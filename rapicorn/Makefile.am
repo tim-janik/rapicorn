@@ -10,6 +10,9 @@ DEFS		= -DRAPICORN_PRIVATE
 rapicorn_public_headers = $(strip 	\
 	rapicorn.hh keycodes.hh		\
 	birnetutils.hh			\
+	birnetsignal.hh			\
+	birnetsignalinc.hh		\
+	birnetsignaldefs.hh		\
 	enumdefs.hh			\
 	primitives.hh			\
 	appearance.hh			\

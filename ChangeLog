@@ -1,3 +1,11 @@
+Sun Mar 27 19:52:12 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/birnetsignal.hh, rapicorn/birnetsignalinc.hh:
+	* rapicorn/birnetsignaldefs.hh:
+	rudimentary signal (callback list) implementation for C++.
+
+	* tests/signal.cc: test signals.
+
 Sun Mar 27 05:54:04 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/events.hh, rapicorn/events.cc: 

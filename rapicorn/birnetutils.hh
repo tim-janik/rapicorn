@@ -793,4 +793,7 @@ binary_lookup (RandIter  begin,
 
 } // Birnet
 
+/* --- signals --- */
+#include <rapicorn/birnetsignal.hh>
+
 #endif  /* __BIRNET_UTILS_HH__ */

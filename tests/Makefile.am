@@ -5,14 +5,16 @@ srcdir          = .
 INCLUDES  	= -I$(top_srcdir) # -I$(srcdir)/cairo
 LDLIBS	       += $(LIBS)
 
-# test programs:
-programs_ldadd = $(top_builddir)/rapicorn/librapicorn.la
-TESTS = walker primitives
 # program sources:
 walker_SOURCES = walker.cc
 walker_LDADD = $(programs_ldadd)
+signal_SOURCES = signal.cc
+signal_LDADD = $(programs_ldadd)
 primitives_SOURCES = primitives.cc
 primitives_LDADD = $(programs_ldadd)
+# test programs:
+TESTS = walker signal primitives
+programs_ldadd = $(top_builddir)/rapicorn/librapicorn.la
 
 # build tests
 noinst_PROGRAMS = $(TESTS)
