@@ -16,6 +16,7 @@ rapicorn_public_headers = $(strip 	\
 	primitives.hh			\
 	appearance.hh			\
 	events.hh			\
+	properties.hh			\
 )
 rapicorn_cc_sources = $(strip 		\
 	birnetutils.cc			\
@@ -23,6 +24,7 @@ rapicorn_cc_sources = $(strip 		\
 	primitives.cc			\
 	appearance.cc			\
 	events.cc			\
+	properties.cc			\
 )
 rapicorn_private_headers = $(strip 	\
 	private.hh			\

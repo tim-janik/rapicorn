@@ -1,3 +1,12 @@
+Thu Mar 31 15:48:06 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/properties.hh, rapicorn/properties.cc: implement generic
+	Property structure and derived types for booleans, ints, doubles and
+	strings. these allow to generically query, set and get properties on
+	an object.
+
+	* tests/properties.cc: test property constructors for various types.
+
 Wed Mar 30 00:52:05 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/birnetsignalslot.hh: moved signal handler and slot
