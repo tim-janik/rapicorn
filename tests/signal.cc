@@ -24,6 +24,7 @@ namespace {
 using namespace Rapicorn;
 using Rapicorn::uint;
 
+#if 0
 struct Test3 {
   void
   vids (int i, double d, char *s)
@@ -152,14 +153,52 @@ public:
     //Func m2 = (Func) (f.* &Foo::pubfoo);
   }
 };
+#endif
+
+struct Emitter3 {
+  Signal3<Emitter3, String, int, String, float> sig_mixed;
+  Signal3<Emitter3, void,   int, String, float> sig_void_mixed;
+  Emitter3() : sig_mixed (*this), sig_void_mixed (*this) {}
+  void
+  test_emissions()
+  {
+    printf ("Emitter3.emit()\n");
+    String s = sig_mixed.emit (7, "seven.seven", 7.7);
+    printf ("Emitter3: result=%s\n", s.c_str());
+    printf ("Emitter3.emit() (void)\n");
+    sig_mixed.emit (3, "three.three", 3.3);
+    printf ("Emitter3: done.\n");
+  }
+  void ref() {}
+  void unref() {}
+};
+
+struct Connection3 {
+  String string_emitter_callback (Emitter3 &emitter, int i, String s, float f)
+  {
+    printf ("Connection3: %d %s %f\n", i, s.c_str(), f);
+    return "Connection3";
+  }
+  void void_emitter_callback (Emitter3 &emitter, int i, String s, float f)
+  {
+    printf ("Connection3: %d %s %f\n", i, s.c_str(), f);
+  }
+};
 
 extern "C" int
 main (int   argc,
       char *argv[])
 {
+#if 0
   SignalTest signal_test;
   signal_test.basic_signal_tests();
   signal_test.member_pointer_tests();
+#endif
+  Emitter3 e3;
+  Connection3 c3;
+  e3.sig_mixed += slot (c3, &Connection3::string_emitter_callback);
+  e3.sig_void_mixed += slot (c3, &Connection3::void_emitter_callback);
+  e3.test_emissions();
   return 0;
 }
 

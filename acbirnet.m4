@@ -311,10 +311,10 @@ AC_DEFUN(MC_PROG_CXX_WITH_CXXFLAGS,[
 		if test "$TPUT" = "yes"; then
 		    gxx_columns=`tput cols`
 		fi
-		if test "$gxx_columns" -gt 1 ; then
-		    MC_PROG_CC_SUPPORTS_OPTION(-fmessage-length=$gxx_columns,
-			MC_EVAR_ADD(CXXFLAGS, -fmessage-length=, -fmessage-length=$gxx_columns))
-		fi
+		dnl if test "$gxx_columns" -gt 1 ; then
+		dnl     MC_PROG_CC_SUPPORTS_OPTION(-fmessage-length=$gxx_columns,
+		dnl 	MC_EVAR_ADD(CXXFLAGS, -fmessage-length=, -fmessage-length=$gxx_columns))
+		dnl fi
 		dnl
 
 	,	

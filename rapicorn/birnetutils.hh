@@ -577,7 +577,7 @@ public:
     if (!m_ref_count)
       {
         finalize();
-        delete this;
+        delete_this(); // effectively: delete this;
       }
   }
   void
@@ -596,9 +596,10 @@ public:
 protected:
   virtual
   ~ReferenceCountImpl()
-  {
-    assert (m_ref_count == 0);
-  }
+  { assert (m_ref_count == 0); }
+  virtual void
+  delete_this ()
+  { delete this; }
 };
 template<class Obj> static Obj& ref      (Obj &obj) { obj.ref();       return obj; }
 template<class Obj> static Obj* ref      (Obj *obj) { obj->ref();      return obj; }

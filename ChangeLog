@@ -1,3 +1,20 @@
+Mon Mar 28 10:01:06 2005  Tim Janik  <timj@gtk.org>
+
+	* acbirnet.m4: disable -fmessage-length argument to g++, since it 
+	doesn't really improve error output with gcc-3.4.
+
+	* rapicorn/birnetsignaldefs.hh: disabled signal generation.
+	added test implementation of a 3 argument signal which supports passing
+	the emitter object as first argument to signal handlers.
+
+	* rapicorn/birnetutils.hh: virtualize the delete this; operation of 
+	ReferenceCountImpl, so derived instances can adapt deletion to their
+	allocation scheme. 
+
+	* tests/signal.cc: disabled old signal tests.
+	added test for 3 argument signal variant, currently implemented in
+	birnetsignaldefs.hh.
+
 Sun Mar 27 19:52:12 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/birnetsignal.hh, rapicorn/birnetsignalinc.hh:
