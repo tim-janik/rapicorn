@@ -7,8 +7,6 @@ GLIB_MKENUMS    = glib-mkenums
 LDLIBS	       += $(LIBS)
 DEFINES		= -DBIRNET_PRIVATE
 
-# libtool stuff: set version and export symbols for resolving
-
 rapicorn_public_headers = $(strip 	\
 	rapicorn.hh 			\
 	birnetutils.hh			\
@@ -30,7 +28,7 @@ librapicorn_la_LDFLAGS = $(strip 				\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-release $(LT_RELEASE) 					\
 	-export-dynamic -no-undefined 				\
-)
+) # set libtool version and export symbols for resolving
 EXTRA_DIST            += $(rapicorn_private_headers)
 
 XML_FILES = $(strip standard.xml )
@@ -58,7 +56,3 @@ gen-enums.cc: enumdefs.hh Makefile
 	&& cp xgen-enu $@ \
 	&& rm -f xgen-enu
 CLEANFILES += xgen-enu gen-enums.cc
-
-.PHONY: clean
-clean:
-	rm -rf *.o $(PROGRAMS) $(CLEANFILES)

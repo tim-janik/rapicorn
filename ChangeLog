@@ -1,3 +1,13 @@
+Sat Mar 26 19:52:48 2005  Tim Janik  <timj@gtk.org>
+
+	* tests/walker.cc: test Walker template.
+
+	* rapicorn/rapicorn.hh: added includes.
+
+	* tests/Makefile.am: build and run tests.
+
+	* build po/ and tests/
+
 Sat Mar 26 19:02:56 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/birnetutils.hh, rapicorn/birnetutils.cc:

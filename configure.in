@@ -117,11 +117,9 @@ dnl Define package requirements.
 dnl
 AC_DEFUN(AC_I18N_REQUIREMENTS,
 [
-    dnl TRANSLATORS: for each new translation added to ALL_LINGUAS, please also update
-    dnl the corresponding links in docs/site-development.texi (search for ALL_LINGUAS).
-    ALL_LINGUAS="az bg ca cs de el en_CA en_GB eo es fr hr it ja mn nl pa pt pt_BR ru sq sr sr@Latn sv"
-    dnl TRANSLATORS: for each new translation added to ALL_LINGUAS, please also update
-    dnl the corresponding links in docs/site-development.texi (search for ALL_LINGUAS).
+    dnl TRANSLATORS: enter your language here
+    ALL_LINGUAS="de"
+    dnl TRANSLATORS: enter your language here
     AC_SUBST(ALL_LINGUAS)
 
     dnl versioned Rapicorn gettext domain (po/)
@@ -262,6 +260,7 @@ Makefile
 rapicorn/Makefile
 po/Makefile.in
 po-helper.sh
+tests/Makefile
 ])
 
 AC_OUTPUT
