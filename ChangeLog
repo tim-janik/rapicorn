@@ -1,3 +1,27 @@
+Wed Mar 30 00:52:05 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/birnetsignalslot.hh: moved signal handler and slot
+	definitions here. there're no emitter handlers/slots anymore.
+	support extra data argument for function and method handlers.
+
+	* rapicorn/birnetsignaltemplate.hh: removed handlers/slots. moved
+	knowledge about emitter obejct into Emission. let class Emission
+	care about casting handlers correctly (with or without emitter arg),
+	cleaned up signal methods some.
+
+	* rapicorn/birnetsignal.hh: removed HandlerBase, ReferencableBase.
+	added with_emitter flag to signal handlers. made SlotBase a regular
+	class, rather than a template. 
+
+	* rapicorn/mksignals.sh: fixed line numbers. allow 17 arguments.
+	allow specification of maximum argument count. 
+
+	* tests/signal.cc: test data handlers and emitter-less ahndlers.
+
+	* rapicorn/Makefile.am: generate birnetsignalvariants.hh from
+	birnetsignalslot.hh (we need 0..17 argument handlers) and
+	birnetsignaltemplate.hh (for 0..16 argument signals).
+
 Tue Mar 29 17:00:08 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/birnetsignal.hh, rapicorn/birnetsignal.cc: namespace change

@@ -24,32 +24,6 @@
 namespace Birnet {
 namespace Signals {
 
-/* --- HandlerBase --- */
-struct HandlerBase : virtual public ReferenceCountImpl {
-  explicit HandlerBase ()
-  {}
-};
-
-/* --- ReferencableWrapper --- */
-struct ReferencableBase {
-  virtual void ref() = 0;
-  virtual void unref() = 0;
-};
-template<class Referencable>
-class ReferencableWrapper : public ReferencableBase {
-  Referencable &obj;
-public:
-  ReferencableWrapper (Referencable &cobj) :
-    obj (cobj)
-  {}
-  virtual void
-  ref()
-  { obj.ref(); }
-  virtual void
-  unref()
-  { obj.unref(); }
-};
-
 /* --- EmissionBase --- */
 struct EmissionBase {
   bool restart_emission;
@@ -64,8 +38,9 @@ struct EmissionBase {
 struct SignalBase {
   struct Link : public ReferenceCountImpl {
     Link *next, *prev;
-    bool  callable;
-    explicit Link() : next (NULL), prev (NULL), callable (true) {}
+    uint  callable : 1;
+    uint  with_emitter : 1;
+    explicit Link() : next (NULL), prev (NULL), callable (true), with_emitter (false) {}
     virtual  ~Link()
     {
       if (next || prev)
@@ -79,13 +54,12 @@ struct SignalBase {
 private:
   class EmbeddedLink : public Link {
     virtual void delete_this () { /* embedded */ }
-    virtual void operator() (EmissionBase &emission) { BIRNET_ASSERT_NOT_REACHED(); }
   };
 protected:
-  ReferencableBase *referencable;
   EmbeddedLink      start;
   void
-  connect_link (Link *link)
+  connect_link (Link *link,
+                bool  with_emitter = false)
   {
     assert (link->prev == NULL && link->next == NULL);
     link->ref_sink();
@@ -93,11 +67,11 @@ protected:
     link->next = &start;
     start.prev->next = link;
     start.prev = link;
+    link->with_emitter = with_emitter;
   }
   template<class Emission> struct Iterator;
 public:
-  explicit SignalBase (ReferencableBase *rbase) :
-    referencable (rbase)
+  explicit SignalBase ()
   {
     start.next = &start;
     start.prev = &start;
@@ -107,8 +81,6 @@ public:
   {
     while (start.next != &start)
       destruct_link (start.next);
-    if (referencable)
-      delete referencable;
     assert (start.next == &start);
     assert (start.prev == &start);
     start.prev = start.next = NULL;
@@ -118,6 +90,7 @@ private:
   void
   destruct_link (Link *link)
   {
+    link->callable = false;
     link->next->prev = link->prev;
     link->prev->next = link->next;
     link->prev = link->next = NULL;
@@ -255,35 +228,35 @@ struct CollectorWhile0 {
 };
 
 /* --- SlotBase --- */
-template <typename Handler>
 class SlotBase {
 protected:
-  Handler *c;
+  typedef SignalBase::Link Link;
+  Link *m_link;
   void
-  set_handler (Handler *cl)
+  set_handler (Link *cl)
   {
     if (cl)
       cl->ref_sink();
-    if (c)
-      c->unref();
-    c = cl;
+    if (m_link)
+      m_link->unref();
+    m_link = cl;
   }
 public:
-  SlotBase (Handler *handler) :
-    c (NULL)
-  { set_handler (handler); }
+  SlotBase (Link *link) :
+    m_link (NULL)
+  { set_handler (link); }
   SlotBase (const SlotBase &src) :
-    c (NULL)
+    m_link (NULL)
   { *this = src; }
   SlotBase&
   operator= (const SlotBase &src)
   {
-    set_handler (src.c);
+    set_handler (src.m_link);
     return *this;
   }
-  Handler*
+  Link*
   get_handler() const
-  { return c; }
+  { return m_link; }
 };
 
 /* --- Signature --- */
@@ -389,6 +362,17 @@ struct Signature<R0 (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14
 
 template<class Emitter, typename SignalSignature, class Collector = CollectorDefault<typename Signature<SignalSignature>::result_type> > struct Signal;
 
+/* --- Casting --- */
+template<class HandlerP> HandlerP
+handler_cast (SignalBase::Link *link)
+{
+#ifdef  PARANOID
+  return dynamic_cast<HandlerP> (link);
+#else
+  return reinterpret_cast<HandlerP> (link);
+#endif
+}
+
 /* --- Handler + Slot + Signal generation --- */
 #define BIRNET_SIG_MATCH(x)             (x >= 0 && x <= 16)
 #define BIRNET_SIG_ARG_TYPENAME(x)      typename A##x
@@ -409,12 +393,6 @@ template<class Emitter, typename SignalSignature, class Collector = CollectorDef
 #undef BIRNET_SIG_ARG_c_VAR
 #undef BIRNET_SIG_ARG_TYPED_VAR
 #undef BIRNET_SIG_ARG_c_TYPED_VAR
-
-/* --- convenience template --- */
-//template<class Emitter, typename R0, typename A1, typename A2, typename A3, class Collector = CollectorDefault<R0> >
-//struct Signal;
-//template<class Emitter, typename R0, typename A1, typename A3, class Collector>
-//struct Signal<Emitter, R0 (A1, A3), Collector> : Signal3<Emitter, R0, A1, int **, A3, Collector> {};
 
 } // Signals
 

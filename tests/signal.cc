@@ -155,7 +155,13 @@ public:
 };
 #endif
 
+struct ExtraType {
+  virtual const char* message() { return "ExtraType::message()"; }
+};
+
 struct EmitterMany {
+  virtual ~EmitterMany() {}
+  virtual const char* emitter_check() { return __func__; }
   Signal<EmitterMany, void ()> sig_void_0;
   Signal<EmitterMany, void (int   )> sig_void_1;
   Signal<EmitterMany, void (int   , double)> sig_void_2;
@@ -200,6 +206,20 @@ struct EmitterMany {
     sig_string_8 (*this), sig_string_9 (*this), sig_string_10 (*this), sig_string_11 (*this),
     sig_string_12 (*this), sig_string_13 (*this), sig_string_14 (*this), sig_string_15 (*this), sig_string_16 (*this)
   {}
+  static String test_string_14_emitter_data (EmitterMany &em,int a1, double a2, int a3, double a4, int a5, double a6, int a7, double a8, int a9,
+                                             double a10, int a11, double a12, int a13, double a14, ExtraType x)
+  {
+    printf ("  callback: %s (%s, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %s);\n",
+            __func__, em.emitter_check(), a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, x.message());
+    return __func__;
+  }
+  static String test_string_14_data (int a1, double a2, int a3, double a4, int a5, double a6, int a7, double a8, int a9,
+                                     double a10, int a11, double a12, int a13, double a14, ExtraType x)
+  {
+    printf ("  callback: %s (%d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %s);\n",
+            __func__, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, x.message());
+    return __func__;
+  }
   void testme ()
   {
     sig_void_0.emit ();
@@ -219,6 +239,9 @@ struct EmitterMany {
     sig_void_14.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14);
     sig_void_15.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
     sig_void_16.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+    ExtraType xt;
+    sig_string_14 += slot (test_string_14_emitter_data, xt);
+    sig_string_14 += slot (test_string_14_data, xt);
     String results;
     results += sig_string_0.emit ();
     results += sig_string_1.emit (1);
@@ -264,21 +287,41 @@ struct Emitter3 {
 };
 
 struct Connection3 {
+  static String mixed_func (int i, String s, float f)
+  {
+    assert (i == 7 && s == "seven.seven" && f == (float) 7.7);
+    printf ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
+    return __func__;
+  }
   static String mixed_efunc      (Emitter3 &obj, int i, String s, float f)
   {
     assert (i == 7 && s == "seven.seven" && f == (float) 7.7);
     printf ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
-    return "mixed_efunc";
+    return __func__;
+  }
+  static void   void_mixed_func (int i, String s, float f)
+  {
+    assert (i == 3 && s == "three.three" && f == (float) 3.3);
+    printf ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
   }
   static void   void_mixed_efunc (Emitter3 &obj, int i, String s, float f)
   {
     assert (i == 3 && s == "three.three" && f == (float) 3.3);
     printf ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
   }
+  String string_callback (int i, String s, float f)
+  {
+    printf ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
+    return __func__;
+  }
   String string_emitter_callback (Emitter3 &emitter, int i, String s, float f)
   {
     printf ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
-    return "Connection3";
+    return __func__;
+  }
+  void void_callback (int i, String s, float f)
+  {
+    printf ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
   }
   void void_emitter_callback (Emitter3 &emitter, int i, String s, float f)
   {
@@ -287,9 +330,13 @@ struct Connection3 {
   void test_signal (Emitter3 &e3)
   {
     e3.sig_mixed += mixed_efunc;
+    e3.sig_mixed += mixed_func;
     e3.sig_mixed += slot (*this, &Connection3::string_emitter_callback);
+    e3.sig_mixed += slot (*this, &Connection3::string_callback);
     e3.sig_void_mixed += void_mixed_efunc;
+    e3.sig_void_mixed += void_mixed_func;
     e3.sig_void_mixed += slot (*this, &Connection3::void_emitter_callback);
+    e3.sig_void_mixed += slot (*this, &Connection3::void_callback);
     e3.test_emissions();
   }
 };

@@ -5,7 +5,7 @@ srcdir          = .
 INCLUDES  	= -I$(top_srcdir) -I$(top_builddir) # -I$(srcdir)/cairo
 GLIB_MKENUMS    = glib-mkenums
 LDLIBS	       += $(LIBS)
-DEFS		= -DRAPICORN_PRIVATE
+DEFS		= -DRAPICORN_PRIVATE -DPARANOID
 
 rapicorn_public_headers = $(strip 	\
 	rapicorn.hh keycodes.hh		\
@@ -26,6 +26,7 @@ rapicorn_cc_sources = $(strip 		\
 )
 rapicorn_private_headers = $(strip 	\
 	private.hh			\
+	birnetsignalslot.hh		\
 	birnetsignaltemplate.hh		\
 )
 rapicorn_extra_sources = $(strip 	\
@@ -56,11 +57,12 @@ stamp-xmllint: $(XML_FILES)
 $(lib_LTLIBRARIES): stamp-xmllint
 
 birnetutils.cc: birnetutils.hh birnetsignal.hh birnetsignalvariants.hh
-birnetsignalvariants.hh: birnetsignaltemplate.hh $(srcdir)/mksignals.sh
+birnetsignalvariants.hh: birnetsignalslot.hh birnetsignaltemplate.hh $(srcdir)/mksignals.sh
 	cd . \
-	&& echo "/* Signal Variants -- Generated file, don't edit. (make $@ from $<) */" > xgen-sigs \
+	&& echo "/* Signal Variants -- Generated file, don't edit. */" > xgen-sigs \
 	&& echo >> xgen-sigs \
-	&& $(srcdir)/mksignals.sh $< >>xgen-sigs \
+	&& $(srcdir)/mksignals.sh $(srcdir)/birnetsignalslot.hh     17 >>xgen-sigs \
+	&& $(srcdir)/mksignals.sh $(srcdir)/birnetsignaltemplate.hh 16 >>xgen-sigs \
 	&& cp xgen-sigs $@ \
 	&& rm -f xgen-sigs
 CLEANFILES += xgen-sigs birnetsignalvariants.hh xgen-signals.sed
