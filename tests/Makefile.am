@@ -1,4 +1,4 @@
-# Rapicorn
+# Rapicorn Tests
 # Copyright (C) 2005 Tim Janik
 
 srcdir          = .
