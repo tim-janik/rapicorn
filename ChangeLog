@@ -1,3 +1,24 @@
+Sun Mar 27 04:20:15 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/primitives.hh, rapicorn/primitives.cc:
+	provide degree/radians conversion. provide asm-based ftoi for doubles.
+	provide iround, iceil, ifloor. 
+	implement class Point with double coordinates. implement rectangle
+	type class Rect based on Point coordinates. implemented ARGB Color
+	type. 
+
+	* tests/primitives.cc: test get_hsv/set_hsv Color conversions.
+
+	* rapicorn/utilities.hh, rapicorn/utilities.cc:
+	moved gettext logic here. import abs, clamp, min, max. provide mixed
+	double/long variants for min and max, to not confuse the compiler
+	if integer constants are used.
+
+	* rapicorn/birnetutils.hh: fixed up swap, min, max, abs and clamp by
+	using std:: versions if possible.
+
+	* rapicorn/enumdefs.hh, rapicorn/enumdefs.cc: removed utility stuff.
+
 Sun Mar 27 01:37:22 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/enumdefs.hh, rapicorn/enumdefs.cc:

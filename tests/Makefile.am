@@ -7,10 +7,12 @@ LDLIBS	       += $(LIBS)
 
 # test programs:
 programs_ldadd = $(top_builddir)/rapicorn/librapicorn.la
-TESTS = walker
+TESTS = walker primitives
 # program sources:
 walker_SOURCES = walker.cc
 walker_LDADD = $(programs_ldadd)
+primitives_SOURCES = primitives.cc
+primitives_LDADD = $(programs_ldadd)
 
 # build tests
 noinst_PROGRAMS = $(TESTS)

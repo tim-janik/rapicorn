@@ -25,12 +25,12 @@ using Rapicorn::uint;
 static void
 walker_test()
 {
+  printf ("%s: ", __func__);
   static int values[] = { 3, 2, 1, };
   std::vector<int*> cells;
   for (uint i = 0; i < sizeof (values) / sizeof (values[0]); i++)
     cells.push_back (values + i);
   /* we need to test the various types of const combinations here */
-  printf ("%s: ", __func__);
   /* int* */
   for (Walker<int*> wp = walker (cells); wp.has_next(); wp++) printf ("%d", **wp);
   // for (Walker<int*> wp (cells); wp.has_next(); wp++) printf ("%d", **wp);

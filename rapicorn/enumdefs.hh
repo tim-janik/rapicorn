@@ -19,24 +19,9 @@
 #ifndef __RAPICORN_ENUMDEFS_HH__
 #define __RAPICORN_ENUMDEFS_HH__
 
-#include <rapicorn/birnetutils.hh>
-#ifdef  RAPICORN_PRIVATE
-#include <rapicorn/private.hh>
-#endif
+#include <rapicorn/utilities.hh>
 
 namespace Rapicorn {
-
-/* --- import Birnet namespace --- */
-using namespace Birnet;
-using Birnet::uint;
-
-/* --- i18n macros --- */
-void            rapicorn_gettext_init (const char *domainname, const char *dirname);
-const char*     rapicorn_gettext      (const char *text);
-#ifdef  RAPICORN_PRIVATE
-#define _(str)  rapicorn_gettext (str)
-#define N_(str) (str)
-#endif
 
 /* --- enum/flags type descriptions --- */
 struct EnumClass {

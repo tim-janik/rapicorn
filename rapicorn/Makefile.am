@@ -11,12 +11,15 @@ rapicorn_public_headers = $(strip 	\
 	rapicorn.hh 			\
 	birnetutils.hh			\
 	enumdefs.hh			\
+	primitives.hh			\
 )
 rapicorn_cc_sources = $(strip 		\
 	birnetutils.cc			\
 	enumdefs.cc			\
+	primitives.cc			\
 )
 rapicorn_private_headers = $(strip 	\
+	private.hh			\
 )
 
 lib_LTLIBRARIES        = librapicorn.la

@@ -1,4 +1,4 @@
-/* BirnetCanvas
+/* Rapicorn
  * Copyright (C) 2005 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -19,23 +19,6 @@
 #include "enumdefs.hh"
 
 namespace Rapicorn {
-
-static const char *canvas_gettext_domain = NULL;
-void
-rapicorn_gettext_init (const char *domainname,
-                       const char *dirname)
-{
-  canvas_gettext_domain = domainname;
-  bindtextdomain (canvas_gettext_domain, dirname);
-  bind_textdomain_codeset (canvas_gettext_domain, "UTF-8");
-}
-
-const char*
-rapicorn_gettext (const char *text)
-{
-  assert (canvas_gettext_domain != NULL);
-  return dgettext (canvas_gettext_domain, text);
-}
 
 static bool
 isalnum (uint8 c)

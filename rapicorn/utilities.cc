@@ -16,12 +16,28 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __RAPICORN_HH__
-#define __RAPICORN_HH__
+#include "utilities.hh"
 
-/* public include files */
-#include <rapicorn/utilities.hh>
-#include <rapicorn/enumdefs.hh>
-#include <rapicorn/primitives.hh>
+namespace Rapicorn {
 
-#endif  /* __RAPICORN_HH__ */
+static const char *rapicorn_gettext_domain = NULL;
+void
+rapicorn_gettext_init (const char *domainname,
+                       const char *dirname)
+{
+  rapicorn_gettext_domain = domainname;
+  bindtextdomain (rapicorn_gettext_domain, dirname);
+  bind_textdomain_codeset (rapicorn_gettext_domain, "UTF-8");
+}
+
+const char*
+rapicorn_gettext (const char *text)
+{
+  assert (rapicorn_gettext_domain != NULL);
+  return dgettext (rapicorn_gettext_domain, text);
+}
+
+/* include generated enum definitions */
+#include "gen-enums.cc"
+
+} // Rapicorn

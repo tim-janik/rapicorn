@@ -99,11 +99,25 @@ using std::map;
 #define BIRNET_DISABLE_CLASS_COPY(Class)       private: Class (const Class&); Class& operator= (const Class&);
 
 /* --- common utilities --- */
-template<typename T> void swap  (T &a, T &b)    { T t = b; b = a; a = t; }
-template<typename T> T    min   (T a, T b)      { return a > b ? b : a; }
-template<typename T> T    max   (T a, T b)      { return a < b ? b : a; }
-template<typename T> T    clamp (T v, T a, T b) { return max (a, min (v, b)); }
-template<typename T> T    abs   (T v)           { return v < 0 ? -v : v; }
+using ::std::swap;
+using ::std::min;
+using ::std::max;
+#undef abs
+template<typename T> inline const T&
+abs (const T &value)
+{
+  return max (value, -value);
+}
+#undef clamp
+template<typename T> inline const T&
+clamp (const T &value, const T &minimum, const T &maximum)
+{
+  if (minimum > value)
+    return minimum;
+  if (maximum < value)
+    return maximum;
+  return value;
+}
 
 /* --- string functionality --- */
 String  string_printf           (const char *format, ...) BIRNET_PRINTF (1, 2);
