@@ -114,4 +114,183 @@ Color::set_hsv (double hue,             /* 0..360: 0=red, 120=green, 240=blue */
     }
 }
 
+Plane::Plane (int x, int y, uint width, uint height) :
+  m_x (x), m_y (y), m_stride (width), m_height (height),
+  m_pixel_buffer (NULL)
+{
+  m_pixel_buffer = new uint32[n_pixels()];
+  memset (m_pixel_buffer, 0, 4 * n_pixels());
+}
+
+void
+Plane::fill (Color c)
+{
+  uint32 argb = c.premultiplied();
+  for (int y = 0; y < height(); y++)
+    for (int x = 0; x < width(); x++)
+      {
+        uint32 *p = peek (x, y);
+        *p = argb;
+      }
+}
+
+Plane::~Plane()
+{
+  delete[] m_pixel_buffer;
+}
+
+bool
+Plane::rgb_convert (uint cwidth, uint cheight, uint rowstride, uint8 *cpixels) const
+{
+  if (!m_pixel_buffer)
+    return false;
+  int h = MIN (cheight, (uint) height());
+  int w = MIN (cwidth, (uint) width());
+  for (int y = 0; y < h; y++)
+    {
+      const uint32 *pix = peek (0, y);
+      uint8 *dst = cpixels + (h - 1 - y) * rowstride;
+      for (const uint32 *b = pix + w; pix < b; pix++)
+        {
+          *dst++ = *pix >> 16;
+          *dst++ = *pix >> 8;
+          *dst++ = *pix;
+        }
+    }
+  return true;
+}
+
+#define IMUL    Color::IMUL
+#define IDIV    Color::IDIV
+#define IDIV0   Color::IDIV0
+#define IMULDIV Color::IMULDIV
+
+template<int KIND> static inline void
+pixel_combine (uint32 *D, const uint32 *B, const uint32 *A, uint span, uint8 blend_alpha)
+{
+  while (span--)
+    {
+      uint8 Da, Dr, Dg, Db;
+      /* extract alpha, red, green ,blue */
+      uint32 Aa = *A >> 24, Ar = (*A >> 16) & 0xff, Ag = (*A >> 8) & 0xff, Ab = *A & 0xff;
+      uint32 Ba = *B >> 24, Br = (*B >> 16) & 0xff, Bg = (*B >> 8) & 0xff, Bb = *B & 0xff;
+      /* A over B = colorA + colorB * (1 - alphaA) */
+      if (KIND == COMBINE_OVER || KIND == COMBINE_NORMAL)
+        {
+          uint32 Ai = 255 - Aa;
+          Dr = Ar + IMUL (Br, Ai);
+          Dg = Ag + IMUL (Bg, Ai);
+          Db = Ab + IMUL (Bb, Ai);
+          Da = Aa + IMUL (Ba, Ai);
+        }
+      /* B over A = colorB + colorA * (1 - alphaB) */
+      if (KIND == COMBINE_UNDER)
+        {
+          uint32 Bi = 255 - Ba;
+          Dr = Br + IMUL (Ar, Bi);
+          Dg = Bg + IMUL (Ag, Bi);
+          Db = Bb + IMUL (Ab, Bi);
+          Da = Ba + IMUL (Aa, Bi);
+        }
+      /* A add B = colorA + colorB */
+      if (KIND == COMBINE_ADD)
+        {
+          Dr = MIN (Ar + Br, 255);
+          Dg = MIN (Ag + Bg, 255);
+          Db = MIN (Ab + Bb, 255);
+          Da = MIN (Aa + Ba, 255);
+        }
+      /* A del B = colorB * (1 - alphaA) */
+      if (KIND == COMBINE_DEL)
+        {
+          uint32 Ai = 255 - Aa;
+          Dr = IMUL (Br, Ai);
+          Dg = IMUL (Bg, Ai);
+          Db = IMUL (Bb, Ai);
+          Da = IMUL (Ba, Ai);
+        }
+      /* A atop B = colorA * alphaB + colorB * (1 - alphaA) */
+      if (KIND == COMBINE_ATOP)
+        {
+          uint32 Ai = 255 - Aa;
+          Dr = IMUL (Ar, Ba) + IMUL (Br, Ai);
+          Dg = IMUL (Ag, Ba) + IMUL (Bg, Ai);
+          Db = IMUL (Ab, Ba) + IMUL (Bb, Ai);
+          Da = IMUL (Aa, Ba) + IMUL (Ba, Ai);
+        }
+      /* A xor B = colorA * (1 - alphaB) + colorB * (1 - alphaA) */
+      if (KIND == COMBINE_XOR)
+        {
+          uint32 Ai = 255 - Aa, Bi = 255 - Ba;
+          Dr = IMUL (Ar, Bi) + IMUL (Br, Ai);
+          Dg = IMUL (Ag, Bi) + IMUL (Bg, Ai);
+          Db = IMUL (Ab, Bi) + IMUL (Bb, Ai);
+          Da = IMUL (Aa, Bi) + IMUL (Ba, Ai);
+        }
+      /* B * (1 - alpha) + A * alpha */
+      if (KIND == COMBINE_BLEND)
+        {
+          uint32 ialpha = 255 - blend_alpha;
+          Dr = IMUL (Br, ialpha) + Ar;
+          Dg = IMUL (Bg, ialpha) + Ag;
+          Db = IMUL (Bb, ialpha) + Ab;
+          Da = IMUL (Ba, ialpha) + Aa;
+        }
+      /* (B.value = A.value) OVER B */
+      if (KIND == COMBINE_VALUE)
+        {
+          uint8 Avalue = MAX (MAX (Ar, Ag), Ab); // HSV value
+          uint8 Bvalue = MAX (MAX (Br, Bg), Bb); // HSV value
+          Da = Aa;
+          uint32 Di = 255 - Da;
+          if (LIKELY (Bvalue))
+            {
+              Dr = IMUL (Br, Di) + IMULDIV (Br, Avalue, Bvalue);
+              Dg = IMUL (Bg, Di) + IMULDIV (Bg, Avalue, Bvalue);
+              Db = IMUL (Bb, Di) + IMULDIV (Bb, Avalue, Bvalue);
+            }
+          else
+            {
+              Dr = IMUL (Br, Di);
+              Dg = IMUL (Bg, Di);
+              Db = IMUL (Bb, Di);
+            }
+          Da = IMUL (Ba, Di) + Da;
+        }
+      /* assign */
+      *D++ = (Da << 24) | (Dr << 16) | (Dg << 8) | Db;
+      A++, B++;
+    }
+}
+
+void
+Plane::combine (const Plane &src, CombineType ct)
+{
+  Rect m (origin(), width(), height());
+  Rect b (src.origin(), src.width(), src.height());
+  b.intersect (m);
+  if (b.is_empty())
+    return;
+  int xmin = iround (b.ll.x), xbound = iround (b.ur.x);
+  int ymin = iround (b.ll.y), ybound = iround (b.ur.y);
+  int xspan = xbound - xmin;
+  for (int y = ymin; y < ybound; y++)
+    {
+      uint32 *d = peek (xmin - xstart(), y - ystart());
+      const uint32 *s = src.peek (xmin - src.xstart(), y - src.ystart());
+      switch (ct)
+        {
+        case COMBINE_NORMAL:  pixel_combine<COMBINE_NORMAL> (d, d, s, xspan, 0xff); break;
+        case COMBINE_OVER:    pixel_combine<COMBINE_OVER>   (d, d, s, xspan, 0xff); break;
+        case COMBINE_UNDER:   pixel_combine<COMBINE_UNDER>  (d, d, s, xspan, 0xff); break;
+        case COMBINE_ADD:     pixel_combine<COMBINE_ADD>    (d, d, s, xspan, 0xff); break;
+        case COMBINE_DEL:     pixel_combine<COMBINE_DEL>    (d, d, s, xspan, 0xff); break;
+        case COMBINE_ATOP:    pixel_combine<COMBINE_ATOP>   (d, d, s, xspan, 0xff); break;
+        case COMBINE_XOR:     pixel_combine<COMBINE_XOR>    (d, d, s, xspan, 0xff); break;
+        case COMBINE_BLEND:   pixel_combine<COMBINE_BLEND>  (d, d, s, xspan, 0xff); break;
+        case COMBINE_VALUE:   pixel_combine<COMBINE_VALUE>  (d, d, s, xspan, 0xff); break;
+        }
+    }
+}
+
 } // Rapicorn

@@ -1,3 +1,12 @@
+Sun Mar 27 05:21:40 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/primitives.hh, rapicorn/primitives.cc:
+	consolidated Rect() constructors. added Plane, an ARGB pixel buffer,
+	which uses an endian dependant ARGB format with premultiplied alpha.
+	this is the same format cairo uses for its surface buffers in ARGB mode.
+	plane implements various combination modes, i.e. the non-inverting
+	porterduff modes, blending and value combination.
+
 Sun Mar 27 04:20:15 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/primitives.hh, rapicorn/primitives.cc:

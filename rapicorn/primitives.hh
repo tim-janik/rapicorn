@@ -148,11 +148,9 @@ public:
   Rect (Point cp0, Point cp1) :
     ll (min (cp0, cp1)), ur (max (cp0, cp1))
   {}
-  Rect (double x0, double y0, double x1, double y1) :
-    ll (min (x0, x1), min (y0, y1)), ur (max (x0, x1), max (y0, y1))
-  {}
-  Rect (double x0, double y0) :
-    ll (min (x0, 0), min (y0, 0)), ur (max (x0, 0), max (y0, 0))
+  Rect (Point p0, double width, double height) :
+    ll (min (p0, Point (p0.x + width, p0.y + height))),
+    ur (max (p0, Point (p0.x + width, p0.y + height)))
   {}
   Point upper_left      () const { return Point (ll.x, ur.y); }
   Point upper_right     () const { return ur; }
@@ -269,7 +267,7 @@ public:
                    double     width,
                    double     height)
   {
-    Rect b (0, 0, abs (width), abs (height)); /* SOUTH_WEST */
+    Rect b (Point (0, 0), abs (width), abs (height)); /* SOUTH_WEST */
     Point delta = b.anchor_point (anchor);
     b.ll -= delta;
     b.ur -= delta;
@@ -283,8 +281,9 @@ class Color {
 public:
   static inline uint8 IMUL    (uint8 v, uint8 alpha)            { return (v * (uint32) 0x010102 * alpha) >> 24; }
   static inline uint8 IDIV    (uint8 v, uint8 alpha)            { return (v * (uint32) 0xff) / alpha; }
-  static inline uint8 IDIV0   (uint8 v, uint8 alpha)            { return alpha ? IDIV (v, alpha) : 0xff; }
-  static inline uint8 IMULDIV (uint8 v, uint8 amul, uint8 adiv) { return (((v * (uint32) 0x010102 * amul / adiv) >> 8) * 0xff) >> 16; }
+  static inline uint8 IDIV0   (uint8 v, uint8 alpha)            { if (!alpha) return 0xff; return IDIV (v, alpha); }
+  static inline uint8 IMULDIV (uint8 v, uint8 amul, uint8 adiv) // IMUL (IDIV (v, amul), adiv)
+  { return (((v * (uint32) 0x010102 * amul / adiv) >> 8) * 0xff) >> 16; }
   Color (uint32 c = 0) :
     argb_pixel (c)
   {}
@@ -465,6 +464,72 @@ public:
   }
 };
 
+
+/* --- Plane --- */
+class Plane {
+  int     m_x, m_y, m_stride, m_height;
+  uint32 *m_pixel_buffer;
+  uint    n_pixels() const                  { return height() * m_stride; }
+  Color   peek_color (uint x, uint y) const { const uint32 *p = peek (x, y); return Color::from_premultiplied (*p); }
+public:
+  uint32*       peek (uint x, uint y)       { return &m_pixel_buffer[y * pixstride() + x]; }
+  const uint32* peek (uint x, uint y) const { return &m_pixel_buffer[y * pixstride() + x]; }
+  explicit      Plane (int x, int y, uint width, uint height);
+  virtual       ~Plane();
+  int           pixstride  () const { return m_stride * 4; }
+  int           width      () const { return m_stride; } //FIXME
+  int           height     () const { return m_height; }
+  Point         origin     () const { return Point (m_x, m_y); }
+  int           xstart     () const { return m_x; }
+  int           ystart     () const { return m_y; }
+  int           xbound     () const { return m_x + width(); }
+  int           ybound     () const { return m_y + height(); }
+  int           channels   () const { return 4; }
+  void   fill              (Color c);
+  void   combine           (const Plane &src, CombineType ct);
+  bool   rgb_convert       (uint cwidth, uint cheight, uint rowstride, uint8 *cpixels) const;
+  void   set_premultiplied (int x, int y, Color c)
+  {
+    int ix = x - m_x, iy = y - m_y;
+    if (ix >= 0 && iy >= 0 && ix < width() && iy < height())
+      {
+        uint32 *pix = peek (ix, iy);
+        *pix = c;
+      }
+  }
+  void   set         (int x, int y, Color c) { set_premultiplied (x, y, c.premultiplied()); }
+  void   set_channel (int x, int y, uint channel, uint8 v)
+  {
+    int ix = x - m_x, iy = y - m_y;
+    if (ix >= 0 && iy >= 0 && ix < width() && iy < height() && channel < 4)
+      {
+        uint32 *pix = peek (ix, iy);
+        Color c = Color::from_premultiplied (*pix);
+        c.channel (channel, v);
+        *pix = c.premultiplied();
+      }
+  }
+  void   set_alpha (int x, int y, uint8 v) { set_channel (x, y, 0, v); }
+  void   set_red   (int x, int y, uint8 v) { set_channel (x, y, 1, v); }
+  void   set_green (int x, int y, uint8 v) { set_channel (x, y, 2, v); }
+  void   set_blue  (int x, int y, uint8 v) { set_channel (x, y, 3, v); }
+  static Plane
+  create_from_intersection (const Plane &master, Point p0, double pwidth, double pheight)
+  {
+    Rect m (master.origin(), master.width(), master.height());
+    Rect b (p0, pwidth, pheight);
+    b.intersect (m);
+    if (b.is_empty())
+      return Plane (iround (p0.x), iround (p0.y), 0, 0);
+    else
+      return Plane (iround (b.ll.x), iround (b.ll.y), iceil (b.width()), iceil (b.height()));
+  }
+  static Plane
+  create_from_size (const Plane &master)
+  {
+    return create_from_intersection (master, master.origin(), master.width(), master.height());
+  }
+};
 
 } // Rapicorn
 
