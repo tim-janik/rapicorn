@@ -1,3 +1,17 @@
+Sun Mar 27 05:54:04 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/events.hh, rapicorn/events.cc: 
+	provide several event types with constructor for mosue events,
+	button events, focus events, key events and scroll events. 
+	also, provide ModifierState and KeyValue (by including keycodes.hh)
+	enums for key events.
+
+	* rapicorn/keycodes.hh: keyboard key codes, generated from gdkkeysyms.h.
+
+	* rapicorn/appearance.hh, rapicorn/appearance.cc: 
+	provide class Style which provides colors according to various states.
+	provide class Appearance which is simply a Style factory.
+
 Sun Mar 27 05:21:40 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/primitives.hh, rapicorn/primitives.cc:

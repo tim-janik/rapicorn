@@ -8,15 +8,19 @@ LDLIBS	       += $(LIBS)
 DEFS		= -DRAPICORN_PRIVATE
 
 rapicorn_public_headers = $(strip 	\
-	rapicorn.hh 			\
+	rapicorn.hh keycodes.hh		\
 	birnetutils.hh			\
 	enumdefs.hh			\
 	primitives.hh			\
+	appearance.hh			\
+	events.hh			\
 )
 rapicorn_cc_sources = $(strip 		\
 	birnetutils.cc			\
 	enumdefs.cc			\
 	primitives.cc			\
+	appearance.cc			\
+	events.cc			\
 )
 rapicorn_private_headers = $(strip 	\
 	private.hh			\

@@ -23,5 +23,7 @@
 #include <rapicorn/utilities.hh>
 #include <rapicorn/enumdefs.hh>
 #include <rapicorn/primitives.hh>
-
+#include <rapicorn/appearance.hh>
+#include <rapicorn/events.hh>
+                      
 #endif  /* __RAPICORN_HH__ */
