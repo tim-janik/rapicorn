@@ -37,7 +37,15 @@ rapicorn_gettext (const char *text)
   return dgettext (rapicorn_gettext_domain, text);
 }
 
-/* include generated enum definitions */
-#include "gen-enums.cc"
+Convertible::Convertible() :
+  sig_find_interface (*this)
+{}
+
+bool
+Convertible::match_interface (InterfaceMatch &imatch,
+                              const String   &ident)
+{
+  return imatch.done() || sig_find_interface.emit (imatch, ident) || (!ident[0] && imatch.match (this));
+}
 
 } // Rapicorn

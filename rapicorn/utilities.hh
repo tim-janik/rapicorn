@@ -50,6 +50,63 @@ inline double min (long   a, double b) { return min<double> (a, b); }
 inline double max (double a, long   b) { return max<double> (a, b); }
 inline double max (long   a, double b) { return max<double> (a, b); }
 
+/* --- Convertible --- */
+class Convertible : public virtual ReferenceCountImpl {
+public: /* typedefs */
+  struct InterfaceMatch {
+    /*Con*/                     InterfaceMatch  () : match_found (false) {}
+    bool                        done            () { return match_found; }
+    virtual  bool               match           (Convertible *object) = 0;
+  protected: bool               match_found;
+  };
+  typedef Signal<Convertible, Convertible* (const InterfaceMatch&, const String&), CollectorWhile0<Convertible*> > SignalFindInterface;
+private:
+  /* implement InterfaceCast template */
+  template<typename Type>
+  struct InterfaceCast : InterfaceMatch {
+    typedef Type  Interface;
+    explicit      InterfaceCast () : instance (NULL) {}
+    virtual bool  match         (Convertible *obj)
+    {
+      if (!instance)
+        instance = dynamic_cast<Interface*> (obj);
+      return match_found = instance != NULL;
+    }
+  protected:
+    Interface *instance;
+  };
+  /* implement InterfaceType template */
+  template<typename Type> struct InterfaceType : InterfaceCast<Type> {
+    typedef Type& Result;
+    Type&         result  (bool may_throw)
+    {
+      if (!this->instance && may_throw)
+        throw NullInterface();
+      return *this->instance;
+    }
+  };
+  template<typename Type> struct InterfaceType<Type&> : InterfaceType<Type> {};
+  template<typename Type> struct InterfaceType<Type*> : InterfaceCast<Type> {
+    typedef Type* Result;
+    Type*         result  (bool may_throw) { return InterfaceCast<Type>::instance; }
+  };
+public: /* user API */
+  explicit                      Convertible     ();
+  SignalFindInterface           sig_find_interface;
+  virtual bool                  match_interface (InterfaceMatch &imatch, const String &ident);
+  template<typename Type>
+  typename
+  InterfaceType<Type>::Result   interface       (const String &ident = String(), const std::nothrow_t &nt = dothrow)
+  {
+    InterfaceType<Type> interface_type;
+    match_interface (interface_type, ident);
+    return interface_type.result (&nt == &dothrow);
+  }
+  template<typename Type>
+  typename
+  InterfaceType<Type>::Result   interface       (const std::nothrow_t &nt) { return interface<Type> (String(), nt); }
+};
+
 } // Rapicorn
 
 #endif  /* __RAPICORN_UTILITIES_HH__ */

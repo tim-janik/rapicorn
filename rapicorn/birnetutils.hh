@@ -723,6 +723,16 @@ private:
   NodeBase* rip_data (DataKey<void> *key);
 };
 
+/* --- DataListContainer --- */
+class DataListContainer {
+  DataList data_list;
+public: /* generic data API */
+  template<typename Type> inline void set_data    (DataKey<Type> *key, Type data) { data_list.set (key, data); }
+  template<typename Type> inline Type get_data    (DataKey<Type> *key) { return data_list.get (key); }
+  template<typename Type> inline Type swap_data   (DataKey<Type> *key, Type data) { return data_list.swap (key, data); }
+  template<typename Type> inline Type swap_data   (DataKey<Type> *key) { return data_list.swap (key); }
+  template<typename Type> inline void delete_data (DataKey<Type> *key) { data_list.del (key); }
+};
 
 /* --- binary lookup --- */
 template<typename RandIter, class Cmp, typename Arg, int case_lookup_or_sibling_or_insertion>

@@ -12,6 +12,7 @@ rapicorn_public_headers = $(strip 	\
 	birnetutils.hh			\
 	birnetsignal.hh			\
 	birnetsignalvariants.hh		\
+	utilities.hh			\
 	enumdefs.hh			\
 	primitives.hh			\
 	appearance.hh			\
@@ -20,6 +21,7 @@ rapicorn_public_headers = $(strip 	\
 )
 rapicorn_cc_sources = $(strip 		\
 	birnetutils.cc			\
+	utilities.cc			\
 	enumdefs.cc			\
 	primitives.cc			\
 	appearance.cc			\

@@ -1,3 +1,14 @@
+Thu Mar 31 16:18:20 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/utilities.hh, rapicorn/utilities.cc: implement class
+	Convertible, a class providing interface<>() methods to retrieve
+	different interfaces. 
+
+	* rapicorn/birnetutils.hh: added DataListContainer, a class containing
+	a DataList.
+
+	* rapicorn/Makefile.am: actually compile utilities.cc.
+
 Thu Mar 31 15:48:06 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/properties.hh, rapicorn/properties.cc: implement generic
