@@ -1,3 +1,8 @@
+Sat Mar 26 17:51:28 2005  Tim Janik  <timj@gtk.org>
+
+	* TODO, Makefile.am, autogen.sh, configure.in, po-helper.sh.in :
+	add standard project files.
+
 Sat Mar 26 17:22:26 2005  Tim Janik  <timj@gtk.org>
 
 	* acbirnet.m4: usefull autoconf macros.
