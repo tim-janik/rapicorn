@@ -37,7 +37,9 @@ XML_FILES = $(strip standard.xml )
 
 # xml linting
 stamp-xmllint: $(XML_FILES)
-	$(XMLLINT) --noout $(XML_FILES)
+	cd $(srcdir) \
+	&& $(XMLLINT) --noout $(XML_FILES)
+	touch $@
 $(lib_LTLIBRARIES): stamp-xmllint
 
 enumdefs.o enumdefs.lo: gen-enums.cc
