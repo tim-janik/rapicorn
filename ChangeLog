@@ -1,3 +1,27 @@
+Sat Mar 26 19:02:56 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/birnetutils.hh, rapicorn/birnetutils.cc:
+	provide standard types, assertion macros, compiler attributes,
+	string conversion functions, warning/error/diagnostic functions,
+	exception hanlding basics. provide special classes:
+	(class Deletable): class with virtual destructor.
+	(class PointerIterator): make a real iterator from a memory pointer.
+	(class ValueIterator): automatically dereference an iterator.
+	(class IteratorRange): self contained iterator range, a normal iterator
+	that also knows it's container's end(), implements has_next(), done().
+	(class ValueIteratorRange): a dereferencing IteratorRange.
+	(class Walker): an easy to use iterator_range (begin(), end())
+	substitute. creating a walker template only requires specification of
+	the actual value type. walkers are created with walker(...).
+	(class ReferenceCountImpl): implement a Deletable object with a 31bit
+	reference count and floating state. derived types should use 
+	BIRNET_DISABLE_CLASS_COPY() to prevent stack allocation of instances.
+	(class DataList): implement a list of generic data items in a typesafe
+	way. sizeof(DataList) is supposed to be just sizeof(Pointer) to allow
+	empty lists with as little as possible overhead.
+	(class DataKey): type specific key template to index DataList items.
+	binary_lookup*(): implement binary lookups as templates.
+
 Sat Mar 26 18:50:03 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/standard.xml: empty skeleton.

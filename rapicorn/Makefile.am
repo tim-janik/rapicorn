@@ -2,19 +2,21 @@
 # Copyright (C) 2005 Tim Janik
 
 srcdir          = .
-INCLUDES  	= -I$(srcdir) $(top_builddir)/rapicorn -I$(srcdir)/cairo
+INCLUDES  	= -I$(srcdir) # $(top_builddir)/rapicorn -I$(srcdir)/cairo
 GLIB_MKENUMS    = glib-mkenums
 LDLIBS	       += $(LIBS)
 DEFINES		= -DBIRNET_PRIVATE
 
 # libtool stuff: set version and export symbols for resolving
 
-rapicorn_public_headers = $(strip \
-	rapicorn.hh \
+rapicorn_public_headers = $(strip 	\
+	rapicorn.hh 			\
+	birnetutils.hh			\
 )
-rapicorn_private_headers = $(strip \
+rapicorn_cc_sources = $(strip 		\
+	birnetutils.cc			\
 )
-rapicorn_cc_sources = $(strip \
+rapicorn_private_headers = $(strip 	\
 )
 
 lib_LTLIBRARIES        = librapicorn.la
