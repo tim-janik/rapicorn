@@ -23,47 +23,47 @@
 #if BIRNET_SIG_NAME(900) == 9003
 
 
-/* --- Closures with emitter --- */
+/* --- Handlers with emitter --- */
 template<typename R0, class Emitter, typename A1, typename A2, typename A3>
-struct ClosureE3 : ClosureBase {
-  ClosureE3 () : ClosureBase () {}
+struct HandlerE3 : HandlerBase {
+  HandlerE3 () : HandlerBase () {}
   virtual R0 operator() (Emitter &emitter, A1 a1, A2 a2, A3 a3) = 0;
 };
 template<typename R0, class Emitter, typename A1, typename A2, typename A3>
-struct ClosureEF3 : ClosureE3 <R0, Emitter, A1, A2, A3> {
+struct HandlerEF3 : HandlerE3 <R0, Emitter, A1, A2, A3> {
   typedef R0 (*Callback) (Emitter&, A1, A2, A3);
-  ClosureEF3 (Callback c) : callback (c) {}
+  HandlerEF3 (Callback c) : callback (c) {}
   virtual R0 operator() (Emitter &emitter, A1 a1, A2 a2, A3 a3)
   { return callback (emitter, a1, a2, a3); }
 protected:
   Callback callback;
 private:
-  ~ClosureEF3() {}
+  ~HandlerEF3() {}
   friend void FIXME_dummy_friend_for_gcc33();
 };
 template<class Class, typename R0, class Emitter, typename A1, typename A2, typename A3>
-struct ClosureEM3 : ClosureE3 <R0, Emitter, A1, A2, A3> {
+struct HandlerEM3 : HandlerE3 <R0, Emitter, A1, A2, A3> {
   typedef R0 (Class::*Method) (Emitter&, A1, A2, A3);
-  ClosureEM3 (Class &obj, Method m) : instance (&obj), method (m) {}
+  HandlerEM3 (Class &obj, Method m) : instance (&obj), method (m) {}
   virtual R0 operator() (Emitter &emitter, A1 a1, A2 a2, A3 a3)
   { return (instance->*method) (emitter, a1, a2, a3); }
 protected:
   Class *instance;
   Method method;
 private:
-  ~ClosureEM3() {}
+  ~HandlerEM3() {}
   friend void FIXME_dummy_friend_for_gcc33();
 };
 /* --- Slots with emitters --- */
 template<typename R0, class Emitter, typename A1, typename A2, typename A3>
-struct SlotE3 : SlotBase <ClosureE3 <R0, Emitter, A1, A2, A3> > {
-  typedef ClosureE3 <R0, Emitter, A1, A2, A3>  Closure;
+struct SlotE3 : SlotBase <HandlerE3 <R0, Emitter, A1, A2, A3> > {
+  typedef HandlerE3 <R0, Emitter, A1, A2, A3>  Handler;
   SlotE3 (R0 (*callback) (Emitter&, A1, A2, A3)) :
-    SlotBase<Closure> (new ClosureEF3 <R0, Emitter, A1, A2, A3> (callback))
+    SlotBase<Handler> (new HandlerEF3 <R0, Emitter, A1, A2, A3> (callback))
   {}
   template<class Class>
   SlotE3 (Class &instance, R0 (Class::*method) (Emitter&, A1, A2, A3)) :
-    SlotBase<Closure> (new ClosureEM3 <Class, R0, Emitter, A1, A2, A3> (instance, method))
+    SlotBase<Handler> (new HandlerEM3 <Class, R0, Emitter, A1, A2, A3> (instance, method))
   {}
 };
 /* function slot constructor */
@@ -77,10 +77,10 @@ slot (Class &obj, R0 (Class::*method) (Emitter&, A1, A2, A3))
 
 /* --- SignalEmittable3 --- */
 template<class Emitter, typename R0, typename A1, typename A2, typename A3, template<typename> class Accu>
-struct SignalEmittable3 : SignalBase< ClosureE3<R0, Emitter, A1, A2, A3> >
+struct SignalEmittable3 : SignalBase< HandlerE3<R0, Emitter, A1, A2, A3> >
 {
-  typedef ClosureE3<R0, Emitter, A1, A2, A3> Closure;
-  typedef SignalBase<Closure>                SignalBase;
+  typedef HandlerE3<R0, Emitter, A1, A2, A3> Handler;
+  typedef SignalBase<Handler>                SignalBase;
   typedef typename SignalBase::Iterator      Iterator;
   inline R0 emit (A1 a1, A2 a2, A3 a3)
   {
@@ -88,7 +88,7 @@ struct SignalEmittable3 : SignalBase< ClosureE3<R0, Emitter, A1, A2, A3> >
       this->referencable->ref();
     R0 result = R0();    // default initialization
     accu.init (result);  // custom setup
-    for (Iterator it = this->closures.begin(); it != this->closures.end(); it++)
+    for (Iterator it = this->handlers.begin(); it != this->handlers.end(); it++)
       if (!accu.collect (result, (*it)->operator() (*(Emitter*) 0, a1, a2, a3))) // FIXME
         break;
     if (this->referencable)
@@ -103,16 +103,16 @@ private:
 };
 /* SignalEmittable3 for void returns */
 template<class Emitter, typename A1, typename A2, typename A3, template<typename> class Accu>
-struct SignalEmittable3<Emitter, void, A1, A2, A3, Accu> : SignalBase< ClosureE3<void, Emitter, A1, A2, A3> >
+struct SignalEmittable3<Emitter, void, A1, A2, A3, Accu> : SignalBase< HandlerE3<void, Emitter, A1, A2, A3> >
 {
-  typedef ClosureE3<void, Emitter, A1, A2, A3> Closure;
-  typedef SignalBase<Closure>                  SignalBase;
+  typedef HandlerE3<void, Emitter, A1, A2, A3> Handler;
+  typedef SignalBase<Handler>                  SignalBase;
   typedef typename SignalBase::Iterator        Iterator;
   inline void emit (A1 a1, A2 a2, A3 a3)
   {
     if (this->referencable)
       this->referencable->ref();
-    for (Iterator it = this->closures.begin(); it != this->closures.end(); it++)
+    for (Iterator it = this->handlers.begin(); it != this->handlers.end(); it++)
       (*it)->operator() (*(Emitter*) 0, a1, a2, a3);
     if (this->referencable)
       this->referencable->unref();
@@ -127,9 +127,9 @@ struct SignalEmittable3<Emitter, void, A1, A2, A3, Accu> : SignalBase< ClosureE3
 template<class Emitter, typename R0, typename A1, typename A2, typename A3, template<typename> class Accu = AccumulatorLast>
 struct Signal3 : SignalEmittable3<Emitter, R0, A1, A2, A3, Accu>
 {
-  typedef ClosureE3<R0, Emitter, A1, A2, A3>               Closure;
+  typedef HandlerE3<R0, Emitter, A1, A2, A3>               Handler;
   typedef SlotE3<R0, Emitter, A1, A2, A3>                  Slot;
-  typedef SignalBase<Closure>                              SignalBase;
+  typedef SignalBase<Handler>                              SignalBase;
   typedef typename SignalBase::Iterator                    Iterator;
   typedef SignalEmittable3<Emitter, R0, A1, A2, A3, Accu>  SignalEmittable;
   explicit Signal3 (Emitter &referencable) :
@@ -140,19 +140,19 @@ struct Signal3 : SignalEmittable3<Emitter, R0, A1, A2, A3, Accu>
     SignalEmittable (new ReferencableWrapper<Emitter> (referencable))
   {
     assert (&referencable != NULL);
-    connect_closure (new ClosureEM3 <Class, R0, Emitter, A1, A2, A3> (referencable, method));
+    connect_handler (new HandlerEM3 <Class, R0, Emitter, A1, A2, A3> (referencable, method));
   }
-  inline void connect (Closure *c)      { connect_closure (c); }
-  inline void connect (const Slot &s)   { connect_closure (s.get_closure()); }
+  inline void connect (Handler *c)      { connect_handler (c); }
+  inline void connect (const Slot &s)   { connect_handler (s.get_handler()); }
   template<class Class>
   inline void connect (Class   *obj, R0 (Class::*method) (Emitter&, A1, A2, A3))
   {
-    connect_closure (new ClosureEM3 <Class, R0, Emitter, A1, A2, A3> (obj, method));
+    connect_handler (new HandlerEM3 <Class, R0, Emitter, A1, A2, A3> (obj, method));
     connect (SlotE3<R0, Emitter, A1, A2, A3> (obj, method)); // FIXME: remove
   }
   typedef R0  (*Callback) (Emitter&, A1, A2, A3);
-  Signal3&      operator+= (Closure *c)         { connect_closure (c); return *this; }
-  Signal3&      operator+= (const Slot &s)      { connect_closure (s.get_closure()); return *this; }
+  Signal3&      operator+= (Handler *c)         { connect_handler (c); return *this; }
+  Signal3&      operator+= (const Slot &s)      { connect_handler (s.get_handler()); return *this; }
   Signal3&      operator+= (const Callback c)   { connect (c); return *this; }
 };
 

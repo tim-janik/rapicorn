@@ -22,20 +22,21 @@
 #include <rapicorn/birnetutils.hh>
 
 namespace Birnet {
+namespace Signal {
 
-/* --- ClosureBase --- */
-struct ClosureBase : virtual public ReferenceCountImpl {
-  explicit ClosureBase ()
+/* --- HandlerBase --- */
+struct HandlerBase : virtual public ReferenceCountImpl {
+  explicit HandlerBase ()
   {}
 };
 
 /* --- SlotBase --- */
-template <typename Closure>
+template <typename Handler>
 class SlotBase {
 protected:
-  Closure *c;
+  Handler *c;
   void
-  set_closure (Closure *cl)
+  set_handler (Handler *cl)
   {
     if (cl)
       cl->ref_sink();
@@ -44,20 +45,20 @@ protected:
     c = cl;
   }
 public:
-  SlotBase (Closure *closure) :
+  SlotBase (Handler *handler) :
     c (NULL)
-  { set_closure (closure); }
+  { set_handler (handler); }
   SlotBase (const SlotBase &src) :
     c (NULL)
   { *this = src; }
   SlotBase&
   operator= (const SlotBase &src)
   {
-    set_closure (src.c);
+    set_handler (src.c);
     return *this;
   }
-  Closure*
-  get_closure() const
+  Handler*
+  get_handler() const
   { return c; }
 };
 
@@ -82,16 +83,16 @@ public:
 };
 
 /* --- SignalBase --- */
-template<typename Closure>
+template<typename Handler>
 class SignalBase {
 protected:
-  vector<Closure*> closures;
-  typedef typename vector<Closure*>::iterator Iterator;
+  vector<Handler*> handlers;
+  typedef typename vector<Handler*>::iterator Iterator;
   void
-  connect_closure (Closure *closure)
+  connect_handler (Handler *handler)
   {
-    closure->ref_sink();
-    closures.push_back (closure);
+    handler->ref_sink();
+    handlers.push_back (handler);
   }
 public:
   explicit SignalBase (ReferencableBase *rbase) :
@@ -144,7 +145,7 @@ struct AccumulatorSum {
   }
 };
 
-/* --- Closure + Slot + Signal generation --- */
+/* --- Handler + Slot + Signal generation --- */
 #define BIRNET_SIG_MATCH(x)             (x >= 0 && x <= 16)
 #define BIRNET_SIG_ARG_TYPENAME(x)      typename A##x
 #define BIRNET_SIG_ARG_c_TYPENAME(x)    , typename A##x
@@ -165,6 +166,7 @@ struct AccumulatorSum {
 #undef BIRNET_SIG_ARG_TYPED_VAR
 #undef BIRNET_SIG_ARG_c_TYPED_VAR
 
+} // Signal
 } // Birnet
 
 #endif  /* __BIRNET_SIGNAL_HH__ */

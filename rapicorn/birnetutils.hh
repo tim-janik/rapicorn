@@ -796,5 +796,10 @@ binary_lookup (RandIter  begin,
 
 /* --- signals --- */
 #include <rapicorn/birnetsignal.hh>
+/* import Signal:: symbols */
+namespace Birnet {
+using Signal::Signal3;
+using Signal::slot;
+} // Birnet
 
 #endif  /* __BIRNET_UTILS_HH__ */
