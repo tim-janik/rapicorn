@@ -2,17 +2,19 @@
 # Copyright (C) 2005 Tim Janik
 
 srcdir          = .
-INCLUDES  	= -I$(srcdir) # $(top_builddir)/rapicorn -I$(srcdir)/cairo
+INCLUDES  	= -I$(top_srcdir) # $(top_builddir)/rapicorn -I$(srcdir)/cairo
 GLIB_MKENUMS    = glib-mkenums
 LDLIBS	       += $(LIBS)
-DEFINES		= -DBIRNET_PRIVATE
+DEFS		= -DRAPICORN_PRIVATE
 
 rapicorn_public_headers = $(strip 	\
 	rapicorn.hh 			\
 	birnetutils.hh			\
+	enumdefs.hh			\
 )
 rapicorn_cc_sources = $(strip 		\
 	birnetutils.cc			\
+	enumdefs.cc			\
 )
 rapicorn_private_headers = $(strip 	\
 )
@@ -40,7 +42,7 @@ stamp-xmllint: $(XML_FILES)
 	touch $@
 $(lib_LTLIBRARIES): stamp-xmllint
 
-enumdefs.o enumdefs.lo: gen-enums.cc
+enumdefs.cc: gen-enums.cc
 gen-enums.cc: enumdefs.hh Makefile
 	cd . \
 	&& ( cd ${srcdir} && $(GLIB_MKENUMS) \

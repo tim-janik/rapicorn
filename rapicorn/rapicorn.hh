@@ -19,13 +19,7 @@
 #ifndef __RAPICORN_HH__
 #define __RAPICORN_HH__
 
-/* Rapicorn makes use of stuff from the Birnet namespace */
-namespace Birnet {}
-namespace Rapicorn {
-using namespace Birnet;
-} // Rapicorn
-
 /* public include files */
-#include <rapicorn/birnetutils.hh>
+#include <rapicorn/enumdefs.hh>
 
 #endif  /* __RAPICORN_HH__ */

@@ -1,3 +1,17 @@
+Sun Mar 27 01:37:22 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/enumdefs.hh, rapicorn/enumdefs.cc:
+	provide i18n funcitons and defines. define enum types:
+	FrameType, LightingType, AlignType, WrapType, EllipsizeType, 
+	StateType and ColorType. implement introspection mechanism 
+	for enums defined in enumdefs.hh (based on glib-mkenums). import
+	Birnet namespace and include private.hh for rapicorn compilation.
+
+	* rapicorn/private.hh: define convenience non-namespaced helper
+	macros for rapicorn compilation.
+
+	* rapicorn/birnetutils.hh: added min, max, clamp and abs.
+
 Sat Mar 26 19:52:48 2005  Tim Janik  <timj@gtk.org>
 
 	* tests/walker.cc: test Walker template.
