@@ -1,2 +1,9 @@
+*.lo
+*.la
+.deps
+.libs
 Makefile
 Makefile.in
+gen-enums.cc
+stamp-xmllint
+ 
