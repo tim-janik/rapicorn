@@ -1,0 +1,27 @@
+General Information
+===================
+
+This is a development version of Rapicorn.
+Rapicorn is targeted at replacing GnomeCanvas in terms of functionality,
+and to extend beyond that functionality as deemed reasonable.
+Cairo is planned to be used for rendering tasks, and Pango is intended to be
+used for text rendering until cairo implementes text rendering sufficiently.
+
+In order to build release tarballs, you need a recent version of pango.
+To be able to use recent development versions, currently libpixman
+and libcairo are included in the tarball, so no extra such libraries are
+required.
+The sources for required packages can be found at:
+
+Pango-1.8:
+	ftp://ftp.gtk.org/pub/gtk/v2.6/
+
+Preliminary web pages of the project can be found at:
+
+	http://beast.gtk.org/wiki:CanvasDesign
+
+
+Installation
+============
+
+See the file `INSTALL'.

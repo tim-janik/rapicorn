@@ -1,3 +1,7 @@
+Sat Mar 26 18:08:15 2005  Tim Janik  <timj@gtk.org>
+
+	* AUTHORS, NEWS, README: describe affairs.
+
 Sat Mar 26 17:51:28 2005  Tim Janik  <timj@gtk.org>
 
 	* TODO, Makefile.am, autogen.sh, configure.in, po-helper.sh.in :
