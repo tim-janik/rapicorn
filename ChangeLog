@@ -1,3 +1,7 @@
+Sat Mar 26 18:50:03 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/standard.xml: empty skeleton.
+
 Sat Mar 26 18:46:20 2005  Tim Janik  <timj@gtk.org>
 
 	* configure.in: detect glib, pango and libz. fixed xmllint check.
