@@ -150,6 +150,31 @@ AC_DEFUN(AC_I18N_REQUIREMENTS,
     AM_GLIB_GNU_GETTEXT
     AC_PROG_INTLTOOL
 ])
+AC_DEFUN(AC_RAPICORN_REQUIREMENTS,
+[
+    dnl --- require libz ---
+    if test -z "$LIBZ"; then
+	AC_CHECK_LIB(z, gzsetparams,
+	    [AC_CHECK_HEADER(zlib.h, LIBZ='-lz', LIBZ='')],
+	    LIBZ='')
+    fi
+    if test -z "$LIBZ"; then
+        AC_MSG_ERROR([Compression library libz is missing, but required])
+    fi
+    AC_SUBST(LIBZ)
+
+    dnl --- glib + pango ---
+    DEPENDANCIES=
+    DEPENDANCIES="$DEPENDANCIES glib-2.0 >= 2.4.11"
+    DEPENDANCIES="$DEPENDANCIES pangoft2 >= 1.8.0"
+    PKG_CHECK_MODULES(PANGO, $DEPENDANCIES) dnl define PANGO_CFLAGS and PANGO_LIBS:
+
+    RAPICORN_CFLAGS="$PANGO_CFLAGS"
+    RAPICORN_LIBS="$PANGO_LIBS $LIBZ"
+    AC_SUBST(RAPICORN_CFLAGS)
+    AC_SUBST(RAPICORN_LIBS)
+
+])
 AC_DEFUN(AC_DOC_REQUIREMENTS,
 [
 ])
@@ -182,20 +207,6 @@ MC_IF_VAR_EQ(GXX, yes,,
 
 # Figure build requirement
 AC_MSG_CHECKING(whether make is GNU Make)
-STRIP_BEGIN=
-STRIP_END=
-if $ac_make --version 2>/dev/null | grep '^GNU Make ' >/dev/null ; then
-        STRIP_BEGIN='$(strip $(STRIP_DUMMY)'
-        STRIP_END=')'
-        AC_MSG_RESULT(yes)
-else
-        AC_MSG_RESULT(no)
-fi
-dnl some Make 3.79 $(strip ) versions are broken and require an empty arg
-STRIP_DUMMY=
-AC_SUBST(STRIP_DUMMY)
-AC_SUBST(STRIP_BEGIN)
-AC_SUBST(STRIP_END)
 
 # require pkg-config
 MC_ASSERT_PROG(PKG_CONFIG, pkg-config, [pkg-config can be found at http://www.freedesktop.org/software/pkgconfig/])
@@ -217,10 +228,7 @@ if test x"$enable_devel_rules" = xyes ; then
     if test -z "$PERL" || $PERL -e 'exit !($] < 5.002)' > /dev/null ; then
 	AC_MSG_ERROR([failed to detect correct perl version (>= 5.002)])
     fi
-    AC_CHECK_PROGS(XMLLINT, xmllint)
-    if test -z "$XMLLINT" ; then
-	AC_MSG_ERROR([failed to find xmllint, which is required for development builds of Rapicorn])
-    fi
+    AC_CHECK_PROGS(XMLLINT, xmllint, true)
     DVLBUILD=""
     NOTDVLBUILD=#
 else
@@ -238,6 +246,7 @@ AC_PATH_PROG(UPDATE_MIME_DATABASE, update-mime-database)
 
 # Check requirement sets
 AC_I18N_REQUIREMENTS
+AC_RAPICORN_REQUIREMENTS
 AC_DOC_REQUIREMENTS
 
 # Automake @VARIABLE@ exports.

@@ -1,3 +1,9 @@
+Sat Mar 26 18:46:20 2005  Tim Janik  <timj@gtk.org>
+
+	* configure.in: detect glib, pango and libz. fixed xmllint check.
+
+	* rapicorn/Makefile.am: basic build rules.
+
 Sat Mar 26 18:08:15 2005  Tim Janik  <timj@gtk.org>
 
 	* AUTHORS, NEWS, README: describe affairs.
