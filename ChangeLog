@@ -1,3 +1,28 @@
+Tue Mar 29 17:00:08 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/birnetsignal.hh, rapicorn/birnetsignal.cc: namespace change
+	to namespace Signals. added EmissionBase, extended SignalBase to
+	maintain a signal handler list as ring data structure. removed
+	accumulators, added Collectors, added Signature template to extract the
+	return type of a function type for functions with up to 16 arguments.
+	include birnetsignalvariants.hh to define all signal variants. 
+
+	* rapicorn/birnetsignaltemplate.hh: implement signal with emission and
+	handlers etc, for exactly 3 signal arguments. 
+
+	* rapicorn/mksignals.sh: generate signal variants for 0..16 signal 
+	arguments from birnetsignaltemplate.hh.
+
+	* rapicorn/birnetsignaldefs.hh, rapicorn/birnetsignalinc.hh: removed.
+
+	* rapicorn/private.hh: renamed PRIVATE_CLASS_COPY().
+	* rapicorn/birnetutils.hh: renamed BIRNET_PRIVATE_CLASS_COPY().
+
+	* rapicorn/Makefile.am: generate birnetsignalvariants.hh.
+
+	* tests/signal.cc: test signal variants for 0..16 arguments with void
+	and other return types. 
+
 Mon Mar 28 10:12:34 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/birnetsignal.hh, rapicorn/birnetsignaldefs.hh:

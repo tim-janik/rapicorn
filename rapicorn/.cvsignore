@@ -4,6 +4,6 @@
 .libs
 Makefile
 Makefile.in
+birnetsignalvariants.hh
 gen-enums.cc
 stamp-xmllint
- 

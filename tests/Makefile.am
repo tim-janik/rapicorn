@@ -13,7 +13,7 @@ signal_LDADD = $(programs_ldadd)
 primitives_SOURCES = primitives.cc
 primitives_LDADD = $(programs_ldadd)
 # test programs:
-TESTS = walker signal primitives
+TESTS = signal walker primitives
 programs_ldadd = $(top_builddir)/rapicorn/librapicorn.la
 
 # build tests

@@ -155,9 +155,99 @@ public:
 };
 #endif
 
+struct EmitterMany {
+  Signal<EmitterMany, void ()> sig_void_0;
+  Signal<EmitterMany, void (int   )> sig_void_1;
+  Signal<EmitterMany, void (int   , double)> sig_void_2;
+  Signal<EmitterMany, void (int   , double, int   )> sig_void_3;
+  Signal<EmitterMany, void (int   , double, int   , double)> sig_void_4;
+  Signal<EmitterMany, void (int   , double, int   , double, int   )> sig_void_5;
+  Signal<EmitterMany, void (double, int   , double, int   , double, int   )> sig_void_6;
+  Signal<EmitterMany, void (int   , double, int   , double, int   , double, int   )> sig_void_7;
+  Signal<EmitterMany, void (double, int   , double, int   , double, int   , double, int   )> sig_void_8;
+  Signal<EmitterMany, void (int   , double, int   , double, int   , double, int   , double, int   )> sig_void_9;
+  Signal<EmitterMany, void (double, int   , double, int   , double, int   , double, int   , double, int   )> sig_void_10;
+  Signal<EmitterMany, void (int   , float , int   , float , int   , float , int   , float , int   , float , int   )> sig_void_11;
+  Signal<EmitterMany, void (int   , char  , int   , char  , int   , char  , int   , char  , int   , char  , int   , char  )> sig_void_12;
+  Signal<EmitterMany, void (short , int   , short , int   , short , int   , short , int   , short , int   , short , int   , short )> sig_void_13;
+  Signal<EmitterMany, void (int   , double, int   , double, int   , double, int   , double, int   , double, int   , double, int   , double)> sig_void_14;
+  Signal<EmitterMany, void (double, int   , double, int   , double, int   , double, int   , double, int   , double, int   , double, int   , double)> sig_void_15;
+  Signal<EmitterMany, void (int   , double, short , uint  , float , char  , uint8 , long  , int64 , char  , uint  , float , char  , double, uint64, short )> sig_void_16;
+  Signal<EmitterMany, String ()> sig_string_0;
+  Signal<EmitterMany, String (int   )> sig_string_1;
+  Signal<EmitterMany, String (int   , double)> sig_string_2;
+  Signal<EmitterMany, String (int   , double, int   )> sig_string_3;
+  Signal<EmitterMany, String (int   , double, int   , double)> sig_string_4;
+  Signal<EmitterMany, String (int   , double, int   , double, int   )> sig_string_5;
+  Signal<EmitterMany, String (double, int   , double, int   , double, int   )> sig_string_6;
+  Signal<EmitterMany, String (int   , double, int   , double, int   , double, int   )> sig_string_7;
+  Signal<EmitterMany, String (double, int   , double, int   , double, int   , double, int   )> sig_string_8;
+  Signal<EmitterMany, String (int   , double, int   , double, int   , double, int   , double, int   )> sig_string_9;
+  Signal<EmitterMany, String (double, int   , double, int   , double, int   , double, int   , double, int   )> sig_string_10;
+  Signal<EmitterMany, String (int   , float , int   , float , int   , float , int   , float , int   , float , int   )> sig_string_11;
+  Signal<EmitterMany, String (int   , char  , int   , char  , int   , char  , int   , char  , int   , char  , int   , char  )> sig_string_12;
+  Signal<EmitterMany, String (short , int   , short , int   , short , int   , short , int   , short , int   , short , int   , short )> sig_string_13;
+  Signal<EmitterMany, String (int   , double, int   , double, int   , double, int   , double, int   , double, int   , double, int   , double)> sig_string_14;
+  Signal<EmitterMany, String (double, int   , double, int   , double, int   , double, int   , double, int   , double, int   , double, int   , double)> sig_string_15;
+  Signal<EmitterMany, String (int   , double, short , uint  , float , char  , uint8 , long  , int64 , char  , uint  , float , char  , double, uint64, short )> sig_string_16;
+  EmitterMany() :
+    sig_void_0 (*this), sig_void_1 (*this), sig_void_2 (*this), sig_void_3 (*this),
+    sig_void_4 (*this), sig_void_5 (*this), sig_void_6 (*this), sig_void_7 (*this),
+    sig_void_8 (*this), sig_void_9 (*this), sig_void_10 (*this), sig_void_11 (*this),
+    sig_void_12 (*this), sig_void_13 (*this), sig_void_14 (*this), sig_void_15 (*this), sig_void_16 (*this),
+    sig_string_0 (*this), sig_string_1 (*this), sig_string_2 (*this), sig_string_3 (*this),
+    sig_string_4 (*this), sig_string_5 (*this), sig_string_6 (*this), sig_string_7 (*this),
+    sig_string_8 (*this), sig_string_9 (*this), sig_string_10 (*this), sig_string_11 (*this),
+    sig_string_12 (*this), sig_string_13 (*this), sig_string_14 (*this), sig_string_15 (*this), sig_string_16 (*this)
+  {}
+  void testme ()
+  {
+    sig_void_0.emit ();
+    sig_void_1.emit (1);
+    sig_void_2.emit (1, 2);
+    sig_void_3.emit (1, 2, 3);
+    sig_void_4.emit (1, 2, 3, 4);
+    sig_void_5.emit (1, 2, 3, 4, 5);
+    sig_void_6.emit (1, 2, 3, 4, 5, 6);
+    sig_void_7.emit (1, 2, 3, 4, 5, 6, 7);
+    sig_void_8.emit (1, 2, 3, 4, 5, 6, 7, 8);
+    sig_void_9.emit (1, 2, 3, 4, 5, 6, 7, 8, 9);
+    sig_void_10.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+    sig_void_11.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
+    sig_void_12.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
+    sig_void_13.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
+    sig_void_14.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14);
+    sig_void_15.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+    sig_void_16.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+    String results;
+    results += sig_string_0.emit ();
+    results += sig_string_1.emit (1);
+    results += sig_string_2.emit (1, 2);
+    results += sig_string_3.emit (1, 2, 3);
+    results += sig_string_4.emit (1, 2, 3, 4);
+    results += sig_string_5.emit (1, 2, 3, 4, 5);
+    results += sig_string_6.emit (1, 2, 3, 4, 5, 6);
+    results += sig_string_7.emit (1, 2, 3, 4, 5, 6, 7);
+    results += sig_string_8.emit (1, 2, 3, 4, 5, 6, 7, 8);
+    results += sig_string_9.emit (1, 2, 3, 4, 5, 6, 7, 8, 9);
+    results += sig_string_10.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+    results += sig_string_11.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
+    results += sig_string_12.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
+    results += sig_string_13.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
+    results += sig_string_14.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14);
+    results += sig_string_15.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+    results += sig_string_16.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+    printf ("32 signals emitted: %s\n", results.c_str());
+  }
+  void ref()   {}
+  void unref() {}
+};
+
 struct Emitter3 {
-  Signal3<Emitter3, String, int, String, float> sig_mixed;
-  Signal3<Emitter3, void,   int, String, float> sig_void_mixed;
+  // Signal3<Emitter3, String, int, String, float, Signal::CollectorSum<String> > sig_mixed;
+  Signal<Emitter3, String (int, String, float), Signals::CollectorSum<String> > sig_mixed;
+  // Signal3<Emitter3, void,   int, String, float> sig_void_mixed;
+  Signal<Emitter3, void (int, String, float)> sig_void_mixed;
   Emitter3() : sig_mixed (*this), sig_void_mixed (*this) {}
   void
   test_emissions()
@@ -166,7 +256,7 @@ struct Emitter3 {
     String s = sig_mixed.emit (7, "seven.seven", 7.7);
     printf ("Emitter3: result=%s\n", s.c_str());
     printf ("Emitter3.emit() (void)\n");
-    sig_mixed.emit (3, "three.three", 3.3);
+    sig_void_mixed.emit (3, "three.three", 3.3);
     printf ("Emitter3: done.\n");
   }
   void ref() {}
@@ -174,14 +264,33 @@ struct Emitter3 {
 };
 
 struct Connection3 {
+  static String mixed_efunc      (Emitter3 &obj, int i, String s, float f)
+  {
+    assert (i == 7 && s == "seven.seven" && f == (float) 7.7);
+    printf ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
+    return "mixed_efunc";
+  }
+  static void   void_mixed_efunc (Emitter3 &obj, int i, String s, float f)
+  {
+    assert (i == 3 && s == "three.three" && f == (float) 3.3);
+    printf ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
+  }
   String string_emitter_callback (Emitter3 &emitter, int i, String s, float f)
   {
-    printf ("Connection3: %d %s %f\n", i, s.c_str(), f);
+    printf ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
     return "Connection3";
   }
   void void_emitter_callback (Emitter3 &emitter, int i, String s, float f)
   {
-    printf ("Connection3: %d %s %f\n", i, s.c_str(), f);
+    printf ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
+  }
+  void test_signal (Emitter3 &e3)
+  {
+    e3.sig_mixed += mixed_efunc;
+    e3.sig_mixed += slot (*this, &Connection3::string_emitter_callback);
+    e3.sig_void_mixed += void_mixed_efunc;
+    e3.sig_void_mixed += slot (*this, &Connection3::void_emitter_callback);
+    e3.test_emissions();
   }
 };
 
@@ -194,11 +303,11 @@ main (int   argc,
   signal_test.basic_signal_tests();
   signal_test.member_pointer_tests();
 #endif
-  Emitter3 e3;
   Connection3 c3;
-  e3.sig_mixed += slot (c3, &Connection3::string_emitter_callback);
-  e3.sig_void_mixed += slot (c3, &Connection3::void_emitter_callback);
-  e3.test_emissions();
+  Emitter3 e3;
+  c3.test_signal (e3);
+  EmitterMany many;
+  many.testme();
   return 0;
 }
 

@@ -2,7 +2,7 @@
 # Copyright (C) 2005 Tim Janik
 
 srcdir          = .
-INCLUDES  	= -I$(top_srcdir) # $(top_builddir)/rapicorn -I$(srcdir)/cairo
+INCLUDES  	= -I$(top_srcdir) -I$(top_builddir) # -I$(srcdir)/cairo
 GLIB_MKENUMS    = glib-mkenums
 LDLIBS	       += $(LIBS)
 DEFS		= -DRAPICORN_PRIVATE
@@ -11,8 +11,7 @@ rapicorn_public_headers = $(strip 	\
 	rapicorn.hh keycodes.hh		\
 	birnetutils.hh			\
 	birnetsignal.hh			\
-	birnetsignalinc.hh		\
-	birnetsignaldefs.hh		\
+	birnetsignalvariants.hh		\
 	enumdefs.hh			\
 	primitives.hh			\
 	appearance.hh			\
@@ -27,6 +26,10 @@ rapicorn_cc_sources = $(strip 		\
 )
 rapicorn_private_headers = $(strip 	\
 	private.hh			\
+	birnetsignaltemplate.hh		\
+)
+rapicorn_extra_sources = $(strip 	\
+	mksignals.sh			\
 )
 
 lib_LTLIBRARIES        = librapicorn.la
@@ -41,7 +44,7 @@ librapicorn_la_LDFLAGS = $(strip 				\
 	-release $(LT_RELEASE) 					\
 	-export-dynamic -no-undefined 				\
 ) # set libtool version and export symbols for resolving
-EXTRA_DIST            += $(rapicorn_private_headers)
+EXTRA_DIST            += $(rapicorn_private_headers) $(rapicorn_extra_sources)
 
 XML_FILES = $(strip standard.xml )
 
@@ -51,6 +54,16 @@ stamp-xmllint: $(XML_FILES)
 	&& $(XMLLINT) --noout $(XML_FILES)
 	touch $@
 $(lib_LTLIBRARIES): stamp-xmllint
+
+birnetutils.cc: birnetutils.hh birnetsignal.hh birnetsignalvariants.hh
+birnetsignalvariants.hh: birnetsignaltemplate.hh $(srcdir)/mksignals.sh
+	cd . \
+	&& echo "/* Signal Variants -- Generated file, don't edit. (make $@ from $<) */" > xgen-sigs \
+	&& echo >> xgen-sigs \
+	&& $(srcdir)/mksignals.sh $< >>xgen-sigs \
+	&& cp xgen-sigs $@ \
+	&& rm -f xgen-sigs
+CLEANFILES += xgen-sigs birnetsignalvariants.hh xgen-signals.sed
 
 enumdefs.cc: gen-enums.cc
 gen-enums.cc: enumdefs.hh Makefile

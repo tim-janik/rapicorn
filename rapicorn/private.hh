@@ -58,7 +58,7 @@ namespace Rapicorn {
 #undef assert
 #define assert(e)                       BIRNET_ASSERT(e)
 #define MakeProperty                    BIRNET_MakeProperty
-#define DISABLE_CLASS_COPY(C)           BIRNET_DISABLE_CLASS_COPY(C)
+#define PRIVATE_CLASS_COPY(C)           BIRNET_PRIVATE_CLASS_COPY(C)
 
 } // Rapicorn
 

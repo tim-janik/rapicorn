@@ -96,7 +96,7 @@ using std::map;
 #endif
 
 /* --- helper macros --- */
-#define BIRNET_DISABLE_CLASS_COPY(Class)       private: Class (const Class&); Class& operator= (const Class&);
+#define BIRNET_PRIVATE_CLASS_COPY(Class)       private: Class (const Class&); Class& operator= (const Class&);
 
 /* --- common utilities --- */
 using ::std::swap;
@@ -796,10 +796,5 @@ binary_lookup (RandIter  begin,
 
 /* --- signals --- */
 #include <rapicorn/birnetsignal.hh>
-/* import Signal:: symbols */
-namespace Birnet {
-using Signal::Signal3;
-using Signal::slot;
-} // Birnet
 
 #endif  /* __BIRNET_UTILS_HH__ */
