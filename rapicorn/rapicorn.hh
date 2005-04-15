@@ -26,5 +26,8 @@
 #include <rapicorn/events.hh>
 #include <rapicorn/appearance.hh>
 #include <rapicorn/properties.hh>
+#include <rapicorn/item.hh>
+#include <rapicorn/container.hh>
+#include <rapicorn/table.hh>
                       
 #endif  /* __RAPICORN_HH__ */

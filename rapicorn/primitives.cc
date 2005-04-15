@@ -293,4 +293,59 @@ Plane::combine (const Plane &src, CombineType ct)
     }
 }
 
+Affine
+Affine::from_triangles (Point src_a, Point src_b, Point src_c,
+                        Point dst_a, Point dst_b, Point dst_c)
+{
+  const double Ax = src_a.x, Ay = src_a.y;
+  const double Bx = src_b.x, By = src_b.y;
+  const double Cx = src_c.x, Cy = src_c.y;
+  const double ax = dst_a.x, ay = dst_a.y;
+  const double bx = dst_b.x, by = dst_b.y;
+  const double cx = dst_c.x, cy = dst_c.y;
+  
+  /* solve the linear equation system:
+   *   ax = Ax * matrix.xx + Ay * matrix.xy + matrix.xz;
+   *   ay = Ax * matrix.yx + Ay * matrix.yy + matrix.yz;
+   *   bx = Bx * matrix.xx + By * matrix.xy + matrix.xz;
+   *   by = Bx * matrix.yx + By * matrix.yy + matrix.yz;
+   *   cx = Cx * matrix.xx + Cy * matrix.xy + matrix.xz;
+   *   cy = Cx * matrix.yx + Cy * matrix.yy + matrix.yz;
+   * for matrix.*
+   */
+  double AxBy = Ax * By, AyBx = Ay * Bx;
+  double AxCy = Ax * Cy, AyCx = Ay * Cx;
+  double BxCy = Bx * Cy, ByCx = By * Cx;
+  double divisor = AxBy - AyBx - AxCy + AyCx + BxCy - ByCx;
+  
+  if (fabs (divisor) < 1e-9)
+    return false;
+  
+  Affine matrix;
+  matrix.xx = By * ax - Ay * bx + Ay * cx - Cy * ax - By * cx + Cy * bx;
+  matrix.yx = By * ay - Ay * by + Ay * cy - Cy * ay - By * cy + Cy * by;
+  matrix.xy = Ax * bx - Bx * ax - Ax * cx + Cx * ax + Bx * cx - Cx * bx;
+  matrix.yy = Ax * by - Bx * ay - Ax * cy + Cx * ay + Bx * cy - Cx * by;
+  matrix.xz = AxBy * cx - AxCy * bx - AyBx * cx + AyCx * bx + BxCy * ax - ByCx * ax;
+  matrix.yz = AxBy * cy - AxCy * by - AyBx * cy + AyCx * by + BxCy * ay - ByCx * ay;
+  double rec_divisor = 1.0 / divisor;
+  matrix.xx *= rec_divisor;
+  matrix.xy *= rec_divisor;
+  matrix.xz *= rec_divisor;
+  matrix.yx *= rec_divisor;
+  matrix.yy *= rec_divisor;
+  matrix.yz *= rec_divisor;
+  
+  return true;
+}
+
+String
+Affine::string() const
+{
+  char buffer[6 * 64 + 128];
+  sprintf (buffer, "{ { %.17g, %.17g, %.17g }, { %.17g, %.17g, %.17g } }",
+           xx, xy, xz, yx, yy, yz);
+  return String (buffer);
+}
+
 } // Rapicorn

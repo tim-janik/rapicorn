@@ -531,6 +531,286 @@ public:
   }
 };
 
+/* --- Affine --- */
+class Affine {
+protected:
+  /* ( xx yx )
+   * ( xy yy )
+   * ( xz yz )
+   */
+  double xx, xy, xz, yx, yy, yz;
+public:
+  Affine (double cxx = 1,
+          double cxy = 0,
+          double cxz = 0,
+          double cyx = 0,
+          double cyy = 1,
+          double cyz = 0) :
+    xx (cxx), xy (cxy), xz (cxz),
+    yx (cyx), yy (cyy), yz (cyz)
+  {}
+  Affine&
+  translate (double tx, double ty)
+  {
+    multiply (Affine (1, 0, tx, 0, 1, ty));
+    return *this;
+  }
+  Affine&
+  translate (Point p)
+  {
+    multiply (Affine (1, 0, p.x, 0, 1, p.y));
+    return *this;
+  }
+  Affine&
+  set_translation (double tx, double ty)
+  {
+    xz = tx;
+    yz = ty;
+    return *this;
+  }
+  Affine&
+  hflip()
+  {
+    xx = -xx;
+    yx = -yx;
+    xz = -xz;
+    return *this;
+  }
+  Affine&
+  vflip()
+  {
+    xy = -xy;
+    yy = -yy;
+    yz = -yz;
+    return *this;
+  }
+  Affine&
+  rotate (double theta)
+  {
+    double s = sin (theta);
+    double c = cos (theta);
+    return multiply (Affine (c, -s, 0, s, c, 0));
+  }
+  Affine&
+  rotate (double theta, Point anchor)
+  {
+    translate (anchor.x, anchor.y);
+    rotate (theta);
+    return translate (-anchor.x, -anchor.y);
+  }
+  Affine&
+  scale (double sx, double sy)
+  {
+    xx *= sx;
+    xy *= sy;
+    yx *= sx;
+    yy *= sy;
+    return *this;
+  }
+  Affine&
+  shear (double shearx, double sheary)
+  {
+    return multiply (Affine (1, shearx, 0, sheary, 1, 0));
+  }
+  Affine&
+  shear (double theta)
+  {
+    return multiply (Affine (1, tan (theta), 0, 0, 1, 0));
+  }
+  Affine&
+  multiply (const Affine &a2)
+  {
+    Affine dst; // dst * point = this * (a2 * point)
+    dst.xx = a2.xx * xx + a2.yx * xy;
+    dst.xy = a2.xy * xx + a2.yy * xy;
+    dst.xz = a2.xz * xx + a2.yz * xy + xz;
+    dst.yx = a2.xx * yx + a2.yx * yy;
+    dst.yy = a2.xy * yx + a2.yy * yy;
+    dst.yz = a2.xz * yx + a2.yz * yy + yz;
+    return *this = dst;
+  }
+  Affine&
+  multiply_swapped (const Affine &a2)
+  {
+    Affine dst; // dst * point = a2 * (this * point)
+    dst.xx = xx * a2.xx + yx * a2.xy;
+    dst.xy = xy * a2.xx + yy * a2.xy;
+    dst.xz = xz * a2.xx + yz * a2.xy + a2.xz;
+    dst.yx = xx * a2.yx + yx * a2.yy;
+    dst.yy = xy * a2.yx + yy * a2.yy;
+    dst.yz = xz * a2.yx + yz * a2.yy + a2.yz;
+    return *this = dst;
+  }
+  Point
+  point (const Point &s) const
+  {
+    Point d;
+    d.x = xx * s.x + xy * s.y + xz;
+    d.y = yx * s.x + yy * s.y + yz;
+    return d;
+  }
+  Point point (double x, double y) const { return point (Point (x, y)); }
+  double
+  determinant() const
+  {
+    /* if this is != 0, the affine is invertible */
+    return xx * yy - xy * yx;
+  }
+  double
+  expansion() const
+  {
+    return sqrt (fabs (determinant()));
+  }
+  Affine&
+  invert()
+  {
+    double rec_det = 1.0 / determinant();
+    Affine dst (yy, -xy, 0, -yx, xx, 0);
+    dst.xx *= rec_det;
+    dst.xy *= rec_det;
+    dst.yx *= rec_det;
+    dst.yy *= rec_det;
+    dst.xz = -(dst.xx * xz + dst.xy * yz);
+    dst.yz = -(dst.yy * yz + dst.yx * xz);
+    return *this = dst;
+  }
+  Point
+  ipoint (const Point &s) const
+  {
+    double rec_det = 1.0 / determinant();
+    Point d;
+    d.x = yy * s.x - xy * s.y;
+    d.x *= rec_det;
+    d.x -= xz;
+    d.y = xx * s.y - yx * s.x;
+    d.y *= rec_det;
+    d.y -= yz;
+    return d;
+  }
+  Point ipoint (double x, double y) const { return ipoint (Point (x, y)); }
+  Point
+  operator* (const Point &p) const
+  {
+    return point (p);
+  }
+  Affine
+  operator* (const Affine &a2) const
+  {
+    return Affine (*this).multiply (a2);
+  }
+  Affine&
+  operator= (const Affine &a2)
+  {
+    xx = a2.xx;
+    xy = a2.xy;
+    xz = a2.xz;
+    yx = a2.yx;
+    yy = a2.yy;
+    yz = a2.yz;
+    return *this;
+  }
+  bool
+  is_identity () const
+  {
+    return xx == 1 && xy == 0 && xz == 0 && yx == 0 && yy == 1 && yz == 0;
+  }
+  Affine
+  create_inverse () const
+  {
+    Affine inv (*this);
+    return inv.invert();
+  }
+  String        string() const;
+  static Affine from_triangles (Point src_a, Point src_b, Point src_c,
+                                Point dst_a, Point dst_b, Point dst_c);
+  struct VectorReturn { double x, y, z; };
+  VectorReturn x() const { VectorReturn v = { xx, xy, xz }; return v; }
+  VectorReturn y() const { VectorReturn v = { yx, yy, yz }; return v; }
+};
+struct AffineIdentity : Affine {
+  AffineIdentity() :
+    Affine (1, 0, 0, 0, 1, 0)
+  {}
+};
+struct AffineHFlip : Affine {
+  AffineHFlip() :
+    Affine (-1, 0, 0, 0, 1, 0)
+  {}
+};
+struct AffineVFlip : Affine {
+  AffineVFlip() :
+    Affine (1, 0, 0, 0, -1, 0)
+  {}
+};
+struct AffineTranslate : Affine {
+  AffineTranslate (double tx, double ty)
+  {
+    xx = 1;
+    xy = 0;
+    xz = tx;
+    yx = 0;
+    yy = 1;
+    yz = ty;
+  }
+  AffineTranslate (Point p)
+  {
+    xx = 1;
+    xy = 0;
+    xz = p.x;
+    yx = 0;
+    yy = 1;
+    yz = p.y;
+  }
+};
+struct AffineScale : Affine {
+  AffineScale (double sx, double sy)
+  {
+    xx = sx;
+    xy = 0;
+    xz = 0;
+    yx = 0;
+    yy = sy;
+    yz = 0;
+  }
+};
+struct AffineRotate : Affine {
+  AffineRotate (double theta)
+  {
+    double s = sin (theta);
+    double c = cos (theta);
+    xx = c;
+    xy = -s;
+    xz = 0;
+    yx = s;
+    yy = c;
+    yz = 0;
+  }
+  AffineRotate (double theta, Point anchor)
+  {
+    rotate (theta, anchor);
+  }    
+};
+struct AffineShear : Affine {
+  AffineShear (double shearx, double sheary)
+  {
+    xx = 1;
+    xy = shearx;
+    xz = 0;
+    yx = sheary;
+    yy = 1;
+    yz = 0;
+  }
+  AffineShear (double theta)
+  {
+    xx = 1;
+    xy = tan (theta);
+    xz = 0;
+    yx = 0;
+    yy = 1;
+    yz = 0;
+  }
+};
+
 } // Rapicorn
 
 #endif  /* __RAPICORN_PRIMITIVES_HH__ */
