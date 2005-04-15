@@ -345,6 +345,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
+  printf ("TEST: %s:\n", basename (argv[0]));
 #if 0
   SignalTest signal_test;
   signal_test.basic_signal_tests();

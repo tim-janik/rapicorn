@@ -1,28 +1,38 @@
+Fri Apr 15 17:38:52 2005  Tim Janik  <timj@gtk.org>
+
+	* tests/Makefile.am: compile tests with -DRAPICORN_PRIVATE to enable
+	a few convenience macros.
+
+	* tests/datalist.cc: test datalist implementation.
+
+	* rapicorn/item.cc: removed unused test code.
+
 Fri Apr 15 17:13:02 2005  Tim Janik  <timj@gtk.org>
 
-	* table.hh, table.cc, tableimpl.hh: define Table interface, implement
-	TableImpl, a very versatile container type, based on GtkTable of GTK+.
+	* rapicorn/table.hh, rapicorn/table.cc, rapicorn/tableimpl.hh:
+	define Table interface, implement TableImpl, a very versatile 
+	container type, based on GtkTable of GTK+.
 
-	* container.hh, container.cc, containerimpl.hh: define the most basic
-	Container API. define Root widget API. implement SingleContainerImpl
-	and MultiContainerImpl, implement RootImpl.
+	* rapicorn/container.hh, rapicorn/container.cc, rapicorn/containerimpl.hh:
+	define the most basic Container API. define Root widget API. implement
+	SingleContainerImpl and MultiContainerImpl, implement RootImpl.
 
-	* item.hh, item.cc, itemimpl.hh: define API of the most basic 
-	graphically visible instance, an Item. provide sample implementation
-	ItemImpl.
+	* rapicorn/item.hh, rapicorn/item.cc, rapicorn/itemimpl.hh:
+	define API of the most basic graphically visible instance, an Item.
+	provide sample implementation ItemImpl.
 
-	* primitives.hh, primitives.cc: implemented Affine transformations
-	as class type. 
+	* rapicorn/primitives.hh, rapicorn/primitives.cc: implemented Affine
+	transformations as class type. 
 
-	* factory.hh, factory.cc: implement factory logic to register item 
-	types and create item instances. added gadget parser (XML based item
-	tree descriptions) so item definitions can be read in and created
-	from XML definitions.
+	* rapicorn/factory.hh, rapicorn/factory.cc: implement factory logic to
+	register item types and create item instances. added gadget parser
+	(XML based item tree descriptions) so item definitions can be read in
+	and created from XML definitions.
 
-	* birnetmarkup.hh, birnetmarkup.cc: added simple XML markup parser,
-	based on GMarklup from GLib.
+	* rapicorn/birnetmarkup.hh, rapicorn/birnetmarkup.cc: added simple 
+	XML markup parser, based on GMarklup from GLib.
 
-	* private.hh: define MakeProperty() internally.
+	* rapicorn/private.hh: define MakeProperty() internally.
 
 Thu Mar 31 16:18:20 2005  Tim Janik  <timj@gtk.org>
 

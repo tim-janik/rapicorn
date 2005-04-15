@@ -54,6 +54,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
+  printf ("TEST: %s:\n", basename (argv[0]));
   color_test();
   return 0;
 }
