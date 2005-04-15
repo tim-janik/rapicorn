@@ -1,3 +1,7 @@
+Fri Apr 15 18:06:41 2005  Tim Janik  <timj@gtk.org>
+
+	* tests/markup.cc: test markup parser. 
+
 Fri Apr 15 17:38:52 2005  Tim Janik  <timj@gtk.org>
 
 	* tests/Makefile.am: compile tests with -DRAPICORN_PRIVATE to enable

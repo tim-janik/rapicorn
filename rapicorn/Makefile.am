@@ -76,6 +76,7 @@ stamp-xmllint: $(XML_FILES)
 	touch $@
 $(lib_LTLIBRARIES): stamp-xmllint
 
+*.cc: birnetsignalvariants.hh
 birnetutils.cc: birnetutils.hh birnetsignal.hh birnetsignalvariants.hh
 birnetsignalvariants.hh: birnetsignalslot.hh birnetsignaltemplate.hh $(srcdir)/mksignals.sh
 	cd . \
