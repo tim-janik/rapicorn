@@ -23,11 +23,14 @@
 #include <rapicorn/utilities.hh>
 #include <rapicorn/enumdefs.hh>
 #include <rapicorn/primitives.hh>
+#include <rapicorn/painter.hh>
 #include <rapicorn/events.hh>
 #include <rapicorn/appearance.hh>
 #include <rapicorn/properties.hh>
 #include <rapicorn/item.hh>
 #include <rapicorn/container.hh>
 #include <rapicorn/table.hh>
+#include <rapicorn/layoutcontainers.hh>
+#include <rapicorn/paintcontainers.hh>
                       
 #endif  /* __RAPICORN_HH__ */

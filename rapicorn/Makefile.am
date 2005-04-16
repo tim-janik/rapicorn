@@ -10,7 +10,9 @@ DEFS		= -DRAPICORN_PRIVATE -DPARANOID
 rapicorn_public_headers = $(strip 	\
 	rapicorn.hh keycodes.hh		\
 	$(rapicorn_impl_headers)	\
-	table.hh			\
+	painter.hh			\
+	paintcontainers.hh		\
+	layoutcontainers.hh		\
 	birnetutils.hh			\
 	birnetsignal.hh			\
 	birnetsignalvariants.hh		\
@@ -24,6 +26,7 @@ rapicorn_public_headers = $(strip 	\
 	item.hh				\
 	factory.hh			\
 	container.hh			\
+	table.hh			\
 )
 rapicorn_impl_headers = $(strip 	\
 	itemimpl.hh			\
@@ -31,7 +34,9 @@ rapicorn_impl_headers = $(strip 	\
 	tableimpl.hh			\
 )
 rapicorn_cc_sources = $(strip 		\
-	table.cc			\
+	painter.cc			\
+	paintcontainers.cc		\
+	layoutcontainers.cc		\
 	birnetutils.cc			\
 	birnetmarkup.cc			\
 	utilities.cc			\
@@ -43,6 +48,7 @@ rapicorn_cc_sources = $(strip 		\
 	item.cc				\
 	factory.cc			\
 	container.cc			\
+	table.cc			\
 )
 rapicorn_private_headers = $(strip 	\
 	private.hh			\

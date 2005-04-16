@@ -18,8 +18,6 @@
  */
 #include <rapicorn/rapicorn.hh>
 
-#define STRFUNC BIRNET_PRETTY_FUNCTION
-
 namespace {
 using namespace Rapicorn;
 using Rapicorn::uint;

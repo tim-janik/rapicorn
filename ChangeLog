@@ -1,3 +1,16 @@
+Sat Apr 16 18:00:21 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/layoutcontainers.hh, rapicorn/layoutcontainers.cc:
+	implement Alignemtn, HBox and VBox containers.
+
+	* rapicorn/paintcontainers.hh, rapicorn/paintcontainers.cc:
+	implement Ambience, Frame and ButtonView ontainers.
+
+	* rapicorn/painter.hh, rapicorn/painter.cc: interface for drawing
+	operations on planes, such as hlines, vlines or shading/filling a
+	rectangle. added Dasher implementation internally, a helpr structure 
+	for stippled outlines.
+
 Fri Apr 15 18:06:41 2005  Tim Janik  <timj@gtk.org>
 
 	* tests/markup.cc: test markup parser. 
