@@ -147,7 +147,7 @@ public:
   Signal<Item,
          bool (const Event&),
          CollectorWhile0<bool> >  sig_event;
-  Signal<Item, void ()>           sig_finalize;
+  SignalFinalize<Item>            sig_finalize;
   Signal<Item, void ()>           sig_changed;
   Signal<Item, void ()>           sig_invalidate;
   /* event handling */

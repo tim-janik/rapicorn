@@ -17,16 +17,26 @@
  * Boston, MA 02111-1307, USA.
  */
 #include <rapicorn/rapicorn.hh>
+#include "gtkrootwidget.hh"
+#include <gtk/gtk.h>
 
 namespace {
 using namespace Rapicorn;
 using Rapicorn::uint;
 
 static void
-construct_gui()
+construct_gui (GtkWindow *window)
 {
-  printf ("%s: ", __func__);
-  printf ("\n");
+  Factory.parse_resource ("tour.xml", "Test", nothrow);
+
+  /* create root item */
+  Item &item = Factory.create_gadget ("root");
+  Root &root = item.interface<Root&>();
+  root.ref_sink();
+
+  /* create dialog */
+  Item &dialog = Factory.create_gadget ("test-dialog");
+  root.add (dialog);
 }
 
 extern "C" int
@@ -34,7 +44,21 @@ main (int   argc,
       char *argv[])
 {
   printf ("EXAMPLE: %s:\n", basename (argv[0]));
-  construct_gui();
+  rapicorn_gettext_init ("Rapicorn", NULL); // FIXME: gettext path
+  gtk_init (&argc, &argv);
+
+  GtkWidget *window = gtk_widget_new (GTK_TYPE_WINDOW, NULL);
+  gtk_window_set_default_size (GTK_WINDOW (window), 640, 480);
+  Gtk::gtk_window_set_min_size (GTK_WINDOW (window), 20, 20);
+  g_signal_connect (window, "delete-event", G_CALLBACK (gtk_widget_hide_on_delete), NULL);
+  g_signal_connect (window, "hide", G_CALLBACK (gtk_main_quit), NULL);
+
+  construct_gui (GTK_WINDOW (window));
+
+  gtk_widget_show (window);
+
+  gtk_main();
+  gtk_widget_destroy (window);
   return 0;
 }
 

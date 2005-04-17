@@ -94,15 +94,12 @@ struct SignalEmittable3 : SignalBase {
   };
   inline Result emit (A1 a1, A2 a2, A3 a3)
   {
-    if (m_emitter)
-      m_emitter->ref();
+    ScopeReference<Emitter, Collector> lref (*m_emitter);
     Emission emission (m_emitter, a1, a2, a3);
     Iterator it (emission, &start), last (emission, &start);
     ++it; /* walk from start to first */
     Collector collector;
     Result result = collector (it, last);
-    if (m_emitter)
-      m_emitter->unref();
     return result;
   }
   explicit SignalEmittable3 (Emitter *emitter) : m_emitter (emitter) {}
@@ -119,15 +116,12 @@ struct SignalEmittable3 <Emitter, void, A1, A2, A3, Collector> : SignalBase {
   };
   inline void emit (A1 a1, A2 a2, A3 a3)
   {
-    if (m_emitter)
-      m_emitter->ref();
+    ScopeReference<Emitter, Collector> lref (*m_emitter);
     Emission emission (m_emitter, a1, a2, a3);
     Iterator it (emission, &start), last (emission, &start);
     ++it; /* walk from start to first */
     Collector collector;
     collector (it, last);
-    if (m_emitter)
-      m_emitter->unref();
   }
   explicit SignalEmittable3 (Emitter *emitter) : m_emitter (emitter) {}
 private:

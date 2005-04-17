@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
+<rapicorn-gadgets
+  xmlns:def="http://beast.gtk.org/rapicorn-gadgets/xmlns:def"
+  xmlns:env="http://beast.gtk.org/rapicorn-gadgets/xmlns:env">
+
+  <!-- root -->
+  <def:root inherit="Rapicorn::Root"/>
+  <!-- frame -->
+  <def:frame inherit="Rapicorn::Frame" >
+  </def:frame>
+  <!-- alignment -->
+  <def:alignment inherit="Rapicorn::Alignment"
+    left-padding="0"
+    right-padding="0"
+    top-padding="0"
+    bottom-padding="0"
+    halign="0.5"
+    valign="0.5"
+    hscale="1"
+    vscale="1" />
+  <!-- ambience (background + lighting) -->
+  <def:ambience inherit="Rapicorn::Ambience"/>
+  <!-- table -->
+  <def:table inherit="Rapicorn::Table" >
+  </def:table>
+  <def:hbox inherit="Rapicorn::HBox" />
+  <def:vbox inherit="Rapicorn::VBox" />
+  <!-- label -->
+  <def:label inherit="Rapicorn::PangoLabel" />
+  <!-- buttons -->
+  <def:button inherit="Rapicorn::ButtonView" sensitive="1" child-container="child-area" >
+    <frame normal-frame="out" impressed-frame="in" >
+      <ambience
+	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
+	normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"
+	>
+	<frame frame-type="none" >
+	  <alignment id="child-area" vscale="0" hscale="0" left-padding="5" right-padding="5" bottom-padding="1" top-padding="1" >
+	  </alignment>
+	</frame>
+      </ambience>
+    </frame>
+  </def:button>
+  <def:default-button inherit="Rapicorn::Frame" child-container="child-area" frame-type="in" >
+    <alignment left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
+      <button id="child-area" />
+    </alignment>
+  </def:default-button>
+  
+  <!-- test dialog -->
+  <def:test-dialog inherit="ambience" normal-lighting="upper-left">
+    <vbox sensitive="1">
+      <alignment visible="1" left-padding="5" right-padding="5" top-padding="5" bottom-padding="5">
+	<frame frame-type="etched-in">
+	  <alignment left-padding="5" right-padding="5" top-padding="5" bottom-padding="5"> <!-- width="125" height="110" -->
+	    <table>
+	      <label text="*** Ttitle ***" align="center" bottom-attach="100" hexpand="1" />
+	      <default-button sensitive="1" bottom-attach="51" vspread="1" vshrink="1" hexpand="0" hfill="0" vfill="0" >
+		<vbox>
+		  <label text="left" right-padding="10" />
+		  <label id="vslabel" text="VSpread" />
+		  <label text="right" left-padding="10" />
+		</vbox>
+	      </default-button>
+	      <button bottom-attach="52" >
+		<label text="Normal Button" />
+	      </button>
+	      <frame frame-type="etched-out" visible="1" left-padding="10" right-padding="10" bottom-padding="10">
+		<table>
+		  <frame left-attach="50" bottom-attach="59" />
+		  <frame left-attach="51" bottom-attach="58" />
+		  <frame left-attach="52" bottom-attach="57" />
+		  <frame left-attach="53" bottom-attach="56" />
+		  <frame left-attach="54" bottom-attach="55" left-padding="20" right-padding="3" frame-type="out" />
+		  <frame left-attach="55" bottom-attach="54" />
+		  <frame left-attach="56" bottom-attach="53" />
+		  <frame left-attach="57" bottom-attach="52" bottom-padding="2" top-padding="13" frame-type="out" />
+		  <frame left-attach="59" bottom-attach="50" hspread="1" vexpand="1" >
+		    <label id="hspread-label" text="HSpread" />
+		  </frame>
+		  <frame frame-type="out" />
+		  <frame/>
+		  <frame left-attach="43" bottom-attach="43" right-attach="46" top-attach="46" hexpand="1" vexpand="1" />
+		  <frame left-attach="42" bottom-attach="42" right-attach="47" top-attach="47" />
+		  <frame left-attach="46" right-attach="47" bottom-attach="46" top-attach="47" hexpand="1" vexpand="1" >
+		    <label text="HUHU, mir wird schwindelig. Jetzt kommt ein richtig langer text,&#10; der sich immer weiter erstreckt." />
+		  </frame>
+		  <frame/>
+		  <frame/>
+		  <frame/>
+		  <frame/>
+		  <frame/>
+		  <frame/>
+		  <frame/>
+		</table>
+	      </frame>
+	    </table>
+	  </alignment>
+	</frame>
+      </alignment>
+      <alignment left-padding="5" right-padding="5" top-padding="3" bottom-padding="3" >
+	<hbox spacing="5" homogeneous="0" >
+	  <button hexpand="1" > <label text="Ok"/> </button>
+	  <button hexpand="1" > <label text="Cancel"/> </button>
+	</hbox>
+      </alignment>
+    </vbox>
+  </def:test-dialog>
+</rapicorn-gadgets>

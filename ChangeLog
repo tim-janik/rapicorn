@@ -1,3 +1,30 @@
+Sun Apr 17 19:06:31 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/birnetsignal.hh: introduce ScopeReference to keep an
+	instance referenced within block scope. added SignalFinalize
+	which does not need the emitter to be ref/unref-ed around emit(),
+	but instead asserts its in finalization stage. cleanups.
+	* rapicorn/birnetsignaltemplate.hh: use ScopeReference.
+
+	* rapicorn/birnetutils.hh: added is_derived<>().
+
+	* rapicorn/item.hh: made sig_finalize a SignalFinalize, so we don't
+	trigger ref_count!=0 assertions during finalization.
+
+	* tests/signal.cc: removed cruft.
+
+	* examples/tour.xml: define dialogs for tour.cc.
+
+	* examples/tour.cc: build tree from tour.xml.
+
+	* examples/gtkrootwidget.hh, examples/gtkrootwidget.cc: embedd the
+	Root item in a GtkWidget.
+
+	* examples/Makefile.am: only build tour example if gtk is present.
+
+	* configure.in: test for pango and Gtk+ and provide automake 
+	conditionals for them.
+
 Sun Apr 17 13:37:42 2005  Tim Janik  <timj@gtk.org>
 
 	* examples/: new directory to compile example programs.

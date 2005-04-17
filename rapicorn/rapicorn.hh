@@ -25,6 +25,7 @@
 #include <rapicorn/primitives.hh>
 #include <rapicorn/painter.hh>
 #include <rapicorn/events.hh>
+#include <rapicorn/factory.hh>
 #include <rapicorn/appearance.hh>
 #include <rapicorn/properties.hh>
 #include <rapicorn/item.hh>

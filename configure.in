@@ -161,14 +161,32 @@ AC_DEFUN(AC_RAPICORN_REQUIREMENTS,
     fi
     AC_SUBST(LIBZ)
 
-    dnl --- glib + pango ---
+    dnl --- check for pango --- 
     DEPENDANCIES=
     DEPENDANCIES="$DEPENDANCIES glib-2.0 >= 2.4.11"
-    DEPENDANCIES="$DEPENDANCIES pangoft2 >= 1.8.0"
-    PKG_CHECK_MODULES(PANGO, $DEPENDANCIES) dnl define PANGO_CFLAGS and PANGO_LIBS:
+    DEPENDANCIES="$DEPENDANCIES pangoft2 >= 1.4.0"
+    dnl define PANGO_CFLAGS and PANGO_LIBS:
+    PANGO_PKG_ERRORS=OK
+    PKG_CHECK_MODULES(PANGO, $DEPENDANCIES,,
+	AC_MSG_WARN([[Failed to detect or find pango, building without pango modules (consider adjusting \$PKG_CONFIG_PATH)]]))
+    AC_SUBST(PANGO_CFLAGS)
+    AC_SUBST(PANGO_LIBS)
+    AM_CONDITIONAL(WITH_PANGO, test "x$PANGO_PKG_ERRORS" = xOK)
 
-    RAPICORN_CFLAGS="$PANGO_CFLAGS"
-    RAPICORN_LIBS="$PANGO_LIBS $LIBZ"
+    dnl --- check for Gtk+ --- 
+    DEPENDANCIES=
+    DEPENDANCIES="$DEPENDANCIES glib-2.0 >= 2.4.11"
+    DEPENDANCIES="$DEPENDANCIES gtk+-2.0 >= 2.4.11"
+    dnl define GTK_CFLAGS and GTK_LIBS:
+    GTK_PKG_ERRORS=OK
+    PKG_CHECK_MODULES(GTK, $DEPENDANCIES,,
+	AC_MSG_WARN([[Failed to detect or find Gtk+, building without gtk programs (consider adjusting \$PKG_CONFIG_PATH)]]))
+    AC_SUBST(GTK_CFLAGS)
+    AC_SUBST(GTK_LIBS)
+    AM_CONDITIONAL(WITH_GTK, test "x$GTK_PKG_ERRORS" = xOK)
+
+    RAPICORN_CFLAGS=""
+    RAPICORN_LIBS="$LIBZ"
     AC_SUBST(RAPICORN_CFLAGS)
     AC_SUBST(RAPICORN_LIBS)
 

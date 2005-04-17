@@ -208,27 +208,39 @@ throw_if_null (Pointer data)
     throw NullPointer();
 }
 
-/* --- derivation checks --- */
-template<class Derived, class Base>     // ex: EnforceDerivedFrom<Child, Base> assertion;
+/* --- derivation assertions --- */
+template<class Derived, class Base>
 struct EnforceDerivedFrom {
   EnforceDerivedFrom (Derived *derived = 0,
                       Base    *base = 0)
-  {
-    base = derived;
-  }
+  { base = derived; }
 };
-template<class Derived, class Base>     // ex: EnforceDerivedFrom<Child*, Base*> assertion;
-struct EnforceDerivedFrom<Derived*, Base*> {
+template<class Derived, class Base>
+struct EnforceDerivedFrom<Derived*,Base*> {
   EnforceDerivedFrom (Derived *derived = 0,
                       Base    *base = 0)
-  {
-    base = derived;
-  }
+  { base = derived; }
 };
 template<class Derived, class Base> void        // ex: assert_derived_from<Child, Base>();
 assert_derived_from (void)
 {
   EnforceDerivedFrom<Derived, Base> assertion;
+}
+
+/* --- derivation checks --- */
+template<class Child, class Base>
+class CheckDerivedFrom {
+  static bool is_derived (void*) { return false; }
+  static bool is_derived (Base*) { return true; }
+public:
+  static bool is_derived () { return is_derived ((Child*) (0)); }
+};
+template<class Child, class Base>
+struct CheckDerivedFrom<Child*,Base*> : CheckDerivedFrom<Child,Base> {};
+template<class Derived, class Base> bool
+is_derived ()                                   // ex: if (is_derived<Child, Base>()) ...; */
+{
+  return CheckDerivedFrom<Derived,Base>::is_derived();
 }
 
 /* --- Deletable --- */

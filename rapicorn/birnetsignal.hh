@@ -227,6 +227,23 @@ struct CollectorWhile0 {
   }
 };
 
+/* --- ScopeReference --- */
+template<class Instance, typename Mark>
+class ScopeReference {
+  Instance &m_instance;
+public:
+  ScopeReference  (Instance &instance) : m_instance (instance) { m_instance.ref(); }
+  ~ScopeReference ()                                           { m_instance.unref(); }
+};
+struct ScopeReferenceFinalizationMark : CollectorDefault<void> {};
+template<class Instance>
+class ScopeReference<Instance, ScopeReferenceFinalizationMark> {
+  Instance &m_instance;
+public:
+  ScopeReference  (Instance &instance) : m_instance (instance) { assert (m_instance.finalizing() == true); }
+  ~ScopeReference ()                                           { assert (m_instance.finalizing() == true); }
+};
+
 /* --- SlotBase --- */
 class SlotBase {
 protected:
@@ -374,25 +391,16 @@ handler_cast (SignalBase::Link *link)
 }
 
 /* --- Handler + Slot + Signal generation --- */
-#define BIRNET_SIG_MATCH(x)             (x >= 0 && x <= 16)
-#define BIRNET_SIG_ARG_TYPENAME(x)      typename A##x
-#define BIRNET_SIG_ARG_c_TYPENAME(x)    , typename A##x
-#define BIRNET_SIG_ARG_TYPE(x)          A##x
-#define BIRNET_SIG_ARG_c_TYPE(x)        , A##x
-#define BIRNET_SIG_ARG_VAR(x)           a##x
-#define BIRNET_SIG_ARG_c_VAR(x)         , a##x
-#define BIRNET_SIG_ARG_TYPED_VAR(x)     A##x a##x
-#define BIRNET_SIG_ARG_c_TYPED_VAR(x)   , A##x a##x
 #include <rapicorn/birnetsignalvariants.hh> // contains multiple versions of "birnetsignaltemplate.hh"
-#undef BIRNET_SIG_MATCH
-#undef BIRNET_SIG_ARG_TYPENAME
-#undef BIRNET_SIG_ARG_c_TYPENAME
-#undef BIRNET_SIG_ARG_TYPE
-#undef BIRNET_SIG_ARG_c_TYPE
-#undef BIRNET_SIG_ARG_VAR
-#undef BIRNET_SIG_ARG_c_VAR
-#undef BIRNET_SIG_ARG_TYPED_VAR
-#undef BIRNET_SIG_ARG_c_TYPED_VAR
+
+/* --- SignalFinalize --- */
+template<class Emitter>
+struct SignalFinalize : Signal0 <Emitter, void, ScopeReferenceFinalizationMark> {
+  typedef Signal0<Emitter, void, ScopeReferenceFinalizationMark> Signal0;
+  explicit SignalFinalize (Emitter &emitter)                             : Signal0 (emitter) {}
+  explicit SignalFinalize (Emitter &emitter, void (Emitter::*method) ()) : Signal0 (emitter, method) {}
+  BIRNET_PRIVATE_CLASS_COPY (SignalFinalize);
+};
 
 } // Signals
 
@@ -401,9 +409,9 @@ using Signals::CollectorDefault;
 using Signals::CollectorWhile0;
 using Signals::CollectorLast;
 using Signals::CollectorSum;
+using Signals::SignalFinalize;
 using Signals::Signal;
 using Signals::slot;
-
 
 } // Birnet
 
