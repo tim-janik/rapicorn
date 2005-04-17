@@ -37,6 +37,10 @@ construct_gui (GtkWindow *window)
   /* create dialog */
   Item &dialog = Factory.create_gadget ("test-dialog");
   root.add (dialog);
+
+  /* complete gtk window */
+  GtkWidget *rwidget = Gtk::root_widget_from_root (root);
+  gtk_container_add (GTK_CONTAINER (window), rwidget);
 }
 
 extern "C" int

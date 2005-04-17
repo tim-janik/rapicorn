@@ -2,9 +2,9 @@
 # Copyright (C) 2005 Tim Janik
 
 srcdir          = .
-INCLUDES  	= -I$(top_srcdir) -I$(top_builddir) # -I$(srcdir)/cairo
+INCLUDES  	= -I$(top_srcdir) -I$(top_builddir) $(PANGO_CFLAGS) # -I$(srcdir)/cairo
 GLIB_MKENUMS    = glib-mkenums
-LDLIBS	       += $(LIBS)
+LDLIBS	       += $(LIBS) $(PANGO_LIBS)
 DEFS		= -DRAPICORN_PRIVATE -DPARANOID
 
 rapicorn_public_headers = $(strip 	\
@@ -27,6 +27,7 @@ rapicorn_public_headers = $(strip 	\
 	factory.hh			\
 	container.hh			\
 	table.hh			\
+	pangolabel.hh			\
 )
 rapicorn_impl_headers = $(strip 	\
 	itemimpl.hh			\
@@ -49,6 +50,7 @@ rapicorn_cc_sources = $(strip 		\
 	factory.cc			\
 	container.cc			\
 	table.cc			\
+	pangolabel.cc			\
 )
 rapicorn_private_headers = $(strip 	\
 	private.hh			\

@@ -1,3 +1,11 @@
+Sun Apr 17 19:42:35 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/primitives.hh: fixed pixel stride.
+
+	* rapicorn/pangolabel.hh, rapicorn/pangolabel.cc: implement PangoLabel.
+
+	* examples/tour.cc: setup the root item widget.
+
 Sun Apr 17 19:06:31 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/birnetsignal.hh: introduce ScopeReference to keep an

@@ -472,8 +472,8 @@ class Plane {
   uint    n_pixels() const                  { return height() * m_stride; }
   Color   peek_color (uint x, uint y) const { const uint32 *p = peek (x, y); return Color::from_premultiplied (*p); }
 public:
-  uint32*       peek (uint x, uint y)       { return &m_pixel_buffer[y * pixstride() + x]; }
-  const uint32* peek (uint x, uint y) const { return &m_pixel_buffer[y * pixstride() + x]; }
+  uint32*       peek (uint x, uint y)       { return &m_pixel_buffer[y * m_stride + x]; }
+  const uint32* peek (uint x, uint y) const { return &m_pixel_buffer[y * m_stride + x]; }
   explicit      Plane (int x, int y, uint width, uint height);
   virtual       ~Plane();
   int           pixstride  () const { return m_stride * 4; }

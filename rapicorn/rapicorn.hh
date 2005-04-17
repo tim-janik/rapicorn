@@ -33,5 +33,6 @@
 #include <rapicorn/table.hh>
 #include <rapicorn/layoutcontainers.hh>
 #include <rapicorn/paintcontainers.hh>
+/* conditional: #include <rapicorn/pangolabel.hh> */
                       
 #endif  /* __RAPICORN_HH__ */

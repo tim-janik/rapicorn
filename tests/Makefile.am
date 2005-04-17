@@ -21,7 +21,7 @@ primitives_SOURCES = primitives.cc
 primitives_LDADD = $(programs_ldadd)
 # test programs:
 TESTS = properties signal walker markup datalist primitives
-programs_ldadd = $(top_builddir)/rapicorn/librapicorn.la
+programs_ldadd = $(top_builddir)/rapicorn/librapicorn.la $(PANGO_LIBS)
 
 # build tests
 noinst_PROGRAMS = $(TESTS)
