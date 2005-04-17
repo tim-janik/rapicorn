@@ -260,6 +260,7 @@ Makefile
 rapicorn/Makefile
 po/Makefile.in
 po-helper.sh
+examples/Makefile
 tests/Makefile
 ])
 

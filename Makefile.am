@@ -1,7 +1,7 @@
 # Rapicorn
 # Copyright (C) 2005 Tim Janik
 
-SUBDIRS = . rapicorn po tests
+SUBDIRS = . rapicorn po examples tests
 
 # require automake 1.4
 AUTOMAKE_OPTIONS = 1.4
