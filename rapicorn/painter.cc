@@ -91,11 +91,57 @@ Painter::~Painter ()
 void
 Painter::draw_hline (int x0, int x1, int y, Color c, const vector<int> &dashes, int dash_offset)
 {
+  Dasher dd (dashes, dash_offset);
+  int xmin = MAX (MIN (x0, x1), xstart());
+  int xmax = MIN (MAX (x0, x1), xbound() - 1);
+  if (y >= ystart() && y < ybound())
+    {
+      if (!dd.total)
+        for (int x = xmin; x <= xmax; x++, ++dd)
+          set (x, y, c);
+      else if (x0 <= x1)
+        {
+          dd.increment (xmin - x0);
+          for (int x = xmin; x <= xmax; x++, ++dd)
+            if (dd.on())
+              set (x, y, c);
+        }
+      else
+        {
+          dd.increment (x0 - xmax);
+          for (int x = xmax; x >= xmin; x--, ++dd)
+            if (dd.on())
+              set (x, y, c);
+        }
+    }
 }
 
 void
 Painter::draw_vline (int x, int y0, int y1, Color c, const vector<int> &dashes, int dash_offset)
 {
+  Dasher dd (dashes, dash_offset);
+  int ymin = MAX (MIN (y0, y1), ystart());
+  int ymax = MIN (MAX (y0, y1), ybound() - 1);
+  if (x >= xstart() && x < xbound())
+    {
+      if (!dd.total)
+        for (int y = ymin; y <= ymax; y++)
+          set (x, y, c);
+      else if (y0 <= y1)
+        {
+          dd.increment (ymin - y0);
+          for (int y = ymin; y <= ymax; y++, ++dd)
+            if (dd.on())
+              set (x, y, c);
+        }
+      else
+        {
+          dd.increment (y0 - ymax);
+          for (int y = ymax; y >= ymin; y--, ++dd)
+            if (dd.on())
+              set (x, y, c);
+        }
+    }
 }
 
 void
@@ -103,21 +149,76 @@ Painter::draw_shadow (int x, int y, int width, int height,
                       Color outer_upper_left, Color inner_upper_left,
                       Color inner_lower_right, Color outer_lower_right)
 {
+  /* outer lower-right */
+  draw_hline (x, x + width - 1, y, outer_lower_right);
+  draw_vline (x + width - 1, y, y + height - 1, outer_lower_right);
+  /* inner lower-right */
+  draw_hline (x + 1, x + width - 2, y + 1, inner_lower_right);
+  draw_vline (x + width - 2, y + 1, y + height - 2, inner_lower_right);
+  /* outer upper-left */
+  draw_hline (x + width - 1, x, y + height - 1, outer_upper_left);
+  draw_vline (x, y + height - 1, y, outer_upper_left);
+  /* inner upper-left */
+  draw_hline (x + width - 2, x + 1, y + height - 2, inner_upper_left);
+  draw_vline (x + 1, y + height - 2, y + 1, inner_upper_left);
 }
 
 void
 Painter::draw_border (int x, int y, int width, int height, Color border, const vector<int> &dashes, int dash_offset)
 {
+  if (width && height)
+    {
+      /* adjust the dash offset below by consumed length and by -1 for overlapping corners */
+      draw_hline (x, x + width - 1, y, border, dashes, dash_offset);
+      draw_vline (x + width - 1, y, y + height - 1, border, dashes, dash_offset + width - 1);
+      draw_hline (x + width - 1, x, y + height - 1, border, dashes, dash_offset + width + height - 2);
+      draw_vline (x, y + height - 1, y, border, dashes, dash_offset + width + height + width - 3);
+    }
 }
 
 void
 Painter::draw_shaded_rect (int xc0, int yc0, Color color0, int xc1, int yc1, Color color1)
 {
+  Point c0 (xc0, yc0);
+  Color pre0 = color0.premultiplied(), pre1 = color1.premultiplied();
+  /* extract alpha, red, green ,blue */
+  uint32 Aa = pre1.alpha(), Ar = pre1.red(), Ag = pre1.green(), Ab = pre1.blue();
+  uint32 Ba = pre0.alpha(), Br = pre0.red(), Bg = pre0.green(), Bb = pre0.blue();
+  int x0 = MIN (xc0, xc1), x1 = MAX (xc0, xc1);
+  int y0 = MIN (yc0, yc1), y1 = MAX (yc0, yc1);
+  x0 = MAX (x0, xstart());
+  x1 = MIN (x1, xbound() - 1);
+  y0 = MAX (y0, ystart());
+  y1 = MIN (y1, ybound() - 1);
+  double max_dist = Point (xc0, yc0).dist (xc1, yc1);
+  double wdist = 1 / MAX (1, max_dist);
+  for (int y = y0; y <= y1; y++)
+    for (int x = x0; x <= x1; x++)
+      {
+        double d0 = c0.dist (x, y), lucent = d0 * wdist, ilucent = 1 - lucent;
+        /* A over B = colorA * alpha + colorB * (1 - alpha) */
+        double Dr = Ar * lucent + Br * ilucent;
+        double Dg = Ag * lucent + Bg * ilucent;
+        double Db = Ab * lucent + Bb * ilucent;
+        double Da = Aa * lucent + Ba * ilucent;
+        /* dither */
+        union { uint32 r; uint8 a[4]; } z = { lrand48() };
+        uint32 dr = ftoi (Dr * 0xff) + z.a[3];
+        uint32 dg = ftoi (Dg * 0xff) + z.a[2];
+        uint32 db = ftoi (Db * 0xff) + z.a[1];
+        uint32 da = ftoi (Da * 0xff) + z.a[0];
+        /* apply */
+        set_premultiplied (x, y, Color (dr >> 8, dg >> 8, db >> 8, da >> 8));
+      }
 }
 
 void
 Painter::draw_filled_rect (int x, int y, int width, int height, Color fill_color)
 {
+  Color pre = fill_color.premultiplied();
+  for (int iy = y; iy < y + height; iy++)
+    for (int ix = x; ix < x + width; ix++)
+      set_premultiplied (ix, iy, pre);
 }
 
 } // Rapicorn

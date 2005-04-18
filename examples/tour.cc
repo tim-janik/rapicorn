@@ -35,7 +35,7 @@ construct_gui (GtkWindow *window)
   root.ref_sink();
 
   /* create dialog */
-  Item &dialog = Factory.create_gadget ("test-dialog");
+  Item &dialog = Factory.create_gadget ("tour-dialog");
   root.add (dialog);
 
   /* complete gtk window */

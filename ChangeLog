@@ -1,3 +1,15 @@
+Mon Apr 18 23:10:21 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/painter.cc: implement hline and vline drawing.
+	implemented draw border, and draw shadow. implemented shaded
+	and filled rectangles.
+
+	* rapicorn/mksignals.sh: /bin/sh is more protable than bash.
+
+	* examples/Makefile.am: check xml files with xmllint.
+
+	* examples/tour.cc, examples/tour.xml: minor fixups, added licensing.
+
 Sun Apr 17 19:42:35 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/primitives.hh: fixed pixel stride.
