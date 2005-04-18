@@ -2,4 +2,5 @@
 .libs
 Makefile.in
 Makefile
+stamp-allchecks
 tour
