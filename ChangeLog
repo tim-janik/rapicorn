@@ -1,3 +1,7 @@
+Tue Apr 19 14:32:48 2005  Tim Janik  <timj@gtk.org>
+
+	* version 0.1.0-rc1.
+
 Tue Apr 19 14:27:41 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/birnetutils.hh, rapicorn/birnetutils.cc: allow varying bases
