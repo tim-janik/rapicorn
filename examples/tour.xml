@@ -66,7 +66,7 @@
   </def:default-button>
   
   <!-- test dialog -->
-  <def:tour-dialog inherit="ambience" normal-lighting="upper-left">
+  <def:tour-dialog inherit="ambience" normal-lighting="upper-left" >
     <vbox sensitive="1">
       <alignment visible="1" left-padding="5" right-padding="5" top-padding="5" bottom-padding="5">
 	<frame frame-type="etched-in">

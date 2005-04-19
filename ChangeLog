@@ -1,3 +1,11 @@
+Tue Apr 19 14:27:41 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/birnetutils.hh, rapicorn/birnetutils.cc: allow varying bases
+	when converting strings to integers.
+
+	* rapicorn/paintcontainers.cc: allow color property specification as
+	hex triplet.
+
 Mon Apr 18 23:10:21 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/painter.cc: implement hline and vline drawing.

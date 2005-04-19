@@ -180,13 +180,14 @@ string_from_bool (bool value)
 }
 
 uint64
-string_to_uint (const String &string)
+string_to_uint (const String &string,
+                uint          base)
 {
   const char *p = string.c_str();
   while (*p == ' ' || *p == '\n' || *p == '\t' || *p == '\r')
     p++;
   bool hex = p[0] == '0' && (p[1] == 'X' || p[1] == 'x');
-  return strtoull (hex ? p + 2 : p, NULL, hex ? 16 : 10);
+  return strtoull (hex ? p + 2 : p, NULL, hex ? 16 : base);
 }
 
 String
@@ -205,13 +206,14 @@ string_has_int (const String &string)
 }
 
 int64
-string_to_int (const String &string)
+string_to_int (const String &string,
+               uint          base)
 {
   const char *p = string.c_str();
   while (*p == ' ' || *p == '\n' || *p == '\t' || *p == '\r')
     p++;
   bool hex = p[0] == '0' && (p[1] == 'X' || p[1] == 'x');
-  return strtoll (hex ? p + 2 : p, NULL, hex ? 16 : 10);
+  return strtoll (hex ? p + 2 : p, NULL, hex ? 16 : base);
 }
 
 String
