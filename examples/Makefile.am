@@ -1,7 +1,6 @@
 # Rapicorn Examples
 # Copyright (C) 2005 Tim Janik
 
-srcdir          = .
 INCLUDES  	= -I$(top_srcdir) $(GTK_CFLAGS) # -I$(srcdir)/cairo
 LDLIBS	       += $(GTK_LIBS) $(LIBS)
 DEFS            = -DRAPICORN_PRIVATE -DPARANOID
@@ -10,6 +9,7 @@ XMLLINTCALL     = $(if $(XMLLINT),$(XMLLINT),true) # handle undefined XMLLINT
 # program sources:
 tour_SOURCES = tour.cc gtkrootwidget.cc
 tour_LDADD = $(programs_ldadd) $(GTK_LIBS)
+EXTRA_DIST += gtkrootwidget.hh tour.xml
 # test programs:
 if WITH_GTK
 GTK_EXAMPLES = tour

@@ -1,8 +1,7 @@
 # Rapicorn
 # Copyright (C) 2005 Tim Janik
 
-srcdir          = .
-INCLUDES  	= -I$(top_srcdir) -I$(top_builddir) $(PANGO_CFLAGS) # -I$(srcdir)/cairo
+INCLUDES  	= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(PANGO_CFLAGS)
 GLIB_MKENUMS    = glib-mkenums
 LDLIBS	       += $(LIBS) $(PANGO_LIBS)
 DEFS		= -DRAPICORN_PRIVATE -DPARANOID
@@ -61,11 +60,11 @@ rapicorn_extra_sources = $(strip 	\
 	mksignals.sh			\
 )
 
-lib_LTLIBRARIES        = librapicorn.la
-librapicornincludedir  = $(includedir)/rapicorn
-librapicorninclude_HEADERS  = $(rapicorn_public_headers)
-librapicorn_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorn_la_LIBADD  = $(strip 		\
+lib_LTLIBRARIES            = librapicorn.la
+librapicornincludedir      = $(includedir)/rapicorn
+librapicorninclude_HEADERS = $(rapicorn_public_headers)
+librapicorn_la_SOURCES     = $(rapicorn_cc_sources)
+librapicorn_la_LIBADD      = $(strip 		\
 	$(RAPICORN_LIBS) -lm 			\
 ) # -lfreetype -lfontconfig $(top_builddir)/cairo/libcairo.a  	$(top_builddir)/pixman/libpixman.a 	
 librapicorn_la_LDFLAGS = $(strip 				\
@@ -75,18 +74,16 @@ librapicorn_la_LDFLAGS = $(strip 				\
 ) # set libtool version and export symbols for resolving
 EXTRA_DIST            += $(rapicorn_private_headers) $(rapicorn_extra_sources)
 
-XML_FILES = $(strip standard.xml )
+#XML_FILES = $(strip standard.xml )
+## xml linting
+#stamp-xmllint: $(XML_FILES)
+#	cd $(srcdir) \
+#	&& $(XMLLINT) --noout $(XML_FILES)
+#	touch $@
+#$(lib_LTLIBRARIES): stamp-xmllint
 
-# xml linting
-stamp-xmllint: $(XML_FILES)
-	cd $(srcdir) \
-	&& $(XMLLINT) --noout $(XML_FILES)
-	touch $@
-$(lib_LTLIBRARIES): stamp-xmllint
-
-*.cc: birnetsignalvariants.hh
-birnetutils.cc: birnetutils.hh birnetsignal.hh birnetsignalvariants.hh
-birnetsignalvariants.hh: birnetsignalslot.hh birnetsignaltemplate.hh $(srcdir)/mksignals.sh
+$(srcdir)/*.cc: birnetsignalvariants.hh
+birnetsignalvariants.hh: $(srcdir)/birnetsignalslot.hh $(srcdir)/birnetsignaltemplate.hh $(srcdir)/mksignals.sh
 	cd . \
 	&& echo "/* Signal Variants -- Generated file, don't edit. */" > xgen-sigs \
 	&& echo >> xgen-sigs \
@@ -96,8 +93,8 @@ birnetsignalvariants.hh: birnetsignalslot.hh birnetsignaltemplate.hh $(srcdir)/m
 	&& rm -f xgen-sigs
 CLEANFILES += xgen-sigs birnetsignalvariants.hh xgen-signals.sed
 
-enumdefs.cc: gen-enums.cc
-gen-enums.cc: enumdefs.hh Makefile
+$(srcdir)/enumdefs.cc: gen-enums.cc
+gen-enums.cc: $(srcdir)/enumdefs.hh Makefile
 	cd . \
 	&& ( cd ${srcdir} && $(GLIB_MKENUMS) \
 	  --fprod "\n/* --- @filename@ --- */\n#include\t\"@filename@\"" \

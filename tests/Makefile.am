@@ -1,7 +1,6 @@
 # Rapicorn Tests
 # Copyright (C) 2005 Tim Janik
 
-srcdir          = .
 INCLUDES  	= -I$(top_srcdir) # -I$(srcdir)/cairo
 LDLIBS	       += $(LIBS)
 DEFS            = -DRAPICORN_PRIVATE -DPARANOID

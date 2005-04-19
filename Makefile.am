@@ -25,7 +25,6 @@ EXTRA_DIST += $(strip		\
 	COPYING.LGPL		\
 	acbirnet.m4		\
  	po-helper.sh.in		\
-	topconfig.h		\
 	intltool-extract.in     \
 	intltool-merge.in       \
 	intltool-update.in	\
