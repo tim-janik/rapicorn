@@ -221,4 +221,5 @@ Painter::draw_filled_rect (int x, int y, int width, int height, Color fill_color
       set_premultiplied (ix, iy, pre);
 }
 
+
 } // Rapicorn

@@ -459,6 +459,7 @@ protected:
             press_button = event.button;
             impressed (true);
             root()->add_grab (*this);
+            handled = true;
           }
         break;
       case BUTTON_RELEASE:
@@ -474,6 +475,7 @@ protected:
             impressed (pressed());
             if (proper_release && inbutton)
               diag ("button-clicked: impressed=%d (event.button=%d)", impressed(), event.button);
+            handled = true;
           }
         break;
       case KEY_PRESS:

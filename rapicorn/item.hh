@@ -30,6 +30,7 @@ namespace Rapicorn {
 struct Requisition {
   double width, height;
   Requisition () : width (0), height (0) {}
+  Requisition (double w, double h) : width (w), height (h) {}
 };
 struct Allocation {
   int x, y, width, height;

@@ -25,12 +25,14 @@ rapicorn_public_headers = $(strip 	\
 	item.hh				\
 	factory.hh			\
 	container.hh			\
+	arrangement.hh			\
 	table.hh			\
 	pangolabel.hh			\
 )
 rapicorn_impl_headers = $(strip 	\
 	itemimpl.hh			\
 	containerimpl.hh		\
+	arrangementimpl.hh		\
 	tableimpl.hh			\
 )
 rapicorn_cc_sources = $(strip 		\
@@ -48,6 +50,7 @@ rapicorn_cc_sources = $(strip 		\
 	item.cc				\
 	factory.cc			\
 	container.cc			\
+	arrangement.cc			\
 	table.cc			\
 	pangolabel.cc			\
 )

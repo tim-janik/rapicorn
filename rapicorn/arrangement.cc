@@ -1,0 +1,226 @@
+/* Rapicorn
+ * Copyright (C) 2005 Tim Janik
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General
+ * Public License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+#include "arrangementimpl.hh"
+#include "factory.hh"
+
+namespace Rapicorn {
+
+ArrangementImpl::Location::Location() :
+  pos_x (0), pos_y (0),
+  pos_hanchor (0.5), pos_vanchor (0.5)
+{}
+
+DataKey<ArrangementImpl::Location> ArrangementImpl::child_location_key;
+
+ArrangementImpl::Location
+ArrangementImpl::child_location (Item &child)
+{
+  Location loc = child.get_data (&child_location_key);
+  return loc;
+}
+
+void
+ArrangementImpl::child_location (Item     &child,
+                                 Location  loc)
+{
+  child.set_data (&child_location_key, loc);
+}
+
+ArrangementImpl::ArrangementPacker::~ArrangementPacker()
+{}
+
+ArrangementImpl::ArrangementPacker::ArrangementPacker (Item &citem) :
+  item (citem)
+{}
+
+void
+ArrangementImpl::ArrangementPacker::update () /* fetch real pack properties */
+{
+  if (dynamic_cast<Arrangement*> (item.parent()))
+    loc = child_location (item);
+}
+
+void
+ArrangementImpl::ArrangementPacker::commit ()/* assign pack properties */
+{
+  ArrangementImpl *arrangement = dynamic_cast<ArrangementImpl*> (item.parent());
+  if (arrangement)
+    {
+      child_location (item, loc);
+      item.invalidate();
+    }
+}
+
+const PropertyList&
+ArrangementImpl::ArrangementPacker::list_properties()
+{
+  static Property *properties[] = {
+    MakeProperty (ArrangementPacker, position, _("Position"),          _("Position coordinate of the child's anchor"), Point (0, 0), Point (-MAXDOUBLE, -MAXDOUBLE), Point (+MAXDOUBLE, +MAXDOUBLE), "rw"),
+    MakeProperty (ArrangementPacker, hanchor,  _("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), 0.5, 0, 1, 0.5, "rw"),
+    MakeProperty (ArrangementPacker, vanchor,  _("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), 0.5, 0, 1, 0.5, "rw"),
+  };
+  static const PropertyList property_list (properties);
+  return property_list;
+}
+
+Container::Packer
+ArrangementImpl::create_packer (Item &item)
+{
+  if (item.parent() == this)
+    return Packer (new ArrangementPacker (item));
+  else
+    throw Exception ("foreign child: ", item.name());
+}
+
+bool
+ArrangementImpl::add_child (Item &item, const PackPropertyList &pack_plist)
+{
+  if (MultiContainerImpl::add_child (item, pack_plist)) /* ref, sink, set_parent, insert */
+    {
+      Packer packer = create_packer (item);
+      packer.apply_properties (pack_plist);
+      return true;
+    }
+  return false;
+}
+
+ArrangementImpl::ArrangementImpl() :
+  m_origin (0, 0),
+  m_origin_hanchor (0.5),
+  m_origin_vanchor (0.5),
+  m_child_area()
+{}
+
+ArrangementImpl::~ArrangementImpl()
+{}
+
+Allocation
+ArrangementImpl::local_child_allocation (Item &child,
+                                         double width,
+                                         double height)
+{
+  Requisition requisition = child.requisition();
+  Location location = child_location (child);
+  Allocation area;
+  area.width = iceil (requisition.width);
+  area.height = iceil (requisition.height);
+  double origin_x = width * m_origin_hanchor - m_origin.x;
+  double origin_y = height * m_origin_vanchor - m_origin.y;
+  area.x = iround (origin_x + location.pos_x - location.pos_hanchor * area.width);
+  area.y = iround (origin_y + location.pos_y - location.pos_vanchor * area.height);
+  if (width > 0 && child.hexpand())
+    {
+      area.x = 0;
+      area.width = iround (width);
+    }
+  if (height > 0 && child.vexpand())
+    {
+      area.y = 0;
+      area.height = iround (height);
+    }
+  return area;
+}
+
+Rect
+ArrangementImpl::child_area ()
+{
+  Rect rect; /* empty */
+  Allocation area = allocation();
+  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+    {
+      Item &child = *cw;
+      Allocation area = local_child_allocation (child, area.width, area.height);
+      rect.rect_union (Rect (Point (area.x, area.y), 1, 1));
+      rect.rect_union (Rect (Point (area.x + area.width - 1, area.y + area.height - 1), 1, 1));
+    }
+  return rect;
+}
+
+void
+ArrangementImpl::size_request (Requisition &requisition)
+{
+  Rect rect; /* empty */
+  bool chspread = false, cvspread = false, need_origin = false;
+  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+    {
+      Item &child = *cw;
+      /* size request all children */
+      Requisition rq = child.size_request();
+      if (!child.visible())
+        continue;
+      chspread |= child.hspread();
+      cvspread |= child.vspread();
+      Allocation area = local_child_allocation (child, 0, 0);
+      rect.rect_union (Rect (Point (area.x, area.y), 1, 1));
+      rect.rect_union (Rect (Point (area.x + area.width - 1, area.y + area.height - 1), 1, 1));
+      need_origin = true;
+    }
+  if (need_origin)
+    rect.rect_union (Rect (Point (0, 0), 1, 1));
+  double side1, side2;
+  /* calculate size requisition in the west and east of anchor */
+  side1 = MAX (-rect.ll.x, 0);
+  side2 = MAX (0, rect.ur.x);
+  /* expand proportionally */
+  side1 = side1 * 1.0 / CLAMP (origin_hanchor(), 0.5, 1);
+  side2 = side2 * 1.0 / (1 - CLAMP (origin_hanchor(), 0, 0.5));
+  requisition.width = MAX (side1, side2);
+  /* calculate size requisition in the south and north of anchor */
+  side1 = MAX (-rect.ll.y, 0);
+  side2 = MAX (0, rect.ur.y);
+  /* expand proportionally */
+  side1 = side1 * 1.0 / CLAMP (origin_vanchor(), 0.5, 1);
+  side2 = side2 * 1.0 / (1 - CLAMP (origin_vanchor(), 0, 0.5));
+  requisition.height = MAX (side1, side2);
+  set_flag (HSPREAD_CONTAINER, chspread);
+  set_flag (VSPREAD_CONTAINER, cvspread);
+}
+
+void
+ArrangementImpl::size_allocate (Allocation area)
+{
+  allocation (area);
+  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+    {
+      Item &child = *cw;
+      if (!child.visible())
+        continue;
+      Allocation carea = local_child_allocation (child, area.width, area.height);
+      carea.x += area.x;
+      carea.y += area.y;
+      /* allocate child */
+      child.set_allocation (carea);
+    }
+}
+
+const PropertyList&
+ArrangementImpl::list_properties()
+{
+  static Property *properties[] = {
+    MakeProperty (Arrangement, origin,         _("Origin"),            _("The coordinate origin to be displayed by the arrangement"), Point (0, 0), Point (-MAXDOUBLE, -MAXDOUBLE), Point (+MAXDOUBLE, +MAXDOUBLE), "rw"),
+    MakeProperty (Arrangement, origin_hanchor, _("Horizontal Anchor"), _("Horizontal position of the origin within arrangement, 0=left, 1=right"), 0.5, 0, 1, 0.1, "rw"),
+    MakeProperty (Arrangement, origin_vanchor, _("Vertical Anchor"),   _("Vertical position of the origin within arrangement, 0=bottom, 1=top"), 0.5, 0, 1, 0.1, "rw"),
+  };
+  static const PropertyList property_list (properties, Container::list_properties());
+  return property_list;
+}
+
+static const ItemFactory<ArrangementImpl> arrangement_factory ("Rapicorn::Arrangement");
+
+} // Rapicorn

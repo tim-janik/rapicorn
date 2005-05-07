@@ -45,6 +45,10 @@ class PropertyHost {
   void          float_prop (float v)         		{}
   float         const_float_prop () const    		{ return 0; }
   void          const_float_prop (float v)   		{}
+  Point         point_prop ()             		{ return Point (7, 7); }
+  void          point_prop (Point v)       		{}
+  Point         const_point_prop () const      		{ return Point (7, 7); }
+  void          const_point_prop (Point v)     		{}
   String        string_prop ()               		{ return ""; }
   void          string_prop (const String &v)      	{}
   String        const_string_prop () const   		{ return ""; }
@@ -68,6 +72,7 @@ public:
       MakeProperty (PropertyHost, const_double_prop,    "Label", "Blurb", 50.5, 0, 100, 0.5, "rw"),
       MakeProperty (PropertyHost, float_prop,           "Label", "Blurb", 50.5, 0, 100, 0.5, "rw"),
       MakeProperty (PropertyHost, const_float_prop,     "Label", "Blurb", 50.5, 0, 100, 0.5, "rw"),
+      MakeProperty (PropertyHost, point_prop,           "Label", "Blurb", Point (1,1), Point (0,0), Point (10,10), "rw"),
       MakeProperty (PropertyHost, string_prop,          "Label", "Blurb", "", "rw"),
       MakeProperty (PropertyHost, const_string_prop,    "Label", "Blurb", "", "rw"),
       MakeProperty (PropertyHost, enum_prop,            "Label", "Blurb", FRAME_NONE, "rw"),

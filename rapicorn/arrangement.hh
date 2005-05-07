@@ -16,24 +16,24 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __RAPICORN_HH__
-#define __RAPICORN_HH__
+#ifndef __RAPICORN_ARRANGEMENT_HH__
+#define __RAPICORN_ARRANGEMENT_HH__
 
-/* public include files */
-#include <rapicorn/utilities.hh>
-#include <rapicorn/enumdefs.hh>
-#include <rapicorn/primitives.hh>
-#include <rapicorn/painter.hh>
-#include <rapicorn/events.hh>
-#include <rapicorn/factory.hh>
-#include <rapicorn/appearance.hh>
-#include <rapicorn/properties.hh>
 #include <rapicorn/item.hh>
-#include <rapicorn/container.hh>
-#include <rapicorn/arrangement.hh>
-#include <rapicorn/table.hh>
-#include <rapicorn/layoutcontainers.hh>
-#include <rapicorn/paintcontainers.hh>
-/* conditional: #include <rapicorn/pangolabel.hh> */
-                      
-#endif  /* __RAPICORN_HH__ */
+
+namespace Rapicorn {
+
+class Arrangement : public virtual Convertible {
+public:
+  virtual Point origin          () = 0;
+  virtual void  origin          (Point p) = 0;
+  virtual float origin_hanchor  () = 0;
+  virtual void  origin_hanchor  (float align) = 0;
+  virtual float origin_vanchor  () = 0;
+  virtual void  origin_vanchor  (float align) = 0;
+  virtual Rect  child_area      () = 0;
+};
+
+} // Rapicorn
+
+#endif  /* __RAPICORN_ARRANGEMENT_HH__ */

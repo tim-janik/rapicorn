@@ -223,7 +223,7 @@ string_from_int (int64 value)
 }
 
 double
-string_to_float (const String &string)
+string_to_double (const String &string)
 {
   return strtod (string.c_str(), NULL);
 }
@@ -235,9 +235,60 @@ string_from_float (float value)
 }
 
 String
-string_from_float (double value)
+string_from_double (double value)
 {
   return string_printf ("%.17g", value);
+}
+
+vector<double>
+string_to_vector (const String &string)
+{
+  vector<double> dvec;
+  const char *spaces = " \t\n";
+  const char *obrace = "{([";
+  const char *delims = ";";
+  const char *cbrace = "])}";
+  const char *number = "+-0123456789eE.,";
+  const char *s = string.c_str();
+  /* skip spaces */
+  while (*s && strchr (spaces, *s))
+    s++;
+  /* skip opening brace */
+  if (*s && strchr (obrace, *s))
+    s++;
+  const char *d = s;
+  while (*d && !strchr (cbrace, *d))
+    {
+      while (*d && strchr (spaces, *d))         /* skip spaces */
+        d++;
+      s = d;                                    /* start of number */
+      if (!*d || (!strchr (number, *d) &&       /* ... if any */
+                  !strchr (delims, *d)))
+        break;
+      while (*d && strchr (number, *d))         /* pass across number */
+        d++;
+      dvec.push_back (string_to_double (String (s, d - s)));
+      while (*d && strchr (spaces, *d))         /* skip spaces */
+        d++;
+      if (*d && strchr (delims, *d))
+        d++;                                    /* eat delimiter */
+    }
+  printf ("vector: %d: %s\n", dvec.size(), string_from_vector (dvec).c_str());
+  return dvec;
+}
+
+String
+string_from_vector (const vector<double> &dvec,
+                    const String         &delim)
+{
+  String s;
+  for (uint i = 0; i < dvec.size(); i++)
+    {
+      if (i > 0)
+        s += delim;
+      s += string_from_double (dvec[i]);
+    }
+  return s;
 }
 
 void

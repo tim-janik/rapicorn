@@ -1,3 +1,18 @@
+Sat May  7 15:47:36 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/arrangement*.hh, rapicorn/arrangement.cc:
+	add arrangement container interface and implementation. an arrangement
+	allowes free form item positioning, based on coordinates.
+
+	* rapicorn/properties.hh: added Point (two doubles) property.
+
+	* rapicorn/birnetutils.cc, rapicorn/birnetutils.hh: 
+	added conversion functions between string and a vector of doubles.
+
+	* rapicorn/paintcontainers.cc: fixed button event return values.
+
+	* examples/tour.xml: test arrangement.
+
 Tue Apr 19 14:32:48 2005  Tim Janik  <timj@gtk.org>
 
 	* version 0.1.0-rc1.
