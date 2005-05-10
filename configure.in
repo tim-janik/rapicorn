@@ -85,26 +85,35 @@ AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
 
 # declare --enable-* args and collect ac_help strings
 AC_ARG_ENABLE(debug,       [  --enable-debug=[no/minimum/yes] turn on debugging [default=$debug_default]],,enable_debug=$debug_default)
+AC_ARG_ENABLE(profile,     [  --enable-profile=[no/yes] turn on profiling [default=no]],,enable_profile=no)
 AC_ARG_ENABLE(devel-rules, [  --enable-devel-rules=[no/yes]   turn on developer build rules],,)
 # $enable_devel_rules
 
 dnl setup DEBUG defaults
 if test "x$enable_debug" = "xyes"; then
-  DEBUG_FLAGS="-g -DG_ENABLE_DEBUG"
+  ADDON_CFLAGS="-g -DG_ENABLE_DEBUG"
 else if test "x$enable_debug" = "xno"; then
-  DEBUG_FLAGS="-DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS" # -DG_DISABLE_ASSERT
+  ADDON_CFLAGS="-DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS" # -DG_DISABLE_ASSERT
 else
-  DEBUG_FLAGS="-DG_DISABLE_CAST_CHECKS"
+  ADDON_CFLAGS="-DG_DISABLE_CAST_CHECKS"
 fi fi
+if test "x$enable_profile" = "xyes"; then
+  if test -z "$ADDON_CFLAGS"; then
+    ADDON_CFLAGS="-pg"
+  else
+    ADDON_CFLAGS="$ADDON_CFLAGS -pg"
+  fi
+fi
+dnl setup CFLAGS
 if test -z "$CFLAGS"; then
-  CFLAGS="$DEBUG_FLAGS"
+  CFLAGS="$ADDON_CFLAGS"
 else
-  CFLAGS="$CFLAGS $DEBUG_FLAGS"
+  CFLAGS="$CFLAGS $ADDON_CFLAGS"
 fi
 if test -z "$CXXFLAGS"; then
-  CXXFLAGS="$DEBUG_FLAGS"
+  CXXFLAGS="$ADDON_CFLAGS"
 else
-  CXXFLAGS="$CXXFLAGS $DEBUG_FLAGS"
+  CXXFLAGS="$CXXFLAGS $ADDON_CFLAGS"
 fi
 
 dnl Foreign defaults:
