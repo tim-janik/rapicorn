@@ -1,3 +1,10 @@
+- MAKE COMBINE_NORMAL --> over a real alias
+- render(): pass on a RenderBuffer from which planes can be created via intersection
+- Table: change shrink logic to shrink according to:
+  1) shrink hshrink(1)/vshrink(1) children
+  2) shrink expand children
+  3) shrink *middle* children before edge (start/end packed) children
+     (this preserves menubars or close buttons)
 EVENTS:
 - add_grab/remove_grab should queue a synthesized motion event so enter/leave states are
   updated. (test with overlapping buttons)
