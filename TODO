@@ -8,6 +8,7 @@
 EVENTS:
 - add_grab/remove_grab should queue a synthesized motion event so enter/leave states are
   updated. (test with overlapping buttons)
+- button-press/-release: need to queue extra motion event so enter/leave states are updated
 RENDERING:
 - digital image compositing modes: http://keithp.com/~keithp/porterduff/
 - curve_to approximation:
