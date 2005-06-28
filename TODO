@@ -1,3 +1,7 @@
+- allow notification for signal connections and disconnections
+- before processing delete event, synthesize focus out (for the window in question) 
+  if it has a focus item
+- synthesize focus-out before popping up new (modal, override-redirect) windows  
 - MAKE COMBINE_NORMAL --> over a real alias
 - render(): pass on a RenderBuffer from which planes can be created via intersection
 - Table: change shrink logic to shrink according to:
@@ -12,7 +16,7 @@ EVENTS:
 RENDERING:
 - digital image compositing modes: http://keithp.com/~keithp/porterduff/
 - curve_to approximation:
-  http://graphics.cs.ucdavis.edu/GraphicsNotes/Divide-and-Conquer-Bezier-Curve/Divide-and-Conquer-Bezier-Curve.html
+  http://graphics.idav.ucdavis.edu/education/CAGDNotes/Divide-and-Conquer-Bezier-Curve/Divide-and-Conquer-Bezier-Curve.html
   http://www.cs.mtu.edu/~shene/COURSES/cs3621/NOTES/
 - geometry primitives: http://astronomy.swin.edu.au/~pbourke/geometry/
 - hershey vector fonts: http://astronomy.swin.edu.au/~pbourke/other/hershey/

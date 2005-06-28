@@ -165,7 +165,7 @@ Plane::rgb_convert (uint cwidth, uint cheight, uint rowstride, uint8 *cpixels) c
 #define IDIV0   Color::IDIV0
 #define IMULDIV Color::IMULDIV
 
-template<int KIND> static inline void
+template<int KIND> extern inline void
 pixel_combine (uint32 *D, const uint32 *B, const uint32 *A, uint span, uint8 blend_alpha)
 {
   while (span--)
