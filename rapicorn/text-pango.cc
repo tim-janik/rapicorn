@@ -374,8 +374,7 @@ public:
     delete[] bitmap.buffer;
   }
   void
-  render (Plane        &plane,
-          Affine        affine)
+  render (Display &display)
   {
     int x = allocation().x, y = allocation().y, width = allocation().width, height = allocation().height;
     bool vellipsize = ellipsize() != ELLIPSIZE_NONE && height < requisition().height;
@@ -396,21 +395,22 @@ public:
     if (vellipsize)
       dot_size = max (1, iround (pango_font_description_get_size (layout_get_font_description (m_layout)) *
                                  get_dpi_for_pango().y) / (PANGO_SCALE * 72 * 6));
+    Plane &plane = display.create_plane ();
     if (insensitive())
       {
         x += 1;
-        render (plane, affine, x, y, width, height, dot_size, white());
+        render (plane, Affine(), x, y, width, height, dot_size, white());
         x -= 1;
         y += 1;
         Plane emboss = Plane::create_from_size (plane);
-        render (emboss, affine, x, y, width, height, dot_size, dark_shadow());
+        render (emboss, Affine(), x, y, width, height, dot_size, dark_shadow());
         plane.combine (emboss, COMBINE_OVER);
       }
     else
       {
         x += 1;
         y += 1;
-        render (plane, affine, x, y, width, height, dot_size, foreground());
+        render (plane, Affine(), x, y, width, height, dot_size, foreground());
       }
   }
   virtual const PropertyList&

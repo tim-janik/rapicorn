@@ -136,22 +136,21 @@ Container::match_interface (InterfaceMatch &imatch,
 }
 
 void
-Container::render (Plane  &plane,
-                   Affine  affine)
+Container::render (Display &display)
 {
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       if (!cw->drawable())
         continue;
       const Allocation area = cw->allocation();
-      Plane scratch = Plane::create_from_intersection (plane, Point (area.x, area.y), area.width, area.height);
+      display.push_clip_rect (area.x, area.y, area.width, area.height);
       if (cw->test_flags (INVALID_REQUISITION))
         warning ("rendering item with invalid %s: %s (%p)", "requisition", cw->name().c_str(), &*cw);
       if (cw->test_flags (INVALID_ALLOCATION))
         warning ("rendering item with invalid %s: %s (%p)", "allocation", cw->name().c_str(), &*cw);
-      cw->render (scratch, affine);
-      // plane.combine (scratch, COMBINE_VALUE);
-      plane.combine (scratch, COMBINE_NORMAL);
+      if (!display.empty())
+        cw->render (display);
+      display.pop_clip_rect();
     }
 }
 
@@ -749,8 +748,15 @@ public:
   render (Plane &plane)
   {
     plane.fill (background());
-    render (plane, Affine());
-    // render_coordinates (plane, Affine());
+    Display display;
+    const Allocation &a = allocation();
+    display.push_clip_rect (a.x, a.y, a.width, a.height);
+    display.push_clip_rect (plane.rect());
+    if (!display.empty())
+      render (display);
+    display.render_combined (plane);
+    display.pop_clip_rect();
+    display.pop_clip_rect();
   }
 };
 

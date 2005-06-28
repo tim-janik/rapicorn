@@ -19,6 +19,7 @@
 #ifndef __RAPICORN_PRIMITIVES_HH__
 #define __RAPICORN_PRIMITIVES_HH__
 
+#include <list>
 #include <math.h>
 #include <values.h> /* MAXDOUBLE, etc. */
 #include <rapicorn/enumdefs.hh>
@@ -89,13 +90,21 @@ public:
     y (0)
   {}
   inline double
+  dist2 (double px, double py) const
+  {
+    double dx = px - x;
+    double dy = py - y;
+    return dx * dx + dy * dy;
+  }
+  inline double
   dist (double px, double py) const
   {
     double dx = px - x;
     double dy = py - y;
     return sqrt (dx * dx + dy * dy);
   }
-  inline double dist (const Point &p = Point (0, 0)) const { return dist (p.x, p.y); }
+  inline double dist2 (const Point &p = Point (0, 0)) const { return dist2 (p.x, p.y); }
+  inline double dist  (const Point &p = Point (0, 0)) const { return dist (p.x, p.y); }
   Point  operator+  (const Point &p) const { return Point (x + p.x, y + p.y); }
   Point  operator+  (double delta)   const { return Point (x + delta, y + delta); }
   Point  operator-  (const Point &p) const { return Point (x - p.x, y - p.y); }
@@ -215,12 +224,12 @@ public:
     return ll.x > ur.x || ll.y > ur.y;
   }
   double
-  width()
+  width() const
   {
     return ll.x >= ur.x ? 0 : ur.x - ll.x;
   }
   double
-  height()
+  height() const
   {
     return ll.y >= ur.y ? 0 : ur.y - ll.y;
   }
@@ -461,73 +470,6 @@ public:
     char buffer[128];
     sprintf (buffer, "{.r=%u,.g=%u,.b=%u,.a=%u}", red(), green(), blue(), alpha());
     return String (buffer);
-  }
-};
-
-
-/* --- Plane --- */
-class Plane {
-  int     m_x, m_y, m_stride, m_height;
-  uint32 *m_pixel_buffer;
-  uint    n_pixels() const                  { return height() * m_stride; }
-  Color   peek_color (uint x, uint y) const { const uint32 *p = peek (x, y); return Color::from_premultiplied (*p); }
-public:
-  uint32*       peek (uint x, uint y)       { return &m_pixel_buffer[y * m_stride + x]; }
-  const uint32* peek (uint x, uint y) const { return &m_pixel_buffer[y * m_stride + x]; }
-  explicit      Plane (int x, int y, uint width, uint height);
-  virtual       ~Plane();
-  int           pixstride  () const { return m_stride * 4; }
-  int           width      () const { return m_stride; } //FIXME
-  int           height     () const { return m_height; }
-  Point         origin     () const { return Point (m_x, m_y); }
-  int           xstart     () const { return m_x; }
-  int           ystart     () const { return m_y; }
-  int           xbound     () const { return m_x + width(); }
-  int           ybound     () const { return m_y + height(); }
-  int           channels   () const { return 4; }
-  void   fill              (Color c);
-  void   combine           (const Plane &src, CombineType ct);
-  bool   rgb_convert       (uint cwidth, uint cheight, uint rowstride, uint8 *cpixels) const;
-  void   set_premultiplied (int x, int y, Color c)
-  {
-    int ix = x - m_x, iy = y - m_y;
-    if (ix >= 0 && iy >= 0 && ix < width() && iy < height())
-      {
-        uint32 *pix = peek (ix, iy);
-        *pix = c;
-      }
-  }
-  void   set         (int x, int y, Color c) { set_premultiplied (x, y, c.premultiplied()); }
-  void   set_channel (int x, int y, uint channel, uint8 v)
-  {
-    int ix = x - m_x, iy = y - m_y;
-    if (ix >= 0 && iy >= 0 && ix < width() && iy < height() && channel < 4)
-      {
-        uint32 *pix = peek (ix, iy);
-        Color c = Color::from_premultiplied (*pix);
-        c.channel (channel, v);
-        *pix = c.premultiplied();
-      }
-  }
-  void   set_alpha (int x, int y, uint8 v) { set_channel (x, y, 0, v); }
-  void   set_red   (int x, int y, uint8 v) { set_channel (x, y, 1, v); }
-  void   set_green (int x, int y, uint8 v) { set_channel (x, y, 2, v); }
-  void   set_blue  (int x, int y, uint8 v) { set_channel (x, y, 3, v); }
-  static Plane
-  create_from_intersection (const Plane &master, Point p0, double pwidth, double pheight)
-  {
-    Rect m (master.origin(), master.width(), master.height());
-    Rect b (p0, pwidth, pheight);
-    b.intersect (m);
-    if (b.is_empty())
-      return Plane (iround (p0.x), iround (p0.y), 0, 0);
-    else
-      return Plane (iround (b.ll.x), iround (b.ll.y), iceil (b.width()), iceil (b.height()));
-  }
-  static Plane
-  create_from_size (const Plane &master)
-  {
-    return create_from_intersection (master, master.origin(), master.width(), master.height());
   }
 };
 
@@ -809,6 +751,94 @@ struct AffineShear : Affine {
     yy = 1;
     yz = 0;
   }
+};
+
+/* --- Plane --- */
+class Plane {
+  int     m_x, m_y, m_stride, m_height;
+  uint32 *m_pixel_buffer;
+  uint    n_pixels() const                  { return height() * m_stride; }
+  Color   peek_color (uint x, uint y) const { const uint32 *p = peek (x, y); return Color::from_premultiplied (*p); }
+public:
+  uint32*       peek (uint x, uint y)       { return &m_pixel_buffer[y * m_stride + x]; }
+  const uint32* peek (uint x, uint y) const { return &m_pixel_buffer[y * m_stride + x]; }
+  explicit      Plane (int x, int y, uint width, uint height);
+  virtual       ~Plane();
+  int           pixstride  () const { return m_stride * 4; }
+  int           width      () const { return m_stride; } //FIXME
+  int           height     () const { return m_height; }
+  Rect          rect       () const { return Rect (Point (m_x, m_y), width(), height()); }
+  Point         origin     () const { return Point (m_x, m_y); }
+  int           xstart     () const { return m_x; }
+  int           ystart     () const { return m_y; }
+  int           xbound     () const { return m_x + width(); }
+  int           ybound     () const { return m_y + height(); }
+  int           channels   () const { return 4; }
+  void   fill              (Color c);
+  void   combine           (const Plane &src, CombineType ct = COMBINE_NORMAL, uint8 lucent = 0xff);
+  bool   rgb_convert       (uint cwidth, uint cheight, uint rowstride, uint8 *cpixels) const;
+  void   set_premultiplied (int x, int y, Color c)
+  {
+    int ix = x - m_x, iy = y - m_y;
+    if (ix >= 0 && iy >= 0 && ix < width() && iy < height())
+      {
+        uint32 *pix = peek (ix, iy);
+        *pix = c;
+      }
+  }
+  void   set         (int x, int y, Color c) { set_premultiplied (x, y, c.premultiplied()); }
+  void   set_channel (int x, int y, uint channel, uint8 v)
+  {
+    int ix = x - m_x, iy = y - m_y;
+    if (ix >= 0 && iy >= 0 && ix < width() && iy < height() && channel < 4)
+      {
+        uint32 *pix = peek (ix, iy);
+        Color c = Color::from_premultiplied (*pix);
+        c.channel (channel, v);
+        *pix = c.premultiplied();
+      }
+  }
+  void   set_alpha (int x, int y, uint8 v) { set_channel (x, y, 0, v); }
+  void   set_red   (int x, int y, uint8 v) { set_channel (x, y, 1, v); }
+  void   set_green (int x, int y, uint8 v) { set_channel (x, y, 2, v); }
+  void   set_blue  (int x, int y, uint8 v) { set_channel (x, y, 3, v); }
+  static Plane
+  create_from_intersection (const Plane &master, Point p0, double pwidth, double pheight)
+  {
+    Rect m (master.origin(), master.width(), master.height());
+    Rect b (p0, pwidth, pheight);
+    b.intersect (m);
+    if (b.is_empty())
+      return Plane (iround (p0.x), iround (p0.y), 0, 0);
+    else
+      return Plane (iround (b.ll.x), iround (b.ll.y), iceil (b.width()), iceil (b.height()));
+  }
+  static Plane
+  create_from_size (const Plane &master)
+  {
+    return create_from_intersection (master, master.origin(), master.width(), master.height());
+  }
+};
+
+/* --- Display --- */
+class Display {
+  struct Layer {
+    Plane      *plane;
+    CombineType ctype;
+    double      alpha;
+  };
+  std::list<Layer> layer_stack;
+  std::list<Rect>  clip_stack;
+public:
+  explicit      Display();
+  virtual       ~Display();
+  void          push_clip_rect  (int x, int y, uint width, uint height) { push_clip_rect (Rect (Point (x, y), width, height)); }
+  void          push_clip_rect  (const Rect &rect);
+  Plane&        create_plane    (CombineType ctype = COMBINE_NORMAL,
+                                 double      alpha = 1.0); /* 0..1 */
+  bool          empty           () const;
+  void          pop_clip_rect   ();
+  void          render_combined (Plane &plane);
 };
 
 } // Rapicorn

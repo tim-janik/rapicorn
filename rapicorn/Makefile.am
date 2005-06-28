@@ -9,6 +9,7 @@ DEFS		= -DRAPICORN_PRIVATE -DPARANOID
 rapicorn_public_headers = $(strip 	\
 	rapicorn.hh keycodes.hh		\
 	$(rapicorn_impl_headers)	\
+	primitives.hh			\
 	painter.hh			\
 	paintcontainers.hh		\
 	layoutcontainers.hh		\
@@ -18,7 +19,6 @@ rapicorn_public_headers = $(strip 	\
 	birnetmarkup.hh			\
 	utilities.hh			\
 	enumdefs.hh			\
-	primitives.hh			\
 	appearance.hh			\
 	events.hh			\
 	properties.hh			\
@@ -36,6 +36,7 @@ rapicorn_impl_headers = $(strip 	\
 	tableimpl.hh			\
 )
 rapicorn_cc_sources = $(strip 		\
+	primitives.cc			\
 	painter.cc			\
 	paintcontainers.cc		\
 	layoutcontainers.cc		\
@@ -43,7 +44,6 @@ rapicorn_cc_sources = $(strip 		\
 	birnetmarkup.cc			\
 	utilities.cc			\
 	enumdefs.cc			\
-	primitives.cc			\
 	appearance.cc			\
 	events.cc			\
 	properties.cc			\
@@ -62,6 +62,9 @@ rapicorn_private_headers = $(strip 	\
 rapicorn_extra_sources = $(strip 	\
 	mksignals.sh			\
 )
+rapicorn_fastmath_files = $(strip	\
+)
+CXXFLAGS += $(if $(filter $(rapicorn_fastmath_files), $<), -ffast-math)
 
 lib_LTLIBRARIES            = librapicorn.la
 librapicornincludedir      = $(includedir)/rapicorn

@@ -51,8 +51,7 @@ public:
                                          double                  y,
                                          Affine                  affine,
                                          std::vector<Item*>     &stack);
-  virtual void          render          (Plane                  &plane,
-                                         Affine                  affine);
+  virtual void          render          (Display                &display);
   void                  debug_tree      (String indent = String());
   /* child properties */
   struct ChildPacker : public virtual ReferenceCountImpl {

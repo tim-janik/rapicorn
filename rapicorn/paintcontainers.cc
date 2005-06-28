@@ -161,9 +161,9 @@ private:
   }
 public:
   void
-  render (Plane        &plane,
-          Affine        affine)
+  render (Display &display)
   {
+    Plane &plane = display.create_plane();
     int x = allocation().x, y = allocation().y, width = allocation().width, height = allocation().height;
     bool bimpressed = branch_impressed(), bprelight = branch_prelight();
     /* render background */
@@ -184,53 +184,53 @@ public:
     if (bimpressed && impressed_lighting())
       {
         Plane shade = Plane::create_from_size (plane);
-        render_shade (shade, affine, x, y, width, height, impressed_lighting());
+        render_shade (shade, Affine(), x, y, width, height, impressed_lighting());
         plane.combine (shade, COMBINE_OVER);
       }
     else if (insensitive() && insensitive_lighting())
       {
         Plane shade = Plane::create_from_size (plane);
-        render_shade (shade, affine, x, y, width, height, insensitive_lighting());
+        render_shade (shade, Affine(), x, y, width, height, insensitive_lighting());
         plane.combine (shade, COMBINE_OVER);
       }
     else if (bprelight && prelight_lighting())
       {
         Plane shade = Plane::create_from_size (plane);
-        render_shade (shade, affine, x, y, width, height, prelight_lighting());
+        render_shade (shade, Affine(), x, y, width, height, prelight_lighting());
         plane.combine (shade, COMBINE_OVER);
       }
     else if (normal_lighting() && !bimpressed && !insensitive() && !bprelight)
       {
         Plane shade = Plane::create_from_size (plane);
-        render_shade (shade, affine, x, y, width, height, normal_lighting());
+        render_shade (shade, Affine(), x, y, width, height, normal_lighting());
         plane.combine (shade, COMBINE_OVER);
       }
     /* render shade (combinatoric) */
     if (bimpressed && impressed_shade())
       {
         Plane shade = Plane::create_from_size (plane);
-        render_shade (shade, affine, x, y, width, height, impressed_shade());
+        render_shade (shade, Affine(), x, y, width, height, impressed_shade());
         plane.combine (shade, COMBINE_OVER);
       }
     if (insensitive() && insensitive_shade())
       {
         Plane shade = Plane::create_from_size (plane);
-        render_shade (shade, affine, x, y, width, height, insensitive_shade());
+        render_shade (shade, Affine(), x, y, width, height, insensitive_shade());
         plane.combine (shade, COMBINE_OVER);
       }
     if (bprelight && prelight_shade())
       {
         Plane shade = Plane::create_from_size (plane);
-        render_shade (shade, affine, x, y, width, height, prelight_shade());
+        render_shade (shade, Affine(), x, y, width, height, prelight_shade());
         plane.combine (shade, COMBINE_OVER);
       }
     if (!bimpressed && !insensitive() && !bprelight && normal_shade())
       {
         Plane shade = Plane::create_from_size (plane);
-        render_shade (shade, affine, x, y, width, height, normal_shade());
+        render_shade (shade, Affine(), x, y, width, height, normal_shade());
         plane.combine (shade, COMBINE_OVER);
       }
-    SingleContainerImpl::render (plane, affine);
+    SingleContainerImpl::render (display);
   }
 protected:
   virtual const PropertyList&
@@ -326,8 +326,7 @@ protected:
   }
 public:
   void
-  render (Plane        &plane,
-          Affine        affine)
+  render (Display &display)
   {
     int x = allocation().x, y = allocation().y, width = allocation().width, height = allocation().height;
     if (width >= 2 && height >= 2)
@@ -390,6 +389,7 @@ public:
         dashes.push_back (1);
         dashes.push_back (4);
 #endif
+        Plane &plane = display.create_plane();
         Painter painter (plane);
         if (outer_upper_left || inner_upper_left || inner_lower_right || outer_lower_right)
           painter.draw_shadow (x, y, width, height, outer_upper_left, inner_upper_left, inner_lower_right, outer_lower_right);
@@ -398,7 +398,7 @@ public:
         if (border2)
           painter.draw_border (x + 1, y + 1, width - 2, height - 2, border2, dashes);
       }
-    SingleContainerImpl::render (plane, affine);
+    SingleContainerImpl::render (display);
   }
   virtual const PropertyList&
   list_properties()

@@ -162,8 +162,7 @@ public:
   virtual void                  set_allocation  (const Allocation &area) = 0; /* assign new allocation */
   virtual const Allocation&     allocation      () = 0;                       /* current allocation */
   /* display */
-  virtual void                  render          (Plane        &plane,
-                                                 Affine        affine) = 0;
+  virtual void                  render          (Display        &display) = 0;
   /* styles / appearance */
   StateType             state                   () const;
   Style*                style                   () { return m_style; }

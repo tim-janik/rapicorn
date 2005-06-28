@@ -114,6 +114,15 @@ Color::set_hsv (double hue,             /* 0..360: 0=red, 120=green, 240=blue */
     }
 }
 
+String
+Affine::string() const
+{
+  char buffer[6 * 64 + 128];
+  sprintf (buffer, "{ { %.17g, %.17g, %.17g }, { %.17g, %.17g, %.17g } }",
+           xx, xy, xz, yx, yy, yz);
+  return String (buffer);
+}
+
 Plane::Plane (int x, int y, uint width, uint height) :
   m_x (x), m_y (y), m_stride (width), m_height (height),
   m_pixel_buffer (NULL)
@@ -264,7 +273,7 @@ pixel_combine (uint32 *D, const uint32 *B, const uint32 *A, uint span, uint8 ble
 }
 
 void
-Plane::combine (const Plane &src, CombineType ct)
+Plane::combine (const Plane &src, CombineType ct, uint8 lucent)
 {
   Rect m (origin(), width(), height());
   Rect b (src.origin(), src.width(), src.height());
@@ -280,15 +289,15 @@ Plane::combine (const Plane &src, CombineType ct)
       const uint32 *s = src.peek (xmin - src.xstart(), y - src.ystart());
       switch (ct)
         {
-        case COMBINE_NORMAL:  pixel_combine<COMBINE_NORMAL> (d, d, s, xspan, 0xff); break;
-        case COMBINE_OVER:    pixel_combine<COMBINE_OVER>   (d, d, s, xspan, 0xff); break;
-        case COMBINE_UNDER:   pixel_combine<COMBINE_UNDER>  (d, d, s, xspan, 0xff); break;
-        case COMBINE_ADD:     pixel_combine<COMBINE_ADD>    (d, d, s, xspan, 0xff); break;
-        case COMBINE_DEL:     pixel_combine<COMBINE_DEL>    (d, d, s, xspan, 0xff); break;
-        case COMBINE_ATOP:    pixel_combine<COMBINE_ATOP>   (d, d, s, xspan, 0xff); break;
-        case COMBINE_XOR:     pixel_combine<COMBINE_XOR>    (d, d, s, xspan, 0xff); break;
-        case COMBINE_BLEND:   pixel_combine<COMBINE_BLEND>  (d, d, s, xspan, 0xff); break;
-        case COMBINE_VALUE:   pixel_combine<COMBINE_VALUE>  (d, d, s, xspan, 0xff); break;
+        case COMBINE_NORMAL:  pixel_combine<COMBINE_NORMAL> (d, d, s, xspan, lucent); break;
+        case COMBINE_OVER:    pixel_combine<COMBINE_OVER>   (d, d, s, xspan, lucent); break;
+        case COMBINE_UNDER:   pixel_combine<COMBINE_UNDER>  (d, d, s, xspan, lucent); break;
+        case COMBINE_ADD:     pixel_combine<COMBINE_ADD>    (d, d, s, xspan, lucent); break;
+        case COMBINE_DEL:     pixel_combine<COMBINE_DEL>    (d, d, s, xspan, lucent); break;
+        case COMBINE_ATOP:    pixel_combine<COMBINE_ATOP>   (d, d, s, xspan, lucent); break;
+        case COMBINE_XOR:     pixel_combine<COMBINE_XOR>    (d, d, s, xspan, lucent); break;
+        case COMBINE_BLEND:   pixel_combine<COMBINE_BLEND>  (d, d, s, xspan, lucent); break;
+        case COMBINE_VALUE:   pixel_combine<COMBINE_VALUE>  (d, d, s, xspan, lucent); break;
         }
     }
 }
@@ -339,13 +348,69 @@ Affine::from_triangles (Point src_a, Point src_b, Point src_c,
   return true;
 }
 
-String
-Affine::string() const
+Display::Display()
 {
-  char buffer[6 * 64 + 128];
-  sprintf (buffer, "{ { %.17g, %.17g, %.17g }, { %.17g, %.17g, %.17g } }",
-           xx, xy, xz, yx, yy, yz);
-  return String (buffer);
+  Rect r (Point (-8.9884656743115785e+307, -8.9884656743115785e+307), 1.7976931348623157e+308, 1.7976931348623157e+308);
+  clip_stack.push_front (r);
+}
+
+Display::~Display()
+{
+  while (!layer_stack.empty())
+    {
+      Layer &l = layer_stack.front();
+      layer_stack.pop_front();
+      delete l.plane;
+    }
+}
+
+void
+Display::push_clip_rect (const Rect &rect)
+{
+  clip_stack.push_front (Rect (rect).intersect (clip_stack.front()));
+}
+
+void
+Display::pop_clip_rect ()
+{
+  clip_stack.pop_front ();
+}
+
+bool
+Display::empty () const
+{
+  const Rect &r = clip_stack.front();
+  int w = iceil (r.width()), h = iceil (r.height());
+  return !(w > 0 && h > 0);
+}
+
+Plane&
+Display::create_plane (CombineType ctype,
+                       double      alpha) /* 0..1 */
+{
+  const Rect &r = clip_stack.front();
+  int x = iround (r.ll.x), y = iround (r.ll.y), w = iceil (r.width()), h = iceil (r.height());
+  if (w > 0 && h > 0)
+    {
+      Layer l;
+      l.plane = new Plane (x, y, w, h);
+      l.ctype = ctype;
+      l.alpha = CLAMP (alpha, 0, 1.0);
+      layer_stack.push_back (l);
+      return *l.plane;
+    }
+  else
+    throw Exception (STRFUNC, ": zero-size display");
+}
+
+void
+Display::render_combined (Plane &plane)
+{
+  for (Walker<Layer> layer = walker (layer_stack); layer.has_next(); layer++)
+    {
+      Layer &l = *layer;
+      plane.combine (*l.plane, l.ctype, iround (l.alpha * 0xff));
+    }
 }
 
 } // Rapicorn

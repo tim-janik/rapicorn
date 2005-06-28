@@ -1,3 +1,24 @@
+Tue Jun 28 22:32:57 2005  Tim Janik  <timj@gtk.org>
+
+	* implemented on-demand plane rendering so no extra intermediate
+	planes are constructed (and combined) for containers which do only
+	layout and don't paint anything themselves.
+
+	* rapicorn/primitives.hh, rapicorn/primitives.cc: 
+	Plane::combine(): added lucent argument to allow variable alpha.
+	Point::dist2(): return square distances.
+	Display: new class which can be used to create clipped planes and
+	render the combined result.
+
+	* rapicorn/pangolabel.cc:
+	* rapicorn/paintcontainers.cc: create planes for rendering from 
+	the Display passed in to render(). 
+
+	* rapicorn/container.hh, rapicorn/container.cc: render containers
+	to a Display instead of a plane.
+
+	* rapicorn/item.hh: render() now just has a Display as argument.
+
 Wed May 11 18:10:56 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/primitives.cc (pixel_combine): make this an external
