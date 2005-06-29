@@ -1,3 +1,12 @@
+Wed Jun 29 22:21:52 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/painter.cc: 
+	Painter::draw_shaded_rect(): managed to move 5 muls and one add out of
+	the inner loop, for an overall speed improvement of 5%.
+
+	* rapicorn/primitives.cc:
+	Plane::combine(): use generic pixel combiner for unknown endianess.
+
 Wed Jun 29 21:48:50 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/primitives.cc: added optimized variant for combining pixel

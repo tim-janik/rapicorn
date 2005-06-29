@@ -317,7 +317,7 @@ Plane::combine (const Plane &src, CombineType ct, uint8 lucent)
 #elif   __BYTE_ORDER == __BIG_ENDIAN
           pixel_combine_over_inplace<0,1,2,3> ((uint8*) d, (uint8*) s, xspan);
 #else
-#error value of __BYTE_ORDER unknown
+          pixel_combine<COMBINE_OVER> (d, d, s, xspan, lucent);
 #endif
           break;
         case COMBINE_UNDER:   pixel_combine<COMBINE_UNDER>  (d, d, s, xspan, lucent); break;

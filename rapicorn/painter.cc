@@ -200,17 +200,18 @@ Painter::draw_shaded_rect (int xc0, int yc0, Color color0, int xc1, int yc1, Col
   y1 = MIN (y1, ybound() - 1);
   double max_dist = Point (xc0, yc0).dist (xc1, yc1);
   double wdist = 1 / MAX (1, max_dist);
+  float Ca = (Aa - Ba) * wdist, Cr = (Ar - Br) * wdist, Cg = (Ag - Bg) * wdist, Cb = (Ab - Bb) * wdist;
   for (int y = y0; y <= y1; y++)
     {
       uint32 *d = m_plane.poke_span (x0, y, x1 - x0 + 1);
       for (int x = x0; x <= x1; x++)
         {
-          double d0 = c0.dist (x, y), lucent = d0 * wdist, ilucent = 1 - lucent;
+          double lucent_dist = c0.dist (x, y);
           /* A over B = colorA * alpha + colorB * (1 - alpha) */
-          double Dr = Ar * lucent + Br * ilucent;
-          double Dg = Ag * lucent + Bg * ilucent;
-          double Db = Ab * lucent + Bb * ilucent;
-          double Da = Aa * lucent + Ba * ilucent;
+          double Dr = Br + Cr * lucent_dist;
+          double Dg = Bg + Cg * lucent_dist;
+          double Db = Bb + Cb * lucent_dist;
+          double Da = Ba + Ca * lucent_dist;
           /* dither */
           union { uint32 r; uint8 a[4]; } z = { quick_rand32() };
           uint32 dr = ftoi (Dr * 0xff) + z.a[3];
