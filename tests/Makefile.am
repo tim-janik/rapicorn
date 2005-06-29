@@ -18,8 +18,10 @@ properties_SOURCES = properties.cc
 properties_LDADD = $(programs_ldadd)
 primitives_SOURCES = primitives.cc
 primitives_LDADD = $(programs_ldadd)
+shaderect_SOURCES = shaderect.cc
+shaderect_LDADD = $(programs_ldadd)
 # test programs:
-TESTS = properties signal walker markup datalist primitives
+TESTS = properties signal walker markup datalist primitives shaderect
 programs_ldadd = $(top_builddir)/rapicorn/librapicorn.la $(PANGO_LIBS)
 
 # build tests

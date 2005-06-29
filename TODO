@@ -1,3 +1,4 @@
+- make Plane.peek() private and rename poke_span()
 - allow notification for signal connections and disconnections
 - before processing delete event, synthesize focus out (for the window in question) 
   if it has a focus item

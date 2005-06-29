@@ -176,14 +176,22 @@ Painter::draw_border (int x, int y, int width, int height, Color border, const v
     }
 }
 
+extern inline uint32
+quick_rand32 ()
+{
+  static uint32 accu = 2147483563;
+  accu = 1664525 * accu + 1013904223;
+  return accu;
+}
+
 void
 Painter::draw_shaded_rect (int xc0, int yc0, Color color0, int xc1, int yc1, Color color1)
 {
   Point c0 (xc0, yc0);
   Color pre0 = color0.premultiplied(), pre1 = color1.premultiplied();
   /* extract alpha, red, green ,blue */
-  uint32 Aa = pre1.alpha(), Ar = pre1.red(), Ag = pre1.green(), Ab = pre1.blue();
-  uint32 Ba = pre0.alpha(), Br = pre0.red(), Bg = pre0.green(), Bb = pre0.blue();
+  float Aa = pre1.alpha(), Ar = pre1.red(), Ag = pre1.green(), Ab = pre1.blue();
+  float Ba = pre0.alpha(), Br = pre0.red(), Bg = pre0.green(), Bb = pre0.blue();
   int x0 = MIN (xc0, xc1), x1 = MAX (xc0, xc1);
   int y0 = MIN (yc0, yc1), y1 = MAX (yc0, yc1);
   x0 = MAX (x0, xstart());
@@ -193,23 +201,39 @@ Painter::draw_shaded_rect (int xc0, int yc0, Color color0, int xc1, int yc1, Col
   double max_dist = Point (xc0, yc0).dist (xc1, yc1);
   double wdist = 1 / MAX (1, max_dist);
   for (int y = y0; y <= y1; y++)
-    for (int x = x0; x <= x1; x++)
-      {
-        double d0 = c0.dist (x, y), lucent = d0 * wdist, ilucent = 1 - lucent;
-        /* A over B = colorA * alpha + colorB * (1 - alpha) */
-        double Dr = Ar * lucent + Br * ilucent;
-        double Dg = Ag * lucent + Bg * ilucent;
-        double Db = Ab * lucent + Bb * ilucent;
-        double Da = Aa * lucent + Ba * ilucent;
-        /* dither */
-        union { uint32 r; uint8 a[4]; } z = { lrand48() };
-        uint32 dr = ftoi (Dr * 0xff) + z.a[3];
-        uint32 dg = ftoi (Dg * 0xff) + z.a[2];
-        uint32 db = ftoi (Db * 0xff) + z.a[1];
-        uint32 da = ftoi (Da * 0xff) + z.a[0];
-        /* apply */
-        set_premultiplied (x, y, Color (dr >> 8, dg >> 8, db >> 8, da >> 8));
-      }
+    {
+      uint32 *d = m_plane.poke_span (x0, y, x1 - x0 + 1);
+      for (int x = x0; x <= x1; x++)
+        {
+          double d0 = c0.dist (x, y), lucent = d0 * wdist, ilucent = 1 - lucent;
+          /* A over B = colorA * alpha + colorB * (1 - alpha) */
+          double Dr = Ar * lucent + Br * ilucent;
+          double Dg = Ag * lucent + Bg * ilucent;
+          double Db = Ab * lucent + Bb * ilucent;
+          double Da = Aa * lucent + Ba * ilucent;
+          /* dither */
+          union { uint32 r; uint8 a[4]; } z = { quick_rand32() };
+          uint32 dr = ftoi (Dr * 0xff) + z.a[3];
+          uint32 dg = ftoi (Dg * 0xff) + z.a[2];
+          uint32 db = ftoi (Db * 0xff) + z.a[1];
+          uint32 da = ftoi (Da * 0xff) + z.a[0];
+          /* apply */
+          *d++ = Color (dr >> 8, dg >> 8, db >> 8, da >> 8);
+        }
+    }
+  /* timings:
+   * span+quick-rand+floatcolor:   	0m1.412s (63.8%)
+   * span+quick-rand+dblcolor:   	0m1.464s
+   * span+quick-rand:   		0m2.380s
+   * poke-span:         		0m3.764s
+   * original:            		0m3.904s (100%)
+   * sqrt(float):       		0m4.140s
+   * coarse2:           		0m4.390s
+   * coarse3:           		0m4.460s
+   * -ffast-math:       		0m4.418s
+   * builtin_hypot:     		0m4.930s
+   * hypot:             		0m4.948s
+   */
 }
 
 void

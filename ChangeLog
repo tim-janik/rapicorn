@@ -1,3 +1,18 @@
+Wed Jun 29 11:43:39 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/painter.cc:
+	major speed optimizations to shaded rectangles. combined, the
+	following changes result in a more than 60% speed-up.
+	Painter::draw_shaded_rect(): convert color components from int
+	to float outside of the inner loop. fill destination area span-wise
+	not pixels-wise. use a quick-and-dirty uint32-random generator
+	rather than lrand48(). this random number generator is good enough
+	for dithering but just requires one multiply and one add.
+
+	* rapicorn/primitives.hh: support hand out of entire Plane spans.
+
+	* tests/shaderect.cc: new test, used to benchmark shaded rectangles.
+
 Tue Jun 28 22:32:57 2005  Tim Janik  <timj@gtk.org>
 
 	* implemented on-demand plane rendering so no extra intermediate
