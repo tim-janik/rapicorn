@@ -1,3 +1,10 @@
+Wed Jun 29 21:48:50 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/primitives.cc: added optimized variant for combining pixel
+	planes in-place with COMBINE_OVER, this gives a 30% speed improvement.
+
+	* tests/pixcombine.cc: new test, used to benchmark pixel combination.
+
 Wed Jun 29 11:43:39 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/painter.cc:

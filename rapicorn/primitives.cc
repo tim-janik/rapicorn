@@ -174,17 +174,38 @@ Plane::rgb_convert (uint cwidth, uint cheight, uint rowstride, uint8 *cpixels) c
 #define IDIV0   Color::IDIV0
 #define IMULDIV Color::IMULDIV
 
+template<int iALPHA, int iRED, int iGREEN, int iBLUE> extern inline void
+pixel_combine_over_inplace (uint8 *D, const uint8 *A, uint span)
+{
+  const uint8 *limit = D + 4 * span;
+  while (D < limit)
+    {
+      /* extract alpha, red, green, blue */
+      uint32 Ab = A[iBLUE], Ag = A[iGREEN], Ar = A[iRED], Aa = A[iALPHA];
+      uint32 Bb = D[iBLUE], Bg = D[iGREEN], Br = D[iRED], Ba = D[iALPHA];
+      /* A over B = colorA + colorB * (1 - alphaA) */
+      uint32 Ai = 255 - Aa;
+      uint8 Dr = Ar + IMUL (Br, Ai);
+      uint8 Dg = Ag + IMUL (Bg, Ai);
+      uint8 Db = Ab + IMUL (Bb, Ai);
+      uint8 Da = Aa + IMUL (Ba, Ai);
+      /* assign */
+      D[iBLUE] = Db, D[iGREEN] = Dg, D[iRED] = Dr, D[iALPHA] = Da;
+      A += 4, D += 4;
+    }
+}
+
 template<int KIND> extern inline void
 pixel_combine (uint32 *D, const uint32 *B, const uint32 *A, uint span, uint8 blend_alpha)
 {
   while (span--)
     {
       uint8 Da, Dr, Dg, Db;
-      /* extract alpha, red, green ,blue */
+      /* extract alpha, red, green, blue */
       uint32 Aa = *A >> 24, Ar = (*A >> 16) & 0xff, Ag = (*A >> 8) & 0xff, Ab = *A & 0xff;
       uint32 Ba = *B >> 24, Br = (*B >> 16) & 0xff, Bg = (*B >> 8) & 0xff, Bb = *B & 0xff;
       /* A over B = colorA + colorB * (1 - alphaA) */
-      if (KIND == COMBINE_OVER || KIND == COMBINE_NORMAL)
+      if (KIND == COMBINE_OVER)
         {
           uint32 Ai = 255 - Aa;
           Dr = Ar + IMUL (Br, Ai);
@@ -289,8 +310,16 @@ Plane::combine (const Plane &src, CombineType ct, uint8 lucent)
       const uint32 *s = src.peek (xmin - src.xstart(), y - src.ystart());
       switch (ct)
         {
-        case COMBINE_NORMAL:  pixel_combine<COMBINE_NORMAL> (d, d, s, xspan, lucent); break;
-        case COMBINE_OVER:    pixel_combine<COMBINE_OVER>   (d, d, s, xspan, lucent); break;
+        case COMBINE_NORMAL:
+        case COMBINE_OVER:
+#if     __BYTE_ORDER == __LITTLE_ENDIAN
+          pixel_combine_over_inplace<3,2,1,0> ((uint8*) d, (uint8*) s, xspan);
+#elif   __BYTE_ORDER == __BIG_ENDIAN
+          pixel_combine_over_inplace<0,1,2,3> ((uint8*) d, (uint8*) s, xspan);
+#else
+#error value of __BYTE_ORDER unknown
+#endif
+          break;
         case COMBINE_UNDER:   pixel_combine<COMBINE_UNDER>  (d, d, s, xspan, lucent); break;
         case COMBINE_ADD:     pixel_combine<COMBINE_ADD>    (d, d, s, xspan, lucent); break;
         case COMBINE_DEL:     pixel_combine<COMBINE_DEL>    (d, d, s, xspan, lucent); break;

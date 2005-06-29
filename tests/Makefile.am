@@ -20,8 +20,10 @@ primitives_SOURCES = primitives.cc
 primitives_LDADD = $(programs_ldadd)
 shaderect_SOURCES = shaderect.cc
 shaderect_LDADD = $(programs_ldadd)
+pixcombine_SOURCES = pixcombine.cc
+pixcombine_LDADD = $(programs_ldadd)
 # test programs:
-TESTS = properties signal walker markup datalist primitives shaderect
+TESTS = properties signal walker markup datalist primitives shaderect pixcombine
 programs_ldadd = $(top_builddir)/rapicorn/librapicorn.la $(PANGO_LIBS)
 
 # build tests
