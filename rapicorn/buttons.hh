@@ -16,25 +16,23 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __RAPICORN_HH__
-#define __RAPICORN_HH__
+#ifndef __RAPICORN_BUTTONS_HH__
+#define __RAPICORN_BUTTONS_HH__
 
-/* public include files */
 #include <rapicorn/utilities.hh>
 #include <rapicorn/enumdefs.hh>
-#include <rapicorn/primitives.hh>
-#include <rapicorn/painter.hh>
-#include <rapicorn/events.hh>
-#include <rapicorn/factory.hh>
-#include <rapicorn/appearance.hh>
-#include <rapicorn/properties.hh>
-#include <rapicorn/item.hh>
-#include <rapicorn/container.hh>
-#include <rapicorn/arrangement.hh>
-#include <rapicorn/table.hh>
-#include <rapicorn/layoutcontainers.hh>
-#include <rapicorn/paintcontainers.hh>
-#include <rapicorn/buttons.hh>
-/* conditional: #include <rapicorn/pangolabel.hh> */
-                      
-#endif  /* __RAPICORN_HH__ */
+
+namespace Rapicorn {
+
+class ButtonView : public virtual Convertible {
+protected:
+  explicit      ButtonView ();
+  virtual bool  pressed    ();
+  virtual void  do_clicked ();
+public:
+  Signal<ButtonView,void()> sig_clicked;
+};
+
+} // Rapicorn
+
+#endif  /* __RAPICORN_BUTTONS_HH__ */

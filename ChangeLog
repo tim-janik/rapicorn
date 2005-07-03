@@ -1,3 +1,11 @@
+Sun Jul  3 13:27:03 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/paintcontainers.hh, rapicorn/paintcontainers.cc:
+	removed button-view code.
+
+	* rapicorn/buttons.hh, rapicorn/buttons.cc: moved button 
+	implementation here.
+
 Wed Jun 29 22:21:52 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/painter.cc: 

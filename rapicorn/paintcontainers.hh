@@ -70,15 +70,6 @@ public:
   virtual FrameType     impressed_frame () const = 0;
 };
 
-class ButtonView : public virtual Convertible {
-protected:
-  explicit      ButtonView ();
-  virtual bool  pressed    ();
-  virtual void  do_clicked ();
-public:
-  Signal<ButtonView,void()> sig_clicked;
-};
-
 } // Rapicorn
 
 #endif  /* __RAPICORN_PAINT_CONTAINERS_HH__ */
