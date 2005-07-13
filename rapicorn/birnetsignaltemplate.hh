@@ -92,6 +92,7 @@ struct SignalEmittable3 : SignalBase {
     Iterator (Emission &emission, Link *link) : SignalBase::Iterator<Emission> (emission, link) {}
     R0 operator* () { return this->emission.call (this->current); }
   };
+  explicit SignalEmittable3 (Emitter *emitter) : m_emitter (emitter) {}
   inline Result emit (A1 a1, A2 a2, A3 a3)
   {
     ScopeReference<Emitter, Collector> lref (*m_emitter);
@@ -102,7 +103,6 @@ struct SignalEmittable3 : SignalBase {
     Result result = collector (it, last);
     return result;
   }
-  explicit SignalEmittable3 (Emitter *emitter) : m_emitter (emitter) {}
 private:
   Emitter *m_emitter;
 };
@@ -114,6 +114,7 @@ struct SignalEmittable3 <Emitter, void, A1, A2, A3, Collector> : SignalBase {
     Iterator (Emission &emission, Link *link) : SignalBase::Iterator<Emission> (emission, link) {}
     void operator* () { return this->emission.call (this->current); }
   };
+  explicit SignalEmittable3 (Emitter *emitter) : m_emitter (emitter) {}
   inline void emit (A1 a1, A2 a2, A3 a3)
   {
     ScopeReference<Emitter, Collector> lref (*m_emitter);
@@ -123,7 +124,6 @@ struct SignalEmittable3 <Emitter, void, A1, A2, A3, Collector> : SignalBase {
     Collector collector;
     collector (it, last);
   }
-  explicit SignalEmittable3 (Emitter *emitter) : m_emitter (emitter) {}
 private:
   Emitter *m_emitter;
 };
