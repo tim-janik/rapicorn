@@ -23,51 +23,70 @@
 
 namespace Rapicorn {
 
-ButtonView::ButtonView () :
-  sig_clicked (*this, &ButtonView::do_clicked)
+ButtonController::ButtonController() :
+  sig_check_activate (*this),
+  sig_activate (*this)
 {}
 
-bool
-ButtonView::pressed()
-{
-  return false;
-}
-
-void
-ButtonView::do_clicked()
-{}
-
-class ButtonViewImpl : public virtual SingleContainerImpl, public virtual ButtonView {
-  uint press_button;
-public:
-  explicit ButtonViewImpl() :
-    press_button (0)
-  {}
-  ~ButtonViewImpl()
-  {}
-protected:
-  virtual bool
-  do_event (const Event &event)
+class ButtonControllerImpl : public virtual ButtonController {
+  ButtonView *m_view;
+  uint m_button;
+  virtual void
+  set_item (Item &item)
   {
+    m_view = dynamic_cast<ButtonView*> (&item);
+  }
+  virtual Item&
+  get_item ()
+  {
+    return *m_view;
+  }
+protected:
+  virtual void
+  unset_model()
+  { // FIXME
+  }
+public:
+  virtual void
+  set_model (Activatable  &activatable)
+  { // FIXME
+  }
+  virtual void
+  update ()
+  { // FIXME
+  }
+  ButtonControllerImpl () :
+    m_view (NULL),
+    m_button (0)
+  {}
+  void
+  set_view (ButtonView &bview)
+  {
+    set_item (dynamic_cast<Item&> (bview));
+  }
+  virtual bool
+  handle_event (const Event &event)
+  {
+    ButtonView &view = *m_view;
     bool handled = false, proper_release = false;
     switch (event.type)
       {
       case MOUSE_ENTER:
-        impressed (press_button != 0 || pressed());
-        prelight (true);
+        view.impressed (m_button != 0);
+        view.prelight (true);
         break;
       case MOUSE_LEAVE:
-        prelight (false);
-        impressed (pressed());
+        view.prelight (false);
+        view.impressed (m_button != 0);
         break;
       case BUTTON_PRESS:
       case BUTTON_2PRESS:
       case BUTTON_3PRESS:
-        if (!press_button && event.button == 1)
+        if (!m_button && event.button == 1)
           {
-            press_button = event.button;
-            impressed (true);
-            root()->add_grab (*this);
+            m_button = event.button;
+            view.impressed (true);
+            view.root()->add_grab (view);
             handled = true;
           }
         break;
@@ -76,15 +95,15 @@ protected:
       case BUTTON_3RELEASE:
         proper_release = true;
       case BUTTON_CANCELED:
-        if (press_button == event.button)
+        if (m_button == event.button)
           {
-            bool inbutton = prelight();
-            root()->remove_grab (*this);
-            press_button = 0;
-            impressed (pressed());
-            if (proper_release && inbutton)
-              diag ("button-clicked: impressed=%d (event.button=%d)", impressed(), event.button);
+            bool inbutton = view.prelight();
+            view.root()->remove_grab (view);
+            m_button = 0;
+            view.impressed (false);
             handled = true;
+            if (proper_release && inbutton)
+              diag ("button-clicked: impressed=%d (event.button=%d)", view.impressed(), event.button);
           }
         break;
       case KEY_PRESS:
@@ -97,7 +116,24 @@ protected:
       }
     return handled;
   }
+};
+
+class ButtonViewImpl : public virtual SingleContainerImpl, public virtual ButtonView {
 public:
+  ButtonViewImpl()
+  {
+    set_controller (*new ButtonControllerImpl); // FIXME: leak
+  }
+  void
+  set_model (Activatable &activatable)
+  {
+    // FIXME
+  }
+  void
+  set_controller (ButtonController &bcontroller)
+  {
+    controller (bcontroller);
+  }
   virtual const PropertyList&
   list_properties()
   {

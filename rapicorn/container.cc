@@ -264,13 +264,12 @@ Container::void_packer ()
 {
   class PackerSingleton : public ChildPacker {
     PackerSingleton() { ref_sink(); }
+    PRIVATE_CLASS_COPY (PackerSingleton);
   public:
     static PackerSingleton*
     dummy_packer()
     {
-      static PackerSingleton *singleton = NULL;
-      if (!singleton)
-        singleton = new PackerSingleton;
+      static PackerSingleton *singleton = new PackerSingleton;
       return singleton;
     }
     ~PackerSingleton() { assert_not_reached(); }
@@ -472,18 +471,18 @@ protected:
     vector<Item*> left_children = item_difference (last_entered_children, pierced);
     mevent.type = MOUSE_LEAVE;
     for (vector<Item*>::reverse_iterator it = left_children.rbegin(); it != left_children.rend(); it++)
-      (*it)->handle_event (mevent);
+      (*it)->controller().process_event (mevent);
     /* send enter events */
     vector<Item*> entered_children = item_difference (pierced, last_entered_children);
     mevent.type = MOUSE_ENTER;
     for (vector<Item*>::reverse_iterator it = entered_children.rbegin(); it != entered_children.rend(); it++)
-      (*it)->handle_event (mevent);
+      (*it)->controller().process_event (mevent);
     /* send actual move event */
     bool handled = false;
     mevent.type = MOUSE_MOVE;
     for (vector<Item*>::reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
       if (!handled && (*it)->sensitive())
-        handled = (*it)->handle_event (mevent);
+        handled = (*it)->controller().process_event (mevent);
     /* cleanup */
     delete &mevent;
     for (vector<Item*>::reverse_iterator it = last_entered_children.rbegin(); it != last_entered_children.rend(); it++)
@@ -509,7 +508,7 @@ protected:
     for (vector<Item*>::reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
       {
         if (!handled && (*it)->sensitive())
-          handled = (*it)->handle_event (event);
+          handled = (*it)->controller().process_event (event);
         (*it)->unref();
       }
     return handled;
@@ -546,7 +545,7 @@ private:
           if (button_state_map[bs] == 0)                /* no press delivered for <button> on <item> yet */
             {
               button_state_map[bs] = press_count;       /* record single press */
-              handled = (*it)->handle_event (bevent);
+              handled = (*it)->controller().process_event (bevent);
             }
         }
     delete &bevent;
@@ -569,7 +568,7 @@ private:
               bevent.type = BUTTON_3RELEASE;
             else if (press_count == 2)
               bevent.type = BUTTON_2RELEASE;
-            handled |= bs.item->handle_event (bevent);
+            handled |= bs.item->controller().process_event (bevent);
             button_state_map.erase (current);
           }
       }
@@ -587,7 +586,7 @@ private:
         if (item == current || !item)
           {
             EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, last_event_context);
-            current->handle_event (*mevent);
+            current->controller().process_event (*mevent);
             delete mevent;
             current->unref();
             last_entered_children.erase (last_entered_children.begin() + i);
@@ -601,7 +600,7 @@ private:
         if (bs.item == item || !item)
           {
             EventButton *bevent = create_event_button (BUTTON_CANCELED, last_event_context, bs.button);
-            bs.item->handle_event (*bevent);
+            bs.item->controller().process_event (*bevent);
             delete bevent;
             button_state_map.erase (current);
           }
@@ -637,7 +636,7 @@ public:
       {
         Item *item = last_entered_children.back();
         last_entered_children.pop_back();
-        item->handle_event (mevent);
+        item->controller().process_event (mevent);
         item->unref();
       }
     delete &mevent;
@@ -670,7 +669,7 @@ public:
     EventKey *kevent = create_event_key (is_press ? KEY_PRESS : KEY_RELEASE, econtext, key, key_name);
     Item *grab_item = get_grab();
     grab_item = grab_item ? grab_item : this;
-    bool handled = grab_item->handle_event (*kevent);
+    bool handled = grab_item->controller().process_event (*kevent);
     delete kevent;
     return handled;
   }

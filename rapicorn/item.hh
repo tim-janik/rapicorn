@@ -39,8 +39,27 @@ struct Allocation {
   bool operator== (const Allocation &other) { return other.x == x && other.y == y && other.width == width && other.height == height; }
   bool operator!= (const Allocation &other) { return !operator== (other); }
 };
-class Root;
+class Item;
 class Container;
+class Root;
+
+/* --- controller --- */
+class Controller : public virtual ReferenceCountImpl {
+  typedef Signal<Controller, bool (const Event&), CollectorWhile0<bool> >       EventSignal;
+  friend class Item;
+protected:
+  virtual bool  handle_event    (const Event    &event);
+  virtual void  set_item        (Item           &item) = 0;
+public:
+  virtual Item& get_item        () = 0;
+  explicit      Controller      ();
+  EventSignal   sig_event;
+  bool          process_event   (Event&);
+  typedef enum {
+    RESET_ALL
+  } ResetMode;
+  virtual void  reset           (ResetMode       mode = RESET_ALL);
+};
 
 /* --- Item --- */
 class Item : public virtual Convertible, public virtual DataListContainer, public virtual ReferenceCountImpl {
@@ -90,7 +109,6 @@ protected:
   virtual bool                  match_interface (InterfaceMatch &imatch, const String &ident);
   virtual void                  do_invalidate   () = 0;
   virtual void                  do_changed      () = 0;
-  virtual bool                  do_event        (const Event &event) = 0;
   /* misc */
   virtual void                  style           (Style  *st);
   virtual void                  finalize        ();
@@ -145,14 +163,15 @@ public:
   virtual void                  expose          (const Allocation &area) = 0;
   void                          expose          ()       { expose (allocation()); }
   /* public signals */
-  Signal<Item,
-         bool (const Event&),
-         CollectorWhile0<bool> >  sig_event;
   SignalFinalize<Item>            sig_finalize;
   Signal<Item, void ()>           sig_changed;
   Signal<Item, void ()>           sig_invalidate;
   /* event handling */
-  bool                          handle_event    (Event&);
+protected:
+  friend class Controller;
+  void                          controller      (Controller &controller);
+public:
+  Controller&                   controller      ();
   virtual bool                  point           (double     x,  /* global coordinate system */
                                                  double     y,
                                                  Affine     affine) = 0;

@@ -22,11 +22,54 @@
 
 namespace Rapicorn {
 
+Controller::Controller() :
+  sig_event (*this, &Controller::handle_event)
+{}
+
+bool
+Controller::handle_event (const Event &event)
+{
+  return false;
+}
+
+bool
+Controller::process_event (Event &event)
+{
+  return sig_event.emit (event);
+}
+
+void
+Controller::reset (ResetMode mode)
+{}
+
+class DummyEventController : public Controller {
+  virtual void
+  set_item (Item &item)
+  {}
+  virtual Item&
+  get_item ()
+  {
+    return *(Item*) NULL;
+  }
+  DummyEventController()
+  {
+    /* keep alive singleton */
+    ref_sink();
+  }
+  PRIVATE_CLASS_COPY (DummyEventController);
+public:
+  static DummyEventController&
+  singleton()
+  {
+    static DummyEventController *self = new DummyEventController();
+    return *self;
+  }
+};
+
 Item::Item () :
   m_parent (NULL),
   m_flags (VISIBLE | SENSITIVE),
   m_style (NULL),
-  sig_event (*this, &Item::do_event),
   sig_finalize (*this),
   sig_changed (*this, &Item::do_changed),
   sig_invalidate (*this, &Item::do_invalidate)
@@ -159,6 +202,7 @@ Item::finalize()
 
 Item::~Item()
 {
+  controller (*(Controller*) NULL);
   if (parent_container())
     parent_container()->remove (this);
   if (m_style)
@@ -326,12 +370,6 @@ Item::invalidate()
     }
 }
 
-bool
-Item::handle_event (Event &event)
-{
-  return sig_event.emit (event);
-}
-
 void
 ItemImpl::allocation (const Allocation &area)
 {
@@ -371,6 +409,36 @@ void
 ItemImpl::name (const String &str)
 {
   m_name = str;
+}
+
+static DataKey<Controller*> event_controller_key;
+
+Controller&
+Item::controller ()
+{
+  Controller *controller = get_data (&event_controller_key);
+  return controller ? *controller : DummyEventController::singleton();
+}
+
+void
+Item::controller (Controller &controller)
+{
+  if (&controller)
+    controller.ref_sink();
+  Controller *oldc = get_data (&event_controller_key);
+  if (oldc)
+    {
+      oldc->reset ();
+      delete_data (&event_controller_key);
+      oldc->set_item (*(Item*) NULL);
+      oldc->unref();
+    }
+  if (&controller)
+    {
+      set_data (&event_controller_key, &controller);
+      controller.set_item (*this);
+      controller.reset ();
+    }
 }
 
 bool

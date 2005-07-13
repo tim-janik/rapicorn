@@ -19,18 +19,38 @@
 #ifndef __RAPICORN_BUTTONS_HH__
 #define __RAPICORN_BUTTONS_HH__
 
-#include <rapicorn/utilities.hh>
-#include <rapicorn/enumdefs.hh>
+#include <rapicorn/item.hh>
 
 namespace Rapicorn {
 
-class ButtonView : public virtual Convertible {
+struct Disposable : virtual Convertible { // FIXME: move out of here
+  SignalVoid<Disposable> sig_dispose;
+};
+
+struct Activatable : virtual Convertible { /* ActivateModel */
+  SignalVoid<Activatable>       sig_changed;
+  virtual bool                  check_activate ();
+  virtual void                  activate       ();
+};
+
+class ButtonController : public virtual Controller {
 protected:
-  explicit      ButtonView ();
-  virtual bool  pressed    ();
-  virtual void  do_clicked ();
+  explicit      ButtonController();
+  virtual void  unset_model() = 0;
 public:
-  Signal<ButtonView,void()> sig_clicked;
+  virtual void  set_model (Activatable  &activatable) = 0;
+  virtual void  update    () = 0;
+public: /* convenience API to spare model */
+  typedef Signal<ButtonController, bool (), CollectorUntil0<bool> > SignalCheckActivate;
+  typedef Signal<ButtonController, void ()>                         SignalActivate;
+  SignalCheckActivate   sig_check_activate;
+  SignalActivate        sig_activate;
+};
+
+class ButtonView : public virtual Item {
+public:
+  virtual void  set_model       (Activatable            &activatable) = 0;
+  virtual void  set_controller  (ButtonController       &bcontroller) = 0;
 };
 
 } // Rapicorn

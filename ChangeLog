@@ -1,3 +1,17 @@
+Wed Jul  6 20:06:05 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/birnetsignal.hh: added struct CollectorUntil0 signal
+	collector template. predefine SignalVoid for void(void) signals.
+
+	* rapicorn/buttons.hh, rapicorn/buttons.cc:
+	moved event handling to ButtonController.
+
+	* rapicorn/container.cc: made singleton packer creation thread safe.
+	dispatch event handling to item->controller() instances.
+
+	* rapicorn/item.hh, rapicorn/item.cc: introduced per-item controller
+	objects which take over the responsibility of handling events.
+
 Sun Jul  3 13:27:03 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/paintcontainers.hh, rapicorn/paintcontainers.cc:

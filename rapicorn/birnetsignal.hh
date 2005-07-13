@@ -215,11 +215,28 @@ struct CollectorWhile0 {
   template<typename InputIterator>
   Result operator() (InputIterator begin, InputIterator end)
   {
-    Result result = Result();
+    Result result = Result();   // result = 0
     while (begin != end)
       {
         result = *begin;
-        if (result)
+        if (result)             // result != 0
+          break;
+        ++begin;
+      }
+    return result;
+  }
+};
+template<typename Result>
+struct CollectorUntil0 {
+  typedef Result result_type;
+  template<typename InputIterator>
+  Result operator() (InputIterator begin, InputIterator end)
+  {
+    Result result = !Result();  // result = !0
+    while (begin != end)
+      {
+        result = *begin;
+        if (!result)            // result == 0
           break;
         ++begin;
       }
@@ -393,7 +410,7 @@ handler_cast (SignalBase::Link *link)
 /* --- Handler + Slot + Signal generation --- */
 #include <rapicorn/birnetsignalvariants.hh> // contains multiple versions of "birnetsignaltemplate.hh"
 
-/* --- SignalFinalize --- */
+/* --- predefined signals --- */
 template<class Emitter>
 struct SignalFinalize : Signal0 <Emitter, void, ScopeReferenceFinalizationMark> {
   typedef Signal0<Emitter, void, ScopeReferenceFinalizationMark> Signal0;
@@ -402,14 +419,24 @@ struct SignalFinalize : Signal0 <Emitter, void, ScopeReferenceFinalizationMark> 
   BIRNET_PRIVATE_CLASS_COPY (SignalFinalize);
 };
 
+template<class Emitter>
+struct SignalVoid : Signal0 <Emitter, void> {
+  typedef Signal0<Emitter, void> Signal0;
+  explicit SignalVoid (Emitter &emitter)                                 : Signal0 (emitter) {}
+  explicit SignalVoid (Emitter &emitter, void (Emitter::*method) (void)) : Signal0 (emitter, method) {}
+  BIRNET_PRIVATE_CLASS_COPY (SignalVoid);
+};
+
 } // Signals
 
 /* --- Birnet::Signal imports --- */
 using Signals::CollectorDefault;
 using Signals::CollectorWhile0;
+using Signals::CollectorUntil0;
 using Signals::CollectorLast;
 using Signals::CollectorSum;
 using Signals::SignalFinalize;
+using Signals::SignalVoid;
 using Signals::Signal;
 using Signals::slot;
 
