@@ -1,3 +1,14 @@
+Tue Jul 19 17:04:42 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/birnetutils.hh, rapicorn/private.hh: define DIR_SEPARATOR,
+	DIR_SEPARATOR_S, SEARCHPATH_SEPARATOR and SEARCHPATH_SEPARATOR_S.
+
+	* rapicorn/birnetutils.hh, rapicorn/birnetutils.cc: introduce basename 
+	and dirname.
+
+	* examples/tour.cc (construct_gui): try to find tour.xml based on the
+	programs pathname.
+
 Wed Jul  6 20:06:05 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/birnetsignal.hh: added struct CollectorUntil0 signal

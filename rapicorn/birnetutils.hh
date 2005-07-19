@@ -119,6 +119,14 @@ clamp (const T &value, const T &minimum, const T &maximum)
   return value;
 }
 
+/* --- file/path functionality --- */
+#define BIRNET_DIR_SEPARATOR            '/'
+#define BIRNET_DIR_SEPARATOR_S          "/"
+#define BIRNET_SEARCHPATH_SEPARATOR     ':'
+#define BIRNET_SEARCHPATH_SEPARATOR_S   ":"
+const String              dirname (const String &path);
+const String              basename (const String &path);
+
 /* --- string functionality --- */
 String  string_printf           (const char *format, ...) BIRNET_PRINTF (1, 2);
 String  string_vprintf          (const char *format, va_list vargs);

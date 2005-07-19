@@ -25,9 +25,20 @@ using namespace Rapicorn;
 using Rapicorn::uint;
 
 static void
-construct_gui (GtkWindow *window)
+construct_gui (GtkWindow  *window,
+               const char *path)
 {
-  Factory.parse_resource ("tour.xml", "Test", nothrow);
+  try {
+    Factory.parse_resource ("tour.xml", "Test");
+  } catch (...) {
+    try {
+      String file = String (path) + DIR_SEPARATOR + "tour.xml";
+      Factory.parse_resource (file.c_str(), "Test");
+    } catch (...) {
+      String file = String (path) + DIR_SEPARATOR + ".." + DIR_SEPARATOR + "tour.xml";
+      Factory.parse_resource (file.c_str(), "Test", nothrow);
+    }
+  }
 
   /* create root item */
   Item &item = Factory.create_gadget ("root");
@@ -57,7 +68,7 @@ main (int   argc,
   g_signal_connect (window, "delete-event", G_CALLBACK (gtk_widget_hide_on_delete), NULL);
   g_signal_connect (window, "hide", G_CALLBACK (gtk_main_quit), NULL);
 
-  construct_gui (GTK_WINDOW (window));
+  construct_gui (GTK_WINDOW (window), dirname (argv[0]).c_str());
 
   gtk_widget_show (window);
 

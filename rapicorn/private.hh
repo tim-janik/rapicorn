@@ -57,7 +57,14 @@ namespace Rapicorn {
 #define assert_not_reached()            BIRNET_ASSERT_NOT_REACHED()
 #undef assert
 #define assert(e)                       BIRNET_ASSERT(e)
+
+#define DIR_SEPARATOR                   BIRNET_DIR_SEPARATOR
+#define DIR_SEPARATOR_S                 BIRNET_DIR_SEPARATOR_S
+#define SEARCHPATH_SEPARATOR            BIRNET_SEARCHPATH_SEPARATOR
+#define SEARCHPATH_SEPARATOR_S          BIRNET_SEARCHPATH_SEPARATOR_S
+
 #define MakeProperty                    RAPICORN_MakeProperty
+
 #define PRIVATE_CLASS_COPY(C)           BIRNET_PRIVATE_CLASS_COPY(C)
 
 } // Rapicorn
