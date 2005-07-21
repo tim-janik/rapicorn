@@ -1,3 +1,14 @@
+Fri Jul 22 01:10:41 2005  Tim Janik  <timj@gtk.org>
+
+	* examples/tour.xml: define "image" item, added broken image for
+	test purposes.
+
+	* rapicorn/birnetutils.hh: allow refcounting of const objects.
+
+	* rapicorn/image.hh, rapicorn/image.cc: started basic image 
+	implementation. so far, the API is in place, as well as a deserializer
+	for gdk-pixbuf pixstreams. added 16x16 pixel big "broken image" pixstream.
+
 Tue Jul 19 17:04:42 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/birnetutils.hh, rapicorn/private.hh: define DIR_SEPARATOR,

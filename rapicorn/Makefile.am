@@ -13,6 +13,7 @@ rapicorn_public_headers = $(strip 	\
 	painter.hh			\
 	paintcontainers.hh		\
 	buttons.hh			\
+	image.hh			\
 	layoutcontainers.hh		\
 	birnetutils.hh			\
 	birnetsignal.hh			\
@@ -41,6 +42,7 @@ rapicorn_cc_sources = $(strip 		\
 	painter.cc			\
 	paintcontainers.cc		\
 	buttons.cc			\
+	image.cc			\
 	layoutcontainers.cc		\
 	birnetutils.cc			\
 	birnetmarkup.cc			\

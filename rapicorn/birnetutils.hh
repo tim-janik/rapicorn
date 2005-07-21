@@ -561,22 +561,22 @@ value_walker (const Iterator &begin, const Iterator &end)
 /* --- ReferenceCountImpl --- */
 class ReferenceCountImpl : public virtual Deletable
 {
-  unsigned int m_ref_count : 31;
-  unsigned int m_floating : 1;
+  mutable unsigned int m_ref_count : 31;
+  mutable unsigned int m_floating : 1;
 public:
   ReferenceCountImpl() :
     m_ref_count (1),
     m_floating (1)
   {}
   void
-  ref()
+  ref() const
   {
     assert (m_ref_count > 0);
     assert (m_ref_count < 2147483647);
     m_ref_count++;
   }
   void
-  ref_sink()
+  ref_sink() const
   {
     assert (m_ref_count > 0);
     ref();
@@ -586,27 +586,25 @@ public:
         unref();
       }
   }
-  virtual void
-  finalize()
-  {}
   bool
-  finalizing()
+  finalizing() const
   {
     return m_ref_count < 1;
   }
   void
-  unref()
+  unref() const
   {
     assert (m_ref_count > 0);
     m_ref_count--;
     if (!m_ref_count)
       {
-        finalize();
-        delete_this(); // effectively: delete this;
+        ReferenceCountImpl *self = const_cast<ReferenceCountImpl*> (this);
+        self->finalize();
+        self->delete_this(); // effectively: delete this;
       }
   }
   void
-  ref_diag(const char *msg = NULL)
+  ref_diag (const char *msg = NULL) const
   {
     diag ("%s: this=%p ref_count=%d floating=%d", msg ? msg : "ReferenceCountImpl", this, m_ref_count, m_floating);
   }
@@ -622,6 +620,9 @@ protected:
   virtual
   ~ReferenceCountImpl()
   { assert (m_ref_count == 0); }
+  virtual void
+  finalize()
+  {}
   virtual void
   delete_this ()
   { delete this; }
