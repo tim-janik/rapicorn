@@ -102,14 +102,20 @@
 	      </button>
 	      <frame frame-type="etched-out" visible="1" left-padding="10" right-padding="10" bottom-padding="10">
 		<table>
-		  <frame left-attach="50" bottom-attach="59" />
-		  <frame left-attach="51" bottom-attach="58" />
-		  <frame left-attach="52" bottom-attach="57">
+		  <frame left-attach="3" bottom-attach="59" >
 		    <hbox>
 		      <label text="broken-image: " />
 		      <image image-file="/../..-nonexistantfilename" />
+		      <label text=" test images: " />
+		      <image builtin_pixstream="testimage-rgb-raw" />
+		      <image builtin_pixstream="testimage-rgb-rle" />
+		      <image builtin_pixstream="testimage-alpha-raw" />
+		      <image builtin_pixstream="testimage-alpha-rle" />
 		    </hbox>
 		  </frame>
+		  <frame left-attach="50" bottom-attach="59" />
+		  <frame left-attach="51" bottom-attach="58" />
+		  <frame left-attach="52" bottom-attach="57" />
 		  <frame left-attach="53" bottom-attach="56" />
 		  <frame left-attach="54" bottom-attach="55" left-padding="20" right-padding="3" frame-type="out" />
 		  <frame left-attach="55" bottom-attach="54" />

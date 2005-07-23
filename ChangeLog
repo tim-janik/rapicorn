@@ -1,3 +1,15 @@
+Sat Jul 23 17:04:06 2005  Tim Janik  <timj@gtk.org>
+
+	* examples/tour.cc: added testimages to exploit ARGB/RGB and RLE/Raw
+	pixel stream deserialization code. 
+
+	* examples/tour.xml: display testimages. 
+
+	* rapicorn/image.hh, rapicorn/image.cc: implemented builtin pixstream 
+	registry. marked non-MT safe portions with "FIXME". 
+	implemented actual image rendering in render(), fixed deserialization
+	and cleaned up API.
+
 Fri Jul 22 01:10:41 2005  Tim Janik  <timj@gtk.org>
 
 	* examples/tour.xml: define "image" item, added broken image for

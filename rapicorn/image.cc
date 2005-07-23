@@ -20,8 +20,46 @@
 #include "itemimpl.hh"
 #include "painter.hh"
 #include "factory.hh"
+#include <ext/hash_map>
 
 namespace Rapicorn {
+
+struct HashName {
+  size_t
+  operator() (const char *name) const
+  {
+    /* 31 bit hash function */
+    const char *p = name;
+    size_t h = *p;
+    if (h)
+      for (p += 1; *p != '\0'; p++)
+        h = (h << 5) - h + *p;
+    return h;
+  }
+};
+
+struct EqualNames {
+  bool
+  operator() (const char *name1, const char *name2) const
+  {
+    return strcmp (name1, name2) == 0;
+  }
+};
+
+static __gnu_cxx::hash_map <const char*, const uint8*, HashName, EqualNames> builtin_pixstreams; // FIXME: needs locking
+
+const uint8*
+Image::lookup_builtin_pixstream (const char *builtin_name)
+{
+  return builtin_pixstreams[builtin_name];
+}
+
+void
+Image::register_builtin_pixstream (const char  * const builtin_name,
+                                   const uint8 * const builtin_pixstream)
+{
+  builtin_pixstreams[builtin_name] = builtin_pixstream;
+}
 
 static const uint8* get_broken16_pixdata (void);
 
@@ -49,7 +87,14 @@ public:
   ~ImageImpl()
   {}
   virtual void          image_file        (const String &filename)      { load_image_file (filename); }
-  virtual void          builtin_pixstream (const String &builtin_name)  { load_image_file (builtin_name); } // FIXME
+  virtual void
+  builtin_pixstream (const String &builtin_name)
+  {
+    const uint8 *pixstream = lookup_builtin_pixstream (builtin_name.c_str());
+    if (!pixstream)
+      pixstream = get_broken16_pixdata();
+    load_pixstream (pixstream);
+  }
   virtual ErrorType
   load_image_file (const String &filename)
   {
@@ -119,10 +164,24 @@ public:
   void
   render (Display &display)
   {
-    int x = allocation().x, y = allocation().y, width = allocation().width, height = allocation().height;
-    Plane &plane = display.create_plane();
-    Painter painter (plane);
-    painter.draw_shadow (x, y, width, height, dark_glint(), dark_shadow(), dark_glint(), dark_shadow());
+    if (m_pimage)
+      {
+        int ix = allocation().x + m_xoffset, iy = allocation().y + m_yoffset;
+        int ih = m_pimage->height();
+        display.push_clip_rect (ix, iy, m_pimage->width(), ih);
+        Plane &plane = display.create_plane();
+        for (int y = plane.ystart(); y < plane.ybound(); y++)
+          {
+            uint nth = y - iy;
+            const uint32 *row = m_pimage->row (ih - (1 + nth));
+            row += plane.xstart() - ix;
+            uint32 *span = plane.poke_span (plane.xstart(), y, plane.width());
+            uint32 *limit = span + plane.width();
+            while (span < limit)
+              *span++ = Color (*row++).premultiplied();
+          }
+        display.pop_clip_rect();
+      }
   }
   virtual const PropertyList&
   list_properties()
@@ -150,6 +209,7 @@ public:
   {
     if (m_pixels)
       delete[] m_pixels;
+    m_pixels = NULL;
   }
   void
   resize (uint iwidth,
@@ -166,9 +226,9 @@ public:
   {
     return m_pixels;
   }
-  virtual uint          width  () const       { return m_width; }
-  virtual uint          height () const       { return m_height; }
-  virtual const uint32* row    (uint y) const { return m_pixels + y * width() * 4; }
+  virtual int           width  () const       { return m_width; }
+  virtual int           height () const       { return m_height; }
+  virtual const uint32* row    (uint y) const { return m_pixels + y * width(); }
 };
 
 static Image::ErrorType
@@ -239,7 +299,7 @@ fill_pixel_image_from_pixstream (bool                has_alpha,
   else
     for (uint y = 0; y < pixdata_height; y++)
       {
-        uint32 *row = pimage.pixels() + y * pimage.width() * 4;
+        uint32 *row = pimage.pixels() + y * pimage.width();
         uint length = pixdata_width;
         if (bpp < 4)
           while (length--)
@@ -340,25 +400,38 @@ get_broken16_pixdata (void)
       /* height (16) */
       "\0\0\0\20"
       /* pixel_data: */
-      "\221\0\0\0\0\1\0\0\0@\214\0\0\0\200\1\0\0\0@\202\0\0\0\0\1\0\0\0\200"
-      "\214\0\0\0\377\1\0\0\0\200\202\0\0\0\0\2\0\0\0\200\0\0\0\377\204\235"
-      "\264\377\377\2\244\272\377\306\245\272\377\277\204\235\264\377\377\2"
-      "\0\0\0\377\0\0\0~\202\0\0\0\0\2\0\0\0\200\0\0\0\377\202\235\264\377\377"
-      "\2\237\265\377\360\256\301\377p\202\0\0\0\0\1\235\264\377\375\203\235"
-      "\264\377\377\2\0\0\0\273\0\0\0\17\202\0\0\0\0\5\0\0\0\200\0\0\0\377\235"
-      "\264\377\377\246\273\377\270\264\305\377\36\203\0\0\0\0\1\256\301\377"
-      "j\202\235\264\377\377\2\250\274\377\243\0\0\0\7\203\0\0\0\0\3\0\0\0\200"
-      "\0\0\0\351\260\303\377^\205\0\0\0\0\3\277\316\377\6\243\271\377\320\253"
-      "\276\377\217\205\0\0\0\0\2\0\0\0<\0\0\0\26\207\0\0\0\0\1\263\305\377"
-      "\24\213\0\0\0\0\2\200\377w!m\377b^\206\0\0\0\0\1\0\0\0\14\205\0\0\0\0"
-      "\5\210\377\177\2d\377Xv\34\377\13\364\27\377\6\371}\377s.\204\0\0\0\0"
-      "\2\0\0\0d\0\0\0{\204\0\0\0\0\2}\377s.8\377)\315\203\22\377\0\377\2""2"
-      "\377\"\326\210\377\177\5\202\0\0\0\0\3d\377Yu\0\0\0\377\0\0\0\200\202"
-      "\0\0\0\0\3\0\0\0\12\0\0\0\205\25\377\4\373\205\22\377\0\377\6\\\377P"
-      "\211\0\0\0\0^\377R\205\22\377\0\377\0\0\0\377\0\0\0\200\202\0\0\0\0\2"
-      "\0\0\0\177\0\0\0\377\207\22\377\0\377\1T\377G\234\202\22\377\0\377\2"
-      "\0\0\0\377\0\0\0\200\202\0\0\0\0\1\0\0\0\200\214\0\0\0\377\1\0\0\0\200"
-      "\202\0\0\0\0\1\0\0\0@\214\0\0\0\200\1\0\0\0@\221\0\0\0\0" };
+      "\221\0\0\0\0\203\0\0\0\377\2>\0\10\377\0\0\0\377\202\0\0\0\0\1\253\0"
+      "\30\\\203\0\0\0\377\2\0\0\0\177\0\0\0\77\203\0\0\0\0\1\0\0\0\377\202"
+      "\377\377\377\377\2\377r\205\377\377Jc\262\202\0\0\0\0\7\377D_\301\377"
+      "\201\222\377\377\377\377\377\0\0\0\377\300\300\300\377\0\0\0\177\0\0"
+      "\0\77\202\0\0\0\0\1\0\0\0\377\202\377\377\377\377\2\377\"A\377\377Kd"
+      "D\202\0\0\0\0\7\377\32;\367\377\317\325\377\377\377\377\377\0\0\0\377"
+      "\377\377\377\377\300\300\300\377\0\0\0\177\202\0\0\0\0\4\0\0\0\377\377"
+      "\377\377\377\377\324\332\377\377\25""6\371\202\0\0\0\0\2\377Kd=\377\33"
+      ";\377\202\377\377\377\377\204\0\0\0\377\202\0\0\0\0\4\0\0\0\377\377\377"
+      "\377\377\377\206\227\377\377A\\\307\202\0\0\0\0\2\377.K\224\377k\177"
+      "\377\205\377\377\377\377\1\0\0\0\377\202\0\0\0\0\11\0\0\0\377\377\377"
+      "\377\377\377\257\272\377\377\5(\363\377\0$8\0\0\0\0\377\0$P\377\5(\363"
+      "\377\305\315\370\204\377\377\377\377\1\0\0\0\377\202\0\0\0\0\1\0\0\0"
+      "\377\202\377\377\377\377\7\377\273\305\366\377\4'\366\377\0$R\0\0\0\0"
+      "\377\0$A\377\2%\364\377\247\264\360\203\377\377\377\377\1\0\0\0\377\202"
+      "\0\0\0\0\1\0\0\0\377\203\377\377\377\377\7\377\325\333\376\377\12,\365"
+      "\377\0$w\0\0\0\0\377\0$)\377\2%\355\377|\216\350\202\377\377\377\377"
+      "\1\0\0\0\377\202\0\0\0\0\1\0\0\0\377\204\377\377\377\377\11\377\366\367"
+      "\377\377(F\352\377\1%\251\377\0$\10\377\0$\11\377\3'\310\377F`\350\377"
+      "\367\370\377\0\0\0\377\202\0\0\0\0\1\0\0\0\377\204\377\377\377\377\11"
+      "\377\365\366\377\3777S\361\377\4'\256\377\0$\6\377\0$\12\377\5(\301\377"
+      "F`\354\377\371\371\377\0\0\0\377\202\0\0\0\0\1\0\0\0\377\203\377\377"
+      "\377\377\12\377\356\360\377\377+H\355\377\1%\252\377\0$\2\377\0$\21\377"
+      "\6)\312\377Jd\357\377\375\375\377\377\377\377\377\0\0\0\377\202\0\0\0"
+      "\0\1\0\0\0\377\202\377\377\377\377\10\377\356\360\377\377\35=\360\377"
+      "\1%\216\377\0$\1\377\0$\21\377\3'\327\377h}\357\377\376\376\377\202\377"
+      "\377\377\377\1\0\0\0\377\202\0\0\0\0\11\0\0\0\377\377\377\377\377\377"
+      "\340\344\377\377\15/\365\377\2%z\0\0\0\0\377\0$\37\377\3&\353\377\200"
+      "\222\364\204\377\377\377\377\1\0\0\0\377\202\0\0\0\0\7\0\0\0\377&\0\5"
+      "\377\0\0\0\377\326\0\36p\0\0\0\0\377\0$&\370\0#\351\207\0\0\0\377\221"
+      "\0\0\0\0"
+    };
   return broken16_pixdata;
 }
 
