@@ -100,11 +100,11 @@ root_widget_realize (GtkWidget *widget)
   gdk_window_set_user_data (widget->window, widget);
   widget->style = gtk_style_attach (widget->style, widget->window);
   Color argb_color = root ? dynamic_cast<Item*> (root)->style()->color (STATE_NORMAL, COLOR_BACKGROUND) : Color (0xff808080);
-  Color pre_color = argb_color.premultiplied();
   GdkColor gdkcolor = { 0, };
-  gdkcolor.red = pre_color.red() * 0x0101;
-  gdkcolor.green = pre_color.green() * 0x0101;
-  gdkcolor.blue = pre_color.blue() * 0x0101;
+  gdkcolor.red = argb_color.red() * 0x0101;
+  gdkcolor.green = argb_color.green() * 0x0101;
+  gdkcolor.blue = argb_color.blue() * 0x0101;
+  printf ("backgreound: %x %x %x\n", gdkcolor.red, gdkcolor.green, gdkcolor.blue);
   if (gdk_colormap_alloc_color (attributes.colormap, &gdkcolor, FALSE, TRUE))
     {
       gdk_window_set_background (widget->window, &gdkcolor);
@@ -117,6 +117,13 @@ root_widget_realize (GtkWidget *widget)
   GtkWidget *toplevel = gtk_widget_get_toplevel (widget);
   gtk_widget_add_events (toplevel, GDK_STRUCTURE_MASK);
   g_signal_connect (toplevel, "event", G_CALLBACK (root_widget_ancestor_event), self);
+  if (widget->parent == toplevel && toplevel->window &&  // FIXME: hacking up parent GtkWindow
+      gdk_colormap_alloc_color (attributes.colormap, &gdkcolor, FALSE, TRUE))
+    {
+      gtk_widget_set_app_paintable (toplevel, TRUE);
+      gdk_window_set_background (toplevel->window, &gdkcolor);
+      gdk_colormap_free_colors (attributes.colormap, &gdkcolor, 1);
+    }
 }
 
 static void

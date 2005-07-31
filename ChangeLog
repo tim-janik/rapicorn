@@ -1,3 +1,9 @@
+Sun Jul 31 05:06:54 2005  Tim Janik  <timj@gtk.org>
+
+	* examples/gtkrootwidget.cc (root_widget_realize): adjust the toplevel
+	GdkWindow's background color, so background redrawing is blatantly 
+	obvious upon resizes.
+
 Sat Jul 23 17:04:06 2005  Tim Janik  <timj@gtk.org>
 
 	* examples/tour.cc: added testimages to exploit ARGB/RGB and RLE/Raw
