@@ -1,3 +1,6 @@
+- fix (upon resizing):
+  terminate called after throwing an instance of 'Birnet::Exception'
+    what():  Rapicorn::Plane& Rapicorn::Display::create_plane(Rapicorn::CombineType, double): zero-size display
 - make Plane.peek() private and rename poke_span()
 - allow notification for signal connections and disconnections
 - before processing delete event, synthesize focus out (for the window in question) 
@@ -21,3 +24,4 @@ RENDERING:
   http://www.cs.mtu.edu/~shene/COURSES/cs3621/NOTES/
 - geometry primitives: http://astronomy.swin.edu.au/~pbourke/geometry/
 - hershey vector fonts: http://astronomy.swin.edu.au/~pbourke/other/hershey/
+- color FAQ: http://www.inforamp.net/~poynton/

@@ -34,3 +34,5 @@ stamp-allchecks: $(XML_FILES)
 	@touch $@
 
 noinst_DATA = stamp-allchecks
+
+EXTRA_DIST += testpic.jpg testpic.png testpic-IHDR.png testpic-IDAT.png testpic-DATA.png

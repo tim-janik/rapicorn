@@ -159,6 +159,20 @@ AC_DEFUN(AC_I18N_REQUIREMENTS,
 ])
 AC_DEFUN(AC_RAPICORN_REQUIREMENTS,
 [
+    dnl --- require libpng ---
+    if test -z "$LIBPNG"; then
+	dnl png_set_add_alpha() exists only snice libpng v1.2
+	AC_MSG_CHECKING(for libpng12)
+	if $PKG_CONFIG --exists libpng12 ; then
+	    AC_MSG_RESULT(yes)
+	    LIBPNG=`$PKG_CONFIG --libs libpng12`
+	else
+	    AC_MSG_RESULT(no)
+	    AC_MSG_ERROR([PNG image library libpng12 is missing, but required])
+	fi
+    fi
+    AC_SUBST(LIBPNG)
+
     dnl --- require libz ---
     if test -z "$LIBZ"; then
 	AC_CHECK_LIB(z, gzsetparams,
@@ -195,7 +209,7 @@ AC_DEFUN(AC_RAPICORN_REQUIREMENTS,
     AM_CONDITIONAL(WITH_GTK, test "x$GTK_PKG_ERRORS" = xOK)
 
     RAPICORN_CFLAGS=""
-    RAPICORN_LIBS="$LIBZ"
+    RAPICORN_LIBS="$LIBPNG $LIBZ"
     AC_SUBST(RAPICORN_CFLAGS)
     AC_SUBST(RAPICORN_LIBS)
 ])

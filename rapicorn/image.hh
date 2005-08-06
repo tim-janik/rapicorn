@@ -37,9 +37,9 @@ public:
   typedef enum {
     NONE        = 0,
     UNKNOWN_FORMAT,
-    EXCESS_DIMENSIONS,
-    READ_FAILED,
-    DATA_CORRUPT,
+    READ_FAILED,        /* file io problems */
+    DATA_CORRUPT,       /* image (partially) corrupted */
+    EXCESS_DIMENSIONS,  /* image too large or out of memory */
   } ErrorType;
   virtual ErrorType        load_image_file              (const String         &filename) = 0;
   virtual ErrorType        load_pixstream               (const uint8          *gdkp_pixstream) = 0;

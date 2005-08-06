@@ -22,6 +22,12 @@
 #include "factory.hh"
 #include <ext/hash_map>
 
+namespace { // Anon
+static Rapicorn::Image::ErrorType       rapicorn_load_png_image (const char            *file_name,
+                                                                 Rapicorn::PixelImage **imagep,
+                                                                 std::string           &comment);
+} // Anon
+
 namespace Rapicorn {
 
 struct HashName {
@@ -99,8 +105,20 @@ public:
   load_image_file (const String &filename)
   {
     reset();
-    ErrorType error = UNKNOWN_FORMAT;
-    if (error)
+    PixelImage *pimage = NULL;
+    String comment;
+    ErrorType error = rapicorn_load_png_image (filename.c_str(), &pimage, comment);
+    diag ("Image: load \"%s\": %d comment=%s", filename.c_str(), error, comment.c_str());
+    if (pimage)
+      {
+        pimage->ref_sink();
+        if (error)      /* return first error */
+          load_pixel_image (pimage);
+        else
+          error = load_pixel_image (pimage);
+        pimage->unref();
+      }
+    else
       load_pixstream (get_broken16_pixdata());
     return error;
   }
@@ -219,7 +237,30 @@ public:
       delete[] m_pixels;
     m_width = iwidth;
     m_height = iheight;
-    m_pixels = new uint32[iwidth * iheight];
+    m_pixels = new uint32[iwidth * iheight]; /* may fail and set m_pixels = NULL; */
+  }
+  void
+  fill (uint32 pixel)
+  {
+    if (m_pixels)
+      {
+        if (pixel == 0)
+          memset (m_pixels, 0, m_height * m_width * sizeof (m_pixels[0]));
+        else
+          for (uint i = 0; i < m_width * m_height; i++)
+            m_pixels[i] = pixel;
+      }
+  }
+  void
+  border (uint32 pixel)
+  {
+    if (m_pixels)
+      {
+        for (uint i = 0; i < m_width; i++)
+          m_pixels[i] = m_pixels[i + (m_height - 1) * m_width] = pixel;
+        for (uint i = 0; i < m_height; i++)
+          m_pixels[i * m_width] = m_pixels[i * m_width + m_width - 1] = pixel;
+      }
   }
   uint32*
   pixels ()
@@ -436,3 +477,226 @@ get_broken16_pixdata (void)
 }
 
 } // Rapicorn
+
+
+/* --- libpng wrapper code --- */
+#include <png.h>
+namespace {
+typedef Rapicorn::uint8 uint8;
+
+static Rapicorn::Image::ErrorType /* longjmp() may jump across this function */
+png_loader_configure_4argb (png_structp  png_ptr,
+                            png_infop    info_ptr,
+                            uint        *widthp,
+                            uint        *heightp)
+{
+  int bit_depth = png_get_bit_depth (png_ptr, info_ptr);
+  /* check bit-depth to be only 1, 2, 4, 8, 16 to prevent libpng errors */
+  if (bit_depth < 1 || bit_depth > 16 || (bit_depth & (bit_depth - 1)))
+    return Rapicorn::Image::UNKNOWN_FORMAT;
+  int color_type = png_get_color_type (png_ptr, info_ptr);
+  int interlace_type = png_get_interlace_type (png_ptr, info_ptr);
+  /* beware, ordering of the following transformation requests matters */
+  if (color_type == PNG_COLOR_TYPE_PALETTE)
+    png_set_palette_to_rgb (png_ptr);                           /* request RGB format */
+  if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
+    png_set_gray_1_2_4_to_8 (png_ptr);                          /* request 8bit per sample */
+  if (png_get_valid (png_ptr, info_ptr, PNG_INFO_tRNS))
+    png_set_tRNS_to_alpha (png_ptr);                            /* request transparency as alpha channel */
+  if (bit_depth == 16)
+    png_set_strip_16 (png_ptr);                                 /* request 8bit per sample */
+  if (bit_depth < 8)
+    png_set_packing (png_ptr);                                  /* request 8bit per sample */
+  if (color_type == PNG_COLOR_TYPE_GRAY ||
+      color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+    png_set_gray_to_rgb (png_ptr);                              /* request RGB format */
+#if     __BYTE_ORDER == __LITTLE_ENDIAN
+  if (color_type == PNG_COLOR_TYPE_RGB ||
+      color_type == PNG_COLOR_TYPE_RGB_ALPHA)
+    png_set_bgr (png_ptr);                                      /* request ARGB as little-endian: BGRA */
+  if (color_type == PNG_COLOR_TYPE_RGB ||
+      color_type == PNG_COLOR_TYPE_GRAY)
+    png_set_add_alpha (png_ptr, 0xff, PNG_FILLER_AFTER);        /* request ARGB as little-endian: BGRA */
+#elif   __BYTE_ORDER == __BIG_ENDIAN
+  if (color_type == PNG_COLOR_TYPE_RGB_ALPHA)
+    png_set_swap_alpha (png_ptr);                               /* request big-endian ARGB */
+  if (color_type == PNG_COLOR_TYPE_RGB ||
+      color_type == PNG_COLOR_TYPE_GRAY)
+    png_set_add_alpha (png_ptr, 0xff, PNG_FILLER_BEFORE);       /* request big-endian ARGB */
+#else
+#error  Unknown endianess type
+#endif
+  if (interlace_type != PNG_INTERLACE_NONE)
+    png_set_interlace_handling (png_ptr);                       /* request non-interlaced image */
+  /* reflect the transformations */
+  png_read_update_info (png_ptr, info_ptr);
+  png_uint_32 pwidth = 0, pheight = 0;
+  int compression_type = 0, filter_type = 0;
+  png_get_IHDR (png_ptr, info_ptr, &pwidth, &pheight,
+                &bit_depth, &color_type, &interlace_type,
+                &compression_type, &filter_type);
+  *widthp = pwidth;
+  *heightp = pheight;
+  /* sanity checks */
+  if (pwidth < 1 || pheight < 1 || pwidth > 100000 | pheight > 100000)
+    return Rapicorn::Image::EXCESS_DIMENSIONS;
+  if (bit_depth != 8 ||
+      color_type != PNG_COLOR_TYPE_RGB_ALPHA ||
+      png_get_channels (png_ptr, info_ptr) != 4)
+    return Rapicorn::Image::UNKNOWN_FORMAT;
+  return Rapicorn::Image::NONE;
+}
+
+struct PngImage {
+  Rapicorn::Image::ErrorType error;
+  FILE                      *fp;
+  Rapicorn::PixelImageImpl  *image;
+  uint8                    **rows;
+  std::string                comment;
+  explicit PngImage() :
+    error (Rapicorn::Image::NONE),
+    fp (NULL), image (NULL), rows (NULL)
+  {}
+};
+
+static void /* longjmp() may jump across this function */
+png_loader_read_image (PngImage   &pimage,
+                       png_structp png_ptr,
+                       png_infop   info_ptr)
+{
+  /* setup PNG io */
+  png_init_io (png_ptr, pimage.fp);
+  png_set_sig_bytes (png_ptr, 8);                       /* advance by the 8 signature bytes we read earlier */
+  png_set_user_limits (png_ptr, 0x7ffffff, 0x7ffffff);  /* we check the size ourselves */
+  /* setup from meta data */
+  png_read_info (png_ptr, info_ptr);
+  uint width, height;
+  Rapicorn::Image::ErrorType error = png_loader_configure_4argb (png_ptr, info_ptr, &width, &height);
+  if (error)
+    {
+      pimage.error = error;
+      return;
+    }
+  /* setup rows */
+  pimage.image = new Rapicorn::PixelImageImpl();
+  if (pimage.image)
+    {
+      pimage.image->resize (width, height);
+      uint8 *pixels = (uint8*) pimage.image->pixels();
+      if (pixels)
+        {
+          uint rowstride = width * 4;
+          pimage.image->fill (0);               /* transparent background for partial images */
+          pimage.image->border (0x80ff0000);    /* show red error border for partial images */
+          pimage.rows = new png_bytep[height];
+          if (pimage.rows)
+            for (uint i = 0; i < height; i++)
+              pimage.rows[i] = pixels + i * rowstride;
+        }
+      else      /* not enough pixel memory */
+        {
+          delete pimage.image;
+          pimage.image = NULL;
+        }
+    }
+  if (!pimage.rows)
+    {
+      pimage.error = Rapicorn::Image::EXCESS_DIMENSIONS;
+      return;
+    }
+  /* read in image */
+  png_read_image (png_ptr, pimage.rows);
+  png_read_end (png_ptr, info_ptr);
+  /* read out comments */
+  png_textp text_ptr = NULL;
+  int num_texts = 0;
+  if (png_get_text (png_ptr, info_ptr, &text_ptr, &num_texts))
+    for (int i = 0; i < num_texts; i++)
+      {
+        bool is_comment = strcasecmp (text_ptr[i].key, "Comment") == 0;
+        if (is_comment || strcasecmp (text_ptr[i].key, "Description") == 0)
+          {
+            std::string output, input (text_ptr[i].text);
+            if (Rapicorn::text_convert ("UTF-8", output, "ISO-8859-1", input) &&
+                output[0] != 0)
+              {
+                pimage.comment = output;
+                if (is_comment)
+                  break;
+              }
+          }
+      }
+  pimage.error = Rapicorn::Image::NONE;
+}
+
+static void
+png_loader_error (png_structp     png_ptr,
+                  png_const_charp error_msg)
+{
+  PngImage *pimage = (PngImage*) png_get_error_ptr (png_ptr);
+  pimage->error = Rapicorn::Image::DATA_CORRUPT;
+  longjmp (png_ptr->jmpbuf, 1);
+}
+
+static void
+png_loader_nop (png_structp     png_ptr,
+                png_const_charp error_msg)
+{}
+
+static Rapicorn::Image::ErrorType
+rapicorn_load_png_image (const char            *file_name,
+                         Rapicorn::PixelImage **imagep,
+                         std::string           &comment)
+{
+  *imagep = NULL;
+  comment = "";
+  /* open image */
+  FILE *fp = fopen (file_name, "rb");
+  if (!fp)
+    return Rapicorn::Image::READ_FAILED;
+  /* read 8 PNG signature bytes */
+  uint8 sigbuffer[8];
+  if (fread (sigbuffer, 1, 8, fp) != 8)
+    {
+      fclose (fp);
+      return Rapicorn::Image::READ_FAILED;
+    }
+  /* check signature */
+  if (png_sig_cmp (sigbuffer, 0, 8) != 0)
+    {
+      fclose (fp);
+      return Rapicorn::Image::UNKNOWN_FORMAT;
+    }
+  /* allocate resources */
+  PngImage pimage;
+  pimage.error = Rapicorn::Image::EXCESS_DIMENSIONS;
+  png_structp png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING, &pimage, png_loader_error, png_loader_nop);
+  png_infop info_ptr = !png_ptr ? NULL : png_create_info_struct (png_ptr);
+  if (!info_ptr)
+    {
+      if (png_ptr)
+        png_destroy_read_struct (&png_ptr, NULL, NULL);
+      fclose (fp);
+      return pimage.error;
+    }
+  /* save stack for longjmp() in png_loader_error() */
+  if (setjmp (png_ptr->jmpbuf) == 0)
+    {
+      /* read pixel image */
+      pimage.fp = fp;
+      pimage.error = Rapicorn::Image::DATA_CORRUPT;
+      png_loader_read_image (pimage, png_ptr, info_ptr);
+    }
+  /* cleanup */
+  png_destroy_read_struct (&png_ptr, &info_ptr, NULL);
+  if (pimage.rows)
+    delete[] pimage.rows;
+  fclose (fp);
+  /* apply return values */
+  *imagep = pimage.image;       /* may be != NULL even on errors */
+  comment = pimage.comment;
+  /* pimage.error indicates success */
+  return pimage.error;
+}
+
+} // Anon

@@ -104,13 +104,20 @@
 		<table>
 		  <frame left-attach="3" bottom-attach="59" >
 		    <hbox>
-		      <label text="broken-image: " />
-		      <image image-file="/../..-nonexistantfilename" />
-		      <label text=" test images: " />
+		      <label text="broken: " />
+		      <image builtin-pixstream="!!! rapicorn-trigger-broken-image (non-pixstream-name) !!!" />
+		      <label text=" test: " />
 		      <image builtin_pixstream="testimage-rgb-raw" />
 		      <image builtin_pixstream="testimage-rgb-rle" />
 		      <image builtin_pixstream="testimage-alpha-raw" />
 		      <image builtin_pixstream="testimage-alpha-rle" />
+		      <label text=" file: " />
+		      <image image-file="testpic.jpg" />
+		      <image image-file="///////////" />
+		      <image image-file="testpic.png" />
+		      <image image-file="testpic-DATA.png" />
+		      <image image-file="testpic-IHDR.png" />
+		      <image image-file="testpic-IDAT.png" />
 		    </hbox>
 		  </frame>
 		  <frame left-attach="50" bottom-attach="59" />

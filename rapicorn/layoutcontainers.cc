@@ -171,7 +171,7 @@ class HBoxImpl : public virtual HBox, public virtual TableImpl {
         Packer packer = create_packer (item);
         TablePacker *tpacker = extract_child_packer<TablePacker*> (packer);
         tpacker->update();
-        diag ("hboxcolumn: %d used:%d,%d,%d (%d)\n", col, is_col_used(0),is_col_used(1),is_col_used(2),get_n_cols());
+        // diag ("hboxcolumn: %d used:%d,%d,%d (%d)\n", col, is_col_used(0),is_col_used(1),is_col_used(2),get_n_cols());
         tpacker->left_attach (col);
         tpacker->right_attach (col + 1);
         tpacker->commit();

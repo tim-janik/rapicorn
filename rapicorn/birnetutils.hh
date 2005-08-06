@@ -127,6 +127,14 @@ clamp (const T &value, const T &minimum, const T &maximum)
 const String              dirname (const String &path);
 const String              basename (const String &path);
 
+/* --- text encoding --- */
+bool    text_convert    (const char        *to_charset,
+                         std::string       &output_string,
+                         const char        *from_charset,
+                         const std::string &input_string,
+                         const char        *fallback_charset = "ISO-8859-1",
+                         const std::string &output_mark = "");
+
 /* --- string functionality --- */
 String  string_printf           (const char *format, ...) BIRNET_PRINTF (1, 2);
 String  string_vprintf          (const char *format, va_list vargs);

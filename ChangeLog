@@ -1,3 +1,29 @@
+Sat Aug  6 14:23:31 2005  Tim Janik  <timj@gtk.org>
+
+	* configure.in: require libpng12.
+
+	* rapicorn/image.hh, rapicorn/image.cc: implemented ARGB PNG loader,
+	based on libpng12. default initialize scratch images with transparent
+	background and a red frame to spot partially loaded images.
+
+	* rapicorn/birnetutils.hh, rapicorn/birnetutils.cc:
+	added charset encoding conversion functions.
+	unaliased_encoding(): resolve alias names for encoding names to MIME
+	charset names.
+	unaliased_iconv_open(): retry iconv_open() with resolved
+	encoding aliases.
+	text_convert(): convert input string in a specific encoding to output
+	string in a specific encoding, falling back to a second input encoding
+	if neccessary, and allowing to mark non-convertable characters.
+
+	* examples/tour.xml: added test images.
+
+	* examples/testpic.png: test PNG image.
+	* examples/testpic-IHDR.png: PNG image with broken IHDR chunk.
+	* examples/testpic-IDAT.png: PNG image with broken IDAT chunk.
+	* examples/testpic-DATA.png: PNG image with broken image data.
+	* examples/testpic.jpg: test JPG image (for not PNG test).
+
 Sun Jul 31 14:25:36 2005  Tim Janik  <timj@gtk.org>
 
 	* released 0.1.1, binary 0, interface 0.
