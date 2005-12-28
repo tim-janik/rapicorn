@@ -86,6 +86,14 @@ Container::dispose_item (Item &item)
 }
 
 void
+Container::hierarchy_changed (Item *old_toplevel)
+{
+  Item::hierarchy_changed (old_toplevel);
+  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+    cw->sig_hierarchy_changed.emit (old_toplevel);
+}
+
+void
 Container::remove (Item &item)
 {
   Container *container = item.parent_container();
@@ -329,9 +337,7 @@ SingleContainerImpl::size_request (Requisition &requisition)
   if (has_visible_child())
     {
       Item &child = get_child();
-      Requisition cr = child.size_request ();
-      requisition.width += cr.width;
-      requisition.height += cr.height;
+      requisition = child.size_request ();
       chspread = child.hspread();
       cvspread = child.vspread();
     }
@@ -343,11 +349,10 @@ void
 SingleContainerImpl::size_allocate (Allocation area)
 {
   allocation (area);
-  if (has_children())
+  if (has_visible_child())
     {
       Item &child = get_child();
-      if (child.visible())
-        child.set_allocation (area);
+      child.set_allocation (area);
     }
 }
 
@@ -361,6 +366,21 @@ SingleContainerImpl::~SingleContainerImpl()
 {
   while (child_item)
     remove (child_item);
+}
+
+void
+ControlArea::control (const String &command)
+{
+  uint pos = command.find ("::");
+  String command_name, arg;
+  if (pos != command.npos)
+    {
+      arg = command.substr (pos + 2);
+      command_name = command.substr (0, pos);
+    }
+  else
+    command_name = command;
+  control (command_name, arg);
 }
 
 MultiContainerImpl::MultiContainerImpl ()
@@ -398,7 +418,9 @@ MultiContainerImpl::~MultiContainerImpl()
 
 Root::Root() :
   sig_expose (*this)
-{}
+{
+  change_flags_silently (ANCHORED, true);       /* root is always anchored */
+}
 
 class RootImpl : public Root, public SingleContainerImpl {
 public:
@@ -408,6 +430,14 @@ public:
     style (appearance->create_style ("normal"));
     unref (appearance);
     set_flag (PARENT_SENSITIVE, true);
+  }
+  ~RootImpl()
+  {
+    /* make sure all children are removed while this is still of type Root.
+     * necessary because C++ alters the object type during constructors and destructors
+     */
+    if (has_children())
+      remove (get_child());
   }
   virtual void
   size_request (Requisition &requisition)
@@ -456,10 +486,11 @@ protected:
     EventMouse &mevent = *create_event_mouse (MOUSE_MOVE, econtext);
     vector<Item*> pierced;
     /* figure all entered children */
-    Item *grab_item = get_grab();
+    bool unconfined;
+    Item *grab_item = get_grab (&unconfined);
     if (grab_item)
       {
-        if (grab_item->point (mevent.x, mevent.y, Affine()))
+        if (unconfined or grab_item->point (mevent.x, mevent.y, Affine()))
           pierced.push_back (ref (grab_item));
       }
     else if (drawable())
@@ -471,18 +502,18 @@ protected:
     vector<Item*> left_children = item_difference (last_entered_children, pierced);
     mevent.type = MOUSE_LEAVE;
     for (vector<Item*>::reverse_iterator it = left_children.rbegin(); it != left_children.rend(); it++)
-      (*it)->controller().process_event (mevent);
+      (*it)->process_event (mevent);
     /* send enter events */
     vector<Item*> entered_children = item_difference (pierced, last_entered_children);
     mevent.type = MOUSE_ENTER;
     for (vector<Item*>::reverse_iterator it = entered_children.rbegin(); it != entered_children.rend(); it++)
-      (*it)->controller().process_event (mevent);
+      (*it)->process_event (mevent);
     /* send actual move event */
     bool handled = false;
     mevent.type = MOUSE_MOVE;
     for (vector<Item*>::reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
       if (!handled && (*it)->sensitive())
-        handled = (*it)->controller().process_event (mevent);
+        handled = (*it)->process_event (mevent);
     /* cleanup */
     delete &mevent;
     for (vector<Item*>::reverse_iterator it = last_entered_children.rbegin(); it != last_entered_children.rend(); it++)
@@ -508,7 +539,7 @@ protected:
     for (vector<Item*>::reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
       {
         if (!handled && (*it)->sensitive())
-          handled = (*it)->controller().process_event (event);
+          handled = (*it)->process_event (event);
         (*it)->unref();
       }
     return handled;
@@ -545,7 +576,7 @@ private:
           if (button_state_map[bs] == 0)                /* no press delivered for <button> on <item> yet */
             {
               button_state_map[bs] = press_count;       /* record single press */
-              handled = (*it)->controller().process_event (bevent);
+              handled = (*it)->process_event (bevent);
             }
         }
     delete &bevent;
@@ -568,7 +599,7 @@ private:
               bevent.type = BUTTON_3RELEASE;
             else if (press_count == 2)
               bevent.type = BUTTON_2RELEASE;
-            handled |= bs.item->controller().process_event (bevent);
+            handled |= bs.item->process_event (bevent);
             button_state_map.erase (current);
           }
       }
@@ -586,7 +617,7 @@ private:
         if (item == current || !item)
           {
             EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, last_event_context);
-            current->controller().process_event (*mevent);
+            current->process_event (*mevent);
             delete mevent;
             current->unref();
             last_entered_children.erase (last_entered_children.begin() + i);
@@ -600,7 +631,7 @@ private:
         if (bs.item == item || !item)
           {
             EventButton *bevent = create_event_button (BUTTON_CANCELED, last_event_context, bs.button);
-            bs.item->controller().process_event (*bevent);
+            bs.item->process_event (*bevent);
             delete bevent;
             button_state_map.erase (current);
           }
@@ -624,6 +655,7 @@ public:
       handled = dispatch_button_press (econtext, button, 1);
     else
       handled = dispatch_button_release (econtext, button);
+    dispatch_mouse_movement (econtext);
     return handled;
   }
   virtual bool
@@ -636,7 +668,7 @@ public:
       {
         Item *item = last_entered_children.back();
         last_entered_children.pop_back();
-        item->controller().process_event (mevent);
+        item->process_event (mevent);
         item->unref();
       }
     delete &mevent;
@@ -669,7 +701,7 @@ public:
     EventKey *kevent = create_event_key (is_press ? KEY_PRESS : KEY_RELEASE, econtext, key, key_name);
     Item *grab_item = get_grab();
     grab_item = grab_item ? grab_item : this;
-    bool handled = grab_item->controller().process_event (*kevent);
+    bool handled = grab_item->process_event (*kevent);
     delete kevent;
     return handled;
   }
@@ -688,13 +720,21 @@ public:
     return handled;
   }
 private:
-  vector<Item*> grab_stack;
+  struct GrabEntry {
+    Item *item;
+    bool  unconfined;
+    GrabEntry (Item *i, bool uc) :
+      item (i),
+      unconfined (uc)
+    {}
+  };
+  vector<GrabEntry> grab_stack;
   virtual void
   remove_grab_item (Item &child)
   {
     bool stack_changed = false;
     for (int i = grab_stack.size() - 1; i >= 0; i--)
-      if (grab_stack[i] == &child)
+      if (grab_stack[i].item == &child)
         {
           grab_stack.erase (grab_stack.begin() + i);
           stack_changed = true;
@@ -709,17 +749,18 @@ private:
   }
 public:
   virtual void
-  add_grab (Item &child)
+  add_grab (Item &child,
+            bool  unconfined)
   {
     if (!child.has_ancestor (*this))
       throw Exception ("child is not descendant of container \"", name(), "\": ", child.name());
-    grab_stack.push_back (&child);
+    grab_stack.push_back (GrabEntry (&child, unconfined));
   }
   virtual void
   remove_grab (Item &child)
   {
     for (int i = grab_stack.size() - 1; i >= 0; i--)
-      if (grab_stack[i] == &child)
+      if (grab_stack[i].item == &child)
         {
           grab_stack.erase (grab_stack.begin() + i);
           grab_stack_changed();
@@ -728,11 +769,15 @@ public:
     throw Exception ("no such child in grab stack: ", child.name());
   }
   virtual Item*
-  get_grab ()
+  get_grab (bool *unconfined = NULL)
   {
     for (int i = grab_stack.size() - 1; i >= 0; i--)
-      if (grab_stack[i]->visible())
-        return grab_stack[i];
+      if (grab_stack[i].item->visible())
+        {
+          if (unconfined)
+            *unconfined = grab_stack[i].unconfined;
+          return grab_stack[i].item;
+        }
     return NULL;
   }
   virtual void

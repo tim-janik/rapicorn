@@ -24,6 +24,7 @@ using Rapicorn::uint;
 
 struct ExtraType {
   virtual const char* message() { return "ExtraType::message()"; }
+  bool operator== (const ExtraType &other) const { return false; }
 };
 
 struct EmitterMany {

@@ -50,7 +50,7 @@
   <!-- image -->
   <def:image inherit="Rapicorn::Image" />
   <!-- buttons -->
-  <def:button inherit="Rapicorn::ButtonView" sensitive="1" child-container="child-area" >
+  <def:button inherit="Rapicorn::ButtonArea" sensitive="1" child-container="child-area" >
     <frame normal-frame="out" impressed-frame="in" >
       <ambience
 	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
@@ -68,6 +68,22 @@
       <button id="child-area" />
     </alignment>
   </def:default-button>
+  <!-- slider -->
+  <def:Rapicorn-slider-trough inherit="Rapicorn::SliderTrough">
+  </def:Rapicorn-slider-trough>
+  <def:slider inherit="Rapicorn::SliderArea">
+    <frame normal-frame="in" hexpand="1" >
+      <table>
+	<button left-attach="1"><label text="&lt;"></label></button>
+	<Rapicorn-slider-trough left-attach="2" hexpand="1">
+	  <frame normal-frame="out" vexpand="1">
+	    <label text="[SLIDER]" />
+	  </frame>
+	</Rapicorn-slider-trough>
+	<button left-attach="3"><label text=">"></label></button>
+      </table>
+    </frame>
+  </def:slider>
   
   <!-- test dialog -->
   <def:tour-dialog inherit="ambience" normal-lighting="upper-left" >
@@ -77,7 +93,7 @@
 	<label text="First Label" hanchor="1" position="-75 30" />
 	<label text="Middle Label" />
 	<label text="Third Label" hanchor="0" position="75 30" />
-	<button hexpand="1" position="0 -30" >
+	<button hexpand="1" position="0 -30" on-click="test-handler1" >
 	  <label text="Expand Button" />
 	</button>
 	<button vexpand="1" position="150 0" >
@@ -90,6 +106,7 @@
 	  <alignment left-padding="5" right-padding="5" top-padding="5" bottom-padding="5"> <!-- width="125" height="110" -->
 	    <table>
 	      <label text="*** Ttitle ***" align="center" bottom-attach="100" hexpand="1" />
+	      <slider align="center" bottom-attach="102" hexpand="1" />
 	      <default-button sensitive="1" bottom-attach="51" vspread="1" vshrink="1" hexpand="0" hfill="0" vfill="0" >
 		<vbox>
 		  <label text="left" right-padding="10" />

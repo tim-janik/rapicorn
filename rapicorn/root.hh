@@ -27,14 +27,15 @@ namespace Rapicorn {
 struct Container : public virtual Item {
   typedef std::map<String,String> PackPropertyList;
 protected:
-  virtual bool          match_interface (InterfaceMatch &imatch,
+  virtual bool        match_interface   (InterfaceMatch &imatch,
                                          const String   &ident);
-  virtual bool          add_child       (Item                   &item,
+  virtual bool        add_child         (Item                   &item,
                                          const PackPropertyList &pack_plist = PackPropertyList()) = 0;
-  virtual void          remove_child    (Item &item) = 0;
-  void                  hide_child      (Item &child) { child.set_flag (HIDDEN_CHILD, false); }
-  void                  show_child      (Item &child) { child.set_flag (HIDDEN_CHILD, true); }
-  virtual void          dispose_item    (Item &item);
+  virtual void        remove_child      (Item &item) = 0;
+  void                hide_child        (Item &child) { child.set_flag (HIDDEN_CHILD, false); }
+  void                show_child        (Item &child) { child.set_flag (HIDDEN_CHILD, true); }
+  virtual void        dispose_item      (Item &item);
+  virtual void        hierarchy_changed (Item *old_toplevel);
 public:
   typedef Walker<Item>  ChildWalker;
   void                  child_container (Container *child_container);
@@ -88,6 +89,15 @@ protected:
   PackerType    extract_child_packer    (Packer &packer) { return dynamic_cast<PackerType> (packer.m_child_packer); }
 };
 
+/* --- single container controller --- */
+class ControlArea : public virtual Convertible {        // FIXME: move elsewhere?
+protected:
+  virtual void  control         (const String   &command_name,
+                                 const String   &arg) = 0;
+public:
+  void          control         (const String   &command);
+};
+
 /* --- Root --- */
 class Root : public virtual Container {
 protected:
@@ -111,11 +121,17 @@ public:
   virtual bool  dispatch_scroll_event   (const EventContext &econtext,
                                          EventType           scroll_type) = 0;
   virtual void  dispatch_cancel_events  () = 0;
-  virtual void  add_grab                (Item               &child) = 0;
-  void          add_grab                (Item               *child)     { throw_if_null (child); return add_grab (*child); }
+  virtual void  add_grab                (Item   &child,
+                                         bool    unconfined = false) = 0;
+  void          add_grab                (Item   *child,
+                                         bool    unconfined = false)
+  {
+    throw_if_null (child);
+    return add_grab (*child, unconfined);
+  }
   virtual void  remove_grab             (Item               &child) = 0;
   void          remove_grab             (Item               *child)     { throw_if_null (child); return remove_grab (*child); }
-  virtual Item* get_grab                () = 0;
+  virtual Item* get_grab                (bool   *unconfined = NULL) = 0;
 };
 
 } // Rapicorn

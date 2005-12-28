@@ -22,6 +22,7 @@
 
 namespace Rapicorn {
 
+
 class AlignmentImpl : public virtual SingleContainerImpl, public virtual Alignment {
   int    m_width, m_height;
   uint16 m_left_padding, m_right_padding;
@@ -129,6 +130,7 @@ protected:
 };
 static const ItemFactory<AlignmentImpl> alignment_factory ("Rapicorn::Alignment");
 
+
 class HBoxImpl : public virtual HBox, public virtual TableImpl {
   /* pack properties */
   class HBoxPacker : public virtual TablePacker {
@@ -202,8 +204,8 @@ public:
   ~HBoxImpl()
   {}
 };
-
 static const ItemFactory<HBoxImpl> hbox_factory ("Rapicorn::HBox");
+
 
 class VBoxImpl : public virtual VBox, public virtual TableImpl {
   /* pack properties */
@@ -275,7 +277,6 @@ public:
   ~VBoxImpl()
   {}
 };
-
 static const ItemFactory<VBoxImpl> vbox_factory ("Rapicorn::VBox");
 
 } // Rapicorn

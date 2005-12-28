@@ -26,30 +26,30 @@
 /* --- Emission --- */
 template<class Emitter, typename R0, typename A1, typename A2, typename A3>
 struct Emission3 : public EmissionBase {
-  typedef Handler3<R0, A1, A2, A3>           Handler;
-  typedef Handler4<R0, Emitter&, A1, A2, A3> HandlerE;
+  typedef Trampoline3<R0, A1, A2, A3>           Trampoline;
+  typedef Trampoline4<R0, Emitter&, A1, A2, A3> TrampolineE;
   Emitter *m_emitter;
   R0 m_result; A1 m_a1; A2 m_a2; A3 m_a3;
   SignalBase::Link *m_last_link;
   Emission3 (Emitter *emitter, A1 a1, A2 a2, A3 a3) :
     m_emitter (emitter), m_result(), m_a1 (a1), m_a2 (a2), m_a3 (a3), m_last_link (NULL)
   {}
-  /* call Handler and store result, so handler templates need no <void> specialization */
+  /* call Trampoline and store result, so trampoline templates need no <void> specialization */
   R0 call (SignalBase::Link *link)
   {
     if (m_last_link != link)
       {
         if (link->with_emitter)
           {
-            HandlerE *handler = handler_cast<HandlerE*> (link);
-            if (handler->callable)
-              m_result = (*handler) (*m_emitter, m_a1, m_a2, m_a3);
+            TrampolineE *trampoline = trampoline_cast<TrampolineE*> (link);
+            if (trampoline->callable)
+              m_result = (*trampoline) (*m_emitter, m_a1, m_a2, m_a3);
           }
         else
           {
-            Handler *handler = handler_cast<Handler*> (link);
-            if (handler->callable)
-              m_result = (*handler) (m_a1, m_a2, m_a3);
+            Trampoline *trampoline = trampoline_cast<Trampoline*> (link);
+            if (trampoline->callable)
+              m_result = (*trampoline) (m_a1, m_a2, m_a3);
           }
         m_last_link = link;
       }
@@ -58,27 +58,27 @@ struct Emission3 : public EmissionBase {
 };
 template<class Emitter, typename A1, typename A2, typename A3>
 struct Emission3 <Emitter, void, A1, A2, A3> : public EmissionBase {
-  typedef Handler3<void, A1, A2, A3>           Handler;
-  typedef Handler4<void, Emitter&, A1, A2, A3> HandlerE;
+  typedef Trampoline3<void, A1, A2, A3>           Trampoline;
+  typedef Trampoline4<void, Emitter&, A1, A2, A3> TrampolineE;
   Emitter *m_emitter;
   A1 m_a1; A2 m_a2; A3 m_a3;
   Emission3 (Emitter *emitter, A1 a1, A2 a2, A3 a3) :
     m_emitter (emitter), m_a1 (a1), m_a2 (a2), m_a3 (a3)
   {}
-  /* call the handler and ignore result, so handler templates need no <void> specialization */
+  /* call the trampoline and ignore result, so trampoline templates need no <void> specialization */
   void call (SignalBase::Link *link)
   {
     if (link->with_emitter)
       {
-        HandlerE *handler = handler_cast<HandlerE*> (link);
-        if (handler->callable)
-          (*handler) (*m_emitter, m_a1, m_a2, m_a3);
+        TrampolineE *trampoline = trampoline_cast<TrampolineE*> (link);
+        if (trampoline->callable)
+          (*trampoline) (*m_emitter, m_a1, m_a2, m_a3);
       }
     else
       {
-        Handler *handler = handler_cast<Handler*> (link);
-        if (handler->callable)
-          (*handler) (m_a1, m_a2, m_a3);
+        Trampoline *trampoline = trampoline_cast<Trampoline*> (link);
+        if (trampoline->callable)
+          (*trampoline) (m_a1, m_a2, m_a3);
       }
   }
 };
@@ -147,12 +147,18 @@ struct Signal3 : SignalEmittable3<Emitter, R0, A1, A2, A3, Collector>
     assert (&emitter != NULL);
     connect (slot (emitter, method));
   }
-  inline void connect    (const Slot  &s) { connect_link (s.get_handler()); }
-  inline void connect    (const SlotE &s) { connect_link (s.get_handler(), true); }
+  inline void connect    (const Slot  &s) { connect_link (s.get_trampoline()); }
+  inline void connect    (const SlotE &s) { connect_link (s.get_trampoline(), true); }
+  inline uint disconnect (const Slot  &s) { return disconnect_equal_link (*s.get_trampoline()); }
+  inline uint disconnect (const SlotE &s) { return disconnect_equal_link (*s.get_trampoline(), true); }
   Signal3&    operator+= (const Slot  &s) { connect (s); return *this; }
   Signal3&    operator+= (const SlotE &s) { connect (s); return *this; }
   Signal3&    operator+= (R0 (*callback) (A1, A2, A3))            { connect (slot (callback)); return *this; }
   Signal3&    operator+= (R0 (*callback) (Emitter&, A1, A2, A3))  { connect (slot (callback)); return *this; }
+  Signal3&    operator-= (const Slot  &s) { disconnect (s); return *this; }
+  Signal3&    operator-= (const SlotE &s) { disconnect (s); return *this; }
+  Signal3&    operator-= (R0 (*callback) (A1, A2, A3))            { disconnect (slot (callback)); return *this; }
+  Signal3&    operator-= (R0 (*callback) (Emitter&, A1, A2, A3))  { disconnect (slot (callback)); return *this; }
   BIRNET_PRIVATE_CLASS_COPY (Signal3);
 };
 

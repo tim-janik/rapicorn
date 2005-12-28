@@ -32,39 +32,9 @@ Controller::handle_event (const Event &event)
   return false;
 }
 
-bool
-Controller::process_event (Event &event)
-{
-  return sig_event.emit (event);
-}
-
 void
 Controller::reset (ResetMode mode)
 {}
-
-class DummyEventController : public Controller {
-  virtual void
-  set_item (Item &item)
-  {}
-  virtual Item&
-  get_item ()
-  {
-    return *(Item*) NULL;
-  }
-  DummyEventController()
-  {
-    /* keep alive singleton */
-    ref_sink();
-  }
-  PRIVATE_CLASS_COPY (DummyEventController);
-public:
-  static DummyEventController&
-  singleton()
-  {
-    static DummyEventController *self = new DummyEventController();
-    return *self;
-  }
-};
 
 Item::Item () :
   m_parent (NULL),
@@ -72,7 +42,8 @@ Item::Item () :
   m_style (NULL),
   sig_finalize (*this),
   sig_changed (*this, &Item::do_changed),
-  sig_invalidate (*this, &Item::do_invalidate)
+  sig_invalidate (*this, &Item::do_invalidate),
+  sig_hierarchy_changed (*this, &Item::hierarchy_changed)
 {}
 
 bool
@@ -202,7 +173,6 @@ Item::finalize()
 
 Item::~Item()
 {
-  controller (*(Controller*) NULL);
   if (parent_container())
     parent_container()->remove (this);
   if (m_style)
@@ -297,14 +267,36 @@ Item::style (Style *st)
   propagate_style ();
 }
 
+bool
+Item::process_event (Event &event)
+{
+  Controller *controller = dynamic_cast<Controller*> (this);
+  bool handled = false;
+  if (controller)
+    handled = controller->sig_event.emit (event);
+  return handled;
+}
+
+void
+Item::hierarchy_changed (Item *old_toplevel)
+{
+  anchored (old_toplevel == NULL);
+}
+
 void
 Item::set_parent (Item *pitem)
 {
+  Controller *controller = dynamic_cast<Controller*> (this);
+  if (controller)
+    controller->reset();
   if (parent())
     {
+      Root *rtoplevel = root();
       invalidate();
       style (NULL);
       m_parent = NULL;
+      if (anchored() and rtoplevel)
+        sig_hierarchy_changed.emit (rtoplevel);
     }
   if (pitem)
     {
@@ -315,6 +307,8 @@ Item::set_parent (Item *pitem)
       style (m_parent->style());
       propagate_flags();
       invalidate();
+      if (m_parent->anchored() and !anchored())
+        sig_hierarchy_changed.emit (NULL);
     }
 }
 
@@ -325,9 +319,9 @@ Item::parent_container() const
 }
 
 bool
-Item::has_ancestor (const Item &ancestor)
+Item::has_ancestor (const Item &ancestor) const
 {
-  Item *item = this;
+  const Item *item = this;
   while (item)
     {
       if (item == &ancestor)
@@ -409,36 +403,6 @@ void
 ItemImpl::name (const String &str)
 {
   m_name = str;
-}
-
-static DataKey<Controller*> event_controller_key;
-
-Controller&
-Item::controller ()
-{
-  Controller *controller = get_data (&event_controller_key);
-  return controller ? *controller : DummyEventController::singleton();
-}
-
-void
-Item::controller (Controller &controller)
-{
-  if (&controller)
-    controller.ref_sink();
-  Controller *oldc = get_data (&event_controller_key);
-  if (oldc)
-    {
-      oldc->reset ();
-      delete_data (&event_controller_key);
-      oldc->set_item (*(Item*) NULL);
-      oldc->unref();
-    }
-  if (&controller)
-    {
-      set_data (&event_controller_key, &controller);
-      controller.set_item (*this);
-      controller.reset ();
-    }
 }
 
 bool

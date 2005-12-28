@@ -43,18 +43,15 @@ class Item;
 class Container;
 class Root;
 
-/* --- controller --- */
+/* --- event controller --- */
 class Controller : public virtual ReferenceCountImpl {
   typedef Signal<Controller, bool (const Event&), CollectorWhile0<bool> >       EventSignal;
   friend class Item;
 protected:
   virtual bool  handle_event    (const Event    &event);
-  virtual void  set_item        (Item           &item) = 0;
 public:
-  virtual Item& get_item        () = 0;
   explicit      Controller      ();
   EventSignal   sig_event;
-  bool          process_event   (Event&);
   typedef enum {
     RESET_ALL
   } ResetMode;
@@ -75,14 +72,15 @@ protected:
   /* flag handling */
   bool                          change_flags_silently (uint32 mask, bool on);
   enum {
-    VISIBLE                     = 1 <<  0,
-    HIDDEN_CHILD                = 1 <<  1,
-    SENSITIVE                   = 1 <<  2,
-    PARENT_SENSITIVE            = 1 <<  3,
-    PRELIGHT                    = 1 <<  4,
-    IMPRESSED                   = 1 <<  5,
-    HAS_FOCUS                   = 1 <<  6,
-    HAS_DEFAULT                 = 1 <<  7,
+    ANCHORED                    = 1 <<  0,
+    VISIBLE                     = 1 <<  1,
+    HIDDEN_CHILD                = 1 <<  2,
+    SENSITIVE                   = 1 <<  3,
+    PARENT_SENSITIVE            = 1 <<  4,
+    PRELIGHT                    = 1 <<  5,
+    IMPRESSED                   = 1 <<  6,
+    HAS_FOCUS                   = 1 <<  7,
+    HAS_DEFAULT                 = 1 <<  8,
     /* REQUEST_DEFAULT          = 1 <<  8, */
     INVALID_REQUISITION         = 1 << 10,
     INVALID_ALLOCATION          = 1 << 11,
@@ -98,7 +96,7 @@ protected:
     DEBUG                       = 1 << 21,
     LAST_FLAG                   = 1 << 22
   };
-  virtual void                  set_flag        (uint32 flag, bool on = true);
+  void                          set_flag        (uint32 flag, bool on = true);
   void                          unset_flag      (uint32 flag) { set_flag (flag, false); }
   bool                          test_flags      (uint32 mask) const { return (m_flags & mask) == mask; }
   bool                          test_any_flag   (uint32 mask) const { return (m_flags & mask) != 0; }
@@ -110,11 +108,14 @@ protected:
   virtual void                  do_invalidate   () = 0;
   virtual void                  do_changed      () = 0;
   /* misc */
-  virtual void                  style           (Style  *st);
-  virtual void                  finalize        ();
-  virtual                       ~Item           ();
+  virtual                     ~Item             ();
+  virtual void                style             (Style  *st);
+  virtual void                finalize          ();
+  virtual void                hierarchy_changed (Item *old_toplevel);
+  void                        anchored          (bool b) { set_flag (ANCHORED, b); }
 public:
   explicit                      Item            ();
+  bool                          anchored        () const { return test_flags (ANCHORED); }
   bool                          visible         () const { return test_flags (VISIBLE) && !test_flags (HIDDEN_CHILD); }
   void                          visible         (bool b) { set_flag (VISIBLE, b); }
   bool                          sensitive       () const { return test_flags (SENSITIVE | PARENT_SENSITIVE); }
@@ -155,7 +156,7 @@ public:
   virtual void                  set_parent      (Item *parent);
   Item*                         parent          () const { return m_parent; }
   Container*                    parent_container() const;
-  bool                          has_ancestor    (const Item &ancestor);
+  bool                          has_ancestor    (const Item &ancestor) const;
   Root*                         root            ();
   /* invalidation / changes */
   void                          invalidate      ();
@@ -166,12 +167,10 @@ public:
   SignalFinalize<Item>            sig_finalize;
   Signal<Item, void ()>           sig_changed;
   Signal<Item, void ()>           sig_invalidate;
-  /* event handling */
-protected:
-  friend class Controller;
-  void                          controller      (Controller &controller);
+  Signal<Item, void (Item *oldt)> sig_hierarchy_changed;
 public:
-  Controller&                   controller      ();
+  /* event handling */
+  bool                          process_event   (Event     &event);
   virtual bool                  point           (double     x,  /* global coordinate system */
                                                  double     y,
                                                  Affine     affine) = 0;

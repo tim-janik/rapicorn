@@ -23,51 +23,34 @@
 
 namespace Rapicorn {
 
-ButtonController::ButtonController() :
+ButtonArea::ButtonArea() :
   sig_check_activate (*this),
   sig_activate (*this)
 {}
 
-class ButtonControllerImpl : public virtual ButtonController {
-  ButtonView *m_view;
+class ButtonAreaImpl : public virtual SingleContainerImpl, public virtual ButtonArea {
   uint m_button;
-  virtual void
-  set_item (Item &item)
-  {
-    m_view = dynamic_cast<ButtonView*> (&item);
-  }
-  virtual Item&
-  get_item ()
-  {
-    return *m_view;
-  }
-protected:
-  virtual void
-  unset_model()
-  { // FIXME
-  }
 public:
-  virtual void
-  set_model (Activatable  &activatable)
-  { // FIXME
-  }
-  virtual void
-  update ()
-  { // FIXME
-  }
-  ButtonControllerImpl () :
-    m_view (NULL),
+  ButtonAreaImpl() :
     m_button (0)
   {}
   void
-  set_view (ButtonView &bview)
+  set_model (Activatable &activatable)
   {
-    set_item (dynamic_cast<Item&> (bview));
+    // FIXME
+  }
+  virtual const PropertyList&
+  list_properties()
+  {
+    static Property *properties[] = {
+    };
+    static const PropertyList property_list (properties, Container::list_properties());
+    return property_list;
   }
   virtual bool
   handle_event (const Event &event)
   {
-    ButtonView &view = *m_view;
+    ButtonArea &view = *this;
     bool handled = false, proper_release = false;
     switch (event.type)
       {
@@ -117,32 +100,6 @@ public:
     return handled;
   }
 };
-
-class ButtonViewImpl : public virtual SingleContainerImpl, public virtual ButtonView {
-public:
-  ButtonViewImpl()
-  {
-    set_controller (*new ButtonControllerImpl); // FIXME: leak
-  }
-  void
-  set_model (Activatable &activatable)
-  {
-    // FIXME
-  }
-  void
-  set_controller (ButtonController &bcontroller)
-  {
-    controller (bcontroller);
-  }
-  virtual const PropertyList&
-  list_properties()
-  {
-    static Property *properties[] = {
-    };
-    static const PropertyList property_list (properties, Container::list_properties());
-    return property_list;
-  }
-};
-static const ItemFactory<ButtonViewImpl> button_view_factory ("Rapicorn::ButtonView");
+static const ItemFactory<ButtonAreaImpl> button_area_factory ("Rapicorn::ButtonArea");
 
 } // Rapicorn

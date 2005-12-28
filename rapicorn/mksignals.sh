@@ -20,8 +20,8 @@ fi
 # Signal0
 [ 0 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\20/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\21/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\20/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\21/g;
 	s/, typename A1, typename A2, typename A3//g;		# either front comma
 	s/typename A1, typename A2, typename A3,\?//g;		# or (maybe) back comma
 	s/, A1, A2, A3//g;
@@ -43,8 +43,8 @@ EOT
 # Signal1
 [ 1 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\21/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\22/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\21/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\22/g;
 	s/\(, \)\?typename A1, typename A2, typename A3/\1typename A1/g;
 	s/\(, \)\?A1, A2, A3/\1A1/g;
 	s/\(, \)\?a1, a2, a3/\1a1/g;
@@ -60,8 +60,8 @@ EOT
 # Signal2
 [ 2 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\22/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\23/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\22/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\23/g;
 	s/\(, \)\?typename A1, typename A2, typename A3/\1typename A1, typename A2/g;
 	s/\(, \)\?A1, A2, A3/\1A1, A2/g;
 	s/\(, \)\?a1, a2, a3/\1a1, a2/g;
@@ -77,8 +77,8 @@ EOT
 # Signal4
 [ 4 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\25/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\24/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\25/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\24/g;
 	s/\(, \)\?typename A1, typename A2, typename A3/\1typename A1, typename A2, typename A3, typename A4/g;
 	s/\(, \)\?A1, A2, A3/\1A1, A2, A3, A4/g;
 	s/\(, \)\?a1, a2, a3/\1a1, a2, a3, a4/g;
@@ -94,8 +94,8 @@ EOT
 # Signal5
 [ 5 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\25/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\26/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\25/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\26/g;
 	s/\(, \)\?typename A1, typename A2, typename A3/\1typename A1, typename A2, typename A3, typename A4, typename A5/g;
 	s/\(, \)\?A1, A2, A3/\1A1, A2, A3, A4, A5/g;
 	s/\(, \)\?a1, a2, a3/\1a1, a2, a3, a4, a5/g;
@@ -111,8 +111,8 @@ EOT
 # Signal6
 [ 6 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\26/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\27/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\26/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\27/g;
 	s/\(, \)\?typename A1, typename A2, typename A3/\1typename A1, typename A2, typename A3, typename A4, typename A5, typename A6/g;
 	s/\(, \)\?A1, A2, A3/\1A1, A2, A3, A4, A5, A6/g;
 	s/\(, \)\?a1, a2, a3/\1a1, a2, a3, a4, a5, a6/g;
@@ -128,8 +128,8 @@ EOT
 # Signal7
 [ 7 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\27/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\28/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\27/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\28/g;
 	s/\(, \)\?typename A1, typename A2, typename A3/\1typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7/g;
 	s/\(, \)\?A1, A2, A3/\1A1, A2, A3, A4, A5, A6, A7/g;
 	s/\(, \)\?a1, a2, a3/\1a1, a2, a3, a4, a5, a6, a7/g;
@@ -145,8 +145,8 @@ EOT
 # Signal8
 [ 8 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\28/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\29/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\28/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\29/g;
 	s/\(, \)\?typename A1, typename A2, typename A3/\1typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8/g;
 	s/\(, \)\?A1, A2, A3/\1A1, A2, A3, A4, A5, A6, A7, A8/g;
 	s/\(, \)\?a1, a2, a3/\1a1, a2, a3, a4, a5, a6, a7, a8/g;
@@ -162,8 +162,8 @@ EOT
 # Signal9
 [ 9 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\29/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\210/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\29/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\210/g;
 	s/\(, \)\?typename A1, typename A2, typename A3/\1typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9/g;
 	s/\(, \)\?A1, A2, A3/\1A1, A2, A3, A4, A5, A6, A7, A8, A9/g;
 	s/\(, \)\?a1, a2, a3/\1a1, a2, a3, a4, a5, a6, a7, a8, a9/g;
@@ -179,8 +179,8 @@ EOT
 # Signal10
 [ 10 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\210/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\211/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\210/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\211/g;
 	s/\(, \)\?typename A1, typename A2, typename A3/\1typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10/g;
 	s/\(, \)\?A1, A2, A3/\1A1, A2, A3, A4, A5, A6, A7, A8, A9, A10/g;
 	s/\(, \)\?a1, a2, a3/\1a1, a2, a3, a4, a5, a6, a7, a8, a9, a10/g;
@@ -196,8 +196,8 @@ EOT
 # Signal11
 [ 11 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\211/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\212/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\211/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\212/g;
 	s/\(, \)\?typename A1, typename A2, typename A3/\1typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11/g;
 	s/\(, \)\?A1, A2, A3/\1A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11/g;
 	s/\(, \)\?a1, a2, a3/\1a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11/g;
@@ -213,8 +213,8 @@ EOT
 # Signal12
 [ 12 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\212/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\213/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\212/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\213/g;
 	s/\(, \)\?typename A1, typename A2, typename A3/\1typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12/g;
 	s/\(, \)\?A1, A2, A3/\1A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12/g;
 	s/\(, \)\?a1, a2, a3/\1a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12/g;
@@ -230,8 +230,8 @@ EOT
 # Signal13
 [ 13 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\213/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\214/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\213/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\214/g;
 	s/\(, \)\?typename A1, typename A2, typename A3/\1typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename A13/g;
 	s/\(, \)\?A1, A2, A3/\1A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13/g;
 	s/\(, \)\?a1, a2, a3/\1a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13/g;
@@ -247,8 +247,8 @@ EOT
 # Signal14
 [ 14 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\214/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\215/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\214/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\215/g;
 	s/\(, \)\?typename A1, typename A2, typename A3/\1typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename A13, typename A14/g;
 	s/\(, \)\?A1, A2, A3/\1A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14/g;
 	s/\(, \)\?a1, a2, a3/\1a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14/g;
@@ -264,8 +264,8 @@ EOT
 # Signal15
 [ 15 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\215/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\216/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\215/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\216/g;
 	s/\(, \)\?typename A1, typename A2, typename A3/\1typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename A13, typename A14, typename A15/g;
 	s/\(, \)\?A1, A2, A3/\1A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15/g;
 	s/\(, \)\?a1, a2, a3/\1a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15/g;
@@ -281,8 +281,8 @@ EOT
 # Signal16
 [ 16 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\216/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\217/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\216/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\217/g;
 	s/\(, \)\?typename A1, typename A2, typename A3/\1typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename A13, typename A14, typename A15, typename A16/g;
 	s/\(, \)\?A1, A2, A3/\1A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16/g;
 	s/\(, \)\?a1, a2, a3/\1a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16/g;
@@ -298,8 +298,8 @@ EOT
 # Signal17
 [ 17 -le $MAXIMUM ] && {
   cat >xgen-signals.sed <<EOT
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\217/g;
-	s/\b\(Handler\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\218/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)3\b/\1\217/g;
+	s/\b\([A-Za-z0-9]*Trampoline\|Slot\|Signal\|Emission\|SignalEmittable\)\([A-Z]*\)4\b/\1\218/g;
 	s/\(, \)\?typename A1, typename A2, typename A3/\1typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename A13, typename A14, typename A15, typename A16, typename A17/g;
 	s/\(, \)\?A1, A2, A3/\1A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17/g;
 	s/\(, \)\?a1, a2, a3/\1a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17/g;

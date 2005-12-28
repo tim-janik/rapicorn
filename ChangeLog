@@ -1,3 +1,43 @@
+Wed Dec 28 01:07:43 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/adjustment.[hc]: implemented adjustment.
+
+	* rapicorn/slider.[hc]: implement SliderArea and SliderTroughImpl
+	classes to enable slider/scale/scrollbar implementations.
+	SliderArea uses Adjustment to store the slider position.
+
+	* rapicorn/birnetsignaltemplate.hh: added disconnect() and
+	corrsponding -= operators.
+
+	* rapicorn/birnetsignal.hh: added operator== to signal handler
+	links, to allow disconnections. implemented disconnect_equal_link()
+	for signal links.
+
+	* rapicorn/mksignals.sh:
+	* rapicorn/birnetsignalslot.hh: renamed handler to trampoline.
+	added slot() constructor for signals + emit() method. with this,
+	slot(sig_some_signal) can be connected and disconnected.
+
+	* rapicorn/buttons.[hc]*: merged ButtonController and ButtonView 
+	into ButtonArea which can process events and implementes prelighting.
+
+	* rapicorn/container.[hc]: always anchor Root. remove Root children
+	early on during destructions when the object type is still >= Root.
+	started framework for special control processing.
+	added "unconfined" flag to add_grab() to allow processing of events
+	outside of the grab widget.
+
+	* rapicorn/item.[hc]*: removed the whole concept of having 
+	non-event-aware views and non-drawing event controllers on some items.
+	items may now implement the Controller interface, that enables them
+	to process events. added hierarchy_changed signal, together with
+	ANCHORED flag. this mimicks hierarchy_changed/anchored of Gtk+.
+	some const fixes.
+	
+	* examples/tour.xml: define "slider".
+
+	* tests/signal.cc: signal handler data must implement operator== now.
+
 Sat Aug  6 14:23:31 2005  Tim Janik  <timj@gtk.org>
 
 	* configure.in: require libpng12.

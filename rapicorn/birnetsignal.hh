@@ -40,8 +40,13 @@ struct SignalBase {
     Link *next, *prev;
     uint  callable : 1;
     uint  with_emitter : 1;
-    explicit Link() : next (NULL), prev (NULL), callable (true), with_emitter (false) {}
-    virtual  ~Link()
+    explicit
+    Link() :
+      next (NULL), prev (NULL), callable (true), with_emitter (false)
+    {}
+    virtual bool operator== (const SignalBase::Link &other) const = 0;
+    virtual
+    ~Link()
     {
       if (next || prev)
         {
@@ -53,6 +58,7 @@ struct SignalBase {
   };
 private:
   class EmbeddedLink : public Link {
+    virtual bool operator== (const SignalBase::Link &other) const { return false; }
     virtual void delete_this () { /* embedded */ }
   };
 protected:
@@ -68,6 +74,23 @@ protected:
     start.prev->next = link;
     start.prev = link;
     link->with_emitter = with_emitter;
+  }
+  uint
+  disconnect_equal_link (const Link &link,
+                         bool        with_emitter = false)
+  {
+    for (Link *walk = start.next; walk != &start; walk = walk->next)
+      if (walk->with_emitter == with_emitter and *walk == link)
+        {
+          walk->callable = false;
+          /* unlink */
+          walk->next->prev = walk->prev;
+          walk->prev->next = walk->next;
+          /* leave ->next, ->prev intact for iterators */
+          walk->unref();
+          return 1;
+        }
+    return 0;
   }
   template<class Emission> struct Iterator;
 public:
@@ -154,11 +177,11 @@ public:
     /* not supporting iterator copies for post-increment */
     operator++();
   }
-  bool operator!= (const Iterator &b)
+  bool operator!= (const Iterator &b) const
   {
     return current != b.current || &emission != &b.emission;
   }
-  bool operator== (const Iterator &b)
+  bool operator== (const Iterator &b) const
   {
     return !operator!= (b);
   }
@@ -267,7 +290,7 @@ protected:
   typedef SignalBase::Link Link;
   Link *m_link;
   void
-  set_handler (Link *cl)
+  set_trampoline (Link *cl)
   {
     if (cl)
       cl->ref_sink();
@@ -278,18 +301,18 @@ protected:
 public:
   SlotBase (Link *link) :
     m_link (NULL)
-  { set_handler (link); }
+  { set_trampoline (link); }
   SlotBase (const SlotBase &src) :
     m_link (NULL)
   { *this = src; }
   SlotBase&
   operator= (const SlotBase &src)
   {
-    set_handler (src.m_link);
+    set_trampoline (src.m_link);
     return *this;
   }
   Link*
-  get_handler() const
+  get_trampoline() const
   { return m_link; }
 };
 
@@ -397,17 +420,17 @@ struct Signature<R0 (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14
 template<class Emitter, typename SignalSignature, class Collector = CollectorDefault<typename Signature<SignalSignature>::result_type> > struct Signal;
 
 /* --- Casting --- */
-template<class HandlerP> HandlerP
-handler_cast (SignalBase::Link *link)
+template<class TrampolineP> TrampolineP
+trampoline_cast (SignalBase::Link *link)
 {
 #ifdef  PARANOID
-  return dynamic_cast<HandlerP> (link);
+  return dynamic_cast<TrampolineP> (link);
 #else
-  return reinterpret_cast<HandlerP> (link);
+  return reinterpret_cast<TrampolineP> (link);
 #endif
 }
 
-/* --- Handler + Slot + Signal generation --- */
+/* --- Trampoline + Slot + Signal generation --- */
 #include <rapicorn/birnetsignalvariants.hh> // contains multiple versions of "birnetsignaltemplate.hh"
 
 /* --- predefined signals --- */

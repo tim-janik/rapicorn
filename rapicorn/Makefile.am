@@ -10,11 +10,6 @@ rapicorn_public_headers = $(strip 	\
 	rapicorn.hh keycodes.hh		\
 	$(rapicorn_impl_headers)	\
 	primitives.hh			\
-	painter.hh			\
-	paintcontainers.hh		\
-	buttons.hh			\
-	image.hh			\
-	layoutcontainers.hh		\
 	birnetutils.hh			\
 	birnetsignal.hh			\
 	birnetsignalvariants.hh		\
@@ -23,10 +18,17 @@ rapicorn_public_headers = $(strip 	\
 	enumdefs.hh			\
 	appearance.hh			\
 	events.hh			\
-	properties.hh			\
 	item.hh				\
-	factory.hh			\
 	container.hh			\
+	factory.hh			\
+	properties.hh			\
+	adjustment.hh			\
+	painter.hh			\
+	paintcontainers.hh		\
+	layoutcontainers.hh		\
+	slider.hh			\
+	buttons.hh			\
+	image.hh			\
 	arrangement.hh			\
 	table.hh			\
 	pangolabel.hh			\
@@ -39,21 +41,23 @@ rapicorn_impl_headers = $(strip 	\
 )
 rapicorn_cc_sources = $(strip 		\
 	primitives.cc			\
-	painter.cc			\
-	paintcontainers.cc		\
-	buttons.cc			\
-	image.cc			\
-	layoutcontainers.cc		\
 	birnetutils.cc			\
 	birnetmarkup.cc			\
 	utilities.cc			\
 	enumdefs.cc			\
 	appearance.cc			\
 	events.cc			\
-	properties.cc			\
 	item.cc				\
-	factory.cc			\
 	container.cc			\
+	factory.cc			\
+	properties.cc			\
+	adjustment.cc			\
+	painter.cc			\
+	paintcontainers.cc		\
+	layoutcontainers.cc		\
+	slider.cc			\
+	buttons.cc			\
+	image.cc			\
 	arrangement.cc			\
 	table.cc			\
 	pangolabel.cc			\

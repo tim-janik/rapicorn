@@ -33,24 +33,15 @@ struct Activatable : virtual Convertible { /* ActivateModel */
   virtual void                  activate       ();
 };
 
-class ButtonController : public virtual Controller {
+class ButtonArea : public virtual Item, public virtual Controller { // FIXME: ButtonArea
+  typedef Signal<ButtonArea, bool (), CollectorUntil0<bool> > SignalCheckActivate;
+  typedef Signal<ButtonArea, void ()>                         SignalActivate;
 protected:
-  explicit      ButtonController();
-  virtual void  unset_model() = 0;
+  explicit              ButtonArea();
 public:
-  virtual void  set_model (Activatable  &activatable) = 0;
-  virtual void  update    () = 0;
-public: /* convenience API to spare model */
-  typedef Signal<ButtonController, bool (), CollectorUntil0<bool> > SignalCheckActivate;
-  typedef Signal<ButtonController, void ()>                         SignalActivate;
   SignalCheckActivate   sig_check_activate;
   SignalActivate        sig_activate;
-};
-
-class ButtonView : public virtual Item {
-public:
-  virtual void  set_model       (Activatable            &activatable) = 0;
-  virtual void  set_controller  (ButtonController       &bcontroller) = 0;
+  virtual void          set_model       (Activatable            &activatable) = 0;
 };
 
 } // Rapicorn
