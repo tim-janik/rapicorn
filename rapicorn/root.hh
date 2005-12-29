@@ -47,7 +47,8 @@ public:
   void                  remove          (Item   &item);
   void                  remove          (Item   *item)          { if (item) remove (*item); else throw NullPointer(); }
   virtual
-  const PropertyList&   list_properties (); /* essentially item properties */
+  const PropertyList&   list_properties (); /* essentially chaining to Item:: */
+  const CommandList&    list_commands   (); /* essentially chaining to Item:: */
   virtual void          point_children  (double                  x,
                                          double                  y,
                                          Affine                  affine,

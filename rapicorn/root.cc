@@ -31,6 +31,15 @@ Container::list_properties()
   return property_list;
 }
 
+const CommandList&
+Container::list_commands()
+{
+  static Command *commands[] = {
+  };
+  static const CommandList command_list (commands, Item::list_commands());
+  return command_list;
+}
+
 static DataKey<Container*> child_container_key;
 
 void

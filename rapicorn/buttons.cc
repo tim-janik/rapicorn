@@ -40,7 +40,7 @@ ButtonArea::list_properties()
   return property_list;
 }
 
-class ButtonAreaImpl : public virtual SingleContainerImpl, public virtual ButtonArea {
+class ButtonAreaImpl : public virtual ButtonArea, public virtual EventHandler, public virtual SingleContainerImpl {
   uint m_button;
   String m_on_click[3];
 public:
@@ -58,6 +58,11 @@ public:
   virtual void   on_click2 (const String &command)      { m_on_click[1] = string_strip (command); }
   virtual String on_click3 () const                     { return m_on_click[2]; }
   virtual void   on_click3 (const String &command)      { m_on_click[2] = string_strip (command); }
+  virtual void
+  reset (ResetMode mode = RESET_ALL)
+  {
+    m_button = 0;
+  }
   virtual bool
   handle_event (const Event &event)
   {

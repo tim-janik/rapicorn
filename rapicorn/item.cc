@@ -22,19 +22,15 @@
 
 namespace Rapicorn {
 
-Controller::Controller() :
-  sig_event (*this, &Controller::handle_event)
+EventHandler::EventHandler() :
+  sig_event (*this, &EventHandler::handle_event)
 {}
 
 bool
-Controller::handle_event (const Event &event)
+EventHandler::handle_event (const Event &event)
 {
   return false;
 }
-
-void
-Controller::reset (ResetMode mode)
-{}
 
 Item::Item () :
   m_parent (NULL),
@@ -344,7 +340,7 @@ Item::style (Style *st)
 bool
 Item::process_event (Event &event)
 {
-  Controller *controller = dynamic_cast<Controller*> (this);
+  EventHandler *controller = dynamic_cast<EventHandler*> (this);
   bool handled = false;
   if (controller)
     handled = controller->sig_event.emit (event);
@@ -360,7 +356,7 @@ Item::hierarchy_changed (Item *old_toplevel)
 void
 Item::set_parent (Item *pitem)
 {
-  Controller *controller = dynamic_cast<Controller*> (this);
+  EventHandler *controller = dynamic_cast<EventHandler*> (this);
   if (controller)
     controller->reset();
   if (parent())

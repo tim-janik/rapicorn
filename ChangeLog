@@ -1,3 +1,17 @@
+Thu Dec 29 03:04:35 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/item.[hc]*: renamed Controller class to EventHandler which
+	is more accurate. made reset() method pure virtual to enforce 
+	implementation in all classes implementing event handling.
+
+	* rapicorn/buttons.[hc]*: derive only implementation classes from 
+	EventHandler, implement reset().
+
+	* rapicorn/slider.cc: implement reset().
+
+	* rapicorn/container.[hc]*: provide a dummy list_commands() method
+	for derived container classes.
+
 Thu Dec 29 02:18:23 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/buttons.[hc]*: added on-click, on-click2 and on-click3 

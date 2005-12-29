@@ -44,18 +44,18 @@ class Item;
 class Container;
 class Root;
 
-/* --- event controller --- */
-class Controller : public virtual ReferenceCountImpl {
-  typedef Signal<Controller, bool (const Event&), CollectorWhile0<bool> >       EventSignal;
+/* --- event handler --- */
+class EventHandler : public virtual ReferenceCountImpl {
+  typedef Signal<EventHandler, bool (const Event&), CollectorWhile0<bool> > EventSignal;
 protected:
   virtual bool  handle_event    (const Event    &event);
 public:
-  explicit      Controller      ();
+  explicit      EventHandler    ();
   EventSignal   sig_event;
   typedef enum {
     RESET_ALL
   } ResetMode;
-  virtual void  reset           (ResetMode       mode = RESET_ALL);
+  virtual void  reset           (ResetMode       mode = RESET_ALL) = 0;
 };
 
 /* --- Item --- */

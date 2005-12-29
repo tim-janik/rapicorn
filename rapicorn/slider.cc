@@ -67,7 +67,7 @@ SliderArea::list_commands ()
   return command_list;
 }
 
-class SliderAreaImpl : public virtual TableImpl, public virtual SliderArea {
+class SliderAreaImpl : public virtual SliderArea, public virtual TableImpl {
   Adjustment *m_adjustment;
   void
   unset_adjustment()
@@ -113,7 +113,7 @@ public:
 };
 static const ItemFactory<SliderAreaImpl> slider_area_factory ("Rapicorn::SliderArea");
 
-class SliderTroughImpl : public virtual SingleContainerImpl, public virtual Controller {
+class SliderTroughImpl : public virtual EventHandler, public virtual SingleContainerImpl {
   SliderArea *m_slider_area;
   uint        m_button;
   double      m_coffset;
@@ -203,6 +203,12 @@ protected:
         area.height = iround (rq.height);
       }
     child.set_allocation (area);
+  }
+  virtual void
+  reset (ResetMode mode = RESET_ALL)
+  {
+    m_button = 0;
+    m_coffset = 0;
   }
   virtual bool
   handle_event (const Event &event)

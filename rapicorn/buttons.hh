@@ -29,7 +29,7 @@ struct Activatable : virtual Convertible { // FIXME: remove this? /* ActivateMod
   virtual void                  activate       ();
 };
 
-class ButtonArea : public virtual Container, public virtual Controller {
+class ButtonArea : public virtual Container {
   typedef Signal<ButtonArea, bool (), CollectorUntil0<bool> > SignalCheckActivate;
   typedef Signal<ButtonArea, void ()>                         SignalActivate;
 protected:
