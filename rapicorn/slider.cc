@@ -31,6 +31,42 @@ void
 SliderArea::slider_changed()
 {}
 
+bool
+SliderArea::move (int distance)
+{
+  Adjustment *adj = adjustment();
+  switch (adj ? distance : 0)
+    {
+    case +2:
+      adj->value (adj->value() + adj->page_increment());
+      return true;
+    case +1:
+      adj->value (adj->value() + adj->step_increment());
+      return true;
+    case -1:
+      adj->value (adj->value() - adj->step_increment());
+      return true;
+    case -2:
+      adj->value (adj->value() - adj->page_increment());
+      return true;
+    default:
+      return false;
+    }
+}
+
+const CommandList&
+SliderArea::list_commands ()
+{
+  static Command *commands[] = {
+    MakeNamedCommand (SliderArea, "increment", _("Increment slider"), move, +1),
+    MakeNamedCommand (SliderArea, "decrement", _("Decrement slider"), move, -1),
+    MakeNamedCommand (SliderArea, "page-increment", _("Large slider increment"), move, +2),
+    MakeNamedCommand (SliderArea, "page-decrement", _("Large slider decrement"), move, -2),
+  };
+  static const CommandList command_list (commands, Container::list_commands());
+  return command_list;
+}
+
 class SliderAreaImpl : public virtual TableImpl, public virtual SliderArea {
   Adjustment *m_adjustment;
   void
@@ -50,7 +86,7 @@ public:
   SliderAreaImpl() :
     m_adjustment (NULL)
   {
-    Adjustment *adj = Adjustment::create();
+    Adjustment *adj = Adjustment::create (0, 0, 1, 0.01, 0.2);
     adjustment (*adj);
     adj->unref();
   }
@@ -88,9 +124,7 @@ public:
     m_coffset (0)
   {}
   ~SliderTroughImpl()
-  {
-    diag ("SliderTroughImpl finalization");
-  }
+  {}
 protected:
   virtual void
   hierarchy_changed (Item *old_toplevel)
@@ -180,7 +214,7 @@ protected:
       case BUTTON_PRESS:
       case BUTTON_2PRESS:
       case BUTTON_3PRESS:
-        if (!m_button && event.button == 1)
+        if (!m_button and (event.button == 1 or event.button == 2))
           {
             m_button = event.button;
             root()->add_grab (this, true);

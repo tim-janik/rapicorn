@@ -182,6 +182,80 @@ Item::~Item()
     }
 }
 
+Command*
+Item::lookup_command (const String &command_name)
+{
+  typedef std::map<const String, Command*> CommandMap;
+  static std::map<const CommandList*,CommandMap*> clist_map;
+  /* find/construct command map */
+  const CommandList &clist = list_commands();
+  CommandMap *cmap = clist_map[&clist];
+  if (!cmap)
+    {
+      cmap = new CommandMap;
+      for (uint i = 0; i < clist.n_commands; i++)
+        (*cmap)[clist.commands[i]->ident] = clist.commands[i];
+      clist_map[&clist] = cmap;
+    }
+  CommandMap::iterator it = cmap->find (command_name);
+  if (it != cmap->end())
+    return it->second;
+  else
+    return NULL;
+}
+
+bool
+Item::exec_command (const String &command_call_string)
+{
+  const char *cname = command_call_string.c_str();
+  while ((*cname >= 'a' and *cname <= 'z') or
+         (*cname >= 'A' and *cname <= 'Z') or
+         (*cname >= '0' and *cname <= '9') or
+         *cname == '-')
+    cname++;
+  String name = command_call_string.substr (0, cname - command_call_string.c_str());
+
+  String arg;
+  while (*cname and (*cname == ' ' or *cname == '\t'))
+    cname++;
+  if (*cname == '(')
+    {
+      cname++;
+      while (*cname and (*cname == ' ' or *cname == '\t'))
+        cname++;
+      const char *carg = cname;
+      while (*cname and *cname != ')')
+        cname++;
+      if (*cname != ')')
+        goto invalid_command;
+      arg = String (carg, cname - carg);
+    }
+  else if (*cname)
+    goto invalid_command;
+
+  Item *item = this;
+  while (item)
+    {
+      Command *cmd = item->lookup_command (name);
+      if (cmd)
+        return cmd->exec (item, arg);
+      item = item->parent();
+    }
+  return false;
+
+ invalid_command:
+  throw Exception ("Invalid command call: ", command_call_string.c_str());
+}
+
+const CommandList&
+Item::list_commands ()
+{
+  static Command *commands[] = {
+  };
+  static const CommandList command_list (commands);
+  return command_list;
+}
+
 Property*
 Item::lookup_property (const String &property_name)
 {

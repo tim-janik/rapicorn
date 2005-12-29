@@ -16,30 +16,33 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __RAPICORN_SLIDER_HH__
-#define __RAPICORN_SLIDER_HH__
-
-#include <rapicorn/adjustment.hh>
-#include <rapicorn/container.hh>
+#include "commands.hh"
 
 namespace Rapicorn {
 
-class SliderArea : public virtual Container {
-  bool                  move            (int);
-protected:
-  typedef Signal<SliderArea, void ()>   SignalSliderChanged;
-  explicit              SliderArea      ();
-  virtual void          control         (const String   &command_name,
-                                         const String   &arg) = 0;
-  virtual void          slider_changed  ();
-public:
-  virtual Adjustment*   adjustment      () const = 0;
-  virtual void          adjustment      (Adjustment     &adjustment) = 0;
-  SignalSliderChanged   sig_slider_changed;
-  virtual
-  const CommandList&    list_commands   ();
-};
+static inline String
+canonify (String s)
+{
+  for (uint i = 0; i < s.size(); i++)
+    if (!((s[i] >= 'A' && s[i] <= 'Z') ||
+          (s[i] >= 'a' && s[i] <= 'z') ||
+          (s[i] >= '0' && s[i] <= '9') ||
+          s[i] == '-'))
+      s[i] = '-';
+  return s;
+}
+
+Command::Command (const char *cident,
+                  const char *cblurb,
+                  bool        has_arg) :
+  ident (canonify (cident)),
+  blurb (cblurb),
+  needs_arg (has_arg)
+{
+  assert (cident != NULL);
+}
+
+Command::~Command()
+{}
 
 } // Rapicorn
-
-#endif  /* __RAPICORN_SLIDER_HH__ */

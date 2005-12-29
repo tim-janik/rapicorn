@@ -21,6 +21,7 @@
 
 #include <rapicorn/events.hh>
 #include <rapicorn/primitives.hh>
+#include <rapicorn/commands.hh>
 #include <rapicorn/properties.hh>
 #include <rapicorn/appearance.hh>
 
@@ -46,7 +47,6 @@ class Root;
 /* --- event controller --- */
 class Controller : public virtual ReferenceCountImpl {
   typedef Signal<Controller, bool (const Event&), CollectorWhile0<bool> >       EventSignal;
-  friend class Item;
 protected:
   virtual bool  handle_event    (const Event    &event);
 public:
@@ -152,6 +152,10 @@ public:
   String                        get_property    (const String    &property_name);
   Property*                     lookup_property (const String    &property_name);
   virtual const PropertyList&   list_properties ();
+  /* commands */
+  bool                          exec_command    (const String   &command_call_string);
+  Command*                      lookup_command  (const String   &command_name);
+  virtual const CommandList&    list_commands   ();
   /* parents */
   virtual void                  set_parent      (Item *parent);
   Item*                         parent          () const { return m_parent; }

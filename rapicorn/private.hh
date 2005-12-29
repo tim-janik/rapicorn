@@ -64,6 +64,8 @@ namespace Rapicorn {
 #define SEARCHPATH_SEPARATOR_S          BIRNET_SEARCHPATH_SEPARATOR_S
 
 #define MakeProperty                    RAPICORN_MakeProperty
+#define MakeNamedCommand                RAPICORN_MakeNamedCommand
+#define MakeSimpleCommand               RAPICORN_MakeSimpleCommand
 
 #define PRIVATE_CLASS_COPY(C)           BIRNET_PRIVATE_CLASS_COPY(C)
 

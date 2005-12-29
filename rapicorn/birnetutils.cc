@@ -162,6 +162,18 @@ string_vprintf (const char *format,
   return s;
 }
 
+String
+string_strip (const String &str)
+{
+  const char *cstr = str.c_str();
+  uint start = 0, end = str.size();
+  while (end and strchr (" \t\n\r", cstr[end-1]))
+    end--;
+  while (strchr (" \t\n\r", cstr[start]))
+    start++;
+  return String (cstr + start, end - start);
+}
+
 bool
 string_to_bool (const String &string)
 {

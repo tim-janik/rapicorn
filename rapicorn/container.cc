@@ -368,21 +368,6 @@ SingleContainerImpl::~SingleContainerImpl()
     remove (child_item);
 }
 
-void
-ControlArea::control (const String &command)
-{
-  uint pos = command.find ("::");
-  String command_name, arg;
-  if (pos != command.npos)
-    {
-      arg = command.substr (pos + 2);
-      command_name = command.substr (0, pos);
-    }
-  else
-    command_name = command;
-  control (command_name, arg);
-}
-
 MultiContainerImpl::MultiContainerImpl ()
 {}
 

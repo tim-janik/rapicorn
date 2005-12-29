@@ -138,6 +138,7 @@ bool    text_convert    (const char        *to_charset,
 /* --- string functionality --- */
 String  string_printf           (const char *format, ...) BIRNET_PRINTF (1, 2);
 String  string_vprintf          (const char *format, va_list vargs);
+String  string_strip            (const String &str);
 bool    string_to_bool          (const String &string);
 String  string_from_bool        (bool value);
 uint64  string_to_uint          (const String &string, uint base = 10);

@@ -21,6 +21,7 @@ rapicorn_public_headers = $(strip 	\
 	item.hh				\
 	container.hh			\
 	factory.hh			\
+	commands.hh			\
 	properties.hh			\
 	adjustment.hh			\
 	painter.hh			\
@@ -50,6 +51,7 @@ rapicorn_cc_sources = $(strip 		\
 	item.cc				\
 	container.cc			\
 	factory.cc			\
+	commands.cc			\
 	properties.cc			\
 	adjustment.cc			\
 	painter.cc			\

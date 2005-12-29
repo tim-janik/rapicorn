@@ -1,3 +1,28 @@
+Thu Dec 29 02:18:23 2005  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/buttons.[hc]*: added on-click, on-click2 and on-click3 
+	command properties to specify button actions. removed cruft.
+	derive ButtonArea from Container.
+
+	* rapicorn/slider.[hc]: provide slider movement commands. tweak
+	default adjustment to support step and page increments.
+	derive SliderArea from Container.
+
+	* rapicorn/commands.[hc]: implemented command templates similar to
+	the property mechanism.
+
+	* rapicorn/item.[hc]*: added methods to lookup, list and execute
+	commands on an item (or its ancestry).
+
+	* rapicorn/birnetutils.[hc]*: added string_strip().
+
+	* examples/tour.xml: add commands to slider buttons so they have actual
+	effects on the slider position.
+
+	* rapicorn/private.hh: define convenience macros to create commands.
+
+	* rapicorn/container.[hc]*: removed ControlArea cruft.
+
 Wed Dec 28 01:07:43 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/adjustment.[hc]: implemented adjustment.

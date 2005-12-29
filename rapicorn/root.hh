@@ -89,15 +89,6 @@ protected:
   PackerType    extract_child_packer    (Packer &packer) { return dynamic_cast<PackerType> (packer.m_child_packer); }
 };
 
-/* --- single container controller --- */
-class ControlArea : public virtual Convertible {        // FIXME: move elsewhere?
-protected:
-  virtual void  control         (const String   &command_name,
-                                 const String   &arg) = 0;
-public:
-  void          control         (const String   &command);
-};
-
 /* --- Root --- */
 class Root : public virtual Container {
 protected:

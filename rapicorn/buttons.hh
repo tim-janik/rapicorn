@@ -19,21 +19,17 @@
 #ifndef __RAPICORN_BUTTONS_HH__
 #define __RAPICORN_BUTTONS_HH__
 
-#include <rapicorn/item.hh>
+#include <rapicorn/container.hh>
 
 namespace Rapicorn {
 
-struct Disposable : virtual Convertible { // FIXME: move out of here
-  SignalVoid<Disposable> sig_dispose;
-};
-
-struct Activatable : virtual Convertible { /* ActivateModel */
+struct Activatable : virtual Convertible { // FIXME: remove this? /* ActivateModel */
   SignalVoid<Activatable>       sig_changed;
   virtual bool                  check_activate ();
   virtual void                  activate       ();
 };
 
-class ButtonArea : public virtual Item, public virtual Controller { // FIXME: ButtonArea
+class ButtonArea : public virtual Container, public virtual Controller {
   typedef Signal<ButtonArea, bool (), CollectorUntil0<bool> > SignalCheckActivate;
   typedef Signal<ButtonArea, void ()>                         SignalActivate;
 protected:
@@ -41,7 +37,15 @@ protected:
 public:
   SignalCheckActivate   sig_check_activate;
   SignalActivate        sig_activate;
-  virtual void          set_model       (Activatable            &activatable) = 0;
+  virtual void          set_model       (Activatable &activatable) = 0;
+  virtual String        on_click        () const = 0;
+  virtual void          on_click        (const String &command) = 0;
+  virtual String        on_click2       () const = 0;
+  virtual void          on_click2       (const String &command) = 0;
+  virtual String        on_click3       () const = 0;
+  virtual void          on_click3       (const String &command) = 0;
+  virtual
+  const PropertyList&   list_properties ();
 };
 
 } // Rapicorn

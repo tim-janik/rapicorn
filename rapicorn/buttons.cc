@@ -28,8 +28,21 @@ ButtonArea::ButtonArea() :
   sig_activate (*this)
 {}
 
+const PropertyList&
+ButtonArea::list_properties()
+{
+  static Property *properties[] = {
+    MakeProperty (ButtonArea, on_click,  _("On CLick"), _("Command on button1 click"), "", "rw"),
+    MakeProperty (ButtonArea, on_click2, _("On CLick2"), _("Command on button2 click"), "", "rw"),
+    MakeProperty (ButtonArea, on_click3, _("On CLick3"), _("Command on button3 click"), "", "rw"),
+  };
+  static const PropertyList property_list (properties, Container::list_properties());
+  return property_list;
+}
+
 class ButtonAreaImpl : public virtual SingleContainerImpl, public virtual ButtonArea {
   uint m_button;
+  String m_on_click[3];
 public:
   ButtonAreaImpl() :
     m_button (0)
@@ -39,14 +52,12 @@ public:
   {
     // FIXME
   }
-  virtual const PropertyList&
-  list_properties()
-  {
-    static Property *properties[] = {
-    };
-    static const PropertyList property_list (properties, Container::list_properties());
-    return property_list;
-  }
+  virtual String on_click  () const                     { return m_on_click[0]; }
+  virtual void   on_click  (const String &command)      { m_on_click[0] = string_strip (command); }
+  virtual String on_click2 () const                     { return m_on_click[1]; }
+  virtual void   on_click2 (const String &command)      { m_on_click[1] = string_strip (command); }
+  virtual String on_click3 () const                     { return m_on_click[2]; }
+  virtual void   on_click3 (const String &command)      { m_on_click[2] = string_strip (command); }
   virtual bool
   handle_event (const Event &event)
   {
@@ -65,7 +76,8 @@ public:
       case BUTTON_PRESS:
       case BUTTON_2PRESS:
       case BUTTON_3PRESS:
-        if (!m_button && event.button == 1)
+        if (!m_button and event.button >= 1 and event.button <= 3 and
+            m_on_click[event.button - 1] != "")
           {
             m_button = event.button;
             view.impressed (true);
@@ -85,8 +97,10 @@ public:
             m_button = 0;
             view.impressed (false);
             handled = true;
-            if (proper_release && inbutton)
-              diag ("button-clicked: impressed=%d (event.button=%d)", view.impressed(), event.button);
+            if (proper_release and inbutton and
+                event.button >= 1 and event.button <= 3 and
+                m_on_click[event.button - 1] != "")
+              exec_command (m_on_click[event.button - 1]);
           }
         break;
       case KEY_PRESS:

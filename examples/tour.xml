@@ -74,13 +74,17 @@
   <def:slider inherit="Rapicorn::SliderArea">
     <frame normal-frame="in" hexpand="1" >
       <table>
-	<button left-attach="1"><label text="&lt;"></label></button>
+	<button left-attach="1" on-click="decrement" on-click2="page-decrement">
+	  <label text="&lt;"/>
+	</button>
 	<Rapicorn-slider-trough left-attach="2" hexpand="1">
 	  <frame normal-frame="out" vexpand="1">
 	    <label text="[SLIDER]" />
 	  </frame>
 	</Rapicorn-slider-trough>
-	<button left-attach="3"><label text=">"></label></button>
+	<button left-attach="3" on-click="increment" on-click2="page-increment">
+	  <label text=">"/>
+	</button>
       </table>
     </frame>
   </def:slider>
