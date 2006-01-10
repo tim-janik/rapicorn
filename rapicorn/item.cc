@@ -210,6 +210,7 @@ Item::exec_command (const String &command_call_string)
          *cname == '-')
     cname++;
   String name = command_call_string.substr (0, cname - command_call_string.c_str());
+  Item *item;
 
   String arg;
   while (*cname and (*cname == ' ' or *cname == '\t'))
@@ -229,7 +230,7 @@ Item::exec_command (const String &command_call_string)
   else if (*cname)
     goto invalid_command;
 
-  Item *item = this;
+  item = this;
   while (item)
     {
       Command *cmd = item->lookup_command (name);

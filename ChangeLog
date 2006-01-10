@@ -1,3 +1,8 @@
+Tue Jan 10 20:09:44 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/item.cc (exec_command): fix for gcc-3.3, don't jump across
+	pointer variable initialization.
+
 Thu Dec 29 03:04:35 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/item.[hc]*: renamed Controller class to EventHandler which
