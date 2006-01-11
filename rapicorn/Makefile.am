@@ -1,7 +1,7 @@
 # Rapicorn
 # Copyright (C) 2005 Tim Janik
 
-INCLUDES  	= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(PANGO_CFLAGS)
+INCLUDES  	= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(PANGO_CFLAGS) -I$(top_builddir)/cairo-inlined
 GLIB_MKENUMS    = glib-mkenums
 LDLIBS	       += $(LIBS) $(PANGO_LIBS)
 DEFS		= -DRAPICORN_PRIVATE -DPARANOID
@@ -80,15 +80,21 @@ lib_LTLIBRARIES            = librapicorn.la
 librapicornincludedir      = $(includedir)/rapicorn
 librapicorninclude_HEADERS = $(rapicorn_public_headers)
 librapicorn_la_SOURCES     = $(rapicorn_cc_sources)
-librapicorn_la_LIBADD      = $(strip 		\
-	$(RAPICORN_LIBS) -lm 			\
-) # -lfreetype -lfontconfig $(top_builddir)/cairo/libcairo.a  	$(top_builddir)/pixman/libpixman.a 	
+librapicorn_la_DEPENDENCIES += ldscript.map
 librapicorn_la_LDFLAGS = $(strip 				\
+	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-release $(LT_RELEASE) 					\
-	-export-dynamic -no-undefined 				\
+	-no-undefined 						\
 ) # set libtool version and export symbols for resolving
-EXTRA_DIST            += $(rapicorn_private_headers) $(rapicorn_extra_sources)
+#
+librapicorn_la_LIBADD      = $(strip 			\
+	$(top_builddir)/cairo-inlined/libpixman.la	\
+	$(top_builddir)/cairo-inlined/libcairo.la	\
+	$(RAPICORN_LIBS) -lm 				\
+) # -lfreetype -lfontconfig
+#
+EXTRA_DIST += $(rapicorn_private_headers) $(rapicorn_extra_sources)
 
 #XML_FILES = $(strip standard.xml )
 ## xml linting

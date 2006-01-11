@@ -153,8 +153,9 @@ public:
   Property*                     lookup_property (const String    &property_name);
   virtual const PropertyList&   list_properties ();
   /* commands */
-  bool                          exec_command    (const String   &command_call_string);
-  Command*                      lookup_command  (const String   &command_name);
+  bool                          exec_command    (const String    &command_call_string,
+                                                 const nothrow_t &nt = dothrow);
+  Command*                      lookup_command  (const String    &command_name);
   virtual const CommandList&    list_commands   ();
   /* parents */
   virtual void                  set_parent      (Item *parent);

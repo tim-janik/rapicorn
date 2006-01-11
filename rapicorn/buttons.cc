@@ -105,7 +105,7 @@ public:
             if (proper_release and inbutton and
                 event.button >= 1 and event.button <= 3 and
                 m_on_click[event.button - 1] != "")
-              exec_command (m_on_click[event.button - 1]);
+              exec_command (m_on_click[event.button - 1], std::nothrow);
           }
         break;
       case KEY_PRESS:

@@ -1,3 +1,26 @@
+Wed Jan 11 01:08:52 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/item.cc, rapicorn/item.hh: added nothrow argument to 
+	exec_command(), to determine whether warnings should be issued
+	or exceptions should bne thrown for unimplemented or invalid 
+	commands.
+
+	* rapicorn/buttons.cc: just issue a warning for non-existing commands.
+
+	* cairo-inlined/config.h:
+	* cairo-inlined/Makefile.am: build libpixman.la and libcairo.la from
+	the contents of a cairo-1.0.2 tarball.
+
+	* rapicorn/ldscript.map: export only sambols from Rapicorn::, Birnet::
+	and typeinfo symbols.
+
+	* rapicorn/Makefile.am: include cairo-inlined. use ldscript.map during
+	linking to decide which symbols should be exported. link against
+	cairo-inlined/libpixman.la and cairo-inlined/libcairo.la.
+
+	* configure.in: added some cairo configure checks.
+	create cairo-inlined/Makefile and cairo-inlined/cairo-features.h.
+
 Tue Jan 10 20:09:44 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/item.cc (exec_command): fix for gcc-3.3, don't jump across

@@ -1,3 +1,9 @@
+- stefan: s/Factory.parse_resource/Factory::parse_resource/
+- stefan: s/create_gadget/create_item/
+- s/cancel/cancelled/
+- implement SliderArea::list_properties()
+- check taht all container types really derive from multi/simple-container
+- check all property chaining
 - fix (upon resizing):
   terminate called after throwing an instance of 'Birnet::Exception'
     what():  Rapicorn::Plane& Rapicorn::Display::create_plane(Rapicorn::CombineType, double): zero-size display

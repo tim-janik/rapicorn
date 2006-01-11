@@ -201,7 +201,8 @@ Item::lookup_command (const String &command_name)
 }
 
 bool
-Item::exec_command (const String &command_call_string)
+Item::exec_command (const String    &command_call_string,
+                    const nothrow_t &nt)
 {
   const char *cname = command_call_string.c_str();
   while ((*cname >= 'a' and *cname <= 'z') or
@@ -210,7 +211,6 @@ Item::exec_command (const String &command_call_string)
          *cname == '-')
     cname++;
   String name = command_call_string.substr (0, cname - command_call_string.c_str());
-  Item *item;
 
   String arg;
   while (*cname and (*cname == ' ' or *cname == '\t'))
@@ -228,9 +228,18 @@ Item::exec_command (const String &command_call_string)
       arg = String (carg, cname - carg);
     }
   else if (*cname)
-    goto invalid_command;
+    {
+    invalid_command:
+      if (&nt == &dothrow)
+        throw Exception ("Invalid command syntax: ", command_call_string.c_str());
+      else
+        {
+          warning ("%s: %s", "Invalid command syntax: ", command_call_string.c_str());
+          return false;
+        }
+    }
 
-  item = this;
+  Item *item = this;
   while (item)
     {
       Command *cmd = item->lookup_command (name);
@@ -238,10 +247,14 @@ Item::exec_command (const String &command_call_string)
         return cmd->exec (item, arg);
       item = item->parent();
     }
-  return false;
 
- invalid_command:
-  throw Exception ("Invalid command call: ", command_call_string.c_str());
+  if (&nt == &dothrow)
+    throw Exception ("Command unimplemented: ", command_call_string.c_str());
+  else
+    {
+      warning ("%s: %s", "Command unimplemented: ", command_call_string.c_str());
+      return false;
+    }
 }
 
 const CommandList&
