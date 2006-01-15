@@ -24,6 +24,7 @@
 namespace Rapicorn {
 
 class Painter {
+protected:
   Plane &m_plane;
 public:
   explicit      Painter                 (Plane &plane);

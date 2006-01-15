@@ -54,17 +54,6 @@ inline int BIRNET_CONST ifloor (double d) { return ftoi (floor (d)); }
 
 /* --- enums --- */
 typedef enum {
-  CENTER,
-  NORTH,
-  NORTH_EAST,
-  EAST,
-  SOUTH_EAST,
-  SOUTH,
-  SOUTH_WEST,
-  WEST,
-  NORTH_WEST,
-} AnchorType;
-typedef enum {
   COMBINE_NORMAL,       /* A OVER B */
   COMBINE_OVER,         /* A + (B & ~A) */
   COMBINE_UNDER,        /* B + (A & ~B) */
@@ -239,15 +228,15 @@ public:
     switch (anchor)
       {
       default:
-      case CENTER:      return center();        break;
-      case NORTH:       return north();         break;
-      case NORTH_EAST:  return north_east();    break;
-      case EAST:        return east();          break;
-      case SOUTH_EAST:  return south_east();    break;
-      case SOUTH:       return south();         break;
-      case SOUTH_WEST:  return south_west();    break;
-      case WEST:        return west();          break;
-      case NORTH_WEST:  return north_west();    break;
+      case ANCHOR_CENTER:       return center();        break;
+      case ANCHOR_NORTH:        return north();         break;
+      case ANCHOR_NORTH_EAST:   return north_east();    break;
+      case ANCHOR_EAST:         return east();          break;
+      case ANCHOR_SOUTH_EAST:   return south_east();    break;
+      case ANCHOR_SOUTH:        return south();         break;
+      case ANCHOR_SOUTH_WEST:   return south_west();    break;
+      case ANCHOR_WEST:         return west();          break;
+      case ANCHOR_NORTH_WEST:   return north_west();    break;
       }
   }
   Rect&

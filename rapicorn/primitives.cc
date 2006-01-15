@@ -419,17 +419,14 @@ Display::create_plane (CombineType ctype,
 {
   const Rect &r = clip_stack.front();
   int x = iround (r.ll.x), y = iround (r.ll.y), w = iceil (r.width()), h = iceil (r.height());
-  if (w > 0 && h > 0)
-    {
-      Layer l;
-      l.plane = new Plane (x, y, w, h);
-      l.ctype = ctype;
-      l.alpha = CLAMP (alpha, 0, 1.0);
-      layer_stack.push_back (l);
-      return *l.plane;
-    }
-  else
-    throw Exception (STRFUNC, ": zero-size display");
+  if (w <= 0 || h <= 0)
+    w = h = 0;
+  Layer l;
+  l.plane = new Plane (x, y, w, h);
+  l.ctype = ctype;
+  l.alpha = CLAMP (alpha, 0, 1.0);
+  layer_stack.push_back (l);
+  return *l.plane;
 }
 
 void

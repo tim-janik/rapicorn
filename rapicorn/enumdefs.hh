@@ -103,6 +103,29 @@ inline LightingType  operator|  (LightingType  s1, LightingType s2) { return Lig
 inline LightingType& operator|= (LightingType &s1, LightingType s2) { s1 = s1 | s2; return s1; }
 
 typedef enum {
+  DIR_NONE,
+  DIR_RIGHT,
+  DIR_UP,
+  DIR_LEFT,
+  DIR_DOWN,
+} DirType;
+typedef EnumType<DirType> EnumTypeDirType;
+
+typedef enum {
+  ANCHOR_NONE,
+  ANCHOR_CENTER,
+  ANCHOR_EAST,
+  ANCHOR_NORTH_EAST,
+  ANCHOR_NORTH,
+  ANCHOR_NORTH_WEST,
+  ANCHOR_WEST,
+  ANCHOR_SOUTH_WEST,
+  ANCHOR_SOUTH,
+  ANCHOR_SOUTH_EAST,
+} AnchorType;
+typedef EnumType<AnchorType> EnumTypeAnchorType;
+
+typedef enum {
   ALIGN_LEFT = 1,
   ALIGN_CENTER,
   ALIGN_RIGHT,
@@ -143,8 +166,6 @@ typedef enum {
   COLOR_NONE,
   COLOR_FOREGROUND,
   COLOR_BACKGROUND,
-  COLOR_SELECTED_FOREGROUND,
-  COLOR_SELECTED_BACKGROUND,
   COLOR_FOCUS,
   COLOR_DEFAULT,
   COLOR_LIGHT_GLINT,
@@ -158,7 +179,7 @@ typedef enum {
   COLOR_GREEN,
   COLOR_CYAN,
   COLOR_BLUE,
-  COLOR_MAGENTA
+  COLOR_MAGENTA,
 } ColorType;
 typedef EnumType<ColorType> EnumTypeColorType;
 

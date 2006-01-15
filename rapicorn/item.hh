@@ -189,24 +189,18 @@ public:
   /* styles / appearance */
   StateType             state                   () const;
   Style*                style                   () { return m_style; }
-  Color                 foreground              () { return style()->color (state(), COLOR_FOREGROUND); }
-  Color                 background              () { return style()->color (state(), COLOR_BACKGROUND); }
-  Color                 selected_foreground     () { return style()->color (state(), COLOR_SELECTED_FOREGROUND); }
-  Color                 selected_background     () { return style()->color (state(), COLOR_SELECTED_BACKGROUND); }
-  Color                 focus_color             () { return style()->color (state(), COLOR_FOCUS); }
-  Color                 default_color           () { return style()->color (state(), COLOR_DEFAULT); }
-  Color                 light_glint             () { return style()->color (state(), COLOR_LIGHT_GLINT); }
-  Color                 light_shadow            () { return style()->color (state(), COLOR_LIGHT_SHADOW); }
-  Color                 dark_glint              () { return style()->color (state(), COLOR_DARK_GLINT); }
-  Color                 dark_shadow             () { return style()->color (state(), COLOR_DARK_SHADOW); }
-  Color                 white                   () { return style()->color (state(), COLOR_WHITE); }
-  Color                 black                   () { return style()->color (state(), COLOR_BLACK); }
-  Color                 red                     () { return style()->color (state(), COLOR_RED); }
-  Color                 yellow                  () { return style()->color (state(), COLOR_YELLOW); }
-  Color                 green                   () { return style()->color (state(), COLOR_GREEN); }
-  Color                 cyan                    () { return style()->color (state(), COLOR_CYAN); }
-  Color                 blue                    () { return style()->color (state(), COLOR_BLUE); }
-  Color                 magenta                 () { return style()->color (state(), COLOR_MAGENTA); }
+  Color                 foreground              () { return style()->standard_color (state(), COLOR_FOREGROUND); }
+  Color                 background              () { return style()->standard_color (state(), COLOR_BACKGROUND); }
+  Color                 selected_foreground     () { return style()->selected_color (state(), COLOR_FOREGROUND); }
+  Color                 selected_background     () { return style()->selected_color (state(), COLOR_BACKGROUND); }
+  Color                 focus_color             () { return style()->standard_color (state(), COLOR_FOCUS); }
+  Color                 default_color           () { return style()->standard_color (state(), COLOR_DEFAULT); }
+  Color                 light_glint             () { return style()->standard_color (state(), COLOR_LIGHT_GLINT); }
+  Color                 light_shadow            () { return style()->standard_color (state(), COLOR_LIGHT_SHADOW); }
+  Color                 dark_glint              () { return style()->standard_color (state(), COLOR_DARK_GLINT); }
+  Color                 dark_shadow             () { return style()->standard_color (state(), COLOR_DARK_SHADOW); }
+  Color                 white                   () { return style()->standard_color (state(), COLOR_WHITE); }
+  Color                 black                   () { return style()->standard_color (state(), COLOR_BLACK); }
 };
 
 } // Rapicorn

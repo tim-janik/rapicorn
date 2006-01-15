@@ -28,40 +28,33 @@ Style::Style (Appearance     &appearance,
   m_appearance.register_style (*this);
 }
 
-static Color
-normal_color (const String   &color_name,
-              ColorType       ctype)
+Color
+Style::lighten_color (Color source_color)
 {
-  switch (ctype)
-    {
-    default:
-    case COLOR_NONE:                    return 0x00000000;
-    case COLOR_FOREGROUND:              return 0xff000000;
-    case COLOR_BACKGROUND:              return 0xffc0c0c0;
-    case COLOR_SELECTED_FOREGROUND:     return 0xffffffff;
-    case COLOR_SELECTED_BACKGROUND:     return 0xff000077;
-    case COLOR_FOCUS:                   return 0xff000060;
-    case COLOR_DEFAULT:                 return 0xffd0d000;
-    case COLOR_LIGHT_GLINT:             return 0xffe0e0e0;
-    case COLOR_LIGHT_SHADOW:            return 0xffb0b0b0;
-    case COLOR_DARK_GLINT:              return 0xffb0b0b0;
-    case COLOR_DARK_SHADOW:             return 0xff808080;
-    case COLOR_WHITE:                   return 0xffffffff;
-    case COLOR_BLACK:                   return 0xff000000;
-    case COLOR_RED:                     return 0xffff0000;
-    case COLOR_YELLOW:                  return 0xffffff00;
-    case COLOR_GREEN:                   return 0xff00ff00;
-    case COLOR_CYAN:                    return 0xff00ffff;
-    case COLOR_BLUE:                    return 0xff0000ff;
-    case COLOR_MAGENTA:                 return 0xffff00ff;
-    }
+  Color c = source_color;
+  double hue, saturation, value;
+  c.get_hsv (&hue, &saturation, &value);
+  value *= 1.1;
+  c.set_hsv (hue, saturation, value);
+  return c;
 }
 
-static Color
-insensitive_color (Color           c,
-                   const String   &color_name,
-                   ColorType       ctype)
+Color
+Style::darken_color (Color source_color)
 {
+  Color c = source_color;
+  double hue, saturation, value;
+  c.get_hsv (&hue, &saturation, &value);
+  value *= 0.9;
+  c.set_hsv (hue, saturation, value);
+  return c;
+}
+
+Color
+Style::insensitive_color (Color source_color,
+                          ColorType ctype)
+{
+  Color c = source_color;
   double hue, saturation, value;
   c.get_hsv (&hue, &saturation, &value);
   saturation *= 0.8;
@@ -70,81 +63,122 @@ insensitive_color (Color           c,
   return c;
 }
 
-static Color
-prelight_color (Color           c,
-                const String   &color_name,
-                ColorType       ctype)
+Color
+Style::prelight_color (Color source_color,
+                       ColorType ctype)
 {
+  Color c = source_color;
   switch (ctype)
     {
-    case COLOR_FOREGROUND: case COLOR_BACKGROUND:
-    case COLOR_SELECTED_FOREGROUND: case COLOR_SELECTED_BACKGROUND:
-    case COLOR_FOCUS: case COLOR_DEFAULT:
-      break;
-    default:
-      double hue, saturation, value;
-      c.get_hsv (&hue, &saturation, &value);
-      saturation *= 1.15;
-      c.set_hsv (hue, MIN (1, saturation), value);
-      break;
+    case COLOR_FOREGROUND:
+    case COLOR_BACKGROUND:
+    case COLOR_FOCUS:
+    case COLOR_DEFAULT:
+      return c;
+    default: ;
     }
-  return c;
-}
-
-static Color
-impressed_color (Color           c,
-                 const String   &color_name,
-                 ColorType       ctype)
-{
-  switch (ctype)
-    {
-    case COLOR_FOREGROUND: case COLOR_BACKGROUND:
-    case COLOR_SELECTED_FOREGROUND: case COLOR_SELECTED_BACKGROUND:
-    case COLOR_FOCUS: case COLOR_DEFAULT:
-      break;
-    default:
-      double hue, saturation, value;
-      c.get_hsv (&hue, &saturation, &value);
-      value *= 0.8;
-      c.set_hsv (hue, saturation, value);
-      break;
-    }
-  return c;
-}
-
-static Color
-has_focus_color (Color           c,
-                 const String   &color_name,
-                 ColorType       ctype)
-{
-  return c;
-}
-
-static Color
-has_default_color (Color           c,
-                   const String   &color_name,
-                   ColorType       ctype)
-{
+  double hue, saturation, value;
+  c.get_hsv (&hue, &saturation, &value);
+  saturation *= 1.15;
+  c.set_hsv (hue, MIN (1, saturation), value);
   return c;
 }
 
 Color
-Style::color (StateType     state,
-              const String &color_name,
-              ColorType     ctype)
+Style::impressed_color (Color source_color,
+                        ColorType ctype)
 {
-  Color c = normal_color (color_name, ctype);
-  if (state & STATE_IMPRESSED)
-    c = impressed_color (c, color_name, ctype);
-  if (state & STATE_FOCUS)
-    c = has_focus_color (c, color_name, ctype);
-  if (state & STATE_DEFAULT)
-    c = has_default_color (c, color_name, ctype);
-  if (state & STATE_INSENSITIVE)
-    return insensitive_color (c, color_name, ctype);
-  if (state & STATE_PRELIGHT)
-    c = prelight_color (c, color_name, ctype);
+  Color c = source_color;
+  switch (ctype)
+    {
+    case COLOR_FOREGROUND:
+    case COLOR_BACKGROUND:
+    case COLOR_FOCUS:
+    case COLOR_DEFAULT:
+      return c;
+    default: ;
+    }
+  double hue, saturation, value;
+  c.get_hsv (&hue, &saturation, &value);
+  value *= 0.8;
+  c.set_hsv (hue, saturation, value);
   return c;
+}
+
+Color
+Style::focus_state_color (Color source_color,
+                          ColorType ctype)
+{
+  Color c = source_color;
+  return c;
+}
+
+Color
+Style::default_state_color (Color source_color,
+                            ColorType ctype)
+{
+  Color c = source_color;
+  return c;
+}
+
+Color
+Style::state_convert_color (StateType      state,
+                            Color          color,
+                            ColorType      ctype)
+{
+  Color c = color;
+  if (state & STATE_IMPRESSED)
+    c = impressed_color (c, ctype);
+  if (state & STATE_FOCUS)
+    c = focus_state_color (c, ctype);
+  if (state & STATE_DEFAULT)
+    c = default_state_color (c, ctype);
+  if (state & STATE_INSENSITIVE)
+    return insensitive_color (c, ctype);        /* ignore prelight if insensitive */
+  if (state & STATE_PRELIGHT)
+    c = prelight_color (c, ctype);
+  return c;
+}
+
+Color
+Style::cube_color (Style::ColorCubeRef   cube,
+                   StateType      state,
+                   Color          rgb_color,
+                   ColorType      color_type) const
+{
+  Color rgb = cube.convert_color (rgb_color);
+  rgb = state_convert_color (state, rgb, color_type);
+  return rgb;
+}
+
+Color
+Style::cube_color (Style::ColorCubeRef   cube,
+                   StateType      state,
+                   ColorType      color_type) const
+{
+  Color c;
+  switch (color_type)
+    {
+    default:
+    case COLOR_NONE:                    c = 0x00000000; break;
+    case COLOR_FOREGROUND:              c = 0xff000000; break;
+    case COLOR_BACKGROUND:              c = 0xffc0c0c0; break;
+    case COLOR_FOCUS:                   c = 0xff000060; break;
+    case COLOR_DEFAULT:                 c = 0xffd0d000; break;
+    case COLOR_LIGHT_GLINT:             c = 0xffe0e0e0; break;
+    case COLOR_LIGHT_SHADOW:            c = 0xffb0b0b0; break;
+    case COLOR_DARK_GLINT:              c = 0xffb0b0b0; break;
+    case COLOR_DARK_SHADOW:             c = 0xff808080; break;
+    case COLOR_WHITE:                   c = 0xffffffff; break;
+    case COLOR_BLACK:                   c = 0xff000000; break;
+    case COLOR_RED:                     c = 0xffff0000; break;
+    case COLOR_YELLOW:                  c = 0xffffff00; break;
+    case COLOR_GREEN:                   c = 0xff00ff00; break;
+    case COLOR_CYAN:                    c = 0xff00ffff; break;
+    case COLOR_BLUE:                    c = 0xff0000ff; break;
+    case COLOR_MAGENTA:                 c = 0xffff00ff; break;
+    }
+  return cube_color (cube, state, c, color_type);
 }
 
 Style*
@@ -157,6 +191,21 @@ Style::~Style ()
 {
   m_appearance.unregister_style (*this);
 }
+
+class StandardCube : public virtual ColorCube {
+public:
+  virtual Color
+  convert_color   (Color  color) const
+  {
+    Color c = color;
+    return c;
+  }
+};
+static StandardCube standard_cube;
+
+const ColorCube &Style::STANDARD = standard_cube;
+const ColorCube &Style::SELECTED = standard_cube;
+const ColorCube &Style::INPUT = standard_cube;
 
 Appearance::Appearance (const String &name) :
   m_name (name)

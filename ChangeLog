@@ -1,3 +1,37 @@
+Sun Jan 15 23:56:30 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/paintgadgets.[hc]*: added arrow and dot-grid interfaces
+	and implementations.
+
+	* rapicorn/enumdefs.hh: added direction and anchor type.
+	got rid of seleciton specific color types.
+
+	* rapicorn/item.hh: consolidated color API.
+
+	* rapicorn/paintcontainers.cc: color and test code fixups.
+
+	* rapicorn/cairocontext.[hc]*: C++ API wrapper for cairo.
+
+	* rapicorn/appearance.[hc]*: extended color API of styles.
+
+	* examples/tour.xml: added "arrow" definition, added "dot-grid"
+	definition, use both for sliders.
+
+	* examples/gtkrootwidget.cc: added some test code, adapt to 
+	new style API.
+
+	* rapicorn/primitives.cc: premit zero-size planes which may be
+	triggered in some expose/clipping szenarios.
+
+	* rapicorn/primitives.hh: adapt to new anchor enumeration.
+
+	* rapicorn/painter.cc: added guards to Painter::draw_shadow().
+
+	* rapicorn/painter.hh: allow Painter derived classes to access planes.
+
+	* rapicorn/pangolabel.cc: implemented a font-config handler
+	default_substitute_func() to configure hinting and anti-aliasing.
+
 Wed Jan 11 01:08:52 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/item.cc, rapicorn/item.hh: added nothrow argument to 

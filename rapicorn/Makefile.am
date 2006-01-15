@@ -25,6 +25,8 @@ rapicorn_public_headers = $(strip 	\
 	properties.hh			\
 	adjustment.hh			\
 	painter.hh			\
+	cairocontext.hh			\
+	paintgadgets.hh			\
 	paintcontainers.hh		\
 	layoutcontainers.hh		\
 	slider.hh			\
@@ -55,6 +57,8 @@ rapicorn_cc_sources = $(strip 		\
 	properties.cc			\
 	adjustment.cc			\
 	painter.cc			\
+	cairocontext.cc			\
+	paintgadgets.cc			\
 	paintcontainers.cc		\
 	layoutcontainers.cc		\
 	slider.cc			\

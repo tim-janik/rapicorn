@@ -107,15 +107,13 @@ private:
         Color c (argb);
         c.alpha (0xff - c.alpha());
         return c;
-        printf ("color: %s => 0x%08x (mag: 0x%08x)\n", &color[1], argb,
-                style()->color (state(), ColorType (ect.find_first("magenta")->value)).argb());
         return argb;
       }
     const EnumClass::Value *value = ect.find_first (color);
     if (value)
-      return style()->color (state(), ColorType (value->value));
+      return style()->standard_color (state(), ColorType (value->value));
     else
-      return style()->color (state(), color, COLOR_BACKGROUND);
+      return style()->standard_color (state(), COLOR_BACKGROUND); // FIXME: use color string
   }
   void
   render_shade (Plane        &plane,

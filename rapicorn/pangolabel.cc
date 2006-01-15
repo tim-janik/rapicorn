@@ -79,11 +79,55 @@ class PangoLabelImpl : public virtual ItemImpl, public virtual PangoLabel {
   {
     return Point (96, 96);
   }
+  static void
+  default_substitute_func (FcPattern *pattern,
+                           gpointer   data)
+  {
+    bool antialias = true, hinting = true, autohint = false;
+    int hint_style = 4; /* 0:unset, 1:none, 2:slight, 3:medium, 4:full */
+    int subpxorder = 1; /* 0:unset, 1:none, 2:RGB, 3:BGR, 4:VRGB, 5:VBGR */
+    // subpixel order != none needs FT_PIXEL_MODE_LCD or FT_PIXEL_MODE_LCD_V
+    FcValue v;
+
+    if (FcPatternGet (pattern, FC_ANTIALIAS, 0, &v) == FcResultNoMatch)
+      FcPatternAddBool (pattern, FC_ANTIALIAS, antialias);
+    if (FcPatternGet (pattern, FC_HINTING, 0, &v) == FcResultNoMatch)
+      FcPatternAddBool (pattern, FC_HINTING, hinting);
+    if (hint_style && FcPatternGet (pattern, FC_HINT_STYLE, 0, &v) == FcResultNoMatch)
+      {
+        switch (hint_style)
+          {
+          case 1: FcPatternAddInteger (pattern, FC_HINT_STYLE, FC_HINT_NONE);   break;
+          case 2: FcPatternAddInteger (pattern, FC_HINT_STYLE, FC_HINT_SLIGHT); break;
+          case 3: FcPatternAddInteger (pattern, FC_HINT_STYLE, FC_HINT_MEDIUM); break;
+          case 4: FcPatternAddInteger (pattern, FC_HINT_STYLE, FC_HINT_FULL);   break;
+          default:      break;
+          }
+      }
+    if (FcPatternGet (pattern, FC_AUTOHINT, 0, &v) == FcResultNoMatch)
+      FcPatternAddBool (pattern, FC_AUTOHINT, autohint);
+    if (subpxorder && FcPatternGet (pattern, FC_RGBA, 0, &v) == FcResultNoMatch)
+      {
+        switch (subpxorder)
+          {
+          case 1: FcPatternAddInteger (pattern, FC_RGBA, FC_RGBA_NONE); break;
+          case 2: FcPatternAddInteger (pattern, FC_RGBA, FC_RGBA_RGB);  break;
+          case 3: FcPatternAddInteger (pattern, FC_RGBA, FC_RGBA_BGR);  break;
+          case 4: FcPatternAddInteger (pattern, FC_RGBA, FC_RGBA_VRGB); break;
+          case 5: FcPatternAddInteger (pattern, FC_RGBA, FC_RGBA_VBGR); break;
+          default:      break;
+          }
+      }
+  }
   static PangoLayout*
   create_layout()
   {
     Point dpi = get_dpi_for_pango();
-    PangoContext *context = pango_ft2_get_context (dpi.x, dpi.y);
+    PangoFontMap *fontmap = pango_ft2_font_map_new();
+    pango_ft2_font_map_set_default_substitute (PANGO_FT2_FONT_MAP (fontmap), default_substitute_func, NULL, NULL);
+    pango_ft2_font_map_set_resolution (PANGO_FT2_FONT_MAP (fontmap), dpi.x, dpi.y);
+    PangoContext *context = pango_ft2_font_map_create_context (PANGO_FT2_FONT_MAP (fontmap));
+    g_object_unref (fontmap);
     pango_context_set_base_dir (context, default_text_direction());
     pango_context_set_language (context, default_pango_language());
     PangoFontDescription *font_desc = create_default_font_description();
@@ -351,7 +395,7 @@ public:
     bitmap.buffer = new uint8[bitmap.rows * bitmap.pitch];
     memset (bitmap.buffer, 0, bitmap.rows * bitmap.pitch);
     bitmap.num_grays = 256;
-    bitmap.pixel_mode = ft_pixel_mode_grays;
+    bitmap.pixel_mode = FT_PIXEL_MODE_GRAY;
     pango_ft2_render_layout (&bitmap, m_layout, 0, 0);
     /* render bitmap to plane */
     Color fg (col.premultiplied());

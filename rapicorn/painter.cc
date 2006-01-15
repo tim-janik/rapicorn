@@ -149,18 +149,30 @@ Painter::draw_shadow (int x, int y, int width, int height,
                       Color outer_upper_left, Color inner_upper_left,
                       Color inner_lower_right, Color outer_lower_right)
 {
-  /* outer lower-right */
-  draw_hline (x, x + width - 1, y, outer_lower_right);
-  draw_vline (x + width - 1, y, y + height - 1, outer_lower_right);
-  /* inner lower-right */
-  draw_hline (x + 1, x + width - 2, y + 1, inner_lower_right);
-  draw_vline (x + width - 2, y + 1, y + height - 2, inner_lower_right);
-  /* outer upper-left */
-  draw_hline (x + width - 1, x, y + height - 1, outer_upper_left);
-  draw_vline (x, y + height - 1, y, outer_upper_left);
-  /* inner upper-left */
-  draw_hline (x + width - 2, x + 1, y + height - 2, inner_upper_left);
-  draw_vline (x + 1, y + height - 2, y + 1, inner_upper_left);
+  if (width > 0 && height > 0)
+    {
+      /* outer lower-right */
+      draw_hline (x, x + width - 1, y, outer_lower_right);
+      draw_vline (x + width - 1, y, y + height - 1, outer_lower_right);
+    }
+  if (width > 1 && height > 1)
+    {
+      /* inner lower-right */
+      draw_hline (x + 1, x + width - 2, y + 1, inner_lower_right);
+      draw_vline (x + width - 2, y + 1, y + height - 2, inner_lower_right);
+    }
+  if (width > 0 && height > 0)
+    {
+      /* outer upper-left */
+      draw_hline (x + width - 1, x, y + height - 1, outer_upper_left);
+      draw_vline (x, y + height - 1, y, outer_upper_left);
+    }
+  if (width > 1 && height > 1)
+    {
+      /* inner upper-left */
+      draw_hline (x + width - 2, x + 1, y + height - 2, inner_upper_left);
+      draw_vline (x + 1, y + height - 2, y + 1, inner_upper_left);
+    }
 }
 
 void

@@ -24,6 +24,7 @@ namespace Gtk {
 /* --- prototypes --- */
 static gboolean root_widget_ancestor_event      (GtkWidget *ancestor, GdkEvent *event, GtkWidget *widget);
 static bool     gdk_window_has_ancestor         (GdkWindow *window, GdkWindow *ancestor);
+static void     call_me                         (GdkWindow *window);
 
 /* --- type definition --- */
 typedef RootWidget      BirnetCanvasGtkRootWidget;
@@ -99,7 +100,7 @@ root_widget_realize (GtkWidget *widget)
   widget->window = gdk_window_new (gtk_widget_get_parent_window (widget), &attributes, attributes_mask);
   gdk_window_set_user_data (widget->window, widget);
   widget->style = gtk_style_attach (widget->style, widget->window);
-  Color argb_color = root ? dynamic_cast<Item*> (root)->style()->color (STATE_NORMAL, COLOR_BACKGROUND) : Color (0xff808080);
+  Color argb_color = root ? dynamic_cast<Item*> (root)->style()->standard_color (STATE_NORMAL, COLOR_BACKGROUND) : Color (0xff808080);
   GdkColor gdkcolor = { 0, };
   gdkcolor.red = argb_color.red() * 0x0101;
   gdkcolor.green = argb_color.green() * 0x0101;
@@ -235,6 +236,7 @@ root_widget_event (GtkWidget *widget,
     case GDK_VISIBILITY_NOTIFY:
       if (event->visibility.state == GDK_VISIBILITY_FULLY_OBSCURED)
         root->dispatch_cancel_events ();
+      call_me (window);
       break;
     case GDK_EXPOSE:
       GdkRectangle *areas;
@@ -425,6 +427,15 @@ gdk_window_has_ancestor (GdkWindow *window,
 
 #include <X11/Xlib.h>
 #include <gdk/gdkx.h>
+
+static void
+call_me (GdkWindow *window)
+{
+  const char *val1 = XGetDefault (GDK_WINDOW_XDISPLAY (window), "Xft", "antialias");
+  const char *val2 = XGetDefault (GDK_WINDOW_XDISPLAY (window), "Xft", "dpi");
+  if (0)
+    g_printerr ("XGetDefault(): dpi=%s antialias=%s\n", val2, val1);
+}
 
 static void
 gdk_window_set_any_gravity (GdkWindow *window, GdkGravity g, bool win, bool bit)
