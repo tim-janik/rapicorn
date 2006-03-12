@@ -1,3 +1,14 @@
+Sun Mar 12 18:01:30 2006  Tim Janik  <timj@gtk.org>
+
+	* examples/tour.xml: added Rapicorn-slider-skid, fixed up slider
+	layout.
+
+	* rapicorn/slider.cc: added SliderSkidImpl. moved the grab and button 
+	handling from Trough to Skid. forward button events from Trough to Skid
+	to allow the Skid to warp in place for clicks into the Trough.
+	confined the mouse-click offset in skid to not slip the skid off the
+	trough boundaries.
+
 Sun Mar 12 14:45:47 2006  Tim Janik  <timj@gtk.org>
 
 	* integrated birnet/ into the build process.

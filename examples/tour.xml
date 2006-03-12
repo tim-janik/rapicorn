@@ -73,28 +73,25 @@
   <!-- arrow -->
   <def:arrow inherit="Rapicorn::Arrow"/>
   <!-- slider -->
-  <def:Rapicorn-slider-trough inherit="Rapicorn::SliderTrough">
-  </def:Rapicorn-slider-trough>
+  <def:Rapicorn-slider-trough inherit="Rapicorn::SliderTrough"/>
+  <def:Rapicorn-slider-skid inherit="Rapicorn::SliderSkid"/>
   <def:slider inherit="Rapicorn::SliderArea">
     <frame normal-frame="in" hexpand="1" >
       <table>
 	<button left-attach="1" on-click="decrement" on-click2="page-decrement">
-	  <arrow arrow-dir="left"/>
+	  <arrow arrow-dir="left" height="5"/>
 	</button>
 	<Rapicorn-slider-trough left-attach="2" hexpand="1">
-	  <frame normal-frame="out" vexpand="1">
+	  <Rapicorn-slider-skid vexpand="1">
 	    <ambience
 	      normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
 	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"
 	      >
-	      <hbox>
+	      <frame normal-frame="out" vexpand="1">
 		<dot-grid n-hdots="6" n-vdots="2" left-padding-dots="2" right-padding-dots="2" top-padding-dots="0" bottom-padding-dots="0" />
-		<button on-click="boom" >
-		  <label text="x"/>
-		</button>
-	      </hbox>
+	      </frame>
 	    </ambience>
-	  </frame>
+	  </Rapicorn-slider-skid>
 	</Rapicorn-slider-trough>
 	<button left-attach="3" on-click="increment" on-click2="page-increment">
 	  <arrow arrow-dir="right"/>

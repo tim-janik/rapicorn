@@ -113,15 +113,13 @@ public:
 };
 static const ItemFactory<SliderAreaImpl> slider_area_factory ("Rapicorn::SliderArea");
 
+class SliderSkidImpl;
+
 class SliderTroughImpl : public virtual EventHandler, public virtual SingleContainerImpl {
   SliderArea *m_slider_area;
-  uint        m_button;
-  double      m_coffset;
 public:
   SliderTroughImpl() :
-    m_slider_area (NULL),
-    m_button (0),
-    m_coffset (0)
+    m_slider_area (NULL)
   {}
   ~SliderTroughImpl()
   {}
@@ -158,25 +156,6 @@ protected:
     return m_slider_area->adjustment();
   }
   virtual void
-  size_request (Requisition &requisition)
-  {
-    bool chspread = false, cvspread = false;
-    if (has_children())
-      {
-        Item &child = get_child();
-        if (child.visible())
-          {
-            Requisition cr = child.size_request ();
-            requisition.width = 20; // FIXME: hardcoded minimum
-            requisition.height = cr.height;
-            chspread = child.hspread();
-            cvspread = child.vspread();
-          }
-      }
-    set_flag (HSPREAD_CONTAINER, chspread);
-    set_flag (VSPREAD_CONTAINER, cvspread);
-  }
-  virtual void
   size_allocate (Allocation area)
   {
     allocation (area);
@@ -204,6 +183,66 @@ protected:
       }
     child.set_allocation (area);
   }
+  friend class SliderSkidImpl;
+  virtual void
+  reset (ResetMode mode = RESET_ALL)
+  {}
+  virtual bool
+  handle_event (const Event &event)
+  {
+    bool handled = false;
+    switch (event.type)
+      {
+      case BUTTON_PRESS:
+      case BUTTON_2PRESS:
+      case BUTTON_3PRESS:
+      case BUTTON_RELEASE:
+      case BUTTON_2RELEASE:
+      case BUTTON_3RELEASE:
+      case BUTTON_CANCELED:
+        /* forward button events to allow slider warps */
+        if (has_visible_child())
+          {
+            Event cevent = event;
+            handled = get_child().process_event (cevent);
+          }
+        break;
+      default: break;
+      }
+    return handled;
+  }
+};
+static const ItemFactory<SliderTroughImpl> slider_trough_factory ("Rapicorn::SliderTrough");
+
+class SliderSkidImpl : public virtual EventHandler, public virtual SingleContainerImpl {
+  uint        m_button;
+  double      m_coffset;
+public:
+  SliderSkidImpl() :
+    m_button (0),
+    m_coffset (0)
+  {}
+  ~SliderSkidImpl()
+  {}
+protected:
+  virtual void
+  size_request (Requisition &requisition)
+  {
+    bool chspread = false, cvspread = false;
+    if (has_children())
+      {
+        Item &child = get_child();
+        if (child.visible())
+          {
+            requisition = child.size_request ();
+            chspread = child.hspread();
+            cvspread = child.vspread();
+          }
+      }
+    set_flag (HSPREAD_CONTAINER, chspread);
+    set_flag (VSPREAD_CONTAINER, cvspread);
+    requisition.width = MAX (requisition.width, 20); // FIXME: hardcoded minimum
+  }
   virtual void
   reset (ResetMode mode = RESET_ALL)
   {
@@ -214,7 +253,8 @@ protected:
   handle_event (const Event &event)
   {
     bool handled = false, proper_release = false;
-    Adjustment &adj = *adjustment();
+    SliderTroughImpl &trough = parent()->interface<SliderTroughImpl>(); // FIXME: need Item.parent_interface<>();
+    Adjustment &adj = *trough.adjustment();
     switch (event.type)
       {
       case MOUSE_ENTER:
@@ -232,29 +272,33 @@ protected:
             root()->add_grab (this, true);
             handled = true;
             m_coffset = 0;
-            if (has_visible_child())
+            double cx = event.x - allocation().x;
+            double cwidth = allocation().width;
+            if (cx >= 0 && cx < cwidth)
+              m_coffset = cx / cwidth;
+            else
               {
-                Item &child = get_child();
-                double cx = event.x - child.allocation().x;
-                double cwidth = child.allocation().width;
-                if (cx >= 0 && cx < cwidth)
-                  m_coffset = cx / cwidth;
-                else
-                  m_coffset = 0.5;
+                m_coffset = 0.5;
+                /* confine offset to not slip the skip off trough boundaries */
+                cx = event.x - cwidth * m_coffset;
+                double start_slip = trough.allocation().x - cx;
+                double end_slip = cx + cwidth - (trough.allocation().x + trough.allocation().width);
+                /* adjust skid position */
+                cx += MAX (0, start_slip);
+                cx -= MAX (0, end_slip);
+                /* recalculate offset */
+                m_coffset = (event.x - cx) / cwidth;
               }
           }
         break;
       case MOUSE_MOVE:
         if (m_button)
           {
-            double pos = event.x - allocation().x;
-            int width = allocation().width;
-            if (has_visible_child())
-              {
-                int cwidth = get_child().allocation().width;
-                width -= cwidth;
-                pos -= m_coffset * cwidth;
-              }
+            double pos = event.x - trough.allocation().x;
+            int width = trough.allocation().width;
+            int cwidth = allocation().width;
+            width -= cwidth;
+            pos -= m_coffset * cwidth;
             pos /= width;
             pos = CLAMP (pos, 0, 1);
             adj.value (pos);
@@ -278,6 +322,6 @@ protected:
     return handled;
   }
 };
-static const ItemFactory<SliderTroughImpl> slider_trough_factory ("Rapicorn::SliderTrough");
+static const ItemFactory<SliderSkidImpl> slider_skid_factory ("Rapicorn::SliderSkid");
 
 } // Rapicorn

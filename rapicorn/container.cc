@@ -485,7 +485,12 @@ protected:
     if (grab_item)
       {
         if (unconfined or grab_item->point (mevent.x, mevent.y, Affine()))
-          pierced.push_back (ref (grab_item));
+          {
+            pierced.push_back (ref (grab_item));        /* grab-item receives all mouse events */
+            Container *container = grab_item->interface<Container*>();
+            if (container)                              /* deliver to hovered grab-item children as well */
+              container->point_children (mevent.x, mevent.y, Affine(), pierced);
+          }
       }
     else if (drawable())
       {
@@ -748,6 +753,10 @@ public:
   {
     if (!child.has_ancestor (*this))
       throw Exception ("child is not descendant of container \"", name(), "\": ", child.name());
+    /* for unconfined==true grabs, the mouse pointer is always considered to
+     * be contained by the grab-item, and only by the grab-item. events are
+     * delivered to the grab-item and its children.
+     */
     grab_stack.push_back (GrabEntry (&child, unconfined));
   }
   virtual void
