@@ -217,6 +217,12 @@ protected:
     Adjustment &adj = *adjustment();
     switch (event.type)
       {
+      case MOUSE_ENTER:
+        this->prelight (true);
+        break;
+      case MOUSE_LEAVE:
+        this->prelight (false);
+        break;
       case BUTTON_PRESS:
       case BUTTON_2PRESS:
       case BUTTON_3PRESS:

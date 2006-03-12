@@ -188,7 +188,7 @@ Painter::draw_border (int x, int y, int width, int height, Color border, const v
     }
 }
 
-extern inline uint32
+static inline uint32
 quick_rand32 ()
 {
   static uint32 accu = 2147483563;

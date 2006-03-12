@@ -59,7 +59,7 @@ AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
 
-dnl figure debugging default, prior to $ac_help setup
+dnl # figure debugging default, prior to $ac_help setup
 dnl
 AC_DIVERT_BEFORE_HELP([
 if test `expr $RAPICORN_MINOR_VERSION \% 2 \| $RAPICORN_MAJOR_VERSION \< 1` = 1 ; then
@@ -89,7 +89,7 @@ AC_ARG_ENABLE(profile,     [  --enable-profile=[no/yes] turn on profiling [defau
 AC_ARG_ENABLE(devel-rules, [  --enable-devel-rules=[no/yes]   turn on developer build rules],,)
 # $enable_devel_rules
 
-dnl setup DEBUG defaults
+dnl # setup DEBUG defaults
 if test "x$enable_debug" = "xyes"; then
   ADDON_CFLAGS="-g -DG_ENABLE_DEBUG"
 else if test "x$enable_debug" = "xno"; then
@@ -104,7 +104,7 @@ if test "x$enable_profile" = "xyes"; then
     ADDON_CFLAGS="$ADDON_CFLAGS -pg"
   fi
 fi
-dnl setup CFLAGS
+dnl # setup CFLAGS
 if test -z "$CFLAGS"; then
   CFLAGS="$ADDON_CFLAGS"
 else
@@ -116,30 +116,42 @@ else
   CXXFLAGS="$CXXFLAGS $ADDON_CFLAGS"
 fi
 
-dnl Foreign defaults:
+dnl # Foreign defaults:
 MC_IF_VAR_EQ(enable_static, yes, , enable_static=no)
 MC_IF_VAR_EQ(enable_shared, no, , enable_shared=yes)
 
+dnl #
+dnl # Include sub-package macro definitions
+dnl #
+builtin(include, birnet/configure.inc)dnl
+#include(birnet/configure.inc)
+AC_DEFUN([DUMMY_DEFS],
+[
+    # work around stupid automake (doesn't figure includes)
+    AC_SUBST(BIRNET_CFLAGS)
+    AC_SUBST(BIRNET_LIBS)
+])
+
 
 dnl
-dnl Define package requirements.
+dnl # Define package requirements.
 dnl
 AC_DEFUN(AC_I18N_REQUIREMENTS,
 [
-    dnl TRANSLATORS: enter your language here
+    dnl # TRANSLATORS: enter your language here
     ALL_LINGUAS="de"
-    dnl TRANSLATORS: enter your language here
+    dnl # TRANSLATORS: enter your language here
     AC_SUBST(ALL_LINGUAS)
 
-    dnl versioned Rapicorn gettext domain (po/)
+    dnl # versioned Rapicorn gettext domain (po/)
     RAPICORN_GETTEXT_DOMAIN=rapicorn-v$BIN_VERSION    # version without -rcZ
     AC_SUBST(RAPICORN_GETTEXT_DOMAIN)
     AC_DEFINE_UNQUOTED(RAPICORN_GETTEXT_DOMAIN, "$RAPICORN_GETTEXT_DOMAIN", [Versioned Rapicorn gettext domain])
     GETTEXT_PACKAGE=$RAPICORN_GETTEXT_DOMAIN
     AC_SUBST(GETTEXT_PACKAGE)
 
-    dnl locale directory for all domains
-    dnl (AM_GLIB_DEFINE_LOCALEDIR() could do this if it would do AC_SUBST())
+    dnl # locale directory for all domains
+    dnl # (AM_GLIB_DEFINE_LOCALEDIR() could do this if it would do AC_SUBST())
     saved_prefix="$prefix"
     saved_exec_prefix="$exec_prefix"
     test "x$prefix" = xNONE && prefix=$ac_default_prefix
@@ -153,7 +165,7 @@ AC_DEFUN(AC_I18N_REQUIREMENTS,
     prefix="$saved_prefix"
     AC_SUBST(rapicornlocaledir)
 
-    dnl do gettext checks and provide INTLLIBS
+    dnl # do gettext checks and provide INTLLIBS
     AM_GLIB_GNU_GETTEXT
     AC_PROG_INTLTOOL
 ])
@@ -161,7 +173,7 @@ AC_DEFUN(AC_RAPICORN_REQUIREMENTS,
 [
     dnl --- require libpng ---
     if test -z "$LIBPNG"; then
-	dnl png_set_add_alpha() exists only snice libpng v1.2
+	dnl # png_set_add_alpha() exists only snice libpng v1.2
 	AC_MSG_CHECKING(for libpng12)
 	if $PKG_CONFIG --exists libpng12 ; then
 	    AC_MSG_RESULT(yes)
@@ -187,11 +199,11 @@ AC_DEFUN(AC_RAPICORN_REQUIREMENTS,
     fi
     AC_SUBST(LIBZ)
 
-    dnl --- check for pango --- 
+    dnl --- check for Pango --- 
     DEPENDANCIES=
     DEPENDANCIES="$DEPENDANCIES glib-2.0 >= 2.4.11"
     DEPENDANCIES="$DEPENDANCIES pangoft2 >= 1.4.0"
-    dnl define PANGO_CFLAGS and PANGO_LIBS:
+    dnl # define PANGO_CFLAGS and PANGO_LIBS:
     PANGO_PKG_ERRORS=OK
     PKG_CHECK_MODULES(PANGO, $DEPENDANCIES,,
 	AC_MSG_WARN([[Failed to detect or find pango, building without pango modules (consider adjusting \$PKG_CONFIG_PATH)]]))
@@ -203,7 +215,7 @@ AC_DEFUN(AC_RAPICORN_REQUIREMENTS,
     DEPENDANCIES=
     DEPENDANCIES="$DEPENDANCIES glib-2.0 >= 2.4.11"
     DEPENDANCIES="$DEPENDANCIES gtk+-2.0 >= 2.4.11"
-    dnl define GTK_CFLAGS and GTK_LIBS:
+    dnl # define GTK_CFLAGS and GTK_LIBS:
     GTK_PKG_ERRORS=OK
     PKG_CHECK_MODULES(GTK, $DEPENDANCIES,,
 	AC_MSG_WARN([[Failed to detect or find Gtk+, building without gtk programs (consider adjusting \$PKG_CONFIG_PATH)]]))
@@ -219,7 +231,7 @@ AC_DEFUN(AC_RAPICORN_REQUIREMENTS,
 AC_DEFUN(AC_DOC_REQUIREMENTS,
 [
 ])
-dnl FIXME: remove cairo's _CHECK_FUNCS_WITH_FLAGS
+dnl # FIXME: remove cairo's _CHECK_FUNCS_WITH_FLAGS
 AC_DEFUN([_CHECK_FUNCS_WITH_FLAGS],
 [ 
   save_cflags="$CFLAGS"
@@ -258,7 +270,7 @@ AC_DEFUN(AC_CAIRO_REQUIREMENTS,
   AC_SUBST(ATSUI_FONT_FEATURE)
 
   dnl ===========================================================================
-  dnl Checks for precise integer types
+  dnl # Checks for precise integer types
   AC_CHECK_HEADERS([stdint.h inttypes.h sys/int_types.h])
   AC_CHECK_TYPES([uint64_t, uint128_t])
 
@@ -299,7 +311,7 @@ AC_DEFUN(AC_CAIRO_REQUIREMENTS,
   if test "x$use_png" = "xyes"; then
     PNG_FUNCTIONS_FEATURE="#define CAIRO_HAS_PNG_FUNCTIONS 1"
   else
-    AC_MSG_WARN("*** To run the tests, cairo must be built with png support ***)
+    AC_MSG_WARN("*** To run the tests, cairo must be built with png support ***")
   fi
   AC_SUBST(PNG_FUNCTIONS_FEATURE)
   CAIRO_CFLAGS="$CAIRO_CFLAGS $PNG_CFLAGS"
@@ -308,7 +320,7 @@ AC_DEFUN(AC_CAIRO_REQUIREMENTS,
 
   dnl ===========================================================================
   AC_ARG_ENABLE(freetype,
-    [  --disable-freetype      Disable cairo's freetype font backend],
+    [  --disable-freetype      Disable cairo's freetype font backend], dnl'
     [use_freetype=$enableval], [use_freetype=yes])
   
   if test "x$use_freetype" = "xyes"; then
@@ -484,8 +496,12 @@ AM_CONDITIONAL(IF_NOTDVLBUILD, test -z "$NOTDVLBUILD")
 # find installation utilities
 AC_PATH_PROG(UPDATE_MIME_DATABASE, update-mime-database)
 
+# Check sub-package requirements
+AC_BIRNET_REQUIREMENTS
+
 # Check requirement sets
 AC_I18N_REQUIREMENTS
+AC_BIRNET_REQUIREMENTS
 AC_RAPICORN_REQUIREMENTS
 AC_DOC_REQUIREMENTS
 AC_CAIRO_REQUIREMENTS
@@ -500,11 +516,13 @@ AC_SUBST(LDFLAGS)
 # create output files
 AC_CONFIG_FILES([
 Makefile
+cairo-inlined/Makefile
+cairo-inlined/cairo-features.h
+birnet/Makefile
+birnet/tests/Makefile
 rapicorn/Makefile
 po/Makefile.in
 po-helper.sh
-cairo-inlined/Makefile
-cairo-inlined/cairo-features.h
 examples/Makefile
 tests/Makefile
 ])

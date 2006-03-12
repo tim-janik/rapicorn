@@ -1,3 +1,15 @@
+Sun Mar 12 14:45:47 2006  Tim Janik  <timj@gtk.org>
+
+	* integrated birnet/ into the build process.
+
+	* configure.in: comment fixups.
+
+	* examples/tour.xml: some slider work to get prelighting going.
+
+	* rapicorn/birnetutils.[hc]*: export DataList::clear_like_destructor().
+
+	* rapicorn/slider.cc: test prelighint for trough.
+
 Sun Jan 15 23:56:30 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/paintgadgets.[hc]*: added arrow and dot-grid interfaces

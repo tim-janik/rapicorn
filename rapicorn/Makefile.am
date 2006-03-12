@@ -93,8 +93,8 @@ librapicorn_la_LDFLAGS = $(strip 				\
 ) # set libtool version and export symbols for resolving
 #
 librapicorn_la_LIBADD      = $(strip 			\
-	$(top_builddir)/cairo-inlined/libpixman.la	\
 	$(top_builddir)/cairo-inlined/libcairo.la	\
+	$(top_builddir)/cairo-inlined/libpixman.la	\
 	$(RAPICORN_LIBS) -lm 				\
 ) # -lfreetype -lfontconfig
 #

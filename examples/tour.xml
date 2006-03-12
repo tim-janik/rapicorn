@@ -83,7 +83,17 @@
 	</button>
 	<Rapicorn-slider-trough left-attach="2" hexpand="1">
 	  <frame normal-frame="out" vexpand="1">
-	    <dot-grid n-hdots="6" n-vdots="2" left-padding-dots="2" right-padding-dots="2" top-padding-dots="0" bottom-padding-dots="0" />
+	    <ambience
+	      normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
+	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"
+	      >
+	      <hbox>
+		<dot-grid n-hdots="6" n-vdots="2" left-padding-dots="2" right-padding-dots="2" top-padding-dots="0" bottom-padding-dots="0" />
+		<button on-click="boom" >
+		  <label text="x"/>
+		</button>
+	      </hbox>
+	    </ambience>
 	  </frame>
 	</Rapicorn-slider-trough>
 	<button left-attach="3" on-click="increment" on-click2="page-increment">
@@ -94,7 +104,7 @@
   </def:slider>
   
   <!-- test dialog -->
-  <def:tour-dialog inherit="ambience" normal-lighting="upper-left" normal-background="blue">
+  <def:tour-dialog inherit="ambience" normal-lighting="upper-left"> <!-- normal-background="black" -->
     <vbox sensitive="1">
       <label text="Mark1" />
       <arrangement origin="0 0" >

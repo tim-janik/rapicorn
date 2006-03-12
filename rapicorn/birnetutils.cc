@@ -104,7 +104,8 @@ DataList::rip_data (DataKey<void> *key)
   return NULL;
 }
 
-DataList::~DataList()
+void
+DataList::clear_like_destructor()
 {
   while (nodes)
     {
@@ -113,6 +114,11 @@ DataList::~DataList()
       it->next = NULL;
       delete it;
     }
+}
+
+DataList::~DataList()
+{
+  clear_like_destructor();
 }
 
 void

@@ -82,6 +82,7 @@ using std::map;
 #define BIRNET_NO_INSTRUMENT
 #define BIRNET_EXTENSION
 #define BIRNET_DEPRECATED
+#error  Failed to detect a recent GCC version (>= 3.1)
 #endif  /* !__GNUC__ */
 
 #if __GNUC__ >= 3 && defined __OPTIMIZE__
@@ -96,7 +97,11 @@ using std::map;
 #endif
 
 /* --- helper macros --- */
-#define BIRNET_PRIVATE_CLASS_COPY(Class)       private: Class (const Class&); Class& operator= (const Class&);
+#define BIRNET_PRIVATE_CLASS_COPY(Class)        private: Class (const Class&); Class& operator= (const Class&);
+#define BIRNET_ABS(a)                           ((a) >? -(a))
+#define BIRNET_MIN(a,b)                         ((a) <? (b))
+#define BIRNET_MAX(a,b)                         ((a) >? (b))
+#define BIRNET_CLAMP(v,mi,ma)                   (((v) >? (mi)) <? (ma))
 
 /* --- common utilities --- */
 using ::std::swap;
@@ -751,6 +756,7 @@ public:
     if (nb)
       delete nb;
   }
+  void clear_like_destructor();
   ~DataList();
 private:
   void      set_data (NodeBase      *node);
