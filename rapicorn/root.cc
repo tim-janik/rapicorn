@@ -417,8 +417,10 @@ Root::Root() :
 }
 
 class RootImpl : public Root, public SingleContainerImpl {
+  bool m_entered;
 public:
-  RootImpl()
+  RootImpl() :
+    m_entered (false)
   {
     Appearance *appearance = Appearance::create_default();
     style (appearance->create_style ("normal"));
@@ -495,7 +497,8 @@ protected:
     else if (drawable())
       {
         pierced.push_back (ref (this)); /* root receives all mouse events */
-        point_children (mevent.x, mevent.y, Affine(), pierced);
+        if (m_entered)
+          point_children (mevent.x, mevent.y, Affine(), pierced);
       }
     /* send leave events */
     vector<Item*> left_children = item_difference (last_entered_children, pierced);
@@ -644,6 +647,44 @@ public:
     cancel_item_events (NULL);
   }
   virtual bool
+  dispatch_enter_event (const EventContext &econtext)
+  {
+    bool handled = false;
+    m_entered = true;
+    dispatch_mouse_movement (econtext);
+    return handled;
+  }
+  virtual bool
+  dispatch_move_event (const EventContext &econtext)
+  {
+    bool handled = false;
+    handled = dispatch_mouse_movement (econtext);
+    return handled;
+  }
+  virtual bool
+  dispatch_leave_event (const EventContext &econtext)
+  {
+    bool handled = false;
+    dispatch_mouse_movement (econtext);
+    m_entered = false;
+    if (get_grab ())
+      ; /* leave events in grab mode are automatically calculated */
+    else
+      {
+        EventMouse &mevent = *create_event_mouse (MOUSE_LEAVE, econtext);
+        /* send leave events */
+        while (last_entered_children.size())
+          {
+            Item *item = last_entered_children.back();
+            last_entered_children.pop_back();
+            item->process_event (mevent);
+            item->unref();
+          }
+        delete &mevent;
+      }
+    return handled;
+  }
+  virtual bool
   dispatch_button_event (const EventContext &econtext,
                          bool                is_press,
                          uint                button)
@@ -657,29 +698,6 @@ public:
     dispatch_mouse_movement (econtext);
     return handled;
   }
-  virtual bool
-  dispatch_leave_event (const EventContext &econtext)
-  {
-    dispatch_mouse_movement (econtext);
-    EventMouse &mevent = *create_event_mouse (MOUSE_LEAVE, econtext);
-    /* send leave events */
-    while (last_entered_children.size())
-      {
-        Item *item = last_entered_children.back();
-        last_entered_children.pop_back();
-        item->process_event (mevent);
-        item->unref();
-      }
-    delete &mevent;
-    return false;
-  }
-  virtual bool
-  dispatch_move_event (const EventContext &econtext)
-  {
-    bool handled = dispatch_mouse_movement (econtext);
-    return handled;
-  }
-  
   virtual bool
   dispatch_focus_event (const EventContext &econtext,
                         bool                is_in)
@@ -744,7 +762,11 @@ private:
   void
   grab_stack_changed()
   {
+    // FIXME: use idle handler for event synthesis
     dispatch_move_event (last_event_context);
+    /* synthesize neccessary leaves after grabbing */
+    if (!grab_stack.size() && !m_entered)
+      dispatch_leave_event (last_event_context);
   }
 public:
   virtual void
@@ -758,6 +780,7 @@ public:
      * delivered to the grab-item and its children.
      */
     grab_stack.push_back (GrabEntry (&child, unconfined));
+    // grab_stack_changed(); // FIXME: re-enable this, once grab_stack_changed() synthesizes from idler
   }
   virtual void
   remove_grab (Item &child)

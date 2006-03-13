@@ -24,14 +24,38 @@
 namespace Rapicorn {
 
 class Appearance;
-class ColorCube {
+
+class ColorScheme {
 public:
-  virtual Color convert_color   (Color  color) const = 0;
+  /* base colors */
+  virtual Color make_color      (ColorType ct) const = 0;
+  Color         foreground      () const	{ return make_color (COLOR_FOREGROUND); }
+  Color         background      () const	{ return make_color (COLOR_BACKGROUND); }
+  Color         light_glint     () const	{ return make_color (COLOR_LIGHT_GLINT); }
+  Color         light_shadow    () const	{ return make_color (COLOR_LIGHT_SHADOW); }
+  Color         dark_glint      () const	{ return make_color (COLOR_DARK_GLINT); }
+  Color         dark_shadow     () const	{ return make_color (COLOR_DARK_SHADOW); }
+  Color         focus_state     () const        { return make_color (COLOR_FOCUS); }
+  Color         default_state   () const        { return make_color (COLOR_DEFAULT); }
+  /* color alterations */
+  virtual Color generic_color           (Color          source_color) const;
+  virtual Color make_light_color        (Color          source_color) const;
+  virtual Color make_dark_color         (Color          source_color) const;
+  virtual Color make_insensitive_color  (Color          source_color, ColorType ctype = COLOR_NONE) const;
+  virtual Color make_prelight_color     (Color          source_color, ColorType ctype = COLOR_NONE) const;
+  virtual Color make_impressed_color    (Color          source_color, ColorType ctype = COLOR_NONE) const;
+  virtual Color make_focus_state_color  (Color          source_color, ColorType ctype = COLOR_NONE) const;
+  virtual Color make_default_state_color(Color          source_color, ColorType ctype = COLOR_NONE) const;
+  virtual Color make_state_color        (StateType      state,
+                                         Color          color,
+                                         ColorType      ctype = COLOR_NONE) const;
+  /* standard scheme */
+  static const ColorScheme&     default_scheme  ();
 };
+
 class Style : public virtual ReferenceCountImpl {
   Appearance &m_appearance;
   String      m_name;
-  typedef const ColorCube & ColorCubeRef;
 public:
   explicit              Style           (Appearance     &appearance,
                                          const String   &name);
@@ -40,36 +64,19 @@ public:
   Style*                create_style    ()                              { return create_style (name()); }
   virtual               ~Style          ();
 
-  static const ColorCube &STANDARD;
-  static const ColorCube &SELECTED;
-  static const ColorCube &INPUT;
-  virtual Color         cube_color              (ColorCubeRef   cube,
-                                                 StateType      state,
-                                                 Color          rgb_color,
-                                                 ColorType      color_type = COLOR_NONE) const;
-  virtual Color         cube_color              (ColorCubeRef   cube,
-                                                 StateType      state,
-                                                 ColorType      color_type) const;
-  static Color          state_convert_color     (StateType      state,
-                                                 Color          color,
-                                                 ColorType      ctype = COLOR_NONE);
-  static Color          insensitive_color       (Color          source_color, ColorType ctype = COLOR_NONE);
-  static Color          prelight_color          (Color          source_color, ColorType ctype = COLOR_NONE);
-  static Color          impressed_color         (Color          source_color, ColorType ctype = COLOR_NONE);
-  static Color          focus_state_color       (Color          source_color, ColorType ctype = COLOR_NONE);
-  static Color          default_state_color     (Color          source_color, ColorType ctype = COLOR_NONE);
-  static Color          darken_color            (Color          source_color);
-  static Color          lighten_color           (Color          source_color);
+  /* color schemes */
+  class ColorSchemeKind;
+  static const ColorSchemeKind &STANDARD;
+  static const ColorSchemeKind &SELECTED;
+  static const ColorSchemeKind &INPUT;
+  const ColorScheme&            color_scheme    (const ColorSchemeKind  &kind) const;
   /* convenience */
-  Color                 standard_color          (StateType      state,
-                                                 ColorType      color_type = COLOR_NONE) const
-  { return cube_color (STANDARD, state, color_type); }
-  Color                 selected_color          (StateType      state,
-                                                 ColorType      color_type = COLOR_NONE) const
-  { return cube_color (SELECTED, state, color_type); }
-  Color                 input_color             (StateType      state,
-                                                 ColorType      color_type = COLOR_NONE) const
-  { return cube_color (INPUT, state, color_type); }
+  Color                         standard_color  (StateType      state,
+                                                 ColorType      color_type = COLOR_NONE) const;
+  Color                         selected_color  (StateType      state,
+                                                 ColorType      color_type = COLOR_NONE) const;
+  Color                         input_color     (StateType      state,
+                                                 ColorType      color_type = COLOR_NONE) const;
 };
 
 class Appearance : public virtual ReferenceCountImpl {

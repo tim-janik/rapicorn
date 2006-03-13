@@ -1,3 +1,22 @@
+Mon Mar 13 02:06:00 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/container.[hc]*: enter/move/leave and grab event fixups.
+
+	* rapicorn/appearance.[hc]*: implemented ColorSchemes. a color scheme
+	provides a set of standard colors and can transform colors according
+	to states. ported Style over to use color schemes. only one default
+	color scheme is currently provided. this needs to be extended.
+
+	* examples/gtkrootwidget.cc: properly save last x/y/state.
+	added even dispatcher debugging spew. dispatch enter and leave
+	events, except for GDK_NOTIFY_INFERIOR crossing events.
+
+	* rapicorn/enumdefs.hh: removed colorname color types.
+
+	* rapicorn/item.hh: use hardcoded values for black and white instead
+	of colorname color types. virtualisation occours through the color
+	scheme anyway.
+
 Sun Mar 12 18:01:30 2006  Tim Janik  <timj@gtk.org>
 
 	* examples/tour.xml: added Rapicorn-slider-skid, fixed up slider

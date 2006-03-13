@@ -157,9 +157,15 @@ root_widget_event (GtkWidget *widget,
       gdk_window_get_size (window, &ww, &wh);
       double doublex, doubley;
       GdkModifierType modifier_type;
-      if (event->any.window != window ||
-          !gdk_event_get_coords (event, &doublex, &doubley) ||
-          !gdk_event_get_state (event, &modifier_type))
+      if (event->any.window == window &&
+          gdk_event_get_coords (event, &doublex, &doubley) &&
+          gdk_event_get_state (event, &modifier_type))
+        {
+          self->last_x = doublex;
+          self->last_y = doubley;
+          self->last_modifier = modifier_type;
+        }
+      else
         {
           doublex = self->last_x;
           doubley = self->last_y;
@@ -184,11 +190,51 @@ root_widget_event (GtkWidget *widget,
       static_assert (GDK_BUTTON2_MASK == (int) MOD_BUTTON2);
       static_assert (GDK_BUTTON3_MASK == (int) MOD_BUTTON3);
     }
+  /* debug events */
+  if (0)
+    {
+      GEnumClass *eclass = (GEnumClass*) g_type_class_ref (GDK_TYPE_EVENT_TYPE);
+      const gchar *name = g_enum_get_value (eclass, event->type)->value_name;
+      if (strncmp (name, "GDK_", 4) == 0)
+        name += 4;
+      g_printerr ("Rapicorn-EVENT: %-20s) time=0x%08x synth=%d x=%+7.2f y=%+7.2f state=0x%04x win=%p",
+                  name, econtext.time, econtext.synthesized,
+                  econtext.x, econtext.y, econtext.modifiers,
+                  event->any.window);
+      switch (event->type)
+        {
+          const gchar *mode, *detail;
+        case GDK_ENTER_NOTIFY:
+        case GDK_LEAVE_NOTIFY:
+          switch (event->crossing.mode) {
+          case GDK_CROSSING_NORMAL:             mode = "normal";  break;
+          case GDK_CROSSING_GRAB:               mode = "grab";    break;
+          case GDK_CROSSING_UNGRAB:             mode = "ungrab";  break;
+          default:                              mode = "unknown"; break;
+          }
+          switch (event->crossing.detail) {
+          case GDK_NOTIFY_INFERIOR:             detail = "inferior";  break;
+          case GDK_NOTIFY_ANCESTOR:             detail = "ancestor";  break;
+          case GDK_NOTIFY_VIRTUAL:              detail = "virtual";   break;
+          case GDK_NOTIFY_NONLINEAR:            detail = "nonlinear"; break;
+          case GDK_NOTIFY_NONLINEAR_VIRTUAL:    detail = "nolinvirt"; break;
+          default:                              detail = "unknown";   break;
+          }
+          g_printerr (" %s/%s sub=%p", mode, detail, event->crossing.subwindow);
+          break;
+        default: ;
+        }
+      g_printerr ("\n");
+      g_type_class_unref (eclass);
+    }
   /* forward events */
   switch (event->type)
     {
     case GDK_ENTER_NOTIFY:
-      handled = root->dispatch_move_event (econtext);
+      if (event->crossing.detail == GDK_NOTIFY_INFERIOR)
+        handled = root->dispatch_move_event (econtext);
+      else
+        handled = root->dispatch_enter_event (econtext);
       break;
     case GDK_MOTION_NOTIFY:
       handled = root->dispatch_move_event (econtext);
@@ -197,7 +243,10 @@ root_widget_event (GtkWidget *widget,
         gdk_window_get_pointer (window, NULL, NULL, NULL);
       break;
     case GDK_LEAVE_NOTIFY:
-      handled = root->dispatch_leave_event (econtext);
+      if (event->crossing.detail == GDK_NOTIFY_INFERIOR)
+        handled = root->dispatch_move_event (econtext);
+      else
+        handled = root->dispatch_leave_event (econtext);
       break;
     case GDK_KEY_PRESS:
     case GDK_KEY_RELEASE:

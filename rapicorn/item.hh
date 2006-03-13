@@ -199,8 +199,8 @@ public:
   Color                 light_shadow            () { return style()->standard_color (state(), COLOR_LIGHT_SHADOW); }
   Color                 dark_glint              () { return style()->standard_color (state(), COLOR_DARK_GLINT); }
   Color                 dark_shadow             () { return style()->standard_color (state(), COLOR_DARK_SHADOW); }
-  Color                 white                   () { return style()->standard_color (state(), COLOR_WHITE); }
-  Color                 black                   () { return style()->standard_color (state(), COLOR_BLACK); }
+  Color                 white                   () { return style()->color_scheme (Style::STANDARD).generic_color (0xffffffff); }
+  Color                 black                   () { return style()->color_scheme (Style::STANDARD).generic_color (0xff000000); }
 };
 
 } // Rapicorn

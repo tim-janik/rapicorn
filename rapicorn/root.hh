@@ -99,6 +99,8 @@ public:
   Signal<Container, void (const Allocation&)> sig_expose;
   virtual void  render                  (Plane &plane) = 0;
   /* events */
+  virtual void  dispatch_cancel_events  () = 0;
+  virtual bool  dispatch_enter_event    (const EventContext &econtext) = 0;
   virtual bool  dispatch_move_event     (const EventContext &econtext) = 0;
   virtual bool  dispatch_leave_event    (const EventContext &econtext) = 0;
   virtual bool  dispatch_button_event   (const EventContext &econtext,
@@ -112,7 +114,6 @@ public:
                                          const char         *key_name) = 0;
   virtual bool  dispatch_scroll_event   (const EventContext &econtext,
                                          EventType           scroll_type) = 0;
-  virtual void  dispatch_cancel_events  () = 0;
   virtual void  add_grab                (Item   &child,
                                          bool    unconfined = false) = 0;
   void          add_grab                (Item   *child,

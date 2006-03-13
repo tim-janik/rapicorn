@@ -172,14 +172,6 @@ typedef enum {
   COLOR_LIGHT_SHADOW,
   COLOR_DARK_GLINT,
   COLOR_DARK_SHADOW,
-  COLOR_WHITE,
-  COLOR_BLACK,
-  COLOR_RED,
-  COLOR_YELLOW,
-  COLOR_GREEN,
-  COLOR_CYAN,
-  COLOR_BLUE,
-  COLOR_MAGENTA,
 } ColorType;
 typedef EnumType<ColorType> EnumTypeColorType;
 

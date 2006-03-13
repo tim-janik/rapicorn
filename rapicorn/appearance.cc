@@ -20,6 +20,10 @@
 
 namespace Rapicorn {
 
+const Style::ColorSchemeKind &Style::STANDARD = *(ColorSchemeKind*) 0xC0FFEE41;
+const Style::ColorSchemeKind &Style::SELECTED = *(ColorSchemeKind*) 0xC0FFEE42;
+const Style::ColorSchemeKind &Style::INPUT = *(ColorSchemeKind*) 0xC0FFEE43;
+
 Style::Style (Appearance     &appearance,
               const String   &name) :
   m_appearance (appearance),
@@ -28,8 +32,46 @@ Style::Style (Appearance     &appearance,
   m_appearance.register_style (*this);
 }
 
+Style*
+Style::create_style (const String   &style_name)
+{
+  return m_appearance.create_style (style_name);
+}
+
+const ColorScheme&
+Style::color_scheme (const ColorSchemeKind &kind) const
+{
+  return ColorScheme::default_scheme();
+}
+
 Color
-Style::lighten_color (Color source_color)
+Style::standard_color (StateType      state,
+                       ColorType      color_type) const
+{
+  return color_scheme (STANDARD).make_color (color_type);
+}
+
+Color
+Style::selected_color (StateType      state,
+                       ColorType      color_type) const
+{
+  return color_scheme (SELECTED).make_color (color_type);
+}
+
+Color
+Style::input_color (StateType      state,
+                    ColorType      color_type) const
+{
+  return color_scheme (INPUT).make_color (color_type);
+}
+
+Style::~Style ()
+{
+  m_appearance.unregister_style (*this);
+}
+
+Color
+ColorScheme::make_light_color (Color source_color) const
 {
   Color c = source_color;
   double hue, saturation, value;
@@ -40,7 +82,7 @@ Style::lighten_color (Color source_color)
 }
 
 Color
-Style::darken_color (Color source_color)
+ColorScheme::make_dark_color (Color source_color) const
 {
   Color c = source_color;
   double hue, saturation, value;
@@ -51,27 +93,26 @@ Style::darken_color (Color source_color)
 }
 
 Color
-Style::insensitive_color (Color source_color,
-                          ColorType ctype)
+ColorScheme::make_insensitive_color (Color     source_color,
+                                     ColorType ctype) const
 {
   Color c = source_color;
   double hue, saturation, value;
   c.get_hsv (&hue, &saturation, &value);
   saturation *= 0.8;
-  value *= 1.1; // FIXME: adjust lightness
+  value *= 1.075;
   c.set_hsv (hue, saturation, MIN (1, value));
   return c;
 }
 
 Color
-Style::prelight_color (Color source_color,
-                       ColorType ctype)
+ColorScheme::make_prelight_color (Color     source_color,
+                                  ColorType ctype) const
 {
   Color c = source_color;
   switch (ctype)
     {
     case COLOR_FOREGROUND:
-    case COLOR_BACKGROUND:
     case COLOR_FOCUS:
     case COLOR_DEFAULT:
       return c;
@@ -79,20 +120,19 @@ Style::prelight_color (Color source_color,
     }
   double hue, saturation, value;
   c.get_hsv (&hue, &saturation, &value);
-  saturation *= 1.15;
+  saturation *= 1.2;
   c.set_hsv (hue, MIN (1, saturation), value);
   return c;
 }
 
 Color
-Style::impressed_color (Color source_color,
-                        ColorType ctype)
+ColorScheme::make_impressed_color (Color     source_color,
+                                   ColorType ctype) const
 {
   Color c = source_color;
   switch (ctype)
     {
     case COLOR_FOREGROUND:
-    case COLOR_BACKGROUND:
     case COLOR_FOCUS:
     case COLOR_DEFAULT:
       return c;
@@ -106,106 +146,110 @@ Style::impressed_color (Color source_color,
 }
 
 Color
-Style::focus_state_color (Color source_color,
-                          ColorType ctype)
+ColorScheme::make_focus_state_color (Color     source_color,
+                                     ColorType ctype) const
 {
   Color c = source_color;
   return c;
 }
 
 Color
-Style::default_state_color (Color source_color,
-                            ColorType ctype)
+ColorScheme::make_default_state_color (Color     source_color,
+                                       ColorType ctype) const
 {
   Color c = source_color;
   return c;
 }
 
 Color
-Style::state_convert_color (StateType      state,
-                            Color          color,
-                            ColorType      ctype)
+ColorScheme::make_state_color (StateType      state,
+                               Color          color,
+                               ColorType      ctype) const
 {
   Color c = color;
   if (state & STATE_IMPRESSED)
-    c = impressed_color (c, ctype);
-  if (state & STATE_FOCUS)
-    c = focus_state_color (c, ctype);
+    c = make_impressed_color (c, ctype);
   if (state & STATE_DEFAULT)
-    c = default_state_color (c, ctype);
+    c = make_default_state_color (c, ctype);
+  if (state & STATE_FOCUS)
+    c = make_focus_state_color (c, ctype);
   if (state & STATE_INSENSITIVE)
-    return insensitive_color (c, ctype);        /* ignore prelight if insensitive */
-  if (state & STATE_PRELIGHT)
-    c = prelight_color (c, ctype);
+    c = make_insensitive_color (c, ctype);
+  if ((state & STATE_PRELIGHT) &&
+      !(state & STATE_INSENSITIVE))     /* ignore prelight if insensitive */
+    c = make_prelight_color (c, ctype);
   return c;
 }
 
 Color
-Style::cube_color (Style::ColorCubeRef   cube,
-                   StateType      state,
-                   Color          rgb_color,
-                   ColorType      color_type) const
+ColorScheme::generic_color (Color source_color) const
 {
-  Color rgb = cube.convert_color (rgb_color);
-  rgb = state_convert_color (state, rgb, color_type);
-  return rgb;
+  return source_color;
 }
 
-Color
-Style::cube_color (Style::ColorCubeRef   cube,
-                   StateType      state,
-                   ColorType      color_type) const
+const ColorScheme&
+ColorScheme::default_scheme ()
 {
-  Color c;
-  switch (color_type)
+  static const class DefaultColorScheme : public virtual ColorScheme {
+    virtual Color
+    make_color (ColorType color_type) const
     {
-    default:
-    case COLOR_NONE:                    c = 0x00000000; break;
-    case COLOR_FOREGROUND:              c = 0xff000000; break;
-    case COLOR_BACKGROUND:              c = 0xffc0c0c0; break;
-    case COLOR_FOCUS:                   c = 0xff000060; break;
-    case COLOR_DEFAULT:                 c = 0xffd0d000; break;
-    case COLOR_LIGHT_GLINT:             c = 0xffe0e0e0; break;
-    case COLOR_LIGHT_SHADOW:            c = 0xffb0b0b0; break;
-    case COLOR_DARK_GLINT:              c = 0xffb0b0b0; break;
-    case COLOR_DARK_SHADOW:             c = 0xff808080; break;
-    case COLOR_WHITE:                   c = 0xffffffff; break;
-    case COLOR_BLACK:                   c = 0xff000000; break;
-    case COLOR_RED:                     c = 0xffff0000; break;
-    case COLOR_YELLOW:                  c = 0xffffff00; break;
-    case COLOR_GREEN:                   c = 0xff00ff00; break;
-    case COLOR_CYAN:                    c = 0xff00ffff; break;
-    case COLOR_BLUE:                    c = 0xff0000ff; break;
-    case COLOR_MAGENTA:                 c = 0xffff00ff; break;
+      Color c;
+#if 1
+      switch (color_type)
+        {
+        default:
+        case COLOR_NONE:                    c = 0x00000000; break;
+        case COLOR_FOREGROUND:              c = 0xff000000; break;
+        case COLOR_BACKGROUND:              c = 0xffc0c0c0; break;
+        case COLOR_FOCUS:                   c = 0xff000060; break;
+        case COLOR_DEFAULT:                 c = 0xffd0d000; break;
+        case COLOR_LIGHT_GLINT:             c = 0xffe0e0e0; break;
+        case COLOR_LIGHT_SHADOW:            c = 0xffb0b0b0; break;
+        case COLOR_DARK_GLINT:              c = 0xffb0b0b0; break;
+        case COLOR_DARK_SHADOW:             c = 0xff808080; break;
+        }
+#else
+      switch (color_type)
+        {
+          double hue, saturation, value;
+        default:
+        case COLOR_NONE:                    c = 0x00000000; break;
+        case COLOR_FOREGROUND:              c = 0xff000000; break;
+        case COLOR_BACKGROUND:              c = 0xff6060c0; break;
+        case COLOR_FOCUS:                   c = 0xff000000; break;
+        case COLOR_DEFAULT:                 c = 0xffd0d000; break;
+        case COLOR_LIGHT_GLINT:
+          c = make_color (COLOR_BACKGROUND);
+          c.get_hsv (&hue, &saturation, &value);
+          value *= 1.3;
+          c.set_hsv (hue, saturation, value);
+          break;
+        case COLOR_LIGHT_SHADOW:
+          c = make_color (COLOR_BACKGROUND);
+          c.get_hsv (&hue, &saturation, &value);
+          value *= 1.15;
+          c.set_hsv (hue, saturation, value);
+          break;
+        case COLOR_DARK_GLINT:
+          c = make_color (COLOR_BACKGROUND);
+          c.get_hsv (&hue, &saturation, &value);
+          value *= 0.8;
+          c.set_hsv (hue, saturation, value);
+          break;
+        case COLOR_DARK_SHADOW:
+          c = make_color (COLOR_BACKGROUND);
+          c.get_hsv (&hue, &saturation, &value);
+          value *= 0.7;
+          c.set_hsv (hue, saturation, value);
+          break;
+        }
+#endif
+      return Color (c);
     }
-  return cube_color (cube, state, c, color_type);
+  } default_color_scheme;
+  return default_color_scheme;
 }
-
-Style*
-Style::create_style (const String   &style_name)
-{
-  return m_appearance.create_style (style_name);
-}
-
-Style::~Style ()
-{
-  m_appearance.unregister_style (*this);
-}
-
-class StandardCube : public virtual ColorCube {
-public:
-  virtual Color
-  convert_color   (Color  color) const
-  {
-    Color c = color;
-    return c;
-  }
-};
-static StandardCube standard_cube;
-
-const ColorCube &Style::STANDARD = standard_cube;
-const ColorCube &Style::SELECTED = standard_cube;
-const ColorCube &Style::INPUT = standard_cube;
 
 Appearance::Appearance (const String &name) :
   m_name (name)
