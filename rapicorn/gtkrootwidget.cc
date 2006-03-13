@@ -204,6 +204,7 @@ root_widget_event (GtkWidget *widget,
       switch (event->type)
         {
           const gchar *mode, *detail;
+          GEnumClass *ec1;
         case GDK_ENTER_NOTIFY:
         case GDK_LEAVE_NOTIFY:
           switch (event->crossing.mode) {
@@ -221,6 +222,14 @@ root_widget_event (GtkWidget *widget,
           default:                              detail = "unknown";   break;
           }
           g_printerr (" %s/%s sub=%p", mode, detail, event->crossing.subwindow);
+          break;
+        case GDK_SCROLL:
+          ec1 = (GEnumClass*) g_type_class_ref (GDK_TYPE_SCROLL_DIRECTION);
+          detail = g_enum_get_value (ec1, event->scroll.direction)->value_name;
+          if (strncmp (detail, "GDK_", 4) == 0)
+            detail += 4;
+          g_printerr (" %s", detail);
+          g_type_class_unref (ec1);
           break;
         default: ;
         }

@@ -155,6 +155,13 @@ protected:
       throw Exception ("SliderTrough used outside of anchored hierarchy: ", name());
     return m_slider_area->adjustment();
   }
+  double
+  value()
+  {
+    Adjustment &adj = *adjustment();
+    bool horizontal = true;
+    return horizontal ? adj.flipped_value() : adj.value();
+  }
   virtual void
   size_allocate (Allocation area)
   {
@@ -169,16 +176,15 @@ protected:
       return;
     Item &child = get_child();
     Requisition rq = child.size_request();
-    Adjustment &adj = *adjustment();
     /* expand/scale child */
     if (area.width > rq.width && !child.hexpand())
       {
-        area.x += iround (adj.value() * (area.width - rq.width));
+        area.x += iround (value() * (area.width - rq.width));
         area.width = iround (rq.width);
       }
     if (area.height > rq.height && !child.vexpand())
       {
-        area.y += iround (adj.value() * (area.height - rq.height));
+        area.y += iround (value() * (area.height - rq.height));
         area.height = iround (rq.height);
       }
     child.set_allocation (area);
@@ -206,6 +212,14 @@ protected:
             Event cevent = event;
             handled = get_child().process_event (cevent);
           }
+        break;
+      case SCROLL_UP:
+      case SCROLL_LEFT:
+        exec_command ("increment");
+        break;
+      case SCROLL_DOWN:
+      case SCROLL_RIGHT:
+        exec_command ("decrement");
         break;
       default: break;
       }
@@ -242,6 +256,14 @@ protected:
     set_flag (HSPREAD_CONTAINER, chspread);
     set_flag (VSPREAD_CONTAINER, cvspread);
     requisition.width = MAX (requisition.width, 20); // FIXME: hardcoded minimum
+  }
+  double
+  value()
+  {
+    SliderTroughImpl &trough = parent()->interface<SliderTroughImpl>(); // FIXME: need Item.parent_interface<>();
+    Adjustment &adj = *trough.adjustment();
+    bool horizontal = true;
+    return horizontal ? adj.flipped_value() : adj.value();
   }
   virtual void
   reset (ResetMode mode = RESET_ALL)
@@ -301,7 +323,10 @@ protected:
             pos -= m_coffset * cwidth;
             pos /= width;
             pos = CLAMP (pos, 0, 1);
-            adj.value (pos);
+            if (1 /* horizontal */)
+              adj.flipped_value (pos);
+            else
+              adj.value (pos);
           }
         break;
       case BUTTON_RELEASE:

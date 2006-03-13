@@ -209,7 +209,7 @@ ColorScheme::default_scheme ()
         case COLOR_DARK_GLINT:              c = 0xffb0b0b0; break;
         case COLOR_DARK_SHADOW:             c = 0xff808080; break;
         }
-#else
+#elif 0
       switch (color_type)
         {
           double hue, saturation, value;

@@ -29,6 +29,23 @@ Adjustment::Adjustment() :
 Adjustment::~Adjustment()
 {}
 
+double
+Adjustment::flipped_value()
+{
+  double v = value() - lower();
+  return upper() - page() - v;
+}
+
+void
+Adjustment::flipped_value (double newval)
+{
+  double l = lower();
+  double u = upper() - page();
+  newval = CLAMP (newval, l, u);
+  double v = newval - l;
+  value (u - v);
+}
+
 void
 Adjustment::value_changed()
 {}

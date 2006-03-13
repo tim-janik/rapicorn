@@ -35,6 +35,8 @@ public:
   /* value */
   virtual double        value	        () = 0;
   virtual void		value	        (double newval) = 0;
+  double                flipped_value   ();
+  void                  flipped_value   (double newval);
   SignalValueChanged	sig_value_changed;
   /* range */
   virtual bool          frozen          () const = 0;

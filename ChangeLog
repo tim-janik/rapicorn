@@ -1,3 +1,13 @@
+Tue Mar 14 00:13:58 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/slider.cc: flipped value for the horizontal direction
+	(so by default it grows to the left). added scroll event handling
+	to the trough.
+
+	* examples/gtkrootwidget.cc: added debugging spew for scroll events.
+
+	* rapicorn/appearance.cc: disabled blue GUI test code ;)
+
 Mon Mar 13 02:06:00 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/container.[hc]*: enter/move/leave and grab event fixups.
