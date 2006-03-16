@@ -4,7 +4,7 @@ CFLAGS += -Wno-redundant-decls -Wnested-externs -fno-strict-aliasing -Wpointer-a
 
 noinst_LTLIBRARIES = libpixman.la libcairo.la	# helper libs to compile .lo files
 
-CAIRO_LOCATION = ./cairo-1.0.2/
+CAIRO_LOCATION = ./cairo-1.0.4/
 
 %.c: ${CAIRO_LOCATION}/pixman/src/%.c
 	cp $< $@
