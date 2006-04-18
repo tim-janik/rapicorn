@@ -1,3 +1,22 @@
+Tue Apr 18 02:31:52 2006  Tim Janik  <timj@gtk.org>
+
+	* integrated with birnet/ subdir. 
+
+	* Makefile.decl: predefine variables for automake-1.9.
+
+	* tests/Makefile.am:
+	* examples/Makefile.am: cleanups.
+
+	* rapicorn/birnetutils.hh:
+	* tests/signal.cc:
+	* rapicorn/mksignals.sh:
+	* rapicorn/birnetsignal.hh:
+	* rapicorn/birnetsignalslot.hh:
+	* rapicorn/birnetsignaltemplate.hh:
+	* rapicorn/Makefile.am: removed stuff that moved into birnet/.
+
+	* rapicorn/ldscript.map: export birnet_* symbols.
+
 Thu Mar 16 02:07:58 2006  Tim Janik  <timj@gtk.org>
 
 	* cairo-inlined/Makefile.am: build against inlined cairo-1.0.4 now.

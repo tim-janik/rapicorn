@@ -11,8 +11,6 @@ rapicorn_public_headers = $(strip 	\
 	$(rapicorn_impl_headers)	\
 	primitives.hh			\
 	birnetutils.hh			\
-	birnetsignal.hh			\
-	birnetsignalvariants.hh		\
 	birnetmarkup.hh			\
 	utilities.hh			\
 	enumdefs.hh			\
@@ -70,11 +68,6 @@ rapicorn_cc_sources = $(strip 		\
 )
 rapicorn_private_headers = $(strip 	\
 	private.hh			\
-	birnetsignalslot.hh		\
-	birnetsignaltemplate.hh		\
-)
-rapicorn_extra_sources = $(strip 	\
-	mksignals.sh			\
 )
 rapicorn_fastmath_files = $(strip	\
 )
@@ -93,12 +86,13 @@ librapicorn_la_LDFLAGS = $(strip 				\
 ) # set libtool version and export symbols for resolving
 #
 librapicorn_la_LIBADD      = $(strip 			\
-	$(top_builddir)/cairo-inlined/libcairo.la	\
 	$(top_builddir)/cairo-inlined/libpixman.la	\
+	$(top_builddir)/cairo-inlined/libcairo.la	\
+	$(top_builddir)/birnet/libbirnet.o		\
 	$(RAPICORN_LIBS) -lm 				\
 ) # -lfreetype -lfontconfig
 #
-EXTRA_DIST += $(rapicorn_private_headers) $(rapicorn_extra_sources)
+EXTRA_DIST += $(rapicorn_private_headers)
 
 #XML_FILES = $(strip standard.xml )
 ## xml linting
@@ -107,17 +101,6 @@ EXTRA_DIST += $(rapicorn_private_headers) $(rapicorn_extra_sources)
 #	&& $(XMLLINT) --noout $(XML_FILES)
 #	touch $@
 #$(lib_LTLIBRARIES): stamp-xmllint
-
-$(srcdir)/*.cc: birnetsignalvariants.hh
-birnetsignalvariants.hh: $(srcdir)/birnetsignalslot.hh $(srcdir)/birnetsignaltemplate.hh $(srcdir)/mksignals.sh
-	cd . \
-	&& echo "/* Signal Variants -- Generated file, don't edit. */" > xgen-sigs \
-	&& echo >> xgen-sigs \
-	&& $(srcdir)/mksignals.sh $(srcdir)/birnetsignalslot.hh     17 >>xgen-sigs \
-	&& $(srcdir)/mksignals.sh $(srcdir)/birnetsignaltemplate.hh 16 >>xgen-sigs \
-	&& cp xgen-sigs $@ \
-	&& rm -f xgen-sigs
-CLEANFILES += xgen-sigs birnetsignalvariants.hh xgen-signals.sed
 
 $(srcdir)/enumdefs.cc: gen-enums.cc
 gen-enums.cc: $(srcdir)/enumdefs.hh Makefile

@@ -20,40 +20,9 @@
 #define __BIRNET_UTILS_HH__
 
 /* pull in common system headers */
-#include <assert.h>
-#include <string>
-#include <vector>
-#include <map>
+#include <birnet/birnet.h>
 
 namespace Birnet {
-
-/* --- compile time assertions --- */
-#define BIRNET_CPP_PASTE2(a,b)                  a ## b
-#define BIRNET_CPP_PASTE(a,b)                   BIRNET_CPP_PASTE2 (a, b)
-#define BIRNET_STATIC_ASSERT_NAMED(expr,asname) typedef struct { char asname[(expr) ? 1 : -1]; } BIRNET_CPP_PASTE (StaticAssertion_LINE, __LINE__)
-#define BIRNET_STATIC_ASSERT(expr)              BIRNET_STATIC_ASSERT_NAMED (expr, compile_time_assertion_failed)
-
-
-/* --- common type shorthands --- */
-typedef unsigned int            uint;
-typedef unsigned char           uint8;
-typedef unsigned short          uint16;
-typedef unsigned int            uint32;
-typedef unsigned long long      uint64;
-typedef signed char             int8;
-typedef signed short            int16;
-typedef signed int              int32;
-typedef signed long long        int64;
-BIRNET_STATIC_ASSERT (sizeof (int8) == 1);
-BIRNET_STATIC_ASSERT (sizeof (int16) == 2);
-BIRNET_STATIC_ASSERT (sizeof (int32) == 4);
-BIRNET_STATIC_ASSERT (sizeof (int64) == 8);
-typedef uint32                  unichar;
-
-/* --- type alias frequently used standard lib types --- */
-typedef std::string String;
-using std::vector;
-using std::map;
 
 /* --- GCC macros --- */
 #if     __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1)
@@ -190,12 +159,6 @@ void    diag                            (const String &s);
 void    warning_expr_failed             (const char *file, uint line, const char *function, const char *expression);
 void    error_expr_failed               (const char *file, uint line, const char *function, const char *expression);
 void    warning_expr_reached            (const char *file, uint line, const char *function);
-#define BIRNET_RETURN_IF_FAIL(e)        do { if (LIKELY (e)) {} else { warning_expr_failed (__FILE__, __LINE__, __func__, #e); return; } } while (0)
-#define BIRNET_RETURN_VAL_IF_FAIL(e,v)  do { if (LIKELY (e)) {} else { warning_expr_failed (__FILE__, __LINE__, __func__, #e); return v; } } while (0)
-#define BIRNET_ASSERT(e)                do { if (LIKELY (e)) {} else error_expr_failed (__FILE__, __LINE__, __func__, #e); } while (0)
-#define BIRNET_ASSERT_NOT_REACHED()     do { warning_expr_reached (__FILE__, __LINE__, __func__); abort(); } while (0)
-#define BIRNET_RETURN_IF_REACHED()      do { warning_expr_reached (__FILE__, __LINE__, __func__); return; } while (0)
-#define BIRNET_RETURN_VAL_IF_REACHED(v) do { warning_expr_reached (__FILE__, __LINE__, __func__); return v; } while (0)
 void    raise_sigtrap           ();
 #if (defined __i386__ || defined __x86_64__) && defined __GNUC__ && __GNUC__ >= 2
 extern inline void BREAKPOINT()            { __asm__ __volatile__ ("int $03"); }
@@ -269,12 +232,6 @@ is_derived ()                                   // ex: if (is_derived<Child, Bas
 {
   return CheckDerivedFrom<Derived,Base>::is_derived();
 }
-
-/* --- Deletable --- */
-class Deletable {
-protected:
-  virtual ~Deletable() {}
-};
 
 /* --- type dereferencing --- */
 template<typename Type> struct Dereference;
@@ -572,84 +529,6 @@ value_walker (const Iterator &begin, const Iterator &end)
   return Walker (new Adapter (VIterator (begin), VIterator (end)));
 }
 
-/* --- ReferenceCountImpl --- */
-class ReferenceCountImpl : public virtual Deletable
-{
-  mutable unsigned int m_ref_count : 31;
-  mutable unsigned int m_floating : 1;
-public:
-  ReferenceCountImpl() :
-    m_ref_count (1),
-    m_floating (1)
-  {}
-  void
-  ref() const
-  {
-    assert (m_ref_count > 0);
-    assert (m_ref_count < 2147483647);
-    m_ref_count++;
-  }
-  void
-  ref_sink() const
-  {
-    assert (m_ref_count > 0);
-    ref();
-    if (m_floating)
-      {
-        m_floating = 0;
-        unref();
-      }
-  }
-  bool
-  finalizing() const
-  {
-    return m_ref_count < 1;
-  }
-  void
-  unref() const
-  {
-    assert (m_ref_count > 0);
-    m_ref_count--;
-    if (!m_ref_count)
-      {
-        ReferenceCountImpl *self = const_cast<ReferenceCountImpl*> (this);
-        self->finalize();
-        self->delete_this(); // effectively: delete this;
-      }
-  }
-  void
-  ref_diag (const char *msg = NULL) const
-  {
-    diag ("%s: this=%p ref_count=%d floating=%d", msg ? msg : "ReferenceCountImpl", this, m_ref_count, m_floating);
-  }
-  template<class Obj> static Obj& ref      (Obj &obj) { obj.ref();       return obj; }
-  template<class Obj> static Obj* ref      (Obj *obj) { obj->ref();      return obj; }
-  template<class Obj> static Obj& ref_sink (Obj &obj) { obj.ref_sink();  return obj; }
-  template<class Obj> static Obj* ref_sink (Obj *obj) { obj->ref_sink(); return obj; }
-  template<class Obj> static void unref    (Obj &obj) { obj.unref(); }
-  template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
-  template<class Obj> static void sink     (Obj &obj) { obj.ref_sink(); obj.unref(); }
-  template<class Obj> static void sink     (Obj *obj) { obj->ref_sink(); obj->unref(); }
-protected:
-  virtual
-  ~ReferenceCountImpl()
-  { assert (m_ref_count == 0); }
-  virtual void
-  finalize()
-  {}
-  virtual void
-  delete_this ()
-  { delete this; }
-};
-template<class Obj> static Obj& ref      (Obj &obj) { obj.ref();       return obj; }
-template<class Obj> static Obj* ref      (Obj *obj) { obj->ref();      return obj; }
-template<class Obj> static Obj& ref_sink (Obj &obj) { obj.ref_sink();  return obj; }
-template<class Obj> static Obj* ref_sink (Obj *obj) { obj->ref_sink(); return obj; }
-template<class Obj> static void unref    (Obj &obj) { obj.unref(); }
-template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
-template<class Obj> static void sink     (Obj &obj) { obj.ref_sink(); obj.unref(); }
-template<class Obj> static void sink     (Obj *obj) { obj->ref_sink(); obj->unref(); }
-
 /* --- generic named data --- */
 template<typename Type>
 class DataKey {
@@ -844,8 +723,5 @@ binary_lookup (RandIter  begin,
 }
 
 } // Birnet
-
-/* --- signals --- */
-#include <rapicorn/birnetsignal.hh>
 
 #endif  /* __BIRNET_UTILS_HH__ */
