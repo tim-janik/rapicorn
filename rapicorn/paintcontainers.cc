@@ -97,23 +97,28 @@ public:
   virtual LightingType  normal_shade            () const              { return m_normal_shade; }
 private:
   Color
-  resolve_color (const String &color)
+  resolve_color (const String &color_name)
   {
     EnumTypeColorType ect;
-    if (color[0] == '#')
+    if (color_name[0] == '#')
       {
-        uint32 argb = string_to_int (&color[1], 16);
+        uint32 argb = string_to_int (&color_name[1], 16);
         /* invert alpha */
         Color c (argb);
         c.alpha (0xff - c.alpha());
         return c;
         return argb;
       }
-    const EnumClass::Value *value = ect.find_first (color);
+    const EnumClass::Value *value = ect.find_first (color_name);
     if (value)
       return style()->standard_color (state(), ColorType (value->value));
     else
-      return style()->standard_color (state(), COLOR_BACKGROUND); // FIXME: use color string
+      {
+        Color parsed_color = Color::from_name (color_name);
+        if (!parsed_color)
+          parsed_color = style()->standard_color (state(), COLOR_BACKGROUND);
+        return parsed_color;
+      }
   }
   void
   render_shade (Plane        &plane,

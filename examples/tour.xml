@@ -101,7 +101,7 @@
   </def:slider>
   
   <!-- test dialog -->
-  <def:tour-dialog inherit="ambience" normal-lighting="upper-left"> <!-- normal-background="black" -->
+  <def:tour-dialog inherit="ambience" normal-lighting="upper-left"> <!-- normal-background="beige" -->
     <vbox sensitive="1">
       <label text="Mark1" />
       <arrangement origin="0 0" >

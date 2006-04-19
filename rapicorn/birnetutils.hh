@@ -25,35 +25,6 @@
 namespace Birnet {
 
 /* --- GCC macros --- */
-#if     __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1)
-#define BIRNET_PRETTY_FUNCTION                  (__PRETTY_FUNCTION__)
-#define BIRNET_PURE                             __attribute__((__pure__))
-#define BIRNET_MALLOC                           __attribute__((__malloc__))
-#define BIRNET_PRINTF(format_idx, arg_idx)      __attribute__((__format__ (__printf__, format_idx, arg_idx)))
-#define BIRNET_SCANF(format_idx, arg_idx)       __attribute__((__format__ (__scanf__, format_idx, arg_idx)))
-#define BIRNET_FORMAT(arg_idx)                  __attribute__((__format_arg__ (arg_idx)))
-#define BIRNET_NORETURN                         __attribute__((__noreturn__))
-#define BIRNET_CONST                            __attribute__((__const__))
-#define BIRNET_UNUSED                           __attribute__((__unused__))
-#define BIRNET_NO_INSTRUMENT                    __attribute__((__no_instrument_function__))
-#define BIRNET_EXTENSION                        __extension__
-#define BIRNET_DEPRECATED                       __attribute__((__deprecated__))
-#else   /* !__GNUC__ */
-#define BIRNET_PRETTY_FUNCTION                  (__func__)
-#define BIRNET_PURE
-#define BIRNET_MALLOC
-#define BIRNET_PRINTF(format_idx, arg_idx)
-#define BIRNET_SCANF(format_idx, arg_idx)
-#define BIRNET_FORMAT(arg_idx)
-#define BIRNET_NORETURN
-#define BIRNET_CONST
-#define BIRNET_UNUSED
-#define BIRNET_NO_INSTRUMENT
-#define BIRNET_EXTENSION
-#define BIRNET_DEPRECATED
-#error  Failed to detect a recent GCC version (>= 3.1)
-#endif  /* !__GNUC__ */
-
 #if __GNUC__ >= 3 && defined __OPTIMIZE__
 #define BIRNET_BOOL_EXPR(expr)  __extension__ ({ bool b = 0; if (expr) b = 1; b; })
 #define BIRNET_EXPECT(expr,val) __builtin_expect (BIRNET_BOOL_EXPR (expr), val)

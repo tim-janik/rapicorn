@@ -1,3 +1,15 @@
+Wed Apr 19 02:50:51 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/paintcontainers.cc: added logic to resolve colors by name.
+
+	* rapicorn/primitives.hh:
+	* rapicorn/primitives.cc: implemented Color::from_name() using various
+	internet sources for color names.
+
+	* acbirnet.m4: updated from beast, this adds compiler options for gcc-4.2.0.
+
+	* rapicorn/birnetutils.hh: removed macros which got moved to birnet/.
+
 Tue Apr 18 02:31:52 2006  Tim Janik  <timj@gtk.org>
 
 	* integrated with birnet/ subdir. 

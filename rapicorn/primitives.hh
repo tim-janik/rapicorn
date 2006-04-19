@@ -288,6 +288,7 @@ public:
   Color (uint8 red, uint8 green, uint8 blue, uint8 alpha = 0xff) :
     argb_pixel ((alpha << 24) | (red << 16) | (green << 8) | blue)
   {}
+  static Color from_name          (const String &color_name);
   static Color from_premultiplied (uint32 pargb)
   {
     Color c = (pargb);
