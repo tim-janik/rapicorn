@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include "pangolabel.hh"
+#if     RAPICORN_WITH_PANGO
 #include <pango/pangoft2.h>
 #include "factory.hh"
 #include "itemimpl.hh"
@@ -477,3 +478,4 @@ public:
 static const ItemFactory<PangoLabelImpl> pango_label_factory ("Rapicorn::PangoLabel");
 
 } // Rapicorn
+#endif  /* RAPICORN_WITH_PANGO */

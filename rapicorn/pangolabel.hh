@@ -22,6 +22,7 @@
 #include <rapicorn/utilities.hh>
 #include <rapicorn/enumdefs.hh>
 
+#if     RAPICORN_WITH_PANGO
 namespace Rapicorn {
 
 class PangoLabel : public virtual Convertible {
@@ -43,5 +44,6 @@ public:
 };
 
 } // Rapicorn
+#endif  /* RAPICORN_WITH_PANGO */
 
 #endif  /* __RAPICORN_PANGO_LABEL_HH__ */

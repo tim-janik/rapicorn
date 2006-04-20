@@ -1,5 +1,5 @@
 /* Rapicorn
- * Copyright (C) 2005 Tim Janik
+ * Copyright (C) 2005-2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,9 +19,10 @@
 #ifndef __RAPICORN_GTK_ROOT_WIDGET_HH__
 #define __RAPICORN_GTK_ROOT_WIDGET_HH__
 
-#include <gtk/gtkwindow.h>
-#include <rapicorn/rapicorn.hh>
+#include <rapicorn/container.hh>
 
+#if     RAPICORN_WITH_GTK
+#include <gtk/gtkwindow.h>
 namespace Rapicorn {
 namespace Gtk {
 
@@ -58,5 +59,6 @@ void                    gdk_window_set_bit_gravity (GdkWindow *window, GdkGravit
 
 } // Gtk
 } // Rapicorn
+#endif  /* RAPICORN_WITH_GTK */
 
 #endif  /* __RAPICORN_GTK_ROOT_WIDGET_HH__ */

@@ -1,5 +1,5 @@
 /* Rapicorn
- * Copyright (C) 2005 Tim Janik
+ * Copyright (C) 2005-2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include "gtkrootwidget.hh"
+#if     RAPICORN_WITH_GTK
 
 namespace Rapicorn {
 namespace Gtk {
@@ -532,3 +533,5 @@ gdk_window_set_win_gravity (GdkWindow *window, GdkGravity g)
 
 } // Gtk
 } // Rapicorn
+
+#endif  /* RAPICORN_WITH_GTK */

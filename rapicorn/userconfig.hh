@@ -1,5 +1,5 @@
 /* Rapicorn
- * Copyright (C) 2005 Tim Janik
+ * Copyright (C) 2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,36 +16,23 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#include "utilities.hh"
+#ifndef __RAPICORN_USER_CONFIG_HH_
+#define __RAPICORN_USER_CONFIG_HH_
+
+#include <birnet/birnet.h>
 
 namespace Rapicorn {
 
-static const char *rapicorn_i18n_domain = NULL;
+/* === i18n domain === */
+#define RAPICORN_I18N_DOMAIN	"rapicorn"
+/* make sure to call bindtextdomain (RAPICORN_I18N_DOMAIN, path_to_translation_directory); */
 
-void
-rapicorn_init (void)
-{
-  rapicorn_i18n_domain = RAPICORN_I18N_DOMAIN;
-  // bindtextdomain (rapicorn_i18n_domain, dirname);
-  bind_textdomain_codeset (rapicorn_i18n_domain, "UTF-8");
-}
+/* === Gtk+ backend === */
+#define RAPICORN_WITH_GTK       (1)
 
-const char*
-rapicorn_gettext (const char *text)
-{
-  assert (rapicorn_i18n_domain != NULL);
-  return dgettext (rapicorn_i18n_domain, text);
-}
-
-Convertible::Convertible() :
-  sig_find_interface (*this)
-{}
-
-bool
-Convertible::match_interface (InterfaceMatch &imatch,
-                              const String   &ident)
-{
-  return imatch.done() || sig_find_interface.emit (imatch, ident) || (!ident[0] && imatch.match (this));
-}
+/* === Pango font rendering === */
+#define RAPICORN_WITH_PANGO     (1)
 
 } // Rapicorn
+
+#endif  /* __RAPICORN_USER_CONFIG_HH_ */

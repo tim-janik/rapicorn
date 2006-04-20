@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include <rapicorn/rapicorn.hh>
-#include "gtkrootwidget.hh"
+#include <rapicorn/gtkrootwidget.hh>
 #include <gtk/gtk.h>
 
 namespace {
@@ -61,7 +61,7 @@ main (int   argc,
       char *argv[])
 {
   printf ("EXAMPLE: %s:\n", basename (argv[0]));
-  rapicorn_gettext_init ("Rapicorn", NULL); // FIXME: gettext path
+  rapicorn_init ();
   gtk_init (&argc, &argv);
 
   GtkWidget *window = gtk_widget_new (GTK_TYPE_WINDOW, NULL);

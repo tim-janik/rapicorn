@@ -20,6 +20,7 @@
 #define __RAPICORN_UTILITIES_HH__
 
 #include <rapicorn/birnetutils.hh>
+#include <rapicorn/userconfig.hh>
 #ifdef  RAPICORN_PRIVATE
 #include <rapicorn/private.hh>
 #endif
@@ -31,8 +32,8 @@ using namespace Birnet;
 using Birnet::uint;     // resolve conflict with global uint
 
 /* --- i18n macros --- */
-void            rapicorn_gettext_init (const char *domainname, const char *dirname);
-const char*     rapicorn_gettext      (const char *text);
+void            rapicorn_init           (void);
+const char*     rapicorn_gettext        (const char *text);
 #ifdef  RAPICORN_PRIVATE
 #define _(str)  rapicorn_gettext (str)
 #define N_(str) (str)

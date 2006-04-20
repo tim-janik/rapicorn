@@ -6,7 +6,7 @@ DEFS     = -DPARANOID $(RAPICORN_CFLAGS) -DRAPICORN_PRIVATE
 
 # test programs:
 TESTS = properties walker markup datalist primitives shaderect pixcombine
-programs_ldadd = $(top_builddir)/rapicorn/librapicorn.la $(RAPICORN_LIBS) $(PANGO_LIBS)
+programs_ldadd = $(top_builddir)/rapicorn/librapicorn.la $(RAPICORN_LIBS) $(PANGO_LIBS) $(GTK_LIBS)
 # program sources:
 walker_SOURCES = walker.cc
 walker_LDADD = $(programs_ldadd)

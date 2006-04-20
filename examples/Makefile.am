@@ -19,9 +19,9 @@ programs_gtk_ldadd = $(programs_ldadd) $(GTK_LIBS)
 noinst_PROGRAMS = $(GTK_EXAMPLES)
 
 # program sources:
-tour_SOURCES = tour.cc gtkrootwidget.cc
+tour_SOURCES = tour.cc
 tour_LDADD = $(programs_gtk_ldadd)
-EXTRA_DIST += gtkrootwidget.hh tour.xml
+EXTRA_DIST += tour.xml
 
 XML_FILES = $(strip	\
 	tour.xml	\
