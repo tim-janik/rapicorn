@@ -37,31 +37,41 @@ protected:
   virtual ~Property();
 };
 
-struct PropertyList {
+class PropertyList {
+  void  append_properties (uint                n_props,
+                           Property          **props,
+                           const PropertyList &chain0,
+                           const PropertyList &chain1,
+                           const PropertyList &chain2,
+                           const PropertyList &chain3,
+                           const PropertyList &chain4,
+                           const PropertyList &chain5,
+                           const PropertyList &chain6,
+                           const PropertyList &chain7,
+                           const PropertyList &chain8);
+public:
   uint       n_properties;
   Property **properties;
   PropertyList () : n_properties (0), properties (NULL) {}
   template<typename Array>
   PropertyList (Array              &a,
-                const PropertyList &chain = PropertyList()) :
+                const PropertyList &chain0 = PropertyList(),
+                const PropertyList &chain1 = PropertyList(),
+                const PropertyList &chain2 = PropertyList(),
+                const PropertyList &chain3 = PropertyList(),
+                const PropertyList &chain4 = PropertyList(),
+                const PropertyList &chain5 = PropertyList(),
+                const PropertyList &chain6 = PropertyList(),
+                const PropertyList &chain7 = PropertyList(),
+                const PropertyList &chain8 = PropertyList()) :
     n_properties (0),
     properties (NULL)
   {
-    uint array_length = sizeof (a) / sizeof (a[0]);
-    n_properties = array_length + chain.n_properties;
-    properties = new Property*[n_properties];
-    uint i;
-    for (i = 0; i < array_length; i++)
-      properties[i] = ref_sink (a[i]);
-    for (; i < n_properties; i++)
-      properties[i] = ref (chain.properties[i - array_length]);
+    append_properties (sizeof (a) / sizeof (a[0]), a,
+                       chain0, chain1, chain2, chain3,
+                       chain4, chain5, chain6, chain7, chain8);
   }
-  ~PropertyList()
-  {
-    for (uint i = 0; i < n_properties; i++)
-      unref (properties[i]);
-    delete[] properties;
-  }
+  ~PropertyList();
 };
 
 #define RAPICORN_MakeProperty(Type, accessor, label, blurb, ...)   \

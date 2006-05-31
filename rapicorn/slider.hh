@@ -33,11 +33,14 @@ protected:
                                          const String   &arg) = 0;
   virtual void          slider_changed  ();
 public:
+  virtual bool          flipped         () const = 0;
+  virtual void          flipped         (bool flip) = 0;
   virtual Adjustment*   adjustment      () const = 0;
   virtual void          adjustment      (Adjustment     &adjustment) = 0;
   SignalSliderChanged   sig_slider_changed;
   virtual
   const CommandList&    list_commands   ();
+  const PropertyList&   list_properties ();
 };
 
 } // Rapicorn

@@ -1,3 +1,16 @@
+Wed May 31 23:18:16 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/properties.[hc]*: extended constructor to support chaining of
+	multiple property lists. added deduping logic for appending.
+
+	* rapicorn/slider.cc, rapicorn/slider.hh: added flipped() property to
+	SliderArea. fixed increment/decrement logic, honour flipped() setting.
+
+	* rapicorn/private.hh:
+	* rapicorn/birnetutils.hh, rapicorn/birnetutils.cc:
+	removed dirname, basename, *LIKELY, ABS, MIN, MAX, CLAMP, etc. which are
+	provided by birnet now.
+
 Fri Apr 21 01:35:30 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/userconfig.hh: new file, used to manually enable/disable 

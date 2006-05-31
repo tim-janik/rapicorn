@@ -25,14 +25,6 @@
 namespace Rapicorn {
 
 /* --- safe standard macros --- */
-#undef ABS
-#define ABS(a)                          ((a) >? -(a))
-#undef MIN
-#define MIN(a,b)                        ((a) <? (b))
-#undef MAX
-#define MAX(a,b)                        ((a) >? (b))
-#undef CLAMP
-#define CLAMP(v,mi,ma)                  (((v) >? (mi)) <? (ma))
 #undef STRFUNC
 #define STRFUNC                         ((const char*) BIRNET_PRETTY_FUNCTION)
 #undef EXPECT

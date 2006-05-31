@@ -24,25 +24,6 @@
 
 namespace Birnet {
 
-/* --- GCC macros --- */
-#if __GNUC__ >= 3 && defined __OPTIMIZE__
-#define BIRNET_BOOL_EXPR(expr)  __extension__ ({ bool b = 0; if (expr) b = 1; b; })
-#define BIRNET_EXPECT(expr,val) __builtin_expect (BIRNET_BOOL_EXPR (expr), val)
-#define BIRNET_LIKELY(expr)     __builtin_expect (BIRNET_BOOL_EXPR (expr), 1)
-#define BIRNET_UNLIKELY(expr)   __builtin_expect (BIRNET_BOOL_EXPR (expr), 0)
-#else
-#define BIRNET_EXPECT(expr,val) expr
-#define BIRNET_LIKELY(expr)     expr
-#define BIRNET_UNLIKELY(expr)   expr
-#endif
-
-/* --- helper macros --- */
-#define BIRNET_PRIVATE_CLASS_COPY(Class)        private: Class (const Class&); Class& operator= (const Class&);
-#define BIRNET_ABS(a)                           ((a) >? -(a))
-#define BIRNET_MIN(a,b)                         ((a) <? (b))
-#define BIRNET_MAX(a,b)                         ((a) >? (b))
-#define BIRNET_CLAMP(v,mi,ma)                   (((v) >? (mi)) <? (ma))
-
 /* --- common utilities --- */
 using ::std::swap;
 using ::std::min;
@@ -63,14 +44,6 @@ clamp (const T &value, const T &minimum, const T &maximum)
     return maximum;
   return value;
 }
-
-/* --- file/path functionality --- */
-#define BIRNET_DIR_SEPARATOR            '/'
-#define BIRNET_DIR_SEPARATOR_S          "/"
-#define BIRNET_SEARCHPATH_SEPARATOR     ':'
-#define BIRNET_SEARCHPATH_SEPARATOR_S   ":"
-const String              dirname (const String &path);
-const String              basename (const String &path);
 
 /* --- text encoding --- */
 bool    text_convert    (const char        *to_charset,

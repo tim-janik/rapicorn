@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include "properties.hh"
+#include <set>
 
 namespace Rapicorn {
 
@@ -52,6 +53,59 @@ Property::~Property()
     free (blurb);
   if (hints)
     free (hints);
+}
+
+void
+PropertyList::append_properties (uint                n_props,
+                                 Property          **props,
+                                 const PropertyList &chain0,
+                                 const PropertyList &chain1,
+                                 const PropertyList &chain2,
+                                 const PropertyList &chain3,
+                                 const PropertyList &chain4,
+                                 const PropertyList &chain5,
+                                 const PropertyList &chain6,
+                                 const PropertyList &chain7,
+                                 const PropertyList &chain8)
+{
+  typedef std::set<Property*> PropertySet;
+  PropertySet pset;
+  std::vector<Property*> parray;
+  for (uint i = 0; i < n_properties; i++)
+    if (pset.find (properties[i]) == pset.end())
+      {
+        pset.insert (properties[i]);
+        parray.push_back (properties[i]);
+      }
+  for (uint i = 0; i < n_props; i++)
+    if (pset.find (props[i]) == pset.end())
+      {
+        pset.insert (props[i]);
+        parray.push_back (ref_sink (props[i]));
+      }
+  const PropertyList *chains[] = {
+    &chain0, &chain1, &chain2, &chain3, &chain4, &chain5, &chain6, &chain7, &chain8
+  };
+  for (uint j = 0; j < sizeof (chains) / sizeof (chains[0]); j++)
+    for (uint i = 0; i < chains[j]->n_properties; i++)
+      if (pset.find (chains[j]->properties[i]) == pset.end())
+        {
+          pset.insert (chains[j]->properties[i]);
+          parray.push_back (ref (chains[j]->properties[i]));
+        }
+  delete[] properties;
+  n_properties = parray.size();
+  properties = new Property*[n_properties];
+  for (uint i = 0; i < n_properties; i++)
+    properties[i] = parray[i];
+}
+
+PropertyList::~PropertyList()
+{
+  while (n_properties)
+    unref (properties[--n_properties]);
+  if (properties)
+    delete[] properties;
 }
 
 } // Rapicorn

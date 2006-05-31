@@ -67,8 +67,19 @@ SliderArea::list_commands ()
   return command_list;
 }
 
+const PropertyList&
+SliderArea::list_properties()
+{
+  static Property *properties[] = {
+    MakeProperty (SliderArea, flipped,  _("Flipped"), _("Invert (flip) display of the adjustment value"), "", "rw"),
+  };
+  static const PropertyList property_list (properties, Container::list_properties());
+  return property_list;
+}
+
 class SliderAreaImpl : public virtual SliderArea, public virtual TableImpl {
   Adjustment *m_adjustment;
+  bool m_flip;
   void
   unset_adjustment()
   {
@@ -78,13 +89,37 @@ class SliderAreaImpl : public virtual SliderArea, public virtual TableImpl {
     m_adjustment = NULL;
   }
 protected:
+  virtual bool
+  flipped () const
+  {
+    return m_flip;
+  }
+  virtual void
+  flipped (bool flip)
+  {
+    if (m_flip != flip)
+      {
+        m_flip = flip;
+        changed();
+      }
+  }
   virtual ~SliderAreaImpl()
   {
     unset_adjustment();
   }
+  virtual const PropertyList&
+  list_properties()
+  {
+    static Property *properties[] = {};
+    static const PropertyList property_list (properties,
+                                             SliderArea::list_properties(),
+                                             TableImpl::list_properties());
+    return property_list;
+  }
 public:
   SliderAreaImpl() :
-    m_adjustment (NULL)
+    m_adjustment (NULL),
+    m_flip (false)
   {
     Adjustment *adj = Adjustment::create (0, 0, 1, 0.01, 0.2);
     adjustment (*adj);
@@ -99,6 +134,7 @@ public:
     m_adjustment = &adjustment;
     m_adjustment->sig_value_changed += slot (sig_slider_changed);
     m_adjustment->sig_range_changed += slot (sig_slider_changed);
+    changed();
   }
   virtual Adjustment*
   adjustment () const
@@ -117,6 +153,11 @@ class SliderSkidImpl;
 
 class SliderTroughImpl : public virtual EventHandler, public virtual SingleContainerImpl {
   SliderArea *m_slider_area;
+  bool
+  flipped()
+  {
+    return m_slider_area ? m_slider_area->flipped() : false;
+  }
 public:
   SliderTroughImpl() :
     m_slider_area (NULL)
@@ -159,8 +200,7 @@ protected:
   value()
   {
     Adjustment &adj = *adjustment();
-    bool horizontal = true;
-    return horizontal ? adj.flipped_value() : adj.value();
+    return flipped() ? adj.flipped_value() : adj.value();
   }
   virtual void
   size_allocate (Allocation area)
@@ -214,11 +254,11 @@ protected:
           }
         break;
       case SCROLL_UP:
-      case SCROLL_LEFT:
+      case SCROLL_RIGHT:
         exec_command ("increment");
         break;
       case SCROLL_DOWN:
-      case SCROLL_RIGHT:
+      case SCROLL_LEFT:
         exec_command ("decrement");
         break;
       default: break;
@@ -231,6 +271,12 @@ static const ItemFactory<SliderTroughImpl> slider_trough_factory ("Rapicorn::Sli
 class SliderSkidImpl : public virtual EventHandler, public virtual SingleContainerImpl {
   uint        m_button;
   double      m_coffset;
+  bool
+  flipped()
+  {
+    SliderTroughImpl &trough = parent()->interface<SliderTroughImpl>(); // FIXME: need Item.parent_interface<>();
+    return trough.flipped();
+  }
 public:
   SliderSkidImpl() :
     m_button (0),
@@ -262,8 +308,7 @@ protected:
   {
     SliderTroughImpl &trough = parent()->interface<SliderTroughImpl>(); // FIXME: need Item.parent_interface<>();
     Adjustment &adj = *trough.adjustment();
-    bool horizontal = true;
-    return horizontal ? adj.flipped_value() : adj.value();
+    return flipped() ? adj.flipped_value() : adj.value();
   }
   virtual void
   reset (ResetMode mode = RESET_ALL)
@@ -323,7 +368,7 @@ protected:
             pos -= m_coffset * cwidth;
             pos /= width;
             pos = CLAMP (pos, 0, 1);
-            if (1 /* horizontal */)
+            if (flipped())
               adj.flipped_value (pos);
             else
               adj.value (pos);

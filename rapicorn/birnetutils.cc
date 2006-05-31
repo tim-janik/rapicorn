@@ -380,30 +380,6 @@ diag (const String &s)
   fputs ("\n", stderr);
 }
 
-const String
-dirname (const String &path)
-{
-  const char *filename = path.c_str();
-  const char *base = strrchr (filename, BIRNET_DIR_SEPARATOR);
-  if (!base)
-    return ".";
-
-  while (*base == BIRNET_DIR_SEPARATOR && base > filename)
-    base--;
-
-  return String (filename, base - filename + 1);
-}
-
-const String
-basename (const String &path)
-{
-  const char *filename = path.c_str();
-  const char *base = strrchr (filename, BIRNET_DIR_SEPARATOR);
-  if (!base)
-    return String (base + 1);
-  return filename;
-}
-
 static bool
 unaliased_encoding (std::string &name)
 {
