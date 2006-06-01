@@ -24,14 +24,12 @@ namespace Rapicorn {
 
 
 class AlignmentImpl : public virtual SingleContainerImpl, public virtual Alignment {
-  int    m_width, m_height;
   uint16 m_left_padding, m_right_padding;
   uint16 m_bottom_padding, m_top_padding;
   float m_halign, m_hscale;
   float m_valign, m_vscale;
 public:
   AlignmentImpl() :
-    m_width (-1), m_height (-1),
     m_left_padding (0), m_right_padding (0),
     m_bottom_padding (0), m_top_padding (0),
     m_halign (0.5), m_hscale (1),
@@ -55,10 +53,6 @@ public:
       }
     set_flag (HSPREAD_CONTAINER, chspread);
     set_flag (VSPREAD_CONTAINER, cvspread);
-    if (width() >= 0)
-      requisition.width = width();
-    if (height() >= 0)
-      requisition.height = height();
   }
   virtual void
   size_allocate (Allocation area)
@@ -88,10 +82,6 @@ public:
       }
     child.set_allocation (area);
   }
-  virtual int   width          () const  { return m_width; }
-  virtual void  width          (int w)   { m_width = MAX (-1, w); invalidate(); }
-  virtual int   height         () const  { return m_width; }
-  virtual void  height         (int h)   { m_height = MAX (-1, h); invalidate(); }
   virtual float halign         () const  { return m_halign; }
   virtual void  halign         (float f) { m_halign = CLAMP (f, 0, 1); invalidate(); }
   virtual float hscale         () const  { return m_hscale; }
@@ -113,8 +103,6 @@ protected:
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (AlignmentImpl, width,          _("Requested Width"), _("The supposed width for the alignment, -1=automatic"), -1, -1, MAXINT, 5, "rw"),
-      MakeProperty (AlignmentImpl, height,         _("Requested Height"), _("The supposed height for the alignment, -1=automatic"), -1, -1, MAXINT, 5, "rw"),
       MakeProperty (AlignmentImpl, halign,         _("Horizontal Alignment"), _("Horizontal position of unexpanded child, 0=left, 1=right"), 0, 0, 1, 0.5, "rw"),
       MakeProperty (AlignmentImpl, hscale,         _("Horizontal Scale"),     _("Fractional expansion of unexpanded child, 0=unexpanded, 1=expanded"), 1, 0, 1, 0.5, "rw"),
       MakeProperty (AlignmentImpl, valign,         _("Vertical Alignment"),   _("Vertical position of unexpanded child, 0=bottom, 1=top"), 0, 0, 1, 0.5, "rw"),

@@ -1,3 +1,24 @@
+Thu Jun  1 19:12:57 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/slider.cc: make use parent_interface<>(), get rid of
+	ancestor pointers. added vertical_skid() property to SliderSkidImpl
+	for vertical movement. 
+
+	* rapicorn/adjustment.cc: fixed freeze_count initialization.
+
+	* examples/tour.xml: fix up button padding.
+	renamed hslider, added vslider. 
+
+	* rapicorn/birnetutils.cc: const fixups.
+
+	* rapicorn/item.[hc]*: added width/height override requisition properties.
+	implemented parent_interface<>() analogous to interface<>().
+
+	* rapicorn/layoutcontainers.cc: removed width/height from Alignment, 
+	which got moved to Item.
+
+	* rapicorn/paintgadgets.cc: shrunk arrow requisition.
+
 Thu Jun  1 02:12:10 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/slider.cc (move): fixed flipped slider movement.

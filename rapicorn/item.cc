@@ -161,6 +161,19 @@ Item::match_interface (InterfaceMatch &imatch,
   return imatch.done() || sig_find_interface.emit (imatch, ident) || ((!ident[0] || ident == name()) && imatch.match (this));
 }
 
+bool
+Item::match_parent_interface (InterfaceMatch &imatch,
+                              const String   &ident) const
+{
+  if (imatch.done() ||
+      (parent() && (!ident[0] || ident == parent()->name()) && imatch.match (parent())))
+    return true;
+  if (parent())
+    return parent()->match_parent_interface (imatch, ident);
+  else
+    return false;
+}
+
 void
 Item::finalize()
 {
@@ -309,11 +322,53 @@ Item::get_property (const String   &property_name)
   return prop->get_value (this);
 }
 
+static class OvrKey : public DataKey<Requisition> {
+  Requisition
+  fallback()
+  {
+    return Requisition (-1, -1);
+  }
+} override_requisition;
+
+float
+Item::width () const
+{
+  Requisition ovr = get_data (&override_requisition);
+  return ovr.width >= 0 ? ovr.width : -1;
+}
+
+void
+Item::width (float w)
+{
+  Requisition ovr = get_data (&override_requisition);
+  ovr.width = w >= 0 ? w : -1;
+  set_data (&override_requisition, ovr);
+  invalidate();
+}
+
+float
+Item::height () const
+{
+  Requisition ovr = get_data (&override_requisition);
+  return ovr.height >= 0 ? ovr.height : -1;
+}
+
+void
+Item::height (float h)
+{
+  Requisition ovr = get_data (&override_requisition);
+  ovr.height = h >= 0 ? h : -1;
+  set_data (&override_requisition, ovr);
+  invalidate();
+}
+
 const PropertyList&
 Item::list_properties ()
 {
   static Property *properties[] = {
     MakeProperty (Item, name,      _("Name"), _("Identification name of the item"), "", "rw"),
+    MakeProperty (Item, width,     _("Requested Width"), _("The width to request from its container for this item, -1=automatic"), -1, -1, MAXINT, 5, "rw"),
+    MakeProperty (Item, height,    _("Requested Height"), _("The height to request from its container for this item, -1=automatic"), -1, -1, MAXINT, 5, "rw"),
     MakeProperty (Item, visible,   _("Visible"), _("Whether this item is visible"), true, "rw"),
     MakeProperty (Item, sensitive, _("Sensitive"), _("Whether this item is sensitive (receives events)"), true, "rw"),
     MakeProperty (Item, hexpand,   _("Horizontal Expand"), _("Whether to expand this item horizontally"), false, "rw"),
@@ -513,6 +568,11 @@ ItemImpl::size_request ()
       size_request (req);
       req.width = MAX (req.width, 0);
       req.height = MAX (req.height, 0);
+      Requisition ovr (width(), height());
+      if (ovr.width >= 0)
+        req.width = ovr.width;
+      if (ovr.height >= 0)
+        req.height = ovr.height;
       m_requisition = req;
     }
   return m_requisition;

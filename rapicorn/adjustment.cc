@@ -56,18 +56,12 @@ Adjustment::range_changed()
 
 class AdjustmentSimpleImpl : public virtual Adjustment {
   double m_value, m_lower, m_upper, m_step_increment, m_page_increment, m_page;
-  uint   freeze_count;
-protected:
-  virtual void
-  value_changed ()
-  {}
-  virtual void
-  range_changed ()
-  {}
+  uint   m_freeze_count;
 public:
   AdjustmentSimpleImpl() :
     m_value (0), m_lower (0), m_upper (1),
-    m_step_increment (1.0 / 100), m_page_increment (1.0 / 10), m_page (0)
+    m_step_increment (1.0 / 100), m_page_increment (1.0 / 10), m_page (0),
+    m_freeze_count (0)
   {}
   /* value */
   virtual double        value	        ()                      { return m_value; }
@@ -76,28 +70,28 @@ public:
   {
     double old_value = m_value;
     m_value = CLAMP (newval, m_lower, m_upper);
-    if (old_value != m_value && !freeze_count)
+    if (old_value != m_value && !m_freeze_count)
       sig_value_changed.emit ();
   }
   /* range */
-  virtual bool                  frozen          () const                { return freeze_count > 0; }
-  virtual void                  freeze          ()                      { freeze_count++; }
+  virtual bool                  frozen          () const                { return m_freeze_count > 0; }
+  virtual void                  freeze          ()                      { m_freeze_count++; }
   virtual double                lower	        () const                { return m_lower; }
-  virtual void                  lower           (double newval)         { return_if_fail (freeze_count); m_lower = newval; }
+  virtual void                  lower           (double newval)         { return_if_fail (m_freeze_count); m_lower = newval; }
   virtual double                upper	        () const                { return m_upper; }
-  virtual void		        upper	        (double newval)         { return_if_fail (freeze_count); m_upper = newval; }
+  virtual void		        upper	        (double newval)         { return_if_fail (m_freeze_count); m_upper = newval; }
   virtual double	        step_increment	() const                { return m_step_increment; }
-  virtual void		        step_increment	(double newval)         { return_if_fail (freeze_count); m_step_increment = newval; }
+  virtual void		        step_increment	(double newval)         { return_if_fail (m_freeze_count); m_step_increment = newval; }
   virtual double	        page_increment	() const                { return m_page_increment; }
-  virtual void		        page_increment	(double newval)         { return_if_fail (freeze_count); m_page_increment = newval; }
+  virtual void		        page_increment	(double newval)         { return_if_fail (m_freeze_count); m_page_increment = newval; }
   virtual double	        page	        () const                { return m_page; }
-  virtual void		        page	        (double newval)         { return_if_fail (freeze_count); m_page = newval; }
+  virtual void		        page	        (double newval)         { return_if_fail (m_freeze_count); m_page = newval; }
   virtual void
   thaw ()
   {
-    return_if_fail (freeze_count);
-    freeze_count--;
-    if (!freeze_count)
+    return_if_fail (m_freeze_count);
+    m_freeze_count--;
+    if (!m_freeze_count)
       {
         double old_value = m_value;
         double old_lower = m_lower;

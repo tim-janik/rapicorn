@@ -77,7 +77,7 @@ DataList::set_data (NodeBase    *node)
 }
 
 DataList::NodeBase*
-DataList::get_data (DataKey<void> *key)
+DataList::get_data (DataKey<void> *key) const
 {
   NodeBase *it;
   for (it = nodes; it; it = it->next)

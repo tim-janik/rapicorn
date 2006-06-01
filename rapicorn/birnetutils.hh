@@ -530,7 +530,7 @@ public:
     set_data (node);
   }
   template<typename T> T
-  get (DataKey<T> *key)
+  get (DataKey<T> *key) const
   {
     NodeBase *nb = get_data (reinterpret_cast<DataKey<void>*> (key));
     if (nb)
@@ -583,7 +583,7 @@ public:
   ~DataList();
 private:
   void      set_data (NodeBase      *node);
-  NodeBase* get_data (DataKey<void> *key);
+  NodeBase* get_data (DataKey<void> *key) const;
   NodeBase* rip_data (DataKey<void> *key);
 };
 
@@ -592,10 +592,10 @@ class DataListContainer {
   DataList data_list;
 public: /* generic data API */
   template<typename Type> inline void set_data    (DataKey<Type> *key, Type data) { data_list.set (key, data); }
-  template<typename Type> inline Type get_data    (DataKey<Type> *key) { return data_list.get (key); }
+  template<typename Type> inline Type get_data    (DataKey<Type> *key) const      { return data_list.get (key); }
   template<typename Type> inline Type swap_data   (DataKey<Type> *key, Type data) { return data_list.swap (key, data); }
-  template<typename Type> inline Type swap_data   (DataKey<Type> *key) { return data_list.swap (key); }
-  template<typename Type> inline void delete_data (DataKey<Type> *key) { data_list.del (key); }
+  template<typename Type> inline Type swap_data   (DataKey<Type> *key)            { return data_list.swap (key); }
+  template<typename Type> inline void delete_data (DataKey<Type> *key)            { data_list.del (key); }
 };
 
 /* --- binary lookup --- */

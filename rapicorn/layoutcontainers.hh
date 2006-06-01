@@ -24,10 +24,6 @@
 namespace Rapicorn {
 
 class Alignment : public virtual Convertible {
-  virtual int   width          () const  = 0;
-  virtual void  width          (int w)   = 0;
-  virtual int   height         () const  = 0;
-  virtual void  height         (int h)   = 0;
   virtual float halign         () const  = 0;
   virtual void  halign         (float f) = 0;
   virtual float hscale         () const  = 0;

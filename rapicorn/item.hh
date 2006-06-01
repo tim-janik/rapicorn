@@ -29,9 +29,9 @@ namespace Rapicorn {
 
 /* --- Item structures and forward decls --- */
 struct Requisition {
-  double width, height;
+  float width, height;
   Requisition () : width (0), height (0) {}
-  Requisition (double w, double h) : width (w), height (h) {}
+  Requisition (float w, float h) : width (w), height (h) {}
 };
 struct Allocation {
   int x, y, width, height;
@@ -145,6 +145,11 @@ public:
   void                        debug             (bool f) { set_flag (DEBUG, f); }
   virtual String              name              () const = 0;
   virtual void                name              (const String &str) = 0;
+  /* override requisition */
+  float                       width             () const;
+  void                        width             (float w);
+  float                       height            () const;
+  void                        height            (float h);
   /* properties */
   void                        set_property      (const String    &property_name,
                                                  const String    &value,
@@ -201,6 +206,20 @@ public:
   Color                 dark_shadow             () { return style()->standard_color (state(), COLOR_DARK_SHADOW); }
   Color                 white                   () { return style()->color_scheme (Style::STANDARD).generic_color (0xffffffff); }
   Color                 black                   () { return style()->color_scheme (Style::STANDARD).generic_color (0xff000000); }
+public:
+  template<typename Type>
+  typename
+  InterfaceType<Type>::Result parent_interface  (const String &ident = String(), const std::nothrow_t &nt = dothrow) const
+  {
+    InterfaceType<Type> interface_type;
+    match_parent_interface (interface_type, ident);
+    return interface_type.result (&nt == &dothrow);
+  }
+  template<typename Type>
+  typename
+  InterfaceType<Type>::Result parent_interface  (const std::nothrow_t &nt) const { return parent_interface<Type> (String(), nt); }
+private:
+  bool                  match_parent_interface  (InterfaceMatch &imatch, const String &ident) const;
 };
 
 } // Rapicorn

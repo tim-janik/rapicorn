@@ -37,8 +37,8 @@ protected:
   virtual void
   size_request (Requisition &requisition)
   {
-    requisition.width = 12;
-    requisition.height = 12;
+    requisition.width = 3;
+    requisition.height = 3;
   }
   virtual void
   size_allocate (Allocation area)

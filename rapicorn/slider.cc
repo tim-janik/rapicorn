@@ -159,15 +159,14 @@ static const ItemFactory<SliderAreaImpl> slider_area_factory ("Rapicorn::SliderA
 class SliderSkidImpl;
 
 class SliderTroughImpl : public virtual EventHandler, public virtual SingleContainerImpl {
-  SliderArea *m_slider_area;
   bool
   flipped()
   {
-    return m_slider_area ? m_slider_area->flipped() : false;
+    SliderArea *slider_area = parent_interface<SliderArea*>();
+    return slider_area ? slider_area->flipped() : false;
   }
 public:
-  SliderTroughImpl() :
-    m_slider_area (NULL)
+  SliderTroughImpl()
   {}
   ~SliderTroughImpl()
   {}
@@ -175,33 +174,22 @@ protected:
   virtual void
   hierarchy_changed (Item *old_toplevel)
   {
-    if (m_slider_area)
-      {
-        m_slider_area->sig_slider_changed -= slot (*this, &SliderTroughImpl::reallocate_child);
-        m_slider_area = NULL;
-      }
+    SliderArea *slider_area = parent_interface<SliderArea*>();
+    if (slider_area)
+      slider_area->sig_slider_changed -= slot (*this, &SliderTroughImpl::reallocate_child);
     this->SingleContainerImpl::hierarchy_changed (old_toplevel);
     if (anchored())
       {
-        Item *item = parent();
-        while (item)
-          {
-            m_slider_area = dynamic_cast<SliderArea*> (item);
-            if (m_slider_area)
-              break;
-            item = item->parent();
-          }
-        if (!m_slider_area)
+        if (!slider_area)
           throw Exception ("SliderTrough without SliderArea ancestor: ", name());
-        m_slider_area->sig_slider_changed += slot (*this, &SliderTroughImpl::reallocate_child);
+        slider_area->sig_slider_changed += slot (*this, &SliderTroughImpl::reallocate_child);
       }
   }
   Adjustment*
   adjustment () const
   {
-    if (!anchored())
-      throw Exception ("SliderTrough used outside of anchored hierarchy: ", name());
-    return m_slider_area->adjustment();
+    SliderArea *slider_area = parent_interface<SliderArea*>();
+    return slider_area ? slider_area->adjustment() : NULL;
   }
   double
   value()
@@ -278,16 +266,32 @@ static const ItemFactory<SliderTroughImpl> slider_trough_factory ("Rapicorn::Sli
 class SliderSkidImpl : public virtual EventHandler, public virtual SingleContainerImpl {
   uint        m_button;
   double      m_coffset;
+  bool        m_vertical_skid;
   bool
   flipped()
   {
-    SliderTroughImpl &trough = parent()->interface<SliderTroughImpl>(); // FIXME: need Item.parent_interface<>();
+    SliderTroughImpl &trough = parent_interface<SliderTroughImpl>();
     return trough.flipped();
+  }
+  bool
+  vertical_skid () const
+  {
+    return m_vertical_skid;
+  }
+  void
+  vertical_skid (bool vs)
+  {
+    if (m_vertical_skid != vs)
+      {
+        m_vertical_skid = vs;
+        changed();
+      }
   }
 public:
   SliderSkidImpl() :
     m_button (0),
-    m_coffset (0)
+    m_coffset (0),
+    m_vertical_skid (false)
   {}
   ~SliderSkidImpl()
   {}
@@ -308,12 +312,11 @@ protected:
       }
     set_flag (HSPREAD_CONTAINER, chspread);
     set_flag (VSPREAD_CONTAINER, cvspread);
-    requisition.width = MAX (requisition.width, 20); // FIXME: hardcoded minimum
   }
   double
   value()
   {
-    SliderTroughImpl &trough = parent()->interface<SliderTroughImpl>(); // FIXME: need Item.parent_interface<>();
+    SliderTroughImpl &trough = parent_interface<SliderTroughImpl>();
     Adjustment &adj = *trough.adjustment();
     return flipped() ? adj.flipped_value() : adj.value();
   }
@@ -327,7 +330,7 @@ protected:
   handle_event (const Event &event)
   {
     bool handled = false, proper_release = false;
-    SliderTroughImpl &trough = parent()->interface<SliderTroughImpl>(); // FIXME: need Item.parent_interface<>();
+    SliderTroughImpl &trough = parent_interface<SliderTroughImpl>();
     Adjustment &adj = *trough.adjustment();
     switch (event.type)
       {
@@ -346,34 +349,40 @@ protected:
             root()->add_grab (this, true);
             handled = true;
             m_coffset = 0;
-            double cx = event.x - allocation().x;
-            double cwidth = allocation().width;
-            if (cx >= 0 && cx < cwidth)
-              m_coffset = cx / cwidth;
+            double ep = vertical_skid() ? event.y : event.x;
+            double cp = vertical_skid() ? ep - allocation().y : ep - allocation().x;
+            double clength = vertical_skid() ? allocation().height : allocation().width;
+            if (cp >= 0 && cp < clength)
+              m_coffset = cp / clength;
             else
               {
                 m_coffset = 0.5;
                 /* confine offset to not slip the skip off trough boundaries */
-                cx = event.x - cwidth * m_coffset;
-                double start_slip = trough.allocation().x - cx;
-                double end_slip = cx + cwidth - (trough.allocation().x + trough.allocation().width);
+                cp = ep - clength * m_coffset;
+                const Allocation &ta = trough.allocation();
+                double start_slip = (vertical_skid() ? ta.y : ta.x) - cp;
+                double tlength = vertical_skid() ? ta.y + ta.height : ta.x + ta.width;
+                double end_slip = cp + clength - tlength;
                 /* adjust skid position */
-                cx += MAX (0, start_slip);
-                cx -= MAX (0, end_slip);
+                cp += MAX (0, start_slip);
+                cp -= MAX (0, end_slip);
                 /* recalculate offset */
-                m_coffset = (event.x - cx) / cwidth;
+                m_coffset = (ep - cp) / clength;
               }
           }
         break;
       case MOUSE_MOVE:
         if (m_button)
           {
-            double pos = event.x - trough.allocation().x;
-            int width = trough.allocation().width;
-            int cwidth = allocation().width;
-            width -= cwidth;
-            pos -= m_coffset * cwidth;
-            pos /= width;
+            double ep = vertical_skid() ? event.y : event.x;
+            const Allocation &ta = trough.allocation();
+            double tp = vertical_skid() ? ta.y : ta.x;
+            double pos = ep - tp;
+            int tlength = vertical_skid() ? ta.height : ta.width;
+            double clength = vertical_skid() ? allocation().height : allocation().width;
+            tlength -= clength;
+            pos -= m_coffset * clength;
+            pos /= tlength;
             pos = CLAMP (pos, 0, 1);
             if (flipped())
               adj.flipped_value (pos);
@@ -397,6 +406,16 @@ protected:
       default: break;
       }
     return handled;
+  }
+private:
+  virtual const PropertyList&
+  list_properties()
+  {
+    static Property *properties[] = {
+      MakeProperty (SliderSkidImpl, vertical_skid, _("Vertical Skid"), _("Adjust behaviour to vertical skid movement"), false, "rw"),
+    };
+    static const PropertyList property_list (properties, SingleContainerImpl::list_properties());
+    return property_list;
   }
 };
 static const ItemFactory<SliderSkidImpl> slider_skid_factory ("Rapicorn::SliderSkid");

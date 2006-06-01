@@ -57,7 +57,7 @@
 	normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"
 	>
 	<frame frame-type="none" >
-	  <alignment id="child-area" vscale="0" hscale="0" left-padding="5" right-padding="5" bottom-padding="1" top-padding="1" >
+	  <alignment id="child-area" vscale="0" hscale="0" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" >
 	  </alignment>
 	</frame>
       </ambience>
@@ -75,11 +75,12 @@
   <!-- slider -->
   <def:Rapicorn-slider-trough inherit="Rapicorn::SliderTrough"/>
   <def:Rapicorn-slider-skid inherit="Rapicorn::SliderSkid"/>
-  <def:slider inherit="Rapicorn::SliderArea">
+  <!-- hslider -->
+  <def:hslider inherit="Rapicorn::SliderArea">
     <frame normal-frame="in" hexpand="1" >
       <table>
 	<button left-attach="1" on-click="decrement" on-click2="page-decrement">
-	  <arrow arrow-dir="left" height="5"/>
+	  <arrow arrow-dir="left" />
 	</button>
 	<Rapicorn-slider-trough left-attach="2" hexpand="1">
 	  <Rapicorn-slider-skid vexpand="1">
@@ -98,7 +99,32 @@
 	</button>
       </table>
     </frame>
-  </def:slider>
+  </def:hslider>
+  <!-- vslider -->
+  <def:vslider inherit="Rapicorn::SliderArea">
+    <frame normal-frame="in" vexpand="1" >
+      <vbox >
+	<button on-click="increment" on-click2="page-increment">
+	  <arrow arrow-dir="up" />
+	</button>
+	<Rapicorn-slider-trough vexpand="1">
+	  <Rapicorn-slider-skid hexpand="1" vertical-skid="1">
+	    <ambience
+	      normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
+	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"
+	      >
+	      <frame normal-frame="out" hexpand="1">
+		<dot-grid n-hdots="2" n-vdots="6" left-padding-dots="0" right-padding-dots="0" top-padding-dots="2" bottom-padding-dots="2" />
+	      </frame>
+	    </ambience>
+	  </Rapicorn-slider-skid>
+	</Rapicorn-slider-trough>
+	<button on-click="decrement" on-click2="page-decrement">
+	  <arrow arrow-dir="down" />
+	</button>
+      </vbox>
+    </frame>
+  </def:vslider>
   
   <!-- test dialog -->
   <def:tour-dialog inherit="ambience" normal-lighting="upper-left"> <!-- normal-background="beige" -->
@@ -121,7 +147,12 @@
 	  <alignment left-padding="5" right-padding="5" top-padding="5" bottom-padding="5"> <!-- width="125" height="110" -->
 	    <table>
 	      <label text="*** Ttitle ***" align="center" bottom-attach="100" hexpand="1" />
-	      <slider align="center" bottom-attach="102" hexpand="1" />
+	      <hbox bottom-attach="102" vexpand="1" >
+ 	        <hslider align="center" hexpand="1" />
+	        <vslider vexpand="1" />
+	        <vslider vexpand="1" />
+	        <vslider vexpand="1" />
+	      </hbox>
 	      <default-button sensitive="1" bottom-attach="51" vspread="1" vshrink="1" hexpand="0" hfill="0" vfill="0" >
 		<vbox>
 		  <label text="left" right-padding="10" />
