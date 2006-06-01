@@ -1,3 +1,7 @@
+Thu Jun  1 02:12:10 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/slider.cc (move): fixed flipped slider movement.
+
 Wed May 31 23:18:16 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/properties.[hc]*: extended constructor to support chaining of

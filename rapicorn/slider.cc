@@ -35,19 +35,26 @@ bool
 SliderArea::move (int distance)
 {
   Adjustment *adj = adjustment();
+  double pi = adj->page_increment();
+  double si = adj->step_increment();
+  if (flipped())
+    {
+      pi = -pi;
+      si = -si;
+    }
   switch (adj ? distance : 0)
     {
     case +2:
-      adj->value (adj->value() + adj->page_increment());
+      adj->value (adj->value() + pi);
       return true;
     case +1:
-      adj->value (adj->value() + adj->step_increment());
+      adj->value (adj->value() + si);
       return true;
     case -1:
-      adj->value (adj->value() - adj->step_increment());
+      adj->value (adj->value() - si);
       return true;
     case -2:
-      adj->value (adj->value() - adj->page_increment());
+      adj->value (adj->value() - pi);
       return true;
     default:
       return false;
@@ -71,7 +78,7 @@ const PropertyList&
 SliderArea::list_properties()
 {
   static Property *properties[] = {
-    MakeProperty (SliderArea, flipped,  _("Flipped"), _("Invert (flip) display of the adjustment value"), "", "rw"),
+    MakeProperty (SliderArea, flipped, _("Flipped"), _("Invert (flip) display of the adjustment value"), false, "rw"),
   };
   static const PropertyList property_list (properties, Container::list_properties());
   return property_list;
