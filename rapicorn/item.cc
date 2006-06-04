@@ -19,6 +19,7 @@
 #include "item.hh"
 #include "itemimpl.hh"
 #include "container.hh"
+#include "root.hh"
 
 namespace Rapicorn {
 

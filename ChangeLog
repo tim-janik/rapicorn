@@ -1,3 +1,11 @@
+Sun Jun  4 21:46:31 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/container.hh:
+	* rapicorn/container.cc: removed Root declaration and implementation.
+
+	* rapicorn/root.hh:
+	* rapicorn/root.cc: removed Container declaration and implementation.
+
 Sun Jun  4 21:44:08 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/root.hh: CVS copied from container.hh.

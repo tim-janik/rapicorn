@@ -20,6 +20,7 @@
 #include "tableimpl.hh"
 #include "painter.hh"
 #include "factory.hh"
+#include "root.hh"
 
 namespace Rapicorn {
 

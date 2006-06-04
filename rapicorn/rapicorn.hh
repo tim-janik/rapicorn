@@ -36,6 +36,7 @@
 /* conditional: #include <rapicorn/pangolabel.hh> */
 #include <rapicorn/primitives.hh>
 #include <rapicorn/properties.hh>
+#include <rapicorn/root.hh>
 #include <rapicorn/table.hh>
 #include <rapicorn/utilities.hh>
                       

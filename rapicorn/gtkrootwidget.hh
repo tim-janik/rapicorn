@@ -19,7 +19,7 @@
 #ifndef __RAPICORN_GTK_ROOT_WIDGET_HH__
 #define __RAPICORN_GTK_ROOT_WIDGET_HH__
 
-#include <rapicorn/container.hh>
+#include <rapicorn/root.hh>
 
 #if     RAPICORN_WITH_GTK
 #include <gtk/gtkwindow.h>
