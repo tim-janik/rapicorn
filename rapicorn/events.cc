@@ -44,6 +44,7 @@ string_from_event_type (EventType etype)
     case SCROLL_DOWN:           return "ScrollDown";
     case SCROLL_LEFT:           return "ScrollLeft";
     case SCROLL_RIGHT:          return "ScrollRight";
+    case CANCEL_EVENTS:         return "CancelEvents";
     case EVENT_NONE:
     case EVENT_LAST:
       break;
@@ -70,6 +71,14 @@ setup_event (Event              *event,
   event->button = 0;
   event->key = 0;
   event->key_name = "";
+}
+
+Event*
+create_event_cancellation (const EventContext &econtext)
+{
+  Event *event = new Event;
+  setup_event (event, CANCEL_EVENTS, econtext);
+  return event;
 }
 
 EventMouse*

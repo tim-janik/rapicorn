@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include "utilities.hh"
+#include "loop.hh"
 
 namespace Rapicorn {
 
@@ -28,6 +29,8 @@ rapicorn_init (void)
   rapicorn_i18n_domain = RAPICORN_I18N_DOMAIN;
   // bindtextdomain (rapicorn_i18n_domain, dirname);
   bind_textdomain_codeset (rapicorn_i18n_domain, "UTF-8");
+  /* initialize sub components */
+  MainLoopPool::rapicorn_init();
 }
 
 const char*

@@ -66,6 +66,7 @@ typedef enum {
   SCROLL_DOWN,        /* button5 */
   SCROLL_LEFT,        /* button6 */
   SCROLL_RIGHT,       /* button7 */
+  CANCEL_EVENTS,
   EVENT_LAST
 } EventType;
 String string_from_event_type (EventType etype);
@@ -98,16 +99,17 @@ struct EventContext {
   EventContext() : time (0), synthesized (true), modifiers (ModifierState (0)), x (-1), y (-1) {}
 };
 
-EventMouse*     create_event_mouse      (EventType           type,
+Event*       create_event_cancellation  (const EventContext &econtext);
+EventMouse*  create_event_mouse         (EventType           type,
                                          const EventContext &econtext);
-EventButton*    create_event_button     (EventType           type,
+EventButton* create_event_button        (EventType           type,
                                          const EventContext &econtext,
                                          uint                button);
-EventScroll*    create_event_scroll     (EventType           type,
+EventScroll* create_event_scroll        (EventType           type,
                                          const EventContext &econtext);
-EventFocus*     create_event_focus      (EventType           type,
+EventFocus*  create_event_focus         (EventType           type,
                                          const EventContext &econtext);
-EventKey*       create_event_key        (EventType           type,
+EventKey*    create_event_key           (EventType           type,
                                          const EventContext &econtext,
                                          uint32              key,
                                          const char         *name);

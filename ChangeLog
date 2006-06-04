@@ -1,3 +1,14 @@
+Sun Jun  4 21:05:19 2006  Tim Janik  <timj@gtk.org>
+
+	* examples/tour.cc: added main loop test timers.
+
+	* rapicorn/events.hh: 
+	* rapicorn/events.cc: added CANCEL_EVENTS event type.
+
+	* rapicorn/loop.hh:
+	* rapicorn/loop.cc: implemented MainLoop and an asyncronous 
+	threaded MainLoopPool.
+
 Thu Jun  1 19:12:57 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/slider.cc: make use parent_interface<>(), get rid of

@@ -56,14 +56,44 @@ construct_gui (GtkWindow  *window,
   gtk_container_add (GTK_CONTAINER (window), rwidget);
 }
 
+static bool
+timer ()
+{
+  g_printerr ("zoot!\n");
+  return true;
+}
+
+static bool
+timer2 ()
+{
+  g_printerr ("FRUMP!\n");
+  return true;
+}
+
 extern "C" int
 main (int   argc,
       char *argv[])
 {
+  birnet_init (&argc, &argv, "TourTest");
+
   printf ("EXAMPLE: %s:\n", basename (argv[0]));
+
   rapicorn_init ();
+
   gtk_init (&argc, &argv);
 
+  {
+    MainLoop *tloop = glib_loop_create();
+    tloop->idle_timed (250, timer);
+    MainLoopPool::add_loop (tloop);
+  }
+  
+  {
+    MainLoop *tloop = glib_loop_create();
+    tloop->idle_timed (125, timer2);
+    MainLoopPool::add_loop (tloop);
+  }
+  
   GtkWidget *window = gtk_widget_new (GTK_TYPE_WINDOW, NULL);
   gtk_window_set_default_size (GTK_WINDOW (window), 640, 480);
   Gtk::gtk_window_set_min_size (GTK_WINDOW (window), 20, 20);

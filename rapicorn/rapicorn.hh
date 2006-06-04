@@ -20,22 +20,23 @@
 #define __RAPICORN_HH__
 
 /* public include files */
-#include <rapicorn/utilities.hh>
+#include <rapicorn/appearance.hh>
+#include <rapicorn/arrangement.hh>
+#include <rapicorn/buttons.hh>
+#include <rapicorn/container.hh>
 #include <rapicorn/enumdefs.hh>
-#include <rapicorn/primitives.hh>
-#include <rapicorn/painter.hh>
 #include <rapicorn/events.hh>
 #include <rapicorn/factory.hh>
-#include <rapicorn/appearance.hh>
-#include <rapicorn/properties.hh>
-#include <rapicorn/item.hh>
-#include <rapicorn/container.hh>
-#include <rapicorn/arrangement.hh>
-#include <rapicorn/table.hh>
-#include <rapicorn/layoutcontainers.hh>
-#include <rapicorn/paintcontainers.hh>
-#include <rapicorn/buttons.hh>
 #include <rapicorn/image.hh>
+#include <rapicorn/item.hh>
+#include <rapicorn/layoutcontainers.hh>
+#include <rapicorn/loop.hh>
+#include <rapicorn/paintcontainers.hh>
+#include <rapicorn/painter.hh>
 /* conditional: #include <rapicorn/pangolabel.hh> */
+#include <rapicorn/primitives.hh>
+#include <rapicorn/properties.hh>
+#include <rapicorn/table.hh>
+#include <rapicorn/utilities.hh>
                       
 #endif  /* __RAPICORN_HH__ */
