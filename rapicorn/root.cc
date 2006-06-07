@@ -88,55 +88,55 @@ protected:
   EventContext last_event_context;
   vector<Item*> last_entered_children;
   bool
-  dispatch_mouse_movement (const EventContext &econtext)
+  dispatch_mouse_movement (const Event &event)
   {
-    last_event_context = econtext;
-    EventMouse &mevent = *create_event_mouse (MOUSE_MOVE, econtext);
+    last_event_context = event;
     vector<Item*> pierced;
     /* figure all entered children */
     bool unconfined;
     Item *grab_item = get_grab (&unconfined);
     if (grab_item)
       {
-        if (unconfined or grab_item->point (mevent.x, mevent.y, Affine()))
+        if (unconfined or grab_item->point (event.x, event.y, Affine()))
           {
             pierced.push_back (ref (grab_item));        /* grab-item receives all mouse events */
             Container *container = grab_item->interface<Container*>();
             if (container)                              /* deliver to hovered grab-item children as well */
-              container->point_children (mevent.x, mevent.y, Affine(), pierced);
+              container->point_children (event.x, event.y, Affine(), pierced);
           }
       }
     else if (drawable())
       {
         pierced.push_back (ref (this)); /* root receives all mouse events */
         if (m_entered)
-          point_children (mevent.x, mevent.y, Affine(), pierced);
+          point_children (event.x, event.y, Affine(), pierced);
       }
     /* send leave events */
     vector<Item*> left_children = item_difference (last_entered_children, pierced);
-    mevent.type = MOUSE_LEAVE;
+    EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, EventContext (event));
     for (vector<Item*>::reverse_iterator it = left_children.rbegin(); it != left_children.rend(); it++)
-      (*it)->process_event (mevent);
+      (*it)->process_event (*mevent);
     /* send enter events */
     vector<Item*> entered_children = item_difference (pierced, last_entered_children);
-    mevent.type = MOUSE_ENTER;
+    mevent->type = MOUSE_ENTER;
     for (vector<Item*>::reverse_iterator it = entered_children.rbegin(); it != entered_children.rend(); it++)
-      (*it)->process_event (mevent);
+      (*it)->process_event (*mevent);
     /* send actual move event */
     bool handled = false;
-    mevent.type = MOUSE_MOVE;
+    mevent->type = MOUSE_MOVE;
     for (vector<Item*>::reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
       if (!handled && (*it)->sensitive())
-        handled = (*it)->process_event (mevent);
+        handled = (*it)->process_event (*mevent);
     /* cleanup */
-    delete &mevent;
+    mevent->type = MOUSE_LEAVE;
+    delete mevent;
     for (vector<Item*>::reverse_iterator it = last_entered_children.rbegin(); it != last_entered_children.rend(); it++)
       (*it)->unref();
     last_entered_children = pierced;
     return handled;
   }
   bool
-  dispatch_event_to_pierced_or_grab (Event &event)
+  dispatch_event_to_pierced_or_grab (const Event &event)
   {
     vector<Item*> pierced;
     /* figure all entered children */
@@ -173,12 +173,10 @@ private:
   };
   map<ButtonState,uint> button_state_map;
   bool
-  dispatch_button_press (const EventContext &econtext,
-                         uint                button,
-                         uint                press_count)
+  dispatch_button_press (const EventButton &bevent)
   {
+    uint press_count = bevent.type - BUTTON_PRESS + 1;
     assert (press_count >= 1 && press_count <= 3);
-    EventButton &bevent = *create_event_button (press_count == 3 ? BUTTON_3PRESS : press_count == 2 ? BUTTON_2PRESS : BUTTON_PRESS, econtext, button);
     /* figure all entered children */
     const vector<Item*> &pierced = last_entered_children;
     /* send actual event */
@@ -193,32 +191,30 @@ private:
               handled = (*it)->process_event (bevent);
             }
         }
-    delete &bevent;
     return handled;
   }
   bool
-  dispatch_button_release (const EventContext &econtext,
-                           uint                button)
+  dispatch_button_release (const EventButton &bevent)
   {
-    EventButton &bevent = *create_event_button (BUTTON_RELEASE, econtext, button);
     bool handled = false;
     for (map<ButtonState,uint>::iterator it = button_state_map.begin(); it != button_state_map.end();)
       {
         const ButtonState &bs = it->first;
-        uint press_count = it->second;
+        // uint press_count = it->second;
         map<ButtonState,uint>::iterator current = it++;
-        if (bs.button == button)
+        if (bs.button == bevent.button)
           {
+#if 0 // FIXME
             if (press_count == 3)
               bevent.type = BUTTON_3RELEASE;
             else if (press_count == 2)
               bevent.type = BUTTON_2RELEASE;
+#endif
             handled |= bs.item->process_event (bevent);
             button_state_map.erase (current);
           }
       }
-    bevent.type = BUTTON_RELEASE;
-    delete &bevent;
+    // bevent.type = BUTTON_RELEASE;
     return handled;
   }
   void
@@ -251,39 +247,39 @@ private:
           }
       }
   }
-  virtual void cancel_item_events (Item &item) { cancel_item_events (&item); }
-public:
   virtual void
-  dispatch_cancel_events ()
+  cancel_item_events (Item &item)
+  {
+    cancel_item_events (&item);
+  }
+  bool
+  dispatch_cancel_event (const Event &event)
   {
     cancel_item_events (NULL);
+    return false;
   }
-  virtual bool
-  dispatch_enter_event (const EventContext &econtext)
+  bool
+  dispatch_enter_event (const EventMouse &mevent)
   {
-    bool handled = false;
     m_entered = true;
-    dispatch_mouse_movement (econtext);
-    return handled;
+    dispatch_mouse_movement (mevent);
+    return false;
   }
   virtual bool
-  dispatch_move_event (const EventContext &econtext)
+  dispatch_move_event (const EventMouse &mevent)
   {
-    bool handled = false;
-    handled = dispatch_mouse_movement (econtext);
-    return handled;
+    dispatch_mouse_movement (mevent);
+    return false;
   }
-  virtual bool
-  dispatch_leave_event (const EventContext &econtext)
+  bool
+  dispatch_leave_event (const EventMouse &mevent)
   {
-    bool handled = false;
-    dispatch_mouse_movement (econtext);
+    dispatch_mouse_movement (mevent);
     m_entered = false;
     if (get_grab ())
       ; /* leave events in grab mode are automatically calculated */
     else
       {
-        EventMouse &mevent = *create_event_mouse (MOUSE_LEAVE, econtext);
         /* send leave events */
         while (last_entered_children.size())
           {
@@ -292,59 +288,69 @@ public:
             item->process_event (mevent);
             item->unref();
           }
-        delete &mevent;
+      }
+    return false;
+  }
+  bool
+  dispatch_button_event (const Event &event)
+  {
+    bool handled = false;
+    const EventButton *bevent = dynamic_cast<const EventButton*> (&event);
+    if (bevent)
+      {
+        dispatch_mouse_movement (*bevent);
+        if (bevent->type >= BUTTON_PRESS && bevent->type <= BUTTON_3PRESS)
+          handled = dispatch_button_press (*bevent);
+        else
+          handled = dispatch_button_release (*bevent);
+        dispatch_mouse_movement (*bevent);
       }
     return handled;
   }
-  virtual bool
-  dispatch_button_event (const EventContext &econtext,
-                         bool                is_press,
-                         uint                button)
+  bool
+  dispatch_focus_event (const EventFocus &fevent)
   {
     bool handled = false;
-    dispatch_mouse_movement (econtext);
-    if (is_press)
-      handled = dispatch_button_press (econtext, button, 1);
-    else
-      handled = dispatch_button_release (econtext, button);
-    dispatch_mouse_movement (econtext);
+    // dispatch_event_to_pierced_or_grab (*fevent);
+    dispatch_mouse_movement (fevent);
     return handled;
   }
-  virtual bool
-  dispatch_focus_event (const EventContext &econtext,
-                        bool                is_in)
-  {
-    dispatch_mouse_movement (econtext);
-    EventFocus *fevent = create_event_focus (is_in ? FOCUS_IN : FOCUS_OUT, econtext);
-    bool handled = false; // dispatch_event_to_pierced_or_grab (*fevent);
-    delete fevent;
-    return handled;
-  }
-  virtual bool
-  dispatch_key_event (const EventContext &econtext,
-                      bool                is_press,
-                      KeyValue            key,
-                      const char         *key_name)
-  {
-    dispatch_mouse_movement (econtext);
-    EventKey *kevent = create_event_key (is_press ? KEY_PRESS : KEY_RELEASE, econtext, key, key_name);
-    Item *grab_item = get_grab();
-    grab_item = grab_item ? grab_item : this;
-    bool handled = grab_item->process_event (*kevent);
-    delete kevent;
-    return handled;
-  }
-  virtual bool
-  dispatch_scroll_event (const EventContext &econtext,
-                         EventType           scroll_type)
+  bool
+  dispatch_key_event (const Event &event)
   {
     bool handled = false;
-    if (scroll_type == SCROLL_UP || scroll_type == SCROLL_RIGHT || scroll_type == SCROLL_DOWN || scroll_type == SCROLL_LEFT)
+    const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
+    if (kevent)
       {
-        dispatch_mouse_movement (econtext);
-        EventScroll *sevent = create_event_scroll (scroll_type, econtext);
-        handled = dispatch_event_to_pierced_or_grab (*sevent);
-        delete sevent;
+        dispatch_mouse_movement (*kevent);
+        Item *grab_item = get_grab();
+        grab_item = grab_item ? grab_item : this;
+        handled = grab_item->process_event (*kevent);
+      }
+    return handled;
+  }
+  bool
+  dispatch_scroll_event (const EventScroll &sevent)
+  {
+    bool handled = false;
+    if (sevent.type == SCROLL_UP || sevent.type == SCROLL_RIGHT ||
+        sevent.type == SCROLL_DOWN || sevent.type == SCROLL_LEFT)
+      {
+        dispatch_mouse_movement (sevent);
+        handled = dispatch_event_to_pierced_or_grab (sevent);
+      }
+    return handled;
+  }
+  bool
+  dispatch_win_size_event (const Event &event)
+  {
+    bool handled = false;
+    const EventWinSize *wevent = dynamic_cast<const EventWinSize*> (&event);
+    if (wevent)
+      {
+        Allocation allocation (0, 0, wevent->width, wevent->height);
+        set_allocation (allocation);
+        handled = true;
       }
     return handled;
   }
@@ -375,10 +381,12 @@ private:
   grab_stack_changed()
   {
     // FIXME: use idle handler for event synthesis
-    dispatch_move_event (last_event_context);
+    EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, last_event_context);
+    dispatch_mouse_movement (*mevent);
     /* synthesize neccessary leaves after grabbing */
     if (!grab_stack.size() && !m_entered)
-      dispatch_leave_event (last_event_context);
+      dispatch_event (*mevent);
+    delete mevent;
   }
 public:
   virtual void
@@ -439,6 +447,73 @@ public:
     display.render_combined (plane);
     display.pop_clip_rect();
     display.pop_clip_rect();
+  }
+  virtual bool
+  dispatch_event (const Event &event)
+  {
+    switch (event.type)
+      {
+      case EVENT_NONE:          return false;
+      case MOUSE_ENTER:         return dispatch_enter_event (event);
+      case MOUSE_MOVE:          return dispatch_move_event (event);
+      case MOUSE_LEAVE:         return dispatch_leave_event (event);
+      case BUTTON_PRESS:
+      case BUTTON_2PRESS:
+      case BUTTON_3PRESS:
+      case BUTTON_CANCELED:
+      case BUTTON_RELEASE:
+      case BUTTON_2RELEASE:
+      case BUTTON_3RELEASE:     return dispatch_button_event (event);
+      case FOCUS_IN:
+      case FOCUS_OUT:           return dispatch_focus_event (event);
+      case KEY_PRESS:
+      case KEY_CANCELED:
+      case KEY_RELEASE:         return dispatch_key_event (event);
+      case SCROLL_UP:          /* button4 */
+      case SCROLL_DOWN:        /* button5 */
+      case SCROLL_LEFT:        /* button6 */
+      case SCROLL_RIGHT:       /* button7 */
+        /**/                    return dispatch_scroll_event (event);
+      case CANCEL_EVENTS:       return dispatch_cancel_event (event);
+      case WIN_SIZE:            return dispatch_win_size_event (event);
+      default:
+      case EVENT_LAST:          return false;
+      }
+  }
+  /* event queue */
+  Mutex m_loop_mutex;
+  std::list<Event*> m_event_queue;
+  virtual bool
+  prepare (uint64 current_time_usecs,
+           int   *timeout_msecs_p)
+  {
+    AutoLocker locker (m_loop_mutex);
+    return m_event_queue.size() > 0;
+  }
+  virtual bool
+  check (uint64 current_time_usecs)
+  {
+    AutoLocker locker (m_loop_mutex);
+    return m_event_queue.size() > 0;
+  }
+  virtual bool
+  dispatch ()
+  {
+    AutoLocker locker (m_loop_mutex);
+    if (m_event_queue.size())
+      {
+        Event *event = m_event_queue.front();
+        m_event_queue.pop_front();
+        dispatch_event (*event);
+        delete event;
+      }
+    return true;
+  }
+  virtual void
+  enqueue_async (Event *event)
+  {
+    AutoLocker locker (m_loop_mutex);
+    m_event_queue.push_back (event);
   }
 };
 

@@ -244,10 +244,7 @@ protected:
       case BUTTON_CANCELED:
         /* forward button events to allow slider warps */
         if (has_visible_child())
-          {
-            Event cevent = event;
-            handled = get_child().process_event (cevent);
-          }
+          handled = get_child().process_event (event);
         break;
       case SCROLL_UP:
       case SCROLL_RIGHT:
@@ -335,6 +332,7 @@ protected:
     Adjustment &adj = *trough.adjustment();
     switch (event.type)
       {
+        const EventButton *bevent;
       case MOUSE_ENTER:
         this->prelight (true);
         break;
@@ -344,9 +342,10 @@ protected:
       case BUTTON_PRESS:
       case BUTTON_2PRESS:
       case BUTTON_3PRESS:
-        if (!m_button and (event.button == 1 or event.button == 2))
+        bevent = dynamic_cast<const EventButton*> (&event);
+        if (!m_button and (bevent->button == 1 or bevent->button == 2))
           {
-            m_button = event.button;
+            m_button = bevent->button;
             root()->add_grab (this, true);
             handled = true;
             m_coffset = 0;
@@ -396,7 +395,8 @@ protected:
       case BUTTON_3RELEASE:
         proper_release = true;
       case BUTTON_CANCELED:
-        if (m_button == event.button)
+        bevent = dynamic_cast<const EventButton*> (&event);
+        if (m_button == bevent->button)
           {
             root()->remove_grab (this);
             m_button = 0;

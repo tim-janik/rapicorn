@@ -180,10 +180,10 @@ public:
   Signal<Item, void (Item *oldt)> sig_hierarchy_changed;
 public:
   /* event handling */
-  bool                        process_event     (Event     &event);
-  virtual bool                point             (double     x,  /* global coordinate system */
-                                                 double     y,
-                                                 Affine     affine) = 0;
+  bool                        process_event     (const Event &event);
+  virtual bool                point             (double       x,                /* global coordinate system */
+                                                 double       y,
+                                                 Affine       affine) = 0;
   /* public size accessors */
   virtual const Requisition&  size_request      () = 0;                       /* re-request size */
   const Requisition&          requisition       () { return size_request(); } /* cached requisition */

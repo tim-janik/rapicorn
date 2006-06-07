@@ -71,6 +71,7 @@ public:
     bool handled = false, proper_release = false;
     switch (event.type)
       {
+        const EventButton *bevent;
       case MOUSE_ENTER:
         view.impressed (m_button != 0);
         view.prelight (true);
@@ -82,10 +83,11 @@ public:
       case BUTTON_PRESS:
       case BUTTON_2PRESS:
       case BUTTON_3PRESS:
-        if (!m_button and event.button >= 1 and event.button <= 3 and
-            m_on_click[event.button - 1] != "")
+        bevent = dynamic_cast<const EventButton*> (&event);
+        if (!m_button and bevent->button >= 1 and bevent->button <= 3 and
+            m_on_click[bevent->button - 1] != "")
           {
-            m_button = event.button;
+            m_button = bevent->button;
             view.impressed (true);
             view.root()->add_grab (view);
             handled = true;
@@ -96,7 +98,8 @@ public:
       case BUTTON_3RELEASE:
         proper_release = true;
       case BUTTON_CANCELED:
-        if (m_button == event.button)
+        bevent = dynamic_cast<const EventButton*> (&event);
+        if (m_button == bevent->button)
           {
             bool inbutton = view.prelight();
             view.root()->remove_grab (view);
@@ -104,9 +107,9 @@ public:
             view.impressed (false);
             handled = true;
             if (proper_release and inbutton and
-                event.button >= 1 and event.button <= 3 and
-                m_on_click[event.button - 1] != "")
-              exec_command (m_on_click[event.button - 1], std::nothrow);
+                bevent->button >= 1 and bevent->button <= 3 and
+                m_on_click[bevent->button - 1] != "")
+              exec_command (m_on_click[bevent->button - 1], std::nothrow);
           }
         break;
       case KEY_PRESS:

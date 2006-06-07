@@ -141,11 +141,11 @@ Rect
 ArrangementImpl::child_area ()
 {
   Rect rect; /* empty */
-  Allocation area = allocation();
+  Allocation parea = allocation();
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       Item &child = *cw;
-      Allocation area = local_child_allocation (child, area.width, area.height);
+      Allocation area = local_child_allocation (child, parea.width, parea.height);
       rect.rect_union (Rect (Point (area.x, area.y), 1, 1));
       rect.rect_union (Rect (Point (area.x + area.width - 1, area.y + area.height - 1), 1, 1));
     }

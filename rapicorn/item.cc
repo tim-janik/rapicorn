@@ -408,7 +408,7 @@ Item::style (Style *st)
 }
 
 bool
-Item::process_event (Event &event)
+Item::process_event (const Event &event)
 {
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
   bool handled = false;

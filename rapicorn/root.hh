@@ -20,44 +20,33 @@
 #define __RAPICORN_ROOT_HH__
 
 #include <rapicorn/container.hh>
+#include <rapicorn/loop.hh>
 
 namespace Rapicorn {
 
 /* --- Root --- */
-class Root : public virtual Container {
+class Root : public virtual Container, public virtual MainLoop::Source {
 protected:
-  explicit      Root            ();
-  virtual void  cancel_item_events      (Item               &item) = 0;
+  explicit      Root                    ();
+  virtual void  cancel_item_events      (Item        &item) = 0;
+  virtual bool  dispatch_event          (const Event &event) = 0;
+  /* loop source (FIXME) */
+  virtual bool  prepare                 (uint64 current_time_usecs,
+                                         int   *timeout_msecs_p) = 0;
+public://FIXME: protected:
+  virtual bool  check                   (uint64 current_time_usecs) = 0;
+  virtual bool  dispatch                () = 0;
 public:
+  virtual void  enqueue_async           (Event              *event) = 0;
   Signal<Container, void (const Allocation&)> sig_expose;
   virtual void  render                  (Plane &plane) = 0;
-  /* events */
-  virtual void  dispatch_cancel_events  () = 0;
-  virtual bool  dispatch_enter_event    (const EventContext &econtext) = 0;
-  virtual bool  dispatch_move_event     (const EventContext &econtext) = 0;
-  virtual bool  dispatch_leave_event    (const EventContext &econtext) = 0;
-  virtual bool  dispatch_button_event   (const EventContext &econtext,
-                                         bool                is_press,
-                                         uint                button) = 0;
-  virtual bool  dispatch_focus_event    (const EventContext &econtext,
-                                         bool                is_in) = 0;
-  virtual bool  dispatch_key_event      (const EventContext &econtext,
-                                         bool                is_press,
-                                         KeyValue            key,
-                                         const char         *key_name) = 0;
-  virtual bool  dispatch_scroll_event   (const EventContext &econtext,
-                                         EventType           scroll_type) = 0;
-  virtual void  add_grab                (Item   &child,
-                                         bool    unconfined = false) = 0;
-  void          add_grab                (Item   *child,
-                                         bool    unconfined = false)
-  {
-    throw_if_null (child);
-    return add_grab (*child, unconfined);
-  }
-  virtual void  remove_grab             (Item               &child) = 0;
-  void          remove_grab             (Item               *child)     { throw_if_null (child); return remove_grab (*child); }
-  virtual Item* get_grab                (bool   *unconfined = NULL) = 0;
+  virtual void  add_grab                (Item  &child,
+                                         bool   unconfined = false) = 0;
+  void          add_grab                (Item  *child,
+                                         bool   unconfined = false)    { throw_if_null (child); return add_grab (*child, unconfined); }
+  virtual void  remove_grab             (Item  &child) = 0;
+  void          remove_grab             (Item  *child)     { throw_if_null (child); return remove_grab (*child); }
+  virtual Item* get_grab                (bool  *unconfined = NULL) = 0;
 };
 
 } // Rapicorn

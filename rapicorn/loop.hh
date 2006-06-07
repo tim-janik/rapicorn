@@ -75,7 +75,6 @@ private:
     explicit TimedSource (Func func,
                           uint interval_msecs);
   };
-  static uint64     get_current_time_usecs();
   static const uint PRIORITY_NOW        = -G_MAXINT / 2;                /* most important, used for immediate async execution */
   static const uint PRIORITY_HIGH       = G_PRIORITY_HIGH - 10;         /* very important, used for io handlers */
   static const uint PRIORITY_NEXT       = G_PRIORITY_HIGH - 5;          /* still very important, used for need-to-be-async operations */
@@ -84,6 +83,7 @@ private:
   static const uint PRIORITY_UPDATE     = G_PRIORITY_HIGH_IDLE + 5;     /* mildly important, used for GUI updates or user information */
   static const uint PRIORITY_BACKGROUND = G_PRIORITY_LOW + 500;         /* unimportant, used when everything else done */
 public:
+  static uint64                 get_current_time_usecs(); // FIXME: should move this to birnetutilsxx.hh
   virtual void                  quit            (void) = 0;
   virtual bool                  running         (void) = 0;
   virtual uint                  add_source      (int     priority,

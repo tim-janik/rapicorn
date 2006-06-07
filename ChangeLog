@@ -1,3 +1,28 @@
+Wed Jun  7 02:35:47 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/root.hh, rapicorn/root.cc:
+	rewrote event management code, many type fixups, const corrections
+	and memory management fixups. disabled double/triple button press
+	delivery. offer a centralized dispatch_event() method. staerted
+	implementaiton of Root as an asyncronous thread loop source with
+	asyncronous event queue.
+
+	* rapicorn/events.hh, rapicorn/events.cc: added WIN_SIZE event.
+	properly derived some event types. made event construction private
+	so create_event_*() API _must_ be used to create events.
+	added convenience methods to EventContext.
+
+	* rapicorn/gtkrootwidget.cc: 
+	* rapicorn/item.cc, rapicorn/item.hh:
+	* rapicorn/buttons.cc:
+	* rapicorn/slider.cc: fixed Event type, memory and const management.
+
+	* rapicorn/loop.hh: export get_current_time_usecs() until utils supplies this.
+
+	* rapicorn/arrangement.cc: buglet fixup.
+
+	* rapicorn/birnetutils.hh: removed binary lookup which is provided by Birnet now.
+
 Sun Jun  4 21:46:31 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/container.hh:

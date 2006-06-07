@@ -23,9 +23,12 @@ namespace Rapicorn {
 namespace Gtk {
 
 /* --- prototypes --- */
-static gboolean root_widget_ancestor_event      (GtkWidget *ancestor, GdkEvent *event, GtkWidget *widget);
-static bool     gdk_window_has_ancestor         (GdkWindow *window, GdkWindow *ancestor);
-static void     call_me                         (GdkWindow *window);
+static gboolean     root_widget_ancestor_event  (GtkWidget *ancestor, GdkEvent *event, GtkWidget *widget);
+static EventContext root_widget_event_context   (GtkWidget *widget,
+                                                 GdkEvent  *event = NULL,
+                                                 gint      *window_height = NULL);
+static bool         gdk_window_has_ancestor     (GdkWindow *window, GdkWindow *ancestor);
+static void         call_me                     (GdkWindow *window);
 
 /* --- type definition --- */
 typedef RootWidget      BirnetCanvasGtkRootWidget;
@@ -38,6 +41,7 @@ root_widget_init (RootWidget *self)
 {
   GtkWidget *widget = GTK_WIDGET (self);
   self->root = NULL;
+  self->last_time = 0;
   self->last_x = -1;
   self->last_y = -1;
   self->last_modifier = GdkModifierType (0);
@@ -54,7 +58,7 @@ root_widget_size_request (GtkWidget      *widget,
   Root *root = self->root;
   if (root)
     {
-      Requisition rq = root->size_request();
+      Requisition rq = root->size_request();    // FIXME: direct root call
       requisition->width = iceil (rq.width);
       requisition->height = iceil (rq.height);
     }
@@ -67,17 +71,17 @@ root_widget_size_allocate (GtkWidget      *widget,
   widget->allocation = *allocation;
   RootWidget *self = BIRNET_CANVAS_GTK_ROOT_WIDGET (widget);
   Root *root = self->root;
-  if (root)
-    {
-      Allocation area;
-      area.width = allocation->width;
-      area.height = allocation->height;
-      root->set_allocation (area);
-    }
   if (GTK_WIDGET_REALIZED (widget))
     {
       gdk_window_move_resize (widget->window, allocation->x, allocation->y, allocation->width, allocation->height);
       gdk_flush(); /* resize now, so gravity settings take effect immediately */
+    }
+  if (root)
+    {
+      /* root_widget_event_context() relies on a proper GdkWindow size */
+      root->enqueue_async (create_event_win_size (root_widget_event_context (widget), allocation->width, allocation->height));
+      while (root->check (MainLoop::get_current_time_usecs()))
+        root->dispatch();
     }
 }
 
@@ -136,8 +140,72 @@ root_widget_unrealize (GtkWidget *widget)
   GtkWidget *toplevel = gtk_widget_get_toplevel (widget);
   g_signal_handlers_disconnect_by_func (toplevel, (void*) (root_widget_ancestor_event), self);
   if (root)
-    root->dispatch_cancel_events ();
+    root->enqueue_async (create_event_cancellation (root_widget_event_context (widget)));
   GTK_WIDGET_CLASS (root_widget_parent_class)->unrealize (widget);
+  while (root->check (MainLoop::get_current_time_usecs()))
+    root->dispatch();
+}
+
+static EventContext
+root_widget_event_context (GtkWidget *widget,
+                           GdkEvent  *event,
+                           gint      *window_height)
+{
+  RootWidget *self = BIRNET_CANVAS_GTK_ROOT_WIDGET (widget);
+  /* extract common event information */
+  EventContext econtext;
+  double doublex, doubley;
+  GdkModifierType modifier_type;
+  gint ww = 0, wh = 0;
+  if (widget->window)
+    {
+      GdkWindow *window = widget->window;
+      gdk_window_get_size (window, &ww, &wh);
+      if (event)
+        {
+          if (event->any.window == window &&
+              gdk_event_get_coords (event, &doublex, &doubley) &&
+              gdk_event_get_state (event, &modifier_type))
+            {
+              self->last_time = gdk_event_get_time (event);
+              self->last_x = doublex;
+              self->last_y = doubley;
+              self->last_modifier = modifier_type;
+            }
+          econtext.time = self->last_time;
+          econtext.synthesized = event->any.send_event;
+          doublex = self->last_x;
+          doubley = self->last_y;
+          modifier_type = self->last_modifier;
+        }
+      else
+        {
+          econtext.time = self->last_time;
+          econtext.synthesized = true;
+          doublex = -1;
+          doubley = -1;
+          modifier_type = GdkModifierType (0);
+        }
+    }
+  econtext.x = iround (doublex);
+  /* vertical canvas/plane axis extends upwards */
+  econtext.y = iround (wh - doubley);
+  /* ensure modifier compatibility */
+  econtext.modifiers = ModifierState (modifier_type);
+  BIRNET_STATIC_ASSERT (GDK_SHIFT_MASK   == (int) MOD_SHIFT);
+  BIRNET_STATIC_ASSERT (GDK_LOCK_MASK    == (int) MOD_CAPS_LOCK);
+  BIRNET_STATIC_ASSERT (GDK_CONTROL_MASK == (int) MOD_CONTROL);
+  BIRNET_STATIC_ASSERT (GDK_MOD1_MASK    == (int) MOD_MOD1);
+  BIRNET_STATIC_ASSERT (GDK_MOD2_MASK    == (int) MOD_MOD2);
+  BIRNET_STATIC_ASSERT (GDK_MOD3_MASK    == (int) MOD_MOD3);
+  BIRNET_STATIC_ASSERT (GDK_MOD4_MASK    == (int) MOD_MOD4);
+  BIRNET_STATIC_ASSERT (GDK_MOD5_MASK    == (int) MOD_MOD5);
+  BIRNET_STATIC_ASSERT (GDK_BUTTON1_MASK == (int) MOD_BUTTON1);
+  BIRNET_STATIC_ASSERT (GDK_BUTTON2_MASK == (int) MOD_BUTTON2);
+  BIRNET_STATIC_ASSERT (GDK_BUTTON3_MASK == (int) MOD_BUTTON3);
+  if (window_height)
+    *window_height = wh;
+  return econtext;
 }
 
 static gboolean
@@ -149,48 +217,10 @@ root_widget_event (GtkWidget *widget,
   if (!root)
     return false;
   bool handled = FALSE;
-  /* extract common event information */
   GdkWindow *window = widget->window;
-  EventContext econtext;
-  gint ww, wh;
-  if (true)
-    {
-      gdk_window_get_size (window, &ww, &wh);
-      double doublex, doubley;
-      GdkModifierType modifier_type;
-      if (event->any.window == window &&
-          gdk_event_get_coords (event, &doublex, &doubley) &&
-          gdk_event_get_state (event, &modifier_type))
-        {
-          self->last_x = doublex;
-          self->last_y = doubley;
-          self->last_modifier = modifier_type;
-        }
-      else
-        {
-          doublex = self->last_x;
-          doubley = self->last_y;
-          modifier_type = self->last_modifier;
-        }
-      econtext.time = gdk_event_get_time (event);
-      econtext.synthesized = event->any.send_event;
-      econtext.x = iround (doublex);
-      /* vertical canvas/plane axis extends upwards */
-      econtext.y = iround (wh - doubley);
-      /* ensure modifier compatibility */
-      econtext.modifiers = ModifierState (modifier_type);
-      static_assert (GDK_SHIFT_MASK   == (int) MOD_SHIFT);
-      static_assert (GDK_LOCK_MASK    == (int) MOD_CAPS_LOCK);
-      static_assert (GDK_CONTROL_MASK == (int) MOD_CONTROL);
-      static_assert (GDK_MOD1_MASK    == (int) MOD_MOD1);
-      static_assert (GDK_MOD2_MASK    == (int) MOD_MOD2);
-      static_assert (GDK_MOD3_MASK    == (int) MOD_MOD3);
-      static_assert (GDK_MOD4_MASK    == (int) MOD_MOD4);
-      static_assert (GDK_MOD5_MASK    == (int) MOD_MOD5);
-      static_assert (GDK_BUTTON1_MASK == (int) MOD_BUTTON1);
-      static_assert (GDK_BUTTON2_MASK == (int) MOD_BUTTON2);
-      static_assert (GDK_BUTTON3_MASK == (int) MOD_BUTTON3);
-    }
+  /* extract common event information */
+  gint window_height = 0;
+  EventContext econtext = root_widget_event_context (widget, event, &window_height);
   /* debug events */
   if (0)
     {
@@ -241,60 +271,66 @@ root_widget_event (GtkWidget *widget,
   switch (event->type)
     {
     case GDK_ENTER_NOTIFY:
-      if (event->crossing.detail == GDK_NOTIFY_INFERIOR)
-        handled = root->dispatch_move_event (econtext);
-      else
-        handled = root->dispatch_enter_event (econtext);
+      root->enqueue_async (create_event_mouse (event->crossing.detail == GDK_NOTIFY_INFERIOR ? MOUSE_MOVE : MOUSE_ENTER, econtext));
       break;
     case GDK_MOTION_NOTIFY:
-      handled = root->dispatch_move_event (econtext);
+      root->enqueue_async (create_event_mouse (MOUSE_MOVE, econtext));
       /* trigger new motion events (since we use motion-hint) */
-      if (event->any.window == window)
+      if (event->any.window == window) // FIXME: should be executed after the move event was processed
         gdk_window_get_pointer (window, NULL, NULL, NULL);
       break;
     case GDK_LEAVE_NOTIFY:
-      if (event->crossing.detail == GDK_NOTIFY_INFERIOR)
-        handled = root->dispatch_move_event (econtext);
-      else
-        handled = root->dispatch_leave_event (econtext);
+      root->enqueue_async (create_event_mouse (event->crossing.detail == GDK_NOTIFY_INFERIOR ? MOUSE_MOVE : MOUSE_LEAVE, econtext));
       break;
     case GDK_KEY_PRESS:
     case GDK_KEY_RELEASE:
       char *key_name;
       key_name = g_strndup (event->key.string, event->key.length);
       /* KeyValue is modelled to match GDK keyval */
-      handled = root->dispatch_key_event (econtext, event->type == GDK_KEY_PRESS, KeyValue (event->key.keyval), key_name);
+      // FIXME: handled = root->dispatch_key_event (econtext, event->type == GDK_KEY_PRESS, KeyValue (event->key.keyval), key_name);
+      root->enqueue_async (create_event_key (event->type == GDK_KEY_PRESS ? KEY_PRESS : KEY_RELEASE, econtext, KeyValue (event->key.keyval), key_name));
+      handled = TRUE;
       g_free (key_name);
       break;
+    case GDK_FOCUS_CHANGE:
+      root->enqueue_async (create_event_focus (event->focus_change.in ? FOCUS_IN : FOCUS_OUT, econtext));
+      break;
     case GDK_BUTTON_PRESS:
+      root->enqueue_async (create_event_button (BUTTON_PRESS, econtext, event->button.button));
+      handled = TRUE;
+      // FIXME: handled = root->dispatch_button_event (econtext, true, event->button.button);
+      break;
     case GDK_2BUTTON_PRESS:
+      root->enqueue_async (create_event_button (BUTTON_PRESS, econtext, event->button.button));
+      handled = TRUE;
+      break;
     case GDK_3BUTTON_PRESS:
-      handled = root->dispatch_button_event (econtext, true, event->button.button);
+      root->enqueue_async (create_event_button (BUTTON_PRESS, econtext, event->button.button));
+      handled = TRUE;
       break;
     case GDK_BUTTON_RELEASE:
-      handled = root->dispatch_button_event (econtext, false, event->button.button);
+      root->enqueue_async (create_event_button (BUTTON_RELEASE, econtext, event->button.button));
+      handled = TRUE;
       break;
     case GDK_SCROLL:
       if (event->scroll.direction == GDK_SCROLL_UP)
-        handled = root->dispatch_scroll_event (econtext, SCROLL_UP);
+        root->enqueue_async (create_event_scroll (SCROLL_UP, econtext));
       else if (event->scroll.direction == GDK_SCROLL_LEFT)
-        handled = root->dispatch_scroll_event (econtext, SCROLL_LEFT);
+        root->enqueue_async (create_event_scroll (SCROLL_LEFT, econtext));
       else if (event->scroll.direction == GDK_SCROLL_RIGHT)
-        handled = root->dispatch_scroll_event (econtext, SCROLL_RIGHT);
+        root->enqueue_async (create_event_scroll (SCROLL_RIGHT, econtext));
       else if (event->scroll.direction == GDK_SCROLL_DOWN)
-        handled = root->dispatch_scroll_event (econtext, SCROLL_DOWN);
-      break;
-    case GDK_FOCUS_CHANGE:
-      handled = root->dispatch_focus_event (econtext, event->focus_change.in);
+        root->enqueue_async (create_event_scroll (SCROLL_DOWN, econtext));
+      handled = TRUE;
       break;
     case GDK_DELETE:
     case GDK_DESTROY:
     case GDK_UNMAP:
-      root->dispatch_cancel_events ();
+      root->enqueue_async (create_event_cancellation (econtext));
       break;
     case GDK_VISIBILITY_NOTIFY:
       if (event->visibility.state == GDK_VISIBILITY_FULLY_OBSCURED)
-        root->dispatch_cancel_events ();
+        root->enqueue_async (create_event_cancellation (econtext));
       call_me (window);
       break;
     case GDK_EXPOSE:
@@ -327,10 +363,10 @@ root_widget_event (GtkWidget *widget,
               {
                 gint x = area->x + n, y = area->y + m, w = MIN (nl, area->width - n), h = MIN (ml, area->height - m);
                 /* vertical canvas/plane axis extends upwards */
-                gint realy = wh - (y + h);
+                gint realy = window_height - (y + h);
                 /* render canvas contents */
                 Plane plane (x, realy, w, h);
-                root->render (plane);
+                root->render (plane); // FIXME: direct root call
                 /* blit to screen */
                 GdkPixbuf *pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE /* alpha */, 8 /* bits */, plane.width(), plane.height());
                 if (plane.rgb_convert (gdk_pixbuf_get_width (pixbuf), gdk_pixbuf_get_height (pixbuf),
@@ -352,6 +388,8 @@ root_widget_event (GtkWidget *widget,
       /* nothing to forward */
       break;
     }
+  while (root->check (MainLoop::get_current_time_usecs()))
+    root->dispatch();
   return handled;
 }
 
@@ -362,6 +400,7 @@ root_widget_ancestor_event (GtkWidget *ancestor,
 {
   RootWidget *self = BIRNET_CANVAS_GTK_ROOT_WIDGET (widget);
   Root *root = self->root;
+  EventContext econtext = root_widget_event_context (widget, event);
   if (!root)
     return false;
   switch (event->type)
@@ -370,20 +409,22 @@ root_widget_ancestor_event (GtkWidget *ancestor,
     case GDK_DESTROY:
     case GDK_UNMAP:
       if (widget->window && gdk_window_has_ancestor (widget->window, ancestor->window))
-        root->dispatch_cancel_events ();
+        root->enqueue_async (create_event_cancellation (econtext));
       break;
     case GDK_WINDOW_STATE:
       if ((event->window_state.new_window_state & (GDK_WINDOW_STATE_WITHDRAWN | GDK_WINDOW_STATE_ICONIFIED)) &&
           widget->window && gdk_window_has_ancestor (widget->window, ancestor->window))
-        root->dispatch_cancel_events ();
+        root->enqueue_async (create_event_cancellation (econtext));
       break;
     case GDK_VISIBILITY_NOTIFY:
       if (event->visibility.state == GDK_VISIBILITY_FULLY_OBSCURED &&
           widget->window && gdk_window_has_ancestor (widget->window, ancestor->window))
-        root->dispatch_cancel_events ();
+        root->enqueue_async (create_event_cancellation (econtext));
       break;
     default: break;
     }
+  while (root->check (MainLoop::get_current_time_usecs()))
+    root->dispatch();
   return false;
 }
 
@@ -394,6 +435,8 @@ root_widget_dispose (GObject *object)
   Root *root = self->root;
   if (root)
     {
+      while (root->check (MainLoop::get_current_time_usecs()))
+        root->dispatch();
       root->ref_diag ("Root");
       root->unref();
       self->root = NULL;
@@ -423,7 +466,9 @@ public:
   invalidated ()
   {
     GtkWidget *widget = GTK_WIDGET (self);
+    GDK_THREADS_ENTER ();
     gtk_widget_queue_resize (widget);
+    GDK_THREADS_LEAVE ();
   }
   void
   delete_this ()
@@ -436,10 +481,12 @@ public:
     GtkWidget *widget = GTK_WIDGET (self);
     if (widget->window)
       {
+        GDK_THREADS_ENTER ();
         gint ww, wh;
         gdk_window_get_size (widget->window, &ww, &wh);
         /* vertical canvas/plane axis extends upwards */
         gtk_widget_queue_draw_area (widget, area.x, wh - area.y - area.height, area.width, area.height);
+        GDK_THREADS_LEAVE ();
       }
   }
   RootWidgetTrampoline (RootWidget *cself) :

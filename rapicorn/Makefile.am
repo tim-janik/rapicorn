@@ -12,9 +12,9 @@ rapicorn_public_headers = $(strip 	\
 	$(rapicorn_impl_headers)	\
 	primitives.hh	birnetutils.hh	birnetmarkup.hh	utilities.hh	enumdefs.hh	paintcontainers.hh	\
 	appearance.hh	events.hh	item.hh		container.hh	factory.hh	layoutcontainers.hh	\
-	commands.hh	properties.hh	adjustment.hh	painter.hh	cairocontext.hh	gtkrootwidget.hh	\
 	paintgadgets.hh	slider.hh	buttons.hh	image.hh	arrangement.hh	\
 	table.hh	pangolabel.hh	loop.hh		root.hh		\
+	commands.hh	properties.hh	adjustment.hh	painter.hh	cairocontext.hh	gtkrootwidget.hh	\
 )
 rapicorn_impl_headers = $(strip 	\
 	itemimpl.hh			\
@@ -25,9 +25,9 @@ rapicorn_impl_headers = $(strip 	\
 rapicorn_cc_sources = $(strip 		\
 	primitives.cc	birnetutils.cc	birnetmarkup.cc	utilities.cc	enumdefs.cc	paintcontainers.cc	\
 	appearance.cc	events.cc	item.cc		container.cc	factory.cc	layoutcontainers.cc	\
-	commands.cc	properties.cc	adjustment.cc	painter.cc	cairocontext.cc	gtkrootwidget.cc	\
 	paintgadgets.cc	slider.cc	buttons.cc	image.cc	arrangement.cc	\
-	table.cc	pangolabel.cc	loop.cc		root.cc		\
+	table.cc	pangolabel.cc	loop.cc		root.cc 	\
+	commands.cc	properties.cc	adjustment.cc	painter.cc	cairocontext.cc	gtkrootwidget.cc	\
 )
 rapicorn_private_headers = $(strip 	\
 	private.hh			\

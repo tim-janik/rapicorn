@@ -45,6 +45,7 @@ string_from_event_type (EventType etype)
     case SCROLL_LEFT:           return "ScrollLeft";
     case SCROLL_RIGHT:          return "ScrollRight";
     case CANCEL_EVENTS:         return "CancelEvents";
+    case WIN_SIZE:              return "WinSize";
     case EVENT_NONE:
     case EVENT_LAST:
       break;
@@ -52,32 +53,61 @@ string_from_event_type (EventType etype)
   return "<unknown>";
 }
 
+EventContext::EventContext () :
+  time (0), synthesized (true),
+  modifiers (ModifierState (0)),
+  x (-1), y (-1)
+{}
+
+EventContext::EventContext (const Event &event) :
+  time (event.time), synthesized (event.synthesized),
+  modifiers (event.modifiers),
+  x (event.x), y (event.y)
+{}
+
+EventContext&
+EventContext::operator= (const Event &event)
+{
+  time = event.time;
+  synthesized = event.synthesized;
+  modifiers = event.modifiers;
+  x = event.x;
+  y = event.y;
+  return *this;
+}
+
+Event::Event () :
+  type (EVENT_NONE), time (0), synthesized (true),
+  modifiers (ModifierState (0)), key_state (ModifierState (0)),
+  x (-1), y (-1)
+{}
+
 Event::~Event()
 {
 }
 
-static void
-setup_event (Event              *event,
-             EventType           type,
+class EventFactory {
+public:
+  template<class EventKind> static EventKind*
+  new_event (EventType           type,
              const EventContext &econtext)
-{
-  event->type = type;
-  event->time = econtext.time;
-  event->synthesized = econtext.synthesized;
-  event->modifiers = ModifierState (econtext.modifiers & MOD_MASK);
-  event->key_state = ModifierState (event->modifiers & MOD_KEY_MASK);
-  event->x = econtext.x;
-  event->y = econtext.y;
-  event->button = 0;
-  event->key = 0;
-  event->key_name = "";
-}
+  {
+    EventKind *event = new EventKind();
+    event->type = type;
+    event->time = econtext.time;
+    event->synthesized = econtext.synthesized;
+    event->modifiers = ModifierState (econtext.modifiers & MOD_MASK);
+    event->key_state = ModifierState (event->modifiers & MOD_KEY_MASK);
+    event->x = econtext.x;
+    event->y = econtext.y;
+    return event;
+  }
+};
 
 Event*
 create_event_cancellation (const EventContext &econtext)
 {
-  Event *event = new Event;
-  setup_event (event, CANCEL_EVENTS, econtext);
+  Event *event = EventFactory::new_event<Event> (CANCEL_EVENTS, econtext);
   return event;
 }
 
@@ -86,8 +116,7 @@ create_event_mouse (EventType           type,
                     const EventContext &econtext)
 {
   assert (type >= MOUSE_ENTER && type <= MOUSE_LEAVE);
-  EventMouse *event = new EventMouse;
-  setup_event (event, type, econtext);
+  EventMouse *event = EventFactory::new_event<EventMouse> (type, econtext);
   return event;
 }
 
@@ -98,8 +127,7 @@ create_event_button (EventType           type,
 {
   assert (type >= BUTTON_PRESS && type <= BUTTON_3RELEASE);
   assert (button >= 1 && button <= 16);
-  EventButton *event = new EventButton;
-  setup_event (event, type, econtext);
+  EventButton *event = EventFactory::new_event<EventButton> (type, econtext);
   event->button = button;
   return event;
 }
@@ -109,8 +137,7 @@ create_event_scroll (EventType           type,
                      const EventContext &econtext)
 {
   assert (type == SCROLL_UP || type == SCROLL_RIGHT || type == SCROLL_DOWN || type == SCROLL_LEFT);
-  EventScroll *event = new EventScroll;
-  setup_event (event, type, econtext);
+  EventScroll *event = EventFactory::new_event<EventScroll> (type, econtext);
   return event;
 }
 
@@ -119,8 +146,7 @@ create_event_focus (EventType           type,
                     const EventContext &econtext)
 {
   assert (type == FOCUS_IN || type == FOCUS_OUT);
-  EventFocus *event = new EventFocus;
-  setup_event (event, type, econtext);
+  EventFocus *event = EventFactory::new_event<EventFocus> (type, econtext);
   return event;
 }
 
@@ -131,10 +157,20 @@ create_event_key (EventType           type,
                   const char         *name)
 {
   assert (type == KEY_PRESS || type == KEY_RELEASE || type == KEY_CANCELED);
-  EventKey *event = new EventKey;
-  setup_event (event, type, econtext);
+  EventKey *event = EventFactory::new_event<EventKey> (type, econtext);
   event->key = key;
   event->key_name = name;
+  return event;
+}
+
+EventWinSize*
+create_event_win_size (const EventContext &econtext,
+                       double              width,
+                       double              height)
+{
+  EventWinSize *event = EventFactory::new_event<EventWinSize> (WIN_SIZE, econtext);
+  event->width = width;
+  event->height = height;
   return event;
 }
 

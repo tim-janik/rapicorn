@@ -67,52 +67,79 @@ typedef enum {
   SCROLL_LEFT,        /* button6 */
   SCROLL_RIGHT,       /* button7 */
   CANCEL_EVENTS,
+  WIN_SIZE,
   EVENT_LAST
 } EventType;
 String string_from_event_type (EventType etype);
 
-struct Event {
-  EventType     type; /* of type EventType */
+class Event {
+  friend class EventFactory;
+  PRIVATE_CLASS_COPY (Event);
+protected:
+  explicit      Event();
+public:
+  virtual       ~Event();
+  EventType     type;
   uint32        time;
   bool          synthesized;
   ModifierState modifiers;
   ModifierState key_state; /* modifiers & MOD_KEY_MASK */
   double        x, y;
-  virtual       ~Event();
+};
+typedef Event EventMouse;
+class EventButton : public Event {
+  friend class EventFactory;
+  EventButton() {}
+  PRIVATE_CLASS_COPY (EventButton);
+public:
   /* button press/release */
   uint          button; /* 1, 2, 3 */
+};
+typedef Event EventScroll;
+typedef Event EventFocus;
+class EventKey : public Event {
+  friend class EventFactory;
+  EventKey() {}
+  PRIVATE_CLASS_COPY (EventKey);
+public:
   /* key press/release */
   uint32        key;    /* of type KeyValue */
   String        key_name;
 };
-struct EventMouse  : Event {};
-struct EventButton : EventMouse { /* buton */ };
-struct EventScroll : EventMouse {};
-struct EventFocus  : Event {};
-struct EventKey    : Event { /* key, key_name */ };
-
+struct EventWinSize : public Event {
+  friend class EventFactory;
+  EventWinSize() {}
+  PRIVATE_CLASS_COPY (EventWinSize);
+public:
+  double width, height;
+};
 struct EventContext {
   uint32        time;
   bool          synthesized;
   ModifierState modifiers;
   double        x, y;
-  EventContext() : time (0), synthesized (true), modifiers (ModifierState (0)), x (-1), y (-1) {}
+  explicit      EventContext ();
+  explicit      EventContext (const Event&);
+  EventContext& operator=    (const Event&);
 };
 
-Event*       create_event_cancellation  (const EventContext &econtext);
-EventMouse*  create_event_mouse         (EventType           type,
-                                         const EventContext &econtext);
-EventButton* create_event_button        (EventType           type,
-                                         const EventContext &econtext,
-                                         uint                button);
-EventScroll* create_event_scroll        (EventType           type,
-                                         const EventContext &econtext);
-EventFocus*  create_event_focus         (EventType           type,
-                                         const EventContext &econtext);
-EventKey*    create_event_key           (EventType           type,
-                                         const EventContext &econtext,
-                                         uint32              key,
-                                         const char         *name);
+Event*        create_event_cancellation  (const EventContext &econtext);
+EventMouse*   create_event_mouse         (EventType           type,
+                                          const EventContext &econtext);
+EventButton*  create_event_button        (EventType           type,
+                                          const EventContext &econtext,
+                                          uint                button);
+EventScroll*  create_event_scroll        (EventType           type,
+                                          const EventContext &econtext);
+EventFocus*   create_event_focus         (EventType           type,
+                                          const EventContext &econtext);
+EventKey*     create_event_key           (EventType           type,
+                                          const EventContext &econtext,
+                                          uint32              key,
+                                          const char         *name);
+EventWinSize* create_event_win_size      (const EventContext &econtext,
+                                          double              width,
+                                          double              height);
 
 } // Rapicorn
 

@@ -38,6 +38,7 @@ namespace Gtk {
 typedef struct {
   GtkContainer    container;
   Root           *root;
+  guint32         last_time;
   double          last_x, last_y;
   GdkModifierType last_modifier;
 } RootWidget;
