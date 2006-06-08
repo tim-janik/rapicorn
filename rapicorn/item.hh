@@ -24,6 +24,7 @@
 #include <rapicorn/commands.hh>
 #include <rapicorn/properties.hh>
 #include <rapicorn/appearance.hh>
+#include <rapicorn/handle.hh>
 
 namespace Rapicorn {
 
@@ -62,12 +63,12 @@ public:
 class Item : public virtual Convertible, public virtual DataListContainer, public virtual ReferenceCountImpl {
   /*Copy*/                    Item      (const Item&);
   Item&                       operator= (const Item&);
-  Item                       *m_parent;         /* interface-inlined for fast read-out */
   uint32                      m_flags;          /* interface-inlined for fast read-out */
+  Item                       *m_parent;         /* interface-inlined for fast read-out */
   Style                      *m_style;
-  friend class Container;
-  void                        propagate_flags   ();
-  void                        propagate_style   ();
+  void                        propagate_flags ();
+  void                        propagate_style ();
+  friend                      class Container;
 protected:
   /* flag handling */
   bool                        change_flags_silently   (uint32 mask, bool on);

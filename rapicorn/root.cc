@@ -517,6 +517,13 @@ public:
   }
 };
 
+Handle<Root>
+Root::handle ()
+{
+  Handle<Root> handle (*this, m_omutex);
+  return handle;
+}
+
 static const ItemFactory<RootImpl> root_factory ("Rapicorn::Root");
 
 } // Rapicorn

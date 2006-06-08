@@ -117,14 +117,14 @@ public:
 protected:
   explicit              MainLoopPool    ()                      {}
   static Singleton     *m_singleton;
-  static Mutex         *m_mutex;
-  static MainLoop*      pop_loop        ()                      { AutoLocker locker (*m_mutex); return m_singleton->pop_loop(); }
-  static void           push_loop       (MainLoop *mloop)       { AutoLocker locker (*m_mutex); return m_singleton->push_loop (mloop); }
+  static Mutex          m_mutex;
+  static MainLoop*      pop_loop        ()                      { AutoLocker locker (m_mutex); return m_singleton->pop_loop(); }
+  static void           push_loop       (MainLoop *mloop)       { AutoLocker locker (m_mutex); return m_singleton->push_loop (mloop); }
 public:
-  static void           add_loop        (MainLoop *mloop)       { AutoLocker locker (*m_mutex); return m_singleton->add_loop (mloop); }
-  static void           set_n_threads   (uint      n)           { AutoLocker locker (*m_mutex); return m_singleton->set_n_threads (n); }
-  static uint           get_n_threads   (void)                  { AutoLocker locker (*m_mutex); return m_singleton->get_n_threads(); }
-  static void           quit_loops      ()                      { AutoLocker locker (*m_mutex); return m_singleton->quit_loops(); }
+  static void           add_loop        (MainLoop *mloop)       { AutoLocker locker (m_mutex); return m_singleton->add_loop (mloop); }
+  static void           set_n_threads   (uint      n)           { AutoLocker locker (m_mutex); return m_singleton->set_n_threads (n); }
+  static uint           get_n_threads   (void)                  { AutoLocker locker (m_mutex); return m_singleton->get_n_threads(); }
+  static void           quit_loops      ()                      { AutoLocker locker (m_mutex); return m_singleton->quit_loops(); }
 };
 
 /* --- implementation details --- */

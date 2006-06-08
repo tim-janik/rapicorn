@@ -494,7 +494,7 @@ public:
   {
     assert (self->root != NULL);
     Root *root = self->root;
-    root->sig_expose += slot (*this, &RootWidgetTrampoline::exposed);
+    root->sig_expose += slot (*this, &RootWidgetTrampoline::exposed); // FIXME
     root->sig_invalidate += slot (*this, &RootWidgetTrampoline::invalidated);
     root->sig_finalize += slot (*this, &RootWidgetTrampoline::delete_this);
   }

@@ -34,8 +34,8 @@ EventHandler::handle_event (const Event &event)
 }
 
 Item::Item () :
-  m_parent (NULL),
   m_flags (VISIBLE | SENSITIVE),
+  m_parent (NULL),
   m_style (NULL),
   sig_finalize (*this),
   sig_changed (*this, &Item::do_changed),

@@ -13,7 +13,7 @@ rapicorn_public_headers = $(strip 	\
 	primitives.hh	birnetutils.hh	birnetmarkup.hh	utilities.hh	enumdefs.hh	paintcontainers.hh	\
 	appearance.hh	events.hh	item.hh		container.hh	factory.hh	layoutcontainers.hh	\
 	paintgadgets.hh	slider.hh	buttons.hh	image.hh	arrangement.hh	\
-	table.hh	pangolabel.hh	loop.hh		root.hh		\
+	table.hh	pangolabel.hh	loop.hh		root.hh		handle.hh	\
 	commands.hh	properties.hh	adjustment.hh	painter.hh	cairocontext.hh	gtkrootwidget.hh	\
 )
 rapicorn_impl_headers = $(strip 	\

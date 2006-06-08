@@ -136,13 +136,12 @@ protected:
 };
 
 MainLoopPool::Singleton *MainLoopPool::m_singleton = NULL;
-Mutex                   *MainLoopPool::m_mutex = NULL;
+Mutex                    MainLoopPool::m_mutex;
 void
 MainLoopPool::rapicorn_init ()
 {
-  g_assert (!m_singleton && !m_mutex);
+  g_assert (!m_singleton);
   m_singleton = new MainLoopPoolSingleton();
-  m_mutex = new Mutex();
 }
 
 /* --- GLibSourceBase --- */

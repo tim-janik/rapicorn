@@ -1,3 +1,13 @@
+Thu Jun  8 03:23:31 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/handle.hh: implemented Handle template to store item 
+	references across threads.
+
+	* rapicorn/loop.cc: use static Mutex.
+
+	* rapicorn/root.cc: added handle() method to create Handles for Root
+	objects. 
+
 Wed Jun  7 02:35:47 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/root.hh, rapicorn/root.cc:
