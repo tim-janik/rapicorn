@@ -86,7 +86,7 @@ protected:
   virtual MainLoop*
   pop_loop ()
   {
-    if (!loops.size())
+    if (loops.empty())
       return NULL;
     MainLoop *loop = loops.front();
     loops.pop_front();
@@ -464,7 +464,7 @@ MainLoopPoolThread::iterate()
       priorities[n] = G_MAXINT;
       n++;
     }
-  while (busy_loops.size())
+  while (!busy_loops.empty())
     {
       push_loop (busy_loops.front());
       busy_loops.pop_front();

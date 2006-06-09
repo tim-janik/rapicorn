@@ -1,3 +1,16 @@
+Fri Jun  9 03:27:13 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/factory.hh, rapicorn/factory.cc: refactored code. Factory::
+	is an extra namespace now. renamed parsing functions. renamed item
+	creation and made it return an item handle.
+
+	* rapicorn/handle.hh: implementation fixups.
+
+	* rapicorn/root.cc:
+	* rapicorn/loop.cc: avoid std::list::size() which is O(N).
+
+	* examples/tour.cc (construct_gui): use the new factory and handle API.
+
 Thu Jun  8 03:23:31 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/handle.hh: implemented Handle template to store item 

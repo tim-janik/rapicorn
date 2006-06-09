@@ -31,24 +31,28 @@ construct_gui (GtkWindow  *window,
                const char *path)
 {
   try {
-    Factory.parse_resource ("tour.xml", "Test");
+    Factory::parse_file ("tour.xml", "Test");
   } catch (...) {
     try {
       String file = String (path) + DIR_SEPARATOR + "tour.xml";
-      Factory.parse_resource (file.c_str(), "Test");
+      Factory::parse_file (file.c_str(), "Test");
     } catch (...) {
       String file = String (path) + DIR_SEPARATOR + ".." + DIR_SEPARATOR + "tour.xml";
-      Factory.parse_resource (file.c_str(), "Test", nothrow);
+      Factory::parse_file (file.c_str(), "Test", nothrow);
     }
   }
 
   /* create root item */
-  Item &item = Factory.create_gadget ("root");
+  Handle<Item> ihandle = Factory::create_item ("root");
+  AutoLocker ilocker (ihandle);
+  Item &item = ihandle.get();
   Root &root = item.interface<Root&>();
   root.ref_sink();
 
   /* create dialog */
-  Item &dialog = Factory.create_gadget ("tour-dialog");
+  Handle<Item> dhandle = Factory::create_item ("tour-dialog");
+  AutoLocker dlocker (dhandle);
+  Item &dialog = dhandle.get();
   root.add (dialog);
 
   /* complete gtk window */

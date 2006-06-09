@@ -1,5 +1,5 @@
 /* Rapicorn
- * Copyright (C) 2002-2005 Tim Janik
+ * Copyright (C) 2002-2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,57 +20,58 @@
 #define __RAPICORN_FACTORY_HH__
 
 #include <rapicorn/item.hh>
+#include <rapicorn/handle.hh>
 #include <list>
 
 namespace Rapicorn {
 
-/* --- Factory --- */
-struct Factory {
-  typedef map<String,String>            VariableMap;
-  typedef std::list<String>             ArgumentList;   /* elements: key=utf8string */
-  virtual Item& create_gadget           (const String           &gadget_identifier,
-                                         const ArgumentList     &arguments = ArgumentList()) = 0;
-  virtual void  parse_resource          (const String           &file_name,
-                                         const String           &i18n_domain,
-                                         const String           &domain,
-                                         const std::nothrow_t   &nt = dothrow) = 0;
-  void          parse_resource          (const String           &file_name,
-                                         const String           &i18n_domain,
-                                         const std::nothrow_t   &nt = dothrow)  { return parse_resource (file_name, i18n_domain, i18n_domain, nt); }
-  struct        ItemTypeFactory;
-  static void   announce_item_factory   (const ItemTypeFactory  *itfactory);
-private:
-  virtual void  register_item_factory   (const ItemTypeFactory  *itfactory) = 0;
-  BIRNET_PRIVATE_CLASS_COPY (Factory);
-protected:
-  Factory();
-  virtual ~Factory();
-};
+namespace Factory {
 
-/* --- Factory Singleton --- */
-extern class Factory &Factory;
+/* --- Factory API --- */
+typedef map<String,String>      VariableMap;
+typedef std::list<String>       ArgumentList;   /* elements: key=utf8string */
+void           parse_file      (const String           &file_name,
+                                const String           &i18n_domain,
+                                const String           &domain,
+                                const std::nothrow_t   &nt = dothrow);
+void           parse_file      (const String           &file_name,
+                                const String           &i18n_domain,
+                                const std::nothrow_t   &nt = dothrow);
+Handle<Item>   create_item     (const String           &gadget_identifier,
+                                const ArgumentList     &arguments = ArgumentList());
 
 /* --- item type registration --- */
-struct Factory::ItemTypeFactory : Deletable {
-  const String qualified_type;
-  ItemTypeFactory (const char *namespaced_ident) :
-    qualified_type (namespaced_ident)
-  {}
-  virtual Item* create_item (const String &name) const = 0;
+struct ItemTypeFactory : Deletable {
+  const String  qualified_type;
+  BIRNET_PRIVATE_CLASS_COPY (ItemTypeFactory);
+protected:
+  static void   register_item_factory (const ItemTypeFactory  *itfactory);
+public:
+  explicit      ItemTypeFactory       (const char             *namespaced_ident);
+  virtual Item* create_item           (const String           &name) const = 0;
+  static void   initialize_factories  ();
 };
+
+} // Factory
+
+// namespace Rapicorn
+
+/* --- item factory template --- */
 template<class Type>
-struct ItemFactory : Factory::ItemTypeFactory {
-  ItemFactory (const char *namespaced_ident) :
-    ItemTypeFactory (namespaced_ident)
-  {
-    Factory::announce_item_factory (this);
-  }
+class ItemFactory : Factory::ItemTypeFactory {
+  BIRNET_PRIVATE_CLASS_COPY (ItemFactory);
   virtual Item*
   create_item (const String &name) const
   {
     Item *item = new Type();
     item->name (name);
     return item;
+  }
+public:
+  ItemFactory (const char *namespaced_ident) :
+    ItemTypeFactory (namespaced_ident)
+  {
+    register_item_factory (this);
   }
 };
 

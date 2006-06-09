@@ -37,7 +37,7 @@ public:
   /*Copy*/    Handle    (const Handle &handle);
   void        lock      ()                      { m_omutex.lock(); }
   bool        trylock   ()                      { return m_omutex.trylock(); }
-  Client&     get       ()                      { return *get (&dothrow); }
+  Client&     get       ()                      { return *get (dothrow); }
   Client*     get       (const nothrow_t &nt);
   void        unlock    ()                      { m_omutex.unlock(); }
   /*Des*/     ~Handle   ();
@@ -70,7 +70,7 @@ Handle<Client>::get (const nothrow_t &nt)
   if (m_omutex.mine())
     return &m_client;
   if (&nt == &dothrow)
-    throw Exception ("Unsyncronized handle access in thread: ", Thread::name());
+    throw Exception ("Unsyncronized handle access in thread: ", Thread::Self::name());
   else
     return NULL;
 }

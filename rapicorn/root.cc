@@ -488,19 +488,19 @@ public:
            int   *timeout_msecs_p)
   {
     AutoLocker locker (m_loop_mutex);
-    return m_event_queue.size() > 0;
+    return !m_event_queue.empty();
   }
   virtual bool
   check (uint64 current_time_usecs)
   {
     AutoLocker locker (m_loop_mutex);
-    return m_event_queue.size() > 0;
+    return !m_event_queue.empty();
   }
   virtual bool
   dispatch ()
   {
     AutoLocker locker (m_loop_mutex);
-    if (m_event_queue.size())
+    if (!m_event_queue.empty())
       {
         Event *event = m_event_queue.front();
         m_event_queue.pop_front();
