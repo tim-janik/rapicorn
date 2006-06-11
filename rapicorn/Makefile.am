@@ -7,13 +7,12 @@ LDLIBS	       += $(LIBS) $(PANGO_LIBS) $(GTK_LIBS)
 DEFS		= -DRAPICORN_PRIVATE -DPARANOID
 
 rapicorn_public_headers = $(strip 	\
-	rapicorn.hh keycodes.hh		\
-	userconfig.hh			\
-	handle.hh			\
+	rapicorn.hh	keycodes.hh	userconfig.hh	handle.hh	\
 	$(rapicorn_impl_headers)	\
-	enumdefs.hh	primitives.hh	birnetutils.hh	birnetmarkup.hh	utilities.hh	paintcontainers.hh	\
+	enumdefs.hh	viewport.hh	\
+	arrangement.hh	primitives.hh	birnetutils.hh	birnetmarkup.hh	utilities.hh	paintcontainers.hh	\
 	appearance.hh	events.hh	item.hh		container.hh	factory.hh	layoutcontainers.hh	\
-	paintgadgets.hh	slider.hh	buttons.hh	image.hh	arrangement.hh	\
+	paintgadgets.hh	slider.hh	buttons.hh	image.hh	\
 	table.hh	pangolabel.hh	loop.hh		root.hh		\
 	commands.hh	properties.hh	adjustment.hh	painter.hh	cairocontext.hh	gtkrootwidget.hh	\
 )
@@ -24,9 +23,12 @@ rapicorn_impl_headers = $(strip 	\
 	tableimpl.hh			\
 )
 rapicorn_cc_sources = $(strip 		\
-	enumdefs.cc	primitives.cc	birnetutils.cc	birnetmarkup.cc	utilities.cc	paintcontainers.cc	\
+	viewport-gtk.cc			\
+	$(strip)			\
+	enumdefs.cc	viewport.cc	\
+	arrangement.cc	primitives.cc	birnetutils.cc	birnetmarkup.cc	utilities.cc	paintcontainers.cc	\
 	appearance.cc	events.cc	item.cc		container.cc	factory.cc	layoutcontainers.cc	\
-	paintgadgets.cc	slider.cc	buttons.cc	image.cc	arrangement.cc	\
+	paintgadgets.cc	slider.cc	buttons.cc	image.cc	\
 	table.cc	pangolabel.cc	loop.cc		root.cc 	\
 	commands.cc	properties.cc	adjustment.cc	painter.cc	cairocontext.cc	gtkrootwidget.cc	\
 )

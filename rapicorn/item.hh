@@ -61,14 +61,13 @@ public:
 
 /* --- Item --- */
 class Item : public virtual Convertible, public virtual DataListContainer, public virtual ReferenceCountImpl {
-  /*Copy*/                    Item      (const Item&);
-  Item&                       operator= (const Item&);
   uint32                      m_flags;          /* interface-inlined for fast read-out */
   Item                       *m_parent;         /* interface-inlined for fast read-out */
   Style                      *m_style;
   void                        propagate_flags ();
   void                        propagate_style ();
   friend                      class Container;
+  BIRNET_PRIVATE_CLASS_COPY  (Item);
 protected:
   /* flag handling */
   bool                        change_flags_silently   (uint32 mask, bool on);
@@ -179,7 +178,6 @@ public:
   Signal<Item, void ()>           sig_changed;
   Signal<Item, void ()>           sig_invalidate;
   Signal<Item, void (Item *oldt)> sig_hierarchy_changed;
-public:
   /* event handling */
   bool                        process_event     (const Event &event);
   virtual bool                point             (double       x,                /* global coordinate system */
@@ -219,9 +217,20 @@ public:
   template<typename Type>
   typename
   InterfaceType<Type>::Result parent_interface  (const std::nothrow_t &nt) const { return parent_interface<Type> (String(), nt); }
+  template<class ItemType>
+  Handle<ItemType>            handle            ();
+  virtual OwnedMutex&         owned_mutex       ();
 private:
   bool                  match_parent_interface  (InterfaceMatch &imatch, const String &ident) const;
 };
+
+/* --- implementation --- */
+template<class ItemType> Handle<ItemType>
+Item::handle ()
+{
+  ItemType &self = Handle<ItemType>::type_cast (*this);
+  return Handle<ItemType> (self, owned_mutex());
+}
 
 } // Rapicorn
 

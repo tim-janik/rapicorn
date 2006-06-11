@@ -1,3 +1,28 @@
+Mon Jun 12 01:43:39 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/item.hh, rapicorn/item.cc: provide handle() and owned_mutex().
+
+	* rapicorn/loop.cc: fixed Thread ref counting.
+
+	* rapicorn/factory.hh, rapicorn/factory.cc: provide create_root().
+
+	* rapicorn/root.hh, rapicorn/root.cc: override owned_mutex() to return 
+	the Root mutex. removed Handle<Root>handle(), because there is 
+	Item::handle<>() now.
+
+	* rapicorn/handle.hh: specialize Handle<> for non-pointer types.
+	added type_cast<>() to execute partially specialized dynamic_cast<>()s.
+
+	* rapicorn/enumdefs.hh: added window types from wm-spec-1.4.html draft
+	as of 2006-06-11.
+
+	* rapicorn/birnetutils.hh, rapicorn/birnetutils.cc: removed 
+	DataListContainer definition which is in Birnet now.
+
+	* tests/Makefile.am:
+	* tests/datalist.cc: removed, data lists are implemented and tested in
+	Birnet now.
+
 Sun Jun 11 14:47:24 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/enumdefs.hh: added WindowType enumeration according to

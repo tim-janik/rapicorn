@@ -39,6 +39,8 @@ void           parse_file      (const String           &file_name,
                                 const std::nothrow_t   &nt = dothrow);
 Handle<Item>   create_item     (const String           &gadget_identifier,
                                 const ArgumentList     &arguments = ArgumentList());
+Handle<Root>   create_root     (const String           &gadget_identifier,
+                                const ArgumentList     &arguments = ArgumentList());
 
 /* --- item type registration --- */
 struct ItemTypeFactory : Deletable {

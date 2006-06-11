@@ -111,13 +111,14 @@ protected:
     if (n && !worker)
       {
         worker = new MainLoopPoolThread ("RapicornWorker");
+        ref_sink (worker);
         worker->start();
       }
     if (!n && worker)
       {
         worker->abort();
         worker->wait_for_exit();
-        delete worker;
+        unref (worker);
         worker = NULL;
       }
   }

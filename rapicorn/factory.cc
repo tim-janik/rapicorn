@@ -18,7 +18,7 @@
  */
 #include "factory.hh"
 #include "birnetmarkup.hh"
-#include "container.hh"
+#include "root.hh"
 #include <stack>
 #include <errno.h>
 using namespace std;
@@ -608,10 +608,16 @@ Handle<Item>
 Factory::create_item (const String       &gadget_identifier,
                       const ArgumentList &arguments)
 {
-  static OwnedMutex fixme_mutex;
   Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments);
-  Handle<Item> handle (item, fixme_mutex); // does ref_sink (item)
-  return handle;
+  return item.handle<Item>(); // Handle<> does ref_sink()
+}
+
+Handle<Root>
+Factory::create_root (const String           &gadget_identifier,
+                      const ArgumentList     &arguments)
+{
+  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments);
+  return item.handle<Root>(); // Handle<> does ref_sink()
 }
 
 void

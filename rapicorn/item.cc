@@ -192,6 +192,15 @@ Item::~Item()
     }
 }
 
+OwnedMutex&
+Item::owned_mutex ()
+{
+  if (m_parent)
+    return m_parent->owned_mutex();
+  else
+    return Thread::Self::owned_mutex();
+}
+
 Command*
 Item::lookup_command (const String &command_name)
 {

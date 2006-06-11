@@ -178,13 +178,19 @@ typedef EnumType<WrapType> EnumTypeWrapType;
 typedef enum {
   /* main window types */
   WINDOW_TYPE_NORMAL  = 0,
-  WINDOW_TYPE_DESKTOP,  /* desktop background */
-  WINDOW_TYPE_DOCK,     /* dock or panel */
-  WINDOW_TYPE_TOOLBAR,  /* torn-off toolbar */
-  WINDOW_TYPE_MENU,     /* torn-off menu */
-  WINDOW_TYPE_UTILITY,  /* palette or toolbox */
-  WINDOW_TYPE_SPLASH,   /* startup/splash screen */
-  WINDOW_TYPE_DIALOG,   /* dialog window, usually transient */
+  WINDOW_TYPE_DESKTOP,          /* desktop background */
+  WINDOW_TYPE_DOCK,             /* dock or panel */
+  WINDOW_TYPE_TOOLBAR,          /* torn-off toolbar */
+  WINDOW_TYPE_MENU,             /* torn-off menu */
+  WINDOW_TYPE_UTILITY,          /* palette or toolbox */
+  WINDOW_TYPE_SPLASH,           /* startup/splash screen */
+  WINDOW_TYPE_DIALOG,           /* dialog window, usually transient */
+  WINDOW_TYPE_DROPDOWN_MENU,    /* menu, opened from menubar */
+  WINDOW_TYPE_POPUP_MENU,       /* menu, opened as context menu */
+  WINDOW_TYPE_TOOLTIP,          /* transient context info window */
+  WINDOW_TYPE_NOTIFICATION,     /* transient info window (e.g. info bubble) */
+  WINDOW_TYPE_COMBO,            /* combo box menu or list window */
+  WINDOW_TYPE_DND,              /* window being dragged in a DND operation */
 } WindowType;
 typedef EnumType<WindowType> EnumTypeWindowType;
 

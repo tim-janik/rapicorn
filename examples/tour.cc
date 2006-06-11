@@ -83,7 +83,6 @@ main (int   argc,
   printf ("EXAMPLE: %s:\n", basename (argv[0]));
 
   rapicorn_init ();
-
   gtk_init (&argc, &argv);
 
   {

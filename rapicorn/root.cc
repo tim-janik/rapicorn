@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include "root.hh"
+#include "viewport.hh"
 #include "containerimpl.hh"
 using namespace std;
 
@@ -29,7 +30,13 @@ Root::Root() :
 }
 
 class RootImpl : public Root, public SingleContainerImpl {
-  bool m_entered;
+  OwnedMutex m_omutex;
+  bool       m_entered;
+  virtual OwnedMutex&
+  owned_mutex ()
+  {
+    return m_omutex;
+  }
 public:
   RootImpl() :
     m_entered (false)
@@ -516,14 +523,6 @@ public:
     m_event_queue.push_back (event);
   }
 };
-
-Handle<Root>
-Root::handle ()
-{
-  Handle<Root> handle (*this, m_omutex);
-  return handle;
-}
-
 static const ItemFactory<RootImpl> root_factory ("Rapicorn::Root");
 
 } // Rapicorn

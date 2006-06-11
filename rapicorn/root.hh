@@ -27,7 +27,6 @@ namespace Rapicorn {
 
 /* --- Root --- */
 class Root : public virtual Container, public virtual MainLoop::Source {
-  OwnedMutex    m_omutex;
 protected:
   explicit      Root                    ();
   virtual void  cancel_item_events      (Item        &item) = 0;
@@ -49,7 +48,6 @@ public:
   virtual void  remove_grab             (Item  &child) = 0;
   void          remove_grab             (Item  *child)     { throw_if_null (child); return remove_grab (*child); }
   virtual Item* get_grab                (bool  *unconfined = NULL) = 0;
-  Handle<Root>  handle                  ();
 };
 
 } // Rapicorn

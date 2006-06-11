@@ -23,17 +23,17 @@
 
 namespace Rapicorn {
 
+/* --- Handle<> --- */
+template<class Client> class Handle;
+/* Handle<&> */
 template<class Client>
-class Handle {
+class Handle<Client&> {
   Client     &m_client;
   OwnedMutex &m_omutex;
   Handle&     operator= (const Handle &handle);
 public:
   explicit    Handle    (Client       &client,
                          OwnedMutex   &omutex);
-  template<class Client2>
-  explicit    Handle    (Client       &client,
-                         const Handle<Client2>&);
   /*Copy*/    Handle    (const Handle &handle);
   void        lock      ()                      { m_omutex.lock(); }
   bool        trylock   ()                      { return m_omutex.trylock(); }
@@ -41,31 +41,38 @@ public:
   Client*     get       (const nothrow_t &nt);
   void        unlock    ()                      { m_omutex.unlock(); }
   /*Des*/     ~Handle   ();
+  /* partially specialized dynamic_cast<>() */
+  template<class T> static Client&
+  type_cast (T &t)
+  {
+    return dynamic_cast<Client&> (t);
+  }
 };
+/* Handle<class> - alias to Handle<&> */
+template<class Client> struct Handle : Handle<Client&> {
+  explicit Handle (Client       &client,
+                   OwnedMutex   &omutex) : Handle<Client&> (client, omutex) {}
+  /*Copy*/ Handle (const Handle &handle) : Handle<Client&> (handle)         {}
+};
+/* Handle<*> */
+template<class Client> class Handle<Client*> : TEMPLATE_ERROR::InvalidType<Client*> {}; // not supported
 
 /* --- implementation --- */
 template<class Client>
-Handle<Client>::Handle (Client       &client,
-                        OwnedMutex   &omutex) :
+Handle<Client&>::Handle (Client       &client,
+                         OwnedMutex   &omutex) :
   m_client (ref_sink (client)),
   m_omutex (omutex)
 {}
 
-template<class Client> template<class Client2>
-Handle<Client>::Handle (Client                &client,
-                        const Handle<Client2> &handle) :
-  m_client (ref_sink (client)),
-  m_omutex (handle.m_omutex)
-{}
-
 template<class Client>
-Handle<Client>::Handle (const Handle &handle) :
+Handle<Client&>::Handle (const Handle &handle) :
   m_client (ref (handle.m_client)),
   m_omutex (handle.m_omutex)
 {}
 
 template<class Client> Client*
-Handle<Client>::get (const nothrow_t &nt)
+Handle<Client&>::get (const nothrow_t &nt)
 {
   if (m_omutex.mine())
     return &m_client;
@@ -76,7 +83,7 @@ Handle<Client>::get (const nothrow_t &nt)
 }
 
 template<class Client>
-Handle<Client>::~Handle ()
+Handle<Client&>::~Handle ()
 {
   unref (m_client);
 }
