@@ -333,12 +333,14 @@ class GLibMainLoop : public virtual MainLoop {
   ~GLibMainLoop()
   {
     AutoLocker locker (m_mutex);
+    // FIXME: we should destroy all sources here
     g_main_context_unref (m_context);
   }
   virtual void
   quit (void)
   {
     AutoLocker locker (m_mutex);
+    // FIXME: we should destroy all sources here
     g_main_context_unref (m_context);
     m_context = g_main_context_new();
     inactive = true;

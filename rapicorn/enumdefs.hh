@@ -69,6 +69,57 @@ private:
 
 /* --- enums --- */
 typedef enum {
+  ALIGN_LEFT = 1,
+  ALIGN_CENTER,
+  ALIGN_RIGHT,
+} AlignType;
+typedef EnumType<AlignType> EnumTypeAlignType;
+
+typedef enum {
+  ANCHOR_NONE,
+  ANCHOR_CENTER,
+  ANCHOR_EAST,
+  ANCHOR_NORTH_EAST,
+  ANCHOR_NORTH,
+  ANCHOR_NORTH_WEST,
+  ANCHOR_WEST,
+  ANCHOR_SOUTH_WEST,
+  ANCHOR_SOUTH,
+  ANCHOR_SOUTH_EAST,
+} AnchorType;
+typedef EnumType<AnchorType> EnumTypeAnchorType;
+
+typedef enum {
+  COLOR_NONE,
+  COLOR_FOREGROUND,
+  COLOR_BACKGROUND,
+  COLOR_FOCUS,
+  COLOR_DEFAULT,
+  COLOR_LIGHT_GLINT,
+  COLOR_LIGHT_SHADOW,
+  COLOR_DARK_GLINT,
+  COLOR_DARK_SHADOW,
+} ColorType;
+typedef EnumType<ColorType> EnumTypeColorType;
+
+typedef enum {
+  DIR_NONE,
+  DIR_RIGHT,
+  DIR_UP,
+  DIR_LEFT,
+  DIR_DOWN,
+} DirType;
+typedef EnumType<DirType> EnumTypeDirType;
+
+typedef enum {
+  ELLIPSIZE_NONE,
+  ELLIPSIZE_START,
+  ELLIPSIZE_MIDDLE,
+  ELLIPSIZE_END
+} EllipsizeType;
+typedef EnumType<EllipsizeType> EnumTypeEllipsizeType;
+
+typedef enum {
   FRAME_NONE,
   FRAME_BACKGROUND,
   FRAME_IN,
@@ -103,51 +154,6 @@ inline LightingType  operator|  (LightingType  s1, LightingType s2) { return Lig
 inline LightingType& operator|= (LightingType &s1, LightingType s2) { s1 = s1 | s2; return s1; }
 
 typedef enum {
-  DIR_NONE,
-  DIR_RIGHT,
-  DIR_UP,
-  DIR_LEFT,
-  DIR_DOWN,
-} DirType;
-typedef EnumType<DirType> EnumTypeDirType;
-
-typedef enum {
-  ANCHOR_NONE,
-  ANCHOR_CENTER,
-  ANCHOR_EAST,
-  ANCHOR_NORTH_EAST,
-  ANCHOR_NORTH,
-  ANCHOR_NORTH_WEST,
-  ANCHOR_WEST,
-  ANCHOR_SOUTH_WEST,
-  ANCHOR_SOUTH,
-  ANCHOR_SOUTH_EAST,
-} AnchorType;
-typedef EnumType<AnchorType> EnumTypeAnchorType;
-
-typedef enum {
-  ALIGN_LEFT = 1,
-  ALIGN_CENTER,
-  ALIGN_RIGHT,
-} AlignType;
-typedef EnumType<AlignType> EnumTypeAlignType;
-
-typedef enum {
-  WRAP_NONE,
-  WRAP_CHAR,
-  WRAP_WORD,
-} WrapType;
-typedef EnumType<WrapType> EnumTypeWrapType;
-
-typedef enum {
-  ELLIPSIZE_NONE,
-  ELLIPSIZE_START,
-  ELLIPSIZE_MIDDLE,
-  ELLIPSIZE_END
-} EllipsizeType;
-typedef EnumType<EllipsizeType> EnumTypeEllipsizeType;
-
-typedef enum {
   STATE_INSENSITIVE     = 1 << 0,
   STATE_PRELIGHT        = 1 << 1,
   STATE_IMPRESSED       = 1 << 2,
@@ -163,17 +169,24 @@ inline StateType  operator|  (StateType  s1, StateType s2) { return StateType (s
 inline StateType& operator|= (StateType &s1, StateType s2) { s1 = s1 | s2; return s1; }
 
 typedef enum {
-  COLOR_NONE,
-  COLOR_FOREGROUND,
-  COLOR_BACKGROUND,
-  COLOR_FOCUS,
-  COLOR_DEFAULT,
-  COLOR_LIGHT_GLINT,
-  COLOR_LIGHT_SHADOW,
-  COLOR_DARK_GLINT,
-  COLOR_DARK_SHADOW,
-} ColorType;
-typedef EnumType<ColorType> EnumTypeColorType;
+  WRAP_NONE,
+  WRAP_CHAR,
+  WRAP_WORD,
+} WrapType;
+typedef EnumType<WrapType> EnumTypeWrapType;
+
+typedef enum {
+  /* main window types */
+  WINDOW_TYPE_NORMAL  = 0,
+  WINDOW_TYPE_DESKTOP,  /* desktop background */
+  WINDOW_TYPE_DOCK,     /* dock or panel */
+  WINDOW_TYPE_TOOLBAR,  /* torn-off toolbar */
+  WINDOW_TYPE_MENU,     /* torn-off menu */
+  WINDOW_TYPE_UTILITY,  /* palette or toolbox */
+  WINDOW_TYPE_SPLASH,   /* startup/splash screen */
+  WINDOW_TYPE_DIALOG,   /* dialog window, usually transient */
+} WindowType;
+typedef EnumType<WindowType> EnumTypeWindowType;
 
 } // Rapicorn
 
