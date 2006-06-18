@@ -822,7 +822,7 @@ rapicorn_viewport_realize (GtkWidget *widget)
   rapicorn_viewport_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);
   self->fast_local_blitting = gtk_widget_has_local_display (widget);
   if (!self->fast_local_blitting)
-    self->backing_store = gdk_window_enable_backing (widget->window, BACKING_STORE_WHEN_MAPPED);
+    self->backing_store = gdk_window_enable_backing (widget->window, BACKING_STORE_ALWAYS);
 }
 
 static void
@@ -1003,6 +1003,7 @@ rapicorn_viewport_event (GtkWidget *widget,
 #endif
     case GDK_DELETE:
       handled = TRUE;
+      break;
     case GDK_DESTROY:
     case GDK_UNMAP:
       rapicorn_viewport_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);
@@ -1085,6 +1086,7 @@ rapicorn_viewport_ancestor_event (GtkWidget *ancestor,
     case GDK_DELETE:
       if (ancestor == (GtkWidget*) rapicorn_viewport_get_my_window (self))
         handled = true;
+      break;
     case GDK_DESTROY:
     case GDK_UNMAP:
       rapicorn_viewport_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);

@@ -1,3 +1,10 @@
+Sun Jun 18 23:34:24 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/viewport-gtk.cc:
+	rapicorn_viewport_realize(): use BACKING_STORE_ALWAYS if at all.
+	rapicorn_viewport_ancestor_event(): 
+	rapicorn_viewport_event(): don't send cancel events after swallowing GDK_DELETE.
+
 Sun Jun 18 21:51:15 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/viewport-gtk.cc: refined backing store logic to take display
