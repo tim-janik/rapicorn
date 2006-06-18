@@ -33,6 +33,7 @@ rapicorn_init (int        *argcp,
   // bindtextdomain (rapicorn_i18n_domain, dirname);
   bind_textdomain_codeset (rapicorn_i18n_domain, "UTF-8");
   /* initialize sub components */
+  birnet_init (argcp, argvp, app_name);
   MainLoopPool::rapicorn_init();
 }
 

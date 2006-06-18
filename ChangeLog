@@ -1,3 +1,18 @@
+Sun Jun 18 21:51:15 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/viewport-gtk.cc: refined backing store logic to take display
+	settings into account. refined cancellation of incremental blit requests.
+	simplified and slightly fixed rapicorn_viewport_event_context().
+	introduced rapicorn_viewport_change_visibility() for all visibility changes.
+	listen to toplevel visibility-notify events. honoured more 
+	GDK_VISIBILITY_FULLY_OBSCURED, e.g. on toplevel unmap.
+	ignore GDK_DELETE events.
+	introduced rapicorn_init_with_foreign_gtk().
+
+	* rapicorn/utilities.cc: make sure to initialize birnet with rapicorn.
+
+	* examples/tour.cc: test rapicorn_init_with_foreign_gtk().
+
 Sun Jun 18 03:19:59 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/root.hh, rapicorn/root.cc: implemented Root with viewport, 

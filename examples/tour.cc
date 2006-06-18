@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include <rapicorn/rapicorn.hh>
+#include <gtk/gtk.h>
 
 namespace {
 using namespace Rapicorn;
@@ -73,15 +74,13 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  birnet_init (&argc, &argv, "TourTest");
-  
-  printf ("EXAMPLE: %s:\n", basename (argv[0]));
-  
-  rapicorn_init_with_gtk_thread (&argc, &argv, NULL);
-  
+  rapicorn_init_with_foreign_gtk (&argc, &argv, "TourTest");
   register_builtin_images();
+
   Root *root = construct_gui (dirname (argv[0]).c_str());
   root->run_async();
+  gtk_main();
+  return 0;
   
   if (1)
     {
