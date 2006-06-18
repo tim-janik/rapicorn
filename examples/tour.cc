@@ -17,8 +17,6 @@
  * Boston, MA 02111-1307, USA.
  */
 #include <rapicorn/rapicorn.hh>
-#include <rapicorn/gtkrootwidget.hh>
-#include <gtk/gtk.h>
 
 namespace {
 using namespace Rapicorn;
@@ -26,9 +24,8 @@ using Rapicorn::uint;
 
 static void     register_builtin_images (void);
 
-static void
-construct_gui (GtkWindow  *window,
-               const char *path)
+static Root*
+construct_gui (const char *path)
 {
   try {
     Factory::parse_file ("tour.xml", "Test");
@@ -55,9 +52,7 @@ construct_gui (GtkWindow  *window,
   Item &dialog = dhandle.get();
   root.add (dialog);
 
-  /* complete gtk window */
-  GtkWidget *rwidget = Gtk::root_widget_from_root (root);
-  gtk_container_add (GTK_CONTAINER (window), rwidget);
+  return &root;
 }
 
 static bool
@@ -79,37 +74,30 @@ main (int   argc,
       char *argv[])
 {
   birnet_init (&argc, &argv, "TourTest");
-
+  
   printf ("EXAMPLE: %s:\n", basename (argv[0]));
-
-  rapicorn_init ();
-  gtk_init (&argc, &argv);
-
-  {
-    MainLoop *tloop = glib_loop_create();
-    tloop->idle_timed (250, timer);
-    MainLoopPool::add_loop (tloop);
-  }
   
-  {
-    MainLoop *tloop = glib_loop_create();
-    tloop->idle_timed (125, timer2);
-    MainLoopPool::add_loop (tloop);
-  }
+  rapicorn_init_with_gtk_thread (&argc, &argv, NULL);
   
-  GtkWidget *window = gtk_widget_new (GTK_TYPE_WINDOW, NULL);
-  gtk_window_set_default_size (GTK_WINDOW (window), 640, 480);
-  Gtk::gtk_window_set_min_size (GTK_WINDOW (window), 20, 20);
-  g_signal_connect (window, "delete-event", G_CALLBACK (gtk_widget_hide_on_delete), NULL);
-  g_signal_connect (window, "hide", G_CALLBACK (gtk_main_quit), NULL);
-
   register_builtin_images();
-  construct_gui (GTK_WINDOW (window), dirname (argv[0]).c_str());
+  Root *root = construct_gui (dirname (argv[0]).c_str());
+  root->run_async();
+  
+  if (1)
+    {
+      MainLoop *tloop = glib_loop_create();
+      tloop->idle_timed (250, slot (timer));
+      MainLoopPool::add_loop (tloop);
+    }
+  if (1)
+    {
+      MainLoop *tloop = glib_loop_create();
+      tloop->idle_timed (125, slot (timer2));
+      MainLoopPool::add_loop (tloop);
+    }
+  
+  Thread::Self::exit();
 
-  gtk_widget_show (window);
-
-  gtk_main();
-  gtk_widget_destroy (window);
   return 0;
 }
 

@@ -38,8 +38,6 @@ public://FIXME: protected:
   virtual bool  check                   (uint64 current_time_usecs) = 0;
   virtual bool  dispatch                () = 0;
 public:
-  virtual void  enqueue_async           (Event              *event) = 0;
-  Signal<Container, void (const Allocation&)> sig_expose;
   virtual void  render                  (Plane &plane) = 0;
   virtual void  add_grab                (Item  &child,
                                          bool   unconfined = false) = 0;
@@ -48,6 +46,8 @@ public:
   virtual void  remove_grab             (Item  &child) = 0;
   void          remove_grab             (Item  *child)     { throw_if_null (child); return remove_grab (*child); }
   virtual Item* get_grab                (bool  *unconfined = NULL) = 0;
+  /* MT-safe */
+  virtual void  run_async               (void) = 0;
 };
 
 } // Rapicorn

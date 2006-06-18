@@ -36,9 +36,9 @@ class PangoLabelImpl : public virtual ItemImpl, public virtual PangoLabel {
   default_pango_language()
   {
     String lc_ctype = setlocale (LC_CTYPE, NULL);
-    uint sep1 = lc_ctype.find ('.');
-    uint sep2 = lc_ctype.find ('@');
-    uint sep = MIN (sep1, sep2);
+    String::size_type sep1 = lc_ctype.find ('.');
+    String::size_type sep2 = lc_ctype.find ('@');
+    String::size_type sep = MIN (sep1, sep2);
     if (sep != lc_ctype.npos)
       lc_ctype[sep] = 0;
     PangoLanguage *pango_language = pango_language_from_string (lc_ctype.c_str());

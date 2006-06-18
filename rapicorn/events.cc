@@ -46,6 +46,7 @@ string_from_event_type (EventType etype)
     case SCROLL_RIGHT:          return "ScrollRight";
     case CANCEL_EVENTS:         return "CancelEvents";
     case WIN_SIZE:              return "WinSize";
+    case WIN_DRAW:              return "WinDraw";
     case EVENT_NONE:
     case EVENT_LAST:
       break;
@@ -165,12 +166,27 @@ create_event_key (EventType           type,
 
 EventWinSize*
 create_event_win_size (const EventContext &econtext,
+                       uint                draw_stamp,
                        double              width,
                        double              height)
 {
   EventWinSize *event = EventFactory::new_event<EventWinSize> (WIN_SIZE, econtext);
+  event->draw_stamp = draw_stamp;
   event->width = width;
   event->height = height;
+  return event;
+}
+
+EventWinDraw*
+create_event_win_draw (const EventContext &econtext,
+                       uint                     draw_stamp,
+                       const std::vector<Rect> &rects)
+{
+  EventWinDraw *event = EventFactory::new_event<EventWinDraw> (WIN_DRAW, econtext);
+  event->draw_stamp = draw_stamp;
+  event->rectangles = rects;
+  for (uint i = 0; i < rects.size(); i++)
+    event->bbox.rect_union(rects[i]);
   return event;
 }
 

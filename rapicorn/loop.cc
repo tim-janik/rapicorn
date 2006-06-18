@@ -22,6 +22,7 @@
 
 namespace Rapicorn {
 
+/* --- MainLoop --- */
 uint64
 MainLoop::get_current_time_usecs ()
 {
@@ -37,6 +38,64 @@ MainLoop::remove (uint   id)
     g_warning ("%s: failed to remove loop source: %u", G_STRFUNC, id);
 }
 
+/* --- MainLoop::TimedSource --- */
+bool
+MainLoop::TimedSource::prepare (uint64 current_time_usecs,
+                                int   *timeout_msecs_p)
+{
+  if (current_time_usecs >= m_expiration_usecs)
+    return true;                                            /* timeout expired */
+  uint64 interval = m_interval_msecs * 1000ULL;
+  if (current_time_usecs + interval < m_expiration_usecs)
+    m_expiration_usecs = current_time_usecs + interval;     /* clock warped back in time */
+  *timeout_msecs_p = MIN (G_MAXINT, (m_expiration_usecs - current_time_usecs) / 1000ULL);
+  return 0 == *timeout_msecs_p;
+}
+
+bool
+MainLoop::TimedSource::check (uint64 current_time_usecs)
+{
+  return current_time_usecs >= m_expiration_usecs;
+}
+
+bool
+MainLoop::TimedSource::dispatch()
+{
+  bool repeat = false;
+  if (m_oneshot && m_vtrampoline->callable)
+    (*m_vtrampoline) ();
+  else if (!m_oneshot && m_btrampoline->callable)
+    repeat = (*m_btrampoline) ();
+  if (repeat)
+    m_expiration_usecs = MainLoop::get_current_time_usecs() + 1000ULL * m_interval_msecs;
+  return repeat;
+}
+
+MainLoop::TimedSource::TimedSource (Signals::Trampoline0<bool> &bt,
+                                    uint interval_msecs):
+  m_expiration_usecs (MainLoop::get_current_time_usecs() + 1000ULL * interval_msecs),
+  m_interval_msecs (interval_msecs),
+  m_oneshot (false),
+  m_btrampoline (ref_sink (&bt))
+{}
+
+MainLoop::TimedSource::TimedSource (Signals::Trampoline0<void> &vt,
+                                    uint interval_msecs) :
+  m_expiration_usecs (MainLoop::get_current_time_usecs() + 1000ULL * interval_msecs),
+  m_interval_msecs (interval_msecs),
+  m_oneshot (true),
+  m_vtrampoline (ref_sink (&vt))
+{}
+
+MainLoop::TimedSource::~TimedSource ()
+{
+  if (m_oneshot)
+    unref (m_vtrampoline);
+  else
+    unref (m_btrampoline);
+}
+
+/* --- MainLoopPoolThread --- */
 class MainLoopPoolThread : public virtual Thread, public virtual MainLoopPool {
   bool iterate();
 public:
@@ -75,6 +134,7 @@ public:
   }
 };
 
+/* --- MainLoopPoolSingleton --- */
 class MainLoopPoolSingleton : public virtual MainLoopPool::Singleton {
   std::list<MainLoop*> loops;
   Thread              *worker;
@@ -323,6 +383,7 @@ public:
   }
 };
 
+/* --- GLibMainLoop --- */
 class GLibMainLoop : public virtual MainLoop {
   GMainContext *m_context;
   Mutex         m_mutex;
@@ -345,6 +406,12 @@ class GLibMainLoop : public virtual MainLoop {
     g_main_context_unref (m_context);
     m_context = g_main_context_new();
     inactive = true;
+  }
+  virtual void
+  wakeup (void)
+  {
+    AutoLocker locker (m_mutex);
+    g_main_context_wakeup (m_context);
   }
   virtual bool
   running (void)
@@ -443,7 +510,7 @@ glib_loop_create (void) // FIXME
   return GLibMainLoop::create_loop_context();
 }
 
-/* --- main loop iteration --- */
+/* --- MainLoopPoolThread --- */
 bool
 MainLoopPoolThread::iterate()
 {

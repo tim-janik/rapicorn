@@ -1,3 +1,38 @@
+Sun Jun 18 03:19:59 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/root.hh, rapicorn/root.cc: implemented Root with viewport, 
+	main loop and loop source. added WIN_DRAW and WIN_SIZE handling, added
+	expose queue. implemented run_async().
+
+	* rapicorn/events.hh, rapicorn/events.cc: added WIN_DRAW event.
+	introduced draw_stamp for WIN_SIZE and WIN_DRAW.
+
+	* rapicorn/pangolabel.cc: use std::string::size_type instead of uint to 
+	store std::string::npos. this fixes 64bit issues, where npos is 2^64-1
+	and as a result doesn't fit a 32bit uint. pointed out by Stefan Westerfeld.
+
+	* rapicorn/loop.hh: replaced IdleSource and TimedSource templates by
+	a regular class TimedSource. replaced templates to add idle handlers by
+	regular functions that take Signals::Slot0<> arguments.
+
+	* rapicorn/loop.cc: implemented MainLoop::TimedSource. 
+	added GLibMainLoop::wakeup().
+
+	* rapicorn/utilities.hh, rapicorn/utilities.cc: extended rapicorn_init().
+
+	* rapicorn/viewport-gtk.cc: implemented Viewport interface and glue 
+	GtkWidget, based on gtkrootwidget.cc. all redrawing and event handling are
+	completely asyncronous (transfered between two threads). remote windows
+	are updated incrementally and have backing store enabled.
+
+	* rapicorn/viewport.hh, rapicorn/viewport.cc: added interface definition
+	to display a Root item on physical screend.
+
+	* examples/tour.cc: removed all gtk specific glue.
+
+	* rapicorn/gtkrootwidget.hh, rapicorn/gtkrootwidget.cc: removed. replaced 
+	by viewport-gtk.cc.
+
 Mon Jun 12 01:43:39 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/item.hh, rapicorn/item.cc: provide handle() and owned_mutex().

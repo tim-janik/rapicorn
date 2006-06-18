@@ -52,57 +52,65 @@ protected:
   virtual void release   () = 0;
   friend class MainLoopPoolThread;
 private:
-  template<typename Func>
-  class IdleSource : public virtual Source {
-    Func m_func;
+  class TimedSource : public virtual Source {
+    uint64     m_expiration_usecs;
+    uint       m_interval_msecs;
+    const bool m_oneshot;
+    union {
+      Signals::Trampoline0<bool> *m_btrampoline;
+      Signals::Trampoline0<void> *m_vtrampoline;
+    };
   protected:
-    virtual bool prepare    (uint64 current_time_usecs,
-                             int   *timeout_msecs_p)    { return true; }
-    virtual bool check      (uint64 current_time_usecs) { return true; }
-    virtual bool dispatch   ()                          { return 0 != m_func (); }
+    virtual      ~TimedSource ();
+    virtual bool prepare      (uint64 current_time_usecs,
+                               int   *timeout_msecs_p);
+    virtual bool check        (uint64 current_time_usecs);
+    virtual bool dispatch     ();
   public:
-    explicit     IdleSource (Func func) : m_func (func) {}
+    explicit     TimedSource (Signals::Trampoline0<bool> &bt,
+                              uint interval_msecs = 0);
+    explicit     TimedSource (Signals::Trampoline0<void> &vt,
+                              uint interval_msecs = 0);
   };
-  template<typename Func>
-  class TimedSource : public virtual IdleSource<Func> {
-    uint   m_interval_msecs;
-    uint64 m_expiration_usecs;
-    virtual bool prepare  (uint64 current_time_usecs,
-                           int   *timeout_msecs_p);
-    virtual bool check    (uint64 current_time_usecs);
-    virtual bool dispatch ();
-  public:
-    explicit TimedSource (Func func,
-                          uint interval_msecs);
-  };
-  static const uint PRIORITY_NOW        = -G_MAXINT / 2;                /* most important, used for immediate async execution */
-  static const uint PRIORITY_HIGH       = G_PRIORITY_HIGH - 10;         /* very important, used for io handlers */
-  static const uint PRIORITY_NEXT       = G_PRIORITY_HIGH - 5;          /* still very important, used for need-to-be-async operations */
-  static const uint PRIORITY_NOTIFY     = G_PRIORITY_DEFAULT - 1;       /* important, delivers async signals */
-  static const uint PRIORITY_NORMAL     = G_PRIORITY_DEFAULT;           /* normal importantance, interfaces to all layers */
-  static const uint PRIORITY_UPDATE     = G_PRIORITY_HIGH_IDLE + 5;     /* mildly important, used for GUI updates or user information */
-  static const uint PRIORITY_BACKGROUND = G_PRIORITY_LOW + 500;         /* unimportant, used when everything else done */
 public:
-  static uint64                 get_current_time_usecs(); // FIXME: should move this to birnetutilsxx.hh
-  virtual void                  quit            (void) = 0;
-  virtual bool                  running         (void) = 0;
-  virtual uint                  add_source      (int     priority,
-                                                 Source *loop_source) = 0;
-  virtual bool                  try_remove      (uint   id) = 0;
-  void                          remove          (uint   id);
-  template<typename Func> uint  idle_timed      (uint   timeout_ms,
-                                                 Func   func_obj)  { return add_source (PRIORITY_NEXT,       new TimedSource<Func> (func_obj, timeout_ms)); }
-  template<typename Func> uint  idle_now        (Func   func_obj)  { return add_source (PRIORITY_HIGH,       new IdleSource<Func> (func_obj)); }
-  template<typename Func> uint  idle_next       (Func   func_obj)  { return add_source (PRIORITY_NEXT,       new IdleSource<Func> (func_obj)); }
-  template<typename Func> uint  idle_notify     (Func   func_obj)  { return add_source (PRIORITY_NOTIFY,     new IdleSource<Func> (func_obj)); }
-  template<typename Func> uint  idle_normal     (Func   func_obj)  { return add_source (PRIORITY_NORMAL,     new IdleSource<Func> (func_obj)); }
-  template<typename Func> uint  idle_update     (Func   func_obj)  { return add_source (PRIORITY_UPDATE,     new IdleSource<Func> (func_obj)); }
-  template<typename Func> uint  idle_background (Func   func_obj)  { return add_source (PRIORITY_BACKGROUND, new IdleSource<Func> (func_obj)); }
+  typedef Signals::Slot0<void, void> VoidSlot;
+  typedef Signals::Slot0<bool, void> BoolSlot;
+  static const  int PRIORITY_NOW        = -G_MAXINT / 2;                /* most important, used for immediate async execution */
+  static const  int PRIORITY_HIGH       = G_PRIORITY_HIGH - 10;         /* very important, used for io handlers */
+  static const  int PRIORITY_NEXT       = G_PRIORITY_HIGH - 5;          /* still very important, used for need-to-be-async operations */
+  static const  int PRIORITY_NOTIFY     = G_PRIORITY_DEFAULT - 1;       /* important, delivers async signals */
+  static const  int PRIORITY_NORMAL     = G_PRIORITY_DEFAULT;           /* normal importantance, interfaces to all layers */
+  static const  int PRIORITY_UPDATE     = G_PRIORITY_HIGH_IDLE + 5;     /* mildly important, used for GUI updates or user information */
+  static const  int PRIORITY_BACKGROUND = G_PRIORITY_LOW + 500;         /* unimportant, used when everything else done */
+  static uint64 get_current_time_usecs(); // FIXME: should move this to birnetutilsxx.hh
+  virtual void  quit            (void) = 0;
+  virtual void  wakeup          (void) = 0;
+  virtual bool  running         (void) = 0;
+  virtual uint  add_source      (int             priority,
+                                 Source         *loop_source) = 0;
+  virtual bool  try_remove      (uint            id) = 0;
+  void          remove          (uint            id);
+  uint          idle_timed      (uint            timeout_ms,
+                                 const VoidSlot &sl) { return add_source (PRIORITY_NEXT,       new TimedSource (*sl.get_trampoline(), timeout_ms)); }
+  uint          idle_timed      (uint            timeout_ms,
+                                 const BoolSlot &sl) { return add_source (PRIORITY_NEXT,       new TimedSource (*sl.get_trampoline(), timeout_ms)); }
+  uint          idle_now        (const VoidSlot &sl) { return add_source (PRIORITY_HIGH,       new TimedSource (*sl.get_trampoline())); }
+  uint          idle_now        (const BoolSlot &sl) { return add_source (PRIORITY_HIGH,       new TimedSource (*sl.get_trampoline())); }
+  uint          idle_next       (const VoidSlot &sl) { return add_source (PRIORITY_NEXT,       new TimedSource (*sl.get_trampoline())); }
+  uint          idle_next       (const BoolSlot &sl) { return add_source (PRIORITY_NEXT,       new TimedSource (*sl.get_trampoline())); }
+  uint          idle_notify     (const VoidSlot &sl) { return add_source (PRIORITY_NOTIFY,     new TimedSource (*sl.get_trampoline())); }
+  uint          idle_notify     (const BoolSlot &sl) { return add_source (PRIORITY_NOTIFY,     new TimedSource (*sl.get_trampoline())); }
+  uint          idle_normal     (const VoidSlot &sl) { return add_source (PRIORITY_NORMAL,     new TimedSource (*sl.get_trampoline())); }
+  uint          idle_normal     (const BoolSlot &sl) { return add_source (PRIORITY_NORMAL,     new TimedSource (*sl.get_trampoline())); }
+  uint          idle_update     (const VoidSlot &sl) { return add_source (PRIORITY_UPDATE,     new TimedSource (*sl.get_trampoline())); }
+  uint          idle_update     (const BoolSlot &sl) { return add_source (PRIORITY_UPDATE,     new TimedSource (*sl.get_trampoline())); }
+  uint          idle_background (const VoidSlot &sl) { return add_source (PRIORITY_BACKGROUND, new TimedSource (*sl.get_trampoline())); }
+  uint          idle_background (const BoolSlot &sl) { return add_source (PRIORITY_BACKGROUND, new TimedSource (*sl.get_trampoline())); }
 };
 
 class MainLoopPool {
   static void           rapicorn_init   ();
-  friend void           rapicorn_init   ();
+  friend void           rapicorn_init   (int*, char***, const char*);
   BIRNET_PRIVATE_CLASS_COPY (MainLoopPool);
 public:
   class Singleton {
@@ -126,43 +134,6 @@ public:
   static uint           get_n_threads   (void)                  { AutoLocker locker (m_mutex); return m_singleton->get_n_threads(); }
   static void           quit_loops      ()                      { AutoLocker locker (m_mutex); return m_singleton->quit_loops(); }
 };
-
-/* --- implementation details --- */
-template<typename Func> bool
-MainLoop::TimedSource<Func>::prepare (uint64 current_time_usecs,
-                                      int   *timeout_msecs_p)
-{
-  if (current_time_usecs >= m_expiration_usecs)
-    return true;                                            /* timeout expired */
-  uint64 interval = m_interval_msecs * 1000ULL;
-  if (current_time_usecs + interval < m_expiration_usecs)
-    m_expiration_usecs = current_time_usecs + interval;     /* clock warped back in time */
-  *timeout_msecs_p = MIN (G_MAXINT, (m_expiration_usecs - current_time_usecs) / 1000ULL);
-  return 0 == *timeout_msecs_p;
-}
-
-template<typename Func> bool
-MainLoop::TimedSource<Func>::check (uint64 current_time_usecs)
-{
-  return current_time_usecs >= m_expiration_usecs;
-}
-
-template<typename Func> bool
-MainLoop::TimedSource<Func>::dispatch()
-{
-  if (!IdleSource<Func>::dispatch())
-    return false;
-  m_expiration_usecs = MainLoop::get_current_time_usecs() + 1000ULL * m_interval_msecs;
-  return true;
-}
-
-template<typename Func>
-MainLoop::TimedSource<Func>::TimedSource (Func func,
-                                          uint interval_msecs) :
-  IdleSource<Func> (func),
-  m_interval_msecs (interval_msecs),
-  m_expiration_usecs (MainLoop::get_current_time_usecs() + 1000ULL * interval_msecs)
-{}
 
 // FIXME:
 MainLoop*    glib_loop_create (void);

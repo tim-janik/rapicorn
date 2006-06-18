@@ -32,7 +32,9 @@ using namespace Birnet;
 using Birnet::uint;     // resolve conflict with global uint
 
 /* --- i18n macros --- */
-void            rapicorn_init           (void);
+void            rapicorn_init           (int        *argcp,
+                                         char     ***argvp,
+                                         const char *app_name);
 const char*     rapicorn_gettext        (const char *text);
 #ifdef  RAPICORN_PRIVATE
 #define _(str)  rapicorn_gettext (str)

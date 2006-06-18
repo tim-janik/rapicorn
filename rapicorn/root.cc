@@ -23,36 +23,57 @@ using namespace std;
 
 namespace Rapicorn {
 
-Root::Root() :
-  sig_expose (*this)
+Root::Root()
 {
   change_flags_silently (ANCHORED, true);       /* root is always anchored */
 }
 
-class RootImpl : public Root, public SingleContainerImpl {
+class RootImpl : public virtual Root,
+                 public virtual SingleContainerImpl,
+                 public virtual Viewport::EventReceiver {
   OwnedMutex m_omutex;
   bool       m_entered;
-  virtual OwnedMutex&
-  owned_mutex ()
-  {
-    return m_omutex;
-  }
+  Viewport  *m_viewport;
+  MainLoop  *m_loop;
+  MainLoop::Source *m_source;
 public:
   RootImpl() :
-    m_entered (false)
+    m_entered (false), m_viewport (NULL),
+    m_loop (NULL), m_source (NULL),
+    m_expose_queue_stamp (0)
   {
+    BIRNET_ASSERT (m_loop == NULL);
+    m_loop = glib_loop_create();
     Appearance *appearance = Appearance::create_default();
     style (appearance->create_style ("normal"));
     unref (appearance);
     set_flag (PARENT_SENSITIVE, true);
   }
+private:
   ~RootImpl()
   {
+    if (m_loop)
+      {
+        m_loop->quit();
+        m_loop->unref();
+        m_loop = NULL;
+      }
+    BIRNET_ASSERT (m_source == NULL); // should have been destroyed with loop
+    if (m_viewport)
+      {
+        delete m_viewport;
+        m_viewport = NULL;
+      }
     /* make sure all children are removed while this is still of type Root.
      * necessary because C++ alters the object type during constructors and destructors
      */
     if (has_children())
       remove (get_child());
+  }
+  virtual OwnedMutex&
+  owned_mutex ()
+  {
+    return m_omutex;
   }
   virtual void
   size_request (Requisition &requisition)
@@ -73,12 +94,6 @@ public:
     Requisition rq = child.size_request();
     child.set_allocation (area);
   }
-  virtual void
-  expose (const Allocation &area)
-  {
-    sig_expose.emit (area);
-  }
-protected:
   vector<Item*>
   item_difference (const vector<Item*> &clist, /* preserve order of clist */
                    const vector<Item*> &cminus)
@@ -165,7 +180,6 @@ protected:
       }
     return handled;
   }
-private:
   struct ButtonState {
     Item *item;
     uint button;
@@ -357,11 +371,57 @@ private:
       {
         Allocation allocation (0, 0, wevent->width, wevent->height);
         set_allocation (allocation);
+        /* discard expose requests, well get a WIN_DRAW event */
+        m_expose_queue.clear();
         handled = true;
       }
     return handled;
   }
-private:
+  bool
+  dispatch_win_draw_event (const Event &event)
+  {
+    bool handled = false;
+    const EventWinDraw *devent = dynamic_cast<const EventWinDraw*> (&event);
+    if (devent)
+      {
+        for (uint i = 0; i < devent->rectangles.size(); i++)
+          {
+            if (m_viewport->last_draw_stamp() != devent->draw_stamp)
+              break;    // discard outdated expose rectangles
+            const Rect &rect = devent->rectangles[i];
+            /* render area */
+            Plane *plane = new Plane (rect.ll.x, rect.ll.y, rect.width(), rect.height());
+            render (*plane);
+            /* blit to screen */
+            m_viewport->blit_plane (plane, devent->draw_stamp); // takes over plane
+          }
+        handled = true;
+      }
+    return handled;
+  }
+  void
+  flush_expose_queue()
+  {
+    m_viewport->invalidate_plane (m_expose_queue, m_expose_queue_stamp);
+    m_expose_queue.clear();
+  }
+  std::vector<Rect> m_expose_queue;
+  uint              m_expose_queue_stamp;
+  virtual void
+  expose (const Allocation &area)
+  {
+    /* this function is expected to *queue* events, and not render immediately */
+    if (m_viewport && area.width && area.height)
+      {
+        if (!m_expose_queue.size())
+          m_loop->idle_next (slot (*this, &RootImpl::flush_expose_queue));
+        uint stamp = m_viewport->last_draw_stamp();
+        if (stamp != m_expose_queue_stamp)
+          m_expose_queue.clear(); /* discard outdated exposes */
+        m_expose_queue.push_back (Rect (Point (area.x, area.y), area.width, area.height));
+        m_expose_queue_stamp = stamp;
+      }
+  }
   struct GrabEntry {
     Item *item;
     bool  unconfined;
@@ -395,7 +455,6 @@ private:
       dispatch_event (*mevent);
     delete mevent;
   }
-public:
   virtual void
   add_grab (Item &child,
             bool  unconfined)
@@ -460,6 +519,7 @@ public:
   {
     switch (event.type)
       {
+      case EVENT_LAST:
       case EVENT_NONE:          return false;
       case MOUSE_ENTER:         return dispatch_enter_event (event);
       case MOUSE_MOVE:          return dispatch_move_event (event);
@@ -483,30 +543,29 @@ public:
         /**/                    return dispatch_scroll_event (event);
       case CANCEL_EVENTS:       return dispatch_cancel_event (event);
       case WIN_SIZE:            return dispatch_win_size_event (event);
-      default:
-      case EVENT_LAST:          return false;
+      case WIN_DRAW:            return dispatch_win_draw_event (event);
       }
+    return false;
   }
   /* event queue */
-  Mutex m_loop_mutex;
   std::list<Event*> m_event_queue;
   virtual bool
   prepare (uint64 current_time_usecs,
            int   *timeout_msecs_p)
   {
-    AutoLocker locker (m_loop_mutex);
+    AutoLocker locker (m_omutex);
     return !m_event_queue.empty();
   }
   virtual bool
   check (uint64 current_time_usecs)
   {
-    AutoLocker locker (m_loop_mutex);
+    AutoLocker locker (m_omutex);
     return !m_event_queue.empty();
   }
   virtual bool
   dispatch ()
   {
-    AutoLocker locker (m_loop_mutex);
+    AutoLocker locker (m_omutex);
     if (!m_event_queue.empty())
       {
         Event *event = m_event_queue.front();
@@ -519,8 +578,38 @@ public:
   virtual void
   enqueue_async (Event *event)
   {
-    AutoLocker locker (m_loop_mutex);
+    AutoLocker locker (m_omutex);
     m_event_queue.push_back (event);
+    if (m_loop)
+      m_loop->wakeup();
+  }
+  class RootSource : public MainLoop::Source {
+    RootImpl &root;
+  public:
+    explicit     RootSource  (RootImpl &_root) : root (_root) { AutoLocker locker (root.m_omutex); root.m_source = this; }
+    virtual      ~RootSource ()                               { AutoLocker locker (root.m_omutex); root.m_source = NULL; }
+    virtual bool prepare     (uint64 current_time_usecs,
+                              int   *timeout_msecs_p)     { AutoLocker locker (root.m_omutex); return root.prepare (current_time_usecs, timeout_msecs_p); }
+    virtual bool check       (uint64 current_time_usecs)  { AutoLocker locker (root.m_omutex); return root.check (current_time_usecs); }
+    virtual bool dispatch    ()                           { AutoLocker locker (root.m_omutex); return root.dispatch(); }
+  };
+  void
+  idle_show()
+  {
+    m_viewport->show();
+  }
+  virtual void
+  run_async (void)
+  {
+    BIRNET_ASSERT (m_viewport == NULL);
+    m_viewport = Viewport::create_viewport ("auto", WINDOW_TYPE_NORMAL, *this);
+    BIRNET_ASSERT (m_loop != NULL);
+    MainLoopPool::add_loop (m_loop);
+    BIRNET_ASSERT (m_source == NULL);
+    m_source = new RootSource (*this);
+    m_loop->idle_now (slot (*this, &RootImpl::idle_show));
+    m_loop->add_source (MainLoop::PRIORITY_NORMAL, m_source);
+    // m_loop->idle_timed (250, timer);
   }
 };
 static const ItemFactory<RootImpl> root_factory ("Rapicorn::Root");

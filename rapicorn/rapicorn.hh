@@ -39,5 +39,6 @@
 #include <rapicorn/root.hh>
 #include <rapicorn/table.hh>
 #include <rapicorn/utilities.hh>
+#include <rapicorn/viewport.hh>
                       
 #endif  /* __RAPICORN_HH__ */

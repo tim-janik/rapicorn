@@ -24,8 +24,11 @@ namespace Rapicorn {
 static const char *rapicorn_i18n_domain = NULL;
 
 void
-rapicorn_init (void)
+rapicorn_init (int        *argcp,
+               char     ***argvp,
+               const char *app_name)
 {
+  /* initialize i18n functions */
   rapicorn_i18n_domain = RAPICORN_I18N_DOMAIN;
   // bindtextdomain (rapicorn_i18n_domain, dirname);
   bind_textdomain_codeset (rapicorn_i18n_domain, "UTF-8");
