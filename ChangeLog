@@ -1,3 +1,12 @@
+Mon Jun 19 03:28:14 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/root.cc: removed RootImpl class declaration. provide external method
+	implementations of class RootImpl.
+
+	* rapicorn/rootimpl.hh: declare class RootImpl.
+
+	* rapicorn/root.hh: minor cancel_item_events() fixup.
+
 Sun Jun 18 23:34:24 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/viewport-gtk.cc:

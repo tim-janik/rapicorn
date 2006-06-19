@@ -1,0 +1,129 @@
+/* Rapicorn
+ * Copyright (C) 2005-2006 Tim Janik
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General
+ * Public License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+#ifndef __RAPICORN_ROOT_IMPL_HH__
+#define __RAPICORN_ROOT_IMPL_HH__
+
+#include <rapicorn/root.hh>
+#include <rapicorn/containerimpl.hh>
+#include <rapicorn/viewport.hh>
+
+namespace Rapicorn {
+
+class RootImpl : public virtual Root,
+                 public virtual SingleContainerImpl,
+                 public virtual Viewport::EventReceiver
+{
+  OwnedMutex            m_omutex;
+  bool                  m_entered;
+  Viewport             *m_viewport;
+  MainLoop             *m_loop;
+  MainLoop::Source     *m_source;
+  std::vector<Rect>     m_expose_queue;
+  uint                  m_expose_queue_stamp;
+  std::list<Event*>     m_event_queue;
+  EventContext          m_last_event_context;
+  vector<Item*>         m_last_entered_children;
+public:
+  explicit              RootImpl                                ();
+private:
+  /*Des*/               ~RootImpl                               ();
+  virtual void          dispose_item                            (Item                   &item);
+  /* misc */
+  virtual OwnedMutex&   owned_mutex                             ();
+  vector<Item*>         item_difference                         (const vector<Item*>    &clist, /* preserves order of clist */
+                                                                 const vector<Item*>    &cminus);
+  /* Item */
+  virtual void          size_request                            (Requisition            &requisition);
+  virtual void          size_allocate                           (Allocation              area);
+  /* rendering */
+  virtual void          render                                  (Plane                  &plane);
+  using                 Item::render;
+  virtual void          expose                                  (const Allocation       &area);
+  void                  flush_expose_queue                      ();
+  /* grab handling */
+  virtual void          remove_grab_item                        (Item                   &child);
+  void                  grab_stack_changed                      ();
+  virtual void          add_grab                                (Item                   &child,
+                                                                 bool                    unconfined);
+  virtual void          remove_grab                             (Item                   &child);
+  virtual Item*         get_grab                                (bool                   *unconfined = NULL);
+  /* main loop */
+  void                  idle_show                               ();
+  virtual void          run_async                               (void);
+  virtual bool          prepare                                 (uint64                  current_time_usecs,
+                                                                 int                    *timeout_msecs_p);
+  virtual bool          check                                   (uint64                  current_time_usecs);
+  virtual bool          dispatch                                ();
+  /* event queue */
+  virtual void          enqueue_async                           (Event                  *event);
+  virtual void          cancel_item_events                      (Item                   *item);
+  using                 Root::cancel_item_events;
+  bool                  dispatch_mouse_movement                 (const Event            &event);
+  bool                  dispatch_event_to_pierced_or_grab       (const Event            &event);
+  bool                  dispatch_button_press                   (const EventButton      &bevent);
+  bool                  dispatch_button_release                 (const EventButton      &bevent);
+  bool                  dispatch_cancel_event                   (const Event            &event);
+  bool                  dispatch_enter_event                    (const EventMouse       &mevent);
+  bool                  dispatch_move_event                     (const EventMouse       &mevent);
+  bool                  dispatch_leave_event                    (const EventMouse       &mevent);
+  bool                  dispatch_button_event                   (const Event            &event);
+  bool                  dispatch_focus_event                    (const EventFocus       &fevent);
+  bool                  dispatch_key_event                      (const Event            &event);
+  bool                  dispatch_scroll_event                   (const EventScroll      &sevent);
+  bool                  dispatch_win_size_event                 (const Event            &event);
+  bool                  dispatch_win_draw_event                 (const Event            &event);
+  virtual bool          dispatch_event                          (const Event            &event);
+  /* --- GrabEntry --- */
+  struct GrabEntry {
+    Item *item;
+    bool  unconfined;
+    explicit            GrabEntry (Item *i, bool uc) : item (i), unconfined (uc) {}
+  };
+  vector<GrabEntry>     m_grab_stack;
+  /* --- ButtonState --- */
+  struct ButtonState {
+    Item               *item;
+    uint                button;
+    explicit            ButtonState     (Item *i, uint b) : item (i), button (b) {}
+    explicit            ButtonState     () : item (NULL), button (0) {}
+    bool                operator< (const ButtonState &bs2) const
+    {
+      const ButtonState &bs1 = *this;
+      return bs1.item < bs2.item || (bs1.item == bs2.item &&
+                                     bs1.button < bs2.button);
+    }
+  };
+  map<ButtonState,uint> m_button_state_map;
+  /* --- MainLoop Source --- */
+  class RootSource : public MainLoop::Source {
+    RootImpl &root;
+  public:
+    explicit            RootSource  (RootImpl &_root) : root (_root) { AutoLocker locker (root.m_omutex); root.m_source = this; }
+    virtual             ~RootSource ()                               { AutoLocker locker (root.m_omutex); root.m_source = NULL; }
+    virtual bool        prepare     (uint64 current_time_usecs,
+                                     int   *timeout_msecs_p)     { AutoLocker locker (root.m_omutex); return root.prepare (current_time_usecs, timeout_msecs_p); }
+    virtual bool        check       (uint64 current_time_usecs)  { AutoLocker locker (root.m_omutex); return root.check (current_time_usecs); }
+    virtual bool        dispatch    ()                           { AutoLocker locker (root.m_omutex); return root.dispatch(); }
+  };
+};
+
+
+} // Rapicorn
+
+#endif  /* __RAPICORN_ROOT_IMPL_HH__ */

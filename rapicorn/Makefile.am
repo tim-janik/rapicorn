@@ -17,9 +17,10 @@ rapicorn_public_headers = $(strip 	\
 	commands.hh	properties.hh	adjustment.hh	painter.hh	cairocontext.hh	\
 )
 rapicorn_impl_headers = $(strip 	\
-	itemimpl.hh			\
-	containerimpl.hh		\
 	arrangementimpl.hh		\
+	containerimpl.hh		\
+	itemimpl.hh			\
+	rootimpl.hh			\
 	tableimpl.hh			\
 )
 rapicorn_cc_sources = $(strip 		\

@@ -29,7 +29,8 @@ namespace Rapicorn {
 class Root : public virtual Container, public virtual MainLoop::Source {
 protected:
   explicit      Root                    ();
-  virtual void  cancel_item_events      (Item        &item) = 0;
+  virtual void  cancel_item_events      (Item        *item) = 0;
+  void          cancel_item_events      (Item        &item)             { cancel_item_events (&item); }
   virtual bool  dispatch_event          (const Event &event) = 0;
   /* loop source (FIXME) */
   virtual bool  prepare                 (uint64 current_time_usecs,
