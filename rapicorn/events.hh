@@ -75,7 +75,7 @@ String string_from_event_type (EventType etype);
 
 class Event {
   friend class EventFactory;
-  PRIVATE_CLASS_COPY (Event);
+  BIRNET_PRIVATE_CLASS_COPY (Event);
 protected:
   explicit      Event();
 public:
@@ -91,7 +91,7 @@ typedef Event EventMouse;
 class EventButton : public Event {
   friend class EventFactory;
   EventButton() {}
-  PRIVATE_CLASS_COPY (EventButton);
+  BIRNET_PRIVATE_CLASS_COPY (EventButton);
 public:
   /* button press/release */
   uint          button; /* 1, 2, 3 */
@@ -101,7 +101,7 @@ typedef Event EventFocus;
 class EventKey : public Event {
   friend class EventFactory;
   EventKey() {}
-  PRIVATE_CLASS_COPY (EventKey);
+  BIRNET_PRIVATE_CLASS_COPY (EventKey);
 public:
   /* key press/release */
   uint32        key;    /* of type KeyValue */
@@ -110,7 +110,7 @@ public:
 struct EventWinSize : public Event {
   friend class EventFactory;
   EventWinSize() {}
-  PRIVATE_CLASS_COPY (EventWinSize);
+  BIRNET_PRIVATE_CLASS_COPY (EventWinSize);
 public:
   uint   draw_stamp;
   double width, height;
@@ -118,7 +118,7 @@ public:
 struct EventWinDraw : public Event {
   friend class EventFactory;
   EventWinDraw() {}
-  PRIVATE_CLASS_COPY (EventWinDraw);
+  BIRNET_PRIVATE_CLASS_COPY (EventWinDraw);
 public:
   uint              draw_stamp;
   Rect              bbox; /* bounding box */

@@ -55,13 +55,13 @@ public:
   void                  lighting                (LightingType sh);
   void                  shade                   (LightingType sh);
 private:
-  virtual String        background              () const { assert_not_reached(); }
-  virtual LightingType  lighting                () const { assert_not_reached(); }
-  virtual LightingType  shade                   () const { assert_not_reached(); }
+  virtual String        background              () const { BIRNET_ASSERT_NOT_REACHED(); }
+  virtual LightingType  lighting                () const { BIRNET_ASSERT_NOT_REACHED(); }
+  virtual LightingType  shade                   () const { BIRNET_ASSERT_NOT_REACHED(); }
 };
 
 class Frame : public virtual Convertible {
-  FrameType             frame_type      () const        { assert_not_reached(); }
+  FrameType             frame_type      () const        { BIRNET_ASSERT_NOT_REACHED(); }
 public:
   void                  frame_type      (FrameType ft);
   virtual void          normal_frame    (FrameType ft) = 0;

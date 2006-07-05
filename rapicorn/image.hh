@@ -31,8 +31,8 @@ public:
 };
 
 class Image : public virtual Item {
-  virtual String        image_file        () const { assert_not_reached(); }
-  virtual String        builtin_pixstream () const { assert_not_reached(); }
+  virtual String        image_file        () const { BIRNET_ASSERT_NOT_REACHED(); }
+  virtual String        builtin_pixstream () const { BIRNET_ASSERT_NOT_REACHED(); }
 public:
   typedef enum {
     NONE        = 0,

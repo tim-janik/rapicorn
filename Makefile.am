@@ -13,19 +13,14 @@ test:
 # extra dependancies
 configure: acbirnet.m4 birnet/configure.inc
 
-CLEANFILES += $(strip		\
-	intltool-extract	\
-	intltool-merge		\
-	intltool-update		\
-)
 
-EXTRA_DIST += $(strip		\
-	TODO			\
-	COPYING.GPL		\
-	COPYING.LGPL		\
-	acbirnet.m4		\
- 	po-helper.sh.in		\
-	intltool-extract.in     \
-	intltool-merge.in       \
-	intltool-update.in	\
-)
+CLEANFILES += intltool-extract intltool-merge intltool-update
+
+EXTRA_DIST += intltool-extract.in intltool-merge.in intltool-update.in
+
+# install pkg-config files
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = rapicorn.pc
+$(pkgconfig_DATA): $(top_builddir)/config.status
+CLEANFILES += rapicorn.pc
+EXTRA_DIST += rapicorn.pc

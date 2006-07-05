@@ -1,3 +1,13 @@
+Thu Jul  6 01:08:54 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn.pc.in:
+	* configure.in:
+	* Makefile.am: generate and install rapicorn.pc.
+
+	* rapicorn/image.hh:
+	* rapicorn/events.hh: 
+	* rapicorn/paintcontainers.hh: macro fixups.
+
 Mon Jun 19 03:28:14 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/root.cc: removed RootImpl class declaration. provide external method
