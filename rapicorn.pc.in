@@ -8,5 +8,5 @@ Name: Rapicorn
 Description: Rapicorn (micro widget library)
 Requires: glib-2.0
 Version: @VERSION@
-Libs: -L${libdir} -lrapicorn
+Libs: -L${libdir} -lrapicorn @GTK_LIBS@
 Cflags: -I${includedir}

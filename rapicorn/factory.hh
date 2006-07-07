@@ -41,6 +41,11 @@ Handle<Item>   create_item     (const String           &gadget_identifier,
                                 const ArgumentList     &arguments = ArgumentList());
 Handle<Root>   create_root     (const String           &gadget_identifier,
                                 const ArgumentList     &arguments = ArgumentList());
+/* convenience function */
+void           must_parse_file (const String           &relative_file_name,
+                                const String           &i18n_domain,
+                                const String            altpath1,
+                                const String            altpath2 = ".");
 
 /* --- item type registration --- */
 struct ItemTypeFactory : Deletable {

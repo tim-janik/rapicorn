@@ -1488,7 +1488,6 @@ MarkupParser::parse (const char          *text,
                   error.char_number = context->char_number;
                   context->parser->end_element (close_name, error);
 		  
-		  
 		  /* Pop the tag stack */
 		  context->tag_stack.pop();
 		  if (error.code)

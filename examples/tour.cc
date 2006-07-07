@@ -77,7 +77,7 @@ main (int   argc,
   rapicorn_init_with_foreign_gtk (&argc, &argv, "TourTest");
   register_builtin_images();
 
-  Root *root = construct_gui (dirname (argv[0]).c_str());
+  Root *root = construct_gui (Path::dirname (argv[0]).c_str());
   root->run_async();
   gtk_main();
   return 0;

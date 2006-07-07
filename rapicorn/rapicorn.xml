@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>  <!--*-mode: xml;-*-->
+<!-- Rapicorn
+ ! Copyright (C) 2005-2006 Tim Janik
+ !
+ ! This library is free software; you can redistribute it and/or
+ ! modify it under the terms of the GNU Lesser General Public 
+ ! License as published by the Free Software Foundation; either 
+ ! version 2 of the License, or (at your option) any later version. 
+ ! 
+ ! This library is distributed in the hope that it will be useful, 
+ ! but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
+ ! Lesser General Public License for more details. 
+ ! 
+ ! You should have received a copy of the GNU Lesser General 
+ ! Public License along with this library; if not, write to the 
+ ! Free Software Foundation, Inc., 59 Temple Place, Suite 330, 
+ ! Boston, MA 02111-1307, USA. 
+ !--> 
+<rapicorn-gadgets xmlns:def="http://rapicorn.org/xmlns:def">
+  
+  <!-- root -->
+  <def:root inherit="Rapicorn::Root"/>
+
+  <!-- frame -->
+  <def:frame inherit="Rapicorn::Frame" >
+  </def:frame>
+
+  <!-- alignment -->
+  <def:alignment inherit="Rapicorn::Alignment" />
+
+  <!-- ambience (background + lighting) -->
+  <def:ambience inherit="Rapicorn::Ambience"/>
+
+  <!-- table -->
+  <def:table inherit="Rapicorn::Table" >
+  </def:table>
+  <def:hbox inherit="Rapicorn::HBox" />
+  <def:vbox inherit="Rapicorn::VBox" />
+
+  <!-- arrangement -->
+  <def:arrangement inherit="Rapicorn::Arrangement" />
+
+  <!-- label -->
+  <def:label inherit="Rapicorn::PangoLabel" />
+
+  <!-- image -->
+  <def:image inherit="Rapicorn::Image" />
+
+  <!-- buttons -->
+  <def:button inherit="Rapicorn::ButtonArea" child-container="child-area" >
+    <frame normal-frame="out" impressed-frame="in" >
+      <ambience
+	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
+	normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"
+	>
+	<frame frame-type="none" >
+	  <alignment id="child-area" vscale="0" hscale="0" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" >
+	  </alignment>
+	</frame>
+      </ambience>
+    </frame>
+  </def:button>
+  <def:default-button inherit="Rapicorn::Frame" child-container="child-area" frame-type="in" >
+    <alignment left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
+      <button id="child-area" />
+    </alignment>
+  </def:default-button>
+
+  <!-- dot-grid -->
+  <def:dot-grid inherit="Rapicorn::DotGrid"/>
+
+  <!-- arrow -->
+  <def:arrow inherit="Rapicorn::Arrow"/>
+
+  <!-- slider -->
+  <def:Rapicorn-slider-trough inherit="Rapicorn::SliderTrough"/>
+  <def:Rapicorn-slider-skid inherit="Rapicorn::SliderSkid"/>
+  <!-- hslider -->
+  <def:hslider inherit="Rapicorn::SliderArea">
+    <frame normal-frame="in" vexpand="1" hexpand="1">
+      <hbox vexpand="1">
+	<button on-click="decrement" on-click2="page-decrement" vexpand="1">
+	  <arrow arrow-dir="left" />
+	</button>
+	<Rapicorn-slider-trough hexpand="1" vexpand="1">
+	  <Rapicorn-slider-skid vexpand="1" vertical-skid="0">
+	    <ambience
+	      normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
+	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"
+	      >
+	      <frame normal-frame="out" vexpand="1">
+		<dot-grid n-hdots="6" n-vdots="2" left-padding-dots="2" right-padding-dots="2" top-padding-dots="0" bottom-padding-dots="0" />
+	      </frame>
+	    </ambience>
+	  </Rapicorn-slider-skid>
+	</Rapicorn-slider-trough>
+	<button on-click="increment" on-click2="page-increment" vexpand="1">
+	  <arrow arrow-dir="right" />
+	</button>
+      </hbox>
+    </frame>
+  </def:hslider>
+  <!-- vslider -->
+  <def:vslider inherit="Rapicorn::SliderArea">
+    <frame normal-frame="in" vexpand="1" hexpand="1">
+      <vbox hexpand="1">
+	<button on-click="increment" on-click2="page-increment" hexpand="1">
+	  <arrow arrow-dir="up" />
+	</button>
+	<Rapicorn-slider-trough vexpand="1" hexpand="1">
+	  <Rapicorn-slider-skid hexpand="1" vertical-skid="1">
+	    <ambience
+	      normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
+	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"
+	      >
+	      <frame normal-frame="out" hexpand="1">
+		<dot-grid n-hdots="2" n-vdots="6" left-padding-dots="0" right-padding-dots="0" top-padding-dots="2" bottom-padding-dots="2" />
+	      </frame>
+	    </ambience>
+	  </Rapicorn-slider-skid>
+	</Rapicorn-slider-trough>
+	<button on-click="decrement" on-click2="page-decrement" hexpand="1">
+	  <arrow arrow-dir="down" />
+	</button>
+      </vbox>
+    </frame>
+  </def:vslider>
+  
+</rapicorn-gadgets>

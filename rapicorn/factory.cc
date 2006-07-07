@@ -28,6 +28,8 @@ using Birnet::uint;
 using namespace Rapicorn;
 using namespace Rapicorn::Factory;
 
+static void initialize_standard_gadgets_lazily (void);
+
 
 /* --- Gadget definition --- */
 struct Gadget {
@@ -121,6 +123,11 @@ public:
                                                          const String          &i18n_domain,
                                                          const String          &domain,
                                                          const std::nothrow_t  &nt);
+  void                          parse_gadget_data       (const uint             data_length,
+                                                         const char            *data,
+                                                         const String          &i18n_domain,
+                                                         const String          &domain,
+                                                         const std::nothrow_t  &nt = dothrow);
   
   Item&                         construct_gadget        (const String          &gadget_identifier,
                                                          const ArgumentList    &arguments);
@@ -163,7 +170,7 @@ rewrite_canonify_attribute (String s)
 
 /* --- GadgetParser --- */
 struct GadgetParser : public MarkupParser {
-  FactoryDomain &fdomain;
+  FactoryDomain      &fdomain;
   std::stack<Gadget*> gadget_stack;
   const Gadget      **child_container_loc;
   String              child_container_name;
@@ -342,6 +349,32 @@ FactorySingleton::parse_gadget_file (const String           &file_name,
     }
   if (error.code)
     {
+      String ers = string_printf ("%s:%d:%d:error(%d): %s", file_name.c_str(), error.line_number, error.char_number, error.code, error.message.c_str());
+      if (&nt == &dothrow)
+        throw Exception (ers);
+      else
+        Birnet::error (ers);
+    }
+}
+
+void
+FactorySingleton::parse_gadget_data (const uint             data_length,
+                                     const char            *data,
+                                     const String          &i18n_domain,
+                                     const String          &domain,
+                                     const std::nothrow_t  &nt)
+{
+  FactoryDomain *fdomain = lookup_domain (domain);
+  if (!fdomain)
+    fdomain = add_domain (domain, i18n_domain);
+  GadgetParser gp (*fdomain);
+  MarkupParser::Error error;
+  gp.parse (data, data_length, &error);
+  if (!error.code)
+    gp.end_parse (&error);
+  if (error.code)
+    {
+      String file_name = "-";
       String ers = string_printf ("%s:%d:%d:error(%d): %s", file_name.c_str(), error.line_number, error.char_number, error.code, error.message.c_str());
       if (&nt == &dothrow)
         throw Exception (ers);
@@ -588,11 +621,36 @@ FactorySingleton::create_from_item_type (const String &ident)
 namespace Rapicorn {
 
 void
+Factory::must_parse_file (const String           &relative_file_name,
+                          const String           &i18n_domain,
+                          const String            altpath1,
+                          const String            altpath2)
+{
+  if (Path::isabs (relative_file_name))
+    parse_file (relative_file_name, i18n_domain, i18n_domain);
+  else if (altpath1[0] && altpath2[0])
+    {
+      String p1 = Path::join (altpath1, relative_file_name);
+      if (Path::check (p1, "r"))
+        parse_file (p1, i18n_domain, i18n_domain);
+      else
+        parse_file (Path::join (altpath2, relative_file_name), i18n_domain, i18n_domain);
+    }
+  else if (altpath1[0])
+    parse_file (Path::join (altpath1, relative_file_name), i18n_domain, i18n_domain);
+  else if (altpath2[0])
+    parse_file (Path::join (altpath2, relative_file_name), i18n_domain, i18n_domain);
+  else
+    throw Exception (STRFUNC, ": failed to locate file without pathname: ", relative_file_name);
+}
+
+void
 Factory::parse_file (const String           &file_name,
                      const String           &i18n_domain,
                      const String           &domain,
                      const std::nothrow_t   &nt)
 {
+  initialize_standard_gadgets_lazily();
   FactorySingleton::singleton->parse_gadget_file (file_name, i18n_domain, domain, nt);
 }
 
@@ -608,6 +666,7 @@ Handle<Item>
 Factory::create_item (const String       &gadget_identifier,
                       const ArgumentList &arguments)
 {
+  initialize_standard_gadgets_lazily();
   Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments);
   return item.handle<Item>(); // Handle<> does ref_sink()
 }
@@ -616,6 +675,7 @@ Handle<Root>
 Factory::create_root (const String           &gadget_identifier,
                       const ArgumentList     &arguments)
 {
+  initialize_standard_gadgets_lazily();
   Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments);
   return item.handle<Root>(); // Handle<> does ref_sink()
 }
@@ -658,3 +718,23 @@ Factory::ItemTypeFactory::ItemTypeFactory (const char *namespaced_ident) :
 {}
 
 } // Rapicorn
+
+namespace { // Anon
+#include "zintern.c"    // provides RAPICORN_SIZE and RAPICORN_DATA
+
+static void
+initialize_standard_gadgets_lazily (void)
+{
+  AutoLocker al (rapicorn_mutex());
+  static bool initialized = false;
+  if (!initialized)
+    {
+      initialized = true;
+      uint8 *data = birnet_zintern_decompress (RAPICORN_SIZE, RAPICORN_DATA, sizeof (RAPICORN_DATA) / sizeof (RAPICORN_DATA[0]));
+      const char *domain = "Rapicorn";
+      FactorySingleton::singleton->parse_gadget_data (RAPICORN_SIZE, (const char*) data, domain, domain);
+      g_free (data);
+    }
+}
+
+} // Anon

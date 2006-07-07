@@ -44,6 +44,14 @@ rapicorn_gettext (const char *text)
   return dgettext (rapicorn_i18n_domain, text);
 }
 
+static RecMutex rapicorn_global_mutex;
+
+RecMutex*
+rapicorn_mutex ()
+{
+  return &rapicorn_global_mutex;
+}
+
 Convertible::Convertible() :
   sig_find_interface (*this)
 {}

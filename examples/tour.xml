@@ -17,115 +17,8 @@
  ! Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  ! Boston, MA 02111-1307, USA.
  !-->
-<rapicorn-gadgets
-  xmlns:def="http://beast.gtk.org/rapicorn-gadgets/xmlns:def"
-  xmlns:env="http://beast.gtk.org/rapicorn-gadgets/xmlns:env">
+<rapicorn-gadgets xmlns:def="http://rapicorn.org/xmlns:def">
 
-  <!-- root -->
-  <def:root inherit="Rapicorn::Root"/>
-  <!-- frame -->
-  <def:frame inherit="Rapicorn::Frame" >
-  </def:frame>
-  <!-- alignment -->
-  <def:alignment inherit="Rapicorn::Alignment"
-    left-padding="0"
-    right-padding="0"
-    top-padding="0"
-    bottom-padding="0"
-    halign="0.5"
-    valign="0.5"
-    hscale="1"
-    vscale="1" />
-  <!-- ambience (background + lighting) -->
-  <def:ambience inherit="Rapicorn::Ambience"/>
-  <!-- table -->
-  <def:table inherit="Rapicorn::Table" >
-  </def:table>
-  <def:hbox inherit="Rapicorn::HBox" />
-  <def:vbox inherit="Rapicorn::VBox" />
-  <!-- arrangement -->
-  <def:arrangement inherit="Rapicorn::Arrangement" />
-  <!-- label -->
-  <def:label inherit="Rapicorn::PangoLabel" />
-  <!-- image -->
-  <def:image inherit="Rapicorn::Image" />
-  <!-- buttons -->
-  <def:button inherit="Rapicorn::ButtonArea" sensitive="1" child-container="child-area" >
-    <frame normal-frame="out" impressed-frame="in" >
-      <ambience
-	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
-	normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"
-	>
-	<frame frame-type="none" >
-	  <alignment id="child-area" vscale="0" hscale="0" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" >
-	  </alignment>
-	</frame>
-      </ambience>
-    </frame>
-  </def:button>
-  <def:default-button inherit="Rapicorn::Frame" child-container="child-area" frame-type="in" >
-    <alignment left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
-      <button id="child-area" />
-    </alignment>
-  </def:default-button>
-  <!-- dot-grid -->
-  <def:dot-grid inherit="Rapicorn::DotGrid"/>
-  <!-- arrow -->
-  <def:arrow inherit="Rapicorn::Arrow"/>
-  <!-- slider -->
-  <def:Rapicorn-slider-trough inherit="Rapicorn::SliderTrough"/>
-  <def:Rapicorn-slider-skid inherit="Rapicorn::SliderSkid"/>
-  <!-- hslider -->
-  <def:hslider inherit="Rapicorn::SliderArea">
-    <frame normal-frame="in" hexpand="1" >
-      <table>
-	<button left-attach="1" on-click="decrement" on-click2="page-decrement">
-	  <arrow arrow-dir="left" />
-	</button>
-	<Rapicorn-slider-trough left-attach="2" hexpand="1">
-	  <Rapicorn-slider-skid vexpand="1">
-	    <ambience
-	      normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
-	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"
-	      >
-	      <frame normal-frame="out" vexpand="1">
-		<dot-grid n-hdots="6" n-vdots="2" left-padding-dots="2" right-padding-dots="2" top-padding-dots="0" bottom-padding-dots="0" />
-	      </frame>
-	    </ambience>
-	  </Rapicorn-slider-skid>
-	</Rapicorn-slider-trough>
-	<button left-attach="3" on-click="increment" on-click2="page-increment">
-	  <arrow arrow-dir="right"/>
-	</button>
-      </table>
-    </frame>
-  </def:hslider>
-  <!-- vslider -->
-  <def:vslider inherit="Rapicorn::SliderArea">
-    <frame normal-frame="in" vexpand="1" >
-      <vbox >
-	<button on-click="increment" on-click2="page-increment">
-	  <arrow arrow-dir="up" />
-	</button>
-	<Rapicorn-slider-trough vexpand="1">
-	  <Rapicorn-slider-skid hexpand="1" vertical-skid="1">
-	    <ambience
-	      normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
-	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"
-	      >
-	      <frame normal-frame="out" hexpand="1">
-		<dot-grid n-hdots="2" n-vdots="6" left-padding-dots="0" right-padding-dots="0" top-padding-dots="2" bottom-padding-dots="2" />
-	      </frame>
-	    </ambience>
-	  </Rapicorn-slider-skid>
-	</Rapicorn-slider-trough>
-	<button on-click="decrement" on-click2="page-decrement">
-	  <arrow arrow-dir="down" />
-	</button>
-      </vbox>
-    </frame>
-  </def:vslider>
-  
   <!-- test dialog -->
   <def:tour-dialog inherit="ambience" normal-lighting="upper-left"> <!-- normal-background="beige" -->
     <vbox sensitive="1">
@@ -148,7 +41,9 @@
 	    <table>
 	      <label text="*** Ttitle ***" align="center" bottom-attach="100" hexpand="1" />
 	      <hbox bottom-attach="102" vexpand="1" >
- 	        <hslider align="center" hexpand="1" />
+ 	        <alignment hexpand="1">
+		  <hslider align="center" hexpand="1" vexpand="0"/>
+		</alignment>
 	        <vslider vexpand="1" />
 	        <vslider vexpand="1" />
 	        <vslider vexpand="1" />
@@ -214,7 +109,7 @@
 	  </alignment>
 	</frame>
       </alignment>
-      <alignment left-padding="5" right-padding="5" top-padding="3" bottom-padding="3" >
+      <alignment left-padding="5" right-padding="5" top-padding="3" bottom-padding="3" hscale="1">
 	<hbox spacing="5" homogeneous="0" >
 	  <button hexpand="1" > <label text="Ok"/> </button>
 	  <button hexpand="1" > <label text="Cancel"/> </button>
@@ -222,4 +117,5 @@
       </alignment>
     </vbox>
   </def:tour-dialog>
+
 </rapicorn-gadgets>

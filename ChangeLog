@@ -1,3 +1,32 @@
+Fri Jul  7 23:35:08 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/utilities.hh, rapicorn/utilities.cc: provide accessor for a
+	global recursive mutex for rapicorn. 
+
+	* rapicorn/rapicorn.xml: moved standard gadget definitions from tour.xml
+	here. fixed up alignment definitions to not override AlignmentImpl defaults.
+	fixed up hslider definition to match vslider more closely.
+
+	* rapicorn/layoutcontainers.cc: changed AlignmentImpl defaults to 
+	hscale=0 and vscale=0 upon creation.
+	
+	* rapicorn/factory.hh: 
+	* rapicorn/factory.cc: added Factory::must_parse_file() to easily read
+	in gadget definitions at program startup. added lazy initialization
+	for gadget definitions from rapicorn.xml.
+
+	* rapicorn/Makefile.am: run xmllint on rapicorn.xml and generate a
+	compressed zintern block from it.
+
+	* tests/Makefile.am:
+	* tests/items.cc: new test to check item creation.
+
+	* rapicorn.pc.in: currently, linking against rapicorn requires gtk.
+
+	* examples/tour.xml: removed standard gadget definitions.
+
+	* examples/tour.cc: use Path::dirname().
+
 Thu Jul  6 01:08:54 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn.pc.in:

@@ -36,6 +36,8 @@ void            rapicorn_init           (int        *argcp,
                                          char     ***argvp,
                                          const char *app_name);
 const char*     rapicorn_gettext        (const char *text);
+RecMutex*       rapicorn_mutex          ();
+
 #ifdef  RAPICORN_PRIVATE
 #define _(str)  rapicorn_gettext (str)
 #define N_(str) (str)

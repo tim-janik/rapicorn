@@ -85,3 +85,18 @@ gen-enums.cc: $(srcdir)/enumdefs.hh Makefile
 	&& cp xgen-enu $@ \
 	&& rm -f xgen-enu
 CLEANFILES += xgen-enu gen-enums.cc
+
+XML_FILES   = rapicorn.xml
+XMLLINTCALL = $(if $(XMLLINT),$(XMLLINT),true) # handle undefined XMLLINT
+xml-lint:
+	$(XMLLINTCALL) --noout $(XML_FILES)
+.PHONY: xml-lint
+stamp-allchecks: $(XML_FILES)
+	@$(MAKE) xml-lint
+	@touch $@
+noinst_DATA = stamp-allchecks
+
+zintern.c:	$(top_builddir)/birnet/birnet-zintern $(srcdir)/rapicorn.xml stamp-allchecks
+	$(top_builddir)/birnet/birnet-zintern -b -z RAPICORN $(srcdir)/rapicorn.xml > xgen-$(@F)
+	mv xgen-$(@F) $@
+factory.cc: zintern.c
