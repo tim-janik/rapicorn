@@ -1,3 +1,14 @@
+Sat Jul  8 20:55:12 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/table.cc, rapicorn/tableimpl.hh: changed shrinking logic so
+	we start shrinking columns/rows in the center of a table. also, if not
+	enough shrinkable columns could be found, shrink all columns/rows by
+	an amount proportional to their size, starting from the center.
+	this makes resizes beyond the requisition feel much more natural, since
+	we now make the best effort to avoid shrinking artefacts and we do our
+	best to provide important controls at window/table edges (like menubars
+	or buttons).
+
 Sat Jul  8 18:07:30 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/rapicorn.xml: fixed buttons to espand their children.

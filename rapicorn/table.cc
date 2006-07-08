@@ -592,6 +592,13 @@ TableImpl::size_allocate_init()
       }
 }
 
+bool
+TableImpl::RowCol::lesser_allocation (const TableImpl::RowCol *const &v1,
+                                      const TableImpl::RowCol *const &v2)
+{
+  return v1->allocation < v2->allocation;
+}
+
 void
 TableImpl::size_allocate_pass1 ()
 {
@@ -641,42 +648,73 @@ TableImpl::size_allocate_pass1 ()
         }
       for (uint col = 0; col + 1 < cols.size(); col++)
         width += cols[col].spacing;
-      /* Check to see if we were allocated more width than we requested. */
+      /* distribute extra space that we were allocated beyond requisition */
       if (width < real_width && nexpand >= 1)
         {
           width = real_width - width;
-          for (uint col = 0; col < cols.size(); col++)
-            if (cols[col].expand)
-              {
-                extra = width / nexpand;
-                cols[col].allocation += extra;
-                width -= extra;
-                nexpand -= 1;
-              }
+          for (uint jcol = 0; jcol < cols.size(); jcol++)
+            {
+              uint col = cols.size() / 2 + ((1 + jcol) >> 1) * (1 & jcol ? -1 : +1); // start distributing in the center
+              if (cols[col].expand)
+                {
+                  extra = width / nexpand;
+                  cols[col].allocation += extra;
+                  width -= extra;
+                  nexpand -= 1;
+                }
+            }
         }
-      /* Check to see if we were allocated less width than we requested,
-       * then shrink until we fit the size given.
-       */
+      /* shrink until we fit the size given */
       if (width > real_width)
         {
           uint total_nshrink = nshrink;
           extra = width - real_width;
+          /* shrink shrinkable columns */
           while (total_nshrink > 0 && extra > 0)
             {
               nshrink = total_nshrink;
-              for (uint col = 0; col < cols.size(); col++)
-                if (cols[col].shrink)
-                  {
-                    int allocation = cols[col].allocation;
-                    cols[col].allocation = MAX (1, allocation - extra / nshrink);
-                    extra -= allocation - cols[col].allocation;
-                    nshrink -= 1;
-                    if (cols[col].allocation < 2)
+              for (uint jcol = 0; jcol < cols.size(); jcol++)
+                {
+                  uint col = cols.size() / 2 + ((1 + jcol) >> 1) * (1 & jcol ? -1 : +1); // start distributing in the center
+                  if (cols[col].shrink)
+                    {
+                      int allocation = cols[col].allocation;
+                      cols[col].allocation = MAX (1, allocation - extra / nshrink);
+                      extra -= allocation - cols[col].allocation;
+                      nshrink -= 1;
+                      if (cols[col].allocation < 2)
+                        {
+                          total_nshrink -= 1;
+                          cols[col].shrink = false;
+                        }
+                    }
+                }
+            }
+          /* shrink all columns (last resort) */
+          if (extra && cols.size())
+            {
+              float allocation_max = 1.0 * width;
+              vector<RowCol*> svec;
+              for (uint jcol = 0; jcol < cols.size(); jcol++)
+                {
+                  uint col = cols.size() / 2 + ((1 + jcol) >> 1) * (1 & jcol ? -1 : +1); // start distribution in the center
+                  svec.push_back (&cols[col]);
+                }
+              reverse (svec.begin(), svec.end());                                       // swap edge vs. center
+              stable_sort (svec.begin(), svec.end(), RowCol::lesser_allocation);        // smaller columns first
+              reverse (svec.begin(), svec.end());                                       // bigger columns first, from center to egde
+              while (extra && svec[0]->allocation)
+                {
+                  int base_extra = extra;
+                  for (uint i = 0; i < svec.size() && extra; i++)
+                    if (svec[i]->allocation)
                       {
-                        total_nshrink -= 1;
-                        cols[col].shrink = false;
+                        int allocation = svec[i]->allocation;
+                        int shrink = base_extra * allocation / allocation_max;           // shrink in proportion to size
+                        svec[i]->allocation -= CLAMP (shrink, 1, allocation);
+                        extra -= allocation - svec[i]->allocation;
                       }
-                  }
+                }
             }
         }
     }
@@ -719,43 +757,75 @@ TableImpl::size_allocate_pass1 ()
         }
       for (uint row = 0; row + 1 < rows.size(); row++)
         height += rows[row].spacing;
-      /* Check to see if we were allocated more height than we requested. */
+      /* distribute extra space that we were allocated beyond requisition */
       if (height < real_height && nexpand >= 1)
         {
           height = real_height - height;
-          for (uint row = 0; row < rows.size(); row++)
-            if (rows[row].expand)
-              {
-                extra = height / nexpand;
-                rows[row].allocation += extra;
-                height -= extra;
-                nexpand -= 1;
-              }
+          for (uint jrow = 0; jrow < rows.size(); jrow++)
+            {
+              uint row = rows.size() / 2 + ((1 + jrow) >> 1) * (1 & jrow ? -1 : +1); // start distributing in the center
+              if (rows[row].expand)
+                {
+                  extra = height / nexpand;
+                  rows[row].allocation += extra;
+                  height -= extra;
+                  nexpand -= 1;
+                }
+            }
         }
-      /* Check to see if we were allocated less height than we requested.
-       * then shrink until we fit the size given.
-       */
+      /* shrink until we fit the size given */
       if (height > real_height)
         {
           uint total_nshrink = nshrink;
           extra = height - real_height;
+          /* shrink shrinkable rows */
           while (total_nshrink > 0 && extra > 0)
             {
               nshrink = total_nshrink;
-              for (uint row = 0; row < rows.size(); row++)
-                if (rows[row].shrink)
-                  {
-                    int allocation = rows[row].allocation;
-                    rows[row].allocation = MAX (1, allocation - extra / nshrink);
-                    extra -= allocation - rows[row].allocation;
-                    nshrink -= 1;
-                    if (rows[row].allocation < 2)
-                      {
-                        total_nshrink -= 1;
-                        rows[row].shrink = false;
-                      }
-                  }
+              for (uint jrow = 0; jrow < rows.size(); jrow++)
+                {
+                  uint row = rows.size() / 2 + ((1 + jrow) >> 1) * (1 & jrow ? -1 : +1); // start distributing in the center
+                  if (rows[row].shrink)
+                    {
+                      int allocation = rows[row].allocation;
+                      rows[row].allocation = MAX (1, allocation - extra / nshrink);
+                      extra -= allocation - rows[row].allocation;
+                      nshrink -= 1;
+                      if (rows[row].allocation < 2)
+                        {
+                          total_nshrink -= 1;
+                          rows[row].shrink = false;
+                        }
+                    }
+                }
             }
+          /* shrink all rows (last resort) */
+          if (extra && rows.size())
+            {
+              float allocation_max = 1.0 * height;
+              vector<RowCol*> svec;
+              for (uint jrow = 0; jrow < rows.size(); jrow++)
+                {
+                  uint row = rows.size() / 2 + ((1 + jrow) >> 1) * (1 & jrow ? -1 : +1); // start distribution in the center
+                  svec.push_back (&rows[row]);
+                }
+              reverse (svec.begin(), svec.end());                                       // swap edge vs. center
+              stable_sort (svec.begin(), svec.end(), RowCol::lesser_allocation);        // smaller rows first
+              reverse (svec.begin(), svec.end());                                       // bigger rows first, from center to egde
+              while (extra && svec[0]->allocation)
+                {
+                  int base_extra = extra;
+                  for (uint i = 0; i < svec.size() && extra; i++)
+                    if (svec[i]->allocation)
+                      {
+                        int allocation = svec[i]->allocation;
+                        int shrink = base_extra * allocation / allocation_max;           // shrink in proportion to size
+                        svec[i]->allocation -= CLAMP (shrink, 1, allocation);
+                        extra -= allocation - svec[i]->allocation;
+                      }
+                }
+            }
+          
         }
     }
 }

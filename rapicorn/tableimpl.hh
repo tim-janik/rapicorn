@@ -34,7 +34,9 @@ class TableImpl : public virtual Table, public virtual MultiContainerImpl {
     uint   expand : 1;
     uint   shrink : 1;
     uint   empty : 1;
-    RowCol() { memset (this, 0, sizeof (*this)); }
+    explicit    RowCol() { memset (this, 0, sizeof (*this)); }
+    static bool lesser_allocation (const TableImpl::RowCol *const &v1,
+                                   const TableImpl::RowCol *const &v2);
   };
   vector<RowCol>        rows, cols;
   uint16                default_row_spacing;
