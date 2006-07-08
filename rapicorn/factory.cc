@@ -499,7 +499,7 @@ FactorySingleton::call_gadget (const Gadget       *gadget,
   /* filter special arguments */
   String name = gadget->ident;
   name = variable_map_filter (expanded_arguments, "name", name);
-  /* ignore nonsense arguments */
+  /* ignore special arguments */
   variable_map_filter (expanded_arguments, "child-container");
   variable_map_filter (expanded_arguments, "inherit");
   /* construct argument list for ancestor */

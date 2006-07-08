@@ -503,7 +503,7 @@ Item::changed()
 void
 Item::invalidate()
 {
-  if (!test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+  if (!test_all_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
       change_flags_silently (INVALID_REQUISITION | INVALID_ALLOCATION, true); /* skip notification */
       if (!finalizing())
@@ -511,6 +511,24 @@ Item::invalidate()
       if (parent())
         parent()->invalidate();
     }
+}
+
+bool
+Item::tune_requisition (Requisition requisition)
+{
+  return false;
+}
+
+bool
+Item::tune_requisition (float new_width,
+                        float new_height)
+{
+  Requisition req = size_request();
+  if (new_width >= 0)
+    req.width = new_width;
+  if (new_height >= 0)
+    req.height = new_height;
+  return tune_requisition (req);
 }
 
 void
@@ -568,6 +586,29 @@ ItemImpl::point (double     x,
   return false;
 }
 
+bool
+ItemImpl::tune_requisition (Requisition requisition)
+{
+  Item *p = parent();
+  if (p && !test_flags (INVALID_REQUISITION))
+    {
+      Root *r = p->root();
+      if (r && r->tunable_requisitions())
+        {
+          Requisition ovr (width(), height());
+          requisition.width = ovr.width >= 0 ? ovr.width : MAX (requisition.width, 0);
+          requisition.height = ovr.height >= 0 ? ovr.height : MAX (requisition.height, 0);
+          if (requisition.width != m_requisition.width || requisition.height != m_requisition.height)
+            {
+              m_requisition = requisition;
+              p->invalidate(); /* need new size-request on parent */
+              return true;
+            }
+        }
+    }
+  return false;
+}
+
 const Requisition&
 ItemImpl::size_request ()
 {
@@ -600,12 +641,14 @@ ItemImpl::set_allocation (const Allocation &area)
   Allocation sarea = area;
   sarea.width = MAX (area.width, 0);
   sarea.height = MAX (area.height, 0);
-  /* always reallocate to re-layout children */
+  /* expose old area */
   expose();
+  /* always reallocate to re-layout children */
   change_flags_silently (INVALID_ALLOCATION, false); /* skip notification */
   size_allocate (sarea);
   Allocation a = allocation();
   set_flag (POSITIVE_ALLOCATION, a.width > 0 && a.height > 0);
+  /* expose new area */
   expose();
 }
 

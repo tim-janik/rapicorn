@@ -1,3 +1,35 @@
+Sat Jul  8 18:07:30 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/rapicorn.xml: fixed buttons to espand their children.
+	set width-from-height/height-from-width size policies for slider
+	arrows to enforce square allocations for arrow buttons.
+
+	* rapicorn/paintgadgets.hh, rapicorn/paintgadgets.cc:
+	added size_policy() property to arrows to allow width-from-height and
+	vice versa sizing policies.
+
+	* rapicorn/item.hh, rapicorn/itemimpl.hh, rapicorn/item.cc:
+	tune_requisition(): allow requisition tuning during size allocation. 
+	returns whether the tuning had any effect (can be ignored).
+	test_flags(): test any of the flags passed in.
+	test_all_flags(): return true if all flags passed in were tested.
+	test_any_flag(): removed.
+
+	* rapicorn/root.hh, rapicorn/rootimpl.hh, rapicorn/root.cc:
+	changed resizing logic to allow requisition tuning during allocation,
+	at least for the first 3 size allocations (basically, this allowes
+	flexible resizing algorithms which to converge from an initially unstable
+	to a stable state later on, similar to simulated annealing).
+	added logic to dispatch WIN_DELETE events.
+
+	* rapicorn/enumdefs.hh: added SizePolicyType. 
+
+	* rapicorn/events.cc: added WIN_DELETE event.
+
+	* rapicorn/viewport.hh, rapicorn/viewport-gtk.cc:
+	fixed some bit masking bugs. provide viewport size with Viewport::State.
+	enqueue WIN_DELETE events.
+
 Fri Jul  7 23:35:08 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/utilities.hh, rapicorn/utilities.cc: provide accessor for a

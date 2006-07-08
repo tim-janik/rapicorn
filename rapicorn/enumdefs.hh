@@ -154,6 +154,13 @@ inline LightingType  operator|  (LightingType  s1, LightingType s2) { return Lig
 inline LightingType& operator|= (LightingType &s1, LightingType s2) { s1 = s1 | s2; return s1; }
 
 typedef enum {
+  SIZE_POLICY_NORMAL            = 0,
+  SIZE_POLICY_WIDTH_FROM_HEIGHT,
+  SIZE_POLICY_HEIGHT_FROM_WIDTH,
+} SizePolicyType;
+typedef EnumType<SizePolicyType> EnumTypeSizePolicyType;
+
+typedef enum {
   STATE_INSENSITIVE     = 1 << 0,
   STATE_PRELIGHT        = 1 << 1,
   STATE_IMPRESSED       = 1 << 2,

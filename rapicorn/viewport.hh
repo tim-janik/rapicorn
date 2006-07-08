@@ -44,6 +44,7 @@ public:
     bool        is_active;
     bool        has_toplevel_focus;     /* for embedded windows, this may be false allthough is_active==true */
     WindowState window_state;
+    float       width, height;
   };
   /* viewport configuration */
   typedef enum {

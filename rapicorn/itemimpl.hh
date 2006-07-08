@@ -43,9 +43,11 @@ public:
   virtual bool          point           (double     x,  /* global coordinate system */
                                          double     y,
                                          Affine     affine);
-  virtual const Requisition&            size_request    ();
-  virtual const Allocation&             allocation      ();
-  virtual void                          set_allocation  (const Allocation &area);
+  virtual const Requisition& size_request           ();
+  virtual const Allocation&  allocation             ();
+  virtual bool               tune_requisition       (Requisition requisition);
+  using                      Item::tune_requisition;
+  virtual void               set_allocation         (const Allocation &area);
 };
 
 } // Rapicorn

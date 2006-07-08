@@ -23,6 +23,8 @@
 
 namespace Rapicorn {
 
+static DataKey<SizePolicyType> size_policy_key;
+
 class ArrowImpl : public virtual ItemImpl, public virtual Arrow {
   DirType m_dir;
 public:
@@ -33,6 +35,20 @@ public:
   {}
   virtual void    arrow_dir (DirType dir)       { m_dir = dir; expose(); }
   virtual DirType arrow_dir () const            { return m_dir; }
+  virtual void
+  size_policy (SizePolicyType spol)
+  {
+    if (!spol)
+      delete_data (&size_policy_key);
+    else
+      set_data (&size_policy_key, spol);
+  }
+  virtual SizePolicyType
+  size_policy () const
+  {
+    SizePolicyType spol = get_data (&size_policy_key);
+    return spol;
+  }
 protected:
   virtual void
   size_request (Requisition &requisition)
@@ -44,6 +60,11 @@ protected:
   size_allocate (Allocation area)
   {
     allocation (area);
+    SizePolicyType spol = size_policy();
+    if (spol == SIZE_POLICY_WIDTH_FROM_HEIGHT)
+      tune_requisition (area.height, -1);
+    else if (spol == SIZE_POLICY_HEIGHT_FROM_WIDTH)
+      tune_requisition (-1, area.width);
   }
   virtual void
   render (Display &display)
@@ -61,7 +82,8 @@ protected:
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (Arrow, arrow_dir, _("Arrow Direction"), _("The direction the arrow points to"), DIR_RIGHT, "rw"),
+      MakeProperty (Arrow, arrow_dir,   _("Arrow Direction"), _("The direction the arrow points to"), DIR_RIGHT, "rw"),
+      MakeProperty (Arrow, size_policy, _("Size Policy"),     _("Policy which determines coupling of width and height"), SIZE_POLICY_NORMAL, "rw"),
     };
     static const PropertyList property_list (properties, ItemImpl::list_properties());
     return property_list;

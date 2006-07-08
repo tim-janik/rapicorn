@@ -39,6 +39,8 @@ class RootImpl : public virtual Root,
   std::list<Event*>     m_event_queue;
   EventContext          m_last_event_context;
   vector<Item*>         m_last_entered_children;
+  uint                  m_tunable_requisition_counter;
+  Viewport::Config      m_config;
 public:
   explicit              RootImpl                                ();
 private:
@@ -48,9 +50,12 @@ private:
   virtual OwnedMutex&   owned_mutex                             ();
   vector<Item*>         item_difference                         (const vector<Item*>    &clist, /* preserves order of clist */
                                                                  const vector<Item*>    &cminus);
-  /* Item */
+  /* sizing */
   virtual void          size_request                            (Requisition            &requisition);
+  using                 Item::size_request;
   virtual void          size_allocate                           (Allocation              area);
+  virtual bool          tunable_requisitions                    ();
+  void                  resize_all                              (Allocation             *new_area = NULL);
   /* rendering */
   virtual void          render                                  (Plane                  &plane);
   using                 Item::render;
@@ -66,6 +71,7 @@ private:
   /* main loop */
   void                  idle_show                               ();
   virtual void          run_async                               (void);
+  virtual void          stop_async                              (void);
   virtual bool          prepare                                 (uint64                  current_time_usecs,
                                                                  int                    *timeout_msecs_p);
   virtual bool          check                                   (uint64                  current_time_usecs);
@@ -88,6 +94,7 @@ private:
   bool                  dispatch_scroll_event                   (const EventScroll      &sevent);
   bool                  dispatch_win_size_event                 (const Event            &event);
   bool                  dispatch_win_draw_event                 (const Event            &event);
+  bool                  dispatch_win_delete_event               (const Event            &event);
   virtual bool          dispatch_event                          (const Event            &event);
   /* --- GrabEntry --- */
   struct GrabEntry {

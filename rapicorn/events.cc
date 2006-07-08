@@ -47,6 +47,7 @@ string_from_event_type (EventType etype)
     case CANCEL_EVENTS:         return "CancelEvents";
     case WIN_SIZE:              return "WinSize";
     case WIN_DRAW:              return "WinDraw";
+    case WIN_DELETE:            return "WinDelete";
     case EVENT_NONE:
     case EVENT_LAST:
       break;
@@ -187,6 +188,13 @@ create_event_win_draw (const EventContext &econtext,
   event->rectangles = rects;
   for (uint i = 0; i < rects.size(); i++)
     event->bbox.rect_union(rects[i]);
+  return event;
+}
+
+EventWinDelete*
+create_event_win_delete (const EventContext &econtext)
+{
+  EventWinDelete *event = EventFactory::new_event<EventWinDelete> (WIN_DELETE, econtext);
   return event;
 }
 

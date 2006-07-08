@@ -69,6 +69,7 @@ typedef enum {
   CANCEL_EVENTS,
   WIN_SIZE,
   WIN_DRAW,
+  WIN_DELETE,
   EVENT_LAST
 } EventType;
 String string_from_event_type (EventType etype);
@@ -124,6 +125,7 @@ public:
   Rect              bbox; /* bounding box */
   std::vector<Rect> rectangles;
 };
+typedef Event EventWinDelete;
 struct EventContext {
   uint32        time;
   bool          synthesized;
@@ -134,27 +136,28 @@ struct EventContext {
   EventContext& operator=    (const Event&);
 };
 
-Event*        create_event_cancellation (const EventContext &econtext);
-EventMouse*   create_event_mouse        (EventType           type,
-                                         const EventContext &econtext);
-EventButton*  create_event_button       (EventType           type,
-                                         const EventContext &econtext,
-                                         uint                button);
-EventScroll*  create_event_scroll       (EventType           type,
-                                         const EventContext &econtext);
-EventFocus*   create_event_focus        (EventType           type,
-                                         const EventContext &econtext);
-EventKey*     create_event_key          (EventType           type,
-                                         const EventContext &econtext,
-                                         uint32              key,
-                                         const char         *name);
-EventWinSize* create_event_win_size     (const EventContext &econtext,
-                                         uint                draw_stamp,
-                                         double              width,
-                                         double              height);
-EventWinDraw* create_event_win_draw     (const EventContext &econtext,
-                                         uint                draw_stamp,
-                                         const std::vector<Rect> &rects);
+Event*          create_event_cancellation (const EventContext &econtext);
+EventMouse*     create_event_mouse        (EventType           type,
+                                           const EventContext &econtext);
+EventButton*    create_event_button       (EventType           type,
+                                           const EventContext &econtext,
+                                           uint                button);
+EventScroll*    create_event_scroll       (EventType           type,
+                                           const EventContext &econtext);
+EventFocus*     create_event_focus        (EventType           type,
+                                           const EventContext &econtext);
+EventKey*       create_event_key          (EventType           type,
+                                           const EventContext &econtext,
+                                           uint32              key,
+                                           const char         *name);
+EventWinSize*   create_event_win_size     (const EventContext &econtext,
+                                           uint                draw_stamp,
+                                           double              width,
+                                           double              height);
+EventWinDraw*   create_event_win_draw     (const EventContext &econtext,
+                                           uint                draw_stamp,
+                                           const std::vector<Rect> &rects);
+EventWinDelete* create_event_win_delete   (const EventContext &econtext);
 
 } // Rapicorn
 

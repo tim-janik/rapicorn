@@ -25,8 +25,10 @@ namespace Rapicorn {
 
 class Arrow : public virtual Item {
 public:
-  virtual void          arrow_dir       (DirType dir) = 0;
-  virtual DirType       arrow_dir       () const = 0;
+  virtual void           arrow_dir      (DirType dir) = 0;
+  virtual DirType        arrow_dir      () const = 0;
+  virtual void           size_policy    (SizePolicyType spol) = 0;
+  virtual SizePolicyType size_policy    () const = 0;
 };
 
 class DotGrid : public virtual Item {

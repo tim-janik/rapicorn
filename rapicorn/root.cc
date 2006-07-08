@@ -29,7 +29,8 @@ Root::Root()
 RootImpl::RootImpl() :
   m_entered (false), m_viewport (NULL),
   m_loop (NULL), m_source (NULL),
-  m_expose_queue_stamp (0)
+  m_expose_queue_stamp (0),
+  m_tunable_requisition_counter (0)
 {
   BIRNET_ASSERT (m_loop == NULL);
   m_loop = glib_loop_create();
@@ -37,6 +38,9 @@ RootImpl::RootImpl() :
   style (appearance->create_style ("normal"));
   unref (appearance);
   set_flag (PARENT_SENSITIVE, true);
+  /* adjust default Viewport config */
+  m_config.min_width = 13;
+  m_config.min_height = 7;
 }
 
 RootImpl::~RootImpl()
@@ -80,11 +84,58 @@ void
 RootImpl::size_allocate (Allocation area)
 {
   allocation (area);
-  if (!has_visible_child())
-    return;
-  Item &child = get_child();
-  Requisition rq = child.size_request();
-  child.set_allocation (area);
+  if (has_visible_child())
+    {
+      Item &child = get_child();
+      Requisition rq = child.size_request();
+      child.set_allocation (area);
+    }
+}
+
+bool
+RootImpl::tunable_requisitions ()
+{
+  return m_tunable_requisition_counter > 0;
+}
+
+void
+RootImpl::resize_all (Allocation *new_area)
+{
+  assert (m_tunable_requisition_counter == 0);
+  bool have_allocation = false;
+  Allocation area;
+  if (new_area)
+    {
+      area.width = new_area->width;
+      area.height = new_area->height;
+      have_allocation = true;
+      change_flags_silently (INVALID_ALLOCATION, true);
+    }
+  else if (m_viewport)
+    {
+      Viewport::State state = m_viewport->get_state();
+      if (state.width > 0 && state.height > 0)
+        {
+          area.width = state.width;
+          area.height = state.height;
+          have_allocation = true;
+        }
+    }
+  m_tunable_requisition_counter = 3;
+  while (test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+    {
+      Requisition req = size_request();
+      if (!have_allocation)
+        {
+          /* fake an allocation */
+          area.width = req.width;
+          area.height = req.height;
+        }
+      set_allocation (area);
+      if (m_tunable_requisition_counter)
+        m_tunable_requisition_counter--;
+    }
+  m_tunable_requisition_counter = 0;
 }
 
 vector<Item*>
@@ -356,8 +407,8 @@ RootImpl::dispatch_win_size_event (const Event &event)
   if (wevent)
     {
       Allocation allocation (0, 0, wevent->width, wevent->height);
-      set_allocation (allocation);
-      /* discard expose requests, well get a WIN_DRAW event */
+      resize_all (&allocation);
+      /* discard all expose requests, we'll get a WIN_DRAW event */
       m_expose_queue.clear();
       handled = true;
     }
@@ -382,6 +433,19 @@ RootImpl::dispatch_win_draw_event (const Event &event)
           /* blit to screen */
           m_viewport->blit_plane (plane, devent->draw_stamp); // takes over plane
         }
+      handled = true;
+    }
+  return handled;
+}
+
+bool
+RootImpl::dispatch_win_delete_event (const Event &event)
+{
+  bool handled = false;
+  const EventWinDelete *devent = dynamic_cast<const EventWinDelete*> (&event);
+  if (devent)
+    {
+      stop_async();
       handled = true;
     }
   return handled;
@@ -529,6 +593,7 @@ RootImpl::dispatch_event (const Event &event)
     case CANCEL_EVENTS:       return dispatch_cancel_event (event);
     case WIN_SIZE:            return dispatch_win_size_event (event);
     case WIN_DRAW:            return dispatch_win_draw_event (event);
+    case WIN_DELETE:          return dispatch_win_delete_event (event);
     }
   return false;
 }
@@ -574,12 +639,18 @@ RootImpl::enqueue_async (Event *event)
 void
 RootImpl::idle_show()
 {
+  resize_all();
+  Requisition req = size_request();
+  m_config.request_width = req.width;
+  m_config.request_height = req.height;
+  m_viewport->set_config (m_config);
   m_viewport->show();
 }
 
 void
 RootImpl::run_async (void)
 {
+  AutoLocker monitor (owned_mutex());
   BIRNET_ASSERT (m_viewport == NULL);
   m_viewport = Viewport::create_viewport ("auto", WINDOW_TYPE_NORMAL, *this);
   BIRNET_ASSERT (m_loop != NULL);
@@ -589,6 +660,16 @@ RootImpl::run_async (void)
   m_loop->idle_now (slot (*this, &RootImpl::idle_show));
   m_loop->add_source (MainLoop::PRIORITY_NORMAL, m_source);
   // m_loop->idle_timed (250, timer);
+}
+
+void
+RootImpl::stop_async (void)
+{
+  AutoLocker monitor (owned_mutex());
+  if (m_viewport)
+    m_viewport->hide();
+  if (m_loop)
+    m_loop->quit();
 }
 
 static const ItemFactory<RootImpl> root_factory ("Rapicorn::Root");

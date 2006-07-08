@@ -427,6 +427,9 @@ ViewportGtk::get_state ()
   state.is_active = window && gtk_window_is_active (window);
   state.has_toplevel_focus = window && gtk_window_has_toplevel_focus (window);
   state.window_state = m_window_state;
+  bool has_real_allocation = GTK_WIDGET_REALIZED (m_widget) && GTK_WIDGET_VISIBLE (m_widget);
+  state.width = has_real_allocation ? m_widget->allocation.width : 0;
+  state.height = has_real_allocation ? m_widget->allocation.height : 0;
   return state;
 }
 
@@ -519,9 +522,9 @@ adjust_gtk_window (GtkWindow            *window,
   else
     gtk_window_unfullscreen (window);
   uint fully_maximized = Viewport::HINT_HMAXIMIZED | Viewport::HINT_VMAXIMIZED;
-  if (window_hint & fully_maximized == fully_maximized)
+  if ((window_hint & fully_maximized) == fully_maximized)
     gtk_window_maximize (window);
-  else if (window_hint & fully_maximized == 0)
+  else if ((window_hint & fully_maximized) == 0)
     gtk_window_unmaximize (window);
   else
     {
@@ -619,7 +622,6 @@ gdk_window_enable_backing (GdkWindow   *window,
                            &attr);
   GdkScreen *screen = gdk_colormap_get_screen (gdk_drawable_get_colormap (window));
   int bs_screen = XDoesBackingStore (GDK_SCREEN_XSCREEN (screen));
-  g_printerr ("backing: win=%d screen=%d\n", attr.backing_store, bs_screen);
   /* return backing store state for this window */
   if (bs_screen == Always &&
       bs_type   == BACKING_STORE_ALWAYS)
@@ -1002,6 +1004,7 @@ rapicorn_viewport_event (GtkWidget *widget,
     case GDK_GRAB_BROKEN:
 #endif
     case GDK_DELETE:
+      viewport->enqueue_locked (create_event_win_delete (econtext));
       handled = TRUE;
       break;
     case GDK_DESTROY:
@@ -1085,7 +1088,10 @@ rapicorn_viewport_ancestor_event (GtkWidget *ancestor,
 #endif
     case GDK_DELETE:
       if (ancestor == (GtkWidget*) rapicorn_viewport_get_my_window (self))
-        handled = true;
+        {
+          viewport->enqueue_locked (create_event_win_delete (econtext));
+          handled = true;
+        }
       break;
     case GDK_DESTROY:
     case GDK_UNMAP:

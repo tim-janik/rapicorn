@@ -39,6 +39,7 @@ public://FIXME: protected:
   virtual bool  check                   (uint64 current_time_usecs) = 0;
   virtual bool  dispatch                () = 0;
 public:
+  virtual bool  tunable_requisitions    () = 0;
   virtual void  render                  (Plane &plane) = 0;
   virtual void  add_grab                (Item  &child,
                                          bool   unconfined = false) = 0;
@@ -49,6 +50,7 @@ public:
   virtual Item* get_grab                (bool  *unconfined = NULL) = 0;
   /* MT-safe */
   virtual void  run_async               (void) = 0;
+  virtual void  stop_async              (void) = 0;
 };
 
 } // Rapicorn

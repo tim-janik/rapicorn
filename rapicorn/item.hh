@@ -98,11 +98,14 @@ protected:
   };
   void                        set_flag          (uint32 flag, bool on = true);
   void                        unset_flag        (uint32 flag) { set_flag (flag, false); }
-  bool                        test_flags        (uint32 mask) const { return (m_flags & mask) == mask; }
-  bool                        test_any_flag     (uint32 mask) const { return (m_flags & mask) != 0; }
+  bool                        test_flags        (uint32 mask) const { return (m_flags & mask) != 0; }
+  bool                        test_all_flags    (uint32 mask) const { return (m_flags & mask) == mask; }
   /* size requisition and allocation */
   virtual void                size_request      (Requisition &requisition) = 0;
-  virtual void                size_allocate     (Allocation area) = 0;
+  virtual void                size_allocate     (Allocation   area) = 0;
+  virtual bool                tune_requisition  (Requisition  requisition);
+  bool                        tune_requisition  (float        new_width,
+                                                 float        new_height);
   /* signal methods */
   virtual bool                match_interface   (InterfaceMatch &imatch, const String &ident);
   virtual void                do_invalidate     () = 0;
@@ -118,7 +121,7 @@ public:
   bool                        anchored          () const { return test_flags (ANCHORED); }
   bool                        visible           () const { return test_flags (VISIBLE) && !test_flags (HIDDEN_CHILD); }
   void                        visible           (bool b) { set_flag (VISIBLE, b); }
-  bool                        sensitive         () const { return test_flags (SENSITIVE | PARENT_SENSITIVE); }
+  bool                        sensitive         () const { return test_all_flags (SENSITIVE | PARENT_SENSITIVE); }
   virtual void                sensitive         (bool b);
   bool                        insensitive       () const { return !sensitive(); }
   void                        insensitive       (bool b) { sensitive (!b); }
@@ -132,13 +135,13 @@ public:
   bool                        grab_focus        () const;
   bool                        has_default       () const { return test_flags (HAS_DEFAULT); }
   bool                        grab_default      () const;
-  bool                        hexpand           () const { return test_any_flag (HEXPAND | HSPREAD | HSPREAD_CONTAINER); }
+  bool                        hexpand           () const { return test_flags (HEXPAND | HSPREAD | HSPREAD_CONTAINER); }
   void                        hexpand           (bool b) { set_flag (HEXPAND, b); }
-  bool                        vexpand           () const { return test_any_flag (VEXPAND | VSPREAD | VSPREAD_CONTAINER); }
+  bool                        vexpand           () const { return test_flags (VEXPAND | VSPREAD | VSPREAD_CONTAINER); }
   void                        vexpand           (bool b) { set_flag (VEXPAND, b); }
-  bool                        hspread           () const { return test_any_flag (HSPREAD | HSPREAD_CONTAINER); }
+  bool                        hspread           () const { return test_flags (HSPREAD | HSPREAD_CONTAINER); }
   void                        hspread           (bool b) { set_flag (HSPREAD, b); }
-  bool                        vspread           () const { return test_any_flag (VSPREAD | VSPREAD_CONTAINER); }
+  bool                        vspread           () const { return test_flags (VSPREAD | VSPREAD_CONTAINER); }
   void                        vspread           (bool b) { set_flag (VSPREAD, b); }
   bool                        drawable          () const { return visible() && test_flags (POSITIVE_ALLOCATION); }
   bool                        debug             () const { return test_flags (DEBUG); }
