@@ -43,11 +43,29 @@ static BackingStore gdk_window_enable_backing        (GdkWindow  *window,
                                                       BackingStore bs_type);
 
 /* --- GDK_THREADS_* / AutoLocker glue --- */
-struct RapicronGdkLock {
-  void        lock()   { GDK_THREADS_ENTER(); }
-  void        unlock() { GDK_THREADS_LEAVE(); }
+struct RapicronGdkSyncLock {
+  void
+  lock()
+  {
+    GDK_THREADS_ENTER();
+    /* protect execution of any Gtk/Gdk functions */
+  }
+  void
+  unlock()
+  {
+    /* X commands enqueued by any Gtk/Gdk functions so far
+     * may still be queued and need to be flushed. also, any
+     * X events that may have arrived already need to be
+     * handled by the gtk_main() loop. waking up the default
+     * main context will do exactly this, wake up gtk_main(),
+     * and call XPending() which flushes any queued events.
+     */
+    g_main_context_wakeup (NULL);
+    /* unprotect Gtk/Gdk */
+    GDK_THREADS_LEAVE();
+  }
 };
-static RapicronGdkLock Rapicorn_GDK_THREADS_LOCK;
+static RapicronGdkSyncLock GTK_GDK_THREAD_SYNC;
 
 /* --- RapicornViewport --- */
 #define RAPICORN_TYPE_VIEWPORT              (rapicorn_viewport_get_type ())
@@ -121,7 +139,7 @@ ViewportGtk::ViewportGtk (const String  &backend_name,
   m_request_width (33), m_request_height (33),
   m_window_state (WindowState (0)), m_average_background (0xff808080)
 {
-  AutoLocker locker (Rapicorn_GDK_THREADS_LOCK);
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
   rapicorn_viewport__alive_counter++;
   bool is_override_redirect = (m_window_type == WINDOW_TYPE_DESKTOP ||
                                m_window_type == WINDOW_TYPE_DROPDOWN_MENU ||
@@ -185,7 +203,7 @@ rapicorn_viewport_get_my_window (RapicornViewport *rviewport)
 void
 ViewportGtk::present_viewport ()
 {
-  AutoLocker locker (Rapicorn_GDK_THREADS_LOCK);
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
   GtkWindow *window = rapicorn_viewport_get_toplevel_window (m_viewport);
   if (window && GTK_WIDGET_DRAWABLE (window))
     gtk_window_present (window);
@@ -194,7 +212,7 @@ ViewportGtk::present_viewport ()
 void
 ViewportGtk::enqueue_locked (Event *event)
 {
-  // AutoLocker locker (Rapicorn_GDK_THREADS_LOCK);
+  // AutoLocker locker (GTK_GDK_THREAD_SYNC);
   m_receiver.enqueue_async (event);
 }
 
@@ -203,7 +221,7 @@ ViewportGtk::start_user_move (uint           button,
                               float          root_x,
                               float          root_y)
 {
-  AutoLocker locker (Rapicorn_GDK_THREADS_LOCK);
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
   GtkWindow *window = rapicorn_viewport_get_toplevel_window (m_viewport);
   if (window && GTK_WIDGET_DRAWABLE (window))
     gtk_window_begin_move_drag (window, button, root_x, root_y, GDK_CURRENT_TIME);
@@ -234,7 +252,7 @@ ViewportGtk::start_user_resize (uint           button,
                                 float          root_y,
                                 AnchorType     edge)
 {
-  AutoLocker locker (Rapicorn_GDK_THREADS_LOCK);
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
   GtkWindow *window = rapicorn_viewport_get_toplevel_window (m_viewport);
   if (window && GTK_WIDGET_DRAWABLE (window))
     gtk_window_begin_resize_drag (window, get_gdk_window_edge (edge), button, root_x, root_y, GDK_CURRENT_TIME);
@@ -243,7 +261,7 @@ ViewportGtk::start_user_resize (uint           button,
 void
 ViewportGtk::show (void)
 {
-  AutoLocker locker (Rapicorn_GDK_THREADS_LOCK);
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
   if (m_viewport)
     {
       gtk_widget_show (m_widget);
@@ -256,7 +274,7 @@ ViewportGtk::show (void)
 void
 ViewportGtk::hide (void)
 {
-  AutoLocker locker (Rapicorn_GDK_THREADS_LOCK);
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
   if (m_viewport)
     {
       GtkWindow *window = rapicorn_viewport_get_my_window (m_viewport);
@@ -378,7 +396,7 @@ void
 ViewportGtk::blit_plane (Plane *plane,
                          uint   draw_stamp)
 {
-  /* acquirering Rapicorn_GDK_THREADS_LOCK is not neccessary just for adding an idle handler */
+  /* acquirering GTK_GDK_THREAD_SYNC is not neccessary just for adding an idle handler */
   if (m_viewport)
     {
       int priority;
@@ -397,7 +415,7 @@ void
 ViewportGtk::invalidate_plane (const std::vector<Rect> &rects,
                                uint                     draw_stamp)
 {
-  AutoLocker locker (Rapicorn_GDK_THREADS_LOCK);
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
   if (GTK_WIDGET_DRAWABLE (m_widget) &&
       draw_stamp == m_draw_counter) // ignore outdated invalidations
     {
@@ -420,7 +438,7 @@ ViewportGtk::last_draw_stamp ()
 Viewport::State
 ViewportGtk::get_state ()
 {
-  AutoLocker locker (Rapicorn_GDK_THREADS_LOCK);
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
   GtkWindow *window = rapicorn_viewport_get_toplevel_window (m_viewport);
   State state;
   state.window_type = m_window_type;
@@ -540,7 +558,7 @@ adjust_gtk_window (GtkWindow            *window,
 void
 ViewportGtk::set_config (const Config &config)
 {
-  AutoLocker locker (Rapicorn_GDK_THREADS_LOCK);
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
   GtkWindow *window = rapicorn_viewport_get_my_window (m_viewport);
   m_root_x = config.root_x;
   m_root_y = config.root_y;
@@ -562,7 +580,7 @@ ViewportGtk::set_config (const Config &config)
 void
 ViewportGtk::trigger_hint_action (WindowHint window_hint)
 {
-  AutoLocker locker (Rapicorn_GDK_THREADS_LOCK);
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
   GtkWindow *window = rapicorn_viewport_get_my_window (m_viewport);
   if (window)
     adjust_gtk_window (window, window_hint);
@@ -609,7 +627,7 @@ gdk_window_enable_backing (GdkWindow   *window,
   g_return_val_if_fail (GDK_IS_WINDOW (window), BACKING_STORE_NOT_USEFUL);
   if (GDK_WINDOW_DESTROYED (window))
     return BACKING_STORE_NOT_USEFUL;
-
+  
   XSetWindowAttributes attr = { 0, };
   attr.backing_store = NotUseful;
   if (bs_type == BACKING_STORE_WHEN_MAPPED)
@@ -1136,7 +1154,7 @@ public:
   virtual void
   run ()
   {
-    AutoLocker locker (Rapicorn_GDK_THREADS_LOCK);
+    AutoLocker locker (GTK_GDK_THREAD_SYNC);
     gtk_main(); /* does GDK_THREADS_LEAVE(); ... GDK_THREADS_ENTER(); */
   }
 };
@@ -1157,7 +1175,7 @@ rapicorn_init_with_gtk_thread (int        *argcp,
   g_type_init();
   /* setup GDK_THREADS_ENTER/GDK_THREADS_LEAVE */
   gdk_threads_init();
-  AutoLocker locker (Rapicorn_GDK_THREADS_LOCK);
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
   /* GTK intilization */
   gtk_init (argcp, argvp);
   gtkthread = new RapicornGtkThread ();
@@ -1176,7 +1194,7 @@ rapicorn_init_with_foreign_gtk (int        *argcp,
   g_type_init();
   /* setup GDK_THREADS_ENTER/GDK_THREADS_LEAVE */
   gdk_threads_init();
-  AutoLocker locker (Rapicorn_GDK_THREADS_LOCK);
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
   rapicorn_viewport__auto_quit_gtk = auto_quit_gtk;
   /* GTK intilization */
   return gtk_init_check (argcp, argvp); // allow $DISPLAY initialisation to fail

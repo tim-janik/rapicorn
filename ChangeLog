@@ -1,3 +1,11 @@
+Mon Jul 10 23:55:13 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/viewport-gtk.cc: flush even queue and wake up the gtk
+	main loop to process received X events after each viewport action.
+
+	* tests/testitems.cc: added slight workaround to find .xml file even
+	if the binary resides in .libs/.
+
 Mon Jul 10 02:18:18 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/testitem.hh, rapicorn/testitem.cc: implemented a test item

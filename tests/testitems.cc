@@ -81,7 +81,7 @@ main (int   argc,
   rapicorn_init_with_gtk_thread (&argc, &argv, NULL);
 
   /* parse GUI description */
-  Factory::must_parse_file ("testitems.xml", "TEST-ITEM", Path::dirname (argv[0]));
+  Factory::must_parse_file ("testitems.xml", "TEST-ITEM", Path::dirname (argv[0]), Path::join (Path::dirname (argv[0]), ".."));
 
   /* create/run tests */
   run_and_test ("test-alignment");
