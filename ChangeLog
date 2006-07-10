@@ -1,3 +1,15 @@
+Mon Jul 10 02:18:18 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/testitem.hh, rapicorn/testitem.cc: implemented a test item
+	that can be used to assert various layout properties like sizing and
+	positioning.
+
+	* rapicorn/rapicorn.xml: define test-item.
+
+	* tests/testitems.cc, tests/testitems.xml: implemented item test 
+	program. added checks for alignment padding and Item::width and
+	Item::height properties.
+
 Sat Jul  8 20:55:12 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/table.cc, rapicorn/tableimpl.hh: changed shrinking logic so

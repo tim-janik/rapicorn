@@ -179,7 +179,7 @@ protected:
       m_xoffset = m_yoffset = 0;
   }
 public:
-  void
+  virtual void
   render (Display &display)
   {
     if (m_pimage)
