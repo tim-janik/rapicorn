@@ -465,7 +465,7 @@ RootImpl::expose (const Allocation &area)
   if (m_viewport && area.width && area.height)
     {
       if (!m_expose_queue.size())
-        m_loop->idle_next (slot (*this, &RootImpl::flush_expose_queue));
+        m_loop->idle_next (slot (*this, &RootImpl::flush_expose_queue)); // FIXME: prio should be lower than the prio for input event processing
       uint stamp = m_viewport->last_draw_stamp();
       if (stamp != m_expose_queue_stamp)
         m_expose_queue.clear(); /* discard outdated exposes */

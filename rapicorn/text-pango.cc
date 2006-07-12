@@ -447,7 +447,7 @@ public:
         render (plane, Affine(), x, y, width, height, dot_size, white());
         x -= 1;
         y += 1;
-        Plane emboss = Plane::create_from_size (plane);
+        Plane emboss (Plane::init_from_size (plane));
         render (emboss, Affine(), x, y, width, height, dot_size, dark_shadow());
         plane.combine (emboss, COMBINE_OVER);
       }

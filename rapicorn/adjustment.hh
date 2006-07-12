@@ -38,6 +38,11 @@ public:
   double                flipped_value   ();
   void                  flipped_value   (double newval);
   SignalValueChanged	sig_value_changed;
+  /* normalized (0..1) value */
+  double                nvalue	        ();
+  void		        nvalue	        (double newval);
+  double                flipped_nvalue  ();
+  void                  flipped_nvalue  (double newval);
   /* range */
   virtual bool          frozen          () const = 0;
   virtual void          freeze          () = 0;
@@ -53,6 +58,8 @@ public:
   virtual void		page	        (double newval) = 0;
   virtual void          thaw            () = 0;
   SignalRangeChanged	sig_range_changed;
+  double                abs_range       ();
+  String                string          ();
   /* factory */
   static Adjustment*    create          (double  value = 0,
                                          double  lower = 0,
@@ -60,6 +67,12 @@ public:
                                          double  step_increment = 0,
                                          double  page_increment = 0,
                                          double  page_size = 0);
+};
+
+class AdjustmentSource : public virtual Convertible {
+public:
+  virtual Adjustment*   get_adjustment  (AdjustmentSourceType   adj_source,
+                                         const String          &name = "") = 0;
 };
 
 } // Rapicorn

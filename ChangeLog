@@ -1,3 +1,30 @@
+Thu Jul 13 01:17:18 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/adjustment.hh, rapicorn/adjustment.cc: added nvalue()
+	API to simplify normalization, added abs_range() and string()
+	utility methods.
+	introduced AdjustmentSource interface type to generically query
+	adjustments from objects of unknown type.
+
+	* rapicorn/container.hh: removed hide_child() and show_child() which 
+	were both unused.
+
+	* rapicorn/enumdefs.hh: added AdjustmentSourceType for AdjustmentSource.
+
+	* rapicorn/primitives.hh, rapicorn/primitives.cc: made Plane copy
+	constructor and assignment operator private, because this class
+	does not support copying semantics. reworked plane creation
+	functions to avoid copy constructor dependecy.
+
+	* rapicorn/paintcontainers.cc:
+	* rapicorn/pangolabel.cc: fixed plane creation.
+
+	* rapicorn/slider.hh, rapicorn/slider.cc: added adjustment_source
+	property to SliderArea, to find an adjustment from its ancestors.
+	fixed up value() vs. nvalue() accesses of adjustments.
+
+	* rapicorn/item*.*: minor fixes.
+
 Mon Jul 10 23:55:13 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/viewport-gtk.cc: flush even queue and wake up the gtk

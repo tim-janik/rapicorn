@@ -46,6 +46,32 @@ Adjustment::flipped_value (double newval)
   value (u - v);
 }
 
+double
+Adjustment::nvalue ()
+{
+  double l = lower(), u = upper(), ar = u - l;
+  return ar > 0 ? (value() - l) / ar : 0.0;
+}
+
+void
+Adjustment::nvalue (double newval)
+{
+  double l = lower(), u = upper(), ar = u - l;
+  value (l + newval * ar);
+}
+
+double
+Adjustment::flipped_nvalue ()
+{
+  return 1.0 - nvalue();
+}
+
+void
+Adjustment::flipped_nvalue (double newval)
+{
+  nvalue (1.0 - newval);
+}
+
 void
 Adjustment::value_changed()
 {}
@@ -53,6 +79,22 @@ Adjustment::value_changed()
 void
 Adjustment::range_changed()
 {}
+
+double
+Adjustment::abs_range ()
+{
+  return fabs (upper() - lower());
+}
+
+String
+Adjustment::string ()
+{
+  String s = string_printf ("Adjustment(%g,[%f,%f],istep=%+f,pstep=%+f,page=%f%s)",
+                            value(), lower(), upper(),
+                            step_increment(), page_increment(), page(),
+                            frozen() ? ",frozen" : "");
+  return s;
+}
 
 class AdjustmentSimpleImpl : public virtual Adjustment {
   double m_value, m_lower, m_upper, m_step_increment, m_page_increment, m_page;

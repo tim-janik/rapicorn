@@ -79,15 +79,17 @@ const PropertyList&
 SliderArea::list_properties()
 {
   static Property *properties[] = {
-    MakeProperty (SliderArea, flipped, _("Flipped"), _("Invert (flip) display of the adjustment value"), false, "rw"),
+    MakeProperty (SliderArea, flipped,           _("Flipped"),           _("Invert (flip) display of the adjustment value"), false, "rw"),
+    MakeProperty (SliderArea, adjustment_source, _("Adjustment Source"), _("Type of source to retrive an adjustment from"), ADJUSTMENT_SOURCE_SELF, "rw"),
   };
   static const PropertyList property_list (properties, Container::list_properties());
   return property_list;
 }
 
 class SliderAreaImpl : public virtual SliderArea, public virtual TableImpl {
-  Adjustment *m_adjustment;
-  bool m_flip;
+  Adjustment          *m_adjustment;
+  AdjustmentSourceType m_adjustment_source;
+  bool                 m_flip;
   void
   unset_adjustment()
   {
@@ -97,6 +99,37 @@ class SliderAreaImpl : public virtual SliderArea, public virtual TableImpl {
     m_adjustment = NULL;
   }
 protected:
+  virtual AdjustmentSourceType
+  adjustment_source () const
+  {
+    return m_adjustment_source;
+  }
+  virtual void
+  adjustment_source (AdjustmentSourceType adj_source)
+  {
+    m_adjustment_source = adj_source;
+  }
+  virtual void
+  hierarchy_changed (Item *old_toplevel)
+  {
+    this->TableImpl::hierarchy_changed (old_toplevel);
+    if (anchored() && m_adjustment_source != ADJUSTMENT_SOURCE_SELF)
+      {
+        AdjustmentSource *adjustment_source = parent_interface<AdjustmentSource*>();
+        Adjustment *adj = NULL;
+        if (adjustment_source)
+          adj = adjustment_source->get_adjustment (m_adjustment_source);
+        if (!adj)
+          {
+            EnumTypeAdjustmentSourceType ast;
+            throw Exception ("SliderArea failed to get Adjustment (",
+                             ast.string (m_adjustment_source),
+                             ") from ancestors: ", name());
+          }
+        EnumTypeAdjustmentSourceType ast;
+        adjustment (*adj);
+      }
+  }
   virtual bool
   flipped () const
   {
@@ -127,6 +160,7 @@ protected:
 public:
   SliderAreaImpl() :
     m_adjustment (NULL),
+    m_adjustment_source (ADJUSTMENT_SOURCE_SELF),
     m_flip (false)
   {
     Adjustment *adj = Adjustment::create (0, 0, 1, 0.01, 0.2);
@@ -193,10 +227,10 @@ protected:
     return slider_area ? slider_area->adjustment() : NULL;
   }
   double
-  value()
+  nvalue()
   {
     Adjustment &adj = *adjustment();
-    return flipped() ? adj.flipped_value() : adj.value();
+    return flipped() ? adj.flipped_nvalue() : adj.nvalue();
   }
   virtual void
   size_allocate (Allocation area)
@@ -215,12 +249,12 @@ protected:
     /* expand/scale child */
     if (area.width > rq.width && !child.hexpand())
       {
-        area.x += iround (value() * (area.width - rq.width));
+        area.x += iround (nvalue() * (area.width - rq.width));
         area.width = iround (rq.width);
       }
     if (area.height > rq.height && !child.vexpand())
       {
-        area.y += iround (value() * (area.height - rq.height));
+        area.y += iround (nvalue() * (area.height - rq.height));
         area.height = iround (rq.height);
       }
     child.set_allocation (area);
@@ -311,13 +345,15 @@ protected:
     set_flag (HSPREAD_CONTAINER, chspread);
     set_flag (VSPREAD_CONTAINER, cvspread);
   }
+#if 0
   double
-  value()
+  nvalue()
   {
     SliderTroughImpl &trough = parent_interface<SliderTroughImpl>();
     Adjustment &adj = *trough.adjustment();
-    return flipped() ? adj.flipped_value() : adj.value();
+    return flipped() ? adj.flipped_nvalue() : adj.nvalue();
   }
+#endif
   virtual void
   reset (ResetMode mode = RESET_ALL)
   {
@@ -385,9 +421,9 @@ protected:
             pos /= tlength;
             pos = CLAMP (pos, 0, 1);
             if (flipped())
-              adj.flipped_value (pos);
+              adj.flipped_nvalue (pos);
             else
-              adj.value (pos);
+              adj.nvalue (pos);
           }
         break;
       case BUTTON_RELEASE:

@@ -32,8 +32,6 @@ protected:
   virtual bool        add_child         (Item                   &item,
                                          const PackPropertyList &pack_plist = PackPropertyList()) = 0;
   virtual void        remove_child      (Item &item) = 0;
-  void                hide_child        (Item &child) { child.set_flag (HIDDEN_CHILD, false); }
-  void                show_child        (Item &child) { child.set_flag (HIDDEN_CHILD, true); }
   virtual void        dispose_item      (Item &item);
   virtual void        hierarchy_changed (Item *old_toplevel);
 public:

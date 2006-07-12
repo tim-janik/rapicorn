@@ -37,7 +37,7 @@ protected:
   using Item::expose;
   virtual void          expose          (const Allocation &area);
   using Item::size_request;
-public:
+
   virtual String        name            () const;
   virtual void          name            (const String &str);
   virtual bool          point           (double     x,  /* global coordinate system */

@@ -69,6 +69,14 @@ private:
 
 /* --- enums --- */
 typedef enum {
+  ADJUSTMENT_SOURCE_SELF                = 0,
+  ADJUSTMENT_SOURCE_ANCESTOR_HORIZONTAL,
+  ADJUSTMENT_SOURCE_ANCESTOR_VERTICAL,
+  ADJUSTMENT_SOURCE_ANCESTOR_VALUE
+} AdjustmentSourceType;
+typedef EnumType<AdjustmentSourceType> EnumTypeAdjustmentSourceType;
+
+typedef enum {
   ALIGN_LEFT = 1,
   ALIGN_CENTER,
   ALIGN_RIGHT,

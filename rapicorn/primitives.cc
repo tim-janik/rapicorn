@@ -390,6 +390,15 @@ Affine::string() const
   return String (buffer);
 }
 
+Plane::Plane (const Initializer &initializer) :
+  m_x (initializer.m_x), m_y (initializer.m_y),
+  m_stride (initializer.m_stride), m_height (initializer.m_height),
+  m_pixel_buffer (NULL)
+{
+  m_pixel_buffer = new uint32[n_pixels()];
+  memset (m_pixel_buffer, 0, 4 * n_pixels());
+}
+
 Plane::Plane (int x, int y, uint width, uint height) :
   m_x (x), m_y (y), m_stride (width), m_height (height),
   m_pixel_buffer (NULL)

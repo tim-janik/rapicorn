@@ -186,50 +186,50 @@ public:
     /* render lighting (mutually exclusive) */
     if (bimpressed && impressed_lighting())
       {
-        Plane shade = Plane::create_from_size (plane);
+        Plane shade (Plane::init_from_size (plane));
         render_shade (shade, Affine(), x, y, width, height, impressed_lighting());
         plane.combine (shade, COMBINE_OVER);
       }
     else if (insensitive() && insensitive_lighting())
       {
-        Plane shade = Plane::create_from_size (plane);
+        Plane shade (Plane::init_from_size (plane));
         render_shade (shade, Affine(), x, y, width, height, insensitive_lighting());
         plane.combine (shade, COMBINE_OVER);
       }
     else if (bprelight && prelight_lighting())
       {
-        Plane shade = Plane::create_from_size (plane);
+        Plane shade (Plane::init_from_size (plane));
         render_shade (shade, Affine(), x, y, width, height, prelight_lighting());
         plane.combine (shade, COMBINE_OVER);
       }
     else if (normal_lighting() && !bimpressed && !insensitive() && !bprelight)
       {
-        Plane shade = Plane::create_from_size (plane);
+        Plane shade (Plane::init_from_size (plane));
         render_shade (shade, Affine(), x, y, width, height, normal_lighting());
         plane.combine (shade, COMBINE_OVER);
       }
     /* render shade (combinatoric) */
     if (bimpressed && impressed_shade())
       {
-        Plane shade = Plane::create_from_size (plane);
+        Plane shade (Plane::init_from_size (plane));
         render_shade (shade, Affine(), x, y, width, height, impressed_shade());
         plane.combine (shade, COMBINE_OVER);
       }
     if (insensitive() && insensitive_shade())
       {
-        Plane shade = Plane::create_from_size (plane);
+        Plane shade (Plane::init_from_size (plane));
         render_shade (shade, Affine(), x, y, width, height, insensitive_shade());
         plane.combine (shade, COMBINE_OVER);
       }
     if (bprelight && prelight_shade())
       {
-        Plane shade = Plane::create_from_size (plane);
+        Plane shade (Plane::init_from_size (plane));
         render_shade (shade, Affine(), x, y, width, height, prelight_shade());
         plane.combine (shade, COMBINE_OVER);
       }
     if (!bimpressed && !insensitive() && !bprelight && normal_shade())
       {
-        Plane shade = Plane::create_from_size (plane);
+        Plane shade (Plane::init_from_size (plane));
         render_shade (shade, Affine(), x, y, width, height, normal_shade());
         plane.combine (shade, COMBINE_OVER);
       }

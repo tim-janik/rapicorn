@@ -532,12 +532,6 @@ Item::tune_requisition (float new_width,
 }
 
 void
-ItemImpl::allocation (const Allocation &area)
-{
-  m_allocation = area;
-}
-
-void
 ItemImpl::do_changed()
 {
 }
@@ -633,6 +627,12 @@ const Allocation&
 ItemImpl::allocation()
 {
   return m_allocation;
+}
+
+void
+ItemImpl::allocation (const Allocation &area)
+{
+  m_allocation = area;
 }
 
 void

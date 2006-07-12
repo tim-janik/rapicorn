@@ -749,10 +749,16 @@ class Plane {
   uint32 *m_pixel_buffer;
   uint    n_pixels() const                  { return height() * m_stride; }
   Color   peek_color (uint x, uint y) const { const uint32 *p = peek (x, y); return Color::from_premultiplied (*p); }
+  BIRNET_PRIVATE_CLASS_COPY (Plane);
+  struct Initializer {
+    int m_x, m_y, m_stride, m_height;
+    Initializer (int x, int y, int stride, int height) : m_x (x), m_y (y), m_stride (stride), m_height (height) {}
+  };
 public:
   uint32*       peek (uint x, uint y)       { return &m_pixel_buffer[y * m_stride + x]; }
   const uint32* peek (uint x, uint y) const { return &m_pixel_buffer[y * m_stride + x]; }
   explicit      Plane (int x, int y, uint width, uint height);
+  explicit      Plane (const Initializer &initializer);
   virtual       ~Plane();
   int           pixstride  () const { return m_stride * 4; }
   int           width      () const { return m_stride; } //FIXME
@@ -799,21 +805,29 @@ public:
   void   set_red   (int x, int y, uint8 v) { set_channel (x, y, 1, v); }
   void   set_green (int x, int y, uint8 v) { set_channel (x, y, 2, v); }
   void   set_blue  (int x, int y, uint8 v) { set_channel (x, y, 3, v); }
-  static Plane
-  create_from_intersection (const Plane &master, Point p0, double pwidth, double pheight)
+  static Initializer
+  init_from_intersection (const Plane &master, Point p0, double pwidth, double pheight)
   {
     Rect m (master.origin(), master.width(), master.height());
     Rect b (p0, pwidth, pheight);
     b.intersect (m);
     if (b.is_empty())
-      return Plane (iround (p0.x), iround (p0.y), 0, 0);
+      return Initializer (iround (p0.x), iround (p0.y), 0, 0);
     else
-      return Plane (iround (b.ll.x), iround (b.ll.y), iceil (b.width()), iceil (b.height()));
+      return Initializer (iround (b.ll.x), iround (b.ll.y), iceil (b.width()), iceil (b.height()));
   }
-  static Plane
-  create_from_size (const Plane &master)
+  static Initializer
+  init_from_size (const Plane &master)
   {
-    return create_from_intersection (master, master.origin(), master.width(), master.height());
+    return init_from_intersection (master, master.origin(), master.width(), master.height());
+  }
+  static void
+  warp_plane_iknowwhatimdoing (Plane &plane,
+                               int    x,
+                               int    y)
+  {
+    plane.m_x = x;
+    plane.m_y = y;
   }
 };
 
