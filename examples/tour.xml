@@ -19,9 +19,46 @@
  !-->
 <rapicorn-gadgets xmlns:def="http://rapicorn.org/xmlns:def">
 
+  <!-- scroll-area -->
+  <def:scroll-port inherit="Rapicorn::ScrollPort">
+  </def:scroll-port>
+  <def:scroll-area inherit="Rapicorn::ScrollArea" child-container="scroll-port">
+    <table>
+      <alignment hexpand="0" vexpand="0" bottom-attach="1" left-attach="0" right-attach="1" top-attach="2" width="0" height="0"
+	left-padding="2" right-padding="3" bottom-padding="2" top-padding="2">
+	<frame frame-type="in">
+	  <scroll-port />
+	</frame>
+      </alignment>
+      <hslider hexpand="1" adjustment-source="ancestor-horizontal" bottom-attach="0" />
+      <vslider vexpand="1" adjustment-source="ancestor-vertical"   bottom-attach="1" left-attach="1" height="200" />
+    </table>
+  </def:scroll-area>
+
   <!-- test dialog -->
   <def:tour-dialog inherit="ambience" normal-lighting="upper-left"> <!-- normal-background="beige" -->
     <vbox sensitive="1">
+      <scroll-area width="400" >
+	<frame left-attach="46" right-attach="47" bottom-attach="46" top-attach="47" hexpand="1" vexpand="1" >
+	  <label text=
+	    "HUHU, mir wird schwindelig. Jetzt kommt ein richtig langer text,&#10; der sich immer weiter erstreckt.
+	    lala tutu dumdeli. tra lal la und humpeli.&#10;
+	    A 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789&#10;
+	    B 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789&#10;
+	    C 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789&#10;
+	    D 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789&#10;
+	    E 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789&#10;
+	    F 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789&#10;
+	    G 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789&#10;
+	    H 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789&#10;
+	    I 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789&#10;
+	    J 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789&#10;
+	    K 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789&#10;
+	    L 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789&#10;
+	    M 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789
+	    " />
+	</frame>
+      </scroll-area>
       <label text="Mark1" />
       <arrangement origin="0 0" >
 	<label text="First Label" hanchor="1" position="-75 30" />
@@ -93,9 +130,6 @@
 		  <frame/>
 		  <frame left-attach="43" bottom-attach="43" right-attach="46" top-attach="46" hexpand="1" vexpand="1" />
 		  <frame left-attach="42" bottom-attach="42" right-attach="47" top-attach="47" />
-		  <frame left-attach="46" right-attach="47" bottom-attach="46" top-attach="47" hexpand="1" vexpand="1" >
-		    <label text="HUHU, mir wird schwindelig. Jetzt kommt ein richtig langer text,&#10; der sich immer weiter erstreckt." />
-		  </frame>
 		  <frame/>
 		  <frame/>
 		  <frame/>

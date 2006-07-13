@@ -840,11 +840,13 @@ class Display {
   };
   std::list<Layer> layer_stack;
   std::list<Rect>  clip_stack;
+  BIRNET_PRIVATE_CLASS_COPY (Display);
 public:
   explicit      Display();
   virtual       ~Display();
   void          push_clip_rect  (int x, int y, uint width, uint height) { push_clip_rect (Rect (Point (x, y), width, height)); }
   void          push_clip_rect  (const Rect &rect);
+  Rect          current_rect    ();
   Plane&        create_plane    (CombineType ctype = COMBINE_NORMAL,
                                  double      alpha = 1.0); /* 0..1 */
   bool          empty           () const;

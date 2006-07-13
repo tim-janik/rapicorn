@@ -80,7 +80,7 @@
   <def:Rapicorn-slider-skid inherit="Rapicorn::SliderSkid"/>
   <!-- hslider -->
   <def:hslider inherit="Rapicorn::SliderArea">
-    <frame normal-frame="in" vexpand="1" hexpand="1">
+    <frame normal-frame="in" vexpand="1" hexpand="1" height="18">
       <hbox vexpand="1">
 	<button on-click="decrement" on-click2="page-decrement" vexpand="1">
 	  <arrow arrow-dir="left" size-policy="width-from-height"/>
@@ -105,7 +105,7 @@
   </def:hslider>
   <!-- vslider -->
   <def:vslider inherit="Rapicorn::SliderArea">
-    <frame normal-frame="in" vexpand="1" hexpand="1">
+    <frame normal-frame="in" vexpand="1" hexpand="1" width="18">
       <vbox hexpand="1">
 	<button on-click="increment" on-click2="page-increment" hexpand="1">
 	  <arrow arrow-dir="up" size-policy="height-from-width"/>

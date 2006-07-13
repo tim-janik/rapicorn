@@ -475,6 +475,21 @@ RootImpl::expose (const Allocation &area)
 }
 
 void
+RootImpl::render (Plane &plane)
+{
+  plane.fill (background());
+  Display display;
+  const Allocation &a = allocation();
+  display.push_clip_rect (a.x, a.y, a.width, a.height);
+  display.push_clip_rect (plane.rect());
+  if (!display.empty())
+    render (display);
+  display.render_combined (plane);
+  display.pop_clip_rect();
+  display.pop_clip_rect();
+}
+
+void
 RootImpl::remove_grab_item (Item &child)
 {
   bool stack_changed = false;
@@ -546,21 +561,6 @@ RootImpl::dispose_item (Item &item)
   remove_grab_item (item);
   cancel_item_events (item);
   SingleContainerImpl::dispose_item (item);
-}
-
-void
-RootImpl::render (Plane &plane)
-{
-  plane.fill (background());
-  Display display;
-  const Allocation &a = allocation();
-  display.push_clip_rect (a.x, a.y, a.width, a.height);
-  display.push_clip_rect (plane.rect());
-  if (!display.empty())
-    render (display);
-  display.render_combined (plane);
-  display.pop_clip_rect();
-  display.pop_clip_rect();
 }
 
 bool

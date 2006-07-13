@@ -1,3 +1,17 @@
+Thu Jul 13 21:59:55 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/rapicorn.xml: changed hslider and vslider to make them
+	higher and wider respectively.
+
+	* rapicorn/primitives.hh, rapicorn/primitives.cc: 
+	added Display::current_rect(). made Display non-copyable.
+
+	* rapicorn/scrollitems.hh, rapicorn/scrollitems.cc, rapicorn/scrollitemsimpl.hh:
+	added prototype implementations of ScrollArea, ScrollPort and ScrollAreaImpl.
+
+	* examples/tour.xml: added scroll-area and scroll-port definitions
+	for development purposes.
+
 Thu Jul 13 01:17:18 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/adjustment.hh, rapicorn/adjustment.cc: added nvalue()

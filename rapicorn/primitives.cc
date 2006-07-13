@@ -689,6 +689,15 @@ Display::empty () const
   return !(w > 0 && h > 0);
 }
 
+Rect
+Display::current_rect ()
+{
+  const Rect &r = clip_stack.front();
+  /* align to integer bounds */
+  int x = iround (r.ll.x), y = iround (r.ll.y), w = iceil (r.width()), h = iceil (r.height());
+  return Rect (Point (x, y), w, h); // FIXME: should be IntRect
+}
+
 Plane&
 Display::create_plane (CombineType ctype,
                        double      alpha) /* 0..1 */
