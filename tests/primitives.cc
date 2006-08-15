@@ -16,6 +16,8 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+//#define TEST_VERBOSE
+#include <birnet/birnettests.h>
 #include <rapicorn/rapicorn.hh>
 
 namespace {
@@ -34,11 +36,11 @@ color_test()
           double hue, saturation, value;
           c.get_hsv (&hue, &saturation, &value);
           if (r > g && r > b)
-            assert (hue < 60 || hue > 300);
+            BIRNET_ASSERT (hue < 60 || hue > 300);
           else if (g > r && g > b)
-            assert (hue > 60 || hue < 180);
+            BIRNET_ASSERT (hue > 60 || hue < 180);
           else if (b > g && b > r)
-            assert (hue > 180 || hue < 300);
+            BIRNET_ASSERT (hue > 180 || hue < 300);
           Color d (0xff75c3a9);
           d.set_hsv (hue, saturation, value);
           if (c.red()   != d.red() ||
@@ -54,7 +56,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  printf ("TEST: %s:\n", basename (argv[0]));
+  birnet_init_test (&argc, &argv);
   color_test();
   return 0;
 }

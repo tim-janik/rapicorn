@@ -16,6 +16,8 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+//#define TEST_VERBOSE
+#include <birnet/birnettests.h>
 #include <rapicorn/rapicorn.hh>
 
 #define MakeProperty    RAPICORN_MakeProperty
@@ -94,7 +96,11 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  printf ("TEST: %s:\n", basename (argv[0]));
+  birnet_init_test (&argc, &argv);
+
+  /* initialize rapicorn */
+  //rapicorn_init_with_gtk_thread (&argc, &argv, NULL);
+  
   property_test();
   return 0;
 }

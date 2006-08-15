@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 //#define TEST_VERBOSE
-#include <rapicorn/rapicorn.hh>
 #include <birnet/birnettests.h>
+#include <rapicorn/rapicorn.hh>
 #include <rapicorn/testitem.hh>
 
 namespace {

@@ -1,3 +1,11 @@
+Tue Jul 18 01:52:17 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/properties.hh: fixed assertion macros.
+	
+	* tests/*.cc: fixed test includes and assertion macros.
+
+	* tests/Makefile.am: do not define RAPICORN_PRIVATE for test programs.
+
 Thu Jul 13 21:59:55 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/rapicorn.xml: changed hslider and vslider to make them

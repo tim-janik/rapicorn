@@ -2,7 +2,7 @@
 # Copyright (C) 2005 Tim Janik
 
 INCLUDES = -I$(top_srcdir)
-DEFS     = -DPARANOID $(RAPICORN_CFLAGS) -DRAPICORN_PRIVATE
+DEFS     = -DPARANOID $(RAPICORN_CFLAGS)
 
 # test programs:
 TESTS = items testitems walker markup primitives shaderect pixcombine properties

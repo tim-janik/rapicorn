@@ -16,8 +16,9 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#include <rapicorn/rapicorn.hh>
+//#define TEST_VERBOSE
 #include <birnet/birnettests.h>
+#include <rapicorn/rapicorn.hh>
 
 namespace {
 using namespace Rapicorn;
