@@ -1,3 +1,8 @@
+Tue Jul 18 02:03:05 2006  Tim Janik  <timj@gtk.org>
+
+	* configure.in: upgraded version to 0.1.2-snapshot,
+	interface age 0, binary age 0.
+	
 Tue Jul 18 01:52:17 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/properties.hh: fixed assertion macros.
