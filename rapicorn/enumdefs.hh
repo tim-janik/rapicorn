@@ -98,6 +98,15 @@ typedef enum {
 typedef EnumType<AnchorType> EnumTypeAnchorType;
 
 typedef enum {
+  CLICK_ON_PRESS        = 1,
+  CLICK_ON_RELEASE,
+  CLICK_SLOW_REPEAT,
+  CLICK_FAST_REPEAT,
+  CLICK_KEY_REPEAT,
+} ClickType;
+typedef EnumType<ClickType> EnumTypeClickType;
+
+typedef enum {
   COLOR_NONE,
   COLOR_FOREGROUND,
   COLOR_BACKGROUND,

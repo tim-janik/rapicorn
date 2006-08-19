@@ -48,6 +48,8 @@ public:
   virtual void  remove_grab             (Item  &child) = 0;
   void          remove_grab             (Item  *child)     { throw_if_null (child); return remove_grab (*child); }
   virtual Item* get_grab                (bool  *unconfined = NULL) = 0;
+  /* main loop functions */
+  virtual MainLoop* get_loop            () = 0;
   /* MT-safe */
   virtual void  run_async               (void) = 0;
   virtual void  stop_async              (void) = 0;

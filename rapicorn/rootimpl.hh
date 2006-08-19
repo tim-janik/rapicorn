@@ -76,6 +76,7 @@ private:
                                                                  int                    *timeout_msecs_p);
   virtual bool          check                                   (uint64                  current_time_usecs);
   virtual bool          dispatch                                ();
+  virtual MainLoop*     get_loop                                ();
   /* event queue */
   virtual void          enqueue_async                           (Event                  *event);
   virtual void          cancel_item_events                      (Item                   *item);

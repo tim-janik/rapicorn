@@ -45,9 +45,12 @@ MainLoop::TimedSource::prepare (uint64 current_time_usecs,
 {
   if (current_time_usecs >= m_expiration_usecs)
     return true;                                            /* timeout expired */
-  uint64 interval = m_interval_msecs * 1000ULL;
-  if (current_time_usecs + interval < m_expiration_usecs)
-    m_expiration_usecs = current_time_usecs + interval;     /* clock warped back in time */
+  if (!m_first_interval)
+    {
+      uint64 interval = m_interval_msecs * 1000ULL;
+      if (current_time_usecs + interval < m_expiration_usecs)
+        m_expiration_usecs = current_time_usecs + interval; /* clock warped back in time */
+    }
   *timeout_msecs_p = MIN (G_MAXINT, (m_expiration_usecs - current_time_usecs) / 1000ULL);
   return 0 == *timeout_msecs_p;
 }
@@ -62,6 +65,7 @@ bool
 MainLoop::TimedSource::dispatch()
 {
   bool repeat = false;
+  m_first_interval = false;
   if (m_oneshot && m_vtrampoline->callable)
     (*m_vtrampoline) ();
   else if (!m_oneshot && m_btrampoline->callable)
@@ -72,18 +76,20 @@ MainLoop::TimedSource::dispatch()
 }
 
 MainLoop::TimedSource::TimedSource (Signals::Trampoline0<bool> &bt,
-                                    uint interval_msecs):
-  m_expiration_usecs (MainLoop::get_current_time_usecs() + 1000ULL * interval_msecs),
-  m_interval_msecs (interval_msecs),
-  m_oneshot (false),
+                                    uint initial_interval_msecs,
+                                    uint repeat_interval_msecs) :
+  m_expiration_usecs (MainLoop::get_current_time_usecs() + 1000ULL * initial_interval_msecs),
+  m_interval_msecs (repeat_interval_msecs),
+  m_oneshot (false), m_first_interval (true),
   m_btrampoline (ref_sink (&bt))
 {}
 
 MainLoop::TimedSource::TimedSource (Signals::Trampoline0<void> &vt,
-                                    uint interval_msecs) :
-  m_expiration_usecs (MainLoop::get_current_time_usecs() + 1000ULL * interval_msecs),
-  m_interval_msecs (interval_msecs),
-  m_oneshot (true),
+                                    uint initial_interval_msecs,
+                                    uint repeat_interval_msecs) :
+  m_expiration_usecs (MainLoop::get_current_time_usecs() + 1000ULL * initial_interval_msecs),
+  m_interval_msecs (repeat_interval_msecs),
+  m_oneshot (true), m_first_interval (true),
   m_vtrampoline (ref_sink (&vt))
 {}
 

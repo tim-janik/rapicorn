@@ -44,6 +44,8 @@ public:
   virtual void          on_click2       (const String &command) = 0;
   virtual String        on_click3       () const = 0;
   virtual void          on_click3       (const String &command) = 0;
+  virtual ClickType     click_type      () const = 0;
+  virtual void          click_type      (ClickType     click_type) = 0;
   virtual
   const PropertyList&   list_properties ();
 };

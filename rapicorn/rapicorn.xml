@@ -82,7 +82,7 @@
   <def:hslider inherit="Rapicorn::SliderArea">
     <frame normal-frame="in" vexpand="1" hexpand="1" height="18">
       <hbox vexpand="1">
-	<button on-click="decrement" on-click2="page-decrement" vexpand="1">
+	<button on-click="decrement" on-click2="page-decrement" click-type="fast-repeat" vexpand="1">
 	  <arrow arrow-dir="left" size-policy="width-from-height"/>
 	</button>
 	<Rapicorn-slider-trough hexpand="1" vexpand="1">
@@ -97,7 +97,7 @@
 	    </ambience>
 	  </Rapicorn-slider-skid>
 	</Rapicorn-slider-trough>
-	<button on-click="increment" on-click2="page-increment" vexpand="1">
+	<button on-click="increment" on-click2="page-increment" click-type="fast-repeat" vexpand="1">
 	  <arrow arrow-dir="right" size-policy="width-from-height"/>
 	</button>
       </hbox>
@@ -107,7 +107,7 @@
   <def:vslider inherit="Rapicorn::SliderArea">
     <frame normal-frame="in" vexpand="1" hexpand="1" width="18">
       <vbox hexpand="1">
-	<button on-click="increment" on-click2="page-increment" hexpand="1">
+	<button on-click="increment" on-click2="page-increment" click-type="fast-repeat" hexpand="1">
 	  <arrow arrow-dir="up" size-policy="height-from-width"/>
 	</button>
 	<Rapicorn-slider-trough vexpand="1" hexpand="1">
@@ -122,7 +122,7 @@
 	    </ambience>
 	  </Rapicorn-slider-skid>
 	</Rapicorn-slider-trough>
-	<button on-click="decrement" on-click2="page-decrement" hexpand="1">
+	<button on-click="decrement" on-click2="page-decrement" click-type="fast-repeat" hexpand="1">
 	  <arrow arrow-dir="down" size-policy="height-from-width"/>
 	</button>
       </vbox>

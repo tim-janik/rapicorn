@@ -85,13 +85,13 @@ main (int   argc,
   if (1)
     {
       MainLoop *tloop = glib_loop_create();
-      tloop->idle_timed (250, slot (timer));
+      tloop->exec_timer (250, 250, slot (timer));
       MainLoopPool::add_loop (tloop);
     }
   if (1)
     {
       MainLoop *tloop = glib_loop_create();
-      tloop->idle_timed (125, slot (timer2));
+      tloop->exec_timer (125, 125, slot (timer2));
       MainLoopPool::add_loop (tloop);
     }
   

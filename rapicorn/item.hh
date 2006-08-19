@@ -110,6 +110,11 @@ protected:
   virtual bool                match_interface   (InterfaceMatch &imatch, const String &ident);
   virtual void                do_invalidate     () = 0;
   virtual void                do_changed        () = 0;
+  /* idlers & timers */
+  uint                        exec_fast_repeater   (const BoolSlot &sl);
+  uint                        exec_slow_repeater   (const BoolSlot &sl);
+  uint                        exec_key_repeater    (const BoolSlot &sl);
+  bool                        remove_exec          (uint            exec_id);
   /* misc */
   virtual                     ~Item             ();
   virtual void                style             (Style  *st);

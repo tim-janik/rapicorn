@@ -1,3 +1,21 @@
+Sat Aug 19 23:56:30 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/buttons.hh, rapicorn/buttons.cc: added ButtonArea::click_type
+	to adjust press/release and repeat click behaviour. implemented click
+	behaviours for ButtonAreaImpl.
+
+	* rapicorn/enumdefs.hh: added ClickType.
+	
+	* rapicorn/item.hh, rapicorn/item.cc: added API to setup main loop
+	handlers for various repeat types.
+	
+	* rapicorn/loop.hh, rapicorn/loop.cc: extended timeout implementation
+	to support an initial timeout different from repetition timeouts.
+	renamed idle handler methods to exec_*().
+	
+	* rapicorn/rapicorn.xml: enable fast repetition for hslider and
+	vslider buttons.
+
 Tue Jul 18 02:03:05 2006  Tim Janik  <timj@gtk.org>
 
 	* configure.in: upgraded version to 0.1.2-snapshot,

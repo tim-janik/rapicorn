@@ -33,35 +33,77 @@ const PropertyList&
 ButtonArea::list_properties()
 {
   static Property *properties[] = {
-    MakeProperty (ButtonArea, on_click,  _("On CLick"), _("Command on button1 click"), "", "rw"),
-    MakeProperty (ButtonArea, on_click2, _("On CLick2"), _("Command on button2 click"), "", "rw"),
-    MakeProperty (ButtonArea, on_click3, _("On CLick3"), _("Command on button3 click"), "", "rw"),
+    MakeProperty (ButtonArea, on_click,   _("On CLick"),   _("Command on button1 click"), "", "rw"),
+    MakeProperty (ButtonArea, on_click2,  _("On CLick2"),  _("Command on button2 click"), "", "rw"),
+    MakeProperty (ButtonArea, on_click3,  _("On CLick3"),  _("Command on button3 click"), "", "rw"),
+    MakeProperty (ButtonArea, click_type, _("CLick Type"), _("Click event generation type"), CLICK_ON_RELEASE, "rw"),
   };
   static const PropertyList property_list (properties, Container::list_properties());
   return property_list;
 }
 
 class ButtonAreaImpl : public virtual ButtonArea, public virtual EventHandler, public virtual SingleContainerImpl {
-  uint m_button;
+  uint m_button, m_repeater;
+  ClickType m_click_type;
   String m_on_click[3];
 public:
   ButtonAreaImpl() :
-    m_button (0)
+    m_button (0), m_repeater (0),
+    m_click_type (CLICK_ON_RELEASE)
   {}
   void
   set_model (Activatable &activatable)
   {
     // FIXME
   }
-  virtual String on_click  () const                     { return m_on_click[0]; }
-  virtual void   on_click  (const String &command)      { m_on_click[0] = string_strip (command); }
-  virtual String on_click2 () const                     { return m_on_click[1]; }
-  virtual void   on_click2 (const String &command)      { m_on_click[1] = string_strip (command); }
-  virtual String on_click3 () const                     { return m_on_click[2]; }
-  virtual void   on_click3 (const String &command)      { m_on_click[2] = string_strip (command); }
+  virtual String    on_click   () const                 { return m_on_click[0]; }
+  virtual void      on_click   (const String &command)  { m_on_click[0] = string_strip (command); }
+  virtual String    on_click2  () const                 { return m_on_click[1]; }
+  virtual void      on_click2  (const String &command)  { m_on_click[1] = string_strip (command); }
+  virtual String    on_click3  () const                 { return m_on_click[2]; }
+  virtual void      on_click3  (const String &command)  { m_on_click[2] = string_strip (command); }
+  virtual ClickType click_type () const                 { return m_click_type; }
+  virtual void      click_type (ClickType click_type_v) { reset(); m_click_type = click_type_v; }
+  bool
+  activate_command()
+  {
+    if (m_button >= 1 && m_button <= 3 && m_on_click[m_button - 1] != "")
+      {
+        exec_command (m_on_click[m_button - 1], std::nothrow);
+        return TRUE;
+      }
+    else
+      return FALSE;
+  }
+  void
+  activate_click (EventType etype)
+  {
+    bool need_repeat = etype == BUTTON_PRESS && (m_click_type == CLICK_KEY_REPEAT || m_click_type == CLICK_SLOW_REPEAT || m_click_type == CLICK_FAST_REPEAT);
+    bool need_click = need_repeat;
+    need_click |= etype == BUTTON_PRESS && m_click_type == CLICK_ON_PRESS;
+    need_click |= etype == BUTTON_RELEASE && m_click_type == CLICK_ON_RELEASE;
+    bool can_exec = need_click && activate_command();
+    need_repeat &= can_exec;
+    if (need_repeat && !m_repeater)
+      {
+        if (m_click_type == CLICK_FAST_REPEAT)
+          m_repeater = exec_fast_repeater (slot (*this, &ButtonAreaImpl::activate_command));
+        else if (m_click_type == CLICK_SLOW_REPEAT)
+          m_repeater = exec_slow_repeater (slot (*this, &ButtonAreaImpl::activate_command));
+        else if (m_click_type == CLICK_KEY_REPEAT)
+          m_repeater = exec_key_repeater (slot (*this, &ButtonAreaImpl::activate_command));
+      }
+    else if (!need_repeat && m_repeater)
+      {
+        remove_exec (m_repeater);
+        m_repeater = 0;
+      }
+  }
   virtual void
   reset (ResetMode mode = RESET_ALL)
   {
+    remove_exec (m_repeater);
+    m_repeater = 0;
     m_button = 0;
   }
   virtual bool
@@ -87,9 +129,11 @@ public:
         if (!m_button and bevent->button >= 1 and bevent->button <= 3 and
             m_on_click[bevent->button - 1] != "")
           {
+            bool inbutton = view.prelight();
             m_button = bevent->button;
             view.impressed (true);
             view.root()->add_grab (view);
+            activate_click (inbutton ? BUTTON_PRESS : BUTTON_CANCELED);
             handled = true;
           }
         break;
@@ -103,13 +147,10 @@ public:
           {
             bool inbutton = view.prelight();
             view.root()->remove_grab (view);
-            m_button = 0;
+            activate_click (inbutton && proper_release ? BUTTON_RELEASE : BUTTON_CANCELED);
             view.impressed (false);
+            m_button = 0;
             handled = true;
-            if (proper_release and inbutton and
-                bevent->button >= 1 and bevent->button <= 3 and
-                m_on_click[bevent->button - 1] != "")
-              exec_command (m_on_click[bevent->button - 1], std::nothrow);
           }
         break;
       case KEY_PRESS:

@@ -56,6 +56,7 @@ private:
     uint64     m_expiration_usecs;
     uint       m_interval_msecs;
     const bool m_oneshot;
+    bool       m_first_interval;
     union {
       Signals::Trampoline0<bool> *m_btrampoline;
       Signals::Trampoline0<void> *m_vtrampoline;
@@ -68,13 +69,13 @@ private:
     virtual bool dispatch     ();
   public:
     explicit     TimedSource (Signals::Trampoline0<bool> &bt,
-                              uint interval_msecs = 0);
+                              uint initial_interval_msecs = 0,
+                              uint repeat_interval_msecs = 0);
     explicit     TimedSource (Signals::Trampoline0<void> &vt,
-                              uint interval_msecs = 0);
+                              uint initial_interval_msecs = 0,
+                              uint repeat_interval_msecs = 0);
   };
 public:
-  typedef Signals::Slot0<void, void> VoidSlot;
-  typedef Signals::Slot0<bool, void> BoolSlot;
   static const  int PRIORITY_NOW        = -G_MAXINT / 2;                /* most important, used for immediate async execution */
   static const  int PRIORITY_HIGH       = G_PRIORITY_HIGH - 10;         /* very important, used for io handlers */
   static const  int PRIORITY_NEXT       = G_PRIORITY_HIGH - 5;          /* still very important, used for need-to-be-async operations */
@@ -90,22 +91,24 @@ public:
                                  Source         *loop_source) = 0;
   virtual bool  try_remove      (uint            id) = 0;
   void          remove          (uint            id);
-  uint          idle_timed      (uint            timeout_ms,
-                                 const VoidSlot &sl) { return add_source (PRIORITY_NEXT,       new TimedSource (*sl.get_trampoline(), timeout_ms)); }
-  uint          idle_timed      (uint            timeout_ms,
-                                 const BoolSlot &sl) { return add_source (PRIORITY_NEXT,       new TimedSource (*sl.get_trampoline(), timeout_ms)); }
-  uint          idle_now        (const VoidSlot &sl) { return add_source (PRIORITY_HIGH,       new TimedSource (*sl.get_trampoline())); }
-  uint          idle_now        (const BoolSlot &sl) { return add_source (PRIORITY_HIGH,       new TimedSource (*sl.get_trampoline())); }
-  uint          idle_next       (const VoidSlot &sl) { return add_source (PRIORITY_NEXT,       new TimedSource (*sl.get_trampoline())); }
-  uint          idle_next       (const BoolSlot &sl) { return add_source (PRIORITY_NEXT,       new TimedSource (*sl.get_trampoline())); }
-  uint          idle_notify     (const VoidSlot &sl) { return add_source (PRIORITY_NOTIFY,     new TimedSource (*sl.get_trampoline())); }
-  uint          idle_notify     (const BoolSlot &sl) { return add_source (PRIORITY_NOTIFY,     new TimedSource (*sl.get_trampoline())); }
-  uint          idle_normal     (const VoidSlot &sl) { return add_source (PRIORITY_NORMAL,     new TimedSource (*sl.get_trampoline())); }
-  uint          idle_normal     (const BoolSlot &sl) { return add_source (PRIORITY_NORMAL,     new TimedSource (*sl.get_trampoline())); }
-  uint          idle_update     (const VoidSlot &sl) { return add_source (PRIORITY_UPDATE,     new TimedSource (*sl.get_trampoline())); }
-  uint          idle_update     (const BoolSlot &sl) { return add_source (PRIORITY_UPDATE,     new TimedSource (*sl.get_trampoline())); }
-  uint          idle_background (const VoidSlot &sl) { return add_source (PRIORITY_BACKGROUND, new TimedSource (*sl.get_trampoline())); }
-  uint          idle_background (const BoolSlot &sl) { return add_source (PRIORITY_BACKGROUND, new TimedSource (*sl.get_trampoline())); }
+  uint          exec_now        (const VoidSlot &sl) { return add_source (PRIORITY_HIGH,       new TimedSource (*sl.get_trampoline())); }
+  uint          exec_now        (const BoolSlot &sl) { return add_source (PRIORITY_HIGH,       new TimedSource (*sl.get_trampoline())); }
+  uint          exec_next       (const VoidSlot &sl) { return add_source (PRIORITY_NEXT,       new TimedSource (*sl.get_trampoline())); }
+  uint          exec_next       (const BoolSlot &sl) { return add_source (PRIORITY_NEXT,       new TimedSource (*sl.get_trampoline())); }
+  uint          exec_notify     (const VoidSlot &sl) { return add_source (PRIORITY_NOTIFY,     new TimedSource (*sl.get_trampoline())); }
+  uint          exec_notify     (const BoolSlot &sl) { return add_source (PRIORITY_NOTIFY,     new TimedSource (*sl.get_trampoline())); }
+  uint          exec_normal     (const VoidSlot &sl) { return add_source (PRIORITY_NORMAL,     new TimedSource (*sl.get_trampoline())); }
+  uint          exec_normal     (const BoolSlot &sl) { return add_source (PRIORITY_NORMAL,     new TimedSource (*sl.get_trampoline())); }
+  uint          exec_update     (const VoidSlot &sl) { return add_source (PRIORITY_UPDATE,     new TimedSource (*sl.get_trampoline())); }
+  uint          exec_update     (const BoolSlot &sl) { return add_source (PRIORITY_UPDATE,     new TimedSource (*sl.get_trampoline())); }
+  uint          exec_background (const VoidSlot &sl) { return add_source (PRIORITY_BACKGROUND, new TimedSource (*sl.get_trampoline())); }
+  uint          exec_background (const BoolSlot &sl) { return add_source (PRIORITY_BACKGROUND, new TimedSource (*sl.get_trampoline())); }
+  uint          exec_timer      (uint            initial_timeout_ms,
+                                 uint            repeat_timeout_ms,
+                                 const VoidSlot &sl) { return add_source (PRIORITY_NEXT,       new TimedSource (*sl.get_trampoline(), initial_timeout_ms, repeat_timeout_ms)); }
+  uint          exec_timer      (uint            initial_timeout_ms,
+                                 uint            repeat_timeout_ms,
+                                 const BoolSlot &sl) { return add_source (PRIORITY_NEXT,       new TimedSource (*sl.get_trampoline(), initial_timeout_ms, repeat_timeout_ms)); }
 };
 
 class MainLoopPool {

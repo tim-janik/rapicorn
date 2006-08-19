@@ -465,7 +465,7 @@ RootImpl::expose (const Allocation &area)
   if (m_viewport && area.width && area.height)
     {
       if (!m_expose_queue.size())
-        m_loop->idle_next (slot (*this, &RootImpl::flush_expose_queue)); // FIXME: prio should be lower than the prio for input event processing
+        m_loop->exec_next (slot (*this, &RootImpl::flush_expose_queue)); // FIXME: prio should be lower than the prio for input event processing
       uint stamp = m_viewport->last_draw_stamp();
       if (stamp != m_expose_queue_stamp)
         m_expose_queue.clear(); /* discard outdated exposes */
@@ -627,6 +627,12 @@ RootImpl::dispatch ()
   return true;
 }
 
+MainLoop*
+RootImpl::get_loop ()
+{
+  return m_loop;
+}
+
 void
 RootImpl::enqueue_async (Event *event)
 {
@@ -657,7 +663,7 @@ RootImpl::run_async (void)
   MainLoopPool::add_loop (m_loop);
   BIRNET_ASSERT (m_source == NULL);
   m_source = new RootSource (*this);
-  m_loop->idle_now (slot (*this, &RootImpl::idle_show));
+  m_loop->exec_now (slot (*this, &RootImpl::idle_show));
   m_loop->add_source (MainLoop::PRIORITY_NORMAL, m_source);
   // m_loop->idle_timed (250, timer);
 }

@@ -175,6 +175,58 @@ Item::match_parent_interface (InterfaceMatch &imatch,
     return false;
 }
 
+uint
+Item::exec_slow_repeater (const BoolSlot &sl)
+{
+  Root *ritem = root();
+  if (ritem)
+    {
+      MainLoop *loop = ritem->get_loop();
+      if (loop)
+        return loop->exec_timer (250, 50, sl);
+    }
+  return 0;
+}
+
+uint
+Item::exec_fast_repeater (const BoolSlot &sl)
+{
+  Root *ritem = root();
+  if (ritem)
+    {
+      MainLoop *loop = ritem->get_loop();
+      if (loop)
+        return loop->exec_timer (200, 20, sl);
+    }
+  return 0;
+}
+
+uint
+Item::exec_key_repeater (const BoolSlot &sl)
+{
+  Root *ritem = root();
+  if (ritem)
+    {
+      MainLoop *loop = ritem->get_loop();
+      if (loop)
+        return loop->exec_timer (250, 33, sl);
+    }
+  return 0;
+}
+
+bool
+Item::remove_exec (uint exec_id)
+{
+  Root *ritem = root();
+  if (ritem)
+    {
+      MainLoop *loop = ritem->get_loop();
+      if (loop)
+        return loop->try_remove (exec_id);
+    }
+  return false;
+}
+
 void
 Item::finalize()
 {
