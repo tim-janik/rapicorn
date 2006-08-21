@@ -46,14 +46,15 @@ RecMutex*       rapicorn_mutex          ();
 /* --- standard utlities --- */
 using Birnet::abs;
 using Birnet::clamp;
-using Birnet::min;
-using Birnet::max;
 //template<typename T> inline const T& min   (const T &a, const T &b) { return ::std::min<T> (a, b); }
 //template<typename T> inline const T& max   (const T &a, const T &b) { return ::std::min<T> (a, b); }
-inline double min (double a, long   b) { return min<double> (a, b); }
-inline double min (long   a, double b) { return min<double> (a, b); }
-inline double max (double a, long   b) { return max<double> (a, b); }
-inline double max (long   a, double b) { return max<double> (a, b); }
+using ::std::min;
+using ::std::max;
+inline double min     (double a, long   b) { return min<double> (a, b); }
+inline double min     (long   a, double b) { return min<double> (a, b); }
+inline double max     (double a, long   b) { return max<double> (a, b); }
+inline double max     (long   a, double b) { return max<double> (a, b); }
+inline void   memset4 (uint32 *mem, uint32 filler, uint length) { birnet_memset4 (mem, filler, length); }
 
 /* --- Convertible --- */
 class Convertible : public virtual ReferenceCountImpl {

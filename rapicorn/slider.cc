@@ -232,6 +232,16 @@ protected:
     Adjustment &adj = *adjustment();
     return flipped() ? adj.flipped_nvalue() : adj.nvalue();
   }
+  void
+  size_request (Requisition &requisition)
+  {
+    if (has_visible_child())
+      {
+        Item &child = get_child();
+        requisition = child.size_request ();
+        /* we intentionally don't propagate child.hspread() or child.vspread() here */
+      }
+  }
   virtual void
   size_allocate (Allocation area)
   {
@@ -247,15 +257,27 @@ protected:
     Item &child = get_child();
     Requisition rq = child.size_request();
     /* expand/scale child */
-    if (area.width > rq.width && !child.hexpand())
+    if (area.width > rq.width && !child.hspread())
       {
-        area.x += iround (nvalue() * (area.width - rq.width));
-        area.width = iround (rq.width);
+        if (child.hexpand())
+          {
+            Adjustment &adj = *adjustment();
+            double cwidth = round (adj.abs_length() * area.width);
+            rq.width = MAX (cwidth, rq.width);
+          }
+        area.x += round (nvalue() * (area.width - rq.width));
+        area.width = round (rq.width);
       }
-    if (area.height > rq.height && !child.vexpand())
+    if (area.height > rq.height && !child.vspread())
       {
-        area.y += iround (nvalue() * (area.height - rq.height));
-        area.height = iround (rq.height);
+        if (child.vexpand())
+          {
+            Adjustment &adj = *adjustment();
+            double cheight = round (adj.abs_length() * area.height);
+            rq.height = MAX (cheight, rq.height);
+          }
+        area.y += round (nvalue() * (area.height - rq.height));
+        area.height = round (rq.height);
       }
     child.set_allocation (area);
   }

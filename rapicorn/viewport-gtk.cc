@@ -22,6 +22,8 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 
+#define DEBUG_EVENTS    0
+
 namespace { // Anon
 using Birnet::uint;
 using namespace Rapicorn;
@@ -80,6 +82,7 @@ struct RapicornViewport : public GtkContainer {
   GdkVisibilityState visibility_state;
   bool               fast_local_blitting;
   guint32            last_time;
+  guint32            last_motion_time;
   BackingStore       backing_store;
   GdkModifierType    last_modifier;
   double             last_x, last_y;
@@ -119,8 +122,16 @@ struct ViewportGtk : public virtual Viewport {
   virtual void          hide                    (void);
   virtual void          blit_plane              (Plane          *plane,
                                                  uint            draw_stamp);
+  virtual void          copy_area               (double          src_x,
+                                                 double          src_y,
+                                                 double          width,
+                                                 double          height,
+                                                 double          dest_x,
+                                                 double          dest_y);
   virtual void          invalidate_plane        (const std::vector<Rect> &rects,
                                                  uint                     draw_stamp);
+  virtual void          enqueue_win_draws       (void);
+  virtual void          enqueue_mouse_moves     (void);
   virtual uint          last_draw_stamp         ();
   virtual State         get_state               ();
   virtual void          set_config              (const Config   &config);
@@ -287,6 +298,7 @@ ViewportGtk::hide (void)
     }
 }
 
+#if 0
 struct IdleBlitter {
   RapicornViewport *self;
   Plane            *plane;
@@ -380,23 +392,29 @@ struct IdleBlitter {
     return false; /* all done */
   }
   static gboolean
-  idle_blit_plane (gpointer data)
+  idle_blit_plane_locked (IdleBlitter *iblitter)
   {
-    IdleBlitter *iblitter = static_cast<IdleBlitter*> (data);
-    GDK_THREADS_ENTER();
     bool repeat = iblitter->blit_plane();
     if (!repeat)
       delete iblitter;
-    GDK_THREADS_LEAVE();
+    return repeat;
+  }
+  static gboolean
+  idle_blit_plane (gpointer data)
+  {
+    AutoLocker locker (GTK_GDK_THREAD_SYNC);
+    IdleBlitter *iblitter = static_cast<IdleBlitter*> (data);
+    bool repeat = idle_blit_plane_locked (iblitter);
     return repeat;
   }
 };
+#endif
 
 void
 ViewportGtk::blit_plane (Plane *plane,
                          uint   draw_stamp)
 {
-  /* acquirering GTK_GDK_THREAD_SYNC is not neccessary just for adding an idle handler */
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
   if (m_viewport)
     {
       int priority;
@@ -404,11 +422,76 @@ ViewportGtk::blit_plane (Plane *plane,
         priority = -G_MAXINT / 2;       /* run with PRIORITY_NOW to blit immediately on local displays */
       else
         priority = GTK_PRIORITY_REDRAW; /* allow event processing to interrupt blitting on remote displays */
-      /* add idle handler to g_main_context_default() to be executed from gtk_main() */
-      g_idle_add_full (priority, IdleBlitter::idle_blit_plane, new IdleBlitter (m_viewport, plane, draw_stamp), NULL);
+#if 0
+      if (GTK_WIDGET_DRAWABLE (m_widget))
+        {
+          /* add idle handler to g_main_context_default() to be executed from gtk_main() */
+          g_idle_add_full (priority, IdleBlitter::idle_blit_plane, new IdleBlitter (m_viewport, plane, draw_stamp), NULL);
+          /* call idle handler directly */
+          IdleBlitter *ib = new IdleBlitter (m_viewport, plane, draw_stamp);
+          while (TRUE)
+            {
+              bool done = !IdleBlitter::idle_blit_plane_locked (ib);
+              if (done)
+                break;
+            }
+        }
+#endif
+      if (GTK_WIDGET_DRAWABLE (m_widget))
+        {
+          /* convert to pixbuf */
+          GdkPixbuf *pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE /* alpha */, 8 /* bits */, plane->width(), plane->height());
+          bool success = plane->rgb_convert (gdk_pixbuf_get_width (pixbuf), gdk_pixbuf_get_height (pixbuf),
+                                             gdk_pixbuf_get_rowstride (pixbuf), gdk_pixbuf_get_pixels (pixbuf));
+          BIRNET_ASSERT (success);
+          int window_height;
+          gdk_window_get_size (m_widget->window, NULL, &window_height);
+          int dest_x = plane->xstart();
+          int dest_y = window_height - (plane->ystart() + gdk_pixbuf_get_height (pixbuf));
+          delete plane;
+          plane = NULL;
+          /* blit pixbuf to screen */
+          int pw = gdk_pixbuf_get_width (pixbuf), ph = gdk_pixbuf_get_height (pixbuf);
+          gdk_draw_pixbuf (m_widget->window, m_widget->style->black_gc,
+                           pixbuf, 0, 0, /* src (x,y) */
+                           dest_x, dest_y, pw, ph,
+                           GDK_RGB_DITHER_MAX, dest_x, dest_y);
+          gdk_pixbuf_unref (pixbuf);
+        }
     }
   else
     delete plane;
+}
+
+void
+ViewportGtk::copy_area (double          src_x,
+                        double          src_y,
+                        double          width,
+                        double          height,
+                        double          dest_x,
+                        double          dest_y)
+{
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  if (GTK_WIDGET_DRAWABLE (m_widget))
+    {
+      /* copy the area */
+      int window_height;
+      gdk_window_get_size (m_widget->window, NULL, &window_height);
+      gdk_gc_set_exposures (m_widget->style->black_gc, TRUE);
+      gdk_draw_drawable (m_widget->window, m_widget->style->black_gc,
+                         m_widget->window, src_x, window_height - src_y - height,
+                         dest_x, window_height - dest_y - height, width, height);
+      gdk_gc_set_exposures (m_widget->style->black_gc, FALSE);
+      /* ensure last GraphicsExpose events are processed before the next copy */
+      GdkEvent *event = gdk_event_get_graphics_expose (m_widget->window);
+      while (event)
+        {
+          gtk_widget_send_expose (m_widget, event);
+          bool last = event->expose.count == 0;
+          gdk_event_free (event);
+          event = last ? NULL : gdk_event_get_graphics_expose (m_widget->window);
+        }
+    }
 }
 
 void
@@ -426,6 +509,39 @@ ViewportGtk::invalidate_plane (const std::vector<Rect> &rects,
         gtk_widget_queue_draw_area (m_widget, rects[i].ll.x,
                                     window_height - (rects[i].ll.y + rects[i].height()),
                                     rects[i].width(), rects[i].height());
+    }
+}
+
+void
+ViewportGtk::enqueue_win_draws (void)
+{
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  if (GTK_WIDGET_DRAWABLE (m_widget))
+    gdk_window_process_updates (m_widget->window, TRUE);
+}
+
+void
+ViewportGtk::enqueue_mouse_moves (void)
+{
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  if (GTK_WIDGET_DRAWABLE (m_widget))
+    {
+      bool need_many_events = false;
+      if (!need_many_events)
+        {
+          /* get only *one* new motion event */
+          gdk_window_get_pointer (m_widget->window, NULL, NULL, NULL);
+        }
+      else
+        {
+          /* get pending motion events */
+          GdkDisplay *display = gtk_widget_get_display (m_widget);
+          gdk_device_get_history  (gdk_display_get_core_pointer (display),
+                                   m_widget->window,
+                                   m_viewport->last_motion_time,
+                                   GDK_CURRENT_TIME,
+                                   NULL, NULL);
+        }
     }
 }
 
@@ -682,6 +798,7 @@ rapicorn_viewport_init (RapicornViewport *self)
   self->visibility_state = GDK_VISIBILITY_FULLY_OBSCURED;
   self->backing_store = BACKING_STORE_NOT_USEFUL;
   self->last_time = 0;
+  self->last_motion_time = 0;
   self->last_x = -1;
   self->last_y = -1;
   self->last_modifier = GdkModifierType (0);
@@ -920,6 +1037,9 @@ debug_dump_event (GtkWidget          *widget,
       }
       g_printerr (" %s/%s sub=%p", mode, detail, event->crossing.subwindow);
       break;
+    case GDK_MOTION_NOTIFY:
+      g_printerr (" is_hint=%d", event->motion.is_hint);
+      break;
     case GDK_EXPOSE:
       {
         GdkRectangle &area = event->expose.area;
@@ -954,11 +1074,10 @@ rapicorn_viewport_event (GtkWidget *widget,
 {
   RapicornViewport *self = RAPICORN_VIEWPORT (widget);
   ViewportGtk *viewport = self->viewport;
-  GdkWindow *window = widget->window;
   bool handled = false;
   int window_height = 0;
   EventContext econtext = rapicorn_viewport_event_context (self, event, &window_height);
-  if (0) /* debug events */
+  if (DEBUG_EVENTS) /* debug events */
     debug_dump_event (widget, "", event, econtext);
   if (!viewport)
     return false;
@@ -970,9 +1089,12 @@ rapicorn_viewport_event (GtkWidget *widget,
       break;
     case GDK_MOTION_NOTIFY:
       viewport->enqueue_locked (create_event_mouse (MOUSE_MOVE, econtext));
+      self->last_motion_time = gdk_event_get_time (event);
       /* trigger new motion events (since we use motion-hint) */
-      if (event->any.window == window) // FIXME: should be executed after the move event was processed
+#if 0
+      if (event->any.window == widget->window) /* will be requested by enqueue_mouse_moves() instead */
         gdk_window_get_pointer (window, NULL, NULL, NULL);
+#endif
       break;
     case GDK_LEAVE_NOTIFY:
       viewport->enqueue_locked (create_event_mouse (event->crossing.detail == GDK_NOTIFY_INFERIOR ? MOUSE_MOVE : MOUSE_LEAVE, econtext));
@@ -1086,7 +1208,7 @@ rapicorn_viewport_ancestor_event (GtkWidget *ancestor,
   EventContext econtext = rapicorn_viewport_event_context (self, event);
   if (!viewport)
     return false;
-  if (0) /* debug events */
+  if (DEBUG_EVENTS) /* debug events */
     debug_dump_event (widget, "GtkWindow:", event, econtext);
   bool handled = false;
   switch (event->type)

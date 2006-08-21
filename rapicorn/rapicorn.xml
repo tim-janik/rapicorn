@@ -86,7 +86,7 @@
 	  <arrow arrow-dir="left" size-policy="width-from-height"/>
 	</button>
 	<Rapicorn-slider-trough hexpand="1" vexpand="1">
-	  <Rapicorn-slider-skid vexpand="1" vertical-skid="0">
+	  <Rapicorn-slider-skid vspread="1" hexpand="1" vertical-skid="0">
 	    <ambience
 	      normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
 	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"
@@ -111,7 +111,7 @@
 	  <arrow arrow-dir="up" size-policy="height-from-width"/>
 	</button>
 	<Rapicorn-slider-trough vexpand="1" hexpand="1">
-	  <Rapicorn-slider-skid hexpand="1" vertical-skid="1">
+	  <Rapicorn-slider-skid hspread="1" vexpand="1" vertical-skid="1">
 	    <ambience
 	      normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
 	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"

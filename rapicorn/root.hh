@@ -27,8 +27,11 @@ namespace Rapicorn {
 
 /* --- Root --- */
 class Root : public virtual Container, public virtual MainLoop::Source {
+  friend class  Item;
 protected:
   explicit      Root                    ();
+  virtual void  copy_area               (const Rect  &src,
+                                         const Point &dest) = 0;
   virtual void  cancel_item_events      (Item        *item) = 0;
   void          cancel_item_events      (Item        &item)             { cancel_item_events (&item); }
   virtual bool  dispatch_event          (const Event &event) = 0;
@@ -38,6 +41,7 @@ protected:
 public://FIXME: protected:
   virtual bool  check                   (uint64 current_time_usecs) = 0;
   virtual bool  dispatch                () = 0;
+  virtual void  draw_now                () = 0;
 public:
   virtual bool  tunable_requisitions    () = 0;
   virtual void  render                  (Plane &plane) = 0;

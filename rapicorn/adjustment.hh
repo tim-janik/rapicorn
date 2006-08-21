@@ -59,6 +59,7 @@ public:
   virtual void          thaw            () = 0;
   SignalRangeChanged	sig_range_changed;
   double                abs_range       ();
+  double                abs_length      ();
   String                string          ();
   /* factory */
   static Adjustment*    create          (double  value = 0,

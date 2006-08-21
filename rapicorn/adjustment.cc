@@ -49,14 +49,14 @@ Adjustment::flipped_value (double newval)
 double
 Adjustment::nvalue ()
 {
-  double l = lower(), u = upper(), ar = u - l;
+  double l = lower(), u = upper() - page(), ar = u - l;
   return ar > 0 ? (value() - l) / ar : 0.0;
 }
 
 void
 Adjustment::nvalue (double newval)
 {
-  double l = lower(), u = upper(), ar = u - l;
+  double l = lower(), u = upper() - page(), ar = u - l;
   value (l + newval * ar);
 }
 
@@ -83,7 +83,15 @@ Adjustment::range_changed()
 double
 Adjustment::abs_range ()
 {
-  return fabs (upper() - lower());
+  return fabs (upper() - page() - lower());
+}
+
+double
+Adjustment::abs_length ()
+{
+  double p = page();
+  double ar = fabs (upper() - lower());
+  return ar > 0 ? p / ar : 0.0;
 }
 
 String
@@ -111,7 +119,7 @@ public:
   value (double newval)
   {
     double old_value = m_value;
-    m_value = CLAMP (newval, m_lower, m_upper);
+    m_value = CLAMP (newval, m_lower, m_upper - m_page);
     if (old_value != m_value && !m_freeze_count)
       sig_value_changed.emit ();
   }
@@ -143,7 +151,7 @@ public:
           m_lower = m_upper = (m_lower + m_upper) / 2;
         m_page = CLAMP (m_page, 0, m_upper - m_lower);
         m_value = CLAMP (m_value, m_lower, m_upper);
-        if (old_lower != m_lower || old_upper != m_upper || old_page != m_page) //FIXME: check change since freeze()
+        if (old_lower != m_lower || old_upper != m_upper || old_page != m_page) //FIXME: check change since freeze() !!!
           sig_range_changed.emit();
         if (old_value != m_value)
           sig_value_changed.emit ();

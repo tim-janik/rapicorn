@@ -1,3 +1,56 @@
+Mon Aug 21 01:58:52 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/adjustment.hh, rapicorn/adjustment.cc: fixed nvalue() to 
+	respect page() size, same for abs_range(). added abs_length(), to relate
+	page size to range.
+
+	* rapicorn/rapicorn.xml: expand/spread sliders so they grow with 
+	adjustment page() size changes.
+
+	* rapicorn/slider.hh, rapicorn/slider.cc: changed inner trough layout
+	so that v/h-spread children will expand up to the trough borders, and
+	h/v-expand children will be expanded according to the page size.
+
+	* rapicorn/scrollitems.hh, rapicorn/scrollitems.cc: make sure to round
+	adjustment quantities to nearest integers, since we can't scroll onto
+	fractional pixel boundaries. use area copying and differential area
+	exposes when scrolling now, which immensely reduces the re-rendered
+	areas.
+	freeze h/v adjustments before updating both values in scroll_to(), so
+	x+y changes are handled "atomically".
+	adjust step and page increment upon size_allocate(), to allow fast
+	stepping over the scrollable region and fast paging relative to the
+	viewport size.
+	pre-paint scrollable region in background color, since area copying
+	requires a homogeneous background.
+
+	* rapicorn/item.hh, rapicorn/item.cc: added copy_area() which wraps
+	clips to the child allocation and wraps Root::copy_area().
+
+	* rapicorn/root.hh, rapicorn/root.cc, rapicorn/rootimpl.hh: added
+	copy_area() and draw_now() methods to implement fast scrolling.
+	added extra lock to protect the event queueand main loop, to avoid
+	deadlocks when being called from viewport methods (in extra thread). 
+	call Viewport::enqueue_mouse_moves() to receive new mouse events once
+	movement events have been processed. lowered expose event handler
+	priority, so input event processing has a higher priority now.
+
+	* rapicorn/viewport-gtk.hh, rapicorn/viewport-gtk.cc: added copy_area()
+	for fast on-device copies of viewport areas. added enqueue_win_draws()
+	to allow immediate processing of invalidation areas. added
+	enqueue_mouse_moves() to request new motion event generation.
+	disabled IdleBlitter code, we're always blitting full planes immediately
+	now, though this hampers responsiveness on remote displays, it is
+	neccessary for area copying (which relies on all prios blits to be
+	completed).
+
+	* rapicorn/primitives.hh, rapicorn/primitives.cc: added using directives
+	for overloaded functions. added minor speedups to plane filling by using
+	memset4() when possible. added Color argument to Display::create_plane()
+	and Plane() to spare unneccessary 0-fills.
+
+	* rapicorn/utilities.hh, rapicorn/utilities.cc: added memset4().
+
 Sat Aug 19 23:56:30 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/buttons.hh, rapicorn/buttons.cc: added ButtonArea::click_type

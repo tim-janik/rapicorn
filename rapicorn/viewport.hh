@@ -118,8 +118,16 @@ public:
   virtual uint          last_draw_stamp         () = 0;
   virtual void          invalidate_plane        (const std::vector<Rect> &rects,
                                                  uint                     draw_stamp) = 0;
+  virtual void          enqueue_win_draws       (void) = 0;
+  virtual void          enqueue_mouse_moves     (void) = 0;
   virtual void          blit_plane              (Plane          *plane,
                                                  uint            draw_stamp) = 0;
+  virtual void          copy_area               (double          src_x,
+                                                 double          src_y,
+                                                 double          width,
+                                                 double          height,
+                                                 double          dest_x,
+                                                 double          dest_y) = 0;
   /* --- backend API --- */
   class FactoryBase {
     BIRNET_PRIVATE_CLASS_COPY (FactoryBase);

@@ -111,29 +111,34 @@ min (const Point &p1, const Point &p2)
 {
   return Point (Birnet::min (p1.x, p2.x), Birnet::min (p1.y, p2.y));
 }
+using ::std::min;
 inline Point
 max (const Point &p1, const Point &p2)
 {
   return Point (Birnet::max (p1.x, p2.x), Birnet::max (p1.y, p2.y));
 }
+using ::std::max;
 inline Point
 floor (const Point &s)
 {
   using ::floor;
   return Point (floor (s.x), floor (s.y));
 }
+using ::floor;
 inline Point
 ceil (const Point &s)
 {
   using ::ceil;
   return Point (ceil (s.x), ceil (s.y));
 }
+using ::ceil;
 inline Point
 round (const Point &s)
 {
   using ::round;
   return Point (round (s.x), ::round (s.y));
 }
+using ::round;
 
 /* --- Rect --- */
 class Rect {
@@ -757,7 +762,7 @@ class Plane {
 public:
   uint32*       peek (uint x, uint y)       { return &m_pixel_buffer[y * m_stride + x]; }
   const uint32* peek (uint x, uint y) const { return &m_pixel_buffer[y * m_stride + x]; }
-  explicit      Plane (int x, int y, uint width, uint height);
+  explicit      Plane (int x, int y, uint width, uint height, Color c = 0x00000000);
   explicit      Plane (const Initializer &initializer);
   virtual       ~Plane();
   int           pixstride  () const { return m_stride * 4; }
@@ -847,7 +852,8 @@ public:
   void          push_clip_rect  (int x, int y, uint width, uint height) { push_clip_rect (Rect (Point (x, y), width, height)); }
   void          push_clip_rect  (const Rect &rect);
   Rect          current_rect    ();
-  Plane&        create_plane    (CombineType ctype = COMBINE_NORMAL,
+  Plane&        create_plane    (Color       c = 0x00000000,
+                                 CombineType ctype = COMBINE_NORMAL,
                                  double      alpha = 1.0); /* 0..1 */
   bool          empty           () const;
   void          pop_clip_rect   ();

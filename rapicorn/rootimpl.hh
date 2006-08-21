@@ -32,11 +32,12 @@ class RootImpl : public virtual Root,
   OwnedMutex            m_omutex;
   bool                  m_entered;
   Viewport             *m_viewport;
-  MainLoop             *m_loop;
+  Mutex                 m_async_mutex;
+  std::list<Event*>     m_async_event_queue;
+  MainLoop             *m_async_loop;
   MainLoop::Source     *m_source;
   std::vector<Rect>     m_expose_queue;
   uint                  m_expose_queue_stamp;
-  std::list<Event*>     m_event_queue;
   EventContext          m_last_event_context;
   vector<Item*>         m_last_entered_children;
   uint                  m_tunable_requisition_counter;
@@ -61,6 +62,9 @@ private:
   using                 Item::render;
   virtual void          expose                                  (const Allocation       &area);
   void                  flush_expose_queue                      ();
+  virtual void          copy_area                               (const Rect  &src,
+                                                                 const Point &dest);
+  virtual void          draw_now                                ();
   /* grab handling */
   virtual void          remove_grab_item                        (Item                   &child);
   void                  grab_stack_changed                      ();

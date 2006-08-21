@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include "scrollitemsimpl.hh"
+#include "root.hh"
 
 namespace Rapicorn {
 using namespace std;
@@ -64,21 +65,25 @@ ScrollAreaImpl::get_adjustment (AdjustmentSourceType adj_source,
 double
 ScrollAreaImpl::xoffset () const
 {
-  return hadjustment().value();
+  return round (hadjustment().value());
 }
 
 double
 ScrollAreaImpl::yoffset () const
 {
-  return vadjustment().value();
+  return round (vadjustment().value());
 }
 
 void
 ScrollAreaImpl::scroll_to (double x,
                            double y)
 {
-  hadjustment().value (x);
-  vadjustment().value (y);
+  hadjustment().freeze();
+  vadjustment().freeze();
+  m_hadjustment->value (round (x));
+  m_vadjustment->value (round (y));
+  m_hadjustment->thaw();
+  m_vadjustment->thaw();
 }
 
 static const ItemFactory<ScrollAreaImpl> scroll_area_factory ("Rapicorn::ScrollArea");
@@ -86,6 +91,7 @@ static const ItemFactory<ScrollAreaImpl> scroll_area_factory ("Rapicorn::ScrollA
 /* --- ScrollPortImpl --- */
 class ScrollPortImpl : public virtual SingleContainerImpl {
   Adjustment *m_hadjustment, *m_vadjustment;
+  double last_xoffset, last_yoffset;
   virtual void
   hierarchy_changed (Item *old_toplevel)
   {
@@ -157,32 +163,39 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     area.height = rq.height;
     child.set_allocation (area);
     area = child.allocation();
+    const double small_step = 10;
     if (m_hadjustment)
       {
         m_hadjustment->freeze();
         m_hadjustment->lower (0);
         m_hadjustment->upper (area.width);
-        double d, w = allocation().width;
-        w = MIN (w, area.width);
-        d = m_hadjustment->step_increment ();
-        m_hadjustment->step_increment (MIN (d, w));
-        d = m_hadjustment->page_increment ();
-        m_hadjustment->page_increment (MIN (d, w));
+        double d, w = allocation().width, l = min (w, 1);
         m_hadjustment->page (w);
+        m_hadjustment->step_increment (min (small_step, round (m_hadjustment->page() / 10)));
+        m_hadjustment->page_increment (max (small_step, round (m_hadjustment->page() / 3)));
+        w = MIN (m_hadjustment->page(), area.width);
+        d = m_hadjustment->step_increment ();
+        m_hadjustment->step_increment (CLAMP (d, l, w));
+        d = m_hadjustment->page_increment ();
+        m_hadjustment->page_increment (CLAMP (d, l, w));
       }
     if (m_vadjustment)
       {
         m_vadjustment->freeze();
         m_vadjustment->lower (0);
         m_vadjustment->upper (area.height);
-        double d, h = allocation().height;
-        h = MIN (h, area.height);
-        d = m_vadjustment->step_increment ();
-        m_vadjustment->step_increment (MIN (d, h));
-        d = m_vadjustment->page_increment ();
-        m_vadjustment->page_increment (MIN (d, h));
+        double d, h = allocation().height, l = min (h, 1);
         m_vadjustment->page (h);
+        m_vadjustment->step_increment (min (small_step, round (m_vadjustment->page() / 10)));
+        m_vadjustment->page_increment (max (small_step, round (m_vadjustment->page() / 3)));
+        h = MIN (m_vadjustment->page(), area.height);
+        d = m_vadjustment->step_increment ();
+        m_vadjustment->step_increment (CLAMP (d, l, h));
+        d = m_vadjustment->page_increment ();
+        m_vadjustment->page_increment (CLAMP (d, l, h));
       }
+    last_xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
+    last_yoffset = m_vadjustment ? round (m_vadjustment->value()) : 0.0;
     if (m_hadjustment)
       m_hadjustment->thaw();
     if (m_vadjustment)
@@ -193,8 +206,8 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
   {
     if (!has_visible_child())
       return;
-    double xoffset = m_hadjustment ? m_hadjustment->value() : 0.0;
-    double yoffset = m_vadjustment ? m_vadjustment->value() : 0.0;
+    double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
+    double yoffset = m_vadjustment ? round (m_vadjustment->value()) : 0.0;
     const Allocation area = allocation();
     Item &child = get_child();
     const Allocation carea = child.allocation();
@@ -206,8 +219,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     if (!scroll_display.empty())
       {
         child.render (scroll_display);
-        Plane &plane = display.create_plane ();
-        const Rect &r = plane.rect();
+        Plane &plane = display.create_plane (background());
         int real_x = plane.xstart();
         int real_y = plane.ystart();
         Plane::warp_plane_iknowwhatimdoing (plane,
@@ -223,18 +235,46 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
   void
   adjustment_changed()
   {
+    double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
+    double yoffset = m_vadjustment ? round (m_vadjustment->value()) : 0.0;
+    bool need_expose_handling = false;
     if (has_visible_child())
       {
         Item &child = get_child();
         if (child.drawable())
-          g_printerr ("ScrollPortImpl: expose %f %f\n", m_hadjustment->value(), m_vadjustment->value());
-        if (child.drawable())
-          expose();
+          {
+            if (xoffset != last_xoffset || yoffset != last_yoffset)
+              {
+                double xdelta = xoffset - last_xoffset;
+                double ydelta = yoffset - last_yoffset;
+                Allocation a = allocation();
+                copy_area (Rect (Point (a.x, a.y), a.width, a.height),
+                           Point (a.x - xdelta, a.y - ydelta));
+                if (xdelta > 0)
+                  expose (Allocation (a.x + a.width + max (-a.width, -xdelta), a.y, min (a.width, xdelta), a.height));
+                else if (xdelta < 0)
+                  expose (Allocation (a.x, a.y, min (a.width, -xdelta), a.height));
+                if (ydelta > 0)
+                  expose (Allocation (a.x, a.y + a.height + max (-a.height, -ydelta), a.width, min (a.height, ydelta)));
+                else if (ydelta < 0)
+                  expose (Allocation (a.x, a.y, a.width, min (a.height, -ydelta)));
+                need_expose_handling = true;
+              }
+          }
+      }
+    last_xoffset = xoffset;
+    last_yoffset = yoffset;
+    if (need_expose_handling)
+      {
+        Root *ritem = root();
+        if (ritem)
+          ritem->draw_now();
       }
   }
 public:
   ScrollPortImpl() :
-    m_hadjustment (NULL), m_vadjustment (NULL)
+    m_hadjustment (NULL), m_vadjustment (NULL),
+    last_xoffset (0), last_yoffset(0)
   {}
 };
 static const ItemFactory<ScrollPortImpl> scroll_port_factory ("Rapicorn::ScrollPort");

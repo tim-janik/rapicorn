@@ -9,12 +9,13 @@ DEFS		= -DRAPICORN_PRIVATE -DPARANOID
 rapicorn_public_headers = $(strip 	\
 	rapicorn.hh	keycodes.hh	userconfig.hh	handle.hh	\
 	$(rapicorn_impl_headers)	\
-	enumdefs.hh	viewport.hh	\
-	arrangement.hh	primitives.hh	birnetutils.hh	birnetmarkup.hh	utilities.hh	paintcontainers.hh	\
-	table.hh	pangolabel.hh	loop.hh		root.hh		scrollitems.hh	\
-	appearance.hh	events.hh	item.hh		container.hh	factory.hh	layoutcontainers.hh	\
-	paintgadgets.hh	slider.hh	buttons.hh	image.hh	testitem.hh	\
-	commands.hh	properties.hh	adjustment.hh	painter.hh	cairocontext.hh	\
+	birnetutils.hh	birnetmarkup.hh	utilities.hh	\
+	enumdefs.hh	primitives.hh	events.hh	loop.hh		viewport.hh		\
+	properties.hh	commands.hh	appearance.hh	painter.hh	cairocontext.hh		\
+	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
+	adjustment.hh	image.hh	paintgadgets.hh	slider.hh	paintcontainers.hh	\
+	buttons.hh	factory.hh	scrollitems.hh	pangolabel.hh	layoutcontainers.hh	\
+	testitem.hh	\
 )
 rapicorn_impl_headers = $(strip 	\
 	arrangementimpl.hh		\
@@ -26,12 +27,13 @@ rapicorn_impl_headers = $(strip 	\
 rapicorn_cc_sources = $(strip 		\
 	viewport-gtk.cc			\
 	$(strip )			\
-	enumdefs.cc	viewport.cc	\
-	arrangement.cc	primitives.cc	birnetutils.cc	birnetmarkup.cc	utilities.cc	paintcontainers.cc	\
-	table.cc	pangolabel.cc	loop.cc		root.cc 	scrollitems.cc	\
-	appearance.cc	events.cc	item.cc		container.cc	factory.cc	layoutcontainers.cc	\
-	paintgadgets.cc	slider.cc	buttons.cc	image.cc	testitem.cc	\
-	commands.cc	properties.cc	adjustment.cc	painter.cc	cairocontext.cc	\
+	birnetutils.cc	birnetmarkup.cc	utilities.cc	\
+	enumdefs.cc	primitives.cc	events.cc	loop.cc		viewport.cc		\
+	properties.cc	commands.cc	appearance.cc	painter.cc	cairocontext.cc		\
+	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\
+	adjustment.cc	image.cc	paintgadgets.cc	slider.cc	paintcontainers.cc	\
+	buttons.cc	factory.cc	scrollitems.cc	pangolabel.cc	layoutcontainers.cc	\
+	testitem.cc	\
 )
 rapicorn_private_headers = $(strip 	\
 	private.hh			\

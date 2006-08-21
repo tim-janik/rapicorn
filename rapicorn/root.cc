@@ -28,12 +28,15 @@ Root::Root()
 
 RootImpl::RootImpl() :
   m_entered (false), m_viewport (NULL),
-  m_loop (NULL), m_source (NULL),
+  m_async_loop (NULL), m_source (NULL),
   m_expose_queue_stamp (0),
   m_tunable_requisition_counter (0)
 {
-  BIRNET_ASSERT (m_loop == NULL);
-  m_loop = glib_loop_create();
+  {
+    AutoLocker aelocker (m_async_mutex);
+    BIRNET_ASSERT (m_async_loop == NULL);
+    m_async_loop = glib_loop_create();
+  }
   Appearance *appearance = Appearance::create_default();
   style (appearance->create_style ("normal"));
   unref (appearance);
@@ -45,11 +48,16 @@ RootImpl::RootImpl() :
 
 RootImpl::~RootImpl()
 {
-  if (m_loop)
+  MainLoop *old_loop;
+  {
+    AutoLocker aelocker (m_async_mutex);
+    old_loop = m_async_loop;
+    m_async_loop = NULL;
+  }
+  if (old_loop)
     {
-      m_loop->quit();
-      m_loop->unref();
-      m_loop = NULL;
+      old_loop->quit();
+      old_loop->unref();
     }
   BIRNET_ASSERT (m_source == NULL); // should have been destroyed with loop
   if (m_viewport)
@@ -465,12 +473,58 @@ RootImpl::expose (const Allocation &area)
   if (m_viewport && area.width && area.height)
     {
       if (!m_expose_queue.size())
-        m_loop->exec_next (slot (*this, &RootImpl::flush_expose_queue)); // FIXME: prio should be lower than the prio for input event processing
+        {
+          VoidSlot sl = slot (*this, &RootImpl::flush_expose_queue);
+          AutoLocker aelocker (m_async_mutex);
+          m_async_loop->exec_update (sl); // prio should be lower than for input event processing
+        }
       uint stamp = m_viewport->last_draw_stamp();
       if (stamp != m_expose_queue_stamp)
         m_expose_queue.clear(); /* discard outdated exposes */
       m_expose_queue.push_back (Rect (Point (area.x, area.y), area.width, area.height));
       m_expose_queue_stamp = stamp;
+    }
+}
+
+void
+RootImpl::copy_area (const Rect  &src,
+                     const Point &dest)
+{
+  if (m_viewport && src.width() && src.height())
+    m_viewport->copy_area (src.ll.x, src.ll.y,
+                           src.width(), src.height(),
+                           dest.x, dest.y);
+}
+
+void
+RootImpl::draw_now ()
+{
+  if (m_viewport)
+    {
+      flush_expose_queue();
+      m_viewport->enqueue_win_draws();
+      m_async_mutex.lock();
+      std::list<Event*> events;
+      std::list<Event*>::iterator it = m_async_event_queue.begin();
+      while (it != m_async_event_queue.end())
+        {
+          if ((*it)->type == WIN_DRAW)
+            {
+              std::list<Event*>::iterator current = it++;
+              events.push_back (*current);
+              m_async_event_queue.erase (current);
+            }
+          else
+            it++;
+        }
+      m_async_mutex.unlock();
+      while (!events.empty())
+        {
+          Event *event = events.front();
+          events.pop_front();
+          dispatch_event (*event);
+          delete event;
+        }
     }
 }
 
@@ -568,10 +622,15 @@ RootImpl::dispatch_event (const Event &event)
 {
   switch (event.type)
     {
+      bool handled;
     case EVENT_LAST:
     case EVENT_NONE:          return false;
     case MOUSE_ENTER:         return dispatch_enter_event (event);
-    case MOUSE_MOVE:          return dispatch_move_event (event);
+    case MOUSE_MOVE:
+      handled = dispatch_move_event (event);
+      if (m_viewport)
+        m_viewport->enqueue_mouse_moves();
+      return handled;
     case MOUSE_LEAVE:         return dispatch_leave_event (event);
     case BUTTON_PRESS:
     case BUTTON_2PRESS:
@@ -603,43 +662,49 @@ RootImpl::prepare (uint64 current_time_usecs,
                    int   *timeout_msecs_p)
 {
   AutoLocker locker (m_omutex);
-  return !m_event_queue.empty();
+  AutoLocker aelocker (m_async_mutex);
+  return !m_async_event_queue.empty();
 }
 
 bool
 RootImpl::check (uint64 current_time_usecs)
 {
   AutoLocker locker (m_omutex);
-  return !m_event_queue.empty();
+  AutoLocker aelocker (m_async_mutex);
+  return !m_async_event_queue.empty();
 }
 
 bool
 RootImpl::dispatch ()
 {
   AutoLocker locker (m_omutex);
-  if (!m_event_queue.empty())
+  m_async_mutex.lock();
+  Event *event = NULL;
+  if (!m_async_event_queue.empty())
     {
-      Event *event = m_event_queue.front();
-      m_event_queue.pop_front();
-      dispatch_event (*event);
-      delete event;
+      event = m_async_event_queue.front();
+      m_async_event_queue.pop_front();
     }
+  m_async_mutex.unlock();
+  dispatch_event (*event);
+  delete event;
   return true;
 }
 
 MainLoop*
 RootImpl::get_loop ()
 {
-  return m_loop;
+  AutoLocker aelocker (m_async_mutex);
+  return m_async_loop;
 }
 
 void
 RootImpl::enqueue_async (Event *event)
 {
-  AutoLocker locker (m_omutex);
-  m_event_queue.push_back (event);
-  if (m_loop)
-    m_loop->wakeup();
+  AutoLocker aelocker (m_async_mutex);
+  m_async_event_queue.push_back (event);
+  if (m_async_loop)
+    m_async_loop->wakeup();
 }
 
 void
@@ -659,13 +724,14 @@ RootImpl::run_async (void)
   AutoLocker monitor (owned_mutex());
   BIRNET_ASSERT (m_viewport == NULL);
   m_viewport = Viewport::create_viewport ("auto", WINDOW_TYPE_NORMAL, *this);
-  BIRNET_ASSERT (m_loop != NULL);
-  MainLoopPool::add_loop (m_loop);
   BIRNET_ASSERT (m_source == NULL);
   m_source = new RootSource (*this);
-  m_loop->exec_now (slot (*this, &RootImpl::idle_show));
-  m_loop->add_source (MainLoop::PRIORITY_NORMAL, m_source);
-  // m_loop->idle_timed (250, timer);
+  VoidSlot sl = slot (*this, &RootImpl::idle_show);
+  AutoLocker aelocker (m_async_mutex);
+  BIRNET_ASSERT (m_async_loop != NULL);
+  MainLoopPool::add_loop (m_async_loop);
+  m_async_loop->exec_now (sl);
+  m_async_loop->add_source (MainLoop::PRIORITY_NORMAL, m_source);
 }
 
 void
@@ -674,8 +740,18 @@ RootImpl::stop_async (void)
   AutoLocker monitor (owned_mutex());
   if (m_viewport)
     m_viewport->hide();
-  if (m_loop)
-    m_loop->quit();
+  MainLoop *tmp_loop;
+  {
+    AutoLocker aelocker (m_async_mutex);
+    tmp_loop = m_async_loop;
+    if (tmp_loop)
+      tmp_loop->ref();
+  }
+  if (tmp_loop)
+    {
+      tmp_loop->quit();
+      tmp_loop->unref();
+    }
 }
 
 static const ItemFactory<RootImpl> root_factory ("Rapicorn::Root");

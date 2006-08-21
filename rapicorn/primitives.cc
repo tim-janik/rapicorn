@@ -396,27 +396,30 @@ Plane::Plane (const Initializer &initializer) :
   m_pixel_buffer (NULL)
 {
   m_pixel_buffer = new uint32[n_pixels()];
-  memset (m_pixel_buffer, 0, 4 * n_pixels());
+  fill (0);
 }
 
-Plane::Plane (int x, int y, uint width, uint height) :
+Plane::Plane (int x, int y, uint width, uint height, Color c) :
   m_x (x), m_y (y), m_stride (width), m_height (height),
   m_pixel_buffer (NULL)
 {
   m_pixel_buffer = new uint32[n_pixels()];
-  memset (m_pixel_buffer, 0, 4 * n_pixels());
+  fill (c);
 }
 
 void
 Plane::fill (Color c)
 {
   uint32 argb = c.premultiplied();
+  memset4 (m_pixel_buffer, argb, n_pixels());
+#if 0
   for (int y = 0; y < height(); y++)
     for (int x = 0; x < width(); x++)
       {
         uint32 *p = peek (x, y);
         *p = argb;
       }
+#endif
 }
 
 Plane::~Plane()
@@ -699,7 +702,8 @@ Display::current_rect ()
 }
 
 Plane&
-Display::create_plane (CombineType ctype,
+Display::create_plane (Color       c,
+                       CombineType ctype,
                        double      alpha) /* 0..1 */
 {
   const Rect &r = clip_stack.front();
@@ -707,7 +711,7 @@ Display::create_plane (CombineType ctype,
   if (w <= 0 || h <= 0)
     w = h = 0;
   Layer l;
-  l.plane = new Plane (x, y, w, h);
+  l.plane = new Plane (x, y, w, h, c);
   l.ctype = ctype;
   l.alpha = CLAMP (alpha, 0, 1.0);
   layer_stack.push_back (l);

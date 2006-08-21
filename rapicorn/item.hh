@@ -181,6 +181,7 @@ public:
   void                        changed           ();
   virtual void                expose            (const Allocation &area) = 0;
   void                        expose            ()       { expose (allocation()); }
+  void                        copy_area         (const Rect &rect, const Point &dest);
   /* public signals */
   SignalFinalize<Item>            sig_finalize;
   Signal<Item, void ()>           sig_changed;
