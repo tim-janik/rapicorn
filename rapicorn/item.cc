@@ -720,6 +720,7 @@ ItemImpl::set_allocation (const Allocation &area)
   expose();
   /* always reallocate to re-layout children */
   change_flags_silently (INVALID_ALLOCATION, false); /* skip notification */
+  change_flags_silently (POSITIVE_ALLOCATION, false); /* !drawable() while size_allocate() is called */
   size_allocate (sarea);
   Allocation a = allocation();
   set_flag (POSITIVE_ALLOCATION, a.width > 0 && a.height > 0);

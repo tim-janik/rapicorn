@@ -56,6 +56,7 @@ public:
   virtual void		page_increment	(double newval) = 0;
   virtual double	page	        () const = 0;
   virtual void		page	        (double newval) = 0;
+  virtual void          constrain       () = 0;
   virtual void          thaw            () = 0;
   SignalRangeChanged	sig_range_changed;
   double                abs_range       ();

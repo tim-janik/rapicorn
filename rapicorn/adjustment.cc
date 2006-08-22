@@ -104,7 +104,12 @@ Adjustment::string ()
   return s;
 }
 
-class AdjustmentSimpleImpl : public virtual Adjustment {
+struct AdjustmentMemorizedState {
+  double value, lower, upper, step_increment, page_increment, page;
+};
+static DataKey<AdjustmentMemorizedState> memorized_state_key;
+
+class AdjustmentSimpleImpl : public virtual Adjustment, public virtual DataListContainer {
   double m_value, m_lower, m_upper, m_step_increment, m_page_increment, m_page;
   uint   m_freeze_count;
 public:
@@ -125,7 +130,6 @@ public:
   }
   /* range */
   virtual bool                  frozen          () const                { return m_freeze_count > 0; }
-  virtual void                  freeze          ()                      { m_freeze_count++; }
   virtual double                lower	        () const                { return m_lower; }
   virtual void                  lower           (double newval)         { return_if_fail (m_freeze_count); m_lower = newval; }
   virtual double                upper	        () const                { return m_upper; }
@@ -137,23 +141,46 @@ public:
   virtual double	        page	        () const                { return m_page; }
   virtual void		        page	        (double newval)         { return_if_fail (m_freeze_count); m_page = newval; }
   virtual void
+  freeze ()
+  {
+    if (!m_freeze_count)
+      {
+        AdjustmentMemorizedState m;
+        m.value = m_value;
+        m.lower = m_lower;
+        m.upper = m_upper;
+        m.step_increment = m_step_increment;
+        m.page_increment = m_page_increment;
+        m.page = m_page;
+        set_data (&memorized_state_key, m);
+      }
+    m_freeze_count++;
+  }
+  virtual void
+  constrain ()
+  {
+    return_if_fail (m_freeze_count);
+    if (m_lower > m_upper)
+      m_lower = m_upper = (m_lower + m_upper) / 2;
+    m_page = CLAMP (m_page, 0, m_upper - m_lower);
+    m_page_increment = CLAMP (m_page_increment, 0, m_page);
+    m_step_increment = CLAMP (m_step_increment, 0, m_page_increment);
+    m_value = CLAMP (m_value, m_lower, m_upper - m_page);
+  }
+  virtual void
   thaw ()
   {
     return_if_fail (m_freeze_count);
+    if (m_freeze_count == 1)
+      constrain();
     m_freeze_count--;
     if (!m_freeze_count)
       {
-        double old_value = m_value;
-        double old_lower = m_lower;
-        double old_upper = m_upper;
-        double old_page  = m_page;
-        if (m_lower > m_upper)
-          m_lower = m_upper = (m_lower + m_upper) / 2;
-        m_page = CLAMP (m_page, 0, m_upper - m_lower);
-        m_value = CLAMP (m_value, m_lower, m_upper);
-        if (old_lower != m_lower || old_upper != m_upper || old_page != m_page) //FIXME: check change since freeze() !!!
+        AdjustmentMemorizedState m = swap_data (&memorized_state_key);
+        if (m.lower != m_lower || m.upper != m_upper || m.page != m_page ||
+            m.step_increment != m_step_increment || m.page_increment != m_page_increment)
           sig_range_changed.emit();
-        if (old_value != m_value)
+        if (m.value != m_value)
           sig_value_changed.emit ();
       }
   }

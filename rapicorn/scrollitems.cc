@@ -82,6 +82,8 @@ ScrollAreaImpl::scroll_to (double x,
   vadjustment().freeze();
   m_hadjustment->value (round (x));
   m_vadjustment->value (round (y));
+  m_hadjustment->constrain();
+  m_vadjustment->constrain();
   m_hadjustment->thaw();
   m_vadjustment->thaw();
 }
@@ -91,7 +93,7 @@ static const ItemFactory<ScrollAreaImpl> scroll_area_factory ("Rapicorn::ScrollA
 /* --- ScrollPortImpl --- */
 class ScrollPortImpl : public virtual SingleContainerImpl {
   Adjustment *m_hadjustment, *m_vadjustment;
-  double last_xoffset, last_yoffset;
+  double m_last_xoffset, m_last_yoffset;
   virtual void
   hierarchy_changed (Item *old_toplevel)
   {
@@ -194,8 +196,12 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
         d = m_vadjustment->page_increment ();
         m_vadjustment->page_increment (CLAMP (d, l, h));
       }
-    last_xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
-    last_yoffset = m_vadjustment ? round (m_vadjustment->value()) : 0.0;
+    m_last_xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
+    m_last_yoffset = m_vadjustment ? round (m_vadjustment->value()) : 0.0;
+    if (m_hadjustment)
+      m_hadjustment->constrain();
+    if (m_vadjustment)
+      m_vadjustment->constrain();
     if (m_hadjustment)
       m_hadjustment->thaw();
     if (m_vadjustment)
@@ -237,44 +243,42 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
   {
     double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
     double yoffset = m_vadjustment ? round (m_vadjustment->value()) : 0.0;
-    bool need_expose_handling = false;
-    if (has_visible_child())
+    double xdelta = xoffset - m_last_xoffset;
+    double ydelta = yoffset - m_last_yoffset;
+    Root *ritem = root();
+    if (!drawable() || !ritem)
       {
-        Item &child = get_child();
-        if (child.drawable())
-          {
-            if (xoffset != last_xoffset || yoffset != last_yoffset)
-              {
-                double xdelta = xoffset - last_xoffset;
-                double ydelta = yoffset - last_yoffset;
-                Allocation a = allocation();
-                copy_area (Rect (Point (a.x, a.y), a.width, a.height),
-                           Point (a.x - xdelta, a.y - ydelta));
-                if (xdelta > 0)
-                  expose (Allocation (a.x + a.width + max (-a.width, -xdelta), a.y, min (a.width, xdelta), a.height));
-                else if (xdelta < 0)
-                  expose (Allocation (a.x, a.y, min (a.width, -xdelta), a.height));
-                if (ydelta > 0)
-                  expose (Allocation (a.x, a.y + a.height + max (-a.height, -ydelta), a.width, min (a.height, ydelta)));
-                else if (ydelta < 0)
-                  expose (Allocation (a.x, a.y, a.width, min (a.height, -ydelta)));
-                need_expose_handling = true;
-              }
-          }
+        m_last_xoffset = xoffset;
+        m_last_yoffset = yoffset;
       }
-    last_xoffset = xoffset;
-    last_yoffset = yoffset;
-    if (need_expose_handling)
+    else if (fabs (xdelta) + fabs (ydelta) >= 0.1)
       {
-        Root *ritem = root();
-        if (ritem)
-          ritem->draw_now();
+        /* force rendering of pending exposes before copying areas */
+        ritem->draw_now();
+        /* copy scrolled area */
+        Allocation a = allocation();
+        copy_area (Rect (Point (a.x, a.y), a.width, a.height),
+                   Point (a.x - xdelta, a.y - ydelta));
+        /* expose areas uncovered by scrolling */
+        if (xdelta > 0)
+          expose (Allocation (a.x + a.width + max (-a.width, -xdelta), a.y, min (a.width, xdelta), a.height));
+        else if (xdelta < 0)
+          expose (Allocation (a.x, a.y, min (a.width, -xdelta), a.height));
+        if (ydelta > 0)
+          expose (Allocation (a.x, a.y + a.height + max (-a.height, -ydelta), a.width, min (a.height, ydelta)));
+        else if (ydelta < 0)
+          expose (Allocation (a.x, a.y, a.width, min (a.height, -ydelta)));
+        /* update last scroll position */
+        m_last_xoffset = xoffset;
+        m_last_yoffset = yoffset;
+        /* force rendering to complete "scroll"-effect */
+        ritem->draw_now();
       }
   }
 public:
   ScrollPortImpl() :
     m_hadjustment (NULL), m_vadjustment (NULL),
-    last_xoffset (0), last_yoffset(0)
+    m_last_xoffset (0), m_last_yoffset(0)
   {}
 };
 static const ItemFactory<ScrollPortImpl> scroll_port_factory ("Rapicorn::ScrollPort");

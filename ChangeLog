@@ -1,3 +1,19 @@
+Tue Aug 22 19:54:35 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/scrollitems.cc: constrain both adjustments before thawing
+	them individually. fixed missing member variable prefixes. make sure
+	all pending exposes have been processed before calling copy_area().
+
+	* rapicorn/item.cc: unset POSITIVE_ALLOCATION in set_allocation() so
+	items are !drawable() while size_allocate() is called.
+
+	* rapicorn/adjustment.hh, rapicorn/adjustment.cc: fixed value comparisons
+	upon thaw(), so all possible changes between freeze() and thaw() are now
+	accounted for. exported ::constrain() to anticipate the value validation 
+	usually executed by thaw(). 
+
+	* examples/tour.xml: extended scrollable text.
+
 Mon Aug 21 01:58:52 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/adjustment.hh, rapicorn/adjustment.cc: fixed nvalue() to 
