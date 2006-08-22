@@ -478,7 +478,7 @@ ViewportGtk::copy_area (double          src_x,
       int window_height;
       gdk_window_get_size (m_widget->window, NULL, &window_height);
       gdk_gc_set_exposures (m_widget->style->black_gc, TRUE);
-      gdk_draw_drawable (m_widget->window, m_widget->style->black_gc,
+      gdk_draw_drawable (m_widget->window, m_widget->style->black_gc, // FIXME: use gdk_window_move_region() with newer Gtk+
                          m_widget->window, src_x, window_height - src_y - height,
                          dest_x, window_height - dest_y - height, width, height);
       gdk_gc_set_exposures (m_widget->style->black_gc, FALSE);
