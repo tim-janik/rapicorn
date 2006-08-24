@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include "factory.hh"
+#include "evaluator.hh"
 #include "birnetmarkup.hh"
 #include "root.hh"
 #include <stack>
@@ -24,7 +25,6 @@
 using namespace std;
 
 namespace { // Anon
-using Birnet::uint;
 using namespace Rapicorn;
 using namespace Rapicorn::Factory;
 
@@ -36,6 +36,7 @@ struct Gadget {
   const String    ident, ancestor;
   const Gadget   *child_container;
   VariableMap     ancestor_arguments;
+  VariableMap     custom_arguments;
   vector<Gadget*> children;
   void            add_child (Gadget *child_gadget) { children.push_back (child_gadget); }
   explicit        Gadget    (const String      &cident,
@@ -146,28 +147,6 @@ public:
 FactorySingleton *FactorySingleton::singleton = NULL;
 static FactorySingleton static_factory_singleton;
 
-/* --- attribute canonification --- */
-static inline String
-canonify (String s)
-{
-  for (uint i = 0; i < s.size(); i++)
-    if (!((s[i] >= 'A' && s[i] <= 'Z') ||
-          (s[i] >= 'a' && s[i] <= 'z') ||
-          (s[i] >= '0' && s[i] <= '9') ||
-          s[i] == '-'))
-      s[i] = '-';
-  return s;
-}
-
-static inline String
-rewrite_canonify_attribute (String s)
-{
-  if (s == "id")
-    return "name";
-  else
-    return canonify (s);
-}
-
 /* --- GadgetParser --- */
 struct GadgetParser : public MarkupParser {
   FactoryDomain      &fdomain;
@@ -178,6 +157,19 @@ public:
   GadgetParser (FactoryDomain &cfdomain) :
     fdomain (cfdomain), child_container_loc (NULL)
   {}
+  static String
+  canonify_element (const String &key)
+  {
+    /* chars => [A-Za-z0-9_-] */
+    String s = key;
+    for (uint i = 0; i < s.size(); i++)
+      if (!((s[i] >= 'A' && s[i] <= 'Z') ||
+            (s[i] >= 'a' && s[i] <= 'z') ||
+            (s[i] >= '0' && s[i] <= '9') ||
+            s[i] == '_' || s[i] == '-'))
+        s[i] = '_';
+    return s;
+  }
   virtual void
   start_element (const String  &element_name,
                  ConstStrings  &attribute_names,
@@ -198,10 +190,10 @@ public:
             child_container_name = "";
             for (uint i = 0; i < attribute_names.size(); i++)
               {
-                String canonified_attribute = rewrite_canonify_attribute (attribute_names[i]);
+                String canonified_attribute = Evaluator::canonify_key (attribute_names[i]);
                 if (canonified_attribute == "name")
                   error.set (INVALID_CONTENT,
-                             String() + "invalid argument for inherited gadget: " +
+                             String() + "invalid attrbiute for inherited gadget: " +
                              attribute_names[i] + "=\"" + attribute_values[i] + "\"");
                 else if (canonified_attribute == "child-container")
                   child_container_name = attribute_values[i];
@@ -226,20 +218,45 @@ public:
         else
           error.set (INVALID_CONTENT, String() + "gadget \"" + ident + "\" already defined");
       }
-    else if (!gadget_stack.empty() && canonify (element_name) == element_name)
+    else if (element_name.compare (0, 4, "arg:") == 0 && gadget_stack.size() == 1)
+      {
+        Gadget *gadget = gadget_stack.top();
+        String ident = element_name.substr (4);
+        if (gadget->custom_arguments.find (ident) != gadget->custom_arguments.end())
+          error.set (INVALID_CONTENT, String() + "redeclaration of argument: " + element_name);
+        else
+          {
+            String default_value = "";
+            for (uint i = 0; i < attribute_names.size(); i++)
+              {
+                String canonified_attribute = Evaluator::canonify_key (attribute_names[i]);
+                if (canonified_attribute == "default")
+                  default_value = attribute_values[i];
+                else
+                  error.set (INVALID_CONTENT,
+                             String() + "invalid attribute for " + element_name + ": " +
+                             attribute_names[i] + "=\"" + attribute_values[i] + "\"");
+              }
+            if (!error.set())
+              {
+                gadget->custom_arguments[ident] = default_value;
+              }
+          }
+      }
+    else if (!gadget_stack.empty() && canonify_element (element_name) == element_name)
       {
         Gadget *gparent = gadget_stack.top();
         String gadget_name = element_name;
         VariableMap vmap;
         for (uint i = 0; i < attribute_names.size(); i++)
           {
-            String canonified_attribute = rewrite_canonify_attribute (attribute_names[i]);
+            String canonified_attribute = Evaluator::canonify_key (attribute_names[i]);
             if (canonified_attribute == "name")
               gadget_name = attribute_values[i];
             else if (canonified_attribute == "child-container" ||
                      canonified_attribute == "inherit")
               error.set (INVALID_CONTENT,
-                         String() + "invalid argument for gadget construction: " +
+                         String() + "invalid attribute for gadget construction: " +
                          attribute_names[i] + "=\"" + attribute_values[i] + "\"");
             else
               vmap[canonified_attribute] = attribute_values[i];
@@ -251,7 +268,7 @@ public:
           *child_container_loc = gadget;
       }
     else
-      warning ("ignoring unknown element: " + element_name);
+      error.set (INVALID_CONTENT, String() + "invalid element: " + element_name);
   }
   virtual void
   end_element (const String  &element_name,
@@ -267,6 +284,8 @@ public:
         child_container_name = "";
         gadget_stack.pop();
       }
+    else if (element_name.compare (0, 4, "arg:") == 0 && gadget)
+      {}
     else if (gadget && gadget->ancestor.compare (&element_name[0]) == 0)
       gadget_stack.pop();
   }
@@ -430,9 +449,9 @@ FactorySingleton::construct_gadget (const String           &gadget_identifier,
       const char *key_value = it->c_str();
       const char *equal = strchr (key_value, '=');
       if (!equal || equal <= key_value)
-        throw Exception ("Invalid argument=value pair: ", *it);
+        throw Exception ("Invalid 'argument=value' syntax: ", *it);
       String key = it->substr (0, equal - key_value);
-      vmap[rewrite_canonify_attribute (key)] = equal + 1;
+      vmap[Evaluator::canonify_key (key)] = equal + 1;
     }
   Environment empty_env;
   return call_gadget (gadget, vmap, VariableMap(), empty_env, NULL, NULL);

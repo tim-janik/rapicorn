@@ -76,7 +76,8 @@ Container::add (Item &item, const PackPropertyList &pack_plist)
   if (added)
     item.invalidate();
   else
-    throw Exception ("invalid attempt to add child: ", item.name());
+    throw Exception ("invalid attempt to add child \"", item.name(), "\" to container \"", name(), "\"");
+  // throw Exception ("container(\"", name(), "\"): invalid attempt to add child: ", item.name());
 }
 
 void

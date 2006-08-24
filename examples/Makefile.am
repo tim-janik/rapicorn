@@ -6,28 +6,28 @@ DEFS            = -DRAPICORN_PRIVATE -DPARANOID $(RAPICORN_CFLAGS) $(CONDITIONAL
 
 # test programs:
 if WITH_GTK
-GTK_EXAMPLES = tour
+CONDITIONAL_PROGS  = $(GTK_EXAMPLES)
 CONDITIONAL_CFLAGS = $(GTK_CFLAGS)
 else
-GTK_EXAMPLES = 
+CONDITIONAL_PROGS  =
 CONDITIONAL_CFLAGS =
 endif
-programs_ldadd     = $(top_builddir)/rapicorn/librapicorn.la $(RAPICORN_LIBS)
-programs_gtk_ldadd = $(programs_ldadd) $(GTK_LIBS)
-
+XML_FILES =
 # build tests
-noinst_PROGRAMS = $(GTK_EXAMPLES)
+noinst_PROGRAMS   = $(CONDITIONAL_PROGS)
+programs_ldadd    = $(top_builddir)/rapicorn/librapicorn.la $(RAPICORN_LIBS)
+gtkprograms_ldadd = $(programs_ldadd) $(GTK_LIBS)
 
 # program sources:
-tour_SOURCES = tour.cc
-tour_LDADD = $(programs_gtk_ldadd)
-EXTRA_DIST += tour.xml
+GTK_EXAMPLES    += tour # scroller
+tour_SOURCES     = tour.cc
+tour_LDADD       = $(gtkprograms_ldadd)
+XML_FILES       += tour.xml
+#scroller_SOURCES = scroller.cc
+#scroller_LDADD   = $(gtkprograms_ldadd)
+XML_FILES       += scroller.xml
 
-XML_FILES = $(strip	\
-	tour.xml	\
-)
-
-XMLLINTCALL     = $(if $(XMLLINT),$(XMLLINT),true) # handle undefined XMLLINT
+XMLLINTCALL = $(if $(XMLLINT),$(XMLLINT),true) # handle undefined XMLLINT
 xml-lint:
 	$(XMLLINTCALL) --noout $(XML_FILES)
 .PHONY: xml-lint
@@ -38,4 +38,4 @@ stamp-allchecks: $(XML_FILES)
 
 noinst_DATA = stamp-allchecks
 
-EXTRA_DIST += testpic.jpg testpic.png testpic-IHDR.png testpic-IDAT.png testpic-DATA.png
+EXTRA_DIST += $(XML_FILES) testpic.jpg testpic.png testpic-IHDR.png testpic-IDAT.png testpic-DATA.png

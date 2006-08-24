@@ -14,8 +14,8 @@ rapicorn_public_headers = $(strip 	\
 	properties.hh	commands.hh	appearance.hh	painter.hh	cairocontext.hh		\
 	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
 	adjustment.hh	image.hh	paintgadgets.hh	slider.hh	paintcontainers.hh	\
-	buttons.hh	factory.hh	scrollitems.hh	pangolabel.hh	layoutcontainers.hh	\
-	testitem.hh	\
+	buttons.hh	factory.hh	evaluator.hh	scrollitems.hh	layoutcontainers.hh	\
+	pangolabel.hh	testitem.hh	\
 )
 rapicorn_impl_headers = $(strip 	\
 	arrangementimpl.hh		\
@@ -32,8 +32,8 @@ rapicorn_cc_sources = $(strip 		\
 	properties.cc	commands.cc	appearance.cc	painter.cc	cairocontext.cc		\
 	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\
 	adjustment.cc	image.cc	paintgadgets.cc	slider.cc	paintcontainers.cc	\
-	buttons.cc	factory.cc	scrollitems.cc	pangolabel.cc	layoutcontainers.cc	\
-	testitem.cc	\
+	buttons.cc	factory.cc	evaluator.cc	scrollitems.cc	layoutcontainers.cc	\
+	pangolabel.cc	testitem.cc	\
 )
 rapicorn_private_headers = $(strip 	\
 	private.hh			\

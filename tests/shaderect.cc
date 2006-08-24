@@ -22,7 +22,6 @@
 
 namespace {
 using namespace Rapicorn;
-using Rapicorn::uint;
 
 static void
 shade_rect_test (uint n)

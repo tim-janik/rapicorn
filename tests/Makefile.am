@@ -5,7 +5,7 @@ INCLUDES = -I$(top_srcdir)
 DEFS     = -DPARANOID $(RAPICORN_CFLAGS)
 
 # test programs:
-TESTS = items testitems walker markup primitives shaderect pixcombine properties
+TESTS = evaltest items testitems walker markup primitives shaderect pixcombine properties
 programs_ldadd = $(top_builddir)/rapicorn/librapicorn.la $(RAPICORN_LIBS) $(PANGO_LIBS) $(GTK_LIBS)
 # program sources:
 walker_SOURCES = walker.cc
@@ -24,6 +24,8 @@ items_SOURCES = items.cc
 items_LDADD = $(programs_ldadd)
 testitems_SOURCES = testitems.cc
 testitems_LDADD = $(programs_ldadd)
+evaltest_SOURCES = evaltest.cc
+evaltest_LDADD = $(programs_ldadd)
 
 # build tests
 noinst_PROGRAMS = $(TESTS)

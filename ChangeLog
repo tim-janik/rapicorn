@@ -1,3 +1,29 @@
+Wed Aug 23 23:06:07 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/evaluator.hh, rapicorn/evaluator.cc: new support class for
+	Rapicorn::Factory to evaluate simple expressions and handle variable maps.
+	implemented standard boolean operators, numeric comparators, string
+	comparators. println and count. added builtin variables $RAPICORN_VERSION,
+	$RANDOM and $RAPICORN_ARCHITECTURE.
+
+	* rapicorn/factory.cc: support argument declarations "arg:*" for gadget
+	definitions. fixed element canonifcation to allow '_' in element names.
+	use Evaluator canonification for variables/attributes, which mandates
+	'_' as word delimiter. error out on invalid elements instead of throwing
+	a warning.
+
+	* rapicorn/birnetutils.hh, rapicorn/birnetutils.cc:
+	extended string_to_bool(), added errmsg(), extended number of strings
+	supported by Exception().
+
+	* rapicorn/container.cc, rapicorn/factory.cc: improved error and
+	exception messages.
+
+	* tests/evaltest.cc: test Evaluator funcitonality such as variable
+	expansion and function evaluation.
+
+	* configure.in: define RAPICORN_VERSION, RAPICORN_PACKAGE_VERSION.
+
 Tue Aug 22 19:54:35 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/scrollitems.cc: constrain both adjustments before thawing

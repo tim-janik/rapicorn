@@ -100,6 +100,8 @@ void    warning                         (const char *format, ...) BIRNET_PRINTF 
 void    warning                         (const String &s);
 void    diag                            (const char *format, ...) BIRNET_PRINTF (1, 2);
 void    diag                            (const String &s);
+void    errmsg                          (const String &entity, const char *format, ...) BIRNET_PRINTF (2, 3);
+void    errmsg                          (const String &entity, const String &s);
 void    warning_expr_failed             (const char *file, uint line, const char *function, const char *expression);
 void    error_expr_failed               (const char *file, uint line, const char *function, const char *expression);
 void    warning_expr_reached            (const char *file, uint line, const char *function);
@@ -116,7 +118,8 @@ extern inline void BREAKPOINT()            { raise_sigtrap(); }
 struct Exception : std::exception {
 public:
   // BROKEN(g++-3.3,g++-3.4): Exception  (const char *reason_format, ...) BIRNET_PRINTF (2, 3);
-  explicit            Exception  (const String &s1, const String &s2 = String(), const String &s3 = String(), const String &s4 = String());
+  explicit            Exception  (const String &s1, const String &s2 = String(), const String &s3 = String(), const String &s4 = String(),
+                                  const String &s5 = String(), const String &s6 = String(), const String &s7 = String(), const String &s8 = String());
   void                set        (const String &s);
   virtual const char* what       () const throw() { return reason ? reason : "out of memory"; }
   /*Copy*/            Exception  (const Exception &e);

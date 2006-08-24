@@ -24,7 +24,6 @@
 
 namespace {
 using namespace Rapicorn;
-using Rapicorn::uint;
 
 class PropertyHost {
   bool          bool_prop ()             		{ return false; }

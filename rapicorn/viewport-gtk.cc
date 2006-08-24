@@ -25,7 +25,6 @@
 #define DEBUG_EVENTS    0
 
 namespace { // Anon
-using Birnet::uint;
 using namespace Rapicorn;
 
 /* --- prototypes --- */

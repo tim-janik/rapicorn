@@ -22,7 +22,6 @@
 
 namespace {
 using namespace Rapicorn;
-using Rapicorn::uint;
 
 static void
 walker_test()

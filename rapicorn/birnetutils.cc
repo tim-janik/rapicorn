@@ -28,7 +28,8 @@ namespace Birnet {
 /* --- exceptions --- */
 const std::nothrow_t dothrow = {};
 
-Exception::Exception (const String &s1, const String &s2, const String &s3, const String &s4) :
+Exception::Exception (const String &s1, const String &s2, const String &s3, const String &s4,
+                      const String &s5, const String &s6, const String &s7, const String &s8) :
   reason (NULL)
 {
   String s (s1);
@@ -38,6 +39,14 @@ Exception::Exception (const String &s1, const String &s2, const String &s3, cons
     s += s3;
   if (s4.size())
     s += s4;
+  if (s5.size())
+    s += s5;
+  if (s6.size())
+    s += s6;
+  if (s7.size())
+    s += s7;
+  if (s8.size())
+    s += s8;
   set (s);
 }
 
@@ -121,13 +130,31 @@ string_strip (const String &str)
 bool
 string_to_bool (const String &string)
 {
+  static const char *spaces = " \t\n\r";
   const char *p = string.c_str();
-  while (*p == ' ' || *p == '\n' || *p == '\t' || *p == '\r')
+  /* skip spaces */
+  while (*p && strchr (spaces, *p))
     p++;
-  if (!p[0] || p[0] == 'n' || p[0] == 'N' || p[0] == 'f' || p[0] == 'F' || p[0] == '0')
-    return false;
-  else
-    return true;
+  /* ignore signs */
+  if (p[0] == '-' || p[0] == '+')
+    {
+      p++;
+      /* skip spaces */
+      while (*p && strchr (spaces, *p))
+        p++;
+    }
+  /* handle numbers */
+  if (p[0] >= '0' && p[0] <= '9')
+    return 0 != string_to_uint (p);
+  /* handle special words */
+  if (strncasecmp (p, "ON", 2) == 0)
+    return 1;
+  if (strncasecmp (p, "OFF", 3) == 0)
+    return 0;
+  /* handle non-numbers */
+  return !(p[0] == 0 ||
+           p[0] == 'f' || p[0] == 'F' ||
+           p[0] == 'n' || p[0] == 'N');
 }
 
 String
@@ -269,9 +296,10 @@ void
 error (const String &s)
 {
   fflush (stdout);
-  fputs ("\nERROR: ", stderr);
-  fputs (s.c_str(), stderr);
-  fputs ("\naborting...\n", stderr);
+  String msg ("\nERROR: ");
+  msg += s;
+  msg += "\naborting...\n";
+  fputs (msg.c_str(), stderr);
   fflush (stderr);
   abort();
 }
@@ -292,9 +320,11 @@ warning (const char *format,
 void
 warning (const String &s)
 {
-  fputs ("\nWARNING: ", stderr);
-  fputs (s.c_str(), stderr);
-  fputs ("\n", stderr);
+  fflush (stdout);
+  String msg ("\nWARNING: ");
+  msg += s;
+  msg += '\n';
+  fputs (msg.c_str(), stderr);
 }
 
 void
@@ -313,9 +343,35 @@ diag (const char *format,
 void
 diag (const String &s)
 {
-  fputs ("DIAG: ", stderr);
-  fputs (s.c_str(), stderr);
-  fputs ("\n", stderr);
+  String msg ("DIAG: ");
+  msg += s;
+  msg += '\n';
+  fputs (msg.c_str(), stderr);
+}
+
+void
+errmsg (const String &entity,
+        const char *format,
+        ...)
+{
+  fflush (stdout);
+  va_list args;
+  va_start (args, format);
+  String ers = string_vprintf (format, args);
+  va_end (args);
+  errmsg (entity, ers);
+  fflush (stderr);
+}
+
+void
+errmsg (const String &entity,
+        const String &s)
+{
+  String msg (entity);
+  msg += entity.size() ? ": " : "DEBUG: ";
+  msg += s;
+  msg += '\n';
+  fputs (msg.c_str(), stderr);
 }
 
 static bool

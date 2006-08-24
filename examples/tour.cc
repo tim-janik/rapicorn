@@ -21,7 +21,6 @@
 
 namespace {
 using namespace Rapicorn;
-using Rapicorn::uint;
 
 static void     register_builtin_images (void);
 

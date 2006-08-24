@@ -23,6 +23,8 @@
 #include <ext/hash_map>
 
 namespace { // Anon
+using namespace Rapicorn;
+
 static Rapicorn::Image::ErrorType       rapicorn_load_png_image (const char            *file_name,
                                                                  Rapicorn::PixelImage **imagep,
                                                                  std::string           &comment);
@@ -482,7 +484,6 @@ get_broken16_pixdata (void)
 /* --- libpng wrapper code --- */
 #include <png.h>
 namespace {
-typedef Rapicorn::uint8 uint8;
 
 static Rapicorn::Image::ErrorType /* longjmp() may jump across this function */
 png_loader_configure_4argb (png_structp  png_ptr,
