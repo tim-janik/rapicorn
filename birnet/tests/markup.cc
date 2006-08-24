@@ -22,7 +22,6 @@
 
 namespace {
 using namespace Birnet;
-using Birnet::uint;
 
 struct TestMarkupParser : MarkupParser {
   virtual void start_element (const String  &element_name,
