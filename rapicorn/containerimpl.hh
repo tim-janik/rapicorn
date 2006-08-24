@@ -36,7 +36,7 @@ protected:
   virtual bool          has_children            () { return child_item != NULL; }
   bool                  has_visible_child       () { return child_item && child_item->visible(); }
   bool                  has_drawable_child      () { return child_item && child_item->drawable(); }
-  virtual bool          add_child               (Item   &item, const PackPropertyList &pack_plist = PackPropertyList());
+  virtual void          add_child               (Item   &item, const PackPropertyList &pack_plist = PackPropertyList());
   virtual void          remove_child            (Item   &item);
   explicit              SingleContainerImpl     ();
 public:
@@ -50,7 +50,7 @@ protected:
   virtual               ~MultiContainerImpl();
   virtual ChildWalker   local_children          () { return value_walker (items); }
   virtual bool          has_children            () { return items.size() > 0; }
-  virtual bool          add_child               (Item   &item, const PackPropertyList &pack_plist = PackPropertyList());
+  virtual void          add_child               (Item   &item, const PackPropertyList &pack_plist = PackPropertyList());
   virtual void          remove_child            (Item   &item);
   explicit              MultiContainerImpl      ();
 };

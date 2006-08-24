@@ -41,7 +41,7 @@ public:
   virtual void                  origin_vanchor          (float align)           { m_origin_vanchor = align; invalidate(); }
   virtual Rect                  child_area              ();
 protected:
-  virtual bool                  add_child               (Item &item, const PackPropertyList &pack_plist);
+  virtual void                  add_child               (Item &item, const PackPropertyList &pack_plist);
   virtual void                  size_request            (Requisition &requisition);
   virtual void                  size_allocate           (Allocation area);
   /* child location */

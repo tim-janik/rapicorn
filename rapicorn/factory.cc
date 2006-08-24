@@ -170,6 +170,15 @@ public:
         s[i] = '_';
     return s;
   }
+  static String
+  canonify_attribute (const String &key)
+  {
+    /* skip gettext prefix */
+    String s = key[0] == '_' ? String (key, 1) : key;
+    if (s == "id")
+      return "name";
+    return s;
+  }
   virtual void
   start_element (const String  &element_name,
                  ConstStrings  &attribute_names,
@@ -190,10 +199,10 @@ public:
             child_container_name = "";
             for (uint i = 0; i < attribute_names.size(); i++)
               {
-                String canonified_attribute = Evaluator::canonify_key (attribute_names[i]);
+                String canonified_attribute = canonify_attribute (attribute_names[i]);
                 if (canonified_attribute == "name")
                   error.set (INVALID_CONTENT,
-                             String() + "invalid attrbiute for inherited gadget: " +
+                             String() + "invalid attribute for inherited gadget: " +
                              attribute_names[i] + "=\"" + attribute_values[i] + "\"");
                 else if (canonified_attribute == "child-container")
                   child_container_name = attribute_values[i];
@@ -229,7 +238,7 @@ public:
             String default_value = "";
             for (uint i = 0; i < attribute_names.size(); i++)
               {
-                String canonified_attribute = Evaluator::canonify_key (attribute_names[i]);
+                String canonified_attribute = canonify_attribute (attribute_names[i]);
                 if (canonified_attribute == "default")
                   default_value = attribute_values[i];
                 else
@@ -250,7 +259,7 @@ public:
         VariableMap vmap;
         for (uint i = 0; i < attribute_names.size(); i++)
           {
-            String canonified_attribute = Evaluator::canonify_key (attribute_names[i]);
+            String canonified_attribute = canonify_attribute (attribute_names[i]);
             if (canonified_attribute == "name")
               gadget_name = attribute_values[i];
             else if (canonified_attribute == "child-container" ||

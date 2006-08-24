@@ -64,20 +64,21 @@ Container::add (Item &item, const PackPropertyList &pack_plist)
 {
   if (item.parent())
     throw Exception ("not adding item with parent: ", item.name());
-  item.ref();
   Container &container = child_container();
   if (this != &container)
     {
       container.add (item, pack_plist);
       return;
     }
-  bool added = container.add_child (item, pack_plist);
+  item.ref();
+  try {
+    container.add_child (item, pack_plist);
+  } catch (...) {
+    item.unref();
+    throw;
+  }
+  item.invalidate();
   item.unref();
-  if (added)
-    item.invalidate();
-  else
-    throw Exception ("invalid attempt to add child \"", item.name(), "\" to container \"", name(), "\"");
-  // throw Exception ("container(\"", name(), "\"): invalid attempt to add child: ", item.name());
 }
 
 void
@@ -317,18 +318,15 @@ SingleContainerImpl::local_children ()
   return value_walker (PointerIterator<Item*> (iter), PointerIterator<Item*> (iend));
 }
 
-bool
+void
 SingleContainerImpl::add_child (Item &item, const PackPropertyList &pack_plist)
 {
-  if (!child_item)
-    {
-      item.ref_sink();
-      item.set_parent (this);
-      child_item = &item;
-      return true;
-    }
-  else
-    return false;
+  if (child_item)
+    throw Exception ("invalid attempt to add child \"", item.name(), "\" to single-child container \"", name(), "\" ",
+                     "which already has a child \"", child_item->name(), "\"");
+  item.ref_sink();
+  item.set_parent (this);
+  child_item = &item;
 }
 
 void
@@ -381,13 +379,12 @@ SingleContainerImpl::~SingleContainerImpl()
 MultiContainerImpl::MultiContainerImpl ()
 {}
 
-bool
+void
 MultiContainerImpl::add_child (Item &item, const PackPropertyList &pack_plist)
 {
   item.ref_sink();
   item.set_parent (this);
   items.push_back (&item);
-  return true;
 }
 
 void

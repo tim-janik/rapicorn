@@ -149,26 +149,22 @@ class HBoxImpl : public virtual HBox, public virtual TableImpl {
     else
       throw Exception ("foreign child: ", item.name());
   }
-  virtual bool
+  virtual void
   add_child (Item &item, const PackPropertyList &pack_plist)
   {
-    if (MultiContainerImpl::add_child (item, pack_plist)) /* ref, sink, set_parent, insert */
-      {
-        uint col = get_n_cols();
-        insert_cols (col, 1);
-        while (col > 0 && !is_col_used (col - 1))
-          col--;
-        Packer packer = create_packer (item);
-        TablePacker *tpacker = extract_child_packer<TablePacker*> (packer);
-        tpacker->update();
-        // diag ("hboxcolumn: %d used:%d,%d,%d (%d)\n", col, is_col_used(0),is_col_used(1),is_col_used(2),get_n_cols());
-        tpacker->left_attach (col);
-        tpacker->right_attach (col + 1);
-        tpacker->commit();
-        packer.apply_properties (pack_plist);
-        return true;
-      }
-    return false;
+    MultiContainerImpl::add_child (item, pack_plist); /* ref, sink, set_parent, insert */
+    uint col = get_n_cols();
+    insert_cols (col, 1);
+    while (col > 0 && !is_col_used (col - 1))
+      col--;
+    Packer packer = create_packer (item);
+    TablePacker *tpacker = extract_child_packer<TablePacker*> (packer);
+    tpacker->update();
+    // diag ("hboxcolumn: %d used:%d,%d,%d (%d)\n", col, is_col_used(0),is_col_used(1),is_col_used(2),get_n_cols());
+    tpacker->left_attach (col);
+    tpacker->right_attach (col + 1);
+    tpacker->commit();
+    packer.apply_properties (pack_plist);
   }
 protected:
   virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }
@@ -225,23 +221,19 @@ class VBoxImpl : public virtual VBox, public virtual TableImpl {
     else
       throw Exception ("foreign child: ", item.name());
   }
-  virtual bool
+  virtual void
   add_child (Item &item, const PackPropertyList &pack_plist)
   {
-    if (MultiContainerImpl::add_child (item, pack_plist)) /* ref, sink, set_parent, insert */
-      {
-        uint row = 0; // get_n_rows();
-        insert_rows (row, 1);
-        Packer packer = create_packer (item);
-        TablePacker *tpacker = extract_child_packer<TablePacker*> (packer);
-        tpacker->update();
-        tpacker->bottom_attach (row);
-        tpacker->top_attach (row + 1);
-        tpacker->commit();
-        packer.apply_properties (pack_plist);
-        return true;
-      }
-    return false;
+    MultiContainerImpl::add_child (item, pack_plist); /* ref, sink, set_parent, insert */
+    uint row = 0; // get_n_rows();
+    insert_rows (row, 1);
+    Packer packer = create_packer (item);
+    TablePacker *tpacker = extract_child_packer<TablePacker*> (packer);
+    tpacker->update();
+    tpacker->bottom_attach (row);
+    tpacker->top_attach (row + 1);
+    tpacker->commit();
+    packer.apply_properties (pack_plist);
   }
 protected:
   virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }

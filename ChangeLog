@@ -1,3 +1,18 @@
+Thu Aug 24 21:53:32 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/container.hh, rapicorn/containerimpl.hh, rapicorn/container.cc:
+	changed add_child() to not return a bool but report errors via exceptions.
+	fixed item leak in case of exception, impro ved exception messages.
+
+	* rapicorn/factory.cc: fixed up attribute canonification which broke
+	property settings.
+
+	* rapicorn/tableimpl.cc:
+	* rapicorn/table.cc:
+	* rapicorn/layoutcontainers.cc:
+	* rapicorn/arrangementimpl.hh:
+	* rapicorn/arrangement.cc: fixed up add_child().
+
 Wed Aug 23 23:06:07 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/evaluator.hh, rapicorn/evaluator.cc: new support class for

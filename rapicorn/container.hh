@@ -29,7 +29,7 @@ struct Container : public virtual Item {
 protected:
   virtual bool        match_interface   (InterfaceMatch &imatch,
                                          const String   &ident);
-  virtual bool        add_child         (Item                   &item,
+  virtual void        add_child         (Item                   &item,
                                          const PackPropertyList &pack_plist = PackPropertyList()) = 0;
   virtual void        remove_child      (Item &item) = 0;
   virtual void        dispose_item      (Item &item);

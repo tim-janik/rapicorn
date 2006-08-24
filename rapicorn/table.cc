@@ -99,16 +99,12 @@ TableImpl::create_packer (Item &item)
     throw Exception ("foreign child: ", item.name());
 }
 
-bool
+void
 TableImpl::add_child (Item &item, const PackPropertyList &pack_plist)
 {
-  if (MultiContainerImpl::add_child (item, pack_plist)) /* ref, sink, set_parent, insert */
-    {
-      Packer packer = create_packer (item);
-      packer.apply_properties (pack_plist);
-      return true;
-    }
-  return false;
+  MultiContainerImpl::add_child (item, pack_plist); /* ref, sink, set_parent, insert */
+  Packer packer = create_packer (item);
+  packer.apply_properties (pack_plist);
 }
 
 TableImpl::TableImpl() :

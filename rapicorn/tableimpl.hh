@@ -50,7 +50,7 @@ class TableImpl : public virtual Table, public virtual MultiContainerImpl {
   void                  size_allocate_pass1     ();
   void                  size_allocate_pass2     ();
 protected:
-  virtual bool          add_child       (Item &item, const PackPropertyList &pack_plist);
+  virtual void          add_child       (Item &item, const PackPropertyList &pack_plist);
   virtual void          size_request    (Requisition &requisition);
   virtual void          size_allocate   (Allocation area);
 public:
