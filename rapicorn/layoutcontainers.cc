@@ -154,9 +154,10 @@ class HBoxImpl : public virtual HBox, public virtual TableImpl {
   {
     MultiContainerImpl::add_child (item, pack_plist); /* ref, sink, set_parent, insert */
     uint col = get_n_cols();
-    insert_cols (col, 1);
     while (col > 0 && !is_col_used (col - 1))
       col--;
+    if (is_col_used (col))
+      insert_cols (col, 1);     // should never be triggered
     Packer packer = create_packer (item);
     TablePacker *tpacker = extract_child_packer<TablePacker*> (packer);
     tpacker->update();
@@ -226,7 +227,8 @@ class VBoxImpl : public virtual VBox, public virtual TableImpl {
   {
     MultiContainerImpl::add_child (item, pack_plist); /* ref, sink, set_parent, insert */
     uint row = 0; // get_n_rows();
-    insert_rows (row, 1);
+    if (is_row_used (row))
+      insert_rows (row, 1);
     Packer packer = create_packer (item);
     TablePacker *tpacker = extract_child_packer<TablePacker*> (packer);
     tpacker->update();

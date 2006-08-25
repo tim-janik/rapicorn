@@ -699,6 +699,15 @@ Factory::create_item (const String       &gadget_identifier,
   return item.handle<Item>(); // Handle<> does ref_sink()
 }
 
+Handle<Container>
+Factory::create_container (const String           &gadget_identifier,
+                           const ArgumentList     &arguments)
+{
+  initialize_standard_gadgets_lazily();
+  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments);
+  return item.handle<Container>(); // Handle<> does ref_sink()
+}
+
 Handle<Root>
 Factory::create_root (const String           &gadget_identifier,
                       const ArgumentList     &arguments)

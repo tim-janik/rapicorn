@@ -1,3 +1,15 @@
+Fri Aug 25 02:38:48 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/layoutcontainers.cc: fixed up excessive column/row creation in
+	hbox and vbox.
+
+	* rapicorn/table.cc: minor optimizations to is_row_used() and is_col_used().
+
+	* rapicorn/factory.hh, rapicorn/factory.cc: added create_container().
+
+	* examples/scroller.cc, examples/scroller.xml: new test program to stress 
+	scroll area implementation.
+
 Thu Aug 24 21:53:32 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/container.hh, rapicorn/containerimpl.hh, rapicorn/container.cc:

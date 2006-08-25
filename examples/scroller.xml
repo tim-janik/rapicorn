@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
+<!-- Rapicorn Examples
+ ! Copyright (C) 2006 Tim Janik
+ !
+ ! This library is free software; you can redistribute it and/or
+ ! modify it under the terms of the GNU Lesser General Public
+ ! License as published by the Free Software Foundation; either
+ ! version 2 of the License, or (at your option) any later version.
+ !
+ ! This library is distributed in the hope that it will be useful,
+ ! but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ ! Lesser General Public License for more details.
+ !
+ ! You should have received a copy of the GNU Lesser General
+ ! Public License along with this library; if not, write to the
+ ! Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ ! Boston, MA 02111-1307, USA.
+ !-->
+<rapicorn-gadgets xmlns:def="http://rapicorn.org/xmlns:def" xmlns:arg="http://rapicorn.org/xmlns:arg">
+
+  <!-- scroll-area -->
+  <def:scroll-port inherit="Rapicorn::ScrollPort">
+  </def:scroll-port>
+  <def:scroll-area inherit="Rapicorn::ScrollArea" child-container="scroll-port">
+    <table>
+      <alignment hexpand="0" vexpand="0" bottom-attach="1" left-attach="0" right-attach="1" top-attach="2" width="0" height="0"
+	left-padding="2" right-padding="3" bottom-padding="2" top-padding="2">
+	<frame frame-type="in">
+	  <scroll-port />
+	</frame>
+      </alignment>
+      <hslider hexpand="1" adjustment-source="ancestor-horizontal" bottom-attach="0" />
+      <vslider vexpand="1" adjustment-source="ancestor-vertical"   bottom-attach="1" left-attach="1" height="200" />
+    </table>
+  </def:scroll-area>
+
+  <!-- main dialog -->
+  <def:main-shell inherit="root" child-container="scroll-box">
+    <arg:test-value1 default="2"/>
+    <arg:test-value2/>
+    <ambience normal-lighting="upper-left">
+      <vbox>
+	<scroll-area hspread="1" vspread="1">
+	  <vbox id="scroll-box" spacing="5" />
+	</scroll-area>
+      </vbox>
+    </ambience>
+  </def:main-shell>
+  <!-- button definition -->
+  <def:test-button inherit="button" on-click="dummy">
+    <label text="test-FOO" />
+  </def:test-button>
+  <!-- button row -->
+  <def:button-row inherit="hbox" spacing="5" >
+  </def:button-row>
+
+</rapicorn-gadgets>

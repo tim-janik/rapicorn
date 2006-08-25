@@ -118,24 +118,26 @@ TableImpl::TableImpl() :
 bool
 TableImpl::is_row_used (uint row)
 {
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    {
-      Location loc = child_location (*cw);
-      if (row >= loc.bottom_attach && row < loc.top_attach)
-        return true;
-    }
+  if (row < rows.size())
+    for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+      {
+        Location loc = child_location (*cw);
+        if (row >= loc.bottom_attach && row < loc.top_attach)
+          return true;
+      }
   return false;
 }
 
 bool
 TableImpl::is_col_used (uint col)
 {
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    {
-      Location loc = child_location (*cw);
-      if (col >= loc.left_attach && col < loc.right_attach)
-        return true;
-    }
+  if (col < cols.size())
+    for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+      {
+        Location loc = child_location (*cw);
+        if (col >= loc.left_attach && col < loc.right_attach)
+          return true;
+      }
   return false;
 }
 

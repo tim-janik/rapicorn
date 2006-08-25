@@ -19,12 +19,12 @@ programs_ldadd    = $(top_builddir)/rapicorn/librapicorn.la $(RAPICORN_LIBS)
 gtkprograms_ldadd = $(programs_ldadd) $(GTK_LIBS)
 
 # program sources:
-GTK_EXAMPLES    += tour # scroller
+GTK_EXAMPLES    += tour scroller
 tour_SOURCES     = tour.cc
 tour_LDADD       = $(gtkprograms_ldadd)
 XML_FILES       += tour.xml
-#scroller_SOURCES = scroller.cc
-#scroller_LDADD   = $(gtkprograms_ldadd)
+scroller_SOURCES = scroller.cc
+scroller_LDADD   = $(gtkprograms_ldadd)
 XML_FILES       += scroller.xml
 
 XMLLINTCALL = $(if $(XMLLINT),$(XMLLINT),true) # handle undefined XMLLINT
