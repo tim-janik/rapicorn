@@ -416,7 +416,7 @@ RootImpl::dispatch_win_size_event (const Event &event)
     {
       Allocation allocation (0, 0, wevent->width, wevent->height);
       resize_all (&allocation);
-      /* discard all expose requests, we'll get a WIN_DRAW event */
+      /* discard all expose requests, we'll get a new WIN_DRAW event */
       m_expose_queue.clear();
       handled = true;
     }
@@ -618,8 +618,26 @@ RootImpl::dispose_item (Item &item)
 }
 
 bool
+RootImpl::has_pending_win_size ()
+{
+  bool found_one = false;
+  m_async_mutex.lock();
+  for (std::list<Event*>::iterator it = m_async_event_queue.begin();
+       it != m_async_event_queue.end();
+       it++)
+    if ((*it)->type == WIN_SIZE)
+      {
+        found_one = true;
+        break;
+      }
+  m_async_mutex.unlock();
+  return found_one;
+}
+
+bool
 RootImpl::dispatch_event (const Event &event)
 {
+  // diag ("Root: event: %s", string_from_event_type (event.type));
   switch (event.type)
     {
       bool handled;
@@ -650,8 +668,8 @@ RootImpl::dispatch_event (const Event &event)
     case SCROLL_RIGHT:       /* button7 */
       /**/                    return dispatch_scroll_event (event);
     case CANCEL_EVENTS:       return dispatch_cancel_event (event);
-    case WIN_SIZE:            return dispatch_win_size_event (event);
-    case WIN_DRAW:            return dispatch_win_draw_event (event);
+    case WIN_SIZE:            return has_pending_win_size() ? true : dispatch_win_size_event (event);
+    case WIN_DRAW:            return has_pending_win_size() ? true : dispatch_win_draw_event (event);
     case WIN_DELETE:          return dispatch_win_delete_event (event);
     }
   return false;

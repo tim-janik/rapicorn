@@ -20,7 +20,7 @@
 
 namespace Rapicorn {
 
-String
+const char*
 string_from_event_type (EventType etype)
 {
   switch (etype)
@@ -50,9 +50,8 @@ string_from_event_type (EventType etype)
     case WIN_DELETE:            return "WinDelete";
     case EVENT_NONE:
     case EVENT_LAST:
-      break;
+    default:                    return "<unknown>";
     }
-  return "<unknown>";
 }
 
 EventContext::EventContext () :

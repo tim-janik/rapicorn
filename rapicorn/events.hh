@@ -72,7 +72,7 @@ typedef enum {
   WIN_DELETE,
   EVENT_LAST
 } EventType;
-String string_from_event_type (EventType etype);
+const char* string_from_event_type (EventType etype);
 
 class Event {
   friend class EventFactory;

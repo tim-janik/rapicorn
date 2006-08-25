@@ -101,6 +101,7 @@ private:
   bool                  dispatch_win_draw_event                 (const Event            &event);
   bool                  dispatch_win_delete_event               (const Event            &event);
   virtual bool          dispatch_event                          (const Event            &event);
+  bool                  has_pending_win_size                    ();
   /* --- GrabEntry --- */
   struct GrabEntry {
     Item *item;

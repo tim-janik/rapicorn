@@ -1,3 +1,12 @@
+Sat Aug 26 00:25:56 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/root.cc: discard WIN_SIZE and WIN_DRAW events if more 
+	WIN_SIZE events are pending. this makes resizes much snappier.
+
+	* rapicorn/events.hh, rapicorn/events.cc: changed string_from_event_type()
+	to return const char* instead of a temporary string which seems to make
+	problems with varargs calls.
+
 Fri Aug 25 23:52:31 2006  Tim Janik  <timj@gtk.org>
 
 	* examples/scroller.cc: removed layout caching, since PangoLayout 
