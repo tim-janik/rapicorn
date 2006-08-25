@@ -149,6 +149,7 @@ public:
   };
 };
 
+/* --- Gtk support functions --- */
 void rapicorn_init_with_gtk_thread      (int        *argcp,  // FIXME:
                                          char     ***argvp,
                                          const char *app_name);
@@ -156,6 +157,9 @@ bool rapicorn_init_with_foreign_gtk     (int        *argcp,  // FIXME:
                                          char     ***argvp,
                                          const char *app_name,
                                          bool        auto_quit_gtk = true);
+/* internal */
+void rapicorn_gtk_threads_enter         ();
+void rapicorn_gtk_threads_leave         ();
 
 } // Rapicorn
 

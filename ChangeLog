@@ -1,3 +1,13 @@
+Fri Aug 25 19:05:07 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/pangolabel.cc: rewrote to plug layout/context leaks and to
+	cache initialized structures to a certain extend. code cleanups.
+
+	* rapicorn/viewport.hh, rapicorn/viewport-gtk.cc: alloc gtk locking from
+	other code portions.
+
+	* examples/scroller.xml: test text fixup.
+
 Fri Aug 25 02:38:48 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/layoutcontainers.cc: fixed up excessive column/row creation in

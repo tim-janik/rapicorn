@@ -49,7 +49,7 @@
   </def:main-shell>
   <!-- button definition -->
   <def:test-button inherit="button" on-click="dummy">
-    <label text="test-FOO" />
+    <label text="Abcde&#10;abCde&#10;abcdE" />
   </def:test-button>
   <!-- button row -->
   <def:button-row inherit="hbox" spacing="5" >

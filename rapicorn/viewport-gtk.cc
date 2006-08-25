@@ -1321,4 +1321,16 @@ rapicorn_init_with_foreign_gtk (int        *argcp,
   return gtk_init_check (argcp, argvp); // allow $DISPLAY initialisation to fail
 }
 
+void
+rapicorn_gtk_threads_enter ()
+{
+  GTK_GDK_THREAD_SYNC.lock();
+}
+
+void
+rapicorn_gtk_threads_leave ()
+{
+  GTK_GDK_THREAD_SYNC.unlock();
+}
+
 } // Rapicorn
