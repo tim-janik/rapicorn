@@ -1,3 +1,9 @@
+Fri Aug 25 23:52:31 2006  Tim Janik  <timj@gtk.org>
+
+	* examples/scroller.cc: removed layout caching, since PangoLayout 
+	caching only has negligible performance effects. PangoContext is
+	still in place though, and is very important memory wise.
+
 Fri Aug 25 19:05:07 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/pangolabel.cc: rewrote to plug layout/context leaks and to

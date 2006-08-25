@@ -243,29 +243,6 @@ class LayoutCache {
       }
     return pcontext;
   }
-  struct LayoutKey {
-    ContextKey     context_key;
-    String         font_description;
-    AlignType      align;
-    WrapType       wrap;
-    EllipsizeType  ellipsize;
-    int            indent;
-    int            spacing;
-    inline bool
-    operator< (const LayoutKey &rhs) const
-    {
-      const LayoutKey &lhs = *this;
-      RETURN_LESS_IF_UNEQUAL (lhs.context_key,      rhs.context_key);
-      RETURN_LESS_IF_UNEQUAL (lhs.font_description, rhs.font_description);
-      RETURN_LESS_IF_UNEQUAL (lhs.align,            rhs.align);
-      RETURN_LESS_IF_UNEQUAL (lhs.wrap,             rhs.wrap);
-      RETURN_LESS_IF_UNEQUAL (lhs.ellipsize,        rhs.ellipsize);
-      RETURN_LESS_IF_UNEQUAL (lhs.indent,           rhs.indent);
-      RETURN_LESS_IF_UNEQUAL (lhs.spacing,          rhs.spacing);
-      return 0;
-    }
-  };
-  std::map<LayoutKey, PangoLayout*> layout_cache;
 public:
   PangoLayout*
   fetch_layout (String         font_description,
@@ -275,58 +252,32 @@ public:
                 int            indent,
                 int            spacing)
   {
-    LayoutKey key;
-    key.context_key.direction = default_pango_direction();
-    key.context_key.language = default_text_language();
-    key.context_key.dpi = default_pango_dpi();
-    PangoContext *pcontext = retrieve_context (key.context_key);
-    key.align = align;
-    key.wrap = wrap;
-    key.ellipsize = ellipsize;
-    key.indent = indent;
-    key.spacing = spacing;
+    ContextKey key;
+    key.direction = default_pango_direction();
+    key.language = default_text_language();
+    key.dpi = default_pango_dpi();
+    PangoContext *pcontext = retrieve_context (key);
     PangoFontDescription *pfdesc;
     if (font_description.size())
       pfdesc = pango_font_description_from_string (font_description.c_str());
     else
       pfdesc = pango_font_description_copy_static (default_pango_font_description());
     gchar *gstr = pango_font_description_to_string (pfdesc);
-    key.font_description = gstr;
+    font_description = gstr;
     g_free (gstr);
-    PangoLayout *playout = layout_cache[key];
-    if (!playout)
-      {
-        playout = pango_layout_new (pcontext);
-        pango_layout_set_alignment (playout, pango_alignment_from_align_type (key.align));
-        pango_layout_set_wrap (playout, pango_wrap_mode_from_wrap_type (key.wrap));
-        pango_layout_set_ellipsize (playout, pango_ellipsize_mode_from_ellipsize_type (key.ellipsize));
-        pango_layout_set_indent (playout, key.indent);
-        pango_layout_set_spacing (playout, key.spacing);
-        pango_layout_set_attributes (playout, NULL);
-        pango_layout_set_tabs (playout, NULL);
-        pango_layout_set_width (playout, -1);
-        pango_layout_set_text (playout, "", 0);
-        pango_font_description_merge_static (pfdesc, default_pango_font_description(), FALSE);
-        pango_layout_set_font_description (playout, pfdesc);
-        /* trim cache before insertion */
-        if (layout_cache.size() >= cache_threshold)
-          {
-            std::map<LayoutKey, PangoLayout*>::iterator it = layout_cache.begin();
-            while (it != layout_cache.end())
-              {
-                std::map<LayoutKey, PangoLayout*>::iterator last = it++;
-                if (drand48() > cache_probability)
-                  {
-                    if (last->second)   // maybe NULL due to failing lookups
-                      g_object_unref (last->second);
-                    layout_cache.erase (last);
-                  }
-              }
-          }
-        layout_cache[key] = playout; // takes over initial ref()
-      }
+    PangoLayout *playout = pango_layout_new (pcontext);
+    pango_layout_set_alignment (playout, pango_alignment_from_align_type (align));
+    pango_layout_set_wrap (playout, pango_wrap_mode_from_wrap_type (wrap));
+    pango_layout_set_ellipsize (playout, pango_ellipsize_mode_from_ellipsize_type (ellipsize));
+    pango_layout_set_indent (playout, indent);
+    pango_layout_set_spacing (playout, spacing);
+    pango_layout_set_attributes (playout, NULL);
+    pango_layout_set_tabs (playout, NULL);
+    pango_layout_set_width (playout, -1);
+    pango_layout_set_text (playout, "", 0);
+    pango_font_description_merge_static (pfdesc, default_pango_font_description(), FALSE);
+    pango_layout_set_font_description (playout, pfdesc);
     pango_font_description_free (pfdesc);
-    g_object_ref (playout);
     return playout;
   }
   void
