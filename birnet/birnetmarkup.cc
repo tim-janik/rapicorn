@@ -212,16 +212,18 @@ struct MarkupParser::Context {
   
   uint  document_empty : 1;
   uint  parsing : 1;
-  int  balance;
+  uint  line_number_after_newline : 1;
+  int   balance;
 };
 
-MarkupParser::MarkupParser () :
-  context (NULL)
+MarkupParser::MarkupParser (const String &input_name) :
+  context (NULL), m_input_name (input_name)
 {
   context = new MarkupParserContext;
   
   context->parser = this;
   context->line_number = 1;
+  context->line_number_after_newline = 0;
   context->char_number = 1;
   context->state = STATE_START;
   context->current_text = NULL;
@@ -235,9 +237,9 @@ MarkupParser::MarkupParser () :
 }
 
 MarkupParser*
-MarkupParser::create_parser()
+MarkupParser::create_parser (const String &input_name)
 {
-  MarkupParser *parser = new MarkupParser;
+  MarkupParser *parser = new MarkupParser (input_name);
   return parser;
 }
 
@@ -274,7 +276,7 @@ static void BIRNET_PRINTF (4, 5)
   va_end (args);
   error.message = msg;
   error.code = code;
-  error.line_number = context->line_number;
+  error.line_number = context->line_number - context->line_number_after_newline;
   error.char_number = context->char_number;
   mark_error (context, error);
 }
@@ -368,7 +370,7 @@ set_unescape_error (MarkupParserContext *context,
   
   error.message = msg;
   error.code = code;
-  error.line_number = context->line_number - remaining_newlines;
+  error.line_number = context->line_number - context->line_number_after_newline - remaining_newlines;
   error.char_number = 0; // context->char_number;
   mark_error (context, error);
 }
@@ -769,7 +771,8 @@ advance_char (MarkupParserContext *context)
 {  
   context->iter = utf8_next_char (context->iter);
   context->char_number += 1;
-  
+  context->line_number_after_newline = 0;
+
   if (context->iter == context->current_text_end)
     {
       return false;
@@ -778,6 +781,7 @@ advance_char (MarkupParserContext *context)
     {
       context->line_number += 1;
       context->char_number = 1;
+      context->line_number_after_newline = 1;
     }
   
   return true;
@@ -1103,7 +1107,7 @@ MarkupParser::parse (const char          *text,
              * function, since this is the close tag
              */
             assert (!context->tag_stack.empty());
-            error.line_number = context->line_number;
+            error.line_number = context->line_number - context->line_number_after_newline;;
             error.char_number = context->char_number;
             context->parser->end_element (context->tag_stack.top(), error);
             if (error.code)
@@ -1254,7 +1258,7 @@ MarkupParser::parse (const char          *text,
                   context->state == STATE_AFTER_CLOSE_ANGLE)
                 {
                   /* Call user callback for element start */
-                  error.line_number = context->line_number;
+                  error.line_number = context->line_number - context->line_number_after_newline;
                   error.char_number = context->char_number;
                   context->parser->start_element (current_element (context),
                                                   context->attr_names,
@@ -1385,7 +1389,7 @@ MarkupParser::parse (const char          *text,
                                  &unescaped,
                                  error))
                 {
-                  error.line_number = context->line_number;
+                  error.line_number = context->line_number - context->line_number_after_newline;
                   error.char_number = context->char_number;
                   context->parser->text (unescaped, error);
                   if (!error.code)
@@ -1484,7 +1488,7 @@ MarkupParser::parse (const char          *text,
 		  context->start = NULL;
 		  
 		  /* call the end_element callback */
-                  error.line_number = context->line_number;
+                  error.line_number = context->line_number - context->line_number_after_newline;
                   error.char_number = context->char_number;
                   context->parser->end_element (close_name, error);
 		  
@@ -1539,7 +1543,7 @@ MarkupParser::parse (const char          *text,
               advance_char (context); /* advance past close angle */
               add_to_partial (context, context->start, context->iter);
               
-              error.line_number = context->line_number;
+              error.line_number = context->line_number - context->line_number_after_newline;
               error.char_number = context->char_number;
               context->parser->pass_through (context->partial_chunk, error);
               
@@ -1689,15 +1693,18 @@ MarkupParser::get_element()
 } 
 
 void
-MarkupParser::get_position (int                 *line_number,
-                            int                 *char_number)
+MarkupParser::get_position (int            *line_number,
+                            int            *char_number,
+                            const char    **input_name_p)
 {
   /* For user-constructed error messages, has no precise semantics */
   return_if_fail (context != NULL);
   if (line_number)
-    *line_number = context->line_number;
+    *line_number = context->line_number - context->line_number_after_newline;
   if (char_number)
     *char_number = context->char_number;
+  if (input_name_p)
+    *input_name_p = m_input_name.c_str();
 }
 
 void
