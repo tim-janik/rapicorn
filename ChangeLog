@@ -1,3 +1,13 @@
+Sun Aug 27 23:05:10 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/factory.cc: canonify custom argument names.
+	expand property and pack-property values before applying them.
+	this allowes general $... value expressions in gadget XML files.
+
+	* examples/scroller.xml: 
+	* examples/scroller.cc: supply buttons labels with a text containing the
+	row/col pair.
+
 Sun Aug 27 18:01:08 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/factory.hh, rapicorn/factory.cc: added input_name,

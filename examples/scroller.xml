@@ -49,7 +49,8 @@
   </def:main-shell>
   <!-- button definition -->
   <def:test-button inherit="button" on-click="dummy">
-    <label text="Abcde&#10;abCde&#10;abcdE" />
+    <arg:test-button-text default="ClickMe" />
+    <label text="$test_button_text"/>
   </def:test-button>
   <!-- button row -->
   <def:button-row inherit="hbox" spacing="5" >

@@ -51,7 +51,6 @@ public:
   void          push_map                       (const VariableMap  &vmap);
   void          pop_map                        (const VariableMap  &vmap);
   void          set                            (const String &key_eq_utf8string);
-  String        expand_expression_variables    (const String &expression);
   String        expand_expression              (const String &expression);
 };
 

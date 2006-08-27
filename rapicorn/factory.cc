@@ -230,7 +230,7 @@ public:
     else if (element_name.compare (0, 4, "arg:") == 0 && gadget_stack.size() == 1)
       {
         Gadget *gadget = gadget_stack.top();
-        String ident = element_name.substr (4);
+        String ident = Evaluator::canonify (element_name.substr (4));
         if (gadget->custom_arguments.find (ident) != gadget->custom_arguments.end())
           error.set (INVALID_CONTENT, String() + "redeclaration of argument: " + element_name);
         else
@@ -494,7 +494,7 @@ FactorySingleton::inherit_gadget (const String &ancestor_name,
       /* apply arguments */
       try {
         for (ConstVariableIter it = call_arguments.begin(); it != call_arguments.end(); it++)
-          if (!item.try_set_property (it->first, it->second))
+          if (!item.try_set_property (it->first, env.expand_expression (it->second)))
             unused_arguments[it->first] = it->second;
       } catch (...) {
         sink (&item);
@@ -572,10 +572,21 @@ FactorySingleton::call_gadget (const Gadget       *gadget,
     /* add to parent */
     if (parent)
       {
-        VariableMap still_unused_args;
-        /* unused_args become packer_args */
-        parent->add (item, unused_args, &still_unused_args);
-        unused_args = still_unused_args;
+        /* expand pack args from unused property args */
+        VariableMap pack_args;
+        for (VariableMap::const_iterator it = unused_args.begin(); it != unused_args.end(); it++)
+          pack_args[it->first] = env.expand_expression (it->second);
+        /* pack into parent */
+        VariableMap unused_pack_args;
+        parent->add (item, pack_args, &unused_pack_args);
+        /* eliminate args which were used during packing */
+        VariableMap::iterator it = unused_args.begin();;
+        while (it != unused_args.end())
+          {
+            VariableMap::iterator current = it++;
+            if (unused_pack_args.find (current->first) == unused_pack_args.end())
+              unused_args.erase (current);
+          }
       }
   } catch (...) {
     sink (item);

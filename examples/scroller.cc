@@ -22,16 +22,19 @@ namespace {
 using namespace Rapicorn;
 
 static void
-add_button_row (Container &area)
+add_button_row (Container &area,
+                uint       row)
 {
-  std::list<String> args;
-  args.push_back ("id=1");
-  Handle<Container> rh = Factory::create_container ("button-row", args);
+  std::list<String> row_args;
+  row_args.push_back ("id=row#" + string_from_uint (row));
+  Handle<Container> rh = Factory::create_container ("button-row", row_args);
   AutoLocker rl (rh);
   area.add (rh.get());
   for (uint i = 0; i < 100; i++)
     {
-      Handle<Item> bh = Factory::create_item ("test-button");
+      std::list<String> args;
+      args.push_back ("test-button-text=(" + string_from_uint (row) + "," + string_from_uint (i) + ")");
+      Handle<Item> bh = Factory::create_item ("test-button", args);
       AutoLocker bl (bh);
       rh.get().add (bh.get());
     }
@@ -56,7 +59,7 @@ main (int   argc,
 
   /* create button rows */
   for (uint i = 0; i < 100; i++)
-    add_button_row (shell);
+    add_button_row (shell, i);
 
   /* show and process window */
   root.run_async();
