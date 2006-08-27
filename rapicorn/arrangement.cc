@@ -88,14 +88,6 @@ ArrangementImpl::create_packer (Item &item)
     throw Exception ("foreign child: ", item.name());
 }
 
-void
-ArrangementImpl::add_child (Item &item, const PackPropertyList &pack_plist)
-{
-  MultiContainerImpl::add_child (item, pack_plist); /* ref, sink, set_parent, insert */
-  Packer packer = create_packer (item);
-  packer.apply_properties (pack_plist);
-}
-
 ArrangementImpl::ArrangementImpl() :
   m_origin (0, 0),
   m_origin_hanchor (0.5),

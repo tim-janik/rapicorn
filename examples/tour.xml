@@ -39,7 +39,7 @@
   <def:tour-dialog inherit="ambience" normal-lighting="upper-left"> <!-- normal-background="beige" -->
     <vbox sensitive="1">
       <scroll-area width="400" >
-	<frame left-attach="46" right-attach="47" bottom-attach="46" top-attach="47" hexpand="1" vexpand="1" >
+	<frame hexpand="1" vexpand="1" >
 	  <label text=
 	    "HUHU, mir wird schwindelig. Jetzt kommt ein richtig langer text,&#10; der sich immer weiter erstreckt.
 	    lala tutu dumdeli. tra lal la und humpeli.&#10;
@@ -93,7 +93,7 @@
 	      <label text="*** Ttitle ***" align="center" bottom-attach="100" hexpand="1" />
 	      <hbox bottom-attach="102" vexpand="1" >
  	        <alignment hexpand="1">
-		  <hslider align="center" hexpand="1" vexpand="0"/>
+		  <hslider hexpand="1" vexpand="0"/>
 		</alignment>
 	        <vslider vexpand="1" />
 	        <vslider vexpand="1" />

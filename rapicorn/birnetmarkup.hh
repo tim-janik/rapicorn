@@ -44,7 +44,7 @@ public:
     bool        set  ()                         { return code != NONE; }
   };
   typedef const vector<String> ConstStrings;
-  static MarkupParser*  create_parser   ();
+  static MarkupParser*  create_parser   (const String   &input_name);
   virtual               ~MarkupParser   ();
   bool                  parse           (const char     *text,
                                          ssize_t         text_len,  
@@ -52,17 +52,8 @@ public:
   bool                  end_parse       (Error          *error);
   String                get_element     ();
   void                  get_position    (int            *line_number,
-                                         int            *char_number);
-  virtual void          start_element   (const String   &element_name,
-                                         ConstStrings   &attribute_names,
-                                         ConstStrings   &attribute_values,
-                                         Error          &error);
-  virtual void          end_element     (const String   &element_name,
-                                         Error          &error);
-  virtual void          text            (const String   &text,
-                                         Error          &error);
-  virtual void          pass_through    (const String   &pass_through_text,
-                                         Error          &error);
+                                         int            *char_number,
+                                         const char    **input_name_p = NULL);
   virtual void          error           (const Error    &error);
   /* useful when saving */
   static String         escape_text     (const char     *text,
@@ -73,9 +64,20 @@ public:
                                          va_list         args);
   struct Context;
 protected:
-  explicit MarkupParser ();
+  explicit              MarkupParser    (const String   &input_name);
+  virtual void          start_element   (const String   &element_name,
+                                         ConstStrings   &attribute_names,
+                                         ConstStrings   &attribute_values,
+                                         Error          &error);
+  virtual void          end_element     (const String   &element_name,
+                                         Error          &error);
+  virtual void          text            (const String   &text,
+                                         Error          &error);
+  virtual void          pass_through    (const String   &pass_through_text,
+                                         Error          &error);
 private:
   Context *context;
+  String   m_input_name;
 };
 
 } // Birnet

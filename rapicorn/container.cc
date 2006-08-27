@@ -60,33 +60,41 @@ Container::child_container ()
 }
 
 void
-Container::add (Item &item, const PackPropertyList &pack_plist)
+Container::add (Item                   &item,
+                const PackPropertyList &pack_plist,
+                PackPropertyList       *unused_props)
 {
   if (item.parent())
     throw Exception ("not adding item with parent: ", item.name());
   Container &container = child_container();
   if (this != &container)
     {
-      container.add (item, pack_plist);
+      container.add (item, pack_plist, unused_props);
       return;
     }
   item.ref();
   try {
-    container.add_child (item, pack_plist);
+    container.add_child (item);
   } catch (...) {
     item.unref();
     throw;
   }
+  /* always run packer code */
+  Packer packer = create_packer (item);
+  packer.apply_properties (pack_plist, unused_props);
+  /* can invalidate etc. the fully setup item now */
   item.invalidate();
   item.unref();
 }
 
 void
-Container::add (Item *item, const PackPropertyList &pack_plist)
+Container::add (Item                   *item,
+                const PackPropertyList &pack_plist,
+                PackPropertyList       *unused_props)
 {
   if (!item)
     throw NullPointer();
-  add (*item, pack_plist);
+  add (*item, pack_plist, unused_props);
 }
 
 void
@@ -223,6 +231,16 @@ Container::Packer::lookup_property (const String &property_name)
     return NULL;
 }
 
+String
+Container::Packer::get_property (const String   &property_name)
+{
+  Property *prop = lookup_property (property_name);
+  if (!prop)
+    throw Exception ("no such property: ", property_name);
+  m_child_packer->update();
+  return prop->get_value (m_child_packer);
+}
+
 void
 Container::Packer::set_property (const String    &property_name,
                                  const String    &value,
@@ -239,22 +257,21 @@ Container::Packer::set_property (const String    &property_name,
     throw Exception ("no such property: ", property_name);
 }
 
-String
-Container::Packer::get_property (const String   &property_name)
-{
-  Property *prop = lookup_property (property_name);
-  if (!prop)
-    throw Exception ("no such property: ", property_name);
-  m_child_packer->update();
-  return prop->get_value (m_child_packer);
-}
-
 void
-Container::Packer::apply_properties (const PackPropertyList &pack_plist)
+Container::Packer::apply_properties (const PackPropertyList &pack_plist,
+                                     PackPropertyList       *unused_props)
 {
   m_child_packer->update();
   for (PackPropertyList::const_iterator it = pack_plist.begin(); it != pack_plist.end(); it++)
-    set_property (it->first, it->second, nothrow);
+    {
+      Property *prop = lookup_property (it->first);
+      if (prop)
+        prop->set_value (m_child_packer, it->second);
+      else if (unused_props)
+        (*unused_props)[it->first] = it->second;
+      else
+        throw Exception ("no such pack property: " + it->first);
+    }
   m_child_packer->commit();
 }
 
@@ -319,7 +336,7 @@ SingleContainerImpl::local_children ()
 }
 
 void
-SingleContainerImpl::add_child (Item &item, const PackPropertyList &pack_plist)
+SingleContainerImpl::add_child (Item &item)
 {
   if (child_item)
     throw Exception ("invalid attempt to add child \"", item.name(), "\" to single-child container \"", name(), "\" ",
@@ -380,7 +397,7 @@ MultiContainerImpl::MultiContainerImpl ()
 {}
 
 void
-MultiContainerImpl::add_child (Item &item, const PackPropertyList &pack_plist)
+MultiContainerImpl::add_child (Item &item)
 {
   item.ref_sink();
   item.set_parent (this);

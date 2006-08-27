@@ -144,7 +144,7 @@ String
 Evaluator::lookup (const String &var)
 {
   String key = canonify_key (var);
-  for (list<VariableMap*>::const_iterator it = env_maps.begin(); it != env_maps.end(); it++)
+  for (list<const VariableMap*>::const_iterator it = env_maps.begin(); it != env_maps.end(); it++)
     {
       VariableMap::const_iterator cit = (*it)->find (key);
       if (cit != (*it)->end())
@@ -159,26 +159,23 @@ Evaluator::lookup (const String &var)
 }
 
 void
-Evaluator::push_map (VariableMap *vmap)
+Evaluator::push_map (const VariableMap &vmap)
 {
-  assert (vmap != NULL);
-  env_maps.push_front (vmap);
+  env_maps.push_back (&vmap);
 }
 
-Evaluator::VariableMap*
-Evaluator::pop_map ()
+void
+Evaluator::pop_map (const VariableMap  &vmap)
 {
-  VariableMap *vmap = env_maps.size() ? env_maps.front() : NULL;
-  env_maps.pop_front();
-  return vmap;
+  if (!env_maps.size() || &vmap != env_maps.back())
+    error ("invalid map for pop(): %p != %p", &vmap, env_maps.back());
+  env_maps.pop_back();
 }
 
 String
-Evaluator::canonify_key (const String &key)
+Evaluator::canonify (const String &key)
 {
-  /* chars => [A-Za-z0-9_], 'id' => 'name' */
-  if (key == "id")
-    return "name";
+  /* chars => [A-Za-z0-9_] */
   String s = key;
   for (uint i = 0; i < s.size(); i++)
     if (!((s[i] >= 'A' && s[i] <= 'Z') ||
@@ -187,6 +184,16 @@ Evaluator::canonify_key (const String &key)
           s[i] == '_'))
       s[i] = '_';
   return s;
+}
+
+String
+Evaluator::canonify_key (const String &key)
+{
+  /* chars => [A-Za-z0-9_], 'id' => 'name' */
+  if (key == "id")
+    return "name";
+  else
+    return canonify (key);
 }
 
 void
@@ -201,6 +208,49 @@ Evaluator::populate_map (VariableMap        &vmap,
         throw Exception ("Invalid 'argument=value' syntax: ", *it);
       String key = it->substr (0, equal - key_value);
       vmap[canonify_key (key)] = equal + 1;
+    }
+}
+
+void
+Evaluator::populate_map (VariableMap       &vmap,
+                         const VariableMap &args)
+{
+  for (VariableMap::const_iterator it = args.begin(); it != args.end(); it++)
+    {
+      const String &key = it->first;
+      const String &value = it->second;
+      vmap[canonify_key (key)] = value;
+    }
+}
+
+void
+Evaluator::replenish_map (VariableMap        &vmap,
+                          const ArgumentList &args)
+{
+  for (ArgumentList::const_iterator it = args.begin(); it != args.end(); it++)
+    {
+      const char *key_value = it->c_str();
+      const char *equal = strchr (key_value, '=');
+      if (!equal || equal <= key_value)
+        throw Exception ("Invalid 'argument=value' syntax: ", *it);
+      String key = it->substr (0, equal - key_value);
+      key = canonify_key (key);
+      if (vmap.find (key) == vmap.end())
+        vmap[key] = equal + 1;
+    }
+}
+
+void
+Evaluator::replenish_map (VariableMap       &vmap,
+                          const VariableMap &args)
+{
+  for (VariableMap::const_iterator it = args.begin(); it != args.end(); it++)
+    {
+      const String &mkey = it->first;
+      const String &value = it->second;
+      String key = canonify_key (mkey);
+      if (vmap.find (key) == vmap.end())
+        vmap[key] = value;
     }
 }
 

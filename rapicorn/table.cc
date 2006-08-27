@@ -99,14 +99,6 @@ TableImpl::create_packer (Item &item)
     throw Exception ("foreign child: ", item.name());
 }
 
-void
-TableImpl::add_child (Item &item, const PackPropertyList &pack_plist)
-{
-  MultiContainerImpl::add_child (item, pack_plist); /* ref, sink, set_parent, insert */
-  Packer packer = create_packer (item);
-  packer.apply_properties (pack_plist);
-}
-
 TableImpl::TableImpl() :
   default_row_spacing (0),
   default_column_spacing (0),

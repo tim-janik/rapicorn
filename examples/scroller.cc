@@ -25,7 +25,7 @@ static void
 add_button_row (Container &area)
 {
   std::list<String> args;
-  args.push_back ("Id=1");
+  args.push_back ("id=1");
   Handle<Container> rh = Factory::create_container ("button-row", args);
   AutoLocker rl (rh);
   area.add (rh.get());

@@ -33,17 +33,22 @@ static void initialize_standard_gadgets_lazily (void);
 
 /* --- Gadget definition --- */
 struct Gadget {
-  const String    ident, ancestor;
+  const String    ident, ancestor, m_input_name;
+  int             m_line_number;
   const Gadget   *child_container;
   VariableMap     ancestor_arguments;
   VariableMap     custom_arguments;
   vector<Gadget*> children;
   void            add_child (Gadget *child_gadget) { children.push_back (child_gadget); }
+  String          location  () const { return m_input_name + String (m_line_number > G_MININT ? ":" + string_from_int (m_line_number) : ""); }
   explicit        Gadget    (const String      &cident,
                              const String      &cancestor,
+                             const String      &input_name,
+                             int                line_number,
                              const VariableMap &cancestor_arguments = VariableMap()) :
     ident (cident),
     ancestor (cancestor),
+    m_input_name (input_name), m_line_number (line_number),
     child_container (NULL),
     ancestor_arguments (cancestor_arguments)
   {}
@@ -70,22 +75,12 @@ struct FactoryDomain {
   }
 };
 
-/* --- Environment --- */
-struct Environment {
-  static String
-  expand_value (const String      &value,
-                const VariableMap &vmap = VariableMap())
-  {
-    return value;
-  }
-};
-
 /* --- FactorySingleton --- */
 class FactorySingleton {
   typedef std::pair<String,String>      ArgumentPair;
   typedef vector<ArgumentPair>          ArgumentVector;
   typedef VariableMap::const_iterator   ConstVariableIter;
-  /* ChildContainerSlot - return value slot for the current gadget's "child-container" */
+  /* ChildContainerSlot - return value slot for the current gadget's "child_container" */
   struct ChildContainerSlot {
     const Gadget *gadget;
     Item         *item;
@@ -101,22 +96,22 @@ class FactorySingleton {
   /* gadgets */
   Gadget*                       lookup_gadget           (const String       &gadget_identifier);
   Item&                         inherit_gadget          (const String       &ancestor_name,
-                                                         const VariableMap  &expanded_arguments,
-                                                         Environment        &environment);
+                                                         VariableMap        &call_arguments,
+                                                         Evaluator          &env,
+                                                         VariableMap        &unused_arguments);
   Item&                         call_gadget             (const Gadget       *gadget,
-                                                         const VariableMap  &canonified_arguments,
-                                                         const VariableMap  &fallback_variables,
-                                                         Environment        &environment,
+                                                         VariableMap        &call_arguments,
+                                                         Evaluator          &env,
                                                          ChildContainerSlot *ccslot,
-                                                         Container          *parent);
+                                                         Container          *parent,
+                                                         VariableMap        &unused_call_args);
   void                          call_gadget_children    (const Gadget       *gadget,
                                                          Item               &item,
-                                                         const VariableMap  &parent_arguments,
-                                                         Environment        &environment,
+                                                         Evaluator          &env,
                                                          ChildContainerSlot *ccslot);
   /* type registration */
   std::list<const ItemTypeFactory*> types;
-  const ItemTypeFactory*        lookup_item_factory     (const String          &namespaced_ident);
+  const ItemTypeFactory*        lookup_item_factory     (String                 namespaced_ident);
   Item&                         create_from_item_type   (const String          &ident);
 public:
   void                          register_item_factory   (const ItemTypeFactory &itfactory);
@@ -154,7 +149,9 @@ struct GadgetParser : public MarkupParser {
   const Gadget      **child_container_loc;
   String              child_container_name;
 public:
-  GadgetParser (FactoryDomain &cfdomain) :
+  GadgetParser (const String  &input_name,
+                FactoryDomain &cfdomain) :
+    MarkupParser (input_name),
     fdomain (cfdomain), child_container_loc (NULL)
   {}
   static String
@@ -177,7 +174,7 @@ public:
     String s = key[0] == '_' ? String (key, 1) : key;
     if (s == "id")
       return "name";
-    return s;
+    return Evaluator::canonify (s);
   }
   virtual void
   start_element (const String  &element_name,
@@ -204,7 +201,7 @@ public:
                   error.set (INVALID_CONTENT,
                              String() + "invalid attribute for inherited gadget: " +
                              attribute_names[i] + "=\"" + attribute_values[i] + "\"");
-                else if (canonified_attribute == "child-container")
+                else if (canonified_attribute == "child_container")
                   child_container_name = attribute_values[i];
                 else if (canonified_attribute == "inherit")
                   inherit = attribute_values[i];
@@ -217,7 +214,10 @@ public:
               error.set (INVALID_CONTENT, String() + "missing ancestor for gadget \"" + ident + "\"");
             else
               {
-                gadget = new Gadget (ident, inherit, vmap);
+                int line_number, char_number;
+                const char *input_name;
+                get_position (&line_number, &char_number, &input_name);
+                gadget = new Gadget (ident, inherit, input_name, line_number, vmap);
                 if (child_container_name[0])
                   child_container_loc = &gadget->child_container;
                 fdomain.definitions[ident] = gadget;
@@ -262,7 +262,7 @@ public:
             String canonified_attribute = canonify_attribute (attribute_names[i]);
             if (canonified_attribute == "name")
               gadget_name = attribute_values[i];
-            else if (canonified_attribute == "child-container" ||
+            else if (canonified_attribute == "child_container" ||
                      canonified_attribute == "inherit")
               error.set (INVALID_CONTENT,
                          String() + "invalid attribute for gadget construction: " +
@@ -270,7 +270,10 @@ public:
             else
               vmap[canonified_attribute] = attribute_values[i];
           }
-        Gadget *gadget = new Gadget (gadget_name, element_name, vmap);
+        int line_number, char_number;
+        const char *input_name;
+        get_position (&line_number, &char_number, &input_name);
+        Gadget *gadget = new Gadget (gadget_name, element_name, input_name, line_number, vmap);
         gparent->add_child (gadget);
         gadget_stack.push (gadget);
         if (child_container_loc && child_container_name == gadget_name)
@@ -354,7 +357,7 @@ FactorySingleton::parse_gadget_file (const String           &file_name,
   FactoryDomain *fdomain = lookup_domain (domain);
   if (!fdomain)
     fdomain = add_domain (domain, i18n_domain);
-  GadgetParser gp (*fdomain);
+  GadgetParser gp (file_name, *fdomain);
   MarkupParser::Error error;
   FILE *f = fopen (file_name.c_str(), "r");
   if (f)
@@ -392,17 +395,17 @@ FactorySingleton::parse_gadget_data (const uint             data_length,
                                      const String          &domain,
                                      const std::nothrow_t  &nt)
 {
+  String file_name = "-";
   FactoryDomain *fdomain = lookup_domain (domain);
   if (!fdomain)
     fdomain = add_domain (domain, i18n_domain);
-  GadgetParser gp (*fdomain);
+  GadgetParser gp (file_name, *fdomain);
   MarkupParser::Error error;
   gp.parse (data, data_length, &error);
   if (!error.code)
     gp.end_parse (&error);
   if (error.code)
     {
-      String file_name = "-";
       String ers = string_printf ("%s:%d:%d:error(%d): %s", file_name.c_str(), error.line_number, error.char_number, error.code, error.message.c_str());
       if (&nt == &dothrow)
         throw Exception (ers);
@@ -452,18 +455,14 @@ FactorySingleton::construct_gadget (const String           &gadget_identifier,
   Gadget *gadget = lookup_gadget (gadget_identifier);
   if (!gadget)
     throw Exception ("no such gadget: ", gadget_identifier);
-  VariableMap vmap;
-  for (ArgumentList::const_iterator it = arguments.begin(); it != arguments.end(); it++)
-    {
-      const char *key_value = it->c_str();
-      const char *equal = strchr (key_value, '=');
-      if (!equal || equal <= key_value)
-        throw Exception ("Invalid 'argument=value' syntax: ", *it);
-      String key = it->substr (0, equal - key_value);
-      vmap[Evaluator::canonify_key (key)] = equal + 1;
-    }
-  Environment empty_env;
-  return call_gadget (gadget, vmap, VariableMap(), empty_env, NULL, NULL);
+  VariableMap args;
+  Evaluator::populate_map (args, arguments);
+  Evaluator env;
+  VariableMap unused_args;
+  Item &item = call_gadget (gadget, args, env, NULL, NULL, unused_args);
+  for (VariableMap::const_iterator it = unused_args.begin(); it != unused_args.end(); it++)
+    error (gadget->location() + ": for <def:" + gadget->ident + "/> - invalid argument: " + it->first + "=" + it->second);
+  return item;
 }
 
 static String
@@ -484,17 +483,19 @@ variable_map_filter (VariableMap  &vmap,
 }
 
 Item&
-FactorySingleton::inherit_gadget (const String      &ancestor_name,
-                                  const VariableMap &expanded_arguments,
-                                  Environment       &environment)
+FactorySingleton::inherit_gadget (const String &ancestor_name,
+                                  VariableMap  &call_arguments,
+                                  Evaluator    &env,
+                                  VariableMap  &unused_arguments)
 {
   if (ancestor_name[0] == '\177')      /* item factory type */
     {
       Item &item = create_from_item_type (&ancestor_name[1]);
       /* apply arguments */
       try {
-        for (ConstVariableIter it = expanded_arguments.begin(); it != expanded_arguments.end(); it++)
-          item.set_property (it->first, it->second, nothrow);
+        for (ConstVariableIter it = call_arguments.begin(); it != call_arguments.end(); it++)
+          if (!item.try_set_property (it->first, it->second))
+            unused_arguments[it->first] = it->second;
       } catch (...) {
         sink (&item);
         throw;
@@ -506,48 +507,54 @@ FactorySingleton::inherit_gadget (const String      &ancestor_name,
       Gadget *gadget = lookup_gadget (ancestor_name);
       if (!gadget)
         throw Exception ("no such gadget: ", ancestor_name);
-      return call_gadget (gadget, expanded_arguments, VariableMap(), environment, NULL, NULL);
+      return call_gadget (gadget, call_arguments, env, NULL, NULL, unused_arguments);
     }
 }
 
 Item&
 FactorySingleton::call_gadget (const Gadget       *gadget,
-                               const VariableMap  &canonified_arguments,
-                               const VariableMap  &fallback_variables,
-                               Environment        &environment,
+                               VariableMap        &call_args,
+                               Evaluator          &env,
                                ChildContainerSlot *ccslot,
-                               Container          *parent)
+                               Container          *parent,
+                               VariableMap        &unused_call_args)
 {
-  /* extend environament */
-  // FIXME: add gadget->env_variables (not overriding existing vars)
-  /* expand call arguments */
-  VariableMap expanded_arguments;
-  for (ConstVariableIter it = canonified_arguments.begin(); it != canonified_arguments.end(); it++)
-    expanded_arguments[it->first] = environment.expand_value (it->second, fallback_variables);
   /* filter special arguments */
   String name = gadget->ident;
-  name = variable_map_filter (expanded_arguments, "name", name);
-  /* ignore special arguments */
-  variable_map_filter (expanded_arguments, "child-container");
-  variable_map_filter (expanded_arguments, "inherit");
-  /* construct argument list for ancestor */
-  VariableMap ancestor_arguments;
-  for (ConstVariableIter it = gadget->ancestor_arguments.begin(); it != gadget->ancestor_arguments.end(); it++)
+  name = variable_map_filter (call_args, "name", name);
+  /* ignore special arguments (FIXME) */
+  variable_map_filter (call_args, "child_container");
+  variable_map_filter (call_args, "inherit");
+  /* seperate custom arguments */
+  VariableMap custom_args;
+  for (VariableMap::const_iterator it = gadget->custom_arguments.begin(); it != gadget->custom_arguments.end(); it++)
     {
-      VariableMap::iterator xt = expanded_arguments.find (it->first);
-      if (xt != expanded_arguments.end())
-        continue;       /* skip overridden ancestor arguments */
-      ancestor_arguments[it->first] = environment.expand_value (it->second, expanded_arguments);
+      VariableMap::iterator ga = call_args.find (it->first);
+      if (ga != call_args.end())
+        {
+          custom_args[ga->first] = ga->second;
+          call_args.erase (ga);
+        }
     }
-  /* override with call arguments */
-  for (ConstVariableIter it = expanded_arguments.begin(); it != expanded_arguments.end(); it++)
-    ancestor_arguments[it->first] = it->second;
+  env.push_map (custom_args);
+  /* construct argument list for ancestor */
+  VariableMap ancestor_args (call_args);
+  Evaluator::replenish_map (ancestor_args, gadget->ancestor_arguments);
+  /* collect unused arguments */
+  VariableMap unused_args;
   /* construct gadget from ancestor */
-  Item &item = inherit_gadget (gadget->ancestor, ancestor_arguments, environment);
+  Item *itemp;
+  try {
+    itemp = &inherit_gadget (gadget->ancestor, ancestor_args, env, unused_args);
+  } catch (...) {
+    env.pop_map (custom_args);
+    throw;
+  }
+  Item &item = *itemp;
   /* construct gadget children */
   try {
     ChildContainerSlot outer_ccslot (gadget->child_container);
-    call_gadget_children (gadget, item, expanded_arguments, environment, ccslot ? ccslot : &outer_ccslot);
+    call_gadget_children (gadget, item, env, ccslot ? ccslot : &outer_ccslot);
     /* assign specials */
     item.name (name);
     /* setup child container */
@@ -564,22 +571,34 @@ FactorySingleton::call_gadget (const Gadget       *gadget,
       }
     /* add to parent */
     if (parent)
-      parent->add (item, ancestor_arguments);
+      {
+        VariableMap still_unused_args;
+        /* unused_args become packer_args */
+        parent->add (item, unused_args, &still_unused_args);
+        unused_args = still_unused_args;
+      }
   } catch (...) {
     sink (item);
+    env.pop_map (custom_args);
     throw;
   }
+  /* cleanups */
+  env.pop_map (custom_args);
+  for (VariableMap::const_iterator it = unused_args.begin(); it != unused_args.end(); it++)
+    if (gadget->ancestor_arguments.find (it->first) != gadget->ancestor_arguments.end())
+      error (gadget->location() + ": in <def:" + gadget->ident + "/> - no such property: " + it->first + "=" + it->second);
+    else
+      unused_call_args[it->first] = it->second;
   return item;
 }
 
 void
 FactorySingleton::call_gadget_children (const Gadget       *gadget,
                                         Item               &item,
-                                        const VariableMap  &parent_arguments,
-                                        Environment        &environment,
+                                        Evaluator          &env,
                                         ChildContainerSlot *ccslot)
 {
-  /* protect leafs */
+  /* guard against leafs */
   if (!gadget->children.size())
     return;
   /* retrieve container */
@@ -591,15 +610,15 @@ FactorySingleton::call_gadget_children (const Gadget       *gadget,
     diag ("%d) %s", nth++, (*cw)->ident.c_str());
 #endif
   if (!container)
-    throw Exception ("parent gadgets must implement Container interface: ", gadget->ident);
+    throw Exception ("parent gadget fails to implement Container interface: ", gadget->ident);
   /* create children */
   for (Walker<Gadget*const> cw = walker (gadget->children); cw.has_next(); cw++)
     {
       /* create child gadget */
-      Gadget *child_gadget = *cw;
+      const Gadget *child_gadget = *cw;
       /* the real call arguments are stored as ancestor arguments of the child */
-      VariableMap expanded_arguments;
-      Item &child = call_gadget (child_gadget, expanded_arguments, parent_arguments, environment, ccslot, container);
+      VariableMap dummy;
+      Item &child = call_gadget (child_gadget, dummy, env, ccslot, container, dummy);
       /* find child container */
       if (ccslot->gadget == child_gadget)
         ccslot->item = &child;
@@ -618,14 +637,15 @@ FactorySingleton::register_item_factory (const ItemTypeFactory &itfactory)
   FactoryDomain *fdomain = lookup_domain (domain_name);
   if (!fdomain)
     fdomain = add_domain (domain_name, domain_name);
-  Gadget *gadget = new Gadget (base + 1, String ("\177") + itfactory.qualified_type);
+  Gadget *gadget = new Gadget (base + 1, String ("\177") + itfactory.qualified_type, "<builtin>", G_MININT);
   fdomain->definitions[gadget->ident] = gadget;
   types.push_back (&itfactory);
 }
 
 const ItemTypeFactory*
-FactorySingleton::lookup_item_factory (const String &namespaced_ident)
+FactorySingleton::lookup_item_factory (String namespaced_ident)
 {
+  namespaced_ident = namespaced_ident;
   std::list<const ItemTypeFactory*>::iterator it;
   for (it = types.begin(); it != types.end(); it++)
     if ((*it)->qualified_type == namespaced_ident)

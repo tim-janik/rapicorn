@@ -162,6 +162,9 @@ public:
   void                        set_property      (const String    &property_name,
                                                  const String    &value,
                                                  const nothrow_t &nt = dothrow);
+  bool                        try_set_property  (const String    &property_name,
+                                                 const String    &value,
+                                                 const nothrow_t &nt = dothrow);
   String                      get_property      (const String    &property_name);
   Property*                   lookup_property   (const String    &property_name);
   virtual const PropertyList& list_properties   ();

@@ -372,7 +372,22 @@ Item::set_property (const String    &property_name,
   if (prop)
     prop->set_value (this, value);
   else if (&nt == &dothrow)
-    throw Exception ("no such property: ", property_name);
+    throw Exception ("no such property: " + name() + "::" + property_name);
+}
+
+bool
+Item::try_set_property (const String    &property_name,
+                        const String    &value,
+                        const nothrow_t &nt)
+{
+  Property *prop = lookup_property (property_name);
+  if (prop)
+    {
+      prop->set_value (this, value);
+      return true;
+    }
+  else
+    return false;
 }
 
 String
@@ -380,7 +395,7 @@ Item::get_property (const String   &property_name)
 {
   Property *prop = lookup_property (property_name);
   if (!prop)
-    throw Exception ("no such property: ", property_name);
+    throw Exception ("no such property: " + name() + "::" + property_name);
   return prop->get_value (this);
 }
 

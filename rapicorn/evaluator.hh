@@ -35,14 +35,21 @@ private:
                                                  String       &result);
   String        lookup                          (const String &var);
   VariableMap   default_map;
-  std::list<VariableMap*> env_maps;
+  std::list<const VariableMap*> env_maps;
 public:
   explicit      Evaluator                      ();
-  static String canonify_key                   (const String       &key); /* chars => [A-Za-z0-9-], 'id' => 'name' */
+  static String canonify                       (const String       &key); /* chars => [A-Za-z0-9_] */
+  static String canonify_key                   (const String       &key); /* canonify, 'id' => 'name' */
   static void   populate_map                   (VariableMap        &vmap,
                                                 const ArgumentList &args);
-  void          push_map                       (VariableMap        *vmap);
-  VariableMap*  pop_map                        ();
+  static void   populate_map                   (VariableMap        &vmap,
+                                                const VariableMap  &args);
+  static void   replenish_map                  (VariableMap        &vmap,
+                                                const ArgumentList &args);
+  static void   replenish_map                  (VariableMap        &vmap,
+                                                const VariableMap  &args);
+  void          push_map                       (const VariableMap  &vmap);
+  void          pop_map                        (const VariableMap  &vmap);
   void          set                            (const String &key_eq_utf8string);
   String        expand_expression_variables    (const String &expression);
   String        expand_expression              (const String &expression);

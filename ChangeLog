@@ -1,3 +1,45 @@
+Sun Aug 27 18:01:08 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/factory.hh, rapicorn/factory.cc: added input_name,
+	line_number and location() to gadget structure to enable proper
+	error messages. removed internal Environment and replaced its
+	uses by Evaluator. more canonicalization fixups.
+	changed argument/property handling so that they either address item
+	properties, pack properties or custom arguments (via "<arg:.../>").
+	lists of unused argumnets/properties are now explicitely maintained,
+	and proper error() messages are now generated for invalid argument
+	names (including file+line number of the corresponding gadget
+	definition).
+
+	* rapicorn/evaluator.hh, rapicorn/evaluator.cc: added canonify(), 
+	extended populate_map() and added replenish_map().
+
+	* rapicorn/properties.cc: use '_' as delimiter to canonify property names.
+
+	* rapicorn/item.hh, rapicorn/item.cc: added try_set_property() to spare
+	an extra lookup to figure whether a property exists before setting it.
+
+	* rapicorn/container.cc: reworked add()/add_child() mechanism so that
+	pack properties are now applied automatically, and so that a list of
+	unused (invalid) pack properties can be returned from add().
+	optimized Packer::apply_properties() to require only a single commit
+	for multiple properties.
+
+	* rapicorn/tableimpl.hh, rapicorn/table.cc:
+	* rapicorn/layoutcontainers.cc:
+	* rapicorn/arrangement.cc: removed/cleaned up add_child() implementations.
+
+	* rapicorn/birnetmarkup.hh, rapicorn/birnetmarkup.cc: introduced
+	line_number_after_newline flag to adjust line numbers used for errors
+	and get_position() if it refers to a statements right before a recently
+	parsed '\n'. added input_name field for more descriptive messages.
+
+	* examples/tour.xml: removed bogus pack properties.
+
+	* examples/scroller.cc: fixed up add_button_row() to set only known properties.
+
+	* tests/markup.cc: adapt to MarkupParser().
+
 Sat Aug 26 00:25:56 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/root.cc: discard WIN_SIZE and WIN_DRAW events if more 

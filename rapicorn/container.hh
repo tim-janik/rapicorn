@@ -29,21 +29,24 @@ struct Container : public virtual Item {
 protected:
   virtual bool        match_interface   (InterfaceMatch &imatch,
                                          const String   &ident);
-  virtual void        add_child         (Item                   &item,
-                                         const PackPropertyList &pack_plist = PackPropertyList()) = 0;
-  virtual void        remove_child      (Item &item) = 0;
-  virtual void        dispose_item      (Item &item);
-  virtual void        hierarchy_changed (Item *old_toplevel);
+  virtual void        add_child         (Item           &item) = 0;
+  virtual void        remove_child      (Item           &item) = 0;
+  virtual void        dispose_item      (Item           &item);
+  virtual void        hierarchy_changed (Item           *old_toplevel);
 public:
   typedef Walker<Item>  ChildWalker;
-  void                  child_container (Container *child_container);
+  void                  child_container (Container      *child_container);
   Container&            child_container ();
   virtual ChildWalker   local_children  () = 0;
   virtual bool          has_children    () = 0;
-  void                  add             (Item   &item, const PackPropertyList &pack_plist = PackPropertyList());
-  void                  add             (Item   *item, const PackPropertyList &pack_plist = PackPropertyList());
-  void                  remove          (Item   &item);
-  void                  remove          (Item   *item)          { if (item) remove (*item); else throw NullPointer(); }
+  void                  remove          (Item           &item);
+  void                  remove          (Item           *item)  { if (item) remove (*item); else throw NullPointer(); }
+  void                  add             (Item                   &item,
+                                         const PackPropertyList &pack_plist = PackPropertyList(),
+                                         PackPropertyList       *unused_props = NULL);
+  void                  add             (Item                   *item,
+                                         const PackPropertyList &pack_plist = PackPropertyList(),
+                                         PackPropertyList       *unused_props = NULL);
   virtual
   const PropertyList&   list_properties (); /* essentially chaining to Item:: */
   const CommandList&    list_commands   (); /* essentially chaining to Item:: */
@@ -60,8 +63,7 @@ public:
     virtual void                commit           () = 0; /* assign pack properties */
     explicit                    ChildPacker      ();
   private:
-    /*Copy*/                    ChildPacker      (const ChildPacker&);
-    ChildPacker&                operator=        (const ChildPacker&);
+    BIRNET_PRIVATE_CLASS_COPY (ChildPacker);
   };
   struct Packer {
     /*Con*/             Packer           (ChildPacker     *cp);
@@ -71,7 +73,8 @@ public:
                                           const nothrow_t &nt = dothrow);
     String              get_property     (const String    &property_name);
     Property*           lookup_property  (const String    &property_name);
-    void                apply_properties (const PackPropertyList &pplist);
+    void                apply_properties (const PackPropertyList &pplist,
+                                          PackPropertyList       *unused_props = NULL);
     const PropertyList& list_properties  ();
     /*Des*/             ~Packer          ();
   private:

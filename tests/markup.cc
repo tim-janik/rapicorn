@@ -24,6 +24,9 @@ namespace {
 using namespace Birnet;
 
 struct TestMarkupParser : MarkupParser {
+  TestMarkupParser (const String &input_name) :
+    MarkupParser (input_name)
+  {}
   virtual void start_element (const String  &element_name,
                               ConstStrings  &attribute_names,
                               ConstStrings  &attribute_values,
@@ -61,7 +64,7 @@ extern const char *xml_data;
 void
 markup_parser_test()
 {
-  TestMarkupParser *tmp = new TestMarkupParser;
+  TestMarkupParser *tmp = new TestMarkupParser ("-");
   MarkupParser::Error error;
   const char *input_file = "TestInput.xml";
   tmp->parse (xml_data, strlen (xml_data), &error);

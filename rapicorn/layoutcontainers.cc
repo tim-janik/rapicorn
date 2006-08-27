@@ -150,9 +150,9 @@ class HBoxImpl : public virtual HBox, public virtual TableImpl {
       throw Exception ("foreign child: ", item.name());
   }
   virtual void
-  add_child (Item &item, const PackPropertyList &pack_plist)
+  add_child (Item &item)
   {
-    MultiContainerImpl::add_child (item, pack_plist); /* ref, sink, set_parent, insert */
+    MultiContainerImpl::add_child (item); /* ref, sink, set_parent, insert */
     uint col = get_n_cols();
     while (col > 0 && !is_col_used (col - 1))
       col--;
@@ -165,7 +165,6 @@ class HBoxImpl : public virtual HBox, public virtual TableImpl {
     tpacker->left_attach (col);
     tpacker->right_attach (col + 1);
     tpacker->commit();
-    packer.apply_properties (pack_plist);
   }
 protected:
   virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }
@@ -223,9 +222,9 @@ class VBoxImpl : public virtual VBox, public virtual TableImpl {
       throw Exception ("foreign child: ", item.name());
   }
   virtual void
-  add_child (Item &item, const PackPropertyList &pack_plist)
+  add_child (Item &item)
   {
-    MultiContainerImpl::add_child (item, pack_plist); /* ref, sink, set_parent, insert */
+    MultiContainerImpl::add_child (item); /* ref, sink, set_parent, insert */
     uint row = 0; // get_n_rows();
     if (is_row_used (row))
       insert_rows (row, 1);
@@ -235,7 +234,6 @@ class VBoxImpl : public virtual VBox, public virtual TableImpl {
     tpacker->bottom_attach (row);
     tpacker->top_attach (row + 1);
     tpacker->commit();
-    packer.apply_properties (pack_plist);
   }
 protected:
   virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }
