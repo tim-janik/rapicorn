@@ -1,3 +1,19 @@
+Tue Aug 29 01:42:57 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/region.hh, rapicorn/region.cc: added class Region which
+	represents a list of non-overlapping rectangles. it supports union,
+	subtract, intersect, xor, point_in and rect_in operations. the
+	rectangles are stored at 64bit integer precision, not at double
+	precision which the API might suggest in places.
+
+	* rapicorn/regionimpl.c: edited to support 64bit integer coordinates,
+	edited to avoid symbol exports and to enable compilation of a
+	standalone version of this file. added rapicorn C API wrapper
+	functions.
+
+	* rapicorn/regionimpl.h: provide rapicorn C API wrapper prototypes
+	for rapicorn/regionimpl.c.
+
 Mon Aug 28 23:14:46 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/miregion.c: added contents of mi/miregion.c from the

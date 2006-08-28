@@ -9,8 +9,8 @@ DEFS		= -DRAPICORN_PRIVATE -DPARANOID
 rapicorn_public_headers = $(strip 	\
 	rapicorn.hh	keycodes.hh	userconfig.hh	handle.hh	\
 	$(rapicorn_impl_headers)	\
-	birnetutils.hh	birnetmarkup.hh	utilities.hh	\
-	enumdefs.hh	primitives.hh	events.hh	loop.hh		viewport.hh		\
+	birnetutils.hh	birnetmarkup.hh	utilities.hh	events.hh	\
+	enumdefs.hh	primitives.hh	region.hh	loop.hh		viewport.hh		\
 	properties.hh	commands.hh	appearance.hh	painter.hh	cairocontext.hh		\
 	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
 	adjustment.hh	image.hh	paintgadgets.hh	slider.hh	paintcontainers.hh	\
@@ -25,10 +25,10 @@ rapicorn_impl_headers = $(strip 	\
 	tableimpl.hh			\
 )
 rapicorn_cc_sources = $(strip 		\
-	viewport-gtk.cc			\
+	viewport-gtk.cc	regionimpl.c	\
 	$(strip )			\
-	birnetutils.cc	birnetmarkup.cc	utilities.cc	\
-	enumdefs.cc	primitives.cc	events.cc	loop.cc		viewport.cc		\
+	birnetutils.cc	birnetmarkup.cc	utilities.cc	events.cc	\
+	enumdefs.cc	primitives.cc	region.cc	loop.cc		viewport.cc		\
 	properties.cc	commands.cc	appearance.cc	painter.cc	cairocontext.cc		\
 	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\
 	adjustment.cc	image.cc	paintgadgets.cc	slider.cc	paintcontainers.cc	\
@@ -36,6 +36,7 @@ rapicorn_cc_sources = $(strip 		\
 	pangolabel.cc	testitem.cc	\
 )
 rapicorn_private_headers = $(strip 	\
+	regionimpl.h			\
 	private.hh			\
 )
 rapicorn_fastmath_files = $(strip	\
