@@ -1,3 +1,9 @@
+Mon Aug 28 23:14:46 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/miregion.c: added contents of mi/miregion.c from the
+	xorg-server-X11R7.1-1.1.0.tar.bz2 tarball, license "AS IS", as long as
+	the copyright disclaimer is retained.
+
 Sun Aug 27 23:05:10 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/factory.cc: canonify custom argument names.
