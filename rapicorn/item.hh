@@ -38,8 +38,8 @@ struct Allocation {
   int x, y, width, height;
   Allocation() : x (0), y (0), width (0), height (0) {}
   Allocation (int cx, int cy, int cwidth, int cheight) : x (cx), y (cy), width (cwidth), height (cheight) {}
-  bool operator== (const Allocation &other) { return other.x == x && other.y == y && other.width == width && other.height == height; }
-  bool operator!= (const Allocation &other) { return !operator== (other); }
+  bool operator== (const Allocation &other) const { return other.x == x && other.y == y && other.width == width && other.height == height; }
+  bool operator!= (const Allocation &other) const { return !operator== (other); }
 };
 class Item;
 class Container;

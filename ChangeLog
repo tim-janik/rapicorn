@@ -1,3 +1,29 @@
+Wed Aug 30 02:04:48 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/region.hh, rapicorn/region.cc: const fixes.
+	allow implicit constructor conversions. s/is_empty/empty/.
+	added cmp(). renamed containment tests. added contains() also
+	for regions. renamed add/subtract/interset/exor.
+	added operators for ==, !=, <.
+
+	* rapicorn/regionimpl.h, rapicorn/regionimpl.c: fixed debugging prints.
+	removed miRegionReset() and resurrected miRegionNotEmpty() and
+	miRegionEmpty() because the former does odd NULL fiddling which
+	the latter seem to get right. fixed up empty modified regions to
+	always contain a 0-size extents rectangle at 0,0.
+	fixed up invalid pointer accesses that the compiler didn't catch.
+	fixed up euqlity handling of empty regions. implemented
+	_rapicorn_region_cmp() and _rapicorn_region_region_in().
+	relaxed coordinate order constraints on rect_in, fixed empty
+	rect handling. 
+
+	* rapicorn/primitives.hh: s/is_empty/empty/, changed callers.
+	const fixes. added == and != to Rect. 
+
+	* rapicorn/item.hh: const fixes.
+
+	* tests/region.cc: added test code for regions.
+
 Tue Aug 29 01:42:57 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/region.hh, rapicorn/region.cc: added class Region which

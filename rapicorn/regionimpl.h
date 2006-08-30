@@ -66,6 +66,8 @@ void			_rapicorn_region_clear 		(RapicornRegion 	   *region);
 bool			_rapicorn_region_empty 		(const RapicornRegion 	   *region);
 bool			_rapicorn_region_equal 		(const RapicornRegion 	   *region,
 							 const RapicornRegion 	   *region2);
+int			_rapicorn_region_cmp 		(const RapicornRegion 	   *region,
+							 const RapicornRegion 	   *region2);
 void			_rapicorn_region_swap 		(RapicornRegion 	   *region,
 							 RapicornRegion 	   *region2);
 void			_rapicorn_region_extents 	(const RapicornRegion 	   *region,
@@ -74,6 +76,8 @@ bool			_rapicorn_region_point_in 	(const RapicornRegion 	   *region,
 							 const RapicornRegionPoint *point);
 RapicornRegionCType	_rapicorn_region_rect_in 	(const RapicornRegion      *region,
 							 const RapicornRegionBox   *rect);
+RapicornRegionCType	_rapicorn_region_region_in 	(const RapicornRegion      *region,
+							 const RapicornRegion      *region2);
 int			_rapicorn_region_get_rects 	(const RapicornRegion 	   *region,
 							 int                  	    n_rects,
 							 RapicornRegionBox    	   *rects);
@@ -87,6 +91,8 @@ void			_rapicorn_region_intersect 	(RapicornRegion       	   *region,
 							 const RapicornRegion 	   *region2);
 void			_rapicorn_region_xor 		(RapicornRegion       	   *region,
 							 const RapicornRegion 	   *region2);
+void			_rapicorn_region_debug 		(const char 		   *format,
+							 ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 
 RAPICORN_EXTERN_C_END();
 #endif /* __RAPICORN_REGION_IMPL_H__ */

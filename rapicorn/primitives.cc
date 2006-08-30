@@ -578,7 +578,7 @@ Plane::combine (const Plane &src, CombineType ct, uint8 lucent)
   Rect m (origin(), width(), height());
   Rect b (src.origin(), src.width(), src.height());
   b.intersect (m);
-  if (b.is_empty())
+  if (b.empty())
     return;
   int xmin = iround (b.ll.x), xbound = iround (b.ur.x);
   int ymin = iround (b.ll.y), ybound = iround (b.ur.y);

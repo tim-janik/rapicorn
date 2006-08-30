@@ -10,6 +10,8 @@
 #include <assert.h>
 #include <malloc.h>
 #include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 /* --- compat stuff --- */
 typedef RapicornRegionInt64     Xint64;
@@ -131,7 +133,8 @@ struct _RapicornRegion {
 #define REGION_END(reg) REGION_BOX(reg, (reg)->data->numRects - 1)
 #define REGION_SZOF(n) (sizeof(RegDataRec) + ((n) * sizeof(BoxRec)))
 
-#define good(reg) assert(miValidRegion(reg))
+#define ErrorF    _rapicorn_region_debug
+#define good(reg) do { if (!miValidRegion(reg)) { ErrorF ("InvalidRegion: %p:\n", reg); miPrintRegion (reg); } assert(miValidRegion(reg)); } while (0)
 
 /*
  * The functions in this file implement the Region abstraction used extensively
@@ -254,7 +257,6 @@ _X_EXPORT RegDataRec miEmptyData = {0, 0};
 static RegDataRec  miBrokenData = {0, 0};
 static RegionRec   miBrokenRegion = { { 0, 0, 0, 0 }, &miBrokenData };
 
-#if 0
 static int
 miPrintRegion(rgn)
     RegionPtr rgn;
@@ -267,15 +269,14 @@ miPrintRegion(rgn)
     size = REGION_SIZE(rgn);
     rects = REGION_RECTS(rgn);
     ErrorF("num: %d size: %d\n", num, size);
-    ErrorF("extents: %d %d %d %d\n",
+    ErrorF("extents: %lld %lld %lld %lld\n",
 	   rgn->extents.x1, rgn->extents.y1, rgn->extents.x2, rgn->extents.y2);
     for (i = 0; i < num; i++)
-      ErrorF("%d %d %d %d \n",
+      ErrorF("%lld %lld %lld %lld \n",
 	     rects[i].x1, rects[i].y1, rects[i].x2, rects[i].y2);
     ErrorF("\n");
     return(num);
 }
-#endif
 
 _X_EXPORT Bool
 miRegionEqual(reg1, reg2)
@@ -1582,19 +1583,6 @@ miRectIn(region, prect)
     return(partIn ? ((y < prect->y2) ? rgnPART : rgnIN) : rgnOUT);
 }
 
-_X_EXPORT void
-miRegionReset(pReg, pBox)
-    RegionPtr pReg;
-    BoxPtr pBox;
-{
-    good(pReg);
-    assert(pBox->x1<=pBox->x2);
-    assert(pBox->y1<=pBox->y2);
-    pReg->extents = *pBox;
-    xfreeData(pReg);
-    pReg->data = (RegDataPtr)NULL;
-}
-
 _X_EXPORT Bool
 miPointInRegion(pReg, x, y, box)
     register RegionPtr pReg;
@@ -1629,11 +1617,30 @@ miPointInRegion(pReg, x, y, box)
     return(FALSE);
 }
 
+_X_EXPORT Bool
+miRegionNotEmpty(pReg)
+     RegionPtr pReg;
+{
+  good(pReg);
+  return(!REGION_NIL(pReg));
+}
+
 static Bool
 miRegionBroken(RegionPtr pReg)
 {
     good(pReg);
     return (REGION_NAR(pReg));
+}
+
+_X_EXPORT void
+miRegionEmpty(pReg)
+     RegionPtr pReg;
+{
+  good(pReg);
+  xfreeData(pReg);
+  pReg->extents.x2 = pReg->extents.x1;
+  pReg->extents.y2 = pReg->extents.y1;
+  pReg->data = &miEmptyData;
 }
 
 _X_EXPORT BoxPtr
@@ -1658,11 +1665,26 @@ bmutable (const RapicornRegionBox *box)
   return (RapicornRegionBox*) box;
 }
 
+static void
+fix_empty_region (RapicornRegion *region)
+{
+  /* fix up empty regions to always contain the same extents */
+  if (region->extents.x1 == region->extents.x2 &&
+      region->extents.y1 == region->extents.y2)
+    {
+      if (miRegionNotEmpty (region)) { ErrorF ("Invalid empty region: %p:\n", region); miPrintRegion (region); }
+      assert (miRegionNotEmpty (region) == FALSE);
+      region->extents.x1 = region->extents.x2 = 0;
+      region->extents.y1 = region->extents.y2 = 0;
+    }
+}
+
 RapicornRegion*
 _rapicorn_region_create (void)
 {
   RapicornRegion *region = miRegionCreate (NULL, 0);
   assert (!miRegionBroken (region));
+  fix_empty_region (region);
   return region;
 }
 
@@ -1679,6 +1701,7 @@ _rapicorn_region_init (RapicornRegion *region,
 {
   assert (region_size == sizeof (region[0]));
   miRegionInit (region, NULL, 0);
+  fix_empty_region (region);
 }
 
 void
@@ -1694,6 +1717,7 @@ _rapicorn_region_copy (RapicornRegion       *region,
   assert (region != NULL);
   assert (region2 != NULL);
   miRegionCopy (region, region2);
+  fix_empty_region (region);
 }
 
 /* Alter region so that it additionally covers all of the rectangle. */
@@ -1712,9 +1736,10 @@ _rapicorn_region_union_rect (RapicornRegion          *region,
       };
       RapicornRegion tregion;
       miRegionInit (&tregion, bmutable (&brec), 1);
-      miUnion (region, region, tregion);
+      miUnion (region, region, &tregion);
       miRegionUninit (&tregion);
     }
+  fix_empty_region (region);
 }
 
 /* Alter region so that it additionally covers all of region2. */
@@ -1726,6 +1751,7 @@ _rapicorn_region_union (RapicornRegion       *region,
   assert (region2 != NULL);
 
   miUnion (region, region, region2);
+  fix_empty_region (region);
 }
 
 /* Alter region so that all of region2 is removed from it. */
@@ -1737,6 +1763,7 @@ _rapicorn_region_subtract (RapicornRegion       *region,
   assert (region2 != NULL);
 
   miSubtract (region, region, region2);
+  fix_empty_region (region);
 }
 
 /* Alter region so that everything not in region2 is removed from it. */
@@ -1748,6 +1775,7 @@ _rapicorn_region_intersect (RapicornRegion       *region,
   assert (region2 != NULL);
 
   miIntersect (region, region, rmutable (region2));
+  fix_empty_region (region);
 }
 
 /* Alter region so that everything also in region2 is removed from it,
@@ -1762,18 +1790,19 @@ _rapicorn_region_xor (RapicornRegion       *region,
 
   RapicornRegion tregion;
   miRegionInit (&tregion, NULL, 0);
-  miSubtract (tregion, region2, region);
+  miSubtract (&tregion, region2, region);
   miSubtract (region, region, region2);
-  miUnion (region, region, tregion);
+  miUnion (region, region, &tregion);
   miRegionUninit (&tregion);
+  fix_empty_region (region);
 }
 
 /* Alter region so that it is empty. */
 void
 _rapicorn_region_clear (RapicornRegion *region)
 {
-  BoxRec zrec = { 0, 0, 0, 0 };
-  miRegionReset (region, &zrec);
+  miRegionEmpty (region);
+  fix_empty_region (region);
 }
 
 /* Check whether region is empty. */
@@ -1787,7 +1816,37 @@ bool
 _rapicorn_region_equal (const RapicornRegion *region,
                         const RapicornRegion *region2)
 {
+  if (_rapicorn_region_empty (region) && _rapicorn_region_empty (region2))
+    return TRUE;        /* empty regions are equal regardless of their zero-size extents */
   return miRegionEqual (rmutable (region), rmutable (region2));
+}
+
+#define RETURN_SIGN_IF_UNEQUAL(lhs,rhs) { if (lhs < rhs) return -1; else if (rhs < lhs) return +1; }
+
+int
+_rapicorn_region_cmp (const RapicornRegion *region,
+                      const RapicornRegion *region2)
+{
+  RETURN_SIGN_IF_UNEQUAL (region->extents.y1, region2->extents.y1);
+  RETURN_SIGN_IF_UNEQUAL (region->extents.x1, region2->extents.x1);
+  RETURN_SIGN_IF_UNEQUAL (region->extents.y2, region2->extents.y2);
+  RETURN_SIGN_IF_UNEQUAL (region->extents.x2, region2->extents.x2);
+
+  int n1 = REGION_NUM_RECTS (region);
+  int n2 = REGION_NUM_RECTS (region2);
+  RETURN_SIGN_IF_UNEQUAL (n1, n2);
+
+  const RapicornRegionBox *rs1 = REGION_RECTS (region);
+  const RapicornRegionBox *rs2 = REGION_RECTS (region2);
+  int i;
+  for (i = 0; i < n1; i++)
+    {
+      RETURN_SIGN_IF_UNEQUAL (rs1[i].y1, rs2[i].y1);
+      RETURN_SIGN_IF_UNEQUAL (rs1[i].x1, rs2[i].x1);
+      RETURN_SIGN_IF_UNEQUAL (rs1[i].y2, rs2[i].y2);
+      RETURN_SIGN_IF_UNEQUAL (rs1[i].x2, rs2[i].x2);
+  }
+  return 0; /* equality */
 }
 
 void
@@ -1797,6 +1856,8 @@ _rapicorn_region_swap (RapicornRegion *region,
   RapicornRegion tregion = *region;
   *region = *region2;
   *region2 = tregion;
+  fix_empty_region (region);
+  fix_empty_region (region2);
 }
 
 void
@@ -1820,7 +1881,39 @@ _rapicorn_region_rect_in (const RapicornRegion    *region,
                           const RapicornRegionBox *rect)
 {
   assert (region != NULL);
-  return miRectIn (rmutable (region), bmutable (rect)); /* 0=Out, 1=In, 2=Partial */
+  if (rect->x1 == rect->x2 && rect->y1 == rect->y2)
+    return RAPICORN_REGION_INSIDE;
+  BoxRec brec = {
+    .x1 = min (rect->x1, rect->x2),
+    .y1 = min (rect->y1, rect->y2),
+    .x2 = max (rect->x1, rect->x2),
+    .y2 = max (rect->y1, rect->y2),
+  };
+  return miRectIn (rmutable (region), &brec); /* 0=Out, 1=In, 2=Partial */
+}
+
+RapicornRegionCType
+_rapicorn_region_region_in (const RapicornRegion      *region,
+                            const RapicornRegion      *region2)
+{
+  if (_rapicorn_region_empty (region2))
+    return RAPICORN_REGION_INSIDE;
+  int i, n = REGION_NUM_RECTS (region);
+  const RapicornRegionBox *rects = REGION_RECTS (region);
+  if (n < 1)
+    return RAPICORN_REGION_OUTSIDE;
+  RapicornRegionCType contains = miRectIn (rmutable (region2), bmutable (&rects[0]));
+  for (i = 1; i < n && contains != RAPICORN_REGION_PARTIAL; i++)
+    {
+      RapicornRegionCType ct = miRectIn (rmutable (region2), bmutable (&rects[i]));
+      if (ct == RAPICORN_REGION_OUTSIDE)
+        contains = contains == RAPICORN_REGION_INSIDE ? RAPICORN_REGION_PARTIAL : contains;
+      else if (ct == RAPICORN_REGION_INSIDE)
+        contains = contains == RAPICORN_REGION_OUTSIDE ? RAPICORN_REGION_PARTIAL : contains;
+      else /* (ct == RAPICORN_REGION_PARTIAL) */
+        contains = RAPICORN_REGION_PARTIAL;
+    }
+  return contains;
 }
 
 int
@@ -1831,6 +1924,16 @@ _rapicorn_region_get_rects (const RapicornRegion *region,
   int i, n = n_rects;
   n = min (n, REGION_NUM_RECTS (region));
   for (i = 0; i < n; i++)
-    rects[i] = REGION_BOXPTR (region)[i];
+    rects[i] = REGION_RECTS (region)[i];
   return REGION_NUM_RECTS (region);
+}
+
+void
+_rapicorn_region_debug (const char *format,
+                        ...)
+{
+  va_list args;
+  va_start (args, format);
+  vfprintf (stderr, format, args);
+  va_end (args);
 }

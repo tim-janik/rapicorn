@@ -94,17 +94,17 @@ public:
   }
   inline double dist2 (const Point &p = Point (0, 0)) const { return dist2 (p.x, p.y); }
   inline double dist  (const Point &p = Point (0, 0)) const { return dist (p.x, p.y); }
-  Point  operator+  (const Point &p) const { return Point (x + p.x, y + p.y); }
-  Point  operator+  (double delta)   const { return Point (x + delta, y + delta); }
-  Point  operator-  (const Point &p) const { return Point (x - p.x, y - p.y); }
-  Point  operator-  (double delta)   const { return Point (x - delta, y - delta); }
-  Point& operator-  ()                     { x = -x; y = -y; return *this; }
-  Point& operator+= (const Point &p)       { return *this = *this + p; }
-  Point& operator+= (double delta)         { return *this = *this + delta; }
-  Point& operator-= (const Point &p)       { return *this = *this - p; }
-  Point& operator-= (double delta)         { return *this = *this - delta; }
-  bool   operator== (const Point &p2)      { return x == p2.x && y == p2.y; }
-  bool   operator!= (const Point &p2)      { return x != p2.x || y != p2.y; }
+  Point  operator+  (const Point  &p) const { return Point (x + p.x, y + p.y); }
+  Point  operator+  (double    delta) const { return Point (x + delta, y + delta); }
+  Point  operator-  (const Point  &p) const { return Point (x - p.x, y - p.y); }
+  Point  operator-  (double    delta) const { return Point (x - delta, y - delta); }
+  Point& operator-  ()                      { x = -x; y = -y; return *this; }
+  Point& operator+= (const Point  &p)       { return *this = *this + p; }
+  Point& operator+= (double    delta)       { return *this = *this + delta; }
+  Point& operator-= (const Point  &p)       { return *this = *this - p; }
+  Point& operator-= (double    delta)       { return *this = *this - delta; }
+  bool   operator== (const Point &p2) const { return x == p2.x && y == p2.y; }
+  bool   operator!= (const Point &p2) const { return x != p2.x || y != p2.y; }
 };
 inline Point
 min (const Point &p1, const Point &p2)
@@ -168,12 +168,24 @@ public:
   Point south_west      () const { return Point (ll.x, ll.y); }
   Point west            () const { return Point (ll.x, (ll.y + ur.y) / 2); }
   Point north_west      () const { return Point (ll.x, ur.y); }
+  bool  operator==      (const Rect &other) const
+  {
+    if (empty() && other.empty())
+      return true;
+    return other.ll.x == ll.x && other.ll.y == ll.y && other.ur.x == ur.x && other.ur.y == ur.y;
+  }
+  bool  operator!=      (const Rect &other) const
+  {
+    if (empty() && other.empty())
+      return false;
+    return other.ll.x != ll.x || other.ll.y != ll.y || other.ur.x != ur.x || other.ur.y != ur.y;
+  }
   Rect&
   rect_union (const Rect &r)
   {
-    if (r.is_empty())
+    if (r.empty())
       return *this;
-    if (is_empty())
+    if (empty())
       return *this = r;
     ll = min (ll, r.ll);
     ur = max (ur, r.ur);
@@ -182,7 +194,7 @@ public:
   Rect&
   rect_union (const Point &p)
   {
-    if (is_empty())
+    if (empty())
       {
         ll = p;
         ur = p;
@@ -201,7 +213,7 @@ public:
     ll.y -= b;
     ur.x += b;
     ur.y += b;
-    if (is_empty())
+    if (empty())
       *this = Rect();
     return *this;
   }
@@ -213,7 +225,7 @@ public:
     return *this;
   }
   bool
-  is_empty () const
+  empty () const
   {
     return ll.x > ur.x || ll.y > ur.y;
   }
@@ -816,7 +828,7 @@ public:
     Rect m (master.origin(), master.width(), master.height());
     Rect b (p0, pwidth, pheight);
     b.intersect (m);
-    if (b.is_empty())
+    if (b.empty())
       return Initializer (iround (p0.x), iround (p0.y), 0, 0);
     else
       return Initializer (iround (b.ll.x), iround (b.ll.y), iceil (b.width()), iceil (b.height()));

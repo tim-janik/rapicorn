@@ -26,27 +26,40 @@ namespace Rapicorn {
 class Region {
   struct { int64 idummy[4]; void *pdummy; } m_region;
   inline void*       region_mem   ();
-  inline const void* region_cmem  () const;
+  inline const void* region_mem   () const;
 public: /* rectangles are represented at 64bit integer precision */
-  typedef enum { OUTSIDE, INSIDE, PARTIAL } ContainedTyoe;
+  typedef enum { OUTSIDE = 0, INSIDE = 1, PARTIAL } ContainedType;
   explicit      Region            ();
-  explicit      Region            (const Rect           &src);
-  explicit      Region            (const Region         &src);
+  /*Con*/       Region            (const Region         &src);
+  /*Con*/       Region            (const Rect           &src);
+  /*Con*/       Region            (const Point          &rect_p1,
+                                   const Point          &rect_p2);
   Region&       operator=         (const Region         &src);
   void          clear             ();
-  bool          is_empty          () const;
-  bool          equal             (const Region         &other) const;
+  bool          empty             () const;
+  bool          equal             (const Region &other) const;
+  int           cmp               (const Region &other) const;
   void          swap              (Region               &other);
   Rect          extents           () const;
-  bool          point_in          (const Point          &point) const;
-  ContainedTyoe rect_in           (const Rect           &rect) const;
+  bool          contains          (const Point          &point) const;
+  bool          contains          (double                x,
+                                   double                y) const       { return contains (Point (x, y)); }
+  ContainedType contains          (const Rect           &rect) const;
+  ContainedType contains          (const Region         &other) const;
   void          list_rects        (std::vector<Rect>    &rects) const;
-  void          union_rect        (const Rect           &rect);
-  void          union_region      (const Region         &other);
-  void          subtract_region   (const Region         &subtrahend);
-  void          intersect_region  (const Region         &other);
-  void          xor_region        (const Region         &other);
+  void          add               (const Rect           &rect);
+  void          add               (const Region         &other);
+  void          subtract          (const Region         &subtrahend);
+  void          intersect         (const Region         &other);
+  void          exor              (const Region         &other);
 };
+
+bool operator== (const Region &r1,
+                 const Region &r2);
+bool operator!= (const Region &r1,
+                 const Region &r2);
+bool operator<  (const Region &r1,
+                 const Region &r2);
 
 } // Rapicorn
 

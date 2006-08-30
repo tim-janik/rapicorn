@@ -616,7 +616,7 @@ Item::copy_area (const Rect  &rect,
                 min (srect.width(), drect.width()),
                 min (srect.height(), drect.height()));
       /* the actual copy */
-      if (!src.is_empty())
+      if (!src.empty())
         ritem->copy_area (src, drect.lower_left());
     }
 }
