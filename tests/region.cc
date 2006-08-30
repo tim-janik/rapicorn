@@ -175,7 +175,11 @@ test_region_cmp ()
   for (uint i = 0; i < 65 || cases != 7; i++)
     {
       Region r1 = create_rand_region();
+      TCHECK (r1.contains (r1) == r1.INSIDE);
+      TCHECK (r1.contains (Region (r1)) == r1.INSIDE);
       Region r2 = create_rand_region();
+      TCHECK (r2.contains (r2) == r2.INSIDE);
+      TCHECK (r2.contains (Region (r2)) == r2.INSIDE);
       int c1 = r1.cmp (r2);
       int c2 = r2.cmp (r1);
       TCHECK (c1 == -c2);

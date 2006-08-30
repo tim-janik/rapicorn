@@ -1896,7 +1896,7 @@ RapicornRegionCType
 _rapicorn_region_region_in (const RapicornRegion      *region,
                             const RapicornRegion      *region2)
 {
-  if (_rapicorn_region_empty (region2))
+  if (_rapicorn_region_empty (region2) || region == region2)
     return RAPICORN_REGION_INSIDE;
   int i, n = REGION_NUM_RECTS (region);
   const RapicornRegionBox *rects = REGION_RECTS (region);
