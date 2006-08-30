@@ -98,21 +98,6 @@ Container::add (Item                   *item,
 }
 
 void
-Container::dispose_item (Item &item)
-{
-  if (&item == get_data (&child_container_key))
-    child_container (NULL);
-}
-
-void
-Container::hierarchy_changed (Item *old_toplevel)
-{
-  Item::hierarchy_changed (old_toplevel);
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    cw->sig_hierarchy_changed.emit (old_toplevel);
-}
-
-void
 Container::remove (Item &item)
 {
   Container *container = item.parent_container();
@@ -130,22 +115,51 @@ Container::remove (Item &item)
   item.unref();
 }
 
-void
-Container::point_children (double                 x,
-                           double                 y,
-                           Affine                 affine,
-                           std::vector<Item*>    &stack)
+Affine
+Container::child_affine (Item &item)
 {
-  Affine a = affine;
+  return Affine(); // Identity
+}
+
+void
+Container::dispose_item (Item &item)
+{
+  if (&item == get_data (&child_container_key))
+    child_container (NULL);
+}
+
+void
+Container::hierarchy_changed (Item *old_toplevel)
+{
+  Item::hierarchy_changed (old_toplevel);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    if (cw->point (x, y, a))
-      {
-        cw->ref();
-        stack.push_back (&*cw);
-        Container *c = dynamic_cast<Container*> (&*cw);
-        if (c)
-          c->point_children (x, y, affine, stack);
-      }
+    cw->sig_hierarchy_changed.emit (old_toplevel);
+}
+
+void
+Container::point_children (Point               p, /* root coordinates relative */
+                           std::vector<Item*> &stack)
+{
+  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+    {
+      Item &child = *cw;
+      Point cp = child_affine (child).point (p);
+      if (child.point (cp))
+        {
+          child.ref();
+          stack.push_back (&child);
+          Container *cc = dynamic_cast<Container*> (&child);
+          if (cc)
+            cc->point_children (cp, stack);
+        }
+    }
+}
+
+void
+Container::root_point_children (Point                   p, /* root coordinates relative */
+                                std::vector<Item*>     &stack)
+{
+  point_children (point_from_root (p), stack);
 }
 
 bool

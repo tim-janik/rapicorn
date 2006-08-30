@@ -31,6 +31,8 @@ namespace Rapicorn {
 #define EXPECT(expr,val)                BIRNET_EXPECT(expr,val)
 #undef LIKELY
 #define LIKELY(expr)                    BIRNET_LIKELY(expr)
+#undef ISLIKELY
+#define ISLIKELY(expr)                  BIRNET_ISLIKELY(expr)
 #undef UNLIKELY
 #define UNLIKELY(expr)                  BIRNET_UNLIKELY(expr)
 #undef static_assert_named

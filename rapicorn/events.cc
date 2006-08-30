@@ -87,23 +87,139 @@ Event::~Event()
 {
 }
 
-class EventFactory {
-public:
-  template<class EventKind> static EventKind*
-  new_event (EventType           type,
-             const EventContext &econtext)
-  {
-    EventKind *event = new EventKind();
-    event->type = type;
-    event->time = econtext.time;
-    event->synthesized = econtext.synthesized;
-    event->modifiers = ModifierState (econtext.modifiers & MOD_MASK);
-    event->key_state = ModifierState (event->modifiers & MOD_KEY_MASK);
-    event->x = econtext.x;
-    event->y = econtext.y;
-    return event;
-  }
+struct EventFactory {
+  static void                                   copy_transform_event_base       (Event                  &event,
+                                                                                 const Event            &source,
+                                                                                 const Affine           &affine);
+  template<class EventKind> static Event&       copy_transform_event            (const Event            &source_base,
+                                                                                 const Affine           &affine);
+  template<class EventKind> static EventKind*   new_event                       (EventType               type,
+                                                                                 const EventContext     &econtext);
 };
+
+void
+EventFactory::copy_transform_event_base (Event        &event,
+                                         const Event  &source,
+                                         const Affine &affine)
+{
+  event.type = source.type;
+  event.time = source.time;
+  event.synthesized = source.synthesized;
+  event.modifiers = source.modifiers;
+  event.key_state = source.key_state;
+  Point p = affine.point (Point (source.x, source.y));
+  event.x = p.x;
+  event.y = p.y;
+}
+
+template<> Event&
+EventFactory::copy_transform_event<Event> (const Event  &source_base,
+                                           const Affine &affine)
+{
+  Event &event = *new Event();
+  copy_transform_event_base (event, source_base, affine);
+  return event;
+}
+
+template<> Event&
+EventFactory::copy_transform_event<EventButton> (const Event  &source_base,
+                                                 const Affine &affine)
+{
+  const EventButton &source = dynamic_cast<const EventButton&> (source_base);
+  EventButton &event = *new EventButton();
+  copy_transform_event_base (event, source, affine);
+  event.button = source.button;
+  return event;
+}
+
+template<> Event&
+EventFactory::copy_transform_event<EventKey> (const Event  &source_base,
+                                              const Affine &affine)
+{
+  const EventKey &source = dynamic_cast<const EventKey&> (source_base);
+  EventKey &event = *new EventKey();
+  copy_transform_event_base (event, source, affine);
+  event.key = source.key;
+  event.key_name = source.key_name;
+  return event;
+}
+
+template<> Event&
+EventFactory::copy_transform_event<EventWinSize> (const Event  &source_base,
+                                                  const Affine &affine)
+{
+  const EventWinSize &source = dynamic_cast<const EventWinSize&> (source_base);
+  EventWinSize &event = *new EventWinSize();
+  copy_transform_event_base (event, source, affine);
+  event.draw_stamp = source.draw_stamp;
+  event.width = affine.hexpansion() * source.width;
+  event.height = affine.vexpansion() * source.height;
+  return event;
+}
+
+template<> Event&
+EventFactory::copy_transform_event<EventWinDraw> (const Event  &source_base,
+                                                  const Affine &affine)
+{
+  const EventWinDraw &source = dynamic_cast<const EventWinDraw&> (source_base);
+  EventWinDraw &event = *new EventWinDraw();
+  copy_transform_event_base (event, source, affine);
+  event.draw_stamp = source.draw_stamp;
+  event.bbox = Rect (affine.point (source.bbox.ll), affine.point (source.bbox.ur));
+  for (uint i = 0; i < source.rectangles.size(); i++)
+    event.rectangles.push_back (Rect (affine.point (source.rectangles[i].ll), affine.point (source.rectangles[i].ur)));
+  return event;
+}
+
+Event*
+create_event_transformed (const Event        &source_event,
+                          const Affine       &affine)
+{
+  switch (source_event.type)
+    {
+    case MOUSE_ENTER:
+    case MOUSE_MOVE:
+    case MOUSE_LEAVE:           return &EventFactory::copy_transform_event<EventMouse> (source_event, affine);
+    case BUTTON_PRESS:
+    case BUTTON_2PRESS:
+    case BUTTON_3PRESS:
+    case BUTTON_CANCELED:
+    case BUTTON_RELEASE:
+    case BUTTON_2RELEASE:
+    case BUTTON_3RELEASE:       return &EventFactory::copy_transform_event<EventButton> (source_event, affine);
+    case FOCUS_IN:
+    case FOCUS_OUT:             return &EventFactory::copy_transform_event<EventFocus> (source_event, affine);
+    case KEY_PRESS:
+    case KEY_CANCELED:
+    case KEY_RELEASE:           return &EventFactory::copy_transform_event<EventKey> (source_event, affine);
+    case SCROLL_UP:
+    case SCROLL_DOWN:
+    case SCROLL_LEFT:
+    case SCROLL_RIGHT:          return &EventFactory::copy_transform_event<EventScroll> (source_event, affine);
+    case CANCEL_EVENTS:         return &EventFactory::copy_transform_event<Event> (source_event, affine);
+    case WIN_SIZE:              return &EventFactory::copy_transform_event<EventWinSize> (source_event, affine);
+    case WIN_DRAW:              return &EventFactory::copy_transform_event<EventWinDraw> (source_event, affine);
+    case WIN_DELETE:            return &EventFactory::copy_transform_event<EventWinDelete> (source_event, affine);
+    case EVENT_NONE:
+    case EVENT_LAST:
+    default:                    throw Exception ("invalid event type for copy");
+    }
+}
+
+template<class EventKind> EventKind*
+EventFactory::new_event (EventType           type,
+                         const EventContext &econtext)
+{
+  EventKind *event = new EventKind();
+  event->type = type;
+  event->time = econtext.time;
+  event->synthesized = econtext.synthesized;
+  event->modifiers = ModifierState (econtext.modifiers & MOD_MASK);
+  event->key_state = ModifierState (event->modifiers & MOD_KEY_MASK);
+  event->x = econtext.x;
+  event->y = econtext.y;
+  return event;
+}
 
 Event*
 create_event_cancellation (const EventContext &econtext)

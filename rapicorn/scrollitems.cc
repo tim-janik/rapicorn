@@ -275,6 +275,14 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
         ritem->draw_now();
       }
   }
+  Affine
+  child_affine (Item &item)
+  {
+    const Allocation area = allocation();
+    double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
+    double yoffset = m_vadjustment ? round (m_vadjustment->value()) : 0.0;
+    return AffineTranslate (-area.x + xoffset, -area.y + yoffset);
+  }
 public:
   ScrollPortImpl() :
     m_hadjustment (NULL), m_vadjustment (NULL),

@@ -610,6 +610,20 @@ public:
   {
     return sqrt (fabs (determinant()));
   }
+  double
+  hexpansion() const
+  {
+    Point p0 = point (Point (0, 0));
+    Point p1 = point (Point (1, 0));
+    return p1.dist (p0);
+  }
+  double
+  vexpansion() const
+  {
+    Point p0 = point (Point (0, 0));
+    Point p1 = point (Point (0, 1));
+    return p1.dist (p0);
+  }
   Affine&
   invert()
   {
@@ -661,7 +675,7 @@ public:
   bool
   is_identity () const
   {
-    return xx == 1 && xy == 0 && xz == 0 && yx == 0 && yy == 1 && yz == 0;
+    return BIRNET_ISLIKELY (xx == 1 && xy == 0 && xz == 0 && yx == 0 && yy == 1 && yz == 0);
   }
   Affine
   create_inverse () const
@@ -669,6 +683,8 @@ public:
     Affine inv (*this);
     return inv.invert();
   }
+  bool  operator== (const Affine &oa) const { return xx == oa.xx && xy == oa.xy && xz == oa.xz && yx == oa.yx && yy == oa.yy && yz == oa.yz; }
+  bool  operator!= (const Affine &oa) const { return !operator== (oa); }
   String        string() const;
   static Affine from_triangles (Point src_a, Point src_b, Point src_c,
                                 Point dst_a, Point dst_b, Point dst_c);

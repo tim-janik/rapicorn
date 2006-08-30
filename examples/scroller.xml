@@ -22,12 +22,14 @@
   <!-- scroll-area -->
   <def:scroll-port inherit="Rapicorn::ScrollPort">
   </def:scroll-port>
-  <def:scroll-area inherit="Rapicorn::ScrollArea" child-container="scroll-port">
+  <def:scroll-area inherit="Rapicorn::ScrollArea" child-container="scroll-container">
     <table>
       <alignment hexpand="0" vexpand="0" bottom-attach="1" left-attach="0" right-attach="1" top-attach="2" width="0" height="0"
 	left-padding="2" right-padding="3" bottom-padding="2" top-padding="2">
 	<frame frame-type="in">
-	  <scroll-port />
+	  <scroll-port>
+	    <ambience id="scroll-container" normal-lighting="upper-left"/>
+	  </scroll-port>
 	</frame>
       </alignment>
       <hslider hexpand="1" adjustment-source="ancestor-horizontal" bottom-attach="0" />

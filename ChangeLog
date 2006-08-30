@@ -1,3 +1,25 @@
+Wed Aug 30 19:27:10 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/scrollitems.cc: implement ScrollPortImpl::child_affine() to
+	account for the scrolling area offset, and the rendering offset.
+
+	* rapicorn/item.*, rapicorn/container.*, rapicorn/root.*:
+	fixed up item/child coordinate handling by introducing ::child_affine()
+	which provides a parent<->child translation matrix. this affects event
+	processing, expose handling and item intersection tests via ::point().
+
+	* rapicorn/events.hh, rapicorn/events.cc: provide 
+	create_event_transformed() which copies an existing event and adjusts
+	coordinates and dimensions according to an affine matrix.
+
+	* rapicorn/primitives.hh, rapicorn/primitives.cc: provide h/v expansion
+	for affines as well as == and !=.
+
+	* tests/primitives.cc: fixed HSV test cosmetics. started testing Affine.
+
+	* examples/scroller.xml: added upper-left lightning ambience to
+	scrollable area.
+
 Wed Aug 30 02:04:48 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/region.hh, rapicorn/region.cc: const fixes.

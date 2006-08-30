@@ -40,9 +40,6 @@ protected:
 
   virtual String        name            () const;
   virtual void          name            (const String &str);
-  virtual bool          point           (double     x,  /* global coordinate system */
-                                         double     y,
-                                         Affine     affine);
   virtual const Requisition& size_request           ();
   virtual const Allocation&  allocation             ();
   virtual bool               tune_requisition       (Requisition requisition);

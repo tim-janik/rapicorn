@@ -47,12 +47,13 @@ public:
   void                  add             (Item                   *item,
                                          const PackPropertyList &pack_plist = PackPropertyList(),
                                          PackPropertyList       *unused_props = NULL);
+  virtual Affine        child_affine    (Item                   &item);
   virtual
   const PropertyList&   list_properties (); /* essentially chaining to Item:: */
   const CommandList&    list_commands   (); /* essentially chaining to Item:: */
-  virtual void          point_children  (double                  x,
-                                         double                  y,
-                                         Affine                  affine,
+  virtual void          point_children  (Point                   p, /* item coordinates relative */
+                                         std::vector<Item*>     &stack);
+  void             root_point_children  (Point                   p, /* root coordinates relative */
                                          std::vector<Item*>     &stack);
   virtual void          render          (Display                &display);
   void                  debug_tree      (String indent = String());

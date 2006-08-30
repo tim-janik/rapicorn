@@ -26,29 +26,51 @@ using namespace Rapicorn;
 static void
 color_test()
 {
-  printf ("%s: testing set_hsv(get_hsv(v)) == v...\n", __func__);
+  /* assert that set_hsv(get_hsv(v))==v for all v */
+  TSTART ("HSV-convert");
   for (uint r = 0; r < 256; r++)
-    for (uint g = 0; g < 256; g++)
-      for (uint b = 0; b < 256; b++)
-        {
-          Color c (r, g, b, 0xff);
-          double hue, saturation, value;
-          c.get_hsv (&hue, &saturation, &value);
-          if (r > g && r > b)
-            BIRNET_ASSERT (hue < 60 || hue > 300);
-          else if (g > r && g > b)
-            BIRNET_ASSERT (hue > 60 || hue < 180);
-          else if (b > g && b > r)
-            BIRNET_ASSERT (hue > 180 || hue < 300);
-          Color d (0xff75c3a9);
-          d.set_hsv (hue, saturation, value);
-          if (c.red()   != d.red() ||
-              c.green() != d.green() ||
-              c.blue()  != d.blue() ||
-              c.alpha() != d.alpha())
-            error ("color difference after hsv: %s != %s (hue=%f saturation=%f value=%f)\n",
-                   c.string().c_str(), d.string().c_str(), hue, saturation, value);
-        }
+    {
+      for (uint g = 0; g < 256; g++)
+        for (uint b = 0; b < 256; b++)
+          {
+            Color c (r, g, b, 0xff);
+            double hue, saturation, value;
+            c.get_hsv (&hue, &saturation, &value);
+            if (r > g && r > b)
+              BIRNET_ASSERT (hue < 60 || hue > 300);
+            else if (g > r && g > b)
+              BIRNET_ASSERT (hue > 60 || hue < 180);
+            else if (b > g && b > r)
+              BIRNET_ASSERT (hue > 180 || hue < 300);
+            Color d (0xff75c3a9);
+            d.set_hsv (hue, saturation, value);
+            if (c.red()   != d.red() ||
+                c.green() != d.green() ||
+                c.blue()  != d.blue() ||
+                c.alpha() != d.alpha())
+              error ("color difference after hsv: %s != %s (hue=%f saturation=%f value=%f)\n",
+                     c.string().c_str(), d.string().c_str(), hue, saturation, value);
+          }
+      if (r % 5 == 0)
+        TICK();
+    }
+  TDONE();
+}
+
+static void
+affine_test()
+{
+  double epsilon = 0.1e-14;
+  TSTART ("affine");
+  AffineIdentity id;
+  Affine a;
+  TASSERT (a == id);
+  TASSERT (a.determinant() == 1);
+  TASSERT (a.is_identity());
+  AffineTranslate at (1, 1);
+  TASSERT (at.point (3, 5) == Point (4, 6));
+  TASSERT (at.ipoint (4, 6) == Point (3, 5));
+  TDONE();
 }
 
 extern "C" int
@@ -56,6 +78,7 @@ main (int   argc,
       char *argv[])
 {
   birnet_init_test (&argc, &argv);
+  affine_test();
   color_test();
   return 0;
 }

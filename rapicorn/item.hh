@@ -182,7 +182,7 @@ public:
   /* invalidation / changes */
   void                        invalidate        ();
   void                        changed           ();
-  virtual void                expose            (const Allocation &area) = 0;
+  virtual void                expose            (const Allocation &area) = 0;   /* item coordinates relative */
   void                        expose            ()       { expose (allocation()); }
   void                        copy_area         (const Rect &rect, const Point &dest);
   /* public signals */
@@ -191,17 +191,21 @@ public:
   Signal<Item, void ()>           sig_invalidate;
   Signal<Item, void (Item *oldt)> sig_hierarchy_changed;
   /* event handling */
-  bool                        process_event     (const Event &event);
-  virtual bool                point             (double       x,                /* global coordinate system */
-                                                 double       y,
-                                                 Affine       affine) = 0;
+  bool                       process_event      (const Event &event);           /* item coordinates relative */
+  bool                       process_root_event (const Event &event);           /* root coordinates relative */
+  bool                       root_point         (Point        p);               /* root coordinates relative */
+  virtual bool               point              (Point        p);               /* item coordinates relative */
+  Affine                     affine_to_root     ();                             /* item => root affine */
+  Affine                     affine_from_root   ();                             /* root => item affine */
+  Point                      point_to_root      (Point        item_point);      /* item coordinates relative */
+  Point                      point_from_root    (Point        root_point);      /* root coordinates relative */
   /* public size accessors */
-  virtual const Requisition&  size_request      () = 0;                       /* re-request size */
-  const Requisition&          requisition       () { return size_request(); } /* cached requisition */
-  virtual void                set_allocation    (const Allocation &area) = 0; /* assign new allocation */
-  virtual const Allocation&   allocation        () = 0;                       /* current allocation */
+  virtual const Requisition& size_request       () = 0;                       /* re-request size */
+  const Requisition&         requisition        () { return size_request(); } /* cached requisition */
+  virtual void               set_allocation     (const Allocation &area) = 0; /* assign new allocation */
+  virtual const Allocation&  allocation         () = 0;                       /* current allocation */
   /* display */
-  virtual void                render            (Display        &display) = 0;
+  virtual void               render             (Display        &display) = 0;
   /* styles / appearance */
   StateType             state                   () const;
   Style*                style                   () { return m_style; }

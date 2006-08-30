@@ -170,19 +170,19 @@ RootImpl::dispatch_mouse_movement (const Event &event)
   Item *grab_item = get_grab (&unconfined);
   if (grab_item)
     {
-      if (unconfined or grab_item->point (event.x, event.y, Affine()))
+      if (unconfined or grab_item->root_point (Point (event.x, event.y)))
         {
           pierced.push_back (ref (grab_item));        /* grab-item receives all mouse events */
           Container *container = grab_item->interface<Container*>();
           if (container)                              /* deliver to hovered grab-item children as well */
-            container->point_children (event.x, event.y, Affine(), pierced);
+            container->root_point_children (Point (event.x, event.y), pierced);
         }
     }
   else if (drawable())
     {
       pierced.push_back (ref (this)); /* root receives all mouse events */
       if (m_entered)
-        point_children (event.x, event.y, Affine(), pierced);
+        root_point_children (Point (event.x, event.y), pierced);
     }
   /* send leave events */
   vector<Item*> left_children = item_difference (m_last_entered_children, pierced);
@@ -220,7 +220,7 @@ RootImpl::dispatch_event_to_pierced_or_grab (const Event &event)
   else if (drawable())
     {
       pierced.push_back (ref (this)); /* root receives all events */
-      point_children (event.x, event.y, Affine(), pierced);
+      root_point_children (Point (event.x, event.y), pierced);
     }
   /* send actual event */
   bool handled = false;

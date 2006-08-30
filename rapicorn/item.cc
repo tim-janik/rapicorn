@@ -483,14 +483,103 @@ Item::style (Style *st)
   propagate_style ();
 }
 
-bool
-Item::process_event (const Event &event)
+Affine
+Item::affine_from_root () /* root => item affine */
 {
-  EventHandler *controller = dynamic_cast<EventHandler*> (this);
+  Affine iaffine;
+  Container *pc = parent_container();
+  if (pc)
+    {
+      const Affine &paffine = pc->affine_from_root();
+      const Affine &caffine = pc->child_affine (*this);
+      if (!caffine.is_identity())
+        iaffine = paffine * caffine;
+      else
+        iaffine = caffine;
+    }
+  return iaffine;
+}
+
+Affine
+Item::affine_to_root () /* item => root affine */
+{
+  Affine iaffine = affine_from_root();
+  if (!iaffine.is_identity())
+    iaffine = iaffine.invert();
+  return iaffine;
+}
+
+Point
+Item::point_from_root (Point root_point) /* root coordinates relative */
+{
+  Point p = root_point;
+  Container *pc = parent_container();
+  if (pc)
+    {
+      const Affine &caffine = pc->child_affine (*this);
+      p = pc->point_from_root (p);      // to parent coords
+      p = caffine * p;
+    }
+  return p;
+}
+
+Point
+Item::point_to_root (Point item_point) /* item coordinates relative */
+{
+  Point p = item_point;
+  Container *pc = parent_container();
+  if (pc)
+    {
+      const Affine &caffine = pc->child_affine (*this);
+      p = caffine.ipoint (p);           // to parent coords
+      p = pc->point_to_root (p);
+    }
+  return p;
+}
+
+bool
+Item::process_event (const Event &event) /* item coordinates relative */
+{
   bool handled = false;
+  EventHandler *controller = dynamic_cast<EventHandler*> (this);
   if (controller)
     handled = controller->sig_event.emit (event);
   return handled;
+}
+
+bool
+Item::process_root_event (const Event &event) /* root coordinates relative */
+{
+  bool handled = false;
+  EventHandler *controller = dynamic_cast<EventHandler*> (this);
+  if (controller)
+    {
+      const Affine &affine = affine_from_root();
+      if (affine.is_identity ())
+        handled = controller->sig_event.emit (event);
+      else
+        {
+          Event *ecopy = create_event_transformed (event, affine);
+          handled = controller->sig_event.emit (*ecopy);
+          delete ecopy;
+        }
+    }
+  return handled;
+}
+
+bool
+Item::root_point (Point p) /* root coordinates relative */
+{
+  return point (point_from_root (p));
+}
+
+bool
+Item::point (Point p) /* item coordinates relative */
+{
+  Allocation a = allocation();
+  return (drawable() &&
+          p.x >= a.x && p.x < a.x + a.width &&
+          p.y >= a.y && p.y < a.y + a.height);
 }
 
 void
@@ -640,8 +729,15 @@ ItemImpl::do_event (const Event &event)
 void
 ItemImpl::expose (const Allocation &area)
 {
-  if (parent() && !test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
-    parent()->expose (area);
+  Container *pc = parent_container();
+  if (pc && !test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+    {
+      const Affine &caffine = pc->child_affine (*this);
+      Point p = caffine.ipoint (area.x, area.y);
+      double width = area.width / caffine.hexpansion();
+      double height = area.height / caffine.vexpansion();
+      pc->expose (Allocation (iround (p.x), iround (p.y), iround (width), iround (height)));
+    }
 }
 
 String
@@ -654,20 +750,6 @@ void
 ItemImpl::name (const String &str)
 {
   m_name = str;
-}
-
-bool
-ItemImpl::point (double     x,
-                 double     y,
-                 Affine     affine)
-{
-  Allocation a = allocation();
-  Point p = affine.ipoint (x, y);
-  if (drawable() &&
-      p.x >= a.x && p.x < a.x + a.width &&
-      p.y >= a.y && p.y < a.y + a.height)
-    return true;
-  return false;
 }
 
 bool
