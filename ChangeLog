@@ -1,3 +1,8 @@
+Tue Sep  5 00:03:38 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/text-pango.hh, rapicorn/text-pango.cc: CVS copied from 
+	pangolabel.hh and pangolabel.cc.
+
 Mon Sep  4 19:54:55 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/adjustment.hh, rapicorn/adjustment.cc: fixed default adjustment
