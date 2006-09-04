@@ -1,5 +1,5 @@
 /* Rapicorn
- * Copyright (C) 2005 Tim Janik
+ * Copyright (C) 2005-2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,8 +16,8 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __RAPICORN_PANGO_LABEL_HH__
-#define __RAPICORN_PANGO_LABEL_HH__
+#ifndef __RAPICORN_TEXT_PANGO_HH__
+#define __RAPICORN_TEXT_PANGO_HH__
 
 #include <rapicorn/utilities.hh>
 #include <rapicorn/enumdefs.hh>
@@ -25,7 +25,7 @@
 #if     RAPICORN_WITH_PANGO
 namespace Rapicorn {
 
-class PangoLabel : public virtual Convertible {
+class TextPango : public virtual Convertible {
 public:
   virtual void          font_name       (const String &fname) = 0;
   virtual String        font_name       () const = 0;
@@ -46,4 +46,4 @@ public:
 } // Rapicorn
 #endif  /* RAPICORN_WITH_PANGO */
 
-#endif  /* __RAPICORN_PANGO_LABEL_HH__ */
+#endif  /* __RAPICORN_TEXT_PANGO_HH__ */

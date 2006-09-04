@@ -16,7 +16,7 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#include "pangolabel.hh"
+#include "text-pango.hh"
 #if     RAPICORN_WITH_PANGO
 #include <pango/pangoft2.h>
 #include "factory.hh"
@@ -309,8 +309,8 @@ public:
 };
 static LayoutCache global_layout_cache; // protected by rapicorn_gtk_threads_enter / rapicorn_gtk_threads_leave
 
-/* --- PangoLabelImpl --- */
-class PangoLabelImpl : public virtual ItemImpl, public virtual PangoLabel {
+/* --- TextPangoImpl --- */
+class TextPangoImpl : public virtual ItemImpl, public virtual TextPango {
   String                m_text;
   String                m_font_desc;
   AlignType             m_align;
@@ -340,7 +340,7 @@ class PangoLabelImpl : public virtual ItemImpl, public virtual PangoLabel {
     playout = NULL;
   }
 public:
-  PangoLabelImpl() :
+  TextPangoImpl() :
     m_align (ALIGN_LEFT), m_wrap (WRAP_WORD), m_ellipsize (ELLIPSIZE_END),
     m_indent (0), m_spacing (0)
   {}
@@ -512,20 +512,20 @@ public:
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (PangoLabel, align,     _("Align Type"), _("The kind of text alignment"), ALIGN_LEFT, "rw"),
-      MakeProperty (PangoLabel, wrap,      _("Wrap Type"),      _("The type of wrapping applied when breaking lines"), WRAP_WORD, "rw"),
-      MakeProperty (PangoLabel, ellipsize, _("Ellipsize Type"), _("Whether and where to reduce the text size"), ELLIPSIZE_END, "rw"),
-      MakeProperty (PangoLabel, spacing,   _("Spacing"),        _("The amount of space between lines"), 0, 0, 65535, 0, "rw"),
-      MakeProperty (PangoLabel, indent,    _("Indent"),         _("The paragraph indentation"), 0, -32767, 32767, 0, "rw"),
-      MakeProperty (PangoLabel, text,      _("Text"),           _("The text to display"), "", "rw"),
-      MakeProperty (PangoLabel, font_name, _("Font Name"),      _("The type of font to use"), "", "rw"),
+      MakeProperty (TextPango, align,     _("Align Type"), _("The kind of text alignment"), ALIGN_LEFT, "rw"),
+      MakeProperty (TextPango, wrap,      _("Wrap Type"),      _("The type of wrapping applied when breaking lines"), WRAP_WORD, "rw"),
+      MakeProperty (TextPango, ellipsize, _("Ellipsize Type"), _("Whether and where to reduce the text size"), ELLIPSIZE_END, "rw"),
+      MakeProperty (TextPango, spacing,   _("Spacing"),        _("The amount of space between lines"), 0, 0, 65535, 0, "rw"),
+      MakeProperty (TextPango, indent,    _("Indent"),         _("The paragraph indentation"), 0, -32767, 32767, 0, "rw"),
+      MakeProperty (TextPango, text,      _("Text"),           _("The text to display"), "", "rw"),
+      MakeProperty (TextPango, font_name, _("Font Name"),      _("The type of font to use"), "", "rw"),
     };
     static const PropertyList property_list (properties, Item::list_properties());
     return property_list;
   }
 };
 
-static const ItemFactory<PangoLabelImpl> pango_label_factory ("Rapicorn::PangoLabel");
+static const ItemFactory<TextPangoImpl> pango_text_factory ("Rapicorn::TextPango");
 
 } // Rapicorn
 #endif  /* RAPICORN_WITH_PANGO */

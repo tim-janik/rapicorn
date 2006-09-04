@@ -1,3 +1,7 @@
+Tue Sep  5 00:07:29 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/text-pango.hh, rapicorn/text-pango.cc: label -> text rename.
+
 Tue Sep  5 00:03:38 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/text-pango.hh, rapicorn/text-pango.cc: CVS copied from 
