@@ -89,8 +89,7 @@
 	  <Rapicorn-slider-skid vspread="1" hexpand="1" vertical-skid="0">
 	    <ambience
 	      normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
-	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"
-	      >
+	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none">
 	      <frame normal-frame="out" vexpand="1">
 		<dot-grid n-hdots="6" n-vdots="2" left-padding-dots="2" right-padding-dots="2" top-padding-dots="0" bottom-padding-dots="0" />
 	      </frame>
@@ -114,8 +113,7 @@
 	  <Rapicorn-slider-skid hspread="1" vexpand="1" vertical-skid="1">
 	    <ambience
 	      normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
-	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"
-	      >
+	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none">
 	      <frame normal-frame="out" hexpand="1">
 		<dot-grid n-hdots="2" n-vdots="6" left-padding-dots="0" right-padding-dots="0" top-padding-dots="2" bottom-padding-dots="2" />
 	      </frame>

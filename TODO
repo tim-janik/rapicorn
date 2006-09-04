@@ -6,6 +6,7 @@ FIXME:
   or rename child properties: left-margin, right-spacing, etc...
 MISC:
 - color names: http://www.w3.org/TR/xhtml-modularization/abstraction.html
+- put lower-right light into scroll-trough
 - cache mouse coords per-display only
 - stefan: s/Factory.parse_resource/Factory::parse_resource/
 - stefan: s/create_gadget/create_item/
