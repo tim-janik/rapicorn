@@ -1,3 +1,15 @@
+Tue Sep  5 00:11:40 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/text-pango.cc: removed useless Affines. added cursor 
+	rendering prototype code.
+
+	* rapicorn/rapicorn.xml: define label in terms of Rapicorn::TextPango.
+
+	* rapicorn/pangolabel.hh, rapicorn/pangolabel.cc, rapicorn/Makefile.am:
+	removed PangoLabel.
+
+	* examples/tour.xml: removed useless frames. added insensitive label.
+
 Tue Sep  5 00:07:29 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/text-pango.hh, rapicorn/text-pango.cc: label -> text rename.

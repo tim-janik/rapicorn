@@ -390,7 +390,6 @@ protected:
 public:
   void
   render_dot (Plane        &plane,
-              Affine        affine,
               int           x,
               int           y,
               int           width,
@@ -398,7 +397,6 @@ public:
               int           dot_size,
               Color         col)
   {
-    /* render bitmap to plane */
     Color fg (col.premultiplied());
     int offset = height - dot_size;
     y += offset / 2;
@@ -417,9 +415,38 @@ public:
       }
   }
   void
+  render_cursor (Plane        &plane,
+                 PangoLayout  *playout,
+                 int           x,
+                 int           y,
+                 int           width,
+                 int           height,
+                 Color         col)
+  {
+    const char *ptext = pango_layout_get_text (playout);
+    uint cpos = strlen (ptext) / 2;
+    PangoRectangle crect1, crect2, irect, lrect;
+    pango_layout_get_extents (playout, &irect, &lrect);
+    pango_layout_get_cursor_pos (playout, cpos, &crect1, &crect2);
+    x += PANGO_PIXELS (irect.x + crect1.x);
+    width = MIN (width, MAX (1, PANGO_PIXELS (crect1.width))); // FIXME: cursor width
+    double ydelta = PANGO_PIXELS (lrect.height - irect.y - crect1.y - crect1.height);
+    y += ydelta;
+    height = MIN (height - ydelta, PANGO_PIXELS (crect1.height));
+    Color fg (col.premultiplied());
+    int xmin = MAX (x, plane.xstart()), xbound = MIN (x + width, plane.xbound());
+    int ymin = MAX (y, plane.ystart()), ybound = MIN (y + height, plane.ybound());
+    int xspan = xbound - xmin;
+    for (int iy = ymin; iy < ybound; iy++)
+      {
+        uint32 *pp = plane.peek (xmin - plane.xstart(), iy - plane.ystart()), *p = pp;
+        while (p < pp + xspan)
+          *p++ = fg;
+      }
+  }
+  void
   render (PangoLayout  *playout,
           Plane        &plane,
-          Affine        affine,
           int           x,
           int           y,
           int           width,
@@ -429,9 +456,9 @@ public:
   {
     if (dot_size)
       {
-        render_dot (plane, affine, x, y, width / 3, height, dot_size, col);
-        render_dot (plane, affine, x + width / 3, y, width / 3, height, dot_size, col);
-        render_dot (plane, affine, x + 2 * width / 3, y, width / 3, height, dot_size, col);
+        render_dot (plane, x, y, width / 3, height, dot_size, col);
+        render_dot (plane, x + width / 3, y, width / 3, height, dot_size, col);
+        render_dot (plane, x + 2 * width / 3, y, width / 3, height, dot_size, col);
         return;
       }
     /* render text to alpha bitmap */
@@ -462,6 +489,7 @@ public:
             *p++ = Color (r, g, b, alpha);
           }
       }
+    render_cursor (plane, playout, x, y, width, height, col);
     /* cleanup */
     delete[] bitmap.buffer;
   }
@@ -493,18 +521,18 @@ public:
     if (insensitive())
       {
         x += 1;
-        render (playout, plane, Affine(), x, y, width, height, dot_size, white());
+        render (playout, plane, x, y, width, height, dot_size, white());
         x -= 1;
         y += 1;
         Plane emboss (Plane::init_from_size (plane));
-        render (playout, emboss, Affine(), x, y, width, height, dot_size, dark_shadow());
+        render (playout, emboss, x, y, width, height, dot_size, dark_shadow());
         plane.combine (emboss, COMBINE_OVER);
       }
     else
       {
         x += 1;
         y += 1;
-        render (playout, plane, Affine(), x, y, width, height, dot_size, foreground());
+        render (playout, plane, x, y, width, height, dot_size, foreground());
       }
     release_layout (playout);
   }

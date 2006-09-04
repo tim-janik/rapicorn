@@ -45,7 +45,7 @@
   <def:arrangement inherit="Rapicorn::Arrangement" />
 
   <!-- label -->
-  <def:label inherit="Rapicorn::PangoLabel" />
+  <def:label inherit="Rapicorn::TextPango" />
 
   <!-- image -->
   <def:image inherit="Rapicorn::Image" />
