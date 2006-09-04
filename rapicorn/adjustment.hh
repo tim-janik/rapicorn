@@ -65,9 +65,9 @@ public:
   /* factory */
   static Adjustment*    create          (double  value = 0,
                                          double  lower = 0,
-                                         double  upper = 1,
-                                         double  step_increment = 0,
-                                         double  page_increment = 0,
+                                         double  upper = 100,
+                                         double  step_increment = 1,
+                                         double  page_increment = 10,
                                          double  page_size = 0);
 };
 

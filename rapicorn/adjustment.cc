@@ -114,8 +114,8 @@ class AdjustmentSimpleImpl : public virtual Adjustment, public virtual DataListC
   uint   m_freeze_count;
 public:
   AdjustmentSimpleImpl() :
-    m_value (0), m_lower (0), m_upper (1),
-    m_step_increment (1.0 / 100), m_page_increment (1.0 / 10), m_page (0),
+    m_value (0), m_lower (0), m_upper (100),
+    m_step_increment (1), m_page_increment (10), m_page (0),
     m_freeze_count (0)
   {}
   /* value */
@@ -163,8 +163,14 @@ public:
     if (m_lower > m_upper)
       m_lower = m_upper = (m_lower + m_upper) / 2;
     m_page = CLAMP (m_page, 0, m_upper - m_lower);
-    m_page_increment = CLAMP (m_page_increment, 0, m_page);
-    m_step_increment = CLAMP (m_step_increment, 0, m_page_increment);
+    m_page_increment = MAX (m_page_increment, 0);
+    if (m_page > 0)
+      m_page_increment = MIN (m_page_increment, m_page);
+    m_step_increment = MAX (0, m_step_increment);
+    if (m_page_increment > 0)
+      m_step_increment = MIN (m_step_increment, m_page_increment);
+    else if (m_page > 0)
+      m_step_increment = MIN (m_step_increment, m_page);
     m_value = CLAMP (m_value, m_lower, m_upper - m_page);
   }
   virtual void

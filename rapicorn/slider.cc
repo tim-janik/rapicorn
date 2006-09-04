@@ -163,7 +163,7 @@ public:
     m_adjustment_source (ADJUSTMENT_SOURCE_SELF),
     m_flip (false)
   {
-    Adjustment *adj = Adjustment::create (0, 0, 1, 0.01, 0.2);
+    Adjustment *adj = Adjustment::create();
     adjustment (*adj);
     adj->unref();
   }
