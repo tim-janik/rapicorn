@@ -25,9 +25,9 @@
   <!-- root -->
   <def:root inherit="Rapicorn::Root"/>
 
-  <!-- frame -->
-  <def:frame inherit="Rapicorn::Frame" >
-  </def:frame>
+  <!-- frames -->
+  <def:frame inherit="Rapicorn::Frame"/>
+  <def:focus-frame inherit="Rapicorn::FocusFrame"/>
 
   <!-- alignment -->
   <def:alignment inherit="Rapicorn::Alignment" />
@@ -57,9 +57,9 @@
 	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
 	normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"
 	>
-	<frame frame-type="none" >
+	<focus-frame frame-type="none" >
 	  <alignment id="child-area" vscale="1" hscale="1" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
-	</frame>
+	</focus-frame>
       </ambience>
     </frame>
   </def:button>

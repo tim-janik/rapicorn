@@ -137,6 +137,16 @@ typedef enum {
 typedef EnumType<EllipsizeType> EnumTypeEllipsizeType;
 
 typedef enum {
+  FOCUS_NEXT    = 1,
+  FOCUS_PREV,
+  FOCUS_RIGHT,
+  FOCUS_UP,
+  FOCUS_LEFT,
+  FOCUS_DOWN
+} FocusDirType;
+typedef EnumType<FocusDirType> EnumTypeFocusDirType;
+
+typedef enum {
   FRAME_NONE,
   FRAME_BACKGROUND,
   FRAME_IN,

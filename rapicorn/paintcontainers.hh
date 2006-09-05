@@ -70,6 +70,12 @@ public:
   virtual FrameType     impressed_frame () const = 0;
 };
 
+class FocusFrame : public virtual Frame {
+public:
+  virtual void          focus_frame     (FrameType ft) = 0;
+  virtual FrameType     focus_frame     () const = 0;
+};
+
 } // Rapicorn
 
 #endif  /* __RAPICORN_PAINT_CONTAINERS_HH__ */

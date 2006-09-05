@@ -284,7 +284,7 @@ public:
   virtual FrameType     normal_frame    () const        { return m_normal_frame; }
   virtual void          impressed_frame (FrameType ft)  { m_impressed_frame = ft; invalidate(); }
   virtual FrameType     impressed_frame () const        { return m_impressed_frame; }
-  FrameType             current_frame   () const        { return branch_impressed() ? impressed_frame() : normal_frame(); }
+  virtual FrameType     current_frame   () const        { return branch_impressed() ? impressed_frame() : normal_frame(); }
 protected:
   virtual void
   size_request (Requisition &requisition)
@@ -416,5 +416,27 @@ public:
   }
 };
 static const ItemFactory<FrameImpl> frame_factory ("Rapicorn::Frame");
+
+class FocusFrameImpl : public virtual FrameImpl {
+  FrameType m_focus_frame;
+public:
+  explicit FocusFrameImpl() :
+    m_focus_frame (FRAME_FOCUS)
+  {}
+  virtual void          focus_frame     (FrameType ft)  { m_focus_frame = ft; invalidate(); }
+  virtual FrameType     focus_frame     () const        { return m_focus_frame; }
+  virtual FrameType     current_frame   () const        { return has_focus() ? focus_frame() : (branch_impressed() ? impressed_frame() : normal_frame()); }
+public:
+  virtual const PropertyList&
+  list_properties()
+  {
+    static Property *properties[] = {
+      MakeProperty (FocusFrame, focus_frame, _("Focus Frame"), _("The kind of frame to draw in focus state"), FRAME_FOCUS, "rw"),
+    };
+    static const PropertyList property_list (properties, FrameImpl::list_properties());
+    return property_list;
+  }
+};
+static const ItemFactory<FocusFrameImpl> focus_frame_factory ("Rapicorn::FocusFrame");
 
 } // Rapicorn

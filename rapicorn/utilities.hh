@@ -57,12 +57,15 @@ inline void   memset4 (uint32 *mem, uint32 filler, uint length) { birnet_memset4
 
 /* --- Convertible --- */
 class Convertible : public virtual ReferenceCountImpl {
-public: /* typedefs */
-  struct InterfaceMatch {
-    /*Con*/                     InterfaceMatch  () : match_found (false) {}
-    bool                        done            () { return match_found; }
+public:
+  /* typedefs */
+  class InterfaceMatch {
+  protected:
+    bool                        m_match_found;
+  public:
+    explicit                    InterfaceMatch  () : m_match_found (false) {}
+    bool                        done            () { return m_match_found; }
     virtual  bool               match           (Convertible *object) = 0;
-  protected: bool               match_found;
   };
   typedef Signal<Convertible, Convertible* (const InterfaceMatch&, const String&), CollectorWhile0<Convertible*> > SignalFindInterface;
 private:
@@ -70,30 +73,33 @@ private:
   template<typename Type>
   struct InterfaceCast : InterfaceMatch {
     typedef Type  Interface;
-    explicit      InterfaceCast () : instance (NULL) {}
+    explicit      InterfaceCast () : m_instance (NULL) {}
     virtual bool  match         (Convertible *obj)
     {
-      if (!instance)
-        instance = dynamic_cast<Interface*> (obj);
-      return match_found = instance != NULL;
+      if (!m_instance)
+        {
+          m_instance = dynamic_cast<Interface*> (obj);
+          m_match_found = m_instance != NULL;
+        }
+      return m_match_found;
     }
   protected:
-    Interface *instance;
+    Interface *m_instance;
   };
   /* implement InterfaceType template */
   template<typename Type> struct InterfaceType : InterfaceCast<Type> {
     typedef Type& Result;
     Type&         result  (bool may_throw)
     {
-      if (!this->instance && may_throw)
+      if (!this->m_instance && may_throw)
         throw NullInterface();
-      return *this->instance;
+      return *this->m_instance;
     }
   };
   template<typename Type> struct InterfaceType<Type&> : InterfaceType<Type> {};
   template<typename Type> struct InterfaceType<Type*> : InterfaceCast<Type> {
     typedef Type* Result;
-    Type*         result  (bool may_throw) { return InterfaceCast<Type>::instance; }
+    Type*         result  (bool may_throw) { return InterfaceCast<Type>::m_instance; }
   };
 public: /* user API */
   explicit                      Convertible     ();

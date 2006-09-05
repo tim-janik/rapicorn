@@ -1,3 +1,13 @@
+Tue Sep  5 01:59:55 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/enumdefs.hh: added FocusDirType.
+
+	* rapicorn/paintcontainers.hh, rapicorn/paintcontainers.cc:
+	added FocusFrame with implementation, to change frames depending
+	on focus state.
+
+	* rapicorn/utilities.hh: misc cleanups.
+
 Tue Sep  5 00:11:40 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/text-pango.cc: removed useless Affines. added cursor 
