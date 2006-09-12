@@ -20,6 +20,7 @@
 #define __RAPICORN_BUTTONS_HH__
 
 #include <rapicorn/container.hh>
+#include <rapicorn/paintcontainers.hh>
 
 namespace Rapicorn {
 
@@ -29,15 +30,15 @@ struct Activatable : virtual Convertible { // FIXME: remove this? /* ActivateMod
   virtual void                  activate       ();
 };
 
-class ButtonArea : public virtual Container {
+class ButtonArea : public virtual Container, public virtual FocusFrame::Client {
   typedef Signal<ButtonArea, bool (), CollectorUntil0<bool> > SignalCheckActivate;
   typedef Signal<ButtonArea, void ()>                         SignalActivate;
 protected:
   explicit              ButtonArea();
+  virtual bool          move_focus        (FocusDirType    fdir) { return grab_focus (fdir); }
 public:
   SignalCheckActivate   sig_check_activate;
   SignalActivate        sig_activate;
-  virtual void          set_model       (Activatable &activatable) = 0;
   virtual String        on_click        () const = 0;
   virtual void          on_click        (const String &command) = 0;
   virtual String        on_click2       () const = 0;

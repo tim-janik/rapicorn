@@ -133,7 +133,8 @@ struct ViewportGtk : public virtual Viewport {
   virtual void          enqueue_mouse_moves     (void);
   virtual uint          last_draw_stamp         ();
   virtual State         get_state               ();
-  virtual void          set_config              (const Config   &config);
+  virtual void          set_config              (const Config  &config,
+                                                 bool           force_resize_draw);
   void                  enqueue_locked          (Event         *event);
   bool                  is_splash_screen        () { return m_window_type & WINDOW_TYPE_SPLASH; }
 };
@@ -184,7 +185,8 @@ ViewportGtk::ViewportGtk (const String  &backend_name,
     }
   BIRNET_ASSERT (rapicorn_viewport__cxxinit_viewport == NULL);
   rapicorn_viewport__cxxinit_viewport = this;
-  m_viewport = RAPICORN_VIEWPORT (g_object_ref (g_object_new (RAPICORN_TYPE_VIEWPORT, "parent", window, NULL)));
+  m_viewport = RAPICORN_VIEWPORT (g_object_ref (g_object_new (RAPICORN_TYPE_VIEWPORT, "can-focus", TRUE, "parent", window, NULL)));
+  gtk_widget_grab_focus (GTK_WIDGET (m_viewport));
   rapicorn_viewport__cxxinit_viewport = NULL;
   BIRNET_ASSERT (m_viewport->viewport == this);
   g_object_set_data (G_OBJECT (m_viewport), "RapicornViewport-my-GtkWindow", window); // flag to indicate the window is owned by RapicornViewport
@@ -671,14 +673,22 @@ adjust_gtk_window (GtkWindow            *window,
 }
 
 void
-ViewportGtk::set_config (const Config &config)
+ViewportGtk::set_config (const Config &config,
+                         bool          force_resize_draw)
 {
   AutoLocker locker (GTK_GDK_THREAD_SYNC);
   GtkWindow *window = rapicorn_viewport_get_my_window (m_viewport);
   m_root_x = config.root_x;
   m_root_y = config.root_y;
-  m_request_width = config.request_width;
-  m_request_height = config.request_height;
+  if (m_request_width != config.request_width ||
+      m_request_height != config.request_height ||
+      force_resize_draw)
+    {
+      m_request_width = config.request_width;
+      m_request_height = config.request_height;
+      /* guarantee a WIN_DRAW event upon size changes */
+      gtk_widget_queue_resize (m_widget);
+    }
   m_average_background = config.average_background;
   if (window)
     {

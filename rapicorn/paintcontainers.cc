@@ -417,16 +417,38 @@ public:
 };
 static const ItemFactory<FrameImpl> frame_factory ("Rapicorn::Frame");
 
-class FocusFrameImpl : public virtual FrameImpl {
+class FocusFrameImpl : public virtual FocusFrame, public virtual FrameImpl {
   FrameType m_focus_frame;
-public:
-  explicit FocusFrameImpl() :
-    m_focus_frame (FRAME_FOCUS)
-  {}
+  Client   *m_client;
+  virtual void
+  hierarchy_changed (Item *old_toplevel)
+  {
+    if (m_client)
+      m_client->unregister_focus_frame (*this);
+    m_client = NULL;
+    this->FrameImpl::hierarchy_changed (old_toplevel);
+    if (anchored())
+      {
+        Client *client = parent_interface<Client*>();
+        if (client->register_focus_frame (*this))
+          m_client = client;
+      }
+  }
+protected:
   virtual void          focus_frame     (FrameType ft)  { m_focus_frame = ft; invalidate(); }
   virtual FrameType     focus_frame     () const        { return m_focus_frame; }
-  virtual FrameType     current_frame   () const        { return has_focus() ? focus_frame() : (branch_impressed() ? impressed_frame() : normal_frame()); }
+  virtual FrameType
+  current_frame () const
+  {
+    if (has_focus() || (m_client && m_client->has_focus()))
+      return focus_frame();
+    return branch_impressed() ? impressed_frame() : normal_frame();
+  }
 public:
+  explicit FocusFrameImpl() :
+    m_focus_frame (FRAME_FOCUS),
+    m_client (NULL)
+  {}
   virtual const PropertyList&
   list_properties()
   {

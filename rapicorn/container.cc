@@ -22,6 +22,243 @@ using namespace std;
 
 namespace Rapicorn {
 
+/* --- CrossLinks --- */
+struct CrossLink {
+  Item                             *owner, *link;
+  Signals::Trampoline1<void,Item&> *uncross;
+  CrossLink                        *next;
+  explicit      CrossLink (Item                             *o,
+                           Item                             *l,
+                           Signals::Trampoline1<void,Item&> &it) :
+    owner (o), link (l),
+    uncross (ref_sink (&it)), next (NULL)
+  {}
+  /*Des*/       ~CrossLink()
+  {
+    unref (uncross);
+  }
+  BIRNET_PRIVATE_CLASS_COPY (CrossLink);
+};
+struct CrossLinks {
+  Container *container;
+  CrossLink *links;
+};
+static inline void      container_uncross_link_R        (Container *container,
+                                                         CrossLink **clinkp,
+                                                         bool        notify_callback = true);
+struct CrossLinksKey : public DataKey<CrossLinks*> {
+  virtual void
+  destroy (CrossLinks *clinks)
+  {
+    while (clinks->links)
+      container_uncross_link_R (clinks->container, &clinks->links);
+    delete (clinks);
+  }
+};
+static CrossLinksKey cross_links_key;
+
+struct UncrossNode {
+  UncrossNode *next;
+  Container   *mutable_container;
+  CrossLink   *clink;
+  explicit      UncrossNode (Container *xcontainer,
+                             CrossLink *xclink) :
+    next (NULL), mutable_container (xcontainer), clink (xclink)
+  {}
+  BIRNET_PRIVATE_CLASS_COPY (UncrossNode);
+};
+static UncrossNode *uncross_callback_stack = NULL;
+static Mutex        uncross_callback_stack_mutex;
+
+void
+Container::item_cross_link (Item           &owner,
+                            Item           &link,
+                            const ItemSlot &uncross)
+{
+#ifdef PARANOID
+  assert (&owner != &link);
+  assert (owner.common_ancestor (link) == this);
+#endif
+  CrossLinks *clinks = get_data (&cross_links_key);
+  if (!clinks)
+    {
+      clinks =  new CrossLinks();
+      clinks->container = this;
+      clinks->links = NULL;
+      set_data (&cross_links_key, clinks);
+    }
+  CrossLink *clink = new CrossLink (&owner, &link, *uncross.get_trampoline());
+  clink->next = clinks->links;
+  clinks->links = clink;
+}
+
+void
+Container::item_cross_unlink (Item           &owner,
+                              Item           &link,
+                              const ItemSlot &uncross)
+{
+  bool found_one = false;
+  ref (this);
+  ref (owner);
+  ref (link);
+  /* _first_ check whether a currently uncrossing link (recursing from
+   * container_uncross_link_R()) needs to be unlinked.
+   */
+  uncross_callback_stack_mutex.lock();
+  for (UncrossNode *unode = uncross_callback_stack; unode; unode = unode->next)
+    if (unode->mutable_container == this &&
+        unode->clink->owner == &owner &&
+        unode->clink->link == &link &&
+        *unode->clink->uncross == *uncross.get_trampoline())
+      {
+        unode->mutable_container = NULL; /* prevent more cross_unlink() calls */
+        found_one = true;
+        break;
+      }
+  uncross_callback_stack_mutex.unlock();
+  if (!found_one)
+    {
+      CrossLinks *clinks = get_data (&cross_links_key);
+      for (CrossLink *last = NULL, *clink = clinks ? clinks->links : NULL; clink; last = clink, clink = last->next)
+        if (clink->owner == &owner &&
+            clink->link == &link &&
+            *clink->uncross == *uncross.get_trampoline())
+          {
+            container_uncross_link_R (clinks->container, last ? &last->next : &clinks->links, false);
+            found_one = true;
+            break;
+          }
+    }
+  if (!found_one)
+    throw Exception ("no cross link from \"" + owner.name() + "\" to \"" + link.name() + "\" on \"" + name() + "\" to remove");
+  unref (link);
+  unref (owner);
+  unref (this);
+}
+
+void
+Container::item_uncross_links (Item &owner,
+                               Item &link)
+{
+  ref (this);
+  ref (owner);
+  ref (link);
+ restart_search:
+  CrossLinks *clinks = get_data (&cross_links_key);
+  for (CrossLink *last = NULL, *clink = clinks ? clinks->links : NULL; clink; last = clink, clink = last->next)
+    if (clink->owner == &owner &&
+        clink->link == &link)
+      {
+        container_uncross_link_R (clinks->container, last ? &last->next : &clinks->links);
+        clinks = get_data (&cross_links_key);
+        goto restart_search;
+      }
+  unref (link);
+  unref (owner);
+  unref (this);
+}
+
+static inline bool
+item_has_ancestor (const Item *item,
+                   const Item *ancestor)
+{
+  /* this duplicates item->has_ancestor() to optimize speed and
+   * to cover the case where item == ancestor.
+   */
+  do
+    if (item == ancestor)
+      return true;
+    else
+      item = item->parent();
+  while (item);
+  return false;
+}
+
+void
+Container::uncross_descendant (Item &descendant)
+{
+#ifdef PARANOID
+  assert (descendant.has_ancestor (*this));
+#endif
+  Item *item = &descendant;
+  ref (this);
+  ref (item);
+  Container *cc = dynamic_cast<Container*> (item);
+ restart_search:
+  CrossLinks *clinks = get_data (&cross_links_key);
+  if (!cc || !cc->has_children()) /* suppress tree walks where possible */
+    for (CrossLink *last = NULL, *clink = clinks ? clinks->links : NULL; clink; last = clink, clink = last->next)
+      {
+        if (clink->owner == item || clink->link == item)
+          {
+            container_uncross_link_R (clinks->container, last ? &last->next : &clinks->links);
+            goto restart_search;
+          }
+      }
+  else /* need to check whether item is ancestor of any of our cross-link items */
+    {
+      /* we do some minor hackery here, for optimization purposes. since item
+       * is a descendant of this container, we don't need to walk ->owner's or
+       * ->link's ancestor lists any further than up to reaching this container.
+       * to suppress extra checks in item_has_ancestor() in this regard, we
+       * simply set parent() to NULL temporarily and with that cause
+       * item_has_ancestor() to return earlier.
+       */
+      Item *saved_parent = *_parent_loc();
+      *_parent_loc() = NULL;
+      for (CrossLink *last = NULL, *clink = clinks ? clinks->links : NULL; clink; last = clink, clink = last->next)
+        if (item_has_ancestor (clink->owner, item) ||
+            item_has_ancestor (clink->link, item))
+          {
+            *_parent_loc() = saved_parent;
+            container_uncross_link_R (clinks->container, last ? &last->next : &clinks->links);
+            goto restart_search;
+          }
+      *_parent_loc() = saved_parent;
+    }
+  unref (item);
+  unref (this);
+}
+
+static inline void
+container_uncross_link_R (Container *container,
+                          CrossLink **clinkp,
+                          bool        notify_callback)
+{
+  CrossLink *clink = *clinkp;
+  /* remove cross link */
+  *clinkp = clink->next;
+  /* notify */
+  if (notify_callback)
+    {
+      /* record execution */
+      UncrossNode unode (container, clink);
+      uncross_callback_stack_mutex.lock();
+      unode.next = uncross_callback_stack;
+      uncross_callback_stack = &unode;
+      uncross_callback_stack_mutex.unlock();
+      /* exec callback, note that this may recurse */
+      (*clink->uncross) (*clink->link);
+      /* unrecord execution */
+      uncross_callback_stack_mutex.lock();
+      UncrossNode *walk, *last = NULL;
+      for (walk = uncross_callback_stack; walk; last = walk, walk = last->next)
+        if (walk == &unode)
+          {
+            if (!last)
+              uncross_callback_stack = unode.next;
+            else
+              last->next = unode.next;
+            break;
+          }
+      uncross_callback_stack_mutex.unlock();
+      assert (walk != NULL); /* paranoid */
+    }
+  /* delete cross link */
+  delete clink;
+}
+
+/* --- Container --- */
 const PropertyList&
 Container::list_properties()
 {
@@ -122,18 +359,76 @@ Container::child_affine (Item &item)
 }
 
 void
+Container::hierarchy_changed (Item *old_toplevel)
+{
+  Item::hierarchy_changed (old_toplevel);
+  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+    cw->sig_hierarchy_changed.emit (old_toplevel);
+}
+
+void
 Container::dispose_item (Item &item)
 {
   if (&item == get_data (&child_container_key))
     child_container (NULL);
 }
 
+static DataKey<Item*> focus_child_key;
+
 void
-Container::hierarchy_changed (Item *old_toplevel)
+Container::unparent_child (Item &item)
 {
-  Item::hierarchy_changed (old_toplevel);
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    cw->sig_hierarchy_changed.emit (old_toplevel);
+  if (&item == get_data (&focus_child_key))
+    delete_data (&focus_child_key);
+  Container *ancestor = this;
+  do
+    {
+      ancestor->uncross_descendant (item);
+      ancestor = ancestor->parent_container();
+    }
+  while (ancestor);
+}
+
+void
+Container::set_focus_child (Item *item)
+{
+  if (!item)
+    delete_data (&focus_child_key);
+  else
+    {
+      assert (item->parent() == this);
+      set_data (&focus_child_key, item);
+    }
+}
+
+Item*
+Container::get_focus_child ()
+{
+  return get_data (&focus_child_key);
+}
+
+bool
+Container::move_focus (FocusDirType fdir)
+{
+  if (!visible() || !sensitive())
+    return false;
+  Item *last = get_data (&focus_child_key);
+  if (last && last->move_focus (fdir))
+    return true;
+  ChildWalker cw = local_children();
+  if (last)
+    while (cw.has_next())
+      if (last == &*cw++)
+        break;
+  while (cw.has_next())
+    {
+      Item &child = *cw;
+      if (child.move_focus (fdir))
+        return true;
+      cw++;
+    }
+  delete_data (&focus_child_key);
+  return false;
 }
 
 void

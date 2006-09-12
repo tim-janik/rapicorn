@@ -28,8 +28,9 @@ namespace Rapicorn {
 /* --- Root --- */
 class Root : public virtual Container, public virtual MainLoop::Source {
   friend class  Item;
+  void          uncross_focus           (Item        &fitem);
 protected:
-  explicit      Root                    ();
+  void          set_focus               (Item        *item);
   virtual void  copy_area               (const Rect  &src,
                                          const Point &dest) = 0;
   virtual void  cancel_item_events      (Item        *item) = 0;
@@ -38,11 +39,13 @@ protected:
   /* loop source (FIXME) */
   virtual bool  prepare                 (uint64 current_time_usecs,
                                          int   *timeout_msecs_p) = 0;
+  explicit      Root                    ();
 public://FIXME: protected:
   virtual bool  check                   (uint64 current_time_usecs) = 0;
   virtual bool  dispatch                () = 0;
   virtual void  draw_now                () = 0;
 public:
+  Item*         get_focus               () const;
   virtual bool  tunable_requisitions    () = 0;
   virtual void  render                  (Plane &plane) = 0;
   virtual void  add_grab                (Item  &child,

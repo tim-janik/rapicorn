@@ -35,6 +35,7 @@ class RootImpl : public virtual Root,
   Mutex                 m_async_mutex;
   std::list<Event*>     m_async_event_queue;
   MainLoop             *m_async_loop;
+  uint                  m_asnyc_resize_draw_id;
   MainLoop::Source     *m_source;
   std::vector<Rect>     m_expose_queue;
   uint                  m_expose_queue_stamp;
@@ -56,7 +57,9 @@ private:
   using                 Item::size_request;
   virtual void          size_allocate                           (Allocation              area);
   virtual bool          tunable_requisitions                    ();
-  void                  resize_all                              (Allocation             *new_area = NULL);
+  void                  resize_all                              (Allocation             *new_area);
+  virtual void          do_invalidate                           ();
+  void                  async_resize_draw                       ();
   /* rendering */
   virtual void          render                                  (Plane                  &plane);
   using                 Item::render;

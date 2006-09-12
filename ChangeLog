@@ -1,3 +1,40 @@
+Tue Sep 12 01:48:51 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/container.hh, rapicorn/container.cc: implemented item cross 
+	link handling. uncross links between descendants upon unparentation.
+	implemented keeping of focus child history. implemented recursive
+	hirarchical focus movement. the current implementation just provides
+	"next" movement according to the containers child order, but it gets
+	the basics right.
+
+	* rapicorn/item.hh, rapicorn/item.cc: introduced a FOCUS_CHAIN flag
+	which is set on the current focus item and all its toplevels.
+	added move_focus() method. added viewable() test method to figure
+	whether an item is visible with its parents.
+	added common_ancestor() method and cross_link(), cross_unlink()
+	and uncross_links(). added toplevel_interface(), similar to
+	parent_interface(). allow containers to hook into unparenting.
+	introduced virtual can_focus() method for item type implementations
+	to decide on focus-ability.
+
+	* rapicorn/root.hh, rapicorn/rootimpl.hh, rapicorn/root.cc: added focus
+	item handling, move focus in response to key presses. added invalidation
+	handling by triggering an async resize handler. 
+
+	* rapicorn/viewport.hh, rapicorn/viewport-gtk.cc: added a flag to 
+	set_config() to force delivery of WIN_SIZE and WIN_DRAW events.
+	allow the rapicorn viewport widget to get focus and try to grab the
+	default gtk focus.
+
+	* rapicorn/paintcontainers.hh, rapicorn/paintcontainers.cc:
+	added FocusFrame::Client struct for containers to derive from,
+	to take notion of a child focus frame.
+
+	* rapicorn/buttons.cc: added support for focus frames to buttons, so
+	that a button containing a focus frame as descendant accepts focus.
+
+	* rapicorn/rapicorn.xml: minor button definition fixups.
+
 Tue Sep  5 01:59:55 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/enumdefs.hh: added FocusDirType.

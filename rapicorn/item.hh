@@ -60,6 +60,8 @@ public:
 };
 
 /* --- Item --- */
+class Item;
+typedef Signals::Slot1<void, Item&> ItemSlot;
 class Item : public virtual Convertible, public virtual DataListContainer, public virtual ReferenceCountImpl {
   uint32                      m_flags;          /* interface-inlined for fast read-out */
   Item                       *m_parent;         /* interface-inlined for fast read-out */
@@ -67,6 +69,8 @@ class Item : public virtual Convertible, public virtual DataListContainer, publi
   void                        propagate_flags ();
   void                        propagate_style ();
   friend                      class Container;
+  friend                      class Root;
+  Item**                      _parent_loc     () { return &m_parent; }
   BIRNET_PRIVATE_CLASS_COPY  (Item);
 protected:
   /* flag handling */
@@ -79,7 +83,7 @@ protected:
     PARENT_SENSITIVE          = 1 <<  4,
     PRELIGHT                  = 1 <<  5,
     IMPRESSED                 = 1 <<  6,
-    HAS_FOCUS                 = 1 <<  7,
+    FOCUS_CHAIN               = 1 <<  7,
     HAS_DEFAULT               = 1 <<  8,
     /* REQUEST_DEFAULT        = 1 <<  8, */
     INVALID_REQUISITION       = 1 << 10,
@@ -120,12 +124,14 @@ protected:
   virtual void                style             (Style  *st);
   virtual void                finalize          ();
   virtual void                hierarchy_changed (Item *old_toplevel);
+  virtual bool                move_focus        (FocusDirType fdir);
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
 public:
   explicit                    Item              ();
   bool                        anchored          () const { return test_flags (ANCHORED); }
   bool                        visible           () const { return test_flags (VISIBLE) && !test_flags (HIDDEN_CHILD); }
   void                        visible           (bool b) { set_flag (VISIBLE, b); }
+  bool                        viewable          () const { return visible () && (!m_parent || m_parent->viewable()); }
   bool                        sensitive         () const { return test_all_flags (SENSITIVE | PARENT_SENSITIVE); }
   virtual void                sensitive         (bool b);
   bool                        insensitive       () const { return !sensitive(); }
@@ -136,10 +142,11 @@ public:
   bool                        impressed         () const { return test_flags (IMPRESSED); }
   virtual void                impressed         (bool b);
   bool                        branch_impressed  () const;
-  bool                        has_focus         () const { return test_flags (HAS_FOCUS); }
-  bool                        grab_focus        () const;
   bool                        has_default       () const { return test_flags (HAS_DEFAULT); }
   bool                        grab_default      () const;
+  virtual bool                can_focus         () const;
+  bool                        has_focus         () const;
+  bool                        grab_focus        ();
   bool                        hexpand           () const { return test_flags (HEXPAND | HSPREAD | HSPREAD_CONTAINER); }
   void                        hexpand           (bool b) { set_flag (HEXPAND, b); }
   bool                        vexpand           () const { return test_flags (VEXPAND | VSPREAD | VSPREAD_CONTAINER); }
@@ -178,7 +185,15 @@ public:
   Item*                       parent            () const { return m_parent; }
   Container*                  parent_container  () const;
   bool                        has_ancestor      (const Item &ancestor) const;
-  Root*                       root              ();
+  Item*                       common_ancestor   (const Item &other) const;
+  Item*                       common_ancestor   (const Item *other) const { return common_ancestor (*other); }
+  Root*                       root              () const;
+  /* cross links */
+  void                        cross_link        (Item           &link,
+                                                 const ItemSlot &uncross);
+  void                        cross_unlink      (Item           &link,
+                                                 const ItemSlot &uncross);
+  void                        uncross_links     (Item           &link);
   /* invalidation / changes */
   void                        invalidate        ();
   void                        changed           ();
@@ -233,11 +248,23 @@ public:
   template<typename Type>
   typename
   InterfaceType<Type>::Result parent_interface  (const std::nothrow_t &nt) const { return parent_interface<Type> (String(), nt); }
+  template<typename Type>
+  typename
+  InterfaceType<Type>::Result toplevel_interface  (const String &ident = String(), const std::nothrow_t &nt = dothrow) const
+  {
+    InterfaceType<Type> interface_type;
+    match_toplevel_interface (interface_type, ident);
+    return interface_type.result (&nt == &dothrow);
+  }
+  template<typename Type>
+  typename
+  InterfaceType<Type>::Result toplevel_interface  (const std::nothrow_t &nt) const { return toplevel_interface<Type> (String(), nt); }
   template<class ItemType>
   Handle<ItemType>            handle            ();
   virtual OwnedMutex&         owned_mutex       ();
 private:
-  bool                  match_parent_interface  (InterfaceMatch &imatch, const String &ident) const;
+  bool                 match_parent_interface   (InterfaceMatch &imatch, const String &ident) const;
+  bool                 match_toplevel_interface (InterfaceMatch &imatch, const String &ident) const;
 };
 
 /* --- implementation --- */

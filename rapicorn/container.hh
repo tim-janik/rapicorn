@@ -26,13 +26,28 @@ namespace Rapicorn {
 /* --- Container --- */
 struct Container : public virtual Item {
   typedef std::map<String,String> PackPropertyList;
+  friend              class Item;
+  friend              class Root;
+  void                uncross_descendant(Item          &descendant);
+  void                item_cross_link   (Item           &owner,
+                                         Item           &link,
+                                         const ItemSlot &uncross);
+  void                item_cross_unlink (Item           &owner,
+                                         Item           &link,
+                                         const ItemSlot &uncross);
+  void                item_uncross_links(Item           &owner,
+                                         Item           &link);
 protected:
   virtual bool        match_interface   (InterfaceMatch &imatch,
                                          const String   &ident);
   virtual void        add_child         (Item           &item) = 0;
   virtual void        remove_child      (Item           &item) = 0;
+  virtual void        unparent_child    (Item           &item);
   virtual void        dispose_item      (Item           &item);
   virtual void        hierarchy_changed (Item           *old_toplevel);
+  virtual bool        move_focus        (FocusDirType    fdir);
+  void                set_focus_child   (Item           *item);
+  Item*               get_focus_child   ();
 public:
   typedef Walker<Item>  ChildWalker;
   void                  child_container (Container      *child_container);

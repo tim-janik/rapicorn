@@ -26,10 +26,57 @@ Root::Root()
   change_flags_silently (ANCHORED, true);       /* root is always anchored */
 }
 
+static DataKey<Item*> focus_item_key;
+
+void
+Root::uncross_focus (Item &fitem)
+{
+  Item *fchild = &fitem;
+  assert (fchild == get_data (&focus_item_key));
+  delete_data (&focus_item_key);
+  cross_unlink (*fchild, slot (*this, &Root::uncross_focus));
+  while (fchild)
+    {
+      fchild->unset_flag (FOCUS_CHAIN);
+      fchild = fchild->parent();
+    }
+}
+
+void
+Root::set_focus (Item *item)
+{
+  Item *old_focus = get_data (&focus_item_key);
+  if (item == old_focus)
+    return;
+  if (old_focus)
+    uncross_focus (*old_focus);
+  if (!item)
+    return;
+  /* set new focus */
+  assert (item->has_ancestor (*this));
+  Item &fchild = *item;
+  while (item)
+    {
+      item->set_flag (FOCUS_CHAIN);
+      Container *fc = item->parent_container();
+      if (fc)
+        fc->set_focus_child (item);
+      item = fc;
+    }
+  set_data (&focus_item_key, &fchild);
+  cross_link (fchild, slot (*this, &Root::uncross_focus));
+}
+
+Item*
+Root::get_focus () const
+{
+  return get_data (&focus_item_key);
+}
+
 RootImpl::RootImpl() :
   m_entered (false), m_viewport (NULL),
-  m_async_loop (NULL), m_source (NULL),
-  m_expose_queue_stamp (0),
+  m_async_loop (NULL), m_asnyc_resize_draw_id (0),
+  m_source (NULL), m_expose_queue_stamp (0),
   m_tunable_requisition_counter (0)
 {
   {
@@ -119,7 +166,8 @@ RootImpl::resize_all (Allocation *new_area)
       have_allocation = true;
       change_flags_silently (INVALID_ALLOCATION, true);
     }
-  else if (m_viewport)
+#if 0
+  if (!new_area && m_viewport)
     {
       Viewport::State state = m_viewport->get_state();
       if (state.width > 0 && state.height > 0)
@@ -129,21 +177,56 @@ RootImpl::resize_all (Allocation *new_area)
           have_allocation = true;
         }
     }
+#endif
   m_tunable_requisition_counter = 3;
   while (test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
-      Requisition req = size_request();
+      Requisition req = size_request(); /* unsets INVALID_REQUISITION */
       if (!have_allocation)
         {
           /* fake an allocation */
           area.width = req.width;
           area.height = req.height;
         }
-      set_allocation (area);
+      set_allocation (area); /* unsets INVALID_ALLOCATION, may re-::invalidate() */
       if (m_tunable_requisition_counter)
         m_tunable_requisition_counter--;
     }
   m_tunable_requisition_counter = 0;
+  if (!have_allocation)
+    {
+      Requisition req = size_request();
+      m_config.request_width = req.width;
+      m_config.request_height = req.height;
+      m_viewport->set_config (m_config, true);
+      /* we will get WIN_SIZE and WIN_DRAW now */
+    }
+}
+
+void
+RootImpl::async_resize_draw()
+{
+  if (m_asnyc_resize_draw_id)
+    {
+      AutoLocker aelocker (m_async_mutex);
+      if (m_async_loop)
+        m_async_loop->try_remove (m_asnyc_resize_draw_id);
+      m_asnyc_resize_draw_id = 0;
+    }
+  AutoLocker monitor (owned_mutex());
+  resize_all (NULL);
+}
+
+void
+RootImpl::do_invalidate ()
+{
+  Root::invalidate();
+  if (!m_asnyc_resize_draw_id && !m_tunable_requisition_counter)
+    {
+      AutoLocker aelocker (m_async_mutex);
+      if (m_async_loop)
+        m_asnyc_resize_draw_id = m_async_loop->exec_update (slot (*this, &RootImpl::async_resize_draw));
+    }
 }
 
 vector<Item*>
@@ -386,11 +469,27 @@ RootImpl::dispatch_key_event (const Event &event)
   bool handled = false;
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
   if (kevent)
+    dispatch_mouse_movement (*kevent);
+  if (kevent && kevent->type == KEY_PRESS)
     {
-      dispatch_mouse_movement (*kevent);
-      Item *grab_item = get_grab();
-      grab_item = grab_item ? grab_item : this;
-      handled = grab_item->process_event (*kevent);
+      switch (kevent->key)
+        {
+        case KEY_Right:
+        case KEY_Up:
+        case KEY_Left:
+        case KEY_Down:
+        case KEY_ISO_Left_Tab:
+        case KEY_Tab: case KEY_KP_Tab:
+          if (!move_focus (FOCUS_NEXT))
+            set_focus (NULL);
+          break;
+        }
+      if (0)
+        {
+          Item *grab_item = get_grab();
+          grab_item = grab_item ? grab_item : this;
+          handled = grab_item->process_event (*kevent);
+        }
     }
   return handled;
 }
@@ -728,11 +827,9 @@ RootImpl::enqueue_async (Event *event)
 void
 RootImpl::idle_show()
 {
-  resize_all();
-  Requisition req = size_request();
-  m_config.request_width = req.width;
-  m_config.request_height = req.height;
-  m_viewport->set_config (m_config);
+  /* request size, WIN_SIZE and WIN_DRAW */
+  resize_all (NULL);
+  /* size requested, show up */
   m_viewport->show();
 }
 

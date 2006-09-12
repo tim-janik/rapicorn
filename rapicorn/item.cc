@@ -74,8 +74,8 @@ Item::set_flag (uint32 flag,
                 bool   on)
 {
   assert ((flag & (flag - 1)) == 0); /* single bit check */
-  const uint propagate_flag_mask  = SENSITIVE | PARENT_SENSITIVE | PRELIGHT | IMPRESSED | HAS_FOCUS | HAS_DEFAULT;
-  const uint invalidate_flag_mask = HEXPAND | VEXPAND | HSPREAD | VSPREAD | HSPREAD_CONTAINER | VSPREAD_CONTAINER | VISIBLE;
+  const uint propagate_flag_mask  = SENSITIVE | PARENT_SENSITIVE | PRELIGHT | IMPRESSED | HAS_DEFAULT;
+  const uint invalidate_flag_mask = HEXPAND | VEXPAND | HSPREAD | VSPREAD | HSPREAD_CONTAINER | VSPREAD_CONTAINER | FOCUS_CHAIN | VISIBLE;
   bool fchanged = change_flags_silently (flag, on);
   if (fchanged)
     {
@@ -85,12 +85,6 @@ Item::set_flag (uint32 flag,
         invalidate();
       changed();
     }
-}
-
-bool
-Item::grab_focus () const
-{
-  return false;
 }
 
 bool
@@ -156,6 +150,77 @@ Item::state () const
 }
 
 bool
+Item::has_focus () const
+{
+  if (test_flags (FOCUS_CHAIN))
+    {
+      Root *ritem = root();
+      if (ritem && ritem->get_focus() == this)
+        return true;
+    }
+  return false;
+}
+
+bool
+Item::can_focus () const
+{
+  return false;
+}
+
+bool
+Item::grab_focus ()
+{
+  if (has_focus())
+    return true;
+  if (!can_focus() || !sensitive() || !viewable())
+    return false;
+  /* unset old focus */
+  Root *ritem = root();
+  if (ritem)
+    ritem->set_focus (NULL);
+  /* set new focus */
+  ritem = root();
+  if (ritem && ritem->get_focus() == NULL)
+    ritem->set_focus (this);
+  return ritem->get_focus() == this;
+}
+
+bool
+Item::move_focus (FocusDirType fdir)
+{
+  return false;
+}
+
+void
+Item::cross_link (Item           &link,
+                  const ItemSlot &uncross)
+{
+  assert (this != &link);
+  Container *common_container = dynamic_cast<Container*> (common_ancestor (link));
+  assert (common_container != NULL);
+  common_container->item_cross_link (*this, link, uncross);
+}
+
+void
+Item::cross_unlink (Item           &link,
+                    const ItemSlot &uncross)
+{
+  assert (this != &link);
+  Container *common_container = dynamic_cast<Container*> (common_ancestor (link));
+  assert (common_container != NULL);
+  common_container->item_cross_unlink (*this, link, uncross);
+}
+
+void
+Item::uncross_links (Item &link)
+{
+  assert (this != &link);
+  Container *common_container = dynamic_cast<Container*> (common_ancestor (link));
+  assert (common_container != NULL);
+  common_container->item_uncross_links (*this, link);
+}
+
+bool
 Item::match_interface (InterfaceMatch &imatch,
                        const String   &ident)
 {
@@ -166,13 +231,25 @@ bool
 Item::match_parent_interface (InterfaceMatch &imatch,
                               const String   &ident) const
 {
-  if (imatch.done() ||
-      (parent() && (!ident[0] || ident == parent()->name()) && imatch.match (parent())))
+  Item *pitem = parent();
+  if (pitem && (!ident.size() || ident == pitem->name()) && imatch.match (pitem))
     return true;
-  if (parent())
-    return parent()->match_parent_interface (imatch, ident);
+  if (pitem)
+    return pitem->match_parent_interface (imatch, ident);
   else
     return false;
+}
+
+bool
+Item::match_toplevel_interface (InterfaceMatch &imatch,
+                                const String   &ident) const
+{
+  Item *pitem = parent();
+  if (pitem && pitem->match_toplevel_interface (imatch, ident))
+    return true;
+  if ((!ident.size() || ident == name()) && imatch.match (const_cast<Item*> (this)))
+    return true;
+  return false;
 }
 
 uint
@@ -594,9 +671,11 @@ Item::set_parent (Item *pitem)
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
   if (controller)
     controller->reset();
-  if (parent())
+  Container *pc = parent_container();
+  if (pc)
     {
       Root *rtoplevel = root();
+      pc->unparent_child (*this);
       invalidate();
       style (NULL);
       m_parent = NULL;
@@ -636,10 +715,30 @@ Item::has_ancestor (const Item &ancestor) const
   return false;
 }
 
-Root*
-Item::root ()
+Item*
+Item::common_ancestor (const Item &other) const
 {
-  Item *parent = this;
+  Item *item1 = const_cast<Item*> (this);
+  do
+    {
+      Item *item2 = const_cast<Item*> (&other);
+      do
+        {
+          if (item1 == item2)
+            return item1;
+          item2 = item2->parent();
+        }
+      while (item2);
+      item1 = item1->parent();
+    }
+  while (item1);
+  return NULL;
+}
+
+Root*
+Item::root () const
+{
+  Item *parent = const_cast<Item*> (this);
   while (parent->parent())
     parent = parent->parent();
   return dynamic_cast<Root*> (parent); // NULL if parent is not of type Root*

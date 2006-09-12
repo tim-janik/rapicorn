@@ -55,9 +55,8 @@
     <frame normal-frame="out" impressed-frame="in" >
       <ambience
 	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
-	normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none"
-	>
-	<focus-frame frame-type="none" >
+	normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none">
+	<focus-frame frame-type="none">
 	  <alignment id="child-area" vscale="1" hscale="1" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
 	</focus-frame>
       </ambience>

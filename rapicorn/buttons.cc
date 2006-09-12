@@ -45,17 +45,14 @@ ButtonArea::list_properties()
 class ButtonAreaImpl : public virtual ButtonArea, public virtual EventHandler, public virtual SingleContainerImpl {
   uint m_button, m_repeater;
   ClickType m_click_type;
+  FocusFrame *m_focus_frame;
   String m_on_click[3];
 public:
   ButtonAreaImpl() :
     m_button (0), m_repeater (0),
-    m_click_type (CLICK_ON_RELEASE)
+    m_click_type (CLICK_ON_RELEASE),
+    m_focus_frame (NULL)
   {}
-  void
-  set_model (Activatable &activatable)
-  {
-    // FIXME
-  }
   virtual String    on_click   () const                 { return m_on_click[0]; }
   virtual void      on_click   (const String &command)  { m_on_click[0] = string_strip (command); }
   virtual String    on_click2  () const                 { return m_on_click[1]; }
@@ -98,6 +95,24 @@ public:
         remove_exec (m_repeater);
         m_repeater = 0;
       }
+  }
+  virtual bool
+  can_focus () const
+  {
+    return m_focus_frame != NULL;
+  }
+  virtual bool
+  register_focus_frame (FocusFrame &frame)
+  {
+    if (!m_focus_frame)
+      m_focus_frame = &frame;
+    return m_focus_frame == &frame;
+  }
+  virtual void
+  unregister_focus_frame (FocusFrame &frame)
+  {
+    if (m_focus_frame == &frame)
+      m_focus_frame = NULL;
   }
   virtual void
   reset (ResetMode mode = RESET_ALL)
