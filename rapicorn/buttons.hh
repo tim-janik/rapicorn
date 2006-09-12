@@ -35,7 +35,6 @@ class ButtonArea : public virtual Container, public virtual FocusFrame::Client {
   typedef Signal<ButtonArea, void ()>                         SignalActivate;
 protected:
   explicit              ButtonArea();
-  virtual bool          move_focus        (FocusDirType    fdir) { return grab_focus (fdir); }
 public:
   SignalCheckActivate   sig_check_activate;
   SignalActivate        sig_activate;

@@ -1,3 +1,7 @@
+Tue Sep 12 02:25:49 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/buttons.cc: provide missing move_focus() implementation.
+
 Tue Sep 12 01:48:51 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/container.hh, rapicorn/container.cc: implemented item cross 
