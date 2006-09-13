@@ -18,6 +18,7 @@
  */
 #include "container.hh"
 #include "containerimpl.hh"
+#include "root.hh"
 using namespace std;
 
 namespace Rapicorn {
@@ -407,27 +408,156 @@ Container::get_focus_child ()
   return get_data (&focus_child_key);
 }
 
-bool
-Container::move_focus (FocusDirType fdir)
+struct LesserItemByHBand {
+  bool
+  operator() (Item *const &i1,
+              Item *const &i2) const
+  {
+    const Allocation &a1 = i1->allocation();
+    const Allocation &a2 = i2->allocation();
+    /* sort items by horizontal bands first */
+    if (a1.y >= a2.y + a2.height)
+      return true;
+    if (a1.y + a1.height <= a2.y)
+      return false;
+    /* sort items with overlapping horizontal bands by vertical position */
+    if (a1.x != a2.x)
+      return a1.x < a2.x;
+    /* resort to center */
+    Point m1 (a1.x + a1.width * 0.5, a1.y + a1.height * 0.5);
+    Point m2 (a2.x + a2.width * 0.5, a2.y + a2.height * 0.5);
+    if (m1.y != m2.y)
+      return m1.y < m2.y;
+    else
+      return m1.x < m2.x;
+  }
+};
+
+struct LesserItemByDirection {
+  FocusDirType dir;
+  Point        middle;
+  Item        *last_item;
+  LesserItemByDirection (FocusDirType d,
+                         const Point &p,
+                         Item        *li) :
+    dir (d), middle (p), last_item (li)
+  {}
+  double
+  directional_distance (const Allocation &a) const
+  {
+    switch (dir)
+      {
+      case FOCUS_RIGHT:
+        return a.x - middle.x;
+      case FOCUS_UP:
+        return a.y - middle.y;
+      case FOCUS_LEFT:
+        return middle.x - (a.x + a.width);
+      case FOCUS_DOWN:
+        return middle.y - (a.y + a.height);
+      default:
+        return -1;      /* unused */
+      }
+  }
+  static inline Rect
+  rect_from_allocation (const Allocation &a)
+  {
+    return Rect (Point (a.x, a.y), a.width, a.height);
+  }
+  bool
+  operator() (Item *const &i1,
+              Item *const &i2) const
+  {
+    /* calculate item distances along dir, dist >= 0 lies ahead */
+    const Allocation &a1 = i1->allocation();
+    const Allocation &a2 = i2->allocation();
+    double dd1 = directional_distance (a1);
+    double dd2 = directional_distance (a2);
+    /* current focus item comes last in the list of negative distances */
+    if (dd1 < 0 && dd2 < 0 && (last_item == i1 || last_item == i2))
+      return last_item == i2;
+    /* sort items along dir */
+    if (dd1 != dd2)
+      return dd1 < dd2;
+    /* same horizontal/vertical band distance, sort by closest edge distance */
+    dd1 = rect_from_allocation (a1).dist (middle);
+    dd2 = rect_from_allocation (a2).dist (middle);
+    if (dd1 != dd2)
+      return dd1 < dd2;
+    /* same edge distance, resort to center distance */
+    dd1 = middle.dist (Point (a1.x + a1.width * 0.5, a1.y + a1.height * 0.5));
+    dd2 = middle.dist (Point (a2.x + a2.width * 0.5, a2.y + a2.height * 0.5));
+    return dd1 < dd2;
+  }
+};
+
+static inline Point
+rect_center (const Allocation &a)
 {
+  return Point (a.x + a.width * 0.5, a.y + a.height * 0.5);
+}
+
+bool
+Container::move_focus (FocusDirType fdir,
+                       bool         reset_history)
+{
+  /* check focus ability */
   if (!visible() || !sensitive())
     return false;
-  Item *last = get_data (&focus_child_key);
-  if (last && last->move_focus (fdir))
+  Item *last_child = get_data (&focus_child_key);
+  /* let last focus descendant handle movement */
+  if (last_child && last_child->move_focus (fdir, reset_history))
     return true;
-  ChildWalker cw = local_children();
-  if (last)
+  /* copy children */
+  vector<Item*> children;
+  ChildWalker lw = local_children();
+  while (lw.has_next())
+    children.push_back (&*lw++);
+  /* sort children according to direction and current focus */
+  const Allocation &area = allocation();
+  Point upper_left (area.x, area.y + area.height);
+  Point lower_right (area.x + area.width, area.y);
+  Point refpoint;
+  switch (fdir)
+    {
+      Item *current;
+    case FOCUS_NEXT:
+      stable_sort (children.begin(), children.end(), LesserItemByHBand());
+      break;
+    case FOCUS_PREV:
+      stable_sort (children.begin(), children.end(), LesserItemByHBand());
+      reverse (children.begin(), children.end());
+      break;
+    case FOCUS_UP:
+    case FOCUS_LEFT:
+      current = root()->get_focus();
+      refpoint = current ? rect_center (current->allocation()) : lower_right;
+      stable_sort (children.begin(), children.end(), LesserItemByDirection (fdir, refpoint, last_child));
+      break;
+    case FOCUS_RIGHT:
+    case FOCUS_DOWN:
+      current = root()->get_focus();
+      refpoint = current ? rect_center (current->allocation()) : upper_left;
+      stable_sort (children.begin(), children.end(), LesserItemByDirection (fdir, refpoint, last_child));
+      break;
+    }
+  /* skip children beyond last focus descendant */
+  Walker<Item*> cw = walker (children);
+  if (last_child)
     while (cw.has_next())
-      if (last == &*cw++)
+      if (last_child == *cw++)
         break;
+  /* let remaining descendants handle movement */
   while (cw.has_next())
     {
-      Item &child = *cw;
-      if (child.move_focus (fdir))
+      Item *child = *cw;
+      if (child->move_focus (fdir, reset_history))
         return true;
       cw++;
     }
-  delete_data (&focus_child_key);
+  /* no descendant accepts focus */
+  if (reset_history)
+    delete_data (&focus_child_key);
   return false;
 }
 

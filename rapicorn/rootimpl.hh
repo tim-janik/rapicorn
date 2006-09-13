@@ -60,6 +60,7 @@ private:
   void                  resize_all                              (Allocation             *new_area);
   virtual void          do_invalidate                           ();
   void                  async_resize_draw                       ();
+  virtual void          beep                                    ();
   /* rendering */
   virtual void          render                                  (Plane                  &plane);
   using                 Item::render;

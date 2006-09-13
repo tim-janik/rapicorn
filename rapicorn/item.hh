@@ -124,8 +124,10 @@ protected:
   virtual void                style             (Style  *st);
   virtual void                finalize          ();
   virtual void                hierarchy_changed (Item *old_toplevel);
-  virtual bool                move_focus        (FocusDirType fdir);
+  virtual bool                move_focus        (FocusDirType fdir,
+                                                 bool         reset_history);
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
+  void                        notify_key_error  ();
 public:
   explicit                    Item              ();
   bool                        anchored          () const { return test_flags (ANCHORED); }

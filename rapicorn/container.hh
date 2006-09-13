@@ -45,7 +45,8 @@ protected:
   virtual void        unparent_child    (Item           &item);
   virtual void        dispose_item      (Item           &item);
   virtual void        hierarchy_changed (Item           *old_toplevel);
-  virtual bool        move_focus        (FocusDirType    fdir);
+  virtual bool        move_focus        (FocusDirType    fdir,
+                                         bool            reset_history);
   void                set_focus_child   (Item           *item);
   Item*               get_focus_child   ();
 public:

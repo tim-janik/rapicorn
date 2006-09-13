@@ -1,3 +1,22 @@
+Wed Sep 13 02:13:35 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/root.cc: move focus according to key directions, forget focus
+	history when crossing beyond first/last focusable item. added beep().
+
+	* rapicorn/container.cc: implemented next/prev and right/up/left/down
+	focus direction handling. reset last focus child if no new focus was
+	found, in case reset_history was requested. 
+
+	* rapicorn/item.hh, rapicorn/item.hh: added reset_history arg to 
+	move_focus(), fixed callers. added notify_key_error().
+
+	* rapicorn/primitives.hh, rapicorn/primitives.cc: provide Rect<->Point
+	distance and contains methods.
+
+	* rapicorn/viewport.hh, rapicorn/viewport-gtk.cc: added beep().
+
+	* examples/tour.xml: minor test extensions.
+
 Tue Sep 12 02:25:49 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/buttons.cc: provide missing move_focus() implementation.

@@ -30,6 +30,7 @@ class Root : public virtual Container, public virtual MainLoop::Source {
   friend class  Item;
   void          uncross_focus           (Item        &fitem);
 protected:
+  virtual void  beep                    (void) = 0;
   void          set_focus               (Item        *item);
   virtual void  copy_area               (const Rect  &src,
                                          const Point &dest) = 0;

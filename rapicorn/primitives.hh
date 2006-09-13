@@ -168,7 +168,12 @@ public:
   Point south_west      () const { return Point (ll.x, ll.y); }
   Point west            () const { return Point (ll.x, (ll.y + ur.y) / 2); }
   Point north_west      () const { return Point (ll.x, ur.y); }
-  bool  operator==      (const Rect &other) const
+  bool  contains        (const Point &point) const
+  {
+    return (ll.x <= point.x && ll.y <= point.y &&
+            ur.x >  point.x && ur.y >  point.y);
+  }
+  bool  operator==      (const Rect  &other) const
   {
     if (empty() && other.empty())
       return true;
@@ -180,6 +185,8 @@ public:
       return false;
     return other.ll.x != ll.x || other.ll.y != ll.y || other.ur.x != ur.x || other.ur.y != ur.y;
   }
+  double dist2          (const Point &p) const;
+  double dist           (const Point &p) const;
   Rect&
   rect_union (const Rect &r)
   {

@@ -102,7 +102,8 @@ public:
     return m_focus_frame != NULL;
   }
   virtual bool
-  move_focus (FocusDirType fdir)
+  move_focus (FocusDirType fdir,
+              bool         reset_history)
   {
     if (!has_focus() && can_focus())
       return grab_focus();

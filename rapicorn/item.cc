@@ -186,9 +186,18 @@ Item::grab_focus ()
 }
 
 bool
-Item::move_focus (FocusDirType fdir)
+Item::move_focus (FocusDirType fdir,
+                  bool         reset_history)
 {
   return false;
+}
+
+void
+Item::notify_key_error ()
+{
+  Root *ritem = root();
+  if (ritem)
+    ritem->beep();
 }
 
 void

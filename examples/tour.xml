@@ -78,11 +78,14 @@
 	<label text="First Label" hanchor="1" position="-75 30" />
 	<label text="Middle Label" />
 	<label text="Third Label" hanchor="0" position="75 30" />
+	<button vexpand="1" position="0 0" >
+	  <label text="Expand Button1" />
+	</button>
 	<button hexpand="1" position="0 -30" on-click="test-handler1" >
-	  <label text="Expand Button" />
+	  <label text="Expand Button2" />
 	</button>
 	<button vexpand="1" position="150 0" >
-	  <label text="Expand Button" />
+	  <label text="Expand Button3" />
 	</button>
       </arrangement>
       <label text="Mark2" />

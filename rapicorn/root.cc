@@ -229,6 +229,13 @@ RootImpl::do_invalidate ()
     }
 }
 
+void
+RootImpl::beep()
+{
+  if (m_viewport)
+    m_viewport->beep();
+}
+
 vector<Item*>
 RootImpl::item_difference (const vector<Item*> &clist, /* preserves order of clist */
                            const vector<Item*> &cminus)
@@ -474,14 +481,40 @@ RootImpl::dispatch_key_event (const Event &event)
     {
       switch (kevent->key)
         {
-        case KEY_Right:
-        case KEY_Up:
-        case KEY_Left:
-        case KEY_Down:
-        case KEY_ISO_Left_Tab:
+          bool had_focus;
         case KEY_Tab: case KEY_KP_Tab:
-          if (!move_focus (FOCUS_NEXT))
-            set_focus (NULL);
+          had_focus = get_focus() != NULL;
+          if (!move_focus (FOCUS_NEXT, true))
+            {
+              set_focus (NULL);
+              if (!had_focus)
+                notify_key_error();
+            }
+          break;
+        case KEY_ISO_Left_Tab:
+          had_focus = get_focus() != NULL;
+          if (!move_focus (FOCUS_PREV, true))
+            {
+              set_focus (NULL);
+              if (!had_focus)
+                notify_key_error();
+            }
+          break;
+        case KEY_Right:
+          if (!move_focus (FOCUS_RIGHT, false))
+            notify_key_error();
+          break;
+        case KEY_Up:
+          if (!move_focus (FOCUS_UP, false))
+            notify_key_error();
+          break;
+        case KEY_Left:
+          if (!move_focus (FOCUS_LEFT, false))
+            notify_key_error();
+          break;
+        case KEY_Down:
+          if (!move_focus (FOCUS_DOWN, false))
+            notify_key_error();
           break;
         }
       if (0)

@@ -37,6 +37,64 @@ struct FPUCheck {
 };
 static FPUCheck assert_rounding_mode;
 
+static inline double
+dsqr (double x)
+{
+  return x * x;
+}
+
+double
+Rect::dist2 (const Point &p) const
+{
+  if (p.x <= ll.x)
+    {
+      if (p.y <= ll.y)
+        return p.dist2 (ll);
+      if (p.y >= ur.y)
+        return p.dist2 (upper_left());
+      return dsqr (ll.x - p.x);
+    }
+  if (p.x >= ur.x)
+    {
+      if (p.y <= ll.y)
+        return p.dist2 (lower_right());
+      if (p.y >= ur.y)
+        return p.dist2 (ur);
+      return dsqr (p.x - ur.x);
+    }
+  if (p.y >= ur.y)
+    return dsqr (p.y - ur.y);
+  if (p.y <= ll.y)
+    return dsqr (ll.y - p.y);
+  return 0; /* inside */
+}
+
+double
+Rect::dist (const Point &p) const
+{
+  if (p.x <= ll.x)
+    {
+      if (p.y <= ll.y)
+        return p.dist (ll);
+      if (p.y >= ur.y)
+        return p.dist (upper_left());
+      return ll.x - p.x;
+    }
+  if (p.x >= ur.x)
+    {
+      if (p.y <= ll.y)
+        return p.dist (lower_right());
+      if (p.y >= ur.y)
+        return p.dist (ur);
+      return p.x - ur.x;
+    }
+  if (p.y >= ur.y)
+    return p.y - ur.y;
+  if (p.y <= ll.y)
+    return ll.y - p.y;
+  return 0; /* inside */
+}
+
 void
 Color::get_hsv (double *huep,           /* 0..360: 0=red, 120=green, 240=blue */
                 double *saturationp,    /* 0..1 */

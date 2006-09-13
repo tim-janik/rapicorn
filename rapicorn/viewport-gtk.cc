@@ -135,6 +135,7 @@ struct ViewportGtk : public virtual Viewport {
   virtual State         get_state               ();
   virtual void          set_config              (const Config  &config,
                                                  bool           force_resize_draw);
+  virtual void          beep                    (void);
   void                  enqueue_locked          (Event         *event);
   bool                  is_splash_screen        () { return m_window_type & WINDOW_TYPE_SPLASH; }
 };
@@ -699,6 +700,20 @@ ViewportGtk::set_config (const Config &config,
           if (isfinite (config.root_x) && isfinite (config.root_y))
             gtk_window_move (window, iround (config.root_x), iround (config.root_y));
         }
+    }
+}
+
+void
+ViewportGtk::beep()
+{
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  if (GTK_WIDGET_DRAWABLE (m_widget))
+    {
+#if GTK_CHECK_VERSION (2, 12, 0)
+      gdk_window_beep (m_widget->window);
+#else
+      gdk_display_beep (gtk_widget_get_display (m_widget));
+#endif
     }
 }
 

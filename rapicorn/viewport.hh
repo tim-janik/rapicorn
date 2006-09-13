@@ -100,6 +100,7 @@ public:
   virtual State         get_state               () = 0;
   virtual void          set_config              (const Config   &config,
                                                  bool            force_resize_draw = false) = 0;
+  virtual void          beep                    (void) = 0;
   /* creation */
   static Viewport*      create_viewport         (const String   &backend_name,
                                                  WindowType      viewport_type,
