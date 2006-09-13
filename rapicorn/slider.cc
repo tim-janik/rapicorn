@@ -189,7 +189,7 @@ public:
   {
   }
 };
-static const ItemFactory<SliderAreaImpl> slider_area_factory ("Rapicorn::SliderArea");
+static const ItemFactory<SliderAreaImpl> slider_area_factory ("Rapicorn::Factory::SliderArea");
 
 class SliderSkidImpl;
 
@@ -315,7 +315,7 @@ protected:
     return handled;
   }
 };
-static const ItemFactory<SliderTroughImpl> slider_trough_factory ("Rapicorn::SliderTrough");
+static const ItemFactory<SliderTroughImpl> slider_trough_factory ("Rapicorn::Factory::SliderTrough");
 
 class SliderSkidImpl : public virtual EventHandler, public virtual SingleContainerImpl {
   uint        m_button;
@@ -477,6 +477,6 @@ private:
     return property_list;
   }
 };
-static const ItemFactory<SliderSkidImpl> slider_skid_factory ("Rapicorn::SliderSkid");
+static const ItemFactory<SliderSkidImpl> slider_skid_factory ("Rapicorn::Factory::SliderSkid");
 
 } // Rapicorn

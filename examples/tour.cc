@@ -25,22 +25,12 @@ using namespace Rapicorn;
 static void     register_builtin_images (void);
 
 static Root*
-construct_gui (const char *path)
+construct_gui (const char *executable)
 {
-  try {
-    Factory::parse_file ("tour.xml", "Test");
-  } catch (...) {
-    try {
-      String file = String (path) + DIR_SEPARATOR + "tour.xml";
-      Factory::parse_file (file.c_str(), "Test");
-    } catch (...) {
-      String file = String (path) + DIR_SEPARATOR + ".." + DIR_SEPARATOR + "tour.xml";
-      Factory::parse_file (file.c_str(), "Test", nothrow);
-    }
-  }
+  Factory::must_parse_file ("tour.xml", "Test", Path::dirname (executable));
 
   /* create root item */
-  Handle<Item> ihandle = Factory::create_item ("root");
+  Handle<Item> ihandle = Factory::create_item ("Root");
   AutoLocker ilocker (ihandle);
   Item &item = ihandle.get();
   Root &root = item.interface<Root&>();
@@ -76,7 +66,7 @@ main (int   argc,
   rapicorn_init_with_foreign_gtk (&argc, &argv, "TourTest");
   register_builtin_images();
 
-  Root *root = construct_gui (Path::dirname (argv[0]).c_str());
+  Root *root = construct_gui (argv[0]);
   root->run_async();
   gtk_main();
   return 0;

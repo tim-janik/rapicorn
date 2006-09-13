@@ -88,7 +88,7 @@ ScrollAreaImpl::scroll_to (double x,
   m_vadjustment->thaw();
 }
 
-static const ItemFactory<ScrollAreaImpl> scroll_area_factory ("Rapicorn::ScrollArea");
+static const ItemFactory<ScrollAreaImpl> scroll_area_factory ("Rapicorn::Factory::ScrollArea");
 
 /* --- ScrollPortImpl --- */
 class ScrollPortImpl : public virtual SingleContainerImpl {
@@ -289,7 +289,7 @@ public:
     m_last_xoffset (0), m_last_yoffset(0)
   {}
 };
-static const ItemFactory<ScrollPortImpl> scroll_port_factory ("Rapicorn::ScrollPort");
+static const ItemFactory<ScrollPortImpl> scroll_port_factory ("Rapicorn::Factory::ScrollPort");
 
 
 } // Rapicorn

@@ -209,6 +209,6 @@ ArrangementImpl::list_properties()
   return property_list;
 }
 
-static const ItemFactory<ArrangementImpl> arrangement_factory ("Rapicorn::Arrangement");
+static const ItemFactory<ArrangementImpl> arrangement_factory ("Rapicorn::Factory::Arrangement");
 
 } // Rapicorn

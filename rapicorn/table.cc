@@ -893,6 +893,6 @@ TableImpl::size_allocate_pass2 ()
     }
 }
 
-static const ItemFactory<TableImpl> table_factory ("Rapicorn::Table");
+static const ItemFactory<TableImpl> table_factory ("Rapicorn::Factory::Table");
 
 } // Rapicorn

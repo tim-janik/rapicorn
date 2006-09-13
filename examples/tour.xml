@@ -19,28 +19,28 @@
  !-->
 <rapicorn-gadgets xmlns:def="http://rapicorn.org/xmlns:def">
 
-  <!-- scroll-area -->
-  <def:scroll-port inherit="Rapicorn::ScrollPort">
-  </def:scroll-port>
-  <def:scroll-area inherit="Rapicorn::ScrollArea" child-container="scroll-port">
-    <table>
-      <alignment hexpand="0" vexpand="0" bottom-attach="1" left-attach="0" right-attach="1" top-attach="2" width="0" height="0"
+  <!-- ScrollArea -->
+  <def:ScrollPort inherit="Rapicorn::Factory::ScrollPort">
+  </def:ScrollPort>
+  <def:ScrollArea inherit="Rapicorn::Factory::ScrollArea" child-container="ScrollPort">
+    <Table>
+      <Alignment hexpand="0" vexpand="0" bottom-attach="1" left-attach="0" right-attach="1" top-attach="2" width="0" height="0"
 	left-padding="2" right-padding="3" bottom-padding="2" top-padding="2">
-	<frame frame-type="in">
-	  <scroll-port />
-	</frame>
-      </alignment>
-      <hslider hexpand="1" adjustment-source="ancestor-horizontal" bottom-attach="0" />
-      <vslider vexpand="1" adjustment-source="ancestor-vertical"   bottom-attach="1" left-attach="1" height="200" />
-    </table>
-  </def:scroll-area>
+	<Frame frame-type="in">
+	  <ScrollPort />
+	</Frame>
+      </Alignment>
+      <HSlider hexpand="1" adjustment-source="ancestor-horizontal" bottom-attach="0" />
+      <VSlider vexpand="1" adjustment-source="ancestor-vertical"   bottom-attach="1" left-attach="1" height="200" />
+    </Table>
+  </def:ScrollArea>
 
   <!-- test dialog -->
-  <def:tour-dialog inherit="ambience" normal-lighting="upper-left"> <!-- normal-background="beige" -->
-    <vbox sensitive="1">
-      <scroll-area width="400" >
-	<frame hexpand="1" vexpand="1" >
-	  <label text=
+  <def:tour-dialog inherit="Ambience" normal-lighting="upper-left"> <!-- normal-background="beige" -->
+    <VBox sensitive="1">
+      <ScrollArea width="400" >
+	<Frame hexpand="1" vexpand="1" >
+	  <Label text=
 	    "HUHU, mir wird schwindelig. Jetzt kommt ein richtig langer text,&#10; der sich immer weiter erstreckt.
 	    lala tutu dumdeli. tra lal la und humpeli.&#10;
 	    A 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 A 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 &#10;
@@ -71,88 +71,88 @@
 	    Z 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 A 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 &#10;
 	    _ 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789
 	    " />
-	</frame>
-      </scroll-area>
-      <label text="Mark1" />
-      <arrangement origin="0 0" >
-	<label text="First Label" hanchor="1" position="-75 30" />
-	<label text="Middle Label" />
-	<label text="Third Label" hanchor="0" position="75 30" />
-	<button vexpand="1" position="0 0" >
-	  <label text="Expand Button1" />
-	</button>
-	<button hexpand="1" position="0 -30" on-click="test-handler1" >
-	  <label text="Expand Button2" />
-	</button>
-	<button vexpand="1" position="150 0" >
-	  <label text="Expand Button3" />
-	</button>
-      </arrangement>
-      <label text="Mark2" />
-      <alignment visible="1" left-padding="5" right-padding="5" top-padding="5" bottom-padding="5">
-	<frame frame-type="etched-in">
-	  <alignment left-padding="5" right-padding="5" top-padding="5" bottom-padding="5"> <!-- width="125" height="110" -->
-	    <table>
-	      <label text="*** Ttitle ***" align="center" bottom-attach="100" hexpand="1" />
-	      <hbox bottom-attach="102" vexpand="1" >
- 	        <alignment hexpand="1">
-		  <hslider hexpand="1" vexpand="0"/>
-		</alignment>
-	        <vslider vexpand="1" />
-	        <vslider vexpand="1" />
-	        <vslider vexpand="1" />
-	      </hbox>
-	      <default-button sensitive="1" bottom-attach="51" vspread="1" vshrink="1" hexpand="0" hfill="0" vfill="0" >
-		<vbox>
-		  <label text="left" right-padding="10" />
-		  <label id="vslabel" text="VSpread" />
-		  <label text="right" left-padding="10" />
-		</vbox>
-	      </default-button>
-	      <button bottom-attach="52" >
-		<label text="Normal Button" />
-	      </button>
-	      <frame frame-type="etched-out" visible="1" left-padding="10" right-padding="10" bottom-padding="10">
-		<table>
-		  <frame left-attach="3" bottom-attach="59" >
-		    <hbox>
-		      <label text="broken: " />
-		      <image builtin-pixstream="!!! rapicorn-trigger-broken-image (non-pixstream-name) !!!" />
-		      <label text=" test: " />
-		      <image builtin_pixstream="testimage-rgb-raw" />
-		      <image builtin_pixstream="testimage-rgb-rle" />
-		      <image builtin_pixstream="testimage-alpha-raw" />
-		      <image builtin_pixstream="testimage-alpha-rle" />
-		      <label text=" file: " />
-		      <image image-file="testpic.jpg" />
-		      <image image-file="///////////" />
-		      <image image-file="testpic.png" />
-		      <image image-file="testpic-DATA.png" />
-		      <image image-file="testpic-IHDR.png" />
-		      <image image-file="testpic-IDAT.png" />
-		    </hbox>
-		  </frame>
-		  <frame left-attach="54" bottom-attach="55" left-padding="20" right-padding="3" frame-type="out" />
-		  <frame left-attach="57" bottom-attach="52" bottom-padding="2" top-padding="13" frame-type="out" />
-		  <frame left-attach="59" bottom-attach="50" hspread="1" vexpand="1" >
-		    <label id="hspread-label" text="HSpread" />
-		  </frame>
-		  <frame frame-type="etched-in">
-		    <label text="Insensitive Test Text" sensitive="0" />
-		  </frame>
-		</table>
-	      </frame>
-	    </table>
-	  </alignment>
-	</frame>
-      </alignment>
-      <alignment left-padding="5" right-padding="5" top-padding="3" bottom-padding="3" hscale="1">
-	<hbox spacing="5" homogeneous="0" >
-	  <button hexpand="1" > <label text="Ok"/> </button>
-	  <button hexpand="1" > <label text="Cancel"/> </button>
-	</hbox>
-      </alignment>
-    </vbox>
+	</Frame>
+      </ScrollArea>
+      <Label text="Mark1" />
+      <Arrangement origin="0 0" >
+	<Label text="First Label" hanchor="1" position="-75 30" />
+	<Label text="Middle Label" />
+	<Label text="Third Label" hanchor="0" position="75 30" />
+	<Button vexpand="1" position="0 0" >
+	  <Label text="Expand Button1" />
+	</Button>
+	<Button hexpand="1" position="0 -30" on-click="test-handler1" >
+	  <Label text="Expand Button2" />
+	</Button>
+	<Button vexpand="1" position="150 0" >
+	  <Label text="Expand Button3" />
+	</Button>
+      </Arrangement>
+      <Label text="Mark2" />
+      <Alignment visible="1" left-padding="5" right-padding="5" top-padding="5" bottom-padding="5">
+	<Frame frame-type="etched-in">
+	  <Alignment left-padding="5" right-padding="5" top-padding="5" bottom-padding="5"> <!-- width="125" height="110" -->
+	    <Table>
+	      <Label text="*** Ttitle ***" align="center" bottom-attach="100" hexpand="1" />
+	      <HBox bottom-attach="102" vexpand="1" >
+ 	        <Alignment hexpand="1">
+		  <HSlider hexpand="1" vexpand="0"/>
+		</Alignment>
+	        <VSlider vexpand="1" />
+	        <VSlider vexpand="1" />
+	        <VSlider vexpand="1" />
+	      </HBox>
+	      <DefaultButton sensitive="1" bottom-attach="51" vspread="1" vshrink="1" hexpand="0" hfill="0" vfill="0" >
+		<VBox>
+		  <Label text="left" right-padding="10" />
+		  <Label id="vslabel" text="VSpread" />
+		  <Label text="right" left-padding="10" />
+		</VBox>
+	      </DefaultButton>
+	      <Button bottom-attach="52" >
+		<Label text="Normal Button" />
+	      </Button>
+	      <Frame frame-type="etched-out" visible="1" left-padding="10" right-padding="10" bottom-padding="10">
+		<Table>
+		  <Frame left-attach="3" bottom-attach="59" >
+		    <HBox>
+		      <Label text="broken: " />
+		      <Image builtin-pixstream="!!! rapicorn-trigger-broken-image (non-pixstream-name) !!!" />
+		      <Label text=" test: " />
+		      <Image builtin_pixstream="testimage-rgb-raw" />
+		      <Image builtin_pixstream="testimage-rgb-rle" />
+		      <Image builtin_pixstream="testimage-alpha-raw" />
+		      <Image builtin_pixstream="testimage-alpha-rle" />
+		      <Label text=" file: " />
+		      <Image image-file="testpic.jpg" />
+		      <Image image-file="///////////" />
+		      <Image image-file="testpic.png" />
+		      <Image image-file="testpic-DATA.png" />
+		      <Image image-file="testpic-IHDR.png" />
+		      <Image image-file="testpic-IDAT.png" />
+		    </HBox>
+		  </Frame>
+		  <Frame left-attach="54" bottom-attach="55" left-padding="20" right-padding="3" frame-type="out" />
+		  <Frame left-attach="57" bottom-attach="52" bottom-padding="2" top-padding="13" frame-type="out" />
+		  <Frame left-attach="59" bottom-attach="50" hspread="1" vexpand="1" >
+		    <Label id="hspread-label" text="HSpread" />
+		  </Frame>
+		  <Frame frame-type="etched-in">
+		    <Label text="Insensitive Test Text" sensitive="0" />
+		  </Frame>
+		</Table>
+	      </Frame>
+	    </Table>
+	  </Alignment>
+	</Frame>
+      </Alignment>
+      <Alignment left-padding="5" right-padding="5" top-padding="3" bottom-padding="3" hscale="1">
+	<HBox spacing="5" homogeneous="0" >
+	  <Button hexpand="1" > <Label text="Ok"/> </Button>
+	  <Button hexpand="1" > <Label text="Cancel"/> </Button>
+	</HBox>
+      </Alignment>
+    </VBox>
   </def:tour-dialog>
 
 </rapicorn-gadgets>

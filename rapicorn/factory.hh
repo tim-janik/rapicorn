@@ -54,11 +54,12 @@ struct ItemTypeFactory : Deletable {
   const String  qualified_type;
   BIRNET_PRIVATE_CLASS_COPY (ItemTypeFactory);
 protected:
-  static void   register_item_factory (const ItemTypeFactory  *itfactory);
+  static void   register_item_factory   (const ItemTypeFactory  *itfactory);
+  static void   sanity_check_identifier (const char             *namespaced_ident);
 public:
-  explicit      ItemTypeFactory       (const char             *namespaced_ident);
-  virtual Item* create_item           (const String           &name) const = 0;
-  static void   initialize_factories  ();
+  explicit      ItemTypeFactory         (const char             *namespaced_ident);
+  virtual Item* create_item             (const String           &name) const = 0;
+  static void   initialize_factories    ();
 };
 
 } // Factory
@@ -77,11 +78,12 @@ class ItemFactory : Factory::ItemTypeFactory {
     return item;
   }
 public:
-  ItemFactory (const char *namespaced_ident) :
+  explicit ItemFactory (const char *namespaced_ident) :
     ItemTypeFactory (namespaced_ident)
   {
     register_item_factory (this);
-  }
+    sanity_check_identifier (namespaced_ident);
+  }        
 };
 
 } // Rapicorn

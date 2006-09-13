@@ -1,3 +1,20 @@
+Thu Sep 14 00:32:44 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/factory.hh, rapicorn/factory.cc: improved error mesages, fixed
+	lookup order, so parsing new files can override existing definitions.
+	added Factory::ItemTypeFactory::sanity_check_identifier() to verify proper
+	item types for factory registration.
+
+	* tests/testitems.xml, tests/items.cc:
+	* rapicorn/rapicorn.xml, examples/tour.xml, examples/scroller.xml:
+	changed syntax of newly defined identifiers to MixedCase. refer to stock
+	item implementations via the Rapicorn::Factory::-namespace. fixed up
+	resulting incompatibilities.
+
+	* examples/tour.cc: use Factory::must_parse_file() to parse item definitions.
+
+	* rapicorn/*.cc: declare new item types in the Rapicorn::Factory::-namespace.
+
 Wed Sep 13 02:13:35 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/root.cc: move focus according to key directions, forget focus

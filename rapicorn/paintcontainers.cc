@@ -260,7 +260,7 @@ protected:
     return property_list;
   }
 };
-static const ItemFactory<AmbienceImpl> ambience_factory ("Rapicorn::Ambience");
+static const ItemFactory<AmbienceImpl> ambience_factory ("Rapicorn::Factory::Ambience");
 
 void
 Frame::frame_type (FrameType ft)
@@ -415,7 +415,7 @@ public:
     return property_list;
   }
 };
-static const ItemFactory<FrameImpl> frame_factory ("Rapicorn::Frame");
+static const ItemFactory<FrameImpl> frame_factory ("Rapicorn::Factory::Frame");
 
 class FocusFrameImpl : public virtual FocusFrame, public virtual FrameImpl {
   FrameType m_focus_frame;
@@ -459,6 +459,6 @@ public:
     return property_list;
   }
 };
-static const ItemFactory<FocusFrameImpl> focus_frame_factory ("Rapicorn::FocusFrame");
+static const ItemFactory<FocusFrameImpl> focus_frame_factory ("Rapicorn::Factory::FocusFrame");
 
 } // Rapicorn

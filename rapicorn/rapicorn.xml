@@ -20,110 +20,110 @@
 <rapicorn-gadgets xmlns:def="http://rapicorn.org/xmlns:def">
   
   <!-- test-item -->
-  <def:test-item inherit="Rapicorn::TestItem"/>
+  <def:test-item inherit="Rapicorn::Factory::TestItem"/>
 
-  <!-- root -->
-  <def:root inherit="Rapicorn::Root"/>
+  <!-- Root -->
+  <def:Root inherit="Rapicorn::Factory::Root"/>
 
   <!-- frames -->
-  <def:frame inherit="Rapicorn::Frame"/>
-  <def:focus-frame inherit="Rapicorn::FocusFrame"/>
+  <def:Frame inherit="Rapicorn::Factory::Frame"/>
+  <def:FocusFrame inherit="Rapicorn::Factory::FocusFrame"/>
 
-  <!-- alignment -->
-  <def:alignment inherit="Rapicorn::Alignment" />
+  <!-- Alignment -->
+  <def:Alignment inherit="Rapicorn::Factory::Alignment" />
 
-  <!-- ambience (background + lighting) -->
-  <def:ambience inherit="Rapicorn::Ambience"/>
+  <!-- Ambience (background + lighting) -->
+  <def:Ambience inherit="Rapicorn::Factory::Ambience"/>
 
-  <!-- table -->
-  <def:table inherit="Rapicorn::Table" >
-  </def:table>
-  <def:hbox inherit="Rapicorn::HBox" />
-  <def:vbox inherit="Rapicorn::VBox" />
+  <!-- Table -->
+  <def:Table inherit="Rapicorn::Factory::Table" >
+  </def:Table>
+  <def:HBox inherit="Rapicorn::Factory::HBox" />
+  <def:VBox inherit="Rapicorn::Factory::VBox" />
 
-  <!-- arrangement -->
-  <def:arrangement inherit="Rapicorn::Arrangement" />
+  <!-- Arrangement -->
+  <def:Arrangement inherit="Rapicorn::Factory::Arrangement" />
 
-  <!-- label -->
-  <def:label inherit="Rapicorn::TextPango" />
+  <!-- Label -->
+  <def:Label inherit="Rapicorn::Factory::TextPango" />
 
-  <!-- image -->
-  <def:image inherit="Rapicorn::Image" />
+  <!-- Image -->
+  <def:Image inherit="Rapicorn::Factory::Image" />
 
   <!-- buttons -->
-  <def:button inherit="Rapicorn::ButtonArea" child-container="child-area" >
-    <frame normal-frame="out" impressed-frame="in" >
-      <ambience
+  <def:Button inherit="Rapicorn::Factory::ButtonArea" child-container="child-area" >
+    <Frame normal-frame="out" impressed-frame="in" >
+      <Ambience
 	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
 	normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none">
-	<focus-frame frame-type="none">
-	  <alignment id="child-area" vscale="1" hscale="1" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
-	</focus-frame>
-      </ambience>
-    </frame>
-  </def:button>
-  <def:default-button inherit="Rapicorn::Frame" child-container="child-area" frame-type="in" >
-    <alignment left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
-      <button id="child-area" />
-    </alignment>
-  </def:default-button>
+	<FocusFrame frame-type="none">
+	  <Alignment id="child-area" vscale="1" hscale="1" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
+	</FocusFrame>
+      </Ambience>
+    </Frame>
+  </def:Button>
+  <def:DefaultButton inherit="Rapicorn::Factory::Frame" child-container="child-area" frame-type="in" >
+    <Alignment left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
+      <Button id="child-area" />
+    </Alignment>
+  </def:DefaultButton>
 
-  <!-- dot-grid -->
-  <def:dot-grid inherit="Rapicorn::DotGrid"/>
+  <!-- DotGrid -->
+  <def:DotGrid inherit="Rapicorn::Factory::DotGrid"/>
 
-  <!-- arrow -->
-  <def:arrow inherit="Rapicorn::Arrow"/>
+  <!-- Arrow -->
+  <def:Arrow inherit="Rapicorn::Factory::Arrow"/>
 
   <!-- slider -->
-  <def:Rapicorn-slider-trough inherit="Rapicorn::SliderTrough"/>
-  <def:Rapicorn-slider-skid inherit="Rapicorn::SliderSkid"/>
-  <!-- hslider -->
-  <def:hslider inherit="Rapicorn::SliderArea">
-    <frame normal-frame="in" vexpand="1" hexpand="1" height="18">
-      <hbox vexpand="1">
-	<button on-click="decrement" on-click2="page-decrement" click-type="fast-repeat" vexpand="1">
-	  <arrow arrow-dir="left" size-policy="width-from-height"/>
-	</button>
+  <def:Rapicorn-slider-trough inherit="Rapicorn::Factory::SliderTrough"/>
+  <def:Rapicorn-slider-skid inherit="Rapicorn::Factory::SliderSkid"/>
+  <!-- HSlider -->
+  <def:HSlider inherit="Rapicorn::Factory::SliderArea">
+    <Frame normal-frame="in" vexpand="1" hexpand="1" height="18">
+      <HBox vexpand="1">
+	<Button on-click="decrement" on-click2="page-decrement" click-type="fast-repeat" vexpand="1">
+	  <Arrow arrow-dir="left" size-policy="width-from-height"/>
+	</Button>
 	<Rapicorn-slider-trough hexpand="1" vexpand="1">
 	  <Rapicorn-slider-skid vspread="1" hexpand="1" vertical-skid="0">
-	    <ambience
+	    <Ambience
 	      normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
 	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none">
-	      <frame normal-frame="out" vexpand="1">
-		<dot-grid n-hdots="6" n-vdots="2" left-padding-dots="2" right-padding-dots="2" top-padding-dots="0" bottom-padding-dots="0" />
-	      </frame>
-	    </ambience>
+	      <Frame normal-frame="out" vexpand="1">
+		<DotGrid n-hdots="6" n-vdots="2" left-padding-dots="2" right-padding-dots="2" top-padding-dots="0" bottom-padding-dots="0" />
+	      </Frame>
+	    </Ambience>
 	  </Rapicorn-slider-skid>
 	</Rapicorn-slider-trough>
-	<button on-click="increment" on-click2="page-increment" click-type="fast-repeat" vexpand="1">
-	  <arrow arrow-dir="right" size-policy="width-from-height"/>
-	</button>
-      </hbox>
-    </frame>
-  </def:hslider>
-  <!-- vslider -->
-  <def:vslider inherit="Rapicorn::SliderArea">
-    <frame normal-frame="in" vexpand="1" hexpand="1" width="18">
-      <vbox hexpand="1">
-	<button on-click="increment" on-click2="page-increment" click-type="fast-repeat" hexpand="1">
-	  <arrow arrow-dir="up" size-policy="height-from-width"/>
-	</button>
+	<Button on-click="increment" on-click2="page-increment" click-type="fast-repeat" vexpand="1">
+	  <Arrow arrow-dir="right" size-policy="width-from-height"/>
+	</Button>
+      </HBox>
+    </Frame>
+  </def:HSlider>
+  <!-- VSlider -->
+  <def:VSlider inherit="Rapicorn::Factory::SliderArea">
+    <Frame normal-frame="in" vexpand="1" hexpand="1" width="18">
+      <VBox hexpand="1">
+	<Button on-click="increment" on-click2="page-increment" click-type="fast-repeat" hexpand="1">
+	  <Arrow arrow-dir="up" size-policy="height-from-width"/>
+	</Button>
 	<Rapicorn-slider-trough vexpand="1" hexpand="1">
 	  <Rapicorn-slider-skid hspread="1" vexpand="1" vertical-skid="1">
-	    <ambience
+	    <Ambience
 	      normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
 	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none">
-	      <frame normal-frame="out" hexpand="1">
-		<dot-grid n-hdots="2" n-vdots="6" left-padding-dots="0" right-padding-dots="0" top-padding-dots="2" bottom-padding-dots="2" />
-	      </frame>
-	    </ambience>
+	      <Frame normal-frame="out" hexpand="1">
+		<DotGrid n-hdots="2" n-vdots="6" left-padding-dots="0" right-padding-dots="0" top-padding-dots="2" bottom-padding-dots="2" />
+	      </Frame>
+	    </Ambience>
 	  </Rapicorn-slider-skid>
 	</Rapicorn-slider-trough>
-	<button on-click="decrement" on-click2="page-decrement" click-type="fast-repeat" hexpand="1">
-	  <arrow arrow-dir="down" size-policy="height-from-width"/>
-	</button>
-      </vbox>
-    </frame>
-  </def:vslider>
+	<Button on-click="decrement" on-click2="page-decrement" click-type="fast-repeat" hexpand="1">
+	  <Arrow arrow-dir="down" size-policy="height-from-width"/>
+	</Button>
+      </VBox>
+    </Frame>
+  </def:VSlider>
   
 </rapicorn-gadgets>

@@ -187,6 +187,6 @@ public:
     return handled;
   }
 };
-static const ItemFactory<ButtonAreaImpl> button_area_factory ("Rapicorn::ButtonArea");
+static const ItemFactory<ButtonAreaImpl> button_area_factory ("Rapicorn::Factory::ButtonArea");
 
 } // Rapicorn

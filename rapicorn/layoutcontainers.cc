@@ -116,7 +116,7 @@ protected:
     return property_list;
   }
 };
-static const ItemFactory<AlignmentImpl> alignment_factory ("Rapicorn::Alignment");
+static const ItemFactory<AlignmentImpl> alignment_factory ("Rapicorn::Factory::Alignment");
 
 
 class HBoxImpl : public virtual HBox, public virtual TableImpl {
@@ -188,7 +188,7 @@ public:
   ~HBoxImpl()
   {}
 };
-static const ItemFactory<HBoxImpl> hbox_factory ("Rapicorn::HBox");
+static const ItemFactory<HBoxImpl> hbox_factory ("Rapicorn::Factory::HBox");
 
 
 class VBoxImpl : public virtual VBox, public virtual TableImpl {
@@ -257,6 +257,6 @@ public:
   ~VBoxImpl()
   {}
 };
-static const ItemFactory<VBoxImpl> vbox_factory ("Rapicorn::VBox");
+static const ItemFactory<VBoxImpl> vbox_factory ("Rapicorn::Factory::VBox");
 
 } // Rapicorn

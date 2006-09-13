@@ -902,6 +902,6 @@ RootImpl::stop_async (void)
     }
 }
 
-static const ItemFactory<RootImpl> root_factory ("Rapicorn::Root");
+static const ItemFactory<RootImpl> root_factory ("Rapicorn::Factory::Root");
 
 } // Rapicorn

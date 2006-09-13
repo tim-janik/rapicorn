@@ -188,8 +188,11 @@ public:
     else if (element_name.compare (0, 4, "def:") == 0 && gadget_stack.empty())
       {
         String ident = element_name.substr (4);
+        String qualified_ident = fdomain.domain_name + "::" + ident;
         Gadget *gadget = fdomain.definitions[ident];
-        if (!gadget)
+        if (gadget)
+          error.set (INVALID_CONTENT, String() + "gadget \"" + qualified_ident + "\" already defined (at " + gadget->location() + ")");
+        else
           {
             VariableMap vmap;
             String inherit;
@@ -211,7 +214,7 @@ public:
             if (error.set())
               ;
             else if (inherit[0] == 0)
-              error.set (INVALID_CONTENT, String() + "missing ancestor for gadget \"" + ident + "\"");
+              error.set (INVALID_CONTENT, String() + "missing ancestor for gadget \"" + qualified_ident + "\"");
             else
               {
                 int line_number, char_number;
@@ -224,8 +227,6 @@ public:
                 gadget_stack.push (gadget);
               }
           }
-        else
-          error.set (INVALID_CONTENT, String() + "gadget \"" + ident + "\" already defined");
       }
     else if (element_name.compare (0, 4, "arg:") == 0 && gadget_stack.size() == 1)
       {
@@ -343,7 +344,7 @@ FactorySingleton::add_domain (const String   &domain_name,
                               const String   &i18n_domain)
 {
   FactoryDomain *fdomain = new FactoryDomain (domain_name, i18n_domain);
-  factory_domains.push_back (fdomain);
+  factory_domains.push_front (fdomain);
   return fdomain;
 }
 
@@ -784,6 +785,13 @@ Factory::ItemTypeFactory::initialize_factories ()
 Factory::ItemTypeFactory::ItemTypeFactory (const char *namespaced_ident) :
   qualified_type (namespaced_ident)
 {}
+
+void
+Factory::ItemTypeFactory::sanity_check_identifier (const char *namespaced_ident)
+{
+  if (strncmp (namespaced_ident, "Rapicorn::Factory::", 19) != 0)
+    error ("item type not qualified as \"Rapicorn::Factory::\": %s", namespaced_ident);
+}
 
 } // Rapicorn
 

@@ -553,7 +553,7 @@ public:
   }
 };
 
-static const ItemFactory<TextPangoImpl> pango_text_factory ("Rapicorn::TextPango");
+static const ItemFactory<TextPangoImpl> pango_text_factory ("Rapicorn::Factory::TextPango");
 
 } // Rapicorn
 #endif  /* RAPICORN_WITH_PANGO */

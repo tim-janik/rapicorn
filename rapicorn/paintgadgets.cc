@@ -89,7 +89,7 @@ protected:
     return property_list;
   }
 };
-static const ItemFactory<ArrowImpl> arrow_factory ("Rapicorn::Arrow");
+static const ItemFactory<ArrowImpl> arrow_factory ("Rapicorn::Factory::Arrow");
 
 void
 DotGrid::dot_type (FrameType ft)
@@ -209,6 +209,6 @@ public:
     return property_list;
   }
 };
-static const ItemFactory<DotGridImpl> dot_grid_factory ("Rapicorn::DotGrid");
+static const ItemFactory<DotGridImpl> dot_grid_factory ("Rapicorn::Factory::DotGrid");
 
 } // Rapicorn

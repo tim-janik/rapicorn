@@ -140,6 +140,6 @@ protected:
     sig_assertions_passed.emit ();
   }
 };
-static const ItemFactory<TestItemImpl> test_item_factory ("Rapicorn::TestItem");
+static const ItemFactory<TestItemImpl> test_item_factory ("Rapicorn::Factory::TestItem");
 
 } // Rapicorn

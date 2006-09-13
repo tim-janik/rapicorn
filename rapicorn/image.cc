@@ -214,7 +214,7 @@ public:
     return property_list;
   }
 };
-static const ItemFactory<ImageImpl> image_factory ("Rapicorn::Image");
+static const ItemFactory<ImageImpl> image_factory ("Rapicorn::Factory::Image");
 
 class PixelImageImpl : virtual public PixelImage {
   uint m_width, m_height;

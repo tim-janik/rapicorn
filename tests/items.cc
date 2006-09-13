@@ -34,7 +34,7 @@ main (int   argc,
 
   TSTART ("RapicornItems");
   /* parse standard GUI descriptions and create example item */
-  Handle<Item> shandle = Factory::create_item ("root");
+  Handle<Item> shandle = Factory::create_item ("Root");
   TOK();
   /* get thread safe window handle */
   AutoLocker slocker (shandle); // auto-locks

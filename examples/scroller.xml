@@ -19,43 +19,43 @@
  !-->
 <rapicorn-gadgets xmlns:def="http://rapicorn.org/xmlns:def" xmlns:arg="http://rapicorn.org/xmlns:arg">
 
-  <!-- scroll-area -->
-  <def:scroll-port inherit="Rapicorn::ScrollPort">
-  </def:scroll-port>
-  <def:scroll-area inherit="Rapicorn::ScrollArea" child-container="scroll-container">
-    <table>
-      <alignment hexpand="0" vexpand="0" bottom-attach="1" left-attach="0" right-attach="1" top-attach="2" width="0" height="0"
+  <!-- ScrollArea -->
+  <def:ScrollPort inherit="Rapicorn::Factory::ScrollPort">
+  </def:ScrollPort>
+  <def:ScrollArea inherit="Rapicorn::Factory::ScrollArea" child-container="scroll-container">
+    <Table>
+      <Alignment hexpand="0" vexpand="0" bottom-attach="1" left-attach="0" right-attach="1" top-attach="2" width="0" height="0"
 	left-padding="2" right-padding="3" bottom-padding="2" top-padding="2">
-	<frame frame-type="in">
-	  <scroll-port>
-	    <ambience id="scroll-container" normal-lighting="upper-left"/>
-	  </scroll-port>
-	</frame>
-      </alignment>
-      <hslider hexpand="1" adjustment-source="ancestor-horizontal" bottom-attach="0" />
-      <vslider vexpand="1" adjustment-source="ancestor-vertical"   bottom-attach="1" left-attach="1" height="200" />
-    </table>
-  </def:scroll-area>
+	<Frame frame-type="in">
+	  <ScrollPort>
+	    <Ambience id="scroll-container" normal-lighting="upper-left"/>
+	  </ScrollPort>
+	</Frame>
+      </Alignment>
+      <HSlider hexpand="1" adjustment-source="ancestor-horizontal" bottom-attach="0" />
+      <VSlider vexpand="1" adjustment-source="ancestor-vertical"   bottom-attach="1" left-attach="1" height="200" />
+    </Table>
+  </def:ScrollArea>
 
   <!-- main dialog -->
-  <def:main-shell inherit="root" child-container="scroll-box">
+  <def:main-shell inherit="Root" child-container="scroll-box">
     <arg:test-value1 default="2"/>
     <arg:test-value2/>
-    <ambience normal-lighting="upper-left">
-      <vbox>
-	<scroll-area hspread="1" vspread="1">
-	  <vbox id="scroll-box" spacing="5" />
-	</scroll-area>
-      </vbox>
-    </ambience>
+    <Ambience normal-lighting="upper-left">
+      <VBox>
+	<ScrollArea hspread="1" vspread="1">
+	  <VBox id="scroll-box" spacing="5" />
+	</ScrollArea>
+      </VBox>
+    </Ambience>
   </def:main-shell>
-  <!-- button definition -->
-  <def:test-button inherit="button" on-click="dummy">
+  <!-- Button definition -->
+  <def:test-button inherit="Button" on-click="dummy">
     <arg:test-button-text default="ClickMe" />
-    <label text="$test_button_text"/>
+    <Label text="$test_button_text"/>
   </def:test-button>
-  <!-- button row -->
-  <def:button-row inherit="hbox" spacing="5" >
+  <!-- Button row -->
+  <def:button-row inherit="HBox" spacing="5" >
   </def:button-row>
 
 </rapicorn-gadgets>
