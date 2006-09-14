@@ -163,15 +163,15 @@ ArrangementImpl::size_request (Requisition &requisition)
     rect.rect_union (Rect (Point (0, 0), 1, 1));
   double side1, side2;
   /* calculate size requisition in the west and east of anchor */
-  side1 = MAX (-rect.ll.x, 0);
-  side2 = MAX (0, rect.ur.x);
+  side1 = MAX (-rect.x, 0);
+  side2 = MAX (0, rect.upper_x());
   /* expand proportionally */
   side1 = side1 * 1.0 / CLAMP (origin_hanchor(), 0.5, 1);
   side2 = side2 * 1.0 / (1 - CLAMP (origin_hanchor(), 0, 0.5));
   requisition.width = MAX (side1, side2);
   /* calculate size requisition in the south and north of anchor */
-  side1 = MAX (-rect.ll.y, 0);
-  side2 = MAX (0, rect.ur.y);
+  side1 = MAX (-rect.y, 0);
+  side2 = MAX (0, rect.upper_y());
   /* expand proportionally */
   side1 = side1 * 1.0 / CLAMP (origin_vanchor(), 0.5, 1);
   side2 = side2 * 1.0 / (1 - CLAMP (origin_vanchor(), 0, 0.5));

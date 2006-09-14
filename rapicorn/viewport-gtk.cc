@@ -508,9 +508,9 @@ ViewportGtk::invalidate_plane (const std::vector<Rect> &rects,
       gdk_window_get_size (m_widget->window, NULL, &window_height);
       /* coalesce rects and then queue expose events */
       for (uint i = 0; i < rects.size(); i++)
-        gtk_widget_queue_draw_area (m_widget, rects[i].ll.x,
-                                    window_height - (rects[i].ll.y + rects[i].height()),
-                                    rects[i].width(), rects[i].height());
+        gtk_widget_queue_draw_area (m_widget, rects[i].x,
+                                    window_height - (rects[i].y + rects[i].height),
+                                    rects[i].width, rects[i].height);
     }
 }
 

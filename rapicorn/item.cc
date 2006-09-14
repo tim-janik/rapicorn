@@ -807,11 +807,11 @@ Item::copy_area (const Rect  &rect,
       Rect drect (Point (a.x, a.y), a.width, a.height);
       /* clip src and dest rectangles to allocation */
       srect.intersect (rect);
-      drect.intersect (Rect (dest, rect.width(), rect.height()));
+      drect.intersect (Rect (dest, rect.width, rect.height));
       /* offset src rectangle by the amount the dest rectangle was clipped */
-      Rect src (Point (srect.ll.x + drect.ll.x - dest.x, srect.ll.y + drect.ll.y - dest.y),
-                min (srect.width(), drect.width()),
-                min (srect.height(), drect.height()));
+      Rect src (Point (srect.x + drect.x - dest.x, srect.y + drect.y - dest.y),
+                min (srect.width, drect.width),
+                min (srect.height, drect.height));
       /* the actual copy */
       if (!src.empty())
         ritem->copy_area (src, drect.lower_left());

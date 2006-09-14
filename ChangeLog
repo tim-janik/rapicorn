@@ -1,3 +1,9 @@
+Thu Sep 14 19:40:22 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/primitives.hh, rapicorn/primitives.cc: changed class Rect
+	to provide publically accessible x,y,width,height fields. moved
+	method implementations out of the class definition. adapted callers.
+
 Thu Sep 14 00:32:44 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/factory.hh, rapicorn/factory.cc: improved error mesages, fixed

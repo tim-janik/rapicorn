@@ -221,7 +221,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     scroll_display.push_clip_rect (0, 0, carea.width, carea.height);
     scroll_display.push_clip_rect (xoffset, yoffset, area.width, area.height);
     Rect pr = display.current_rect();
-    scroll_display.push_clip_rect (pr.ll.x - area.x + xoffset, pr.ll.y - area.y + yoffset, pr.width(), pr.height());
+    scroll_display.push_clip_rect (pr.x - area.x + xoffset, pr.y - area.y + yoffset, pr.width, pr.height);
     if (!scroll_display.empty())
       {
         child.render (scroll_display);

@@ -70,8 +70,8 @@ test_region_rect1 (void)
   vector<Rect> rects;
   r.list_rects (rects);
   TASSERT (rects.size() == 1);
-  TASSERT (rects[0].ll == Point (3, 3));
-  TASSERT (rects[0].ur == Point (5, 5));
+  TASSERT (rects[0].lower_left() == Point (3, 3));
+  TASSERT (rects[0].upper_right() == Point (5, 5));
   Region z (r);
   TASSERT (r.equal (z));
   r.exor (r);

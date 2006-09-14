@@ -165,9 +165,9 @@ EventFactory::copy_transform_event<EventWinDraw> (const Event  &source_base,
   EventWinDraw &event = *new EventWinDraw();
   copy_transform_event_base (event, source, affine);
   event.draw_stamp = source.draw_stamp;
-  event.bbox = Rect (affine.point (source.bbox.ll), affine.point (source.bbox.ur));
+  event.bbox = Rect (affine.point (source.bbox.lower_left()), affine.point (source.bbox.upper_right()));
   for (uint i = 0; i < source.rectangles.size(); i++)
-    event.rectangles.push_back (Rect (affine.point (source.rectangles[i].ll), affine.point (source.rectangles[i].ur)));
+    event.rectangles.push_back (Rect (affine.point (source.rectangles[i].lower_left()), affine.point (source.rectangles[i].upper_right())));
   return event;
 }
 

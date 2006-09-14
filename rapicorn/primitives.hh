@@ -143,158 +143,48 @@ using ::round;
 /* --- Rect --- */
 class Rect {
 public:
-  Point ll; /* lower-left */
-  Point ur; /* upper-right */
-  explicit Rect () :
-    ll (0, 0), ur (-1, -1)
-  {}
-  Rect (Point cp0, Point cp1) :
-    ll (min (cp0, cp1)), ur (max (cp0, cp1))
-  {}
-  Rect (Point p0, double width, double height) :
-    ll (min (p0, Point (p0.x + width, p0.y + height))),
-    ur (max (p0, Point (p0.x + width, p0.y + height)))
-  {}
-  Point upper_left      () const { return Point (ll.x, ur.y); }
-  Point upper_right     () const { return ur; }
-  Point lower_right     () const { return Point (ur.x, ll.y); }
-  Point lower_left      () const { return ll; }
-  Point center          () const { return Point ((ll.x + ur.x) / 2, (ll.y + ur.y) / 2); }
-  Point north           () const { return Point ((ll.x + ur.x) / 2, ur.y); }
-  Point north_east      () const { return Point (ur.x, ur.y); }
-  Point east            () const { return Point (ur.x, (ll.y + ur.y) / 2); }
-  Point south_east      () const { return Point (ur.x, ll.y); }
-  Point south           () const { return Point ((ll.x + ur.x) / 2, ll.y); }
-  Point south_west      () const { return Point (ll.x, ll.y); }
-  Point west            () const { return Point (ll.x, (ll.y + ur.y) / 2); }
-  Point north_west      () const { return Point (ll.x, ur.y); }
-  bool  contains        (const Point &point) const
-  {
-    return (ll.x <= point.x && ll.y <= point.y &&
-            ur.x >  point.x && ur.y >  point.y);
-  }
-  bool  operator==      (const Rect  &other) const
-  {
-    if (empty() && other.empty())
-      return true;
-    return other.ll.x == ll.x && other.ll.y == ll.y && other.ur.x == ur.x && other.ur.y == ur.y;
-  }
-  bool  operator!=      (const Rect &other) const
-  {
-    if (empty() && other.empty())
-      return false;
-    return other.ll.x != ll.x || other.ll.y != ll.y || other.ur.x != ur.x || other.ur.y != ur.y;
-  }
-  double dist2          (const Point &p) const;
-  double dist           (const Point &p) const;
-  Rect&
-  rect_union (const Rect &r)
-  {
-    if (r.empty())
-      return *this;
-    if (empty())
-      return *this = r;
-    ll = min (ll, r.ll);
-    ur = max (ur, r.ur);
-    return *this;
-  }
-  Rect&
-  rect_union (const Point &p)
-  {
-    if (empty())
-      {
-        ll = p;
-        ur = p;
-      }
-    else
-      {
-        ll = min (ll, p);
-        ur = max (ur, p);
-      }
-    return *this;
-  }
-  Rect&
-  add_border (double b)
-  {
-    ll.x -= b;
-    ll.y -= b;
-    ur.x += b;
-    ur.y += b;
-    if (empty())
-      *this = Rect();
-    return *this;
-  }
-  Rect&
-  intersect (const Rect &r)
-  {
-    ll = max (ll, r.ll);
-    ur = min (ur, r.ur);
-    return *this;
-  }
-  bool
-  empty () const
-  {
-    return ll.x > ur.x || ll.y > ur.y;
-  }
-  double
-  width() const
-  {
-    return ll.x >= ur.x ? 0 : ur.x - ll.x;
-  }
-  double
-  height() const
-  {
-    return ll.y >= ur.y ? 0 : ur.y - ll.y;
-  }
-  Point
-  anchor_point (AnchorType anchor)
-  {
-    switch (anchor)
-      {
-      default:
-      case ANCHOR_CENTER:       return center();        break;
-      case ANCHOR_NORTH:        return north();         break;
-      case ANCHOR_NORTH_EAST:   return north_east();    break;
-      case ANCHOR_EAST:         return east();          break;
-      case ANCHOR_SOUTH_EAST:   return south_east();    break;
-      case ANCHOR_SOUTH:        return south();         break;
-      case ANCHOR_SOUTH_WEST:   return south_west();    break;
-      case ANCHOR_WEST:         return west();          break;
-      case ANCHOR_NORTH_WEST:   return north_west();    break;
-      }
-  }
-  Rect&
-  operator+ (const Point &p)
-  {
-    ll += p;
-    ur += p;
-    return *this;
-  }
-  Rect&
-  operator- (const Point &p)
-  {
-    ll -= p;
-    ur -= p;
-    return *this;
-  }
-  String
-  string()
-  {
-    char buffer[128];
-    sprintf (buffer, "((%f,%f),(%f,%f))", ll.x, ll.y, ur.x, ur.y);
-    return String (buffer);
-  }
-  static Rect
-  create_anchored (AnchorType anchor,
-                   double     width,
-                   double     height)
-  {
-    Rect b (Point (0, 0), abs (width), abs (height)); /* SOUTH_WEST */
-    Point delta = b.anchor_point (anchor);
-    b.ll -= delta;
-    b.ur -= delta;
-    return b;
-  }
+  double x, y;
+  double width;
+  double height;
+  explicit      Rect            ();
+  explicit      Rect            (Point cp0, Point cp1);
+  explicit      Rect            (Point p0, double cwidth, double cheight);
+  Rect&         assign          (Point p0, Point p1);
+  Rect&         assign          (Point p0, double cwidth, double cheight);
+  double        upper_x         () const { return x + width; }
+  double        upper_y         () const { return y + height; }
+  Point         upper_left      () const { return Point (x, y + height); }
+  Point         upper_right     () const { return Point (x + width, y + height); }
+  Point         lower_right     () const { return Point (x + width, y); }
+  Point         lower_left      () const { return Point (x, y); }
+  Point         center          () const { return Point (x + width * 0.5, y + height * 0.5); }
+  Point         north           () const { return Point (x + width * 0.5, y); }
+  Point         north_east      () const { return upper_right(); }
+  Point         east            () const { return Point (x + width, y + height * 0.5); }
+  Point         south_east      () const { return lower_right(); }
+  Point         south           () const { return Point (x + width * 0.5, y); }
+  Point         south_west      () const { return lower_left(); }
+  Point         west            () const { return Point (x, y + height * 0.5); }
+  Point         north_west      () const { return upper_left(); }
+  bool          contains        (const Point &point) const      { return x <= point.x && y <= point.y && point.x < x + width && point.y < y + height; }
+  bool          operator==      (const Rect  &other) const;
+  bool          operator!=      (const Rect  &other) const      { return !operator== (other); }
+  double        dist2           (const Point &p) const;
+  double        dist            (const Point &p) const;
+  Rect&         rect_union      (const Rect &r);
+  Rect&         add             (const Point &p);
+  Rect&         add_border      (double b);
+  Rect&         intersect       (const Rect &r);
+  bool          empty           () const;
+  Point         anchor_point    (AnchorType anchor);
+  Rect&         translate       (double deltax,
+                                 double delty);
+  Rect&         operator+       (const Point &p);
+  Rect&         operator-       (const Point &p);
+  String        string          ();
+  static Rect   create_anchored (AnchorType anchor,
+                                 double     width,
+                                 double     height);
 };
 
 /* --- Color --- */
@@ -854,7 +744,7 @@ public:
     if (b.empty())
       return Initializer (iround (p0.x), iround (p0.y), 0, 0);
     else
-      return Initializer (iround (b.ll.x), iround (b.ll.y), iceil (b.width()), iceil (b.height()));
+      return Initializer (iround (b.x), iround (b.y), iceil (b.width), iceil (b.height));
   }
   static Initializer
   init_from_size (const Plane &master)
@@ -894,6 +784,114 @@ public:
   void          pop_clip_rect   ();
   void          render_combined (Plane &plane);
 };
+
+/* --- implementations --- */
+inline
+Rect::Rect () :
+  x (0), y (0), width (0), height (0)
+{}
+
+inline Rect&
+Rect::assign (Point p0, double cwidth, double cheight)
+{
+  x = p0.x;
+  y = p0.y;
+  width = MAX (cwidth, 0);
+  height = MAX (cheight, 0);
+  return *this;
+}
+
+inline
+Rect::Rect (Point p0, double cwidth, double cheight)
+{
+  assign (p0, cwidth, cheight);
+}
+
+inline Rect&
+Rect::assign (Point p0, Point p1)
+{
+  Point mll (min (p0, p1));
+  Point mur (max (p0, p1));
+  x = p0.x;
+  y = p0.y;
+  width = mur.x - mll.x;
+  height = mur.y - mll.y;
+  return *this;
+}
+
+inline
+Rect::Rect (Point cp0, Point cp1)
+{
+  assign (cp0, cp1);
+}
+
+inline bool
+Rect::operator== (const Rect &other) const
+{
+  if (empty() && other.empty())
+    return true;
+  return other.x == x && other.y == y && other.width == width && other.height == height;
+}
+
+inline Rect&
+Rect::add_border (double b)
+{
+  x -= b;
+  y -= b;
+  width += 2 * b;
+  height += 2 * b;
+  return *this;
+}
+
+inline Rect&         
+Rect::add (const Point &p)
+{
+  if (empty())
+    assign (p, 0, 0);
+  else
+    assign (min (p, lower_left()), max (p, upper_right()));
+  return *this;
+}
+
+inline Rect&
+Rect::rect_union (const Rect &r)
+{
+  if (r.empty())
+    return *this;
+  if (empty())
+    return *this = r;
+  Point mll = min (lower_left(), r.lower_left());
+  Point mur = max (upper_right(), r.upper_right());
+  assign (mll, mur);
+  return *this;
+}
+
+inline Rect&
+Rect::intersect (const Rect &r)
+{
+  Point pll = max (lower_left(), r.lower_left());
+  Point pur = min (upper_right(), r.upper_right());
+  if (pll.x <= pur.x && pll.y <= pur.y)
+    assign (pll, pur);
+  else
+    *this = Rect();
+  return *this;
+}
+
+inline bool
+Rect::empty () const
+{
+  return width * height == 0;
+}
+
+inline Rect&
+Rect::translate (double deltax,
+                 double delty)
+{
+  x += deltax;
+  y += delty;
+  return *this;
+}
 
 } // Rapicorn
 

@@ -568,7 +568,7 @@ RootImpl::dispatch_win_draw_event (const Event &event)
             break;    // discard outdated expose rectangles
           const Rect &rect = devent->rectangles[i];
           /* render area */
-          Plane *plane = new Plane (rect.ll.x, rect.ll.y, rect.width(), rect.height());
+          Plane *plane = new Plane (rect.x, rect.y, rect.width, rect.height);
           render (*plane);
           /* blit to screen */
           m_viewport->blit_plane (plane, devent->draw_stamp); // takes over plane
@@ -622,9 +622,9 @@ void
 RootImpl::copy_area (const Rect  &src,
                      const Point &dest)
 {
-  if (m_viewport && src.width() && src.height())
-    m_viewport->copy_area (src.ll.x, src.ll.y,
-                           src.width(), src.height(),
+  if (m_viewport && src.width && src.height)
+    m_viewport->copy_area (src.x, src.y,
+                           src.width, src.height,
                            dest.x, dest.y);
 }
 

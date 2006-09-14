@@ -46,53 +46,90 @@ dsqr (double x)
 double
 Rect::dist2 (const Point &p) const
 {
-  if (p.x <= ll.x)
+  if (p.x <= x)
     {
-      if (p.y <= ll.y)
-        return p.dist2 (ll);
-      if (p.y >= ur.y)
+      if (p.y <= y)
+        return p.dist2 (lower_left());
+      if (p.y >= upper_y())
         return p.dist2 (upper_left());
-      return dsqr (ll.x - p.x);
+      return dsqr (x - p.x);
     }
-  if (p.x >= ur.x)
+  if (p.x >= upper_x())
     {
-      if (p.y <= ll.y)
+      if (p.y <= y)
         return p.dist2 (lower_right());
-      if (p.y >= ur.y)
-        return p.dist2 (ur);
-      return dsqr (p.x - ur.x);
+      if (p.y >= upper_y())
+        return p.dist2 (upper_right());
+      return dsqr (p.x - x);
     }
-  if (p.y >= ur.y)
-    return dsqr (p.y - ur.y);
-  if (p.y <= ll.y)
-    return dsqr (ll.y - p.y);
+  if (p.y >= upper_y())
+    return dsqr (p.y - upper_y());
+  if (p.y <= y)
+    return dsqr (y - p.y);
   return 0; /* inside */
 }
 
 double
 Rect::dist (const Point &p) const
 {
-  if (p.x <= ll.x)
+  if (p.x <= x)
     {
-      if (p.y <= ll.y)
-        return p.dist (ll);
-      if (p.y >= ur.y)
+      if (p.y <= y)
+        return p.dist (lower_left());
+      if (p.y >= upper_y())
         return p.dist (upper_left());
-      return ll.x - p.x;
+      return x - p.x;
     }
-  if (p.x >= ur.x)
+  if (p.x >= upper_x())
     {
-      if (p.y <= ll.y)
+      if (p.y <= y)
         return p.dist (lower_right());
-      if (p.y >= ur.y)
-        return p.dist (ur);
-      return p.x - ur.x;
+      if (p.y >= upper_y())
+        return p.dist (upper_right());
+      return p.x - upper_x();
     }
-  if (p.y >= ur.y)
-    return p.y - ur.y;
-  if (p.y <= ll.y)
-    return ll.y - p.y;
+  if (p.y >= upper_y())
+    return p.y - upper_y();
+  if (p.y <= y)
+    return y - p.y;
   return 0; /* inside */
+}
+
+String
+Rect::string()
+{
+  char buffer[128];
+  sprintf (buffer, "((%f,%f),%fx%f)", x, y, width, height);
+  return String (buffer);
+}
+
+Point
+Rect::anchor_point (AnchorType anchor)
+{
+  switch (anchor)
+    {
+    default:
+    case ANCHOR_CENTER:       return center();        break;
+    case ANCHOR_NORTH:        return north();         break;
+    case ANCHOR_NORTH_EAST:   return north_east();    break;
+    case ANCHOR_EAST:         return east();          break;
+    case ANCHOR_SOUTH_EAST:   return south_east();    break;
+    case ANCHOR_SOUTH:        return south();         break;
+    case ANCHOR_SOUTH_WEST:   return south_west();    break;
+    case ANCHOR_WEST:         return west();          break;
+    case ANCHOR_NORTH_WEST:   return north_west();    break;
+    }
+}
+
+Rect
+Rect::create_anchored (AnchorType anchor,
+                       double     width,
+                       double     height)
+{
+  Rect b (Point (0, 0), abs (width), abs (height)); /* SOUTH_WEST */
+  Point delta = b.anchor_point (anchor);
+  b.translate (-delta.x, -delta.y);
+  return b;
 }
 
 void
@@ -638,8 +675,8 @@ Plane::combine (const Plane &src, CombineType ct, uint8 lucent)
   b.intersect (m);
   if (b.empty())
     return;
-  int xmin = iround (b.ll.x), xbound = iround (b.ur.x);
-  int ymin = iround (b.ll.y), ybound = iround (b.ur.y);
+  int xmin = iround (b.x), xbound = iround (b.upper_x());
+  int ymin = iround (b.y), ybound = iround (b.upper_y());
   int xspan = xbound - xmin;
   for (int y = ymin; y < ybound; y++)
     {
@@ -746,7 +783,7 @@ bool
 Display::empty () const
 {
   const Rect &r = clip_stack.front();
-  int w = iceil (r.width()), h = iceil (r.height());
+  int w = iceil (r.width), h = iceil (r.height);
   return !(w > 0 && h > 0);
 }
 
@@ -755,7 +792,7 @@ Display::current_rect ()
 {
   const Rect &r = clip_stack.front();
   /* align to integer bounds */
-  int x = iround (r.ll.x), y = iround (r.ll.y), w = iceil (r.width()), h = iceil (r.height());
+  int x = iround (r.x), y = iround (r.y), w = iceil (r.width), h = iceil (r.height);
   return Rect (Point (x, y), w, h); // FIXME: should be IntRect
 }
 
@@ -765,7 +802,7 @@ Display::create_plane (Color       c,
                        double      alpha) /* 0..1 */
 {
   const Rect &r = clip_stack.front();
-  int x = iround (r.ll.x), y = iround (r.ll.y), w = iceil (r.width()), h = iceil (r.height());
+  int x = iround (r.x), y = iround (r.y), w = iceil (r.width), h = iceil (r.height);
   if (w <= 0 || h <= 0)
     w = h = 0;
   Layer l;

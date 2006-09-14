@@ -31,10 +31,10 @@ static inline RapicornRegionBox
 rect2box (const Rect &src)
 {
   RapicornRegionBox box = {
-    i64round (src.ll.x),
-    i64round (src.ll.y),
-    i64round (src.ur.x),
-    i64round (src.ur.y)
+    i64round (src.x),
+    i64round (src.y),
+    i64round (src.upper_x()),
+    i64round (src.upper_y())
   };
   return box;
 }
