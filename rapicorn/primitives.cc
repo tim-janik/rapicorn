@@ -24,7 +24,7 @@ struct FPUCheck {
   FPUCheck()
   {
 #if defined __i386__ && defined __GNUC__
-    /* assert rounding mode round-to-nearest which ftoi() relies on */
+    /* assert rounding mode round-to-nearest which dtoi32() relies on */
     unsigned short int fpu_state;
     __asm__ ("fnstcw %0"
              : "=m" (*&fpu_state));

@@ -226,10 +226,10 @@ Painter::draw_shaded_rect (int xc0, int yc0, Color color0, int xc1, int yc1, Col
           double Da = Ba + Ca * lucent_dist;
           /* dither */
           union { uint32 r; uint8 a[4]; } z = { quick_rand32() };
-          uint32 dr = ftoi (Dr * 0xff) + z.a[3];
-          uint32 dg = ftoi (Dg * 0xff) + z.a[2];
-          uint32 db = ftoi (Db * 0xff) + z.a[1];
-          uint32 da = ftoi (Da * 0xff) + z.a[0];
+          uint32 dr = dtoi32 (Dr * 0xff) + z.a[3];
+          uint32 dg = dtoi32 (Dg * 0xff) + z.a[2];
+          uint32 db = dtoi32 (Db * 0xff) + z.a[1];
+          uint32 da = dtoi32 (Da * 0xff) + z.a[0];
           /* apply */
           *d++ = Color (dr >> 8, dg >> 8, db >> 8, da >> 8);
         }

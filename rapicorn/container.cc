@@ -623,7 +623,7 @@ Container::render (Display &display)
 void
 Container::debug_tree (String indent)
 {
-  printf ("%s%s(%p) (%dx%d%+d%+d)\n", indent.c_str(), this->name().c_str(), this,
+  printf ("%s%s(%p) (%fx%f%+f%+f)\n", indent.c_str(), this->name().c_str(), this,
           allocation().width, allocation().height, allocation().x, allocation().y);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
@@ -632,7 +632,7 @@ Container::debug_tree (String indent)
       if (c)
         c->debug_tree (indent + "  ");
       else
-        printf ("  %s%s(%p) (%dx%d%+d%+d)\n", indent.c_str(), child.name().c_str(), &child,
+        printf ("  %s%s(%p) (%fx%f%+f%+f)\n", indent.c_str(), child.name().c_str(), &child,
                 child.allocation().width, child.allocation().height, child.allocation().x, child.allocation().y);
     }
 }

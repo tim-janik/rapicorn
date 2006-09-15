@@ -36,21 +36,47 @@ inline double BIRNET_CONST radians (double degree)  { return degree * (PI / 180.
 
 /* double to integer */
 inline int BIRNET_CONST
-ftoi (double d)
+_dtoi32_generic (double d)
+{
+  /* this relies on the C++ behaviour of round-to-0 */
+  return (int) (d < -0.0 ? d - 0.5 : d + 0.5);
+}
+inline int BIRNET_CONST
+dtoi32 (double d)
 {
   /* this relies on the hardware default round-to-nearest */
 #if defined __i386__ && defined __GNUC__
   int r;
-  __asm__ ("fistl %0"
-           : "=m" (r)
-           : "t" (d));
+  __asm__ volatile ("fistl %0"
+                    : "=m" (r)
+                    : "t" (d));
   return r;
 #endif
-  return (int) d;
+  return _dtoi32_generic (d);
 }
-inline int BIRNET_CONST iround (double d) { return ftoi (round (d)); }
-inline int BIRNET_CONST iceil  (double d) { return ftoi (ceil (d)); }
-inline int BIRNET_CONST ifloor (double d) { return ftoi (floor (d)); }
+inline int64 BIRNET_CONST
+_dtoi64_generic (double d)
+{
+  /* this relies on the C++ behaviour of round-to-0 */
+  return (int64) (d < -0.0 ? d - 0.5 : d + 0.5);
+}
+inline int64 BIRNET_CONST
+dtoi64 (double d)
+{
+  /* this relies on the hardware default round-to-nearest */
+#if defined __i386__ && defined __GNUC__
+  int64 r;
+  __asm__ volatile ("fistpll %0"
+                    : "=m" (r)
+                    : "t" (d)
+                    : "st");
+  return r;
+#endif
+  return _dtoi64_generic (d);
+}
+inline int64 BIRNET_CONST iround (double d) { return dtoi64 (round (d)); }
+inline int64 BIRNET_CONST iceil  (double d) { return dtoi64 (ceil (d)); }
+inline int64 BIRNET_CONST ifloor (double d) { return dtoi64 (floor (d)); }
 
 /* --- enums --- */
 typedef enum {
@@ -149,8 +175,10 @@ public:
   explicit      Rect            ();
   explicit      Rect            (Point cp0, Point cp1);
   explicit      Rect            (Point p0, double cwidth, double cheight);
+  explicit      Rect            (double cx, double cy, double cwidth, double cheight);
   Rect&         assign          (Point p0, Point p1);
   Rect&         assign          (Point p0, double cwidth, double cheight);
+  Rect&         assign          (double cx, double cy, double cwidth, double cheight);
   double        upper_x         () const { return x + width; }
   double        upper_y         () const { return y + height; }
   Point         upper_left      () const { return Point (x, y + height); }
@@ -792,13 +820,25 @@ Rect::Rect () :
 {}
 
 inline Rect&
-Rect::assign (Point p0, double cwidth, double cheight)
+Rect::assign (double cx, double cy, double cwidth, double cheight)
 {
-  x = p0.x;
-  y = p0.y;
+  x = cx;
+  y = cy;
   width = MAX (cwidth, 0);
   height = MAX (cheight, 0);
   return *this;
+}
+
+inline
+Rect::Rect (double cx, double cy, double cwidth, double cheight)
+{
+  assign (cx, cy, cwidth, cheight);
+}
+
+inline Rect&
+Rect::assign (Point p0, double cwidth, double cheight)
+{
+  return assign (p0.x, p0.y, cwidth, cheight);
 }
 
 inline

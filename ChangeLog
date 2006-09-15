@@ -1,3 +1,18 @@
+Fri Sep 15 23:55:33 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/item.cc (set_allocation): align allocations to integer
+	quantities and constrain dimensions to values <= 2^52 to stay within
+	double precision.
+
+	* rapicorn/primitives.hh: removed ftoi(). added dtoi32() and dtoi64()
+	with fixed fallback behaviour (round-to-nearest for i386 asm and the
+	non-asm case). turned iceil, ifloor and iround into int64 functions.
+
+	* rapicorn/utilities.hh: extended min/max definitions for mixed integer
+	and floating point arguments to int64 and double.
+
+	* tests/primitives.cc (math_test): test dtoi*, iround, iceil, ifloor.
+
 Thu Sep 14 19:40:22 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/primitives.hh, rapicorn/primitives.cc: changed class Rect

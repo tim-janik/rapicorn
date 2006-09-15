@@ -918,9 +918,12 @@ ItemImpl::allocation (const Allocation &area)
 void
 ItemImpl::set_allocation (const Allocation &area)
 {
-  Allocation sarea = area;
-  sarea.width = MAX (area.width, 0);
-  sarea.height = MAX (area.height, 0);
+  Allocation sarea (iround (area.x), iround (area.y), iround (area.width), iround (area.height));
+  const double smax = 4503599627370496.; // 52bit precision is maximum for doubles
+  sarea.x      = CLAMP (sarea.x, -smax, smax);
+  sarea.y      = CLAMP (sarea.y, -smax, smax);
+  sarea.width  = CLAMP (sarea.width,  0, smax);
+  sarea.height = CLAMP (sarea.height, 0, smax);
   /* expose old area */
   expose();
   /* always reallocate to re-layout children */
