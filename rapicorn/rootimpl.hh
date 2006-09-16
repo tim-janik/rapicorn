@@ -22,6 +22,7 @@
 #include <rapicorn/root.hh>
 #include <rapicorn/containerimpl.hh>
 #include <rapicorn/viewport.hh>
+#include <rapicorn/region.hh>
 
 namespace Rapicorn {
 
@@ -37,7 +38,7 @@ class RootImpl : public virtual Root,
   MainLoop             *m_async_loop;
   uint                  m_asnyc_resize_draw_id;
   MainLoop::Source     *m_source;
-  std::vector<Rect>     m_expose_queue;
+  Region                m_expose_region;
   uint                  m_expose_queue_stamp;
   EventContext          m_last_event_context;
   vector<Item*>         m_last_entered_children;
@@ -65,7 +66,6 @@ private:
   virtual void          render                                  (Plane                  &plane);
   using                 Item::render;
   virtual void          expose                                  (const Allocation       &area);
-  void                  flush_expose_queue                      ();
   virtual void          copy_area                               (const Rect  &src,
                                                                  const Point &dest);
   virtual void          draw_now                                ();

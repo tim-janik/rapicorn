@@ -118,10 +118,7 @@ public:
   virtual void          show                    (void) = 0;
   virtual void          hide                    (void) = 0;
   virtual uint          last_draw_stamp         () = 0;
-  virtual void          invalidate_plane        (const std::vector<Rect> &rects,
-                                                 uint                     draw_stamp) = 0;
   virtual void          enqueue_win_draws       (void) = 0;
-  virtual void          enqueue_mouse_moves     (void) = 0;
   virtual void          blit_plane              (Plane          *plane,
                                                  uint            draw_stamp) = 0;
   virtual void          copy_area               (double          src_x,

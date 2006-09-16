@@ -1,3 +1,18 @@
+Sat Sep 16 21:44:47 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/rootimpl.hh, rapicorn/root.cc: removed expose rectangle 
+	queue. implemented expose region handling via class Region.
+	moved rendering to draw_now(). added logic to dispatch_event() to
+	coalesce multiple motion events. immediately handle pending redraws
+	after all events have been processed.
+
+	* rapicorn/viewport.hh, rapicorn/viewport-gtk.cc: removed 
+	invalidate_plane() and enqueue_mouse_moves() methods. upon processing of
+	motion notify events, immediately request a new event for when the 
+	pointer moves any further, and enqueue intermediate motion events from
+	device history.
+	prevent Gtk+ from queueing a shallow draw upon focus changes.
+
 Sat Sep 16 03:01:26 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/region.hh, rapicorn/region.cc: added ::string() method.

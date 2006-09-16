@@ -549,7 +549,7 @@ RootImpl::dispatch_win_size_event (const Event &event)
       Allocation allocation (0, 0, wevent->width, wevent->height);
       resize_all (&allocation);
       /* discard all expose requests, we'll get a new WIN_DRAW event */
-      m_expose_queue.clear();
+      m_expose_region.clear();
       handled = true;
     }
   return handled;
@@ -565,13 +565,8 @@ RootImpl::dispatch_win_draw_event (const Event &event)
       for (uint i = 0; i < devent->rectangles.size(); i++)
         {
           if (m_viewport->last_draw_stamp() != devent->draw_stamp)
-            break;    // discard outdated expose rectangles
-          const Rect &rect = devent->rectangles[i];
-          /* render area */
-          Plane *plane = new Plane (rect.x, rect.y, rect.width, rect.height);
-          render (*plane);
-          /* blit to screen */
-          m_viewport->blit_plane (plane, devent->draw_stamp); // takes over plane
+            break;    // ignore outdated expose rectangles
+          m_expose_region.add (devent->rectangles[i]);
         }
       handled = true;
     }
@@ -592,28 +587,15 @@ RootImpl::dispatch_win_delete_event (const Event &event)
 }
 
 void
-RootImpl::flush_expose_queue()
-{
-  m_viewport->invalidate_plane (m_expose_queue, m_expose_queue_stamp);
-  m_expose_queue.clear();
-}
-
-void
 RootImpl::expose (const Allocation &area)
 {
   /* this function is expected to *queue* events, and not render immediately */
   if (m_viewport && area.width && area.height)
     {
-      if (!m_expose_queue.size())
-        {
-          VoidSlot sl = slot (*this, &RootImpl::flush_expose_queue);
-          AutoLocker aelocker (m_async_mutex);
-          m_async_loop->exec_update (sl); // prio should be lower than for input event processing
-        }
       uint stamp = m_viewport->last_draw_stamp();
       if (stamp != m_expose_queue_stamp)
-        m_expose_queue.clear(); /* discard outdated exposes */
-      m_expose_queue.push_back (Rect (Point (area.x, area.y), area.width, area.height));
+        m_expose_region.clear(); /* discard outdated exposes */
+      m_expose_region.add (area);
       m_expose_queue_stamp = stamp;
     }
 }
@@ -633,8 +615,14 @@ RootImpl::draw_now ()
 {
   if (m_viewport)
     {
-      flush_expose_queue();
+      /* discard outdated exposes */
+      uint stamp = m_viewport->last_draw_stamp();
+      if (stamp != m_expose_queue_stamp)
+        m_expose_region.clear();
+      m_expose_queue_stamp = stamp;
+      /* force delivery of any pending update events */
       m_viewport->enqueue_win_draws();
+      /* collect all WIN_DRAW events */
       m_async_mutex.lock();
       std::list<Event*> events;
       std::list<Event*>::iterator it = m_async_event_queue.begin();
@@ -650,12 +638,30 @@ RootImpl::draw_now ()
             it++;
         }
       m_async_mutex.unlock();
+      /* invalidate areas from all collected WIN_DRAW events */
       while (!events.empty())
         {
           Event *event = events.front();
           events.pop_front();
           dispatch_event (*event);
           delete event;
+        }
+      /* render invalidated contents */
+      m_expose_region.intersect (Region (allocation()));
+      std::vector<Rect> rects;
+      m_expose_region.list_rects (rects);
+      m_expose_region.clear();
+      stamp = m_expose_queue_stamp;
+      for (uint i = 0; i < rects.size(); i++)
+        {
+          if (stamp != m_viewport->last_draw_stamp())
+            break;
+          const Rect &rect = rects[i];
+          /* render area */
+          Plane *plane = new Plane (rect.x, rect.y, rect.width, rect.height);
+          render (*plane);
+          /* blit to screen */
+          m_viewport->blit_plane (plane, stamp); // takes over plane
         }
     }
 }
@@ -772,15 +778,20 @@ RootImpl::dispatch_event (const Event &event)
   // diag ("Root: event: %s", string_from_event_type (event.type));
   switch (event.type)
     {
-      bool handled;
     case EVENT_LAST:
     case EVENT_NONE:          return false;
     case MOUSE_ENTER:         return dispatch_enter_event (event);
     case MOUSE_MOVE:
-      handled = dispatch_move_event (event);
-      if (m_viewport)
-        m_viewport->enqueue_mouse_moves();
-      return handled;
+      if (true) // coalesce multiple motion events
+        {
+          m_async_mutex.lock();
+          std::list<Event*>::iterator it = m_async_event_queue.begin();
+          bool found_event = it != m_async_event_queue.end() && (*it)->type == MOUSE_MOVE;
+          m_async_mutex.unlock();
+          if (found_event)
+            return true;
+        }
+      return dispatch_move_event (event);
     case MOUSE_LEAVE:         return dispatch_leave_event (event);
     case BUTTON_PRESS:
     case BUTTON_2PRESS:
@@ -813,7 +824,7 @@ RootImpl::prepare (uint64 current_time_usecs,
 {
   AutoLocker locker (m_omutex);
   AutoLocker aelocker (m_async_mutex);
-  return !m_async_event_queue.empty();
+  return !m_async_event_queue.empty() || !m_expose_region.empty();
 }
 
 bool
@@ -821,7 +832,7 @@ RootImpl::check (uint64 current_time_usecs)
 {
   AutoLocker locker (m_omutex);
   AutoLocker aelocker (m_async_mutex);
-  return !m_async_event_queue.empty();
+  return !m_async_event_queue.empty() || !m_expose_region.empty();
 }
 
 bool
@@ -836,8 +847,13 @@ RootImpl::dispatch ()
       m_async_event_queue.pop_front();
     }
   m_async_mutex.unlock();
-  dispatch_event (*event);
-  delete event;
+  if (event)
+    {
+      dispatch_event (*event);
+      delete event;
+    }
+  else if (!m_expose_region.empty())
+    draw_now();
   return true;
 }
 

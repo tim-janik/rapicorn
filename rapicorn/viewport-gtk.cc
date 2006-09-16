@@ -99,7 +99,7 @@ struct ViewportGtk : public virtual Viewport {
   };
   WindowType            m_window_type;
   EventReceiver        &m_receiver;
-  uint                  m_draw_counter;
+  uint                  m_draw_layout_stamp;
   bool                  m_splash_screen;
   float                 m_root_x, m_root_y;
   float                 m_request_width, m_request_height;
@@ -127,10 +127,7 @@ struct ViewportGtk : public virtual Viewport {
                                                  double          height,
                                                  double          dest_x,
                                                  double          dest_y);
-  virtual void          invalidate_plane        (const std::vector<Rect> &rects,
-                                                 uint                     draw_stamp);
   virtual void          enqueue_win_draws       (void);
-  virtual void          enqueue_mouse_moves     (void);
   virtual uint          last_draw_stamp         ();
   virtual State         get_state               ();
   virtual void          set_config              (const Config  &config,
@@ -146,7 +143,7 @@ ViewportGtk::ViewportGtk (const String  &backend_name,
                           WindowType     viewport_type,
                           EventReceiver &receiver) :
   m_viewport (NULL), m_window_type (viewport_type),
-  m_receiver (receiver), m_draw_counter (0),
+  m_receiver (receiver), m_draw_layout_stamp (0),
   m_root_x (NAN), m_root_y (NAN),
   m_request_width (33), m_request_height (33),
   m_window_state (WindowState (0)), m_average_background (0xff808080)
@@ -336,7 +333,7 @@ struct IdleBlitter {
      */
     if (!GTK_WIDGET_DRAWABLE (widget) ||
         (!self->fast_local_blitting &&                          /* when on remote display */
-         draw_stamp != viewport->m_draw_counter))               /* outdated plane */
+         draw_stamp != viewport->m_draw_layout_stamp))          /* outdated plane */
       {
         /* this window possibly has backing store enabled on the server,
          * which reduces the amount of expose events sent. here, we rely
@@ -497,24 +494,6 @@ ViewportGtk::copy_area (double          src_x,
 }
 
 void
-ViewportGtk::invalidate_plane (const std::vector<Rect> &rects,
-                               uint                     draw_stamp)
-{
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
-  if (GTK_WIDGET_DRAWABLE (m_widget) &&
-      draw_stamp == m_draw_counter) // ignore outdated invalidations
-    {
-      int window_height;
-      gdk_window_get_size (m_widget->window, NULL, &window_height);
-      /* coalesce rects and then queue expose events */
-      for (uint i = 0; i < rects.size(); i++)
-        gtk_widget_queue_draw_area (m_widget, rects[i].x,
-                                    window_height - (rects[i].y + rects[i].height),
-                                    rects[i].width, rects[i].height);
-    }
-}
-
-void
 ViewportGtk::enqueue_win_draws (void)
 {
   AutoLocker locker (GTK_GDK_THREAD_SYNC);
@@ -522,35 +501,10 @@ ViewportGtk::enqueue_win_draws (void)
     gdk_window_process_updates (m_widget->window, TRUE);
 }
 
-void
-ViewportGtk::enqueue_mouse_moves (void)
-{
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
-  if (GTK_WIDGET_DRAWABLE (m_widget))
-    {
-      bool need_many_events = false;
-      if (!need_many_events)
-        {
-          /* get only *one* new motion event */
-          gdk_window_get_pointer (m_widget->window, NULL, NULL, NULL);
-        }
-      else
-        {
-          /* get pending motion events */
-          GdkDisplay *display = gtk_widget_get_display (m_widget);
-          gdk_device_get_history  (gdk_display_get_core_pointer (display),
-                                   m_widget->window,
-                                   m_viewport->last_motion_time,
-                                   GDK_CURRENT_TIME,
-                                   NULL, NULL);
-        }
-    }
-}
-
 uint
 ViewportGtk::last_draw_stamp ()
 {
-  return m_draw_counter;
+  return m_draw_layout_stamp;
 }
 
 Viewport::State
@@ -834,7 +788,8 @@ rapicorn_viewport_init (RapicornViewport *self)
 static EventContext
 rapicorn_viewport_event_context (RapicornViewport *self,
                                  GdkEvent         *event = NULL,
-                                 int              *window_height = NULL)
+                                 int              *window_height = NULL,
+                                 GdkTimeCoord     *core_coords = NULL)
 {
   /* extract common event information */
   EventContext econtext;
@@ -844,9 +799,17 @@ rapicorn_viewport_event_context (RapicornViewport *self,
   gint wh = 0;
   if (gdkwindow)
     gdk_window_get_size (gdkwindow, NULL, &wh);
-  if (event && event->any.window == gdkwindow &&
-      gdk_event_get_coords (event, &doublex, &doubley) &&
-      gdk_event_get_state (event, &modifier_type))
+  if (event && event->any.window == gdkwindow && core_coords)
+    {
+      self->last_time = core_coords->time;
+      self->last_x = core_coords->axes[0];
+      /* vertical Rapicorn axis extends upwards */
+      self->last_y = wh - core_coords->axes[1];;
+      econtext.synthesized = true;
+    }
+  else if (event && event->any.window == gdkwindow &&
+           gdk_event_get_coords (event, &doublex, &doubley) &&
+           gdk_event_get_state (event, &modifier_type))
     {
       self->last_time = gdk_event_get_time (event);
       self->last_x = doublex;
@@ -899,7 +862,10 @@ rapicorn_viewport_change_visibility (RapicornViewport  *self,
   if (self->visibility_state == GDK_VISIBILITY_FULLY_OBSCURED)
     {
       EventContext econtext = rapicorn_viewport_event_context (self);
-      viewport->m_draw_counter++;   // ignore pending draws
+      /* note, don't change m_draw_layout_stamp here, we need to continue
+       * drawing even if obscured (e.g. because the xserver might update
+       * it's backing store).
+       */
       viewport->enqueue_locked (create_event_cancellation (econtext));
     }
 }
@@ -932,7 +898,8 @@ rapicorn_viewport_size_allocate (GtkWidget     *widget,
   if (viewport)
     {
       EventContext econtext = rapicorn_viewport_event_context (self); /* relies on proper GdkWindow size */
-      viewport->enqueue_locked (create_event_win_size (econtext, ++viewport->m_draw_counter, allocation->width, allocation->height));
+      viewport->m_draw_layout_stamp++;
+      viewport->enqueue_locked (create_event_win_size (econtext, viewport->m_draw_layout_stamp, allocation->width, allocation->height));
     }
 }
 
@@ -1113,18 +1080,38 @@ rapicorn_viewport_event (GtkWidget *widget,
       break;
     case GDK_MOTION_NOTIFY:
       viewport->enqueue_locked (create_event_mouse (MOUSE_MOVE, econtext));
-      self->last_motion_time = gdk_event_get_time (event);
-      /* trigger new motion events (since we use motion-hint) */
-#if 0
-      if (event->any.window == widget->window) /* will be requested by enqueue_mouse_moves() instead */
-        gdk_window_get_pointer (window, NULL, NULL, NULL);
-#endif
+      self->last_motion_time = self->last_time;
+      /* retrieve and enqueue intermediate moves */
+      if (true)
+        {
+          GdkDevice *device = gdk_display_get_core_pointer (gtk_widget_get_display (widget));
+          assert (device->num_axes >= 2);
+          GdkTimeCoord **tcoords = NULL;
+          gint           n = 0;
+          gdk_device_get_history  (device, widget->window, self->last_motion_time, GDK_CURRENT_TIME, &tcoords, &n);
+          for (int i = 0; i < n; i++)
+            {
+              econtext = rapicorn_viewport_event_context (self, event, NULL, tcoords[i]);
+              self->last_motion_time = self->last_time;
+              if (DEBUG_EVENTS)
+                g_printerr ("Rapicorn-MOTION-HISTORY: time=0x%08x x=%+7.2f y=%+7.2f\n", tcoords[i]->time, tcoords[i]->axes[0], tcoords[i]->axes[1]);
+              viewport->enqueue_locked (create_event_mouse (MOUSE_MOVE, econtext));
+            }
+          gdk_device_free_history (tcoords, n);
+        }
+      else /* only rough motion tracking */
+        {
+          /* request more motion events */
+          if (event->any.window == widget->window && event->motion.is_hint)
+            gdk_window_get_pointer (event->any.window, NULL, NULL, NULL);
+        }
       break;
     case GDK_LEAVE_NOTIFY:
       viewport->enqueue_locked (create_event_mouse (event->crossing.detail == GDK_NOTIFY_INFERIOR ? MOUSE_MOVE : MOUSE_LEAVE, econtext));
       break;
     case GDK_FOCUS_CHANGE:
       viewport->enqueue_locked (create_event_focus (event->focus_change.in ? FOCUS_IN : FOCUS_OUT, econtext));
+      handled = TRUE; // prevent Gtk+ from queueing a shallow draw
       break;
     case GDK_KEY_PRESS:
     case GDK_KEY_RELEASE:
@@ -1205,7 +1192,7 @@ rapicorn_viewport_event (GtkWidget *widget,
             gint realy = window_height - (area.y + area.height);
             rectangles.push_back (Rect (Point (area.x, realy), area.width, area.height));
           }
-        viewport->enqueue_locked (create_event_win_draw (econtext, viewport->m_draw_counter, rectangles));
+        viewport->enqueue_locked (create_event_win_draw (econtext, viewport->m_draw_layout_stamp, rectangles));
       }
       break;
     default:
