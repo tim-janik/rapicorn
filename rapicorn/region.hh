@@ -23,6 +23,13 @@
 
 namespace Rapicorn {
 
+/**
+ * Region implements various common operations on areas which can be covered
+ * by a list of rectangles. Region calculations use fixed point arithmetics,
+ * so only a small number of fractional digits are supported (2 decimals,
+ * fractions are represented by 8 bit), and rectangle sizes are also limited
+ * (rectangle dimensions shouldn't exceed 3.6e16, i.e. 2^55).
+ */
 class Region {
   struct { int64 idummy[4]; void *pdummy; } m_region;
   inline void*       region_mem   ();
@@ -52,6 +59,7 @@ public: /* rectangles are represented at 64bit integer precision */
   void          subtract          (const Region         &subtrahend);
   void          intersect         (const Region         &other);
   void          exor              (const Region         &other);
+  String        string            ();
 };
 
 bool operator== (const Region &r1,

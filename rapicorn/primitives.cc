@@ -99,7 +99,7 @@ String
 Rect::string()
 {
   char buffer[128];
-  sprintf (buffer, "((%f,%f),%fx%f)", x, y, width, height);
+  sprintf (buffer, "((%f, %f), %f, %f)", x, y, width, height);
   return String (buffer);
 }
 

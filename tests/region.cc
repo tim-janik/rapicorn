@@ -158,13 +158,50 @@ static Region
 create_rand_region (void)
 {
   Region r;
-  int u = 1 + (abs (lrand48()) % 307);
-  if (u >= 100 && u <= 200)
-    return Region (Point (70, 123455), Point (-1234, 139832987)); // need equal regions with some probability
+  int u = 1 + (abs (lrand48()) % 157);
+  if (u >= 50 && u <= 99)
+    return Region (Point (70, 123455), Point (12345, 1987)); // need equal regions with some probability
   for (int i = 0; i < u; i++)
-    r.add (Rect (Point (lrand48() + (((int64) lrand48()) << 20), lrand48() + (((int64) lrand48()) << 20)),
-                 Point (lrand48() + (((int64) lrand48()) << 20),lrand48() + (((int64) lrand48()) << 20))));
+    r.add (Rect (Point (lrand48() * 0.005 + (((int64) lrand48()) << 16), lrand48() * 0.005 + (((int64) lrand48()) << 16)),
+                 Point (lrand48() * 0.005 + (((int64) lrand48()) << 16), lrand48() * 0.005 + (((int64) lrand48()) << 16))));
   return r;
+}
+
+static void
+test_region_fract (void)
+{
+  TSTART ("fractional regions");
+  Region r;
+  TASSERT (r.empty());
+  r.clear();
+  TASSERT (r.empty());
+  TASSERT (r.contains (Point (0, 0)) == false);
+  r.add (Rect (Point (0.1, 0.2), Point (3.4, 4.5)));
+  TASSERT (!r.empty());
+  TASSERT (r.contains (2, 2));
+  TASSERT (r.contains (0, 0) == false);
+  TASSERT (r.contains (1, 1));
+  TASSERT (r.contains (3, 3));
+  TASSERT (r.contains (3.3, 3));
+  TASSERT (r.contains (3.5, 3) == false);
+  TASSERT (r.contains (3.3, 4.4));
+  TASSERT (r.contains (3.3, 4.6) == false);
+  TASSERT (r.contains (6, 6) == false);
+  TASSERT (r.contains (Rect (1, 1, 2, 2)) == r.INSIDE);
+  TASSERT (r.contains (Rect (0, 0, 3, 3)) == r.PARTIAL);
+  TASSERT (r.contains (Rect (3.5, 0, 70, 70)) == r.OUTSIDE);
+  Region r2 = r;
+  r2.add (Rect (0, 0, 0.1, 4.5));
+  r2.add (Rect (0, 0, 3.4, 0.2));
+  Region r3 (Rect (0, 0, 3.4, 4.5));
+  TASSERT (r2 == r3);
+  std::vector<Rect> rects;
+  r3.list_rects (rects);
+  TASSERT (rects.size() == 1);
+  rects[0] == Rect (0, 0, 3.4, 4.5);
+  TDONE();
+  if (0)
+    printf ("\nREGION:\n%s\nEMPTY:\n%s\n", create_rand_region().string().c_str(), Region().string().c_str());
 }
 
 static void
@@ -249,6 +286,7 @@ main (int   argc,
   test_region_rect1();
   test_region2();
   test_region2_ops();
+  test_region_fract();
   test_region_cmp();
 
   return 0;

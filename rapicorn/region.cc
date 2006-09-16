@@ -21,20 +21,30 @@
 
 namespace Rapicorn {
 
+#define FIXED2DOUBLE    (0x.01p0)       // / 256.
+#define DOUBLE2FIXED    (0x100.p0)      // * 256.
+
+
 static inline int64
-i64round (double d)
+double2fixed (double d)
 {
-  return (int64) round (d);
+  return iround (d * DOUBLE2FIXED);
+}
+
+static inline double
+fixed2double (int64 i)
+{
+  return FIXED2DOUBLE * i;
 }
 
 static inline RapicornRegionBox
 rect2box (const Rect &src)
 {
   RapicornRegionBox box = {
-    i64round (src.x),
-    i64round (src.y),
-    i64round (src.upper_x()),
-    i64round (src.upper_y())
+    double2fixed (src.x),
+    double2fixed (src.y),
+    double2fixed (src.upper_x()),
+    double2fixed (src.upper_y())
   };
   return box;
 }
@@ -120,13 +130,15 @@ Region::extents () const
 {
   RapicornRegionBox box;
   _rapicorn_region_extents (REGION (this), &box);
-  return Rect (Point (box.x1, box.y1), Point (box.x2, box.y2));
+  return Rect (fixed2double (box.x1), fixed2double (box.y1),
+               fixed2double (box.x2 - box.x1),
+               fixed2double (box.y2 - box.y1));
 }
 
 bool
 Region::contains (const Point &point) const
 {
-  RapicornRegionPoint p = { i64round (point.x), i64round (point.y) };
+  RapicornRegionPoint p = { double2fixed (point.x), double2fixed (point.y) };
   return _rapicorn_region_point_in (REGION (this), &p);
 }
 
@@ -155,7 +167,9 @@ Region::list_rects (std::vector<Rect> &rects) const
   uint k = _rapicorn_region_get_rects (REGION (this), n, boxes);
   assert (k == n);
   for (uint i = 0; i < n; i++)
-    rects.push_back (Rect (Point (boxes[i].x1, boxes[i].y1), Point (boxes[i].x2, boxes[i].y2)));
+    rects.push_back (Rect (fixed2double (boxes[i].x1), fixed2double (boxes[i].y1),
+                           fixed2double (boxes[i].x2 - boxes[i].x1),
+                           fixed2double (boxes[i].y2 - boxes[i].y1)));
 }
 
 void
@@ -208,6 +222,27 @@ operator< (const Region &r1,
            const Region &r2)
 {
   return r1.cmp (r2) < 0;
+}
+
+String
+Region::string()
+{
+  String s ("{ ");
+  std::vector<Rect> rects;
+  list_rects (rects);
+  for (uint i = 0; i < rects.size(); i++)
+    {
+      if (i)
+        s += ",\n  ";
+      s += rects[i].string();
+    }
+  if (rects.size())
+    s += "\n";
+  s += "/*";
+  Rect ext = extents();
+  s += ext.string();
+  s += "*/ }";
+  return s;
 }
 
 } // Rapicorn
