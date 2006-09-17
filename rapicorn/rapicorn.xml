@@ -62,6 +62,17 @@
       </Ambience>
     </Frame>
   </def:Button>
+  <def:UnfocusedButton inherit="Rapicorn::Factory::ButtonArea" child-container="child-area" >
+    <Frame normal-frame="out" impressed-frame="in" >
+      <Ambience
+	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
+	normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none">
+	<Frame frame-type="none">
+	  <Alignment id="child-area" vscale="1" hscale="1" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
+	</Frame>
+      </Ambience>
+    </Frame>
+  </def:UnfocusedButton>
   <def:DefaultButton inherit="Rapicorn::Factory::Frame" child-container="child-area" frame-type="in" >
     <Alignment left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
       <Button id="child-area" />
@@ -81,9 +92,9 @@
   <def:HSlider inherit="Rapicorn::Factory::SliderArea">
     <Frame normal-frame="in" vexpand="1" hexpand="1" height="18">
       <HBox vexpand="1">
-	<Button on-click="decrement" on-click2="page-decrement" click-type="fast-repeat" vexpand="1">
+	<UnfocusedButton on-click="decrement" on-click2="page-decrement" click-type="fast-repeat" vexpand="1">
 	  <Arrow arrow-dir="left" size-policy="width-from-height"/>
-	</Button>
+	</UnfocusedButton>
 	<Rapicorn-slider-trough hexpand="1" vexpand="1">
 	  <Rapicorn-slider-skid vspread="1" hexpand="1" vertical-skid="0">
 	    <Ambience
@@ -95,9 +106,9 @@
 	    </Ambience>
 	  </Rapicorn-slider-skid>
 	</Rapicorn-slider-trough>
-	<Button on-click="increment" on-click2="page-increment" click-type="fast-repeat" vexpand="1">
+	<UnfocusedButton on-click="increment" on-click2="page-increment" click-type="fast-repeat" vexpand="1">
 	  <Arrow arrow-dir="right" size-policy="width-from-height"/>
-	</Button>
+	</UnfocusedButton>
       </HBox>
     </Frame>
   </def:HSlider>
@@ -105,9 +116,9 @@
   <def:VSlider inherit="Rapicorn::Factory::SliderArea">
     <Frame normal-frame="in" vexpand="1" hexpand="1" width="18">
       <VBox hexpand="1">
-	<Button on-click="increment" on-click2="page-increment" click-type="fast-repeat" hexpand="1">
+	<UnfocusedButton on-click="increment" on-click2="page-increment" click-type="fast-repeat" hexpand="1">
 	  <Arrow arrow-dir="up" size-policy="height-from-width"/>
-	</Button>
+	</UnfocusedButton>
 	<Rapicorn-slider-trough vexpand="1" hexpand="1">
 	  <Rapicorn-slider-skid hspread="1" vexpand="1" vertical-skid="1">
 	    <Ambience
@@ -119,9 +130,9 @@
 	    </Ambience>
 	  </Rapicorn-slider-skid>
 	</Rapicorn-slider-trough>
-	<Button on-click="decrement" on-click2="page-decrement" click-type="fast-repeat" hexpand="1">
+	<UnfocusedButton on-click="decrement" on-click2="page-decrement" click-type="fast-repeat" hexpand="1">
 	  <Arrow arrow-dir="down" size-policy="height-from-width"/>
-	</Button>
+	</UnfocusedButton>
       </VBox>
     </Frame>
   </def:VSlider>

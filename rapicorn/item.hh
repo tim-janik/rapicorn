@@ -82,8 +82,6 @@ protected:
     /* REQUEST_DEFAULT        = 1 <<  8, */
     INVALID_REQUISITION       = 1 << 10,
     INVALID_ALLOCATION        = 1 << 11,
-    EXPOSE_ON_CHANGE          = 1 << 12,
-    INVALIDATE_ON_CHANGE      = 1 << 13,
     HEXPAND                   = 1 << 14,
     VEXPAND                   = 1 << 15,
     HSPREAD                   = 1 << 16,
@@ -118,8 +116,7 @@ protected:
   virtual void                style             (Style  *st);
   virtual void                finalize          ();
   virtual void                hierarchy_changed (Item *old_toplevel);
-  virtual bool                move_focus        (FocusDirType fdir,
-                                                 bool         reset_history);
+  virtual bool                move_focus        (FocusDirType fdir);
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
   void                        notify_key_error  ();
 public:

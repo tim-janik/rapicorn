@@ -271,21 +271,32 @@ Frame::frame_type (FrameType ft)
 
 class FrameImpl : public virtual SingleContainerImpl, public virtual Frame {
   FrameType m_normal_frame, m_impressed_frame;
+  bool      m_overlap_child;
 public:
   explicit FrameImpl() :
     m_normal_frame (FRAME_ETCHED_IN),
-    m_impressed_frame (FRAME_ETCHED_IN)
-  {
-    set_flag (EXPOSE_ON_CHANGE, true);
-  }
+    m_impressed_frame (FRAME_ETCHED_IN),
+    m_overlap_child (false)
+  {}
   ~FrameImpl()
   {}
-  virtual void          normal_frame    (FrameType ft)  { m_normal_frame = ft; invalidate(); }
-  virtual FrameType     normal_frame    () const        { return m_normal_frame; }
-  virtual void          impressed_frame (FrameType ft)  { m_impressed_frame = ft; invalidate(); }
-  virtual FrameType     impressed_frame () const        { return m_impressed_frame; }
-  virtual FrameType     current_frame   () const        { return branch_impressed() ? impressed_frame() : normal_frame(); }
 protected:
+  virtual void
+  do_changed ()
+  {
+    SingleContainerImpl::do_changed();
+    if (overlap_child())
+      expose();
+    else
+      expose_enclosure();
+  }
+  virtual void          normal_frame    (FrameType ft)  { m_normal_frame = ft; changed(); }
+  virtual FrameType     normal_frame    () const        { return m_normal_frame; }
+  virtual void          impressed_frame (FrameType ft)  { m_impressed_frame = ft; changed(); }
+  virtual FrameType     impressed_frame () const        { return m_impressed_frame; }
+  virtual bool          overlap_child   () const        { return m_overlap_child; }
+  virtual void          overlap_child   (bool ovc)      { m_overlap_child = ovc; invalidate(); changed(); }
+  virtual FrameType     current_frame   () const        { return branch_impressed() ? impressed_frame() : normal_frame(); }
   virtual void
   size_request (Requisition &requisition)
   {
@@ -301,7 +312,12 @@ protected:
       }
     set_flag (HSPREAD_CONTAINER, chspread);
     set_flag (VSPREAD_CONTAINER, cvspread);
-    if (current_frame() != FRAME_NONE)
+    if (m_overlap_child)
+      {
+        requisition.width = MAX (requisition.width, 2 + 2);
+        requisition.height = MAX (requisition.height, 2 + 2);
+      }
+    else
       {
         requisition.width += 2 + 2;
         requisition.height += 2 + 2;
@@ -407,9 +423,10 @@ public:
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (Frame, normal_frame, _("Normal Frame"), _("The kind of frame to draw in normal state"), FRAME_ETCHED_IN, "rw"),
+      MakeProperty (Frame, normal_frame,    _("Normal Frame"),   _("The kind of frame to draw in normal state"), FRAME_ETCHED_IN, "rw"),
       MakeProperty (Frame, impressed_frame, _("Impresed Frame"), _("The kind of frame to draw in impressed state"), FRAME_ETCHED_IN, "rw"),
-      MakeProperty (Frame, frame_type, _("Frame Type"), _("The kind of frame to draw in all states"), FRAME_ETCHED_IN, "w"),
+      MakeProperty (Frame, frame_type,      _("Frame Type"),     _("The kind of frame to draw in all states"), FRAME_ETCHED_IN, "w"),
+      MakeProperty (Frame, overlap_child,   _("Overlap Child"),  _("Draw frame in the same position as child"), false, "w"),
     };
     static const PropertyList property_list (properties, Container::list_properties());
     return property_list;
@@ -420,11 +437,22 @@ static const ItemFactory<FrameImpl> frame_factory ("Rapicorn::Factory::Frame");
 class FocusFrameImpl : public virtual FocusFrame, public virtual FrameImpl {
   FrameType m_focus_frame;
   Client   *m_client;
+  void
+  client_changed()
+  {
+    if (overlap_child())
+      expose();
+    else
+      expose_enclosure();
+  }
   virtual void
   hierarchy_changed (Item *old_toplevel)
   {
     if (m_client)
-      m_client->unregister_focus_frame (*this);
+      {
+        m_client->sig_changed -= slot (*this, &FocusFrameImpl::client_changed);
+        m_client->unregister_focus_frame (*this);
+      }
     m_client = NULL;
     this->FrameImpl::hierarchy_changed (old_toplevel);
     if (anchored())
@@ -432,10 +460,12 @@ class FocusFrameImpl : public virtual FocusFrame, public virtual FrameImpl {
         Client *client = parent_interface<Client*>();
         if (client->register_focus_frame (*this))
           m_client = client;
+        if (m_client)
+          m_client->sig_changed += slot (*this, &FocusFrameImpl::client_changed);
       }
   }
 protected:
-  virtual void          focus_frame     (FrameType ft)  { m_focus_frame = ft; invalidate(); }
+  virtual void          focus_frame     (FrameType ft)  { m_focus_frame = ft; changed(); }
   virtual FrameType     focus_frame     () const        { return m_focus_frame; }
   virtual FrameType
   current_frame () const

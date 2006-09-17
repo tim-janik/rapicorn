@@ -436,11 +436,9 @@ struct LesserItemByHBand {
 struct LesserItemByDirection {
   FocusDirType dir;
   Point        middle;
-  Item        *last_item;
   LesserItemByDirection (FocusDirType d,
-                         const Point &p,
-                         Item        *li) :
-    dir (d), middle (p), last_item (li)
+                         const Point &p) :
+    dir (d), middle (p)
   {}
   double
   directional_distance (const Allocation &a) const
@@ -459,11 +457,6 @@ struct LesserItemByDirection {
         return -1;      /* unused */
       }
   }
-  static inline Rect
-  rect_from_allocation (const Allocation &a)
-  {
-    return Rect (Point (a.x, a.y), a.width, a.height);
-  }
   bool
   operator() (Item *const &i1,
               Item *const &i2) const
@@ -473,15 +466,12 @@ struct LesserItemByDirection {
     const Allocation &a2 = i2->allocation();
     double dd1 = directional_distance (a1);
     double dd2 = directional_distance (a2);
-    /* current focus item comes last in the list of negative distances */
-    if (dd1 < 0 && dd2 < 0 && (last_item == i1 || last_item == i2))
-      return last_item == i2;
     /* sort items along dir */
     if (dd1 != dd2)
       return dd1 < dd2;
     /* same horizontal/vertical band distance, sort by closest edge distance */
-    dd1 = rect_from_allocation (a1).dist (middle);
-    dd2 = rect_from_allocation (a2).dist (middle);
+    dd1 = a1.dist (middle);
+    dd2 = a2.dist (middle);
     if (dd1 != dd2)
       return dd1 < dd2;
     /* same edge distance, resort to center distance */
@@ -498,15 +488,14 @@ rect_center (const Allocation &a)
 }
 
 bool
-Container::move_focus (FocusDirType fdir,
-                       bool         reset_history)
+Container::move_focus (FocusDirType fdir)
 {
   /* check focus ability */
   if (!visible() || !sensitive())
     return false;
   Item *last_child = get_data (&focus_child_key);
   /* let last focus descendant handle movement */
-  if (last_child && last_child->move_focus (fdir, reset_history))
+  if (last_child && last_child->move_focus (fdir))
     return true;
   /* copy children */
   vector<Item*> children;
@@ -532,18 +521,34 @@ Container::move_focus (FocusDirType fdir,
     case FOCUS_LEFT:
       current = root()->get_focus();
       refpoint = current ? rect_center (current->allocation()) : lower_right;
-      stable_sort (children.begin(), children.end(), LesserItemByDirection (fdir, refpoint, last_child));
+      { /* filter items with negative distance (not ahead in focus direction) */
+        LesserItemByDirection lesseribd = LesserItemByDirection (fdir, refpoint);
+        vector<Item*> children2;
+        for (vector<Item*>::const_iterator it = children.begin(); it != children.end(); it++)
+          if (lesseribd.directional_distance ((*it)->allocation()) >= 0)
+            children2.push_back (*it);
+        children.swap (children2);
+        stable_sort (children.begin(), children.end(), lesseribd);
+      }
       break;
     case FOCUS_RIGHT:
     case FOCUS_DOWN:
       current = root()->get_focus();
       refpoint = current ? rect_center (current->allocation()) : upper_left;
-      stable_sort (children.begin(), children.end(), LesserItemByDirection (fdir, refpoint, last_child));
+      { /* filter items with negative distance (not ahead in focus direction) */
+        LesserItemByDirection lesseribd = LesserItemByDirection (fdir, refpoint);
+        vector<Item*> children2;
+        for (vector<Item*>::const_iterator it = children.begin(); it != children.end(); it++)
+          if (lesseribd.directional_distance ((*it)->allocation()) >= 0)
+            children2.push_back (*it);
+        children.swap (children2);
+        stable_sort (children.begin(), children.end(), lesseribd);
+      }
       break;
     }
   /* skip children beyond last focus descendant */
   Walker<Item*> cw = walker (children);
-  if (last_child)
+  if (last_child && (fdir == FOCUS_NEXT || fdir == FOCUS_PREV))
     while (cw.has_next())
       if (last_child == *cw++)
         break;
@@ -551,14 +556,19 @@ Container::move_focus (FocusDirType fdir,
   while (cw.has_next())
     {
       Item *child = *cw;
-      if (child->move_focus (fdir, reset_history))
+      if (child->move_focus (fdir))
         return true;
       cw++;
     }
-  /* no descendant accepts focus */
-  if (reset_history)
-    delete_data (&focus_child_key);
   return false;
+}
+
+void
+Container::expose_enclosure ()
+{
+  /* expose without children */
+  expose();
+  // FIXME: need ability to queue complete regions
 }
 
 void

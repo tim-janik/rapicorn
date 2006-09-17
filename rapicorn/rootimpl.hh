@@ -85,7 +85,7 @@ private:
   virtual bool          check                                   (uint64                  current_time_usecs);
   virtual bool          dispatch                                ();
   virtual MainLoop*     get_loop                                ();
-  /* event queue */
+  /* event handling */
   virtual void          enqueue_async                           (Event                  *event);
   virtual void          cancel_item_events                      (Item                   *item);
   using                 Root::cancel_item_events;
@@ -99,6 +99,7 @@ private:
   bool                  dispatch_leave_event                    (const EventMouse       &mevent);
   bool                  dispatch_button_event                   (const Event            &event);
   bool                  dispatch_focus_event                    (const EventFocus       &fevent);
+  void                  handle_focus_key                        (const EventKey         &kevent);
   bool                  dispatch_key_event                      (const Event            &event);
   bool                  dispatch_scroll_event                   (const EventScroll      &sevent);
   bool                  dispatch_win_size_event                 (const Event            &event);

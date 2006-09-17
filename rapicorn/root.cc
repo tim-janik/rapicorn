@@ -38,7 +38,10 @@ Root::uncross_focus (Item &fitem)
   while (fchild)
     {
       fchild->unset_flag (FOCUS_CHAIN);
-      fchild = fchild->parent();
+      Container *fc = fchild->parent_container();
+      if (fc)
+        fc->set_focus_child (NULL);
+      fchild = fc;
     }
 }
 
@@ -470,6 +473,53 @@ RootImpl::dispatch_focus_event (const EventFocus &fevent)
   return handled;
 }
 
+void
+RootImpl::handle_focus_key (const EventKey &kevent)
+{
+  Item *new_focus = NULL, *old_focus = get_focus();
+  if (old_focus)
+    ref (old_focus);
+  FocusDirType fdir = FocusDirType (0);
+  switch (kevent.key)
+    {
+    case KEY_Tab: case KEY_KP_Tab:
+      fdir = FOCUS_NEXT;
+      break;
+    case KEY_ISO_Left_Tab:
+      fdir = FOCUS_PREV;
+      break;
+    case KEY_Right:
+      fdir = FOCUS_RIGHT;
+      new_focus = old_focus;
+      break;
+    case KEY_Up:
+      fdir = FOCUS_UP;
+      new_focus = old_focus;
+      break;
+    case KEY_Left:
+      fdir = FOCUS_LEFT;
+      new_focus = old_focus;
+      break;
+    case KEY_Down:
+      fdir = FOCUS_DOWN;
+      new_focus = old_focus;
+      break;
+    }
+  if (fdir && !move_focus (fdir))
+    {
+      if (new_focus && new_focus->root() != this)
+        new_focus = NULL;
+      if (new_focus)
+        new_focus->grab_focus();
+      else
+        set_focus (NULL);
+      if (old_focus == new_focus)
+        notify_key_error();
+    }
+  if (old_focus)
+    unref (old_focus);
+}
+
 bool
 RootImpl::dispatch_key_event (const Event &event)
 {
@@ -481,40 +531,12 @@ RootImpl::dispatch_key_event (const Event &event)
     {
       switch (kevent->key)
         {
-          bool had_focus;
         case KEY_Tab: case KEY_KP_Tab:
-          had_focus = get_focus() != NULL;
-          if (!move_focus (FOCUS_NEXT, true))
-            {
-              set_focus (NULL);
-              if (!had_focus)
-                notify_key_error();
-            }
-          break;
         case KEY_ISO_Left_Tab:
-          had_focus = get_focus() != NULL;
-          if (!move_focus (FOCUS_PREV, true))
-            {
-              set_focus (NULL);
-              if (!had_focus)
-                notify_key_error();
-            }
-          break;
-        case KEY_Right:
-          if (!move_focus (FOCUS_RIGHT, false))
-            notify_key_error();
-          break;
-        case KEY_Up:
-          if (!move_focus (FOCUS_UP, false))
-            notify_key_error();
-          break;
-        case KEY_Left:
-          if (!move_focus (FOCUS_LEFT, false))
-            notify_key_error();
-          break;
-        case KEY_Down:
-          if (!move_focus (FOCUS_DOWN, false))
-            notify_key_error();
+        case KEY_Right: case KEY_Up:
+        case KEY_Left: case KEY_Down:
+          handle_focus_key (*kevent);
+          handled = true;
           break;
         }
       if (0)

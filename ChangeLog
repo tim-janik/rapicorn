@@ -1,3 +1,35 @@
+Sun Sep 17 20:10:05 2006  Tim Janik  <timj@gtk.org>
+
+        * rapicorn/container.hh, rapicorn/container.cc: cleanups.
+        for horizontal/vertical focus movement, ignore the current
+        focus child and simply filter out focus children which are not
+        positioned ahead according to focus direction. this simplifies
+        sorting logic and fixes remaining movement bugs. never reset
+        the current focus child, Root takes care of that now.
+        added ::expose_enclosure() to expose a containers area without
+        exposing its children, this still needs optimization.
+
+        * rapicorn/item.hh, rapicorn/item.cc: don't force invalidation
+        when items enter or leave the focus chain. removed reset_history
+        argument from move_focus(), adapted callers. removed unused flags
+        INVALIDATE_ON_CHANGE and EXPOSE_ON_CHANGE.
+
+        * rapicorn/root.cc: always unset focus child of all containers of
+        the current focus chain when unsetting focus. moved focus handling to
+        an extra function and fixed remaining focus movement oddities.
+
+        * rapicorn/buttons.cc: grab focus when a button is clicked.
+
+        * rapicorn/paintcontainers.hh, rapicorn/paintcontainers.cc:
+        added Frame::overlap_child() property to control whether extra space
+        is requested to draw the frame around the child. implement automatic
+        exposure of frames upon ::changed. also, expose FocusFrame if its
+        Client changed.
+
+        * rapicorn/rapicorn.xml: changed Button to always be focus-able, added
+        UnfocusedButton which can't accept focus. exchanged slider buttons for
+        UnfocusedButton.
+
 Sat Sep 16 21:44:47 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/rootimpl.hh, rapicorn/root.cc: removed expose rectangle 

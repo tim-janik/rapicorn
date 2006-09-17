@@ -65,10 +65,12 @@ class Frame : public virtual Convertible {
   FrameType             frame_type      () const        { BIRNET_ASSERT_NOT_REACHED(); }
 public:
   void                  frame_type      (FrameType ft);
-  virtual void          normal_frame    (FrameType ft) = 0;
   virtual FrameType     normal_frame    () const = 0;
-  virtual void          impressed_frame (FrameType ft) = 0;
+  virtual void          normal_frame    (FrameType ft) = 0;
   virtual FrameType     impressed_frame () const = 0;
+  virtual void          impressed_frame (FrameType ft) = 0;
+  virtual bool          overlap_child   () const = 0;
+  virtual void          overlap_child   (bool ovc) = 0;
 };
 
 class FocusFrame : public virtual Frame {

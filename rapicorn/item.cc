@@ -75,7 +75,7 @@ Item::set_flag (uint32 flag,
 {
   assert ((flag & (flag - 1)) == 0); /* single bit check */
   const uint propagate_flag_mask  = SENSITIVE | PARENT_SENSITIVE | PRELIGHT | IMPRESSED | HAS_DEFAULT;
-  const uint invalidate_flag_mask = HEXPAND | VEXPAND | HSPREAD | VSPREAD | HSPREAD_CONTAINER | VSPREAD_CONTAINER | FOCUS_CHAIN | VISIBLE;
+  const uint invalidate_flag_mask = HEXPAND | VEXPAND | HSPREAD | VSPREAD | HSPREAD_CONTAINER | VSPREAD_CONTAINER | VISIBLE;
   bool fchanged = change_flags_silently (flag, on);
   if (fchanged)
     {
@@ -186,8 +186,7 @@ Item::grab_focus ()
 }
 
 bool
-Item::move_focus (FocusDirType fdir,
-                  bool         reset_history)
+Item::move_focus (FocusDirType fdir)
 {
   return false;
 }
@@ -756,10 +755,6 @@ Item::root () const
 void
 Item::changed()
 {
-  if (test_flags (INVALIDATE_ON_CHANGE))
-    invalidate();
-  if (test_flags (EXPOSE_ON_CHANGE))
-    expose();
   if (!finalizing())
     sig_changed.emit();
 }
