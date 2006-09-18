@@ -31,18 +31,19 @@ static DataKey<Item*> focus_item_key;
 void
 Root::uncross_focus (Item &fitem)
 {
-  Item *fchild = &fitem;
-  assert (fchild == get_data (&focus_item_key));
-  delete_data (&focus_item_key);
-  cross_unlink (*fchild, slot (*this, &Root::uncross_focus));
-  while (fchild)
+  assert (&fitem == get_data (&focus_item_key));
+  cross_unlink (fitem, slot (*this, &Root::uncross_focus));
+  Item *item = &fitem;
+  while (item)
     {
-      fchild->unset_flag (FOCUS_CHAIN);
-      Container *fc = fchild->parent_container();
+      item->unset_flag (FOCUS_CHAIN);
+      Container *fc = item->parent_container();
       if (fc)
         fc->set_focus_child (NULL);
-      fchild = fc;
+      item = fc;
     }
+  assert (&fitem == get_data (&focus_item_key));
+  delete_data (&focus_item_key);
 }
 
 void
@@ -57,7 +58,8 @@ Root::set_focus (Item *item)
     return;
   /* set new focus */
   assert (item->has_ancestor (*this));
-  Item &fchild = *item;
+  set_data (&focus_item_key, item);
+  cross_link (*item, slot (*this, &Root::uncross_focus));
   while (item)
     {
       item->set_flag (FOCUS_CHAIN);
@@ -66,8 +68,6 @@ Root::set_focus (Item *item)
         fc->set_focus_child (item);
       item = fc;
     }
-  set_data (&focus_item_key, &fchild);
-  cross_link (fchild, slot (*this, &Root::uncross_focus));
 }
 
 Item*
@@ -609,15 +609,15 @@ RootImpl::dispatch_win_delete_event (const Event &event)
 }
 
 void
-RootImpl::expose (const Allocation &area)
+RootImpl::expose_root_region (const Region &region)
 {
-  /* this function is expected to *queue* events, and not render immediately */
-  if (m_viewport && area.width && area.height)
+  /* this function is expected to *queue* exposes, and not render immediately */
+  if (m_viewport && !region.empty())
     {
       uint stamp = m_viewport->last_draw_stamp();
       if (stamp != m_expose_queue_stamp)
         m_expose_region.clear(); /* discard outdated exposes */
-      m_expose_region.add (area);
+      m_expose_region.add (region);
       m_expose_queue_stamp = stamp;
     }
 }

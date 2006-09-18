@@ -57,15 +57,14 @@ Item::change_flags_silently (uint32 mask,
 }
 
 void
-Item::propagate_flags()
+Item::propagate_flags (bool notify_changed)
 {
   change_flags_silently (PARENT_SENSITIVE, !parent() || parent()->sensitive());
-  expose();
   Container *container = dynamic_cast<Container*> (this);
   if (container)
     for (Container::ChildWalker it = container->local_children(); it.has_next(); it++)
       it->propagate_flags();
-  if (!finalizing())
+  if (notify_changed && !finalizing())
     sig_changed.emit(); /* notify changed() without invalidate() */
 }
 
@@ -79,10 +78,13 @@ Item::set_flag (uint32 flag,
   bool fchanged = change_flags_silently (flag, on);
   if (fchanged)
     {
-      if (flag & propagate_flag_mask)
-        propagate_flags ();
       if (flag & invalidate_flag_mask)
         invalidate();
+      if (flag & propagate_flag_mask)
+        {
+          expose();
+          propagate_flags (false);
+        }
       changed();
     }
 }
@@ -577,10 +579,12 @@ Item::affine_from_root () /* root => item affine */
     {
       const Affine &paffine = pc->affine_from_root();
       const Affine &caffine = pc->child_affine (*this);
-      if (!caffine.is_identity())
-        iaffine = paffine * caffine;
-      else
+      if (paffine.is_identity())
         iaffine = caffine;
+      else if (caffine.is_identity())
+        iaffine = paffine;
+      else
+        iaffine = caffine * paffine;
     }
   return iaffine;
 }
@@ -592,6 +596,60 @@ Item::affine_to_root () /* item => root affine */
   if (!iaffine.is_identity())
     iaffine = iaffine.invert();
   return iaffine;
+}
+
+Affine
+Item::affine_to_cousin (Item &cousin) /* item => cousin affine*/
+{
+  // FIXME: broken
+  Item *ca = common_ancestor (cousin);
+  assert (ca);
+  Affine taffine;
+  Item *item = this;
+  while (item != ca)
+    {
+      Container *pc = item->parent_container();
+      const Affine &caffine = pc->child_affine (*item);
+      taffine = taffine * caffine;
+      item = pc;
+    }
+  Affine baffine;
+  item = &cousin;
+  while (item != ca)
+    {
+      Container *pc = item->parent_container();
+      const Affine &caffine = pc->child_affine (*item);
+      baffine = baffine * caffine;
+      item = pc;
+    }
+  return baffine.invert() * taffine;
+}
+
+Affine
+Item::affine_from_cousin (Item &cousin) /* cousin => item affine*/
+{
+  // FIXME: broken
+  Item *ca = common_ancestor (cousin);
+  assert (ca);
+  Affine taffine;
+  Item *item = this;
+  while (item != ca)
+    {
+      Container *pc = item->parent_container();
+      const Affine &caffine = pc->child_affine (*item);
+      taffine = taffine * caffine;
+      item = pc;
+    }
+  Affine baffine;
+  item = &cousin;
+  while (item != ca)
+    {
+      Container *pc = item->parent_container();
+      const Affine &caffine = pc->child_affine (*item);
+      baffine = baffine * caffine;
+      item = pc;
+    }
+  return taffine.invert() * baffine;
 }
 
 Point
@@ -814,6 +872,32 @@ Item::copy_area (const Rect  &rect,
 }
 
 void
+Item::expose ()
+{
+  expose (allocation());
+}
+
+void
+Item::expose (const Rect &rect) /* item coordinates relative */
+{
+  expose (Region (rect));
+}
+
+void
+Item::expose (const Region &region) /* item coordinates relative */
+{
+  Region r (allocation());
+  r.intersect (region);
+  Root *rt = root();
+  if (!r.empty() && rt && !test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+    {
+      const Affine &affine = affine_to_root();
+      r.affine (affine);
+      rt->expose_root_region (r);
+    }
+}
+
+void
 ItemImpl::do_changed()
 {
 }
@@ -827,20 +911,6 @@ bool
 ItemImpl::do_event (const Event &event)
 {
   return false;
-}
-
-void
-ItemImpl::expose (const Allocation &area)
-{
-  Container *pc = parent_container();
-  if (pc && !test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
-    {
-      const Affine &caffine = pc->child_affine (*this);
-      Point p = caffine.ipoint (area.x, area.y);
-      double width = area.width / caffine.hexpansion();
-      double height = area.height / caffine.vexpansion();
-      pc->expose (Allocation (iround (p.x), iround (p.y), iround (width), iround (height)));
-    }
 }
 
 String

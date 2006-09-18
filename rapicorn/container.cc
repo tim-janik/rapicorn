@@ -567,8 +567,16 @@ void
 Container::expose_enclosure ()
 {
   /* expose without children */
-  expose();
-  // FIXME: need ability to queue complete regions
+  Region region (allocation());
+  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+    if (cw->drawable())
+      {
+        Item &child = *cw;
+        Region cregion (child.allocation());
+        cregion.affine (child_affine (child).invert());
+        region.subtract (cregion);
+      }
+  expose (region);
 }
 
 void

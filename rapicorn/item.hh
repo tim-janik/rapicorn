@@ -20,7 +20,7 @@
 #define __RAPICORN_ITEM_HH_
 
 #include <rapicorn/events.hh>
-#include <rapicorn/primitives.hh>
+#include <rapicorn/region.hh>
 #include <rapicorn/commands.hh>
 #include <rapicorn/properties.hh>
 #include <rapicorn/appearance.hh>
@@ -60,7 +60,7 @@ class Item : public virtual Convertible, public virtual DataListContainer, publi
   uint32                      m_flags;          /* interface-inlined for fast read-out */
   Item                       *m_parent;         /* interface-inlined for fast read-out */
   Style                      *m_style;
-  void                        propagate_flags ();
+  void                        propagate_flags (bool notify_changed = true);
   void                        propagate_style ();
   friend                      class Container;
   friend                      class Root;
@@ -190,8 +190,9 @@ public:
   /* invalidation / changes */
   void                        invalidate        ();
   void                        changed           ();
-  virtual void                expose            (const Allocation &area) = 0;   /* item coordinates relative */
-  void                        expose            ()       { expose (allocation()); }
+  void                        expose            ();                             /* item allocation */
+  void                        expose            (const Rect       &rect);       /* item coordinates relative */
+  void                        expose            (const Region     &region);     /* item coordinates relative */
   void                        copy_area         (const Rect &rect, const Point &dest);
   /* public signals */
   SignalFinalize<Item>            sig_finalize;
@@ -207,6 +208,8 @@ public:
   Affine                     affine_from_root   ();                             /* root => item affine */
   Point                      point_to_root      (Point        item_point);      /* item coordinates relative */
   Point                      point_from_root    (Point        root_point);      /* root coordinates relative */
+  Affine                     affine_to_cousin   (Item        &cousin);          /* item => cousin affine*/
+  Affine                     affine_from_cousin (Item        &cousin);          /* cousin => item affine*/
   /* public size accessors */
   virtual const Requisition& size_request       () = 0;                       /* re-request size */
   const Requisition&         requisition        () { return size_request(); } /* cached requisition */

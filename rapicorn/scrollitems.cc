@@ -218,7 +218,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     Item &child = get_child();
     const Allocation carea = child.allocation();
     Display scroll_display;
-    scroll_display.push_clip_rect (0, 0, carea.width, carea.height);
+    scroll_display.push_clip_rect (carea.x, carea.y, carea.width, carea.height);
     scroll_display.push_clip_rect (xoffset, yoffset, area.width, area.height);
     Rect pr = display.current_rect();
     scroll_display.push_clip_rect (pr.x - area.x + xoffset, pr.y - area.y + yoffset, pr.width, pr.height);
@@ -226,11 +226,11 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
       {
         child.render (scroll_display);
         Plane &plane = display.create_plane (background());
-        int real_x = plane.xstart();
-        int real_y = plane.ystart();
+        int64 real_x = plane.xstart();
+        int64 real_y = plane.ystart();
         Plane::warp_plane_iknowwhatimdoing (plane,
-                                            xoffset + real_x - area.x,
-                                            yoffset + real_y - area.y);
+                                            real_x - area.x + xoffset,
+                                            real_y - area.y + yoffset);
         scroll_display.render_combined (plane);
         Plane::warp_plane_iknowwhatimdoing (plane, real_x, real_y);
       }
@@ -282,6 +282,45 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
     double yoffset = m_vadjustment ? round (m_vadjustment->value()) : 0.0;
     return AffineTranslate (-area.x + xoffset, -area.y + yoffset);
+  }
+  virtual void
+  set_focus_child (Item *item)
+  {
+    SingleContainerImpl::set_focus_child (item);
+    Root *rt = root();
+    if (!rt)
+      return;
+    Item *fitem = rt->get_focus();
+    if (!fitem)
+      return;
+    Region r (fitem->allocation());
+    Affine affine = fitem->affine_to_cousin (*this);
+    r.affine (affine);
+    Rect rect = r.extents();
+    Rect area = allocation();
+    g_printerr ("scroll-focus: area=%s child=%s\n", area.string().c_str(), rect.string().c_str());
+#if 0   // FIXME: broken
+    double deltax = 0, deltay = 0;
+    if (rect.upper_x() > area.upper_x() + deltax)
+      deltax += rect.upper_x() - (area.upper_x() + deltax);
+    if (rect.x < area.x + deltax)
+      deltax += rect.x - (area.x + deltax);
+    if (rect.y < area.y + deltay)
+      deltay += area.y + deltay - rect.y;
+    if (rect.upper_y() > area.upper_y() + deltay)
+      deltay += area.upper_y() + deltay - rect.upper_y();
+    /* scroll and give precedence to upper left */
+    m_hadjustment->freeze();
+    m_vadjustment->freeze();
+    if (deltax)
+      m_hadjustment->value (m_hadjustment->value() + deltax);
+    if (deltay)
+      m_vadjustment->value (m_vadjustment->value() + deltay);
+    m_hadjustment->constrain();
+    m_vadjustment->constrain();
+    m_hadjustment->thaw();
+    m_vadjustment->thaw();
+#endif
   }
 public:
   ScrollPortImpl() :

@@ -59,6 +59,7 @@ public: /* rectangles are represented at 64bit integer precision */
   void          subtract          (const Region         &subtrahend);
   void          intersect         (const Region         &other);
   void          exor              (const Region         &other);
+  void          affine            (const Affine         &aff);
   String        string            ();
 };
 

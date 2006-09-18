@@ -34,8 +34,6 @@ protected:
   virtual void          do_invalidate   ();
   virtual void          do_changed      ();
   virtual bool          do_event        (const Event &event);
-  using Item::expose;
-  virtual void          expose          (const Allocation &area);
   using Item::size_request;
 
   virtual String        name            () const;

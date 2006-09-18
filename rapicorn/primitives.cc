@@ -675,10 +675,10 @@ Plane::combine (const Plane &src, CombineType ct, uint8 lucent)
   b.intersect (m);
   if (b.empty())
     return;
-  int xmin = iround (b.x), xbound = iround (b.upper_x());
-  int ymin = iround (b.y), ybound = iround (b.upper_y());
-  int xspan = xbound - xmin;
-  for (int y = ymin; y < ybound; y++)
+  int64 xmin = iround (b.x), xbound = iround (b.upper_x());
+  int64 ymin = iround (b.y), ybound = iround (b.upper_y());
+  int64 xspan = xbound - xmin;
+  for (int64 y = ymin; y < ybound; y++)
     {
       uint32 *d = peek (xmin - xstart(), y - ystart());
       const uint32 *s = src.peek (xmin - src.xstart(), y - src.ystart());

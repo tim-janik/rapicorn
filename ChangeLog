@@ -1,3 +1,32 @@
+Mon Sep 18 02:09:32 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/item.hh, rapicorn/item.cc: optimizd flag propagation
+	to reduce exposes. fixed ::affine_from_root().
+	reworked ::expose() methods to queue rectangles and regions.
+	introduced ::affine_to_cousin() and ::affine_from_cousin(),
+	these aren't working correctly yet though.
+
+	* rapicorn/paintcontainers.cc: fixed frame child allocation in
+	case of !m_overlap_child.
+
+	* rapicorn/container.cc: fixed ::expose_enclosure() to not expose 
+	children. made ::set_focus_child() virtual.
+
+	* rapicorn/root.hh, rapicorn/root.cc: fixed get_focus() so containers 
+	can access this from within set_focus_child(). allow enqueueing of
+	expose regions.
+
+	* rapicorn/region.hh, rapicorn/region.cc: added ::affine() to transform
+	a whole region.
+
+	* rapicorn/primitives.cc: 64bit coordinate fixes.
+
+	* rapicorn/scrollitems.cc: minor fixes. prototyped scroll position 
+	adjustment for focus child.
+
+	* examples/scroller.cc, examples/scroller.xml: made fewer and bigger 
+	test buttons which is a lot faster
+
 Sun Sep 17 20:10:05 2006  Tim Janik  <timj@gtk.org>
 
         * rapicorn/container.hh, rapicorn/container.cc: cleanups.

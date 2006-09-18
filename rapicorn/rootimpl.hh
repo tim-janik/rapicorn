@@ -22,7 +22,6 @@
 #include <rapicorn/root.hh>
 #include <rapicorn/containerimpl.hh>
 #include <rapicorn/viewport.hh>
-#include <rapicorn/region.hh>
 
 namespace Rapicorn {
 
@@ -65,9 +64,9 @@ private:
   /* rendering */
   virtual void          render                                  (Plane                  &plane);
   using                 Item::render;
-  virtual void          expose                                  (const Allocation       &area);
-  virtual void          copy_area                               (const Rect  &src,
-                                                                 const Point &dest);
+  virtual void          expose_root_region                      (const Region           &region);
+  virtual void          copy_area                               (const Rect             &src,
+                                                                 const Point            &dest);
   virtual void          draw_now                                ();
   /* grab handling */
   virtual void          remove_grab_item                        (Item                   &child);

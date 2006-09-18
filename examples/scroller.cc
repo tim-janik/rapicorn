@@ -30,7 +30,7 @@ add_button_row (Container &area,
   Handle<Container> rh = Factory::create_container ("button-row", row_args);
   AutoLocker rl (rh);
   area.add (rh.get());
-  for (uint i = 0; i < 100; i++)
+  for (uint i = 0; i < 20; i++)
     {
       std::list<String> args;
       args.push_back ("test-button-text=(" + string_from_uint (row) + "," + string_from_uint (i) + ")");
@@ -58,7 +58,7 @@ main (int   argc,
   Root &root = shell.interface<Root&>();
 
   /* create button rows */
-  for (uint i = 0; i < 100; i++)
+  for (uint i = 0; i < 20; i++)
     add_button_row (shell, i);
 
   /* show and process window */

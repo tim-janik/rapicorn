@@ -52,7 +52,7 @@
   <!-- Button definition -->
   <def:test-button inherit="Button" on-click="dummy">
     <arg:test-button-text default="ClickMe" />
-    <Label text="$test_button_text"/>
+    <Label text="[ $test_button_text ]" font-name="Serif 20"/>
   </def:test-button>
   <!-- Button row -->
   <def:button-row inherit="HBox" spacing="5" >

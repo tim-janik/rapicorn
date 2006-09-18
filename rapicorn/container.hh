@@ -46,7 +46,7 @@ protected:
   virtual void        dispose_item      (Item           &item);
   virtual void        hierarchy_changed (Item           *old_toplevel);
   virtual bool        move_focus        (FocusDirType    fdir);
-  void                set_focus_child   (Item           *item);
+  virtual void        set_focus_child   (Item           *item);
   Item*               get_focus_child   ();
   void                expose_enclosure  (); /* expose without children */
 public:
@@ -63,7 +63,7 @@ public:
   void                  add             (Item                   *item,
                                          const PackPropertyList &pack_plist = PackPropertyList(),
                                          PackPropertyList       *unused_props = NULL);
-  virtual Affine        child_affine    (Item                   &item);
+  virtual Affine        child_affine    (Item                   &item); /* container => item affine */
   virtual
   const PropertyList&   list_properties (); /* essentially chaining to Item:: */
   const CommandList&    list_commands   (); /* essentially chaining to Item:: */

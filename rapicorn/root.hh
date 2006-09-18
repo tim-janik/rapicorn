@@ -31,12 +31,13 @@ class Root : public virtual Container, public virtual MainLoop::Source {
   void          uncross_focus           (Item        &fitem);
 protected:
   virtual void  beep                    (void) = 0;
-  void          set_focus               (Item        *item);
-  virtual void  copy_area               (const Rect  &src,
-                                         const Point &dest) = 0;
-  virtual void  cancel_item_events      (Item        *item) = 0;
-  void          cancel_item_events      (Item        &item)             { cancel_item_events (&item); }
-  virtual bool  dispatch_event          (const Event &event) = 0;
+  void          set_focus               (Item         *item);
+  virtual void  expose_root_region      (const Region &region) = 0;     // root item coords
+  virtual void  copy_area               (const Rect   &src,
+                                         const Point  &dest) = 0;
+  virtual void  cancel_item_events      (Item         *item) = 0;
+  void          cancel_item_events      (Item         &item)            { cancel_item_events (&item); }
+  virtual bool  dispatch_event          (const Event  &event) = 0;
   /* loop source (FIXME) */
   virtual bool  prepare                 (uint64 current_time_usecs,
                                          int   *timeout_msecs_p) = 0;

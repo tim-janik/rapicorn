@@ -203,6 +203,26 @@ Region::exor (const Region &other)
   _rapicorn_region_xor (REGION (this), REGION (&other));
 }
 
+void
+Region::affine (const Affine &aff)
+{
+  // FIXME: optimize for aff.is_identity()
+  std::vector<Rect> rects;
+  list_rects (rects);
+  clear();
+  for (uint i = 0; i < rects.size(); i++)
+    {
+      /* to make sure to cover the new rectangle even for rotations,
+       * we take the bounding box of all 4 corners transformed
+       */
+      Point p1 = aff.point (rects[i].upper_left());
+      Point p2 = aff.point (rects[i].lower_left());
+      Point p3 = aff.point (rects[i].upper_right());
+      Point p4 = aff.point (rects[i].lower_right());
+      add (Rect (min (min (p1, p2), min (p3, p4)), max (max (p1, p2), max (p3, p4))));
+    }
+}
+
 bool
 operator== (const Region &r1,
             const Region &r2)

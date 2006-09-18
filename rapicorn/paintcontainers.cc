@@ -332,7 +332,7 @@ protected:
         Item &child = get_child();
         if (child.visible())
           {
-            if (current_frame() != FRAME_NONE)
+            if (!m_overlap_child)
               {
                 area.x += 2;
                 area.y += 2;
