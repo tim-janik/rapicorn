@@ -217,7 +217,7 @@ struct MarkupParser::Context {
 };
 
 MarkupParser::MarkupParser (const String &input_name) :
-  context (NULL), m_input_name (input_name)
+  context (NULL), m_input_name (input_name), m_recap_depth (0), m_recap_outer (true)
 {
   context = new MarkupParserContext;
   
@@ -1109,7 +1109,10 @@ MarkupParser::parse (const char          *text,
             assert (!context->tag_stack.empty());
             error.line_number = context->line_number - context->line_number_after_newline;;
             error.char_number = context->char_number;
-            context->parser->end_element (context->tag_stack.top(), error);
+            if (m_recap_depth)
+              recap_end_element (context->tag_stack.top(), error);
+            else
+              context->parser->end_element (context->tag_stack.top(), error);
             if (error.code)
               mark_error (context, error);
             else
@@ -1260,10 +1263,10 @@ MarkupParser::parse (const char          *text,
                   /* Call user callback for element start */
                   error.line_number = context->line_number - context->line_number_after_newline;
                   error.char_number = context->char_number;
-                  context->parser->start_element (current_element (context),
-                                                  context->attr_names,
-                                                  context->attr_values,
-                                                  error);
+                  if (m_recap_depth)
+                    recap_start_element (current_element (context), context->attr_names, context->attr_values, error);
+                  else
+                    context->parser->start_element (current_element (context), context->attr_names, context->attr_values, error);
                   /* Go ahead and free the attributes. */
                   context->attr_names.clear();
                   context->attr_values.clear();
@@ -1391,7 +1394,10 @@ MarkupParser::parse (const char          *text,
                 {
                   error.line_number = context->line_number - context->line_number_after_newline;
                   error.char_number = context->char_number;
-                  context->parser->text (unescaped, error);
+                  if (m_recap_depth)
+                    recap_text (unescaped, error);
+                  else
+                    context->parser->text (unescaped, error);
                   if (!error.code)
                     {
                       /* advance past open angle and set state. */
@@ -1490,7 +1496,10 @@ MarkupParser::parse (const char          *text,
 		  /* call the end_element callback */
                   error.line_number = context->line_number - context->line_number_after_newline;
                   error.char_number = context->char_number;
-                  context->parser->end_element (close_name, error);
+                  if (m_recap_depth)
+                    recap_end_element (close_name, error);
+                  else
+                    context->parser->end_element (close_name, error);
 		  
 		  /* Pop the tag stack */
 		  context->tag_stack.pop();
@@ -1545,7 +1554,10 @@ MarkupParser::parse (const char          *text,
               
               error.line_number = context->line_number - context->line_number_after_newline;
               error.char_number = context->char_number;
-              context->parser->pass_through (context->partial_chunk, error);
+              if (m_recap_depth)
+                recap_pass_through (context->partial_chunk, error);
+              else
+                context->parser->pass_through (context->partial_chunk, error);
               
               truncate_partial (context);
               
@@ -1690,7 +1702,13 @@ MarkupParser::get_element()
     return NULL;
   else
     return current_element (context);
-} 
+}
+
+String
+MarkupParser::input_name ()
+{
+  return m_input_name;
+}
 
 void
 MarkupParser::get_position (int            *line_number,
@@ -1705,6 +1723,29 @@ MarkupParser::get_position (int            *line_number,
     *char_number = context->char_number;
   if (input_name_p)
     *input_name_p = m_input_name.c_str();
+}
+
+void
+MarkupParser::recap_element (const String   &element_name,
+                             ConstStrings   &attribute_names,
+                             ConstStrings   &attribute_values,
+                             Error          &error,
+                             bool            include_outer)
+{
+  if (error.set())
+    return;
+  assert (m_recap_depth == 0);
+  m_recap = "";
+  m_recap_outer = include_outer;
+  recap_start_element (element_name, attribute_names, attribute_values, error);
+  if (!m_recap_outer)
+    m_recap = "";
+}
+
+const String&
+MarkupParser::recap_string () const
+{
+  return m_recap;
 }
 
 void
@@ -1781,6 +1822,12 @@ append_escaped_text (String      &str,
         }
       p = next;
     }
+}
+
+String
+MarkupParser::escape_text (const String   &text)
+{
+  return escape_text (&*text.begin(), text.size());
 }
 
 /**
@@ -2054,7 +2101,7 @@ MarkupParser::printf_escaped (const char *format,
   va_list args;
   va_start (args, format);
   try {
-    result = string_vprintf (format, args);
+    result = vprintf_escaped (format, args);
   } catch (...) {
     /* cleanup */
     va_end (args);
@@ -2063,5 +2110,58 @@ MarkupParser::printf_escaped (const char *format,
   va_end (args);
   return result;
 }
+
+void
+MarkupParser::recap_start_element (const String   &element_name,
+                                   ConstStrings   &attribute_names,
+                                   ConstStrings   &attribute_values,
+                                   Error          &error)
+{
+  m_recap_depth++;
+  String appendix;
+  appendix += "<" + element_name;
+  for (uint i = 0; i < attribute_names.size(); i++)
+    {
+      appendix += "\n" + attribute_names[i] + "='";
+      String qvalue;
+      for (String::const_iterator it = attribute_values[i].begin(); it != attribute_values[i].end(); it++)
+        if (*it == '\'')
+          qvalue += "\\'";
+        else
+          qvalue += *it;
+      appendix += qvalue + "'";
+    }
+  appendix += ">";
+  m_recap += appendix; // takes potentially long
+}
+
+void
+MarkupParser::recap_end_element (const String   &element_name,
+                                 Error          &error)
+{
+  m_recap_depth--;
+  if (m_recap_depth || m_recap_outer)
+    {
+      String appendix ("</" + element_name + ">");
+      m_recap += appendix; // takes potentially long
+    }
+  if (!m_recap_depth)
+    {
+      end_element (element_name, error);
+      m_recap.clear(); // potentially large savings
+    }
+}
+
+void
+MarkupParser::recap_text (const String   &text,
+                          Error          &error)
+{
+  m_recap += escape_text (text);
+}
+
+void
+MarkupParser::recap_pass_through (const String   &pass_through_text,
+                                  Error          &error)
+{}
 
 } // Birnet

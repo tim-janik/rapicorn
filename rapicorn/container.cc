@@ -342,7 +342,8 @@ Container::remove (Item &item)
   if (!container)
     throw NullPointer();
   item.ref();
-  item.invalidate();
+  if (item.visible())
+    item.invalidate();
   Container *dcontainer = container;
   while (dcontainer)
     {
@@ -350,6 +351,7 @@ Container::remove (Item &item)
       dcontainer = dcontainer->parent_container();
     }
   container->remove_child (item);
+  item.invalidate();
   item.unref();
 }
 
@@ -379,6 +381,7 @@ static DataKey<Item*> focus_child_key;
 void
 Container::unparent_child (Item &item)
 {
+  ref (this);
   if (&item == get_data (&focus_child_key))
     delete_data (&focus_child_key);
   Container *ancestor = this;
@@ -388,6 +391,7 @@ Container::unparent_child (Item &item)
       ancestor = ancestor->parent_container();
     }
   while (ancestor);
+  unref (this);
 }
 
 void

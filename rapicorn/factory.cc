@@ -132,7 +132,7 @@ public:
   explicit                      FactorySingleton        ()
   {
     if (singleton)
-      throw Exception (STRFUNC, ": non-singleton initialization");
+      error (STRFUNC, ": non-singleton initialization");
     else
       singleton = this;
     /* register backlog */
@@ -253,6 +253,14 @@ public:
               }
           }
       }
+    else if (element_name.compare (0, 5, "prop:") == 0 && gadget_stack.size())
+      {
+        if (attribute_names.size())
+          error.set (INVALID_CONTENT,
+                     String() + "invalid attribute for property element: " +
+                     attribute_names[0] + "=\"" + attribute_values[0] + "\"");
+        recap_element (element_name, attribute_names, attribute_values, error, false);
+      }
     else if (!gadget_stack.empty() && canonify_element (element_name) == element_name)
       {
         Gadget *gparent = gadget_stack.top();
@@ -299,6 +307,18 @@ public:
       }
     else if (element_name.compare (0, 4, "arg:") == 0 && gadget)
       {}
+    else if (element_name.compare (0, 5, "prop:") == 0 && gadget_stack.size())
+      {
+        Gadget *gadget = gadget_stack.top();
+        String canonified_attribute = canonify_attribute (element_name.substr (5));
+        if (!canonified_attribute.size() ||
+            canonified_attribute == "name" ||
+            canonified_attribute == "child_container" ||
+            canonified_attribute == "inherit")
+          error.set (INVALID_CONTENT, "invalid property element: " + element_name);
+        else
+          gadget->ancestor_arguments[canonified_attribute] = recap_string();
+      }
     else if (gadget && gadget->ancestor.compare (&element_name[0]) == 0)
       gadget_stack.pop();
   }
@@ -455,7 +475,7 @@ FactorySingleton::construct_gadget (const String           &gadget_identifier,
 {
   Gadget *gadget = lookup_gadget (gadget_identifier);
   if (!gadget)
-    throw Exception ("no such gadget: ", gadget_identifier);
+    error ("no such gadget: " + gadget_identifier);
   VariableMap args;
   Evaluator::populate_map (args, arguments);
   Evaluator env;
@@ -507,7 +527,7 @@ FactorySingleton::inherit_gadget (const String &ancestor_name,
     {
       Gadget *gadget = lookup_gadget (ancestor_name);
       if (!gadget)
-        throw Exception ("no such gadget: ", ancestor_name);
+        error ("no such gadget: " + ancestor_name);
       return call_gadget (gadget, call_arguments, env, NULL, NULL, unused_arguments);
     }
 }
@@ -568,7 +588,7 @@ FactorySingleton::call_gadget (const Gadget       *gadget,
         else if (item_container && container)
           item_container->child_container (container);
         else if (gadget->child_container)
-          throw Exception ("no such child container: ", gadget->child_container->ident);
+          error ("no such child container: "+ gadget->child_container->ident);
       }
     /* add to parent */
     if (parent)
@@ -622,7 +642,7 @@ FactorySingleton::call_gadget_children (const Gadget       *gadget,
     diag ("%d) %s", nth++, (*cw)->ident.c_str());
 #endif
   if (!container)
-    throw Exception ("parent gadget fails to implement Container interface: ", gadget->ident);
+    error ("parent gadget fails to implement Container interface: "+ gadget->ident);
   /* create children */
   for (Walker<Gadget*const> cw = walker (gadget->children); cw.has_next(); cw++)
     {
@@ -643,7 +663,7 @@ FactorySingleton::register_item_factory (const ItemTypeFactory &itfactory)
   const char *ident = itfactory.qualified_type.c_str();
   const char *base = strrchr (ident, ':');
   if (!base || base <= ident || base[-1] != ':')
-    throw Exception ("invalid/missing domain name in item type: ", ident);
+    error ("invalid/missing domain name in item type: " + String() + ident);
   String domain_name;
   domain_name.assign (ident, base - ident - 1);
   FactoryDomain *fdomain = lookup_domain (domain_name);
@@ -672,7 +692,7 @@ FactorySingleton::create_from_item_type (const String &ident)
   if (itfactory)
     return *itfactory->create_item (ident);
   else
-    throw Exception ("no such item type: ", ident);
+    error ("no such item type: " + ident);
 }
 
 } // Anon
@@ -701,7 +721,7 @@ Factory::must_parse_file (const String           &relative_file_name,
   else if (altpath2[0])
     parse_file (Path::join (altpath2, relative_file_name), i18n_domain, i18n_domain);
   else
-    throw Exception (STRFUNC, ": failed to locate file without pathname: ", relative_file_name);
+    error (STRFUNC + String() + ": failed to locate file without pathname: " + relative_file_name);
 }
 
 void

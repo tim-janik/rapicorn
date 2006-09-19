@@ -94,8 +94,8 @@ String         string_from_vector (const vector<double> &dvec,
                                    const String         &delim = " ");
 
 /* --- assertions, warnings, errors --- */
-void    error                           (const char *format, ...) BIRNET_PRINTF (1, 2);
-void    error                           (const String &s);
+void    error                           (const char *format, ...) BIRNET_PRINTF (1, 2) G_GNUC_NORETURN;
+void    error                           (const String &s) G_GNUC_NORETURN;
 void    warning                         (const char *format, ...) BIRNET_PRINTF (1, 2);
 void    warning                         (const String &s);
 void    diag                            (const char *format, ...) BIRNET_PRINTF (1, 2);

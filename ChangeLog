@@ -1,3 +1,47 @@
+Wed Sep 20 00:35:44 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/text-pango.cc: misc fixes.
+	implemented TextPangoParser and MarkupDumper which parses and save a
+	set of various text attributes of the displayed text string.
+	implemented lazy color attributes for pango to defer resolving of the
+	actual color values until we have a Style assigned.
+	implement the Text::EditorClient interface (at least rudimentarily).
+	changed TextPangoImpl to always keep its own layout and to use
+	a PangoLayout as its main model (for text and attributes).
+	implemented a RapicornPangoRenderer based on pangoft2 to support
+	colored text, this involved copying of pangoft2-render.c trapezoid
+	rendering code (LGPL).
+
+	* rapicorn/text-editor.hh, rapicorn/text-editor.cc: introduce the
+	neccessary API and structures to implement text editing.
+
+	* rapicorn/appearance.hh, rapicorn/appearance.cc: added 
+	Style::resolve_color() to map a color string to a Color.
+
+	* rapicorn/factory.hh, rapicorn/factory.cc: turned many exceptions into
+	errors, because recovery from those case was broken anyway.
+	implemented "prop:"-element handling, which allows an arbitrary XML
+	subtree to be used as property value. for this, the parsed XML is 
+	recaptured into a string with Birnet::MarkupParser.
+
+	* rapicorn/birnetmarkup.hh, rapicorn/birnetmarkup.cc: 
+	fixed printf_escaped(). added input_name() accessor. added
+	recap_element() and recap_string() to recapture an element subtree
+	of the processed XML into a new XML string.
+
+	* rapicorn/birnetutils.hh: tell gcc that error() never returns.
+
+	* rapicorn/container.cc: removal of invisible items doesn't need
+	to invalidate. keep reference to self around unparent_child().
+
+	* rapicorn/item.cc: keep containers referenced across set_parent().
+
+	* rapicorn/paintcontainers.cc: removed resolve_color().
+
+	* examples/tour.xml: added more test gadgets.
+
+	* tests/markup.cc: fixes and extensions.
+
 Mon Sep 18 02:09:32 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/item.hh, rapicorn/item.cc: optimizd flag propagation

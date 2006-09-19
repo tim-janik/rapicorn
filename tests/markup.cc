@@ -19,12 +19,15 @@
 //#define TEST_VERBOSE
 #include <birnet/birnettests.h>
 #include <rapicorn/birnetmarkup.hh>
+#include <rapicorn/rapicorn.hh>
 
 namespace {
 using namespace Birnet;
+using namespace Rapicorn;
 
-struct TestMarkupParser : MarkupParser {
-  TestMarkupParser (const String &input_name) :
+struct TestBirnetMarkupParser : MarkupParser {
+  String debug_string;
+  TestBirnetMarkupParser (const String &input_name) :
     MarkupParser (input_name)
   {}
   virtual void start_element (const String  &element_name,
@@ -33,47 +36,121 @@ struct TestMarkupParser : MarkupParser {
                               Error         &error)
   {
     //printf ("<%s>", element_name.c_str());
-    printf ("<");
+    debug_string += "<";
   }
   virtual void end_element   (const String  &element_name,
                               Error         &error)
   {
     // printf ("</%s>\n", element_name.c_str());
-    printf (">");
+    debug_string += ">";
   }
   virtual void text          (const String  &text,
                               Error         &error)
   {
     // printf ("TEXT: %s", text.c_str());
-    printf (".");
+    if (text.size())
+      debug_string += ".";
   }
   virtual void pass_through (const String   &pass_through_text,
                              Error          &error)
   {
     // printf ("PASS: %s\n", pass_through_text.c_str());
-    printf ("-");
+    debug_string += "-";
   }
   virtual void error        (const Error    &error)
   {
-    Birnet::warning ("parsing error: %s", error.message.c_str());
+    diag ("parsing error: %s", error.message.c_str());
   }
 };
 
 extern const char *xml_data;
 
-void
-markup_parser_test()
+static void
+birnet_markup_parser_test()
 {
-  TestMarkupParser *tmp = new TestMarkupParser ("-");
+  TSTART ("BirnetMarkupParser");
+  TestBirnetMarkupParser *tmp = new TestBirnetMarkupParser ("-");
+  TOK();
   MarkupParser::Error error;
-  const char *input_file = "TestInput.xml";
+  const char *input_file = "test-input";
   tmp->parse (xml_data, strlen (xml_data), &error);
+  TOK();
   if (!error.code)
     tmp->end_parse (&error);
+  TOK();
   if (error.code)
     Birnet::error ("%s:%d:%d: %s (%d)", input_file, error.line_number, error.char_number, error.message.c_str(), error.code);
+  TOK();
+  // g_printerr ("DEBUG_STRING: %s\n", tmp->debug_string.c_str());
+  const char *dcode = tmp->debug_string.c_str();
+  TASSERT (strstr (dcode, "----")); // comments
+  TASSERT (strstr (dcode, "<><>")); // tags
+  TASSERT (strstr (dcode, "."));    // text
+  TASSERT (strstr (dcode, "<.>"));
+  TASSERT (strstr (dcode, ".-."));
+  TASSERT (strstr (dcode, "<.<.>.>"));
+  TASSERT (strstr (dcode, ".>.<."));
   delete tmp;
-  printf ("\n");
+  TOK();
+  TDONE();
+}
+
+static void
+text_markup_test()
+{
+  TSTART ("Label-Markup");
+  Handle<Item> ihandle = Factory::create_item ("Label");
+  TOK();
+  AutoLocker locker (ihandle);
+  TOK();
+  Item &item = ihandle.get();
+  TOK();
+  String full_markup =
+    "<PARA>Start "
+    "<bold>bold</bold> "
+    "<italic>italic</italic> "
+    // "<oblique>oblique</oblique> "
+    "<underline>underline</underline> "
+    // "<condensed>condensed</condensed> "
+    "<strike>strike</strike> "
+    "text. "
+    "<fg color='blue'>changecolor</fg> "
+    "<font family='Serif'>changefont</font> "
+    "<bg color='spEciaLCoLor184'>bgcolortest</bg> "
+    "<fg color='spEciaLCoLor121'>fgcolortest</fg> "
+    "<font family='SpEciALfoNT723'>changefont</font> "
+    "<tt>teletype</tt> "
+    "<smaller>smaller</smaller> "
+    "<larger>larger</larger> "
+    "</PARA>";
+  item.set_property ("markup_text", full_markup);
+  TOK();
+  String str = item.get_property ("markup_text");
+  const char *markup_result = str.c_str();
+  // g_printerr ("MARKUP: %s\n", markup_result);
+  TASSERT (strstr (markup_result, "<I"));
+  TASSERT (strstr (markup_result, "italic<"));
+  TASSERT (strstr (markup_result, "<B"));
+  TASSERT (strstr (markup_result, "bold<"));
+  TASSERT (strstr (markup_result, "<U"));
+  TASSERT (strstr (markup_result, "underline<"));
+  /* try re-parsing */
+  item.set_property ("markup_text", markup_result);
+  TOK();
+  str = item.get_property ("markup_text");
+  markup_result = str.c_str();
+  TASSERT (strstr (markup_result, "<I"));
+  TASSERT (strstr (markup_result, "italic<"));
+  TASSERT (strstr (markup_result, "<U"));
+  TASSERT (strstr (markup_result, "underline<"));
+  TASSERT (strstr (markup_result, "strike<"));
+  TASSERT (strstr (markup_result, "teletype<"));
+  TASSERT (strstr (markup_result, "color='spEciaLCoLor184'"));
+  TASSERT (strstr (markup_result, "color='spEciaLCoLor121'"));
+  TASSERT (strstr (markup_result, "family='SpEciALfoNT723'"));
+  TASSERT (strstr (markup_result, "smaller<"));
+  TASSERT (strstr (markup_result, "larger<"));
+  TDONE();
 }
 
 extern "C" int
@@ -81,7 +158,11 @@ main (int   argc,
       char *argv[])
 {
   birnet_init_test (&argc, &argv);
-  markup_parser_test();
+  /* initialize rapicorn */
+  rapicorn_init_with_gtk_thread (&argc, &argv, NULL); // FIXME: should work offscreen
+  
+  birnet_markup_parser_test();
+  text_markup_test();
   return 0;
 }
 

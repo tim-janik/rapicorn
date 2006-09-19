@@ -65,6 +65,32 @@ Style::input_color (StateType      state,
   return color_scheme (INPUT).make_color (color_type);
 }
 
+Color
+Style::resolve_color (const String &color_name,
+                      StateType     state,
+                      ColorType     color_type)
+{
+  EnumTypeColorType ect;
+  if (color_name[0] == '#')
+    {
+      uint32 argb = string_to_int (&color_name[1], 16);
+      /* invert alpha */
+      Color c (argb);
+      c.alpha (0xff - c.alpha());
+      return c; // return argb;
+    }
+  const EnumClass::Value *value = ect.find_first (color_name);
+  if (value)
+    return standard_color (state, ColorType (value->value));
+  else
+    {
+      Color parsed_color = Color::from_name (color_name);
+      if (!parsed_color)
+        parsed_color = standard_color (state, color_type);
+      return parsed_color;
+    }
+}
+
 Style::~Style ()
 {
   m_appearance.unregister_style (*this);

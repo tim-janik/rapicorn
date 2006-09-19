@@ -740,6 +740,7 @@ Item::set_parent (Item *pitem)
   Container *pc = parent_container();
   if (pc)
     {
+      ref (pc);
       Root *rtoplevel = root();
       pc->unparent_child (*this);
       invalidate();
@@ -747,6 +748,7 @@ Item::set_parent (Item *pitem)
       m_parent = NULL;
       if (anchored() and rtoplevel)
         sig_hierarchy_changed.emit (rtoplevel);
+      unref (pc);
     }
   if (pitem)
     {

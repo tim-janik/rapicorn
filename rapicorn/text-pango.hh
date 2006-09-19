@@ -20,12 +20,12 @@
 #define __RAPICORN_TEXT_PANGO_HH__
 
 #include <rapicorn/utilities.hh>
-#include <rapicorn/enumdefs.hh>
+#include <rapicorn/text-editor.hh>
 
 #if     RAPICORN_WITH_PANGO
 namespace Rapicorn {
 
-class TextPango : public virtual Convertible {
+class TextPango : public virtual Convertible { // FIXME: move to Text::EditorClient
 public:
   virtual void          font_name       (const String &fname) = 0;
   virtual String        font_name       () const = 0;

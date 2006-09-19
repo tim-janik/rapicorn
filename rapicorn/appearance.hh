@@ -77,6 +77,10 @@ public:
                                                  ColorType      color_type = COLOR_NONE) const;
   Color                         input_color     (StateType      state,
                                                  ColorType      color_type = COLOR_NONE) const;
+  /* parsing */
+  Color                         resolve_color   (const String  &color_name,
+                                                 StateType      state,
+                                                 ColorType      color_type = COLOR_NONE);
 };
 
 class Appearance : public virtual ReferenceCountImpl {
