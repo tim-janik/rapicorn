@@ -51,11 +51,13 @@ public:
                                          Error          *error);
   bool                  end_parse       (Error          *error);
   String                get_element     ();
+  String                input_name      ();
   void                  get_position    (int            *line_number,
                                          int            *char_number,
                                          const char    **input_name_p = NULL);
   virtual void          error           (const Error    &error);
   /* useful when saving */
+  static String         escape_text     (const String   &text);
   static String         escape_text     (const char     *text,
                                          ssize_t         length);
   static String         printf_escaped  (const char     *format,
@@ -75,9 +77,28 @@ protected:
                                          Error          &error);
   virtual void          pass_through    (const String   &pass_through_text,
                                          Error          &error);
+  void                  recap_element   (const String   &element_name,
+                                         ConstStrings   &attribute_names,
+                                         ConstStrings   &attribute_values,
+                                         Error          &error,
+                                         bool            include_outer = true);
+  const String&         recap_string    () const;
 private:
   Context *context;
   String   m_input_name;
+  String   m_recap;
+  uint     m_recap_depth;
+  bool     m_recap_outer;
+  void     recap_start_element   (const String   &element_name,
+                                  ConstStrings   &attribute_names,
+                                  ConstStrings   &attribute_values,
+                                  Error          &error);
+  void     recap_end_element     (const String   &element_name,
+                                  Error          &error);
+  void     recap_text            (const String   &text,
+                                  Error          &error);
+  void     recap_pass_through    (const String   &pass_through_text,
+                                  Error          &error);
 };
 
 } // Birnet
