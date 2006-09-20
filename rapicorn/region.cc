@@ -88,6 +88,11 @@ Region::Region (const Point          &rect_p1,
   _rapicorn_region_union_rect (REGION (this), &box);
 }
 
+Region::~Region ()
+{
+  _rapicorn_region_uninit (REGION (this));
+}
+
 Region&
 Region::operator= (const Region &src)
 {

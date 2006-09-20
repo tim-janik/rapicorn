@@ -507,7 +507,7 @@ RootImpl::handle_focus_key (const EventKey &kevent)
     }
   if (fdir && !move_focus (fdir))
     {
-      if (new_focus && new_focus->root() != this)
+      if (new_focus && new_focus->get_root() != this)
         new_focus = NULL;
       if (new_focus)
         new_focus->grab_focus();

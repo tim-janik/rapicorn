@@ -28,6 +28,7 @@ class Evaluator {
 public:
   typedef std::map<String,String> VariableMap;
   typedef std::list<String>       ArgumentList; /* elements: key=utf8string */
+  virtual      ~Evaluator                       (); // FIXME: destructor required by gcc-3.4
 private:
   const char*   expand_variable                 (const char   *expression,
                                                  String       &result);

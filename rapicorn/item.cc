@@ -156,7 +156,7 @@ Item::has_focus () const
 {
   if (test_flags (FOCUS_CHAIN))
     {
-      Root *ritem = root();
+      Root *ritem = get_root();
       if (ritem && ritem->get_focus() == this)
         return true;
     }
@@ -177,11 +177,11 @@ Item::grab_focus ()
   if (!can_focus() || !sensitive() || !viewable())
     return false;
   /* unset old focus */
-  Root *ritem = root();
+  Root *ritem = get_root();
   if (ritem)
     ritem->set_focus (NULL);
   /* set new focus */
-  ritem = root();
+  ritem = get_root();
   if (ritem && ritem->get_focus() == NULL)
     ritem->set_focus (this);
   return ritem->get_focus() == this;
@@ -196,7 +196,7 @@ Item::move_focus (FocusDirType fdir)
 void
 Item::notify_key_error ()
 {
-  Root *ritem = root();
+  Root *ritem = get_root();
   if (ritem)
     ritem->beep();
 }
@@ -265,7 +265,7 @@ Item::match_toplevel_interface (InterfaceMatch &imatch,
 uint
 Item::exec_slow_repeater (const BoolSlot &sl)
 {
-  Root *ritem = root();
+  Root *ritem = get_root();
   if (ritem)
     {
       MainLoop *loop = ritem->get_loop();
@@ -278,7 +278,7 @@ Item::exec_slow_repeater (const BoolSlot &sl)
 uint
 Item::exec_fast_repeater (const BoolSlot &sl)
 {
-  Root *ritem = root();
+  Root *ritem = get_root();
   if (ritem)
     {
       MainLoop *loop = ritem->get_loop();
@@ -291,7 +291,7 @@ Item::exec_fast_repeater (const BoolSlot &sl)
 uint
 Item::exec_key_repeater (const BoolSlot &sl)
 {
-  Root *ritem = root();
+  Root *ritem = get_root();
   if (ritem)
     {
       MainLoop *loop = ritem->get_loop();
@@ -304,7 +304,7 @@ Item::exec_key_repeater (const BoolSlot &sl)
 bool
 Item::remove_exec (uint exec_id)
 {
-  Root *ritem = root();
+  Root *ritem = get_root();
   if (ritem)
     {
       MainLoop *loop = ritem->get_loop();
@@ -741,7 +741,7 @@ Item::set_parent (Item *pitem)
   if (pc)
     {
       ref (pc);
-      Root *rtoplevel = root();
+      Root *rtoplevel = get_root();
       pc->unparent_child (*this);
       invalidate();
       style (NULL);
@@ -804,7 +804,7 @@ Item::common_ancestor (const Item &other) const
 }
 
 Root*
-Item::root () const
+Item::get_root () const
 {
   Item *parent = const_cast<Item*> (this);
   while (parent->parent())
@@ -854,7 +854,7 @@ void
 Item::copy_area (const Rect  &rect,
                  const Point &dest)
 {
-  Root *ritem = root();
+  Root *ritem = get_root();
   if (ritem)
     {
       Allocation a = allocation();
@@ -890,13 +890,19 @@ Item::expose (const Region &region) /* item coordinates relative */
 {
   Region r (allocation());
   r.intersect (region);
-  Root *rt = root();
+  Root *rt = get_root();
   if (!r.empty() && rt && !test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
       const Affine &affine = affine_to_root();
       r.affine (affine);
       rt->expose_root_region (r);
     }
+}
+
+void
+Item::type_cast_error (const char *dest_type)
+{
+  error ("failed to dynamic_cast<%s> item: %s", cxx_demangle (dest_type).c_str(), name().c_str());
 }
 
 void
@@ -933,7 +939,7 @@ ItemImpl::tune_requisition (Requisition requisition)
   Item *p = parent();
   if (p && !test_flags (INVALID_REQUISITION))
     {
-      Root *r = p->root();
+      Root *r = p->get_root();
       if (r && r->tunable_requisitions())
         {
           Requisition ovr (width(), height());

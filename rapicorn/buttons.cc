@@ -156,7 +156,7 @@ public:
             view.impressed (true);
             if (inbutton && can_focus())
               grab_focus();
-            view.root()->add_grab (view);
+            view.get_root()->add_grab (view);
             activate_click (inbutton ? BUTTON_PRESS : BUTTON_CANCELED);
             handled = true;
           }
@@ -170,7 +170,7 @@ public:
         if (m_button == bevent->button)
           {
             bool inbutton = view.prelight();
-            view.root()->remove_grab (view);
+            view.get_root()->remove_grab (view);
             activate_click (inbutton && proper_release ? BUTTON_RELEASE : BUTTON_CANCELED);
             view.impressed (false);
             m_button = 0;

@@ -21,6 +21,7 @@
 
 #include <rapicorn/birnetutils.hh>
 #include <rapicorn/userconfig.hh>
+#include <typeinfo>
 #ifdef  RAPICORN_PRIVATE
 #include <rapicorn/private.hh>
 #endif

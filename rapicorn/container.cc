@@ -260,6 +260,9 @@ container_uncross_link_R (Container *container,
 }
 
 /* --- Container --- */
+Container::~Container ()
+{}
+
 const PropertyList&
 Container::list_properties()
 {
@@ -523,7 +526,7 @@ Container::move_focus (FocusDirType fdir)
       break;
     case FOCUS_UP:
     case FOCUS_LEFT:
-      current = root()->get_focus();
+      current = get_root()->get_focus();
       refpoint = current ? rect_center (current->allocation()) : lower_right;
       { /* filter items with negative distance (not ahead in focus direction) */
         LesserItemByDirection lesseribd = LesserItemByDirection (fdir, refpoint);
@@ -537,7 +540,7 @@ Container::move_focus (FocusDirType fdir)
       break;
     case FOCUS_RIGHT:
     case FOCUS_DOWN:
-      current = root()->get_focus();
+      current = get_root()->get_focus();
       refpoint = current ? rect_center (current->allocation()) : upper_left;
       { /* filter items with negative distance (not ahead in focus direction) */
         LesserItemByDirection lesseribd = LesserItemByDirection (fdir, refpoint);

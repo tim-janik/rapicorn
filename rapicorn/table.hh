@@ -19,11 +19,11 @@
 #ifndef __RAPICORN_TABLE_HH__
 #define __RAPICORN_TABLE_HH__
 
-#include <rapicorn/item.hh>
+#include <rapicorn/container.hh>
 
 namespace Rapicorn {
 
-class Table : public virtual Convertible {
+class Table : public virtual Container {
 public:
   virtual bool  homogeneous     () const = 0;
   virtual void  homogeneous     (bool chomogeneous_items) = 0;

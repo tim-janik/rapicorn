@@ -67,9 +67,7 @@
       <Ambience
 	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
 	normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none">
-	<Frame frame-type="none">
-	  <Alignment id="child-area" vscale="1" hscale="1" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
-	</Frame>
+	<Alignment id="child-area" vscale="1" hscale="1" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
       </Ambience>
     </Frame>
   </def:UnfocusedButton>

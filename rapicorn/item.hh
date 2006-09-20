@@ -180,7 +180,7 @@ public:
   bool                        has_ancestor      (const Item &ancestor) const;
   Item*                       common_ancestor   (const Item &other) const;
   Item*                       common_ancestor   (const Item *other) const { return common_ancestor (*other); }
-  Root*                       root              () const;
+  Root*                       get_root          () const;
   /* cross links */
   void                        cross_link        (Item           &link,
                                                  const ItemSlot &uncross);
@@ -261,14 +261,17 @@ public:
 private:
   bool                 match_parent_interface   (InterfaceMatch &imatch, const String &ident) const;
   bool                 match_toplevel_interface (InterfaceMatch &imatch, const String &ident) const;
+  void                 type_cast_error          (const char *dest_type) G_GNUC_NORETURN;
 };
 
 /* --- implementation --- */
 template<class ItemType> Handle<ItemType>
 Item::handle ()
 {
-  ItemType &self = Handle<ItemType>::type_cast (*this);
-  return Handle<ItemType> (self, owned_mutex());
+  ItemType *self = dynamic_cast<ItemType*> (this);
+  if (!self)
+    type_cast_error (typeid (ItemType).name());
+  return Handle<ItemType> (*self, owned_mutex());
 }
 
 } // Rapicorn

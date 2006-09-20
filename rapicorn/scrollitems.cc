@@ -245,7 +245,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     double yoffset = m_vadjustment ? round (m_vadjustment->value()) : 0.0;
     double xdelta = xoffset - m_last_xoffset;
     double ydelta = yoffset - m_last_yoffset;
-    Root *ritem = root();
+    Root *ritem = get_root();
     if (!drawable() || !ritem)
       {
         m_last_xoffset = xoffset;
@@ -287,7 +287,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
   set_focus_child (Item *item)
   {
     SingleContainerImpl::set_focus_child (item);
-    Root *rt = root();
+    Root *rt = get_root();
     if (!rt)
       return;
     Item *fitem = rt->get_focus();

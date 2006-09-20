@@ -31,6 +31,9 @@ static Function lookup_function (const String &name);
 
 namespace Rapicorn {
 
+Evaluator::~Evaluator ()
+{}
+
 Evaluator::Evaluator()
 {
   default_map["RAPICORN_VERSION"] = RAPICORN_VERSION;

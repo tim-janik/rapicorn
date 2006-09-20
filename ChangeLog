@@ -1,3 +1,33 @@
+Thu Sep 21 00:18:01 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/item.hh, rapicorn/item.cc: changed root() to get_root()
+	because it too easily clashes with variable names. changed handle<>()
+	to use a dynamic_cast<*> pointer cast instead of a dynamic_cast<&>
+	reference cast, because the latter tends to confuse gcc-4.1. this also
+	allowes us to provide a better error message if casts fail, via an
+	error method that demangles the destination C++ type and using typeid.
+
+	* rapicorn/table.hh:
+	* rapicorn/layoutcontainers.hh: fixed Container type interfaces to 
+	actually derive from Container.
+
+	* rapicorn/region.*: properly unintialize regions in destructor.
+
+	* rapicorn/rapicorn.xml: removed useless empty frame
+	from UnfocusedButton.
+
+	* rapicorn/handle.hh: removed useless cast function.
+
+	* rapicorn/factory.cc: slight string fix.
+
+	* rapicorn/viewport.cc:
+	* rapicorn/container.cc: added virtual destructor for class with 
+	virtual methods.
+
+	* rapicorn/evaluator.cc: sigh, added destructor to unconfuse gcc-3.4.
+
+	* rapicorn/utilities.hh: draw in <typeinfo>.
+
 Wed Sep 20 00:45:45 2006  Tim Janik  <timj@gtk.org>
 
 	* examples/tour.xml: scrolling test fixup.

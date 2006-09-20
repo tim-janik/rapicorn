@@ -24,6 +24,10 @@ namespace Rapicorn {
 
 /* --- Viewport::FactoryBase --- */
 static std::list<Viewport::FactoryBase*> viewport_backends;
+
+Viewport::FactoryBase::~FactoryBase ()
+{}
+
 void
 Viewport::FactoryBase::register_backend (FactoryBase &factory)
 {

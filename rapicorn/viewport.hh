@@ -132,6 +132,7 @@ public:
     BIRNET_PRIVATE_CLASS_COPY (FactoryBase);
     friend class Viewport;
   protected:
+    virtual          ~FactoryBase      ();
     const String      m_name;
     explicit          FactoryBase      (const String  &name) : m_name (name) {}
     static void       register_backend (FactoryBase   &factory);

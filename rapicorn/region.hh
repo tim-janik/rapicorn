@@ -61,6 +61,7 @@ public: /* rectangles are represented at 64bit integer precision */
   void          exor              (const Region         &other);
   void          affine            (const Affine         &aff);
   String        string            ();
+  /*Des*/      ~Region            ();
 };
 
 bool operator== (const Region &r1,

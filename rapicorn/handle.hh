@@ -41,12 +41,6 @@ public:
   Client*     get       (const nothrow_t &nt);
   void        unlock    ()                      { m_omutex.unlock(); }
   /*Des*/     ~Handle   ();
-  /* partially specialized dynamic_cast<>() */
-  template<class T> static Client&
-  type_cast (T &t)
-  {
-    return dynamic_cast<Client&> (t);
-  }
 };
 /* Handle<class> - alias to Handle<&> */
 template<class Client> struct Handle : Handle<Client&> {

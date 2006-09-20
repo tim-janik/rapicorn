@@ -132,7 +132,7 @@ public:
   explicit                      FactorySingleton        ()
   {
     if (singleton)
-      error (STRFUNC, ": non-singleton initialization");
+      error (STRFUNC + String() + ": non-singleton initialization");
     else
       singleton = this;
     /* register backlog */

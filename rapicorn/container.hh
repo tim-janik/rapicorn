@@ -38,6 +38,7 @@ struct Container : public virtual Item {
   void                item_uncross_links(Item           &owner,
                                          Item           &link);
 protected:
+  virtual            ~Container         ();
   virtual bool        match_interface   (InterfaceMatch &imatch,
                                          const String   &ident);
   virtual void        add_child         (Item           &item) = 0;

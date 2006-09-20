@@ -19,11 +19,11 @@
 #ifndef __RAPICORN_LAYOUT_CONTAINERS_HH__
 #define __RAPICORN_LAYOUT_CONTAINERS_HH__
 
-#include <rapicorn/utilities.hh>
+#include <rapicorn/container.hh>
 
 namespace Rapicorn {
 
-class Alignment : public virtual Convertible {
+class Alignment : public virtual Container {
   virtual float halign         () const  = 0;
   virtual void  halign         (float f) = 0;
   virtual float hscale         () const  = 0;
@@ -42,7 +42,7 @@ class Alignment : public virtual Convertible {
   virtual void  top_padding    (uint c)  = 0;
 };
 
-class HBox : public virtual Convertible {
+class HBox : public virtual Container {
 public:
   virtual bool  homogeneous     () const = 0;
   virtual void  homogeneous     (bool chomogeneous_items) = 0;
@@ -50,7 +50,7 @@ public:
   virtual void  spacing         (uint cspacing) = 0;
 };
 
-class VBox : public virtual Convertible {
+class VBox : public virtual Container {
 public:
   virtual bool  homogeneous     () const = 0;
   virtual void  homogeneous     (bool chomogeneous_items) = 0;

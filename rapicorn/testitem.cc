@@ -128,7 +128,7 @@ protected:
     Plane &plane = display.create_plane();
     Painter painter (plane);
     painter.draw_filled_rect (area.x, area.y, area.width, area.height, black());
-    Allocation rarea = root()->allocation();
+    Allocation rarea = get_root()->allocation();
     float x1 = area.x, x2 = rarea.width - area.x - area.width;
     float y1 = area.y, y2 = rarea.height - area.y - area.height;
     assert_value ("assert-bottom", m_assert_bottom, y1, y2);
