@@ -1,4 +1,5 @@
 FIXME:
+- non-working .interface<SomeType&>() should provide a better error message than throwing a NullReference exception
 - check that all property changes cause ::changed()
 - turn item->m_parent into a Container*
 - add per-object Blurb slot to type registration at factory

@@ -1,3 +1,32 @@
+Sun Sep 24 20:33:04 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/painter.hh, rapicorn/painter.cc: added drawing methods to
+	draw directional arrows, trapezoid and a quadrangle.
+
+	* rapicorn/paintgadgets.hh, rapicorn/paintgadgets.cc: removed cairo
+	painter uses. added DrawableImpl, an implementation of 
+	Rapicorn::Drawable.
+
+	* rapicorn/primitives.hh: removed unused Color::blend, added
+	Color::add_premultiplied().
+
+	* rapicorn/rapicorn.xml: define Drawable.
+
+	* rapicorn/text-pango.cc: removed all trapezoid rendering code, use
+	Painter::draw_trapezoid() instead which can render directly into a Plane.
+
+	* rapicorn/text-editor.hh, rapicorn/text-editor.cc: moved EditorClient
+	to Editor::Client.
+
+	* rapicorn/item.hh: provide == and != operators for item references.
+
+	* examples/tour.xml, examples/tour.cc: added a test drawable and connected
+	a drawing callback to it to perform some test drawings.
+
+	* rapicorn/Makefile.am:
+	* configure.in:
+	* Makefile.am: removed libpixman/libcairo library inlining.
+
 Thu Sep 21 00:18:01 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/item.hh, rapicorn/item.cc: changed root() to get_root()

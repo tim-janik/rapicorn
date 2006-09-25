@@ -18,8 +18,8 @@
  */
 #include "paintgadgets.hh"
 #include "itemimpl.hh"
-#include "cairocontext.hh"
 #include "factory.hh"
+#include "painter.hh"
 
 namespace Rapicorn {
 
@@ -74,8 +74,8 @@ protected:
       {
         Color color = 0x80000000;
         Plane &plane = display.create_plane();
-        CairoPainter cp (plane);
-        cp.draw_dir_arrow (x, y, width, height, 0xff000000, m_dir);
+        Painter painter (plane);
+        painter.draw_dir_arrow (x, y, width, height, 0xff000000, m_dir);
       }
   }
   virtual const PropertyList&
@@ -177,13 +177,13 @@ public:
           }
         Color color = 0x80000000;
         Plane &plane = display.create_plane();
-        CairoPainter cp (plane);
+        Painter rp (plane);
         for (int j = 0; j < n_vdots; j++)
           {
             int xtmp = 0;
             for (int i = 0; i < n_hdots; i++)
               {
-                cp.draw_shaded_rect (x + xtmp, y + 2 * ythick - 1, dark_shadow(),
+                rp.draw_shaded_rect (x + xtmp, y + 2 * ythick - 1, dark_shadow(),
                                      x + xtmp + 2 * xthick - 1, y, light_glint());
                 xtmp += 3 * xthick;
               }
@@ -210,5 +210,34 @@ public:
   }
 };
 static const ItemFactory<DotGridImpl> dot_grid_factory ("Rapicorn::Factory::DotGrid");
+
+/* --- DrawableImpl --- */
+Drawable::Drawable() :
+  sig_draw (*this, &Drawable::draw)
+{}
+
+class DrawableImpl : public virtual ItemImpl, public virtual Drawable {
+public:
+  virtual void
+  size_request (Requisition &requisition)
+  {
+    requisition.width = 250;
+    requisition.height = 250;
+  }
+  virtual void
+  size_allocate (Allocation area)
+  {
+    allocation (area);
+  }
+  virtual void
+  render (Display &display)
+  {
+    sig_draw.emit (display);
+  }
+  virtual void
+  draw (Display &display)
+  {}
+};
+static const ItemFactory<DrawableImpl> drawable_factory ("Rapicorn::Factory::Drawable");
 
 } // Rapicorn

@@ -374,26 +374,21 @@ public:
     blue (Db);
     return *this;
   }
-  Color&        blend (const Color c2, uint8 lucent)
+  Color&        add_premultiplied (const Color c2, uint8 lucent)
   {
-    Color pre1 = premultiplied(), pre2 = c2.premultiplied();
-    /* A over B = colorA * alpha + colorB * (1 - alpha) */
-    pre1.blend_premultiplied (pre2, lucent);
-    /* un-premultiply */
-    uint32 Da = pre1.alpha(), Dr = pre1.red(), Dg = pre1.green(), Db = pre1.blue();
-    if (Da)
-      {
-        Dr = IDIV (Dr, Da);
-        Dg = IDIV (Dg, Da);
-        Db = IDIV (Db, Da);
-      }
-    else
-      Dr = Dg = Db = 0;
+    /* extract alpha, red, green ,blue */
+    uint32 Aa = alpha(), Ar = red(), Ag = green(), Ab = blue();
+    uint32 Ba = c2.alpha(), Br = c2.red(), Bg = c2.green(), Bb = c2.blue();
+    /* A add B = colorA + colorB */
+    uint32 Dr = Ar + IMUL (Br, lucent);
+    uint32 Dg = Ag + IMUL (Bg, lucent);
+    uint32 Db = Ab + IMUL (Bb, lucent);
+    uint32 Da = Aa + IMUL (Ba, lucent);
     /* assign */
-    alpha (Da);
-    red (Dr);
-    green (Dg);
-    blue (Db);
+    alpha (MIN (Da, 255));
+    red   (MIN (Dr, 255));
+    green (MIN (Dg, 255));
+    blue  (MIN (Db, 255));
     return *this;
   }
   String

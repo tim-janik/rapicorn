@@ -21,6 +21,7 @@
 #if     RAPICORN_WITH_PANGO
 #include <pango/pangoft2.h>
 #include "factory.hh"
+#include "painter.hh"
 #include "itemimpl.hh"
 #include "viewport.hh"  // for rapicorn_gtk_threads_enter / rapicorn_gtk_threads_leave
 
@@ -737,8 +738,8 @@ public:
   }
 };
 
-/* --- TextPangoImpl (EditorClient) --- */
-class TextPangoImpl : public virtual ItemImpl, public virtual Text::EditorClient {
+/* --- TextPangoImpl (TextEditor::Client) --- */
+class TextPangoImpl : public virtual ItemImpl, public virtual Text::Editor::Client {
 protected:
   PangoLayout    *m_layout;
   int             m_cursor;
@@ -1080,6 +1081,7 @@ _rapicorn_pango_renderer_render_layout (Plane           &plane,
                                         gint64           layout_y)
 {
   RapicornPangoRenderer *self = (RapicornPangoRenderer*) g_object_new (_rapicorn_pango_renderer_get_type(), NULL);
+  /* (layout_x,layout_y) corresponds to (rect.x,rect.y+rect.height) */
   self->plane = &plane;
   self->style = &style;
   self->rfg = fg;
@@ -1148,16 +1150,6 @@ _rapicorn_pango_renderer_draw_glyphs (PangoRenderer     *renderer,
   delete[] bitmap.buffer;
 }
 
-static void _rapicorn_pangoft2_renderer_draw_trapezoid (PangoRenderer   *renderer,
-                                                        FT_Bitmap       *bitmap,
-                                                        PangoRenderPart  part,
-                                                        double           y1,
-                                                        double           x11,
-                                                        double           x21,
-                                                        double           y2,
-                                                        double           x12,
-                                                        double           x22);
-
 static void
 _rapicorn_pango_renderer_draw_trapezoid (PangoRenderer   *renderer,
                                          PangoRenderPart  pangopart,
@@ -1169,36 +1161,11 @@ _rapicorn_pango_renderer_draw_trapezoid (PangoRenderer   *renderer,
                                          double           x22)
 {
   RapicornPangoRenderer *self = (RapicornPangoRenderer*) renderer;
-  /* render text to alpha bitmap */
-  FT_Bitmap bitmap = { 0, };
-  bitmap.rows = self->height;
-  bitmap.width = self->width;
-  bitmap.pitch = (bitmap.width + 3) & ~3;
-  bitmap.buffer = new uint8[bitmap.rows * bitmap.pitch];
-  memset (bitmap.buffer, 0, bitmap.rows * bitmap.pitch);
-  bitmap.num_grays = 256;
-  bitmap.pixel_mode = FT_PIXEL_MODE_GRAY;
-  _rapicorn_pangoft2_renderer_draw_trapezoid (renderer, &bitmap, pangopart, y1, x11, x21, y2, x12, x22);
-  /* render bitmap to plane */
-  Plane &plane = *self->plane;
-  Color fg = pangopart == PANGO_RENDER_PART_BACKGROUND ? self->bg : self->fg;
-  fg = fg.premultiplied();
-  int xmin = MAX (self->x, plane.xstart()), xbound = MIN (self->x + self->width, plane.xbound());
-  int ymin = MAX (self->y, plane.ystart()), ybound = MIN (self->y + self->height, plane.ybound());
-  int xspan = xbound - xmin;
-  for (int iy = ymin; iy < ybound; iy++)
-    {
-      uint32 *pp = plane.peek (xmin - plane.xstart(), iy - plane.ystart()), *p = pp;
-      uint8  *ba = &bitmap.buffer[(bitmap.rows - 1 - iy + self->y) * bitmap.pitch + xmin - self->x];
-      while (p < pp + xspan)
-        {
-          uint8 alpha = *ba++;
-          *p = Color (*p).blend_premultiplied (fg, alpha);
-          p++;
-        }
-    }
-  /* cleanup */
-  delete[] bitmap.buffer;
+  Painter painter (*self->plane);
+  /* translate from layout coords to rect coords */
+  double ry1 = self->y + self->height - y1, rx11 = self->x + x11, rx21 = self->x + x21;
+  double ry2 = self->y + self->height - y2, rx12 = self->x + x12, rx22 = self->x + x22;
+  painter.draw_trapezoid (ry1, rx11, rx21, ry2, rx12, rx22, pangopart == PANGO_RENDER_PART_BACKGROUND ? self->bg : self->fg);
 }
 
 static void
@@ -1208,207 +1175,6 @@ _rapicorn_pango_renderer_class_init (RapicornPangoRendererClass *klass)
   renderer_class->prepare_run = _rapicorn_pango_renderer_prepare_run;
   renderer_class->draw_glyphs = _rapicorn_pango_renderer_draw_glyphs;
   renderer_class->draw_trapezoid = _rapicorn_pango_renderer_draw_trapezoid; // needed for UNDERLINE
-}
-
-/* --- pangoft2-render.c trapezoid (LGPL) --- */
-typedef struct {
-  double y;
-  double x1;
-  double x2;
-} Position;
-
-static void
-_rapicorn_pangoft2_renderer_draw_simple_trap (PangoRenderer *renderer,
-                                              FT_Bitmap     *bitmap,
-                                              Position      *t,
-                                              Position      *b)
-{
-  int iy = floor (t->y);
-  int x1, x2, x;
-  double dy = b->y - t->y;
-  guchar *dest;
-  
-  if (iy < 0 || iy >= bitmap->rows)
-    return;
-  dest = bitmap->buffer + iy * bitmap->pitch;
-
-  if (t->x1 < b->x1)
-    x1 = floor (t->x1);
-  else
-    x1 = floor (b->x1);
-
-  if (t->x2 > b->x2)
-    x2 = ceil (t->x2);
-  else
-    x2 = ceil (b->x2);
-
-  x1 = CLAMP (x1, 0, bitmap->width);
-  x2 = CLAMP (x2, 0, bitmap->width);
-
-  for (x = x1; x < x2; x++)
-    {
-      double top_left = MAX (t->x1, x);
-      double top_right = MIN (t->x2, x + 1);
-      double bottom_left = MAX (b->x1, x);
-      double bottom_right = MIN (b->x2, x + 1);
-      double c = 0.5 * dy * ((top_right - top_left) + (bottom_right - bottom_left));
-      
-      /* When converting to [0,255], we round up. This is intended
-       * to prevent the problem of pixels that get divided into
-       * multiple slices not being fully black.
-       */
-      int ic = c * 256;
-      
-      dest[x] = MIN (dest[x] + ic, 255);
-    }
-}
-
-static void
-_rapicorn_pangoft2_renderer_interpolate_position (Position *result,
-                                                  Position *top,
-                                                  Position *bottom,
-                                                  double    val,
-                                                  double    val1,
-                                                  double    val2)
-{
-  result->y  = (top->y *  (val2 - val) + bottom->y *  (val - val1)) / (val2 - val1);
-  result->x1 = (top->x1 * (val2 - val) + bottom->x1 * (val - val1)) / (val2 - val1);
-  result->x2 = (top->x2 * (val2 - val) + bottom->x2 * (val - val1)) / (val2 - val1);
-}
-
-/* This draws a trapezoid with the parallel sides aligned with
- * the X axis. We do this by subdividing the trapezoid vertically
- * into thin slices (themselves trapezoids) where two edge sides are each
- * contained within a single pixel and then rasterizing each
- * slice. There are frequently multiple slices within a single
- * line so we have to accumulate to get the final result.
- */
-static void
-_rapicorn_pangoft2_renderer_draw_trapezoid (PangoRenderer   *renderer,
-                                            FT_Bitmap       *bitmap,
-                                            PangoRenderPart  part,
-                                            double           y1,
-                                            double           x11,
-                                            double           x21,
-                                            double           y2,
-                                            double           x12,
-                                            double           x22)
-{
-  Position pos;
-  Position t;
-  Position b;
-  gboolean done = FALSE;
-  
-  if (y1 == y2)
-    return;
-  
-  pos.y = t.y = y1;
-  pos.x1 = t.x1 = x11;
-  pos.x2 = t.x2 = x21;
-  b.y = y2;
-  b.x1 = x12;
-  b.x2 = x22;
-  
-  while (!done)
-    {
-      Position pos_next;
-      double y_next, x1_next, x2_next;
-      double ix1, ix2;
-      
-      /* The algorithm here is written to emphasize simplicity and
-       * numerical stability as opposed to speed.
-       *
-       * While the end result is slicing up the polygon vertically,
-       * conceptually we aren't walking in the X direction, rather we
-       * are walking along the edges. When we compute crossing of
-       * horizontal pixel boundaries, we use the X coordinate as the
-       * interpolating variable, when we compute crossing for vertical
-       * pixel boundaries, we use the Y coordinate.
-       *
-       * This allows us to handle almost exactly horizontal edges without
-       * running into difficulties. (Almost exactly horizontal edges
-       * come up frequently due to inexactness in computing, say,
-       * a 90 degree rotation transformation)
-       */
-      
-      pos_next = b;
-      done = TRUE;
-      
-      /* Check for crossing vertical pixel boundaries */
-      y_next = floor (pos.y) + 1;
-      if (y_next < pos_next.y)
-	{
-	  _rapicorn_pangoft2_renderer_interpolate_position (&pos_next, &t, &b,
-                                                            y_next, t.y, b.y);
-	  pos_next.y = y_next;
-	  done = FALSE;
-	}
-      
-      /* Check left side for crossing horizontal pixel boundaries */
-      ix1 = floor (pos.x1);
-      
-      if (b.x1 < t.x1)
-	{
-	  if (ix1 == pos.x1)
-	    x1_next = ix1 - 1;
-	  else
-	    x1_next = ix1;
-          
-	  if (x1_next > pos_next.x1)
-	    {
-	      _rapicorn_pangoft2_renderer_interpolate_position (&pos_next, &t, &b,
-                                                                x1_next, t.x1, b.x1);
-	      pos_next.x1 = x1_next;
-	      done = FALSE;
-	    }
-	}
-      else if (b.x1 > t.x1)
-	{
-	  x1_next = ix1 + 1;
-          
-	  if (x1_next < pos_next.x1)
-	    {
-	      _rapicorn_pangoft2_renderer_interpolate_position (&pos_next, &t, &b,
-                                                                x1_next, t.x1, b.x1);
-	      pos_next.x1 = x1_next;
-	      done = FALSE;
-	    }
-	}
-      
-      /* Check right side for crossing horizontal pixel boundaries */
-      ix2 = floor (pos.x2);
-      
-      if (b.x2 < t.x2)
-	{
-	  if (ix2 == pos.x2)
-	    x2_next = ix2 - 1;
-	  else
-	    x2_next = ix2;
-          
-	  if (x2_next > pos_next.x2)
-	    {
-	      _rapicorn_pangoft2_renderer_interpolate_position (&pos_next, &t, &b,
-                                                                x2_next, t.x2, b.x2);
-	      pos_next.x2 = x2_next;
-	      done = FALSE;
-	    }
-	}
-      else if (x22 > x21)
-	{
-	  x2_next = ix2 + 1;
-          
-	  if (x2_next < pos_next.x2)
-	    {
-	      _rapicorn_pangoft2_renderer_interpolate_position (&pos_next, &t, &b,
-                                                                x2_next, t.x2, b.x2);
-	      pos_next.x2 = x2_next;
-	      done = FALSE;
-	    }
-	}
-      
-      _rapicorn_pangoft2_renderer_draw_simple_trap (renderer, bitmap, &pos, &pos_next);
-      pos = pos_next;
-    }
 }
 
 } // Rapicorn

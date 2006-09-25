@@ -80,6 +80,9 @@
   <!-- DotGrid -->
   <def:DotGrid inherit="Rapicorn::Factory::DotGrid"/>
 
+  <!-- Drawable -->
+  <def:Drawable inherit="Rapicorn::Factory::Drawable"/>
+
   <!-- Arrow -->
   <def:Arrow inherit="Rapicorn::Factory::Arrow"/>
 

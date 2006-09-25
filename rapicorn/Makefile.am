@@ -1,7 +1,7 @@
 # Rapicorn
 # Copyright (C) 2005 Tim Janik
 
-INCLUDES  	= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(PANGO_CFLAGS) $(GTK_CFLAGS) -I$(top_builddir)/cairo-inlined
+INCLUDES  	= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(PANGO_CFLAGS) $(GTK_CFLAGS)
 GLIB_MKENUMS    = glib-mkenums
 LDLIBS	       += $(LIBS) $(PANGO_LIBS) $(GTK_LIBS)
 DEFS		= -DRAPICORN_PRIVATE -DPARANOID
@@ -11,7 +11,7 @@ rapicorn_public_headers = $(strip 	\
 	$(rapicorn_impl_headers)	\
 	birnetutils.hh	birnetmarkup.hh	utilities.hh	events.hh	\
 	enumdefs.hh	primitives.hh	region.hh	loop.hh		viewport.hh		\
-	properties.hh	commands.hh	appearance.hh	painter.hh	cairocontext.hh		\
+	properties.hh	commands.hh	appearance.hh	painter.hh	\
 	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
 	adjustment.hh	image.hh	paintgadgets.hh	slider.hh	paintcontainers.hh	\
 	buttons.hh	factory.hh	evaluator.hh	scrollitems.hh	layoutcontainers.hh	\
@@ -29,7 +29,7 @@ rapicorn_cc_sources = $(strip 		\
 	$(strip )			\
 	birnetutils.cc	birnetmarkup.cc	utilities.cc	events.cc	\
 	enumdefs.cc	primitives.cc	region.cc	loop.cc		viewport.cc		\
-	properties.cc	commands.cc	appearance.cc	painter.cc	cairocontext.cc		\
+	properties.cc	commands.cc	appearance.cc	painter.cc	\
 	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\
 	adjustment.cc	image.cc	paintgadgets.cc	slider.cc	paintcontainers.cc	\
 	buttons.cc	factory.cc	evaluator.cc	scrollitems.cc	layoutcontainers.cc	\
@@ -56,8 +56,6 @@ librapicorn_la_LDFLAGS = $(strip 				\
 ) # set libtool version and export symbols for resolving
 #
 librapicorn_la_LIBADD      = $(strip 			\
-	$(top_builddir)/cairo-inlined/libpixman.la	\
-	$(top_builddir)/cairo-inlined/libcairo.la	\
 	$(top_builddir)/birnet/libbirnet.o		\
 	$(RAPICORN_LIBS) -lm 				\
 ) # -lfreetype -lfontconfig

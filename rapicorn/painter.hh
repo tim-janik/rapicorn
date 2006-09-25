@@ -24,6 +24,8 @@
 namespace Rapicorn {
 
 class Painter {
+  inline void   draw_trapezoid_run      (double by, double bx1, double bx2, double ty, double tx1, double tx2, Color fg_premul);
+  inline void   draw_trapezoid_row      (double by, double bx1, double bx2, double ty, double tx1, double tx2, Color fg_premul);
 protected:
   Plane &m_plane;
 public:
@@ -45,6 +47,10 @@ public:
   void          draw_border             (int x, int y, int width, int height, Color border, const vector<int> &dashes = vector<int>(), int dash_offset = 0);
   void          draw_shaded_rect        (int xc0, int yc0, Color color0, int xc1, int yc1, Color color1);
   void          draw_filled_rect        (int x, int y, int width, int height, Color fill_color);
+  void          draw_dir_arrow          (double x, double y, double width, double height, Color c, DirType dir);
+  void          draw_trapezoid          (double c1y, double c1x1, double c1x2, double c2y, double c2x1, double c2x2, Color fill_color);
+  void          draw_quadrangle         (const Point points[4], Color fill_color);
+  void          draw_simple_line        (double x0, double y0, double x1, double y1, double thickness, Color fill_color);
 };
 
 } // Rapicorn

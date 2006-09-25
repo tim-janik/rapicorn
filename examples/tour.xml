@@ -104,7 +104,10 @@
 	  <Label markup-text="Expand Button3" />
 	</Button>
       </Arrangement>
-      <Label markup-text="Mark2" />
+      <VBox>
+	<Label markup-text="Mark2" />
+	<Drawable id="drawable1" />
+      </VBox>
       <Alignment visible="1" left-padding="5" right-padding="5" top-padding="5" bottom-padding="5">
 	<Frame frame-type="etched-in">
 	  <Alignment left-padding="5" right-padding="5" top-padding="5" bottom-padding="5"> <!-- width="125" height="110" -->

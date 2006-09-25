@@ -32,7 +32,7 @@ public:
 };
 
 class DotGrid : public virtual Item {
-  FrameType             dot_type        () const { assert_not_reached(); }
+  FrameType             dot_type        () const { BIRNET_ASSERT_NOT_REACHED(); }
 public:
   void                  dot_type            (FrameType ft);
   virtual void          normal_dot          (FrameType ft) = 0;
@@ -51,6 +51,14 @@ public:
   virtual void          left_padding_dots   (uint c)  = 0;
   virtual uint          bottom_padding_dots () const  = 0;
   virtual void          bottom_padding_dots (uint c)  = 0;
+};
+
+class Drawable : public virtual Item {
+protected:
+  explicit      Drawable();
+  virtual void  draw    (Display        &display) = 0;
+public:
+  Signal<Drawable, void (Display &display)> sig_draw;
 };
 
 } // Rapicorn

@@ -24,6 +24,22 @@ using namespace Rapicorn;
 
 static void     register_builtin_images (void);
 
+static void
+drawable_draw (Display  &display,
+               Drawable &drawable)
+{
+  Plane &plane = display.create_plane();
+  Painter painter (plane);
+  Rect area = drawable.allocation();
+  Color fg = 0xff000000;
+  double lthickness = 2.25;
+  painter.draw_simple_line (area.x + 15, area.y + 15, area.x + 35, area.y + 35, lthickness, fg);
+  painter.draw_simple_line (area.x + 35, area.y + 35, area.x + 50, area.y + 20, lthickness, fg);
+  painter.draw_simple_line (area.x + 50, area.y + 20, area.x + 75, area.y + 90, lthickness, fg);
+  painter.draw_simple_line (area.x + 75, area.y + 90, area.x + 230, area.y + 93, lthickness, fg);
+  painter.draw_simple_line (area.x + 75, area.y + 120, area.x + 230, area.y + 110, lthickness * 0.5, fg);
+}
+
 static Root*
 construct_gui (const char *executable)
 {
@@ -41,6 +57,10 @@ construct_gui (const char *executable)
   AutoLocker dlocker (dhandle);
   Item &dialog = dhandle.get();
   root.add (dialog);
+
+  /* hook up drawable test */
+  Drawable &drawable = root.interface<Drawable&>();
+  drawable.sig_draw += slot (&drawable_draw, drawable);
 
   return &root;
 }

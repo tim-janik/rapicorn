@@ -35,7 +35,7 @@ AttrState::AttrState() :
   foreground (0), background (0)
 {}
 
-EditorClient::~EditorClient ()
+Editor::Client::~Client ()
 {}
 
 } // Text

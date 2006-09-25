@@ -263,6 +263,8 @@ private:
   bool                 match_toplevel_interface (InterfaceMatch &imatch, const String &ident) const;
   void                 type_cast_error          (const char *dest_type) G_GNUC_NORETURN;
 };
+inline bool operator== (const Item &item1, const Item &item2) { return &item1 == &item2; }
+inline bool operator!= (const Item &item1, const Item &item2) { return &item1 != &item2; }
 
 /* --- implementation --- */
 template<class ItemType> Handle<ItemType>

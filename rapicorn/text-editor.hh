@@ -19,7 +19,7 @@
 #ifndef __RAPICORN_TEXT_EDITOR_HH__
 #define __RAPICORN_TEXT_EDITOR_HH__
 
-#include <rapicorn/primitives.hh>
+#include <rapicorn/container.hh>
 
 namespace Rapicorn {
 namespace Text {
@@ -48,25 +48,27 @@ struct AttrState {
   explicit AttrState();
 };
 
-struct EditorClient {
-  virtual            ~EditorClient ();
-  virtual String      plain_text   () const = 0;
-  virtual void        plain_text   (const String &ptext) = 0;
-  virtual int         cursor       () const = 0;
-  virtual void        cursor       (int pos) = 0;
-  virtual ParaState   para_state   () const = 0;
-  virtual void        para_state   (const ParaState &pstate) = 0;
-  virtual AttrState   attr_state   () const = 0;
-  virtual void        attr_state   (const AttrState &astate) = 0;
-  virtual void        insert       (uint             pos,
-                                    const String    &text,
-                                    const AttrState *astate = NULL) = 0;
-  virtual void        remove       (uint             pos,
-                                    uint             n_bytes) = 0;
-  virtual String      save_markup  () const = 0;
-  virtual void        load_markup  (const String    &markup) = 0;
+class Editor : public virtual Container {
+public:
+  struct Client {
+    virtual            ~Client ();
+    virtual String      plain_text   () const = 0;
+    virtual void        plain_text   (const String &ptext) = 0;
+    virtual int         cursor       () const = 0;
+    virtual void        cursor       (int pos) = 0;
+    virtual ParaState   para_state   () const = 0;
+    virtual void        para_state   (const ParaState &pstate) = 0;
+    virtual AttrState   attr_state   () const = 0;
+    virtual void        attr_state   (const AttrState &astate) = 0;
+    virtual void        insert       (uint             pos,
+                                      const String    &text,
+                                      const AttrState *astate = NULL) = 0;
+    virtual void        remove       (uint             pos,
+                                      uint             n_bytes) = 0;
+    virtual String      save_markup  () const = 0;
+    virtual void        load_markup  (const String    &markup) = 0;
+  };
 };
-
 
 } // Text
 } // Rapicorn
