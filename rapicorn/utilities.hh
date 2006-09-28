@@ -59,65 +59,108 @@ inline void   memset4 (uint32 *mem, uint32 filler, uint length) { birnet_memset4
 /* --- Convertible --- */
 class Convertible : public virtual ReferenceCountImpl {
 public:
-  /* typedefs */
+  /* interface matching base class */
   class InterfaceMatch {
-  protected:
-    bool                        m_match_found;
+    BIRNET_PRIVATE_CLASS_COPY (InterfaceMatch);
   public:
-    explicit                    InterfaceMatch  () : m_match_found (false) {}
-    bool                        done            () { return m_match_found; }
-    virtual  bool               match           (Convertible *object) = 0;
+    explicit            InterfaceMatch  (const String &ident) : m_ident (ident), m_match_found (false) {}
+    bool                done            () { return m_match_found; }
+    virtual  bool       match           (Convertible  *object,
+                                         const String &ident = String()) = 0;
+    const String&       identifier      () { return m_ident; }
+  protected:
+    const String       &m_ident;
+    bool                m_match_found;
   };
   typedef Signal<Convertible, Convertible* (const InterfaceMatch&, const String&), CollectorWhile0<Convertible*> > SignalFindInterface;
+  /* SignalFindInterface sig_find_interface; */
 private:
-  /* implement InterfaceCast template */
+  /* interface matching base template class */
   template<typename Type>
   struct InterfaceCast : InterfaceMatch {
-    typedef Type  Interface;
-    explicit      InterfaceCast () : m_instance (NULL) {}
-    virtual bool  match         (Convertible *obj)
+    typedef Type        Interface;
+    explicit            InterfaceCast   (const String &ident) : InterfaceMatch (ident), m_instance (NULL) {}
+    virtual bool        match           (Convertible *obj,
+                                         const String &ident);
+  protected:
+    Interface          *m_instance;
+  };
+  /* interface matching template class implementation for Type, Type& and Type* */
+  template<typename Type>
+  struct InterfaceType : InterfaceCast<Type> {
+    typedef Type&       Result;
+    explicit            InterfaceType   (const String &ident) : InterfaceCast<Type> (ident) {}
+    Type&               result          (bool may_throw);
+  };
+  template<typename Type>
+  struct InterfaceType<Type&> : InterfaceType<Type> {
+    explicit            InterfaceType   (const String &ident) : InterfaceType<Type> (ident) {}
+  };
+  template<typename Type>
+  struct InterfaceType<Type*> : InterfaceCast<Type> {
+    typedef Type*       Result;
+    explicit            InterfaceType   (const String &ident) : InterfaceCast<Type> (ident) {}
+    Type*               result          (bool may_throw);
+  };
+public: /* user API */
+  explicit              Convertible     ();
+  virtual bool          match_interface (InterfaceMatch &imatch) const;
+  template<typename Type>
+  typename
+  InterfaceType<Type>::
+  Result                interface       (const String         &ident = String(),
+                                         const std::nothrow_t &nt = dothrow) const;
+  template<typename Type>
+  typename
+  InterfaceType<Type>::
+  Result                interface       (const std::nothrow_t &nt) const;
+};
+
+/* --- template implementations --- */
+template<typename Type> bool
+Convertible::InterfaceCast<Type>::match (Convertible  *obj,
+                                         const String &ident)
+{
+  if (!m_instance)
     {
-      if (!m_instance)
+      const String &id = identifier();
+      if (id.empty() || id == ident)
         {
           m_instance = dynamic_cast<Interface*> (obj);
           m_match_found = m_instance != NULL;
         }
-      return m_match_found;
     }
-  protected:
-    Interface *m_instance;
-  };
-  /* implement InterfaceType template */
-  template<typename Type> struct InterfaceType : InterfaceCast<Type> {
-    typedef Type& Result;
-    Type&         result  (bool may_throw)
-    {
-      if (!this->m_instance && may_throw)
-        throw NullInterface();
-      return *this->m_instance;
-    }
-  };
-  template<typename Type> struct InterfaceType<Type&> : InterfaceType<Type> {};
-  template<typename Type> struct InterfaceType<Type*> : InterfaceCast<Type> {
-    typedef Type* Result;
-    Type*         result  (bool may_throw) { return InterfaceCast<Type>::m_instance; }
-  };
-public: /* user API */
-  explicit                      Convertible     ();
-  SignalFindInterface           sig_find_interface;
-  virtual bool                  match_interface (InterfaceMatch &imatch, const String &ident);
-  template<typename Type>
-  typename
-  InterfaceType<Type>::Result   interface       (const String &ident = String(), const std::nothrow_t &nt = dothrow)
-  {
-    InterfaceType<Type> interface_type;
-    match_interface (interface_type, ident);
-    return interface_type.result (&nt == &dothrow);
-  }
-  template<typename Type>
-  typename
-  InterfaceType<Type>::Result   interface       (const std::nothrow_t &nt) { return interface<Type> (String(), nt); }
-};
+  return m_match_found;
+}
+
+template<typename Type> Type&
+Convertible::InterfaceType<Type>::result (bool may_throw)
+{
+  if (!this->m_instance && may_throw)
+    throw NullInterface();
+  return *this->m_instance;
+}
+
+template<typename Type> Type*
+Convertible::InterfaceType<Type*>::result (bool may_throw)
+{
+  return InterfaceCast<Type>::m_instance;
+}
+
+template<typename Type> typename Convertible::InterfaceType<Type>::Result
+Convertible::interface (const String         &ident,
+                        const std::nothrow_t &nt) const
+{
+  InterfaceType<Type> interface_type (ident);
+  match_interface (interface_type);
+  return interface_type.result (&nt == &dothrow);
+}
+
+template<typename Type> typename Convertible::InterfaceType<Type>::Result
+Convertible::interface (const std::nothrow_t &nt) const
+{
+  return interface<Type> (String(), nt);
+}
 
 } // Rapicorn
 

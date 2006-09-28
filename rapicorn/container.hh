@@ -39,8 +39,7 @@ struct Container : public virtual Item {
                                          Item           &link);
 protected:
   virtual            ~Container         ();
-  virtual bool        match_interface   (InterfaceMatch &imatch,
-                                         const String   &ident);
+  virtual bool        match_interface   (InterfaceMatch &imatch) const;
   virtual void        add_child         (Item           &item) = 0;
   virtual void        remove_child      (Item           &item) = 0;
   virtual void        unparent_child    (Item           &item);
@@ -54,7 +53,7 @@ public:
   typedef Walker<Item>  ChildWalker;
   void                  child_container (Container      *child_container);
   Container&            child_container ();
-  virtual ChildWalker   local_children  () = 0;
+  virtual ChildWalker   local_children  () const = 0;
   virtual bool          has_children    () = 0;
   void                  remove          (Item           &item);
   void                  remove          (Item           *item)  { if (item) remove (*item); else throw NullPointer(); }

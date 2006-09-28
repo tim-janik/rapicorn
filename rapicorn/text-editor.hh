@@ -50,6 +50,7 @@ struct AttrState {
 
 class Editor : public virtual Container {
 public:
+  /* Text::Editor::Client */
   struct Client {
     virtual            ~Client ();
     virtual String      plain_text   () const = 0;
@@ -68,6 +69,9 @@ public:
     virtual String      save_markup  () const = 0;
     virtual void        load_markup  (const String    &markup) = 0;
   };
+  /* Text::Editor */
+  virtual void          text            (const String &text) = 0;
+  virtual String        text            () const = 0;
 };
 
 } // Text

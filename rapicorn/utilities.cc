@@ -52,15 +52,14 @@ rapicorn_mutex ()
   return &rapicorn_global_mutex;
 }
 
-Convertible::Convertible() :
-  sig_find_interface (*this)
+Convertible::Convertible()
 {}
 
 bool
-Convertible::match_interface (InterfaceMatch &imatch,
-                              const String   &ident)
+Convertible::match_interface (InterfaceMatch &imatch) const
 {
-  return imatch.done() || sig_find_interface.emit (imatch, ident) || (!ident[0] && imatch.match (this));
+  Convertible *self = const_cast<Convertible*> (this);
+  return imatch.done() || imatch.match (self);
 }
 
 } // Rapicorn

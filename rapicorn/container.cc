@@ -613,15 +613,12 @@ Container::root_point_children (Point                   p, /* root coordinates r
 }
 
 bool
-Container::match_interface (InterfaceMatch &imatch,
-                            const String   &ident)
+Container::match_interface (InterfaceMatch &imatch) const
 {
-  if (imatch.done() ||
-      sig_find_interface.emit (imatch, ident) ||
-      ((!ident[0] || ident == name()) && imatch.match (this)))
+  if (imatch.done() || imatch.match (const_cast<Container*> (this), name()))
     return true;
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    if (cw->match_interface (imatch, ident))
+    if (cw->match_interface (imatch))
       break;
   return imatch.done();
 }
@@ -791,9 +788,9 @@ SingleContainerImpl::SingleContainerImpl () :
 {}
 
 Container::ChildWalker
-SingleContainerImpl::local_children ()
+SingleContainerImpl::local_children () const
 {
-  Item **iter = &child_item, **iend = iter;
+  Item **iter = const_cast<Item**> (&child_item), **iend = iter;
   if (child_item)
     iend++;
   return value_walker (PointerIterator<Item*> (iter), PointerIterator<Item*> (iend));

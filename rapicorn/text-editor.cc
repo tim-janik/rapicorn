@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include "text-editor.hh"
+#include "containerimpl.hh"
 
 namespace Rapicorn {
 namespace Text {
@@ -37,6 +38,26 @@ AttrState::AttrState() :
 
 Editor::Client::~Client ()
 {}
+
+class EditorImpl : public virtual SingleContainerImpl, public virtual Editor {
+public:
+  Client*       get_client () const { return interface<Client*>(); }
+  virtual void
+  text (const String &text)
+  {
+    Client *client = get_client();
+    if (client)
+      client->load_markup (text);
+  }
+  virtual String
+  text () const
+  {
+    Client *client = get_client();
+    return client ? client->save_markup() : "";
+  }
+};
+static const ItemFactory<EditorImpl> editor_factory ("Rapicorn::Factory::Text::Editor");
+
 
 } // Text
 } // Rapicorn

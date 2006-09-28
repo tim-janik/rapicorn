@@ -231,33 +231,30 @@ Item::uncross_links (Item &link)
 }
 
 bool
-Item::match_interface (InterfaceMatch &imatch,
-                       const String   &ident)
+Item::match_interface (InterfaceMatch &imatch) const
 {
-  return imatch.done() || sig_find_interface.emit (imatch, ident) || ((!ident[0] || ident == name()) && imatch.match (this));
+  return imatch.done() || imatch.match (const_cast<Item*> (this), name());
 }
 
 bool
-Item::match_parent_interface (InterfaceMatch &imatch,
-                              const String   &ident) const
+Item::match_parent_interface (InterfaceMatch &imatch) const
 {
   Item *pitem = parent();
-  if (pitem && (!ident.size() || ident == pitem->name()) && imatch.match (pitem))
+  if (pitem && imatch.match (pitem, pitem->name()))
     return true;
   if (pitem)
-    return pitem->match_parent_interface (imatch, ident);
+    return pitem->match_parent_interface (imatch);
   else
     return false;
 }
 
 bool
-Item::match_toplevel_interface (InterfaceMatch &imatch,
-                                const String   &ident) const
+Item::match_toplevel_interface (InterfaceMatch &imatch) const
 {
   Item *pitem = parent();
-  if (pitem && pitem->match_toplevel_interface (imatch, ident))
+  if (pitem && pitem->match_toplevel_interface (imatch))
     return true;
-  if ((!ident.size() || ident == name()) && imatch.match (const_cast<Item*> (this)))
+  if (imatch.match (const_cast<Item*> (this), name()))
     return true;
   return false;
 }

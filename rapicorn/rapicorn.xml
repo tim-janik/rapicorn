@@ -47,6 +47,9 @@
   <!-- Label -->
   <def:Label inherit="Rapicorn::Factory::TextPango" />
 
+  <!-- TextEditor -->
+  <def:TextEditor inherit="Rapicorn::Factory::Text::Editor" />
+
   <!-- Image -->
   <def:Image inherit="Rapicorn::Factory::Image" />
 

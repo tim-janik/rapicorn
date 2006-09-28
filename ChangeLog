@@ -1,3 +1,22 @@
+Thu Sep 28 01:30:17 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/item.hh: removed identifier arg from internal interface match
+	function implementations. supplied identifier argument when creating
+	InterfaceMatch structures.
+
+	* rapicorn/container.*: made local_children() const.
+
+	* rapicorn/utilities.hh, rapicorn/utilities.hh:
+	added idnetifier string to InterfaceMatch and implemented match() method
+	to automatically check the identifier, this significantly simplifies uses
+	of InterfaceMatch. remove signal sig_find_interface which seems useless.
+	some cleanups.
+
+	* rapicorn/text-editor.hh: provide Editor interface.
+	* rapicorn/text-editor.cc: implement Factory::Editor with EditorImpl.
+
+	* rapicorn/rapicorn.xml: declare TextEditor.
+
 Sun Sep 24 20:33:04 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/painter.hh, rapicorn/painter.cc: added drawing methods to

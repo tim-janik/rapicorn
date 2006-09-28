@@ -32,7 +32,7 @@ protected:
   virtual void          size_allocate           (Allocation area);
   Item&                 get_child               () { if (!child_item) throw NullPointer(); return *child_item; }
   virtual               ~SingleContainerImpl    ();
-  virtual ChildWalker   local_children          ();
+  virtual ChildWalker   local_children          () const;
   virtual bool          has_children            () { return child_item != NULL; }
   bool                  has_visible_child       () { return child_item && child_item->visible(); }
   bool                  has_drawable_child      () { return child_item && child_item->drawable(); }
@@ -48,7 +48,7 @@ class MultiContainerImpl : public virtual ItemImpl, public virtual Container {
   std::vector<Item*>    items;
 protected:
   virtual               ~MultiContainerImpl();
-  virtual ChildWalker   local_children          () { return value_walker (items); }
+  virtual ChildWalker   local_children          () const { return value_walker (items); }
   virtual bool          has_children            () { return items.size() > 0; }
   virtual void          add_child               (Item   &item);
   virtual void          remove_child            (Item   &item);

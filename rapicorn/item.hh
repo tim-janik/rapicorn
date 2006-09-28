@@ -103,7 +103,7 @@ protected:
   bool                        tune_requisition  (float        new_width,
                                                  float        new_height);
   /* signal methods */
-  virtual bool                match_interface   (InterfaceMatch &imatch, const String &ident);
+  virtual bool                match_interface   (InterfaceMatch &imatch) const;
   virtual void                do_invalidate     () = 0;
   virtual void                do_changed        () = 0;
   /* idlers & timers */
@@ -237,8 +237,8 @@ public:
   typename
   InterfaceType<Type>::Result parent_interface  (const String &ident = String(), const std::nothrow_t &nt = dothrow) const
   {
-    InterfaceType<Type> interface_type;
-    match_parent_interface (interface_type, ident);
+    InterfaceType<Type> interface_type (ident);
+    match_parent_interface (interface_type);
     return interface_type.result (&nt == &dothrow);
   }
   template<typename Type>
@@ -248,8 +248,8 @@ public:
   typename
   InterfaceType<Type>::Result toplevel_interface  (const String &ident = String(), const std::nothrow_t &nt = dothrow) const
   {
-    InterfaceType<Type> interface_type;
-    match_toplevel_interface (interface_type, ident);
+    InterfaceType<Type> interface_type (ident);
+    match_toplevel_interface (interface_type);
     return interface_type.result (&nt == &dothrow);
   }
   template<typename Type>
@@ -259,8 +259,8 @@ public:
   Handle<ItemType>            handle            ();
   virtual OwnedMutex&         owned_mutex       ();
 private:
-  bool                 match_parent_interface   (InterfaceMatch &imatch, const String &ident) const;
-  bool                 match_toplevel_interface (InterfaceMatch &imatch, const String &ident) const;
+  bool                 match_parent_interface   (InterfaceMatch &imatch) const;
+  bool                 match_toplevel_interface (InterfaceMatch &imatch) const;
   void                 type_cast_error          (const char *dest_type) G_GNUC_NORETURN;
 };
 inline bool operator== (const Item &item1, const Item &item2) { return &item1 == &item2; }
