@@ -221,8 +221,8 @@ public:
   virtual void
   size_request (Requisition &requisition)
   {
-    requisition.width = 250;
-    requisition.height = 250;
+    requisition.width = 320;
+    requisition.height = 200;
   }
   virtual void
   size_allocate (Allocation area)

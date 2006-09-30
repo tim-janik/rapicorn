@@ -1,3 +1,30 @@
+Sat Sep 30 02:37:44 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/root.cc: send key events to focus child.
+
+	* rapicorn/container.hh, rapicorn/container.cc: const fixes, export
+	get_focus_child(). 
+	move_focus(): grab focus on this if this->can_focus().
+
+	* rapicorn/item.cc: move_focus(): grab focus on this if this->can_focus().
+
+	* rapicorn/paintcontainers.cc: expose FocusFrame if focus child changed.
+	also fixed focus state logic.
+
+	* rapicorn/buttons.cc: removed move_focus(), the container default 
+	implementation is now good enough.
+
+	* rapicorn/text-editor.cc: started at key press and cursor movement handling.
+
+	* rapicorn/text-pango.cc: draw cursor.
+
+	* rapicorn/paintgadgets.cc: resized default Drawable size.
+
+	* examples/texttest.cc, examples/texttest.xml: new example for text tests,
+	added markup and ASCII art tests as well as scrolling test.
+
+	* examples/tour.xml: major cleanups, removed scrolling and text tests.
+
 Thu Sep 28 01:30:17 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/item.hh: removed identifier arg from internal interface match

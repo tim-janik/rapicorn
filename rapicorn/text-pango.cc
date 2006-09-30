@@ -268,11 +268,11 @@ class LayoutCache {
 public:
   PangoLayout*
   create_layout (String         font_description,
-                AlignType      align,
-                WrapType       wrap,
-                EllipsizeType  ellipsize,
-                int            indent,
-                int            spacing)
+                 AlignType      align,
+                 WrapType       wrap,
+                 EllipsizeType  ellipsize,
+                 int            indent,
+                 int            spacing)
   {
     ContextKey key;
     key.direction = default_pango_direction();
@@ -789,7 +789,8 @@ protected:
   virtual void
   cursor (int pos)
   {
-    m_cursor = pos;
+    int length = strlen (pango_layout_get_text (m_layout));
+    m_cursor = CLAMP (pos, -1, length);
     expose();
     changed();
   }
@@ -935,32 +936,34 @@ protected:
   }
   void
   render_cursor (Plane        &plane,
-                 int           x,
-                 int           y,
-                 int           width,
-                 int           height,
-                 Color         col)
+                 Color         col,
+                 Rect          layout_rect,
+                 double        layout_x,
+                 double        layout_y)
   {
-    const char *ptext = pango_layout_get_text (m_layout);
-    uint cpos = strlen (ptext) / 2;
+    // const char *ptext = pango_layout_get_text (m_layout);
     PangoRectangle crect1, crect2, irect, lrect;
     pango_layout_get_extents (m_layout, &irect, &lrect);
-    pango_layout_get_cursor_pos (m_layout, cpos, &crect1, &crect2);
-    x += PANGO_PIXELS (irect.x + crect1.x);
-    width = MIN (width, MAX (1, PANGO_PIXELS (crect1.width))); // FIXME: cursor width
-    double ydelta = PANGO_PIXELS (lrect.height - irect.y - crect1.y - crect1.height);
-    y += ydelta;
-    height = MIN (height - ydelta, PANGO_PIXELS (crect1.height));
+    if (m_cursor < 0)
+      return;
+    pango_layout_get_cursor_pos (m_layout, m_cursor, &crect1, &crect2);
+    double x = layout_rect.x + layout_x + PANGO_PIXELS (irect.x + crect1.x);
+    double width = MIN (layout_rect.width, MAX (1, PANGO_PIXELS (crect1.width))); // FIXME: cursor width
+    // double y = layout_rect.y + layout_y + PANGO_PIXELS (lrect.height - irect.y - crect1.y - crect1.height);
+    double y = layout_rect.y + layout_y + PANGO_PIXELS (lrect.height - crect1.y - crect1.height);
+    double height = PANGO_PIXELS (crect1.height);
     Color fg (col.premultiplied());
-    int xmin = MAX (x, plane.xstart()), xbound = MIN (x + width, plane.xbound());
-    int ymin = MAX (y, plane.ystart()), ybound = MIN (y + height, plane.ybound());
-    int xspan = xbound - xmin;
-    for (int iy = ymin; iy < ybound; iy++)
-      {
-        uint32 *pp = plane.peek (xmin - plane.xstart(), iy - plane.ystart()), *p = pp;
-        while (p < pp + xspan)
-          *p++ = fg;
-      }
+    double xpos = MAX (x, plane.xstart());
+    double ymin = MAX (y, plane.ystart()), ymax = MIN (y + height, plane.ybound()) - 1;
+    Painter pp (plane);
+    pp.draw_trapezoid (ymax, xpos - 2, xpos + 3, ymax - 3, xpos + .5, xpos + .5, col);
+    pp.draw_vline (xpos, ymin + 2, ymax - 3, col);
+    pp.draw_trapezoid (ymin, xpos - 2, xpos + 3, ymin + 3, xpos + .5, xpos + .5, col);
+#if 0
+    pp.draw_hline (xpos - 1, xpos + 1, ymax, col);
+    pp.draw_vline (xpos, ymin + 1, ymax - 1, col);
+    pp.draw_hline (xpos - 1, xpos + 1, ymin, col);
+#endif
   }
   void
   render_text (Plane        &plane,
@@ -981,9 +984,11 @@ protected:
     if (r.empty())
       return;
     /* render text to plane */
-    _rapicorn_pango_renderer_render_layout (plane, *style(), fg, m_layout, r,
-                                            layout_rect.x - r.x,
-                                            r.y + r.height - (layout_rect.y + layout_rect.height));
+    double lx = layout_rect.x - r.x;
+    double ly = r.y + r.height - (layout_rect.y + layout_rect.height);
+    _rapicorn_pango_renderer_render_layout (plane, *style(), fg, m_layout, r, lx, ly);
+    /* and cursor */
+    render_cursor (plane, fg, r, lx, ly);
   }
   void
   render (Display &display)

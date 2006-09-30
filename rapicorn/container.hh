@@ -46,10 +46,10 @@ protected:
   virtual void        dispose_item      (Item           &item);
   virtual void        hierarchy_changed (Item           *old_toplevel);
   virtual bool        move_focus        (FocusDirType    fdir);
-  virtual void        set_focus_child   (Item           *item);
-  Item*               get_focus_child   ();
   void                expose_enclosure  (); /* expose without children */
+  virtual void        set_focus_child   (Item           *item);
 public:
+  Item*               get_focus_child   () const;
   typedef Walker<Item>  ChildWalker;
   void                  child_container (Container      *child_container);
   Container&            child_container ();

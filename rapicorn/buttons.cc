@@ -102,13 +102,6 @@ public:
     return m_focus_frame != NULL;
   }
   virtual bool
-  move_focus (FocusDirType fdir)
-  {
-    if (!has_focus() && can_focus())
-      return grab_focus();
-    return false;
-  }
-  virtual bool
   register_focus_frame (FocusFrame &frame)
   {
     if (!m_focus_frame)

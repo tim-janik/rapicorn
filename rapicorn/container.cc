@@ -410,7 +410,7 @@ Container::set_focus_child (Item *item)
 }
 
 Item*
-Container::get_focus_child ()
+Container::get_focus_child () const
 {
   return get_data (&focus_child_key);
 }
@@ -500,6 +500,9 @@ Container::move_focus (FocusDirType fdir)
   /* check focus ability */
   if (!visible() || !sensitive())
     return false;
+  /* focus self */
+  if (!has_focus() && can_focus())
+    return grab_focus();
   Item *last_child = get_data (&focus_child_key);
   /* let last focus descendant handle movement */
   if (last_child && last_child->move_focus (fdir))

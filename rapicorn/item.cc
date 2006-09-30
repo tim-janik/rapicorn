@@ -190,6 +190,8 @@ Item::grab_focus ()
 bool
 Item::move_focus (FocusDirType fdir)
 {
+  if (!has_focus() && can_focus())
+    return grab_focus();
   return false;
 }
 

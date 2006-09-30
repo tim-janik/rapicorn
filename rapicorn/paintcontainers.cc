@@ -413,6 +413,12 @@ static const ItemFactory<FrameImpl> frame_factory ("Rapicorn::Factory::Frame");
 class FocusFrameImpl : public virtual FocusFrame, public virtual FrameImpl {
   FrameType m_focus_frame;
   Client   *m_client;
+  virtual void
+  set_focus_child (Item *item)
+  {
+    FrameImpl::set_focus_child (item);
+    expose_enclosure();
+  }
   void
   client_changed()
   {
@@ -434,7 +440,7 @@ class FocusFrameImpl : public virtual FocusFrame, public virtual FrameImpl {
     if (anchored())
       {
         Client *client = parent_interface<Client*>();
-        if (client->register_focus_frame (*this))
+        if (client && client->register_focus_frame (*this))
           m_client = client;
         if (m_client)
           m_client->sig_changed += slot (*this, &FocusFrameImpl::client_changed);
@@ -446,7 +452,12 @@ protected:
   virtual FrameType
   current_frame () const
   {
-    if (has_focus() || (m_client && m_client->has_focus()))
+    bool in_focus = has_focus();
+    in_focus |= get_focus_child() != NULL;
+    in_focus |= m_client && m_client->has_focus();
+    Container *m_cclient = dynamic_cast<Container*> (m_client);
+    in_focus |= m_cclient && m_cclient->get_focus_child() != NULL;
+    if (in_focus)
       return focus_frame();
     return branch_impressed() ? impressed_frame() : normal_frame();
   }

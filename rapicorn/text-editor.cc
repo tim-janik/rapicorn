@@ -39,9 +39,30 @@ AttrState::AttrState() :
 Editor::Client::~Client ()
 {}
 
-class EditorImpl : public virtual SingleContainerImpl, public virtual Editor {
+class EditorImpl : public virtual EventHandler, public virtual SingleContainerImpl, public virtual Editor {
+  int m_cursor;
 public:
+  EditorImpl() :
+    m_cursor (0)
+  {}
+private:
   Client*       get_client () const { return interface<Client*>(); }
+  virtual int
+  cursor () const
+  {
+    return m_cursor;
+  }
+  virtual void
+  cursor (int pos)
+  {
+    m_cursor = MAX (0, pos);
+    Client *client = get_client();
+    if (client)
+      {
+        client->cursor (m_cursor);
+        m_cursor = client->cursor();
+      }
+  }
   virtual void
   text (const String &text)
   {
@@ -54,6 +75,46 @@ public:
   {
     Client *client = get_client();
     return client ? client->save_markup() : "";
+  }
+  virtual bool
+  can_focus () const
+  {
+    Client *client = get_client();
+    return client != NULL;
+  }
+  virtual void
+  reset (ResetMode mode = RESET_ALL)
+  {}
+  virtual bool
+  handle_event (const Event &event)
+  {
+    bool handled = false;
+    switch (event.type)
+      {
+        const EventKey *kevent;
+      case KEY_PRESS:
+        kevent = dynamic_cast<const EventKey*> (&event);
+        switch (kevent->key)
+          {
+          case KEY_Right:
+            cursor (cursor() + 1);
+            handled = true;
+            break;
+          case KEY_Left:
+            cursor (cursor() - 1);
+            handled = true;
+            break;
+          }
+        break;
+      case KEY_CANCELED:
+      case KEY_RELEASE:
+        break;
+      case BUTTON_PRESS:
+        grab_focus();
+        break;
+      default: ;
+      }
+    return handled;
   }
 };
 static const ItemFactory<EditorImpl> editor_factory ("Rapicorn::Factory::Text::Editor");

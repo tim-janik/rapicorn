@@ -524,9 +524,11 @@ bool
 RootImpl::dispatch_key_event (const Event &event)
 {
   bool handled = false;
+  dispatch_mouse_movement (event);
+  Item *item = get_focus();
+  if (item && item->process_root_event (event))
+    return true;
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
-  if (kevent)
-    dispatch_mouse_movement (*kevent);
   if (kevent && kevent->type == KEY_PRESS)
     {
       switch (kevent->key)
