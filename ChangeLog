@@ -1,3 +1,7 @@
+Sat Sep 30 02:57:57 2006  Tim Janik  <timj@gtk.org>
+
+	* examples/tour.xml: added frames test.
+
 Sat Sep 30 02:37:44 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/root.cc: send key events to focus child.

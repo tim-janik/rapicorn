@@ -113,6 +113,64 @@
     </VBox>
   </def:image-test>
 
+  <!-- Frames -->
+  <def:frame-test inherit="HBox" spacing="10">
+    <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
+	    <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
+		    <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
+			    <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
+				    <Label markup-text="IN"/>
+				  </Frame></Frame></Frame></Frame>
+			  </Frame></Frame></Frame></Frame>
+		  </Frame></Frame></Frame></Frame>
+	  </Frame></Frame></Frame></Frame>
+    <Frame frame-type="etched-in"><Frame frame-type="etched-in"><Frame frame-type="etched-in"><Frame frame-type="etched-in">
+	    <Frame frame-type="etched-in"><Frame frame-type="etched-in"><Frame frame-type="etched-in"><Frame frame-type="etched-in">
+		    <Frame frame-type="etched-in"><Frame frame-type="etched-in"><Frame frame-type="etched-in"><Frame frame-type="etched-in">
+			    <Frame frame-type="etched-in"><Frame frame-type="etched-in"><Frame frame-type="etched-in"><Frame frame-type="etched-in">
+				    <Label markup-text="ETCHED-IN"/>
+				  </Frame></Frame></Frame></Frame>
+			  </Frame></Frame></Frame></Frame>
+		  </Frame></Frame></Frame></Frame>
+	  </Frame></Frame></Frame></Frame>
+    <Frame frame-type="focus"><Frame frame-type="focus"><Frame frame-type="focus"><Frame frame-type="focus">
+	    <Frame frame-type="focus"><Frame frame-type="focus"><Frame frame-type="focus"><Frame frame-type="focus">
+		    <Frame frame-type="focus"><Frame frame-type="focus"><Frame frame-type="focus"><Frame frame-type="focus">
+			    <Frame frame-type="focus"><Frame frame-type="focus"><Frame frame-type="focus"><Frame frame-type="focus">
+				    <Label markup-text="FOCUS"/>
+				  </Frame></Frame></Frame></Frame>
+			  </Frame></Frame></Frame></Frame>
+		  </Frame></Frame></Frame></Frame>
+	  </Frame></Frame></Frame></Frame>
+    <Frame frame-type="none"><Frame frame-type="none"><Frame frame-type="none"><Frame frame-type="none">
+	    <Frame frame-type="none"><Frame frame-type="none"><Frame frame-type="none"><Frame frame-type="none">
+		    <Frame frame-type="none"><Frame frame-type="none"><Frame frame-type="none"><Frame frame-type="none">
+			    <Frame frame-type="none"><Frame frame-type="none"><Frame frame-type="none"><Frame frame-type="none">
+				    <Label markup-text="NONE"/>
+				  </Frame></Frame></Frame></Frame>
+			  </Frame></Frame></Frame></Frame>
+		  </Frame></Frame></Frame></Frame>
+	  </Frame></Frame></Frame></Frame>
+    <Frame frame-type="etched-out"><Frame frame-type="etched-out"><Frame frame-type="etched-out"><Frame frame-type="etched-out">
+	    <Frame frame-type="etched-out"><Frame frame-type="etched-out"><Frame frame-type="etched-out"><Frame frame-type="etched-out">
+		    <Frame frame-type="etched-out"><Frame frame-type="etched-out"><Frame frame-type="etched-out"><Frame frame-type="etched-out">
+			    <Frame frame-type="etched-out"><Frame frame-type="etched-out"><Frame frame-type="etched-out"><Frame frame-type="etched-out">
+				    <Label markup-text="ETCHED-OUT"/>
+				  </Frame></Frame></Frame></Frame>
+			  </Frame></Frame></Frame></Frame>
+		  </Frame></Frame></Frame></Frame>
+	  </Frame></Frame></Frame></Frame>
+    <Frame frame-type="out"><Frame frame-type="out"><Frame frame-type="out"><Frame frame-type="out">
+	    <Frame frame-type="out"><Frame frame-type="out"><Frame frame-type="out"><Frame frame-type="out">
+		    <Frame frame-type="out"><Frame frame-type="out"><Frame frame-type="out"><Frame frame-type="out">
+			    <Frame frame-type="out"><Frame frame-type="out"><Frame frame-type="out"><Frame frame-type="out">
+				    <Label markup-text="OUT"/>
+				  </Frame></Frame></Frame></Frame>
+			  </Frame></Frame></Frame></Frame>
+		  </Frame></Frame></Frame></Frame>
+	  </Frame></Frame></Frame></Frame>
+  </def:frame-test>
+
   <!-- test dialog -->
   <def:tour-dialog inherit="Ambience" normal-lighting="upper-left"> <!-- normal-background="beige" -->
     <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
@@ -137,6 +195,10 @@
 	<VBox bottom-attach="7" left-attach="2" >
 	  <Label markup-text="Arrangement Test:"/>
 	  <arrangement-test/>
+	</VBox>
+	<VBox bottom-attach="6" right-attach="3">
+	  <Label markup-text="Funny Frames:"/>
+	  <frame-test/>
 	</VBox>
 	<Alignment visible="1" left-padding="5" right-padding="5" top-padding="5" bottom-padding="5">
 	  <Frame frame-type="etched-in">
