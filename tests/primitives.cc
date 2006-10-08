@@ -218,6 +218,45 @@ main (int   argc,
       char *argv[])
 {
   birnet_init_test (&argc, &argv);
+
+  TSTART ("uuid string test");
+  TASSERT (uuid_string_test ("00000000-0000-0000-0000-000000000000") == 0);
+  TASSERT (uuid_string_test ("6ba7b812-9dad-11d1-80b4-00c04fd430c8") == 0);
+  TASSERT (uuid_string_test ("6BA7B812-9DAD-11D1-80B4-00C04FD430C8") == 0);
+  TASSERT (uuid_string_test ("a425fd92-4f06-11db-aea9-000102e7e309") == 0);
+  TASSERT (uuid_string_test ("A425FD92-4F06-11DB-AEA9-000102E7E309") == 0);
+  TASSERT (uuid_string_test ("dc380602-a739-4be1-a5cb-53c437ffe39f") == 0);
+  TASSERT (uuid_string_test ("DC380602-A739-4BE1-A5CB-53C437FFE39F") == 0);
+  TASSERT (uuid_string_test (NULL) != 0);
+  TASSERT (uuid_string_test ("") != 0);
+  TASSERT (uuid_string_test ("gba7b812-9dad-11d1-80b4-00c04fd430c8") != 0);
+  TASSERT (uuid_string_test ("Gba7b812-9dad-11d1-80b4-00c04fd430c8") != 0);
+  TASSERT (uuid_string_test ("6ba7b812.9dad-11d1-80b4-00c04fd430c8") != 0);
+  TASSERT (uuid_string_test ("6ba7b812-9dad.11d1-80b4-00c04fd430c8") != 0);
+  TASSERT (uuid_string_test ("6ba7b812-9dad-11d1.80b4-00c04fd430c8") != 0);
+  TASSERT (uuid_string_test ("6ba7b812-9dad-11d1-80b4.00c04fd430c8") != 0);
+  TASSERT (uuid_string_test ("6ba7b812-9dad-11d1-80b4-00c04fd430c8-") != 0);
+  TASSERT (uuid_string_test ("6ba7b812-9dad-11d1-80b4-00c04fd430c80") != 0);
+  TASSERT (uuid_string_test ("6ba7b812-9dad-11d1-80b4-00c04fd430c") != 0);
+  TDONE();
+  TSTART ("uuid string cmp");
+  TASSERT (uuid_string_cmp ("00000000-0000-0000-0000-000000000000", "A425FD92-4F06-11DB-AEA9-000102E7E309") < 0);
+  TASSERT (uuid_string_cmp ("A425FD92-4F06-11DB-AEA9-000102E7E309", "00000000-0000-0000-0000-000000000000") > 0);
+  TASSERT (uuid_string_cmp ("00000000-0000-0000-0000-000000000000", "6ba7b812-9dad-11d1-80b4-00c04fd430c8") < 0);
+  TASSERT (uuid_string_cmp ("6BA7B812-9DAD-11D1-80B4-00C04FD430C8", "00000000-0000-0000-0000-000000000000") > 0);
+  TASSERT (uuid_string_cmp ("00000000-0000-0000-0000-000000000000", "00000000-0000-0000-0000-000000000000") == 0);
+  TASSERT (uuid_string_cmp ("6BA7B812-9DAD-11D1-80B4-00C04FD430C8", "A425FD92-4F06-11DB-AEA9-000102E7E309") < 0);
+  TASSERT (uuid_string_cmp ("6ba7b812-9dad-11d1-80b4-00c04fd430c8", "A425FD92-4F06-11DB-AEA9-000102E7E309") < 0);
+  TASSERT (uuid_string_cmp ("6BA7B812-9DAD-11D1-80B4-00C04FD430C8", "a425fd92-4f06-11db-aea9-000102e7e309") < 0);
+  TASSERT (uuid_string_cmp ("6ba7b812-9dad-11d1-80b4-00c04fd430c8", "a425fd92-4f06-11db-aea9-000102e7e309") < 0);
+  TASSERT (uuid_string_cmp ("A425FD92-4F06-11DB-AEA9-000102E7E309", "a425fd92-4f06-11db-aea9-000102e7e309") == 0);
+  TASSERT (uuid_string_cmp ("6ba7b812-9DAD-11d1-80B4-00c04fd430c8", "6BA7B812-9dad-11D1-80b4-00C04FD430C8") == 0);
+  TASSERT (uuid_string_cmp ("A425FD92-4F06-11DB-AEA9-000102E7E309", "6BA7B812-9DAD-11D1-80B4-00C04FD430C8") > 0);
+  TASSERT (uuid_string_cmp ("A425FD92-4F06-11DB-AEA9-000102E7E309", "6ba7b812-9dad-11d1-80b4-00c04fd430c8") > 0);
+  TASSERT (uuid_string_cmp ("a425fd92-4f06-11db-aea9-000102e7e309", "6BA7B812-9DAD-11D1-80B4-00C04FD430C8") > 0);
+  TASSERT (uuid_string_cmp ("a425fd92-4f06-11db-aea9-000102e7e309", "6ba7b812-9dad-11d1-80b4-00c04fd430c8") > 0);
+  TDONE();
+  
   math_test();
   affine_test();
   color_test();

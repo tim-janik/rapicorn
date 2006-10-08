@@ -1,3 +1,12 @@
+Sun Oct  8 03:51:29 2006  Tim Janik  <timj@gtk.org>
+
+	* misc adaptions to recent Birnet.
+
+	* rapicorn/birnetutils.hh, rapicorn/birnetutils.cc: added UUID
+	string detection and comparison.
+
+	* tests/primitives.cc: added tests for UUID functions.
+
 Sat Sep 30 02:57:57 2006  Tim Janik  <timj@gtk.org>
 
 	* examples/tour.xml: added frames test.

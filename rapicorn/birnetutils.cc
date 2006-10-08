@@ -276,12 +276,6 @@ string_from_vector (const vector<double> &dvec,
 }
 
 void
-raise_sigtrap ()
-{
-  raise (SIGTRAP);
-}
-
-void
 error (const char *format,
        ...)
 {
@@ -372,6 +366,38 @@ errmsg (const String &entity,
   msg += s;
   msg += '\n';
   fputs (msg.c_str(), stderr);
+}
+
+int
+uuid_string_test (const char *uuid_string) /* 0: valid, -1: invalid, >0: 1 + invalid index */
+{
+  if (!uuid_string)
+    return -1;
+  int i, l = strlen (uuid_string);
+  if (l != 36)
+    return -1;
+  // 00000000-0000-0000-0000-000000000000
+  for (i = 0; i < l; i++)
+    if (i == 8 || i == 13 || i == 18 || i == 23)
+      {
+        if (uuid_string[i] != '-')
+          return -1;
+        continue;
+      }
+    else if ((uuid_string[i] >= '0' && uuid_string[i] <= '9') ||
+             (uuid_string[i] >= 'a' && uuid_string[i] <= 'f') ||
+             (uuid_string[i] >= 'A' && uuid_string[i] <= 'F'))
+      continue;
+    else
+      return -1;
+  return 0;
+}
+
+int
+uuid_string_cmp (const char     *uuid_string1,
+                 const char     *uuid_string2) /* -1=smaller, 0=equal, +1=greater (assuming valid uuid strings) */
+{
+  return strcasecmp (uuid_string1, uuid_string2); /* good enough for numeric equality and defines stable order */
 }
 
 static bool

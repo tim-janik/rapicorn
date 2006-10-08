@@ -20,7 +20,7 @@
 #define __BIRNET_UTILS_HH__
 
 /* pull in common system headers */
-#include <birnet/birnet.h>
+#include <birnet/birnet.hh>
 
 namespace Birnet {
 
@@ -105,14 +105,11 @@ void    errmsg                          (const String &entity, const String &s);
 void    warning_expr_failed             (const char *file, uint line, const char *function, const char *expression);
 void    error_expr_failed               (const char *file, uint line, const char *function, const char *expression);
 void    warning_expr_reached            (const char *file, uint line, const char *function);
-void    raise_sigtrap           ();
-#if (defined __i386__ || defined __x86_64__) && defined __GNUC__ && __GNUC__ >= 2
-extern inline void BREAKPOINT()            { __asm__ __volatile__ ("int $03"); }
-#elif defined __alpha__ && !defined __osf__ && defined __GNUC__ && __GNUC__ >= 2
-extern inline void BREAKPOINT()            { __asm__ __volatile__ ("bpt"); }
-#else   /* !__i386__ && !__alpha__ */
-extern inline void BREAKPOINT()            { raise_sigtrap(); }
-#endif  /* __i386__ */
+
+/* --- misc utilities --- */
+int     uuid_string_test        (const char     *uuid_string);  /* !=0 for invalid uuid strings */
+int     uuid_string_cmp         (const char     *uuid_string1,
+                                 const char     *uuid_string2); /* -1=smaller, 0=equal, +1=greater (assuming valid uuid strings) */
 
 /* --- exceptions --- */
 struct Exception : std::exception {

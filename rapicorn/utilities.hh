@@ -54,7 +54,7 @@ inline double min     (double a, int64  b) { return min<double> (a, b); }
 inline double min     (int64  a, double b) { return min<double> (a, b); }
 inline double max     (double a, int64  b) { return max<double> (a, b); }
 inline double max     (int64  a, double b) { return max<double> (a, b); }
-inline void   memset4 (uint32 *mem, uint32 filler, uint length) { birnet_memset4 (mem, filler, length); }
+inline void   memset4 (uint32 *mem, uint32 filler, uint length) { Birnet::memset4 (mem, filler, length); }
 
 /* --- Convertible --- */
 class Convertible : public virtual ReferenceCountImpl {

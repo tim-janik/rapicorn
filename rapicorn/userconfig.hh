@@ -19,7 +19,7 @@
 #ifndef __RAPICORN_USER_CONFIG_HH_
 #define __RAPICORN_USER_CONFIG_HH_
 
-#include <birnet/birnet.h>
+#include <birnet/birnet.hh>
 
 namespace Rapicorn {
 

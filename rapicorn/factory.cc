@@ -826,7 +826,7 @@ initialize_standard_gadgets_lazily (void)
   if (!initialized)
     {
       initialized = true;
-      uint8 *data = birnet_zintern_decompress (RAPICORN_SIZE, RAPICORN_DATA, sizeof (RAPICORN_DATA) / sizeof (RAPICORN_DATA[0]));
+      uint8 *data = zintern_decompress (RAPICORN_SIZE, RAPICORN_DATA, sizeof (RAPICORN_DATA) / sizeof (RAPICORN_DATA[0]));
       const char *domain = "Rapicorn";
       FactorySingleton::singleton->parse_gadget_data (RAPICORN_SIZE, (const char*) data, domain, domain);
       g_free (data);
