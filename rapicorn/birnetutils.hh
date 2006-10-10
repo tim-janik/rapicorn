@@ -53,49 +53,9 @@ bool    text_convert    (const char        *to_charset,
                          const char        *fallback_charset = "ISO-8859-1",
                          const std::string &output_mark = "");
 
-/* --- string functionality --- */
-String  string_printf           (const char *format, ...) BIRNET_PRINTF (1, 2);
-String  string_vprintf          (const char *format, va_list vargs);
-String  string_strip            (const String &str);
-bool    string_to_bool          (const String &string);
-String  string_from_bool        (bool value);
-uint64  string_to_uint          (const String &string, uint base = 10);
-String  string_from_uint        (uint64 value);
-bool    string_has_int          (const String &string);
-int64   string_to_int           (const String &string, uint base = 10);
-String  string_from_int         (int64 value);
-String  string_from_float       (float value);
-double  string_to_double        (const String &string);
-String  string_from_double      (double value);
-inline String                   string_from_float        (double value)         { return string_from_double (value); }
-inline double                   string_to_float          (const String &string) { return string_to_double (string); }
-template<typename Type> Type    string_to_type           (const String &string);
-template<typename Type> String  string_from_type         (Type          value);
-template<> inline double        string_to_type<double>   (const String &string) { return string_to_double (string); }
-template<> inline String        string_from_type<double> (double         value) { return string_from_double (value); }
-template<> inline float         string_to_type<float>    (const String &string) { return string_to_float (string); }
-template<> inline String        string_from_type<float>  (float         value)  { return string_from_float (value); }
-template<> inline bool          string_to_type<bool>     (const String &string) { return string_to_bool (string); }
-template<> inline String        string_from_type<bool>   (bool         value)   { return string_from_bool (value); }
-template<> inline int16         string_to_type<int16>    (const String &string) { return string_to_int (string); }
-template<> inline String        string_from_type<int16>  (int16         value)  { return string_from_int (value); }
-template<> inline uint16        string_to_type<uint16>   (const String &string) { return string_to_uint (string); }
-template<> inline String        string_from_type<uint16> (uint16        value)  { return string_from_uint (value); }
-template<> inline int           string_to_type<int>      (const String &string) { return string_to_int (string); }
-template<> inline String        string_from_type<int>    (int         value)    { return string_from_int (value); }
-template<> inline uint          string_to_type<uint>     (const String &string) { return string_to_uint (string); }
-template<> inline String        string_from_type<uint>   (uint           value) { return string_from_uint (value); }
-template<> inline int64         string_to_type<int64>    (const String &string) { return string_to_int (string); }
-template<> inline String        string_from_type<int64>  (int64         value)  { return string_from_int (value); }
-template<> inline uint64        string_to_type<uint64>   (const String &string) { return string_to_uint (string); }
-template<> inline String        string_from_type<uint64> (uint64         value) { return string_from_uint (value); }
-vector<double> string_to_vector   (const String         &string);
-String         string_from_vector (const vector<double> &dvec,
-                                   const String         &delim = " ");
-
 /* --- assertions, warnings, errors --- */
-void    error                           (const char *format, ...) BIRNET_PRINTF (1, 2) G_GNUC_NORETURN;
-void    error                           (const String &s) G_GNUC_NORETURN;
+void    error                           (const char *format, ...) BIRNET_PRINTF (1, 2) BIRNET_NORETURN;
+void    error                           (const String &s) BIRNET_NORETURN;
 void    warning                         (const char *format, ...) BIRNET_PRINTF (1, 2);
 void    warning                         (const String &s);
 void    diag                            (const char *format, ...) BIRNET_PRINTF (1, 2);
@@ -105,11 +65,6 @@ void    errmsg                          (const String &entity, const String &s);
 void    warning_expr_failed             (const char *file, uint line, const char *function, const char *expression);
 void    error_expr_failed               (const char *file, uint line, const char *function, const char *expression);
 void    warning_expr_reached            (const char *file, uint line, const char *function);
-
-/* --- misc utilities --- */
-int     uuid_string_test        (const char     *uuid_string);  /* !=0 for invalid uuid strings */
-int     uuid_string_cmp         (const char     *uuid_string1,
-                                 const char     *uuid_string2); /* -1=smaller, 0=equal, +1=greater (assuming valid uuid strings) */
 
 /* --- exceptions --- */
 struct Exception : std::exception {

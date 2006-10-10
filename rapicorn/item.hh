@@ -261,7 +261,7 @@ public:
 private:
   bool                 match_parent_interface   (InterfaceMatch &imatch) const;
   bool                 match_toplevel_interface (InterfaceMatch &imatch) const;
-  void                 type_cast_error          (const char *dest_type) G_GNUC_NORETURN;
+  void                 type_cast_error          (const char *dest_type) BIRNET_NORETURN;
 };
 inline bool operator== (const Item &item1, const Item &item2) { return &item1 == &item2; }
 inline bool operator!= (const Item &item1, const Item &item2) { return &item1 != &item2; }

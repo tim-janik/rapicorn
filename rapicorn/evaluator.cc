@@ -104,7 +104,7 @@ Evaluator::expand_variable (const char  *expression,
 {
   static const char ident_start[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "abcdefghijklmnopqrstuvwxyz" "_";
   static const char ident_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "abcdefghijklmnopqrstuvwxyz" "_." "0123456789";
-  const gchar *c = expression;
+  const char *c = expression;
   if (strchr (ident_start, *c))
     {
       c++;
@@ -449,7 +449,7 @@ lookup_function (const String &name)
     { "strne",          defun_string_comparisons },
     { "println",        defun_println },
   };
-  for (uint i = 0; i < G_N_ELEMENTS (funcs); i++)
+  for (uint i = 0; i < ARRAY_SIZE (funcs); i++)
     if (name == funcs[i].name)
       return funcs[i].func;
   return unknown_function;

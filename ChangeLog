@@ -1,3 +1,19 @@
+Tue Oct 10 23:53:45 2006  Tim Janik  <timj@gtk.org>
+
+	* adapted sources to use the new Birnet C++ API.
+
+	* rapicorn/birnetmarkup.cc: removed UTF-8 hacks, simply use 
+	birnetutf8.hh now. improved invalid-utf-8 error messages to pinpoint
+	actual errors.
+
+	* rapicorn/birnetutils.hh, rapicorn/birnetutils.cc: moved string 
+	utilities to Birnet.
+
+	* examples/tour.xml:
+	* examples/texttest.xml:
+	* examples/scroller.xml: 
+	* rapicorn/rapicorn.xml: fixed XML namespaces.
+
 Sun Oct  8 03:51:29 2006  Tim Janik  <timj@gtk.org>
 
 	* misc adaptions to recent Birnet.

@@ -19,6 +19,7 @@
 #ifndef __RAPICORN_LOOP_HH__
 #define __RAPICORN_LOOP_HH__
 
+#include <glib.h> // FIXME: GPollFD
 #include <rapicorn/primitives.hh>
 
 namespace Rapicorn {
