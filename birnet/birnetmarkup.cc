@@ -27,112 +27,12 @@
 #include <vector>
 #include <stack>
 
+#define _(x) x  // FIXME
+
 namespace Birnet {
 using namespace std;
 
-/* --- unicode hacks --- */
-#define _(x) x  // FIXME
-inline bool
-unichar_isalpha (unichar uc) // FIXME
-{
-  return (uc >= 'A' && uc <= 'Z') || (uc >= 'a' && uc <= 'z');
-}
-inline int
-unichar_to_utf8 (unichar c, // FIXME
-                 char   *outbuf)
-{
-  *outbuf = c;
-  return 1;
-}
-inline unichar
-utf8_get_char (const char *p) // FIXME
-{
-  return *p;
-}
-inline char*
-utf8_next_char (char *p)
-{
-  static const char utf8_skip_data[256] = {
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,6,6,1,1
-  };
-  return p + utf8_skip_data[*(uint8*) p];
-}
-inline const char*
-utf8_next_char (const char *c)
-{
-  char *result = utf8_next_char (const_cast<char*> (c));
-  return const_cast<const char*> (result);
-}
-inline char*
-utf8_find_prev_char (char *str,
-                     char *p)
-{
-  for (--p; p >= str; --p)
-    {
-      if ((*p & 0xc0) != 0x80)
-        return p;
-    }
-  return NULL;
-}
-inline const char*
-utf8_find_prev_char (const char *str,
-                     const char *p)
-{
-  char *result = utf8_find_prev_char (const_cast<char*> (str), const_cast<char*> (p));
-  return const_cast<const char*> (result);
-}
-inline char*
-utf8_find_next_char (char *p,
-                     char *end)
-{
-  if (*p)
-    {
-      ++p;
-      if (end)
-        while (p < end && (*p & 0xc0) == 0x80)
-          ++p;
-      else
-        while ((*p & 0xc0) == 0x80)
-          ++p;
-    }
-  return (p == end) ? NULL : p;
-}
-inline const char*
-utf8_find_next_char (const char *p,
-                     const char *end)
-{
-  char *result = utf8_find_next_char (const_cast<char*> (p), const_cast<char*> (end));
-  return const_cast<const char*> (result);
-}
-inline bool
-utf8_validate (const char  *str, // FIXME
-               ssize_t      max_len,
-               const char **end)
-{
-  const char *p;
-  for (p = str; (max_len < 0 || (p - str) < max_len) && *p; p++)
-    {
-      if (*(uint8*) p < 128)
-        /* done */;
-      else
-        break;
-    }
-  if (end)
-    *end = p;
-  if ((max_len >= 0 && p != str + max_len) ||
-      (max_len < 0 && *p != '\0'))
-    return false;
-  else
-    return true;
-}
-
+/* --- string utils --- */
 static inline bool
 str_has_prefix (const String &str,
                 const String &prefix)
@@ -299,7 +199,7 @@ is_name_start_char (const char  *p)
       (!IS_COMMON_NAME_END_CHAR (*p) &&
        (*p == '_' || 
 	*p == ':' ||
-	unichar_isalpha (utf8_get_char (p)))))
+	Unichar::isalpha (utf8_to_unichar (p)))))
     return true;
   else
     return false;
@@ -316,27 +216,18 @@ is_name_char (const char  *p)
 	*p == '-' ||
 	*p == '_' ||
 	*p == ':' ||
-	unichar_isalpha (utf8_get_char (p)))))
+	Unichar::isalpha (utf8_to_unichar (p)))))
     return true;
   else
     return false;
 }
 
 
-static char *
-char_str (unichar  c,
-          char    *buf)
+static char*
+utf8_str (const char *utf8,
+          char        buf[8])
 {
-  memset (buf, 0, 8);
-  unichar_to_utf8 (c, buf);
-  return buf;
-}
-
-static char *
-utf8_str (const char  *utf8,
-          char        *buf)
-{
-  char_str (utf8_get_char (utf8), buf);
+  utf8_from_unichar (utf8_to_unichar (utf8), buf);
   return buf;
 }
 
@@ -417,20 +308,20 @@ unescape_text_state_inside_text (UnescapeContext *ucontext,
         {
           ucontext->str.append (start, p - start);
           ucontext->str.append (" ");
-          p = utf8_next_char (p);
+          p = utf8_next (p);
           start = p;
         }
       else if (*p == '\r')
         {
           ucontext->str.append (start, p - start);
           ucontext->str.append (normalize_attribute ? " " : "\n");
-          p = utf8_next_char (p);
+          p = utf8_next (p);
           if (p != ucontext->text_end && *p == '\n')
-            p = utf8_next_char (p);
+            p = utf8_next (p);
           start = p;
         }
       else
-        p = utf8_next_char (p);
+        p = utf8_next (p);
     }
   
   if (p != start)
@@ -438,7 +329,7 @@ unescape_text_state_inside_text (UnescapeContext *ucontext,
   
   if (p != ucontext->text_end && *p == '&')
     {
-      p = utf8_next_char (p);
+      p = utf8_next (p);
       ucontext->state = USTATE_AFTER_AMPERSAND;
     }
   
@@ -454,7 +345,7 @@ unescape_text_state_after_ampersand (UnescapeContext *ucontext,
   
   if (*p == '#')
     {
-      p = utf8_next_char (p);
+      p = utf8_next (p);
       
       ucontext->entity_start = p;
       ucontext->state = USTATE_AFTER_CHARREF_HASH;
@@ -516,7 +407,7 @@ unescape_text_state_inside_entity_name (UnescapeContext *ucontext,
           break;
         }
       
-      p = utf8_next_char (p);
+      p = utf8_next (p);
     }
   
   if (ucontext->context->state != STATE_ERROR)
@@ -526,7 +417,7 @@ unescape_text_state_inside_entity_name (UnescapeContext *ucontext,
 	  int  len = p - ucontext->entity_start;
           
           /* move to after semicolon */
-          p = utf8_next_char (p);
+          p = utf8_next (p);
           ucontext->state = USTATE_INSIDE_TEXT;
           
           if (strncmp (ucontext->entity_start, "lt", len) == 0)
@@ -580,12 +471,12 @@ unescape_text_state_after_charref_hash (UnescapeContext *ucontext,
   if (*p == 'x')
     {
       is_hex = true;
-      p = utf8_next_char (p);
+      p = utf8_next (p);
       start = p;
     }
   
   while (p != ucontext->text_end && *p != ';')
-    p = utf8_next_char (p);
+    p = utf8_next (p);
   
   if (p != ucontext->text_end)
     {
@@ -627,7 +518,8 @@ unescape_text_state_after_charref_hash (UnescapeContext *ucontext,
                   (l >= 0x10000 && l <= 0x10FFFF))
                 {
                   char  buf[8];
-                  ucontext->str.append (char_str (l, buf));
+                  utf8_from_unichar (l, buf);
+                  ucontext->str.append (buf);
                 }
               else
                 {
@@ -641,7 +533,7 @@ unescape_text_state_after_charref_hash (UnescapeContext *ucontext,
             }
           
           /* Move to next state */
-          p = utf8_next_char (p); /* past semicolon */
+          p = utf8_next (p); /* past semicolon */
           ucontext->state = USTATE_INSIDE_TEXT;
         }
       else
@@ -769,7 +661,7 @@ unescape_text (MarkupParserContext *context,
 static inline bool    
 advance_char (MarkupParserContext *context)
 {  
-  context->iter = utf8_next_char (context->iter);
+  context->iter = utf8_next (context->iter);
   context->char_number += 1;
   context->line_number_after_newline = 0;
 
@@ -863,13 +755,13 @@ find_current_text_end (MarkupParserContext *context)
   
   assert (context->current_text_len > 0);
   
-  p = utf8_find_prev_char (context->current_text, end);
+  p = utf8_find_prev (context->current_text, end);
   
   assert (p != NULL); /* since current_text was a char start */
   
   /* p is now the start of the last character or character portion. */
   assert (p != end);
-  next = utf8_next_char (p); /* this only touches *p, nothing beyond */
+  next = utf8_next (p); /* this only touches *p, nothing beyond */
   
   if (next == end)
     {
@@ -899,7 +791,6 @@ MarkupParser::parse (const char          *text,
                      MarkupError         *errorp)
 {
   Error dummy, &error = errorp ? *errorp : dummy;
-  const char  *first_invalid;
   
   return_val_if_fail (context != NULL, false);
   return_val_if_fail (text != NULL, false);
@@ -921,7 +812,7 @@ MarkupParser::parse (const char          *text,
       if ((*text & 0xc0) != 0x80)
         first_char = text;
       else
-        first_char = utf8_find_next_char (text, text + text_len);
+        first_char = utf8_find_next (text, text + text_len);
       
       if (first_char)
         {
@@ -951,7 +842,7 @@ MarkupParser::parse (const char          *text,
               /* The leftover char portion is too big to be
                * a UTF-8 character
                */
-              set_error (context, error, MarkupParser::BAD_UTF8, _("Invalid UTF-8 encoded text"));
+              set_error (context, error, MarkupParser::BAD_UTF8, _("Invalid UTF-8 encoded text (char too long)"));
             }
           goto finished;
         }
@@ -975,7 +866,7 @@ MarkupParser::parse (const char          *text,
    */
   if ((*context->current_text & 0xc0) == 0x80) /* not a char start */
     {
-      set_error (context, error, MarkupParser::BAD_UTF8, _("Invalid UTF-8 encoded text"));
+      set_error (context, error, MarkupParser::BAD_UTF8, _("Invalid UTF-8 encoded text (partial char)"));
       goto finished;
     }
   
@@ -987,9 +878,7 @@ MarkupParser::parse (const char          *text,
   /* Validate UTF8 (must be done after we find the end, since
    * we could have a trailing incomplete char)
    */
-  if (!utf8_validate (context->current_text,
-                      context->current_text_len,
-                      &first_invalid))
+  if (!utf8_validate (String (context->current_text, context->current_text_len)))
     {
       int  newlines = 0;
       const char  *p;
@@ -1000,10 +889,9 @@ MarkupParser::parse (const char          *text,
             ++newlines;
           ++p;
         }
-      
       context->line_number += newlines;
       
-      set_error (context, error, MarkupParser::BAD_UTF8, _("Invalid UTF-8 encoded text"));
+      set_error (context, error, MarkupParser::BAD_UTF8, _("Invalid UTF-8 encoded text (broken char)"));
       goto finished;
     }
   
@@ -1428,12 +1316,12 @@ MarkupParser::parse (const char          *text,
           else
             {
               char  buf[8];
+              utf8_str (context->iter, buf);
               set_error (context, error, MarkupParser::PARSE_ERROR,
                          _("'%s' is not a valid character following "
                            "the characters '</'; '%s' may not begin an "
                            "element name"),
-                         utf8_str (context->iter, buf),
-                         utf8_str (context->iter, buf));
+                         buf, buf);
             }
           break;
           
@@ -1798,7 +1686,7 @@ append_escaped_text (String      &str,
   const char  *end = text + length;
   while (p != end)
     {
-      const char  *next = utf8_next_char (p);
+      const char  *next = utf8_next (p);
       switch (*p)
         {
         case '&':
