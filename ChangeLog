@@ -1,3 +1,14 @@
+Wed Oct 11 02:15:57 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/text-editor.hh, rapicorn/text-editor.cc: simplified former
+	Client API and added "mark" concept to client API.
+
+	* rapicorn/text-pango.cc: implement new Text::Editor::CLient API,
+	including implementing pango's visual cursor movement for strong
+	cursors.
+
+	* tests/Makefile.am: cleanups.
+
 Tue Oct 10 23:53:45 2006  Tim Janik  <timj@gtk.org>
 
 	* adapted sources to use the new Birnet C++ API.

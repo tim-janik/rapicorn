@@ -47,21 +47,29 @@ public:
   {}
 private:
   Client*       get_client () const { return interface<Client*>(); }
-  virtual int
+  int
   cursor () const
   {
     return m_cursor;
   }
-  virtual void
-  cursor (int pos)
+  bool
+  step_cursor (int dir)
   {
-    m_cursor = MAX (0, pos);
     Client *client = get_client();
     if (client)
       {
-        client->cursor (m_cursor);
-        m_cursor = client->cursor();
+        client->mark (m_cursor);
+        int o = client->mark();
+        client->step_mark (dir);
+        int m = client->mark();
+        if (o == m)
+          return false;
+        m_cursor = m;
+        client->mark2cursor();
+        changed();
+        return true;
       }
+    return false;
   }
   virtual void
   text (const String &text)
@@ -97,12 +105,10 @@ private:
         switch (kevent->key)
           {
           case KEY_Right:
-            cursor (cursor() + 1);
-            handled = true;
+            handled = step_cursor (+1);
             break;
           case KEY_Left:
-            cursor (cursor() - 1);
-            handled = true;
+            handled = step_cursor (-1);
             break;
           }
         break;

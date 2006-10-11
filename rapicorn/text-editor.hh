@@ -53,21 +53,23 @@ public:
   /* Text::Editor::Client */
   struct Client {
     virtual            ~Client ();
-    virtual String      plain_text   () const = 0;
-    virtual void        plain_text   (const String &ptext) = 0;
-    virtual int         cursor       () const = 0;
-    virtual void        cursor       (int pos) = 0;
+    virtual const char* peek_text    (int *byte_length) = 0;
     virtual ParaState   para_state   () const = 0;
     virtual void        para_state   (const ParaState &pstate) = 0;
     virtual AttrState   attr_state   () const = 0;
     virtual void        attr_state   (const AttrState &astate) = 0;
-    virtual void        insert       (uint             pos,
-                                      const String    &text,
-                                      const AttrState *astate = NULL) = 0;
-    virtual void        remove       (uint             pos,
-                                      uint             n_bytes) = 0;
     virtual String      save_markup  () const = 0;
     virtual void        load_markup  (const String    &markup) = 0;
+    /* mark handling */
+    virtual int         mark         () const = 0; /* byte_index */
+    virtual void        mark         (int              byte_index) = 0;
+    virtual bool        mark_at_end  () const = 0;
+    virtual void        step_mark    (int              visual_direction) = 0;
+    virtual void        mark2cursor  () = 0;
+    virtual void        hide_cursor  () = 0;
+    virtual void        mark_delete  (uint             n_utf8_chars) = 0;
+    virtual void        mark_insert  (String           utf8string,
+                                      const AttrState *astate = NULL) = 0;
   };
   /* Text::Editor */
   virtual void          text            (const String &text) = 0;

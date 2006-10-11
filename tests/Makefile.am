@@ -5,29 +5,39 @@ INCLUDES = -I$(top_srcdir)
 DEFS     = -DPARANOID $(RAPICORN_CFLAGS)
 
 # test programs:
-TESTS = evaltest items testitems walker markup primitives region shaderect pixcombine properties
+TESTS          =
 programs_ldadd = $(top_builddir)/rapicorn/librapicorn.la $(RAPICORN_LIBS) $(PANGO_LIBS) $(GTK_LIBS)
 # program sources:
-walker_SOURCES = walker.cc
-walker_LDADD = $(programs_ldadd)
-markup_SOURCES = markup.cc
-markup_LDADD = $(programs_ldadd)
+TESTS             += walker
+walker_SOURCES     = walker.cc
+walker_LDADD       = $(programs_ldadd)
+TESTS             += markup
+markup_SOURCES     = markup.cc
+markup_LDADD       = $(programs_ldadd)
+TESTS             += properties
 properties_SOURCES = properties.cc
-properties_LDADD = $(programs_ldadd)
+properties_LDADD   = $(programs_ldadd)
+TESTS             += primitives
 primitives_SOURCES = primitives.cc
-primitives_LDADD = $(programs_ldadd)
-region_SOURCES = region.cc
-region_LDADD = $(programs_ldadd)
-shaderect_SOURCES = shaderect.cc
-shaderect_LDADD = $(programs_ldadd)
+primitives_LDADD   = $(programs_ldadd)
+TESTS             += region
+region_SOURCES     = region.cc
+region_LDADD       = $(programs_ldadd)
+TESTS             += shaderect
+shaderect_SOURCES  = shaderect.cc
+shaderect_LDADD    = $(programs_ldadd)
+TESTS             += pixcombine
 pixcombine_SOURCES = pixcombine.cc
-pixcombine_LDADD = $(programs_ldadd)
-items_SOURCES = items.cc
-items_LDADD = $(programs_ldadd)
-testitems_SOURCES = testitems.cc
-testitems_LDADD = $(programs_ldadd)
-evaltest_SOURCES = evaltest.cc
-evaltest_LDADD = $(programs_ldadd)
+pixcombine_LDADD   = $(programs_ldadd)
+TESTS             += items
+items_SOURCES      = items.cc
+items_LDADD        = $(programs_ldadd)
+TESTS             += testitems
+testitems_SOURCES  = testitems.cc
+testitems_LDADD    = $(programs_ldadd)
+TESTS             += evaltest
+evaltest_SOURCES   = evaltest.cc
+evaltest_LDADD     = $(programs_ldadd)
 
 # build tests
 noinst_PROGRAMS = $(TESTS)

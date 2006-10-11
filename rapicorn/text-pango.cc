@@ -742,10 +742,10 @@ public:
 class TextPangoImpl : public virtual ItemImpl, public virtual Text::Editor::Client {
 protected:
   PangoLayout    *m_layout;
-  int             m_cursor;
+  int             m_mark, m_cursor;
 public:
   TextPangoImpl() :
-    m_layout (NULL), m_cursor (-1)
+    m_layout (NULL), m_mark (-1), m_cursor (-1)
   {
     rapicorn_gtk_threads_enter();
     Text::ParaState pstate; // for defaults
@@ -764,35 +764,15 @@ public:
     rapicorn_gtk_threads_leave();
   }
 protected:
-  virtual String
-  plain_text () const
+  virtual const char*
+  peek_text (int *byte_length)
   {
     rapicorn_gtk_threads_enter();
-    String str = pango_layout_get_text (m_layout);
+    const char *str = pango_layout_get_text (m_layout);
     rapicorn_gtk_threads_leave();
+    if (byte_length)
+      *byte_length = strlen (str);
     return str;
-  }
-  virtual void
-  plain_text (const String &ptext)
-  {
-    rapicorn_gtk_threads_enter();
-    pango_layout_set_text (m_layout, ptext.c_str(), -1);
-    rapicorn_gtk_threads_leave();
-    invalidate();
-    changed();
-  }
-  virtual int
-  cursor () const
-  {
-    return m_cursor;
-  }
-  virtual void
-  cursor (int pos)
-  {
-    int length = strlen (pango_layout_get_text (m_layout));
-    m_cursor = CLAMP (pos, -1, length);
-    expose();
-    changed();
   }
   virtual Text::ParaState
   para_state () const
@@ -849,25 +829,6 @@ protected:
     // FIXME: implement this
     changed();
   }
-  virtual void
-  insert (uint                   pos,
-          const String          &text,
-          const Text::AttrState *astate)
-  {
-    String s = plain_text();
-    s.insert (pos, text);
-    plain_text (s);
-    // FIXME: implement attributes
-  }
-  virtual void
-  remove (uint             pos,
-          uint             n_bytes)
-  {
-    String s = plain_text();
-    s.erase (pos, n_bytes);
-    plain_text (s);
-    // FIXME: preserve attributes
-  }
   virtual String
   save_markup () const
   {
@@ -890,6 +851,108 @@ protected:
     rapicorn_gtk_threads_leave();
     if (err.size())
       warning (err);
+  }
+  virtual int
+  mark () const /* byte_index */
+  {
+    return m_mark;
+  }
+  virtual void
+  mark (int byte_index)
+  {
+    rapicorn_gtk_threads_enter();
+    const char *c = pango_layout_get_text (m_layout);
+    rapicorn_gtk_threads_leave();
+    int l = strlen (c);
+    if (byte_index < 0)
+      m_mark = l;
+    else if (byte_index >= l)
+      m_mark = l;
+    else
+      {
+        m_mark = utf8_align (c, c + byte_index) - c;
+      }
+    changed();
+  }
+  virtual bool
+  mark_at_end () const
+  {
+    rapicorn_gtk_threads_enter();
+    const char *c = pango_layout_get_text (m_layout);
+    rapicorn_gtk_threads_leave();
+    int l = strlen (c);
+    return m_mark >= l;
+  }
+  virtual void
+  step_mark (int visual_direction)
+  {
+    rapicorn_gtk_threads_enter();
+    const char *c = pango_layout_get_text (m_layout);
+    int l = strlen (c);
+    int xmark = m_mark, trailing;
+    pango_layout_move_cursor_visually (m_layout, TRUE, m_mark, 0, visual_direction, &xmark, &trailing);
+    diag ("pangomove[%d]: (%d,%d) (%d,%d)", l, m_mark, 0, xmark, trailing);
+    while (xmark < l && trailing--)
+      xmark = utf8_next (c + xmark) - c;
+    rapicorn_gtk_threads_leave();
+    if (xmark >= l)
+      m_mark = l;
+    else
+      m_mark = MAX (0, xmark);
+    changed();
+  }
+  virtual void
+  mark2cursor ()
+  {
+    if (m_cursor != m_mark)
+      {
+        m_cursor = m_mark;
+        expose();
+        changed();
+      }
+  }
+  virtual void
+  hide_cursor ()
+  {
+    if (m_cursor >= 0)
+      {
+        m_cursor = -1;
+        expose();
+        changed();
+      }
+  }
+  virtual void
+  mark_delete (uint n_utf8_chars)
+  {
+    rapicorn_gtk_threads_enter();
+    const char *c = pango_layout_get_text (m_layout);
+    int l = strlen (c);
+    int m = m_mark;
+    while (m_mark < l && n_utf8_chars--)
+      m_mark = utf8_next (c + m_mark) - c;
+    String s = c;
+    s.erase (m, m_mark - m);
+    pango_layout_set_text (m_layout, s.c_str(), -1);
+    // FIXME: adjust attributes
+    rapicorn_gtk_threads_leave();
+    invalidate();
+    changed();
+  }
+  virtual void
+  mark_insert (String                 utf8string,
+               const Text::AttrState *astate = NULL)
+  {
+    rapicorn_gtk_threads_enter();
+    String s = pango_layout_get_text (m_layout);
+    int s1 = s.size();
+    s.insert (m_mark, utf8string);
+    int s2 = s.size();
+    m_mark += s2 - s1;
+    pango_layout_set_text (m_layout, s.c_str(), -1);
+    // FIXME: adjust attributes
+    rapicorn_gtk_threads_leave();
+    invalidate();
+    changed();
   }
 protected:
   virtual void
@@ -948,7 +1011,7 @@ protected:
       return;
     pango_layout_get_cursor_pos (m_layout, m_cursor, &crect1, &crect2);
     double x = layout_rect.x + layout_x + PANGO_PIXELS (irect.x + crect1.x);
-    double width = MIN (layout_rect.width, MAX (1, PANGO_PIXELS (crect1.width))); // FIXME: cursor width
+    // double width = MIN (layout_rect.width, MAX (1, PANGO_PIXELS (crect1.width))); // FIXME: cursor width
     // double y = layout_rect.y + layout_y + PANGO_PIXELS (lrect.height - irect.y - crect1.y - crect1.height);
     double y = layout_rect.y + layout_y + PANGO_PIXELS (lrect.height - crect1.y - crect1.height);
     double height = PANGO_PIXELS (crect1.height);
