@@ -32,6 +32,13 @@ MISC:
   2) shrink expand children
   3) shrink *middle* children before edge (start/end packed) children
      (this preserves menubars or close buttons)
+BASIC-SIZING:
+- there should be per-window settings for:
+  - basic-size: goes from something like 12points & 96dpi => 20 pixels
+    can be provided in points, pixels, etc.
+    "pixel" here is a scalable standard unit (or, could be)
+  - basic-font-size: this is basic-size in points
+  - basic-arrow-size: this is derived from basic-size by e.g. * 0.875
 EVENTS:
 - add_grab/remove_grab should queue a synthesized motion event so enter/leave states are
   updated. (test with overlapping buttons)
