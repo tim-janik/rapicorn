@@ -1,9 +1,12 @@
 # Rapicorn
 # Copyright (C) 2005 Tim Janik
+#
+## GNU Lesser General Public License version 2 or any later version.
+include $(top_srcdir)/Makefile.decl
 
-INCLUDES  	= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(PANGO_CFLAGS) $(GTK_CFLAGS)
+INCLUDES       += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(PANGO_CFLAGS) $(GTK_CFLAGS)
 GLIB_MKENUMS    = glib-mkenums
-LDLIBS	       += $(LIBS) $(PANGO_LIBS) $(GTK_LIBS)
+LDLIBS	        = $(LIBS) $(PANGO_LIBS) $(GTK_LIBS)
 DEFS		= -DRAPICORN_PRIVATE -DPARANOID
 
 rapicorn_public_headers = $(strip 	\
@@ -41,14 +44,14 @@ rapicorn_private_headers = $(strip 	\
 )
 rapicorn_fastmath_files = $(strip	\
 )
-CXXFLAGS += $(if $(filter $(rapicorn_fastmath_files), $<), -ffast-math)
+librapicorn_la_CXXFLAGS = $(if $(filter $(rapicorn_fastmath_files), $<), -ffast-math)
 
-lib_LTLIBRARIES            = librapicorn.la
-librapicornincludedir      = $(includedir)/rapicorn
-librapicorninclude_HEADERS = $(rapicorn_public_headers)
-librapicorn_la_SOURCES     = $(rapicorn_cc_sources)
-librapicorn_la_DEPENDENCIES += ldscript.map
-librapicorn_la_LDFLAGS = $(strip 				\
+lib_LTLIBRARIES             = librapicorn.la
+librapicornincludedir       = $(includedir)/rapicorn
+librapicorninclude_HEADERS  = $(rapicorn_public_headers)
+librapicorn_la_SOURCES      = $(rapicorn_cc_sources)
+librapicorn_la_DEPENDENCIES = ldscript.map
+librapicorn_la_LDFLAGS      = $(strip 				\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-release $(LT_RELEASE) 					\

@@ -1,10 +1,13 @@
 # Rapicorn
 # Copyright (C) 2005 Tim Janik
+#
+## GNU Lesser General Public License version 2 or any later version.
+include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = . birnet rapicorn po examples tests
 
-# require automake 1.4
-AUTOMAKE_OPTIONS = 1.4
+# require automake 1.9
+AUTOMAKE_OPTIONS = 1.9
 
 test:
 	$(MAKE) -C tests/ $(AM_MAKEFLAGS) $@

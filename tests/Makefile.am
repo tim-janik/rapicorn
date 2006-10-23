@@ -1,11 +1,13 @@
 # Rapicorn Tests
 # Copyright (C) 2005 Tim Janik
+#
+## GNU Lesser General Public License version 2 or any later version.
+include $(top_srcdir)/Makefile.decl
 
-INCLUDES = -I$(top_srcdir)
-DEFS     = -DPARANOID $(RAPICORN_CFLAGS)
+INCLUDES += -I$(top_srcdir)
+DEFS     += -DPARANOID $(RAPICORN_CFLAGS)
 
 # test programs:
-TESTS          =
 programs_ldadd = $(top_builddir)/rapicorn/librapicorn.la $(RAPICORN_LIBS) $(PANGO_LIBS) $(GTK_LIBS)
 # program sources:
 TESTS             += walker
@@ -18,6 +20,7 @@ TESTS             += properties
 properties_SOURCES = properties.cc
 properties_LDADD   = $(programs_ldadd)
 TESTS             += primitives
+SLOWTESTS         += primitives
 primitives_SOURCES = primitives.cc
 primitives_LDADD   = $(programs_ldadd)
 TESTS             += region

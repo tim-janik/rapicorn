@@ -72,6 +72,10 @@ fi
 ])
 
 
+# architecture information
+AC_CANONICAL_TARGET
+AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
+
 # initialize automake, don't define PACKAGE and VERSION
 AM_INIT_AUTOMAKE(rapicorn, $RAPICORN_PACKAGE_VERSION, no-define)
 
@@ -80,10 +84,6 @@ AC_PROG_MAKE_SET
 
 # Disable automatic maintainer mode.
 AM_MAINTAINER_MODE
-
-# architecture information
-AC_CANONICAL_TARGET
-AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
 
 # declare --enable-* args and collect ac_help strings
 AC_ARG_ENABLE(debug,       [  --enable-debug=[no/minimum/yes] turn on debugging [default=$debug_default]],,enable_debug=$debug_default)
@@ -137,7 +137,7 @@ AC_DEFUN([DUMMY_DEFS],
 dnl
 dnl # Define package requirements.
 dnl
-AC_DEFUN(AC_I18N_REQUIREMENTS,
+AC_DEFUN([AC_I18N_REQUIREMENTS],
 [
     dnl # TRANSLATORS: enter your language here
     ALL_LINGUAS="de"
@@ -170,7 +170,7 @@ AC_DEFUN(AC_I18N_REQUIREMENTS,
     AM_GLIB_GNU_GETTEXT
     AC_PROG_INTLTOOL
 ])
-AC_DEFUN(AC_RAPICORN_REQUIREMENTS,
+AC_DEFUN([AC_RAPICORN_REQUIREMENTS],
 [
     dnl --- require libpng ---
     if test -z "$LIBPNG"; then
@@ -229,7 +229,7 @@ AC_DEFUN(AC_RAPICORN_REQUIREMENTS,
     AC_SUBST(RAPICORN_CFLAGS)
     AC_SUBST(RAPICORN_LIBS)
 ])
-AC_DEFUN(AC_DOC_REQUIREMENTS,
+AC_DEFUN([AC_DOC_REQUIREMENTS],
 [
 ])
 

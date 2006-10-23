@@ -1,13 +1,14 @@
 #!/bin/sh
+## GNU Lesser General Public License version 2 or any later version.
 # Run this to generate all the initial makefiles, etc.
 
 PROJECT=Rapicorn
 TEST_TYPE=-f
 FILE=rapicorn/rapicorn.hh
 AUTOMAKE=automake
-AUTOMAKE_POSTFIX=1.4
-AUTOMAKE_VERSION=1.4
-AUTOMAKE_MAXVERSION=1.4
+AUTOMAKE_POSTFIX=1.9
+AUTOMAKE_VERSION=1.9
+AUTOMAKE_MAXVERSION=1.9
 ACLOCAL=aclocal
 AUTOCONF=autoconf
 AUTOCONF_POSTFIX=2.50
@@ -155,6 +156,9 @@ if test -z "$ACLOCAL_FLAGS"; then
 	done
 fi
 
+echo "Cleaning configure cache..."
+rm -rf autom4te.cache/
+
 echo "Running: $LIBTOOLIZE"
 $LIBTOOLIZE --force || exit $?
 
@@ -163,6 +167,9 @@ echo "no" | $GLIB_GETTEXTIZE --force || exit $?
 
 echo "Running: $INTLTOOLIZE"
 $INTLTOOLIZE --force --automake || exit $?
+
+echo "Overriding gettext po/Makefile.in.in with intltool version"
+rm -f po/Makefile.in.in && cp -v po/Makefile.intltool po/Makefile.in.in || exit $?
 
 echo "Running: $ACLOCAL $ACLOCAL_FLAGS"
 $ACLOCAL $ACLOCAL_FLAGS	|| exit $?
@@ -174,7 +181,7 @@ echo "Running: $AUTOMAKE"
 case $CC in
 *xlc | *xlc\ * | *lcc | *lcc\ *) am_opt=--include-deps;;
 esac
-$AUTOMAKE --add-missing $am_opt || exit $?
+$AUTOMAKE --force-missing --add-missing $am_opt || exit $?
 
 echo "Running: $AUTOCONF"
 $AUTOCONF || exit $?

@@ -1,8 +1,11 @@
 # Rapicorn Examples
 # Copyright (C) 2005 Tim Janik
+#
+## GNU Lesser General Public License version 2 or any later version.
+include $(top_srcdir)/Makefile.decl
 
-INCLUDES  	= -I$(top_srcdir)
-DEFS            = -DRAPICORN_PRIVATE -DPARANOID $(RAPICORN_CFLAGS) $(CONDITIONAL_CFLAGS)
+INCLUDES  	+= -I$(top_srcdir)
+DEFS            += -DRAPICORN_PRIVATE -DPARANOID $(RAPICORN_CFLAGS) $(CONDITIONAL_CFLAGS)
 
 # test programs:
 if WITH_GTK
@@ -17,6 +20,7 @@ XML_FILES =
 noinst_PROGRAMS   = $(CONDITIONAL_PROGS)
 programs_ldadd    = $(top_builddir)/rapicorn/librapicorn.la $(RAPICORN_LIBS)
 gtkprograms_ldadd = $(programs_ldadd) $(GTK_LIBS)
+GTK_EXAMPLES      =
 
 # program sources:
 GTK_EXAMPLES    += tour

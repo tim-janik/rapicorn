@@ -28,10 +28,11 @@ color_test()
 {
   /* assert that set_hsv(get_hsv(v))==v for all v */
   TSTART ("HSV-convert");
-  for (uint r = 0; r < 256; r++)
+  const int step = init_settings().test_slow ? 1 : 10;
+  for (uint r = 0; r < 256; r += step)
     {
-      for (uint g = 0; g < 256; g++)
-        for (uint b = 0; b < 256; b++)
+      for (uint g = 0; g < 256; g += step)
+        for (uint b = 0; b < 256; b += step)
           {
             Color c (r, g, b, 0xff);
             double hue, saturation, value;
