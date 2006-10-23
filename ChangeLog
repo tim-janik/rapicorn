@@ -5,6 +5,7 @@ Mon Oct 23 02:57:44 2006  Tim Janik  <timj@gtk.org>
 
 	* Makefile.decl: added upgrades from the BEAST project.
 
+	* po/Makefile.intltool:
 	* autogen.sh: override po/Makefile.in.in so we can add extra rules.
 
 	* tests/primitives.cc: speed up HSV test for quick checks.
