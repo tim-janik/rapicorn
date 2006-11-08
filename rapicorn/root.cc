@@ -78,7 +78,7 @@ Root::get_focus () const
 
 RootImpl::RootImpl() :
   m_entered (false), m_viewport (NULL),
-  m_async_loop (NULL), m_asnyc_resize_draw_id (0),
+  m_async_loop (NULL),
   m_source (NULL), m_expose_queue_stamp (0),
   m_tunable_requisition_counter (0)
 {
@@ -207,29 +207,13 @@ RootImpl::resize_all (Allocation *new_area)
 }
 
 void
-RootImpl::async_resize_draw()
-{
-  if (m_asnyc_resize_draw_id)
-    {
-      AutoLocker aelocker (m_async_mutex);
-      if (m_async_loop)
-        m_async_loop->try_remove (m_asnyc_resize_draw_id);
-      m_asnyc_resize_draw_id = 0;
-    }
-  AutoLocker monitor (owned_mutex());
-  resize_all (NULL);
-}
-
-void
 RootImpl::do_invalidate ()
 {
   Root::invalidate();
-  if (!m_asnyc_resize_draw_id && !m_tunable_requisition_counter)
-    {
-      AutoLocker aelocker (m_async_mutex);
-      if (m_async_loop)
-        m_asnyc_resize_draw_id = m_async_loop->exec_update (slot (*this, &RootImpl::async_resize_draw));
-    }
+  // we just need to make sure to be woken up, since flags are set appropriately already
+  AutoLocker aelocker (m_async_mutex);
+  if (m_async_loop)
+    m_async_loop->wakeup();
 }
 
 void
@@ -848,7 +832,7 @@ RootImpl::prepare (uint64 current_time_usecs,
 {
   AutoLocker locker (m_omutex);
   AutoLocker aelocker (m_async_mutex);
-  return !m_async_event_queue.empty() || !m_expose_region.empty();
+  return !m_async_event_queue.empty() || !m_expose_region.empty() || test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
 }
 
 bool
@@ -856,7 +840,7 @@ RootImpl::check (uint64 current_time_usecs)
 {
   AutoLocker locker (m_omutex);
   AutoLocker aelocker (m_async_mutex);
-  return !m_async_event_queue.empty() || !m_expose_region.empty();
+  return !m_async_event_queue.empty() || !m_expose_region.empty() || test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
 }
 
 bool
@@ -876,6 +860,8 @@ RootImpl::dispatch ()
       dispatch_event (*event);
       delete event;
     }
+  else if (test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+    resize_all (NULL);
   else if (!m_expose_region.empty())
     draw_now();
   return true;

@@ -1,3 +1,8 @@
+Wed Nov  8 01:16:52 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/root.cc: handle resizing with a higher priority than 
+	redrawing, so we're not redrawing with invalid item sizes.
+
 Mon Oct 23 02:57:44 2006  Tim Janik  <timj@gtk.org>
 
 	* upgraded to newer Birnet and automake-1.9.
