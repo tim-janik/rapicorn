@@ -1,3 +1,11 @@
+Thu Nov  9 09:43:18 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/text-editor.cc: added methods for character insertion, delete
+	and backspace.
+
+	* rapicorn/text-pango.cc: fixed character deletion to leave the mark 
+	unchanged.
+
 Wed Nov  8 01:16:52 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/root.cc: handle resizing with a higher priority than 

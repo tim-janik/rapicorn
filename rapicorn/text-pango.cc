@@ -891,7 +891,6 @@ protected:
     int l = strlen (c);
     int xmark = m_mark, trailing;
     pango_layout_move_cursor_visually (m_layout, TRUE, m_mark, 0, visual_direction, &xmark, &trailing);
-    diag ("pangomove[%d]: (%d,%d) (%d,%d)", l, m_mark, 0, xmark, trailing);
     while (xmark < l && trailing--)
       xmark = utf8_next (c + xmark) - c;
     rapicorn_gtk_threads_leave();
@@ -928,10 +927,10 @@ protected:
     const char *c = pango_layout_get_text (m_layout);
     int l = strlen (c);
     int m = m_mark;
-    while (m_mark < l && n_utf8_chars--)
-      m_mark = utf8_next (c + m_mark) - c;
+    while (m < l && n_utf8_chars--)
+      m = utf8_next (c + m) - c;
     String s = c;
-    s.erase (m, m_mark - m);
+    s.erase (m_mark, m - m_mark);
     pango_layout_set_text (m_layout, s.c_str(), -1);
     // FIXME: adjust attributes
     rapicorn_gtk_threads_leave();

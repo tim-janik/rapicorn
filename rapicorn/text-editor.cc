@@ -71,6 +71,57 @@ private:
       }
     return false;
   }
+  bool
+  insert_literally (unichar uc)
+  {
+    Client *client = get_client();
+    if (client)
+      {
+        client->mark (m_cursor);
+        char str[8];
+        utf8_from_unichar (uc, str);
+        client->mark_insert (str);
+        step_cursor (+1);
+        invalidate();
+        changed();
+      }
+    return true;
+  }
+  bool
+  delete_backward ()
+  {
+    Client *client = get_client();
+    if (client)
+      {
+        client->mark (m_cursor);
+        int o = client->mark();
+        client->step_mark (-1);
+        int m = client->mark();
+        if (o == m)
+          return false;
+        m_cursor = m;
+        client->mark2cursor();
+        client->mark_delete (1);
+        changed();
+        return true;
+      }
+    return false;
+  }
+  bool
+  delete_foreward ()
+  {
+    Client *client = get_client();
+    if (client)
+      {
+        client->mark (m_cursor);
+        if (client->mark_at_end())
+          return false;
+        client->mark_delete (1);
+        changed();
+        return true;
+      }
+    return false;
+  }
   virtual void
   text (const String &text)
   {
@@ -109,6 +160,17 @@ private:
             break;
           case KEY_Left:
             handled = step_cursor (-1);
+            break;
+          case KEY_BackSpace:
+            handled = delete_backward();
+            break;
+          case KEY_Delete: case KEY_KP_Delete:
+            handled = delete_foreward();
+            break;
+          default:
+            if (kevent->key >= 32 && /* space */
+                kevent->key <= 126)  /* ~ */
+              handled = insert_literally (kevent->key);
             break;
           }
         break;
