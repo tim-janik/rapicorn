@@ -325,6 +325,7 @@ Container::add (Item                   &item,
   packer.apply_properties (pack_plist, unused_props);
   /* can invalidate etc. the fully setup item now */
   item.invalidate();
+  invalidate();
   item.unref();
 }
 
@@ -346,7 +347,10 @@ Container::remove (Item &item)
     throw NullPointer();
   item.ref();
   if (item.visible())
-    item.invalidate();
+    {
+      item.invalidate();
+      invalidate();
+    }
   Container *dcontainer = container;
   while (dcontainer)
     {

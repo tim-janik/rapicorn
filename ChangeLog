@@ -1,3 +1,19 @@
+Fri Nov 10 01:23:00 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/item.hh, rapicorn/item.cc: introduce invalidate_size() which
+	will only cause exposes upon size changes. optimized allocation logic
+	to skip exposes if no size changes occoured.
+
+	* rapicorn/rootimpl.hh:
+	* rapicorn/root.cc: removed stamp logic. adaptions to size/expose logic
+	fixes in viewport. 
+
+	* rapicorn/viewport-gtk.cc: removed expose stamps which are unused. added
+	a flag to ignore expose events if resizes are pending.
+
+	* rapicorn/text-editor.cc: removed unecessary invlidation on insertions,
+	the text client takes care of this.
+
 Thu Nov  9 09:43:18 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/text-editor.cc: added methods for character insertion, delete

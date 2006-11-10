@@ -506,7 +506,7 @@ Item::width (float w)
   Requisition ovr = get_data (&override_requisition);
   ovr.width = w >= 0 ? w : -1;
   set_data (&override_requisition, ovr);
-  invalidate();
+  invalidate_size();
 }
 
 float
@@ -522,7 +522,7 @@ Item::height (float h)
   Requisition ovr = get_data (&override_requisition);
   ovr.height = h >= 0 ? h : -1;
   set_data (&override_requisition, ovr);
-  invalidate();
+  invalidate_size();
 }
 
 const PropertyList&
@@ -821,13 +821,26 @@ Item::changed()
 void
 Item::invalidate()
 {
+  if (!test_all_flags (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT))
+    {
+      change_flags_silently (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT, true); /* skip notification */
+      if (!finalizing())
+        sig_invalidate.emit();
+      if (parent())
+        parent()->invalidate_size();
+    }
+}
+
+void
+Item::invalidate_size()
+{
   if (!test_all_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
       change_flags_silently (INVALID_REQUISITION | INVALID_ALLOCATION, true); /* skip notification */
       if (!finalizing())
         sig_invalidate.emit();
       if (parent())
-        parent()->invalidate();
+        parent()->invalidate_size();
     }
 }
 
@@ -890,7 +903,7 @@ Item::expose (const Region &region) /* item coordinates relative */
   Region r (allocation());
   r.intersect (region);
   Root *rt = get_root();
-  if (!r.empty() && rt && !test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+  if (!r.empty() && rt && !test_flags (INVALID_CONTENT))
     {
       const Affine &affine = affine_to_root();
       r.affine (affine);
@@ -947,7 +960,7 @@ ItemImpl::tune_requisition (Requisition requisition)
           if (requisition.width != m_requisition.width || requisition.height != m_requisition.height)
             {
               m_requisition = requisition;
-              p->invalidate(); /* need new size-request on parent */
+              p->invalidate_size(); /* need new size-request on parent */
               return true;
             }
         }
@@ -996,16 +1009,33 @@ ItemImpl::set_allocation (const Allocation &area)
   sarea.y      = CLAMP (sarea.y, -smax, smax);
   sarea.width  = CLAMP (sarea.width,  0, smax);
   sarea.height = CLAMP (sarea.height, 0, smax);
-  /* expose old area */
-  expose();
+  /* remember old area */
+  Allocation oa = allocation();
   /* always reallocate to re-layout children */
   change_flags_silently (INVALID_ALLOCATION, false); /* skip notification */
   change_flags_silently (POSITIVE_ALLOCATION, false); /* !drawable() while size_allocate() is called */
   size_allocate (sarea);
   Allocation a = allocation();
-  set_flag (POSITIVE_ALLOCATION, a.width > 0 && a.height > 0);
+  change_flags_silently (POSITIVE_ALLOCATION, a.width > 0 && a.height > 0);
+  bool need_expose = oa != a || test_flags (INVALID_CONTENT);
+  change_flags_silently (INVALID_CONTENT, false); /* skip notification */
+  /* expose old area */
+  if (need_expose)
+    {
+      /* expose unclipped */
+      Region r (oa);
+      Root *rt = get_root();
+      if (!r.empty() && rt)
+        {
+          const Affine &affine = affine_to_root();
+          r.affine (affine);
+          Rect rc = r.extents();
+          rt->expose (rc);
+        }
+    }
   /* expose new area */
-  expose();
+  if (need_expose)
+    expose();
 }
 
 } // Rapicorn

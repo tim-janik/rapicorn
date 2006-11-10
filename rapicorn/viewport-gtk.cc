@@ -99,7 +99,7 @@ struct ViewportGtk : public virtual Viewport {
   };
   WindowType            m_window_type;
   EventReceiver        &m_receiver;
-  uint                  m_draw_layout_stamp;
+  bool                  m_ignore_exposes;
   bool                  m_splash_screen;
   float                 m_root_x, m_root_y;
   float                 m_request_width, m_request_height;
@@ -143,7 +143,7 @@ ViewportGtk::ViewportGtk (const String  &backend_name,
                           WindowType     viewport_type,
                           EventReceiver &receiver) :
   m_viewport (NULL), m_window_type (viewport_type),
-  m_receiver (receiver), m_draw_layout_stamp (0),
+  m_receiver (receiver), m_ignore_exposes (false),
   m_root_x (NAN), m_root_y (NAN),
   m_request_width (33), m_request_height (33),
   m_window_state (WindowState (0)), m_average_background (0xff808080)
@@ -297,118 +297,6 @@ ViewportGtk::hide (void)
     }
 }
 
-#if 0
-struct IdleBlitter {
-  RapicornViewport *self;
-  Plane            *plane;
-  GdkPixbuf        *pixbuf;
-  uint              draw_stamp;
-  int               px, py, window_height, j, k;
-  IdleBlitter (RapicornViewport *_viewport,
-               Plane            *_plane,
-               uint              _draw_stamp) :
-    self (_viewport), plane (_plane), pixbuf (NULL),
-    draw_stamp (_draw_stamp),
-    px (0), py (0), window_height (0), j (0), k(0)
-  {
-    g_object_ref (G_OBJECT (self));
-  }
-  ~IdleBlitter()
-  {
-    g_object_unref (G_OBJECT (self));
-    if (plane)
-      delete plane;
-    if (pixbuf)
-      gdk_pixbuf_unref (pixbuf);
-  }
-  bool
-  blit_plane ()
-  {
-    ViewportGtk *viewport = self->viewport;
-    GtkWidget *widget = GTK_WIDGET (self);
-    /* ignore outdated planes, especially on slow displays.
-     * this is especially important on remote displays where due to the
-     * incremental updates, multiple concurring blit-queues can pile
-     * up unless outdated planes are discarded.
-     */
-    if (!GTK_WIDGET_DRAWABLE (widget) ||
-        (!self->fast_local_blitting &&                          /* when on remote display */
-         draw_stamp != viewport->m_draw_layout_stamp))          /* outdated plane */
-      {
-        /* this window possibly has backing store enabled on the server,
-         * which reduces the amount of expose events sent. here, we rely
-         * on future expose events, so we better make sure to get them.
-         */
-        if (self->backing_store != BACKING_STORE_NOT_USEFUL)
-          {
-            int ww, wh;
-            gdk_window_get_size (widget->window, &ww, &wh);
-            gdk_window_clear_area_e (widget->window, 0, 0, ww, wh);
-          }
-        return false;
-      }
-    /* when blitting to screen, we prefer incremental screen updates to reduce
-     * latency (at least for slow X connections) and increase responsiveness.
-     * we split up larger areas into small tiles which are blitted individually.
-     * the GdkRGB tile size is usually around 128x128 pixels so anything beyond
-     * that is furtherly split up anyways.
-     */
-    if (!pixbuf)
-      {
-        /* initial setup */
-        pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE /* alpha */, 8 /* bits */, plane->width(), plane->height());
-        bool success = plane->rgb_convert (gdk_pixbuf_get_width (pixbuf), gdk_pixbuf_get_height (pixbuf),
-                                           gdk_pixbuf_get_rowstride (pixbuf), gdk_pixbuf_get_pixels (pixbuf));
-        BIRNET_ASSERT (success);
-        gdk_window_get_size (widget->window, NULL, &window_height);
-        px = plane->xstart();
-        py = window_height - (plane->ystart() + gdk_pixbuf_get_height (pixbuf));
-        delete plane;
-        plane = NULL;
-      }
-    /* loop body */
-    int xstep = 256, ystep = 64;
-    if (self->fast_local_blitting)
-      {
-        /* no real need to tile on local displays */
-        xstep = 8192;
-        ystep = 8192;
-      }
-    int pw = gdk_pixbuf_get_width (pixbuf), ph = gdk_pixbuf_get_height (pixbuf);
-    int dest_x = px + j, dest_y = py + k, w = MIN (xstep, pw - j), h = MIN (ystep, ph - k);
-    gdk_draw_pixbuf (widget->window, widget->style->black_gc,
-                     pixbuf, j, k, /* src (x,y) */
-                     dest_x, dest_y, w, h,
-                     GDK_RGB_DITHER_MAX, dest_x, dest_y);
-    /* loop counter increments and checks */
-    j += xstep;
-    if (j < pw)
-      return true; /* continue */
-    j = 0;
-    k += ystep;
-    if (k < ph)
-      return true; /* continue */
-    return false; /* all done */
-  }
-  static gboolean
-  idle_blit_plane_locked (IdleBlitter *iblitter)
-  {
-    bool repeat = iblitter->blit_plane();
-    if (!repeat)
-      delete iblitter;
-    return repeat;
-  }
-  static gboolean
-  idle_blit_plane (gpointer data)
-  {
-    AutoLocker locker (GTK_GDK_THREAD_SYNC);
-    IdleBlitter *iblitter = static_cast<IdleBlitter*> (data);
-    bool repeat = idle_blit_plane_locked (iblitter);
-    return repeat;
-  }
-};
-#endif
-
 void
 ViewportGtk::blit_plane (Plane *plane,
                          uint   draw_stamp)
@@ -421,21 +309,6 @@ ViewportGtk::blit_plane (Plane *plane,
         priority = -G_MAXINT / 2;       /* run with PRIORITY_NOW to blit immediately on local displays */
       else
         priority = GTK_PRIORITY_REDRAW; /* allow event processing to interrupt blitting on remote displays */
-#if 0
-      if (GTK_WIDGET_DRAWABLE (m_widget))
-        {
-          /* add idle handler to g_main_context_default() to be executed from gtk_main() */
-          g_idle_add_full (priority, IdleBlitter::idle_blit_plane, new IdleBlitter (m_viewport, plane, draw_stamp), NULL);
-          /* call idle handler directly */
-          IdleBlitter *ib = new IdleBlitter (m_viewport, plane, draw_stamp);
-          while (TRUE)
-            {
-              bool done = !IdleBlitter::idle_blit_plane_locked (ib);
-              if (done)
-                break;
-            }
-        }
-#endif
       if (GTK_WIDGET_DRAWABLE (m_widget))
         {
           /* convert to pixbuf */
@@ -504,7 +377,7 @@ ViewportGtk::enqueue_win_draws (void)
 uint
 ViewportGtk::last_draw_stamp ()
 {
-  return m_draw_layout_stamp;
+  return 0;
 }
 
 Viewport::State
@@ -537,7 +410,8 @@ configure_gtk_window (GtkWindow              *window,
     gtk_window_set_default_size (window, config.initial_width, config.initial_height);
   else
     gtk_window_set_default_size (window, -1, -1);
-  
+  window->need_default_size = TRUE; /* work-around for gtk_window_set_geometry_hints() breaking basic resizing functionality */
+
   /* geometry handling */
   if (GTK_WIDGET_REALIZED (window))
     gdk_window_set_geometry_hints (widget->window, NULL, GdkWindowHints (0));   // clear geometry on XServer
@@ -643,6 +517,7 @@ ViewportGtk::set_config (const Config &config,
       m_request_height = config.request_height;
       /* guarantee a WIN_DRAW event upon size changes */
       gtk_widget_queue_resize (m_widget);
+      m_ignore_exposes = true;
     }
   m_average_background = config.average_background;
   if (window)
@@ -862,10 +737,6 @@ rapicorn_viewport_change_visibility (RapicornViewport  *self,
   if (self->visibility_state == GDK_VISIBILITY_FULLY_OBSCURED)
     {
       EventContext econtext = rapicorn_viewport_event_context (self);
-      /* note, don't change m_draw_layout_stamp here, we need to continue
-       * drawing even if obscured (e.g. because the xserver might update
-       * it's backing store).
-       */
       viewport->enqueue_locked (create_event_cancellation (econtext));
     }
 }
@@ -898,9 +769,10 @@ rapicorn_viewport_size_allocate (GtkWidget     *widget,
   if (viewport)
     {
       EventContext econtext = rapicorn_viewport_event_context (self); /* relies on proper GdkWindow size */
-      viewport->m_draw_layout_stamp++;
-      viewport->enqueue_locked (create_event_win_size (econtext, viewport->m_draw_layout_stamp, allocation->width, allocation->height));
+      viewport->enqueue_locked (create_event_win_size (econtext, 0, allocation->width, allocation->height));
+      gtk_widget_queue_draw (widget); /* make sure we *always* redraw when sending win_size */
     }
+  viewport->m_ignore_exposes = false;
 }
 
 static void
@@ -1192,7 +1064,8 @@ rapicorn_viewport_event (GtkWidget *widget,
             gint realy = window_height - (area.y + area.height);
             rectangles.push_back (Rect (Point (area.x, realy), area.width, area.height));
           }
-        viewport->enqueue_locked (create_event_win_draw (econtext, viewport->m_draw_layout_stamp, rectangles));
+        if (!viewport->m_ignore_exposes)
+          viewport->enqueue_locked (create_event_win_draw (econtext, 0, rectangles));
       }
       break;
     default:

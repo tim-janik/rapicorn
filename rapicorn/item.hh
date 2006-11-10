@@ -79,9 +79,9 @@ protected:
     IMPRESSED                 = 1 <<  6,
     FOCUS_CHAIN               = 1 <<  7,
     HAS_DEFAULT               = 1 <<  8,
-    /* REQUEST_DEFAULT        = 1 <<  8, */
-    INVALID_REQUISITION       = 1 << 10,
-    INVALID_ALLOCATION        = 1 << 11,
+    INVALID_REQUISITION       = 1 <<  9,
+    INVALID_ALLOCATION        = 1 << 10,
+    INVALID_CONTENT           = 1 << 11,
     HEXPAND                   = 1 << 14,
     VEXPAND                   = 1 << 15,
     HSPREAD                   = 1 << 16,
@@ -189,6 +189,7 @@ public:
   void                        uncross_links     (Item           &link);
   /* invalidation / changes */
   void                        invalidate        ();
+  void                        invalidate_size   ();
   void                        changed           ();
   void                        expose            ();                             /* item allocation */
   void                        expose            (const Rect       &rect);       /* item coordinates relative */

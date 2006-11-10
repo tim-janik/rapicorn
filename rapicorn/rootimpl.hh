@@ -38,7 +38,6 @@ class RootImpl : public virtual Root,
   uint                  m_asnyc_resize_draw_id;
   MainLoop::Source     *m_source;
   Region                m_expose_region;
-  uint                  m_expose_queue_stamp;
   EventContext          m_last_event_context;
   vector<Item*>         m_last_entered_children;
   uint                  m_tunable_requisition_counter;

@@ -79,7 +79,7 @@ Root::get_focus () const
 RootImpl::RootImpl() :
   m_entered (false), m_viewport (NULL),
   m_async_loop (NULL),
-  m_source (NULL), m_expose_queue_stamp (0),
+  m_source (NULL),
   m_tunable_requisition_counter (0)
 {
   {
@@ -169,8 +169,7 @@ RootImpl::resize_all (Allocation *new_area)
       have_allocation = true;
       change_flags_silently (INVALID_ALLOCATION, true);
     }
-#if 0
-  if (!new_area && m_viewport)
+  else if (!new_area && m_viewport)
     {
       Viewport::State state = m_viewport->get_state();
       if (state.width > 0 && state.height > 0)
@@ -180,36 +179,38 @@ RootImpl::resize_all (Allocation *new_area)
           have_allocation = true;
         }
     }
-#endif
   m_tunable_requisition_counter = 3;
+  Requisition req;
   while (test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
-      Requisition req = size_request(); /* unsets INVALID_REQUISITION */
+      req = size_request(); /* unsets INVALID_REQUISITION */
       if (!have_allocation)
         {
           /* fake an allocation */
           area.width = req.width;
           area.height = req.height;
         }
-      set_allocation (area); /* unsets INVALID_ALLOCATION, may re-::invalidate() */
+      set_allocation (area); /* unsets INVALID_ALLOCATION, may re-::invalidate_size() */
       if (m_tunable_requisition_counter)
         m_tunable_requisition_counter--;
     }
   m_tunable_requisition_counter = 0;
-  if (!have_allocation)
+  if (!have_allocation ||
+      (!new_area && (req.width > allocation().width || req.height > allocation().height)))
     {
-      Requisition req = size_request();
       m_config.request_width = req.width;
       m_config.request_height = req.height;
+      /* we will request a WIN_SIZE and WIN_DRAW now, so there's no point in handling further exposes */
+      m_viewport->enqueue_win_draws();
+      m_expose_region.clear();
       m_viewport->set_config (m_config, true);
-      /* we will get WIN_SIZE and WIN_DRAW now */
     }
 }
 
 void
 RootImpl::do_invalidate ()
 {
-  Root::invalidate();
+  SingleContainerImpl::do_invalidate();
   // we just need to make sure to be woken up, since flags are set appropriately already
   AutoLocker aelocker (m_async_mutex);
   if (m_async_loop)
@@ -558,6 +559,8 @@ RootImpl::dispatch_win_size_event (const Event &event)
       resize_all (&allocation);
       /* discard all expose requests, we'll get a new WIN_DRAW event */
       m_expose_region.clear();
+      if (0)
+        diag ("win-size: %f %f", wevent->width, wevent->height);
       handled = true;
     }
   return handled;
@@ -572,9 +575,10 @@ RootImpl::dispatch_win_draw_event (const Event &event)
     {
       for (uint i = 0; i < devent->rectangles.size(); i++)
         {
-          if (m_viewport->last_draw_stamp() != devent->draw_stamp)
-            break;    // ignore outdated expose rectangles
           m_expose_region.add (devent->rectangles[i]);
+          if (0)
+            diag ("win-draw: %f %f (at: %f %f)", devent->rectangles[i].width, devent->rectangles[i].height,
+                  devent->rectangles[i].x, devent->rectangles[i].y);
         }
       handled = true;
     }
@@ -599,13 +603,7 @@ RootImpl::expose_root_region (const Region &region)
 {
   /* this function is expected to *queue* exposes, and not render immediately */
   if (m_viewport && !region.empty())
-    {
-      uint stamp = m_viewport->last_draw_stamp();
-      if (stamp != m_expose_queue_stamp)
-        m_expose_region.clear(); /* discard outdated exposes */
-      m_expose_region.add (region);
-      m_expose_queue_stamp = stamp;
-    }
+    m_expose_region.add (region);
 }
 
 void
@@ -623,11 +621,6 @@ RootImpl::draw_now ()
 {
   if (m_viewport)
     {
-      /* discard outdated exposes */
-      uint stamp = m_viewport->last_draw_stamp();
-      if (stamp != m_expose_queue_stamp)
-        m_expose_region.clear();
-      m_expose_queue_stamp = stamp;
       /* force delivery of any pending update events */
       m_viewport->enqueue_win_draws();
       /* collect all WIN_DRAW events */
@@ -659,17 +652,14 @@ RootImpl::draw_now ()
       std::vector<Rect> rects;
       m_expose_region.list_rects (rects);
       m_expose_region.clear();
-      stamp = m_expose_queue_stamp;
       for (uint i = 0; i < rects.size(); i++)
         {
-          if (stamp != m_viewport->last_draw_stamp())
-            break;
           const Rect &rect = rects[i];
           /* render area */
           Plane *plane = new Plane (rect.x, rect.y, rect.width, rect.height);
           render (*plane);
           /* blit to screen */
-          m_viewport->blit_plane (plane, stamp); // takes over plane
+          m_viewport->blit_plane (plane, 0); // takes over plane
         }
     }
 }
@@ -783,7 +773,8 @@ RootImpl::has_pending_win_size ()
 bool
 RootImpl::dispatch_event (const Event &event)
 {
-  // diag ("Root: event: %s", string_from_event_type (event.type));
+  if (0)
+    diag ("Root: event: %s", string_from_event_type (event.type));
   switch (event.type)
     {
     case EVENT_LAST:

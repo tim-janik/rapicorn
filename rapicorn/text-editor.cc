@@ -82,7 +82,6 @@ private:
         utf8_from_unichar (uc, str);
         client->mark_insert (str);
         step_cursor (+1);
-        invalidate();
         changed();
       }
     return true;
