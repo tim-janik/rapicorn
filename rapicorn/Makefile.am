@@ -41,6 +41,7 @@ rapicorn_cc_sources = $(strip 		\
 rapicorn_private_headers = $(strip 	\
 	regionimpl.h			\
 	private.hh			\
+	key2utf8.cc			\
 )
 rapicorn_fastmath_files = $(strip	\
 )
