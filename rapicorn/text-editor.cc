@@ -75,7 +75,7 @@ private:
   insert_literally (unichar uc)
   {
     Client *client = get_client();
-    if (client)
+    if (client && uc)
       {
         client->mark (m_cursor);
         char str[8];
@@ -167,9 +167,8 @@ private:
             handled = delete_foreward();
             break;
           default:
-            if (kevent->key >= 32 && /* space */
-                kevent->key <= 126)  /* ~ */
-              handled = insert_literally (kevent->key);
+            if (!key_value_is_modifier (kevent->key))
+              handled = insert_literally (key_value_to_unichar (kevent->key));
             break;
           }
         break;

@@ -1,3 +1,12 @@
+Sat Nov 11 16:45:11 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/events.hh, rapicorn/events.cc: provide key_value_is_modifier()
+	and key_value_to_unichar().
+
+	* rapicorn/key2utf8.cc: put under LGPL, implement key_value_to_unichar().
+
+	* rapicorn/text-editor.cc: insert non-modifier unicode characters.
+
 Sat Nov 11 13:25:54 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/key2utf8.cc: this file maps KEY_* keycodes from keycodes.hh

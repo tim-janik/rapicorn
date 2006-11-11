@@ -1,3 +1,22 @@
+/* Rapicorn
+ * Copyright (C) 2006 Tim Janik
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General
+ * Public License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
 /* $XFree86$
  * This module converts keysym values into the corresponding ISO 10646-1
  * (UCS, Unicode) values.
@@ -30,10 +49,7 @@
  *
  * This software is in the public domain. Share and enjoy!
  */
-
-#include <keysym2ucs.h>
-
-struct codepair {
+static const struct KeyCodePair {
   unsigned short keysym;
   unsigned short ucs;
 } keysymtab[] = {
@@ -1180,34 +1196,35 @@ struct codepair {
   { 0x20ac, 0x20ac }, /*                    EuroSign € EURO SIGN */
 };
 
-long keysym2ucs(KeySym keysym)
+namespace Rapicorn {
+
+unichar
+key_value_to_unichar (uint32 keysym)
 {
-    int min = 0;
-    int max = sizeof(keysymtab) / sizeof(struct codepair) - 1;
-    int mid;
-
-    /* first check for Latin-1 characters (1:1 mapping) */
-    if ((keysym >= 0x0020 && keysym <= 0x007e) ||
-        (keysym >= 0x00a0 && keysym <= 0x00ff))
-        return keysym;
-
-    /* also check for directly encoded 24-bit UCS characters */
-    if ((keysym & 0xff000000) == 0x01000000)
-	return keysym & 0x00ffffff;
-
-    /* binary search in table */
-    while (max >= min) {
-	mid = (min + max) / 2;
-	if (keysymtab[mid].keysym < keysym)
-	    min = mid + 1;
-	else if (keysymtab[mid].keysym > keysym)
-	    max = mid - 1;
-	else {
-	    /* found it */
-	    return keysymtab[mid].ucs;
-	}
+  /* first check for Latin-1 characters (1:1 mapping) */
+  if ((keysym >= 0x0020 && keysym <= 0x007e) ||
+      (keysym >= 0x00a0 && keysym <= 0x00ff))
+    return keysym;
+  
+  /* also check for directly encoded 24-bit UCS characters */
+  if ((keysym & 0xff000000) == 0x01000000)
+    return keysym & 0x00ffffff;
+  
+  /* binary search in table */
+  int first = 0, last = sizeof (keysymtab) / sizeof (KeyCodePair) - 1;
+  while (last >= first)
+    {
+      int mid = (first + last) / 2;
+      if (keysymtab[mid].keysym < keysym)
+        first = mid + 1;
+      else if (keysymtab[mid].keysym > keysym)
+        last = mid - 1;
+      else /* found it */
+        return keysymtab[mid].ucs;
     }
-
-    /* no matching Unicode value found */
-    return -1;
+  
+  /* no matching Unicode value found */
+  return 0;
 }
+
+} // Rapicorn

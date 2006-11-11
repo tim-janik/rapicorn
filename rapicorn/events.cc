@@ -313,4 +313,32 @@ create_event_win_delete (const EventContext &econtext)
   return event;
 }
 
+static const unsigned short non_accelerator[] = {
+  KEY_Tab,              KEY_ISO_Left_Tab,       KEY_KP_Tab,
+  KEY_Shift_L,          KEY_Shift_R,            KEY_Shift_Lock,         KEY_Caps_Lock,  KEY_ISO_Lock,
+  KEY_Control_L,        KEY_Control_R,
+  KEY_Alt_L,            KEY_Alt_R,              KEY_Meta_L,             KEY_Meta_R,
+  KEY_Super_L,          KEY_Super_R,            KEY_Hyper_L,            KEY_Hyper_R,
+  KEY_Num_Lock ,        KEY_Scroll_Lock,        KEY_Sys_Req,
+  KEY_Mode_switch,      KEY_Multi_key,
+  KEY_ISO_Level3_Shift,
+  KEY_ISO_First_Group,          KEY_ISO_Last_Group,
+  KEY_ISO_Next_Group,           KEY_ISO_Prev_Group,
+  KEY_First_Virtual_Screen,     KEY_Last_Virtual_Screen,
+  KEY_Prev_Virtual_Screen,      KEY_Next_Virtual_Screen,
+  KEY_Terminate_Server,         KEY_AudibleBell_Enable,
+};
+
+bool
+key_value_is_modifier (uint32 keysym)
+{
+  for (uint i = 0; i < ARRAY_SIZE (non_accelerator); i++)
+    if (keysym == non_accelerator[i])
+      return true;
+  return false;
+}
+
 } // Rapicorn
+
+/* implement key_value_to_unichar() */
+#include "key2utf8.cc"
