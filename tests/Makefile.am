@@ -6,6 +6,7 @@ include $(top_srcdir)/Makefile.decl
 
 INCLUDES += -I$(top_srcdir)
 DEFS     += -DPARANOID $(RAPICORN_CFLAGS)
+XML_FILES =
 
 # test programs:
 programs_ldadd = $(top_builddir)/rapicorn/librapicorn.la $(RAPICORN_LIBS) $(PANGO_LIBS) $(GTK_LIBS)
@@ -38,6 +39,7 @@ items_LDADD        = $(programs_ldadd)
 TESTS             += testitems
 testitems_SOURCES  = testitems.cc
 testitems_LDADD    = $(programs_ldadd)
+XML_FILES         += testitems.xml
 TESTS             += evaltest
 evaltest_SOURCES   = evaltest.cc
 evaltest_LDADD     = $(programs_ldadd)
@@ -47,3 +49,25 @@ noinst_PROGRAMS = $(TESTS)
 
 # run tests
 test: check
+
+noinst_DATA =
+
+# check XML files
+XMLLINTCALL = $(if $(XMLLINT),$(XMLLINT),true) # handle undefined XMLLINT
+xml-lint:
+	$(XMLLINTCALL) --noout $(XML_FILES)
+.PHONY: xml-lint
+stamp-autochecks: $(XML_FILES)
+	@$(MAKE) xml-lint
+	@touch $@
+noinst_DATA += stamp-autochecks
+EXTRA_DIST  += $(XML_FILES)
+
+# copy XML_FILES into builddir
+stamp-xmlcopy: $(XML_FILES)
+	test '$(srcdir)' = '.' || \
+	  for file in $(XML_FILES); do \
+	    cp $(srcdir)/$$file . ; \
+	  done
+	touch $@
+noinst_DATA += stamp-xmlcopy

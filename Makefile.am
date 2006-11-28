@@ -27,3 +27,7 @@ pkgconfig_DATA = rapicorn.pc
 $(pkgconfig_DATA): $(top_builddir)/config.status
 CLEANFILES += rapicorn.pc
 EXTRA_DIST += rapicorn.pc
+
+# disable bogus cleanup checks
+distcleancheck_listfiles = true # find . -type f -print
+# distuninstallcheck_listfiles = true # find . -type f -print

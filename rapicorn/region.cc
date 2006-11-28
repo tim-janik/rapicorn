@@ -21,8 +21,8 @@
 
 namespace Rapicorn {
 
-#define FIXED2DOUBLE    (0x.01p0)       // / 256.
-#define DOUBLE2FIXED    (0x100.p0)      // * 256.
+#define FIXED2DOUBLE    (1.0 / 256.)    // 0x.01p0
+#define DOUBLE2FIXED    (256.)          // 0x100.p0
 
 
 static inline int64

@@ -43,10 +43,20 @@ xml-lint:
 	$(XMLLINTCALL) --noout $(XML_FILES)
 .PHONY: xml-lint
 
-stamp-allchecks: $(XML_FILES)
+noinst_DATA =
+
+stamp-autochecks: $(XML_FILES)
 	@$(MAKE) xml-lint
 	@touch $@
-
-noinst_DATA = stamp-allchecks
+noinst_DATA += stamp-autochecks
 
 EXTRA_DIST += $(XML_FILES) testpic.jpg testpic.png testpic-IHDR.png testpic-IDAT.png testpic-DATA.png
+
+# copy XML_FILES into builddir
+stamp-xmlcopy: $(XML_FILES)
+	test '$(srcdir)' = '.' || \
+	  for file in $(XML_FILES); do \
+	    cp $(srcdir)/$$file . ; \
+	  done
+	touch $@
+noinst_DATA += stamp-xmlcopy

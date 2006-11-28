@@ -1,3 +1,25 @@
+Wed Nov 29 00:44:56 2006  Tim Janik  <timj@gtk.org>
+
+	* released 0.1.2-snapshot, binary 0, interface 0.
+
+	* lots of distcheck fixes, included files missing from tarball.
+
+	* NEWS: updates. added known issues.
+	
+Tue Nov 28 21:21:59 2006  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/ldscript.map: fixed typeinfo and vtable symbol exports.
+
+	* rapicorn/primitives.hh: removed integer conversions which are now 
+	provided by Birnet.
+
+	* rapicorn/root.cc: document resizing logic.
+
+	* rapicorn/itemimpl.hh: added constructor as G++ workaround.
+
+	* rapicorn/region.cc: don't use hex floats which are undigestible 
+	for g++-3.4.
+	
 Sat Nov 11 16:45:11 2006  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/events.hh, rapicorn/events.cc: provide key_value_is_modifier()
@@ -27,7 +49,7 @@ Fri Nov 10 01:23:00 2006  Tim Janik  <timj@gtk.org>
 	* rapicorn/viewport-gtk.cc: removed expose stamps which are unused. added
 	a flag to ignore expose events if resizes are pending.
 
-	* rapicorn/text-editor.cc: removed unecessary invlidation on insertions,
+	* rapicorn/text-editor.cc: removed unecessary invalidation on insertions,
 	the text client takes care of this.
 
 Thu Nov  9 09:43:18 2006  Tim Janik  <timj@gtk.org>
@@ -1281,7 +1303,7 @@ Wed Jan 11 01:08:52 2006  Tim Janik  <timj@gtk.org>
 	* cairo-inlined/Makefile.am: build libpixman.la and libcairo.la from
 	the contents of a cairo-1.0.2 tarball.
 
-	* rapicorn/ldscript.map: export only sambols from Rapicorn::, Birnet::
+	* rapicorn/ldscript.map: export only symbols from Rapicorn::, Birnet::
 	and typeinfo symbols.
 
 	* rapicorn/Makefile.am: include cairo-inlined. use ldscript.map during
@@ -1611,10 +1633,10 @@ Sun Apr 17 13:37:42 2005  Tim Janik  <timj@gtk.org>
 Sat Apr 16 18:00:21 2005  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/layoutcontainers.hh, rapicorn/layoutcontainers.cc:
-	implement Alignemtn, HBox and VBox containers.
+	implement Alignment, HBox and VBox containers.
 
 	* rapicorn/paintcontainers.hh, rapicorn/paintcontainers.cc:
-	implement Ambience, Frame and ButtonView ontainers.
+	implement Ambience, Frame and ButtonView Containers.
 
 	* rapicorn/painter.hh, rapicorn/painter.cc: interface for drawing
 	operations on planes, such as hlines, vlines or shading/filling a

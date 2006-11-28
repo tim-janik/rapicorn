@@ -34,50 +34,6 @@ static const double LN_INV255 = -5.5412635451584261462455391880218; // ln(1/255)
 inline double BIRNET_CONST degree  (double radians) { return radians * (180. / PI); }
 inline double BIRNET_CONST radians (double degree)  { return degree * (PI / 180.); }
 
-/* double to integer */
-inline int BIRNET_CONST
-_dtoi32_generic (double d)
-{
-  /* this relies on the C++ behaviour of round-to-0 */
-  return (int) (d < -0.0 ? d - 0.5 : d + 0.5);
-}
-inline int BIRNET_CONST
-dtoi32 (double d)
-{
-  /* this relies on the hardware default round-to-nearest */
-#if defined __i386__ && defined __GNUC__
-  int r;
-  __asm__ volatile ("fistl %0"
-                    : "=m" (r)
-                    : "t" (d));
-  return r;
-#endif
-  return _dtoi32_generic (d);
-}
-inline int64 BIRNET_CONST
-_dtoi64_generic (double d)
-{
-  /* this relies on the C++ behaviour of round-to-0 */
-  return (int64) (d < -0.0 ? d - 0.5 : d + 0.5);
-}
-inline int64 BIRNET_CONST
-dtoi64 (double d)
-{
-  /* this relies on the hardware default round-to-nearest */
-#if defined __i386__ && defined __GNUC__
-  int64 r;
-  __asm__ volatile ("fistpll %0"
-                    : "=m" (r)
-                    : "t" (d)
-                    : "st");
-  return r;
-#endif
-  return _dtoi64_generic (d);
-}
-inline int64 BIRNET_CONST iround (double d) { return dtoi64 (round (d)); }
-inline int64 BIRNET_CONST iceil  (double d) { return dtoi64 (ceil (d)); }
-inline int64 BIRNET_CONST ifloor (double d) { return dtoi64 (floor (d)); }
-
 /* --- enums --- */
 typedef enum {
   COMBINE_NORMAL,       /* A OVER B */

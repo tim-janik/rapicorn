@@ -25,6 +25,7 @@ rapicorn_impl_headers = $(strip 	\
 	containerimpl.hh		\
 	itemimpl.hh			\
 	rootimpl.hh			\
+	scrollitemsimpl.hh		\
 	tableimpl.hh			\
 )
 rapicorn_cc_sources = $(strip 		\
@@ -58,13 +59,11 @@ librapicorn_la_LDFLAGS      = $(strip 				\
 	-release $(LT_RELEASE) 					\
 	-no-undefined 						\
 ) # set libtool version and export symbols for resolving
-#
 librapicorn_la_LIBADD      = $(strip 			\
 	$(top_builddir)/birnet/libbirnet.o		\
 	$(RAPICORN_LIBS) -lm 				\
 ) # -lfreetype -lfontconfig
-#
-EXTRA_DIST += $(rapicorn_private_headers)
+EXTRA_DIST += $(rapicorn_private_headers) $(librapicorn_la_DEPENDENCIES)
 
 #XML_FILES = $(strip standard.xml )
 ## xml linting
@@ -96,12 +95,13 @@ XMLLINTCALL = $(if $(XMLLINT),$(XMLLINT),true) # handle undefined XMLLINT
 xml-lint:
 	$(XMLLINTCALL) --noout $(XML_FILES)
 .PHONY: xml-lint
-stamp-allchecks: $(XML_FILES)
+stamp-autochecks: $(XML_FILES)
 	@$(MAKE) xml-lint
 	@touch $@
-noinst_DATA = stamp-allchecks
+noinst_DATA = stamp-autochecks
+EXTRA_DIST += $(XML_FILES)
 
-zintern.c:	$(top_builddir)/birnet/birnet-zintern $(srcdir)/rapicorn.xml stamp-allchecks
+zintern.c:	$(top_builddir)/birnet/birnet-zintern $(srcdir)/rapicorn.xml stamp-autochecks
 	$(top_builddir)/birnet/birnet-zintern -b -z RAPICORN $(srcdir)/rapicorn.xml > xgen-$(@F)
 	mv xgen-$(@F) $@
 factory.cc: zintern.c

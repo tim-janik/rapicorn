@@ -1,3 +1,55 @@
+Rapicorn 0.1.2:
+
+* added Image support for PNG images.
+* added HSlider, VSlider, Arrow, dot-grid.
+* added ScrollArea.
+* added Adjustments.
+* added command system allowing on-click properties.
+* added reset logic to recover from stale event situations.
+* added requisition tuning to allow iterative size allocations.
+* added event grabbing.
+* added MainLoop.
+* added Thread-per-Window paradigm.
+* added Viewport abstraction of drawing backends.
+* added color schemes.
+* added simple function Evaluator for XML properties.
+* added Markup to labels.
+* added focus handling for Items.
+* added TextEditor prototype.
+* added Region to handle rectangle arrays.
+* added partial screen updates.
+* removed libcairo/libpixman dependency.
+* overhauled Table shrinking logic.
+* upgraded Birnet library.
+
+Known Issues:
++ instabilities upon main loop exit.
++ possible build issues with g++ versions other than 3.4.
+
+Rapicorn 0.1.1: - Sun Jul 31 14:25:36 2005
+
+* overhaul of rendering logic.
+* added Arrangement.
+* added Point property.
+* added Controller interfaces for event handling.
+* added Image item displaying GdkPixbuf pixstreams.
+* speed ups and many fixes.
+
+Rapicorn 0.1.0: - Tue Apr 19 14:32:48 2005
+
+* added basic class hierarchy, properties.
+* added Affine transforms.
+* added RGB Plane and porter-duff combination modes.
+* added C++ signal system (mostly auto-generated).
+* added automatic enum introspection for enumdefs.hh.
+* added XML markup parser.
+* added XML based Item factory and registry.
+* added basic Event processing.
+* added Pango based Label.
+* added Frame, Ambience, Button.
+* added Table, Alignment, HBox, VBox.
+* added Gtk+ based drawing backend.
+
 Rapicorn 0.0.1:
 
-* Initial project release.
+* Initial project setup.

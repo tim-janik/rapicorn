@@ -29,6 +29,7 @@ class ItemImpl : public virtual Item {
   Allocation            m_allocation;
   String                m_name;
 protected:
+  ItemImpl() { /* removing this breaks g++ pre-4.2.0 20060530 */ }
   virtual void          allocation      (const Allocation &area);
   /* signal methods */
   virtual void          do_invalidate   ();

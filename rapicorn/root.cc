@@ -179,6 +179,15 @@ RootImpl::resize_all (Allocation *new_area)
           have_allocation = true;
         }
     }
+  /* this is the core of the resizing loop. via Item.tune_requisition(), we
+   * allow items to adjust the requisition from within size_allocate().
+   * whether the tuned requisition is honored at all, depends on
+   * m_tunable_requisition_counter.
+   * currently, we simply freeze the allocation after 3 iterations. for the
+   * future it's possible to honor the tuned requisition only partially or
+   * proportionally as m_tunable_requisition_counter decreases, so to mimick
+   * a simulated annealing process yielding the final layout.
+   */
   m_tunable_requisition_counter = 3;
   Requisition req;
   while (test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
