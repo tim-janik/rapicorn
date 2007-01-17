@@ -1,3 +1,7 @@
+Wed Jan 17 02:55:49 2007  Tim Janik  <timj@gtk.org>
+
+	* birent/: merge with Birnet commit b45930ce7a9478286bbf99d2cca3deea6c271768.
+
 Wed Nov 29 00:44:56 2006  Tim Janik  <timj@gtk.org>
 
 	* released 0.1.2-snapshot, binary 0, interface 0.
