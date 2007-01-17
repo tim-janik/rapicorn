@@ -1,3 +1,17 @@
+Wed Jan 17 02:30:35 2007  Tim Janik  <timj@gtk.org>
+
+	* examples/mkhost.sh: added a small script to set up an example project
+	that configures, builds and tests (via make check) a birnet/ subdir.
+
+Wed Jan 17 02:28:18 2007  Tim Janik  <timj@gtk.org>
+
+	* Makefile.am: define _BIRNET_SOURCE_EXTENSIONS, so birnet extensions
+	can be used internally.
+
+Wed Jan 17 02:19:56 2007  Tim Janik  <timj@gtk.org>
+
+	* COPYING.LGPL: explicitely include Birnet license, GNU LGPL.
+
 Thu Jan  4 21:53:56 2007  Tim Janik  <timj@gtk.org>
 
 	* birnetthread.hh:
