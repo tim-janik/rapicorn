@@ -2,23 +2,43 @@ General Information
 ===================
 
 This is a development version of Rapicorn.
-Rapicorn is targeted at replacing GnomeCanvas in terms of functionality,
-and to extend beyond that functionality as deemed reasonable.
-Cairo is planned to be used for rendering tasks, and Pango is intended to be
-used for text rendering until cairo implementes text rendering sufficiently.
+Rapicorn is targeted at replacing the use of GnomeCanvas in the Beast
+project (http://beast.gtk.org/), and to extend beyond that functionality
+as deemed reasonable.
+Cairo is planned to be used for rendering tasks, and Pango is used for
+text rendering.
 
-In order to build release tarballs, you need a recent version of pango.
-To be able to use recent development versions, currently libpixman
-and libcairo are included in the tarball, so no extra such libraries are
-required.
+Rapicorn so far supports an item hierarchy with cross-references,
+type safe per object signal emissions, a Gtk+ based blitting backend, a
+Pango based text rendering backend, basic Event processing and focus
+handling.
+It comes with a prototype set of stock items such as buttons, sliders,
+scroll area, table like layout containers and items to paint foreground
+or background elements.
+It also provides an XML markup parser that allows full GUI specifications
+to be written in XML, more of which is detailed here:
+	http://blogs.gnome.org/view/timj/2005/07/31/0
+
+In order to build release tarballs, you need a recent version of Pango.
 The sources for required packages can be found at:
 
 Pango-1.8:
 	ftp://ftp.gtk.org/pub/gtk/v2.6/
 
+Rapicorn tends to hit G++ compiler bugs fairly frequently, so if you
+have problems compiling the code, or get segfaults in STL source files,
+upgrading your compiler may improve the situation.
+Compiling with a different compiler version than the default on your system
+and running all checks Rapicorn offers (they should all succeed) can be
+done with a command line similar to:
+  export CC=gcc-3.4 CXX=g++-3.4 CPP=gcc-3.4\ -E CPPCXX=g++-3.4\ -E
+  ./configure
+  make all install
+  make report # report runs fast tests, slow tests and performance tests
+
 Preliminary web pages of the project can be found at:
 
-	http://beast.gtk.org/wiki:CanvasDesign
+	http://rapicorn.org
 
 
 Installation
