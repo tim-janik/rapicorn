@@ -87,6 +87,7 @@ public:
   Point& operator-= (double    delta)       { return *this = *this - delta; }
   bool   operator== (const Point &p2) const { return x == p2.x && y == p2.y; }
   bool   operator!= (const Point &p2) const { return x != p2.x || y != p2.y; }
+  bool   equals     (const Point &p2, double epsilon = 0.0) const;
 };
 inline Point
 min (const Point &p1, const Point &p2)
@@ -153,6 +154,7 @@ public:
   bool          contains        (const Point &point) const      { return x <= point.x && y <= point.y && point.x < x + width && point.y < y + height; }
   bool          operator==      (const Rect  &other) const;
   bool          operator!=      (const Rect  &other) const      { return !operator== (other); }
+  bool          equals          (const Rect  &other, double epsilon = 0.0) const;
   double        dist2           (const Point &p) const;
   double        dist            (const Point &p) const;
   Rect&         rect_union      (const Rect &r);
@@ -765,6 +767,13 @@ public:
 };
 
 /* --- implementations --- */
+inline bool
+Point::equals (const Point &p2,
+               double       epsilon) const
+{
+  return fabs (x - p2.x) <= epsilon && fabs (y - p2.y) <= epsilon;
+}
+
 inline
 Rect::Rect () :
   x (0), y (0), width (0), height (0)
@@ -822,6 +831,18 @@ Rect::operator== (const Rect &other) const
   if (empty() && other.empty())
     return true;
   return other.x == x && other.y == y && other.width == width && other.height == height;
+}
+
+inline bool
+Rect::equals (const Rect &other,
+              double      epsilon) const
+{
+  if (empty() && other.empty())
+    return true;
+  return (fabs (other.x - x) <= epsilon &&
+          fabs (other.y - y) <= epsilon &&
+          fabs (other.width - width) <= epsilon &&
+          fabs (other.height - height) <= epsilon);
 }
 
 inline Rect&

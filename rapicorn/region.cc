@@ -249,6 +249,12 @@ operator< (const Region &r1,
   return r1.cmp (r2) < 0;
 }
 
+double
+Region::epsilon () const
+{
+  return FIXED2DOUBLE;
+}
+
 String
 Region::string()
 {

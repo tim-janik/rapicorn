@@ -1,3 +1,15 @@
+Sat Jan 20 18:28:57 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/primitives.hh: introduced Point::equals() and Rect::equals()
+	which compare within an epsilon.
+
+	* rapicorn/region.[hc]*: added epsilon() to export accuracy constant.
+
+	* rapicorn/primitives.cc: fixed Rect::string() output accuracy.
+
+	* tests/region.cc: added basic Rect tests. fixed region comparisons to
+	take epsilon into account.
+
 Wed Jan 17 02:55:49 2007  Tim Janik  <timj@gtk.org>
 
 	* birent/: merge with Birnet commit b45930ce7a9478286bbf99d2cca3deea6c271768.

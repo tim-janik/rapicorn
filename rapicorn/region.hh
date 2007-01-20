@@ -60,6 +60,7 @@ public: /* rectangles are represented at 64bit integer precision */
   void          intersect         (const Region         &other);
   void          exor              (const Region         &other);
   void          affine            (const Affine         &aff);
+  double        epsilon           () const;
   String        string            ();
   /*Des*/      ~Region            ();
 };

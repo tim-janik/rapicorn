@@ -24,6 +24,24 @@ namespace {
 using namespace Rapicorn;
 
 static void
+test_rect (void)
+{
+  TSTART ("rectangles");
+  Rect r1;
+  TASSERT (r1.empty());
+  r1.assign (Point (7.1, 7.2), Point (8.4, 8.5));       // stores width=1.3, height=1.3 in double precision
+  TASSERT (!r1.empty());
+  Rect r2 (7.1, 7.2, 1.3, 1.3);
+  TASSERT (r2 == Rect (7.1, 7.2, 1.3, 1.3));
+  TASSERT (false == (r2 != Rect (7.1, 7.2, 1.3, 1.3)));
+  Rect r3 (7.1, 7.2, 1.0, 1.0);
+  TASSERT (r3.equals (r2, 0.1) == false);
+  TASSERT (r3.equals (r2, 0.5) == true);
+  TASSERT (r2.equals (r1, 0.00000000000001));           // using epsilon due to precision artefacts
+  TDONE();
+}
+
+static void
 test_region_basics (void)
 {
   TSTART ("region basics");
@@ -173,6 +191,8 @@ test_region_fract (void)
   TSTART ("fractional regions");
   Region r;
   TASSERT (r.empty());
+  const double epsilon = r.epsilon();   /* allow errors within +-epsilon */
+  TASSERT (epsilon <= 0.5);             /* assert at least pxiel resolution */
   r.clear();
   TASSERT (r.empty());
   TASSERT (r.contains (Point (0, 0)) == false);
@@ -191,6 +211,7 @@ test_region_fract (void)
   TASSERT (r.contains (Rect (0, 0, 3, 3)) == r.PARTIAL);
   TASSERT (r.contains (Rect (3.5, 0, 70, 70)) == r.OUTSIDE);
   Region r2 = r;
+  TASSERT (r2.extents().equals (Rect (0.1, 0.2, 3.3, 4.3), epsilon));
   r2.add (Rect (0, 0, 0.1, 4.5));
   r2.add (Rect (0, 0, 3.4, 0.2));
   Region r3 (Rect (0, 0, 3.4, 4.5));
@@ -198,7 +219,7 @@ test_region_fract (void)
   std::vector<Rect> rects;
   r3.list_rects (rects);
   TASSERT (rects.size() == 1);
-  rects[0] == Rect (0, 0, 3.4, 4.5);
+  TASSERT (rects[0].equals (Rect (0, 0, 3.4, 4.5), epsilon));
   TDONE();
   if (0)
     printf ("\nREGION:\n%s\nEMPTY:\n%s\n", create_rand_region().string().c_str(), Region().string().c_str());
@@ -282,6 +303,7 @@ main (int   argc,
   rapicorn_init_with_gtk_thread (&argc, &argv, NULL); // FIXME: should work without Gtk+
 
   /* run tests */
+  test_rect();
   test_region_basics();
   test_region_rect1();
   test_region2();
