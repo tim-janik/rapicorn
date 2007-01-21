@@ -1,3 +1,7 @@
+Sun Jan 21 22:19:12 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/text-pango.cc: fixed stale mutex.
+
 Sat Jan 20 18:28:57 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/primitives.hh: introduced Point::equals() and Rect::equals()

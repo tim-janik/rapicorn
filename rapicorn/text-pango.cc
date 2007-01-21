@@ -1061,7 +1061,10 @@ protected:
     area.width -= 1;
     area.height -= 1;
     if (area.width < 1 || area.height < 1)
-      return;
+      {
+        rapicorn_gtk_threads_leave();
+        return;
+      }
     if (pango_layout_get_ellipsize (m_layout) == PANGO_ELLIPSIZE_NONE)
       pango_layout_set_width (m_layout, -1);
     else
