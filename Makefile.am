@@ -14,7 +14,7 @@ test:
 .PHONY: test
 
 # extra dependancies
-configure: acbirnet.m4 birnet/configure.inc
+configure: birnet/acbirnet.m4 birnet/configure.inc
 
 
 CLEANFILES += intltool-extract intltool-merge intltool-update

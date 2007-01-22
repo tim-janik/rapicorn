@@ -1,6 +1,14 @@
-Mon Jan 22 01:30:59 2007  Tim Janik  <timj@gtk.org>
+Mon Jan 22 20:20:14 2007  Tim Janik  <timj@gtk.org>
 
 	* released 0.1.2, binary 0, interface 0.
+
+	* Makefile.am: acbirnet dependency fixup.
+
+	* acbirnet.m4: removed, provided by birnet/ now.
+
+	* configure.in: fixed acbirnet.m4 include.
+
+Mon Jan 22 01:30:59 2007  Tim Janik  <timj@gtk.org>
 
 	* README: explained compiler gotchas.
 

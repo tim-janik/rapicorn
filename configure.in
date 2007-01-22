@@ -1,7 +1,7 @@
 dnl ******************************
 dnl *** include special macros ***
 dnl ******************************
-builtin(include, acbirnet.m4)dnl
+builtin(include, birnet/acbirnet.m4)dnl
 
 #
 # Configure script for Rapicorn
