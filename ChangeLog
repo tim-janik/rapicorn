@@ -1,3 +1,8 @@
+Wed Jan 24 22:04:36 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/viewport-gtk.cc: fixed gtk_window_set_deletable version
+	check.
+
 Mon Jan 22 20:20:14 2007  Tim Janik  <timj@gtk.org>
 
 	* released 0.1.2, binary 0, interface 0.
