@@ -1,3 +1,55 @@
+Mon Jan 29 23:29:27 2007  Tim Janik  <timj@gtk.org>
+
+	* examples/mkhost.sh: generate Makefile.decl with slowcheck: and perf:
+	rules. also generate report: rule which runs all of check: slowcheck:
+	and perf: and generates a report.out file.
+
+Mon Jan 29 22:46:40 2007  Tim Janik  <timj@gtk.org>
+
+	* birnet/birnetthread.hh: made read_barrier() and write_barrier() a NOP 
+	on systems that don't need barriers. provided full_barrier().
+
+	* birnetthread.cc: fixed a bad bug in atomic_int_set() and 
+	atomic_pointer_set() which caused atomic values to temporarily be 0.
+
+	* birnet/birnetcdefs.h: provide memory barrier implementations based on atomic ops.
+
+	* birnet/Makefile.am: define BIRNET_MEMORY_BARRIER_NEEDED in birnetconfig.h.
+
+	* configure.inc: provide BIRNET_MEMORY_BARRIER_NEEDED=[01] based on 
+	glib's G_ATOMIC_OP_MEMORY_BARRIER_NEEDED.
+
+Sun Jan 28 19:31:12 2007  Tim Janik  <timj@gtk.org>
+
+	* fixed various compiler warnings.
+
+Sun Jan 28 19:05:51 2007  Tim Janik  <timj@gtk.org>
+
+	* birnetthread.hh: provide read and write memory barriers:
+	Atomic::read_barrier(), Atomic::write_barrier().
+	Atomic::RingBuffer: prevent class copies, fixed destructor, use
+	std::copy() for fast memory copies and added missing barriers;
+	fixes suggested by Stefan Westerfeld.
+
+	* tests/threads.cc: fixed contention handling in ring buffer tests.
+
+Thu Jan 25 02:43:28 2007  Tim Janik  <timj@gtk.org>
+
+	* tests/threads.cc: give up CPU if ring buffer reader/writer
+	are busy spinning. this speeds up tests on single-CPU systems
+	significantly.
+
+Thu Jan 25 02:03:37 2007  Tim Janik  <timj@gtk.org>
+
+	* birnetthread.[hc]*: sink & ref threads around run() to keep the Thread
+	structure alive. added Thread::Self::yield().
+	added Atomic::RingBuffer<>, a simple 1-reader/1-writer ring bufferthat
+	does atomic reads/writes without needing mutexes.
+
+	* tests/threads.cc: added atomic ring buffer tests.
+	test_deletable_destruction(): shutup old debug output.
+	main(): always run quick tests.
+
 Sat Jan 20 17:41:06 2007  Tim Janik  <timj@gtk.org>
 
 	* birnetthread.hh: fixed volatile pointer attribute to apply to the
@@ -14,7 +66,6 @@ Fri Jan 19 01:48:22 2007  Tim Janik  <timj@gtk.org>
 	* birnetutils.hh, birnetutils.cc: call monitoring_deletable()
 	when deletion hooks are added to deletables, renamed
 	dismiss_deletable() method.
-
 
 	* birnetsignalslot.hh: adapted DeletionHook methods.
 

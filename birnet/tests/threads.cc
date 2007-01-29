@@ -497,8 +497,9 @@ test_auto_locker_cxx()
 class HeapLocker {
   // like PtrAutoLocker but allocates on the heap
   struct Lockable {
-    virtual void lock() = 0;
-    virtual void unlock() = 0;
+    virtual void lock     () = 0;
+    virtual void unlock   () = 0;
+    virtual     ~Lockable () {}
   };
   template<class L>
   struct Wrapper : public virtual Lockable {
@@ -584,6 +585,7 @@ class GenericAutoLocker {
   struct Locker {
     virtual void lock   () const = 0;
     virtual void unlock () const = 0;
+    virtual     ~Locker () {}
   };
   template<class Lockable>
   struct LockerImpl : public Locker {
@@ -629,6 +631,7 @@ class PtrAutoLocker {
   struct Locker {
     virtual void lock   () = 0;
     virtual void unlock () = 0;
+    virtual     ~Locker () {}
   };
   template<class Lockable>
   struct LockerImpl : public Locker {
@@ -850,6 +853,178 @@ test_thread_atomic_cxx (void)
   TDONE ();
 }
 
+/* --- thread_yield --- */
+static inline void
+handle_contention ()
+{
+  /* we're waiting for our contention counterpart if we got here:
+   * - sched_yield(3posix) will immediately give up the CPU and let another
+   *   task run. but if the contention counterpart is running on another
+   *   CPU this will lead to scheduler trashing on our CPU. and if other
+   *   bacground tasks are running, they could get all our CPU time,
+   *   because sched_yield() effectively discards the current time slice.
+   * - busy spinning is useful if the contention counterpart runs on a
+   *   different CPU, as long as the loop doesn't involve syncronization
+   *   primitives which cause IO bus trashing ("lock" prefix in x86 asm).
+   * - usleep(3posix) is a way to give up the CPU without discarding our
+   *   time slices and avoids scheduler or bus trashing. allthough it is
+   *   not the perfect or optimum syncronization/timing primitive, it
+   *   avoids most ill effects and still allows for a sufficient number
+   *   of task switches.
+   */
+  usleep (500); // 1usec is the minimum value to cause an effect
+}
+
+/* --- ring buffer --- */
+typedef Atomic::RingBuffer<int> IntRingBuffer;
+class IntSequence {
+  uint32 accu;
+public:
+  explicit      IntSequence() : accu (123456789) {}
+  inline int32  gen_int    () { accu = 1664525 * accu + 1013904223; return accu; }
+};
+#define CONTENTION_PRINTF       if(1);else g_printerr
+struct RingBufferWriter : public virtual Birnet::Thread, IntSequence {
+  IntRingBuffer *ring;
+  uint           ring_buffer_test_length;
+  RingBufferWriter (IntRingBuffer *rb,
+                    uint           rbtl) :
+    Thread ("RingBufferWriter"),
+    ring (rb), ring_buffer_test_length (rbtl)
+  {}
+  virtual void
+  run ()
+  {
+    TPRINT ("%s start.", Thread::Self::name().c_str());
+    for (uint l = 0; l < ring_buffer_test_length;)
+      {
+        uint k, n = g_random_int() % MIN (ring_buffer_test_length - l + 1, 65536 * 2);
+        int buffer[n], *b = buffer;
+        for (uint i = 0; i < n; i++)
+          b[i] = gen_int();
+        uint j = n;
+        while (j)
+          {
+            k = ring->write (j, b);
+            TCHECK (k <= j);
+            j -= k;
+            b += k;
+            if (!k)     // waiting for reader thread
+              handle_contention();
+            CONTENTION_PRINTF (k ? "*" : "/");
+          }
+        if (l / 499999 != (l + n) / 499999)
+          TICK();
+        l += n;
+      }
+    TPRINT ("%s done.", Thread::Self::name().c_str());
+  }
+};
+struct RingBufferReader : public virtual Birnet::Thread, IntSequence {
+  IntRingBuffer *ring;
+  uint           ring_buffer_test_length;
+  RingBufferReader (IntRingBuffer *rb,
+                    uint           rbtl) :
+    Thread ("RingBufferReader"),
+    ring (rb), ring_buffer_test_length (rbtl)
+  {}
+  virtual void
+  run ()
+  {
+    TPRINT ("%s start.", Thread::Self::name().c_str());
+    for (uint l = 0; l < ring_buffer_test_length;)
+      {
+        uint k, n = ring->n_readable();
+        n = lrand48() % MIN (n + 1, 65536 * 2);
+        int buffer[n], *b = buffer;
+        if (rand() & 1)
+          {
+            k = ring->read (n, b, false);
+            TCHECK (n == k);
+            if (k)
+              CONTENTION_PRINTF ("+");
+          }
+        else
+          {
+            k = ring->read (n, b, true);
+            TCHECK (k <= n);
+            if (!k)         // waiting for writer thread
+              handle_contention();
+            CONTENTION_PRINTF (k ? "+" : "\\");
+          }
+        for (uint i = 0; i < k; i++)
+          TCHECK (b[i] == gen_int());
+        if (l / 499999 != (l + k) / 499999)
+          TACK();
+        l += k;
+      }
+    TPRINT ("%s done.", Thread::Self::name().c_str());
+  }
+};
+
+static void
+test_ring_buffer ()
+{
+  static const gchar *testtext = "Ring Buffer test Text (47\xff)";
+  uint n, ttl = strlen (testtext);
+  TSTART ("RingBuffer");
+  Atomic::RingBuffer<char> rb1 (ttl);
+  TASSERT (rb1.n_writable() == ttl);
+  n = rb1.write (ttl, testtext);
+  TASSERT (n == ttl);
+  TASSERT (rb1.n_writable() == 0);
+  TASSERT (rb1.n_readable() == ttl);
+  char buffer[8192];
+  n = rb1.read (8192, buffer);
+  TASSERT (n == ttl);
+  TASSERT (rb1.n_readable() == 0);
+  TASSERT (rb1.n_writable() == ttl);
+  TASSERT (strncmp (buffer, testtext, n) == 0);
+  TDONE();
+
+  /* check lower end ring buffer sizes (high contention test) */
+  for (uint step = 1; step < 8; step++)
+    {
+      uint ring_buffer_test_length = 17 * step + (rand() % 19);
+      TSTART ("AsyncRingBuffer-%d-%d", step, ring_buffer_test_length);
+      IntRingBuffer irb (step);
+      RingBufferReader *rbr = new RingBufferReader (&irb, ring_buffer_test_length);
+      ref_sink (rbr);
+      RingBufferWriter *rbw = new RingBufferWriter (&irb, ring_buffer_test_length);
+      ref_sink (rbw);
+      TASSERT (rbr && rbw);
+      rbr->start();
+      rbw->start();
+      rbw->wait_for_exit();
+      rbr->wait_for_exit();
+      TASSERT (rbr && rbw);
+      unref (rbr);
+      unref (rbw);
+      TDONE();
+    }
+
+  /* check big ring buffer sizes */
+  if (true)
+    {
+      TSTART ("AsyncRingBuffer-big");
+      uint ring_buffer_test_length = 999999 * (init_settings().test_quick ? 1 : 20);
+      IntRingBuffer irb (16384 + (lrand48() % 8192));
+      RingBufferReader *rbr = new RingBufferReader (&irb, ring_buffer_test_length);
+      ref_sink (rbr);
+      RingBufferWriter *rbw = new RingBufferWriter (&irb, ring_buffer_test_length);
+      ref_sink (rbw);
+      TASSERT (rbr && rbw);
+      rbr->start();
+      rbw->start();
+      rbw->wait_for_exit();
+      rbr->wait_for_exit();
+      TASSERT (rbr && rbw);
+      unref (rbr);
+      unref (rbw);
+      TDONE();
+    }
+}
+
 /* --- late deletable destruction --- */
 static bool deletable_destructor = false;
 struct MyDeletable : public virtual Deletable {
@@ -902,7 +1077,7 @@ test_deletable_destruction ()
     MyDeletable test_deletable;
     TICK();
     MyDeletableHook dhook1;
-    g_printerr ("TestHook=%p\n", (Deletable::DeletionHook*) &dhook1);
+    // g_printerr ("TestHook=%p\n", (Deletable::DeletionHook*) &dhook1);
     dhook1.deletable_add_hook (&test_deletable);
     TICK();
     dhook1.deletable_remove_hook (&test_deletable);
@@ -963,15 +1138,13 @@ main (int   argc,
 
   birnet_init_test (&argc, &argv);
 
-  if (init_settings().test_quick)
-    {
-      test_threads();
-      test_atomic();
-      test_thread_cxx();
-      test_thread_atomic_cxx();
-      test_auto_locker_cxx();
-      test_deletable_destruction();
-    }
+  test_threads();
+  test_atomic();
+  test_thread_cxx();
+  test_thread_atomic_cxx();
+  test_auto_locker_cxx();
+  test_deletable_destruction();
+  test_ring_buffer(); 
   if (init_settings().test_perf)
     bench_auto_locker_cxx();
   
