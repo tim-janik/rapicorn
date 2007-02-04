@@ -1,3 +1,34 @@
+Sun Feb  4 17:08:31 2007  Tim Janik  <timj@gtk.org>
+
+	* ChangeLog: updated .gitignore files.
+
+Sun Feb  4 17:00:38 2007  Tim Janik  <timj@gtk.org>
+
+	* updated all licenses to GNU Lesser General Public License version 2.1.
+
+Fri Feb  2 00:54:32 2007  Tim Janik  <timj@gtk.org>
+
+	* birnetdebugtools.cc: don't write trailing 0s in debug stream, 
+	slightly reduced stack requirements, 4000 chars are hopefully 
+	enough for async debugging messages.
+
+Thu Feb  1 23:24:16 2007  Tim Janik  <timj@gtk.org>
+
+	* birnetdebugtools.hh: make printf_valist() public to allow wrapper
+	implementations.
+
+	* birnetdebugtools.cc: auto append newlines to printed lines.
+
+Thu Feb  1 20:27:09 2007  Tim Janik  <timj@gtk.org>
+
+	* birnetdebugtools.hh, birnetdebugtools.cc: added DebugChannel, a 
+	reference counted interface which allows sending of debug messages.
+	if a debug channel is created with new_from_file_async(), printing
+	a message happens in constant time in the calling thread, and the
+	debugging output is written into a file by a background thread.
+
+	* tests/threads.cc: added simply DebugChannel test.
+
 Mon Jan 29 23:29:27 2007  Tim Janik  <timj@gtk.org>
 
 	* examples/mkhost.sh: generate Makefile.decl with slowcheck: and perf:

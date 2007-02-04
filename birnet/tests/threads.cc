@@ -4,17 +4,15 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
- * Boston, MA 02111-1307, USA.
+ * A copy of the GNU Lesser General Public License should ship along
+ * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 //#define TEST_VERBOSE
 #include <birnet/birnettests.h>
@@ -1025,6 +1023,39 @@ test_ring_buffer ()
     }
 }
 
+/* --- --- */
+static void
+test_debug_channel ()
+{
+  TSTART ("DebugChannelFileAsync (countdown)");
+  DebugChannel *dbg = DebugChannel::new_from_file_async ("/dev/stderr");
+  ref_sink (dbg);
+  TASSERT (dbg);
+  dbg->printf ("9");
+  usleep (100 * 1000);
+  dbg->printf ("8");
+  usleep (110 * 1000);
+  dbg->printf ("7");
+  usleep (120 * 1000);
+  dbg->printf ("6");
+  usleep (130 * 1000);
+  dbg->printf ("5");
+  usleep (140 * 1000);
+  dbg->printf ("4");
+  usleep (150 * 1000);
+  dbg->printf ("3");
+  usleep (160 * 1000);
+  dbg->printf ("2");
+  usleep (170 * 1000);
+  dbg->printf ("1");
+  usleep (180 * 1000);
+  dbg->printf ("0");
+  usleep (190 * 1000);
+  unref (dbg);
+  TICK();
+  TDONE();
+}
+
 /* --- late deletable destruction --- */
 static bool deletable_destructor = false;
 struct MyDeletable : public virtual Deletable {
@@ -1145,6 +1176,7 @@ main (int   argc,
   test_auto_locker_cxx();
   test_deletable_destruction();
   test_ring_buffer(); 
+  test_debug_channel(); 
   if (init_settings().test_perf)
     bench_auto_locker_cxx();
   
