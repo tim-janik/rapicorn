@@ -1,5 +1,5 @@
 FIXME:
-- DPI / font selection: http://primates.ximian.com/~federico/news-2007-01.html#31
+- add command() signal to connect to
 - non-working .interface<SomeType&>() should provide a better error message than throwing a NullReference exception
 - check that all property changes cause ::changed()
 - turn item->m_parent into a Container*
@@ -9,6 +9,7 @@ FIXME:
 - rename left-padding,etc. Alignment properties because they overlap with Table's child proeprty names
   or rename child properties: left-margin, right-spacing, etc...
 MISC:
+- DPI / font selection: http://primates.ximian.com/~federico/news-2007-01.html#31
 - supply overlay dialogs; here, the parent dialog becomes insensitive and the
   overlay dialog reuses the viewport of its parent dialog. it's modal for the parent
   dialog and releases the parent dialog for further operation once closed/answered.
