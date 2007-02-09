@@ -61,6 +61,7 @@ public:
   class InterfaceMatch {
     BIRNET_PRIVATE_CLASS_COPY (InterfaceMatch);
   public:
+    virtual            ~InterfaceMatch  () {}
     explicit            InterfaceMatch  (const String &ident) : m_ident (ident), m_match_found (false) {}
     bool                done            () { return m_match_found; }
     virtual  bool       match           (Convertible  *object,

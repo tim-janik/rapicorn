@@ -92,6 +92,7 @@ public:
   };
   /* --- frontend API --- */
   struct EventReceiver {
+    virtual            ~EventReceiver           () {}
     virtual void        enqueue_async           (Event              *event) = 0;
   };
   /* --- public API --- */

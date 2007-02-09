@@ -25,6 +25,7 @@ class Appearance;
 
 class ColorScheme {
 public:
+  virtual      ~ColorScheme     () {}
   /* base colors */
   virtual Color make_color      (ColorType ct) const = 0;
   Color         foreground      () const	{ return make_color (COLOR_FOREGROUND); }

@@ -117,6 +117,7 @@ class MainLoopPool {
 public:
   class Singleton {
   public:
+    virtual            ~Singleton       () {}
     virtual void        add_loop        (MainLoop *mloop) = 0;
     virtual void        set_n_threads   (uint      n) = 0;
     virtual uint        get_n_threads   (void) = 0;

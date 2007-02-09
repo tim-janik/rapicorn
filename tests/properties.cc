@@ -57,6 +57,7 @@ class PropertyHost {
   FrameType     const_enum_prop () const        	{ return FRAME_NONE; }
   void          const_enum_prop (FrameType ft)  	{}
 public:
+  virtual      ~PropertyHost () {}
   virtual const PropertyList&
   list_properties()
   {

@@ -28,6 +28,7 @@ struct EnumClass {
     const char       *const value_name;
     const uint              name_length;
   };
+  virtual            ~EnumClass         () {}
   virtual void        list_values       (uint &n_values, const Value* &values) const = 0;
   virtual const char* enum_name         () const = 0;
   virtual bool        flag_combinable   () const = 0;
