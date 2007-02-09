@@ -1,3 +1,7 @@
+Fri Feb  9 18:54:36 2007  Tim Janik  <timj@gtk.org>
+
+	* po/Makefile.intltool: upgraded to Makefile.in.in from intltool-0.35.0.
+
 Fri Feb  9 18:42:59 2007  Tim Janik  <timj@gtk.org>
 
 	* added virtual destructor to all classes with virtual methods.
