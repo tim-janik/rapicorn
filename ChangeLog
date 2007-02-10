@@ -1,3 +1,7 @@
+Sat Feb 10 18:04:00 2007  Tim Janik  <timj@gtk.org>
+
+	* private.hh: got rid of unused macro PRIVATE_CLASS_COPY().
+
 Fri Feb  9 18:54:36 2007  Tim Janik  <timj@gtk.org>
 
 	* po/Makefile.intltool: upgraded to Makefile.in.in from intltool-0.35.0.

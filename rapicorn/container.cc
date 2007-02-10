@@ -766,7 +766,7 @@ Container::void_packer ()
 {
   class PackerSingleton : public ChildPacker {
     PackerSingleton() { ref_sink(); }
-    PRIVATE_CLASS_COPY (PackerSingleton);
+    BIRNET_PRIVATE_CLASS_COPY (PackerSingleton);
   public:
     static PackerSingleton*
     dummy_packer()

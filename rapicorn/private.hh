@@ -59,8 +59,6 @@ namespace Rapicorn {
 #define MakeNamedCommand                RAPICORN_MakeNamedCommand
 #define MakeSimpleCommand               RAPICORN_MakeSimpleCommand
 
-#define PRIVATE_CLASS_COPY(C)           BIRNET_PRIVATE_CLASS_COPY(C)
-
 } // Rapicorn
 
 #endif  /* __RAPICORN_PRIVATE_HH__ */
