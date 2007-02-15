@@ -21,41 +21,7 @@
 namespace {
 using namespace Rapicorn;
 
-static void
-color_test()
-{
-  /* assert that set_hsv(get_hsv(v))==v for all v */
-  TSTART ("HSV-convert");
-  const int step = init_settings().test_slow ? 1 : 10;
-  for (uint r = 0; r < 256; r += step)
-    {
-      for (uint g = 0; g < 256; g += step)
-        for (uint b = 0; b < 256; b += step)
-          {
-            Color c (r, g, b, 0xff);
-            double hue, saturation, value;
-            c.get_hsv (&hue, &saturation, &value);
-            if (r > g && r > b)
-              BIRNET_ASSERT (hue < 60 || hue > 300);
-            else if (g > r && g > b)
-              BIRNET_ASSERT (hue > 60 || hue < 180);
-            else if (b > g && b > r)
-              BIRNET_ASSERT (hue > 180 || hue < 300);
-            Color d (0xff75c3a9);
-            d.set_hsv (hue, saturation, value);
-            if (c.red()   != d.red() ||
-                c.green() != d.green() ||
-                c.blue()  != d.blue() ||
-                c.alpha() != d.alpha())
-              error ("color difference after hsv: %s != %s (hue=%f saturation=%f value=%f)\n",
-                     c.string().c_str(), d.string().c_str(), hue, saturation, value);
-          }
-      if (r % 5 == 0)
-        TICK();
-    }
-  TDONE();
-}
-
+/* --- affine --- */
 static void
 affine_test()
 {
@@ -71,8 +37,9 @@ affine_test()
   TDONE();
 }
 
+/* --- double<->int --- */
 static void
-math_test()
+double_int_test()
 {
   TSTART ("dtoi32");
   TASSERT (_dtoi32_generic (0.0) == 0);
@@ -212,13 +179,50 @@ math_test()
   TDONE();
 }
 
+/* --- hsv --- */
+static void
+color_test()
+{
+  /* assert that set_hsv(get_hsv(v))==v for all v */
+  TSTART ("HSV-convert");
+  const int step = init_settings().test_slow ? 1 : 10;
+  for (uint r = 0; r < 256; r += step)
+    {
+      for (uint g = 0; g < 256; g += step)
+        for (uint b = 0; b < 256; b += step)
+          {
+            Color c (r, g, b, 0xff);
+            double hue, saturation, value;
+            c.get_hsv (&hue, &saturation, &value);
+            if (r > g && r > b)
+              BIRNET_ASSERT (hue < 60 || hue > 300);
+            else if (g > r && g > b)
+              BIRNET_ASSERT (hue > 60 || hue < 180);
+            else if (b > g && b > r)
+              BIRNET_ASSERT (hue > 180 || hue < 300);
+            Color d (0xff75c3a9);
+            d.set_hsv (hue, saturation, value);
+            if (c.red()   != d.red() ||
+                c.green() != d.green() ||
+                c.blue()  != d.blue() ||
+                c.alpha() != d.alpha())
+              error ("color difference after hsv: %s != %s (hue=%f saturation=%f value=%f)\n",
+                     c.string().c_str(), d.string().c_str(), hue, saturation, value);
+          }
+      if (r % 5 == 0)
+        TICK();
+    }
+  TDONE();
+}
+
+/* --- main --- */
 extern "C" int
 main (int   argc,
       char *argv[])
 {
   birnet_init_test (&argc, &argv);
 
-  math_test();
+  double_int_test();
   affine_test();
   color_test();
   return 0;
