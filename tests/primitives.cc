@@ -17,9 +17,317 @@
 //#define TEST_VERBOSE
 #include <birnet/birnettests.h>
 #include <rapicorn/rapicorn.hh>
+#include <errno.h>
 
 namespace {
 using namespace Rapicorn;
+
+inline uint32
+quick_rand32 (void)
+{
+  static uint32 accu = 2147483563;
+  accu = 1664525 * accu + 1013904223;
+  return accu;
+}
+
+/* --- basic loop tests --- */
+static bool test_callback_touched = false;
+static void
+test_callback()
+{
+  test_callback_touched = true;
+}
+
+static bool
+keep_alive_callback()
+{
+  return true;
+}
+
+static bool
+pipe_writer (PollFD &pfd)
+{
+  uint8 buffer[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 };
+  int err;
+  do
+    err = write (pfd.fd, buffer, sizeof (buffer));
+  while (err < 0 && (errno == EINTR || errno == EAGAIN));
+  BIRNET_ASSERT (err == sizeof (buffer));
+  return true;
+}
+
+static uint pipe_reader_seen = 0;
+
+static bool
+pipe_reader (PollFD &pfd)
+{
+  int counter = 1;
+  while (counter <= 17)
+    {
+      uint8 data;
+      int err;
+      do
+        err = read (pfd.fd, &data, 1);
+      while (err < 0 && (errno == EINTR || errno == EAGAIN));
+      BIRNET_ASSERT (err == 1);
+      BIRNET_ASSERT (counter == data);
+      counter++;
+    }
+  pipe_reader_seen++;
+  if (pipe_reader_seen % 997 == 0)
+    TICK();
+  return true;
+}
+
+static void
+basic_loop_test()
+{
+  const uint max_runs = 9999;
+  TSTART ("loop");
+  /* basal loop tests */
+  MainLoop *loop = MainLoop::create();
+  TASSERT (loop);
+  ref_sink (loop);
+  while (loop->pending())
+    loop->iteration (false);
+  /* oneshot test */
+  TASSERT (test_callback_touched == false);
+  uint tcid = loop->exec_now (slot (test_callback));
+  TASSERT (test_callback_touched == false);
+  while (loop->pending())
+    loop->iteration (false);
+  TASSERT (test_callback_touched == true);
+  bool tremove = loop->try_remove (tcid);
+  TASSERT (tremove == false);
+  test_callback_touched = false;
+  /* keep-alive test */
+  tcid = loop->exec_now (slot (keep_alive_callback));
+  for (uint counter = 0; counter < max_runs; counter++)
+    if (loop->pending())
+      loop->iteration (false);
+    else
+      break;
+  tremove = loop->try_remove (tcid);
+  TASSERT (tremove == true);
+  while (loop->pending())
+    loop->iteration (false);
+  tremove = loop->try_remove (tcid);
+  TASSERT (tremove == false);
+  /* loop + pipe */
+  int pipe_fds[2];
+  int err = pipe (pipe_fds);
+  TASSERT (err == 0);
+  while (loop->pending())
+    loop->iteration (false);
+  loop->exec_io_handler (slot (pipe_reader), pipe_fds[0], "r");
+  loop->exec_io_handler (slot (pipe_writer), pipe_fds[1], "w");
+  TASSERT (pipe_reader_seen == 0);
+  while (pipe_reader_seen < 49999)
+    {
+      if (loop->pending())
+        loop->iteration (false);
+      else
+        loop->iteration (true);
+    }
+  TASSERT_CMP (pipe_reader_seen, ==, 49999);
+  err = close (pipe_fds[1]);
+  TASSERT (err == 0);
+  while (loop->pending())
+    loop->iteration (false);
+  err = close (pipe_fds[0]);
+  TASSERT (err == -1); /* should have been auto-closed by PollFDSource */
+  unref (loop);
+  TDONE ();
+}
+
+/* --- loop state tests --- */
+static uint         check_source_counter = 0;
+static uint         check_source_destroyed_counter = 0;
+
+class CheckSource : public virtual MainLoop::Source {
+  enum {
+    INITIALIZED = 1,
+    PREPARED,
+    CHECKED,
+    DISPATCHED,
+    DESTROYED,
+    FINALIZED,
+    DESTRUCTED
+  };
+  uint          m_state;
+public:
+  CheckSource () :
+    m_state (0)
+  {
+    BIRNET_ASSERT (m_state == 0);
+    m_state = INITIALIZED;
+    check_source_counter++;
+  }
+  virtual bool
+  prepare (uint64 current_time_usecs,
+           int64 *timeout_usecs_p)
+  {
+    BIRNET_ASSERT (m_state == INITIALIZED ||
+                   m_state == PREPARED ||
+                   m_state == CHECKED ||
+                   m_state == DISPATCHED);
+    m_state = PREPARED;
+    if (quick_rand32() & 0xfeedf00d)
+      *timeout_usecs_p = quick_rand32() % 5000;
+    return quick_rand32() & 0x00400200a;
+  }
+  virtual bool
+  check (uint64 current_time_usecs)
+  {
+    BIRNET_ASSERT (m_state == INITIALIZED ||
+                   m_state == PREPARED);
+    m_state = CHECKED;
+    return quick_rand32() & 0xc0ffee;
+  }
+  virtual bool
+  dispatch ()
+  {
+    BIRNET_ASSERT (m_state == PREPARED ||
+                   m_state == CHECKED);
+    m_state = DISPATCHED;
+    return (quick_rand32() % 131) != 0;
+  }
+  virtual void
+  destroy ()
+  {
+    BIRNET_ASSERT (m_state == INITIALIZED ||
+                   m_state == PREPARED ||
+                   m_state == CHECKED ||
+                   m_state == DISPATCHED);
+    m_state = DESTROYED;
+    check_source_destroyed_counter++;
+  }
+  virtual void
+  finalize ()
+  {
+    BIRNET_ASSERT (m_state == DESTROYED);
+    // BIRNET_ASSERT (m_state == INITIALIZED || m_state == DESTROYED);
+    MainLoop::Source::finalize();
+    m_state = FINALIZED;
+  }
+  virtual
+  ~CheckSource ()
+  {
+    BIRNET_ASSERT (m_state == FINALIZED);
+    m_state = DESTRUCTED;
+    check_source_counter--;
+  }
+};
+
+static CheckSource *check_sources[997] = { NULL, };
+
+static void
+more_loop_test2()
+{
+  const uint max_runs = 9999;
+  TSTART ("loop-states");
+  MainLoop *loop = MainLoop::create();
+  TASSERT (loop);
+  ref_sink (loop);
+  while (loop->pending())
+    loop->iteration (false);
+  /* source state checks */
+  TASSERT (check_source_counter == 0);
+  const uint nsrc = quick_rand32() % (1 + ARRAY_SIZE (check_sources));
+  for (uint i = 0; i < nsrc; i++)
+    {
+      check_sources[i] = new CheckSource();
+      ref (check_sources[i]);
+      loop->add_source (check_sources[i], quick_rand32());
+    }
+  TASSERT (check_source_counter == nsrc);
+  TASSERT (check_source_destroyed_counter == 0);
+  for (uint counter = 0; counter < max_runs; counter++)
+    {
+      if (loop->pending())
+        loop->iteration (false);
+      else
+        break;
+      if (counter % 347 == 0)
+        TICK();
+    }
+  TASSERT (check_source_counter == nsrc);
+  loop->quit();
+  TASSERT_CMP (check_source_destroyed_counter, ==, nsrc); /* checks execution of enough destroy() handlers */
+  TASSERT (check_source_counter == nsrc);
+  for (uint i = 0; i < nsrc; i++)
+    unref (check_sources[i]);
+  TASSERT (check_source_counter == 0);
+  unref (loop);
+  TDONE ();
+}
+
+/* --- async loop tests --- */
+static bool quit_source_destroyed = false;
+class QuitSource : public virtual MainLoop::Source {
+  uint      m_counter;
+  MainLoop *m_loop;
+public:
+  QuitSource (uint      countdown,
+              MainLoop *loop) :
+    m_counter (countdown),
+    m_loop (loop)
+  {}
+  virtual bool
+  prepare (uint64 current_time_usecs,
+           int64 *timeout_usecs_p)
+  {
+    return m_counter > 0;
+  }
+  virtual bool
+  check (uint64 current_time_usecs)
+  {
+    return m_counter > 0;
+  }
+  virtual bool
+  dispatch ()
+  {
+    if (m_counter)
+      {
+        m_counter--;
+        if (!m_counter && m_loop)
+          m_loop->quit();
+      }
+    else
+      ASSERT_NOT_REACHED();
+    return true;
+  }
+  virtual void
+  destroy ()
+  {}
+  virtual void
+  finalize ()
+  {}
+  virtual
+  ~QuitSource ()
+  {
+    quit_source_destroyed = true;
+  }
+};
+
+static void
+async_loop_test()
+{
+  const uint max_runs = 9999;
+  TSTART ("async-loop");
+  MainLoop *loop = MainLoop::create();
+  TASSERT (loop);
+  ref_sink (loop);
+  loop->start();
+  MainLoop::Source *source = new QuitSource (max_runs, loop);
+  TASSERT (quit_source_destroyed == false);
+  loop->add_source (source);
+  while (!quit_source_destroyed)
+    Thread::Self::sleep (25 * 1000);
+  TASSERT (quit_source_destroyed == true);
+  unref (loop);
+  TDONE ();
+}
 
 /* --- affine --- */
 static void
@@ -222,8 +530,11 @@ main (int   argc,
 {
   birnet_init_test (&argc, &argv);
 
-  double_int_test();
+  basic_loop_test();
+  more_loop_test2();
+  async_loop_test();
   affine_test();
+  double_int_test();
   color_test();
   return 0;
 }

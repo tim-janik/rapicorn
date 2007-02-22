@@ -38,7 +38,7 @@ struct Gadget {
   VariableMap     custom_arguments;
   vector<Gadget*> children;
   void            add_child (Gadget *child_gadget) { children.push_back (child_gadget); }
-  String          location  () const { return m_input_name + String (m_line_number > G_MININT ? ":" + string_from_int (m_line_number) : ""); }
+  String          location  () const { return m_input_name + String (m_line_number > INT_MIN ? ":" + string_from_int (m_line_number) : ""); }
   explicit        Gadget    (const String      &cident,
                              const String      &cancestor,
                              const String      &input_name,
@@ -667,7 +667,7 @@ FactorySingleton::register_item_factory (const ItemTypeFactory &itfactory)
   FactoryDomain *fdomain = lookup_domain (domain_name);
   if (!fdomain)
     fdomain = add_domain (domain_name, domain_name);
-  Gadget *gadget = new Gadget (base + 1, String ("\177") + itfactory.qualified_type, "<builtin>", G_MININT);
+  Gadget *gadget = new Gadget (base + 1, String ("\177") + itfactory.qualified_type, "<builtin>", INT_MIN);
   fdomain->definitions[gadget->ident] = gadget;
   types.push_back (&itfactory);
 }
@@ -827,7 +827,7 @@ initialize_standard_gadgets_lazily (void)
       uint8 *data = zintern_decompress (RAPICORN_SIZE, RAPICORN_DATA, sizeof (RAPICORN_DATA) / sizeof (RAPICORN_DATA[0]));
       const char *domain = "Rapicorn";
       FactorySingleton::singleton->parse_gadget_data (RAPICORN_SIZE, (const char*) data, domain, domain);
-      g_free (data);
+      zintern_free (data);
     }
 }
 

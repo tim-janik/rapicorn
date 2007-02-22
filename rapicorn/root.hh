@@ -38,7 +38,7 @@ protected:
   virtual bool  dispatch_event          (const Event  &event) = 0;
   /* loop source (FIXME) */
   virtual bool  prepare                 (uint64 current_time_usecs,
-                                         int   *timeout_msecs_p) = 0;
+                                         int64 *timeout_usecs_p) = 0;
   explicit      Root                    ();
 public://FIXME: protected:
   virtual bool  check                   (uint64 current_time_usecs) = 0;

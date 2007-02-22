@@ -91,15 +91,15 @@ main (int   argc,
   
   if (1)
     {
-      MainLoop *tloop = glib_loop_create();
+      MainLoop *tloop = MainLoop::create();
       tloop->exec_timer (250, 250, slot (timer));
-      MainLoopPool::add_loop (tloop);
+      tloop->start();
     }
   if (1)
     {
-      MainLoop *tloop = glib_loop_create();
+      MainLoop *tloop = MainLoop::create();
       tloop->exec_timer (125, 125, slot (timer2));
-      MainLoopPool::add_loop (tloop);
+      tloop->start();
     }
   
   Thread::Self::exit();

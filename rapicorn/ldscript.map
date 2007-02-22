@@ -1,8 +1,8 @@
 {
   global:
     extern "C++" {
-      Birnet::*;   vtable*Birnet::*;   typeinfo*Birnet::*;
-      Rapicorn::*; vtable*Rapicorn::*; typeinfo*Rapicorn::*;
+      Birnet::*;   vtable*Birnet::*;   typeinfo*Birnet::*;   virtual*Birnet::*;
+      Rapicorn::*; vtable*Rapicorn::*; typeinfo*Rapicorn::*; virtual*Rapicorn::*;
     };
     birnet_*;
   local: *;

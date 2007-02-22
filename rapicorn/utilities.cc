@@ -15,7 +15,6 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "utilities.hh"
-#include "loop.hh"
 
 namespace Rapicorn {
 
@@ -32,7 +31,6 @@ rapicorn_init (int        *argcp,
   bind_textdomain_codeset (rapicorn_i18n_domain, "UTF-8");
   /* initialize sub components */
   birnet_init (argcp, argvp, app_name);
-  MainLoopPool::rapicorn_init();
 }
 
 const char*

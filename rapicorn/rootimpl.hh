@@ -77,7 +77,7 @@ private:
   virtual void          run_async                               (void);
   virtual void          stop_async                              (void);
   virtual bool          prepare                                 (uint64                  current_time_usecs,
-                                                                 int                    *timeout_msecs_p);
+                                                                 int64                  *timeout_usecs_p);
   virtual bool          check                                   (uint64                  current_time_usecs);
   virtual bool          dispatch                                ();
   virtual MainLoop*     get_loop                                ();
@@ -131,7 +131,7 @@ private:
     explicit            RootSource  (RootImpl &_root) : root (_root) { AutoLocker locker (root.m_omutex); root.m_source = this; }
     virtual             ~RootSource ()                               { AutoLocker locker (root.m_omutex); root.m_source = NULL; }
     virtual bool        prepare     (uint64 current_time_usecs,
-                                     int   *timeout_msecs_p)     { AutoLocker locker (root.m_omutex); return root.prepare (current_time_usecs, timeout_msecs_p); }
+                                     int64 *timeout_usecs_p)     { AutoLocker locker (root.m_omutex); return root.prepare (current_time_usecs, timeout_usecs_p); }
     virtual bool        check       (uint64 current_time_usecs)  { AutoLocker locker (root.m_omutex); return root.check (current_time_usecs); }
     virtual bool        dispatch    ()                           { AutoLocker locker (root.m_omutex); return root.dispatch(); }
   };

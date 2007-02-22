@@ -83,7 +83,9 @@ RootImpl::RootImpl() :
   {
     AutoLocker aelocker (m_async_mutex);
     BIRNET_ASSERT (m_async_loop == NULL);
-    m_async_loop = glib_loop_create();
+    m_async_loop = ref_sink (MainLoop::create());
+    if (!m_async_loop->start())
+      error ("failed to start MainLoop");
   }
   Appearance *appearance = Appearance::create_default();
   style (appearance->create_style ("normal"));
@@ -105,7 +107,7 @@ RootImpl::~RootImpl()
   if (old_loop)
     {
       old_loop->quit();
-      old_loop->unref();
+      unref (old_loop);
     }
   BIRNET_ASSERT (m_source == NULL); // should have been destroyed with loop
   if (m_viewport)
@@ -826,7 +828,7 @@ RootImpl::dispatch_event (const Event &event)
 
 bool
 RootImpl::prepare (uint64 current_time_usecs,
-                   int   *timeout_msecs_p)
+                   int64 *timeout_usecs_p)
 {
   AutoLocker locker (m_omutex);
   AutoLocker aelocker (m_async_mutex);
@@ -893,7 +895,7 @@ RootImpl::idle_show()
 void
 RootImpl::run_async (void)
 {
-  AutoLocker monitor (owned_mutex());
+  AutoLocker monitor (m_omutex);
   BIRNET_ASSERT (m_viewport == NULL);
   m_viewport = Viewport::create_viewport ("auto", WINDOW_TYPE_NORMAL, *this);
   BIRNET_ASSERT (m_source == NULL);
@@ -901,15 +903,14 @@ RootImpl::run_async (void)
   VoidSlot sl = slot (*this, &RootImpl::idle_show);
   AutoLocker aelocker (m_async_mutex);
   BIRNET_ASSERT (m_async_loop != NULL);
-  MainLoopPool::add_loop (m_async_loop);
+  m_async_loop->add_source (m_source, MainLoop::PRIORITY_NORMAL);
   m_async_loop->exec_now (sl);
-  m_async_loop->add_source (MainLoop::PRIORITY_NORMAL, m_source);
 }
 
 void
 RootImpl::stop_async (void)
 {
-  AutoLocker monitor (owned_mutex());
+  AutoLocker monitor (m_omutex);
   if (m_viewport)
     m_viewport->hide();
   MainLoop *tmp_loop;

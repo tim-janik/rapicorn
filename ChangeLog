@@ -1,3 +1,23 @@
+Thu Feb 22 01:44:12 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/loop.hh, rapicorn/loop.cc: complete genuine rewrite of the
+	main loop logic. loops can be executed asyncronously now which gets
+	rid of a global threadpool singleton. this removes the use and wrapping
+	of the glib main loop, which turned out to result in a much cleaner and
+	also simpler implementation. this removes global glib.h include from
+	rapicorn. introduced PollFD and PollFDSource.
+
+	* rapicorn/root.cc: use the new main loop, fixed loop reference counting.
+
+	* rapicorn/factory.cc: replaced glib-isms.
+
+	* rapicorn/ldscript.map: allow virtual* C++ symbols.
+
+	* tests/primitives.cc: added various main loop tests including source
+	state checks, io (pipe) source tests and an async loop test.
+
+	* examples/tour.cc: use the new main loop.
+
 Thu Feb 15 23:11:47 2007  Tim Janik  <timj@gtk.org>
 
 	* tests/primitives.cc: slight cleanups.

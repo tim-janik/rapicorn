@@ -296,8 +296,8 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     r.affine (affine);
     Rect rect = r.extents();
     Rect area = allocation();
-    g_printerr ("scroll-focus: area=%s child=%s\n", area.string().c_str(), rect.string().c_str());
 #if 0   // FIXME: broken
+    g_printerr ("scroll-focus: area=%s child=%s\n", area.string().c_str(), rect.string().c_str());
     double deltax = 0, deltay = 0;
     if (rect.upper_x() > area.upper_x() + deltax)
       deltax += rect.upper_x() - (area.upper_x() + deltax);

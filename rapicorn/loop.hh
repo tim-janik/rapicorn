@@ -1,5 +1,5 @@
 /* Rapicorn
- * Copyright (C) 2006 Tim Janik
+ * Copyright (C) 2006-2007 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,130 +17,293 @@
 #ifndef __RAPICORN_LOOP_HH__
 #define __RAPICORN_LOOP_HH__
 
-#include <glib.h> // FIXME: GPollFD
 #include <rapicorn/primitives.hh>
 
 namespace Rapicorn {
 
-class MainLoop : public virtual ReferenceCountImpl {
-public:
-  class Source {
-  public:
-    virtual      ~Source  ()                            {}
-    virtual bool prepare  (uint64 current_time_usecs,
-                           int   *timeout_msecs_p) = 0;
-    virtual bool check    (uint64 current_time_usecs) = 0;
-    virtual bool dispatch () = 0;
+struct PollFD // mirror struct pollfd for poll(3posix)
+{
+  int           fd;
+  uint16        events;
+  uint16        revents;
+  enum {
+    /* Event types that can be polled for, set in .events, updated in .revents */
+    IN          = BIRNET_SYSVAL_POLLIN,         /* RDNORM || RDBAND */
+    PRI         = BIRNET_SYSVAL_POLLPRI,        /* urgent data available */
+    OUT         = BIRNET_SYSVAL_POLLOUT,        /* writing data will not block */
+    RDNORM      = BIRNET_SYSVAL_POLLRDNORM,     /* reading data will not block */
+    RDBAND      = BIRNET_SYSVAL_POLLRDBAND,     /* reading priority data will not block */
+    WRNORM      = BIRNET_SYSVAL_POLLWRNORM,     /* writing data will not block */
+    WRBAND      = BIRNET_SYSVAL_POLLWRBAND,     /* writing priority data will not block */
+    /* Event types updated in .revents regardlessly */
+    ERR         = BIRNET_SYSVAL_POLLERR,        /* error condition */
+    HUP         = BIRNET_SYSVAL_POLLHUP,        /* file descriptor closed */
+    NVAL        = BIRNET_SYSVAL_POLLNVAL,       /* invalid PollFD */
   };
+};
+
+/* --- MainLoop --- */
+class MainLoop : public virtual ReferenceCountImpl {
+  class TimedSource;
+  class PollFDSource;
+  BIRNET_PRIVATE_CLASS_COPY (MainLoop);
 protected:
   explicit     MainLoop  () {}
-  virtual      ~MainLoop () {}
-  virtual bool pending   () = 0;
-  virtual bool iteration (bool     may_block = false) = 0;
-  virtual bool acquire   () = 0;
-  virtual bool prepare   (int     *priority,
-                          int     *timeout) = 0;
-  virtual bool query     (int      max_priority,
-                          int     *timeout,
-                          int      n_pfds,
-                          GPollFD *pfds) = 0;
-  virtual bool check     (int      max_priority,
-                          int      n_pfds,
-                          GPollFD *pfds) = 0;
-  virtual void dispatch  () = 0;
-  virtual void release   () = 0;
-  friend class MainLoopPoolThread;
-private:
-  class TimedSource : public virtual Source {
-    uint64     m_expiration_usecs;
-    uint       m_interval_msecs;
-    const bool m_oneshot;
-    bool       m_first_interval;
-    union {
-      Signals::Trampoline0<bool> *m_btrampoline;
-      Signals::Trampoline0<void> *m_vtrampoline;
-    };
-  protected:
-    virtual      ~TimedSource ();
-    virtual bool prepare      (uint64 current_time_usecs,
-                               int   *timeout_msecs_p);
-    virtual bool check        (uint64 current_time_usecs);
-    virtual bool dispatch     ();
-  public:
-    explicit     TimedSource (Signals::Trampoline0<bool> &bt,
-                              uint initial_interval_msecs = 0,
-                              uint repeat_interval_msecs = 0);
-    explicit     TimedSource (Signals::Trampoline0<void> &vt,
-                              uint initial_interval_msecs = 0,
-                              uint repeat_interval_msecs = 0);
-  };
+  virtual     ~MainLoop  ();
+  virtual bool iterate   (bool     may_block,
+                          bool     may_dispatch) = 0;
+  typedef Signals::Slot1<void,PollFD&> VPfdSlot;
+  typedef Signals::Slot1<bool,PollFD&> BPfdSlot;
 public:
-  static const  int PRIORITY_NOW        = -G_MAXINT / 2;                /* most important, used for immediate async execution */
-  static const  int PRIORITY_HIGH       = G_PRIORITY_HIGH - 10;         /* very important, used for io handlers */
-  static const  int PRIORITY_NEXT       = G_PRIORITY_HIGH - 5;          /* still very important, used for need-to-be-async operations */
-  static const  int PRIORITY_NOTIFY     = G_PRIORITY_DEFAULT - 1;       /* important, delivers async signals */
-  static const  int PRIORITY_NORMAL     = G_PRIORITY_DEFAULT;           /* normal importantance, interfaces to all layers */
-  static const  int PRIORITY_UPDATE     = G_PRIORITY_HIGH_IDLE + 5;     /* mildly important, used for GUI updates or user information */
-  static const  int PRIORITY_BACKGROUND = G_PRIORITY_LOW + 500;         /* unimportant, used when everything else done */
-  static uint64 get_current_time_usecs(); // FIXME: should move this to birnetutilsxx.hh
+  static const int PRIORITY_NOW        = -1073741824;   /* most important, used for immediate async execution (MAXINT/2) */
+  static const int PRIORITY_HIGH       = -100 - 10;     /* very important, used for io handlers (G*HIGH) */
+  static const int PRIORITY_NEXT       = -100 - 5;      /* still very important, used for need-to-be-async operations (G*HIGH) */
+  static const int PRIORITY_NOTIFY     =    0 - 1;      /* important, delivers async signals (G*DEFAULT) */
+  static const int PRIORITY_NORMAL     =    0;          /* normal importantance, interfaces to all layers (G*DEFAULT) */
+  static const int PRIORITY_UPDATE     = +100 + 5;      /* mildly important, used for GUI updates or user information (G*HIGH_IDLE) */
+  static const int PRIORITY_IDLE       = +200;          /* mildly important, used for GUI updates or user information (G*DEFAULT_IDLE) */
+  static const int PRIORITY_BACKGROUND = +300 + 500;    /* unimportant, used when everything else done (G*LOW) */
+  // FIXME: current_time should move to birnetutilsxx.hh
+  static uint64    get_current_time_usecs();
+  static MainLoop* create                ();
+  /* running */
+  bool          pending         ();
+  bool          iteration       (bool     may_block = true);
+  virtual bool  start           () = 0;                 /* start async main loop thread */
+  /* run state */
   virtual void  quit            (void) = 0;
   virtual void  wakeup          (void) = 0;
   virtual bool  running         (void) = 0;
-  virtual uint  add_source      (int             priority,
-                                 Source         *loop_source) = 0;
+  /* source handling */
+  class Source;
+  virtual uint  add_source      (Source         *loop_source,
+                                 int             priority = PRIORITY_IDLE) = 0;
   virtual bool  try_remove      (uint            id) = 0;
   void          remove          (uint            id);
-  uint          exec_now        (const VoidSlot &sl) { return add_source (PRIORITY_HIGH,       new TimedSource (*sl.get_trampoline())); }
-  uint          exec_now        (const BoolSlot &sl) { return add_source (PRIORITY_HIGH,       new TimedSource (*sl.get_trampoline())); }
-  uint          exec_next       (const VoidSlot &sl) { return add_source (PRIORITY_NEXT,       new TimedSource (*sl.get_trampoline())); }
-  uint          exec_next       (const BoolSlot &sl) { return add_source (PRIORITY_NEXT,       new TimedSource (*sl.get_trampoline())); }
-  uint          exec_notify     (const VoidSlot &sl) { return add_source (PRIORITY_NOTIFY,     new TimedSource (*sl.get_trampoline())); }
-  uint          exec_notify     (const BoolSlot &sl) { return add_source (PRIORITY_NOTIFY,     new TimedSource (*sl.get_trampoline())); }
-  uint          exec_normal     (const VoidSlot &sl) { return add_source (PRIORITY_NORMAL,     new TimedSource (*sl.get_trampoline())); }
-  uint          exec_normal     (const BoolSlot &sl) { return add_source (PRIORITY_NORMAL,     new TimedSource (*sl.get_trampoline())); }
-  uint          exec_update     (const VoidSlot &sl) { return add_source (PRIORITY_UPDATE,     new TimedSource (*sl.get_trampoline())); }
-  uint          exec_update     (const BoolSlot &sl) { return add_source (PRIORITY_UPDATE,     new TimedSource (*sl.get_trampoline())); }
-  uint          exec_background (const VoidSlot &sl) { return add_source (PRIORITY_BACKGROUND, new TimedSource (*sl.get_trampoline())); }
-  uint          exec_background (const BoolSlot &sl) { return add_source (PRIORITY_BACKGROUND, new TimedSource (*sl.get_trampoline())); }
+  uint          exec_now        (const VoidSlot &sl);
+  uint          exec_now        (const BoolSlot &sl);
+  uint          exec_next       (const VoidSlot &sl);
+  uint          exec_next       (const BoolSlot &sl);
+  uint          exec_notify     (const VoidSlot &sl);
+  uint          exec_notify     (const BoolSlot &sl);
+  uint          exec_normal     (const VoidSlot &sl);
+  uint          exec_normal     (const BoolSlot &sl);
+  uint          exec_update     (const VoidSlot &sl);
+  uint          exec_update     (const BoolSlot &sl);
+  uint          exec_background (const VoidSlot &sl);
+  uint          exec_background (const BoolSlot &sl);
   uint          exec_timer      (uint            initial_timeout_ms,
                                  uint            repeat_timeout_ms,
-                                 const VoidSlot &sl) { return add_source (PRIORITY_NEXT,       new TimedSource (*sl.get_trampoline(), initial_timeout_ms, repeat_timeout_ms)); }
+                                 const VoidSlot &sl);
   uint          exec_timer      (uint            initial_timeout_ms,
                                  uint            repeat_timeout_ms,
-                                 const BoolSlot &sl) { return add_source (PRIORITY_NEXT,       new TimedSource (*sl.get_trampoline(), initial_timeout_ms, repeat_timeout_ms)); }
+                                 const BoolSlot &sl);
+  uint          exec_io_handler (const VPfdSlot &sl,
+                                 int             fd,
+                                 const String   &mode,
+                                 int             priority = PRIORITY_NORMAL);
+  uint          exec_io_handler (const BPfdSlot &sl,
+                                 int             fd,
+                                 const String   &mode,
+                                 int             priority = PRIORITY_NORMAL);
 };
 
-class MainLoopPool {
-  static void           rapicorn_init   ();
-  friend void           rapicorn_init   (int*, char***, const char*);
-  BIRNET_PRIVATE_CLASS_COPY (MainLoopPool);
-public:
-  class Singleton {
-  public:
-    virtual            ~Singleton       () {}
-    virtual void        add_loop        (MainLoop *mloop) = 0;
-    virtual void        set_n_threads   (uint      n) = 0;
-    virtual uint        get_n_threads   (void) = 0;
-    virtual void        quit_loops      () = 0;
-    virtual MainLoop*   pop_loop        () = 0;
-    virtual void        push_loop       (MainLoop *mloop) = 0;
-  };
+/* --- MainLoop::Source --- */
+class MainLoop::Source : public virtual ReferenceCountImpl {
+  friend       class RealMainLoop;
+  MainLoop    *m_main_loop;
+  uint         m_id;
+  uint         m_loop_flags;
+  int          m_priority;
+  struct {
+    PollFD    *pfd;
+    uint       idx;
+  }           *m_pfds;
+  uint         n_pfds      ();
+  BIRNET_PRIVATE_CLASS_COPY (Source);
 protected:
-  explicit              MainLoopPool    ()                      {}
-  static Singleton     *m_singleton;
-  static Mutex          m_mutex;
-  static MainLoop*      pop_loop        ()                      { AutoLocker locker (m_mutex); return m_singleton->pop_loop(); }
-  static void           push_loop       (MainLoop *mloop)       { AutoLocker locker (m_mutex); return m_singleton->push_loop (mloop); }
+  explicit     Source      ();
 public:
-  static void           add_loop        (MainLoop *mloop)       { AutoLocker locker (m_mutex); return m_singleton->add_loop (mloop); }
-  static void           set_n_threads   (uint      n)           { AutoLocker locker (m_mutex); return m_singleton->set_n_threads (n); }
-  static uint           get_n_threads   (void)                  { AutoLocker locker (m_mutex); return m_singleton->get_n_threads(); }
-  static void           quit_loops      ()                      { AutoLocker locker (m_mutex); return m_singleton->quit_loops(); }
+  virtual     ~Source      ();
+  virtual bool prepare     (uint64 current_time_usecs,
+                            int64 *timeout_usecs_p) = 0;
+  virtual bool check       (uint64 current_time_usecs) = 0;
+  virtual bool dispatch    () = 0;
+  virtual void destroy     ();
+  void         add_poll    (PollFD * const pfd);
+  void         remove_poll (PollFD * const pfd);
 };
 
-// FIXME:
-MainLoop*    glib_loop_create (void);
+/* --- MainLoop::TimedSource --- */
+class MainLoop::TimedSource : public virtual MainLoop::Source {
+  uint64     m_expiration_usecs;
+  uint       m_interval_msecs;
+  bool       m_first_interval;
+  const bool m_oneshot;
+  union {
+    Signals::Trampoline0<bool> *m_btrampoline;
+    Signals::Trampoline0<void> *m_vtrampoline;
+  };
+  BIRNET_PRIVATE_CLASS_COPY (TimedSource);
+protected:
+  virtual     ~TimedSource  ();
+  virtual bool prepare      (uint64 current_time_usecs,
+                             int64 *timeout_usecs_p);
+  virtual bool check        (uint64 current_time_usecs);
+  virtual bool dispatch     ();
+public:
+  explicit     TimedSource (Signals::Trampoline0<bool> &bt,
+                            uint initial_interval_msecs = 0,
+                            uint repeat_interval_msecs = 0);
+  explicit     TimedSource (Signals::Trampoline0<void> &vt,
+                            uint initial_interval_msecs = 0,
+                            uint repeat_interval_msecs = 0);
+};
 
+/* --- MainLoop::PollFDSource --- */
+class MainLoop::PollFDSource : public virtual MainLoop::Source {
+protected:
+  void          construct       (const String &mode);
+  virtual      ~PollFDSource    ();
+  virtual bool  prepare         (uint64 current_time_usecs,
+                                 int64 *timeout_usecs_p);
+  virtual bool  check           (uint64 current_time_usecs);
+  virtual bool  dispatch        ();
+  virtual void  destroy         ();
+  PollFD        m_pfd;
+  /* w - poll writable
+   * r - poll readable
+   * p - poll urgent redable
+   * b - blocking
+   * E - ignore erros (or auto destroy)
+   * H - ignore hangup (or auto destroy)
+   * C - prevent auto close on destroy
+   */
+  uint          m_ignore_errors : 1;    // 'E'
+  uint          m_ignore_hangup : 1;    // 'H'
+  uint          m_never_close : 1;      // 'C'
+private:
+  const uint    m_oneshot : 1;
+  union {
+    Signals::Trampoline1<bool,PollFD&> *m_btrampoline;
+    Signals::Trampoline1<void,PollFD&> *m_vtrampoline;
+  };
+  BIRNET_PRIVATE_CLASS_COPY (PollFDSource);
+public:
+  explicit      PollFDSource    (Signals::Trampoline1<bool,PollFD&> &bt,
+                                 int                                 fd,
+                                 const String                       &mode);
+  explicit      PollFDSource    (Signals::Trampoline1<void,PollFD&> &vt,
+                                 int                                 fd,
+                                 const String                       &mode);
+};
+
+/* --- MainLoop methods --- */
+inline uint
+MainLoop::exec_now (const VoidSlot &sl)
+{
+  return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_HIGH);
+}
+
+inline uint
+MainLoop::exec_now (const BoolSlot &sl)
+{
+  return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_HIGH);
+}
+
+inline uint
+MainLoop::exec_next (const VoidSlot &sl)
+{
+  return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_NEXT);
+}
+
+inline uint
+MainLoop::exec_next (const BoolSlot &sl)
+{
+  return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_NEXT);
+}
+
+inline uint
+MainLoop::exec_notify (const VoidSlot &sl)
+{
+  return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_NOTIFY);
+}
+
+inline uint
+MainLoop::exec_notify (const BoolSlot &sl)
+{
+  return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_NOTIFY);
+}
+
+inline uint
+MainLoop::exec_normal (const VoidSlot &sl)
+{
+  return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_NORMAL);
+}
+
+inline uint
+MainLoop::exec_normal (const BoolSlot &sl)
+{
+  return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_NORMAL);
+}
+
+inline uint
+MainLoop::exec_update (const VoidSlot &sl)
+{
+  return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_UPDATE);
+}
+
+inline uint
+MainLoop::exec_update (const BoolSlot &sl)
+{
+  return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_UPDATE);
+}
+
+inline uint
+MainLoop::exec_background (const VoidSlot &sl)
+{
+  return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_BACKGROUND);
+}
+
+inline uint
+MainLoop::exec_background (const BoolSlot &sl)
+{
+  return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_BACKGROUND);
+}
+
+inline uint
+MainLoop::exec_timer (uint            initial_timeout_ms,
+                      uint            repeat_timeout_ms,
+                      const VoidSlot &sl)
+{
+  return add_source (new TimedSource (*sl.get_trampoline(), initial_timeout_ms, repeat_timeout_ms), PRIORITY_NEXT);
+}
+
+inline uint
+MainLoop::exec_timer (uint            initial_timeout_ms,
+                      uint            repeat_timeout_ms,
+                      const BoolSlot &sl)
+{
+  return add_source (new TimedSource (*sl.get_trampoline(), initial_timeout_ms, repeat_timeout_ms), PRIORITY_NEXT);
+}
+
+inline uint
+MainLoop::exec_io_handler (const VPfdSlot &sl,
+                           int             fd,
+                           const String   &mode,
+                           int             priority)
+{
+  return add_source (new PollFDSource (*sl.get_trampoline(), fd, mode), priority);
+}
+
+inline uint
+MainLoop::exec_io_handler (const BPfdSlot &sl,
+                           int             fd,
+                           const String   &mode,
+                           int             priority)
+{
+  return add_source (new PollFDSource (*sl.get_trampoline(), fd, mode), priority);
+}
 
 } // Rapicorn
 
