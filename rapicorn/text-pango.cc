@@ -311,7 +311,7 @@ public:
     g_free (gstr);
     return font_desc;
   }
-  static double
+  static int
   dot_size_from_layout (PangoLayout *playout)
   {
     const PangoFontDescription *cfdesc = pango_layout_get_font_description (playout);
@@ -319,7 +319,7 @@ public:
       cfdesc = pango_context_get_font_description (pango_layout_get_context (playout));
     // FIXME: hardcoded dpi, assumes relative size
     double dot_size = (pango_font_description_get_size (cfdesc) * default_pango_dpi().y) / (PANGO_SCALE * 72 * 6);
-    return max (1, iround (dot_size));
+    return iround (max (1, dot_size));
   }
 };
 static LayoutCache global_layout_cache; // protected by rapicorn_gtk_threads_enter / rapicorn_gtk_threads_leave
@@ -747,7 +747,8 @@ public:
   {
     rapicorn_gtk_threads_enter();
     Text::ParaState pstate; // for defaults
-    m_layout = global_layout_cache.create_layout (pstate.font_family, pstate.align, pstate.wrap, pstate.ellipsize, pstate.indent, pstate.line_spacing);
+    m_layout = global_layout_cache.create_layout (pstate.font_family, pstate.align, pstate.wrap, pstate.ellipsize,
+                                                  iround (pstate.indent), iround (pstate.line_spacing));
     pango_layout_set_attributes (m_layout, NULL);
     pango_layout_set_tabs (m_layout, NULL);
     pango_layout_set_width (m_layout, -1);
@@ -799,15 +800,15 @@ protected:
     pango_layout_set_alignment (m_layout, pango_alignment_from_align_type (pstate.align));
     pango_layout_set_wrap (m_layout, pango_wrap_mode_from_wrap_type (pstate.wrap));
     pango_layout_set_ellipsize (m_layout, pango_ellipsize_mode_from_ellipsize_type (pstate.ellipsize));
-    pango_layout_set_spacing (m_layout, pstate.line_spacing * PANGO_SCALE);
-    pango_layout_set_indent (m_layout, pstate.indent * PANGO_SCALE);
+    pango_layout_set_spacing (m_layout, iround (pstate.line_spacing * PANGO_SCALE));
+    pango_layout_set_indent (m_layout, iround (pstate.indent * PANGO_SCALE));
     if (pstate.font_family.size() || pstate.font_size)
       {
         PangoFontDescription *fdesc = pango_font_description_new();
         if (pstate.font_family.size())
           pango_font_description_set_family (fdesc, pstate.font_family.c_str());
         if (pstate.font_size)
-          pango_font_description_set_size (fdesc, pstate.font_size * PANGO_SCALE);
+          pango_font_description_set_size (fdesc, iround (pstate.font_size * PANGO_SCALE));
         pango_layout_set_font_description (m_layout, fdesc);
         pango_font_description_free (fdesc);
       }
@@ -1013,8 +1014,8 @@ protected:
     double y = layout_rect.y + layout_y + PANGO_PIXELS (lrect.height - crect1.y - crect1.height);
     double height = PANGO_PIXELS (crect1.height);
     Color fg (col.premultiplied());
-    double xpos = MAX (x, plane.xstart());
-    double ymin = MAX (y, plane.ystart()), ymax = MIN (y + height, plane.ybound()) - 1;
+    int xpos = iround (MAX (x, plane.xstart()));
+    int ymin = iround (MAX (y, plane.ystart())), ymax = iround (MIN (y + height, plane.ybound()) - 1);
     Painter pp (plane);
     pp.draw_trapezoid (ymax, xpos - 2, xpos + 3, ymax - 3, xpos + .5, xpos + .5, col);
     pp.draw_vline (xpos, ymin + 2, ymax - 3, col);
@@ -1033,9 +1034,10 @@ protected:
   {
     if (dot_size)
       {
-        render_dot (plane, layout_rect.x, layout_rect.y, layout_rect.width / 3, layout_rect.height, dot_size, fg);
-        render_dot (plane, layout_rect.x + layout_rect.width / 3, layout_rect.y, layout_rect.width / 3, layout_rect.height, dot_size, fg);
-        render_dot (plane, layout_rect.x + 2 * layout_rect.width / 3, layout_rect.y, layout_rect.width / 3, layout_rect.height, dot_size, fg);
+        IRect idr = layout_rect;
+        render_dot (plane, idr.x, idr.y, idr.width / 3, idr.height, dot_size, fg);
+        render_dot (plane, idr.x + idr.width / 3, idr.y, idr.width / 3, idr.height, dot_size, fg);
+        render_dot (plane, idr.x + 2 * idr.width / 3, idr.y, idr.width / 3, idr.height, dot_size, fg);
         return;
       }
     /* constrain rendering area */
@@ -1046,7 +1048,7 @@ protected:
     /* render text to plane */
     double lx = layout_rect.x - r.x;
     double ly = r.y + r.height - (layout_rect.y + layout_rect.height);
-    _rapicorn_pango_renderer_render_layout (plane, *style(), fg, m_layout, r, lx, ly);
+    _rapicorn_pango_renderer_render_layout (plane, *style(), fg, m_layout, r, ifloor (lx), ifloor (ly));
     /* and cursor */
     render_cursor (plane, fg, r, lx, ly);
   }
@@ -1066,7 +1068,7 @@ protected:
     if (pango_layout_get_ellipsize (m_layout) == PANGO_ELLIPSIZE_NONE)
       pango_layout_set_width (m_layout, -1);
     else
-      pango_layout_set_width (m_layout, area.width * PANGO_SCALE);
+      pango_layout_set_width (m_layout, iround (area.width * PANGO_SCALE));
     PangoRectangle prect = { 0, 0 };
     pango_layout_get_extents (m_layout, NULL, &prect);
     double pixels = PANGO_PIXELS (prect.height);
@@ -1153,10 +1155,10 @@ _rapicorn_pango_renderer_render_layout (Plane           &plane,
   self->plane = &plane;
   self->style = &style;
   self->rfg = fg;
-  self->x = rect.x;
-  self->y = rect.y;
-  self->width = rect.width;
-  self->height = rect.height;
+  self->x = ifloor (rect.x);
+  self->y = ifloor (rect.y);
+  self->width = iceil (rect.width);
+  self->height = iceil (rect.height);
   pango_renderer_draw_layout (PANGO_RENDERER (self), layout, layout_x * PANGO_SCALE, layout_y * PANGO_SCALE);
   g_object_unref (self);
 }
@@ -1195,7 +1197,7 @@ _rapicorn_pango_renderer_draw_glyphs (PangoRenderer     *renderer,
   memset (bitmap.buffer, 0, bitmap.rows * bitmap.pitch);
   bitmap.num_grays = 256;
   bitmap.pixel_mode = FT_PIXEL_MODE_GRAY;
-  pango_ft2_render (&bitmap, font, glyphs, pangox * PANGO_ISCALE, pangoy * PANGO_ISCALE);
+  pango_ft2_render (&bitmap, font, glyphs, ifloor (pangox * PANGO_ISCALE), ifloor (pangoy * PANGO_ISCALE));
   /* render bitmap to plane */
   Plane &plane = *self->plane;
   Color fg = self->fg;

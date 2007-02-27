@@ -122,6 +122,7 @@ round (const Point &s)
 using ::round;
 
 /* --- Rect --- */
+class IRect;
 class Rect {
 public:
   double x, y;
@@ -169,6 +170,22 @@ public:
   static Rect   create_anchored (AnchorType anchor,
                                  double     width,
                                  double     height);
+};
+struct IRect {
+  int64 x, y, width, height;
+  IRect (const Rect &r) :
+    x (ifloor (r.x)), y (ifloor (r.y)),
+    width (iceil (r.width)), height (iceil (r.height))
+  {}
+  IRect&
+  operator= (const Rect &r)
+  {
+    x = ifloor (r.x);
+    y = ifloor (r.y);
+    width = iceil (r.width);
+    height = iceil (r.height);
+    return *this;
+  }
 };
 
 /* --- Color --- */

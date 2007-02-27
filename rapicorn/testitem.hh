@@ -22,22 +22,22 @@ class TestItem : public virtual Item {
 protected:
   explicit      TestItem        ();
 public:
-  virtual float epsilon         () const = 0;
-  virtual void  epsilon         (float  val) = 0;
-  virtual float assert_left     () const = 0;
-  virtual void  assert_left     (float  val) = 0;
-  virtual float assert_right    () const = 0;
-  virtual void  assert_right    (float  val) = 0;
-  virtual float assert_top      () const = 0;
-  virtual void  assert_top      (float  val) = 0;
-  virtual float assert_bottom   () const = 0;
-  virtual void  assert_bottom   (float  val) = 0;
-  virtual float assert_width    () const = 0;
-  virtual void  assert_width    (float  val) = 0;
-  virtual float assert_height   () const = 0;
-  virtual void  assert_height   (float  val) = 0;
-  virtual bool  fatal_asserts   () const = 0;
-  virtual void  fatal_asserts   (bool   val) = 0;
+  virtual double epsilon         () const = 0;
+  virtual void   epsilon         (double val) = 0;
+  virtual double assert_left     () const = 0;
+  virtual void   assert_left     (double val) = 0;
+  virtual double assert_right    () const = 0;
+  virtual void   assert_right    (double val) = 0;
+  virtual double assert_top      () const = 0;
+  virtual void   assert_top      (double val) = 0;
+  virtual double assert_bottom   () const = 0;
+  virtual void   assert_bottom   (double val) = 0;
+  virtual double assert_width    () const = 0;
+  virtual void   assert_width    (double val) = 0;
+  virtual double assert_height   () const = 0;
+  virtual void   assert_height   (double val) = 0;
+  virtual bool   fatal_asserts   () const = 0;
+  virtual void   fatal_asserts   (bool   val) = 0;
   const PropertyList&                               list_properties ();
   Signal<TestItem, void (const String &assertion)>  sig_assertion_ok;
   Signal<TestItem, void ()>                         sig_assertions_passed;

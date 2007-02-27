@@ -172,8 +172,8 @@ protected:
     allocation (area);
     if (m_pimage)
       {
-        m_xoffset = (area.width - m_pimage->width()) / 2;
-        m_yoffset = (area.height - m_pimage->height()) / 2;
+        m_xoffset = iround (0.5 * (area.width - m_pimage->width()));
+        m_yoffset = iround (0.5 * (area.height - m_pimage->height()));
       }
     else
       m_xoffset = m_yoffset = 0;
@@ -184,7 +184,7 @@ public:
   {
     if (m_pimage)
       {
-        int ix = allocation().x + m_xoffset, iy = allocation().y + m_yoffset;
+        int ix = iround (allocation().x + m_xoffset), iy = iround (allocation().y + m_yoffset);
         int ih = m_pimage->height();
         display.push_clip_rect (ix, iy, m_pimage->width(), ih);
         Plane &plane = display.create_plane();

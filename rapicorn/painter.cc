@@ -424,8 +424,8 @@ Painter::draw_trapezoid_run (const double by,
   const double xs = CLAMP (MIN (tx1, bx1), xstart(), xbound());
   const double xe = CLAMP (MAX (tx2, bx2), xstart(), xbound());
   double last_left_area = left_trapezoid_area (by, bx1, bx2, ty, tx1, tx2, dy, xs);
-  const double xsfloor = floor (xs), xeceil = ceil (xe);
-  uint32 *d = m_plane.poke_span (xsfloor, by, xeceil - xsfloor);
+  const int64 xsfloor = ifloor (xs), xeceil = iceil (xe);
+  uint32 *d = m_plane.poke_span (xsfloor, ifloor (by), xeceil - xsfloor);
   for (double xi = xsfloor; xi < xeceil; xi += 1)
     {
       const double sx = MIN (xi + 1, xe);

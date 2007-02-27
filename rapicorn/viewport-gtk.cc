@@ -109,11 +109,11 @@ struct ViewportGtk : public virtual Viewport {
   virtual void          present_viewport        ();
   virtual void          trigger_hint_action     (WindowHint     hint);
   virtual void          start_user_move         (uint           button,
-                                                 float          root_x,
-                                                 float          root_y);
+                                                 double         root_x,
+                                                 double         root_y);
   virtual void          start_user_resize       (uint           button,
-                                                 float          root_x,
-                                                 float          root_y,
+                                                 double         root_x,
+                                                 double         root_y,
                                                  AnchorType     edge);
   virtual void          show                    (void);
   virtual void          hide                    (void);
@@ -226,13 +226,13 @@ ViewportGtk::enqueue_locked (Event *event)
 
 void
 ViewportGtk::start_user_move (uint           button,
-                              float          root_x,
-                              float          root_y)
+                              double         root_x,
+                              double         root_y)
 {
   AutoLocker locker (GTK_GDK_THREAD_SYNC);
   GtkWindow *window = rapicorn_viewport_get_toplevel_window (m_viewport);
   if (window && GTK_WIDGET_DRAWABLE (window))
-    gtk_window_begin_move_drag (window, button, root_x, root_y, GDK_CURRENT_TIME);
+    gtk_window_begin_move_drag (window, button, iround (root_x), iround (root_y), GDK_CURRENT_TIME);
 }
 
 static GdkWindowEdge
@@ -256,14 +256,14 @@ get_gdk_window_edge (AnchorType anchor)
 
 void
 ViewportGtk::start_user_resize (uint           button,
-                                float          root_x,
-                                float          root_y,
+                                double         root_x,
+                                double         root_y,
                                 AnchorType     edge)
 {
   AutoLocker locker (GTK_GDK_THREAD_SYNC);
   GtkWindow *window = rapicorn_viewport_get_toplevel_window (m_viewport);
   if (window && GTK_WIDGET_DRAWABLE (window))
-    gtk_window_begin_resize_drag (window, get_gdk_window_edge (edge), button, root_x, root_y, GDK_CURRENT_TIME);
+    gtk_window_begin_resize_drag (window, get_gdk_window_edge (edge), button, iround (root_x), iround (root_y), GDK_CURRENT_TIME);
 }
 
 void
@@ -349,8 +349,8 @@ ViewportGtk::copy_area (double          src_x,
       gdk_window_get_size (m_widget->window, NULL, &window_height);
       gdk_gc_set_exposures (m_widget->style->black_gc, TRUE);
       gdk_draw_drawable (m_widget->window, m_widget->style->black_gc, // FIXME: use gdk_window_move_region() with newer Gtk+
-                         m_widget->window, src_x, window_height - src_y - height,
-                         dest_x, window_height - dest_y - height, width, height);
+                         m_widget->window, iround (src_x), iround (window_height - src_y - height),
+                         iround (dest_x), iround (window_height - dest_y - height), iround (width), iround (height));
       gdk_gc_set_exposures (m_widget->style->black_gc, FALSE);
       /* ensure last GraphicsExpose events are processed before the next copy */
       GdkEvent *event = gdk_event_get_graphics_expose (m_widget->window);
@@ -405,7 +405,7 @@ configure_gtk_window (GtkWindow              *window,
   gtk_window_set_title (window, config.title.c_str());
   gtk_window_set_role (window, config.session_role.c_str());
   if (config.initial_width > 0 && config.initial_height > 0)
-    gtk_window_set_default_size (window, config.initial_width, config.initial_height);
+    gtk_window_set_default_size (window, iround (config.initial_width), iround (config.initial_height));
   else
     gtk_window_set_default_size (window, -1, -1);
   window->need_default_size = TRUE; /* work-around for gtk_window_set_geometry_hints() breaking basic resizing functionality */

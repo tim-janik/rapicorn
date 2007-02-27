@@ -635,8 +635,8 @@ Container::render (Display &display)
     {
       if (!cw->drawable())
         continue;
-      const Allocation area = cw->allocation();
-      display.push_clip_rect (area.x, area.y, area.width, area.height);
+      const IRect ia = cw->allocation();
+      display.push_clip_rect (ia.x, ia.y, ia.width, ia.height);
       if (cw->test_flags (INVALID_REQUISITION))
         warning ("rendering item with invalid %s: %s (%p)", "requisition", cw->name().c_str(), &*cw);
       if (cw->test_flags (INVALID_ALLOCATION))

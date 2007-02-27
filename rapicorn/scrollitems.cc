@@ -214,12 +214,12 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     double yoffset = m_vadjustment ? round (m_vadjustment->value()) : 0.0;
     const Allocation area = allocation();
     Item &child = get_child();
-    const Allocation carea = child.allocation();
+    const IRect ica = child.allocation();
     Display scroll_display;
-    scroll_display.push_clip_rect (carea.x, carea.y, carea.width, carea.height);
-    scroll_display.push_clip_rect (xoffset, yoffset, area.width, area.height);
+    scroll_display.push_clip_rect (ica.x, ica.y, ica.width, ica.height);
+    scroll_display.push_clip_rect (ifloor (xoffset), ifloor (yoffset), iceil (area.width), iceil (area.height));
     Rect pr = display.current_rect();
-    scroll_display.push_clip_rect (pr.x - area.x + xoffset, pr.y - area.y + yoffset, pr.width, pr.height);
+    scroll_display.push_clip_rect (ifloor (pr.x - area.x + xoffset), ifloor (pr.y - area.y + yoffset), iceil (pr.width), iceil (pr.height));
     if (!scroll_display.empty())
       {
         child.render (scroll_display);
@@ -227,8 +227,8 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
         int64 real_x = plane.xstart();
         int64 real_y = plane.ystart();
         Plane::warp_plane_iknowwhatimdoing (plane,
-                                            real_x - area.x + xoffset,
-                                            real_y - area.y + yoffset);
+                                            iround (real_x - area.x + xoffset),
+                                            iround (real_y - area.y + yoffset));
         scroll_display.render_combined (plane);
         Plane::warp_plane_iknowwhatimdoing (plane, real_x, real_y);
       }

@@ -141,7 +141,8 @@ public:
   render (Display &display)
   {
     Plane &plane = display.create_plane();
-    int x = allocation().x, y = allocation().y, width = allocation().width, height = allocation().height;
+    IRect ia = allocation();
+    int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
     bool bimpressed = branch_impressed(), bprelight = branch_prelight();
     /* render background */
     String background_color;
@@ -321,7 +322,8 @@ public:
   void
   render (Display &display)
   {
-    int x = allocation().x, y = allocation().y, width = allocation().width, height = allocation().height;
+    IRect ia = allocation();
+    int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
     if (width >= 2 && height >= 2)
       {
         Color border1, border2;

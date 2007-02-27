@@ -33,13 +33,13 @@ TestItem::list_properties()
 {
   /* not using _() here, because TestItem is just a developer tool */
   static Property *properties[] = {
-    MakeProperty (TestItem, epsilon,       "Epsilon",       "Epsilon within which assertions must hold",  DFLTEPS,   0,         +MAXFLOAT, 0.01, "rw"),
-    MakeProperty (TestItem, assert_left,   "Assert-Left",   "Assert positioning of the left item edge",   -INFINITY, -INFINITY, +MAXFLOAT, 3, "rw"),
-    MakeProperty (TestItem, assert_right,  "Assert-Right",  "Assert positioning of the right item edge",  -INFINITY, -INFINITY, +MAXFLOAT, 3, "rw"),
-    MakeProperty (TestItem, assert_bottom, "Assert-Bottom", "Assert positioning of the bottom item edge", -INFINITY, -INFINITY, +MAXFLOAT, 3, "rw"),
-    MakeProperty (TestItem, assert_top,    "Assert-Top",    "Assert positioning of the top item edge",    -INFINITY, -INFINITY, +MAXFLOAT, 3, "rw"),
-    MakeProperty (TestItem, assert_width,  "Assert-Width",  "Assert amount of the item width",            -INFINITY, -INFINITY, +MAXFLOAT, 3, "rw"),
-    MakeProperty (TestItem, assert_height, "Assert-Height", "Assert amount of the item height",           -INFINITY, -INFINITY, +MAXFLOAT, 3, "rw"),
+    MakeProperty (TestItem, epsilon,       "Epsilon",       "Epsilon within which assertions must hold",  DFLTEPS,   0,         +DBL_MAX, 0.01, "rw"),
+    MakeProperty (TestItem, assert_left,   "Assert-Left",   "Assert positioning of the left item edge",   -INFINITY, -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestItem, assert_right,  "Assert-Right",  "Assert positioning of the right item edge",  -INFINITY, -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestItem, assert_bottom, "Assert-Bottom", "Assert positioning of the bottom item edge", -INFINITY, -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestItem, assert_top,    "Assert-Top",    "Assert positioning of the top item edge",    -INFINITY, -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestItem, assert_width,  "Assert-Width",  "Assert amount of the item width",            -INFINITY, -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestItem, assert_height, "Assert-Height", "Assert amount of the item height",           -INFINITY, -INFINITY, +DBL_MAX, 3, "rw"),
     MakeProperty (TestItem, fatal_asserts, "Fatal-Asserts", "Handle assertion failures as fatal errors",  false, "rw"),
   };
   static const PropertyList property_list (properties, Item::list_properties());
@@ -47,11 +47,11 @@ TestItem::list_properties()
 }
 
 class TestItemImpl : public virtual TestItem, public virtual ItemImpl {
-  float m_assert_left, m_assert_right;
-  float m_assert_top, m_assert_bottom;
-  float m_assert_width, m_assert_height;
-  float m_epsilon;
-  bool  m_fatal_asserts;
+  double m_assert_left, m_assert_right;
+  double m_assert_top, m_assert_bottom;
+  double m_assert_width, m_assert_height;
+  double m_epsilon;
+  bool   m_fatal_asserts;
 public:
   TestItemImpl() :
     m_assert_left (-INFINITY), m_assert_right (-INFINITY),
@@ -59,22 +59,22 @@ public:
     m_assert_width (-INFINITY), m_assert_height (-INFINITY),
     m_epsilon (DFLTEPS), m_fatal_asserts (false)
   {}
-  virtual float epsilon         () const        { return m_epsilon  ; }
-  virtual void  epsilon         (float  val)    { m_epsilon = val; invalidate(); }
-  virtual float assert_left     () const        { return m_assert_left  ; }
-  virtual void  assert_left     (float  val)    { m_assert_left = val; invalidate(); }
-  virtual float assert_right    () const        { return m_assert_right ; }
-  virtual void  assert_right    (float  val)    { m_assert_right = val; invalidate(); }
-  virtual float assert_top      () const        { return m_assert_top   ; }
-  virtual void  assert_top      (float  val)    { m_assert_top = val; invalidate(); }
-  virtual float assert_bottom   () const        { return m_assert_bottom; }
-  virtual void  assert_bottom   (float  val)    { m_assert_bottom = val; invalidate(); }
-  virtual float assert_width    () const        { return m_assert_width ; }
-  virtual void  assert_width    (float  val)    { m_assert_width = val; invalidate(); }
-  virtual float assert_height   () const        { return m_assert_height; }
-  virtual void  assert_height   (float  val)    { m_assert_height = val; invalidate(); }
-  virtual bool  fatal_asserts   () const        { return m_fatal_asserts; }
-  virtual void  fatal_asserts   (bool   val)    { m_fatal_asserts = val; invalidate(); }
+  virtual double epsilon         () const        { return m_epsilon  ; }
+  virtual void   epsilon         (double val)    { m_epsilon = val; invalidate(); }
+  virtual double assert_left     () const        { return m_assert_left  ; }
+  virtual void   assert_left     (double val)    { m_assert_left = val; invalidate(); }
+  virtual double assert_right    () const        { return m_assert_right ; }
+  virtual void   assert_right    (double val)    { m_assert_right = val; invalidate(); }
+  virtual double assert_top      () const        { return m_assert_top   ; }
+  virtual void   assert_top      (double val)    { m_assert_top = val; invalidate(); }
+  virtual double assert_bottom   () const        { return m_assert_bottom; }
+  virtual void   assert_bottom   (double val)    { m_assert_bottom = val; invalidate(); }
+  virtual double assert_width    () const        { return m_assert_width ; }
+  virtual void   assert_width    (double val)    { m_assert_width = val; invalidate(); }
+  virtual double assert_height   () const        { return m_assert_height; }
+  virtual void   assert_height   (double val)    { m_assert_height = val; invalidate(); }
+  virtual bool   fatal_asserts   () const        { return m_fatal_asserts; }
+  virtual void   fatal_asserts   (bool   val)    { m_fatal_asserts = val; invalidate(); }
 protected:
   virtual void
   size_request (Requisition &requisition)
@@ -122,19 +122,20 @@ protected:
   virtual void
   render (Display &display)
   {
-    Allocation area = allocation();
+    IRect ia = allocation();
     Plane &plane = display.create_plane();
     Painter painter (plane);
-    painter.draw_filled_rect (area.x, area.y, area.width, area.height, black());
+    painter.draw_filled_rect (ia.x, ia.y, ia.width, ia.height, black());
     Allocation rarea = get_root()->allocation();
-    float x1 = area.x, x2 = rarea.width - area.x - area.width;
-    float y1 = area.y, y2 = rarea.height - area.y - area.height;
+    double width = allocation().width, height = allocation().height;
+    double x1 = allocation().x, x2 = rarea.width - x1 - width;
+    double y1 = allocation().y, y2 = rarea.height - y1 - height;
     assert_value ("assert-bottom", m_assert_bottom, y1, y2);
     assert_value ("assert-right",  m_assert_right,  x1, x2);
     assert_value ("assert-top",    m_assert_top,    y1, y2);
     assert_value ("assert-left",   m_assert_left,   x1, x2);
-    assert_value ("assert-width",  m_assert_width, area.width, area.width);
-    assert_value ("assert-height", m_assert_height, area.height, area.height);
+    assert_value ("assert-width",  m_assert_width, width, width);
+    assert_value ("assert-height", m_assert_height, height, height);
     sig_assertions_passed.emit ();
   }
 };

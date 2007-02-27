@@ -663,9 +663,9 @@ RootImpl::draw_now ()
       m_expose_region.clear();
       for (uint i = 0; i < rects.size(); i++)
         {
-          const Rect &rect = rects[i];
+          const IRect &ir = rects[i];
           /* render area */
-          Plane *plane = new Plane (rect.x, rect.y, rect.width, rect.height);
+          Plane *plane = new Plane (ir.x, ir.y, ir.width, ir.height);
           render (*plane);
           /* blit to screen */
           m_viewport->blit_plane (plane, 0); // takes over plane
@@ -678,8 +678,8 @@ RootImpl::render (Plane &plane)
 {
   plane.fill (background());
   Display display;
-  const Allocation &a = allocation();
-  display.push_clip_rect (a.x, a.y, a.width, a.height);
+  const IRect ia = allocation();
+  display.push_clip_rect (ia.x, ia.y, ia.width, ia.height);
   display.push_clip_rect (plane.rect());
   if (!display.empty())
     render (display);

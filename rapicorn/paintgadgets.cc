@@ -67,7 +67,8 @@ protected:
   virtual void
   render (Display &display)
   {
-    int x = allocation().x, y = allocation().y, width = allocation().width, height = allocation().height;
+    IRect ia = allocation();
+    int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
     if (width >= 2 && height >= 2)
       {
         Color color = 0x80000000;
@@ -145,7 +146,8 @@ public:
   render (Display &display)
   {
     int ythick = 1, xthick = 1, n_hdots = m_n_hdots, n_vdots = m_n_vdots;
-    int x = allocation().x, y = allocation().y, width = allocation().width, height = allocation().height;
+    IRect ia = allocation();
+    int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
     int rq_width = m_n_hdots * (xthick + xthick) + MAX (n_hdots - 1, 0) * xthick;
     int rq_height = m_n_vdots * (ythick + ythick) + MAX (n_vdots - 1, 0) * ythick;
     /* split up extra width */

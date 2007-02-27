@@ -434,7 +434,7 @@ protected:
             const Allocation &ta = trough.allocation();
             double tp = vertical_skid() ? ta.y : ta.x;
             double pos = ep - tp;
-            int tlength = vertical_skid() ? ta.height : ta.width;
+            double tlength = vertical_skid() ? ta.height : ta.width;
             double clength = vertical_skid() ? allocation().height : allocation().width;
             tlength -= clength;
             pos -= m_coffset * clength;

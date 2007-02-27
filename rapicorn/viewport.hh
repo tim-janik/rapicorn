@@ -42,7 +42,7 @@ public:
     bool        is_active;
     bool        has_toplevel_focus;     /* for embedded windows, this may be false allthough is_active==true */
     WindowState window_state;
-    float       width, height;
+    double      width, height;
   };
   /* viewport configuration */
   typedef enum {
@@ -67,14 +67,14 @@ public:
     WindowHint  window_hint;
     String      title;
     String      session_role;
-    float       root_x,         root_y;
-    float       request_width,  request_height;
-    float       min_width,      min_height;
-    float       initial_width,  initial_height;
-    float       max_width,      max_height;
-    float       base_width,     base_height;
-    float       width_inc,      height_inc;
-    float       min_aspect,     max_aspect;     /* horizontal / vertical */
+    double      root_x,         root_y;
+    double      request_width,  request_height;
+    double      min_width,      min_height;
+    double      initial_width,  initial_height;
+    double      max_width,      max_height;
+    double      base_width,     base_height;
+    double      width_inc,      height_inc;
+    double      min_aspect,     max_aspect;     /* horizontal / vertical */
     Color       average_background;
     explicit    Config() :
       modal (false),
@@ -108,11 +108,11 @@ public:
   virtual void          present_viewport        () = 0;
   virtual void          trigger_hint_action     (WindowHint     hint) = 0;
   virtual void          start_user_move         (uint           button,
-                                                 float          root_x,
-                                                 float          root_y) = 0;
+                                                 double         root_x,
+                                                 double         root_y) = 0;
   virtual void          start_user_resize       (uint           button,
-                                                 float          root_x,
-                                                 float          root_y,
+                                                 double         root_x,
+                                                 double         root_y,
                                                  AnchorType     edge) = 0;
   virtual void          show                    (void) = 0;
   virtual void          hide                    (void) = 0;

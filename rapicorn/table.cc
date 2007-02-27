@@ -595,8 +595,8 @@ TableImpl::size_allocate_pass1 ()
    *  to fill in the extra space.
    */
   Allocation area = allocation();
-  const int real_width = area.width;
-  const int real_height = area.height;
+  const int real_width = iround (area.width);
+  const int real_height = iround (area.height);
   if (homogeneous())
     {
       int nexpand, extra;
@@ -681,7 +681,7 @@ TableImpl::size_allocate_pass1 ()
           /* shrink all columns (last resort) */
           if (extra && cols.size())
             {
-              float allocation_max = 1.0 * width;
+              double allocation_max = 1.0 * width;
               vector<RowCol*> svec;
               for (uint jcol = 0; jcol < cols.size(); jcol++)
                 {
@@ -698,7 +698,7 @@ TableImpl::size_allocate_pass1 ()
                     if (svec[i]->allocation)
                       {
                         int allocation = svec[i]->allocation;
-                        int shrink = base_extra * allocation / allocation_max;           // shrink in proportion to size
+                        int shrink = ifloor (base_extra * allocation / allocation_max); // shrink in proportion to size
                         svec[i]->allocation -= CLAMP (shrink, 1, allocation);
                         extra -= allocation - svec[i]->allocation;
                       }
@@ -790,7 +790,7 @@ TableImpl::size_allocate_pass1 ()
           /* shrink all rows (last resort) */
           if (extra && rows.size())
             {
-              float allocation_max = 1.0 * height;
+              double allocation_max = 1.0 * height;
               vector<RowCol*> svec;
               for (uint jrow = 0; jrow < rows.size(); jrow++)
                 {
@@ -807,7 +807,7 @@ TableImpl::size_allocate_pass1 ()
                     if (svec[i]->allocation)
                       {
                         int allocation = svec[i]->allocation;
-                        int shrink = base_extra * allocation / allocation_max;           // shrink in proportion to size
+                        int shrink = ifloor (base_extra * allocation / allocation_max); // shrink in proportion to size
                         svec[i]->allocation -= CLAMP (shrink, 1, allocation);
                         extra -= allocation - svec[i]->allocation;
                       }
@@ -828,7 +828,7 @@ TableImpl::size_allocate_pass2 ()
         continue;
       Location loc = child_location (*cw);
       Requisition crq = cw->size_request();
-      int x = area.x;
+      int x = ifloor (area.x);
       for (uint col = 0; col < loc.left_attach; col++)
         x += cols[col].allocation + cols[col].spacing;
       int max_width = 0;
@@ -838,7 +838,7 @@ TableImpl::size_allocate_pass2 ()
           if (col + 1 < loc.right_attach)
             max_width += cols[col].spacing;
         }
-      int y = area.y;
+      int y = ifloor (area.y);
       for (uint row = 0; row < loc.bottom_attach; row++)
         y += rows[row].allocation + rows[row].spacing;
       int max_height = 0;
