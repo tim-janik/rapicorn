@@ -8,6 +8,9 @@ FIXME:
 - AdjustmentSource::get_adjustment() must be called recursively up the heirarchy as long as adj==NULL
 - rename left-padding,etc. Alignment properties because they overlap with Table's child proeprty names
   or rename child properties: left-margin, right-spacing, etc...
+CLEANUPS:
+- rename paintgadgets.cc to paintitems.cc
+- rename table allocation passes
 MISC:
 - DPI / font selection: http://primates.ximian.com/~federico/news-2007-01.html#31
 - supply overlay dialogs; here, the parent dialog becomes insensitive and the
