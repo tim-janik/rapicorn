@@ -74,9 +74,15 @@ private:
   virtual void          remove_grab                             (Item                   &child);
   virtual Item*         get_grab                                (bool                   *unconfined = NULL);
   /* main loop */
+  virtual void          show                                    ();
+  virtual bool          visible                                 ();
+  virtual void          hide                                    ();
+  virtual bool          closed                                  ();
+  virtual void          close                                   ();
   void                  idle_show                               ();
   virtual void          run_async                               (void);
   virtual void          stop_async                              (void);
+  virtual Window        window                                  ();
   virtual bool          prepare                                 (uint64                  current_time_usecs,
                                                                  int64                  *timeout_usecs_p);
   virtual bool          check                                   (uint64                  current_time_usecs);

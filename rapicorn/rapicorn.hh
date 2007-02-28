@@ -43,5 +43,6 @@
 /* conditional: #include <rapicorn/text-pango.hh> */
 #include <rapicorn/utilities.hh>
 #include <rapicorn/viewport.hh>
+#include <rapicorn/window.hh>
                       
 #endif  /* __RAPICORN_HH__ */

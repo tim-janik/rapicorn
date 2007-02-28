@@ -86,6 +86,9 @@ RootImpl::RootImpl() :
     m_async_loop = ref_sink (MainLoop::create());
     if (!m_async_loop->start())
       error ("failed to start MainLoop");
+    BIRNET_ASSERT (m_source == NULL);
+    m_source = new RootSource (*this);
+    m_async_loop->add_source (m_source, MainLoop::PRIORITY_NORMAL);
   }
   Appearance *appearance = Appearance::create_default();
   style (appearance->create_style ("normal"));
@@ -872,24 +875,28 @@ RootImpl::check (uint64 current_time_usecs)
 bool
 RootImpl::dispatch ()
 {
-  AutoLocker locker (m_omutex);
-  m_async_mutex.lock();
-  Event *event = NULL;
-  if (!m_async_event_queue.empty())
-    {
-      event = m_async_event_queue.front();
-      m_async_event_queue.pop_front();
-    }
-  m_async_mutex.unlock();
-  if (event)
-    {
-      dispatch_event (*event);
-      delete event;
-    }
-  else if (test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
-    resize_all (NULL);
-  else if (!m_expose_region.empty())
-    draw_now();
+  ref (this);
+  {
+    AutoLocker locker (m_omutex);
+    m_async_mutex.lock();
+    Event *event = NULL;
+    if (!m_async_event_queue.empty())
+      {
+        event = m_async_event_queue.front();
+        m_async_event_queue.pop_front();
+      }
+    m_async_mutex.unlock();
+    if (event)
+      {
+        dispatch_event (*event);
+        delete event;
+      }
+    else if (test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+      resize_all (NULL);
+    else if (!m_expose_region.empty())
+      draw_now();
+  }
+  unref();
   return true;
 }
 
@@ -912,10 +919,71 @@ RootImpl::enqueue_async (Event *event)
 void
 RootImpl::idle_show()
 {
-  /* request size, WIN_SIZE and WIN_DRAW */
-  resize_all (NULL);
-  /* size requested, show up */
-  m_viewport->show();
+  if (m_viewport)
+    {
+      /* request size, WIN_SIZE and WIN_DRAW */
+      if (!m_viewport->visible())
+        resize_all (NULL);
+      /* size requested, show up */
+      m_viewport->show();
+    }
+}
+
+void
+RootImpl::show ()
+{
+  if (m_source)
+    {
+      if (!m_viewport)
+        m_viewport = Viewport::create_viewport ("auto", WINDOW_TYPE_NORMAL, *this);
+      BIRNET_ASSERT (m_viewport != NULL);
+      VoidSlot sl = slot (*this, &RootImpl::idle_show);
+      AutoLocker aelocker (m_async_mutex);
+      m_async_loop->exec_now (sl);
+    }
+}
+
+bool
+RootImpl::visible ()
+{
+  return m_viewport && m_viewport->visible();
+}
+
+void
+RootImpl::hide ()
+{
+  if (m_viewport)
+    m_viewport->hide();
+}
+
+bool
+RootImpl::closed ()
+{
+  return !m_source;
+}
+
+void
+RootImpl::close ()
+{
+  ref (this);
+  if (m_viewport)
+    {
+      m_viewport->hide();
+      delete m_viewport;
+      m_viewport = NULL;
+    }
+  if (m_source)
+    {
+      AutoLocker aelocker (m_async_mutex);
+      MainLoop *loop = ref (m_async_loop);
+      aelocker.unlock();
+      loop->quit(); // calls m_source methods
+      aelocker.relock();
+      BIRNET_ASSERT (m_async_loop->running() == false);
+      unref (loop);
+      BIRNET_ASSERT (m_source == NULL);
+    }
+  unref (this);
 }
 
 void
@@ -924,12 +992,14 @@ RootImpl::run_async (void)
   AutoLocker monitor (m_omutex);
   BIRNET_ASSERT (m_viewport == NULL);
   m_viewport = Viewport::create_viewport ("auto", WINDOW_TYPE_NORMAL, *this);
-  BIRNET_ASSERT (m_source == NULL);
-  m_source = new RootSource (*this);
   VoidSlot sl = slot (*this, &RootImpl::idle_show);
   AutoLocker aelocker (m_async_mutex);
   BIRNET_ASSERT (m_async_loop != NULL);
-  m_async_loop->add_source (m_source, MainLoop::PRIORITY_NORMAL);
+  if (!m_source)
+    {
+      m_source = new RootSource (*this);
+      m_async_loop->add_source (m_source, MainLoop::PRIORITY_NORMAL);
+    }
   m_async_loop->exec_now (sl);
 }
 
@@ -951,6 +1021,19 @@ RootImpl::stop_async (void)
       tmp_loop->quit();
       tmp_loop->unref();
     }
+}
+
+Window
+RootImpl::window ()
+{
+  class WindowImpl : public Window {
+  public:
+    WindowImpl (Root       &r,
+                OwnedMutex &om) :
+      Window (r, om)
+    {}
+  };
+  return WindowImpl (*this, m_omutex);
 }
 
 static const ItemFactory<RootImpl> root_factory ("Rapicorn::Factory::Root");

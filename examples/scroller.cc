@@ -60,7 +60,7 @@ main (int   argc,
     add_button_row (shell, i);
 
   /* show and process window */
-  root.run_async();
+  root.show();
   sl.unlock();             // un-protects item/root
 
   /* wait while the window runs asyncronously */

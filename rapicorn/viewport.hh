@@ -115,6 +115,8 @@ public:
                                                  double         root_y,
                                                  AnchorType     edge) = 0;
   virtual void          show                    (void) = 0;
+  virtual bool          visible                 (void) = 0;
+  virtual bool          viewable                (void) = 0;
   virtual void          hide                    (void) = 0;
   virtual uint          last_draw_stamp         () = 0;
   virtual void          enqueue_win_draws       (void) = 0;

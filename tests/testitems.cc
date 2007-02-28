@@ -40,22 +40,19 @@ static void
 run_and_test (const char *test_name)
 {
   TSTART (test_name);
-  Handle<Item> ihandle = Factory::create_item (test_name);
+  Window window = Factory::create_window (test_name);
   TOK();
-  AutoLocker locker (ihandle);
-  Item &item = ihandle.get();
-  Root &root = item.interface<Root&>();
+  AutoLocker locker (window);
   TOK();
-  TestItem *titem = item.interface<TestItem*>();
-  if (titem)
-    {
-      TOK();
-      titem->sig_assertion_ok += slot (assertion_ok);
-      titem->sig_assertions_passed += slot (assertions_passed);
-      titem->fatal_asserts (test_item_fatal_asserts);
-    }
+  Root &root = window.root(); /* needs lock acquired */
   TOK();
-  root.run_async();
+  TestItem *titem = root.interface<TestItem*>();
+  TASSERT (titem != NULL);
+  titem->sig_assertion_ok += slot (assertion_ok);
+  titem->sig_assertions_passed += slot (assertions_passed);
+  titem->fatal_asserts (test_item_fatal_asserts);
+  TOK();
+  root.show();
   TOK();
   locker.unlock();
   TOK();

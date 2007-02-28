@@ -14,7 +14,7 @@ rapicorn_public_headers = $(strip 	\
 	$(rapicorn_impl_headers)	\
 	utilities.hh	events.hh	\
 	enumdefs.hh	primitives.hh	region.hh	loop.hh		viewport.hh		\
-	properties.hh	commands.hh	appearance.hh	painter.hh	\
+	properties.hh	commands.hh	appearance.hh	painter.hh	window.hh		\
 	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
 	adjustment.hh	image.hh	paintgadgets.hh	slider.hh	paintcontainers.hh	\
 	buttons.hh	factory.hh	evaluator.hh	scrollitems.hh	layoutcontainers.hh	\
@@ -36,7 +36,7 @@ rapicorn_cc_sources = $(strip 		\
 	$(strip )			\
 	utilities.cc	events.cc	\
 	enumdefs.cc	primitives.cc	region.cc	loop.cc		viewport.cc		\
-	properties.cc	commands.cc	appearance.cc	painter.cc	\
+	properties.cc	commands.cc	appearance.cc	painter.cc	window.cc		\
 	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\
 	adjustment.cc	image.cc	paintgadgets.cc	slider.cc	paintcontainers.cc	\
 	buttons.cc	factory.cc	evaluator.cc	scrollitems.cc	layoutcontainers.cc	\

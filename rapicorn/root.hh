@@ -19,6 +19,7 @@
 
 #include <rapicorn/container.hh>
 #include <rapicorn/handle.hh>
+#include <rapicorn/window.hh>
 #include <rapicorn/loop.hh>
 
 namespace Rapicorn {
@@ -55,11 +56,18 @@ public:
   virtual void  remove_grab             (Item  &child) = 0;
   void          remove_grab             (Item  *child)     { throw_if_null (child); return remove_grab (*child); }
   virtual Item* get_grab                (bool  *unconfined = NULL) = 0;
+  /* window */
+  virtual void  show                    () = 0;
+  virtual bool  visible                 () = 0;
+  virtual void  hide                    () = 0;
+  virtual bool  closed                  () = 0;
+  virtual void  close                   () = 0;
   /* main loop functions */
   virtual MainLoop* get_loop            () = 0;
   /* MT-safe */
   virtual void  run_async               (void) = 0;
   virtual void  stop_async              (void) = 0;
+  virtual Window window                 () = 0;
 };
 
 } // Rapicorn

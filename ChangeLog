@@ -1,3 +1,28 @@
+Wed Feb 28 02:17:10 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/factory.*: introduce create_window() which can be used for
+	item definitions that create a Root item.
+
+	* rapicorn/root.*: always create and start a main loop when a Root 
+	item is created. added show(), visible(), hide(), close() and closed().
+	provide window() access method to get Window handle for a Root.
+	keep a reference on Root items around dispatch(), because the last
+	reference may be dropped during dispatching.
+
+	* rapicorn/window.*: new thread-safe handle for Root items. keeping a 
+	Window handle for a Root item keeps the item alive (referenced).
+	a Window also mirrors some Root item methods, calling these through the
+	Window object acquires the Root item's mutex first.
+
+	* rapicorn/viewport-gtk.*: added visible() and viewable().
+
+	* tests/testitems.cc: use Factory::create_window().
+
+	* examples/tour.cc: use Factory::create_window().
+
+	* examples/texttest.cc: 
+	* examples/scroller.cc: use root.show();
+
 Sun Mar  4 20:01:18 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/region.hh: made m_region a union with char[] member to 

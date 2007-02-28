@@ -37,7 +37,7 @@ main (int   argc,
   Root &root = shell.interface<Root&>();
 
   /* show and process window */
-  root.run_async();
+  root.show();
   sl.unlock();             // un-protects item/root
 
   /* wait while the window runs asyncronously */

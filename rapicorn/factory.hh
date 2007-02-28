@@ -19,6 +19,7 @@
 
 #include <rapicorn/item.hh>
 #include <rapicorn/handle.hh>
+#include <rapicorn/window.hh>
 #include <list>
 
 namespace Rapicorn {
@@ -40,6 +41,8 @@ Handle<Item>      create_item      (const String           &gadget_identifier,
 Handle<Container> create_container (const String           &gadget_identifier,
                                     const ArgumentList     &arguments = ArgumentList());
 Handle<Root>      create_root      (const String           &gadget_identifier,
+                                    const ArgumentList     &arguments = ArgumentList());
+Window            create_window    (const String           &gadget_identifier,
                                     const ArgumentList     &arguments = ArgumentList());
 /* convenience function */
 void              must_parse_file  (const String           &relative_file_name,

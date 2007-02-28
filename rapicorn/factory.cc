@@ -775,6 +775,18 @@ Factory::create_root (const String           &gadget_identifier,
   return item.handle<Root>(); // Handle<> does ref_sink()
 }
 
+Window
+Factory::create_window (const String           &gadget_identifier,
+                        const ArgumentList     &arguments)
+{
+  initialize_standard_gadgets_lazily();
+  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments);
+  Root &root = dynamic_cast<Root&> (item);
+  Window win = root.window();
+  /* win does ref_sink(); */
+  return win;
+}
+
 void
 Factory::ItemTypeFactory::register_item_factory (const ItemTypeFactory *itfactory)
 {

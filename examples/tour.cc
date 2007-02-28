@@ -38,17 +38,15 @@ drawable_draw (Display  &display,
   painter.draw_simple_line (area.x + 75, area.y + 120, area.x + 230, area.y + 110, lthickness * 0.5, fg);
 }
 
-static Root*
+static Window
 construct_gui (const char *executable)
 {
   Factory::must_parse_file ("tour.xml", "Test", Path::dirname (executable));
 
   /* create root item */
-  Handle<Item> ihandle = Factory::create_item ("Root");
-  AutoLocker ilocker (ihandle);
-  Item &item = ihandle.get();
-  Root &root = item.interface<Root&>();
-  root.ref_sink();
+  Window window = Factory::create_window ("Root");
+  AutoLocker wlocker (window);
+  Root &root = window.root();
 
   /* create dialog */
   Handle<Item> dhandle = Factory::create_item ("tour-dialog");
@@ -60,7 +58,7 @@ construct_gui (const char *executable)
   Drawable &drawable = root.interface<Drawable&>();
   drawable.sig_draw += slot (&drawable_draw, drawable);
 
-  return &root;
+  return window;
 }
 
 static bool
@@ -84,8 +82,8 @@ main (int   argc,
   rapicorn_init_with_foreign_gtk (&argc, &argv, "TourTest");
   register_builtin_images();
 
-  Root *root = construct_gui (argv[0]);
-  root->run_async();
+  Window window = construct_gui (argv[0]);
+  window.show();
   gtk_main();
   return 0;
   

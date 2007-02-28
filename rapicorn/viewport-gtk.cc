@@ -116,6 +116,8 @@ struct ViewportGtk : public virtual Viewport {
                                                  double         root_y,
                                                  AnchorType     edge);
   virtual void          show                    (void);
+  virtual bool          visible                 (void);
+  virtual bool          viewable                (void);
   virtual void          hide                    (void);
   virtual void          blit_plane              (Plane          *plane,
                                                  uint            draw_stamp);
@@ -277,6 +279,40 @@ ViewportGtk::show (void)
       if (window)
         gtk_widget_show (GTK_WIDGET (window));
     }
+}
+
+bool
+ViewportGtk::visible (void)
+{
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  if (m_viewport)
+    {
+      GtkWindow *window = rapicorn_viewport_get_my_window (m_viewport);
+      if (GTK_WIDGET_DRAWABLE (m_widget) &&
+          (!window || GTK_WIDGET_DRAWABLE (window)))
+        return TRUE;
+    }
+  return FALSE;
+}
+
+bool
+ViewportGtk::viewable (void)
+{
+  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  if (m_viewport)
+    {
+      if (!m_widget->window)
+        return FALSE;
+      GtkWidget *widget = m_widget;
+      while (widget)
+        {
+          if (!GTK_WIDGET_DRAWABLE (widget) || !gdk_window_is_viewable (widget->window))
+            return FALSE;
+          widget = widget->parent;
+        }
+      return TRUE;
+    }
+  return FALSE;
 }
 
 void
