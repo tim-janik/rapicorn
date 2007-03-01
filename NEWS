@@ -1,4 +1,13 @@
-Rapicorn 0.1.2:
+Rapicorn 702.0:
+
+* License update to GNU LGPL 2.1
+* simpler versioning scheme.
+* fixed various compiler/build issues
+* fixed Gtk+ version checks
+* rewrote asyncronous main loops
+* misc fixes and cleanups
+
+Rapicorn 0.1.2: - Mon Jan 22 20:20:14 2007
 
 * added Image support for PNG images.
 * added HSlider, VSlider, Arrow, dot-grid.

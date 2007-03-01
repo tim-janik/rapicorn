@@ -3,74 +3,40 @@ dnl *** include special macros ***
 dnl ******************************
 builtin(include, birnet/acbirnet.m4)dnl
 
-#
-# Configure script for Rapicorn
-#
+# initialize autoconf for Rapicorn
 AC_INIT
 AC_CONFIG_SRCDIR([rapicorn/rapicorn.hh])
 AM_CONFIG_HEADER(configure.h)
 AC_PREREQ(2.57)
 
-#
 # Rapicorn version numbers
-#
 AC_DIVERT_BEFORE_HELP([
-RAPICORN_MAJOR_VERSION=0
-RAPICORN_MINOR_VERSION=1
-RAPICORN_MICRO_VERSION=2
-RAPICORN_INTERFACE_AGE=0
-RAPICORN_BINARY_AGE=0
+RAPICORN_RELEASE_VERSION=702    # increment when ABI or API changes
+RAPICORN_REVISION_VERSION=0     # increment while ABI compatible, otherwise reset
 ])
-dnl#
-dnl# Making releases:
-dnl#   RAPICORN_MICRO_VERSION += 1;
-dnl#   RAPICORN_INTERFACE_AGE += 1;
-dnl#   RAPICORN_BINARY_AGE += 1;
-dnl# if any functions have been added, set RAPICORN_INTERFACE_AGE to 0.
-dnl# if backwards compatibility has been broken,
-dnl# set RAPICORN_BINARY_AGE _and_ RAPICORN_INTERFACE_AGE to 0.
 dnl# RAPICORN_RELEASE_CANDIDATE may contain rc[0-9]+ or nothing
 RAPICORN_RELEASE_CANDIDATE= #rc1
 
-# version number setup
-RAPICORN_VERSION=$RAPICORN_MAJOR_VERSION.$RAPICORN_MINOR_VERSION.$RAPICORN_MICRO_VERSION
+# version numbering and libtool versioning
+RAPICORN_VERSION=$RAPICORN_RELEASE_VERSION.$RAPICORN_REVISION_VERSION
 RAPICORN_PACKAGE_VERSION=$RAPICORN_VERSION # -rcZ to be appended...
 if test -n "$RAPICORN_RELEASE_CANDIDATE" ; then
     RAPICORN_PACKAGE_VERSION=$RAPICORN_VERSION-$RAPICORN_RELEASE_CANDIDATE
 fi
-BIN_VERSION=$RAPICORN_VERSION    # binary version, used for binaries and paths
-AC_SUBST(RAPICORN_MAJOR_VERSION)
-AC_SUBST(RAPICORN_MINOR_VERSION)
-AC_SUBST(RAPICORN_MICRO_VERSION)
-AC_SUBST(RAPICORN_INTERFACE_AGE)
-AC_SUBST(RAPICORN_BINARY_AGE)
+AC_SUBST(RAPICORN_RELEASE_VERSION)
+AC_SUBST(RAPICORN_REVISION_VERSION)
 AC_SUBST(RAPICORN_VERSION)
 AC_SUBST(RAPICORN_PACKAGE_VERSION)
-AC_SUBST(BIN_VERSION)
 AC_DEFINE_UNQUOTED(RAPICORN_VERSION, "$RAPICORN_VERSION", [Rapicorn Version])
 AC_DEFINE_UNQUOTED(RAPICORN_PACKAGE_VERSION, "$RAPICORN_PACKAGE_VERSION", [Rapicorn Package/Tarball Version])
-AC_DEFINE_UNQUOTED(BIN_VERSION, "$BIN_VERSION", [Binary Version])
-
-# compute libtool versions
-LT_RELEASE=$RAPICORN_MAJOR_VERSION.$RAPICORN_MINOR_VERSION
-LT_CURRENT=`expr $RAPICORN_MICRO_VERSION - $RAPICORN_INTERFACE_AGE`
-LT_REVISION=$RAPICORN_INTERFACE_AGE
-LT_AGE=`expr $RAPICORN_BINARY_AGE - $RAPICORN_INTERFACE_AGE`
+LT_RELEASE=$RAPICORN_RELEASE_VERSION
+LT_CURRENT=$RAPICORN_REVISION_VERSION
+LT_REVISION=0
+LT_AGE=$RAPICORN_REVISION_VERSION
 AC_SUBST(LT_RELEASE)
 AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
-
-dnl # figure debugging default, prior to $ac_help setup
-dnl
-AC_DIVERT_BEFORE_HELP([
-if test `expr $RAPICORN_MINOR_VERSION \% 2 \| $RAPICORN_MAJOR_VERSION \< 1` = 1 ; then
-        debug_default=yes
-else
-        debug_default=minimum
-fi
-])
-
 
 # architecture information
 AC_CANONICAL_TARGET
@@ -79,19 +45,19 @@ AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
 # initialize automake, don't define PACKAGE and VERSION
 AM_INIT_AUTOMAKE(rapicorn, $RAPICORN_PACKAGE_VERSION, no-define)
 
-# We have subdirectories.
+# support subdirectories.
 AC_PROG_MAKE_SET
 
-# Disable automatic maintainer mode.
+# disable automatic maintainer mode.
 AM_MAINTAINER_MODE
 
 # declare --enable-* args and collect ac_help strings
-AC_ARG_ENABLE(debug,       [  --enable-debug=[no/minimum/yes] turn on debugging [default=$debug_default]],,enable_debug=$debug_default)
+AC_ARG_ENABLE(debug,       [  --enable-debug=[no/minimum/yes] turn on debugging [default=yes]],,enable_debug=yes)
 AC_ARG_ENABLE(profile,     [  --enable-profile=[no/yes] turn on profiling [default=no]],,enable_profile=no)
 AC_ARG_ENABLE(devel-rules, [  --enable-devel-rules=[no/yes]   turn on developer build rules],,)
 # $enable_devel_rules
 
-dnl # setup DEBUG defaults
+# setup DEBUG defaults
 if test "x$enable_debug" = "xyes"; then
   ADDON_CFLAGS="-g -DG_ENABLE_DEBUG"
 else if test "x$enable_debug" = "xno"; then
@@ -106,7 +72,7 @@ if test "x$enable_profile" = "xyes"; then
     ADDON_CFLAGS="$ADDON_CFLAGS -pg"
   fi
 fi
-dnl # setup CFLAGS
+# setup CFLAGS
 if test -z "$CFLAGS"; then
   CFLAGS="$ADDON_CFLAGS"
 else
@@ -118,13 +84,11 @@ else
   CXXFLAGS="$CXXFLAGS $ADDON_CFLAGS"
 fi
 
-dnl # Foreign defaults:
+# foreign defaults:
 MC_IF_VAR_EQ(enable_static, yes, , enable_static=no)
 MC_IF_VAR_EQ(enable_shared, no, , enable_shared=yes)
 
-dnl #
-dnl # Include sub-package macro definitions
-dnl #
+# include sub-package macro definitions
 builtin(include, birnet/configure.inc)dnl
 #include(birnet/configure.inc)
 AC_DEFUN([DUMMY_DEFS],
@@ -134,9 +98,7 @@ AC_DEFUN([DUMMY_DEFS],
     AC_SUBST(BIRNET_LIBS)
 ])
 
-dnl
-dnl # Define package requirements.
-dnl
+# define package requirements.
 AC_DEFUN([AC_I18N_REQUIREMENTS],
 [
     dnl # TRANSLATORS: enter your language here
@@ -145,7 +107,7 @@ AC_DEFUN([AC_I18N_REQUIREMENTS],
     AC_SUBST(ALL_LINGUAS)
 
     dnl # versioned Rapicorn gettext domain (po/)
-    RAPICORN_GETTEXT_DOMAIN=rapicorn-v$BIN_VERSION    # version without -rcZ
+    RAPICORN_GETTEXT_DOMAIN=rapicorn-v$RAPICORN_VERSION    # version without -rcZ
     AC_SUBST(RAPICORN_GETTEXT_DOMAIN)
     AC_DEFINE_UNQUOTED(RAPICORN_GETTEXT_DOMAIN, "$RAPICORN_GETTEXT_DOMAIN", [Versioned Rapicorn gettext domain])
     GETTEXT_PACKAGE=$RAPICORN_GETTEXT_DOMAIN
@@ -233,7 +195,7 @@ AC_DEFUN([AC_DOC_REQUIREMENTS],
 [
 ])
 
-# check compilers and their behaviour, setup CFLAGS
+# check compilers and behaviour; setup CFLAGS
 MC_PROG_CC_WITH_CFLAGS
 MC_PROG_CXX_WITH_CXXFLAGS
 AC_PROG_CPP
@@ -243,15 +205,11 @@ AC_C_CONST
 AC_C_INLINE
 AC_HEADER_STDC
 
-# Checks for programs
-AC_PROG_INSTALL
-AC_PROG_LN_S
-
-# initialize libtool, we need dynamic module support
+# initialize libtool with dynamic module support
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 
-# Check for package requirements.
+# check for package requirements.
 MC_IF_VAR_EQ(GCC, yes,,
     AC_MSG_ERROR(This package requires GNU gcc)
 )
@@ -259,13 +217,11 @@ MC_IF_VAR_EQ(GXX, yes,,
     AC_MSG_ERROR(This package requires GNU g++)
 )
 
-# Figure build requirement
+# check build requirements
 AC_MSG_CHECKING(whether make is GNU Make)
+MC_ASSERT_PROG(PKG_CONFIG, pkg-config, [pkg-config can be found at http://pkgconfig.freedesktop.org/])
 
-# require pkg-config
-MC_ASSERT_PROG(PKG_CONFIG, pkg-config, [pkg-config can be found at http://www.freedesktop.org/software/pkgconfig/])
-
-# check for development build rules (autogen.sh based builds from CVS)
+# check for development build rules (autogen.sh based builds)
 AC_MSG_CHECKING(whether develoment build rules are to be used)
 if test x"$enable_devel_rules" = xyes ; then
     AC_MSG_RESULT(yes)
@@ -296,18 +252,20 @@ AM_CONDITIONAL(IF_DVLBUILD, test -z "$DVLBUILD")
 AM_CONDITIONAL(IF_NOTDVLBUILD, test -z "$NOTDVLBUILD")
 
 # find installation utilities
+AC_PROG_INSTALL
+AC_PROG_LN_S
 AC_PATH_PROG(UPDATE_MIME_DATABASE, update-mime-database)
 
-# Check sub-package requirements
+# check sub-package requirements
 AC_BIRNET_REQUIREMENTS
 
-# Check requirement sets
+# check requirement sets
 AC_I18N_REQUIREMENTS
 AC_BIRNET_REQUIREMENTS
 AC_RAPICORN_REQUIREMENTS
 AC_DOC_REQUIREMENTS
 
-# Automake @VARIABLE@ exports.
+# automake @VARIABLE@ exports.
 AC_SUBST(CFLAGS)
 AC_SUBST(CXXFLAGS)
 AC_SUBST(CPPFLAGS)
