@@ -565,6 +565,10 @@ FactorySingleton::call_gadget (const Gadget       *gadget,
   Item *itemp;
   try {
     itemp = &inherit_gadget (gadget->ancestor, ancestor_args, env, unused_args);
+  } catch (std::exception &exc) {
+    error (gadget->location() + ": in <def:" + gadget->ident + "/> - failed to inherit: " + exc.what());
+    env.pop_map (custom_args);
+    throw;
   } catch (...) {
     env.pop_map (custom_args);
     throw;
@@ -607,6 +611,11 @@ FactorySingleton::call_gadget (const Gadget       *gadget,
               unused_args.erase (current);
           }
       }
+  } catch (std::exception &exc) {
+    error (gadget->location() + ": in <def:" + gadget->ident + "/> - construction failed: " + exc.what());
+    sink (item);
+    env.pop_map (custom_args);
+    throw;
   } catch (...) {
     sink (item);
     env.pop_map (custom_args);
