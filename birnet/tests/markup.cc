@@ -16,7 +16,6 @@
  */
 //#define TEST_VERBOSE
 #include <birnet/birnettests.h>
-#include <birnet/birnetmarkup.hh>
 
 namespace {
 using namespace Birnet;
