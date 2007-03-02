@@ -15,7 +15,6 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "text-pango.hh"
-#include "birnetmarkup.hh"
 #if     RAPICORN_WITH_PANGO
 #include <pango/pangoft2.h>
 #include "factory.hh"

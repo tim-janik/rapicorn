@@ -294,7 +294,7 @@ public:
           m_loop->quit();
       }
     else
-      ASSERT_NOT_REACHED();
+      assert_not_reached();
     return true;
   }
   virtual void

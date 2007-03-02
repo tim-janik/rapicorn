@@ -1,3 +1,18 @@
+Fri Mar  2 03:12:38 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/birnetutils.hh, rapicorn/birnetutils.cc: moved utilities to
+	Birnet: swap(), min(), max(), abs(), clamp(), provide error(), warning(),
+	diag() and errmsg(). removed some unused cruft.
+
+	* rapicorn/birnetmarkup.hh, rapicorn/birnetmarkup.cc: moved to Birnet.
+
+	* rapicorn/private.hh: removed utilities provided by newer Birnet.
+
+	* rapicorn/Makefile.am: enable _BIRNET_SOURCE_EXTENSIONS.
+
+	* tests/markup.cc: stripped down to just run Rapicorn specific 
+	markup tests.
+
 Thu Mar  1 22:24:39 2007  Tim Janik  <timj@gtk.org>
 
 	* configure.in: changed versioning scheme to RELEASE.REVISION, using

@@ -22,27 +22,6 @@
 
 namespace Birnet {
 
-/* --- common utilities --- */
-using ::std::swap;
-using ::std::min;
-using ::std::max;
-#undef abs
-template<typename T> inline const T&
-abs (const T &value)
-{
-  return max (value, -value);
-}
-#undef clamp
-template<typename T> inline const T&
-clamp (const T &value, const T &minimum, const T &maximum)
-{
-  if (minimum > value)
-    return minimum;
-  if (maximum < value)
-    return maximum;
-  return value;
-}
-
 /* --- text encoding --- */
 bool    text_convert    (const char        *to_charset,
                          std::string       &output_string,
@@ -50,19 +29,6 @@ bool    text_convert    (const char        *to_charset,
                          const std::string &input_string,
                          const char        *fallback_charset = "ISO-8859-1",
                          const std::string &output_mark = "");
-
-/* --- assertions, warnings, errors --- */
-void    error                           (const char *format, ...) BIRNET_PRINTF (1, 2) BIRNET_NORETURN;
-void    error                           (const String &s) BIRNET_NORETURN;
-void    warning                         (const char *format, ...) BIRNET_PRINTF (1, 2);
-void    warning                         (const String &s);
-void    diag                            (const char *format, ...) BIRNET_PRINTF (1, 2);
-void    diag                            (const String &s);
-void    errmsg                          (const String &entity, const char *format, ...) BIRNET_PRINTF (2, 3);
-void    errmsg                          (const String &entity, const String &s);
-void    warning_expr_failed             (const char *file, uint line, const char *function, const char *expression);
-void    error_expr_failed               (const char *file, uint line, const char *function, const char *expression);
-void    warning_expr_reached            (const char *file, uint line, const char *function);
 
 /* --- exceptions --- */
 struct Exception : std::exception {

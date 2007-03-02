@@ -16,7 +16,6 @@
  */
 #include "factory.hh"
 #include "evaluator.hh"
-#include "birnetmarkup.hh"
 #include "root.hh"
 #include <stack>
 #include <errno.h>

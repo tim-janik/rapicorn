@@ -7,12 +7,12 @@ include $(top_srcdir)/Makefile.decl
 INCLUDES       += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(PANGO_CFLAGS) $(GTK_CFLAGS)
 GLIB_MKENUMS    = glib-mkenums
 LDLIBS	        = $(LIBS) $(PANGO_LIBS) $(GTK_LIBS)
-DEFS		= -DRAPICORN_PRIVATE -DPARANOID
+DEFS            = -DRAPICORN_PRIVATE -DPARANOID -D_BIRNET_SOURCE_EXTENSIONS -DBIRNET_LOG_DOMAIN=\"RAPICORN\" # "
 
 rapicorn_public_headers = $(strip 	\
 	rapicorn.hh	keycodes.hh	userconfig.hh	handle.hh	\
 	$(rapicorn_impl_headers)	\
-	birnetutils.hh	birnetmarkup.hh	utilities.hh	events.hh	\
+	birnetutils.hh	utilities.hh	events.hh	\
 	enumdefs.hh	primitives.hh	region.hh	loop.hh		viewport.hh		\
 	properties.hh	commands.hh	appearance.hh	painter.hh	\
 	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
@@ -31,7 +31,7 @@ rapicorn_impl_headers = $(strip 	\
 rapicorn_cc_sources = $(strip 		\
 	viewport-gtk.cc	regionimpl.c	\
 	$(strip )			\
-	birnetutils.cc	birnetmarkup.cc	utilities.cc	events.cc	\
+	birnetutils.cc	utilities.cc	events.cc	\
 	enumdefs.cc	primitives.cc	region.cc	loop.cc		viewport.cc		\
 	properties.cc	commands.cc	appearance.cc	painter.cc	\
 	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\
