@@ -30,6 +30,7 @@ birnet_generated_headers = $(strip 	\
 	birnetsignalvariants.hh         \
 )
 EXTRA_DIST += configure.inc acbirnet.m4 mksignals.sh
+BIRNET_HEADER_CHECKSUM=cat $(filter-out birnetconfig.h, $(birnet_headers) $(birnet_private_headers) $(birnet_generated_headers)) | md5sum | sed 's/ .*//'
 
 # Birnet library
 # we want a partial shared library here. libtool creates that if the library
@@ -42,13 +43,25 @@ libbirnetinclude_HEADERS   = $(birnet_headers) $(birnet_generated_headers)
 libbirnet_la_SOURCES       = $(birnet_sources)
 libbirnet_la_DEPENDENCIES  =
 libbirnet_la_LIBADD        = $(BIRNET_LIBS) -lm
-libbirnet_la_LDFLAGS       = -no-undefined # -Wl,-Bsymbolic
+libbirnet_la_LDFLAGS       = -no-undefined -avoid-version # -Wl,-Bsymbolic
 # keep this .o rule in sync with the corresponding .la rule from Makefile.in
 libbirnet.o: $(libbirnet_la_OBJECTS) $(libbirnet_la_DEPENDENCIES)
 	$(CXXLINK)  $(libbirnet_la_LDFLAGS) $(libbirnet_la_OBJECTS) # $(libbirnet_la_LIBADD) $(LIBS)
 all-am: libbirnet.o
 CLEANFILES += libbirnet.lo libbirnet.o
 EXTRA_DIST += $(birnet_private_headers)
+
+# === header-checksum ===
+header-checksum:
+	$(BIRNET_HEADER_CHECKSUM)
+check-header-checksum:
+	cd $(srcdir) \
+	&& BIRNET_CURRENT_CHECKSUM=$$($(BIRNET_HEADER_CHECKSUM))						\
+	&& test "$$BIRNET_CURRENT_CHECKSUM" = "@BIRNET_RELEASE_CHECKSUM@" 					\
+	|| test $$(expr $$(date +%Y) - 2000)$$(date +%m) = @BIRNET_RELEASE_VERSION@				\
+	|| { MSG="BIRNET_RELEASE_VERSION must be updated to match header changes ($$BIRNET_CURRENT_CHECKSUM)" ;	\
+	     echo $$MSG | sed 's/./=/g'; echo $$MSG; echo $$MSG | sed 's/./=/g'; false ; }
+check-am: @BIRNET_SKIP_VERSION_CHECK@ check-header-checksum
 
 # === birnetconfig.h ===
 birnetconfig.h: $(top_builddir)/config.status # Makefile
@@ -60,6 +73,9 @@ birnetconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "#define _GNU_SOURCE"								>> xgen-$(@F) \
 	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
+	&& echo "/* select unique namespace for all symbols */"					>> xgen-$(@F) \
+	&& echo "#define Birnet				@BIRNET_NAMESPACE_NAME@"		>> xgen-$(@F) \
+	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* standard C code wrappers */"						>> xgen-$(@F) \
 	&& echo "#ifdef  __cplusplus"								>> xgen-$(@F) \
 	&& echo '#define BIRNET_EXTERN_C_BEGIN()	extern "C" {'				>> xgen-$(@F) \
@@ -68,13 +84,6 @@ birnetconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "#define BIRNET_EXTERN_C_BEGIN()"						>> xgen-$(@F) \
 	&& echo "#define BIRNET_EXTERN_C_END()"							>> xgen-$(@F) \
 	&& echo "#endif"									>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* birnet version */"								>> xgen-$(@F) \
-	&& echo "#define BIRNET_MAJOR_VERSION		(@BIRNET_MAJOR_VERSION@)"		>> xgen-$(@F) \
-	&& echo "#define BIRNET_MINOR_VERSION		(@BIRNET_MINOR_VERSION@)"		>> xgen-$(@F) \
-	&& echo "#define BIRNET_MICRO_VERSION		(@BIRNET_MICRO_VERSION@)"		>> xgen-$(@F) \
-	&& echo "#define BIRNET_BINARY_AGE		(@BIRNET_BINARY_AGE@)"			>> xgen-$(@F) \
-	&& echo "#define BIRNET_INTERFACE_AGE		(@BIRNET_INTERFACE_AGE@)"		>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* log domain */"								>> xgen-$(@F) \
 	&& echo "#ifndef BIRNET_LOG_DOMAIN"							>> xgen-$(@F) \
@@ -85,15 +94,16 @@ birnetconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
+	&& echo "/* birnet version */"								>> xgen-$(@F) \
+	&& echo "#define BIRNET_RELEASE_VERSION		(@BIRNET_RELEASE_VERSION@)"		>> xgen-$(@F) \
+	&& echo "#define BIRNET_REVISION_VERSION	(@BIRNET_REVISION_VERSION@)"		>> xgen-$(@F) \
 	&& echo "/* version checks */"								>> xgen-$(@F) \
-	&& echo "#define BIRNET_CHECK_VERSION(major,minor,micro)	\\"			>> xgen-$(@F) \
-	&& echo "  (BIRNET_MAJOR_VERSION > (major) || \\"					>> xgen-$(@F) \
-	&& echo "   (BIRNET_MAJOR_VERSION == (major) && BIRNET_MINOR_VERSION > (minor)) || \\"	>> xgen-$(@F) \
-	&& echo "   (BIRNET_MAJOR_VERSION == (major) && BIRNET_MINOR_VERSION == (minor) && \\"	>> xgen-$(@F) \
-	&& echo "    BIRNET_MICRO_VERSION >= (micro)))"						>> xgen-$(@F) \
+	&& echo "#define BIRNET_CHECK_VERSION(relv,revv)	\\"				>> xgen-$(@F) \
+	&& echo "  (BIRNET_RELEASE_VERSION > (relv) || \\"					>> xgen-$(@F) \
+	&& echo "   (BIRNET_RELEASE_VERSION == (relv) && BIRNET_REVISION_VERSION >= (revv)))"	>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* configure results */"							>> xgen-$(@F) \
-	&& echo "#define BIRNET_OS_@BIRNET_OS@		(1) /* one of: @BIRNET_OS_CHOICES@ */"	>> xgen-$(@F) \
+	&& echo "#define BIRNET_OS_@BIRNET_OS@  	(1) /* one of: @BIRNET_OS_CHOICES@ */"	>> xgen-$(@F) \
 	&& echo "#define BIRNET_SIZEOF_POINTER		(@BIRNET_SIZEOF_POINTER@)"		>> xgen-$(@F) \
 	&& echo "#define BIRNET_SIZEOF_LONG		(@BIRNET_SIZEOF_LONG@)"			>> xgen-$(@F) \
 	&& echo "#define BIRNET_SIZEOF_SYS_TYPESH_UINT	(@BIRNET_SIZEOF_SYS_TYPESH_UINT@)"	>> xgen-$(@F) \

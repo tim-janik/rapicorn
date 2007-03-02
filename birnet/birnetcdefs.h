@@ -17,12 +17,12 @@
 #ifndef __BIRNET_CDEFS_H__
 #define __BIRNET_CDEFS_H__
 
+#include <birnet/birnetconfig.h>	/* _GNU_SOURCE */
 #include <stdbool.h>
 #include <stddef.h>			/* NULL */
 #include <sys/types.h>			/* uint, ssize */
 #include <limits.h>                     /* {INT|CHAR|...}_{MIN|MAX} */
 #include <float.h>                      /* {FLT|DBL}_{MIN|MAX|EPSILON} */
-#include <birnet/birnetconfig.h>
 
 BIRNET_EXTERN_C_BEGIN();
 

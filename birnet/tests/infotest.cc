@@ -18,7 +18,7 @@
 #include <birnet/birnettests.h>
 using namespace Birnet;
 
-#if BIRNET_CHECK_VERSION (2147483647, 2147483647, 2147483647) || !BIRNET_CHECK_VERSION (0, 0, 1)      
+#if BIRNET_CHECK_VERSION (2147483647, 2147483647) || !BIRNET_CHECK_VERSION (0, 0)      
 #error BIRNET_CHECK_VERSION() apparently broken
 #endif
 

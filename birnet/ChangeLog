@@ -1,3 +1,22 @@
+Sat Mar  3 00:45:52 2007  Tim Janik  <timj@gtk.org>
+
+	* configure.inc: changed versioning to RELEASE.REVISION, using
+	year+month to construct release numbers. also provide a RELEASE_CHECKSUM
+	derived from a specific header file set, so make check: can check and
+	abort if the headers changed and the release number hasn't been updated
+	for too long. require, expand and check BIRNET_NAMESPACE_NAME.
+
+	* birnet/Makefile.am: added header-checksum: rule to generate a checksum
+	from the current header files. added check-header-checksum: rule to
+	error out and issue a message when the version number should be updated.
+	redefine "Birnet" namespace in birnetconfig.h. according to configure.in.
+	adapted version number generation in birnetconfig.h.
+
+	* birnet/birnetcdefs.h: make birnetconfig.h the first included file, so
+	definitions like _GNU_SOURCE really have an effect.
+	
+	* birnet/examples/mkhost.sh: package versioning fixups.
+
 Fri Mar  2 02:58:46 2007  Tim Janik  <timj@gtk.org>
 
 	* birnet/birnet.hh:
