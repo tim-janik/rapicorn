@@ -17,12 +17,12 @@
 #ifndef __BIRNET_CDEFS_H__
 #define __BIRNET_CDEFS_H__
 
+#include <birnet/birnetconfig.h>	/* _GNU_SOURCE */
 #include <stdbool.h>
 #include <stddef.h>			/* NULL */
 #include <sys/types.h>			/* uint, ssize */
 #include <limits.h>                     /* {INT|CHAR|...}_{MIN|MAX} */
 #include <float.h>                      /* {FLT|DBL}_{MIN|MAX|EPSILON} */
-#include <birnet/birnetconfig.h>
 
 BIRNET_EXTERN_C_BEGIN();
 
@@ -94,12 +94,11 @@ BIRNET_EXTERN_C_BEGIN();
 #define	ISLIKELY		BIRNET_ISLIKELY
 #define	UNLIKELY		BIRNET_UNLIKELY
 #define	LIKELY			BIRNET_LIKELY
-#define	RETURN_IF_FAIL		BIRNET_RETURN_IF_FAIL
-#define	RETURN_VAL_IF_FAIL	BIRNET_RETURN_VAL_IF_FAIL
-#define	ASSERT_NOT_REACHED	BIRNET_ASSERT_NOT_REACHED
-#define	ASSERT			BIRNET_ASSERT
-#define	WARNING			BIRNET_WARNING
-#define	ERROR			BIRNET_ERROR
+#define	return_if_fail		BIRNET_RETURN_IF_FAIL
+#define	return_val_if_fail	BIRNET_RETURN_VAL_IF_FAIL
+#define	assert_not_reached	BIRNET_ASSERT_NOT_REACHED
+#undef  assert
+#define	assert			BIRNET_ASSERT
 #endif /* _BIRNET_SOURCE_EXTENSIONS */
 
 /* --- preprocessor pasting --- */

@@ -1,3 +1,47 @@
+Sat Mar  3 00:45:52 2007  Tim Janik  <timj@gtk.org>
+
+	* configure.inc: changed versioning to RELEASE.REVISION, using
+	year+month to construct release numbers. also provide a RELEASE_CHECKSUM
+	derived from a specific header file set, so make check: can check and
+	abort if the headers changed and the release number hasn't been updated
+	for too long. require, expand and check BIRNET_NAMESPACE_NAME.
+
+	* birnet/Makefile.am: added header-checksum: rule to generate a checksum
+	from the current header files. added check-header-checksum: rule to
+	error out and issue a message when the version number should be updated.
+	redefine "Birnet" namespace in birnetconfig.h. according to configure.in.
+	adapted version number generation in birnetconfig.h.
+
+	* birnet/birnetcdefs.h: make birnetconfig.h the first included file, so
+	definitions like _GNU_SOURCE really have an effect.
+	
+	* birnet/examples/mkhost.sh: package versioning fixups.
+
+Fri Mar  2 02:58:46 2007  Tim Janik  <timj@gtk.org>
+
+	* birnet/birnet.hh:
+	* birnet/tests/markup.cc: fixed missing birnetmarkup.hh include.
+
+Fri Mar  2 02:32:08 2007  Tim Janik  <timj@gtk.org>
+
+	* birnetmarkup.hh, birnetmarkup.cc: added simple XML markup parser
+	from Rapicorn, based on GMarkup from GLib.
+	this parser additionally contains a line_number_after_newline to fixup
+	error message line numbers and it can recapture an element subtree
+	of the processed XML into a new XML string.
+
+	* tests/markup.cc: test Birnet::MarkupParser.
+
+Fri Mar  2 02:19:51 2007  Tim Janik  <timj@gtk.org>
+
+	* birnet/birnetcdefs.h: if _BIRNET_SOURCE_EXTENSIONS is defined,
+	provide return_if_fail(), return_val_if_fail(), assert_not_reached()
+	and assert().
+
+	* birnet/birnetutils.hh, birnet/birnetutils.cc: 
+	provide swap(), min(), max(), abs() and clamp().
+	provide error(), warning(), diag() and errmsg().
+
 Wed Feb 21 03:27:02 2007  Tim Janik  <timj@gtk.org>
 
 	* birnetthread.hh: fixed up destructor ordering. added missing

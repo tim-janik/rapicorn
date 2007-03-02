@@ -42,7 +42,7 @@ __EOFmkhost
 
 # NEWS
 create_target NEWS <<-__EOFmkhost
-	Version 0.0.0 news:
+	Version 0 news:
 	
 	* Added birnet/ library
 	* Setup ChangeLog, AUTHORS, COPYING, NEWS and README
@@ -155,13 +155,12 @@ create_target configure.in <<-\__EOFmkhost
 	builtin(include, birnet/acbirnet.m4)dnl
 	
 	# Initialize and configure
-	PACKAGE_VERSION=0.0.0
 	AC_INIT
 	AC_CONFIG_SRCDIR([birnet/birnet.hh])
 	AM_CONFIG_HEADER(configure.h)
 	AC_PREREQ(2.57)
 	AC_CANONICAL_TARGET
-	AM_INIT_AUTOMAKE(birnet, $PACKAGE_VERSION, no-define)
+	AM_INIT_AUTOMAKE(birnet, $BIRNET_PACKAGE_VERSION, no-define)
 	AC_PROG_MAKE_SET
 	
 	ADDON_CFLAGS="-g -DG_ENABLE_DEBUG" # DEBUG defaults
@@ -189,6 +188,7 @@ create_target configure.in <<-\__EOFmkhost
 	dnl # Birnet configure macro included
 	
 	# Configure Birnet
+	BIRNET_NAMESPACE_NAME=Birnet$BIRNET_RELEASE_VERSION
 	AC_BIRNET_REQUIREMENTS
 	
 	# create output files

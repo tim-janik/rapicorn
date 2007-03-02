@@ -255,7 +255,101 @@ BIRNET_STATIC_ASSERT (LDBL_MIN     <= 1E-37);
 BIRNET_STATIC_ASSERT (LDBL_MAX     >= 1E+37);
 BIRNET_STATIC_ASSERT (LDBL_EPSILON <= 1E-9);
 
-/* --- assertions/warnings/errors --- */
+/* --- assertions, warnings, errors --- */
+void
+error (const char *format,
+       ...)
+{
+  va_list args;
+  va_start (args, format);
+  String ers = string_vprintf (format, args);
+  va_end (args);
+  error (ers);
+}
+
+void
+error (const String &s)
+{
+  fflush (stdout);
+  String msg ("\nERROR: ");
+  msg += s;
+  msg += "\naborting...\n";
+  fputs (msg.c_str(), stderr);
+  fflush (stderr);
+  BREAKPOINT();
+  abort();
+}
+
+void
+warning (const char *format,
+         ...)
+{
+  fflush (stdout);
+  va_list args;
+  va_start (args, format);
+  String ers = string_vprintf (format, args);
+  va_end (args);
+  warning (ers);
+  fflush (stderr);
+}
+
+void
+warning (const String &s)
+{
+  fflush (stdout);
+  String msg ("\nWARNING: ");
+  msg += s;
+  msg += '\n';
+  fputs (msg.c_str(), stderr);
+}
+
+void
+diag (const char *format,
+      ...)
+{
+  fflush (stdout);
+  va_list args;
+  va_start (args, format);
+  String ers = string_vprintf (format, args);
+  va_end (args);
+  diag (ers);
+  fflush (stderr);
+}
+
+void
+diag (const String &s)
+{
+  String msg ("DIAG: ");
+  msg += s;
+  msg += '\n';
+  fputs (msg.c_str(), stderr);
+}
+
+void
+errmsg (const String &entity,
+        const char *format,
+        ...)
+{
+  fflush (stdout);
+  va_list args;
+  va_start (args, format);
+  String ers = string_vprintf (format, args);
+  va_end (args);
+  errmsg (entity, ers);
+  fflush (stderr);
+}
+
+void
+errmsg (const String &entity,
+        const String &s)
+{
+  String msg (entity);
+  msg += entity.size() ? ": " : "DEBUG: ";
+  msg += s;
+  msg += '\n';
+  fputs (msg.c_str(), stderr);
+}
+
 void
 raise_sigtrap ()
 {

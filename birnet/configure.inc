@@ -12,26 +12,40 @@ AC_DEFUN([BIRNET_SUBST_COMPUTED_SYSVAL],
 dnl # AC_BIRNET_REQUIREMENTS() checks everything needed for birnetconfig.h
 AC_DEFUN([AC_BIRNET_REQUIREMENTS],
 [
-    dnl # BIRNET versioning
+    # --- Birnet version numbers ---
     AC_DIVERT_BEFORE_HELP([
-    BIRNET_MAJOR_VERSION=0
-    BIRNET_MINOR_VERSION=0
-    BIRNET_MICRO_VERSION=1
-    BIRNET_INTERFACE_AGE=0
-    BIRNET_BINARY_AGE=0
-    BIRNET_VERSION="$BIRNET_MAJOR_VERSION.$BIRNET_MINOR_VERSION.$BIRNET_MICRO_VERSION"
+    BIRNET_RELEASE_CHECKSUM=95fe2f2d9b109503ae6e83f7fd8c9454
+    BIRNET_RELEASE_VERSION=702  # increment when ABI or API changes
+    BIRNET_REVISION_VERSION=0   # increment while ABI compatible, otherwise reset
+    BIRNET_RELEASE_CANDIDATE=   # rc[0-9]+
+    BIRNET_VERSION=$BIRNET_RELEASE_VERSION.$BIRNET_REVISION_VERSION
+    BIRNET_PACKAGE_VERSION=$BIRNET_VERSION # -rcZ to be appended...
+    test -n "$BIRNET_RELEASE_CANDIDATE" && BIRNET_PACKAGE_VERSION=$BIRNET_VERSION-$BIRNET_RELEASE_CANDIDATE
     ])
-    AC_SUBST(BIRNET_MAJOR_VERSION)
-    AC_SUBST(BIRNET_MINOR_VERSION)
-    AC_SUBST(BIRNET_MICRO_VERSION)
-    AC_SUBST(BIRNET_INTERFACE_AGE)
-    AC_SUBST(BIRNET_BINARY_AGE)
+    AC_SUBST(BIRNET_RELEASE_CHECKSUM)
+    AC_SUBST(BIRNET_RELEASE_VERSION)
+    AC_SUBST(BIRNET_REVISION_VERSION)
     AC_SUBST(BIRNET_VERSION)
+    AC_SUBST(BIRNET_PACKAGE_VERSION)
+    AC_DEFINE_UNQUOTED(BIRNET_VERSION, "$BIRNET_VERSION", [Birnet Version])
+    AC_DEFINE_UNQUOTED(BIRNET_PACKAGE_VERSION, "$BIRNET_PACKAGE_VERSION", [Birnet Package/Tarball Version])
+    BIRNET_SKIP_VERSION_CHECK='#'
+    grep -q '^AM''_INIT_AUTOMAKE(birnet,' ./configure.in && BIRNET_SKIP_VERSION_CHECK=''
+    AC_SUBST(BIRNET_SKIP_VERSION_CHECK)
 
-    BIRNET_CFLAGS=""
-    BIRNET_LIBS=""
+    # --- Birnet namespace ---
+    AC_MSG_CHECKING([for Birnet namespace])
+    xtmp=$(echo "$BIRNET_NAMESPACE_NAME")  # expand shell variables
+    BIRNET_NAMESPACE_NAME="$xtmp"
+    if test -z "$BIRNET_NAMESPACE_NAME" || test "$BIRNET_NAMESPACE_NAME" = "Birnet" ; then
+	    AC_MSG_RESULT(["$BIRNET_NAMESPACE_NAME"])
+	    AC_MSG_ERROR([BIRNET_NAMESPACE_NAME must be specified distinctly to build Birnet])
+    else
+	    AC_MSG_RESULT([$BIRNET_NAMESPACE_NAME])
+    fi
+    AC_SUBST(BIRNET_NAMESPACE_NAME)
 
-    dnl # --- sizeof and presence of uint ---
+    # --- sizeof and presence of uint ---
     GLIB_SIZEOF([#include <sys/types.h>], uint, birnet_sys_typesh_uint)
     BIRNET_SIZEOF_SYS_TYPESH_UINT="$glib_cv_sizeof_birnet_sys_typesh_uint"
     AC_SUBST(BIRNET_SIZEOF_SYS_TYPESH_UINT) dnl # for birnetconfig.h
@@ -42,7 +56,7 @@ AC_DEFUN([AC_BIRNET_REQUIREMENTS],
     BIRNET_SIZEOF_LONG="$glib_cv_sizeof_birnet_long"
     AC_SUBST(BIRNET_SIZEOF_LONG) dnl # for birnetconfig.h
 
-    dnl # --- POLL* ---
+    # --- POLL* ---
     poll_headers=["
       #define _GNU_SOURCE
       #include <sys/types.h>
@@ -61,7 +75,7 @@ AC_DEFUN([AC_BIRNET_REQUIREMENTS],
     BIRNET_SUBST_COMPUTED_SYSVAL([POLLNVAL],   $poll_headers)
     AC_MSG_RESULT([done])
 
-    dnl # --- OS/Win32 detection ---
+    # --- OS/Win32 detection ---
     dnl # needs AC_CANONICAL_HOST
     test -z "$host" && {
 	missing_macro="AC""_CANONICAL_HOST"

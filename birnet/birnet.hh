@@ -20,9 +20,8 @@
 #include <birnet/birnetconfig.h>
 #include <birnet/birnetcpu.hh>
 #include <birnet/birnetdebugtools.hh>
-
 #include <birnet/birnetmsg.hh>
-
+#include <birnet/birnetmarkup.hh>
 #include <birnet/birnetmath.hh>
 #include <birnet/birnetutf8.hh>
 #include <birnet/birnetutils.hh>
