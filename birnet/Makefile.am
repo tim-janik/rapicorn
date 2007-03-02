@@ -10,29 +10,16 @@ DEFS            = -DBIRNET_LOG_DOMAIN=\"BIRNET\" -D_BIRNET_SOURCE_EXTENSIONS
 GLIB_MKENUMS    = glib-mkenums
 
 birnet_headers = $(strip 		\
-	birnet.hh			\
-	birnetcdefs.h			\
-	birnetcdefs.h			\
-	birnetcpu.hh			\
-	birnetdebugtools.hh		\
-	birnetmsg.hh			\
-	birnetsignal.hh                 \
-	birnettests.h			\
-	birnetthread.hh			\
-	birnetmath.hh			\
-	birnetutf8.hh			\
-	birnetutils.hh			\
+	birnet.hh	birnetcdefs.h		birnettests.h			\
+	birnetcpu.hh	birnetdebugtools.hh	birnetthread.hh	birnetutils.hh	\
+	birnetmsg.hh	birnetsignal.hh		birnetmath.hh	birnetutf8.hh	\
+	birnetmarkup.hh	\
 )
 birnet_sources = $(strip 		\
 	birnetthreadimpl.cc		\
-	birnetcpu.cc			\
-	birnetdebugtools.cc		\
-	birnetmsg.cc			\
-	birnetsignal.cc                 \
-	birnetthread.cc			\
-	birnetmath.cc			\
-	birnetutf8.cc			\
-	birnetutils.cc			\
+	birnetcpu.cc	birnetdebugtools.cc	birnetthread.cc	birnetutils.cc	\
+	birnetmsg.cc	birnetsignal.cc		birnetmath.cc	birnetutf8.cc	\
+	birnetmarkup.cc	\
 )
 birnet_private_headers = $(strip 	\
 	birnetsignalslot.hh		\

@@ -16,12 +16,10 @@
  */
 //#define TEST_VERBOSE
 #include <birnet/birnettests.h>
-#include <rapicorn/birnetmarkup.hh>
-#include <rapicorn/rapicorn.hh>
+#include <birnet/birnetmarkup.hh>
 
 namespace {
 using namespace Birnet;
-using namespace Rapicorn;
 
 struct TestBirnetMarkupParser : MarkupParser {
   String debug_string;
@@ -96,6 +94,7 @@ birnet_markup_parser_test()
 static void
 text_markup_test()
 {
+#if 0
   TSTART ("Label-Markup");
   Handle<Item> ihandle = Factory::create_item ("Label");
   TOK();
@@ -149,6 +148,7 @@ text_markup_test()
   TASSERT (strstr (markup_result, "smaller<"));
   TASSERT (strstr (markup_result, "larger<"));
   TDONE();
+#endif
 }
 
 extern "C" int
@@ -156,8 +156,6 @@ main (int   argc,
       char *argv[])
 {
   birnet_init_test (&argc, &argv);
-  /* initialize rapicorn */
-  rapicorn_init_with_gtk_thread (&argc, &argv, NULL); // FIXME: should work offscreen
   
   birnet_markup_parser_test();
   text_markup_test();

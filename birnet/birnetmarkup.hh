@@ -17,7 +17,7 @@
 #ifndef __BIRNET_MARKUP_HH__
 #define __BIRNET_MARKUP_HH__
 
-#include <rapicorn/birnetutils.hh>
+#include <birnet/birnetutils.hh>
 
 namespace Birnet {
 
