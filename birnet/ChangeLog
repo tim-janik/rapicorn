@@ -1,3 +1,13 @@
+Fri Mar  2 02:32:08 2007  Tim Janik  <timj@gtk.org>
+
+	* birnetmarkup.hh, birnetmarkup.cc: added simple XML markup parser
+	from Rapicorn, based on GMarkup from GLib.
+	this parser additionally contains a line_number_after_newline to fixup
+	error message line numbers and it can recapture an element subtree
+	of the processed XML into a new XML string.
+
+	* tests/markup.cc: test Birnet::MarkupParser.
+
 Fri Mar  2 02:19:51 2007  Tim Janik  <timj@gtk.org>
 
 	* birnet/birnetcdefs.h: if _BIRNET_SOURCE_EXTENSIONS is defined,
