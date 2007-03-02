@@ -38,7 +38,30 @@ typedef BirnetUnichar unichar;
 /* --- convenient stdc++ types --- */
 typedef std::string String;
 using std::vector;
-using std::map;       
+using std::map;
+
+/* --- common (stdc++) utilities --- */
+using ::std::swap;
+using ::std::min;
+using ::std::max;
+#undef abs
+template<typename T> inline const T&
+abs (const T &value)
+{
+  return max (value, -value);
+}
+#undef clamp
+template<typename T> inline const T&
+clamp (const T &value, const T &minimum, const T &maximum)
+{
+  if (minimum > value)
+    return minimum;
+  if (maximum < value)
+    return maximum;
+  return value;
+}
+
+/* --- typeid base type --- */
 class VirtualTypeid {
 protected:
   virtual      ~VirtualTypeid      ();
@@ -99,14 +122,23 @@ public:
                      int          _priority = 0);
 };
 
-/* --- assertions/warnings/errors --- */
-void    raise_sigtrap           ();
+/* --- assertions, warnings, errors --- */
+void        error               (const char   *format, ...) BIRNET_PRINTF (1, 2) BIRNET_NORETURN;
+void        error               (const String &s) BIRNET_NORETURN;
+void        warning             (const char   *format, ...) BIRNET_PRINTF (1, 2);
+void        warning             (const String &s);
+void        diag                (const char   *format, ...) BIRNET_PRINTF (1, 2);
+void        diag                (const String &s);
+void        errmsg              (const String &entity, const char *format, ...) BIRNET_PRINTF (2, 3);
+void        errmsg              (const String &entity, const String &s);
+void        raise_sigtrap       ();
+inline void BREAKPOINT          ();
 #if (defined __i386__ || defined __x86_64__) && defined __GNUC__ && __GNUC__ >= 2
-extern inline void BREAKPOINT() { __asm__ __volatile__ ("int $03"); }
+inline void BREAKPOINT() { __asm__ __volatile__ ("int $03"); }
 #elif defined __alpha__ && !defined __osf__ && defined __GNUC__ && __GNUC__ >= 2
-extern inline void BREAKPOINT() { __asm__ __volatile__ ("bpt"); }
+inline void BREAKPOINT() { __asm__ __volatile__ ("bpt"); }
 #else   /* !__i386__ && !__alpha__ */
-extern inline void BREAKPOINT() { raise_sigtrap(); }
+inline void BREAKPOINT() { raise_sigtrap(); }
 #endif  /* __i386__ */
 
 /* --- threading implementaiton bit --- */

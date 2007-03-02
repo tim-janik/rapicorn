@@ -1,3 +1,13 @@
+Fri Mar  2 02:19:51 2007  Tim Janik  <timj@gtk.org>
+
+	* birnet/birnetcdefs.h: if _BIRNET_SOURCE_EXTENSIONS is defined,
+	provide return_if_fail(), return_val_if_fail(), assert_not_reached()
+	and assert().
+
+	* birnet/birnetutils.hh, birnet/birnetutils.cc: 
+	provide swap(), min(), max(), abs() and clamp().
+	provide error(), warning(), diag() and errmsg().
+
 Wed Feb 21 03:27:02 2007  Tim Janik  <timj@gtk.org>
 
 	* birnetthread.hh: fixed up destructor ordering. added missing
