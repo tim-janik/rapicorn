@@ -10,9 +10,9 @@ LDLIBS	        = $(LIBS) $(PANGO_LIBS) $(GTK_LIBS)
 DEFS            = -DRAPICORN_PRIVATE -DPARANOID -D_BIRNET_SOURCE_EXTENSIONS -DBIRNET_LOG_DOMAIN=\"RAPICORN\" # "
 
 rapicorn_public_headers = $(strip 	\
-	rapicorn.hh	keycodes.hh	userconfig.hh	handle.hh	\
+	rapicorn.hh	keycodes.hh	handle.hh	\
 	$(rapicorn_impl_headers)	\
-	birnetutils.hh	utilities.hh	events.hh	\
+	utilities.hh	events.hh	\
 	enumdefs.hh	primitives.hh	region.hh	loop.hh		viewport.hh		\
 	properties.hh	commands.hh	appearance.hh	painter.hh	\
 	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
@@ -28,10 +28,13 @@ rapicorn_impl_headers = $(strip 	\
 	scrollitemsimpl.hh		\
 	tableimpl.hh			\
 )
+rapicorn_generated_headers = $(strip	\
+	rapicornconfig.hh		\
+)
 rapicorn_cc_sources = $(strip 		\
 	viewport-gtk.cc	regionimpl.c	\
 	$(strip )			\
-	birnetutils.cc	utilities.cc	events.cc	\
+	utilities.cc	events.cc	\
 	enumdefs.cc	primitives.cc	region.cc	loop.cc		viewport.cc		\
 	properties.cc	commands.cc	appearance.cc	painter.cc	\
 	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\
@@ -50,7 +53,7 @@ librapicorn_la_CXXFLAGS = $(if $(filter $(rapicorn_fastmath_files), $<), -ffast-
 
 lib_LTLIBRARIES             = librapicorn.la
 librapicornincludedir       = $(includedir)/rapicorn
-librapicorninclude_HEADERS  = $(rapicorn_public_headers)
+librapicorninclude_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
 librapicorn_la_SOURCES      = $(rapicorn_cc_sources)
 librapicorn_la_DEPENDENCIES = ldscript.map
 librapicorn_la_LDFLAGS      = $(strip 				\
@@ -105,3 +108,38 @@ zintern.c:	$(top_builddir)/birnet/birnet-zintern $(srcdir)/rapicorn.xml stamp-au
 	$(top_builddir)/birnet/birnet-zintern -b -z RAPICORN $(srcdir)/rapicorn.xml > xgen-$(@F)
 	mv xgen-$(@F) $@
 factory.cc: zintern.c
+
+
+# === rapicornconfig.hh ===
+rapicornconfig.hh: $(top_builddir)/config.status # Makefile
+	cd . \
+	&& echo "/* Generated data from $< (by make $@) */" 					 > xgen-$(@F) \
+	&& echo ""										>> xgen-$(@F) \
+	&& echo "/* --- select programming environment --- */"					>> xgen-$(@F) \
+	&& echo "#include <birnet/birnet.hh> /* _GNU_SOURCE */"					>> xgen-$(@F) \
+	&& echo ""										>> xgen-$(@F) \
+	&& echo "/* --- unique namespace for all symbols --- */"				>> xgen-$(@F) \
+	&& echo "#define Rapicorn			@RAPICORN_NAMESPACE_NAME@"		>> xgen-$(@F) \
+	&& echo ""										>> xgen-$(@F) \
+	&& echo "/* --- rapicorn version --- */"						>> xgen-$(@F) \
+	&& echo "#define RAPICORN_RELEASE_VERSION	(@RAPICORN_RELEASE_VERSION@)"		>> xgen-$(@F) \
+	&& echo "#define RAPICORN_REVISION_VERSION	(@RAPICORN_REVISION_VERSION@)"		>> xgen-$(@F) \
+	&& echo "/* version checks */"								>> xgen-$(@F) \
+	&& echo "#define RAPICORN_CHECK_VERSION(relv,revv)	\\"				>> xgen-$(@F) \
+	&& echo "  (RAPICORN_RELEASE_VERSION > (relv) || \\"					>> xgen-$(@F) \
+	&& echo "   (RAPICORN_RELEASE_VERSION == (relv) && \\" 					>> xgen-$(@F) \
+	&& echo "    RAPICORN_REVISION_VERSION >= (revv)))" 					>> xgen-$(@F) \
+	&& echo ""										>> xgen-$(@F) \
+	&& echo "/* --- i18n domain --- */"							>> xgen-$(@F) \
+	&& echo '#define RAPICORN_I18N_DOMAIN    "rapicorn"'					>> xgen-$(@F) \
+	&& echo "/* make sure to call bindtextdomain (RAPICORN_I18N_DOMAIN, i18ndir_path); */"	>> xgen-$(@F) \
+	&& echo ""										>> xgen-$(@F) \
+	&& echo "/* --- backends, support libraries --- */"					>> xgen-$(@F) \
+	&& echo "#define RAPICORN_WITH_GTK	(1)"						>> xgen-$(@F) \
+	&& echo "#define RAPICORN_WITH_PANGO	(1)"						>> xgen-$(@F) \
+	&& echo ""										>> xgen-$(@F) \
+	&& echo "/* Generated data ends here */" 						>> xgen-$(@F) \
+	&& cp xgen-$(@F) $@ \
+	&& rm -f xgen-$(@F)
+CLEANFILES += rapicornconfig.hh
+$(librapicorn_la_OBJECTS): rapicornconfig.hh

@@ -37,6 +37,19 @@ AC_SUBST(LT_RELEASE)
 AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
+RAPICORN_NAMESPACE_NAME=Rapicorn$RAPICORN_RELEASE_VERSION
+
+# Rapicorn namespace
+AC_MSG_CHECKING([for Rapicorn namespace])
+xtmp=$(echo "$RAPICORN_NAMESPACE_NAME")  # expand shell variables
+RAPICORN_NAMESPACE_NAME="$xtmp"
+if test -z "$RAPICORN_NAMESPACE_NAME" || test "$RAPICORN_NAMESPACE_NAME" = "Rapicorn" ; then
+    AC_MSG_RESULT(["$RAPICORN_NAMESPACE_NAME"])
+    AC_MSG_ERROR([RAPICORN_NAMESPACE_NAME must be specified distinctly to build Rapicorn])
+else
+    AC_MSG_RESULT([$RAPICORN_NAMESPACE_NAME])
+fi
+AC_SUBST(RAPICORN_NAMESPACE_NAME)
 
 # architecture information
 AC_CANONICAL_TARGET
@@ -257,6 +270,7 @@ AC_PROG_LN_S
 AC_PATH_PROG(UPDATE_MIME_DATABASE, update-mime-database)
 
 # check sub-package requirements
+BIRNET_NAMESPACE_NAME="Rapicorn""$RAPICORN_RELEASE_VERSION""Birnet"
 AC_BIRNET_REQUIREMENTS
 
 # check requirement sets

@@ -1,3 +1,26 @@
+Sat Mar  3 01:58:19 2007  Tim Janik  <timj@gtk.org>
+
+	* configure.in: define RAPICORN_NAMESPACE_NAME and BIRNET_NAMESPACE_NAME
+	based on RAPICORN_RELEASE_VERSION, so symbols of different ABI versions
+	cannot clash.
+
+	* rapicorn/Makefile.am: generate rapicornconfig.hh.
+	redefine "Rapicorn" namespace to $RAPICORN_NAMESPACE_NAME in
+	rapicornconfig.hh.
+
+	* rapicorn/ldscript.map: adapt symbol patterns to new namespaces.
+
+	* rapicorn/userconfig.hh: removed, we have rapicornconfig.hh. now.
+
+	* rapicorn/private.hh: provide internal i18n macros.
+
+	* rapicorn/testitem.hh: include fixup.
+
+	* rapicorn/utilities.hh, rapicorn/utilities.cc: moved text_convert()
+	and exception and iterator/walker definitions from birnetutils.* here.
+
+	* rapicorn/birnetutils.hh, rapicorn/birnetutils.cc: removed.
+
 Fri Mar  2 03:12:38 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/birnetutils.hh, rapicorn/birnetutils.cc: moved utilities to

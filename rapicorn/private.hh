@@ -22,6 +22,9 @@
 
 namespace Rapicorn {
 
+#define _(str)  rapicorn_gettext (str)
+#define N_(str) (str)
+
 /* --- safe standard macros --- */
 #define DIR_SEPARATOR                   BIRNET_DIR_SEPARATOR
 #define DIR_SEPARATOR_S                 BIRNET_DIR_SEPARATOR_S
