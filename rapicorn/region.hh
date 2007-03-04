@@ -29,7 +29,11 @@ namespace Rapicorn {
  * (rectangle dimensions shouldn't exceed 3.6e16, i.e. 2^55).
  */
 class Region {
-  struct { int64 idummy[4]; void *pdummy; } m_region;
+  union {
+    struct CRegion { int64 idummy[4]; void *pdummy; };
+    CRegion          cstruct_mem;               // ensure C structure size and alignment
+    char             chars[sizeof (CRegion)];   // char may_alias any type
+  }                  m_region;                  // BIRNET_MAY_ALIAS; ICE: GCC#30894
   inline void*       region_mem   ();
   inline const void* region_mem   () const;
 public: /* rectangles are represented at 64bit integer precision */

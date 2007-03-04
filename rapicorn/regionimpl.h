@@ -17,26 +17,9 @@
 #ifndef __RAPICORN_REGION_IMPL_H__
 #define __RAPICORN_REGION_IMPL_H__
 
-#include <stdbool.h>
+#include <birnet/birnetcdefs.h>
 
-#ifdef  __cplusplus
-#define RAPICORN_EXTERN_C_BEGIN() extern "C" {
-#define RAPICORN_EXTERN_C_END()              }
-#else
-#define RAPICORN_EXTERN_C_BEGIN()
-#define RAPICORN_EXTERN_C_END()
-#endif
-
-RAPICORN_EXTERN_C_BEGIN();
-
-/* --- compat stuff --- */
-typedef signed int      RapicornRegionInt64 __attribute__ ((__mode__ (__DI__)));
-#ifndef FALSE
-#define FALSE           false
-#endif
-#ifndef TRUE
-#define TRUE            true
-#endif
+BIRNET_EXTERN_C_BEGIN();
 
 /* --- types & macros --- */
 typedef enum {
@@ -46,10 +29,10 @@ typedef enum {
 } RapicornRegionCType;
 typedef struct _RapicornRegion    RapicornRegion;
 typedef struct {
-  RapicornRegionInt64 x1, y1, x2, y2;
+  BirnetInt64 x1, y1, x2, y2;
 } RapicornRegionBox;
 typedef struct {
-  RapicornRegionInt64 x, y;
+  BirnetInt64 x, y;
 } RapicornRegionPoint;
 
 /* --- functions --- */
@@ -90,7 +73,8 @@ void			_rapicorn_region_intersect 	(RapicornRegion       	   *region,
 void			_rapicorn_region_xor 		(RapicornRegion       	   *region,
 							 const RapicornRegion 	   *region2);
 void			_rapicorn_region_debug 		(const char 		   *format,
-							 ...) __attribute__ ((__format__ (__printf__, 1, 2)));
+							 ...) BIRNET_PRINTF (1, 2);
 
-RAPICORN_EXTERN_C_END();
+BIRNET_EXTERN_C_END();
+
 #endif /* __RAPICORN_REGION_IMPL_H__ */

@@ -1,3 +1,10 @@
+Sun Mar  4 20:01:18 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/region.hh: made m_region a union with char[] member to 
+	indicate its may_alias nature and avoid an ICE. 
+
+	* rapicorn/regionimpl.[hc]: use Birnet types and macros.
+
 Sun Mar  4 19:05:33 2007  Tim Janik  <timj@gtk.org>
 
 

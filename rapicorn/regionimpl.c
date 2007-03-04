@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 /* --- compat stuff --- */
-typedef RapicornRegionInt64     Xint64;
+typedef BirnetInt64             Xint64;
 #define INLINE                  inline
 #define _X_EXPORT               static
 #define Bool                    bool
