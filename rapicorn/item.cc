@@ -876,7 +876,7 @@ Item::invalidate_size()
 bool
 Item::tune_requisition (Requisition requisition)
 {
-  return false;
+  return false; /* ItemImpl implements this */
 }
 
 bool
