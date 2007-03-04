@@ -131,6 +131,8 @@ void        diag                (const char   *format, ...) BIRNET_PRINTF (1, 2)
 void        diag                (const String &s);
 void        errmsg              (const String &entity, const char *format, ...) BIRNET_PRINTF (2, 3);
 void        errmsg              (const String &entity, const String &s);
+void        printerr            (const char   *format, ...) BIRNET_PRINTF (1, 2);
+void        printout            (const char   *format, ...) BIRNET_PRINTF (1, 2);
 void        raise_sigtrap       ();
 inline void BREAKPOINT          ();
 #if (defined __i386__ || defined __x86_64__) && defined __GNUC__ && __GNUC__ >= 2

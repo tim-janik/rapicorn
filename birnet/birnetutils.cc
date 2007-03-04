@@ -351,6 +351,32 @@ errmsg (const String &entity,
 }
 
 void
+printerr (const char   *format,
+          ...)
+{
+  va_list args;
+  va_start (args, format);
+  String ers = string_vprintf (format, args);
+  va_end (args);
+  fflush (stdout);
+  fputs (ers.c_str(), stderr);
+  fflush (stderr);
+}
+
+void
+printout (const char   *format,
+          ...)
+{
+  va_list args;
+  va_start (args, format);
+  String ers = string_vprintf (format, args);
+  va_end (args);
+  fflush (stderr);
+  fputs (ers.c_str(), stdout);
+  fflush (stdout);
+}
+
+void
 raise_sigtrap ()
 {
   raise (SIGTRAP);
