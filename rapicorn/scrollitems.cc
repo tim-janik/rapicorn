@@ -251,8 +251,6 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
       }
     else if (fabs (xdelta) + fabs (ydelta) >= 0.1)
       {
-        /* force rendering of pending exposes before copying areas */
-        ritem->draw_now();
         /* copy scrolled area */
         Allocation a = allocation();
         copy_area (Rect (Point (a.x, a.y), a.width, a.height),
@@ -269,8 +267,6 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
         /* update last scroll position */
         m_last_xoffset = xoffset;
         m_last_yoffset = yoffset;
-        /* force rendering to complete "scroll"-effect */
-        ritem->draw_now();
       }
   }
   virtual Affine

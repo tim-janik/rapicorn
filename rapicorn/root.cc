@@ -619,14 +619,28 @@ void
 RootImpl::copy_area (const Rect  &src,
                      const Point &dest)
 {
+  /* need to copy pixel regions and expose regions */
   if (m_viewport && src.width && src.height)
-    m_viewport->copy_area (src.x, src.y,
-                           src.width, src.height,
-                           dest.x, dest.y);
+    {
+      /* force delivery of any pending exposes */
+      expose_now();
+      /* intersect copied expose region */
+      Region exr = m_expose_region;
+      exr.intersect (Region (src));
+      /* pixel-copy area */
+      m_viewport->copy_area (src.x, src.y, // may queue new exposes
+                             src.width, src.height,
+                             dest.x, dest.y);
+      /* shift expose region */
+      exr.affine (AffineTranslate (Point (dest.x - src.x, dest.y - src.y)));
+      /* expose copied area */
+      expose_root_region (exr);
+      // FIXME: synthesize 0-dist pointer movement from idle handler
+    }
 }
 
 void
-RootImpl::draw_now ()
+RootImpl::expose_now ()
 {
   if (m_viewport)
     {
@@ -656,6 +670,18 @@ RootImpl::draw_now ()
           dispatch_event (*event);
           delete event;
         }
+    }
+  else
+    m_expose_region.clear();
+}
+
+void
+RootImpl::draw_now ()
+{
+  if (m_viewport)
+    {
+      /* force delivery of any pending exposes */
+      expose_now();
       /* render invalidated contents */
       m_expose_region.intersect (Region (allocation()));
       std::vector<Rect> rects;

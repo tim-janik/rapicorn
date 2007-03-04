@@ -64,6 +64,7 @@ private:
   virtual void          expose_root_region                      (const Region           &region);
   virtual void          copy_area                               (const Rect             &src,
                                                                  const Point            &dest);
+  void                  expose_now                              ();
   virtual void          draw_now                                ();
   /* grab handling */
   virtual void          remove_grab_item                        (Item                   &child);

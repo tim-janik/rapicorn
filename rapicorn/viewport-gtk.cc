@@ -359,7 +359,7 @@ ViewportGtk::copy_area (double          src_x,
           gtk_widget_send_expose (m_widget, event);
           bool last = event->expose.count == 0;
           gdk_event_free (event);
-          event = last ? NULL : gdk_event_get_graphics_expose (m_widget->window);
+          event = last || !m_widget->window ? NULL : gdk_event_get_graphics_expose (m_widget->window);
         }
     }
 }
