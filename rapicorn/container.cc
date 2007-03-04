@@ -611,10 +611,10 @@ Container::point_children (Point               p, /* root coordinates relative *
 }
 
 void
-Container::root_point_children (Point                   p, /* root coordinates relative */
-                                std::vector<Item*>     &stack)
+Container::viewport_point_children (Point                   p, /* viewport coordinates relative */
+                                    std::vector<Item*>     &stack)
 {
-  point_children (point_from_root (p), stack);
+  point_children (point_from_viewport (p), stack);
 }
 
 bool

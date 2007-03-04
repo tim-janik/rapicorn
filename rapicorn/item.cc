@@ -652,14 +652,42 @@ Item::translate_to (const uint    n_rects,
   return target_item.translate_from (*this, n_rects, rects);
 }
 
+Point
+Item::point_from_viewport (Point root_point) /* root coordinates relative */
+{
+  Point p = root_point;
+  Container *pc = parent_container();
+  if (pc)
+    {
+      const Affine &caffine = pc->child_affine (*this);
+      p = pc->point_from_viewport (p);  // to viewport coords
+      p = caffine * p;
+    }
+  return p;
+}
+
+Point
+Item::point_to_viewport (Point item_point) /* item coordinates relative */
+{
+  Point p = item_point;
+  Container *pc = parent_container();
+  if (pc)
+    {
+      const Affine &caffine = pc->child_affine (*this);
+      p = caffine.ipoint (p);           // to parent coords
+      p = pc->point_to_viewport (p);
+    }
+  return p;
+}
+
 Affine
-Item::affine_from_root () /* root => item affine */
+Item::affine_from_viewport () /* viewport => item affine */
 {
   Affine iaffine;
   Container *pc = parent_container();
   if (pc)
     {
-      const Affine &paffine = pc->affine_from_root();
+      const Affine &paffine = pc->affine_from_viewport();
       const Affine &caffine = pc->child_affine (*this);
       if (paffine.is_identity())
         iaffine = caffine;
@@ -672,94 +700,12 @@ Item::affine_from_root () /* root => item affine */
 }
 
 Affine
-Item::affine_to_root () /* item => root affine */
+Item::affine_to_viewport () /* item => viewport affine */
 {
-  Affine iaffine = affine_from_root();
+  Affine iaffine = affine_from_viewport();
   if (!iaffine.is_identity())
     iaffine = iaffine.invert();
   return iaffine;
-}
-
-Affine
-Item::affine_to_cousin (Item &cousin) /* item => cousin affine*/
-{
-  // FIXME: broken
-  Item *ca = common_ancestor (cousin);
-  assert (ca);
-  Affine taffine;
-  Item *item = this;
-  while (item != ca)
-    {
-      Container *pc = item->parent_container();
-      const Affine &caffine = pc->child_affine (*item);
-      taffine = taffine * caffine;
-      item = pc;
-    }
-  Affine baffine;
-  item = &cousin;
-  while (item != ca)
-    {
-      Container *pc = item->parent_container();
-      const Affine &caffine = pc->child_affine (*item);
-      baffine = baffine * caffine;
-      item = pc;
-    }
-  return baffine.invert() * taffine;
-}
-
-Affine
-Item::affine_from_cousin (Item &cousin) /* cousin => item affine*/
-{
-  // FIXME: broken
-  Item *ca = common_ancestor (cousin);
-  assert (ca);
-  Affine taffine;
-  Item *item = this;
-  while (item != ca)
-    {
-      Container *pc = item->parent_container();
-      const Affine &caffine = pc->child_affine (*item);
-      taffine = taffine * caffine;
-      item = pc;
-    }
-  Affine baffine;
-  item = &cousin;
-  while (item != ca)
-    {
-      Container *pc = item->parent_container();
-      const Affine &caffine = pc->child_affine (*item);
-      baffine = baffine * caffine;
-      item = pc;
-    }
-  return taffine.invert() * baffine;
-}
-
-Point
-Item::point_from_root (Point root_point) /* root coordinates relative */
-{
-  Point p = root_point;
-  Container *pc = parent_container();
-  if (pc)
-    {
-      const Affine &caffine = pc->child_affine (*this);
-      p = pc->point_from_root (p);      // to parent coords
-      p = caffine * p;
-    }
-  return p;
-}
-
-Point
-Item::point_to_root (Point item_point) /* item coordinates relative */
-{
-  Point p = item_point;
-  Container *pc = parent_container();
-  if (pc)
-    {
-      const Affine &caffine = pc->child_affine (*this);
-      p = caffine.ipoint (p);           // to parent coords
-      p = pc->point_to_root (p);
-    }
-  return p;
 }
 
 bool
@@ -773,13 +719,13 @@ Item::process_event (const Event &event) /* item coordinates relative */
 }
 
 bool
-Item::process_root_event (const Event &event) /* root coordinates relative */
+Item::process_viewport_event (const Event &event) /* viewport coordinates relative */
 {
   bool handled = false;
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
   if (controller)
     {
-      const Affine &affine = affine_from_root();
+      const Affine &affine = affine_from_viewport();
       if (affine.is_identity ())
         handled = controller->sig_event.emit (event);
       else
@@ -793,9 +739,9 @@ Item::process_root_event (const Event &event) /* root coordinates relative */
 }
 
 bool
-Item::root_point (Point p) /* root coordinates relative */
+Item::viewport_point (Point p) /* root coordinates relative */
 {
-  return point (point_from_root (p));
+  return point (point_from_viewport (p));
 }
 
 bool
@@ -988,7 +934,7 @@ Item::expose (const Region &region) /* item coordinates relative */
   Root *rt = get_root();
   if (!r.empty() && rt && !test_flags (INVALID_CONTENT))
     {
-      const Affine &affine = affine_to_root();
+      const Affine &affine = affine_to_viewport();
       r.affine (affine);
       rt->expose_root_region (r);
     }
@@ -1110,7 +1056,7 @@ ItemImpl::set_allocation (const Allocation &area)
       Root *rt = get_root();
       if (!r.empty() && rt)
         {
-          const Affine &affine = affine_to_root();
+          const Affine &affine = affine_to_viewport();
           r.affine (affine);
           Rect rc = r.extents();
           rt->expose (rc);

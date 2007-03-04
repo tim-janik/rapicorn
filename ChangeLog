@@ -1,3 +1,16 @@
+Sun Mar  4 19:05:33 2007  Tim Janik  <timj@gtk.org>
+
+
+	* rapicorn/item.*: removed affine_to_cousin() and affine_from_cousin(),
+	translate_*() should be used instead. renamed process_viewport_event(),
+	point_from_viewport(), point_to_viewport(), affine_from_viewport(),
+	affine_to_viewport() and viewport_point(), because these methods really
+	assume viewport relative coordinates (not root relative).
+
+	* rapicorn/container.*: renamed viewport_point_children().
+
+	* rapicorn/root.cc: changed to use viewport relative item methods.
+
 Sun Mar  4 18:11:56 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/root.cc: poll, intersect and translate existing expose 

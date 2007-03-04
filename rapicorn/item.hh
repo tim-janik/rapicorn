@@ -199,34 +199,34 @@ public:
   Signal<Item, void ()>           sig_invalidate;
   Signal<Item, void (Item *oldt)> sig_hierarchy_changed;
   /* event handling */
-  bool                       process_event      (const Event &event);           /* item coordinates relative */
-  bool                       process_root_event (const Event &event);           /* root coordinates relative */
+  bool                       process_event          (const Event &event);       /* item coordinates relative */
+  bool                       process_viewport_event (const Event &event);       /* viewport coordinates relative */
   /* coordinate handling */
-  virtual bool               translate_from     (const Item   &src_item,
-                                                 const uint    n_points,
-                                                 Point        *points) const;
-  bool                       translate_to       (const uint    n_points,
-                                                 Point        *points,
-                                                 const Item   &target_item) const;
-  bool                       translate_from     (const Item   &src_item,
-                                                 const uint    n_rects,
-                                                 Rect         *rects) const;
-  bool                       translate_to       (const uint    n_rects,
-                                                 Rect         *rects,
-                                                 const Item   &target_item) const;
-  bool                       root_point         (Point        p);               /* root coordinates relative */
-  virtual bool               point              (Point        p);               /* item coordinates relative */
-  Affine                     affine_to_root     ();                             /* item => root affine */
-  Affine                     affine_from_root   ();                             /* root => item affine */
-  Point                      point_to_root      (Point        item_point);      /* item coordinates relative */
-  Point                      point_from_root    (Point        root_point);      /* root coordinates relative */
-  Affine                     affine_to_cousin   (Item        &cousin);          /* item => cousin affine*/
-  Affine                     affine_from_cousin (Item        &cousin);          /* cousin => item affine*/
+protected:
+  Affine                     affine_to_viewport     ();                         /* item => viewport affine */
+  Affine                     affine_from_viewport   ();                         /* viewport => item affine */
+public:
+  virtual bool               point                  (Point        p);           /* item coordinates relative */
+  Point                      point_to_viewport      (Point        item_point);  /* item coordinates relative */
+  Point                      point_from_viewport    (Point        root_point);  /* viewport coordinates relative */
+  virtual bool               translate_from         (const Item   &src_item,
+                                                     const uint    n_points,
+                                                     Point        *points) const;
+  bool                       translate_to           (const uint    n_points,
+                                                     Point        *points,
+                                                     const Item   &target_item) const;
+  bool                       translate_from         (const Item   &src_item,
+                                                     const uint    n_rects,
+                                                     Rect         *rects) const;
+  bool                       translate_to           (const uint    n_rects,
+                                                     Rect         *rects,
+                                                     const Item   &target_item) const;
+  bool                       viewport_point         (Point        p);           /* viewport coordinates relative */
   /* public size accessors */
-  virtual const Requisition& size_request       () = 0;                       /* re-request size */
-  const Requisition&         requisition        () { return size_request(); } /* cached requisition */
-  virtual void               set_allocation     (const Allocation &area) = 0; /* assign new allocation */
-  virtual const Allocation&  allocation         () = 0;                       /* current allocation */
+  virtual const Requisition& size_request       () = 0;                         /* re-request size */
+  const Requisition&         requisition        () { return size_request(); }   /* cached requisition */
+  virtual void               set_allocation     (const Allocation &area) = 0;   /* assign new allocation */
+  virtual const Allocation&  allocation         () = 0;                         /* current allocation */
   /* display */
   virtual void               render             (Display        &display) = 0;
   /* styles / appearance */

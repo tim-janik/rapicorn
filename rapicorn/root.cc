@@ -257,19 +257,19 @@ RootImpl::dispatch_mouse_movement (const Event &event)
   Item *grab_item = get_grab (&unconfined);
   if (grab_item)
     {
-      if (unconfined or grab_item->root_point (Point (event.x, event.y)))
+      if (unconfined or grab_item->viewport_point (Point (event.x, event.y)))
         {
           pierced.push_back (ref (grab_item));        /* grab-item receives all mouse events */
           Container *container = grab_item->interface<Container*>();
           if (container)                              /* deliver to hovered grab-item children as well */
-            container->root_point_children (Point (event.x, event.y), pierced);
+            container->viewport_point_children (Point (event.x, event.y), pierced);
         }
     }
   else if (drawable())
     {
       pierced.push_back (ref (this)); /* root receives all mouse events */
       if (m_entered)
-        root_point_children (Point (event.x, event.y), pierced);
+        viewport_point_children (Point (event.x, event.y), pierced);
     }
   /* send leave events */
   vector<Item*> left_children = item_difference (m_last_entered_children, pierced);
@@ -307,7 +307,7 @@ RootImpl::dispatch_event_to_pierced_or_grab (const Event &event)
   else if (drawable())
     {
       pierced.push_back (ref (this)); /* root receives all events */
-      root_point_children (Point (event.x, event.y), pierced);
+      viewport_point_children (Point (event.x, event.y), pierced);
     }
   /* send actual event */
   bool handled = false;
@@ -520,7 +520,7 @@ RootImpl::dispatch_key_event (const Event &event)
   bool handled = false;
   dispatch_mouse_movement (event);
   Item *item = get_focus();
-  if (item && item->process_root_event (event))
+  if (item && item->process_viewport_event (event))
     return true;
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
   if (kevent && kevent->type == KEY_PRESS)
