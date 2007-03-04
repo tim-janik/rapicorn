@@ -94,7 +94,7 @@ Rect::dist (const Point &p) const
 }
 
 String
-Rect::string()
+Rect::string() const
 {
   char buffer[128];
   sprintf (buffer, "((%.17g, %.17g), %.17g, %.17g)", x, y, width, height);

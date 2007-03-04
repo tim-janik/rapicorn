@@ -166,7 +166,7 @@ public:
                                  double delty);
   Rect&         operator+       (const Point &p);
   Rect&         operator-       (const Point &p);
-  String        string          ();
+  String        string          () const;
   static Rect   create_anchored (AnchorType anchor,
                                  double     width,
                                  double     height);
@@ -365,7 +365,7 @@ public:
     return *this;
   }
   String
-  string()
+  string() const
   {
     char buffer[128];
     sprintf (buffer, "{.r=%u,.g=%u,.b=%u,.a=%u}", red(), green(), blue(), alpha());
