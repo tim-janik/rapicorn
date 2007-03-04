@@ -1,3 +1,11 @@
+Sun Mar  4 16:12:35 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/primitives.*:
+	* rapicorn/container.*: const fixes
+
+	* rapicorn/viewport-gtk.cc: handle GDK_GRAB_BROKEN by cancelling
+	current event state, instead of deleting the window.
+
 Sat Mar  3 01:58:19 2007  Tim Janik  <timj@gtk.org>
 
 	* configure.in: define RAPICORN_NAMESPACE_NAME and BIRNET_NAMESPACE_NAME
