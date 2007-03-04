@@ -285,12 +285,37 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
   set_focus_child (Item *item)
   {
     SingleContainerImpl::set_focus_child (item);
+    Item *fchild = get_focus_child();
+    if (!fchild)
+      return;
     Root *rt = get_root();
     if (!rt)
       return;
     Item *fitem = rt->get_focus();
     if (!fitem)
       return;
+    /* list focus items between focus_item and out immediate child */
+    list<Item*> fitems;
+    while (fitem)
+      {
+        fitems.push_back (fitem);
+        if (fitem == fchild)
+          break;
+        fitem = fitem->parent();
+      }
+    /* find the first focus descendant that fits the scroll area */
+    fitem = NULL;
+    for (Walker<Item*> w = walker (fitems); w.has_next(); w++)
+      {
+        Item *item = *w;
+        Rect a = item->allocation();
+        Rect r = translate_from (item, a);
+        if (r.width <= allocation.width() && w.height <= allocation.height())
+          {
+            fitem = item;
+            break;
+          }
+      }
     Region r (fitem->allocation());
     Affine affine = fitem->affine_to_cousin (*this);
     r.affine (affine);
