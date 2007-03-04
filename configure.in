@@ -270,7 +270,7 @@ AC_PROG_LN_S
 AC_PATH_PROG(UPDATE_MIME_DATABASE, update-mime-database)
 
 # check sub-package requirements
-BIRNET_NAMESPACE_NAME="Rapicorn""$RAPICORN_RELEASE_VERSION""Birnet"
+BIRNET_NAMESPACE_NAME="Rapicorn""$RAPICORN_RELEASE_VERSION""Birnet""$BIRNET_RELEASE_VERSION"
 AC_BIRNET_REQUIREMENTS
 
 # check requirement sets
