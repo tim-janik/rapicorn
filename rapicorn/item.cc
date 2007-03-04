@@ -567,6 +567,91 @@ Item::style (Style *st)
   propagate_style ();
 }
 
+static bool
+translate_from_ancestor (Item         *ancestor,
+                         const Item   *child,
+                         const uint    n_points,
+                         Point        *points)
+{
+  if (child == ancestor)
+    return true;
+  Container *pc = child->parent_container();
+  translate_from_ancestor (ancestor, pc, n_points, points);
+  Affine caffine = pc->child_affine (*child);
+  for (uint i = 0; i < n_points; i++)
+    points[i] = caffine.point (points[i]);
+  return true;
+}
+
+bool
+Item::translate_from (const Item   &src_item,
+                      const uint    n_points,
+                      Point        *points) const
+{
+  Item *ca = common_ancestor (src_item);
+  if (!ca)
+    return false;
+  Item *item = const_cast<Item*> (&src_item);
+  while (item != ca)
+    {
+      Container *pc = item->parent_container();
+      Affine affine = pc->child_affine (*item);
+      affine.invert();
+      for (uint i = 0; i < n_points; i++)
+        points[i] = affine.point (points[i]);
+      item = pc;
+    }
+  bool can_translate = translate_from_ancestor (ca, this, n_points, points);
+  if (!can_translate)
+    return false;
+  return true;
+}
+
+bool
+Item::translate_to (const uint    n_points,
+                    Point        *points,
+                    const Item   &target_item) const
+{
+  return target_item.translate_from (*this, n_points, points);
+}
+
+bool
+Item::translate_from (const Item   &src_item,
+                      const uint    n_rects,
+                      Rect         *rects) const
+{
+  vector<Point> points;
+  for (uint i = 0; i < n_rects; i++)
+    {
+      points.push_back (rects[i].lower_left());
+      points.push_back (rects[i].lower_right());
+      points.push_back (rects[i].upper_left());
+      points.push_back (rects[i].upper_right());
+    }
+  if (!translate_from (src_item, points.size(), &points[0]))
+    return false;
+  for (uint i = 0; i < n_rects; i++)
+    {
+      const Point &p1 = points[i * 4 + 0], &p2 = points[i * 4 + 1];
+      const Point &p3 = points[i * 4 + 2], &p4 = points[i * 4 + 3];
+      const Point ll = min (min (p1, p2), min (p3, p4));
+      const Point ur = max (max (p1, p2), max (p3, p4));
+      rects[i].x = ll.x;
+      rects[i].y = ll.y;
+      rects[i].width = ur.x - ll.x;
+      rects[i].height = ur.y - ll.y;
+    }
+  return true;
+}
+
+bool
+Item::translate_to (const uint    n_rects,
+                    Rect         *rects,
+                    const Item   &target_item) const
+{
+  return target_item.translate_from (*this, n_rects, rects);
+}
+
 Affine
 Item::affine_from_root () /* root => item affine */
 {

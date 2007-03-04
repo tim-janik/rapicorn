@@ -201,6 +201,19 @@ public:
   /* event handling */
   bool                       process_event      (const Event &event);           /* item coordinates relative */
   bool                       process_root_event (const Event &event);           /* root coordinates relative */
+  /* coordinate handling */
+  virtual bool               translate_from     (const Item   &src_item,
+                                                 const uint    n_points,
+                                                 Point        *points) const;
+  bool                       translate_to       (const uint    n_points,
+                                                 Point        *points,
+                                                 const Item   &target_item) const;
+  bool                       translate_from     (const Item   &src_item,
+                                                 const uint    n_rects,
+                                                 Rect         *rects) const;
+  bool                       translate_to       (const uint    n_rects,
+                                                 Rect         *rects,
+                                                 const Item   &target_item) const;
   bool                       root_point         (Point        p);               /* root coordinates relative */
   virtual bool               point              (Point        p);               /* item coordinates relative */
   Affine                     affine_to_root     ();                             /* item => root affine */
