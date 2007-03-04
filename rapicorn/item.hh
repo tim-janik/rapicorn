@@ -22,7 +22,6 @@
 #include <rapicorn/commands.hh>
 #include <rapicorn/properties.hh>
 #include <rapicorn/appearance.hh>
-#include <rapicorn/handle.hh>
 
 namespace Rapicorn {
 
@@ -267,8 +266,6 @@ public:
   template<typename Type>
   typename
   InterfaceType<Type>::Result toplevel_interface  (const std::nothrow_t &nt) const { return toplevel_interface<Type> (String(), nt); }
-  template<class ItemType>
-  Handle<ItemType>            handle            ();
   virtual OwnedMutex&         owned_mutex       ();
 private:
   bool                 match_parent_interface   (InterfaceMatch &imatch) const;
@@ -277,16 +274,6 @@ private:
 };
 inline bool operator== (const Item &item1, const Item &item2) { return &item1 == &item2; }
 inline bool operator!= (const Item &item1, const Item &item2) { return &item1 != &item2; }
-
-/* --- implementation --- */
-template<class ItemType> Handle<ItemType>
-Item::handle ()
-{
-  ItemType *self = dynamic_cast<ItemType*> (this);
-  if (!self)
-    type_cast_error (typeid (ItemType).name());
-  return Handle<ItemType> (*self, owned_mutex());
-}
 
 } // Rapicorn
 

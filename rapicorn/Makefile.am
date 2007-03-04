@@ -10,7 +10,7 @@ LDLIBS	        = $(LIBS) $(PANGO_LIBS) $(GTK_LIBS)
 DEFS            = -DRAPICORN_PRIVATE -DPARANOID -D_BIRNET_SOURCE_EXTENSIONS -DBIRNET_LOG_DOMAIN=\"RAPICORN\" # "
 
 rapicorn_public_headers = $(strip 	\
-	rapicorn.hh	keycodes.hh	handle.hh	\
+	rapicorn.hh	keycodes.hh	\
 	$(rapicorn_impl_headers)	\
 	utilities.hh	events.hh	\
 	enumdefs.hh	primitives.hh	region.hh	loop.hh		viewport.hh		\

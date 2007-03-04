@@ -49,9 +49,7 @@ construct_gui (const char *executable)
   Root &root = window.root();
 
   /* create dialog */
-  Handle<Item> dhandle = Factory::create_item ("tour-dialog");
-  AutoLocker dlocker (dhandle);
-  Item &dialog = dhandle.get();
+  Item &dialog = Factory::create_item ("tour-dialog");
   root.add (dialog);
 
   /* hook up drawable test */

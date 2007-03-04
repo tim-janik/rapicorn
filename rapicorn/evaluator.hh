@@ -18,7 +18,6 @@
 #define __RAPICORN_EVALUATOR_HH__
 
 #include <rapicorn/item.hh>
-#include <rapicorn/handle.hh>
 #include <list>
 
 namespace Rapicorn {

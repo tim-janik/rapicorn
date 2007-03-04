@@ -25,16 +25,14 @@ add_button_row (Container &area,
 {
   std::list<String> row_args;
   row_args.push_back ("id=row#" + string_from_uint (row));
-  Handle<Container> rh = Factory::create_container ("button-row", row_args);
-  AutoLocker rl (rh);
-  area.add (rh.get());
+  Container &brow = Factory::create_container ("button-row", row_args);
+  area.add (brow);
   for (uint i = 0; i < 20; i++)
     {
       std::list<String> args;
       args.push_back ("test-button-text=(" + string_from_uint (row) + "," + string_from_uint (i) + ")");
-      Handle<Item> bh = Factory::create_item ("test-button", args);
-      AutoLocker bl (bh);
-      rh.get().add (bh.get());
+      Item &tb = Factory::create_item ("test-button", args);
+      brow.add (tb);
     }
 }
 
@@ -49,19 +47,19 @@ main (int   argc,
   Factory::must_parse_file ("scroller.xml", "Scroller", Path::dirname (argv[0]));
 
   /* create main window */
-  Handle<Container> shandle = Factory::create_container ("main-shell");
+  Window window = Factory::create_window ("main-shell");
+  AutoLocker wl (window);
+  Container &mshell = window.root().interface<Container>();
   /* get thread safe window handle */
-  AutoLocker sl (shandle); // auto-locks
-  Container &shell = shandle.get();
-  Root &root = shell.interface<Root&>();
+  Root &root = mshell.interface<Root&>();
 
   /* create button rows */
   for (uint i = 0; i < 20; i++)
-    add_button_row (shell, i);
+    add_button_row (mshell, i);
 
   /* show and process window */
   root.show();
-  sl.unlock();             // un-protects item/root
+  wl.unlock();             // un-protects item/root
 
   /* wait while the window runs asyncronously */
   sleep (10000);

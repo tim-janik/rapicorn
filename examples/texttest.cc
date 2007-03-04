@@ -30,15 +30,10 @@ main (int   argc,
   Factory::must_parse_file ("texttest.xml", "TextTest", Path::dirname (argv[0]));
 
   /* create main window */
-  Handle<Container> shandle = Factory::create_container ("main-shell");
-  /* get thread safe window handle */
-  AutoLocker sl (shandle); // auto-locks
-  Container &shell = shandle.get();
-  Root &root = shell.interface<Root&>();
+  Window window = Factory::create_window ("main-shell");
 
   /* show and process window */
-  root.show();
-  sl.unlock();             // un-protects item/root
+  window.show();
 
   /* wait while the window runs asyncronously */
   sleep (10000);

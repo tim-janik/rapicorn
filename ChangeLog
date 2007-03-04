@@ -1,3 +1,17 @@
+Sun Mar  4 23:38:38 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/handle.hh: removed Handle<> template, we have Window instead.
+
+	* rapicorn/Makefile.am:
+	* rapicorn/item.*:
+	* rapicorn/factory.*: removed Handle<> from API.
+
+	* tests/items.cc:
+	* tests/markup.cc:
+	* examples/tour.cc:
+	* examples/texttest.cc: 
+	* examples/scroller.cc: get rid of Handle<>s, use Window instead.
+
 Wed Feb 28 02:17:10 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/factory.*: introduce create_window() which can be used for

@@ -32,16 +32,16 @@ main (int   argc,
 
   TSTART ("RapicornItems");
   /* parse standard GUI descriptions and create example item */
-  Handle<Item> shandle = Factory::create_item ("Root");
+  Window window = Factory::create_window ("Root");
   TOK();
   /* get thread safe window handle */
-  AutoLocker slocker (shandle); // auto-locks
+  AutoLocker wlocker (window); // auto-locks
   TOK();
-  Item &item = shandle.get();
+  Item &item = window.root();
   TOK();
   Root &root = item.interface<Root&>();
   TASSERT (&root != NULL);
-  slocker.unlock();             // un-protects item/root
+  wlocker.unlock();             // un-protects item/root
   TOK();
   TDONE();
 

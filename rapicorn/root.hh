@@ -18,7 +18,6 @@
 #define __RAPICORN_ROOT_HH__
 
 #include <rapicorn/container.hh>
-#include <rapicorn/handle.hh>
 #include <rapicorn/window.hh>
 #include <rapicorn/loop.hh>
 

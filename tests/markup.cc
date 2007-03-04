@@ -26,11 +26,8 @@ static void
 text_markup_test()
 {
   TSTART ("Label-Markup");
-  Handle<Item> ihandle = Factory::create_item ("Label");
+  Item &label = Factory::create_item ("Label");
   TOK();
-  AutoLocker locker (ihandle);
-  TOK();
-  Item &item = ihandle.get();
   TOK();
   String full_markup =
     "<PARA>Start "
@@ -50,9 +47,9 @@ text_markup_test()
     "<smaller>smaller</smaller> "
     "<larger>larger</larger> "
     "</PARA>";
-  item.set_property ("markup_text", full_markup);
+  label.set_property ("markup_text", full_markup);
   TOK();
-  String str = item.get_property ("markup_text");
+  String str = label.get_property ("markup_text");
   const char *markup_result = str.c_str();
   // g_printerr ("MARKUP: %s\n", markup_result);
   TASSERT (strstr (markup_result, "<I"));
@@ -62,9 +59,9 @@ text_markup_test()
   TASSERT (strstr (markup_result, "<U"));
   TASSERT (strstr (markup_result, "underline<"));
   /* try re-parsing */
-  item.set_property ("markup_text", markup_result);
+  label.set_property ("markup_text", markup_result);
   TOK();
-  str = item.get_property ("markup_text");
+  str = label.get_property ("markup_text");
   markup_result = str.c_str();
   TASSERT (strstr (markup_result, "<I"));
   TASSERT (strstr (markup_result, "italic<"));

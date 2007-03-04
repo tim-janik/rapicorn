@@ -748,31 +748,23 @@ Factory::parse_file (const String           &file_name,
   parse_file (file_name, i18n_domain, i18n_domain, nt);
 }
 
-Handle<Item>
+Item&
 Factory::create_item (const String       &gadget_identifier,
                       const ArgumentList &arguments)
 {
   initialize_standard_gadgets_lazily();
   Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments);
-  return item.handle<Item>(); // Handle<> does ref_sink()
+  return item; // floating
 }
 
-Handle<Container>
+Container&
 Factory::create_container (const String           &gadget_identifier,
                            const ArgumentList     &arguments)
 {
   initialize_standard_gadgets_lazily();
   Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments);
-  return item.handle<Container>(); // Handle<> does ref_sink()
-}
-
-Handle<Root>
-Factory::create_root (const String           &gadget_identifier,
-                      const ArgumentList     &arguments)
-{
-  initialize_standard_gadgets_lazily();
-  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments);
-  return item.handle<Root>(); // Handle<> does ref_sink()
+  Container &container = dynamic_cast<Container&> (item);
+  return container; // floating
 }
 
 Window

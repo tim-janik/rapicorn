@@ -18,7 +18,6 @@
 #define __RAPICORN_FACTORY_HH__
 
 #include <rapicorn/item.hh>
-#include <rapicorn/handle.hh>
 #include <rapicorn/window.hh>
 #include <list>
 
@@ -36,11 +35,9 @@ void              parse_file       (const String           &file_name,
 void              parse_file       (const String           &file_name,
                                     const String           &i18n_domain,
                                     const std::nothrow_t   &nt = dothrow);
-Handle<Item>      create_item      (const String           &gadget_identifier,
+Item&             create_item      (const String           &gadget_identifier,
                                     const ArgumentList     &arguments = ArgumentList());
-Handle<Container> create_container (const String           &gadget_identifier,
-                                    const ArgumentList     &arguments = ArgumentList());
-Handle<Root>      create_root      (const String           &gadget_identifier,
+Container&        create_container (const String           &gadget_identifier,
                                     const ArgumentList     &arguments = ArgumentList());
 Window            create_window    (const String           &gadget_identifier,
                                     const ArgumentList     &arguments = ArgumentList());
