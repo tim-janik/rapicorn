@@ -1,3 +1,10 @@
+Sun Mar  4 16:46:50 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/scrollitems.cc: list and find the right focus item, fixed
+	scroll position calculation in set_focus_child.
+
+	* rapicorn/item.*: added translate_to() and translate_from().
+
 Sun Mar  4 16:12:35 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/primitives.*:
