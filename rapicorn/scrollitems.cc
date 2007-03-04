@@ -273,8 +273,8 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
         ritem->draw_now();
       }
   }
-  Affine
-  child_affine (Item &item)
+  virtual Affine
+  child_affine (const Item &item)
   {
     const Allocation area = allocation();
     double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
@@ -291,7 +291,8 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     Root *rt = get_root();
     if (!rt)
       return;
-    Item *fitem = rt->get_focus();
+    Item *const rfitem = rt->get_focus();
+    Item *fitem = rfitem;
     if (!fitem)
       return;
     /* list focus items between focus_item and out immediate child */
@@ -304,35 +305,44 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
         fitem = fitem->parent();
       }
     /* find the first focus descendant that fits the scroll area */
-    fitem = NULL;
+    fitem = rfitem; /* fallback to innermost focus item */
+    const Rect area = allocation();
     for (Walker<Item*> w = walker (fitems); w.has_next(); w++)
       {
         Item *item = *w;
         Rect a = item->allocation();
-        Rect r = translate_from (item, a);
-        if (r.width <= allocation.width() && w.height <= allocation.height())
+        if (!translate_from (*item, 1, &a))
+          {
+            fitem = NULL; // no geographic descendant
+            break;
+          }
+        if (a.width <= area.width && a.height <= area.height)
           {
             fitem = item;
             break;
           }
       }
-    Region r (fitem->allocation());
-    Affine affine = fitem->affine_to_cousin (*this);
-    r.affine (affine);
-    Rect rect = r.extents();
-    Rect area = allocation();
-#if 0   // FIXME: broken
-    g_printerr ("scroll-focus: area=%s child=%s\n", area.string().c_str(), rect.string().c_str());
+    if (!fitem)
+      return;
+    /* adjust scroll area to fitem's area */
+    Rect farea = fitem->allocation();
+    if (!translate_from (*fitem, 1, &farea))
+      return;           // not geographic descendant
+    if (0)
+      printerr ("scroll-focus: area=%s farea=%s child=%p (%s)\n",
+                area.string().c_str(), farea.string().c_str(), fitem,
+                fitem->allocation().string().c_str());
+    /* calc new scroll position, giving precedence to lower left */
     double deltax = 0, deltay = 0;
-    if (rect.upper_x() > area.upper_x() + deltax)
-      deltax += rect.upper_x() - (area.upper_x() + deltax);
-    if (rect.x < area.x + deltax)
-      deltax += rect.x - (area.x + deltax);
-    if (rect.y < area.y + deltay)
-      deltay += area.y + deltay - rect.y;
-    if (rect.upper_y() > area.upper_y() + deltay)
-      deltay += area.upper_y() + deltay - rect.upper_y();
-    /* scroll and give precedence to upper left */
+    if (farea.upper_x() > area.upper_x() + deltax)
+      deltax += farea.upper_x() - (area.upper_x() + deltax);
+    if (farea.x < area.x + deltax)
+      deltax += farea.x - (area.x + deltax);
+    if (farea.upper_y() > area.upper_y() + deltay)
+      deltay += farea.upper_y() - (area.upper_y() + deltay);
+    if (farea.y < area.y + deltay)
+      deltay += farea.y - (area.y + deltay);
+    /* scroll to new position */
     m_hadjustment->freeze();
     m_vadjustment->freeze();
     if (deltax)
@@ -343,7 +353,6 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     m_vadjustment->constrain();
     m_hadjustment->thaw();
     m_vadjustment->thaw();
-#endif
   }
 public:
   ScrollPortImpl() :
