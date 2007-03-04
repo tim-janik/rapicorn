@@ -1023,6 +1023,8 @@ rapicorn_viewport_event (GtkWidget *widget,
       break;
 #if GTK_CHECK_VERSION (2, 8, 0)
     case GDK_GRAB_BROKEN:
+      viewport->enqueue_locked (create_event_cancellation (econtext));
+      break;
 #endif
     case GDK_DELETE:
       viewport->enqueue_locked (create_event_win_delete (econtext));
@@ -1107,6 +1109,8 @@ rapicorn_viewport_ancestor_event (GtkWidget *ancestor,
       break;
 #if GTK_CHECK_VERSION (2, 8, 0)
     case GDK_GRAB_BROKEN:
+      viewport->enqueue_locked (create_event_cancellation (econtext));
+      break;
 #endif
     case GDK_DELETE:
       if (ancestor == (GtkWidget*) rapicorn_viewport_get_my_window (self))
