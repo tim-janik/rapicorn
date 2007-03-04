@@ -2,6 +2,8 @@ Sun Mar  4 16:57:03 2007  Tim Janik  <timj@gtk.org>
 
 	* configure.in: fixed up Birnet namespace to also contain Birnet release number.
 
+	* rapicorn/ldscript.map: adapted to new Birnet namespace.
+
 Sun Mar  4 16:46:50 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/scrollitems.cc: list and find the right focus item, fixed
