@@ -361,7 +361,7 @@ Container::remove (Item &item)
 }
 
 Affine
-Container::child_affine (Item &item)
+Container::child_affine (const Item &item)
 {
   return Affine(); // Identity
 }

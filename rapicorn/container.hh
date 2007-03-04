@@ -61,7 +61,7 @@ public:
   void                  add             (Item                   *item,
                                          const PackPropertyList &pack_plist = PackPropertyList(),
                                          PackPropertyList       *unused_props = NULL);
-  virtual Affine        child_affine    (Item                   &item); /* container => item affine */
+  virtual Affine        child_affine    (const Item             &item); /* container => item affine */
   virtual
   const PropertyList&   list_properties (); /* essentially chaining to Item:: */
   const CommandList&    list_commands   (); /* essentially chaining to Item:: */
