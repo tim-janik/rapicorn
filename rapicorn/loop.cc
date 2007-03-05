@@ -276,6 +276,9 @@ public:
   quit (void)
   {
     AutoLocker locker (m_mutex);
+    bool keepref = !finalizing();
+    if (keepref)
+      ref (this);
     Source *source = find_first();
     while (source)
       {
@@ -290,12 +293,18 @@ public:
         close (m_wakeup_pipe[1]);
         m_wakeup_pipe[1] = -1;
         if (&Thread::self() != m_thread)
-          m_thread->wait_for_exit();
+          {
+            locker.unlock();
+            m_thread->wait_for_exit();
+            locker.relock();
+          }
         close (m_wakeup_pipe[0]);
         m_wakeup_pipe[0] = -1;
         unref (m_thread);
         m_thread = NULL;
       }
+    if (keepref)
+      unref (this);
   }
 };
 

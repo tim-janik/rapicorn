@@ -64,8 +64,6 @@ public:
   /* main loop functions */
   virtual MainLoop* get_loop            () = 0;
   /* MT-safe */
-  virtual void  run_async               (void) = 0;
-  virtual void  stop_async              (void) = 0;
   virtual Window window                 () = 0;
 };
 

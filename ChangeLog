@@ -1,3 +1,12 @@
+Mon Mar  5 00:51:32 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/root.cc: abort resize_all() if neither the requisition nor
+	the allocation are invalid. this prevents bogus size allocations with
+	a 0x0 size. removed show_async() and stop_async() use Window instead.
+
+	* rapicorn/loop.cc: release loop mutex while waiting in quit to avoid
+	deadlock with loop thread.
+
 Sun Mar  4 23:38:38 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/handle.hh: removed Handle<> template, we have Window instead.

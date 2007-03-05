@@ -80,8 +80,6 @@ private:
   virtual bool          closed                                  ();
   virtual void          close                                   ();
   void                  idle_show                               ();
-  virtual void          run_async                               (void);
-  virtual void          stop_async                              (void);
   virtual Window        window                                  ();
   virtual bool          prepare                                 (uint64                  current_time_usecs,
                                                                  int64                  *timeout_usecs_p);

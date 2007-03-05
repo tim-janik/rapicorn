@@ -182,6 +182,8 @@ RootImpl::resize_all (Allocation *new_area)
           have_allocation = true;
         }
     }
+  if (!test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+    return;
   /* this is the core of the resizing loop. via Item.tune_requisition(), we
    * allow items to adjust the requisition from within size_allocate().
    * whether the tuned requisition is honored at all, depends on
@@ -208,15 +210,20 @@ RootImpl::resize_all (Allocation *new_area)
     }
   m_tunable_requisition_counter = 0;
   if (!have_allocation ||
-      (!new_area && (req.width > allocation().width || req.height > allocation().height)))
+      (!new_area &&
+       (req.width > allocation().width || req.height > allocation().height)))
     {
       m_config.request_width = req.width;
       m_config.request_height = req.height;
-      /* we will request a WIN_SIZE and WIN_DRAW now, so there's no point in handling further exposes */
-      m_viewport->enqueue_win_draws();
-      m_expose_region.clear();
-      m_viewport->set_config (m_config, true);
+      /* set_config() will request a WIN_SIZE and WIN_DRAW now, so there's no point in handling further exposes */
+      if (m_viewport)
+        {
+          m_viewport->enqueue_win_draws();
+          m_expose_region.clear();
+          m_viewport->set_config (m_config, true);
+        }
     }
+  printerr ("RESIZE: %fx%f\n", req.width, req.height);
 }
 
 void
@@ -604,7 +611,20 @@ RootImpl::dispatch_win_delete_event (const Event &event)
   const EventWinDelete *devent = dynamic_cast<const EventWinDelete*> (&event);
   if (devent)
     {
-      stop_async();
+      if (m_viewport)
+        m_viewport->hide();
+      MainLoop *tmp_loop;
+      {
+        AutoLocker aelocker (m_async_mutex);
+        tmp_loop = m_async_loop;
+        if (tmp_loop)
+          tmp_loop->ref();
+      }
+      if (tmp_loop)
+        {
+          tmp_loop->quit();
+          tmp_loop->unref();
+        }
       handled = true;
     }
   return handled;
@@ -861,7 +881,7 @@ RootImpl::prepare (uint64 current_time_usecs,
 {
   AutoLocker locker (m_omutex);
   AutoLocker aelocker (m_async_mutex);
-  return !m_async_event_queue.empty() || !m_expose_region.empty() || test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
+  return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewport && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
 }
 
 bool
@@ -869,7 +889,7 @@ RootImpl::check (uint64 current_time_usecs)
 {
   AutoLocker locker (m_omutex);
   AutoLocker aelocker (m_async_mutex);
-  return !m_async_event_queue.empty() || !m_expose_region.empty() || test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
+  return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewport && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
 }
 
 bool
@@ -891,7 +911,7 @@ RootImpl::dispatch ()
         dispatch_event (*event);
         delete event;
       }
-    else if (test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+    else if (m_viewport && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
       resize_all (NULL);
     else if (!m_expose_region.empty())
       draw_now();
@@ -935,7 +955,10 @@ RootImpl::show ()
   if (m_source)
     {
       if (!m_viewport)
-        m_viewport = Viewport::create_viewport ("auto", WINDOW_TYPE_NORMAL, *this);
+        {
+          m_viewport = Viewport::create_viewport ("auto", WINDOW_TYPE_NORMAL, *this);
+          resize_all (NULL);
+        }
       BIRNET_ASSERT (m_viewport != NULL);
       VoidSlot sl = slot (*this, &RootImpl::idle_show);
       AutoLocker aelocker (m_async_mutex);
@@ -984,43 +1007,6 @@ RootImpl::close ()
       BIRNET_ASSERT (m_source == NULL);
     }
   unref (this);
-}
-
-void
-RootImpl::run_async (void)
-{
-  AutoLocker monitor (m_omutex);
-  BIRNET_ASSERT (m_viewport == NULL);
-  m_viewport = Viewport::create_viewport ("auto", WINDOW_TYPE_NORMAL, *this);
-  VoidSlot sl = slot (*this, &RootImpl::idle_show);
-  AutoLocker aelocker (m_async_mutex);
-  BIRNET_ASSERT (m_async_loop != NULL);
-  if (!m_source)
-    {
-      m_source = new RootSource (*this);
-      m_async_loop->add_source (m_source, MainLoop::PRIORITY_NORMAL);
-    }
-  m_async_loop->exec_now (sl);
-}
-
-void
-RootImpl::stop_async (void)
-{
-  AutoLocker monitor (m_omutex);
-  if (m_viewport)
-    m_viewport->hide();
-  MainLoop *tmp_loop;
-  {
-    AutoLocker aelocker (m_async_mutex);
-    tmp_loop = m_async_loop;
-    if (tmp_loop)
-      tmp_loop->ref();
-  }
-  if (tmp_loop)
-    {
-      tmp_loop->quit();
-      tmp_loop->unref();
-    }
 }
 
 Window
