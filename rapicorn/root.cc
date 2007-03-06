@@ -223,7 +223,6 @@ RootImpl::resize_all (Allocation *new_area)
           m_viewport->set_config (m_config, true);
         }
     }
-  printerr ("RESIZE: %fx%f\n", req.width, req.height);
 }
 
 void
