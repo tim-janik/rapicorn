@@ -36,7 +36,7 @@ public:
   void          unlock          ()      { m_omutex.unlock(); }
   Root&         root            ();     /* must be locked */
   Root*         peek_root       ();
-  /*  window ops */
+  /* window ops */
   bool          visible         ();
   void          show            ();
   void          hide            ();
