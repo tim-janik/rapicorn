@@ -1,3 +1,10 @@
+Tue Mar  6 23:58:26 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/loop.hh, rapicorn/loop.cc: added loop source recursion
+	concept to MainLoop::Source API.
+	refactored loop processing into prepare/poll/check/dispatch methods
+	to allow multi-loop poll().
+
 Fri Mar  9 02:49:51 2007  Tim Janik  <timj@gtk.org>
 
 	* configure.in: updated version to 710.0, based on year + week number.

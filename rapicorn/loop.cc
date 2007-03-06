@@ -47,8 +47,9 @@ BIRNET_STATIC_ASSERT (sizeof (((PollFD*) 0)->revents) == sizeof (((struct pollfd
 
 
 enum {
-  NEEDS_DISPATCH        = 0x1,
-  IS_DESTROYED          = 0x2,  // FIXME: use (source->m_main_loop == this) instead
+  UNCHECKED             = 0,
+  PREPARED,
+  NEEDS_DISPATCH,
   _DUMMY = UINT_MAX
 };
 
@@ -119,7 +120,7 @@ class RealMainLoop : public virtual MainLoop {
   vector<PollFD> m_pfds;
   int            m_wakeup_pipe[2];      // [0] = readable; [1] = writable
   Thread        *m_thread;
-  bool           inactive;
+  bool           m_inactive;
   enum {
     WILL_CHECK,
     WILL_DISPATCH
@@ -156,21 +157,28 @@ class RealMainLoop : public virtual MainLoop {
     slist.remove (source);
     if (slist.empty())
       m_sources.erase (m_sources.find (source->m_priority));
-    bool needs_destroy = !(source->m_loop_flags & IS_DESTROYED);
-    source->m_loop_flags |= IS_DESTROYED;
+    bool needs_destroy = source->m_main_loop == this;
     source->m_main_loop = NULL;
+    source->m_loop_state = UNCHECKED;
     m_mutex.unlock();
     if (needs_destroy)
       source->destroy();
     unref (source);
     m_mutex.lock();
   }
-  virtual bool iterate (bool, bool);
+  bool          prepare_sources (int                  &max_priority,
+                                 vector<PollFD>       &pfds,
+                                 int64                &timeout_usecs);
+  virtual bool iterate          (bool                  may_block,
+                                 bool                  may_dispatch);
+  bool         check_sources    (const int             max_priority,
+                                 const vector<PollFD> &pfds);
+  void         dispatch_sources (const int             max_priority);
 public:
   RealMainLoop () :
     m_counter (1),
     m_thread (NULL),
-    inactive (true),
+    m_inactive (true),
     m_istate (WILL_CHECK)
   {
     m_wakeup_pipe[0] = -1;
@@ -203,7 +211,7 @@ public:
   running (void)
   {
     AutoLocker locker (m_mutex);
-    return !inactive;
+    return !m_inactive;
   }
   virtual uint
   add_source (Source   *source,
@@ -212,14 +220,15 @@ public:
     AutoLocker locker (m_mutex);
     return_val_if_fail (source->m_main_loop == NULL, 0);
     ref_sink (source);
-    source->m_priority = priority;
     source->m_main_loop = this;
     source->m_id = m_counter++;
     if (!source->m_id)
       error ("MainLoop::m_counter overflow, please report");
+    source->m_loop_state = UNCHECKED;
+    source->m_priority = priority;
     list<Source*> &slist = m_sources[priority];
     slist.push_back (source);
-    inactive = false;
+    m_inactive = false;
     wakeup_L();
     return source->m_id;
   }
@@ -285,7 +294,7 @@ public:
         real_remove_Lm (source);
         source = find_first();
       }
-    inactive = true;
+    m_inactive = true;
     if (m_thread)
       {
         m_thread->queue_abort();
@@ -310,27 +319,30 @@ public:
 
 /* --- loop iteration function --- */
 bool
-RealMainLoop::iterate (bool may_block,
-                       bool may_dispatch)
+RealMainLoop::prepare_sources (int            &max_priority,
+                               vector<PollFD> &pfds,
+                               int64          &timeout_usecs)
 {
   AutoLocker locker (m_mutex);
-  inactive = false;
-  int64 timeout_usecs = INT64_MAX;
   bool must_dispatch = false;
-  vector<PollFD> pfds;
-  /* fetch source list to operate on */
+  m_inactive = false;
+  /* create source list to operate on */
   SourceList sources;
   for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
     {
       SourceList slist = (*it).second;
       for (SourceList::iterator lit = slist.begin(); lit != slist.end(); lit++)
-        sources.push_back (ref (*lit));
+        if ((*lit)->m_main_loop == this && /* test undestroyed */
+            (!(*lit)->m_dispatching || (*lit)->m_may_recurse))
+          {
+            (*lit)->m_loop_state = UNCHECKED;
+            sources.push_back (ref (*lit));
+          }
     }
   /* prepare sources, up to NEEDS_DISPATCH priority */
-  int max_priority = INT_MAX;
   uint64 current_time_usecs = MainLoop::get_current_time_usecs();
   for (SourceList::iterator lit = sources.begin(); lit != sources.end(); lit++)
-    if (!((*lit)->m_loop_flags & IS_DESTROYED) &&
+    if ((*lit)->m_main_loop == this &&
         max_priority >= (*lit)->m_priority)
       {
         Source &source = **lit;
@@ -338,14 +350,16 @@ RealMainLoop::iterate (bool may_block,
         locker.unlock();
         bool need_dispatch = source.prepare (current_time_usecs, &timeout);
         locker.relock();
+        if (source.m_main_loop != this)
+          continue;
         if (need_dispatch)
           {
             max_priority = source.m_priority;
-            source.m_loop_flags |= NEEDS_DISPATCH;
+            source.m_loop_state = NEEDS_DISPATCH;
             must_dispatch = true;
           }
         else
-          source.m_loop_flags &= ~NEEDS_DISPATCH;
+          source.m_loop_state = PREPARED;
         if (timeout >= 0)
           timeout_usecs = MIN (timeout_usecs, timeout);
         uint npfds = source.n_pfds();
@@ -362,6 +376,24 @@ RealMainLoop::iterate (bool may_block,
               source.m_pfds[i].idx = UINT_MAX;
           }
       }
+  if (must_dispatch)
+    timeout_usecs = 0;
+  /* clean up */
+  locker.unlock();                              /* unlocked */
+  for (SourceList::iterator lit = sources.begin(); lit != sources.end(); lit++)
+    unref (*lit);                               /* unlocked */
+  return must_dispatch;
+}
+
+bool
+RealMainLoop::iterate (bool may_block,
+                       bool may_dispatch)
+{
+  vector<PollFD> pfds;
+  int64 timeout_usecs = INT64_MAX;
+  /* prepare */
+  int max_priority = INT_MAX;
+  bool must_dispatch = prepare_sources (max_priority, pfds, timeout_usecs);
   /* allow poll wakeups */
   PollFD wakeup = { m_wakeup_pipe[0], PollFD::IN, 0 };
   uint wakeup_idx = pfds.size();
@@ -374,24 +406,46 @@ RealMainLoop::iterate (bool may_block,
     timeout_msecs = 0;
   int presult;
   do
-    {
-      locker.unlock();
-      presult = poll ((struct pollfd*) &pfds[0], pfds.size(), timeout_msecs > INT_MAX ? -1 : timeout_msecs);
-      locker.relock();
-    }
+    presult = poll ((struct pollfd*) &pfds[0], pfds.size(), MIN (timeout_msecs, INT_MAX));
   while (presult < 0 && (errno == EAGAIN || errno == EINTR));
   if (presult < 0)
     warning ("failure during main loop poll: %s", strerror (errno));
   else if (pfds[wakeup_idx].revents)
     {
       /* flush wakeup pipe */
-      char buffer[512]; // 512 <= posix pipe atomic read/write size
+      char buffer[512]; // 512 is posix pipe atomic read/write size
       read (m_wakeup_pipe[0], buffer, sizeof (buffer));
     }
+  /* check */
+  must_dispatch |= check_sources (max_priority, pfds);
+  /* dispatch */
+  if (may_dispatch && must_dispatch)
+    dispatch_sources (max_priority);
+  return must_dispatch && !may_dispatch;
+}
+
+bool
+RealMainLoop::check_sources (const int             max_priority,
+                             const vector<PollFD> &pfds)
+{
+  AutoLocker locker (m_mutex);
+  bool must_dispatch = false;
+  m_inactive = false;
+  /* create source list to operate on */
+  SourceList sources;
+  for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
+    {
+      SourceList slist = (*it).second;
+      for (SourceList::iterator lit = slist.begin(); lit != slist.end(); lit++)
+        if ((*lit)->m_main_loop == this && /* test undestroyed */
+            ((*lit)->m_loop_state == PREPARED ||
+             (*lit)->m_loop_state == NEEDS_DISPATCH))
+          sources.push_back (ref (*lit));
+    }
   /* check polled sources */
-  current_time_usecs = MainLoop::get_current_time_usecs();
+  uint64 current_time_usecs = MainLoop::get_current_time_usecs();
   for (SourceList::iterator lit = sources.begin(); lit != sources.end(); lit++)
-    if (!((*lit)->m_loop_flags & IS_DESTROYED) &&
+    if ((*lit)->m_main_loop == this &&
         max_priority >= (*lit)->m_priority)
       {
         Source &source = **lit;
@@ -399,44 +453,74 @@ RealMainLoop::iterate (bool may_block,
         for (uint i = 0; i < npfds; i++)
           {
             uint idx = source.m_pfds[i].idx;
-            if (idx < pfds.size())
+            if (idx < pfds.size() &&
+                source.m_pfds[i].pfd->fd == pfds[idx].fd)
               source.m_pfds[i].pfd->revents = pfds[idx].revents;
+            else
+              source.m_pfds[i].idx = UINT_MAX;
           }
-        if (!(source.m_loop_flags & NEEDS_DISPATCH))
+        if (source.m_loop_state == PREPARED)
           {
             Source &source = **lit;
             locker.unlock();
             bool need_dispatch = source.check (current_time_usecs);
             locker.relock();
-            if (need_dispatch)
+            if (source.m_main_loop == this && need_dispatch)
               {
-                source.m_loop_flags |= NEEDS_DISPATCH;
+                source.m_loop_state = NEEDS_DISPATCH;
                 must_dispatch = true;
               }
           }
+        else if (source.m_loop_state == NEEDS_DISPATCH)
+          must_dispatch = true;
       }
-  /* dispatch sources */
-  if (may_dispatch && must_dispatch)
-    for (SourceList::iterator lit = sources.begin(); lit != sources.end(); lit++)
-      if (!((*lit)->m_loop_flags & IS_DESTROYED) &&
-          max_priority >= (*lit)->m_priority)
-        {
-          Source &source = **lit;
-          if (source.m_loop_flags & NEEDS_DISPATCH)
-            {
-              source.m_loop_flags &= ~NEEDS_DISPATCH;
-              locker.unlock();
-              bool keep_alive = source.dispatch ();
-              locker.relock();
-              if (!keep_alive && source.m_main_loop == this)
-                real_remove_Lm (&source);
-            }
-        }
   /* clean up */
   locker.unlock();                              /* unlocked */
   for (SourceList::iterator lit = sources.begin(); lit != sources.end(); lit++)
     unref (*lit);                               /* unlocked */
-  return must_dispatch && !may_dispatch;        /* unlocked */
+  return must_dispatch;
+}
+
+void
+RealMainLoop::dispatch_sources (const int max_priority)
+{
+  AutoLocker locker (m_mutex);
+  m_inactive = false;
+  /* create source list to operate on */
+  SourceList sources;
+  for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
+    {
+      SourceList slist = (*it).second;
+      for (SourceList::iterator lit = slist.begin(); lit != slist.end(); lit++)
+        if ((*lit)->m_main_loop == this && /* test undestroyed */
+            (*lit)->m_loop_state == NEEDS_DISPATCH)
+          sources.push_back (ref (*lit));
+    }
+  /* dispatch sources */
+  for (SourceList::iterator lit = sources.begin(); lit != sources.end(); lit++)
+    if ((*lit)->m_main_loop == this &&
+        max_priority >= (*lit)->m_priority)
+      {
+        Source &source = **lit;
+        if (source.m_loop_state == NEEDS_DISPATCH)
+          {
+            source.m_loop_state = UNCHECKED;
+            bool was_dispatching = source.m_was_dispatching;
+            source.m_was_dispatching = source.m_dispatching;
+            source.m_dispatching = true;
+            locker.unlock();
+            bool keep_alive = source.dispatch ();
+            locker.relock();
+            source.m_dispatching = source.m_was_dispatching;
+            source.m_was_dispatching = was_dispatching;
+            if (source.m_main_loop == this && !keep_alive)
+              real_remove_Lm (&source);
+          }
+      }
+  /* clean up */
+  locker.unlock();                              /* unlocked */
+  for (SourceList::iterator lit = sources.begin(); lit != sources.end(); lit++)
+    unref (*lit);                               /* unlocked */
 }
 
 /* --- MainLoop::Source --- */
@@ -448,9 +532,13 @@ MainLoop::create ()
 
 MainLoop::Source::Source () :
   m_main_loop (NULL),
+  m_pfds (NULL),
   m_id (0),
-  m_loop_flags (0),
-  m_pfds (NULL)
+  m_priority (INT_MAX),
+  m_loop_state (0),
+  m_may_recurse (0),
+  m_dispatching (0),
+  m_was_dispatching (0)
 {}
 
 uint
@@ -461,6 +549,24 @@ MainLoop::Source::n_pfds ()
     while (m_pfds[i].pfd)
       i++;
   return i;
+}
+
+void
+MainLoop::Source::may_recurse (bool may_recurse)
+{
+  m_may_recurse = may_recurse;
+}
+
+bool
+MainLoop::Source::may_recurse () const
+{
+  return m_may_recurse;
+}
+
+bool
+MainLoop::Source::recursion () const
+{
+  return m_dispatching && m_was_dispatching;
 }
 
 void

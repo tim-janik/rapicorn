@@ -112,13 +112,16 @@ public:
 class MainLoop::Source : public virtual ReferenceCountImpl {
   friend       class RealMainLoop;
   MainLoop    *m_main_loop;
-  uint         m_id;
-  uint         m_loop_flags;
-  int          m_priority;
   struct {
     PollFD    *pfd;
     uint       idx;
   }           *m_pfds;
+  uint         m_id;
+  int          m_priority;
+  uint16       m_loop_state;
+  uint         m_may_recurse : 1;
+  uint         m_dispatching : 1;
+  uint         m_was_dispatching : 1;
   uint         n_pfds      ();
   BIRNET_PRIVATE_CLASS_COPY (Source);
 protected:
@@ -130,6 +133,9 @@ public:
   virtual bool check       (uint64 current_time_usecs) = 0;
   virtual bool dispatch    () = 0;
   virtual void destroy     ();
+  void         may_recurse (bool           may_recurse);
+  bool         may_recurse () const;
+  bool         recursion   () const;
   void         add_poll    (PollFD * const pfd);
   void         remove_poll (PollFD * const pfd);
 };
