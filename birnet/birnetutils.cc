@@ -1143,6 +1143,10 @@ ReferenceCountImpl::ref_diag (const char *msg) const
 }
 
 void
+ReferenceCountImpl::pre_finalize ()
+{}
+
+void
 ReferenceCountImpl::finalize ()
 {}
 

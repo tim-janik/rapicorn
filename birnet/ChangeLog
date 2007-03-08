@@ -1,3 +1,10 @@
+Thu Mar  8 03:40:15 2007  Tim Janik  <timj@gtk.org>
+
+	* birnet/birnetutils.hh, birnet/birnetutils.cc: added 
+	ReferenceCountImpl::pre_finalize() method which allows resurrection
+	by increasing the last reference count. 
+	optimized ref_sink, ref and unref.
+
 Thu Mar  8 02:59:50 2007  Tim Janik  <timj@gtk.org>
 
 	* birnet/birnetthread.hh, birnet/birnetthread.cc: keep lock
