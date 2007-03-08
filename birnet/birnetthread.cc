@@ -322,7 +322,8 @@ Cond::~Cond ()
 
 OwnedMutex::OwnedMutex () :
   m_rec_mutex (zero_rec_mutex),
-  m_owner (NULL)
+  m_owner (NULL),
+  m_count (0)
 {
   if (birnet_threads_initialized())
     ThreadTable.rec_mutex_init (&m_rec_mutex);
@@ -333,6 +334,7 @@ OwnedMutex::OwnedMutex () :
 OwnedMutex::~OwnedMutex()
 {
   BIRNET_ASSERT (m_owner == NULL);
+  BIRNET_ASSERT (m_count == 0);
   if (birnet_threads_initialized())
     ThreadTable.rec_mutex_destroy (&m_rec_mutex);
   else

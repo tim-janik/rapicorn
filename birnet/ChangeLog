@@ -1,3 +1,10 @@
+Thu Mar  8 02:59:50 2007  Tim Janik  <timj@gtk.org>
+
+	* birnet/birnetthread.hh, birnet/birnetthread.cc: keep lock
+	count for OwnedMutex to prevent premature unsetting of the owner.
+
+	* tests/threads.cc: test multiple locking of OwnedMutex.
+
 Sun Mar  4 16:28:09 2007  Tim Janik  <timj@gtk.org>
 
 	* configure.inc: release-version update to 703.
