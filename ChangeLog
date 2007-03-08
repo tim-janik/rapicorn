@@ -1,3 +1,20 @@
+Fri Mar  9 00:07:39 2007  Tim Janik  <timj@gtk.org>
+
+	* changed Rapicorn to live in one global lock: rapicorn_mutex.
+
+	* rapicorn/loop.hh, rapicorn/loop.cc: moved loop iteration to
+	single-thread functions EventLoop::iterate_loops() and
+	EventLoop::quit_loops().
+
+	* rapicorn/testitem.[hc]*: added seen_test_items() to verify
+	that display + assertion checks have been performed.
+
+	* tests/primitives.cc: adapted to new event loop API, disabled
+	async loop test.
+
+	* tests/testitems.cc: use loop testing API and assert actual
+	display of TestItem.
+
 Thu Mar  8 01:33:45 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/loop.hh, rapicorn/loop.cc: renamed MainLoop to EventLoop.

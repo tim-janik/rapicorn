@@ -831,7 +831,7 @@ namespace { // Anon
 static void
 initialize_standard_gadgets_lazily (void)
 {
-  AutoLocker al (rapicorn_mutex());
+  assert (rapicorn_mutex.mine());
   static bool initialized = false;
   if (!initialized)
     {

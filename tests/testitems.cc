@@ -19,6 +19,28 @@
 #include <rapicorn/rapicorn.hh>
 #include <rapicorn/testitem.hh>
 
+/* --- RapicornTester --- */
+namespace Rapicorn {
+struct RapicornTester {
+  static bool
+  loops_pending()
+  {
+    return EventLoop::iterate_loops (false, false);
+  }
+  static void
+  loops_dispatch (bool may_block)
+  {
+    EventLoop::iterate_loops (may_block, true);
+  }
+  static void
+  quit_loops ()
+  {
+    return EventLoop::quit_loops ();
+  }
+};
+} // Rapicorn
+
+/* --- tests --- */
 namespace {
 using namespace Rapicorn;
 
@@ -56,9 +78,16 @@ run_and_test (const char *test_name)
   TOK();
   locker.unlock();
   TOK();
-  sleep (3);
-  warning ("EEEEEEEEEEK: have to abort! **FIXME!!!**"); _exit (0);
+  while (RapicornTester::loops_pending())
+    RapicornTester::loops_dispatch (false);
   TOK();
+  printerr ("(auto-sleep)"); sleep (1); // FIXME: work around lack of show_now()
+  TOK();
+  while (RapicornTester::loops_pending())
+    RapicornTester::loops_dispatch (false);
+  TOK();
+  uint seen_test = TestItem::seen_test_items();
+  TASSERT (seen_test > 0);
   TDONE();
 }
 
@@ -74,7 +103,8 @@ main (int   argc,
 
   /* initialize rapicorn */
   rapicorn_init_with_gtk_thread (&argc, &argv, NULL);
-
+  AutoLocker ral (rapicorn_mutex);
+  
   /* parse GUI description */
   Factory::must_parse_file ("testitems.xml", "TEST-ITEM", Path::dirname (argv[0]), Path::join (Path::dirname (argv[0]), ".."));
 

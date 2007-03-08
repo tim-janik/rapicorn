@@ -54,7 +54,10 @@ enum {
 };
 
 /* --- EventLoop --- */
-EventLoop::~EventLoop  ()
+EventLoop::EventLoop ()
+{}
+
+EventLoop::~EventLoop ()
 {}
 
 uint64
@@ -72,55 +75,24 @@ EventLoop::remove (uint   id)
     g_warning ("%s: failed to remove loop source: %u", G_STRFUNC, id);
 }
 
-bool
-EventLoop::pending ()
-{
-  return iterate (false, false);
-}
-
-bool
-EventLoop::iteration (bool may_block)
-{
-  return iterate (may_block, true);
-}
-
-/* --- EventLoopThread --- */
-class EventLoopThread : public virtual Thread {
-  EventLoop *m_loop;
-  BIRNET_PRIVATE_CLASS_COPY (EventLoopThread);
-public:
-  EventLoopThread (EventLoop *mloop) :
-    Thread ("EventLoopThread"),
-    m_loop (ref_sink (mloop))
-  {}
-  ~EventLoopThread()
-  {
-    unref (m_loop);
-  }
-  virtual void
-  run ()
-  {
-    while (!aborted())
-      {
-        if (m_loop->pending())
-          m_loop->iteration (false);
-        else
-          m_loop->iteration (true);
-      }
-  }
-};
+class EventLoopImpl;
+static vector<EventLoopImpl*> rapicorn_main_loops;
+static int                    rapicorn_wakeups[2] = { -1, -1 };
 
 /* --- EventLoopImpl --- */
 class EventLoopImpl : public virtual EventLoop {
   typedef list<Source*>         SourceList;
   typedef map<int, SourceList>  SourceListMap;
   Mutex          m_mutex;
+public:                                 // EventLoop::iterate_loops
+  int            m_max_priority;        // EventLoop::iterate_loops
+  bool           m_must_dispatch;       // EventLoop::iterate_loops
+private:
+  bool           m_inactive;
   uint           m_counter;             // FIXME: need to handle wrapping at some point
   SourceListMap  m_sources;
   vector<PollFD> m_pfds;
   int            m_wakeup_pipe[2];      // [0] = readable; [1] = writable
-  Thread        *m_thread;
-  bool           m_inactive;
   enum {
     WILL_CHECK,
     WILL_DISPATCH
@@ -166,19 +138,12 @@ class EventLoopImpl : public virtual EventLoop {
     unref (source);
     m_mutex.lock();
   }
-  bool          prepare_sources (int                  &max_priority,
-                                 vector<PollFD>       &pfds,
-                                 int64                &timeout_usecs);
-  virtual bool iterate          (bool                  may_block,
-                                 bool                  may_dispatch);
-  bool         check_sources    (const int             max_priority,
-                                 const vector<PollFD> &pfds);
-  void         dispatch_sources (const int             max_priority);
 public:
   EventLoopImpl () :
-    m_counter (1),
-    m_thread (NULL),
+    m_max_priority (INT_MAX),
+    m_must_dispatch (0),
     m_inactive (true),
+    m_counter (1),
     m_istate (WILL_CHECK)
   {
     m_wakeup_pipe[0] = -1;
@@ -187,12 +152,21 @@ public:
   }
   ~EventLoopImpl()
   {
+    vector<EventLoopImpl*>::iterator it = find (rapicorn_main_loops.begin(), rapicorn_main_loops.end(), this);
+    if (it != rapicorn_main_loops.end())
+      rapicorn_main_loops.erase (it);
     quit();
   }
+  virtual bool prepare_sources  (int                  &max_priority,
+                                 vector<PollFD>       &pfds,
+                                 int64                &timeout_usecs);
+  virtual bool check_sources    (const int             max_priority,
+                                 const vector<PollFD> &pfds);
+  virtual void dispatch_sources (const int             max_priority);
   void
   wakeup_L (void)
   {
-    if (m_wakeup_pipe[1] >= 0)
+    if (rapicorn_wakeups[1] >= 0)
       {
         char w = 'w';
         int err;
@@ -254,12 +228,9 @@ public:
       }
     return false;
   }
-  virtual bool
-  start ()
+  bool
+  create_pipes_L()
   {
-    AutoLocker locker (m_mutex);
-    if (m_thread)
-      return false;
     return_val_if_fail (m_wakeup_pipe[0] == -1 && m_wakeup_pipe[1] == -1, false);
     if (pipe (m_wakeup_pipe) < 0)
       return false;
@@ -272,14 +243,19 @@ public:
           err = fcntl (m_wakeup_pipe[i], F_SETFL, nflags);
         while (err < 0 && (errno == EINTR || errno == EAGAIN));
       }
-    if (!m_thread)
-      {
-        m_thread = new EventLoopThread (this);
-        ref_sink (m_thread);
-        m_thread->start();
-        return true;
-      }
-    return false;
+    return true;
+  }
+  virtual bool
+  start ()
+  {
+    AutoLocker locker (m_mutex);
+    return_val_if_fail (m_wakeup_pipe[0] == -1 && m_wakeup_pipe[1] == -1, false);
+    return_val_if_fail (find (rapicorn_main_loops.begin(), rapicorn_main_loops.end(), this) == rapicorn_main_loops.end(), false);
+    if (!create_pipes_L())
+      return false;
+    AutoLocker rl (rapicorn_mutex);
+    rapicorn_main_loops.push_back (this);
+    return true;
   }
   virtual void
   quit (void)
@@ -295,29 +271,13 @@ public:
         source = find_first();
       }
     m_inactive = true;
-    if (m_thread)
-      {
-        m_thread->queue_abort();
-        wakeup_L();
-        close (m_wakeup_pipe[1]);
-        m_wakeup_pipe[1] = -1;
-        if (&Thread::self() != m_thread)
-          {
-            locker.unlock();
-            m_thread->wait_for_exit();
-            locker.relock();
-          }
-        close (m_wakeup_pipe[0]);
-        m_wakeup_pipe[0] = -1;
-        unref (m_thread);
-        m_thread = NULL;
-      }
+    wakeup_L();
     if (keepref)
       unref (this);
   }
 };
 
-/* --- loop iteration function --- */
+/* --- EventLoopImpl iteration --- */
 bool
 EventLoopImpl::prepare_sources (int            &max_priority,
                                 vector<PollFD> &pfds,
@@ -383,45 +343,6 @@ EventLoopImpl::prepare_sources (int            &max_priority,
   for (SourceList::iterator lit = sources.begin(); lit != sources.end(); lit++)
     unref (*lit);                               /* unlocked */
   return must_dispatch;
-}
-
-bool
-EventLoopImpl::iterate (bool may_block,
-                        bool may_dispatch)
-{
-  vector<PollFD> pfds;
-  int64 timeout_usecs = INT64_MAX;
-  /* prepare */
-  int max_priority = INT_MAX;
-  bool must_dispatch = prepare_sources (max_priority, pfds, timeout_usecs);
-  /* allow poll wakeups */
-  PollFD wakeup = { m_wakeup_pipe[0], PollFD::IN, 0 };
-  uint wakeup_idx = pfds.size();
-  pfds.push_back (wakeup);
-  /* poll file descriptors */
-  int64 timeout_msecs = timeout_usecs / 1000;
-  if (timeout_usecs > 0 && timeout_msecs <= 0)
-    timeout_msecs = 1;
-  if (must_dispatch || !may_block)
-    timeout_msecs = 0;
-  int presult;
-  do
-    presult = poll ((struct pollfd*) &pfds[0], pfds.size(), MIN (timeout_msecs, INT_MAX));
-  while (presult < 0 && (errno == EAGAIN || errno == EINTR));
-  if (presult < 0)
-    warning ("failure during main loop poll: %s", strerror (errno));
-  else if (pfds[wakeup_idx].revents)
-    {
-      /* flush wakeup pipe */
-      char buffer[512]; // 512 is posix pipe atomic read/write size
-      read (m_wakeup_pipe[0], buffer, sizeof (buffer));
-    }
-  /* check */
-  must_dispatch |= check_sources (max_priority, pfds);
-  /* dispatch */
-  if (may_dispatch && must_dispatch)
-    dispatch_sources (max_priority);
-  return must_dispatch && !may_dispatch;
 }
 
 bool
@@ -521,6 +442,107 @@ EventLoopImpl::dispatch_sources (const int max_priority)
   locker.unlock();                              /* unlocked */
   for (SourceList::iterator lit = sources.begin(); lit != sources.end(); lit++)
     unref (*lit);                               /* unlocked */
+}
+
+/* --- EventLoop running --- */
+void
+EventLoop::quit_loops()
+{
+  AutoLocker al (rapicorn_mutex);
+  /* create referenced loop list */
+  list<EventLoopImpl*> loops;
+  for (uint i = 0; i < rapicorn_main_loops.size(); i++)
+    loops.push_back (ref (rapicorn_main_loops[i]));
+  /* quit loops */
+  for (list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
+    {
+      EventLoopImpl &loop = **lit;
+      loop.quit();
+    }
+  /* cleanup */
+  for (list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
+    unref (*lit);
+}
+
+bool
+EventLoop::iterate_loops (bool may_block,
+                          bool may_dispatch)
+{
+  AutoLocker al (rapicorn_mutex);       // acquire global lock
+  if (rapicorn_wakeups[0] < 0)
+    {
+      int err;
+      do
+        err = pipe (rapicorn_wakeups);
+      while (err < 0 && (errno == EAGAIN || errno == EINTR));
+      if (err < 0)
+        error ("EventLoop: failed to create wakeup pipe");
+    }
+  vector<PollFD> pfds;
+  int64 timeout_usecs = INT64_MAX;
+  bool seen_must_dispatch = false;
+  /* create referenced loop list */
+  list<EventLoopImpl*> loops;
+  for (uint i = 0; i < rapicorn_main_loops.size(); i++)
+    loops.push_back (ref (rapicorn_main_loops[i]));
+  /* prepare */
+  for (list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
+    {
+      EventLoopImpl &loop = **lit;
+      ref (loop);
+      loop.m_max_priority = INT_MAX;
+      loop.m_must_dispatch = loop.prepare_sources (loop.m_max_priority, pfds, timeout_usecs);
+      seen_must_dispatch |= loop.m_must_dispatch;
+      unref (loop);
+    }
+  /* allow poll wakeups */
+  PollFD wakeup = { rapicorn_wakeups[0], PollFD::IN, 0 };
+  uint wakeup_idx = pfds.size();
+  pfds.push_back (wakeup);
+  /* poll file descriptors */
+  int64 timeout_msecs = timeout_usecs / 1000;
+  if (timeout_usecs > 0 && timeout_msecs <= 0)
+    timeout_msecs = 1;
+  if (!may_block || seen_must_dispatch)
+    timeout_msecs = 0;
+  int presult;
+  do
+    {
+      al.unlock();                      // release global lock
+      presult = poll ((struct pollfd*) &pfds[0], pfds.size(), MIN (timeout_msecs, INT_MAX));
+      al.relock();                      // re-acquire global lock
+    }
+  while (presult < 0 && (errno == EAGAIN || errno == EINTR));
+  if (presult < 0)
+    warning ("failure during main loop poll: %s", strerror (errno));
+  else if (pfds[wakeup_idx].revents)
+    {
+      /* flush wakeup pipe */
+      char buffer[512]; // 512 is posix pipe atomic read/write size
+      read (rapicorn_wakeups[0], buffer, sizeof (buffer));
+    }
+  /* check */
+  for (list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
+    {
+      EventLoopImpl &loop = **lit;
+      ref (loop);
+      loop.m_must_dispatch |= loop.check_sources (loop.m_max_priority, pfds);
+      seen_must_dispatch |= loop.m_must_dispatch;
+      unref (loop);
+    }
+  /* dispatch */
+  if (may_dispatch && seen_must_dispatch)
+    for (list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
+      {
+        EventLoopImpl &loop = **lit;
+        ref (loop);
+        loop.dispatch_sources (loop.m_max_priority);
+        unref (loop);
+      }
+  /* cleanup */
+  for (list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
+    unref (*lit);
+  return seen_must_dispatch && !may_dispatch;
 }
 
 /* --- EventLoop::Source --- */

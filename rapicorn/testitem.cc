@@ -46,18 +46,29 @@ TestItem::list_properties()
   return property_list;
 }
 
+static uint test_items_rendered = 0;
+
+uint
+TestItem::seen_test_items ()
+{
+  assert (rapicorn_mutex.mine());
+  return test_items_rendered;
+}
+
 class TestItemImpl : public virtual TestItem, public virtual ItemImpl {
   double m_assert_left, m_assert_right;
   double m_assert_top, m_assert_bottom;
   double m_assert_width, m_assert_height;
   double m_epsilon;
+  bool   m_test_item_counted;
   bool   m_fatal_asserts;
 public:
   TestItemImpl() :
     m_assert_left (-INFINITY), m_assert_right (-INFINITY),
     m_assert_top (-INFINITY), m_assert_bottom (-INFINITY),
     m_assert_width (-INFINITY), m_assert_height (-INFINITY),
-    m_epsilon (DFLTEPS), m_fatal_asserts (false)
+    m_epsilon (DFLTEPS), m_test_item_counted (false),
+    m_fatal_asserts (false)
   {}
   virtual double epsilon         () const        { return m_epsilon  ; }
   virtual void   epsilon         (double val)    { m_epsilon = val; invalidate(); }
@@ -122,6 +133,7 @@ protected:
   virtual void
   render (Display &display)
   {
+    assert (rapicorn_mutex.mine());
     IRect ia = allocation();
     Plane &plane = display.create_plane();
     Painter painter (plane);
@@ -137,6 +149,12 @@ protected:
     assert_value ("assert-width",  m_assert_width, width, width);
     assert_value ("assert-height", m_assert_height, height, height);
     sig_assertions_passed.emit ();
+    /* count items for seen_test_items() */
+    if (!m_test_item_counted)
+      {
+        m_test_item_counted = true;
+        test_items_rendered++;
+      }
   }
 };
 static const ItemFactory<TestItemImpl> test_item_factory ("Rapicorn::Factory::TestItem");

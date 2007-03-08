@@ -25,13 +25,14 @@
 
 namespace Rapicorn {
 using namespace Birnet; // import Birnet namespace
+class RapicornTester;	// allow Rapicorn test implementations
 
 /* --- i18n macros --- */
-void            rapicorn_init           (int        *argcp,
+extern OwnedMutex rapicorn_mutex;
+void              rapicorn_init         (int        *argcp,
                                          char     ***argvp,
                                          const char *app_name);
-const char*     rapicorn_gettext        (const char *text);
-RecMutex*       rapicorn_mutex          ();
+const char*       rapicorn_gettext      (const char *text);
 
 /* --- standard utlities --- */
 using Birnet::abs;

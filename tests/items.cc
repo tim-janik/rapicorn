@@ -29,6 +29,7 @@ main (int   argc,
 
   /* initialize rapicorn */
   rapicorn_init_with_gtk_thread (&argc, &argv, NULL);
+  AutoLocker ral (rapicorn_mutex);
 
   TSTART ("RapicornItems");
   /* parse standard GUI descriptions and create example item */

@@ -38,6 +38,7 @@ public:
   virtual void   assert_height   (double val) = 0;
   virtual bool   fatal_asserts   () const = 0;
   virtual void   fatal_asserts   (bool   val) = 0;
+  static uint    seen_test_items ();
   const PropertyList&                               list_properties ();
   Signal<TestItem, void (const String &assertion)>  sig_assertion_ok;
   Signal<TestItem, void ()>                         sig_assertions_passed;

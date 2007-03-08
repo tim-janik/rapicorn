@@ -44,16 +44,19 @@ struct PollFD // mirror struct pollfd for poll(3posix)
 
 /* --- EventLoop --- */
 class EventLoop : public virtual ReferenceCountImpl {
+  friend class RapicornTester;
   class TimedSource;
   class PollFDSource;
+  static bool   iterate_loops   (bool may_block,
+                                 bool may_dispatch);
+  static void   quit_loops      ();
   BIRNET_PRIVATE_CLASS_COPY (EventLoop);
 protected:
-  explicit     EventLoop  () {}
-  virtual     ~EventLoop  ();
-  virtual bool iterate   (bool     may_block,
-                          bool     may_dispatch) = 0;
   typedef Signals::Slot1<void,PollFD&> VPfdSlot;
   typedef Signals::Slot1<bool,PollFD&> BPfdSlot;
+  explicit         EventLoop  ();
+  virtual         ~EventLoop  ();
+  static uint64    get_current_time_usecs();    // FIXME: current_time should move to birnetutilsxx.hh
 public:
   static const int PRIORITY_NOW        = -1073741824;   /* most important, used for immediate async execution (MAXINT/2) */
   static const int PRIORITY_HIGH       = -100 - 10;     /* very important, used for io handlers (G*HIGH) */
@@ -63,13 +66,9 @@ public:
   static const int PRIORITY_UPDATE     = +100 + 5;      /* mildly important, used for GUI updates or user information (G*HIGH_IDLE) */
   static const int PRIORITY_IDLE       = +200;          /* mildly important, used for GUI updates or user information (G*DEFAULT_IDLE) */
   static const int PRIORITY_BACKGROUND = +300 + 500;    /* unimportant, used when everything else done (G*LOW) */
-  // FIXME: current_time should move to birnetutilsxx.hh
-  static uint64    get_current_time_usecs();
-  static EventLoop* create                ();
+  static EventLoop* create      ();
   /* running */
-  bool          pending         ();
-  bool          iteration       (bool     may_block = true);
-  virtual bool  start           () = 0;                 /* start async main loop thread */
+  virtual bool  start           () = 0;                 /* start event loop in main thread */
   /* run state */
   virtual void  quit            (void) = 0;
   virtual void  wakeup          (void) = 0;

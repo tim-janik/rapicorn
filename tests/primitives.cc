@@ -19,7 +19,29 @@
 #include <rapicorn/rapicorn.hh>
 #include <errno.h>
 
-namespace {
+/* --- RapicornTester --- */
+namespace Rapicorn {
+struct RapicornTester {
+  static bool
+  loops_pending()
+  {
+    return EventLoop::iterate_loops (false, false);
+  }
+  static void
+  loops_dispatch (bool may_block)
+  {
+    EventLoop::iterate_loops (may_block, true);
+  }
+  static void
+  quit_loops ()
+  {
+    return EventLoop::quit_loops ();
+  }
+};
+} // Rapicorn
+
+/* --- tests --- */
+namespace { // Anon
 using namespace Rapicorn;
 
 inline uint32
@@ -88,14 +110,16 @@ basic_loop_test()
   EventLoop *loop = EventLoop::create();
   TASSERT (loop);
   ref_sink (loop);
-  while (loop->pending())
-    loop->iteration (false);
   /* oneshot test */
   TASSERT (test_callback_touched == false);
   uint tcid = loop->exec_now (slot (test_callback));
+  TASSERT (tcid > 0);
+  while (RapicornTester::loops_pending())
+    RapicornTester::loops_dispatch (false);
   TASSERT (test_callback_touched == false);
-  while (loop->pending())
-    loop->iteration (false);
+  loop->start();
+  while (RapicornTester::loops_pending())
+    RapicornTester::loops_dispatch (false);
   TASSERT (test_callback_touched == true);
   bool tremove = loop->try_remove (tcid);
   TASSERT (tremove == false);
@@ -103,40 +127,40 @@ basic_loop_test()
   /* keep-alive test */
   tcid = loop->exec_now (slot (keep_alive_callback));
   for (uint counter = 0; counter < max_runs; counter++)
-    if (loop->pending())
-      loop->iteration (false);
+    if (RapicornTester::loops_pending())
+      RapicornTester::loops_dispatch (false);
     else
       break;
   tremove = loop->try_remove (tcid);
   TASSERT (tremove == true);
-  while (loop->pending())
-    loop->iteration (false);
+  while (RapicornTester::loops_pending())
+    RapicornTester::loops_dispatch (false);
   tremove = loop->try_remove (tcid);
   TASSERT (tremove == false);
   /* loop + pipe */
   int pipe_fds[2];
   int err = pipe (pipe_fds);
   TASSERT (err == 0);
-  while (loop->pending())
-    loop->iteration (false);
+  while (RapicornTester::loops_pending())
+    RapicornTester::loops_dispatch (false);
   loop->exec_io_handler (slot (pipe_reader), pipe_fds[0], "r");
   loop->exec_io_handler (slot (pipe_writer), pipe_fds[1], "w");
   TASSERT (pipe_reader_seen == 0);
   while (pipe_reader_seen < 49999)
-    {
-      if (loop->pending())
-        loop->iteration (false);
-      else
-        loop->iteration (true);
-    }
+    if (RapicornTester::loops_pending())
+      RapicornTester::loops_dispatch (false);
+    else
+      RapicornTester::loops_dispatch (true);
   TASSERT_CMP (pipe_reader_seen, ==, 49999);
   err = close (pipe_fds[1]);
   TASSERT (err == 0);
-  while (loop->pending())
-    loop->iteration (false);
+  while (RapicornTester::loops_pending())
+    RapicornTester::loops_dispatch (false);
   err = close (pipe_fds[0]);
   TASSERT (err == -1); /* should have been auto-closed by PollFDSource */
   unref (loop);
+  while (RapicornTester::loops_pending())
+    RapicornTester::loops_dispatch (false);
   TDONE ();
 }
 
@@ -229,8 +253,8 @@ more_loop_test2()
   EventLoop *loop = EventLoop::create();
   TASSERT (loop);
   ref_sink (loop);
-  while (loop->pending())
-    loop->iteration (false);
+  while (RapicornTester::loops_pending())
+    RapicornTester::loops_dispatch (false);
   /* source state checks */
   TASSERT (check_source_counter == 0);
   const uint nsrc = quick_rand32() % (1 + ARRAY_SIZE (check_sources));
@@ -244,8 +268,8 @@ more_loop_test2()
   TASSERT (check_source_destroyed_counter == 0);
   for (uint counter = 0; counter < max_runs; counter++)
     {
-      if (loop->pending())
-        loop->iteration (false);
+      if (RapicornTester::loops_pending())
+        RapicornTester::loops_dispatch (false);
       else
         break;
       if (counter % 347 == 0)
@@ -313,12 +337,14 @@ public:
 static void
 async_loop_test()
 {
+#if 0
   const uint max_runs = 9999;
   TSTART ("async-loop");
   EventLoop *loop = EventLoop::create();
   TASSERT (loop);
   ref_sink (loop);
-  loop->start();
+  bool started = loop->start();
+  TASSERT (started);
   EventLoop::Source *source = new QuitSource (max_runs, loop);
   TASSERT (quit_source_destroyed == false);
   loop->add_source (source);
@@ -327,6 +353,7 @@ async_loop_test()
   TASSERT (quit_source_destroyed == true);
   unref (loop);
   TDONE ();
+#endif
 }
 
 /* --- affine --- */
