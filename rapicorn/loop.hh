@@ -42,14 +42,14 @@ struct PollFD // mirror struct pollfd for poll(3posix)
   };
 };
 
-/* --- MainLoop --- */
-class MainLoop : public virtual ReferenceCountImpl {
+/* --- EventLoop --- */
+class EventLoop : public virtual ReferenceCountImpl {
   class TimedSource;
   class PollFDSource;
-  BIRNET_PRIVATE_CLASS_COPY (MainLoop);
+  BIRNET_PRIVATE_CLASS_COPY (EventLoop);
 protected:
-  explicit     MainLoop  () {}
-  virtual     ~MainLoop  ();
+  explicit     EventLoop  () {}
+  virtual     ~EventLoop  ();
   virtual bool iterate   (bool     may_block,
                           bool     may_dispatch) = 0;
   typedef Signals::Slot1<void,PollFD&> VPfdSlot;
@@ -65,7 +65,7 @@ public:
   static const int PRIORITY_BACKGROUND = +300 + 500;    /* unimportant, used when everything else done (G*LOW) */
   // FIXME: current_time should move to birnetutilsxx.hh
   static uint64    get_current_time_usecs();
-  static MainLoop* create                ();
+  static EventLoop* create                ();
   /* running */
   bool          pending         ();
   bool          iteration       (bool     may_block = true);
@@ -108,10 +108,10 @@ public:
                                  int             priority = PRIORITY_NORMAL);
 };
 
-/* --- MainLoop::Source --- */
-class MainLoop::Source : public virtual ReferenceCountImpl {
-  friend       class RealMainLoop;
-  MainLoop    *m_main_loop;
+/* --- EventLoop::Source --- */
+class EventLoop::Source : public virtual ReferenceCountImpl {
+  friend       class EventLoopImpl;
+  EventLoop    *m_main_loop;
   struct {
     PollFD    *pfd;
     uint       idx;
@@ -140,8 +140,8 @@ public:
   void         remove_poll (PollFD * const pfd);
 };
 
-/* --- MainLoop::TimedSource --- */
-class MainLoop::TimedSource : public virtual MainLoop::Source {
+/* --- EventLoop::TimedSource --- */
+class EventLoop::TimedSource : public virtual EventLoop::Source {
   uint64     m_expiration_usecs;
   uint       m_interval_msecs;
   bool       m_first_interval;
@@ -166,8 +166,8 @@ public:
                             uint repeat_interval_msecs = 0);
 };
 
-/* --- MainLoop::PollFDSource --- */
-class MainLoop::PollFDSource : public virtual MainLoop::Source {
+/* --- EventLoop::PollFDSource --- */
+class EventLoop::PollFDSource : public virtual EventLoop::Source {
 protected:
   void          construct       (const String &mode);
   virtual      ~PollFDSource    ();
@@ -204,109 +204,109 @@ public:
                                  const String                       &mode);
 };
 
-/* --- MainLoop methods --- */
+/* --- EventLoop methods --- */
 inline uint
-MainLoop::exec_now (const VoidSlot &sl)
+EventLoop::exec_now (const VoidSlot &sl)
 {
   return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_HIGH);
 }
 
 inline uint
-MainLoop::exec_now (const BoolSlot &sl)
+EventLoop::exec_now (const BoolSlot &sl)
 {
   return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_HIGH);
 }
 
 inline uint
-MainLoop::exec_next (const VoidSlot &sl)
+EventLoop::exec_next (const VoidSlot &sl)
 {
   return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_NEXT);
 }
 
 inline uint
-MainLoop::exec_next (const BoolSlot &sl)
+EventLoop::exec_next (const BoolSlot &sl)
 {
   return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_NEXT);
 }
 
 inline uint
-MainLoop::exec_notify (const VoidSlot &sl)
+EventLoop::exec_notify (const VoidSlot &sl)
 {
   return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_NOTIFY);
 }
 
 inline uint
-MainLoop::exec_notify (const BoolSlot &sl)
+EventLoop::exec_notify (const BoolSlot &sl)
 {
   return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_NOTIFY);
 }
 
 inline uint
-MainLoop::exec_normal (const VoidSlot &sl)
+EventLoop::exec_normal (const VoidSlot &sl)
 {
   return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_NORMAL);
 }
 
 inline uint
-MainLoop::exec_normal (const BoolSlot &sl)
+EventLoop::exec_normal (const BoolSlot &sl)
 {
   return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_NORMAL);
 }
 
 inline uint
-MainLoop::exec_update (const VoidSlot &sl)
+EventLoop::exec_update (const VoidSlot &sl)
 {
   return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_UPDATE);
 }
 
 inline uint
-MainLoop::exec_update (const BoolSlot &sl)
+EventLoop::exec_update (const BoolSlot &sl)
 {
   return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_UPDATE);
 }
 
 inline uint
-MainLoop::exec_background (const VoidSlot &sl)
+EventLoop::exec_background (const VoidSlot &sl)
 {
   return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_BACKGROUND);
 }
 
 inline uint
-MainLoop::exec_background (const BoolSlot &sl)
+EventLoop::exec_background (const BoolSlot &sl)
 {
   return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_BACKGROUND);
 }
 
 inline uint
-MainLoop::exec_timer (uint            initial_timeout_ms,
-                      uint            repeat_timeout_ms,
-                      const VoidSlot &sl)
+EventLoop::exec_timer (uint            initial_timeout_ms,
+                       uint            repeat_timeout_ms,
+                       const VoidSlot &sl)
 {
   return add_source (new TimedSource (*sl.get_trampoline(), initial_timeout_ms, repeat_timeout_ms), PRIORITY_NEXT);
 }
 
 inline uint
-MainLoop::exec_timer (uint            initial_timeout_ms,
-                      uint            repeat_timeout_ms,
-                      const BoolSlot &sl)
+EventLoop::exec_timer (uint            initial_timeout_ms,
+                       uint            repeat_timeout_ms,
+                       const BoolSlot &sl)
 {
   return add_source (new TimedSource (*sl.get_trampoline(), initial_timeout_ms, repeat_timeout_ms), PRIORITY_NEXT);
 }
 
 inline uint
-MainLoop::exec_io_handler (const VPfdSlot &sl,
-                           int             fd,
-                           const String   &mode,
-                           int             priority)
+EventLoop::exec_io_handler (const VPfdSlot &sl,
+                            int             fd,
+                            const String   &mode,
+                            int             priority)
 {
   return add_source (new PollFDSource (*sl.get_trampoline(), fd, mode), priority);
 }
 
 inline uint
-MainLoop::exec_io_handler (const BPfdSlot &sl,
-                           int             fd,
-                           const String   &mode,
-                           int             priority)
+EventLoop::exec_io_handler (const BPfdSlot &sl,
+                            int             fd,
+                            const String   &mode,
+                            int             priority)
 {
   return add_source (new PollFDSource (*sl.get_trampoline(), fd, mode), priority);
 }

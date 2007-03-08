@@ -24,7 +24,7 @@
 namespace Rapicorn {
 
 /* --- Root --- */
-class Root : public virtual Container, public virtual MainLoop::Source {
+class Root : public virtual Container, public virtual EventLoop::Source {
   friend class  Item;
   void          uncross_focus           (Item        &fitem);
 protected:
@@ -62,7 +62,7 @@ public:
   virtual bool  closed                  () = 0;
   virtual void  close                   () = 0;
   /* main loop functions */
-  virtual MainLoop* get_loop            () = 0;
+  virtual EventLoop* get_loop           () = 0;
   /* MT-safe */
   virtual Window window                 () = 0;
 };

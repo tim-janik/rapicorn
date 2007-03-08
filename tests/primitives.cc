@@ -85,7 +85,7 @@ basic_loop_test()
   const uint max_runs = 9999;
   TSTART ("loop");
   /* basal loop tests */
-  MainLoop *loop = MainLoop::create();
+  EventLoop *loop = EventLoop::create();
   TASSERT (loop);
   ref_sink (loop);
   while (loop->pending())
@@ -144,7 +144,7 @@ basic_loop_test()
 static uint         check_source_counter = 0;
 static uint         check_source_destroyed_counter = 0;
 
-class CheckSource : public virtual MainLoop::Source {
+class CheckSource : public virtual EventLoop::Source {
   enum {
     INITIALIZED = 1,
     PREPARED,
@@ -207,7 +207,7 @@ public:
   {
     BIRNET_ASSERT (m_state == DESTROYED);
     // BIRNET_ASSERT (m_state == INITIALIZED || m_state == DESTROYED);
-    MainLoop::Source::finalize();
+    EventLoop::Source::finalize();
     m_state = FINALIZED;
   }
   virtual
@@ -226,7 +226,7 @@ more_loop_test2()
 {
   const uint max_runs = 9999;
   TSTART ("loop-states");
-  MainLoop *loop = MainLoop::create();
+  EventLoop *loop = EventLoop::create();
   TASSERT (loop);
   ref_sink (loop);
   while (loop->pending())
@@ -264,12 +264,12 @@ more_loop_test2()
 
 /* --- async loop tests --- */
 static bool quit_source_destroyed = false;
-class QuitSource : public virtual MainLoop::Source {
-  uint      m_counter;
-  MainLoop *m_loop;
+class QuitSource : public virtual EventLoop::Source {
+  uint       m_counter;
+  EventLoop *m_loop;
 public:
   QuitSource (uint      countdown,
-              MainLoop *loop) :
+              EventLoop *loop) :
     m_counter (countdown),
     m_loop (loop)
   {}
@@ -315,11 +315,11 @@ async_loop_test()
 {
   const uint max_runs = 9999;
   TSTART ("async-loop");
-  MainLoop *loop = MainLoop::create();
+  EventLoop *loop = EventLoop::create();
   TASSERT (loop);
   ref_sink (loop);
   loop->start();
-  MainLoop::Source *source = new QuitSource (max_runs, loop);
+  EventLoop::Source *source = new QuitSource (max_runs, loop);
   TASSERT (quit_source_destroyed == false);
   loop->add_source (source);
   while (!quit_source_destroyed)

@@ -32,9 +32,9 @@ class RootImpl : public virtual Root,
   Viewport             *m_viewport;
   Mutex                 m_async_mutex;
   std::list<Event*>     m_async_event_queue;
-  MainLoop             *m_async_loop;
+  EventLoop            *m_async_loop;
   uint                  m_asnyc_resize_draw_id;
-  MainLoop::Source     *m_source;
+  EventLoop::Source    *m_source;
   Region                m_expose_region;
   EventContext          m_last_event_context;
   vector<Item*>         m_last_entered_children;
@@ -85,7 +85,7 @@ private:
                                                                  int64                  *timeout_usecs_p);
   virtual bool          check                                   (uint64                  current_time_usecs);
   virtual bool          dispatch                                ();
-  virtual MainLoop*     get_loop                                ();
+  virtual EventLoop*    get_loop                                ();
   /* event handling */
   virtual void          enqueue_async                           (Event                  *event);
   virtual void          cancel_item_events                      (Item                   *item);
@@ -129,8 +129,8 @@ private:
     }
   };
   map<ButtonState,uint> m_button_state_map;
-  /* --- MainLoop Source --- */
-  class RootSource : public MainLoop::Source {
+  /* --- EventLoop Source --- */
+  class RootSource : public EventLoop::Source {
     RootImpl &root;
   public:
     explicit            RootSource  (RootImpl &_root) : root (_root) { AutoLocker locker (root.m_omutex); root.m_source = this; }

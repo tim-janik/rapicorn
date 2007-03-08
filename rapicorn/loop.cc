@@ -53,12 +53,12 @@ enum {
   _DUMMY = UINT_MAX
 };
 
-/* --- MainLoop --- */
-MainLoop::~MainLoop  ()
+/* --- EventLoop --- */
+EventLoop::~EventLoop  ()
 {}
 
 uint64
-MainLoop::get_current_time_usecs ()
+EventLoop::get_current_time_usecs ()
 {
   GTimeVal current_time;
   g_get_current_time (&current_time);
@@ -66,34 +66,34 @@ MainLoop::get_current_time_usecs ()
 }
 
 void
-MainLoop::remove (uint   id)
+EventLoop::remove (uint   id)
 {
   if (!try_remove (id))
     g_warning ("%s: failed to remove loop source: %u", G_STRFUNC, id);
 }
 
 bool
-MainLoop::pending ()
+EventLoop::pending ()
 {
   return iterate (false, false);
 }
 
 bool
-MainLoop::iteration (bool may_block)
+EventLoop::iteration (bool may_block)
 {
   return iterate (may_block, true);
 }
 
-/* --- MainLoopThread --- */
-class MainLoopThread : public virtual Thread {
-  MainLoop *m_loop;
-  BIRNET_PRIVATE_CLASS_COPY (MainLoopThread);
+/* --- EventLoopThread --- */
+class EventLoopThread : public virtual Thread {
+  EventLoop *m_loop;
+  BIRNET_PRIVATE_CLASS_COPY (EventLoopThread);
 public:
-  MainLoopThread (MainLoop *mloop) :
-    Thread ("MainLoopThread"),
+  EventLoopThread (EventLoop *mloop) :
+    Thread ("EventLoopThread"),
     m_loop (ref_sink (mloop))
   {}
-  ~MainLoopThread()
+  ~EventLoopThread()
   {
     unref (m_loop);
   }
@@ -110,8 +110,8 @@ public:
   }
 };
 
-/* --- RealMainLoop --- */
-class RealMainLoop : public virtual MainLoop {
+/* --- EventLoopImpl --- */
+class EventLoopImpl : public virtual EventLoop {
   typedef list<Source*>         SourceList;
   typedef map<int, SourceList>  SourceListMap;
   Mutex          m_mutex;
@@ -175,7 +175,7 @@ class RealMainLoop : public virtual MainLoop {
                                  const vector<PollFD> &pfds);
   void         dispatch_sources (const int             max_priority);
 public:
-  RealMainLoop () :
+  EventLoopImpl () :
     m_counter (1),
     m_thread (NULL),
     m_inactive (true),
@@ -185,7 +185,7 @@ public:
     m_wakeup_pipe[1] = -1;
     AutoLocker locker (m_mutex);
   }
-  ~RealMainLoop()
+  ~EventLoopImpl()
   {
     quit();
   }
@@ -223,7 +223,7 @@ public:
     source->m_main_loop = this;
     source->m_id = m_counter++;
     if (!source->m_id)
-      error ("MainLoop::m_counter overflow, please report");
+      error ("EventLoop::m_counter overflow, please report");
     source->m_loop_state = UNCHECKED;
     source->m_priority = priority;
     list<Source*> &slist = m_sources[priority];
@@ -274,7 +274,7 @@ public:
       }
     if (!m_thread)
       {
-        m_thread = new MainLoopThread (this);
+        m_thread = new EventLoopThread (this);
         ref_sink (m_thread);
         m_thread->start();
         return true;
@@ -319,9 +319,9 @@ public:
 
 /* --- loop iteration function --- */
 bool
-RealMainLoop::prepare_sources (int            &max_priority,
-                               vector<PollFD> &pfds,
-                               int64          &timeout_usecs)
+EventLoopImpl::prepare_sources (int            &max_priority,
+                                vector<PollFD> &pfds,
+                                int64          &timeout_usecs)
 {
   AutoLocker locker (m_mutex);
   bool must_dispatch = false;
@@ -340,7 +340,7 @@ RealMainLoop::prepare_sources (int            &max_priority,
           }
     }
   /* prepare sources, up to NEEDS_DISPATCH priority */
-  uint64 current_time_usecs = MainLoop::get_current_time_usecs();
+  uint64 current_time_usecs = EventLoop::get_current_time_usecs();
   for (SourceList::iterator lit = sources.begin(); lit != sources.end(); lit++)
     if ((*lit)->m_main_loop == this &&
         max_priority >= (*lit)->m_priority)
@@ -386,8 +386,8 @@ RealMainLoop::prepare_sources (int            &max_priority,
 }
 
 bool
-RealMainLoop::iterate (bool may_block,
-                       bool may_dispatch)
+EventLoopImpl::iterate (bool may_block,
+                        bool may_dispatch)
 {
   vector<PollFD> pfds;
   int64 timeout_usecs = INT64_MAX;
@@ -425,8 +425,8 @@ RealMainLoop::iterate (bool may_block,
 }
 
 bool
-RealMainLoop::check_sources (const int             max_priority,
-                             const vector<PollFD> &pfds)
+EventLoopImpl::check_sources (const int             max_priority,
+                              const vector<PollFD> &pfds)
 {
   AutoLocker locker (m_mutex);
   bool must_dispatch = false;
@@ -443,7 +443,7 @@ RealMainLoop::check_sources (const int             max_priority,
           sources.push_back (ref (*lit));
     }
   /* check polled sources */
-  uint64 current_time_usecs = MainLoop::get_current_time_usecs();
+  uint64 current_time_usecs = EventLoop::get_current_time_usecs();
   for (SourceList::iterator lit = sources.begin(); lit != sources.end(); lit++)
     if ((*lit)->m_main_loop == this &&
         max_priority >= (*lit)->m_priority)
@@ -482,7 +482,7 @@ RealMainLoop::check_sources (const int             max_priority,
 }
 
 void
-RealMainLoop::dispatch_sources (const int max_priority)
+EventLoopImpl::dispatch_sources (const int max_priority)
 {
   AutoLocker locker (m_mutex);
   m_inactive = false;
@@ -523,14 +523,14 @@ RealMainLoop::dispatch_sources (const int max_priority)
     unref (*lit);                               /* unlocked */
 }
 
-/* --- MainLoop::Source --- */
-MainLoop*
-MainLoop::create ()
+/* --- EventLoop::Source --- */
+EventLoop*
+EventLoop::create ()
 {
-  return new RealMainLoop();
+  return new EventLoopImpl();
 }
 
-MainLoop::Source::Source () :
+EventLoop::Source::Source () :
   m_main_loop (NULL),
   m_pfds (NULL),
   m_id (0),
@@ -542,7 +542,7 @@ MainLoop::Source::Source () :
 {}
 
 uint
-MainLoop::Source::n_pfds ()
+EventLoop::Source::n_pfds ()
 {
   uint i = 0;
   if (m_pfds)
@@ -552,31 +552,31 @@ MainLoop::Source::n_pfds ()
 }
 
 void
-MainLoop::Source::may_recurse (bool may_recurse)
+EventLoop::Source::may_recurse (bool may_recurse)
 {
   m_may_recurse = may_recurse;
 }
 
 bool
-MainLoop::Source::may_recurse () const
+EventLoop::Source::may_recurse () const
 {
   return m_may_recurse;
 }
 
 bool
-MainLoop::Source::recursion () const
+EventLoop::Source::recursion () const
 {
   return m_dispatching && m_was_dispatching;
 }
 
 void
-MainLoop::Source::add_poll (PollFD *const pfd)
+EventLoop::Source::add_poll (PollFD *const pfd)
 {
   const uint idx = n_pfds();
   uint npfds = idx + 1;
   m_pfds = (typeof (m_pfds)) realloc (m_pfds, sizeof (m_pfds[0]) * (npfds + 1));
   if (!m_pfds)
-    error ("MainLoopSource: out of memory");
+    error ("EventLoopSource: out of memory");
   m_pfds[npfds].idx = UINT_MAX;
   m_pfds[npfds].pfd = NULL;
   m_pfds[idx].idx = UINT_MAX;
@@ -584,7 +584,7 @@ MainLoop::Source::add_poll (PollFD *const pfd)
 }
 
 void
-MainLoop::Source::remove_poll (PollFD *const pfd)
+EventLoop::Source::remove_poll (PollFD *const pfd)
 {
   uint idx, npfds = n_pfds();
   for (idx = 0; idx < npfds; idx++)
@@ -599,40 +599,40 @@ MainLoop::Source::remove_poll (PollFD *const pfd)
       m_pfds[npfds - 1].pfd = NULL;
     }
   else
-    warning ("MainLoopSource: unremovable PollFD: %p (fd=%d)", pfd, pfd->fd);
+    warning ("EventLoopSource: unremovable PollFD: %p (fd=%d)", pfd, pfd->fd);
 }
 
 void
-MainLoop::Source::destroy ()
+EventLoop::Source::destroy ()
 {}
 
-MainLoop::Source::~Source ()
+EventLoop::Source::~Source ()
 {
   BIRNET_ASSERT (m_main_loop == NULL);
   if (m_pfds)
     free (m_pfds);
 }
 
-/* --- MainLoop::TimedSource --- */
-MainLoop::TimedSource::TimedSource (Signals::Trampoline0<void> &vt,
-                                    uint initial_interval_msecs,
-                                    uint repeat_interval_msecs) :
-  m_expiration_usecs (MainLoop::get_current_time_usecs() + 1000ULL * initial_interval_msecs),
+/* --- EventLoop::TimedSource --- */
+EventLoop::TimedSource::TimedSource (Signals::Trampoline0<void> &vt,
+                                     uint initial_interval_msecs,
+                                     uint repeat_interval_msecs) :
+  m_expiration_usecs (EventLoop::get_current_time_usecs() + 1000ULL * initial_interval_msecs),
   m_interval_msecs (repeat_interval_msecs), m_first_interval (true),
   m_oneshot (true), m_vtrampoline (ref_sink (&vt))
 {}
 
-MainLoop::TimedSource::TimedSource (Signals::Trampoline0<bool> &bt,
-                                    uint initial_interval_msecs,
-                                    uint repeat_interval_msecs) :
-  m_expiration_usecs (MainLoop::get_current_time_usecs() + 1000ULL * initial_interval_msecs),
+EventLoop::TimedSource::TimedSource (Signals::Trampoline0<bool> &bt,
+                                     uint initial_interval_msecs,
+                                     uint repeat_interval_msecs) :
+  m_expiration_usecs (EventLoop::get_current_time_usecs() + 1000ULL * initial_interval_msecs),
   m_interval_msecs (repeat_interval_msecs), m_first_interval (true),
   m_oneshot (false), m_btrampoline (ref_sink (&bt))
 {}
 
 bool
-MainLoop::TimedSource::prepare (uint64 current_time_usecs,
-                                int64   *timeout_usecs_p)
+EventLoop::TimedSource::prepare (uint64 current_time_usecs,
+                                 int64   *timeout_usecs_p)
 {
   if (current_time_usecs >= m_expiration_usecs)
     return true;                                            /* timeout expired */
@@ -647,13 +647,13 @@ MainLoop::TimedSource::prepare (uint64 current_time_usecs,
 }
 
 bool
-MainLoop::TimedSource::check (uint64 current_time_usecs)
+EventLoop::TimedSource::check (uint64 current_time_usecs)
 {
   return current_time_usecs >= m_expiration_usecs;
 }
 
 bool
-MainLoop::TimedSource::dispatch()
+EventLoop::TimedSource::dispatch()
 {
   bool repeat = false;
   m_first_interval = false;
@@ -662,11 +662,11 @@ MainLoop::TimedSource::dispatch()
   else if (!m_oneshot && m_btrampoline->callable)
     repeat = (*m_btrampoline) ();
   if (repeat)
-    m_expiration_usecs = MainLoop::get_current_time_usecs() + 1000ULL * m_interval_msecs;
+    m_expiration_usecs = EventLoop::get_current_time_usecs() + 1000ULL * m_interval_msecs;
   return repeat;
 }
 
-MainLoop::TimedSource::~TimedSource ()
+EventLoop::TimedSource::~TimedSource ()
 {
   if (m_oneshot)
     unref (m_vtrampoline);
@@ -674,10 +674,10 @@ MainLoop::TimedSource::~TimedSource ()
     unref (m_btrampoline);
 }
 
-/* --- MainLoop::PollFDSource --- */
-MainLoop::PollFDSource::PollFDSource (Signals::Trampoline1<bool,PollFD&> &bt,
-                                      int                                 fd,
-                                      const String                       &mode) :
+/* --- EventLoop::PollFDSource --- */
+EventLoop::PollFDSource::PollFDSource (Signals::Trampoline1<bool,PollFD&> &bt,
+                                       int                                 fd,
+                                       const String                       &mode) :
   m_pfd ((PollFD) { fd, 0, 0 }),
   m_ignore_errors (strchr (mode.c_str(), 'E') != NULL),
   m_ignore_hangup (strchr (mode.c_str(), 'H') != NULL),
@@ -687,9 +687,9 @@ MainLoop::PollFDSource::PollFDSource (Signals::Trampoline1<bool,PollFD&> &bt,
   construct (mode);
 }
 
-MainLoop::PollFDSource::PollFDSource (Signals::Trampoline1<void,PollFD&> &vt,
-                                      int                                 fd,
-                                      const String                       &mode) :
+EventLoop::PollFDSource::PollFDSource (Signals::Trampoline1<void,PollFD&> &vt,
+                                       int                                 fd,
+                                       const String                       &mode) :
   m_pfd ((PollFD) { fd, 0, 0 }),
   m_ignore_errors (strchr (mode.c_str(), 'E') != NULL),
   m_ignore_hangup (strchr (mode.c_str(), 'H') != NULL),
@@ -700,7 +700,7 @@ MainLoop::PollFDSource::PollFDSource (Signals::Trampoline1<void,PollFD&> &vt,
 }
 
 void
-MainLoop::PollFDSource::construct (const String &mode)
+EventLoop::PollFDSource::construct (const String &mode)
 {
   add_poll (&m_pfd);
   m_pfd.events |= strchr (mode.c_str(), 'w') ? PollFD::OUT : 0;
@@ -725,21 +725,21 @@ MainLoop::PollFDSource::construct (const String &mode)
 }
 
 bool
-MainLoop::PollFDSource::prepare (uint64 current_time_usecs,
-                               int64 *timeout_usecs_p)
+EventLoop::PollFDSource::prepare (uint64 current_time_usecs,
+                                  int64 *timeout_usecs_p)
 {
   m_pfd.revents = 0;
   return m_pfd.fd < 0;
 }
 
 bool
-MainLoop::PollFDSource::check (uint64 current_time_usecs)
+EventLoop::PollFDSource::check (uint64 current_time_usecs)
 {
   return m_pfd.fd < 0 || m_pfd.revents != 0;
 }
 
 bool
-MainLoop::PollFDSource::dispatch()
+EventLoop::PollFDSource::dispatch()
 {
   bool keep_alive = false;
   if (m_pfd.fd >= 0 && (m_pfd.revents & PollFD::NVAL))
@@ -763,7 +763,7 @@ MainLoop::PollFDSource::dispatch()
 }
 
 void
-MainLoop::PollFDSource::destroy()
+EventLoop::PollFDSource::destroy()
 {
   /* close down */
   if (!m_never_close && m_pfd.fd >= 0)
@@ -771,7 +771,7 @@ MainLoop::PollFDSource::destroy()
   m_pfd.fd = -1;
 }
 
-MainLoop::PollFDSource::~PollFDSource ()
+EventLoop::PollFDSource::~PollFDSource ()
 {
   if (m_oneshot)
     unref (m_vtrampoline);

@@ -1,3 +1,7 @@
+Thu Mar  8 01:33:45 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/loop.hh, rapicorn/loop.cc: renamed MainLoop to EventLoop.
+
 Tue Mar  6 23:58:26 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/loop.hh, rapicorn/loop.cc: added loop source recursion

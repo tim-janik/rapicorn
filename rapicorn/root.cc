@@ -83,12 +83,12 @@ RootImpl::RootImpl() :
   {
     AutoLocker aelocker (m_async_mutex);
     BIRNET_ASSERT (m_async_loop == NULL);
-    m_async_loop = ref_sink (MainLoop::create());
+    m_async_loop = ref_sink (EventLoop::create());
     if (!m_async_loop->start())
-      error ("failed to start MainLoop");
+      error ("failed to start EventLoop");
     BIRNET_ASSERT (m_source == NULL);
     m_source = new RootSource (*this);
-    m_async_loop->add_source (m_source, MainLoop::PRIORITY_NORMAL);
+    m_async_loop->add_source (m_source, EventLoop::PRIORITY_NORMAL);
   }
   Appearance *appearance = Appearance::create_default();
   style (appearance->create_style ("normal"));
@@ -101,7 +101,7 @@ RootImpl::RootImpl() :
 
 RootImpl::~RootImpl()
 {
-  MainLoop *old_loop;
+  EventLoop *old_loop;
   {
     AutoLocker aelocker (m_async_mutex);
     old_loop = m_async_loop;
@@ -612,7 +612,7 @@ RootImpl::dispatch_win_delete_event (const Event &event)
     {
       if (m_viewport)
         m_viewport->hide();
-      MainLoop *tmp_loop;
+      EventLoop *tmp_loop;
       {
         AutoLocker aelocker (m_async_mutex);
         tmp_loop = m_async_loop;
@@ -919,7 +919,7 @@ RootImpl::dispatch ()
   return true;
 }
 
-MainLoop*
+EventLoop*
 RootImpl::get_loop ()
 {
   AutoLocker aelocker (m_async_mutex);
@@ -997,7 +997,7 @@ RootImpl::close ()
   if (m_source)
     {
       AutoLocker aelocker (m_async_mutex);
-      MainLoop *loop = ref (m_async_loop);
+      EventLoop *loop = ref (m_async_loop);
       aelocker.unlock();
       loop->quit(); // calls m_source methods
       aelocker.relock();

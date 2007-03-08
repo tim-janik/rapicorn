@@ -265,7 +265,7 @@ Item::exec_slow_repeater (const BoolSlot &sl)
   Root *ritem = get_root();
   if (ritem)
     {
-      MainLoop *loop = ritem->get_loop();
+      EventLoop *loop = ritem->get_loop();
       if (loop)
         return loop->exec_timer (250, 50, sl);
     }
@@ -278,7 +278,7 @@ Item::exec_fast_repeater (const BoolSlot &sl)
   Root *ritem = get_root();
   if (ritem)
     {
-      MainLoop *loop = ritem->get_loop();
+      EventLoop *loop = ritem->get_loop();
       if (loop)
         return loop->exec_timer (200, 20, sl);
     }
@@ -291,7 +291,7 @@ Item::exec_key_repeater (const BoolSlot &sl)
   Root *ritem = get_root();
   if (ritem)
     {
-      MainLoop *loop = ritem->get_loop();
+      EventLoop *loop = ritem->get_loop();
       if (loop)
         return loop->exec_timer (250, 33, sl);
     }
@@ -304,7 +304,7 @@ Item::remove_exec (uint exec_id)
   Root *ritem = get_root();
   if (ritem)
     {
-      MainLoop *loop = ritem->get_loop();
+      EventLoop *loop = ritem->get_loop();
       if (loop)
         return loop->try_remove (exec_id);
     }

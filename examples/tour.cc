@@ -87,13 +87,13 @@ main (int   argc,
   
   if (1)
     {
-      MainLoop *tloop = MainLoop::create();
+      EventLoop *tloop = EventLoop::create();
       tloop->exec_timer (250, 250, slot (timer));
       tloop->start();
     }
   if (1)
     {
-      MainLoop *tloop = MainLoop::create();
+      EventLoop *tloop = EventLoop::create();
       tloop->exec_timer (125, 125, slot (timer2));
       tloop->start();
     }
