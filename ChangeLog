@@ -1,3 +1,8 @@
+Fri Mar  9 16:31:05 2007  Tim Janik  <timj@gtk.org>
+
+	* container.cc: remove all children in pre_finalize(), since reference
+	counting is still allowed here (not in finalize()).
+
 Fri Mar  9 00:07:39 2007  Tim Janik  <timj@gtk.org>
 
 	* changed Rapicorn to live in one global lock: rapicorn_mutex.

@@ -853,6 +853,14 @@ SingleContainerImpl::create_packer (Item &item)
   return void_packer(); /* no child properties */
 }    
 
+void
+SingleContainerImpl::pre_finalize()
+{
+  while (child_item)
+    remove (child_item);
+  Container::pre_finalize();
+}
+
 SingleContainerImpl::~SingleContainerImpl()
 {
   while (child_item)
@@ -883,6 +891,14 @@ MultiContainerImpl::remove_child (Item &item)
         return;
       }
   assert_not_reached();
+}
+
+void
+MultiContainerImpl::pre_finalize()
+{
+  while (items.size())
+    remove (*items[items.size() - 1]);
+  Container::pre_finalize();
 }
 
 MultiContainerImpl::~MultiContainerImpl()

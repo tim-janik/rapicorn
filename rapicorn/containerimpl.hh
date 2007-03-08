@@ -29,7 +29,8 @@ protected:
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area);
   Item&                 get_child               () { if (!child_item) throw NullPointer(); return *child_item; }
-  virtual               ~SingleContainerImpl    ();
+  virtual void          pre_finalize            ();
+  virtual              ~SingleContainerImpl     ();
   virtual ChildWalker   local_children          () const;
   virtual bool          has_children            () { return child_item != NULL; }
   bool                  has_visible_child       () { return child_item && child_item->visible(); }
@@ -45,7 +46,8 @@ public:
 class MultiContainerImpl : public virtual ItemImpl, public virtual Container {
   std::vector<Item*>    items;
 protected:
-  virtual               ~MultiContainerImpl();
+  virtual void          pre_finalize            ();
+  virtual              ~MultiContainerImpl      ();
   virtual ChildWalker   local_children          () const { return value_walker (items); }
   virtual bool          has_children            () { return items.size() > 0; }
   virtual void          add_child               (Item   &item);
