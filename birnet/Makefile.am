@@ -30,7 +30,6 @@ birnet_generated_headers = $(strip 	\
 	birnetsignalvariants.hh         \
 )
 EXTRA_DIST += configure.inc acbirnet.m4 mksignals.sh
-BIRNET_HEADER_CHECKSUM=cat $(filter-out birnetconfig.h, $(birnet_headers) $(birnet_private_headers) $(birnet_generated_headers)) | md5sum | sed 's/ .*//'
 
 # Birnet library
 # we want a partial shared library here. libtool creates that if the library
@@ -52,16 +51,26 @@ CLEANFILES += libbirnet.lo libbirnet.o
 EXTRA_DIST += $(birnet_private_headers)
 
 # === header-checksum ===
-header-checksum:
-	$(BIRNET_HEADER_CHECKSUM)
-check-header-checksum:
+BIRNET_MAKE_CHECKSUM=cat $(filter-out birnetconfig.h, $(birnet_headers) $(birnet_private_headers) $(birnet_generated_headers)) | md5sum | sed 's/ .*//'
+checksum:	# ensure headers don't change if RELEASE=outdated && REVISION=0
 	cd $(srcdir) \
-	&& BIRNET_CURRENT_CHECKSUM=$$($(BIRNET_HEADER_CHECKSUM))						\
-	&& test "$$BIRNET_CURRENT_CHECKSUM" = "@BIRNET_RELEASE_CHECKSUM@" 					\
-	|| test $$(expr $$(date +%Y) - 2000)$$(date +%m) = @BIRNET_RELEASE_VERSION@				\
-	|| { MSG="BIRNET_RELEASE_VERSION must be updated to match header changes ($$BIRNET_CURRENT_CHECKSUM)" ;	\
-	     echo $$MSG | sed 's/./=/g'; echo $$MSG; echo $$MSG | sed 's/./=/g'; false ; }
-check-am: @BIRNET_SKIP_VERSION_CHECK@ check-header-checksum
+	&& BIRNET_CURRENT_CHECKSUM=$$($(BIRNET_MAKE_CHECKSUM))			\
+	&& BIRNET_WEEK_VERSION="$$(expr $$(date +%G) - 2000)$$(date +%V)"	\
+	&& test "$$BIRNET_CURRENT_CHECKSUM"  = "`cat api-check.md5`"		\
+	|| if [ "@BIRNET_RELEASE_VERSION@"   = "$$BIRNET_WEEK_VERSION" -o	\
+		"@BIRNET_REVISION_VERSION@" -gt 0 ]; then			\
+	     echo "$$BIRNET_CURRENT_CHECKSUM" > api-check.md5 ;			\
+	   else \
+	     MSG1="The Birnet version (@BIRNET_RELEASE_VERSION@.@BIRNET_REVISION_VERSION@) needs updating " ;		\
+	     MSG2="(expected $$BIRNET_WEEK_VERSION.0) to match header changes (checksum: $$BIRNET_CURRENT_CHECKSUM)" ;	\
+	     MSG="$$MSG1$$MSG2" ; echo $$MSG | sed 's/./=/g'; echo $$MSG; echo $$MSG | sed 's/./=/g' ;			\
+	     exit 1 ; \
+	   fi
+header-checksum:
+	$(BIRNET_MAKE_CHECKSUM)
+check-am: @BIRNET_SKIP_VERSION_CHECK@ checksum
+EXTRA_DIST += api-check.md5
+
 
 # === birnetconfig.h ===
 birnetconfig.h: $(top_builddir)/config.status # Makefile

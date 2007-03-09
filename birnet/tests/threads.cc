@@ -278,9 +278,19 @@ test_thread_cxx (void)
 
   TSTART ("C++OwnedMutex");
   static OwnedMutex static_omutex;
+  TASSERT (static_omutex.mine() == false);
   static_omutex.lock();
   TASSERT (static_omutex.mine() == true);
   static_omutex.unlock();
+  TASSERT (static_omutex.mine() == false);
+  static_omutex.lock();
+  TASSERT (static_omutex.mine() == true);
+  static_omutex.lock();
+  TASSERT (static_omutex.mine() == true);
+  static_omutex.unlock();
+  TASSERT (static_omutex.mine() == true);
+  static_omutex.unlock();
+  TASSERT (static_omutex.mine() == false);
   TASSERT (NULL != &Thread::self());
   OwnedMutex omutex;
   TASSERT (omutex.owner() == NULL);

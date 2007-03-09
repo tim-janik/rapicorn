@@ -327,26 +327,34 @@ public:
   void
   ref() const
   {
-    BIRNET_ASSERT (ref_count() > 0);
-    uint32 old_ref, new_ref;
-    do {
-      old_ref = ref_get();
-      new_ref = old_ref + 1;
-      BIRNET_ASSERT (new_ref & ~FLOATING_FLAG); /* catch overflow */
-    } while (!ref_cas (old_ref, new_ref));
+    uint32 old_ref = ref_get();
+    uint32 current_ref_count = old_ref & ~FLOATING_FLAG;
+    BIRNET_ASSERT (current_ref_count > 0);
+    uint32 new_ref = old_ref + 1;
+    BIRNET_ASSERT (new_ref & ~FLOATING_FLAG);       /* catch overflow */
+    while (BIRNET_UNLIKELY (!ref_cas (old_ref, new_ref)))
+      {
+        old_ref = ref_get();
+        new_ref = old_ref + 1;
+        BIRNET_ASSERT (new_ref & ~FLOATING_FLAG);   /* catch overflow */
+      }
   }
   void
   ref_sink() const
   {
-    BIRNET_ASSERT (ref_count() > 0);
     ref();
-    uint32 old_ref, new_ref;
-    do {
-      old_ref = ref_get();
-      new_ref = old_ref & ~FLOATING_FLAG;
-    } while (!ref_cas (old_ref, new_ref));
-    if (old_ref & FLOATING_FLAG)
-      unref();
+    uint32 old_ref = ref_get();
+    uint32 new_ref = old_ref & ~FLOATING_FLAG;
+    if (BIRNET_UNLIKELY (old_ref != new_ref))
+      {
+        while (BIRNET_UNLIKELY (!ref_cas (old_ref, new_ref)))
+          {
+            old_ref = ref_get();
+            new_ref = old_ref & ~FLOATING_FLAG;
+          }
+        if (old_ref & FLOATING_FLAG)
+          unref();
+      }
   }
   bool
   finalizing() const
@@ -356,14 +364,24 @@ public:
   void
   unref() const
   {
-    BIRNET_ASSERT (ref_count() > 0);
-    uint32 old_ref, new_ref;
-    do {
-      old_ref = ref_get();
-      BIRNET_ASSERT (old_ref & ~FLOATING_FLAG); /* catch underflow */
-      new_ref = old_ref - 1;
-    } while (!ref_cas (old_ref, new_ref));
-    if (0 == (new_ref & ~FLOATING_FLAG))
+    uint32 old_ref = ref_get();
+    uint32 current_ref_count = old_ref & ~FLOATING_FLAG;
+    BIRNET_ASSERT (current_ref_count > 0);
+    if (BIRNET_UNLIKELY (1 == (old_ref & ~FLOATING_FLAG)))
+      {
+        ReferenceCountImpl *self = const_cast<ReferenceCountImpl*> (this);
+        self->pre_finalize();
+        old_ref = ref_get();
+      }
+    uint32 new_ref = old_ref - 1;
+    BIRNET_ASSERT (old_ref & ~FLOATING_FLAG);       /* catch underflow */
+    while (BIRNET_UNLIKELY (!ref_cas (old_ref, new_ref)))
+      {
+        old_ref = ref_get();
+        BIRNET_ASSERT (old_ref & ~FLOATING_FLAG);   /* catch underflow */
+        new_ref = old_ref - 1;
+      }
+    if (BIRNET_UNLIKELY (0 == (new_ref & ~FLOATING_FLAG)))
       {
         ReferenceCountImpl *self = const_cast<ReferenceCountImpl*> (this);
         self->finalize();
@@ -380,6 +398,7 @@ public:
   template<class Obj> static void sink     (Obj &obj) { obj.ref_sink(); obj.unref(); }
   template<class Obj> static void sink     (Obj *obj) { obj->ref_sink(); obj->unref(); }
 protected:
+  virtual void pre_finalize       ();
   virtual void finalize           ();
   virtual void delete_this        ();
   virtual     ~ReferenceCountImpl ();

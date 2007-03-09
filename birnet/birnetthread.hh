@@ -89,6 +89,7 @@ inline bool    ptr_cas       (V* volatile *ptr_adr, V *o, V *n) { return ThreadT
 class OwnedMutex {
   BirnetRecMutex    m_rec_mutex;
   Thread * volatile m_owner;
+  uint     volatile m_count;
   BIRNET_PRIVATE_CLASS_COPY (OwnedMutex);
 public:
   explicit       OwnedMutex ();
@@ -319,6 +320,7 @@ OwnedMutex::lock ()
 {
   ThreadTable.rec_mutex_lock (&m_rec_mutex);
   Atomic::ptr_set (&m_owner, &Thread::self());
+  m_count++;
 }
 
 inline bool
@@ -327,6 +329,7 @@ OwnedMutex::trylock ()
   if (ThreadTable.rec_mutex_trylock (&m_rec_mutex) == 0)
     {
       Atomic::ptr_set (&m_owner, &Thread::self());
+      m_count++;
       return true; /* TRUE indicates success */
     }
   else
@@ -336,7 +339,8 @@ OwnedMutex::trylock ()
 inline void
 OwnedMutex::unlock ()
 {
-  Atomic::ptr_set (&m_owner, (Thread*) 0);
+  if (--m_count == 0)
+    Atomic::ptr_set (&m_owner, (Thread*) 0);
   ThreadTable.rec_mutex_unlock (&m_rec_mutex);
 }
 
