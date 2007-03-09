@@ -1,3 +1,7 @@
+Fri Mar  9 23:12:16 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/api-check.md5: store header file md5 hash to detect changes.
+
 Fri Mar  9 23:09:19 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/factory.xml: renamed from rapicorn.xml.
