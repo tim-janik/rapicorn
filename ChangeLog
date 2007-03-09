@@ -1,3 +1,12 @@
+Fri Mar  9 22:43:26 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/root*.[hc]*: removed obsolete OwnedMutex member.
+
+	* rapicorn/rapicorn.xml: fixed testItem definition to use CamelCase.
+
+	* tests/testitems.cc, tests/testitems.xml: slight fixes.
+	added test for a window build purely with C++ code.
+
 Fri Mar  9 16:31:05 2007  Tim Janik  <timj@gtk.org>
 
 	* container.cc: remove all children in pre_finalize(), since reference

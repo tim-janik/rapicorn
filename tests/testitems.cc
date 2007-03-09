@@ -59,35 +59,71 @@ assertions_passed ()
 }
 
 static void
-run_and_test (const char *test_name)
+test_cxx_gui ()
 {
-  TSTART (test_name);
-  Window window = Factory::create_window (test_name);
+  TSTART ("C++GUI Test");
+  Window window = Factory::create_window ("Root");
   TOK();
-  AutoLocker locker (window);
+  Item &titem = Factory::create_item ("TestItem");
   TOK();
-  Root &root = window.root(); /* needs lock acquired */
+  window.root().add (titem);
   TOK();
+  while (RapicornTester::loops_pending())
+    RapicornTester::loops_dispatch (false);
+  uint old_seen_test = TestItem::seen_test_items();
+  window.show();
+  TOK();
+  while (RapicornTester::loops_pending())
+    RapicornTester::loops_dispatch (false);
+  TOK();
+  printerr ("(auto-sleep)");
+  sleep (1); // FIXME: work around lack of show_now()
+  TOK();
+  while (RapicornTester::loops_pending())
+    RapicornTester::loops_dispatch (false);
+  TOK();
+  uint seen_test = TestItem::seen_test_items();
+  TASSERT (seen_test > old_seen_test);
+  window.close();
+  TDONE();
+}
+
+static void
+test_test_item ()
+{
+  TSTART ("alignment-test");
+  Window window = Factory::create_window ("alignment-test");
+  TOK();
+  AutoLocker locker (window);   /* check recursive locking */
+  TOK();
+  Root &root = window.root();
   TestItem *titem = root.interface<TestItem*>();
   TASSERT (titem != NULL);
   titem->sig_assertion_ok += slot (assertion_ok);
   titem->sig_assertions_passed += slot (assertions_passed);
   titem->fatal_asserts (test_item_fatal_asserts);
   TOK();
+  while (RapicornTester::loops_pending())
+    RapicornTester::loops_dispatch (false);
+  uint old_seen_test = TestItem::seen_test_items();
   root.show();
-  TOK();
-  locker.unlock();
   TOK();
   while (RapicornTester::loops_pending())
     RapicornTester::loops_dispatch (false);
   TOK();
-  printerr ("(auto-sleep)"); sleep (1); // FIXME: work around lack of show_now()
+  printerr ("(auto-sleep)");
+  sleep (1); // FIXME: work around lack of show_now()
+  TOK();
+  while (RapicornTester::loops_pending())
+    RapicornTester::loops_dispatch (false);
+  printerr ("(auto-sleep)");
+  sleep (1); // FIXME: work around lack of show_now()
   TOK();
   while (RapicornTester::loops_pending())
     RapicornTester::loops_dispatch (false);
   TOK();
   uint seen_test = TestItem::seen_test_items();
-  TASSERT (seen_test > 0);
+  TASSERT (seen_test > old_seen_test);
   TDONE();
 }
 
@@ -109,7 +145,8 @@ main (int   argc,
   Factory::must_parse_file ("testitems.xml", "TEST-ITEM", Path::dirname (argv[0]), Path::join (Path::dirname (argv[0]), ".."));
 
   /* create/run tests */
-  run_and_test ("test-alignment");
+  test_cxx_gui ();
+  test_test_item ();
 
   return 0;
 }

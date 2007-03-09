@@ -17,12 +17,12 @@
  !-->
 <rapicorn-gadgets xmlns:def="http://rapicorn.org/xmlns:def">
 
-  <!-- test alignment -->
-  <def:test-alignment inherit="Root">
+  <!-- alignment test -->
+  <def:alignment-test inherit="Root">
     <Alignment left-padding="31" right-padding="22" top-padding="33" bottom-padding="34">
-      <test-item assert-left="31" assert-right="-22" assert-top="-33" assert-bottom="34"
+      <TestItem assert-left="31" assert-right="-22" assert-top="-33" assert-bottom="34"
 	width="17" height="19" assert-width="17" assert-height="19" />
     </Alignment>
-  </def:test-alignment>
+  </def:alignment-test>
 
 </rapicorn-gadgets>

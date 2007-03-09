@@ -125,12 +125,6 @@ RootImpl::~RootImpl()
     remove (get_child());
 }
 
-OwnedMutex&
-RootImpl::owned_mutex ()
-{
-  return m_omutex;
-}
-
 void
 RootImpl::size_request (Requisition &requisition)
 {
@@ -878,7 +872,6 @@ bool
 RootImpl::prepare (uint64 current_time_usecs,
                    int64 *timeout_usecs_p)
 {
-  AutoLocker locker (m_omutex);
   AutoLocker aelocker (m_async_mutex);
   return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewport && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
 }
@@ -886,7 +879,6 @@ RootImpl::prepare (uint64 current_time_usecs,
 bool
 RootImpl::check (uint64 current_time_usecs)
 {
-  AutoLocker locker (m_omutex);
   AutoLocker aelocker (m_async_mutex);
   return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewport && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
 }
@@ -896,7 +888,6 @@ RootImpl::dispatch ()
 {
   ref (this);
   {
-    AutoLocker locker (m_omutex);
     m_async_mutex.lock();
     Event *event = NULL;
     if (!m_async_event_queue.empty())
@@ -1018,7 +1009,7 @@ RootImpl::window ()
       Window (r, om)
     {}
   };
-  return WindowImpl (*this, m_omutex);
+  return WindowImpl (*this, rapicorn_mutex);
 }
 
 static const ItemFactory<RootImpl> root_factory ("Rapicorn::Factory::Root");

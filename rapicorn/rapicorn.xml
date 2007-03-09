@@ -17,8 +17,8 @@
  !-->
 <rapicorn-gadgets xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
   
-  <!-- test-item -->
-  <def:test-item inherit="Rapicorn::Factory::TestItem"/>
+  <!-- TestItem -->
+  <def:TestItem inherit="Rapicorn::Factory::TestItem"/>
 
   <!-- Root -->
   <def:Root inherit="Rapicorn::Factory::Root"/>

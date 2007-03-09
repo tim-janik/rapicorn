@@ -27,7 +27,6 @@ class RootImpl : public virtual Root,
                  public virtual SingleContainerImpl,
                  public virtual Viewport::EventReceiver
 {
-  OwnedMutex            m_omutex;
   bool                  m_entered;
   Viewport             *m_viewport;
   Mutex                 m_async_mutex;
@@ -46,7 +45,6 @@ private:
   /*Des*/               ~RootImpl                               ();
   virtual void          dispose_item                            (Item                   &item);
   /* misc */
-  virtual OwnedMutex&   owned_mutex                             ();
   vector<Item*>         item_difference                         (const vector<Item*>    &clist, /* preserves order of clist */
                                                                  const vector<Item*>    &cminus);
   /* sizing */
@@ -133,12 +131,12 @@ private:
   class RootSource : public EventLoop::Source {
     RootImpl &root;
   public:
-    explicit            RootSource  (RootImpl &_root) : root (_root) { AutoLocker locker (root.m_omutex); root.m_source = this; }
-    virtual             ~RootSource ()                               { AutoLocker locker (root.m_omutex); root.m_source = NULL; }
+    explicit            RootSource  (RootImpl &_root) : root (_root) { AutoLocker locker (rapicorn_mutex); root.m_source = this; }
+    virtual             ~RootSource ()                               { AutoLocker locker (rapicorn_mutex); root.m_source = NULL; }
     virtual bool        prepare     (uint64 current_time_usecs,
-                                     int64 *timeout_usecs_p)     { AutoLocker locker (root.m_omutex); return root.prepare (current_time_usecs, timeout_usecs_p); }
-    virtual bool        check       (uint64 current_time_usecs)  { AutoLocker locker (root.m_omutex); return root.check (current_time_usecs); }
-    virtual bool        dispatch    ()                           { AutoLocker locker (root.m_omutex); return root.dispatch(); }
+                                     int64 *timeout_usecs_p)     { AutoLocker locker (rapicorn_mutex); return root.prepare (current_time_usecs, timeout_usecs_p); }
+    virtual bool        check       (uint64 current_time_usecs)  { AutoLocker locker (rapicorn_mutex); return root.check (current_time_usecs); }
+    virtual bool        dispatch    ()                           { AutoLocker locker (rapicorn_mutex); return root.dispatch(); }
   };
 };
 
