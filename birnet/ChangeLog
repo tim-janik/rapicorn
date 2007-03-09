@@ -1,13 +1,13 @@
 Thu Mar  8 03:40:15 2007  Tim Janik  <timj@gtk.org>
 
-	* birnet/birnetutils.hh, birnet/birnetutils.cc: added 
+	* birnetutils.hh, birnet/birnetutils.cc: added 
 	ReferenceCountImpl::pre_finalize() method which allows resurrection
 	by increasing the last reference count. 
 	optimized ref_sink, ref and unref.
 
 Thu Mar  8 02:59:50 2007  Tim Janik  <timj@gtk.org>
 
-	* birnet/birnetthread.hh, birnet/birnetthread.cc: keep lock
+	* birnetthread.hh, birnet/birnetthread.cc: keep lock
 	count for OwnedMutex to prevent premature unsetting of the owner.
 
 	* tests/threads.cc: test multiple locking of OwnedMutex.
@@ -16,7 +16,7 @@ Sun Mar  4 16:28:09 2007  Tim Janik  <timj@gtk.org>
 
 	* configure.inc: release-version update to 703.
 
-	* birnet/birnetutils.*: added printerr() and printout().
+	* birnetutils.*: added printerr() and printout().
 
 Sat Mar  3 00:45:52 2007  Tim Janik  <timj@gtk.org>
 
@@ -26,21 +26,21 @@ Sat Mar  3 00:45:52 2007  Tim Janik  <timj@gtk.org>
 	abort if the headers changed and the release number hasn't been updated
 	for too long. require, expand and check BIRNET_NAMESPACE_NAME.
 
-	* birnet/Makefile.am: added header-checksum: rule to generate a checksum
+	* Makefile.am: added header-checksum: rule to generate a checksum
 	from the current header files. added check-header-checksum: rule to
 	error out and issue a message when the version number should be updated.
 	redefine "Birnet" namespace in birnetconfig.h. according to configure.in.
 	adapted version number generation in birnetconfig.h.
 
-	* birnet/birnetcdefs.h: make birnetconfig.h the first included file, so
+	* birnetcdefs.h: make birnetconfig.h the first included file, so
 	definitions like _GNU_SOURCE really have an effect.
 	
-	* birnet/examples/mkhost.sh: package versioning fixups.
+	* examples/mkhost.sh: package versioning fixups.
 
 Fri Mar  2 02:58:46 2007  Tim Janik  <timj@gtk.org>
 
-	* birnet/birnet.hh:
-	* birnet/tests/markup.cc: fixed missing birnetmarkup.hh include.
+	* birnet.hh:
+	* tests/markup.cc: fixed missing birnetmarkup.hh include.
 
 Fri Mar  2 02:32:08 2007  Tim Janik  <timj@gtk.org>
 
@@ -54,11 +54,11 @@ Fri Mar  2 02:32:08 2007  Tim Janik  <timj@gtk.org>
 
 Fri Mar  2 02:19:51 2007  Tim Janik  <timj@gtk.org>
 
-	* birnet/birnetcdefs.h: if _BIRNET_SOURCE_EXTENSIONS is defined,
+	* birnetcdefs.h: if _BIRNET_SOURCE_EXTENSIONS is defined,
 	provide return_if_fail(), return_val_if_fail(), assert_not_reached()
 	and assert().
 
-	* birnet/birnetutils.hh, birnet/birnetutils.cc: 
+	* birnetutils.hh, birnet/birnetutils.cc: 
 	provide swap(), min(), max(), abs() and clamp().
 	provide error(), warning(), diag() and errmsg().
 
@@ -140,15 +140,15 @@ Mon Jan 29 23:29:27 2007  Tim Janik  <timj@gtk.org>
 
 Mon Jan 29 22:46:40 2007  Tim Janik  <timj@gtk.org>
 
-	* birnet/birnetthread.hh: made read_barrier() and write_barrier() a NOP 
+	* birnetthread.hh: made read_barrier() and write_barrier() a NOP 
 	on systems that don't need barriers. provided full_barrier().
 
 	* birnetthread.cc: fixed a bad bug in atomic_int_set() and 
 	atomic_pointer_set() which caused atomic values to temporarily be 0.
 
-	* birnet/birnetcdefs.h: provide memory barrier implementations based on atomic ops.
+	* birnetcdefs.h: provide memory barrier implementations based on atomic ops.
 
-	* birnet/Makefile.am: define BIRNET_MEMORY_BARRIER_NEEDED in birnetconfig.h.
+	* Makefile.am: define BIRNET_MEMORY_BARRIER_NEEDED in birnetconfig.h.
 
 	* configure.inc: provide BIRNET_MEMORY_BARRIER_NEEDED=[01] based on 
 	glib's G_ATOMIC_OP_MEMORY_BARRIER_NEEDED.
