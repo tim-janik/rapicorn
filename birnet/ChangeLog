@@ -1,6 +1,6 @@
-Fri Mar  9 01:55:35 2007  Tim Janik  <timj@gtk.org>
+Fri Mar  9 02:41:00 2007  Tim Janik  <timj@gtk.org>
 
-	* configure.inc: updated version to 710.0.
+	* configure.inc: updated version to 710.0, based on year + week number.
 
 	* Makefile.am: changed md5 hash version check. the check now fails
 	if headers are changed, REVISION=0 and RELEASE is outdated.
@@ -32,10 +32,11 @@ Sun Mar  4 16:28:09 2007  Tim Janik  <timj@gtk.org>
 Sat Mar  3 00:45:52 2007  Tim Janik  <timj@gtk.org>
 
 	* configure.inc: changed versioning to RELEASE.REVISION, using
-	year+month to construct release numbers. also provide a RELEASE_CHECKSUM
-	derived from a specific header file set, so make check: can check and
-	abort if the headers changed and the release number hasn't been updated
-	for too long. require, expand and check BIRNET_NAMESPACE_NAME.
+	the current date (year, etc.) to construct release numbers.
+	also provide a RELEASE_CHECKSUM	derived from a specific header
+	file set, so make check: can check and abort if the headers
+	changed and the release number hasn't been updated for too
+	long. require, expand and check BIRNET_NAMESPACE_NAME.
 
 	* Makefile.am: added header-checksum: rule to generate a checksum
 	from the current header files. added check-header-checksum: rule to

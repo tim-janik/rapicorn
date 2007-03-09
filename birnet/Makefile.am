@@ -55,20 +55,21 @@ BIRNET_MAKE_CHECKSUM=cat $(filter-out birnetconfig.h, $(birnet_headers) $(birnet
 checksum:	# ensure headers don't change if RELEASE=outdated && REVISION=0
 	cd $(srcdir) \
 	&& BIRNET_CURRENT_CHECKSUM=$$($(BIRNET_MAKE_CHECKSUM))			\
-	&& BIRNET_DATE_VERSION="$$(expr $$(date +%G) - 2000)$$(date +%V)"	\
+	&& BIRNET_WEEK_VERSION="$$(expr $$(date +%G) - 2000)$$(date +%V)"	\
 	&& test "$$BIRNET_CURRENT_CHECKSUM"  = "`cat api-check.md5`"		\
-	|| if [ "@BIRNET_RELEASE_VERSION@"   = "$$BIRNET_DATE_VERSION" -o	\
+	|| if [ "@BIRNET_RELEASE_VERSION@"   = "$$BIRNET_WEEK_VERSION" -o	\
 		"@BIRNET_REVISION_VERSION@" -gt 0 ]; then			\
 	     echo "$$BIRNET_CURRENT_CHECKSUM" > api-check.md5 ;			\
 	   else \
 	     MSG1="The Birnet version (@BIRNET_RELEASE_VERSION@.@BIRNET_REVISION_VERSION@) needs updating " ;		\
-	     MSG2="(expected $$BIRNET_DATE_VERSION.0) to match header changes (checksum: $$BIRNET_CURRENT_CHECKSUM)" ;	\
+	     MSG2="(expected $$BIRNET_WEEK_VERSION.0) to match header changes (checksum: $$BIRNET_CURRENT_CHECKSUM)" ;	\
 	     MSG="$$MSG1$$MSG2" ; echo $$MSG | sed 's/./=/g'; echo $$MSG; echo $$MSG | sed 's/./=/g' ;			\
 	     exit 1 ; \
 	   fi
 header-checksum:
 	$(BIRNET_MAKE_CHECKSUM)
 check-am: @BIRNET_SKIP_VERSION_CHECK@ checksum
+EXTRA_DIST += api-check.md5
 
 
 # === birnetconfig.h ===
