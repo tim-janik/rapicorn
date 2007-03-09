@@ -31,3 +31,5 @@ EXTRA_DIST += rapicorn.pc
 # disable bogus cleanup checks
 distcleancheck_listfiles = true # find . -type f -print
 # distuninstallcheck_listfiles = true # find . -type f -print
+distcheck-hook:
+	$(MAKE) -C rapicorn/ $(AM_MAKEFLAGS) api-check

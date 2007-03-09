@@ -1,3 +1,12 @@
+Fri Mar  9 02:49:51 2007  Tim Janik  <timj@gtk.org>
+
+	* configure.in: updated version to 710.0, based on year + week number.
+
+	* rapicorn/Makefile.am: added md5 hash api version check. the check 
+	fails if headers are changed while REVISION=0 and RELEASE are outdated.
+
+	* rapicorn/Makefile.am: execute rapicorn api-check upon distcheck.
+	
 Mon Mar  5 00:51:32 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/root.cc: abort resize_all() if neither the requisition nor
@@ -139,7 +148,7 @@ Fri Mar  2 03:12:38 2007  Tim Janik  <timj@gtk.org>
 Thu Mar  1 22:24:39 2007  Tim Janik  <timj@gtk.org>
 
 	* configure.in: changed versioning scheme to RELEASE.REVISION, using
-	year+month to construct release numbers. cleanups.
+	the current date (year, etc.) to construct release numbers. cleanups.
 
 	* NEWS: versioning updates.
 

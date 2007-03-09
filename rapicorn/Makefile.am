@@ -42,7 +42,7 @@ rapicorn_cc_sources = $(strip 		\
 	buttons.cc	factory.cc	evaluator.cc	scrollitems.cc	layoutcontainers.cc	\
 	text-editor.cc	text-pango.cc	testitem.cc	\
 )
-rapicorn_private_headers = $(strip 	\
+rapicorn_private_files = $(strip 	\
 	regionimpl.h			\
 	private.hh			\
 	key2utf8.cc			\
@@ -66,7 +66,29 @@ librapicorn_la_LIBADD      = $(strip 			\
 	$(top_builddir)/birnet/libbirnet.o		\
 	$(RAPICORN_LIBS) -lm 				\
 ) # -lfreetype -lfontconfig
-EXTRA_DIST += $(rapicorn_private_headers) $(librapicorn_la_DEPENDENCIES)
+EXTRA_DIST += $(rapicorn_private_files) $(librapicorn_la_DEPENDENCIES)
+
+# === header-checksum ===
+RAPICORN_MAKE_CHECKSUM=cat $(filter-out rapicornconfig.hh, $(rapicorn_public_headers) $(rapicorn_generated_headers)) | md5sum | sed 's/ .*//'
+api-check:	# ensure headers don't change if RELEASE=outdated && REVISION=0
+	cd $(srcdir) \
+	&& RAPICORN_CURRENT_CHECKSUM=$$($(RAPICORN_MAKE_CHECKSUM))		\
+	&& RAPICORN_WEEK_VERSION="$$(expr $$(date +%G) - 2000)$$(date +%V)"	\
+	&& test "$$RAPICORN_CURRENT_CHECKSUM"  = "`cat api-check.md5`"		\
+	|| if [ "@RAPICORN_RELEASE_VERSION@"   = "$$RAPICORN_WEEK_VERSION" -o	\
+		"@RAPICORN_REVISION_VERSION@" -gt 0 ]; then			\
+	     echo "$$RAPICORN_CURRENT_CHECKSUM" > api-check.md5 ;		\
+	   else \
+	     MSG1="The Rapicorn version (@RAPICORN_RELEASE_VERSION@.@RAPICORN_REVISION_VERSION@) needs updating " ;		\
+	     MSG2="(expected $$RAPICORN_WEEK_VERSION.0) to match header changes (checksum: $$RAPICORN_CURRENT_CHECKSUM)" ;	\
+	     MSG="$$MSG1$$MSG2" ; echo $$MSG | sed 's/./=/g'; echo $$MSG; echo $$MSG | sed 's/./=/g' ;				\
+	     exit 1 ; \
+	   fi
+header-checksum:
+	$(RAPICORN_MAKE_CHECKSUM)
+EXTRA_DIST += api-check.md5
+#check-am: api-check # this is called by the toplevel Makefile.am
+
 
 #XML_FILES = $(strip standard.xml )
 ## xml linting
