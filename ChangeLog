@@ -1,3 +1,7 @@
+Fri Mar  9 23:09:19 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/factory.xml: renamed from rapicorn.xml.
+
 Fri Mar  9 22:43:26 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/root*.[hc]*: removed obsolete OwnedMutex member.

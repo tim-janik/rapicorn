@@ -1,5 +1,9 @@
+Makefile
+Makefile.in
+rapicornconfig.hh
+stamp-autochecks
 librapicorn.la
 librapicorn_la-*.lo
 regionimpl.lo
 gen-enums.cc
-zintern.c
+gen-zintern.c

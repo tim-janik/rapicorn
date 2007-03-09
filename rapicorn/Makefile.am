@@ -115,7 +115,7 @@ gen-enums.cc: $(srcdir)/enumdefs.hh Makefile
 	&& rm -f xgen-enu
 CLEANFILES += xgen-enu gen-enums.cc
 
-XML_FILES   = rapicorn.xml
+XML_FILES   = factory.xml
 XMLLINTCALL = $(if $(XMLLINT),$(XMLLINT),true) # handle undefined XMLLINT
 xml-lint:
 	$(XMLLINTCALL) --noout $(XML_FILES)
@@ -126,10 +126,11 @@ stamp-autochecks: $(XML_FILES)
 noinst_DATA = stamp-autochecks
 EXTRA_DIST += $(XML_FILES)
 
-zintern.c:	$(top_builddir)/birnet/birnet-zintern $(srcdir)/rapicorn.xml stamp-autochecks
-	$(top_builddir)/birnet/birnet-zintern -b -z RAPICORN $(srcdir)/rapicorn.xml > xgen-$(@F)
+gen-zintern.c:	$(top_builddir)/birnet/birnet-zintern $(srcdir)/factory.xml stamp-autochecks
+	$(top_builddir)/birnet/birnet-zintern -b -z FACTORY_XML $(srcdir)/factory.xml > xgen-$(@F)
 	mv xgen-$(@F) $@
-factory.cc: zintern.c
+factory.cc: gen-zintern.c
+CLEANFILES += xgen-gen-zintern.c gen-zintern.c
 
 
 # === rapicornconfig.hh ===
@@ -163,5 +164,5 @@ rapicornconfig.hh: $(top_builddir)/config.status # Makefile
 	&& echo "/* Generated data ends here */" 						>> xgen-$(@F) \
 	&& cp xgen-$(@F) $@ \
 	&& rm -f xgen-$(@F)
-CLEANFILES += rapicornconfig.hh
+CLEANFILES += xgen-rapicornconfig.hh rapicornconfig.hh
 $(librapicorn_la_OBJECTS): rapicornconfig.hh
