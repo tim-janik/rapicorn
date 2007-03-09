@@ -1,3 +1,14 @@
+Fri Mar  9 01:55:35 2007  Tim Janik  <timj@gtk.org>
+
+	* configure.inc: updated version to 710.0.
+
+	* Makefile.am: changed md5 hash version check. the check now fails
+	if headers are changed, REVISION=0 and RELEASE is outdated.
+
+	* configure.inc: removed BIRNET_RELEASE_CHECKSUM.
+
+	* api-check.md5: store header file md5 hash to detect changes.
+
 Thu Mar  8 03:40:15 2007  Tim Janik  <timj@gtk.org>
 
 	* birnetutils.hh, birnet/birnetutils.cc: added 
