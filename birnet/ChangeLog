@@ -1,3 +1,12 @@
+Sat Mar 10 01:20:26 2007  Tim Janik  <timj@gtk.org>
+
+	* birnet/birnetutils.[hc]*: handle negative errnos in string_from_errno().
+	removed useless const from returned strings. added Path:: utility cwd(),
+	and constants dir_separator and searchpath_separator.
+
+	* birnet/tests/infotest.cc: check dir_separator, searchpath_separator
+	and cwd().
+
 Fri Mar  9 02:41:00 2007  Tim Janik  <timj@gtk.org>
 
 	* configure.inc: updated version to 710.0, based on year + week number.

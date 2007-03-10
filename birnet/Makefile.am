@@ -137,7 +137,7 @@ birnetconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "/* Generated data ends here */" 						>> xgen-$(@F) \
 	&& cp xgen-$(@F) $@ \
 	&& rm -f xgen-$(@F)
-CLEANFILES += birnetconfig.h
+CLEANFILES += xgen-birnetconfig.h birnetconfig.h
 $(libbirnet_la_OBJECTS): birnetconfig.h
 
 # === birnetsignalvariants.hh ===
