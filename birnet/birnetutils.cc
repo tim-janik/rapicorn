@@ -726,10 +726,14 @@ string_from_vector (const vector<double> &dvec,
 String
 string_from_errno (int errno_val)
 {
+  if (errno_val < 0)
+    errno_val = -errno_val;     // fixup library return values
   char buffer[1024] = { 0, };
-  /* strerror_r() is broken on GNU systems, especially if _GNU_SOURCE is defined, so fall back to strerror() */
   if (strerror_r (errno_val, buffer, sizeof (buffer)) < 0 || !buffer[0])
-    return strerror (errno_val);
+    {
+      /* strerror_r() may be broken on GNU systems, especially if _GNU_SOURCE is defined, so fall back to strerror() */
+      return strerror (errno_val);
+    }
   return buffer;
 }
 
@@ -766,26 +770,22 @@ string_cmp_uuid (const String &uuid_string1,
 /* --- file utils --- */
 namespace Path {
 
-const String
+String
 dirname (const String &path)
 {
-  const char *filename = path.c_str();
-  const char *base = strrchr (filename, BIRNET_DIR_SEPARATOR);
-  if (!base)
-    return ".";
-  while (*base == BIRNET_DIR_SEPARATOR && base > filename)
-    base--;
-  return String (filename, base - filename + 1);
+  char *gdir = g_path_get_dirname (path.c_str());
+  String dname = gdir;
+  g_free (gdir);
+  return dname;
 }
 
-const String
+String
 basename (const String &path)
 {
-  const char *filename = path.c_str();
-  const char *base = strrchr (filename, BIRNET_DIR_SEPARATOR);
-  if (!base)
-    return filename;
-  return String (base + 1);
+  char *gbase = g_path_get_basename (path.c_str());
+  String bname = gbase;
+  g_free (gbase);
+  return bname;
 }
 
 bool
@@ -794,14 +794,14 @@ isabs (const String &path)
   return g_path_is_absolute (path.c_str());
 }
 
-const String
+String
 skip_root (const String &path)
 {
   const char *frag = g_path_skip_root (path.c_str());
   return frag;
 }
 
-const String
+String
 join (const String &frag0, const String &frag1,
       const String &frag2, const String &frag3,
       const String &frag4, const String &frag5,
@@ -956,6 +956,18 @@ equals (const String &file1,
           st1.st_ino  == st2.st_ino &&
           st1.st_rdev == st2.st_rdev);
 }
+
+String
+cwd ()
+{
+  char *gpwd = g_get_current_dir();
+  String wd = gpwd;
+  g_free (gpwd);
+  return wd;
+}
+
+const String dir_separator = BIRNET_DIR_SEPARATOR_S;
+const String searchpath_separator = BIRNET_SEARCHPATH_SEPARATOR_S;
 
 } // Path
 

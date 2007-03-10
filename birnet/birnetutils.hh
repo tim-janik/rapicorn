@@ -195,22 +195,25 @@ int                             string_cmp_uuid          (const String &uuid_str
 
 /* --- file/path functionality --- */
 namespace Path {
-const String    dirname   (const String &path);
-const String    basename  (const String &path);
-bool            isabs     (const String &path);
-const String    skip_root (const String &path);
-const String    join      (const String &frag0, const String &frag1,
-                           const String &frag2 = "", const String &frag3 = "",
-                           const String &frag4 = "", const String &frag5 = "",
-                           const String &frag6 = "", const String &frag7 = "",
-                           const String &frag8 = "", const String &frag9 = "",
-                           const String &frag10 = "", const String &frag11 = "",
-                           const String &frag12 = "", const String &frag13 = "",
-                           const String &frag14 = "", const String &frag15 = "");
-bool            check     (const String &file,
-                           const String &mode);
-bool            equals    (const String &file1,
-                           const String &file2);
+String  dirname         (const String &path);
+String  basename        (const String &path);
+bool    isabs           (const String &path);
+String  skip_root       (const String &path);
+String  join            (const String &frag0, const String &frag1,
+                         const String &frag2 = "", const String &frag3 = "",
+                         const String &frag4 = "", const String &frag5 = "",
+                         const String &frag6 = "", const String &frag7 = "",
+                         const String &frag8 = "", const String &frag9 = "",
+                         const String &frag10 = "", const String &frag11 = "",
+                         const String &frag12 = "", const String &frag13 = "",
+                         const String &frag14 = "", const String &frag15 = "");
+bool    check           (const String &file,
+                         const String &mode);
+bool    equals          (const String &file1,
+                         const String &file2);
+String  cwd             ();
+extern const String     dir_separator;         /* 1char */
+extern const String     searchpath_separator;  /* 1char */
 } // Path
 
 /* --- url handling --- */

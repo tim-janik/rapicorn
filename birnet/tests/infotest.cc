@@ -60,12 +60,16 @@ test_paths()
   TASSERT (b == true);
   s = Path::skip_root (s);
   TASSERT (s == p);
+  TASSERT (Path::dir_separator == "/" || Path::dir_separator == "\\");
+  TASSERT (Path::searchpath_separator == ":" || Path::searchpath_separator == ";");
   TASSERT (Path::basename ("simple") == "simple");
   TASSERT (Path::basename ("skipthis" BIRNET_DIR_SEPARATOR_S "file") == "file");
   TASSERT (Path::basename (BIRNET_DIR_SEPARATOR_S "skipthis" BIRNET_DIR_SEPARATOR_S "file") == "file");
   TASSERT (Path::dirname ("file") == ".");
   TASSERT (Path::dirname ("dir" BIRNET_DIR_SEPARATOR_S) == "dir");
   TASSERT (Path::dirname ("dir" BIRNET_DIR_SEPARATOR_S "file") == "dir");
+  TASSERT (Path::cwd() != "");
+  TASSERT (Path::check (Path::join (Path::cwd(), "..", "tests"), "rd") == true); // ./../tests/ should be a readable directory
   TDONE();
 }
 

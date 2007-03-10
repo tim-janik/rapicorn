@@ -52,7 +52,7 @@ EXTRA_DIST += $(birnet_private_headers)
 
 # === header-checksum ===
 BIRNET_MAKE_CHECKSUM=cat $(filter-out birnetconfig.h, $(birnet_headers) $(birnet_private_headers) $(birnet_generated_headers)) | md5sum | sed 's/ .*//'
-checksum:	# ensure headers don't change if RELEASE=outdated && REVISION=0
+api-check:	# ensure headers don't change if RELEASE=outdated && REVISION=0
 	cd $(srcdir) \
 	&& BIRNET_CURRENT_CHECKSUM=$$($(BIRNET_MAKE_CHECKSUM))			\
 	&& BIRNET_WEEK_VERSION="$$(expr $$(date +%G) - 2000)$$(date +%V)"	\
@@ -68,7 +68,7 @@ checksum:	# ensure headers don't change if RELEASE=outdated && REVISION=0
 	   fi
 header-checksum:
 	$(BIRNET_MAKE_CHECKSUM)
-check-am: @BIRNET_SKIP_VERSION_CHECK@ checksum
+check-am: @BIRNET_SKIP_VERSION_CHECK@ api-check
 EXTRA_DIST += api-check.md5
 
 
@@ -137,7 +137,7 @@ birnetconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "/* Generated data ends here */" 						>> xgen-$(@F) \
 	&& cp xgen-$(@F) $@ \
 	&& rm -f xgen-$(@F)
-CLEANFILES += birnetconfig.h
+CLEANFILES += xgen-birnetconfig.h birnetconfig.h
 $(libbirnet_la_OBJECTS): birnetconfig.h
 
 # === birnetsignalvariants.hh ===
