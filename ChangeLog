@@ -1,3 +1,10 @@
+Sat Mar 10 18:19:42 2007  Tim Janik  <timj@gtk.org>
+
+	* examples/tour.cc: removed inlined pixstreams. include testpixs.c
+	instead. removed obsolete timer/loop test code.
+
+	* examples/testpixs.c: moved test pixstreams here.
+
 Fri Mar  9 23:12:16 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/api-check.md5: store header file md5 hash to detect changes.
