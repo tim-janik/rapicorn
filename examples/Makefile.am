@@ -27,6 +27,7 @@ GTK_EXAMPLES    += tour
 tour_SOURCES     = tour.cc
 tour_LDADD       = $(gtkprograms_ldadd)
 XML_FILES       += tour.xml
+EXTRA_DIST      += testpixs.c
 
 GTK_EXAMPLES    += scroller
 scroller_SOURCES = scroller.cc

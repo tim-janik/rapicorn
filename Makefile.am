@@ -6,8 +6,8 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = . birnet rapicorn po examples tests
 
-# require automake 1.9
-AUTOMAKE_OPTIONS = 1.9
+# setup automake
+AUTOMAKE_OPTIONS = 1.9 dist-bzip2 no-dist-gzip
 
 test:
 	$(MAKE) -C tests/ $(AM_MAKEFLAGS) $@
@@ -32,4 +32,5 @@ EXTRA_DIST += rapicorn.pc
 distcleancheck_listfiles = true # find . -type f -print
 # distuninstallcheck_listfiles = true # find . -type f -print
 distcheck-hook:
-	$(MAKE) -C rapicorn/ $(AM_MAKEFLAGS) api-check
+	$(MAKE) $(AM_MAKEFLAGS) -C birnet/ api-check
+	$(MAKE) $(AM_MAKEFLAGS) -C rapicorn/ api-check
