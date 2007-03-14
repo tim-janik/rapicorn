@@ -36,14 +36,27 @@ drawable_draw (Display  &display,
   painter.draw_simple_line (area.x + 75, area.y + 120, area.x + 230, area.y + 110, lthickness * 0.5, fg);
 }
 
-static Window
-construct_gui (const char *executable)
+#include "testpixs.c" // alpha_rle alpha_raw rgb_rle rgb_raw
+
+extern "C" int
+main (int   argc,
+      char *argv[])
 {
-  Factory::must_parse_file ("tour.xml", "Test", Path::dirname (executable));
+  /* initialize Rapicorn and its gtk backend */
+  Application::init_with_x11 (&argc, &argv, "TourTest");
+  /* initialization acquired global Rapicorn mutex */
+
+  /* register builtin images */
+  Application::pixstream ("testimage-alpha-rle", alpha_rle);
+  Application::pixstream ("testimage-alpha-raw", alpha_raw);
+  Application::pixstream ("testimage-rgb-rle", rgb_rle);
+  Application::pixstream ("testimage-rgb-raw", rgb_raw);
+
+  /* load GUI definition file, relative to argv[0] */
+  Application::load_gui ("RapicornTest", "tour.xml", argv[0]);
 
   /* create root item */
-  Window window = Factory::create_window ("Root");
-  AutoLocker wlocker (window);
+  Window window = Application::create_window ("Root");
   Root &root = window.root();
 
   /* create dialog */
@@ -54,24 +67,10 @@ construct_gui (const char *executable)
   Drawable &drawable = root.interface<Drawable&>();
   drawable.sig_draw += slot (&drawable_draw, drawable);
 
-  return window;
-}
-
-#include "testpixs.c" // alpha_rle alpha_raw rgb_rle rgb_raw
-
-extern "C" int
-main (int   argc,
-      char *argv[])
-{
-  rapicorn_init_with_foreign_gtk (&argc, &argv, "TourTest");
-  Image::register_builtin_pixstream ("testimage-alpha-rle", alpha_rle);
-  Image::register_builtin_pixstream ("testimage-alpha-raw", alpha_raw);
-  Image::register_builtin_pixstream ("testimage-rgb-rle", rgb_rle);
-  Image::register_builtin_pixstream ("testimage-rgb-raw", rgb_raw);
-
-  Window window = construct_gui (argv[0]);
   window.show();
-  gtk_main();
+
+  Application::execute_loops();
+
   return 0;
 }
 

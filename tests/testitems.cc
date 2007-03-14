@@ -94,8 +94,6 @@ test_test_item ()
   TSTART ("alignment-test");
   Window window = Factory::create_window ("alignment-test");
   TOK();
-  AutoLocker locker (window);   /* check recursive locking */
-  TOK();
   Root &root = window.root();
   TestItem *titem = root.interface<TestItem*>();
   TASSERT (titem != NULL);
@@ -138,11 +136,10 @@ main (int   argc,
       test_item_fatal_asserts = false;
 
   /* initialize rapicorn */
-  rapicorn_init_with_gtk_thread (&argc, &argv, NULL);
-  AutoLocker ral (rapicorn_mutex);
+  Application::init_with_x11 (&argc, &argv, "TestItemTest");
   
   /* parse GUI description */
-  Factory::must_parse_file ("testitems.xml", "TEST-ITEM", Path::dirname (argv[0]), Path::join (Path::dirname (argv[0]), ".."));
+  Application::load_gui ("testitems", "testitems.xml", argv[0]); // Path::dirname (argv[0]), Path::join (Path::dirname (argv[0]), ".."));
 
   /* create/run tests */
   test_cxx_gui ();

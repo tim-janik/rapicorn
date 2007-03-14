@@ -19,6 +19,7 @@
 
 /* public include files */
 #include <rapicorn/appearance.hh>
+#include <rapicorn/application.hh>
 #include <rapicorn/arrangement.hh>
 #include <rapicorn/buttons.hh>
 #include <rapicorn/container.hh>

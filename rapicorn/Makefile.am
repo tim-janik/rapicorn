@@ -12,7 +12,7 @@ DEFS            = -DRAPICORN_PRIVATE -DPARANOID -D_BIRNET_SOURCE_EXTENSIONS -DBI
 rapicorn_public_headers = $(strip 	\
 	rapicorn.hh	keycodes.hh	\
 	$(rapicorn_impl_headers)	\
-	utilities.hh	events.hh	\
+	utilities.hh	events.hh	application.hh	\
 	enumdefs.hh	primitives.hh	region.hh	loop.hh		viewport.hh		\
 	properties.hh	commands.hh	appearance.hh	painter.hh	window.hh		\
 	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
@@ -34,7 +34,7 @@ rapicorn_generated_headers = $(strip	\
 rapicorn_cc_sources = $(strip 		\
 	viewport-gtk.cc	regionimpl.c	\
 	$(strip )			\
-	utilities.cc	events.cc	\
+	utilities.cc	events.cc	application.cc	\
 	enumdefs.cc	primitives.cc	region.cc	loop.cc		viewport.cc		\
 	properties.cc	commands.cc	appearance.cc	painter.cc	window.cc		\
 	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\

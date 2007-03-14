@@ -77,7 +77,7 @@ EventLoop::remove (uint   id)
 
 class EventLoopImpl;
 static vector<EventLoopImpl*> rapicorn_main_loops;
-static int                    rapicorn_wakeups[2] = { -1, -1 };
+static int                    rapicorn_wakeups[2] = { -1, -1 }; // [0] = readable; [1] = writable
 
 /* --- EventLoopImpl --- */
 class EventLoopImpl : public virtual EventLoop {
@@ -92,7 +92,6 @@ private:
   uint           m_counter;             // FIXME: need to handle wrapping at some point
   SourceListMap  m_sources;
   vector<PollFD> m_pfds;
-  int            m_wakeup_pipe[2];      // [0] = readable; [1] = writable
   enum {
     WILL_CHECK,
     WILL_DISPATCH
@@ -145,11 +144,7 @@ public:
     m_inactive (true),
     m_counter (1),
     m_istate (WILL_CHECK)
-  {
-    m_wakeup_pipe[0] = -1;
-    m_wakeup_pipe[1] = -1;
-    AutoLocker locker (m_mutex);
-  }
+  {}
   ~EventLoopImpl()
   {
     vector<EventLoopImpl*>::iterator it = find (rapicorn_main_loops.begin(), rapicorn_main_loops.end(), this);
@@ -171,7 +166,7 @@ public:
         char w = 'w';
         int err;
         do
-          err = write (m_wakeup_pipe[1], &w, 1);
+          err = write (rapicorn_wakeups[1], &w, 1);
         while (err < 0 && (errno == EINTR || errno == EAGAIN));
       }
   }
@@ -228,32 +223,12 @@ public:
       }
     return false;
   }
-  bool
-  create_pipes_L()
-  {
-    return_val_if_fail (m_wakeup_pipe[0] == -1 && m_wakeup_pipe[1] == -1, false);
-    if (pipe (m_wakeup_pipe) < 0)
-      return false;
-    for (uint i = 0; i <= 1; i++)
-      {
-        long nflags = fcntl (m_wakeup_pipe[i], F_GETFL, 0);
-        nflags |= O_NONBLOCK;
-        int err;
-        do
-          err = fcntl (m_wakeup_pipe[i], F_SETFL, nflags);
-        while (err < 0 && (errno == EINTR || errno == EAGAIN));
-      }
-    return true;
-  }
   virtual bool
   start ()
   {
     AutoLocker locker (m_mutex);
-    return_val_if_fail (m_wakeup_pipe[0] == -1 && m_wakeup_pipe[1] == -1, false);
     return_val_if_fail (find (rapicorn_main_loops.begin(), rapicorn_main_loops.end(), this) == rapicorn_main_loops.end(), false);
-    if (!create_pipes_L())
-      return false;
-    AutoLocker rl (rapicorn_mutex);
+    assert (rapicorn_thread_entered());
     rapicorn_main_loops.push_back (this);
     return true;
   }
@@ -445,10 +420,17 @@ EventLoopImpl::dispatch_sources (const int max_priority)
 }
 
 /* --- EventLoop running --- */
+bool
+EventLoop::has_loops ()
+{
+  assert (rapicorn_thread_entered());
+  return rapicorn_main_loops.size() > 0;
+}
+
 void
 EventLoop::quit_loops()
 {
-  AutoLocker al (rapicorn_mutex);
+  assert (rapicorn_thread_entered());
   /* create referenced loop list */
   list<EventLoopImpl*> loops;
   for (uint i = 0; i < rapicorn_main_loops.size(); i++)
@@ -468,15 +450,31 @@ bool
 EventLoop::iterate_loops (bool may_block,
                           bool may_dispatch)
 {
-  AutoLocker al (rapicorn_mutex);       // acquire global lock
+  assert (rapicorn_thread_entered());   // acquire global lock
   if (rapicorn_wakeups[0] < 0)
     {
       int err;
       do
         err = pipe (rapicorn_wakeups);
       while (err < 0 && (errno == EAGAIN || errno == EINTR));
+      if (err >= 0)
+        {
+          long nflags = fcntl (rapicorn_wakeups[0], F_GETFL, 0);
+          nflags |= O_NONBLOCK;
+          do
+            err = fcntl (rapicorn_wakeups[0], F_SETFL, nflags);
+          while (err < 0 && (errno == EINTR || errno == EAGAIN));
+        }
+      if (err >= 0)
+        {
+          long nflags = fcntl (rapicorn_wakeups[1], F_GETFL, 0);
+          nflags |= O_NONBLOCK;
+          do
+            err = fcntl (rapicorn_wakeups[1], F_SETFL, nflags);
+          while (err < 0 && (errno == EINTR || errno == EAGAIN));
+        }
       if (err < 0)
-        error ("EventLoop: failed to create wakeup pipe");
+        error ("EventLoop: failed to create wakeup pipe: %s", strerror (errno));
     }
   vector<PollFD> pfds;
   int64 timeout_usecs = INT64_MAX;
@@ -508,9 +506,9 @@ EventLoop::iterate_loops (bool may_block,
   int presult;
   do
     {
-      al.unlock();                      // release global lock
+      rapicorn_thread_leave();          // release global lock
       presult = poll ((struct pollfd*) &pfds[0], pfds.size(), MIN (timeout_msecs, INT_MAX));
-      al.relock();                      // re-acquire global lock
+      rapicorn_thread_enter();          // re-acquire global lock
     }
   while (presult < 0 && (errno == EAGAIN || errno == EINTR));
   if (presult < 0)

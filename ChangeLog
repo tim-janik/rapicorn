@@ -1,3 +1,41 @@
+Wed Mar 14 00:34:41 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/application.hh, rapicorn/application.cc: introduced 
+	Application singleton which provides a number of commonly used
+	convenience API functions for initialization, bootup code,
+	event loop execution and window handling.
+
+	* rapicorn/utilities.hh, rapicorn/utilities.cc: cleaned up
+	global lock API and adapted callers.
+
+	* rapicorn/window.hh, rapicorn/window.cc: removed OwnedMutex handling
+	from Window, since windows now exist within the global Rapicorn lock.
+
+	* rapicorn/loop.hh, rapicorn/loop.cc: fixed wakeup pipe handling 
+	in the loop execution logic, there's only one pipe required now.
+
+	* rapicorn/root.cc: avoid uneccessary plane transfers if win size
+	events are pending.
+
+	* rapicorn/factory.hh, rapicorn/factory.cc: fixed fd-leak in XML parser
+	and changed parsing logic to return io errors. removed must_parse_file()
+	which is superseded by the new Application API.
+
+	* rapicorn/image.hh, rapicorn/image.cc: changed pixstream registration
+	to not rely on const static strings.
+
+	* examples/tour.cc, examples/tour.xml: changed XML definitions to
+	provide a complete dialog with Root item.
+	
+	* examples/tour.cc:
+	* examples/scroller.cc:
+	* examples/texttest.cc: adapted to use Application:: API.
+
+	* tests/testitems.cc:
+	* tests/primitives.cc:
+	* tests/markup.cc:
+	* tests/items.cc: adapted to use Application:: API and fixed mutex handling.
+
 Sat Mar 10 18:19:42 2007  Tim Janik  <timj@gtk.org>
 
 	* examples/tour.cc: removed inlined pixstreams. include testpixs.c

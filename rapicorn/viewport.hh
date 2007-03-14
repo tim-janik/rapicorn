@@ -150,7 +150,7 @@ public:
   };
 };
 
-/* --- Gtk support functions --- */
+/* --- Gtk+ backend functions --- */
 void rapicorn_init_with_gtk_thread      (int        *argcp,  // FIXME:
                                          char     ***argvp,
                                          const char *app_name);

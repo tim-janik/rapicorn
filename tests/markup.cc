@@ -83,8 +83,7 @@ main (int   argc,
 {
   birnet_init_test (&argc, &argv);
   /* initialize rapicorn */
-  rapicorn_init_with_gtk_thread (&argc, &argv, NULL); // FIXME: should work offscreen
-  AutoLocker ral (rapicorn_mutex);
+  Application::init_with_x11 (&argc, &argv, "MarkupTest"); // FIXME: should work offscreen
   
   text_markup_test();
   return 0;

@@ -112,10 +112,10 @@ class FactorySingleton {
   Item&                         create_from_item_type   (const String          &ident);
 public:
   void                          register_item_factory   (const ItemTypeFactory &itfactory);
-  void                          parse_gadget_file       (const String          &file_name,
+  MarkupParser::Error           parse_gadget_file       (FILE                  *file,
                                                          const String          &i18n_domain,
-                                                         const String          &domain,
-                                                         const std::nothrow_t  &nt);
+                                                         const String          &file_name,
+                                                         const String          &domain);
   void                          parse_gadget_data       (const uint             data_length,
                                                          const char            *data,
                                                          const String          &i18n_domain,
@@ -366,44 +366,28 @@ FactorySingleton::add_domain (const String   &domain_name,
 }
 
 
-void
-FactorySingleton::parse_gadget_file (const String           &file_name,
-                                     const String           &i18n_domain,
-                                     const String           &domain,
-                                     const std::nothrow_t   &nt)
+MarkupParser::Error
+FactorySingleton::parse_gadget_file (FILE         *file,
+                                     const String &i18n_domain,
+                                     const String &file_name,
+                                     const String &domain)
 {
   FactoryDomain *fdomain = lookup_domain (domain);
   if (!fdomain)
     fdomain = add_domain (domain, i18n_domain);
   GadgetParser gp (file_name, *fdomain);
-  MarkupParser::Error error;
-  FILE *f = fopen (file_name.c_str(), "r");
-  if (f)
+  MarkupParser::Error merror;
+  char buffer[1024];
+  int n = fread (buffer, 1, 1024, file);
+  while (n > 0)
     {
-      char buffer[1024];
-      int n = fread (buffer, 1, 1024, f);
-      while (n > 0)
-        {
-          if (!gp.parse (buffer, n, &error))
-            break;
-          n = fread (buffer, 1, 1024, f);
-        }
-      if (!error.code)
-        gp.end_parse (&error);
+      if (!gp.parse (buffer, n, &merror))
+        break;
+      n = fread (buffer, 1, 1024, file);
     }
-  else
-    {
-      error.code = MarkupParser::READ_FAILED;
-      error.message = strerror (errno);
-    }
-  if (error.code)
-    {
-      String ers = string_printf ("%s:%d:%d:error(%d): %s", file_name.c_str(), error.line_number, error.char_number, error.code, error.message.c_str());
-      if (&nt == &dothrow)
-        throw Exception (ers);
-      else
-        Birnet::error (ers);
-    }
+  if (!merror.code)
+    gp.end_parse (&merror);
+  return merror;
 }
 
 void
@@ -706,46 +690,24 @@ FactorySingleton::create_from_item_type (const String &ident)
 
 namespace Rapicorn {
 
-void
-Factory::must_parse_file (const String           &relative_file_name,
-                          const String           &i18n_domain,
-                          const String            altpath1,
-                          const String            altpath2)
-{
-  if (Path::isabs (relative_file_name))
-    parse_file (relative_file_name, i18n_domain, i18n_domain);
-  else if (altpath1[0] && altpath2[0])
-    {
-      String p1 = Path::join (altpath1, relative_file_name);
-      if (Path::check (p1, "r"))
-        parse_file (p1, i18n_domain, i18n_domain);
-      else
-        parse_file (Path::join (altpath2, relative_file_name), i18n_domain, i18n_domain);
-    }
-  else if (altpath1[0])
-    parse_file (Path::join (altpath1, relative_file_name), i18n_domain, i18n_domain);
-  else if (altpath2[0])
-    parse_file (Path::join (altpath2, relative_file_name), i18n_domain, i18n_domain);
-  else
-    error (STRFUNC + String() + ": failed to locate file without pathname: " + relative_file_name);
-}
-
-void
-Factory::parse_file (const String           &file_name,
-                     const String           &i18n_domain,
-                     const String           &domain,
-                     const std::nothrow_t   &nt)
+int
+Factory::parse_file (const String           &i18n_domain,
+                     const String           &file_name,
+                     const String           &domain)
 {
   initialize_standard_gadgets_lazily();
-  FactorySingleton::singleton->parse_gadget_file (file_name, i18n_domain, domain, nt);
-}
-
-void
-Factory::parse_file (const String           &file_name,
-                     const String           &i18n_domain,
-                     const std::nothrow_t   &nt)
-{
-  parse_file (file_name, i18n_domain, i18n_domain, nt);
+  String fdomain = domain == "" ? i18n_domain : domain;
+  FILE *file = fopen (file_name.c_str(), "r");
+  if (!file)
+    return -errno;
+  MarkupParser::Error merror = FactorySingleton::singleton->parse_gadget_file (file, i18n_domain, file_name, fdomain);
+  if (merror.code)
+    {
+      String ers = string_printf ("%s:%d:%d:error(%d): %s", file_name.c_str(), merror.line_number, merror.char_number, merror.code, merror.message.c_str());
+      error (ers);
+    }
+  fclose (file);
+  return 0;
 }
 
 Item&
@@ -831,7 +793,7 @@ namespace { // Anon
 static void
 initialize_standard_gadgets_lazily (void)
 {
-  assert (rapicorn_mutex.mine());
+  assert (rapicorn_thread_entered());
   static bool initialized = false;
   if (!initialized)
     {

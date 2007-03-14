@@ -170,75 +170,77 @@
   </def:frame-test>
 
   <!-- test dialog -->
-  <def:tour-dialog inherit="Ambience" normal-lighting="upper-left"> <!-- normal-background="beige" -->
-    <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
-      <Table sensitive="1" column-spacing="5" row-spacing="5" hexpand="1">
-	<VBox bottom-attach="9" right-attach="3" hexpand="1">
-	  <button-test hexpand="1" />
-	</VBox>
-	<VBox bottom-attach="8" >
-	  <Label markup-text="Slider Test:" />
-	  <slider-test hexpand="1"/>
-	</VBox>
-	<VBox bottom-attach="8" left-attach="2" hexpand="1">
-	  <Label markup-text="Drawable Test:" />
-	  <Frame>
-	    <Drawable id="drawable1" />
-	  </Frame>
-	</VBox>
-	<VBox bottom-attach="7" >
-	  <Label markup-text="Image Tests:" />
-	  <image-test/>
-	</VBox>
-	<VBox bottom-attach="7" left-attach="2" >
-	  <Label markup-text="Arrangement Test:"/>
-	  <arrangement-test/>
-	</VBox>
-	<VBox bottom-attach="6" right-attach="3">
-	  <Label markup-text="Funny Frames:"/>
-	  <frame-test/>
-	</VBox>
-	<Alignment visible="1" left-padding="5" right-padding="5" top-padding="5" bottom-padding="5">
-	  <Frame frame-type="etched-in">
-	    <Alignment left-padding="5" right-padding="5" top-padding="5" bottom-padding="5"> <!-- width="125" height="110" -->
-	      <Table>
-		<Label markup-text="*** Title ***" bottom-attach="100" hexpand="1" /> <!-- FIXME: align="center" -->
-		<DefaultButton sensitive="1" bottom-attach="51" vspread="1" vshrink="1" hexpand="0" hfill="0" vfill="0" >
-		  <VBox>
-		    <Label markup-text="left" right-padding="10" />
-		    <Label id="vslabel" markup-text="VSpread" />
-		    <Label markup-text="right" left-padding="10" />
-		  </VBox>
-		</DefaultButton>
-		<Button bottom-attach="52" >
-		  <Label markup-text="Normal Button" />
-		</Button>
-		<Frame frame-type="etched-out" visible="1" left-padding="10" right-padding="10" bottom-padding="10">
-		  <Table>
-		    <Frame left-attach="3" bottom-attach="59" >
-		    </Frame>
-		    <Frame left-attach="54" bottom-attach="55" left-padding="20" right-padding="3" frame-type="out" />
-		    <Frame left-attach="57" bottom-attach="52" bottom-padding="2" top-padding="13" frame-type="out" />
-		    <Frame left-attach="59" bottom-attach="50" hspread="1" vexpand="1" >
-		      <Label id="hspread-label" markup-text="HSpread" />
-		    </Frame>
-		    <Frame frame-type="etched-in">
-		      <Label markup-text="Insensitive Test Text" sensitive="0" />
-		    </Frame>
-		  </Table>
-		</Frame>
-	      </Table>
-	    </Alignment>
-	  </Frame>
-	</Alignment>
-	<Alignment left-padding="5" right-padding="5" top-padding="3" bottom-padding="3" hscale="1">
-	  <HBox spacing="5" homogeneous="0" >
-	    <Button hexpand="1" > <Label markup-text="Ok"/> </Button>
-	    <Button hexpand="1" > <Label markup-text="Cancel"/> </Button>
-	  </HBox>
-	</Alignment>
-      </Table>
-    </Alignment>
+  <def:tour-dialog inherit="Root">
+    <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
+      <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
+	<Table sensitive="1" column-spacing="5" row-spacing="5" hexpand="1">
+	  <VBox bottom-attach="9" right-attach="3" hexpand="1">
+	    <button-test hexpand="1" />
+	  </VBox>
+	  <VBox bottom-attach="8" >
+	    <Label markup-text="Slider Test:" />
+	    <slider-test hexpand="1"/>
+	  </VBox>
+	  <VBox bottom-attach="8" left-attach="2" hexpand="1">
+	    <Label markup-text="Drawable Test:" />
+	    <Frame>
+	      <Drawable id="drawable1" />
+	    </Frame>
+	  </VBox>
+	  <VBox bottom-attach="7" >
+	    <Label markup-text="Image Tests:" />
+	    <image-test/>
+	  </VBox>
+	  <VBox bottom-attach="7" left-attach="2" >
+	    <Label markup-text="Arrangement Test:"/>
+	    <arrangement-test/>
+	  </VBox>
+	  <VBox bottom-attach="6" right-attach="3">
+	    <Label markup-text="Funny Frames:"/>
+	    <frame-test/>
+	  </VBox>
+	  <Alignment visible="1" left-padding="5" right-padding="5" top-padding="5" bottom-padding="5">
+	    <Frame frame-type="etched-in">
+	      <Alignment left-padding="5" right-padding="5" top-padding="5" bottom-padding="5"> <!-- width="125" height="110" -->
+		<Table>
+		  <Label markup-text="*** Title ***" bottom-attach="100" hexpand="1" /> <!-- FIXME: align="center" -->
+		  <DefaultButton sensitive="1" bottom-attach="51" vspread="1" vshrink="1" hexpand="0" hfill="0" vfill="0" >
+		    <VBox>
+		      <Label markup-text="left" right-padding="10" />
+		      <Label id="vslabel" markup-text="VSpread" />
+		      <Label markup-text="right" left-padding="10" />
+		    </VBox>
+		  </DefaultButton>
+		  <Button bottom-attach="52" >
+		    <Label markup-text="Normal Button" />
+		  </Button>
+		  <Frame frame-type="etched-out" visible="1" left-padding="10" right-padding="10" bottom-padding="10">
+		    <Table>
+		      <Frame left-attach="3" bottom-attach="59" >
+		      </Frame>
+		      <Frame left-attach="54" bottom-attach="55" left-padding="20" right-padding="3" frame-type="out" />
+		      <Frame left-attach="57" bottom-attach="52" bottom-padding="2" top-padding="13" frame-type="out" />
+		      <Frame left-attach="59" bottom-attach="50" hspread="1" vexpand="1" >
+			<Label id="hspread-label" markup-text="HSpread" />
+		      </Frame>
+		      <Frame frame-type="etched-in">
+			<Label markup-text="Insensitive Test Text" sensitive="0" />
+		      </Frame>
+		    </Table>
+		  </Frame>
+		</Table>
+	      </Alignment>
+	    </Frame>
+	  </Alignment>
+	  <Alignment left-padding="5" right-padding="5" top-padding="3" bottom-padding="3" hscale="1">
+	    <HBox spacing="5" homogeneous="0" >
+	      <Button hexpand="1" > <Label markup-text="Ok"/> </Button>
+	      <Button hexpand="1" > <Label markup-text="Cancel"/> </Button>
+	    </HBox>
+	  </Alignment>
+	</Table>
+      </Alignment>
+    </Ambience>
   </def:tour-dialog>
   
 </rapicorn-gadgets>

@@ -41,28 +41,22 @@ main (int   argc,
       char *argv[])
 {
   /* initialize rapicorn */
-  rapicorn_init_with_gtk_thread (&argc, &argv, "Scroller");
+  Application::init_with_x11 (&argc, &argv, "Scroller");
 
   /* parse GUI description */
-  Factory::must_parse_file ("scroller.xml", "Scroller", Path::dirname (argv[0]));
+  Application::load_gui ("RapicornTest", "scroller.xml", argv[0]);
 
   /* create main window */
-  Window window = Factory::create_window ("main-shell");
-  AutoLocker wl (window);
+  Window window = Application::create_window ("main-shell");
   Container &mshell = window.root().interface<Container>();
-  /* get thread safe window handle */
-  Root &root = mshell.interface<Root&>();
 
   /* create button rows */
   for (uint i = 0; i < 20; i++)
     add_button_row (mshell, i);
 
-  /* show and process window */
-  root.show();
-  wl.unlock();             // un-protects item/root
-
-  /* wait while the window runs asyncronously */
-  sleep (10000);
+  /* show and process */
+  window.show();
+  Application::execute_loops();
 
   return 0;
 }

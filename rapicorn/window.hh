@@ -24,18 +24,12 @@ namespace Rapicorn {
 class Root;
 class Window : virtual public Deletable {
   Root         &m_root;
-  OwnedMutex   &m_omutex;
   Window&       operator=       (const Window   &window);
 protected:
-  explicit      Window          (Root           &root,
-                                 OwnedMutex     &omutex);
+  explicit      Window          (Root           &root);
 public:
   /* reference ops */
-  void          lock            ()      { m_omutex.lock(); }
-  bool          trylock         ()      { return m_omutex.trylock(); }
-  void          unlock          ()      { m_omutex.unlock(); }
   Root&         root            ();     /* must be locked */
-  Root*         peek_root       ();
   /* window ops */
   bool          visible         ();
   void          show            ();

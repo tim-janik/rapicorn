@@ -18,6 +18,7 @@
 #define __RAPICORN_LOOP_HH__
 
 #include <rapicorn/primitives.hh>
+#include <rapicorn/application.hh>
 
 namespace Rapicorn {
 
@@ -45,11 +46,13 @@ struct PollFD // mirror struct pollfd for poll(3posix)
 /* --- EventLoop --- */
 class EventLoop : public virtual ReferenceCountImpl {
   friend class RapicornTester;
+  friend class Application;
   class TimedSource;
   class PollFDSource;
   static bool   iterate_loops   (bool may_block,
                                  bool may_dispatch);
   static void   quit_loops      ();
+  static bool   has_loops       ();
   BIRNET_PRIVATE_CLASS_COPY (EventLoop);
 protected:
   typedef Signals::Slot1<void,PollFD&> VPfdSlot;

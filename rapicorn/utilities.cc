@@ -34,6 +34,43 @@ rapicorn_init (int        *argcp,
   birnet_init (argcp, argvp, app_name);
 }
 
+static Mutex         thread_mutex;
+static volatile uint thread_counter = 0;
+
+void
+rapicorn_thread_enter ()
+{
+  assert (rapicorn_thread_entered() == false);
+  thread_mutex.lock();
+  Atomic::uint_add (&thread_counter, +1);
+}
+
+bool
+rapicorn_thread_try_enter ()
+{
+  if (thread_mutex.trylock())
+    {
+      Atomic::uint_add (&thread_counter, +1);
+      return true;
+    }
+  else
+    return false;
+}
+
+bool
+rapicorn_thread_entered ()
+{
+  return Atomic::uint_get (&thread_counter) > 0;
+}
+
+void
+rapicorn_thread_leave ()
+{
+  assert (rapicorn_thread_entered());
+  Atomic::uint_add (&thread_counter, -1);
+  thread_mutex.unlock();
+}
+
 const char*
 rapicorn_gettext (const char *text)
 {

@@ -709,6 +709,9 @@ RootImpl::draw_now ()
           /* render area */
           Plane *plane = new Plane (ir.x, ir.y, ir.width, ir.height);
           render (*plane);
+          /* avoid unnecessary plane transfers */
+          if (has_pending_win_size())
+            break;
           /* blit to screen */
           m_viewport->blit_plane (plane, 0); // takes over plane
         }
@@ -1004,12 +1007,11 @@ RootImpl::window ()
 {
   class WindowImpl : public Window {
   public:
-    WindowImpl (Root       &r,
-                OwnedMutex &om) :
-      Window (r, om)
+    WindowImpl (Root &r) :
+      Window (r)
     {}
   };
-  return WindowImpl (*this, rapicorn_mutex);
+  return WindowImpl (*this);
 }
 
 static const ItemFactory<RootImpl> root_factory ("Rapicorn::Factory::Root");

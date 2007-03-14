@@ -556,7 +556,9 @@ main (int   argc,
       char *argv[])
 {
   birnet_init_test (&argc, &argv);
-
+  /* initialize rapicorn */
+  Application::init_with_x11 (&argc, &argv, "PrimitivesTest");
+  
   basic_loop_test();
   more_loop_test2();
   async_loop_test();

@@ -45,9 +45,9 @@ public:
   ErrorType                load_pixel_image             (const PixelImage     &pimage) { return load_pixel_image (&pimage); }
   virtual void             image_file                   (const String         &filename) = 0;
   virtual void             builtin_pixstream            (const String         &builtin_name) = 0;
-  static const uint8*      lookup_builtin_pixstream     (const char           *builtin_name);
-  static void              register_builtin_pixstream   (const char    * const builtin_name,
-                                                         const uint8   * const builtin_pixstream);
+  static const uint8*      lookup_builtin_pixstream     (const String         &builtin_name);
+  static void              register_builtin_pixstream   (const String         &builtin_name,
+                                                         const uint8   * const static_const_pixstream);
   static const PixelImage* pixel_image_from_pixstream   (const uint8          *gdkp_pixstream,
                                                          ErrorType            *error_type = NULL);
 };

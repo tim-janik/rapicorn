@@ -32,39 +32,39 @@ namespace Rapicorn {
 
 struct HashName {
   size_t
-  operator() (const char *name) const
+  operator() (const String &name) const
   {
-    /* 31 bit hash function */
-    const char *p = name;
-    size_t h = *p;
-    if (h)
-      for (p += 1; *p != '\0'; p++)
-        h = (h << 5) - h + *p;
+    /* 31 quantization steps hash function */
+    const size_t len = name.size();
+    size_t h = 0;
+    for (uint i = 0; i < len; i++)
+      h = (h << 5) - h + name[i];
     return h;
   }
 };
 
 struct EqualNames {
   bool
-  operator() (const char *name1, const char *name2) const
+  operator() (const String &name1,
+              const String &name2) const
   {
-    return strcmp (name1, name2) == 0;
+    return name1 == name2;
   }
 };
 
-static __gnu_cxx::hash_map <const char*, const uint8*, HashName, EqualNames> builtin_pixstreams; // FIXME: needs locking
+static __gnu_cxx::hash_map <const String, const uint8*, HashName, EqualNames> builtin_pixstreams;
 
 const uint8*
-Image::lookup_builtin_pixstream (const char *builtin_name)
+Image::lookup_builtin_pixstream (const String &builtin_name)
 {
   return builtin_pixstreams[builtin_name];
 }
 
 void
-Image::register_builtin_pixstream (const char  * const builtin_name,
-                                   const uint8 * const builtin_pixstream)
+Image::register_builtin_pixstream (const String       &builtin_name,
+                                   const uint8 * const static_const_pixstream)
 {
-  builtin_pixstreams[builtin_name] = builtin_pixstream;
+  builtin_pixstreams[builtin_name] = static_const_pixstream;
 }
 
 static const uint8* get_broken16_pixdata (void);
@@ -108,7 +108,7 @@ public:
     PixelImage *pimage = NULL;
     String comment;
     ErrorType error = rapicorn_load_png_image (filename.c_str(), &pimage, comment);
-    diag ("Image: load \"%s\": %d comment=%s", filename.c_str(), error, comment.c_str());
+    // diag ("Image: load \"%s\": %d comment=%s", filename.c_str(), error, comment.c_str());
     if (pimage)
       {
         pimage->ref_sink();
@@ -144,8 +144,8 @@ public:
     reset();
     if (!pimage)
       {
-        /* no setting a "broken" image here, to allow
-         * load_pixel_image(NULL) for setting up an empty image
+        /* not setting a "broken" image here, to allow
+         * load_pixel_image (NULL) for setting up an empty image
          */
         return EXCESS_DIMENSIONS;
       }

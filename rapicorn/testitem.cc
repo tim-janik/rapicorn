@@ -51,7 +51,7 @@ static uint test_items_rendered = 0;
 uint
 TestItem::seen_test_items ()
 {
-  assert (rapicorn_mutex.mine());
+  assert (rapicorn_thread_entered());
   return test_items_rendered;
 }
 
@@ -133,7 +133,7 @@ protected:
   virtual void
   render (Display &display)
   {
-    assert (rapicorn_mutex.mine());
+    assert (rapicorn_thread_entered());
     IRect ia = allocation();
     Plane &plane = display.create_plane();
     Painter painter (plane);

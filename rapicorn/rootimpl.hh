@@ -131,12 +131,33 @@ private:
   class RootSource : public EventLoop::Source {
     RootImpl &root;
   public:
-    explicit            RootSource  (RootImpl &_root) : root (_root) { AutoLocker locker (rapicorn_mutex); root.m_source = this; }
-    virtual             ~RootSource ()                               { AutoLocker locker (rapicorn_mutex); root.m_source = NULL; }
-    virtual bool        prepare     (uint64 current_time_usecs,
-                                     int64 *timeout_usecs_p)     { AutoLocker locker (rapicorn_mutex); return root.prepare (current_time_usecs, timeout_usecs_p); }
-    virtual bool        check       (uint64 current_time_usecs)  { AutoLocker locker (rapicorn_mutex); return root.check (current_time_usecs); }
-    virtual bool        dispatch    ()                           { AutoLocker locker (rapicorn_mutex); return root.dispatch(); }
+    explicit
+    RootSource  (RootImpl &_root) :
+      root (_root)
+    {
+      bool entered = rapicorn_thread_entered();
+      if (!entered)
+        rapicorn_thread_enter();
+      assert (root.m_source == NULL);
+      root.m_source = this;
+      if (!entered)
+        rapicorn_thread_leave();
+    }
+    virtual
+    ~RootSource ()
+    {
+      bool entered = rapicorn_thread_entered();
+      if (!entered)
+        rapicorn_thread_enter();
+      assert (root.m_source == this);
+      root.m_source = NULL;
+      if (!entered)
+        rapicorn_thread_leave();
+    }
+    virtual bool prepare    (uint64 current_time_usecs,
+                             int64 *timeout_usecs_p)         { assert (rapicorn_thread_entered()); return root.prepare (current_time_usecs, timeout_usecs_p); }
+    virtual bool check      (uint64 current_time_usecs)      { assert (rapicorn_thread_entered()); return root.check (current_time_usecs); }
+    virtual bool dispatch   ()                               { assert (rapicorn_thread_entered()); return root.dispatch(); }
   };
 };
 

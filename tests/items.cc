@@ -26,23 +26,19 @@ main (int   argc,
       char *argv[])
 {
   birnet_init_test (&argc, &argv);
-
   /* initialize rapicorn */
-  rapicorn_init_with_gtk_thread (&argc, &argv, NULL);
-  AutoLocker ral (rapicorn_mutex);
+  Application::init_with_x11 (&argc, &argv, "ItemTest");
 
   TSTART ("RapicornItems");
   /* parse standard GUI descriptions and create example item */
   Window window = Factory::create_window ("Root");
   TOK();
   /* get thread safe window handle */
-  AutoLocker wlocker (window); // auto-locks
   TOK();
   Item &item = window.root();
   TOK();
   Root &root = item.interface<Root&>();
   TASSERT (&root != NULL);
-  wlocker.unlock();             // un-protects item/root
   TOK();
   TDONE();
 

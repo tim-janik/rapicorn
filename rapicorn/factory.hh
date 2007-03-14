@@ -28,24 +28,15 @@ namespace Factory {
 /* --- Factory API --- */
 typedef map<String,String>      VariableMap;
 typedef std::list<String>       ArgumentList;   /* elements: key=utf8string */
-void              parse_file       (const String           &file_name,
-                                    const String           &i18n_domain,
-                                    const String           &domain,
-                                    const std::nothrow_t   &nt = dothrow);
-void              parse_file       (const String           &file_name,
-                                    const String           &i18n_domain,
-                                    const std::nothrow_t   &nt = dothrow);
+int /*-errno*/    parse_file       (const String           &i18n_domain,
+                                    const String           &file_name,
+                                    const String           &domain = "");
 Item&             create_item      (const String           &gadget_identifier,
                                     const ArgumentList     &arguments = ArgumentList());
 Container&        create_container (const String           &gadget_identifier,
                                     const ArgumentList     &arguments = ArgumentList());
 Window            create_window    (const String           &gadget_identifier,
                                     const ArgumentList     &arguments = ArgumentList());
-/* convenience function */
-void              must_parse_file  (const String           &relative_file_name,
-                                    const String           &i18n_domain,
-                                    const String            altpath1,
-                                    const String            altpath2 = ".");
 
 /* --- item type registration --- */
 struct ItemTypeFactory : Deletable {

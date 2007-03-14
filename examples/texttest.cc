@@ -24,19 +24,17 @@ main (int   argc,
       char *argv[])
 {
   /* initialize rapicorn */
-  rapicorn_init_with_gtk_thread (&argc, &argv, "TextTest");
+  Application::init_with_x11 (&argc, &argv, "TextTest");
 
   /* parse GUI description */
-  Factory::must_parse_file ("texttest.xml", "TextTest", Path::dirname (argv[0]));
+  Application::load_gui ("RapicornTest", "texttest.xml", argv[0]);
 
   /* create main window */
-  Window window = Factory::create_window ("main-shell");
+  Window window = Application::create_window ("main-shell");
 
-  /* show and process window */
+  /* show and process */
   window.show();
-
-  /* wait while the window runs asyncronously */
-  sleep (10000);
+  Application::execute_loops();
 
   return 0;
 }
