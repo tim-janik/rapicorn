@@ -27,6 +27,7 @@ namespace Rapicorn {
 class Root : public virtual Container, public virtual EventLoop::Source {
   friend class  Item;
   void          uncross_focus           (Item        &fitem);
+  Window        m_window; // for WindowCommandSignal
 protected:
   virtual void  beep                    (void) = 0;
   void          set_focus               (Item         *item);
@@ -36,6 +37,9 @@ protected:
   virtual void  cancel_item_events      (Item         *item) = 0;
   void          cancel_item_events      (Item         &item)            { cancel_item_events (&item); }
   virtual bool  dispatch_event          (const Event  &event) = 0;
+  virtual void  set_parent              (Item         *parent);
+  virtual bool  custom_command          (const String &command_name,
+                                         const String &command_args);
   /* loop source (FIXME) */
   virtual bool  prepare                 (uint64 current_time_usecs,
                                          int64 *timeout_usecs_p) = 0;
@@ -55,6 +59,11 @@ public:
   virtual void  remove_grab             (Item  &child) = 0;
   void          remove_grab             (Item  *child)     { throw_if_null (child); return remove_grab (*child); }
   virtual Item* get_grab                (bool  *unconfined = NULL) = 0;
+  /* commands */
+  typedef Signal<Root, bool (const String&, const String&), CollectorWhile0<bool> >   CommandSignal;
+  CommandSignal sig_command;
+  typedef Signal<Window, bool (const String&, const String&), CollectorWhile0<bool> > WindowCommandSignal;
+  WindowCommandSignal sig_window_command;
   /* window */
   virtual void  show                    () = 0;
   virtual bool  visible                 () = 0;

@@ -29,7 +29,9 @@ protected:
   explicit      Window          (Root           &root);
 public:
   /* reference ops */
-  Root&         root            ();     /* must be locked */
+  void          ref             () const;       // m_root.ref();
+  Root&         root            () const;       // rapicorn_thread_entered()
+  void          unref           () const;       // m_root.unref();
   /* window ops */
   bool          visible         ();
   void          show            ();
@@ -37,8 +39,26 @@ public:
   bool          closed          ();
   void          close           ();
   /* class */
-  /*Con*/       Window          (const Window   &window);
+  /*Copy*/      Window          (const Window   &window);
   virtual      ~Window          ();
+  /* callbacks */
+  typedef Signals::Slot2<bool,          const String&, const String&> CmdSlot;
+  typedef Signals::Slot3<bool, Window&, const String&, const String&> CmdSlotW;
+  class Commands {
+    Window  &window;
+    explicit Commands (Window &w);
+    friend   class Window;
+  public:
+    void operator+= (const CmdSlot  &s);
+    void operator-= (const CmdSlot  &s);
+    void operator+= (const CmdSlotW &s);
+    void operator-= (const CmdSlotW &s);
+    void operator+= (bool (*callback) (const String&, const String&));
+    void operator-= (bool (*callback) (const String&, const String&));
+    void operator+= (bool (*callback) (Window&, const String&, const String&));
+    void operator-= (bool (*callback) (Window&, const String&, const String&));
+  };
+  Commands      commands;
 }; 
 
 } // Rapicorn

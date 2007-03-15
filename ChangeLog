@@ -1,3 +1,18 @@
+Fri Mar 16 00:23:32 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/window.hh, rapicorn/window.cc: added ref/unref to support
+	signal emissions on Window objects. added .commands member which
+	allows signal connections with '+=' and '-='.
+
+	* rapicorn/root.cc: issue a warning if a Root is packed into
+	a container. added signals for custom command handling.
+
+	* rapicorn/item.hh, rapicorn/item.cc: removed some exceptions.
+	added virtual method for custom command handling.
+
+	* examples/tour.cc: added custom_commands() test callback,
+	fixed double-root creation.
+
 Wed Mar 14 01:24:41 2007  Tim Janik  <timj@gtk.org>
 
 	* configure.in: updated version to 711.0.

@@ -22,23 +22,37 @@ using namespace std;
 
 /* --- implementation --- */
 Window::Window (Root &root) :
-  m_root (ref_sink (root))
+  m_root (ref_sink (root)),
+  commands (*this)
 {}
 
 Window::Window (const Window &window) :
-  m_root (ref_sink (window.m_root))
+  m_root (ref_sink (window.m_root)),
+  commands (*this)
 {}
 
 Window::~Window ()
 {
-  unref (m_root);
+  m_root.unref();
+}
+
+void
+Window::ref () const
+{
+  return m_root.ref();
 }
 
 Root&
-Window::root ()
+Window::root () const
 {
   assert (rapicorn_thread_entered());
   return m_root;
+}
+
+void
+Window::unref () const
+{
+  return m_root.unref();
 }
 
 bool
@@ -74,6 +88,58 @@ Window::close ()
 {
   assert (rapicorn_thread_entered());
   m_root.close();
+}
+
+Window::Commands::Commands (Window &w) :
+  window (w)
+{}
+
+void
+Window::Commands::operator+= (const CmdSlot &s)
+{
+  window.m_root.sig_command += s;
+}
+
+void
+Window::Commands::operator-= (const CmdSlot &s)
+{
+  window.m_root.sig_command -= s;
+}
+
+void
+Window::Commands::operator+= (const CmdSlotW &s)
+{
+  window.m_root.sig_window_command += s;
+}
+
+void
+Window::Commands::operator-= (const CmdSlotW &s)
+{
+  window.m_root.sig_window_command -= s;
+}
+
+void
+Window::Commands::operator+= (bool (*callback) (const String&, const String&))
+{
+  return operator+= (slot (callback));
+}
+
+void
+Window::Commands::operator-= (bool (*callback) (const String&, const String&))
+{
+  return operator-= (slot (callback));
+}
+
+void
+Window::Commands::operator+= (bool (*callback) (Window&, const String&, const String&))
+{
+  return operator+= (slot (callback));
+}
+
+void
+Window::Commands::operator-= (bool (*callback) (Window&, const String&, const String&))
+{
+  return operator-= (slot (callback));
 }
 
 } // Rapicorn

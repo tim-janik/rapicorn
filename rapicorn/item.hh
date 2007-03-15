@@ -114,6 +114,8 @@ protected:
   virtual void                finalize          ();
   virtual void                hierarchy_changed (Item *old_toplevel);
   virtual bool                move_focus        (FocusDirType fdir);
+  virtual bool                custom_command    (const String &command_name,
+                                                 const String &command_args);
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
   void                        notify_key_error  ();
 public:
@@ -166,8 +168,7 @@ public:
   Property*                   lookup_property   (const String    &property_name);
   virtual const PropertyList& list_properties   ();
   /* commands */
-  bool                        exec_command      (const String    &command_call_string,
-                                                 const nothrow_t &nt = dothrow);
+  bool                        exec_command      (const String    &command_call_string);
   Command*                    lookup_command    (const String    &command_name);
   virtual const CommandList&  list_commands     ();
   /* parents */

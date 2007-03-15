@@ -20,6 +20,15 @@
 namespace {
 using namespace Rapicorn;
 
+static bool
+custom_commands (Window       &window,
+                 const String &command,
+                 const String &args)
+{
+  printout ("%s(): custom command: %s(%s) (window: %s)\n", __func__, command.c_str(), args.c_str(), window.root().name().c_str());
+  return true;
+}
+
 static void
 drawable_draw (Display  &display,
                Drawable &drawable)
@@ -56,14 +65,11 @@ main (int   argc,
   Application::load_gui ("RapicornTest", "tour.xml", argv[0]);
 
   /* create root item */
-  Window window = Application::create_window ("Root");
-  Root &root = window.root();
-
-  /* create dialog */
-  Item &dialog = Factory::create_item ("tour-dialog");
-  root.add (dialog);
+  Window window = Application::create_window ("tour-dialog");
+  window.commands += custom_commands;
 
   /* hook up drawable test */
+  Root &root = window.root();
   Drawable &drawable = root.interface<Drawable&>();
   drawable.sig_draw += slot (&drawable_draw, drawable);
 

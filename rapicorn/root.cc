@@ -19,9 +19,37 @@
 namespace Rapicorn {
 using namespace std;
 
-Root::Root()
+class RootWindowImpl : public Window {
+public:
+  RootWindowImpl (Root &r) :
+    Window (r)
+  {}
+};
+
+Root::Root() :
+  m_window (RootWindowImpl (*this)),
+  sig_command (*this),
+  sig_window_command (m_window)
 {
   change_flags_silently (ANCHORED, true);       /* root is always anchored */
+}
+
+void
+Root::set_parent (Item *parent)
+{
+  if (parent)
+    warning ("setting parent on toplevel Root item to: %p (%s)", parent, parent->typeid_pretty_name().c_str());
+  return Container::set_parent (parent);
+}
+
+bool
+Root::custom_command (const String &command_name,
+                      const String &command_args)
+{
+  bool handled = sig_command.emit (command_name, command_args);
+  if (!handled)
+    handled = sig_window_command.emit (command_name, command_args);
+  return handled;
 }
 
 static DataKey<Item*> focus_item_key;
@@ -1005,13 +1033,7 @@ RootImpl::close ()
 Window
 RootImpl::window ()
 {
-  class WindowImpl : public Window {
-  public:
-    WindowImpl (Root &r) :
-      Window (r)
-    {}
-  };
-  return WindowImpl (*this);
+  return RootWindowImpl (*this);
 }
 
 static const ItemFactory<RootImpl> root_factory ("Rapicorn::Factory::Root");

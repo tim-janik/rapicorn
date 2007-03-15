@@ -64,7 +64,7 @@ public:
   {
     if (m_button >= 1 && m_button <= 3 && m_on_click[m_button - 1] != "")
       {
-        exec_command (m_on_click[m_button - 1], std::nothrow);
+        exec_command (m_on_click[m_button - 1]);
         return TRUE;
       }
     else

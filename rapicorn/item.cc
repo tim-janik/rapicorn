@@ -360,8 +360,7 @@ Item::lookup_command (const String &command_name)
 }
 
 bool
-Item::exec_command (const String    &command_call_string,
-                    const nothrow_t &nt)
+Item::exec_command (const String &command_call_string)
 {
   const char *cname = command_call_string.c_str();
   while ((*cname >= 'a' and *cname <= 'z') or
@@ -389,13 +388,8 @@ Item::exec_command (const String    &command_call_string,
   else if (*cname)
     {
     invalid_command:
-      if (&nt == &dothrow)
-        throw Exception ("Invalid command syntax: ", command_call_string.c_str());
-      else
-        {
-          warning ("%s: %s", "Invalid command syntax: ", command_call_string.c_str());
-          return false;
-        }
+      warning ("%s: %s", "Invalid command syntax: ", command_call_string.c_str());
+      return false;
     }
 
   Item *item = this;
@@ -407,13 +401,23 @@ Item::exec_command (const String    &command_call_string,
       item = item->parent();
     }
 
-  if (&nt == &dothrow)
-    throw Exception ("Command unimplemented: ", command_call_string.c_str());
-  else
+  item = this;
+  while (item)
     {
-      warning ("%s: %s", "Command unimplemented: ", command_call_string.c_str());
-      return false;
+      if (item->custom_command (name, arg))
+        return true;
+      item = item->parent();
     }
+
+  warning ("%s: %s", "Command unimplemented: ", command_call_string.c_str());
+  return false;
+}
+
+bool
+Item::custom_command (const String &command_name,
+                      const String &command_args)
+{
+  return false;
 }
 
 const CommandList&
