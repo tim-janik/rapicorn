@@ -14,7 +14,7 @@ AC_DEFUN([AC_BIRNET_REQUIREMENTS],
 [
     # --- Birnet version numbers ---
     AC_DIVERT_BEFORE_HELP([
-    BIRNET_RELEASE_VERSION=710  # increment when ABI or API changes
+    BIRNET_RELEASE_VERSION=713  # increment when ABI or API changes
     BIRNET_REVISION_VERSION=0   # increment while ABI compatible, otherwise reset
     BIRNET_RELEASE_CANDIDATE=   # rc[0-9]+
     BIRNET_VERSION=$BIRNET_RELEASE_VERSION.$BIRNET_REVISION_VERSION
@@ -30,6 +30,12 @@ AC_DEFUN([AC_BIRNET_REQUIREMENTS],
     BIRNET_SKIP_VERSION_CHECK='#'
     grep -q '^AM''_INIT_AUTOMAKE(birnet,' ./configure.in && BIRNET_SKIP_VERSION_CHECK=''
     AC_SUBST(BIRNET_SKIP_VERSION_CHECK)
+
+    # --- Birnet includedir ---
+    AC_MSG_CHECKING([for Birnet includedir])
+    test -z "$BIRNET_INCLUDEDIR" && BIRNET_INCLUDEDIR='${includedir}'
+    AC_MSG_RESULT(["$BIRNET_INCLUDEDIR"])
+    AC_SUBST(BIRNET_INCLUDEDIR)
 
     # --- Birnet namespace ---
     AC_MSG_CHECKING([for Birnet namespace])

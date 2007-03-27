@@ -37,7 +37,7 @@ EXTRA_DIST += configure.inc acbirnet.m4 mksignals.sh
 # so we simply build an ordinary non-installed .la library and then use our
 # own rule to build the .o from the .la pieces.
 noinst_LTLIBRARIES         = libbirnet.la
-libbirnetincludedir        = $(includedir)/birnet
+libbirnetincludedir        = $(BIRNET_INCLUDEDIR)/birnet
 libbirnetinclude_HEADERS   = $(birnet_headers) $(birnet_generated_headers)
 libbirnet_la_SOURCES       = $(birnet_sources)
 libbirnet_la_DEPENDENCIES  =
@@ -66,11 +66,11 @@ api-check:	# ensure headers don't change if RELEASE=outdated && REVISION=0
 	     MSG="$$MSG1$$MSG2" ; echo $$MSG | sed 's/./=/g'; echo $$MSG; echo $$MSG | sed 's/./=/g' ;			\
 	     exit 1 ; \
 	   fi
-header-checksum:
+api-checksum:
 	$(BIRNET_MAKE_CHECKSUM)
 check-am: @BIRNET_SKIP_VERSION_CHECK@ api-check
 EXTRA_DIST += api-check.md5
-
+.PHONY: api-check api-checksum
 
 # === birnetconfig.h ===
 birnetconfig.h: $(top_builddir)/config.status # Makefile
