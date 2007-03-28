@@ -1,3 +1,19 @@
+Wed Mar 28 03:02:43 2007  Tim Janik  <timj@gtk.org>
+
+	* configure.in: updated version to 713.0.
+	adapted gettext domain name. provided versioned includedir
+	for birnet/.
+
+	* Makefile.am: added release version to .pc file. 
+
+	* */Makefile.am: concatenated release version to library name.
+
+	* rapicorn/Makefile.am: moved installed header files into a versioned
+	rapicorn dir. moved installation location for the toplevel
+	include file, so users only need to include <rapicorn.hh>.
+	made api-checksum: and api-check: rules phony.
+	removed fastmath cruft.
+
 Fri Mar 16 00:23:32 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/window.hh, rapicorn/window.cc: added ref/unref to support

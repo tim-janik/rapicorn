@@ -18,7 +18,7 @@ endif
 XML_FILES =
 # build tests
 noinst_PROGRAMS   = $(CONDITIONAL_PROGS)
-programs_ldadd    = $(top_builddir)/rapicorn/librapicorn.la $(RAPICORN_LIBS)
+programs_ldadd    = $(top_builddir)/rapicorn/librapicorn@LT_RELEASE@.la $(RAPICORN_LIBS)
 gtkprograms_ldadd = $(programs_ldadd) $(GTK_LIBS)
 GTK_EXAMPLES      =
 

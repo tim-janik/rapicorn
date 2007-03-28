@@ -9,9 +9,9 @@ GLIB_MKENUMS    = glib-mkenums
 LDLIBS	        = $(LIBS) $(PANGO_LIBS) $(GTK_LIBS)
 DEFS            = -DRAPICORN_PRIVATE -DPARANOID -D_BIRNET_SOURCE_EXTENSIONS -DBIRNET_LOG_DOMAIN=\"RAPICORN\" # "
 
+rapicorn_top_headers = rapicorn.hh
 rapicorn_public_headers = $(strip 	\
-	rapicorn.hh	keycodes.hh	\
-	$(rapicorn_impl_headers)	\
+	keycodes.hh	$(rapicorn_impl_headers)	\
 	utilities.hh	events.hh	application.hh	\
 	enumdefs.hh	primitives.hh	region.hh	loop.hh		viewport.hh		\
 	properties.hh	commands.hh	appearance.hh	painter.hh	window.hh		\
@@ -33,7 +33,6 @@ rapicorn_generated_headers = $(strip	\
 )
 rapicorn_cc_sources = $(strip 		\
 	viewport-gtk.cc	regionimpl.c	\
-	$(strip )			\
 	utilities.cc	events.cc	application.cc	\
 	enumdefs.cc	primitives.cc	region.cc	loop.cc		viewport.cc		\
 	properties.cc	commands.cc	appearance.cc	painter.cc	window.cc		\
@@ -47,29 +46,36 @@ rapicorn_private_files = $(strip 	\
 	private.hh			\
 	key2utf8.cc			\
 )
-rapicorn_fastmath_files = $(strip	\
-)
-librapicorn_la_CXXFLAGS = $(if $(filter $(rapicorn_fastmath_files), $<), -ffast-math)
 
-lib_LTLIBRARIES             = librapicorn.la
-librapicornincludedir       = $(includedir)/rapicorn
-librapicorninclude_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
-librapicorn_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorn_la_DEPENDENCIES = ldscript.map
-librapicorn_la_LDFLAGS      = $(strip 				\
+# librapicorn
+lib_LTLIBRARIES                         = librapicorn@LT_RELEASE@.la	# hardcoded -release $(LT_RELEASE)
+librapicorn@LT_RELEASE@includedir       = $(includedir)/rapicorn@LT_RELEASE@/rapicorn
+librapicorn@LT_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
+librapicorn@LT_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
+librapicorn@LT_RELEASE@_la_DEPENDENCIES = ldscript.map
+librapicorn@LT_RELEASE@_la_LDFLAGS      = $(strip		\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
-	-release $(LT_RELEASE) 					\
 	-no-undefined 						\
 ) # set libtool version and export symbols for resolving
-librapicorn_la_LIBADD      = $(strip 			\
+librapicorn@LT_RELEASE@_la_LIBADD       = $(strip	\
 	$(top_builddir)/birnet/libbirnet.o		\
 	$(RAPICORN_LIBS) -lm 				\
 ) # -lfreetype -lfontconfig
-EXTRA_DIST += $(rapicorn_private_files) $(librapicorn_la_DEPENDENCIES)
+EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@LT_RELEASE@_la_DEPENDENCIES)
+# install toplevel includes
+topincludedir   = $(includedir)/rapicorn@LT_RELEASE@
+topinclude_DATA = $(rapicorn_top_headers)
+EXTRA_DIST     += $(rapicorn_top_headers)
 
 # === header-checksum ===
-RAPICORN_MAKE_CHECKSUM=cat $(filter-out rapicornconfig.hh, $(rapicorn_public_headers) $(rapicorn_generated_headers)) | md5sum | sed 's/ .*//'
+RAPICORN_MAKE_CHECKSUM=$(strip			\
+	cat $(filter-out rapicornconfig.hh,	\
+		$(rapicorn_public_headers)	\
+		$(rapicorn_top_headers)		\
+		$(rapicorn_generated_headers)	\
+	) | md5sum | sed 's/ .*//'		\
+)
 api-check:	# ensure headers don't change if RELEASE=outdated && REVISION=0
 	cd $(srcdir) \
 	&& RAPICORN_CURRENT_CHECKSUM=$$($(RAPICORN_MAKE_CHECKSUM))		\
@@ -84,11 +90,11 @@ api-check:	# ensure headers don't change if RELEASE=outdated && REVISION=0
 	     MSG="$$MSG1$$MSG2" ; echo $$MSG | sed 's/./=/g'; echo $$MSG; echo $$MSG | sed 's/./=/g' ;				\
 	     exit 1 ; \
 	   fi
-header-checksum:
+api-checksum:
 	$(RAPICORN_MAKE_CHECKSUM)
-EXTRA_DIST += api-check.md5
 #check-am: api-check # this is called by the toplevel Makefile.am
-
+EXTRA_DIST += api-check.md5
+.PHONY: api-check api-checksum
 
 #XML_FILES = $(strip standard.xml )
 ## xml linting
@@ -165,4 +171,4 @@ rapicornconfig.hh: $(top_builddir)/config.status # Makefile
 	&& cp xgen-$(@F) $@ \
 	&& rm -f xgen-$(@F)
 CLEANFILES += xgen-rapicornconfig.hh rapicornconfig.hh
-$(librapicorn_la_OBJECTS): rapicornconfig.hh
+$(librapicorn@LT_RELEASE@_la_OBJECTS): rapicornconfig.hh

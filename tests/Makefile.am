@@ -9,7 +9,7 @@ DEFS     += -DPARANOID $(RAPICORN_CFLAGS)
 XML_FILES =
 
 # test programs:
-programs_ldadd = $(top_builddir)/rapicorn/librapicorn.la $(RAPICORN_LIBS) $(PANGO_LIBS) $(GTK_LIBS)
+programs_ldadd = $(top_builddir)/rapicorn/librapicorn@LT_RELEASE@.la $(RAPICORN_LIBS) $(PANGO_LIBS) $(GTK_LIBS)
 # program sources:
 TESTS             += walker
 walker_SOURCES     = walker.cc

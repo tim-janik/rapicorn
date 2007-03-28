@@ -23,10 +23,14 @@ EXTRA_DIST += intltool-extract.in intltool-merge.in intltool-update.in
 
 # install pkg-config files
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = rapicorn.pc
+pkgconfig_DATA = rapicorn@LT_RELEASE@.pc
+rapicorn@LT_RELEASE@.pc: $(srcdir)/rapicorn.pc.in
+rapicorn@LT_RELEASE@.pc: $(top_builddir)/config.status
+	cd $(top_builddir) && $(SHELL) ./config.status --file=$@:rapicorn.pc.in
 $(pkgconfig_DATA): $(top_builddir)/config.status
-CLEANFILES += rapicorn.pc
-EXTRA_DIST += rapicorn.pc
+CLEANFILES += rapicorn@LT_RELEASE@.pc
+EXTRA_DIST += rapicorn@LT_RELEASE@.pc
+        
 
 # disable bogus cleanup checks
 distcleancheck_listfiles = true # find . -type f -print

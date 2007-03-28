@@ -2,7 +2,7 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
 datadir=@datadir@
-includedir=@includedir@
+includedir=@includedir@/rapicorn@LT_RELEASE@
 
 Name: Rapicorn
 Description: Rapicorn (micro widget library)
