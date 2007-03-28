@@ -1,3 +1,11 @@
+Wed Mar 28 02:00:38 2007  Tim Janik  <timj@gtk.org>
+
+	* configure.inc: update to release version 713. allow specification
+	of parent includedir via BIRNET_INCLUDEDIR.
+
+	* Makefile.am: install header files in $(BIRNET_INCLUDEDIR)/birnet/.
+	made api-checksum: and api-check: rules phony.
+
 Sat Mar 10 01:20:26 2007  Tim Janik  <timj@gtk.org>
 
 	* birnet/birnetutils.[hc]*: handle negative errnos in string_from_errno().
