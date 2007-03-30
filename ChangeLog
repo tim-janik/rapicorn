@@ -1,3 +1,11 @@
+Fri Mar 31 23:42:55 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/events.[hc]*: rewritten for simplicity, turned exceptions
+	into errors. got rid of public friend declarations.
+	made event type	const.
+
+	* rapicorn/root.cc: fixed event struct modifications.
+
 Wed Mar 28 03:02:43 2007  Tim Janik  <timj@gtk.org>
 
 	* configure.in: updated version to 713.0.

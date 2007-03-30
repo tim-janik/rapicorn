@@ -18,6 +18,33 @@
 
 namespace Rapicorn {
 
+Event::Event (EventType           etype,
+              const EventContext &econtext) :
+  type (etype), time (econtext.time),
+  synthesized (econtext.synthesized),
+  modifiers (ModifierState (econtext.modifiers & MOD_MASK)),
+  key_state (ModifierState (modifiers & MOD_KEY_MASK)),
+  x (econtext.x), y (econtext.y)
+{}
+
+Event::~Event()
+{}
+
+class EventImpl : public Event {
+  BIRNET_PRIVATE_CLASS_COPY (EventImpl);
+public:
+  explicit EventImpl (EventType           etype,
+                      const EventContext &econtext) :
+    Event (etype, econtext)
+  {
+    assert ((etype >= MOUSE_ENTER && etype <= MOUSE_LEAVE) ||
+            (etype >= FOCUS_IN    && etype <= FOCUS_OUT) ||
+            (etype >= SCROLL_UP   && etype <= SCROLL_RIGHT) ||
+            etype == CANCEL_EVENTS ||
+            etype == WIN_DELETE);
+  }
+};
+
 const char*
 string_from_event_type (EventType etype)
 {
@@ -75,154 +102,65 @@ EventContext::operator= (const Event &event)
   return *this;
 }
 
-Event::Event () :
-  type (EVENT_NONE), time (0), synthesized (true),
-  modifiers (ModifierState (0)), key_state (ModifierState (0)),
-  x (-1), y (-1)
-{}
-
-Event::~Event()
-{
-}
-
-struct EventFactory {
-  static void                                   copy_transform_event_base       (Event                  &event,
-                                                                                 const Event            &source,
-                                                                                 const Affine           &affine);
-  template<class EventKind> static Event&       copy_transform_event            (const Event            &source_base,
-                                                                                 const Affine           &affine);
-  template<class EventKind> static EventKind*   new_event                       (EventType               type,
-                                                                                 const EventContext     &econtext);
-};
-
-void
-EventFactory::copy_transform_event_base (Event        &event,
-                                         const Event  &source,
-                                         const Affine &affine)
-{
-  event.type = source.type;
-  event.time = source.time;
-  event.synthesized = source.synthesized;
-  event.modifiers = source.modifiers;
-  event.key_state = source.key_state;
-  Point p = affine.point (Point (source.x, source.y));
-  event.x = p.x;
-  event.y = p.y;
-}
-
-template<> Event&
-EventFactory::copy_transform_event<Event> (const Event  &source_base,
-                                           const Affine &affine)
-{
-  Event &event = *new Event();
-  copy_transform_event_base (event, source_base, affine);
-  return event;
-}
-
-template<> Event&
-EventFactory::copy_transform_event<EventButton> (const Event  &source_base,
-                                                 const Affine &affine)
-{
-  const EventButton &source = dynamic_cast<const EventButton&> (source_base);
-  EventButton &event = *new EventButton();
-  copy_transform_event_base (event, source, affine);
-  event.button = source.button;
-  return event;
-}
-
-template<> Event&
-EventFactory::copy_transform_event<EventKey> (const Event  &source_base,
-                                              const Affine &affine)
-{
-  const EventKey &source = dynamic_cast<const EventKey&> (source_base);
-  EventKey &event = *new EventKey();
-  copy_transform_event_base (event, source, affine);
-  event.key = source.key;
-  event.key_name = source.key_name;
-  return event;
-}
-
-template<> Event&
-EventFactory::copy_transform_event<EventWinSize> (const Event  &source_base,
-                                                  const Affine &affine)
-{
-  const EventWinSize &source = dynamic_cast<const EventWinSize&> (source_base);
-  EventWinSize &event = *new EventWinSize();
-  copy_transform_event_base (event, source, affine);
-  event.draw_stamp = source.draw_stamp;
-  event.width = affine.hexpansion() * source.width;
-  event.height = affine.vexpansion() * source.height;
-  return event;
-}
-
-template<> Event&
-EventFactory::copy_transform_event<EventWinDraw> (const Event  &source_base,
-                                                  const Affine &affine)
-{
-  const EventWinDraw &source = dynamic_cast<const EventWinDraw&> (source_base);
-  EventWinDraw &event = *new EventWinDraw();
-  copy_transform_event_base (event, source, affine);
-  event.draw_stamp = source.draw_stamp;
-  event.bbox = Rect (affine.point (source.bbox.lower_left()), affine.point (source.bbox.upper_right()));
-  for (uint i = 0; i < source.rectangles.size(); i++)
-    event.rectangles.push_back (Rect (affine.point (source.rectangles[i].lower_left()), affine.point (source.rectangles[i].upper_right())));
-  return event;
-}
-
 Event*
-create_event_transformed (const Event        &source_event,
-                          const Affine       &affine)
+create_event_transformed (const Event  &source_event,
+                          const Affine &affine)
 {
+  EventContext dcontext (source_event);
+  Point p = affine.point (Point (dcontext.x, dcontext.y));
+  dcontext.x = p.x;
+  dcontext.y = p.y;
   switch (source_event.type)
     {
     case MOUSE_ENTER:
     case MOUSE_MOVE:
-    case MOUSE_LEAVE:           return &EventFactory::copy_transform_event<EventMouse> (source_event, affine);
+    case MOUSE_LEAVE:           return create_event_mouse (source_event.type, dcontext);
     case BUTTON_PRESS:
     case BUTTON_2PRESS:
     case BUTTON_3PRESS:
     case BUTTON_CANCELED:
     case BUTTON_RELEASE:
     case BUTTON_2RELEASE:
-    case BUTTON_3RELEASE:       return &EventFactory::copy_transform_event<EventButton> (source_event, affine);
+    case BUTTON_3RELEASE:       return create_event_button (source_event.type, dcontext,
+                                                            dynamic_cast<const EventButton&> (source_event).button);
     case FOCUS_IN:
-    case FOCUS_OUT:             return &EventFactory::copy_transform_event<EventFocus> (source_event, affine);
+    case FOCUS_OUT:             return create_event_focus (source_event.type, dcontext);
     case KEY_PRESS:
     case KEY_CANCELED:
-    case KEY_RELEASE:           return &EventFactory::copy_transform_event<EventKey> (source_event, affine);
+    case KEY_RELEASE:
+      {
+        const EventKey &key_event = dynamic_cast<const EventKey&> (source_event);
+        return create_event_key (source_event.type, dcontext, key_event.key, key_event.key_name.c_str());
+      }
     case SCROLL_UP:
     case SCROLL_DOWN:
     case SCROLL_LEFT:
-    case SCROLL_RIGHT:          return &EventFactory::copy_transform_event<EventScroll> (source_event, affine);
-    case CANCEL_EVENTS:         return &EventFactory::copy_transform_event<Event> (source_event, affine);
-    case WIN_SIZE:              return &EventFactory::copy_transform_event<EventWinSize> (source_event, affine);
-    case WIN_DRAW:              return &EventFactory::copy_transform_event<EventWinDraw> (source_event, affine);
-    case WIN_DELETE:            return &EventFactory::copy_transform_event<EventWinDelete> (source_event, affine);
+    case SCROLL_RIGHT:          return create_event_scroll (source_event.type, dcontext);
+    case CANCEL_EVENTS:         return create_event_cancellation (dcontext);
+    case WIN_SIZE:
+      {
+        const EventWinSize &source = dynamic_cast<const EventWinSize&> (source_event);
+        return create_event_win_size (dcontext, source.draw_stamp, affine.hexpansion() * source.width, affine.vexpansion() * source.height);
+      }
+    case WIN_DRAW:
+      {
+        const EventWinDraw &source = dynamic_cast<const EventWinDraw&> (source_event);
+        std::vector<Rect> rects;
+        for (uint i = 0; i < source.rectangles.size(); i++)
+          rects.push_back (Rect (affine.point (source.rectangles[i].lower_left()), affine.point (source.rectangles[i].upper_right()))); // FIXME: transform 4 points
+        return create_event_win_draw (dcontext, source.draw_stamp, rects);
+      }
+    case WIN_DELETE:            return create_event_win_delete (dcontext);
     case EVENT_NONE:
     case EVENT_LAST:
-    default:                    throw Exception ("invalid event type for copy");
+    default:                    error ("not copyable event type: %s", string_from_event_type (source_event.type));
     }
-}
-
-template<class EventKind> EventKind*
-EventFactory::new_event (EventType           type,
-                         const EventContext &econtext)
-{
-  EventKind *event = new EventKind();
-  event->type = type;
-  event->time = econtext.time;
-  event->synthesized = econtext.synthesized;
-  event->modifiers = ModifierState (econtext.modifiers & MOD_MASK);
-  event->key_state = ModifierState (event->modifiers & MOD_KEY_MASK);
-  event->x = econtext.x;
-  event->y = econtext.y;
-  return event;
 }
 
 Event*
 create_event_cancellation (const EventContext &econtext)
 {
-  Event *event = EventFactory::new_event<Event> (CANCEL_EVENTS, econtext);
+  Event *event = new EventImpl (CANCEL_EVENTS, econtext);
   return event;
 }
 
@@ -231,20 +169,35 @@ create_event_mouse (EventType           type,
                     const EventContext &econtext)
 {
   assert (type >= MOUSE_ENTER && type <= MOUSE_LEAVE);
-  EventMouse *event = EventFactory::new_event<EventMouse> (type, econtext);
+  EventMouse *event = new EventImpl (type, econtext);
   return event;
 }
+
+EventButton::~EventButton()
+{}
+
+EventButton::EventButton (EventType           etype,
+                          const EventContext &econtext,
+                          uint                btn) :
+  Event (etype, econtext),
+  button (btn)
+{}
 
 EventButton*
 create_event_button (EventType           type,
                      const EventContext &econtext,
                      uint                button)
 {
+  struct EventButtonImpl : public EventButton {
+    EventButtonImpl (EventType           etype,
+                     const EventContext &econtext,
+                     uint                btn) :
+      EventButton (etype, econtext, btn)
+    {}
+  };
   assert (type >= BUTTON_PRESS && type <= BUTTON_3RELEASE);
   assert (button >= 1 && button <= 16);
-  EventButton *event = EventFactory::new_event<EventButton> (type, econtext);
-  event->button = button;
-  return event;
+  return new EventButtonImpl (type, econtext, button);
 }
 
 EventScroll*
@@ -252,7 +205,7 @@ create_event_scroll (EventType           type,
                      const EventContext &econtext)
 {
   assert (type == SCROLL_UP || type == SCROLL_RIGHT || type == SCROLL_DOWN || type == SCROLL_LEFT);
-  EventScroll *event = EventFactory::new_event<EventScroll> (type, econtext);
+  EventMouse *event = new EventImpl (type, econtext);
   return event;
 }
 
@@ -261,9 +214,20 @@ create_event_focus (EventType           type,
                     const EventContext &econtext)
 {
   assert (type == FOCUS_IN || type == FOCUS_OUT);
-  EventFocus *event = EventFactory::new_event<EventFocus> (type, econtext);
+  EventMouse *event = new EventImpl (type, econtext);
   return event;
 }
+
+EventKey::~EventKey()
+{}
+
+EventKey::EventKey (EventType           etype,
+                    const EventContext &econtext,
+                    uint32              _key,
+                    const String       &_key_name) :
+  Event (etype, econtext),
+  key (_key), key_name (_key_name)
+{}
 
 EventKey*
 create_event_key (EventType           type,
@@ -271,12 +235,35 @@ create_event_key (EventType           type,
                   uint32              key,
                   const char         *name)
 {
+  struct EventKeyImpl : public EventKey {
+    EventKeyImpl (EventType           etype,
+                  const EventContext &econtext,
+                  uint32              _key,
+                  const String       &_key_name) :
+      EventKey (etype, econtext, _key, _key_name)
+    {}
+  };
   assert (type == KEY_PRESS || type == KEY_RELEASE || type == KEY_CANCELED);
-  EventKey *event = EventFactory::new_event<EventKey> (type, econtext);
-  event->key = key;
-  event->key_name = name;
-  return event;
+  EventKey *kevent = new EventKeyImpl (type, econtext, key, name);
+  Event &test = *kevent;
+  assert (dynamic_cast<const EventKey*> (&test) != NULL);
+  const EventKey &source = dynamic_cast<const EventKey&> (test);
+  // FIXME: const EventKey &source = dynamic_cast<const EventKey&> (dynamic_cast<const Event&> (*event));
+  return kevent;
 }
+
+EventWinSize::~EventWinSize()
+{}
+
+EventWinSize::EventWinSize (EventType           etype,
+                            const EventContext &econtext,
+                            uint                _draw_stamp,
+                            double              _width,
+                            double              _height) :
+  Event (etype, econtext),
+  draw_stamp (_draw_stamp),
+  width (_width), height (_height)
+{}
 
 EventWinSize*
 create_event_win_size (const EventContext &econtext,
@@ -284,30 +271,55 @@ create_event_win_size (const EventContext &econtext,
                        double              width,
                        double              height)
 {
-  EventWinSize *event = EventFactory::new_event<EventWinSize> (WIN_SIZE, econtext);
-  event->draw_stamp = draw_stamp;
-  event->width = width;
-  event->height = height;
-  return event;
+  struct EventWinSizeImpl : public EventWinSize {
+    EventWinSizeImpl (EventType           etype,
+                      const EventContext &econtext,
+                      uint                _draw_stamp,
+                      double              _width,
+                      double              _height) :
+      EventWinSize (etype, econtext, _draw_stamp, _width, _height)
+    {}
+  };
+  EventWinSize *wevent = new EventWinSizeImpl (WIN_SIZE, econtext, draw_stamp, width, height);
+  return wevent;
+}
+
+EventWinDraw::~EventWinDraw()
+{}
+
+EventWinDraw::EventWinDraw (EventType                etype,
+                            const EventContext      &econtext,
+                            uint                     _draw_stamp,
+                            const std::vector<Rect> &_rects) :
+  Event (etype, econtext),
+  draw_stamp (_draw_stamp),
+  rectangles (_rects)
+{
+  for (uint i = 0; i < rectangles.size(); i++)
+    bbox.rect_union (rectangles[i]);
 }
 
 EventWinDraw*
-create_event_win_draw (const EventContext &econtext,
+create_event_win_draw (const EventContext      &econtext,
                        uint                     draw_stamp,
                        const std::vector<Rect> &rects)
 {
-  EventWinDraw *event = EventFactory::new_event<EventWinDraw> (WIN_DRAW, econtext);
-  event->draw_stamp = draw_stamp;
-  event->rectangles = rects;
-  for (uint i = 0; i < rects.size(); i++)
-    event->bbox.rect_union(rects[i]);
-  return event;
+  struct EventWinDrawImpl : public EventWinDraw {
+    EventWinDrawImpl (EventType                etype,
+                      const EventContext      &econtext,
+                      uint                     _draw_stamp,
+                      const std::vector<Rect> &_rects) :
+      EventWinDraw (etype, econtext, _draw_stamp, _rects)
+    {}
+  };
+  EventWinDraw *wevent = new EventWinDrawImpl (WIN_DRAW, econtext, draw_stamp, rects);
+  return wevent;
 }
 
 EventWinDelete*
 create_event_win_delete (const EventContext &econtext)
 {
-  EventWinDelete *event = EventFactory::new_event<EventWinDelete> (WIN_DELETE, econtext);
+  EventMouse *event = new EventImpl (WIN_DELETE, econtext);
   return event;
 }
 

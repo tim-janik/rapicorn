@@ -304,23 +304,24 @@ RootImpl::dispatch_mouse_movement (const Event &event)
     }
   /* send leave events */
   vector<Item*> left_children = item_difference (m_last_entered_children, pierced);
-  EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, EventContext (event));
+  EventMouse *leave_event = create_event_mouse (MOUSE_LEAVE, EventContext (event));
   for (vector<Item*>::reverse_iterator it = left_children.rbegin(); it != left_children.rend(); it++)
-    (*it)->process_event (*mevent);
+    (*it)->process_event (*leave_event);
+  delete leave_event;
   /* send enter events */
   vector<Item*> entered_children = item_difference (pierced, m_last_entered_children);
-  mevent->type = MOUSE_ENTER;
+  EventMouse *enter_event = create_event_mouse (MOUSE_ENTER, EventContext (event));
   for (vector<Item*>::reverse_iterator it = entered_children.rbegin(); it != entered_children.rend(); it++)
-    (*it)->process_event (*mevent);
+    (*it)->process_event (*enter_event);
+  delete enter_event;
   /* send actual move event */
   bool handled = false;
-  mevent->type = MOUSE_MOVE;
+  EventMouse *move_event = create_event_mouse (MOUSE_MOVE, EventContext (event));
   for (vector<Item*>::reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
     if (!handled && (*it)->sensitive())
-      handled = (*it)->process_event (*mevent);
+      handled = (*it)->process_event (*move_event);
+  delete move_event;
   /* cleanup */
-  mevent->type = MOUSE_LEAVE;
-  delete mevent;
   for (vector<Item*>::reverse_iterator it = m_last_entered_children.rbegin(); it != m_last_entered_children.rend(); it++)
     (*it)->unref();
   m_last_entered_children = pierced;

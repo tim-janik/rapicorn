@@ -74,53 +74,57 @@ typedef enum {
 } EventType;
 const char* string_from_event_type (EventType etype);
 
-class Event {
-  friend class EventFactory;
+struct EventContext;
+class Event : public Deletable {
   BIRNET_PRIVATE_CLASS_COPY (Event);
 protected:
-  explicit      Event();
+  explicit        Event (EventType, const EventContext&);
 public:
-  virtual       ~Event();
-  EventType     type;
-  uint32        time;
-  bool          synthesized;
-  ModifierState modifiers;
-  ModifierState key_state; /* modifiers & MOD_KEY_MASK */
-  double        x, y;
+  virtual        ~Event();
+  const EventType type;
+  uint32          time;
+  bool            synthesized;
+  ModifierState   modifiers;
+  ModifierState   key_state; /* modifiers & MOD_KEY_MASK */
+  double          x, y;
 };
 typedef Event EventMouse;
 class EventButton : public Event {
-  friend class EventFactory;
-  EventButton() {}
   BIRNET_PRIVATE_CLASS_COPY (EventButton);
+protected:
+  explicit        EventButton (EventType, const EventContext&, uint);
 public:
+  virtual        ~EventButton();
   /* button press/release */
   uint          button; /* 1, 2, 3 */
 };
 typedef Event EventScroll;
 typedef Event EventFocus;
 class EventKey : public Event {
-  friend class EventFactory;
-  EventKey() {}
   BIRNET_PRIVATE_CLASS_COPY (EventKey);
+protected:
+  explicit        EventKey (EventType, const EventContext&, uint32, const String &);
 public:
+  virtual        ~EventKey();
   /* key press/release */
-  uint32        key;    /* of type KeyValue */
-  String        key_name;
+  uint32          key;  /* of type KeyValue */
+  String          key_name;
 };
 struct EventWinSize : public Event {
-  friend class EventFactory;
-  EventWinSize() {}
   BIRNET_PRIVATE_CLASS_COPY (EventWinSize);
+protected:
+  explicit        EventWinSize (EventType, const EventContext&, uint, double, double);
 public:
-  uint   draw_stamp;
-  double width, height;
+  virtual        ~EventWinSize();
+  uint            draw_stamp;
+  double          width, height;
 };
 struct EventWinDraw : public Event {
-  friend class EventFactory;
-  EventWinDraw() {}
   BIRNET_PRIVATE_CLASS_COPY (EventWinDraw);
+protected:
+  explicit          EventWinDraw (EventType, const EventContext&, uint, const std::vector<Rect> &);
 public:
+  virtual          ~EventWinDraw();
   uint              draw_stamp;
   Rect              bbox; /* bounding box */
   std::vector<Rect> rectangles;
