@@ -1,4 +1,4 @@
-Rapicorn 702.0:
+Rapicorn 713.0:
 
 * License update to GNU LGPL 2.1
 * simpler versioning scheme.
@@ -6,6 +6,7 @@ Rapicorn 702.0:
 * fixed Gtk+ version checks
 * rewrote asyncronous main loops
 * misc fixes and cleanups
+* worked around GCC C++ bugs
 
 Rapicorn 0.1.2: - Mon Jan 22 20:20:14 2007
 

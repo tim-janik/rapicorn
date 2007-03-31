@@ -27,8 +27,7 @@ Pango-1.8:
 
 Rapicorn tends to hit G++ compiler bugs fairly frequently, so if you
 have problems compiling the code, or get segfaults in STL source files,
-upgrading your compiler may improve the situation. In particular gcc-3.3
-and versions <= 3.4.5 are known to miscompile the code.
+upgrading your compiler may improve the situation.
 GCC 3.4.6 (Ubuntu 3.4.6-3ubuntu1) and newer seem to work fine.
 Compiling with a different compiler version than the default on your system
 and running all checks Rapicorn offers (they should all succeed) can be
