@@ -24,7 +24,6 @@ namespace Text {
 
 struct ParaState {
   AlignType     align;
-  WrapType      wrap;
   EllipsizeType ellipsize;
   double        line_spacing;
   double        indent;

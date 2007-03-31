@@ -22,7 +22,19 @@
 #include "itemimpl.hh"
 #include "viewport.hh"  // for rapicorn_gtk_threads_enter / rapicorn_gtk_threads_leave
 
-#define PANGO_ISCALE    (1.0 / PANGO_SCALE)
+#if PANGO_SCALE != 1024
+#error code needs adaption to unknown PANGO_SCALE value
+#endif
+
+/* undefine integer based pango macros to avoid accidental use */
+#undef  PANGO_SCALE
+#undef  PANGO_PIXELS
+#undef  PANGO_PIXELS_FLOOR
+#undef  PANGO_PIXELS_CEIL
+/* provide pango unit <-> pixel conversion functions */
+#define UNITS2PIXELS(pu)        (pu / 1024.0)
+#define PIXELS2UNITS(pp)        (pp * 1024.0)
+
 #define MONOSPACE_NAME  (String ("Monospace"))
 
 namespace Rapicorn {
@@ -88,7 +100,7 @@ default_pango_font_description()
       if (!pango_font_description_get_family (font_desc))
         pango_font_description_set_family (font_desc, "Sans");
       if (pango_font_description_get_size (font_desc) <= 0)
-        pango_font_description_set_size (font_desc, 10 * PANGO_SCALE);
+        pango_font_description_set_size (font_desc, PIXELS2UNITS (10));
     }
   return font_desc;
 }
@@ -158,39 +170,15 @@ align_type_from_pango_alignment (PangoAlignment pa)
     }
 }
 
-static PangoWrapMode
-pango_wrap_mode_from_wrap_type (WrapType wt)
-{
-  switch (wt)
-    {
-    default:
-    case WRAP_NONE:   return PANGO_WRAP_CHAR;
-    case WRAP_CHAR:   return PANGO_WRAP_WORD_CHAR;
-    case WRAP_WORD:   return PANGO_WRAP_WORD;
-    }
-}
-
-static WrapType
-wrap_type_from_pango_wrap_mode (PangoWrapMode wm)
-{
-  switch (wm)
-    {
-    default:
-    case PANGO_WRAP_CHAR:       return WRAP_NONE;
-    case PANGO_WRAP_WORD_CHAR:  return WRAP_CHAR;
-    case PANGO_WRAP_WORD:       return WRAP_WORD;
-    }
-}
-
 static PangoEllipsizeMode
 pango_ellipsize_mode_from_ellipsize_type (EllipsizeType et)
 {
   switch (et)
     {
-    default:
-    case ELLIPSIZE_NONE:      return PANGO_ELLIPSIZE_NONE;
+      // case ELLIPSIZE_NONE: return PANGO_ELLIPSIZE_NONE;
     case ELLIPSIZE_START:     return PANGO_ELLIPSIZE_START;
     case ELLIPSIZE_MIDDLE:    return PANGO_ELLIPSIZE_MIDDLE;
+    default:
     case ELLIPSIZE_END:       return PANGO_ELLIPSIZE_END;
     }
 }
@@ -200,10 +188,10 @@ ellipsize_type_from_pango_ellipsize_mode (PangoEllipsizeMode em)
 {
   switch (em)
     {
-    default:
-    case PANGO_ELLIPSIZE_NONE:        return ELLIPSIZE_NONE;
+      // case PANGO_ELLIPSIZE_NONE:   return ELLIPSIZE_NONE;
     case PANGO_ELLIPSIZE_START:       return ELLIPSIZE_START;
     case PANGO_ELLIPSIZE_MIDDLE:      return ELLIPSIZE_MIDDLE;
+    default:
     case PANGO_ELLIPSIZE_END:         return ELLIPSIZE_END;
     }
 }
@@ -266,10 +254,11 @@ public:
   PangoLayout*
   create_layout (String         font_description,
                  AlignType      align,
-                 WrapType       wrap,
+                 PangoWrapMode  pangowrap,
                  EllipsizeType  ellipsize,
                  int            indent,
-                 int            spacing)
+                 int            spacing,
+                 bool           single_paragraph)
   {
     ContextKey key;
     key.direction = default_pango_direction();
@@ -286,13 +275,14 @@ public:
     g_free (gstr);
     PangoLayout *playout = pango_layout_new (pcontext);
     pango_layout_set_alignment (playout, pango_alignment_from_align_type (align));
-    pango_layout_set_wrap (playout, pango_wrap_mode_from_wrap_type (wrap));
+    pango_layout_set_wrap (playout, pangowrap);
     pango_layout_set_ellipsize (playout, pango_ellipsize_mode_from_ellipsize_type (ellipsize));
-    pango_layout_set_indent (playout, indent * PANGO_SCALE);
-    pango_layout_set_spacing (playout, spacing * PANGO_SCALE);
+    pango_layout_set_indent (playout, iround (PIXELS2UNITS (indent)));
+    pango_layout_set_spacing (playout, iround (PIXELS2UNITS (spacing)));
     pango_layout_set_attributes (playout, NULL);
-    pango_layout_set_tabs (playout, NULL);
     pango_layout_set_width (playout, -1);
+    pango_layout_set_single_paragraph_mode (playout, single_paragraph);
+    pango_layout_set_tabs (playout, NULL);
     pango_layout_set_text (playout, "", 0);
     pango_font_description_merge_static (pfdesc, default_pango_font_description(), FALSE);
     pango_layout_set_font_description (playout, pfdesc);
@@ -317,7 +307,7 @@ public:
     if (!cfdesc)
       cfdesc = pango_context_get_font_description (pango_layout_get_context (playout));
     // FIXME: hardcoded dpi, assumes relative size
-    double dot_size = (pango_font_description_get_size (cfdesc) * default_pango_dpi().y) / (PANGO_SCALE * 72 * 6);
+    double dot_size = (pango_font_description_get_size (cfdesc) * default_pango_dpi().y) / PIXELS2UNITS (72 * 6);
     return iround (max (1, dot_size));
   }
 };
@@ -736,22 +726,35 @@ public:
 };
 
 /* --- TextPangoImpl (TextEditor::Client) --- */
-class TextPangoImpl : public virtual ItemImpl, public virtual Text::Editor::Client {
-protected:
+class TextPangoImpl : public virtual ItemImpl, public virtual TextField, public virtual Text::Editor::Client {
   PangoLayout    *m_layout;
   int             m_mark, m_cursor;
+  TextMode        m_text_mode;
+protected:
+  virtual String   markup_text () const               { return save_markup(); }
+  virtual void     markup_text (const String &markup) { load_markup (markup); }
+  virtual TextMode text_mode   () const               { return m_text_mode; }
+  virtual void
+  text_mode (TextMode text_mode)
+  {
+    if (text_mode != m_text_mode)
+      {
+        m_text_mode = text_mode;
+        invalidate_size();
+      }
+  }
 public:
   TextPangoImpl() :
-    m_layout (NULL), m_mark (-1), m_cursor (-1)
+    m_layout (NULL),
+    m_mark (-1), m_cursor (-1),
+    m_text_mode (TEXT_MODE_ELLIPSIZED)
   {
+    Text::ParaState pstate; // retrieve defaults
     rapicorn_gtk_threads_enter();
-    Text::ParaState pstate; // for defaults
-    m_layout = global_layout_cache.create_layout (pstate.font_family, pstate.align, pstate.wrap, pstate.ellipsize,
-                                                  iround (pstate.indent), iround (pstate.line_spacing));
-    pango_layout_set_attributes (m_layout, NULL);
-    pango_layout_set_tabs (m_layout, NULL);
-    pango_layout_set_width (m_layout, -1);
-    pango_layout_set_text (m_layout, "", 0);
+    m_layout = global_layout_cache.create_layout (pstate.font_family, pstate.align,
+                                                  PANGO_WRAP_WORD_CHAR, pstate.ellipsize,
+                                                  iround (pstate.indent), iround (pstate.line_spacing),
+                                                  m_text_mode == TEXT_MODE_SINGLE_LINE);
     rapicorn_gtk_threads_leave();
   }
   ~TextPangoImpl()
@@ -760,6 +763,43 @@ public:
     g_object_unref (m_layout);
     m_layout = NULL;
     rapicorn_gtk_threads_leave();
+  }
+  virtual void
+  size_request (Requisition &requisition)
+  {
+    Text::ParaState pstate; // retrieve defaults
+    PangoRectangle rect = { 0, 0 };
+    rapicorn_gtk_threads_enter();
+    pango_layout_set_ellipsize (m_layout,
+                                m_text_mode == TEXT_MODE_WRAPPED ?
+                                PANGO_ELLIPSIZE_NONE :
+                                pango_ellipsize_mode_from_ellipsize_type (pstate.ellipsize));
+    pango_layout_set_width (m_layout, -1);
+    pango_layout_get_extents (m_layout, NULL, &rect);
+    rapicorn_gtk_threads_leave();
+    /* pad requisition by 1 emboss pixel */
+    requisition.width = ceil (1 + UNITS2PIXELS (rect.width));
+    requisition.height = ceil (1 + UNITS2PIXELS (rect.height));
+  }
+  virtual void
+  size_allocate (Allocation area)
+  {
+    allocation (area);
+    Text::ParaState pstate; // retrieve defaults
+    PangoRectangle rect = { 0, 0 };
+    rapicorn_gtk_threads_enter();
+    pango_layout_set_width (m_layout, PIXELS2UNITS (area.width));
+    pango_layout_set_ellipsize (m_layout,
+                                m_text_mode == TEXT_MODE_WRAPPED ?
+                                PANGO_ELLIPSIZE_NONE :
+                                pango_ellipsize_mode_from_ellipsize_type (pstate.ellipsize));
+    pango_layout_get_extents (m_layout, NULL, &rect);
+#if 0
+    if (m_text_mode == TEXT_MODE_WRAPPED && UNITS2PIXELS (rect.height) > area.height)
+      pango_layout_set_ellipsize (m_layout, pango_ellipsize_mode_from_ellipsize_type (pstate.ellipsize));
+#endif
+    rapicorn_gtk_threads_leave();
+    tune_requisition (-1, ceil (1 + UNITS2PIXELS (rect.height)));
   }
 protected:
   virtual const char*
@@ -778,15 +818,14 @@ protected:
     Text::ParaState pstate;
     rapicorn_gtk_threads_enter();
     pstate.align = align_type_from_pango_alignment (pango_layout_get_alignment (m_layout));
-    pstate.wrap = wrap_type_from_pango_wrap_mode (pango_layout_get_wrap (m_layout));
     pstate.ellipsize = ellipsize_type_from_pango_ellipsize_mode (pango_layout_get_ellipsize (m_layout));
-    pstate.line_spacing = pango_layout_get_spacing (m_layout) * PANGO_ISCALE;
-    pstate.indent = pango_layout_get_indent (m_layout) * PANGO_ISCALE;
+    pstate.line_spacing = UNITS2PIXELS (pango_layout_get_spacing (m_layout));
+    pstate.indent = UNITS2PIXELS (pango_layout_get_indent (m_layout));
     PangoFontDescription *fdesc = pango_font_description_copy_static (pango_context_get_font_description (pango_layout_get_context (m_layout)));
     if (pango_layout_get_font_description (m_layout))
       pango_font_description_merge_static (fdesc, pango_layout_get_font_description (m_layout), TRUE);
     pstate.font_family = pango_font_description_get_family (fdesc);
-    pstate.font_size = pango_font_description_get_size (fdesc) * PANGO_ISCALE;
+    pstate.font_size = UNITS2PIXELS (pango_font_description_get_size (fdesc));
     assert (pango_font_description_get_size_is_absolute (fdesc) == false);
     pango_font_description_free (fdesc);
     rapicorn_gtk_threads_leave();
@@ -797,17 +836,16 @@ protected:
   {
     rapicorn_gtk_threads_enter();
     pango_layout_set_alignment (m_layout, pango_alignment_from_align_type (pstate.align));
-    pango_layout_set_wrap (m_layout, pango_wrap_mode_from_wrap_type (pstate.wrap));
     pango_layout_set_ellipsize (m_layout, pango_ellipsize_mode_from_ellipsize_type (pstate.ellipsize));
-    pango_layout_set_spacing (m_layout, iround (pstate.line_spacing * PANGO_SCALE));
-    pango_layout_set_indent (m_layout, iround (pstate.indent * PANGO_SCALE));
+    pango_layout_set_spacing (m_layout, iround (PIXELS2UNITS (pstate.line_spacing)));
+    pango_layout_set_indent (m_layout, iround (PIXELS2UNITS (pstate.indent)));
     if (pstate.font_family.size() || pstate.font_size)
       {
         PangoFontDescription *fdesc = pango_font_description_new();
         if (pstate.font_family.size())
           pango_font_description_set_family (fdesc, pstate.font_family.c_str());
         if (pstate.font_size)
-          pango_font_description_set_size (fdesc, iround (pstate.font_size * PANGO_SCALE));
+          pango_font_description_set_size (fdesc, iround (PIXELS2UNITS (pstate.font_size)));
         pango_layout_set_font_description (m_layout, fdesc);
         pango_font_description_free (fdesc);
       }
@@ -849,6 +887,7 @@ protected:
     rapicorn_gtk_threads_leave();
     if (err.size())
       warning (err);
+    invalidate();
   }
   virtual int
   mark () const /* byte_index */
@@ -952,22 +991,6 @@ protected:
     changed();
   }
 protected:
-  virtual void
-  size_request (Requisition &requisition)
-  {
-    PangoRectangle rect = { 0, 0 };
-    rapicorn_gtk_threads_enter();
-    pango_layout_set_width (m_layout, -1);
-    pango_layout_get_extents (m_layout, NULL, &rect);
-    rapicorn_gtk_threads_leave();
-    requisition.width = 1 + PANGO_PIXELS (rect.width);
-    requisition.height = 1 + PANGO_PIXELS (rect.height);
-  }
-  virtual void
-  size_allocate (Allocation area)
-  {
-    allocation (area);
-  }
   void
   render_dot (Plane        &plane,
               int           x,
@@ -1007,11 +1030,11 @@ protected:
     if (m_cursor < 0)
       return;
     pango_layout_get_cursor_pos (m_layout, m_cursor, &crect1, &crect2);
-    double x = layout_rect.x + layout_x + PANGO_PIXELS (irect.x + crect1.x);
-    // double width = MIN (layout_rect.width, MAX (1, PANGO_PIXELS (crect1.width))); // FIXME: cursor width
-    // double y = layout_rect.y + layout_y + PANGO_PIXELS (lrect.height - irect.y - crect1.y - crect1.height);
-    double y = layout_rect.y + layout_y + PANGO_PIXELS (lrect.height - crect1.y - crect1.height);
-    double height = PANGO_PIXELS (crect1.height);
+    double x = layout_rect.x + layout_x + UNITS2PIXELS (irect.x + crect1.x);
+    // double width = MIN (layout_rect.width, MAX (1, UNITS2PIXELS (crect1.width))); // FIXME: cursor width
+    // double y = layout_rect.y + layout_y + UNITS2PIXELS (lrect.height - irect.y - crect1.y - crect1.height);
+    double y = layout_rect.y + layout_y + UNITS2PIXELS (lrect.height - crect1.y - crect1.height);
+    double height = UNITS2PIXELS (crect1.height);
     Color fg (col.premultiplied());
     int xpos = iround (MAX (x, plane.xstart()));
     int ymin = iround (MAX (y, plane.ystart())), ymax = iround (MIN (y + height, plane.ybound()) - 1);
@@ -1054,35 +1077,34 @@ protected:
   void
   render (Display &display)
   {
-    rapicorn_gtk_threads_enter();
     Rect area = allocation();
-    bool vellipsize = pango_layout_get_ellipsize (m_layout) != PANGO_ELLIPSIZE_NONE && area.height < requisition().height;
-    area.width -= 1;
-    area.height -= 1;
-    if (area.width < 1 || area.height < 1)
-      {
-        rapicorn_gtk_threads_leave();
-        return;
-      }
-    if (pango_layout_get_ellipsize (m_layout) == PANGO_ELLIPSIZE_NONE)
-      pango_layout_set_width (m_layout, -1);
-    else
-      pango_layout_set_width (m_layout, iround (area.width * PANGO_SCALE));
+    /* area needs to be larger than emboss padding */
+    if (area.width <= 1 || area.height <= 1)
+      return;
+    rapicorn_gtk_threads_enter();
     PangoRectangle prect = { 0, 0 };
     pango_layout_get_extents (m_layout, NULL, &prect);
-    double pixels = PANGO_PIXELS (prect.height);
-    if (pixels < area.height)
+    double vpixels = UNITS2PIXELS (prect.height);
+    bool vellipsize = floor (vpixels) > area.height;
+    /* preserve emboss space */
+    area.width -= 1;
+    area.height -= 1;
+    /* center vertically */
+    if (vpixels < area.height)
       {
-        double extra = area.height - pixels;
+        double extra = area.height - vpixels;
         area.y += extra / 2;
         area.height -= extra;
       }
+    /* setup vertical ellipsis */
     uint dot_size = 0;
     if (vellipsize)
       dot_size = LayoutCache::dot_size_from_layout (m_layout);
+    /* render text */
     Plane &plane = display.create_plane ();
     if (insensitive())
       {
+        /* render embossed text */
         area.x += 1;
         render_text (plane, area, dot_size, white());
         area.x -= 1;
@@ -1093,27 +1115,19 @@ protected:
       }
     else
       {
+        /* render normal text */
         area.x += 1;
         area.y += 1;
         render_text (plane, area, dot_size, foreground());
       }
     rapicorn_gtk_threads_leave();
   }
-  String
-  markup_text () const
-  {
-    return save_markup();
-  }
-  void
-  markup_text (const String &mtext)
-  {
-    load_markup (mtext);
-  }
   virtual const PropertyList&
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (TextPangoImpl, markup_text, _("MarkupText"), _("The text to display, containing font and style markup."), "", "rw"),
+      MakeProperty (TextPangoImpl, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "", "rw"),
+      MakeProperty (TextPangoImpl, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), TEXT_MODE_ELLIPSIZED, "rw"),
     };
     static const PropertyList property_list (properties, Item::list_properties());
     return property_list;
@@ -1158,7 +1172,7 @@ _rapicorn_pango_renderer_render_layout (Plane           &plane,
   self->y = ifloor (rect.y);
   self->width = iceil (rect.width);
   self->height = iceil (rect.height);
-  pango_renderer_draw_layout (PANGO_RENDERER (self), layout, layout_x * PANGO_SCALE, layout_y * PANGO_SCALE);
+  pango_renderer_draw_layout (PANGO_RENDERER (self), layout, PIXELS2UNITS (layout_x), PIXELS2UNITS (layout_y));
   g_object_unref (self);
 }
 
@@ -1196,7 +1210,7 @@ _rapicorn_pango_renderer_draw_glyphs (PangoRenderer     *renderer,
   memset (bitmap.buffer, 0, bitmap.rows * bitmap.pitch);
   bitmap.num_grays = 256;
   bitmap.pixel_mode = FT_PIXEL_MODE_GRAY;
-  pango_ft2_render (&bitmap, font, glyphs, ifloor (pangox * PANGO_ISCALE), ifloor (pangoy * PANGO_ISCALE));
+  pango_ft2_render (&bitmap, font, glyphs, ifloor (UNITS2PIXELS (pangox)), ifloor (UNITS2PIXELS (pangoy)));
   /* render bitmap to plane */
   Plane &plane = *self->plane;
   Color fg = self->fg;

@@ -20,17 +20,23 @@
 #include <rapicorn/utilities.hh>
 #include <rapicorn/text-editor.hh>
 
-#if     RAPICORN_WITH_PANGO
 namespace Rapicorn {
 
-class TextPango : public virtual Convertible { // FIXME: move to Text::EditorClient
+class TextField : public virtual Convertible {
+public:
+  virtual TextMode text_mode    () const = 0;
+  virtual void     text_mode    (TextMode      text_mode) = 0;
+  virtual String   markup_text  () const = 0;
+  virtual void     markup_text  (const String &markup) = 0;
+};
+
+#if     RAPICORN_WITH_PANGO
+class TextPango : public virtual TextField { // FIXME: move to Text::EditorClient
 public:
   virtual void          font_name       (const String &fname) = 0;
   virtual String        font_name       () const = 0;
   virtual AlignType     align           () const = 0;
   virtual void          align           (AlignType at) = 0;
-  virtual WrapType      wrap            () const = 0;
-  virtual void          wrap            (WrapType wt) = 0;
   virtual EllipsizeType ellipsize       () const = 0;
   virtual void          ellipsize       (EllipsizeType et) = 0;
   virtual uint16        spacing         () const = 0;
@@ -40,8 +46,8 @@ public:
   virtual void          text            (const String &text) = 0;
   virtual String        text            () const = 0;
 };
+#endif  /* RAPICORN_WITH_PANGO */
 
 } // Rapicorn
-#endif  /* RAPICORN_WITH_PANGO */
 
 #endif  /* __RAPICORN_TEXT_PANGO_HH__ */

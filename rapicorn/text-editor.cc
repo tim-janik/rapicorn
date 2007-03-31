@@ -22,7 +22,7 @@ namespace Text {
 using namespace Birnet;
 
 ParaState::ParaState() :
-  align (ALIGN_LEFT), wrap (WRAP_WORD), ellipsize (ELLIPSIZE_END),
+  align (ALIGN_LEFT), ellipsize (ELLIPSIZE_END),
   line_spacing (1), indent (0),
   font_family ("Sans"), font_size (12)
 {}

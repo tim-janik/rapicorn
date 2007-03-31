@@ -128,8 +128,7 @@ typedef enum {
 typedef EnumType<DirType> EnumTypeDirType;
 
 typedef enum {
-  ELLIPSIZE_NONE,
-  ELLIPSIZE_START,
+  ELLIPSIZE_START = 1,
   ELLIPSIZE_MIDDLE,
   ELLIPSIZE_END
 } EllipsizeType;
@@ -202,11 +201,11 @@ inline StateType  operator|  (StateType  s1, StateType s2) { return StateType (s
 inline StateType& operator|= (StateType &s1, StateType s2) { s1 = s1 | s2; return s1; }
 
 typedef enum {
-  WRAP_NONE,
-  WRAP_CHAR,
-  WRAP_WORD,
-} WrapType;
-typedef EnumType<WrapType> EnumTypeWrapType;
+  TEXT_MODE_WRAPPED = 1,
+  TEXT_MODE_ELLIPSIZED,
+  TEXT_MODE_SINGLE_LINE,
+} TextMode;
+typedef EnumType<TextMode> EnumTypeTextMode;
 
 typedef enum {
   /* main window types */

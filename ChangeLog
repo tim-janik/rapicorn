@@ -1,3 +1,18 @@
+Sun Apr  1 00:42:30 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/enumdefs.hh: removed ELLIPSIZE_NONE because it doesn't
+	indicate a supported ellipsization mode. added TextMode which can
+	be used to select wrapped, ellipsized or single-line layout modes.
+
+	* rapicorn/text-pango.[hc]*: polished pango unit <-> pixel conversions.
+	implemented layout modes according to text-mode, made ellipsization
+	and wrap mode dependent on text-mode. added public TextField interface
+	(to be moved into a non-pango header) which provides text-mode and
+	markup-text properties.
+
+	* rapicorn/text-editor.[hc]*: removed .wrap field from paragraph
+	state, since wrapping is determined by text-mode.
+
 Sat Mar 31 15:37:29 2007  Tim Janik  <timj@gtk.org>
 
 	* for some reason, dynamic_cast<&> doesn't work reliably in gcc <= 3.3.5
