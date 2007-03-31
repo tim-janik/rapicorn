@@ -38,6 +38,7 @@ struct Gadget {
   vector<Gadget*> children;
   void            add_child (Gadget *child_gadget) { children.push_back (child_gadget); }
   String          location  () const { return m_input_name + String (m_line_number > INT_MIN ? ":" + string_from_int (m_line_number) : ""); }
+  String          definition() const { return location() + ":<def:" + ident + "/>"; }
   explicit        Gadget    (const String      &cident,
                              const String      &cancestor,
                              const String      &input_name,
@@ -92,7 +93,7 @@ class FactorySingleton {
                                                          const String       &i18n_domain);
   /* gadgets */
   Gadget*                       lookup_gadget           (const String       &gadget_identifier);
-  Item&                         inherit_gadget          (const String       &ancestor_name,
+  Item*                         inherit_gadget          (const String       &ancestor_name,
                                                          VariableMap        &call_arguments,
                                                          Evaluator          &env,
                                                          VariableMap        &unused_arguments);
@@ -123,7 +124,8 @@ public:
                                                          const std::nothrow_t  &nt = dothrow);
   
   Item&                         construct_gadget        (const String          &gadget_identifier,
-                                                         const ArgumentList    &arguments);
+                                                         const ArgumentList    &arguments,
+                                                         String                *gadget_definition = NULL);
   /* singleton definition & initialization */
   static FactorySingleton      *singleton;
   explicit                      FactorySingleton        ()
@@ -211,7 +213,7 @@ public:
             if (error.set())
               ;
             else if (inherit[0] == 0)
-              error.set (INVALID_CONTENT, String() + "missing ancestor for gadget \"" + qualified_ident + "\"");
+              error.set (INVALID_CONTENT, String ("missing ancestor in gadget definition: ") + qualified_ident);
             else
               {
                 int line_number, char_number;
@@ -408,7 +410,8 @@ FactorySingleton::parse_gadget_data (const uint             data_length,
     gp.end_parse (&error);
   if (error.code)
     {
-      String ers = string_printf ("%s:%d:%d:error(%d): %s", file_name.c_str(), error.line_number, error.char_number, error.code, error.message.c_str());
+      // ("error(%d):", error.code)
+      String ers = string_printf ("%s:%d:%d: %s", file_name.c_str(), error.line_number, error.char_number, error.message.c_str());
       if (&nt == &dothrow)
         throw Exception (ers);
       else
@@ -451,19 +454,22 @@ FactorySingleton::lookup_gadget (const String &gadget_identifier)
 }
 
 Item&
-FactorySingleton::construct_gadget (const String           &gadget_identifier,
-                                    const ArgumentList     &arguments)
+FactorySingleton::construct_gadget (const String          &gadget_identifier,
+                                    const ArgumentList    &arguments,
+                                    String                *gadget_definition)
 {
   Gadget *gadget = lookup_gadget (gadget_identifier);
   if (!gadget)
-    error ("no such gadget: " + gadget_identifier);
+    error ("Rapicorn::Factory: unknown gadget type: " + gadget_identifier);
   VariableMap args;
   Evaluator::populate_map (args, arguments);
   Evaluator env;
   VariableMap unused_args;
   Item &item = call_gadget (gadget, args, env, NULL, NULL, unused_args);
   for (VariableMap::const_iterator it = unused_args.begin(); it != unused_args.end(); it++)
-    error (gadget->location() + ": for <def:" + gadget->ident + "/> - invalid argument: " + it->first + "=" + it->second);
+    error ("%s: invalid argument: %s", gadget->definition().c_str(), String (it->first + "=" + it->second).c_str());
+  if (gadget_definition)
+    *gadget_definition = gadget->definition();
   return item;
 }
 
@@ -484,7 +490,7 @@ variable_map_filter (VariableMap  &vmap,
   return result;
 }
 
-Item&
+Item*
 FactorySingleton::inherit_gadget (const String &ancestor_name,
                                   VariableMap  &call_arguments,
                                   Evaluator    &env,
@@ -492,14 +498,14 @@ FactorySingleton::inherit_gadget (const String &ancestor_name,
 {
   if (ancestor_name[0] == '\177')      /* item factory type */
     {
-      Item &item = create_from_item_type (&ancestor_name[1]);
+      Item *item = &create_from_item_type (&ancestor_name[1]);
       /* apply arguments */
       try {
         for (ConstVariableIter it = call_arguments.begin(); it != call_arguments.end(); it++)
-          if (!item.try_set_property (it->first, env.expand_expression (it->second)))
+          if (!item->try_set_property (it->first, env.expand_expression (it->second)))
             unused_arguments[it->first] = it->second;
       } catch (...) {
-        sink (&item);
+        sink (item);
         throw;
       }
       return item;
@@ -507,9 +513,10 @@ FactorySingleton::inherit_gadget (const String &ancestor_name,
   else
     {
       Gadget *gadget = lookup_gadget (ancestor_name);
-      if (!gadget)
-        error ("no such gadget: " + ancestor_name);
-      return call_gadget (gadget, call_arguments, env, NULL, NULL, unused_arguments);
+      Item *item = NULL;
+      if (gadget)
+        item = &call_gadget (gadget, call_arguments, env, NULL, NULL, unused_arguments);
+      return item;
     }
 }
 
@@ -546,16 +553,18 @@ FactorySingleton::call_gadget (const Gadget       *gadget,
   VariableMap unused_args;
   /* construct gadget from ancestor */
   Item *itemp;
+  String reason;
   try {
-    itemp = &inherit_gadget (gadget->ancestor, ancestor_args, env, unused_args);
+    itemp = inherit_gadget (gadget->ancestor, ancestor_args, env, unused_args);
   } catch (std::exception &exc) {
-    error (gadget->location() + ": in <def:" + gadget->ident + "/> - failed to inherit: " + exc.what());
-    env.pop_map (custom_args);
-    throw;
+    itemp = NULL;
+    reason = exc.what();
   } catch (...) {
-    env.pop_map (custom_args);
-    throw;
+    itemp = NULL;
   }
+  if (!itemp)
+    error ("%s: failed to inherit: %s", gadget->definition().c_str(),
+           reason.size() ? reason.c_str() : String ("unknown gadget type: " + gadget->ancestor).c_str());
   Item &item = *itemp;
   /* construct gadget children */
   try {
@@ -573,7 +582,7 @@ FactorySingleton::call_gadget (const Gadget       *gadget,
         else if (item_container && container)
           item_container->child_container (container);
         else if (gadget->child_container)
-          error ("no such child container: "+ gadget->child_container->ident);
+          error ("%s: failed to find child container: %s", gadget->definition().c_str(), gadget->child_container->ident.c_str());
       }
     /* add to parent */
     if (parent)
@@ -595,7 +604,7 @@ FactorySingleton::call_gadget (const Gadget       *gadget,
           }
       }
   } catch (std::exception &exc) {
-    error (gadget->location() + ": in <def:" + gadget->ident + "/> - construction failed: " + exc.what());
+    error ("%s: construction failed: %s", gadget->definition().c_str(), exc.what());
     sink (item);
     env.pop_map (custom_args);
     throw;
@@ -608,7 +617,7 @@ FactorySingleton::call_gadget (const Gadget       *gadget,
   env.pop_map (custom_args);
   for (VariableMap::const_iterator it = unused_args.begin(); it != unused_args.end(); it++)
     if (gadget->ancestor_arguments.find (it->first) != gadget->ancestor_arguments.end())
-      error (gadget->location() + ": in <def:" + gadget->ident + "/> - no such property: " + it->first + "=" + it->second);
+      error ("%s: unknown property: %s", gadget->definition().c_str(), String (it->first + "=" + it->second).c_str());
     else
       unused_call_args[it->first] = it->second;
   return item;
@@ -682,7 +691,7 @@ FactorySingleton::create_from_item_type (const String &ident)
   if (itfactory)
     return *itfactory->create_item (ident);
   else
-    error ("no such item type: " + ident);
+    error ("Rapicorn::Factory: unknown item type: " + ident);
 }
 
 } // Anon
@@ -703,7 +712,8 @@ Factory::parse_file (const String           &i18n_domain,
   MarkupParser::Error merror = FactorySingleton::singleton->parse_gadget_file (file, i18n_domain, file_name, fdomain);
   if (merror.code)
     {
-      String ers = string_printf ("%s:%d:%d:error(%d): %s", file_name.c_str(), merror.line_number, merror.char_number, merror.code, merror.message.c_str());
+      // ("error(%d):", merror.code)
+      String ers = string_printf ("%s:%d:%d: %s", file_name.c_str(), merror.line_number, merror.char_number, merror.message.c_str());
       error (ers);
     }
   fclose (file);
@@ -724,9 +734,12 @@ Factory::create_container (const String           &gadget_identifier,
                            const ArgumentList     &arguments)
 {
   initialize_standard_gadgets_lazily();
-  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments);
-  Container &container = dynamic_cast<Container&> (item);
-  return container; // floating
+  String gadget_definition;
+  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments, &gadget_definition);
+  Container *container = dynamic_cast<Container*> (&item);
+  if (!container)
+    error ("%s: gadget construction yields non container: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
+  return *container; // floating
 }
 
 Window
@@ -734,9 +747,12 @@ Factory::create_window (const String           &gadget_identifier,
                         const ArgumentList     &arguments)
 {
   initialize_standard_gadgets_lazily();
-  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments);
-  Root &root = dynamic_cast<Root&> (item);
-  Window win = root.window();
+  String gadget_definition;
+  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments, &gadget_definition);
+  Root *root = dynamic_cast<Root*> (&item);
+  if (!root)
+    error ("%s: gadget construction yields non window: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
+  Window win = root->window();
   /* win does ref_sink(); */
   return win;
 }

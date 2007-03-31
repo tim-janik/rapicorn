@@ -38,3 +38,9 @@ distcleancheck_listfiles = true # find . -type f -print
 distcheck-hook:
 	$(MAKE) $(AM_MAKEFLAGS) -C birnet/ api-check
 	$(MAKE) $(AM_MAKEFLAGS) -C rapicorn/ api-check
+
+check-drcast:	# check for dynamic_cast of reference types which is broken in gcc <= 3.3.5
+	find $(srcdir)	-type f \( -iname '*.[hc][hc]' -o -iname '*.[hc]' \)	\
+			-exec grep -Hn 'dynamic_cast[^<]*<[^>&]*&' {} \;	\
+	| grep '.' ; exit $$[!$$?] # fail on matches
+check-am: check-drcast # run check-drcast before other checks

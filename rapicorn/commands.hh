@@ -134,8 +134,10 @@ CommandDataArg<Class,Data>::CommandDataArg (bool (Class::*method) (Data, const S
 template<class Class, typename Data> bool
 CommandDataArg<Class,Data>::exec (Deletable *obj, const String &args)
 {
-  Class &instance = dynamic_cast<Class&> (*obj);
-  return (instance.*command_method) (data, args);
+  Class *instance = dynamic_cast<Class*> (obj);
+  if (!instance)
+    error ("Rapicorn::Command: invalid command object: %s", obj->typeid_pretty_name().c_str());
+  return (instance->*command_method) (data, args);
 }
 
 /* command arg string */
@@ -148,8 +150,10 @@ CommandArg<Class>::CommandArg (bool (Class::*method) (const String&),
 template<class Class> bool
 CommandArg<Class>::exec (Deletable *obj, const String &args)
 {
-  Class &instance = dynamic_cast<Class&> (*obj);
-  return (instance.*command_method) (args);
+  Class *instance = dynamic_cast<Class*> (obj);
+  if (!instance)
+    error ("Rapicorn::Command: invalid command object: %s", obj->typeid_pretty_name().c_str());
+  return (instance->*command_method) (args);
 }
 
 /* command with data */
@@ -163,8 +167,10 @@ CommandData<Class,Data>::CommandData (bool (Class::*method) (Data),
 template<class Class, typename Data> bool
 CommandData<Class,Data>::exec (Deletable *obj, const String&)
 {
-  Class &instance = dynamic_cast<Class&> (*obj);
-  return (instance.*command_method) (data);
+  Class *instance = dynamic_cast<Class*> (obj);
+  if (!instance)
+    error ("Rapicorn::Command: invalid command object: %s", obj->typeid_pretty_name().c_str());
+  return (instance->*command_method) (data);
 }
 
 /* simple command */
@@ -177,8 +183,10 @@ CommandSimple<Class>::CommandSimple (bool (Class::*method) (),
 template<class Class> bool
 CommandSimple<Class>::exec (Deletable *obj, const String&)
 {
-  Class &instance = dynamic_cast<Class&> (*obj);
-  return (instance.*command_method) ();
+  Class *instance = dynamic_cast<Class*> (obj);
+  if (!instance)
+    error ("Rapicorn::Command: invalid command object: %s", obj->typeid_pretty_name().c_str());
+  return (instance->*command_method) ();
 }
 
 } // Rapicorn

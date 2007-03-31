@@ -122,15 +122,15 @@ create_event_transformed (const Event  &source_event,
     case BUTTON_RELEASE:
     case BUTTON_2RELEASE:
     case BUTTON_3RELEASE:       return create_event_button (source_event.type, dcontext,
-                                                            dynamic_cast<const EventButton&> (source_event).button);
+                                                            dynamic_cast<const EventButton*> (&source_event)->button);
     case FOCUS_IN:
     case FOCUS_OUT:             return create_event_focus (source_event.type, dcontext);
     case KEY_PRESS:
     case KEY_CANCELED:
     case KEY_RELEASE:
       {
-        const EventKey &key_event = dynamic_cast<const EventKey&> (source_event);
-        return create_event_key (source_event.type, dcontext, key_event.key, key_event.key_name.c_str());
+        const EventKey *key_event = dynamic_cast<const EventKey*> (&source_event);
+        return create_event_key (source_event.type, dcontext, key_event->key, key_event->key_name.c_str());
       }
     case SCROLL_UP:
     case SCROLL_DOWN:
@@ -139,21 +139,21 @@ create_event_transformed (const Event  &source_event,
     case CANCEL_EVENTS:         return create_event_cancellation (dcontext);
     case WIN_SIZE:
       {
-        const EventWinSize &source = dynamic_cast<const EventWinSize&> (source_event);
-        return create_event_win_size (dcontext, source.draw_stamp, affine.hexpansion() * source.width, affine.vexpansion() * source.height);
+        const EventWinSize *source = dynamic_cast<const EventWinSize*> (&source_event);
+        return create_event_win_size (dcontext, source->draw_stamp, affine.hexpansion() * source->width, affine.vexpansion() * source->height);
       }
     case WIN_DRAW:
       {
-        const EventWinDraw &source = dynamic_cast<const EventWinDraw&> (source_event);
+        const EventWinDraw *source = dynamic_cast<const EventWinDraw*> (&source_event);
         std::vector<Rect> rects;
-        for (uint i = 0; i < source.rectangles.size(); i++)
-          rects.push_back (Rect (affine.point (source.rectangles[i].lower_left()), affine.point (source.rectangles[i].upper_right()))); // FIXME: transform 4 points
-        return create_event_win_draw (dcontext, source.draw_stamp, rects);
+        for (uint i = 0; i < source->rectangles.size(); i++)
+          rects.push_back (Rect (affine.point (source->rectangles[i].lower_left()), affine.point (source->rectangles[i].upper_right()))); // FIXME: transform 4 points
+        return create_event_win_draw (dcontext, source->draw_stamp, rects);
       }
     case WIN_DELETE:            return create_event_win_delete (dcontext);
     case EVENT_NONE:
     case EVENT_LAST:
-    default:                    error ("not copyable event type: %s", string_from_event_type (source_event.type));
+    default:                    error ("uncopyable event type: %s", string_from_event_type (source_event.type));
     }
 }
 
@@ -247,8 +247,6 @@ create_event_key (EventType           type,
   EventKey *kevent = new EventKeyImpl (type, econtext, key, name);
   Event &test = *kevent;
   assert (dynamic_cast<const EventKey*> (&test) != NULL);
-  const EventKey &source = dynamic_cast<const EventKey&> (test);
-  // FIXME: const EventKey &source = dynamic_cast<const EventKey&> (dynamic_cast<const Event&> (*event));
   return kevent;
 }
 

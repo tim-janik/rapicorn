@@ -1,3 +1,19 @@
+Sat Mar 31 15:37:29 2007  Tim Janik  <timj@gtk.org>
+
+	* for some reason, dynamic_cast<&> doesn't work reliably in gcc <= 3.3.5
+	and throws spurious std::bad_cast exceptions where dynamic_cast<*>
+	suceeds.
+
+	* rapicorn/commands.hh: turned dynamic_cast<&> into dynamic_cast<*>.
+
+	* rapicorn/events.cc: turned dynamic_cast<&> into dynamic_cast<*>.
+
+	* rapicorn/factory.cc: turned dynamic_cast<&> into dynamic_cast<*>.
+	improved and polished error messages all over the place.
+
+	* Makefile.am: check via grepping that our code doesn't contain
+	dynamic_cast<&> statements.
+
 Fri Mar 31 23:42:55 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/events.[hc]*: rewritten for simplicity, turned exceptions
