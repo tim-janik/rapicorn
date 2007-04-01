@@ -68,9 +68,10 @@ public:
     virtual void        mark_insert  (String           utf8string,
                                       const AttrState *astate = NULL) = 0;
   };
+public:
   /* Text::Editor */
-  virtual void          text            (const String &text) = 0;
-  virtual String        text            () const = 0;
+  virtual void          text           (const String &text) = 0;
+  virtual String        text           () const = 0;
 };
 
 } // Text

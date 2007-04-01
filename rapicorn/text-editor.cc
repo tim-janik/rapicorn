@@ -21,6 +21,13 @@ namespace Rapicorn {
 namespace Text {
 using namespace Birnet;
 
+typedef enum {
+  NEXT_CHAR,
+  PREV_CHAR,
+  WARP_HOME,
+  WARP_END,
+} CursorMovement;
+
 ParaState::ParaState() :
   align (ALIGN_LEFT), ellipsize (ELLIPSIZE_END),
   line_spacing (1), indent (0),
@@ -45,20 +52,68 @@ public:
   {}
 private:
   Client*       get_client () const { return interface<Client*>(); }
+  virtual bool
+  can_focus () const
+  {
+    Client *client = get_client();
+    return client != NULL;
+  }
+  virtual void
+  reset (ResetMode mode = RESET_ALL)
+  {}
+  virtual bool
+  handle_event (const Event &event)
+  {
+    bool handled = false;
+    switch (event.type)
+      {
+        const EventKey *kevent;
+      case KEY_PRESS:
+        kevent = dynamic_cast<const EventKey*> (&event);
+        switch (kevent->key)
+          {
+          case KEY_Home:    case KEY_KP_Home:           handled = move_cursor (WARP_HOME);      break;
+          case KEY_End:     case KEY_KP_End:            handled = move_cursor (WARP_END);       break;
+          case KEY_Right:   case KEY_KP_Right:          handled = move_cursor (NEXT_CHAR);      break;
+          case KEY_Left:    case KEY_KP_Left:           handled = move_cursor (PREV_CHAR);      break;
+          case KEY_BackSpace:                           handled = delete_backward();            break;
+          case KEY_Delete:  case KEY_KP_Delete:         handled = delete_foreward();            break;
+          default:
+            if (!key_value_is_modifier (kevent->key))
+              handled = insert_literally (key_value_to_unichar (kevent->key));
+            break;
+          }
+        break;
+      case KEY_CANCELED:
+      case KEY_RELEASE:
+        break;
+      case BUTTON_PRESS:
+        grab_focus();
+        break;
+      default: ;
+      }
+    return handled;
+  }
   int
   cursor () const
   {
     return m_cursor;
   }
   bool
-  step_cursor (int dir)
+  move_cursor (CursorMovement cm)
   {
     Client *client = get_client();
     if (client)
       {
         client->mark (m_cursor);
         int o = client->mark();
-        client->step_mark (dir);
+        switch (cm)
+          {
+          case NEXT_CHAR:       client->step_mark (+1); break;
+          case PREV_CHAR:       client->step_mark (-1); break;
+          case WARP_HOME:       client->mark (0);       break;
+          case WARP_END:        client->mark (-1);      break;
+          }
         int m = client->mark();
         if (o == m)
           return false;
@@ -79,7 +134,7 @@ private:
         char str[8];
         utf8_from_unichar (uc, str);
         client->mark_insert (str);
-        step_cursor (+1);
+        move_cursor (NEXT_CHAR);
         changed();
       }
     return true;
@@ -131,54 +186,6 @@ private:
   {
     Client *client = get_client();
     return client ? client->save_markup() : "";
-  }
-  virtual bool
-  can_focus () const
-  {
-    Client *client = get_client();
-    return client != NULL;
-  }
-  virtual void
-  reset (ResetMode mode = RESET_ALL)
-  {}
-  virtual bool
-  handle_event (const Event &event)
-  {
-    bool handled = false;
-    switch (event.type)
-      {
-        const EventKey *kevent;
-      case KEY_PRESS:
-        kevent = dynamic_cast<const EventKey*> (&event);
-        switch (kevent->key)
-          {
-          case KEY_Right:
-            handled = step_cursor (+1);
-            break;
-          case KEY_Left:
-            handled = step_cursor (-1);
-            break;
-          case KEY_BackSpace:
-            handled = delete_backward();
-            break;
-          case KEY_Delete: case KEY_KP_Delete:
-            handled = delete_foreward();
-            break;
-          default:
-            if (!key_value_is_modifier (kevent->key))
-              handled = insert_literally (key_value_to_unichar (kevent->key));
-            break;
-          }
-        break;
-      case KEY_CANCELED:
-      case KEY_RELEASE:
-        break;
-      case BUTTON_PRESS:
-        grab_focus();
-        break;
-      default: ;
-      }
-    return handled;
   }
 };
 static const ItemFactory<EditorImpl> editor_factory ("Rapicorn::Factory::Text::Editor");

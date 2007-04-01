@@ -1,3 +1,8 @@
+Sun Apr  1 22:00:19 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/text-editor.cc: consolidate cursor movement implementation,
+	added support for Home and End keys.
+
 Sun Apr  1 01:57:03 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/text-pango.[hc]: added request_chars and request_digits
