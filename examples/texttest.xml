@@ -111,6 +111,15 @@
     </FocusFrame>
   </def:text-editor-test>
 
+  <!-- wrap text test -->
+  <def:wrap-text-test inherit="Frame">
+    <Label
+      text-mode="wrapped"
+      markup-text="Wrappable test text with extra character and digit requisition"
+      request-digits="3" request-chars="3"
+      />
+  </def:wrap-text-test>
+
   <!-- test dialog -->
   <def:main-shell inherit="Root">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
@@ -128,6 +137,10 @@
 	      </Frame>
 	    </Alignment>
 	  </VBox>
+	  <HBox>
+	    <Label markup-text="Wrap Test:"/>
+	    <wrap-text-test/>
+	  </HBox>
 	  <VBox>
 	    <Label markup-text="Text Editor Test:"/>
 	    <text-editor-test />

@@ -1,3 +1,11 @@
+Sun Apr  1 01:57:03 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/text-pango.[hc]: added request_chars and request_digits
+	properties to TextField to increase the default requisition.
+	fixed missing parenthesis in macro definitions. removed cruft.
+
+	* examples/texttest.xml: added test for wrapable label.
+
 Sun Apr  1 00:42:30 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/enumdefs.hh: removed ELLIPSIZE_NONE because it doesn't

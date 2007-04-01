@@ -32,8 +32,8 @@
 #undef  PANGO_PIXELS_FLOOR
 #undef  PANGO_PIXELS_CEIL
 /* provide pango unit <-> pixel conversion functions */
-#define UNITS2PIXELS(pu)        (pu / 1024.0)
-#define PIXELS2UNITS(pp)        (pp * 1024.0)
+#define UNITS2PIXELS(pu)        ((pu) / 1024.0)
+#define PIXELS2UNITS(pp)        ((pp) * 1024.0)
 
 #define MONOSPACE_NAME  (String ("Monospace"))
 
@@ -289,12 +289,18 @@ public:
     pango_font_description_free (pfdesc);
     return playout;
   }
-  static String
+  static const PangoFontDescription*
   font_description_from_layout (PangoLayout *playout)
   {
     const PangoFontDescription *cfdesc = pango_layout_get_font_description (playout);
     if (!cfdesc)
       cfdesc = pango_context_get_font_description (pango_layout_get_context (playout));
+    return cfdesc;
+  }
+  static String
+  font_string_from_layout (PangoLayout *playout)
+  {
+    const PangoFontDescription *cfdesc = font_description_from_layout (playout);
     gchar *gstr = pango_font_description_to_string (cfdesc);
     String font_desc = gstr;
     g_free (gstr);
@@ -729,8 +735,13 @@ public:
 class TextPangoImpl : public virtual ItemImpl, public virtual TextField, public virtual Text::Editor::Client {
   PangoLayout    *m_layout;
   int             m_mark, m_cursor;
+  uint            m_request_chars, m_request_digits;
   TextMode        m_text_mode;
 protected:
+  virtual uint     request_chars  () const  { return m_request_chars; }
+  virtual void     request_chars  (uint nc) { m_request_chars = nc; invalidate_size(); }
+  virtual uint     request_digits () const  { return m_request_digits; }
+  virtual void     request_digits (uint nd) { m_request_digits = nd; invalidate_size(); }
   virtual String   markup_text () const               { return save_markup(); }
   virtual void     markup_text (const String &markup) { load_markup (markup); }
   virtual TextMode text_mode   () const               { return m_text_mode; }
@@ -747,6 +758,7 @@ public:
   TextPangoImpl() :
     m_layout (NULL),
     m_mark (-1), m_cursor (-1),
+    m_request_chars (0), m_request_digits (0),
     m_text_mode (TEXT_MODE_ELLIPSIZED)
   {
     Text::ParaState pstate; // retrieve defaults
@@ -776,9 +788,20 @@ public:
                                 pango_ellipsize_mode_from_ellipsize_type (pstate.ellipsize));
     pango_layout_set_width (m_layout, -1);
     pango_layout_get_extents (m_layout, NULL, &rect);
+    double extra_width = 0;
+    if (m_request_chars || m_request_digits)
+      {
+        PangoContext *pcontext = pango_layout_get_context (m_layout);
+        const PangoFontDescription *cfdesc = LayoutCache::font_description_from_layout (m_layout);
+        PangoFontMetrics *metrics = pango_context_get_metrics (pcontext, cfdesc, pango_context_get_language (pcontext));
+        double char_width = pango_font_metrics_get_approximate_char_width (metrics);
+        double digit_width = pango_font_metrics_get_approximate_digit_width (metrics);
+        pango_font_metrics_unref (metrics);
+        extra_width = m_request_chars * char_width + m_request_digits * digit_width;
+      }
     rapicorn_gtk_threads_leave();
     /* pad requisition by 1 emboss pixel */
-    requisition.width = ceil (1 + UNITS2PIXELS (rect.width));
+    requisition.width = ceil (1 + UNITS2PIXELS (rect.width + extra_width));
     requisition.height = ceil (1 + UNITS2PIXELS (rect.height));
   }
   virtual void
@@ -794,10 +817,6 @@ public:
                                 PANGO_ELLIPSIZE_NONE :
                                 pango_ellipsize_mode_from_ellipsize_type (pstate.ellipsize));
     pango_layout_get_extents (m_layout, NULL, &rect);
-#if 0
-    if (m_text_mode == TEXT_MODE_WRAPPED && UNITS2PIXELS (rect.height) > area.height)
-      pango_layout_set_ellipsize (m_layout, pango_ellipsize_mode_from_ellipsize_type (pstate.ellipsize));
-#endif
     rapicorn_gtk_threads_leave();
     tune_requisition (-1, ceil (1 + UNITS2PIXELS (rect.height)));
   }
@@ -1128,6 +1147,8 @@ protected:
     static Property *properties[] = {
       MakeProperty (TextPangoImpl, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "", "rw"),
       MakeProperty (TextPangoImpl, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), TEXT_MODE_ELLIPSIZED, "rw"),
+      MakeProperty (TextPangoImpl, request_digits, _("Request Digits"), _("Number of digits to request extra space for."), 0, 0, INT_MAX, 2, "rw"),
+      MakeProperty (TextPangoImpl, request_chars,  _("Request Chars"),  _("Number of characters to request extra space for."), 0, 0, INT_MAX, 2, "rw"),
     };
     static const PropertyList property_list (properties, Item::list_properties());
     return property_list;
