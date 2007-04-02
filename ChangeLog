@@ -1,3 +1,17 @@
+Mon Apr  2 03:01:53 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/text-editor.[hc]*: added request-chars and request-digits 
+	properties to allow user specification of the requisition. added
+	text-mode and text-requisition to text editor clients. also supply
+	text-mode and markup-text properties on text editors.
+
+	* rapicorn/text-pango.[hc]*: removed request-chars and request-digits
+	properties. fixed ellipsization for single-line text mode. implement
+	text_requisition() and renamed TextField to TextLayout.
+
+	* examples/texttest.xml: use text editor in single-line mode.
+	adapt to removal of request-digits and request-chars fields from TextLayout.
+
 Sun Apr  1 22:00:19 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/text-editor.cc: consolidate cursor movement implementation,

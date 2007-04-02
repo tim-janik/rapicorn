@@ -115,9 +115,9 @@
   <def:wrap-text-test inherit="Frame">
     <Label
       text-mode="wrapped"
-      markup-text="Wrappable test text with extra character and digit requisition"
-      request-digits="3" request-chars="3"
+      markup-text="Wrappable test text with multiple words so words and spaces are available to allow wrapping"
       />
+    <!-- request-digits="3" request-chars="3" -->
   </def:wrap-text-test>
 
   <!-- test dialog -->

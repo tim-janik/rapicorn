@@ -45,13 +45,40 @@ Editor::Client::~Client ()
 {}
 
 class EditorImpl : public virtual EventHandler, public virtual SingleContainerImpl, public virtual Editor {
-  int m_cursor;
+  uint     m_request_chars, m_request_digits;
+  int      m_cursor;
+  TextMode m_text_mode;
+  Client*       get_client () const { return interface<Client*>(); }
 public:
   EditorImpl() :
-    m_cursor (0)
+    m_request_chars (0), m_request_digits (0),
+    m_cursor (0), m_text_mode (TEXT_MODE_SINGLE_LINE)
   {}
 private:
-  Client*       get_client () const { return interface<Client*>(); }
+  virtual void
+  size_request (Requisition &requisition)
+  {
+    update_client();
+    SingleContainerImpl::size_request (requisition);
+    uint fallback_chars = 0, fallback_digits = 0;
+    if (m_text_mode == TEXT_MODE_SINGLE_LINE)
+      {
+        requisition.width = 0;
+        if (m_request_chars <= 0 && m_request_digits <= 0)
+          {
+            fallback_chars = 26;
+            fallback_digits = 10;
+          }
+      }
+    Client *client = get_client();
+    if (client)
+      requisition.width += client->text_requisition (fallback_chars + m_request_chars, fallback_digits + m_request_digits);
+  }
+  virtual void
+  size_allocate (Allocation area)
+  {
+    SingleContainerImpl::size_allocate (area);
+  }
   virtual bool
   can_focus () const
   {
@@ -186,6 +213,44 @@ private:
   {
     Client *client = get_client();
     return client ? client->save_markup() : "";
+  }
+  void
+  update_client ()
+  {
+    // FIXME: this funciton and its callers may be optimized when we create our own text layouts
+    Client *client = get_client();
+    if (client)
+      {
+        client->text_mode (m_text_mode);
+        // client->load_markup (markup);
+      }
+  }
+  virtual TextMode text_mode      () const                      { return m_text_mode; }
+  virtual void     text_mode      (TextMode      text_mode)
+  {
+    m_text_mode = text_mode;
+    Client *client = get_client();
+    if (client)
+      client->text_mode (m_text_mode);
+    invalidate_size();
+  }
+  virtual String   markup_text    () const                      { Client *client = get_client(); return client ? client->save_markup() : ""; }
+  virtual void     markup_text    (const String &markup)        { Client *client = get_client(); if (client) client->load_markup (markup); }
+  virtual uint     request_chars  () const                      { return m_request_chars; }
+  virtual void     request_chars  (uint nc)                     { m_request_chars = nc; invalidate_size(); }
+  virtual uint     request_digits () const                      { return m_request_digits; }
+  virtual void     request_digits (uint nd)                     { m_request_digits = nd; invalidate_size(); }
+  virtual const PropertyList&
+  list_properties()
+  {
+    static Property *properties[] = {
+      MakeProperty (EditorImpl, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), TEXT_MODE_SINGLE_LINE, "rw"),
+      MakeProperty (EditorImpl, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "", "rw"),
+      MakeProperty (EditorImpl, request_chars,  _("Request Chars"),  _("Number of characters to request space for."), 0, 0, INT_MAX, 2, "rw"),
+      MakeProperty (EditorImpl, request_digits, _("Request Digits"), _("Number of digits to request space for."), 0, 0, INT_MAX, 2, "rw"),
+    };
+    static const PropertyList property_list (properties, Item::list_properties());
+    return property_list;
   }
 };
 static const ItemFactory<EditorImpl> editor_factory ("Rapicorn::Factory::Text::Editor");
