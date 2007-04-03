@@ -64,3 +64,16 @@ RENDERING:
 - geometry primitives: http://astronomy.swin.edu.au/~pbourke/geometry/
 - hershey vector fonts: http://astronomy.swin.edu.au/~pbourke/other/hershey/
 - color FAQ: http://www.inforamp.net/~poynton/
+
+
+POPUPS:
+- popups should be part of the regular item hierarchy, so popup children, and
+  even subpopups of popups should all be part of a single parent<->child 
+  runtime tree.
+- popups should only be considered enabled for popping up if they are visible.
+- popups should be flagged !allocatable, because they should not be allocated
+  and layed out by their parents.
+- the viewport handling logic from Root needs to be split up into a seperate
+  container type (Presentable / ViewportArea / Showable).
+- popups need to implement viewport handling functionality.
+- popups should integrate with the main loop on the toplevel Root container.
