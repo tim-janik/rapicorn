@@ -495,7 +495,7 @@ static class OvrKey : public DataKey<Requisition> {
   }
 } override_requisition;
 
-float
+double
 Item::width () const
 {
   Requisition ovr = get_data (&override_requisition);
@@ -503,7 +503,7 @@ Item::width () const
 }
 
 void
-Item::width (float w)
+Item::width (double w)
 {
   Requisition ovr = get_data (&override_requisition);
   ovr.width = w >= 0 ? w : -1;
@@ -511,7 +511,7 @@ Item::width (float w)
   invalidate_size();
 }
 
-float
+double
 Item::height () const
 {
   Requisition ovr = get_data (&override_requisition);
@@ -519,7 +519,7 @@ Item::height () const
 }
 
 void
-Item::height (float h)
+Item::height (double h)
 {
   Requisition ovr = get_data (&override_requisition);
   ovr.height = h >= 0 ? h : -1;
@@ -884,8 +884,8 @@ Item::tune_requisition (Requisition requisition)
 }
 
 bool
-Item::tune_requisition (float new_width,
-                        float new_height)
+Item::tune_requisition (double new_width,
+                        double new_height)
 {
   Requisition req = size_request();
   if (new_width >= 0)

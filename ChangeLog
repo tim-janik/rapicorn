@@ -1,3 +1,7 @@
+Tue Apr  3 01:57:09 2007  Tim Janik  <timj@gtk.org>
+
+	* rapicorn/item.[hc]*: fixed up requisition to use doubles.
+
 Mon Apr  2 03:01:53 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/text-editor.[hc]*: added request-chars and request-digits 

@@ -27,9 +27,9 @@ namespace Rapicorn {
 
 /* --- Item structures and forward decls --- */
 struct Requisition {
-  float width, height;
+  double width, height;
   Requisition () : width (0), height (0) {}
-  Requisition (float w, float h) : width (w), height (h) {}
+  Requisition (double w, double h) : width (w), height (h) {}
 };
 typedef Rect Allocation;
 class Item;
@@ -97,8 +97,8 @@ protected:
   virtual void                size_request      (Requisition &requisition) = 0;
   virtual void                size_allocate     (Allocation   area) = 0;
   virtual bool                tune_requisition  (Requisition  requisition);
-  bool                        tune_requisition  (float        new_width,
-                                                 float        new_height);
+  bool                        tune_requisition  (double       new_width,
+                                                 double       new_height);
   /* signal methods */
   virtual bool                match_interface   (InterfaceMatch &imatch) const;
   virtual void                do_invalidate     () = 0;
@@ -153,10 +153,10 @@ public:
   virtual String              name              () const = 0;
   virtual void                name              (const String &str) = 0;
   /* override requisition */
-  float                       width             () const;
-  void                        width             (float w);
-  float                       height            () const;
-  void                        height            (float h);
+  double                      width             () const;
+  void                        width             (double w);
+  double                      height            () const;
+  void                        height            (double h);
   /* properties */
   void                        set_property      (const String    &property_name,
                                                  const String    &value,
