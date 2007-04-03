@@ -156,7 +156,7 @@ RootImpl::~RootImpl()
 void
 RootImpl::size_request (Requisition &requisition)
 {
-  if (has_visible_child())
+  if (has_allocatable_child())
     {
       Item &child = get_child();
       requisition = child.size_request();
@@ -167,7 +167,7 @@ void
 RootImpl::size_allocate (Allocation area)
 {
   allocation (area);
-  if (has_visible_child())
+  if (has_allocatable_child())
     {
       Item &child = get_child();
       Requisition rq = child.size_request();
@@ -989,9 +989,9 @@ RootImpl::show ()
 }
 
 bool
-RootImpl::visible ()
+RootImpl::viewable ()
 {
-  return m_viewport && m_viewport->visible();
+  return visible() && m_viewport && m_viewport->visible();
 }
 
 void

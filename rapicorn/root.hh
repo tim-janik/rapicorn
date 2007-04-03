@@ -66,7 +66,6 @@ public:
   WindowCommandSignal sig_window_command;
   /* window */
   virtual void  show                    () = 0;
-  virtual bool  visible                 () = 0;
   virtual void  hide                    () = 0;
   virtual bool  closed                  () = 0;
   virtual void  close                   () = 0;

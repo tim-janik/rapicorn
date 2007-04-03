@@ -825,7 +825,7 @@ void
 SingleContainerImpl::size_request (Requisition &requisition)
 {
   bool chspread = false, cvspread = false;
-  if (has_visible_child())
+  if (has_allocatable_child())
     {
       Item &child = get_child();
       requisition = child.size_request ();
@@ -840,7 +840,7 @@ void
 SingleContainerImpl::size_allocate (Allocation area)
 {
   allocation (area);
-  if (has_visible_child())
+  if (has_allocatable_child())
     {
       Item &child = get_child();
       child.set_allocation (area);

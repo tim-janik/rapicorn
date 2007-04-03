@@ -255,10 +255,6 @@ TableImpl::size_request (Requisition &requisition)
     requisition.height += rows[row].requisition;
   for (uint row = 0; row + 1 < rows.size(); row++)
     requisition.height += rows[row].spacing;
-  uint c = 0;
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    if (cw->visible())
-      c++;
 }
 
 void
@@ -301,7 +297,7 @@ TableImpl::size_request_init()
     {
       /* size request all children */
       Requisition rq = cw->size_request();
-      if (!cw->visible())
+      if (!cw->allocatable())
         continue;
       chspread |= cw->hspread();
       cvspread |= cw->vspread();
@@ -323,7 +319,7 @@ TableImpl::size_request_pass1()
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       Requisition crq = cw->size_request();
-      if (!cw->visible())
+      if (!cw->allocatable())
         continue;
       Location loc = child_location (*cw);
       /* fetch requisition from single-column children */
@@ -367,7 +363,7 @@ TableImpl::size_request_pass3()
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       Location loc = child_location (*cw);
-      if (!cw->visible())
+      if (!cw->allocatable())
         continue;
       /* request remaining space for multi-column children */
       if (loc.left_attach + 1 != loc.right_attach)
@@ -479,7 +475,7 @@ TableImpl::size_allocate_init()
   /* adjust the row and col flags from expand/shrink flags of single row/col children */
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      if (!cw->visible())
+      if (!cw->allocatable())
         continue;
       Location loc = child_location (*cw);
       if (loc.left_attach + 1 == loc.right_attach)
@@ -498,7 +494,7 @@ TableImpl::size_allocate_init()
   /* adjust the row and col flags from expand/shrink flags of multi row/col children */
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      if (!cw->visible())
+      if (!cw->allocatable())
         continue;
       Location loc = child_location (*cw);
       if (loc.left_attach + 1 != loc.right_attach)
@@ -824,7 +820,7 @@ TableImpl::size_allocate_pass2 ()
   Allocation area = allocation(), child_area;
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      if (!cw->visible())
+      if (!cw->allocatable())
         continue;
       Location loc = child_location (*cw);
       Requisition crq = cw->size_request();

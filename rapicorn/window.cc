@@ -56,10 +56,10 @@ Window::unref () const
 }
 
 bool
-Window::visible ()
+Window::viewable ()
 {
   assert (rapicorn_thread_entered());
-  return m_root.visible();
+  return m_root.viewable();
 }
 
 void

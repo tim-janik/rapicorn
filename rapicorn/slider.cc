@@ -233,11 +233,11 @@ protected:
   void
   size_request (Requisition &requisition)
   {
-    if (has_visible_child())
+    if (has_allocatable_child())
       {
         Item &child = get_child();
         requisition = child.size_request ();
-        /* we intentionally don't propagate child.hspread() or child.vspread() here */
+        /* we confine spreading to within the trough, so don't propagate hspread/vspread here */
       }
   }
   virtual void
@@ -250,7 +250,7 @@ protected:
   reallocate_child ()
   {
     Allocation area = allocation();
-    if (!has_visible_child())
+    if (!has_allocatable_child())
       return;
     Item &child = get_child();
     Requisition rq = child.size_request();
@@ -355,7 +355,7 @@ protected:
     if (has_children())
       {
         Item &child = get_child();
-        if (child.visible())
+        if (child.allocatable())
           {
             requisition = child.size_request ();
             chspread = child.hspread();

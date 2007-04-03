@@ -40,7 +40,7 @@ public:
     if (has_children())
       {
         Item &child = get_child();
-        if (child.visible())
+        if (child.allocatable())
           {
             Requisition cr = child.size_request ();
             requisition.width = left_padding() + cr.width + right_padding();
@@ -56,7 +56,7 @@ public:
   size_allocate (Allocation area)
   {
     allocation (area);
-    if (!has_visible_child())
+    if (!has_allocatable_child())
       return;
     Item &child = get_child();
     Requisition rq = child.size_request();

@@ -123,7 +123,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     if (has_children())
       {
         Item &child = get_child();
-        if (child.visible())
+        if (child.allocatable())
           {
             requisition = child.size_request ();
             chspread = child.hspread();
@@ -139,7 +139,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
   virtual void
   size_allocate (Allocation area)
   {
-    if (!has_visible_child())
+    if (!has_allocatable_child())
       {
         allocation (area);
         return;
@@ -208,7 +208,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
   virtual void
   render (Display &display)
   {
-    if (!has_visible_child())
+    if (!has_drawable_child())
       return;
     double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
     double yoffset = m_vadjustment ? round (m_vadjustment->value()) : 0.0;

@@ -73,7 +73,7 @@ private:
   virtual Item*         get_grab                                (bool                   *unconfined = NULL);
   /* main loop */
   virtual void          show                                    ();
-  virtual bool          visible                                 ();
+  virtual bool          viewable                                ();
   virtual void          hide                                    ();
   virtual bool          closed                                  ();
   virtual void          close                                   ();

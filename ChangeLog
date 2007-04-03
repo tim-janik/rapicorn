@@ -1,3 +1,26 @@
+Tue Apr  3 02:59:13 2007  Tim Janik  <timj@gtk.org>
+
+	* introduced allocatable() property on items. since some items may be 
+	added to containers and should not be regularly layed out eventhough
+	they can be visible. this is the intended case for popups.
+
+	* adapted containers to check children to be allocatable.
+
+	* rapicorn/containerimpl.hh: provide has_allocatable_child().
+
+	* rapicorn/item.[hc]*: added allocatable handling. made viewable()
+	a virtual method.
+
+	* rapicorn/window.[hc]*: renamed visible() to viewable() which directly
+	corresponds to the state of the root item.
+
+	* rapicorn/root.cc: instead of erroneously reintroducing visible(),
+	reimplement viewable(), taking viewport state into account.
+
+	* rapicorn/table.cc: removed cruft. 
+
+	* rapicorn/slider.cc: comment fixup.
+
 Tue Apr  3 01:57:09 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/item.[hc]*: fixed up requisition to use doubles.

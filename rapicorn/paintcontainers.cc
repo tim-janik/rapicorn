@@ -276,7 +276,7 @@ protected:
   size_request (Requisition &requisition)
   {
     bool chspread = false, cvspread = false;
-    if (has_visible_child())
+    if (has_allocatable_child())
       {
         Item &child = get_child();
         Requisition cr = child.size_request ();
@@ -305,7 +305,7 @@ protected:
     if (has_children())
       {
         Item &child = get_child();
-        if (child.visible())
+        if (child.allocatable())
           {
             if (!m_overlap_child)
               {

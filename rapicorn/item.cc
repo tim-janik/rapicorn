@@ -32,7 +32,7 @@ EventHandler::handle_event (const Event &event)
 }
 
 Item::Item () :
-  m_flags (VISIBLE | SENSITIVE),
+  m_flags (VISIBLE | SENSITIVE | ALLOCATABLE),
   m_parent (NULL),
   m_style (NULL),
   sig_finalize (*this),
@@ -40,6 +40,12 @@ Item::Item () :
   sig_invalidate (*this, &Item::do_invalidate),
   sig_hierarchy_changed (*this, &Item::hierarchy_changed)
 {}
+
+bool
+Item::viewable() const
+{
+  return drawable() && (!m_parent || m_parent->viewable());
+}
 
 bool
 Item::change_flags_silently (uint32 mask,
@@ -1016,6 +1022,8 @@ ItemImpl::size_request ()
         req.width = ovr.width;
       if (ovr.height >= 0)
         req.height = ovr.height;
+      if (!allocatable())
+        req = Requisition (0, 0);
       m_requisition = req;
     }
   return m_requisition;
@@ -1047,7 +1055,7 @@ ItemImpl::set_allocation (const Allocation &area)
   /* always reallocate to re-layout children */
   change_flags_silently (INVALID_ALLOCATION, false); /* skip notification */
   change_flags_silently (POSITIVE_ALLOCATION, false); /* !drawable() while size_allocate() is called */
-  size_allocate (sarea);
+  size_allocate (allocatable () ? sarea : Allocation (0, 0, 0, 0));
   Allocation a = allocation();
   change_flags_silently (POSITIVE_ALLOCATION, a.width > 0 && a.height > 0);
   bool need_expose = oa != a || test_flags (INVALID_CONTENT);

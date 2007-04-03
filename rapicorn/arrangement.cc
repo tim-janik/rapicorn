@@ -148,7 +148,7 @@ ArrangementImpl::size_request (Requisition &requisition)
       Item &child = *cw;
       /* size request all children */
       Requisition rq = child.size_request();
-      if (!child.visible())
+      if (!child.allocatable())
         continue;
       chspread |= child.hspread();
       cvspread |= child.vspread();
@@ -185,7 +185,7 @@ ArrangementImpl::size_allocate (Allocation area)
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       Item &child = *cw;
-      if (!child.visible())
+      if (!child.allocatable())
         continue;
       Allocation carea = local_child_allocation (child, area.width, area.height);
       carea.x += area.x;

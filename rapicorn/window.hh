@@ -33,7 +33,7 @@ public:
   Root&         root            () const;       // rapicorn_thread_entered()
   void          unref           () const;       // m_root.unref();
   /* window ops */
-  bool          visible         ();
+  bool          viewable        ();
   void          show            ();
   void          hide            ();
   bool          closed          ();

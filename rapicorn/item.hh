@@ -85,9 +85,10 @@ protected:
     VSPREAD                   = 1 << 17,
     HSPREAD_CONTAINER         = 1 << 18,
     VSPREAD_CONTAINER         = 1 << 19,
-    POSITIVE_ALLOCATION       = 1 << 20,
-    DEBUG                     = 1 << 21,
-    LAST_FLAG                 = 1 << 22
+    ALLOCATABLE               = 1 << 20,
+    POSITIVE_ALLOCATION       = 1 << 21,
+    DEBUG                     = 1 << 22,
+    LAST_FLAG                 = 1 << 23
   };
   void                        set_flag          (uint32 flag, bool on = true);
   void                        unset_flag        (uint32 flag) { set_flag (flag, false); }
@@ -123,7 +124,9 @@ public:
   bool                        anchored          () const { return test_flags (ANCHORED); }
   bool                        visible           () const { return test_flags (VISIBLE) && !test_flags (HIDDEN_CHILD); }
   void                        visible           (bool b) { set_flag (VISIBLE, b); }
-  bool                        viewable          () const { return visible () && (!m_parent || m_parent->viewable()); }
+  bool                        allocatable       () const { return visible() && test_flags (ALLOCATABLE); }
+  bool                        drawable          () const { return visible() && test_flags (POSITIVE_ALLOCATION); }
+  virtual bool                viewable          () const; // drawable() && parent->viewable();
   bool                        sensitive         () const { return test_all_flags (SENSITIVE | PARENT_SENSITIVE); }
   virtual void                sensitive         (bool b);
   bool                        insensitive       () const { return !sensitive(); }
@@ -147,7 +150,6 @@ public:
   void                        hspread           (bool b) { set_flag (HSPREAD, b); }
   bool                        vspread           () const { return test_flags (VSPREAD | VSPREAD_CONTAINER); }
   void                        vspread           (bool b) { set_flag (VSPREAD, b); }
-  bool                        drawable          () const { return visible() && test_flags (POSITIVE_ALLOCATION); }
   bool                        debug             () const { return test_flags (DEBUG); }
   void                        debug             (bool f) { set_flag (DEBUG, f); }
   virtual String              name              () const = 0;
