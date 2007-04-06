@@ -4,10 +4,14 @@
 ## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = . birnet rapicorn po examples tests
+SUBDIRS = . birnet rapicorn po examples tests web
 
 # setup automake
 AUTOMAKE_OPTIONS = 1.9 dist-bzip2 no-dist-gzip
+
+site site-update:
+	@$(MAKE) -C web/ $(AM_MAKEFLAGS) $@
+.PHONY: site site-update
 
 test:
 	$(MAKE) -C tests/ $(AM_MAKEFLAGS) $@

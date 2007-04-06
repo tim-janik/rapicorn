@@ -1,0 +1,87 @@
+@doxer_dnl      # emacs: -*- mode: texinfo; texinfo-open-quote: "\""; texinfo-close-quote: "\""; -*-
+@doxer_set{title}	Rapicorn - Rapicorn Technology Bits
+@include "definitions.doxi"
+
+@heading Rapicorn Technology Bits
+
+Rapicorn is supposed to provide a suitable playground for experiments
+in consolidating the programming and design interfaces of existing GUI
+toolkits, and for exploring new GUI ideas, including also possible
+evolutionary failures. :-)
+
+Lots of design decisions or techniques that Rapicorn employs can be found
+and have been pioneered in other toolkits, but it is also intentionally
+distinct in selected areas. 
+In particular, Rapicorn tries to simplify structures and automate developer
+tasks wherever possible. 
+Convenience in development and UI usage is a paramount design goal.
+
+At the same time, Rapicorn attempts to incorporate all significant usability
+aspects for which open treatment is available.
+For a first summary of Usability guidelines and collections of further readings,
+see @uri{http://beast.gtk.org/wiki:UsabilityGuidelines}.
+
+Fulfillment of the above development intentions comes at a certain cost.
+That is, implementation simplicity and maintainability is generally regarded
+higher than micro optimizations or 
+@uri{http://en.wikipedia.org/wiki/Creeping_featurism, creeping featuritis}.
+Also, programming interface compatibility is prioritized much lower than
+in comparable other library projects. To compensate for possibly frequent
+programming interface changes, the actual API is designed to be as small
+as possible, ideally just consisting of application data models and XML
+definitions to specify widget packing and widget properties.
+
+The following list focuses on some of the selected areas where Rapicorn
+intentionally differs from other toolkits:
+
+@itemize
+
+@item @anchor{micro-widget-composition}
+	The main mechanism to construct composite widgets in Rapicorn is not by programming
+	compositions, but by writing an XML definition that packs multiple micro widgets
+	(GUI components with very limited event processing or drawing elements)
+	together in different configurations.
+
+@item @anchor{composite-customization}
+	Rapicorn allows customization of composite widgets as suggested in a
+	@uri{http://bugzilla.gnome.org/show_bug.cgi?id=356864#c13, Gtk+ Bugzilla comment},
+	because by reusing the XML definitions of composites, users can easily alter
+	all visible aspects.
+
+@item @anchor{confined-motion-events}
+	Confining motions to motion evens.
+	Rapicorn delivers new pointer motion information in motion events
+	only. All other event types just repeat the last motion event coordinates.
+	This may result in occasional reports of 0-distance motions, but is easy
+	to program with, since motion logic does not need to be replicated across
+	handlers of multiple event types.
+
+@item @anchor{paired-events}
+	Paired event delivery.
+	Rapicorn event delivery maintains extra state information to ensure that all enter
+	events are followed by their corresponding leaves and that button/key presses are
+	always followed by either a corresponding release or a corresponding cancellation event.
+	So no additional bookkeeping regarding paired events needs to be implemented by
+	event handlers.
+
+@item @anchor{single-model-selection}
+	Single view, single selection.
+	Most applications only need a single view onto their data model, and except for
+	very rare exceptions, only a single selection set is ever needed per data model.
+	So the data model framework used by Rapicorn might support multiple views but
+	relies on the selection information to be provided by the model itself,
+	and be supplied only once.
+	This significantly reduces implementation complexity in various places and also
+	avoids problem areas that emerge from application scripting if the scripts and
+	all views don't share the same selection information.
+	Beyond that, multiple selection user interfaces are unmanageable by non-expert users.
+	It also is impossible to implement a consistent per-view selection metaphor, if the
+	application specific model logic requires awareness of the current selection
+	(like models for @uri{http://en.wikipedia.org/wiki/Piano_roll, Piano Roll} widgets).
+
+@item @anchor{multi-pointer}
+	Multi pointer support.
+	Rapicorn is supposed to work well in multi-pointer and multiple window focus scenarios
+	that are currently being developed for X: 
+	@uri{http://wiki.x.org/wiki/XDC2007Notes#head-6a32160debfaa441605bee568704bea44bae18b6, MPX}.
+@done

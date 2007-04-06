@@ -1,0 +1,73 @@
+@doxer_dnl      # emacs: -*- mode: texinfo; texinfo-open-quote: "\""; texinfo-close-quote: "\""; -*-
+@doxer_set{title}	Rapicorn - Website
+@include "definitions.doxi"
+
+@heading @image{rapicorn032.png} Rapicorn - Introduction
+
+Rapicorn is an experimental graphical user interface toolkit.
+It is still in early development phase and doesn't provide all the
+features and functionality that other mature toolkits provide like:
+@itemize
+@item	@uri{http://www.gtk.org, Gtk+ - Multi-Platform GNU Toolkit}
+@item	@uri{http://www.trolltech.com, Qt - Cross-platform C++ Toolkit}
+@done
+Visitors searching for a stable and mature GUI toolkit are currently better off turning
+to the above two projects.
+@itemize
+@item Downloads (ftp) - 
+	Public preview releases can be found via ftp: @uri{ftp://rapicorn.org/pub/rapicorn/}.
+
+@item Downloads (http) - 
+	Alternative download location: @uri{http://rapicorn.org/rapicorn-ftp/}.
+
+@item
+	Screenshots of early test windows are here: @uri{http://www.rapicorn.org/screenshotdir/, screenshotdir/}.
+
+@item
+	Git source code repository: @uri{git://people.freedesktop.org/~timj/rapicorn, rapicorn.git/}.
+
+@item
+	Browse source code history: @uri{http://gitweb.freedesktop.org/?p=users/timj/rapicorn.git, rapicorn webview}.
+
+@done
+
+
+@subheading Applied technologies
+
+Rapicorn is targeted at becoming a suitable replacement for canvas projects
+such as @uri{http://developer.gnome.org/doc/API/2.0/libgnomecanvas/, GnomeCanvas} and
+to some extend also cover aspects of projects like @uri{http://www.gtk.org, Gtk+}.
+
+It is currently planned to employ the following technologies:
+@itemize
+@item	Depend on the @uri{http://gcc.gnu.org/, GNU C++ Compiler} for C++ language support,
+@item	depend on the @uri{http://cairographics.org/, Cairo library} for 2D graphics rendering,
+@item	depend on the @uri{http://www.pango.org/, Pango library} for text layout and rendering,
+@item	depend on the @uri{http://www.libpng.org/pub/png/, PNG library} for image imports,
+@item	depend on the @uri{http://www.zlib.net/, zlib library} for data compression,
+@item	possibly use other libraries for animations or 3D effects.
+@done
+
+@subheading Feature set
+
+Rapicorn so far supports separate item interface and implementation hierarchies,
+intra-hierarchy cross-references of objects and type safe per-object signal emissions.
+It also already has a Gtk+ based blitting backend (planned to be replaced by a native
+Cairo/xlib backend at some future point), a Pango based text rendering backend,
+PNG based image support, basic event processing and focus handling.
+
+It comes with a prototype set of stock items such as:
+@itemize
+@item a Label,
+@item an Image view,
+@item Buttons,
+@item Sliders,
+@item a ScrollArea,
+@item layout containers: Table, HBox, VBox, Alignment,
+@item paint containers: Ambiance, Frames,
+@item paintable items: Arrow, DotGrid and Drawable.
+@done
+
+It also provides an XML markup parser that allows full GUI definitions
+to be written in XML, the basic ideas of which are sketched out here:
+@uri{http://blogs.gnome.org/view/timj/2005/07/31/0}.

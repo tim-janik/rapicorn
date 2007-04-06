@@ -1,3 +1,29 @@
+Fri Apr  6 02:13:10 2007  Tim Janik  <timj@gtk.org>
+
+	* added Rapicorn website + generation rules.
+
+	* web/main.doxi: added document for website front page.
+
+	* web/basics.doxi: added document on Rapicorn programming basics.
+
+	* web/techbits.doxi: added document on Rapicorn technologies.
+
+	* web/cmpgtk.doxi: added document on Gtk+ related observations.
+
+	* web/definitions.doxi: common doxer definitions for rapicorn. also
+	at the moment contains the website menu.
+
+	* web/style.css: website style definitions.
+
+	* web/rapicorn032.png:
+	* web/rapicorn16.png: rapicorn logo at different sizes.
+
+	* web/hgradientG.png, web/vgradientG.png: website gradients.
+
+	* web/Makefile.am: build rules for website tarball.
+
+	* configure.in: check for availability of doxer.
+
 Tue Apr  3 02:59:13 2007  Tim Janik  <timj@gtk.org>
 
 	* introduced allocatable() property on items. since some items may be 

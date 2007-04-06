@@ -1,0 +1,84 @@
+@doxer_dnl      # emacs: -*- mode: texinfo; texinfo-open-quote: "\""; texinfo-close-quote: "\""; -*-
+@doxer_set{title}	Rapicorn - Basics
+@include "definitions.doxi"
+
+@heading Rapicorn programming basics
+
+A typical Rapicorn application consists of one application
+thread, and a number of Rapicorn windows, each of which runs
+its own event loop but is executed in the main application thread.
+Alternative execution models have been considered for Rapicorn
+in particular the
+one-@uri{http://www.google.com/search?&q=%22thread%20per%20window%22, thread-per-window} model.
+But after some initial development and debugging phase, they have 
+been disregarded for the sake of reliability and predictability.
+More information is provided by the paper
+@uri{ http://www.eecs.berkeley.edu/Pubs/TechRpts/2006/EECS-2006-1.pdf, "The Problem with Threads" by Edward A. Lee}.
+
+The usual number of steps of a GUI application written with Rapicorn are:
+@enumerate
+
+@item Initialization of Rapicorn and the GUI components.@*
+	For Rapicorn this means choosing a drawing backend, such as
+	for example the X windowing backend via Gtk+.
+	For backends that require a server connection (like X11),
+	this is also when the server connection is established.
+
+@item Loading of the UI definitions.@*
+	In Rapicorn, most windows and UI elements are defined (or
+	"programmed") by writing composite definitions in XML files.
+	After initialization, these XML files need to be loaded in
+	order to use the GUI components.
+	(A later example will show, that it's also possible to compile
+	XML definitions into a Rapicorn application.)
+
+@item Creation of one or more windows from the UI definitions.@*
+	After the UI definitions have been loaded successfully, they
+	can be instantiated.
+	Most often, fully defined application specific windows are
+	created from the XML definitions.
+
+@item Setup of application data and user command handling.@*
+	Graphical UI programs commonly use an event based programming
+	model, where the application reacts to user input through the
+	graphical interface.
+	After window creation, the application logic needs to be
+	connected and interact with the toolkit components.
+	This usually means setting up of one or more callback handlers
+	to react to certain UI events, and providing the necessary data
+	to be displayed by the application windows.
+
+@item Display of and interaction with the graphical interface.@*
+	After the application dialogs have been created and setup in an
+	application specific fashion, they are ready to be presented
+	to the user.
+	For this, the show() method is invoked on a window handle which
+	causes it to be displayed on the users screen, as soon as the
+	window's event loop starts executing.
+	Once a window's event loop starts executing, it'll process events
+	like drawing requests from the windowing backend, and user input
+	events like key presses or mouse actions.
+	If necessary, user commands setup at the previous step @dnl ---enumeration-reference---
+	are processed by the application logic, by calling application
+	callbacks from within the event loop's event handlers.
+
+@item Executing the event loops.@*
+	For most GUI applications, there is no additional work to be done
+	by the application logic, once the GUI has been started.
+	So once all dialogs have been created and setup accordingly, the
+	(main) application thread usually calls a toolkit function to
+	process all GUI events until all GUI interaction has been completed,
+	and the applications cleanup logic can be run.
+	In Rapicorn this is accomplished by calling
+	@code{Application::execute_loops();}.
+
+@item Exiting.@*
+	A notification signal is emitted when no primary window (a window
+	that is not a transient or child window) remains on the screen and
+	retained events to be handled by the event loop.
+	This signal is Application::sig_missing_primary,
+	and if no new primary windows are present after the signal emission,
+	Application::execute_loops() will return.
+	Alternatively, Application::execute_loops() can be forced to return
+	by calling Application::exit().
+@done

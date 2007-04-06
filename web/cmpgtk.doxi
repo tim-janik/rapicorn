@@ -1,0 +1,79 @@
+@doxer_dnl      # emacs: -*- mode: texinfo; texinfo-open-quote: "\""; texinfo-close-quote: "\""; -*-
+@doxer_set{title}	Rapicorn - observing Gtk+
+@include "definitions.doxi"
+
+@heading Observing Gtk+
+
+These days (2007) @uri{http://www.gtk.org, Gtk+} is a fairly large and widely
+deployed GUI toolkit. In terms of deployment, it is a very successful toolkit.
+However, 
+@uri{http://blogs.gnome.org/view/timj/2006/12/20/0,
+	maintenance and continuous development of a project at this scope and scale}
+come at significant costs in terms of development flexibility and 
+compatibility.
+
+It is not anymore a suitable place for evolution of new experimental GUI technologies
+and quick paradigm shifts.
+So radically new toolkit approaches or design ideas now need to be explored elsewhere
+and only if successful and applicable can reflect back onto Gtk+ development.
+Rapicorn explores some approaches which are simply different from established
+Gtk+ paradigms.
+
+The following list is meant to record resulting findings about
+existing shortcomings in Gtk+ and where possible suggests future improvements.
+
+@itemize
+
+@item @anchor{x-event-motion}
+	X event model motion event delivery.
+	Gtk+ follows the X event model very closely, so multiple event types deliver
+	pointer motion event information,
+	in particular the event types motion (motion-hint),
+	button-press, button-release, enter and leave.
+	One consequence of this approach is that pointer position bookkeeping code
+	has to be replicated in various places. The replication process is
+	fairly bug vulnerable and makes future adoptions hard to impossible
+	(e.g. adoption to multi-pointer awareness, see 
+        @uri{http://wiki.x.org/wiki/XDC2007Notes#head-6a32160debfaa441605bee568704bea44bae18b6, MPX}).
+	Rapicorn employs a different approach that could possibly be adapted
+	compatibly by Gtk+: @uri{techbits.html#confined-motion-events}.
+
+@item @anchor{paired-x-events}
+	Paired event delivery.
+	In Gtk+, the user or widget developer has to keep track and work around event
+	pairedness on his own. E.g. a button-press event may or may not be followed by
+	a button-release depending on a large amount of external conditions (such as
+	pointer grabs or the widget becoming temporarily insensitive and/or hidden).
+	Still, regardless of previous event history (unpaired presses, or enter events,
+	spurious releases and leaves), the widgets are supposed to remain working in
+	full effect for future presses, enter events, etc.
+	This produces lots of buggy cases in Gtk+ widget implementations, ranging from
+	subtle buglets to sometimes serous destabilization.
+	The introduction of the
+	@uri{http://developer.gnome.org/doc/API/2.0/gtk/GtkWidget.html#GtkWidget-grab-broken-event, "grab-broken" Event}
+	helped to work around a restricted subset of the resulting bugs, but couldn't
+	fully solve the more general problem.
+	Rapicorn introduces dedicated cancellation events which may also be applicable
+	to improve the reliability of event delivery in Gtk+: @uri{techbits.html#paired-events}.
+
+@item Multiple views, multiple selections.
+	The GtkTextView and GtkTreeView widgets suffer majorly from a complexity boost
+	introduced by support for multiple views and multiple selections.
+	In some situations, multiple views onto program specific data can have
+	interesting applications. For the vast majority of user interfaces, multiple
+	views are however not critically needed. 
+	Complexity escalates if multiple selections are supported. Tying data model
+	selections to the model implementation vastly simplifies implementation and
+	interface complexity, for some model types it can even be a hard requirement.
+	Other mechanism like application scripting may be severely impacted by
+	multiple selection models, because selection-aware scripting generally relies on
+	a unique model/selection relationship that's also presented transparently to
+	the GUI user.
+	In terms of usability aspects, support for multiple selections per model is
+	generally rarely advisable, if at all, only expert users can make use of
+	such functionality.
+	While Gtk+ can not be compatibly reduced to single-view or single-selection
+	view modes for the existing interfaces, confinement to single-selection mode
+	could at least be a future development directive.
+
+@done

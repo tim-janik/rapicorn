@@ -1,0 +1,49 @@
+/* Rapicorn
+ * Copyright (C) 2007 Tim Janik
+ * GNU Lesser General Public License version 2 or any later version.
+ */
+@import url(doxer-style.css);
+
+
+/* general layout */
+body {
+  margin: 5px;
+  padding: 0;
+  background-color: #fff5c0; /* continue vgradient */
+  background-image:url(vgradientG.png);
+  background-repeat:repeat-x;
+  color: Black;
+  font-size: 100%;  
+  font-weight: 500; /* 500:normnal 700:bold */
+}
+
+/* equalize cross browser behaviour */
+#header         { padding: 0 1px; }
+#lheader        { padding: 0 1px; }
+#cheader        { padding: 0 1px; }
+#rheader        { padding: 0 1px; }
+#left           { padding: 0 1px; }
+#content        { padding: 0 1px; }
+#right          { padding: 0 1px; }
+#lfooter        { padding: 0 1px; }
+#cfooter        { padding: 0 1px; }
+#rfooter        { padding: 0 1px; }
+#footer         { padding: 0 1px; }
+
+/* navigation menu */
+.webmenu            { font-weight: bold; }
+.webmenu            { white-space:nowrap; /* needed because mozilla ignores padding during text wrapping */ }
+.webmenu ul         { margin-left:1.1em; padding-left:0; }
+.webmenu ul ul      { margin-left:0.6em; padding-left:0; }
+.webmenu li         { margin-left:0.6em; padding-left:0; min-width:12.1em; margin-bottom:0.2em; }
+.webmenu li li      { margin-left:0.6em; padding-left:0; }
+* html .webmenu li  { /* IE-switch */
+  white-space:normal; /* needed because IE nowrap creates bogus newlines */
+}
+.webmenu            {
+  background-color: #fff5c0; /* continue hgradient */
+  background-image:url(hgradientG.png);
+  background-repeat:repeat-y;
+  margin-right: 0.8em; padding-right:0.5em;
+  border: 3px; border-style:outset; border-color:#806c00;
+}

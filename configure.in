@@ -206,6 +206,15 @@ AC_DEFUN([AC_RAPICORN_REQUIREMENTS],
 ])
 AC_DEFUN([AC_DOC_REQUIREMENTS],
 [
+    # need doxer to generate documentation
+    DOXRULE='#'
+    AC_CHECK_PROGS(DOXER, doxer)
+    if test -n "$DOXER" ; then
+	doxer_version=`$DOXER --version`
+	MC_CHECK_VERSION($doxer_version, 0.6, [DOXRULE=''])
+    fi
+    AC_SUBST(DOXER)
+    AC_SUBST(DOXRULE)
 ])
 
 # check compilers and behaviour; setup CFLAGS
@@ -297,6 +306,7 @@ po/Makefile.in
 po-helper.sh
 examples/Makefile
 tests/Makefile
+web/Makefile
 ])
 
 AC_OUTPUT
