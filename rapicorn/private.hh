@@ -35,6 +35,16 @@ namespace Rapicorn {
 #define MakeNamedCommand                RAPICORN_MakeNamedCommand
 #define MakeSimpleCommand               RAPICORN_MakeSimpleCommand
 
+/* --- catch broken compilers --- */
+#define RAPICORN_GNUC_CHECK(major,minor,plevel) \
+                                        (__GNUC__ > (major) || \
+                                         (__GNUC__ == (major) && __GNUC_MINOR__ > (minor)) || \
+                                         (__GNUC__ == (major) && __GNUC_MINOR__ == (minor) && \
+                                          __GNUC_PATCHLEVEL__ >= (plevel)))
+#if     !RAPICORN_GNUC_CHECK (3, 4, 6)
+#error This GNU C++ compiler version is known to be broken - please consult rapicorn/README
+#endif
+
 } // Rapicorn
 
 #endif  /* __RAPICORN_PRIVATE_HH__ */
