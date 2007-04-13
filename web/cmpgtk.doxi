@@ -56,7 +56,8 @@ existing shortcomings in Gtk+ and where possible suggests future improvements.
 	Rapicorn introduces dedicated cancellation events which may also be applicable
 	to improve the reliability of event delivery in Gtk+: @uri{techbits.html#paired-events}.
 
-@item Multiple views, multiple selections.
+@item @anchor{multiple-selections}
+	Multiple views, multiple selections.
 	The GtkTextView and GtkTreeView widgets suffer majorly from a complexity boost
 	introduced by support for multiple views and multiple selections.
 	In some situations, multiple views onto program specific data can have
@@ -76,4 +77,23 @@ existing shortcomings in Gtk+ and where possible suggests future improvements.
 	view modes for the existing interfaces, confinement to single-selection mode
 	could at least be a future development directive.
 
+@item @anchor{resizing-hysteresis}
+	Resizing hysteresis.
+	The general resizing model in Gtk+ is fairly simple, in a first run all widgets
+	are asked for their size requisition, and in a second run the available space
+	is divided up between all visible widgets according to container specific
+	partitioning of their respective child areas.
+	This doesn't leave room for multi-stage layout strategies that are e.g. required
+	for proper width-for-height or height-for-width management that is often needed
+	by text elements.
+	Other widgets, in particular 
+	  @uri{http://developer.gnome.org/doc/API/2.0/gtk/GtkScrolledWindow.html, GtkScrolledWindow}
+	break with the resizing contracts when they occasionally re-queue additional resizes,
+	and apply resizing thresholds which depend on previous size negotiations.
+	The outcome are resizing
+	  @uri{http://en.wikipedia.org/wiki/Hysteresis, hysteresis}
+	effects that can feel unnatural to the enduser and possibly result in an overall
+	layout with clearly suboptimal size allocations.
+	Rapicorn allows arbitrary multi-stage size negotiations, and employs dedicated
+	strategies to stabilize the resizing process: @uri{techbits.html#size-negotiation}.
 @done

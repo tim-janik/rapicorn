@@ -84,4 +84,29 @@ intentionally differs from other toolkits:
 	Rapicorn is supposed to work well in multi-pointer and multiple window focus scenarios
 	that are currently being developed for X: 
 	@uri{http://wiki.x.org/wiki/XDC2007Notes#head-6a32160debfaa441605bee568704bea44bae18b6, MPX}.
+
+@item @anchor{size-negotiation}
+	Arbitrary size negotiations.
+	It's not uncommon for GUI elements to have optimal and suboptimal aspect ratios
+	(width/height quotient) for their layout sizes, or arbitrary width/height constraints.
+	This is especially true for text elements which may break lines of text at quasi-random
+	positions (e.g. word boundaries) and ellipsize overlong lines.
+	Or GUI elements may be tailored to be layed out at specific heights, widths and ratios.
+	Supporting arbitrary resizing constraints for an unlimited combination of possibly nested
+	GUI elements can lead to unsolvable 
+	  @uri{http://en.wikipedia.org/wiki/Global_optimization, optimization problems}
+	and is thusly rarely supported by GUI toolkits.
+	Rapicorn does support arbitrary negotiation constraints via a
+@example
+  bool tune_requisition (double new_width, double new_height);
+       /* returns whether tuning was honored */
+@done
+	method that can retrigger the size requisition phase during the size allocation phase.
+	To cope with layout negotiation instabilities and endless resizing loops,
+	the resizing logic in Rapicorn resorts to a 
+	  @uri{http://en.wikipedia.org/wiki/Simulated_annealing, simulated annealing}
+	variant, which is a probabilistic approach that can guarantee size negotiation termination.
+	This approach is still highly experimental and different resolution strategies might be
+	applied in future versions, the current implementation is summarized in a source code comment:
+	  @uri{http://gitweb.freedesktop.org/?p=users/timj/rapicorn.git;a=blob;h=b5401f1138429d64d59cd9e41665934faba8cc0c;hb=a924cdc6949d0cfa4853cf0af481da93edda5788;f=rapicorn/root.cc#l181, resizing loop behavior}.
 @done
