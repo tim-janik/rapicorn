@@ -66,7 +66,7 @@ existing shortcomings in Gtk+ and where possible suggests future improvements.
 	Complexity escalates if multiple selections are supported. Tying data model
 	selections to the model implementation vastly simplifies implementation and
 	interface complexity, for some model types it can even be a hard requirement.
-	Other mechanism like application scripting may be severely impacted by
+	Other mechanisms like application scripting may be severely impacted by
 	multiple selection models, because selection-aware scripting generally relies on
 	a unique model/selection relationship that's also presented transparently to
 	the GUI user.
