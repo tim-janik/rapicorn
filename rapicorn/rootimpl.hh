@@ -59,6 +59,7 @@ private:
   /* rendering */
   virtual void          render                                  (Plane                  &plane);
   using                 Item::render;
+  void                  collapse_expose_region                  ();
   virtual void          expose_root_region                      (const Region           &region);
   virtual void          copy_area                               (const Rect             &src,
                                                                  const Point            &dest);

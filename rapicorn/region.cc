@@ -175,6 +175,13 @@ Region::list_rects (std::vector<Rect> &rects) const
                            fixed2double (boxes[i].y2 - boxes[i].y1)));
 }
 
+uint
+Region::count_rects () const
+{
+  uint n = _rapicorn_region_get_rects (REGION (this), 0, NULL);
+  return n;
+}
+
 void
 Region::add (const Rect &rect)
 {

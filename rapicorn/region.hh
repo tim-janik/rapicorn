@@ -56,6 +56,7 @@ public: /* rectangles are represented at 64bit integer precision */
   ContainedType contains          (const Rect           &rect) const;
   ContainedType contains          (const Region         &other) const;
   void          list_rects        (std::vector<Rect>    &rects) const;
+  uint          count_rects       () const;
   void          add               (const Rect           &rect);
   void          add               (const Region         &other);
   void          subtract          (const Region         &subtrahend);

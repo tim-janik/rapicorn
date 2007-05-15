@@ -607,6 +607,25 @@ RootImpl::dispatch_win_size_event (const Event &event)
   return handled;
 }
 
+void
+RootImpl::collapse_expose_region ()
+{
+  /* check for excess expose fragment scenarios */
+  uint n_erects = m_expose_region.count_rects();
+  if (n_erects > 999)           /* workable limit, considering O(n^2) collision complexity */
+    {
+      /* aparently the expose fragments we're combining are too small,
+       * so we can end up with spending too much time on expose rectangle
+       * compression (much more than needed for rendering).
+       * as a workaround, we simply force everything into a single expose
+       * rectangle which is good enough to avoid worst case explosion.
+       * note that this is only triggered in seldom pathological cases.
+       */
+      m_expose_region.add (m_expose_region.extents());
+      // printerr ("collapsing due to too many expose rectangles: %u -> %u\n", n_erects, m_expose_region.count_rects());
+    }
+}
+
 bool
 RootImpl::dispatch_win_draw_event (const Event &event)
 {
@@ -620,6 +639,9 @@ RootImpl::dispatch_win_draw_event (const Event &event)
           if (0)
             diag ("win-draw: %f %f (at: %f %f)", devent->rectangles[i].width, devent->rectangles[i].height,
                   devent->rectangles[i].x, devent->rectangles[i].y);
+          /* check for excess expose fragment scenarios */
+          if (i % 11 == 0)              /* infrequent checks are good enough */
+            collapse_expose_region();   /* collapse pathological expose regions */
         }
       handled = true;
     }
@@ -657,7 +679,10 @@ RootImpl::expose_root_region (const Region &region)
 {
   /* this function is expected to *queue* exposes, and not render immediately */
   if (m_viewport && !region.empty())
-    m_expose_region.add (region);
+    {
+      m_expose_region.add (region);
+      collapse_expose_region();
+    }
 }
 
 void
