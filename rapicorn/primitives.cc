@@ -759,7 +759,7 @@ Display::~Display()
 {
   while (!layer_stack.empty())
     {
-      Layer &l = layer_stack.front();
+      Layer l = layer_stack.front();
       layer_stack.pop_front();
       delete l.plane;
     }
