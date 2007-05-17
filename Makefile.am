@@ -5,6 +5,7 @@
 include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = . birnet rapicorn po examples tests web
+noinst_DATA =
 
 # setup automake
 AUTOMAKE_OPTIONS = 1.9 dist-bzip2 no-dist-gzip
@@ -25,6 +26,16 @@ CLEANFILES += intltool-extract intltool-merge intltool-update
 
 EXTRA_DIST += intltool-extract.in intltool-merge.in intltool-update.in
 
+# ChangeLog rule
+LAST_COMMITID = ff8bccbfdebed924568022d527bb18cee635893a
+ChangeLog:	$(shell ls "$${GIT_DIR=.git}/`git-symbolic-ref HEAD`" 2>/dev/null )
+	git-log ${LAST_COMMITID}..HEAD --stat	 > xgen-$(@F) \
+	&& echo -e "\ncommit ${LAST_COMMITID}"	>> xgen-$(@F) \
+	&& cat OldChangeLog			>> xgen-$(@F) \
+	&& cp xgen-$(@F) $@ && rm -f xgen-$(@F)
+noinst_DATA += ChangeLog
+EXTRA_DIST  += ChangeLog
+
 # install pkg-config files
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = rapicorn@LT_RELEASE@.pc
@@ -34,7 +45,7 @@ rapicorn@LT_RELEASE@.pc: $(top_builddir)/config.status
 $(pkgconfig_DATA): $(top_builddir)/config.status
 CLEANFILES += rapicorn@LT_RELEASE@.pc
 EXTRA_DIST += rapicorn@LT_RELEASE@.pc
-        
+
 
 # disable bogus cleanup checks
 distcleancheck_listfiles = true # find . -type f -print
