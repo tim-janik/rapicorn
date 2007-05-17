@@ -17,6 +17,8 @@
 //#define TEST_VERBOSE
 #include <birnet/birnettests.h>
 
+#include "data.cc" // xml_data1
+
 namespace {
 using namespace Birnet;
 
@@ -58,8 +60,6 @@ struct TestBirnetMarkupParser : MarkupParser {
   }
 };
 
-extern const char *xml_data;
-
 static void
 birnet_markup_parser_test()
 {
@@ -68,7 +68,7 @@ birnet_markup_parser_test()
   TOK();
   MarkupParser::Error error;
   const char *input_file = "test-input";
-  tmp->parse (xml_data, strlen (xml_data), &error);
+  tmp->parse (xml_data1, strlen (xml_data1), &error);
   TOK();
   if (!error.code)
     tmp->end_parse (&error);
@@ -155,91 +155,9 @@ main (int   argc,
       char *argv[])
 {
   birnet_init_test (&argc, &argv);
-  
   birnet_markup_parser_test();
   text_markup_test();
   return 0;
 }
-
-const char *xml_data = /* random, but valid xml data */
-"<?xml version='1.0' encoding='UTF-8'?>		<!--*-mode: xml;-*-->\n"
-"<toplevel-tag\n"
-"  xmlns:xfoo='http://beast.gtk.org/xmlns:xfoo' >\n"
-"\n"
-"  <!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!---->\n"
-"  <!-- a real comment -->\n"
-"  <xfoo:zibtupasti    inherit='xxx1' />\n"
-"  <xfoo:ohanifurtasy  inherit='YbbmXXX1' />\n"
-"  <xfoo:chacka        inherit='XyXyXyXy'\n"
-"    prop:orientation='$(somestring)'\n"
-"    prop:x-channels='$(other args,$n,0)' />\n"
-"  <xfoo:ergostuff     inherit='Parent' >\n"
-"  </xfoo:ergostuff>\n"
-"\n"
-"  <tag/><tag/><tag/><tag/><tag/><tag/><tag/><tag/><tag/><tag/><tag/><tag/>"
-"  <!-- comment2 -->\n"
-"  <xfoo:defineme inherit='SomeParent' variable='3' >\n"
-"    <hbox spacing='3' >\n"
-"      <hpaned height='120' position='240' >\n"
-"	  <hscrollbar id='need-a-handle' size:vgroup='vg-size' />\n"
-"      </hpaned>\n"
-"      <vbox spacing='3' >\n"
-"	<alignment size:vgroup='vg-size' />\n"
-"	<vscrollbar id='another-handle' size:vgroup='vg-size' pack:expand='1' />\n"
-"	<alignment size:vgroup='vg-size' />\n"
-"      </vbox>\n"
-"    </hbox>\n"
-"  </xfoo:defineme>\n"
-"  \n"
-"  <!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!---->\n"
-"  <nest>\n"
-"    <nest>\n"
-"      <nest>\n"
-"        <nest>\n"
-"          <nest>\n"
-"            <nest>\n"
-"              <nest>\n"
-"                <nest>\n"
-"                  <nest>\n"
-"                    <nest>\n"
-"                      <nest>\n"
-"                        <nest>\n"
-"                          <nest>\n"
-"                            <nest>\n"
-"                              <nest>\n"
-"                              </nest>\n"
-"                            </nest>\n"
-"                          </nest>\n"
-"                        </nest>\n"
-"                      </nest>\n"
-"                    </nest>\n"
-"                  </nest>\n"
-"                  <nest>\n"
-"                    <nest>\n"
-"                      <nest>\n"
-"                        <nest>\n"
-"                          <nest>\n"
-"                            <nest>\n"
-"                              <nest>\n"
-"                              </nest>\n"
-"                            </nest>\n"
-"                          </nest>\n"
-"                        </nest>\n"
-"                      </nest>\n"
-"                    </nest>\n"
-"                  </nest>\n"
-"                </nest>\n"
-"              </nest>\n"
-"            </nest>\n"
-"          </nest>\n"
-"        </nest>\n"
-"      </nest>\n"
-"    </nest>\n"
-"  </nest>\n"
-"  <!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!---->\n"
-"\n"
-"  \n"
-"  \n"
-"</toplevel-tag>\n";
 
 } // anon
