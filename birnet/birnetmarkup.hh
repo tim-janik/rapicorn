@@ -30,7 +30,12 @@ public:
     DOCUMENT_EMPTY,
     PARSE_ERROR,
     /* client errors */
-    INVALID_CONTENT
+    INVALID_ELEMENT,
+    INVALID_ATTRIBUTE,
+    INVALID_CONTENT,
+    MISSING_ELEMENT,
+    MISSING_ATTRIBUTE,
+    MISSING_CONTENT
   } ErrorType;
   struct Error {
     ErrorType   code;

@@ -27,6 +27,7 @@
 #include <birnet/birnetutils.hh>
 #include <birnet/birnetsignal.hh>
 #include <birnet/birnetthread.hh>
+#include <birnet/birnetxml.hh>
 
 #endif /* __BIRNET_H__ */
 /* vim:set ts=8 sts=2 sw=2: */
