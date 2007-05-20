@@ -7,7 +7,7 @@ ARG0=$(basename $0)
 # check directory
 test -r ./birnet/birnet.hh || { echo "$ARG0: script must be invoked from a birnet parent dir like birnet/.." >&2 ; exit 1; }
 
-create_target() {
+create_target() { # create_target FILE
 	if test -e "$1" ; then
 		echo "$ARG0: skipping existing file: $1" >&1
 		cat >/dev/null
@@ -16,7 +16,18 @@ create_target() {
 		cat >"$1"
 	fi
 }
-create_link() {
+append_target() { # append_target PATTERN FILE
+	if egrep -q "$1" "$2" 2>/dev/null ; then
+		echo "$ARG0: skipping existing file: $2" >&1
+	elif test -e "$2" ; then
+		echo "$ARG0: appending to existing file: $2" >&1
+		cat >>"$2"
+	else
+		echo "$ARG0: creating $2..."
+		cat >"$2"
+	fi
+}
+create_link() { # create_link LINKNAME TARGET
 	if test -e "$1" ; then
 		echo "$ARG0: skipping existing file: $1" >&1
 	else
@@ -30,7 +41,8 @@ create_link() {
 ###
 
 # ChangeLog
-create_link ChangeLog birnet/ChangeLog
+rm -f ChangeLog
+#create_link ChangeLog birnet/ChangeLog
 
 # COPYING
 create_link COPYING ./birnet/COPYING.LGPL
@@ -55,12 +67,44 @@ create_target README <<-__EOFmkhost
 	the birnet/ subdirectory.
 __EOFmkhost
 
-#########################################
+# .git/info/exclude
+append_target "^Makefile.am" .git/info/exclude <<-__EOFmkhost
+	
+	# /
+	AUTHORS
+	COPYING
+	ChangeLog
+	INSTALL
+	Makefile
+	Makefile.am
+	Makefile.decl
+	Makefile.in
+	NEWS
+	README
+	aclocal.m4
+	autogen.sh
+	autom4te.cache
+	config.guess
+	config.log
+	config.status
+	config.sub
+	configure
+	configure.h
+	configure.h.in
+	configure.in
+	depcomp
+	install-sh
+	libtool
+	ltmain.sh
+	missing
+	report.out
+	stamp-h1
+__EOFmkhost
+
 #########################################
 ###                 #####################
 ###  Makefile.decl  START >>> >>> >>> >>>
 ###                 #####################
-#########################################
 #########################################
 create_target Makefile.decl <<\__EOFmkhost # need correct TAB interpretation for makefiles
 # Makefile.decl
@@ -128,27 +172,46 @@ report: all
 	&& test "$${PIPESTATUS[*]}" = "0 0"
 __EOFmkhost
 #########################################
-#########################################
 ###                 #####################
 ###  Makefile.decl  END   <<< <<< <<< <<<
 ###                 #####################
 #########################################
-#########################################
 	
-# Makefile.am
-create_target Makefile.am <<-\__EOFmkhost
-	# Makefile.am (toplevel)
-	include $(top_srcdir)/Makefile.decl
-	
-	SUBDIRS = . birnet
-	
-	# require automake 1.9
-	AUTOMAKE_OPTIONS = 1.9
-	
-	# extra dependencies
-	configure: birnet/acbirnet.m4 birnet/configure.inc
+
+#######################################
+###               #####################
+###  Makefile.am  START >>> >>> >>> >>>
+###               #####################
+#######################################
+create_target Makefile.am <<\__EOFmkhost
+# Makefile.am (toplevel)
+include $(top_srcdir)/Makefile.decl
+
+SUBDIRS = . birnet
+
+# require automake 1.9
+AUTOMAKE_OPTIONS = 1.9
+
+# extra dependencies
+configure: birnet/acbirnet.m4 birnet/configure.inc
+
+# === ChangeLog ===
+LAST_COMMITID = 52724ecb1cceb1c5532108c56e3ab77faf4f2766
+ChangeLog:      $(shell ls "$${GIT_DIR=.git}/`git-symbolic-ref HEAD`" 2>/dev/null )
+	git-log ${LAST_COMMITID}..HEAD --stat    > xgen-$(@F) \
+	&& echo -e "\ncommit ${LAST_COMMITID}"  >> xgen-$(@F) \
+	&& cat birnet/OldChangeLog              >> xgen-$(@F) \
+	&& cp xgen-$(@F) $@ && rm -f xgen-$(@F)
+noinst_DATA = ChangeLog
+EXTRA_DIST  += ChangeLog
 __EOFmkhost
+#######################################
+###               #####################
+###  Makefile.am  END   <<< <<< <<< <<<
+###               #####################
+#######################################
 	
+
 # configure.in
 create_target configure.in <<-\__EOFmkhost
 	dnl # include Birnet macros
