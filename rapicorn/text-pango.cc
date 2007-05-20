@@ -100,7 +100,7 @@ default_pango_font_description()
       if (!pango_font_description_get_family (font_desc))
         pango_font_description_set_family (font_desc, "Sans");
       if (pango_font_description_get_size (font_desc) <= 0)
-        pango_font_description_set_size (font_desc, PIXELS2UNITS (10));
+        pango_font_description_set_size (font_desc, iround (PIXELS2UNITS (10)));
     }
   return font_desc;
 }
@@ -797,7 +797,7 @@ public:
     if (m_text_mode == TEXT_MODE_SINGLE_LINE)
       pango_layout_set_width (m_layout, -1);
     else
-      pango_layout_set_width (m_layout, PIXELS2UNITS (area.width));
+      pango_layout_set_width (m_layout, ifloor (PIXELS2UNITS (area.width)));
     pango_layout_set_ellipsize (m_layout,
                                 m_text_mode != TEXT_MODE_ELLIPSIZED ?
                                 PANGO_ELLIPSIZE_NONE :
@@ -1211,7 +1211,7 @@ _rapicorn_pango_renderer_render_layout (Plane           &plane,
   self->y = ifloor (rect.y);
   self->width = iceil (rect.width);
   self->height = iceil (rect.height);
-  pango_renderer_draw_layout (PANGO_RENDERER (self), layout, PIXELS2UNITS (layout_x), PIXELS2UNITS (layout_y));
+  pango_renderer_draw_layout (PANGO_RENDERER (self), layout, ifloor (PIXELS2UNITS (layout_x)), ifloor (PIXELS2UNITS (layout_y)));
   g_object_unref (self);
 }
 
