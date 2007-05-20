@@ -8,18 +8,6 @@ SUBDIRS		= . tests
 INCLUDES       += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(BIRNET_CFLAGS)
 DEFS            = -DBIRNET_LOG_DOMAIN=\"BIRNET\" -D_BIRNET_SOURCE_EXTENSIONS
 GLIB_MKENUMS    = glib-mkenums
-noinst_DATA	=
-
-# === ChangeLog ===
-LAST_COMMITID = 52724ecb1cceb1c5532108c56e3ab77faf4f2766
-ChangeLog:	$(shell ls "$${GIT_DIR=../.git}/`git-symbolic-ref HEAD`" 2>/dev/null )
-	git-log ${LAST_COMMITID}..HEAD --stat    > xgen-$(@F) \
-	&& echo -e "\ncommit ${LAST_COMMITID}"  >> xgen-$(@F) \
-	&& cat OldChangeLog                     >> xgen-$(@F) \
-	&& cp xgen-$(@F) $@ && rm -f xgen-$(@F)
-noinst_DATA += ChangeLog
-EXTRA_DIST  += ChangeLog
-
 
 # === sources ===
 birnet_headers = $(strip 		\

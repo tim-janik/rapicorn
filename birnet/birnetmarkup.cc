@@ -922,7 +922,7 @@ MarkupParser::parse (const char          *text,
                 }
               else
                 {
-                  set_error (context, error, MarkupParser::PARSE_ERROR, _("Document must begin with an element (e.g. <book>)"));
+                  set_error (context, error, MarkupParser::PARSE_ERROR, _("Document must begin with an element (e.g. <document>)"));
                 }
             }
           break;
