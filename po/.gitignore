@@ -1,2 +1,4 @@
-Makefile.in.in
 *.gmo
+Makefile.in.in
+POTFILES
+stamp-it
