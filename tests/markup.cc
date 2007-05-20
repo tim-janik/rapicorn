@@ -29,8 +29,8 @@ text_markup_test()
   Item &label = Factory::create_item ("Label");
   TOK();
   TOK();
-  String full_markup =
-    "<PARA>Start "
+  String test_markup =
+    "Start "
     "<bold>bold</bold> "
     "<italic>italic</italic> "
     // "<oblique>oblique</oblique> "
@@ -45,9 +45,8 @@ text_markup_test()
     "<font family='SpEciALfoNT723'>changefont</font> "
     "<tt>teletype</tt> "
     "<smaller>smaller</smaller> "
-    "<larger>larger</larger> "
-    "</PARA>";
-  label.set_property ("markup_text", full_markup);
+    "<larger>larger</larger>";
+  label.set_property ("markup_text", test_markup);
   TOK();
   String str = label.get_property ("markup_text");
   const char *markup_result = str.c_str();

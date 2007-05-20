@@ -476,7 +476,7 @@ class MarkupDumper {
   {
     String text = pango_layout_get_text (playout);
     const uint length = text.size();
-    output += "<PARA>";
+    output += "<TEXT>";
     std::list<PangoAttribute*> alist;
     pango_attr_list_filter (pango_layout_get_attributes (playout), pattribute_filter, &alist);
     std::list<PangoAttribute*>::iterator ait = alist.begin();
@@ -507,7 +507,7 @@ class MarkupDumper {
         astack.pop_front();
         element_end (attr);
       }
-    output += "</PARA>";
+    output += "</TEXT>";
   }
 public:
   static String
@@ -519,51 +519,65 @@ public:
   }
 };
 
-/* --- TextPangoParser --- */
-class TextPangoParser : Birnet::MarkupParser {
-  String                     plain_text;
-  std::list<PangoAttribute*> astack;
-  std::list<PangoAttribute*> alist;
+/* --- XmlToPango --- */
+class XmlToPango : Birnet::MarkupParser {
+  String                     m_plain_text;
+  std::list<PangoAttribute*> m_alist;
   PangoLayout               *m_layout;
-  int                        scaling;
+  int                        m_scaling;
   uint                       m_pre_count;
-  bool                       m_preserve_last;
-  const char          *const whitspaces;
-  TextPangoParser (PangoLayout     *playout,
-                   const String    &input_name) :
-    MarkupParser (input_name), m_layout (playout), scaling (0),
-    m_pre_count (0), m_preserve_last (false), whitspaces (" \t\n\r\v\f")
+  bool                       m_preserve_last_whitespace;
+  const char          *const m_whitspaces;
+  String                     m_error;
+  const XmlNode             *m_error_node;
+  XmlToPango (PangoLayout   *playout,
+              const String  &input_name) :
+    MarkupParser (input_name), m_layout (playout), m_scaling (0),
+    m_pre_count (0), m_preserve_last_whitespace (false), m_whitspaces (" \t\n\r\v\f"),
+    m_error (""), m_error_node (NULL)
   {}
-  ~TextPangoParser()
+  ~XmlToPango()
   {
-    for (std::list<PangoAttribute*>::iterator it = astack.begin(); it != astack.end(); it++)
-      if (*it)
-        pango_attribute_destroy (*it);
-    for (std::list<PangoAttribute*>::iterator it = alist.begin(); it != alist.end(); it++)
+    for (std::list<PangoAttribute*>::iterator it = m_alist.begin(); it != m_alist.end(); it++)
       if (*it)
         pango_attribute_destroy (*it);
   }
-  char
+  void
+  set_error (const String  &estring,
+             const XmlNode *enode)
+  {
+    if (m_error.size())
+      warning ("%s: skipping second error: %s (%p)", G_STRFUNC, estring.c_str(), enode);
+    else
+      {
+        m_error = estring;
+        m_error_node = enode;
+      }
+  }
+  static char
   lookup_text_attribute (const String &name,
                          String       *lname = NULL)
   {
     static const struct { const char token, *short_name, *long_name; } talist[] = {
       { 'B', "B",       "Bold" },
       { 'I', "I",       "Italic" },
-      /*'Q', "Q",       "Oblique" },*/
+      /*'Q', "Q",       "Oblique" */
       { 'U', "U",       "Underline" },
       { 'S', "S",       "Strike" },
-      /*'A', "A",       "Small-Caps" },*/
-      /*'C', "C",       "Condensed" },*/
-      /*'E', "E",       "Expanded" },*/
-      /*'H', "H",       "Heavy" },*/
-      /*'L', "L",       "Light" },*/
+      /*'A', "A",       "Small-Caps" */
+      /*'C', "C",       "Condensed" */
+      /*'E', "E",       "Expanded" */
+      /*'H', "H",       "Heavy" */
+      /*'L', "L",       "Light" */
       { '0', "BG",      "Background" },
       { '1', "FG",      "Foreground" },
       { '+', "",        "Larger" },
       { '-', "",        "Smaller" },
       { '=', "TT",      "TeleType" },
       { '#', "",        "Font" },
+      { ':', "",        "TEXT" },
+      { '$', "",        "BR" },
+      { 'P', "",        "pre" },
     };
     for (uint i = 0; i < sizeof (talist) / sizeof (talist[0]); i++)
       if (strcasecmp (name.c_str(), talist[i].short_name) == 0 ||
@@ -575,56 +589,34 @@ class TextPangoParser : Birnet::MarkupParser {
         }
     return 0;
   }
-  String
-  find_attribute (const String  &name,
-                  ConstStrings  &attribute_names,
-                  ConstStrings  &attribute_values,
-                  const String   fallback = "")
+  void
+  handle_tag (const XmlNode &xnode)
   {
-    for (uint i = 0; i < attribute_names.size(); i++)
-      if (strcasecmp (attribute_names[i].c_str(), name.c_str()) == 0)
-        return attribute_values[i];
-    return fallback;
-  }
-  virtual void
-  start_element (const String  &element_name,
-                 ConstStrings  &attribute_names,
-                 ConstStrings  &attribute_values,
-                 Error         &error)
-  {
-    if (element_name == "PARA")
-      return;
-    else if (strcasecmp (element_name.c_str(), "br") == 0)
-      {
-        plain_text += "\n";
-        m_preserve_last = true;
-        return;
-      }
-    else if (strcasecmp (element_name.c_str(), "pre") == 0)
-      {
-        m_pre_count++;
-        return;
-      }
-    char token = lookup_text_attribute (element_name);
-    String val;
+    char token = lookup_text_attribute (xnode.name());
+    // tag preamble
     PangoAttribute *pa = NULL;
     switch (token)
       {
-      case 'B': pa = pango_attr_weight_new (PANGO_WEIGHT_BOLD); break;
-      case 'I': pa = pango_attr_style_new (PANGO_STYLE_ITALIC); break;
-      case 'U': pa = pango_attr_underline_new (PANGO_UNDERLINE_SINGLE); break;
-      case 'S': pa = pango_attr_strikethrough_new (true); break;
-      case '+': scaling++; pa = pango_attr_scale_new (pow (1.2, scaling)); break;
-      case '-': scaling--; pa = pango_attr_scale_new (pow (1.2, scaling)); break;
-      case '=': pa = pango_attr_family_new (MONOSPACE_NAME.c_str()); break;
+      case ':':                                                                 break;  /* TEXT */
+      case '$': m_plain_text += "\n"; m_preserve_last_whitespace = true;        break;  /* BR */
+      case 'P': m_pre_count++;                                                  break;  /* PRE */
+      case 'B': pa = pango_attr_weight_new (PANGO_WEIGHT_BOLD);                 break;
+      case 'I': pa = pango_attr_style_new (PANGO_STYLE_ITALIC);                 break;
+      case 'U': pa = pango_attr_underline_new (PANGO_UNDERLINE_SINGLE);         break;
+      case 'S': pa = pango_attr_strikethrough_new (true);                       break;
+      case '+': m_scaling++; pa = pango_attr_scale_new (pow (1.2, m_scaling));  break;
+      case '-': m_scaling--; pa = pango_attr_scale_new (pow (1.2, m_scaling));  break;
+      case '=': pa = pango_attr_family_new (MONOSPACE_NAME.c_str());            break;
       case '#':
-        val = find_attribute ("family", attribute_names, attribute_values);
-        if (val.size())
-          pa = pango_attr_family_new (val.c_str());
+        {
+          String val = xnode.get_attribute ("family", true);
+          if (val.size())
+            pa = pango_attr_family_new (val.c_str());
+        }
         break;
       case '0': case '1':
         {
-          String col = find_attribute ("color", attribute_names, attribute_values);
+          String col = xnode.get_attribute ("color", true);
           if (col.size() && token == '0')
             pa = LazyColorAttr::create_color (LazyColorAttr::background_klass(), col, COLOR_BACKGROUND);
           else if (col.size() && token == '1')
@@ -632,102 +624,99 @@ class TextPangoParser : Birnet::MarkupParser {
         }
         break;
       default:
-        error.set (INVALID_CONTENT, "invalid elememnt: " + element_name);
+        set_error ("invalid elememnt: " + xnode.name(), &xnode);
       }
+    // open tag
     if (pa)
-      pa->start_index = plain_text.size();
-    astack.push_front (pa);
-  }
-  virtual void
-  end_element (const String  &element_name,
-               Error         &error)
-  {
-    if (element_name == "PARA")
-      return;
-    else if (strcasecmp (element_name.c_str(), "br") == 0)
-      return;
-    else if (strcasecmp (element_name.c_str(), "pre") == 0)
+      pa->start_index = m_plain_text.size();
+    // apply tag contents
+    if (!m_error.size())
+      apply_tags (xnode.children());
+    // close tag
+    if (pa)
       {
-        m_pre_count--;
-        return;
+        pa->end_index = m_plain_text.size();
+        m_alist.push_front (pa);
       }
-    char token = lookup_text_attribute (element_name);
+    // tag postamble
     switch (token)
       {
-      case '+': scaling--; break;
-      case '-': scaling++; break;
-      }
-    PangoAttribute *pa = astack.front();
-    astack.pop_front();
-    if (pa)
-      {
-        pa->end_index = plain_text.size();
-        alist.push_front (pa);
+      case 'P': m_pre_count--;  break;  /* PRE */
+      case '+': m_scaling--;    break;
+      case '-': m_scaling++;    break;
       }
   }
-  virtual void
-  text (const String  &text,
-        Error         &error)
+  void
+  apply_tags (const vector<XmlNode*> &nodes)
   {
-    if (m_pre_count)
+    /* apply nodes */
+    for (vector<XmlNode*>::const_iterator it = nodes.begin(); it != nodes.end(); it++)
       {
-        plain_text += text;
-        m_preserve_last = true;
-      }
-    else
-      {
-        for (String::const_iterator it = text.begin(); it != text.end(); it++)
-          if (!strchr (whitspaces, *it))
-            plain_text += *it;
-          else if (plain_text.size() && !strchr (whitspaces, plain_text[plain_text.size() - 1]))
-            plain_text += ' ';
-        m_preserve_last = false; /* whether to preserve last whitespace */
+        const XmlNode &xnode = **it;
+        if (!xnode.istext())
+          handle_tag (xnode);
+        else /* text */
+          {
+            if (m_pre_count)
+              {
+                m_plain_text += xnode.text();
+                m_preserve_last_whitespace = true;
+              }
+            else
+              {
+                const String &text = xnode.text();
+                for (String::const_iterator it = text.begin(); it != text.end(); it++)
+                  if (!strchr (m_whitspaces, *it))
+                    m_plain_text += *it;
+                  else if (m_plain_text.size() && !strchr (m_whitspaces, m_plain_text[m_plain_text.size() - 1]))
+                    m_plain_text += ' ';
+                if (text.size())
+                  m_preserve_last_whitespace = false; /* whether to preserve last whitespace */
+              }
+          }
+        if (m_error.size())
+          break;
       }
   }
   String
-  parse_intern (const String &markup)
+  apply_node (XmlNode &xnode)
   {
-    MarkupParser::Error error;
-    if (!error.code)
-      parse ("<PARA>", -1, &error);
-    if (!error.code)
-      parse (&markup[0], markup.size(), &error);
-    if (!error.code)
-      parse ("</PARA>", -1, &error);
-    if (!error.code)
-      end_parse (&error);
-    if (!error.code)
+    /* apply node */
+    vector<XmlNode*> nodes;
+    nodes.push_back (&xnode);
+    apply_tags (nodes);
+    /* handle errors */
+    if (m_error.size())
       {
-        assert (astack.empty());
-        if (!m_preserve_last && plain_text.size() &&
-            strchr (whitspaces, plain_text[plain_text.size() - 1]))
-          plain_text.resize (plain_text.size() - 1);
+        if (m_error_node)
+          return string_printf ("%s:%d:%d: %s", input_name().c_str(), m_error_node->parsed_line(), m_error_node->parsed_char(), m_error.c_str());
+        else
+          return string_printf ("%s: %s", input_name().c_str(), m_error.c_str());
       }
-    if (!error.code)
+    /* strip trailing whitespaces */
+    if (!m_preserve_last_whitespace && m_plain_text.size() &&
+        strchr (m_whitspaces, m_plain_text[m_plain_text.size() - 1]))
+      m_plain_text.resize (m_plain_text.size() - 1);
+    pango_layout_set_text (m_layout, &m_plain_text[0], m_plain_text.size());
+    PangoAttrList *pal = pango_attr_list_new();
+    while (!m_alist.empty())
       {
-        pango_layout_set_text (m_layout, &plain_text[0], plain_text.size());
-        PangoAttrList *pal = pango_attr_list_new();
-        while (!alist.empty())
-          {
-            PangoAttribute *pa = alist.front();
-            alist.pop_front();
-            pango_attr_list_change (pal, pa);
-          }
-        pango_layout_set_attributes (m_layout, pal);
-        pango_attr_list_unref (pal);
-        return "";
+        PangoAttribute *pa = m_alist.front();
+        m_alist.pop_front();
+        pango_attr_list_change (pal, pa); /* assumes pa ownership */
       }
-    else
-      return string_printf ("%s:%d:%d:error(%d): %s", input_name().c_str(), error.line_number, error.char_number, error.code, error.message.c_str());
+    pango_layout_set_attributes (m_layout, pal);
+    pango_attr_list_unref (pal);
+    return "";
   }
 public:
   static String
-  parse_markup (PangoLayout     *playout,
-                const String    &markup,
-                const String    &input_name)
+  apply_markup_tree (PangoLayout  *playout,
+                     XmlNode      &xnode,
+                     const String &input_name)
   {
-    TextPangoParser tpp (playout, input_name);
-    return tpp.parse_intern (markup);
+    XmlToPango xtp (playout, input_name);
+    return xtp.apply_node (xnode);
   }
 };
 
@@ -917,12 +906,18 @@ protected:
   {
     String err;
     rapicorn_gtk_threads_enter();
-    try {
-      err = TextPangoParser::parse_markup (m_layout, markup, "TextPango::markup_text");
-    } catch (...) {
-      rapicorn_gtk_threads_leave();
-      throw;
-    }
+    MarkupParser::Error perror;
+    const char *input_file = "TextPango::markup_text";
+    XmlNode *xnode = XmlNode::parse_xml (input_file, markup.c_str(), markup.size(), &perror, "text");
+    if (perror.code)
+      err = string_printf ("%s:%d:%d: %s", input_file, perror.line_number, perror.char_number, perror.message.c_str());
+    if (xnode)
+      {
+        ref_sink (xnode);
+        if (!err.size())
+          err = XmlToPango::apply_markup_tree (m_layout, *xnode, input_file);
+        unref (xnode);
+      }
     rapicorn_gtk_threads_leave();
     if (err.size())
       warning (err);
