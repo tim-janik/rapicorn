@@ -63,15 +63,16 @@ public:
     virtual double      text_requisition (uint          n_chars,
                                           uint          n_digits) = 0;
     /* mark handling */
-    virtual int         mark         () const = 0; /* byte_index */
-    virtual void        mark         (int              byte_index) = 0;
-    virtual bool        mark_at_end  () const = 0;
-    virtual void        step_mark    (int              visual_direction) = 0;
-    virtual void        mark2cursor  () = 0;
-    virtual void        hide_cursor  () = 0;
-    virtual void        mark_delete  (uint             n_utf8_chars) = 0;
-    virtual void        mark_insert  (String           utf8string,
-                                      const AttrState *astate = NULL) = 0;
+    virtual int         mark            () const = 0; /* byte_index */
+    virtual void        mark            (int              byte_index) = 0;
+    virtual bool        mark_at_end     () const = 0;
+    virtual bool        mark_to_coord   (double x, double y) = 0;
+    virtual void        step_mark       (int              visual_direction) = 0;
+    virtual void        mark2cursor     () = 0;
+    virtual void        hide_cursor     () = 0;
+    virtual void        mark_delete     (uint             n_utf8_chars) = 0;
+    virtual void        mark_insert     (String           utf8string,
+                                         const AttrState *astate = NULL) = 0;
   };
 public:
   /* Text::Editor */

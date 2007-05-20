@@ -933,16 +933,14 @@ protected:
   {
     rapicorn_gtk_threads_enter();
     const char *c = pango_layout_get_text (m_layout);
-    rapicorn_gtk_threads_leave();
     int l = strlen (c);
     if (byte_index < 0)
       m_mark = l;
     else if (byte_index >= l)
       m_mark = l;
     else
-      {
-        m_mark = utf8_align (c, c + byte_index) - c;
-      }
+      m_mark = utf8_align (c, c + byte_index) - c;
+    rapicorn_gtk_threads_leave();
     changed();
   }
   virtual bool
@@ -953,6 +951,39 @@ protected:
     rapicorn_gtk_threads_leave();
     int l = strlen (c);
     return m_mark >= l;
+  }
+  virtual bool
+  mark_to_coord (double x,
+                 double y)
+  {
+    Rect area = layout_area (NULL);
+    if (area.width >= 1 && area.height >= 1)
+      {
+        int xmark = -1, trailing = -1;
+        /* offset into layout area */
+        x -= area.x;
+        y -= area.y;
+        /* adapt y direction */
+        y = area.height - y;
+        /* scale to pango */
+        x = PIXELS2UNITS (x);
+        y = PIXELS2UNITS (y);
+        /* query pos */
+        rapicorn_gtk_threads_enter();
+        bool texthit = pango_layout_xy_to_index (m_layout, iround (x), iround (y), &xmark, &trailing);
+        const char *c = pango_layout_get_text (m_layout);
+        int l = strlen (c);
+        rapicorn_gtk_threads_leave();
+        if (xmark >= 0 && xmark < l)    /* texthit is constrained to real text area */
+          {
+            while (xmark < l && trailing--)
+              xmark = utf8_next (c + xmark) - c;
+            mark (xmark);
+            return true;
+            (void) texthit;
+          }
+      }
+    return false;
   }
   virtual void
   step_mark (int visual_direction)
@@ -1108,21 +1139,24 @@ protected:
     /* and cursor */
     render_cursor (plane, fg, r, lx, ly);
   }
-  void
-  render (Display &display)
+  Rect
+  layout_area (uint *vdot_size)
   {
     Rect area = allocation();
-    /* area needs to be larger than emboss padding */
-    if (area.width <= 1 || area.height <= 1)
-      return;
     rapicorn_gtk_threads_enter();
+    /* measure layout size */
     PangoRectangle prect = { 0, 0 };
     pango_layout_get_extents (m_layout, NULL, &prect);
     double vpixels = UNITS2PIXELS (prect.height);
+    /* decide vertical ellipsis */
     bool vellipsize = floor (vpixels) > area.height;
+    if (vdot_size)
+      *vdot_size = !vellipsize ? 0 : LayoutCache::dot_size_from_layout (m_layout);
     /* preserve emboss space */
     area.width -= 1;
     area.height -= 1;
+    area.x += 1;
+    area.y += 1;
     /* center vertically */
     if (vpixels < area.height)
       {
@@ -1130,29 +1164,38 @@ protected:
         area.y += extra / 2;
         area.height -= extra;
       }
-    /* setup vertical ellipsis */
-    uint dot_size = 0;
-    if (vellipsize)
-      dot_size = LayoutCache::dot_size_from_layout (m_layout);
+    rapicorn_gtk_threads_leave();
+    /* check area */
+    if ((area.width < 1 || area.height < 1) ||  /* area needs to be larger than emboss padding */
+        (vellipsize && !vdot_size))             /* too tall without vellipsization */
+      area.width = area.height = 0;
+    return area;
+  }
+  void
+  render (Display &display)
+  {
+    uint vdot_size = 0;
+    Rect area = layout_area (&vdot_size);
+    if (area.width < 1 || area.height < 1)
+      return;
     /* render text */
     Plane &plane = display.create_plane ();
+    rapicorn_gtk_threads_enter();
     if (insensitive())
       {
         /* render embossed text */
-        area.x += 1;
-        render_text (plane, area, dot_size, white());
+        area.y -= 1;
+        render_text (plane, area, vdot_size, white());
         area.x -= 1;
         area.y += 1;
         Plane emboss (Plane::init_from_size (plane));
-        render_text (emboss, area, dot_size, dark_shadow());
+        render_text (emboss, area, vdot_size, dark_shadow());
         plane.combine (emboss, COMBINE_OVER);
       }
     else
       {
         /* render normal text */
-        area.x += 1;
-        area.y += 1;
-        render_text (plane, area, dot_size, foreground());
+        render_text (plane, area, vdot_size, foreground());
       }
     rapicorn_gtk_threads_leave();
   }
@@ -1198,7 +1241,7 @@ _rapicorn_pango_renderer_render_layout (Plane           &plane,
                                         gint64           layout_y)
 {
   RapicornPangoRenderer *self = (RapicornPangoRenderer*) g_object_new (_rapicorn_pango_renderer_get_type(), NULL);
-  /* (layout_x,layout_y) corresponds to (rect.x,rect.y+rect.height) */
+  /* (+layout_x, -layout_y) corresponds to (rect.x, rect.y+rect.height) */
   self->plane = &plane;
   self->style = &style;
   self->rfg = fg;

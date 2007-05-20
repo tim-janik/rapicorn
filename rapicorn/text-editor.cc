@@ -116,6 +116,24 @@ private:
         break;
       case BUTTON_PRESS:
         grab_focus();
+        {
+          Client *client = get_client();
+          if (client)
+            {
+              const EventButton *bevent = dynamic_cast<const EventButton*> (&event);
+              int o = client->mark();
+              bool moved = client->mark_to_coord (bevent->x, bevent->y);
+              int m = client->mark();
+              if (o != m)
+                {
+                  m_cursor = m;
+                  client->mark2cursor();
+                  changed();
+                }
+              (void) moved;
+            }
+        }
+        handled = true;
         break;
       default: ;
       }
