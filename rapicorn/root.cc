@@ -103,21 +103,12 @@ Root::get_focus () const
 }
 
 RootImpl::RootImpl() :
-  m_entered (false), m_viewport (NULL),
-  m_async_loop (NULL),
+  m_loop (*ref_sink (EventLoop::create())),
   m_source (NULL),
-  m_tunable_requisition_counter (0)
+  m_viewport (NULL),
+  m_tunable_requisition_counter (0),
+  m_entered (false)
 {
-  {
-    AutoLocker aelocker (m_async_mutex);
-    BIRNET_ASSERT (m_async_loop == NULL);
-    m_async_loop = ref_sink (EventLoop::create());
-    if (!m_async_loop->start())
-      error ("failed to start EventLoop");
-    BIRNET_ASSERT (m_source == NULL);
-    m_source = new RootSource (*this);
-    m_async_loop->add_source (m_source, EventLoop::PRIORITY_NORMAL);
-  }
   Appearance *appearance = Appearance::create_default();
   style (appearance->create_style ("normal"));
   unref (appearance);
@@ -125,22 +116,15 @@ RootImpl::RootImpl() :
   /* adjust default Viewport config */
   m_config.min_width = 13;
   m_config.min_height = 7;
+  /* create event loop (auto-starts) */
+  BIRNET_ASSERT (m_source == NULL);
+  EventLoop::Source *source = new RootSource (*this);
+  BIRNET_ASSERT (m_source == source);
+  m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
 }
 
 RootImpl::~RootImpl()
 {
-  EventLoop *old_loop;
-  {
-    AutoLocker aelocker (m_async_mutex);
-    old_loop = m_async_loop;
-    m_async_loop = NULL;
-  }
-  if (old_loop)
-    {
-      old_loop->quit();
-      unref (old_loop);
-    }
-  BIRNET_ASSERT (m_source == NULL); // should have been destroyed with loop
   if (m_viewport)
     {
       delete m_viewport;
@@ -151,6 +135,11 @@ RootImpl::~RootImpl()
    */
   if (has_children())
     remove (get_child());
+  /* shutdown event loop */
+  m_loop.kill_sources();
+  BIRNET_ASSERT (m_source == NULL); // should have been destroyed with loop
+  /* this should be done last */
+  unref (&m_loop);
 }
 
 void
@@ -252,9 +241,7 @@ RootImpl::do_invalidate ()
 {
   SingleContainerImpl::do_invalidate();
   // we just need to make sure to be woken up, since flags are set appropriately already
-  AutoLocker aelocker (m_async_mutex);
-  if (m_async_loop)
-    m_async_loop->wakeup();
+  m_loop.wakeup();
 }
 
 void
@@ -657,18 +644,8 @@ RootImpl::dispatch_win_delete_event (const Event &event)
     {
       if (m_viewport)
         m_viewport->hide();
-      EventLoop *tmp_loop;
-      {
-        AutoLocker aelocker (m_async_mutex);
-        tmp_loop = m_async_loop;
-        if (tmp_loop)
-          tmp_loop->ref();
-      }
-      if (tmp_loop)
-        {
-          tmp_loop->quit();
-          tmp_loop->unref();
-        }
+      m_loop.kill_sources();
+      destroy_viewport();
       handled = true;
     }
   return handled;
@@ -971,7 +948,7 @@ EventLoop*
 RootImpl::get_loop ()
 {
   AutoLocker aelocker (m_async_mutex);
-  return m_async_loop;
+  return &m_loop;
 }
 
 void
@@ -979,8 +956,7 @@ RootImpl::enqueue_async (Event *event)
 {
   AutoLocker aelocker (m_async_mutex);
   m_async_event_queue.push_back (event);
-  if (m_async_loop)
-    m_async_loop->wakeup();
+  m_loop.wakeup(); /* thread safe */
 }
 
 bool
@@ -1014,8 +990,7 @@ RootImpl::create_viewport ()
         }
       BIRNET_ASSERT (m_viewport != NULL);
       VoidSlot sl = slot (*this, &RootImpl::idle_show);
-      AutoLocker aelocker (m_async_mutex);
-      m_async_loop->exec_now (sl);
+      m_loop.exec_now (sl);
     }
 }
 
@@ -1037,14 +1012,11 @@ RootImpl::destroy_viewport ()
     }
   if (m_source)
     {
-      AutoLocker aelocker (m_async_mutex);
-      EventLoop *loop = ref (m_async_loop);
-      aelocker.unlock();
-      loop->quit(); // calls m_source methods
-      aelocker.relock();
-      BIRNET_ASSERT (m_async_loop->running() == false);
-      unref (loop);
+      m_loop.kill_sources(); // calls m_source methods
       BIRNET_ASSERT (m_source == NULL);
+      EventLoop::Source *source = new RootSource (*this);
+      BIRNET_ASSERT (m_source == source);
+      m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
     }
   unref (this);
 }

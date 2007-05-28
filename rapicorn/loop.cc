@@ -88,7 +88,6 @@ public:                                 // EventLoop::iterate_loops
   int            m_max_priority;        // EventLoop::iterate_loops
   bool           m_must_dispatch;       // EventLoop::iterate_loops
 private:
-  bool           m_inactive;
   uint           m_counter;             // FIXME: need to handle wrapping at some point
   SourceListMap  m_sources;
   vector<PollFD> m_pfds;
@@ -137,20 +136,30 @@ private:
     unref (source);
     m_mutex.lock();
   }
-public:
-  EventLoopImpl () :
-    m_max_priority (INT_MAX),
-    m_must_dispatch (0),
-    m_inactive (true),
-    m_counter (1),
-    m_istate (WILL_CHECK)
-  {}
-  ~EventLoopImpl()
+  void
+  remove_loop_M ()
   {
     vector<EventLoopImpl*>::iterator it = find (rapicorn_main_loops.begin(), rapicorn_main_loops.end(), this);
     if (it != rapicorn_main_loops.end())
       rapicorn_main_loops.erase (it);
-    quit();
+  }
+public:
+  EventLoopImpl () :
+    m_max_priority (INT_MAX),
+    m_must_dispatch (0),
+    m_counter (1),
+    m_istate (WILL_CHECK)
+  {
+    AutoLocker locker (m_mutex);
+    return_if_fail (find (rapicorn_main_loops.begin(), rapicorn_main_loops.end(), this) == rapicorn_main_loops.end());
+    assert (rapicorn_thread_entered());
+    rapicorn_main_loops.push_back (this);
+  }
+  ~EventLoopImpl()
+  {
+    kill_sources();
+    AutoLocker locker (m_mutex);
+    remove_loop_M();
   }
   virtual bool prepare_sources  (int                  &max_priority,
                                  vector<PollFD>       &pfds,
@@ -176,12 +185,6 @@ public:
     AutoLocker locker (m_mutex);
     wakeup_L();
   }
-  virtual bool
-  running (void)
-  {
-    AutoLocker locker (m_mutex);
-    return !m_inactive;
-  }
   virtual uint
   add_source (Source   *source,
               int       priority)
@@ -197,7 +200,6 @@ public:
     source->m_priority = priority;
     list<Source*> &slist = m_sources[priority];
     slist.push_back (source);
-    m_inactive = false;
     wakeup_L();
     return source->m_id;
   }
@@ -223,17 +225,8 @@ public:
       }
     return false;
   }
-  virtual bool
-  start ()
-  {
-    AutoLocker locker (m_mutex);
-    return_val_if_fail (find (rapicorn_main_loops.begin(), rapicorn_main_loops.end(), this) == rapicorn_main_loops.end(), false);
-    assert (rapicorn_thread_entered());
-    rapicorn_main_loops.push_back (this);
-    return true;
-  }
   virtual void
-  quit (void)
+  kill_sources (void)
   {
     AutoLocker locker (m_mutex);
     bool keepref = !finalizing();
@@ -245,7 +238,6 @@ public:
         real_remove_Lm (source);
         source = find_first();
       }
-    m_inactive = true;
     wakeup_L();
     if (keepref)
       unref (this);
@@ -260,7 +252,6 @@ EventLoopImpl::prepare_sources (int            &max_priority,
 {
   AutoLocker locker (m_mutex);
   bool must_dispatch = false;
-  m_inactive = false;
   /* create source list to operate on */
   SourceList sources;
   for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
@@ -326,7 +317,6 @@ EventLoopImpl::check_sources (const int             max_priority,
 {
   AutoLocker locker (m_mutex);
   bool must_dispatch = false;
-  m_inactive = false;
   /* create source list to operate on */
   SourceList sources;
   for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
@@ -381,7 +371,6 @@ void
 EventLoopImpl::dispatch_sources (const int max_priority)
 {
   AutoLocker locker (m_mutex);
-  m_inactive = false;
   /* create source list to operate on */
   SourceList sources;
   for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
@@ -428,18 +417,18 @@ EventLoop::has_loops ()
 }
 
 void
-EventLoop::quit_loops()
+EventLoop::kill_loops()
 {
   assert (rapicorn_thread_entered());
   /* create referenced loop list */
   list<EventLoopImpl*> loops;
   for (uint i = 0; i < rapicorn_main_loops.size(); i++)
     loops.push_back (ref (rapicorn_main_loops[i]));
-  /* quit loops */
+  /* kill loops */
   for (list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
     {
       EventLoopImpl &loop = **lit;
-      loop.quit();
+      loop.kill_sources();
     }
   /* cleanup */
   for (list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)

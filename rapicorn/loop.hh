@@ -51,7 +51,7 @@ class EventLoop : public virtual ReferenceCountImpl {
   class PollFDSource;
   static bool   iterate_loops   (bool may_block,
                                  bool may_dispatch);
-  static void   quit_loops      ();
+  static void   kill_loops      ();
   static bool   has_loops       ();
   BIRNET_PRIVATE_CLASS_COPY (EventLoop);
 protected:
@@ -70,12 +70,9 @@ public:
   static const int PRIORITY_IDLE       = +200;          /* mildly important, used for GUI updates or user information (G*DEFAULT_IDLE) */
   static const int PRIORITY_BACKGROUND = +300 + 500;    /* unimportant, used when everything else done (G*LOW) */
   static EventLoop* create      ();
-  /* running */
-  virtual bool  start           () = 0;                 /* start event loop in main thread */
   /* run state */
-  virtual void  quit            (void) = 0;
-  virtual void  wakeup          (void) = 0;
-  virtual bool  running         (void) = 0;
+  virtual void  kill_sources    (void) = 0;
+  virtual void  wakeup          (void) = 0;             /* thread-safe, as long as loop is undestructed */
   /* source handling */
   class Source;
   virtual uint  add_source      (Source         *loop_source,

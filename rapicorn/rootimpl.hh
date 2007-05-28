@@ -27,17 +27,16 @@ class RootImpl : public virtual Root,
                  public virtual SingleContainerImpl,
                  public virtual Viewport::EventReceiver
 {
-  bool                  m_entered;
-  Viewport             *m_viewport;
+  EventLoop            &m_loop;
+  EventLoop::Source    *m_source;
   Mutex                 m_async_mutex;
   std::list<Event*>     m_async_event_queue;
-  EventLoop            *m_async_loop;
-  uint                  m_asnyc_resize_draw_id;
-  EventLoop::Source    *m_source;
   Region                m_expose_region;
+  Viewport             *m_viewport;
+  uint                  m_tunable_requisition_counter : 24;
+  uint                  m_entered : 1;
   EventContext          m_last_event_context;
   vector<Item*>         m_last_entered_children;
-  uint                  m_tunable_requisition_counter;
   Viewport::Config      m_config;
 public:
   explicit              RootImpl                                ();
@@ -54,7 +53,6 @@ private:
   virtual bool          tunable_requisitions                    ();
   void                  resize_all                              (Allocation             *new_area);
   virtual void          do_invalidate                           ();
-  void                  async_resize_draw                       ();
   virtual void          beep                                    ();
   /* rendering */
   virtual void          render                                  (Plane                  &plane);
@@ -149,8 +147,7 @@ private:
       bool entered = rapicorn_thread_entered();
       if (!entered)
         rapicorn_thread_enter();
-      assert (root.m_source == this);
-      root.m_source = NULL;
+      assert (root.m_source != this);
       if (!entered)
         rapicorn_thread_leave();
     }
@@ -158,6 +155,13 @@ private:
                              int64 *timeout_usecs_p)         { assert (rapicorn_thread_entered()); return root.prepare (current_time_usecs, timeout_usecs_p); }
     virtual bool check      (uint64 current_time_usecs)      { assert (rapicorn_thread_entered()); return root.check (current_time_usecs); }
     virtual bool dispatch   ()                               { assert (rapicorn_thread_entered()); return root.dispatch(); }
+    virtual void
+    destroy ()
+    {
+      assert (rapicorn_thread_entered());
+      assert (root.m_source == this);
+      root.m_source = NULL;
+    }
   };
 };
 

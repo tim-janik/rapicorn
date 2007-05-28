@@ -32,11 +32,6 @@ struct RapicornTester {
   {
     EventLoop::iterate_loops (may_block, true);
   }
-  static void
-  quit_loops ()
-  {
-    return EventLoop::quit_loops ();
-  }
 };
 } // Rapicorn
 
@@ -114,10 +109,7 @@ basic_loop_test()
   TASSERT (test_callback_touched == false);
   uint tcid = loop->exec_now (slot (test_callback));
   TASSERT (tcid > 0);
-  while (RapicornTester::loops_pending())
-    RapicornTester::loops_dispatch (false);
   TASSERT (test_callback_touched == false);
-  loop->start();
   while (RapicornTester::loops_pending())
     RapicornTester::loops_dispatch (false);
   TASSERT (test_callback_touched == true);
@@ -276,7 +268,7 @@ more_loop_test2()
         TICK();
     }
   TASSERT (check_source_counter == nsrc);
-  loop->quit();
+  loop->kill_sources();
   TASSERT_CMP (check_source_destroyed_counter, ==, nsrc); /* checks execution of enough destroy() handlers */
   TASSERT (check_source_counter == nsrc);
   for (uint i = 0; i < nsrc; i++)
@@ -315,7 +307,7 @@ public:
       {
         m_counter--;
         if (!m_counter && m_loop)
-          m_loop->quit();
+          m_loop->kill_sources();
       }
     else
       assert_not_reached();

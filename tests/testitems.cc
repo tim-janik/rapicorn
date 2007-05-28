@@ -32,11 +32,6 @@ struct RapicornTester {
   {
     EventLoop::iterate_loops (may_block, true);
   }
-  static void
-  quit_loops ()
-  {
-    return EventLoop::quit_loops ();
-  }
 };
 } // Rapicorn
 

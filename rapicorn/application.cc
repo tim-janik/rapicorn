@@ -134,7 +134,7 @@ Application::exit (uint code)
   assert (rapicorn_thread_entered());           // guards exit_code
   if (!exit_code)
     exit_code = code;
-  return EventLoop::quit_loops ();
+  return EventLoop::kill_loops ();
 }
 
 } // Rapicorn
