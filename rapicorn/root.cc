@@ -983,6 +983,12 @@ RootImpl::enqueue_async (Event *event)
     m_async_loop->wakeup();
 }
 
+bool
+RootImpl::viewable ()
+{
+  return visible() && m_viewport && m_viewport->visible();
+}
+
 void
 RootImpl::idle_show()
 {
@@ -997,7 +1003,7 @@ RootImpl::idle_show()
 }
 
 void
-RootImpl::show ()
+RootImpl::create_viewport ()
 {
   if (m_source)
     {
@@ -1014,26 +1020,13 @@ RootImpl::show ()
 }
 
 bool
-RootImpl::viewable ()
+RootImpl::has_viewport ()
 {
-  return visible() && m_viewport && m_viewport->visible();
+  return m_source && m_viewport && m_viewport->visible();
 }
 
 void
-RootImpl::hide ()
-{
-  if (m_viewport)
-    m_viewport->hide();
-}
-
-bool
-RootImpl::closed ()
-{
-  return !m_source;
-}
-
-void
-RootImpl::close ()
+RootImpl::destroy_viewport ()
 {
   ref (this);
   if (m_viewport)

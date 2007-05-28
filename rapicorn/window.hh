@@ -35,7 +35,6 @@ public:
   /* window ops */
   bool          viewable        ();
   void          show            ();
-  void          hide            ();
   bool          closed          ();
   void          close           ();
   /* class */

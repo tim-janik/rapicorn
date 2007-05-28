@@ -66,28 +66,21 @@ void
 Window::show ()
 {
   assert (rapicorn_thread_entered());
-  m_root.show();
-}
-
-void
-Window::hide ()
-{
-  assert (rapicorn_thread_entered());
-  m_root.hide();
+  m_root.create_viewport();
 }
 
 bool
 Window::closed ()
 {
   assert (rapicorn_thread_entered());
-  return m_root.closed();
+  return m_root.has_viewport();
 }
 
 void
 Window::close ()
 {
   assert (rapicorn_thread_entered());
-  m_root.close();
+  m_root.destroy_viewport();
 }
 
 Window::Commands::Commands (Window &w) :

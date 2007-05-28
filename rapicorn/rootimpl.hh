@@ -73,11 +73,10 @@ private:
   virtual void          remove_grab                             (Item                   &child);
   virtual Item*         get_grab                                (bool                   *unconfined = NULL);
   /* main loop */
-  virtual void          show                                    ();
   virtual bool          viewable                                ();
-  virtual void          hide                                    ();
-  virtual bool          closed                                  ();
-  virtual void          close                                   ();
+  virtual void          create_viewport                         ();
+  virtual bool          has_viewport                            ();
+  virtual void          destroy_viewport                        ();
   void                  idle_show                               ();
   virtual Window        window                                  ();
   virtual bool          prepare                                 (uint64                  current_time_usecs,

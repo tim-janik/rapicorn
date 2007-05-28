@@ -64,11 +64,10 @@ public:
   CommandSignal sig_command;
   typedef Signal<Window, bool (const String&, const String&), CollectorWhile0<bool> > WindowCommandSignal;
   WindowCommandSignal sig_window_command;
-  /* window */
-  virtual void  show                    () = 0;
-  virtual void  hide                    () = 0;
-  virtual bool  closed                  () = 0;
-  virtual void  close                   () = 0;
+  /* viewport ops */
+  virtual void  create_viewport         () = 0;
+  virtual bool  has_viewport            () = 0;
+  virtual void  destroy_viewport        () = 0;
   /* main loop functions */
   virtual EventLoop* get_loop           () = 0;
   /* MT-safe */

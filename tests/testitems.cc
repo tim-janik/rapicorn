@@ -104,7 +104,7 @@ test_test_item ()
   while (RapicornTester::loops_pending())
     RapicornTester::loops_dispatch (false);
   uint old_seen_test = TestItem::seen_test_items();
-  root.show();
+  window.show();
   TOK();
   while (RapicornTester::loops_pending())
     RapicornTester::loops_dispatch (false);
