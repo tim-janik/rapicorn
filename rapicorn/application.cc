@@ -121,7 +121,7 @@ uint
 Application::execute_loops ()
 {
   assert (rapicorn_thread_entered());           // guards exit_code
-  while (EventLoop::has_loops())
+  while (!EventLoop::loops_exitable())
     EventLoop::iterate_loops (true, true);      // prepare/check/dispatch and may_block
   uint ecode = exit_code;
   exit_code = 0;

@@ -242,6 +242,19 @@ public:
     if (keepref)
       unref (this);
   }
+  virtual bool
+  exitable (void)
+  {
+    AutoLocker locker (m_mutex);
+    for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
+      {
+        SourceList slist = (*it).second;
+        for (SourceList::iterator lit = slist.begin(); lit != slist.end(); lit++)
+          if (!(*lit)->exitable())
+            return false;
+      }
+    return true;
+  }
 };
 
 /* --- EventLoopImpl iteration --- */
@@ -410,10 +423,14 @@ EventLoopImpl::dispatch_sources (const int max_priority)
 
 /* --- EventLoop running --- */
 bool
-EventLoop::has_loops ()
+EventLoop::loops_exitable ()
 {
   assert (rapicorn_thread_entered());
-  return rapicorn_main_loops.size() > 0;
+  /* loop list shouldn't be modified by querying exitbale state */
+  for (uint i = 0; i < rapicorn_main_loops.size(); i++)
+    if (!rapicorn_main_loops[i]->exitable())
+      return false;
+  return true;
 }
 
 void
@@ -547,7 +564,8 @@ EventLoop::Source::Source () :
   m_loop_state (0),
   m_may_recurse (0),
   m_dispatching (0),
-  m_was_dispatching (0)
+  m_was_dispatching (0),
+  m_exitable (0)
 {}
 
 uint
@@ -570,6 +588,18 @@ bool
 EventLoop::Source::may_recurse () const
 {
   return m_may_recurse;
+}
+
+bool
+EventLoop::Source::exitable () const
+{
+  return m_exitable;
+}
+
+void
+EventLoop::Source::exitable (bool is_exitable)
+{
+  m_exitable = is_exitable;
 }
 
 bool
