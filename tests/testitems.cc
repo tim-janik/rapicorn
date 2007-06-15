@@ -63,23 +63,33 @@ test_cxx_gui ()
   TOK();
   window.root().add (titem);
   TOK();
+  /* perform all ops neccessary before showing */
   while (RapicornTester::loops_pending())
     RapicornTester::loops_dispatch (false);
   uint old_seen_test = TestItem::seen_test_items();
+  TOK();
   window.show();
   TOK();
+  /* perform all ops neccessary immediately after showing */
   while (RapicornTester::loops_pending())
     RapicornTester::loops_dispatch (false);
   TOK();
   printerr ("(auto-sleep)");
   sleep (1); // FIXME: work around lack of show_now()
   TOK();
+  /* perform all unhandled ops for display (expose etc.) */
   while (RapicornTester::loops_pending())
     RapicornTester::loops_dispatch (false);
   TOK();
+  /* checks and cleanups */
   uint seen_test = TestItem::seen_test_items();
-  TASSERT (seen_test > old_seen_test);
+  TASSERT (seen_test > old_seen_test); // may fail due to missing exposes (locked screens) needs PNG etc. backends
   window.close();
+  TOK();
+  /* perform pending jobs after closing */
+  while (RapicornTester::loops_pending())
+    RapicornTester::loops_dispatch (false);
+  TOK();
   TDONE();
 }
 
