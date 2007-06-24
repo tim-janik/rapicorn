@@ -50,7 +50,8 @@ parser IdlSyntaxParser:
         token EOF:          r'$'
         token IDENT:        r'[a-zA-Z_][a-zA-Z_0-9]*'       # identifiers
         token INTEGER:      r'[0-9]+'
-        token FLOAT:        r'[0-9]+\.[0-9]*'               # FIXME
+        token FULLFLOAT:    r'([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-][0-9]+)?'
+        token FRACTFLOAT:                     r'\.[0-9]+([eE][+-][0-9]+)?'
         token STRING:       r'"([^"\\]+|\\.)*"'             # double quotes string
 
 rule IdlSyntax: ( ';' | namespace )* EOF        {{ return yynamespaces; }}
@@ -130,7 +131,8 @@ rule numterm:                                   # numerical term
         | '(FALSE|False|false)'                 {{ return 0; }} # FIXME: const
         | IDENT                                 {{ return constant_lookup (IDENT) }}
         | INTEGER                               {{ return int (INTEGER); }}
-        | FLOAT                                 {{ return float (FLOAT); }}
+        | FULLFLOAT                             {{ return float (FULLFLOAT); }}
+        | FRACTFLOAT                            {{ return float (FRACTFLOAT); }}
         | r'\(' numeric_expression r'\)'        {{ return numeric_expression; }}
 
 rule string:

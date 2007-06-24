@@ -49,6 +49,7 @@ Const F = 5 * 3 + 4;                            // 19
 Const G = (5 * 3 + 4);                          // 19
 Const Signs = +1 + -2 + - -3 - +-+-+-+-+- 4;    // 6
 Const Pows = 1**1 - -1**1 + 1**-1 - -1**-1 - -(1 + 1)**-(1 + 1) + +1**+1;
+Const Floats = 0 + 0. + .0 + 1. + 10. + .011 + 101. + 1.1e+1 + .1e+1 + 1e-1 + 1E+1 + 1E-1 + 1e+01 + 1e-02; // 144.221
 
 /* test that C++ style commments are properly ignored within strings */
 Const CXX_COMMENT_TEST_1 = "Foo // bar";
