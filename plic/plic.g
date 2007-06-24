@@ -51,7 +51,7 @@ parser IdlSyntaxParser:
         token IDENT:        r'[a-zA-Z_][a-zA-Z_0-9]*'       # identifiers
         token INTEGER:      r'[0-9]+'
         token FLOAT:        r'[0-9]+\.[0-9]*'               # FIXME
-        token STRING:       r'"([^\"]+|\\.)*"'              # double quotes string
+        token STRING:       r'"([^"\\]+|\\.)*"'             # double quotes string
 
 rule IdlSyntax: ( ';' | namespace )* EOF        {{ return yynamespaces; }}
 

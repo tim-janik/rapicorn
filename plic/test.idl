@@ -43,6 +43,17 @@ Const S2 = "concatenated" "string";
 Const A = 1 + 3 * 5 + 2 ** 3 % 11 + 1.5;	// 25.5
 Const B = A**3;					// 16581.375
 
+/* test that C++ style commments are properly ignored within strings */
+Const CXX_COMMENT_TEST_1 = "Foo // bar";
+Const CXX_COMMENT_TEST_2 = "Foo \" // bar";
+Const CXX_COMMENT_TEST_3 = "Foo \\";//bar
+Const CXX_COMMENT_TEST_4 = "Foo /**/ bar";
+Const CXX_COMMENT_TEST_5 = "Foo /*//*/ bar";
+Const CXX_COMMENT_TEST_6 = "Foo /* */ */ bar";
+Const CXX_COMMENT_TEST_7 = "Foo /* /* /* bar";
+Const CXX_COMMENT_TEST_8 = "Foo /* /* */ /* bar";
+
+
 // enumerations
 enumeration Empty  { };
 enumeration Enum1  { A };
