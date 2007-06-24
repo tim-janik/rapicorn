@@ -63,8 +63,6 @@ rule declaration:
         | const_assignment
         | enumeration
 
-# we cannot support leading numbers in enumeration value assignments, because
-# with one token lookahead, "(5 + 6)" is indistinguishable from "(5, '6')"
 rule enumeration:
         ( 'enumeration' | 'enum' )
         IDENT '{'                               {{ evalues = [] }}
@@ -77,17 +75,26 @@ rule enumeration_rest:                          {{ evalues = [] }}
           ] 
         )                                       {{ return evalues }}
 rule enumeration_value:
-        IDENT                                   {{ l = [IDENT, "", ""] }}
+        IDENT                                   {{ l = [IDENT, None, "", ""] }}
         [ '='
-          ( string                              {{ l = [ IDENT, string, "" ] }}
-          | r'\(' enumeration_args_s            {{ l = [ IDENT ] + enumeration_args_s }}
-            r'\)'
+          ( string                              {{ l = [ IDENT, None, string, "" ] }}
+          | r'\(' ( enumeration_args_n          {{ l = [ IDENT ] + enumeration_args_n }}
+                  | enumeration_args_s          {{ l = [ IDENT ] + enumeration_args_s }}
+                  ) r'\)'
+          | r'(?!\()'                           # disambiguate from enumeration arg list
+            numeric_expression                  {{ l = [ IDENT, numeric_expression, "", "" ] }}
           ) 
         ]                                       {{ return tuple (l) }}
+rule enumeration_args_n:
+        numeric_expression                      {{ l = [ numeric_expression ] }}
+        [   ',' string                          {{ l.append (string) }}
+        ] [ ',' string                          {{ l.append (string) }}
+        ]                                       {{ while len (l) < 3: l.append ("") }}
+                                                {{ return l }}
 rule enumeration_args_s:
-        string                                  {{ l = [ string ] }}
+        string                                  {{ l = [ None, string ] }}
         [ ',' string                            {{ l.append (string) }}
-        ]                                       {{ while len (l) < 2: l.append ("") }}
+        ]                                       {{ while len (l) < 3: l.append ("") }}
                                                 {{ return l }}
 
 rule const_assignment:
@@ -105,22 +112,26 @@ rule summation:
         | r'-'  factor                          {{ result = result - factor }}
         )*                                      {{ return result }}
 rule factor:
-          power                                 {{ result = power }}
-        ( r'\*' power                           {{ result = result * power }}
-        | r'/'  power                           {{ result = result / power }}
-        | r'%'  power                           {{ result = result % power }}
+          signed                                {{ result = signed }}
+        ( r'\*' signed                          {{ result = result * signed }}
+        | r'/'  signed                          {{ result = result / signed }}
+        | r'%'  signed                          {{ result = result % signed }}
         )*                                      {{ return result }}
+rule signed:
+          power                                 {{ return power }}
+        | r'\+' signed                          {{ return signed }}
+        | r'-'  signed                          {{ return -signed }}
 rule power:
-          term                                  {{ result = term }}
-        ( r'\*\*' term                          {{ result = result ** term }}
+          numterm                               {{ result = numterm }}
+        ( r'\*\*' signed                        {{ result = result ** signed }}
         )*                                      {{ return result }}
-rule term:                                      # atomized numeric expressions
-          INTEGER                               {{ return int (INTEGER); }}
-        | FLOAT                                 {{ return float (FLOAT); }}
-        | '(TRUE|True|true)'                    {{ return 1; }}
-        | '(FALSE|False|false)'                 {{ return 0; }}
-        | r'\(' numeric_expression r'\)'        {{ return numeric_expression; }}
+rule numterm:                                   # numerical term
+          '(TRUE|True|true)'                    {{ return 1; }} # FIXME: const
+        | '(FALSE|False|false)'                 {{ return 0; }} # FIXME: const
         | IDENT                                 {{ return constant_lookup (IDENT) }}
+        | INTEGER                               {{ return int (INTEGER); }}
+        | FLOAT                                 {{ return float (FLOAT); }}
+        | r'\(' numeric_expression r'\)'        {{ return numeric_expression; }}
 
 rule string:
           '_' r'\(' plain_string r'\)'          {{ return plain_string }} # FIXME: loosing i18n markup
