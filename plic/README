@@ -1,0 +1,5 @@
+plic - Pluggable IDL Compiler
+
+This IDL compiler is used to parse conscise programming interface
+definitions and generate various kinds of code or documentation from it.
+
