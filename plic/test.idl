@@ -50,6 +50,7 @@ Const G = (5 * 3 + 4);                          // 19
 Const Signs = +1 + -2 + - -3 - +-+-+-+-+- 4;    // 6
 Const Pows = 1**1 - -1**1 + 1**-1 - -1**-1 - -(1 + 1)**-(1 + 1) + +1**+1;
 Const Floats = 0 + 0. + .0 + 1. + 10. + .011 + 101. + 1.1e+1 + .1e+1 + 1e-1 + 1E+1 + 1E-1 + 1e+01 + 1e-02; // 144.221
+Const Vint = 42;
 
 /* test that C++ style commments are properly ignored within strings */
 Const CXX_COMMENT_TEST_1 = "Foo // bar";
@@ -60,7 +61,13 @@ Const CXX_COMMENT_TEST_5 = "Foo /*//*/ bar";
 Const CXX_COMMENT_TEST_6 = "Foo /* */ */ bar";
 Const CXX_COMMENT_TEST_7 = "Foo /* /* /* bar";
 Const CXX_COMMENT_TEST_8 = "Foo /* /* */ /* bar";
-
+Const String1 = "1";
+Const String2 = "2";
+Const String3 = "first" "+" "second";
+Const String4 = "" String1 "+" String2;
+Const Vistring = _("foo");
+// Const tmp = "" Vistring "error: i18n string concatenation";
+Const Vstring = "foo";
 
 // enumerations
 enumeration Empty  { };
@@ -110,6 +117,14 @@ enum ExtensiveEnum {
   V26 = +(2 ** (2 + 2)),
   V27 = -(2 ** (2 + 2)),
   V28 = - /*comment*/ (28),
+  /* constants */
+  V30 = Vint,
+  V31 = Vstring,
+  V32 = (Vint),
+  V33 = (Vstring),
+  V34 = (Vstring, Vstring),
+  V35 = (Vint, Vstring),
+  V36 = (Vint, Vstring, Vstring "4"),
 };
 
 } // MandatoryNamespace
