@@ -20,6 +20,7 @@
 import yapps2runtime as runtime
 
 yydict = None
+yyecounter = None
 yynamespace = None
 yynamespaces = []
 
@@ -40,6 +41,21 @@ def constant_lookup (variable):
     if not yydict.has_key (variable):
         raise NameError ('undeclared symbol: ' + variable)
     return yydict[variable]
+def add_evalue (evalue_tuple):
+    global yyecounter
+    evalue_name   = evalue_tuple[0]
+    evalue_number = evalue_tuple[1]
+    evalue_label  = evalue_tuple[2]
+    evalue_blurb  = evalue_tuple[3]
+    if evalue_number == None:
+      evalue_number = yyecounter
+      yyecounter += 1
+    else:
+      yyecounter = 1 + evalue_number
+    AS (evalue_name)
+    AN (evalue_number)
+    yydict[evalue_name] = evalue_number
+    return (evalue_name, evalue_label, evalue_blurb)
 def quote (qstring):
     import rfc822
     return '"' + rfc822.quote (qstring) + '"'
@@ -47,24 +63,26 @@ def unquote (qstring):
     assert (qstring[0] == '"' and qstring[-1] == '"')
     import rfc822
     return rfc822.unquote (qstring)
-def TN (number_candidate):
+def TN (number_candidate):  # test number
     return isinstance (number_candidate, int) or isinstance (number_candidate, float)
-def TS (string_candidate):
+def TS (string_candidate):  # test string
     return isinstance (string_candidate, str) and len (string_candidate) >= 2
-def TSp (string_candidate):
-    return TS (string_candidate) and string_candidate[0] == '"' # plain string
-def TSi (string_candidate):
-    return TS (string_candidate) and string_candidate[0] == '_' # i18n string
-def AN (number_candidate):
+def TSp (string_candidate): # test plain string
+    return TS (string_candidate) and string_candidate[0] == '"'
+def TSi (string_candidate): # test i18n string
+    return TS (string_candidate) and string_candidate[0] == '_'
+def AN (number_candidate):  # assert number
     if not TN (number_candidate): raise TypeError ('invalid number: ' + repr (number_candidate))
-def AS (string_candidate):
+def AS (string_candidate):  # assert string
     if not TS (string_candidate): raise TypeError ('invalid string: ' + repr (string_candidate))
-def ASp (string_candidate, constname = None):
+def ASp (string_candidate, constname = None):   # assert plain string
     if not TSp (string_candidate):
         if constname:   raise TypeError ("invalid untranslated string (constant '%s'): %s" % (constname, repr (string_candidate)))
         else:           raise TypeError ('invalid untranslated string: ' + repr (string_candidate))
-def ASi (string_candidate):
+def ASi (string_candidate): # assert i18n string
     if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
+def AIn (identifier):   # assert new identifier
+    if yydict.has_key (identifier):  raise KeyError ('redefining existing identifier: %s' % identifier)
 
 %%
 parser IdlSyntaxParser:
@@ -90,26 +108,28 @@ rule declaration:
 
 rule enumeration:
         ( 'enumeration' | 'enum' )
-        IDENT '{'                               {{ evalues = [] }}
+        IDENT '{'                               {{ evalues = []; global yyecounter; yyecounter = 1 }}
         enumeration_rest                        {{ evalues = enumeration_rest }}
-        '}' ';'                                 {{ yydict[IDENT] = tuple (evalues) }}
+        '}' ';'                                 {{ AIn (IDENT); yydict[IDENT] = tuple (evalues); yyecounter = None }}
 rule enumeration_rest:                          {{ evalues = [] }}
         ( ''                                    # empty
-        | enumeration_value                     {{ evalues = evalues + [ enumeration_value ] }}
+        | enumeration_value                     {{ evalues = evalues + [ add_evalue (enumeration_value) ] }}
           [ ',' enumeration_rest                {{ evalues = evalues + enumeration_rest }}
           ] 
         )                                       {{ return evalues }}
 rule enumeration_value:
-        IDENT                                   {{ l = [IDENT, None, "", ""] }} # FIXME AN/AS
+        IDENT                                   {{ l = [IDENT, None, "", ""] }}
         [ '='
           ( r'\(' enumeration_args              {{ l = [ IDENT ] + enumeration_args }}
             r'\)'
           | r'(?!\()'                           # disambiguate from enumeration arg list
-            expression                          {{ l = [ IDENT, expression, "", "" ] }} # FIXME
+            expression                          {{ if TS (expression): l = [ None, expression ]; }}
+                                                {{ else:               l = [ expression, "" ] }}
+                                                {{ l = [ IDENT ] + l + [ "" ] }}
           ) 
         ]                                       {{ return tuple (l) }}
 rule enumeration_args:
-        expression                              {{ l = [ expression ]; }}
+        expression                              {{ l = [ expression ] }}
                                                 {{ if TS (expression): l = [ None ] + l }}
         [   ',' expression                      {{ AS (expression); l.append (expression) }}
         ] [ ',' expression                      {{ if len (l) >= 3: raise OverflowError ("too many arguments") }}
@@ -118,7 +138,7 @@ rule enumeration_args:
                                                 {{ return l }}
 
 rule const_assignment:
-        'Const' IDENT '=' expression ';'        {{ yydict[IDENT] = expression; }}
+        'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yydict[IDENT] = expression; }}
 
 
 rule expression: summation                      {{ return summation }}
@@ -184,6 +204,7 @@ if __name__ == '__main__':
         print
     isp = IdlSyntaxParser (IdlSyntaxParserScanner (input_string))
     result = None
+    # parsing: isp.IdlSyntax ()
     try:
         #runtime.wrap_error_reporter (isp, 'IdlSyntax') # parse away
         result = isp.IdlSyntax ()
