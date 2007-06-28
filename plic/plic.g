@@ -19,6 +19,8 @@
 
 import yapps2runtime as runtime
 
+keywords = ( 'TRUE', 'True', 'true', 'FALSE', 'False', 'false', 'namespace', 'enum', 'enumeration', 'Const' )
+
 class YYGlobals:
   dict = None
   ecounter = None
@@ -81,7 +83,7 @@ def ASp (string_candidate, constname = None):   # assert plain string
 def ASi (string_candidate): # assert i18n string
     if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
 def AIn (identifier):   # assert new identifier
-    if yy.dict.has_key (identifier):  raise KeyError ('redefining existing identifier: %s' % identifier)
+    if yy.dict.has_key (identifier) or identifier in keywords:  raise KeyError ('redefining existing identifier: %s' % identifier)
 
 %%
 parser IdlSyntaxParser:
@@ -161,8 +163,8 @@ rule power:
         ( r'\*\*' signed                        {{ result = result ** signed }}
         )*                                      {{ return result }}
 rule term:                                      # numerical/string term
-          '(TRUE|True|true)'                    {{ return 1; }} # FIXME: const
-        | '(FALSE|False|false)'                 {{ return 0; }} # FIXME: const
+          '(TRUE|True|true)'                    {{ return 1; }}
+        | '(FALSE|False|false)'                 {{ return 0; }}
         | IDENT                                 {{ result = constant_lookup (IDENT); }}
           (string                               {{ ASp (result, IDENT); ASp (string); result += string }}
           )*                                    {{ return result }}
