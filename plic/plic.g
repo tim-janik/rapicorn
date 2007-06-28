@@ -19,42 +19,41 @@
 
 import yapps2runtime as runtime
 
-yydict = None
-yyecounter = None
-yynamespace = None
-yynamespaces = []
+class YYGlobals:
+  dict = None
+  ecounter = None
+  namespace = None
+  ns_list = [] # namespaces
+yy = YYGlobals # globals
+
 
 def namespace_open (ident):
-    global yynamespace, yydict
-    assert yynamespace == None and yydict == None
-    yynamespace = ident
-    yydict = {}
+    assert yy.namespace == None and yy.dict == None
+    yy.namespace = ident
+    yy.dict = {}
 def namespace_close ():
-    global yynamespace, yydict
-    assert isinstance (yynamespace, str) and isinstance (yydict, dict)
-    yynamespaces.append ((yynamespace, yydict))
-    yynamespace = None
-    yydict = None
+    assert isinstance (yy.namespace, str) and isinstance (yy.dict, dict)
+    yy.ns_list.append ((yy.namespace, yy.dict))
+    yy.namespace = None
+    yy.dict = None
 def constant_lookup (variable):
-    global yydict
-    assert isinstance (yydict, dict)
-    if not yydict.has_key (variable):
+    assert isinstance (yy.dict, dict)
+    if not yy.dict.has_key (variable):
         raise NameError ('undeclared symbol: ' + variable)
-    return yydict[variable]
+    return yy.dict[variable]
 def add_evalue (evalue_tuple):
-    global yyecounter
     evalue_name   = evalue_tuple[0]
     evalue_number = evalue_tuple[1]
     evalue_label  = evalue_tuple[2]
     evalue_blurb  = evalue_tuple[3]
     if evalue_number == None:
-      evalue_number = yyecounter
-      yyecounter += 1
+      evalue_number = yy.ecounter
+      yy.ecounter += 1
     else:
-      yyecounter = 1 + evalue_number
+      yy.ecounter = 1 + evalue_number
     AS (evalue_name)
     AN (evalue_number)
-    yydict[evalue_name] = evalue_number
+    yy.dict[evalue_name] = evalue_number
     return (evalue_name, evalue_label, evalue_blurb)
 def quote (qstring):
     import rfc822
@@ -82,7 +81,7 @@ def ASp (string_candidate, constname = None):   # assert plain string
 def ASi (string_candidate): # assert i18n string
     if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
 def AIn (identifier):   # assert new identifier
-    if yydict.has_key (identifier):  raise KeyError ('redefining existing identifier: %s' % identifier)
+    if yy.dict.has_key (identifier):  raise KeyError ('redefining existing identifier: %s' % identifier)
 
 %%
 parser IdlSyntaxParser:
@@ -96,7 +95,7 @@ parser IdlSyntaxParser:
         token FRACTFLOAT:                     r'\.[0-9]+([eE][+-][0-9]+)?'
         token STRING:       r'"([^"\\]+|\\.)*"'             # double quotes string
 
-rule IdlSyntax: ( ';' | namespace )* EOF        {{ return yynamespaces; }}
+rule IdlSyntax: ( ';' | namespace )* EOF        {{ return yy.ns_list; }}
 
 rule namespace:
         'namespace' IDENT                       {{ namespace_open (IDENT) }}
@@ -108,9 +107,9 @@ rule declaration:
 
 rule enumeration:
         ( 'enumeration' | 'enum' )
-        IDENT '{'                               {{ evalues = []; global yyecounter; yyecounter = 1 }}
+        IDENT '{'                               {{ evalues = []; yy.ecounter = 1 }}
         enumeration_rest                        {{ evalues = enumeration_rest }}
-        '}' ';'                                 {{ AIn (IDENT); yydict[IDENT] = tuple (evalues); yyecounter = None }}
+        '}' ';'                                 {{ AIn (IDENT); yy.dict[IDENT] = tuple (evalues); yy.ecounter = None }}
 rule enumeration_rest:                          {{ evalues = [] }}
         ( ''                                    # empty
         | enumeration_value                     {{ evalues = evalues + [ add_evalue (enumeration_value) ] }}
@@ -138,7 +137,7 @@ rule enumeration_args:
                                                 {{ return l }}
 
 rule const_assignment:
-        'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yydict[IDENT] = expression; }}
+        'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yy.dict[IDENT] = expression; }}
 
 
 rule expression: summation                      {{ return summation }}
