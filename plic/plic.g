@@ -40,9 +40,10 @@ def namespace_close ():
     yy.dict = None
 def constant_lookup (variable):
     assert isinstance (yy.dict, dict)
-    if not yy.dict.has_key (variable):
-        raise NameError ('undeclared symbol: ' + variable)
-    return yy.dict[variable]
+    type, value = yy.dict.get (variable, (None, 0))
+    if type != 'Const':
+        raise NameError ('undeclared constant: ' + variable)
+    return value
 def add_evalue (evalue_tuple):
     evalue_name   = evalue_tuple[0]
     evalue_number = evalue_tuple[1]
@@ -55,8 +56,8 @@ def add_evalue (evalue_tuple):
       yy.ecounter = 1 + evalue_number
     AS (evalue_name)
     AN (evalue_number)
-    yy.dict[evalue_name] = evalue_number
-    return (evalue_name, evalue_label, evalue_blurb)
+    yy.dict[evalue_name] = ('Const', evalue_number)
+    return (evalue_name, evalue_number, evalue_label, evalue_blurb)
 def quote (qstring):
     import rfc822
     return '"' + rfc822.quote (qstring) + '"'
@@ -111,7 +112,7 @@ rule enumeration:
         ( 'enumeration' | 'enum' )
         IDENT '{'                               {{ evalues = []; yy.ecounter = 1 }}
         enumeration_rest                        {{ evalues = enumeration_rest }}
-        '}' ';'                                 {{ AIn (IDENT); yy.dict[IDENT] = tuple (evalues); yy.ecounter = None }}
+        '}' ';'                                 {{ AIn (IDENT); yy.dict[IDENT] = ('enum', tuple (evalues)); yy.ecounter = None }}
 rule enumeration_rest:                          {{ evalues = [] }}
         ( ''                                    # empty
         | enumeration_value                     {{ evalues = evalues + [ add_evalue (enumeration_value) ] }}
@@ -139,8 +140,7 @@ rule enumeration_args:
                                                 {{ return l }}
 
 rule const_assignment:
-        'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yy.dict[IDENT] = expression; }}
-
+        'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yy.dict[IDENT] = ('Const', expression); }}
 
 rule expression: summation                      {{ return summation }}
 rule summation:
