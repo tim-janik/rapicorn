@@ -19,7 +19,8 @@
 
 import yapps2runtime as runtime
 
-keywords = ( 'TRUE', 'True', 'true', 'FALSE', 'False', 'false', 'namespace', 'enum', 'enumeration', 'Const',
+keywords = ( 'TRUE', 'True', 'true', 'FALSE', 'False', 'false',
+             'namespace', 'enum', 'enumeration', 'Const', 'record',
              'Bool', 'Num', 'Real', 'String' )
 
 class YYGlobals:
@@ -133,7 +134,7 @@ rule enumeration_rest:                          {{ evalues = [] }}
           ] 
         )                                       {{ return evalues }}
 rule enumeration_value:
-        IDENT                                   {{ l = [IDENT, None, "", ""] }}
+        IDENT                                   {{ l = [IDENT, None, "", ""]; AIn (IDENT) }}
         [ '='
           ( r'\(' enumeration_args              {{ l = [ IDENT ] + enumeration_args }}
             r'\)'
@@ -229,6 +230,7 @@ if __name__ == '__main__':
     isp = IdlSyntaxParser (IdlSyntaxParserScanner (input_string))
     result = None
     # parsing: isp.IdlSyntax ()
+    ex = None
     try:
         #runtime.wrap_error_reporter (isp, 'IdlSyntax') # parse away
         result = isp.IdlSyntax ()
@@ -240,6 +242,7 @@ if __name__ == '__main__':
         exstr = str (ex)
         if exstr: exstr = ': ' + exstr
         runtime.print_error (ParseError ('%s%s' % (ex.__class__.__name__, exstr)), isp._scanner)
+    if ex: sys.exit (7)
     print 'namespaces ='
     import pprint
     if 1:   pprint.pprint (result)
