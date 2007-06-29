@@ -58,6 +58,11 @@ def add_evalue (evalue_tuple):
     AN (evalue_number)
     yy.dict[evalue_name] = ('Const', evalue_number)
     return (evalue_name, evalue_number, evalue_label, evalue_blurb)
+def add_record (name, rfields):
+    AIn (name)
+    #if len (rfields) < 1:
+    #    raise AttributeError ('invalid empty record: %s' % name)
+    yy.dict[name] = ('record', tuple (rfields))
 def quote (qstring):
     import rfc822
     return '"' + rfc822.quote (qstring) + '"'
@@ -107,6 +112,7 @@ rule declaration:
           ';'
         | const_assignment
         | enumeration
+        | record
 
 rule enumeration:
         ( 'enumeration' | 'enum' )
@@ -138,6 +144,10 @@ rule enumeration_args:
                                                 {{ AS (expression); l.append (expression) }}
         ]                                       {{ while len (l) < 3: l.append ("") }}
                                                 {{ return l }}
+
+rule record:
+        'record' IDENT '{'                      {{ rfields = [] }}
+        '}' ';'                                 {{ add_record (IDENT, rfields) }}
 
 rule const_assignment:
         'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yy.dict[IDENT] = ('Const', expression); }}
