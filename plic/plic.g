@@ -19,7 +19,8 @@
 
 import yapps2runtime as runtime
 
-keywords = ( 'TRUE', 'True', 'true', 'FALSE', 'False', 'false', 'namespace', 'enum', 'enumeration', 'Const' )
+keywords = ( 'TRUE', 'True', 'true', 'FALSE', 'False', 'false', 'namespace', 'enum', 'enumeration', 'Const',
+             'Bool', 'Num', 'Real', 'String' )
 
 class YYGlobals:
   dict = None
@@ -60,8 +61,13 @@ def add_evalue (evalue_tuple):
     return (evalue_name, evalue_number, evalue_label, evalue_blurb)
 def add_record (name, rfields):
     AIn (name)
-    #if len (rfields) < 1:
-    #    raise AttributeError ('invalid empty record: %s' % name)
+    if len (rfields) < 1:
+      raise AttributeError ('invalid empty record: %s' % name)
+    fdict = {}
+    for field in rfields:
+      if fdict.has_key (field[1]):
+        raise NameError ('duplicate record field name: ' + field[1])
+      fdict[field[1]] = field[0]
     yy.dict[name] = ('record', tuple (rfields))
 def quote (qstring):
     import rfc822
@@ -102,6 +108,7 @@ parser IdlSyntaxParser:
         token FULLFLOAT:    r'([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-][0-9]+)?'
         token FRACTFLOAT:                     r'\.[0-9]+([eE][+-][0-9]+)?'
         token STRING:       r'"([^"\\]+|\\.)*"'             # double quotes string
+        token BUILTINTYPE:  r'(Bool|Num|Real|String)'
 
 rule IdlSyntax: ( ';' | namespace )* EOF        {{ return yy.ns_list; }}
 
@@ -147,7 +154,13 @@ rule enumeration_args:
 
 rule record:
         'record' IDENT '{'                      {{ rfields = [] }}
+          ( variable_decls                      {{ rfields = rfields + variable_decls }}
+          )+
         '}' ';'                                 {{ add_record (IDENT, rfields) }}
+rule variable_decls:
+        BUILTINTYPE IDENT                       {{ vtype = BUILTINTYPE; vars = [ (vtype, IDENT) ] }}
+        ( ',' IDENT                             {{ vars = vars + [ (vtype, IDENT) ] }}
+        )* ';'                                  {{ return vars }}
 
 rule const_assignment:
         'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yy.dict[IDENT] = ('Const', expression); }}

@@ -130,7 +130,16 @@ enum ExtensiveEnum {
 Const enum_math = V36 + V34 + V24 + V13 + V3;
 
 // record tests
-record XEmptyRecord { };
+record XFooRecord {
+  Bool   single_bool;
+  Num    single_num;
+  Real   single_float;
+  String single_string;
+  Num    sibling1, sibling2;
+  Num    multi1, multi2, multi3, multi4;
+};
+// invalid: record DupRecord { Num a, b; Num c, b; };
+// invalid: record EmptyRecord { };
 
 
 } // MandatoryNamespace
