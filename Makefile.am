@@ -27,12 +27,14 @@ CLEANFILES += intltool-extract intltool-merge intltool-update
 EXTRA_DIST += intltool-extract.in intltool-merge.in intltool-update.in
 
 # ChangeLog rule
-LAST_COMMITID = ff8bccbfdebed924568022d527bb18cee635893a
+LAST_COMMITID = 3c74b440cecaba3570eecc6728bbe319ba790b59
 ChangeLog:	$(shell ls "$${GIT_DIR=.git}/`git-symbolic-ref HEAD`" 2>/dev/null )
-	git-log ${LAST_COMMITID}..HEAD --stat	 > xgen-$(@F) \
-	&& echo -e "\ncommit ${LAST_COMMITID}"	>> xgen-$(@F) \
-	&& cat OldChangeLog			>> xgen-$(@F) \
-	&& cp xgen-$(@F) $@ && rm -f xgen-$(@F)
+	git-log --pretty='format:%ad %an 	# %H (%cn)%n%n%s%n%n%b' \
+		${LAST_COMMITID}..HEAD		 > xgen-$(@F)
+	sed 's/^/	/;s/^	//;/^[ 	]*<unknown>$$/d' -i xgen-$(@F)
+	cat OldChangeLog			>> xgen-$(@F)
+	cp xgen-$(@F) $@ && rm -f xgen-$(@F)
+
 noinst_DATA += ChangeLog
 EXTRA_DIST  += ChangeLog
 

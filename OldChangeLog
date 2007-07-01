@@ -1,3 +1,54 @@
+Fri May 18 01:56:47 2007  Tim Janik <timj@gtk.org>
+
+	ChangeLog switched to auto-generated file from GIT commits.
+
+Thu May 17 21:49:26 2007  Tim Janik <timj@gtk.org>
+
+	Merge branch 'master' of http://birnet.org/git/birnet
+
+Thu May 17 03:32:32 2007  Tim Janik <timj@gtk.org>
+
+        * XmlNode implementation.
+
+        * birnet/birnetxml.[hc]: added bool to accessors for insensitive attributes.
+        added parsed_line()/parsed_char().
+
+        * birnet/birnetxml.cc: keep reference count from parent to children.
+        made removal of the last child an O(1) operation.
+
+        * birnet/tests/xmltest.cc: properly reference XmlNode tree root.
+
+        * birnet/birnetmarkup.hh: extended list of custo, error codes.
+
+        * birnet/birnetxml.cc: removed bogus class implementation.
+        implemented text() for parent nodes. added attribute and text handling
+        to xml parser. fixed pseudoroot. added first_child() accessor.
+
+        * birnet/tests/xmltest.cc: added checks for attributes, nested
+        children and text retrival.
+
+        * birnet/tests/data.cc: extensions for testable assertions.
+
+        * birnet/Makefile.am: build birnetxml.hh, birnetxml.cc.
+
+        * birnet/birnet.hh: add birnetxml.hh to public includes.
+
+        * birnet/birnetxml.hh, birnet/birnetxml.cc: new files, implementing XmlNode.
+        a node is ref-counted and can hold text or children.
+        added parser prototype which creates a an xml node tree from XML markup.
+
+        * birnet/tests/xmltest.cc: new test program for XmlNode.
+
+        * birnet/tests/markup.cc: moved test data to data.cc.
+
+        * birnet/tests/data.cc: moved XML test data from markup.cc here.
+
+        * birnet/tests/Makefile.am: added xmltest.cc.
+
+Sun Apr 29 02:28:45 2007  Tim Janik <timj@gtk.org>
+
+	* web/cmpgtk.doxi: fixed typo.
+
 Fri Apr 13 02:30:48 2007  Tim Janik  <timj@gtk.org>
 
 	* rapicorn/private.hh: catch broken compiler versions as described
