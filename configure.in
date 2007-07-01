@@ -141,6 +141,13 @@ AC_DEFUN([AC_I18N_REQUIREMENTS],
     prefix="$saved_prefix"
     AC_SUBST(rapicornlocaledir)
 
+    # --- Rapicorn paths ---
+    rapicornbasedir=\${datadir}/rapicorn
+    rapicorndocsdir=$rapicornbasedir/v$LT_VERSION/docs
+    AC_SUBST(rapicorndocsdir)
+    rapicornimagesdir=$rapicornbasedir/v$LT_VERSION/images
+    AC_SUBST(rapicornimagesdir)
+
     dnl # do gettext checks and provide INTLLIBS
     AM_GLIB_GNU_GETTEXT
     AC_PROG_INTLTOOL
@@ -306,6 +313,7 @@ po/Makefile.in
 po-helper.sh
 examples/Makefile
 tests/Makefile
+docs/Makefile
 web/Makefile
 ])
 

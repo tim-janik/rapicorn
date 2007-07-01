@@ -29,6 +29,8 @@ body {
 #cfooter        { padding: 0 1px; }
 #rfooter        { padding: 0 1px; }
 #footer         { padding: 0 1px; }
+/* un-space lists and preformatetd sections */
+pre, ul, ol { margin-top: 0; margin-bottom: 0; }
 
 /* navigation menu */
 .webmenu            { font-weight: bold; }

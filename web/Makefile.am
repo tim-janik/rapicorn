@@ -16,9 +16,32 @@ HTML_TARGETS = $(strip                  \
 	html/style.css			\
 	html/doxer-style.css		\
 )
-TARGET_DIRS = html/
-DOXIDEFS = -D RAPICORN_VERSION ${RAPICORN_VERSION} -I $(srcdir)
-DOCFRAME_DEFS=
+RDOCU_TARGETS = $(strip                 \
+	html/rdocu-rapicorn/index.html  \
+)
+
+TARGET_DIRS   = html/ tmpdoxi-rapicorn/ html/rdocu-rapicorn/
+DOXIDEFS      = -D RAPICORN_VERSION ${RAPICORN_VERSION} -I $(srcdir)
+DOCFRAME_DEFS = -D DOXI_INCLUDE_FILE \"definitions.doxi\"    # $(if $(findstring $(<F), ${WEBMENU_DOXI_FILES}), \"webmenu.doxi\", \"webframe.doxi\")
+
+# Reference Documentation
+../docs/psource/rapicorn.psrc: PHONY-TARGET
+	@$(MAKE) -C ../docs $(patsubst ../docs/%, %, $@)
+# Rapicorn reference docu
+tmpdoxi-rapicorn/index.doxi: ../docs/psource/rapicorn.psrc rdocu-template.doxi definitions.doxi
+	rm -f tmpdoxi-rapicorn/*
+	$(DOXER) pickle2doxi $(strip -i $<      -D TOP_WEBDIR ".."              \
+		 -d tmpdoxi-rapicorn/ $(DOXIDEFS) -T rdocu-template.doxi \
+		 -D DOCU_TEMPLATE_TITLE "Rapicorn - Interface Reference"        \
+		 -D DOCU_TEMPLATE_HEADING "Rapicorn Interface Reference" )
+html/rdocu-rapicorn/index.html: tmpdoxi-rapicorn/index.doxi $(wildcard tmpdoxi-rapicorn/*.doxi)
+	rm -f html/rdocu-rapicorn/*
+	$(DOXER) doxi2html $(strip                      -D TOP_WEBDIR ".."      \
+		 -d html/rdocu-rapicorn/ $(DOXIDEFS) $(call DOCFRAME_DEFS)      \
+		 $(filter-out $<, $(shell echo tmpdoxi-rapicorn/*.doxi)) )
+	$(DOXER) doxi2html $(strip                      -D TOP_WEBDIR ".."      \
+		 -d html/rdocu-rapicorn/ $(DOXIDEFS) $(call DOCFRAME_DEFS) $< )
+EXTRA_DIST += rdocu-template.doxi
 
 # rule: mkdir
 ${TARGET_DIRS}:
@@ -36,7 +59,7 @@ html/%.css: ./%.css
 html/doxer-style.css:
 	$(DOXER) -d html/ writecss
 # rule: *.tar.bz2
-rapicorn-site.tar.bz2: ${TARGET_DIRS} ${HTML_TARGETS}
+rapicorn-site.tar.bz2: ${TARGET_DIRS} ${HTML_TARGETS} ${RDOCU_TARGETS}
 	tar jcf $@ --anchored --exclude='html/screenshotdir/*' --exclude='html/logogallerydir/*' html/
 CLEANFILES += rapicorn-site.tar.bz2
 # rule: site*
@@ -47,9 +70,12 @@ noinst_DATA = @DOXRULE@ rapicorn-site.tar.bz2
 clean-local:
 	rm -f screenshotdir/*.THUMB.jpg
 	rm -f ${intermediate_files} ${CLEANFILES}
+	rm -f tmpdoxi-rapicorn/* html/rdocu-rapicorn/*
+	-rmdir -p tmpdoxi-rapicorn/ html/rdocu-rapicorn/
 	rm -fr html/screenshotdir/ html/web-images/ html/images/ html/style/
 	rm -f html/* html/.htaccess
 	rmdir html/ 2>/dev/null ; true
+.PHONY: PHONY-TARGET
 
 # remote installation
 ACCOUNT_USER = $(subst tjlocal, timj, ${USER})

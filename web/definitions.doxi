@@ -2,7 +2,7 @@
 @dnl     ^-- import standard definitions
 
 @dnl enlist default style sheet (includes doxer-style.css)
-@doxer_add{html-stylesheets}	Rapicorn Style	<style.css>
+@doxer_add{html-stylesheets}	Rapicorn Style	<@doxer_get{TOP_WEBDIR}/style.css>
 
 @dnl setup webpage icon
 @doxer_add{raw_html_head}	<link href="http://rapicorn.org/rapicorn16.png" rel="shortcut icon">

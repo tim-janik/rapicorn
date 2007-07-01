@@ -4,7 +4,7 @@
 ## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = . birnet rapicorn po examples tests web
+SUBDIRS = . birnet rapicorn po examples tests docs web
 noinst_DATA =
 
 # setup automake
