@@ -13,7 +13,7 @@ body {
   background-image:url(vgradientG.png);
   background-repeat:repeat-x;
   color: Black;
-  font-size: 100%;  
+  font-size: 100%;
   font-weight: 500; /* 500:normnal 700:bold */
 }
 
@@ -49,3 +49,7 @@ pre, ul, ol { margin-top: 0; margin-bottom: 0; }
   margin-right: 0.8em; padding-right:0.5em;
   border: 3px; border-style:outset; border-color:#806c00;
 }
+
+/* custom styles */
+div.ObjectTable    * td { vertical-align: top; padding: 0.4em; }
+div.MilestoneTable * td { vertical-align: top; padding: 0.4em; }

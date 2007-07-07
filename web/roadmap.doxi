@@ -1,0 +1,125 @@
+@doxer_dnl      # emacs: -*- mode: texinfo; texinfo-open-quote: "\""; texinfo-close-quote: "\""; -*-
+@doxer_set{title}       Rapicorn - Roadmap & Steps Ahead
+@include "definitions.doxi"
+
+@heading Roadmap & Steps Ahead
+
+Rapicorn started out as a canvas replacement, but it's scope has vastly broadened since.
+It is now aimed more towards a full graphical toolkit replacement.
+This roadmap is used to structure the open items to be implemented,
+input and feedback is welcome.
+
+
+@subheading Milestones:
+
+@doxer_div{MilestoneTable}
+@table
+@row
+@cell @strong{Milestone}
+@cell @strong{Features}
+@cell @strong{Sumary}
+@done
+@row
+@cell
+@cell	@uri{http://cairographics.org/, Cairo},
+	@uri{http://www.pango.org/, Pango},
+	@uri{http://www.libpng.org/pub/png/, PNG},
+	@uri{http://rapicorn.org/rdocu-rapicorn/item.hh.html#Rapicorn::Item::cross_link, cross-references},
+	signal-emissions,
+	@uri{http://rapicorn.org/rdocu-rapicorn/viewport.hh.html#rapicorn_init_with_gtk_thread, Gtk+-backend},
+	@uri{http://rapicorn.org/rdocu-rapicorn/events.hh.html, event-processing},
+	@uri{http://rapicorn.org/rdocu-rapicorn/item.hh.html#Rapicorn::Item::grab_focus, keyboard-focus}
+@cell Core infrastructure: support Cairo for 2D rendering, Pango for text rendering and the PNG image format.
+@done
+@row
+@cell
+@cell	Buttons, Sliders, Scrolling, Table, Painted Gadgets,
+	@uri{http://blogs.gnome.org/view/timj/2005/07/31/0, XML-GUI}
+@cell Support core GUI elements.
+@done
+@done
+@done
+
+
+
+@subheading Objects and Gadgets:
+
+@doxer_div{ObjectTable}
+@table
+@row
+@cell @strong{Stage}
+@cell @strong{Accomplished}
+@cell @strong{Missing}
+@done
+@row
+@cell Objects
+@cell Adjustment
+@cell SizeGroup
+@done
+@row
+@cell Windowing
+@cell Root (C++ handle: Window)
+@done
+@row
+@cell Layout Containers
+@cell Table HBox VBox Alignment
+@cell NoteBook Fixed HPaned VPaned
+@done
+@row
+@cell Scrolling
+@cell ScrollArea
+@done
+@row
+@cell Text facilities
+@cell Label TextEntry
+@cell TextEditor
+@done
+@row
+@cell Buttons
+@cell Button
+@cell CheckButton Togglebutton RadioButton SpinButton LinkButton
+@done
+@row
+@cell Paint Gadgets
+@cell Arrow DotGrid Drawable Frame
+@cell HSeparator VSeparator
+@done
+@row
+@cell Paint Containers
+@cell Ambience Frame FocusFrame
+@cell SchemeContainer
+@done
+@row
+@cell Scales
+@cell HScrollbar VScrollbar HSlider VSlider
+@cell
+@done
+@row
+@cell Selections
+@cell
+@cell TreeView ComboBox ListView
+@done
+@row
+@cell Menus
+@cell
+@cell MenuBar MenuItem CheckMenuItem RadioMenuItem
+@done
+@row
+@cell Functional Gadgets
+@cell
+@cell StatusBar ToolBar Palette Expander
+@done
+@row
+@cell Other
+@cell Image
+@cell Tooltip ProgressBar Ruler Dockable PlugSocket
+@done
+@row
+@cell Dialogs
+@cell
+@cell MessageDialog FileSelection AboutDialog ColorSelection FontSelection Calendar SearchDialog
+@done
+@done
+@done
+
+

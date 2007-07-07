@@ -14,6 +14,7 @@
 @itemize{none}
 @item	@uri{main.html,		Main}
 @item	@uri{basics.html,	Basics}
+@item	@uri{roadmap.html,	Roadmap}
 @item	@uri{techbits.html,	Tech Bits}
 @item	@uri{cmpgtk.html,	Observing Gtk+}
 @done
@@ -22,6 +23,7 @@
 @dnl# === Website Footer ===
 @heading{group=footer}
 @*
-@center @doxer_fontsize{-1, This website is maintained by @uri{mailto:timj@@gtk.org, Tim Janik}.
+@center @doxer_fontsize{-1, This website is maintained by
+@rawhtml{<a href="mailto:&#116;&#105;&#109;&#106;&#64;&#103;&#116;&#107;&#46;&#111;&#114;&#103;">Tim Janik</a>}.
 Validate the @uri{http://validator.w3.org/check/referer,HTML} or @uri{http://jigsaw.w3.org/css-validator/check/referer,CSS}.
 }

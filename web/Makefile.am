@@ -13,6 +13,7 @@ HTML_TARGETS = $(strip                  \
 	html/rapicorn032.png		\
 	html/hgradientG.png		\
 	html/vgradientG.png		\
+	html/roadmap.html		\
 	html/style.css			\
 	html/doxer-style.css		\
 )
@@ -47,7 +48,7 @@ EXTRA_DIST += rdocu-template.doxi
 ${TARGET_DIRS}:
 	mkdir -p $@
 # rule: .doxi -> .html
-html/%.html: ./%.doxi
+html/%.html: ./%.doxi definitions.doxi
 	$(DOXER) doxi2html $(strip $< -d html/  -D TOP_WEBDIR "." $(DOXIDEFS) $(call DOCFRAME_DEFS))
 # rule: .png -> html/
 html/%.png: ./%.png
@@ -77,15 +78,23 @@ clean-local:
 	rmdir html/ 2>/dev/null ; true
 .PHONY: PHONY-TARGET
 
+# preview installation
+RAPICORN_PREVIEW=~/public_html/rapicorn-preview
+site-preview: ${RAPICORN_PREVIEW}/. rapicorn-site.tar.bz2
+	rm -rf ${RAPICORN_PREVIEW}/html/
+	tar jxmpf rapicorn-site.tar.bz2 -C ${RAPICORN_PREVIEW}/
+	: #ln -s main.html ${RAPICORN_PREVIEW}/html/index.html
+.PHONY: site-preview
+
 # remote installation
-ACCOUNT_USER = $(subst tjlocal, timj, ${USER})
-ACCOUNT=$(strip $(ACCOUNT_USER))@rapicorn.org
-ACDEST=/web/rapicorn/
-ACTMP=xgen-tmp
+REMOTE_USER = $(subst tjlocal, timj, ${USER})
+REMOTE=$(strip $(REMOTE_USER))@rapicorn.org
+REMOTE_DEST=/web/rapicorn/
+REMOTE_TMP=_scptmp
 site-update: rapicorn-site.tar.bz2
-	scp -p $< ${ACCOUNT}:${ACTMP}-$(<F)
-	ssh ${ACCOUNT}                                  \
-	 "set -ex "                                     \
-	 "&& tar jxmpf ${ACTMP}-$(<F) -C ${ACDEST} "    \
-	 "&& rm ${ACTMP}-$(<F)"
+	scp -p $< ${REMOTE}:${REMOTE_TMP}-$(<F)
+	ssh ${REMOTE}						\
+	 "set -ex "						\
+	 "&& tar jxmpf ${REMOTE_TMP}-$(<F) -C ${REMOTE_DEST} "	\
+	 "&& rm ${REMOTE_TMP}-$(<F)"
 .PHONY: site-update
