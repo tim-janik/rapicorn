@@ -1,3 +1,9 @@
+RELEASE:
+- cleanup examples, move tour scroller, testtext to test/
+- simple clean examples:
+  * Hello World + [Close}
+  * FileName:[___] [Save] \n Text:[______\n_____] \n [Close]
+  * Color:[____] |ColoredDrawing| [Close]
 FIXME:
 - add command() signal to connect to
 - non-working .interface<SomeType&>() should provide a better error message than throwing a NullReference exception
