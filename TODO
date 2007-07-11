@@ -17,6 +17,9 @@ FIXME:
 CLEANUPS:
 - rename paintgadgets.cc to paintitems.cc
 - rename table allocation passes
+- stefan: s/Factory.parse_resource/Factory::parse_resource/
+- stefan: s/create_gadget/create_item/
+- consistently rename "Gadget" aliases
 MISC:
 - DPI / font selection: http://primates.ximian.com/~federico/news-2007-01.html#31
 - supply overlay dialogs; here, the parent dialog becomes insensitive and the
@@ -29,9 +32,8 @@ MISC:
     ref_bg
   - requires API that allowes color resolution from a string + reference color (ref_fg,ref_bg)
 - put lower-right light into scroll-trough
-- cache mouse coords per-display only
-- stefan: s/Factory.parse_resource/Factory::parse_resource/
-- stefan: s/create_gadget/create_item/
+- cache mouse coords per-pointer and only per-display
+- pixel plane caching or backing store rating should consider: width * height * n_combines_per_screen_blit
 - s/cancel/cancelled/
 - implement SliderArea::list_properties()
 - check taht all container types really derive from multi/simple-container
@@ -70,6 +72,10 @@ RENDERING:
 - geometry primitives: http://astronomy.swin.edu.au/~pbourke/geometry/
 - hershey vector fonts: http://astronomy.swin.edu.au/~pbourke/other/hershey/
 - color FAQ: http://www.inforamp.net/~poynton/
+CHECK/TESTS/ASSERTIONS:
+- once-removed children should not be re-addable to a container (simplifies code, shouldn't have dramatic impact)
+
+
 
 
 POPUPS:
