@@ -11,9 +11,9 @@ evolutionary failures. :-)
 
 Lots of design decisions or techniques that Rapicorn employs can be found
 and have been pioneered in other toolkits, but it is also intentionally
-distinct in selected areas. 
+distinct in selected areas.
 In particular, Rapicorn tries to simplify structures and automate developer
-tasks wherever possible. 
+tasks wherever possible.
 Convenience in development and UI usage is a paramount design goal.
 
 At the same time, Rapicorn attempts to incorporate all significant usability
@@ -23,27 +23,27 @@ see @uri{http://beast.gtk.org/wiki:UsabilityGuidelines}.
 
 Fulfillment of the above development intentions comes at a certain cost.
 That is, implementation simplicity and maintainability is generally regarded
-higher than micro optimizations or 
+higher than micro optimizations or
 @uri{http://en.wikipedia.org/wiki/Creeping_featurism, creeping featuritis}.
 Also, programming interface compatibility is prioritized much lower than
 in comparable other library projects. To compensate for possibly frequent
 programming interface changes, the actual API is designed to be as small
 as possible, ideally just consisting of application data models and XML
-definitions to specify widget packing and widget properties.
+definitions to specify gadget packing and gadget properties.
 
 The following list focuses on some of the selected areas where Rapicorn
 intentionally differs from other toolkits:
 
 @itemize
 
-@item @anchor{micro-widget-composition}
-	The main mechanism to construct composite widgets in Rapicorn is not by programming
-	compositions, but by writing an XML definition that packs multiple micro widgets
+@item @anchor{micro-gadget-composition}
+	The main mechanism to construct composite gadgets in Rapicorn is not by programming
+	compositions, but by writing an XML definition that packs multiple micro gadgets
 	(GUI components with very limited event processing or drawing elements)
 	together in different configurations.
 
 @item @anchor{composite-customization}
-	Rapicorn allows customization of composite widgets as suggested in a
+	Rapicorn allows customization of composite gadgets as suggested in a
 	@uri{http://bugzilla.gnome.org/show_bug.cgi?id=356864#c13, Gtk+ Bugzilla comment},
 	because by reusing the XML definitions of composites, users can easily alter
 	all visible aspects.
@@ -82,7 +82,7 @@ intentionally differs from other toolkits:
 @item @anchor{multi-pointer}
 	Multi pointer support.
 	Rapicorn is supposed to work well in multi-pointer and multiple window focus scenarios
-	that are currently being developed for X: 
+	that are currently being developed for X:
 	@uri{http://wiki.x.org/wiki/XDC2007Notes#head-6a32160debfaa441605bee568704bea44bae18b6, MPX}.
 
 @item @anchor{size-negotiation}
@@ -93,7 +93,7 @@ intentionally differs from other toolkits:
 	positions (e.g. word boundaries) and ellipsize overlong lines.
 	Or GUI elements may be tailored to be layed out at specific heights, widths and ratios.
 	Supporting arbitrary resizing constraints for an unlimited combination of possibly nested
-	GUI elements can lead to unsolvable 
+	GUI elements can lead to unsolvable
 	  @uri{http://en.wikipedia.org/wiki/Global_optimization, optimization problems}
 	and is thusly rarely supported by GUI toolkits.
 	Rapicorn does support arbitrary negotiation constraints via a
@@ -103,7 +103,7 @@ intentionally differs from other toolkits:
 @done
 	method that can retrigger the size requisition phase during the size allocation phase.
 	To cope with layout negotiation instabilities and endless resizing loops,
-	the resizing logic in Rapicorn resorts to a 
+	the resizing logic in Rapicorn resorts to a
 	  @uri{http://en.wikipedia.org/wiki/Simulated_annealing, simulated annealing}
 	variant, which is a probabilistic approach that can guarantee size negotiation termination.
 	This approach is still highly experimental and different resolution strategies might be

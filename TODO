@@ -19,7 +19,6 @@ CLEANUPS:
 - rename table allocation passes
 - stefan: s/Factory.parse_resource/Factory::parse_resource/
 - stefan: s/create_gadget/create_item/
-- consistently rename "Gadget" aliases
 MISC:
 - DPI / font selection: http://primates.ximian.com/~federico/news-2007-01.html#31
 - supply overlay dialogs; here, the parent dialog becomes insensitive and the
