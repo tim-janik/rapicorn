@@ -1,4 +1,5 @@
 RELEASE:
+- remove cairo-inlined/
 - cleanup examples, move tour scroller, testtext to test/
 - simple clean examples:
   * Hello World + [Close}
