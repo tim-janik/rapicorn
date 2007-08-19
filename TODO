@@ -11,7 +11,7 @@ FIXME:
 - turn item->m_parent into a Container*
 - add per-object Blurb slot to type registration at factory
 - grep for FIXME in the sources
-- AdjustmentSource::get_adjustment() must be called recursively up the heirarchy as long as adj==NULL
+- AdjustmentSource::get_adjustment() must be called recursively up the hierarchy as long as adj==NULL
 - rename left-padding,etc. Alignment properties because they overlap with Table's child proeprty names
   or rename child properties: left-margin, right-spacing, etc...
 CLEANUPS:
