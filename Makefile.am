@@ -4,7 +4,7 @@
 ## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = . birnet rapicorn po examples tests docs web
+SUBDIRS = . rapicorn po examples tests docs web
 noinst_DATA =
 
 # setup automake
@@ -19,7 +19,7 @@ test:
 .PHONY: test
 
 # extra dependancies
-configure: birnet/acbirnet.m4 birnet/configure.inc
+configure: acrapicorn.m4
 
 
 CLEANFILES += intltool-extract intltool-merge intltool-update
