@@ -42,9 +42,9 @@ MISC:
     what():  Rapicorn::Plane& Rapicorn::Display::create_plane(Rapicorn::CombineType, double): zero-size display
 - make Plane.peek() private and rename poke_span()
 - allow notification for signal connections and disconnections
-- before processing delete event, synthesize focus out (for the window in question) 
+- before processing delete event, synthesize focus out (for the window in question)
   if it has a focus item
-- synthesize focus-out before popping up new (modal, override-redirect) windows  
+- synthesize focus-out before popping up new (modal, override-redirect) windows
 - MAKE COMBINE_NORMAL --> over a real alias
 - render(): pass on a RenderBuffer from which planes can be created via intersection
 - Table: change shrink logic to shrink according to:
@@ -79,7 +79,7 @@ CHECK/TESTS/ASSERTIONS:
 
 POPUPS:
 - popups should be part of the regular item hierarchy, so popup children, and
-  even subpopups of popups should all be part of a single parent<->child 
+  even subpopups of popups should all be part of a single parent<->child
   runtime tree.
 - popups should only be considered enabled for popping up if they are visible.
 - popups should be flagged !allocatable, because they should not be allocated
