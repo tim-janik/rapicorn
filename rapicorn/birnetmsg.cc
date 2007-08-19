@@ -455,6 +455,8 @@ Msg::display_parts (const char         *domain,
 {
   int saved_errno = errno;
   String title, primary, secondary, details, checkmsg;
+  if (!domain)
+    domain = "";
   for (uint i = 0; i < parts.size(); i++)
     switch (parts[i].ptype)
       {
