@@ -15,10 +15,7 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE     /* syscall() */
-#endif
-#include "birnetconfig.h" // BIRNET_HAVE_MUTEXATTR_SETTYPE
+#include "rapicornconfig.h" // BIRNET_HAVE_MUTEXATTR_SETTYPE
 #if	(BIRNET_HAVE_MUTEXATTR_SETTYPE > 0)
 #define	_XOPEN_SOURCE   600	/* for full pthread facilities */
 #endif	/* defining _XOPEN_SOURCE on random systems can have bad effects */

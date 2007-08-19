@@ -16,7 +16,7 @@
  */
 //#define TEST_VERBOSE
 #include <rapicorn/birnettests.h>
-#include <rapicorn/birnet.hh>
+#include <rapicorn/rapicorncore.hh>
 
 namespace {
 using namespace Birnet;

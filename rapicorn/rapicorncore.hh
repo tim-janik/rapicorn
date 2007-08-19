@@ -17,7 +17,7 @@
 #ifndef __BIRNET_H__
 #define __BIRNET_H__
 
-#include <rapicorn/birnetconfig.h>
+#include <rapicorn/rapicornconfig.h>
 #include <rapicorn/birnetcpu.hh>
 #include <rapicorn/birnetdebugtools.hh>
 #include <rapicorn/birnetmsg.hh>

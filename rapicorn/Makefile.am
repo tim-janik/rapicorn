@@ -12,7 +12,7 @@ DEFS            = -DRAPICORN_PRIVATE -DPARANOID -D_BIRNET_SOURCE_EXTENSIONS -DBI
 
 rapicorn_top_headers = rapicorn.hh
 rapicorn_public_headers = $(strip 	\
-        birnet.hh       birnetcdefs.h           birnettests.h                   \
+	rapicorncore.hh birnetcdefs.h           birnettests.h                   \
         birnetcpu.hh    birnetdebugtools.hh     birnetthread.hh birnetutils.hh  \
         birnetmsg.hh    birnetsignal.hh         birnetmath.hh   birnetutf8.hh   \
         birnetxml.hh    birnetmarkup.hh \
@@ -35,9 +35,8 @@ rapicorn_impl_headers = $(strip 	\
 	tableimpl.hh			\
 )
 rapicorn_generated_headers = $(strip	\
-        birnetconfig.h                  \
         birnetsignalvariants.hh         \
-	rapicornconfig.hh		\
+	rapicornconfig.h		\
 )
 rapicorn_cc_sources = $(strip 		\
         birnetthreadimpl.cc             \
@@ -93,7 +92,7 @@ birnet_zintern_DEPS    = $(progs_deps)
 
 # === header-checksum ===
 RAPICORN_MAKE_CHECKSUM=$(strip			\
-	cat $(filter-out rapicornconfig.hh,	\
+	cat $(filter-out rapicornconfig.h,	\
 		$(rapicorn_public_headers)	\
 		$(rapicorn_top_headers)		\
 		$(rapicorn_generated_headers)	\
@@ -162,36 +161,96 @@ factory.cc: gen-zintern.c
 CLEANFILES += xgen-gen-zintern.c gen-zintern.c
 
 
-# === rapicornconfig.hh ===
-rapicornconfig.hh: $(top_builddir)/config.status # Makefile
+# === rapicornconfig.h ===
+rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	cd . \
 	&& echo "/* Generated data from $< (by make $@) */" 					 > xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- select programming environment --- */"					>> xgen-$(@F) \
-	&& echo "#include <rapicorn/birnet.hh> /* _GNU_SOURCE */"				>> xgen-$(@F) \
+	&& echo "#ifndef _GNU_SOURCE"								>> xgen-$(@F) \
+	&& echo "#define _GNU_SOURCE"								>> xgen-$(@F) \
+	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- unique namespace for all symbols --- */"				>> xgen-$(@F) \
+	&& echo "#define Birnet				@BIRNET_NAMESPACE_NAME@"		>> xgen-$(@F) \
 	&& echo "#define Rapicorn			@RAPICORN_NAMESPACE_NAME@"		>> xgen-$(@F) \
+	&& echo ""										>> xgen-$(@F) \
+	&& echo "/* --- standard C code wrappers --- */"					>> xgen-$(@F) \
+	&& echo "#ifdef  __cplusplus"								>> xgen-$(@F) \
+	&& echo '#define BIRNET_EXTERN_C_BEGIN()	extern "C" {'				>> xgen-$(@F) \
+	&& echo "#define BIRNET_EXTERN_C_END()		}"					>> xgen-$(@F) \
+	&& echo "#else"										>> xgen-$(@F) \
+	&& echo "#define BIRNET_EXTERN_C_BEGIN()"						>> xgen-$(@F) \
+	&& echo "#define BIRNET_EXTERN_C_END()"							>> xgen-$(@F) \
+	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- rapicorn version --- */"						>> xgen-$(@F) \
 	&& echo "#define RAPICORN_RELEASE_VERSION	(@RAPICORN_RELEASE_VERSION@)"		>> xgen-$(@F) \
 	&& echo "#define RAPICORN_REVISION_VERSION	(@RAPICORN_REVISION_VERSION@)"		>> xgen-$(@F) \
+	&& echo "#define BIRNET_RELEASE_VERSION		(@BIRNET_RELEASE_VERSION@)"		>> xgen-$(@F) \
+	&& echo "#define BIRNET_REVISION_VERSION	(@BIRNET_REVISION_VERSION@)"		>> xgen-$(@F) \
 	&& echo "/* version checks */"								>> xgen-$(@F) \
 	&& echo "#define RAPICORN_CHECK_VERSION(relv,revv)	\\"				>> xgen-$(@F) \
 	&& echo "  (RAPICORN_RELEASE_VERSION > (relv) || \\"					>> xgen-$(@F) \
 	&& echo "   (RAPICORN_RELEASE_VERSION == (relv) && \\" 					>> xgen-$(@F) \
 	&& echo "    RAPICORN_REVISION_VERSION >= (revv)))" 					>> xgen-$(@F) \
+	&& echo "#define BIRNET_CHECK_VERSION(relv,revv)	\\"				>> xgen-$(@F) \
+	&& echo "  (BIRNET_RELEASE_VERSION > (relv) || \\"					>> xgen-$(@F) \
+	&& echo "   (BIRNET_RELEASE_VERSION == (relv) && BIRNET_REVISION_VERSION >= (revv)))"	>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- i18n domain --- */"							>> xgen-$(@F) \
+	&& echo "/* --- log & i18n domains --- */"						>> xgen-$(@F) \
+	&& echo "#ifndef BIRNET_LOG_DOMAIN"							>> xgen-$(@F) \
+	&& echo "#ifdef  G_LOG_DOMAIN"								>> xgen-$(@F) \
+	&& echo "#define BIRNET_LOG_DOMAIN  G_LOG_DOMAIN"					>> xgen-$(@F) \
+	&& echo "#else"										>> xgen-$(@F) \
+	&& echo "#define BIRNET_LOG_DOMAIN  ((const char*) 0)"					>> xgen-$(@F) \
+	&& echo "#endif"									>> xgen-$(@F) \
+	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo '#define RAPICORN_I18N_DOMAIN    "rapicorn"'					>> xgen-$(@F) \
 	&& echo "/* make sure to call bindtextdomain (RAPICORN_I18N_DOMAIN, i18ndir_path); */"	>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- backends, support libraries --- */"					>> xgen-$(@F) \
+	&& echo "/* --- backend configuration --- */"						>> xgen-$(@F) \
 	&& echo "#define RAPICORN_WITH_GTK	(1)"						>> xgen-$(@F) \
 	&& echo "#define RAPICORN_WITH_PANGO	(1)"						>> xgen-$(@F) \
+	&& echo ""										>> xgen-$(@F) \
+	&& echo "/* --- configure results --- */"						>> xgen-$(@F) \
+	&& echo "#define BIRNET_OS_@BIRNET_OS@  	(1) /* one of: @BIRNET_OS_CHOICES@ */"	>> xgen-$(@F) \
+	&& echo "#define BIRNET_SIZEOF_POINTER		(@BIRNET_SIZEOF_POINTER@)"		>> xgen-$(@F) \
+	&& echo "#define BIRNET_SIZEOF_LONG		(@BIRNET_SIZEOF_LONG@)"			>> xgen-$(@F) \
+	&& echo "#define BIRNET_SIZEOF_SYS_TYPESH_UINT	(@BIRNET_SIZEOF_SYS_TYPESH_UINT@)"	>> xgen-$(@F) \
+	&& echo "#define BIRNET_SIZEOF_PTH_MUTEX_T	(@BIRNET_SIZEOF_PTH_MUTEX_T@)" 		>> xgen-$(@F) \
+	&& echo "#define BIRNET_SIZEOF_PTH_COND_T	(@BIRNET_SIZEOF_PTH_COND_T@)" 		>> xgen-$(@F) \
+	&& echo "#define BIRNET_HAVE_MUTEXATTR_SETTYPE	(@BIRNET_HAVE_MUTEXATTR_SETTYPE@ && \\" >> xgen-$(@F) \
+	&& echo "                                        BIRNET_SIZEOF_PTH_MUTEX_T && \\" 	>> xgen-$(@F) \
+	&& echo "                                        BIRNET_SIZEOF_PTH_COND_T)" 		>> xgen-$(@F) \
+	&& echo "#define BIRNET_MEMORY_BARRIER_NEEDED   (@BIRNET_MEMORY_BARRIER_NEEDED@)"	>> xgen-$(@F) \
+	&& echo ""										>> xgen-$(@F) \
+	&& echo "#define BIRNET_SYSVAL_POLLIN 		(@BIRNET_SYSVAL_POLLIN@)"		>> xgen-$(@F) \
+	&& echo "#define BIRNET_SYSVAL_POLLPRI		(@BIRNET_SYSVAL_POLLPRI@)"		>> xgen-$(@F) \
+	&& echo "#define BIRNET_SYSVAL_POLLOUT		(@BIRNET_SYSVAL_POLLOUT@)"		>> xgen-$(@F) \
+	&& echo "#define BIRNET_SYSVAL_POLLRDNORM	(@BIRNET_SYSVAL_POLLRDNORM@)"		>> xgen-$(@F) \
+	&& echo "#define BIRNET_SYSVAL_POLLRDBAND 	(@BIRNET_SYSVAL_POLLRDBAND@)"		>> xgen-$(@F) \
+	&& echo "#define BIRNET_SYSVAL_POLLWRNORM   	(@BIRNET_SYSVAL_POLLWRNORM@)"		>> xgen-$(@F) \
+	&& echo "#define BIRNET_SYSVAL_POLLWRBAND	(@BIRNET_SYSVAL_POLLWRBAND@)"		>> xgen-$(@F) \
+	&& echo "#define BIRNET_SYSVAL_POLLERR		(@BIRNET_SYSVAL_POLLERR@)"		>> xgen-$(@F) \
+	&& echo "#define BIRNET_SYSVAL_POLLHUP		(@BIRNET_SYSVAL_POLLHUP@)"		>> xgen-$(@F) \
+	&& echo "#define BIRNET_SYSVAL_POLLNVAL		(@BIRNET_SYSVAL_POLLNVAL@)"		>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* Generated data ends here */" 						>> xgen-$(@F) \
 	&& cp xgen-$(@F) $@ \
 	&& rm -f xgen-$(@F)
-CLEANFILES += xgen-rapicornconfig.hh rapicornconfig.hh
-$(librapicorn@LT_RELEASE@_la_OBJECTS): rapicornconfig.hh
+CLEANFILES += xgen-rapicornconfig.h rapicornconfig.h
+$(librapicorn@LT_RELEASE@_la_OBJECTS): rapicornconfig.h
+
+
+# === birnetsignalvariants.hh ===
+$(srcdir)/*.cc: birnetsignalvariants.hh
+birnetsignalvariants.hh: $(srcdir)/birnetsignalslot.hh $(srcdir)/birnetsignaltemplate.hh $(srcdir)/mksignals.sh
+	cd . \
+	&& echo "/* Signal Variants -- Generated from: $(^F) */"	>xgen-sigs \
+	&& echo 						       >>xgen-sigs \
+	&& $(srcdir)/mksignals.sh $(srcdir)/birnetsignalslot.hh     17 >>xgen-sigs \
+	&& $(srcdir)/mksignals.sh $(srcdir)/birnetsignaltemplate.hh 16 >>xgen-sigs \
+	&& cp xgen-sigs $@ \
+	&& rm -f xgen-sigs
+CLEANFILES += xgen-sigs birnetsignalvariants.hh xgen-signals.sed
