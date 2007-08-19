@@ -16,9 +16,9 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #ifdef  __cplusplus
-#include <birnet/birnet.hh>
+#include <rapicorn/birnet.hh>
 #else
-#include <birnet/birnetconfig.h>
+#include <rapicorn/birnetconfig.h>
 #endif
 
 /* this file may be included by C programs */

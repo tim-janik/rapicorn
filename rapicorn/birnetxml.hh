@@ -17,7 +17,7 @@
 #ifndef __BIRNET_XML_HH__
 #define __BIRNET_XML_HH__
 
-#include <birnet/birnetmarkup.hh>
+#include <rapicorn/birnetmarkup.hh>
 
 namespace Birnet {
 

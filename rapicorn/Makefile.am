@@ -9,8 +9,14 @@ GLIB_MKENUMS    = glib-mkenums
 LDLIBS	        = $(LIBS) $(PANGO_LIBS) $(GTK_LIBS)
 DEFS            = -DRAPICORN_PRIVATE -DPARANOID -D_BIRNET_SOURCE_EXTENSIONS -DBIRNET_LOG_DOMAIN=\"RAPICORN\" # "
 
+
 rapicorn_top_headers = rapicorn.hh
 rapicorn_public_headers = $(strip 	\
+        birnet.hh       birnetcdefs.h           birnettests.h                   \
+        birnetcpu.hh    birnetdebugtools.hh     birnetthread.hh birnetutils.hh  \
+        birnetmsg.hh    birnetsignal.hh         birnetmath.hh   birnetutf8.hh   \
+        birnetxml.hh    birnetmarkup.hh \
+	\
 	keycodes.hh	$(rapicorn_impl_headers)	\
 	utilities.hh	events.hh	application.hh	\
 	enumdefs.hh	primitives.hh	region.hh	loop.hh		viewport.hh		\
@@ -29,9 +35,16 @@ rapicorn_impl_headers = $(strip 	\
 	tableimpl.hh			\
 )
 rapicorn_generated_headers = $(strip	\
+        birnetconfig.h                  \
+        birnetsignalvariants.hh         \
 	rapicornconfig.hh		\
 )
 rapicorn_cc_sources = $(strip 		\
+        birnetthreadimpl.cc             \
+        birnetcpu.cc    birnetdebugtools.cc     birnetthread.cc birnetutils.cc  \
+        birnetmsg.cc    birnetsignal.cc         birnetmath.cc   birnetutf8.cc   \
+        birnetxml.cc    birnetmarkup.cc \
+	\
 	viewport-gtk.cc	regionimpl.c	\
 	utilities.cc	events.cc	application.cc	\
 	enumdefs.cc	primitives.cc	region.cc	loop.cc		viewport.cc		\
@@ -42,11 +55,18 @@ rapicorn_cc_sources = $(strip 		\
 	text-editor.cc	text-pango.cc	testitem.cc	\
 )
 rapicorn_private_files = $(strip 	\
+        birnetsignalslot.hh             \
+        birnetsignaltemplate.hh         \
+	mksignals.sh			\
 	regionimpl.h			\
 	private.hh			\
 	key2utf8.cc			\
 )
 
+# libraries
+topincludedir   = $(includedir)/rapicorn@LT_RELEASE@
+topinclude_DATA = $(rapicorn_top_headers)
+EXTRA_DIST     += $(rapicorn_top_headers)
 # librapicorn
 lib_LTLIBRARIES                         = librapicorn@LT_RELEASE@.la	# hardcoded -release $(LT_RELEASE)
 librapicorn@LT_RELEASE@includedir       = $(includedir)/rapicorn@LT_RELEASE@/rapicorn
@@ -58,15 +78,18 @@ librapicorn@LT_RELEASE@_la_LDFLAGS      = $(strip		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined 						\
 ) # set libtool version and export symbols for resolving
-librapicorn@LT_RELEASE@_la_LIBADD       = $(strip	\
-	$(top_builddir)/birnet/libbirnet.o		\
-	$(RAPICORN_LIBS) -lm 				\
-) # -lfreetype -lfontconfig
+librapicorn@LT_RELEASE@_la_LIBADD       = $(RAPICORN_LIBS) -lm # -lfreetype -lfontconfig
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@LT_RELEASE@_la_DEPENDENCIES)
-# install toplevel includes
-topincludedir   = $(includedir)/rapicorn@LT_RELEASE@
-topinclude_DATA = $(rapicorn_top_headers)
-EXTRA_DIST     += $(rapicorn_top_headers)
+
+# programs (not installed)
+noinst_PROGRAMS        = $(ALLTESTS)
+progs_ldadd            = librapicorn@LT_RELEASE@.la $(RAPICORN_LIBS) -lm
+# birnet-zintern
+noinst_PROGRAMS       += birnet-zintern
+birnet_zintern_SOURCES = birnet-zintern.cc
+birnet_zintern_LDADD   = $(RAPICORN_LIBS) -lm # $(progs_ldadd)
+birnet_zintern_DEPS    = $(progs_deps)
+
 
 # === header-checksum ===
 RAPICORN_MAKE_CHECKSUM=$(strip			\
@@ -132,8 +155,8 @@ stamp-autochecks: $(XML_FILES)
 noinst_DATA = stamp-autochecks
 EXTRA_DIST += $(XML_FILES)
 
-gen-zintern.c:	$(top_builddir)/birnet/birnet-zintern $(srcdir)/factory.xml stamp-autochecks
-	$(top_builddir)/birnet/birnet-zintern -b -z FACTORY_XML $(srcdir)/factory.xml > xgen-$(@F)
+gen-zintern.c:	./birnet-zintern $(srcdir)/factory.xml stamp-autochecks
+	./birnet-zintern -b -z FACTORY_XML $(srcdir)/factory.xml > xgen-$(@F)
 	mv xgen-$(@F) $@
 factory.cc: gen-zintern.c
 CLEANFILES += xgen-gen-zintern.c gen-zintern.c
@@ -145,7 +168,7 @@ rapicornconfig.hh: $(top_builddir)/config.status # Makefile
 	&& echo "/* Generated data from $< (by make $@) */" 					 > xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- select programming environment --- */"					>> xgen-$(@F) \
-	&& echo "#include <birnet/birnet.hh> /* _GNU_SOURCE */"					>> xgen-$(@F) \
+	&& echo "#include <rapicorn/birnet.hh> /* _GNU_SOURCE */"				>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- unique namespace for all symbols --- */"				>> xgen-$(@F) \
 	&& echo "#define Rapicorn			@RAPICORN_NAMESPACE_NAME@"		>> xgen-$(@F) \

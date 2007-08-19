@@ -17,7 +17,7 @@
 #ifndef __BIRNET_CDEFS_H__
 #define __BIRNET_CDEFS_H__
 
-#include <birnet/birnetconfig.h>	/* _GNU_SOURCE */
+#include <rapicorn/birnetconfig.h>	/* _GNU_SOURCE */
 #include <stdbool.h>
 #include <stddef.h>			/* NULL */
 #include <sys/types.h>			/* uint, ssize */

@@ -17,7 +17,7 @@
 #ifndef __BIRNET_SIGNAL_HH__
 #define __BIRNET_SIGNAL_HH__
 
-#include <birnet/birnetutils.hh>
+#include <rapicorn/birnetutils.hh>
 
 namespace Birnet {
 namespace Signals {
@@ -424,7 +424,7 @@ trampoline_cast (TrampolineLink *link)
 }
 
 /* --- Trampoline + Slot + Signal generation --- */
-#include <birnet/birnetsignalvariants.hh> // contains multiple versions of "birnetsignaltemplate.hh"
+#include <rapicorn/birnetsignalvariants.hh> // contains multiple versions of "birnetsignaltemplate.hh"
 
 /* --- predefined slots --- */
 typedef Slot0<void, void> VoidSlot;

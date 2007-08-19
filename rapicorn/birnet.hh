@@ -17,17 +17,17 @@
 #ifndef __BIRNET_H__
 #define __BIRNET_H__
 
-#include <birnet/birnetconfig.h>
-#include <birnet/birnetcpu.hh>
-#include <birnet/birnetdebugtools.hh>
-#include <birnet/birnetmsg.hh>
-#include <birnet/birnetmarkup.hh>
-#include <birnet/birnetmath.hh>
-#include <birnet/birnetutf8.hh>
-#include <birnet/birnetutils.hh>
-#include <birnet/birnetsignal.hh>
-#include <birnet/birnetthread.hh>
-#include <birnet/birnetxml.hh>
+#include <rapicorn/birnetconfig.h>
+#include <rapicorn/birnetcpu.hh>
+#include <rapicorn/birnetdebugtools.hh>
+#include <rapicorn/birnetmsg.hh>
+#include <rapicorn/birnetmarkup.hh>
+#include <rapicorn/birnetmath.hh>
+#include <rapicorn/birnetutf8.hh>
+#include <rapicorn/birnetutils.hh>
+#include <rapicorn/birnetsignal.hh>
+#include <rapicorn/birnetthread.hh>
+#include <rapicorn/birnetxml.hh>
 
 #endif /* __BIRNET_H__ */
 /* vim:set ts=8 sts=2 sw=2: */

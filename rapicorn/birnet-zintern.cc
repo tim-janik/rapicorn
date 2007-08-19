@@ -14,7 +14,7 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include <birnet/birnet.hh>
+#include <rapicorn/birnet.hh>
 #include <glib.h>
 #include <stdio.h>
 #include <string.h>
@@ -22,6 +22,23 @@
 #include <zlib.h>
 
 namespace Birnet {
+
+static void     zintern_error  (const char     *format,
+                                ...) BIRNET_PRINTF (1, 2);
+
+static void
+zintern_error  (const char     *format,
+                ...)
+{
+  gchar *buffer;
+  va_list args;
+  va_start (args, format);
+  buffer = g_strdup_vprintf (format, args);
+  va_end (args);
+  g_printerr ("\nERROR: %s", buffer);
+  _exit (1);
+  g_free (buffer);
+}
 
 static bool use_compression = FALSE;
 static bool use_base_name = FALSE;
@@ -81,8 +98,8 @@ to_cupper (const String &str)
 {
   String s (str);
   for (uint i = 0; i < s.size(); i++)
-    if (Unichar::isalnum (s[i]))
-      s[i] = Unichar::toupper (s[i]);
+    if (is_alnum (s[i]))
+      s[i] = to_upper (s[i]);
     else
       s[i] = '_';
   return s;
@@ -97,10 +114,12 @@ gen_zfile (const char *name,
   uint i, dlen = 0, mlen = 0;
   Bytef *cdata;
   uLongf clen;
-  String fname = use_base_name ? Path::basename (file) : file;
+  gchar *basefile = g_path_get_basename (file);
+  String fname = use_base_name ? basefile : file;
+  g_free (basefile); basefile = NULL;
   Config config;
   if (!f)
-    BIRNET_ERROR ("failed to open \"%s\": %s", file, string_from_errno (errno).c_str());
+    zintern_error ("failed to open \"%s\": %s", file, g_strerror (errno));
   do
     {
       if (mlen <= dlen + 1024)
@@ -113,7 +132,7 @@ gen_zfile (const char *name,
   while (!feof (f));
 
   if (ferror (f))
-    BIRNET_ERROR ("failed to read from \"%s\": %s", file, string_from_errno (errno).c_str());
+    zintern_error ("failed to read from \"%s\": %s", file, g_strerror (errno));
 
   if (use_compression)
     {
@@ -138,7 +157,7 @@ gen_zfile (const char *name,
 	  break;
 	}
       if (err)
-	BIRNET_ERROR ("while compressing \"%s\": %s", file, err);
+	zintern_error ("while compressing \"%s\": %s", file, err);
     }
   else
     {
@@ -191,7 +210,7 @@ main (int   argc,
     { "stand-alone", "true" },
     { NULL }
   };
-  birnet_init (&argc, &argv, NULL, ivalues);
+  // birnet_init (&argc, &argv, NULL, ivalues);
 
   for (int i = 1; i < argc; i++)
     {

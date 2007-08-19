@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_REGION_IMPL_H__
 #define __RAPICORN_REGION_IMPL_H__
 
-#include <birnet/birnetcdefs.h>
+#include <rapicorn/birnetcdefs.h>
 
 BIRNET_EXTERN_C_BEGIN();
 

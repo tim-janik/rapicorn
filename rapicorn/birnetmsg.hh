@@ -17,7 +17,7 @@
 #ifndef __BIRNET_MSG_HH__
 #define __BIRNET_MSG_HH__
 
-#include <birnet/birnetutils.hh>
+#include <rapicorn/birnetutils.hh>
 #include <stdarg.h>
 
 namespace Birnet {

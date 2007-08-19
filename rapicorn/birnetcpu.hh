@@ -17,7 +17,7 @@
 #ifndef __BIRNET_CPU_HH__
 #define __BIRNET_CPU_HH__
 
-#include <birnet/birnetutils.hh>
+#include <rapicorn/birnetutils.hh>
 
 namespace Birnet {
 

@@ -17,7 +17,7 @@
 #ifndef __BIRNET_MATH_HH__
 #define __BIRNET_MATH_HH__
 
-#include <birnet/birnetutils.hh>
+#include <rapicorn/birnetutils.hh>
 #include <math.h>
 
 namespace Birnet {

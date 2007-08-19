@@ -17,7 +17,7 @@
 #ifndef __BIRNET_THREAD_XX_HH__
 #define __BIRNET_THREAD_XX_HH__
 
-#include <birnet/birnetutils.hh>
+#include <rapicorn/birnetutils.hh>
 
 namespace Birnet {
 

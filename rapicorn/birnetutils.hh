@@ -17,7 +17,7 @@
 #ifndef __BIRNET_UTILS_XX_HH__
 #define __BIRNET_UTILS_XX_HH__
 
-#include <birnet/birnetcdefs.h>
+#include <rapicorn/birnetcdefs.h>
 #include <string>
 #include <vector>
 #include <map>
