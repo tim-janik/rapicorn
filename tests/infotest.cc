@@ -15,7 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 //#define TEST_VERBOSE
-#include <birnet/birnettests.h>
+#include <rapicorn/birnettests.h>
 using namespace Birnet;
 
 #if BIRNET_CHECK_VERSION (2147483647, 2147483647) || !BIRNET_CHECK_VERSION (0, 0)      

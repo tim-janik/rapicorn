@@ -15,12 +15,14 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 //#define TEST_VERBOSE
-#include <birnet/birnettests.h>
+#include <rapicorn/birnettests.h>
+#include <rapicorn/rapicorn.hh>
 
 #include "data.cc" // xml_data1
 
 namespace {
 using namespace Birnet;
+using namespace Rapicorn;
 
 struct TestBirnetMarkupParser : MarkupParser {
   String debug_string;
@@ -93,16 +95,12 @@ birnet_markup_parser_test()
 static void
 text_markup_test()
 {
-#if 0
   TSTART ("Label-Markup");
-  Handle<Item> ihandle = Factory::create_item ("Label");
+  Item &label = Factory::create_item ("Label");
   TOK();
-  AutoLocker locker (ihandle);
   TOK();
-  Item &item = ihandle.get();
-  TOK();
-  String full_markup =
-    "<PARA>Start "
+  String test_markup =
+    "Start "
     "<bold>bold</bold> "
     "<italic>italic</italic> "
     // "<oblique>oblique</oblique> "
@@ -117,11 +115,10 @@ text_markup_test()
     "<font family='SpEciALfoNT723'>changefont</font> "
     "<tt>teletype</tt> "
     "<smaller>smaller</smaller> "
-    "<larger>larger</larger> "
-    "</PARA>";
-  item.set_property ("markup_text", full_markup);
+    "<larger>larger</larger>";
+  label.set_property ("markup_text", test_markup);
   TOK();
-  String str = item.get_property ("markup_text");
+  String str = label.get_property ("markup_text");
   const char *markup_result = str.c_str();
   // g_printerr ("MARKUP: %s\n", markup_result);
   TASSERT (strstr (markup_result, "<I"));
@@ -131,9 +128,9 @@ text_markup_test()
   TASSERT (strstr (markup_result, "<U"));
   TASSERT (strstr (markup_result, "underline<"));
   /* try re-parsing */
-  item.set_property ("markup_text", markup_result);
+  label.set_property ("markup_text", markup_result);
   TOK();
-  str = item.get_property ("markup_text");
+  str = label.get_property ("markup_text");
   markup_result = str.c_str();
   TASSERT (strstr (markup_result, "<I"));
   TASSERT (strstr (markup_result, "italic<"));
@@ -147,7 +144,6 @@ text_markup_test()
   TASSERT (strstr (markup_result, "smaller<"));
   TASSERT (strstr (markup_result, "larger<"));
   TDONE();
-#endif
 }
 
 extern "C" int
@@ -156,6 +152,8 @@ main (int   argc,
 {
   birnet_init_test (&argc, &argv);
   birnet_markup_parser_test();
+  /* initialize rapicorn */
+  Application::init_with_x11 (&argc, &argv, "MarkupTest"); // FIXME: should work offscreen
   text_markup_test();
   return 0;
 }

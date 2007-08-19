@@ -5,12 +5,44 @@
 include $(top_srcdir)/Makefile.decl
 
 INCLUDES += -I$(top_srcdir)
-DEFS     += -DPARANOID $(RAPICORN_CFLAGS)
+DEFS     += -DBIRNET_LOG_DOMAIN='"$(basename $(@F))"' -DPARANOID $(RAPICORN_CFLAGS)
 XML_FILES =
 
 # test programs:
 programs_ldadd = $(top_builddir)/rapicorn/librapicorn@LT_RELEASE@.la $(RAPICORN_LIBS) $(PANGO_LIBS) $(GTK_LIBS)
 # program sources:
+TESTS             += infotest
+infotest_SOURCES   = infotest.cc
+infotest_LDADD     = $(programs_ldadd)
+TESTS             += math
+PERFTESTS         += math
+math_SOURCES       = math.cc
+math_LDADD         = $(programs_ldadd)
+TESTS             += strings
+SLOWTESTS         += strings
+strings_SOURCES    = strings.cc
+strings_LDADD      = $(programs_ldadd)
+TESTS             += systest
+systest_SOURCES    = systest.cc
+systest_LDADD      = $(programs_ldadd)
+TESTS             += threads
+PERFTESTS         += threads
+threads_SOURCES    = threads.cc
+threads_LDADD      = $(programs_ldadd)
+TESTS             += signal
+signal_SOURCES     = signal.cc
+signal_LDADD       = $(programs_ldadd)
+TESTS             += sorting
+SLOWTESTS         += sorting
+sorting_SOURCES    = sorting.cc
+sorting_LDADD      = $(programs_ldadd)
+TESTS             += datalist
+datalist_SOURCES   = datalist.cc
+datalist_LDADD     = $(programs_ldadd)
+EXTRA_DIST        += data.cc
+TESTS             += xmltest
+xmltest_SOURCES    = xmltest.cc
+xmltest_LDADD      = $(programs_ldadd)
 TESTS             += walker
 walker_SOURCES     = walker.cc
 walker_LDADD       = $(programs_ldadd)
@@ -43,6 +75,7 @@ XML_FILES         += testitems.xml
 TESTS             += evaltest
 evaltest_SOURCES   = evaltest.cc
 evaltest_LDADD     = $(programs_ldadd)
+
 
 # build tests
 noinst_PROGRAMS = $(TESTS)
