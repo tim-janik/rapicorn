@@ -1718,18 +1718,18 @@ MarkupParser::escape_text (const String   &text)
 
 /**
  * g_markup_escape_text:
- * @text: some valid UTF-8 text
- * @length: length of @text in bytes
- * 
+ * @param text          some valid UTF-8 text
+ * @param length        length of @a text in bytes
+ *
  * Escapes text so that the markup parser will parse it verbatim.
  * Less than, greater than, ampersand, etc. are replaced with the
  * corresponding entities. This function would typically be used
  * when writing out a file to be parsed with the markup parser.
- * 
+ *
  * Note that this function doesn't protect whitespace and line endings
  * from being processed according to the XML rules for normalization
  * of line endings and attribute values.
- * 
+ *
  * Return value: escaped text
  **/
 String
@@ -1750,17 +1750,17 @@ MarkupParser::escape_text (const char  *text,
 
 /**
  * find_conversion:
- * @format: a printf-style format string
- * @after: location to store a pointer to the character after
+ * @param format        a printf-style format string
+ * @param after         location to store a pointer to the character after
  *   the returned conversion. On a %NULL return, returns the
  *   pointer to the trailing NUL in the string
- * 
+ *
  * Find the next conversion in a printf-style format string.
  * Partially based on code from printf-parser.c,
  * Copyright (C) 1999-2000, 2002-2003 Free Software Foundation, Inc.
- * 
+ *
  * Return value: pointer to the next conversion in @format,
- *  or %NULL, if none.
+ * or %NULL, if none.
  **/
 static const char *
 find_conversion (const char  *format,
