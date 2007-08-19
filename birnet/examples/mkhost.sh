@@ -197,11 +197,12 @@ configure: birnet/acbirnet.m4 birnet/configure.inc
 
 # === ChangeLog ===
 LAST_COMMITID = 52724ecb1cceb1c5532108c56e3ab77faf4f2766
-ChangeLog:      $(shell ls "$${GIT_DIR=.git}/`git-symbolic-ref HEAD`" 2>/dev/null )
-	git-log ${LAST_COMMITID}..HEAD --stat    > xgen-$(@F) \
-	&& echo -e "\ncommit ${LAST_COMMITID}"  >> xgen-$(@F) \
-	&& cat birnet/OldChangeLog              >> xgen-$(@F) \
-	&& cp xgen-$(@F) $@ && rm -f xgen-$(@F)
+ChangeLog:      birnet/OldChangeLog $(shell ls "$${GIT_DIR=.git}/`git-symbolic-ref -q HEAD || echo HEAD`" 2>/dev/null )
+	git-log --pretty='format:%ad %an 	# %H (%cn)%n%n%s%n%n%b' \
+		${LAST_COMMITID}..HEAD		 > xgen-$(@F)
+	sed 's/^/	/;s/^	//;/^[ 	]*<unknown>$$/d' -i xgen-$(@F)
+	cat birnet/OldChangeLog                 >> xgen-$(@F)
+	cp xgen-$(@F) $@ && rm -f xgen-$(@F)
 noinst_DATA = ChangeLog
 EXTRA_DIST  += ChangeLog
 __EOFmkhost
