@@ -1,4 +1,4 @@
-/* BirnetCPU
+/* RapicornCPU
  * Copyright (C) 2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -21,7 +21,7 @@
 
 namespace Birnet {
 
-typedef BirnetCPUInfo CPUInfo;
+typedef RapicornCPUInfo CPUInfo;
 
 /* --- functions --- */
 CPUInfo cpu_info	(void);

@@ -1,4 +1,4 @@
-/* BirnetUtf8 - UTF-8 utilities
+/* RapicornUtf8 - UTF-8 utilities
  * Copyright (C) 2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or

@@ -24,7 +24,7 @@ namespace Birnet {
 class Thread;
 
 class Mutex {
-  BirnetMutex mutex;
+  RapicornMutex mutex;
   friend class Cond;
   RAPICORN_PRIVATE_CLASS_COPY (Mutex);
 public:
@@ -36,7 +36,7 @@ public:
 };
 
 class RecMutex {
-  BirnetRecMutex rmutex;
+  RapicornRecMutex rmutex;
   RAPICORN_PRIVATE_CLASS_COPY (RecMutex);
 public:
   explicit      RecMutex  ();
@@ -47,7 +47,7 @@ public:
 };
 
 class Cond {
-  BirnetCond cond;
+  RapicornCond cond;
   RAPICORN_PRIVATE_CLASS_COPY (Cond);
 public:
   explicit      Cond          ();
@@ -87,7 +87,7 @@ inline bool    ptr_cas       (V* volatile *ptr_adr, V *o, V *n) { return ThreadT
 } // Atomic
 
 class OwnedMutex {
-  BirnetRecMutex    m_rec_mutex;
+  RapicornRecMutex    m_rec_mutex;
   Thread * volatile m_owner;
   uint     volatile m_count;
   RAPICORN_PRIVATE_CLASS_COPY (OwnedMutex);
@@ -130,7 +130,7 @@ public:
     static bool         aborted         ();
     static int          pid             ();
     static void         awake_after     (uint64             stamp);
-    static void         set_wakeup      (BirnetThreadWakeup wakeup_func,
+    static void         set_wakeup      (RapicornThreadWakeup wakeup_func,
                                          void              *wakeup_data,
                                          void             (*destroy_data) (void*));
     static OwnedMutex&  owned_mutex     ();
@@ -148,16 +148,16 @@ public:
   /* implementaiton details */
 private:
   DataList              data_list;
-  BirnetThread         *bthread;
+  RapicornThread         *bthread;
   OwnedMutex            m_omutex;
-  explicit              Thread          (BirnetThread      *thread);
+  explicit              Thread          (RapicornThread      *thread);
   void                  thread_lock     ()                              { m_omutex.lock(); }
   bool                  thread_trylock  ()                              { return m_omutex.trylock(); }
   void                  thread_unlock   ()                              { m_omutex.unlock(); }
   RAPICORN_PRIVATE_CLASS_COPY (Thread);
 protected:
   class ThreadWrapperInternal;
-  static void threadxx_wrap   (BirnetThread *cthread);
+  static void threadxx_wrap   (RapicornThread *cthread);
   static void threadxx_delete (void         *cxxthread);
 };
 

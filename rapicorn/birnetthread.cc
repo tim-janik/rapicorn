@@ -23,14 +23,14 @@ namespace Birnet {
 
 /* --- Thread::ThreadWrapperInternal --- */
 struct Thread::ThreadWrapperInternal : public Thread {
-  ThreadWrapperInternal (BirnetThread *bthread) :
+  ThreadWrapperInternal (RapicornThread *bthread) :
     Thread (bthread)
   {}
   virtual void
   run ()
   {}
   static Thread*
-  thread_from_c (BirnetThread *bthread)
+  thread_from_c (RapicornThread *bthread)
   {
     Thread::ThreadWrapperInternal *ithread = new ThreadWrapperInternal (bthread);
     if (!ithread->bthread)
@@ -46,7 +46,7 @@ struct Thread::ThreadWrapperInternal : public Thread {
   static void
   thread_reset_c (Thread *thread)
   {
-    BirnetThread *bthread = thread->bthread;
+    RapicornThread *bthread = thread->bthread;
     RAPICORN_ASSERT (thread->bthread != NULL);
     thread->data_list.clear_like_destructor();
     thread->bthread = NULL;
@@ -71,7 +71,7 @@ typedef ThreadDescendant::PublicThreadWrapperInternal ThreadWrapperInternal;
 
 /* --- Thread methods --- */
 void
-Thread::threadxx_wrap (BirnetThread *cthread)
+Thread::threadxx_wrap (RapicornThread *cthread)
 {
   ThreadWrapperInternal::thread_from_c (cthread);
 }
@@ -83,7 +83,7 @@ Thread::threadxx_delete (void *cxxthread)
   ThreadWrapperInternal::thread_reset_c (thread);
 }
 
-Thread::Thread (BirnetThread* thread) :
+Thread::Thread (RapicornThread* thread) :
   bthread (NULL)
 {
   ThreadTable.thread_ref (thread);
@@ -98,11 +98,11 @@ Thread::Thread (BirnetThread* thread) :
   ThreadTable.thread_unref (thread);
 }
 
-static BirnetThread*
+static RapicornThread*
 bthread_create_for_thread (const String &name,
                            void         *threadxx)
 {
-  BirnetThread *bthread = ThreadTable.thread_new (name.c_str());
+  RapicornThread *bthread = ThreadTable.thread_new (name.c_str());
   bool success = ThreadTable.thread_setxx (bthread, threadxx);
   RAPICORN_ASSERT (success);
   ThreadTable.thread_ref_sink (bthread);
@@ -238,7 +238,7 @@ Thread::Self::awake_after (uint64 stamp)
 }
 
 void
-Thread::Self::set_wakeup (BirnetThreadWakeup   wakeup_func,
+Thread::Self::set_wakeup (RapicornThreadWakeup   wakeup_func,
                           void                *wakeup_data,
                           void               (*destroy_data) (void*))
 {
@@ -263,7 +263,7 @@ Thread::Self::exit (void *retval)
   ThreadTable.thread_exit (retval);
 }
 
-static const BirnetMutex zero_mutex = { 0, };
+static const RapicornMutex zero_mutex = { 0, };
 
 Mutex::Mutex () :
   mutex (zero_mutex)
@@ -282,7 +282,7 @@ Mutex::~Mutex ()
     ThreadTable.mutex_unchain (&mutex);
 }
 
-static const BirnetRecMutex zero_rec_mutex = { { 0, }, };
+static const RapicornRecMutex zero_rec_mutex = { { 0, }, };
 
 RecMutex::RecMutex () :
   rmutex (zero_rec_mutex)
@@ -301,7 +301,7 @@ RecMutex::~RecMutex ()
     ThreadTable.rec_mutex_unchain (&rmutex);
 }
 
-static const BirnetCond zero_cond = { 0, };
+static const RapicornCond zero_cond = { 0, };
 
 Cond::Cond () :
   cond (zero_cond)

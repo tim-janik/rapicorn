@@ -1,4 +1,4 @@
-/* BirnetSignal
+/* RapicornSignal
  * Copyright (C) 2005-2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or

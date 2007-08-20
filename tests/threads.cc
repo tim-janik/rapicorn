@@ -21,14 +21,14 @@ namespace {
 using namespace Birnet;
 
 /* --- utilities --- */
-BirnetThread*
+RapicornThread*
 birnet_thread_run (const gchar     *name,
-                   BirnetThreadFunc func,
+                   RapicornThreadFunc func,
                    gpointer         user_data)
 {
   g_return_val_if_fail (name && name[0], NULL);
 
-  BirnetThread *thread = ThreadTable.thread_new (name);
+  RapicornThread *thread = ThreadTable.thread_new (name);
   ThreadTable.thread_ref_sink (thread);
   if (ThreadTable.thread_start (thread, func, user_data))
     return thread;
@@ -51,27 +51,27 @@ birnet_thread_run (const gchar     *name,
 #define birnet_rec_mutex_destroy(mtx) (ThreadTable.rec_mutex_destroy (mtx))
 
 #define RAPICORN_MUTEX_DECLARE_INITIALIZED(mutexname)                             \
-  BirnetMutex mutexname = { 0 };                                                \
+  RapicornMutex mutexname = { 0 };                                                \
   static void RAPICORN_CONSTRUCTOR                                                \
   RAPICORN_CPP_PASTE4 (__birnet_mutex__autoinit, __LINE__, __, mutexname) (void)  \
   { ThreadTable.mutex_chain4init (&mutexname); }
 
 #define RAPICORN_REC_MUTEX_DECLARE_INITIALIZED(recmtx)                            \
-  BirnetRecMutex recmtx = { { 0 } };                                            \
+  RapicornRecMutex recmtx = { { 0 } };                                            \
   static void RAPICORN_CONSTRUCTOR                                                \
   RAPICORN_CPP_PASTE4 (__birnet_rec_mutex__autoinit, __LINE__, __, recmtx) (void) \
   { ThreadTable.rec_mutex_chain4init (&recmtx); }
 
 #define RAPICORN_COND_DECLARE_INITIALIZED(condname)                               \
-  BirnetCond condname = { 0 };                                                  \
+  RapicornCond condname = { 0 };                                                  \
   static void RAPICORN_CONSTRUCTOR                                                \
   RAPICORN_CPP_PASTE4 (__birnet_cond__autoinit, __LINE__, __, condname) (void)    \
   { ThreadTable.cond_chain4init (&condname); }
 
 /* --- atomicity tests --- */
 static volatile guint atomic_count = 0;
-static BirnetMutex    atomic_mutex;
-static BirnetCond     atomic_cond;
+static RapicornMutex    atomic_mutex;
+static RapicornCond     atomic_cond;
 
 static void
 atomic_up_thread (gpointer data)
@@ -104,7 +104,7 @@ test_atomic (void)
 {
   TSTART ("AtomicThreading");
   int count = 44;
-  BirnetThread *threads[count];
+  RapicornThread *threads[count];
   volatile int atomic_counter = 0;
   birnet_mutex_init (&atomic_mutex);
   ThreadTable.cond_init (&atomic_cond);
@@ -147,7 +147,7 @@ static RAPICORN_COND_DECLARE_INITIALIZED (static_cond);
 static void
 test_threads (void)
 {
-  static BirnetMutex test_mutex;
+  static RapicornMutex test_mutex;
   gboolean locked;
   TSTART ("Threading");
   /* test C mutex */
@@ -190,11 +190,11 @@ test_threads (void)
   mutex.unlock();
   rmutex.unlock();
   guint thread_data1 = 0;
-  BirnetThread *thread1 = birnet_thread_run ("plus1", plus1_thread, &thread_data1);
+  RapicornThread *thread1 = birnet_thread_run ("plus1", plus1_thread, &thread_data1);
   guint thread_data2 = 0;
-  BirnetThread *thread2 = birnet_thread_run ("plus2", plus1_thread, &thread_data2);
+  RapicornThread *thread2 = birnet_thread_run ("plus2", plus1_thread, &thread_data2);
   guint thread_data3 = 0;
-  BirnetThread *thread3 = birnet_thread_run ("plus3", plus1_thread, &thread_data3);
+  RapicornThread *thread3 = birnet_thread_run ("plus3", plus1_thread, &thread_data3);
   TASSERT (thread1 != NULL);
   TASSERT (thread2 != NULL);
   TASSERT (thread3 != NULL);
@@ -796,12 +796,12 @@ bench_auto_locker_cxx()
   TACK();
   /* done, report */
   TDONE();
-  treport_minimized ("Manual-Locker",      xmin / xdups / RUNS * 1000. * 1000. * 1000., TUNIT_NSEC);
-  treport_minimized ("Direct-AutoLocker",  smin / sdups / RUNS * 1000. * 1000. * 1000., TUNIT_NSEC);
-  treport_minimized ("Generic-AutoLocker", gmin / gdups / RUNS * 1000. * 1000. * 1000., TUNIT_NSEC);
-  treport_minimized ("Birnet-AutoLocker",  bmin / bdups / RUNS * 1000. * 1000. * 1000., TUNIT_NSEC);
-  treport_minimized ("Pointer-AutoLocker", pmin / pdups / RUNS * 1000. * 1000. * 1000., TUNIT_NSEC);
-  treport_minimized ("Heap-AutoLocker",    tmin / tdups / RUNS * 1000. * 1000. * 1000., TUNIT_NSEC);
+  treport_minimized ("Manual-Locker",       xmin / xdups / RUNS * 1000. * 1000. * 1000., TUNIT_NSEC);
+  treport_minimized ("Direct-AutoLocker",   smin / sdups / RUNS * 1000. * 1000. * 1000., TUNIT_NSEC);
+  treport_minimized ("Generic-AutoLocker",  gmin / gdups / RUNS * 1000. * 1000. * 1000., TUNIT_NSEC);
+  treport_minimized ("Rapicorn-AutoLocker", bmin / bdups / RUNS * 1000. * 1000. * 1000., TUNIT_NSEC);
+  treport_minimized ("Pointer-AutoLocker",  pmin / pdups / RUNS * 1000. * 1000. * 1000., TUNIT_NSEC);
+  treport_minimized ("Heap-AutoLocker",     tmin / tdups / RUNS * 1000. * 1000. * 1000., TUNIT_NSEC);
 }
 
 /* --- C++ atomicity tests --- */

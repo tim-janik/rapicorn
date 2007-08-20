@@ -1,4 +1,4 @@
-/* BirnetTests - Utilities for writing test programs
+/* RapicornTests - Utilities for writing test programs
  * Copyright (C) 2006 Tim Janik
  * Copyright (C) 2006 Stefan Westerfeld
  *
@@ -44,7 +44,7 @@ RAPICORN_EXTERN_C_BEGIN();
  * however we're using g_printerr() for test messages to also allow testing
  * of programs which generate output on stdout.
  */
-typedef void (*BirnetTAbort) (void*);
+typedef void (*RapicornTAbort) (void*);
 #ifdef	TEST_VERBOSE
 #define TSTART(...)		TSTART_impl (":\n", __VA_ARGS__)	/* test intro */
 #define TOK()           	do { g_printerr ("OK.\n"); } while (0)	/* subtest OK */
@@ -203,7 +203,7 @@ tabort_handler (bool   set_values,
   void *__tabort_func = NULL, *__tabort_data = NULL;    \
   tabort_handler (0, &__tabort_func, &__tabort_data);   \
   if (__tabort_func)                                    \
-    ((BirnetTAbort) __tabort_func) (__tabort_data);     \
+    ((RapicornTAbort) __tabort_func) (__tabort_data);     \
   G_BREAKPOINT();                                       \
 } while (0)
 
@@ -327,7 +327,7 @@ birnet_init_test (int    *argc,
   /* check that NULL is defined to __null in C++ on 64bit */
   RAPICORN_ASSERT (sizeof (NULL) == sizeof (void*));
   /* normal initialization */
-  BirnetInitValue ivalues[] = {
+  RapicornInitValue ivalues[] = {
     { "stand-alone", "true" },
     { "birnet-test-parse-args", "true" },
     { NULL }

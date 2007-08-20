@@ -24,9 +24,9 @@ namespace {
 using namespace Birnet;
 using namespace Rapicorn;
 
-struct TestBirnetMarkupParser : MarkupParser {
+struct TestRapicornMarkupParser : MarkupParser {
   String debug_string;
-  TestBirnetMarkupParser (const String &input_name) :
+  TestRapicornMarkupParser (const String &input_name) :
     MarkupParser (input_name)
   {}
   virtual void start_element (const String  &element_name,
@@ -65,8 +65,8 @@ struct TestBirnetMarkupParser : MarkupParser {
 static void
 birnet_markup_parser_test()
 {
-  TSTART ("BirnetMarkupParser");
-  TestBirnetMarkupParser *tmp = new TestBirnetMarkupParser ("-");
+  TSTART ("RapicornMarkupParser");
+  TestRapicornMarkupParser *tmp = new TestRapicornMarkupParser ("-");
   TOK();
   MarkupParser::Error error;
   const char *input_file = "test-input";

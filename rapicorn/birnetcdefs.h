@@ -1,4 +1,4 @@
-/* BirnetCDefs - C compatible definitions
+/* RapicornCDefs - C compatible definitions
  * Copyright (C) 2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -108,7 +108,7 @@ RAPICORN_EXTERN_C_BEGIN();
 #define RAPICORN_CPP_PASTE3(a,b,c)                RAPICORN_CPP_PASTE3i (a,b,c)
 #define RAPICORN_CPP_PASTE2i(a,b)                 a ## b      	  /* twofold indirection is required to expand macros like __LINE__ */
 #define RAPICORN_CPP_PASTE2(a,b)                  RAPICORN_CPP_PASTE2i (a,b)
-#define RAPICORN_STATIC_ASSERT_NAMED(expr,asname) typedef struct { char asname[(expr) ? 1 : -1]; } RAPICORN_CPP_PASTE2 (Birnet_StaticAssertion_LINE, __LINE__)
+#define RAPICORN_STATIC_ASSERT_NAMED(expr,asname) typedef struct { char asname[(expr) ? 1 : -1]; } RAPICORN_CPP_PASTE2 (Rapicorn_StaticAssertion_LINE, __LINE__)
 #define RAPICORN_STATIC_ASSERT(expr)              RAPICORN_STATIC_ASSERT_NAMED (expr, compile_time_assertion_failed)
 
 /* --- attributes --- */
@@ -159,28 +159,28 @@ typedef unsigned int		uint;	/* for systems that don't define uint in types.h */
 RAPICORN_STATIC_ASSERT (RAPICORN_SIZEOF_SYS_TYPESH_UINT == 4);
 #endif
 RAPICORN_STATIC_ASSERT (sizeof (uint) == 4);
-typedef unsigned int		BirnetUInt8  __attribute__ ((__mode__ (__QI__)));
-typedef unsigned int		BirnetUInt16 __attribute__ ((__mode__ (__HI__)));
-typedef unsigned int		BirnetUInt32 __attribute__ ((__mode__ (__SI__)));
-// typedef unsigned int         BirnetUInt64 __attribute__ ((__mode__ (__DI__)));
-typedef unsigned long long int  BirnetUInt64; // AMD64 needs this for %llu printf format strings
+typedef unsigned int		RapicornUInt8  __attribute__ ((__mode__ (__QI__)));
+typedef unsigned int		RapicornUInt16 __attribute__ ((__mode__ (__HI__)));
+typedef unsigned int		RapicornUInt32 __attribute__ ((__mode__ (__SI__)));
+// typedef unsigned int         RapicornUInt64 __attribute__ ((__mode__ (__DI__)));
+typedef unsigned long long int  RapicornUInt64; // AMD64 needs this for %llu printf format strings
 // provided by birnetcdefs.h: uint;
-RAPICORN_STATIC_ASSERT (sizeof (BirnetUInt8)  == 1);
-RAPICORN_STATIC_ASSERT (sizeof (BirnetUInt16) == 2);
-RAPICORN_STATIC_ASSERT (sizeof (BirnetUInt32) == 4);
-RAPICORN_STATIC_ASSERT (sizeof (BirnetUInt64) == 8);
-typedef signed int		BirnetInt8  __attribute__ ((__mode__ (__QI__)));
-typedef signed int		BirnetInt16 __attribute__ ((__mode__ (__HI__)));
-typedef signed int		BirnetInt32 __attribute__ ((__mode__ (__SI__)));
-// typedef signed long long int BirnetInt64 __attribute__ ((__mode__ (__DI__)));
-typedef signed long long int	BirnetInt64;  // AMD64 needs this for %lld printf format strings
+RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt8)  == 1);
+RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt16) == 2);
+RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt32) == 4);
+RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt64) == 8);
+typedef signed int		RapicornInt8  __attribute__ ((__mode__ (__QI__)));
+typedef signed int		RapicornInt16 __attribute__ ((__mode__ (__HI__)));
+typedef signed int		RapicornInt32 __attribute__ ((__mode__ (__SI__)));
+// typedef signed long long int RapicornInt64 __attribute__ ((__mode__ (__DI__)));
+typedef signed long long int	RapicornInt64;  // AMD64 needs this for %lld printf format strings
 // provided by compiler       int;
-RAPICORN_STATIC_ASSERT (sizeof (BirnetInt8)  == 1);
-RAPICORN_STATIC_ASSERT (sizeof (BirnetInt16) == 2);
-RAPICORN_STATIC_ASSERT (sizeof (BirnetInt32) == 4);
-RAPICORN_STATIC_ASSERT (sizeof (BirnetInt64) == 8);
-typedef BirnetUInt32		BirnetUnichar;
-RAPICORN_STATIC_ASSERT (sizeof (BirnetUnichar) == 4);
+RAPICORN_STATIC_ASSERT (sizeof (RapicornInt8)  == 1);
+RAPICORN_STATIC_ASSERT (sizeof (RapicornInt16) == 2);
+RAPICORN_STATIC_ASSERT (sizeof (RapicornInt32) == 4);
+RAPICORN_STATIC_ASSERT (sizeof (RapicornInt64) == 8);
+typedef RapicornUInt32		RapicornUnichar;
+RAPICORN_STATIC_ASSERT (sizeof (RapicornUnichar) == 4);
 
 
 /* --- path handling --- */
@@ -204,13 +204,13 @@ typedef struct {
   bool test_quick;		/* run quick tests */
   bool test_slow;		/* run slow tests */
   bool test_perf;		/* run benchmarks, test performance */
-} BirnetInitSettings;
+} RapicornInitSettings;
 
 typedef struct {
   const char *value_name;     	/* value list ends with value_name == NULL */
   const char *value_string;
   long double value_num;     	/* valid if value_string == NULL */
-} BirnetInitValue;
+} RapicornInitValue;
 
 /* --- CPU info --- */
 typedef struct {
@@ -222,7 +222,7 @@ typedef struct {
   uint x86_fpu : 1, x86_ssesys : 1, x86_tsc   : 1, x86_htt      : 1;
   uint x86_mmx : 1, x86_mmxext : 1, x86_3dnow : 1, x86_3dnowext : 1;
   uint x86_sse : 1, x86_sse2   : 1, x86_sse3  : 1, x86_sse4     : 1;
-} BirnetCPUInfo;
+} RapicornCPUInfo;
 
 /* --- Thread info --- */
 typedef enum {
@@ -234,44 +234,44 @@ typedef enum {
   RAPICORN_THREAD_PAGING     = 'W',
   RAPICORN_THREAD_ZOMBIE     = 'Z',
   RAPICORN_THREAD_DEAD       = 'X',
-} BirnetThreadState;
+} RapicornThreadState;
 typedef struct {
   int                	thread_id;
   char                 *name;
   uint                 	aborted : 1;
-  BirnetThreadState     state;
+  RapicornThreadState     state;
   int                  	priority;      	/* nice value */
   int                  	processor;     	/* running processor # */
-  BirnetUInt64         	utime;		/* user time */
-  BirnetUInt64         	stime;         	/* system time */
-  BirnetUInt64		cutime;        	/* user time of dead children */
-  BirnetUInt64		cstime;		/* system time of dead children */
-} BirnetThreadInfo;
+  RapicornUInt64         	utime;		/* user time */
+  RapicornUInt64         	stime;         	/* system time */
+  RapicornUInt64		cutime;        	/* user time of dead children */
+  RapicornUInt64		cstime;		/* system time of dead children */
+} RapicornThreadInfo;
 
 /* --- threading ABI --- */
-typedef struct _BirnetThread BirnetThread;
-typedef void (*BirnetThreadFunc)   (void *user_data);
-typedef void (*BirnetThreadWakeup) (void *wakeup_data);
+typedef struct _RapicornThread RapicornThread;
+typedef void (*RapicornThreadFunc)   (void *user_data);
+typedef void (*RapicornThreadWakeup) (void *wakeup_data);
 typedef union {
   void	     *cond_pointer;
-  BirnetUInt8 cond_dummy[MAX (8, RAPICORN_SIZEOF_PTH_COND_T)];
-} BirnetCond;
+  RapicornUInt8 cond_dummy[MAX (8, RAPICORN_SIZEOF_PTH_COND_T)];
+} RapicornCond;
 typedef union {
   void	     *mutex_pointer;
-  BirnetUInt8 mutex_dummy[MAX (8, RAPICORN_SIZEOF_PTH_MUTEX_T)];
-} BirnetMutex;
+  RapicornUInt8 mutex_dummy[MAX (8, RAPICORN_SIZEOF_PTH_MUTEX_T)];
+} RapicornMutex;
 typedef struct {
-  BirnetMutex   mutex;
-  BirnetThread *owner;
+  RapicornMutex   mutex;
+  RapicornThread *owner;
   uint 		depth;
-} BirnetRecMutex;
+} RapicornRecMutex;
 typedef struct {
-  void              (*mutex_chain4init)     (BirnetMutex       *mutex);
-  void              (*mutex_unchain)        (BirnetMutex       *mutex);
-  void              (*rec_mutex_chain4init) (BirnetRecMutex    *mutex);
-  void              (*rec_mutex_unchain)    (BirnetRecMutex    *mutex);
-  void              (*cond_chain4init)      (BirnetCond        *cond);
-  void              (*cond_unchain)         (BirnetCond        *cond);
+  void              (*mutex_chain4init)     (RapicornMutex       *mutex);
+  void              (*mutex_unchain)        (RapicornMutex       *mutex);
+  void              (*rec_mutex_chain4init) (RapicornRecMutex    *mutex);
+  void              (*rec_mutex_unchain)    (RapicornRecMutex    *mutex);
+  void              (*cond_chain4init)      (RapicornCond        *cond);
+  void              (*cond_unchain)         (RapicornCond        *cond);
   void		    (*atomic_pointer_set)   (volatile void     *atomic,
 					     volatile void     *value);
   void*		    (*atomic_pointer_get)   (volatile void     *atomic);
@@ -298,65 +298,65 @@ typedef struct {
 					     uint           	diff);
   uint		    (*atomic_uint_swap_add) (volatile uint     *atomic,
 					     uint           	diff);
-  BirnetThread*     (*thread_new)           (const char        *name);
-  BirnetThread*     (*thread_ref)           (BirnetThread      *thread);
-  BirnetThread*     (*thread_ref_sink)      (BirnetThread      *thread);
-  void              (*thread_unref)         (BirnetThread      *thread);
-  bool              (*thread_start)         (BirnetThread      *thread,
-					     BirnetThreadFunc 	func,
+  RapicornThread*     (*thread_new)           (const char        *name);
+  RapicornThread*     (*thread_ref)           (RapicornThread      *thread);
+  RapicornThread*     (*thread_ref_sink)      (RapicornThread      *thread);
+  void              (*thread_unref)         (RapicornThread      *thread);
+  bool              (*thread_start)         (RapicornThread      *thread,
+					     RapicornThreadFunc 	func,
 					     void              *user_data);
-  BirnetThread*     (*thread_self)          (void);
+  RapicornThread*     (*thread_self)          (void);
   void*             (*thread_selfxx)        (void);
-  void*             (*thread_getxx)         (BirnetThread      *thread);
-  bool              (*thread_setxx)         (BirnetThread      *thread,
+  void*             (*thread_getxx)         (RapicornThread      *thread);
+  bool              (*thread_setxx)         (RapicornThread      *thread,
 					     void              *xxdata);
-  int               (*thread_pid)           (BirnetThread      *thread);
-  const char*       (*thread_name)          (BirnetThread      *thread);
+  int               (*thread_pid)           (RapicornThread      *thread);
+  const char*       (*thread_name)          (RapicornThread      *thread);
   void              (*thread_set_name)      (const char        *newname);
-  bool		    (*thread_sleep)	    (BirnetInt64        max_useconds);
-  void		    (*thread_wakeup)	    (BirnetThread      *thread);
-  void		    (*thread_awake_after)   (BirnetUInt64       stamp);
-  void		    (*thread_emit_wakeups)  (BirnetUInt64       wakeup_stamp);
-  void		    (*thread_set_wakeup)    (BirnetThreadWakeup wakeup_func,
+  bool		    (*thread_sleep)	    (RapicornInt64        max_useconds);
+  void		    (*thread_wakeup)	    (RapicornThread      *thread);
+  void		    (*thread_awake_after)   (RapicornUInt64       stamp);
+  void		    (*thread_emit_wakeups)  (RapicornUInt64       wakeup_stamp);
+  void		    (*thread_set_wakeup)    (RapicornThreadWakeup wakeup_func,
 					     void              *wakeup_data,
 					     void             (*destroy_data) (void*));
-  void              (*thread_abort) 	    (BirnetThread      *thread);
-  void              (*thread_queue_abort)   (BirnetThread      *thread);
+  void              (*thread_abort) 	    (RapicornThread      *thread);
+  void              (*thread_queue_abort)   (RapicornThread      *thread);
   bool              (*thread_aborted)	    (void);
-  bool		    (*thread_get_aborted)   (BirnetThread      *thread);
-  bool	            (*thread_get_running)   (BirnetThread      *thread);
-  void		    (*thread_wait_for_exit) (BirnetThread      *thread);
+  bool		    (*thread_get_aborted)   (RapicornThread      *thread);
+  bool	            (*thread_get_running)   (RapicornThread      *thread);
+  void		    (*thread_wait_for_exit) (RapicornThread      *thread);
   void              (*thread_yield)         (void);
   void              (*thread_exit)          (void              *retval) RAPICORN_NORETURN;
-  void              (*thread_set_handle)    (BirnetThread      *handle);
-  BirnetThread*     (*thread_get_handle)    (void);
-  BirnetThreadInfo* (*info_collect)         (BirnetThread      *thread);
-  void              (*info_free)            (BirnetThreadInfo  *info);
+  void              (*thread_set_handle)    (RapicornThread      *handle);
+  RapicornThread*     (*thread_get_handle)    (void);
+  RapicornThreadInfo* (*info_collect)         (RapicornThread      *thread);
+  void              (*info_free)            (RapicornThreadInfo  *info);
   void*		    (*qdata_get)	    (uint               glib_quark);
   void		    (*qdata_set)	    (uint               glib_quark,
 					     void              *data,
                                              void             (*destroy_data) (void*));
   void*		    (*qdata_steal)	    (uint		glib_quark);
-  void              (*mutex_init)           (BirnetMutex       *mutex);
-  void              (*mutex_lock)           (BirnetMutex       *mutex);
-  int               (*mutex_trylock)        (BirnetMutex       *mutex); /* 0==has_lock */
-  void              (*mutex_unlock)         (BirnetMutex       *mutex);
-  void              (*mutex_destroy)        (BirnetMutex       *mutex);
-  void              (*rec_mutex_init)       (BirnetRecMutex    *mutex);
-  void              (*rec_mutex_lock)       (BirnetRecMutex    *mutex);
-  int               (*rec_mutex_trylock)    (BirnetRecMutex    *mutex); /* 0==has_lock */
-  void              (*rec_mutex_unlock)     (BirnetRecMutex    *mutex);
-  void              (*rec_mutex_destroy)    (BirnetRecMutex    *mutex);
-  void              (*cond_init)            (BirnetCond        *cond);
-  void              (*cond_signal)          (BirnetCond        *cond);
-  void              (*cond_broadcast)       (BirnetCond        *cond);
-  void              (*cond_wait)            (BirnetCond        *cond,
-					     BirnetMutex       *mutex);
-  void		    (*cond_wait_timed)      (BirnetCond        *cond,
-					     BirnetMutex       *mutex,
-					     BirnetInt64 	max_useconds);
-  void              (*cond_destroy)         (BirnetCond        *cond);
-} BirnetThreadTable;
+  void              (*mutex_init)           (RapicornMutex       *mutex);
+  void              (*mutex_lock)           (RapicornMutex       *mutex);
+  int               (*mutex_trylock)        (RapicornMutex       *mutex); /* 0==has_lock */
+  void              (*mutex_unlock)         (RapicornMutex       *mutex);
+  void              (*mutex_destroy)        (RapicornMutex       *mutex);
+  void              (*rec_mutex_init)       (RapicornRecMutex    *mutex);
+  void              (*rec_mutex_lock)       (RapicornRecMutex    *mutex);
+  int               (*rec_mutex_trylock)    (RapicornRecMutex    *mutex); /* 0==has_lock */
+  void              (*rec_mutex_unlock)     (RapicornRecMutex    *mutex);
+  void              (*rec_mutex_destroy)    (RapicornRecMutex    *mutex);
+  void              (*cond_init)            (RapicornCond        *cond);
+  void              (*cond_signal)          (RapicornCond        *cond);
+  void              (*cond_broadcast)       (RapicornCond        *cond);
+  void              (*cond_wait)            (RapicornCond        *cond,
+					     RapicornMutex       *mutex);
+  void		    (*cond_wait_timed)      (RapicornCond        *cond,
+					     RapicornMutex       *mutex,
+					     RapicornInt64 	max_useconds);
+  void              (*cond_destroy)         (RapicornCond        *cond);
+} RapicornThreadTable;
 
 /* --- implementation bits --- */
 /* the above macros rely on a problem handler macro: */

@@ -1379,7 +1379,7 @@ url_create_redirect (const char    *url,
                                 "Your browser is being redirected.\n"
                                 "If it does not support automatic redirections, try <a href=\"%s\">%s</a>.\n"
                                 "<hr>\n"
-                                "<address>BirnetUrl/%s file redirect</address>\n"
+                                "<address>RapicornUrl/%s file redirect</address>\n"
                                 "</body></html>\n",
                                 url, cookie, url_title, url_title, url, url, ver);
   int w, c, l = strlen (text);

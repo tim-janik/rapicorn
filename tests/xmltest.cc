@@ -25,7 +25,7 @@ using namespace Birnet;
 static void
 xml_tree_test (void)
 {
-  TSTART ("BirnetXmlNode");
+  TSTART ("RapicornXmlNode");
   TOK();
   const char *input_file = "test-input";
   MarkupParser::Error error;

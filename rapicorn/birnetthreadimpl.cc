@@ -1,4 +1,4 @@
-/* BirnetThreadImpl
+/* RapicornThreadImpl
  * Copyright (C) 2002-2006 Tim Janik
  * Copyright (C) 2002 Stefan Westerfeld
  *
@@ -56,7 +56,7 @@ g_atomic_pointer_set (volatile gpointer *atomic,
 #endif
 
 /* --- structures --- */
-struct _BirnetThread
+struct _RapicornThread
 {
   volatile gpointer      threadxx;
   volatile uint          ref_field;
@@ -66,7 +66,7 @@ struct _BirnetThread
   gint8                  accounting;
   volatile void*         guard_cache;
   Birnet::Cond	         wakeup_cond;
-  BirnetThreadWakeup     wakeup_func;
+  RapicornThreadWakeup     wakeup_func;
   gpointer	         wakeup_data;
   GDestroyNotify         wakeup_destroy;
   guint64	         awake_stamp;
@@ -81,7 +81,7 @@ struct _BirnetThread
   struct {
     guint          processor;
     gint           priority;
-    BirnetThreadState state;
+    RapicornThreadState state;
     gint           utime, stime;
     gint           cutime, cstime;
   }                info;
@@ -90,11 +90,11 @@ struct _BirnetThread
 namespace Birnet {
 
 /* --- prototypes --- */
-static void             birnet_guard_deregister_all     (BirnetThread *thread);
-static void	        birnet_thread_handle_exit	(BirnetThread *thread);
-static void             birnet_thread_accounting_L      (BirnetThread *self,
+static void             birnet_guard_deregister_all     (RapicornThread *thread);
+static void	        birnet_thread_handle_exit	(RapicornThread *thread);
+static void             birnet_thread_accounting_L      (RapicornThread *self,
                                                          bool          force_update);
-static void             thread_get_tid                  (BirnetThread *thread);
+static void             thread_get_tid                  (RapicornThread *thread);
 static inline guint     cached_getpid                   (void);
 
 
@@ -104,21 +104,21 @@ static Cond        global_thread_cond;
 static Mutex       global_startup_mutex;
 static GSList     *global_thread_list = NULL;
 static GSList     *thread_awaken_list = NULL;
-static BirnetMutex *mutex_init_chain = NULL;
-static BirnetMutex *rec_mutex_init_chain = NULL;
-static BirnetCond  *cond_init_chain = NULL;
+static RapicornMutex *mutex_init_chain = NULL;
+static RapicornMutex *rec_mutex_init_chain = NULL;
+static RapicornCond  *cond_init_chain = NULL;
 
 
 /* --- functions --- */
-static BirnetThread*
+static RapicornThread*
 common_thread_new (const gchar *name)
 {
   g_return_val_if_fail (name && name[0], NULL);
-  BirnetThread *thread;
+  RapicornThread *thread;
 #if HAVE_GSLICE
-  thread = g_slice_new0 (BirnetThread);
+  thread = g_slice_new0 (RapicornThread);
 #else
-  thread = g_new0 (BirnetThread, 1);
+  thread = g_new0 (RapicornThread, 1);
 #endif
 
   ThreadTable.atomic_pointer_set (&thread->threadxx, NULL);
@@ -137,8 +137,8 @@ common_thread_new (const gchar *name)
   return thread;
 }
 
-static BirnetThread*
-common_thread_ref (BirnetThread *thread)
+static RapicornThread*
+common_thread_ref (RapicornThread *thread)
 {
   g_return_val_if_fail (thread != NULL, NULL);
   RAPICORN_ASSERT (THREAD_REF_COUNT (thread) > 0);
@@ -151,8 +151,8 @@ common_thread_ref (BirnetThread *thread)
   return thread;
 }
 
-static BirnetThread*
-common_thread_ref_sink (BirnetThread *thread)
+static RapicornThread*
+common_thread_ref_sink (RapicornThread *thread)
 {
   g_return_val_if_fail (thread != NULL, NULL);
   RAPICORN_ASSERT (THREAD_REF_COUNT (thread) > 0);
@@ -168,7 +168,7 @@ common_thread_ref_sink (BirnetThread *thread)
 }
 
 static void
-common_thread_unref (BirnetThread *thread)
+common_thread_unref (RapicornThread *thread)
 {
   RAPICORN_ASSERT (THREAD_REF_COUNT (thread) > 0);
   uint32 old_ref, new_ref;
@@ -187,7 +187,7 @@ common_thread_unref (BirnetThread *thread)
       g_free (thread->name);
       thread->name = NULL;
 #if HAVE_GSLICE
-      g_slice_free (BirnetThread, thread);
+      g_slice_free (RapicornThread, thread);
 #else
       g_free (thread);
 #endif
@@ -195,7 +195,7 @@ common_thread_unref (BirnetThread *thread)
 }
 
 static void
-birnet_thread_handle_exit (BirnetThread *thread)
+birnet_thread_handle_exit (RapicornThread *thread)
 {
   /* run custom data cleanup handlers */
   g_datalist_clear (&thread->qdata);
@@ -247,12 +247,12 @@ static gpointer
 birnet_thread_exec (gpointer data)
 {
   void           **tfdx      = (void**) data;
-  BirnetThread    *thread    = (BirnetThread*) tfdx[0];
-  BirnetThreadFunc func      = (BirnetThreadFunc) tfdx[1];
+  RapicornThread    *thread    = (RapicornThread*) tfdx[0];
+  RapicornThreadFunc func      = (RapicornThreadFunc) tfdx[1];
   gpointer         user_data = tfdx[2];
   ThreadTable.thread_set_handle (thread);
   
-  BirnetThread *self = ThreadTable.thread_self ();
+  RapicornThread *self = ThreadTable.thread_self ();
   g_assert (self == thread);
   
   thread_get_tid (thread);
@@ -281,7 +281,7 @@ birnet_thread_exec (gpointer data)
 }
 
 /**
- * @param thread        a valid, unstarted BirnetThread
+ * @param thread        a valid, unstarted RapicornThread
  * @param func	        function to execute in new thread
  * @param user_data     user data to pass into @a func
  * @param returns       FALSE in case of error
@@ -289,8 +289,8 @@ birnet_thread_exec (gpointer data)
  * Create a new thread running @a func.
  */
 static bool
-common_thread_start (BirnetThread    *thread,
-                     BirnetThreadFunc func,
+common_thread_start (RapicornThread    *thread,
+                     RapicornThreadFunc func,
                      void            *user_data)
 {
   GThread *gthread = NULL;
@@ -369,10 +369,10 @@ common_thread_yield (void)
  *
  * Return the thread handle of the currently running thread.
  */
-static BirnetThread*
+static RapicornThread*
 common_thread_self (void)
 {
-  BirnetThread *thread = ThreadTable.thread_get_handle ();
+  RapicornThread *thread = ThreadTable.thread_get_handle ();
   if G_UNLIKELY (!thread)
     {
       /* this function is also used during thread initialization,
@@ -394,14 +394,14 @@ common_thread_self (void)
 }
 
 static inline void*
-common_thread_getxx (BirnetThread *thread)
+common_thread_getxx (RapicornThread *thread)
 {
   void *ptr = ThreadTable.atomic_pointer_get (&thread->threadxx);
   if (UNLIKELY (!ptr))
     {
       struct ThreadAccessWrapper : public Thread {
         ThreadAccessWrapper () : Thread ("") {}
-        static void wrap (BirnetThread *cthread) { return threadxx_wrap (cthread); }
+        static void wrap (RapicornThread *cthread) { return threadxx_wrap (cthread); }
       };
       ThreadAccessWrapper::wrap (thread);
       ptr = ThreadTable.atomic_pointer_get (&thread->threadxx);
@@ -412,14 +412,14 @@ common_thread_getxx (BirnetThread *thread)
 static void*
 common_thread_selfxx (void)
 {
-  BirnetThread *thread = ThreadTable.thread_get_handle ();
+  RapicornThread *thread = ThreadTable.thread_get_handle ();
   if (UNLIKELY (!thread))
     thread = ThreadTable.thread_self();
   return common_thread_getxx (thread);
 }
 
 static bool
-common_thread_setxx (BirnetThread *thread,
+common_thread_setxx (RapicornThread *thread,
                      void         *xxdata)
 {
   global_thread_mutex.lock();
@@ -436,7 +436,7 @@ common_thread_setxx (BirnetThread *thread,
 }
 
 /**
- * @param thread	a valid BirnetThread handle
+ * @param thread	a valid RapicornThread handle
  * @return		thread id
  *
  * Return the specific id for @a thread. This function is highly
@@ -445,21 +445,21 @@ common_thread_setxx (BirnetThread *thread,
  * allthough since kernel 2.6, they share the same process id.
  */
 static int
-common_thread_pid (BirnetThread *thread)
+common_thread_pid (RapicornThread *thread)
 {
   thread = thread ? thread : ThreadTable.thread_self();
   return thread->tid;
 }
 
 /**
- * @param thread	a valid BirnetThread handle
+ * @param thread	a valid RapicornThread handle
  * @return		thread name
  *
  * Return the name of @a thread as specified upon invokation of
  * birnet_thread_run() or assigned by birnet_thread_set_name().
  */
 static const char*
-common_thread_name (BirnetThread *thread)
+common_thread_name (RapicornThread *thread)
 {
   thread = thread ? thread : ThreadTable.thread_self();
   return thread->name;
@@ -468,7 +468,7 @@ common_thread_name (BirnetThread *thread)
 static void
 common_thread_set_name (const gchar *name)
 {
-  BirnetThread *thread = ThreadTable.thread_self ();
+  RapicornThread *thread = ThreadTable.thread_self ();
   if (name)
     {
       global_thread_mutex.lock();
@@ -479,7 +479,7 @@ common_thread_set_name (const gchar *name)
 }
 
 static void
-birnet_thread_wakeup_L (BirnetThread *thread)
+birnet_thread_wakeup_L (RapicornThread *thread)
 {
   thread->wakeup_cond.signal();
   if (thread->wakeup_func)
@@ -501,9 +501,9 @@ birnet_thread_wakeup_L (BirnetThread *thread)
  * internal accounting information.
  */
 static bool
-common_thread_sleep (BirnetInt64 max_useconds)
+common_thread_sleep (RapicornInt64 max_useconds)
 {
-  BirnetThread *self = ThreadTable.thread_self ();
+  RapicornThread *self = ThreadTable.thread_self ();
   bool aborted;
   
   global_thread_mutex.lock();
@@ -540,11 +540,11 @@ common_thread_sleep (BirnetInt64 max_useconds)
  * Per thread, the wakeup function may be set only once.
  */
 static void
-common_thread_set_wakeup (BirnetThreadWakeup wakeup_func,
+common_thread_set_wakeup (RapicornThreadWakeup wakeup_func,
                           gpointer           wakeup_data,
                           GDestroyNotify     destroy)
 {
-  BirnetThread *self = ThreadTable.thread_self ();
+  RapicornThread *self = ThreadTable.thread_self ();
   
   g_return_if_fail (wakeup_func != NULL);
   g_return_if_fail (self->wakeup_func == NULL);
@@ -564,7 +564,7 @@ common_thread_set_wakeup (BirnetThreadWakeup wakeup_func,
  * within @a thread to last for 0 seconds.
  */
 static void
-common_thread_wakeup (BirnetThread *thread)
+common_thread_wakeup (RapicornThread *thread)
 {
   g_return_if_fail (thread != NULL);
   
@@ -582,9 +582,9 @@ common_thread_wakeup (BirnetThread *thread)
  * greater than @a stamp.
  */
 static void
-common_thread_awake_after (BirnetUInt64 stamp)
+common_thread_awake_after (RapicornUInt64 stamp)
 {
-  BirnetThread *self = ThreadTable.thread_self ();
+  RapicornThread *self = ThreadTable.thread_self ();
   
   g_return_if_fail (stamp > 0);
   
@@ -607,7 +607,7 @@ common_thread_awake_after (BirnetUInt64 stamp)
  * stamp smaller than @a wakeup_stamp.
  */
 static void
-common_thread_emit_wakeups (BirnetUInt64 wakeup_stamp)
+common_thread_emit_wakeups (RapicornUInt64 wakeup_stamp)
 {
   g_return_if_fail (wakeup_stamp > 0);
   
@@ -615,7 +615,7 @@ common_thread_emit_wakeups (BirnetUInt64 wakeup_stamp)
   GSList *next, *node;
   for (node = thread_awaken_list; node; node = next)
     {
-      BirnetThread *thread = (BirnetThread*) node->data;
+      RapicornThread *thread = (RapicornThread*) node->data;
       next = node->next;
       if (thread->awake_stamp <= wakeup_stamp)
 	{
@@ -636,7 +636,7 @@ common_thread_emit_wakeups (BirnetUInt64 wakeup_stamp)
  * of birnet_thread_abort() or birnet_thread_queue_abort().
  */
 static void
-common_thread_abort (BirnetThread *thread)
+common_thread_abort (RapicornThread *thread)
 {
   g_return_if_fail (thread != NULL);
   g_return_if_fail (thread != ThreadTable.thread_self ());
@@ -659,7 +659,7 @@ common_thread_abort (BirnetThread *thread)
  * of birnet_thread_abort() or birnet_thread_queue_abort().
  */
 static void
-common_thread_queue_abort (BirnetThread *thread)
+common_thread_queue_abort (RapicornThread *thread)
 {
   g_return_if_fail (thread != NULL);
   
@@ -682,7 +682,7 @@ common_thread_queue_abort (BirnetThread *thread)
 static bool
 common_thread_aborted (void)
 {
-  BirnetThread *self = ThreadTable.thread_self ();
+  RapicornThread *self = ThreadTable.thread_self ();
   global_thread_mutex.lock();
   birnet_thread_accounting_L (self, FALSE);
   bool aborted = self->aborted != FALSE;
@@ -701,7 +701,7 @@ common_thread_aborted (void)
  * information.
  */
 static bool
-common_thread_get_aborted (BirnetThread *thread)
+common_thread_get_aborted (RapicornThread *thread)
 {
   global_thread_mutex.lock();
   bool aborted = thread->aborted != FALSE;
@@ -710,7 +710,7 @@ common_thread_get_aborted (BirnetThread *thread)
 }
 
 static bool
-common_thread_get_running (BirnetThread *thread)
+common_thread_get_running (RapicornThread *thread)
 {
   global_thread_mutex.lock();
   bool running = g_slist_find (global_thread_list, thread);
@@ -719,7 +719,7 @@ common_thread_get_running (BirnetThread *thread)
 }
 
 static void
-common_thread_wait_for_exit (BirnetThread *thread)
+common_thread_wait_for_exit (RapicornThread *thread)
 {
   global_thread_mutex.lock();
   while (g_slist_find (global_thread_list, thread))
@@ -730,7 +730,7 @@ common_thread_wait_for_exit (BirnetThread *thread)
 static gpointer
 common_thread_get_qdata (GQuark quark)
 {
-  BirnetThread *self = ThreadTable.thread_self ();
+  RapicornThread *self = ThreadTable.thread_self ();
   return quark ? g_datalist_id_get_data (&self->qdata, quark) : NULL;
 }
 
@@ -739,7 +739,7 @@ common_thread_set_qdata_full (GQuark         quark,
                               gpointer       data,
                               GDestroyNotify destroy)
 {
-  BirnetThread *self = ThreadTable.thread_self ();
+  RapicornThread *self = ThreadTable.thread_self ();
   g_return_if_fail (quark > 0);
   g_datalist_id_set_data_full (&self->qdata, quark, data,
 			       data ? destroy : (GDestroyNotify) NULL);
@@ -748,23 +748,23 @@ common_thread_set_qdata_full (GQuark         quark,
 static gpointer
 common_thread_steal_qdata (GQuark quark)
 {
-  BirnetThread *self = ThreadTable.thread_self ();
+  RapicornThread *self = ThreadTable.thread_self ();
   return quark ? g_datalist_id_remove_no_notify (&self->qdata, quark) : NULL;
 }
 
 static bool
-common_split_useconds (BirnetInt64   max_useconds,
-                       BirnetUInt64 *abs_secs,
-                       BirnetUInt64 *abs_usecs)
+common_split_useconds (RapicornInt64   max_useconds,
+                       RapicornUInt64 *abs_secs,
+                       RapicornUInt64 *abs_usecs)
 {
   if (max_useconds < 0)
     return false;
   struct timeval now;
   gettimeofday (&now, NULL);
-  BirnetUInt64 secs = max_useconds / 1000000;
-  BirnetUInt64 limit_sec = now.tv_sec + secs;
+  RapicornUInt64 secs = max_useconds / 1000000;
+  RapicornUInt64 limit_sec = now.tv_sec + secs;
   max_useconds -= secs * 1000000;
-  BirnetUInt64 limit_usec = now.tv_usec + max_useconds;
+  RapicornUInt64 limit_usec = now.tv_usec + max_useconds;
   if (limit_usec >= 1000000)
     {
       limit_usec -= 1000000;
@@ -790,7 +790,7 @@ cached_getpid (void)
 #include <linux/unistd.h>
 #endif
 static void
-thread_get_tid (BirnetThread *thread)
+thread_get_tid (RapicornThread *thread)
 {
   gint ppid = thread->tid;      /* creator process id */
   gint tid = -1;
@@ -816,7 +816,7 @@ timeval_usecs (const struct timeval *tv)
 }
 
 static void
-thread_info_from_stat_L (BirnetThread *self,
+thread_info_from_stat_L (RapicornThread *self,
                          double     usec_norm)
 {
   int pid = -1, ppid = -1, pgrp = -1, session = -1, tty_nr = -1, tpgid = -1;
@@ -876,7 +876,7 @@ thread_info_from_stat_L (BirnetThread *self,
       self->ac.cstime = cstime * 10000;
     }
   if (n >= 3)
-    self->info.state = BirnetThreadState (state);
+    self->info.state = RapicornThreadState (state);
   if (n >= 39)
     self->info.processor = 1 + processor;
 }
@@ -884,7 +884,7 @@ thread_info_from_stat_L (BirnetThread *self,
 #define ACCOUNTING_MSECS        (500)
 
 static void
-birnet_thread_accounting_L (BirnetThread *self,
+birnet_thread_accounting_L (RapicornThread *self,
                             bool          force_update)
 {
   struct timeval stamp, ostamp = self->ac.stamp;
@@ -923,10 +923,10 @@ birnet_thread_accounting_L (BirnetThread *self,
     }
 }
 
-static BirnetThreadInfo*
-common_thread_info_collect (BirnetThread *thread)
+static RapicornThreadInfo*
+common_thread_info_collect (RapicornThread *thread)
 {
-  BirnetThreadInfo *info = g_new0 (BirnetThreadInfo, 1);
+  RapicornThreadInfo *info = g_new0 (RapicornThreadInfo, 1);
   struct timeval now;
   gboolean recent = TRUE;
   if (!thread)
@@ -954,7 +954,7 @@ common_thread_info_collect (BirnetThread *thread)
 }
 
 static void
-common_thread_info_free (BirnetThreadInfo  *info)
+common_thread_info_free (RapicornThreadInfo  *info)
 {
   g_return_if_fail (info != NULL);
   g_free (info->name);
@@ -963,7 +963,7 @@ common_thread_info_free (BirnetThreadInfo  *info)
 
 /* --- structure chaining for initialization --- */
 static void
-common_mutex_chain4init (BirnetMutex *mutex)
+common_mutex_chain4init (RapicornMutex *mutex)
 {
   g_assert (mutex->mutex_pointer == NULL);
   mutex->mutex_pointer = mutex_init_chain;
@@ -971,47 +971,47 @@ common_mutex_chain4init (BirnetMutex *mutex)
 }
 
 static void
-common_mutex_unchain (BirnetMutex *mutex)
+common_mutex_unchain (RapicornMutex *mutex)
 {
-  BirnetMutex *last = NULL, *m = mutex_init_chain;
+  RapicornMutex *last = NULL, *m = mutex_init_chain;
   while (m != mutex)
     {
       last = m;
-      m = (BirnetMutex*) last->mutex_pointer;
+      m = (RapicornMutex*) last->mutex_pointer;
     }
   if (last)
     last->mutex_pointer = mutex->mutex_pointer;
   else
-    mutex_init_chain = (BirnetMutex*) mutex->mutex_pointer;
+    mutex_init_chain = (RapicornMutex*) mutex->mutex_pointer;
 }
 
 static void
-common_rec_mutex_chain4init (BirnetRecMutex *rec_mutex)
+common_rec_mutex_chain4init (RapicornRecMutex *rec_mutex)
 {
-  RAPICORN_STATIC_ASSERT (offsetof (BirnetRecMutex, mutex) == 0);
+  RAPICORN_STATIC_ASSERT (offsetof (RapicornRecMutex, mutex) == 0);
   g_assert (rec_mutex->mutex.mutex_pointer == NULL);
   rec_mutex->mutex.mutex_pointer = rec_mutex_init_chain;
   rec_mutex_init_chain = &rec_mutex->mutex;
 }
 
 static void
-common_rec_mutex_unchain (BirnetRecMutex *rec_mutex)
+common_rec_mutex_unchain (RapicornRecMutex *rec_mutex)
 {
-  BirnetMutex *mutex = (BirnetMutex*) rec_mutex;
-  BirnetMutex *last = NULL, *m = rec_mutex_init_chain;
+  RapicornMutex *mutex = (RapicornMutex*) rec_mutex;
+  RapicornMutex *last = NULL, *m = rec_mutex_init_chain;
   while (m != mutex)
     {
       last = m;
-      m = (BirnetMutex*) last->mutex_pointer;
+      m = (RapicornMutex*) last->mutex_pointer;
     }
   if (last)
     last->mutex_pointer = mutex->mutex_pointer;
   else
-    rec_mutex_init_chain = (BirnetMutex*) mutex->mutex_pointer;
+    rec_mutex_init_chain = (RapicornMutex*) mutex->mutex_pointer;
 }
 
 static void
-common_cond_chain4init (BirnetCond *cond)
+common_cond_chain4init (RapicornCond *cond)
 {
   g_assert (cond->cond_pointer == NULL);
   cond->cond_pointer = cond_init_chain;
@@ -1019,38 +1019,38 @@ common_cond_chain4init (BirnetCond *cond)
 }
 
 static void
-common_cond_unchain (BirnetCond *cond)
+common_cond_unchain (RapicornCond *cond)
 {
-  BirnetCond *last = NULL, *c = cond_init_chain;
+  RapicornCond *last = NULL, *c = cond_init_chain;
   while (c != cond)
     {
       last = c;
-      c = (BirnetCond*) last->cond_pointer;
+      c = (RapicornCond*) last->cond_pointer;
     }
   if (last)
     last->cond_pointer = cond->cond_pointer;
   else
-    cond_init_chain = (BirnetCond*) cond->cond_pointer;
+    cond_init_chain = (RapicornCond*) cond->cond_pointer;
 }
 
 /* --- hazard pointer guards --- */
-struct BirnetGuard
+struct RapicornGuard
 {
-  volatile BirnetGuard *next;       /* global guard list */
-  BirnetThread         *thread;
-  volatile BirnetGuard *cache_next; /* per thread free list */
+  volatile RapicornGuard *next;       /* global guard list */
+  RapicornThread         *thread;
+  volatile RapicornGuard *cache_next; /* per thread free list */
   guint                 n_values;
   volatile gpointer     values[1];  /* variable length array */
 };
-static volatile BirnetGuard * volatile guard_list = NULL;
+static volatile RapicornGuard * volatile guard_list = NULL;
 static gint       volatile guard_list_length = 0;
 #define RAPICORN_GUARD_ALIGN  (4)
-#define guard2values(ptr)       G_STRUCT_MEMBER_P (ptr, +G_STRUCT_OFFSET (BirnetGuard, values[0]))
-#define values2guard(ptr)       G_STRUCT_MEMBER_P (ptr, -G_STRUCT_OFFSET (BirnetGuard, values[0]))
+#define guard2values(ptr)       G_STRUCT_MEMBER_P (ptr, +G_STRUCT_OFFSET (RapicornGuard, values[0]))
+#define values2guard(ptr)       G_STRUCT_MEMBER_P (ptr, -G_STRUCT_OFFSET (RapicornGuard, values[0]))
 
 /**
  * @param n_hazards	number of required hazard pointers
- * @return		a valid BirnetGuard
+ * @return		a valid RapicornGuard
  *
  * Retrieve a new guard for node protection of the current thread.
  * The exact mechanism of protection is described in birnet_guard_protect().
@@ -1062,15 +1062,15 @@ static gint       volatile guard_list_length = 0;
  * If an equally or bigger sized hazard pointer array was previously
  * deregistered by this thread, registration takes constant time.
  */
-static volatile BirnetGuard*
+static volatile RapicornGuard*
 birnet_guard_register (guint n_hazards) RAPICORN_UNUSED;
-static volatile BirnetGuard*
+static volatile RapicornGuard*
 birnet_guard_register (guint n_hazards)
 {
-  BirnetThread *thread = ThreadTable.thread_self();
-  volatile BirnetGuard *guard, *last = NULL;
+  RapicornThread *thread = ThreadTable.thread_self();
+  volatile RapicornGuard *guard, *last = NULL;
   /* reuse cached guards */
-  for (guard = (volatile Birnet::BirnetGuard*) thread->guard_cache; guard; last = guard, guard = last->cache_next)
+  for (guard = (volatile Birnet::RapicornGuard*) thread->guard_cache; guard; last = guard, guard = last->cache_next)
     if (n_hazards <= guard->n_values)
       {
         if (last)
@@ -1085,40 +1085,40 @@ birnet_guard_register (guint n_hazards)
     {
       n_hazards = ((MAX (n_hazards, 3) + RAPICORN_GUARD_ALIGN - 1) / RAPICORN_GUARD_ALIGN) * RAPICORN_GUARD_ALIGN;
       Atomic::int_add (&guard_list_length, n_hazards);
-      guard = (volatile Birnet::BirnetGuard*) g_malloc0 (sizeof (BirnetGuard) + (n_hazards - 1) * sizeof (guard->values[0]));
+      guard = (volatile Birnet::RapicornGuard*) g_malloc0 (sizeof (RapicornGuard) + (n_hazards - 1) * sizeof (guard->values[0]));
       guard->n_values = n_hazards;
       guard->thread = thread;
       do
-        guard->next = (volatile BirnetGuard*) ThreadTable.atomic_pointer_get ((volatile void*) &guard_list);
+        guard->next = (volatile RapicornGuard*) ThreadTable.atomic_pointer_get ((volatile void*) &guard_list);
       while (!ThreadTable.atomic_pointer_cas (&guard_list, guard->next, guard));
     }
-  return (volatile BirnetGuard*) guard2values (guard);
+  return (volatile RapicornGuard*) guard2values (guard);
 }
 
 /**
- * @param guard	a valid BirnetGuard as returned from birnet_guard_register()
+ * @param guard	a valid RapicornGuard as returned from birnet_guard_register()
  *
  * Deregister a guard previously registered by a call to birnet_guard_register().
  * Deregistration is performed in constant time.
  */
 static void RAPICORN_UNUSED
-birnet_guard_deregister (volatile BirnetGuard *guard)
+birnet_guard_deregister (volatile RapicornGuard *guard)
 {
-  guard = (volatile BirnetGuard*) values2guard (guard);
-  BirnetThread *thread = ThreadTable.thread_self();
+  guard = (volatile RapicornGuard*) values2guard (guard);
+  RapicornThread *thread = ThreadTable.thread_self();
   g_return_if_fail (guard->thread == thread);
   memset ((guint8*) guard->values, 0, sizeof (guard->values[0]) * guard->n_values);
   /* FIXME: must we have a memory barrier here? */
-  guard->cache_next = (volatile BirnetGuard*) thread->guard_cache;
+  guard->cache_next = (volatile RapicornGuard*) thread->guard_cache;
   thread->guard_cache = guard;
 }
 
 static void
-birnet_guard_deregister_all (BirnetThread *thread)
+birnet_guard_deregister_all (RapicornThread *thread)
 {
-  volatile BirnetGuard *guard;
+  volatile RapicornGuard *guard;
   thread->guard_cache = NULL;
-  for (guard = (volatile BirnetGuard*) ThreadTable.atomic_pointer_get (&guard_list); guard; guard = guard->next)
+  for (guard = (volatile RapicornGuard*) ThreadTable.atomic_pointer_get (&guard_list); guard; guard = guard->next)
     if (guard->thread == thread)
       {
         memset ((guint8*) guard->values, 0, sizeof (guard->values[0]) * guard->n_values);
@@ -1128,7 +1128,7 @@ birnet_guard_deregister_all (BirnetThread *thread)
 }
 
 /**
- * @param guard	a valid BirnetGuard as returned from birnet_guard_register()
+ * @param guard	a valid RapicornGuard as returned from birnet_guard_register()
  * @param nth_hazard	index of the hazard pointer to use for protection
  * @param value	a hazardous pointer value or NULL to reset protection
  *
@@ -1149,7 +1149,7 @@ birnet_guard_deregister_all (BirnetThread *thread)
  * @* 2) Verify that the hazard pointer points to a valid node
  * @* 3) Dereference the node only as long as it's protected by the hazard pointer.
  * @* For example:
- * @* 0: BirnetGuard *guard = birnet_guard_register (1);
+ * @* 0: RapicornGuard *guard = birnet_guard_register (1);
  * @* 1: peek_head_label:
  * @* 2: auto GSList *node = shared_list_head;
  * @* 3: birnet_guard_protect (guard, 0, node);
@@ -1159,7 +1159,7 @@ birnet_guard_deregister_all (BirnetThread *thread)
  */
 #if 0
 static inline
-void birnet_guard_protect (volatile BirnetGuard *guard,  /* defined in birnetthreads.h */
+void birnet_guard_protect (volatile RapicornGuard *guard,  /* defined in birnetthreads.h */
                            guint     nth_hazard,
                            gpointer  value);
 #endif
@@ -1213,8 +1213,8 @@ birnet_guard_snap_values (guint          *n_values,
                           gpointer       *values)
 {
   guint i, n = 0;
-  volatile BirnetGuard *guard;
-  for (guard = (volatile BirnetGuard*) ThreadTable.atomic_pointer_get (&guard_list); guard; guard = guard->next)
+  volatile RapicornGuard *guard;
+  for (guard = (volatile RapicornGuard*) ThreadTable.atomic_pointer_get (&guard_list); guard; guard = guard->next)
     if (guard->thread)
       for (i = 0; i < guard->n_values; i++)
         {
@@ -1251,9 +1251,9 @@ birnet_guard_is_protected (gpointer value)
 {
   if (value)
     {
-      volatile BirnetGuard *guard;
+      volatile RapicornGuard *guard;
       guint i;
-      for (guard = (volatile BirnetGuard*) ThreadTable.atomic_pointer_get (&guard_list); guard; guard = guard->next)
+      for (guard = (volatile RapicornGuard*) ThreadTable.atomic_pointer_get (&guard_list); guard; guard = guard->next)
         if (guard->thread)
           for (i = 0; i < guard->n_values; i++)
             if (guard->values[i] == value)
@@ -1262,36 +1262,36 @@ birnet_guard_is_protected (gpointer value)
   return FALSE;
 }
 
-/* --- fallback (GLib) BirnetThreadTable --- */
+/* --- fallback (GLib) RapicornThreadTable --- */
 static GPrivate *fallback_thread_table_key = NULL;
 
 static void
-fallback_thread_set_handle (BirnetThread *handle)
+fallback_thread_set_handle (RapicornThread *handle)
 {
   g_private_set (fallback_thread_table_key, handle);
 }
 
-static BirnetThread*
+static RapicornThread*
 fallback_thread_get_handle (void)
 {
-  return (BirnetThread*) g_private_get (fallback_thread_table_key);
+  return (RapicornThread*) g_private_get (fallback_thread_table_key);
 }
 
 static void
-fallback_mutex_init (BirnetMutex *mutex)
+fallback_mutex_init (RapicornMutex *mutex)
 {
   g_return_if_fail (mutex != NULL);
   mutex->mutex_pointer = g_mutex_new ();
 }
 
 static int
-fallback_mutex_trylock (BirnetMutex *mutex)
+fallback_mutex_trylock (RapicornMutex *mutex)
 {
   return g_mutex_trylock ((GMutex*) mutex->mutex_pointer) ? 0 : -1;
 }
 
 static void
-fallback_mutex_lock (BirnetMutex *mutex)
+fallback_mutex_lock (RapicornMutex *mutex)
 {
   static gboolean is_smp_system = FALSE; // FIXME
   
@@ -1324,20 +1324,20 @@ fallback_mutex_lock (BirnetMutex *mutex)
 }
 
 static void
-fallback_mutex_unlock (BirnetMutex *mutex)
+fallback_mutex_unlock (RapicornMutex *mutex)
 {
   g_mutex_unlock ((GMutex*) mutex->mutex_pointer);
 }
 
 static void
-fallback_mutex_destroy (BirnetMutex *mutex)
+fallback_mutex_destroy (RapicornMutex *mutex)
 {
   g_mutex_free ((GMutex*) mutex->mutex_pointer);
   memset (mutex, 0, sizeof (*mutex));
 }
 
 static void
-fallback_rec_mutex_init (BirnetRecMutex *rec_mutex)
+fallback_rec_mutex_init (RapicornRecMutex *rec_mutex)
 {
   rec_mutex->owner = NULL;
   rec_mutex->depth = 0;
@@ -1345,9 +1345,9 @@ fallback_rec_mutex_init (BirnetRecMutex *rec_mutex)
 }
 
 static int
-fallback_rec_mutex_trylock (BirnetRecMutex *rec_mutex)
+fallback_rec_mutex_trylock (RapicornRecMutex *rec_mutex)
 {
-  BirnetThread *self = ThreadTable.thread_self ();
+  RapicornThread *self = ThreadTable.thread_self ();
   
   if (rec_mutex->owner == self)
     {
@@ -1369,9 +1369,9 @@ fallback_rec_mutex_trylock (BirnetRecMutex *rec_mutex)
 }
 
 static void
-fallback_rec_mutex_lock (BirnetRecMutex *rec_mutex)
+fallback_rec_mutex_lock (RapicornRecMutex *rec_mutex)
 {
-  BirnetThread *self = ThreadTable.thread_self ();
+  RapicornThread *self = ThreadTable.thread_self ();
   
   if (rec_mutex->owner == self)
     {
@@ -1388,9 +1388,9 @@ fallback_rec_mutex_lock (BirnetRecMutex *rec_mutex)
 }
 
 static void
-fallback_rec_mutex_unlock (BirnetRecMutex *rec_mutex)
+fallback_rec_mutex_unlock (RapicornRecMutex *rec_mutex)
 {
-  BirnetThread *self = ThreadTable.thread_self ();
+  RapicornThread *self = ThreadTable.thread_self ();
   
   if (rec_mutex->owner == self && rec_mutex->depth > 0)
     {
@@ -1407,7 +1407,7 @@ fallback_rec_mutex_unlock (BirnetRecMutex *rec_mutex)
 }
 
 static void
-fallback_rec_mutex_destroy (BirnetRecMutex *rec_mutex)
+fallback_rec_mutex_destroy (RapicornRecMutex *rec_mutex)
 {
   if (rec_mutex->owner || rec_mutex->depth)
     g_warning ("recursive mutex still locked during destruction");
@@ -1419,37 +1419,37 @@ fallback_rec_mutex_destroy (BirnetRecMutex *rec_mutex)
 }
 
 static void
-fallback_cond_init (BirnetCond *cond)
+fallback_cond_init (RapicornCond *cond)
 {
   cond->cond_pointer = g_cond_new ();
 }
 
 static void
-fallback_cond_signal (BirnetCond *cond)
+fallback_cond_signal (RapicornCond *cond)
 {
   g_cond_signal ((GCond*) cond->cond_pointer);
 }
 
 static void
-fallback_cond_broadcast (BirnetCond *cond)
+fallback_cond_broadcast (RapicornCond *cond)
 {
   g_cond_broadcast ((GCond*) cond->cond_pointer);
 }
 
 static void
-fallback_cond_wait (BirnetCond  *cond,
-                    BirnetMutex *mutex)
+fallback_cond_wait (RapicornCond  *cond,
+                    RapicornMutex *mutex)
 {
   /* infinite wait */
   g_cond_wait ((GCond*) cond->cond_pointer, (GMutex*) mutex->mutex_pointer);
 }
 
 static void
-fallback_cond_wait_timed (BirnetCond  *cond,
-                          BirnetMutex *mutex,
-                          BirnetInt64  max_useconds)
+fallback_cond_wait_timed (RapicornCond  *cond,
+                          RapicornMutex *mutex,
+                          RapicornInt64  max_useconds)
 {
-  BirnetUInt64 abs_secs, abs_usecs;
+  RapicornUInt64 abs_secs, abs_usecs;
   if (common_split_useconds (max_useconds, &abs_secs, &abs_usecs))
     {
       GTimeVal gtime;
@@ -1462,7 +1462,7 @@ fallback_cond_wait_timed (BirnetCond  *cond,
 }
 
 static void
-fallback_cond_destroy (BirnetCond *cond)
+fallback_cond_destroy (RapicornCond *cond)
 {
   g_cond_free ((GCond*) cond->cond_pointer);
 }
@@ -1491,7 +1491,7 @@ static void*
 #endif
 
 
-static BirnetThreadTable fallback_thread_table = {
+static RapicornThreadTable fallback_thread_table = {
   NULL, /* mutex_chain4init */
   NULL, /* mutex_unchain */
   NULL, /* rec_mutex_chain4init */
@@ -1561,7 +1561,7 @@ static BirnetThreadTable fallback_thread_table = {
   fallback_cond_destroy,
 };
 
-static BirnetThreadTable*
+static RapicornThreadTable*
 get_fallback_thread_table (void)
 {
   fallback_thread_table_key = g_private_new ((GDestroyNotify) birnet_thread_handle_exit);
@@ -1574,21 +1574,21 @@ get_fallback_thread_table (void)
 #include <pthread.h>
 static pthread_key_t pth_thread_table_key = 0;
 static void
-pth_thread_set_handle (BirnetThread *handle)
+pth_thread_set_handle (RapicornThread *handle)
 {
-  BirnetThread *tmp = (BirnetThread*) pthread_getspecific (pth_thread_table_key);
+  RapicornThread *tmp = (RapicornThread*) pthread_getspecific (pth_thread_table_key);
   pthread_setspecific (pth_thread_table_key, handle);
   if (tmp)
     birnet_thread_handle_exit (tmp);
 }
-static BirnetThread*
+static RapicornThread*
 pth_thread_get_handle (void)
 {
-  return (BirnetThread*) pthread_getspecific (pth_thread_table_key);
+  return (RapicornThread*) pthread_getspecific (pth_thread_table_key);
 }
 
 static void
-pth_mutex_init (BirnetMutex *mutex)
+pth_mutex_init (RapicornMutex *mutex)
 {
   /* need NULL attribute here, which is the fast mutex in glibc
    * and cannot be chosen through pthread_mutexattr_settype()
@@ -1597,9 +1597,9 @@ pth_mutex_init (BirnetMutex *mutex)
 }
 
 static void
-pth_rec_mutex_init (BirnetRecMutex *mutex)
+pth_rec_mutex_init (RapicornRecMutex *mutex)
 {
-  RAPICORN_STATIC_ASSERT (offsetof (BirnetRecMutex, mutex) == 0);
+  RAPICORN_STATIC_ASSERT (offsetof (RapicornRecMutex, mutex) == 0);
   pthread_mutexattr_t attr;
   pthread_mutexattr_init (&attr);
   pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
@@ -1608,17 +1608,17 @@ pth_rec_mutex_init (BirnetRecMutex *mutex)
 }
 
 static void
-pth_cond_init (BirnetCond *cond)
+pth_cond_init (RapicornCond *cond)
 {
   pthread_cond_init ((pthread_cond_t*) cond, NULL);
 }
 
 static void
-pth_cond_wait_timed (BirnetCond  *cond,
-                     BirnetMutex *mutex,
-                     BirnetInt64  max_useconds)
+pth_cond_wait_timed (RapicornCond  *cond,
+                     RapicornMutex *mutex,
+                     RapicornInt64  max_useconds)
 {
-  BirnetUInt64 abs_secs, abs_usecs;
+  RapicornUInt64 abs_secs, abs_usecs;
   if (common_split_useconds (max_useconds, &abs_secs, &abs_usecs))
     {
       struct timespec abstime;
@@ -1630,7 +1630,7 @@ pth_cond_wait_timed (BirnetCond  *cond,
     pthread_cond_wait ((pthread_cond_t*) cond, (pthread_mutex_t    *) mutex);
 }
 
-static BirnetThreadTable pth_thread_table = {
+static RapicornThreadTable pth_thread_table = {
   NULL, /* mutex_chain4init */
   NULL, /* mutex_unchain */
   NULL, /* rec_mutex_chain4init */
@@ -1683,29 +1683,29 @@ static BirnetThreadTable pth_thread_table = {
   common_thread_set_qdata_full,
   common_thread_steal_qdata,
   pth_mutex_init,
-  (void (*) (BirnetMutex*)) pthread_mutex_lock,
-  (int  (*) (BirnetMutex*)) pthread_mutex_trylock,
-  (void (*) (BirnetMutex*)) pthread_mutex_unlock,
-  (void (*) (BirnetMutex*)) pthread_mutex_destroy,
+  (void (*) (RapicornMutex*)) pthread_mutex_lock,
+  (int  (*) (RapicornMutex*)) pthread_mutex_trylock,
+  (void (*) (RapicornMutex*)) pthread_mutex_unlock,
+  (void (*) (RapicornMutex*)) pthread_mutex_destroy,
   pth_rec_mutex_init,
-  (void (*) (BirnetRecMutex*)) pthread_mutex_lock,
-  (int  (*) (BirnetRecMutex*)) pthread_mutex_trylock,
-  (void (*) (BirnetRecMutex*)) pthread_mutex_unlock,
-  (void (*) (BirnetRecMutex*)) pthread_mutex_destroy,
+  (void (*) (RapicornRecMutex*)) pthread_mutex_lock,
+  (int  (*) (RapicornRecMutex*)) pthread_mutex_trylock,
+  (void (*) (RapicornRecMutex*)) pthread_mutex_unlock,
+  (void (*) (RapicornRecMutex*)) pthread_mutex_destroy,
   pth_cond_init,
-  (void (*) (BirnetCond*))               pthread_cond_signal,
-  (void (*) (BirnetCond*))               pthread_cond_broadcast,
-  (void (*) (BirnetCond*, BirnetMutex*)) pthread_cond_wait,
+  (void (*) (RapicornCond*))               pthread_cond_signal,
+  (void (*) (RapicornCond*))               pthread_cond_broadcast,
+  (void (*) (RapicornCond*, RapicornMutex*)) pthread_cond_wait,
   pth_cond_wait_timed,
-  (void (*) (BirnetCond*))               pthread_cond_destroy,
+  (void (*) (RapicornCond*))               pthread_cond_destroy,
 };
-static BirnetThreadTable*
+static RapicornThreadTable*
 get_pth_thread_table (void)
 {
   if (pthread_key_create (&pth_thread_table_key, (void(*)(void*)) birnet_thread_handle_exit) != 0)
     {
       char buffer[1024];
-      snprintf (buffer, 1024, "BirnetThread[%u]: failed to create pthread key, falling back to GLib threads.\n", getpid());
+      snprintf (buffer, 1024, "RapicornThread[%u]: failed to create pthread key, falling back to GLib threads.\n", getpid());
       fputs (buffer, stderr);
       return NULL;
     }
@@ -1715,8 +1715,8 @@ get_pth_thread_table (void)
 #define	get_pth_thread_table()	NULL
 #endif	/* !RAPICORN_HAVE_MUTEXATTR_SETTYPE */
 
-/* ::Birnet::ThreadTable must be a BirnetThreadTable, not a reference for the C API wrapper to work */
-BirnetThreadTable ThreadTable = {
+/* ::Birnet::ThreadTable must be a RapicornThreadTable, not a reference for the C API wrapper to work */
+RapicornThreadTable ThreadTable = {
   common_mutex_chain4init,
   common_mutex_unchain,
   common_rec_mutex_chain4init,
@@ -1742,28 +1742,28 @@ BirnetThreadTable ThreadTable = {
 void
 _birnet_init_threads (void)
 {
-  BirnetThreadTable *table = get_pth_thread_table ();
+  RapicornThreadTable *table = get_pth_thread_table ();
   if (!table)
     table = get_fallback_thread_table ();
   ThreadTable = *table;
   
   while (mutex_init_chain)
     {
-      BirnetMutex *mutex = mutex_init_chain;
-      mutex_init_chain = (BirnetMutex*) mutex->mutex_pointer;
+      RapicornMutex *mutex = mutex_init_chain;
+      mutex_init_chain = (RapicornMutex*) mutex->mutex_pointer;
       ThreadTable.mutex_init (mutex);
     }
   while (rec_mutex_init_chain)
     {
-      BirnetMutex *mutex = rec_mutex_init_chain;
-      rec_mutex_init_chain = (BirnetMutex*) mutex->mutex_pointer;
-      RAPICORN_STATIC_ASSERT (offsetof (BirnetRecMutex, mutex) == 0);
-      ThreadTable.rec_mutex_init ((BirnetRecMutex*) mutex);
+      RapicornMutex *mutex = rec_mutex_init_chain;
+      rec_mutex_init_chain = (RapicornMutex*) mutex->mutex_pointer;
+      RAPICORN_STATIC_ASSERT (offsetof (RapicornRecMutex, mutex) == 0);
+      ThreadTable.rec_mutex_init ((RapicornRecMutex*) mutex);
     }
   while (cond_init_chain)
     {
-      BirnetCond *cond = cond_init_chain;
-      cond_init_chain = (BirnetCond*) cond->cond_pointer;
+      RapicornCond *cond = cond_init_chain;
+      cond_init_chain = (RapicornCond*) cond->cond_pointer;
       ThreadTable.cond_init (cond);
     }
   

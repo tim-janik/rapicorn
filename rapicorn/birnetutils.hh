@@ -25,15 +25,15 @@
 namespace Birnet {
 
 /* --- short integer types --- */
-typedef BirnetUInt8   uint8;
-typedef BirnetUInt16  uint16;
-typedef BirnetUInt32  uint32;
-typedef BirnetUInt64  uint64;
-typedef BirnetInt8    int8;
-typedef BirnetInt16   int16;
-typedef BirnetInt32   int32;
-typedef BirnetInt64   int64;
-typedef BirnetUnichar unichar;
+typedef RapicornUInt8   uint8;
+typedef RapicornUInt16  uint16;
+typedef RapicornUInt32  uint32;
+typedef RapicornUInt64  uint64;
+typedef RapicornInt8    int8;
+typedef RapicornInt16   int16;
+typedef RapicornInt32   int32;
+typedef RapicornInt64   int64;
+typedef RapicornUnichar unichar;
 
 /* --- convenient stdc++ types --- */
 typedef std::string String;
@@ -98,8 +98,8 @@ void birnet_runtime_problemv (char        ewran_tag,
 #endif  /* _BIRNET_SOURCE_EXTENSIONS */
 
 /* --- initialization --- */
-typedef BirnetInitValue    InitValue;
-typedef BirnetInitSettings InitSettings;
+typedef RapicornInitValue    InitValue;
+typedef RapicornInitSettings InitSettings;
 InitSettings init_settings     ();
 void         birnet_init       (int        *argcp,
                                 char     ***argvp,
@@ -144,7 +144,7 @@ inline void BREAKPOINT() { raise_sigtrap(); }
 #endif  /* __i386__ */
 
 /* --- threading implementaiton bit --- */
-extern BirnetThreadTable ThreadTable; /* private, provided by birnetthreadimpl.cc */
+extern RapicornThreadTable ThreadTable; /* private, provided by birnetthreadimpl.cc */
 
 /* --- string functionality --- */
 String  			string_tolower           (const String &str);

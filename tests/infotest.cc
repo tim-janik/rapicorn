@@ -27,7 +27,7 @@ test_cpu_info (void)
 {
   TSTART ("CpuInfo");
   TOK();
-  const BirnetCPUInfo cpi = cpu_info ();
+  const RapicornCPUInfo cpi = cpu_info ();
   TASSERT (cpi.machine != NULL);
   String cps = cpu_info_string (cpi);
   TASSERT (cps.size() != 0);

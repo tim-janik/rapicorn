@@ -29,10 +29,10 @@ typedef enum {
 } RapicornRegionCType;
 typedef struct _RapicornRegion    RapicornRegion;
 typedef struct {
-  BirnetInt64 x1, y1, x2, y2;
+  RapicornInt64 x1, y1, x2, y2;
 } RapicornRegionBox;
 typedef struct {
-  BirnetInt64 x, y;
+  RapicornInt64 x, y;
 } RapicornRegionPoint;
 
 /* --- functions --- */

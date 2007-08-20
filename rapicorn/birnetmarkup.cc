@@ -1,4 +1,4 @@
-/* BirnetMarkup - simple XML parser
+/* RapicornMarkup - simple XML parser
  * Copyright (C) 2005 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
