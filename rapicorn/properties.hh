@@ -319,10 +319,10 @@ PropertyRange<Class,Type>::PropertyRange (void (Class::*csetter) (Type), Type (C
   setter (csetter),
   getter (cgetter)
 {
-  BIRNET_ASSERT (minimum_value <= maximum_value);
-  BIRNET_ASSERT (minimum_value <= default_value);
-  BIRNET_ASSERT (default_value <= maximum_value);
-  BIRNET_ASSERT (minimum_value + stepping <= maximum_value);
+  RAPICORN_ASSERT (minimum_value <= maximum_value);
+  RAPICORN_ASSERT (minimum_value <= default_value);
+  RAPICORN_ASSERT (default_value <= maximum_value);
+  RAPICORN_ASSERT (minimum_value + stepping <= maximum_value);
 }
 
 template<class Class, typename Type> void

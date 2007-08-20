@@ -72,8 +72,8 @@ public:
 };
 
 /* --- implement assertion macros --- */
-#ifndef BIRNET__RUNTIME_PROBLEM
-#define BIRNET__RUNTIME_PROBLEM(ErrorWarningReturnAssertNotreach,domain,file,line,funcname,...) \
+#ifndef RAPICORN__RUNTIME_PROBLEM
+#define RAPICORN__RUNTIME_PROBLEM(ErrorWarningReturnAssertNotreach,domain,file,line,funcname,...) \
         ::Birnet::birnet_runtime_problem (ErrorWarningReturnAssertNotreach, domain, file, line, funcname, __VA_ARGS__)
 #endif
 void birnet_runtime_problem  (char        ewran_tag,
@@ -82,7 +82,7 @@ void birnet_runtime_problem  (char        ewran_tag,
                               int         line,
                               const char *funcname,
                               const char *msgformat,
-                              ...) BIRNET_PRINTF (6, 7);
+                              ...) RAPICORN_PRINTF (6, 7);
 void birnet_runtime_problemv (char        ewran_tag,
                               const char *domain,
                               const char *file,
@@ -92,9 +92,9 @@ void birnet_runtime_problemv (char        ewran_tag,
                               va_list     msgargs);
 
 /* --- private copy constructor and assignment operator --- */
-#define BIRNET_PRIVATE_CLASS_COPY(Class)        private: Class (const Class&); Class& operator= (const Class&);
+#define RAPICORN_PRIVATE_CLASS_COPY(Class)        private: Class (const Class&); Class& operator= (const Class&);
 #ifdef  _BIRNET_SOURCE_EXTENSIONS
-#define PRIVATE_CLASS_COPY                      BIRNET_PRIVATE_CLASS_COPY
+#define PRIVATE_CLASS_COPY                      RAPICORN_PRIVATE_CLASS_COPY
 #endif  /* _BIRNET_SOURCE_EXTENSIONS */
 
 /* --- initialization --- */
@@ -115,7 +115,7 @@ class InitHook {
   InitHook    *next;
   int          priority;
   InitHookFunc hook;
-  BIRNET_PRIVATE_CLASS_COPY (InitHook);
+  RAPICORN_PRIVATE_CLASS_COPY (InitHook);
   static void  invoke_hooks (void);
 public:
   explicit InitHook (InitHookFunc _func,
@@ -123,16 +123,16 @@ public:
 };
 
 /* --- assertions, warnings, errors --- */
-void        error               (const char   *format, ...) BIRNET_PRINTF (1, 2) BIRNET_NORETURN;
-void        error               (const String &s) BIRNET_NORETURN;
-void        warning             (const char   *format, ...) BIRNET_PRINTF (1, 2);
+void        error               (const char   *format, ...) RAPICORN_PRINTF (1, 2) RAPICORN_NORETURN;
+void        error               (const String &s) RAPICORN_NORETURN;
+void        warning             (const char   *format, ...) RAPICORN_PRINTF (1, 2);
 void        warning             (const String &s);
-void        diag                (const char   *format, ...) BIRNET_PRINTF (1, 2);
+void        diag                (const char   *format, ...) RAPICORN_PRINTF (1, 2);
 void        diag                (const String &s);
-void        errmsg              (const String &entity, const char *format, ...) BIRNET_PRINTF (2, 3);
+void        errmsg              (const String &entity, const char *format, ...) RAPICORN_PRINTF (2, 3);
 void        errmsg              (const String &entity, const String &s);
-void        printerr            (const char   *format, ...) BIRNET_PRINTF (1, 2);
-void        printout            (const char   *format, ...) BIRNET_PRINTF (1, 2);
+void        printerr            (const char   *format, ...) RAPICORN_PRINTF (1, 2);
+void        printout            (const char   *format, ...) RAPICORN_PRINTF (1, 2);
 void        raise_sigtrap       ();
 inline void BREAKPOINT          ();
 #if (defined __i386__ || defined __x86_64__) && defined __GNUC__ && __GNUC__ >= 2
@@ -150,7 +150,7 @@ extern BirnetThreadTable ThreadTable; /* private, provided by birnetthreadimpl.c
 String  			string_tolower           (const String &str);
 String  			string_toupper           (const String &str);
 String  			string_totitle           (const String &str);
-String  			string_printf            (const char *format, ...) BIRNET_PRINTF (1, 2);
+String  			string_printf            (const char *format, ...) RAPICORN_PRINTF (1, 2);
 String  			string_vprintf           (const char *format, va_list vargs);
 String  			string_strip             (const String &str);
 bool    			string_to_bool           (const String &string);
@@ -332,14 +332,14 @@ public:
   {
     uint32 old_ref = ref_get();
     uint32 current_ref_count = old_ref & ~FLOATING_FLAG;
-    BIRNET_ASSERT (current_ref_count > 0);
+    RAPICORN_ASSERT (current_ref_count > 0);
     uint32 new_ref = old_ref + 1;
-    BIRNET_ASSERT (new_ref & ~FLOATING_FLAG);       /* catch overflow */
-    while (BIRNET_UNLIKELY (!ref_cas (old_ref, new_ref)))
+    RAPICORN_ASSERT (new_ref & ~FLOATING_FLAG);       /* catch overflow */
+    while (RAPICORN_UNLIKELY (!ref_cas (old_ref, new_ref)))
       {
         old_ref = ref_get();
         new_ref = old_ref + 1;
-        BIRNET_ASSERT (new_ref & ~FLOATING_FLAG);   /* catch overflow */
+        RAPICORN_ASSERT (new_ref & ~FLOATING_FLAG);   /* catch overflow */
       }
   }
   void
@@ -348,9 +348,9 @@ public:
     ref();
     uint32 old_ref = ref_get();
     uint32 new_ref = old_ref & ~FLOATING_FLAG;
-    if (BIRNET_UNLIKELY (old_ref != new_ref))
+    if (RAPICORN_UNLIKELY (old_ref != new_ref))
       {
-        while (BIRNET_UNLIKELY (!ref_cas (old_ref, new_ref)))
+        while (RAPICORN_UNLIKELY (!ref_cas (old_ref, new_ref)))
           {
             old_ref = ref_get();
             new_ref = old_ref & ~FLOATING_FLAG;
@@ -369,22 +369,22 @@ public:
   {
     uint32 old_ref = ref_get();
     uint32 current_ref_count = old_ref & ~FLOATING_FLAG;
-    BIRNET_ASSERT (current_ref_count > 0);
-    if (BIRNET_UNLIKELY (1 == (old_ref & ~FLOATING_FLAG)))
+    RAPICORN_ASSERT (current_ref_count > 0);
+    if (RAPICORN_UNLIKELY (1 == (old_ref & ~FLOATING_FLAG)))
       {
         ReferenceCountImpl *self = const_cast<ReferenceCountImpl*> (this);
         self->pre_finalize();
         old_ref = ref_get();
       }
     uint32 new_ref = old_ref - 1;
-    BIRNET_ASSERT (old_ref & ~FLOATING_FLAG);       /* catch underflow */
-    while (BIRNET_UNLIKELY (!ref_cas (old_ref, new_ref)))
+    RAPICORN_ASSERT (old_ref & ~FLOATING_FLAG);       /* catch underflow */
+    while (RAPICORN_UNLIKELY (!ref_cas (old_ref, new_ref)))
       {
         old_ref = ref_get();
-        BIRNET_ASSERT (old_ref & ~FLOATING_FLAG);   /* catch underflow */
+        RAPICORN_ASSERT (old_ref & ~FLOATING_FLAG);   /* catch underflow */
         new_ref = old_ref - 1;
       }
-    if (BIRNET_UNLIKELY (0 == (new_ref & ~FLOATING_FLAG)))
+    if (RAPICORN_UNLIKELY (0 == (new_ref & ~FLOATING_FLAG)))
       {
         ReferenceCountImpl *self = const_cast<ReferenceCountImpl*> (this);
         self->finalize();

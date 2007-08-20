@@ -76,7 +76,7 @@ const char* string_from_event_type (EventType etype);
 
 struct EventContext;
 class Event : public Deletable {
-  BIRNET_PRIVATE_CLASS_COPY (Event);
+  RAPICORN_PRIVATE_CLASS_COPY (Event);
 protected:
   explicit        Event (EventType, const EventContext&);
 public:
@@ -90,7 +90,7 @@ public:
 };
 typedef Event EventMouse;
 class EventButton : public Event {
-  BIRNET_PRIVATE_CLASS_COPY (EventButton);
+  RAPICORN_PRIVATE_CLASS_COPY (EventButton);
 protected:
   explicit        EventButton (EventType, const EventContext&, uint);
 public:
@@ -101,7 +101,7 @@ public:
 typedef Event EventScroll;
 typedef Event EventFocus;
 class EventKey : public Event {
-  BIRNET_PRIVATE_CLASS_COPY (EventKey);
+  RAPICORN_PRIVATE_CLASS_COPY (EventKey);
 protected:
   explicit        EventKey (EventType, const EventContext&, uint32, const String &);
 public:
@@ -111,7 +111,7 @@ public:
   String          key_name;
 };
 struct EventWinSize : public Event {
-  BIRNET_PRIVATE_CLASS_COPY (EventWinSize);
+  RAPICORN_PRIVATE_CLASS_COPY (EventWinSize);
 protected:
   explicit        EventWinSize (EventType, const EventContext&, uint, double, double);
 public:
@@ -120,7 +120,7 @@ public:
   double          width, height;
 };
 struct EventWinDraw : public Event {
-  BIRNET_PRIVATE_CLASS_COPY (EventWinDraw);
+  RAPICORN_PRIVATE_CLASS_COPY (EventWinDraw);
 protected:
   explicit          EventWinDraw (EventType, const EventContext&, uint, const std::vector<Rect> &);
 public:

@@ -36,7 +36,7 @@ struct CrossLink {
   {
     unref (uncross);
   }
-  BIRNET_PRIVATE_CLASS_COPY (CrossLink);
+  RAPICORN_PRIVATE_CLASS_COPY (CrossLink);
 };
 struct CrossLinks {
   Container *container;
@@ -64,7 +64,7 @@ struct UncrossNode {
                              CrossLink *xclink) :
     next (NULL), mutable_container (xcontainer), clink (xclink)
   {}
-  BIRNET_PRIVATE_CLASS_COPY (UncrossNode);
+  RAPICORN_PRIVATE_CLASS_COPY (UncrossNode);
 };
 static UncrossNode *uncross_callback_stack = NULL;
 static Mutex        uncross_callback_stack_mutex;
@@ -766,7 +766,7 @@ Container::void_packer ()
 {
   class PackerSingleton : public ChildPacker {
     PackerSingleton() { ref_sink(); }
-    BIRNET_PRIVATE_CLASS_COPY (PackerSingleton);
+    RAPICORN_PRIVATE_CLASS_COPY (PackerSingleton);
   public:
     static PackerSingleton*
     dummy_packer()

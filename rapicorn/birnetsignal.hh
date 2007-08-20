@@ -40,7 +40,7 @@ struct TrampolineLink : public ReferenceCountImpl {
   explicit        TrampolineLink() : next (NULL), prev (NULL), callable (true), with_emitter (false) {}
   virtual bool    operator== (const TrampolineLink &other) const = 0;
   virtual        ~TrampolineLink();
-  BIRNET_PRIVATE_CLASS_COPY (TrampolineLink);
+  RAPICORN_PRIVATE_CLASS_COPY (TrampolineLink);
 };
 
 /* --- SignalBase --- */
@@ -49,7 +49,7 @@ class SignalBase {
     virtual bool operator== (const TrampolineLink &other) const;
     virtual void delete_this ();
   public:
-    void         check_last_ref() const { BIRNET_ASSERT (ref_count() == 1); }
+    void         check_last_ref() const { RAPICORN_ASSERT (ref_count() == 1); }
   };
 protected:
   EmbeddedLink   start;
@@ -57,7 +57,7 @@ protected:
   connect_link (TrampolineLink *link,
                 bool            with_emitter = false)
   {
-    BIRNET_ASSERT (link->prev == NULL && link->next == NULL);
+    RAPICORN_ASSERT (link->prev == NULL && link->next == NULL);
     link->ref_sink();
     link->prev = start.prev;
     link->next = &start;
@@ -94,8 +94,8 @@ public:
   {
     while (start.next != &start)
       destruct_link (start.next);
-    BIRNET_ASSERT (start.next == &start);
-    BIRNET_ASSERT (start.prev == &start);
+    RAPICORN_ASSERT (start.next == &start);
+    RAPICORN_ASSERT (start.prev == &start);
     start.prev = start.next = NULL;
     start.check_last_ref();
     start.unref();
@@ -110,7 +110,7 @@ private:
     link->prev = link->next = NULL;
     link->unref();
   }
-  BIRNET_PRIVATE_CLASS_COPY (SignalBase);
+  RAPICORN_PRIVATE_CLASS_COPY (SignalBase);
 };
 
 /* --- Signal Iterator --- */
@@ -272,8 +272,8 @@ template<class Instance>
 class ScopeReference<Instance, ScopeReferenceFinalizationMark> {
   Instance &m_instance;
 public:
-  ScopeReference  (Instance &instance) : m_instance (instance) { BIRNET_ASSERT (m_instance.finalizing() == true); }
-  ~ScopeReference ()                                           { BIRNET_ASSERT (m_instance.finalizing() == true); }
+  ScopeReference  (Instance &instance) : m_instance (instance) { RAPICORN_ASSERT (m_instance.finalizing() == true); }
+  ~ScopeReference ()                                           { RAPICORN_ASSERT (m_instance.finalizing() == true); }
 };
 
 /* --- SlotBase --- */
@@ -436,7 +436,7 @@ struct SignalFinalize : Signal0 <Emitter, void, ScopeReferenceFinalizationMark> 
   typedef Signal0<Emitter, void, ScopeReferenceFinalizationMark> Signal0;
   explicit SignalFinalize (Emitter &emitter)                             : Signal0 (emitter) {}
   explicit SignalFinalize (Emitter &emitter, void (Emitter::*method) ()) : Signal0 (emitter, method) {}
-  BIRNET_PRIVATE_CLASS_COPY (SignalFinalize);
+  RAPICORN_PRIVATE_CLASS_COPY (SignalFinalize);
 };
 
 template<class Emitter>
@@ -444,7 +444,7 @@ struct SignalVoid : Signal0 <Emitter, void> {
   typedef Signal0<Emitter, void> Signal0;
   explicit SignalVoid (Emitter &emitter)                                 : Signal0 (emitter) {}
   explicit SignalVoid (Emitter &emitter, void (Emitter::*method) (void)) : Signal0 (emitter, method) {}
-  BIRNET_PRIVATE_CLASS_COPY (SignalVoid);
+  RAPICORN_PRIVATE_CLASS_COPY (SignalVoid);
 };
 
 } // Signals

@@ -26,10 +26,10 @@ namespace Rapicorn {
 #define N_(str) (str)
 
 /* --- safe standard macros --- */
-#define DIR_SEPARATOR                   BIRNET_DIR_SEPARATOR
-#define DIR_SEPARATOR_S                 BIRNET_DIR_SEPARATOR_S
-#define SEARCHPATH_SEPARATOR            BIRNET_SEARCHPATH_SEPARATOR
-#define SEARCHPATH_SEPARATOR_S          BIRNET_SEARCHPATH_SEPARATOR_S
+#define DIR_SEPARATOR                   RAPICORN_DIR_SEPARATOR
+#define DIR_SEPARATOR_S                 RAPICORN_DIR_SEPARATOR_S
+#define SEARCHPATH_SEPARATOR            RAPICORN_SEARCHPATH_SEPARATOR
+#define SEARCHPATH_SEPARATOR_S          RAPICORN_SEARCHPATH_SEPARATOR_S
 
 #define MakeProperty                    RAPICORN_MakeProperty
 #define MakeNamedCommand                RAPICORN_MakeNamedCommand

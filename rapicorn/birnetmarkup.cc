@@ -156,7 +156,7 @@ mark_error (MarkupParserContext *context,
   context->parser->error (error);
 }
 
-static void BIRNET_PRINTF (4, 5)
+static void RAPICORN_PRINTF (4, 5)
   set_error (MarkupParserContext *context,
              MarkupError         &error,
              MarkupErrorType      code,

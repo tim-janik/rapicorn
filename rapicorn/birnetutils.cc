@@ -54,7 +54,7 @@ InitHook::InitHook (InitHookFunc _func,
                     int          _priority) :
   next (NULL), priority (_priority), hook (_func)
 {
-  BIRNET_ASSERT (birnet_init_settings == NULL);
+  RAPICORN_ASSERT (birnet_init_settings == NULL);
   /* the above assertion guarantees single-threadedness */
   next = init_hooks;
   init_hooks = this;
@@ -232,28 +232,28 @@ init_value_int (InitValue *value)
 
 /* --- limits.h & float.h checks --- */
 /* assert several assumptions the code makes */
-BIRNET_STATIC_ASSERT (CHAR_BIT     == +8);
-BIRNET_STATIC_ASSERT (SCHAR_MIN    == -128);
-BIRNET_STATIC_ASSERT (SCHAR_MAX    == +127);
-BIRNET_STATIC_ASSERT (UCHAR_MAX    == +255);
-BIRNET_STATIC_ASSERT (SHRT_MIN     == -32768);
-BIRNET_STATIC_ASSERT (SHRT_MAX     == +32767);
-BIRNET_STATIC_ASSERT (USHRT_MAX    == +65535);
-BIRNET_STATIC_ASSERT (INT_MIN      == -2147483647 - 1);
-BIRNET_STATIC_ASSERT (INT_MAX      == +2147483647);
-BIRNET_STATIC_ASSERT (UINT_MAX     == +4294967295U);
-BIRNET_STATIC_ASSERT (INT64_MIN    == -9223372036854775807LL - 1);
-BIRNET_STATIC_ASSERT (INT64_MAX    == +9223372036854775807LL);
-BIRNET_STATIC_ASSERT (UINT64_MAX   == +18446744073709551615LLU);
-BIRNET_STATIC_ASSERT (FLT_MIN      <= 1E-37);
-BIRNET_STATIC_ASSERT (FLT_MAX      >= 1E+37);
-BIRNET_STATIC_ASSERT (FLT_EPSILON  <= 1E-5);
-BIRNET_STATIC_ASSERT (DBL_MIN      <= 1E-37);
-BIRNET_STATIC_ASSERT (DBL_MAX      >= 1E+37);
-BIRNET_STATIC_ASSERT (DBL_EPSILON  <= 1E-9);
-BIRNET_STATIC_ASSERT (LDBL_MIN     <= 1E-37);
-BIRNET_STATIC_ASSERT (LDBL_MAX     >= 1E+37);
-BIRNET_STATIC_ASSERT (LDBL_EPSILON <= 1E-9);
+RAPICORN_STATIC_ASSERT (CHAR_BIT     == +8);
+RAPICORN_STATIC_ASSERT (SCHAR_MIN    == -128);
+RAPICORN_STATIC_ASSERT (SCHAR_MAX    == +127);
+RAPICORN_STATIC_ASSERT (UCHAR_MAX    == +255);
+RAPICORN_STATIC_ASSERT (SHRT_MIN     == -32768);
+RAPICORN_STATIC_ASSERT (SHRT_MAX     == +32767);
+RAPICORN_STATIC_ASSERT (USHRT_MAX    == +65535);
+RAPICORN_STATIC_ASSERT (INT_MIN      == -2147483647 - 1);
+RAPICORN_STATIC_ASSERT (INT_MAX      == +2147483647);
+RAPICORN_STATIC_ASSERT (UINT_MAX     == +4294967295U);
+RAPICORN_STATIC_ASSERT (INT64_MIN    == -9223372036854775807LL - 1);
+RAPICORN_STATIC_ASSERT (INT64_MAX    == +9223372036854775807LL);
+RAPICORN_STATIC_ASSERT (UINT64_MAX   == +18446744073709551615LLU);
+RAPICORN_STATIC_ASSERT (FLT_MIN      <= 1E-37);
+RAPICORN_STATIC_ASSERT (FLT_MAX      >= 1E+37);
+RAPICORN_STATIC_ASSERT (FLT_EPSILON  <= 1E-5);
+RAPICORN_STATIC_ASSERT (DBL_MIN      <= 1E-37);
+RAPICORN_STATIC_ASSERT (DBL_MAX      >= 1E+37);
+RAPICORN_STATIC_ASSERT (DBL_EPSILON  <= 1E-9);
+RAPICORN_STATIC_ASSERT (LDBL_MIN     <= 1E-37);
+RAPICORN_STATIC_ASSERT (LDBL_MAX     >= 1E+37);
+RAPICORN_STATIC_ASSERT (LDBL_EPSILON <= 1E-9);
 
 /* --- assertions, warnings, errors --- */
 void
@@ -811,7 +811,7 @@ join (const String &frag0, const String &frag1,
       const String &frag12, const String &frag13,
       const String &frag14, const String &frag15)
 {
-  char *cpath = g_build_path (BIRNET_DIR_SEPARATOR_S, frag0.c_str(),
+  char *cpath = g_build_path (RAPICORN_DIR_SEPARATOR_S, frag0.c_str(),
                               frag1.c_str(), frag2.c_str(), frag3.c_str(), frag4.c_str(), 
                               frag5.c_str(), frag6.c_str(), frag7.c_str(), frag8.c_str(),
                               frag9.c_str(), frag10.c_str(), frag11.c_str(), frag12.c_str(),
@@ -966,8 +966,8 @@ cwd ()
   return wd;
 }
 
-const String dir_separator = BIRNET_DIR_SEPARATOR_S;
-const String searchpath_separator = BIRNET_SEARCHPATH_SEPARATOR_S;
+const String dir_separator = RAPICORN_DIR_SEPARATOR_S;
+const String searchpath_separator = RAPICORN_SEARCHPATH_SEPARATOR_S;
 
 } // Path
 
@@ -1058,9 +1058,9 @@ Deletable::add_deletion_hook (DeletionHook *hook)
   auto_init_deletable_maps();
   uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
   deletable_maps[hashv].mutex.lock();
-  BIRNET_ASSERT (hook);
-  BIRNET_ASSERT (!hook->next);
-  BIRNET_ASSERT (!hook->prev);
+  RAPICORN_ASSERT (hook);
+  RAPICORN_ASSERT (!hook->next);
+  RAPICORN_ASSERT (!hook->prev);
   std::map<Deletable*,DeletionHook*>::iterator it;
   it = deletable_maps[hashv].dmap.find (this);
   if (it != deletable_maps[hashv].dmap.end() && it->second)
@@ -1092,13 +1092,13 @@ Deletable::remove_deletion_hook (DeletionHook *hook)
   auto_init_deletable_maps();
   uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
   deletable_maps[hashv].mutex.lock();
-  BIRNET_ASSERT (hook);
-  BIRNET_ASSERT (hook->next && hook->prev);
+  RAPICORN_ASSERT (hook);
+  RAPICORN_ASSERT (hook->next && hook->prev);
   hook->next->prev = hook->prev;
   hook->prev->next = hook->next;
   std::map<Deletable*,DeletionHook*>::iterator it;
   it = deletable_maps[hashv].dmap.find (this);
-  BIRNET_ASSERT (it != deletable_maps[hashv].dmap.end());
+  RAPICORN_ASSERT (it != deletable_maps[hashv].dmap.end());
   if (it->second == hook)
     it->second = hook->next != hook ? hook->next : NULL;
   hook->prev = NULL;
@@ -1170,7 +1170,7 @@ ReferenceCountImpl::delete_this ()
 
 ReferenceCountImpl::~ReferenceCountImpl ()
 {
-  BIRNET_ASSERT (ref_count() == 0);
+  RAPICORN_ASSERT (ref_count() == 0);
 }
 
 /* --- DataList --- */
@@ -1500,9 +1500,9 @@ memset4 (guint32        *mem,
          guint32         filler,
          guint           length)
 {
-  BIRNET_STATIC_ASSERT (sizeof (*mem) == 4);
-  BIRNET_STATIC_ASSERT (sizeof (filler) == 4);
-  BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
+  RAPICORN_STATIC_ASSERT (sizeof (*mem) == 4);
+  RAPICORN_STATIC_ASSERT (sizeof (filler) == 4);
+  RAPICORN_STATIC_ASSERT (sizeof (wchar_t) == 4);
   wmemset ((wchar_t*) mem, filler, length);
 }
 

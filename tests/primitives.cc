@@ -69,7 +69,7 @@ pipe_writer (PollFD &pfd)
   do
     err = write (pfd.fd, buffer, sizeof (buffer));
   while (err < 0 && (errno == EINTR || errno == EAGAIN));
-  BIRNET_ASSERT (err == sizeof (buffer));
+  RAPICORN_ASSERT (err == sizeof (buffer));
   return true;
 }
 
@@ -86,8 +86,8 @@ pipe_reader (PollFD &pfd)
       do
         err = read (pfd.fd, &data, 1);
       while (err < 0 && (errno == EINTR || errno == EAGAIN));
-      BIRNET_ASSERT (err == 1);
-      BIRNET_ASSERT (counter == data);
+      RAPICORN_ASSERT (err == 1);
+      RAPICORN_ASSERT (counter == data);
       counter++;
     }
   pipe_reader_seen++;
@@ -175,7 +175,7 @@ public:
   CheckSource () :
     m_state (0)
   {
-    BIRNET_ASSERT (m_state == 0);
+    RAPICORN_ASSERT (m_state == 0);
     m_state = INITIALIZED;
     check_source_counter++;
   }
@@ -183,7 +183,7 @@ public:
   prepare (uint64 current_time_usecs,
            int64 *timeout_usecs_p)
   {
-    BIRNET_ASSERT (m_state == INITIALIZED ||
+    RAPICORN_ASSERT (m_state == INITIALIZED ||
                    m_state == PREPARED ||
                    m_state == CHECKED ||
                    m_state == DISPATCHED);
@@ -195,7 +195,7 @@ public:
   virtual bool
   check (uint64 current_time_usecs)
   {
-    BIRNET_ASSERT (m_state == INITIALIZED ||
+    RAPICORN_ASSERT (m_state == INITIALIZED ||
                    m_state == PREPARED);
     m_state = CHECKED;
     return quick_rand32() & 0xc0ffee;
@@ -203,7 +203,7 @@ public:
   virtual bool
   dispatch ()
   {
-    BIRNET_ASSERT (m_state == PREPARED ||
+    RAPICORN_ASSERT (m_state == PREPARED ||
                    m_state == CHECKED);
     m_state = DISPATCHED;
     return (quick_rand32() % 131) != 0;
@@ -211,7 +211,7 @@ public:
   virtual void
   destroy ()
   {
-    BIRNET_ASSERT (m_state == INITIALIZED ||
+    RAPICORN_ASSERT (m_state == INITIALIZED ||
                    m_state == PREPARED ||
                    m_state == CHECKED ||
                    m_state == DISPATCHED);
@@ -221,15 +221,15 @@ public:
   virtual void
   finalize ()
   {
-    BIRNET_ASSERT (m_state == DESTROYED);
-    // BIRNET_ASSERT (m_state == INITIALIZED || m_state == DESTROYED);
+    RAPICORN_ASSERT (m_state == DESTROYED);
+    // RAPICORN_ASSERT (m_state == INITIALIZED || m_state == DESTROYED);
     EventLoop::Source::finalize();
     m_state = FINALIZED;
   }
   virtual
   ~CheckSource ()
   {
-    BIRNET_ASSERT (m_state == FINALIZED);
+    RAPICORN_ASSERT (m_state == FINALIZED);
     m_state = DESTRUCTED;
     check_source_counter--;
   }
@@ -522,11 +522,11 @@ color_test()
             double hue, saturation, value;
             c.get_hsv (&hue, &saturation, &value);
             if (r > g && r > b)
-              BIRNET_ASSERT (hue < 60 || hue > 300);
+              RAPICORN_ASSERT (hue < 60 || hue > 300);
             else if (g > r && g > b)
-              BIRNET_ASSERT (hue > 60 || hue < 180);
+              RAPICORN_ASSERT (hue > 60 || hue < 180);
             else if (b > g && b > r)
-              BIRNET_ASSERT (hue > 180 || hue < 300);
+              RAPICORN_ASSERT (hue > 180 || hue < 300);
             Color d (0xff75c3a9);
             d.set_hsv (hue, saturation, value);
             if (c.red()   != d.red() ||

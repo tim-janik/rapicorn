@@ -24,7 +24,7 @@
 namespace Birnet {
 
 static void     zintern_error  (const char     *format,
-                                ...) BIRNET_PRINTF (1, 2);
+                                ...) RAPICORN_PRINTF (1, 2);
 
 static void
 zintern_error  (const char     *format,

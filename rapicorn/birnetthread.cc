@@ -40,14 +40,14 @@ struct Thread::ThreadWrapperInternal : public Thread {
         ithread->unref();
       }
     void *threadxx = ThreadTable.thread_getxx (bthread);
-    BIRNET_ASSERT (threadxx != NULL);
+    RAPICORN_ASSERT (threadxx != NULL);
     return reinterpret_cast<Thread*> (threadxx);
   }
   static void
   thread_reset_c (Thread *thread)
   {
     BirnetThread *bthread = thread->bthread;
-    BIRNET_ASSERT (thread->bthread != NULL);
+    RAPICORN_ASSERT (thread->bthread != NULL);
     thread->data_list.clear_like_destructor();
     thread->bthread = NULL;
     ThreadTable.thread_setxx (bthread, NULL);
@@ -91,7 +91,7 @@ Thread::Thread (BirnetThread* thread) :
     {
       bthread = thread;
       ThreadTable.thread_ref_sink (thread);
-      BIRNET_ASSERT (ThreadTable.thread_getxx (thread) == this);
+      RAPICORN_ASSERT (ThreadTable.thread_getxx (thread) == this);
     }
   else
     ; /* invalid object state; this should be reaped by thread_from_c() */
@@ -104,7 +104,7 @@ bthread_create_for_thread (const String &name,
 {
   BirnetThread *bthread = ThreadTable.thread_new (name.c_str());
   bool success = ThreadTable.thread_setxx (bthread, threadxx);
-  BIRNET_ASSERT (success);
+  RAPICORN_ASSERT (success);
   ThreadTable.thread_ref_sink (bthread);
   return bthread;
 }
@@ -333,8 +333,8 @@ OwnedMutex::OwnedMutex () :
 
 OwnedMutex::~OwnedMutex()
 {
-  BIRNET_ASSERT (m_owner == NULL);
-  BIRNET_ASSERT (m_count == 0);
+  RAPICORN_ASSERT (m_owner == NULL);
+  RAPICORN_ASSERT (m_count == 0);
   if (birnet_threads_initialized())
     ThreadTable.rec_mutex_destroy (&m_rec_mutex);
   else

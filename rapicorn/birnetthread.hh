@@ -26,7 +26,7 @@ class Thread;
 class Mutex {
   BirnetMutex mutex;
   friend class Cond;
-  BIRNET_PRIVATE_CLASS_COPY (Mutex);
+  RAPICORN_PRIVATE_CLASS_COPY (Mutex);
 public:
   explicit      Mutex   ();
   void          lock    ()                      { ThreadTable.mutex_lock (&mutex); }
@@ -37,7 +37,7 @@ public:
 
 class RecMutex {
   BirnetRecMutex rmutex;
-  BIRNET_PRIVATE_CLASS_COPY (RecMutex);
+  RAPICORN_PRIVATE_CLASS_COPY (RecMutex);
 public:
   explicit      RecMutex  ();
   void          lock      ()                    { ThreadTable.rec_mutex_lock (&rmutex); }
@@ -48,7 +48,7 @@ public:
 
 class Cond {
   BirnetCond cond;
-  BIRNET_PRIVATE_CLASS_COPY (Cond);
+  RAPICORN_PRIVATE_CLASS_COPY (Cond);
 public:
   explicit      Cond          ();
   void          signal        ()                { ThreadTable.cond_signal (&cond); }
@@ -60,9 +60,9 @@ public:
 };
 
 namespace Atomic {
-inline void    read_barrier  (void)                                { BIRNET_MEMORY_BARRIER_RO (ThreadTable); }
-inline void    write_barrier (void)                                { BIRNET_MEMORY_BARRIER_WO (ThreadTable); }
-inline void    full_barrier  (void)                                { BIRNET_MEMORY_BARRIER_RW (ThreadTable); }
+inline void    read_barrier  (void)                                { RAPICORN_MEMORY_BARRIER_RO (ThreadTable); }
+inline void    write_barrier (void)                                { RAPICORN_MEMORY_BARRIER_WO (ThreadTable); }
+inline void    full_barrier  (void)                                { RAPICORN_MEMORY_BARRIER_RW (ThreadTable); }
 /* atomic integers */
 inline void    int_set       (volatile int  *iptr, int value)      { ThreadTable.atomic_int_set (iptr, value); }
 inline int     int_get       (volatile int  *iptr)                 { return ThreadTable.atomic_int_get (iptr); }
@@ -90,7 +90,7 @@ class OwnedMutex {
   BirnetRecMutex    m_rec_mutex;
   Thread * volatile m_owner;
   uint     volatile m_count;
-  BIRNET_PRIVATE_CLASS_COPY (OwnedMutex);
+  RAPICORN_PRIVATE_CLASS_COPY (OwnedMutex);
 public:
   explicit       OwnedMutex ();
   inline void    lock       ();
@@ -135,7 +135,7 @@ public:
                                          void             (*destroy_data) (void*));
     static OwnedMutex&  owned_mutex     ();
     static void         yield           ();
-    static void         exit            (void              *retval = NULL) BIRNET_NORETURN;
+    static void         exit            (void              *retval = NULL) RAPICORN_NORETURN;
   };
   /* DataListContainer API */
   template<typename Type> inline void set_data    (DataKey<Type> *key,
@@ -154,7 +154,7 @@ private:
   void                  thread_lock     ()                              { m_omutex.lock(); }
   bool                  thread_trylock  ()                              { return m_omutex.trylock(); }
   void                  thread_unlock   ()                              { m_omutex.unlock(); }
-  BIRNET_PRIVATE_CLASS_COPY (Thread);
+  RAPICORN_PRIVATE_CLASS_COPY (Thread);
 protected:
   class ThreadWrapperInternal;
   static void threadxx_wrap   (BirnetThread *cthread);
@@ -175,7 +175,7 @@ class AutoLocker {
     virtual     ~Locker  () {}
     virtual void lock    () const = 0;
     virtual void unlock  () const = 0;
-    BIRNET_PRIVATE_CLASS_COPY (Locker);
+    RAPICORN_PRIVATE_CLASS_COPY (Locker);
   };
   template<class Lockable>
   struct LockerImpl : public Locker {
@@ -184,31 +184,31 @@ class AutoLocker {
     virtual     ~LockerImpl () {}
     virtual void lock       () const      { lockable->lock(); }
     virtual void unlock     () const      { lockable->unlock(); }
-    BIRNET_PRIVATE_CLASS_COPY (LockerImpl);
+    RAPICORN_PRIVATE_CLASS_COPY (LockerImpl);
   };
   union {
     void       *pointers[sizeof (LockerImpl<Mutex>) / sizeof (void*)];  // union needs pointer alignment
     char        chars[sizeof (LockerImpl<Mutex>)];                      // char may_alias any type
-  }             space;                                                  // BIRNET_MAY_ALIAS; ICE: GCC#30894
+  }             space;                                                  // RAPICORN_MAY_ALIAS; ICE: GCC#30894
   volatile uint lcount;
   inline const Locker*          locker      () const             { return static_cast<const Locker*> ((const void*) &space); }
-  BIRNET_PRIVATE_CLASS_COPY (AutoLocker);
+  RAPICORN_PRIVATE_CLASS_COPY (AutoLocker);
 protected:
-  template<class Lockable> void initlock () { BIRNET_STATIC_ASSERT (sizeof (LockerImpl<Lockable>) <= sizeof (space)); relock(); }
+  template<class Lockable> void initlock () { RAPICORN_STATIC_ASSERT (sizeof (LockerImpl<Lockable>) <= sizeof (space)); relock(); }
   /* assert implicit assumption of the AutoLocker implementation */
   template<class Lockable> void
   assert_impl (Lockable &lockable)
   {
-    BIRNET_ASSERT (sizeof (LockerImpl<Lockable>) <= sizeof (space));
+    RAPICORN_ASSERT (sizeof (LockerImpl<Lockable>) <= sizeof (space));
     Locker *laddr = new (&space) LockerImpl<Lockable> (&lockable);
-    BIRNET_ASSERT (laddr == locker());
+    RAPICORN_ASSERT (laddr == locker());
   }
 public:
   /*Des*/                      ~AutoLocker  ()                                { while (lcount) unlock(); }
   template<class Lockable>      AutoLocker  (Lockable *lockable) : lcount (0) { new (&space) LockerImpl<Lockable>  (lockable); initlock<Lockable>(); }
   template<class Lockable>      AutoLocker  (Lockable &lockable) : lcount (0) { new (&space) LockerImpl<Lockable> (&lockable); initlock<Lockable>(); }
   inline void                   relock      ()                                { locker()->lock(); lcount++; }
-  inline void                   unlock      ()                                { BIRNET_ASSERT (lcount > 0); lcount--; locker()->unlock(); }
+  inline void                   unlock      ()                                { RAPICORN_ASSERT (lcount > 0); lcount--; locker()->unlock(); }
 };
 
 namespace Atomic {
@@ -218,7 +218,7 @@ class RingBuffer {
   const uint    m_size;
   T            *m_buffer;
   volatile uint m_wmark, m_rmark;
-  BIRNET_PRIVATE_CLASS_COPY (RingBuffer);
+  RAPICORN_PRIVATE_CLASS_COPY (RingBuffer);
 public:
   explicit
   RingBuffer (uint bsize) :

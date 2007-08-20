@@ -82,7 +82,7 @@ Msg::set_msg_type_L (uint   mtype,
       else
         msg_type_bits[mtype / 8] &= ~(1 << mtype % 8);
       msg_types[mtype].default_type = (Type) mtype; /* uncouple from default_type */
-      BIRNET_ASSERT (mtype == (uint) msg_types[mtype].default_type);
+      RAPICORN_ASSERT (mtype == (uint) msg_types[mtype].default_type);
     }
   /* adjust all types which default to mtype */
   for (int i = mtype + 1; i < n_msg_types; i++)
@@ -107,31 +107,31 @@ Msg::init_standard_types()
   Type mtype;
   /* NONE (always disabled) */
   mtype = register_type ("none", NONE, NULL);
-  BIRNET_ASSERT (mtype == NONE);
+  RAPICORN_ASSERT (mtype == NONE);
   set_msg_type_L (mtype, NONE, false);
   /* ALWAYS (always enabled) */
   mtype = register_type ("always", ALWAYS, _("Always"));
-  BIRNET_ASSERT (mtype == ALWAYS);
+  RAPICORN_ASSERT (mtype == ALWAYS);
   set_msg_type_L (mtype, LOG_TO_STDERR | LOG_TO_STDLOG | LOG_TO_HANDLER, true);
   /* ERROR (enabled) */
   mtype = register_type ("error", ALWAYS, _("Error"));
-  BIRNET_ASSERT (mtype == ERROR);
+  RAPICORN_ASSERT (mtype == ERROR);
   set_msg_type_L (mtype, LOG_TO_STDERR | LOG_TO_STDLOG | LOG_TO_HANDLER, true);
   /* WARNING (enabled) */
   mtype = register_type ("warning", ALWAYS, _("Warning"));
-  BIRNET_ASSERT (mtype == WARNING);
+  RAPICORN_ASSERT (mtype == WARNING);
   set_msg_type_L (mtype, LOG_TO_STDERR | LOG_TO_STDLOG | LOG_TO_HANDLER, true);
   /* SCRIPT (enabled) */
   mtype = register_type ("script", ALWAYS, _("Script"));
-  BIRNET_ASSERT (mtype == SCRIPT);
+  RAPICORN_ASSERT (mtype == SCRIPT);
   set_msg_type_L (mtype, LOG_TO_STDERR | LOG_TO_STDLOG | LOG_TO_HANDLER, true);
   /* INFO (enabled) */
   mtype = register_type ("info", ALWAYS, _("Information"));
-  BIRNET_ASSERT (mtype == INFO);
+  RAPICORN_ASSERT (mtype == INFO);
   set_msg_type_L (mtype, LOG_TO_STDERR | LOG_TO_STDLOG | LOG_TO_HANDLER, true);
   /* DIAG (enabled) */
   mtype = register_type ("diag", ALWAYS, _("Diagnostic"));
-  BIRNET_ASSERT (mtype == DIAG);
+  RAPICORN_ASSERT (mtype == DIAG);
   set_msg_type_L (mtype, LOG_TO_STDERR | LOG_TO_STDLOG, true);
   /* DEBUG (disabled) */
   mtype = register_type ("debug", NONE, "Debug");

@@ -26,7 +26,7 @@
 #include <glib.h>
 #include <string.h>
 
-BIRNET_EXTERN_C_BEGIN();
+RAPICORN_EXTERN_C_BEGIN();
 
 /* === auxillary macros for test programs === */
 
@@ -123,19 +123,19 @@ treport_unit (uint tunit)
 }
 static void treport_generic (const char *perf_name, double amount, TUnitType amount_unit, int bias);
 
-static void BIRNET_UNUSED
+static void RAPICORN_UNUSED
 treport_title (const char *perf_name)
 {
   treport_generic (perf_name, 0, TUNIT_NONE, 0);
 }
-static void BIRNET_UNUSED	/* larger amount is better */
+static void RAPICORN_UNUSED	/* larger amount is better */
 treport_maximized (const char *perf_name,
 		   double      amount,
 		   TUnitType   amount_unit)
 {
   treport_generic (perf_name, amount, amount_unit, +1);
 }
-static void BIRNET_UNUSED	/* smaller amount is better */
+static void RAPICORN_UNUSED	/* smaller amount is better */
 treport_minimized (const char *perf_name,
 		   double      amount,
 		   TUnitType   amount_unit)
@@ -325,7 +325,7 @@ birnet_init_test (int    *argc,
 		  char ***argv)
 {
   /* check that NULL is defined to __null in C++ on 64bit */
-  BIRNET_ASSERT (sizeof (NULL) == sizeof (void*));
+  RAPICORN_ASSERT (sizeof (NULL) == sizeof (void*));
   /* normal initialization */
   BirnetInitValue ivalues[] = {
     { "stand-alone", "true" },
@@ -345,4 +345,4 @@ birnet_init_test (int    *argc,
 } // Birnet
 #endif
 
-BIRNET_EXTERN_C_END();
+RAPICORN_EXTERN_C_END();

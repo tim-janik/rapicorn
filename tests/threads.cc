@@ -50,22 +50,22 @@ birnet_thread_run (const gchar     *name,
 #define birnet_rec_mutex_unlock(mtx)  (ThreadTable.rec_mutex_unlock (mtx))
 #define birnet_rec_mutex_destroy(mtx) (ThreadTable.rec_mutex_destroy (mtx))
 
-#define BIRNET_MUTEX_DECLARE_INITIALIZED(mutexname)                             \
+#define RAPICORN_MUTEX_DECLARE_INITIALIZED(mutexname)                             \
   BirnetMutex mutexname = { 0 };                                                \
-  static void BIRNET_CONSTRUCTOR                                                \
-  BIRNET_CPP_PASTE4 (__birnet_mutex__autoinit, __LINE__, __, mutexname) (void)  \
+  static void RAPICORN_CONSTRUCTOR                                                \
+  RAPICORN_CPP_PASTE4 (__birnet_mutex__autoinit, __LINE__, __, mutexname) (void)  \
   { ThreadTable.mutex_chain4init (&mutexname); }
 
-#define BIRNET_REC_MUTEX_DECLARE_INITIALIZED(recmtx)                            \
+#define RAPICORN_REC_MUTEX_DECLARE_INITIALIZED(recmtx)                            \
   BirnetRecMutex recmtx = { { 0 } };                                            \
-  static void BIRNET_CONSTRUCTOR                                                \
-  BIRNET_CPP_PASTE4 (__birnet_rec_mutex__autoinit, __LINE__, __, recmtx) (void) \
+  static void RAPICORN_CONSTRUCTOR                                                \
+  RAPICORN_CPP_PASTE4 (__birnet_rec_mutex__autoinit, __LINE__, __, recmtx) (void) \
   { ThreadTable.rec_mutex_chain4init (&recmtx); }
 
-#define BIRNET_COND_DECLARE_INITIALIZED(condname)                               \
+#define RAPICORN_COND_DECLARE_INITIALIZED(condname)                               \
   BirnetCond condname = { 0 };                                                  \
-  static void BIRNET_CONSTRUCTOR                                                \
-  BIRNET_CPP_PASTE4 (__birnet_cond__autoinit, __LINE__, __, condname) (void)    \
+  static void RAPICORN_CONSTRUCTOR                                                \
+  RAPICORN_CPP_PASTE4 (__birnet_cond__autoinit, __LINE__, __, condname) (void)    \
   { ThreadTable.cond_chain4init (&condname); }
 
 /* --- atomicity tests --- */
@@ -140,9 +140,9 @@ plus1_thread (gpointer data)
     ThreadTable.thread_sleep (-1);
 }
 
-static BIRNET_MUTEX_DECLARE_INITIALIZED (static_mutex);
-static BIRNET_REC_MUTEX_DECLARE_INITIALIZED (static_rec_mutex);
-static BIRNET_COND_DECLARE_INITIALIZED (static_cond);
+static RAPICORN_MUTEX_DECLARE_INITIALIZED (static_mutex);
+static RAPICORN_REC_MUTEX_DECLARE_INITIALIZED (static_rec_mutex);
+static RAPICORN_COND_DECLARE_INITIALIZED (static_cond);
 
 static void
 test_threads (void)
@@ -555,7 +555,7 @@ bench_direct_auto_locker()
       RecMutex *m_rec_mutex;
     };
     const bool m_recursive;
-    BIRNET_PRIVATE_CLASS_COPY (AutoLocker2);
+    RAPICORN_PRIVATE_CLASS_COPY (AutoLocker2);
   public:
     AutoLocker2 (Mutex &mutex) :
       m_recursive (false)
@@ -571,7 +571,7 @@ bench_direct_auto_locker()
     }
     AutoLocker2 (RecMutex *rec_mutex) :
       m_recursive (true) {
-      BIRNET_ASSERT (rec_mutex != NULL);
+      RAPICORN_ASSERT (rec_mutex != NULL);
       m_rec_mutex = rec_mutex;
       relock();
     }
@@ -603,16 +603,16 @@ class GenericAutoLocker {
     explicit     LockerImpl (Lockable *l) : lockable (l) {}
   };
   void  *space[2];
-  BIRNET_PRIVATE_CLASS_COPY (GenericAutoLocker);
+  RAPICORN_PRIVATE_CLASS_COPY (GenericAutoLocker);
   inline const Locker*          locker      () const             { return static_cast<const Locker*> ((const void*) &space); }
 protected:
   /* assert implicit assumption of the GenericAutoLocker implementation */
   template<class Lockable> void
   assert_impl (Lockable &lockable)
   {
-    BIRNET_ASSERT (sizeof (LockerImpl<Lockable>) <= sizeof (space));
+    RAPICORN_ASSERT (sizeof (LockerImpl<Lockable>) <= sizeof (space));
     Locker *laddr = new (space) LockerImpl<Lockable> (&lockable);
-    BIRNET_ASSERT (laddr == locker());
+    RAPICORN_ASSERT (laddr == locker());
   }
 public:
   template<class Lockable>      GenericAutoLocker  (Lockable *lockable) { new (space) LockerImpl<Lockable> (lockable); relock(); }
@@ -650,7 +650,7 @@ class PtrAutoLocker {
   };
   void  *space[2];
   Locker *locker;
-  BIRNET_PRIVATE_CLASS_COPY (PtrAutoLocker);
+  RAPICORN_PRIVATE_CLASS_COPY (PtrAutoLocker);
 public:
   template<class Lockable>      PtrAutoLocker  (Lockable *lockable) { locker = new (space) LockerImpl<Lockable> (lockable); relock(); }
   template<class Lockable>      PtrAutoLocker  (Lockable &lockable) { locker = new (space) LockerImpl<Lockable> (&lockable); relock(); }
@@ -1162,7 +1162,7 @@ test_before_thread_init()
 
 static guint constructur_attribute_test = 0;
 
-static void BIRNET_CONSTRUCTOR
+static void RAPICORN_CONSTRUCTOR
 constructur_attribute_test_initializer (void)
 {
   constructur_attribute_test = 0x1237ABBA;

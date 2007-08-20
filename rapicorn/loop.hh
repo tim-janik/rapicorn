@@ -29,17 +29,17 @@ struct PollFD // mirror struct pollfd for poll(3posix)
   uint16        revents;
   enum {
     /* Event types that can be polled for, set in .events, updated in .revents */
-    IN          = BIRNET_SYSVAL_POLLIN,         /* RDNORM || RDBAND */
-    PRI         = BIRNET_SYSVAL_POLLPRI,        /* urgent data available */
-    OUT         = BIRNET_SYSVAL_POLLOUT,        /* writing data will not block */
-    RDNORM      = BIRNET_SYSVAL_POLLRDNORM,     /* reading data will not block */
-    RDBAND      = BIRNET_SYSVAL_POLLRDBAND,     /* reading priority data will not block */
-    WRNORM      = BIRNET_SYSVAL_POLLWRNORM,     /* writing data will not block */
-    WRBAND      = BIRNET_SYSVAL_POLLWRBAND,     /* writing priority data will not block */
+    IN          = RAPICORN_SYSVAL_POLLIN,         /* RDNORM || RDBAND */
+    PRI         = RAPICORN_SYSVAL_POLLPRI,        /* urgent data available */
+    OUT         = RAPICORN_SYSVAL_POLLOUT,        /* writing data will not block */
+    RDNORM      = RAPICORN_SYSVAL_POLLRDNORM,     /* reading data will not block */
+    RDBAND      = RAPICORN_SYSVAL_POLLRDBAND,     /* reading priority data will not block */
+    WRNORM      = RAPICORN_SYSVAL_POLLWRNORM,     /* writing data will not block */
+    WRBAND      = RAPICORN_SYSVAL_POLLWRBAND,     /* writing priority data will not block */
     /* Event types updated in .revents regardlessly */
-    ERR         = BIRNET_SYSVAL_POLLERR,        /* error condition */
-    HUP         = BIRNET_SYSVAL_POLLHUP,        /* file descriptor closed */
-    NVAL        = BIRNET_SYSVAL_POLLNVAL,       /* invalid PollFD */
+    ERR         = RAPICORN_SYSVAL_POLLERR,        /* error condition */
+    HUP         = RAPICORN_SYSVAL_POLLHUP,        /* file descriptor closed */
+    NVAL        = RAPICORN_SYSVAL_POLLNVAL,       /* invalid PollFD */
   };
 };
 
@@ -53,7 +53,7 @@ class EventLoop : public virtual ReferenceCountImpl {
                                  bool may_dispatch);
   static void   kill_loops      ();
   static bool   loops_exitable  ();
-  BIRNET_PRIVATE_CLASS_COPY (EventLoop);
+  RAPICORN_PRIVATE_CLASS_COPY (EventLoop);
 protected:
   typedef Signals::Slot1<void,PollFD&> VPfdSlot;
   typedef Signals::Slot1<bool,PollFD&> BPfdSlot;
@@ -124,7 +124,7 @@ class EventLoop::Source : public virtual ReferenceCountImpl {
   uint         m_was_dispatching : 1;
   uint         m_exitable : 1;
   uint         n_pfds      ();
-  BIRNET_PRIVATE_CLASS_COPY (Source);
+  RAPICORN_PRIVATE_CLASS_COPY (Source);
 protected:
   explicit     Source      ();
 public:
@@ -153,7 +153,7 @@ class EventLoop::TimedSource : public virtual EventLoop::Source {
     Signals::Trampoline0<bool> *m_btrampoline;
     Signals::Trampoline0<void> *m_vtrampoline;
   };
-  BIRNET_PRIVATE_CLASS_COPY (TimedSource);
+  RAPICORN_PRIVATE_CLASS_COPY (TimedSource);
 protected:
   virtual     ~TimedSource  ();
   virtual bool prepare      (uint64 current_time_usecs,
@@ -197,7 +197,7 @@ private:
     Signals::Trampoline1<bool,PollFD&> *m_btrampoline;
     Signals::Trampoline1<void,PollFD&> *m_vtrampoline;
   };
-  BIRNET_PRIVATE_CLASS_COPY (PollFDSource);
+  RAPICORN_PRIVATE_CLASS_COPY (PollFDSource);
 public:
   explicit      PollFDSource    (Signals::Trampoline1<bool,PollFD&> &bt,
                                  int                                 fd,

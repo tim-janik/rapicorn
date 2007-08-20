@@ -125,7 +125,7 @@ get_arch_name (void)
 
 static jmp_buf cpu_info_jmp_buf;
 
-static void BIRNET_NORETURN
+static void RAPICORN_NORETURN
 cpu_info_sigill_handler (int dummy)
 {
   longjmp (cpu_info_jmp_buf, 1);

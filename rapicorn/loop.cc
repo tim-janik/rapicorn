@@ -25,25 +25,25 @@ namespace Rapicorn {
 using namespace std;
 
 /* --- assert poll constants --- */
-BIRNET_STATIC_ASSERT (PollFD::IN     == POLLIN);
-BIRNET_STATIC_ASSERT (PollFD::PRI    == POLLPRI);
-BIRNET_STATIC_ASSERT (PollFD::OUT    == POLLOUT);
-BIRNET_STATIC_ASSERT (PollFD::RDNORM == POLLRDNORM);
-BIRNET_STATIC_ASSERT (PollFD::RDBAND == POLLRDBAND);
-BIRNET_STATIC_ASSERT (PollFD::WRNORM == POLLWRNORM);
-BIRNET_STATIC_ASSERT (PollFD::WRBAND == POLLWRBAND);
-BIRNET_STATIC_ASSERT (PollFD::ERR    == POLLERR);
-BIRNET_STATIC_ASSERT (PollFD::HUP    == POLLHUP);
-BIRNET_STATIC_ASSERT (PollFD::NVAL   == POLLNVAL);
+RAPICORN_STATIC_ASSERT (PollFD::IN     == POLLIN);
+RAPICORN_STATIC_ASSERT (PollFD::PRI    == POLLPRI);
+RAPICORN_STATIC_ASSERT (PollFD::OUT    == POLLOUT);
+RAPICORN_STATIC_ASSERT (PollFD::RDNORM == POLLRDNORM);
+RAPICORN_STATIC_ASSERT (PollFD::RDBAND == POLLRDBAND);
+RAPICORN_STATIC_ASSERT (PollFD::WRNORM == POLLWRNORM);
+RAPICORN_STATIC_ASSERT (PollFD::WRBAND == POLLWRBAND);
+RAPICORN_STATIC_ASSERT (PollFD::ERR    == POLLERR);
+RAPICORN_STATIC_ASSERT (PollFD::HUP    == POLLHUP);
+RAPICORN_STATIC_ASSERT (PollFD::NVAL   == POLLNVAL);
 
 /* --- assert pollfd struct --- */
-BIRNET_STATIC_ASSERT (sizeof   (PollFD)               == sizeof   (struct pollfd));
-BIRNET_STATIC_ASSERT (offsetof (PollFD, fd)           == offsetof (struct pollfd, fd));
-BIRNET_STATIC_ASSERT (sizeof (((PollFD*) 0)->fd)      == sizeof (((struct pollfd*) 0)->fd));
-BIRNET_STATIC_ASSERT (offsetof (PollFD, events)       == offsetof (struct pollfd, events));
-BIRNET_STATIC_ASSERT (sizeof (((PollFD*) 0)->events)  == sizeof (((struct pollfd*) 0)->events));
-BIRNET_STATIC_ASSERT (offsetof (PollFD, revents)      == offsetof (struct pollfd, revents));
-BIRNET_STATIC_ASSERT (sizeof (((PollFD*) 0)->revents) == sizeof (((struct pollfd*) 0)->revents));
+RAPICORN_STATIC_ASSERT (sizeof   (PollFD)               == sizeof   (struct pollfd));
+RAPICORN_STATIC_ASSERT (offsetof (PollFD, fd)           == offsetof (struct pollfd, fd));
+RAPICORN_STATIC_ASSERT (sizeof (((PollFD*) 0)->fd)      == sizeof (((struct pollfd*) 0)->fd));
+RAPICORN_STATIC_ASSERT (offsetof (PollFD, events)       == offsetof (struct pollfd, events));
+RAPICORN_STATIC_ASSERT (sizeof (((PollFD*) 0)->events)  == sizeof (((struct pollfd*) 0)->events));
+RAPICORN_STATIC_ASSERT (offsetof (PollFD, revents)      == offsetof (struct pollfd, revents));
+RAPICORN_STATIC_ASSERT (sizeof (((PollFD*) 0)->revents) == sizeof (((struct pollfd*) 0)->revents));
 
 
 enum {
@@ -647,7 +647,7 @@ EventLoop::Source::destroy ()
 
 EventLoop::Source::~Source ()
 {
-  BIRNET_ASSERT (m_main_loop == NULL);
+  RAPICORN_ASSERT (m_main_loop == NULL);
   if (m_pfds)
     free (m_pfds);
 }

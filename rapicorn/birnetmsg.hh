@@ -73,7 +73,7 @@ struct Msg {
                                       const Part &p8 = empty_part, const Part &p9 = empty_part);
   static inline void display         (const CustomType   &message_type,
                                       const char         *format,
-                                      ...) BIRNET_PRINTF (2, 3);
+                                      ...) RAPICORN_PRINTF (2, 3);
   /* message handling */
   struct Part {
     String string;
@@ -110,7 +110,7 @@ protected:
                                       Type                message_type,
                                       const char         *format,
                                       va_list             args);
-  BIRNET_PRIVATE_CLASS_COPY (Msg);
+  RAPICORN_PRIVATE_CLASS_COPY (Msg);
 private:
   static volatile int    n_msg_types;
   static uint8 *volatile msg_type_bits;
@@ -122,27 +122,27 @@ private:
                                               bool          enabled);
 public:
   struct Text0 : public Part {  /* message title */
-    explicit BIRNET_PRINTF (2, 3) Text0 (const char *format, ...) { va_list a; va_start (a, format); setup ('0', format, a); va_end (a); }
+    explicit RAPICORN_PRINTF (2, 3) Text0 (const char *format, ...) { va_list a; va_start (a, format); setup ('0', format, a); va_end (a); }
     explicit                      Text0 (const String &s)         { setup ('0', s); }
   };
   struct Text1 : public Part {  /* primary message */
-    explicit BIRNET_PRINTF (2, 3) Text1 (const char *format, ...) { va_list a; va_start (a, format); setup ('1', format, a); va_end (a); }
+    explicit RAPICORN_PRINTF (2, 3) Text1 (const char *format, ...) { va_list a; va_start (a, format); setup ('1', format, a); va_end (a); }
     explicit                      Text1 (const String &s)         { setup ('1', s); }
   };
   struct Text2 : public Part {  /* secondary message (lengthy) */
-    explicit BIRNET_PRINTF (2, 3) Text2 (const char *format, ...) { va_list a; va_start (a, format); setup ('2', format, a); va_end (a); }
+    explicit RAPICORN_PRINTF (2, 3) Text2 (const char *format, ...) { va_list a; va_start (a, format); setup ('2', format, a); va_end (a); }
     explicit                      Text2 (const String &s)         { setup ('2', s); }
   };
   struct Text3 : public Part {  /* message details */
-    explicit BIRNET_PRINTF (2, 3) Text3 (const char *format, ...) { va_list a; va_start (a, format); setup ('3', format, a); va_end (a); }
+    explicit RAPICORN_PRINTF (2, 3) Text3 (const char *format, ...) { va_list a; va_start (a, format); setup ('3', format, a); va_end (a); }
     explicit                      Text3 (const String &s)         { setup ('3', s); }
   };
   struct Check : public Part {  /* user switch */
-    explicit BIRNET_PRINTF (2, 3) Check (const char *format, ...) { va_list a; va_start (a, format); setup ('c', format, a); va_end (a); }
+    explicit RAPICORN_PRINTF (2, 3) Check (const char *format, ...) { va_list a; va_start (a, format); setup ('c', format, a); va_end (a); }
     explicit                      Check (const String &s)         { setup ('c', s); }
   };
   struct Custom : public Part { /* custom part / user defined */
-    explicit BIRNET_PRINTF (3, 4) Custom (uint8 ctype, const char *format, ...) { va_list a; va_start (a, format); setup (ctype | 0x80, format, a); va_end (a); }
+    explicit RAPICORN_PRINTF (3, 4) Custom (uint8 ctype, const char *format, ...) { va_list a; va_start (a, format); setup (ctype | 0x80, format, a); va_end (a); }
     explicit                      Custom (uint8 ctype, const String &s)         { setup (ctype | 0x80, s); }
   };
   struct CustomType {
@@ -152,7 +152,7 @@ public:
                          const char         *label = NULL) :
       type (register_type (ident, default_ouput, label))
     {}
-    BIRNET_PRIVATE_CLASS_COPY (CustomType);
+    RAPICORN_PRIVATE_CLASS_COPY (CustomType);
   };
 };
 
@@ -176,7 +176,7 @@ Msg::display (Type        message_type,
 {
   /* this function is supposed to preserve errno */
   if (check (message_type))
-    display_aparts (BIRNET_LOG_DOMAIN, message_type, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9);
+    display_aparts (RAPICORN_LOG_DOMAIN, message_type, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9);
 }
 
 inline void
@@ -188,7 +188,7 @@ Msg::display (const CustomType   &message_type,
     {
       va_list args;
       va_start (args, format);
-      display_vmsg (BIRNET_LOG_DOMAIN, message_type.type, format, args);
+      display_vmsg (RAPICORN_LOG_DOMAIN, message_type.type, format, args);
       va_end (args);
     }
 }

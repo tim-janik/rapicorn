@@ -18,8 +18,8 @@
 #include <rapicorn/birnettests.h>
 using namespace Birnet;
 
-#if BIRNET_CHECK_VERSION (2147483647, 2147483647) || !BIRNET_CHECK_VERSION (0, 0)      
-#error BIRNET_CHECK_VERSION() apparently broken
+#if RAPICORN_CHECK_VERSION (2147483647, 2147483647) || !RAPICORN_CHECK_VERSION (0, 0)      
+#error RAPICORN_CHECK_VERSION() apparently broken
 #endif
 
 static void
@@ -42,7 +42,7 @@ test_paths()
   TSTART ("Path handling");
   String p, s;
   s = Path::join ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f");
-#if BIRNET_DIR_SEPARATOR == '/'
+#if RAPICORN_DIR_SEPARATOR == '/'
   p = "0/1/2/3/4/5/6/7/8/9/a/b/c/d/e/f";
 #else
   p = "0\\1\\2\\3\\4\\5\\6\\7\\8\\9\\a\\b\\c\\d\\e\\f";
@@ -51,8 +51,8 @@ test_paths()
   TASSERT (s == p);
   bool b = Path::isabs (p);
   TASSERT (b == false);
-#if BIRNET_DIR_SEPARATOR == '/'
-  s = Path::join (BIRNET_DIR_SEPARATOR_S, s);
+#if RAPICORN_DIR_SEPARATOR == '/'
+  s = Path::join (RAPICORN_DIR_SEPARATOR_S, s);
 #else
   s = Path::join ("C:\\", s);
 #endif
@@ -63,11 +63,11 @@ test_paths()
   TASSERT (Path::dir_separator == "/" || Path::dir_separator == "\\");
   TASSERT (Path::searchpath_separator == ":" || Path::searchpath_separator == ";");
   TASSERT (Path::basename ("simple") == "simple");
-  TASSERT (Path::basename ("skipthis" BIRNET_DIR_SEPARATOR_S "file") == "file");
-  TASSERT (Path::basename (BIRNET_DIR_SEPARATOR_S "skipthis" BIRNET_DIR_SEPARATOR_S "file") == "file");
+  TASSERT (Path::basename ("skipthis" RAPICORN_DIR_SEPARATOR_S "file") == "file");
+  TASSERT (Path::basename (RAPICORN_DIR_SEPARATOR_S "skipthis" RAPICORN_DIR_SEPARATOR_S "file") == "file");
   TASSERT (Path::dirname ("file") == ".");
-  TASSERT (Path::dirname ("dir" BIRNET_DIR_SEPARATOR_S) == "dir");
-  TASSERT (Path::dirname ("dir" BIRNET_DIR_SEPARATOR_S "file") == "dir");
+  TASSERT (Path::dirname ("dir" RAPICORN_DIR_SEPARATOR_S) == "dir");
+  TASSERT (Path::dirname ("dir" RAPICORN_DIR_SEPARATOR_S "file") == "dir");
   TASSERT (Path::cwd() != "");
   TASSERT (Path::check (Path::join (Path::cwd(), "..", "tests"), "rd") == true); // ./../tests/ should be a readable directory
   TDONE();

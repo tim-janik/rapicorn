@@ -19,7 +19,7 @@
 
 #include <rapicorn/birnetcdefs.h>
 
-BIRNET_EXTERN_C_BEGIN();
+RAPICORN_EXTERN_C_BEGIN();
 
 /* --- types & macros --- */
 typedef enum {
@@ -73,8 +73,8 @@ void			_rapicorn_region_intersect 	(RapicornRegion       	   *region,
 void			_rapicorn_region_xor 		(RapicornRegion       	   *region,
 							 const RapicornRegion 	   *region2);
 void			_rapicorn_region_debug 		(const char 		   *format,
-							 ...) BIRNET_PRINTF (1, 2);
+							 ...) RAPICORN_PRINTF (1, 2);
 
-BIRNET_EXTERN_C_END();
+RAPICORN_EXTERN_C_END();
 
 #endif /* __RAPICORN_REGION_IMPL_H__ */

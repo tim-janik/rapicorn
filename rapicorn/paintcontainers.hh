@@ -54,13 +54,13 @@ public:
   void                  lighting                (LightingType sh);
   void                  shade                   (LightingType sh);
 private:
-  virtual String        background              () const { BIRNET_ASSERT_NOT_REACHED(); }
-  virtual LightingType  lighting                () const { BIRNET_ASSERT_NOT_REACHED(); }
-  virtual LightingType  shade                   () const { BIRNET_ASSERT_NOT_REACHED(); }
+  virtual String        background              () const { RAPICORN_ASSERT_NOT_REACHED(); }
+  virtual LightingType  lighting                () const { RAPICORN_ASSERT_NOT_REACHED(); }
+  virtual LightingType  shade                   () const { RAPICORN_ASSERT_NOT_REACHED(); }
 };
 
 class Frame : public virtual Convertible {
-  FrameType             frame_type      () const        { BIRNET_ASSERT_NOT_REACHED(); }
+  FrameType             frame_type      () const        { RAPICORN_ASSERT_NOT_REACHED(); }
 public:
   void                  frame_type      (FrameType ft);
   virtual FrameType     normal_frame    () const = 0;

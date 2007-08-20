@@ -149,9 +149,9 @@ Region::ContainedType
 Region::contains (const Rect &rect) const
 {
   RapicornRegionBox box = rect2box (rect);
-  BIRNET_STATIC_ASSERT (OUTSIDE == (int) RAPICORN_REGION_OUTSIDE);
-  BIRNET_STATIC_ASSERT (INSIDE  == (int) RAPICORN_REGION_INSIDE);
-  BIRNET_STATIC_ASSERT (PARTIAL == (int) RAPICORN_REGION_PARTIAL);
+  RAPICORN_STATIC_ASSERT (OUTSIDE == (int) RAPICORN_REGION_OUTSIDE);
+  RAPICORN_STATIC_ASSERT (INSIDE  == (int) RAPICORN_REGION_INSIDE);
+  RAPICORN_STATIC_ASSERT (PARTIAL == (int) RAPICORN_REGION_PARTIAL);
   return ContainedType (_rapicorn_region_rect_in (REGION (this), &box));
 }
 

@@ -61,7 +61,7 @@ bool    text_convert    (const char        *to_charset,
 /* --- exceptions --- */
 struct Exception : std::exception {
 public:
-  // BROKEN(g++-3.3,g++-3.4): Exception  (const char *reason_format, ...) BIRNET_PRINTF (2, 3);
+  // BROKEN(g++-3.3,g++-3.4): Exception  (const char *reason_format, ...) RAPICORN_PRINTF (2, 3);
   explicit            Exception  (const String &s1, const String &s2 = String(), const String &s3 = String(), const String &s4 = String(),
                                   const String &s5 = String(), const String &s6 = String(), const String &s7 = String(), const String &s8 = String());
   void                set        (const String &s);
@@ -425,7 +425,7 @@ class Convertible : public virtual ReferenceCountImpl {
 public:
   /* interface matching base class */
   class InterfaceMatch {
-    BIRNET_PRIVATE_CLASS_COPY (InterfaceMatch);
+    RAPICORN_PRIVATE_CLASS_COPY (InterfaceMatch);
   public:
     virtual            ~InterfaceMatch  () {}
     explicit            InterfaceMatch  (const String &ident) : m_ident (ident), m_match_found (false) {}

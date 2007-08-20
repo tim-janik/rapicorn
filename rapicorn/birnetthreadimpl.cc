@@ -15,8 +15,8 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include "rapicornconfig.h" // BIRNET_HAVE_MUTEXATTR_SETTYPE
-#if	(BIRNET_HAVE_MUTEXATTR_SETTYPE > 0)
+#include "rapicornconfig.h" // RAPICORN_HAVE_MUTEXATTR_SETTYPE
+#if	(RAPICORN_HAVE_MUTEXATTR_SETTYPE > 0)
 #define	_XOPEN_SOURCE   600	/* for full pthread facilities */
 #endif	/* defining _XOPEN_SOURCE on random systems can have bad effects */
 #include <glib.h>
@@ -141,12 +141,12 @@ static BirnetThread*
 common_thread_ref (BirnetThread *thread)
 {
   g_return_val_if_fail (thread != NULL, NULL);
-  BIRNET_ASSERT (THREAD_REF_COUNT (thread) > 0);
+  RAPICORN_ASSERT (THREAD_REF_COUNT (thread) > 0);
   uint32 old_ref, new_ref;
   do {
     old_ref = Atomic::uint_get (&thread->ref_field);
     new_ref = old_ref + 1;
-    BIRNET_ASSERT (new_ref & ~FLOATING_FLAG); /* catch overflow */
+    RAPICORN_ASSERT (new_ref & ~FLOATING_FLAG); /* catch overflow */
   } while (!THREAD_CAS (thread, old_ref, new_ref));
   return thread;
 }
@@ -155,7 +155,7 @@ static BirnetThread*
 common_thread_ref_sink (BirnetThread *thread)
 {
   g_return_val_if_fail (thread != NULL, NULL);
-  BIRNET_ASSERT (THREAD_REF_COUNT (thread) > 0);
+  RAPICORN_ASSERT (THREAD_REF_COUNT (thread) > 0);
   ThreadTable.thread_ref (thread);
   uint32 old_ref, new_ref;
   do {
@@ -170,11 +170,11 @@ common_thread_ref_sink (BirnetThread *thread)
 static void
 common_thread_unref (BirnetThread *thread)
 {
-  BIRNET_ASSERT (THREAD_REF_COUNT (thread) > 0);
+  RAPICORN_ASSERT (THREAD_REF_COUNT (thread) > 0);
   uint32 old_ref, new_ref;
   do {
     old_ref = Atomic::uint_get (&thread->ref_field);
-    BIRNET_ASSERT (old_ref & ~FLOATING_FLAG); /* catch underflow */
+    RAPICORN_ASSERT (old_ref & ~FLOATING_FLAG); /* catch underflow */
     new_ref = old_ref - 1;
   } while (!THREAD_CAS (thread, old_ref, new_ref));
   if (0 == (new_ref & ~FLOATING_FLAG))
@@ -988,7 +988,7 @@ common_mutex_unchain (BirnetMutex *mutex)
 static void
 common_rec_mutex_chain4init (BirnetRecMutex *rec_mutex)
 {
-  BIRNET_STATIC_ASSERT (offsetof (BirnetRecMutex, mutex) == 0);
+  RAPICORN_STATIC_ASSERT (offsetof (BirnetRecMutex, mutex) == 0);
   g_assert (rec_mutex->mutex.mutex_pointer == NULL);
   rec_mutex->mutex.mutex_pointer = rec_mutex_init_chain;
   rec_mutex_init_chain = &rec_mutex->mutex;
@@ -1044,7 +1044,7 @@ struct BirnetGuard
 };
 static volatile BirnetGuard * volatile guard_list = NULL;
 static gint       volatile guard_list_length = 0;
-#define BIRNET_GUARD_ALIGN  (4)
+#define RAPICORN_GUARD_ALIGN  (4)
 #define guard2values(ptr)       G_STRUCT_MEMBER_P (ptr, +G_STRUCT_OFFSET (BirnetGuard, values[0]))
 #define values2guard(ptr)       G_STRUCT_MEMBER_P (ptr, -G_STRUCT_OFFSET (BirnetGuard, values[0]))
 
@@ -1063,7 +1063,7 @@ static gint       volatile guard_list_length = 0;
  * deregistered by this thread, registration takes constant time.
  */
 static volatile BirnetGuard*
-birnet_guard_register (guint n_hazards) BIRNET_UNUSED;
+birnet_guard_register (guint n_hazards) RAPICORN_UNUSED;
 static volatile BirnetGuard*
 birnet_guard_register (guint n_hazards)
 {
@@ -1083,7 +1083,7 @@ birnet_guard_register (guint n_hazards)
   /* allocate new guard */
   if (!guard)
     {
-      n_hazards = ((MAX (n_hazards, 3) + BIRNET_GUARD_ALIGN - 1) / BIRNET_GUARD_ALIGN) * BIRNET_GUARD_ALIGN;
+      n_hazards = ((MAX (n_hazards, 3) + RAPICORN_GUARD_ALIGN - 1) / RAPICORN_GUARD_ALIGN) * RAPICORN_GUARD_ALIGN;
       Atomic::int_add (&guard_list_length, n_hazards);
       guard = (volatile Birnet::BirnetGuard*) g_malloc0 (sizeof (BirnetGuard) + (n_hazards - 1) * sizeof (guard->values[0]));
       guard->n_values = n_hazards;
@@ -1101,7 +1101,7 @@ birnet_guard_register (guint n_hazards)
  * Deregister a guard previously registered by a call to birnet_guard_register().
  * Deregistration is performed in constant time.
  */
-static void BIRNET_UNUSED
+static void RAPICORN_UNUSED
 birnet_guard_deregister (volatile BirnetGuard *guard)
 {
   guard = (volatile BirnetGuard*) values2guard (guard);
@@ -1174,7 +1174,7 @@ void birnet_guard_protect (volatile BirnetGuard *guard,  /* defined in birnetthr
  * birnet_guard_n_snap_values() and birnet_guard_snap_values() can simply be
  * called again.
  */
-static guint BIRNET_UNUSED
+static guint RAPICORN_UNUSED
 birnet_guard_n_snap_values (void)
 {
   return Atomic::int_get (&guard_list_length);
@@ -1208,7 +1208,7 @@ birnet_guard_n_snap_values (void)
  * is to be looked up, calling birnet_guard_is_protected() should be
  * considered.
  */
-static bool BIRNET_UNUSED
+static bool RAPICORN_UNUSED
 birnet_guard_snap_values (guint          *n_values,
                           gpointer       *values)
 {
@@ -1246,7 +1246,7 @@ birnet_guard_snap_values (guint          *n_values,
  * order to allow pointer migration as described in birnet_guard_snap_values()
  * and birnet_guard_register().
  */
-static bool BIRNET_UNUSED
+static bool RAPICORN_UNUSED
 birnet_guard_is_protected (gpointer value)
 {
   if (value)
@@ -1570,7 +1570,7 @@ get_fallback_thread_table (void)
 
 
 /* --- POSIX threads table --- */
-#if	(BIRNET_HAVE_MUTEXATTR_SETTYPE > 0)
+#if	(RAPICORN_HAVE_MUTEXATTR_SETTYPE > 0)
 #include <pthread.h>
 static pthread_key_t pth_thread_table_key = 0;
 static void
@@ -1599,7 +1599,7 @@ pth_mutex_init (BirnetMutex *mutex)
 static void
 pth_rec_mutex_init (BirnetRecMutex *mutex)
 {
-  BIRNET_STATIC_ASSERT (offsetof (BirnetRecMutex, mutex) == 0);
+  RAPICORN_STATIC_ASSERT (offsetof (BirnetRecMutex, mutex) == 0);
   pthread_mutexattr_t attr;
   pthread_mutexattr_init (&attr);
   pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
@@ -1711,9 +1711,9 @@ get_pth_thread_table (void)
     }
   return &pth_thread_table;
 }
-#else	/* !BIRNET_HAVE_MUTEXATTR_SETTYPE */
+#else	/* !RAPICORN_HAVE_MUTEXATTR_SETTYPE */
 #define	get_pth_thread_table()	NULL
-#endif	/* !BIRNET_HAVE_MUTEXATTR_SETTYPE */
+#endif	/* !RAPICORN_HAVE_MUTEXATTR_SETTYPE */
 
 /* ::Birnet::ThreadTable must be a BirnetThreadTable, not a reference for the C API wrapper to work */
 BirnetThreadTable ThreadTable = {
@@ -1757,7 +1757,7 @@ _birnet_init_threads (void)
     {
       BirnetMutex *mutex = rec_mutex_init_chain;
       rec_mutex_init_chain = (BirnetMutex*) mutex->mutex_pointer;
-      BIRNET_STATIC_ASSERT (offsetof (BirnetRecMutex, mutex) == 0);
+      RAPICORN_STATIC_ASSERT (offsetof (BirnetRecMutex, mutex) == 0);
       ThreadTable.rec_mutex_init ((BirnetRecMutex*) mutex);
     }
   while (cond_init_chain)

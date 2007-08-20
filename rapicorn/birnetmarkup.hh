@@ -64,7 +64,7 @@ public:
   static String         escape_text     (const char     *text,
                                          ssize_t         length);
   static String         printf_escaped  (const char     *format,
-                                         ...) BIRNET_PRINTF (1, 2);
+                                         ...) RAPICORN_PRINTF (1, 2);
   static String         vprintf_escaped (const char     *format,
                                          va_list         args);
   struct Context;

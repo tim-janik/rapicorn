@@ -137,11 +137,11 @@ struct Signal3 : SignalEmittable3<Emitter, R0, A1, A2, A3, Collector>
   typedef SignalEmittable3<Emitter, R0, A1, A2, A3, Collector> SignalEmittable;
   explicit Signal3 (Emitter &emitter) :
     SignalEmittable (&emitter)
-  { BIRNET_ASSERT (&emitter != NULL); }
+  { RAPICORN_ASSERT (&emitter != NULL); }
   explicit Signal3 (Emitter &emitter, R0 (Emitter::*method) (A1, A2, A3)) :
     SignalEmittable (&emitter)
   {
-    BIRNET_ASSERT (&emitter != NULL);
+    RAPICORN_ASSERT (&emitter != NULL);
     connect (slot (emitter, method));
   }
   inline void connect    (const Slot  &s) { connect_link (s.get_trampoline_link()); }
@@ -156,7 +156,7 @@ struct Signal3 : SignalEmittable3<Emitter, R0, A1, A2, A3, Collector>
   Signal3&    operator-= (const SlotE &s) { disconnect (s); return *this; }
   Signal3&    operator-= (R0 (*callback) (A1, A2, A3))            { disconnect (slot (callback)); return *this; }
   Signal3&    operator-= (R0 (*callback) (Emitter&, A1, A2, A3))  { disconnect (slot (callback)); return *this; }
-  BIRNET_PRIVATE_CLASS_COPY (Signal3);
+  RAPICORN_PRIVATE_CLASS_COPY (Signal3);
 };
 
 /* --- Signal<> --- */
@@ -170,6 +170,6 @@ struct Signal<Emitter, R0 (A1, A2, A3), Collector> : Signal3<Emitter, R0, A1, A2
   explicit Signal (Emitter &emitter, R0 (Emitter::*method) (A1, A2, A3)) :
     Signal3 (emitter, method)
     {}
-  BIRNET_PRIVATE_CLASS_COPY (Signal);
+  RAPICORN_PRIVATE_CLASS_COPY (Signal);
 };
 

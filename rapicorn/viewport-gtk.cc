@@ -181,12 +181,12 @@ ViewportGtk::ViewportGtk (const String  &backend_name,
 #endif
     default: break;
     }
-  BIRNET_ASSERT (rapicorn_viewport__cxxinit_viewport == NULL);
+  RAPICORN_ASSERT (rapicorn_viewport__cxxinit_viewport == NULL);
   rapicorn_viewport__cxxinit_viewport = this;
   m_viewport = RAPICORN_VIEWPORT (g_object_ref (g_object_new (RAPICORN_TYPE_VIEWPORT, "can-focus", TRUE, "parent", window, NULL)));
   gtk_widget_grab_focus (GTK_WIDGET (m_viewport));
   rapicorn_viewport__cxxinit_viewport = NULL;
-  BIRNET_ASSERT (m_viewport->viewport == this);
+  RAPICORN_ASSERT (m_viewport->viewport == this);
   g_object_set_data (G_OBJECT (m_viewport), "RapicornViewport-my-GtkWindow", window); // flag to indicate the window is owned by RapicornViewport
 }
 // FIXME: add rapicorn_viewport__alive_counter--; to ~ViewportGtk and gtk_main_quit() via idle if 0
@@ -349,7 +349,7 @@ ViewportGtk::blit_plane (Plane *plane,
           GdkPixbuf *pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE /* alpha */, 8 /* bits */, plane->width(), plane->height());
           bool success = plane->rgb_convert (gdk_pixbuf_get_width (pixbuf), gdk_pixbuf_get_height (pixbuf),
                                              gdk_pixbuf_get_rowstride (pixbuf), gdk_pixbuf_get_pixels (pixbuf));
-          BIRNET_ASSERT (success);
+          RAPICORN_ASSERT (success);
           int window_height;
           gdk_window_get_size (m_widget->window, NULL, &window_height);
           int dest_x = plane->xstart();
@@ -681,7 +681,7 @@ rapicorn_viewport_init (RapicornViewport *self)
 {
   GtkWidget *widget = GTK_WIDGET (self);
   self->viewport = rapicorn_viewport__cxxinit_viewport;
-  BIRNET_ASSERT (self->viewport != NULL);
+  RAPICORN_ASSERT (self->viewport != NULL);
   self->visibility_state = GDK_VISIBILITY_FULLY_OBSCURED;
   self->backing_store = BACKING_STORE_NOT_USEFUL;
   self->last_time = 0;
@@ -746,17 +746,17 @@ rapicorn_viewport_event_context (RapicornViewport *self,
   econtext.y = iround (doubley);
   econtext.modifiers = ModifierState (modifier_type);
   /* ensure modifier compatibility */
-  BIRNET_STATIC_ASSERT (GDK_SHIFT_MASK   == (int) MOD_SHIFT);
-  BIRNET_STATIC_ASSERT (GDK_LOCK_MASK    == (int) MOD_CAPS_LOCK);
-  BIRNET_STATIC_ASSERT (GDK_CONTROL_MASK == (int) MOD_CONTROL);
-  BIRNET_STATIC_ASSERT (GDK_MOD1_MASK    == (int) MOD_MOD1);
-  BIRNET_STATIC_ASSERT (GDK_MOD2_MASK    == (int) MOD_MOD2);
-  BIRNET_STATIC_ASSERT (GDK_MOD3_MASK    == (int) MOD_MOD3);
-  BIRNET_STATIC_ASSERT (GDK_MOD4_MASK    == (int) MOD_MOD4);
-  BIRNET_STATIC_ASSERT (GDK_MOD5_MASK    == (int) MOD_MOD5);
-  BIRNET_STATIC_ASSERT (GDK_BUTTON1_MASK == (int) MOD_BUTTON1);
-  BIRNET_STATIC_ASSERT (GDK_BUTTON2_MASK == (int) MOD_BUTTON2);
-  BIRNET_STATIC_ASSERT (GDK_BUTTON3_MASK == (int) MOD_BUTTON3);
+  RAPICORN_STATIC_ASSERT (GDK_SHIFT_MASK   == (int) MOD_SHIFT);
+  RAPICORN_STATIC_ASSERT (GDK_LOCK_MASK    == (int) MOD_CAPS_LOCK);
+  RAPICORN_STATIC_ASSERT (GDK_CONTROL_MASK == (int) MOD_CONTROL);
+  RAPICORN_STATIC_ASSERT (GDK_MOD1_MASK    == (int) MOD_MOD1);
+  RAPICORN_STATIC_ASSERT (GDK_MOD2_MASK    == (int) MOD_MOD2);
+  RAPICORN_STATIC_ASSERT (GDK_MOD3_MASK    == (int) MOD_MOD3);
+  RAPICORN_STATIC_ASSERT (GDK_MOD4_MASK    == (int) MOD_MOD4);
+  RAPICORN_STATIC_ASSERT (GDK_MOD5_MASK    == (int) MOD_MOD5);
+  RAPICORN_STATIC_ASSERT (GDK_BUTTON1_MASK == (int) MOD_BUTTON1);
+  RAPICORN_STATIC_ASSERT (GDK_BUTTON2_MASK == (int) MOD_BUTTON2);
+  RAPICORN_STATIC_ASSERT (GDK_BUTTON3_MASK == (int) MOD_BUTTON3);
   if (window_height)
     *window_height = wh;
   return econtext;

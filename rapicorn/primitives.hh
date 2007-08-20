@@ -29,8 +29,8 @@ namespace Rapicorn {
 static const double PI        = 3.141592653589793238462643383279502884197;
 static const double LN_INV255 = -5.5412635451584261462455391880218; // ln(1/255)
 
-inline double BIRNET_CONST degree  (double radians) { return radians * (180. / PI); }
-inline double BIRNET_CONST radians (double degree)  { return degree * (PI / 180.); }
+inline double RAPICORN_CONST degree  (double radians) { return radians * (180. / PI); }
+inline double RAPICORN_CONST radians (double degree)  { return degree * (PI / 180.); }
 
 /* --- enums --- */
 typedef enum {
@@ -568,7 +568,7 @@ public:
   bool
   is_identity () const
   {
-    return BIRNET_ISLIKELY (xx == 1 && xy == 0 && xz == 0 && yx == 0 && yy == 1 && yz == 0);
+    return RAPICORN_ISLIKELY (xx == 1 && xy == 0 && xz == 0 && yx == 0 && yy == 1 && yz == 0);
   }
   Affine
   create_inverse () const
@@ -675,7 +675,7 @@ class Plane {
   uint32 *m_pixel_buffer;
   uint    n_pixels() const                  { return height() * m_stride; }
   Color   peek_color (uint x, uint y) const { const uint32 *p = peek (x, y); return Color::from_premultiplied (*p); }
-  BIRNET_PRIVATE_CLASS_COPY (Plane);
+  RAPICORN_PRIVATE_CLASS_COPY (Plane);
   struct Initializer {
     int m_x, m_y, m_stride, m_height;
     Initializer (int x, int y, int stride, int height) : m_x (x), m_y (y), m_stride (stride), m_height (height) {}
@@ -766,7 +766,7 @@ class Display {
   };
   std::list<Layer> layer_stack;
   std::list<Rect>  clip_stack;
-  BIRNET_PRIVATE_CLASS_COPY (Display);
+  RAPICORN_PRIVATE_CLASS_COPY (Display);
 public:
   explicit      Display();
   virtual       ~Display();

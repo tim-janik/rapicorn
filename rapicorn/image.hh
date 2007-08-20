@@ -29,8 +29,8 @@ public:
 };
 
 class Image : public virtual Item {
-  virtual String        image_file        () const { BIRNET_ASSERT_NOT_REACHED(); }
-  virtual String        builtin_pixstream () const { BIRNET_ASSERT_NOT_REACHED(); }
+  virtual String        image_file        () const { RAPICORN_ASSERT_NOT_REACHED(); }
+  virtual String        builtin_pixstream () const { RAPICORN_ASSERT_NOT_REACHED(); }
 public:
   typedef enum {
     NONE        = 0,

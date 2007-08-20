@@ -30,7 +30,7 @@ public:
 };
 
 class DotGrid : public virtual Item {
-  FrameType             dot_type        () const { BIRNET_ASSERT_NOT_REACHED(); }
+  FrameType             dot_type        () const { RAPICORN_ASSERT_NOT_REACHED(); }
 public:
   void                  dot_type            (FrameType ft);
   virtual void          normal_dot          (FrameType ft) = 0;

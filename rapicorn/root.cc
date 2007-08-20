@@ -117,9 +117,9 @@ RootImpl::RootImpl() :
   m_config.min_width = 13;
   m_config.min_height = 7;
   /* create event loop (auto-starts) */
-  BIRNET_ASSERT (m_source == NULL);
+  RAPICORN_ASSERT (m_source == NULL);
   EventLoop::Source *source = new RootSource (*this);
-  BIRNET_ASSERT (m_source == source);
+  RAPICORN_ASSERT (m_source == source);
   m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
 }
 
@@ -137,7 +137,7 @@ RootImpl::~RootImpl()
     remove (get_child());
   /* shutdown event loop */
   m_loop.kill_sources();
-  BIRNET_ASSERT (m_source == NULL); // should have been destroyed with loop
+  RAPICORN_ASSERT (m_source == NULL); // should have been destroyed with loop
   /* this should be done last */
   unref (&m_loop);
 }
@@ -988,7 +988,7 @@ RootImpl::create_viewport ()
           m_viewport = Viewport::create_viewport ("auto", WINDOW_TYPE_NORMAL, *this);
           resize_all (NULL);
         }
-      BIRNET_ASSERT (m_viewport != NULL);
+      RAPICORN_ASSERT (m_viewport != NULL);
       VoidSlot sl = slot (*this, &RootImpl::idle_show);
       m_loop.exec_now (sl);
     }
@@ -1013,9 +1013,9 @@ RootImpl::destroy_viewport ()
   if (m_source)
     {
       m_loop.kill_sources(); // calls m_source methods
-      BIRNET_ASSERT (m_source == NULL);
+      RAPICORN_ASSERT (m_source == NULL);
       EventLoop::Source *source = new RootSource (*this);
-      BIRNET_ASSERT (m_source == source);
+      RAPICORN_ASSERT (m_source == source);
       m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
     }
   unref (this);

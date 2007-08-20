@@ -78,7 +78,7 @@ public:
     virtual void                commit           () = 0; /* assign pack properties */
     explicit                    ChildPacker      ();
   private:
-    BIRNET_PRIVATE_CLASS_COPY (ChildPacker);
+    RAPICORN_PRIVATE_CLASS_COPY (ChildPacker);
   };
   struct Packer {
     /*Con*/             Packer           (ChildPacker     *cp);

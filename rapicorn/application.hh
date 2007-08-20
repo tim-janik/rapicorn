@@ -24,7 +24,7 @@ namespace Rapicorn {
 
 class Application {
   explicit              Application     ();
-  BIRNET_PRIVATE_CLASS_COPY (Application);
+  RAPICORN_PRIVATE_CLASS_COPY (Application);
 public:
   /* --- public API --- */
   static Application    self;           // singleton

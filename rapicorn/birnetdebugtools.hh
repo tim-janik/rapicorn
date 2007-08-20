@@ -23,14 +23,14 @@
 namespace Birnet {
 
 class DebugChannel : public virtual ReferenceCountImpl {
-  BIRNET_PRIVATE_CLASS_COPY (DebugChannel);
+  RAPICORN_PRIVATE_CLASS_COPY (DebugChannel);
 protected:
   explicit              DebugChannel        ();
   virtual               ~DebugChannel       ();
 public:
   virtual void          printf_valist       (const char *format,
                                              va_list     args) = 0;
-  inline void           printf              (const char *format, ...) BIRNET_PRINTF (2, 3);
+  inline void           printf              (const char *format, ...) RAPICORN_PRINTF (2, 3);
   static DebugChannel*  new_from_file_async (const String &filename);
 };
 

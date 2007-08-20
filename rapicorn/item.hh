@@ -62,7 +62,7 @@ class Item : public virtual Convertible, public virtual DataListContainer, publi
   friend                      class Container;
   friend                      class Root;
   Item**                      _parent_loc     () { return &m_parent; }
-  BIRNET_PRIVATE_CLASS_COPY  (Item);
+  RAPICORN_PRIVATE_CLASS_COPY  (Item);
 protected:
   /* flag handling */
   bool                        change_flags_silently   (uint32 mask, bool on);
@@ -273,7 +273,7 @@ public:
 private:
   bool                 match_parent_interface   (InterfaceMatch &imatch) const;
   bool                 match_toplevel_interface (InterfaceMatch &imatch) const;
-  void                 type_cast_error          (const char *dest_type) BIRNET_NORETURN;
+  void                 type_cast_error          (const char *dest_type) RAPICORN_NORETURN;
 };
 inline bool operator== (const Item &item1, const Item &item2) { return &item1 == &item2; }
 inline bool operator!= (const Item &item1, const Item &item2) { return &item1 != &item2; }

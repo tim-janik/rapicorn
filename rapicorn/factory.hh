@@ -41,7 +41,7 @@ Window            create_window    (const String           &gadget_identifier,
 /* --- item type registration --- */
 struct ItemTypeFactory : Deletable {
   const String  qualified_type;
-  BIRNET_PRIVATE_CLASS_COPY (ItemTypeFactory);
+  RAPICORN_PRIVATE_CLASS_COPY (ItemTypeFactory);
 protected:
   static void   register_item_factory   (const ItemTypeFactory  *itfactory);
   static void   sanity_check_identifier (const char             *namespaced_ident);
@@ -58,7 +58,7 @@ public:
 /* --- item factory template --- */
 template<class Type>
 class ItemFactory : Factory::ItemTypeFactory {
-  BIRNET_PRIVATE_CLASS_COPY (ItemFactory);
+  RAPICORN_PRIVATE_CLASS_COPY (ItemFactory);
   virtual Item*
   create_item (const String &name) const
   {

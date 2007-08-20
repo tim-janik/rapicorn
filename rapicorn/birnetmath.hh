@@ -23,20 +23,20 @@
 namespace Birnet {
 
 /* --- double to integer --- */
-inline int      dtoi32 (double d) BIRNET_CONST;
-inline int64    dtoi64 (double d) BIRNET_CONST;
-inline int64    iround (double d) BIRNET_CONST;
-inline int64    ifloor (double d) BIRNET_CONST;
-inline int64    iceil  (double d) BIRNET_CONST;
+inline int      dtoi32 (double d) RAPICORN_CONST;
+inline int64    dtoi64 (double d) RAPICORN_CONST;
+inline int64    iround (double d) RAPICORN_CONST;
+inline int64    ifloor (double d) RAPICORN_CONST;
+inline int64    iceil  (double d) RAPICORN_CONST;
 
 /* --- implementation bits --- */
-inline int BIRNET_CONST
+inline int RAPICORN_CONST
 _dtoi32_generic (double d)
 {
   /* this relies on the C++ behaviour of round-to-0 */
   return (int) (d < -0.0 ? d - 0.5 : d + 0.5);
 }
-inline int BIRNET_CONST
+inline int RAPICORN_CONST
 dtoi32 (double d)
 {
   /* this relies on the hardware default round-to-nearest */
@@ -49,13 +49,13 @@ dtoi32 (double d)
 #endif
   return _dtoi32_generic (d);
 }
-inline int64 BIRNET_CONST
+inline int64 RAPICORN_CONST
 _dtoi64_generic (double d)
 {
   /* this relies on the C++ behaviour of round-to-0 */
   return (int64) (d < -0.0 ? d - 0.5 : d + 0.5);
 }
-inline int64 BIRNET_CONST
+inline int64 RAPICORN_CONST
 dtoi64 (double d)
 {
   /* this relies on the hardware default round-to-nearest */
@@ -69,9 +69,9 @@ dtoi64 (double d)
 #endif
   return _dtoi64_generic (d);
 }
-inline int64 BIRNET_CONST iround (double d) { return dtoi64 (round (d)); }
-inline int64 BIRNET_CONST ifloor (double d) { return dtoi64 (floor (d)); }
-inline int64 BIRNET_CONST iceil  (double d) { return dtoi64 (ceil (d)); }
+inline int64 RAPICORN_CONST iround (double d) { return dtoi64 (round (d)); }
+inline int64 RAPICORN_CONST ifloor (double d) { return dtoi64 (floor (d)); }
+inline int64 RAPICORN_CONST iceil  (double d) { return dtoi64 (ceil (d)); }
 
 } // Birnet
 

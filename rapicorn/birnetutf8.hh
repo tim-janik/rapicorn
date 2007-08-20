@@ -22,27 +22,27 @@
 namespace Birnet {
 
 namespace Unichar {
-inline bool isvalid      (unichar uc) BIRNET_CONST;
-bool        isalnum      (unichar uc) BIRNET_CONST;
-bool        isalpha      (unichar uc) BIRNET_CONST;
-bool        iscntrl      (unichar uc) BIRNET_CONST;
-bool        isdigit      (unichar uc) BIRNET_CONST;
-int         digit_value  (unichar uc) BIRNET_CONST;
-bool        isgraph      (unichar uc) BIRNET_CONST;
-bool        islower      (unichar uc) BIRNET_CONST;
-unichar     tolower      (unichar uc) BIRNET_CONST;
-bool        isprint      (unichar uc) BIRNET_CONST;
-bool        ispunct      (unichar uc) BIRNET_CONST;
-bool        isspace      (unichar uc) BIRNET_CONST;
-bool        isupper      (unichar uc) BIRNET_CONST;
-unichar     toupper      (unichar uc) BIRNET_CONST;
-bool        isxdigit     (unichar uc) BIRNET_CONST;
-int         xdigit_value (unichar uc) BIRNET_CONST;
-bool        istitle      (unichar uc) BIRNET_CONST;
-unichar     totitle      (unichar uc) BIRNET_CONST;
-bool        isdefined    (unichar uc) BIRNET_CONST;
-bool        iswide       (unichar uc) BIRNET_CONST;
-bool        iswide_cjk   (unichar uc) BIRNET_CONST;
+inline bool isvalid      (unichar uc) RAPICORN_CONST;
+bool        isalnum      (unichar uc) RAPICORN_CONST;
+bool        isalpha      (unichar uc) RAPICORN_CONST;
+bool        iscntrl      (unichar uc) RAPICORN_CONST;
+bool        isdigit      (unichar uc) RAPICORN_CONST;
+int         digit_value  (unichar uc) RAPICORN_CONST;
+bool        isgraph      (unichar uc) RAPICORN_CONST;
+bool        islower      (unichar uc) RAPICORN_CONST;
+unichar     tolower      (unichar uc) RAPICORN_CONST;
+bool        isprint      (unichar uc) RAPICORN_CONST;
+bool        ispunct      (unichar uc) RAPICORN_CONST;
+bool        isspace      (unichar uc) RAPICORN_CONST;
+bool        isupper      (unichar uc) RAPICORN_CONST;
+unichar     toupper      (unichar uc) RAPICORN_CONST;
+bool        isxdigit     (unichar uc) RAPICORN_CONST;
+int         xdigit_value (unichar uc) RAPICORN_CONST;
+bool        istitle      (unichar uc) RAPICORN_CONST;
+unichar     totitle      (unichar uc) RAPICORN_CONST;
+bool        isdefined    (unichar uc) RAPICORN_CONST;
+bool        iswide       (unichar uc) RAPICORN_CONST;
+bool        iswide_cjk   (unichar uc) RAPICORN_CONST;
 typedef enum {
   CONTROL,              FORMAT,                 UNASSIGNED,
   PRIVATE_USE,          SURROGATE,              LOWERCASE_LETTER,
@@ -55,7 +55,7 @@ typedef enum {
   MODIFIER_SYMBOL,      MATH_SYMBOL,            OTHER_SYMBOL,
   LINE_SEPARATOR,       PARAGRAPH_SEPARATOR,    SPACE_SEPARATOR
 } Type;
-Type    get_type     (unichar uc) BIRNET_CONST;
+Type    get_type     (unichar uc) RAPICORN_CONST;
 typedef enum {
   BREAK_MANDATORY,        BREAK_CARRIAGE_RETURN,    BREAK_LINE_FEED,
   BREAK_COMBINING_MARK,   BREAK_SURROGATE,          BREAK_ZERO_WIDTH_SPACE,
@@ -70,7 +70,7 @@ typedef enum {
   BREAK_WORD_JOINER,      BREAK_HANGUL_L_JAMO,      BREAK_HANGUL_V_JAMO,
   BREAK_HANGUL_T_JAMO,    BREAK_HANGUL_LV_SYLLABLE, BREAK_HANGUL_LVT_SYLLABLE
 } BreakType;
-BreakType get_break  (unichar uc) BIRNET_CONST;
+BreakType get_break  (unichar uc) RAPICORN_CONST;
 
 } // Unichar
 
@@ -103,13 +103,13 @@ namespace Unichar {
 inline bool
 isvalid (unichar uc)
 {
-  if (BIRNET_UNLIKELY (uc > 0xfdcf && uc < 0xfdf0))
+  if (RAPICORN_UNLIKELY (uc > 0xfdcf && uc < 0xfdf0))
     return false;
-  if (BIRNET_UNLIKELY ((uc & 0xfffe) == 0xfffe))
+  if (RAPICORN_UNLIKELY ((uc & 0xfffe) == 0xfffe))
     return false;
-  if (BIRNET_UNLIKELY (uc > 0x10ffff))
+  if (RAPICORN_UNLIKELY (uc > 0x10ffff))
     return false;
-  if (BIRNET_UNLIKELY ((uc & 0xfffff800) == 0xd800))
+  if (RAPICORN_UNLIKELY ((uc & 0xfffff800) == 0xd800))
     return false;
   return true;
 }
