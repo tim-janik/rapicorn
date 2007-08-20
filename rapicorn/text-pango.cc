@@ -520,7 +520,7 @@ public:
 };
 
 /* --- XmlToPango --- */
-class XmlToPango : Birnet::MarkupParser {
+class XmlToPango : Rapicorn::MarkupParser {
   String                     m_plain_text;
   std::list<PangoAttribute*> m_alist;
   PangoLayout               *m_layout;

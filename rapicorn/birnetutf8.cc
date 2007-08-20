@@ -17,7 +17,7 @@
 #include "birnetutf8.hh"
 #include <glib.h>
 
-namespace Birnet {
+namespace Rapicorn {
 namespace Unichar {
 
 /* --- unichar ctype.h equivalents --- */
@@ -157,7 +157,7 @@ get_break (unichar uc)
   return BreakType (g_unichar_break_type (uc));
 }
 
-/* --- ensure castable Birnet::Unichar::Type --- */
+/* --- ensure castable Rapicorn::Unichar::Type --- */
 RAPICORN_STATIC_ASSERT (Unichar::CONTROL == (int) G_UNICODE_CONTROL);
 RAPICORN_STATIC_ASSERT (Unichar::FORMAT == (int) G_UNICODE_FORMAT);
 RAPICORN_STATIC_ASSERT (Unichar::UNASSIGNED == (int) G_UNICODE_UNASSIGNED);
@@ -189,7 +189,7 @@ RAPICORN_STATIC_ASSERT (Unichar::LINE_SEPARATOR == (int) G_UNICODE_LINE_SEPARATO
 RAPICORN_STATIC_ASSERT (Unichar::PARAGRAPH_SEPARATOR == (int) G_UNICODE_PARAGRAPH_SEPARATOR);
 RAPICORN_STATIC_ASSERT (Unichar::SPACE_SEPARATOR == (int) G_UNICODE_SPACE_SEPARATOR);
 
-/* --- ensure castable Birnet::Unichar::BreakType --- */
+/* --- ensure castable Rapicorn::Unichar::BreakType --- */
 RAPICORN_STATIC_ASSERT (Unichar::BREAK_MANDATORY == (int) G_UNICODE_BREAK_MANDATORY);
 RAPICORN_STATIC_ASSERT (Unichar::BREAK_CARRIAGE_RETURN == (int) G_UNICODE_BREAK_CARRIAGE_RETURN);
 RAPICORN_STATIC_ASSERT (Unichar::BREAK_LINE_FEED == (int) G_UNICODE_BREAK_LINE_FEED);
@@ -322,4 +322,4 @@ utf8_validate (const String   &strng,
   return gb != false;
 }
 
-} // Birnet
+} // Rapicorn

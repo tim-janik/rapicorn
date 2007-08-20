@@ -90,13 +90,13 @@ public:
 inline Point
 min (const Point &p1, const Point &p2)
 {
-  return Point (Birnet::min (p1.x, p2.x), Birnet::min (p1.y, p2.y));
+  return Point (Rapicorn::min (p1.x, p2.x), Rapicorn::min (p1.y, p2.y));
 }
 using ::std::min;
 inline Point
 max (const Point &p1, const Point &p2)
 {
-  return Point (Birnet::max (p1.x, p2.x), Birnet::max (p1.y, p2.y));
+  return Point (Rapicorn::max (p1.x, p2.x), Rapicorn::max (p1.y, p2.y));
 }
 using ::std::max;
 inline Point

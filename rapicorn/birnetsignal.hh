@@ -19,7 +19,7 @@
 
 #include <rapicorn/birnetutils.hh>
 
-namespace Birnet {
+namespace Rapicorn {
 namespace Signals {
 
 /* --- EmissionBase --- */
@@ -449,7 +449,7 @@ struct SignalVoid : Signal0 <Emitter, void> {
 
 } // Signals
 
-/* --- Birnet::Signal imports --- */
+/* --- Rapicorn::Signal imports --- */
 using Signals::CollectorDefault;
 using Signals::CollectorWhile0;
 using Signals::CollectorUntil0;
@@ -462,6 +462,6 @@ using Signals::SignalVoid;
 using Signals::Signal;
 using Signals::slot;
 
-} // Birnet
+} // Rapicorn
 
 #endif  /* __BIRNET_SIGNAL_HH__ */

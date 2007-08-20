@@ -20,7 +20,7 @@
 #include "data.cc" // xml_data1
 
 namespace {
-using namespace Birnet;
+using namespace Rapicorn;
 
 static void
 xml_tree_test (void)
@@ -35,7 +35,7 @@ xml_tree_test (void)
     ref_sink (xnode);
   TOK();
   if (error.code)
-    Birnet::error ("%s:%d:%d:error.code=%d: %s", input_file, error.line_number, error.char_number, error.code, error.message.c_str());
+    Rapicorn::error ("%s:%d:%d:error.code=%d: %s", input_file, error.line_number, error.char_number, error.code, error.message.c_str());
   else
     TASSERT (xnode != NULL);
   /* check root */

@@ -65,7 +65,7 @@ struct _RapicornThread
   gint8		         got_wakeup;
   gint8                  accounting;
   volatile void*         guard_cache;
-  Birnet::Cond	         wakeup_cond;
+  Rapicorn::Cond	         wakeup_cond;
   RapicornThreadWakeup     wakeup_func;
   gpointer	         wakeup_data;
   GDestroyNotify         wakeup_destroy;
@@ -87,7 +87,7 @@ struct _RapicornThread
   }                info;
 };
 
-namespace Birnet {
+namespace Rapicorn {
 
 /* --- prototypes --- */
 static void             birnet_guard_deregister_all     (RapicornThread *thread);
@@ -1070,7 +1070,7 @@ birnet_guard_register (guint n_hazards)
   RapicornThread *thread = ThreadTable.thread_self();
   volatile RapicornGuard *guard, *last = NULL;
   /* reuse cached guards */
-  for (guard = (volatile Birnet::RapicornGuard*) thread->guard_cache; guard; last = guard, guard = last->cache_next)
+  for (guard = (volatile Rapicorn::RapicornGuard*) thread->guard_cache; guard; last = guard, guard = last->cache_next)
     if (n_hazards <= guard->n_values)
       {
         if (last)
@@ -1085,7 +1085,7 @@ birnet_guard_register (guint n_hazards)
     {
       n_hazards = ((MAX (n_hazards, 3) + RAPICORN_GUARD_ALIGN - 1) / RAPICORN_GUARD_ALIGN) * RAPICORN_GUARD_ALIGN;
       Atomic::int_add (&guard_list_length, n_hazards);
-      guard = (volatile Birnet::RapicornGuard*) g_malloc0 (sizeof (RapicornGuard) + (n_hazards - 1) * sizeof (guard->values[0]));
+      guard = (volatile Rapicorn::RapicornGuard*) g_malloc0 (sizeof (RapicornGuard) + (n_hazards - 1) * sizeof (guard->values[0]));
       guard->n_values = n_hazards;
       guard->thread = thread;
       do
@@ -1715,7 +1715,7 @@ get_pth_thread_table (void)
 #define	get_pth_thread_table()	NULL
 #endif	/* !RAPICORN_HAVE_MUTEXATTR_SETTYPE */
 
-/* ::Birnet::ThreadTable must be a RapicornThreadTable, not a reference for the C API wrapper to work */
+/* ::Rapicorn::ThreadTable must be a RapicornThreadTable, not a reference for the C API wrapper to work */
 RapicornThreadTable ThreadTable = {
   common_mutex_chain4init,
   common_mutex_unchain,
@@ -1770,4 +1770,4 @@ _birnet_init_threads (void)
   ThreadTable.thread_self ();
 }
 
-} // Birnet
+} // Rapicorn

@@ -1,4 +1,4 @@
-/* Birnet
+/* Rapicorn
  * Copyright (C) 2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
 #include <rapicorn/birnettests.h>
 
 namespace {
-using namespace Birnet;
+using namespace Rapicorn;
 
 /* --- utilities --- */
 RapicornThread*
@@ -220,7 +220,7 @@ test_threads (void)
 }
 
 /* --- C++ threading tests --- */
-struct ThreadA : public virtual Birnet::Thread {
+struct ThreadA : public virtual Rapicorn::Thread {
   int value;
   volatile int *counter;
   ThreadA (volatile int *counterp,
@@ -255,7 +255,7 @@ test_thread_cxx (void)
   volatile int atomic_counter = 0;
   int result = 0;
   int count = 35;
-  Birnet::Thread *threads[count];
+  Rapicorn::Thread *threads[count];
   for (int i = 0; i < count; i++)
     {
       int v = rand();
@@ -437,7 +437,7 @@ test_auto_locker_order()
 static void
 test_auto_locker_counting()
 {
-  /* check Birnet::AutoLocker lock counting */
+  /* check Rapicorn::AutoLocker lock counting */
   LockCounter lock_counter;
   TASSERT (lock_counter.lock_count() == 0);
   {
@@ -892,7 +892,7 @@ public:
   inline int32  gen_int    () { accu = 1664525 * accu + 1013904223; return accu; }
 };
 #define CONTENTION_PRINTF       if(1);else g_printerr
-struct RingBufferWriter : public virtual Birnet::Thread, IntSequence {
+struct RingBufferWriter : public virtual Rapicorn::Thread, IntSequence {
   IntRingBuffer *ring;
   uint           ring_buffer_test_length;
   RingBufferWriter (IntRingBuffer *rb,
@@ -928,7 +928,7 @@ struct RingBufferWriter : public virtual Birnet::Thread, IntSequence {
     TPRINT ("%s done.", Thread::Self::name().c_str());
   }
 };
-struct RingBufferReader : public virtual Birnet::Thread, IntSequence {
+struct RingBufferReader : public virtual Rapicorn::Thread, IntSequence {
   IntRingBuffer *ring;
   uint           ring_buffer_test_length;
   RingBufferReader (IntRingBuffer *rb,

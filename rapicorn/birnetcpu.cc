@@ -20,7 +20,7 @@
 #include <signal.h>
 #include <string.h>
 
-namespace Birnet {
+namespace Rapicorn {
 
 /* figure architecture name from compiler */
 static const char*
@@ -306,4 +306,4 @@ cpu_info_string (const CPUInfo &cpu_info)
   return retval;
 }
 
-} // Birnet
+} // Rapicorn

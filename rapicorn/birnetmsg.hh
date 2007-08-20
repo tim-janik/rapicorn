@@ -1,4 +1,4 @@
-/* Birnet
+/* Rapicorn
  * Copyright (C) 2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -20,7 +20,7 @@
 #include <rapicorn/birnetutils.hh>
 #include <stdarg.h>
 
-namespace Birnet {
+namespace Rapicorn {
 
 /* --- messaging --- */
 struct Msg {
@@ -193,7 +193,7 @@ Msg::display (const CustomType   &message_type,
     }
 }
 
-} // Birnet
+} // Rapicorn
 
 #endif /* __BIRNET_MSG_HH__ */
 /* vim:set ts=8 sts=2 sw=2: */

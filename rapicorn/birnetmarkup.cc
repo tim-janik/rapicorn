@@ -27,7 +27,7 @@
 
 #define _(x) x  // FIXME
 
-namespace Birnet {
+namespace Rapicorn {
 using namespace std;
 
 /* --- string utils --- */
@@ -2050,4 +2050,4 @@ MarkupParser::recap_pass_through (const String   &pass_through_text,
                                   Error          &error)
 {}
 
-} // Birnet
+} // Rapicorn

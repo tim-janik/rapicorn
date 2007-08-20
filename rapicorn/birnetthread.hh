@@ -1,4 +1,4 @@
-/* Birnet
+/* Rapicorn
  * Copyright (C) 2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 
 #include <rapicorn/birnetutils.hh>
 
-namespace Birnet {
+namespace Rapicorn {
 
 class Thread;
 
@@ -356,7 +356,7 @@ OwnedMutex::mine ()
   return Atomic::ptr_get (&m_owner) == &Thread::self();
 }
 
-} // Birnet
+} // Rapicorn
 
 #endif /* __BIRNET_THREAD_XX_HH__ */
 

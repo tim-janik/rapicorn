@@ -1,4 +1,4 @@
-/* Birnet
+/* Rapicorn
  * Copyright (C) 2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 
 #define birnet_threads_initialized()    ISLIKELY ((void*) ThreadTable.mutex_lock != (void*) ThreadTable.mutex_unlock)
 
-namespace Birnet {
+namespace Rapicorn {
 
 /* --- Thread::ThreadWrapperInternal --- */
 struct Thread::ThreadWrapperInternal : public Thread {
@@ -341,4 +341,4 @@ OwnedMutex::~OwnedMutex()
     ThreadTable.rec_mutex_unchain (&m_rec_mutex);
 }
 
-} // Birnet
+} // Rapicorn

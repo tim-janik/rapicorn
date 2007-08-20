@@ -319,7 +319,7 @@ tabort_handler (bool   set_values,
 
 /* --- C++ test initialization --- */
 #ifdef  __cplusplus
-namespace Birnet {
+namespace Rapicorn {
 static inline void
 birnet_init_test (int    *argc,
 		  char ***argv)
@@ -342,7 +342,7 @@ birnet_init_test (int    *argc,
   else
     g_printerr ("TEST: %s\n", g_get_prgname());
 }
-} // Birnet
+} // Rapicorn
 #endif
 
 RAPICORN_EXTERN_C_END();

@@ -1,4 +1,4 @@
-/* Birnet
+/* Rapicorn
  * Copyright (C) 2007 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 #include <poll.h>
 
 namespace {
-using namespace Birnet;
+using namespace Rapicorn;
 
 static void
 test_poll()

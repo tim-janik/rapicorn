@@ -16,7 +16,7 @@
  */
 #include "birnetsignal.hh"
 
-namespace Birnet {
+namespace Rapicorn {
 namespace Signals {
 
 /* --- TrampolineLink --- */
@@ -44,4 +44,4 @@ SignalBase::EmbeddedLink::delete_this ()
 }
 
 } // Signals
-} // Birnet
+} // Rapicorn

@@ -19,7 +19,7 @@
 
 #include <rapicorn/birnetmarkup.hh>
 
-namespace Birnet {
+namespace Rapicorn {
 
 class XmlNode : public virtual ReferenceCountImpl {
   String                m_name; // element name
@@ -72,6 +72,6 @@ public:
                                          const String   &roottag = "");
 };
 
-} // Birnet
+} // Rapicorn
 
 #endif  /* __BIRNET_XML_HH__ */

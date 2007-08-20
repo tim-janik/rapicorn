@@ -21,7 +21,7 @@
 #include <errno.h>
 #include <zlib.h>
 
-namespace Birnet {
+namespace Rapicorn {
 
 static void     zintern_error  (const char     *format,
                                 ...) RAPICORN_PRINTF (1, 2);
@@ -249,4 +249,4 @@ main (int   argc,
   return 0;
 }
 
-} // Birnet
+} // Rapicorn

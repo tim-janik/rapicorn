@@ -19,7 +19,7 @@
 
 #include <rapicorn/birnetutils.hh>
 
-namespace Birnet {
+namespace Rapicorn {
 
 typedef RapicornCPUInfo CPUInfo;
 
@@ -30,7 +30,7 @@ String  cpu_info_string	(const CPUInfo &cpu_info);
 /* --- implementation --- */
 void	_birnet_init_cpuinfo	(void);
 
-} // Birnet
+} // Rapicorn
 
 #endif /* __BIRNET_CPU_HH__ */
 /* vim:set ts=8 sts=2 sw=2: */

@@ -21,7 +21,7 @@
 #include "data.cc" // xml_data1
 
 namespace {
-using namespace Birnet;
+using namespace Rapicorn;
 using namespace Rapicorn;
 
 struct TestRapicornMarkupParser : MarkupParser {
@@ -76,7 +76,7 @@ birnet_markup_parser_test()
     tmp->end_parse (&error);
   TOK();
   if (error.code)
-    Birnet::error ("%s:%d:%d: %s (%d)", input_file, error.line_number, error.char_number, error.message.c_str(), error.code);
+    Rapicorn::error ("%s:%d:%d: %s (%d)", input_file, error.line_number, error.char_number, error.message.c_str(), error.code);
   TOK();
   // g_printerr ("DEBUG_STRING: %s\n", tmp->debug_string.c_str());
   const char *dcode = tmp->debug_string.c_str();

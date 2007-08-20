@@ -16,7 +16,7 @@
  */
 #include "birnetxml.hh"
 
-namespace Birnet {
+namespace Rapicorn {
 
 XmlNode::XmlNode (const String &element_name,
                   uint          line,
@@ -123,10 +123,10 @@ XmlNode::first_child (const String &element_name) const
   return NULL;
 }
 
-} // Birnet
+} // Rapicorn
 
 namespace { // Anon
-using namespace Birnet;
+using namespace Rapicorn;
 
 class XmlNodeText : public virtual XmlNode {
   String                m_text;
@@ -194,7 +194,7 @@ public:
   {}
 };
 
-class XmlNodeParser : public Birnet::MarkupParser {
+class XmlNodeParser : public Rapicorn::MarkupParser {
   vector<XmlNode*> m_node_stack;
   XmlNode         *m_first;
   XmlNodeParser (const String &input_name) :
@@ -268,7 +268,7 @@ public:
 
 } // Anon
 
-namespace Birnet {
+namespace Rapicorn {
 
 XmlNode*
 XmlNode::create_text (const String &utf8text,
@@ -300,4 +300,4 @@ XmlNode::parse_xml (const String        &input_name,
   return xnode;
 }
 
-} // Birnet
+} // Rapicorn

@@ -18,7 +18,7 @@
 #include <rapicorn/birnettests.h>
 
 namespace {
-using namespace Birnet;
+using namespace Rapicorn;
 
 struct ExtraType {
   virtual            ~ExtraType  () {}

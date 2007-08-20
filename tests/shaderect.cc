@@ -36,7 +36,7 @@ main (int   argc,
       char *argv[])
 {
   birnet_init_test (&argc, &argv);
-  shade_rect_test (argc > 1 ? Birnet::string_to_uint (argv[1]) : 1);
+  shade_rect_test (argc > 1 ? Rapicorn::string_to_uint (argv[1]) : 1);
   return 0;
 }
 

@@ -19,7 +19,7 @@
 
 #include <rapicorn/birnetutils.hh>
 
-namespace Birnet {
+namespace Rapicorn {
 
 class MarkupParser {
 public:
@@ -104,6 +104,6 @@ private:
                                   Error          &error);
 };
 
-} // Birnet
+} // Rapicorn
 
 #endif  /* __BIRNET_MARKUP_HH__ */

@@ -39,7 +39,7 @@ main (int   argc,
       char *argv[])
 {
   birnet_init_test (&argc, &argv);
-  pixel_combine (argc > 1 ? Birnet::string_to_uint (argv[1]) : 1);
+  pixel_combine (argc > 1 ? Rapicorn::string_to_uint (argv[1]) : 1);
   return 0;
 }
 

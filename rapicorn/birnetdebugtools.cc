@@ -1,4 +1,4 @@
-/* Birnet
+/* Rapicorn
  * Copyright (C) 2007 Tim Janik
  * 
  * This library is free software; you can redistribute it and/or
@@ -23,7 +23,7 @@
 #define _(x)    (x)
 #endif
 
-namespace Birnet {
+namespace Rapicorn {
 
 DebugChannel::DebugChannel()
 {}
@@ -108,4 +108,4 @@ DebugChannel::new_from_file_async (const String &filename)
   return dcfa;
 }
 
-} // Birnet
+} // Rapicorn

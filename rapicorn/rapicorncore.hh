@@ -1,4 +1,4 @@
-/* Birnet
+/* Rapicorn
  * Copyright (C) 2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or

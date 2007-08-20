@@ -1,4 +1,4 @@
-/* Birnet
+/* Rapicorn
  * Copyright (C) 2006 Tim Janik
  * 
  * This library is free software; you can redistribute it and/or
@@ -24,7 +24,7 @@
 #define _(x)    (x)
 #endif
 
-namespace Birnet {
+namespace Rapicorn {
 
 Msg::Part::Part() :
   ptype (0)
@@ -624,4 +624,4 @@ Msg::default_handler (const char         *domain,
   g_printerr ("********************************************************************************\n");
 }
 
-} // Birnet
+} // Rapicorn

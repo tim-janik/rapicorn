@@ -19,7 +19,7 @@
 
 #include <rapicorn/birnetutils.hh>
 
-namespace Birnet {
+namespace Rapicorn {
 
 namespace Unichar {
 inline bool isvalid      (unichar uc) RAPICORN_CONST;
@@ -204,7 +204,7 @@ utf8_aligned (const char *c)
   return (*c & 0xc0) == 0x80;
 }
 
-} // Birnet
+} // Rapicorn
 
 #endif /* __BIRNET_UTF8_HH__ */
 /* vim:set ts=8 sts=2 sw=2: */

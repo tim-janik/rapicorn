@@ -1,4 +1,4 @@
-/* Birnet
+/* Rapicorn
  * Copyright (C) 2005-2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -22,7 +22,7 @@
 #include <vector>
 #include <map>
 
-namespace Birnet {
+namespace Rapicorn {
 
 /* --- short integer types --- */
 typedef RapicornUInt8   uint8;
@@ -74,7 +74,7 @@ public:
 /* --- implement assertion macros --- */
 #ifndef RAPICORN__RUNTIME_PROBLEM
 #define RAPICORN__RUNTIME_PROBLEM(ErrorWarningReturnAssertNotreach,domain,file,line,funcname,...) \
-        ::Birnet::birnet_runtime_problem (ErrorWarningReturnAssertNotreach, domain, file, line, funcname, __VA_ARGS__)
+        ::Rapicorn::birnet_runtime_problem (ErrorWarningReturnAssertNotreach, domain, file, line, funcname, __VA_ARGS__)
 #endif
 void birnet_runtime_problem  (char        ewran_tag,
                               const char *domain,
@@ -263,7 +263,7 @@ template<typename Type> class InvalidType;
  * Deletable is a virtual base class that can be derived from (usually with
  * public virtual) to ensure an object has a vtable and a virtual destructor.
  * Also, it allows deletion hooks to be called during the objects destructor,
- * by deriving from Birnet::Deletable::DeletionHook. No extra per-object space is
+ * by deriving from Rapicorn::Deletable::DeletionHook. No extra per-object space is
  * consumed to allow deletion hooks, which makes Deletable a suitable base
  * type for classes that may or may not need this feature (e.g. objects that
  * can but often aren't used for signal handler connections).
@@ -271,7 +271,7 @@ template<typename Type> class InvalidType;
 struct Deletable : public virtual VirtualTypeid {
   /**
    * DeletionHook is the base implementation class for hooks which are hooked
-   * up into the deletion phase of a Birnet::Deletable.
+   * up into the deletion phase of a Rapicorn::Deletable.
    */
   class DeletionHook {
     DeletionHook    *prev;
@@ -611,7 +611,7 @@ public: /* generic data API */
 /* --- implementation --- */
 void _birnet_init_threads (void);
 
-} // Birnet
+} // Rapicorn
 
 #endif /* __BIRNET_UTILS_XX_HH__ */
 /* vim:set ts=8 sts=2 sw=2: */

@@ -1,4 +1,4 @@
-/* Birnet
+/* Rapicorn
  * Copyright (C) 2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -20,7 +20,7 @@
 #include <rapicorn/birnetutils.hh>
 #include <math.h>
 
-namespace Birnet {
+namespace Rapicorn {
 
 /* --- double to integer --- */
 inline int      dtoi32 (double d) RAPICORN_CONST;
@@ -73,7 +73,7 @@ inline int64 RAPICORN_CONST iround (double d) { return dtoi64 (round (d)); }
 inline int64 RAPICORN_CONST ifloor (double d) { return dtoi64 (floor (d)); }
 inline int64 RAPICORN_CONST iceil  (double d) { return dtoi64 (ceil (d)); }
 
-} // Birnet
+} // Rapicorn
 
 #endif /* __BIRNET_MATH_HH__ */
 /* vim:set ts=8 sts=2 sw=2: */

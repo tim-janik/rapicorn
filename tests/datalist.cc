@@ -18,7 +18,7 @@
 #include <rapicorn/birnettests.h>
 
 namespace {
-using namespace Birnet;
+using namespace Rapicorn;
 
 class MyKey : public DataKey<int> {
   void destroy (int i)

@@ -1,4 +1,4 @@
-/* Birnet
+/* Rapicorn
  * Copyright (C) 2007 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -20,7 +20,7 @@
 #include <rapicorn/birnetutils.hh>
 #include <stdarg.h>
 
-namespace Birnet {
+namespace Rapicorn {
 
 class DebugChannel : public virtual ReferenceCountImpl {
   RAPICORN_PRIVATE_CLASS_COPY (DebugChannel);
@@ -44,7 +44,7 @@ DebugChannel::printf (const char *format,
   va_end (a);
 }
 
-} // Birnet
+} // Rapicorn
 
 #endif /* __BIRNET_DEBUG_TOOLS_HH__ */
 /* vim:set ts=8 sts=2 sw=2: */

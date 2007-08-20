@@ -1,4 +1,4 @@
-dnl # Birnet
+dnl # Rapicorn
 dnl # GNU Lesser General Public License version 2 or any later version.
 
 ## Portability defines that help interoperate with classic and modern autoconfs

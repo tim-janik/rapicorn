@@ -19,7 +19,7 @@
 
 namespace Rapicorn {
 namespace Text {
-using namespace Birnet;
+using namespace Rapicorn;
 
 typedef enum {
   NEXT_CHAR,

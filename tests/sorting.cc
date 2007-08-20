@@ -1,4 +1,4 @@
-/* Birnet Sorting Test
+/* Rapicorn Sorting Test
  * Copyright (C) 2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 #include <math.h>
 
 namespace {
-using namespace Birnet;
+using namespace Rapicorn;
 
 static int
 compare_floats (float f1,

@@ -1,4 +1,4 @@
-/* Birnet
+/* Rapicorn
  * Copyright (C) 2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -16,10 +16,10 @@
  */
 //#define TEST_VERBOSE
 #include <rapicorn/birnettests.h>
-using namespace Birnet;
+using namespace Rapicorn;
 
 namespace {
-using namespace Birnet;
+using namespace Rapicorn;
 
 static void
 random_tf8_and_unichar_test (void)

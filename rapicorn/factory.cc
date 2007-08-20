@@ -415,7 +415,7 @@ FactorySingleton::parse_gadget_data (const uint             data_length,
       if (&nt == &dothrow)
         throw Exception (ers);
       else
-        Birnet::error (ers);
+        Rapicorn::error (ers);
     }
 }
 

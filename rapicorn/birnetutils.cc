@@ -1,4 +1,4 @@
-/* Birnet
+/* Rapicorn
  * Copyright (C) 2005-2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -34,7 +34,7 @@
 #define _(s)    s
 #endif
 
-namespace Birnet {
+namespace Rapicorn {
 
 static Msg::CustomType debug_browser ("browser", Msg::DEBUG);
 
@@ -1594,4 +1594,4 @@ zintern_free (uint8 *dc_data)
   g_free (dc_data);
 }
 
-} // Birnet
+} // Rapicorn
