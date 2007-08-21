@@ -1,4 +1,4 @@
-/* birnet-zintern - small C source compression utility
+/* rapicorn-zintern - small C source compression utility
  * Copyright (C) 2003-2006 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -165,7 +165,7 @@ gen_zfile (const char *name,
       cdata = data;
     }
 
-  g_print ("/* birnet-zintern file dump of %s */\n", file);
+  g_print ("/* rapicorn-zintern file dump of %s */\n", file);
 
   config = config_init;
   printf ("#define %s_NAME \"", to_cupper (name).c_str());
@@ -191,7 +191,7 @@ gen_zfile (const char *name,
 static int
 help (char *arg)
 {
-  g_printerr ("usage: birnet-zintern [-h] [-b] [-z] [[name file]...]\n");
+  g_printerr ("usage: rapicorn-zintern [-h] [-b] [-z] [[name file]...]\n");
   g_printerr ("  -h  Print usage information\n");
   g_printerr ("  -b  Strip directories from file names\n");
   g_printerr ("  -z  Compress data blocks with libz\n");

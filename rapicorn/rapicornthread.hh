@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_THREAD_XX_HH__
 #define __RAPICORN_THREAD_XX_HH__
 
-#include <rapicorn/birnetutils.hh>
+#include <rapicorn/rapicornutils.hh>
 
 namespace Rapicorn {
 

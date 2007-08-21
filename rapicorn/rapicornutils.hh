@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_UTILS_XX_HH__
 #define __RAPICORN_UTILS_XX_HH__
 
-#include <rapicorn/birnetcdefs.h>
+#include <rapicorn/rapicorncdefs.h>
 #include <string>
 #include <vector>
 #include <map>
@@ -144,7 +144,7 @@ inline void BREAKPOINT() { raise_sigtrap(); }
 #endif  /* __i386__ */
 
 /* --- threading implementaiton bit --- */
-extern RapicornThreadTable ThreadTable; /* private, provided by birnetthreadimpl.cc */
+extern RapicornThreadTable ThreadTable; /* private, provided by rapicornthreadimpl.cc */
 
 /* --- string functionality --- */
 String  			string_tolower           (const String &str);
@@ -242,7 +242,7 @@ void* malloc_aligned            (size_t                total_size,
                                  uint8               **free_pointer);
 
 /* --- C++ demangling --- */
-char*   cxx_demangle	        (const char  *mangled_identifier); /* in birnetutilsxx.cc */
+char*   cxx_demangle	        (const char  *mangled_identifier); /* in rapicornutilsxx.cc */
 
 /* --- zintern support --- */
 uint8*  zintern_decompress      (unsigned int          decompressed_size,

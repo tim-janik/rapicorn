@@ -12,10 +12,10 @@ DEFS            = -DRAPICORN_PRIVATE -DPARANOID -D_RAPICORN_SOURCE_EXTENSIONS -D
 
 rapicorn_top_headers = rapicorn.hh
 rapicorn_public_headers = $(strip 	\
-	rapicorncore.hh birnetcdefs.h           birnettests.h                   \
-        birnetcpu.hh    birnetdebugtools.hh     birnetthread.hh birnetutils.hh  \
-        birnetmsg.hh    birnetsignal.hh         birnetmath.hh   birnetutf8.hh   \
-        birnetxml.hh    birnetmarkup.hh \
+	rapicorncore.hh rapicorncdefs.h           rapicorntests.h                   \
+        rapicorncpu.hh    rapicorndebugtools.hh     rapicornthread.hh rapicornutils.hh  \
+        rapicornmsg.hh    rapicornsignal.hh         rapicornmath.hh   rapicornutf8.hh   \
+        rapicornxml.hh    rapicornmarkup.hh \
 	\
 	keycodes.hh	$(rapicorn_impl_headers)	\
 	utilities.hh	events.hh	application.hh	\
@@ -35,14 +35,14 @@ rapicorn_impl_headers = $(strip 	\
 	tableimpl.hh			\
 )
 rapicorn_generated_headers = $(strip	\
-        birnetsignalvariants.hh         \
+        rapicornsignalvariants.hh         \
 	rapicornconfig.h		\
 )
 rapicorn_cc_sources = $(strip 		\
-        birnetthreadimpl.cc             \
-        birnetcpu.cc    birnetdebugtools.cc     birnetthread.cc birnetutils.cc  \
-        birnetmsg.cc    birnetsignal.cc         birnetmath.cc   birnetutf8.cc   \
-        birnetxml.cc    birnetmarkup.cc \
+        rapicornthreadimpl.cc             \
+        rapicorncpu.cc    rapicorndebugtools.cc     rapicornthread.cc rapicornutils.cc  \
+        rapicornmsg.cc    rapicornsignal.cc         rapicornmath.cc   rapicornutf8.cc   \
+        rapicornxml.cc    rapicornmarkup.cc \
 	\
 	viewport-gtk.cc	regionimpl.c	\
 	utilities.cc	events.cc	application.cc	\
@@ -54,8 +54,8 @@ rapicorn_cc_sources = $(strip 		\
 	text-editor.cc	text-pango.cc	testitem.cc	\
 )
 rapicorn_private_files = $(strip 	\
-        birnetsignalslot.hh             \
-        birnetsignaltemplate.hh         \
+        rapicornsignalslot.hh             \
+        rapicornsignaltemplate.hh         \
 	mksignals.sh			\
 	regionimpl.h			\
 	private.hh			\
@@ -83,11 +83,11 @@ EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@LT_RELEASE@_la_DEPENDENCIE
 # programs (not installed)
 noinst_PROGRAMS        = $(ALLTESTS)
 progs_ldadd            = librapicorn@LT_RELEASE@.la $(RAPICORN_LIBS) -lm
-# birnet-zintern
-noinst_PROGRAMS       += birnet-zintern
-birnet_zintern_SOURCES = birnet-zintern.cc
-birnet_zintern_LDADD   = $(RAPICORN_LIBS) -lm # $(progs_ldadd)
-birnet_zintern_DEPS    = $(progs_deps)
+# rapicorn-zintern
+noinst_PROGRAMS       += rapicorn-zintern
+rapicorn_zintern_SOURCES = rapicorn-zintern.cc
+rapicorn_zintern_LDADD   = $(RAPICORN_LIBS) -lm # $(progs_ldadd)
+rapicorn_zintern_DEPS    = $(progs_deps)
 
 
 # === header-checksum ===
@@ -154,8 +154,8 @@ stamp-autochecks: $(XML_FILES)
 noinst_DATA = stamp-autochecks
 EXTRA_DIST += $(XML_FILES)
 
-gen-zintern.c:	./birnet-zintern $(srcdir)/factory.xml stamp-autochecks
-	./birnet-zintern -b -z FACTORY_XML $(srcdir)/factory.xml > xgen-$(@F)
+gen-zintern.c:	./rapicorn-zintern $(srcdir)/factory.xml stamp-autochecks
+	./rapicorn-zintern -b -z FACTORY_XML $(srcdir)/factory.xml > xgen-$(@F)
 	mv xgen-$(@F) $@
 factory.cc: gen-zintern.c
 CLEANFILES += xgen-gen-zintern.c gen-zintern.c
@@ -237,14 +237,14 @@ CLEANFILES += xgen-rapicornconfig.h rapicornconfig.h
 $(librapicorn@LT_RELEASE@_la_OBJECTS): rapicornconfig.h
 
 
-# === birnetsignalvariants.hh ===
-$(srcdir)/*.cc: birnetsignalvariants.hh
-birnetsignalvariants.hh: $(srcdir)/birnetsignalslot.hh $(srcdir)/birnetsignaltemplate.hh $(srcdir)/mksignals.sh
+# === rapicornsignalvariants.hh ===
+$(srcdir)/*.cc: rapicornsignalvariants.hh
+rapicornsignalvariants.hh: $(srcdir)/rapicornsignalslot.hh $(srcdir)/rapicornsignaltemplate.hh $(srcdir)/mksignals.sh
 	cd . \
 	&& echo "/* Signal Variants -- Generated from: $(^F) */"	>xgen-sigs \
 	&& echo 						       >>xgen-sigs \
-	&& $(srcdir)/mksignals.sh $(srcdir)/birnetsignalslot.hh     17 >>xgen-sigs \
-	&& $(srcdir)/mksignals.sh $(srcdir)/birnetsignaltemplate.hh 16 >>xgen-sigs \
+	&& $(srcdir)/mksignals.sh $(srcdir)/rapicornsignalslot.hh     17 >>xgen-sigs \
+	&& $(srcdir)/mksignals.sh $(srcdir)/rapicornsignaltemplate.hh 16 >>xgen-sigs \
 	&& cp xgen-sigs $@ \
 	&& rm -f xgen-sigs
-CLEANFILES += xgen-sigs birnetsignalvariants.hh xgen-signals.sed
+CLEANFILES += xgen-sigs rapicornsignalvariants.hh xgen-signals.sed

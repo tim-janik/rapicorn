@@ -14,8 +14,8 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include "birnetdebugtools.hh"
-#include "birnetthread.hh"
+#include "rapicorndebugtools.hh"
+#include "rapicornthread.hh"
 #include <syslog.h>
 #include <errno.h>
 

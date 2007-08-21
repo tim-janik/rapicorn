@@ -15,7 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include <glib.h>
-#include "birnetcpu.hh"
+#include "rapicorncpu.hh"
 #include <setjmp.h>
 #include <signal.h>
 #include <string.h>

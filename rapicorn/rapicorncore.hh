@@ -18,16 +18,16 @@
 #define __RAPICORN_H__
 
 #include <rapicorn/rapicornconfig.h>
-#include <rapicorn/birnetcpu.hh>
-#include <rapicorn/birnetdebugtools.hh>
-#include <rapicorn/birnetmsg.hh>
-#include <rapicorn/birnetmarkup.hh>
-#include <rapicorn/birnetmath.hh>
-#include <rapicorn/birnetutf8.hh>
-#include <rapicorn/birnetutils.hh>
-#include <rapicorn/birnetsignal.hh>
-#include <rapicorn/birnetthread.hh>
-#include <rapicorn/birnetxml.hh>
+#include <rapicorn/rapicorncpu.hh>
+#include <rapicorn/rapicorndebugtools.hh>
+#include <rapicorn/rapicornmsg.hh>
+#include <rapicorn/rapicornmarkup.hh>
+#include <rapicorn/rapicornmath.hh>
+#include <rapicorn/rapicornutf8.hh>
+#include <rapicorn/rapicornutils.hh>
+#include <rapicorn/rapicornsignal.hh>
+#include <rapicorn/rapicornthread.hh>
+#include <rapicorn/rapicornxml.hh>
 
 #endif /* __RAPICORN_H__ */
 /* vim:set ts=8 sts=2 sw=2: */

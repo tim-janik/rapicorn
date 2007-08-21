@@ -164,7 +164,7 @@ typedef unsigned int		RapicornUInt16 __attribute__ ((__mode__ (__HI__)));
 typedef unsigned int		RapicornUInt32 __attribute__ ((__mode__ (__SI__)));
 // typedef unsigned int         RapicornUInt64 __attribute__ ((__mode__ (__DI__)));
 typedef unsigned long long int  RapicornUInt64; // AMD64 needs this for %llu printf format strings
-// provided by birnetcdefs.h: uint;
+// provided by rapicorncdefs.h: uint;
 RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt8)  == 1);
 RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt16) == 2);
 RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt32) == 4);

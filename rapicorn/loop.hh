@@ -59,7 +59,7 @@ protected:
   typedef Signals::Slot1<bool,PollFD&> BPfdSlot;
   explicit         EventLoop  ();
   virtual         ~EventLoop  ();
-  static uint64    get_current_time_usecs();    // FIXME: current_time should move to birnetutilsxx.hh
+  static uint64    get_current_time_usecs();    // FIXME: current_time should move to rapicornutilsxx.hh
 public:
   static const int PRIORITY_NOW        = -1073741824;   /* most important, used for immediate async execution (MAXINT/2) */
   static const int PRIORITY_HIGH       = -100 - 10;     /* very important, used for io handlers (G*HIGH) */

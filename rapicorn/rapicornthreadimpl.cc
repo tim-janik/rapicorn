@@ -31,8 +31,8 @@
 #include <sys/resource.h>
 #include <sys/time.h>
 #include <sys/times.h>
-#include "birnetutils.hh"
-#include "birnetthread.hh"
+#include "rapicornutils.hh"
+#include "rapicornthread.hh"
 
 #define FLOATING_FLAG                           (1 << 31)
 #define THREAD_REF_COUNT(thread)                (thread->ref_field & ~FLOATING_FLAG)

@@ -15,8 +15,8 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include <glib.h>
-#include "birnetmsg.hh"
-#include "birnetthread.hh"
+#include "rapicornmsg.hh"
+#include "rapicornthread.hh"
 #include <syslog.h>
 #include <errno.h>
 

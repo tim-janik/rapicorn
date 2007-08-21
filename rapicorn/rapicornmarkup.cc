@@ -16,8 +16,8 @@
  *
  * based on glib/gmarkup.c, Copyright 2000, 2003 Red Hat, Inc.
  */
-#include "birnetmarkup.hh"
-#include "birnetutf8.hh"
+#include "rapicornmarkup.hh"
+#include "rapicornutf8.hh"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>

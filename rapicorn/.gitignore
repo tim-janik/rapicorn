@@ -1,7 +1,7 @@
 librapicorn[0-9][0-9][0-9].la
 rapicornconfig.h
-birnetsignalvariants.hh
+rapicornsignalvariants.hh
 gen-enums.cc
 gen-zintern.c
 stamp-autochecks
-birnet-zintern
+rapicorn-zintern

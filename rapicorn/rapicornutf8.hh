@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_UTF8_HH__
 #define __RAPICORN_UTF8_HH__
 
-#include <rapicorn/birnetutils.hh>
+#include <rapicorn/rapicornutils.hh>
 
 namespace Rapicorn {
 

@@ -15,11 +15,11 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include <glib.h>
-#include "birnetutils.hh"
-#include "birnetutf8.hh"
-#include "birnetthread.hh"
-#include "birnetmsg.hh"
-#include "birnetcpu.hh"
+#include "rapicornutils.hh"
+#include "rapicornutf8.hh"
+#include "rapicornthread.hh"
+#include "rapicornmsg.hh"
+#include "rapicorncpu.hh"
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -1537,7 +1537,7 @@ malloc_aligned (gsize	  total_size,
  * allocated block of size @a decompressed_size which is returned.
  * The returned block needs to be freed with g_free().
  * This function is intended to decompress data which has been compressed
- * with the birnet-zintern utility, so no errors should occour during
+ * with the rapicorn-zintern utility, so no errors should occour during
  * decompression.
  * Consequently, if any error occours during decompression or if the resulting
  * data block is of a size other than @a decompressed_size, the program will

@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_CPU_HH__
 #define __RAPICORN_CPU_HH__
 
-#include <rapicorn/birnetutils.hh>
+#include <rapicorn/rapicornutils.hh>
 
 namespace Rapicorn {
 
