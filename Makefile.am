@@ -52,7 +52,6 @@ EXTRA_DIST += rapicorn@LT_RELEASE@.pc
 distcleancheck_listfiles = true # find . -type f -print
 # distuninstallcheck_listfiles = true # find . -type f -print
 distcheck-hook:
-	$(MAKE) $(AM_MAKEFLAGS) -C birnet/ api-check
 	$(MAKE) $(AM_MAKEFLAGS) -C rapicorn/ api-check
 
 check-drcast:	# check for dynamic_cast of reference types which is broken in gcc <= 3.3.5

@@ -14,8 +14,8 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef __BIRNET_SIGNAL_HH__
-#define __BIRNET_SIGNAL_HH__
+#ifndef __RAPICORN_SIGNAL_HH__
+#define __RAPICORN_SIGNAL_HH__
 
 #include <rapicorn/birnetutils.hh>
 
@@ -464,4 +464,4 @@ using Signals::slot;
 
 } // Rapicorn
 
-#endif  /* __BIRNET_SIGNAL_HH__ */
+#endif  /* __RAPICORN_SIGNAL_HH__ */

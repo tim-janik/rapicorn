@@ -90,10 +90,10 @@ struct _RapicornThread
 namespace Rapicorn {
 
 /* --- prototypes --- */
-static void             birnet_guard_deregister_all     (RapicornThread *thread);
-static void	        birnet_thread_handle_exit	(RapicornThread *thread);
-static void             birnet_thread_accounting_L      (RapicornThread *self,
-                                                         bool          force_update);
+static void             rapicorn_guard_deregister_all   (RapicornThread *thread);
+static void	        rapicorn_thread_handle_exit     (RapicornThread *thread);
+static void             rapicorn_thread_accounting_L    (RapicornThread *self,
+                                                         bool            force_update);
 static void             thread_get_tid                  (RapicornThread *thread);
 static inline guint     cached_getpid                   (void);
 
@@ -182,7 +182,7 @@ common_thread_unref (RapicornThread *thread)
       g_assert (thread->qdata == NULL);
       g_assert (ThreadTable.atomic_pointer_get (&thread->threadxx) == NULL);
       /* final cleanup code, all custom hooks have been processed now */
-      birnet_guard_deregister_all (thread);
+      rapicorn_guard_deregister_all (thread);
       thread->wakeup_cond.~Cond();
       g_free (thread->name);
       thread->name = NULL;
@@ -195,7 +195,7 @@ common_thread_unref (RapicornThread *thread)
 }
 
 static void
-birnet_thread_handle_exit (RapicornThread *thread)
+rapicorn_thread_handle_exit (RapicornThread *thread)
 {
   /* run custom data cleanup handlers */
   g_datalist_clear (&thread->qdata);
@@ -244,7 +244,7 @@ filter_priority_warning (const gchar    *log_domain,
 }
 
 static gpointer
-birnet_thread_exec (gpointer data)
+rapicorn_thread_exec (gpointer data)
 {
   void           **tfdx      = (void**) data;
   RapicornThread    *thread    = (RapicornThread*) tfdx[0];
@@ -262,20 +262,20 @@ birnet_thread_exec (gpointer data)
   global_thread_mutex.lock();
   global_thread_list = g_slist_append (global_thread_list, self);
   self->accounting = 1;
-  birnet_thread_accounting_L (self, TRUE);
+  rapicorn_thread_accounting_L (self, TRUE);
   global_thread_cond.broadcast();
   global_thread_mutex.unlock();
   /* here, tfdx contents have become invalid */
 
   global_startup_mutex.lock();
-  /* acquiring this mutex waits for birnet_thread_run() to figure inlist (global_thread_list, self) */
+  /* acquiring this mutex waits for rapicorn_thread_run() to figure inlist (global_thread_list, self) */
   global_startup_mutex.unlock();
   
   func (user_data);
   g_datalist_clear (&thread->qdata);
 
   /* because func() can be prematurely exited via pthread_exit(),
-   * birnet_thread_handle_exit() does unref and final destruction
+   * rapicorn_thread_handle_exit() does unref and final destruction
    */
   return NULL;
 }
@@ -320,7 +320,7 @@ common_thread_start (RapicornThread    *thread,
    * so we'd just run out of stack at some point.
    */
   const gboolean joinable = FALSE;
-  gthread = g_thread_create_full (birnet_thread_exec, tfdx, 0, joinable, FALSE,
+  gthread = g_thread_create_full (rapicorn_thread_exec, tfdx, 0, joinable, FALSE,
                                   G_THREAD_PRIORITY_NORMAL, &gerror);
   if (gthread)
     {
@@ -456,7 +456,7 @@ common_thread_pid (RapicornThread *thread)
  * @return		thread name
  *
  * Return the name of @a thread as specified upon invokation of
- * birnet_thread_run() or assigned by birnet_thread_set_name().
+ * rapicorn_thread_run() or assigned by rapicorn_thread_set_name().
  */
 static const char*
 common_thread_name (RapicornThread *thread)
@@ -479,7 +479,7 @@ common_thread_set_name (const gchar *name)
 }
 
 static void
-birnet_thread_wakeup_L (RapicornThread *thread)
+rapicorn_thread_wakeup_L (RapicornThread *thread)
 {
   thread->wakeup_cond.signal();
   if (thread->wakeup_func)
@@ -493,10 +493,10 @@ birnet_thread_wakeup_L (RapicornThread *thread)
  *
  * Sleep for the amount of time given.
  * This function may get interrupted by wakeup requests from
- * birnet_thread_wakeup(), abort requests from birnet_thread_queue_abort()
+ * rapicorn_thread_wakeup(), abort requests from rapicorn_thread_queue_abort()
  * or other means. It returns whether the thread is supposed to
  * continue execution after waking up.
- * This function or alternatively birnet_thread_aborted() should be called
+ * This function or alternatively rapicorn_thread_aborted() should be called
  * periodically, to react to thread abortion requests and to update
  * internal accounting information.
  */
@@ -508,7 +508,7 @@ common_thread_sleep (RapicornInt64 max_useconds)
   
   global_thread_mutex.lock();
   
-  birnet_thread_accounting_L (self, FALSE);
+  rapicorn_thread_accounting_L (self, FALSE);
   
   if (!self->got_wakeup && max_useconds != 0)
     {
@@ -527,13 +527,13 @@ common_thread_sleep (RapicornInt64 max_useconds)
 }
 
 /**
- * @param wakeup_func	wakeup function to be called by birnet_thread_wakeup()
+ * @param wakeup_func	wakeup function to be called by rapicorn_thread_wakeup()
  * @param wakeup_data	data passed into wakeup_func()
  * @param destroy	destroy handler for @a wakeup_data
  *
  * Set the wakeup function for the current thread. This enables
- * the thread to be woken up through birnet_thread_wakeup() even
- * if not sleeping in birnet_thread_sleep(). The wakeup function
+ * the thread to be woken up through rapicorn_thread_wakeup() even
+ * if not sleeping in rapicorn_thread_sleep(). The wakeup function
  * must be thread-safe, so it may be called from any thread,
  * and it should be fast, because the global thread system lock
  * is held during its invokation.
@@ -560,7 +560,7 @@ common_thread_set_wakeup (RapicornThreadWakeup wakeup_func,
  * @param thread	thread to wake up
  *
  * Wake up a currently sleeping thread. In practice, this
- * function simply causes the next call to birnet_thread_sleep()
+ * function simply causes the next call to rapicorn_thread_sleep()
  * within @a thread to last for 0 seconds.
  */
 static void
@@ -570,7 +570,7 @@ common_thread_wakeup (RapicornThread *thread)
   
   global_thread_mutex.lock();
   g_assert (g_slist_find (global_thread_list, thread));
-  birnet_thread_wakeup_L (thread);
+  rapicorn_thread_wakeup_L (thread);
   global_thread_mutex.unlock();
 }
 
@@ -578,7 +578,7 @@ common_thread_wakeup (RapicornThread *thread)
  * @param stamp	stamp to trigger wakeup
  *
  * Wake the current thread up at the next invocation
- * of birnet_thread_emit_wakeups() with a wakup_stamp
+ * of rapicorn_thread_emit_wakeups() with a wakup_stamp
  * greater than @a stamp.
  */
 static void
@@ -603,7 +603,7 @@ common_thread_awake_after (RapicornUInt64 stamp)
  * @param wakeup_stamp	wakeup stamp to trigger wakeups
  *
  * Wake all currently sleeping threads up which queued
- * a wakeup through birnet_thread_awake_after() with a
+ * a wakeup through rapicorn_thread_awake_after() with a
  * stamp smaller than @a wakeup_stamp.
  */
 static void
@@ -621,7 +621,7 @@ common_thread_emit_wakeups (RapicornUInt64 wakeup_stamp)
 	{
 	  thread->awake_stamp = 0;
 	  thread_awaken_list = g_slist_remove (thread_awaken_list, thread);
-	  birnet_thread_wakeup_L (thread);
+	  rapicorn_thread_wakeup_L (thread);
 	}
     }
   global_thread_mutex.unlock();
@@ -633,7 +633,7 @@ common_thread_emit_wakeups (RapicornUInt64 wakeup_stamp)
  * Abort a currently running thread. This function does not
  * return until the thread in question terminated execution.
  * Note that the thread handle gets invalidated with invocation
- * of birnet_thread_abort() or birnet_thread_queue_abort().
+ * of rapicorn_thread_abort() or rapicorn_thread_queue_abort().
  */
 static void
 common_thread_abort (RapicornThread *thread)
@@ -644,7 +644,7 @@ common_thread_abort (RapicornThread *thread)
   global_thread_mutex.lock();
   g_assert (g_slist_find (global_thread_list, thread));
   thread->aborted = TRUE;
-  birnet_thread_wakeup_L (thread);
+  rapicorn_thread_wakeup_L (thread);
   while (g_slist_find (global_thread_list, thread))
     global_thread_cond.wait (global_thread_mutex);
   global_thread_mutex.unlock();
@@ -653,10 +653,10 @@ common_thread_abort (RapicornThread *thread)
 /**
  * @param thread	thread to abort
  *
- * Same as birnet_thread_abort(), but returns as soon as possible,
+ * Same as rapicorn_thread_abort(), but returns as soon as possible,
  * even if thread hasn't stopped execution yet.
  * Note that the thread handle gets invalidated with invocation
- * of birnet_thread_abort() or birnet_thread_queue_abort().
+ * of rapicorn_thread_abort() or rapicorn_thread_queue_abort().
  */
 static void
 common_thread_queue_abort (RapicornThread *thread)
@@ -666,7 +666,7 @@ common_thread_queue_abort (RapicornThread *thread)
   global_thread_mutex.lock();
   g_assert (g_slist_find (global_thread_list, thread));
   thread->aborted = TRUE;
-  birnet_thread_wakeup_L (thread);
+  rapicorn_thread_wakeup_L (thread);
   global_thread_mutex.unlock();
 }
 
@@ -675,7 +675,7 @@ common_thread_queue_abort (RapicornThread *thread)
  *
  * Find out if the currently running thread should be aborted (the thread is
  * supposed to return from its main thread function). This function or
- * alternatively birnet_thread_sleep() should be called periodically, to
+ * alternatively rapicorn_thread_sleep() should be called periodically, to
  * react to thread abortion requests and to update internal accounting
  * information.
  */
@@ -684,7 +684,7 @@ common_thread_aborted (void)
 {
   RapicornThread *self = ThreadTable.thread_self ();
   global_thread_mutex.lock();
-  birnet_thread_accounting_L (self, FALSE);
+  rapicorn_thread_accounting_L (self, FALSE);
   bool aborted = self->aborted != FALSE;
   global_thread_mutex.unlock();
   return aborted;
@@ -696,7 +696,7 @@ common_thread_aborted (void)
  *
  * Find out if the currently running thread should be aborted (the thread is
  * supposed to return from its main thread function). This function or
- * alternatively birnet_thread_sleep() should be called periodically, to
+ * alternatively rapicorn_thread_sleep() should be called periodically, to
  * react to thread abortion requests and to update internal accounting
  * information.
  */
@@ -884,8 +884,8 @@ thread_info_from_stat_L (RapicornThread *self,
 #define ACCOUNTING_MSECS        (500)
 
 static void
-birnet_thread_accounting_L (RapicornThread *self,
-                            bool          force_update)
+rapicorn_thread_accounting_L (RapicornThread *self,
+                              bool          force_update)
 {
   struct timeval stamp, ostamp = self->ac.stamp;
   guint diff = 0;
@@ -1053,8 +1053,8 @@ static gint       volatile guard_list_length = 0;
  * @return		a valid RapicornGuard
  *
  * Retrieve a new guard for node protection of the current thread.
- * The exact mechanism of protection is described in birnet_guard_protect().
- * Note that birnet_guard_snap_values() will walk the hazard pointer
+ * The exact mechanism of protection is described in rapicorn_guard_protect().
+ * Note that rapicorn_guard_snap_values() will walk the hazard pointer
  * array in ascending order, so that pointers may migrate from array
  * positions with a lower index to positions with a higher index while
  * retaining protection, according to condition C2 as described in
@@ -1063,9 +1063,9 @@ static gint       volatile guard_list_length = 0;
  * deregistered by this thread, registration takes constant time.
  */
 static volatile RapicornGuard*
-birnet_guard_register (guint n_hazards) RAPICORN_UNUSED;
+rapicorn_guard_register (guint n_hazards) RAPICORN_UNUSED;
 static volatile RapicornGuard*
-birnet_guard_register (guint n_hazards)
+rapicorn_guard_register (guint n_hazards)
 {
   RapicornThread *thread = ThreadTable.thread_self();
   volatile RapicornGuard *guard, *last = NULL;
@@ -1096,13 +1096,13 @@ birnet_guard_register (guint n_hazards)
 }
 
 /**
- * @param guard	a valid RapicornGuard as returned from birnet_guard_register()
+ * @param guard	a valid RapicornGuard as returned from rapicorn_guard_register()
  *
- * Deregister a guard previously registered by a call to birnet_guard_register().
+ * Deregister a guard previously registered by a call to rapicorn_guard_register().
  * Deregistration is performed in constant time.
  */
 static void RAPICORN_UNUSED
-birnet_guard_deregister (volatile RapicornGuard *guard)
+rapicorn_guard_deregister (volatile RapicornGuard *guard)
 {
   guard = (volatile RapicornGuard*) values2guard (guard);
   RapicornThread *thread = ThreadTable.thread_self();
@@ -1114,7 +1114,7 @@ birnet_guard_deregister (volatile RapicornGuard *guard)
 }
 
 static void
-birnet_guard_deregister_all (RapicornThread *thread)
+rapicorn_guard_deregister_all (RapicornThread *thread)
 {
   volatile RapicornGuard *guard;
   thread->guard_cache = NULL;
@@ -1128,7 +1128,7 @@ birnet_guard_deregister_all (RapicornThread *thread)
 }
 
 /**
- * @param guard	a valid RapicornGuard as returned from birnet_guard_register()
+ * @param guard	a valid RapicornGuard as returned from rapicorn_guard_register()
  * @param nth_hazard	index of the hazard pointer to use for protection
  * @param value	a hazardous pointer value or NULL to reset protection
  *
@@ -1136,8 +1136,8 @@ birnet_guard_deregister_all (RapicornThread *thread)
  * thread and against the ABA problem caused by premature reuse.
  * For this to work, threads destroying nodes of the type pointed to by
  * @a value need to suspend destruction as long as nodes are protected,
- * which can by checked by calls to birnet_guard_is_protected() or by
- * searching the values returned from birnet_guard_snap_values().
+ * which can by checked by calls to rapicorn_guard_is_protected() or by
+ * searching the values returned from rapicorn_guard_snap_values().
  * Descriptions of safe memory reclamation and ABA problem detection
  * via hazard pointers guards can be found in
  * http://www.research.ibm.com/people/m/michael/podc-2002.pdf,
@@ -1149,33 +1149,33 @@ birnet_guard_deregister_all (RapicornThread *thread)
  * @* 2) Verify that the hazard pointer points to a valid node
  * @* 3) Dereference the node only as long as it's protected by the hazard pointer.
  * @* For example:
- * @* 0: RapicornGuard *guard = birnet_guard_register (1);
+ * @* 0: RapicornGuard *guard = rapicorn_guard_register (1);
  * @* 1: peek_head_label:
  * @* 2: auto GSList *node = shared_list_head;
- * @* 3: birnet_guard_protect (guard, 0, node);
+ * @* 3: rapicorn_guard_protect (guard, 0, node);
  * @* 4: if (node != shared_list_head) goto peek_head_label;
  * @* 5: operate_on_protected_node (node);
- * @* 6: birnet_guard_deregister (guard);
+ * @* 6: rapicorn_guard_deregister (guard);
  */
 #if 0
 static inline
-void birnet_guard_protect (volatile RapicornGuard *guard,  /* defined in birnetthreads.h */
-                           guint     nth_hazard,
-                           gpointer  value);
+void rapicorn_guard_protect (volatile RapicornGuard *guard,  /* defined in rapicornthreads.h */
+                             guint     nth_hazard,
+                             gpointer  value);
 #endif
 
 /**
  * @return		an upper bound on the number of registered hazard pointers
  *
  * Retrieve an upper bound on the number of hazard pointer value slots
- * currently required for a successfull call to birnet_guard_snap_values().
- * Note that a subsequent call to birnet_guard_snap_values() may still fail
+ * currently required for a successfull call to rapicorn_guard_snap_values().
+ * Note that a subsequent call to rapicorn_guard_snap_values() may still fail
  * due to addtional guards being registerted meanwhile. In such a case
- * birnet_guard_n_snap_values() and birnet_guard_snap_values() can simply be
+ * rapicorn_guard_n_snap_values() and rapicorn_guard_snap_values() can simply be
  * called again.
  */
 static guint RAPICORN_UNUSED
-birnet_guard_n_snap_values (void)
+rapicorn_guard_n_snap_values (void)
 {
   return Atomic::int_get (&guard_list_length);
 }
@@ -1192,25 +1192,25 @@ birnet_guard_n_snap_values (void)
  * to by @a values.
  * The number of values filled in is returned in @a n_values.
  * FALSE is returned if not enough space was available to return
- * all non-NULL values. birnet_guard_n_snap_values() may be used to
+ * all non-NULL values. rapicorn_guard_n_snap_values() may be used to
  * retrieve the current upper bound on the number of registered
- * guards. Note that a successive call to birnet_guard_snap_values() with
+ * guards. Note that a successive call to rapicorn_guard_snap_values() with
  * the requested number of value slots supplied may still fail,
  * because additional guards may have been registered meanwhile.
- * In such a case birnet_guard_n_snap_values() and birnet_guard_snap_values()
+ * In such a case rapicorn_guard_n_snap_values() and rapicorn_guard_snap_values()
  * can simply be called again.
  * This funciton will always walk the hazard pointer arrays supplied
- * by birnet_guard_register() in ascending order, to allow pointer migration
+ * by rapicorn_guard_register() in ascending order, to allow pointer migration
  * from lower to higher array indieces while retaining protection.
  * The returned pointer values are unordered, so in order to perform
  * multiple pointer lookups, we recommend sorting the returned array
  * and then doing binary lookups. However if only a single pointer
- * is to be looked up, calling birnet_guard_is_protected() should be
+ * is to be looked up, calling rapicorn_guard_is_protected() should be
  * considered.
  */
 static bool RAPICORN_UNUSED
-birnet_guard_snap_values (guint          *n_values,
-                          gpointer       *values)
+rapicorn_guard_snap_values (guint          *n_values,
+                            gpointer       *values)
 {
   guint i, n = 0;
   volatile RapicornGuard *guard;
@@ -1236,18 +1236,18 @@ birnet_guard_snap_values (guint          *n_values,
  * @return		TRUE if a hazard pointer protecting @a value has been found
  *
  * Check whether @a value is protected by a hazard pointer guard.
- * If multiple pointer values are to be checked, use birnet_guard_snap_values()
+ * If multiple pointer values are to be checked, use rapicorn_guard_snap_values()
  * instead, as this function has O(n_hazard_pointers) time complexity.
  * If only one pointer value needs to be looked up though,
- * calling birnet_guard_is_protected() will provide a result faster than
- * calling birnet_guard_snap_values() and looking up the pointer in the
+ * calling rapicorn_guard_is_protected() will provide a result faster than
+ * calling rapicorn_guard_snap_values() and looking up the pointer in the
  * filled-in array.
  * Lookup within hazard pointer arrays will always occour in ascending
- * order to allow pointer migration as described in birnet_guard_snap_values()
- * and birnet_guard_register().
+ * order to allow pointer migration as described in rapicorn_guard_snap_values()
+ * and rapicorn_guard_register().
  */
 static bool RAPICORN_UNUSED
-birnet_guard_is_protected (gpointer value)
+rapicorn_guard_is_protected (gpointer value)
 {
   if (value)
     {
@@ -1564,7 +1564,7 @@ static RapicornThreadTable fallback_thread_table = {
 static RapicornThreadTable*
 get_fallback_thread_table (void)
 {
-  fallback_thread_table_key = g_private_new ((GDestroyNotify) birnet_thread_handle_exit);
+  fallback_thread_table_key = g_private_new ((GDestroyNotify) rapicorn_thread_handle_exit);
   return &fallback_thread_table;
 }
 
@@ -1579,7 +1579,7 @@ pth_thread_set_handle (RapicornThread *handle)
   RapicornThread *tmp = (RapicornThread*) pthread_getspecific (pth_thread_table_key);
   pthread_setspecific (pth_thread_table_key, handle);
   if (tmp)
-    birnet_thread_handle_exit (tmp);
+    rapicorn_thread_handle_exit (tmp);
 }
 static RapicornThread*
 pth_thread_get_handle (void)
@@ -1702,7 +1702,7 @@ static RapicornThreadTable pth_thread_table = {
 static RapicornThreadTable*
 get_pth_thread_table (void)
 {
-  if (pthread_key_create (&pth_thread_table_key, (void(*)(void*)) birnet_thread_handle_exit) != 0)
+  if (pthread_key_create (&pth_thread_table_key, (void(*)(void*)) rapicorn_thread_handle_exit) != 0)
     {
       char buffer[1024];
       snprintf (buffer, 1024, "RapicornThread[%u]: failed to create pthread key, falling back to GLib threads.\n", getpid());
@@ -1740,7 +1740,7 @@ RapicornThreadTable ThreadTable = {
 };
 
 void
-_birnet_init_threads (void)
+_rapicorn_init_threads (void)
 {
   RapicornThreadTable *table = get_pth_thread_table ();
   if (!table)

@@ -35,7 +35,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  birnet_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, &argv);
   shade_rect_test (argc > 1 ? Rapicorn::string_to_uint (argv[1]) : 1);
   return 0;
 }

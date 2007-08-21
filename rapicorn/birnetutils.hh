@@ -14,8 +14,8 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef __BIRNET_UTILS_XX_HH__
-#define __BIRNET_UTILS_XX_HH__
+#ifndef __RAPICORN_UTILS_XX_HH__
+#define __RAPICORN_UTILS_XX_HH__
 
 #include <rapicorn/birnetcdefs.h>
 #include <string>
@@ -74,40 +74,40 @@ public:
 /* --- implement assertion macros --- */
 #ifndef RAPICORN__RUNTIME_PROBLEM
 #define RAPICORN__RUNTIME_PROBLEM(ErrorWarningReturnAssertNotreach,domain,file,line,funcname,...) \
-        ::Rapicorn::birnet_runtime_problem (ErrorWarningReturnAssertNotreach, domain, file, line, funcname, __VA_ARGS__)
+        ::Rapicorn::rapicorn_runtime_problem (ErrorWarningReturnAssertNotreach, domain, file, line, funcname, __VA_ARGS__)
 #endif
-void birnet_runtime_problem  (char        ewran_tag,
-                              const char *domain,
-                              const char *file,
-                              int         line,
-                              const char *funcname,
-                              const char *msgformat,
-                              ...) RAPICORN_PRINTF (6, 7);
-void birnet_runtime_problemv (char        ewran_tag,
-                              const char *domain,
-                              const char *file,
-                              int         line,
-                              const char *funcname,
-                              const char *msgformat,
-                              va_list     msgargs);
+void rapicorn_runtime_problem  (char        ewran_tag,
+                                const char *domain,
+                                const char *file,
+                                int         line,
+                                const char *funcname,
+                                const char *msgformat,
+                                ...) RAPICORN_PRINTF (6, 7);
+void rapicorn_runtime_problemv (char        ewran_tag,
+                                const char *domain,
+                                const char *file,
+                                int         line,
+                                const char *funcname,
+                                const char *msgformat,
+                                va_list     msgargs);
 
 /* --- private copy constructor and assignment operator --- */
 #define RAPICORN_PRIVATE_CLASS_COPY(Class)        private: Class (const Class&); Class& operator= (const Class&);
-#ifdef  _BIRNET_SOURCE_EXTENSIONS
+#ifdef  _RAPICORN_SOURCE_EXTENSIONS
 #define PRIVATE_CLASS_COPY                      RAPICORN_PRIVATE_CLASS_COPY
-#endif  /* _BIRNET_SOURCE_EXTENSIONS */
+#endif  /* _RAPICORN_SOURCE_EXTENSIONS */
 
 /* --- initialization --- */
 typedef RapicornInitValue    InitValue;
 typedef RapicornInitSettings InitSettings;
-InitSettings init_settings     ();
-void         birnet_init       (int        *argcp,
-                                char     ***argvp,
-                                const char *app_name,
-                                InitValue   ivalues[] = NULL);
-bool         init_value_bool   (InitValue  *value);
-double       init_value_double (InitValue  *value);
-int64        init_value_int    (InitValue  *value);
+InitSettings init_settings      ();
+void         rapicorn_init_core (int        *argcp,
+                                 char     ***argvp,
+                                 const char *app_name,
+                                 InitValue   ivalues[] = NULL);
+bool         init_value_bool    (InitValue  *value);
+double       init_value_double  (InitValue  *value);
+int64        init_value_int     (InitValue  *value);
 
 /* --- initialization hooks --- */
 class InitHook {
@@ -609,9 +609,9 @@ public: /* generic data API */
 };
 
 /* --- implementation --- */
-void _birnet_init_threads (void);
+void _rapicorn_init_threads (void);
 
 } // Rapicorn
 
-#endif /* __BIRNET_UTILS_XX_HH__ */
+#endif /* __RAPICORN_UTILS_XX_HH__ */
 /* vim:set ts=8 sts=2 sw=2: */

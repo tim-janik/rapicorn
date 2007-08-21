@@ -210,7 +210,7 @@ main (int   argc,
     { "stand-alone", "true" },
     { NULL }
   };
-  // birnet_init (&argc, &argv, NULL, ivalues);
+  // rapicorn_init_core (&argc, &argv, NULL, ivalues);
 
   for (int i = 1; i < argc; i++)
     {

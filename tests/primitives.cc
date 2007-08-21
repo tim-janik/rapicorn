@@ -547,7 +547,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  birnet_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, &argv);
   /* initialize rapicorn */
   Application::init_with_x11 (&argc, &argv, "PrimitivesTest");
   

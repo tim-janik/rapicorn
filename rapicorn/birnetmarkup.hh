@@ -14,8 +14,8 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef __BIRNET_MARKUP_HH__
-#define __BIRNET_MARKUP_HH__
+#ifndef __RAPICORN_MARKUP_HH__
+#define __RAPICORN_MARKUP_HH__
 
 #include <rapicorn/birnetutils.hh>
 
@@ -106,4 +106,4 @@ private:
 
 } // Rapicorn
 
-#endif  /* __BIRNET_MARKUP_HH__ */
+#endif  /* __RAPICORN_MARKUP_HH__ */

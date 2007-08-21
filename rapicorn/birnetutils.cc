@@ -38,12 +38,12 @@ namespace Rapicorn {
 
 static Msg::CustomType debug_browser ("browser", Msg::DEBUG);
 
-static const InitSettings *birnet_init_settings = NULL;
+static const InitSettings *rapicorn_init_settings = NULL;
 
 InitSettings
 init_settings ()
 {
-  return *birnet_init_settings;
+  return *rapicorn_init_settings;
 }
 
 /* --- InitHooks --- */
@@ -54,7 +54,7 @@ InitHook::InitHook (InitHookFunc _func,
                     int          _priority) :
   next (NULL), priority (_priority), hook (_func)
 {
-  RAPICORN_ASSERT (birnet_init_settings == NULL);
+  RAPICORN_ASSERT (rapicorn_init_settings == NULL);
   /* the above assertion guarantees single-threadedness */
   next = init_hooks;
   init_hooks = this;
@@ -87,9 +87,9 @@ static InitSettings global_init_settings = {
 };
 
 static void
-birnet_parse_settings_and_args (InitValue *value,
-                                int       *argc_p,
-                                char    ***argv_p)
+rapicorn_parse_settings_and_args (InitValue *value,
+                                  int       *argc_p,
+                                  char    ***argv_p)
 {
   bool parse_test_args = false;
   /* apply settings */
@@ -104,7 +104,7 @@ birnet_parse_settings_and_args (InitValue *value,
           global_init_settings.test_slow = init_value_bool (value);
         else if (strcmp (value->value_name, "test-perf") == 0)
           global_init_settings.test_perf = init_value_bool (value);
-        else if (strcmp (value->value_name, "birnet-test-parse-args") == 0)
+        else if (strcmp (value->value_name, "rapicorn-test-parse-args") == 0)
           parse_test_args = init_value_bool (value);
         value++;
       }
@@ -152,18 +152,18 @@ birnet_parse_settings_and_args (InitValue *value,
 }
 
 void
-birnet_init (int        *argcp,
-             char     ***argvp,
-             const char *app_name,
-             InitValue   ivalues[])
+rapicorn_init_core (int        *argcp,
+                    char     ***argvp,
+                    const char *app_name,
+                    InitValue   ivalues[])
 {
   /* mandatory initial initialization */
   if (!g_threads_got_initialized)
     g_thread_init (NULL);
-
+  
   /* update program/application name upon repeated initilization */
   char *prg_name = argcp && *argcp ? g_path_get_basename ((*argvp)[0]) : NULL;
-  if (birnet_init_settings != NULL)
+  if (rapicorn_init_settings != NULL)
     {
       if (prg_name && !g_get_prgname ())
         g_set_prgname (prg_name);
@@ -174,8 +174,8 @@ birnet_init (int        *argcp,
     }
 
   /* normal initialization */
-  birnet_init_settings = &global_init_settings;
-  birnet_parse_settings_and_args (ivalues, argcp, argvp);
+  rapicorn_init_settings = &global_init_settings;
+  rapicorn_parse_settings_and_args (ivalues, argcp, argvp);
   if (prg_name)
     g_set_prgname (prg_name);
   g_free (prg_name);
@@ -191,8 +191,8 @@ birnet_init (int        *argcp,
   }
 
   /* initialize sub systems */
-  _birnet_init_cpuinfo();
-  _birnet_init_threads();
+  _rapicorn_init_cpuinfo();
+  _rapicorn_init_threads();
   if (run_init_hooks)
     run_init_hooks();
 }
@@ -418,28 +418,28 @@ stderr_print (bool        bail_out,
 }
 
 void
-birnet_runtime_problem (char        ewran_tag,
-                        const char *domain,
-                        const char *file,
-                        int         line,
-                        const char *funcname,
-                        const char *msgformat,
-                        ...)
+rapicorn_runtime_problem (char        ewran_tag,
+                          const char *domain,
+                          const char *file,
+                          int         line,
+                          const char *funcname,
+                          const char *msgformat,
+                          ...)
 {
   va_list args;
   va_start (args, msgformat);
-  birnet_runtime_problemv (ewran_tag, domain, file, line, funcname, msgformat, args);
+  rapicorn_runtime_problemv (ewran_tag, domain, file, line, funcname, msgformat, args);
   va_end (args);
 }
 
 void
-birnet_runtime_problemv (char        ewran_tag,
-                         const char *domain,
-                         const char *file,
-                         int         line,
-                         const char *funcname,
-                         const char *msgformat,
-                         va_list     args)
+rapicorn_runtime_problemv (char        ewran_tag,
+                           const char *domain,
+                           const char *file,
+                           int         line,
+                           const char *funcname,
+                           const char *msgformat,
+                           va_list     args)
 {
   const bool noreturn_case = ewran_tag == 'E' || ewran_tag == 'A' || ewran_tag == 'N';
   char *msg = NULL;
@@ -1447,7 +1447,7 @@ cleanup_exec_Lm (Cleanup *cleanup)
 }
 
 /**
- * Force all cleanup handlers (see birnet_cleanup_add()) to be immediately
+ * Force all cleanup handlers (see rapicorn_cleanup_add()) to be immediately
  * executed. This function should be called at program exit to execute
  * cleanup handlers which have timeouts that have not yet expired.
  */

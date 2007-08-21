@@ -44,9 +44,9 @@ data_list_test_strings (DataListContainer &r)
   static StringKey strkey;
   r.set_data (&strkey, String ("otto"));
   TASSERT (String ("otto") == r.get_data (&strkey).c_str());
-  String dat = r.swap_data (&strkey, String ("BIRNET"));
+  String dat = r.swap_data (&strkey, String ("RAPICORN"));
   TASSERT (String ("otto") == dat);
-  TASSERT (String ("BIRNET") == r.get_data (&strkey).c_str());
+  TASSERT (String ("RAPICORN") == r.get_data (&strkey).c_str());
   r.delete_data (&strkey);
   TASSERT (String ("") == r.get_data (&strkey).c_str()); // fallback()
 }
@@ -120,7 +120,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  birnet_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, &argv);
   data_list_test();
   return 0;
 }

@@ -14,8 +14,8 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef __BIRNET_CDEFS_H__
-#define __BIRNET_CDEFS_H__
+#ifndef __RAPICORN_CDEFS_H__
+#define __RAPICORN_CDEFS_H__
 
 #include <rapicorn/rapicornconfig.h>	/* _GNU_SOURCE */
 #include <stdbool.h>
@@ -75,22 +75,22 @@ RAPICORN_EXTERN_C_BEGIN();
 #endif
 
 /* --- likelyness hinting --- */
-#define	RAPICORN__BOOL(expr)		__extension__ ({ bool _birnet__bool; if (expr) _birnet__bool = 1; else _birnet__bool = 0; _birnet__bool; })
+#define	RAPICORN__BOOL(expr)		__extension__ ({ bool _rapicorn__bool; if (expr) _rapicorn__bool = 1; else _rapicorn__bool = 0; _rapicorn__bool; })
 #define	RAPICORN_ISLIKELY(expr)		__builtin_expect (RAPICORN__BOOL (expr), 1)
 #define	RAPICORN_UNLIKELY(expr)		__builtin_expect (RAPICORN__BOOL (expr), 0)
 #define	RAPICORN_LIKELY			RAPICORN_ISLIKELY
 
 /* --- assertions and runtime errors --- */
-#define RAPICORN_RETURN_IF_FAIL(e)	do { if (RAPICORN_ISLIKELY (e)) break; RAPICORN__RUNTIME_PROBLEM ('R', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, "%s", #e); return; } while (0)
-#define RAPICORN_RETURN_VAL_IF_FAIL(e,v)	do { if (RAPICORN_ISLIKELY (e)) break; RAPICORN__RUNTIME_PROBLEM ('R', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, "%s", #e); return v; } while (0)
-#define RAPICORN_ASSERT(e)		do { if (RAPICORN_ISLIKELY (e)) break; RAPICORN__RUNTIME_PROBLEM ('A', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, "%s", #e); while (1) *(void*volatile*)0; } while (0)
-#define RAPICORN_ASSERT_NOT_REACHED()	do { RAPICORN__RUNTIME_PROBLEM ('N', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, NULL); RAPICORN_ABORT_NORETURN(); } while (0)
-#define RAPICORN_WARNING(...)		do { RAPICORN__RUNTIME_PROBLEM ('W', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, __VA_ARGS__); } while (0)
-#define RAPICORN_ERROR(...)		do { RAPICORN__RUNTIME_PROBLEM ('E', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, __VA_ARGS__); RAPICORN_ABORT_NORETURN(); } while (0)
-#define RAPICORN_ABORT_NORETURN()		birnet_abort_noreturn()
+#define RAPICORN_RETURN_IF_FAIL(e)	 do { if (RAPICORN_ISLIKELY (e)) break; RAPICORN__RUNTIME_PROBLEM ('R', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, "%s", #e); return; } while (0)
+#define RAPICORN_RETURN_VAL_IF_FAIL(e,v) do { if (RAPICORN_ISLIKELY (e)) break; RAPICORN__RUNTIME_PROBLEM ('R', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, "%s", #e); return v; } while (0)
+#define RAPICORN_ASSERT(e)		 do { if (RAPICORN_ISLIKELY (e)) break; RAPICORN__RUNTIME_PROBLEM ('A', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, "%s", #e); while (1) *(void*volatile*)0; } while (0)
+#define RAPICORN_ASSERT_NOT_REACHED()	 do { RAPICORN__RUNTIME_PROBLEM ('N', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, NULL); RAPICORN_ABORT_NORETURN(); } while (0)
+#define RAPICORN_WARNING(...)		 do { RAPICORN__RUNTIME_PROBLEM ('W', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, __VA_ARGS__); } while (0)
+#define RAPICORN_ERROR(...)		 do { RAPICORN__RUNTIME_PROBLEM ('E', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, __VA_ARGS__); RAPICORN_ABORT_NORETURN(); } while (0)
+#define RAPICORN_ABORT_NORETURN()	 rapicorn_abort_noreturn()
 
 /* --- convenient aliases --- */
-#ifdef  _BIRNET_SOURCE_EXTENSIONS
+#ifdef  _RAPICORN_SOURCE_EXTENSIONS
 #define	ISLIKELY		RAPICORN_ISLIKELY
 #define	UNLIKELY		RAPICORN_UNLIKELY
 #define	LIKELY			RAPICORN_LIKELY
@@ -99,7 +99,7 @@ RAPICORN_EXTERN_C_BEGIN();
 #define	assert_not_reached	RAPICORN_ASSERT_NOT_REACHED
 #undef  assert
 #define	assert			RAPICORN_ASSERT
-#endif /* _BIRNET_SOURCE_EXTENSIONS */
+#endif /* _RAPICORN_SOURCE_EXTENSIONS */
 
 /* --- preprocessor pasting --- */
 #define RAPICORN_CPP_PASTE4i(a,b,c,d)             a ## b ## c ## d  /* twofold indirection is required to expand macros like __LINE__ */
@@ -361,8 +361,8 @@ typedef struct {
 /* --- implementation bits --- */
 /* the above macros rely on a problem handler macro: */
 // RAPICORN__RUNTIME_PROBLEM(ErrorWarningReturnAssertNotreach,domain,file,line,funcname,exprformat,...); // noreturn cases: 'E', 'A', 'N'
-extern inline void birnet_abort_noreturn (void) RAPICORN_NORETURN;
-extern inline void birnet_abort_noreturn (void) { while (1) *(void*volatile*)0; }
+extern inline void rapicorn_abort_noreturn (void) RAPICORN_NORETURN;
+extern inline void rapicorn_abort_noreturn (void) { while (1) *(void*volatile*)0; }
 #if RAPICORN_MEMORY_BARRIER_NEEDED
 #define RAPICORN_MEMORY_BARRIER_RO(tht)   do { int _b_dummy; tht.atomic_int_get (&_b_dummy); } while (0)
 #define RAPICORN_MEMORY_BARRIER_WO(tht)   do { int _b_dummy; tht.atomic_int_set (&_b_dummy, 0); } while (0)
@@ -374,6 +374,6 @@ extern inline void birnet_abort_noreturn (void) { while (1) *(void*volatile*)0; 
 #endif         
 RAPICORN_EXTERN_C_END();
 
-#endif /* __BIRNET_CDEFS_H__ */
+#endif /* __RAPICORN_CDEFS_H__ */
 
 /* vim:set ts=8 sts=2 sw=2: */

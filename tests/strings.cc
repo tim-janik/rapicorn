@@ -257,7 +257,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  birnet_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, &argv);
 
   uuid_tests();
   random_unichar_test();

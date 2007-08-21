@@ -63,7 +63,7 @@ struct TestRapicornMarkupParser : MarkupParser {
 };
 
 static void
-birnet_markup_parser_test()
+rapicorn_markup_parser_test()
 {
   TSTART ("RapicornMarkupParser");
   TestRapicornMarkupParser *tmp = new TestRapicornMarkupParser ("-");
@@ -150,8 +150,8 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  birnet_init_test (&argc, &argv);
-  birnet_markup_parser_test();
+  rapicorn_init_test (&argc, &argv);
+  rapicorn_markup_parser_test();
   /* initialize rapicorn */
   Application::init_with_x11 (&argc, &argv, "MarkupTest"); // FIXME: should work offscreen
   text_markup_test();

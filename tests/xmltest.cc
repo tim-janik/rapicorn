@@ -110,7 +110,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  birnet_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, &argv);
   xml_tree_test();
   return 0;
 }

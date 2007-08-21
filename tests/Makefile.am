@@ -5,7 +5,7 @@
 include $(top_srcdir)/Makefile.decl
 
 INCLUDES += -I$(top_srcdir)
-DEFS     += -DBIRNET_LOG_DOMAIN='"$(basename $(@F))"' -DPARANOID $(RAPICORN_CFLAGS)
+DEFS     += -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"' -DPARANOID $(RAPICORN_CFLAGS)
 XML_FILES =
 
 # test programs:

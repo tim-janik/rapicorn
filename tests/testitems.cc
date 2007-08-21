@@ -134,7 +134,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  birnet_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, &argv);
 
   for (int i = 0; i < argc; i++)
     if (String (argv[i]) == "--non-fatal")

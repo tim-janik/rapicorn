@@ -157,7 +157,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  birnet_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, &argv);
 
   test_cpu_info();
   test_paths();

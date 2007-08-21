@@ -14,8 +14,8 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef __BIRNET_DEBUG_TOOLS_HH__
-#define __BIRNET_DEBUG_TOOLS_HH__
+#ifndef __RAPICORN_DEBUG_TOOLS_HH__
+#define __RAPICORN_DEBUG_TOOLS_HH__
 
 #include <rapicorn/birnetutils.hh>
 #include <stdarg.h>
@@ -46,5 +46,5 @@ DebugChannel::printf (const char *format,
 
 } // Rapicorn
 
-#endif /* __BIRNET_DEBUG_TOOLS_HH__ */
+#endif /* __RAPICORN_DEBUG_TOOLS_HH__ */
 /* vim:set ts=8 sts=2 sw=2: */

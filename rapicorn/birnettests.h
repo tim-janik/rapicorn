@@ -146,9 +146,9 @@ static const char*
 treport_cpu_name (const char *new_info)
 {
   if (new_info)
-    g_dataset_set_data_full ((void*) g_dataset_destroy, "birnet-treport-custom-info", g_strdup (new_info), g_free);
+    g_dataset_set_data_full ((void*) g_dataset_destroy, "rapicorn-treport-custom-info", g_strdup (new_info), g_free);
   /* the implementation of this function is a pretty bad hack around not exporting C symbols... */
-  return (const char*) g_dataset_get_data ((void*) g_dataset_destroy, "birnet-treport-custom-info");
+  return (const char*) g_dataset_get_data ((void*) g_dataset_destroy, "rapicorn-treport-custom-info");
 }
 static void	/* smaller amount is better */
 treport_generic (const char *perf_name,
@@ -183,13 +183,13 @@ tabort_handler (bool   set_values,
   /* the implementation of this function is a pretty bad hack around not exporting C symbols... */
   if (set_values)
     {
-      g_dataset_set_data_full ((void*) g_dataset_destroy, "birnet-tabort-func", *func_loc, NULL);
-      g_dataset_set_data_full ((void*) g_dataset_destroy, "birnet-tabort-data", *data_loc, NULL);
+      g_dataset_set_data_full ((void*) g_dataset_destroy, "rapicorn-tabort-func", *func_loc, NULL);
+      g_dataset_set_data_full ((void*) g_dataset_destroy, "rapicorn-tabort-data", *data_loc, NULL);
     }
   else
     {
-      *func_loc = g_dataset_get_data ((void*) g_dataset_destroy, "birnet-tabort-func");
-      *data_loc = g_dataset_get_data ((void*) g_dataset_destroy, "birnet-tabort-data");
+      *func_loc = g_dataset_get_data ((void*) g_dataset_destroy, "rapicorn-tabort-func");
+      *data_loc = g_dataset_get_data ((void*) g_dataset_destroy, "rapicorn-tabort-data");
     }
 }
 
@@ -281,7 +281,7 @@ tabort_handler (bool   set_values,
     g_timer_start (calibration_timer);                                                  \
   GTimer *timer = g_timer_new();                                                        \
   guint   dups = 1;                                                                     \
-  /* birnet_thread_yield(); * on some OSes, this can stabelize the loop benches */	\
+  /* rapicorn_thread_yield(); * on some OSes, this can stabelize the loop benches */	\
   do                                                                                    \
     {                                                                                   \
       guint i, j;                                                                       \
@@ -321,7 +321,7 @@ tabort_handler (bool   set_values,
 #ifdef  __cplusplus
 namespace Rapicorn {
 static inline void
-birnet_init_test (int    *argc,
+rapicorn_init_test (int    *argc,
 		  char ***argv)
 {
   /* check that NULL is defined to __null in C++ on 64bit */
@@ -329,10 +329,10 @@ birnet_init_test (int    *argc,
   /* normal initialization */
   RapicornInitValue ivalues[] = {
     { "stand-alone", "true" },
-    { "birnet-test-parse-args", "true" },
+    { "rapicorn-test-parse-args", "true" },
     { NULL }
   };
-  birnet_init (argc, argv, NULL, ivalues);
+  rapicorn_init_core (argc, argv, NULL, ivalues);
   unsigned int flags = g_log_set_always_fatal ((GLogLevelFlags) G_LOG_FATAL_MASK);
   g_log_set_always_fatal ((GLogLevelFlags) (flags | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
   CPUInfo ci = cpu_info();

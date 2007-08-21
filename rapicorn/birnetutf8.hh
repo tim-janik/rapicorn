@@ -14,8 +14,8 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef __BIRNET_UTF8_HH__
-#define __BIRNET_UTF8_HH__
+#ifndef __RAPICORN_UTF8_HH__
+#define __RAPICORN_UTF8_HH__
 
 #include <rapicorn/birnetutils.hh>
 
@@ -206,5 +206,5 @@ utf8_aligned (const char *c)
 
 } // Rapicorn
 
-#endif /* __BIRNET_UTF8_HH__ */
+#endif /* __RAPICORN_UTF8_HH__ */
 /* vim:set ts=8 sts=2 sw=2: */

@@ -14,8 +14,8 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef __BIRNET_H__
-#define __BIRNET_H__
+#ifndef __RAPICORN_H__
+#define __RAPICORN_H__
 
 #include <rapicorn/rapicornconfig.h>
 #include <rapicorn/birnetcpu.hh>
@@ -29,5 +29,5 @@
 #include <rapicorn/birnetthread.hh>
 #include <rapicorn/birnetxml.hh>
 
-#endif /* __BIRNET_H__ */
+#endif /* __RAPICORN_H__ */
 /* vim:set ts=8 sts=2 sw=2: */

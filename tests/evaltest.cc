@@ -403,7 +403,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  birnet_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, &argv);
 
   /* initialize rapicorn */
   rapicorn_init_with_gtk_thread (&argc, &argv, NULL); // FIXME: should work without Gtk+

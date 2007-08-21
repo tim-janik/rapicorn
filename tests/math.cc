@@ -168,7 +168,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  birnet_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, &argv);
 
   if (init_settings().test_quick)
     test_dtoi();

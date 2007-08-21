@@ -228,7 +228,7 @@ cpu_info (void)
 }
 
 void
-_birnet_init_cpuinfo (void)
+_rapicorn_init_cpuinfo (void)
 {
   static char vendor_buffer[13];
   CPUInfo lci;

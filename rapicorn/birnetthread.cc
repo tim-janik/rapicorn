@@ -17,7 +17,7 @@
 #include "birnetthread.hh"
 #include <list>
 
-#define birnet_threads_initialized()    ISLIKELY ((void*) ThreadTable.mutex_lock != (void*) ThreadTable.mutex_unlock)
+#define rapicorn_threads_initialized()    ISLIKELY ((void*) ThreadTable.mutex_lock != (void*) ThreadTable.mutex_unlock)
 
 namespace Rapicorn {
 
@@ -211,7 +211,7 @@ Thread::Self::name (const String &name)
  * @param max_useconds  maximum amount of micro seconds to sleep (-1 for infinite time)
  * @param returns       TRUE while the thread should continue execution
  *
- * This is a wrapper for birnet_thread_sleep().
+ * This is a wrapper for rapicorn_thread_sleep().
  */
 bool
 Thread::Self::sleep (long max_useconds)
@@ -268,7 +268,7 @@ static const RapicornMutex zero_mutex = { 0, };
 Mutex::Mutex () :
   mutex (zero_mutex)
 {
-  if (birnet_threads_initialized())
+  if (rapicorn_threads_initialized())
     ThreadTable.mutex_init (&mutex);
   else
     ThreadTable.mutex_chain4init (&mutex);
@@ -276,7 +276,7 @@ Mutex::Mutex () :
 
 Mutex::~Mutex ()
 {
-  if (birnet_threads_initialized())
+  if (rapicorn_threads_initialized())
     ThreadTable.mutex_destroy (&mutex);
   else
     ThreadTable.mutex_unchain (&mutex);
@@ -287,7 +287,7 @@ static const RapicornRecMutex zero_rec_mutex = { { 0, }, };
 RecMutex::RecMutex () :
   rmutex (zero_rec_mutex)
 {
-  if (birnet_threads_initialized())
+  if (rapicorn_threads_initialized())
     ThreadTable.rec_mutex_init (&rmutex);
   else
     ThreadTable.rec_mutex_chain4init (&rmutex);
@@ -295,7 +295,7 @@ RecMutex::RecMutex () :
 
 RecMutex::~RecMutex ()
 {
-  if (birnet_threads_initialized())
+  if (rapicorn_threads_initialized())
     ThreadTable.rec_mutex_destroy (&rmutex);
   else
     ThreadTable.rec_mutex_unchain (&rmutex);
@@ -306,7 +306,7 @@ static const RapicornCond zero_cond = { 0, };
 Cond::Cond () :
   cond (zero_cond)
 {
-  if (birnet_threads_initialized())
+  if (rapicorn_threads_initialized())
     ThreadTable.cond_init (&cond);
   else
     ThreadTable.cond_chain4init (&cond);
@@ -314,7 +314,7 @@ Cond::Cond () :
 
 Cond::~Cond ()
 {
-  if (birnet_threads_initialized())
+  if (rapicorn_threads_initialized())
     ThreadTable.cond_destroy (&cond);
   else
     ThreadTable.cond_unchain (&cond);
@@ -325,7 +325,7 @@ OwnedMutex::OwnedMutex () :
   m_owner (NULL),
   m_count (0)
 {
-  if (birnet_threads_initialized())
+  if (rapicorn_threads_initialized())
     ThreadTable.rec_mutex_init (&m_rec_mutex);
   else
     ThreadTable.rec_mutex_chain4init (&m_rec_mutex);
@@ -335,7 +335,7 @@ OwnedMutex::~OwnedMutex()
 {
   RAPICORN_ASSERT (m_owner == NULL);
   RAPICORN_ASSERT (m_count == 0);
-  if (birnet_threads_initialized())
+  if (rapicorn_threads_initialized())
     ThreadTable.rec_mutex_destroy (&m_rec_mutex);
   else
     ThreadTable.rec_mutex_unchain (&m_rec_mutex);

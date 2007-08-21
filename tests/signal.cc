@@ -335,7 +335,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  birnet_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, &argv);
   test_slot_trampoline ();
 #if 0
   SignalTest signal_test;

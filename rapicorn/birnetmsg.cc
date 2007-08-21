@@ -154,8 +154,8 @@ Msg::init_standard_types()
  * @a default_ouput, this corresponds to the first two message types which
  * are unconfigrable and always have their output disabled or enabled respectively.
  * As an exception to the rest of the message API, this function may be
- * called before birnet_init(). However note, that MT-safety is only ensured
- * for calls occouring after birnet_init().
+ * called before rapicorn_init_core(). However note, that MT-safety is only ensured
+ * for calls occouring after rapicorn_init_core().
  * This function is MT-safe and may be called from any thread.
  */
 Msg::Type
