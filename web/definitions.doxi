@@ -16,6 +16,7 @@
 @item	@uri{basics.html,	Basics}
 @item	@uri{roadmap.html,	Roadmap}
 @item	@uri{techbits.html,	Tech Bits}
+@item	@uri{versioning.html,	Versioning}
 @item	@uri{cmpgtk.html,	Observing Gtk+}
 @done
 @* @doxer_fontsize{+1,@*} @*

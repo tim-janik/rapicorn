@@ -1,11 +1,12 @@
 @doxer_dnl      # emacs: -*- mode: texinfo; texinfo-open-quote: "\""; texinfo-close-quote: "\""; -*-
-@doxer_set{title}	Rapicorn - Rapicorn Technology Bits
+@doxer_set{title}	Rapicorn - Technology Bits
 @include "definitions.doxi"
 
 @heading Rapicorn Technology Bits
 
 Rapicorn is supposed to provide a suitable playground for experiments
-in consolidating the programming and design interfaces of existing GUI
+in consolidating the programming and design interfaces of existing
+@uri{http://en.wikipedia.org/wiki/Graphical_user_interface, GUI}
 toolkits, and for exploring new GUI ideas, including also possible
 evolutionary failures. :-)
 
@@ -13,11 +14,12 @@ Lots of design decisions or techniques that Rapicorn employs can be found
 and have been pioneered in other toolkits, but it is also intentionally
 distinct in selected areas.
 In particular, Rapicorn tries to simplify structures and automate developer
-tasks wherever possible.
-Convenience in development and UI usage is a paramount design goal.
+tasks wherever possible. Convenience in development and
+@uri{http://en.wikipedia.org/wiki/User_interface, UI} usage is a paramount design goal.
 
-At the same time, Rapicorn attempts to incorporate all significant usability
-aspects for which open treatment is available.
+At the same time, Rapicorn attempts to incorporate all significant
+@uri{http://en.wikipedia.org/wiki/Usability, usability aspects}
+for which open treatment is available.
 For a first summary of Usability guidelines and collections of further readings,
 see @uri{http://beast.gtk.org/wiki:UsabilityGuidelines}.
 
@@ -27,9 +29,10 @@ higher than micro optimizations or
 @uri{http://en.wikipedia.org/wiki/Creeping_featurism, creeping featuritis}.
 Also, programming interface compatibility is prioritized much lower than
 in comparable other library projects. To compensate for possibly frequent
-programming interface changes, the actual API is designed to be as small
-as possible, ideally just consisting of application data models and XML
-definitions to specify gadget packing and gadget properties.
+programming interface changes, Rapicorn employs a
+@uri{versioning.html, specially tailored versioning scheme},
+and the actual API is designed to be as small as possible, ideally just consisting of
+application data models and XML definitions to specify gadget packing and gadget properties.
 
 The following list focuses on some of the selected areas where Rapicorn
 intentionally differs from other toolkits:

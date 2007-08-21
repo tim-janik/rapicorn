@@ -1,0 +1,36 @@
+@doxer_dnl      # emacs: -*- mode: texinfo; texinfo-open-quote: "\""; texinfo-close-quote: "\""; -*-
+@doxer_set{title}       Rapicorn - Versioning
+@include "definitions.doxi"
+
+@heading Rapicorn Versioning
+
+Rapicorn is an experimental @uri{http://en.wikipedia.org/wiki/Graphical_user_interface, graphical user interface} toolkit.
+That is, a project to implement and test out new @uri{http://en.wikipedia.org/wiki/Graphical_user_interface, GUI} ideas.
+Technically, this means making
+@uri{http://en.wikipedia.org/wiki/Application_programming_interface, API} changes,
+@uri{http://en.wikipedia.org/wiki/Code_refactoring, refactoring the code} or
+@uri{http://en.wikipedia.org/wiki/Programming_paradigm, paradigm} shifts needs to be
+as easy as possible.
+Because Rapicorn is written in
+@uri{http://en.wikipedia.org/wiki/C%2B%2B, C++}, the above requirements will result in frequent
+@uri{http://en.wikipedia.org/wiki/Application_binary_interface, ABI} breaks.
+Consequently, the versioning scheme Rapicorn employs is designed to not just allow
+and cope with frequent ABI changes, it even enforces it.
+Enforcing frequent ABI changes in the versioning scheme protects the programmer from getting
+locked up for too long in an arbitrary ABI corset and keeps the code base flexible enough
+for continuous refactoring and interface changes.
+
+Versioning in Rapicorn is implemented as follows:
+@itemize
+@item	Every Rapicorn tarball has a MAJOR and a MINOR version.
+@item	Different MAJOR versions are ABI-incompatible with each other.
+	Rapicorn versions with different MAJOR versions are parallel installable without
+	affecting each other.
+@item	The MAJOR version numbers increment weekly if certain changes are detected in
+	the Rapicorn header (interface) files.
+@item	MAJOR versions are constructed by the formula: @code{(current_year - 2000) * 100 + current_week;}
+@item	Different MINOR versions are ABI-compatible to each other.
+	Versions with a greater MINOR number are meant to replace versions with a smaller MINOR.
+@item	All API changes between two consecutive MAJOR versions have to be thoroughly
+	documented in the NEWS file.
+@done

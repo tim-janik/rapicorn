@@ -10,7 +10,7 @@ noinst_DATA =
 # setup automake
 AUTOMAKE_OPTIONS = 1.9 dist-bzip2 no-dist-gzip
 
-site site-update:
+site site-preview site-update:
 	@$(MAKE) -C web/ $(AM_MAKEFLAGS) $@
 .PHONY: site site-update
 

@@ -14,6 +14,7 @@ HTML_TARGETS = $(strip                  \
 	html/hgradientG.png		\
 	html/vgradientG.png		\
 	html/roadmap.html		\
+	html/versioning.html		\
 	html/style.css			\
 	html/doxer-style.css		\
 )
