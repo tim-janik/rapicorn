@@ -22,18 +22,24 @@ programs_ldadd    = $(top_builddir)/rapicorn/librapicorn@LT_RELEASE@.la $(RAPICO
 gtkprograms_ldadd = $(programs_ldadd) $(GTK_LIBS)
 GTK_EXAMPLES      =
 
-# program sources:
+# --- programs ---
+# hello
+GTK_EXAMPLES    += hello
+hello_SOURCES    = hello.cc
+hello_LDADD      = $(gtkprograms_ldadd)
+XML_FILES       += hello.xml
+# tour
 GTK_EXAMPLES    += tour
 tour_SOURCES     = tour.cc
 tour_LDADD       = $(gtkprograms_ldadd)
 XML_FILES       += tour.xml
 EXTRA_DIST      += testpixs.c
-
+# scroller
 GTK_EXAMPLES    += scroller
 scroller_SOURCES = scroller.cc
 scroller_LDADD   = $(gtkprograms_ldadd)
 XML_FILES       += scroller.xml
-
+# texttest
 GTK_EXAMPLES    += texttest
 texttest_SOURCES = texttest.cc
 texttest_LDADD   = $(gtkprograms_ldadd)
