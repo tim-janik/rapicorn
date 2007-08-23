@@ -161,6 +161,7 @@ private:
       assert (rapicorn_thread_entered());
       assert (root.m_source == this);
       root.m_source = NULL;
+      root.destroy_viewport();
     }
   };
 };

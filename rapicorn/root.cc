@@ -121,6 +121,7 @@ RootImpl::RootImpl() :
   EventLoop::Source *source = new RootSource (*this);
   RAPICORN_ASSERT (m_source == source);
   m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
+  m_source->exitable (TRUE);
 }
 
 RootImpl::~RootImpl()
@@ -211,7 +212,7 @@ RootImpl::resize_all (Allocation *new_area)
       req = size_request(); /* unsets INVALID_REQUISITION */
       if (!have_allocation)
         {
-          /* fake an allocation */
+          /* fake initial allocation */
           area.width = req.width;
           area.height = req.height;
         }
@@ -226,9 +227,9 @@ RootImpl::resize_all (Allocation *new_area)
     {
       m_config.request_width = req.width;
       m_config.request_height = req.height;
-      /* set_config() will request a WIN_SIZE and WIN_DRAW now, so there's no point in handling further exposes */
       if (m_viewport)
         {
+          /* set_config() will request a WIN_SIZE and WIN_DRAW now, so there's no point in handling further exposes */
           m_viewport->enqueue_win_draws();
           m_expose_region.clear();
           m_viewport->set_config (m_config, true);
@@ -642,9 +643,6 @@ RootImpl::dispatch_win_delete_event (const Event &event)
   const EventWinDelete *devent = dynamic_cast<const EventWinDelete*> (&event);
   if (devent)
     {
-      if (m_viewport)
-        m_viewport->hide();
-      m_loop.kill_sources();
       destroy_viewport();
       handled = true;
     }
@@ -742,7 +740,10 @@ RootImpl::draw_now ()
           render (*plane);
           /* avoid unnecessary plane transfers */
           if (has_pending_win_size())
-            break;
+            {
+              delete plane;
+              break;
+            }
           /* blit to screen */
           m_viewport->blit_plane (plane, 0); // takes over plane
         }
@@ -989,6 +990,7 @@ RootImpl::create_viewport ()
           resize_all (NULL);
         }
       RAPICORN_ASSERT (m_viewport != NULL);
+      m_source->exitable (FALSE);
       VoidSlot sl = slot (*this, &RootImpl::idle_show);
       m_loop.exec_now (sl);
     }
@@ -1009,14 +1011,15 @@ RootImpl::destroy_viewport ()
       m_viewport->hide();
       delete m_viewport;
       m_viewport = NULL;
-    }
-  if (m_source)
-    {
-      m_loop.kill_sources(); // calls m_source methods
-      RAPICORN_ASSERT (m_source == NULL);
-      EventLoop::Source *source = new RootSource (*this);
-      RAPICORN_ASSERT (m_source == source);
-      m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
+      if (m_source)
+        {
+          m_loop.kill_sources(); // calls m_source methods
+          RAPICORN_ASSERT (m_source == NULL);
+          EventLoop::Source *source = new RootSource (*this);
+          RAPICORN_ASSERT (m_source == source);
+          m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
+          m_source->exitable (TRUE);
+        }
     }
   unref (this);
 }

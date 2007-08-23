@@ -354,8 +354,6 @@ ViewportGtk::blit_plane (Plane *plane,
           gdk_window_get_size (m_widget->window, NULL, &window_height);
           int dest_x = plane->xstart();
           int dest_y = window_height - (plane->ystart() + gdk_pixbuf_get_height (pixbuf));
-          delete plane;
-          plane = NULL;
           /* blit pixbuf to screen */
           int pw = gdk_pixbuf_get_width (pixbuf), ph = gdk_pixbuf_get_height (pixbuf);
           gdk_draw_pixbuf (m_widget->window, m_widget->style->black_gc,
@@ -365,8 +363,7 @@ ViewportGtk::blit_plane (Plane *plane,
           gdk_pixbuf_unref (pixbuf);
         }
     }
-  else
-    delete plane;
+  delete plane;
 }
 
 void
