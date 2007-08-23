@@ -50,6 +50,7 @@ public:
   void          pop_map                        (const VariableMap  &vmap);
   void          set                            (const String &key_eq_utf8string);
   String        expand_expression              (const String &expression);
+  String        debug_dump                     (void);
 };
 
 } // Rapicorn

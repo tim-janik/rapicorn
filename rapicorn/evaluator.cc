@@ -270,6 +270,28 @@ Evaluator::set (const String &key_eq_utf8string)
     default_map[key] = equal + 1;
 }
 
+String
+Evaluator::debug_dump (void)
+{
+  String result;
+  result += "[\n";
+  for (list<const VariableMap*>::const_iterator it = env_maps.begin(); it != env_maps.end(); it++)
+    {
+      result += "  {";
+      for (VariableMap::const_iterator cit = (*it)->begin(); cit != (*it)->end(); cit++)
+        result += "\n    " + cit->first + " = " + cit->second + ",";
+      result += " },\n";
+    }
+  result += "  { # default_map";
+  for (VariableMap::const_iterator cit = default_map.begin(); cit != default_map.end(); cit++)
+    result += "\n    " + cit->first + " = " + cit->second + ",";
+  if (!default_map.size())
+    result += "\n ";
+  result += " },\n";
+  result += "]";
+  return result;
+}
+
 } // Rapicorn
 
 namespace { // Anon
