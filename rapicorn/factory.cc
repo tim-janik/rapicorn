@@ -544,6 +544,8 @@ FactorySingleton::call_gadget (const Gadget       *gadget,
           custom_args[ga->first] = ga->second;
           call_args.erase (ga);
         }
+      else
+        custom_args[it->first] = it->second;
     }
   env.push_map (custom_args);
   /* construct argument list for ancestor */
