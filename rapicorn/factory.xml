@@ -53,22 +53,24 @@
 
   <!-- buttons -->
   <def:Button inherit="Rapicorn::Factory::ButtonArea" child-container="child-area" >
+    <arg:center-child default="1" />
     <Frame normal-frame="out" impressed-frame="in" >
       <Ambience
 	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
 	normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none">
 	<FocusFrame frame-type="none">
-	  <Alignment id="child-area" vscale="1" hscale="1" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
+	  <Alignment id="child-area" vscale="$(not $center_child)" hscale="$(not $center_child)" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
 	</FocusFrame>
       </Ambience>
     </Frame>
   </def:Button>
   <def:UnfocusedButton inherit="Rapicorn::Factory::ButtonArea" child-container="child-area" >
+    <arg:center-child default="1" />
     <Frame normal-frame="out" impressed-frame="in" >
       <Ambience
 	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
 	normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none">
-	<Alignment id="child-area" vscale="1" hscale="1" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
+	<Alignment id="child-area" vscale="$(not $center_child)" hscale="$(not $center_child)" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
       </Ambience>
     </Frame>
   </def:UnfocusedButton>
