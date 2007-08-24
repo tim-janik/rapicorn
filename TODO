@@ -1,12 +1,10 @@
 RELEASE:
-- remove cairo-inlined/
 - cleanup examples, move tour scroller, testtext to test/
 - simple clean examples:
   * Hello World + [Close}
   * FileName:[___] [Save] \n Text:[______\n_____] \n [Close]
   * Color:[____] |ColoredDrawing| [Close]
 FIXME:
-- add command() signal to connect to
 - non-working .interface<SomeType&>() should provide a better error message than throwing a NullReference exception
 - check that all property changes cause ::changed()
 - turn item->m_parent into a Container*
@@ -48,11 +46,6 @@ MISC:
 - synthesize focus-out before popping up new (modal, override-redirect) windows
 - MAKE COMBINE_NORMAL --> over a real alias
 - render(): pass on a RenderBuffer from which planes can be created via intersection
-- Table: change shrink logic to shrink according to:
-  1) shrink hshrink(1)/vshrink(1) children
-  2) shrink expand children
-  3) shrink *middle* children before edge (start/end packed) children
-     (this preserves menubars or close buttons)
 BASIC-SIZING:
 - there should be per-window settings for:
   - basic-size: goes from something like 12points & 96dpi => 20 pixels

@@ -426,7 +426,7 @@ bool
 EventLoop::loops_exitable ()
 {
   assert (rapicorn_thread_entered());
-  /* loop list shouldn't be modified by querying exitbale state */
+  /* loop list shouldn't be modified by querying exitable state */
   for (uint i = 0; i < rapicorn_main_loops.size(); i++)
     if (!rapicorn_main_loops[i]->exitable())
       return false;
