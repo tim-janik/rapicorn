@@ -41,6 +41,8 @@ TestItem::list_properties()
     MakeProperty (TestItem, assert_width,  "Assert-Width",  "Assert amount of the item width",            -INFINITY, -INFINITY, +DBL_MAX, 3, "rw"),
     MakeProperty (TestItem, assert_height, "Assert-Height", "Assert amount of the item height",           -INFINITY, -INFINITY, +DBL_MAX, 3, "rw"),
     MakeProperty (TestItem, fatal_asserts, "Fatal-Asserts", "Handle assertion failures as fatal errors",  false, "rw"),
+    MakeProperty (TestItem, accu,          "Accumulator",   "Store string value and keep history",        "", "rw"),
+    MakeProperty (TestItem, accu_history,  "Accu-History",  "Concatenated accumulator history",           "", "rw"),
   };
   static const PropertyList property_list (properties, Item::list_properties());
   return property_list;
@@ -56,6 +58,7 @@ TestItem::seen_test_items ()
 }
 
 class TestItemImpl : public virtual TestItem, public virtual ItemImpl {
+  String m_accu, m_accu_history;
   double m_assert_left, m_assert_right;
   double m_assert_top, m_assert_bottom;
   double m_assert_width, m_assert_height;
@@ -64,6 +67,7 @@ class TestItemImpl : public virtual TestItem, public virtual ItemImpl {
   bool   m_fatal_asserts;
 public:
   TestItemImpl() :
+    m_accu (""), m_accu_history (""),
     m_assert_left (-INFINITY), m_assert_right (-INFINITY),
     m_assert_top (-INFINITY), m_assert_bottom (-INFINITY),
     m_assert_width (-INFINITY), m_assert_height (-INFINITY),
@@ -86,6 +90,10 @@ public:
   virtual void   assert_height   (double val)    { m_assert_height = val; invalidate(); }
   virtual bool   fatal_asserts   () const        { return m_fatal_asserts; }
   virtual void   fatal_asserts   (bool   val)    { m_fatal_asserts = val; invalidate(); }
+  virtual String accu            () const            { return m_accu; }
+  virtual void   accu            (const String &val) { m_accu = val; m_accu_history += val; }
+  virtual String accu_history    () const            { return m_accu_history; }
+  virtual void   accu_history    (const String &val) { m_accu_history = val; }
 protected:
   virtual void
   size_request (Requisition &requisition)
