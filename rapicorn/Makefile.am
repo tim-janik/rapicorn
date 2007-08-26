@@ -143,7 +143,7 @@ gen-enums.cc: $(srcdir)/enumdefs.hh Makefile
 	&& rm -f xgen-enu
 CLEANFILES += xgen-enu gen-enums.cc
 
-XML_FILES   = factory.xml
+XML_FILES   = foundation.xml
 XMLLINTCALL = $(if $(XMLLINT),$(XMLLINT),true) # handle undefined XMLLINT
 xml-lint:
 	$(XMLLINTCALL) --noout $(XML_FILES)
@@ -154,8 +154,8 @@ stamp-autochecks: $(XML_FILES)
 noinst_DATA = stamp-autochecks
 EXTRA_DIST += $(XML_FILES)
 
-gen-zintern.c:	./rapicorn-zintern $(srcdir)/factory.xml stamp-autochecks
-	./rapicorn-zintern -b -z FACTORY_XML $(srcdir)/factory.xml > xgen-$(@F)
+gen-zintern.c:	./rapicorn-zintern $(srcdir)/foundation.xml stamp-autochecks
+	./rapicorn-zintern -b -z FOUNDATION_XML $(srcdir)/foundation.xml > xgen-$(@F)
 	mv xgen-$(@F) $@
 factory.cc: gen-zintern.c
 CLEANFILES += xgen-gen-zintern.c gen-zintern.c
