@@ -102,6 +102,35 @@ Root::get_focus () const
   return get_data (&focus_item_key);
 }
 
+static Item*
+container_find_item (Container    &container,
+                     const String &name)
+{
+  for (Container::ChildWalker cw = container.local_children (); cw.has_next(); cw++)
+    {
+      Item &item = *cw;
+      if (name == item.name())
+        return &item;
+      Container *ct = dynamic_cast<Container*> (&item);
+      if (ct)
+        {
+          Item *it = container_find_item (*ct, name);
+          if (it)
+            return it;
+        }
+    }
+  return NULL;
+}
+
+
+Item*
+Root::find_item (const String &item_name)
+{
+  if (item_name == name())
+    return this;
+  return container_find_item (*this, item_name);
+}
+
 RootImpl::RootImpl() :
   m_loop (*ref_sink (EventLoop::create())),
   m_source (NULL),

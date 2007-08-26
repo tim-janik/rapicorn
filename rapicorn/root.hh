@@ -59,6 +59,7 @@ public:
   virtual void  remove_grab             (Item  &child) = 0;
   void          remove_grab             (Item  *child)     { throw_if_null (child); return remove_grab (*child); }
   virtual Item* get_grab                (bool  *unconfined = NULL) = 0;
+  Item*         find_item               (const String &name);
   /* commands */
   typedef Signal<Root, bool (const String&, const String&), CollectorWhile0<bool> >   CommandSignal;
   CommandSignal sig_command;
