@@ -88,9 +88,8 @@ site-preview: ${RAPICORN_PREVIEW}/. rapicorn-site.tar.bz2
 .PHONY: site-preview
 
 # remote installation
-REMOTE_USER = $(subst tjlocal, timj, ${USER})
-REMOTE=$(strip $(REMOTE_USER))@rapicorn.org
-REMOTE_DEST=/web/rapicorn/
+REMOTE=rapicorn.org.^.private
+REMOTE_DEST=/srv/rapicorn.org/
 REMOTE_TMP=_scptmp
 site-update: rapicorn-site.tar.bz2
 	scp -p $< ${REMOTE}:${REMOTE_TMP}-$(<F)

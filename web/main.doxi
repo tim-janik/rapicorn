@@ -13,12 +13,10 @@ features and functionality that other mature toolkits provide like:
 @done
 Visitors searching for a stable and mature GUI toolkit are currently better off turning
 to the above two projects.
-@itemize
-@item Downloads (ftp) - 
-	Public preview releases can be found via ftp: @uri{ftp://rapicorn.org/pub/rapicorn/}.
 
+@itemize
 @item Downloads (http) - 
-	Alternative download location: @uri{http://rapicorn.org/rapicorn-ftp/}.
+	Public preview releases can be found at @uri{http://rapicorn.org/files/}.
 
 @item
 	Screenshots of early test windows are here: @uri{http://www.rapicorn.org/screenshotdir/, screenshotdir/}.
