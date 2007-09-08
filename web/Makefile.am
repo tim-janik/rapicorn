@@ -67,7 +67,7 @@ CLEANFILES += rapicorn-site.tar.bz2
 # rule: site*
 site: rapicorn-site.tar.bz2
 .PHONY: site
-noinst_DATA = @DOXRULE@ rapicorn-site.tar.bz2
+noinst_DATA = @DOXRULE@ # rapicorn-site.tar.bz2
 # cleanup
 clean-local:
 	rm -f screenshotdir/*.THUMB.jpg
