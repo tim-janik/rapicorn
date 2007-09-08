@@ -70,9 +70,13 @@ main (int   argc,
   TASSERT (item != NULL);
   titem = dynamic_cast<TestItem*> (item);
   TASSERT (titem != NULL);
-  if (1)
-    printout ("TestItem::accu_history: %s\n", titem->accu_history().c_str());
-  TASSERT (titem->accu_history() == "Instance");
+  if (0)
+    {
+      printout ("\n");
+      printout ("TestItem::accu:%s\n", titem->accu().c_str());
+      printout ("TestItem::accu_history: %s\n", titem->accu_history().c_str());
+    }
+  TASSERT (titem->accu_history() == "L0L1L2Instance");
   TOK();
   testwin.close();
   TDONE();

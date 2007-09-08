@@ -94,15 +94,14 @@ class FactorySingleton {
   /* gadgets */
   Gadget*                       lookup_gadget           (const String       &gadget_identifier);
   Item*                         inherit_gadget          (const String       &ancestor_name,
-                                                         VariableMap        &call_arguments,
-                                                         Evaluator          &env,
-                                                         VariableMap        &unused_arguments);
+                                                         const VariableMap  &call_arguments,
+                                                         Evaluator          &env);
   Item&                         call_gadget             (const Gadget       *gadget,
-                                                         VariableMap        &call_arguments,
+                                                         const VariableMap  &const_ancestor_arguments,
+                                                         const VariableMap  &const_call_arguments,
                                                          Evaluator          &env,
                                                          ChildContainerSlot *ccslot,
-                                                         Container          *parent,
-                                                         VariableMap        &unused_call_args);
+                                                         Container          *parent);
   void                          call_gadget_children    (const Gadget       *gadget,
                                                          Item               &item,
                                                          Evaluator          &env,
@@ -123,7 +122,6 @@ public:
                                                          const String          &i18n_domain,
                                                          const String          &domain,
                                                          const std::nothrow_t  &nt = dothrow);
-  
   Item&                         construct_gadget        (const String          &gadget_identifier,
                                                          const ArgumentList    &arguments,
                                                          String                *gadget_definition = NULL);
@@ -466,10 +464,7 @@ FactorySingleton::construct_gadget (const String          &gadget_identifier,
   VariableMap args;
   Evaluator::populate_map (args, arguments);
   Evaluator env;
-  VariableMap unused_args;
-  Item &item = call_gadget (gadget, args, env, NULL, NULL, unused_args);
-  for (VariableMap::const_iterator it = unused_args.begin(); it != unused_args.end(); it++)
-    error ("%s: invalid argument: %s", gadget->definition().c_str(), String (it->first + "=" + it->second).c_str());
+  Item &item = call_gadget (gadget, gadget->ancestor_arguments, args, env, NULL, NULL);
   if (gadget_definition)
     *gadget_definition = gadget->definition();
   return item;
@@ -493,23 +488,14 @@ variable_map_filter (VariableMap  &vmap,
 }
 
 Item*
-FactorySingleton::inherit_gadget (const String &ancestor_name,
-                                  VariableMap  &call_arguments,
-                                  Evaluator    &env,
-                                  VariableMap  &unused_arguments)
+FactorySingleton::inherit_gadget (const String      &ancestor_name,
+                                  const VariableMap &call_arguments,
+                                  Evaluator         &env)
 {
   if (ancestor_name[0] == '\177')      /* item factory type */
     {
       Item *item = &create_from_item_type (&ancestor_name[1]);
-      /* apply arguments */
-      try {
-        for (ConstVariableIter it = call_arguments.begin(); it != call_arguments.end(); it++)
-          if (!item->try_set_property (it->first, env.expand_expression (it->second)))
-            unused_arguments[it->first] = it->second;
-      } catch (...) {
-        sink (item);
-        throw;
-      }
+      assert (call_arguments.size() == 0); // see FactorySingleton::register_item_factory()
       return item;
     }
   else
@@ -517,26 +503,27 @@ FactorySingleton::inherit_gadget (const String &ancestor_name,
       Gadget *gadget = lookup_gadget (ancestor_name);
       Item *item = NULL;
       if (gadget)
-        item = &call_gadget (gadget, call_arguments, env, NULL, NULL, unused_arguments);
+        item = &call_gadget (gadget, gadget->ancestor_arguments, call_arguments, env, NULL, NULL);
       return item;
     }
 }
 
 Item&
 FactorySingleton::call_gadget (const Gadget       *gadget,
-                               VariableMap        &call_args,
+                               const VariableMap  &const_ancestor_arguments,
+                               const VariableMap  &const_call_arguments,
                                Evaluator          &env,
                                ChildContainerSlot *ccslot,
-                               Container          *parent,
-                               VariableMap        &unused_call_args)
+                               Container          *parent)
 {
+  VariableMap call_args (const_call_arguments);
   /* filter special arguments */
   String name = gadget->ident;
   name = variable_map_filter (call_args, "name", name);
   /* ignore special arguments (FIXME) */
   variable_map_filter (call_args, "child_container");
   variable_map_filter (call_args, "inherit");
-  /* seperate custom arguments */
+  /* setup custom arguments (from <arg/> statements) */
   VariableMap custom_args;
   for (VariableMap::const_iterator it = gadget->custom_arguments.begin(); it != gadget->custom_arguments.end(); it++)
     {
@@ -550,16 +537,11 @@ FactorySingleton::call_gadget (const Gadget       *gadget,
         custom_args[it->first] = it->second;
     }
   env.push_map (custom_args);
-  /* construct argument list for ancestor */
-  VariableMap ancestor_args (call_args);
-  Evaluator::replenish_map (ancestor_args, gadget->ancestor_arguments);
-  /* collect unused arguments */
-  VariableMap unused_args;
   /* construct gadget from ancestor */
   Item *itemp;
   String reason;
   try {
-    itemp = inherit_gadget (gadget->ancestor, ancestor_args, env, unused_args);
+    itemp = inherit_gadget (gadget->ancestor, const_ancestor_arguments, env);
   } catch (std::exception &exc) {
     itemp = NULL;
     reason = exc.what();
@@ -570,6 +552,19 @@ FactorySingleton::call_gadget (const Gadget       *gadget,
     error ("%s: failed to inherit: %s", gadget->definition().c_str(),
            reason.size() ? reason.c_str() : String ("unknown gadget type: " + gadget->ancestor).c_str());
   Item &item = *itemp;
+  /* apply arguments */
+  try {
+    VariableMap unused_args;
+    for (ConstVariableIter it = call_args.begin(); it != call_args.end(); it++)
+      if (!item.try_set_property (it->first, env.expand_expression (it->second)))
+        unused_args[it->first] = it->second;
+    call_args = unused_args;
+  } catch (...) {
+    error ("%s: failed to assign property", gadget->definition().c_str());
+    sink (item);
+    env.pop_map (custom_args);
+    throw;
+  }
   /* construct gadget children */
   try {
     ChildContainerSlot outer_ccslot (gadget->child_container);
@@ -588,25 +583,6 @@ FactorySingleton::call_gadget (const Gadget       *gadget,
         else if (gadget->child_container)
           error ("%s: failed to find child container: %s", gadget->definition().c_str(), gadget->child_container->ident.c_str());
       }
-    /* add to parent */
-    if (parent)
-      {
-        /* expand pack args from unused property args */
-        VariableMap pack_args;
-        for (VariableMap::const_iterator it = unused_args.begin(); it != unused_args.end(); it++)
-          pack_args[it->first] = env.expand_expression (it->second);
-        /* pack into parent */
-        VariableMap unused_pack_args;
-        parent->add (item, pack_args, &unused_pack_args);
-        /* eliminate args which were used during packing */
-        VariableMap::iterator it = unused_args.begin();;
-        while (it != unused_args.end())
-          {
-            VariableMap::iterator current = it++;
-            if (unused_pack_args.find (current->first) == unused_pack_args.end())
-              unused_args.erase (current);
-          }
-      }
   } catch (std::exception &exc) {
     error ("%s: construction failed: %s", gadget->definition().c_str(), exc.what());
     sink (item);
@@ -617,13 +593,33 @@ FactorySingleton::call_gadget (const Gadget       *gadget,
     env.pop_map (custom_args);
     throw;
   }
+  /* add to parent */
+  try {
+    if (parent)
+      {
+        /* expand pack args from unused property args */
+        VariableMap pack_args;
+        for (VariableMap::const_iterator it = call_args.begin(); it != call_args.end(); it++)
+          pack_args[it->first] = env.expand_expression (it->second);
+        /* pack into parent */
+        VariableMap unused_pack_args;
+        parent->add (item, pack_args, &unused_pack_args);
+        call_args = unused_pack_args;
+      }
+  } catch (std::exception &exc) {
+    error ("%s: adding to parent (%s) failed: %s", gadget->definition().c_str(), parent->name().c_str(), exc.what());
+    sink (item);
+    env.pop_map (custom_args);
+    throw;
+  } catch (...) {
+    sink (item);
+    env.pop_map (custom_args);
+    throw;
+  }
   /* cleanups */
   env.pop_map (custom_args);
-  for (VariableMap::const_iterator it = unused_args.begin(); it != unused_args.end(); it++)
-    if (gadget->ancestor_arguments.find (it->first) != gadget->ancestor_arguments.end())
-      error ("%s: unknown property: %s", gadget->definition().c_str(), String (it->first + "=" + it->second).c_str());
-    else
-      unused_call_args[it->first] = it->second;
+  for (VariableMap::const_iterator it = call_args.begin(); it != call_args.end(); it++)
+    error ("%s: unknown property: %s", gadget->definition().c_str(), String (it->first + "=" + it->second).c_str());
   return item;
 }
 
@@ -652,8 +648,8 @@ FactorySingleton::call_gadget_children (const Gadget       *gadget,
       /* create child gadget */
       const Gadget *child_gadget = *cw;
       /* the real call arguments are stored as ancestor arguments of the child */
-      VariableMap dummy;
-      Item &child = call_gadget (child_gadget, dummy, env, ccslot, container, dummy);
+      VariableMap call_args (child_gadget->ancestor_arguments);
+      Item &child = call_gadget (child_gadget, VariableMap(), call_args, env, ccslot, container);
       /* find child container */
       if (ccslot->gadget == child_gadget)
         ccslot->item = &child;
@@ -673,6 +669,7 @@ FactorySingleton::register_item_factory (const ItemTypeFactory &itfactory)
   if (!fdomain)
     fdomain = add_domain (domain_name, domain_name);
   Gadget *gadget = new Gadget (base + 1, String ("\177") + itfactory.qualified_type, "<builtin>", INT_MIN);
+  assert (gadget->ancestor_arguments.size() == 0); // assumed by FactorySingleton::inherit_gadget()
   fdomain->definitions[gadget->ident] = gadget;
   types.push_back (&itfactory);
 }
