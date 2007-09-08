@@ -117,7 +117,8 @@ public:
                                                          const String          &i18n_domain,
                                                          const String          &file_name,
                                                          const String          &domain);
-  void                          parse_gadget_data       (const uint             data_length,
+  void                          parse_gadget_data       (const char            *input_name,
+                                                         const uint             data_length,
                                                          const char            *data,
                                                          const String          &i18n_domain,
                                                          const String          &domain,
@@ -393,13 +394,14 @@ FactorySingleton::parse_gadget_file (FILE         *file,
 }
 
 void
-FactorySingleton::parse_gadget_data (const uint             data_length,
+FactorySingleton::parse_gadget_data (const char            *input_name,
+                                     const uint             data_length,
                                      const char            *data,
                                      const String          &i18n_domain,
                                      const String          &domain,
                                      const std::nothrow_t  &nt)
 {
-  String file_name = "-";
+  String file_name = input_name;
   FactoryDomain *fdomain = lookup_domain (domain);
   if (!fdomain)
     fdomain = add_domain (domain, i18n_domain);
@@ -819,7 +821,7 @@ initialize_standard_gadgets_lazily (void)
       uint8 *data = zintern_decompress (FOUNDATION_XML_SIZE, FOUNDATION_XML_DATA,
                                         sizeof (FOUNDATION_XML_DATA) / sizeof (FOUNDATION_XML_DATA[0]));
       const char *domain = "Rapicorn";
-      FactorySingleton::singleton->parse_gadget_data (FOUNDATION_XML_SIZE, (const char*) data, domain, domain);
+      FactorySingleton::singleton->parse_gadget_data (FOUNDATION_XML_NAME, FOUNDATION_XML_SIZE, (const char*) data, domain, domain);
       zintern_free (data);
     }
 }
