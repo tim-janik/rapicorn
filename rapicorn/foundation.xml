@@ -129,6 +129,26 @@
     </Frame>
   </def:VSlider>
 
+  <!-- ScrollArea -->
+  <def:RapicornScrollPort inherit="Rapicorn::Factory::ScrollPort"/>
+  <def:RapicornScrollArea inherit="Rapicorn::Factory::ScrollArea"/>
+  <def:ScrollArea inherit="Alignment" child-container="scroll-container">
+    <RapicornScrollArea>
+      <Table>
+	<Alignment hexpand="1" vexpand="1" bottom-attach="1" left-attach="0" right-attach="1" top-attach="2" width="0" height="0"
+	  left-padding="2" right-padding="3" bottom-padding="2" top-padding="2" hscale="0" vscale="0" >
+	  <Frame frame-type="in">
+	    <RapicornScrollPort>
+	      <Ambience id="scroll-container" normal-lighting="upper-left"/>
+	    </RapicornScrollPort>
+	  </Frame>
+	</Alignment>
+	<HSlider hexpand="0" adjustment-source="ancestor-horizontal" bottom-attach="0" />
+	<VSlider vexpand="0" adjustment-source="ancestor-vertical"   bottom-attach="1" left-attach="1" />
+      </Table>
+    </RapicornScrollArea>
+  </def:ScrollArea>
+
   <!-- Table -->
   <def:Table inherit="Rapicorn::Factory::Table" >
   </def:Table>

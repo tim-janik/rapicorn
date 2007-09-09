@@ -17,26 +17,6 @@
  !-->
 <rapicorn-gadgets xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
 
-  <!-- ScrollArea -->
-  <def:RapicornScrollPort inherit="Rapicorn::Factory::ScrollPort"/>
-  <def:RapicornScrollArea inherit="Rapicorn::Factory::ScrollArea"/>
-  <def:ScrollArea inherit="Alignment" child-container="scroll-container">
-    <RapicornScrollArea>
-      <Table>
-	<Alignment hexpand="1" vexpand="1" bottom-attach="1" left-attach="0" right-attach="1" top-attach="2" width="0" height="0"
-	  left-padding="2" right-padding="3" bottom-padding="2" top-padding="2" hscale="0" vscale="0" >
-	  <Frame frame-type="in">
-	    <RapicornScrollPort>
-	      <Ambience id="scroll-container" normal-lighting="upper-left"/>
-	    </RapicornScrollPort>
-	  </Frame>
-	</Alignment>
-	<HSlider hexpand="0" adjustment-source="ancestor-horizontal" bottom-attach="0" />
-	<VSlider vexpand="0" adjustment-source="ancestor-vertical"   bottom-attach="1" left-attach="1" />
-      </Table>
-    </RapicornScrollArea>
-  </def:ScrollArea>
-
   <!-- main dialog -->
   <def:main-shell inherit="Root" child-container="scroll-box" width="800" height="600" >
     <arg:test-value1 default="2"/>
@@ -49,6 +29,7 @@
       </VBox>
     </Ambience>
   </def:main-shell>
+
   <!-- Button definition -->
   <def:test-button inherit="Button" on-click="dummy">
     <arg:test-button-text default="ClickMe" />
@@ -58,6 +39,7 @@
       </prop:markup-text>
     </Label>
   </def:test-button>
+
   <!-- Button row -->
   <def:button-row inherit="HBox" spacing="5" >
   </def:button-row>
