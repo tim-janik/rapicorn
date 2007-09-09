@@ -537,15 +537,15 @@ const PropertyList&
 Item::list_properties ()
 {
   static Property *properties[] = {
-    MakeProperty (Item, name,      _("Name"), _("Identification name of the item"), "", "rw"),
-    MakeProperty (Item, width,     _("Requested Width"), _("The width to request from its container for this item, -1=automatic"), -1, -1, MAXINT, 5, "rw"),
-    MakeProperty (Item, height,    _("Requested Height"), _("The height to request from its container for this item, -1=automatic"), -1, -1, MAXINT, 5, "rw"),
-    MakeProperty (Item, visible,   _("Visible"), _("Whether this item is visible"), true, "rw"),
-    MakeProperty (Item, sensitive, _("Sensitive"), _("Whether this item is sensitive (receives events)"), true, "rw"),
-    MakeProperty (Item, hexpand,   _("Horizontal Expand"), _("Whether to expand this item horizontally"), false, "rw"),
-    MakeProperty (Item, vexpand,   _("Vertical Expand"), _("Whether to expand this item vertically"), false, "rw"),
-    MakeProperty (Item, hspread,   _("Horizontal Spread"), _("Whether to expand this item and all its parents horizontally"), false, "rw"),
-    MakeProperty (Item, vspread,   _("Vertical Spread"), _("Whether to expand this item and all its parents vertically"), false, "rw"),
+    MakeProperty (Item, name,      _("Name"), _("Identification name of the item"), "rw"),
+    MakeProperty (Item, width,     _("Requested Width"), _("The width to request from its container for this item, -1=automatic"), -1, MAXINT, 5, "rw"),
+    MakeProperty (Item, height,    _("Requested Height"), _("The height to request from its container for this item, -1=automatic"), -1, MAXINT, 5, "rw"),
+    MakeProperty (Item, visible,   _("Visible"), _("Whether this item is visible"), "rw"),
+    MakeProperty (Item, sensitive, _("Sensitive"), _("Whether this item is sensitive (receives events)"), "rw"),
+    MakeProperty (Item, hexpand,   _("Horizontal Expand"), _("Whether to expand this item horizontally"), "rw"),
+    MakeProperty (Item, vexpand,   _("Vertical Expand"), _("Whether to expand this item vertically"), "rw"),
+    MakeProperty (Item, hspread,   _("Horizontal Spread"), _("Whether to expand this item and all its parents horizontally"), "rw"),
+    MakeProperty (Item, vspread,   _("Vertical Spread"), _("Whether to expand this item and all its parents vertically"), "rw"),
   };
   static const PropertyList property_list (properties);
   return property_list;

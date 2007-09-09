@@ -30,8 +30,7 @@ struct Property : ReferenceCountImpl {
   Property (const char *cident, const char *clabel, const char *cblurb, const char *chints);
   virtual void   set_value   (Deletable *obj, const String &svalue) = 0;
   virtual String get_value   (Deletable *obj) = 0;
-  virtual String get_default (Deletable *obj) = 0;
-  virtual bool   get_range   (Deletable *obj, double &minimum, double &start_value, double &maximum, double &stepping) = 0;
+  virtual bool   get_range   (Deletable *obj, double &minimum, double &maximum, double &stepping) = 0;
 protected:
   virtual ~Property();
 };
@@ -85,30 +84,27 @@ inline Return (Class::*
 /* --- bool --- */
 template<class Class>
 struct PropertyBool : Property {
-  bool default_value;
   void (Class::*setter) (bool);
   bool (Class::*getter) ();
   PropertyBool (void (Class::*csetter) (bool), bool (Class::*cgetter) (),
                 const char *cident, const char *clabel, const char *cblurb,
-                bool cdefault_value, const char *chints);
+                const char *chints);
   virtual void   set_value   (Deletable *obj, const String &svalue);
   virtual String get_value   (Deletable *obj);
-  virtual String get_default (Deletable *obj);
-  virtual bool   get_range   (Deletable *obj, double &minimum, double &start_value, double &maximum, double &stepping) { return false; }
+  virtual bool   get_range   (Deletable *obj, double &minimum, double &maximum, double &stepping) { return false; }
 };
 template<class Class> inline Property*
 create_property (void (Class::*setter) (bool), bool (Class::*getter) (),
-                 const char *ident, const char *label, const char *blurb, bool default_value, const char *hints)
-{ return new PropertyBool<Class> (setter, getter, ident, label, blurb, default_value, hints); }
+                 const char *ident, const char *label, const char *blurb, const char *hints)
+{ return new PropertyBool<Class> (setter, getter, ident, label, blurb, hints); }
 template<class Class> inline Property*
 create_property (void (Class::*setter) (bool), bool (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb, bool default_value, const char *hints)
-{ return new PropertyBool<Class> (setter, noconst_getter (getter), ident, label, blurb, default_value, hints); }
+                 const char *ident, const char *label, const char *blurb, const char *hints)
+{ return new PropertyBool<Class> (setter, noconst_getter (getter), ident, label, blurb, hints); }
 
 /* --- range --- */
 template<class Class, typename Type>
 struct PropertyRange : Property {
-  Type default_value;
   Type minimum_value;
   Type maximum_value;
   Type stepping;
@@ -116,160 +112,153 @@ struct PropertyRange : Property {
   Type (Class::*getter) ();
   PropertyRange (void (Class::*csetter) (Type), Type (Class::*cgetter) (),
                  const char *cident, const char *clabel, const char *cblurb,
-                 Type cdefault_value, Type cminimum_value, Type cmaximum_value,
+                 Type cminimum_value, Type cmaximum_value,
                  Type cstepping, const char *chints);
   virtual void   set_value   (Deletable *obj, const String &svalue);
   virtual String get_value   (Deletable *obj);
-  virtual String get_default (Deletable *obj);
-  virtual bool   get_range   (Deletable *obj, double &minimum, double &start_value, double &maximum, double &stepping);
+  virtual bool   get_range   (Deletable *obj, double &minimum, double &maximum, double &stepping);
 };
 /* int */
 template<class Class> inline Property*
 create_property (void (Class::*setter) (int), int (Class::*getter) (),
-                 const char *ident, const char *label, const char *blurb, int default_value,
+                 const char *ident, const char *label, const char *blurb,
                  int min_value, int max_value, int stepping, const char *hints)
-{ return new PropertyRange<Class,int> (setter, getter, ident, label, blurb, default_value, min_value, max_value, stepping, hints); }
+{ return new PropertyRange<Class,int> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
 template<class Class> inline Property*
 create_property (void (Class::*setter) (int), int (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb, int default_value,
+                 const char *ident, const char *label, const char *blurb,
                  int min_value, int max_value, int stepping, const char *hints)
-{ return new PropertyRange<Class,int> (setter, noconst_getter (getter), ident, label, blurb, default_value, min_value, max_value, stepping, hints); }
+{ return new PropertyRange<Class,int> (setter, noconst_getter (getter), ident, label, blurb, min_value, max_value, stepping, hints); }
 /* int16 */
 template<class Class> inline Property*
 create_property (void (Class::*setter) (int16), int16 (Class::*getter) (),
-                 const char *ident, const char *label, const char *blurb, int16 default_value,
+                 const char *ident, const char *label, const char *blurb,
                  int16 min_value, int16 max_value, int16 stepping, const char *hints)
-{ return new PropertyRange<Class,int16> (setter, getter, ident, label, blurb, default_value, min_value, max_value, stepping, hints); }
+{ return new PropertyRange<Class,int16> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
 template<class Class> inline Property*
 create_property (void (Class::*setter) (int16), int16 (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb, int16 default_value,
+                 const char *ident, const char *label, const char *blurb,
                  int16 min_value, int16 max_value, int16 stepping, const char *hints)
-{ return new PropertyRange<Class,int16> (setter, noconst_getter (getter), ident, label, blurb, default_value, min_value, max_value, stepping, hints); }
+{ return new PropertyRange<Class,int16> (setter, noconst_getter (getter), ident, label, blurb, min_value, max_value, stepping, hints); }
 /* uint */
 template<class Class> inline Property*
 create_property (void (Class::*setter) (uint), uint (Class::*getter) (),
-                 const char *ident, const char *label, const char *blurb, uint default_value,
+                 const char *ident, const char *label, const char *blurb,
                  uint min_value, uint max_value, uint stepping, const char *hints)
-{ return new PropertyRange<Class,uint> (setter, getter, ident, label, blurb, default_value, min_value, max_value, stepping, hints); }
+{ return new PropertyRange<Class,uint> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
 template<class Class> inline Property*
 create_property (void (Class::*setter) (uint), uint (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb, uint default_value,
+                 const char *ident, const char *label, const char *blurb,
                  uint min_value, uint max_value, uint stepping, const char *hints)
-{ return new PropertyRange<Class,uint> (setter, noconst_getter (getter), ident, label, blurb, default_value, min_value, max_value, stepping, hints); }
+{ return new PropertyRange<Class,uint> (setter, noconst_getter (getter), ident, label, blurb, min_value, max_value, stepping, hints); }
 /* uint16 */
 template<class Class> inline Property*
 create_property (void (Class::*setter) (uint16), uint16 (Class::*getter) (),
-                 const char *ident, const char *label, const char *blurb, uint16 default_value,
+                 const char *ident, const char *label, const char *blurb,
                  uint16 min_value, uint16 max_value, uint16 stepping, const char *hints)
-{ return new PropertyRange<Class,uint16> (setter, getter, ident, label, blurb, default_value, min_value, max_value, stepping, hints); }
+{ return new PropertyRange<Class,uint16> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
 template<class Class> inline Property*
 create_property (void (Class::*setter) (uint16), uint16 (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb, uint16 default_value,
+                 const char *ident, const char *label, const char *blurb,
                  uint16 min_value, uint16 max_value, uint16 stepping, const char *hints)
-{ return new PropertyRange<Class,uint16> (setter, noconst_getter (getter), ident, label, blurb, default_value, min_value, max_value, stepping, hints); }
+{ return new PropertyRange<Class,uint16> (setter, noconst_getter (getter), ident, label, blurb, min_value, max_value, stepping, hints); }
 /* float */
 template<class Class> inline Property*
 create_property (void (Class::*setter) (float), float (Class::*getter) (),
-                 const char *ident, const char *label, const char *blurb, float default_value,
+                 const char *ident, const char *label, const char *blurb,
                  float min_value, float max_value, float stepping, const char *hints)
-{ return new PropertyRange<Class,float> (setter, getter, ident, label, blurb, default_value, min_value, max_value, stepping, hints); }
+{ return new PropertyRange<Class,float> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
 template<class Class> inline Property*
 create_property (void (Class::*setter) (float), float (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb, float default_value,
+                 const char *ident, const char *label, const char *blurb,
                  float min_value, float max_value, float stepping, const char *hints)
-{ return new PropertyRange<Class,float> (setter, noconst_getter (getter), ident, label, blurb, default_value, min_value, max_value, stepping, hints); }
+{ return new PropertyRange<Class,float> (setter, noconst_getter (getter), ident, label, blurb, min_value, max_value, stepping, hints); }
 /* double */
 template<class Class> inline Property*
 create_property (void (Class::*setter) (double), double (Class::*getter) (),
-                 const char *ident, const char *label, const char *blurb, double default_value,
+                 const char *ident, const char *label, const char *blurb,
                  double min_value, double max_value, double stepping, const char *hints)
-{ return new PropertyRange<Class,double> (setter, getter, ident, label, blurb, default_value, min_value, max_value, stepping, hints); }
+{ return new PropertyRange<Class,double> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
 template<class Class> inline Property*
 create_property (void (Class::*setter) (double), double (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb, double default_value,
+                 const char *ident, const char *label, const char *blurb,
                  double min_value, double max_value, double stepping, const char *hints)
-{ return new PropertyRange<Class,double> (setter, noconst_getter (getter), ident, label, blurb, default_value, min_value, max_value, stepping, hints); }
+{ return new PropertyRange<Class,double> (setter, noconst_getter (getter), ident, label, blurb, min_value, max_value, stepping, hints); }
 
 /* --- point --- */
 template<class Class>
 struct PropertyPoint : Property {
-  Point default_value;
   Point minimum_value;
   Point maximum_value;
   void  (Class::*setter) (Point);
   Point (Class::*getter) ();
   PropertyPoint (void (Class::*csetter) (Point), Point (Class::*cgetter) (),
                  const char *cident, const char *clabel, const char *cblurb,
-                 Point cdefault_value, Point cminimum_value, Point cmaximum_value,
+                 Point cminimum_value, Point cmaximum_value,
                  const char *chints);
   virtual void   set_value   (Deletable *obj, const String &svalue);
   virtual String get_value   (Deletable *obj);
-  virtual String get_default (Deletable *obj);
-  virtual bool   get_range   (Deletable *obj, Point &minimum, Point &start_value, Point &maximum);
-  virtual bool   get_range   (Deletable *obj, double &minimum, double &start_value, double &maximum, double &stepping) { return false; }
+  virtual bool   get_range   (Deletable *obj, Point &minimum, Point &maximum);
+  virtual bool   get_range   (Deletable *obj, double &minimum, double &maximum, double &stepping) { return false; }
 };
 template<class Class> inline Property*
 create_property (void (Class::*setter) (Point), Point (Class::*getter) (),
-                 const char *ident, const char *label, const char *blurb, const Point &default_value,
+                 const char *ident, const char *label, const char *blurb,
                  const Point &min_value, const Point &max_value, const char *hints)
-{ return new PropertyPoint<Class> (setter, getter, ident, label, blurb, default_value, min_value, max_value, hints); }
+{ return new PropertyPoint<Class> (setter, getter, ident, label, blurb, min_value, max_value, hints); }
 template<class Class> inline Property*
 create_property (void (Class::*setter) (Point), Point (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb, const Point &default_value,
+                 const char *ident, const char *label, const char *blurb,
                  const Point &min_value, const Point &max_value, const char *hints)
-{ return new PropertyPoint<Class> (setter, noconst_getter (getter), ident, label, blurb, default_value, min_value, max_value, hints); }
+{ return new PropertyPoint<Class> (setter, noconst_getter (getter), ident, label, blurb, min_value, max_value, hints); }
 
 /* --- string --- */
 template<class Class>
 struct PropertyString : Property {
-  String default_value;
   void   (Class::*setter) (const String&);
   String (Class::*getter) ();
   PropertyString (void (Class::*csetter) (const String&), String (Class::*cgetter) (),
                   const char *cident, const char *clabel, const char *cblurb,
-                  const String &cdefault_value, const char *chints);
+                  const char *chints);
   virtual void   set_value   (Deletable *obj, const String &svalue);
   virtual String get_value   (Deletable *obj);
-  virtual String get_default (Deletable *obj);
-  virtual bool   get_range   (Deletable *obj, double &minimum, double &start_value, double &maximum, double &stepping) { return false; }
+  virtual bool   get_range   (Deletable *obj, double &minimum, double &maximum, double &stepping) { return false; }
 };
 template<class Class> inline Property*
 create_property (void (Class::*setter) (const String&), String (Class::*getter) (),
-                 const char *ident, const char *label, const char *blurb, String default_value, const char *hints)
-{ return new PropertyString<Class> (setter, getter, ident, label, blurb, default_value, hints); }
+                 const char *ident, const char *label, const char *blurb, const char *hints)
+{ return new PropertyString<Class> (setter, getter, ident, label, blurb, hints); }
 template<class Class> inline Property*
 create_property (void (Class::*setter) (const String&), String (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb, String default_value, const char *hints)
-{ return new PropertyString<Class> (setter, noconst_getter (getter), ident, label, blurb, default_value, hints); }
+                 const char *ident, const char *label, const char *blurb, const char *hints)
+{ return new PropertyString<Class> (setter, noconst_getter (getter), ident, label, blurb, hints); }
 
 /* --- enum --- */
 template<class Class, typename Type>
 struct PropertyEnum : Property {
-  int64 default_value;
   const EnumClass &enum_class;
   void (Class::*setter) (Type);
   Type (Class::*getter) ();
   PropertyEnum (void (Class::*csetter) (Type), Type (Class::*cgetter) (),
                 const char *cident, const char *clabel, const char *cblurb,
-                int64 cdefault_value, const EnumClass &eclass, const char *chints);
+                const EnumClass &eclass, const char *chints);
   virtual void   set_value   (Deletable *obj, const String &svalue);
   virtual String get_value   (Deletable *obj);
-  virtual String get_default (Deletable *obj);
-  virtual bool   get_range   (Deletable *obj, double &minimum, double &start_value, double &maximum, double &stepping) { return false; }
+  virtual bool   get_range   (Deletable *obj, double &minimum, double &maximum, double &stepping) { return false; }
 };
 template<class Class, typename Type> inline Property*
 create_property (void (Class::*setter) (Type), Type (Class::*getter) (),
-                 const char *ident, const char *label, const char *blurb, Type default_value, const char *hints)
+                 const char *ident, const char *label, const char *blurb, const char *hints)
 {
   static const EnumType<Type> enum_class;
-  return new PropertyEnum<Class,Type> (setter, getter, ident, label, blurb, default_value, enum_class, hints);
+  return new PropertyEnum<Class,Type> (setter, getter, ident, label, blurb, enum_class, hints);
 }
 template<class Class, typename Type> inline Property*
 create_property (void (Class::*setter) (Type), Type (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb, Type default_value, const char *hints)
+                 const char *ident, const char *label, const char *blurb, const char *hints)
 {
   static const EnumType<Type> enum_class;
-  return new PropertyEnum<Class,Type> (setter, noconst_getter (getter), ident, label, blurb, default_value, enum_class, hints);
+  return new PropertyEnum<Class,Type> (setter, noconst_getter (getter), ident, label, blurb, enum_class, hints);
 }
 
 /* --- implementations --- */
@@ -277,9 +266,8 @@ create_property (void (Class::*setter) (Type), Type (Class::*getter) () const,
 template<class Class>
 PropertyBool<Class>::PropertyBool (void (Class::*csetter) (bool), bool (Class::*cgetter) (),
                                    const char *cident, const char *clabel, const char *cblurb,
-                                   bool cdefault_value, const char *chints) :
+                                   const char *chints) :
   Property (cident, clabel, cblurb, chints),
-  default_value (cdefault_value),
   setter (csetter),
   getter (cgetter)
 {}
@@ -300,20 +288,13 @@ PropertyBool<Class>::get_value (Deletable *obj)
   return string_from_bool (b);
 }
 
-template<class Class> String
-PropertyBool<Class>::get_default (Deletable *obj)
-{
-  return string_from_bool (default_value);
-}
-
 /* range property implementation */
 template<class Class, typename Type>
 PropertyRange<Class,Type>::PropertyRange (void (Class::*csetter) (Type), Type (Class::*cgetter) (),
                                           const char *cident, const char *clabel, const char *cblurb,
-                                          Type cdefault_value, Type cminimum_value, Type cmaximum_value,
+                                          Type cminimum_value, Type cmaximum_value,
                                           Type cstepping, const char *chints) :
   Property (cident, clabel, cblurb, chints),
-  default_value (cdefault_value),
   minimum_value (cminimum_value),
   maximum_value (cmaximum_value),
   stepping (cstepping),
@@ -321,8 +302,6 @@ PropertyRange<Class,Type>::PropertyRange (void (Class::*csetter) (Type), Type (C
   getter (cgetter)
 {
   RAPICORN_ASSERT (minimum_value <= maximum_value);
-  RAPICORN_ASSERT (minimum_value <= default_value);
-  RAPICORN_ASSERT (default_value <= maximum_value);
   RAPICORN_ASSERT (minimum_value + stepping <= maximum_value);
 }
 
@@ -342,16 +321,10 @@ PropertyRange<Class,Type>::get_value (Deletable *obj)
   return string_from_type<Type> (v);
 }
 
-template<class Class, typename Type> String
-PropertyRange<Class,Type>::get_default (Deletable *obj)
-{
-  return string_from_type<Type> (default_value);
-}
-
 template<class Class, typename Type> bool
-PropertyRange<Class,Type>::get_range (Deletable *obj, double &minimum, double &start_value, double &maximum, double &vstepping)
+PropertyRange<Class,Type>::get_range (Deletable *obj, double &minimum, double &maximum, double &vstepping)
 {
-  minimum = minimum_value, start_value = default_value, maximum = maximum_value, vstepping = stepping;
+  minimum = minimum_value, maximum = maximum_value, vstepping = stepping;
   return true;
 }
 
@@ -359,10 +332,9 @@ PropertyRange<Class,Type>::get_range (Deletable *obj, double &minimum, double &s
 template<class Class>
 PropertyPoint<Class>::PropertyPoint (void (Class::*csetter) (Point), Point (Class::*cgetter) (),
                                      const char *cident, const char *clabel, const char *cblurb,
-                                     Point cdefault_value, Point cminimum_value, Point cmaximum_value,
+                                     Point cminimum_value, Point cmaximum_value,
                                      const char *chints) :
   Property (cident, clabel, cblurb, chints),
-  default_value (cdefault_value),
   setter (csetter),
   getter (cgetter)
 {}
@@ -389,22 +361,10 @@ PropertyPoint<Class>::get_value (Deletable *obj)
   return string_from_vector (dvec);
 }
 
-template<class Class> String
-PropertyPoint<Class>::get_default (Deletable *obj)
-{
-  Point point = default_value;
-  vector<double> dvec;
-  dvec.push_back (point.x);
-  dvec.push_back (point.y);
-  return string_from_vector (dvec);
-}
-
 template<class Class> bool
-PropertyPoint<Class>::get_range (Deletable *obj, Point &minimum, Point &start_value, Point &maximum)
+PropertyPoint<Class>::get_range (Deletable *obj, Point &minimum, Point &maximum)
 {
   minimum = minimum_value, maximum = maximum_value;
-  start_value.x = (minimum.x + maximum.x) / 2;
-  start_value.y = (minimum.y + maximum.y) / 2;
   return true;
 }
 
@@ -412,9 +372,8 @@ PropertyPoint<Class>::get_range (Deletable *obj, Point &minimum, Point &start_va
 template<class Class>
 PropertyString<Class>::PropertyString (void (Class::*csetter) (const String&), String (Class::*cgetter) (),
                                        const char *cident, const char *clabel, const char *cblurb,
-                                       const String &cdefault_value, const char *chints) :
+                                       const char *chints) :
   Property (cident, clabel, cblurb, chints),
-  default_value (cdefault_value),
   setter (csetter),
   getter (cgetter)
 {}
@@ -433,19 +392,12 @@ PropertyString<Class>::get_value (Deletable *obj)
   return (instance->*getter) ();
 }
 
-template<class Class> String
-PropertyString<Class>::get_default (Deletable *obj)
-{
-  return default_value;
-}
-
 /* enum property implementation */
 template<class Class, typename Type>
 PropertyEnum<Class,Type>::PropertyEnum (void (Class::*csetter) (Type), Type (Class::*cgetter) (),
                                         const char *cident, const char *clabel, const char *cblurb,
-                                        int64 cdefault_value, const EnumClass &eclass, const char *chints) :
+                                        const EnumClass &eclass, const char *chints) :
   Property (cident, clabel, cblurb, chints),
-  default_value (cdefault_value),
   enum_class (eclass),
   setter (csetter),
   getter (cgetter)
@@ -471,12 +423,6 @@ PropertyEnum<Class,Type>::get_value (Deletable *obj)
   Class *instance = dynamic_cast<Class*> (obj);
   Type v = (instance->*getter) ();
   return enum_class.string (v);
-}
-
-template<class Class, typename Type> String
-PropertyEnum<Class,Type>::get_default (Deletable *obj)
-{
-  return enum_class.string (default_value);
 }
 
 } // Rapicorn

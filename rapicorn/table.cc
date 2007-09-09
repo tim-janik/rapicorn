@@ -71,18 +71,18 @@ const PropertyList&
 TableImpl::TablePacker::list_properties()
 {
   static Property *properties[] = {
-    MakeProperty (TablePacker, left_attach,    _("Left Attach"),    _("Column index to attach the child's left side to"), 0u, 0u, 99999u, 5u, "rw"),
-    MakeProperty (TablePacker, right_attach,   _("Right Attach"),   _("Column index to attach the child's right side to"), 1u, 1u, 100000u, 5u, "rw"),
-    MakeProperty (TablePacker, bottom_attach,  _("Bottom Attach"),  _("Column index to attach the child's bottom side to"), 0u, 0u, 99999u, 5u, "rw"),
-    MakeProperty (TablePacker, top_attach,     _("Top Attach"),     _("Column index to attach the child's top side to"), 1u, 1u, 100000u, 5u, "rw"),
-    MakeProperty (TablePacker, left_padding,   _("Left Padding"),   _("Amount of padding to add at the child's left side"), 0u, 0u, 65535u, 3u, "rw"),
-    MakeProperty (TablePacker, right_padding,  _("Right Padding"),  _("Amount of padding to add at the child's right side"), 0u, 0u, 65535u, 3u, "rw"),
-    MakeProperty (TablePacker, bottom_padding, _("Bottom Padding"), _("Amount of padding to add at the child's bottom side"), 0u, 0u, 65535u, 3u, "rw"),
-    MakeProperty (TablePacker, top_padding,    _("Top Padding"),    _("Amount of padding to add at the child's top side"), 0u, 0u, 65535u, 3u, "rw"),
-    MakeProperty (TablePacker, hshrink,        _("Horizontal Shrink"), _("Whether the child may be shrunken horizontally"), false, "rw"),
-    MakeProperty (TablePacker, vshrink,        _("Vertical Shrink"),   _("Whether the child may be shrunken vertically"), false, "rw"),
-    MakeProperty (TablePacker, hfill,          _("Horizontal Fill"), _("Whether the child may fill all extra horizontal space"), true, "rw"),
-    MakeProperty (TablePacker, vfill,          _("Vertical Fill"), _("Whether the child may fill all extra vertical space"), true, "rw"),
+    MakeProperty (TablePacker, left_attach,    _("Left Attach"),    _("Column index to attach the child's left side to"), 0u, 99999u, 5u, "rw"),
+    MakeProperty (TablePacker, right_attach,   _("Right Attach"),   _("Column index to attach the child's right side to"), 1u, 100000u, 5u, "rw"),
+    MakeProperty (TablePacker, bottom_attach,  _("Bottom Attach"),  _("Column index to attach the child's bottom side to"), 0u, 99999u, 5u, "rw"),
+    MakeProperty (TablePacker, top_attach,     _("Top Attach"),     _("Column index to attach the child's top side to"), 1u, 100000u, 5u, "rw"),
+    MakeProperty (TablePacker, left_padding,   _("Left Padding"),   _("Amount of padding to add at the child's left side"), 0u, 65535u, 3u, "rw"),
+    MakeProperty (TablePacker, right_padding,  _("Right Padding"),  _("Amount of padding to add at the child's right side"), 0u, 65535u, 3u, "rw"),
+    MakeProperty (TablePacker, bottom_padding, _("Bottom Padding"), _("Amount of padding to add at the child's bottom side"), 0u, 65535u, 3u, "rw"),
+    MakeProperty (TablePacker, top_padding,    _("Top Padding"),    _("Amount of padding to add at the child's top side"), 0u, 65535u, 3u, "rw"),
+    MakeProperty (TablePacker, hshrink,        _("Horizontal Shrink"), _("Whether the child may be shrunken horizontally"), "rw"),
+    MakeProperty (TablePacker, vshrink,        _("Vertical Shrink"),   _("Whether the child may be shrunken vertically"), "rw"),
+    MakeProperty (TablePacker, hfill,          _("Horizontal Fill"), _("Whether the child may fill all extra horizontal space"), "rw"),
+    MakeProperty (TablePacker, vfill,          _("Vertical Fill"), _("Whether the child may fill all extra vertical space"), "rw"),
   };
   static const PropertyList property_list (properties);
   return property_list;
@@ -270,9 +270,9 @@ const PropertyList&
 TableImpl::list_properties()
 {
   static Property *properties[] = {
-    MakeProperty (Table, homogeneous,    _("Homogeneous"), _("Whether all children get the same size"), false, "rw"),
-    MakeProperty (Table, column_spacing, _("Column Spacing"), _("The amount of space between two consecutive columns"), 0, 0, 65535, 10, "rw"),
-    MakeProperty (Table, row_spacing,    _("Row Spacing"), _("The amount of space between two consecutive rows"), 0, 0, 65535, 10, "rw"),
+    MakeProperty (Table, homogeneous,    _("Homogeneous"), _("Whether all children get the same size"), "rw"),
+    MakeProperty (Table, column_spacing, _("Column Spacing"), _("The amount of space between two consecutive columns"), 0, 65535, 10, "rw"),
+    MakeProperty (Table, row_spacing,    _("Row Spacing"), _("The amount of space between two consecutive rows"), 0, 65535, 10, "rw"),
   };
   static const PropertyList property_list (properties, Container::list_properties());
   return property_list;

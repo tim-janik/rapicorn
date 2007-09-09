@@ -62,21 +62,21 @@ public:
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (PropertyHost, bool_prop,            "Label", "Blurb", false, "rw"),
-      MakeProperty (PropertyHost, const_bool_prop,      "Label", "Blurb", false, "rw"),
-      MakeProperty (PropertyHost, uint_prop,            "Label", "Blurb", 50, 0, 100, 5, "rw"),
-      MakeProperty (PropertyHost, const_uint_prop,      "Label", "Blurb", 50, 0, 100, 5, "rw"),
-      MakeProperty (PropertyHost, int_prop,             "Label", "Blurb", 50, 0, 100, 5, "rw"),
-      MakeProperty (PropertyHost, const_int_prop,       "Label", "Blurb", 50, 0, 100, 5, "rw"),
-      MakeProperty (PropertyHost, double_prop,          "Label", "Blurb", 50.5, 0, 100, 0.5, "rw"),
-      MakeProperty (PropertyHost, const_double_prop,    "Label", "Blurb", 50.5, 0, 100, 0.5, "rw"),
-      MakeProperty (PropertyHost, float_prop,           "Label", "Blurb", 50.5, 0, 100, 0.5, "rw"),
-      MakeProperty (PropertyHost, const_float_prop,     "Label", "Blurb", 50.5, 0, 100, 0.5, "rw"),
-      MakeProperty (PropertyHost, point_prop,           "Label", "Blurb", Point (1,1), Point (0,0), Point (10,10), "rw"),
-      MakeProperty (PropertyHost, string_prop,          "Label", "Blurb", "", "rw"),
-      MakeProperty (PropertyHost, const_string_prop,    "Label", "Blurb", "", "rw"),
-      MakeProperty (PropertyHost, enum_prop,            "Label", "Blurb", FRAME_NONE, "rw"),
-      MakeProperty (PropertyHost, const_enum_prop,      "Label", "Blurb", FRAME_NONE, "rw"),
+      MakeProperty (PropertyHost, bool_prop,            "Label", "Blurb", "rw"),
+      MakeProperty (PropertyHost, const_bool_prop,      "Label", "Blurb", "rw"),
+      MakeProperty (PropertyHost, uint_prop,            "Label", "Blurb", 0, 100, 5, "rw"),
+      MakeProperty (PropertyHost, const_uint_prop,      "Label", "Blurb", 0, 100, 5, "rw"),
+      MakeProperty (PropertyHost, int_prop,             "Label", "Blurb", 0, 100, 5, "rw"),
+      MakeProperty (PropertyHost, const_int_prop,       "Label", "Blurb", 0, 100, 5, "rw"),
+      MakeProperty (PropertyHost, double_prop,          "Label", "Blurb", 0, 100, 0.5, "rw"),
+      MakeProperty (PropertyHost, const_double_prop,    "Label", "Blurb", 0, 100, 0.5, "rw"),
+      MakeProperty (PropertyHost, float_prop,           "Label", "Blurb", 0, 100, 0.5, "rw"),
+      MakeProperty (PropertyHost, const_float_prop,     "Label", "Blurb", 0, 100, 0.5, "rw"),
+      MakeProperty (PropertyHost, point_prop,           "Label", "Blurb", Point (0,0), Point (10,10), "rw"),
+      MakeProperty (PropertyHost, string_prop,          "Label", "Blurb", "rw"),
+      MakeProperty (PropertyHost, const_string_prop,    "Label", "Blurb", "rw"),
+      MakeProperty (PropertyHost, enum_prop,            "Label", "Blurb", "rw"),
+      MakeProperty (PropertyHost, const_enum_prop,      "Label", "Blurb", "rw"),
     };
     static const PropertyList property_list (properties);
     return property_list;

@@ -215,21 +215,21 @@ protected:
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (Ambience, insensitive_background, _("Insensitive Background"), _("The kind of background painted when insensitive"), "none", "rw"),
-      MakeProperty (Ambience, prelight_background, _("Prelight Background"), _("The kind of background painted when prelight"), "none", "rw"),
-      MakeProperty (Ambience, impressed_background, _("Impressed Background"), _("The kind of background painted when impressed"), "none", "rw"),
-      MakeProperty (Ambience, normal_background, _("Normal Background"), _("The kind of background painted when normal"), "none", "rw"),
-      MakeProperty (Ambience, insensitive_lighting, _("Insensitive Lighting"), _("The kind of lighting painted when insensitive"), LIGHTING_NONE, "rw"),
-      MakeProperty (Ambience, prelight_lighting, _("Prelight Lighting"), _("The kind of lighting painted when prelight"), LIGHTING_NONE, "rw"),
-      MakeProperty (Ambience, impressed_lighting, _("Impressed Lighting"), _("The kind of lighting painted when impressed"), LIGHTING_NONE, "rw"),
-      MakeProperty (Ambience, normal_lighting, _("Normal Lighting"), _("The kind of lighting painted when normal"), LIGHTING_NONE, "rw"),
-      MakeProperty (Ambience, insensitive_shade, _("Insensitive Shade"), _("The kind of shade painted when insensitive"), LIGHTING_NONE, "rw"),
-      MakeProperty (Ambience, prelight_shade, _("Prelight Shade"), _("The kind of shade painted when prelight"), LIGHTING_NONE, "rw"),
-      MakeProperty (Ambience, impressed_shade, _("Impressed Shade"), _("The kind of shade painted when impressed"), LIGHTING_NONE, "rw"),
-      MakeProperty (Ambience, normal_shade, _("Normal Shade"), _("The kind of shade painted when normal"), LIGHTING_NONE, "rw"),
-      MakeProperty (Ambience, background, _("Background"), _("The kind of background painted for all modes"), "none", "rw"),
-      MakeProperty (Ambience, lighting, _("Lighting"), _("The kind of lighting painted for all modes"), LIGHTING_NONE, "rw"),
-      MakeProperty (Ambience, shade, _("Shade"), _("The kind of shade painted for all modes"), LIGHTING_NONE, "rw"),
+      MakeProperty (Ambience, insensitive_background, _("Insensitive Background"), _("The kind of background painted when insensitive"), "rw"),
+      MakeProperty (Ambience, prelight_background, _("Prelight Background"), _("The kind of background painted when prelight"), "rw"),
+      MakeProperty (Ambience, impressed_background, _("Impressed Background"), _("The kind of background painted when impressed"), "rw"),
+      MakeProperty (Ambience, normal_background, _("Normal Background"), _("The kind of background painted when normal"), "rw"),
+      MakeProperty (Ambience, insensitive_lighting, _("Insensitive Lighting"), _("The kind of lighting painted when insensitive"), "rw"),
+      MakeProperty (Ambience, prelight_lighting, _("Prelight Lighting"), _("The kind of lighting painted when prelight"), "rw"),
+      MakeProperty (Ambience, impressed_lighting, _("Impressed Lighting"), _("The kind of lighting painted when impressed"), "rw"),
+      MakeProperty (Ambience, normal_lighting, _("Normal Lighting"), _("The kind of lighting painted when normal"), "rw"),
+      MakeProperty (Ambience, insensitive_shade, _("Insensitive Shade"), _("The kind of shade painted when insensitive"), "rw"),
+      MakeProperty (Ambience, prelight_shade, _("Prelight Shade"), _("The kind of shade painted when prelight"), "rw"),
+      MakeProperty (Ambience, impressed_shade, _("Impressed Shade"), _("The kind of shade painted when impressed"), "rw"),
+      MakeProperty (Ambience, normal_shade, _("Normal Shade"), _("The kind of shade painted when normal"), "rw"),
+      MakeProperty (Ambience, background, _("Background"), _("The kind of background painted for all modes"), "rw"),
+      MakeProperty (Ambience, lighting, _("Lighting"), _("The kind of lighting painted for all modes"), "rw"),
+      MakeProperty (Ambience, shade, _("Shade"), _("The kind of shade painted for all modes"), "rw"),
     };
     static const PropertyList property_list (properties, SingleContainerImpl::list_properties());
     return property_list;
@@ -399,10 +399,10 @@ public:
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (Frame, normal_frame,    _("Normal Frame"),   _("The kind of frame to draw in normal state"), FRAME_ETCHED_IN, "rw"),
-      MakeProperty (Frame, impressed_frame, _("Impresed Frame"), _("The kind of frame to draw in impressed state"), FRAME_ETCHED_IN, "rw"),
-      MakeProperty (Frame, frame_type,      _("Frame Type"),     _("The kind of frame to draw in all states"), FRAME_ETCHED_IN, "w"),
-      MakeProperty (Frame, overlap_child,   _("Overlap Child"),  _("Draw frame in the same position as child"), false, "w"),
+      MakeProperty (Frame, normal_frame,    _("Normal Frame"),   _("The kind of frame to draw in normal state"), "rw"),
+      MakeProperty (Frame, impressed_frame, _("Impresed Frame"), _("The kind of frame to draw in impressed state"), "rw"),
+      MakeProperty (Frame, frame_type,      _("Frame Type"),     _("The kind of frame to draw in all states"), "w"),
+      MakeProperty (Frame, overlap_child,   _("Overlap Child"),  _("Draw frame in the same position as child"), "w"),
     };
     static const PropertyList property_list (properties, Container::list_properties());
     return property_list;
@@ -470,7 +470,7 @@ public:
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (FocusFrame, focus_frame, _("Focus Frame"), _("The kind of frame to draw in focus state"), FRAME_FOCUS, "rw"),
+      MakeProperty (FocusFrame, focus_frame, _("Focus Frame"), _("The kind of frame to draw in focus state"), "rw"),
     };
     static const PropertyList property_list (properties, FrameImpl::list_properties());
     return property_list;

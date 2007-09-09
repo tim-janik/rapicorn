@@ -69,9 +69,9 @@ const PropertyList&
 ArrangementImpl::ArrangementPacker::list_properties()
 {
   static Property *properties[] = {
-    MakeProperty (ArrangementPacker, position, _("Position"),          _("Position coordinate of the child's anchor"), Point (0, 0), Point (-MAXDOUBLE, -MAXDOUBLE), Point (+MAXDOUBLE, +MAXDOUBLE), "rw"),
-    MakeProperty (ArrangementPacker, hanchor,  _("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), 0.5, 0, 1, 0.5, "rw"),
-    MakeProperty (ArrangementPacker, vanchor,  _("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), 0.5, 0, 1, 0.5, "rw"),
+    MakeProperty (ArrangementPacker, position, _("Position"),          _("Position coordinate of the child's anchor"), Point (-MAXDOUBLE, -MAXDOUBLE), Point (+MAXDOUBLE, +MAXDOUBLE), "rw"),
+    MakeProperty (ArrangementPacker, hanchor,  _("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), 0, 1, 0.5, "rw"),
+    MakeProperty (ArrangementPacker, vanchor,  _("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), 0, 1, 0.5, "rw"),
   };
   static const PropertyList property_list (properties);
   return property_list;
@@ -199,9 +199,9 @@ const PropertyList&
 ArrangementImpl::list_properties()
 {
   static Property *properties[] = {
-    MakeProperty (Arrangement, origin,         _("Origin"),            _("The coordinate origin to be displayed by the arrangement"), Point (0, 0), Point (-MAXDOUBLE, -MAXDOUBLE), Point (+MAXDOUBLE, +MAXDOUBLE), "rw"),
-    MakeProperty (Arrangement, origin_hanchor, _("Horizontal Anchor"), _("Horizontal position of the origin within arrangement, 0=left, 1=right"), 0.5, 0, 1, 0.1, "rw"),
-    MakeProperty (Arrangement, origin_vanchor, _("Vertical Anchor"),   _("Vertical position of the origin within arrangement, 0=bottom, 1=top"), 0.5, 0, 1, 0.1, "rw"),
+    MakeProperty (Arrangement, origin,         _("Origin"),            _("The coordinate origin to be displayed by the arrangement"), Point (-MAXDOUBLE, -MAXDOUBLE), Point (+MAXDOUBLE, +MAXDOUBLE), "rw"),
+    MakeProperty (Arrangement, origin_hanchor, _("Horizontal Anchor"), _("Horizontal position of the origin within arrangement, 0=left, 1=right"), 0, 1, 0.1, "rw"),
+    MakeProperty (Arrangement, origin_vanchor, _("Vertical Anchor"),   _("Vertical position of the origin within arrangement, 0=bottom, 1=top"), 0, 1, 0.1, "rw"),
   };
   static const PropertyList property_list (properties, Container::list_properties());
   return property_list;

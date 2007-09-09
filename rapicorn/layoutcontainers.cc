@@ -101,14 +101,14 @@ protected:
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (AlignmentImpl, halign,         _("Horizontal Alignment"), _("Horizontal position of unexpanded child, 0=left, 1=right"), 0, 0, 1, 0.5, "rw"),
-      MakeProperty (AlignmentImpl, hscale,         _("Horizontal Scale"),     _("Fractional expansion of unexpanded child, 0=unexpanded, 1=expanded"), 1, 0, 1, 0.5, "rw"),
-      MakeProperty (AlignmentImpl, valign,         _("Vertical Alignment"),   _("Vertical position of unexpanded child, 0=bottom, 1=top"), 1, 0, 1, 0.5, "rw"),
-      MakeProperty (AlignmentImpl, vscale,         _("Vertical Scale"),       _("Fractional expansion of unexpanded child, 0=unexpanded, 1=expanded"), 0, 0, 1, 0.5, "rw"),
-      MakeProperty (AlignmentImpl, left_padding,   _("Left Padding"),   _("Amount of padding to add at the child's left side"), 0, 0, 65535, 3, "rw"),
-      MakeProperty (AlignmentImpl, right_padding,  _("Right Padding"),  _("Amount of padding to add at the child's right side"), 0, 0, 65535, 3, "rw"),
-      MakeProperty (AlignmentImpl, bottom_padding, _("Bottom Padding"), _("Amount of padding to add at the child's bottom side"), 0, 0, 65535, 3, "rw"),
-      MakeProperty (AlignmentImpl, top_padding,    _("Top Padding"),    _("Amount of padding to add at the child's top side"), 0, 0, 65535, 3, "rw"),
+      MakeProperty (AlignmentImpl, halign,         _("Horizontal Alignment"), _("Horizontal position of unexpanded child, 0=left, 1=right"), 0, 1, 0.5, "rw"),
+      MakeProperty (AlignmentImpl, hscale,         _("Horizontal Scale"),     _("Fractional expansion of unexpanded child, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "rw"),
+      MakeProperty (AlignmentImpl, valign,         _("Vertical Alignment"),   _("Vertical position of unexpanded child, 0=bottom, 1=top"), 0, 1, 0.5, "rw"),
+      MakeProperty (AlignmentImpl, vscale,         _("Vertical Scale"),       _("Fractional expansion of unexpanded child, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "rw"),
+      MakeProperty (AlignmentImpl, left_padding,   _("Left Padding"),   _("Amount of padding to add at the child's left side"), 0, 65535, 3, "rw"),
+      MakeProperty (AlignmentImpl, right_padding,  _("Right Padding"),  _("Amount of padding to add at the child's right side"), 0, 65535, 3, "rw"),
+      MakeProperty (AlignmentImpl, bottom_padding, _("Bottom Padding"), _("Amount of padding to add at the child's bottom side"), 0, 65535, 3, "rw"),
+      MakeProperty (AlignmentImpl, top_padding,    _("Top Padding"),    _("Amount of padding to add at the child's top side"), 0, 65535, 3, "rw"),
     };
     static const PropertyList property_list (properties, SingleContainerImpl::list_properties());
     return property_list;
@@ -125,14 +125,14 @@ class HBoxImpl : public virtual HBox, public virtual TableImpl {
     list_properties ()
     {
       static Property *properties[] = {
-        MakeProperty (TablePacker, left_padding,   _("Left Padding"),   _("Amount of padding to add at the child's left side"), 0, 0, 65535, 3, "rw"),
-        MakeProperty (TablePacker, right_padding,  _("Right Padding"),  _("Amount of padding to add at the child's right side"), 0, 0, 65535, 3, "rw"),
-        MakeProperty (TablePacker, bottom_padding, _("Bottom Padding"), _("Amount of padding to add at the child's bottom side"), 0, 0, 65535, 3, "rw"),
-        MakeProperty (TablePacker, top_padding,    _("Top Padding"),    _("Amount of padding to add at the child's top side"), 0, 0, 65535, 3, "rw"),
-        MakeProperty (TablePacker, hshrink,        _("Horizontal Shrink"), _("Whether the child may be shrunken horizontally"), false, "rw"),
-        MakeProperty (TablePacker, vshrink,        _("Vertical Shrink"),   _("Whether the child may be shrunken vertically"), false, "rw"),
-        MakeProperty (TablePacker, hfill,          _("Horizontal Fill"),   _("Whether the child may fill all extra horizontal space"), true, "rw"),
-        MakeProperty (TablePacker, vfill,          _("Vertical Fill"),     _("Whether the child may fill all extra vertical space"), true, "rw"),
+        MakeProperty (TablePacker, left_padding,   _("Left Padding"),   _("Amount of padding to add at the child's left side"), 0, 65535, 3, "rw"),
+        MakeProperty (TablePacker, right_padding,  _("Right Padding"),  _("Amount of padding to add at the child's right side"), 0, 65535, 3, "rw"),
+        MakeProperty (TablePacker, bottom_padding, _("Bottom Padding"), _("Amount of padding to add at the child's bottom side"), 0, 65535, 3, "rw"),
+        MakeProperty (TablePacker, top_padding,    _("Top Padding"),    _("Amount of padding to add at the child's top side"), 0, 65535, 3, "rw"),
+        MakeProperty (TablePacker, hshrink,        _("Horizontal Shrink"), _("Whether the child may be shrunken horizontally"), "rw"),
+        MakeProperty (TablePacker, vshrink,        _("Vertical Shrink"),   _("Whether the child may be shrunken vertically"), "rw"),
+        MakeProperty (TablePacker, hfill,          _("Horizontal Fill"),   _("Whether the child may fill all extra horizontal space"), "rw"),
+        MakeProperty (TablePacker, vfill,          _("Vertical Fill"),     _("Whether the child may fill all extra vertical space"), "rw"),
       };
       static const PropertyList property_list (properties);
       return property_list;
@@ -174,8 +174,8 @@ public:
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (HBox, homogeneous, _("Homogeneous"), _("Whether all children get the same size"), false, "rw"),
-      MakeProperty (HBox, spacing,     _("Spacing"),     _("The amount of space between two consecutive columns"), 0, 0, 65535, 10, "rw"),
+      MakeProperty (HBox, homogeneous, _("Homogeneous"), _("Whether all children get the same size"), "rw"),
+      MakeProperty (HBox, spacing,     _("Spacing"),     _("The amount of space between two consecutive columns"), 0, 65535, 10, "rw"),
     };
     static const PropertyList property_list (properties, Container::list_properties());
     return property_list;
@@ -197,14 +197,14 @@ class VBoxImpl : public virtual VBox, public virtual TableImpl {
     list_properties ()
     {
       static Property *properties[] = {
-        MakeProperty (TablePacker, left_padding,   _("Left Padding"),   _("Amount of padding to add at the child's left side"), 0, 0, 65535, 3, "rw"),
-        MakeProperty (TablePacker, right_padding,  _("Right Padding"),  _("Amount of padding to add at the child's right side"), 0, 0, 65535, 3, "rw"),
-        MakeProperty (TablePacker, bottom_padding, _("Bottom Padding"), _("Amount of padding to add at the child's bottom side"), 0, 0, 65535, 3, "rw"),
-        MakeProperty (TablePacker, top_padding,    _("Top Padding"),    _("Amount of padding to add at the child's top side"), 0, 0, 65535, 3, "rw"),
-        MakeProperty (TablePacker, hshrink,        _("Horizontal Shrink"), _("Whether the child may be shrunken horizontally"), false, "rw"),
-        MakeProperty (TablePacker, vshrink,        _("Vertical Shrink"),   _("Whether the child may be shrunken vertically"), false, "rw"),
-        MakeProperty (TablePacker, hfill,          _("Horizontal Fill"),   _("Whether the child may fill all extra horizontal space"), true, "rw"),
-        MakeProperty (TablePacker, vfill,          _("Vertical Fill"),     _("Whether the child may fill all extra vertical space"), true, "rw"),
+        MakeProperty (TablePacker, left_padding,   _("Left Padding"),   _("Amount of padding to add at the child's left side"), 0, 65535, 3, "rw"),
+        MakeProperty (TablePacker, right_padding,  _("Right Padding"),  _("Amount of padding to add at the child's right side"), 0, 65535, 3, "rw"),
+        MakeProperty (TablePacker, bottom_padding, _("Bottom Padding"), _("Amount of padding to add at the child's bottom side"), 0, 65535, 3, "rw"),
+        MakeProperty (TablePacker, top_padding,    _("Top Padding"),    _("Amount of padding to add at the child's top side"), 0, 65535, 3, "rw"),
+        MakeProperty (TablePacker, hshrink,        _("Horizontal Shrink"), _("Whether the child may be shrunken horizontally"), "rw"),
+        MakeProperty (TablePacker, vshrink,        _("Vertical Shrink"),   _("Whether the child may be shrunken vertically"), "rw"),
+        MakeProperty (TablePacker, hfill,          _("Horizontal Fill"),   _("Whether the child may fill all extra horizontal space"), "rw"),
+        MakeProperty (TablePacker, vfill,          _("Vertical Fill"),     _("Whether the child may fill all extra vertical space"), "rw"),
       };
       static const PropertyList property_list (properties);
       return property_list;
@@ -243,8 +243,8 @@ public:
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (VBox, homogeneous, _("Homogeneous"), _("Whether all children get the same size"), false, "rw"),
-      MakeProperty (VBox, spacing,     _("Spacing"),     _("The amount of space between two consecutive rows"), 0, 0, 65535, 10, "rw"),
+      MakeProperty (VBox, homogeneous, _("Homogeneous"), _("Whether all children get the same size"), "rw"),
+      MakeProperty (VBox, spacing,     _("Spacing"),     _("The amount of space between two consecutive rows"), 0, 65535, 10, "rw"),
     };
     static const PropertyList property_list (properties, Container::list_properties());
     return property_list;

@@ -1203,8 +1203,8 @@ protected:
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (TextPangoImpl, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "", "rw"),
-      MakeProperty (TextPangoImpl, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), TEXT_MODE_ELLIPSIZED, "rw"),
+      MakeProperty (TextPangoImpl, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
+      MakeProperty (TextPangoImpl, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
     };
     static const PropertyList property_list (properties, Item::list_properties());
     return property_list;

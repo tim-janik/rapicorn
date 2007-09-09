@@ -77,8 +77,8 @@ const PropertyList&
 SliderArea::list_properties()
 {
   static Property *properties[] = {
-    MakeProperty (SliderArea, flipped,           _("Flipped"),           _("Invert (flip) display of the adjustment value"), false, "rw"),
-    MakeProperty (SliderArea, adjustment_source, _("Adjustment Source"), _("Type of source to retrive an adjustment from"), ADJUSTMENT_SOURCE_SELF, "rw"),
+    MakeProperty (SliderArea, flipped,           _("Flipped"),           _("Invert (flip) display of the adjustment value"), "rw"),
+    MakeProperty (SliderArea, adjustment_source, _("Adjustment Source"), _("Type of source to retrive an adjustment from"), "rw"),
   };
   static const PropertyList property_list (properties, Container::list_properties());
   return property_list;
@@ -469,7 +469,7 @@ private:
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (SliderSkidImpl, vertical_skid, _("Vertical Skid"), _("Adjust behaviour to vertical skid movement"), false, "rw"),
+      MakeProperty (SliderSkidImpl, vertical_skid, _("Vertical Skid"), _("Adjust behaviour to vertical skid movement"), "rw"),
     };
     static const PropertyList property_list (properties, SingleContainerImpl::list_properties());
     return property_list;

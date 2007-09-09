@@ -262,10 +262,10 @@ private:
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (EditorImpl, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), TEXT_MODE_SINGLE_LINE, "rw"),
-      MakeProperty (EditorImpl, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "", "rw"),
-      MakeProperty (EditorImpl, request_chars,  _("Request Chars"),  _("Number of characters to request space for."), 0, 0, INT_MAX, 2, "rw"),
-      MakeProperty (EditorImpl, request_digits, _("Request Digits"), _("Number of digits to request space for."), 0, 0, INT_MAX, 2, "rw"),
+      MakeProperty (EditorImpl, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
+      MakeProperty (EditorImpl, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
+      MakeProperty (EditorImpl, request_chars,  _("Request Chars"),  _("Number of characters to request space for."), 0, INT_MAX, 2, "rw"),
+      MakeProperty (EditorImpl, request_digits, _("Request Digits"), _("Number of digits to request space for."), 0, INT_MAX, 2, "rw"),
     };
     static const PropertyList property_list (properties, Item::list_properties());
     return property_list;

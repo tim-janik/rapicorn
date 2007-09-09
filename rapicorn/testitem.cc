@@ -33,16 +33,16 @@ TestItem::list_properties()
 {
   /* not using _() here, because TestItem is just a developer tool */
   static Property *properties[] = {
-    MakeProperty (TestItem, epsilon,       "Epsilon",       "Epsilon within which assertions must hold",  DFLTEPS,   0,         +DBL_MAX, 0.01, "rw"),
-    MakeProperty (TestItem, assert_left,   "Assert-Left",   "Assert positioning of the left item edge",   -INFINITY, -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestItem, assert_right,  "Assert-Right",  "Assert positioning of the right item edge",  -INFINITY, -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestItem, assert_bottom, "Assert-Bottom", "Assert positioning of the bottom item edge", -INFINITY, -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestItem, assert_top,    "Assert-Top",    "Assert positioning of the top item edge",    -INFINITY, -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestItem, assert_width,  "Assert-Width",  "Assert amount of the item width",            -INFINITY, -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestItem, assert_height, "Assert-Height", "Assert amount of the item height",           -INFINITY, -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestItem, fatal_asserts, "Fatal-Asserts", "Handle assertion failures as fatal errors",  false, "rw"),
-    MakeProperty (TestItem, accu,          "Accumulator",   "Store string value and keep history",        "", "rw"),
-    MakeProperty (TestItem, accu_history,  "Accu-History",  "Concatenated accumulator history",           "", "rw"),
+    MakeProperty (TestItem, epsilon,       "Epsilon",       "Epsilon within which assertions must hold",  0,         +DBL_MAX, 0.01, "rw"),
+    MakeProperty (TestItem, assert_left,   "Assert-Left",   "Assert positioning of the left item edge",   -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestItem, assert_right,  "Assert-Right",  "Assert positioning of the right item edge",  -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestItem, assert_bottom, "Assert-Bottom", "Assert positioning of the bottom item edge", -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestItem, assert_top,    "Assert-Top",    "Assert positioning of the top item edge",    -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestItem, assert_width,  "Assert-Width",  "Assert amount of the item width",            -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestItem, assert_height, "Assert-Height", "Assert amount of the item height",           -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestItem, fatal_asserts, "Fatal-Asserts", "Handle assertion failures as fatal errors",  "rw"),
+    MakeProperty (TestItem, accu,          "Accumulator",   "Store string value and keep history",        "rw"),
+    MakeProperty (TestItem, accu_history,  "Accu-History",  "Concatenated accumulator history",           "rw"),
   };
   static const PropertyList property_list (properties, Item::list_properties());
   return property_list;

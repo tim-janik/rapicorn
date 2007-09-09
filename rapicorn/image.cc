@@ -205,8 +205,8 @@ public:
   list_properties()
   {
     static Property *properties[] = {
-      MakeProperty (Image, image_file, _("Image Filename"), _("Load an image from a file, only PNG images can be loaded."), "", "rw"),
-      MakeProperty (Image, builtin_pixstream, _("Builtin Pixstream"), _("Load an image from a builtin pixel stream."), "", "rw"),
+      MakeProperty (Image, image_file, _("Image Filename"), _("Load an image from a file, only PNG images can be loaded."), "rw"),
+      MakeProperty (Image, builtin_pixstream, _("Builtin Pixstream"), _("Load an image from a builtin pixel stream."), "rw"),
     };
     static const PropertyList property_list (properties, Item::list_properties());
     return property_list;
