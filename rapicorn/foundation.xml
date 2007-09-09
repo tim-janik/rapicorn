@@ -16,40 +16,18 @@
  ! with this library; if not, see http://www.gnu.org/copyleft/.
  !-->
 <rapicorn-gadgets xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
-  
-  <!-- TestItem -->
-  <def:TestItem inherit="Rapicorn::Factory::TestItem"/>
-
-  <!-- Root -->
-  <def:Root inherit="Rapicorn::Factory::Root"/>
-
-  <!-- frames -->
-  <def:Frame inherit="Rapicorn::Factory::Frame"/>
-  <def:FocusFrame inherit="Rapicorn::Factory::FocusFrame"/>
 
   <!-- Alignment -->
-  <def:Alignment inherit="Rapicorn::Factory::Alignment" />
+  <def:Alignment inherit="Rapicorn::Factory::Alignment"/>
 
   <!-- Ambience (background + lighting) -->
   <def:Ambience inherit="Rapicorn::Factory::Ambience"/>
 
-  <!-- Table -->
-  <def:Table inherit="Rapicorn::Factory::Table" >
-  </def:Table>
-  <def:HBox inherit="Rapicorn::Factory::HBox" />
-  <def:VBox inherit="Rapicorn::Factory::VBox" />
-
   <!-- Arrangement -->
   <def:Arrangement inherit="Rapicorn::Factory::Arrangement" />
 
-  <!-- Label -->
-  <def:Label inherit="Rapicorn::Factory::TextPango" />
-
-  <!-- TextEditor -->
-  <def:TextEditor inherit="Rapicorn::Factory::Text::Editor" />
-
-  <!-- Image -->
-  <def:Image inherit="Rapicorn::Factory::Image" />
+  <!-- Arrow -->
+  <def:Arrow inherit="Rapicorn::Factory::Arrow"/>
 
   <!-- buttons -->
   <def:Button inherit="Rapicorn::Factory::ButtonArea" child-container="child-area" >
@@ -86,8 +64,18 @@
   <!-- Drawable -->
   <def:Drawable inherit="Rapicorn::Factory::Drawable"/>
 
-  <!-- Arrow -->
-  <def:Arrow inherit="Rapicorn::Factory::Arrow"/>
+  <!-- frames -->
+  <def:Frame inherit="Rapicorn::Factory::Frame"/>
+  <def:FocusFrame inherit="Rapicorn::Factory::FocusFrame"/>
+
+  <!-- Image -->
+  <def:Image inherit="Rapicorn::Factory::Image" />
+
+  <!-- Label -->
+  <def:Label inherit="Rapicorn::Factory::TextPango" />
+
+  <!-- Root -->
+  <def:Root inherit="Rapicorn::Factory::Root"/>
 
   <!-- slider -->
   <def:Rapicorn-slider-trough inherit="Rapicorn::Factory::SliderTrough"/>
@@ -140,5 +128,17 @@
       </VBox>
     </Frame>
   </def:VSlider>
+
+  <!-- Table -->
+  <def:Table inherit="Rapicorn::Factory::Table" >
+  </def:Table>
+  <def:HBox inherit="Rapicorn::Factory::HBox" />
+  <def:VBox inherit="Rapicorn::Factory::VBox" />
+
+  <!-- TestItem -->
+  <def:TestItem inherit="Rapicorn::Factory::TestItem"/>
+
+  <!-- TextEditor -->
+  <def:TextEditor inherit="Rapicorn::Factory::Text::Editor" />
 
 </rapicorn-gadgets>
