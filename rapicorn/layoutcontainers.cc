@@ -30,8 +30,8 @@ public:
   AlignmentImpl() :
     m_left_padding (0), m_right_padding (0),
     m_bottom_padding (0), m_top_padding (0),
-    m_halign (0.5), m_hscale (0),
-    m_valign (0.5), m_vscale (0)
+    m_halign (0.5), m_hscale (1),
+    m_valign (0.5), m_vscale (1)
   {}
   virtual void
   size_request (Requisition &requisition)
@@ -102,8 +102,8 @@ protected:
   {
     static Property *properties[] = {
       MakeProperty (AlignmentImpl, halign,         _("Horizontal Alignment"), _("Horizontal position of unexpanded child, 0=left, 1=right"), 0, 0, 1, 0.5, "rw"),
-      MakeProperty (AlignmentImpl, hscale,         _("Horizontal Scale"),     _("Fractional expansion of unexpanded child, 0=unexpanded, 1=expanded"), 0, 0, 1, 0.5, "rw"),
-      MakeProperty (AlignmentImpl, valign,         _("Vertical Alignment"),   _("Vertical position of unexpanded child, 0=bottom, 1=top"), 0, 0, 1, 0.5, "rw"),
+      MakeProperty (AlignmentImpl, hscale,         _("Horizontal Scale"),     _("Fractional expansion of unexpanded child, 0=unexpanded, 1=expanded"), 1, 0, 1, 0.5, "rw"),
+      MakeProperty (AlignmentImpl, valign,         _("Vertical Alignment"),   _("Vertical position of unexpanded child, 0=bottom, 1=top"), 1, 0, 1, 0.5, "rw"),
       MakeProperty (AlignmentImpl, vscale,         _("Vertical Scale"),       _("Fractional expansion of unexpanded child, 0=unexpanded, 1=expanded"), 0, 0, 1, 0.5, "rw"),
       MakeProperty (AlignmentImpl, left_padding,   _("Left Padding"),   _("Amount of padding to add at the child's left side"), 0, 0, 65535, 3, "rw"),
       MakeProperty (AlignmentImpl, right_padding,  _("Right Padding"),  _("Amount of padding to add at the child's right side"), 0, 0, 65535, 3, "rw"),
