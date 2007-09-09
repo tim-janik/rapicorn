@@ -40,12 +40,10 @@ EXTRA_DIST  += ChangeLog
 # install pkg-config files
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = rapicorn@LT_RELEASE@.pc
-rapicorn@LT_RELEASE@.pc: $(srcdir)/rapicorn.pc.in
-rapicorn@LT_RELEASE@.pc: $(top_builddir)/config.status
+rapicorn@LT_RELEASE@.pc: $(top_builddir)/config.status rapicorn.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status --file=$@:rapicorn.pc.in
-$(pkgconfig_DATA): $(top_builddir)/config.status
 CLEANFILES += rapicorn@LT_RELEASE@.pc
-EXTRA_DIST += rapicorn@LT_RELEASE@.pc
+EXTRA_DIST += rapicorn.pc.in
 
 
 # disable bogus cleanup checks

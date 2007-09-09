@@ -45,7 +45,6 @@ rapicorn_cc_sources = $(strip 		\
 	text-editor.cc	text-pango.cc	testitem.cc	\
 )
 rapicorn_private_files = $(strip 	\
-                  \
 	regionimpl.h			\
 	private.hh			\
 	key2utf8.cc			\
@@ -101,7 +100,6 @@ api-check:	# ensure headers don't change if RELEASE=outdated && REVISION=0
 api-checksum:
 	$(RAPICORN_MAKE_CHECKSUM)
 #check-am: api-check # this is called by the toplevel Makefile.am
-EXTRA_DIST += api-check.md5
 .PHONY: api-check api-checksum
 
 #XML_FILES = $(strip standard.xml )
@@ -126,5 +124,5 @@ EXTRA_DIST += $(XML_FILES)
 gen-zintern.c:	../rapicorn-core/rapicorn-zintern $(srcdir)/foundation.xml stamp-autochecks
 	../rapicorn-core/rapicorn-zintern -b -z FOUNDATION_XML $(srcdir)/foundation.xml > xgen-$(@F)
 	mv xgen-$(@F) $@
-factory.cc: gen-zintern.c
+$(srcdir)/factory.cc: gen-zintern.c
 CLEANFILES += xgen-gen-zintern.c gen-zintern.c

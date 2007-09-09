@@ -36,8 +36,6 @@ rapicorn_private_files = $(strip	\
         rapicornsignalslot.hh		\
         rapicornsignaltemplate.hh	\
 	mksignals.sh			\
-	private.hh			\
-	key2utf8.cc			\
 )
 
 # libraries
@@ -74,34 +72,7 @@ rapicorn_zintern_LDADD   = $(RAPICORN_LIBS) -lm # $(progs_ldadd)
 rapicorn_zintern_DEPS    = $(progs_deps)
 
 
-# === header-checksum ===
-RAPICORN_MAKE_CHECKSUM=$(strip			\
-	cat $(filter-out rapicornconfig.h,	\
-		$(rapicorn_public_headers)	\
-		$(rapicorn_top_headers)		\
-		$(rapicorn_generated_headers)	\
-	) | md5sum | sed 's/ .*//'		\
-)
-api-check:	# ensure headers don't change if RELEASE=outdated && REVISION=0
-	cd $(srcdir) \
-	&& RAPICORN_CURRENT_CHECKSUM=$$($(RAPICORN_MAKE_CHECKSUM))		\
-	&& RAPICORN_WEEK_VERSION="$$(expr $$(date +%G) - 2000)$$(date +%V)"	\
-	&& test "$$RAPICORN_CURRENT_CHECKSUM"  = "`cat api-check.md5`"		\
-	|| if [ "@RAPICORN_RELEASE_VERSION@"   = "$$RAPICORN_WEEK_VERSION" -o	\
-		"@RAPICORN_REVISION_VERSION@" -gt 0 ]; then			\
-	     echo "$$RAPICORN_CURRENT_CHECKSUM" > api-check.md5 ;		\
-	   else \
-	     MSG1="The Rapicorn version (@RAPICORN_RELEASE_VERSION@.@RAPICORN_REVISION_VERSION@) needs updating " ;		\
-	     MSG2="(expected $$RAPICORN_WEEK_VERSION.0) to match header changes (checksum: $$RAPICORN_CURRENT_CHECKSUM)" ;	\
-	     MSG="$$MSG1$$MSG2" ; echo $$MSG | sed 's/./=/g'; echo $$MSG; echo $$MSG | sed 's/./=/g' ;				\
-	     exit 1 ; \
-	   fi
-api-checksum:
-	$(RAPICORN_MAKE_CHECKSUM)
-#check-am: api-check # this is called by the toplevel Makefile.am
-EXTRA_DIST += api-check.md5
-.PHONY: api-check api-checksum
-
+# === enum introspection ===
 $(srcdir)/enumdefs.cc: gen-enums.cc
 gen-enums.cc: $(srcdir)/enumdefs.hh Makefile
 	cd . \
