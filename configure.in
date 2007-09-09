@@ -430,11 +430,13 @@ AC_SUBST(LDFLAGS)
 # create output files
 AC_CONFIG_FILES([
 Makefile
+rapicorn-core/Makefile
+rapicorn-core/tests/Makefile
 rapicorn/Makefile
+rapicorn/tests/Makefile
 po/Makefile.in
 po-helper.sh
 examples/Makefile
-tests/Makefile
 docs/Makefile
 web/Makefile
 ])

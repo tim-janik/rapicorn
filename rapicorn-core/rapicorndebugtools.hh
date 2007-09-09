@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_DEBUG_TOOLS_HH__
 #define __RAPICORN_DEBUG_TOOLS_HH__
 
-#include <rapicorn/rapicornutils.hh>
+#include <rapicorn-core/rapicornutils.hh>
 #include <stdarg.h>
 
 namespace Rapicorn {

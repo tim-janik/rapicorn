@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_XML_HH__
 #define __RAPICORN_XML_HH__
 
-#include <rapicorn/rapicornmarkup.hh>
+#include <rapicorn-core/rapicornmarkup.hh>
 
 namespace Rapicorn {
 

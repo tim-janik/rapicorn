@@ -14,7 +14,7 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include <rapicorn/rapicorncore.hh>
+#include <rapicorn-core/rapicorncore.hh>
 #include <glib.h>
 #include <stdio.h>
 #include <string.h>

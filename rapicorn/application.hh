@@ -17,6 +17,7 @@
 #ifndef __RAPICORN_APPLICATION_HH__
 #define __RAPICORN_APPLICATION_HH__
 
+#include <rapicorn/utilities.hh>
 #include <rapicorn/primitives.hh>
 #include <rapicorn/window.hh>
 

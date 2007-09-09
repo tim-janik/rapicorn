@@ -4,6 +4,8 @@
 ## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
+SUBDIRS = . tests
+
 INCLUDES       += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(PANGO_CFLAGS) $(GTK_CFLAGS)
 GLIB_MKENUMS    = glib-mkenums
 LDLIBS	        = $(LIBS) $(PANGO_LIBS) $(GTK_LIBS)
@@ -12,14 +14,9 @@ DEFS            = -DRAPICORN_PRIVATE -DPARANOID -D_RAPICORN_SOURCE_EXTENSIONS -D
 
 rapicorn_top_headers = rapicorn.hh
 rapicorn_public_headers = $(strip 	\
-	rapicorncore.hh rapicorncdefs.h           rapicorntests.h                   \
-        rapicorncpu.hh    rapicorndebugtools.hh     rapicornthread.hh rapicornutils.hh  \
-        rapicornmsg.hh    rapicornsignal.hh         rapicornmath.hh   rapicornutf8.hh   \
-        rapicornxml.hh    rapicornmarkup.hh \
-	\
 	keycodes.hh	$(rapicorn_impl_headers)	\
 	utilities.hh	events.hh	application.hh	\
-	enumdefs.hh	primitives.hh	region.hh	loop.hh		viewport.hh		\
+	primitives.hh	region.hh	loop.hh		viewport.hh		\
 	properties.hh	commands.hh	appearance.hh	painter.hh	window.hh		\
 	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
 	adjustment.hh	image.hh	paintgadgets.hh	slider.hh	paintcontainers.hh	\
@@ -35,18 +32,12 @@ rapicorn_impl_headers = $(strip 	\
 	tableimpl.hh			\
 )
 rapicorn_generated_headers = $(strip	\
-        rapicornsignalvariants.hh         \
-	rapicornconfig.h		\
 )
 rapicorn_cc_sources = $(strip 		\
-        rapicornthreadimpl.cc             \
-        rapicorncpu.cc    rapicorndebugtools.cc     rapicornthread.cc rapicornutils.cc  \
-        rapicornmsg.cc    rapicornsignal.cc         rapicornmath.cc   rapicornutf8.cc   \
-        rapicornxml.cc    rapicornmarkup.cc \
 	\
 	viewport-gtk.cc	regionimpl.c	\
 	utilities.cc	events.cc	application.cc	\
-	enumdefs.cc	primitives.cc	region.cc	loop.cc		viewport.cc		\
+	primitives.cc	region.cc	loop.cc		viewport.cc		\
 	properties.cc	commands.cc	appearance.cc	painter.cc	window.cc		\
 	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\
 	adjustment.cc	image.cc	paintgadgets.cc	slider.cc	paintcontainers.cc	\
@@ -54,9 +45,7 @@ rapicorn_cc_sources = $(strip 		\
 	text-editor.cc	text-pango.cc	testitem.cc	\
 )
 rapicorn_private_files = $(strip 	\
-        rapicornsignalslot.hh             \
-        rapicornsignaltemplate.hh         \
-	mksignals.sh			\
+                  \
 	regionimpl.h			\
 	private.hh			\
 	key2utf8.cc			\
@@ -77,22 +66,19 @@ librapicorn@LT_RELEASE@_la_LDFLAGS      = $(strip		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined 						\
 ) # set libtool version and export symbols for resolving
-librapicorn@LT_RELEASE@_la_LIBADD       = $(RAPICORN_LIBS) -lm # -lfreetype -lfontconfig
+librapicorn@LT_RELEASE@_la_LIBADD       = $(top_builddir)/rapicorn-core/librapicorn@LT_RELEASE@core.o $(RAPICORN_LIBS) -lm # -lfreetype -lfontconfig
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@LT_RELEASE@_la_DEPENDENCIES)
 
 # programs (not installed)
 noinst_PROGRAMS        = $(ALLTESTS)
 progs_ldadd            = librapicorn@LT_RELEASE@.la $(RAPICORN_LIBS) -lm
-# rapicorn-zintern
-noinst_PROGRAMS       += rapicorn-zintern
-rapicorn_zintern_SOURCES = rapicorn-zintern.cc
-rapicorn_zintern_LDADD   = $(RAPICORN_LIBS) -lm # $(progs_ldadd)
-rapicorn_zintern_DEPS    = $(progs_deps)
 
 
 # === header-checksum ===
 RAPICORN_MAKE_CHECKSUM=$(strip			\
 	cat $(filter-out rapicornconfig.h,	\
+		../rapicorn-core/*.hh		\
+		../rapicorn-core/*.h		\
 		$(rapicorn_public_headers)	\
 		$(rapicorn_top_headers)		\
 		$(rapicorn_generated_headers)	\
@@ -126,23 +112,6 @@ EXTRA_DIST += api-check.md5
 #	touch $@
 #$(lib_LTLIBRARIES): stamp-xmllint
 
-$(srcdir)/enumdefs.cc: gen-enums.cc
-gen-enums.cc: $(srcdir)/enumdefs.hh Makefile
-	cd . \
-	&& ( cd ${srcdir} && $(GLIB_MKENUMS) \
-	  --fprod "\n/* --- @filename@ --- */\n#include\t\"@filename@\"" \
-	  --vhead "/* @EnumName@\n */\n" \
-	  --vhead "static const @Type@Type<@EnumName@>::Value @EnumName@_value_array[] = {" \
-	  --vprod "  { @VALUENAME@, \"@VALUENAME@\", sizeof (\"@VALUENAME@\") - 1 }," \
-	  --vtail "};\n" \
-	  --vtail "template<> const uint @Type@Type<@EnumName@>::n_values = sizeof (@EnumName@_value_array) / sizeof (@EnumName@_value_array[0]);\n" \
-	  --vtail "template<> const @Type@Type@EnumName@::Value *const @Type@Type@EnumName@::values = @EnumName@_value_array;\n" \
-	  --vtail "template<> const char *@Type@Type@EnumName@::ename = \"@EnumName@\";" \
-	    $^ ) > xgen-enu \
-	&& cp xgen-enu $@ \
-	&& rm -f xgen-enu
-CLEANFILES += xgen-enu gen-enums.cc
-
 XML_FILES   = foundation.xml
 XMLLINTCALL = $(if $(XMLLINT),$(XMLLINT),true) # handle undefined XMLLINT
 xml-lint:
@@ -154,97 +123,8 @@ stamp-autochecks: $(XML_FILES)
 noinst_DATA = stamp-autochecks
 EXTRA_DIST += $(XML_FILES)
 
-gen-zintern.c:	./rapicorn-zintern $(srcdir)/foundation.xml stamp-autochecks
-	./rapicorn-zintern -b -z FOUNDATION_XML $(srcdir)/foundation.xml > xgen-$(@F)
+gen-zintern.c:	../rapicorn-core/rapicorn-zintern $(srcdir)/foundation.xml stamp-autochecks
+	../rapicorn-core/rapicorn-zintern -b -z FOUNDATION_XML $(srcdir)/foundation.xml > xgen-$(@F)
 	mv xgen-$(@F) $@
 factory.cc: gen-zintern.c
 CLEANFILES += xgen-gen-zintern.c gen-zintern.c
-
-
-# === rapicornconfig.h ===
-rapicornconfig.h: $(top_builddir)/config.status # Makefile
-	cd . \
-	&& echo "/* Generated data from $< (by make $@) */" 					 > xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- select programming environment --- */"					>> xgen-$(@F) \
-	&& echo "#ifndef _GNU_SOURCE"								>> xgen-$(@F) \
-	&& echo "#define _GNU_SOURCE"								>> xgen-$(@F) \
-	&& echo "#endif"									>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- unique namespace for all symbols --- */"				>> xgen-$(@F) \
-	&& echo "#define Rapicorn			@RAPICORN_NAMESPACE_NAME@"		>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- standard C code wrappers --- */"					>> xgen-$(@F) \
-	&& echo "#ifdef  __cplusplus"								>> xgen-$(@F) \
-	&& echo '#define RAPICORN_EXTERN_C_BEGIN()	extern "C" {'				>> xgen-$(@F) \
-	&& echo "#define RAPICORN_EXTERN_C_END()		}"					>> xgen-$(@F) \
-	&& echo "#else"										>> xgen-$(@F) \
-	&& echo "#define RAPICORN_EXTERN_C_BEGIN()"						>> xgen-$(@F) \
-	&& echo "#define RAPICORN_EXTERN_C_END()"							>> xgen-$(@F) \
-	&& echo "#endif"									>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- rapicorn version --- */"						>> xgen-$(@F) \
-	&& echo "#define RAPICORN_RELEASE_VERSION	(@RAPICORN_RELEASE_VERSION@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_REVISION_VERSION	(@RAPICORN_REVISION_VERSION@)"		>> xgen-$(@F) \
-	&& echo "/* version checks */"								>> xgen-$(@F) \
-	&& echo "#define RAPICORN_CHECK_VERSION(relv,revv)	\\"				>> xgen-$(@F) \
-	&& echo "  (RAPICORN_RELEASE_VERSION > (relv) || \\"					>> xgen-$(@F) \
-	&& echo "   (RAPICORN_RELEASE_VERSION == (relv) && \\" 					>> xgen-$(@F) \
-	&& echo "    RAPICORN_REVISION_VERSION >= (revv)))" 					>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- log & i18n domains --- */"						>> xgen-$(@F) \
-	&& echo "#ifndef RAPICORN_LOG_DOMAIN"							>> xgen-$(@F) \
-	&& echo "#ifdef  G_LOG_DOMAIN"								>> xgen-$(@F) \
-	&& echo "#define RAPICORN_LOG_DOMAIN  G_LOG_DOMAIN"					>> xgen-$(@F) \
-	&& echo "#else"										>> xgen-$(@F) \
-	&& echo "#define RAPICORN_LOG_DOMAIN  ((const char*) 0)"					>> xgen-$(@F) \
-	&& echo "#endif"									>> xgen-$(@F) \
-	&& echo "#endif"									>> xgen-$(@F) \
-	&& echo '#define RAPICORN_I18N_DOMAIN    "rapicorn"'					>> xgen-$(@F) \
-	&& echo "/* make sure to call bindtextdomain (RAPICORN_I18N_DOMAIN, i18ndir_path); */"	>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- backend configuration --- */"						>> xgen-$(@F) \
-	&& echo "#define RAPICORN_WITH_GTK	(1)"						>> xgen-$(@F) \
-	&& echo "#define RAPICORN_WITH_PANGO	(1)"						>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- configure results --- */"						>> xgen-$(@F) \
-	&& echo "#define RAPICORN_OS_@RAPICORN_OS@  	(1) /* one of: @RAPICORN_OS_CHOICES@ */"	>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_POINTER		(@RAPICORN_SIZEOF_POINTER@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_LONG		(@RAPICORN_SIZEOF_LONG@)"			>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_SYS_TYPESH_UINT	(@RAPICORN_SIZEOF_SYS_TYPESH_UINT@)"	>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_PTH_MUTEX_T	(@RAPICORN_SIZEOF_PTH_MUTEX_T@)" 		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_PTH_COND_T	(@RAPICORN_SIZEOF_PTH_COND_T@)" 		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_HAVE_MUTEXATTR_SETTYPE	(@RAPICORN_HAVE_MUTEXATTR_SETTYPE@ && \\" >> xgen-$(@F) \
-	&& echo "                                        RAPICORN_SIZEOF_PTH_MUTEX_T && \\" 	>> xgen-$(@F) \
-	&& echo "                                        RAPICORN_SIZEOF_PTH_COND_T)" 		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_MEMORY_BARRIER_NEEDED   (@RAPICORN_MEMORY_BARRIER_NEEDED@)"	>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLIN 		(@RAPICORN_SYSVAL_POLLIN@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLPRI		(@RAPICORN_SYSVAL_POLLPRI@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLOUT		(@RAPICORN_SYSVAL_POLLOUT@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLRDNORM	(@RAPICORN_SYSVAL_POLLRDNORM@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLRDBAND 	(@RAPICORN_SYSVAL_POLLRDBAND@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLWRNORM   	(@RAPICORN_SYSVAL_POLLWRNORM@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLWRBAND	(@RAPICORN_SYSVAL_POLLWRBAND@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLERR		(@RAPICORN_SYSVAL_POLLERR@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLHUP		(@RAPICORN_SYSVAL_POLLHUP@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLNVAL		(@RAPICORN_SYSVAL_POLLNVAL@)"		>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* Generated data ends here */" 						>> xgen-$(@F) \
-	&& cp xgen-$(@F) $@ \
-	&& rm -f xgen-$(@F)
-CLEANFILES += xgen-rapicornconfig.h rapicornconfig.h
-$(librapicorn@LT_RELEASE@_la_OBJECTS): rapicornconfig.h
-
-
-# === rapicornsignalvariants.hh ===
-$(srcdir)/*.cc: rapicornsignalvariants.hh
-rapicornsignalvariants.hh: $(srcdir)/rapicornsignalslot.hh $(srcdir)/rapicornsignaltemplate.hh $(srcdir)/mksignals.sh
-	cd . \
-	&& echo "/* Signal Variants -- Generated from: $(^F) */"	>xgen-sigs \
-	&& echo 						       >>xgen-sigs \
-	&& $(srcdir)/mksignals.sh $(srcdir)/rapicornsignalslot.hh     17 >>xgen-sigs \
-	&& $(srcdir)/mksignals.sh $(srcdir)/rapicornsignaltemplate.hh 16 >>xgen-sigs \
-	&& cp xgen-sigs $@ \
-	&& rm -f xgen-sigs
-CLEANFILES += xgen-sigs rapicornsignalvariants.hh xgen-signals.sed

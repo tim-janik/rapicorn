@@ -17,17 +17,18 @@
 #ifndef __RAPICORN_H__
 #define __RAPICORN_H__
 
-#include <rapicorn/rapicornconfig.h>
-#include <rapicorn/rapicorncpu.hh>
-#include <rapicorn/rapicorndebugtools.hh>
-#include <rapicorn/rapicornmsg.hh>
-#include <rapicorn/rapicornmarkup.hh>
-#include <rapicorn/rapicornmath.hh>
-#include <rapicorn/rapicornutf8.hh>
-#include <rapicorn/rapicornutils.hh>
-#include <rapicorn/rapicornsignal.hh>
-#include <rapicorn/rapicornthread.hh>
-#include <rapicorn/rapicornxml.hh>
+#include <rapicorn-core/rapicornconfig.h>
+#include <rapicorn-core/rapicorncpu.hh>
+#include <rapicorn-core/rapicorndebugtools.hh>
+#include <rapicorn-core/enumdefs.hh>
+#include <rapicorn-core/rapicornmsg.hh>
+#include <rapicorn-core/rapicornmarkup.hh>
+#include <rapicorn-core/rapicornmath.hh>
+#include <rapicorn-core/rapicornutf8.hh>
+#include <rapicorn-core/rapicornutils.hh>
+#include <rapicorn-core/rapicornsignal.hh>
+#include <rapicorn-core/rapicornthread.hh>
+#include <rapicorn-core/rapicornxml.hh>
 
 #endif /* __RAPICORN_H__ */
 /* vim:set ts=8 sts=2 sw=2: */

@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_CDEFS_H__
 #define __RAPICORN_CDEFS_H__
 
-#include <rapicorn/rapicornconfig.h>	/* _GNU_SOURCE */
+#include <rapicorn-core/rapicornconfig.h> /* _GNU_SOURCE */
 #include <stdbool.h>
 #include <stddef.h>			/* NULL */
 #include <sys/types.h>			/* uint, ssize */

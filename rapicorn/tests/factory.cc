@@ -18,7 +18,7 @@
  * otherwise) arising in any way out of the use of this software, even
  * if advised of the possibility of such damage.
  */
-#include <rapicorn/rapicorntests.h>
+#include <rapicorn-core/rapicorntests.h>
 #include <rapicorn/rapicorn.hh>
 #include <rapicorn/testitem.hh>
 

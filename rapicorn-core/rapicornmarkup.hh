@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_MARKUP_HH__
 #define __RAPICORN_MARKUP_HH__
 
-#include <rapicorn/rapicornutils.hh>
+#include <rapicorn-core/rapicornutils.hh>
 
 namespace Rapicorn {
 

@@ -23,7 +23,6 @@
 #include <rapicorn/arrangement.hh>
 #include <rapicorn/buttons.hh>
 #include <rapicorn/container.hh>
-#include <rapicorn/enumdefs.hh>
 #include <rapicorn/evaluator.hh>
 #include <rapicorn/events.hh>
 #include <rapicorn/factory.hh>

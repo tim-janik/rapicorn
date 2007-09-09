@@ -4,7 +4,7 @@
 ## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = . rapicorn po examples tests docs web
+SUBDIRS = . rapicorn-core rapicorn po examples docs web
 noinst_DATA =
 
 # setup automake

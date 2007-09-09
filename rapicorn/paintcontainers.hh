@@ -18,7 +18,6 @@
 #define __RAPICORN_PAINT_CONTAINERS_HH__
 
 #include <rapicorn/utilities.hh>
-#include <rapicorn/enumdefs.hh>
 #include <rapicorn/item.hh>
 
 namespace Rapicorn {

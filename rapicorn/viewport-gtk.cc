@@ -15,6 +15,8 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "viewport.hh"
+#include <rapicorn-core/rapicornthread.hh>
+#include <rapicorn/utilities.hh>
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>

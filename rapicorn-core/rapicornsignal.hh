@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_SIGNAL_HH__
 #define __RAPICORN_SIGNAL_HH__
 
-#include <rapicorn/rapicornutils.hh>
+#include <rapicorn-core/rapicornutils.hh>
 
 namespace Rapicorn {
 namespace Signals {
@@ -424,7 +424,7 @@ trampoline_cast (TrampolineLink *link)
 }
 
 /* --- Trampoline + Slot + Signal generation --- */
-#include <rapicorn/rapicornsignalvariants.hh> // contains multiple versions of "rapicornsignaltemplate.hh"
+#include <rapicorn-core/rapicornsignalvariants.hh> // contains multiple versions of "rapicornsignaltemplate.hh"
 
 /* --- predefined slots --- */
 typedef Slot0<void, void> VoidSlot;

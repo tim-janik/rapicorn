@@ -15,7 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 //#define TEST_VERBOSE
-#include <rapicorn/rapicorntests.h>
+#include <rapicorn-core/rapicorntests.h>
 #include <rapicorn/rapicorn.hh>
 
 #define MakeProperty    RAPICORN_MakeProperty

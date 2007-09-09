@@ -18,6 +18,7 @@
 #define __RAPICORN_PROPERTIES_HH__
 
 #include <rapicorn/primitives.hh>
+#include <rapicorn/utilities.hh>
 
 namespace Rapicorn {
 

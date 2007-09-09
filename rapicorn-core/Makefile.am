@@ -4,60 +4,38 @@
 ## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
+SUBDIRS = . tests
+
 INCLUDES       += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(PANGO_CFLAGS) $(GTK_CFLAGS)
 GLIB_MKENUMS    = glib-mkenums
 LDLIBS	        = $(LIBS) $(PANGO_LIBS) $(GTK_LIBS)
 DEFS            = -DRAPICORN_PRIVATE -DPARANOID -D_RAPICORN_SOURCE_EXTENSIONS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
 
 
-rapicorn_top_headers = rapicorn.hh
-rapicorn_public_headers = $(strip 	\
-	rapicorncore.hh rapicorncdefs.h           rapicorntests.h                   \
-        rapicorncpu.hh    rapicorndebugtools.hh     rapicornthread.hh rapicornutils.hh  \
-        rapicornmsg.hh    rapicornsignal.hh         rapicornmath.hh   rapicornutf8.hh   \
-        rapicornxml.hh    rapicornmarkup.hh \
-	\
-	keycodes.hh	$(rapicorn_impl_headers)	\
-	utilities.hh	events.hh	application.hh	\
-	enumdefs.hh	primitives.hh	region.hh	loop.hh		viewport.hh		\
-	properties.hh	commands.hh	appearance.hh	painter.hh	window.hh		\
-	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
-	adjustment.hh	image.hh	paintgadgets.hh	slider.hh	paintcontainers.hh	\
-	buttons.hh	factory.hh	evaluator.hh	scrollitems.hh	layoutcontainers.hh	\
-	text-editor.hh	text-pango.hh	testitem.hh	\
+rapicorn_top_headers = rapicorncore.hh
+rapicorn_public_headers = $(strip	\
+        rapicorncpu.hh	rapicorndebugtools.hh	rapicornthread.hh	rapicornutils.hh  \
+        rapicornmsg.hh	rapicornsignal.hh	rapicornmath.hh		rapicornutf8.hh   \
+        rapicornxml.hh	rapicornmarkup.hh	enumdefs.hh		\
+	$(rapicorn_impl_headers)	\
+	rapicorncore.hh	rapicorncdefs.h		rapicorntests.h		\
 )
 rapicorn_impl_headers = $(strip 	\
-	arrangementimpl.hh		\
-	containerimpl.hh		\
-	itemimpl.hh			\
-	rootimpl.hh			\
-	scrollitemsimpl.hh		\
-	tableimpl.hh			\
 )
 rapicorn_generated_headers = $(strip	\
-        rapicornsignalvariants.hh         \
+        rapicornsignalvariants.hh	\
 	rapicornconfig.h		\
 )
 rapicorn_cc_sources = $(strip 		\
-        rapicornthreadimpl.cc             \
-        rapicorncpu.cc    rapicorndebugtools.cc     rapicornthread.cc rapicornutils.cc  \
-        rapicornmsg.cc    rapicornsignal.cc         rapicornmath.cc   rapicornutf8.cc   \
-        rapicornxml.cc    rapicornmarkup.cc \
-	\
-	viewport-gtk.cc	regionimpl.c	\
-	utilities.cc	events.cc	application.cc	\
-	enumdefs.cc	primitives.cc	region.cc	loop.cc		viewport.cc		\
-	properties.cc	commands.cc	appearance.cc	painter.cc	window.cc		\
-	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\
-	adjustment.cc	image.cc	paintgadgets.cc	slider.cc	paintcontainers.cc	\
-	buttons.cc	factory.cc	evaluator.cc	scrollitems.cc	layoutcontainers.cc	\
-	text-editor.cc	text-pango.cc	testitem.cc	\
+        rapicornthreadimpl.cc		\
+        rapicorncpu.cc    rapicorndebugtools.cc	rapicornthread.cc	rapicornutils.cc  \
+        rapicornmsg.cc    rapicornsignal.cc	rapicornmath.cc		rapicornutf8.cc   \
+        rapicornxml.cc    rapicornmarkup.cc	enumdefs.cc		\
 )
-rapicorn_private_files = $(strip 	\
-        rapicornsignalslot.hh             \
-        rapicornsignaltemplate.hh         \
+rapicorn_private_files = $(strip	\
+        rapicornsignalslot.hh		\
+        rapicornsignaltemplate.hh	\
 	mksignals.sh			\
-	regionimpl.h			\
 	private.hh			\
 	key2utf8.cc			\
 )
@@ -66,23 +44,29 @@ rapicorn_private_files = $(strip 	\
 topincludedir   = $(includedir)/rapicorn@LT_RELEASE@
 topinclude_DATA = $(rapicorn_top_headers)
 EXTRA_DIST     += $(rapicorn_top_headers)
-# librapicorn
-lib_LTLIBRARIES                         = librapicorn@LT_RELEASE@.la	# hardcoded -release $(LT_RELEASE)
-librapicorn@LT_RELEASE@includedir       = $(includedir)/rapicorn@LT_RELEASE@/rapicorn
-librapicorn@LT_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
-librapicorn@LT_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorn@LT_RELEASE@_la_DEPENDENCIES = ldscript.map
-librapicorn@LT_RELEASE@_la_LDFLAGS      = $(strip		\
+# librapicorn-core
+lib_LTLIBRARIES                         = librapicorn@LT_RELEASE@core.la # hardcoded -release $(LT_RELEASE)
+librapicorn@LT_RELEASE@coreincludedir       = $(includedir)/rapicorn@LT_RELEASE@/rapicorn
+librapicorn@LT_RELEASE@coreinclude_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
+librapicorn@LT_RELEASE@core_la_SOURCES      = $(rapicorn_cc_sources)
+librapicorn@LT_RELEASE@core_la_DEPENDENCIES = ldscript.map
+librapicorn@LT_RELEASE@core_la_LDFLAGS      = $(strip		\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined 						\
 ) # set libtool version and export symbols for resolving
-librapicorn@LT_RELEASE@_la_LIBADD       = $(RAPICORN_LIBS) -lm # -lfreetype -lfontconfig
-EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@LT_RELEASE@_la_DEPENDENCIES)
+librapicorn@LT_RELEASE@core_la_LIBADD       = $(RAPICORN_LIBS) -lm # -lfreetype -lfontconfig
+EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@LT_RELEASE@core_la_DEPENDENCIES)
+
+# keep this .o rule in sync with the corresponding .la rule from Makefile.in
+librapicorn@LT_RELEASE@core.o: $(librapicorn@LT_RELEASE@core_la_OBJECTS) $(librapicorn@LT_RELEASE@core_la_DEPENDENCIES)
+	$(CXXLINK) -rpath $(libdir) $(librapicorn@LT_RELEASE@core_la_LDFLAGS) $(librapicorn@LT_RELEASE@core_la_OBJECTS) # $(librapicorn@LT_RELEASE@core_la_LIBADD) $(LIBS)
+all-am: librapicorn@LT_RELEASE@core.o
+CLEANFILES += librapicorn@LT_RELEASE@core.lo librapicorn@LT_RELEASE@core.o
 
 # programs (not installed)
 noinst_PROGRAMS        = $(ALLTESTS)
-progs_ldadd            = librapicorn@LT_RELEASE@.la $(RAPICORN_LIBS) -lm
+progs_ldadd            = librapicorn@LT_RELEASE@core.la $(RAPICORN_LIBS) -lm
 # rapicorn-zintern
 noinst_PROGRAMS       += rapicorn-zintern
 rapicorn_zintern_SOURCES = rapicorn-zintern.cc
@@ -118,14 +102,6 @@ api-checksum:
 EXTRA_DIST += api-check.md5
 .PHONY: api-check api-checksum
 
-#XML_FILES = $(strip standard.xml )
-## xml linting
-#stamp-xmllint: $(XML_FILES)
-#	cd $(srcdir) \
-#	&& $(XMLLINT) --noout $(XML_FILES)
-#	touch $@
-#$(lib_LTLIBRARIES): stamp-xmllint
-
 $(srcdir)/enumdefs.cc: gen-enums.cc
 gen-enums.cc: $(srcdir)/enumdefs.hh Makefile
 	cd . \
@@ -142,23 +118,6 @@ gen-enums.cc: $(srcdir)/enumdefs.hh Makefile
 	&& cp xgen-enu $@ \
 	&& rm -f xgen-enu
 CLEANFILES += xgen-enu gen-enums.cc
-
-XML_FILES   = foundation.xml
-XMLLINTCALL = $(if $(XMLLINT),$(XMLLINT),true) # handle undefined XMLLINT
-xml-lint:
-	$(XMLLINTCALL) --noout $(XML_FILES)
-.PHONY: xml-lint
-stamp-autochecks: $(XML_FILES)
-	@$(MAKE) xml-lint
-	@touch $@
-noinst_DATA = stamp-autochecks
-EXTRA_DIST += $(XML_FILES)
-
-gen-zintern.c:	./rapicorn-zintern $(srcdir)/foundation.xml stamp-autochecks
-	./rapicorn-zintern -b -z FOUNDATION_XML $(srcdir)/foundation.xml > xgen-$(@F)
-	mv xgen-$(@F) $@
-factory.cc: gen-zintern.c
-CLEANFILES += xgen-gen-zintern.c gen-zintern.c
 
 
 # === rapicornconfig.h ===
@@ -234,7 +193,7 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& cp xgen-$(@F) $@ \
 	&& rm -f xgen-$(@F)
 CLEANFILES += xgen-rapicornconfig.h rapicornconfig.h
-$(librapicorn@LT_RELEASE@_la_OBJECTS): rapicornconfig.h
+$(librapicorn@LT_RELEASE@core_la_OBJECTS): rapicornconfig.h
 
 
 # === rapicornsignalvariants.hh ===

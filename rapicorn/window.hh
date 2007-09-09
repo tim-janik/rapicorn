@@ -17,6 +17,7 @@
 #ifndef __RAPICORN_WINDOW_HH__
 #define __RAPICORN_WINDOW_HH__
 
+#include <rapicorn-core/rapicornsignal.hh>
 #include <rapicorn/primitives.hh>
 
 namespace Rapicorn {
