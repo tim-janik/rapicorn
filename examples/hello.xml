@@ -23,7 +23,7 @@
 
   <def:OuterShell inherit="Ambience" child-container="OuterShellCavity"
     normal-lighting="upper-left">
-    <Alignment right-padding="3" top-padding="3" left-padding="3" bottom-padding="3">
+    <Alignment right-padding="3" top-padding="3" left-padding="3" bottom-padding="3" hscale="0" vscale="0" >
       <VBox id="OuterShellCavity" />
     </Alignment>
   </def:OuterShell>
