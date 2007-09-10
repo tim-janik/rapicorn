@@ -1057,13 +1057,13 @@ protected:
   }
 protected:
   void
-  render_dot (Plane        &plane,
-              int           x,
-              int           y,
-              int           width,
-              int           height,
-              int           dot_size,
-              Color         col)
+  render_dot_gL (Plane        &plane,
+                 int           x,
+                 int           y,
+                 int           width,
+                 int           height,
+                 int           dot_size,
+                 Color         col)
   {
     Color fg (col.premultiplied());
     int offset = height - dot_size;
@@ -1083,11 +1083,11 @@ protected:
       }
   }
   void
-  render_cursor (Plane        &plane,
-                 Color         col,
-                 Rect          layout_rect,
-                 double        layout_x,
-                 double        layout_y)
+  render_cursor_gL (Plane        &plane,
+                    Color         col,
+                    Rect          layout_rect,
+                    double        layout_x,
+                    double        layout_y)
   {
     // const char *ptext = pango_layout_get_text (m_layout);
     PangoRectangle crect1, crect2, irect, lrect;
@@ -1114,17 +1114,17 @@ protected:
 #endif
   }
   void
-  render_text (Plane        &plane,
-               Rect          layout_rect,
-               int           dot_size,
-               Color         fg)
+  render_text_gL (Plane        &plane,
+                  Rect          layout_rect,
+                  int           dot_size,
+                  Color         fg)
   {
     if (dot_size)
       {
         IRect idr = layout_rect;
-        render_dot (plane, idr.x, idr.y, idr.width / 3, idr.height, dot_size, fg);
-        render_dot (plane, idr.x + idr.width / 3, idr.y, idr.width / 3, idr.height, dot_size, fg);
-        render_dot (plane, idr.x + 2 * idr.width / 3, idr.y, idr.width / 3, idr.height, dot_size, fg);
+        render_dot_gL (plane, idr.x, idr.y, idr.width / 3, idr.height, dot_size, fg);
+        render_dot_gL (plane, idr.x + idr.width / 3, idr.y, idr.width / 3, idr.height, dot_size, fg);
+        render_dot_gL (plane, idr.x + 2 * idr.width / 3, idr.y, idr.width / 3, idr.height, dot_size, fg);
         return;
       }
     /* constrain rendering area */
@@ -1137,7 +1137,7 @@ protected:
     double ly = r.y + r.height - (layout_rect.y + layout_rect.height);
     _rapicorn_pango_renderer_render_layout (plane, *style(), fg, m_layout, r, ifloor (lx), ifloor (ly));
     /* and cursor */
-    render_cursor (plane, fg, r, lx, ly);
+    render_cursor_gL (plane, fg, r, lx, ly);
   }
   Rect
   layout_area (uint *vdot_size)
@@ -1185,17 +1185,17 @@ protected:
       {
         /* render embossed text */
         area.y -= 1;
-        render_text (plane, area, vdot_size, white());
+        render_text_gL (plane, area, vdot_size, white());
         area.x -= 1;
         area.y += 1;
         Plane emboss (Plane::init_from_size (plane));
-        render_text (emboss, area, vdot_size, dark_shadow());
+        render_text_gL (emboss, area, vdot_size, dark_shadow());
         plane.combine (emboss, COMBINE_OVER);
       }
     else
       {
         /* render normal text */
-        render_text (plane, area, vdot_size, foreground());
+        render_text_gL (plane, area, vdot_size, foreground());
       }
     rapicorn_gtk_threads_leave();
   }
