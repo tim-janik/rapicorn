@@ -42,8 +42,9 @@ enum ModifierState {
 enum KeyValue {
 #include <rapicorn/keycodes.hh>
 };
-unichar key_value_to_unichar  (uint32 keysym); 
-bool    key_value_is_modifier (uint32 keysym);
+unichar key_value_to_unichar     (uint32 keysym);
+bool    key_value_is_modifier    (uint32 keysym);
+bool    key_value_is_accelerator (uint32 keysym);
 
 typedef enum {
   EVENT_NONE,

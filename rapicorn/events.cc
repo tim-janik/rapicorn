@@ -321,15 +321,29 @@ create_event_win_delete (const EventContext &econtext)
   return event;
 }
 
-static const unsigned short non_accelerator[] = {
-  KEY_Tab,              KEY_ISO_Left_Tab,       KEY_KP_Tab,
+static const unsigned short modifier_table[] = {
   KEY_Shift_L,          KEY_Shift_R,            KEY_Shift_Lock,         KEY_Caps_Lock,  KEY_ISO_Lock,
   KEY_Control_L,        KEY_Control_R,
   KEY_Alt_L,            KEY_Alt_R,              KEY_Meta_L,             KEY_Meta_R,
   KEY_Super_L,          KEY_Super_R,            KEY_Hyper_L,            KEY_Hyper_R,
-  KEY_Num_Lock ,        KEY_Scroll_Lock,        KEY_Sys_Req,
+  KEY_Num_Lock,         KEY_Scroll_Lock,
   KEY_Mode_switch,      KEY_Multi_key,
   KEY_ISO_Level3_Shift,
+};
+
+bool
+key_value_is_modifier (uint32 keysym)
+{
+  for (uint i = 0; i < ARRAY_SIZE (modifier_table); i++)
+    if (keysym == modifier_table[i])
+      return true;
+  return false;
+}
+
+static const unsigned short non_accelerator_table[] = {
+  KEY_Sys_Req,
+  KEY_Tab,
+  KEY_ISO_Left_Tab,             KEY_KP_Tab,
   KEY_ISO_First_Group,          KEY_ISO_Last_Group,
   KEY_ISO_Next_Group,           KEY_ISO_Prev_Group,
   KEY_First_Virtual_Screen,     KEY_Last_Virtual_Screen,
@@ -338,12 +352,14 @@ static const unsigned short non_accelerator[] = {
 };
 
 bool
-key_value_is_modifier (uint32 keysym)
+key_value_is_accelerator (uint32 keysym)
 {
-  for (uint i = 0; i < ARRAY_SIZE (non_accelerator); i++)
-    if (keysym == non_accelerator[i])
-      return true;
-  return false;
+  if (key_value_is_modifier (keysym))
+    return false;
+  for (uint i = 0; i < ARRAY_SIZE (non_accelerator_table); i++)
+    if (keysym == non_accelerator_table[i])
+      return false;
+  return true;
 }
 
 } // Rapicorn
