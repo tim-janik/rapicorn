@@ -50,7 +50,7 @@ rapicorn_private_files = $(strip 	\
 	key2utf8.cc			\
 )
 
-# libraries
+# === libraries ===
 topincludedir   = $(includedir)/rapicorn@LT_RELEASE@
 topinclude_DATA = $(rapicorn_top_headers)
 EXTRA_DIST     += $(rapicorn_top_headers)
@@ -68,39 +68,15 @@ librapicorn@LT_RELEASE@_la_LDFLAGS      = $(strip		\
 librapicorn@LT_RELEASE@_la_LIBADD       = $(top_builddir)/rapicorn-core/librapicorn@LT_RELEASE@core.o $(RAPICORN_LIBS) -lm # -lfreetype -lfontconfig
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@LT_RELEASE@_la_DEPENDENCIES)
 
-# programs (not installed)
+# === API headers ===
+api-content:
+	cat $(sort $(rapicorn_public_headers) $(rapicorn_top_headers) $(rapicorn_generated_headers))
+.PHONY: api-content
+
+# === programs (not installed) ===
 noinst_PROGRAMS        = $(ALLTESTS)
 progs_ldadd            = librapicorn@LT_RELEASE@.la $(RAPICORN_LIBS) -lm
 
-
-# === header-checksum ===
-RAPICORN_MAKE_CHECKSUM=$(strip			\
-	cat $(filter-out rapicornconfig.h,	\
-		../rapicorn-core/*.hh		\
-		../rapicorn-core/*.h		\
-		$(rapicorn_public_headers)	\
-		$(rapicorn_top_headers)		\
-		$(rapicorn_generated_headers)	\
-	) | md5sum | sed 's/ .*//'		\
-)
-api-check:	# ensure headers don't change if RELEASE=outdated && REVISION=0
-	cd $(srcdir) \
-	&& RAPICORN_CURRENT_CHECKSUM=$$($(RAPICORN_MAKE_CHECKSUM))		\
-	&& RAPICORN_WEEK_VERSION="$$(expr $$(date +%G) - 2000)$$(date +%V)"	\
-	&& test "$$RAPICORN_CURRENT_CHECKSUM"  = "`cat api-check.md5`"		\
-	|| if [ "@RAPICORN_RELEASE_VERSION@"   = "$$RAPICORN_WEEK_VERSION" -o	\
-		"@RAPICORN_REVISION_VERSION@" -gt 0 ]; then			\
-	     echo "$$RAPICORN_CURRENT_CHECKSUM" > api-check.md5 ;		\
-	   else \
-	     MSG1="The Rapicorn version (@RAPICORN_RELEASE_VERSION@.@RAPICORN_REVISION_VERSION@) needs updating " ;		\
-	     MSG2="(expected $$RAPICORN_WEEK_VERSION.0) to match header changes (checksum: $$RAPICORN_CURRENT_CHECKSUM)" ;	\
-	     MSG="$$MSG1$$MSG2" ; echo $$MSG | sed 's/./=/g'; echo $$MSG; echo $$MSG | sed 's/./=/g' ;				\
-	     exit 1 ; \
-	   fi
-api-checksum:
-	$(RAPICORN_MAKE_CHECKSUM)
-#check-am: api-check # this is called by the toplevel Makefile.am
-.PHONY: api-check api-checksum
 
 #XML_FILES = $(strip standard.xml )
 ## xml linting

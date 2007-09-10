@@ -38,7 +38,7 @@ rapicorn_private_files = $(strip	\
 	mksignals.sh			\
 )
 
-# libraries
+# === libraries ===
 topincludedir   = $(includedir)/rapicorn@LT_RELEASE@
 topinclude_DATA = $(rapicorn_top_headers)
 EXTRA_DIST     += $(rapicorn_top_headers)
@@ -62,7 +62,12 @@ librapicorn@LT_RELEASE@core.o: $(librapicorn@LT_RELEASE@core_la_OBJECTS) $(libra
 all-am: librapicorn@LT_RELEASE@core.o
 CLEANFILES += librapicorn@LT_RELEASE@core.lo librapicorn@LT_RELEASE@core.o
 
-# programs (not installed)
+# === API content ===
+api-content:
+	cat $(sort $(filter-out rapicornconfig.h, $(rapicorn_public_headers) $(rapicorn_top_headers) $(rapicorn_generated_headers)))
+.PHONY: api-content
+
+# === programs (not installed) ===
 noinst_PROGRAMS        = $(ALLTESTS)
 progs_ldadd            = librapicorn@LT_RELEASE@core.la $(RAPICORN_LIBS) -lm
 # rapicorn-zintern
