@@ -110,6 +110,11 @@ private:
               handled = insert_literally (key_value_to_unichar (kevent->key));
             break;
           }
+        if (!handled && !key_value_is_modifier (kevent->key))
+          {
+            notify_key_error();
+            handled = true;
+          }
         break;
       case KEY_CANCELED:
       case KEY_RELEASE:
@@ -181,8 +186,9 @@ private:
         client->mark_insert (str);
         move_cursor (NEXT_CHAR);
         changed();
+        return true;
       }
-    return true;
+    return false;
   }
   bool
   delete_backward ()
