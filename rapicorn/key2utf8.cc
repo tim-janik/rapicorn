@@ -1192,6 +1192,33 @@ static const struct KeyCodePair {
   { 0x20aa, 0x20aa }, /*               NewSheqelSign ₪ NEW SHEQEL SIGN */
   { 0x20ab, 0x20ab }, /*                    DongSign ₫ DONG SIGN */
   { 0x20ac, 0x20ac }, /*                    EuroSign € EURO SIGN */
+
+
+
+  //
+  /*****************************************************
+   **** Rapicorn table extension for numeric key pad ***
+   *****************************************************/
+  //
+  { 0xff80, ' ' },      /* Space */
+  { 0xffaa, '*' },      /* Multiply */
+  { 0xffab, '+' },      /* Add */
+  { 0xffac, ',' },      /* Separator, often comma */
+  { 0xffad, '-' },      /* Subtract */
+  { 0xffae, '.' },      /* Decimal */
+  { 0xffaf, '/' },      /* Divide */
+  { 0xffb0, '0' },
+  { 0xffb1, '1' },
+  { 0xffb2, '2' },
+  { 0xffb3, '3' },
+  { 0xffb4, '4' },
+  { 0xffb5, '5' },
+  { 0xffb6, '6' },
+  { 0xffb7, '7' },
+  { 0xffb8, '8' },
+  { 0xffb9, '9' },
+  { 0xffbd, '=' },      /* Equal, Equals */
+  //
 };
 
 namespace Rapicorn {
