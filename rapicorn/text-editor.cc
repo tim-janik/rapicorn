@@ -110,7 +110,10 @@ private:
               handled = insert_literally (key_value_to_unichar (kevent->key));
             break;
           }
-        if (!handled && !key_value_is_modifier (kevent->key))
+        if (!handled && kevent->key_state & MOD_CONTROL && key_value_is_focus_dir (kevent->key) &&
+            kevent->key != KEY_Left && kevent->key != KEY_Right) // keep Ctrl+Left & Ctrl+Right reserved
+          handled = false; /* pass on Ctrl+FocusKey for focus handling */
+        else if (!handled && !key_value_is_modifier (kevent->key))
           {
             notify_key_error();
             handled = true;
