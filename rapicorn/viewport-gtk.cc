@@ -693,6 +693,73 @@ rapicorn_viewport_init (RapicornViewport *self)
   gtk_widget_show (widget);
 }
 
+static bool
+translate_along_ancestry (GdkWindow *window1, /* from-window */
+                          GdkWindow *window2, /* to-window */
+                          int       *deltax,
+                          int       *deltay)
+{
+  /* translate in case window1 is a child of window2 or vice versa */
+  GdkWindow *c1 = window1, *c2 = window2;
+  int dx1 = 0, dy1 = 0, dx2 = 0, dy2 = 0, px, py;
+  if (c1 == c2)
+    {
+      *deltax = 0;
+      *deltay = 0;
+      return true;
+    }
+  while (c1 && c2)
+    {
+      gdk_window_get_position (c1, &px, &py);
+      dx1 += px;
+      dy1 += py;
+      c1 = gdk_window_get_parent (c1);
+      if (c1 == window2)
+        {
+          *deltax = -dx1;
+          *deltay = -dy1;
+          return true;
+        }
+      gdk_window_get_position (c2, &px, &py);
+      dx2 += px;
+      dy2 += py;
+      c2 = gdk_window_get_parent (c2);
+      if (c2 == window1)
+        {
+          *deltax = dx2;
+          *deltay = dy2;
+          return true;
+        }
+    }
+  while (c1)
+    {
+      gdk_window_get_position (c1, &px, &py);
+      dx1 += px;
+      dy1 += py;
+      c1 = gdk_window_get_parent (c1);
+      if (c1 == window2)
+        {
+          *deltax = -dx1;
+          *deltay = -dy1;
+          return true;
+        }
+    }
+  while (c2)
+    {
+      gdk_window_get_position (c2, &px, &py);
+      dx2 += px;
+      dy2 += py;
+      c2 = gdk_window_get_parent (c2);
+      if (c2 == window1)
+        {
+          *deltax = dx2;
+          *deltay = dy2;
+          return true;
+        }
+    }
+  return false;
+}
+
 static EventContext
 rapicorn_viewport_event_context (RapicornViewport *self,
                                  GdkEvent         *event = NULL,
@@ -715,15 +782,22 @@ rapicorn_viewport_event_context (RapicornViewport *self,
       self->last_y = wh - core_coords->axes[1];;
       econtext.synthesized = true;
     }
-  else if (event && event->any.window == gdkwindow &&
-           gdk_event_get_coords (event, &doublex, &doubley) &&
-           gdk_event_get_state (event, &modifier_type))
+  else if (event)
     {
-      self->last_time = gdk_event_get_time (event);
-      self->last_x = doublex;
-      /* vertical Rapicorn axis extends upwards */
-      self->last_y = wh - doubley;
-      self->last_modifier = modifier_type;
+      guint32 evt = gdk_event_get_time (event);
+      if (evt != GDK_CURRENT_TIME)
+        self->last_time = evt;
+      int dx, dy;
+      if (event->type != GDK_CONFIGURE && // ConfigureNotify events don't contain window-relative pointer coordinates
+          gdk_event_get_coords (event, &doublex, &doubley) &&
+          translate_along_ancestry (event->any.window, gdkwindow, &dx, &dy))
+        {
+          self->last_x = doublex - dx;
+          self->last_y = wh - (doubley - dy); // vertical Rapicorn axis extends upwards
+        }
+      if (event->type != GDK_PROPERTY_NOTIFY && // some X servers send 0-state on PropertyNotify
+          gdk_event_get_state (event, &modifier_type))
+        self->last_modifier = modifier_type;
       econtext.synthesized = event->any.send_event;
     }
   else
@@ -1022,7 +1096,7 @@ rapicorn_viewport_event (GtkWidget *widget,
     case GDK_KEY_RELEASE:
       char *key_name;
       key_name = g_strndup (event->key.string, event->key.length);
-      /* KeyValue is modelled to match GDK keyval */
+      /* KeyValue is modelled to match X keysyms */
       // FIXME: handled = root->dispatch_key_event (econtext, event->type == GDK_KEY_PRESS, KeyValue (event->key.keyval), key_name);
       viewport->enqueue_locked (create_event_key (event->type == GDK_KEY_PRESS ? KEY_PRESS : KEY_RELEASE, econtext, KeyValue (event->key.keyval), key_name));
       handled = TRUE;
