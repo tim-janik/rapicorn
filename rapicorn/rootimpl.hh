@@ -96,7 +96,7 @@ private:
   bool                  dispatch_leave_event                    (const EventMouse       &mevent);
   bool                  dispatch_button_event                   (const Event            &event);
   bool                  dispatch_focus_event                    (const EventFocus       &fevent);
-  void                  handle_focus_key                        (const EventKey         &kevent);
+  bool                  move_focus_dir                          (FocusDirType            focus_dir);
   bool                  dispatch_key_event                      (const Event            &event);
   bool                  dispatch_scroll_event                   (const EventScroll      &sevent);
   bool                  dispatch_win_size_event                 (const Event            &event);

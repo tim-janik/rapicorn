@@ -516,39 +516,22 @@ RootImpl::dispatch_focus_event (const EventFocus &fevent)
   return handled;
 }
 
-void
-RootImpl::handle_focus_key (const EventKey &kevent)
+bool
+RootImpl::move_focus_dir (FocusDirType focus_dir)
 {
   Item *new_focus = NULL, *old_focus = get_focus();
   if (old_focus)
     ref (old_focus);
-  FocusDirType fdir = FocusDirType (0);
-  switch (kevent.key)
+
+  switch (focus_dir)
     {
-    case KEY_Tab: case KEY_KP_Tab:
-      fdir = FOCUS_NEXT;
-      break;
-    case KEY_ISO_Left_Tab:
-      fdir = FOCUS_PREV;
-      break;
-    case KEY_Right:
-      fdir = FOCUS_RIGHT;
+    case FOCUS_UP:   case FOCUS_DOWN:
+    case FOCUS_LEFT: case FOCUS_RIGHT:
       new_focus = old_focus;
       break;
-    case KEY_Up:
-      fdir = FOCUS_UP;
-      new_focus = old_focus;
-      break;
-    case KEY_Left:
-      fdir = FOCUS_LEFT;
-      new_focus = old_focus;
-      break;
-    case KEY_Down:
-      fdir = FOCUS_DOWN;
-      new_focus = old_focus;
-      break;
+    default: ;
     }
-  if (fdir && !move_focus (fdir))
+  if (focus_dir && !move_focus (focus_dir))
     {
       if (new_focus && new_focus->get_root() != this)
         new_focus = NULL;
@@ -557,10 +540,11 @@ RootImpl::handle_focus_key (const EventKey &kevent)
       else
         set_focus (NULL);
       if (old_focus == new_focus)
-        notify_key_error();
+        return false; // should have moved focus but failed
     }
   if (old_focus)
     unref (old_focus);
+  return true;
 }
 
 bool
@@ -574,15 +558,12 @@ RootImpl::dispatch_key_event (const Event &event)
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
   if (kevent && kevent->type == KEY_PRESS)
     {
-      switch (kevent->key)
+      FocusDirType fdir = key_value_to_focus_dir (kevent->key);
+      if (fdir)
         {
-        case KEY_Tab: case KEY_KP_Tab:
-        case KEY_ISO_Left_Tab:
-        case KEY_Right: case KEY_Up:
-        case KEY_Left: case KEY_Down:
-          handle_focus_key (*kevent);
+          if (!move_focus_dir (fdir))
+            notify_key_error();
           handled = true;
-          break;
         }
       if (0)
         {
