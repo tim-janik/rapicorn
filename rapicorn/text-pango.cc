@@ -724,6 +724,7 @@ public:
 class TextPangoImpl : public virtual ItemImpl, public virtual TextLayout, public virtual Text::Editor::Client {
   PangoLayout    *m_layout;
   int             m_mark, m_cursor;
+  double          m_scoffset;
   TextMode        m_text_mode;
 protected:
   virtual String   markup_text () const               { return save_markup(); }
@@ -741,7 +742,7 @@ protected:
 public:
   TextPangoImpl() :
     m_layout (NULL),
-    m_mark (-1), m_cursor (-1),
+    m_mark (-1), m_cursor (-1), m_scoffset (0),
     m_text_mode (TEXT_MODE_ELLIPSIZED)
   {
     Text::ParaState pstate; // retrieve defaults
@@ -794,6 +795,7 @@ public:
     pango_layout_get_extents (m_layout, NULL, &rect);
     rapicorn_gtk_threads_leave();
     tune_requisition (-1, ceil (1 + UNITS2PIXELS (rect.height)));
+    scroll_to_cursor();
   }
 protected:
   virtual double
@@ -963,6 +965,8 @@ protected:
         /* offset into layout area */
         x -= area.x;
         y -= area.y;
+        /* offset by scroll position */
+        x += m_scoffset;
         /* adapt y direction */
         y = area.height - y;
         /* scale to pango */
@@ -1009,6 +1013,7 @@ protected:
       {
         m_cursor = m_mark;
         expose();
+        scroll_to_cursor();
         changed();
       }
   }
@@ -1095,23 +1100,44 @@ protected:
     if (m_cursor < 0)
       return;
     pango_layout_get_cursor_pos (m_layout, m_cursor, &crect1, &crect2);
-    double x = layout_rect.x + layout_x + UNITS2PIXELS (irect.x + crect1.x);
+    double x = layout_rect.x + layout_x + UNITS2PIXELS (crect1.x);
     // double width = MIN (layout_rect.width, MAX (1, UNITS2PIXELS (crect1.width))); // FIXME: cursor width
     // double y = layout_rect.y + layout_y + UNITS2PIXELS (lrect.height - irect.y - crect1.y - crect1.height);
     double y = layout_rect.y + layout_y + UNITS2PIXELS (lrect.height - crect1.y - crect1.height);
     double height = UNITS2PIXELS (crect1.height);
     Color fg (col.premultiplied());
-    int xpos = iround (MAX (x, plane.xstart()));
+    int xpos = iround (x);
     int ymin = iround (MAX (y, plane.ystart())), ymax = iround (MIN (y + height, plane.ybound()) - 1);
     Painter pp (plane);
-    pp.draw_trapezoid (ymax, xpos - 2, xpos + 3, ymax - 3, xpos + .5, xpos + .5, col);
+    const double cw = 3, cl = cw - 1, cr = cw;
+    pp.draw_trapezoid (ymax, xpos - cl, xpos + cr, ymax - 3, xpos + .5, xpos + .5, col);
     pp.draw_vline (xpos, ymin + 2, ymax - 3, col);
-    pp.draw_trapezoid (ymin, xpos - 2, xpos + 3, ymin + 3, xpos + .5, xpos + .5, col);
+    pp.draw_trapezoid (ymin, xpos - cl, xpos + cr, ymin + 3, xpos + .5, xpos + .5, col);
 #if 0
     pp.draw_hline (xpos - 1, xpos + 1, ymax, col);
     pp.draw_vline (xpos, ymin + 1, ymax - 1, col);
     pp.draw_hline (xpos - 1, xpos + 1, ymin, col);
 #endif
+  }
+  void
+  scroll_to_cursor ()
+  {
+    if (m_cursor < 0)
+      return;
+    uint vdot_size;
+    Rect layout_rect = layout_area (&vdot_size);
+    rapicorn_gtk_threads_enter();
+    PangoRectangle irect, lrect, crect1, crect2;
+    pango_layout_get_extents (m_layout, &irect, &lrect);
+    pango_layout_get_cursor_pos (m_layout, m_cursor, &crect1, &crect2);
+    rapicorn_gtk_threads_leave();
+    double cw = 3; // symmetric cursor width left and right from center
+    double cl = UNITS2PIXELS (crect1.x - lrect.x) - cw, cr = UNITS2PIXELS (crect1.x - lrect.x) + cw;
+    if (cr - m_scoffset > layout_rect.width)
+      m_scoffset = MAX (m_scoffset, cr - layout_rect.width);
+    if (cl - m_scoffset < 0)
+      m_scoffset = MIN (m_scoffset, cl); /* for position 0, this "indents" the text by the cursor width */
+    m_scoffset = MAX (0, m_scoffset); /* un-"indent" */
   }
   void
   render_text_gL (Plane        &plane,
@@ -1135,6 +1161,10 @@ protected:
     /* render text to plane */
     double lx = layout_rect.x - r.x;
     double ly = r.y + r.height - (layout_rect.y + layout_rect.height);
+    PangoRectangle lrect; /* logical (x,y) can be != 0, e.g. for RTL-layouts and fixed width set */
+    pango_layout_get_extents (m_layout, NULL, &lrect);
+    lx += UNITS2PIXELS (lrect.x);
+    lx -= m_scoffset;
     _rapicorn_pango_renderer_render_layout (plane, *style(), fg, m_layout, r, ifloor (lx), ifloor (ly));
     /* and cursor */
     render_cursor_gL (plane, fg, r, lx, ly);
@@ -1145,9 +1175,9 @@ protected:
     Rect area = allocation();
     rapicorn_gtk_threads_enter();
     /* measure layout size */
-    PangoRectangle prect = { 0, 0 };
-    pango_layout_get_extents (m_layout, NULL, &prect);
-    double vpixels = UNITS2PIXELS (prect.height);
+    PangoRectangle lrect = { 0, 0 };
+    pango_layout_get_extents (m_layout, NULL, &lrect);
+    double vpixels = UNITS2PIXELS (lrect.height);
     /* decide vertical ellipsis */
     bool vellipsize = floor (vpixels) > area.height;
     if (vdot_size)
