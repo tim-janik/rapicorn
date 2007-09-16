@@ -151,6 +151,19 @@ rapicorn_parse_settings_and_args (InitValue *value,
   *argc_p = e;
 }
 
+/**
+ * @param argcp         location of the 'argc' argument to main()
+ * @param argvp         location of the 'argv' argument to main()
+ * @param app_name      Application name as needed g_set_application_name()
+ * @param ivalues       program specific initialization values
+ *
+ * Initialize rapicorn's core components like random number
+ * generators, CPU detection or the thread system.
+ * Pre-parses the arguments passed in to main() for rapicorn
+ * specific arguments.
+ * Also initializes the GLib program name, application name and thread system
+ * if those are still uninitialized.
+ */
 void
 rapicorn_init_core (int        *argcp,
                     char     ***argvp,
@@ -160,7 +173,7 @@ rapicorn_init_core (int        *argcp,
   /* mandatory initial initialization */
   if (!g_threads_got_initialized)
     g_thread_init (NULL);
-  
+
   /* update program/application name upon repeated initilization */
   char *prg_name = argcp && *argcp ? g_path_get_basename ((*argvp)[0]) : NULL;
   if (rapicorn_init_settings != NULL)
@@ -175,12 +188,12 @@ rapicorn_init_core (int        *argcp,
 
   /* normal initialization */
   rapicorn_init_settings = &global_init_settings;
-  rapicorn_parse_settings_and_args (ivalues, argcp, argvp);
   if (prg_name)
     g_set_prgname (prg_name);
   g_free (prg_name);
   if (app_name && (!g_get_application_name() || g_get_application_name() == g_get_prgname()))
     g_set_application_name (app_name);
+  rapicorn_parse_settings_and_args (ivalues, argcp, argvp);
 
   /* initialize random numbers */
   {
