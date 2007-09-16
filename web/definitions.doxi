@@ -1,23 +1,31 @@
-@include <doxer-standard.doxi>
-@dnl     ^-- import standard definitions
+@doxer_hidden   # emacs: -*- mode: texinfo; texinfo-open-quote: "\""; texinfo-close-quote: "\""; -*-
 
-@dnl enlist default style sheet (includes doxer-style.css)
+@include <doxer-standard.doxi>
+@dnl #    ^-- import standard definitions
+
+@dnl # path definitions (Makefile.am defines TOP_WEBDIR)
+@defalias{top_webdir}   @doxer_get{TOP_WEBDIR}
+@defalias{top_styledir} @top_webdir{}/style
+
+@dnl # enlist default style sheet (includes doxer-style.css)
 @doxer_add{html-stylesheets}	Rapicorn Style	<@doxer_get{TOP_WEBDIR}/style.css>
 
 @dnl setup webpage icon
 @doxer_add{raw_html_head}	<link href="http://rapicorn.org/rapicorn16.png" rel="shortcut icon">
 
-@dnl# === Website Menu ===
+@done   # finishes doxer_hidden section
+
+@dnl # === Website Menu ===
 @heading{group=left,body-span=webmenu}
 @doxer_fontsize{+1,@*}
 
 @itemize{none}
-@item	@uri{main.html,		Main}
-@item	@uri{basics.html,	Basics}
-@item	@uri{roadmap.html,	Roadmap}
-@item	@uri{techbits.html,	Tech Bits}
-@item	@uri{versioning.html,	Versioning}
-@item	@uri{cmpgtk.html,	Observing Gtk+}
+@item	@uri{@top_webdir/main,		Main}
+@item	@uri{@top_webdir/basics,	Basics}
+@item	@uri{@top_webdir/roadmap,	Roadmap}
+@item	@uri{@top_webdir/techbits,	Tech Bits}
+@item	@uri{@top_webdir/versioning,	Versioning}
+@item	@uri{@top_webdir/cmpgtk,	Observing Gtk+}
 @done
 @* @doxer_fontsize{+1,@*} @*
 
