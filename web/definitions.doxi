@@ -20,12 +20,13 @@
 @doxer_fontsize{+1,@*}
 
 @itemize{none}
-@item	@uri{@top_webdir/main,		Main}
-@item	@uri{@top_webdir/basics,	Basics}
-@item	@uri{@top_webdir/roadmap,	Roadmap}
-@item	@uri{@top_webdir/techbits,	Tech Bits}
-@item	@uri{@top_webdir/versioning,	Versioning}
-@item	@uri{@top_webdir/cmpgtk,	Observing Gtk+}
+@item	@uri{@top_webdir/main,			Main}
+@item	@uri{@top_webdir/basics,		Basics}
+@item	@uri{@top_webdir/roadmap,		Roadmap}
+@item	@uri{@top_webdir/techbits,		Tech Bits}
+@item	@uri{@top_webdir/versioning,		Versioning}
+@item	@uri{@top_webdir/rdocu-rapicorn/,	API Reference}
+@item	@uri{@top_webdir/cmpgtk,		Observing Gtk+}
 @done
 @* @doxer_fontsize{+1,@*} @*
 
