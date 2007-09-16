@@ -27,13 +27,15 @@ DOXIDEFS      = -D RAPICORN_VERSION ${RAPICORN_VERSION} -I $(srcdir)
 DOCFRAME_DEFS = -D DOXI_INCLUDE_FILE \"definitions.doxi\"    # $(if $(findstring $(<F), ${WEBMENU_DOXI_FILES}), \"webmenu.doxi\", \"webframe.doxi\")
 
 # Reference Documentation
-../docs/psource/rapicorn.psrc: PHONY-TARGET
+../docs/psource/rapicorn-core.psrc ../docs/psource/rapicorn-gui.psrc: PHONY-TARGET
 	@$(MAKE) -C ../docs $(patsubst ../docs/%, %, $@)
 # Rapicorn reference docu
-tmpdoxi-rapicorn/index.doxi: ../docs/psource/rapicorn.psrc rdocu-template.doxi definitions.doxi
+tmpdoxi-rapicorn/index.doxi: ../docs/psource/rapicorn-core.psrc ../docs/psource/rapicorn-gui.psrc rdocu-template.doxi definitions.doxi
 	rm -f tmpdoxi-rapicorn/*
-	$(DOXER) pickle2doxi $(strip -i $<      -D TOP_WEBDIR ".."              \
-		 -d tmpdoxi-rapicorn/ $(DOXIDEFS) -T rdocu-template.doxi \
+	$(DOXER) pickle2doxi $(strip -i -D TOP_WEBDIR ".."             		\
+		../docs/psource/rapicorn-core.psrc				\
+		../docs/psource/rapicorn-gui.psrc				\
+		 -d tmpdoxi-rapicorn/ $(DOXIDEFS) -T rdocu-template.doxi 	\
 		 -D DOCU_TEMPLATE_TITLE "Rapicorn - Interface Reference"        \
 		 -D DOCU_TEMPLATE_HEADING "Rapicorn Interface Reference" )
 html/rdocu-rapicorn/index.html: tmpdoxi-rapicorn/index.doxi $(wildcard tmpdoxi-rapicorn/*.doxi)
