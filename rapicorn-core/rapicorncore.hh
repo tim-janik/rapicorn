@@ -18,16 +18,16 @@
 #define __RAPICORN_H__
 
 #include <rapicorn-core/rapicornconfig.h>
+#include <rapicorn-core/enumdefs.hh>
 #include <rapicorn-core/rapicorncpu.hh>
 #include <rapicorn-core/rapicorndebugtools.hh>
-#include <rapicorn-core/enumdefs.hh>
-#include <rapicorn-core/rapicornmsg.hh>
 #include <rapicorn-core/rapicornmarkup.hh>
 #include <rapicorn-core/rapicornmath.hh>
-#include <rapicorn-core/rapicornutf8.hh>
-#include <rapicorn-core/rapicornutils.hh>
+#include <rapicorn-core/rapicornmsg.hh>
 #include <rapicorn-core/rapicornsignal.hh>
 #include <rapicorn-core/rapicornthread.hh>
+#include <rapicorn-core/rapicornutf8.hh>
+#include <rapicorn-core/rapicornutils.hh>
 #include <rapicorn-core/rapicornxml.hh>
 
 #endif /* __RAPICORN_H__ */
