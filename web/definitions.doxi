@@ -6,6 +6,8 @@
 @dnl # path definitions (Makefile.am defines TOP_WEBDIR)
 @defalias{top_webdir}   @doxer_get{TOP_WEBDIR}
 @defalias{top_styledir} @top_webdir{}/style
+@dnl # unicode definitions
+@defalias{checkmark}    @rawhtml{&#x2713;}
 
 @dnl # enlist default style sheet (includes doxer-style.css)
 @doxer_add{html-stylesheets}	Rapicorn Style	<@doxer_get{TOP_WEBDIR}/style.css>
