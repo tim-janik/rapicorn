@@ -4,7 +4,7 @@
 
 srcdir=.
 
-all:	plic.py ChangeLog
+all:	plic.py
 	$(MAKE) $(AM_MAKEFLAGS) check
 
 plic.py: plic.g
@@ -32,10 +32,4 @@ check-fail: plic.py testfail.idl
 	rm -f xgen-testfail.idl
 
 clean:
-	rm -f xgen-$(@F) plic.py ChangeLog
-
-# === ChangeLog ===
-ChangeLog:	$(shell ls "$${GIT_DIR=.git}/`git-symbolic-ref HEAD`" 2>/dev/null )
-	git-log --pretty='format:%ad %an	# %H (%cn)%n%n%s%n%n%b' > xgen-$(@F)
-	sed 's/^/	/;s/^	//;/^[ 	]*<unknown>$$/d'           -i xgen-$(@F)
-	cp xgen-$(@F) $@ && rm -f xgen-$(@F)
+	rm -f xgen-$(@F) plic.py
