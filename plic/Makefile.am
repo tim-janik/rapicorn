@@ -10,15 +10,20 @@ PLICV       = plic-@LT_RELEASE@
 PLICL       = plic
 
 bin_PROGRAMS = ${PLICV}
-
+# build and install plic
 plic-@LT_RELEASE@: plic.g
 	yapps plic.g xgen-$(@F) 2>&1 | tee xgen-$(@F).errors
 	@! grep -q '.' xgen-$(@F).errors			# catch all yapps errors & warnings
 	sed 's/^from yapps import runtime$$//' -i xgen-$(@F)	# plic.g has all imports
+	sed 's|^#@PLICSUBST_PREIMPORT@|sys.path.insert (0, "${pyutilsdir}")|' -i xgen-$(@F)
 	chmod +x xgen-$(@F)
 	cp -p xgen-$(@F) $@
 	rm -f xgen-$(@F) xgen-$(@F).errors
 EXTRA_DIST += plic.g
+
+# install plic support module yapps2runtime.py
+pyutils_PYTHON = yapps2runtime.py
+pyutilsdir     = $(libdir)/rapicorn-@LT_RELEASE@/pyutils
 
 # install/uninstall a "plic" link to "plic-VERSION"
 install-exec-hook:
