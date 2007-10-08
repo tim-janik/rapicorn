@@ -36,7 +36,7 @@ existing shortcomings in Gtk+ and where possible suggests future improvements.
 	(e.g. adoption to multi-pointer awareness, see 
         @uri{http://wiki.x.org/wiki/XDC2007Notes#head-6a32160debfaa441605bee568704bea44bae18b6, MPX}).
 	Rapicorn employs a different approach that could possibly be adapted
-	compatibly by Gtk+: @uri{techbits.html#confined-motion-events}.
+	compatibly by Gtk+: @uri{@top_webdir/techbits.html#confined-motion-events}.
 
 @item @anchor{paired-x-events}
 	Paired event delivery.
@@ -54,7 +54,7 @@ existing shortcomings in Gtk+ and where possible suggests future improvements.
 	helped to work around a restricted subset of the resulting bugs, but couldn't
 	fully solve the more general problem.
 	Rapicorn introduces dedicated cancellation events which may also be applicable
-	to improve the reliability of event delivery in Gtk+: @uri{techbits.html#paired-events}.
+	to improve the reliability of event delivery in Gtk+: @uri{@top_webdir/techbits.html#paired-events}.
 
 @item @anchor{multiple-selections}
 	Multiple views, multiple selections.
@@ -95,5 +95,5 @@ existing shortcomings in Gtk+ and where possible suggests future improvements.
 	effects that can feel unnatural to the enduser and possibly result in an overall
 	layout with clearly suboptimal size allocations.
 	Rapicorn allows arbitrary multi-stage size negotiations, and employs dedicated
-	strategies to stabilize the resizing process: @uri{techbits.html#size-negotiation}.
+	strategies to stabilize the resizing process: @uri{@top_webdir/techbits.html#size-negotiation}.
 @done

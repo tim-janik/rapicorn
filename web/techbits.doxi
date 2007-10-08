@@ -30,7 +30,7 @@ higher than micro optimizations or
 Also, programming interface compatibility is prioritized much lower than
 in comparable other library projects. To compensate for possibly frequent
 programming interface changes, Rapicorn employs a
-@uri{versioning.html, specially tailored versioning scheme},
+@uri{@top_webdir/versioning.html, specially tailored versioning scheme},
 and the actual API is designed to be as small as possible, ideally just consisting of
 application data models and XML definitions to specify gadget packing and gadget properties.
 
