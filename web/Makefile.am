@@ -5,16 +5,10 @@ include $(top_srcdir)/Makefile.decl
 
 HTML_TARGETS = $(strip                  	\
 	rapicorn-html/				\
-	rapicorn-html/main.html			\
-	rapicorn-html/cmpgtk.html		\
-	rapicorn-html/basics.html		\
-	rapicorn-html/techbits.html		\
 	rapicorn-html/rapicorn16.png		\
 	rapicorn-html/rapicorn032.png		\
 	rapicorn-html/hgradientG.png		\
 	rapicorn-html/vgradientG.png		\
-	rapicorn-html/roadmap.html		\
-	rapicorn-html/versioning.html		\
 	rapicorn-html/style.css			\
 	rapicorn-html/doxer-style.css		\
 )
