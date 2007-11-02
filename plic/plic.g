@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-#
-# plic - Pluggable IDL Compiler
+# plic - Pluggable IDL Compiler                                -*-mode:python-*-
 # Copyright (C) 2007 Tim Janik
 #
 # This program is free software; you can redistribute it and/or modify
@@ -18,6 +17,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 import sys
 #@PLICSUBST_PREIMPORT@
+PLIC_VERSION=\
+"@PLICSUBST_VERSION@"   # this needs to be in column0 for @@ replacements to work
 
 import yapps2runtime as runtime
 
@@ -218,34 +219,68 @@ class ParseError (runtime.SyntaxError):
         if not self.pos: return 'ParseError'
         else: return 'ParseError@%s(%s)' % (repr (self.pos), self.msg)
 
-if __name__ == '__main__':
-    from sys import argv, stdin
-    if len (argv) >= 2: # file IO
-        # f = stdin
-        f = open (argv[1], 'r')
-        input_string = f.read()
-    else:               # interactive
-        print >>sys.stderr, 'Usage: %s [filename]' % argv[0]
-        try: input_string = raw_input ('IDL> ')
-        except EOFError: input_string = ""
-        print
-    isp = IdlSyntaxParser (IdlSyntaxParserScanner (input_string))
-    result = None
-    # parsing: isp.IdlSyntax ()
-    ex = None
+def main():
+  from sys import argv, stdin
+  files = parse_files_and_args()
+  if len (files) >= 1: # file IO
+    f = open (files[0], 'r')
+    input_string = f.read()
+  else:               # interactive
+    print >>sys.stderr, 'Usage: %s [filename]' % argv[0]
     try:
-        #runtime.wrap_error_reporter (isp, 'IdlSyntax') # parse away
-        result = isp.IdlSyntax ()
-    except runtime.SyntaxError, ex:
-        ex.context = None # prevent context printing
-        runtime.print_error (ex, isp._scanner)
-    except AssertionError: raise
-    except Exception, ex:
-        exstr = str (ex)
-        if exstr: exstr = ': ' + exstr
-        runtime.print_error (ParseError ('%s%s' % (ex.__class__.__name__, exstr)), isp._scanner)
-    if ex: sys.exit (7)
-    print 'namespaces ='
-    import pprint
-    if 1:   pprint.pprint (result)
-    else:   print result
+      input_string = raw_input ('IDL> ')
+    except EOFError:
+      input_string = ""
+    print
+  isp = IdlSyntaxParser (IdlSyntaxParserScanner (input_string))
+  result = None
+  # parsing: isp.IdlSyntax ()
+  ex = None
+  try:
+    #runtime.wrap_error_reporter (isp, 'IdlSyntax') # parse away
+    result = isp.IdlSyntax ()
+  except runtime.SyntaxError, ex:
+    ex.context = None # prevent context printing
+    runtime.print_error (ex, isp._scanner)
+  except AssertionError: raise
+  except Exception, ex:
+    exstr = str (ex)
+    if exstr: exstr = ': ' + exstr
+    runtime.print_error (ParseError ('%s%s' % (ex.__class__.__name__, exstr)), isp._scanner)
+  if ex: sys.exit (7)
+  print 'namespaces ='
+  import pprint
+  if 1:
+    pprint.pprint (result)
+  else:
+    print result
+
+def parse_files_and_args ():
+  from sys import argv, stdin
+  files = []
+  arg_iter = sys.argv[1:].__iter__()
+  rest = len (sys.argv) - 1
+  for arg in arg_iter:
+    rest -= 1
+    if arg == '--help' or arg == '-h':
+      print_help ()
+      sys.exit (0)
+    elif arg == '--version' or arg == '-v':
+      print_help (False)
+      sys.exit (0)
+    else:
+      files = files + [ arg ]
+  return files
+
+def print_help (with_help = True):
+  import os
+  print "plic (Rapicorn utils) version", PLIC_VERSION
+  if not with_help:
+    return
+  print "Usage: %s [OPTIONS] <idlfile>" % os.path.basename (sys.argv[0])
+  print "Options:"
+  print "  --help, -h                print this help message"
+  print "  --version, -v             print version info"
+
+if __name__ == '__main__':
+  main()

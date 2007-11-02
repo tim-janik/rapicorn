@@ -16,6 +16,7 @@ plic-@LT_RELEASE@: plic.g
 	@! grep -q '.' xgen-$(@F).errors			# catch all yapps errors & warnings
 	sed 's/^from yapps import runtime$$//' -i xgen-$(@F)	# plic.g has all imports
 	sed 's|^#@PLICSUBST_PREIMPORT@|sys.path.insert (0, "${pyutilsdir}")|' -i xgen-$(@F)
+	sed 's|^"@PLICSUBST_VERSION@"|"${VERSION}"|' -i xgen-$(@F)
 	chmod +x xgen-$(@F)
 	cp -p xgen-$(@F) $@
 	rm -f xgen-$(@F) xgen-$(@F).errors
