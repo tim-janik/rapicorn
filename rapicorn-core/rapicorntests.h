@@ -52,7 +52,8 @@ typedef void (*RapicornTAbort) (void*);
 #define TACK()          	do { g_printerr ("ACK.\n"); } while (0)	/* alternate OK */
 #define	TPRINT(...)		g_printerr (__VA_ARGS__)		/* misc messages */
 #define	TASSERT(code)		TASSERT_impl ("FAIL.\n", code, 2)	/* test assertion */
-#define	TASSERT_CMP(a,cmp,b)	TASSERT_CMP_impl ("FAIL.\n",a,cmp,b, 2)	/* test assertion */
+#define	TASSERT_CMP(a,cmp,b)	TASSERT_CMP_impl ("FAIL.\n",a,cmp,b, 3)	/* test assertion */
+#define	TASSERT_CMPx(a,cmp,b)	TASSERT_CMP_impl ("FAIL.\n",a,cmp,b, 4)	/* test assertion */
 #define	TCHECK(code)		TASSERT_impl ("FAIL.\n", code, 0)	/* test assertion (silent) */
 #define	TCHECK_CMP(a,cmp,b)	TASSERT_CMP_impl ("FAIL.\n",a,cmp,b, 0)	/* test assertion */
 #define	TERROR(...)		TERROR_impl ("FAIL.\n", __VA_ARGS__)	/* test error, abort */
@@ -67,6 +68,7 @@ typedef void (*RapicornTAbort) (void*);
 #define	TPRINT(...)		do { g_printerr ("*"); } while (0)	/* skip messages */
 #define	TASSERT(code)		TASSERT_impl ("X", code, 1)		/* test assertion */
 #define	TASSERT_CMP(a,cmp,b)	TASSERT_CMP_impl ("X",a,cmp,b, 1)	/* test assertion */
+#define	TASSERT_CMPx(a,cmp,b)	TASSERT_CMP_impl ("X",a,cmp,b, 2)	/* test assertion */
 #define	TCHECK(code)		TASSERT_impl ("X", code, 0)		/* test assertion (silent) */
 #define	TCHECK_CMP(a,cmp,b)	TASSERT_CMP_impl ("X",a,cmp,b, 0)	/* test assertion */
 #define	TERROR(...)		TERROR_impl ("X", __VA_ARGS__)		/* test error, abort */
@@ -74,6 +76,8 @@ typedef void (*RapicornTAbort) (void*);
 #define TDONE()         	do { g_printerr ("]\n");                /* test outro */ \
                                      TABORT_set (NULL, NULL); } while(0)
 #endif
+
+#define TRUN(name, func)        ({ TSTART (name); func(); TDONE(); })
 
 /* --- performance --- */
 typedef enum {
@@ -230,7 +234,13 @@ tabort_handler (bool   set_values,
 #define TASSERT_CMP_impl(mark, a, cmp, b, show)	do {	\
   double __tassert_va = a; double __tassert_vb = b;	\
   if (a cmp b) {					\
-    if (show >= 2)					\
+    if (show >= 4)					\
+      g_printerr ("OK - asserted: "			\
+                  "%s %s %s: 0x%08Lx %s 0x%08Lx\n",	\
+                  #a, #cmp, #b,				\
+                  (guint64) __tassert_va, #cmp,         \
+                  (guint64) __tassert_vb);	        \
+    else if (show >= 3)					\
       g_printerr ("OK - asserted: "			\
                   "%s %s %s: %.17g %s %.17g\n",		\
                   #a, #cmp, #b,				\
@@ -238,7 +248,16 @@ tabort_handler (bool   set_values,
     else if (show) TOK ();				\
   } else {						\
   g_printerr ("%s", mark);				\
-  g_printerr ("\n*** TEST-ERROR ***\n"                  \
+  if (show >= 2)					\
+    g_printerr ("\n*** TEST-ERROR ***\n"                \
+              "%s:%u:%s(): assertion failed: "		\
+              "%s %s %s: 0x%08Lx %s 0x%08Lx\n",		\
+              __FILE__, __LINE__, __PRETTY_FUNCTION__,	\
+              #a, #cmp, #b, 				\
+              (guint64) __tassert_va, #cmp,             \
+              (guint64) __tassert_vb); 	                \
+  else          					\
+    g_printerr ("\n*** TEST-ERROR ***\n"                \
               "%s:%u:%s(): assertion failed: "		\
               "%s %s %s: %.17g %s %.17g\n",		\
               __FILE__, __LINE__, __PRETTY_FUNCTION__,	\
