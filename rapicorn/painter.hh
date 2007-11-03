@@ -43,12 +43,18 @@ public:
                                          Color outer_upper_left, Color inner_upper_left,
                                          Color inner_lower_right, Color outer_lower_right);
   void          draw_border             (int x, int y, int width, int height, Color border, const vector<int> &dashes = vector<int>(), int dash_offset = 0);
+  void          draw_gradient_rect      (int64 recx, int64 recy, int64 recwidth, int64 recheight,
+                                         int64 c0x, int64 c0y, Color color0,
+                                         int64 c1x, int64 c1y, Color color1);
   void          draw_shaded_rect        (int xc0, int yc0, Color color0, int xc1, int yc1, Color color1);
   void          draw_filled_rect        (int x, int y, int width, int height, Color fill_color);
   void          draw_dir_arrow          (double x, double y, double width, double height, Color c, DirType dir);
   void          draw_trapezoid          (double c1y, double c1x1, double c1x2, double c2y, double c2x1, double c2x2, Color fill_color);
   void          draw_quadrangle         (const Point points[4], Color fill_color);
   void          draw_simple_line        (double x0, double y0, double x1, double y1, double thickness, Color fill_color);
+private:
+  void          fill_scan_line          (int64 yy, int64 x1, int64 width, Color color0);
+  void          fill_line_gradient      (int64 yy, int64 lx1, int64 lx2, int64 xc0, Color color0, int64 xc1, Color color1);
 };
 
 } // Rapicorn

@@ -198,54 +198,186 @@ quick_rand32 ()
 void
 Painter::draw_shaded_rect (int xc0, int yc0, Color color0, int xc1, int yc1, Color color1)
 {
-  Point c0 (xc0, yc0);
-  Color pre0 = color0.premultiplied(), pre1 = color1.premultiplied();
-  /* extract alpha, red, green ,blue */
-  float Aa = pre1.alpha(), Ar = pre1.red(), Ag = pre1.green(), Ab = pre1.blue();
-  float Ba = pre0.alpha(), Br = pre0.red(), Bg = pre0.green(), Bb = pre0.blue();
-  int x0 = MIN (xc0, xc1), x1 = MAX (xc0, xc1);
-  int y0 = MIN (yc0, yc1), y1 = MAX (yc0, yc1);
-  x0 = MAX (x0, xstart());
-  x1 = MIN (x1, xbound() - 1);
-  y0 = MAX (y0, ystart());
-  y1 = MIN (y1, ybound() - 1);
-  double max_dist = Point (xc0, yc0).dist (xc1, yc1);
-  double wdist = 1 / MAX (1, max_dist);
-  float Ca = (Aa - Ba) * wdist, Cr = (Ar - Br) * wdist, Cg = (Ag - Bg) * wdist, Cb = (Ab - Bb) * wdist;
-  for (int y = y0; y <= y1; y++)
+  draw_gradient_rect (MIN (xc0, xc1), MIN (yc0, yc1),
+                      MAX (xc0, xc1) - MIN (xc0, xc1) + 1,
+                      MAX (yc0, yc1) - MIN (yc0, yc1) + 1,
+                      xc0, yc0, color0,
+                      xc1, yc1, color1);
+}
+
+/* find u for (px,py) = (x1,y1) + u * (x2-x1,y2-y1)
+ * <=> u = ( (px-x1)*(x2-x1) + (py-y1)*(y2-y1) ) / length(x2y2-x1y1)^2
+ */
+static inline double
+perpendicular_point (double x1, double y1,
+                     double x2, double y2,
+                     double px, double py)
+{
+  /* gradient points distance and length^2 */
+  double dx = x2 - x1, dy = y2 - y1;
+  double length2 = dx * dx + dy * dy;
+  if (length2 > 0)
     {
-      uint32 *d = m_plane.poke_span (x0, y, x1 - x0 + 1);
-      for (int x = x0; x <= x1; x++)
-        {
-          double lucent_dist = c0.dist (x, y);
-          /* A over B = colorA * alpha + colorB * (1 - alpha) */
-          double Dr = Br + Cr * lucent_dist;
-          double Dg = Bg + Cg * lucent_dist;
-          double Db = Bb + Cb * lucent_dist;
-          double Da = Ba + Ca * lucent_dist;
-          /* dither */
-          union { uint32 r; uint8 a[4]; } z = { quick_rand32() };
-          uint32 dr = dtoi32 (Dr * 0xff) + z.a[3];
-          uint32 dg = dtoi32 (Dg * 0xff) + z.a[2];
-          uint32 db = dtoi32 (Db * 0xff) + z.a[1];
-          uint32 da = dtoi32 (Da * 0xff) + z.a[0];
-          /* apply */
-          *d++ = Color (dr >> 8, dg >> 8, db >> 8, da >> 8);
-        }
+      /* start point distance */
+      double jx = px - x1, jy = py - y1;
+      /* fraction into line for perpendicular intersection */
+      double u = (jx * dx + jy * dy) / length2;
+      return u; /* u<0 => "before" line; u>1 => "after" line */
     }
-  /* timings:
-   * span+quick-rand+floatcolor:   	0m1.412s (63.8%)
-   * span+quick-rand+dblcolor:   	0m1.464s
-   * span+quick-rand:   		0m2.380s
-   * poke-span:         		0m3.764s
-   * original:            		0m3.904s (100%)
-   * sqrt(float):       		0m4.140s
-   * coarse2:           		0m4.390s
-   * coarse3:           		0m4.460s
-   * -ffast-math:       		0m4.418s
-   * builtin_hypot:     		0m4.930s
-   * hypot:             		0m4.948s
+  return -1; /* consider (px,py) "before" line of length 0 */
+}
+
+/* find scan line crossings for perpendiculars through line end points */
+static inline bool
+parallels_cut_point (double  x1,  double  y1, // line start
+                     double  x2,  double  y2, // line end
+                     double  py,              // scan line
+                     double &xu0, double &xu1)
+{
+  /* gradient points distance and length^2 */
+  double dx = x2 - x1, dy = y2 - y1;
+  double length2 = dx * dx + dy * dy;
+  if (dx > 0)
+    {
+      //        u = ((px - x1) * dx + (py - y1) * dy) / length2
+      //  <=>  px = (u * length2 - (py - y1) * dy) / dx + x1
+      xu0 = x1 + (y1 - py) * dy / dx;
+      xu1 = x1 + (length2 + (y1 - py) * dy) / dx;
+      return true;
+    }
+  return false; /* vertical gradient, perpendicular to (*,py) */
+}
+
+static inline Color
+interpolate_colors (Color  color1,
+                    Color  color2,
+                    double weight)
+{
+  if (weight <= 0)
+    return color1;
+  if (weight >= 1)
+    return color2;
+  double a = 1 - weight, b = weight;
+  Color A = color1.premultiplied(), B = color2.premultiplied();
+  double Ca = A.alpha() * a, Cr = A.red() * a, Cg = A.green() * a, Cb = A.blue() * a;
+  Ca += B.alpha() * b;
+  Cr += B.red() * b;
+  Cg += B.green() * b;
+  Cb += B.blue() * b;
+  return Color::from_premultiplied (Color (dtoi32 (Cr), dtoi32 (Cg), dtoi32 (Cb), dtoi32 (Ca)));
+}
+
+#define SWAP(a,b)       ({ __typeof (a) __tmp = b; b = a; a = __tmp; })
+
+void
+Painter::draw_gradient_rect (int64 recx,     int64 recy,
+                             int64 recwidth, int64 recheight,
+                             int64 c0x,      int64 c0y, Color color0,
+                             int64 c1x,      int64 c1y, Color color1)
+{
+  const int64 x1 = MAX (xstart(), recx), x2 = MIN (xbound() - 1, x1 + recwidth - 1);
+  const int64 y1 = MAX (ystart(), recy), y2 = MIN (ybound() - 1, y1 + recheight - 1);
+  const double vd = c0x == c1x ? 0.2 : 0; // enforce non-vertical gradients
+  /* ensure color0 point is left of color1 point */
+  if (c0x > c1x)
+    {
+      SWAP (c0x, c1x);
+      SWAP (c0y, c1y);
+      SWAP (color0, color1);
+    }
+  /* for each scan line, we have 3 segments to render:
+   *   ---before---/~~~gradient~~~/---after---
+   *              xu0            xu1
+   * unless we have a vertical gradient.
    */
+  for (int64 yy = y1; yy <= y2; yy++)
+    {
+      double xu0, xu1;
+      if (!parallels_cut_point (c0x - vd, c0y, c1x + vd, c1y, yy, xu0, xu1))
+        {
+          /* vertical gradient */
+          double u = perpendicular_point (c0x, c0y, c1x, c1y, x1, yy);
+          if (u <= 0)
+            fill_scan_line (yy, x1, x2 - x1 + 1, color0);
+          else if (u >= 1)
+            fill_scan_line (yy, x1, x2 - x1 + 1, color1);
+          else
+            {
+              /* this misses dithering but should never be triggered, since vd > 0 here */
+              Color col = interpolate_colors (color0, color1, u);
+              fill_scan_line (yy, x1, x2 - x1 + 1, col);
+            }
+          continue;
+        }
+      int64 xi0 = iround (xu0), xi1 = iround (xu1);
+      if (xu0 > xu1)
+        SWAP (xu0, xu1); // force: xu0 <= xu1
+      if (x1 < xu0)
+        fill_scan_line (yy, x1, MIN (xi0, x2 + 1) - x1, color0);   // [x1..xu0[
+      if (x1 <= xu1)
+        fill_line_gradient (yy, x1, x2, xi0, color0, xi1, color1); // [x1..x2] or [xu0..xu1]
+      if (x2 > xu1)
+        fill_scan_line (yy, xi1 + 1, x2 - xi1, color1);            // ]xu1..x2]
+    }
+}
+
+void
+Painter::fill_scan_line (int64 yy,
+                         int64 x1, int64 width,
+                         Color color0)
+{
+  Color pre0 = color0.premultiplied();
+  int64 sx = MAX (xstart(), x1);
+  int64 ex = MIN (xbound(), x1 + width);
+  int64 len = MAX (ex, sx) - sx;
+  uint32 *pixel = m_plane.poke_span (sx, yy, len);
+  if (pixel)
+    {
+      uint32 col = pre0;
+      memset4 (pixel, col, len);
+    }
+}
+
+void
+Painter::fill_line_gradient (int64 yy,
+                             int64 lx1, int64 lx2,
+                             int64 xc0, Color color0,
+                             int64 xc1, Color color1)
+{
+  return_if_fail (xc0 <= xc1);
+  return_if_fail (lx1 <= lx2);
+  const int64 x1 = MAX (xstart(), MAX (lx1, xc0)), x2 = MIN (xbound() - 1, MIN (lx2, xc1));
+  if (x2 < x1)
+    return;
+  /* extract alpha, red, green, blue */
+  Color A = color0.premultiplied(), B = color1.premultiplied();
+  double Aa = A.alpha(), Ar = A.red(), Ag = A.green(), Ab = A.blue(); // [0..255]
+  double Ba = B.alpha(), Br = B.red(), Bg = B.green(), Bb = B.blue(); // [0..255]
+  double Da = Ba - Aa,   Dr = Br - Ar, Dg = Bg - Ag,   Db = Bb - Ab;  // B - A color delta
+  double Dx = xc1 - xc0; // color step per pixel
+  // distribute color parts along pixels, shift left by 8 for dither arithmetic
+  Da = Da / Dx * 0xff;
+  Dr = Dr / Dx * 0xff;
+  Dg = Dg / Dx * 0xff;
+  Db = Db / Dx * 0xff;
+  Aa *= 256;
+  Ar *= 256;
+  Ag *= 256;
+  Ab *= 256;
+  uint32 *pixel = m_plane.poke_span (x1, yy, x2 - x1 + 1);
+  for (int64 ii = x1 - xc0; ii <= x2 - xc0; ii++)
+    {
+      /* interpolate colors (still shifted left by 8) */
+      int32 Ia = dtoi32 (Aa + Da * ii), Ir = dtoi32 (Ar + Dr * ii), Ig = dtoi32 (Ag + Dg * ii), Ib = dtoi32 (Ab + Db * ii);
+      /* dither */
+      union { uint32 i32; uint8 b[4]; } rnd = { quick_rand32() };
+      Ir += rnd.b[1];
+      Ig += rnd.b[2];
+      Ib += rnd.b[3];
+      Ia += MAX (MAX (rnd.b[0], rnd.b[1]), MAX (rnd.b[2], rnd.b[3])); // preserve premul constraint
+      /* shift right by 8, apply pixel */
+      pixel[ii - x1 + xc0] = Color (Ir >> 8, Ig >> 8, Ib >> 8, Ia >> 8);
+    }
 }
 
 void
