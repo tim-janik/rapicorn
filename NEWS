@@ -8,6 +8,12 @@ Rapicorn 713.0:
 * misc fixes and cleanups
 * worked around GCC C++ bugs
 
+* Many improvements to text editing areas.
+* Introduce simplified Application object API.
+* Replaced main loop mechanism.
+* Fixed some reference counting issues and child removal.
+* Misc compiler and threading fixes.
+
 Rapicorn 0.1.2: - Mon Jan 22 20:20:14 2007
 
 * added Image support for PNG images.
