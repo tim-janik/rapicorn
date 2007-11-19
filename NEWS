@@ -1,18 +1,13 @@
 Rapicorn 713.0:
 
 * License update to GNU LGPL 2.1
-* simpler versioning scheme.
-* fixed various compiler/build issues
-* fixed Gtk+ version checks
-* rewrote asyncronous main loops
-* misc fixes and cleanups
-* worked around GCC C++ bugs
-
+* Simpler versioning scheme.
+* Fixed Gtk+ version checks.
+* Rewrote asyncronous main loops.
 * Many improvements to text editing areas.
 * Introduce simplified Application object API.
-* Replaced main loop mechanism.
 * Fixed some reference counting issues and child removal.
-* Misc compiler and threading fixes.
+* Misc compiler (g++) and threading fixes and cleanups.
 
 Rapicorn 0.1.2: - Mon Jan 22 20:20:14 2007
 
