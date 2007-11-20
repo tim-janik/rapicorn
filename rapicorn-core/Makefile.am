@@ -43,24 +43,24 @@ topincludedir   = $(includedir)/rapicorn@LT_RELEASE@
 topinclude_DATA = $(rapicorn_top_headers)
 EXTRA_DIST     += $(rapicorn_top_headers)
 # librapicorn-core
-lib_LTLIBRARIES                         = librapicorn@LT_RELEASE@core.la # hardcoded -release $(LT_RELEASE)
-librapicorn@LT_RELEASE@coreincludedir       = $(includedir)/rapicorn@LT_RELEASE@/rapicorn
-librapicorn@LT_RELEASE@coreinclude_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
-librapicorn@LT_RELEASE@core_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorn@LT_RELEASE@core_la_DEPENDENCIES = ldscript.map
-librapicorn@LT_RELEASE@core_la_LDFLAGS      = $(strip		\
+lib_LTLIBRARIES                         = librapicorncore@LT_RELEASE@.la # hardcoded -release $(LT_RELEASE)
+librapicorncore@LT_RELEASE@includedir       = $(includedir)/rapicorn@LT_RELEASE@/rapicorn
+librapicorncore@LT_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
+librapicorncore@LT_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
+librapicorncore@LT_RELEASE@_la_DEPENDENCIES = ldscript.map
+librapicorncore@LT_RELEASE@_la_LDFLAGS      = $(strip		\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined 						\
 ) # set libtool version and export symbols for resolving
-librapicorn@LT_RELEASE@core_la_LIBADD       = $(RAPICORN_LIBS) -lm # -lfreetype -lfontconfig
-EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@LT_RELEASE@core_la_DEPENDENCIES)
+librapicorncore@LT_RELEASE@_la_LIBADD       = $(RAPICORN_LIBS) -lm # -lfreetype -lfontconfig
+EXTRA_DIST += $(rapicorn_private_files) $(librapicorncore@LT_RELEASE@_la_DEPENDENCIES)
 
 # keep this .o rule in sync with the corresponding .la rule from Makefile.in
-librapicorn@LT_RELEASE@core.o: $(librapicorn@LT_RELEASE@core_la_OBJECTS) $(librapicorn@LT_RELEASE@core_la_DEPENDENCIES)
-	$(CXXLINK) -rpath $(libdir) $(librapicorn@LT_RELEASE@core_la_LDFLAGS) $(librapicorn@LT_RELEASE@core_la_OBJECTS) # $(librapicorn@LT_RELEASE@core_la_LIBADD) $(LIBS)
-all-am: librapicorn@LT_RELEASE@core.o
-CLEANFILES += librapicorn@LT_RELEASE@core.lo librapicorn@LT_RELEASE@core.o
+librapicorncore@LT_RELEASE@.o: $(librapicorncore@LT_RELEASE@_la_OBJECTS) $(librapicorncore@LT_RELEASE@_la_DEPENDENCIES)
+	$(CXXLINK) -rpath $(libdir) $(librapicorncore@LT_RELEASE@_la_LDFLAGS) $(librapicorncore@LT_RELEASE@_la_OBJECTS) # $(librapicorncore@LT_RELEASE@_la_LIBADD) $(LIBS)
+all-am: librapicorncore@LT_RELEASE@.o
+CLEANFILES += librapicorncore@LT_RELEASE@.lo librapicorncore@LT_RELEASE@.o
 
 # === API content ===
 api-content:
@@ -69,7 +69,7 @@ api-content:
 
 # === programs (not installed) ===
 noinst_PROGRAMS        = $(ALLTESTS)
-progs_ldadd            = librapicorn@LT_RELEASE@core.la $(RAPICORN_LIBS) -lm
+progs_ldadd            = librapicorncore@LT_RELEASE@.la $(RAPICORN_LIBS) -lm
 # rapicorn-zintern
 noinst_PROGRAMS       += rapicorn-zintern
 rapicorn_zintern_SOURCES = rapicorn-zintern.cc
@@ -119,20 +119,21 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- rapicorn version --- */"						>> xgen-$(@F) \
-	&& echo "#define RAPICORN_RELEASE_VERSION	(@RAPICORN_RELEASE_VERSION@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_REVISION_VERSION	(@RAPICORN_REVISION_VERSION@)"		>> xgen-$(@F) \
+	&& echo "#define RAPICORN_VERSION  (@RAPICORN_RELEASE_YEAR@.@RAPICORN_RELEASE_WEEK@.@RAPICORN_REVISION_VERSION@)" >> xgen-$(@F) \
 	&& echo "/* version checks */"								>> xgen-$(@F) \
-	&& echo "#define RAPICORN_CHECK_VERSION(relv,revv)	\\"				>> xgen-$(@F) \
-	&& echo "  (RAPICORN_RELEASE_VERSION > (relv) || \\"					>> xgen-$(@F) \
-	&& echo "   (RAPICORN_RELEASE_VERSION == (relv) && \\" 					>> xgen-$(@F) \
-	&& echo "    RAPICORN_REVISION_VERSION >= (revv)))" 					>> xgen-$(@F) \
+	&& echo "#define RAPICORN_CHECK_VERSION(majv,relv,revv)	\\"				>> xgen-$(@F) \
+	&& echo "  (@RAPICORN_RELEASE_YEAR@ > (majv) || \\"					>> xgen-$(@F) \
+	&& echo "    (@RAPICORN_RELEASE_YEAR@ == (majv) && \\"					>> xgen-$(@F) \
+	&& echo "      (@RAPICORN_RELEASE_WEEK@ > (relv) || \\"					>> xgen-$(@F) \
+	&& echo "        (@RAPICORN_RELEASE_WEEK@ == (relv) && \\"				>> xgen-$(@F) \
+	&& echo "          (@RAPICORN_REVISION_VERSION@ >= (revv))))))"				>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- log & i18n domains --- */"						>> xgen-$(@F) \
 	&& echo "#ifndef RAPICORN_LOG_DOMAIN"							>> xgen-$(@F) \
 	&& echo "#ifdef  G_LOG_DOMAIN"								>> xgen-$(@F) \
 	&& echo "#define RAPICORN_LOG_DOMAIN  G_LOG_DOMAIN"					>> xgen-$(@F) \
 	&& echo "#else"										>> xgen-$(@F) \
-	&& echo "#define RAPICORN_LOG_DOMAIN  ((const char*) 0)"					>> xgen-$(@F) \
+	&& echo "#define RAPICORN_LOG_DOMAIN  ((const char*) 0)"				>> xgen-$(@F) \
 	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo '#define RAPICORN_I18N_DOMAIN    "rapicorn"'					>> xgen-$(@F) \
@@ -169,7 +170,7 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& cp xgen-$(@F) $@ \
 	&& rm -f xgen-$(@F)
 CLEANFILES += xgen-rapicornconfig.h rapicornconfig.h
-$(librapicorn@LT_RELEASE@core_la_OBJECTS): rapicornconfig.h
+$(librapicorncore@LT_RELEASE@_la_OBJECTS): rapicornconfig.h
 
 
 # === rapicornsignalvariants.hh ===

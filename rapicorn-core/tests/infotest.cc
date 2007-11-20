@@ -18,8 +18,8 @@
 #include <rapicorn-core/rapicorntests.h>
 using namespace Rapicorn;
 
-#if RAPICORN_CHECK_VERSION (2147483647, 2147483647) || !RAPICORN_CHECK_VERSION (0, 0)      
-#error RAPICORN_CHECK_VERSION() apparently broken
+#if RAPICORN_CHECK_VERSION (2147483647, 2147483647, 2147483647) || !RAPICORN_CHECK_VERSION (0, 0, 0)
+#error RAPICORN_CHECK_VERSION() implementation seems broken
 #endif
 
 static void

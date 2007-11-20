@@ -9,7 +9,7 @@ DEFS     += -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"' -DPARANOID $(RAPICORN_CF
 XML_FILES =
 
 # test programs:
-programs_ldadd = $(top_builddir)/rapicorn-core/librapicorn@LT_RELEASE@core.la $(RAPICORN_LIBS) $(PANGO_LIBS) $(GTK_LIBS)
+programs_ldadd = $(top_builddir)/rapicorn-core/librapicorncore@LT_RELEASE@.la $(RAPICORN_LIBS) $(PANGO_LIBS) $(GTK_LIBS)
 # program sources:
 TESTS             += infotest
 infotest_SOURCES   = infotest.cc
