@@ -1,17 +1,14 @@
-# plic - Pluggable IDL Compiler
-# Copyright (C) 2007 Tim Janik
-#
-## GNU Lesser General Public License version 2 or any later version.
+# PLIC - Pluggable IDL Compiler
 include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = . tests
 
-PLICV       = plic-@LT_RELEASE@
+PLICV       = plic-@PLIC_VERSION@
 PLICL       = plic
 
 bin_PROGRAMS = ${PLICV}
 # build and install plic
-plic-@LT_RELEASE@: plic.g
+plic-@PLIC_VERSION@: plic.g
 	yapps plic.g xgen-$(@F) 2>&1 | tee xgen-$(@F).errors
 	@! grep -q '.' xgen-$(@F).errors			# catch all yapps errors & warnings
 	sed 's/^from yapps import runtime$$//' -i xgen-$(@F)	# plic.g has all imports
@@ -24,9 +21,9 @@ EXTRA_DIST += plic.g
 
 # install plic support module yapps2runtime.py
 pyutils_PYTHON = yapps2runtime.py
-pyutilsdir     = $(libdir)/rapicorn-@LT_RELEASE@/pyutils
+pyutilsdir     = $(libdir)/rapicorn-@PLIC_VERSION@/pyutils
 
-# install/uninstall a "plic" link to "plic-VERSION"
+# install/uninstall a "plic" link to "plic-PLIC_VERSION"
 install-exec-hook:
 	cd $(DESTDIR)$(bindir)			\
 	&& test -x ${PLICL}			\

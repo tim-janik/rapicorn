@@ -1,10 +1,7 @@
-# plic tests
-# Copyright (C) 2007 Tim Janik
-#
-## GNU Lesser General Public License version 2 or any later version.
+# PLIC - Pluggable IDL Compiler
 include $(top_srcdir)/Makefile.decl
 
-PLIC = $(top_builddir)/plic/plic-@LT_RELEASE@
+PLIC = $(top_builddir)/plic/plic-@PLIC_VERSION@
 
 check:	check-pass check-fail
 

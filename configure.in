@@ -1,0 +1,96 @@
+dnl # PLIC - Pluggable IDL Compiler                  -*- Mode: shell-script; -*-
+
+# initialize autoconf for PLIC
+AC_INIT
+AC_CONFIG_SRCDIR([plic/plic.g])
+AM_CONFIG_HEADER(configure.h)
+AC_PREREQ(2.57)
+
+# PLIC version numbers
+m4_divert_text([NOTICE],[
+PLIC_RELEASE_VERSION=0          # increment when ABI or API changes
+PLIC_REVISION_VERSION=3         # increment while ABI compatible, otherwise reset
+PLIC_RELEASE_CANDIDATE=         # suffix: rc[0-9]+
+])
+PLIC_VERSION=$PLIC_RELEASE_VERSION.$PLIC_REVISION_VERSION
+PLIC_PACKAGE_VERSION=$PLIC_VERSION${PLIC_RELEASE_CANDIDATE:+-}${PLIC_RELEASE_CANDIDATE}
+AC_SUBST(PLIC_RELEASE_VERSION)
+AC_SUBST(PLIC_REVISION_VERSION)
+AC_SUBST(PLIC_VERSION)
+AC_SUBST(PLIC_PACKAGE_VERSION)
+AC_CANONICAL_TARGET # figure arch, define $target
+
+# initialize automake, libtool, etc.
+AM_INIT_AUTOMAKE(plic, $PLIC_PACKAGE_VERSION, no-define)
+AC_DEFINE_UNQUOTED(PLIC_ARCH_NAME, "$target", [Architecture Description])
+AC_LIBTOOL_DLOPEN               # enable dynamic modules for libtool
+AM_PROG_LIBTOOL                 # provide libtool
+AC_PROG_MAKE_SET                # enable sub directories
+AC_PROG_INSTALL                 # installation utility
+AC_PROG_LN_S                    # installation utility
+
+# MC_CHECK_VERSION() extracts up to 6 decimal numbers out of given-version
+# and required-version, using any non-number letters as delimiters. it then
+# compares each of those 6 numbers in order 1..6 to each other, requirering
+# all of the 6 given-version numbers to be greater than, or at least equal
+# to the corresponding number of required-version.
+# MC_CHECK_VERSION(given-version, required-version [, match-action] [, else-action])
+AC_DEFUN([MC_CHECK_VERSION], [
+[eval `echo "$1:0:0:0:0:0:0" | sed -e 's/^[^0-9]*//' -e 's/[^0-9]\+/:/g' \
+ -e 's/\([^:]*\):\([^:]*\):\([^:]*\):\([^:]*\):\([^:]*\):\(.*\)/ac_v1=\1 ac_v2=\2 ac_v3=\3 ac_v4=\4 ac_v5=\5 ac_v6=\6/' \
+`]
+[eval `echo "$2:0:0:0:0:0:0" | sed -e 's/^[^0-9]*//' -e 's/[^0-9]\+/:/g' \
+ -e 's/\([^:]*\):\([^:]*\):\([^:]*\):\([^:]*\):\([^:]*\):\(.*\)/ac_r1=\1 ac_r2=\2 ac_r3=\3 ac_r4=\4 ac_r5=\5 ac_r6=\6/' \
+`]
+ac_vm=[`expr \( $ac_v1 \> $ac_r1 \) \| \( \( $ac_v1 \= $ac_r1 \) \& \(		\
+	      \( $ac_v2 \> $ac_r2 \) \| \( \( $ac_v2 \= $ac_r2 \) \& \(		\
+	       \( $ac_v3 \> $ac_r3 \) \| \( \( $ac_v3 \= $ac_r3 \) \& \(	\
+	        \( $ac_v4 \> $ac_r4 \) \| \( \( $ac_v4 \= $ac_r4 \) \& \(	\
+	         \( $ac_v5 \> $ac_r5 \) \| \( \( $ac_v5 \= $ac_r5 \) \& \(	\
+	          \( $ac_v6 \>= $ac_r6 \)					\
+		 \) \)	\
+		\) \)	\
+	       \) \)	\
+	      \) \)	\
+	     \) \)	`]
+case $ac_vm in
+[1)]
+	[$3]
+	;;
+*[)]
+	[$4]
+	;;
+esac
+])
+
+# PLIC requirements
+AC_DEFUN([AC_PLIC_REQUIREMENTS],
+[
+    AM_PATH_PYTHON(2.4)
+    AC_CHECK_PROGS(XMLLINT, xmllint, true)
+])
+
+# Documentation requirements
+AC_DEFUN([AC_DOCU_REQUIREMENTS],
+[
+    DOXRULE='#'
+    AC_CHECK_PROGS(DOXER, doxer)
+    if test -n "$DOXER" ; then
+	doxer_version=`$DOXER --version`
+	MC_CHECK_VERSION($doxer_version, 0.6, [DOXRULE=''])
+    fi
+    AC_SUBST(DOXER)
+    AC_SUBST(DOXRULE)
+])
+
+# check requirement sets
+AC_PLIC_REQUIREMENTS
+AC_DOCU_REQUIREMENTS
+
+# generate configured files
+AC_CONFIG_FILES([
+Makefile
+plic/Makefile
+plic/tests/Makefile
+])
+AC_OUTPUT
