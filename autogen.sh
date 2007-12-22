@@ -1,5 +1,5 @@
 #!/bin/sh
-## GNU Lesser General Public License version 2 or any later version.
+# This work is provided "as is" and comes with ABSOLUTELY NO WARRANTY.
 # Run this to generate all the initial makefiles, etc.
 
 PROJECT=PLIC
