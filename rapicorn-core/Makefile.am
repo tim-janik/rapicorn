@@ -113,7 +113,7 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- rapicorn version --- */"						>> xgen-$(@F) \
-	&& echo "#define RAPICORN_VERSION  (@RAPICORN_RELEASE_YEAR@.@RAPICORN_RELEASE_WEEK@.@RAPICORN_REVISION_VERSION@)" >> xgen-$(@F) \
+	&& echo '#define RAPICORN_VERSION  "@RAPICORN_RELEASE_YEAR@.@RAPICORN_RELEASE_WEEK@.@RAPICORN_REVISION_VERSION@"' >> xgen-$(@F) \
 	&& echo "/* version checks */"								>> xgen-$(@F) \
 	&& echo "#define RAPICORN_CHECK_VERSION(majv,relv,revv)	\\"				>> xgen-$(@F) \
 	&& echo "  (@RAPICORN_RELEASE_YEAR@ > (majv) || \\"					>> xgen-$(@F) \
