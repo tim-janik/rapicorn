@@ -199,23 +199,23 @@ AC_DEFUN([AC_RAPICORN_CORE_REQUIREMENTS],
         AC_MSG_ERROR([Compression library libz is missing, but required])
     fi
     AC_SUBST(LIBZ)
+    RAPICORN_DEP_LIBS="$LIBZ $RAPICORN_DEP_LIBS"
 
     dnl # --- check for GLib --- 
     DEPENDANCIES="glib-2.0 >= 2.6.4 gthread-2.0"
-    dnl # define RAPICORN_GLIB_CFLAGS and RAPICORN_GLIB_LIBS:
-    PKG_CHECK_MODULES(RAPICORN_GLIB, $DEPENDANCIES,,
+    dnl # define GLIB_CFLAGS and GLIB_LIBS:
+    PKG_CHECK_MODULES(GLIB, $DEPENDANCIES,,
 	AC_MSG_ERROR([[Failed to detect or find $DEPENDANCIES (consider adjusting \$PKG_CONFIG_PATH)]]))
     dnl # libtool doesn't automatically figure that -pthread implies -lpthread
-    RAPICORN_LIBS=`echo " $RAPICORN_GLIB_LIBS" | sed 's/\(-pthread\b\)/-lpthread \1/' `
-    RAPICORN_LIBS="$RAPICORN_LIBS $LIBZ"
-    RAPICORN_CFLAGS="$RAPICORN_GLIB_CFLAGS"
+    RAPICORN_DEP_CFLAGS="$GLIB_CFLAGS"
+    RAPICORN_DEP_LIBS=`echo " $GLIB_LIBS" | sed 's/\(-pthread\b\)/-lpthread \1/' `" $RAPICORN_DEP_LIBS"
 
     dnl # --- check for memory barriers (needs glib) ---
     AC_MSG_CHECKING([for memory barriers])
     saved_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $RAPICORN_CFLAGS"
+    CFLAGS="$CFLAGS $RAPICORN_DEP_CFLAGS"
     saved_LIBS="$LIBS"
-    LIBS="$LIBS $RAPICORN_LIBS"
+    LIBS="$LIBS $RAPICORN_DEP_LIBS"
     AC_TRY_RUN([ #include <glib.h>
 	    int main () {
 	    #if defined (G_ATOMIC_OP_MEMORY_BARRIER_NEEDED) || (!GLIB_CHECK_VERSION (2, 8, 0) && !defined (__i386__))
@@ -234,9 +234,9 @@ AC_DEFUN([AC_RAPICORN_CORE_REQUIREMENTS],
     LIBS="$saved_LIBS"
     AC_SUBST(RAPICORN_MEMORY_BARRIER_NEEDED)
 
-    dnl # --- RAPICORN_CFLAGS & RAPICORN_LIBS ---
-    AC_SUBST(RAPICORN_CFLAGS)
-    AC_SUBST(RAPICORN_LIBS)
+    dnl # --- RAPICORN_DEP_CFLAGS & RAPICORN_DEP_LIBS ---
+    AC_SUBST(RAPICORN_DEP_CFLAGS)
+    AC_SUBST(RAPICORN_DEP_LIBS)
 ])
 
 # define package requirements.
@@ -334,10 +334,10 @@ AC_DEFUN([AC_RAPICORN_REQUIREMENTS],
     AC_SUBST(GTK_LIBS)
     AM_CONDITIONAL(WITH_GTK, test "x$GTK_PKG_ERRORS" = xOK)
 
-    RAPICORN_CFLAGS="$RAPICORN_CFLAGS"
-    RAPICORN_LIBS="$RAPICORN_LIBS $LIBPNG $LIBZ"
-    AC_SUBST(RAPICORN_CFLAGS)
-    AC_SUBST(RAPICORN_LIBS)
+    RAPICORN_DEP_CFLAGS="$GTK_CFLAGS $PANGO_CFLAGS $RAPICORN_DEP_CFLAGS"
+    RAPICORN_DEP_LIBS="$GTK_LIBS $PANGO_LIBS $LIBPNG $RAPICORN_DEP_LIBS"
+    AC_SUBST(RAPICORN_DEP_CFLAGS)
+    AC_SUBST(RAPICORN_DEP_LIBS)
 ])
 AC_DEFUN([AC_DOC_REQUIREMENTS],
 [
@@ -375,7 +375,6 @@ MC_IF_VAR_EQ(GXX, yes,,
 )
 
 # check build requirements
-AC_MSG_CHECKING(whether make is GNU Make)
 MC_ASSERT_PROG(PKG_CONFIG, pkg-config, [pkg-config can be found at http://pkgconfig.freedesktop.org/])
 
 # check for development build rules (autogen.sh based builds)
@@ -429,12 +428,13 @@ AC_SUBST(LDFLAGS)
 # create output files
 AC_CONFIG_FILES([
 Makefile
+po-helper.sh
+po/Makefile.in
 rapicorn-core/Makefile
 rapicorn-core/tests/Makefile
 rapicorn/Makefile
 rapicorn/tests/Makefile
-po/Makefile.in
-po-helper.sh
+tools/Makefile
 examples/Makefile
 docs/Makefile
 web/Makefile

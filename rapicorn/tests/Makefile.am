@@ -1,78 +1,59 @@
-# Rapicorn Tests
-# Copyright (C) 2005 Tim Janik
-#
-## GNU Lesser General Public License version 2 or any later version.
+# Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES += -I$(top_srcdir)
-DEFS     += -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"' -DPARANOID $(RAPICORN_CFLAGS)
-XML_FILES =
+INCLUDES	+= -I$(top_srcdir)
+DEFS		+= $(RAPICORN_DEP_CFLAGS) -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"'
+DEFS            += $(GLIB_CFLAGS) # FIXME
 
-# test programs:
-programs_ldadd = $(top_builddir)/rapicorn/librapicorn@LT_RELEASE@.la $(RAPICORN_LIBS) $(PANGO_LIBS) $(GTK_LIBS)
-# program sources:
+# test programs
+noinst_PROGRAMS	 = $(TESTS)
+noinst_DATA	 =
+LDADDS		 = $(top_builddir)/rapicorn/librapicorn@LT_RELEASE@.la $(RAPICORN_DEP_LIBS)
+XML_FILES	 =
+EXTRA_DIST	+= $(XML_FILES)
+
+# programs
 TESTS             += walker
 walker_SOURCES     = walker.cc
-walker_LDADD       = $(programs_ldadd)
+walker_LDADD       = $(LDADDS)
 TESTS             += labelmarkup
 labelmarkup_SOURCES= labelmarkup.cc
-labelmarkup_LDADD  = $(programs_ldadd)
+labelmarkup_LDADD  = $(LDADDS)
 TESTS             += properties
 properties_SOURCES = properties.cc
-properties_LDADD   = $(programs_ldadd)
+properties_LDADD   = $(LDADDS)
 TESTS             += primitives
 SLOWTESTS         += primitives
 primitives_SOURCES = primitives.cc
-primitives_LDADD   = $(programs_ldadd)
+primitives_LDADD   = $(LDADDS)
 TESTS             += region
 region_SOURCES     = region.cc
-region_LDADD       = $(programs_ldadd)
+region_LDADD       = $(LDADDS)
 TESTS             += shaderect
 shaderect_SOURCES  = shaderect.cc
-shaderect_LDADD    = $(programs_ldadd)
+shaderect_LDADD    = $(LDADDS)
 TESTS             += pixcombine
 pixcombine_SOURCES = pixcombine.cc
-pixcombine_LDADD   = $(programs_ldadd)
+pixcombine_LDADD   = $(LDADDS)
 TESTS             += items
 items_SOURCES      = items.cc
-items_LDADD        = $(programs_ldadd)
+items_LDADD        = $(LDADDS)
 TESTS             += testitems
 testitems_SOURCES  = testitems.cc
-testitems_LDADD    = $(programs_ldadd)
+testitems_LDADD    = $(LDADDS)
 XML_FILES         += testitems.xml
 TESTS             += factory
 factory_SOURCES    = factory.cc
-factory_LDADD      = $(programs_ldadd)
+factory_LDADD      = $(LDADDS)
 XML_FILES         += factory.xml
 TESTS             += evaltest
 evaltest_SOURCES   = evaltest.cc
-evaltest_LDADD     = $(programs_ldadd)
+evaltest_LDADD     = $(LDADDS)
 
-
-# build tests
-noinst_PROGRAMS = $(TESTS)
-
-# run tests
-test: check
-
-noinst_DATA =
-
-# check XML files
-XMLLINTCALL = $(if $(XMLLINT),$(XMLLINT),true) # handle undefined XMLLINT
-xml-lint:
-	$(XMLLINTCALL) --noout $(XML_FILES)
-.PHONY: xml-lint
+xmllint-check:
+	cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES)
+.PHONY: xmllint-check
 stamp-autochecks: $(XML_FILES)
-	@$(MAKE) xml-lint
+	@$(MAKE) xmllint-check
 	@touch $@
 noinst_DATA += stamp-autochecks
-EXTRA_DIST  += $(XML_FILES)
-
-# copy XML_FILES into builddir
-stamp-xmlcopy: $(XML_FILES)
-	test '$(srcdir)' = '.' || \
-	  for file in $(XML_FILES); do \
-	    cp $(srcdir)/$$file . ; \
-	  done
-	touch $@
-noinst_DATA += stamp-xmlcopy

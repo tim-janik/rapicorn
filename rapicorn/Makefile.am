@@ -1,16 +1,10 @@
-# Rapicorn
-# Copyright (C) 2005 Tim Janik
-#
-## GNU Lesser General Public License version 2 or any later version.
+# Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = . tests
+SUBDIRS		= . tests
 
-INCLUDES       += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(PANGO_CFLAGS) $(GTK_CFLAGS)
-GLIB_MKENUMS    = glib-mkenums
-LDLIBS	        = $(LIBS) $(PANGO_LIBS) $(GTK_LIBS)
-DEFS            = -DRAPICORN_PRIVATE -DPARANOID -D_RAPICORN_SOURCE_EXTENSIONS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
-
+INCLUDES	+= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_DEP_CFLAGS)
+DEFS		 = -DRAPICORN_PRIVATE -DPARANOID -D_RAPICORN_SOURCE_EXTENSIONS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
 
 rapicorn_top_headers = rapicorn.hh
 rapicorn_public_headers = $(strip 	\
@@ -65,7 +59,7 @@ librapicorn@LT_RELEASE@_la_LDFLAGS      = $(strip		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined 						\
 ) # set libtool version and export symbols for resolving
-librapicorn@LT_RELEASE@_la_LIBADD       = $(top_builddir)/rapicorn-core/librapicorncore@LT_RELEASE@.o $(RAPICORN_LIBS) -lm # -lfreetype -lfontconfig
+librapicorn@LT_RELEASE@_la_LIBADD       = $(top_builddir)/rapicorn-core/librapicorncore@LT_RELEASE@.o $(RAPICORN_DEP_LIBS) -lm # -lfreetype -lfontconfig
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@LT_RELEASE@_la_DEPENDENCIES)
 
 # === API headers ===
@@ -75,7 +69,7 @@ api-content:
 
 # === programs (not installed) ===
 noinst_PROGRAMS        = $(ALLTESTS)
-progs_ldadd            = librapicorn@LT_RELEASE@.la $(RAPICORN_LIBS) -lm
+progs_ldadd            = librapicorn@LT_RELEASE@.la $(RAPICORN_DEP_LIBS) -lm
 
 
 #XML_FILES = $(strip standard.xml )

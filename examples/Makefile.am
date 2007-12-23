@@ -1,69 +1,40 @@
-# Rapicorn Examples
-# Copyright (C) 2005 Tim Janik
-#
-## GNU Lesser General Public License version 2 or any later version.
+# Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES  	+= -I$(top_srcdir)
-DEFS            += -DRAPICORN_PRIVATE -DPARANOID $(RAPICORN_CFLAGS) $(CONDITIONAL_CFLAGS)
+INCLUDES	+= -I$(top_srcdir)
+DEFS		+= $(RAPICORN_CFLAGS) -DRAPICORN_PRIVATE -DPARANOID
 
-# test programs:
-if WITH_GTK
-CONDITIONAL_PROGS  = $(GTK_EXAMPLES)
-CONDITIONAL_CFLAGS = $(GTK_CFLAGS)
-else
-CONDITIONAL_PROGS  =
-CONDITIONAL_CFLAGS =
-endif
-XML_FILES =
-# build tests
-noinst_PROGRAMS   = $(CONDITIONAL_PROGS)
-programs_ldadd    = $(top_builddir)/rapicorn/librapicorn@LT_RELEASE@.la $(RAPICORN_LIBS)
-gtkprograms_ldadd = $(programs_ldadd) $(GTK_LIBS)
-GTK_EXAMPLES      =
+# example programs
+noinst_PROGRAMS	 = $(EXAMPLES)
+noinst_DATA	 =
+EXAMPLES	 =
+LDADDS		 = $(top_builddir)/rapicorn/librapicorn@LT_RELEASE@.la $(RAPICORN_DEP_LIBS)
+XML_FILES	 =
+EXTRA_DIST	+= $(XML_FILES)
 
-# --- programs ---
-# hello
-GTK_EXAMPLES    += hello
-hello_SOURCES    = hello.cc
-hello_LDADD      = $(gtkprograms_ldadd)
-XML_FILES       += hello.xml
-# tour
-GTK_EXAMPLES    += tour
-tour_SOURCES     = tour.cc
-tour_LDADD       = $(gtkprograms_ldadd)
-XML_FILES       += tour.xml
-EXTRA_DIST      += testpixs.c
-# scroller
-GTK_EXAMPLES    += scroller
+# programs
+EXAMPLES	+= hello
+hello_SOURCES	 = hello.cc
+hello_LDADD	 = $(LDADDS)
+XML_FILES	+= hello.xml
+EXAMPLES	+= scroller
 scroller_SOURCES = scroller.cc
-scroller_LDADD   = $(gtkprograms_ldadd)
-XML_FILES       += scroller.xml
-# texttest
-GTK_EXAMPLES    += texttest
+scroller_LDADD	 = $(LDADDS)
+XML_FILES	+= scroller.xml
+EXAMPLES	+= texttest
 texttest_SOURCES = texttest.cc
-texttest_LDADD   = $(gtkprograms_ldadd)
-XML_FILES       += texttest.xml
+texttest_LDADD	 = $(LDADDS)
+XML_FILES	+= texttest.xml
+EXAMPLES	+= tour
+tour_SOURCES	 = tour.cc
+tour_LDADD	 = $(LDADDS)
+XML_FILES	+= tour.xml
+EXTRA_DIST	+= testpixs.c testpic.jpg testpic.png testpic-IHDR.png testpic-IDAT.png testpic-DATA.png
 
-XMLLINTCALL = $(if $(XMLLINT),$(XMLLINT),true) # handle undefined XMLLINT
-xml-lint:
-	$(XMLLINTCALL) --noout $(XML_FILES)
-.PHONY: xml-lint
-
-noinst_DATA =
-
+xmllint-check:
+	cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES)
+.PHONY: xmllint-check
 stamp-autochecks: $(XML_FILES)
-	@$(MAKE) xml-lint
+	@$(MAKE) xmllint-check
 	@touch $@
 noinst_DATA += stamp-autochecks
-
-EXTRA_DIST += $(XML_FILES) testpic.jpg testpic.png testpic-IHDR.png testpic-IDAT.png testpic-DATA.png
-
-# copy XML_FILES into builddir
-stamp-xmlcopy: $(XML_FILES)
-	test '$(srcdir)' = '.' || \
-	  for file in $(XML_FILES); do \
-	    cp $(srcdir)/$$file . ; \
-	  done
-	touch $@
-noinst_DATA += stamp-xmlcopy

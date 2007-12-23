@@ -1,16 +1,11 @@
-# Rapicorn
-# Copyright (C) 2005 Tim Janik
-#
-## GNU Lesser General Public License version 2 or any later version.
+# Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = . tests
+SUBDIRS		 = . tests
 
-INCLUDES       += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(PANGO_CFLAGS) $(GTK_CFLAGS)
-GLIB_MKENUMS    = glib-mkenums
-LDLIBS	        = $(LIBS) $(PANGO_LIBS) $(GTK_LIBS)
-DEFS            = -DRAPICORN_PRIVATE -DPARANOID -D_RAPICORN_SOURCE_EXTENSIONS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
-
+INCLUDES	+= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_DEP_CFLAGS)
+DEFS		 = -DRAPICORN_PRIVATE -DPARANOID -D_RAPICORN_SOURCE_EXTENSIONS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
+GLIB_MKENUMS	 = glib-mkenums
 
 rapicorn_top_headers = rapicorncore.hh
 rapicorn_public_headers = $(strip	\
@@ -43,17 +38,17 @@ topincludedir   = $(includedir)/rapicorn@LT_RELEASE@
 topinclude_DATA = $(rapicorn_top_headers)
 EXTRA_DIST     += $(rapicorn_top_headers)
 # librapicorn-core
-lib_LTLIBRARIES                         = librapicorncore@LT_RELEASE@.la # hardcoded -release $(LT_RELEASE)
+lib_LTLIBRARIES				    = librapicorncore@LT_RELEASE@.la # hardcoded -release $(LT_RELEASE)
 librapicorncore@LT_RELEASE@includedir       = $(includedir)/rapicorn@LT_RELEASE@/rapicorn
 librapicorncore@LT_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
 librapicorncore@LT_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
 librapicorncore@LT_RELEASE@_la_DEPENDENCIES = ldscript.map
+librapicorncore@LT_RELEASE@_la_LIBADD       = $(RAPICORN_DEP_LIBS) -lm
 librapicorncore@LT_RELEASE@_la_LDFLAGS      = $(strip		\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined 						\
 ) # set libtool version and export symbols for resolving
-librapicorncore@LT_RELEASE@_la_LIBADD       = $(RAPICORN_LIBS) -lm # -lfreetype -lfontconfig
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorncore@LT_RELEASE@_la_DEPENDENCIES)
 
 # keep this .o rule in sync with the corresponding .la rule from Makefile.in
@@ -69,12 +64,11 @@ api-content:
 
 # === programs (not installed) ===
 noinst_PROGRAMS        = $(ALLTESTS)
-progs_ldadd            = librapicorncore@LT_RELEASE@.la $(RAPICORN_LIBS) -lm
+progs_ldadd            = librapicorncore@LT_RELEASE@.la $(RAPICORN_DEP_LIBS) -lm
 # rapicorn-zintern
 noinst_PROGRAMS       += rapicorn-zintern
 rapicorn_zintern_SOURCES = rapicorn-zintern.cc
-rapicorn_zintern_LDADD   = $(RAPICORN_LIBS) -lm # $(progs_ldadd)
-rapicorn_zintern_DEPS    = $(progs_deps)
+rapicorn_zintern_LDADD   = $(RAPICORN_DEP_LIBS) -lm # $(progs_ldadd)
 
 
 # === enum introspection ===

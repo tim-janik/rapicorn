@@ -1,77 +1,47 @@
-# Rapicorn Tests
-# Copyright (C) 2005 Tim Janik
-#
-## GNU Lesser General Public License version 2 or any later version.
+# Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES += -I$(top_srcdir)
-DEFS     += -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"' -DPARANOID $(RAPICORN_CFLAGS)
-XML_FILES =
+INCLUDES	+= -I$(top_srcdir)
+DEFS		+= $(RAPICORN_CFLAGS) -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"'
+DEFS		+= $(GLIB_CFLAGS) # FIXME
 
-# test programs:
-programs_ldadd = $(top_builddir)/rapicorn-core/librapicorncore@LT_RELEASE@.la $(RAPICORN_LIBS) $(PANGO_LIBS) $(GTK_LIBS)
-# program sources:
+# test programs
+noinst_PROGRAMS	 = $(TESTS)
+LDADDS		 = $(top_builddir)/rapicorn-core/librapicorncore@LT_RELEASE@.la $(RAPICORN_LIBS)
+
+# programs
 TESTS             += infotest
 infotest_SOURCES   = infotest.cc
-infotest_LDADD     = $(programs_ldadd)
+infotest_LDADD     = $(LDADDS)
 TESTS             += math
 PERFTESTS         += math
 math_SOURCES       = math.cc
-math_LDADD         = $(programs_ldadd)
+math_LDADD         = $(LDADDS)
 TESTS             += strings
 SLOWTESTS         += strings
 strings_SOURCES    = strings.cc
-strings_LDADD      = $(programs_ldadd)
+strings_LDADD      = $(LDADDS)
 TESTS             += systest
 systest_SOURCES    = systest.cc
-systest_LDADD      = $(programs_ldadd)
+systest_LDADD      = $(LDADDS)
 TESTS             += threads
 PERFTESTS         += threads
 threads_SOURCES    = threads.cc
-threads_LDADD      = $(programs_ldadd)
+threads_LDADD      = $(LDADDS)
 TESTS             += signal
 signal_SOURCES     = signal.cc
-signal_LDADD       = $(programs_ldadd)
+signal_LDADD       = $(LDADDS)
 TESTS             += sorting
 SLOWTESTS         += sorting
 sorting_SOURCES    = sorting.cc
-sorting_LDADD      = $(programs_ldadd)
+sorting_LDADD      = $(LDADDS)
 TESTS             += datalist
 datalist_SOURCES   = datalist.cc
-datalist_LDADD     = $(programs_ldadd)
+datalist_LDADD     = $(LDADDS)
 EXTRA_DIST        += data.cc
 TESTS             += xmltest
 xmltest_SOURCES    = xmltest.cc
-xmltest_LDADD      = $(programs_ldadd)
+xmltest_LDADD      = $(LDADDS)
 TESTS             += markup
 markup_SOURCES     = markup.cc
-markup_LDADD       = $(programs_ldadd)
-
-
-# build tests
-noinst_PROGRAMS = $(TESTS)
-
-# run tests
-test: check
-
-noinst_DATA =
-
-## check XML files
-#XMLLINTCALL = $(if $(XMLLINT),$(XMLLINT),true) # handle undefined XMLLINT
-#xml-lint:
-#	$(XMLLINTCALL) --noout $(XML_FILES)
-#.PHONY: xml-lint
-#stamp-autochecks: $(XML_FILES)
-#	@$(MAKE) xml-lint
-#	@touch $@
-#noinst_DATA += stamp-autochecks
-#EXTRA_DIST  += $(XML_FILES)
-
-# copy XML_FILES into builddir
-stamp-xmlcopy: $(XML_FILES)
-	test '$(srcdir)' = '.' || \
-	  for file in $(XML_FILES); do \
-	    cp $(srcdir)/$$file . ; \
-	  done
-	touch $@
-noinst_DATA += stamp-xmlcopy
+markup_LDADD       = $(LDADDS)
