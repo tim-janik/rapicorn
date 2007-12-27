@@ -35,7 +35,7 @@ Root::Root() :
 }
 
 void
-Root::set_parent (Item *parent)
+Root::set_parent (Container *parent)
 {
   if (parent)
     warning ("setting parent on toplevel Root item to: %p (%s)", parent, parent->typeid_pretty_name().c_str());
@@ -63,7 +63,7 @@ Root::uncross_focus (Item &fitem)
   while (item)
     {
       item->unset_flag (FOCUS_CHAIN);
-      Container *fc = item->parent_container();
+      Container *fc = item->parent();
       if (fc)
         fc->set_focus_child (NULL);
       item = fc;
@@ -89,7 +89,7 @@ Root::set_focus (Item *item)
   while (item)
     {
       item->set_flag (FOCUS_CHAIN);
-      Container *fc = item->parent_container();
+      Container *fc = item->parent();
       if (fc)
         fc->set_focus_child (item);
       item = fc;

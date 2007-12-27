@@ -203,7 +203,7 @@ Container::uncross_descendant (Item &descendant)
        * simply set parent() to NULL temporarily and with that cause
        * item_has_ancestor() to return earlier.
        */
-      Item *saved_parent = *_parent_loc();
+      Container *saved_parent = *_parent_loc();
       *_parent_loc() = NULL;
       for (CrossLink *last = NULL, *clink = clinks ? clinks->links : NULL; clink; last = clink, clink = last->next)
         if (item_has_ancestor (clink->owner, item) ||
@@ -340,7 +340,7 @@ Container::add (Item                   *item,
 void
 Container::remove (Item &item)
 {
-  Container *container = item.parent_container();
+  Container *container = item.parent();
   if (!container)
     throw NullPointer();
   item.ref();
@@ -353,7 +353,7 @@ Container::remove (Item &item)
   while (dcontainer)
     {
       dcontainer->dispose_item (item);
-      dcontainer = dcontainer->parent_container();
+      dcontainer = dcontainer->parent();
     }
   container->remove_child (item);
   item.invalidate();
@@ -393,7 +393,7 @@ Container::unparent_child (Item &item)
   do
     {
       ancestor->uncross_descendant (item);
-      ancestor = ancestor->parent_container();
+      ancestor = ancestor->parent();
     }
   while (ancestor);
   unref (this);
@@ -755,7 +755,7 @@ Container::Packer::~Packer ()
 Container::Packer
 Container::child_packer (Item &item)
 {
-  Container *container = item.parent_container();
+  Container *container = item.parent();
   if (!container)
     throw NullPointer();
   return container->create_packer (item);

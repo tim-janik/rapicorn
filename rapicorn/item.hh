@@ -55,13 +55,13 @@ class Item;
 typedef Signals::Slot1<void, Item&> ItemSlot;
 class Item : public virtual Convertible, public virtual DataListContainer, public virtual ReferenceCountImpl {
   uint32                      m_flags;          /* interface-inlined for fast read-out */
-  Item                       *m_parent;         /* interface-inlined for fast read-out */
+  Container                  *m_parent;         /* interface-inlined for fast read-out */
   Style                      *m_style;
   void                        propagate_flags (bool notify_changed = true);
   void                        propagate_style ();
   friend                      class Container;
   friend                      class Root;
-  Item**                      _parent_loc     () { return &m_parent; }
+  Container**                 _parent_loc     () { return &m_parent; }
   RAPICORN_PRIVATE_CLASS_COPY  (Item);
 protected:
   /* flag handling */
@@ -174,9 +174,8 @@ public:
   Command*                    lookup_command    (const String    &command_name);
   virtual const CommandList&  list_commands     ();
   /* parents */
-  virtual void                set_parent        (Item *parent);
-  Item*                       parent            () const { return m_parent; }
-  Container*                  parent_container  () const;
+  virtual void                set_parent        (Container *parent);
+  Container*                  parent            () const { return m_parent; }
   bool                        has_ancestor      (const Item &ancestor) const;
   Item*                       common_ancestor   (const Item &other) const;
   Item*                       common_ancestor   (const Item *other) const { return common_ancestor (*other); }

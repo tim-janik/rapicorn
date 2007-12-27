@@ -325,8 +325,8 @@ Item::finalize()
 
 Item::~Item()
 {
-  if (parent_container())
-    parent_container()->remove (this);
+  if (parent())
+    parent()->remove (this);
   if (m_style)
     {
       m_style->unref();
@@ -585,7 +585,7 @@ translate_from_ancestor (Item         *ancestor,
 {
   if (child == ancestor)
     return true;
-  Container *pc = child->parent_container();
+  Container *pc = child->parent();
   translate_from_ancestor (ancestor, pc, n_points, points);
   Affine caffine = pc->child_affine (*child);
   for (uint i = 0; i < n_points; i++)
@@ -604,7 +604,7 @@ Item::translate_from (const Item   &src_item,
   Item *item = const_cast<Item*> (&src_item);
   while (item != ca)
     {
-      Container *pc = item->parent_container();
+      Container *pc = item->parent();
       Affine affine = pc->child_affine (*item);
       affine.invert();
       for (uint i = 0; i < n_points; i++)
@@ -666,7 +666,7 @@ Point
 Item::point_from_viewport (Point root_point) /* root coordinates relative */
 {
   Point p = root_point;
-  Container *pc = parent_container();
+  Container *pc = parent();
   if (pc)
     {
       const Affine &caffine = pc->child_affine (*this);
@@ -680,7 +680,7 @@ Point
 Item::point_to_viewport (Point item_point) /* item coordinates relative */
 {
   Point p = item_point;
-  Container *pc = parent_container();
+  Container *pc = parent();
   if (pc)
     {
       const Affine &caffine = pc->child_affine (*this);
@@ -694,7 +694,7 @@ Affine
 Item::affine_from_viewport () /* viewport => item affine */
 {
   Affine iaffine;
-  Container *pc = parent_container();
+  Container *pc = parent();
   if (pc)
     {
       const Affine &paffine = pc->affine_from_viewport();
@@ -770,12 +770,12 @@ Item::hierarchy_changed (Item *old_toplevel)
 }
 
 void
-Item::set_parent (Item *pitem)
+Item::set_parent (Container *pcontainer)
 {
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
   if (controller)
     controller->reset();
-  Container *pc = parent_container();
+  Container *pc = parent();
   if (pc)
     {
       ref (pc);
@@ -788,24 +788,18 @@ Item::set_parent (Item *pitem)
         sig_hierarchy_changed.emit (rtoplevel);
       unref (pc);
     }
-  if (pitem)
+  if (pcontainer)
     {
-      /* ensure parent items are always containers (see parent_container()) */
-      if (!dynamic_cast<Container*> (pitem))
-        throw Exception ("not setting non-Container item as parent: ", pitem->name());
-      m_parent = pitem;
+      /* ensure parent items are always containers (see parent()) */
+      if (!dynamic_cast<Container*> (pcontainer))
+        throw Exception ("not setting non-Container item as parent: ", pcontainer->name());
+      m_parent = pcontainer;
       style (m_parent->style());
       propagate_flags();
       invalidate();
       if (m_parent->anchored() and !anchored())
         sig_hierarchy_changed.emit (NULL);
     }
-}
-
-Container*
-Item::parent_container() const
-{
-  return dynamic_cast<Container*> (m_parent); /* see set_parent() */
 }
 
 bool

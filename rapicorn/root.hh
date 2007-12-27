@@ -37,7 +37,7 @@ protected:
   virtual void  cancel_item_events      (Item         *item) = 0;
   void          cancel_item_events      (Item         &item)            { cancel_item_events (&item); }
   virtual bool  dispatch_event          (const Event  &event) = 0;
-  virtual void  set_parent              (Item         *parent);
+  virtual void  set_parent              (Container    *parent);
   virtual bool  custom_command          (const String &command_name,
                                          const String &command_args);
   /* loop source (FIXME) */
