@@ -32,6 +32,8 @@
 #define SEARCHPATH_SEPARATOR            RAPICORN_SEARCHPATH_SEPARATOR
 #define SEARCHPATH_SEPARATOR_S          RAPICORN_SEARCHPATH_SEPARATOR_S
 #define CODELOC()                       RAPICORN_CODELOC()
+#define ERROR(format,...)               RAPICORN_ERROR (format, __VA_ARGS__)
+#define WARNING(format,...)             RAPICORN_WARNING (format, __VA_ARGS__)
 #endif // RAPICORN_INTERNALS
 
 namespace Rapicorn {

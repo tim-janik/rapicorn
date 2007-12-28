@@ -55,9 +55,9 @@ public:
   virtual void  add_grab                (Item  &child,
                                          bool   unconfined = false) = 0;
   void          add_grab                (Item  *child,
-                                         bool   unconfined = false)    { throw_if_null (child); return add_grab (*child, unconfined); }
+                                         bool   unconfined = false) { if (!child) RAPICORN_WARNING ("NULL item"); else return add_grab (*child, unconfined); }
   virtual void  remove_grab             (Item  &child) = 0;
-  void          remove_grab             (Item  *child)     { throw_if_null (child); return remove_grab (*child); }
+  void          remove_grab             (Item  *child)              { if (!child) RAPICORN_WARNING ("NULL item"); else return remove_grab (*child); }
   virtual Item* get_grab                (bool  *unconfined = NULL) = 0;
   Item*         find_item               (const String &name);
   /* commands */

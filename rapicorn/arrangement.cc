@@ -80,10 +80,9 @@ ArrangementImpl::ArrangementPacker::list_properties()
 Container::Packer
 ArrangementImpl::create_packer (Item &item)
 {
-  if (item.parent() == this)
-    return Packer (new ArrangementPacker (item));
-  else
-    throw Exception ("foreign child: ", item.name());
+  if (item.parent() != this)
+    WARNING ("foreign child: %s", item.name().c_str());
+  return Packer (new ArrangementPacker (item));
 }
 
 ArrangementImpl::ArrangementImpl() :

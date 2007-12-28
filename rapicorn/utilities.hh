@@ -83,16 +83,6 @@ extern const std::nothrow_t dothrow; /* indicate "with exception" semantics */
 using std::nothrow_t;
 using std::nothrow;
 
-/* --- exception assertions --- */
-template<typename Pointer> inline void
-throw_if_null (Pointer data)
-{
-  if (data)
-    ;
-  else
-    throw NullPointer();
-}
-
 /* --- derivation assertions --- */
 template<class Derived, class Base>
 struct EnforceDerivedFrom {

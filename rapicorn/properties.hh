@@ -408,10 +408,10 @@ PropertyEnum<Class,Type>::set_value (Deletable *obj, const String &svalue)
 {
   String error_string;
   uint64 value = enum_class.parse (svalue.c_str(), &error_string);
-  if (0 && error_string[0] && !value && string_has_int (svalue))
+  if (0 && error_string.size() && !value && string_has_int (svalue))
     value = enum_class.constrain (string_to_int (svalue));
-  else if (error_string[0])
-    throw Exception ("no such value name in enum ", enum_class.enum_name(), ": ", error_string);
+  else if (error_string.size())
+    RAPICORN_WARNING ("invalid enum value name '%s': %s", enum_class.enum_name(), error_string.c_str());
   Type v = Type (value);
   Class *instance = dynamic_cast<Class*> (obj);
   (instance->*setter) (v);

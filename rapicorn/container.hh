@@ -54,7 +54,7 @@ public:
   virtual ChildWalker   local_children  () const = 0;
   virtual bool          has_children    () = 0;
   void                  remove          (Item           &item);
-  void                  remove          (Item           *item)  { if (item) remove (*item); else throw NullPointer(); }
+  void                  remove          (Item           *item)  { if (!item) RAPICORN_WARNING ("NULL item"); remove (*item); }
   void                  add             (Item                   &item,
                                          const PackPropertyList &pack_plist = PackPropertyList(),
                                          PackPropertyList       *unused_props = NULL);
@@ -98,7 +98,7 @@ public:
     friend              class Container;
   };
   Packer                child_packer    (Item   &item);
-  Packer                child_packer    (Item   *item)          { if (item) return child_packer (*item); else throw NullPointer(); }
+  Packer                child_packer    (Item   *item)          { if (!item) RAPICORN_WARNING ("NULL item"); return child_packer (*item); }
 protected:
   virtual Packer        create_packer   (Item   &item) = 0;
   static ChildPacker*   void_packer     ();
