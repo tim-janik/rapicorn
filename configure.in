@@ -14,7 +14,7 @@ AC_PREREQ(2.57)
 # Rapicorn version numbers
 AC_DIVERT_BEFORE_HELP([
 RAPICORN_RELEASE_YEAR=7         # increment when ABI or API changes
-RAPICORN_RELEASE_WEEK=38        # increment when ABI or API changes
+RAPICORN_RELEASE_WEEK=52        # increment when ABI or API changes
 RAPICORN_REVISION_VERSION=0     # increment while ABI compatible, otherwise reset
 ])
 dnl# RAPICORN_RELEASE_CANDIDATE may contain rc[0-9]+ or nothing
