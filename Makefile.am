@@ -21,8 +21,12 @@ test:
 .PHONY: test
 
 
+# === i18n tool files ===
 CLEANFILES += intltool-extract intltool-merge intltool-update
 EXTRA_DIST += intltool-extract.in intltool-merge.in intltool-update.in
+
+# === include file links ===
+EXTRA_DIST += rapicorn-core.hh rapicorn.hh
 
 # === ChangeLog ===
 LAST_COMMITID = 3c74b440cecaba3570eecc6728bbe319ba790b59

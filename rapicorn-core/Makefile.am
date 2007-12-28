@@ -7,13 +7,13 @@ INCLUDES	+= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_DEP_CFL
 DEFS		 = -DRAPICORN_PRIVATE -DPARANOID -D_RAPICORN_SOURCE_EXTENSIONS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
 GLIB_MKENUMS	 = glib-mkenums
 
-rapicorn_top_headers = rapicorncore.hh
+rapicorn_top_headers = rapicorn-core.hh
 rapicorn_public_headers = $(strip	\
         rapicorncpu.hh	rapicorndebugtools.hh	rapicornthread.hh	rapicornutils.hh  \
         rapicornmsg.hh	rapicornsignal.hh	rapicornmath.hh		rapicornutf8.hh   \
         rapicornxml.hh	rapicornmarkup.hh	enumdefs.hh		\
 	$(rapicorn_impl_headers)	\
-	rapicorncore.hh	rapicorncdefs.h		rapicorntests.h		\
+	rapicorncdefs.h	rapicorntests.h	\
 )
 rapicorn_impl_headers = $(strip 	\
 )
@@ -39,7 +39,7 @@ topinclude_DATA = $(rapicorn_top_headers)
 EXTRA_DIST     += $(rapicorn_top_headers)
 # librapicorn-core
 lib_LTLIBRARIES				    = librapicorncore@LT_RELEASE@.la # hardcoded -release $(LT_RELEASE)
-librapicorncore@LT_RELEASE@includedir       = $(includedir)/rapicorn@LT_RELEASE@/rapicorn
+librapicorncore@LT_RELEASE@includedir       = $(includedir)/rapicorn@LT_RELEASE@/rapicorn-core
 librapicorncore@LT_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
 librapicorncore@LT_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
 librapicorncore@LT_RELEASE@_la_DEPENDENCIES = ldscript.map

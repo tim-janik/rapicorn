@@ -16,7 +16,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #ifdef  __cplusplus
-#include <rapicorn-core/rapicorncore.hh>
+#include <rapicorn-core/rapicorn-core.hh>
 #else
 #include <rapicorn-core/rapicornconfig.h>
 #endif

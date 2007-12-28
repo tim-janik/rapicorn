@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_UTILITIES_HH__
 #define __RAPICORN_UTILITIES_HH__
 
-#include <rapicorn-core/rapicorncore.hh>
+#include <rapicorn-core.hh>
 #include <typeinfo>
 #ifdef  RAPICORN_PRIVATE
 #include <rapicorn/private.hh>
