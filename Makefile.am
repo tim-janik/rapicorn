@@ -73,6 +73,17 @@ api-checksum:
 #check-am: api-check # check API version upon make check
 distcheck-hook: # check API version upon make distcheck
 	$(MAKE) $(AM_MAKEFLAGS) -C $(top_srcdir)/ api-check
+installcheck-local:
+	cd . \
+	&& echo '#include <rapicorn-core.hh>'				 > tmpx.cc \
+	&& echo '#include <rapicorn.hh>'					>> tmpx.cc \
+	&& echo 'using namespace Rapicorn;'				>> tmpx.cc \
+	&& echo 'extern "C" int main (int argc, char *argv[]) {'		>> tmpx.cc \
+	&& echo 'Application::init_with_x11 (&argc, &argv, ".AMtest");'	>> tmpx.cc \
+	&& echo 'Application::execute_loops(); return 0; }'		>> tmpx.cc \
+	&& $(CC) `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags --libs rapicorn@LT_RELEASE@` tmpx.cc -o tmpx \
+	&& LD_LIBRARY_PATH="$(libdir):$$LD_LIBRARY_PATH" ./tmpx
+	rm -f tmpx.cc tmpx
 
 # === dynamic_cast check ===
 check-drcast:	# check for dynamic_cast of reference types which is broken in gcc <= 3.3.5
