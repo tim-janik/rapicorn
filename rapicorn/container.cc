@@ -74,10 +74,8 @@ Container::item_cross_link (Item           &owner,
                             Item           &link,
                             const ItemSlot &uncross)
 {
-#ifdef PARANOID
   assert (&owner != &link);
-  assert (owner.common_ancestor (link) == this);
-#endif
+  assert (owner.common_ancestor (link) == this); // could be disabled for performance
   CrossLinks *clinks = get_data (&cross_links_key);
   if (!clinks)
     {
@@ -176,9 +174,7 @@ item_has_ancestor (const Item *item,
 void
 Container::uncross_descendant (Item &descendant)
 {
-#ifdef PARANOID
-  assert (descendant.has_ancestor (*this));
-#endif
+  assert (descendant.has_ancestor (*this)); // could be disabled for performance
   Item *item = &descendant;
   ref (this);
   ref (item);

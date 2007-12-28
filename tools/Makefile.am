@@ -2,7 +2,7 @@
 include $(top_srcdir)/Makefile.decl
 
 INCLUDES	+= -I$(top_srcdir)
-DEFS		+= $(RAPICORN_CFLAGS) -DRAPICORN_PRIVATE
+DEFS		+= $(RAPICORN_CFLAGS)
 
 bin_PROGRAMS	 = $(BIN_PROGS)
 BIN_PROGS	 =

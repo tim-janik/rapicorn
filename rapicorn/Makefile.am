@@ -4,7 +4,7 @@ include $(top_srcdir)/Makefile.decl
 SUBDIRS		= . tests
 
 INCLUDES	+= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_DEP_CFLAGS)
-DEFS		 = -DRAPICORN_PRIVATE -DPARANOID -D_RAPICORN_SOURCE_EXTENSIONS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
+DEFS		 = -DRAPICORN_INTERNALS -D_RAPICORN_SOURCE_EXTENSIONS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
 
 rapicorn_top_headers = rapicorn.hh
 rapicorn_public_headers = $(strip 	\
@@ -40,7 +40,6 @@ rapicorn_cc_sources = $(strip 		\
 )
 rapicorn_private_files = $(strip 	\
 	regionimpl.h			\
-	private.hh			\
 	key2utf8.cc			\
 )
 

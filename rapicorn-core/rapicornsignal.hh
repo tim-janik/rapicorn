@@ -416,11 +416,10 @@ template<class Emitter, typename SignalSignature, class Collector = CollectorDef
 template<class TrampolineP> TrampolineP
 trampoline_cast (TrampolineLink *link)
 {
-#ifdef  PARANOID
-  return dynamic_cast<TrampolineP> (link);
-#else
-  return reinterpret_cast<TrampolineP> (link);
-#endif
+  if (1) // could be disabled for performance
+    return dynamic_cast<TrampolineP> (link);
+  else  // cheap cast
+    return reinterpret_cast<TrampolineP> (link);
 }
 
 /* --- Trampoline + Slot + Signal generation --- */
