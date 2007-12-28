@@ -20,6 +20,10 @@
 #include <rapicorn-core.hh>
 #include <typeinfo>
 
+#if !defined __RAPICORN_HH__ && !defined RAPICORN_INTERNALS
+#error Only <rapicorn.hh> can be included directly.
+#endif
+
 /* --- internally used macros --- */
 #ifdef RAPICORN_INTERNALS
 /* internal i18n */

@@ -14,8 +14,8 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef __RAPICORN_H__
-#define __RAPICORN_H__
+#ifndef __RAPICORN_CORE_HH__
+#define __RAPICORN_CORE_HH__
 
 #include <rapicorn-core/rapicornconfig.h>
 #include <rapicorn-core/enumdefs.hh>
@@ -30,5 +30,5 @@
 #include <rapicorn-core/rapicornutils.hh>
 #include <rapicorn-core/rapicornxml.hh>
 
-#endif /* __RAPICORN_H__ */
+#endif // __RAPICORN_CORE_HH__
 /* vim:set ts=8 sts=2 sw=2: */

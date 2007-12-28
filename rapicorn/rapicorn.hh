@@ -18,6 +18,7 @@
 #define __RAPICORN_HH__
 
 /* public include files */
+#include <rapicorn-core.hh>
 #include <rapicorn/appearance.hh>
 #include <rapicorn/application.hh>
 #include <rapicorn/arrangement.hh>
@@ -45,4 +46,4 @@
 #include <rapicorn/viewport.hh>
 #include <rapicorn/window.hh>
                       
-#endif  /* __RAPICORN_HH__ */
+#endif  // __RAPICORN_HH__

@@ -22,6 +22,10 @@
 #include <vector>
 #include <map>
 
+#if !defined __RAPICORN_CORE_HH__ && !defined RAPICORN_INTERNALS
+#error Only <rapicorn-core.hh> can be included directly.
+#endif
+
 /* --- internally used headers and macros --- */
 #ifdef RAPICORN_INTERNALS
 /* provide assert() */
