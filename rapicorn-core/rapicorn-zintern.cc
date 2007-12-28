@@ -14,14 +14,15 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include <rapicorn-core/rapicorn-core.hh>
+#include <rapicorn-core.hh>
 #include <glib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <zlib.h>
 
-namespace Rapicorn {
+namespace {
+using namespace Rapicorn;
 
 static void     zintern_error  (const char     *format,
                                 ...) RAPICORN_PRINTF (1, 2);
@@ -206,12 +207,6 @@ main (int   argc,
 {
   GSList *plist = NULL;
 
-  InitValue ivalues[] = {
-    { "stand-alone", "true" },
-    { NULL }
-  };
-  // rapicorn_init_core (&argc, &argv, NULL, ivalues);
-
   for (int i = 1; i < argc; i++)
     {
       if (strcmp ("-z", argv[i]) == 0)
@@ -229,7 +224,7 @@ main (int   argc,
       else
 	plist = g_slist_append (plist, argv[i]);
     }
-  
+
   if (argc <= 1)
     return help (NULL);
 
@@ -249,4 +244,4 @@ main (int   argc,
   return 0;
 }
 
-} // Rapicorn
+} // anon
