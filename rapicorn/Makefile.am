@@ -71,24 +71,16 @@ noinst_PROGRAMS        = $(ALLTESTS)
 progs_ldadd            = librapicorn@LT_RELEASE@.la $(RAPICORN_DEP_LIBS) -lm
 
 
-#XML_FILES = $(strip standard.xml )
-## xml linting
-#stamp-xmllint: $(XML_FILES)
-#	cd $(srcdir) \
-#	&& $(XMLLINT) --noout $(XML_FILES)
-#	touch $@
-#$(lib_LTLIBRARIES): stamp-xmllint
-
 XML_FILES   = foundation.xml
-XMLLINTCALL = $(if $(XMLLINT),$(XMLLINT),true) # handle undefined XMLLINT
-xml-lint:
-	$(XMLLINTCALL) --noout $(XML_FILES)
-.PHONY: xml-lint
+EXTRA_DIST += $(XML_FILES)
+
+xmllint-check:
+	cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES)
+.PHONY: xmllint-check
 stamp-autochecks: $(XML_FILES)
-	@$(MAKE) xml-lint
+	@$(MAKE) xmllint-check
 	@touch $@
 noinst_DATA = stamp-autochecks
-EXTRA_DIST += $(XML_FILES)
 
 gen-zintern.c:	../rapicorn-core/rapicorn-zintern $(srcdir)/foundation.xml stamp-autochecks
 	../rapicorn-core/rapicorn-zintern -b -z FOUNDATION_XML $(srcdir)/foundation.xml > xgen-$(@F)

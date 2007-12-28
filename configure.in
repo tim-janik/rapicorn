@@ -390,11 +390,6 @@ if test x"$enable_devel_rules" = xyes ; then
 	AC_MSG_RESULT(no)
 	AC_MSG_ERROR([source dir must be the same as build dir for development build rules])
     fi
-    AC_CHECK_PROGS(PERL, perl5 perl)
-    if test -z "$PERL" || $PERL -e 'exit !($] < 5.002)' > /dev/null ; then
-	AC_MSG_ERROR([failed to detect correct perl version (>= 5.002)])
-    fi
-    AC_CHECK_PROGS(XMLLINT, xmllint, true)
     DVLBUILD=""
     NOTDVLBUILD=#
 else
@@ -406,6 +401,9 @@ AC_SUBST(DVLBUILD)
 AC_SUBST(NOTDVLBUILD)
 AM_CONDITIONAL(IF_DVLBUILD, test -z "$DVLBUILD")
 AM_CONDITIONAL(IF_NOTDVLBUILD, test -z "$NOTDVLBUILD")
+
+# check for development tools
+AC_CHECK_PROGS(XMLLINT, xmllint, true)
 
 # find installation utilities
 AC_PROG_INSTALL
