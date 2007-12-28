@@ -20,24 +20,15 @@
 #include <rapicorn-core.hh>
 #include <typeinfo>
 
-/* --- internally used headers and macros --- */
+/* --- internally used macros --- */
 #ifdef RAPICORN_INTERNALS
-/* assert() and friends */
-#include <assert.h>
 /* internal i18n */
 #define _(str)  rapicorn_gettext (str)
 #define N_(str) (str)
 /* convenience macros */
-#define DIR_SEPARATOR                   RAPICORN_DIR_SEPARATOR
-#define DIR_SEPARATOR_S                 RAPICORN_DIR_SEPARATOR_S
-#define SEARCHPATH_SEPARATOR            RAPICORN_SEARCHPATH_SEPARATOR
-#define SEARCHPATH_SEPARATOR_S          RAPICORN_SEARCHPATH_SEPARATOR_S
 #define MakeProperty                    RAPICORN_MakeProperty
 #define MakeNamedCommand                RAPICORN_MakeNamedCommand
 #define MakeSimpleCommand               RAPICORN_MakeSimpleCommand
-#if !__GNUC_PREREQ (3, 4) || (__GNUC__ == 3 && __GNUC_MINOR__ == 4 && __GNUC_PATCHLEVEL__ < 6)
-#error This GNU C++ compiler version is known to be broken - please consult rapicorn/README
-#endif
 #endif // RAPICORN_INTERNALS
 
 namespace Rapicorn {

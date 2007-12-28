@@ -34,6 +34,10 @@
 #define _(s)    s
 #endif
 
+#if !__GNUC_PREREQ (3, 4) || (__GNUC__ == 3 && __GNUC_MINOR__ == 4 && __GNUC_PATCHLEVEL__ < 6)
+#error This GNU C++ compiler version is known to be broken - please consult rapicorn/README
+#endif
+
 namespace Rapicorn {
 
 static Msg::CustomType debug_browser ("browser", Msg::DEBUG);

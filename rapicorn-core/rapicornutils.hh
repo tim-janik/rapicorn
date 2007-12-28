@@ -22,6 +22,18 @@
 #include <vector>
 #include <map>
 
+/* --- internally used headers and macros --- */
+#ifdef RAPICORN_INTERNALS
+/* provide assert() */
+#include <assert.h>
+/* macro shorthands */
+#define DIR_SEPARATOR                   RAPICORN_DIR_SEPARATOR
+#define DIR_SEPARATOR_S                 RAPICORN_DIR_SEPARATOR_S
+#define SEARCHPATH_SEPARATOR            RAPICORN_SEARCHPATH_SEPARATOR
+#define SEARCHPATH_SEPARATOR_S          RAPICORN_SEARCHPATH_SEPARATOR_S
+#define CODELOC()                       RAPICORN_CODELOC()
+#endif // RAPICORN_INTERNALS
+
 namespace Rapicorn {
 
 /* --- short integer types --- */
@@ -60,6 +72,12 @@ clamp (const T &value, const T &minimum, const T &maximum)
     return maximum;
   return value;
 }
+
+/* --- helper macros --- */
+#define RAPICORN_STRINGIFY(macro_or_string)     RAPICORN_STRINGIFY_ARG (macro_or_string)
+#define RAPICORN_STRINGIFY_ARG(arg)             #arg
+#define RAPICORN_CODELOC_STRING()               std::string (std::string (__FILE__) + ":" + RAPICORN_STRINGIFY (__LINE__) + ":" + __FUNCTION__ + "()")
+#define RAPICORN_CODELOC()                      (RAPICORN_CODELOC_STRING().c_str())
 
 /* --- typeid base type --- */
 class VirtualTypeid {
