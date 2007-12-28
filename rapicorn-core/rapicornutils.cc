@@ -155,6 +155,8 @@ rapicorn_parse_settings_and_args (InitValue *value,
   *argc_p = e;
 }
 
+static struct _InternalConstructorTest_lrcc0 { int v; _InternalConstructorTest_lrcc0() : v (0x12affe17) {} } _internalconstructortest;
+
 /**
  * @param argcp         location of the 'argc' argument to main()
  * @param argvp         location of the 'argv' argument to main()
@@ -197,6 +199,11 @@ rapicorn_init_core (int        *argcp,
   g_free (prg_name);
   if (app_name && (!g_get_application_name() || g_get_application_name() == g_get_prgname()))
     g_set_application_name (app_name);
+
+  /* verify constructur runs to catch link errors */
+  if (_internalconstructortest.v != 0x12affe17)
+    error ("librapicorncore: link error: C++ constructors have not been executed");
+
   rapicorn_parse_settings_and_args (ivalues, argcp, argvp);
 
   /* initialize random numbers */

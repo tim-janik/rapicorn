@@ -38,7 +38,7 @@ topincludedir   = $(includedir)/rapicorn@LT_RELEASE@
 topinclude_DATA = $(rapicorn_top_headers)
 EXTRA_DIST     += $(rapicorn_top_headers)
 # librapicorn-core
-lib_LTLIBRARIES				    = librapicorncore@LT_RELEASE@.la # hardcoded -release $(LT_RELEASE)
+noinst_LTLIBRARIES			    = librapicorncore@LT_RELEASE@.la # hardcoded -release $(LT_RELEASE)
 librapicorncore@LT_RELEASE@includedir       = $(includedir)/rapicorn@LT_RELEASE@/rapicorn-core
 librapicorncore@LT_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
 librapicorncore@LT_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)

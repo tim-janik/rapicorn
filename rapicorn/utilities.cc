@@ -21,6 +21,8 @@ namespace Rapicorn {
 
 static const char *rapicorn_i18n_domain = NULL;
 
+static struct _InternalConstructorTest_lrc0 { int v; _InternalConstructorTest_lrc0() : v (0x123caca0) {} } _internalconstructortest;
+
 void
 rapicorn_init (int        *argcp,
                char     ***argvp,
@@ -32,6 +34,9 @@ rapicorn_init (int        *argcp,
   bind_textdomain_codeset (rapicorn_i18n_domain, "UTF-8");
   /* initialize sub components */
   rapicorn_init_core (argcp, argvp, app_name);
+  /* verify constructur runs to catch link errors */
+  if (_internalconstructortest.v != 0x123caca0)
+    error ("librapicorn: link error: C++ constructors have not been executed");
 }
 
 static Mutex         thread_mutex;
