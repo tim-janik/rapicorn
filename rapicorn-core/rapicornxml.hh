@@ -24,8 +24,8 @@ namespace Rapicorn {
 class XmlNode : public virtual ReferenceCountImpl {
   String                m_name; // element name
   XmlNode              *m_parent;
-  vector<String>        m_attribute_names;
-  vector<String>        m_attribute_values;
+  StringVector          m_attribute_names;
+  StringVector          m_attribute_values;
   uint                  m_line, m_char;
 protected:
   explicit              XmlNode         (const String &, uint, uint);
@@ -36,7 +36,7 @@ public:
   typedef ConstNodes::const_iterator ConstChildIter;
   String                name            () const                { return m_name; }
   XmlNode*              parent          () const                { return m_parent; }
-  const vector<String>  list_attributes () const                { return m_attribute_names; }
+  const StringVector    list_attributes () const                { return m_attribute_names; }
   bool                  set_attribute   (const String   &name,
                                          const String   &value,
                                          bool            replace = true);

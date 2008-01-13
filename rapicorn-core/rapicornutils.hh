@@ -54,9 +54,10 @@ typedef RapicornInt64   int64;
 typedef RapicornUnichar unichar;
 
 /* --- convenient stdc++ types --- */
-typedef std::string String;
 using std::vector;
 using std::map;
+typedef std::string String;
+typedef vector<String> StringVector;
 
 /* --- common (stdc++) utilities --- */
 using ::std::swap;
