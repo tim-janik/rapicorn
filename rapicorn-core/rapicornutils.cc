@@ -429,7 +429,7 @@ stderr_print (bool        bail_out,
       msg += String (":") + file + String (":") + String (buffer);
     }
   if (funcname)
-    msg += String (":") + funcname + "()";
+    msg += String (": ") + funcname + "()";
   if (pmsg)
     msg += String (": ") + pmsg;
   if (str)
@@ -789,6 +789,50 @@ string_cmp_uuid (const String &uuid_string1,
                  const String &uuid_string2) /* -1=smaller, 0=equal, +1=greater (assuming valid uuid strings) */
 {
   return strcasecmp (uuid_string1.c_str(), uuid_string2.c_str()); /* good enough for numeric equality and defines stable order */
+}
+
+String
+string_from_pretty_function_name (const char *gnuc_pretty_function)
+{
+  /* finding the function name is non-trivial in the presence of function pointer
+   * return types. the following code assumes the function name preceedes the
+   * first opening parenthesis not followed by a star.
+   */
+  const char *op = strchr (gnuc_pretty_function, '(');
+  while (op && op[1] == '*')
+    op = strchr (op + 1, '(');
+  if (!op)
+    return gnuc_pretty_function;
+  // *op == '(' && op[1] != '*'
+  const char *last = op - 1;
+  while (last >= gnuc_pretty_function && strchr (" \t\n", *last))
+    last--;
+  if (last < gnuc_pretty_function)
+    return gnuc_pretty_function;
+  const char *first = last;
+  while (first >= gnuc_pretty_function && strchr ("0123456789_ABCDEFGHIJKLMNOPQRSTUVWXYZ:abcdefghijklmnopqrstuvwxyz$", *first))
+    first--;
+  String result = String (first + 1, last - first);
+  return result;
+}
+
+String
+string_to_cquote (const String &str)
+{
+  String buffer;
+  for (String::const_iterator it = str.begin(); it != str.end(); it++)
+    {
+      char d = *it;
+      if (d < 32 || d > 126 || d == '?')
+        buffer += string_printf ("\\%03o", d);
+      else if (d == '\\')
+        buffer += "\\\\";
+      else if (d == '"')
+        buffer += "\\\"";
+      else
+        buffer += d;
+    }
+  return buffer;
 }
 
 /* --- file utils --- */

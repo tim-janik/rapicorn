@@ -251,6 +251,17 @@ uuid_tests (void)
   TDONE();
 }
 
+static void
+string_conversions (void)
+{
+  assert (string_from_pretty_function_name ("Anon::Type::Type(int)") == "Anon::Type::Type");
+  assert (string_from_pretty_function_name ("void (** (* Anon::Class::func())(void (*zoot)(int)))(int)") == "Anon::Class::func");
+  assert (string_to_cquote ("\"") == "\\\"");
+  assert (string_to_cquote ("\"") == "\\\"");
+  assert (string_to_cquote ("\\") == "\\\\");
+  assert (string_to_cquote ("\1") == "\\001");
+}
+
 } // Anon
 
 int
@@ -262,7 +273,8 @@ main (int   argc,
   uuid_tests();
   random_unichar_test();
   random_tf8_and_unichar_test();
-  
+  string_conversions();
+
   return 0;
 }
 

@@ -55,13 +55,7 @@ RAPICORN_EXTERN_C_BEGIN();
 #define EXTERN_C                                extern
 #endif
 #undef STRFUNC
-#if defined (__GNUC__)
-#  define STRFUNC				((const char*) (__PRETTY_FUNCTION__))
-#elif defined (G_HAVE_ISO_VARARGS)
-#  define STRFUNC				G_STRFUNC /* GLib present */
-#else
-#  define STRFUNC				("<unknown>()")
-#endif
+#define STRFUNC				        RAPICORN_SIMPLE_FUNCTION
 #if     !defined (INT64_MAX) || !defined (INT64_MIN) || !defined (UINT64_MAX)
 #ifdef  LLONG_MAX       /* some gcc versions ship limits.h that fail to define LLONG_MAX for C99 */
 #  define INT64_MAX     LLONG_MAX       // +9223372036854775807LL
@@ -113,7 +107,6 @@ RAPICORN_EXTERN_C_BEGIN();
 
 /* --- attributes --- */
 #if     __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
-#define RAPICORN_PRETTY_FUNCTION                  (__PRETTY_FUNCTION__)
 #define RAPICORN_PURE                             __attribute__ ((__pure__))
 #define RAPICORN_MALLOC                           __attribute__ ((__malloc__))
 #define RAPICORN_PRINTF(format_idx, arg_idx)      __attribute__ ((__format__ (__printf__, format_idx, arg_idx)))
@@ -129,7 +122,6 @@ RAPICORN_EXTERN_C_BEGIN();
 #define RAPICORN_CONSTRUCTOR			__attribute__ ((constructor,used)) /* gcc-3.3 also needs "used" to emit code */
 #define RAPICORN_MAY_ALIAS                        __attribute__ ((may_alias))
 #else   /* !__GNUC__ */
-#define RAPICORN_PRETTY_FUNCTION                  ("<unknown>")
 #define RAPICORN_PURE
 #define RAPICORN_MALLOC
 #define RAPICORN_PRINTF(format_idx, arg_idx)
@@ -146,10 +138,10 @@ RAPICORN_EXTERN_C_BEGIN();
 #define RAPICORN_MAY_ALIAS
 #error  Failed to detect a recent GCC version (>= 3.3)
 #endif  /* !__GNUC__ */
-#ifdef	__cplusplus
-#define	RAPICORN_SIMPLE_FUNCTION			(__func__)
+#if     defined __GNUC__ && defined __cplusplus
+#define	RAPICORN_SIMPLE_FUNCTION			(::Rapicorn::string_from_pretty_function_name (__PRETTY_FUNCTION__).c_str())
 #else
-#define	RAPICORN_SIMPLE_FUNCTION			RAPICORN_PRETTY_FUNCTION
+#define	RAPICORN_SIMPLE_FUNCTION			(__func__)
 #endif
 
 /* --- provide canonical integer types --- */
