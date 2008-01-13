@@ -179,7 +179,7 @@ treport_generic (const char *perf_name,
 }
 
 /* --- macro details --- */
-static void
+static void RAPICORN_UNUSED
 tabort_handler (bool   set_values,
                 void **func_loc,
                 void **data_loc)
