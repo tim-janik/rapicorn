@@ -54,6 +54,9 @@ TEST_PROGS        += pixmaps
 pixmaps_SOURCES    = pixmaps.cc
 pixmaps_LDADD      = $(LDADDS)
 EXTRA_DIST        += testpixs.c testpixs.png
+TESTS             += modval
+modval_SOURCES     = modval.cc
+modval_LDADD       = $(LDADDS)
 
 # === test rules ===
 # process handle

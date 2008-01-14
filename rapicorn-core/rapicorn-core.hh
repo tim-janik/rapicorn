@@ -30,6 +30,8 @@
 #include <rapicorn-core/rapicornutf8.hh>
 #include <rapicorn-core/rapicornutils.hh>
 #include <rapicorn-core/rapicornxml.hh>
+#include <rapicorn-core/types.hh>
+#include <rapicorn-core/values.hh>
 
 #endif // __RAPICORN_CORE_HH__
 /* vim:set ts=8 sts=2 sw=2: */
