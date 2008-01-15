@@ -154,6 +154,35 @@ test_array ()
   printout ("\nchess1:\n%s\n", a.to_string ("\n").c_str());
 }
 
+static void
+variable_changed (Variable *self)
+{
+  printf ("VARIABLE Changed: %s\n", self->type.ident().c_str());
+}
+
+static void
+test_variable ()
+{
+  Type somestring ("RcTi;000aSomeString;s;;");
+  Variable &v1 = *new Variable (somestring);
+  ref_sink (v1);
+  v1.sig_changed += slot (variable_changed, &v1);
+  v1 = "foohoo";
+  String as_string = v1;
+  assert (as_string == "foohoo");
+  v1 = 5;
+  assert (v1.get<String>() == "5");
+  v1.set (6.0);
+  assert (v1.get<String>() == "6");
+  bool b = v1;
+  int i = v1;
+  uint ui = v1;
+  double d = v1;
+  (void) (b + i + ui + d); // silence compiler
+  unref (v1);
+}
+
+
 } // Anon
 
 int
@@ -167,6 +196,7 @@ main (int   argc,
   test_value_float();
   test_value_string();
   test_array();
+  test_variable();
 
   return 0;
 }

@@ -32,6 +32,7 @@
 #include <rapicorn-core/rapicornxml.hh>
 #include <rapicorn-core/types.hh>
 #include <rapicorn-core/values.hh>
+#include <rapicorn-core/models.hh>
 
 #endif // __RAPICORN_CORE_HH__
 /* vim:set ts=8 sts=2 sw=2: */
