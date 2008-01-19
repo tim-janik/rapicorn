@@ -742,14 +742,17 @@ RootImpl::draw_now ()
       std::vector<Rect> rects;
       m_expose_region.list_rects (rects);
       m_expose_region.clear();
+      Viewport::State state = m_viewport->get_state();
       for (uint i = 0; i < rects.size(); i++)
         {
           const IRect &ir = rects[i];
           /* render area */
           Plane *plane = new Plane (ir.x, ir.y, ir.width, ir.height);
           render (*plane);
-          /* avoid unnecessary plane transfers */
-          if (has_pending_win_size())
+          /* avoid unnecessary plane transfers for slow remote
+           * displays, for local displays it'd cause resizing lags.
+           */
+          if (!state.local_blitting && has_pending_win_size())
             {
               delete plane;
               break;

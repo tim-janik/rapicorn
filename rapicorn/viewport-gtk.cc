@@ -97,7 +97,7 @@ struct ViewportGtk : public virtual Viewport {
     RapicornViewport   *m_viewport;
     GtkWidget          *m_widget;
   };
-  WindowType            m_window_type;
+  Info                  m_info;
   EventReceiver        &m_receiver;
   bool                  m_ignore_exposes;
   bool                  m_splash_screen;
@@ -131,12 +131,12 @@ struct ViewportGtk : public virtual Viewport {
                                                  double          dest_y);
   virtual void          enqueue_win_draws       (void);
   virtual uint          last_draw_stamp         ();
+  virtual Info          get_info                ();
   virtual State         get_state               ();
   virtual void          set_config              (const Config  &config,
                                                  bool           force_resize_draw);
   virtual void          beep                    (void);
   void                  enqueue_locked          (Event         *event);
-  bool                  is_splash_screen        () { return m_window_type & WINDOW_TYPE_SPLASH; }
 };
 static Viewport::Factory<ViewportGtk> viewport_gtk_factory ("GtkWindow"); // FIXME: should register only after gtk_init() has been called
 
@@ -144,26 +144,27 @@ static Viewport::Factory<ViewportGtk> viewport_gtk_factory ("GtkWindow"); // FIX
 ViewportGtk::ViewportGtk (const String  &backend_name,
                           WindowType     viewport_type,
                           EventReceiver &receiver) :
-  m_viewport (NULL), m_window_type (viewport_type),
+  m_viewport (NULL),
   m_receiver (receiver), m_ignore_exposes (false),
   m_root_x (NAN), m_root_y (NAN),
   m_request_width (33), m_request_height (33),
   m_window_state (WindowState (0)), m_average_background (0xff808080)
 {
+  m_info.window_type = viewport_type;
   AutoLocker locker (GTK_GDK_THREAD_SYNC);
   rapicorn_viewport__alive_counter++;
-  bool is_override_redirect = (m_window_type == WINDOW_TYPE_DESKTOP ||
-                               m_window_type == WINDOW_TYPE_DROPDOWN_MENU ||
-                               m_window_type == WINDOW_TYPE_POPUP_MENU ||
-                               m_window_type == WINDOW_TYPE_TOOLTIP ||
-                               m_window_type == WINDOW_TYPE_NOTIFICATION ||
-                               m_window_type == WINDOW_TYPE_COMBO ||
-                               m_window_type == WINDOW_TYPE_DND);
+  bool is_override_redirect = (m_info.window_type == WINDOW_TYPE_DESKTOP ||
+                               m_info.window_type == WINDOW_TYPE_DROPDOWN_MENU ||
+                               m_info.window_type == WINDOW_TYPE_POPUP_MENU ||
+                               m_info.window_type == WINDOW_TYPE_TOOLTIP ||
+                               m_info.window_type == WINDOW_TYPE_NOTIFICATION ||
+                               m_info.window_type == WINDOW_TYPE_COMBO ||
+                               m_info.window_type == WINDOW_TYPE_DND);
   GtkWindow *window = NULL;
   if (backend_name == "GtkWindow")
     window = (GtkWindow*) gtk_window_new (is_override_redirect ? GTK_WINDOW_POPUP : GTK_WINDOW_TOPLEVEL);
   /* set GdkWindowTypeHint */
-  switch (m_window_type)
+  switch (m_info.window_type)
     {
     case WINDOW_TYPE_NORMAL:            gtk_window_set_type_hint (window, GDK_WINDOW_TYPE_HINT_NORMAL);		break;
     case WINDOW_TYPE_DESKTOP:           gtk_window_set_type_hint (window, GDK_WINDOW_TYPE_HINT_DESKTOP);	break;
@@ -413,13 +414,19 @@ ViewportGtk::last_draw_stamp ()
   return 0;
 }
 
+Viewport::Info
+ViewportGtk::get_info ()
+{
+  return m_info;
+}
+
 Viewport::State
 ViewportGtk::get_state ()
 {
   AutoLocker locker (GTK_GDK_THREAD_SYNC);
   GtkWindow *window = rapicorn_viewport_get_toplevel_window (m_viewport);
   State state;
-  state.window_type = m_window_type;
+  state.local_blitting = m_viewport->fast_local_blitting;
   state.is_active = window && gtk_window_is_active (window);
   state.has_toplevel_focus = window && gtk_window_has_toplevel_focus (window);
   state.window_state = m_window_state;

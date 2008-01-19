@@ -26,6 +26,10 @@ class Viewport : public virtual Deletable {
 protected:
   explicit              Viewport                () {}
 public:
+  /* viewport info (constant during runtime) */
+  struct Info {
+    WindowType  window_type;
+  };
   /* viewport state */
   typedef enum {
     STATE_STICKY        = 0x0004,
@@ -38,7 +42,7 @@ public:
     STATE_BELOW         = 0x0200,
   } WindowState;
   struct State {
-    WindowType  window_type;
+    bool        local_blitting;         /* blitting via shared memory */
     bool        is_active;
     bool        has_toplevel_focus;     /* for embedded windows, this may be false allthough is_active==true */
     WindowState window_state;
@@ -96,6 +100,7 @@ public:
     virtual void        enqueue_async           (Event              *event) = 0;
   };
   /* --- public API --- */
+  virtual Info          get_info                () = 0;
   virtual State         get_state               () = 0;
   virtual void          set_config              (const Config   &config,
                                                  bool            force_resize_draw = false) = 0;
