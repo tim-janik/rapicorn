@@ -29,7 +29,7 @@ rapicorn_generated_headers = $(strip	\
 )
 rapicorn_cc_sources = $(strip 		\
 	\
-	viewport-gtk.cc	regionimpl.c	\
+	viewport-gtk.cc	regionimpl.c	blitfuncs.cc	\
 	utilities.cc	events.cc	application.cc	\
 	primitives.cc	region.cc	loop.cc		viewport.cc		\
 	properties.cc	commands.cc	appearance.cc	painter.cc	window.cc		\
@@ -39,6 +39,7 @@ rapicorn_cc_sources = $(strip 		\
 	text-editor.cc	text-pango.cc	testitem.cc	\
 )
 rapicorn_private_files = $(strip 	\
+	blitfuncs.hh			\
 	regionimpl.h			\
 	key2utf8.cc			\
 )

@@ -54,7 +54,6 @@ public:
   void          draw_simple_line        (double x0, double y0, double x1, double y1, double thickness, Color fill_color);
 private:
   void          fill_scan_line          (int64 yy, int64 x1, int64 width, Color color0);
-  void          fill_line_gradient      (int64 yy, int64 lx1, int64 lx2, int64 xc0, Color color0, int64 xc1, Color color1);
 };
 
 } // Rapicorn

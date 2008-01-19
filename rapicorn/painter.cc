@@ -15,6 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "painter.hh"
+#include "blitfuncs.hh"
 #include <algorithm>
 
 namespace Rapicorn {
@@ -187,14 +188,6 @@ Painter::draw_border (int x, int y, int width, int height, Color border, const v
     }
 }
 
-static inline uint32
-quick_rand32 ()
-{
-  static uint32 accu = 2147483563;
-  accu = 1664525 * accu + 1013904223;
-  return accu;
-}
-
 void
 Painter::draw_shaded_rect (int xc0, int yc0, Color color0, int xc1, int yc1, Color color1)
 {
@@ -309,15 +302,25 @@ Painter::draw_gradient_rect (int64 recx,     int64 recy,
             }
           continue;
         }
-      int64 xi0 = iround (xu0), xi1 = iround (xu1);
       if (xu0 > xu1)
         SWAP (xu0, xu1); // force: xu0 <= xu1
-      if (x1 < xu0)
-        fill_scan_line (yy, x1, MIN (xi0, x2 + 1) - x1, color0);   // [x1..xu0[
-      if (x1 <= xu1)
-        fill_line_gradient (yy, x1, x2, xi0, color0, xi1, color1); // [x1..x2] or [xu0..xu1]
-      if (x2 > xu1)
-        fill_scan_line (yy, xi1 + 1, x2 - xi1, color1);            // ]xu1..x2]
+      int64 xi0 = iround (xu0), xi1 = iround (xu1);
+      if (x1 < xi0)     /* x1 ---/ xi0 */
+        fill_scan_line (yy, x1, MIN (xi0, x2 + 1) - x1, color0);   // [x1..xi0[
+      if (x1 <= xi1)    /* xi0 /~~~/ xi1 */
+        {
+          int64 gx1 = MAX (x1, xi0), gx2 = MIN (x2, xi1);          // [xi0..xi1]
+          if (gx1 <= gx2)
+            {
+              int64 len = gx2 - gx1 + 1;
+              uint32 *pixel = m_plane.poke_span (gx1, yy, len);
+              Color cg1 = interpolate_colors (color0, color1, perpendicular_point (c0x, c0y, c1x, c1y, gx1, yy));
+              Color cg2 = interpolate_colors (color0, color1, perpendicular_point (c0x, c0y, c1x, c1y, gx2, yy));
+              Blit::render_gradient_line (pixel, pixel + len, cg1.premultiplied(), cg2.premultiplied());
+            }
+        }
+      if (x2 > xi1)     /* xi1 /--- x2 */
+        fill_scan_line (yy, xi1 + 1, x2 - xi1, color1);            // ]xi1..x2]
     }
 }
 
@@ -335,48 +338,6 @@ Painter::fill_scan_line (int64 yy,
     {
       uint32 col = pre0;
       memset4 (pixel, col, len);
-    }
-}
-
-void
-Painter::fill_line_gradient (int64 yy,
-                             int64 lx1, int64 lx2,
-                             int64 xc0, Color color0,
-                             int64 xc1, Color color1)
-{
-  return_if_fail (xc0 <= xc1);
-  return_if_fail (lx1 <= lx2);
-  const int64 x1 = MAX (xstart(), MAX (lx1, xc0)), x2 = MIN (xbound() - 1, MIN (lx2, xc1));
-  if (x2 < x1)
-    return;
-  /* extract alpha, red, green, blue */
-  Color A = color0.premultiplied(), B = color1.premultiplied();
-  double Aa = A.alpha(), Ar = A.red(), Ag = A.green(), Ab = A.blue(); // [0..255]
-  double Ba = B.alpha(), Br = B.red(), Bg = B.green(), Bb = B.blue(); // [0..255]
-  double Da = Ba - Aa,   Dr = Br - Ar, Dg = Bg - Ag,   Db = Bb - Ab;  // B - A color delta
-  double Dx = xc1 - xc0; // color step per pixel
-  // distribute color parts along pixels, shift left by 8 for dither arithmetic
-  Da = Da / Dx * 0xff;
-  Dr = Dr / Dx * 0xff;
-  Dg = Dg / Dx * 0xff;
-  Db = Db / Dx * 0xff;
-  Aa *= 256;
-  Ar *= 256;
-  Ag *= 256;
-  Ab *= 256;
-  uint32 *pixel = m_plane.poke_span (x1, yy, x2 - x1 + 1);
-  for (int64 ii = x1 - xc0; ii <= x2 - xc0; ii++)
-    {
-      /* interpolate colors (still shifted left by 8) */
-      int32 Ia = dtoi32 (Aa + Da * ii), Ir = dtoi32 (Ar + Dr * ii), Ig = dtoi32 (Ag + Dg * ii), Ib = dtoi32 (Ab + Db * ii);
-      /* dither */
-      union { uint32 i32; uint8 b[4]; } rnd = { quick_rand32() };
-      Ir += rnd.b[1];
-      Ig += rnd.b[2];
-      Ib += rnd.b[3];
-      Ia += MAX (MAX (rnd.b[0], rnd.b[1]), MAX (rnd.b[2], rnd.b[3])); // preserve premul constraint
-      /* shift right by 8, apply pixel */
-      pixel[ii - x1 + xc0] = Color (Ir >> 8, Ig >> 8, Ib >> 8, Ia >> 8);
     }
 }
 
