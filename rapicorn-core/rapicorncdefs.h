@@ -84,7 +84,7 @@ RAPICORN_EXTERN_C_BEGIN();
 #define RAPICORN_ABORT_NORETURN()	 rapicorn_abort_noreturn()
 
 /* --- convenient aliases --- */
-#ifdef  _RAPICORN_SOURCE_EXTENSIONS
+#ifdef  RAPICORN_INTERNALS
 #define	ISLIKELY		RAPICORN_ISLIKELY
 #define	UNLIKELY		RAPICORN_UNLIKELY
 #define	LIKELY			RAPICORN_LIKELY
@@ -93,7 +93,7 @@ RAPICORN_EXTERN_C_BEGIN();
 #define	assert_not_reached	RAPICORN_ASSERT_NOT_REACHED
 #undef  assert
 #define	assert			RAPICORN_ASSERT
-#endif /* _RAPICORN_SOURCE_EXTENSIONS */
+#endif /* RAPICORN_INTERNALS */
 
 /* --- preprocessor pasting --- */
 #define RAPICORN_CPP_PASTE4i(a,b,c,d)             a ## b ## c ## d  /* twofold indirection is required to expand macros like __LINE__ */

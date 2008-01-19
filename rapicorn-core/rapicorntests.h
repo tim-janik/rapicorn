@@ -76,8 +76,13 @@ typedef void (*RapicornTAbort) (void*);
 #define TDONE()         	do { g_printerr ("]\n");                /* test outro */ \
                                      TABORT_set (NULL, NULL); } while(0)
 #endif
-
 #define TRUN(name, func)        ({ TSTART (name); func(); TDONE(); })
+
+#define return_if_fail          RAPICORN_RETURN_IF_FAIL
+#define return_val_if_fail      RAPICORN_RETURN_VAL_IF_FAIL
+#define assert_not_reached      RAPICORN_ASSERT_NOT_REACHED
+#undef  assert
+#define assert                  RAPICORN_ASSERT
 
 /* --- performance --- */
 typedef enum {

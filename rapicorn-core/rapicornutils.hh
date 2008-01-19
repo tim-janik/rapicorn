@@ -118,9 +118,9 @@ void rapicorn_runtime_problemv (char        ewran_tag,
 
 /* --- private copy constructor and assignment operator --- */
 #define RAPICORN_PRIVATE_CLASS_COPY(Class)        private: Class (const Class&); Class& operator= (const Class&);
-#ifdef  _RAPICORN_SOURCE_EXTENSIONS
+#ifdef  RAPICORN_INTERNALS
 #define PRIVATE_CLASS_COPY                      RAPICORN_PRIVATE_CLASS_COPY
-#endif  /* _RAPICORN_SOURCE_EXTENSIONS */
+#endif  /* RAPICORN_INTERNALS */
 
 /* --- initialization --- */
 typedef RapicornInitValue    InitValue;

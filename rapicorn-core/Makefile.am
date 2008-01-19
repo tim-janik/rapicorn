@@ -4,7 +4,7 @@ include $(top_srcdir)/Makefile.decl
 SUBDIRS		 = . tests
 
 INCLUDES	+= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_DEP_CFLAGS)
-DEFS		 = -DRAPICORN_INTERNALS -D_RAPICORN_SOURCE_EXTENSIONS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
+DEFS		 = -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
 GLIB_MKENUMS	 = glib-mkenums
 
 rapicorn_top_headers = rapicorn-core.hh

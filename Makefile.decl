@@ -13,10 +13,6 @@ GENERATED_CLEANFILES=
 GENERATED=$(strip $(GENERATED_EXTRA_DIST) $(GENERATED_CLEANFILES))
 EXTRA_DIST=$(GENERATED_EXTRA_DIST)
 
-# assign project wide defaults
-AM_CFLAGS = -D_RAPICORN_SOURCE_EXTENSIONS
-AM_CXXFLAGS = -D_RAPICORN_SOURCE_EXTENSIONS
-
 # === distfile-list ===
 # recursive rule supported by all Makefiles to generate a list of all files
 # listed as DISTFILES. this asserts a writable file named $DISTFILE_LIST.
