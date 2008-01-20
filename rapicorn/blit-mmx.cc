@@ -37,6 +37,12 @@ load_hi32lo32 (uint32_t a,
   return _mm_or_si64 (mhi, mlo);        // a3 a2 a1 a0 b3 b2 b1 b0
 }
 
+static inline __m64
+load_08080808 (uint32 vv)
+{
+  __m64 mi = _mm_cvtsi32_si64 (vv);             // 00 00 00 00 v3 v2 v1 v0
+  return _mm_unpacklo_pi8 (mi, mmx_zero);       // 00 v3 00 v2 00 v1 00 v0
+}
 
 static inline __m64
 packbyte_8x8 (__m64 a, // 4x16
@@ -48,11 +54,10 @@ packbyte_8x8 (__m64 a, // 4x16
 }
 
 static inline uint32
-store_00008888 (__m64 vv)               // vv = AA aa BB bb CC cc DD dd
+store_00008888 (__m64 vv)                       // vv = AA aa BB bb CC cc DD dd
 {
-  __m64 zz = _mm_setzero_si64();        // zz = 00 00 00 00 00 00 00 00
-  __m64 ip = packbyte_8x8 (vv, zz);     // ip = US (ZZzzZZzz AaBbCcDd)
-  return _mm_cvtsi64_si32 (ip);         // return 0x00000000ffffffff & ip
+  __m64 ip = packbyte_8x8 (vv, mmx_zero);       // ip = US (ZZzzZZzz AaBbCcDd)
+  return _mm_cvtsi64_si32 (ip);                 // return 0x00000000ffffffff & ip
 }
 
 static inline uint32_t
@@ -68,6 +73,46 @@ color_agrb24 (__m64 ag24,                       // 00 aa .. .. 00 gg .. ..
 }
 
 static inline __m64
+pixmul_4x16 (__m64 a,
+             __m64 b)
+{
+  // scaled 16bit multiplication so that 255*255=255 for the 4x16bit vectors a and b
+  __m64 mask = (__m64) 0x0080008000800080ULL;
+  __m64 res;
+  res = _mm_mullo_pi16 (a, b);          // 16bit: res_ = a_ * b_
+  res = _mm_adds_pu16 (res, mask);      // 16bit: res_ = SATURATE (res_ + 0x80)
+  __m64 tmp = _mm_srli_pi16 (res, 8);   // 16bit: tmp_ = res_ >> 8
+  res = _mm_adds_pu16 (res, tmp);       // 16bit: res_ = SATURATE (res_ + tmp_)
+  res = _mm_srli_pi16 (res, 8);         // 16bit: res_ = res_ >> 8
+  return res;   // return (a_ * b_ + 0x80 + ((a_ * b_ + 0x80) >> 8)) >> 8
+}
+
+static inline __m64
+expand_alpha_4x16 (__m64 pixel4)
+{
+  // expand alpha 4 times, the extracted alpha should be <= 255
+  __m64 t1, t2;
+  t1 = mmx_shiftr (pixel4, 48); // t1 = pixel4 >> 48
+  t2 = mmx_shiftl (t1, 16);     // t2 = t1 << 16
+  t1 = _mm_or_si64 (t1, t2);    // t1 |= t2
+  t2 = mmx_shiftl (t1, 32);     // t2 = t1 << 32
+  t1 = _mm_or_si64 (t1, t2);    // t1 |= t2
+  return t1;    // AAaa = alpha16 (pixel4); return AA aa AA aa AA aa AA aa
+}
+
+static inline __m64
+combine_over_4x16 (__m64 src,      // 00aa 00rr 00gg 00bb
+                   __m64 srcalpha, // 00aa 00aa 00aa 00aa
+                   __m64 dst)      // 00aa 00rr 00gg 00bb
+{
+  // src OVER dst = src + dest * (255 - alpha)
+  __m64 m0f = (__m64) 0x00ff00ff00ff00ffULL;
+  __m64 malpha = _mm_xor_si64 (srcalpha, m0f);  // malpha_ = 255 - srcalpha_
+  __m64 apix = pixmul_4x16 (dst, malpha);       // apix_ = dst_ * malpha_
+  return _mm_adds_pu8 (src, apix);              // return src_ + apix_
+}
+
+static inline __m64
 mmx_dither_rand (__m64 maccu)
 {
   // 2^14-period mod16 generator: accu = (accu * 47989) & 0xffff;
@@ -75,6 +120,30 @@ mmx_dither_rand (__m64 maccu)
   return _mm_mullo_pi16 (maccu, mfact); // maccu_ * mfact_
 }
 static __m64 mmx_dither_accu = (__m64) 0xa9d1878556c9bcddULL; // 4095-steps apart seeds
+
+static void
+mmx_combine_over (uint32       *dst,
+                  const uint32 *src,
+                  uint32        length)
+{
+  uint32 *bound = dst + length;
+  while (dst < bound)
+    {
+      uint32 s = *src++, a = s >> 24;
+      if (a == 0xff)
+        *dst = s;
+      else if (a)
+        {
+          __m64 msrc = load_08080808 (s);
+          __m64 mals = expand_alpha_4x16 (msrc);
+          __m64 mdst = load_08080808 (*dst);
+          __m64 mcmb = combine_over_4x16 (msrc, mals, mdst);
+          *dst = store_00008888 (mcmb);
+        }
+      dst++;
+    }
+  _mm_empty();  // cleanup FPU after MMX use
+}
 
 static void
 mmx_gradient_line (uint32 *pixel,
@@ -128,6 +197,7 @@ void
 render_optimize_mmx (void)
 {
   render.gradient_line = mmx_gradient_line;
+  render.combine_over = mmx_combine_over;
 }
 
 #else  /* !__MMX__ */
