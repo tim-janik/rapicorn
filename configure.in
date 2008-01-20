@@ -351,6 +351,30 @@ AC_DEFUN([AC_DOC_REQUIREMENTS],
     AC_SUBST(DOXER)
     AC_SUBST(DOXRULE)
 ])
+AC_DEFUN([AC_CPU_FLAGS],
+[
+    # --- FPU flags ---
+    # -funroll-loops can boost FPU performance
+    MC_PROG_CC_SPECIAL_FLAGS(FPU_FLAGS, -funroll-loops)
+    AC_SUBST(FPU_FLAGS)
+    # --- MMX flags ---
+    MC_PROG_CC_SPECIAL_FLAGS(MMX_FLAGS, -mmmx -funroll-loops -ftree-vectorize)
+    AC_SUBST(MMX_FLAGS)
+    # --- 3DNow flags ---
+    MC_PROG_CC_SPECIAL_FLAGS(AMD3DNOW_FLAGS, -m3dnow -funroll-loops -ftree-vectorize)
+    AC_SUBST(AMD3DNOW_FLAGS)
+    # --- SSE flags ---
+    # * -mfpmath=sse can harm FPU-algorithm performance
+    # * -funroll-loops can harm SSE loop performance
+    MC_PROG_CC_SPECIAL_FLAGS(SSE_FLAGS, -msse -ftree-vectorize)
+    AC_SUBST(SSE_FLAGS)
+    # --- SSE2 flags ---
+    MC_PROG_CC_SPECIAL_FLAGS(SSE2_FLAGS, -msse2 -ftree-vectorize)
+    AC_SUBST(SSE2_FLAGS)
+    # --- SSE3 flags ---
+    MC_PROG_CC_SPECIAL_FLAGS(SSE3_FLAGS, -msse3 -ftree-vectorize)
+    AC_SUBST(SSE3_FLAGS)
+])
 
 # check compilers and behaviour; setup CFLAGS
 MC_PROG_CC_WITH_CFLAGS
@@ -415,6 +439,7 @@ AC_I18N_REQUIREMENTS
 AC_RAPICORN_CORE_REQUIREMENTS
 AC_RAPICORN_REQUIREMENTS
 AC_DOC_REQUIREMENTS
+AC_CPU_FLAGS
 
 # automake @VARIABLE@ exports.
 AC_SUBST(CFLAGS)

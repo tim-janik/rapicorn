@@ -15,6 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "utilities.hh"
+#include "blitfuncs.hh"
 #include <errno.h>
 
 namespace Rapicorn {
@@ -37,6 +38,10 @@ rapicorn_init (int        *argcp,
   /* verify constructur runs to catch link errors */
   if (_internalconstructortest.v != 0x123caca0)
     error ("librapicorn: link error: C++ constructors have not been executed");
+  /* optimize */
+  CPUInfo cpu = cpu_info();
+  if (cpu.x86_mmx)
+    Blit::render_optimize_mmx();
 }
 
 static Mutex         thread_mutex;

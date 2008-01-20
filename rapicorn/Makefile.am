@@ -29,7 +29,7 @@ rapicorn_generated_headers = $(strip	\
 )
 rapicorn_cc_sources = $(strip 		\
 	\
-	viewport-gtk.cc	regionimpl.c	blitfuncs.cc	\
+	viewport-gtk.cc	regionimpl.c	blitfuncs.cc	blit-mmx.cc	\
 	utilities.cc	events.cc	application.cc	\
 	primitives.cc	region.cc	loop.cc		viewport.cc		\
 	properties.cc	commands.cc	appearance.cc	painter.cc	window.cc		\
@@ -43,6 +43,13 @@ rapicorn_private_files = $(strip 	\
 	regionimpl.h			\
 	key2utf8.cc			\
 )
+
+# === CPU flags ===
+CPU_FLAGS = $(or	\
+	$(patsubst %, @MMX_FLAGS@, $(findstring -mmx.cc, $(<F))), \
+	@FPU_FLAGS@	\
+)
+AM_CXXFLAGS = $(CPU_FLAGS)
 
 # === libraries ===
 topincludedir   = $(includedir)/rapicorn@LT_RELEASE@

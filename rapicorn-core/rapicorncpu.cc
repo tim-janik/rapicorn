@@ -62,6 +62,7 @@ get_arch_name (void)
   return "i386";
 #else
   return "unknown-arch";
+#warning rapicorncpu.cc needs updating for this processor type
 #endif
 }
 

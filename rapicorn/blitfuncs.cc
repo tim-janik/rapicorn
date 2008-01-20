@@ -27,7 +27,7 @@ quick_rand32 ()
   return accu;
 }
 
-void
+static void
 render_gradient_line (uint32 *pixel,
                       uint32 *bound,
                       uint32  col1,
@@ -58,6 +58,10 @@ render_gradient_line (uint32 *pixel,
       pixel++;
     }
 }
+
+RenderTable render = {
+  render_gradient_line,
+};
 
 } // Blit
 } // Rapicorn

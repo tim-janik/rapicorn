@@ -33,6 +33,9 @@ rapicorn_private_files = $(strip	\
 	mksignals.sh			\
 )
 
+# === CPU flags ===
+AM_CXXFLAGS = @FPU_FLAGS@
+
 # === libraries ===
 topincludedir   = $(includedir)/rapicorn@LT_RELEASE@
 topinclude_DATA = $(rapicorn_top_headers)

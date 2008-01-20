@@ -316,7 +316,7 @@ Painter::draw_gradient_rect (int64 recx,     int64 recy,
               uint32 *pixel = m_plane.poke_span (gx1, yy, len);
               Color cg1 = interpolate_colors (color0, color1, perpendicular_point (c0x, c0y, c1x, c1y, gx1, yy));
               Color cg2 = interpolate_colors (color0, color1, perpendicular_point (c0x, c0y, c1x, c1y, gx2, yy));
-              Blit::render_gradient_line (pixel, pixel + len, cg1.premultiplied(), cg2.premultiplied());
+              Blit::render.gradient_line (pixel, pixel + len, cg1.premultiplied(), cg2.premultiplied());
             }
         }
       if (x2 > xi1)     /* xi1 /--- x2 */
