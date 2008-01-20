@@ -41,10 +41,13 @@ namespace Blit {
 #define COL_ARGB(a,r,g,b)       (((a) << 24) | ((r) << 16) | ((g) << 8) | (b))
 
 struct RenderTable {
-  void  (*gradient_line)        (uint32 *pixel,
-                                 uint32 *bound,
-                                 uint32  col1,
-                                 uint32  col2);
+  void  (*combine_over)         (uint32       *dst,
+                                 const uint32 *src,
+                                 uint          span);
+  void  (*gradient_line)        (uint32       *pixel,
+                                 uint32       *bound,
+                                 uint32        col1,
+                                 uint32        col2);
 };
 extern RenderTable render;
 

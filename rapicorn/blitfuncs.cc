@@ -28,10 +28,10 @@ quick_rand32 ()
 }
 
 static void
-render_gradient_line (uint32 *pixel,
-                      uint32 *bound,
-                      uint32  col1,
-                      uint32  col2)
+alu_gradient_line (uint32 *pixel,
+                   uint32 *bound,
+                   uint32  col1,
+                   uint32  col2)
 {
   uint32 Ca = COLA (col1) << 16, Cr = COLR (col1) << 16, Cg = COLG (col1) << 16, Cb = COLB (col1) << 16;
   int32 Da = (COLA (col2) << 16) - Ca, Dr = (COLR (col2) << 16) - Cr;
@@ -59,8 +59,31 @@ render_gradient_line (uint32 *pixel,
     }
 }
 
+static void
+alu_combine_over (uint32 *dst, const uint32 *src, uint span)
+{
+  const uint32 *limit = dst + span;
+  while (dst < limit)
+    {
+      /* extract alpha, red, green, blue */
+      uint32 Aa = COLA (*src), Ar = COLR (*src), Ag = COLG (*src), Ab = COLB (*src);
+      uint32 Ba = COLA (*dst), Br = COLR (*dst), Bg = COLG (*dst), Bb = COLB (*dst);
+      /* A over B = colorA + colorB * (1 - alphaA) */
+      uint32 Ai = 255 - Aa;
+      uint8 Dr = Ar + Color::IMUL (Br, Ai);
+      uint8 Dg = Ag + Color::IMUL (Bg, Ai);
+      uint8 Db = Ab + Color::IMUL (Bb, Ai);
+      uint8 Da = Aa + Color::IMUL (Ba, Ai);
+      /* assign */
+      *dst++ = COL_ARGB (Da, Dr, Dg, Db);
+      src++;
+    }
+}
+
+
 RenderTable render = {
-  render_gradient_line,
+  alu_combine_over,
+  alu_gradient_line,
 };
 
 } // Blit
