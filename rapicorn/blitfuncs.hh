@@ -41,6 +41,7 @@ namespace Blit {
 #define COL_ARGB(a,r,g,b)       (((a) << 24) | ((r) << 16) | ((g) << 8) | (b))
 
 struct RenderTable {
+  void  (*clear_fpu)            (void);
   void  (*combine_over)         (uint32       *dst,
                                  const uint32 *src,
                                  uint          span);

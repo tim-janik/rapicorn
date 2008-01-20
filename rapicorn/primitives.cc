@@ -677,6 +677,7 @@ Plane::combine (const Plane &src, CombineType ct, uint8 lucent)
         case COMBINE_VALUE:   pixel_combine<COMBINE_VALUE>  (d, d, s, xspan, lucent); break;
         }
     }
+  Blit::render.clear_fpu();
 }
 
 Affine

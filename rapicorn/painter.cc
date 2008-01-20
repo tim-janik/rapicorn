@@ -317,6 +317,7 @@ Painter::draw_gradient_rect (int64 recx,     int64 recy,
               Color cg1 = interpolate_colors (color0, color1, perpendicular_point (c0x, c0y, c1x, c1y, gx1, yy));
               Color cg2 = interpolate_colors (color0, color1, perpendicular_point (c0x, c0y, c1x, c1y, gx2, yy));
               Blit::render.gradient_line (pixel, pixel + len, cg1.premultiplied(), cg2.premultiplied());
+              Blit::render.clear_fpu();
             }
         }
       if (x2 > xi1)     /* xi1 /--- x2 */

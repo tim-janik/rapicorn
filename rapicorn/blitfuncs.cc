@@ -80,8 +80,14 @@ alu_combine_over (uint32 *dst, const uint32 *src, uint span)
     }
 }
 
+static void
+nop_clear_fpu (void)
+{
+  /* clear render state for FPU use */
+}
 
 RenderTable render = {
+  nop_clear_fpu,
   alu_combine_over,
   alu_gradient_line,
 };

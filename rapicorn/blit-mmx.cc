@@ -122,6 +122,12 @@ mmx_dither_rand (__m64 maccu)
 static __m64 mmx_dither_accu = (__m64) 0xa9d1878556c9bcddULL; // 4095-steps apart seeds
 
 static void
+mmx_clear_fpu (void)
+{
+  _mm_empty();  // cleanup FPU after MMX use
+}
+
+static void
 mmx_combine_over (uint32       *dst,
                   const uint32 *src,
                   uint32        length)
@@ -142,7 +148,6 @@ mmx_combine_over (uint32       *dst,
         }
       dst++;
     }
-  _mm_empty();  // cleanup FPU after MMX use
 }
 
 static void
@@ -190,12 +195,12 @@ mmx_gradient_line (uint32 *pixel,
       pixel++;
     }
   mmx_dither_accu = maccu;
-  _mm_empty();  // cleanup FPU after MMX use
 }
 
 void
 render_optimize_mmx (void)
 {
+  render.clear_fpu = mmx_clear_fpu;
   render.gradient_line = mmx_gradient_line;
   render.combine_over = mmx_combine_over;
 }
