@@ -150,6 +150,8 @@ mmx_combine_over (uint32       *dst,
     }
 }
 
+#define DITHER  1
+
 static void
 mmx_gradient_line (uint32 *pixel,
                    uint32 *bound,
@@ -174,8 +176,7 @@ mmx_gradient_line (uint32 *pixel,
       Db /= delta;
     }
 
-  const bool ditherp = 1;
-  const uint32 roundoffs = ditherp ? 0 : 0x7fff;                // rounding offset when not dithering
+  const uint32 roundoffs = DITHER ? 0 : 0x7fff;                 // rounding offset when not dithering
   __m64 maccu = mmx_dither_accu;
   __m64 mdag = load_hi32lo32 (Da, Dg);                          // 00 aa .. .. 00 gg .. .. (mdag = alpha green)
   __m64 mdrb = load_hi32lo32 (Dr, Db);                          // 00 rr .. .. 00 bb .. .. (mdrb =   red  blue)
@@ -183,17 +184,16 @@ mmx_gradient_line (uint32 *pixel,
   __m64 mcrb = load_hi32lo32 (Cr + roundoffs, Cb + roundoffs);  // 00 rr 7f ff 00 bb 7f ff (mcrb =   red  blue)
   while (pixel < bound)
     {
+#if DITHER
       maccu = mmx_dither_rand (maccu);                          // rand3 rand2 rand1 rand0
       __m64 mvag = _mm_unpacklo_pi16 (maccu, mmx_zero);         // 00 00 rand1 00 00 rand0
       __m64 mvrb = _mm_unpackhi_pi16 (maccu, mmx_zero);         // 00 00 rand3 00 00 rand2
       mvag = _mm_add_pi32 (mcag, mvag);                         // mcag_ + dither
       mvrb = _mm_add_pi32 (mcrb, mvrb);                         // mcrb_ + dither
-
-      if (ditherp)
-        *pixel = color_agrb24 (mvag, mvrb);
-      else
-        *pixel = color_agrb24 (mcag, mcrb);
-
+      *pixel = color_agrb24 (mvag, mvrb);
+#else
+      *pixel = color_agrb24 (mcag, mcrb);
+#endif
       mcag = _mm_add_pi32 (mcag, mdag);                         // mcag += mdag
       mcrb = _mm_add_pi32 (mcrb, mdrb);                         // mcrb += mdrb
 
