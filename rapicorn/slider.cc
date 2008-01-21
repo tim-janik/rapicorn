@@ -96,6 +96,7 @@ class SliderAreaImpl : public virtual SliderArea, public virtual TableImpl {
     m_adjustment->unref();
     m_adjustment = NULL;
   }
+  virtual const PropertyList& list_properties() { return SliderArea::list_properties(); }
 protected:
   virtual AdjustmentSourceType
   adjustment_source () const
@@ -145,15 +146,6 @@ protected:
   virtual ~SliderAreaImpl()
   {
     unset_adjustment();
-  }
-  virtual const PropertyList&
-  list_properties()
-  {
-    static Property *properties[] = {};
-    static const PropertyList property_list (properties,
-                                             SliderArea::list_properties(),
-                                             TableImpl::list_properties());
-    return property_list;
   }
 public:
   SliderAreaImpl() :
@@ -466,7 +458,7 @@ protected:
   }
 private:
   virtual const PropertyList&
-  list_properties()
+  list_properties() // escape check-list_properties ';'
   {
     static Property *properties[] = {
       MakeProperty (SliderSkidImpl, vertical_skid, _("Vertical Skid"), _("Adjust behaviour to vertical skid movement"), "rw"),

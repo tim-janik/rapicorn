@@ -31,6 +31,8 @@ public:
 class Image : public virtual Item {
   virtual String        image_file        () const { RAPICORN_ASSERT_NOT_REACHED(); }
   virtual String        builtin_pixstream () const { RAPICORN_ASSERT_NOT_REACHED(); }
+protected:
+  const PropertyList&   list_properties ();
 public:
   typedef enum {
     NONE        = 0,

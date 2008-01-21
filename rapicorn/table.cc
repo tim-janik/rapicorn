@@ -267,7 +267,7 @@ TableImpl::size_allocate (Allocation area)
 }
 
 const PropertyList&
-TableImpl::list_properties()
+Table::list_properties()
 {
   static Property *properties[] = {
     MakeProperty (Table, homogeneous,    _("Homogeneous"), _("Whether all children get the same size"), "rw"),

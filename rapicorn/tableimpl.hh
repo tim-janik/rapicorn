@@ -62,8 +62,6 @@ public:
   virtual void          insert_cols     (uint first_col, uint n_cols);
   virtual               ~TableImpl      ();
 public:
-  virtual
-  const PropertyList&   list_properties ();
   virtual bool          homogeneous     () const                        { return homogeneous_items; }
   virtual void          homogeneous     (bool chomogeneous_items)       { homogeneous_items = chomogeneous_items; invalidate(); }
   virtual uint          column_spacing  ()                              { return default_column_spacing; }

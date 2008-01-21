@@ -22,6 +22,8 @@
 namespace Rapicorn {
 
 class Table : public virtual Container {
+protected:
+  virtual const PropertyList&   list_properties ();
 public:
   virtual bool  homogeneous     () const = 0;
   virtual void  homogeneous     (bool chomogeneous_items) = 0;

@@ -30,6 +30,17 @@ static Rapicorn::Image::ErrorType       rapicorn_load_png_image (const char     
 
 namespace Rapicorn {
 
+const PropertyList&
+Image::list_properties()
+{
+  static Property *properties[] = {
+    MakeProperty (Image, image_file, _("Image Filename"), _("Load an image from a file, only PNG images can be loaded."), "rw"),
+    MakeProperty (Image, builtin_pixstream, _("Builtin Pixstream"), _("Load an image from a builtin pixel stream."), "rw"),
+  };
+  static const PropertyList property_list (properties, Item::list_properties());
+  return property_list;
+}
+
 struct HashName {
   size_t
   operator() (const String &name) const
@@ -200,16 +211,6 @@ public:
           }
         display.pop_clip_rect();
       }
-  }
-  virtual const PropertyList&
-  list_properties()
-  {
-    static Property *properties[] = {
-      MakeProperty (Image, image_file, _("Image Filename"), _("Load an image from a file, only PNG images can be loaded."), "rw"),
-      MakeProperty (Image, builtin_pixstream, _("Builtin Pixstream"), _("Load an image from a builtin pixel stream."), "rw"),
-    };
-    static const PropertyList property_list (properties, Item::list_properties());
-    return property_list;
   }
 };
 static const ItemFactory<ImageImpl> image_factory ("Rapicorn::Factory::Image");

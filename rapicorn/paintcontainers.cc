@@ -48,6 +48,30 @@ Ambience::shade (LightingType sh)
   normal_lighting (sh);
 }
 
+const PropertyList&
+Ambience::list_properties()
+{
+  static Property *properties[] = {
+    MakeProperty (Ambience, insensitive_background, _("Insensitive Background"), _("The kind of background painted when insensitive"), "rw"),
+    MakeProperty (Ambience, prelight_background, _("Prelight Background"), _("The kind of background painted when prelight"), "rw"),
+    MakeProperty (Ambience, impressed_background, _("Impressed Background"), _("The kind of background painted when impressed"), "rw"),
+    MakeProperty (Ambience, normal_background, _("Normal Background"), _("The kind of background painted when normal"), "rw"),
+    MakeProperty (Ambience, insensitive_lighting, _("Insensitive Lighting"), _("The kind of lighting painted when insensitive"), "rw"),
+    MakeProperty (Ambience, prelight_lighting, _("Prelight Lighting"), _("The kind of lighting painted when prelight"), "rw"),
+    MakeProperty (Ambience, impressed_lighting, _("Impressed Lighting"), _("The kind of lighting painted when impressed"), "rw"),
+    MakeProperty (Ambience, normal_lighting, _("Normal Lighting"), _("The kind of lighting painted when normal"), "rw"),
+    MakeProperty (Ambience, insensitive_shade, _("Insensitive Shade"), _("The kind of shade painted when insensitive"), "rw"),
+    MakeProperty (Ambience, prelight_shade, _("Prelight Shade"), _("The kind of shade painted when prelight"), "rw"),
+    MakeProperty (Ambience, impressed_shade, _("Impressed Shade"), _("The kind of shade painted when impressed"), "rw"),
+    MakeProperty (Ambience, normal_shade, _("Normal Shade"), _("The kind of shade painted when normal"), "rw"),
+    MakeProperty (Ambience, background, _("Background"), _("The kind of background painted for all modes"), "rw"),
+    MakeProperty (Ambience, lighting, _("Lighting"), _("The kind of lighting painted for all modes"), "rw"),
+    MakeProperty (Ambience, shade, _("Shade"), _("The kind of shade painted for all modes"), "rw"),
+  };
+  static const PropertyList property_list (properties, Container::list_properties());
+  return property_list;
+}
+
 class AmbienceImpl : public virtual SingleContainerImpl, public virtual Ambience {
   String m_insensitive_background, m_prelight_background, m_impressed_background, m_normal_background;
   LightingType m_insensitive_lighting, m_prelight_lighting, m_impressed_lighting, m_normal_lighting;
@@ -210,30 +234,6 @@ public:
       }
     SingleContainerImpl::render (display);
   }
-protected:
-  virtual const PropertyList&
-  list_properties()
-  {
-    static Property *properties[] = {
-      MakeProperty (Ambience, insensitive_background, _("Insensitive Background"), _("The kind of background painted when insensitive"), "rw"),
-      MakeProperty (Ambience, prelight_background, _("Prelight Background"), _("The kind of background painted when prelight"), "rw"),
-      MakeProperty (Ambience, impressed_background, _("Impressed Background"), _("The kind of background painted when impressed"), "rw"),
-      MakeProperty (Ambience, normal_background, _("Normal Background"), _("The kind of background painted when normal"), "rw"),
-      MakeProperty (Ambience, insensitive_lighting, _("Insensitive Lighting"), _("The kind of lighting painted when insensitive"), "rw"),
-      MakeProperty (Ambience, prelight_lighting, _("Prelight Lighting"), _("The kind of lighting painted when prelight"), "rw"),
-      MakeProperty (Ambience, impressed_lighting, _("Impressed Lighting"), _("The kind of lighting painted when impressed"), "rw"),
-      MakeProperty (Ambience, normal_lighting, _("Normal Lighting"), _("The kind of lighting painted when normal"), "rw"),
-      MakeProperty (Ambience, insensitive_shade, _("Insensitive Shade"), _("The kind of shade painted when insensitive"), "rw"),
-      MakeProperty (Ambience, prelight_shade, _("Prelight Shade"), _("The kind of shade painted when prelight"), "rw"),
-      MakeProperty (Ambience, impressed_shade, _("Impressed Shade"), _("The kind of shade painted when impressed"), "rw"),
-      MakeProperty (Ambience, normal_shade, _("Normal Shade"), _("The kind of shade painted when normal"), "rw"),
-      MakeProperty (Ambience, background, _("Background"), _("The kind of background painted for all modes"), "rw"),
-      MakeProperty (Ambience, lighting, _("Lighting"), _("The kind of lighting painted for all modes"), "rw"),
-      MakeProperty (Ambience, shade, _("Shade"), _("The kind of shade painted for all modes"), "rw"),
-    };
-    static const PropertyList property_list (properties, SingleContainerImpl::list_properties());
-    return property_list;
-  }
 };
 static const ItemFactory<AmbienceImpl> ambience_factory ("Rapicorn::Factory::Ambience");
 
@@ -242,6 +242,19 @@ Frame::frame_type (FrameType ft)
 {
   normal_frame (ft);
   impressed_frame (ft);
+}
+
+const PropertyList&
+Frame::list_properties()
+{
+  static Property *properties[] = {
+    MakeProperty (Frame, normal_frame,    _("Normal Frame"),   _("The kind of frame to draw in normal state"), "rw"),
+    MakeProperty (Frame, impressed_frame, _("Impresed Frame"), _("The kind of frame to draw in impressed state"), "rw"),
+    MakeProperty (Frame, frame_type,      _("Frame Type"),     _("The kind of frame to draw in all states"), "w"),
+    MakeProperty (Frame, overlap_child,   _("Overlap Child"),  _("Draw frame in the same position as child"), "w"),
+  };
+  static const PropertyList property_list (properties, Container::list_properties());
+  return property_list;
 }
 
 class FrameImpl : public virtual SingleContainerImpl, public virtual Frame {
@@ -395,20 +408,18 @@ public:
       }
     SingleContainerImpl::render (display);
   }
-  virtual const PropertyList&
-  list_properties()
-  {
-    static Property *properties[] = {
-      MakeProperty (Frame, normal_frame,    _("Normal Frame"),   _("The kind of frame to draw in normal state"), "rw"),
-      MakeProperty (Frame, impressed_frame, _("Impresed Frame"), _("The kind of frame to draw in impressed state"), "rw"),
-      MakeProperty (Frame, frame_type,      _("Frame Type"),     _("The kind of frame to draw in all states"), "w"),
-      MakeProperty (Frame, overlap_child,   _("Overlap Child"),  _("Draw frame in the same position as child"), "w"),
-    };
-    static const PropertyList property_list (properties, Container::list_properties());
-    return property_list;
-  }
 };
 static const ItemFactory<FrameImpl> frame_factory ("Rapicorn::Factory::Frame");
+
+const PropertyList&
+FocusFrame::list_properties()
+{
+  static Property *properties[] = {
+    MakeProperty (FocusFrame, focus_frame, _("Focus Frame"), _("The kind of frame to draw in focus state"), "rw"),
+  };
+  static const PropertyList property_list (properties, Frame::list_properties());
+  return property_list;
+}
 
 class FocusFrameImpl : public virtual FocusFrame, public virtual FrameImpl {
   FrameType m_focus_frame;
@@ -466,15 +477,6 @@ public:
     m_focus_frame (FRAME_FOCUS),
     m_client (NULL)
   {}
-  virtual const PropertyList&
-  list_properties()
-  {
-    static Property *properties[] = {
-      MakeProperty (FocusFrame, focus_frame, _("Focus Frame"), _("The kind of frame to draw in focus state"), "rw"),
-    };
-    static const PropertyList property_list (properties, FrameImpl::list_properties());
-    return property_list;
-  }
 };
 static const ItemFactory<FocusFrameImpl> focus_frame_factory ("Rapicorn::Factory::FocusFrame");
 

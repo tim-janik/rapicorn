@@ -22,6 +22,9 @@
 namespace Rapicorn {
 
 class Arrow : public virtual Item {
+protected:
+  virtual
+  const PropertyList&    list_properties();
 public:
   virtual void           arrow_dir      (DirType dir) = 0;
   virtual DirType        arrow_dir      () const = 0;
@@ -31,6 +34,9 @@ public:
 
 class DotGrid : public virtual Item {
   FrameType             dot_type        () const { RAPICORN_ASSERT_NOT_REACHED(); }
+protected:
+  virtual
+  const PropertyList&   list_properties     ();
 public:
   void                  dot_type            (FrameType ft);
   virtual void          normal_dot          (FrameType ft) = 0;

@@ -721,14 +721,12 @@ public:
 };
 
 /* --- TextPangoImpl (TextEditor::Client) --- */
-class TextPangoImpl : public virtual ItemImpl, public virtual TextLayout, public virtual Text::Editor::Client {
+class TextPangoImpl : public virtual ItemImpl, public virtual Text::Editor::Client {
   PangoLayout    *m_layout;
   int             m_mark, m_cursor;
   double          m_scoffset;
   TextMode        m_text_mode;
 protected:
-  virtual String   markup_text () const               { return save_markup(); }
-  virtual void     markup_text (const String &markup) { load_markup (markup); }
   virtual TextMode text_mode   () const               { return m_text_mode; }
   virtual void
   text_mode (TextMode text_mode)
@@ -1230,13 +1228,10 @@ protected:
     rapicorn_gtk_threads_leave();
   }
   virtual const PropertyList&
-  list_properties()
+  list_properties() // escape check-list_properties ';'
   {
-    static Property *properties[] = {
-      MakeProperty (TextPangoImpl, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
-      MakeProperty (TextPangoImpl, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
-    };
-    static const PropertyList property_list (properties, Item::list_properties());
+    static Property *properties[] = {};
+    static const PropertyList property_list (properties, Item::list_properties(), Client::client_list_properties());
     return property_list;
   }
 };

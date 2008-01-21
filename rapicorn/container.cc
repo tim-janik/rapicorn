@@ -772,7 +772,7 @@ Container::void_packer ()
     }
     ~PackerSingleton() { assert_not_reached(); }
     virtual const PropertyList&
-    list_properties ()
+    list_properties ()  // escape check-list_properties ';'
     {
       static Property *properties[] = { };
       static const PropertyList property_list (properties);

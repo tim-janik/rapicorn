@@ -85,12 +85,19 @@ installcheck-local:
 	&& LD_LIBRARY_PATH="$(libdir):$$LD_LIBRARY_PATH" ./tmpx
 	rm -f tmpx.cc tmpx
 
-# === dynamic_cast check ===
-check-drcast:	# check for dynamic_cast of reference types which is broken in gcc <= 3.3.5
+# === source code check ===
+check-dynamic_cast:	# check for dynamic_cast of reference types which is broken in gcc <= 3.3.5
 	find $(srcdir)	-type f \( -iname '*.[hc][hc]' -o -iname '*.[hc]' \)	\
 			-exec grep -Hn 'dynamic_cast[^<]*<[^>&]*&' {} \;	\
 	| grep '.' ; exit $$[!$$?] # fail on matches
-check-am: check-drcast # run check-drcast before other checks
+check-list_properties: # check for list_properties() impls to be type-name prefixed
+	cd $(srcdir) \
+	&& echo "## Checking for untyped list_properties() method implementations." \
+	&& ! grep '^[[:space:]]*list_properties[[:space:]]*([^)]*)[^;]*$$' -n rapicorn/*.cc rapicorn-core/*.cc
+	cd $(srcdir) \
+	&& echo "## Checking for non-interface list_properties() method implementations." \
+	&& ! grep 'Impl::list_properties[[:space:]]*([^)]*)[^;]*$$' -n rapicorn/*.cc rapicorn-core/*.cc
+check-am: check-dynamic_cast check-list_properties # run source code checks before all others
 
 # === automake fixes ===
 # disable bogus cleanup checks

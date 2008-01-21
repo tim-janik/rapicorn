@@ -19,6 +19,18 @@
 
 namespace Rapicorn {
 
+const PropertyList&
+Arrangement::list_properties()
+{
+  static Property *properties[] = {
+    MakeProperty (Arrangement, origin,         _("Origin"),            _("The coordinate origin to be displayed by the arrangement"), Point (-MAXDOUBLE, -MAXDOUBLE), Point (+MAXDOUBLE, +MAXDOUBLE), "rw"),
+    MakeProperty (Arrangement, origin_hanchor, _("Horizontal Anchor"), _("Horizontal position of the origin within arrangement, 0=left, 1=right"), 0, 1, 0.1, "rw"),
+    MakeProperty (Arrangement, origin_vanchor, _("Vertical Anchor"),   _("Vertical position of the origin within arrangement, 0=bottom, 1=top"), 0, 1, 0.1, "rw"),
+  };
+  static const PropertyList property_list (properties, Container::list_properties());
+  return property_list;
+}
+
 ArrangementImpl::Location::Location() :
   pos_x (0), pos_y (0),
   pos_hanchor (0.5), pos_vanchor (0.5)
@@ -192,18 +204,6 @@ ArrangementImpl::size_allocate (Allocation area)
       /* allocate child */
       child.set_allocation (carea);
     }
-}
-
-const PropertyList&
-ArrangementImpl::list_properties()
-{
-  static Property *properties[] = {
-    MakeProperty (Arrangement, origin,         _("Origin"),            _("The coordinate origin to be displayed by the arrangement"), Point (-MAXDOUBLE, -MAXDOUBLE), Point (+MAXDOUBLE, +MAXDOUBLE), "rw"),
-    MakeProperty (Arrangement, origin_hanchor, _("Horizontal Anchor"), _("Horizontal position of the origin within arrangement, 0=left, 1=right"), 0, 1, 0.1, "rw"),
-    MakeProperty (Arrangement, origin_vanchor, _("Vertical Anchor"),   _("Vertical position of the origin within arrangement, 0=bottom, 1=top"), 0, 1, 0.1, "rw"),
-  };
-  static const PropertyList property_list (properties, Container::list_properties());
-  return property_list;
 }
 
 static const ItemFactory<ArrangementImpl> arrangement_factory ("Rapicorn::Factory::Arrangement");

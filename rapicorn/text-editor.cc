@@ -44,6 +44,43 @@ AttrState::AttrState() :
 Editor::Client::~Client ()
 {}
 
+String
+Editor::Client::markup_text () const
+{
+  return save_markup();
+}
+
+void
+Editor::Client::markup_text (const String &markup)
+{
+  load_markup (markup);
+}
+
+const PropertyList&
+Editor::Client::client_list_properties()
+{
+  static Property *properties[] = {
+    MakeProperty (Client, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
+    MakeProperty (Client, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
+  };
+  static const PropertyList property_list (properties);
+  return property_list;
+}
+
+
+const PropertyList&
+Editor::list_properties()
+{
+  static Property *properties[] = {
+    MakeProperty (Editor, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
+    MakeProperty (Editor, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
+    MakeProperty (Editor, request_chars,  _("Request Chars"),  _("Number of characters to request space for."), 0, INT_MAX, 2, "rw"),
+    MakeProperty (Editor, request_digits, _("Request Digits"), _("Number of digits to request space for."), 0, INT_MAX, 2, "rw"),
+  };
+  static const PropertyList property_list (properties, Container::list_properties());
+  return property_list;
+}
+
 class EditorImpl : public virtual EventHandler, public virtual SingleContainerImpl, public virtual Editor {
   uint     m_request_chars, m_request_digits;
   int      m_cursor;
@@ -233,13 +270,13 @@ private:
   {
     Client *client = get_client();
     if (client)
-      client->load_markup (text);
+      client->markup_text (text);
   }
   virtual String
   text () const
   {
     Client *client = get_client();
-    return client ? client->save_markup() : "";
+    return client ? client->markup_text() : "";
   }
   void
   update_client ()
@@ -249,7 +286,7 @@ private:
     if (client)
       {
         client->text_mode (m_text_mode);
-        // client->load_markup (markup);
+        // client->markup_text (markup);
       }
   }
   virtual TextMode text_mode      () const                      { return m_text_mode; }
@@ -261,24 +298,12 @@ private:
       client->text_mode (m_text_mode);
     invalidate_size();
   }
-  virtual String   markup_text    () const                      { Client *client = get_client(); return client ? client->save_markup() : ""; }
-  virtual void     markup_text    (const String &markup)        { Client *client = get_client(); if (client) client->load_markup (markup); }
+  virtual String   markup_text    () const                      { Client *client = get_client(); return client ? client->markup_text() : ""; }
+  virtual void     markup_text    (const String &markup)        { Client *client = get_client(); if (client) client->markup_text (markup); }
   virtual uint     request_chars  () const                      { return m_request_chars; }
   virtual void     request_chars  (uint nc)                     { m_request_chars = nc; invalidate_size(); }
   virtual uint     request_digits () const                      { return m_request_digits; }
   virtual void     request_digits (uint nd)                     { m_request_digits = nd; invalidate_size(); }
-  virtual const PropertyList&
-  list_properties()
-  {
-    static Property *properties[] = {
-      MakeProperty (EditorImpl, text_mode,   _("Text Mode"),   _("The basic text layout mechanism to use."), "rw"),
-      MakeProperty (EditorImpl, markup_text, _("Markup Text"), _("The text to display, containing font and style markup."), "rw"),
-      MakeProperty (EditorImpl, request_chars,  _("Request Chars"),  _("Number of characters to request space for."), 0, INT_MAX, 2, "rw"),
-      MakeProperty (EditorImpl, request_digits, _("Request Digits"), _("Number of digits to request space for."), 0, INT_MAX, 2, "rw"),
-    };
-    static const PropertyList property_list (properties, Item::list_properties());
-    return property_list;
-  }
 };
 static const ItemFactory<EditorImpl> editor_factory ("Rapicorn::Factory::Text::Editor");
 

@@ -17,11 +17,13 @@
 #ifndef __RAPICORN_ARRANGEMENT_HH__
 #define __RAPICORN_ARRANGEMENT_HH__
 
-#include <rapicorn/item.hh>
+#include <rapicorn/container.hh>
 
 namespace Rapicorn {
 
-class Arrangement : public virtual Convertible {
+class Arrangement : public virtual Container {
+protected:
+  virtual const PropertyList& list_properties ();
 public:
   virtual Point origin          () = 0;
   virtual void  origin          (Point p) = 0;

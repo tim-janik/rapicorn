@@ -46,20 +46,28 @@ struct AttrState {
 };
 
 class Editor : public virtual Container {
+protected:
+  virtual const PropertyList& list_properties();
 public:
   /* Text::Editor::Client */
-  struct Client {
+  class Client {
+  protected:
+    const PropertyList& client_list_properties();
+    virtual String      save_markup  () const = 0;
+    virtual void        load_markup  (const String    &markup) = 0;
+  public:
     virtual            ~Client ();
     virtual const char* peek_text    (int *byte_length) = 0;
     virtual ParaState   para_state   () const = 0;
     virtual void        para_state   (const ParaState &pstate) = 0;
     virtual AttrState   attr_state   () const = 0;
     virtual void        attr_state   (const AttrState &astate) = 0;
-    virtual String      save_markup  () const = 0;
-    virtual void        load_markup  (const String    &markup) = 0;
+    /* properties */
+    virtual String      markup_text  () const;
+    virtual void        markup_text  (const String &markup);
+    virtual TextMode    text_mode    () const = 0;
+    virtual void        text_mode    (TextMode      text_mode) = 0;
     /* size negotiation */
-    virtual TextMode    text_mode        () const = 0;
-    virtual void        text_mode        (TextMode      text_mode) = 0;
     virtual double      text_requisition (uint          n_chars,
                                           uint          n_digits) = 0;
     /* mark handling */

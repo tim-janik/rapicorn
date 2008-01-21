@@ -28,7 +28,6 @@ class ArrangementImpl : public virtual Arrangement, public virtual MultiContaine
   float         m_origin_vanchor;
   Rect          m_child_area;
 public:
-  virtual const PropertyList&   list_properties         ();
   explicit                      ArrangementImpl         ();
   virtual                       ~ArrangementImpl        ();
   virtual Point                 origin                  ()                      { return m_origin; }

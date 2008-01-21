@@ -22,13 +22,11 @@
 
 namespace Rapicorn {
 
-class TextLayout : public virtual Convertible {
-public:
+#if     RAPICORN_WITH_PANGO
+class TextLayout : public virtual Item {
   virtual String      markup_text      () const = 0;
   virtual void        markup_text      (const String &markup) = 0;
 };
-
-#if     RAPICORN_WITH_PANGO
 class TextPango : public virtual TextLayout { // FIXME: move to Text::EditorClient
 public:
   virtual void          font_name       (const String &fname) = 0;

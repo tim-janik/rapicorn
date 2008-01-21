@@ -23,6 +23,17 @@ namespace Rapicorn {
 
 static DataKey<SizePolicyType> size_policy_key;
 
+const PropertyList&
+Arrow::list_properties()
+{
+  static Property *properties[] = {
+    MakeProperty (Arrow, arrow_dir,   _("Arrow Direction"), _("The direction the arrow points to"), "rw"),
+    MakeProperty (Arrow, size_policy, _("Size Policy"),     _("Policy which determines coupling of width and height"), "rw"),
+  };
+  static const PropertyList property_list (properties, Item::list_properties());
+  return property_list;
+}
+
 class ArrowImpl : public virtual ItemImpl, public virtual Arrow {
   DirType m_dir;
 public:
@@ -77,16 +88,6 @@ protected:
         painter.draw_dir_arrow (x, y, width, height, 0xff000000, m_dir);
       }
   }
-  virtual const PropertyList&
-  list_properties()
-  {
-    static Property *properties[] = {
-      MakeProperty (Arrow, arrow_dir,   _("Arrow Direction"), _("The direction the arrow points to"), "rw"),
-      MakeProperty (Arrow, size_policy, _("Size Policy"),     _("Policy which determines coupling of width and height"), "rw"),
-    };
-    static const PropertyList property_list (properties, ItemImpl::list_properties());
-    return property_list;
-  }
 };
 static const ItemFactory<ArrowImpl> arrow_factory ("Rapicorn::Factory::Arrow");
 
@@ -95,6 +96,24 @@ DotGrid::dot_type (FrameType ft)
 {
   normal_dot (ft);
   impressed_dot (ft);
+}
+
+const PropertyList&
+DotGrid::list_properties()
+{
+  static Property *properties[] = {
+    MakeProperty (DotGrid, normal_dot, _("Normal Dot"), _("The kind of dot-frame to draw in normal state"), "rw"),
+    MakeProperty (DotGrid, impressed_dot, _("Impresed Dot"), _("The kind of dot-frame to draw in impressed state"), "rw"),
+    MakeProperty (DotGrid, dot_type, _("Dot Type"), _("The kind of dot-frame to draw in all states"), "w"),
+    MakeProperty (DotGrid, n_hdots, _("H-Dot #"), _("The number of horizontal dots to be drawn"), 0u, 99999u, 3u, "rw"),
+    MakeProperty (DotGrid, n_vdots, _("V-Dot #"), _("The number of vertical dots to be drawn"), 0u, 99999u, 3u, "rw"),
+    MakeProperty (DotGrid, right_padding_dots, _("Right Padding Dots"), _("Amount of padding in dots to add at the child's right side"), 0, 65535, 3, "rw"),
+    MakeProperty (DotGrid, top_padding_dots, _("Top Padding Dots"), _("Amount of padding in dots to add at the child's top side"), 0, 65535, 3, "rw"),
+    MakeProperty (DotGrid, left_padding_dots, _("Left Padding Dots"), _("Amount of padding in dots to add at the child's left side"), 0, 65535, 3, "rw"),
+    MakeProperty (DotGrid, bottom_padding_dots, _("Bottom Padding Dots"), _("Amount of padding in dots to add at the child's bottom side"), 0, 65535, 3, "rw"),
+  };
+  static const PropertyList property_list (properties, Item::list_properties());
+  return property_list;
 }
 
 class DotGridImpl : public virtual ItemImpl, public virtual DotGrid {
@@ -190,23 +209,6 @@ public:
             y += 3 * ythick;
           }
       }
-  }
-  virtual const PropertyList&
-  list_properties()
-  {
-    static Property *properties[] = {
-      MakeProperty (DotGrid, normal_dot, _("Normal Dot"), _("The kind of dot-frame to draw in normal state"), "rw"),
-      MakeProperty (DotGrid, impressed_dot, _("Impresed Dot"), _("The kind of dot-frame to draw in impressed state"), "rw"),
-      MakeProperty (DotGrid, dot_type, _("Dot Type"), _("The kind of dot-frame to draw in all states"), "w"),
-      MakeProperty (DotGrid, n_hdots, _("H-Dot #"), _("The number of horizontal dots to be drawn"), 0u, 99999u, 3u, "rw"),
-      MakeProperty (DotGrid, n_vdots, _("V-Dot #"), _("The number of vertical dots to be drawn"), 0u, 99999u, 3u, "rw"),
-      MakeProperty (DotGrid, right_padding_dots, _("Right Padding Dots"), _("Amount of padding in dots to add at the child's right side"), 0, 65535, 3, "rw"),
-      MakeProperty (DotGrid, top_padding_dots, _("Top Padding Dots"), _("Amount of padding in dots to add at the child's top side"), 0, 65535, 3, "rw"),
-      MakeProperty (DotGrid, left_padding_dots, _("Left Padding Dots"), _("Amount of padding in dots to add at the child's left side"), 0, 65535, 3, "rw"),
-      MakeProperty (DotGrid, bottom_padding_dots, _("Bottom Padding Dots"), _("Amount of padding in dots to add at the child's bottom side"), 0, 65535, 3, "rw"),
-    };
-    static const PropertyList property_list (properties, ItemImpl::list_properties());
-    return property_list;
   }
 };
 static const ItemFactory<DotGridImpl> dot_grid_factory ("Rapicorn::Factory::DotGrid");
