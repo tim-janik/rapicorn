@@ -47,8 +47,14 @@ struct RenderTable {
                                  uint          span);
   void  (*gradient_line)        (uint32       *pixel,
                                  uint32       *bound,
-                                 uint32        col1,
-                                 uint32        col2);
+                                 uint32        alpha1pre16,
+                                 uint32        red1pre16,
+                                 uint32        green1pre16,
+                                 uint32        blue1pre16,
+                                 uint32        alpha2pre16,
+                                 uint32        red2pre16,
+                                 uint32        green2pre16,
+                                 uint32        blue2pre16);
 };
 extern RenderTable render;
 

@@ -30,12 +30,18 @@ quick_rand32 ()
 static void
 alu_gradient_line (uint32 *pixel,
                    uint32 *bound,
-                   uint32  col1,
-                   uint32  col2)
+                   uint32  alpha1pre16,
+                   uint32  red1pre16,
+                   uint32  green1pre16,
+                   uint32  blue1pre16,
+                   uint32  alpha2pre16,
+                   uint32  red2pre16,
+                   uint32  green2pre16,
+                   uint32  blue2pre16)
 {
-  uint32 Ca = COLA (col1) << 16, Cr = COLR (col1) << 16, Cg = COLG (col1) << 16, Cb = COLB (col1) << 16;
-  int32 Da = (COLA (col2) << 16) - Ca, Dr = (COLR (col2) << 16) - Cr;
-  int32 Dg = (COLG (col2) << 16) - Cg, Db = (COLB (col2) << 16) - Cb;
+  uint32 Ca = alpha1pre16, Cr = red1pre16, Cg = green1pre16, Cb = blue1pre16;
+  int32 Da = alpha2pre16 - Ca, Dr = red2pre16 - Cr;
+  int32 Dg = green2pre16 - Cg, Db = blue2pre16 - Cb;
   int delta = bound - pixel - 1;
   if (delta)
     {

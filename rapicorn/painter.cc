@@ -241,23 +241,32 @@ parallels_cut_point (double  x1,  double  y1, // line start
   return false; /* vertical gradient, perpendicular to (*,py) */
 }
 
-static inline Color
-interpolate_colors (Color  color1,
-                    Color  color2,
-                    double weight)
+static inline void
+interpolate_colors_pre32 (Color   color1pre,
+                          Color   color2pre,
+                          double  weight,
+                          uint32 *alpha,
+                          uint32 *red,
+                          uint32 *green,
+                          uint32 *blue)
 {
+  Color A = color1pre, B = color2pre;
+  double a, b;
   if (weight <= 0)
-    return color1;
+    a = 1, b = 0;
   if (weight >= 1)
-    return color2;
-  double a = 1 - weight, b = weight;
-  Color A = color1.premultiplied(), B = color2.premultiplied();
+    a = 0, b = 1;
+  else
+    a = 1 - weight, b = weight;
   double Ca = A.alpha() * a, Cr = A.red() * a, Cg = A.green() * a, Cb = A.blue() * a;
   Ca += B.alpha() * b;
   Cr += B.red() * b;
   Cg += B.green() * b;
   Cb += B.blue() * b;
-  return Color::from_premultiplied (Color (dtoi32 (Cr), dtoi32 (Cg), dtoi32 (Cb), dtoi32 (Ca)));
+  *alpha = dtoi32 (Ca * 65536);
+  *red   = dtoi32 (Cr * 65536);
+  *green = dtoi32 (Cg * 65536);
+  *blue  = dtoi32 (Cb * 65536);
 }
 
 #define SWAP(a,b)       ({ __typeof (a) __tmp = b; b = a; a = __tmp; })
@@ -278,6 +287,8 @@ Painter::draw_gradient_rect (int64 recx,     int64 recy,
       SWAP (c0y, c1y);
       SWAP (color0, color1);
     }
+  Color color0pre = color0.premultiplied();
+  Color color1pre = color1.premultiplied();
   /* for each scan line, we have 3 segments to render:
    *   ---before---/~~~gradient~~~/---after---
    *              xu0            xu1
@@ -297,7 +308,11 @@ Painter::draw_gradient_rect (int64 recx,     int64 recy,
           else
             {
               /* this misses dithering but should never be triggered, since vd > 0 here */
-              Color col = interpolate_colors (color0, color1, u);
+              uint32 alpha1pre16, red1pre16, green1pre16, blue1pre16;
+              interpolate_colors_pre32 (color0pre, color1pre, u,
+                                        &alpha1pre16, &red1pre16, &green1pre16, &blue1pre16);
+              Color col = Color::from_premultiplied (COL_ARGB (alpha1pre16 >> 16, red1pre16 >> 16,
+                                                               green1pre16 >> 16, blue1pre16 >> 16));
               fill_scan_line (yy, x1, x2 - x1 + 1, col);
             }
           continue;
@@ -314,9 +329,15 @@ Painter::draw_gradient_rect (int64 recx,     int64 recy,
             {
               int64 len = gx2 - gx1 + 1;
               uint32 *pixel = m_plane.poke_span (gx1, yy, len);
-              Color cg1 = interpolate_colors (color0, color1, perpendicular_point (c0x, c0y, c1x, c1y, gx1, yy));
-              Color cg2 = interpolate_colors (color0, color1, perpendicular_point (c0x, c0y, c1x, c1y, gx2, yy));
-              Blit::render.gradient_line (pixel, pixel + len, cg1.premultiplied(), cg2.premultiplied());
+              uint32 alpha1pre16, red1pre16, green1pre16, blue1pre16;
+              uint32 alpha2pre16, red2pre16, green2pre16, blue2pre16;
+              interpolate_colors_pre32 (color0pre, color1pre, perpendicular_point (c0x, c0y, c1x, c1y, gx1, yy),
+                                        &alpha1pre16, &red1pre16, &green1pre16, &blue1pre16);
+              interpolate_colors_pre32 (color0pre, color1pre, perpendicular_point (c0x, c0y, c1x, c1y, gx2, yy),
+                                        &alpha2pre16, &red2pre16, &green2pre16, &blue2pre16);
+              Blit::render.gradient_line (pixel, pixel + len,
+                                          alpha1pre16, red1pre16, green1pre16, blue1pre16,
+                                          alpha2pre16, red2pre16, green2pre16, blue2pre16);
               Blit::render.clear_fpu();
             }
         }
