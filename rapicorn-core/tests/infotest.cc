@@ -15,31 +15,26 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 //#define TEST_VERBOSE
-#include <rapicorn-core/rapicorntests.h>
+#include <rapicorn-core/testutils.hh>
 using namespace Rapicorn;
 
 #if RAPICORN_CHECK_VERSION (2147483647, 2147483647, 2147483647) || !RAPICORN_CHECK_VERSION (0, 0, 0)
-#error RAPICORN_CHECK_VERSION() implementation seems broken
+#error RAPICORN_CHECK_VERSION() implementation is broken
 #endif
 
 static void
 test_cpu_info (void)
 {
-  TSTART ("CpuInfo");
-  TOK();
   const RapicornCPUInfo cpi = cpu_info ();
   TASSERT (cpi.machine != NULL);
   String cps = cpu_info_string (cpi);
   TASSERT (cps.size() != 0);
-  TPRINT ("%s", cps.c_str());
-  TOK();
-  TDONE();
+  printout ("\n#####\n%s#####\n", cps.c_str());
 }
 
 static void
 test_paths()
 {
-  TSTART ("Path handling");
   String p, s;
   s = Path::join ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f");
 #if RAPICORN_DIR_SEPARATOR == '/'
@@ -70,25 +65,20 @@ test_paths()
   TASSERT (Path::dirname ("dir" RAPICORN_DIR_SEPARATOR_S "file") == "dir");
   TASSERT (Path::cwd() != "");
   TASSERT (Path::check (Path::join (Path::cwd(), "..", "tests"), "rd") == true); // ./../tests/ should be a readable directory
-  TDONE();
 }
 
 static void
 test_zintern()
 {
   static const unsigned char TEST_DATA[] = "x\332K\312,\312K-\321\255\312\314+I-\312S(I-.QHI,I\4\0v\317\11V";
-  TSTART ("ZIntern");
   uint8 *data = zintern_decompress (24, TEST_DATA, sizeof (TEST_DATA) / sizeof (TEST_DATA[0]));
   TASSERT (String ((char*) data) == "birnet-zintern test data");
   zintern_free (data);
-  TOK();
-  TDONE();
 }
 
 static void
-test_files (const char *argv0)
+test_files (char *argv0)
 {
-  TSTART ("FileChecks");
   TASSERT (Path::equals ("/bin", "/../bin") == TRUE);
   TASSERT (Path::equals ("/bin", "/sbin") == FALSE);
   TASSERT (Path::check (argv0, "e") == TRUE);
@@ -101,13 +91,11 @@ test_files (const char *argv0)
   TASSERT (Path::check (argv0, "b") == FALSE);
   TASSERT (Path::check (argv0, "p") == FALSE);
   TASSERT (Path::check (argv0, "s") == FALSE);
-  TDONE();
 }
 
 static void
 test_messaging ()
 {
-  TSTART ("Message Types");
   TASSERT (Msg::NONE    == Msg::lookup_type ("none"));
   TASSERT (Msg::ALWAYS  == Msg::lookup_type ("always"));
   TASSERT (Msg::ERROR   == Msg::lookup_type ("error"));
@@ -127,7 +115,6 @@ test_messaging ()
   TASSERT (Msg::check (Msg::INFO) == false);
   Msg::enable (Msg::INFO);
   TASSERT (Msg::check (Msg::INFO) == true);
-  TDONE();
   Msg::display (Msg::WARNING,
                 Msg::Title ("Warning Title"),
                 Msg::Text1 ("Primary warning message."),
@@ -143,14 +130,11 @@ test_virtual_typeid()
 {
   struct TypeA : public virtual VirtualTypeid {};
   struct TypeB : public virtual VirtualTypeid {};
-  TSTART ("VirtualTypeid");
   TypeA a;
   TypeB b;
-  TOK();
   TASSERT (a.typeid_name() != b.typeid_name());
   TASSERT (strstr (a.typeid_pretty_name().c_str(), "TypeA") != NULL);
   TASSERT (strstr (b.typeid_pretty_name().c_str(), "TypeB") != NULL);
-  TDONE();
 }
 
 int
@@ -159,14 +143,14 @@ main (int   argc,
 {
   rapicorn_init_test (&argc, &argv);
 
-  test_cpu_info();
-  test_paths();
-  test_zintern();
-  test_files (argv[0]);
-  test_messaging();
-  test_virtual_typeid();
-  
-  return 0;
+  Test::add ("CpuInfo", test_cpu_info);
+  Test::add ("Path handling", test_paths);
+  Test::add ("ZIntern", test_zintern);
+  Test::add ("FileChecks", test_files, argv[0]);
+  Test::add ("Message Types", test_messaging);
+  Test::add ("VirtualTypeid", test_virtual_typeid);
+
+  return Test::run();
 }
 
 /* vim:set ts=8 sts=2 sw=2: */
