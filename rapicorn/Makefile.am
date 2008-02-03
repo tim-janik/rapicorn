@@ -60,7 +60,7 @@ lib_LTLIBRARIES                         = librapicorn@LT_RELEASE@.la	# hardcoded
 librapicorn@LT_RELEASE@includedir       = $(includedir)/rapicorn@LT_RELEASE@/rapicorn
 librapicorn@LT_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
 librapicorn@LT_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorn@LT_RELEASE@_la_DEPENDENCIES = ldscript.map
+librapicorn@LT_RELEASE@_la_DEPENDENCIES = $(top_builddir)/rapicorn-core/librapicorncore@LT_RELEASE@.o ldscript.map
 librapicorn@LT_RELEASE@_la_LDFLAGS      = $(strip		\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
