@@ -485,6 +485,7 @@ rapicorn-core/tests/Makefile
 rapicorn/Makefile
 rapicorn/tests/Makefile
 tools/Makefile
+pyrapicorn/Makefile
 examples/Makefile
 docs/Makefile
 web/Makefile

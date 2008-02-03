@@ -4,7 +4,7 @@
 ## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = . po rapicorn-core rapicorn tools examples docs web
+SUBDIRS = . po rapicorn-core rapicorn tools pyrapicorn examples docs web
 noinst_DATA =
 
 # === setup ===
