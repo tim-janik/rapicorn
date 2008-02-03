@@ -1111,6 +1111,9 @@ auto_init_deletable_maps (void)
       DeletableMap *dmaps = new DeletableMap[DELETABLE_MAP_HASH];
       if (!Atomic::ptr_cas (&deletable_maps, (DeletableMap*) NULL, dmaps))
         delete dmaps;
+      // ensure threading works
+      deletable_maps[0].mutex.lock();
+      deletable_maps[0].mutex.unlock();
     }
 }
 
@@ -1181,6 +1184,12 @@ Deletable::remove_deletion_hook (DeletionHook *hook)
 void
 Deletable::invoke_deletion_hooks()
 {
+  /* upon program exit, we may get here without deletable maps or even
+   * threading being initialized. to avoid calling into a NULL threading
+   * table, we'll detect the case and return
+   */
+  if (NULL == Atomic::ptr_get (&deletable_maps))
+    return;
   auto_init_deletable_maps();
   uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
   while (TRUE)
