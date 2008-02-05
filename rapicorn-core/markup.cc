@@ -16,7 +16,7 @@
  *
  * based on glib/gmarkup.c, Copyright 2000, 2003 Red Hat, Inc.
  */
-#include "rapicornmarkup.hh"
+#include "markup.hh"
 #include "rapicornutf8.hh"
 #include <stdio.h>
 #include <stdlib.h>
