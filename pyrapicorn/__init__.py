@@ -22,4 +22,4 @@ More details at http://www.rapicorn.org/.
 #CONSTANT_X = 7
 #__all__ = ['CONSTANT_X']
 
-import pyRapicorn0752
+import pyRapicorn

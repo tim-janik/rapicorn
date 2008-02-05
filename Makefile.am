@@ -55,16 +55,17 @@ MAKE_API_CHECKSUM=$(strip								\
 api-check: # ensure headers don't change if RELEASE=outdated && REVISION=0
 	cd $(srcdir) \
 	&& RAPICORN_CURRENT_CHECKSUM=$$($(MAKE_API_CHECKSUM))			\
-	&& RAPICORN_WEEK_VERSION="$$(expr $$(date +%G) - 2000)$$(date +%V)"	\
+	&& RAPICORN_MONTHLY_VERSION="$$(expr $$(date +%Y%m) - 200000)"		\
 	&& test "$$RAPICORN_CURRENT_CHECKSUM"  = "`cat api-check.md5`"		\
-	|| if [ "$$RAPICORN_WEEK_VERSION" =					\
-                "$$[@RAPICORN_RELEASE_YEAR@ * 100 + @RAPICORN_RELEASE_WEEK@]"	\
+	|| if [ "$$RAPICORN_MONTHLY_VERSION" =					\
+                "$$(expr @RAPICORN_RELEASE_YEAR@ '*' 100 + @RAPICORN_RELEASE_MONTH@)" \
 		-o "@RAPICORN_REVISION_VERSION@" -gt 0 ]; then			\
 	     echo "$$RAPICORN_CURRENT_CHECKSUM" > api-check.md5 ;		\
 	   else \
-	     MSG1="The Rapicorn version (@RAPICORN_RELEASE_YEAR@.@RAPICORN_RELEASE_WEEK@.@RAPICORN_REVISION_VERSION@) needs updating " ; \
-	     MSG2="(expected $$[RAPICORN_WEEK_VERSION/100].$$[RAPICORN_WEEK_VERSION%100].0) to match header changes (checksum: $$RAPICORN_CURRENT_CHECKSUM)" ; \
-	     MSG="$$MSG1$$MSG2" ; echo $$MSG | sed 's/./=/g'; echo $$MSG; echo $$MSG | sed 's/./=/g' ; \
+	     MSG1="Update Rapicorn version to reflect header changes (checksum: $$RAPICORN_CURRENT_CHECKSUM): " ; \
+	     MSG2="@RAPICORN_RELEASE_YEAR@.@RAPICORN_RELEASE_MONTH@.@RAPICORN_REVISION_VERSION@ => " ; \
+	     MSG3="$$[RAPICORN_MONTHLY_VERSION/100].$$[RAPICORN_MONTHLY_VERSION%100].0" ; \
+	     MSG="$$MSG1$$MSG2$$MSG3" ; echo $$MSG | sed 's/./=/g'; echo $$MSG; echo $$MSG | sed 's/./=/g' ; \
 	     exit 1 ; \
 	   fi
 api-checksum:
