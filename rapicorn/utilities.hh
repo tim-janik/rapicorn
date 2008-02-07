@@ -448,6 +448,7 @@ private:
   protected:
     Interface          *m_instance;
   };
+protected:
   /* interface matching template class implementation for Type, Type& and Type* */
   template<typename Type>
   struct InterfaceType : InterfaceCast<Type> {
