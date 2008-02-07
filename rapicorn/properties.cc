@@ -20,7 +20,7 @@
 namespace Rapicorn {
 
 static inline String
-canonify (String s)
+propcanonify (String s)
 {
   for (uint i = 0; i < s.size(); i++)
     if (!((s[i] >= 'A' && s[i] <= 'Z') ||
@@ -38,7 +38,7 @@ Property::Property (const char *cident, const char *clabel, const char *cblurb, 
   hints (chints ? strdup (chints) : NULL)
 {
   assert (ident != NULL);
-  ident = strdup (canonify (ident).c_str());
+  ident = strdup (propcanonify (ident).c_str());
 }
 
 Property::~Property()
