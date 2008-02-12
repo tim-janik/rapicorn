@@ -43,9 +43,9 @@ Application::create_window (const String            &gadget_identifier,
 }
 
 void
-Application::load_gui (const String  &i18n_domain,
-                       const String  &file_name,
-                       const String  &binary_path)
+Application::auto_load (const String  &i18n_domain,
+                        const String  &file_name,
+                        const String  &binary_path)
 {
   assert (rapicorn_thread_entered());
   printerr ("LOAD-GUI: domain=\"%s\" file=\"%s\" path=\"%s\"\n", i18n_domain.c_str(), file_name.c_str(), binary_path.c_str());

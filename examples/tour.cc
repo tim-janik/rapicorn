@@ -61,7 +61,7 @@ main (int   argc,
   Application::pixstream ("testimage-rgb-raw", rgb_raw);
 
   /* load GUI definition file, relative to argv[0] */
-  Application::load_gui ("RapicornTest", "tour.xml", argv[0]);
+  Application::auto_load ("RapicornTest", "tour.xml", argv[0]);
 
   /* create root item */
   Window window = Application::create_window ("tour-dialog");

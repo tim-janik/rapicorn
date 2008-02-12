@@ -43,9 +43,9 @@ main (int   argc,
   Application::init_with_x11 (&argc, &argv, "HelloWorld");
 
   /* find and load GUI definitions relative to argv[0] */
-  Application::load_gui ("DummyTranslation",    // i18n_domain,
-                         "hello.xml",           // GUI file name
-                         argv[0]);
+  Application::auto_load ("DummyTranslation",   // i18n_domain,
+                          "hello.xml",          // GUI file name
+                          argv[0]);
 
   /* create main window */
   Window window = Application::create_window ("main-window");

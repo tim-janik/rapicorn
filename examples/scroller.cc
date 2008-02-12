@@ -44,7 +44,7 @@ main (int   argc,
   Application::init_with_x11 (&argc, &argv, "Scroller");
 
   /* parse GUI description */
-  Application::load_gui ("RapicornTest", "scroller.xml", argv[0]);
+  Application::auto_load ("RapicornTest", "scroller.xml", argv[0]);
 
   /* create main window */
   Window window = Application::create_window ("main-shell");

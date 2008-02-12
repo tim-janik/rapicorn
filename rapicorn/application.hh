@@ -33,7 +33,7 @@ public:
   static void           init_with_x11   (int           *argcp,
                                          char        ***argvp,
                                          const char    *app_name);
-  static void           load_gui        (const String  &i18n_domain,
+  static void           auto_load       (const String  &i18n_domain,
                                          const String  &file_name,
                                          const String  &binary_path);
   static void           pixstream       (const String  &pix_name,

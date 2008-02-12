@@ -52,9 +52,9 @@ main (int   argc,
   Application::init_with_x11 (&argc, &argv, "FactoryTest");
 
   /* find and load GUI definitions relative to argv[0] */
-  Application::load_gui ("DummyTranslation",    // i18n_domain,
-                         "factory.xml",         // GUI file name
-                         argv[0]);
+  Application::auto_load ("DummyTranslation",   // i18n_domain,
+                          "factory.xml",        // GUI file name
+                          argv[0]);
   Root *root;
   Item *item;
   TestItem *titem;

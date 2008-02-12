@@ -144,7 +144,7 @@ main (int   argc,
   Application::init_with_x11 (&argc, &argv, "TestItemTest");
   
   /* parse GUI description */
-  Application::load_gui ("testitems", "testitems.xml", argv[0]); // Path::dirname (argv[0]), Path::join (Path::dirname (argv[0]), ".."));
+  Application::auto_load ("testitems", "testitems.xml", argv[0]);
 
   /* create/run tests */
   test_cxx_gui ();

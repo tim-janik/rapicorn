@@ -93,7 +93,7 @@ main (int   argc,
     help_usage (true);
 
   /* load GUI definition file, relative to argv[0] */
-  Application::load_gui ("RapicornTest", argv[1], argv[0]);
+  Application::auto_load ("RapicornTest", argv[1], argv[0]);
 
   /* create root item */
   Window window = Application::create_window ("test-dialog");
