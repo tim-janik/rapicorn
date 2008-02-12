@@ -1145,11 +1145,11 @@ protected:
   {
     if (dot_size)
       {
-        IRect idr = layout_rect;
-        render_dot_gL (plane, idr.x, idr.y, idr.width / 3, idr.height, dot_size, fg);
-        render_dot_gL (plane, idr.x + idr.width / 3, idr.y, idr.width / 3, idr.height, dot_size, fg);
-        render_dot_gL (plane, idr.x + 2 * idr.width / 3, idr.y, idr.width / 3, idr.height, dot_size, fg);
-        return;
+        Rect area = allocation();
+        area.height -= MIN (area.height, layout_rect.height); // draw vdots beneth layout
+        render_dot_gL (plane, area.x, area.y, area.width / 3, area.height, dot_size, fg);
+        render_dot_gL (plane, area.x + area.width / 3, area.y, area.width / 3, area.height, dot_size, fg);
+        render_dot_gL (plane, area.x + 2 * area.width / 3, area.y, area.width / 3, area.height, dot_size, fg);
       }
     /* constrain rendering area */
     Rect r = plane.rect();
@@ -1170,6 +1170,9 @@ protected:
   Rect
   layout_area (uint *vdot_size)
   {
+    /* once PANGO_VERSION_CHECK (1, 19, 3) succeeds, this
+     * should use pango_layout_set_height() instead.
+     */
     Rect area = allocation();
     rapicorn_gtk_threads_enter();
     /* measure layout size */
@@ -1178,13 +1181,33 @@ protected:
     double vpixels = UNITS2PIXELS (lrect.height);
     /* decide vertical ellipsis */
     bool vellipsize = floor (vpixels) > area.height;
-    if (vdot_size)
-      *vdot_size = !vellipsize ? 0 : LayoutCache::dot_size_from_layout (m_layout);
+    if (vellipsize)
+      {
+        gint last_height = 0, dotsize = LayoutCache::dot_size_from_layout (m_layout);
+        PangoLayoutIter *pli = pango_layout_get_iter (m_layout);
+        do
+          {
+            PangoRectangle nrect;
+            pango_layout_iter_get_line_extents (pli, NULL, &nrect);
+            if (UNITS2PIXELS (nrect.y + nrect.height) + 3 * dotsize > area.height)
+              break;
+            last_height = floor (UNITS2PIXELS (nrect.y + nrect.height));
+          }
+        while (pango_layout_iter_next_line (pli));
+        pango_layout_iter_free (pli);
+        if (vdot_size)
+          *vdot_size = dotsize;
+        area.y += area.height - last_height;
+        area.height = last_height;
+      }
+    else if (vdot_size)
+      *vdot_size = 0;
     /* preserve emboss space */
-    area.width -= 1;
-    area.height -= 1;
     area.x += 1;
     area.y += 1;
+    area.width -= 1;
+    area.height -= 1;
+    area.height = MAX (0, area.height);
     /* center vertically */
     if (vpixels < area.height)
       {
@@ -1194,8 +1217,8 @@ protected:
       }
     rapicorn_gtk_threads_leave();
     /* check area */
-    if ((area.width < 1 || area.height < 1) ||  /* area needs to be larger than emboss padding */
-        (vellipsize && !vdot_size))             /* too tall without vellipsization */
+    if ((area.width < 1) ||             /* area needs to be larger than emboss padding */
+        (vellipsize && !vdot_size))     /* too tall without vellipsization */
       area.width = area.height = 0;
     return area;
   }
@@ -1204,7 +1227,7 @@ protected:
   {
     uint vdot_size = 0;
     Rect area = layout_area (&vdot_size);
-    if (area.width < 1 || area.height < 1)
+    if (area.width < 1) // allowed: area.height < 1
       return;
     /* render text */
     Plane &plane = display.create_plane ();
