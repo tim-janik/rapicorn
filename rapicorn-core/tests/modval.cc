@@ -14,7 +14,7 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include <rapicorn-core/rapicorntests.h>
+#include <rapicorn-core/testutils.hh>
 #include <rapicorn-core/rapicorn-core.hh>
 
 namespace {
@@ -146,18 +146,21 @@ test_array ()
   };
   for (int64 i = 0; i < RAPICORN_ARRAY_SIZE (board); i++)
     a.push_tail (Array::FromCArray<String> (board[i]));
-  printout ("\nchess0:\n%s\n", a.to_string ("\n").c_str());
+  if (Test::verbose())
+    printout ("chess0:\n%s\n", a.to_string ("\n").c_str());
 
   a[3].array()[4] = a[1].array()[4];
   a[1].array()[4] = " ";
 
-  printout ("\nchess1:\n%s\n", a.to_string ("\n").c_str());
+  if (Test::verbose())
+    printout ("\nchess1:\n%s\n", a.to_string ("\n").c_str());
 }
 
 static void
 variable_changed (Variable *self)
 {
-  printf ("VARIABLE Changed: %s\n", self->type().ident().c_str());
+  if (Test::verbose())
+    printout ("Variable::changed: %s\n", self->type().ident().c_str());
 }
 
 static void
@@ -191,12 +194,12 @@ main (int   argc,
 {
   rapicorn_init_test (&argc, &argv);
 
-  test_types();
-  test_value_num();
-  test_value_float();
-  test_value_string();
-  test_array();
-  test_variable();
+  Test::add ("/Type/basics", test_types);
+  Test::add ("/Value/num", test_value_num);
+  Test::add ("/Value/float", test_value_float);
+  Test::add ("/Value/string", test_value_string);
+  Test::add ("/Array/chess", test_array);
+  Test::add ("/Variable/notification", test_variable);
 
-  return 0;
+  return Test::run();
 }
