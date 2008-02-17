@@ -31,12 +31,11 @@ class Model0 : public virtual ReferenceCountImpl { // 1*Type + 1*Value
   Type                  m_type;
   Model0Value           m_value;
 protected:
-  virtual              ~Model0          ();
-  virtual void          changed         ();
+  virtual              ~Model0          (void);
+  virtual void          changed         (void);
 public:
   explicit              Model0          (Type t);
-  Type                  type            ()              { return m_type; }
-  AnyValue              value           ()              { return m_value; }
+  Type                  type            (void)          { return m_type; }
   /* notification */
   Signal<Model0, void ()> sig_changed;
   /* accessors */
@@ -47,6 +46,62 @@ public:
 };
 typedef class Model0 Variable;
 
+class Store1;
+class Model1 : public virtual ReferenceCountImpl { // 1*Type + n*Value
+  Type                  m_type;
+protected:
+  void                  changed         (uint64       first,
+                                         uint64       count);
+  void                  inserted        (uint64       first,
+                                         uint64       count);
+  void                  deleted         (uint64       first,
+                                         uint64       count);
+  virtual              ~Model1          (void);
+  virtual void          handle_changed  (uint64, uint64);
+  virtual void          handle_inserted (uint64, uint64);
+  virtual void          handle_deleted  (uint64, uint64);
+  virtual Store1*       pget_store      (void) = 0;
+  virtual uint64        pcount_rows     (void) = 0;
+  virtual Array         pget_row        (uint64       row) = 0;
+public:
+  explicit              Model1          (Type         row_type);
+  Store1*               store           (void)                  { return pget_store(); }
+  Type                  type            (void) const            { return m_type; }
+  uint64                count           (void)                  { return pcount_rows(); }
+  Array                 get             (uint64       nth)      { return pget_row (nth); }
+  /* notification */
+  typedef Signal<Model1, void (uint64,uint64)> RangeSignal;
+  RangeSignal           sig_changed;
+  RangeSignal           sig_inserted;
+  RangeSignal           sig_deleted;
+};
+
+class Store1 : public virtual ReferenceCountImpl { // 1*Type + n*Value
+protected:
+  virtual              ~Store1          (void);
+  virtual Model1&       pget_model      (void) = 0;
+  virtual void          pchange_rows    (uint64       first,
+                                         uint64       count,
+                                         const Array *array) = 0;
+  virtual void          pinsert_rows    (uint64       first,
+                                         uint64       count,
+                                         const Array *arrays) = 0;
+  virtual void          pdelete_rows    (uint64       first,
+                                         uint64       count) = 0;
+public:
+  explicit              Store1          (void);
+  Model1&               model           (void)                  { return pget_model(); }
+  Type                  type            (void)                  { return model().type(); }
+  uint64                count           (void)                  { return model().count(); }
+  Array                 get             (uint64       nth)      { return model().get (nth); }
+  void                  set             (uint64       nth,
+                                         const Array &array)    { pchange_rows (nth, 1, &array); }
+  void                  insert_row      (uint64       nth,
+                                         const Array &array)    { pinsert_rows (nth, 1, &array); }
+  void                  delete_row      (uint64       nth)      { pdelete_rows (nth, 1); }
+  /* premade stores */
+  static Store1*        create_memory_store     (Type row_type);
+};
 
 } // Rapicorn
 

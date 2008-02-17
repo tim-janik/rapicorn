@@ -38,4 +38,141 @@ void
 Model0::changed()
 {}
 
+Model1::~Model1 (void)
+{}
+
+Model1::Model1 (Type row_type) :
+  m_type (row_type),
+  sig_changed  (*this, &Model1::handle_changed),
+  sig_inserted (*this, &Model1::handle_inserted),
+  sig_deleted  (*this, &Model1::handle_deleted)
+{}
+
+void
+Model1::changed (uint64 first,
+                 uint64 count)
+{
+  sig_changed.emit (first, count);
+}
+
+void
+Model1::handle_changed (uint64 first,
+                        uint64 count)
+{}
+
+void
+Model1::inserted (uint64 first,
+                  uint64 count)
+{
+  sig_inserted.emit (first, count);
+}
+
+void
+Model1::handle_inserted (uint64 first,
+                         uint64 count)
+{}
+
+void
+Model1::deleted (uint64 first,
+                 uint64 count)
+{
+  sig_deleted.emit (first, count);
+}
+
+void
+Model1::handle_deleted  (uint64 first,
+                         uint64 count)
+{}
+
+Store1::Store1()
+{}
+
+Store1::~Store1()
+{}
+
+class MemoryStore1 : public virtual Model1, public virtual Store1 {
+  vector<Array*> avector;
+  virtual Store1*
+  pget_store (void)
+  {
+    return this;
+  }
+  virtual uint64
+  pcount_rows (void)
+  {
+    return avector.size();
+  }
+  virtual Array
+  pget_row (uint64 row)
+  {
+    if (row < avector.size())
+      return *avector[row];
+    return Array();
+  }
+  virtual Model1&
+  pget_model (void)
+  {
+    return *this;
+  }
+  virtual void
+  pchange_rows (uint64       first,
+                uint64       count,
+                const Array *arrays)
+  {
+    uint64 cnotify = 0;
+    for (uint64 row = first; row < first + count; row++)
+      if (row < avector.size())
+        {
+          Array *old = avector[row];
+          avector[row] = new Array (arrays[row - first]);
+          if (old)
+            delete old;
+          cnotify++;
+        }
+    changed (first, cnotify);
+  }
+  virtual void
+  pinsert_rows (uint64       first,
+                uint64       count,
+                const Array *arrays)
+  {
+    if (first > avector.size())
+      return;
+    avector.insert (avector.begin() + first, count, NULL);
+    for (uint64 row = first; row < first + count; row++)
+      avector[row] = new Array (arrays[row - first]);
+    inserted (first, count);
+  }
+  virtual void
+  pdelete_rows (uint64 first,
+                uint64 count)
+  {
+    if (first >= avector.size())
+      return;
+    uint64 end = first + count;
+    end = MIN (end, avector.size());
+    for (uint64 row = first; row < end; row++)
+      delete avector[row];
+    deleted (first, end - first);
+  }
+  ~MemoryStore1()
+  {
+    while (avector.size())
+      {
+        delete avector[avector.size() - 1];
+        avector.resize (avector.size() - 1);
+      }
+  }
+public:
+  explicit MemoryStore1 (Type row_type) :
+    Model1 (row_type)
+  {}
+};
+
+Store1*
+Store1::create_memory_store (Type row_type)
+{
+  return new MemoryStore1 (row_type);
+}
+
 } // Rapicorn
