@@ -29,7 +29,8 @@ test_cpu_info (void)
   TASSERT (cpi.machine != NULL);
   String cps = cpu_info_string (cpi);
   TASSERT (cps.size() != 0);
-  printout ("\n#####\n%s#####\n", cps.c_str());
+  if (Test::verbose())
+    printout ("\n#####\n%s#####\n", cps.c_str());
 }
 
 static void
@@ -42,7 +43,7 @@ test_paths()
 #else
   p = "0\\1\\2\\3\\4\\5\\6\\7\\8\\9\\a\\b\\c\\d\\e\\f";
 #endif
-  // g_printerr ("%s == %s\n", s.c_str(), p.c_str());
+  // printerr ("%s == %s\n", s.c_str(), p.c_str());
   TASSERT (s == p);
   bool b = Path::isabs (p);
   TASSERT (b == false);
@@ -147,8 +148,8 @@ main (int   argc,
   Test::add ("Path handling", test_paths);
   Test::add ("ZIntern", test_zintern);
   Test::add ("FileChecks", test_files, argv[0]);
-  Test::add ("Message Types", test_messaging);
   Test::add ("VirtualTypeid", test_virtual_typeid);
+  Test::add ("Message Types", test_messaging);
 
   return Test::run();
 }

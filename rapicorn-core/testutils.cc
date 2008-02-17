@@ -45,12 +45,53 @@ run (void)
 {
   for (uint i = 0; i < testfuncs.size(); i++)
     {
-      printout ("%s: ", testnames[i].c_str());
+      if (verbose())
+        printout ("Test: run: %s\n", testnames[i].c_str());
+      else
+        {
+          String sc = string_printf ("%s:", testnames[i].c_str());
+          String sleft = string_printf ("%-68s", sc.c_str());
+          printout ("%70s ", sleft.c_str());
+        }
       testfuncs[i] (testdatas[i]);
-      printout ("DONE.\n");
+      if (verbose())
+        printout ("Test: result: OK\n");
+      else
+        printout ("OK\n");
     }
   return 0;
 }
+
+bool
+verbose (void)
+{
+  return init_settings().test_verbose;
+}
+
+bool
+quick (void)
+{
+  return init_settings().test_quick;
+}
+
+bool
+slow (void)
+{
+  return init_settings().test_slow;
+}
+
+bool
+thorough (void)
+{
+  return init_settings().test_slow;
+}
+
+bool
+perf (void)
+{
+  return init_settings().test_perf;
+}
+
 
 } // Test
 } // Rapicorn

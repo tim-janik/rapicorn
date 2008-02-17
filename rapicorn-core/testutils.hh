@@ -28,6 +28,12 @@ namespace Test {
 
 
 int     run             (void);
+bool    verbose         (void);
+bool    quick           (void);
+bool    slow            (void);
+bool    thorough        (void);
+bool    perf            (void);
+
 
 void    add_internal    (const String &testname,
                          void        (*test_func) (void*),

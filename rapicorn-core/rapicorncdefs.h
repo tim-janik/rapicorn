@@ -196,6 +196,7 @@ typedef struct {
   bool test_quick;		/* run quick tests */
   bool test_slow;		/* run slow tests */
   bool test_perf;		/* run benchmarks, test performance */
+  bool test_verbose;		/* provide extra test output */
 } RapicornInitSettings;
 
 typedef struct {

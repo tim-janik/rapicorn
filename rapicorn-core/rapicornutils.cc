@@ -108,6 +108,8 @@ rapicorn_parse_settings_and_args (InitValue *value,
           global_init_settings.test_slow = init_value_bool (value);
         else if (strcmp (value->value_name, "test-perf") == 0)
           global_init_settings.test_perf = init_value_bool (value);
+        else if (strcmp (value->value_name, "test-verbose") == 0)
+          global_init_settings.test_verbose = init_value_bool (value);
         else if (strcmp (value->value_name, "rapicorn-test-parse-args") == 0)
           parse_test_args = init_value_bool (value);
         value++;
@@ -138,6 +140,19 @@ rapicorn_parse_settings_and_args (InitValue *value,
         {
           global_init_settings.test_perf = true;
           argv[i] = NULL;
+        }
+      else if (parse_test_args && strcmp ("--test-verbose", argv[i]) == 0)
+        {
+          global_init_settings.test_verbose = true;
+          argv[i] = NULL;
+        }
+      else if (parse_test_args && strcmp ("--verbose", argv[i]) == 0)
+        {
+          global_init_settings.test_verbose = true;
+          /* interpret --verbose for GLib compat but don't delete the argument
+           * since regular non-test programs may need this. could be fixed by
+           * having a separate test program argument parser.
+           */
         }
     }
   /* fallback handling for tests */
