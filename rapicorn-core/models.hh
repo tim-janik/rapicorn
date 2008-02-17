@@ -24,26 +24,29 @@ namespace Rapicorn {
 /* --- Data Models --- */
 class Model0 : public virtual ReferenceCountImpl { // 1*Type + 1*Value
   class Model0Value : public BaseValue {
-    virtual void                changed         ();
+    virtual void        changed         ();
   public:
-    explicit                    Model0Value     (Type::Storage s) : BaseValue (s) {}
+    explicit            Model0Value     (Type::Storage s) : BaseValue (s) {}
   };
+  Type                  m_type;
+  Model0Value           m_value;
 protected:
+  virtual              ~Model0          ();
   virtual void          changed         ();
-  virtual              ~Model0        ();
 public:
-  explicit              Model0        (Type t);
-  Type                  type;
-  Model0Value           value;
+  explicit              Model0          (Type t);
+  Type                  type            ()              { return m_type; }
+  AnyValue              value           ()              { return m_value; }
   /* notification */
   Signal<Model0, void ()> sig_changed;
   /* accessors */
-  template<typename T> void  set        (T tvalue)      { value.set (tvalue); }
-  template<typename T> void  operator=  (T tvalue)      { value.set (tvalue); }
-  template<typename T> T     get        ()              { return value.convert ((T*) 0); }
-  template<typename T> /*T*/ operator T ()              { return value.convert ((T*) 0); }
+  template<typename T> void  set        (T tvalue)      { m_value.set (tvalue); }
+  template<typename T> void  operator=  (T tvalue)      { m_value.set (tvalue); }
+  template<typename T> T     get        ()              { return m_value.convert ((T*) 0); }
+  template<typename T> /*T*/ operator T ()              { return m_value.convert ((T*) 0); }
 };
 typedef class Model0 Variable;
+
 
 } // Rapicorn
 

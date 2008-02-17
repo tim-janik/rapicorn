@@ -145,7 +145,7 @@ test_array ()
     { "r","n","b","q","k","b","n","r" }
   };
   for (int64 i = 0; i < RAPICORN_ARRAY_SIZE (board); i++)
-    a.push_tail (Array::FromArray<String> (board[i]));
+    a.push_tail (Array::FromCArray<String> (board[i]));
   printout ("\nchess0:\n%s\n", a.to_string ("\n").c_str());
 
   a[3].array()[4] = a[1].array()[4];
@@ -157,7 +157,7 @@ test_array ()
 static void
 variable_changed (Variable *self)
 {
-  printf ("VARIABLE Changed: %s\n", self->type.ident().c_str());
+  printf ("VARIABLE Changed: %s\n", self->type().ident().c_str());
 }
 
 static void

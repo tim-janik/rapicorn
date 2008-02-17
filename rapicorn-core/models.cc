@@ -19,7 +19,7 @@
 namespace Rapicorn {
 
 Model0::Model0 (Type t) :
-  type (t), value (t.storage()),
+  m_type (t), m_value (t.storage()),
   sig_changed (*this, &Model0::changed)
 {}
 
@@ -29,7 +29,7 @@ Model0::~Model0 ()
 void
 Model0::Model0Value::changed()
 {
-  ssize_t vvoffset = (ssize_t) ((char*) &((Model0*) 1024)->value) - 1024;
+  ssize_t vvoffset = (ssize_t) ((char*) &((Model0*) 0x10000)->m_value) - 0x10000;
   Model0 *var = (Model0*) ((char*) this - vvoffset);
   var->sig_changed.emit();
 }

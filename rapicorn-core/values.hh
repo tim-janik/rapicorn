@@ -114,7 +114,7 @@ public:
   /*copy*/        Array         (const Array    &other);
   explicit        Array         ();
   template<typename Element, typename CArray>
-  static Array    FromArray     (CArray &a) { Array r; RAPICORN_ARRAY_APPEND (r, a, Element); return r; }
+  static Array    FromCArray    (CArray &a) { Array r; RAPICORN_ARRAY_APPEND (r, a, Element); return r; }
   /* array operations */
   Array&          operator=     (const Array    &other);
   Array           operator+     (const Array    &other) const; /* yield this + other (non replacing) */
