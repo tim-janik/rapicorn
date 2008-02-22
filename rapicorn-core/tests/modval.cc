@@ -98,6 +98,24 @@ test_value_string ()
   assert (v1.string() == "x");
 }
 
+struct TestObject : public virtual ReferenceCountImpl {};
+
+static void
+test_array_auto_value ()
+{
+  Array a1, a2;
+  TestObject *to = new TestObject();
+  ref_sink (to);
+  a1.push_head (AutoValue ("first")); // demand create AutoValue
+  a1.push_head (String ("second")); // implicit AutoValue creation
+  a1.push_head ("third"); // implicit AutoValue creation from C string
+  // implicit AutoValue creations
+  a1.push_head (0.1);
+  a1.push_head (a2);
+  a1.push_head (*to);
+  unref (to);
+}
+
 static void
 test_array ()
 {
@@ -198,6 +216,7 @@ main (int   argc,
   Test::add ("/Value/num", test_value_num);
   Test::add ("/Value/float", test_value_float);
   Test::add ("/Value/string", test_value_string);
+  Test::add ("/Array/AutoValue", test_array_auto_value);
   Test::add ("/Array/chess", test_array);
   Test::add ("/Variable/notification", test_variable);
 

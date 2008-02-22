@@ -95,6 +95,7 @@ public:
 class AutoValue : public AnyValue {
 public:
   /*Con*/       AutoValue       (long double           num)           : AnyValue (Type::STRING)        { set (num); }
+  /*Con*/       AutoValue       (const char           *cstring)       : AnyValue (Type::STRING)        { set (String (cstring)); }
   /*Con*/       AutoValue       (const String         &string)        : AnyValue (Type::STRING)        { set (string); }
   /*Con*/       AutoValue       (const StringVector   &string_vector) : AnyValue (Type::STRING_VECTOR) { set (string_vector); }
   /*Con*/       AutoValue       (Object               &object)        : AnyValue (Type::OBJECT)        { assign (&object); }
