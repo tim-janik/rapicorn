@@ -57,6 +57,9 @@ EXTRA_DIST        += testpixs.c testpixs.png
 TESTS             += modval
 modval_SOURCES     = modval.cc
 modval_LDADD       = $(LDADDS)
+TESTS             += mod1tst
+mod1tst_SOURCES    = mod1tst.cc
+mod1tst_LDADD      = $(LDADDS)
 
 # === test rules ===
 # process handle
