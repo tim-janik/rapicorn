@@ -21,7 +21,7 @@ namespace {
 using namespace Rapicorn;
 
 static void
-test_store1 ()
+test_store1_string_row ()
 {
   /* create storage model with row type */
   Type t1 ("RcTi;000bDummyString;s;;");
@@ -39,6 +39,23 @@ test_store1 ()
   assert (s1->count() == 1);
 }
 
+static void
+test_store1_array ()
+{
+  /* create storage model with row type */
+  Type t1 ("RcTi;000aDummyArray;A;;");
+  Store1 *s1 = Store1::create_memory_store (t1);
+  assert (s1 != NULL);
+  assert (s1->count() == 0);
+  /* insert first row */
+  Array row;
+  row[-1] = "a C string";
+  row[-1] = 0.5; // double
+  row[-1] = 17; // integer
+  s1->insert_row (0, row);
+  assert (s1->count() == 1);
+}
+
 } // Anon
 
 int
@@ -47,7 +64,8 @@ main (int   argc,
 {
   rapicorn_init_test (&argc, &argv);
 
-  Test::add ("/Store/basics", test_store1);
+  Test::add ("/Store/string-row", test_store1_string_row);
+  Test::add ("/Store/array-row", test_store1_array);
 
   return Test::run();
 }
