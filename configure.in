@@ -388,14 +388,14 @@ AC_DEFUN([AC_PYRAPICORN_REQUIREMENTS],
 AC_DEFUN([AC_DOC_REQUIREMENTS],
 [
     # need doxer to generate documentation
-    DOXRULE='#'
+    DOXERDEP='#'
     AC_CHECK_PROGS(DOXER, doxer)
     if test -n "$DOXER" ; then
 	doxer_version=`$DOXER --version`
-	MC_CHECK_VERSION($doxer_version, 0.6, [DOXRULE=''])
+	MC_CHECK_VERSION($doxer_version, 0.6, [DOXERDEP=''])
     fi
     AC_SUBST(DOXER)
-    AC_SUBST(DOXRULE)
+    AC_SUBST(DOXERDEP)
 ])
 AC_DEFUN([AC_CPU_FLAGS],
 [
