@@ -1,11 +1,15 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-TMPDIR=tmphtml
+docdir = ${datarootdir}/doc/${PACKAGE}${RAPICORN_RELEASE_NUMBER}
+
+tutorialdir   = $(docdir)/tutorial
+tutorial_DATA = doxer.css Hello-World.html Rapicorn-Tutorial.html
+EXTRA_DIST   += $(tutorial_DATA)
 
 CHROME_CONF = --no-cache --header "X-Script-Chrome: chrome=off style=doxer.css"
 WGET_MIRROR = wget -E -k -r -np -nd -nc
-
+TMPDIR=tmphtml
 import-docs:
 	mkdir -p $(TMPDIR)
 	rm -rf $(TMPDIR)/*
