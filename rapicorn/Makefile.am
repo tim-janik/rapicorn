@@ -79,7 +79,7 @@ noinst_PROGRAMS        = $(ALLTESTS)
 progs_ldadd            = librapicorn@LT_RELEASE@.la $(RAPICORN_DEP_LIBS) -lm
 
 
-XML_FILES   = foundation.xml
+XML_FILES   = foundation.xml standard.xml
 EXTRA_DIST += $(XML_FILES)
 
 xmllint-check:
@@ -90,8 +90,9 @@ stamp-autochecks: $(XML_FILES)
 	@touch $@
 noinst_DATA = stamp-autochecks
 
-gen-zintern.c:	../rapicorn-core/rapicorn-zintern $(srcdir)/foundation.xml stamp-autochecks
-	../rapicorn-core/rapicorn-zintern -b -z FOUNDATION_XML $(srcdir)/foundation.xml > xgen-$(@F)
+gen-zintern.c:	../rapicorn-core/rapicorn-zintern $(srcdir)/foundation.xml $(srcdir)/standard.xml stamp-autochecks
+	../rapicorn-core/rapicorn-zintern -b -z FOUNDATION_XML \
+	  $(srcdir)/foundation.xml STANDARD_XML $(srcdir)/standard.xml > xgen-$(@F)
 	mv xgen-$(@F) $@
 $(srcdir)/factory.cc: gen-zintern.c
 CLEANFILES += xgen-gen-zintern.c gen-zintern.c

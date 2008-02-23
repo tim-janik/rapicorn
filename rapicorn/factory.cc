@@ -833,7 +833,7 @@ Factory::ItemTypeFactory::sanity_check_identifier (const char *namespaced_ident)
 } // Rapicorn
 
 namespace { // Anon
-#include "gen-zintern.c" // compressed foundation.xml - defines FOUNDATION_XML_SIZE and FOUNDATION_XML_DATA
+#include "gen-zintern.c" // compressed foundation.xml & standard.xml
 
 static void
 initialize_standard_gadgets_lazily (void)
@@ -843,10 +843,15 @@ initialize_standard_gadgets_lazily (void)
   if (!initialized)
     {
       initialized = true;
-      uint8 *data = zintern_decompress (FOUNDATION_XML_SIZE, FOUNDATION_XML_DATA,
-                                        sizeof (FOUNDATION_XML_DATA) / sizeof (FOUNDATION_XML_DATA[0]));
+      uint8 *data;
       const char *domain = "Rapicorn";
+      data = zintern_decompress (FOUNDATION_XML_SIZE, FOUNDATION_XML_DATA,
+                                 sizeof (FOUNDATION_XML_DATA) / sizeof (FOUNDATION_XML_DATA[0]));
       FactorySingleton::singleton->parse_gadget_data (FOUNDATION_XML_NAME, FOUNDATION_XML_SIZE, (const char*) data, domain, domain);
+      zintern_free (data);
+      data = zintern_decompress (STANDARD_XML_SIZE, STANDARD_XML_DATA,
+                                 sizeof (STANDARD_XML_DATA) / sizeof (STANDARD_XML_DATA[0]));
+      FactorySingleton::singleton->parse_gadget_data (STANDARD_XML_NAME, STANDARD_XML_SIZE, (const char*) data, domain, domain);
       zintern_free (data);
     }
 }
