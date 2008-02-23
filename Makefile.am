@@ -5,6 +5,8 @@
 include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = . po rapicorn-core rapicorn tools pyrapicorn examples docs web
+
+docdir  = ${datarootdir}/doc/${PACKAGE}${RAPICORN_RELEASE_NUMBER}
 noinst_DATA =
 
 # === setup ===
@@ -20,6 +22,10 @@ test:
 	$(MAKE) -C tests/ $(AM_MAKEFLAGS) $@
 .PHONY: test
 
+# === doc/ files ===
+maindocsdir   = $(docdir)/
+maindocs_DATA = README NEWS
+EXTRA_DIST   += $(maindocs_DATA)
 
 # === i18n tool files ===
 CLEANFILES += intltool-extract intltool-merge intltool-update

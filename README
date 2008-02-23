@@ -1,5 +1,5 @@
-General Information
-===================
+The Rapicorn Toolkit
+====================
 
 Rapicorn is an experimental UI toolkit.
 Many things that programmers need to spell out explicitely in Gtk+ or
@@ -12,6 +12,9 @@ reduces needs for UI programming to a minimum.
 
 Cairo is planned to be used for rendering tasks, and Pango is used for
 text rendering.
+
+A programming tutorial can be found under:
+  $(prefix)/doc/rapicorn$(VERSION)/tutorial/
 
 Existing Features
 -----------------
