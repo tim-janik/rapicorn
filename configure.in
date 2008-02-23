@@ -509,6 +509,7 @@ tools/Makefile
 pyrapicorn/Makefile
 examples/Makefile
 docs/Makefile
+docs/imports/Makefile
 web/Makefile
 ])
 
