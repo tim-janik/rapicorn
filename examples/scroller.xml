@@ -15,7 +15,7 @@
  ! A copy of the GNU Lesser General Public License should ship along
  ! with this library; if not, see http://www.gnu.org/copyleft/.
  !-->
-<rapicorn-gadgets xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
+<rapicorn-definitions xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
 
   <!-- main dialog -->
   <def:main-shell inherit="Root" child-container="scroll-box" width="800" height="600" >
@@ -44,4 +44,4 @@
   <def:button-row inherit="HBox" spacing="5" >
   </def:button-row>
 
-</rapicorn-gadgets>
+</rapicorn-definitions>

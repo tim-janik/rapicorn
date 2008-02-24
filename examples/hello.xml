@@ -19,7 +19,7 @@
  | otherwise) arising in any way out of the use of this software, even
  | if advised of the possibility of such damage.
  !-->
-<rapicorn-gadgets xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
+<rapicorn-definitions xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
 
   <!-- main window -->
   <def:main-window inherit="Root">
@@ -35,4 +35,4 @@
     </OuterShell>
   </def:main-window>
 
-</rapicorn-gadgets>
+</rapicorn-definitions>

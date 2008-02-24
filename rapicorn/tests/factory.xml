@@ -19,7 +19,7 @@
  | otherwise) arising in any way out of the use of this software, even
  | if advised of the possibility of such damage.
  !-->
-<rapicorn-gadgets xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
+<rapicorn-definitions xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
 
   <!-- Multi-Level TestItem creation -->
   <def:TestItemL0 inherit="Rapicorn::Factory::TestItem" accu="L0"/>
@@ -31,4 +31,4 @@
     <TestItemL2 accu="Instance"/>
   </def:test-TestItemL2>
 
-</rapicorn-gadgets>
+</rapicorn-definitions>

@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
-<rapicorn-gadgets
-  xmlns:def="http://beast.gtk.org/rapicorn-gadgets/xmlns:def"
-  xmlns:env="http://beast.gtk.org/rapicorn-gadgets/xmlns:env">
+<rapicorn-definitions xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
 
   <def:OuterShell inherit="Ambience" child-container="OuterShellCavity"
     normal-lighting="upper-left">
@@ -10,4 +8,4 @@
     </Alignment>
   </def:OuterShell>
 
-</rapicorn-gadgets>
+</rapicorn-definitions>

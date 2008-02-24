@@ -204,7 +204,7 @@ public:
                  Error         &error)
   {
     // GadgetDef *top_gadget = !gadget_stack.empty() ? gadget_stack.top() : NULL;
-    if (element_name == "rapicorn-gadgets")
+    if (element_name == "rapicorn-definitions")
       ; // outer element
     else if (element_name.compare (0, 4, "def:") == 0 && gadget_stack.empty())
       {
