@@ -21,5 +21,5 @@ import-docs:
 .PHONY: import-docs
 
 dist-hook:
-	find stamp-import-docs -mtime -4 | fgrep -q stamp \
+	! test -e stamp-import-docs || find stamp-import-docs -mtime -4 | fgrep -q stamp \
 	|| { echo "docs/imports/: Last import is outdated, please run: make import-docs" >&2 ; exit 1 ; }
