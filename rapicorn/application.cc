@@ -48,64 +48,36 @@ Application::auto_load (const String  &i18n_domain,
                         const String  &binary_path)
 {
   assert (rapicorn_thread_entered());
-  printerr ("LOAD-GUI: domain=\"%s\" file=\"%s\" path=\"%s\"\n", i18n_domain.c_str(), file_name.c_str(), binary_path.c_str());
-  /* - search for /file_name if isabs (file_name), then let file_name = basename (file_name)
-   * - if isdir(binary_path) search binary_path/file_name
-   * - if !isabs (binary_path), then let binary_path=CWD/binary_path
-   * - if isprogram (binary_path) search dirname (binary_path)/file_name
-   * - if isprogram (binary_path) in ".lib" or "_libs" search dirname (dirname (binary_path))/file_name
-   */
-  String fname = file_name;
+  /* test load absolute file_name */
+  if (Path::isabs (file_name))
+    {
+      int err = Factory::parse_file (i18n_domain, file_name);
+      if (err)
+        error ("failed to load \"%s\": %s", file_name.c_str(), string_from_errno (err).c_str());
+      return;
+    }
+  /* assign bpath the absolute binary path */
   String bpath = binary_path;
-  /* support absolute file names */
-  if (Path::isabs (fname))
-    {
-      int err = Factory::parse_file (i18n_domain, fname);
-      if (!err)
-        return;
-      /* need relative file name for composition */
-      fname = Path::basename (fname);
-    }
-  /* handle directory location */
-  if (Path::check (bpath, "d")) // isdir
-    {
-      String tname = Path::join (bpath, fname);
-      int err = Factory::parse_file (i18n_domain, tname);
-      if (!err)
-        return;
-    }
-  /* ensure absolute binary path */
-  if (bpath != "" && !Path::isabs (bpath))
+  if (!Path::isabs (bpath))
     bpath = Path::join (Path::cwd(), bpath);
-  /* handle executable location */
-  if (Path::check (bpath, "fx")) // executable file
+  /* extract binary dirname */
+  if (!Path::check (bpath, "d")) // isdir
     {
-      String dir = Path::dirname (bpath);
-      String tname = Path::join (dir, fname);
-      int err = Factory::parse_file (i18n_domain, tname);
-      if (!err)
-        return;
-      /* libtool work around: skip .libs or _libs */
-      while (dir.size() && dir[dir.size() - 1] == Path::dir_separator[0])
-        dir.erase (dir.size() - 1);             // strip trailing separators
-      while (dir.size() >= 2 && dir[dir.size() - 1] == '.' && dir[dir.size() - 2] == Path::dir_separator[0])
-        {
-          dir.erase (dir.size() - 2, 2);        // strip /./ self references
-          while (dir.size() && dir[dir.size() - 1] == Path::dir_separator[0])
-            dir.erase (dir.size() - 1);         // strip trailing separators
-        }
-      String bdir = Path::basename (dir);
-      if (bdir == ".libs" || bdir == "_libs")
-        {
-          tname = Path::join (Path::dirname (dir), fname);
-          int err = Factory::parse_file (i18n_domain, tname);
-          if (!err)
-            return;
-        }
+      bpath = Path::dirname (bpath);
+      /* strip .libs or _libs directories */
+      String tbase = Path::basename (bpath);
+      if (tbase == ".libs" or tbase == "_libs")
+        bpath = Path::dirname (bpath);
     }
-  /* failed to find file */
-  String assumed_path = Path::join (binary_path, fname);
-  error ("failed to load GUI: %s", assumed_path.c_str());
+  /* test load relative file_name */
+  if (1)
+    {
+      String full_name = Path::join (bpath, file_name);
+      int err = Factory::parse_file (i18n_domain, full_name);
+      if (err)
+        error ("failed to load \"%s\": %s", full_name.c_str(), string_from_errno (err).c_str());
+      return;
+    }
 }
 
 void
