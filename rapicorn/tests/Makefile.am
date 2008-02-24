@@ -13,6 +13,7 @@ XML_FILES	 =
 EXTRA_DIST	+= $(XML_FILES)
 
 # programs
+TESTS_ENVIRONMENT  = RAPICORN_VPATH=$(VPATH) # also search srcdir for XML files
 TESTS             += walker
 walker_SOURCES     = walker.cc
 walker_LDADD       = $(LDADDS)

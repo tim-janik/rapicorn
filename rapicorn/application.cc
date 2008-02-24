@@ -61,7 +61,7 @@ Application::auto_load (const String  &i18n_domain,
   if (!Path::isabs (bpath))
     bpath = Path::join (Path::cwd(), bpath);
   /* extract binary dirname */
-  if (!Path::check (bpath, "d")) // isdir
+  if (!Path::check (bpath, "d") && !Path::isdirname (bpath))
     {
       bpath = Path::dirname (bpath);
       /* strip .libs or _libs directories */
@@ -69,15 +69,21 @@ Application::auto_load (const String  &i18n_domain,
       if (tbase == ".libs" or tbase == "_libs")
         bpath = Path::dirname (bpath);
     }
+  /* construct search path list */
+  const char *gvp = getenv ("RAPICORN_VPATH");
+  StringVector spl = Path::searchpath_split (gvp ? gvp : "");
+  spl.insert (spl.begin(), bpath);
   /* test load relative file_name */
-  if (1)
+  int err0 = 0;
+  for (uint i = 0; i < spl.size(); i++)
     {
-      String full_name = Path::join (bpath, file_name);
-      int err = Factory::parse_file (i18n_domain, full_name);
-      if (err)
-        error ("failed to load \"%s\": %s", full_name.c_str(), string_from_errno (err).c_str());
-      return;
+      int err = Factory::parse_file (i18n_domain, Path::join (spl[i], file_name));
+      if (err == 0)
+        return; // success
+      if (i == 0)
+        err0 = err; // save error from bpath + file_name
     }
+  error ("failed to load \"%s\": %s", file_name.c_str(), string_from_errno (err0).c_str());
 }
 
 void
