@@ -14,22 +14,18 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-//#define TEST_VERBOSE
-#include <rapicorn-core/rapicorntests.h>
+#include <rapicorn-core/testutils.hh>
 using namespace Rapicorn;
 
 namespace {
 using namespace Rapicorn;
 
 static void
-random_tf8_and_unichar_test (void)
+random_utf8_and_unichar_test (void)
 {
-  TSTART ("utf8<->unichar");
   const uint count = init_settings().test_quick ? 30000 : 1000000;
   for (uint i = 0; i < count; i++)
     {
-      if (i % 20000 == 0)
-        TOK();
       unichar nc, uc = rand() % (0x100 << (i % 24));
       if (!uc)
         continue;
@@ -108,13 +104,11 @@ random_tf8_and_unichar_test (void)
       if (!bb)
         TCHECK (cbuffer + indx == gp);
     }
-  TDONE();
 }
 
 static void
 random_unichar_test (void)
 {
-  TSTART ("unichar classification");
   const uint count = init_settings().test_quick ? 30000 : 1000000;
   for (uint i = 0; i < count; i++)
     {
@@ -123,8 +117,6 @@ random_unichar_test (void)
       gboolean gb;
       bool bb;
       int bv, gv;
-      if (i % 20000 == 0)
-        TOK();
 
       bb = Unichar::isvalid (uc);
       gb = g_unichar_validate (uc);
@@ -206,13 +198,12 @@ random_unichar_test (void)
       TCHECK (Unichar::get_type (uc) == (int) g_unichar_type (uc));
       TCHECK (Unichar::get_break (uc) == (int) g_unichar_break_type (uc));
     }
-  TDONE();
 }
 
 static void
 uuid_tests (void)
 {
-  TSTART ("uuid string test");
+  /* uuid string test */
   TASSERT (string_is_uuid ("00000000-0000-0000-0000-000000000000") == true);
   TASSERT (string_is_uuid ("6ba7b812-9dad-11d1-80b4-00c04fd430c8") == true);
   TASSERT (string_is_uuid ("6BA7B812-9DAD-11D1-80B4-00C04FD430C8") == true);
@@ -231,8 +222,7 @@ uuid_tests (void)
   TASSERT (string_is_uuid ("6ba7b812-9dad-11d1-80b4-00c04fd430c8-") == false);
   TASSERT (string_is_uuid ("6ba7b812-9dad-11d1-80b4-00c04fd430c80") == false);
   TASSERT (string_is_uuid ("6ba7b812-9dad-11d1-80b4-00c04fd430c") == false);
-  TDONE();
-  TSTART ("uuid string cmp");
+  /* uuid string cmp */
   TASSERT (string_cmp_uuid ("00000000-0000-0000-0000-000000000000", "A425FD92-4F06-11DB-AEA9-000102E7E309") < 0);
   TASSERT (string_cmp_uuid ("A425FD92-4F06-11DB-AEA9-000102E7E309", "00000000-0000-0000-0000-000000000000") > 0);
   TASSERT (string_cmp_uuid ("00000000-0000-0000-0000-000000000000", "6ba7b812-9dad-11d1-80b4-00c04fd430c8") < 0);
@@ -248,7 +238,6 @@ uuid_tests (void)
   TASSERT (string_cmp_uuid ("A425FD92-4F06-11DB-AEA9-000102E7E309", "6ba7b812-9dad-11d1-80b4-00c04fd430c8") > 0);
   TASSERT (string_cmp_uuid ("a425fd92-4f06-11db-aea9-000102e7e309", "6BA7B812-9DAD-11D1-80B4-00C04FD430C8") > 0);
   TASSERT (string_cmp_uuid ("a425fd92-4f06-11db-aea9-000102e7e309", "6ba7b812-9dad-11d1-80b4-00c04fd430c8") > 0);
-  TDONE();
 }
 
 static void
@@ -270,12 +259,12 @@ main (int   argc,
 {
   rapicorn_init_test (&argc, &argv);
 
-  uuid_tests();
-  random_unichar_test();
-  random_tf8_and_unichar_test();
-  string_conversions();
+  Test::add ("/Strings/UUID", uuid_tests);
+  Test::add ("/Strings/random unichar", random_unichar_test);
+  Test::add ("/Strings/random UTF8", random_utf8_and_unichar_test);
+  Test::add ("/Strings/conversions", string_conversions);
 
-  return 0;
+  return Test::run();
 }
 
 /* vim:set ts=8 sts=2 sw=2: */
