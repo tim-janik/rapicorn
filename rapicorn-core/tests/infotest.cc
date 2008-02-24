@@ -66,6 +66,19 @@ test_paths()
   TASSERT (Path::dirname ("dir" RAPICORN_DIR_SEPARATOR_S "file") == "dir");
   TASSERT (Path::cwd() != "");
   TASSERT (Path::check (Path::join (Path::cwd(), "..", "tests"), "rd") == true); // ./../tests/ should be a readable directory
+  TASSERT (Path::isdirname ("") == false);
+  TASSERT (Path::isdirname ("foo") == false);
+  TASSERT (Path::isdirname ("foo/") == true);
+  TASSERT (Path::isdirname ("/foo") == false);
+  TASSERT (Path::isdirname ("foo/.") == true);
+  TASSERT (Path::isdirname ("foo/..") == true);
+  TASSERT (Path::isdirname ("foo/...") == false);
+  TASSERT (Path::isdirname ("foo/..../") == true);
+  TASSERT (Path::isdirname ("/.") == true);
+  TASSERT (Path::isdirname ("/..") == true);
+  TASSERT (Path::isdirname ("/") == true);
+  TASSERT (Path::isdirname (".") == true);
+  TASSERT (Path::isdirname ("..") == true);
 }
 
 static void

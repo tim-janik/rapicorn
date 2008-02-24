@@ -251,6 +251,23 @@ string_conversions (void)
   assert (string_to_cquote ("\1") == "\\001");
 }
 
+static void
+split_string_tests (void)
+{
+  StringVector sv;
+  sv = string_split ("a;b;c", ";");
+  assert (string_join ("//", sv) == "a//b//c");
+  assert (string_join ("_", string_split ("a;b;c;", ";")) == "a_b_c_");
+  assert (string_join ("_", string_split (";;a;b;c", ";")) == "__a_b_c");
+  assert (string_join ("+", string_split (" a  b \n c \t\n\r\f\v d")) == "a+b+c+d");
+  assert (string_join ("^", Path::searchpath_split ("one;two;three;;")) == "one^two^three");
+  assert (string_join ("^", Path::searchpath_split (";one;two;three")) == "one^two^three");
+#ifdef RAPICORN_OS_UNIX
+  assert (string_join ("^", Path::searchpath_split (":one:two:three:")) == "one^two^three");
+#endif
+  assert (string_join ("", string_split ("all  white\tspaces\nwill\vbe\fstripped")) == "allwhitespaceswillbestripped");
+}
+
 } // Anon
 
 int
@@ -263,6 +280,7 @@ main (int   argc,
   Test::add ("/Strings/random unichar", random_unichar_test);
   Test::add ("/Strings/random UTF8", random_utf8_and_unichar_test);
   Test::add ("/Strings/conversions", string_conversions);
+  Test::add ("/Strings/split strings", split_string_tests);
 
   return Test::run();
 }

@@ -178,6 +178,10 @@ String  			string_totitle           (const String &str);
 String  			string_printf            (const char *format, ...) RAPICORN_PRINTF (1, 2);
 String  			string_vprintf           (const char *format, va_list vargs);
 String  			string_strip             (const String &str);
+StringVector 			string_split             (const String       &string,
+                                                          const String       &splitter = "");
+String  			string_join              (const String       &junctor,
+                                                          const StringVector &strvec);
 bool    			string_to_bool           (const String &string);
 String  			string_from_bool         (bool value);
 uint64  			string_to_uint           (const String &string, uint base = 10);
@@ -225,6 +229,7 @@ namespace Path {
 String  dirname         (const String &path);
 String  basename        (const String &path);
 bool    isabs           (const String &path);
+bool    isdirname       (const String &path);
 String  skip_root       (const String &path);
 String  join            (const String &frag0, const String &frag1,
                          const String &frag2 = "", const String &frag3 = "",
@@ -239,6 +244,7 @@ bool    check           (const String &file,
 bool    equals          (const String &file1,
                          const String &file2);
 String  cwd             ();
+StringVector searchpath_split (const String &searchpath);
 extern const String     dir_separator;         /* 1char */
 extern const String     searchpath_separator;  /* 1char */
 } // Path

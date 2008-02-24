@@ -610,6 +610,56 @@ string_strip (const String &str)
   return String (cstr + start, end - start);
 }
 
+static StringVector
+string_whitesplit (const String &string)
+{
+  static const char whitespaces[] = " \t\n\r\f\v";
+  StringVector sv;
+  uint i, l = 0;
+  for (i = 0; i < string.size(); i++)
+    if (strchr (whitespaces, string[i]))
+      {
+        if (i > l)
+          sv.push_back (string.substr (l, i - l));
+        l = i + 1;
+      }
+  if (i > l)
+    sv.push_back (string.substr (l, i - l));
+  return sv;
+}
+
+StringVector
+string_split (const String       &string,
+              const String       &splitter)
+{
+  if (splitter == "")
+    return string_whitesplit (string);
+  StringVector sv;
+  uint i, l = 0, k = splitter.size();
+  for (i = 0; i < string.size(); i++)
+    if (string.substr (i, k) == splitter)
+      {
+        if (i >= l)
+          sv.push_back (string.substr (l, i - l));
+        l = i + k;
+      }
+  if (i >= l)
+    sv.push_back (string.substr (l, i - l));
+  return sv;
+}
+
+String
+string_join (const String       &junctor,
+             const StringVector &strvec)
+{
+  String s;
+  if (strvec.size())
+    s = strvec[0];
+  for (uint i = 1; i < strvec.size(); i++)
+    s += junctor + strvec[i];
+  return s;
+}
+
 bool
 string_to_bool (const String &string)
 {
@@ -877,6 +927,21 @@ isabs (const String &path)
   return g_path_is_absolute (path.c_str());
 }
 
+bool
+isdirname (const String &path)
+{
+  uint l = path.size();
+  if (path == "." || path == "..")
+    return true;
+  if (l >= 1 && path[l-1] == RAPICORN_DIR_SEPARATOR)
+    return true;
+  if (l >= 2 && path[l-2] == RAPICORN_DIR_SEPARATOR && path[l-1] == '.')
+    return true;
+  if (l >= 3 && path[l-3] == RAPICORN_DIR_SEPARATOR && path[l-2] == '.' && path[l-1] == '.')
+    return true;
+  return false;
+}
+
 String
 skip_root (const String &path)
 {
@@ -1047,6 +1112,24 @@ cwd ()
   String wd = gpwd;
   g_free (gpwd);
   return wd;
+}
+
+StringVector
+searchpath_split (const String &searchpath)
+{
+  StringVector sv;
+  uint i, l = 0;
+  for (i = 0; i < searchpath.size(); i++)
+    if (searchpath[i] == RAPICORN_SEARCHPATH_SEPARATOR || // ':' or ';'
+        searchpath[i] == ';') // make ';' work under windows and unix
+      {
+        if (i > l)
+          sv.push_back (searchpath.substr (l, i - l));
+        l = i + 1;
+      }
+  if (i > l)
+    sv.push_back (searchpath.substr (l, i - l));
+  return sv;
 }
 
 const String dir_separator = RAPICORN_DIR_SEPARATOR_S;
