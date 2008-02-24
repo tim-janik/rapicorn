@@ -32,7 +32,7 @@
 #include <rapicorn/layoutcontainers.hh>
 #include <rapicorn/loop.hh>
 #include <rapicorn/paintcontainers.hh>
-#include <rapicorn/paintgadgets.hh>
+#include <rapicorn/paintitems.hh>
 #include <rapicorn/painter.hh>
 #include <rapicorn/primitives.hh>
 #include <rapicorn/properties.hh>
