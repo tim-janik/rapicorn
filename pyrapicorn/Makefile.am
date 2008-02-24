@@ -9,12 +9,12 @@ pyrapicorn_cc_sources = module.cc
 
 
 # === python module ===
-pyrapicorndir                          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
-pyrapicorn_PYTHON                      = __init__.py
-pyrapicorn_LTLIBRARIES                 = pyRapicorn.la
-pyRapicorn_la_SOURCES = $(pyrapicorn_cc_sources)
-pyRapicorn_la_LDFLAGS = -module -avoid-version -no-undefined -export-symbols-regex pyRapicorn
-pyRapicorn_la_LIBADD  = $(top_builddir)/rapicorn/librapicorn@LT_RELEASE@.la
+pyrapicorndir          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
+pyrapicorn_PYTHON      = __init__.py
+pyrapicorn_LTLIBRARIES = pyRapicorn.la
+pyRapicorn_la_SOURCES  = $(pyrapicorn_cc_sources)
+pyRapicorn_la_LDFLAGS  = -module -avoid-version -no-undefined -export-symbols-regex pyRapicorn
+pyRapicorn_la_LIBADD   = $(top_builddir)/rapicorn/librapicorn@LT_RELEASE@.la
 
 
 # === tests ===
@@ -27,4 +27,4 @@ test-pyprintout:
 	@echo OK
 call-info:
 	@echo 'PYTHONPATH="$$PYTHONPATH:$(pythondir)" python -c "import @RAPICORN_NAMESPACE_NAME@"'
-check-local: test-pyprintout call-info
+installcheck-local: test-pyprintout call-info
