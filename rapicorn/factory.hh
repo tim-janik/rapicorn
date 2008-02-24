@@ -31,11 +31,11 @@ typedef std::list<String>       ArgumentList;   /* elements: key=utf8string */
 int /*-errno*/    parse_file       (const String           &i18n_domain,
                                     const String           &file_name,
                                     const String           &domain = "");
-Item&             create_item      (const String           &gadget_identifier,
+Item&             create_item      (const String           &item_identifier,
                                     const ArgumentList     &arguments = ArgumentList());
-Container&        create_container (const String           &gadget_identifier,
+Container&        create_container (const String           &container_identifier,
                                     const ArgumentList     &arguments = ArgumentList());
-Window            create_window    (const String           &gadget_identifier,
+Window            create_window    (const String           &window_identifier,
                                     const ArgumentList     &arguments = ArgumentList());
 
 /* --- item type registration --- */

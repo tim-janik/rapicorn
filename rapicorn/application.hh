@@ -39,7 +39,7 @@ public:
   static void           pixstream       (const String  &pix_name,
                                          const uint8   *static_const_pixstream);
   /* windows */
-  static Window         create_window   (const String            &gadget_identifier,
+  static Window         create_window   (const String            &window_identifier,
                                          const std::list<String> &arguments = std::list<String>());
   static vector<Window> list_windows    ();
   /* execution */
