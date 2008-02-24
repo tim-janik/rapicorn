@@ -53,7 +53,7 @@ struct Thread::ThreadWrapperInternal : public Thread {
     ThreadTable.thread_setxx (bthread, NULL);
   }
   static void
-  trampoline (void *thread_data)
+  run_static (void *thread_data)
   {
     Thread &self = *reinterpret_cast<Thread*> (thread_data);
     ref_sink (self);
@@ -128,7 +128,7 @@ Thread::start ()
   bool success = false;
   while (!success)
     {
-      success = ThreadTable.thread_start (bthread, Thread::ThreadWrapperInternal::trampoline, this);
+      success = ThreadTable.thread_start (bthread, Thread::ThreadWrapperInternal::run_static, this);
       if (!success)
         ThreadTable.thread_yield();
     }
