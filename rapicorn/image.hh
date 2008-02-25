@@ -38,6 +38,7 @@ public:
     NONE        = 0,
     UNKNOWN_FORMAT,
     READ_FAILED,        /* file io problems */
+    WRITE_FAILED,       /* file io problems */
     DATA_CORRUPT,       /* image (partially) corrupted */
     EXCESS_DIMENSIONS,  /* image too large or out of memory */
   } ErrorType;
@@ -45,6 +46,7 @@ public:
   virtual ErrorType        load_pixstream               (const uint8          *gdkp_pixstream) = 0;
   virtual ErrorType        load_pixel_image             (const PixelImage     *pimage) = 0;
   ErrorType                load_pixel_image             (const PixelImage     &pimage) { return load_pixel_image (&pimage); }
+  virtual ErrorType        save_image_file              (const String         &filename) = 0;
   virtual void             image_file                   (const String         &filename) = 0;
   virtual void             builtin_pixstream            (const String         &builtin_name) = 0;
   static const uint8*      lookup_builtin_pixstream     (const String         &builtin_name);

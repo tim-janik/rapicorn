@@ -23,9 +23,13 @@
 namespace { // Anon
 using namespace Rapicorn;
 
-static Rapicorn::Image::ErrorType       rapicorn_load_png_image (const char            *file_name,
-                                                                 Rapicorn::PixelImage **imagep,
-                                                                 std::string           &comment);
+static Rapicorn::Image::ErrorType       rapicorn_load_png_image (const char                 *file_name,
+                                                                 Rapicorn::PixelImage      **imagep,
+                                                                 std::string                &comment);
+static Rapicorn::Image::ErrorType       rapicorn_save_png_image (const String                file_name,
+                                                                 const Rapicorn::PixelImage *image,
+                                                                 const String                comment);
+
 } // Anon
 
 namespace Rapicorn {
@@ -168,6 +172,15 @@ public:
     return NONE;
   }
 protected:
+  virtual ErrorType
+  save_image_file (const String &filename)
+  {
+    if (!m_pimage)
+      return DATA_CORRUPT;
+    String comment = "Saved by Rapicorn";
+    ErrorType error = rapicorn_save_png_image (filename, m_pimage, comment);
+    return error;
+  }
   virtual void
   size_request (Requisition &requisition)
   {
@@ -620,9 +633,11 @@ png_loader_read_image (PngImage   &pimage,
             if (Rapicorn::text_convert ("UTF-8", output, "ISO-8859-1", input) &&
                 output[0] != 0)
               {
-                pimage.comment = output;
                 if (is_comment)
-                  break;
+                  {
+                    pimage.comment = output;
+                    break;
+                  }
               }
           }
       }
@@ -696,6 +711,118 @@ rapicorn_load_png_image (const char            *file_name,
   *imagep = pimage.image;       /* may be != NULL even on errors */
   comment = pimage.comment;
   /* pimage.error indicates success */
+  return pimage.error;
+}
+
+static void
+png_saving_error (png_structp     png_ptr,
+                  png_const_charp error_msg)
+{
+  PngImage *pimage = (PngImage*) png_get_error_ptr (png_ptr);
+  pimage->error = Rapicorn::Image::DATA_CORRUPT; // FIXME
+  longjmp (png_ptr->jmpbuf, 1);
+}
+
+static void
+png_saving_nop (png_structp     png_ptr,
+                png_const_charp error_msg)
+{}
+
+static Rapicorn::Image::ErrorType
+rapicorn_save_png_image (const String                file_name,
+                         const Rapicorn::PixelImage *image,
+                         const String                comment)
+{
+  const int w = image->width();
+  const int h = image->height();
+  const int depth = 8;
+  /* allocate resources */
+  PngImage pimage;
+  pimage.error = Rapicorn::Image::EXCESS_DIMENSIONS;
+  png_structp png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING, &pimage,
+                                                 png_saving_error, png_saving_nop);
+  png_infop info_ptr = !png_ptr ? NULL : png_create_info_struct (png_ptr);
+  if (!info_ptr)
+    {
+      if (png_ptr)
+        png_destroy_write_struct (&png_ptr, &info_ptr);
+      return pimage.error;
+    }
+  /* setup key=value pairs for PNG text section */
+  StringVector sv;
+  if (comment.size())
+    sv.insert (sv.begin(), "Comment=" + comment);
+  StringVector keys, values;
+  for (uint i = 0; i < sv.size(); i++)
+    {
+      uint as = sv[i].find ('=');
+      if (as > 0 && as <= 79 && sv[i].size() > as + 1)
+        {
+          String utf8string = sv[i].substr (as + 1);
+          String iso_string;
+          if (Rapicorn::text_convert ("ISO-8859-1", iso_string, "UTF-8", utf8string) && iso_string.size())
+            {
+              keys.push_back (sv[i].substr (0, as));
+              values.push_back (iso_string);
+            }
+        }
+    }
+  /* save stack for longjmp() in png_saving_error() */
+  pimage.error = Rapicorn::Image::WRITE_FAILED;
+  png_textp text_ptr = NULL;
+  FILE *fp = fopen (file_name.c_str(), "wb");
+  if (fp && setjmp (png_ptr->jmpbuf) == 0)
+    {
+      /* write pixel image */
+      pimage.error = Rapicorn::Image::WRITE_FAILED;
+      text_ptr = new png_text[sv.size()];
+      memset (text_ptr, 0, sizeof (*text_ptr) * sv.size());
+      uint num_text;
+      for (num_text = 0; num_text < keys.size(); num_text++)
+        {
+          text_ptr[num_text].compression = PNG_TEXT_COMPRESSION_zTXt;
+          text_ptr[num_text].key = const_cast<char*> (keys[num_text].c_str());
+          text_ptr[num_text].text = const_cast<char*> (values[num_text].c_str());
+          text_ptr[num_text].text_length = values[num_text].size();
+        }
+      png_set_text (png_ptr, info_ptr, text_ptr, num_text);
+      png_set_compression_level (png_ptr, 9);
+      png_set_IHDR (png_ptr, info_ptr, w, h, depth,
+                    PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
+                    PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+      png_color_8 sig_bit;
+      sig_bit.red = sig_bit.green = sig_bit.blue = sig_bit.alpha = depth;
+      png_set_sBIT (png_ptr, info_ptr, &sig_bit);
+      png_set_shift (png_ptr, &sig_bit);
+      png_set_packing (png_ptr);
+#if     __BYTE_ORDER == __LITTLE_ENDIAN
+      png_set_bgr (png_ptr);                            /* request ARGB as little-endian: BGRA */
+#elif   __BYTE_ORDER == __BIG_ENDIAN
+      png_set_swap_alpha (png_ptr);                     /* request big-endian ARGB */
+#else
+#error  Unknown endianess type
+#endif
+      /* perform image IO */
+      png_init_io (png_ptr, fp);
+      png_write_info (png_ptr, info_ptr);
+      for (int y = 0; y < h; y++)
+        {
+          png_bytep row_ptr = (png_bytep) image->row (y);
+          png_write_rows (png_ptr, &row_ptr, 1);
+        }
+      png_write_end (png_ptr, info_ptr);
+      pimage.error = Rapicorn::Image::NONE;
+    }
+  png_destroy_write_struct (&png_ptr, &info_ptr);
+  if (text_ptr)
+    delete[] text_ptr;
+  if (fp)
+    {
+      if (fclose (fp) != 0 && !pimage.error)
+        pimage.error = Rapicorn::Image::WRITE_FAILED;
+      if (pimage.error)
+        unlink (file_name.c_str());
+    }
   return pimage.error;
 }
 
