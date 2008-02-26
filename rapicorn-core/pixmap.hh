@@ -27,17 +27,17 @@ class Pixbuf {
 protected:
   const int       m_width, m_height;
   virtual        ~Pixbuf    ();
-  explicit        Pixbuf    (uint _width, uint _height);
+  explicit        Pixbuf    (uint _width, uint _height, int alignment = -1);
 public:
   int             width     () const { return m_width; }
   int             height    () const { return m_height; }
   const uint32*   row       (uint y) const; /* endian dependant ARGB integers */
-  bool            compare   (const Pixbuf &other,
-                             uint x, uint y, int width, int height,
+  bool            compare   (const Pixbuf &source,
+                             uint sx, uint sy, int swidth, int sheight,
                              uint tx, uint ty,
                              double *averrp = NULL, double *maxerrp = NULL,
                              double *nerrp = NULL, double *npixp = NULL) const;
-  static bool     try_alloc (uint width, uint height);
+  static bool     try_alloc (uint width, uint height, int alignment = -1);
 };
 
 class Pixmap : public Pixbuf, public virtual ReferenceCountImpl {
@@ -45,13 +45,18 @@ class Pixmap : public Pixbuf, public virtual ReferenceCountImpl {
 protected:
   virtual        ~Pixmap    ();
 public:
-  explicit        Pixmap    (uint _width, uint _height);
+  explicit        Pixmap    (uint _width, uint _height, int alignment = -1);
   String          comment   () const    { return m_comment; }
   void            comment   (const String &_comment);
   uint32*         row       (uint y)    { return const_cast<uint32*> (Pixbuf::row (y)); }
+  using           Pixbuf::row;
   bool            save_png  (const String &filename);   /* assigns errno */
+  void            copy      (const Pixmap &source,
+                             uint sx, uint sy, int swidth, int sheight,
+                             uint tx, uint ty);
   static Pixmap*  load_png  (const String &filename,    /* assigns errno */
                              bool          tryrepair = false);
+  static Pixmap*  pixstream (const uint8  *pixstream);  /* assigns errno */
 };
 
 } // Rapicorn

@@ -44,7 +44,7 @@ drawable_draw (Display  &display,
   painter.draw_simple_line (area.x + 75, area.y + 120, area.x + 230, area.y + 110, lthickness * 0.5, fg);
 }
 
-#include "testpixs.c" // alpha_rle alpha_raw rgb_rle rgb_raw
+#include "../rapicorn-core/tests/testpixs.c" // alpha_rle alpha_raw rgb_rle rgb_raw
 
 extern "C" int
 main (int   argc,

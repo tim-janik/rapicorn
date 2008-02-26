@@ -20,7 +20,6 @@
 
 #define MAXDIM                          (20480) // MAXDIM*MAXDIM < 536870912
 #define ALIGN_SIZE(size,pow2align)      ((size + (pow2align - 1)) & -pow2align)
-#define ALIGN_STRIDE(size)              ALIGN_SIZE (size, 16)
 
 namespace {
 using namespace Rapicorn;
@@ -34,13 +33,47 @@ static bool     anon_save_png (const String  filename,
 
 namespace Rapicorn {
 
+static inline int /* 0 or 1..64 */
+fmsb (uint64 val)
+{
+  if (val >> 32)
+    return 32 + fmsb (val >> 32);
+  int nb = 32;
+  do
+    {
+      nb--;
+      if (val & (1U << nb))
+        return nb + 1;  /* 1..32 */
+    }
+  while (nb > 0);
+  return 0; /* none found */
+}
+
+static inline uint64
+upper_power2 (uint64 number)
+{
+  return number ? 1 << fmsb (number - 1) : 0;
+}
+
+static int
+align_rowstride (uint width,
+                 int  alignment)
+{
+  if (alignment < 0)
+    alignment = 16;     // default
+  else
+    alignment = upper_power2 (alignment);
+  return alignment ? ALIGN_SIZE (width, alignment) : width;
+}
+
 bool
 Pixbuf::try_alloc (uint width,
-                   uint height)
+                   uint height,
+                   int  alignment)
 {
-  if (width <= MAXDIM && height <= MAXDIM)
+  if (width && height && width <= MAXDIM && height <= MAXDIM)
     {
-      uint64 rowstride = ALIGN_STRIDE (width);
+      uint64 rowstride = align_rowstride (width, alignment);
       uint64 total = rowstride * height;
       uint32 *pixels = new uint32[total];
       if (pixels)
@@ -54,8 +87,9 @@ Pixbuf::try_alloc (uint width,
 }
 
 Pixbuf::Pixbuf (uint _width,
-                uint _height) :
-  m_pixels (NULL), m_rowstride (ALIGN_STRIDE (_width)),
+                uint _height,
+                int  alignment) :
+  m_pixels (NULL), m_rowstride (align_rowstride (_width, alignment)),
   m_width (_width), m_height (_height)
 {
   assert (_width <= MAXDIM);
@@ -86,8 +120,8 @@ Pixbuf::~Pixbuf ()
 #define SQR(x)  ((x) * (x))
 
 bool
-Pixbuf::compare (const Pixbuf &other,
-                 uint x, uint y, int width, int height,
+Pixbuf::compare (const Pixbuf &source,
+                 uint sx, uint sy, int swidth, int sheight,
                  uint tx, uint ty,
                  double *averrp, double *maxerrp,
                  double *nerrp, double *npixp) const
@@ -96,26 +130,26 @@ Pixbuf::compare (const Pixbuf &other,
   if (maxerrp) *maxerrp = 0;
   if (nerrp) *nerrp = 0;
   if (npixp) *npixp = 0;
-  if (x >= (uint) m_width || tx >= (uint) other.m_width ||
-      y >= (uint) m_height || ty >= (uint) other.m_height)
+  if (sx >= (uint) source.width() || sy >= (uint) source.height() ||
+      tx >= (uint) width() || ty >= (uint) height())
     return false;
-  if (width < 0)
-    width = m_width;
-  if (height < 0)
-    height = m_height;
-  width = MIN (MIN (m_width - (int) x, other.m_width - (int) tx), width);
-  height = MIN (MIN (m_height - (int) y, other.m_height - (int) ty), height);
-  const uint npix = height * width;
+  if (swidth < 0)
+    swidth = source.width();
+  if (sheight < 0)
+    sheight = source.height();
+  swidth = MIN (MIN (width() - (int) tx, source.width() - (int) sx), swidth);
+  sheight = MIN (MIN (height() - (int) ty, source.height() - (int) sy), sheight);
+  const uint npix = sheight * swidth;
   uint nerr = 0;
   int maxerr2 = 0;
-  for (int k = 0; k < height; k++)
+  for (int k = 0; k < sheight; k++)
     {
-      const uint32 *r1 = row (y + k);
-      const uint32 *r2 = other.row (ty + k);
-      for (int j = 0; j < width; j++)
-        if (r1[x + j] != r2[tx + j])
+      const uint32 *r1 = row (ty + k);
+      const uint32 *r2 = source.row (sy + k);
+      for (int j = 0; j < swidth; j++)
+        if (r1[tx + j] != r2[sx + j])
           {
-            int8 *p1 = (int8*) &r1[x + j], *p2 = (int8*) &r2[tx + j];
+            int8 *p1 = (int8*) &r1[tx + j], *p2 = (int8*) &r2[sx + j];
             maxerr2 = MAX (maxerr2,
                            SQR (p1[0] - p2[0]) + SQR (p1[1] - p2[1]) +
                            SQR (p1[2] - p2[2]) + SQR (p1[3] - p2[3]));
@@ -135,8 +169,9 @@ Pixbuf::compare (const Pixbuf &other,
 }
 
 Pixmap::Pixmap (uint _width,
-                uint _height) :
-  Pixbuf (_width, _height)
+                uint _height,
+                int  alignment) :
+  Pixbuf (_width, _height, alignment)
 {}
 
 void
@@ -171,6 +206,29 @@ Pixmap::~Pixmap ()
   m_comment.erase();
 }
 
+void
+Pixmap::copy (const Pixmap &source,
+              uint sx, uint sy,
+              int swidth, int sheight,
+              uint tx, uint ty)
+{
+  if (sx >= (uint) source.width() || sy >= (uint) source.height() ||
+      tx >= (uint) width() || ty >= (uint) height())
+    return;
+  if (swidth < 0)
+    swidth = source.width();
+  if (sheight < 0)
+    sheight = source.height();
+  swidth = MIN (MIN (width() - (int) tx, source.width() - (int) sx), swidth);
+  sheight = MIN (MIN (height() - (int) ty, source.height() - (int) sy), sheight);
+  for (int j = 0; j < sheight; j++)
+    {
+      uint32 *r1 = row (ty + j);
+      const uint32 *r2 = source.row (sy + j);
+      memcpy (r1 + tx, r2 + sx, sizeof (r1[0]) * swidth);
+    }
+}
+
 static void
 pixmap_fill (Pixmap *pixmap,
              uint32  pixel)
@@ -199,6 +257,147 @@ pixmap_border (Pixmap *pixmap,
       row[0] = pixel;
       row[pixmap->width() - 1] = pixel;
     }
+}
+
+static int /* errno */
+fill_pixmap_from_pixstream (Pixmap      &pixmap,
+                            bool         has_alpha,
+                            bool         rle_encoded,
+                            uint         pixdata_width,
+                            uint         pixdata_height,
+                            const uint8 *encoded_pixdata)
+{
+  if (pixdata_width < 1 || pixdata_height < 1)
+    return EINVAL;
+  uint bpp = has_alpha ? 4 : 3;
+  if (!encoded_pixdata)
+    return EINVAL;
+
+  if (rle_encoded)
+    {
+      const uint8 *rle_buffer = encoded_pixdata;
+      uint32 *image_buffer = pixmap.row (0); // depends on alignment=0
+      uint32 *image_limit = image_buffer + pixdata_width * pixdata_height;
+
+      while (image_buffer < image_limit)
+        {
+          uint length = *(rle_buffer++);
+          if ((length & ~128) == 0)
+            return EINVAL;
+          bool check_overrun = false;
+          if (length & 128)
+            {
+              length = length - 128;
+              check_overrun = image_buffer + length > image_limit;
+              if (check_overrun)
+                length = image_limit - image_buffer;
+              if (bpp < 4)
+                while (length--)
+                  *image_buffer++ = (0xff << 24) | (rle_buffer[0] << 16) | (rle_buffer[1] << 8) | rle_buffer[2];
+              else
+                while (length--)
+                  *image_buffer++ = (rle_buffer[3] << 24) | (rle_buffer[0] << 16) | (rle_buffer[1] << 8) | rle_buffer[2];
+              rle_buffer += bpp;
+            }
+          else
+            {
+              check_overrun = image_buffer + length > image_limit;
+              if (check_overrun)
+                length = image_limit - image_buffer;
+              if (bpp < 4)
+                while (length--)
+                  {
+                    *image_buffer++ = (0xff << 24) | (rle_buffer[0] << 16) | (rle_buffer[1] << 8) | rle_buffer[2];
+                    rle_buffer += 3;
+                  }
+              else
+                while (length--)
+                  {
+                    *image_buffer++ = (rle_buffer[3] << 24) | (rle_buffer[0] << 16) | (rle_buffer[1] << 8) | rle_buffer[2];
+                    rle_buffer += 4;
+                  }
+            }
+          if (check_overrun)
+            return EINVAL;
+        }
+    }
+  else
+    for (uint y = 0; y < pixdata_height; y++)
+      {
+        uint32 *row = pixmap.row (y);
+        uint length = pixdata_width;
+        if (bpp < 4)
+          while (length--)
+            {
+              *row++ = (0xff << 24) | (encoded_pixdata[0] << 16) | (encoded_pixdata[1] << 8) | encoded_pixdata[2];
+              encoded_pixdata += 3;
+            }
+        else
+          while (length--)
+            {
+              *row++ = (encoded_pixdata[3] << 24) | (encoded_pixdata[0] << 16) | (encoded_pixdata[1] << 8) | encoded_pixdata[2];
+              encoded_pixdata += 4;
+            }
+      }
+
+  return 0;
+}
+
+static inline uint32
+next_uint32 (const uint8 **streamp)
+{
+  const uint8 *stream = *streamp;
+  uint32 result = (stream[0] << 24) + (stream[1] << 16) + (stream[2] << 8) + stream[3];
+  *streamp = stream + 4;
+  return result;
+}
+
+Pixmap*
+Pixmap::pixstream (const uint8 *pixstream)
+{
+  errno = EINVAL;
+  return_val_if_fail (pixstream != NULL, NULL);
+
+  errno = ENODATA;
+  const uint8 *s = pixstream;
+  if (strncmp ((char*) s, "GdkP", 4) != 0)
+    return NULL;
+  s += 4;
+
+  errno = ENODATA;
+  uint len = next_uint32 (&s);
+  if (len < 24)
+    return NULL;
+
+  errno = ENODATA;
+  uint type = next_uint32 (&s);
+  if (type != 0x02010001 &&     /* RLE/8bit/RGB */
+      type != 0x01010001 &&     /* RAW/8bit/RGB */
+      type != 0x02010002 &&     /* RLE/8bit/RGBA */
+      type != 0x01010002)       /* RAW/8bit/RGBA */
+    return NULL;
+
+  errno = ENOMEM;
+  next_uint32 (&s); /* rowstride */
+  uint width = next_uint32 (&s);
+  uint height = next_uint32 (&s);
+  if (width < 1 || height < 1)
+    return NULL;
+
+  errno = ENOMEM;
+  if (!Pixbuf::try_alloc (width, height, 0))
+    return NULL;
+  Pixmap *pixmap = new Pixmap (width, height, 0);
+  errno = fill_pixmap_from_pixstream (*pixmap,
+                                      (type & 0xff) == 0x02,
+                                      (type >> 24) == 0x02,
+                                      width, height, s);
+  if (errno == 0)
+    return pixmap;
+  int saved = errno;
+  unref (ref_sink (pixmap));
+  errno = saved;
+  return NULL;
 }
 
 } // Rapicorn

@@ -99,6 +99,41 @@ test_pixmap_try_alloc (void)
   assert (Pixbuf::try_alloc (65536, 65536) == false);
 }
 
+#include "testpixs.c" // defines alpha_rle, alpha_raw, rgb_rle, rgb_raw
+
+static void
+test_pixstreams (void)
+{
+  /* decode pixstreams */
+  Pixmap *pixmap1 = Pixmap::pixstream (alpha_rle);
+  if (!pixmap1)
+    error ("%s(): failed to decode pixstream: %s", STRFUNC, string_from_errno (errno).c_str());
+  Pixmap *pixmap2 = Pixmap::pixstream (alpha_raw);
+  if (!pixmap2)
+    error ("%s(): failed to decode pixstream: %s", STRFUNC, string_from_errno (errno).c_str());
+  Pixmap *pixmap3 = Pixmap::pixstream (rgb_rle);
+  if (!pixmap3)
+    error ("%s(): failed to decode pixstream: %s", STRFUNC, string_from_errno (errno).c_str());
+  Pixmap *pixmap4 = Pixmap::pixstream (rgb_raw);
+  if (!pixmap4)
+    error ("%s(): failed to decode pixstream: %s", STRFUNC, string_from_errno (errno).c_str());
+  /* concat pixstreams */
+  Pixmap *pixall = new Pixmap (32, 128);
+  pixall->copy (*pixmap1, 0, 0, -1, -1, 0,  0);
+  pixall->copy (*pixmap2, 0, 0, -1, -1, 0, 32);
+  pixall->copy (*pixmap3, 0, 0, -1, -1, 0, 64);
+  pixall->copy (*pixmap4, 0, 0, -1, -1, 0, 96);
+  /* load reference */
+  const char *reference = "testpixs.png";
+  Pixmap *pixref = Pixmap::load_png (reference);
+  if (!pixref || errno)
+    error ("failed to load \"%s\": %s", reference, string_from_errno (errno).c_str());
+  ref_sink (pixmap2);
+  /* check equality */
+  bool cmp = pixall->compare (*pixref, 0, 0, -1, -1, 0, 0);
+  assert (cmp == false);
+}
+
 } // Anon
 
 int
@@ -110,6 +145,7 @@ main (int   argc,
   Test::add ("Pixmap/compare", test_pixmap_compare);
   Test::add ("Pixmap/save & load", test_pixmap_save_load);
   Test::add ("Pixmap/try-alloc", test_pixmap_try_alloc);
+  Test::add ("Pixmap/pixstreams", test_pixstreams);
 
   return Test::run();
 }
