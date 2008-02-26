@@ -207,18 +207,6 @@ pixmap_border (Pixmap *pixmap,
 
 namespace {
 
-static bool
-text_convert (const char        *to_charset,    // FIXME
-              std::string       &output_string,
-              const char        *from_charset,
-              const std::string &input_string,
-              const char        *fallback_charset = "ISO-8859-1",
-              const std::string &output_mark = "")
-{
-  output_string = input_string;
-  return true;
-}
-
 struct PngContext {
   Pixmap    *pixmap;
   int        error;

@@ -224,6 +224,14 @@ int                             string_cmp_uuid          (const String &uuid_str
 String  string_from_pretty_function_name                 (const char *gnuc_pretty_function);
 String  string_to_cquote                                 (const String &str);
 
+/* --- charset conversions --- */
+bool    text_convert    (const String &to_charset,
+                         String       &output_string,
+                         const String &from_charset,
+                         const String &input_string,
+                         const String &fallback_charset = "ISO-8859-15",
+                         const String &output_mark = "");
+
 /* --- file/path functionality --- */
 namespace Path {
 String  dirname         (const String &path);

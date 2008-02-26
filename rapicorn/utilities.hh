@@ -58,14 +58,6 @@ inline double min     (int64  a, double b) { return min<double> (a, b); }
 inline double max     (double a, int64  b) { return max<double> (a, b); }
 inline double max     (int64  a, double b) { return max<double> (a, b); }
 
-/* --- text encoding --- */
-bool    text_convert    (const char        *to_charset,
-                         std::string       &output_string,
-                         const char        *from_charset,
-                         const std::string &input_string,
-                         const char        *fallback_charset = "ISO-8859-1",
-                         const std::string &output_mark = "");
-
 /* --- exceptions --- */
 struct Exception : std::exception {
 public:

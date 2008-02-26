@@ -268,6 +268,34 @@ split_string_tests (void)
   assert (string_join ("", string_split ("all  white\tspaces\nwill\vbe\fstripped")) == "allwhitespaceswillbestripped");
 }
 
+static void
+test_string_charsets (void)
+{
+  String output;
+  bool res;
+  res = text_convert ("UTF-8", output, "ASCII", "Hello");
+  assert (res && output == "Hello");
+  /* latin1 <-> UTF-8 */
+  String latin1_umlauts = "\xc4 \xd6 \xdc \xdf \xe4 \xf6 \xfc";
+  String utf8_umlauts = "Ä Ö Ü ß ä ö ü";
+  res = text_convert ("UTF-8", output, "LATIN1", latin1_umlauts);
+  assert (res && output == utf8_umlauts);
+  res = text_convert ("LATIN1", output, "UTF-8", utf8_umlauts);
+  assert (res && output == latin1_umlauts);
+  /* assert failinmg conversions */
+  res = text_convert ("invalidNOTEXISTINGcharset", output, "UTF-8", "Hello", "");
+  assert (res == false);
+  /* check fallback charset (ISO-8859-15) */
+  res = text_convert ("UTF-8", output, "ASCII", "Euro: \xa4");
+  assert (res && output == "Euro: \xe2\x82\xac");
+  /* check alias LATIN9 -> ISO-8859-15 */
+  res = text_convert ("UTF-8", output, "LATIN9", "9/15: \xa4", "");
+  assert (res && output == "9/15: \xe2\x82\xac");
+  /* check invalid-character marks */
+  res = text_convert ("UTF-8", output, "ASCII", "non-ascii \xa4 char", "", "[?]");
+  assert (res && output == "non-ascii [?] char");
+}
+
 } // Anon
 
 int
@@ -281,6 +309,7 @@ main (int   argc,
   Test::add ("/Strings/random UTF8", random_utf8_and_unichar_test);
   Test::add ("/Strings/conversions", string_conversions);
   Test::add ("/Strings/split strings", split_string_tests);
+  Test::add ("/Strings/charsets", test_string_charsets);
 
   return Test::run();
 }
