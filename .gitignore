@@ -26,8 +26,9 @@ intltool-update.in
 libtool
 ltmain.sh
 missing
+py-compile
 mkinstalldirs
 po-helper.sh
-rapicorn[0-9][0-9][0-9].pc
+rapicorn.[0-9].[0-9].pc
 report.out
 stamp-h1
