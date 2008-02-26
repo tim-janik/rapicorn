@@ -26,7 +26,7 @@ namespace Test {
 #undef TASSERT
 #define TASSERT TCHECK
 
-
+/* test maintenance */
 int     run             (void);
 bool    verbose         (void);
 bool    quick           (void);
@@ -47,6 +47,16 @@ void    add             (const String &testname,
 {
   add_internal (testname, (void(*)(void*)) test_func, (void*) data);
 }
+
+/* random numbers */
+char    rand_bit                (void);
+int32   rand_int                (void);
+int32   rand_int_range          (int32          begin,
+                                 int32          end);
+double  test_rand_double        (void);
+double  test_rand_double_range  (double          range_start,
+                                 double          range_end);
+
 
 } // Test
 } // Rapicorn

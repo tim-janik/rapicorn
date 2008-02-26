@@ -12,6 +12,7 @@ rapicorn_public_headers = $(strip	\
         rapicorncpu.hh	rapicorndebugtools.hh	rapicornthread.hh	rapicornutils.hh  \
         rapicornmsg.hh	rapicornsignal.hh	rapicornmath.hh		rapicornutf8.hh   \
         rapicornxml.hh	markup.hh		enumdefs.hh		testutils.hh \
+        pixmap.hh	\
 	$(rapicorn_impl_headers)	\
 	rapicorncdefs.h	rapicorntests.h	\
 )
@@ -23,9 +24,10 @@ rapicorn_generated_headers = $(strip	\
 )
 rapicorn_cc_sources = $(strip 		\
         rapicornthreadimpl.cc		\
-        rapicorncpu.cc    rapicorndebugtools.cc	rapicornthread.cc	rapicornutils.cc  \
-        rapicornmsg.cc    rapicornsignal.cc	rapicornmath.cc		rapicornutf8.cc   \
-        rapicornxml.cc    markup.cc		enumdefs.cc		testutils.cc \
+        rapicorncpu.cc  rapicorndebugtools.cc	rapicornthread.cc	rapicornutils.cc  \
+        rapicornmsg.cc  rapicornsignal.cc	rapicornmath.cc		rapicornutf8.cc   \
+        rapicornxml.cc  markup.cc		enumdefs.cc		testutils.cc \
+        pixmap.cc	\
 )
 rapicorn_private_files = $(strip	\
         rapicornsignalslot.hh		\

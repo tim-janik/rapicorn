@@ -45,3 +45,6 @@ xmltest_LDADD      = $(LDADDS)
 TESTS             += markup
 markup_SOURCES     = markup.cc
 markup_LDADD       = $(LDADDS)
+TESTS             += pixmaps
+pixmaps_SOURCES    = pixmaps.cc
+pixmaps_LDADD      = $(LDADDS)

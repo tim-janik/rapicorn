@@ -22,6 +22,7 @@
 #include <rapicorn-core/rapicorncpu.hh>
 #include <rapicorn-core/rapicorndebugtools.hh>
 #include <rapicorn-core/markup.hh>
+#include <rapicorn-core/pixmap.hh>
 #include <rapicorn-core/rapicornmath.hh>
 #include <rapicorn-core/rapicornmsg.hh>
 #include <rapicorn-core/rapicornsignal.hh>

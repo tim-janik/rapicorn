@@ -92,6 +92,37 @@ perf (void)
   return init_settings().test_perf;
 }
 
+char
+rand_bit (void)
+{
+  return 0 != (rand_int() & (1 << 15));
+}
+
+int32
+rand_int (void)
+{
+  return g_random_int(); // g_test_rand_int();
+}
+
+int32
+rand_int_range (int32 begin,
+                int32 end)
+{
+  return g_random_int_range (begin, end); // g_test_rand_int_range()
+}
+
+double
+test_rand_double (void)
+{
+  return g_random_double(); // g_test_rand_double()
+}
+
+double
+test_rand_double_range (double range_start,
+                        double range_end)
+{
+  return g_random_double_range (range_start, range_end); // g_test_rand_double_range()
+}
 
 } // Test
 } // Rapicorn
