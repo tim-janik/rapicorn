@@ -90,7 +90,7 @@ void
 Application::pixstream (const String  &pix_name,
                         const uint8   *static_const_pixstream)
 {
-  Image::register_builtin_pixstream (pix_name, static_const_pixstream);
+  Pixmap::add_stock (pix_name, static_const_pixstream);
 }
 
 static uint     exit_code = 0;

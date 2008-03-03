@@ -74,14 +74,14 @@
     <VBox>
       <HBox>
 	<Label markup-text="Inlined images, RAW/RLE: " />
-	<Image builtin_pixstream="testimage-rgb-raw" />
-	<Image builtin_pixstream="testimage-rgb-rle" />
+	<Image stock-pixmap="testimage-rgb-raw" />
+	<Image stock-pixmap="testimage-rgb-rle" />
       </HBox>
-      <HBox> <Label markup-text="Broken icon: " /> <Image builtin-pixstream="!!! rapicorn-trigger-broken-image (non-pixstream-name-32hd_~^) !!!" /></HBox>
+      <HBox> <Label markup-text="Broken icon: " /> <Image stock-pixmap="!!! rapicorn-trigger-broken-image (non-pixstream-name-32hd_~^) !!!" /></HBox>
       <HBox>
 	<Label markup-text="Inlined images with Alpha: " />
-	<Image builtin_pixstream="testimage-alpha-raw" />
-	<Image builtin_pixstream="testimage-alpha-rle" />
+	<Image stock-pixmap="testimage-alpha-raw" />
+	<Image stock-pixmap="testimage-alpha-rle" />
       </HBox>
       <HBox>
 	<Label markup-text="Load PNG image file: " />

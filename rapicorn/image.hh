@@ -21,39 +21,16 @@
 
 namespace Rapicorn {
 
-class PixelImage : public virtual ReferenceCountImpl {
-public:
-  virtual int           width   () const = 0;
-  virtual int           height  () const = 0;
-  virtual const uint32* row     (uint y) const = 0; /* endian dependant ARGB integers */
-};
-
 class Image : public virtual Item {
-  virtual String        image_file        () const { RAPICORN_ASSERT_NOT_REACHED(); }
-  virtual String        builtin_pixstream () const { RAPICORN_ASSERT_NOT_REACHED(); }
+  virtual String        image_file      () const { RAPICORN_ASSERT_NOT_REACHED(); }
+  virtual String        stock_pixmap    () const { RAPICORN_ASSERT_NOT_REACHED(); }
 protected:
   const PropertyList&   list_properties ();
 public:
-  typedef enum {
-    NONE        = 0,
-    UNKNOWN_FORMAT,
-    READ_FAILED,        /* file io problems */
-    WRITE_FAILED,       /* file io problems */
-    DATA_CORRUPT,       /* image (partially) corrupted */
-    EXCESS_DIMENSIONS,  /* image too large or out of memory */
-  } ErrorType;
-  virtual ErrorType        load_image_file              (const String         &filename) = 0;
-  virtual ErrorType        load_pixstream               (const uint8          *gdkp_pixstream) = 0;
-  virtual ErrorType        load_pixel_image             (const PixelImage     *pimage) = 0;
-  ErrorType                load_pixel_image             (const PixelImage     &pimage) { return load_pixel_image (&pimage); }
-  virtual ErrorType        save_image_file              (const String         &filename) = 0;
-  virtual void             image_file                   (const String         &filename) = 0;
-  virtual void             builtin_pixstream            (const String         &builtin_name) = 0;
-  static const uint8*      lookup_builtin_pixstream     (const String         &builtin_name);
-  static void              register_builtin_pixstream   (const String         &builtin_name,
-                                                         const uint8   * const static_const_pixstream);
-  static const PixelImage* pixel_image_from_pixstream   (const uint8          *gdkp_pixstream,
-                                                         ErrorType            *error_type = NULL);
+  virtual void             pixmap       (Pixmap       *pixmap) = 0;
+  virtual Pixmap*          pixmap       (void) = 0;
+  virtual void /*errno*/   stock_pixmap (const String &stock_name) = 0;
+  virtual void /*errno*/   image_file   (const String &filename) = 0;
 };
 
 } // Rapicorn

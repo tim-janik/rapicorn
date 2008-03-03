@@ -15,6 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "pixmap.hh"
+#include "rapicornthread.hh"
 #include <errno.h>
 #include <math.h>
 
@@ -398,6 +399,28 @@ Pixmap::pixstream (const uint8 *pixstream)
   unref (ref_sink (pixmap));
   errno = saved;
   return NULL;
+}
+
+static Mutex stock_mutex;
+static map <const String, const uint8*> stock_map;
+
+void
+Pixmap::add_stock (const String &stock_name,
+                   const uint8  *pixstream)
+{
+  AutoLocker locker (stock_mutex);
+  stock_map[stock_name] = pixstream;
+}
+
+Pixmap*
+Pixmap::stock (const String &stock_name)
+{
+  const uint8 *pixstream = NULL;
+  {
+    AutoLocker locker (stock_mutex);
+    pixstream = stock_map[stock_name];
+  }
+  return pixstream ? Pixmap::pixstream (pixstream) : NULL;
 }
 
 } // Rapicorn

@@ -57,6 +57,9 @@ public:
   static Pixmap*  load_png  (const String &filename,    /* assigns errno */
                              bool          tryrepair = false);
   static Pixmap*  pixstream (const uint8  *pixstream);  /* assigns errno */
+  static Pixmap*  stock     (const String &stock_name);
+  static void     add_stock (const String &stock_name,
+                             const uint8  *pixstream);
 };
 
 } // Rapicorn
