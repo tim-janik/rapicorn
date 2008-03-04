@@ -56,6 +56,19 @@ test_store1_array ()
   assert (s1->count() == 1);
 }
 
+static void
+test_store1_row_test ()
+{
+  /* creating a model 1D test:
+   * 1: create array type with fixed field count
+   * 2: create list store from type
+   * 3: create row with random field values
+   * 4: add row to list
+   * 5: fetc row
+   * 6: verify altered field values
+   */
+}
+
 } // Anon
 
 int
@@ -66,6 +79,7 @@ main (int   argc,
 
   Test::add ("/Store/string-row", test_store1_string_row);
   Test::add ("/Store/array-row", test_store1_array);
+  Test::add ("/Store/row-test", test_store1_row_test);
 
   return Test::run();
 }
