@@ -22,7 +22,7 @@ PLIC_VERSION=\
 import yapps2runtime as runtime
 
 keywords = ( 'TRUE', 'True', 'true', 'FALSE', 'False', 'false',
-             'namespace', 'enum', 'enumeration', 'Const', 'record',
+             'namespace', 'enum', 'enumeration', 'Const', 'record', 'sequence',
              'Bool', 'Num', 'Real', 'String' )
 
 class YYGlobals:
@@ -72,6 +72,13 @@ def add_record (name, rfields):
         raise NameError ('duplicate record field name: ' + field[1])
       fdict[field[1]] = field[0]
     yy.dict[name] = ('record', tuple (rfields))
+def add_sequence (name, sfields):
+    AIn (name)
+    if len (sfields) < 1:
+      raise AttributeError ('invalid empty sequence: %s' % name)
+    if len (sfields) > 1:
+      raise AttributeError ('invalid multiple fields in sequence: %s' % name)
+    yy.dict[name] = ('sequence', tuple (sfields))
 def quote (qstring):
     import rfc822
     return '"' + rfc822.quote (qstring) + '"'
@@ -122,6 +129,7 @@ rule declaration:
           ';'
         | const_assignment
         | enumeration
+        | sequence
         | record
 
 rule enumeration:
@@ -164,6 +172,13 @@ rule variable_decls:
         BUILTINTYPE IDENT                       {{ vtype = BUILTINTYPE; vars = [ (vtype, IDENT) ] }}
         ( ',' IDENT                             {{ vars = vars + [ (vtype, IDENT) ] }}
         )* ';'                                  {{ return vars }}
+
+rule sequence:
+        'sequence' IDENT '{'                    {{ sfields = [] }}
+          ( variable_decls                      {{ if len (sfields): raise OverflowError ("too many fields in sequence") }}
+                                                {{ sfields = sfields + variable_decls }}
+          )
+        '}' ';'                                 {{ add_sequence (IDENT, sfields) }}
 
 rule const_assignment:
         'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yy.dict[IDENT] = ('Const', expression); }}

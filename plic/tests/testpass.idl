@@ -141,5 +141,9 @@ record XFooRecord {
 // invalid: record DupRecord { Num a, b; Num c, b; };
 // invalid: record EmptyRecord { };
 
+// sequence tests
+sequence XFooSequence {
+  Bool   single_bool;
+};
 
 } // MandatoryNamespace

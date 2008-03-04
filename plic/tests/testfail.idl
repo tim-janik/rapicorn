@@ -17,3 +17,7 @@ enum ExtensiveEnum { record, }; // keyword as enum value
 enum ExtensiveEnum { Foo; }; // semicolon in enum
 
 Const Var = 0; enum ExtensiveEnum { Var }; // constant in enum
+
+sequence EmptySequence { }; // sequence needs 1 field
+
+sequence MultiFieldSequence { Bool one; Num toomany; }; // sequence needs 1 field
