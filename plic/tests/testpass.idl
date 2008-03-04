@@ -146,4 +146,13 @@ sequence XFooSequence {
   Bool   single_bool;
 };
 
+// test nested types
+record NestedTypesRec {
+  XFooRecord    rec;
+  XFooSequence  seq;
+};
+sequence NestedTypesSeq {
+  NestedTypesRec ntr;
+};
+
 } // MandatoryNamespace

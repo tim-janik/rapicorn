@@ -32,11 +32,13 @@ class YYGlobals:
   ns_list = [] # namespaces
 yy = YYGlobals # globals
 
-
 def namespace_open (ident):
     assert yy.namespace == None and yy.dict == None
     yy.namespace = ident
     yy.dict = {}
+    # initialize namespace
+    for builtintype in ('Bool', 'Num', 'Real', 'String'):
+      yy.dict[builtintype] = ('builtin', builtintype)
 def namespace_close ():
     assert isinstance (yy.namespace, str) and isinstance (yy.dict, dict)
     yy.ns_list.append ((yy.namespace, yy.dict))
@@ -106,6 +108,11 @@ def ASi (string_candidate): # assert i18n string
     if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
 def AIn (identifier):   # assert new identifier
     if yy.dict.has_key (identifier) or identifier in keywords:  raise KeyError ('redefining existing identifier: %s' % identifier)
+def ATN (typename):     # assert a typename
+  ttuple = yy.dict.get (typename, (None,))
+  print "TYPE: ", typename, ttuple
+  if not ttuple[0] in ('sequence', 'record', 'enum', 'builtin'):
+    raise TypeError ('invalid typename: ' + repr (typename))
 
 %%
 parser IdlSyntaxParser:
@@ -118,7 +125,6 @@ parser IdlSyntaxParser:
         token FULLFLOAT:    r'([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-][0-9]+)?'
         token FRACTFLOAT:                     r'\.[0-9]+([eE][+-][0-9]+)?'
         token STRING:       r'"([^"\\]+|\\.)*"'             # double quotes string
-        token BUILTINTYPE:  r'(Bool|Num|Real|String)'
 
 rule IdlSyntax: ( ';' | namespace )* EOF        {{ return yy.ns_list; }}
 
@@ -163,15 +169,19 @@ rule enumeration_args:
         ]                                       {{ while len (l) < 3: l.append ("") }}
                                                 {{ return l }}
 
+rule typename:
+        IDENT                                   {{ ATN (IDENT); return IDENT }}
+
+rule variable_decls:
+        typename IDENT                          {{ vtype = typename; vars = [ (vtype, IDENT) ] }}
+        ( ',' IDENT                             {{ vars = vars + [ (vtype, IDENT) ] }}
+        )* ';'                                  {{ return vars }}
+
 rule record:
         'record' IDENT '{'                      {{ rfields = [] }}
           ( variable_decls                      {{ rfields = rfields + variable_decls }}
           )+
         '}' ';'                                 {{ add_record (IDENT, rfields) }}
-rule variable_decls:
-        BUILTINTYPE IDENT                       {{ vtype = BUILTINTYPE; vars = [ (vtype, IDENT) ] }}
-        ( ',' IDENT                             {{ vars = vars + [ (vtype, IDENT) ] }}
-        )* ';'                                  {{ return vars }}
 
 rule sequence:
         'sequence' IDENT '{'                    {{ sfields = [] }}

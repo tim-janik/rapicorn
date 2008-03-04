@@ -21,3 +21,9 @@ Const Var = 0; enum ExtensiveEnum { Var }; // constant in enum
 sequence EmptySequence { }; // sequence needs 1 field
 
 sequence MultiFieldSequence { Bool one; Num toomany; }; // sequence needs 1 field
+
+sequence Seq { enum b; }; // keyword is not typename
+
+sequence S1 { Bool b; }; sequence S2 { _S1 s; }; // need existing typenames
+
+sequence Dup { Bool b; }; sequence Dup { Bool b; }; // duplicate definition
