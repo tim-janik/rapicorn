@@ -31,7 +31,6 @@ struct Trampoline3 : public TrampolineLink {
 /* --- Trampoline (plain) --- */
 template<typename R0, typename A1, typename A2, typename A3>
 class FunctionTrampoline3 : public Trampoline3 <R0, A1, A2, A3> {
-  friend void FIXME_dummy_friend_for_gcc33();
   typedef R0 (*Callback) (A1, A2, A3);
   Callback callback;
   virtual R0 operator() (A1 a1, A2 a2, A3 a3)
@@ -47,7 +46,6 @@ public:
 };
 template<class Class, typename R0, typename A1, typename A2, typename A3>
 class MethodTrampoline3 : public Trampoline3 <R0, A1, A2, A3>, public virtual Deletable::DeletionHook {
-  friend void FIXME_dummy_friend_for_gcc33();
   typedef R0 (Class::*Method) (A1, A2, A3);
   Class *instance;
   Method method;
@@ -67,7 +65,6 @@ public:
 /* --- Trampoline with Data --- */
 template<typename R0, typename A1, typename A2, typename A3, typename Data>
 class DataFunctionTrampoline3 : public Trampoline3 <R0, A1, A2, A3> {
-  friend void FIXME_dummy_friend_for_gcc33();
   typedef R0 (*Callback) (A1, A2, A3, Data);
   Callback callback; Data data;
   virtual R0 operator() (A1 a1, A2 a2, A3 a3)
@@ -83,7 +80,6 @@ public:
 };
 template<class Class, typename R0, typename A1, typename A2, typename A3, typename Data>
 class DataMethodTrampoline3 : public Trampoline3 <R0, A1, A2, A3>, public virtual Deletable::DeletionHook {
-  friend void FIXME_dummy_friend_for_gcc33();
   typedef R0 (Class::*Method) (A1, A2, A3, Data);
   Class *instance; Method method; Data data;
   virtual R0 operator() (A1 a1, A2 a2, A3 a3)
