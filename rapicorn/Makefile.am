@@ -9,7 +9,7 @@ DEFS		 = -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
 rapicorn_top_headers = rapicorn.hh
 rapicorn_public_headers = $(strip 	\
 	keycodes.hh	$(rapicorn_impl_headers)	\
-	utilities.hh	events.hh	application.hh	\
+	utilities.hh	events.hh	application.hh	cmdlib.hh	\
 	primitives.hh	region.hh	loop.hh		viewport.hh		\
 	properties.hh	commands.hh	appearance.hh	painter.hh	window.hh		\
 	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
@@ -30,7 +30,7 @@ rapicorn_generated_headers = $(strip	\
 rapicorn_cc_sources = $(strip 		\
 	\
 	viewport-gtk.cc	regionimpl.c	blitfuncs.cc	blit-mmx.cc	\
-	utilities.cc	events.cc	application.cc	\
+	utilities.cc	events.cc	application.cc	cmdlib.cc	\
 	primitives.cc	region.cc	loop.cc		viewport.cc		\
 	properties.cc	commands.cc	appearance.cc	painter.cc	window.cc		\
 	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\

@@ -18,6 +18,7 @@
 #include "itemimpl.hh"
 #include "container.hh"
 #include "root.hh"
+#include "cmdlib.hh"
 
 namespace Rapicorn {
 
@@ -372,7 +373,7 @@ Item::exec_command (const String &command_call_string)
   while ((*cname >= 'a' and *cname <= 'z') or
          (*cname >= 'A' and *cname <= 'Z') or
          (*cname >= '0' and *cname <= '9') or
-         *cname == '-')
+         *cname == '_' or *cname == ':')
     cname++;
   String name = command_call_string.substr (0, cname - command_call_string.c_str());
 
@@ -406,6 +407,9 @@ Item::exec_command (const String &command_call_string)
         return cmd->exec (item, arg);
       item = item->parent();
     }
+
+  if (command_lib_exec (*this, name, arg))
+    return true;
 
   item = this;
   while (item)
