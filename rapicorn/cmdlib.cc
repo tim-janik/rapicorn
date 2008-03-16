@@ -92,4 +92,148 @@ command_lib_exec (Item         &item,
   return false;
 }
 
+static bool
+parse_arg (const String &input,
+           uint         *pos,
+           String       *arg)
+{
+  uint a0 = *pos, level = 0;
+  bool sq = false, dq = false, be = false, done = false;
+  while (*pos < input.size())
+    {
+      switch (input[*pos])
+        {
+        case '\\':
+          if (!be && (sq || dq))
+            {
+              be = true;
+              (*pos)++;
+              continue;
+            }
+          break;
+        case '\'':
+          if (!dq && (!sq || !be))
+            sq = !sq;
+          break;
+        case '"':
+          if (!sq && (!dq || !be))
+            dq = !dq;
+          break;
+        case '(':
+          if (!sq && !dq)
+            level++;
+          break;
+        case ',':
+          if (!sq && !dq && !level)
+            done = true;
+          break;
+        case ')':
+          if (!sq && !dq)
+            {
+              if (level)
+                level--;
+              else
+                done = true;
+            }
+          break;
+        default: ;
+        }
+      if (done)
+        break;
+      be = false;
+      (*pos)++;
+    }
+  if (sq)
+    {
+      diag ("unclosed single-quotes in command arg: %s", input.c_str());
+      return false;
+    }
+  if (dq)
+    {
+      diag ("unclosed double-quotes in command arg: %s", input.c_str());
+      return false;
+    }
+  if (level)
+    {
+      diag ("unmatched parenthesis in command arg: %s", input.c_str());
+      return false;
+    }
+  if (be)
+    {
+      diag ("invalid command arg: %s", input.c_str());
+      return false;
+    }
+  if (!done)
+    {
+      diag ("unclosed command arg list: %s", input.c_str());
+      return false;
+    }
+  *arg = input.substr (a0, *pos - a0);
+  return true;
+}
+
+bool
+command_scan (const String &input,
+              String       *cmd_name,
+              StringVector *args)
+{
+  const char *spaces = " \t\v\f\n\r";
+  const char *ident0 = "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const char *identn = "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  *cmd_name = "";
+  args->resize (0);
+  uint i = 0;
+  /* skip leading spaces */
+  while (i < input.size() && strchr (spaces, input[i]))
+    i++;
+  /* parse command name */
+  const uint c0 = i;
+  if (i < input.size() && strchr (ident0, input[i]))
+    i++;
+  while (i < input.size() && strchr (identn, input[i]))
+    i++;
+  const uint cl = i;
+  /* skip intermediate spaces */
+  while (i < input.size() && strchr (spaces, input[i]))
+    i++;
+  /* check command name */
+  if (cl <= c0)
+    {
+      diag ("invalid command name: %s", input.c_str());
+      return false;
+    }
+  *cmd_name = input.substr (c0, cl - c0);
+  /* parse args */
+  if (i < input.size() && input[i] == '(')
+    {
+      i++; // skip '('
+      String arg;
+      if (!parse_arg (input, &i, &arg))
+        return false; // invalid arg syntax
+      args->push_back (arg);
+      while (i < input.size() && input[i] == ',')
+        {
+          i++;
+          if (!parse_arg (input, &i, &arg))
+            return false; // invalid arg syntax
+          args->push_back (arg);
+        }
+      if (i >= input.size() || input[i] != ')')
+        {
+          diag ("missing closing parenthesis in command: %s", input.c_str());
+          return false;
+        }
+      i++; // skip ')'
+    }
+  /* skip trailing spaces */
+  while (i < input.size() && strchr (spaces, input[i]))
+    i++;
+  if (i < input.size() && input[i] != 0)
+    {
+      diag ("encountered junk after command: %s", input.c_str());
+      return false;
+    }
+  return true;
+}
+
 } // Rapicorn
