@@ -135,8 +135,12 @@ record XFooRecord {
   Num    single_num;
   Real   single_float;
   String single_string;
-  Num    sibling1, sibling2;
-  Num    multi1, multi2, multi3, multi4;
+  Num    sibling1;
+  Num    sibling2;
+  Num    multi1;
+  Num    multi2;
+  Num    multi3;
+  Num    multi4;
 };
 // invalid: record DupRecord { Num a, b; Num c, b; };
 // invalid: record EmptyRecord { };

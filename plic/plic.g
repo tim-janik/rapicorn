@@ -22,7 +22,7 @@ PLIC_VERSION=\
 import yapps2runtime as runtime
 
 keywords = ( 'TRUE', 'True', 'true', 'FALSE', 'False', 'false',
-             'namespace', 'enum', 'enumeration', 'Const', 'record', 'sequence',
+             'namespace', 'enum', 'enumeration', 'Const', 'record', 'class', 'sequence',
              'Bool', 'Num', 'Real', 'String' )
 
 class YYGlobals:
@@ -172,21 +172,20 @@ rule enumeration_args:
 rule typename:
         IDENT                                   {{ ATN (IDENT); return IDENT }}
 
-rule variable_decls:
+rule variable_decl:
         typename IDENT                          {{ vtype = typename; vars = [ (vtype, IDENT) ] }}
-        ( ',' IDENT                             {{ vars = vars + [ (vtype, IDENT) ] }}
-        )* ';'                                  {{ return vars }}
+        ';'                                     {{ return vars }}
 
 rule record:
         'record' IDENT '{'                      {{ rfields = [] }}
-          ( variable_decls                      {{ rfields = rfields + variable_decls }}
+          ( variable_decl                       {{ rfields = rfields + variable_decl }}
           )+
         '}' ';'                                 {{ add_record (IDENT, rfields) }}
 
 rule sequence:
         'sequence' IDENT '{'                    {{ sfields = [] }}
-          ( variable_decls                      {{ if len (sfields): raise OverflowError ("too many fields in sequence") }}
-                                                {{ sfields = sfields + variable_decls }}
+          ( variable_decl                       {{ if len (sfields): raise OverflowError ("too many fields in sequence") }}
+                                                {{ sfields = sfields + variable_decl }}
           )
         '}' ';'                                 {{ add_sequence (IDENT, sfields) }}
 
