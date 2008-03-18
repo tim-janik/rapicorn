@@ -21,12 +21,13 @@
 
 namespace Rapicorn {
 
-bool    command_lib_exec (Item         &item,
-                          const String &cmd_name,
-                          const String &args);
-bool    command_scan     (const String &input,
-                          String       *cmd_name,
-                          StringVector *args);
+bool    command_lib_exec        (Item         &item,
+                                 const String &cmd_name,
+                                 const String &args);
+bool    command_scan            (const String &input,
+                                 String       *cmd_name,
+                                 StringVector *args);
+String  command_string_unquote  (const String &input);
 
 } // Rapicorn
 

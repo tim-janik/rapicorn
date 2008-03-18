@@ -172,19 +172,20 @@ parse_arg (const String &input,
   return true;
 }
 
+static const char *whitespaces = " \t\v\f\n\r";
+
 bool
 command_scan (const String &input,
               String       *cmd_name,
               StringVector *args)
 {
-  const char *spaces = " \t\v\f\n\r";
   const char *ident0 = "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const char *identn = "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   *cmd_name = "";
   args->resize (0);
   uint i = 0;
   /* skip leading spaces */
-  while (i < input.size() && strchr (spaces, input[i]))
+  while (i < input.size() && strchr (whitespaces, input[i]))
     i++;
   /* parse command name */
   const uint c0 = i;
@@ -194,7 +195,7 @@ command_scan (const String &input,
     i++;
   const uint cl = i;
   /* skip intermediate spaces */
-  while (i < input.size() && strchr (spaces, input[i]))
+  while (i < input.size() && strchr (whitespaces, input[i]))
     i++;
   /* check command name */
   if (cl <= c0)
@@ -226,7 +227,7 @@ command_scan (const String &input,
       i++; // skip ')'
     }
   /* skip trailing spaces */
-  while (i < input.size() && strchr (spaces, input[i]))
+  while (i < input.size() && strchr (whitespaces, input[i]))
     i++;
   if (i < input.size() && input[i] != 0)
     {
@@ -234,6 +235,47 @@ command_scan (const String &input,
       return false;
     }
   return true;
+}
+
+String
+command_string_unquote (const String &input)
+{
+  uint i = 0;
+  while (i < input.size() && strchr (whitespaces, input[i]))
+    i++;
+  if (i < input.size() && (input[i] == '"' || input[i] == '\''))
+    {
+      const char qchar = input[i];
+      i++;
+      String out;
+      bool be = false;
+      while (i < input.size() && (input[i] != qchar || be))
+        {
+          if (!be && input[i] == '\\')
+            be = true;
+          else
+            {
+              out += input[i];
+              be = false;
+            }
+          i++;
+        }
+      if (i < input.size() && input[i] == qchar)
+        {
+          i++;
+          while (i < input.size() && strchr (whitespaces, input[i]))
+            i++;
+          if (i >= input.size())
+            return out;
+          else
+            diag ("extraneous characters after string: %s", input.c_str());
+        }
+      else
+        diag ("unclosed string: %s", input.c_str());
+    }
+  else
+    diag ("missing string argument: %s", input.c_str());
+  return "";
 }
 
 } // Rapicorn

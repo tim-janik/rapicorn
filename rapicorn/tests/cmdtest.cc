@@ -48,6 +48,24 @@ test_command_scanning (void)
   // printerr ("\nergo (success=%d): %s\n", success, cmdjoin (name, args).c_str());
 }
 
+static void
+test_command_unquoting (void)
+{
+  String ret;
+  ret = command_string_unquote ("\"x\"");
+  assert (ret == "x");
+  ret = command_string_unquote (" \"foo\" ");
+  assert (ret == "foo");
+  ret = command_string_unquote (" \"foo\\\"boo\" ");
+  assert (ret == "foo\"boo");
+  ret = command_string_unquote (" 'foo' ");
+  assert (ret == "foo");
+  ret = command_string_unquote (" 'foo\\'boo' ");
+  assert (ret == "foo'boo");
+  ret = command_string_unquote ("''");
+  assert (ret == "");
+}
+
 int
 main (int   argc,
       char *argv[])
@@ -55,6 +73,7 @@ main (int   argc,
   rapicorn_init_test (&argc, &argv);
 
   Test::add ("Commands/Scanning", test_command_scanning);
+  Test::add ("Commands/Unquoting", test_command_unquoting);
 
   return Test::run();
 }
