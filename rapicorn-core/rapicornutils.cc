@@ -598,18 +598,6 @@ string_vprintf (const char *format,
     return format;
 }
 
-String
-string_strip (const String &str)
-{
-  const char *cstr = str.c_str();
-  uint start = 0, end = str.size();
-  while (end and strchr (" \t\n\r", cstr[end-1]))
-    end--;
-  while (strchr (" \t\n\r", cstr[start]))
-    start++;
-  return String (cstr + start, end - start);
-}
-
 static StringVector
 string_whitesplit (const String &string)
 {
@@ -898,6 +886,43 @@ string_to_cquote (const String &str)
         buffer += d;
     }
   return buffer;
+}
+
+static const char *whitespaces = " \t\v\f\n\r";
+
+String
+string_lstrip (const String &input)
+{
+  uint64 i = 0;
+  while (i < input.size() && strchr (whitespaces, input[i]))
+    i++;
+  return i ? input.substr (i) : input;
+}
+
+String
+string_rstrip (const String &input)
+{
+  uint64 i = input.size();
+  while (i > 0 && strchr (whitespaces, input[i - 1]))
+    i--;
+  return i < input.size() ? input.substr (0, i) : input;
+}
+
+String
+string_strip (const String &input)
+{
+  uint64 a = 0;
+  while (a < input.size() && strchr (whitespaces, input[a]))
+    a++;
+  uint64 b = input.size();
+  while (b > 0 && strchr (whitespaces, input[b - 1]))
+    b--;
+  if (a == 0 && b == input.size())
+    return input;
+  else if (b == 0)
+    return "";
+  else
+    return input.substr (a, b - a);
 }
 
 /* --- charset conversions --- */

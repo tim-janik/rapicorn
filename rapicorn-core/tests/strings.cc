@@ -296,6 +296,23 @@ test_string_charsets (void)
   assert (res && output == "non-ascii [?] char");
 }
 
+static void
+test_string_stripping (void)
+{
+  assert (string_strip ("") == "");
+  assert (string_lstrip ("") == "");
+  assert (string_rstrip ("") == "");
+  assert (string_strip ("123") == "123");
+  assert (string_lstrip ("123") == "123");
+  assert (string_rstrip ("123") == "123");
+  assert (string_strip (" \t\v\f\n\r") == "");
+  assert (string_lstrip (" \t\v\f\n\r") == "");
+  assert (string_rstrip (" \t\v\f\n\r") == "");
+  assert (string_strip (" \t\v\f\n\rX \t\v\f\n\r") == "X");
+  assert (string_lstrip (" \t\v\f\n\rX \t\v\f\n\r") == "X \t\v\f\n\r");
+  assert (string_rstrip (" \t\v\f\n\rX \t\v\f\n\r") == " \t\v\f\n\rX");
+}
+
 } // Anon
 
 int
@@ -310,6 +327,7 @@ main (int   argc,
   Test::add ("/Strings/conversions", string_conversions);
   Test::add ("/Strings/split strings", split_string_tests);
   Test::add ("/Strings/charsets", test_string_charsets);
+  Test::add ("/Strings/stripping", test_string_stripping);
 
   return Test::run();
 }

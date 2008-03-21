@@ -177,7 +177,6 @@ String  			string_toupper           (const String &str);
 String  			string_totitle           (const String &str);
 String  			string_printf            (const char *format, ...) RAPICORN_PRINTF (1, 2);
 String  			string_vprintf           (const char *format, va_list vargs);
-String  			string_strip             (const String &str);
 StringVector 			string_split             (const String       &string,
                                                           const String       &splitter = "");
 String  			string_join              (const String       &junctor,
@@ -223,6 +222,9 @@ int                             string_cmp_uuid          (const String &uuid_str
                                                           const String &uuid_string2); /* -1=smaller, 0=equal, +1=greater (assuming valid uuid strings) */
 String  string_from_pretty_function_name                 (const char *gnuc_pretty_function);
 String  string_to_cquote                                 (const String &str);
+String  string_lstrip                                    (const String &input);
+String  string_rstrip                                    (const String &input);
+String  string_strip                                     (const String &input);
 
 /* --- charset conversions --- */
 bool    text_convert    (const String &to_charset,
