@@ -25,7 +25,7 @@
 	<Button vexpand="1">
 	  <Label markup-text="VExpand Button" />
 	</Button>
-	<Button hexpand="1" on-click="test-handler1" >
+	<Button hexpand="1" on-click="test_handler1" >
 	  <Label markup-text="HExpand Button with test handler"/>
 	</Button>
 	<Button>
