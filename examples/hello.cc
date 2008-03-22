@@ -24,14 +24,14 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-handle_commands (Window       &window,
-                 const String &command,
-                 const String &args)
+handle_commands (Window             &window,
+                 const String       &command,
+                 const StringVector &args)
 {
   if (command == "close")
     window.close();
   else
-    printout ("%s(): custom command: %s(%s)\n", __func__, command.c_str(), args.c_str());
+    printout ("%s(): custom command: %s(%s)\n", __func__, command.c_str(), string_join (",", args).c_str());
   return true;
 }
 

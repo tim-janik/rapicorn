@@ -369,52 +369,33 @@ Item::lookup_command (const String &command_name)
 bool
 Item::exec_command (const String &command_call_string)
 {
-  const char *cname = command_call_string.c_str();
-  while ((*cname >= 'a' and *cname <= 'z') or
-         (*cname >= 'A' and *cname <= 'Z') or
-         (*cname >= '0' and *cname <= '9') or
-         *cname == '_' or *cname == ':')
-    cname++;
-  String name = command_call_string.substr (0, cname - command_call_string.c_str());
-
-  String arg;
-  while (*cname and (*cname == ' ' or *cname == '\t'))
-    cname++;
-  if (*cname == '(')
+  String cmd_name;
+  StringVector args;
+  if (!command_scan (command_call_string, &cmd_name, &args))
     {
-      cname++;
-      while (*cname and (*cname == ' ' or *cname == '\t'))
-        cname++;
-      const char *carg = cname;
-      while (*cname and *cname != ')')
-        cname++;
-      if (*cname != ')')
-        goto invalid_command;
-      arg = String (carg, cname - carg);
-    }
-  else if (*cname)
-    {
-    invalid_command:
       warning ("%s: %s", "Invalid command syntax: ", command_call_string.c_str());
       return false;
     }
+  cmd_name = string_strip (cmd_name);
+  if (cmd_name == "")
+    return true;
 
   Item *item = this;
   while (item)
     {
-      Command *cmd = item->lookup_command (name);
+      Command *cmd = item->lookup_command (cmd_name);
       if (cmd)
-        return cmd->exec (item, arg);
+        return cmd->exec (item, args);
       item = item->parent();
     }
 
-  if (command_lib_exec (*this, name, arg))
+  if (command_lib_exec (*this, cmd_name, args))
     return true;
 
   item = this;
   while (item)
     {
-      if (item->custom_command (name, arg))
+      if (item->custom_command (cmd_name, args))
         return true;
       item = item->parent();
     }
@@ -424,8 +405,8 @@ Item::exec_command (const String &command_call_string)
 }
 
 bool
-Item::custom_command (const String &command_name,
-                      const String &command_args)
+Item::custom_command (const String       &command_name,
+                      const StringVector &command_args)
 {
   return false;
 }

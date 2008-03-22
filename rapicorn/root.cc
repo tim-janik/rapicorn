@@ -43,8 +43,8 @@ Root::set_parent (Container *parent)
 }
 
 bool
-Root::custom_command (const String &command_name,
-                      const String &command_args)
+Root::custom_command (const String       &command_name,
+                      const StringVector &command_args)
 {
   bool handled = sig_command.emit (command_name, command_args);
   if (!handled)

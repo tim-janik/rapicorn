@@ -20,51 +20,53 @@ namespace Rapicorn {
 
 
 static void
-item_println (Item         &item,
-            const String &args)
+item_println (Item               &item,
+              const StringVector &args)
 {
-  printout ("%s\n", args.c_str());
+  for (uint i = 0; i < args.size(); i++)
+    printout ("%s%s", i ? " " : "", args[i].c_str());
+  printout ("\n");
 }
 
 static struct {
-  void      (*cmd) (Item&, const String&);
+  void      (*cmd) (Item&, const StringVector&);
   const char *name;
 } item_cmds[] = {
   { item_println,         "Item::println" },
 };
 
 static void
-window_close (Window       &window,
-              const String &args)
+window_close (Window             &window,
+              const StringVector &args)
 {
   window.close();
 }
 
 static struct {
-  void      (*cmd) (Window&, const String&);
+  void      (*cmd) (Window&, const StringVector&);
   const char *name;
 } window_cmds[] = {
   { window_close,       "Window::close" },
 };
 
 static void
-application_close (Item         &item,
-                   const String &args)
+application_close (Item               &item,
+                   const StringVector &args)
 {
   printout ("app.close()\n");
 }
 
 static struct {
-  void      (*cmd) (Item&, const String&);
+  void      (*cmd) (Item&, const StringVector&);
   const char *name;
 } application_cmds[] = {
   { application_close,  "Application::close" },
 };
 
 bool
-command_lib_exec (Item         &item,
-                  const String &cmd_name,
-                  const String &args)
+command_lib_exec (Item               &item,
+                  const String       &cmd_name,
+                  const StringVector &args)
 {
   for (uint ui = 0; ui < ARRAY_SIZE (item_cmds); ui++)
     if (item_cmds[ui].name == cmd_name)

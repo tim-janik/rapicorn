@@ -26,7 +26,7 @@ struct Command : ReferenceCountImpl {
   const String blurb;
   bool         needs_arg;
   Command (const char *cident, const char *cblurb, bool has_arg);
-  virtual bool   exec (Deletable *obj, const String &args) = 0;
+  virtual bool   exec (Deletable *obj, const StringVector &args) = 0;
 protected:
   virtual ~Command();
 };
@@ -67,12 +67,12 @@ struct CommandList {
 /* command with data and arg string */
 template<class Class, class Data>
 struct CommandDataArg : Command {
-  typedef bool (Class::*CommandMethod) (Data data, const String &args);
-  bool (Class::*command_method) (Data data, const String &args);
+  typedef bool (Class::*CommandMethod) (Data data, const StringVector &args);
+  bool (Class::*command_method) (Data data, const StringVector &args);
   Data data;
   CommandDataArg (bool (Class::*method) (Data, const String&),
                   const char *cident, const char *cblurb, const Data &method_data);
-  virtual bool exec (Deletable *obj, const String &args);
+  virtual bool exec (Deletable *obj, const StringVector &args);
 };
 template<class Class, class Data> inline Command*
 create_command (bool (Class::*method) (Data, const String&),
@@ -87,7 +87,7 @@ struct CommandData : Command {
   Data data;
   CommandData (bool (Class::*method) (Data),
                const char *cident, const char *cblurb, const Data &method_data);
-  virtual bool exec (Deletable *obj, const String&);
+  virtual bool exec (Deletable *obj, const StringVector&);
 };
 template<class Class, class Data> inline Command*
 create_command (bool (Class::*method) (Data),
@@ -97,11 +97,11 @@ create_command (bool (Class::*method) (Data),
 /* command with arg string */
 template<class Class>
 struct CommandArg: Command {
-  typedef bool (Class::*CommandMethod) (const String &args);
-  bool (Class::*command_method) (const String &args);
+  typedef bool (Class::*CommandMethod) (const StringVector &args);
+  bool (Class::*command_method) (const StringVector &args);
   CommandArg (bool (Class::*method) (const String&),
               const char *cident, const char *cblurb);
-  virtual bool exec (Deletable *obj, const String &args);
+  virtual bool exec (Deletable *obj, const StringVector &args);
 };
 template<class Class> inline Command*
 create_command (bool (Class::*method) (const String&),
@@ -115,7 +115,7 @@ struct CommandSimple : Command {
   bool (Class::*command_method) ();
   CommandSimple (bool (Class::*method) (),
                  const char *cident, const char *cblurb);
-  virtual bool exec (Deletable *obj, const String&);
+  virtual bool exec (Deletable *obj, const StringVector&);
 };
 template<class Class> inline Command*
 create_command (bool (Class::*method) (),
@@ -132,7 +132,7 @@ CommandDataArg<Class,Data>::CommandDataArg (bool (Class::*method) (Data, const S
   data (method_data)
 {}
 template<class Class, typename Data> bool
-CommandDataArg<Class,Data>::exec (Deletable *obj, const String &args)
+CommandDataArg<Class,Data>::exec (Deletable *obj, const StringVector &args)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   if (!instance)
@@ -148,7 +148,7 @@ CommandArg<Class>::CommandArg (bool (Class::*method) (const String&),
   command_method (method)
 {}
 template<class Class> bool
-CommandArg<Class>::exec (Deletable *obj, const String &args)
+CommandArg<Class>::exec (Deletable *obj, const StringVector &args)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   if (!instance)
@@ -165,7 +165,7 @@ CommandData<Class,Data>::CommandData (bool (Class::*method) (Data),
   data (method_data)
 {}
 template<class Class, typename Data> bool
-CommandData<Class,Data>::exec (Deletable *obj, const String&)
+CommandData<Class,Data>::exec (Deletable *obj, const StringVector&)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   if (!instance)
@@ -181,7 +181,7 @@ CommandSimple<Class>::CommandSimple (bool (Class::*method) (),
   command_method (method)
 {}
 template<class Class> bool
-CommandSimple<Class>::exec (Deletable *obj, const String&)
+CommandSimple<Class>::exec (Deletable *obj, const StringVector&)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   if (!instance)

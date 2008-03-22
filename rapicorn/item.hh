@@ -115,8 +115,8 @@ protected:
   virtual void                finalize          ();
   virtual void                hierarchy_changed (Item *old_toplevel);
   virtual bool                move_focus        (FocusDirType fdir);
-  virtual bool                custom_command    (const String &command_name,
-                                                 const String &command_args);
+  virtual bool                custom_command    (const String       &command_name,
+                                                 const StringVector &command_args);
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
   void                        notify_key_error  ();
 public:

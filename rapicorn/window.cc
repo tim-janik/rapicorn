@@ -112,25 +112,25 @@ Window::Commands::operator-= (const CmdSlotW &s)
 }
 
 void
-Window::Commands::operator+= (bool (*callback) (const String&, const String&))
+Window::Commands::operator+= (bool (*callback) (const String&, const StringVector&))
 {
   return operator+= (slot (callback));
 }
 
 void
-Window::Commands::operator-= (bool (*callback) (const String&, const String&))
+Window::Commands::operator-= (bool (*callback) (const String&, const StringVector&))
 {
   return operator-= (slot (callback));
 }
 
 void
-Window::Commands::operator+= (bool (*callback) (Window&, const String&, const String&))
+Window::Commands::operator+= (bool (*callback) (Window&, const String&, const StringVector&))
 {
   return operator+= (slot (callback));
 }
 
 void
-Window::Commands::operator-= (bool (*callback) (Window&, const String&, const String&))
+Window::Commands::operator-= (bool (*callback) (Window&, const String&, const StringVector&))
 {
   return operator-= (slot (callback));
 }

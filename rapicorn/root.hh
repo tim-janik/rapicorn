@@ -38,8 +38,8 @@ protected:
   void          cancel_item_events      (Item         &item)            { cancel_item_events (&item); }
   virtual bool  dispatch_event          (const Event  &event) = 0;
   virtual void  set_parent              (Container    *parent);
-  virtual bool  custom_command          (const String &command_name,
-                                         const String &command_args);
+  virtual bool  custom_command          (const String       &command_name,
+                                         const StringVector &command_args);
   /* loop source (FIXME) */
   virtual bool  prepare                 (uint64 current_time_usecs,
                                          int64 *timeout_usecs_p) = 0;
@@ -61,9 +61,9 @@ public:
   virtual Item* get_grab                (bool  *unconfined = NULL) = 0;
   Item*         find_item               (const String &name);
   /* commands */
-  typedef Signal<Root, bool (const String&, const String&), CollectorWhile0<bool> >   CommandSignal;
+  typedef Signal<Root, bool (const String&, const StringVector&), CollectorWhile0<bool> >   CommandSignal;
   CommandSignal sig_command;
-  typedef Signal<Window, bool (const String&, const String&), CollectorWhile0<bool> > WindowCommandSignal;
+  typedef Signal<Window, bool (const String&, const StringVector&), CollectorWhile0<bool> > WindowCommandSignal;
   WindowCommandSignal sig_window_command;
   /* viewport ops */
   virtual void  create_viewport         () = 0;

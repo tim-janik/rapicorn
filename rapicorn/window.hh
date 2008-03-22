@@ -42,8 +42,8 @@ public:
   /*Copy*/      Window          (const Window   &window);
   virtual      ~Window          ();
   /* callbacks */
-  typedef Signals::Slot2<bool,          const String&, const String&> CmdSlot;
-  typedef Signals::Slot3<bool, Window&, const String&, const String&> CmdSlotW;
+  typedef Signals::Slot2<bool,          const String&, const StringVector&> CmdSlot;
+  typedef Signals::Slot3<bool, Window&, const String&, const StringVector&> CmdSlotW;
   class Commands {
     Window  &window;
     explicit Commands (Window &w);
@@ -53,10 +53,10 @@ public:
     void operator-= (const CmdSlot  &s);
     void operator+= (const CmdSlotW &s);
     void operator-= (const CmdSlotW &s);
-    void operator+= (bool (*callback) (const String&, const String&));
-    void operator-= (bool (*callback) (const String&, const String&));
-    void operator+= (bool (*callback) (Window&, const String&, const String&));
-    void operator-= (bool (*callback) (Window&, const String&, const String&));
+    void operator+= (bool (*callback) (const String&, const StringVector&));
+    void operator-= (bool (*callback) (const String&, const StringVector&));
+    void operator+= (bool (*callback) (Window&, const String&, const StringVector&));
+    void operator-= (bool (*callback) (Window&, const String&, const StringVector&));
   };
   Commands      commands;
 }; 

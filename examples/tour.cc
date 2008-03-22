@@ -20,11 +20,12 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-custom_commands (Window       &window,
-                 const String &command,
-                 const String &args)
+custom_commands (Window             &window,
+                 const String       &command,
+                 const StringVector &args)
 {
-  printout ("%s(): custom command: %s(%s) (window: %s)\n", __func__, command.c_str(), args.c_str(), window.root().name().c_str());
+  printout ("%s(): custom command: %s(%s) (window: %s)\n", __func__,
+            command.c_str(), string_join (",", args).c_str(), window.root().name().c_str());
   return true;
 }
 
