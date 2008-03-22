@@ -20,19 +20,25 @@ namespace Rapicorn {
 
 
 static void
-item_println (Item               &item,
-              const StringVector &args)
+item_print (Item               &item,
+            const StringVector &args)
 {
+  bool last_empty = false;
   for (uint i = 0; i < args.size(); i++)
-    printout ("%s%s", i ? " " : "", args[i].c_str());
-  printout ("\n");
+    {
+      String str = command_string_unquote (args[i]);
+      last_empty = str == "" && string_strip (args[i]) == "";
+      printout ("%s%s", i ? " " : "", str.c_str());
+    }
+  if (!last_empty)
+    printout ("\n");
 }
 
 static struct {
   void      (*cmd) (Item&, const StringVector&);
   const char *name;
 } item_cmds[] = {
-  { item_println,         "Item::println" },
+  { item_print,         "Item::print" },
 };
 
 static void
@@ -275,8 +281,10 @@ command_string_unquote (const String &input)
       else
         diag ("unclosed string: %s", input.c_str());
     }
+  else if (i == input.size())
+    ; // empty string arg: ""
   else
-    diag ("missing string argument: %s", input.c_str());
+    diag ("invalid string argument: %s", input.c_str());
   return "";
 }
 
