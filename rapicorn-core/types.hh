@@ -66,6 +66,14 @@ protected:
   Info          m_info;
 };
 
+class TypeTest {
+  class TypeInfo;
+  TypeInfo *type_info;
+public:
+  static TypeTest* parse_type_info (const char *type_info_string,
+                                    uint        type_info_length);
+};
+
 } // Rapicorn
 
 #endif /* __RAPICORN_TYPES_HH__ */

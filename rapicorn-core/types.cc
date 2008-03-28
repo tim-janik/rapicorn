@@ -216,4 +216,149 @@ Type::aux_num (const String &auxname) const
   return string_to_int (aux_string (auxname));
 }
 
+struct TypeTest::TypeInfo {
+  const char *type_string;
+  uint        type_string_length;
+  Type::Storage type_storage;
+  uint name_offset, name_length;
+  vector<uint> auxkey_offsets; // last member points after last aux key
+  static String
+  parse_int (const char *ts,
+             uint       *ui)
+  {
+    uint8 *us = (uint8*) ts, u0 = us[0], u1 = us[1], u2 = us[2], u3 = us[3];
+    if (u0 < 128 || u1 < 128 || u2 < 128 || u3 < 128)
+      return "invalid integer encoding";
+    *ui = (u3 & 0x7f) + ((u2 & 0x7f) >> 1) + ((u1 & 0x7f) >> 2) + ((u0 & 0x7f) >> 3);
+    return "";
+  }
+  static String
+  parse_strings (uint          count,
+                 const char   *tstart,
+                 uint          offset,
+                 uint          len,
+                 vector<uint> *offsets,
+                 const String &errpart)
+  {
+    for (uint i = 0; i < count; i++)
+      {
+        if (len < 4)
+          return string_printf ("premature end while parsing %s", errpart.c_str());
+        uint ui = 0;
+        String err = parse_int (tstart + offset, &ui);
+        if (err != "")
+          return string_printf ("%s while parsing %s", err.c_str(), errpart.c_str());
+        offset += 4;
+        len -= 4;
+        if (len < ui)
+          return string_printf ("premature end while parsing %s", errpart.c_str());
+        offsets->push_back (offset);
+        offset += ui;
+        len -= ui;
+      }
+    offsets->push_back (offset);
+    return "";
+  }
+  String
+  parse_offsets (const char *ts,
+                 uint        _tsl)
+  {
+    type_string = ts;
+    type_string_length = _tsl;
+    const char *tb = ts + _tsl;
+    String err;
+    uint ui = 0;
+    if (!type_string || type_string_length == 0 || type_string[0] == 0)
+      return "Empty type string";
+    if (ts + 24 > tb)
+      return "type info string too short";
+    // check magic
+    if (strncmp (type_string, "GType001", 8) != 0)
+      return "Invalid/unknown type info string";
+    ts += 8;
+    // type name
+    auxkey_offsets.clear();
+    err = parse_strings (1, type_string, ts - type_string, tb - ts, &auxkey_offsets, "type name");
+    if (err != "")
+      return err;
+    assert (auxkey_offsets.size() == 2);
+    name_offset = auxkey_offsets[0];
+    name_length = auxkey_offsets[1] - auxkey_offsets[0];
+    if (name_length < 1)
+      return "Invalid type name";
+    ts = type_string + auxkey_offsets[1];
+    if (ts + 4 + 4 + 4 > tb)
+      return "Premature type info end after type name";
+    // type length
+    err = parse_int (ts, &ui);
+    if (err != "")
+      return err + " in type info length";
+    ts += 4;
+    if (ui < 8 || ts + ui > tb)
+      return "type info too short";
+    if (tb > ts + ui)
+      tb = ts + ui;
+    // storage type
+    if (ts[0] != '_' || ts[1] != '_' || ts[2] != '_' ||
+        !strchr (RAPICORN_TYPE_STORAGE_CHARS, ts[3]))
+      return "Invalid storage type";
+    type_storage = Type::Storage (ts[3]);
+    ts += 4;
+    // number of aux entries
+    err = parse_int (ts, &ui);
+    if (err != "")
+      return err + " in aux count";
+    ts += 4;
+    if (ts + ui * (4 + 1) > tb)
+      return "type info too short for aux data";
+    // parse aux info
+    auxkey_offsets.clear();
+    if (ui)
+      {
+        err = parse_strings (ui, type_string, ts - type_string, tb - ts, &auxkey_offsets, "aux infos");
+        if (err != "")
+          return err;
+        ts += auxkey_offsets[auxkey_offsets.size() - 1];
+      }
+    // FIXME: 0xfe00000 0x1fc000 0x3f80 0x7f
+    return "";
+  }
+
+};
+
+/*
+ * type info offsets: name, auxkeys, entries, element, fields, ...
+ *
+ * GTyp e001
+ *
+ * xxxx TypeNameString // field name
+ *
+ * TypeLength
+ *
+ * StorageType
+ *
+ * yyyy [ xxxx AuxKey '=' AuxValue ]*
+ *
+ * NUM/REAL/STRING: // typeid, auxdata
+ *
+ * CHOICE: yyyy [ xxxx Ident xxxx Label xxxx Blurb ]+
+ *
+ * RECORD: yyyy [ xxxx FieldName _TYPE_SPECIFIER_ ]+
+ *
+ * SEQUENCE: xxxx FieldName _TYPE_SPECIFIER_
+ *
+ * INTERFACE: yyyy [ xxxx InterfaceTypeName ]+
+ */
+
+TypeTest*
+TypeTest::parse_type_info (const char *type_info_string,
+                           uint        type_info_length)
+{
+  TypeInfo *type_info = new TypeInfo();
+  String err = type_info->parse_offsets (type_info_string, type_info_length);
+  if (err != "")
+    error ("%s", err.c_str());
+  return NULL;
+}
+
 } // Rapicorn

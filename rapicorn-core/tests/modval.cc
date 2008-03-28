@@ -21,6 +21,19 @@ namespace {
 using namespace Rapicorn;
 
 static void
+test_type_info ()
+{
+  TypeTest *tt;
+  String ts;
+  ts = "GType001\200\200\200\201X\200\200\200\210___n\200\200\200\200";
+  tt = TypeTest::parse_type_info (ts.c_str(), ts.size());
+  assert (tt == NULL);
+  ts = "GType001\200\200\200\201Y\200\200\200\217___f\200\200\200\201\200\200\200\203a=b";
+  tt = TypeTest::parse_type_info (ts.c_str(), ts.size());
+  assert (tt == NULL);
+}
+
+static void
 test_types ()
 {
   Type t1 ("RcTi;0003Foo;n;0008zonk=bar000eSHREK=Schreck!0009SomeNum=7;");
@@ -212,6 +225,7 @@ main (int   argc,
 {
   rapicorn_init_test (&argc, &argv);
 
+  Test::add ("/Type/type info", test_type_info);
   Test::add ("/Type/basics", test_types);
   Test::add ("/Value/num", test_value_num);
   Test::add ("/Value/float", test_value_float);
