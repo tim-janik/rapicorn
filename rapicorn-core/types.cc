@@ -262,6 +262,11 @@ struct TypeTest::TypeInfo {
   parse_offsets (const char *ts,
                  uint        _tsl)
   {
+    /* parse a type definition like:
+     * - GTyp e001              // magic
+     * - llll TypeNameString    // type name with length
+     * - LLLL TypeInfo_data     // main type info with length
+     */
     type_string = ts;
     type_string_length = _tsl;
     const char *tb = ts + _tsl;
@@ -281,7 +286,7 @@ struct TypeTest::TypeInfo {
     name_offset = svo[0];
     name_length = svo[1] - svo[0];
     return_if (name_length < 1, "Invalid type name");
-    // parse type info
+    // parse main type info
     err = parse_type_info (*this, type_string, &ts, tb);
     return_if (err != "", err);
     // done
@@ -293,12 +298,22 @@ struct TypeTest::TypeInfo {
                    const char **tsp,
                    const char  *boundary)
   {
+    /* parse type info:
+     * - LLLL                   // length of upcoming type info data
+     * - ___?                   // storage type
+     * - xxxx                   // number of aux entries
+     * - [ llll AuxEntry ]*     // xxxx times aux entry strings
+     * - CHOICE:    yyyy [ llll Ident llll Label llll Blurb ]+
+     * - RECORD:    yyyy [ llll FieldName _TYPE_INFO_ ]+
+     * - SEQUENCE:  yyyy FieldName _TYPE_INFO_
+     * - INTERFACE: yyyy [ llll InterfaceTypeName ]+
+     */
     String err;
     uint ui = 0;
     // type length
     err = parse_int (tsp, boundary, &ui);
     return_if (err != "", err + " in type info length");
-    return_if (*tsp + ui > boundary, "type info string too short");
+    return_if (*tsp + ui > boundary, "type info data too short");
     boundary = MIN (*tsp + ui, boundary);
     // storage type
     return_if (*tsp + 4 > boundary, "premature end at storage type");
@@ -318,34 +333,12 @@ struct TypeTest::TypeInfo {
         return_if (err != "", err);
         *tsp += self.auxkey_offsets[self.auxkey_offsets.size() - 1];
       }
+    // skip across unrecognized type data
+    *tsp = boundary;
     // FIXME: 0xfe00000 0x1fc000 0x3f80 0x7f
     return "";
   }
 };
-
-/*
- * type info offsets: name, auxkeys, entries, element, fields, ...
- *
- * GTyp e001
- *
- * xxxx TypeNameString // field name
- *
- * TypeLength
- *
- * StorageType
- *
- * yyyy [ xxxx AuxKey '=' AuxValue ]*
- *
- * NUM/REAL/STRING: // typeid, auxdata
- *
- * CHOICE: yyyy [ xxxx Ident xxxx Label xxxx Blurb ]+
- *
- * RECORD: yyyy [ xxxx FieldName _TYPE_SPECIFIER_ ]+
- *
- * SEQUENCE: xxxx FieldName _TYPE_SPECIFIER_
- *
- * INTERFACE: yyyy [ xxxx InterfaceTypeName ]+
- */
 
 TypeTest*
 TypeTest::parse_type_info (const char *type_info_string,
