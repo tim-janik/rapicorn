@@ -258,8 +258,9 @@ struct TypeTest::TypeInfo {
     assert (offsets->size() == count + 1); // paranoid
     return "";
   }
-  String
-  parse_offsets (const char *ts,
+  static String
+  parse_offsets (TypeInfo    &self,
+                 const char *ts,
                  uint        _tsl)
   {
     /* parse a type definition like:
@@ -267,27 +268,27 @@ struct TypeTest::TypeInfo {
      * - llll TypeNameString    // type name with length
      * - LLLL TypeInfo_data     // main type info with length
      */
-    type_string = ts;
-    type_string_length = _tsl;
+    self.type_string = ts;
+    self.type_string_length = _tsl;
     const char *tb = ts + _tsl;
     String err;
-    if (!type_string || type_string_length == 0 || type_string[0] == 0)
+    if (!self.type_string || self.type_string_length == 0 || self.type_string[0] == 0)
       return "Empty type string";
     if (ts + 24 > tb)
       return "type info string too short";
     // check magic
-    if (strncmp (type_string, "GType001", 8) != 0)
+    if (strncmp (self.type_string, "GType001", 8) != 0)
       return "Invalid/unknown type info string";
     ts += 8;
     // type name
     vector<uint> svo;
-    err = parse_strings (1, type_string, &ts, tb, &svo, "type name");
+    err = parse_strings (1, self.type_string, &ts, tb, &svo, "type name");
     return_if (err != "", err);
-    name_offset = svo[0];
-    name_length = svo[1] - svo[0];
-    return_if (name_length < 1, "Invalid type name");
+    self.name_offset = svo[0];
+    self.name_length = svo[1] - svo[0];
+    return_if (self.name_length < 1, "Invalid type name");
     // parse main type info
-    err = parse_type_info (*this, type_string, &ts, tb);
+    err = parse_type_info (self, self.type_string, &ts, tb);
     return_if (err != "", err);
     // done
     return "";
@@ -345,7 +346,7 @@ TypeTest::parse_type_info (const char *type_info_string,
                            uint        type_info_length)
 {
   TypeInfo *type_info = new TypeInfo();
-  String err = type_info->parse_offsets (type_info_string, type_info_length);
+  String err = type_info->parse_offsets (*type_info, type_info_string, type_info_length);
   if (err != "")
     error ("%s", err.c_str());
   return NULL;
