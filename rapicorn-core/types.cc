@@ -238,28 +238,23 @@ struct TypeTest::TypeInfo {
   static String
   parse_strings (uint          count,
                  const char   *tstart,
-                 uint          offset,
-                 uint          len,
+                 const char  **tsp,
+                 const char   *boundary,
                  vector<uint> *offsets,
                  const String &errpart)
   {
+    uint ui = 0;
     for (uint i = 0; i < count; i++)
       {
-        return_if (len < 4, string_printf ("premature end while parsing %s", errpart.c_str()));
-        uint ui = 0;
-        const char *ts = tstart + offset;
-        String err = parse_int (&ts, &ui);
-        if (err != "")
-          return string_printf ("%s while parsing %s", err.c_str(), errpart.c_str());
-        offset += 4;
-        len -= 4;
-        if (len < ui)
-          return string_printf ("premature end while parsing %s", errpart.c_str());
-        offsets->push_back (offset);
-        offset += ui;
-        len -= ui;
+        return_if (*tsp + 4 > boundary, string_printf ("premature end while parsing %s", errpart.c_str()));
+        String err = parse_int (tsp, &ui);
+        return_if (err != "", string_printf ("%s while parsing %s", err.c_str(), errpart.c_str()));
+        return_if (*tsp + ui > boundary, string_printf ("premature end while parsing %s", errpart.c_str()));
+        offsets->push_back (*tsp - tstart);
+        *tsp += ui;
       }
-    offsets->push_back (offset);
+    offsets->push_back (*tsp - tstart);
+    assert (offsets->size() == count + 1); // paranoid
     return "";
   }
   String
@@ -280,17 +275,11 @@ struct TypeTest::TypeInfo {
     ts += 8;
     // type name
     vector<uint> svo;
-    err = parse_strings (1, type_string, ts - type_string, tb - ts, &svo, "type name");
-    if (err != "")
-      return err;
-    assert (svo.size() == 2);
+    err = parse_strings (1, type_string, &ts, tb, &svo, "type name");
+    return_if (err != "", err);
     name_offset = svo[0];
     name_length = svo[1] - svo[0];
-    if (name_length < 1)
-      return "Invalid type name";
-    ts = type_string + svo[1];
-    if (ts + 4 + 4 + 4 > tb)
-      return "Premature type info end after type name";
+    return_if (name_length < 1, "Invalid type name");
     // parse type info
     err = parse_type_info (*this, type_string, &ts, tb);
     return_if (err != "", err);
@@ -309,13 +298,11 @@ struct TypeTest::TypeInfo {
     return_if (*tsp + 4 > boundary, "premature end at type info length");
     err = parse_int (tsp, &ui);
     return_if (err != "", err + " in type info length");
-    if (ui < 8 || *tsp + ui > boundary)
-      return "type info string too short";
+    return_if (*tsp + ui > boundary, "type info string too short");
     boundary = MIN (*tsp + ui, boundary);
     // storage type
     return_if (*tsp + 4 > boundary, "premature end at storage type");
-    if ((*tsp)[0] != '_' || (*tsp)[1] != '_' || (*tsp)[2] != '_' ||
-        !strchr (RAPICORN_TYPE_STORAGE_CHARS, (*tsp)[3]))
+    if (strncmp (*tsp, "___", 3) != 0 || !strchr (RAPICORN_TYPE_STORAGE_CHARS, (*tsp)[3]))
       return "invalid storage type";
     self.type_storage = Type::Storage ((*tsp)[3]);
     *tsp += 4;
@@ -328,8 +315,7 @@ struct TypeTest::TypeInfo {
     self.auxkey_offsets.clear();
     if (ui)
       {
-        err = parse_strings (ui, type_string_start, *tsp - type_string_start,
-                             boundary - *tsp, &self.auxkey_offsets, "aux infos");
+        err = parse_strings (ui, type_string_start, tsp, boundary, &self.auxkey_offsets, "aux infos");
         return_if (err != "", err);
         *tsp += self.auxkey_offsets[self.auxkey_offsets.size() - 1];
       }
