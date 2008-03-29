@@ -226,8 +226,10 @@ struct TypeTest::TypeInfo {
   vector<uint> auxkey_offsets; // last member points after last aux key
   static String
   parse_int (const char **tsp,
+             const char  *boundary,
              uint        *ui)
   {
+    return_if (*tsp + 4 > boundary, "premature end");
     uint8 *us = (uint8*) *tsp, u0 = us[0], u1 = us[1], u2 = us[2], u3 = us[3];
     if (u0 < 128 || u1 < 128 || u2 < 128 || u3 < 128)
       return "invalid integer encoding";
@@ -246,8 +248,7 @@ struct TypeTest::TypeInfo {
     uint ui = 0;
     for (uint i = 0; i < count; i++)
       {
-        return_if (*tsp + 4 > boundary, string_printf ("premature end while parsing %s", errpart.c_str()));
-        String err = parse_int (tsp, &ui);
+        String err = parse_int (tsp, boundary, &ui);
         return_if (err != "", string_printf ("%s while parsing %s", err.c_str(), errpart.c_str()));
         return_if (*tsp + ui > boundary, string_printf ("premature end while parsing %s", errpart.c_str()));
         offsets->push_back (*tsp - tstart);
@@ -295,8 +296,7 @@ struct TypeTest::TypeInfo {
     String err;
     uint ui = 0;
     // type length
-    return_if (*tsp + 4 > boundary, "premature end at type info length");
-    err = parse_int (tsp, &ui);
+    err = parse_int (tsp, boundary, &ui);
     return_if (err != "", err + " in type info length");
     return_if (*tsp + ui > boundary, "type info string too short");
     boundary = MIN (*tsp + ui, boundary);
@@ -307,9 +307,8 @@ struct TypeTest::TypeInfo {
     self.type_storage = Type::Storage ((*tsp)[3]);
     *tsp += 4;
     // number of aux entries
-    return_if (*tsp + 4 > boundary, "premature end at aux entries");
-    err = parse_int (tsp, &ui);
-    return_if (err != "", err + " in aux entry length");
+    err = parse_int (tsp, boundary, &ui);
+    return_if (err != "", err + " at aux entries");
     return_if (*tsp + ui * (4 + 1) > boundary, "premature end in aux data");
     // parse aux info
     self.auxkey_offsets.clear();
