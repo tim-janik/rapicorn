@@ -66,10 +66,51 @@ protected:
   Info          m_info;
 };
 
-class TypeTest {
+class Typ2 {
 public:
-  static TypeTest* parse_type_info (const char *type_info_string,
-                                    uint        type_info_length);
+  /* basic typing */
+#define RAPICORN_TYP2_STORAGE_CHARS     ("ifseqrc")
+  enum Storage {
+    NUM = 'i', REAL = 'f', STRING = 's', CHOICE = 'e',
+    SEQUENCE = 'q', RECORD = 'r', INTERFACE = 'c',
+  };
+  /*Copy*/              Typ2            (const Typ2&);
+  Storage               storage         () const;
+  String                name            () const;
+  /* enumeration values */
+  struct                Entry           { const String &ident, &label, &blurb; };
+  int64                 n_entries       ();
+  Entry                 entry           (uint64 nth);
+  /* interface */
+  StringVector          prerequisites   ();
+  /* record fields */
+  int64                 n_fields        ();
+  Typ2                  field           (uint64 nth);
+  /* sequence element */
+  Typ2                  elements        ();
+  /* for sequence/record field types */
+  Typ2                  main_type       ();
+  /* convenience API */
+  String                ident           () const { return name(); }
+  String                label           () const { return aux_string ("label"); }
+  String                blurb           () const { return aux_string ("blurb"); }
+  String                hints           () const { return aux_string ("hints"); }
+  /* generic auxillary data */
+  String                aux_string      (const String &auxname) const;
+  long double           aux_float       (const String &auxname) const;
+  int64                 aux_num         (const String &auxname) const;
+  /* retrieve types */
+  static Typ2*          from_type_info  (const char *type_info_string,
+                                         uint        type_info_length,
+                                         String     &error);
+  static Typ2*          from_type_info  (const char *type_info_string,
+                                         uint        type_info_length);
+  /* internal */
+  static const char*    storage_name    (Storage storage);
+  class Info;
+private:
+  Info *tinfo;
+  Typ2& operator= (const Typ2&); // must not be used
 };
 
 } // Rapicorn

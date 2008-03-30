@@ -23,14 +23,13 @@ using namespace Rapicorn;
 static void
 test_type_info ()
 {
-  TypeTest *tt;
   String ts;
-  ts = "GType001\200\200\200\201X\200\200\200\210___n\200\200\200\200";
-  tt = TypeTest::parse_type_info (ts.c_str(), ts.size());
-  assert (tt == NULL);
+  ts = "GType001\200\200\200\201X\200\200\200\210___i\200\200\200\200";
+  Typ2 *t1 = Typ2::from_type_info (ts.c_str(), ts.size());
+  assert (t1 == NULL);
   ts = "GType001\200\200\200\201Y\200\200\200\217___f\200\200\200\201\200\200\200\203a=b";
-  tt = TypeTest::parse_type_info (ts.c_str(), ts.size());
-  assert (tt == NULL);
+  Typ2 *t2 = Typ2::from_type_info (ts.c_str(), ts.size());
+  assert (t2 == NULL);
 }
 
 static void

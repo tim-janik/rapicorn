@@ -287,7 +287,7 @@ parse_type_info (TypeInfo    &self,
   boundary = MIN (*tsp + ui, boundary);
   // storage type
   return_if (*tsp + 4 > boundary, "premature end at storage type");
-  if (strncmp (*tsp, "___", 3) != 0 || !strchr (RAPICORN_TYPE_STORAGE_CHARS, (*tsp)[3]))
+  if (strncmp (*tsp, "___", 3) != 0 || !strchr (RAPICORN_TYP2_STORAGE_CHARS, (*tsp)[3]))
     return "invalid storage type";
   self.type_storage = Type::Storage ((*tsp)[3]);
   *tsp += 4;
@@ -345,15 +345,30 @@ parse_offsets (TypeInfo    &self,
   return "";
 }
 
-TypeTest*
-TypeTest::parse_type_info (const char *type_info_string,
-                           uint        type_info_length)
+Typ2*
+Typ2::from_type_info (const char *type_info_string,
+                      uint        type_info_length,
+                      String     &error)
 {
   TypeInfo *type_info = new TypeInfo();
-  String err = parse_offsets (*type_info, type_info_string, type_info_length);
+  error = parse_offsets (*type_info, type_info_string, type_info_length);
+  if (error != "")
+    {
+      delete type_info;
+      return NULL;
+    }
+  return NULL; // FIXME: type_from (type_info);
+}
+
+Typ2* // FIXME: Typ2 from_type_info (const String &type_info_string);
+Typ2::from_type_info (const char *type_info_string,
+                      uint        type_info_length)
+{
+  String err;
+  Typ2 *type = Typ2::from_type_info (type_info_string, type_info_length, err);
   if (err != "")
-    error ("%s", err.c_str());
-  return NULL;
+    error ("%s: %s", STRFUNC, err.c_str());
+  return type;
 }
 
 } // Rapicorn
