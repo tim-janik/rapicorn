@@ -221,7 +221,7 @@ Type::aux_num (const String &auxname) const
 struct TypeInfo : public virtual ReferenceCountImpl {
   const char   *type_string;
   uint          type_string_length;
-  Type::Storage type_storage;
+  Typ2::Storage type_storage;
   uint          name_offset, name_length;
   vector<uint>  auxkey_offsets; // last member points after last aux key
 };
@@ -229,12 +229,6 @@ struct TypeInfo : public virtual ReferenceCountImpl {
 struct Typ2::Info : public TypeInfo {
   String type_string_mem;
 };
-
-String
-Typ2::name () const
-{
-  return String (m_info->type_string + m_info->name_offset, m_info->name_length);
-}
 
 static String
 parse_int (const char **tsp,
@@ -299,7 +293,7 @@ parse_type_info (TypeInfo    &self,
   return_if (*tsp + 4 > boundary, "premature end at storage type");
   if (strncmp (*tsp, "___", 3) != 0 || !strchr (RAPICORN_TYP2_STORAGE_CHARS, (*tsp)[3]))
     return "invalid storage type";
-  self.type_storage = Type::Storage ((*tsp)[3]);
+  self.type_storage = Typ2::Storage ((*tsp)[3]);
   *tsp += 4;
   // number of aux entries
   err = parse_int (tsp, boundary, &ui);
@@ -353,6 +347,46 @@ parse_offsets (TypeInfo    &self,
   return_if (err != "", err);
   // done
   return "";
+}
+
+String
+Typ2::name () const
+{
+  return String (m_info->type_string + m_info->name_offset, m_info->name_length);
+}
+
+Typ2::Storage
+Typ2::storage () const
+{
+  return m_info->type_storage;
+}
+
+String
+Typ2::aux_string (const String &auxname) const
+{
+  String key = auxname + "=";
+  uint kl = key.size();
+  for (uint ui = 0; ui + 1 < m_info->auxkey_offsets.size(); ui++)
+    {
+      uint kb = m_info->auxkey_offsets[ui];
+      uint ke = m_info->auxkey_offsets[ui + 1];
+      if (ke - kb >= kl && m_info->type_string[kb + kl - 1] == '=' &&
+          strncmp (m_info->type_string + kb, key.c_str(), kl - 1) == 0)
+        return m_info->type_string + kb + kl;
+    }
+  return "";
+}
+
+double
+Typ2::aux_float (const String &auxname) const
+{
+  return string_to_double (aux_string (auxname));
+}
+
+int64
+Typ2::aux_num (const String &auxname) const
+{
+  return string_to_int (aux_string (auxname));
 }
 
 Typ2::Typ2 (Info &tinfo) :

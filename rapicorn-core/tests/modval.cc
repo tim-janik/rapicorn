@@ -30,15 +30,22 @@ static void
 test_type_info ()
 {
   String err, ts;
+  // fail type extraction
   Typ2 *t0 = Typ2::from_type_info ("Invalid-Type-Definition", err);
   assert (t0 == NULL && err != "");
-  const char tchars[] = "GType001\200\200\200\201X\200\200\200\210___i\200\200\200\200          ";
+  // type extraction by reference
+  const char tchars[] = "GType001\200\200\200\201X\200\200\200\222___i\200\200\200\201\200\200\200\206foo=37";
   Typ2 t1 = Typ2::from_type_info (tchars, sizeof (tchars));
   assert (t1.name() == "X");
+  assert (t1.storage() == Typ2::NUM);
+  // type extraction by pointer (need to check it didn't fail)
   ts = string_from_chars ("GType001\200\200\200\201Y\200\200\200\217___f\200\200\200\201\200\200\200\203a=b");
   Typ2 *t2 = Typ2::from_type_info (ts, err);
   assert (t2 != NULL && err == "");
   assert (t2->name() == "Y");
+  assert (t2->storage() == Typ2::REAL);
+  // aux keys
+  assert (t1.aux_string ("foo") == "37");
   // check that type memory used above is still valid
   assert (t1.name() + "postfix" == String ("Xpostfix"));
   assert (t2->name() == String ("Y"));

@@ -74,10 +74,9 @@ public:
     NUM = 'i', REAL = 'f', STRING = 's', CHOICE = 'e',
     SEQUENCE = 'q', RECORD = 'r', INTERFACE = 'c',
   };
-  /*Copy*/              Typ2            (const Typ2&);
-  /*Des*/              ~Typ2            ();
-  Storage               storage         () const;
+  static const char*    storage_name    (Storage storage);
   String                name            () const;
+  Storage               storage         () const;
   /* enumeration values */
   struct                Entry           { const String &ident, &label, &blurb; };
   int64                 n_entries       ();
@@ -98,7 +97,7 @@ public:
   String                hints           () const { return aux_string ("hints"); }
   /* generic auxillary data */
   String                aux_string      (const String &auxname) const;
-  long double           aux_float       (const String &auxname) const;
+  double                aux_float       (const String &auxname) const;
   int64                 aux_num         (const String &auxname) const;
   /* retrieve types */
   static Typ2           from_type_info  (const char   *rom_type_info_string,
@@ -106,7 +105,8 @@ public:
   static Typ2*          from_type_info  (const String &type_info_string, // caller owns Typ2*
                                          String       &error);
   /* internal */
-  static const char*    storage_name    (Storage storage);
+  /*Copy*/              Typ2            (const Typ2&);
+  /*Des*/              ~Typ2            ();
   class Info;
 private:
   explicit              Typ2            (Info &tinfo);
