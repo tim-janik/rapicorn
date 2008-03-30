@@ -223,7 +223,7 @@ struct TypeInfo : public virtual ReferenceCountImpl {
   uint          type_string_length;
   Typ2::Storage type_storage;
   uint          name_offset, name_length;
-  vector<uint>  auxkey_offsets; // last member points after last aux key
+  vector<uint>  auxdata_offsets; // last member points after last aux key
 };
 
 struct Typ2::Info : public TypeInfo {
@@ -252,13 +252,15 @@ parse_strings (uint          count,
                vector<uint> *offsets,
                const String &errpart)
 {
+  // Parse: xxxx XString yyyy YString zzzz ZString
+  // Store: ^            ^            ^            ^ (i.e. count + 1 offsets)
   uint ui = 0;
   for (uint i = 0; i < count; i++)
     {
+      offsets->push_back (*tsp - tstart);
       String err = parse_int (tsp, boundary, &ui);
       return_if (err != "", string_printf ("%s while parsing %s", err.c_str(), errpart.c_str()));
       return_if (*tsp + ui > boundary, string_printf ("premature end while parsing %s", errpart.c_str()));
-      offsets->push_back (*tsp - tstart);
       *tsp += ui;
     }
   offsets->push_back (*tsp - tstart);
@@ -300,12 +302,11 @@ parse_type_info (TypeInfo    &self,
   return_if (err != "", err + " at aux entries");
   return_if (*tsp + ui * (4 + 1) > boundary, "premature end in aux data");
   // parse aux info
-  self.auxkey_offsets.clear();
+  self.auxdata_offsets.clear();
   if (ui)
     {
-      err = parse_strings (ui, type_string_start, tsp, boundary, &self.auxkey_offsets, "aux infos");
+      err = parse_strings (ui, type_string_start, tsp, boundary, &self.auxdata_offsets, "aux infos");
       return_if (err != "", err);
-      *tsp += self.auxkey_offsets[self.auxkey_offsets.size() - 1];
     }
   // skip across unrecognized type data
   *tsp = boundary;
@@ -339,8 +340,8 @@ parse_offsets (TypeInfo    &self,
   vector<uint> svo;
   err = parse_strings (1, self.type_string, &ts, tb, &svo, "type name");
   return_if (err != "", err);
-  self.name_offset = svo[0];
-  self.name_length = svo[1] - svo[0];
+  self.name_offset = svo[0] + 4;
+  self.name_length = svo[1] - self.name_offset;
   return_if (self.name_length < 1, "Invalid type name");
   // parse main type info
   err = parse_type_info (self, self.type_string, &ts, tb);
@@ -366,13 +367,13 @@ Typ2::aux_string (const String &auxname) const
 {
   String key = auxname + "=";
   uint kl = key.size();
-  for (uint ui = 0; ui + 1 < m_info->auxkey_offsets.size(); ui++)
+  for (uint ui = 0; ui + 1 < m_info->auxdata_offsets.size(); ui++)
     {
-      uint kb = m_info->auxkey_offsets[ui];
-      uint ke = m_info->auxkey_offsets[ui + 1];
+      uint kb = m_info->auxdata_offsets[ui] + 4;
+      uint ke = m_info->auxdata_offsets[ui + 1];
       if (ke - kb >= kl && m_info->type_string[kb + kl - 1] == '=' &&
           strncmp (m_info->type_string + kb, key.c_str(), kl - 1) == 0)
-        return m_info->type_string + kb + kl;
+        return String (m_info->type_string + kb + kl, ke - kb - kl);
     }
   return "";
 }
@@ -387,6 +388,24 @@ int64
 Typ2::aux_num (const String &auxname) const
 {
   return string_to_int (aux_string (auxname));
+}
+
+String
+Typ2::label () const
+{
+  String str = aux_string ("label");
+  return str.size() == 0 ? ident() : str;
+}
+
+String
+Typ2::hints () const
+{
+  String str = aux_string ("hints");
+  if (str.size() == 0 || str[0] != ':')
+    str = ":" + str;
+  if (str[str.size() - 1] != ':')
+    str = str + ":";
+  return str;
 }
 
 Typ2::Typ2 (Info &tinfo) :

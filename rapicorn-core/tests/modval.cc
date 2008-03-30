@@ -54,20 +54,40 @@ test_type_info ()
 static void
 test_types ()
 {
-  Type t1 ("RcTi;0003Foo;n;0008zonk=bar000eSHREK=Schreck!0009SomeNum=7;");
-  assert (t1.storage() == Type::NUM);
+  const char tchars1[] = ("GType001\200\200\200\203Foo\200\200\200\263___i\200\200\200\203"
+                          "\200\200\200\210zonk=bar\200\200\200\216SHREK=Schreck!\200\200\200\211SomeNum=7");
+  Typ2 t1 = Typ2::from_type_info (tchars1, sizeof (tchars1));
+  assert (t1.name() == "Foo");
+  assert (t1.storage() == Typ2::NUM);
   assert (t1.ident() == "Foo");
   assert (t1.label() == "Foo");
   assert (t1.aux_string ("SHREK") == "Schreck!");
   assert (t1.aux_num ("SomeNum") == 7);
   assert (t1.aux_float ("SomeNum") == 7.0);
   assert (t1.hints() == ":");
-  Type t2 ("RcTi;0003Bar;n;0009label=BAR0008hints=rw000Dblurb=nothing;");
-  assert (t2.storage() == Type::NUM);
+  Type o1 ("RcTi;0003Foo;n;0008zonk=bar000eSHREK=Schreck!0009SomeNum=7;");
+  assert (o1.storage() == Type::NUM);
+  assert (o1.ident() == "Foo");
+  assert (o1.label() == "Foo");
+  assert (o1.aux_string ("SHREK") == "Schreck!");
+  assert (o1.aux_num ("SomeNum") == 7);
+  assert (o1.aux_float ("SomeNum") == 7.0);
+  assert (o1.hints() == ":");
+  const char tchars2[] = ("GType001\200\200\200\203Bar\200\200\200\262___i\200\200\200\203"
+                          "\200\200\200\211label=BAR\200\200\200\215blurb=nothing\200\200\200\210hints=rw");
+  Typ2 t2 = Typ2::from_type_info (tchars2, sizeof (tchars2));
+  assert (t2.name() == "Bar");
+  assert (t2.storage() == Typ2::NUM);
   assert (t2.ident() == "Bar");
   assert (t2.label() == "BAR");
   assert (t2.blurb() == "nothing");
   assert (t2.hints() == ":rw:");
+  Type o2 ("RcTi;0003Bar;n;0009label=BAR0008hints=rw000Dblurb=nothing;");
+  assert (o2.storage() == Type::NUM);
+  assert (o2.ident() == "Bar");
+  assert (o2.label() == "BAR");
+  assert (o2.blurb() == "nothing");
+  assert (o2.hints() == ":rw:");
 }
 
 static void

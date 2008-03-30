@@ -92,9 +92,9 @@ public:
   Typ2                  main_type       ();
   /* convenience API */
   String                ident           () const { return name(); }
-  String                label           () const { return aux_string ("label"); }
+  String                label           () const; // defaults to ident()
   String                blurb           () const { return aux_string ("blurb"); }
-  String                hints           () const { return aux_string ("hints"); }
+  String                hints           () const; // ensures enclosing ':'
   /* generic auxillary data */
   String                aux_string      (const String &auxname) const;
   double                aux_float       (const String &auxname) const;
