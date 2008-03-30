@@ -218,135 +218,139 @@ Type::aux_num (const String &auxname) const
 
 #define return_if(cond,string)     do { if (cond) return string; } while (0)
 
-struct TypeTest::TypeInfo {
+struct TypeInfo {
   const char *type_string;
   uint        type_string_length;
   Type::Storage type_storage;
   uint name_offset, name_length;
   vector<uint> auxkey_offsets; // last member points after last aux key
-  static String
-  parse_int (const char **tsp,
-             const char  *boundary,
-             uint        *ui)
-  {
-    return_if (*tsp + 4 > boundary, "premature end");
-    uint8 *us = (uint8*) *tsp, u0 = us[0], u1 = us[1], u2 = us[2], u3 = us[3];
-    if (u0 < 128 || u1 < 128 || u2 < 128 || u3 < 128)
-      return "invalid integer encoding";
-    *ui = (u3 & 0x7f) + ((u2 & 0x7f) >> 1) + ((u1 & 0x7f) >> 2) + ((u0 & 0x7f) >> 3);
-    *tsp += 4;
-    return "";
-  }
-  static String
-  parse_strings (uint          count,
-                 const char   *tstart,
-                 const char  **tsp,
-                 const char   *boundary,
-                 vector<uint> *offsets,
-                 const String &errpart)
-  {
-    uint ui = 0;
-    for (uint i = 0; i < count; i++)
-      {
-        String err = parse_int (tsp, boundary, &ui);
-        return_if (err != "", string_printf ("%s while parsing %s", err.c_str(), errpart.c_str()));
-        return_if (*tsp + ui > boundary, string_printf ("premature end while parsing %s", errpart.c_str()));
-        offsets->push_back (*tsp - tstart);
-        *tsp += ui;
-      }
-    offsets->push_back (*tsp - tstart);
-    assert (offsets->size() == count + 1); // paranoid
-    return "";
-  }
-  static String
-  parse_offsets (TypeInfo    &self,
-                 const char *ts,
-                 uint        _tsl)
-  {
-    /* parse a type definition like:
-     * - GTyp e001              // magic
-     * - llll TypeNameString    // type name with length
-     * - LLLL TypeInfo_data     // main type info with length
-     */
-    self.type_string = ts;
-    self.type_string_length = _tsl;
-    const char *tb = ts + _tsl;
-    String err;
-    if (!self.type_string || self.type_string_length == 0 || self.type_string[0] == 0)
-      return "Empty type string";
-    if (ts + 24 > tb)
-      return "type info string too short";
-    // check magic
-    if (strncmp (self.type_string, "GType001", 8) != 0)
-      return "Invalid/unknown type info string";
-    ts += 8;
-    // type name
-    vector<uint> svo;
-    err = parse_strings (1, self.type_string, &ts, tb, &svo, "type name");
-    return_if (err != "", err);
-    self.name_offset = svo[0];
-    self.name_length = svo[1] - svo[0];
-    return_if (self.name_length < 1, "Invalid type name");
-    // parse main type info
-    err = parse_type_info (self, self.type_string, &ts, tb);
-    return_if (err != "", err);
-    // done
-    return "";
-  }
-  static String
-  parse_type_info (TypeInfo    &self,
-                   const char  *type_string_start,
-                   const char **tsp,
-                   const char  *boundary)
-  {
-    /* parse type info:
-     * - LLLL                   // length of upcoming type info data
-     * - ___?                   // storage type
-     * - xxxx                   // number of aux entries
-     * - [ llll AuxEntry ]*     // xxxx times aux entry strings
-     * - CHOICE:    yyyy [ llll Ident llll Label llll Blurb ]+
-     * - RECORD:    yyyy [ llll FieldName _TYPE_INFO_ ]+
-     * - SEQUENCE:  yyyy FieldName _TYPE_INFO_
-     * - INTERFACE: yyyy [ llll InterfaceTypeName ]+
-     */
-    String err;
-    uint ui = 0;
-    // type length
-    err = parse_int (tsp, boundary, &ui);
-    return_if (err != "", err + " in type info length");
-    return_if (*tsp + ui > boundary, "type info data too short");
-    boundary = MIN (*tsp + ui, boundary);
-    // storage type
-    return_if (*tsp + 4 > boundary, "premature end at storage type");
-    if (strncmp (*tsp, "___", 3) != 0 || !strchr (RAPICORN_TYPE_STORAGE_CHARS, (*tsp)[3]))
-      return "invalid storage type";
-    self.type_storage = Type::Storage ((*tsp)[3]);
-    *tsp += 4;
-    // number of aux entries
-    err = parse_int (tsp, boundary, &ui);
-    return_if (err != "", err + " at aux entries");
-    return_if (*tsp + ui * (4 + 1) > boundary, "premature end in aux data");
-    // parse aux info
-    self.auxkey_offsets.clear();
-    if (ui)
-      {
-        err = parse_strings (ui, type_string_start, tsp, boundary, &self.auxkey_offsets, "aux infos");
-        return_if (err != "", err);
-        *tsp += self.auxkey_offsets[self.auxkey_offsets.size() - 1];
-      }
-    // skip across unrecognized type data
-    *tsp = boundary;
-    // FIXME: 0xfe00000 0x1fc000 0x3f80 0x7f
-    return "";
-  }
 };
+
+static String
+parse_int (const char **tsp,
+           const char  *boundary,
+           uint        *ui)
+{
+  return_if (*tsp + 4 > boundary, "premature end");
+  uint8 *us = (uint8*) *tsp, u0 = us[0], u1 = us[1], u2 = us[2], u3 = us[3];
+  if (u0 < 128 || u1 < 128 || u2 < 128 || u3 < 128)
+    return "invalid integer encoding";
+  *ui = (u3 & 0x7f) + ((u2 & 0x7f) >> 1) + ((u1 & 0x7f) >> 2) + ((u0 & 0x7f) >> 3);
+  *tsp += 4;
+  return "";
+}
+
+static String
+parse_strings (uint          count,
+               const char   *tstart,
+               const char  **tsp,
+               const char   *boundary,
+               vector<uint> *offsets,
+               const String &errpart)
+{
+  uint ui = 0;
+  for (uint i = 0; i < count; i++)
+    {
+      String err = parse_int (tsp, boundary, &ui);
+      return_if (err != "", string_printf ("%s while parsing %s", err.c_str(), errpart.c_str()));
+      return_if (*tsp + ui > boundary, string_printf ("premature end while parsing %s", errpart.c_str()));
+      offsets->push_back (*tsp - tstart);
+      *tsp += ui;
+    }
+  offsets->push_back (*tsp - tstart);
+  assert (offsets->size() == count + 1); // paranoid
+  return "";
+}
+
+static String
+parse_type_info (TypeInfo    &self,
+                 const char  *type_string_start,
+                 const char **tsp,
+                 const char  *boundary)
+{
+  /* parse type info:
+   * - LLLL                   // length of upcoming type info data
+   * - ___?                   // storage type
+   * - xxxx                   // number of aux entries
+   * - [ llll AuxEntry ]*     // xxxx times aux entry strings
+   * - CHOICE:    yyyy [ llll Ident llll Label llll Blurb ]+
+   * - RECORD:    yyyy [ llll FieldName _TYPE_INFO_ ]+
+   * - SEQUENCE:  yyyy FieldName _TYPE_INFO_
+   * - INTERFACE: yyyy [ llll InterfaceTypeName ]+
+   */
+  String err;
+  uint ui = 0;
+  // type length
+  err = parse_int (tsp, boundary, &ui);
+  return_if (err != "", err + " in type info length");
+  return_if (*tsp + ui > boundary, "type info data too short");
+  boundary = MIN (*tsp + ui, boundary);
+  // storage type
+  return_if (*tsp + 4 > boundary, "premature end at storage type");
+  if (strncmp (*tsp, "___", 3) != 0 || !strchr (RAPICORN_TYPE_STORAGE_CHARS, (*tsp)[3]))
+    return "invalid storage type";
+  self.type_storage = Type::Storage ((*tsp)[3]);
+  *tsp += 4;
+  // number of aux entries
+  err = parse_int (tsp, boundary, &ui);
+  return_if (err != "", err + " at aux entries");
+  return_if (*tsp + ui * (4 + 1) > boundary, "premature end in aux data");
+  // parse aux info
+  self.auxkey_offsets.clear();
+  if (ui)
+    {
+      err = parse_strings (ui, type_string_start, tsp, boundary, &self.auxkey_offsets, "aux infos");
+      return_if (err != "", err);
+      *tsp += self.auxkey_offsets[self.auxkey_offsets.size() - 1];
+    }
+  // skip across unrecognized type data
+  *tsp = boundary;
+  // FIXME: 0xfe00000 0x1fc000 0x3f80 0x7f
+  return "";
+}
+
+static String
+parse_offsets (TypeInfo    &self,
+               const char *ts,
+               uint        _tsl)
+{
+  /* parse a type definition like:
+   * - GTyp e001              // magic
+   * - llll TypeNameString    // type name with length
+   * - LLLL TypeInfo_data     // main type info with length
+   */
+  self.type_string = ts;
+  self.type_string_length = _tsl;
+  const char *tb = ts + _tsl;
+  String err;
+  if (!self.type_string || self.type_string_length == 0 || self.type_string[0] == 0)
+    return "Empty type string";
+  if (ts + 24 > tb)
+    return "type info string too short";
+  // check magic
+  if (strncmp (self.type_string, "GType001", 8) != 0)
+    return "Invalid/unknown type info string";
+  ts += 8;
+  // type name
+  vector<uint> svo;
+  err = parse_strings (1, self.type_string, &ts, tb, &svo, "type name");
+  return_if (err != "", err);
+  self.name_offset = svo[0];
+  self.name_length = svo[1] - svo[0];
+  return_if (self.name_length < 1, "Invalid type name");
+  // parse main type info
+  err = parse_type_info (self, self.type_string, &ts, tb);
+  return_if (err != "", err);
+  // done
+  return "";
+}
 
 TypeTest*
 TypeTest::parse_type_info (const char *type_info_string,
                            uint        type_info_length)
 {
   TypeInfo *type_info = new TypeInfo();
-  String err = type_info->parse_offsets (*type_info, type_info_string, type_info_length);
+  String err = parse_offsets (*type_info, type_info_string, type_info_length);
   if (err != "")
     error ("%s", err.c_str());
   return NULL;
