@@ -32,13 +32,16 @@ test_type_info ()
   String err, ts;
   Typ2 *t0 = Typ2::from_type_info ("Invalid-Type-Definition", err);
   assert (t0 == NULL && err != "");
-  ts = string_from_chars ("GType001\200\200\200\201X\200\200\200\210___i\200\200\200\200");
-  Typ2 t1 = Typ2::from_type_info (ts.data(), ts.size());
+  const char tchars[] = "GType001\200\200\200\201X\200\200\200\210___i\200\200\200\200          ";
+  Typ2 t1 = Typ2::from_type_info (tchars, sizeof (tchars));
   assert (t1.name() == "X");
   ts = string_from_chars ("GType001\200\200\200\201Y\200\200\200\217___f\200\200\200\201\200\200\200\203a=b");
   Typ2 *t2 = Typ2::from_type_info (ts, err);
   assert (t2 != NULL && err == "");
   assert (t2->name() == "Y");
+  // check that type memory used above is still valid
+  assert (t1.name() + "postfix" == String ("Xpostfix"));
+  assert (t2->name() == String ("Y"));
 }
 
 static void
