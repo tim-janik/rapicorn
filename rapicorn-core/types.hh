@@ -75,6 +75,7 @@ public:
     SEQUENCE = 'q', RECORD = 'r', INTERFACE = 'c',
   };
   /*Copy*/              Typ2            (const Typ2&);
+  /*Des*/              ~Typ2            ();
   Storage               storage         () const;
   String                name            () const;
   /* enumeration values */
@@ -100,17 +101,17 @@ public:
   long double           aux_float       (const String &auxname) const;
   int64                 aux_num         (const String &auxname) const;
   /* retrieve types */
-  static Typ2*          from_type_info  (const char *type_info_string,
-                                         uint        type_info_length,
-                                         String     &error);
-  static Typ2*          from_type_info  (const char *type_info_string,
-                                         uint        type_info_length);
+  static Typ2           from_type_info  (const char   *rom_type_info_string,
+                                         uint          type_info_string_length);
+  static Typ2*          from_type_info  (const String &type_info_string, // caller owns Typ2*
+                                         String       &error);
   /* internal */
   static const char*    storage_name    (Storage storage);
   class Info;
 private:
-  Info *tinfo;
-  Typ2& operator= (const Typ2&); // must not be used
+  explicit              Typ2            (Info &tinfo);
+  Info                 *m_info;
+  Typ2&                 operator=       (const Typ2&); // must not be used
 };
 
 } // Rapicorn

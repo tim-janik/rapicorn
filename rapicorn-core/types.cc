@@ -218,13 +218,23 @@ Type::aux_num (const String &auxname) const
 
 #define return_if(cond,string)     do { if (cond) return string; } while (0)
 
-struct TypeInfo {
-  const char *type_string;
-  uint        type_string_length;
+struct TypeInfo : public virtual ReferenceCountImpl {
+  const char   *type_string;
+  uint          type_string_length;
   Type::Storage type_storage;
-  uint name_offset, name_length;
-  vector<uint> auxkey_offsets; // last member points after last aux key
+  uint          name_offset, name_length;
+  vector<uint>  auxkey_offsets; // last member points after last aux key
 };
+
+struct Typ2::Info : public TypeInfo {
+  String type_string_mem;
+};
+
+String
+Typ2::name () const
+{
+  return String (m_info->type_string + m_info->name_offset, m_info->name_length);
+}
 
 static String
 parse_int (const char **tsp,
@@ -345,30 +355,51 @@ parse_offsets (TypeInfo    &self,
   return "";
 }
 
-Typ2*
-Typ2::from_type_info (const char *type_info_string,
-                      uint        type_info_length,
-                      String     &error)
+Typ2::Typ2 (Info &tinfo) :
+  m_info (ref (&tinfo))
+{}
+
+Typ2::Typ2 (const Typ2 &src) :
+  m_info (ref (src.m_info))
+{}
+
+Typ2::~Typ2 ()
 {
-  TypeInfo *type_info = new TypeInfo();
-  error = parse_offsets (*type_info, type_info_string, type_info_length);
-  if (error != "")
-    {
-      delete type_info;
-      return NULL;
-    }
-  return NULL; // FIXME: type_from (type_info);
+  Info *old_info = m_info;
+  m_info = NULL;
+  if (old_info)
+    unref (old_info);
 }
 
-Typ2* // FIXME: Typ2 from_type_info (const String &type_info_string);
-Typ2::from_type_info (const char *type_info_string,
-                      uint        type_info_length)
+Typ2
+Typ2::from_type_info (const char *rom_type_info_string,
+                      uint        type_info_string_length)
 {
-  String err;
-  Typ2 *type = Typ2::from_type_info (type_info_string, type_info_length, err);
+  Typ2::Info *type_info = new Typ2::Info();
+  ref_sink (type_info);
+  /* we rely on caller owned memory to stay around
+   * // type_info.type_string_mem = String (rom_type_info_string, type_info_string_length);
+   */
+  String err = parse_offsets (*type_info, rom_type_info_string, type_info_string_length);
   if (err != "")
     error ("%s: %s", STRFUNC, err.c_str());
+  Typ2 type (*type_info);
+  unref (type_info);
   return type;
+}
+
+Typ2* // caller owns Typ2*
+Typ2::from_type_info (const String &type_info_string,
+                      String       &error)
+{
+  Typ2::Info *type_info = new Typ2::Info();
+  ref_sink (type_info);
+  type_info->type_string_mem = type_info_string; // copy and save type_info_string
+  error = parse_offsets (*type_info, type_info->type_string_mem.data(), type_info->type_string_mem.size());
+  Typ2 *tp = NULL;
+  if (error == "")
+    tp = new Typ2 (*type_info);
+  return tp;
 }
 
 } // Rapicorn

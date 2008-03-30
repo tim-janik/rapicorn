@@ -29,13 +29,16 @@ string_from_chars (CharArray &ca)
 static void
 test_type_info ()
 {
-  String ts;
+  String err, ts;
+  Typ2 *t0 = Typ2::from_type_info ("Invalid-Type-Definition", err);
+  assert (t0 == NULL && err != "");
   ts = string_from_chars ("GType001\200\200\200\201X\200\200\200\210___i\200\200\200\200");
-  Typ2 *t1 = Typ2::from_type_info (ts.c_str(), ts.size());
-  assert (t1 == NULL);
+  Typ2 t1 = Typ2::from_type_info (ts.data(), ts.size());
+  assert (t1.name() == "X");
   ts = string_from_chars ("GType001\200\200\200\201Y\200\200\200\217___f\200\200\200\201\200\200\200\203a=b");
-  Typ2 *t2 = Typ2::from_type_info (ts.c_str(), ts.size());
-  assert (t2 == NULL);
+  Typ2 *t2 = Typ2::from_type_info (ts, err);
+  assert (t2 != NULL && err == "");
+  assert (t2->name() == "Y");
 }
 
 static void
