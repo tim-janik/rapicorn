@@ -114,7 +114,6 @@ def AIn (identifier):   # assert new identifier
   if yy.namespace_find (identifier) or identifier in keywords:  raise KeyError ('redefining existing identifier: %s' % identifier)
 def ATN (typename):     # assert a typename
   ttuple = yy.namespace_find (typename, (None,))
-  print "TYPE: ", typename, ttuple
   if not ttuple[0] in ('sequence', 'record', 'enum', 'builtin'):
     raise TypeError ('invalid typename: ' + repr (typename))
 
