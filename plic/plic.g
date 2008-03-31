@@ -248,14 +248,16 @@ def main():
   if len (files) >= 1: # file IO
     f = open (files[0], 'r')
     input_string = f.read()
+    filename = files[0]
   else:               # interactive
     print >>sys.stderr, 'Usage: %s [filename]' % argv[0]
     try:
       input_string = raw_input ('IDL> ')
     except EOFError:
       input_string = ""
+    filename = '<stdin>'
     print
-  isp = IdlSyntaxParser (IdlSyntaxParserScanner (input_string))
+  isp = IdlSyntaxParser (IdlSyntaxParserScanner (input_string, filename = filename))
   result = None
   # parsing: isp.IdlSyntax ()
   ex = None
