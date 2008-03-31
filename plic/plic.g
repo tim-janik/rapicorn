@@ -30,20 +30,20 @@ class YYGlobals:
   ecounter = None
   namespace = None
   ns_list = [] # namespaces
-yy = YYGlobals # globals
-
-def namespace_open (ident):
-    assert yy.namespace == None and yy.dict == None
-    yy.namespace = ident
-    yy.dict = {}
+  def namespace_open (self, ident):
+    assert self.namespace == None and self.dict == None
+    self.namespace = ident
+    self.dict = {}
     # initialize namespace
     for builtintype in ('Bool', 'Num', 'Real', 'String'):
-      yy.dict[builtintype] = ('builtin', builtintype)
-def namespace_close ():
-    assert isinstance (yy.namespace, str) and isinstance (yy.dict, dict)
-    yy.ns_list.append ((yy.namespace, yy.dict))
-    yy.namespace = None
-    yy.dict = None
+      self.dict[builtintype] = ('builtin', builtintype)
+  def namespace_close (self):
+    assert isinstance (self.namespace, str) and isinstance (self.dict, dict)
+    self.ns_list.append ((self.namespace, self.dict))
+    self.namespace = None
+    self.dict = None
+yy = YYGlobals() # globals
+
 def constant_lookup (variable):
     assert isinstance (yy.dict, dict)
     type, value = yy.dict.get (variable, (None, 0))
@@ -129,8 +129,8 @@ parser IdlSyntaxParser:
 rule IdlSyntax: ( ';' | namespace )* EOF        {{ return yy.ns_list; }}
 
 rule namespace:
-        'namespace' IDENT                       {{ namespace_open (IDENT) }}
-        '{' declaration* '}'                    {{ namespace_close() }}
+        'namespace' IDENT                       {{ yy.namespace_open (IDENT) }}
+        '{' declaration* '}'                    {{ yy.namespace_close() }}
 rule declaration:
           ';'
         | const_assignment
@@ -269,6 +269,7 @@ def main():
     runtime.print_error (ex, isp._scanner)
   except AssertionError: raise
   except Exception, ex:
+    # raise # pass exceptions on when debugging
     exstr = str (ex)
     if exstr: exstr = ': ' + exstr
     runtime.print_error (ParseError ('%s%s' % (ex.__class__.__name__, exstr)), isp._scanner)
