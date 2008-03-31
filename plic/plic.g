@@ -50,68 +50,68 @@ class YYGlobals (object):
 yy = YYGlobals() # globals
 
 def constant_lookup (variable):
-    type, value = yy.namespace_find (variable, (None, 0))
-    if type != 'Const':
-        raise NameError ('undeclared constant: ' + variable)
-    return value
+  type, value = yy.namespace_find (variable, (None, 0))
+  if type != 'Const':
+    raise NameError ('undeclared constant: ' + variable)
+  return value
 def add_evalue (evalue_tuple):
-    evalue_name   = evalue_tuple[0]
-    evalue_number = evalue_tuple[1]
-    evalue_label  = evalue_tuple[2]
-    evalue_blurb  = evalue_tuple[3]
-    if evalue_number == None:
-      evalue_number = yy.ecounter
-      yy.ecounter += 1
-    else:
-      yy.ecounter = 1 + evalue_number
-    AS (evalue_name)
-    AN (evalue_number)
-    yy.dictadd (evalue_name, 'Const', evalue_number)
-    return (evalue_name, evalue_number, evalue_label, evalue_blurb)
+  evalue_name   = evalue_tuple[0]
+  evalue_number = evalue_tuple[1]
+  evalue_label  = evalue_tuple[2]
+  evalue_blurb  = evalue_tuple[3]
+  if evalue_number == None:
+    evalue_number = yy.ecounter
+    yy.ecounter += 1
+  else:
+    yy.ecounter = 1 + evalue_number
+  AS (evalue_name)
+  AN (evalue_number)
+  yy.dictadd (evalue_name, 'Const', evalue_number)
+  return (evalue_name, evalue_number, evalue_label, evalue_blurb)
 def add_record (name, rfields):
-    AIn (name)
-    if len (rfields) < 1:
-      raise AttributeError ('invalid empty record: %s' % name)
-    fdict = {}
-    for field in rfields:
-      if fdict.has_key (field[1]):
-        raise NameError ('duplicate record field name: ' + field[1])
-      fdict[field[1]] = field[0]
-    yy.dictadd (name, 'record', tuple (rfields))
+  AIn (name)
+  if len (rfields) < 1:
+    raise AttributeError ('invalid empty record: %s' % name)
+  fdict = {}
+  for field in rfields:
+    if fdict.has_key (field[1]):
+      raise NameError ('duplicate record field name: ' + field[1])
+    fdict[field[1]] = field[0]
+  yy.dictadd (name, 'record', tuple (rfields))
 def add_sequence (name, sfields):
-    AIn (name)
-    if len (sfields) < 1:
-      raise AttributeError ('invalid empty sequence: %s' % name)
-    if len (sfields) > 1:
-      raise AttributeError ('invalid multiple fields in sequence: %s' % name)
-    yy.dictadd (name, 'sequence', tuple (sfields))
+  AIn (name)
+  if len (sfields) < 1:
+    raise AttributeError ('invalid empty sequence: %s' % name)
+  if len (sfields) > 1:
+    raise AttributeError ('invalid multiple fields in sequence: %s' % name)
+  yy.dictadd (name, 'sequence', tuple (sfields))
 def quote (qstring):
-    import rfc822
-    return '"' + rfc822.quote (qstring) + '"'
+  import rfc822
+  return '"' + rfc822.quote (qstring) + '"'
 def unquote (qstring):
-    assert (qstring[0] == '"' and qstring[-1] == '"')
-    import rfc822
-    return rfc822.unquote (qstring)
+  assert (qstring[0] == '"' and qstring[-1] == '"')
+  import rfc822
+  return rfc822.unquote (qstring)
 def TN (number_candidate):  # test number
-    return isinstance (number_candidate, int) or isinstance (number_candidate, float)
+  return isinstance (number_candidate, int) or isinstance (number_candidate, float)
 def TS (string_candidate):  # test string
-    return isinstance (string_candidate, str) and len (string_candidate) >= 2
+  return isinstance (string_candidate, str) and len (string_candidate) >= 2
 def TSp (string_candidate): # test plain string
-    return TS (string_candidate) and string_candidate[0] == '"'
+  return TS (string_candidate) and string_candidate[0] == '"'
 def TSi (string_candidate): # test i18n string
-    return TS (string_candidate) and string_candidate[0] == '_'
+  return TS (string_candidate) and string_candidate[0] == '_'
 def AN (number_candidate):  # assert number
-    if not TN (number_candidate): raise TypeError ('invalid number: ' + repr (number_candidate))
+  if not TN (number_candidate): raise TypeError ('invalid number: ' + repr (number_candidate))
 def AS (string_candidate):  # assert string
-    if not TS (string_candidate): raise TypeError ('invalid string: ' + repr (string_candidate))
+  if not TS (string_candidate): raise TypeError ('invalid string: ' + repr (string_candidate))
 def ASp (string_candidate, constname = None):   # assert plain string
-    if not TSp (string_candidate):
-        if constname:   raise TypeError ("invalid untranslated string (constant '%s'): %s" % (constname, repr (string_candidate)))
-        else:           raise TypeError ('invalid untranslated string: ' + repr (string_candidate))
+  if not TSp (string_candidate):
+    if constname:   raise TypeError ("invalid untranslated string (constant '%s'): %s" % (constname, repr (string_candidate)))
+    else:           raise TypeError ('invalid untranslated string: ' + repr (string_candidate))
 def ASi (string_candidate): # assert i18n string
-    if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
+  if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
 def AIn (identifier):   # assert new identifier
-    if yy.namespace_find (identifier) or identifier in keywords:  raise KeyError ('redefining existing identifier: %s' % identifier)
+  if yy.namespace_find (identifier) or identifier in keywords:  raise KeyError ('redefining existing identifier: %s' % identifier)
 def ATN (typename):     # assert a typename
   ttuple = yy.namespace_find (typename, (None,))
   print "TYPE: ", typename, ttuple
@@ -240,11 +240,11 @@ rule plain_string:
 %%
 
 class ParseError (runtime.SyntaxError):
-    def __init__ (self, msg = "Parse Error"):
-        runtime.SyntaxError.__init__ (self, None, msg)
-    def __str__(self):
-        if not self.pos: return 'ParseError'
-        else: return 'ParseError@%s(%s)' % (repr (self.pos), self.msg)
+  def __init__ (self, msg = "Parse Error"):
+    runtime.SyntaxError.__init__ (self, None, msg)
+  def __str__(self):
+    if not self.pos: return 'ParseError'
+    else: return 'ParseError@%s(%s)' % (repr (self.pos), self.msg)
 
 def main():
   from sys import argv, stdin
