@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-import sys
+import sys, Decls
 #@PLICSUBST_PREIMPORT@
 PLIC_VERSION=\
 "@PLICSUBST_VERSION@"   # this needs to be in column0 for @@ replacements to work
@@ -29,28 +29,26 @@ class YYGlobals (object):
   def __init__ (self):
     self.ecounter = None
     self.namespace = None
-    self.nsdict = None
     self.ns_list = [] # namespaces
-  def dictadd (self, name, kind, members):
-    self.nsdict[name] = (kind, members)
+  def nsadd (self, name, kind, members):
+    self.namespace.add (name, kind, members)
   def namespace_open (self, ident):
-    assert self.namespace == None and self.nsdict == None
-    self.namespace = ident
-    self.nsdict = {}
+    assert self.namespace == None
+    self.namespace = Decls.Namespace (ident)
     # initialize namespace
     for builtintype in ('Bool', 'Num', 'Real', 'String'):
-      self.dictadd (builtintype, 'builtin', builtintype)
+      self.namespace.add (builtintype, 'builtin', builtintype)
   def namespace_close (self):
-    assert isinstance (self.namespace, str) and isinstance (self.nsdict, dict)
-    self.ns_list.append ((self.namespace, self.nsdict))
+    assert isinstance (self.namespace, Decls.Namespace)
+    self.ns_list.append (self.namespace)
     self.namespace = None
-    self.nsdict = None
   def namespace_find (self, name, fallback = None):
-    return self.nsdict.get (name, fallback)
+    assert isinstance (self.namespace, Decls.Namespace)
+    return self.namespace.find (name, fallback)
 yy = YYGlobals() # globals
 
 def constant_lookup (variable):
-  type, value = yy.namespace_find (variable, (None, 0))
+  varname, type, value = yy.namespace_find (variable, (None, None, 0))
   if type != 'Const':
     raise NameError ('undeclared constant: ' + variable)
   return value
@@ -66,7 +64,7 @@ def add_evalue (evalue_tuple):
     yy.ecounter = 1 + evalue_number
   AS (evalue_name)
   AN (evalue_number)
-  yy.dictadd (evalue_name, 'Const', evalue_number)
+  yy.nsadd (evalue_name, 'Const', evalue_number)
   return (evalue_name, evalue_number, evalue_label, evalue_blurb)
 def add_record (name, rfields):
   AIn (name)
@@ -77,14 +75,14 @@ def add_record (name, rfields):
     if fdict.has_key (field[1]):
       raise NameError ('duplicate record field name: ' + field[1])
     fdict[field[1]] = field[0]
-  yy.dictadd (name, 'record', tuple (rfields))
+  yy.nsadd (name, 'record', tuple (rfields))
 def add_sequence (name, sfields):
   AIn (name)
   if len (sfields) < 1:
     raise AttributeError ('invalid empty sequence: %s' % name)
   if len (sfields) > 1:
     raise AttributeError ('invalid multiple fields in sequence: %s' % name)
-  yy.dictadd (name, 'sequence', tuple (sfields))
+  yy.nsadd (name, 'sequence', tuple (sfields))
 def quote (qstring):
   import rfc822
   return '"' + rfc822.quote (qstring) + '"'
@@ -114,7 +112,7 @@ def AIn (identifier):   # assert new identifier
   if yy.namespace_find (identifier) or identifier in keywords:  raise KeyError ('redefining existing identifier: %s' % identifier)
 def ATN (typename):     # assert a typename
   ttuple = yy.namespace_find (typename, (None,))
-  if not ttuple[0] in ('sequence', 'record', 'enum', 'builtin'):
+  if not ttuple[1] in ('sequence', 'record', 'enum', 'builtin'):
     raise TypeError ('invalid typename: ' + repr (typename))
 
 %%
@@ -145,7 +143,7 @@ rule enumeration:
         ( 'enumeration' | 'enum' )
         IDENT '{'                               {{ evalues = []; yy.ecounter = 1 }}
         enumeration_rest                        {{ evalues = enumeration_rest }}
-        '}' ';'                                 {{ AIn (IDENT); yy.dictadd (IDENT, 'enum', tuple (evalues)); yy.ecounter = None }}
+        '}' ';'                                 {{ AIn (IDENT); yy.nsadd (IDENT, 'enum', tuple (evalues)); yy.ecounter = None }}
 rule enumeration_rest:                          {{ evalues = [] }}
         ( ''                                    # empty
         | enumeration_value                     {{ evalues = evalues + [ add_evalue (enumeration_value) ] }}
@@ -193,7 +191,7 @@ rule sequence:
         '}' ';'                                 {{ add_sequence (IDENT, sfields) }}
 
 rule const_assignment:
-        'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yy.dictadd (IDENT, 'Const', expression); }}
+        'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yy.nsadd (IDENT, 'Const', expression); }}
 
 rule expression: summation                      {{ return summation }}
 rule summation:
