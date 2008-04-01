@@ -4,6 +4,8 @@
 
 Const a = 5; Const a = 6; // invalid reassignment
 
+Const record = 5; // keyword assignment
+
 Const TRUE = 17; // invalid constant name
 
 Const tmp = "invalid" _("i18n string") "concatenation";
