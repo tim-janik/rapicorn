@@ -8,6 +8,10 @@ Const TRUE = 17; // invalid constant name
 
 Const tmp = "invalid" _("i18n string") "concatenation";
 
+FrobCheck tmp = 1; // FrobCheck is no type
+
+Const zzz = 1; zzz tmp = 1; // zzz is no type
+
 record DupRecord { Num a, b, c; }; // fail on multiple fields per type
 
 record DupRecord { Num b; Num b; }; // duplicate: b
