@@ -14,7 +14,7 @@ check-fail:	${PLIC} testfail.idl
 	  while read num line ; do \
 	    echo -e "namespace X {\n $$line \n}" > xgen-testfail.idl \
 	      && ! ${PLIC} xgen-testfail.idl > /dev/null 2>&1 \
-	      || { echo -e "\ntestfail.idl:$$num: no error: $$line" ; exit 1 ; } ; \
+	      || { echo -e "\ntestfail.idl:$$num: uncaught error: $$line" ; exit 1 ; } ; \
 	    echo -n " $$num" ; \
 	  done ; echo
 	rm -f xgen-testfail.idl
