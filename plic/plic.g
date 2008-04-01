@@ -34,21 +34,21 @@ class YYGlobals (object):
     self.ns_list = [] # namespaces
   def nsadd (self, name, kind, members):
     self.namespace.add (name, kind, members)
-  def nsadd_enum (self, enum_name, enum_values):
-    enum = Decls.Enum (enum_name)
-    for ev in enum_values:
-      enum.add (*ev)
-    self.namespace.add_enum (enum)
   def nsadd_evalue (self, evalue_ident, evalue_label, evalue_blurb, evalue_number = None):
+    AS (evalue_ident)
     if evalue_number == None:
       evalue_number = yy.ecounter
       yy.ecounter += 1
     else:
+      AN (evalue_number)
       yy.ecounter = 1 + evalue_number
-    AS (evalue_ident)
-    AN (evalue_number)
     yy.nsadd (evalue_ident, 'Const', evalue_number)
     return (evalue_ident, evalue_label, evalue_blurb, evalue_number)
+  def nsadd_enum (self, enum_name, enum_values):
+    enum = Decls.TypeInfo (enum_name, Decls.ENUM)
+    for ev in enum_values:
+      enum.add_option (*ev)
+    self.namespace.add_type (enum)
   def nsadd_record (self, name, rfields):
     AIn (name)
     if len (rfields) < 1:
