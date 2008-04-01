@@ -18,6 +18,12 @@ enum ExtensiveEnum { record, }; // keyword as enum value
 
 enum ExtensiveEnum { Foo; }; // semicolon in enum
 
+enum ExtensiveEnum { EV1, EV2, EV1 }; // duplicate enum value
+
+enum Enu1 { AA }; enum Enu2 { AA }; // duplicate enum value
+
+enum Enu1 { AA }; enum Enu1 { BB }; // duplicate enum name
+
 Const Var = 0; enum ExtensiveEnum { Var }; // constant in enum
 
 sequence EmptySequence { }; // sequence needs 1 field
