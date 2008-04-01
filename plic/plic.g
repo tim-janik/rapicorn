@@ -24,6 +24,7 @@ import yapps2runtime as runtime
 keywords = ( 'TRUE', 'True', 'true', 'FALSE', 'False', 'false',
              'namespace', 'enum', 'enumeration', 'Const', 'record', 'class', 'sequence',
              'Bool', 'Num', 'Real', 'String' )
+debugging = 0 # causes exceptions to bypass IDL-file parser error handling
 
 class YYGlobals (object):
   def __init__ (self):
@@ -32,6 +33,18 @@ class YYGlobals (object):
     self.ns_list = [] # namespaces
   def nsadd (self, name, kind, members):
     self.namespace.add (name, kind, members)
+  def nsadd_enum (self, enum_name, enum_values):
+    yy.nsadd (enum_name, 'enum', enum_values)
+  def nsadd_evalue (self, evalue_ident, evalue_label, evalue_blurb, evalue_number = None):
+    if evalue_number == None:
+      evalue_number = yy.ecounter
+      yy.ecounter += 1
+    else:
+      yy.ecounter = 1 + evalue_number
+    AS (evalue_ident)
+    AN (evalue_number)
+    yy.nsadd (evalue_ident, 'Const', evalue_number)
+    return (evalue_ident, evalue_number, evalue_label, evalue_blurb)
   def namespace_open (self, ident):
     assert self.namespace == None
     self.namespace = Decls.Namespace (ident)
@@ -52,20 +65,6 @@ def constant_lookup (variable):
   if type != 'Const':
     raise NameError ('undeclared constant: ' + variable)
   return value
-def add_evalue (evalue_tuple):
-  evalue_name   = evalue_tuple[0]
-  evalue_number = evalue_tuple[1]
-  evalue_label  = evalue_tuple[2]
-  evalue_blurb  = evalue_tuple[3]
-  if evalue_number == None:
-    evalue_number = yy.ecounter
-    yy.ecounter += 1
-  else:
-    yy.ecounter = 1 + evalue_number
-  AS (evalue_name)
-  AN (evalue_number)
-  yy.nsadd (evalue_name, 'Const', evalue_number)
-  return (evalue_name, evalue_number, evalue_label, evalue_blurb)
 def add_record (name, rfields):
   AIn (name)
   if len (rfields) < 1:
@@ -143,10 +142,11 @@ rule enumeration:
         ( 'enumeration' | 'enum' )
         IDENT '{'                               {{ evalues = []; yy.ecounter = 1 }}
         enumeration_rest                        {{ evalues = enumeration_rest }}
-        '}' ';'                                 {{ AIn (IDENT); yy.nsadd (IDENT, 'enum', tuple (evalues)); yy.ecounter = None }}
+        '}'                                     {{ AIn (IDENT); yy.nsadd_enum (IDENT, evalues) }}
+        ';'                                     {{ evalues = None; yy.ecounter = None }}
 rule enumeration_rest:                          {{ evalues = [] }}
         ( ''                                    # empty
-        | enumeration_value                     {{ evalues = evalues + [ add_evalue (enumeration_value) ] }}
+        | enumeration_value                     {{ evalues = evalues + [ enumeration_value ] }}
           [ ',' enumeration_rest                {{ evalues = evalues + enumeration_rest }}
           ] 
         )                                       {{ return evalues }}
@@ -160,7 +160,7 @@ rule enumeration_value:
                                                 {{ else:               l = [ expression, "" ] }}
                                                 {{ l = [ IDENT ] + l + [ "" ] }}
           ) 
-        ]                                       {{ return tuple (l) }}
+        ]                                       {{ return yy.nsadd_evalue (l[0], l[2], l[3], l[1]) }}
 rule enumeration_args:
         expression                              {{ l = [ expression ] }}
                                                 {{ if TS (expression): l = [ None ] + l }}
@@ -270,7 +270,7 @@ def main():
     runtime.print_error (ex, isp._scanner)
   except AssertionError: raise
   except Exception, ex:
-    # raise # pass exceptions on when debugging
+    if debugging: raise # pass exceptions on when debugging
     exstr = str (ex)
     if exstr: exstr = ': ' + exstr
     runtime.print_error (ParseError ('%s%s' % (ex.__class__.__name__, exstr)), isp._scanner)
