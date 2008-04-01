@@ -148,7 +148,7 @@ rule enumeration_rest:                          {{ evalues = [] }}
         ( ''                                    # empty
         | enumeration_value                     {{ evalues = evalues + [ enumeration_value ] }}
           [ ',' enumeration_rest                {{ evalues = evalues + enumeration_rest }}
-          ] 
+          ]
         )                                       {{ return evalues }}
 rule enumeration_value:
         IDENT                                   {{ l = [IDENT, None, "", ""]; AIn (IDENT) }}
@@ -159,7 +159,7 @@ rule enumeration_value:
             expression                          {{ if TS (expression): l = [ None, expression ]; }}
                                                 {{ else:               l = [ expression, "" ] }}
                                                 {{ l = [ IDENT ] + l + [ "" ] }}
-          ) 
+          )
         ]                                       {{ return yy.nsadd_evalue (l[0], l[2], l[3], l[1]) }}
 rule enumeration_args:
         expression                              {{ l = [ expression ] }}
