@@ -34,7 +34,23 @@ class Namespace (BaseDecl):
     self.member_dict = {}
   def add (self, name, kind, content):
     assert kind in decl_types
+    assert kind != 'enum'
     self.members += [ (name, kind, content) ]
     self.member_dict[name] = self.members[-1]
+  def add_enum (self, enum):
+    assert isinstance (enum, Enum)
+    self.members += [ (enum.name, 'enum', enum) ]
+    self.member_dict[enum.name] = self.members[-1]
   def find (self, name, fallback = None):
     return self.member_dict.get (name, fallback)
+
+class Enum (BaseDecl):
+  def __init__ (self, name):
+    self.name = name
+    self.members = [] # holds: (ident, label, blurb, number)
+  def add (self, ident, label, blurb, number):
+    assert isinstance (ident, str)
+    assert isinstance (label, str)
+    assert isinstance (blurb, str)
+    assert isinstance (number, int)
+    self.members += [ (ident, label, blurb, number) ]

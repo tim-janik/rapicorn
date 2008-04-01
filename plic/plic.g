@@ -34,7 +34,10 @@ class YYGlobals (object):
   def nsadd (self, name, kind, members):
     self.namespace.add (name, kind, members)
   def nsadd_enum (self, enum_name, enum_values):
-    yy.nsadd (enum_name, 'enum', enum_values)
+    enum = Decls.Enum (enum_name)
+    for ev in enum_values:
+      enum.add (*ev)
+    self.namespace.add_enum (enum)
   def nsadd_evalue (self, evalue_ident, evalue_label, evalue_blurb, evalue_number = None):
     if evalue_number == None:
       evalue_number = yy.ecounter
@@ -44,7 +47,7 @@ class YYGlobals (object):
     AS (evalue_ident)
     AN (evalue_number)
     yy.nsadd (evalue_ident, 'Const', evalue_number)
-    return (evalue_ident, evalue_number, evalue_label, evalue_blurb)
+    return (evalue_ident, evalue_label, evalue_blurb, evalue_number)
   def namespace_open (self, ident):
     assert self.namespace == None
     self.namespace = Decls.Namespace (ident)
