@@ -32,8 +32,10 @@ class YYGlobals (object):
     self.ecounter = None
     self.namespace = None
     self.ns_list = [] # namespaces
-  def nsadd (self, name, kind, members):
-    self.namespace.add (name, kind, members)
+  def nsadd_const (self, name, value):
+    if not isinstance (value, (int, long, float, str)):
+      raise TypeError ('constant expression does not yield string or number: ' + repr (typename))
+    self.namespace.add_const (name, value)
   def nsadd_evalue (self, evalue_ident, evalue_label, evalue_blurb, evalue_number = None):
     AS (evalue_ident)
     if evalue_number == None:
@@ -42,7 +44,7 @@ class YYGlobals (object):
     else:
       AN (evalue_number)
       yy.ecounter = 1 + evalue_number
-    yy.nsadd (evalue_ident, 'Const', evalue_number)
+    yy.nsadd_const (evalue_ident, evalue_number)
     return (evalue_ident, evalue_label, evalue_blurb, evalue_number)
   def nsadd_enum (self, enum_name, enum_values):
     enum = Decls.TypeInfo (enum_name, Decls.ENUM)
@@ -90,8 +92,8 @@ class YYGlobals (object):
 yy = YYGlobals() # globals
 
 def constant_lookup (variable):
-  varname, type, value = yy.namespace.find_const (variable, (None, None, 0))
-  if type != 'Const':
+  value = yy.namespace.find_const (variable)
+  if value == None:
     raise NameError ('undeclared constant: ' + variable)
   return value
 def quote (qstring):
@@ -120,7 +122,7 @@ def ASp (string_candidate, constname = None):   # assert plain string
 def ASi (string_candidate): # assert i18n string
   if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
 def AIn (identifier):   # assert new identifier
-  if yy.namespace.unknown (identifier) or identifier in keywords:  raise KeyError ('redefining existing identifier: %s' % identifier)
+  if not yy.namespace.unknown (identifier) or identifier in keywords:  raise KeyError ('redefining existing identifier: %s' % identifier)
 def ATN (typename):     # assert a typename
   if not yy.namespace.find_type (typename):
     raise TypeError ('invalid typename: ' + repr (typename))
@@ -203,7 +205,7 @@ rule sequence:
         '}' ';'                                 {{ yy.nsadd_sequence (IDENT, sfields) }}
 
 rule const_assignment:
-        'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yy.nsadd (IDENT, 'Const', expression); }}
+        'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yy.nsadd_const (IDENT, expression); }}
 
 rule expression: summation                      {{ return summation }}
 rule summation:
