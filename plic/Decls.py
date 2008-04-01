@@ -25,7 +25,9 @@ class BaseDecl (object):
     self.hint = ''
     self.docu = ()
 
-decl_types = ('builtin', 'Const', 'record', 'sequence', 'enum')
+NUM, REAL, STRING, CHOICE, RECORD, SEQUENCE, INTERFACE = tuple ('ifserqc')
+
+decl_types = ('type', 'Const', 'record', 'sequence', 'enum')
 
 class Namespace (BaseDecl):
   def __init__ (self, name):
@@ -34,15 +36,29 @@ class Namespace (BaseDecl):
     self.member_dict = {}
   def add (self, name, kind, content):
     assert kind in decl_types
-    assert kind != 'enum'
+    assert kind not in ('enum', 'type')
     self.members += [ (name, kind, content) ]
     self.member_dict[name] = self.members[-1]
   def add_enum (self, enum):
     assert isinstance (enum, Enum)
     self.members += [ (enum.name, 'enum', enum) ]
     self.member_dict[enum.name] = self.members[-1]
-  def find (self, name, fallback = None):
-    return self.member_dict.get (name, fallback)
+  def add_type (self, type):
+    assert isinstance (type, TypeInfo)
+    self.members += [ (type.name, 'type', type) ]
+    self.member_dict[type.name] = self.members[-1]
+  def unknown (self, name):
+    return self.member_dict.has_key (name)
+  def find_const (self, name, fallback = None):
+    ndc = self.member_dict.get (name, (None, None, None))
+    if ndc[1] == 'Const':
+      return ndc
+    return fallback
+  def find_type (self, name, fallback = None):
+    ndc = self.member_dict.get (name, (None, None, None))
+    if ndc[1] not in (None, 'Const'):
+      return ndc
+    return fallback
 
 class Enum (BaseDecl):
   def __init__ (self, name):
@@ -54,3 +70,13 @@ class Enum (BaseDecl):
     assert isinstance (blurb, str)
     assert isinstance (number, int)
     self.members += [ (ident, label, blurb, number) ]
+
+class TypeInfo (BaseDecl):
+  def __init__ (self, name, storage):
+    assert storage in tuple ('ifserqc')
+    self.name = name
+    self.storage = storage
+    self.enum = None
+    self.record = None
+    self.sequence = None
+    self.interface = None

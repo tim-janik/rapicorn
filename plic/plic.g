@@ -52,19 +52,18 @@ class YYGlobals (object):
     assert self.namespace == None
     self.namespace = Decls.Namespace (ident)
     # initialize namespace
-    for builtintype in ('Bool', 'Num', 'Real', 'String'):
-      self.namespace.add (builtintype, 'builtin', builtintype)
+    self.namespace.add_type (Decls.TypeInfo ('Bool',   Decls.NUM))
+    self.namespace.add_type (Decls.TypeInfo ('Num',    Decls.NUM))
+    self.namespace.add_type (Decls.TypeInfo ('Real',   Decls.REAL))
+    self.namespace.add_type (Decls.TypeInfo ('String', Decls.STRING))
   def namespace_close (self):
     assert isinstance (self.namespace, Decls.Namespace)
     self.ns_list.append (self.namespace)
     self.namespace = None
-  def namespace_find (self, name, fallback = None):
-    assert isinstance (self.namespace, Decls.Namespace)
-    return self.namespace.find (name, fallback)
 yy = YYGlobals() # globals
 
 def constant_lookup (variable):
-  varname, type, value = yy.namespace_find (variable, (None, None, 0))
+  varname, type, value = yy.namespace.find_const (variable, (None, None, 0))
   if type != 'Const':
     raise NameError ('undeclared constant: ' + variable)
   return value
@@ -111,10 +110,9 @@ def ASp (string_candidate, constname = None):   # assert plain string
 def ASi (string_candidate): # assert i18n string
   if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
 def AIn (identifier):   # assert new identifier
-  if yy.namespace_find (identifier) or identifier in keywords:  raise KeyError ('redefining existing identifier: %s' % identifier)
+  if yy.namespace.unknown (identifier) or identifier in keywords:  raise KeyError ('redefining existing identifier: %s' % identifier)
 def ATN (typename):     # assert a typename
-  ttuple = yy.namespace_find (typename, (None,))
-  if not ttuple[1] in ('sequence', 'record', 'enum', 'builtin'):
+  if not yy.namespace.find_type (typename):
     raise TypeError ('invalid typename: ' + repr (typename))
 
 %%
