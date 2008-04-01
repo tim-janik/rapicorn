@@ -143,8 +143,6 @@ record XFooRecord {
   Num    multi4;
   ExtensiveEnum enum_field;
 };
-// invalid: record DupRecord { Num a, b; Num c, b; };
-// invalid: record EmptyRecord { };
 
 // sequence tests
 sequence XFooSequence {
