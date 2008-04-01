@@ -141,6 +141,7 @@ record XFooRecord {
   Num    multi2;
   Num    multi3;
   Num    multi4;
+  ExtensiveEnum enum_field;
 };
 // invalid: record DupRecord { Num a, b; Num c, b; };
 // invalid: record EmptyRecord { };
@@ -148,6 +149,9 @@ record XFooRecord {
 // sequence tests
 sequence XFooSequence {
   Bool   single_bool;
+};
+sequence ExtensiveEnumSequence {
+  ExtensiveEnum enum_elements;
 };
 
 // test nested types
