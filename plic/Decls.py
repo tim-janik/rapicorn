@@ -36,7 +36,7 @@ class Namespace (BaseDecl):
     self.member_dict = {}
   def add (self, name, kind, content):
     assert kind in decl_types
-    assert kind not in ('enum', 'type')
+    assert kind not in ('enum', 'type', 'record', 'sequence')
     self.members += [ (name, kind, content) ]
     self.member_dict[name] = self.members[-1]
   def add_enum (self, enum):
@@ -57,7 +57,7 @@ class Namespace (BaseDecl):
   def find_type (self, name, fallback = None):
     ndc = self.member_dict.get (name, (None, None, None))
     if ndc[1] not in (None, 'Const'):
-      return ndc
+      return ndc[2]
     return fallback
 
 class Enum (BaseDecl):
@@ -77,6 +77,16 @@ class TypeInfo (BaseDecl):
     self.name = name
     self.storage = storage
     self.enum = None
-    self.record = None
-    self.sequence = None
+    self.fields = [] # holds: (ident, TypeInfo)
+    self.elements = None # holds: ident, TypeInfo
     self.interface = None
+  def add_field (self, ident, type):
+    assert self.storage == RECORD
+    assert isinstance (ident, str)
+    assert isinstance (type, TypeInfo)
+    self.fields += [ (ident, type) ]
+  def set_elements (self, ident, type):
+    assert self.storage == SEQUENCE
+    assert isinstance (ident, str)
+    assert isinstance (type, TypeInfo)
+    self.elements = (ident, type)

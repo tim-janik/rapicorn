@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 import sys, Decls
+true, false, length = (True, False, len)
 #@PLICSUBST_PREIMPORT@
 PLIC_VERSION=\
 "@PLICSUBST_VERSION@"   # this needs to be in column0 for @@ replacements to work
@@ -48,6 +49,32 @@ class YYGlobals (object):
     AN (evalue_number)
     yy.nsadd (evalue_ident, 'Const', evalue_number)
     return (evalue_ident, evalue_label, evalue_blurb, evalue_number)
+  def nsadd_record (self, name, rfields):
+    AIn (name)
+    if len (rfields) < 1:
+      raise AttributeError ('invalid empty record: %s' % name)
+    rec = Decls.TypeInfo (name, Decls.RECORD)
+    fdict = {}
+    for field in rfields:
+      if fdict.has_key (field[0]):
+        raise NameError ('duplicate record field name: ' + field[0])
+      fdict[field[0]] = true
+      rec.add_field (field[0], field[1])
+    self.namespace.add_type (rec)
+  def nsadd_sequence (self, name, sfields):
+    AIn (name)
+    if len (sfields) < 1:
+      raise AttributeError ('invalid empty sequence: %s' % name)
+    if len (sfields) > 1:
+      raise AttributeError ('invalid multiple fields in sequence: %s' % name)
+    seq = Decls.TypeInfo (name, Decls.SEQUENCE)
+    seq.set_elements (sfields[0][0], sfields[0][1])
+    self.namespace.add_type (seq)
+  def resolve_type (self, typename):
+    type_info = self.namespace.find_type (typename)
+    if not type_info:
+      raise TypeError ('invalid typename: ' + repr (typename))
+    return type_info
   def namespace_open (self, ident):
     assert self.namespace == None
     self.namespace = Decls.Namespace (ident)
@@ -67,23 +94,6 @@ def constant_lookup (variable):
   if type != 'Const':
     raise NameError ('undeclared constant: ' + variable)
   return value
-def add_record (name, rfields):
-  AIn (name)
-  if len (rfields) < 1:
-    raise AttributeError ('invalid empty record: %s' % name)
-  fdict = {}
-  for field in rfields:
-    if fdict.has_key (field[1]):
-      raise NameError ('duplicate record field name: ' + field[1])
-    fdict[field[1]] = field[0]
-  yy.nsadd (name, 'record', tuple (rfields))
-def add_sequence (name, sfields):
-  AIn (name)
-  if len (sfields) < 1:
-    raise AttributeError ('invalid empty sequence: %s' % name)
-  if len (sfields) > 1:
-    raise AttributeError ('invalid multiple fields in sequence: %s' % name)
-  yy.nsadd (name, 'sequence', tuple (sfields))
 def quote (qstring):
   import rfc822
   return '"' + rfc822.quote (qstring) + '"'
@@ -175,21 +185,22 @@ rule typename:
         IDENT                                   {{ ATN (IDENT); return IDENT }}
 
 rule variable_decl:
-        typename IDENT                          {{ vtype = typename; vars = [ (vtype, IDENT) ] }}
+        typename                                {{ vtype = yy.resolve_type (typename) }}
+        IDENT                                   {{ vars = [ (IDENT, vtype) ] }}
         ';'                                     {{ return vars }}
 
 rule record:
         'record' IDENT '{'                      {{ rfields = [] }}
           ( variable_decl                       {{ rfields = rfields + variable_decl }}
           )+
-        '}' ';'                                 {{ add_record (IDENT, rfields) }}
+        '}' ';'                                 {{ yy.nsadd_record (IDENT, rfields) }}
 
 rule sequence:
         'sequence' IDENT '{'                    {{ sfields = [] }}
           ( variable_decl                       {{ if len (sfields): raise OverflowError ("too many fields in sequence") }}
                                                 {{ sfields = sfields + variable_decl }}
           )
-        '}' ';'                                 {{ add_sequence (IDENT, sfields) }}
+        '}' ';'                                 {{ yy.nsadd_sequence (IDENT, sfields) }}
 
 rule const_assignment:
         'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yy.nsadd (IDENT, 'Const', expression); }}
