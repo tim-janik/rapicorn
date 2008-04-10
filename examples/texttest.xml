@@ -70,31 +70,35 @@
   </def:scroll-area-test>
   
   <!-- Markup test -->
+  <def:ascii-art-label inherit="Label">
+    <prop:markup-text>
+      <pre><tt>
++----------------------------------------+
+|         (__)                           |
+|         (oo)   .oooO  / ) ( \  Oooo.   |
+|   /------\/    (   ) / (   ) \ (   )   |
+|  / |    ||      \ ( (   ) (   ) ) /    |
+| *  /\---/\   ----\_).oooO-Oooo.(_/---- |
+|    ~~   ~~                             |
++----------------------------------------+
+	</tt></pre>
+    </prop:markup-text>
+  </def:ascii-art-label>
+
+  <!-- Markup test -->
   <def:markup-test inherit="Label">
     <prop:markup-text>
-      Bold Text: <b>bold</b> <br/>
-      Underlined Text: <u>underline</u> <br/>
-      Italic Text: <i>italic</i> <br/>
-      Strikethrough Text: <s>strike</s> <br/>
-      Teletype+Pre text: <tt><pre>|     teletype space1  space2   space3   space4     |</pre></tt> <br/>
-      Smaller and smaller: normal <smaller>smaller1 <smaller>smaller2 <smaller>smaller3 <smaller>smaller4 <smaller>smaller5 </smaller></smaller></smaller></smaller></smaller> <br/>
-      Larger and larger: normal <larger>larger1 <larger>larger2 <larger>larger3 <larger>larger4 <larger>larger5 </larger></larger></larger></larger></larger> <br/>
+      Text styles: <b>bold</b> <u>underline</u> <i>italic</i> <s>strike</s> <br/>
+      Teletype + pre: <tt><pre>** *  *   * teletype + pre *   *  * **</pre></tt> <br/>
+      Large: normal <larger>larger1 <larger>larger2 <larger>larger3 <larger>larger4 <larger>larger5 </larger></larger></larger></larger></larger> <br/>
+      Small: normal <smaller>smaller1 <smaller>smaller2 <smaller>smaller3 <smaller>smaller4 <smaller>smaller5 </smaller></smaller></smaller></smaller></smaller> <br/>
       Nested tags: <b>bold<u>+underline<i>+italic<s>+strike</s></i></u></b> <br/>
       Nested tags &lt;tt&gt;: <tt><b>bold<u>+underline<i>+italic<s>+strike</s></i></u></b></tt> <br/>
       Font Families: <font family="serif">Serif-Text</font> <font family="sans">Sans-Text</font> <font family="mono">Mono-Text</font> <font family="arial">Arial-Text</font> <font family="times">Times-Text</font> <br/>
-      Foreground Color: normal <fg color='blue'>blue foreground</fg> normal <br/>
-      Background Color: normal <bg color='red'>red background</bg> normal <br/>
-      Mixed Color: normal <bg color='red'>red-bg <fg color='blue'>blue-fg</fg> red-bg</bg> normal <br/>
-      Ascii Art: <pre><tt>
-	  +-------------------------------------------------+
-	  |         (__)                                    |
-	  |         (oo)            .oooO  / ) ( \  Oooo.   |
-	  |   /------\/     O       (   ) / (   ) \ (   )   |
-	  |  / |    ||     /H\       \ ( (   ) (   ) ) /    |
-	  | *  /\---/\     / \    ----\_).oooO-Oooo.(_/---- |
-	  |    ~~   ~~                                      |
-	  +-------------------------------------------------+
-	</tt></pre>
+      Colors:
+      normal <fg color='blue'>blue foreground</fg>
+      normal <bg color='red'>red background</bg>
+      normal <bg color='red'>red-bg <fg color='blue'>blue-fg</fg> red-bg</bg> normal
     </prop:markup-text>
   </def:markup-test>
 
@@ -125,18 +129,15 @@
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox sensitive="1" spacing="5" hexpand="1">
-	  <VBox>
-	    <Label markup-text="Scroll Area Test:"/>
+	  <HBox>
+	    <ascii-art-label/>
 	    <scroll-area-test width="400" hspread="1"/>
-	  </VBox>
-	  <VBox>
-	    <Label markup-text="Markup Test:"/>
-	    <Alignment halign="0.5" hexpand="1">
-	      <Frame frame-type="etched-out">
-		<markup-test/>
-	      </Frame>
-	    </Alignment>
-	  </VBox>
+	  </HBox>
+	  <Alignment halign="0.5" hexpand="1">
+	    <Frame frame-type="etched-out">
+	      <markup-test/>
+	    </Frame>
+	  </Alignment>
 	  <HBox>
 	    <Label markup-text="Wrap Test:"/>
 	    <wrap-text-test/>
