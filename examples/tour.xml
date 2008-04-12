@@ -69,106 +69,6 @@
     </HBox>
   </def:slider-test>
 
-  <!-- Image tests -->
-  <def:image-test inherit="Frame" >
-    <VBox>
-      <HBox>
-	<Label markup-text="Inlined images, RAW/RLE: " />
-	<Image stock-pixmap="testimage-rgb-raw" />
-	<Image stock-pixmap="testimage-rgb-rle" />
-      </HBox>
-      <HBox> <Label markup-text="Broken icon: " /> <Image stock-pixmap="!!! rapicorn-trigger-broken-image (non-pixstream-name-32hd_~^) !!!" /></HBox>
-      <HBox>
-	<Label markup-text="Inlined images with Alpha: " />
-	<Image stock-pixmap="testimage-alpha-raw" />
-	<Image stock-pixmap="testimage-alpha-rle" />
-      </HBox>
-      <HBox>
-	<Label markup-text="Load PNG image file: " />
-	<Image image-file="testpic.png" />
-      </HBox>
-      <HBox>
-	<Label markup-text="Load image file with corrupt DATA: " />
-	<Image image-file="testpic-DATA.png" />
-      </HBox>
-      <HBox>
-	<Label markup-text="Load image file with corrupt IHDR: " />
-	<Image image-file="testpic-IHDR.png" />
-      </HBox>
-      <HBox>
-	<Label markup-text="Load image file with corrupt IDAT: " />
-	<Image image-file="testpic-IDAT.png" />
-      </HBox>
-      <HBox>
-	<Label markup-text="Load JPG image file: " />
-	<Image image-file="testpic.jpg" />
-	<Label markup-text="(not supported)" />
-      </HBox>
-      <HBox>
-	<Label markup-text="Load invalid filename: " />
-	<Image image-file="///////////" />
-      </HBox>
-    </VBox>
-  </def:image-test>
-
-  <!-- Frames -->
-  <def:frame-test inherit="HBox" spacing="10">
-    <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
-	    <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
-		    <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
-			    <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
-				    <Label markup-text="IN"/>
-				  </Frame></Frame></Frame></Frame>
-			  </Frame></Frame></Frame></Frame>
-		  </Frame></Frame></Frame></Frame>
-	  </Frame></Frame></Frame></Frame>
-    <Frame frame-type="etched-in"><Frame frame-type="etched-in"><Frame frame-type="etched-in"><Frame frame-type="etched-in">
-	    <Frame frame-type="etched-in"><Frame frame-type="etched-in"><Frame frame-type="etched-in"><Frame frame-type="etched-in">
-		    <Frame frame-type="etched-in"><Frame frame-type="etched-in"><Frame frame-type="etched-in"><Frame frame-type="etched-in">
-			    <Frame frame-type="etched-in"><Frame frame-type="etched-in"><Frame frame-type="etched-in"><Frame frame-type="etched-in">
-				    <Label markup-text="ETCHED-IN"/>
-				  </Frame></Frame></Frame></Frame>
-			  </Frame></Frame></Frame></Frame>
-		  </Frame></Frame></Frame></Frame>
-	  </Frame></Frame></Frame></Frame>
-    <Frame frame-type="focus"><Frame frame-type="focus"><Frame frame-type="focus"><Frame frame-type="focus">
-	    <Frame frame-type="focus"><Frame frame-type="focus"><Frame frame-type="focus"><Frame frame-type="focus">
-		    <Frame frame-type="focus"><Frame frame-type="focus"><Frame frame-type="focus"><Frame frame-type="focus">
-			    <Frame frame-type="focus"><Frame frame-type="focus"><Frame frame-type="focus"><Frame frame-type="focus">
-				    <Label markup-text="FOCUS"/>
-				  </Frame></Frame></Frame></Frame>
-			  </Frame></Frame></Frame></Frame>
-		  </Frame></Frame></Frame></Frame>
-	  </Frame></Frame></Frame></Frame>
-    <Frame frame-type="none"><Frame frame-type="none"><Frame frame-type="none"><Frame frame-type="none">
-	    <Frame frame-type="none"><Frame frame-type="none"><Frame frame-type="none"><Frame frame-type="none">
-		    <Frame frame-type="none"><Frame frame-type="none"><Frame frame-type="none"><Frame frame-type="none">
-			    <Frame frame-type="none"><Frame frame-type="none"><Frame frame-type="none"><Frame frame-type="none">
-				    <Label markup-text="NONE"/>
-				  </Frame></Frame></Frame></Frame>
-			  </Frame></Frame></Frame></Frame>
-		  </Frame></Frame></Frame></Frame>
-	  </Frame></Frame></Frame></Frame>
-    <Frame frame-type="etched-out"><Frame frame-type="etched-out"><Frame frame-type="etched-out"><Frame frame-type="etched-out">
-	    <Frame frame-type="etched-out"><Frame frame-type="etched-out"><Frame frame-type="etched-out"><Frame frame-type="etched-out">
-		    <Frame frame-type="etched-out"><Frame frame-type="etched-out"><Frame frame-type="etched-out"><Frame frame-type="etched-out">
-			    <Frame frame-type="etched-out"><Frame frame-type="etched-out"><Frame frame-type="etched-out"><Frame frame-type="etched-out">
-				    <Label markup-text="ETCHED-OUT"/>
-				  </Frame></Frame></Frame></Frame>
-			  </Frame></Frame></Frame></Frame>
-		  </Frame></Frame></Frame></Frame>
-	  </Frame></Frame></Frame></Frame>
-    <Frame frame-type="out"><Frame frame-type="out"><Frame frame-type="out"><Frame frame-type="out">
-	    <Frame frame-type="out"><Frame frame-type="out"><Frame frame-type="out"><Frame frame-type="out">
-		    <Frame frame-type="out"><Frame frame-type="out"><Frame frame-type="out"><Frame frame-type="out">
-			    <Frame frame-type="out"><Frame frame-type="out"><Frame frame-type="out"><Frame frame-type="out">
-				    <Label markup-text="OUT"/>
-				  </Frame></Frame></Frame></Frame>
-			  </Frame></Frame></Frame></Frame>
-		  </Frame></Frame></Frame></Frame>
-	  </Frame></Frame></Frame></Frame>
-  </def:frame-test>
-
   <!-- test dialog -->
   <def:tour-dialog inherit="Root">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
@@ -181,23 +81,9 @@
 	    <Label markup-text="Slider Test:" />
 	    <slider-test hexpand="1"/>
 	  </VBox>
-	  <VBox bottom-attach="8" left-attach="2" hexpand="1">
-	    <Label markup-text="Drawable Test:" />
-	    <Frame>
-	      <Drawable id="drawable1" />
-	    </Frame>
-	  </VBox>
-	  <VBox bottom-attach="7" >
-	    <Label markup-text="Image Tests:" />
-	    <image-test/>
-	  </VBox>
-	  <VBox bottom-attach="7" left-attach="2" >
+	  <VBox bottom-attach="8" left-attach="2" >
 	    <Label markup-text="Arrangement Test:"/>
 	    <arrangement-test/>
-	  </VBox>
-	  <VBox bottom-attach="6" right-attach="3">
-	    <Label markup-text="Funny Frames:"/>
-	    <frame-test/>
 	  </VBox>
 	  <Alignment visible="1" left-padding="5" right-padding="5" top-padding="5" bottom-padding="5">
 	    <Frame frame-type="etched-in">

@@ -29,22 +29,6 @@ custom_commands (Window             &window,
   return true;
 }
 
-static void
-drawable_draw (Display  &display,
-               Drawable &drawable)
-{
-  Plane &plane = display.create_plane();
-  Painter painter (plane);
-  Rect area = drawable.allocation();
-  Color fg = 0xff000000;
-  double lthickness = 2.25;
-  painter.draw_simple_line (area.x + 15, area.y + 15, area.x + 35, area.y + 35, lthickness, fg);
-  painter.draw_simple_line (area.x + 35, area.y + 35, area.x + 50, area.y + 20, lthickness, fg);
-  painter.draw_simple_line (area.x + 50, area.y + 20, area.x + 75, area.y + 90, lthickness, fg);
-  painter.draw_simple_line (area.x + 75, area.y + 90, area.x + 230, area.y + 93, lthickness, fg);
-  painter.draw_simple_line (area.x + 75, area.y + 120, area.x + 230, area.y + 110, lthickness * 0.5, fg);
-}
-
 #include "../rapicorn-core/tests/testpixs.c" // alpha_rle alpha_raw rgb_rle rgb_raw
 
 extern "C" int
@@ -67,11 +51,6 @@ main (int   argc,
   /* create root item */
   Window window = Application::create_window ("tour-dialog");
   window.commands += custom_commands;
-
-  /* hook up drawable test */
-  Root &root = window.root();
-  Drawable &drawable = root.interface<Drawable&>();
-  drawable.sig_draw += slot (&drawable_draw, drawable);
 
   window.show();
 

@@ -19,16 +19,6 @@
 namespace {
 using namespace Rapicorn;
 
-static bool
-custom_commands (Window             &window,
-                 const String       &command,
-                 const StringVector &args)
-{
-  printout ("%s(): custom command: %s(%s) (window: %s)\n", __func__,
-            command.c_str(), string_join (",", args).c_str(), window.root().name().c_str());
-  return true;
-}
-
 static void
 drawable_draw (Display  &display,
                Drawable &drawable)
@@ -45,28 +35,19 @@ drawable_draw (Display  &display,
   painter.draw_simple_line (area.x + 75, area.y + 120, area.x + 230, area.y + 110, lthickness * 0.5, fg);
 }
 
-#include "../rapicorn-core/tests/testpixs.c" // alpha_rle alpha_raw rgb_rle rgb_raw
-
 extern "C" int
 main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn and its gtk backend */
-  Application::init_with_x11 (&argc, &argv, "TourTest");
+  Application::init_with_x11 (&argc, &argv, "Graphics");
   /* initialization acquired global Rapicorn mutex */
 
-  /* register builtin images */
-  Application::pixstream ("testimage-alpha-rle", alpha_rle);
-  Application::pixstream ("testimage-alpha-raw", alpha_raw);
-  Application::pixstream ("testimage-rgb-rle", rgb_rle);
-  Application::pixstream ("testimage-rgb-raw", rgb_raw);
-
   /* load GUI definition file, relative to argv[0] */
-  Application::auto_load ("RapicornTest", "tour.xml", argv[0]);
+  Application::auto_load ("RapicornTest", "graphics.xml", argv[0]);
 
   /* create root item */
-  Window window = Application::create_window ("tour-dialog");
-  window.commands += custom_commands;
+  Window window = Application::create_window ("graphics-dialog");
 
   /* hook up drawable test */
   Root &root = window.root();
