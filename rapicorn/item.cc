@@ -42,6 +42,10 @@ Item::Item () :
   sig_hierarchy_changed (*this, &Item::hierarchy_changed)
 {}
 
+void
+Item::constructed()
+{}
+
 bool
 Item::viewable() const
 {

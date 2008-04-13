@@ -19,6 +19,11 @@
 namespace Rapicorn {
 using namespace std;
 
+struct ClassDoctor {
+  static void item_set_flag   (Item &item, uint32 flag) { item.set_flag (flag, true); }
+  static void item_unset_flag (Item &item, uint32 flag) { item.unset_flag (flag); }
+};
+
 class RootWindowImpl : public Window {
 public:
   RootWindowImpl (Root &r) :
@@ -62,7 +67,7 @@ Root::uncross_focus (Item &fitem)
   Item *item = &fitem;
   while (item)
     {
-      item->unset_flag (FOCUS_CHAIN);
+      ClassDoctor::item_unset_flag (*item, FOCUS_CHAIN);
       Container *fc = item->parent();
       if (fc)
         fc->set_focus_child (NULL);
@@ -88,7 +93,7 @@ Root::set_focus (Item *item)
   cross_link (*item, slot (*this, &Root::uncross_focus));
   while (item)
     {
-      item->set_flag (FOCUS_CHAIN);
+      ClassDoctor::item_set_flag (*item, FOCUS_CHAIN);
       Container *fc = item->parent();
       if (fc)
         fc->set_focus_child (item);

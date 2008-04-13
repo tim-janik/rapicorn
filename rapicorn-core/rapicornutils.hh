@@ -116,10 +116,13 @@ void rapicorn_runtime_problemv (char        ewran_tag,
                                 const char *msgformat,
                                 va_list     msgargs);
 
-/* --- private copy constructor and assignment operator --- */
+/* --- private class copies, class ClassDoctor --- */
 #define RAPICORN_PRIVATE_CLASS_COPY(Class)        private: Class (const Class&); Class& operator= (const Class&);
 #ifdef  RAPICORN_INTERNALS
 #define PRIVATE_CLASS_COPY                      RAPICORN_PRIVATE_CLASS_COPY
+class ClassDoctor;
+#else   /* !RAPICORN_INTERNALS */
+class ClassDoctor {};
 #endif  /* RAPICORN_INTERNALS */
 
 /* --- initialization --- */

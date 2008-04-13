@@ -21,6 +21,12 @@
 #include <errno.h>
 using namespace std;
 
+namespace Rapicorn {
+struct ClassDoctor {
+  static void item_constructed (Item &item) { item.constructed(); }
+};
+} // Rapicorn
+
 namespace { // Anon
 using namespace Rapicorn;
 using namespace Rapicorn::Factory;
@@ -588,11 +594,13 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
         unused_args[it->first] = it->second;
     call_args = unused_args;
   } catch (...) {
-    error ("%s: failed to assign property", bgadget->definition().c_str());
+    error ("%s: failed to assign properties", bgadget->definition().c_str());
     sink (item);
     env.pop_map (custom_args);
     throw;
   }
+  /* notify of completed object construction */
+  ClassDoctor::item_constructed (item);
   /* construct gadget children */
   try {
     ChildContainerSlot outer_ccslot (dgadget ? dgadget->child_container : NULL);

@@ -54,16 +54,17 @@ public:
 class Item;
 typedef Signals::Slot1<void, Item&> ItemSlot;
 class Item : public virtual Convertible, public virtual DataListContainer, public virtual ReferenceCountImpl {
+  friend                      class ClassDoctor;
+  friend                      class Container;
   uint32                      m_flags;          /* interface-inlined for fast read-out */
   Container                  *m_parent;         /* interface-inlined for fast read-out */
   Style                      *m_style;
   void                        propagate_flags (bool notify_changed = true);
   void                        propagate_style ();
-  friend                      class Container;
-  friend                      class Root;
   Container**                 _parent_loc     () { return &m_parent; }
   RAPICORN_PRIVATE_CLASS_COPY  (Item);
 protected:
+  virtual void                constructed             ();
   /* flag handling */
   bool                        change_flags_silently   (uint32 mask, bool on);
   enum {
