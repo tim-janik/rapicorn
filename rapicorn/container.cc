@@ -17,9 +17,13 @@
 #include "container.hh"
 #include "containerimpl.hh"
 #include "root.hh"
-using namespace std;
 
 namespace Rapicorn {
+using namespace std;
+
+struct ClassDoctor {
+  static void item_set_parent (Item &item, Container *parent) { item.set_parent (parent); }
+};
 
 /* --- CrossLinks --- */
 struct CrossLink {
@@ -804,7 +808,7 @@ SingleContainerImpl::add_child (Item &item)
     throw Exception ("invalid attempt to add child \"", item.name(), "\" to single-child container \"", name(), "\" ",
                      "which already has a child \"", child_item->name(), "\"");
   item.ref_sink();
-  item.set_parent (this);
+  ClassDoctor::item_set_parent (item, this);
   child_item = &item;
 }
 
@@ -813,7 +817,7 @@ SingleContainerImpl::remove_child (Item &item)
 {
   assert (child_item == &item); /* ensured by remove() */
   child_item = NULL;
-  item.set_parent (NULL);
+  ClassDoctor::item_set_parent (item, NULL);
   item.unref();
 }
 
@@ -870,7 +874,7 @@ void
 MultiContainerImpl::add_child (Item &item)
 {
   item.ref_sink();
-  item.set_parent (this);
+  ClassDoctor::item_set_parent (item, this);
   items.push_back (&item);
 }
 
@@ -882,7 +886,7 @@ MultiContainerImpl::remove_child (Item &item)
     if (*it == &item)
       {
         items.erase (it);
-        item.set_parent (NULL);
+        ClassDoctor::item_set_parent (item, NULL);
         item.unref();
         return;
       }

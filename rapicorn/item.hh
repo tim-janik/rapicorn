@@ -114,6 +114,7 @@ protected:
   virtual                     ~Item             ();
   virtual void                style             (Style  *st);
   virtual void                finalize          ();
+  virtual void                set_parent        (Container *parent);
   virtual void                hierarchy_changed (Item *old_toplevel);
   virtual bool                move_focus        (FocusDirType fdir);
   virtual bool                custom_command    (const String       &command_name,
@@ -175,7 +176,6 @@ public:
   Command*                    lookup_command    (const String    &command_name);
   virtual const CommandList&  list_commands     ();
   /* parents */
-  virtual void                set_parent        (Container *parent);
   Container*                  parent            () const { return m_parent; }
   bool                        has_ancestor      (const Item &ancestor) const;
   Item*                       common_ancestor   (const Item &other) const;
