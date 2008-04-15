@@ -16,6 +16,7 @@
  */
 #include "itemlist.hh"
 #include "containerimpl.hh"
+#include "adjustment.hh"
 #include "table.hh"
 
 namespace Rapicorn {
@@ -41,19 +42,24 @@ struct Model7 : public virtual ReferenceCountImpl {
   Array         get     (uint64 nth) { return Array (nth); }
 };
 
-class ItemListImpl : public virtual SingleContainerImpl, public virtual ItemList {
-  Model7       *m_model;
-  Table        *m_table;
-  bool          need_heights, need_layout;
-  vector<uint>  row_heights;
-  vector<Item*> cached_items;
-  bool          m_browse;
-  uint64        first_item_row;
-  vector<Item*> row_items;
-  uint64        first_height_row;
+class ItemListImpl : public virtual SingleContainerImpl,
+                     public virtual ItemList,
+                     public virtual AdjustmentSource
+{
+  Table                 *m_table;
+  Model7                *m_model;
+  mutable Adjustment    *m_hadjustment, *m_vadjustment;
+  bool                   need_heights, need_layout;
+  vector<uint>           row_heights;
+  vector<Item*>          cached_items;
+  bool                   m_browse;
+  uint64                 first_item_row;
+  vector<Item*>          row_items;
+  uint64                 first_height_row;
 public:
   ItemListImpl() :
-    m_model (NULL), m_table (NULL),
+    m_table (NULL), m_model (NULL),
+    m_hadjustment (NULL), m_vadjustment (NULL),
     need_heights (true), need_layout (true),
     m_browse (true),
     first_item_row (0), first_height_row (0)
@@ -82,6 +88,34 @@ public:
       }
     if (!m_model)
       model (new Model7());
+  }
+  Adjustment&
+  hadjustment () const
+  {
+    if (!m_hadjustment)
+      m_hadjustment = Adjustment::create (0, 0, 1, 0.01, 0.2);
+    return *m_hadjustment;
+  }
+  Adjustment&
+  vadjustment () const
+  {
+    if (!m_vadjustment)
+      m_vadjustment = Adjustment::create (0, 0, 1, 0.01, 0.2);
+    return *m_vadjustment;
+  }
+  Adjustment*
+  get_adjustment (AdjustmentSourceType adj_source,
+                  const String        &name)
+  {
+    switch (adj_source)
+      {
+      case ADJUSTMENT_SOURCE_ANCESTRY_HORIZONTAL:
+        return &hadjustment();
+      case ADJUSTMENT_SOURCE_ANCESTRY_VERTICAL:
+        return &vadjustment();
+      default:
+        return NULL;
+      }
   }
   virtual Model7* model         () const        { return m_model; }
   virtual void
