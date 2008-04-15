@@ -17,6 +17,7 @@
 #include "item.hh"
 #include "itemimpl.hh"
 #include "container.hh"
+#include "adjustment.hh"
 #include "root.hh"
 #include "cmdlib.hh"
 
@@ -937,6 +938,37 @@ void
 Item::type_cast_error (const char *dest_type)
 {
   error ("failed to dynamic_cast<%s> item: %s", VirtualTypeid::cxx_demangle (dest_type).c_str(), name().c_str());
+}
+
+void
+Item::find_adjustments (AdjustmentSourceType adjsrc1,
+                        Adjustment         **adj1,
+                        AdjustmentSourceType adjsrc2,
+                        Adjustment         **adj2,
+                        AdjustmentSourceType adjsrc3,
+                        Adjustment         **adj3,
+                        AdjustmentSourceType adjsrc4,
+                        Adjustment         **adj4)
+{
+  for (Item *pitem = this->parent(); pitem; pitem = pitem->parent())
+    {
+      AdjustmentSource *adjustment_source = pitem->interface<AdjustmentSource*>();
+      if (!adjustment_source)
+        continue;
+      if (adj1 && !*adj1)
+        *adj1 = adjustment_source->get_adjustment (adjsrc1);
+      if (adj2 && !*adj2)
+        *adj2 = adjustment_source->get_adjustment (adjsrc2);
+      if (adj3 && !*adj3)
+        *adj3 = adjustment_source->get_adjustment (adjsrc3);
+      if (adj4 && !*adj4)
+        *adj4 = adjustment_source->get_adjustment (adjsrc4);
+      if ((!adj1 || *adj1) &&
+          (!adj2 || *adj2) &&
+          (!adj3 || *adj3) &&
+          (!adj4 || *adj4))
+        break;
+    }
 }
 
 void

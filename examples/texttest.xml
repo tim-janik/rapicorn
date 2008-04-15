@@ -28,8 +28,8 @@
 	  <ScrollPort />
 	</Frame>
       </Alignment>
-      <HSlider hexpand="1" adjustment-source="ancestor-horizontal" bottom-attach="0" />
-      <VSlider vexpand="1" adjustment-source="ancestor-vertical"   bottom-attach="1" left-attach="1" height="200" />
+      <HSlider hexpand="1" adjustment-source="ancestry-horizontal" bottom-attach="0" />
+      <VSlider vexpand="1" adjustment-source="ancestry-vertical"   bottom-attach="1" left-attach="1" height="200" />
     </Table>
   </def:ScrollArea>
 

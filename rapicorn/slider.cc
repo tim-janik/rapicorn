@@ -112,12 +112,10 @@ protected:
   hierarchy_changed (Item *old_toplevel)
   {
     this->TableImpl::hierarchy_changed (old_toplevel);
-    if (anchored() && m_adjustment_source != ADJUSTMENT_SOURCE_SELF)
+    if (anchored() && m_adjustment_source != ADJUSTMENT_SOURCE_NONE)
       {
-        AdjustmentSource *adjustment_source = parent_interface<AdjustmentSource*>();
         Adjustment *adj = NULL;
-        if (adjustment_source)
-          adj = adjustment_source->get_adjustment (m_adjustment_source);
+        find_adjustments (m_adjustment_source, &adj);
         if (!adj)
           {
             EnumTypeAdjustmentSourceType ast;
@@ -125,7 +123,6 @@ protected:
                              ast.string (m_adjustment_source),
                              ") from ancestors: ", name());
           }
-        EnumTypeAdjustmentSourceType ast;
         adjustment (*adj);
       }
   }
@@ -150,7 +147,7 @@ protected:
 public:
   SliderAreaImpl() :
     m_adjustment (NULL),
-    m_adjustment_source (ADJUSTMENT_SOURCE_SELF),
+    m_adjustment_source (ADJUSTMENT_SOURCE_NONE),
     m_flip (false)
   {
     Adjustment *adj = Adjustment::create();

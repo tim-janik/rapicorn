@@ -51,9 +51,9 @@ ScrollAreaImpl::get_adjustment (AdjustmentSourceType adj_source,
 {
   switch (adj_source)
     {
-    case ADJUSTMENT_SOURCE_ANCESTOR_HORIZONTAL:
+    case ADJUSTMENT_SOURCE_ANCESTRY_HORIZONTAL:
       return &hadjustment();
-    case ADJUSTMENT_SOURCE_ANCESTOR_VERTICAL:
+    case ADJUSTMENT_SOURCE_ANCESTRY_VERTICAL:
       return &vadjustment();
     default:
       return NULL;
@@ -104,16 +104,12 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     this->SingleContainerImpl::hierarchy_changed (old_toplevel);
     if (anchored())
       {
-        AdjustmentSource *m_adjustment_source = parent_interface<AdjustmentSource*>();
-        if (m_adjustment_source)
-          {
-            m_hadjustment = m_adjustment_source->get_adjustment (ADJUSTMENT_SOURCE_ANCESTOR_HORIZONTAL);
-            if (m_hadjustment)
-              m_hadjustment->sig_value_changed += slot (*this, &ScrollPortImpl::adjustment_changed);
-            m_vadjustment = m_adjustment_source->get_adjustment (ADJUSTMENT_SOURCE_ANCESTOR_VERTICAL);
-            if (m_vadjustment)
-              m_vadjustment->sig_value_changed += slot (*this, &ScrollPortImpl::adjustment_changed);
-          }
+        find_adjustments (ADJUSTMENT_SOURCE_ANCESTRY_HORIZONTAL, &m_hadjustment,
+                          ADJUSTMENT_SOURCE_ANCESTRY_VERTICAL, &m_vadjustment);
+        if (m_hadjustment)
+          m_hadjustment->sig_value_changed += slot (*this, &ScrollPortImpl::adjustment_changed);
+        if (m_vadjustment)
+          m_vadjustment->sig_value_changed += slot (*this, &ScrollPortImpl::adjustment_changed);
       }
   }
   virtual void

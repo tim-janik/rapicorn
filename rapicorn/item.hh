@@ -33,6 +33,7 @@ struct Requisition {
 };
 typedef Rect Allocation;
 class Item;
+class Adjustment;
 class Container;
 class Root;
 
@@ -246,6 +247,15 @@ public:
   Color                 dark_shadow             () { return style()->standard_color (state(), COLOR_DARK_SHADOW); }
   Color                 white                   () { return style()->color_scheme (Style::STANDARD).generic_color (0xffffffff); }
   Color                 black                   () { return style()->color_scheme (Style::STANDARD).generic_color (0xff000000); }
+  /* convenience */
+  void                  find_adjustments        (AdjustmentSourceType adjsrc1,
+                                                 Adjustment         **adj1,
+                                                 AdjustmentSourceType adjsrc2 = ADJUSTMENT_SOURCE_NONE,
+                                                 Adjustment         **adj2 = NULL,
+                                                 AdjustmentSourceType adjsrc3 = ADJUSTMENT_SOURCE_NONE,
+                                                 Adjustment         **adj3 = NULL,
+                                                 AdjustmentSourceType adjsrc4 = ADJUSTMENT_SOURCE_NONE,
+                                                 Adjustment         **adj4 = NULL);
 public:
   template<typename Type>
   typename

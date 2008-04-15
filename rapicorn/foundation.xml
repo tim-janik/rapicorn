@@ -143,8 +143,8 @@
 	    </RapicornScrollPort>
 	  </Frame>
 	</Alignment>
-	<HSlider hexpand="0" adjustment-source="ancestor-horizontal" bottom-attach="0" />
-	<VSlider vexpand="0" adjustment-source="ancestor-vertical"   bottom-attach="1" left-attach="1" />
+	<HSlider hexpand="0" adjustment-source="ancestry-horizontal" bottom-attach="0" />
+	<VSlider vexpand="0" adjustment-source="ancestry-vertical"   bottom-attach="1" left-attach="1" />
       </Table>
     </RapicornScrollArea>
   </def:ScrollArea>
