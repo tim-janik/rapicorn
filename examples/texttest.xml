@@ -142,6 +142,9 @@
 	    <Label markup-text="Wrap Test:"/>
 	    <wrap-text-test/>
 	  </HBox>
+	  <Frame frame-type="etched-in">
+	    <Label markup-text="Insensitive Demo Text on a very long line with semantically insignifcant words." sensitive="0" />
+	  </Frame>
 	  <VBox>
 	    <Label markup-text="Text Editor Test:"/>
 	    <text-editor-test />
