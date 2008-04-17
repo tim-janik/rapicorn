@@ -1234,14 +1234,18 @@ protected:
     rapicorn_gtk_threads_enter();
     if (insensitive())
       {
+        const double ax = area.x, ay = area.y;
+        Plane plane2 (Plane::init_from_size (plane));
         /* render embossed text */
-        area.y -= 1;
+        area.x = ax, area.y = ay - 1;
         render_text_gL (plane, area, vdot_size, white());
-        area.x -= 1;
-        area.y += 1;
-        Plane emboss (Plane::init_from_size (plane));
-        render_text_gL (emboss, area, vdot_size, dark_shadow());
-        plane.combine (emboss, COMBINE_OVER);
+        area.x = ax - 1, area.y = ay;
+        Color insensitive_shadow = dark_shadow();
+        insensitive_shadow = style()->color_scheme (Style::STANDARD).make_dark_color (insensitive_shadow);
+        insensitive_shadow = style()->color_scheme (Style::STANDARD).make_dark_color (insensitive_shadow);
+        insensitive_shadow = style()->color_scheme (Style::STANDARD).make_dark_color (insensitive_shadow);
+        render_text_gL (plane2, area, vdot_size, insensitive_shadow);
+        plane.combine (plane2, COMBINE_OVER);
       }
     else
       {
