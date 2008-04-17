@@ -225,13 +225,13 @@ ColorScheme::default_scheme ()
         default:
         case COLOR_NONE:                    c = 0x00000000; break;
         case COLOR_FOREGROUND:              c = 0xff000000; break;
-        case COLOR_BACKGROUND:              c = 0xffc0c0c0; break;
+        case COLOR_BACKGROUND:              c = 0xffdfdcd8; break;
         case COLOR_FOCUS:                   c = 0xff000060; break;
         case COLOR_DEFAULT:                 c = 0xffd0d000; break;
-        case COLOR_LIGHT_GLINT:             c = 0xffe0e0e0; break;
-        case COLOR_LIGHT_SHADOW:            c = 0xffb0b0b0; break;
-        case COLOR_DARK_GLINT:              c = 0xffb0b0b0; break;
-        case COLOR_DARK_SHADOW:             c = 0xff808080; break;
+        case COLOR_LIGHT_GLINT:             c = 0xffefece8; break;
+        case COLOR_LIGHT_SHADOW:            c = 0xffcfccc8; break;
+        case COLOR_DARK_GLINT:              c = 0xffafaca8; break;
+        case COLOR_DARK_SHADOW:             c = 0xff8f8c88; break;
         }
 #elif 0
       switch (color_type)
