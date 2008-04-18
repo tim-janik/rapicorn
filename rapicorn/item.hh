@@ -111,6 +111,7 @@ protected:
   uint                        exec_slow_repeater   (const BoolSlot &sl);
   uint                        exec_key_repeater    (const BoolSlot &sl);
   bool                        remove_exec          (uint            exec_id);
+  virtual void                visual_update        ();
   /* misc */
   virtual                     ~Item             ();
   virtual void                style             (Style  *st);
@@ -196,6 +197,8 @@ public:
   void                        expose            (const Rect       &rect);       /* item coordinates relative */
   void                        expose            (const Region     &region);     /* item coordinates relative */
   void                        copy_area         (const Rect &rect, const Point &dest);
+  void                        queue_visual_update  ();
+  void                        force_visual_update  ();
   /* public signals */
   SignalFinalize<Item>            sig_finalize;
   Signal<Item, void ()>           sig_changed;

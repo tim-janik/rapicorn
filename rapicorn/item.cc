@@ -323,6 +323,43 @@ Item::remove_exec (uint exec_id)
   return false;
 }
 
+static DataKey<uint> visual_update_key;
+
+void
+Item::queue_visual_update ()
+{
+  uint timer_id = get_data (&visual_update_key);
+  if (!timer_id)
+    {
+      Root *ritem = get_root();
+      if (ritem)
+        {
+          EventLoop *loop = ritem->get_loop();
+          if (loop)
+            {
+              timer_id = loop->exec_timer (60, slot (*this, &Item::force_visual_update));
+              set_data (&visual_update_key, timer_id);
+            }
+        }
+    }
+}
+
+void
+Item::force_visual_update ()
+{
+  uint timer_id = get_data (&visual_update_key);
+  if (timer_id)
+    {
+      remove_exec (timer_id);
+      set_data (&visual_update_key, uint (0));
+    }
+  visual_update();
+}
+
+void
+Item::visual_update ()
+{}
+
 void
 Item::finalize()
 {
@@ -337,6 +374,12 @@ Item::~Item()
     {
       m_style->unref();
       m_style = NULL;
+    }
+  uint timer_id = get_data (&visual_update_key);
+  if (timer_id)
+    {
+      remove_exec (timer_id);
+      set_data (&visual_update_key, uint (0));
     }
 }
 
