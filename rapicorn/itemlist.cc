@@ -89,6 +89,13 @@ public:
     if (!m_model)
       model (new Model7());
   }
+  virtual void
+  hierarchy_changed (Item *old_toplevel)
+  {
+    Item::hierarchy_changed (old_toplevel);
+    if (anchored())
+      queue_visual_update();
+  }
   Adjustment&
   hadjustment () const
   {
@@ -100,7 +107,10 @@ public:
   vadjustment () const
   {
     if (!m_vadjustment)
-      m_vadjustment = Adjustment::create (0, 0, 1, 0.01, 0.2);
+      {
+        m_vadjustment = Adjustment::create (0, 0, 1, 0.01, 0.2);
+        m_vadjustment->sig_value_changed += slot ((Item&) *this, &Item::queue_visual_update);
+      }
     return *m_vadjustment;
   }
   Adjustment*
@@ -152,6 +162,11 @@ public:
           }
       }
     invalidate();
+  }
+  virtual void
+  visual_update ()
+  {
+    printerr ("%s\n", STRFUNC);
   }
   void
   set_child (Item        &child,
