@@ -92,8 +92,7 @@ public:
   uint          exec_update     (const BoolSlot &sl);
   uint          exec_background (const VoidSlot &sl);
   uint          exec_background (const BoolSlot &sl);
-  uint          exec_timer      (uint            initial_timeout_ms,
-                                 uint            repeat_timeout_ms,
+  uint          exec_timer      (uint            timeout_ms,
                                  const VoidSlot &sl);
   uint          exec_timer      (uint            initial_timeout_ms,
                                  uint            repeat_timeout_ms,
@@ -281,11 +280,10 @@ EventLoop::exec_background (const BoolSlot &sl)
 }
 
 inline uint
-EventLoop::exec_timer (uint            initial_timeout_ms,
-                       uint            repeat_timeout_ms,
+EventLoop::exec_timer (uint            timeout_ms,
                        const VoidSlot &sl)
 {
-  return add_source (new TimedSource (*sl.get_trampoline(), initial_timeout_ms, repeat_timeout_ms), PRIORITY_NEXT);
+  return add_source (new TimedSource (*sl.get_trampoline(), timeout_ms, timeout_ms), PRIORITY_NEXT);
 }
 
 inline uint
