@@ -83,6 +83,7 @@ public:
                                                  uint64  *allocation_offset = NULL);
   uint64                get_scroll_item         (double *row_offsetp,
                                                  double *pixel_offsetp);
+  bool                  need_pixel_scrolling    ();
   void                  layout_list             ();
 };
 

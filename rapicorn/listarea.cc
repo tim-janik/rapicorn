@@ -16,6 +16,8 @@
  */
 #include "listareaimpl.hh"
 
+#define IFDEBUG(...)      __VA_ARGS__
+
 namespace Rapicorn {
 
 const PropertyList&
@@ -179,6 +181,8 @@ ItemListImpl::fill_row (ListRow *lr,
     lr->child->set_property ("markup_text", string_printf ("|<br/>| <br/>| %llu<br/>|<br/>|", row));
 }
 
+IFDEBUG (static uint dbg_cached = 0, dbg_refilled = 0, dbg_created = 0);
+
 ListRow*
 ItemListImpl::fetch_row (uint64 row)
 {
@@ -190,20 +194,20 @@ ItemListImpl::fetch_row (uint64 row)
       lr = ri->second;
       m_row_map.erase (ri);
       filled = true;
-      printerr ("CACHED: %lld\n", row);
+      IFDEBUG (dbg_cached++);
     }
   else if (m_row_cache.size())
     {
       lr = m_row_cache.back();
       m_row_cache.pop_back();
-      printerr ("refill: %lld\n", row);
+      IFDEBUG (dbg_refilled++);
     }
   else /* create row */
     {
       lr = new ListRow();
       lr->child = ref_sink (&Factory::create_item ("Label"));
       m_table->add (*lr->child);
-      printerr ("create: %lld\n", row);
+      IFDEBUG (dbg_created++);
     }
   if (!filled)
     fill_row (lr, row);
@@ -258,7 +262,7 @@ ItemListImpl::get_scroll_item (double *row_offsetp,
    * the current slider position is interpreted as a fractional pointer
    * into the interval [0,count[. so the integer part of the scroll
    * position will always point at one particular item and the fractional
-   * part is interpreted as an offset into the row.
+   * part is interpreted as an offset into the item's row.
    */
   double norm_value = 1.0 - m_vadjustment->nvalue(); /* 0..1 scroll position */
   double scroll_value = norm_value * m_model->count();
@@ -268,24 +272,46 @@ ItemListImpl::get_scroll_item (double *row_offsetp,
   return scroll_item;
 }
 
+bool
+ItemListImpl::need_pixel_scrolling ()
+{
+  /* Scrolling for large models works by interpreting the scroll adjustment
+   * values as [row_index.row_fraction]. From this, a scroll position is
+   * interpolated so that the top of the first row and the bottom of the
+   * last row are aligned with top and bottom of the list view
+   * respectively.
+   * However, for models small enough, so that more scrollbar pixels per
+   * row are available than the size of the smallest row, a "backward"
+   * scrolling effect can be observed, resulting from the list top/bottom
+   * alignment interpolation values progressing faster than row_fraction
+   * increments.
+   * To counteract this effect and for an overall smoother scrolling
+   * behavior, we use pixel scrolling for smaller models, which requires
+   * all rows, visible and invisible rows to be layed out.
+   * In this context, this method is used to draw the distinction between
+   * "large" and "small" models.
+   */
+  double scroll_pixels_per_row = allocation().height / m_model->count();
+  double minimum_pixels_per_row = 1 + 3 + 1; /* outer border + minimum font size + inner border */
+  return scroll_pixels_per_row > minimum_pixels_per_row;
+}
+
 void
 ItemListImpl::layout_list ()
 {
   double area_height = MAX (allocation().height, 1);
   if (!m_model || !m_table || m_model->count() < 1)
     return;
+  const bool pixel_scrolling = need_pixel_scrolling();
   double row_offset, pixel_offset; /* 0..1 */
   uint64 r, current_item = get_scroll_item (&row_offset, &pixel_offset);
   RowMap rc;
   uint64 rcmin = current_item, rcmax = current_item;
   double height_before = area_height, height_after = area_height; // FIXME: add 2 * border?
+  IFDEBUG (dbg_cached = dbg_refilled = dbg_created = 0);
   /* fill rows from scroll_item towards list end */
   double accu_height = 0;
-  printerr ("count=%lld current=%lld nvalue=%f hb=%f ha=%f cond=%d\n",
-            m_model->count(), current_item, m_vadjustment->nvalue(),
-            height_before, height_after,
-            current_item < m_model->count() && accu_height <= height_before);
-  for (r = current_item; r < m_model->count() && accu_height <= height_before; r++)
+  for (r = current_item; r < m_model->count() && (accu_height <= height_before || pixel_scrolling); r++)
     {
       ListRow *lr = fetch_row (r);
       rc[r] = lr;
@@ -297,7 +323,7 @@ ItemListImpl::layout_list ()
   uint64 rowsteps = CLAMP (iround (height_before / avheight), 1, 17);
   uint64 first = current_item;
   accu_height = 0;
-  while (first > 0 && accu_height <= height_after)
+  while (first > 0 && (accu_height <= height_after || pixel_scrolling))
     {
       uint64 last = first;
       first -= MIN (first, rowsteps);
@@ -330,23 +356,31 @@ ItemListImpl::layout_list ()
   /* align scroll item */
   if (current_item < m_model->count() && has_allocatable_child())
     {
-      Allocation area = allocation();
-      ListRow *lr = m_row_map[current_item];
-      uint64 row_y, row_height = measure_row (lr, &row_y); // FIXME: add border
-      int64 row_pixel = row_y - area.y + row_height * (1.0 - row_offset);
-      int64 list_pixel = area.height * (1.0 - pixel_offset);
-      int64 pixel_diff = list_pixel - row_pixel;
-      /* shift rows */
+      const Allocation area = allocation();
       Item &child = get_child();
       Requisition requisition = child.size_request();
-      Allocation carea = allocation();
-      if (requisition.height <= carea.height)
-        pixel_diff = carea.height - requisition.height;
+      int64 pixel_diff;
+      if (requisition.height <= area.height)
+        pixel_diff = area.height - requisition.height;
+      else if (pixel_scrolling)
+        pixel_diff = - (1.0 - pixel_offset) * (requisition.height - area.height);
+      else /* fractional row scrolling */
+        {
+          ListRow *lr = m_row_map[current_item];
+          uint64 row_y, row_height = measure_row (lr, &row_y); // FIXME: add border
+          int64 row_pixel = row_y - area.y + row_height * (1.0 - row_offset);
+          int64 list_pixel = area.height * (1.0 - pixel_offset);
+          pixel_diff = list_pixel - row_pixel;
+        }
+      /* shift rows */
+      Allocation carea = area;
       carea.width = requisition.width;
       carea.height = requisition.height;
       carea.y += pixel_diff;
-      printerr ("list_pixel=%lld row_pixel=%lld pixel_diff=%lld pixel_offset=%f current=%lld row_offset=%f\n",
-                (int64) -1, (int64) -1, pixel_diff, pixel_offset, current_item, row_offset);
+      IFDEBUG (printout ("List: cached=%u refilled=%u created=%u current=%3lld row_offset=%f pixel_offset=%f diff=%lld ps=%d\n",
+                         dbg_cached, dbg_refilled, dbg_created,
+                         current_item, row_offset, pixel_offset,
+                         pixel_diff, pixel_scrolling));
       child.set_allocation (carea);
     }
 }
