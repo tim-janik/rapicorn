@@ -14,8 +14,8 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef __RAPICORN_LIST_HH__
-#define __RAPICORN_LIST_HH__
+#ifndef __RAPICORN_LIST_AREA_HH__
+#define __RAPICORN_LIST_AREA_HH__
 
 #include <rapicorn/container.hh>
 
@@ -31,4 +31,4 @@ public:
 
 } // Rapicorn
 
-#endif  /* __RAPICORN_LIST_HH__ */
+#endif  /* __RAPICORN_LIST_AREA_HH__ */

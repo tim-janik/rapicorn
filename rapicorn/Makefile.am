@@ -23,6 +23,7 @@ rapicorn_impl_headers = $(strip 	\
 	arrangementimpl.hh		\
 	containerimpl.hh		\
 	itemimpl.hh			\
+	listareaimpl.hh			\
 	rootimpl.hh			\
 	scrollitemsimpl.hh		\
 	sinfeximpl.hh			\
