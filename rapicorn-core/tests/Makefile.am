@@ -2,7 +2,7 @@
 include $(top_srcdir)/Makefile.decl
 
 INCLUDES	+= -I$(top_srcdir)
-DEFS		+= $(RAPICORN_CFLAGS) -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"'
+DEFS		+= $(RAPICORN_CFLAGS) -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"' -DSRCDIR='"$(srcdir)"'
 DEFS		+= $(GLIB_CFLAGS) # FIXME
 
 # test programs
@@ -48,3 +48,4 @@ markup_LDADD       = $(LDADDS)
 TESTS             += pixmaps
 pixmaps_SOURCES    = pixmaps.cc
 pixmaps_LDADD      = $(LDADDS)
+EXTRA_DIST        += testpixs.c testpixs.png

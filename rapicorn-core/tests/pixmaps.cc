@@ -124,10 +124,10 @@ test_pixstreams (void)
   pixall->copy (*pixmap3, 0, 0, -1, -1, 0, 64);
   pixall->copy (*pixmap4, 0, 0, -1, -1, 0, 96);
   /* load reference */
-  const char *reference = "testpixs.png";
-  Pixmap *pixref = Pixmap::load_png (reference);
+  String reference = Path::join (SRCDIR, "testpixs.png");
+  Pixmap *pixref = Pixmap::load_png (reference.c_str());
   if (!pixref || errno)
-    error ("failed to load \"%s\": %s", reference, string_from_errno (errno).c_str());
+    error ("failed to load \"%s\": %s", reference.c_str(), string_from_errno (errno).c_str());
   ref_sink (pixmap2);
   /* check equality */
   bool cmp = pixall->compare (*pixref, 0, 0, -1, -1, 0, 0);
