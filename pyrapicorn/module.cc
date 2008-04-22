@@ -52,7 +52,7 @@ static const char rapicorn_doc[] = "Rapicorn C++ glue module.";
 PyMODINIT_FUNC
 initpyRapicorn (void) // conventional dlmodule initializer
 {
-  PyObject *m = Py_InitModule3 (PYRAPICORNSTR, rapicorn_vtable, rapicorn_doc);
+  PyObject *m = Py_InitModule3 (PYRAPICORNSTR, rapicorn_vtable, (char*) rapicorn_doc);
   if (!m)
     return;
   if (!rapicorn_exception)
