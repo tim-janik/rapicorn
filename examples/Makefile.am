@@ -33,7 +33,7 @@ EXAMPLES	+= tour
 tour_SOURCES	 = tour.cc
 tour_LDADD	 = $(LDADDS)
 XML_FILES	+= tour.xml
-EXTRA_DIST	+= testpixs.c testpic.jpg testpic.png testpic-IHDR.png testpic-IDAT.png testpic-DATA.png
+EXTRA_DIST	+= testpic.jpg testpic.png testpic-IHDR.png testpic-IDAT.png testpic-DATA.png
 
 xmllint-check:
 	cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES)
