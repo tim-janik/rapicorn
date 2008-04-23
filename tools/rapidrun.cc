@@ -32,6 +32,8 @@ help_usage (bool usage_error)
   printout ("%s\n", usage);
   /*         12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
   printout ("Show Rapicorn dialogs defined in GuiFile.xml.\n");
+  printout ("This tool will read the GUI description file listed on the command\n");
+  printout ("line, look for a dialog named 'test-dialog' and show it.\n");
   printout ("\n");
   printout ("Options:\n");
   printout ("  --parse-test                  Parse GuiFile.xml and exit.\n");
