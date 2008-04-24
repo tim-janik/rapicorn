@@ -20,7 +20,7 @@ pyRapicorn_la_LIBADD   = $(top_builddir)/rapicorn/librapicorn@RAPICORN_RELEASE@.
 # === tests ===
 test-pyprintout:
 	@echo -n "Test Rapicorn::printout(): "
-	@NL=$$'\n'; PYTHONPATH="$$PYTHONPATH:$(pythondir)" python -c "if 1:$$NL\
+	@NL=$$'\n'; PYTHONPATH="$$PYTHONPATH:$(pythondir)" ${PYTHON} -c "if 1:$$NL\
 	  import @RAPICORN_NAMESPACE_NAME@ as Rapicorn $$NL\
 	  Rapicorn.pyRapicorn.printout ('test_01')" \
 	| fgrep -q test_01
