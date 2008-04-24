@@ -1,7 +1,7 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-docdir = ${datarootdir}/doc/${PACKAGE}${RAPICORN_RELEASE_NUMBER}
+docdir = ${datarootdir}/doc/${PACKAGE}${RAPICORN_RELEASE}
 
 tutorialdir   = $(docdir)/tutorial
 tutorial_DATA = doxer.css Hello-World.html Rapicorn-Tutorial.html

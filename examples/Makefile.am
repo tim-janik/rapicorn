@@ -8,7 +8,7 @@ DEFS		+= $(RAPICORN_CFLAGS)
 noinst_PROGRAMS	 = $(EXAMPLES)
 noinst_DATA	 =
 EXAMPLES	 =
-LDADDS		 = $(top_builddir)/rapicorn/librapicorn@LT_RELEASE@.la $(RAPICORN_DEP_LIBS)
+LDADDS		 = $(top_builddir)/rapicorn/librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS)
 XML_FILES	 =
 EXTRA_DIST	+= $(XML_FILES)
 

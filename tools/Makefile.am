@@ -6,7 +6,7 @@ DEFS		+= $(RAPICORN_CFLAGS)
 
 bin_PROGRAMS	 = $(BIN_PROGS)
 BIN_PROGS	 =
-LDADDS		 = $(top_builddir)/rapicorn/librapicorn@LT_RELEASE@.la $(RAPICORN_DEP_LIBS)
+LDADDS		 = $(top_builddir)/rapicorn/librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS)
 
 # rapidrun
 BIN_PROGS	+= rapidrun

@@ -6,7 +6,7 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = . po rapicorn-core rapicorn tools pyrapicorn examples docs web
 
-docdir  = ${datarootdir}/doc/${PACKAGE}${RAPICORN_RELEASE_NUMBER}
+docdir  = ${datarootdir}/doc/${PACKAGE}${RAPICORN_RELEASE}
 noinst_DATA =
 
 # === setup ===
@@ -46,10 +46,10 @@ EXTRA_DIST  += ChangeLog
 
 # === rapicorn*.pc ===
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = rapicorn@LT_RELEASE@.pc
-rapicorn@LT_RELEASE@.pc: $(top_builddir)/config.status rapicorn.pc.in
+pkgconfig_DATA = rapicorn@RAPICORN_RELEASE@.pc
+rapicorn@RAPICORN_RELEASE@.pc: $(top_builddir)/config.status rapicorn.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status --file=$@:rapicorn.pc.in
-CLEANFILES += rapicorn@LT_RELEASE@.pc
+CLEANFILES += rapicorn@RAPICORN_RELEASE@.pc
 EXTRA_DIST += rapicorn.pc.in
 
 # === API version check ===
@@ -88,7 +88,7 @@ installcheck-local:
 	&& echo 'extern "C" int main (int argc, char *argv[]) {'		>> tmpx.cc \
 	&& echo 'Application::init_with_x11 (&argc, &argv, ".AMtest");'	>> tmpx.cc \
 	&& echo 'Application::execute_loops(); return 0; }'		>> tmpx.cc \
-	&& $(CC) `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags --libs rapicorn@LT_RELEASE@` tmpx.cc -o tmpx \
+	&& $(CC) `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags --libs rapicorn@RAPICORN_RELEASE@` tmpx.cc -o tmpx \
 	&& LD_LIBRARY_PATH="$(libdir):$$LD_LIBRARY_PATH" ./tmpx
 	rm -f tmpx.cc tmpx
 

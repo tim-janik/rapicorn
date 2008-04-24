@@ -7,7 +7,7 @@ DEFS		+= $(GLIB_CFLAGS) # FIXME
 
 # test programs
 noinst_PROGRAMS	 = $(TESTS)
-LDADDS		 = $(top_builddir)/rapicorn-core/librapicorncore@LT_RELEASE@.la $(RAPICORN_LIBS)
+LDADDS		 = $(top_builddir)/rapicorn-core/librapicorncore@RAPICORN_RELEASE@.la $(RAPICORN_LIBS)
 
 # programs
 TESTS             += infotest

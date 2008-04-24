@@ -14,7 +14,7 @@ pyrapicorn_PYTHON      = __init__.py
 pyrapicorn_LTLIBRARIES = pyRapicorn.la
 pyRapicorn_la_SOURCES  = $(pyrapicorn_cc_sources)
 pyRapicorn_la_LDFLAGS  = -module -avoid-version -no-undefined -export-symbols-regex pyRapicorn
-pyRapicorn_la_LIBADD   = $(top_builddir)/rapicorn/librapicorn@LT_RELEASE@.la
+pyRapicorn_la_LIBADD   = $(top_builddir)/rapicorn/librapicorn@RAPICORN_RELEASE@.la
 
 
 # === tests ===

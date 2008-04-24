@@ -8,7 +8,7 @@ DEFS            += $(GLIB_CFLAGS) # FIXME
 # test programs
 noinst_PROGRAMS	 = $(TESTS)
 noinst_DATA	 =
-LDADDS		 = $(top_builddir)/rapicorn/librapicorn@LT_RELEASE@.la $(RAPICORN_DEP_LIBS)
+LDADDS		 = $(top_builddir)/rapicorn/librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS)
 XML_FILES	 =
 EXTRA_DIST	+= $(XML_FILES)
 

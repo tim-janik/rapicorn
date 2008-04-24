@@ -39,28 +39,28 @@ rapicorn_private_files = $(strip	\
 AM_CXXFLAGS = @FPU_FLAGS@
 
 # === libraries ===
-topincludedir   = $(includedir)/rapicorn@LT_RELEASE@
+topincludedir   = $(includedir)/rapicorn@RAPICORN_RELEASE@
 topinclude_DATA = $(rapicorn_top_headers)
 EXTRA_DIST     += $(rapicorn_top_headers)
 # librapicorn-core
-noinst_LTLIBRARIES			    = librapicorncore@LT_RELEASE@.la # hardcoded -release $(LT_RELEASE)
-librapicorncore@LT_RELEASE@includedir       = $(includedir)/rapicorn@LT_RELEASE@/rapicorn-core
-librapicorncore@LT_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
-librapicorncore@LT_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorncore@LT_RELEASE@_la_DEPENDENCIES = ldscript.map
-librapicorncore@LT_RELEASE@_la_LIBADD       = $(RAPICORN_DEP_LIBS) -lm
-librapicorncore@LT_RELEASE@_la_LDFLAGS      = $(strip		\
+noinst_LTLIBRARIES			    = librapicorncore@RAPICORN_RELEASE@.la # hardcoded -release $(RAPICORN_RELEASE)
+librapicorncore@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/rapicorn-core
+librapicorncore@RAPICORN_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
+librapicorncore@RAPICORN_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
+librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES = ldscript.map
+librapicorncore@RAPICORN_RELEASE@_la_LIBADD       = $(RAPICORN_DEP_LIBS) -lm
+librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined 						\
 ) # set libtool version and export symbols for resolving
-EXTRA_DIST += $(rapicorn_private_files) $(librapicorncore@LT_RELEASE@_la_DEPENDENCIES)
+EXTRA_DIST += $(rapicorn_private_files) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
 
 # keep this .o rule in sync with the corresponding .la rule from Makefile.in
-librapicorncore@LT_RELEASE@.o: $(librapicorncore@LT_RELEASE@_la_OBJECTS) $(librapicorncore@LT_RELEASE@_la_DEPENDENCIES)
-	$(CXXLINK) -rpath $(libdir) $(librapicorncore@LT_RELEASE@_la_LDFLAGS) $(librapicorncore@LT_RELEASE@_la_OBJECTS) # $(librapicorncore@LT_RELEASE@_la_LIBADD) $(LIBS)
-all-am: librapicorncore@LT_RELEASE@.o
-CLEANFILES += librapicorncore@LT_RELEASE@.lo librapicorncore@LT_RELEASE@.o
+librapicorncore@RAPICORN_RELEASE@.o: $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
+	$(CXXLINK) -rpath $(libdir) $(librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS) $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS) # $(librapicorncore@RAPICORN_RELEASE@_la_LIBADD) $(LIBS)
+all-am: librapicorncore@RAPICORN_RELEASE@.o
+CLEANFILES += librapicorncore@RAPICORN_RELEASE@.lo librapicorncore@RAPICORN_RELEASE@.o
 
 # === API content ===
 api-content:
@@ -69,7 +69,7 @@ api-content:
 
 # === programs (not installed) ===
 noinst_PROGRAMS        = $(ALLTESTS)
-progs_ldadd            = librapicorncore@LT_RELEASE@.la $(RAPICORN_DEP_LIBS) -lm
+progs_ldadd            = librapicorncore@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS) -lm
 # rapicorn-zintern
 noinst_PROGRAMS       += rapicorn-zintern
 rapicorn_zintern_SOURCES = rapicorn-zintern.cc
@@ -169,7 +169,7 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& cp xgen-$(@F) $@ \
 	&& rm -f xgen-$(@F)
 CLEANFILES += xgen-rapicornconfig.h rapicornconfig.h
-$(librapicorncore@LT_RELEASE@_la_OBJECTS): rapicornconfig.h
+$(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS): rapicornconfig.h
 
 
 # === rapicornsignalvariants.hh ===

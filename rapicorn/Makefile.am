@@ -52,22 +52,22 @@ CPU_FLAGS = $(or	\
 AM_CXXFLAGS = $(CPU_FLAGS)
 
 # === libraries ===
-topincludedir   = $(includedir)/rapicorn@LT_RELEASE@
+topincludedir   = $(includedir)/rapicorn@RAPICORN_RELEASE@
 topinclude_DATA = $(rapicorn_top_headers)
 EXTRA_DIST     += $(rapicorn_top_headers)
 # librapicorn
-lib_LTLIBRARIES                         = librapicorn@LT_RELEASE@.la	# hardcoded -release $(LT_RELEASE)
-librapicorn@LT_RELEASE@includedir       = $(includedir)/rapicorn@LT_RELEASE@/rapicorn
-librapicorn@LT_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
-librapicorn@LT_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorn@LT_RELEASE@_la_DEPENDENCIES = $(top_builddir)/rapicorn-core/librapicorncore@LT_RELEASE@.o ldscript.map
-librapicorn@LT_RELEASE@_la_LDFLAGS      = $(strip		\
+lib_LTLIBRARIES                         = librapicorn@RAPICORN_RELEASE@.la	# hardcoded -release $(RAPICORN_RELEASE)
+librapicorn@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/rapicorn
+librapicorn@RAPICORN_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
+librapicorn@RAPICORN_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
+librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES = $(top_builddir)/rapicorn-core/librapicorncore@RAPICORN_RELEASE@.o ldscript.map
+librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined 						\
 ) # set libtool version and export symbols for resolving
-librapicorn@LT_RELEASE@_la_LIBADD       = $(top_builddir)/rapicorn-core/librapicorncore@LT_RELEASE@.o $(RAPICORN_DEP_LIBS) -lm # -lfreetype -lfontconfig
-EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@LT_RELEASE@_la_DEPENDENCIES)
+librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(top_builddir)/rapicorn-core/librapicorncore@RAPICORN_RELEASE@.o $(RAPICORN_DEP_LIBS) -lm # -lfreetype -lfontconfig
+EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES)
 
 # === API headers ===
 api-content:
@@ -76,7 +76,7 @@ api-content:
 
 # === programs (not installed) ===
 noinst_PROGRAMS        = $(ALLTESTS)
-progs_ldadd            = librapicorn@LT_RELEASE@.la $(RAPICORN_DEP_LIBS) -lm
+progs_ldadd            = librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS) -lm
 
 
 XML_FILES   = foundation.xml standard.xml
