@@ -2,30 +2,31 @@ The Rapicorn Toolkit
 ====================
 
 Rapicorn is an experimental UI toolkit.
-Many things that programmers need to spell out explicitely in Gtk+ or
-other toolkits are automated in Rapicorn and duplicate manual work is
-reduced as much as possible.
-It aims at bringing UI-design, UI-notation and UI-programming much
-closer together. This is accomplished by providing a conscise way for
-UI notation, that can be used directly throughout design phases and
-reduces needs for UI programming to a minimum.
+It aims at bringing UI-design, UI-notation and UI-programming as close
+together as possible. To accomplish this, it provides conscise ways for
+UI notation, usable also throughout design phases.
+Simple but powerful programming mechanisms will be provided to automate
+binding of programming and GUI logic and to minimize manual work.
 
-Cairo is planned to be used for rendering tasks, and Pango is used for
-text rendering.
+Cairo is planned to be used for rendering tasks, and Pango is currently
+used for text rendering. A more extensive overview is provided online:
+  http://testbit.eu/wiki/Rapicorn-Introduction
 
 A programming tutorial can be found under:
-  $(prefix)/doc/rapicorn$(VERSION)/tutorial/
+  ${prefix}/doc/rapicorn<VERSION>/tutorial/
+  http://testbit.eu/book/Rapicorn-Tutorial
+
 
 Existing Features
 -----------------
 
 Rapicorn supports an item hierarchy with cross-references, type safe
 per-object signal emissions, a Gtk+ based blitting backend, a Pango
-based text rendering backend, basic Event processing and focus handling.
+based text rendering backend, Event processing and focus handling.
 It comes with a set of core widgets such as buttons, sliders, a scroll
-area, table alike layout containers and widgets to paint foreground
+area, table like layout containers and widgets to paint foreground
 or background elements.
-It also provides an XML markup parser that allows full GUI specifications
+It provides an XML markup parser that allows full GUI specifications
 to be written in XML, more of which is detailed here:
   http://blogs.gnome.org/view/timj/2005/07/31/0
 
@@ -33,8 +34,8 @@ to be written in XML, more of which is detailed here:
 Building Rapicorn
 =================
 
-In order to build released tarballs, a recent version of Pango is needed.
-The sources for required packages can be found at:
+In order to build Rapicorn from release tarballs, a recent version of
+Pango is needed. The sources for required packages can be found at:
 
 Pango-1.8:
 	ftp://ftp.gtk.org/pub/gtk/v2.6/
@@ -45,7 +46,7 @@ upgrading the compiler may improve the situation.
 
 Compiling with a different compiler version than the default on your system
 and running all checks Rapicorn offers (they should all succeed) can be
-done with command lines similar to:
+done with a command line like:
   export CC=gcc-3.4 CXX=g++-3.4 CPP=gcc-3.4\ -E CPPCXX=g++-3.4\ -E
   ./configure
   make all install
@@ -54,6 +55,15 @@ done with command lines similar to:
 Web pages of the project can be found at:
 
 	http://rapicorn.org
+
+A mailing list for Rapicorn development and feedback:
+
+	http://rapicorn.org/pipermail/rapicorn-list/
+	http://rapicorn.org/mailman/listinfo/rapicorn-list
+
+Roadmap and planning of steps ahead:
+
+	http://testbit.eu/wiki/Rapicorn-Roadmap-and-Steps-Ahead
 
 
 Installation
