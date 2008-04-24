@@ -31,28 +31,35 @@ to be written in XML, more of which is detailed here:
   http://blogs.gnome.org/view/timj/2005/07/31/0
 
 
-Building Rapicorn
-=================
+Dependencies
+============
 
 In order to build Rapicorn from release tarballs, a recent version of
-Pango is needed. The sources for required packages can be found at:
+libpng, Pango and Gtk+ as well as Python 2.4 or 2.5 are currently needed.
+The sources for the required packages can be found here:
 
-Pango-1.8:
-	ftp://ftp.gtk.org/pub/gtk/v2.6/
+	http://gtk.org/download.html
+	http://sourceforge.net/projects/libpng/
+	http://www.python.org/download/releases/
 
-Rapicorn tends to hit G++ compiler bugs fairly frequently, so if you
+As Debian package list:
+
+	libgtk2.0-dev libpango1.0-dev libpng12-dev python2.5-dev
+
+Rapicorn tends to hit GNU C++ compiler bugs fairly frequently, so if you
 have problems compiling the code, or get segfaults in STL source files,
 upgrading the compiler may improve the situation.
 
-Compiling with a different compiler version than the default on your system
-and running all checks Rapicorn offers (they should all succeed) can be
-done with a command line like:
+Compiling with a different compiler version than the default on your
+system and running all checks Rapicorn offers (they should all succeed)
+can be done with commands like:
+
   export CC=gcc-3.4 CXX=g++-3.4 CPP=gcc-3.4\ -E CPPCXX=g++-3.4\ -E
   ./configure
   make all install
   make report # report runs fast tests, slow tests and performance tests
 
-Web pages of the project can be found at:
+Web pages and further resources can be found at:
 
 	http://rapicorn.org
 
