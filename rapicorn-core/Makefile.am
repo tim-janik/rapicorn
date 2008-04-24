@@ -120,11 +120,11 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "/* --- rapicorn version --- */"						>> xgen-$(@F) \
 	&& echo '#define RAPICORN_VERSION  "@RAPICORN_RELEASE_YEAR@.@RAPICORN_RELEASE_MONTH@.@RAPICORN_REVISION_VERSION@"' >> xgen-$(@F) \
 	&& echo "/* version checks */"								>> xgen-$(@F) \
-	&& echo "#define RAPICORN_CHECK_VERSION(majv,relv,revv)	\\"				>> xgen-$(@F) \
-	&& echo "  (@RAPICORN_RELEASE_YEAR@ > (majv) || \\"					>> xgen-$(@F) \
-	&& echo "    (@RAPICORN_RELEASE_YEAR@ == (majv) && \\"					>> xgen-$(@F) \
-	&& echo "      (@RAPICORN_RELEASE_MONTH@ > (relv) || \\"					>> xgen-$(@F) \
-	&& echo "        (@RAPICORN_RELEASE_MONTH@ == (relv) && \\"				>> xgen-$(@F) \
+	&& echo "#define RAPICORN_CHECK_VERSION(year,month,revv) \\"				>> xgen-$(@F) \
+	&& echo "  (@RAPICORN_RELEASE_YEAR@ > (year) || \\"					>> xgen-$(@F) \
+	&& echo "    (@RAPICORN_RELEASE_YEAR@ == (year) && \\"					>> xgen-$(@F) \
+	&& echo "      (@RAPICORN_RELEASE_MONTH@ > (month) || \\"				>> xgen-$(@F) \
+	&& echo "        (@RAPICORN_RELEASE_MONTH@ == (month) && \\"				>> xgen-$(@F) \
 	&& echo "          (@RAPICORN_REVISION_VERSION@ >= (revv))))))"				>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- log & i18n domains --- */"						>> xgen-$(@F) \
