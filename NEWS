@@ -1,6 +1,6 @@
 Rapicorn 8.4.0: - Thu Apr 24 23:19:39 CEST 2008
 
-* Changed versioning scheme to YEAR.WEEK.REVISION.
+* Changed versioning scheme to YEAR.MONTH.REVISION.
 * License update to GNU LGPL 2.1.
 * Added a publically installed tool: rapidrun
 * Support println() and close() commands in GUI files.
