@@ -94,8 +94,8 @@ main (int   argc,
   if (argc != 2)
     help_usage (true);
 
-  /* load GUI definition file, relative to argv[0] */
-  Application::auto_load ("RapicornTest", argv[1], argv[0]);
+  /* load GUI definition file, relative to CWD */
+  Application::auto_load ("RapicornTest", argv[1], ".");
 
   /* create root item */
   Window window = Application::create_window ("test-dialog");
