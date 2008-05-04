@@ -162,20 +162,10 @@ TableImpl::~TableImpl()
 {}
 
 void
-TableImpl::add_child (Item &item)
+TableImpl::repack_child (Item &item)
 {
-  if (1)
-    {
-      const PackAttach &xpa = item.pack_attach();       // copy PackAttach
-      if (xpa.right_attach <= xpa.left_attach)
-        item.right_attach (xpa.left_attach + 1);        // invalidates original PackAttach
-      if (xpa.top_attach <= xpa.bottom_attach)
-        item.top_attach (xpa.bottom_attach + 1);        // invalidates original PackAttach
-    }
-  const PackAttach pa = item.pack_attach();
+  const PackAttach &pa = item.pack_attach();
   resize (pa.right_attach, pa.top_attach);
-  MultiContainerImpl::add_child (item);
-  // FIXME: resize if props change after add
 }
 
 void

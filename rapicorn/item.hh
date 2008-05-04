@@ -277,22 +277,23 @@ public: /* packing */
   const PackAttach&  pack_attach     () const { return const_cast<Item*> (this)->pack_attach (false); }
   const PackSpacing& pack_spacing    () const { return const_cast<Item*> (this)->pack_spacing (false); }
   uint               left_attach     ()       { return pack_attach (false).left_attach; }
-  void 		     left_attach     (uint c) { PackAttach &pa = pack_attach (true); pa.left_attach = c; pa.right_attach = MAX (pa.left_attach + 1, pa.right_attach); invalidate(); }
+  void 		     left_attach     (uint c) { PackAttach &pa = pack_attach (true); pa.left_attach = c; pa.right_attach = MAX (pa.left_attach + 1, pa.right_attach); repack(); }
   uint 		     right_attach    ()       { return pack_attach (false).right_attach; }
-  void 		     right_attach    (uint c) { PackAttach &pa = pack_attach (true); pa.right_attach = MAX (1, c); pa.left_attach = MIN (pa.left_attach, pa.right_attach - 1); invalidate(); }
+  void 		     right_attach    (uint c) { PackAttach &pa = pack_attach (true); pa.right_attach = MAX (1, c); pa.left_attach = MIN (pa.left_attach, pa.right_attach - 1); repack(); }
   uint 		     bottom_attach   ()       { return pack_attach (false).bottom_attach; }
-  void 		     bottom_attach   (uint c) { PackAttach &pa = pack_attach (true); pa.bottom_attach = c; pa.top_attach = MAX (pa.top_attach, pa.bottom_attach + 1); invalidate(); }
+  void 		     bottom_attach   (uint c) { PackAttach &pa = pack_attach (true); pa.bottom_attach = c; pa.top_attach = MAX (pa.top_attach, pa.bottom_attach + 1); repack(); }
   uint 		     top_attach      ()       { return pack_attach (false).top_attach; }
-  void 		     top_attach      (uint c) { PackAttach &pa = pack_attach (true); pa.top_attach = MAX (1, c); pa.bottom_attach = MIN (pa.bottom_attach, pa.top_attach - 1); invalidate(); }
+  void 		     top_attach      (uint c) { PackAttach &pa = pack_attach (true); pa.top_attach = MAX (1, c); pa.bottom_attach = MIN (pa.bottom_attach, pa.top_attach - 1); repack(); }
   uint 		     left_spacing    ()       { return pack_spacing (false).left_spacing; }
-  void 		     left_spacing    (uint c) { pack_spacing (true).left_spacing = c; invalidate(); }
+  void 		     left_spacing    (uint c) { pack_spacing (true).left_spacing = c; repack(); }
   uint 		     right_spacing   ()       { return pack_spacing (false).right_spacing; }
-  void 		     right_spacing   (uint c) { pack_spacing (true).right_spacing = c; invalidate(); }
+  void 		     right_spacing   (uint c) { pack_spacing (true).right_spacing = c; repack(); }
   uint 		     bottom_spacing  ()       { return pack_spacing (false).bottom_spacing; }
-  void 		     bottom_spacing  (uint c) { pack_spacing (true).bottom_spacing = c; invalidate(); }
+  void 		     bottom_spacing  (uint c) { pack_spacing (true).bottom_spacing = c; repack(); }
   uint 		     top_spacing     ()       { return pack_spacing (false).top_spacing; }
-  void 		     top_spacing     (uint c) { pack_spacing (true).top_spacing = c; invalidate(); }
+  void 		     top_spacing     (uint c) { pack_spacing (true).top_spacing = c; repack(); }
 private:
+  void               repack          (void);
   PackAttach&        pack_attach     (bool create);
   PackSpacing&       pack_spacing    (bool create);
 public:

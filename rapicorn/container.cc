@@ -313,7 +313,9 @@ Container::add (Item                   &item,
     }
   item.ref();
   try {
+    container.repack_child (item);
     container.add_child (item);
+    container.repack_child (item);
   } catch (...) {
     item.unref();
     throw;
@@ -380,6 +382,10 @@ Container::dispose_item (Item &item)
   if (&item == get_data (&child_container_key))
     child_container (NULL);
 }
+
+void
+Container::repack_child (Item &item)
+{}
 
 static DataKey<Item*> focus_child_key;
 

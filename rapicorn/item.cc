@@ -84,18 +84,18 @@ Item::set_flag (uint32 flag,
 {
   assert ((flag & (flag - 1)) == 0); /* single bit check */
   const uint propagate_flag_mask  = SENSITIVE | PARENT_SENSITIVE | PRELIGHT | IMPRESSED | HAS_DEFAULT;
-  const uint invalidate_flag_mask = HEXPAND | VEXPAND | HSHRINK | VSHRINK | HFILL | VFILL |
-                                    HSPREAD | VSPREAD | HSPREAD_CONTAINER | VSPREAD_CONTAINER | VISIBLE;
+  const uint repack_flag_mask = HEXPAND | VEXPAND | HSHRINK | VSHRINK | HFILL | VFILL |
+                                HSPREAD | VSPREAD | HSPREAD_CONTAINER | VSPREAD_CONTAINER | VISIBLE;
   bool fchanged = change_flags_silently (flag, on);
   if (fchanged)
     {
-      if (flag & invalidate_flag_mask)
-        invalidate();
       if (flag & propagate_flag_mask)
         {
           expose();
           propagate_flags (false);
         }
+      if (flag & repack_flag_mask)
+        repack(); // includes invalidate();
       changed();
     }
 }
@@ -1026,6 +1026,14 @@ Item::find_adjustments (AdjustmentSourceType adjsrc1,
           (!adj4 || *adj4))
         break;
     }
+}
+
+void
+Item::repack()
+{
+  if (parent())
+    parent()->repack_child (*this);
+  invalidate();
 }
 
 Item::PackAttach&
