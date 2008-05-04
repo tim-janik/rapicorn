@@ -486,19 +486,16 @@ Affine::string() const
 }
 
 Plane::Plane (const Initializer &initializer) :
-  m_x (initializer.m_x), m_y (initializer.m_y),
-  m_stride (initializer.m_stride), m_height (initializer.m_height),
-  m_pixel_buffer (NULL)
+  Pixbuf (initializer.m_width, initializer.m_height),
+  m_x (initializer.m_x), m_y (initializer.m_y)
 {
-  m_pixel_buffer = new uint32[n_pixels()];
   fill (0);
 }
 
-Plane::Plane (int x, int y, uint width, uint height, Color c) :
-  m_x (x), m_y (y), m_stride (width), m_height (height),
-  m_pixel_buffer (NULL)
+Plane::Plane (int x, int y, uint _width, uint _height, Color c) :
+  Pixbuf (_width, _height),
+  m_x (x), m_y (y)
 {
-  m_pixel_buffer = new uint32[n_pixels()];
   fill (c);
 }
 
@@ -506,27 +503,20 @@ void
 Plane::fill (Color c)
 {
   uint32 argb = c.premultiplied();
-  memset4 (m_pixel_buffer, argb, n_pixels());
-#if 0
   for (int y = 0; y < height(); y++)
-    for (int x = 0; x < width(); x++)
-      {
-        uint32 *p = peek (x, y);
-        *p = argb;
-      }
-#endif
+    {
+      uint32 *p = peek (0, y);
+      memset4 (p, argb, width());
+      // uint32 *p = peek (x, y); *p = argb;
+    }
 }
 
 Plane::~Plane()
-{
-  delete[] m_pixel_buffer;
-}
+{}
 
 bool
 Plane::rgb_convert (uint cwidth, uint cheight, uint rowstride, uint8 *cpixels) const
 {
-  if (!m_pixel_buffer)
-    return false;
   int h = MIN (cheight, (uint) height());
   int w = MIN (cwidth, (uint) width());
   for (int y = 0; y < h; y++)

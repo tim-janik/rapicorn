@@ -20,8 +20,7 @@
 #include <list>
 #include <math.h>
 #include <values.h> /* MAXDOUBLE, etc. */
-#include <rapicorn-core/enumdefs.hh>
-#include <rapicorn-core/rapicornmath.hh>
+#include <rapicorn-core/rapicorn-core.hh>
 
 namespace Rapicorn {
 
@@ -671,25 +670,21 @@ struct AffineShear : Affine {
 };
 
 /* --- Plane --- */
-class Plane {
-  int     m_x, m_y, m_stride, m_height;
-  uint32 *m_pixel_buffer;
-  uint    n_pixels() const                  { return height() * m_stride; }
+class Plane : public virtual Pixbuf {
+  int     m_x, m_y;
   Color   peek_color (uint x, uint y) const { const uint32 *p = peek (x, y); return Color::from_premultiplied (*p); }
   RAPICORN_PRIVATE_CLASS_COPY (Plane);
   struct Initializer {
-    int m_x, m_y, m_stride, m_height;
-    Initializer (int x, int y, int stride, int height) : m_x (x), m_y (y), m_stride (stride), m_height (height) {}
+    int m_x, m_y, m_width, m_height;
+    Initializer (int x, int y, int width, int height) : m_x (x), m_y (y), m_width (width), m_height (height) {}
   };
 public:
-  uint32*       peek (uint x, uint y)       { return &m_pixel_buffer[y * m_stride + x]; }
-  const uint32* peek (uint x, uint y) const { return &m_pixel_buffer[y * m_stride + x]; }
+  uint32*       peek (uint x, uint y)       { return const_cast<uint32*> (row (y) + x); }
+  const uint32* peek (uint x, uint y) const { return row (y) + x; }
   explicit      Plane (int x, int y, uint width, uint height, Color c = 0x00000000);
   explicit      Plane (const Initializer &initializer);
   virtual       ~Plane();
-  int           pixstride  () const { return m_stride * 4; }
-  int           width      () const { return m_stride; } //FIXME
-  int           height     () const { return m_height; }
+  int           pixstride  () const { return m_rowstride * 4; }
   Rect          rect       () const { return Rect (Point (m_x, m_y), width(), height()); }
   Point         origin     () const { return Point (m_x, m_y); }
   int           xstart     () const { return m_x; }
