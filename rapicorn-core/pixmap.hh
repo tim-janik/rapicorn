@@ -23,8 +23,8 @@ namespace Rapicorn {
 
 class Pixbuf {
   uint32         *m_pixels;
-  int             m_rowstride;
 protected:
+  const int       m_rowstride;
   const int       m_width, m_height;
   virtual        ~Pixbuf    ();
   explicit        Pixbuf    (uint _width, uint _height, int alignment = -1);

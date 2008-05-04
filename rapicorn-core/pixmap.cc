@@ -113,7 +113,7 @@ Pixbuf::row (uint y) const /* endian dependant ARGB integers */
 
 Pixbuf::~Pixbuf ()
 {
-  m_rowstride = 0;
+  *const_cast<int*> (&m_rowstride) = 0;
   delete[] m_pixels;
   m_pixels = NULL;
 }
