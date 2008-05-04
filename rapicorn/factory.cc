@@ -549,7 +549,12 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
   const GadgetDef *dgadget = dynamic_cast<const GadgetDef*> (bgadget);
   const GadgetDef *real_dgadget = dgadget;
   if (!real_dgadget)
-    real_dgadget = lookup_gadget (bgadget->ancestor);
+    {
+      real_dgadget = lookup_gadget (bgadget->ancestor);
+      if (!real_dgadget)
+        error ("%s: invalid or unknown gadget type: %s",
+               bgadget->location().c_str(), bgadget->ancestor.c_str());
+    }
   VariableMap call_args (const_call_arguments);
   /* filter special arguments */
   String name = bgadget->ident;
