@@ -13,6 +13,7 @@ rapicorn_public_headers = $(strip	\
         rapicornmsg.hh	rapicornsignal.hh	rapicornmath.hh		rapicornutf8.hh   \
         rapicornxml.hh	markup.hh		enumdefs.hh		testutils.hh \
         pixmap.hh	\
+	$(rapicorn_top_headers)		\
 	$(rapicorn_impl_headers)	\
 	rapicorncdefs.h	rapicorntests.h	\
 )
@@ -64,7 +65,7 @@ CLEANFILES += librapicorncore@RAPICORN_RELEASE@.lo librapicorncore@RAPICORN_RELE
 
 # === API content ===
 api-content:
-	cat $(sort $(filter-out rapicornconfig.h, $(rapicorn_public_headers) $(rapicorn_top_headers) $(rapicorn_generated_headers)))
+	cat $(sort $(filter-out rapicornconfig.h, $(rapicorn_public_headers) $(rapicorn_generated_headers)))
 .PHONY: api-content
 
 # === programs (not installed) ===
