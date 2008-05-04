@@ -50,12 +50,13 @@ class TableImpl : public virtual Table, public virtual MultiContainerImpl {
 protected:
   virtual void          size_request    (Requisition &requisition);
   virtual void          size_allocate   (Allocation area);
+  virtual void          add_child       (Item   &item);
 public:
   explicit              TableImpl       ();
   virtual uint          get_n_rows      ()                              { return rows.size(); }
   virtual uint          get_n_cols      ()                              { return cols.size(); }
-  void                  resize_grow     (uint n_cols, uint n_rows);
-  virtual void          resize          (uint n_cols, uint n_rows);
+  void                  resize          (uint n_cols, uint n_rows, bool force);
+  virtual void          resize          (uint n_cols, uint n_rows) { resize (n_cols, n_rows, false); }
   virtual bool          is_row_used     (uint row);
   virtual bool          is_col_used     (uint col);
   virtual void          insert_rows     (uint first_row, uint n_rows);
@@ -68,61 +69,25 @@ public:
   virtual void          column_spacing  (uint cspacing);
   virtual uint          row_spacing     ()                              { return default_row_spacing; }
   virtual void          row_spacing     (uint rspacing);
-protected:
-  /* child location */
-  struct Location {
-    uint   left_attach, right_attach;
-    uint   bottom_attach, top_attach;
-    uint16 left_padding, right_padding;
-    uint16 bottom_padding, top_padding;
-    uint   xexpand : 1;
-    uint   yexpand : 1;
-    uint   xshrink : 1;
-    uint   yshrink : 1;
-    uint   xfill : 1;
-    uint   yfill : 1;
-    Location() { memset (this, 0, sizeof (*this)); xfill = yfill = true; }
-  };
-  static Location       child_location  (Item &child);
-  static void           child_location  (Item &child, Location loc);
-  static DataKey<Location> child_location_key;
-  /* pack properties */
-  class TablePacker : public virtual ChildPacker {
+private:
+  struct TablePacker : public virtual ChildPacker {
     Item     &item;
-    Location loc;
-  public:
-    explicit            TablePacker     (Item &citem);
-    virtual             ~TablePacker    ();
-    virtual
-    const PropertyList& list_properties ();
-    virtual void        update          (); /* fetch real pack properties */
-    virtual void        commit          (); /* assign pack properties */
-    uint                left_attach     () const { return loc.left_attach; }
-    void 		left_attach     (uint c) { loc.left_attach = c; loc.right_attach = MAX (loc.left_attach + 1, loc.right_attach); }
-    uint 		right_attach    () const { return loc.right_attach; }
-    void 		right_attach    (uint c) { loc.right_attach = c; loc.left_attach = MIN (loc.left_attach, loc.right_attach - 1); }
-    uint 		bottom_attach   () const { return loc.bottom_attach; }
-    void 		bottom_attach   (uint c) { loc.bottom_attach = c; loc.top_attach = MAX (loc.top_attach, loc.bottom_attach + 1); }
-    uint 		top_attach      () const { return loc.top_attach; }
-    void 		top_attach      (uint c) { loc.top_attach = c; loc.bottom_attach = MIN (loc.bottom_attach, loc.top_attach - 1); }
-    uint 		left_padding    () const { return loc.left_padding; }
-    void 		left_padding    (uint c) { loc.left_padding = c; }
-    uint 		right_padding   () const { return loc.right_padding; }
-    void 		right_padding   (uint c) { loc.right_padding = c; }
-    uint 		bottom_padding  () const { return loc.bottom_padding; }
-    void 		bottom_padding  (uint c) { loc.bottom_padding = c; }
-    uint 		top_padding     () const { return loc.top_padding; }
-    void 		top_padding     (uint c) { loc.top_padding = c; }
-    bool 		hshrink         () const { return loc.xshrink; }
-    void 		hshrink         (bool b) { loc.xshrink = b; }
-    bool 		vshrink         () const { return loc.yshrink; }
-    void 		vshrink         (bool b) { loc.yshrink = b; }
-    bool 		hfill           () const { return loc.xfill; }
-    void 		hfill           (bool b) { loc.xfill = b; }
-    bool 		vfill           () const { return loc.yfill; }
-    void 		vfill           (bool b) { loc.yfill = b; }
+    TablePacker (Item &citem) : item (citem) {}
+    void        update () {}
+    void        commit () {}
+    const PropertyList& list_properties ()
+    {
+      static Property *properties[] = {};
+      static const PropertyList property_list (properties);
+      return property_list;
+    }
   };
-  virtual Packer        create_packer   (Item &item);
+  Packer                create_packer   (Item &item) {
+    if (item.parent() == this)
+      return Packer (new TablePacker (item));
+    else
+      throw Exception ("foreign child: ", item.name());
+  }
 };
 
 } // Rapicorn

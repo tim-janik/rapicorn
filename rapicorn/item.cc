@@ -34,7 +34,7 @@ EventHandler::handle_event (const Event &event)
 }
 
 Item::Item () :
-  m_flags (VISIBLE | SENSITIVE | ALLOCATABLE),
+  m_flags (VISIBLE | SENSITIVE | ALLOCATABLE | HFILL | VFILL),
   m_parent (NULL),
   m_style (NULL),
   sig_finalize (*this),
@@ -84,7 +84,8 @@ Item::set_flag (uint32 flag,
 {
   assert ((flag & (flag - 1)) == 0); /* single bit check */
   const uint propagate_flag_mask  = SENSITIVE | PARENT_SENSITIVE | PRELIGHT | IMPRESSED | HAS_DEFAULT;
-  const uint invalidate_flag_mask = HEXPAND | VEXPAND | HSPREAD | VSPREAD | HSPREAD_CONTAINER | VSPREAD_CONTAINER | VISIBLE;
+  const uint invalidate_flag_mask = HEXPAND | VEXPAND | HSHRINK | VSHRINK | HFILL | VFILL |
+                                    HSPREAD | VSPREAD | HSPREAD_CONTAINER | VSPREAD_CONTAINER | VISIBLE;
   bool fchanged = change_flags_silently (flag, on);
   if (fchanged)
     {
@@ -579,6 +580,19 @@ Item::list_properties ()
     MakeProperty (Item, vexpand,   _("Vertical Expand"), _("Whether to expand this item vertically"), "rw"),
     MakeProperty (Item, hspread,   _("Horizontal Spread"), _("Whether to expand this item and all its parents horizontally"), "rw"),
     MakeProperty (Item, vspread,   _("Vertical Spread"), _("Whether to expand this item and all its parents vertically"), "rw"),
+    MakeProperty (Item, hshrink,   _("Horizontal Shrink"), _("Whether the item may be shrunken horizontally"), "rw"),
+    MakeProperty (Item, vshrink,   _("Vertical Shrink"),   _("Whether the item may be shrunken vertically"), "rw"),
+    MakeProperty (Item, hfill,     _("Horizontal Fill"), _("Whether the item may fill all extra horizontal space"), "rw"),
+    MakeProperty (Item, vfill,     _("Vertical Fill"), _("Whether the item may fill all extra vertical space"), "rw"),
+    /* packing */
+    MakeProperty (Item, left_attach,    _("Left Attach"),    _("Column index to attach the item's left side to"), 0u, 99999u, 5u, "Prw"),
+    MakeProperty (Item, right_attach,   _("Right Attach"),   _("Column index to attach the item's right side to"), 1u, 100000u, 5u, "Prw"),
+    MakeProperty (Item, bottom_attach,  _("Bottom Attach"),  _("Row index to attach the item's bottom side to"), 0u, 99999u, 5u, "Prw"),
+    MakeProperty (Item, top_attach,     _("Top Attach"),     _("Row index to attach the item's top side to"), 1u, 100000u, 5u, "Prw"),
+    MakeProperty (Item, left_spacing,   _("Left Spacing"),   _("Amount of spacing to add at the item's left side"), 0u, 65535u, 3u, "Prw"),
+    MakeProperty (Item, right_spacing,  _("Right Spacing"),  _("Amount of spacing to add at the item's right side"), 0u, 65535u, 3u, "Prw"),
+    MakeProperty (Item, bottom_spacing, _("Bottom Spacing"), _("Amount of spacing to add at the item's bottom side"), 0u, 65535u, 3u, "Prw"),
+    MakeProperty (Item, top_spacing,    _("Top Spacing"),    _("Amount of spacing to add at the item's top side"), 0u, 65535u, 3u, "Prw"),
   };
   static const PropertyList property_list (properties);
   return property_list;
@@ -1012,6 +1026,44 @@ Item::find_adjustments (AdjustmentSourceType adjsrc1,
           (!adj4 || *adj4))
         break;
     }
+}
+
+Item::PackAttach&
+Item::pack_attach (bool create)
+{
+  static const PackAttach pack_attach_default = { 0, 1, 0, 1 };
+  static DataKey<PackAttach*> pack_attach_key;
+  PackAttach *pa = get_data (&pack_attach_key);
+  if (!pa)
+    {
+      if (create)
+        {
+          pa = new PackAttach (pack_attach_default);
+          set_data (&pack_attach_key, pa);
+        }
+      else /* read-only access */
+        pa = const_cast<PackAttach*> (&pack_attach_default);
+    }
+  return *pa;
+}
+
+Item::PackSpacing&
+Item::pack_spacing (bool create)
+{
+  static const PackSpacing pack_spacing_default = { 0, 0, 0, 0 };
+  static DataKey<PackSpacing*> pack_spacing_key;
+  PackSpacing *pp = get_data (&pack_spacing_key);
+  if (!pp)
+    {
+      if (create)
+        {
+          pp = new PackSpacing (pack_spacing_default);
+          set_data (&pack_spacing_key, pp);
+        }
+      else /* read-only access */
+        pp = const_cast<PackSpacing*> (&pack_spacing_default);
+    }
+  return *pp;
 }
 
 void

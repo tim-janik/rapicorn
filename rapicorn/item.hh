@@ -81,16 +81,20 @@ protected:
     INVALID_REQUISITION       = 1 <<  9,
     INVALID_ALLOCATION        = 1 << 10,
     INVALID_CONTENT           = 1 << 11,
-    HEXPAND                   = 1 << 14,
-    VEXPAND                   = 1 << 15,
-    HSPREAD                   = 1 << 16,
-    VSPREAD                   = 1 << 17,
-    HSPREAD_CONTAINER         = 1 << 18,
-    VSPREAD_CONTAINER         = 1 << 19,
-    ALLOCATABLE               = 1 << 20,
-    POSITIVE_ALLOCATION       = 1 << 21,
-    DEBUG                     = 1 << 22,
-    LAST_FLAG                 = 1 << 23
+    HSPREAD_CONTAINER         = 1 << 12,
+    VSPREAD_CONTAINER         = 1 << 13,
+    HSPREAD                   = 1 << 14,
+    VSPREAD                   = 1 << 15,
+    HEXPAND                   = 1 << 16,
+    VEXPAND                   = 1 << 17,
+    HSHRINK                   = 1 << 18,
+    VSHRINK                   = 1 << 19,
+    HFILL                     = 1 << 20,
+    VFILL                     = 1 << 21,
+    ALLOCATABLE               = 1 << 22,
+    POSITIVE_ALLOCATION       = 1 << 23,
+    DEBUG                     = 1 << 24,
+    LAST_FLAG                 = 1 << 25
   };
   void                        set_flag          (uint32 flag, bool on = true);
   void                        unset_flag        (uint32 flag) { set_flag (flag, false); }
@@ -154,6 +158,14 @@ public:
   void                        hspread           (bool b) { set_flag (HSPREAD, b); }
   bool                        vspread           () const { return test_flags (VSPREAD | VSPREAD_CONTAINER); }
   void                        vspread           (bool b) { set_flag (VSPREAD, b); }
+  bool                        hshrink           () const { return test_flags (HSHRINK); }
+  void                        hshrink           (bool b) { set_flag (HSHRINK, b); }
+  bool                        vshrink           () const { return test_flags (VSHRINK); }
+  void                        vshrink           (bool b) { set_flag (VSHRINK, b); }
+  bool                        hfill             () const { return test_flags (HFILL); }
+  void                        hfill             (bool b) { set_flag (HFILL, b); }
+  bool                        vfill             () const { return test_flags (VFILL); }
+  void                        vfill             (bool b) { set_flag (VFILL, b); }
   bool                        debug             () const { return test_flags (DEBUG); }
   void                        debug             (bool f) { set_flag (DEBUG, f); }
   virtual String              name              () const = 0;
@@ -259,6 +271,30 @@ public:
                                                  Adjustment         **adj3 = NULL,
                                                  AdjustmentSourceType adjsrc4 = ADJUSTMENT_SOURCE_NONE,
                                                  Adjustment         **adj4 = NULL);
+public: /* packing */
+  struct PackAttach  { uint left_attach, right_attach, bottom_attach, top_attach; };
+  struct PackSpacing { uint left_spacing, right_spacing, bottom_spacing, top_spacing; };
+  const PackAttach&  pack_attach     () const { return const_cast<Item*> (this)->pack_attach (false); }
+  const PackSpacing& pack_spacing    () const { return const_cast<Item*> (this)->pack_spacing (false); }
+  uint               left_attach     ()       { return pack_attach (false).left_attach; }
+  void 		     left_attach     (uint c) { PackAttach &pa = pack_attach (true); pa.left_attach = c; pa.right_attach = MAX (pa.left_attach + 1, pa.right_attach); invalidate(); }
+  uint 		     right_attach    ()       { return pack_attach (false).right_attach; }
+  void 		     right_attach    (uint c) { PackAttach &pa = pack_attach (true); pa.right_attach = MAX (1, c); pa.left_attach = MIN (pa.left_attach, pa.right_attach - 1); invalidate(); }
+  uint 		     bottom_attach   ()       { return pack_attach (false).bottom_attach; }
+  void 		     bottom_attach   (uint c) { PackAttach &pa = pack_attach (true); pa.bottom_attach = c; pa.top_attach = MAX (pa.top_attach, pa.bottom_attach + 1); invalidate(); }
+  uint 		     top_attach      ()       { return pack_attach (false).top_attach; }
+  void 		     top_attach      (uint c) { PackAttach &pa = pack_attach (true); pa.top_attach = MAX (1, c); pa.bottom_attach = MIN (pa.bottom_attach, pa.top_attach - 1); invalidate(); }
+  uint 		     left_spacing    ()       { return pack_spacing (false).left_spacing; }
+  void 		     left_spacing    (uint c) { pack_spacing (true).left_spacing = c; invalidate(); }
+  uint 		     right_spacing   ()       { return pack_spacing (false).right_spacing; }
+  void 		     right_spacing   (uint c) { pack_spacing (true).right_spacing = c; invalidate(); }
+  uint 		     bottom_spacing  ()       { return pack_spacing (false).bottom_spacing; }
+  void 		     bottom_spacing  (uint c) { pack_spacing (true).bottom_spacing = c; invalidate(); }
+  uint 		     top_spacing     ()       { return pack_spacing (false).top_spacing; }
+  void 		     top_spacing     (uint c) { pack_spacing (true).top_spacing = c; invalidate(); }
+private:
+  PackAttach&        pack_attach     (bool create);
+  PackSpacing&       pack_spacing    (bool create);
 public:
   template<typename Type>
   typename

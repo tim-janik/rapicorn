@@ -22,81 +22,6 @@
 
 namespace Rapicorn {
 
-DataKey<TableImpl::Location> TableImpl::child_location_key;
-
-TableImpl::Location
-TableImpl::child_location (Item &child)
-{
-  Location loc = child.get_data (&child_location_key);
-  loc.xexpand |= child.hexpand();
-  loc.yexpand |= child.vexpand();
-  return loc;
-}
-
-void
-TableImpl::child_location (Item     &child,
-                           Location  loc)
-{
-  loc.right_attach = MAX (loc.right_attach, loc.left_attach + 1);
-  loc.top_attach = MAX (loc.top_attach, loc.bottom_attach + 1);
-  child.set_data (&child_location_key, loc);
-}
-
-TableImpl::TablePacker::~TablePacker()
-{}
-
-TableImpl::TablePacker::TablePacker (Item &citem) :
-  item (citem)
-{}
-
-void
-TableImpl::TablePacker::update () /* fetch real pack properties */
-{
-  if (dynamic_cast<Table*> (item.parent()))
-    loc = child_location (item);
-}
-
-void
-TableImpl::TablePacker::commit ()/* assign pack properties */
-{
-  TableImpl *table = dynamic_cast<TableImpl*> (item.parent());
-  if (table)
-    {
-      child_location (item, loc);
-      table->resize_grow (loc.right_attach, loc.top_attach);
-    }
-}
-
-const PropertyList&
-TableImpl::TablePacker::list_properties()
-{
-  static Property *properties[] = {
-    MakeProperty (TablePacker, left_attach,    _("Left Attach"),    _("Column index to attach the child's left side to"), 0u, 99999u, 5u, "rw"),
-    MakeProperty (TablePacker, right_attach,   _("Right Attach"),   _("Column index to attach the child's right side to"), 1u, 100000u, 5u, "rw"),
-    MakeProperty (TablePacker, bottom_attach,  _("Bottom Attach"),  _("Column index to attach the child's bottom side to"), 0u, 99999u, 5u, "rw"),
-    MakeProperty (TablePacker, top_attach,     _("Top Attach"),     _("Column index to attach the child's top side to"), 1u, 100000u, 5u, "rw"),
-    MakeProperty (TablePacker, left_padding,   _("Left Padding"),   _("Amount of padding to add at the child's left side"), 0u, 65535u, 3u, "rw"),
-    MakeProperty (TablePacker, right_padding,  _("Right Padding"),  _("Amount of padding to add at the child's right side"), 0u, 65535u, 3u, "rw"),
-    MakeProperty (TablePacker, bottom_padding, _("Bottom Padding"), _("Amount of padding to add at the child's bottom side"), 0u, 65535u, 3u, "rw"),
-    MakeProperty (TablePacker, top_padding,    _("Top Padding"),    _("Amount of padding to add at the child's top side"), 0u, 65535u, 3u, "rw"),
-    MakeProperty (TablePacker, hshrink,        _("Horizontal Shrink"), _("Whether the child may be shrunken horizontally"), "rw"),
-    MakeProperty (TablePacker, vshrink,        _("Vertical Shrink"),   _("Whether the child may be shrunken vertically"), "rw"),
-    MakeProperty (TablePacker, hfill,          _("Horizontal Fill"), _("Whether the child may fill all extra horizontal space"), "rw"),
-    MakeProperty (TablePacker, vfill,          _("Vertical Fill"), _("Whether the child may fill all extra vertical space"), "rw"),
-  };
-  static const PropertyList property_list (properties);
-  return property_list;
-}
-
-Container::Packer
-TableImpl::create_packer (Item &item)
-{
-  if (item.parent() == this)
-    return Packer (new TablePacker (item));
-  else
-    throw Exception ("foreign child: ", item.name());
-}
-
 TableImpl::TableImpl() :
   default_row_spacing (0),
   default_column_spacing (0),
@@ -111,8 +36,8 @@ TableImpl::is_row_used (uint row)
   if (row < rows.size())
     for (ChildWalker cw = local_children(); cw.has_next(); cw++)
       {
-        Location loc = child_location (*cw);
-        if (row >= loc.bottom_attach && row < loc.top_attach)
+        const PackAttach &pa = cw->pack_attach();
+        if (row >= pa.bottom_attach && row < pa.top_attach)
           return true;
       }
   return false;
@@ -124,42 +49,36 @@ TableImpl::is_col_used (uint col)
   if (col < cols.size())
     for (ChildWalker cw = local_children(); cw.has_next(); cw++)
       {
-        Location loc = child_location (*cw);
-        if (col >= loc.left_attach && col < loc.right_attach)
+        const PackAttach &pa = cw->pack_attach();
+        if (col >= pa.left_attach && col < pa.right_attach)
           return true;
       }
   return false;
 }
 
 void
-TableImpl::resize_grow (uint n_cols, uint n_rows)
-{
-  resize (MAX (n_cols, cols.size()), MAX (n_rows, rows.size()));
-}
-
-void
-TableImpl::resize (uint n_cols, uint n_rows)
+TableImpl::resize (uint n_cols, uint n_rows, bool force)
 {
   n_rows = MAX (n_rows, 1);
   n_cols = MAX (n_cols, 1);
-  if (n_rows == rows.size() && n_cols == cols.size())
+  if (!force && n_rows == rows.size() && n_cols == cols.size())
     return;
   /* grow as children require */
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      Location loc = child_location (*cw);
-      n_rows = MAX (n_rows, loc.top_attach);
-      n_cols = MAX (n_cols, loc.right_attach);
+      const PackAttach &pa = cw->pack_attach();
+      n_rows = MAX (n_rows, pa.top_attach);
+      n_cols = MAX (n_cols, pa.right_attach);
     }
-  if (n_rows == rows.size() && n_cols == cols.size())
-    return;
   /* resize rows and cols */
+  bool need_invalidate = false;
   if (n_rows != rows.size())
     {
       uint i = rows.size();
       rows.resize (n_rows);
       for (; i < rows.size(); i++)
         rows[i].spacing = default_row_spacing;
+      need_invalidate = true;
     }
   if (n_cols != cols.size())
     {
@@ -167,8 +86,10 @@ TableImpl::resize (uint n_cols, uint n_rows)
       cols.resize (n_cols);
       for (; i < cols.size(); i++)
         cols[i].spacing = default_column_spacing;
+      need_invalidate = true;
     }
-  invalidate();
+  if (need_invalidate)
+    invalidate();
 }
 
 void
@@ -179,17 +100,18 @@ TableImpl::insert_rows (uint first_row, uint n_rows)
   resize (cols.size(), rows.size() + n_rows);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      Location loc = child_location (*cw);
-      if (loc.bottom_attach >= first_row)
+      const PackAttach &pa = cw->pack_attach();
+      if (pa.bottom_attach >= first_row)
         {
-          loc.bottom_attach += n_rows;
-          loc.top_attach += n_rows;
-          child_location (*cw, loc);
+          uint bottom_attach = pa.bottom_attach + n_rows;
+          uint top_attach = pa.top_attach + n_rows;
+          cw->bottom_attach (bottom_attach);
+          cw->top_attach (top_attach);
         }
-      else if (first_row < loc.top_attach)
+      else if (first_row < pa.top_attach)
         {
-          loc.top_attach += n_rows;
-          child_location (*cw, loc);
+          uint top_attach = pa.top_attach + n_rows;
+          cw->top_attach (top_attach);
         }
     }
 }
@@ -202,17 +124,18 @@ TableImpl::insert_cols (uint first_col, uint n_cols)
   resize (cols.size() + n_cols, rows.size());
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      Location loc = child_location (*cw);
-      if (loc.left_attach >= first_col)
+      const PackAttach &pa = cw->pack_attach();
+      if (pa.left_attach >= first_col)
         {
-          loc.left_attach += n_cols;
-          loc.right_attach += n_cols;
-          child_location (*cw, loc);
+          uint left_attach = pa.left_attach + n_cols;
+          uint right_attach = pa.right_attach + n_cols;
+          cw->left_attach (left_attach);
+          cw->right_attach (right_attach);
         }
-      else if (first_col < loc.right_attach)
+      else if (first_col < pa.right_attach)
         {
-          loc.right_attach += n_cols;
-          child_location (*cw, loc);
+          uint right_attach = pa.right_attach + n_cols;
+          cw->right_attach (right_attach);
         }
     }
 }
@@ -237,6 +160,23 @@ TableImpl::row_spacing (uint rspacing)
 
 TableImpl::~TableImpl()
 {}
+
+void
+TableImpl::add_child (Item &item)
+{
+  if (1)
+    {
+      const PackAttach &xpa = item.pack_attach();       // copy PackAttach
+      if (xpa.right_attach <= xpa.left_attach)
+        item.right_attach (xpa.left_attach + 1);        // invalidates original PackAttach
+      if (xpa.top_attach <= xpa.bottom_attach)
+        item.top_attach (xpa.bottom_attach + 1);        // invalidates original PackAttach
+    }
+  const PackAttach pa = item.pack_attach();
+  resize (pa.right_attach, pa.top_attach);
+  MultiContainerImpl::add_child (item);
+  // FIXME: resize if props change after add
+}
 
 void
 TableImpl::size_request (Requisition &requisition)
@@ -296,18 +236,17 @@ TableImpl::size_request_init()
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       /* size request all children */
-      Requisition rq = cw->size_request();
       if (!cw->allocatable())
         continue;
+      const PackAttach &pa = cw->pack_attach();
       chspread |= cw->hspread();
       cvspread |= cw->vspread();
-      Location loc = child_location (*cw);
       /* expand cols with single-column expand children */
-      if (loc.left_attach + 1 == loc.right_attach && loc.xexpand)
-        cols[loc.left_attach].expand = true;
+      if (pa.left_attach + 1 == pa.right_attach && cw->hexpand())
+        cols[pa.left_attach].expand = true;
       /* expand rows with single-column expand children */
-      if (loc.bottom_attach + 1 == loc.top_attach && loc.yexpand)
-        rows[loc.bottom_attach].expand = true;
+      if (pa.bottom_attach + 1 == pa.top_attach && cw->vexpand())
+        rows[pa.bottom_attach].expand = true;
     }
   set_flag (HSPREAD_CONTAINER, chspread);
   set_flag (VSPREAD_CONTAINER, cvspread);
@@ -321,18 +260,19 @@ TableImpl::size_request_pass1()
       Requisition crq = cw->size_request();
       if (!cw->allocatable())
         continue;
-      Location loc = child_location (*cw);
+      const PackAttach &pa = cw->pack_attach();
+      const PackSpacing &ps = cw->pack_spacing();
       /* fetch requisition from single-column children */
-      if (loc.left_attach + 1 == loc.right_attach)
+      if (pa.left_attach + 1 == pa.right_attach)
         {
-          uint width = iround (crq.width + loc.left_padding + loc.right_padding);
-          cols[loc.left_attach].requisition = MAX (cols[loc.left_attach].requisition, width);
+          uint width = iround (crq.width + ps.left_spacing + ps.right_spacing);
+          cols[pa.left_attach].requisition = MAX (cols[pa.left_attach].requisition, width);
         }
       /* fetch requisition from single-row children */
-      if (loc.bottom_attach + 1 == loc.top_attach)
+      if (pa.bottom_attach + 1 == pa.top_attach)
         {
-          uint height = iround (crq.height + loc.bottom_padding + loc.top_padding);
-          rows[loc.bottom_attach].requisition = MAX (rows[loc.bottom_attach].requisition, height);
+          uint height = iround (crq.height + ps.bottom_spacing + ps.top_spacing);
+          rows[pa.bottom_attach].requisition = MAX (rows[pa.bottom_attach].requisition, height);
         }
     }
 }
@@ -362,39 +302,40 @@ TableImpl::size_request_pass3()
 {
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      Location loc = child_location (*cw);
       if (!cw->allocatable())
         continue;
+      const PackAttach &pa = cw->pack_attach();
+      const PackSpacing &ps = cw->pack_spacing();
       /* request remaining space for multi-column children */
-      if (loc.left_attach + 1 != loc.right_attach)
+      if (pa.left_attach + 1 != pa.right_attach)
         {
           Requisition crq = cw->size_request();
           /* Check and see if there is already enough space for the child. */
           uint width = 0;
-          for (uint col = loc.left_attach; col < loc.right_attach; col++)
+          for (uint col = pa.left_attach; col < pa.right_attach; col++)
             {
               width += cols[col].requisition;
-              if (col + 1 < loc.right_attach)
+              if (col + 1 < pa.right_attach)
                 width += cols[col].spacing;
             }
           /* If we need to request more space for this child to fill
            *  its requisition, then divide up the needed space amongst the
            *  columns it spans, favoring expandable columns if any.
            */
-          if (width < crq.width + loc.left_padding + loc.right_padding)
+          if (width < crq.width + ps.left_spacing + ps.right_spacing)
             {
               bool force_expand = false;
               uint n_expand = 0;
-              width = iround (crq.width + loc.left_padding + loc.right_padding - width);
-              for (uint col = loc.left_attach; col < loc.right_attach; col++)
+              width = iround (crq.width + ps.left_spacing + ps.right_spacing - width);
+              for (uint col = pa.left_attach; col < pa.right_attach; col++)
                 if (cols[col].expand)
                   n_expand++;
               if (n_expand == 0)
                 {
-                  n_expand = loc.right_attach - loc.left_attach;
+                  n_expand = pa.right_attach - pa.left_attach;
                   force_expand = true;
                 }
-              for (uint col = loc.left_attach; col < loc.right_attach; col++)
+              for (uint col = pa.left_attach; col < pa.right_attach; col++)
                 if (force_expand || cols[col].expand)
                   {
                     uint extra = width / n_expand;
@@ -405,35 +346,35 @@ TableImpl::size_request_pass3()
             }
         }
       /* request remaining space for multi-row children */
-      if (loc.bottom_attach + 1 != loc.top_attach)
+      if (pa.bottom_attach + 1 != pa.top_attach)
         {
           Requisition crq = cw->size_request();
           /* Check and see if there is already enough space for the child. */
           uint height = 0;
-          for (uint row = loc.bottom_attach; row < loc.top_attach; row++)
+          for (uint row = pa.bottom_attach; row < pa.top_attach; row++)
             {
               height += rows[row].requisition;
-              if (row + 1 < loc.top_attach)
+              if (row + 1 < pa.top_attach)
                 height += rows[row].spacing;
             }
           /* If we need to request more space for this child to fill
            *  its requisition, then divide up the needed space amongst the
            *  rows it spans, favoring expandable rows if any.
            */
-          if (height < crq.height + loc.bottom_padding + loc.top_padding)
+          if (height < crq.height + ps.bottom_spacing + ps.top_spacing)
             {
               bool force_expand = false;
               uint n_expand = 0;
-              height = iround (crq.height + loc.bottom_padding + loc.top_padding - height);
-              for (uint row = loc.bottom_attach; row < loc.top_attach; row++)
+              height = iround (crq.height + ps.bottom_spacing + ps.top_spacing - height);
+              for (uint row = pa.bottom_attach; row < pa.top_attach; row++)
                 if (rows[row].expand)
                   n_expand++;
               if (n_expand == 0)
                 {
-                  n_expand = loc.top_attach - loc.bottom_attach;
+                  n_expand = pa.top_attach - pa.bottom_attach;
                   force_expand = true;
                 }
-              for (uint row = loc.bottom_attach; row < loc.top_attach; row++)
+              for (uint row = pa.bottom_attach; row < pa.top_attach; row++)
                 if (force_expand || rows[row].expand)
                   {
                     uint extra = height / n_expand;
@@ -477,18 +418,18 @@ TableImpl::size_allocate_init()
     {
       if (!cw->allocatable())
         continue;
-      Location loc = child_location (*cw);
-      if (loc.left_attach + 1 == loc.right_attach)
+      const PackAttach &pa = cw->pack_attach();
+      if (pa.left_attach + 1 == pa.right_attach)
         {
-          cols[loc.left_attach].expand |= loc.xexpand;
-          cols[loc.left_attach].shrink &= loc.xshrink;
-          cols[loc.left_attach].empty = false;
+          cols[pa.left_attach].expand |= cw->hexpand();
+          cols[pa.left_attach].shrink &= cw->hshrink();
+          cols[pa.left_attach].empty = false;
         }
-      if (loc.bottom_attach + 1 == loc.top_attach)
+      if (pa.bottom_attach + 1 == pa.top_attach)
         {
-          rows[loc.bottom_attach].expand |= loc.yexpand;
-          rows[loc.bottom_attach].shrink &= loc.yshrink;
-          rows[loc.bottom_attach].empty = false;
+          rows[pa.bottom_attach].expand |= cw->vexpand();
+          rows[pa.bottom_attach].shrink &= cw->vshrink();
+          rows[pa.bottom_attach].empty = false;
         }
     }
   /* adjust the row and col flags from expand/shrink flags of multi row/col children */
@@ -496,52 +437,52 @@ TableImpl::size_allocate_init()
     {
       if (!cw->allocatable())
         continue;
-      Location loc = child_location (*cw);
-      if (loc.left_attach + 1 != loc.right_attach)
+      const PackAttach &pa = cw->pack_attach();
+      if (pa.left_attach + 1 != pa.right_attach)
         {
           uint col;
-          for (col = loc.left_attach; col < loc.right_attach; col++)
+          for (col = pa.left_attach; col < pa.right_attach; col++)
             cols[col].empty = false;
-          if (loc.xexpand)
+          if (cw->hexpand())
             {
-              for (col = loc.left_attach; col < loc.right_attach; col++)
+              for (col = pa.left_attach; col < pa.right_attach; col++)
                 if (cols[col].expand)
                   break;
-              if (col >= loc.right_attach) /* no expand col found */
-                for (col = loc.left_attach; col < loc.right_attach; col++)
+              if (col >= pa.right_attach) /* no expand col found */
+                for (col = pa.left_attach; col < pa.right_attach; col++)
                   cols[col].need_expand = true;
             }
-          if (!loc.xshrink)
+          if (!cw->hshrink())
             {
-              for (col = loc.left_attach; col < loc.right_attach; col++)
+              for (col = pa.left_attach; col < pa.right_attach; col++)
                 if (!cols[col].shrink)
                   break;
-              if (col >= loc.right_attach) /* no shrink col found */
-                for (col = loc.left_attach; col < loc.right_attach; col++)
+              if (col >= pa.right_attach) /* no shrink col found */
+                for (col = pa.left_attach; col < pa.right_attach; col++)
                   cols[col].need_shrink = false;
             }
         }
-      if (loc.bottom_attach + 1 != loc.top_attach)
+      if (pa.bottom_attach + 1 != pa.top_attach)
         {
           uint row;
-          for (row = loc.bottom_attach; row < loc.top_attach; row++)
+          for (row = pa.bottom_attach; row < pa.top_attach; row++)
             rows[row].empty = false;
-          if (loc.yexpand)
+          if (cw->vexpand())
             {
-              for (row = loc.bottom_attach; row < loc.top_attach; row++)
+              for (row = pa.bottom_attach; row < pa.top_attach; row++)
                 if (rows[row].expand)
                   break;
-              if (row >= loc.top_attach) /* no expand row found */
-                for (row = loc.bottom_attach; row < loc.top_attach; row++)
+              if (row >= pa.top_attach) /* no expand row found */
+                for (row = pa.bottom_attach; row < pa.top_attach; row++)
                   rows[row].need_expand = true;
             }
-          if (!loc.yshrink)
+          if (!cw->vshrink())
             {
-              for (row = loc.bottom_attach; row < loc.top_attach; row++)
+              for (row = pa.bottom_attach; row < pa.top_attach; row++)
                 if (!rows[row].shrink)
                   break;
-              if (row >= loc.top_attach) /* no shrink row found */
-                for (row = loc.bottom_attach; row < loc.top_attach; row++)
+              if (row >= pa.top_attach) /* no shrink row found */
+                for (row = pa.bottom_attach; row < pa.top_attach; row++)
                   rows[row].need_shrink = false;
             }
         }
@@ -822,42 +763,43 @@ TableImpl::size_allocate_pass2 ()
     {
       if (!cw->allocatable())
         continue;
-      Location loc = child_location (*cw);
+      const PackAttach &pa = cw->pack_attach();
+      const PackSpacing &ps = cw->pack_spacing();
       Requisition crq = cw->size_request();
       int x = ifloor (area.x);
-      for (uint col = 0; col < loc.left_attach; col++)
+      for (uint col = 0; col < pa.left_attach; col++)
         x += cols[col].allocation + cols[col].spacing;
       int max_width = 0;
-      for (uint col = loc.left_attach; col < loc.right_attach; col++)
+      for (uint col = pa.left_attach; col < pa.right_attach; col++)
         {
           max_width += cols[col].allocation;
-          if (col + 1 < loc.right_attach)
+          if (col + 1 < pa.right_attach)
             max_width += cols[col].spacing;
         }
       int y = ifloor (area.y);
-      for (uint row = 0; row < loc.bottom_attach; row++)
+      for (uint row = 0; row < pa.bottom_attach; row++)
         y += rows[row].allocation + rows[row].spacing;
       int max_height = 0;
-      for (uint row = loc.bottom_attach; row < loc.top_attach; row++)
+      for (uint row = pa.bottom_attach; row < pa.top_attach; row++)
         {
           max_height += rows[row].allocation;
-          if (row + 1 < loc.top_attach)
+          if (row + 1 < pa.top_attach)
             max_height += rows[row].spacing;
         }
-      if (loc.xfill)
+      if (cw->hfill())
         {
-          child_area.width = max_width; // MAX (0, max_width - int (loc.left_padding + loc.right_padding));
-          child_area.x = x; //  + loc.left_padding; // (max_width - child_area.width) / 2;
+          child_area.width = max_width; // MAX (0, max_width - int (ps.left_spacing + ps.right_spacing));
+          child_area.x = x; //  + ps.left_spacing; // (max_width - child_area.width) / 2;
         }
       else
         {
           child_area.width = MIN (iround (crq.width), max_width);
           child_area.x = x + (max_width - child_area.width) / 2;
         }
-      if (loc.yfill)
+      if (cw->vfill())
         {
-          child_area.height = max_height; // MAX (0, max_height - int (loc.bottom_padding + loc.top_padding));
-          child_area.y = y; //  + loc.bottom_padding; // (max_height - child_area.height) / 2;
+          child_area.height = max_height; // MAX (0, max_height - int (ps.bottom_spacing + ps.top_spacing));
+          child_area.y = y; //  + ps.bottom_spacing; // (max_height - child_area.height) / 2;
         }
       else
         {
@@ -871,16 +813,16 @@ TableImpl::size_allocate_pass2 ()
         child_area.width -= child_area.x + child_area.width - area.x - area.width;
       if (child_area.y + child_area.height > area.y + area.height)
         child_area.height -= child_area.y + child_area.height - area.y - area.height;
-      /* account for padding */
-      if (loc.xfill)
+      /* account for spacing */
+      if (cw->hfill())
         {
-          child_area.width -= int (loc.left_padding + loc.right_padding);
-          child_area.x += loc.left_padding;
+          child_area.width -= int (ps.left_spacing + ps.right_spacing);
+          child_area.x += ps.left_spacing;
         }
-      if (loc.yfill)
+      if (cw->vfill())
         {
-          child_area.height -= int (loc.bottom_padding + loc.top_padding);
-          child_area.y += loc.bottom_padding;
+          child_area.height -= int (ps.bottom_spacing + ps.top_spacing);
+          child_area.y += ps.bottom_spacing;
         }
       /* allocate child */
       cw->set_allocation (child_area);

@@ -127,52 +127,18 @@ HBox::list_properties()
 }
 
 class HBoxImpl : public virtual HBox, public virtual TableImpl {
-  /* pack properties */
-  class HBoxPacker : public virtual TablePacker {
-  public:
-    virtual const PropertyList&
-    list_properties ()  // escape check-list_properties ';'
-    {
-      static Property *properties[] = {
-        MakeProperty (TablePacker, left_padding,   _("Left Padding"),   _("Amount of padding to add at the child's left side"), 0, 65535, 3, "rw"),
-        MakeProperty (TablePacker, right_padding,  _("Right Padding"),  _("Amount of padding to add at the child's right side"), 0, 65535, 3, "rw"),
-        MakeProperty (TablePacker, bottom_padding, _("Bottom Padding"), _("Amount of padding to add at the child's bottom side"), 0, 65535, 3, "rw"),
-        MakeProperty (TablePacker, top_padding,    _("Top Padding"),    _("Amount of padding to add at the child's top side"), 0, 65535, 3, "rw"),
-        MakeProperty (TablePacker, hshrink,        _("Horizontal Shrink"), _("Whether the child may be shrunken horizontally"), "rw"),
-        MakeProperty (TablePacker, vshrink,        _("Vertical Shrink"),   _("Whether the child may be shrunken vertically"), "rw"),
-        MakeProperty (TablePacker, hfill,          _("Horizontal Fill"),   _("Whether the child may fill all extra horizontal space"), "rw"),
-        MakeProperty (TablePacker, vfill,          _("Vertical Fill"),     _("Whether the child may fill all extra vertical space"), "rw"),
-      };
-      static const PropertyList property_list (properties);
-      return property_list;
-    }
-    HBoxPacker (Item &citem) : TablePacker (citem) {}
-  };
   virtual const PropertyList& list_properties() { return HBox::list_properties(); }
-  virtual Packer
-  create_packer (Item &item)
-  {
-    if (item.parent() == this)
-      return Packer (new HBoxPacker (item));
-    else
-      throw Exception ("foreign child: ", item.name());
-  }
   virtual void
   add_child (Item &item)
   {
-    MultiContainerImpl::add_child (item); /* ref, sink, set_parent, insert */
     uint col = get_n_cols();
     while (col > 0 && !is_col_used (col - 1))
       col--;
     if (is_col_used (col))
       insert_cols (col, 1);     // should never be triggered
-    Packer packer = create_packer (item);
-    TablePacker *tpacker = extract_child_packer<TablePacker*> (packer);
-    tpacker->update();
-    // diag ("hboxcolumn: %d used:%d,%d,%d (%d)\n", col, is_col_used(0),is_col_used(1),is_col_used(2),get_n_cols());
-    tpacker->left_attach (col);
-    tpacker->right_attach (col + 1);
-    tpacker->commit();
+    item.left_attach (col);
+    item.right_attach (col + 1);
+    TableImpl::add_child (item); /* ref, sink, set_parent, insert */
   }
 protected:
   virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }
@@ -201,48 +167,16 @@ VBox::list_properties()
 
 class VBoxImpl : public virtual VBox, public virtual TableImpl {
   /* pack properties */
-  class VBoxPacker : public virtual TablePacker {
-  public:
-    virtual const PropertyList&
-    list_properties () // escape check-list_properties ';'
-    {
-      static Property *properties[] = {
-        MakeProperty (TablePacker, left_padding,   _("Left Padding"),   _("Amount of padding to add at the child's left side"), 0, 65535, 3, "rw"),
-        MakeProperty (TablePacker, right_padding,  _("Right Padding"),  _("Amount of padding to add at the child's right side"), 0, 65535, 3, "rw"),
-        MakeProperty (TablePacker, bottom_padding, _("Bottom Padding"), _("Amount of padding to add at the child's bottom side"), 0, 65535, 3, "rw"),
-        MakeProperty (TablePacker, top_padding,    _("Top Padding"),    _("Amount of padding to add at the child's top side"), 0, 65535, 3, "rw"),
-        MakeProperty (TablePacker, hshrink,        _("Horizontal Shrink"), _("Whether the child may be shrunken horizontally"), "rw"),
-        MakeProperty (TablePacker, vshrink,        _("Vertical Shrink"),   _("Whether the child may be shrunken vertically"), "rw"),
-        MakeProperty (TablePacker, hfill,          _("Horizontal Fill"),   _("Whether the child may fill all extra horizontal space"), "rw"),
-        MakeProperty (TablePacker, vfill,          _("Vertical Fill"),     _("Whether the child may fill all extra vertical space"), "rw"),
-      };
-      static const PropertyList property_list (properties);
-      return property_list;
-    }
-    VBoxPacker (Item &citem) : TablePacker (citem) {}
-  };
   virtual const PropertyList& list_properties() { return VBox::list_properties(); }
-  virtual Packer
-  create_packer (Item &item)
-  {
-    if (item.parent() == this)
-      return Packer (new VBoxPacker (item));
-    else
-      throw Exception ("foreign child: ", item.name());
-  }
   virtual void
   add_child (Item &item)
   {
-    MultiContainerImpl::add_child (item); /* ref, sink, set_parent, insert */
-    uint row = 0; // get_n_rows();
+    uint row = 0;
     if (is_row_used (row))
       insert_rows (row, 1);
-    Packer packer = create_packer (item);
-    TablePacker *tpacker = extract_child_packer<TablePacker*> (packer);
-    tpacker->update();
-    tpacker->bottom_attach (row);
-    tpacker->top_attach (row + 1);
-    tpacker->commit();
+    item.bottom_attach (row);
+    item.top_attach (row + 1);
+    TableImpl::add_child (item); /* ref, sink, set_parent, insert */
   }
 protected:
   virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }
