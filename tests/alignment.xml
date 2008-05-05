@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
+<!-- Rapicorn Example
+ ! Copyright (C) 2008 Tim Janik
+ !
+ | This work is provided "as is"; redistribution and modification
+ | in whole or in part, in any medium, physical or electronic is
+ | permitted without restriction.
+ |
+ | This work is distributed in the hope that it will be useful,
+ | but WITHOUT ANY WARRANTY; without even the implied warranty of
+ | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ |
+ | In no event shall the authors or contributors be liable for any
+ | direct, indirect, incidental, special, exemplary, or consequential
+ | damages (including, but not limited to, procurement of substitute
+ | goods or services; loss of use, data, or profits; or business
+ | interruption) however caused and on any theory of liability, whether
+ | in contract, strict liability, or tort (including negligence or
+ | otherwise) arising in any way out of the use of this software, even
+ | if advised of the possibility of such damage.
+ !-->
+<rapicorn-definitions xmlns:def="http://rapicorn.org/xmlns:def">
+
+  <def:test-dialog inherit="Root">
+    <VBox>
+
+      <Label markup-text="Horizontal Alignment, Horizontal Scale,"/>
+      <Label markup-text="Vertical Alignment, Vertical Scale:"/>
+
+      <HBox>
+	<Frame>
+	  <TestBox snapshot_file="xtmp-alignment.png">
+	    <HBox>
+
+	      <VBox width="90">
+		<Alignment halign="0.0" hscale="0.0" hexpand="1"> <Arrow width="30" height="30"/> </Alignment>
+		<Alignment halign="0.5" hscale="0.0" hexpand="1"> <Arrow width="30" height="30"/> </Alignment>
+		<Alignment halign="1.0" hscale="0.0" hexpand="1"> <Arrow width="30" height="30"/> </Alignment>
+	      </VBox>
+
+	      <VBox width="90">
+		<Alignment hscale="0.0" halign="0.5" hexpand="1"> <Arrow width="30" height="30"/> </Alignment>
+		<Alignment hscale="0.5" halign="0.5" hexpand="1"> <Arrow width="30" height="30"/> </Alignment>
+		<Alignment hscale="1.0" halign="0.5" hexpand="1"> <Arrow width="30" height="30"/> </Alignment>
+	      </VBox>
+
+	      <HBox height="90">
+		<Alignment valign="0.0" vscale="0.0" vexpand="1"> <Arrow width="30" height="30"/> </Alignment>
+		<Alignment valign="0.5" vscale="0.0" vexpand="1"> <Arrow width="30" height="30"/> </Alignment>
+		<Alignment valign="1.0" vscale="0.0" vexpand="1"> <Arrow width="30" height="30"/> </Alignment>
+	      </HBox>
+
+	      <HBox height="90">
+		<Alignment vscale="0.0" valign="0.5" vexpand="1"> <Arrow width="30" height="30"/> </Alignment>
+		<Alignment vscale="0.5" valign="0.5" vexpand="1"> <Arrow width="30" height="30"/> </Alignment>
+		<Alignment vscale="1.0" valign="0.5" vexpand="1"> <Arrow width="30" height="30"/> </Alignment>
+	      </HBox>
+
+	    </HBox>
+	  </TestBox>
+	</Frame>
+      </HBox>
+
+    </VBox>
+  </def:test-dialog>
+
+</rapicorn-definitions>
