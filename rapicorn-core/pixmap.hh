@@ -38,6 +38,9 @@ public:
                              double *averrp = NULL, double *maxerrp = NULL,
                              double *nerrp = NULL, double *npixp = NULL) const;
   static bool     try_alloc (uint width, uint height, int alignment = -1);
+  static bool     save_png  (const String &filename,    /* assigns errno */
+                             const Pixbuf &pixbuf,
+                             const String &comment);
 };
 
 class Pixmap : public Pixbuf, public virtual ReferenceCountImpl {

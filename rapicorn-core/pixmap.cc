@@ -26,9 +26,6 @@ namespace {
 using namespace Rapicorn;
 
 static Pixmap*  anon_load_png (const String &filename); /* assigns errno */
-static bool     anon_save_png (const String  filename,
-                               const Pixbuf &pixbuf,
-                               const String &comment);
 
 } // Anon
 
@@ -142,7 +139,7 @@ Pixbuf::compare (const Pixbuf &source,
   sheight = MIN (MIN (height() - (int) ty, source.height() - (int) sy), sheight);
   const uint npix = sheight * swidth;
   uint nerr = 0;
-  int maxerr2 = 0;
+  double erraccu = 0, errmax = 0;
   for (int k = 0; k < sheight; k++)
     {
       const uint32 *r1 = row (ty + k);
@@ -151,17 +148,17 @@ Pixbuf::compare (const Pixbuf &source,
         if (r1[tx + j] != r2[sx + j])
           {
             int8 *p1 = (int8*) &r1[tx + j], *p2 = (int8*) &r2[sx + j];
-            maxerr2 = MAX (maxerr2,
-                           SQR (p1[0] - p2[0]) + SQR (p1[1] - p2[1]) +
-                           SQR (p1[2] - p2[2]) + SQR (p1[3] - p2[3]));
+            double pixerr = sqrt (SQR (p1[0] - p2[0]) + SQR (p1[1] - p2[1]) +
+                                  SQR (p1[2] - p2[2]) + SQR (p1[3] - p2[3]));
+            errmax = MAX (errmax, pixerr);
+            erraccu += pixerr;
             nerr++;
           }
     }
-  double maxerr = sqrt (maxerr2);
   if (averrp)
-    *averrp = maxerr / npix;
+    *averrp = erraccu / npix;
   if (maxerrp)
-    *maxerrp = maxerr;
+    *maxerrp = errmax;
   if (nerrp)
     *nerrp = nerr;
   if (npixp)
@@ -199,7 +196,7 @@ Pixmap::load_png (const String &filename, /* assigns errno */
 bool
 Pixmap::save_png (const String &filename) /* assigns errno */
 {
-  return anon_save_png (filename, *this, m_comment);
+  return Pixbuf::save_png (filename, *this, m_comment);
 }
 
 Pixmap::~Pixmap ()
@@ -614,10 +611,14 @@ anon_load_png (const String &filename) /* assigns errno */
   return pcontext.pixmap;
 }
 
-static bool
-anon_save_png (const String  filename,
-               const Pixbuf &pixbuf,
-               const String &comment)
+} // Anon
+
+namespace Rapicorn {
+
+bool
+Pixbuf::save_png (const String &filename, /* assigns errno */
+                  const Pixbuf &pixbuf,
+                  const String &comment)
 {
   const int w = pixbuf.width();
   const int h = pixbuf.height();
@@ -715,4 +716,4 @@ anon_save_png (const String  filename,
 }
 
 
-} // Anon
+} // Rapicorn
