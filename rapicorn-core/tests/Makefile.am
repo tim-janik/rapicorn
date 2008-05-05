@@ -6,10 +6,16 @@ DEFS		+= $(RAPICORN_CFLAGS) -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"' -DSRCDIR
 DEFS		+= $(GLIB_CFLAGS) # FIXME
 
 # test programs
-noinst_PROGRAMS	 = $(TESTS)
+noinst_PROGRAMS	 = $(TESTS) $(NOINSTPRGS)
 LDADDS		 = $(top_builddir)/rapicorn-core/librapicorncore@RAPICORN_RELEASE@.la $(RAPICORN_LIBS)
+NOINSTPRGS =
 
 # programs
+NOINSTPRGS        += imgcheck
+imgcheck_SOURCES   = imgcheck.cc
+imgcheck_LDADD     = $(LDADDS)
+
+# test programs
 TESTS             += infotest
 infotest_SOURCES   = infotest.cc
 infotest_LDADD     = $(LDADDS)
