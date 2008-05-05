@@ -35,6 +35,7 @@ class RootImpl : public virtual Root,
   Viewport             *m_viewport;
   uint                  m_tunable_requisition_counter : 24;
   uint                  m_entered : 1;
+  uint                  m_auto_close : 1;
   EventContext          m_last_event_context;
   vector<Item*>         m_last_entered_children;
   Viewport::Config      m_config;
@@ -81,6 +82,7 @@ private:
                                                                  int64                  *timeout_usecs_p);
   virtual bool          check                                   (uint64                  current_time_usecs);
   virtual bool          dispatch                                ();
+  virtual void          enable_auto_close                       ();
   virtual EventLoop*    get_loop                                ();
   /* event handling */
   virtual void          enqueue_async                           (Event                  *event);

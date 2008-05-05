@@ -71,6 +71,7 @@ public:
   virtual void  destroy_viewport        () = 0;
   /* main loop functions */
   virtual EventLoop* get_loop           () = 0;
+  virtual void       enable_auto_close  ();
   /* MT-safe */
   virtual Window window                 () = 0;
 };

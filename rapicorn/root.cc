@@ -136,12 +136,16 @@ Root::find_item (const String &item_name)
   return container_find_item (*this, item_name);
 }
 
+void
+Root::enable_auto_close ()
+{}
+
 RootImpl::RootImpl() :
   m_loop (*ref_sink (EventLoop::create())),
   m_source (NULL),
   m_viewport (NULL),
   m_tunable_requisition_counter (0),
-  m_entered (false)
+  m_entered (false), m_auto_close (false)
 {
   Appearance *appearance = Appearance::create_default();
   style (appearance->create_style ("normal"));
@@ -936,6 +940,12 @@ RootImpl::check (uint64 current_time_usecs)
   return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewport && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
 }
 
+void
+RootImpl::enable_auto_close ()
+{
+  m_auto_close = true;
+}
+
 bool
 RootImpl::dispatch ()
 {
@@ -957,7 +967,18 @@ RootImpl::dispatch ()
     else if (m_viewport && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
       resize_all (NULL);
     else if (!m_expose_region.empty())
-      draw_now();
+      {
+        draw_now();
+        if (m_auto_close)
+          {
+            EventLoop *loop = get_loop();
+            if (loop)
+              {
+                loop->exec_timer (0, slot (*this, &RootImpl::destroy_viewport), INT_MAX);
+                m_auto_close = false;
+              }
+          }
+      }
   }
   unref();
   return true;
