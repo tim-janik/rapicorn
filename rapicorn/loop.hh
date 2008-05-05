@@ -93,10 +93,12 @@ public:
   uint          exec_background (const VoidSlot &sl);
   uint          exec_background (const BoolSlot &sl);
   uint          exec_timer      (uint            timeout_ms,
-                                 const VoidSlot &sl);
+                                 const VoidSlot &sl,
+                                 int             priority = PRIORITY_NEXT);
   uint          exec_timer      (uint            initial_timeout_ms,
                                  uint            repeat_timeout_ms,
-                                 const BoolSlot &sl);
+                                 const BoolSlot &sl,
+                                 int             priority = PRIORITY_NEXT);
   uint          exec_io_handler (const VPfdSlot &sl,
                                  int             fd,
                                  const String   &mode,
@@ -281,17 +283,19 @@ EventLoop::exec_background (const BoolSlot &sl)
 
 inline uint
 EventLoop::exec_timer (uint            timeout_ms,
-                       const VoidSlot &sl)
+                       const VoidSlot &sl,
+                       int             priority)
 {
-  return add_source (new TimedSource (*sl.get_trampoline(), timeout_ms, timeout_ms), PRIORITY_NEXT);
+  return add_source (new TimedSource (*sl.get_trampoline(), timeout_ms, timeout_ms), priority);
 }
 
 inline uint
 EventLoop::exec_timer (uint            initial_timeout_ms,
                        uint            repeat_timeout_ms,
-                       const BoolSlot &sl)
+                       const BoolSlot &sl,
+                       int             priority)
 {
-  return add_source (new TimedSource (*sl.get_trampoline(), initial_timeout_ms, repeat_timeout_ms), PRIORITY_NEXT);
+  return add_source (new TimedSource (*sl.get_trampoline(), initial_timeout_ms, repeat_timeout_ms), priority);
 }
 
 inline uint
