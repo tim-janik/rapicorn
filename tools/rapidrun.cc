@@ -37,11 +37,13 @@ help_usage (bool usage_error)
   printout ("\n");
   printout ("Options:\n");
   printout ("  --parse-test                  Parse GuiFile.xml and exit.\n");
+  printout ("  -x                            Enable auto-exit after first expose.\n");
   printout ("  -h, --help                    Display this help and exit.\n");
   printout ("  -v, --version                 Display version and exit.\n");
 }
 
 static bool parse_test = false;
+static bool auto_exit = false;
 
 static void
 parse_args (int    *argc_p,
@@ -55,6 +57,11 @@ parse_args (int    *argc_p,
       if (strcmp (argv[i], "--parse-test") == 0)
         {
           parse_test = true;
+          argv[i] = NULL;
+        }
+      else if (strcmp (argv[i], "-x") == 0)
+        {
+          auto_exit = true;
           argv[i] = NULL;
         }
       else if (strcmp (argv[i], "--help") == 0 || strcmp (argv[i], "-h") == 0)
@@ -99,6 +106,10 @@ main (int   argc,
 
   /* create root item */
   Window window = Application::create_window ("test-dialog");
+
+  /* hook up auto-exit handler */
+  if (auto_exit)
+    window.root().enable_auto_close();
 
   /* show window and process events */
   window.show();
