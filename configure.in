@@ -505,6 +505,7 @@ rapicorn/Makefile
 rapicorn/tests/Makefile
 tools/Makefile
 pyrapicorn/Makefile
+tests/Makefile
 examples/Makefile
 docs/Makefile
 docs/imports/Makefile
