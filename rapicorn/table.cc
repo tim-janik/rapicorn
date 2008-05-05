@@ -36,8 +36,8 @@ TableImpl::is_row_used (uint row)
   if (row < rows.size())
     for (ChildWalker cw = local_children(); cw.has_next(); cw++)
       {
-        const PackAttach &pa = cw->pack_attach();
-        if (row >= pa.bottom_attach && row < pa.top_attach)
+        const PackInfo &pi = cw->pack_info();
+        if (row >= pi.bottom_attach && row < pi.top_attach)
           return true;
       }
   return false;
@@ -49,8 +49,8 @@ TableImpl::is_col_used (uint col)
   if (col < cols.size())
     for (ChildWalker cw = local_children(); cw.has_next(); cw++)
       {
-        const PackAttach &pa = cw->pack_attach();
-        if (col >= pa.left_attach && col < pa.right_attach)
+        const PackInfo &pi = cw->pack_info();
+        if (col >= pi.left_attach && col < pi.right_attach)
           return true;
       }
   return false;
@@ -66,9 +66,9 @@ TableImpl::resize (uint n_cols, uint n_rows, bool force)
   /* grow as children require */
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      const PackAttach &pa = cw->pack_attach();
-      n_rows = MAX (n_rows, pa.top_attach);
-      n_cols = MAX (n_cols, pa.right_attach);
+      const PackInfo &pi = cw->pack_info();
+      n_rows = MAX (n_rows, pi.top_attach);
+      n_cols = MAX (n_cols, pi.right_attach);
     }
   /* resize rows and cols */
   bool need_invalidate = false;
@@ -100,17 +100,17 @@ TableImpl::insert_rows (uint first_row, uint n_rows)
   resize (cols.size(), rows.size() + n_rows);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      const PackAttach &pa = cw->pack_attach();
-      if (pa.bottom_attach >= first_row)
+      const PackInfo &pi = cw->pack_info();
+      if (pi.bottom_attach >= first_row)
         {
-          uint bottom_attach = pa.bottom_attach + n_rows;
-          uint top_attach = pa.top_attach + n_rows;
+          uint bottom_attach = pi.bottom_attach + n_rows;
+          uint top_attach = pi.top_attach + n_rows;
           cw->bottom_attach (bottom_attach);
           cw->top_attach (top_attach);
         }
-      else if (first_row < pa.top_attach)
+      else if (first_row < pi.top_attach)
         {
-          uint top_attach = pa.top_attach + n_rows;
+          uint top_attach = pi.top_attach + n_rows;
           cw->top_attach (top_attach);
         }
     }
@@ -124,17 +124,17 @@ TableImpl::insert_cols (uint first_col, uint n_cols)
   resize (cols.size() + n_cols, rows.size());
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      const PackAttach &pa = cw->pack_attach();
-      if (pa.left_attach >= first_col)
+      const PackInfo &pi = cw->pack_info();
+      if (pi.left_attach >= first_col)
         {
-          uint left_attach = pa.left_attach + n_cols;
-          uint right_attach = pa.right_attach + n_cols;
+          uint left_attach = pi.left_attach + n_cols;
+          uint right_attach = pi.right_attach + n_cols;
           cw->left_attach (left_attach);
           cw->right_attach (right_attach);
         }
-      else if (first_col < pa.right_attach)
+      else if (first_col < pi.right_attach)
         {
-          uint right_attach = pa.right_attach + n_cols;
+          uint right_attach = pi.right_attach + n_cols;
           cw->right_attach (right_attach);
         }
     }
@@ -164,8 +164,8 @@ TableImpl::~TableImpl()
 void
 TableImpl::repack_child (Item &item)
 {
-  const PackAttach &pa = item.pack_attach();
-  resize (pa.right_attach, pa.top_attach);
+  const PackInfo &pi = item.pack_info();
+  resize (pi.right_attach, pi.top_attach);
 }
 
 void
@@ -228,15 +228,15 @@ TableImpl::size_request_init()
       /* size request all children */
       if (!cw->allocatable())
         continue;
-      const PackAttach &pa = cw->pack_attach();
+      const PackInfo &pi = cw->pack_info();
       chspread |= cw->hspread();
       cvspread |= cw->vspread();
       /* expand cols with single-column expand children */
-      if (pa.left_attach + 1 == pa.right_attach && cw->hexpand())
-        cols[pa.left_attach].expand = true;
+      if (pi.left_attach + 1 == pi.right_attach && cw->hexpand())
+        cols[pi.left_attach].expand = true;
       /* expand rows with single-column expand children */
-      if (pa.bottom_attach + 1 == pa.top_attach && cw->vexpand())
-        rows[pa.bottom_attach].expand = true;
+      if (pi.bottom_attach + 1 == pi.top_attach && cw->vexpand())
+        rows[pi.bottom_attach].expand = true;
     }
   set_flag (HSPREAD_CONTAINER, chspread);
   set_flag (VSPREAD_CONTAINER, cvspread);
@@ -250,19 +250,18 @@ TableImpl::size_request_pass1()
       Requisition crq = cw->size_request();
       if (!cw->allocatable())
         continue;
-      const PackAttach &pa = cw->pack_attach();
-      const PackSpacing &ps = cw->pack_spacing();
+      const PackInfo &pi = cw->pack_info();
       /* fetch requisition from single-column children */
-      if (pa.left_attach + 1 == pa.right_attach)
+      if (pi.left_attach + 1 == pi.right_attach)
         {
-          uint width = iround (crq.width + ps.left_spacing + ps.right_spacing);
-          cols[pa.left_attach].requisition = MAX (cols[pa.left_attach].requisition, width);
+          uint width = iround (crq.width + pi.left_spacing + pi.right_spacing);
+          cols[pi.left_attach].requisition = MAX (cols[pi.left_attach].requisition, width);
         }
       /* fetch requisition from single-row children */
-      if (pa.bottom_attach + 1 == pa.top_attach)
+      if (pi.bottom_attach + 1 == pi.top_attach)
         {
-          uint height = iround (crq.height + ps.bottom_spacing + ps.top_spacing);
-          rows[pa.bottom_attach].requisition = MAX (rows[pa.bottom_attach].requisition, height);
+          uint height = iround (crq.height + pi.bottom_spacing + pi.top_spacing);
+          rows[pi.bottom_attach].requisition = MAX (rows[pi.bottom_attach].requisition, height);
         }
     }
 }
@@ -294,38 +293,37 @@ TableImpl::size_request_pass3()
     {
       if (!cw->allocatable())
         continue;
-      const PackAttach &pa = cw->pack_attach();
-      const PackSpacing &ps = cw->pack_spacing();
+      const PackInfo &pi = cw->pack_info();
       /* request remaining space for multi-column children */
-      if (pa.left_attach + 1 != pa.right_attach)
+      if (pi.left_attach + 1 != pi.right_attach)
         {
           Requisition crq = cw->size_request();
           /* Check and see if there is already enough space for the child. */
           uint width = 0;
-          for (uint col = pa.left_attach; col < pa.right_attach; col++)
+          for (uint col = pi.left_attach; col < pi.right_attach; col++)
             {
               width += cols[col].requisition;
-              if (col + 1 < pa.right_attach)
+              if (col + 1 < pi.right_attach)
                 width += cols[col].spacing;
             }
           /* If we need to request more space for this child to fill
            *  its requisition, then divide up the needed space amongst the
            *  columns it spans, favoring expandable columns if any.
            */
-          if (width < crq.width + ps.left_spacing + ps.right_spacing)
+          if (width < crq.width + pi.left_spacing + pi.right_spacing)
             {
               bool force_expand = false;
               uint n_expand = 0;
-              width = iround (crq.width + ps.left_spacing + ps.right_spacing - width);
-              for (uint col = pa.left_attach; col < pa.right_attach; col++)
+              width = iround (crq.width + pi.left_spacing + pi.right_spacing - width);
+              for (uint col = pi.left_attach; col < pi.right_attach; col++)
                 if (cols[col].expand)
                   n_expand++;
               if (n_expand == 0)
                 {
-                  n_expand = pa.right_attach - pa.left_attach;
+                  n_expand = pi.right_attach - pi.left_attach;
                   force_expand = true;
                 }
-              for (uint col = pa.left_attach; col < pa.right_attach; col++)
+              for (uint col = pi.left_attach; col < pi.right_attach; col++)
                 if (force_expand || cols[col].expand)
                   {
                     uint extra = width / n_expand;
@@ -336,35 +334,35 @@ TableImpl::size_request_pass3()
             }
         }
       /* request remaining space for multi-row children */
-      if (pa.bottom_attach + 1 != pa.top_attach)
+      if (pi.bottom_attach + 1 != pi.top_attach)
         {
           Requisition crq = cw->size_request();
           /* Check and see if there is already enough space for the child. */
           uint height = 0;
-          for (uint row = pa.bottom_attach; row < pa.top_attach; row++)
+          for (uint row = pi.bottom_attach; row < pi.top_attach; row++)
             {
               height += rows[row].requisition;
-              if (row + 1 < pa.top_attach)
+              if (row + 1 < pi.top_attach)
                 height += rows[row].spacing;
             }
           /* If we need to request more space for this child to fill
            *  its requisition, then divide up the needed space amongst the
            *  rows it spans, favoring expandable rows if any.
            */
-          if (height < crq.height + ps.bottom_spacing + ps.top_spacing)
+          if (height < crq.height + pi.bottom_spacing + pi.top_spacing)
             {
               bool force_expand = false;
               uint n_expand = 0;
-              height = iround (crq.height + ps.bottom_spacing + ps.top_spacing - height);
-              for (uint row = pa.bottom_attach; row < pa.top_attach; row++)
+              height = iround (crq.height + pi.bottom_spacing + pi.top_spacing - height);
+              for (uint row = pi.bottom_attach; row < pi.top_attach; row++)
                 if (rows[row].expand)
                   n_expand++;
               if (n_expand == 0)
                 {
-                  n_expand = pa.top_attach - pa.bottom_attach;
+                  n_expand = pi.top_attach - pi.bottom_attach;
                   force_expand = true;
                 }
-              for (uint row = pa.bottom_attach; row < pa.top_attach; row++)
+              for (uint row = pi.bottom_attach; row < pi.top_attach; row++)
                 if (force_expand || rows[row].expand)
                   {
                     uint extra = height / n_expand;
@@ -408,18 +406,18 @@ TableImpl::size_allocate_init()
     {
       if (!cw->allocatable())
         continue;
-      const PackAttach &pa = cw->pack_attach();
-      if (pa.left_attach + 1 == pa.right_attach)
+      const PackInfo &pi = cw->pack_info();
+      if (pi.left_attach + 1 == pi.right_attach)
         {
-          cols[pa.left_attach].expand |= cw->hexpand();
-          cols[pa.left_attach].shrink &= cw->hshrink();
-          cols[pa.left_attach].empty = false;
+          cols[pi.left_attach].expand |= cw->hexpand();
+          cols[pi.left_attach].shrink &= cw->hshrink();
+          cols[pi.left_attach].empty = false;
         }
-      if (pa.bottom_attach + 1 == pa.top_attach)
+      if (pi.bottom_attach + 1 == pi.top_attach)
         {
-          rows[pa.bottom_attach].expand |= cw->vexpand();
-          rows[pa.bottom_attach].shrink &= cw->vshrink();
-          rows[pa.bottom_attach].empty = false;
+          rows[pi.bottom_attach].expand |= cw->vexpand();
+          rows[pi.bottom_attach].shrink &= cw->vshrink();
+          rows[pi.bottom_attach].empty = false;
         }
     }
   /* adjust the row and col flags from expand/shrink flags of multi row/col children */
@@ -427,52 +425,52 @@ TableImpl::size_allocate_init()
     {
       if (!cw->allocatable())
         continue;
-      const PackAttach &pa = cw->pack_attach();
-      if (pa.left_attach + 1 != pa.right_attach)
+      const PackInfo &pi = cw->pack_info();
+      if (pi.left_attach + 1 != pi.right_attach)
         {
           uint col;
-          for (col = pa.left_attach; col < pa.right_attach; col++)
+          for (col = pi.left_attach; col < pi.right_attach; col++)
             cols[col].empty = false;
           if (cw->hexpand())
             {
-              for (col = pa.left_attach; col < pa.right_attach; col++)
+              for (col = pi.left_attach; col < pi.right_attach; col++)
                 if (cols[col].expand)
                   break;
-              if (col >= pa.right_attach) /* no expand col found */
-                for (col = pa.left_attach; col < pa.right_attach; col++)
+              if (col >= pi.right_attach) /* no expand col found */
+                for (col = pi.left_attach; col < pi.right_attach; col++)
                   cols[col].need_expand = true;
             }
           if (!cw->hshrink())
             {
-              for (col = pa.left_attach; col < pa.right_attach; col++)
+              for (col = pi.left_attach; col < pi.right_attach; col++)
                 if (!cols[col].shrink)
                   break;
-              if (col >= pa.right_attach) /* no shrink col found */
-                for (col = pa.left_attach; col < pa.right_attach; col++)
+              if (col >= pi.right_attach) /* no shrink col found */
+                for (col = pi.left_attach; col < pi.right_attach; col++)
                   cols[col].need_shrink = false;
             }
         }
-      if (pa.bottom_attach + 1 != pa.top_attach)
+      if (pi.bottom_attach + 1 != pi.top_attach)
         {
           uint row;
-          for (row = pa.bottom_attach; row < pa.top_attach; row++)
+          for (row = pi.bottom_attach; row < pi.top_attach; row++)
             rows[row].empty = false;
           if (cw->vexpand())
             {
-              for (row = pa.bottom_attach; row < pa.top_attach; row++)
+              for (row = pi.bottom_attach; row < pi.top_attach; row++)
                 if (rows[row].expand)
                   break;
-              if (row >= pa.top_attach) /* no expand row found */
-                for (row = pa.bottom_attach; row < pa.top_attach; row++)
+              if (row >= pi.top_attach) /* no expand row found */
+                for (row = pi.bottom_attach; row < pi.top_attach; row++)
                   rows[row].need_expand = true;
             }
           if (!cw->vshrink())
             {
-              for (row = pa.bottom_attach; row < pa.top_attach; row++)
+              for (row = pi.bottom_attach; row < pi.top_attach; row++)
                 if (!rows[row].shrink)
                   break;
-              if (row >= pa.top_attach) /* no shrink row found */
-                for (row = pa.bottom_attach; row < pa.top_attach; row++)
+              if (row >= pi.top_attach) /* no shrink row found */
+                for (row = pi.bottom_attach; row < pi.top_attach; row++)
                   rows[row].need_shrink = false;
             }
         }
@@ -753,33 +751,32 @@ TableImpl::size_allocate_pass2 ()
     {
       if (!cw->allocatable())
         continue;
-      const PackAttach &pa = cw->pack_attach();
-      const PackSpacing &ps = cw->pack_spacing();
+      const PackInfo &pi = cw->pack_info();
       Requisition crq = cw->size_request();
       int x = ifloor (area.x);
-      for (uint col = 0; col < pa.left_attach; col++)
+      for (uint col = 0; col < pi.left_attach; col++)
         x += cols[col].allocation + cols[col].spacing;
       int max_width = 0;
-      for (uint col = pa.left_attach; col < pa.right_attach; col++)
+      for (uint col = pi.left_attach; col < pi.right_attach; col++)
         {
           max_width += cols[col].allocation;
-          if (col + 1 < pa.right_attach)
+          if (col + 1 < pi.right_attach)
             max_width += cols[col].spacing;
         }
       int y = ifloor (area.y);
-      for (uint row = 0; row < pa.bottom_attach; row++)
+      for (uint row = 0; row < pi.bottom_attach; row++)
         y += rows[row].allocation + rows[row].spacing;
       int max_height = 0;
-      for (uint row = pa.bottom_attach; row < pa.top_attach; row++)
+      for (uint row = pi.bottom_attach; row < pi.top_attach; row++)
         {
           max_height += rows[row].allocation;
-          if (row + 1 < pa.top_attach)
+          if (row + 1 < pi.top_attach)
             max_height += rows[row].spacing;
         }
       if (cw->hfill())
         {
-          child_area.width = max_width; // MAX (0, max_width - int (ps.left_spacing + ps.right_spacing));
-          child_area.x = x; //  + ps.left_spacing; // (max_width - child_area.width) / 2;
+          child_area.width = max_width; // MAX (0, max_width - int (pi.left_spacing + pi.right_spacing));
+          child_area.x = x; //  + pi.left_spacing; // (max_width - child_area.width) / 2;
         }
       else
         {
@@ -788,8 +785,8 @@ TableImpl::size_allocate_pass2 ()
         }
       if (cw->vfill())
         {
-          child_area.height = max_height; // MAX (0, max_height - int (ps.bottom_spacing + ps.top_spacing));
-          child_area.y = y; //  + ps.bottom_spacing; // (max_height - child_area.height) / 2;
+          child_area.height = max_height; // MAX (0, max_height - int (pi.bottom_spacing + pi.top_spacing));
+          child_area.y = y; //  + pi.bottom_spacing; // (max_height - child_area.height) / 2;
         }
       else
         {
@@ -806,13 +803,13 @@ TableImpl::size_allocate_pass2 ()
       /* account for spacing */
       if (cw->hfill())
         {
-          child_area.width -= int (ps.left_spacing + ps.right_spacing);
-          child_area.x += ps.left_spacing;
+          child_area.width -= int (pi.left_spacing + pi.right_spacing);
+          child_area.x += pi.left_spacing;
         }
       if (cw->vfill())
         {
-          child_area.height -= int (ps.bottom_spacing + ps.top_spacing);
-          child_area.y += ps.bottom_spacing;
+          child_area.height -= int (pi.bottom_spacing + pi.top_spacing);
+          child_area.y += pi.bottom_spacing;
         }
       /* allocate child */
       cw->set_allocation (child_area);

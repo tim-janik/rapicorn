@@ -1036,42 +1036,26 @@ Item::repack()
   invalidate();
 }
 
-Item::PackAttach&
-Item::pack_attach (bool create)
+Item::PackInfo&
+Item::pack_info (bool create)
 {
-  static const PackAttach pack_attach_default = { 0, 1, 0, 1 };
-  static DataKey<PackAttach*> pack_attach_key;
-  PackAttach *pa = get_data (&pack_attach_key);
-  if (!pa)
+  static const PackInfo pack_info_defaults = {
+    0, 1, 0, 1, /* *_attach */
+    0, 0, 0, 0, /* *_spacing */
+  };
+  static DataKey<PackInfo*> pack_info_key;
+  PackInfo *pi = get_data (&pack_info_key);
+  if (!pi)
     {
       if (create)
         {
-          pa = new PackAttach (pack_attach_default);
-          set_data (&pack_attach_key, pa);
+          pi = new PackInfo (pack_info_defaults);
+          set_data (&pack_info_key, pi);
         }
       else /* read-only access */
-        pa = const_cast<PackAttach*> (&pack_attach_default);
+        pi = const_cast<PackInfo*> (&pack_info_defaults);
     }
-  return *pa;
-}
-
-Item::PackSpacing&
-Item::pack_spacing (bool create)
-{
-  static const PackSpacing pack_spacing_default = { 0, 0, 0, 0 };
-  static DataKey<PackSpacing*> pack_spacing_key;
-  PackSpacing *pp = get_data (&pack_spacing_key);
-  if (!pp)
-    {
-      if (create)
-        {
-          pp = new PackSpacing (pack_spacing_default);
-          set_data (&pack_spacing_key, pp);
-        }
-      else /* read-only access */
-        pp = const_cast<PackSpacing*> (&pack_spacing_default);
-    }
-  return *pp;
+  return *pi;
 }
 
 void

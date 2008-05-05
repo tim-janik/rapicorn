@@ -272,30 +272,30 @@ public:
                                                  AdjustmentSourceType adjsrc4 = ADJUSTMENT_SOURCE_NONE,
                                                  Adjustment         **adj4 = NULL);
 public: /* packing */
-  struct PackAttach  { uint left_attach, right_attach, bottom_attach, top_attach; };
-  struct PackSpacing { uint left_spacing, right_spacing, bottom_spacing, top_spacing; };
-  const PackAttach&  pack_attach     () const { return const_cast<Item*> (this)->pack_attach (false); }
-  const PackSpacing& pack_spacing    () const { return const_cast<Item*> (this)->pack_spacing (false); }
-  uint               left_attach     ()       { return pack_attach (false).left_attach; }
-  void 		     left_attach     (uint c) { PackAttach &pa = pack_attach (true); pa.left_attach = c; pa.right_attach = MAX (pa.left_attach + 1, pa.right_attach); repack(); }
-  uint 		     right_attach    ()       { return pack_attach (false).right_attach; }
-  void 		     right_attach    (uint c) { PackAttach &pa = pack_attach (true); pa.right_attach = MAX (1, c); pa.left_attach = MIN (pa.left_attach, pa.right_attach - 1); repack(); }
-  uint 		     bottom_attach   ()       { return pack_attach (false).bottom_attach; }
-  void 		     bottom_attach   (uint c) { PackAttach &pa = pack_attach (true); pa.bottom_attach = c; pa.top_attach = MAX (pa.top_attach, pa.bottom_attach + 1); repack(); }
-  uint 		     top_attach      ()       { return pack_attach (false).top_attach; }
-  void 		     top_attach      (uint c) { PackAttach &pa = pack_attach (true); pa.top_attach = MAX (1, c); pa.bottom_attach = MIN (pa.bottom_attach, pa.top_attach - 1); repack(); }
-  uint 		     left_spacing    ()       { return pack_spacing (false).left_spacing; }
-  void 		     left_spacing    (uint c) { pack_spacing (true).left_spacing = c; repack(); }
-  uint 		     right_spacing   ()       { return pack_spacing (false).right_spacing; }
-  void 		     right_spacing   (uint c) { pack_spacing (true).right_spacing = c; repack(); }
-  uint 		     bottom_spacing  ()       { return pack_spacing (false).bottom_spacing; }
-  void 		     bottom_spacing  (uint c) { pack_spacing (true).bottom_spacing = c; repack(); }
-  uint 		     top_spacing     ()       { return pack_spacing (false).top_spacing; }
-  void 		     top_spacing     (uint c) { pack_spacing (true).top_spacing = c; repack(); }
+  struct PackInfo {
+    uint left_attach, right_attach, bottom_attach, top_attach;
+    uint left_spacing, right_spacing, bottom_spacing, top_spacing;
+  };
+  const PackInfo&    pack_info       () const { return const_cast<Item*> (this)->pack_info (false); }
+  uint               left_attach     ()       { return pack_info (false).left_attach; }
+  void 		     left_attach     (uint c) { PackInfo &pa = pack_info (true); pa.left_attach = c; pa.right_attach = MAX (pa.left_attach + 1, pa.right_attach); repack(); }
+  uint 		     right_attach    ()       { return pack_info (false).right_attach; }
+  void 		     right_attach    (uint c) { PackInfo &pa = pack_info (true); pa.right_attach = MAX (1, c); pa.left_attach = MIN (pa.left_attach, pa.right_attach - 1); repack(); }
+  uint 		     bottom_attach   ()       { return pack_info (false).bottom_attach; }
+  void 		     bottom_attach   (uint c) { PackInfo &pa = pack_info (true); pa.bottom_attach = c; pa.top_attach = MAX (pa.top_attach, pa.bottom_attach + 1); repack(); }
+  uint 		     top_attach      ()       { return pack_info (false).top_attach; }
+  void 		     top_attach      (uint c) { PackInfo &pa = pack_info (true); pa.top_attach = MAX (1, c); pa.bottom_attach = MIN (pa.bottom_attach, pa.top_attach - 1); repack(); }
+  uint 		     left_spacing    ()       { return pack_info (false).left_spacing; }
+  void 		     left_spacing    (uint c) { pack_info (true).left_spacing = c; repack(); }
+  uint 		     right_spacing   ()       { return pack_info (false).right_spacing; }
+  void 		     right_spacing   (uint c) { pack_info (true).right_spacing = c; repack(); }
+  uint 		     bottom_spacing  ()       { return pack_info (false).bottom_spacing; }
+  void 		     bottom_spacing  (uint c) { pack_info (true).bottom_spacing = c; repack(); }
+  uint 		     top_spacing     ()       { return pack_info (false).top_spacing; }
+  void 		     top_spacing     (uint c) { pack_info (true).top_spacing = c; repack(); }
 private:
   void               repack          (void);
-  PackAttach&        pack_attach     (bool create);
-  PackSpacing&       pack_spacing    (bool create);
+  PackInfo&          pack_info       (bool create);
 public:
   template<typename Type>
   typename
