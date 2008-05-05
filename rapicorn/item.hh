@@ -89,12 +89,10 @@ protected:
     VEXPAND                   = 1 << 17,
     HSHRINK                   = 1 << 18,
     VSHRINK                   = 1 << 19,
-    HFILL                     = 1 << 20,
-    VFILL                     = 1 << 21,
-    ALLOCATABLE               = 1 << 22,
-    POSITIVE_ALLOCATION       = 1 << 23,
-    DEBUG                     = 1 << 24,
-    LAST_FLAG                 = 1 << 25
+    ALLOCATABLE               = 1 << 20,
+    POSITIVE_ALLOCATION       = 1 << 21,
+    DEBUG                     = 1 << 22,
+    LAST_FLAG                 = 1 << 23
   };
   void                        set_flag          (uint32 flag, bool on = true);
   void                        unset_flag        (uint32 flag) { set_flag (flag, false); }
@@ -162,10 +160,6 @@ public:
   void                        hshrink           (bool b) { set_flag (HSHRINK, b); }
   bool                        vshrink           () const { return test_flags (VSHRINK); }
   void                        vshrink           (bool b) { set_flag (VSHRINK, b); }
-  bool                        hfill             () const { return test_flags (HFILL); }
-  void                        hfill             (bool b) { set_flag (HFILL, b); }
-  bool                        vfill             () const { return test_flags (VFILL); }
-  void                        vfill             (bool b) { set_flag (VFILL, b); }
   bool                        debug             () const { return test_flags (DEBUG); }
   void                        debug             (bool f) { set_flag (DEBUG, f); }
   virtual String              name              () const = 0;

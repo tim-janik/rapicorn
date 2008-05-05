@@ -34,7 +34,7 @@ EventHandler::handle_event (const Event &event)
 }
 
 Item::Item () :
-  m_flags (VISIBLE | SENSITIVE | ALLOCATABLE | HFILL | VFILL),
+  m_flags (VISIBLE | SENSITIVE | ALLOCATABLE),
   m_parent (NULL),
   m_style (NULL),
   sig_finalize (*this),
@@ -84,8 +84,9 @@ Item::set_flag (uint32 flag,
 {
   assert ((flag & (flag - 1)) == 0); /* single bit check */
   const uint propagate_flag_mask  = SENSITIVE | PARENT_SENSITIVE | PRELIGHT | IMPRESSED | HAS_DEFAULT;
-  const uint repack_flag_mask = HEXPAND | VEXPAND | HSHRINK | VSHRINK | HFILL | VFILL |
-                                HSPREAD | VSPREAD | HSPREAD_CONTAINER | VSPREAD_CONTAINER | VISIBLE;
+  const uint repack_flag_mask = HEXPAND | VEXPAND | HSPREAD | VSPREAD |
+                                HSPREAD_CONTAINER | VSPREAD_CONTAINER |
+                                HSHRINK | VSHRINK | VISIBLE;
   bool fchanged = change_flags_silently (flag, on);
   if (fchanged)
     {
@@ -582,8 +583,6 @@ Item::list_properties ()
     MakeProperty (Item, vspread,   _("Vertical Spread"), _("Whether to expand this item and all its parents vertically"), "rw"),
     MakeProperty (Item, hshrink,   _("Horizontal Shrink"), _("Whether the item may be shrunken horizontally"), "rw"),
     MakeProperty (Item, vshrink,   _("Vertical Shrink"),   _("Whether the item may be shrunken vertically"), "rw"),
-    MakeProperty (Item, hfill,     _("Horizontal Fill"), _("Whether the item may fill all extra horizontal space"), "rw"),
-    MakeProperty (Item, vfill,     _("Vertical Fill"), _("Whether the item may fill all extra vertical space"), "rw"),
     /* packing */
     MakeProperty (Item, left_attach,    _("Left Attach"),    _("Column index to attach the item's left side to"), 0u, 99999u, 5u, "Prw"),
     MakeProperty (Item, right_attach,   _("Right Attach"),   _("Column index to attach the item's right side to"), 1u, 100000u, 5u, "Prw"),

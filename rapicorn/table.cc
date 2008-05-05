@@ -738,7 +738,6 @@ TableImpl::size_allocate_pass1 ()
                       }
                 }
             }
-          
         }
     }
 }
@@ -773,43 +772,36 @@ TableImpl::size_allocate_pass2 ()
           if (row + 1 < pi.top_attach)
             max_height += rows[row].spacing;
         }
-      if (cw->hfill())
-        {
-          child_area.width = max_width; // MAX (0, max_width - int (pi.left_spacing + pi.right_spacing));
-          child_area.x = x; //  + pi.left_spacing; // (max_width - child_area.width) / 2;
-        }
-      else
-        {
-          child_area.width = MIN (iround (crq.width), max_width);
-          child_area.x = x + (max_width - child_area.width) / 2;
-        }
-      if (cw->vfill())
-        {
-          child_area.height = max_height; // MAX (0, max_height - int (pi.bottom_spacing + pi.top_spacing));
-          child_area.y = y; //  + pi.bottom_spacing; // (max_height - child_area.height) / 2;
-        }
-      else
-        {
-          child_area.height = MIN (iround (crq.height), max_height);
-          child_area.y = y + (max_height - child_area.height) / 2;
-        }
-      if (false) /* flip layout horizontally */
+      /* max possible child size */
+      child_area.width = max_width;
+      child_area.x = x;
+      child_area.height = max_height;
+      child_area.y = y;
+      /* flip layout horizontally */
+      if (false)
         child_area.x = area.x + area.width - (child_area.x - area.x) - child_area.width;
       /* constrain child allocation to table */
       if (child_area.x + child_area.width > area.x + area.width)
         child_area.width -= child_area.x + child_area.width - area.x - area.width;
       if (child_area.y + child_area.height > area.y + area.height)
         child_area.height -= child_area.y + child_area.height - area.y - area.height;
-      /* account for spacing */
-      if (cw->hfill())
+      /* subtract child spacings */
+      child_area.width -= MIN (child_area.width, pi.left_spacing + pi.right_spacing);
+      child_area.x += MIN (child_area.width, pi.left_spacing);
+      child_area.height -= MIN (child_area.height, pi.bottom_spacing + pi.top_spacing);
+      child_area.y += MIN (child_area.height, pi.bottom_spacing);
+      /* align and scale */
+      if (child_area.width > crq.width)
         {
-          child_area.width -= int (pi.left_spacing + pi.right_spacing);
-          child_area.x += pi.left_spacing;
+          int width = iround (crq.width + pi.hscale * (child_area.width - crq.width));
+          child_area.x += iround (pi.halign * (child_area.width - width));
+          child_area.width = width;
         }
-      if (cw->vfill())
+      if (child_area.height > crq.height)
         {
-          child_area.height -= int (pi.bottom_spacing + pi.top_spacing);
-          child_area.y += pi.bottom_spacing;
+          int height = iround (crq.height + pi.vscale * (child_area.height - crq.height));
+          child_area.y += iround (pi.valign * (child_area.height - height));
+          child_area.height = height;
         }
       /* allocate child */
       cw->set_allocation (child_area);
