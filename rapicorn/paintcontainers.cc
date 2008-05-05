@@ -288,18 +288,7 @@ protected:
   virtual void
   size_request (Requisition &requisition)
   {
-    bool chspread = false, cvspread = false;
-    if (has_allocatable_child())
-      {
-        Item &child = get_child();
-        Requisition cr = child.size_request ();
-        requisition.width += cr.width;
-        requisition.height += cr.height;
-        chspread = child.hspread();
-        cvspread = child.vspread();
-      }
-    set_flag (HSPREAD_CONTAINER, chspread);
-    set_flag (VSPREAD_CONTAINER, cvspread);
+    SingleContainerImpl::size_request (requisition);
     if (m_overlap_child)
       {
         requisition.width = MAX (requisition.width, 2 + 2);
@@ -314,22 +303,16 @@ protected:
   virtual void
   size_allocate (Allocation area)
   {
-    allocation (area);
-    if (has_children())
+    Allocation carea = area;
+    if (has_allocatable_child() && !m_overlap_child)
       {
-        Item &child = get_child();
-        if (child.allocatable())
-          {
-            if (!m_overlap_child)
-              {
-                area.x += 2;
-                area.y += 2;
-                area.width -= 4;
-                area.height -= 4;
-              }
-            child.set_allocation (area);
-          }
+        carea.x += 2;
+        carea.y += 2;
+        carea.width -= 4;
+        carea.height -= 4;
       }
+    SingleContainerImpl::size_allocate (carea);
+    allocation (area);
   }
 public:
   void

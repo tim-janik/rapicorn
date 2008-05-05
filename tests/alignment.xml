@@ -33,27 +33,27 @@
 	    <HBox>
 
 	      <VBox width="90">
-		<Alignment halign="0.0" hscale="0.0" hexpand="1"> <Arrow width="30" height="30"/> </Alignment>
-		<Alignment halign="0.5" hscale="0.0" hexpand="1"> <Arrow width="30" height="30"/> </Alignment>
-		<Alignment halign="1.0" hscale="0.0" hexpand="1"> <Arrow width="30" height="30"/> </Alignment>
+		<Alignment hexpand="1"> <Arrow halign="0.0" hscale="0.0" width="30" height="30"/> </Alignment>
+		<Alignment hexpand="1"> <Arrow halign="0.5" hscale="0.0" width="30" height="30"/> </Alignment>
+		<Alignment hexpand="1"> <Arrow halign="1.0" hscale="0.0" width="30" height="30"/> </Alignment>
 	      </VBox>
 
 	      <VBox width="90">
-		<Alignment hscale="0.0" halign="0.5" hexpand="1"> <Arrow width="30" height="30"/> </Alignment>
-		<Alignment hscale="0.5" halign="0.5" hexpand="1"> <Arrow width="30" height="30"/> </Alignment>
-		<Alignment hscale="1.0" halign="0.5" hexpand="1"> <Arrow width="30" height="30"/> </Alignment>
+		<Alignment hexpand="1"> <Arrow hscale="0.0" halign="0.5" width="30" height="30"/> </Alignment>
+		<Alignment hexpand="1"> <Arrow hscale="0.5" halign="0.5" width="30" height="30"/> </Alignment>
+		<Alignment hexpand="1"> <Arrow hscale="1.0" halign="0.5" width="30" height="30"/> </Alignment>
 	      </VBox>
 
 	      <HBox height="90">
-		<Alignment valign="0.0" vscale="0.0" vexpand="1"> <Arrow width="30" height="30"/> </Alignment>
-		<Alignment valign="0.5" vscale="0.0" vexpand="1"> <Arrow width="30" height="30"/> </Alignment>
-		<Alignment valign="1.0" vscale="0.0" vexpand="1"> <Arrow width="30" height="30"/> </Alignment>
+		<Alignment vexpand="1"> <Arrow valign="0.0" vscale="0.0" width="30" height="30"/> </Alignment>
+		<Alignment vexpand="1"> <Arrow valign="0.5" vscale="0.0" width="30" height="30"/> </Alignment>
+		<Alignment vexpand="1"> <Arrow valign="1.0" vscale="0.0" width="30" height="30"/> </Alignment>
 	      </HBox>
 
 	      <HBox height="90">
-		<Alignment vscale="0.0" valign="0.5" vexpand="1"> <Arrow width="30" height="30"/> </Alignment>
-		<Alignment vscale="0.5" valign="0.5" vexpand="1"> <Arrow width="30" height="30"/> </Alignment>
-		<Alignment vscale="1.0" valign="0.5" vexpand="1"> <Arrow width="30" height="30"/> </Alignment>
+		<Alignment vexpand="1"> <Arrow vscale="0.0" valign="0.5" width="30" height="30"/> </Alignment>
+		<Alignment vexpand="1"> <Arrow vscale="0.5" valign="0.5" width="30" height="30"/> </Alignment>
+		<Alignment vexpand="1"> <Arrow vscale="1.0" valign="0.5" width="30" height="30"/> </Alignment>
 	      </HBox>
 
 	    </HBox>

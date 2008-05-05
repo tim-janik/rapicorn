@@ -593,6 +593,10 @@ Item::list_properties ()
     MakeProperty (Item, right_spacing,  _("Right Spacing"),  _("Amount of spacing to add at the item's right side"), 0u, 65535u, 3u, "Prw"),
     MakeProperty (Item, bottom_spacing, _("Bottom Spacing"), _("Amount of spacing to add at the item's bottom side"), 0u, 65535u, 3u, "Prw"),
     MakeProperty (Item, top_spacing,    _("Top Spacing"),    _("Amount of spacing to add at the item's top side"), 0u, 65535u, 3u, "Prw"),
+    MakeProperty (Item, halign, _("Horizontal Alignment"), _("Horizontal position within extra space when unexpanded, 0=left, 1=right"), 0, 1, 0.5, "Prw"),
+    MakeProperty (Item, hscale, _("Horizontal Scale"),     _("Fractional horizontal expansion within extra space, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "Prw"),
+    MakeProperty (Item, valign, _("Vertical Alignment"),   _("Vertical position within extra space when unexpanded, 0=bottom, 1=top"), 0, 1, 0.5, "Prw"),
+    MakeProperty (Item, vscale, _("Vertical Scale"),       _("Fractional vertical expansion within extra space, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "Prw"),
   };
   static const PropertyList property_list (properties);
   return property_list;
@@ -1040,8 +1044,9 @@ Item::PackInfo&
 Item::pack_info (bool create)
 {
   static const PackInfo pack_info_defaults = {
-    0, 1, 0, 1, /* *_attach */
-    0, 0, 0, 0, /* *_spacing */
+    0,   1,   0, 1,     /* *_attach */
+    0,   0,   0, 0,     /* *_spacing */
+    0.5, 1, 0.5, 1,     /* align/scale */
   };
   static DataKey<PackInfo*> pack_info_key;
   PackInfo *pi = get_data (&pack_info_key);

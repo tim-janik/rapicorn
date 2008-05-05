@@ -834,7 +834,10 @@ SingleContainerImpl::size_request (Requisition &requisition)
   if (has_allocatable_child())
     {
       Item &child = get_child();
-      requisition = child.size_request ();
+      Requisition cr = child.size_request ();
+      const PackInfo &pi = child.pack_info();
+      requisition.width = pi.left_spacing + cr.width + pi.right_spacing;
+      requisition.height = pi.bottom_spacing + cr.height + pi.top_spacing;
       chspread = child.hspread();
       cvspread = child.vspread();
     }
@@ -849,6 +852,26 @@ SingleContainerImpl::size_allocate (Allocation area)
   if (has_allocatable_child())
     {
       Item &child = get_child();
+      Requisition rq = child.size_request();
+      const PackInfo &pi = child.pack_info();
+      /* pad allocation */
+      area.x += pi.left_spacing;
+      area.width -= pi.left_spacing + pi.right_spacing;
+      area.y += pi.bottom_spacing;
+      area.height -= pi.bottom_spacing + pi.top_spacing;
+      /* expand/scale child */
+      if (area.width > rq.width && !child.hexpand())
+        {
+          int width = iround (rq.width + pi.hscale * (area.width - rq.width));
+          area.x += iround (pi.halign * (area.width - width));
+          area.width = width;
+        }
+      if (area.height > rq.height && !child.vexpand())
+        {
+          int height = iround (rq.height + pi.vscale * (area.height - rq.height));
+          area.y += iround (pi.valign * (area.height - height));
+          area.height = height;
+        }
       child.set_allocation (area);
     }
 }
@@ -857,7 +880,7 @@ Container::Packer
 SingleContainerImpl::create_packer (Item &item)
 {
   return void_packer(); /* no child properties */
-}    
+}
 
 void
 SingleContainerImpl::pre_finalize()

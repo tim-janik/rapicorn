@@ -24,10 +24,6 @@ const PropertyList&
 Alignment::list_properties()
 {
   static Property *properties[] = {
-    MakeProperty (Alignment, halign,         _("Horizontal Alignment"), _("Horizontal position of unexpanded child, 0=left, 1=right"), 0, 1, 0.5, "rw"),
-    MakeProperty (Alignment, hscale,         _("Horizontal Scale"),     _("Fractional expansion of unexpanded child, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "rw"),
-    MakeProperty (Alignment, valign,         _("Vertical Alignment"),   _("Vertical position of unexpanded child, 0=bottom, 1=top"), 0, 1, 0.5, "rw"),
-    MakeProperty (Alignment, vscale,         _("Vertical Scale"),       _("Fractional expansion of unexpanded child, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "rw"),
     MakeProperty (Alignment, left_padding,   _("Left Padding"),   _("Amount of padding to add at the child's left side"), 0, 65535, 3, "rw"),
     MakeProperty (Alignment, right_padding,  _("Right Padding"),  _("Amount of padding to add at the child's right side"), 0, 65535, 3, "rw"),
     MakeProperty (Alignment, bottom_padding, _("Bottom Padding"), _("Amount of padding to add at the child's bottom side"), 0, 65535, 3, "rw"),
@@ -40,18 +36,15 @@ Alignment::list_properties()
 class AlignmentImpl : public virtual SingleContainerImpl, public virtual Alignment {
   uint16 m_left_padding, m_right_padding;
   uint16 m_bottom_padding, m_top_padding;
-  float m_halign, m_hscale;
-  float m_valign, m_vscale;
 public:
   AlignmentImpl() :
     m_left_padding (0), m_right_padding (0),
-    m_bottom_padding (0), m_top_padding (0),
-    m_halign (0.5), m_hscale (1),
-    m_valign (0.5), m_vscale (1)
+    m_bottom_padding (0), m_top_padding (0)
   {}
   virtual void
   size_request (Requisition &requisition)
   {
+    // FIXME: account for child's PackInfo like SingleContainerImpl::size_request
     bool chspread = false, cvspread = false;
     if (has_children())
       {
@@ -71,6 +64,7 @@ public:
   virtual void
   size_allocate (Allocation area)
   {
+    // FIXME: account for child's PackInfo like SingleContainerImpl::size_allocate
     allocation (area);
     if (!has_allocatable_child())
       return;
@@ -84,26 +78,18 @@ public:
     /* expand/scale child */
     if (area.width > rq.width && !child.hexpand())
       {
-        int width = iround (rq.width + hscale() * (area.width - rq.width));
-        area.x += iround (halign() * (area.width - width));
+        int width = iround (rq.width + child.hscale() * (area.width - rq.width));
+        area.x += iround (child.halign() * (area.width - width));
         area.width = width;
       }
     if (area.height > rq.height && !child.vexpand())
       {
-        int height = iround (rq.height + vscale() * (area.height - rq.height));
-        area.y += iround (valign() * (area.height - height));
+        int height = iround (rq.height + child.vscale() * (area.height - rq.height));
+        area.y += iround (child.valign() * (area.height - height));
         area.height = height;
       }
     child.set_allocation (area);
   }
-  virtual float halign         () const  { return m_halign; }
-  virtual void  halign         (float f) { m_halign = CLAMP (f, 0, 1); invalidate(); }
-  virtual float hscale         () const  { return m_hscale; }
-  virtual void  hscale         (float f) { m_hscale = CLAMP (f, 0, 1); invalidate(); }
-  virtual float valign         () const  { return m_valign; }
-  virtual void  valign         (float f) { m_valign = CLAMP (f, 0, 1); invalidate(); }
-  virtual float vscale         () const  { return m_vscale; }
-  virtual void  vscale         (float f) { m_vscale = CLAMP (f, 0, 1); invalidate(); }
   virtual uint  left_padding   () const  { return m_left_padding; }
   virtual void  left_padding   (uint c)  { m_left_padding = c; invalidate(); }
   virtual uint  right_padding  () const  { return m_right_padding; }

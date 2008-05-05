@@ -275,24 +275,33 @@ public: /* packing */
   struct PackInfo {
     uint left_attach, right_attach, bottom_attach, top_attach;
     uint left_spacing, right_spacing, bottom_spacing, top_spacing;
+    float halign, hscale, valign, vscale;
   };
-  const PackInfo&    pack_info       () const { return const_cast<Item*> (this)->pack_info (false); }
-  uint               left_attach     ()       { return pack_info (false).left_attach; }
-  void 		     left_attach     (uint c) { PackInfo &pa = pack_info (true); pa.left_attach = c; pa.right_attach = MAX (pa.left_attach + 1, pa.right_attach); repack(); }
-  uint 		     right_attach    ()       { return pack_info (false).right_attach; }
-  void 		     right_attach    (uint c) { PackInfo &pa = pack_info (true); pa.right_attach = MAX (1, c); pa.left_attach = MIN (pa.left_attach, pa.right_attach - 1); repack(); }
-  uint 		     bottom_attach   ()       { return pack_info (false).bottom_attach; }
-  void 		     bottom_attach   (uint c) { PackInfo &pa = pack_info (true); pa.bottom_attach = c; pa.top_attach = MAX (pa.top_attach, pa.bottom_attach + 1); repack(); }
-  uint 		     top_attach      ()       { return pack_info (false).top_attach; }
-  void 		     top_attach      (uint c) { PackInfo &pa = pack_info (true); pa.top_attach = MAX (1, c); pa.bottom_attach = MIN (pa.bottom_attach, pa.top_attach - 1); repack(); }
-  uint 		     left_spacing    ()       { return pack_info (false).left_spacing; }
-  void 		     left_spacing    (uint c) { pack_info (true).left_spacing = c; repack(); }
-  uint 		     right_spacing   ()       { return pack_info (false).right_spacing; }
-  void 		     right_spacing   (uint c) { pack_info (true).right_spacing = c; repack(); }
-  uint 		     bottom_spacing  ()       { return pack_info (false).bottom_spacing; }
-  void 		     bottom_spacing  (uint c) { pack_info (true).bottom_spacing = c; repack(); }
-  uint 		     top_spacing     ()       { return pack_info (false).top_spacing; }
-  void 		     top_spacing     (uint c) { pack_info (true).top_spacing = c; repack(); }
+  const PackInfo&    pack_info       () const  { return const_cast<Item*> (this)->pack_info (false); }
+  uint               left_attach     ()        { return pack_info (false).left_attach; }
+  void               left_attach     (uint a)  { PackInfo &pa = pack_info (true); pa.left_attach = a; pa.right_attach = MAX (pa.left_attach + 1, pa.right_attach); repack(); }
+  uint               right_attach    ()        { return pack_info (false).right_attach; }
+  void               right_attach    (uint a)  { PackInfo &pa = pack_info (true); pa.right_attach = MAX (1, a); pa.left_attach = MIN (pa.left_attach, pa.right_attach - 1); repack(); }
+  uint               bottom_attach   ()        { return pack_info (false).bottom_attach; }
+  void               bottom_attach   (uint a)  { PackInfo &pa = pack_info (true); pa.bottom_attach = a; pa.top_attach = MAX (pa.top_attach, pa.bottom_attach + 1); repack(); }
+  uint               top_attach      ()        { return pack_info (false).top_attach; }
+  void               top_attach      (uint a)  { PackInfo &pa = pack_info (true); pa.top_attach = MAX (1, a); pa.bottom_attach = MIN (pa.bottom_attach, pa.top_attach - 1); repack(); }
+  uint               left_spacing    ()        { return pack_info (false).left_spacing; }
+  void               left_spacing    (uint s)  { pack_info (true).left_spacing = s; repack(); }
+  uint               right_spacing   ()        { return pack_info (false).right_spacing; }
+  void               right_spacing   (uint s)  { pack_info (true).right_spacing = s; repack(); }
+  uint               bottom_spacing  ()        { return pack_info (false).bottom_spacing; }
+  void               bottom_spacing  (uint s)  { pack_info (true).bottom_spacing = s; repack(); }
+  uint               top_spacing     ()        { return pack_info (false).top_spacing; }
+  void               top_spacing     (uint s)  { pack_info (true).top_spacing = s; repack(); }
+  float              halign          ()        { return pack_info (false).halign; }
+  void               halign          (float f) { pack_info (true).halign = f; repack(); }
+  float              hscale          ()        { return pack_info (false).hscale; }
+  void               hscale          (float f) { pack_info (true).hscale = f; repack(); }
+  float              valign          ()        { return pack_info (false).valign; }
+  void               valign          (float f) { pack_info (true).valign = f; repack(); }
+  float              vscale          ()        { return pack_info (false).vscale; }
+  void               vscale          (float f) { pack_info (true).vscale = f; repack(); }
 private:
   void               repack          (void);
   PackInfo&          pack_info       (bool create);

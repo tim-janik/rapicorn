@@ -25,14 +25,6 @@ class Alignment : public virtual Container {
 protected:
   virtual const PropertyList&   list_properties ();
 public:
-  virtual float halign          () const  = 0;
-  virtual void  halign          (float f) = 0;
-  virtual float hscale          () const  = 0;
-  virtual void  hscale          (float f) = 0;
-  virtual float valign          () const  = 0;
-  virtual void  valign          (float f) = 0;
-  virtual float vscale          () const  = 0;
-  virtual void  vscale          (float f) = 0;
   virtual uint  left_padding    () const  = 0;
   virtual void  left_padding    (uint c)  = 0;
   virtual uint  right_padding   () const  = 0;
