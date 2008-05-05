@@ -15,9 +15,10 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "testitem.hh"
-#include "itemimpl.hh"
+#include "containerimpl.hh"
 #include "painter.hh"
 #include "root.hh"
+#include <errno.h>
 
 namespace Rapicorn {
 
@@ -166,5 +167,71 @@ protected:
   }
 };
 static const ItemFactory<TestItemImpl> test_item_factory ("Rapicorn::Factory::TestItem");
+
+const PropertyList&
+TestBox::list_properties()
+{
+  static Property *properties[] = {
+    MakeProperty (TestBox, snapshot_file, _("Snapshot File Name"), _("PNG image file name to write snapshot to"), "rw"),
+  };
+  static const PropertyList property_list (properties, Container::list_properties());
+  return property_list;
+}
+
+class TestBoxImpl : public virtual SingleContainerImpl, public virtual TestBox {
+  String m_snapshot_file;
+  uint   m_handler_id;
+protected:
+  virtual String snapshot_file () const                 { return m_snapshot_file; }
+  virtual void   snapshot_file (const String &val)      { m_snapshot_file = val; invalidate(); }
+  ~TestBoxImpl()
+  {
+    if (m_handler_id)
+      {
+        remove_exec (m_handler_id);
+        m_handler_id = 0;
+      }
+  }
+  void
+  make_snapshot ()
+  {
+    Root *ritem = get_root();
+    if (m_snapshot_file != "" && ritem)
+      {
+        const IRect area = allocation();
+        Plane *plane = new Plane (area.x, area.y, area.width, area.height);
+        ritem->render (*plane);
+        bool saved = plane->save_png (m_snapshot_file, *plane, "TestBox snapshot");
+        String err = saved ? "ok" : string_from_errno (errno);
+        delete plane;
+        printerr ("%s: wrote %s: %s\n", name().c_str(), m_snapshot_file.c_str(), err.c_str());
+      }
+    if (m_handler_id)
+      {
+        remove_exec (m_handler_id);
+        m_handler_id = 0;
+      }
+  }
+public:
+  explicit TestBoxImpl()
+  {}
+  void
+  render (Display &display)
+  {
+    SingleContainerImpl::render (display);
+    if (!m_handler_id)
+      {
+        Root *ritem = get_root();
+        if (ritem)
+          {
+            EventLoop *loop = ritem->get_loop();
+            if (loop)
+              m_handler_id = loop->exec_now (slot (*this, &TestBoxImpl::make_snapshot));
+          }
+      }
+  }
+};
+static const ItemFactory<TestBoxImpl> test_box_factory ("Rapicorn::Factory::TestBox");
+
 
 } // Rapicorn

@@ -14,13 +14,13 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include <rapicorn/item.hh>
+#include <rapicorn/container.hh>
 
 namespace Rapicorn {
 
 class TestItem : public virtual Item {
 protected:
-  explicit      TestItem        ();
+  explicit      TestItem         ();
 public:
   virtual double epsilon         () const = 0;
   virtual void   epsilon         (double val) = 0;
@@ -46,6 +46,13 @@ public:
   const PropertyList&                               list_properties ();
   Signal<TestItem, void (const String &assertion)>  sig_assertion_ok;
   Signal<TestItem, void ()>                         sig_assertions_passed;
+};
+
+class TestBox : public virtual Container {
+public:
+  virtual String      snapshot_file   () const = 0;
+  virtual void        snapshot_file   (const String &val) = 0;
+  const PropertyList& list_properties ();
 };
 
 } // Rapicorn
