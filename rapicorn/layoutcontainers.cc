@@ -122,8 +122,8 @@ class HBoxImpl : public virtual HBox, public virtual TableImpl {
       col--;
     if (is_col_used (col))
       insert_cols (col, 1);     // should never be triggered
-    item.left_attach (col);
-    item.right_attach (col + 1);
+    item.hposition (col);
+    item.hspan (1);
     TableImpl::add_child (item); /* ref, sink, set_parent, insert */
   }
 protected:
@@ -160,8 +160,8 @@ class VBoxImpl : public virtual VBox, public virtual TableImpl {
     uint row = 0;
     if (is_row_used (row))
       insert_rows (row, 1);
-    item.bottom_attach (row);
-    item.top_attach (row + 1);
+    item.vposition (row);
+    item.vspan (1);
     TableImpl::add_child (item); /* ref, sink, set_parent, insert */
   }
 protected:

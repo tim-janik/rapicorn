@@ -22,14 +22,14 @@
   </def:ScrollPort>
   <def:ScrollArea inherit="Rapicorn::Factory::ScrollArea" child-container="ScrollPort">
     <Table>
-      <Alignment hexpand="0" vexpand="0" bottom-attach="1" left-attach="0" right-attach="1" top-attach="2" width="0" height="0"
+      <Alignment hexpand="0" vexpand="0" hposition="0" hspan="1" vposition="1" vspan="1" width="0" height="0"
 	left-padding="2" right-padding="3" bottom-padding="2" top-padding="2">
 	<Frame frame-type="in">
 	  <ScrollPort />
 	</Frame>
       </Alignment>
-      <HSlider hexpand="1" adjustment-source="ancestry-horizontal" bottom-attach="0" />
-      <VSlider vexpand="1" adjustment-source="ancestry-vertical"   bottom-attach="1" left-attach="1" height="200" />
+      <HSlider hexpand="1" adjustment-source="ancestry-horizontal" vposition="0" />
+      <VSlider vexpand="1" adjustment-source="ancestry-vertical"   vposition="1" hposition="1" height="200" />
     </Table>
   </def:ScrollArea>
 

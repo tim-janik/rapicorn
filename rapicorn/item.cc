@@ -584,10 +584,10 @@ Item::list_properties ()
     MakeProperty (Item, hshrink,   _("Horizontal Shrink"), _("Whether the item may be shrunken horizontally"), "rw"),
     MakeProperty (Item, vshrink,   _("Vertical Shrink"),   _("Whether the item may be shrunken vertically"), "rw"),
     /* packing */
-    MakeProperty (Item, left_attach,    _("Left Attach"),    _("Column index to attach the item's left side to"), 0u, 99999u, 5u, "Prw"),
-    MakeProperty (Item, right_attach,   _("Right Attach"),   _("Column index to attach the item's right side to"), 1u, 100000u, 5u, "Prw"),
-    MakeProperty (Item, bottom_attach,  _("Bottom Attach"),  _("Row index to attach the item's bottom side to"), 0u, 99999u, 5u, "Prw"),
-    MakeProperty (Item, top_attach,     _("Top Attach"),     _("Row index to attach the item's top side to"), 1u, 100000u, 5u, "Prw"),
+    MakeProperty (Item, hposition, _("Horizontal Position"), _("Horizontal layout position for the item"), 0u, 99999u, 5u, "Prw"),
+    MakeProperty (Item, hspan,     _("Horizontal Span"),     _("Horizontal span for item layout"), 1u, 100000u, 5u, "Prw"),
+    MakeProperty (Item, vposition, _("Vertical Position"),   _("Vertical layout position for the item"), 0u, 99999u, 5u, "Prw"),
+    MakeProperty (Item, vspan,     _("Vertical Span"),       _("Vertical span for item layout"), 1u, 100000u, 5u, "Prw"),
     MakeProperty (Item, left_spacing,   _("Left Spacing"),   _("Amount of spacing to add at the item's left side"), 0u, 65535u, 3u, "Prw"),
     MakeProperty (Item, right_spacing,  _("Right Spacing"),  _("Amount of spacing to add at the item's right side"), 0u, 65535u, 3u, "Prw"),
     MakeProperty (Item, bottom_spacing, _("Bottom Spacing"), _("Amount of spacing to add at the item's bottom side"), 0u, 65535u, 3u, "Prw"),
@@ -1043,7 +1043,7 @@ Item::PackInfo&
 Item::pack_info (bool create)
 {
   static const PackInfo pack_info_defaults = {
-    0,   1,   0, 1,     /* *_attach */
+    0,   1,   0, 1,     /* hposition, hspan, vposition, vspan */
     0,   0,   0, 0,     /* *_spacing */
     0.5, 1, 0.5, 1,     /* align/scale */
   };

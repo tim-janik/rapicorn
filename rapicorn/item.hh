@@ -267,19 +267,19 @@ public:
                                                  Adjustment         **adj4 = NULL);
 public: /* packing */
   struct PackInfo {
-    uint left_attach, right_attach, bottom_attach, top_attach;
+    double hposition, hspan, vposition, vspan;
     uint left_spacing, right_spacing, bottom_spacing, top_spacing;
     float halign, hscale, valign, vscale;
   };
-  const PackInfo&    pack_info       () const  { return const_cast<Item*> (this)->pack_info (false); }
-  uint               left_attach     ()        { return pack_info (false).left_attach; }
-  void               left_attach     (uint a)  { PackInfo &pa = pack_info (true); pa.left_attach = a; pa.right_attach = MAX (pa.left_attach + 1, pa.right_attach); repack(); }
-  uint               right_attach    ()        { return pack_info (false).right_attach; }
-  void               right_attach    (uint a)  { PackInfo &pa = pack_info (true); pa.right_attach = MAX (1, a); pa.left_attach = MIN (pa.left_attach, pa.right_attach - 1); repack(); }
-  uint               bottom_attach   ()        { return pack_info (false).bottom_attach; }
-  void               bottom_attach   (uint a)  { PackInfo &pa = pack_info (true); pa.bottom_attach = a; pa.top_attach = MAX (pa.top_attach, pa.bottom_attach + 1); repack(); }
-  uint               top_attach      ()        { return pack_info (false).top_attach; }
-  void               top_attach      (uint a)  { PackInfo &pa = pack_info (true); pa.top_attach = MAX (1, a); pa.bottom_attach = MIN (pa.bottom_attach, pa.top_attach - 1); repack(); }
+  const PackInfo&    pack_info       () const   { return const_cast<Item*> (this)->pack_info (false); }
+  double             hposition       ()         { return pack_info (false).hposition; }
+  void               hposition       (double d) { PackInfo &pa = pack_info (true); pa.hposition = d; repack(); }
+  double             hspan           ()         { return pack_info (false).hspan; }
+  void               hspan           (double d) { PackInfo &pa = pack_info (true); pa.hspan = MAX (1, d); repack(); }
+  double             vposition       ()         { return pack_info (false).vposition; }
+  void               vposition       (double d) { PackInfo &pa = pack_info (true); pa.vposition = d; repack(); }
+  double             vspan           ()         { return pack_info (false).vspan; }
+  void               vspan           (double d) { PackInfo &pa = pack_info (true); pa.vspan = MAX (1, d); repack(); }
   uint               left_spacing    ()        { return pack_info (false).left_spacing; }
   void               left_spacing    (uint s)  { pack_info (true).left_spacing = s; repack(); }
   uint               right_spacing   ()        { return pack_info (false).right_spacing; }
