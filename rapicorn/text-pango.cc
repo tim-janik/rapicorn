@@ -1080,7 +1080,7 @@ protected:
     int xspan = xbound - xmin;
     for (int iy = ymin; iy < ybound; iy++)
       {
-        uint32 *pp = plane.peek (xmin - plane.xstart(), iy - plane.ystart()), *p = pp;
+        uint32 *pp = plane.poke_span (xmin, iy, xspan), *p = pp;
         while (p < pp + xspan)
           *p++ = fg;
       }
@@ -1349,7 +1349,7 @@ _rapicorn_pango_renderer_draw_glyphs (PangoRenderer     *renderer,
   int xspan = xbound - xmin;
   for (int iy = ymin; iy < ybound; iy++)
     {
-      uint32 *pp = plane.peek (xmin - plane.xstart(), iy - plane.ystart()), *p = pp;
+      uint32 *pp = plane.poke_span (xmin, iy, xspan), *p = pp;
       uint8  *ba = &bitmap.buffer[(bitmap.rows - 1 - iy + self->y) * bitmap.pitch + xmin - self->x];
       while (p < pp + xspan)
         {

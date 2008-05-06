@@ -678,12 +678,12 @@ class Plane : public virtual Pixbuf {
     int m_x, m_y, m_width, m_height;
     Initializer (int x, int y, int width, int height) : m_x (x), m_y (y), m_width (width), m_height (height) {}
   };
+  uint32*       peek       (uint x, uint y)       { return const_cast<uint32*> (row (y) + x); }
+  const uint32* peek       (uint x, uint y) const { return row (y) + x; }
 public:
-  uint32*       peek (uint x, uint y)       { return const_cast<uint32*> (row (y) + x); }
-  const uint32* peek (uint x, uint y) const { return row (y) + x; }
-  explicit      Plane (int x, int y, uint width, uint height, Color c = 0x00000000);
-  explicit      Plane (const Initializer &initializer);
-  virtual       ~Plane();
+  explicit      Plane      (int x, int y, uint width, uint height, Color c = 0x00000000);
+  explicit      Plane      (const Initializer &initializer);
+  virtual       ~Plane     ();
   int           pixstride  () const { return m_rowstride * 4; }
   Rect          rect       () const { return Rect (Point (m_x, m_y), width(), height()); }
   Point         origin     () const { return Point (m_x, m_y); }

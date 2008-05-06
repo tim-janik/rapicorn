@@ -26,11 +26,11 @@ plane_fill_test()
 {
   Plane plane1 (0, 0, 1024, 1024);
   plane1.fill (0x80808080);     // premul: 0x80404040
-  TASSERT_CMP (0x80404040, ==, *plane1.peek (0, 0));
-  TASSERT_CMP (0x80404040, ==, *plane1.peek (1023, 0));
-  TASSERT_CMP (0x80404040, ==, *plane1.peek (0, 1023));
-  TASSERT_CMP (0x80404040, ==, *plane1.peek (1023, 1023));
-  TASSERT_CMP (0x80404040, ==, *plane1.peek (512, 512));
+  TASSERT_CMP (0x80404040, ==, *plane1.poke_span (0, 0, 1));
+  TASSERT_CMP (0x80404040, ==, *plane1.poke_span (1023, 0, 1));
+  TASSERT_CMP (0x80404040, ==, *plane1.poke_span (0, 1023, 1));
+  TASSERT_CMP (0x80404040, ==, *plane1.poke_span (1023, 1023, 1));
+  TASSERT_CMP (0x80404040, ==, *plane1.poke_span (512, 512, 1));
 }
 
 static void
@@ -41,12 +41,12 @@ plane_gradient_test()
   painter.draw_gradient_rect (0, 0, 1024, 1024,
                               200, 300, Color (0x80406080),     // premul: 0x80203040
                               600, 700, Color (0xff202020));    // premul: 0xff202020
-  TASSERT_CMPx (0x80203040, ==, *plane1.peek (0, 0));
-  TASSERT_CMPx (0xff202020, ==, *plane1.peek (1023, 1023));
-  TASSERT_CMPx (0x80203040, ==, *plane1.peek (0, 200 + 1));
-  TASSERT_CMPx (0xff202020, ==, *plane1.peek (1023, 700 - 1));
-  TASSERT_CMPx (0x80203040, <,  *plane1.peek (400, 500));
-  TASSERT_CMPx (0xff202020, >,  *plane1.peek (400, 500));
+  TASSERT_CMPx (0x80203040, ==, *plane1.poke_span (0, 0, 1));
+  TASSERT_CMPx (0xff202020, ==, *plane1.poke_span (1023, 1023, 1));
+  TASSERT_CMPx (0x80203040, ==, *plane1.poke_span (0, 200 + 1, 1));
+  TASSERT_CMPx (0xff202020, ==, *plane1.poke_span (1023, 700 - 1, 1));
+  TASSERT_CMPx (0x80203040, <,  *plane1.poke_span (400, 500, 1));
+  TASSERT_CMPx (0xff202020, >,  *plane1.poke_span (400, 500, 1));
 }
 
 static void
