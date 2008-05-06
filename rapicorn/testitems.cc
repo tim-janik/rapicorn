@@ -14,7 +14,7 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include "testitem.hh"
+#include "testitems.hh"
 #include "containerimpl.hh"
 #include "painter.hh"
 #include "root.hh"

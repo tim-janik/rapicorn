@@ -15,7 +15,7 @@ rapicorn_public_headers = $(strip 	\
 	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
 	adjustment.hh	image.hh	paintitems.hh	slider.hh	paintcontainers.hh	\
 	buttons.hh	factory.hh	evaluator.hh	scrollitems.hh	layoutcontainers.hh	\
-	text-editor.hh	text-pango.hh	testitem.hh	\
+	text-editor.hh	text-pango.hh	testitems.hh	\
 )
 rapicorn_impl_headers = $(strip 	\
 	arrangementimpl.hh		\
@@ -36,7 +36,7 @@ rapicorn_cc_sources = $(strip 		\
 	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\
 	adjustment.cc	image.cc	paintitems.cc	slider.cc	paintcontainers.cc	\
 	buttons.cc	factory.cc	evaluator.cc	scrollitems.cc	layoutcontainers.cc	\
-	text-editor.cc	text-pango.cc	testitem.cc	\
+	text-editor.cc	text-pango.cc	testitems.cc	\
 )
 rapicorn_private_files = $(strip 	\
 	blitfuncs.hh			\

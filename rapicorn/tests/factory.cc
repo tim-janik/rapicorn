@@ -20,7 +20,7 @@
  */
 #include <rapicorn-core/rapicorntests.h>
 #include <rapicorn/rapicorn.hh>
-#include <rapicorn/testitem.hh>
+#include <rapicorn/testitems.hh>
 
 
 /* --- RapicornTester --- */
