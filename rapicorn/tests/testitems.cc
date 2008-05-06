@@ -63,33 +63,19 @@ test_cxx_gui ()
   TOK();
   window.root().add (titem);
   TOK();
-  /* perform all ops neccessary before showing */
-  while (RapicornTester::loops_pending())
-    RapicornTester::loops_dispatch (false);
+  /* close window (and exit main loop) after first expose */
+  window.root().enable_auto_close();
+  TOK();
+  /* verify and assert at least one TestItem rendering */
   uint old_seen_test = TestItem::seen_test_items();
   TOK();
+  /* show onscreen and handle events like expose */
   window.show();
+  Application::execute_loops();
   TOK();
-  /* perform all ops neccessary immediately after showing */
-  while (RapicornTester::loops_pending())
-    RapicornTester::loops_dispatch (false);
-  TOK();
-  printerr ("(auto-sleep)");
-  sleep (1); // FIXME: work around lack of show_now()
-  TOK();
-  /* perform all unhandled ops for display (expose etc.) */
-  while (RapicornTester::loops_pending())
-    RapicornTester::loops_dispatch (false);
-  TOK();
-  /* checks and cleanups */
+  /* assert TestItem rendering */
   uint seen_test = TestItem::seen_test_items();
   TASSERT (seen_test > old_seen_test); // may fail due to missing exposes (locked screens) needs PNG etc. backends
-  window.close();
-  TOK();
-  /* perform pending jobs after closing */
-  while (RapicornTester::loops_pending())
-    RapicornTester::loops_dispatch (false);
-  TOK();
   TDONE();
 }
 
@@ -108,26 +94,17 @@ test_test_item ()
   TOK();
   while (RapicornTester::loops_pending())
     RapicornTester::loops_dispatch (false);
+  /* close window (and exit main loop) after first expose */
+  root.enable_auto_close();
+  /* verify and assert at least one TestItem rendering */
   uint old_seen_test = TestItem::seen_test_items();
   window.show();
-  TOK();
-  while (RapicornTester::loops_pending())
-    RapicornTester::loops_dispatch (false);
-  TOK();
-  printerr ("(auto-sleep)");
-  sleep (1); // FIXME: work around lack of show_now()
-  TOK();
-  while (RapicornTester::loops_pending())
-    RapicornTester::loops_dispatch (false);
-  printerr ("(auto-sleep)");
-  sleep (1); // FIXME: work around lack of show_now()
-  TOK();
-  while (RapicornTester::loops_pending())
-    RapicornTester::loops_dispatch (false);
-  TOK();
+  Application::execute_loops();
   uint seen_test = TestItem::seen_test_items();
   TASSERT (seen_test > old_seen_test);
+  /* test item rendering also executed various assertions */
   TDONE();
+  return;
 }
 
 extern "C" int
