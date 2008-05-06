@@ -129,8 +129,8 @@ class HBoxImpl : public virtual HBox, public virtual TableImpl {
 protected:
   virtual bool  homogeneous     () const                        { return TableImpl::homogeneous(); }
   virtual void  homogeneous     (bool chomogeneous_items)       { TableImpl::homogeneous (chomogeneous_items); }
-  virtual uint  spacing  ()                                     { return column_spacing(); }
-  virtual void  spacing  (uint cspacing)                        { column_spacing (cspacing); }
+  virtual uint  spacing  ()                                     { return col_spacing(); }
+  virtual void  spacing  (uint cspacing)                        { col_spacing (cspacing); }
 public:
   explicit
   HBoxImpl()

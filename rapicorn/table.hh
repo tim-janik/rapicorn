@@ -27,8 +27,8 @@ protected:
 public:
   virtual bool  homogeneous     () const = 0;
   virtual void  homogeneous     (bool chomogeneous_items) = 0;
-  virtual uint  column_spacing  () = 0;
-  virtual void  column_spacing  (uint cspacing) = 0;
+  virtual uint  col_spacing     () = 0;
+  virtual void  col_spacing     (uint cspacing) = 0;
   virtual uint  row_spacing     () = 0;
   virtual void  row_spacing     (uint rspacing) = 0;
   virtual void  resize          (uint n_cols, uint n_rows) = 0;

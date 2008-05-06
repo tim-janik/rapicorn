@@ -38,7 +38,7 @@ class TableImpl : public virtual Table, public virtual MultiContainerImpl {
   };
   vector<RowCol>        rows, cols;
   uint16                default_row_spacing;
-  uint16                default_column_spacing;
+  uint16                default_col_spacing;
   uint                  homogeneous_items : 1;
   void                  size_request_init       ();
   void                  size_request_pass1      ();
@@ -65,8 +65,8 @@ public:
 public:
   virtual bool          homogeneous     () const                        { return homogeneous_items; }
   virtual void          homogeneous     (bool chomogeneous_items)       { homogeneous_items = chomogeneous_items; invalidate(); }
-  virtual uint          column_spacing  ()                              { return default_column_spacing; }
-  virtual void          column_spacing  (uint cspacing);
+  virtual uint          col_spacing     ()                              { return default_col_spacing; }
+  virtual void          col_spacing     (uint cspacing);
   virtual uint          row_spacing     ()                              { return default_row_spacing; }
   virtual void          row_spacing     (uint rspacing);
 private:

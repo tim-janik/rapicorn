@@ -52,7 +52,7 @@ top_attach (const Item::PackInfo &pi)
 
 TableImpl::TableImpl() :
   default_row_spacing (0),
-  default_column_spacing (0),
+  default_col_spacing (0),
   homogeneous_items (false)
 {
   resize (1, 1);
@@ -113,7 +113,7 @@ TableImpl::resize (uint n_cols, uint n_rows, bool force)
       uint i = cols.size();
       cols.resize (n_cols);
       for (; i < cols.size(); i++)
-        cols[i].spacing = default_column_spacing;
+        cols[i].spacing = default_col_spacing;
       need_invalidate = true;
     }
   if (need_invalidate)
@@ -153,11 +153,11 @@ TableImpl::insert_cols (uint first_col, uint n_cols)
 }
 
 void
-TableImpl::column_spacing (uint cspacing)
+TableImpl::col_spacing (uint cspacing)
 {
-  default_column_spacing = cspacing;
+  default_col_spacing = cspacing;
   for (uint col = 0; col < cols.size(); col++)
-    cols[col].spacing = default_column_spacing;
+    cols[col].spacing = default_col_spacing;
   invalidate();
 }
 
@@ -212,9 +212,9 @@ const PropertyList&
 Table::list_properties()
 {
   static Property *properties[] = {
-    MakeProperty (Table, homogeneous,    _("Homogeneous"), _("Whether all children get the same size"), "rw"),
-    MakeProperty (Table, column_spacing, _("Column Spacing"), _("The amount of space between two consecutive columns"), 0, 65535, 10, "rw"),
-    MakeProperty (Table, row_spacing,    _("Row Spacing"), _("The amount of space between two consecutive rows"), 0, 65535, 10, "rw"),
+    MakeProperty (Table, homogeneous, _("Homogeneous"), _("Whether all children get the same size"), "rw"),
+    MakeProperty (Table, col_spacing, _("Column Spacing"), _("The amount of space between two consecutive columns"), 0, 65535, 10, "rw"),
+    MakeProperty (Table, row_spacing, _("Row Spacing"), _("The amount of space between two consecutive rows"), 0, 65535, 10, "rw"),
   };
   static const PropertyList property_list (properties, Container::list_properties());
   return property_list;
