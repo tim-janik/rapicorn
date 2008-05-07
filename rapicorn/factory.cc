@@ -218,7 +218,7 @@ public:
         String qualified_ident = fdomain.domain_name + "::" + ident;
         GadgetDef *dgadget = fdomain.definitions[ident];
         if (dgadget)
-          error.set (INVALID_CONTENT, String() + "gadget \"" + qualified_ident + "\" already defined (at " + dgadget->location() + ")");
+          error.set (INVALID_CONTENT, String() + "widget \"" + qualified_ident + "\" already defined (at " + dgadget->location() + ")");
         else
           {
             VariableMap vmap;
@@ -229,7 +229,7 @@ public:
                 String canonified_attribute = canonify_attribute (attribute_names[i]);
                 if (canonified_attribute == "name")
                   error.set (INVALID_CONTENT,
-                             String() + "invalid attribute for inherited gadget: " +
+                             String() + "invalid attribute for inherited widget: " +
                              attribute_names[i] + "=\"" + attribute_values[i] + "\"");
                 else if (canonified_attribute == "child_container")
                   child_container_name = attribute_values[i];
@@ -241,7 +241,7 @@ public:
             if (error.set())
               ;
             else if (inherit[0] == 0)
-              error.set (INVALID_CONTENT, String ("missing ancestor in gadget definition: ") + qualified_ident);
+              error.set (INVALID_CONTENT, String ("missing ancestor in widget definition: ") + qualified_ident);
             else
               {
                 int line_number, char_number;
@@ -302,7 +302,7 @@ public:
             else if (canonified_attribute == "child_container" ||
                      canonified_attribute == "inherit")
               error.set (INVALID_CONTENT,
-                         String() + "invalid attribute for gadget construction: " +
+                         String() + "invalid attribute for widget construction: " +
                          attribute_names[i] + "=\"" + attribute_values[i] + "\"");
             else
               vmap[canonified_attribute] = attribute_values[i];
@@ -490,7 +490,7 @@ FactorySingleton::construct_gadget (const String          &gadget_identifier,
 {
   GadgetDef *dgadget = lookup_gadget (gadget_identifier);
   if (!dgadget)
-    error ("Rapicorn::Factory: unknown gadget type: " + gadget_identifier);
+    error ("Rapicorn::Factory: unknown widget type: " + gadget_identifier);
   VariableMap args;
   Evaluator::populate_map (args, arguments);
   Evaluator env;
@@ -552,7 +552,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
     {
       real_dgadget = lookup_gadget (bgadget->ancestor);
       if (!real_dgadget)
-        error ("%s: invalid or unknown gadget type: %s",
+        error ("%s: invalid or unknown widget type: %s",
                bgadget->location().c_str(), bgadget->ancestor.c_str());
     }
   VariableMap call_args (const_call_arguments);
@@ -589,7 +589,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
   }
   if (!itemp)
     error ("%s: failed to inherit: %s", bgadget->definition().c_str(),
-           reason.size() ? reason.c_str() : String ("unknown gadget type: " + bgadget->ancestor).c_str());
+           reason.size() ? reason.c_str() : String ("unknown widget type: " + bgadget->ancestor).c_str());
   Item &item = *itemp;
   /* apply arguments */
   try {
@@ -673,7 +673,7 @@ FactorySingleton::call_gadget_children (const BaseGadget   *bgadget,
     diag ("%d) %s", nth++, (*cw)->ident.c_str());
 #endif
   if (!container)
-    error ("parent gadget fails to implement Container interface: "+ bgadget->ident);
+    error ("parent widget fails to implement Container interface: "+ bgadget->ident);
   /* create children */
   for (Walker<ChildGadget*const> cw = walker (bgadget->children); cw.has_next(); cw++)
     {
@@ -771,7 +771,7 @@ Factory::create_container (const String           &gadget_identifier,
   Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments, &gadget_definition);
   Container *container = dynamic_cast<Container*> (&item);
   if (!container)
-    error ("%s: gadget construction yields non container: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
+    error ("%s: widget construction yields non container: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
   return *container; // floating
 }
 
@@ -784,7 +784,7 @@ Factory::create_window (const String           &gadget_identifier,
   Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments, &gadget_definition);
   Root *root = dynamic_cast<Root*> (&item);
   if (!root)
-    error ("%s: gadget construction yields non window: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
+    error ("%s: widget construction yields non window: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
   Window win = root->window();
   /* win does ref_sink(); */
   return win;

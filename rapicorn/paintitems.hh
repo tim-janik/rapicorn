@@ -14,8 +14,8 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef __RAPICORN_PAINT_GADGETS_HH__
-#define __RAPICORN_PAINT_GADGETS_HH__
+#ifndef __RAPICORN_PAINT_ITEMS_HH__
+#define __RAPICORN_PAINT_ITEMS_HH__
 
 #include <rapicorn/item.hh>
 
@@ -67,4 +67,4 @@ public:
 
 } // Rapicorn
 
-#endif  /* __RAPICORN_PAINT_GADGETS_HH__ */
+#endif  /* __RAPICORN_PAINT_ITEMS_HH__ */
