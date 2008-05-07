@@ -596,6 +596,9 @@ Item::list_properties ()
     MakeProperty (Item, hscale, _("Horizontal Scale"),     _("Fractional horizontal expansion within extra space, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "Prw"),
     MakeProperty (Item, valign, _("Vertical Alignment"),   _("Vertical position within extra space when unexpanded, 0=bottom, 1=top"), 0, 1, 0.5, "Prw"),
     MakeProperty (Item, vscale, _("Vertical Scale"),       _("Fractional vertical expansion within extra space, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "Prw"),
+    MakeProperty (Item, position, _("Position"),          _("Horizontal/vertical position of the item as point coordinate"), Point (-MAXDOUBLE, -MAXDOUBLE), Point (+MAXDOUBLE, +MAXDOUBLE), "Prw"),
+    MakeProperty (Item, hanchor,  _("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), 0, 1, 0.5, "Prw"),
+    MakeProperty (Item, vanchor,  _("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), 0, 1, 0.5, "Prw"),
   };
   static const PropertyList property_list (properties);
   return property_list;
@@ -1044,8 +1047,8 @@ Item::pack_info (bool create)
 {
   static const PackInfo pack_info_defaults = {
     0,   1,   0, 1,     /* hposition, hspan, vposition, vspan */
-    0,   0,   0, 0,     /* *_spacing */
-    0.5, 1, 0.5, 1,     /* align/scale */
+    0,   0,   0, 0,     /* left_spacing, right_spacing, bottom_spacing, top_spacing */
+    0.5, 1, 0.5, 1,     /* halign, hscale, valign, vscale */
   };
   static DataKey<PackInfo*> pack_info_key;
   PackInfo *pi = get_data (&pack_info_key);
@@ -1060,6 +1063,22 @@ Item::pack_info (bool create)
         pi = const_cast<PackInfo*> (&pack_info_defaults);
     }
   return *pi;
+}
+
+Point
+Item::position () // mirrors (hposition,vposition)
+{
+  const PackInfo &pi = pack_info();
+  return Point (pi.hposition, pi.vposition);
+}
+
+void
+Item::position (Point point) // mirrors (hposition,vposition)
+{
+  PackInfo &pa = pack_info (true);
+  pa.hposition = point.x;
+  pa.vposition = point.y;
+  repack();
 }
 
 void

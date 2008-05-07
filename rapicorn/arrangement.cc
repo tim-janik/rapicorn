@@ -31,72 +31,6 @@ Arrangement::list_properties()
   return property_list;
 }
 
-ArrangementImpl::Location::Location() :
-  pos_x (0), pos_y (0),
-  pos_hanchor (0.5), pos_vanchor (0.5)
-{}
-
-DataKey<ArrangementImpl::Location> ArrangementImpl::child_location_key;
-
-ArrangementImpl::Location
-ArrangementImpl::child_location (Item &child)
-{
-  Location loc = child.get_data (&child_location_key);
-  return loc;
-}
-
-void
-ArrangementImpl::child_location (Item     &child,
-                                 Location  loc)
-{
-  child.set_data (&child_location_key, loc);
-}
-
-ArrangementImpl::ArrangementPacker::~ArrangementPacker()
-{}
-
-ArrangementImpl::ArrangementPacker::ArrangementPacker (Item &citem) :
-  item (citem)
-{}
-
-void
-ArrangementImpl::ArrangementPacker::update () /* fetch real pack properties */
-{
-  if (dynamic_cast<Arrangement*> (item.parent()))
-    loc = child_location (item);
-}
-
-void
-ArrangementImpl::ArrangementPacker::commit ()/* assign pack properties */
-{
-  ArrangementImpl *arrangement = dynamic_cast<ArrangementImpl*> (item.parent());
-  if (arrangement)
-    {
-      child_location (item, loc);
-      item.invalidate();
-    }
-}
-
-const PropertyList&
-ArrangementImpl::ArrangementPacker::list_properties()
-{
-  static Property *properties[] = {
-    MakeProperty (ArrangementPacker, position, _("Position"),          _("Position coordinate of the child's anchor"), Point (-MAXDOUBLE, -MAXDOUBLE), Point (+MAXDOUBLE, +MAXDOUBLE), "rw"),
-    MakeProperty (ArrangementPacker, hanchor,  _("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), 0, 1, 0.5, "rw"),
-    MakeProperty (ArrangementPacker, vanchor,  _("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), 0, 1, 0.5, "rw"),
-  };
-  static const PropertyList property_list (properties);
-  return property_list;
-}
-
-Container::Packer
-ArrangementImpl::create_packer (Item &item)
-{
-  if (item.parent() != this)
-    WARNING ("foreign child: %s", item.name().c_str());
-  return Packer (new ArrangementPacker (item));
-}
-
 ArrangementImpl::ArrangementImpl() :
   m_origin (0, 0),
   m_origin_hanchor (0.5),
@@ -108,19 +42,19 @@ ArrangementImpl::~ArrangementImpl()
 {}
 
 Allocation
-ArrangementImpl::local_child_allocation (Item &child,
+ArrangementImpl::local_child_allocation (Item  &child,
                                          double width,
                                          double height)
 {
   Requisition requisition = child.requisition();
-  Location location = child_location (child);
+  const PackInfo &pi = child.pack_info();
   Allocation area;
   area.width = iceil (requisition.width);
   area.height = iceil (requisition.height);
   double origin_x = width * m_origin_hanchor - m_origin.x;
   double origin_y = height * m_origin_vanchor - m_origin.y;
-  area.x = iround (origin_x + location.pos_x - location.pos_hanchor * area.width);
-  area.y = iround (origin_y + location.pos_y - location.pos_vanchor * area.height);
+  area.x = iround (origin_x + pi.hposition - pi.halign * area.width);
+  area.y = iround (origin_y + pi.vposition - pi.valign * area.height);
   if (width > 0 && child.hexpand())
     {
       area.x = 0;

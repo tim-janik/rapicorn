@@ -40,38 +40,30 @@ public:
 protected:
   virtual void                  size_request            (Requisition &requisition);
   virtual void                  size_allocate           (Allocation area);
-  /* child location */
-  struct Location {
-    double pos_x, pos_y;
-    float  pos_hanchor;
-    float  pos_vanchor;
-    explicit                    Location                ();
-  };
-  static Location               child_location          (Item &child);
-  static void                   child_location          (Item &child, Location loc);
-  static DataKey<Location>      child_location_key;
   Allocation                    local_child_allocation  (Item  &child,
                                                          double width,
                                                          double height);
   /* pack properties */
   class ArrangementPacker : public virtual ChildPacker {
     Item     &item;
-    Location loc;
   public:
-    explicit                    ArrangementPacker       (Item &citem);
-    virtual                     ~ArrangementPacker      ();
-    virtual
-    const PropertyList&         list_properties         ();
-    virtual void                update                  (); /* fetch real pack properties */
-    virtual void                commit                  (); /* assign pack properties */
-    Point                       position                ()        { return Point (loc.pos_x, loc.pos_y); }
-    void                        position                (Point p) { loc.pos_x = p.x; loc.pos_y = p.y; }
-    float                       hanchor                 () const { return loc.pos_hanchor; }
-    void 		        hanchor                 (float align) { loc.pos_hanchor = CLAMP (align, 0, 1); }
-    float                       vanchor                 () const { return loc.pos_vanchor; }
-    void 		        vanchor                 (float align) { loc.pos_vanchor = CLAMP (align, 0, 1); }
+    explicit                    ArrangementPacker       (Item &citem) : item (citem) {}
+    virtual const PropertyList&
+    list_properties ()
+    {
+      static Property *properties[] = {};
+      static const PropertyList property_list (properties);
+      return property_list;
+    }
+    virtual void                update                  () {}
+    virtual void                commit                  () {}
   };
-  virtual Packer                create_packer           (Item &item);
+  virtual Packer                create_packer           (Item &item)
+  {
+    if (item.parent() != this)
+      warning ("foreign child: %s", item.name().c_str());
+    return Packer (new ArrangementPacker (item));
+  }
 };
 
 } // Rapicorn
