@@ -299,16 +299,14 @@ Container::child_container ()
 }
 
 void
-Container::add (Item                   &item,
-                const PackPropertyList &pack_plist,
-                PackPropertyList       *unused_props)
+Container::add (Item &item)
 {
   if (item.parent())
     throw Exception ("not adding item with parent: ", item.name());
   Container &container = child_container();
   if (this != &container)
     {
-      container.add (item, pack_plist, unused_props);
+      container.add (item);
       return;
     }
   item.ref();
@@ -320,9 +318,6 @@ Container::add (Item                   &item,
     item.unref();
     throw;
   }
-  /* always run packer code */
-  Packer packer = create_packer (item);
-  packer.apply_properties (pack_plist, unused_props);
   /* can invalidate etc. the fully setup item now */
   item.invalidate();
   invalidate();
@@ -330,13 +325,11 @@ Container::add (Item                   &item,
 }
 
 void
-Container::add (Item                   *item,
-                const PackPropertyList &pack_plist,
-                PackPropertyList       *unused_props)
+Container::add (Item *item)
 {
   if (!item)
     throw NullPointer();
-  add (*item, pack_plist, unused_props);
+  add (*item);
 }
 
 void
@@ -670,130 +663,6 @@ Container::debug_tree (String indent)
     }
 }
 
-Container::ChildPacker::ChildPacker ()
-{}
-
-Container::Packer::Packer (ChildPacker *cp) :
-  m_child_packer (ref_sink (cp))
-{}
-
-Container::Packer::Packer (const Packer &src) :
-  m_child_packer (ref_sink (src.m_child_packer))
-{}
-
-Property*
-Container::Packer::lookup_property (const String &property_name)
-{
-  typedef std::map<const String, Property*> PropertyMap;
-  static std::map<const PropertyList*,PropertyMap*> plist_map;
-  /* find/construct property map */
-  const PropertyList &plist = list_properties();
-  PropertyMap *pmap = plist_map[&plist];
-  if (!pmap)
-    {
-      pmap = new PropertyMap;
-      for (uint i = 0; i < plist.n_properties; i++)
-        (*pmap)[plist.properties[i]->ident] = plist.properties[i];
-      plist_map[&plist] = pmap;
-    }
-  PropertyMap::iterator it = pmap->find (property_name);
-  if (it != pmap->end())
-    return it->second;
-  else
-    return NULL;
-}
-
-String
-Container::Packer::get_property (const String   &property_name)
-{
-  Property *prop = lookup_property (property_name);
-  if (!prop)
-    throw Exception ("no such property: ", property_name);
-  m_child_packer->update();
-  return prop->get_value (m_child_packer);
-}
-
-void
-Container::Packer::set_property (const String    &property_name,
-                                 const String    &value,
-                                 const nothrow_t &nt)
-{
-  Property *prop = lookup_property (property_name);
-  if (prop)
-    {
-      m_child_packer->update();
-      prop->set_value (m_child_packer, value);
-      m_child_packer->commit();
-    }
-  else if (&nt == &dothrow)
-    throw Exception ("no such property: ", property_name);
-}
-
-void
-Container::Packer::apply_properties (const PackPropertyList &pack_plist,
-                                     PackPropertyList       *unused_props)
-{
-  m_child_packer->update();
-  for (PackPropertyList::const_iterator it = pack_plist.begin(); it != pack_plist.end(); it++)
-    {
-      Property *prop = lookup_property (it->first);
-      if (prop)
-        prop->set_value (m_child_packer, it->second);
-      else if (unused_props)
-        (*unused_props)[it->first] = it->second;
-      else
-        throw Exception ("no such pack property: " + it->first);
-    }
-  m_child_packer->commit();
-}
-
-const PropertyList&
-Container::Packer::list_properties()
-{
-  return m_child_packer->list_properties();
-}
-
-Container::Packer::~Packer ()
-{
-  unref (m_child_packer);
-}
-
-Container::Packer
-Container::child_packer (Item &item)
-{
-  Container *container = item.parent();
-  if (!container)
-    throw NullPointer();
-  return container->create_packer (item);
-}
-
-Container::ChildPacker*
-Container::void_packer ()
-{
-  class PackerSingleton : public ChildPacker {
-    PackerSingleton() { ref_sink(); }
-    RAPICORN_PRIVATE_CLASS_COPY (PackerSingleton);
-  public:
-    static PackerSingleton*
-    dummy_packer()
-    {
-      static PackerSingleton *singleton = new PackerSingleton;
-      return singleton;
-    }
-    ~PackerSingleton() { assert_not_reached(); }
-    virtual const PropertyList&
-    list_properties ()  // escape check-list_properties ';'
-    {
-      static Property *properties[] = { };
-      static const PropertyList property_list (properties);
-      return property_list;
-    }
-    virtual void update () {}
-    virtual void commit () {}
-  };
-  return PackerSingleton::dummy_packer();
-}
-
 SingleContainerImpl::SingleContainerImpl () :
   child_item (NULL)
 {}
@@ -874,12 +743,6 @@ SingleContainerImpl::size_allocate (Allocation area)
         }
       child.set_allocation (area);
     }
-}
-
-Container::Packer
-SingleContainerImpl::create_packer (Item &item)
-{
-  return void_packer(); /* no child properties */
 }
 
 void

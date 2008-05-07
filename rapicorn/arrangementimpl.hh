@@ -43,27 +43,6 @@ protected:
   Allocation                    local_child_allocation  (Item  &child,
                                                          double width,
                                                          double height);
-  /* pack properties */
-  class ArrangementPacker : public virtual ChildPacker {
-    Item     &item;
-  public:
-    explicit                    ArrangementPacker       (Item &citem) : item (citem) {}
-    virtual const PropertyList&
-    list_properties ()
-    {
-      static Property *properties[] = {};
-      static const PropertyList property_list (properties);
-      return property_list;
-    }
-    virtual void                update                  () {}
-    virtual void                commit                  () {}
-  };
-  virtual Packer                create_packer           (Item &item)
-  {
-    if (item.parent() != this)
-      warning ("foreign child: %s", item.name().c_str());
-    return Packer (new ArrangementPacker (item));
-  }
 };
 
 } // Rapicorn

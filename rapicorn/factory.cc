@@ -637,16 +637,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
   /* add to parent */
   try {
     if (parent)
-      {
-        /* expand pack args from unused property args */
-        VariableMap pack_args;
-        for (VariableMap::const_iterator it = call_args.begin(); it != call_args.end(); it++)
-          pack_args[it->first] = env.expand_expression (it->second);
-        /* pack into parent */
-        VariableMap unused_pack_args;
-        parent->add (item, pack_args, &unused_pack_args);
-        call_args = unused_pack_args;
-      }
+      parent->add (item); /* pack into parent */
   } catch (std::exception &exc) {
     error ("%s: adding to parent (%s) failed: %s", bgadget->definition().c_str(), parent->name().c_str(), exc.what());
     sink (item);

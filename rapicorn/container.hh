@@ -23,7 +23,6 @@ namespace Rapicorn {
 
 /* --- Container --- */
 struct Container : public virtual Item {
-  typedef std::map<String,String> PackPropertyList;
   friend              class Item;
   friend              class Root;
   void                uncross_descendant(Item          &descendant);
@@ -56,12 +55,8 @@ public:
   virtual bool          has_children    () = 0;
   void                  remove          (Item           &item);
   void                  remove          (Item           *item)  { if (!item) RAPICORN_WARNING ("NULL item"); remove (*item); }
-  void                  add             (Item                   &item,
-                                         const PackPropertyList &pack_plist = PackPropertyList(),
-                                         PackPropertyList       *unused_props = NULL);
-  void                  add             (Item                   *item,
-                                         const PackPropertyList &pack_plist = PackPropertyList(),
-                                         PackPropertyList       *unused_props = NULL);
+  void                  add             (Item                   &item);
+  void                  add             (Item                   *item);
   virtual Affine        child_affine    (const Item             &item); /* container => item affine */
   virtual
   const PropertyList&   list_properties (); /* essentially chaining to Item:: */
@@ -72,39 +67,6 @@ public:
                                          std::vector<Item*>     &stack);
   virtual void          render          (Display                &display);
   void                  debug_tree      (String indent = String());
-  /* child properties */
-  struct ChildPacker : public virtual ReferenceCountImpl {
-    virtual const PropertyList& list_properties  () = 0;
-    virtual void                update           () = 0; /* fetch real pack properties */
-    virtual void                commit           () = 0; /* assign pack properties */
-    explicit                    ChildPacker      ();
-  private:
-    RAPICORN_PRIVATE_CLASS_COPY (ChildPacker);
-  };
-  struct Packer {
-    /*Con*/             Packer           (ChildPacker     *cp);
-    /*Copy*/            Packer           (const Packer    &src);
-    void                set_property     (const String    &property_name,
-                                          const String    &value,
-                                          const nothrow_t &nt = dothrow);
-    String              get_property     (const String    &property_name);
-    Property*           lookup_property  (const String    &property_name);
-    void                apply_properties (const PackPropertyList &pplist,
-                                          PackPropertyList       *unused_props = NULL);
-    const PropertyList& list_properties  ();
-    /*Des*/             ~Packer          ();
-  private:
-    ChildPacker        *m_child_packer;
-    ChildPacker&        operator=        (const Packer &src);
-    friend              class Container;
-  };
-  Packer                child_packer    (Item   &item);
-  Packer                child_packer    (Item   *item)          { if (!item) RAPICORN_WARNING ("NULL item"); return child_packer (*item); }
-protected:
-  virtual Packer        create_packer   (Item   &item) = 0;
-  static ChildPacker*   void_packer     ();
-  template<class PackerType>
-  PackerType    extract_child_packer    (Packer &packer) { return dynamic_cast<PackerType> (packer.m_child_packer); }
 };
 
 } // Rapicorn

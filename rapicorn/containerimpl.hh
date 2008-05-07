@@ -39,8 +39,6 @@ protected:
   virtual void          add_child               (Item   &item);
   virtual void          remove_child            (Item   &item);
   explicit              SingleContainerImpl     ();
-public:
-  virtual Packer        create_packer           (Item &item);
 };
 
 /* --- Multi Child Container Impl --- */

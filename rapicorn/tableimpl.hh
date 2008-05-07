@@ -69,25 +69,6 @@ public:
   virtual void          col_spacing     (uint cspacing);
   virtual uint          row_spacing     ()                              { return default_row_spacing; }
   virtual void          row_spacing     (uint rspacing);
-private:
-  struct TablePacker : public virtual ChildPacker {
-    Item     &item;
-    TablePacker (Item &citem) : item (citem) {}
-    void        update () {}
-    void        commit () {}
-    const PropertyList& list_properties ()
-    {
-      static Property *properties[] = {};
-      static const PropertyList property_list (properties);
-      return property_list;
-    }
-  };
-  Packer                create_packer   (Item &item) {
-    if (item.parent() == this)
-      return Packer (new TablePacker (item));
-    else
-      throw Exception ("foreign child: ", item.name());
-  }
 };
 
 } // Rapicorn
