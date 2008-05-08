@@ -136,16 +136,16 @@ private:
     switch (st & ~LIGHTING_DARK_FLAG)
       {
       case LIGHTING_UPPER_LEFT:
-        painter.draw_shaded_rect (x, y + height - 1, light, x + width - 1, y, dark);
+        painter.draw_center_shade_rect (x, y + height - 1, light, x + width - 1, y, dark);
         break;
       case LIGHTING_UPPER_RIGHT:
-        painter.draw_shaded_rect (x + width - 1, y + height - 1, light, x, y, dark);
+        painter.draw_center_shade_rect (x + width - 1, y + height - 1, light, x, y, dark);
         break;
       case LIGHTING_LOWER_LEFT:
-        painter.draw_shaded_rect (x, y, light, x + width - 1, y + height - 1, dark);
+        painter.draw_center_shade_rect (x, y, light, x + width - 1, y + height - 1, dark);
         break;
       case LIGHTING_LOWER_RIGHT:
-        painter.draw_shaded_rect (x + width - 1, y, light, x, y + height - 1, dark);
+        painter.draw_center_shade_rect (x + width - 1, y, light, x, y + height - 1, dark);
         break;
       case LIGHTING_CENTER:
         render_shade (plane, affine, x, y, width / 2, height / 2, LIGHTING_UPPER_RIGHT | dark_flag);

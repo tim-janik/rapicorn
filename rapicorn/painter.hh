@@ -47,6 +47,7 @@ public:
                                          int64 c0x, int64 c0y, Color color0,
                                          int64 c1x, int64 c1y, Color color1);
   void          draw_shaded_rect        (int xc0, int yc0, Color color0, int xc1, int yc1, Color color1);
+  void          draw_center_shade_rect  (int xc0, int yc0, Color color0, int xc1, int yc1, Color color1);
   void          draw_filled_rect        (int x, int y, int width, int height, Color fill_color);
   void          draw_dir_arrow          (double x, double y, double width, double height, Color c, DirType dir);
   void          draw_trapezoid          (double c1y, double c1x1, double c1x2, double c2y, double c2x1, double c2x2, Color fill_color);

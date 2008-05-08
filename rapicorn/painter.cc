@@ -198,6 +198,24 @@ Painter::draw_shaded_rect (int xc0, int yc0, Color color0, int xc1, int yc1, Col
                       xc1, yc1, color1);
 }
 
+void
+Painter::draw_center_shade_rect (int xc0, int yc0, Color color0,
+                                 int xc1, int yc1, Color color1)
+{
+  int64 recx = MIN (xc0, xc1), recy = MIN (yc0, yc1);
+  int64 recwidth = MAX (xc0, xc1) - MIN (xc0, xc1) + 1;
+  int64 recheight = MAX (yc0, yc1) - MIN (yc0, yc1) + 1;
+  /* revert to a vertical gradient for certain aspect ratios */
+  if (recwidth * 10 > recheight * 12)
+    {
+      int64 xcc = (xc0 + xc1) / 2;
+      xc0 = xc1 = xcc;
+    }
+  draw_gradient_rect (recx, recy, recwidth, recheight,
+                      xc0, yc0, color0,
+                      xc1, yc1, color1);
+}
+
 /* find u for (px,py) = (x1,y1) + u * (x2-x1,y2-y1)
  * <=> u = ( (px-x1)*(x2-x1) + (py-y1)*(y2-y1) ) / length(x2y2-x1y1)^2
  */
