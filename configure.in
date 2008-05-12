@@ -102,14 +102,14 @@ fi
 MC_IF_VAR_EQ(enable_static, yes, , enable_static=no)
 MC_IF_VAR_EQ(enable_shared, no, , enable_shared=yes)
 
-dnl # RAPICORN_COMPUTE_SYSVAL(IDENTIFIER, INCLUDES) defines & AC_SUBST()s RAPICORN_SYSVAL_$1
+dnl # RAPICORN_SUBST_COMPUTED_SYSVAL(IDENTIFIER, INCLUDES) - defines & AC_SUBST()s RAPICORN_SYSVAL_$1
 AC_DEFUN([RAPICORN_SUBST_COMPUTED_SYSVAL], 
     [_AC_COMPUTE_INT([$1], [RAPICORN_SYSVAL_$1], [$2],
 	    [AC_MSG_ERROR("failed to detect [$1]")])
     AC_SUBST([RAPICORN_SYSVAL_$1])])
 
-# AC_GCC_REQUIREMENTS() - check for required minimum GCC version
-AC_DEFUN([AC_GCC_REQUIREMENTS],
+dnl # RAPICORN_GCC_REQUIREMENTS() - check for required minimum GCC version
+AC_DEFUN([RAPICORN_GCC_REQUIREMENTS],
 [
     # check for minimum GCC version
     DEPVERSION_GNUC='3.4.6'
@@ -128,8 +128,8 @@ AC_DEFUN([AC_GCC_REQUIREMENTS],
     fi
 ])
 
-dnl # AC_RAPICORN_CORE_REQUIREMENTS() checks everything needed for rapicornconfig.h
-AC_DEFUN([AC_RAPICORN_CORE_REQUIREMENTS],
+dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rapicornconfig.h
+AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
 [
     # --- sizeof and presence of uint ---
     GLIB_SIZEOF([#include <sys/types.h>], uint, rapicorn_sys_typesh_uint)
@@ -259,8 +259,8 @@ AC_DEFUN([AC_RAPICORN_CORE_REQUIREMENTS],
     AC_SUBST(RAPICORN_DEP_LIBS)
 ])
 
-# define package requirements.
-AC_DEFUN([AC_I18N_REQUIREMENTS],
+dnl # RAPICORN_I18N_REQUIREMENTS() - check for all i18n requirements
+AC_DEFUN([RAPICORN_I18N_REQUIREMENTS],
 [
     dnl # TRANSLATORS: enter your language here
     ALL_LINGUAS="de"
@@ -300,7 +300,9 @@ AC_DEFUN([AC_I18N_REQUIREMENTS],
     AM_GLIB_GNU_GETTEXT
     AC_PROG_INTLTOOL
 ])
-AC_DEFUN([AC_RAPICORN_REQUIREMENTS],
+
+dnl # RAPICORN_REQUIREMENTS() - checks everything needed by rapicorn/
+AC_DEFUN([RAPICORN_REQUIREMENTS],
 [
     dnl --- require libpng ---
     if test -z "$LIBPNG"; then
@@ -359,7 +361,9 @@ AC_DEFUN([AC_RAPICORN_REQUIREMENTS],
     AC_SUBST(RAPICORN_DEP_CFLAGS)
     AC_SUBST(RAPICORN_DEP_LIBS)
 ])
-AC_DEFUN([AC_PYRAPICORN_REQUIREMENTS],
+
+dnl # PYRAPICORN_REQUIREMENTS() - rapicorn python binding checks
+AC_DEFUN([PYRAPICORN_REQUIREMENTS],
 [
     # find Python development version
     DEPVERSION_PYTHON=2.4
@@ -383,7 +387,9 @@ AC_DEFUN([AC_PYRAPICORN_REQUIREMENTS],
 	AC_MSG_ERROR([failed to build extension against Python (>=$DEPVERSION_PYTHON) headers])
     fi
 ])
-AC_DEFUN([AC_DOC_REQUIREMENTS],
+
+dnl # RAPICORN_DOC_REQUIREMENTS() - checks for documentation generation
+AC_DEFUN([RAPICORN_DOC_REQUIREMENTS],
 [
     # need doxer to generate documentation
     DOXERDEP='#'
@@ -395,7 +401,9 @@ AC_DEFUN([AC_DOC_REQUIREMENTS],
     AC_SUBST(DOXER)
     AC_SUBST(DOXERDEP)
 ])
-AC_DEFUN([AC_CPU_FLAGS],
+
+dnl # RAPICORN_CPU_FLAGS() - checks for CPU optimizations
+AC_DEFUN([RAPICORN_CPU_FLAGS],
 [
     # --- FPU flags ---
     # -funroll-loops can boost FPU performance
@@ -479,13 +487,13 @@ AC_PROG_LN_S
 AC_PATH_PROG(UPDATE_MIME_DATABASE, update-mime-database)
 
 # check requirement sets
-AC_I18N_REQUIREMENTS
-AC_GCC_REQUIREMENTS
-AC_RAPICORN_CORE_REQUIREMENTS
-AC_RAPICORN_REQUIREMENTS
-AC_PYRAPICORN_REQUIREMENTS
-AC_DOC_REQUIREMENTS
-AC_CPU_FLAGS
+RAPICORN_I18N_REQUIREMENTS
+RAPICORN_GCC_REQUIREMENTS
+RAPICORN_CORE_REQUIREMENTS
+RAPICORN_REQUIREMENTS
+PYRAPICORN_REQUIREMENTS
+RAPICORN_DOC_REQUIREMENTS
+RAPICORN_CPU_FLAGS
 
 # automake @VARIABLE@ exports.
 AC_SUBST(CFLAGS)
