@@ -16,7 +16,7 @@ rapicorn_public_headers = $(strip 	\
 	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
 	adjustment.hh	image.hh	paintitems.hh	slider.hh	paintcontainers.hh	\
 	buttons.hh	factory.hh	evaluator.hh	scrollitems.hh	layoutcontainers.hh	\
-	text-editor.hh	text-pango.hh	testitems.hh	\
+	text-editor.hh	text-pango.hh	sinfex.hh	testitems.hh	\
 )
 rapicorn_impl_headers = $(strip 	\
 	arrangementimpl.hh		\
@@ -24,6 +24,7 @@ rapicorn_impl_headers = $(strip 	\
 	itemimpl.hh			\
 	rootimpl.hh			\
 	scrollitemsimpl.hh		\
+	sinfeximpl.hh			\
 	tableimpl.hh			\
 )
 rapicorn_generated_headers = $(strip	\
@@ -37,7 +38,7 @@ rapicorn_cc_sources = $(strip 		\
 	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\
 	adjustment.cc	image.cc	paintitems.cc	slider.cc	paintcontainers.cc	\
 	buttons.cc	factory.cc	evaluator.cc	scrollitems.cc	layoutcontainers.cc	\
-	text-editor.cc	text-pango.cc	testitems.cc	\
+	text-editor.cc	text-pango.cc	sinfex.cc	testitems.cc	\
 )
 rapicorn_private_files = $(strip 	\
 	blitfuncs.hh			\
@@ -74,6 +75,14 @@ EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPEN
 api-content:
 	cat $(sort $(rapicorn_public_headers) $(rapicorn_top_headers) $(rapicorn_generated_headers))
 .PHONY: api-content
+
+# === Flex & Bison rules ===
+GENERATED_EXTRA_DIST += sinfex.lgen sinfex.ygen
+sinfex.lgen: sinfex.l
+	flex -CFe -o$@ $<
+sinfex.ygen: sinfex.y
+	bison -o$@ $<
+sinfex.cc: sinfex.lgen sinfex.ygen
 
 # === Programs (not installed) ===
 noinst_PROGRAMS        = $(ALLTESTS)

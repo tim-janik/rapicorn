@@ -388,6 +388,21 @@ AC_DEFUN([PYRAPICORN_REQUIREMENTS],
     fi
 ])
 
+dnl # RAPICORN_TEST_REQUIREMENTS() - checks for test programs
+AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
+[
+    READLINELIBS=""
+    AC_CHECK_HEADERS(readline/readline.h, [
+        AC_CHECK_HEADERS(readline/history.h, [
+	    AC_CHECK_LIB(readline, readline, [
+		AC_CHECK_LIB(history, using_history, [
+		    AC_DEFINE_UNQUOTED(HAVE_READLINE_AND_HISTORY, 1,
+			[Whether -lreadline -lhistory works])
+		    READLINELIBS="-lreadline -lhistory"
+		    ]) ]) ]) ])
+    AC_SUBST(READLINELIBS)
+])
+
 dnl # RAPICORN_DOC_REQUIREMENTS() - checks for documentation generation
 AC_DEFUN([RAPICORN_DOC_REQUIREMENTS],
 [
@@ -492,6 +507,7 @@ RAPICORN_GCC_REQUIREMENTS
 RAPICORN_CORE_REQUIREMENTS
 RAPICORN_REQUIREMENTS
 PYRAPICORN_REQUIREMENTS
+RAPICORN_TEST_REQUIREMENTS
 RAPICORN_DOC_REQUIREMENTS
 RAPICORN_CPU_FLAGS
 
@@ -540,9 +556,11 @@ Autoconfiguration complete.
 	Operating System:		$RAPICORN_OS
 
 	CPU optimizations:		${FPU_FLAGS:+fpu}${MMX_FLAGS:+ mmx}${AMD3DNOW_FLAGS:+ 3dnow}${SSE_FLAGS:+ sse}${SSE2_FLAGS:+ sse2}${SSE3_FLAGS:+ sse3}
-	Python extension:		enabled (curently mandatory)
 	Developer rules:		${NOTDVLBUILD:+enabled}${DVLBUILD:+disabled}
 	Documentation tool:		${DOXER:-none}
+
+	Python extension:		enabled (curently mandatory)
+	Readline libs:			$READLINELIBS
 
 	Binaries:			`printexpandvar $prefix/bin`
 	Libraries:			`printexpandvar $prefix/lib`

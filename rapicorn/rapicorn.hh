@@ -40,6 +40,7 @@
 #include <rapicorn/region.hh>
 #include <rapicorn/root.hh>
 #include <rapicorn/scrollitems.hh>
+#include <rapicorn/sinfex.hh>
 #include <rapicorn/table.hh>
 #include <rapicorn/text-editor.hh>
 /* conditional: #include <rapicorn/text-pango.hh> */

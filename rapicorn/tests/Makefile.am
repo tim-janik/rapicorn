@@ -36,6 +36,9 @@ region_LDADD       = $(LDADDS)
 TESTS             += shaderect
 shaderect_SOURCES  = shaderect.cc
 shaderect_LDADD    = $(LDADDS)
+TESTS             += sinfextest
+sinfextest_SOURCES = sinfextest.cc
+sinfextest_LDADD   = $(LDADDS) $(READLINELIBS)
 TESTS             += pixcombine
 pixcombine_SOURCES = pixcombine.cc
 pixcombine_LDADD   = $(LDADDS)
@@ -53,6 +56,25 @@ XML_FILES         += factory.xml
 TESTS             += evaltest
 evaltest_SOURCES   = evaltest.cc
 evaltest_LDADD     = $(LDADDS)
+
+
+SINFEX=./sinfextest --shell
+SINFEXDAT=sinfextest.dat
+sinfex-check:
+	@ echo "TEST: ${SINFEXDAT}"; echo -n "Lines:"; L=0 ; \
+	while read -r line ; do \
+	  L=$$((1 + $$L)) ; \
+	  echo " $$line" | egrep -q '^[[:space:]]*(#|$$)' && continue ; \
+	  echo -n " $$L" ; \
+	  read -r result ; L=$$((1 + $$L)) ; \
+	  echo " $$line" | ${SINFEX} > xtmp-snfx.$$$$ && \
+	  egrep -q "-e$$result" < xtmp-snfx.$$$$ || { \
+	    echo ; echo -n "${SINFEXDAT}:$$L: pattern ($$result) unmatched: "; \
+	    cat xtmp-snfx.$$$$ ; rm -f xtmp-snfx.$$$$ ; echo ; exit 1 ; } ; \
+	  rm -f xtmp-snfx.$$$$ ; \
+	done < ${SINFEXDAT}; echo ; \
+	echo "PASS: ${SINFEXDAT}"
+check-am: sinfex-check
 
 xmllint-check:
 	cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES)
