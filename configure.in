@@ -290,10 +290,10 @@ AC_DEFUN([RAPICORN_I18N_REQUIREMENTS],
     AC_SUBST(rapicornlocaledir)
 
     # --- Rapicorn paths ---
-    rapicornbasedir=\${datadir}/rapicorn
-    rapicorndocsdir=$rapicornbasedir/v$LT_VERSION/docs
+    rapicornbasedir="$datadir/rapicorn"
+    rapicorndocsdir="$rapicornbasedir/v$RAPICORN_RELEASE/docs"
     AC_SUBST(rapicorndocsdir)
-    rapicornimagesdir=$rapicornbasedir/v$LT_VERSION/images
+    rapicornimagesdir="$rapicornbasedir/v$RAPICORN_RELEASE/images"
     AC_SUBST(rapicornimagesdir)
 
     dnl # do gettext checks and provide INTLLIBS
@@ -521,3 +521,35 @@ web/Makefile
 ])
 
 AC_OUTPUT
+
+printexpandvar()
+{
+	_x="$1";
+	while echo " $_x" | fgrep -q '${'; do
+		_x=$(eval echo "$_x")
+	done
+	echo -n "$_x"
+}
+
+dnl # Show configuration summary
+cat <<EOF
+Autoconfiguration complete.
+
+	Building package:		$PACKAGE-$VERSION
+	C++ Namespace:			$RAPICORN_NAMESPACE_NAME
+	Operating System:		$RAPICORN_OS
+
+	CPU optimizations:		${FPU_FLAGS:+fpu}${MMX_FLAGS:+ mmx}${AMD3DNOW_FLAGS:+ 3dnow}${SSE_FLAGS:+ sse}${SSE2_FLAGS:+ sse2}${SSE3_FLAGS:+ sse3}
+	Python extension:		enabled (curently mandatory)
+	Developer rules:		${NOTDVLBUILD:+enabled}${DVLBUILD:+disabled}
+	Documentation tool:		${DOXER:-none}
+
+	Binaries:			`printexpandvar $prefix/bin`
+	Libraries:			`printexpandvar $prefix/lib`
+	Locales:			`printexpandvar $rapicornlocaledir`
+	Includes:			`printexpandvar $includedir/rapicorn$RAPICORN_RELEASE`
+	PyRapicorn:			`printexpandvar $pythondir/$RAPICORN_NAMESPACE_NAME`
+	Documentation:			`printexpandvar $rapicorndocsdir`
+	Images:				`printexpandvar $rapicornimagesdir`
+
+EOF
