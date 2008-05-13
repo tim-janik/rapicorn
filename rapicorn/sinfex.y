@@ -27,9 +27,8 @@
 %union { // defines YYSTYPE
   double        df;
   long long int li;
-  Exon         *xx;
-  ExonArgs     *xa;
-  ExonString   *xs;
+  String       *cs;
+  uint          pi; // SinfexProgram index
 }
 
 /* === POST-UNION DECLARATIONS === */
@@ -47,12 +46,9 @@ static int    bison_yylex    (YYSTYPE    *yylval_param,	/* impl in sinfex.cc */
 %token	    POW
 %token <li> INTEGER
 %token <df> FLOAT
-%token <xs> STRING IDENT
-%type  <xx> start input expr num single
-%type  <xa> args fargs
+%token <cs> STRING IDENT
+%type  <pi> num single fargs args expr input start
 %destructor { if ($$) delete $$; $$ = NULL; } STRING IDENT
-%destructor { if ($$) delete $$; $$ = NULL; } start input expr num single
-%destructor { if ($$) delete $$; $$ = NULL; } args fargs
 /* precedence increases per line */
 %left OR
 %left AND
@@ -60,50 +56,50 @@ static int    bison_yylex    (YYSTYPE    *yylval_param,	/* impl in sinfex.cc */
 %left EQ NE
 %left '<' '>' LE GE
 %left '-' '+'
-%left P0n
 %left '*' '/'
 %left SIGN	// unary minus precedence
 %right POW
 
 /* === RULES === */
 %%
-start   : input                 { YYSELF.exon = $1; $$ = NULL; }
+start   : input                 { YYESTK.set_start ($1); $$ = 0; }
 ;
-input   : /* empty */		{ $$ = NULL; }
+input   : /* empty */		{ $$ = 0; }
 	| expr  		{ $$ = $1; }
 ;
-args	: expr			{ $$ = new ExonArgs(); $$->add (*$1); }
-	| args ',' expr		{ $$ = $1; $$->add (*$3); }
+args	: expr			{ $$ = YYESTK.push_arg ($1, 0); }
+	| expr ',' args		{ $$ = YYESTK.push_arg ($1, $3); }
 ;
-fargs	: /*< empty */		{ $$ = new ExonArgs(); }
+fargs	: /* empty */		{ $$ = 0; }
 	| args			{ $$ = $1; }
 ;
 expr	: single                { $$ = $1; }
-	| IDENT '(' fargs ')'	{ $$ = new ExonFun (*$1, dynamic_cast<ExonArgs&> (*$3)); }
-	| expr OR  expr		{ $$ = new ExonOr (*$1, *$3); }
-	| expr AND expr		{ $$ = new ExonAnd (*$1, *$3); }
-	| NOT expr		{ $$ = new ExonNot (*$2); }
-	| expr NE  expr		{ $$ = new ExonCmp (*$1, 99, *$3); }
-	| expr EQ  expr		{ $$ = new ExonCmp (*$1,  0, *$3); }
-	| expr LE  expr		{ $$ = new ExonCmp (*$1, -2, *$3); }
-	| expr GE  expr		{ $$ = new ExonCmp (*$1, +2, *$3); }
-	| expr '<' expr		{ $$ = new ExonCmp (*$1, -1, *$3); }
-	| expr '>' expr		{ $$ = new ExonCmp (*$1, +1, *$3); }
-	| expr '+' expr		{ $$ = new ExonAdd (*$1, *$3); }
-	| expr '-' expr		{ $$ = new ExonSub (*$1, *$3); }
-	| expr '*' expr		{ $$ = new ExonMul (*$1, *$3); }
-	| expr '/' expr		{ $$ = new ExonDiv (*$1, *$3); }
-	| '-' expr %prec SIGN	{ $$ = new ExonSign ('-', *$2); }
-	| '+' expr %prec SIGN	{ $$ = new ExonSign ('+', *$2); }
-	| expr POW expr		{ $$ = new ExonPow (*$1, *$3); }
+	| IDENT '(' fargs ')'	{ $$ = YYESTK.push_func (*$1, $3); delete $1; $1 = NULL; }
+	| expr OR  expr		{ $$ = YYESTK.push_or ($1, $3); }
+	| expr AND expr		{ $$ = YYESTK.push_and ($1, $3); }
+	| NOT expr		{ $$ = YYESTK.push_not ($2); }
+	| expr NE  expr		{ $$ = YYESTK.push_ne ($1, $3); }
+	| expr EQ  expr		{ $$ = YYESTK.push_eq ($1, $3); }
+	| expr LE  expr		{ $$ = YYESTK.push_le ($1, $3); }
+	| expr GE  expr		{ $$ = YYESTK.push_ge ($1, $3); }
+	| expr '<' expr		{ $$ = YYESTK.push_lt ($1, $3); }
+	| expr '>' expr		{ $$ = YYESTK.push_gt ($1, $3); }
+	| expr '+' expr		{ $$ = YYESTK.push_add ($1, $3); }
+	| expr '-' expr		{ $$ = YYESTK.push_sub ($1, $3); }
+	| expr '*' expr		{ $$ = YYESTK.push_mul ($1, $3); }
+	| expr '/' expr		{ $$ = YYESTK.push_div ($1, $3); }
+	| '-' expr %prec SIGN	{ $$ = YYESTK.push_neg ($2); }
+	| '+' expr %prec SIGN	{ $$ = YYESTK.push_pos ($2); }
+	| expr POW expr		{ $$ = YYESTK.push_pow ($1, $3); }
 	| '(' expr ')'		{ $$ = $2; }
 ;
 single	: num		        { $$ = $1; }
-	| STRING	        { $$ = $1; }
-	| IDENT '.' IDENT	{ $$ = new ExonVar (*$1, *$3); }
+	| STRING	        { $$ = YYESTK.push_string (*$1); delete $1; $1 = NULL; }
+	| IDENT '.' IDENT	{ $$ = YYESTK.push_entity_variable (*$1, *$3);
+				  delete $1; delete $3; $1 = $3 = NULL; }
 ;
-num	: INTEGER               { $$ = new ExonReal ($1); }
-	| FLOAT                 { $$ = new ExonReal ($1); }
+num	: INTEGER               { $$ = YYESTK.push_double ($1); }
+	| FLOAT                 { $$ = YYESTK.push_double ($1); }
 ;
 %%
 /* === FUNCTIONS === */

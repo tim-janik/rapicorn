@@ -21,15 +21,18 @@ namespace Rapicorn {
 struct Sinfex { // YYSELF - main lexer & parser state keeping
   String input;
   uint   input_offset;
-  Exon  *exon;
-  explicit      Sinfex  () : input_offset (0), exon (NULL) {}
+  SinfexExpressionStack estk;
+  explicit      Sinfex  () : input_offset (0) {}
   int           yyread          (int         max_size,
                                  char       *buffer);
   void          parse_error     (const char *error_message,
                                  int         first_line,
-                                 int         first_column,
+                                 int         first_column, // unmaintained
                                  int         last_line,
-                                 int         last_column)   {}
+                                 int         last_column)  // unmaintained
+  {
+    printerr ("<string>:%u: Sinfex: parse error\n", first_line);
+  }
   void          yyparse_string  (const String &string);
 };
 
@@ -54,18 +57,18 @@ sinfex_parse_eval_string (const String &string)
 
   yyself.yyparse_string (string);
 
-  if (yyself.exon)
-    {
-      Value v = yyself.exon->eval (NULL);
-      String vstr = v.tostring();
-      printf ("= %s\n", vstr.c_str());
-    }
+  SinfexExpression expr (yyself.estk);
+  Value v = expr.eval (NULL);
+  String vstr = v.tostring();
+  printf ("= %s\n", vstr.c_str());
 }
 
 } // Rapicorn
 
 namespace { // Anon
 using namespace Rapicorn;
+
+#define YYESTK  YYSELF.estk
 
 /* Sinfex accessor for sinfex.l and sinfex.y */
 #define YYSELF  (*(Sinfex*) flex_yyget_extra (yyscanner))

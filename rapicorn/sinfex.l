@@ -47,13 +47,13 @@ IDENTIFIER              [a-z_A-Z][0-9a-z_A-Z]*
 
 {FLOAT}                 { yylval->df = strtold (yytext, NULL); return FLOAT; }
 
-{STRING}                { yylval->xx = new ExonString (yytext); return STRING; }
+{STRING}                { yylval->cs = new String (yytext); return STRING; }
 
 or                      { return OR; }
 and                     { return AND; }
 not                     { return NOT; }
 
-{IDENTIFIER}            { yylval->xx = new ExonString (yytext); return IDENT; }
+{IDENTIFIER}            { yylval->cs = new String (yytext); return IDENT; }
 
 !=                      { return NE; }
 ==                      { return EQ; }
