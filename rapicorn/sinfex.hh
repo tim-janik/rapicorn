@@ -21,7 +21,33 @@
 
 namespace Rapicorn {
 
-void    sinfex_parse_eval_string (const String &string);
+class Sinfex : public virtual ReferenceCountImpl {
+  RAPICORN_PRIVATE_CLASS_COPY (Sinfex);
+protected:
+  uint          *m_start;
+  explicit       Sinfex ();
+  virtual       ~Sinfex ();
+public:
+  static Sinfex* parse_string (const String &expression);
+  class          Value;
+  virtual Value  eval         (void         *env) = 0;
+  /* Sinfex::Value implementation */
+  class Value {
+    const String m_string;
+    const double m_real;
+    const bool   m_strflag;
+    String       realstring () const;
+  public:
+    bool         isreal   () const { return !m_strflag; }
+    bool         isstring () const { return m_strflag; }
+    double       real     () const { return !m_strflag ? m_real : 0.0; }
+    String       string   () const { return m_strflag ? m_string : ""; }
+    bool         asbool   () const { return (!m_strflag && m_real) || (m_strflag && m_string != ""); }
+    explicit     Value    (double        d) : m_real (d), m_strflag (0) {}
+    explicit     Value    (const String &s);
+    String       tostring () const { return m_strflag ? m_string : realstring(); }
+  };
+};
 
 } // Rapicorn
 

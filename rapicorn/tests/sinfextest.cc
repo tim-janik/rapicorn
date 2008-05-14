@@ -31,7 +31,11 @@ using namespace Rapicorn;
 static void
 test_basics ()
 {
-  assert (sinfex_parse_eval_string != NULL);
+  Sinfex *sinfex = Sinfex::parse_string ("21");
+  ref_sink (sinfex);
+  assert (sinfex != NULL);
+  assert (sinfex->eval (NULL).real() == 21);
+  unref (sinfex);
 }
 
 static RAPICORN_UNUSED char*
@@ -101,8 +105,19 @@ main (int   argc,
 #endif
           if (malloc_string)
             {
-              sinfex_parse_eval_string (malloc_string);
+              Sinfex *sinfex = Sinfex::parse_string (malloc_string);
+              ref_sink (sinfex);
               free (malloc_string);
+              Sinfex::Value v = sinfex->eval (NULL);
+              String s = v.tostring();
+              if (v.isreal())
+                {
+                  char buffer[128];
+                  snprintf (buffer, 128, "%.15g", v.real());
+                  s = buffer;
+                }
+              printf ("= %s\n", s.c_str());
+              unref (sinfex);
             }
         }
       while (malloc_string);
