@@ -36,7 +36,7 @@ EXTRA_DIST += rapicorn-core.hh rapicorn.hh
 
 # === ChangeLog ===
 LAST_COMMITID = 3c74b440cecaba3570eecc6728bbe319ba790b59
-ChangeLog:	$(shell ls "$${GIT_DIR:-.git}/`git-symbolic-ref -q HEAD || echo HEAD`" 2>/dev/null )
+ChangeLog:	$(shell ls "$${GIT_DIR:-.git}/packed-refs" "$${GIT_DIR:-.git}/`git-symbolic-ref -q HEAD || echo HEAD`" 2>/dev/null )
 	git-log --pretty='format:%ad %an 	# %H (%cn)%n%n%s%n%n%b' \
 		${LAST_COMMITID}..HEAD		 > xgen-$(@F)
 	sed 's/^/	/;s/^	//;/^[ 	]*<unknown>$$/d' -i xgen-$(@F)
