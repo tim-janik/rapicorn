@@ -34,7 +34,7 @@ test_basics ()
   Sinfex *sinfex = Sinfex::parse_string ("21");
   ref_sink (sinfex);
   assert (sinfex != NULL);
-  assert (sinfex->eval (NULL).real() == 21);
+  assert (sinfex->eval (*(Sinfex::Scope*) NULL).real() == 21);
   unref (sinfex);
 }
 
@@ -72,6 +72,27 @@ freadline (const char *prompt,
   goto continue_readline;
 }
 
+struct EvalScope : public Sinfex::Scope {
+  virtual Sinfex::Value
+  resolve_variable (const String        &entity,
+                    const String        &name)
+  {
+    printout ("VAR: %s.%s\n", entity.c_str(), name.c_str());
+    return Sinfex::Value (0);
+  }
+  virtual Sinfex::Value
+  call_function (const String                &entity,
+                 const String                &name,
+                 const vector<Sinfex::Value> &args)
+  {
+    printout ("FUNC: %s (", name.c_str());
+    for (uint i = 0; i < args.size(); i++)
+      printout ("%s%s", i ? ", " : "", args[i].tostring().c_str());
+    printout (");\n");
+    return Sinfex::Value (0);
+  }
+};
+
 extern "C" int
 main (int   argc,
       char *argv[])
@@ -108,7 +129,8 @@ main (int   argc,
               Sinfex *sinfex = Sinfex::parse_string (malloc_string);
               ref_sink (sinfex);
               free (malloc_string);
-              Sinfex::Value v = sinfex->eval (NULL);
+              EvalScope scope;
+              Sinfex::Value v = sinfex->eval (scope);
               String s = v.tostring();
               if (v.isreal())
                 {

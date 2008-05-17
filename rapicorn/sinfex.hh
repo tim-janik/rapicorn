@@ -30,22 +30,29 @@ protected:
 public:
   static Sinfex* parse_string (const String &expression);
   class          Value;
-  virtual Value  eval         (void         *env) = 0;
+  struct Scope {
+    virtual Value resolve_variable        (const String        &entity,
+                                           const String        &name) = 0;
+    virtual Value call_function           (const String        &entity,
+                                           const String        &name,
+                                           const vector<Value> &args) = 0;
+  };
+  virtual Value  eval     (Scope &scop) = 0;
   /* Sinfex::Value implementation */
   class Value {
-    const String m_string;
-    const double m_real;
-    const bool   m_strflag;
-    String       realstring () const;
+    String   m_string;
+    double   m_real;
+    bool     m_strflag;
+    String   realstring () const;
   public:
-    bool         isreal   () const { return !m_strflag; }
-    bool         isstring () const { return m_strflag; }
-    double       real     () const { return !m_strflag ? m_real : 0.0; }
-    String       string   () const { return m_strflag ? m_string : ""; }
-    bool         asbool   () const { return (!m_strflag && m_real) || (m_strflag && m_string != ""); }
-    explicit     Value    (double        d) : m_real (d), m_strflag (0) {}
-    explicit     Value    (const String &s);
-    String       tostring () const { return m_strflag ? m_string : realstring(); }
+    bool     isreal     () const { return !m_strflag; }
+    bool     isstring   () const { return m_strflag; }
+    double   real       () const { return !m_strflag ? m_real : 0.0; }
+    String   string     () const { return m_strflag ? m_string : ""; }
+    bool     asbool     () const { return (!m_strflag && m_real) || (m_strflag && m_string != ""); }
+    explicit Value      (double        d) : m_real (d), m_strflag (0) {}
+    explicit Value      (const String &s);
+    String   tostring   () const { return m_strflag ? m_string : realstring(); }
   };
 };
 

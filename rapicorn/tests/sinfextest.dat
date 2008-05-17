@@ -82,5 +82,5 @@
 # identifier tests
   namespace.variable
 	VAR.*namespace\.variable
-  testfunc (1,2,3)
-	.*testfunc \(.*\)
+  testfunc (1,2,3, "string with numbers: 0,0, 0,0")
+	.*testfunc \(1, 2, 3, string with numbers: 0,0, 0,0\);

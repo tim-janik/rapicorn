@@ -109,7 +109,7 @@ class SinfexExpression : public virtual Sinfex {
         return a.real() - b.real() < 0 ? -1 : a.real() - b.real() > 0 ? +1 : 0;
       }
   }
-  Value eval_op (uint opx);
+  Value eval_op (Scope &scope, uint opx);
   RAPICORN_PRIVATE_CLASS_COPY (SinfexExpression);
 public:
   SinfexExpression (const SinfexExpressionStack &estk)
@@ -122,24 +122,26 @@ public:
       }
   }
   virtual Value
-  eval (void *env)
+  eval (Scope &scope)
   {
     if (!m_start || !m_start[1])
       return Value (0);
     else
-      return eval_op (m_start[1]);
+      return eval_op (scope, m_start[1]);
   }
 };
 
 Sinfex::Value
-SinfexExpression::eval_op (uint opx)
+SinfexExpression::eval_op (Scope &scope,
+                           uint   opx)
 {
-  union {
+  union Mark {
     const uint   *up;
     const int    *ip;
     const char   *cp;
     const double *dp;
-  } mark;
+  };
+  Mark mark;
   mark.up = m_start + opx;
   assert (mark.up + 1 <= m_start + m_start[0]);
   switch (*mark.up++)
@@ -151,52 +153,56 @@ SinfexExpression::eval_op (uint opx)
       ui = *mark.up++;
       return Value (String (mark.cp, ui));
     case SINFEX_VARIABLE:
-      ui = *mark.up++;
-      printout ("FIXME:VAR: %s\n", String (mark.cp, ui).c_str());
-      return Value (0);
+      {
+        ui = *mark.up++;
+        String varname = String (mark.cp, ui);
+        Value result = scope.resolve_variable ("", varname);
+        return result;
+      }
     case SINFEX_ENTITY_VARIABLE:
       {
         String v1, v2;
         ui = *mark.up++;
-        v1 = String (mark.cp, ui);
+        String entity = String (mark.cp, ui);
         mark.up += (ui + 3) / 4;
         ui = *mark.up++;
+        String varname = String (mark.cp, ui);
         v2 = String (mark.cp, ui);
-        printout ("VAR: %s.%s\n", v1.c_str(), v2.c_str());
+        Value result = scope.resolve_variable (entity, varname);
+        return result;
       }
-      return Value (0);
     case SINFEX_OR:
       {
-        const Value &a = eval_op (*mark.up++), &b = eval_op (*mark.up++);
+        const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
         return Value (a.asbool() ? a : b);
       }
     case SINFEX_AND:
       {
-        const Value &a = eval_op (*mark.up++), &b = eval_op (*mark.up++);
+        const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
         return Value (a.asbool() ? b : a);
       }
     case SINFEX_NOT:
       {
-        const Value &a = eval_op (*mark.up++);
+        const Value &a = eval_op (scope, *mark.up++);
         return Value (!a.asbool());
       }
     case SINFEX_NEG:
       {
-        const Value &a = eval_op (*mark.up++);
+        const Value &a = eval_op (scope, *mark.up++);
         if (a.isreal())
           return Value (-a.real());
         error ("incompatible value type for unary sign");
       }
     case SINFEX_POS:
       {
-        const Value &a = eval_op (*mark.up++);
+        const Value &a = eval_op (scope, *mark.up++);
         if (a.isreal())
           return a;
         error ("incompatible value type for unary sign");
       }
     case SINFEX_ADD:
       {
-        const Value &a = eval_op (*mark.up++), &b = eval_op (*mark.up++);
+        const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
         if (a.isreal() && b.isreal())
           return Value (a.real() + b.real());
         else if (a.isstring() && b.isstring())
@@ -206,7 +212,7 @@ SinfexExpression::eval_op (uint opx)
       }
     case SINFEX_SUB:
       {
-        const Value &a = eval_op (*mark.up++), &b = eval_op (*mark.up++);
+        const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
         if (a.isreal() && b.isreal())
           return Value (a.real() - b.real());
         else
@@ -214,7 +220,7 @@ SinfexExpression::eval_op (uint opx)
       }
     case SINFEX_MUL:
       {
-        const Value &a = eval_op (*mark.up++), &b = eval_op (*mark.up++);
+        const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
         if (a.isreal() && b.isreal())
           return Value (a.real() * b.real());
         else
@@ -222,7 +228,7 @@ SinfexExpression::eval_op (uint opx)
       }
     case SINFEX_DIV:
       {
-        const Value &a = eval_op (*mark.up++), &b = eval_op (*mark.up++);
+        const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
         if (a.isreal() && b.isreal())
           return Value (b.real() != 0.0 ? a.real() / b.real() : nanl (0));
         else
@@ -230,7 +236,7 @@ SinfexExpression::eval_op (uint opx)
       }
     case SINFEX_POW:
       {
-        const Value &a = eval_op (*mark.up++), &b = eval_op (*mark.up++);
+        const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
         if (a.isreal() && b.isreal())
           return Value (pow (a.real(), b.real()));
         else
@@ -238,40 +244,49 @@ SinfexExpression::eval_op (uint opx)
       }
     case SINFEX_EQ:
       {
-        const Value &a = eval_op (*mark.up++), &b = eval_op (*mark.up++);
+        const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
         return Value (cmp_values (a, b) == 0);
       }
     case SINFEX_NE:
       {
-        const Value &a = eval_op (*mark.up++), &b = eval_op (*mark.up++);
+        const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
         return Value (cmp_values (a, b) != 0);
       }
     case SINFEX_LT:
       {
-        const Value &a = eval_op (*mark.up++), &b = eval_op (*mark.up++);
+        const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
         return Value (cmp_values (a, b) < 0);
       }
     case SINFEX_GT:
       {
-        const Value &a = eval_op (*mark.up++), &b = eval_op (*mark.up++);
+        const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
         return Value (cmp_values (a, b) > 0);
       }
     case SINFEX_LE:
       {
-        const Value &a = eval_op (*mark.up++), &b = eval_op (*mark.up++);
+        const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
         return Value (cmp_values (a, b) <= 0);
       }
     case SINFEX_GE:
       {
-        const Value &a = eval_op (*mark.up++), &b = eval_op (*mark.up++);
+        const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
         return Value (cmp_values (a, b) >= 0);
       }
     case SINFEX_FUNCTION:
       {
-        uint arg1 = *mark.up++;
+        Mark arg;
+        arg.up = m_start + *mark.up++;
         ui = *mark.up++;
-        printout ("FIXME:FUNC: %s (->ARGS:%u)\n", String (mark.cp, ui).c_str(), arg1);
-        return Value (0);
+        vector<Value> funcargs;
+        while (arg.up > m_start && *arg.up++ == SINFEX_ARG)
+          {
+            uint valindex = *arg.up++;
+            arg.up = m_start + *arg.up;
+            funcargs.push_back (eval_op (scope, valindex));
+          }
+        String funcname = String (mark.cp, ui);
+        Value result = scope.call_function ("", funcname, funcargs);
+        return result;
       }
     case SINFEX_ARG: ;
     }
