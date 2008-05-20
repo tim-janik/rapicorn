@@ -67,6 +67,92 @@ string_cunquote (const String &input) // FIXME
     return input; // missing string quotes
 }
 
+/* --- Sinfex standard functions --- */
+class StandardScope : public Sinfex::Scope {
+  Scope &m_chain_scope;
+  typedef Sinfex::Value Value;
+  double
+  vdouble (const Value &v)
+  {
+    return v.isreal() ? v.real() : v.asbool();
+  }
+  enum SeqType { SEQMIN = 1, SEQMAX, SEQSUM, SEQAVG, };
+  Value
+  seqfunc (const SeqType        seqtype,
+           const vector<Value> &args)
+  {
+    double accu = args.size() ? vdouble (args[0]) : 0;
+    for (uint i = 1; i < args.size(); i++)
+      {
+        double v = vdouble (args[i]);
+        switch (seqtype)
+          {
+          case SEQMIN:  accu = MIN (accu, v);   break;
+          case SEQMAX:  accu = MAX (accu, v);   break;
+          case SEQAVG:
+          case SEQSUM:  accu += v;              break;
+          }
+      }
+    if (seqtype == SEQAVG && args.size())
+      accu /= args.size();
+    return Value (accu);
+  }
+public:
+  StandardScope (Scope &chain) :
+    m_chain_scope (chain)
+  {}
+  virtual Value
+  resolve_variable (const String        &entity,
+                    const String        &name)
+  {
+    return m_chain_scope.resolve_variable (entity, name);
+  }
+#define MATH1FUNC(func,args)    Value (({ double v = func (vdouble (args[0])); v; }))
+#define RETURN_IF_MATH1FUNC(func,args,nm)     ({ if (nm == #func) return MATH1FUNC (func, args); })
+#define MATH2FUNC(func,args)    Value (({ double v = func (vdouble (args[0]), vdouble (args[1])); v; }))
+#define RETURN_IF_MATH2FUNC(func,args,nm)     ({ if (nm == #func) return MATH2FUNC (func, args); })
+  virtual Value
+  call_function (const String        &entity,
+                 const String        &name,
+                 const vector<Value> &args)
+  {
+    if (entity == "")
+      {
+        if (args.size() == 0)
+          {
+            if (name == "rand")
+              return Value (drand48());
+          }
+        else if (args.size() == 1)
+          {
+            RETURN_IF_MATH1FUNC (ceil,  args, name);
+            RETURN_IF_MATH1FUNC (floor, args, name);
+            RETURN_IF_MATH1FUNC (round, args, name);
+            RETURN_IF_MATH1FUNC (log10, args, name);
+            RETURN_IF_MATH1FUNC (log2, args, name);
+            RETURN_IF_MATH1FUNC (log, args, name);
+            RETURN_IF_MATH1FUNC (exp, args, name);
+          }
+        else if (args.size() == 2)
+          {
+            RETURN_IF_MATH2FUNC (hypot, args, name);
+          }
+        else
+          {
+            if (name == "min")
+              return seqfunc (SEQMIN, args);
+            else if (name == "max")
+              return seqfunc (SEQMAX, args);
+            else if (name == "sum")
+              return seqfunc (SEQSUM, args);
+            else if (name == "avg")
+              return seqfunc (SEQAVG, args);
+          }
+      }
+    return m_chain_scope.call_function (entity, name, args);
+  }
+};
+
 /* --- Sinfex Class --- */
 Sinfex::Sinfex () :
   m_start (NULL)
@@ -127,7 +213,10 @@ public:
     if (!m_start || !m_start[1])
       return Value (0);
     else
-      return eval_op (scope, m_start[1]);
+      {
+        StandardScope stdscope (scope);
+        return eval_op (stdscope, m_start[1]);
+      }
   }
 };
 

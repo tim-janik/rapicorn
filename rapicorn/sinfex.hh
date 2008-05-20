@@ -37,7 +37,7 @@ public:
                                            const String        &name,
                                            const vector<Value> &args) = 0;
   };
-  virtual Value  eval     (Scope &scop) = 0;
+  virtual Value  eval     (Scope &scope) = 0;
   /* Sinfex::Value implementation */
   class Value {
     String   m_string;
