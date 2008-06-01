@@ -121,7 +121,7 @@ public:
   uint  push_arg    (uint ex1, uint ex2)    { uint ix = index(); put_uint (SINFEX_ARG); put_uint (ex1); put_uint (ex2); return ix; }
   uint  push_double (double d)              { uint ix = index(); put_uint (SINFEX_REAL); put_double (d); return ix; }
   uint  push_string (const String &s)       { uint ix = index(); put_uint (SINFEX_STRING); put_string (s); return ix; }
-  uint  push_variable  (const char *name)   { uint ix = index(); put_uint (SINFEX_VARIABLE); put_string (name); return ix; }
+  uint  push_variable  (const String &name) { uint ix = index(); put_uint (SINFEX_VARIABLE); put_string (name); return ix; }
   uint
   push_entity_variable (const String &entity,
                         const String &name)

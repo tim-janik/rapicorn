@@ -97,6 +97,8 @@ single	: num		        { $$ = $1; }
 	| STRING	        { $$ = YYESTK.push_string (*$1); delete $1; $1 = NULL; }
 	| IDENT '.' IDENT	{ $$ = YYESTK.push_entity_variable (*$1, *$3);
 				  delete $1; delete $3; $1 = $3 = NULL; }
+	| IDENT                 { $$ = YYESTK.push_variable (*$1);
+				  delete $1; $1 = NULL; }
 ;
 num	: INTEGER               { $$ = YYESTK.push_double ($1); }
 	| FLOAT                 { $$ = YYESTK.push_double ($1); }

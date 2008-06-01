@@ -76,12 +76,27 @@ class StandardScope : public Sinfex::Scope {
   {
     return v.isreal() ? v.real() : v.asbool();
   }
-  enum SeqType { SEQMIN = 1, SEQMAX, SEQSUM, SEQAVG, };
+  Value
+  printfunc (uint                 stdnum,
+             const vector<Value> &args)
+  {
+    String s;
+    for (uint i = 0; i < args.size(); i++)
+      s += args[i].tostring();
+    if (stdnum == 1)
+      printout ("%s", s.c_str());
+    else if (stdnum == 2)
+      printerr ("%s", s.c_str());
+    return Value ("");
+  }
+  enum SeqType { SEQCOUNT, SEQMIN, SEQMAX, SEQSUM, SEQAVG, };
   Value
   seqfunc (const SeqType        seqtype,
            const vector<Value> &args)
   {
     double accu = args.size() ? vdouble (args[0]) : 0;
+    if (seqtype == SEQCOUNT)
+      return Value (args.size());
     for (uint i = 1; i < args.size(); i++)
       {
         double v = vdouble (args[i]);
@@ -91,6 +106,7 @@ class StandardScope : public Sinfex::Scope {
           case SEQMAX:  accu = MAX (accu, v);   break;
           case SEQAVG:
           case SEQSUM:  accu += v;              break;
+          default: ;
           }
       }
     if (seqtype == SEQAVG && args.size())
@@ -125,6 +141,10 @@ public:
           }
         else if (args.size() == 1)
           {
+            if (name == "bool")
+              return Value (args[0].asbool());
+            else if (name == "strbool")
+              return Value (string_to_bool (args[0].string()));
             RETURN_IF_MATH1FUNC (ceil,  args, name);
             RETURN_IF_MATH1FUNC (floor, args, name);
             RETURN_IF_MATH1FUNC (round, args, name);
@@ -137,17 +157,20 @@ public:
           {
             RETURN_IF_MATH2FUNC (hypot, args, name);
           }
-        else
-          {
-            if (name == "min")
-              return seqfunc (SEQMIN, args);
-            else if (name == "max")
-              return seqfunc (SEQMAX, args);
-            else if (name == "sum")
-              return seqfunc (SEQSUM, args);
-            else if (name == "avg")
-              return seqfunc (SEQAVG, args);
-          }
+        if (name == "count")
+          return seqfunc (SEQCOUNT, args);
+        else if (name == "min")
+          return seqfunc (SEQMIN, args);
+        else if (name == "max")
+          return seqfunc (SEQMAX, args);
+        else if (name == "sum")
+          return seqfunc (SEQSUM, args);
+        else if (name == "avg")
+          return seqfunc (SEQAVG, args);
+        else if (name == "printout")
+          return printfunc (1, args);
+        else if (name == "printerr")
+          return printfunc (2, args);
       }
     return m_chain_scope.call_function (entity, name, args);
   }

@@ -54,6 +54,12 @@
 	11$
   9 and not 0 and "rose"
 	rose$
+  bool (0) == 0 and bool (1) == 1 and bool (2) == 1 and bool (-3) == 1 and "OK"
+	OK
+  strbool ("yes") and not strbool ("no") and strbool ("true") and not strbool ("false") and OK
+	OK
+  strbool ("1") and not strbool ("0") and OK
+	OK
 
 # comparisons
   4 < 7 and not 7 < 4 and not 7 < 7 and not 4 > 7 and 7 > 4 and not 7 > 7 and "OK"
@@ -87,12 +93,12 @@
   testfunc (1,2,3, "string with numbers: 0,0, 0,0")
 	.*testfunc \(1, 2, 3, string with numbers: 0,0, 0,0\);
 
-# standard functions
+# math functions
   rand() > 0 and rand() != rand() and "OK"
 	OK
-  min (6, 3, 4, 5, 2, 9, 7, 8) == 2 and "OK"
+  min (6, 3, 4, 5, 2, 9, 7, 8) == 2 and min (1) == 1 and "OK"
 	OK
-  max (6, 3, 4, 5, 2, 9, 7, 8) == 9 and "OK"
+  max (6, 3, 4, 5, 2, 9, 7, 8) == 9 and max (1) == 1 and "OK"
 	OK
   sum (6, 3, 4, 5, 2, 9, 7, 8) == 44 and "OK"
 	OK
@@ -108,3 +114,11 @@
 	OK
   floor (8.8) == 8 and ceil (8.2) == 9 and round (7.3) == 7 and round (7.9) == 8 and "OK"
 	OK
+
+# other functions
+  count () == 0 and count (3) == 1 and count (5,4,3,2,1) == 5 and OK
+	OK
+  printout ("teststring1")
+	teststring1
+# printerr ("teststring2")
+#	teststring2
