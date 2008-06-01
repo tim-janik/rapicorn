@@ -32,6 +32,7 @@ DQSTRING                \"([^\"\\]+|\\.|\\\n)*\"
 SQSTRING                \'([^\'\\]+|\\.|\\\n)*\'
 STRING                  ({DQSTRING}|{SQSTRING})
 INTEGER                 [1-9][0-9]*
+HEXNUM                  0[xX][0-9a-fA-F]+
 FULLFLOAT               ([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-]?[0-9]+)?
 FRACTFLOAT              \.[0-9]+([eE][+-]?[0-9]+)?
 FLOAT                   ({FULLFLOAT}|{FRACTFLOAT})
@@ -44,6 +45,8 @@ IDENTIFIER              [a-z_A-Z][0-9a-z_A-Z]*
 
 {INTEGER}               { if (yyleng <= 17) { yylval->li = strtoull (yytext, NULL, 0); return INTEGER; }
 			  else { yylval->df = strtold (yytext, NULL); return FLOAT; } }
+
+{HEXNUM}                { yylval->li = strtoull (yytext, NULL, 0); return INTEGER; }
 
 {FLOAT}                 { yylval->df = strtold (yytext, NULL); return FLOAT; }
 
