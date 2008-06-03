@@ -25,6 +25,7 @@ namespace Rapicorn {
 struct ClassDoctor {
   static void item_constructed (Item &item) { item.constructed(); }
 };
+
 } // Rapicorn
 
 namespace { // Anon
@@ -194,15 +195,6 @@ public:
         s[i] = '_';
     return s;
   }
-  static String
-  canonify_attribute (const String &key)
-  {
-    /* skip gettext prefix */
-    String s = key[0] == '_' ? String (key, 1) : key;
-    if (s == "id")
-      return "name";
-    return Evaluator::canonify (s);
-  }
   virtual void
   start_element (const String  &element_name,
                  ConstStrings  &attribute_names,
@@ -226,7 +218,7 @@ public:
             child_container_name = "";
             for (uint i = 0; i < attribute_names.size(); i++)
               {
-                String canonified_attribute = canonify_attribute (attribute_names[i]);
+                String canonified_attribute = Evaluator::canonify_key (attribute_names[i]);
                 if (canonified_attribute == "name")
                   error.set (INVALID_CONTENT,
                              String() + "invalid attribute for inherited widget: " +
@@ -259,7 +251,7 @@ public:
       {
         GadgetDef *dgadget = dynamic_cast<GadgetDef*> (gadget_stack.top());
         assert (dgadget != NULL); // must succeed for gadget_stack.top()
-        String ident = Evaluator::canonify (element_name.substr (4));
+        String ident = Evaluator::canonify_name (element_name.substr (4));
         if (dgadget->custom_arguments.find (ident) != dgadget->custom_arguments.end())
           error.set (INVALID_CONTENT, String() + "redeclaration of argument: " + element_name);
         else
@@ -267,7 +259,7 @@ public:
             String default_value = "";
             for (uint i = 0; i < attribute_names.size(); i++)
               {
-                String canonified_attribute = canonify_attribute (attribute_names[i]);
+                String canonified_attribute = Evaluator::canonify_key (attribute_names[i]);
                 if (canonified_attribute == "default")
                   default_value = attribute_values[i];
                 else
@@ -296,7 +288,7 @@ public:
         VariableMap vmap;
         for (uint i = 0; i < attribute_names.size(); i++)
           {
-            String canonified_attribute = canonify_attribute (attribute_names[i]);
+            String canonified_attribute = Evaluator::canonify_key (attribute_names[i]);
             if (canonified_attribute == "name")
               gadget_name = attribute_values[i];
             else if (canonified_attribute == "child_container" ||
@@ -338,7 +330,7 @@ public:
       {}
     else if (element_name.compare (0, 5, "prop:") == 0 && bgadget)
       {
-        String canonified_attribute = canonify_attribute (element_name.substr (5));
+        String canonified_attribute = Evaluator::canonify_key (element_name.substr (5));
         if (!canonified_attribute.size() ||
             canonified_attribute == "name" ||
             canonified_attribute == "child_container" ||
@@ -595,7 +587,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
   try {
     VariableMap unused_args;
     for (ConstVariableIter it = call_args.begin(); it != call_args.end(); it++)
-      if (!item.try_set_property (it->first, env.expand_expression (it->second)))
+      if (!item.try_set_property (it->first, env.parse_eval (it->second)))
         unused_args[it->first] = it->second;
     call_args = unused_args;
   } catch (...) {

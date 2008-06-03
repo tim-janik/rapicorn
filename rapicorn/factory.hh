@@ -26,17 +26,17 @@ namespace Rapicorn {
 namespace Factory {
 
 /* --- Factory API --- */
-typedef map<String,String>      VariableMap;
-typedef std::list<String>       ArgumentList;   /* elements: key=utf8string */
-int /*-errno*/    parse_file       (const String           &i18n_domain,
-                                    const String           &file_name,
-                                    const String           &domain = "");
-Item&             create_item      (const String           &item_identifier,
-                                    const ArgumentList     &arguments = ArgumentList());
-Container&        create_container (const String           &container_identifier,
-                                    const ArgumentList     &arguments = ArgumentList());
-Window            create_window    (const String           &window_identifier,
-                                    const ArgumentList     &arguments = ArgumentList());
+typedef map<String,String>       VariableMap;
+typedef std::list<String>        ArgumentList;  /* elements: key=utf8string */
+int /*-errno*/  parse_file       (const String           &i18n_domain,
+                                  const String           &file_name,
+                                  const String           &domain = "");
+Item&           create_item      (const String           &item_identifier,
+                                  const ArgumentList     &arguments = ArgumentList());
+Container&      create_container (const String           &container_identifier,
+                                  const ArgumentList     &arguments = ArgumentList());
+Window          create_window    (const String           &window_identifier,
+                                  const ArgumentList     &arguments = ArgumentList());
 
 /* --- item type registration --- */
 struct ItemTypeFactory : Deletable {
@@ -72,7 +72,7 @@ public:
   {
     register_item_factory (this);
     sanity_check_identifier (namespaced_ident);
-  }        
+  }
 };
 
 } // Rapicorn

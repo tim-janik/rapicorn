@@ -18,55 +18,6 @@
 
 namespace Rapicorn {
 
-String
-string_cunquote (const String &input) // FIXME
-{
-  uint i = 0;
-  if (i < input.size() && (input[i] == '"' || input[i] == '\''))
-    {
-      const char qchar = input[i];
-      i++;
-      String out;
-      bool be = false;
-      while (i < input.size() && (input[i] != qchar || be))
-        {
-          if (!be && input[i] == '\\')
-            be = true;
-          else
-            {
-              if (be)
-                switch (input[i])
-                  {
-                  case 'n':     out += '\n';            break;
-                  case 'r':     out += '\r';            break;
-                  case 't':     out += '\t';            break;
-                  case 'b':     out += '\b';            break;
-                  case 'f':     out += '\f';            break;
-                  case 'v':     out += '\v';            break;
-                  default:      out += input[i];        break;
-                  }
-              else
-                out += input[i];
-              be = false;
-            }
-          i++;
-        }
-      if (i < input.size() && input[i] == qchar)
-        {
-          i++;
-          if (i < input.size())
-            return input; // extraneous characters after string quotes
-          return out;
-        }
-      else
-        return input; // unclosed string quotes
-    }
-  else if (i == input.size())
-    return input; // empty string arg: ""
-  else
-    return input; // missing string quotes
-}
-
 /* --- Sinfex standard functions --- */
 class StandardScope : public Sinfex::Scope {
   Scope &m_chain_scope;
@@ -75,6 +26,18 @@ class StandardScope : public Sinfex::Scope {
   vdouble (const Value &v)
   {
     return v.isreal() ? v.real() : v.asbool();
+  }
+  double
+  str2real (const char *str)
+  {
+    while (*str && (str[0] == ' ' || str[0] == '\t'))
+      str++;
+    double real;
+    if (str[0] == 0 && (str[1] == 'x' || str[1] == 'X'))
+      real = string_to_uint (str);
+    else
+      real = string_to_double (str);
+    return real;
   }
   Value
   printfunc (uint                 stdnum,
@@ -145,6 +108,8 @@ public:
               return Value (args[0].asbool());
             else if (name == "strbool")
               return Value (string_to_bool (args[0].string()));
+            else if (name == "real")
+              return Value (str2real (args[0].string().c_str()));
             RETURN_IF_MATH1FUNC (ceil,  args, name);
             RETURN_IF_MATH1FUNC (floor, args, name);
             RETURN_IF_MATH1FUNC (round, args, name);
@@ -191,7 +156,7 @@ Sinfex::~Sinfex ()
 }
 
 Sinfex::Value::Value (const String &s) :
-  m_string (string_cunquote (s)), m_real (0), m_strflag (1)
+  m_string (string_from_cquote (s)), m_real (0), m_strflag (1)
 {}
 
 String

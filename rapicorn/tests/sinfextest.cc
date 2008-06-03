@@ -25,8 +25,130 @@ using namespace Rapicorn;
 #include <readline/history.h>   // for --shell
 #endif
 
+#define STRLINE         STRLINE2 (__LINE__)
+#define STRLINE2(txt)   RAPICORN_STRINGIFY_ARG (txt) // must be defined *after* STRLINE
+
 namespace {
 using namespace Rapicorn;
+
+static void
+eval_expect_tests ()
+{
+  const char *eetests[] = {
+    /* basics */
+    STRLINE, "", "",
+    STRLINE, "foo", "foo",
+    STRLINE, "``", "`",
+    STRLINE, "`17`", "17",
+    STRLINE, "`not 0`", "1",
+    STRLINE, "`not 1`", "0",
+    STRLINE, "`not not 'ABC'`", "1",
+    STRLINE, "before`not 0`", "before1",
+    STRLINE, "`not 0`after", "1after",
+    STRLINE, "before`not 0`after", "before1after",
+    STRLINE, "`not 0`", "1",
+    STRLINE, "`not 1`", "0",
+    STRLINE, "`not (0)`", "1",
+    STRLINE, "`not 'string'`", "0",
+    /* logic */
+    STRLINE, "`0 or 0`", "0",
+    STRLINE, "`0 or 1`", "1",
+    STRLINE, "`1 or 0`", "1",
+    STRLINE, "`0 or 1 or 0`", "1",
+    STRLINE, "`1 and 1`", "1",
+    STRLINE, "`0 and 1`", "0",
+    STRLINE, "`1 and 0`", "0",
+    STRLINE, "`1 and 1 and 1`", "1",
+    STRLINE, "`not 3 == 4 and 4 == 4 and not 5 == 4 and 'OK'`", "OK",
+    STRLINE, "`3 != 4 and not 4 != 4 and 5 != 4 and 'OK'`", "OK",
+    STRLINE, "`not 4 < 3 and not 4 < 4 and 4 < 5 and 'OK'`", "OK",
+    STRLINE, "`not 3 > 4 and not 4 > 4 and 5 > 4 and 'OK'`", "OK",
+    STRLINE, "`not 4 <= 3 and 4 <= 4 and 4 <= 5 and 'OK'`", "OK",
+    STRLINE, "`not 3 >= 4 and 4 >= 4 and 5 >= 4 and 'OK'`", "OK",
+    STRLINE, "`'a' == 'a' and not 'a' == 'b' and not 'b' == 'a' and 'OK'`", "OK",
+    STRLINE, "`not 'a' != 'a' and 'a' != 'b' and 'b' != 'a' and 'OK'`", "OK",
+    STRLINE, "`not 'a' < 'a' and 'a' < 'b' and not 'b' < 'a' and 'OK'`", "OK",
+    STRLINE, "`'a' <= 'a' and 'a' <= 'b' and not 'b' <= 'a' and 'OK'`", "OK",
+    STRLINE, "`not 'a' > 'a' and not 'a' > 'b' and 'b' > 'a' and 'OK'`", "OK",
+    STRLINE, "`'a' >= 'a' and not 'a' >= 'b' and 'b' >= 'a' and 'OK'`", "OK",
+    /* boolean conversion */
+    STRLINE, "`bool (0)`", "0",
+    STRLINE, "`bool (1)`", "1",
+    STRLINE, "`bool (2)`", "1",
+    STRLINE, "`bool (0)`", "0",
+    STRLINE, "`bool (1)`", "1",
+    STRLINE, "`bool (2)`", "1",
+    STRLINE, "`bool ('')`", "0",
+    STRLINE, "`bool ('t')`", "1",
+    STRLINE, "`bool ('f')`", "1",
+    STRLINE, "`bool ('0')`", "1",
+    STRLINE, "`bool (0x0)`", "0",
+    STRLINE, "`bool (0x1)`", "1",
+    STRLINE, "`bool (0x5)`", "1",
+    STRLINE, "`bool (0x9)`", "1",
+    STRLINE, "`bool (0x0b)`", "1",
+    // STRLINE, "`bool (0b)`", "0", // parse error
+    /* boolean strings */
+    STRLINE, "`strbool ('n')`", "0",
+    STRLINE, "`strbool ('y')`", "1",
+    STRLINE, "`strbool ('Off')`", "0",
+    STRLINE, "`strbool ('On')`", "1",
+    STRLINE, "`strbool ('false')`", "0",
+    STRLINE, "`strbool ('true')`", "1",
+    /* strings as numbers */
+    STRLINE, "`(1 * real ('12') + 1 + real ('2') - 1) / real ('2')`", "7",
+    STRLINE, "`real ('123') == 123 and real ('123') != 122 and 'OK'`", "OK",
+    STRLINE, "`real ('0x2') > 1 and real ('1') < 0x2 and real ('0x1234') == 4660 and 'OK'`", "OK",
+    STRLINE, "`real ('2') >= 2 and real ('3') <= 3 and 'OK'`", "OK",
+    /* variables */
+    STRLINE, "plaintext", "plaintext",
+    STRLINE, "`empty`", "",
+    STRLINE, "`zero`", "0",
+    STRLINE, "`one`", "1",
+    STRLINE, "before^`one`", "before^1",
+    STRLINE, "`one`^after", "1^after",
+    STRLINE, "before^`one`^after", "before^1^after",
+    STRLINE, "`empty == ''`", "1",
+    STRLINE, "`zero == 0`", "1",
+    STRLINE, "`one == 1`", "1",
+    STRLINE, "`zero == real ('0')`", "1",
+    STRLINE, "`one == real ('1')`", "1",
+    /* standard variables */
+    STRLINE, "`RAPICORN_ARCHITECTURE == ''`", "0",
+    STRLINE, "`RAPICORN_VERSION == ''`", "0",
+    /* functions */
+    STRLINE, "`count()`", "0",
+    STRLINE, "`count ()`", "0",
+    STRLINE, "`count(0)`", "1",
+    STRLINE, "`count (0)`", "1",
+    STRLINE, "`count(0,1)`", "2",
+    STRLINE, "`count (0,1)`", "2",
+    STRLINE, "`count(0, 1)`", "2",
+    STRLINE, "`count (0, 1)`", "2",
+    STRLINE, "`count (1, 2, 3)`", "3",
+    STRLINE, "`rand() > 0 and rand() != rand() and 'OK'`", "OK",
+  };
+  Evaluator ev;
+  Evaluator::VariableMap map;
+  const char *variables[] = {
+    "empty=", "zero=0", "one=1",
+  };
+  for (uint i = 0; i < ARRAY_SIZE (variables); i++)
+    {
+      String key, value;
+      if (Evaluator::split_argument (variables[i], key, value))
+        map[key] = value;
+    }
+  ev.push_map (map);
+  for (uint i = 0; i < ARRAY_SIZE (eetests); i += 3)
+    {
+      const char *sline = eetests[i], *expr = eetests[i + 1], *expect = eetests[i + 2];
+      String result = ev.parse_eval (expr);
+      if (result != expect)
+        error ("%s:%s: Evaluator mismatch: %s != %s", __FILE__, sline, result.c_str(), expect);
+    }
+  ev.pop_map (map);
+}
 
 static void
 test_basics ()
@@ -149,6 +271,7 @@ main (int   argc,
     }
 
   Test::add ("Sinfex/Basics", test_basics);
+  Test::add ("Sinfex/Expressions", eval_expect_tests);
 
   return Test::run();
 }

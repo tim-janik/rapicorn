@@ -21,36 +21,23 @@
 #include <list>
 
 namespace Rapicorn {
-class Evaluator {
-public:
-  typedef std::map<String,String> VariableMap;
-  typedef std::list<String>       ArgumentList; /* elements: key=utf8string */
-  virtual      ~Evaluator                       (); // FIXME: destructor required by gcc-3.4
+
+struct Evaluator {
+  typedef std::list<String>             ArgumentList; /* elements: key=utf8string */
+  typedef std::map<String,String>       VariableMap;
+  typedef std::list<const VariableMap*> VariableMapList;
+  static String     canonify_name   (const String       &key); /* chars => [A-Za-z0-9_] */
+  static String     canonify_key    (const String       &key); /* canonify, id=>name, strip leading '_' */
+  static bool       split_argument  (const String       &argument,
+                                     String             &key,
+                                     String             &value);
+  static void       populate_map    (VariableMap        &vmap,
+                                     const ArgumentList &args);
+  void              push_map        (const VariableMap  &vmap);
+  void              pop_map         (const VariableMap  &vmap);
+  String            parse_eval      (const String       &expression);
 private:
-  const char*   expand_variable                 (const char   *expression,
-                                                 String       &result);
-  const char*   expand_formula                  (const char   *expression,
-                                                 String       &result);
-  String        lookup                          (const String &var);
-  VariableMap   default_map;
-  std::list<const VariableMap*> env_maps;
-public:
-  explicit      Evaluator                      ();
-  static String canonify                       (const String       &key); /* chars => [A-Za-z0-9_] */
-  static String canonify_key                   (const String       &key); /* canonify, 'id' => 'name' */
-  static void   populate_map                   (VariableMap        &vmap,
-                                                const ArgumentList &args);
-  static void   populate_map                   (VariableMap        &vmap,
-                                                const VariableMap  &args);
-  static void   replenish_map                  (VariableMap        &vmap,
-                                                const ArgumentList &args);
-  static void   replenish_map                  (VariableMap        &vmap,
-                                                const VariableMap  &args);
-  void          push_map                       (const VariableMap  &vmap);
-  void          pop_map                        (const VariableMap  &vmap);
-  void          set                            (const String &key_eq_utf8string);
-  String        expand_expression              (const String &expression);
-  String        debug_dump                     (void);
+  VariableMapList   env_maps;
 };
 
 } // Rapicorn
