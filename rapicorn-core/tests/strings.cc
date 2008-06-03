@@ -249,6 +249,11 @@ string_conversions (void)
   assert (string_to_cquote ("\"") == "\\\"");
   assert (string_to_cquote ("\\") == "\\\\");
   assert (string_to_cquote ("\1") == "\\001");
+  assert (string_from_cquote ("''") == "");
+  assert (string_from_cquote ("\"\"") == "");
+  assert (string_from_cquote ("'foo\"bar'") == "foo\"bar");
+  assert (string_from_cquote ("\"newline\\nreturn\\rtab\\tbell\\bformfeed\\fvtab\\vbackslash\\\\tick'end\"") ==
+          "newline\nreturn\rtab\tbell\bformfeed\fvtab\vbackslash\\tick'end");
 }
 
 static void

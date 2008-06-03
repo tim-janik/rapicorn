@@ -888,6 +888,55 @@ string_to_cquote (const String &str)
   return buffer;
 }
 
+String
+string_from_cquote (const String &input)
+{
+  uint i = 0;
+  if (i < input.size() && (input[i] == '"' || input[i] == '\''))
+    {
+      const char qchar = input[i];
+      i++;
+      String out;
+      bool be = false;
+      while (i < input.size() && (input[i] != qchar || be))
+        {
+          if (!be && input[i] == '\\')
+            be = true;
+          else
+            {
+              if (be)
+                switch (input[i])
+                  {
+                  case 'n':     out += '\n';            break;
+                  case 'r':     out += '\r';            break;
+                  case 't':     out += '\t';            break;
+                  case 'b':     out += '\b';            break;
+                  case 'f':     out += '\f';            break;
+                  case 'v':     out += '\v';            break;
+                  default:      out += input[i];        break;
+                  }
+              else
+                out += input[i];
+              be = false;
+            }
+          i++;
+        }
+      if (i < input.size() && input[i] == qchar)
+        {
+          i++;
+          if (i < input.size())
+            return input; // extraneous characters after string quotes
+          return out;
+        }
+      else
+        return input; // unclosed string quotes
+    }
+  else if (i == input.size())
+    return input; // empty string arg: ""
+  else
+    return input; // missing string quotes
+}
+
 static const char *whitespaces = " \t\v\f\n\r";
 
 String
