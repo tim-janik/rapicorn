@@ -259,6 +259,15 @@ string_conversions (void)
   assert (string_from_cquote ("'foo\"bar'") == "foo\"bar");
   assert (string_from_cquote ("\"newline\\nreturn\\rtab\\tbell\\bformfeed\\fvtab\\vbackslash\\\\tick'end\"") ==
           "newline\nreturn\rtab\tbell\bformfeed\fvtab\vbackslash\\tick'end");
+  const char *quotetests[] = {
+    "", "\"", "\\", "abcdefg\b\v\ffoo\"bar'baz'zonk\"end",
+    "~\377\277\154\22\01", "null\000null",
+  };
+  for (uint i = 0; i < ARRAY_SIZE (quotetests); i++)
+    if (string_from_cquote (string_to_cquote (quotetests[i])) != quotetests[i])
+      error ("cquote inconsistency for \"%s\": %s -> %s", quotetests[i],
+             string_to_cquote (quotetests[i]).c_str(),
+             string_from_cquote (string_to_cquote (quotetests[i])).c_str());
 }
 
 static void

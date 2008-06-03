@@ -889,6 +889,12 @@ string_to_cescape (const String &str)
 }
 
 String
+string_to_cquote (const String &str)
+{
+  return String() + "\"" + string_to_cescape (str) + "\"";
+}
+
+String
 string_from_cquote (const String &input)
 {
   uint i = 0;

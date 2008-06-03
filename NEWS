@@ -1,3 +1,7 @@
+Rapicorn NEXT:
+
+* Changed string_to_cquote() to add double quotes.
+
 Rapicorn 8.4.0: - Thu Apr 24 23:19:39 CEST 2008
 
 * Changed versioning scheme to YEAR.MONTH.REVISION.

@@ -225,6 +225,7 @@ int                             string_cmp_uuid          (const String &uuid_str
                                                           const String &uuid_string2); /* -1=smaller, 0=equal, +1=greater (assuming valid uuid strings) */
 String  string_from_pretty_function_name                 (const char *gnuc_pretty_function);
 String  string_to_cescape                                (const String &str);
+String  string_to_cquote                                 (const String &str);
 String  string_from_cquote                               (const String &input);
 String  string_lstrip                                    (const String &input);
 String  string_rstrip                                    (const String &input);
