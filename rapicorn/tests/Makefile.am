@@ -53,9 +53,6 @@ TESTS             += factory
 factory_SOURCES    = factory.cc
 factory_LDADD      = $(LDADDS)
 XML_FILES         += factory.xml
-TESTS             += evaltest
-evaltest_SOURCES   = evaltest.cc
-evaltest_LDADD     = $(LDADDS)
 
 
 SINFEX=./sinfextest --shell
