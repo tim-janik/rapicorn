@@ -251,6 +251,11 @@ string_conversions (void)
   assert (string_to_cescape ("\1") == "\\001");
   assert (string_from_cquote ("''") == "");
   assert (string_from_cquote ("\"\"") == "");
+  assert (string_from_cquote ("\"\\1\"") == "\1");
+  assert (string_from_cquote ("\"\\11\"") == "\t");
+  assert (string_from_cquote ("\"\\111\"") == "I");
+  assert (string_from_cquote ("\"\\1111\"") == "I1");
+  assert (string_from_cquote ("\"\\7\\8\\9\"") == "\a89");
   assert (string_from_cquote ("'foo\"bar'") == "foo\"bar");
   assert (string_from_cquote ("\"newline\\nreturn\\rtab\\tbell\\bformfeed\\fvtab\\vbackslash\\\\tick'end\"") ==
           "newline\nreturn\rtab\tbell\bformfeed\fvtab\vbackslash\\tick'end");

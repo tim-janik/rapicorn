@@ -907,6 +907,16 @@ string_from_cquote (const String &input)
               if (be)
                 switch (input[i])
                   {
+                    uint k, oc;
+                  case '0': case '1': case '2': case '3':
+                  case '4': case '5': case '6': case '7':
+                    k = MIN (input.size(), i + 3);
+                    oc = input[i++] - '0';
+                    while (i < k && input[i] >= '0' && input[i] <= '7')
+                      oc = oc * 8 + input[i++] - '0';
+                    out += char (oc);
+                    i--;
+                    break;
                   case 'n':     out += '\n';            break;
                   case 'r':     out += '\r';            break;
                   case 't':     out += '\t';            break;
