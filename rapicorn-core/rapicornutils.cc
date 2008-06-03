@@ -870,7 +870,7 @@ string_from_pretty_function_name (const char *gnuc_pretty_function)
 }
 
 String
-string_to_cquote (const String &str)
+string_to_cescape (const String &str)
 {
   String buffer;
   for (String::const_iterator it = str.begin(); it != str.end(); it++)

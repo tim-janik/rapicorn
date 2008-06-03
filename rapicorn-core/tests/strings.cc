@@ -245,10 +245,10 @@ string_conversions (void)
 {
   assert (string_from_pretty_function_name ("Anon::Type::Type(int)") == "Anon::Type::Type");
   assert (string_from_pretty_function_name ("void (** (* Anon::Class::func())(void (*zoot)(int)))(int)") == "Anon::Class::func");
-  assert (string_to_cquote ("\"") == "\\\"");
-  assert (string_to_cquote ("\"") == "\\\"");
-  assert (string_to_cquote ("\\") == "\\\\");
-  assert (string_to_cquote ("\1") == "\\001");
+  assert (string_to_cescape ("\"") == "\\\"");
+  assert (string_to_cescape ("\"") == "\\\"");
+  assert (string_to_cescape ("\\") == "\\\\");
+  assert (string_to_cescape ("\1") == "\\001");
   assert (string_from_cquote ("''") == "");
   assert (string_from_cquote ("\"\"") == "");
   assert (string_from_cquote ("'foo\"bar'") == "foo\"bar");
