@@ -875,7 +875,7 @@ string_to_cescape (const String &str)
   String buffer;
   for (String::const_iterator it = str.begin(); it != str.end(); it++)
     {
-      char d = *it;
+      uint8 d = *it;
       if (d < 32 || d > 126 || d == '?')
         buffer += string_printf ("\\%03o", d);
       else if (d == '\\')
