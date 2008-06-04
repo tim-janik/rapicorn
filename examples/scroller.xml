@@ -35,7 +35,7 @@
     <arg:test-button-text default="ClickMe" />
     <Label>
       <prop:markup-text>
-	<font family='Serif'><larger><larger><larger><larger>[ $test_button_text ]</larger></larger></larger></larger></font>
+	<font family='Serif'><larger><larger><larger><larger>[ `test_button_text` ]</larger></larger></larger></larger></font>
       </prop:markup-text>
     </Label>
   </def:test-button>
