@@ -32,21 +32,7 @@ variable_map_list_lookup (const VariableMapList &env_maps,
     {
       Evaluator::VariableMap::const_iterator cit = (*it)->find (key);
       if (cit != (*it)->end())
-        {
-          const String &v = cit->second;
-          if (v.size() == 0)
-            return Sinfex::Value ("");
-          if (v[0] == '0' && v.size() > 1 && (v[1] == 'x' || v[1] == 'X'))
-            return Sinfex::Value (string_to_uint (v));
-          if (v[0] >= '0' && v[0] <= '9')
-            return Sinfex::Value (string_to_double (v));
-          if (v.size() > 1 && v[0] == '.' && v[1] >= '0' && v[1] <= '9')
-            return Sinfex::Value (string_to_double (v));
-          if (v[0] == '"' || v[0] == '\'')
-            return Sinfex::Value (string_from_cquote (v));
-          warning ("invalid variable value syntax: %s", v.c_str());
-          return Sinfex::Value (nanl ("0xbadfeed"));
-        }
+        return Sinfex::Value (cit->second);
     }
   if (key == "RAPICORN_VERSION")
     return Sinfex::Value (RAPICORN_VERSION);

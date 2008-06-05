@@ -55,7 +55,7 @@
   <def:DefaultButton inherit="Rapicorn::Factory::Frame" child-container="child-area" frame-type="in" >
     <arg:on-click />
     <Alignment left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
-      <Button id="child-area" on-click="$on_click"/>
+      <Button id="child-area" on-click="`on_click`"/>
     </Alignment>
   </def:DefaultButton>
 
