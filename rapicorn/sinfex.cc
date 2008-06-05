@@ -307,7 +307,7 @@ SinfexExpression::eval_op (Scope &scope,
       {
         const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
         if (a.isreal() && b.isreal())
-          return Value (b.real() != 0.0 ? a.real() / b.real() : nanl (0));
+          return Value (b.real() != 0.0 ? a.real() / b.real() : nanl ("0xbad0"));
         else
           error ("incompatible value types in '/'\n");
       }

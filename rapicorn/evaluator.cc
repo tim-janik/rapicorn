@@ -45,7 +45,7 @@ variable_map_list_lookup (const VariableMapList &env_maps,
           if (v[0] == '"' || v[0] == '\'')
             return Sinfex::Value (string_from_cquote (v));
           warning ("invalid variable value syntax: %s", v.c_str());
-          return Sinfex::Value (nanl (0));
+          return Sinfex::Value (nanl ("0xbadfeed"));
         }
     }
   if (key == "RAPICORN_VERSION")
