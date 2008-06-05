@@ -43,16 +43,16 @@ public:
     String   m_string;
     double   m_real;
     bool     m_strflag;
-    String   realstring () const;
+    String   real2string () const;
+    double   string2real () const;
   public:
-    bool     isreal     () const { return !m_strflag; }
-    bool     isstring   () const { return m_strflag; }
-    double   real       () const { return !m_strflag ? m_real : 0.0; }
-    String   string     () const { return m_strflag ? m_string : ""; }
-    bool     asbool     () const { return (!m_strflag && m_real) || (m_strflag && m_string != ""); }
-    explicit Value      (double        d) : m_real (d), m_strflag (0) {}
-    explicit Value      (const String &s);
-    String   tostring   () const { return m_strflag ? m_string : realstring(); }
+    bool     isreal      () const { return !m_strflag; }
+    bool     isstring    () const { return m_strflag; }
+    double   real        () const { return !m_strflag ? m_real : string2real(); }
+    String   string      () const { return m_strflag ? m_string : real2string(); }
+    bool     asbool      () const { return (!m_strflag && m_real) || (m_strflag && m_string != ""); }
+    explicit Value       (double        d) : m_real (d), m_strflag (0) {}
+    explicit Value       (const String &s);
   };
 };
 

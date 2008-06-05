@@ -100,6 +100,10 @@ eval_expect_tests ()
     STRLINE, "`real ('123') == 123 and real ('123') != 122 and 'OK'`", "OK",
     STRLINE, "`real ('0x2') > 1 and real ('1') < 0x2 and real ('0x1234') == 4660 and 'OK'`", "OK",
     STRLINE, "`real ('2') >= 2 and real ('3') <= 3 and 'OK'`", "OK",
+    STRLINE, "`'123' == 123 and '123' != 122 and 'OK'`", "OK",
+    STRLINE, "`'0x2' > 1 and '1' < 0x2 and '0x1234' == 4660 and 'OK'`", "OK",
+    STRLINE, "`'2' >= 2 and '3' <= 3 and 'OK'`", "OK",
+    STRLINE, "`'21' == '21' and '21' != '21 ' and 'OK'`", "OK",
     /* variables */
     STRLINE, "plaintext", "plaintext",
     STRLINE, "`empty`", "",
@@ -113,6 +117,8 @@ eval_expect_tests ()
     STRLINE, "`one == 1`", "1",
     STRLINE, "`zero == real ('0')`", "1",
     STRLINE, "`one == real ('1')`", "1",
+    STRLINE, "`zero == '0'`", "1",
+    STRLINE, "`one == '1'`", "1",
     /* standard variables */
     STRLINE, "`RAPICORN_ARCHITECTURE == ''`", "0",
     STRLINE, "`RAPICORN_VERSION == ''`", "0",
@@ -209,7 +215,7 @@ struct EvalScope : public Sinfex::Scope {
   {
     printout ("FUNC: %s (", name.c_str());
     for (uint i = 0; i < args.size(); i++)
-      printout ("%s%s", i ? ", " : "", args[i].tostring().c_str());
+      printout ("%s%s", i ? ", " : "", args[i].string().c_str());
     printout (");\n");
     return Sinfex::Value (0);
   }
@@ -253,7 +259,7 @@ main (int   argc,
               free (malloc_string);
               EvalScope scope;
               Sinfex::Value v = sinfex->eval (scope);
-              String s = v.tostring();
+              String s = v.string();
               if (v.isreal())
                 {
                   char buffer[128];

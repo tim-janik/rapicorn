@@ -84,7 +84,7 @@ public:
       {
         if (i)
           funcstring += ", ";
-        funcstring += args[i].tostring();
+        funcstring += args[i].string();
       }
     funcstring += ")";
     warning ("%s: unknown function call: %s", "Rapicorn::Evaluator::Scope", funcstring.c_str());
@@ -208,7 +208,7 @@ expand_eval_expressions (const char           *warning_entity,
               Sinfex *sinfex = Sinfex::parse_string (expr);
               ref_sink (sinfex);
               Sinfex::Value value = sinfex->eval (scope);
-              result += value.tostring();
+              result += value.string();
               unref (sinfex);
             }
           i = e + 1;

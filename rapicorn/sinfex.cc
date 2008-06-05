@@ -25,7 +25,7 @@ class StandardScope : public Sinfex::Scope {
   double
   vdouble (const Value &v)
   {
-    return v.isreal() ? v.real() : v.asbool();
+    return v.real();
   }
   double
   str2real (const char *str)
@@ -45,7 +45,7 @@ class StandardScope : public Sinfex::Scope {
   {
     String s;
     for (uint i = 0; i < args.size(); i++)
-      s += args[i].tostring();
+      s += args[i].string();
     if (stdnum == 1)
       printout ("%s", s.c_str());
     else if (stdnum == 2)
@@ -160,9 +160,21 @@ Sinfex::Value::Value (const String &s) :
 {}
 
 String
-Sinfex::Value::realstring () const
+Sinfex::Value::real2string () const
 {
   return string_from_double (m_real);
+}
+
+double
+Sinfex::Value::string2real () const
+{
+  const char *str = m_string.c_str();
+  while (*str && (str[0] == ' ' || str[0] == '\t'))
+    str++;
+  if (str[0] == '0' && (str[1] == 'x' || str[1] == 'X'))
+    return string_to_uint (str);
+  else
+    return string_to_double (str);
 }
 
 /* --- SinfexExpression Class --- */
@@ -170,17 +182,14 @@ class SinfexExpression : public virtual Sinfex {
   inline int
   cmp_values (const Value &a, const Value &b)
   {
-    if (RAPICORN_UNLIKELY (a.isstring()))
-      {
-        if (RAPICORN_UNLIKELY (!b.isstring()))
-          return 1;
-        return strcmp (a.string().c_str(), b.string().c_str());
-      }
+    /* like ECMAScript, perform string comparison only if both types are strings */
+    if (RAPICORN_UNLIKELY (a.isstring()) && RAPICORN_UNLIKELY (b.isstring()))
+      return strcmp (a.string().c_str(), b.string().c_str());
     else
       {
-        if (RAPICORN_UNLIKELY (b.isstring()))
-          return -1;
-        return a.real() - b.real() < 0 ? -1 : a.real() - b.real() > 0 ? +1 : 0;
+        /* numrical comparison */
+        const double ar = a.real(), br = b.real();
+        return ar - br < 0 ? -1 : ar - br > 0 ? +1 : 0;
       }
   }
   Value eval_op (Scope &scope, uint opx);
@@ -266,58 +275,43 @@ SinfexExpression::eval_op (Scope &scope,
     case SINFEX_NEG:
       {
         const Value &a = eval_op (scope, *mark.up++);
-        if (a.isreal())
-          return Value (-a.real());
-        error ("incompatible value type for unary sign");
+        return Value (-a.real());
       }
     case SINFEX_POS:
       {
         const Value &a = eval_op (scope, *mark.up++);
-        if (a.isreal())
-          return a;
-        error ("incompatible value type for unary sign");
+        return Value (a.real());
       }
     case SINFEX_ADD:
       {
         const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
-        if (a.isreal() && b.isreal())
-          return Value (a.real() + b.real());
-        else if (a.isstring() && b.isstring())
+        /* like ECMAScript, perform string concatenation if either type is string */
+        if (a.isstring() || b.isstring())
           return Value (a.string() + b.string());
         else
-          error ("incompatible value types in '+'\n");
+          return Value (a.real() + b.real());
       }
     case SINFEX_SUB:
       {
         const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
-        if (a.isreal() && b.isreal())
-          return Value (a.real() - b.real());
-        else
-          error ("incompatible value types in '-'\n");
+        return Value (a.real() - b.real());
       }
     case SINFEX_MUL:
       {
         const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
-        if (a.isreal() && b.isreal())
-          return Value (a.real() * b.real());
-        else
-          error ("incompatible value types in '*'\n");
+        return Value (a.real() * b.real());
       }
     case SINFEX_DIV:
       {
         const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
-        if (a.isreal() && b.isreal())
-          return Value (b.real() != 0.0 ? a.real() / b.real() : nanl ("0xbad0"));
-        else
-          error ("incompatible value types in '/'\n");
+        double ar = a.real(), br = b.real();
+        /* like ECMAScript, produce +-Infinity for division by zero */
+        return Value (br != 0 ? ar / br : copysign (ar == 0 ? nanl ("0xbad0") : INFINITY, ar * br));
       }
     case SINFEX_POW:
       {
         const Value &a = eval_op (scope, *mark.up++), &b = eval_op (scope, *mark.up++);
-        if (a.isreal() && b.isreal())
-          return Value (pow (a.real(), b.real()));
-        else
-          error ("incompatible value types in '*'\n");
+        return Value (pow (a.real(), b.real()));
       }
     case SINFEX_EQ:
       {
