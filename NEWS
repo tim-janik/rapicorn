@@ -4,9 +4,6 @@ Incompatible changes:
 
 * Changed string_to_cquote() to add double quotes, string_to_cescape() can
   be used instead.
-* Variables of the form Key=Value passed as ArgumentList to create_item(),
-  create_container() or create_window() now have to enclose non-numeric
-  Values into quotes, e.g. "key='arbitrary string'".
 * The expression syntax for property values in GUI descriptions changed
   from $(function)-expressions to `backtick enclosed infix expressions`.
   A sample evaluator is provided by: rapicorn/tests/sinfextest --shell
