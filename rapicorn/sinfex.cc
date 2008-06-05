@@ -27,18 +27,6 @@ class StandardScope : public Sinfex::Scope {
   {
     return v.real();
   }
-  double
-  str2real (const char *str)
-  {
-    while (*str && (str[0] == ' ' || str[0] == '\t'))
-      str++;
-    double real;
-    if (str[0] == 0 && (str[1] == 'x' || str[1] == 'X'))
-      real = string_to_uint (str);
-    else
-      real = string_to_double (str);
-    return real;
-  }
   Value
   printfunc (uint                 stdnum,
              const vector<Value> &args)
@@ -109,7 +97,7 @@ public:
             else if (name == "strbool")
               return Value (string_to_bool (args[0].string()));
             else if (name == "real")
-              return Value (str2real (args[0].string().c_str()));
+              return Value (args[0].real());
             RETURN_IF_MATH1FUNC (ceil,  args, name);
             RETURN_IF_MATH1FUNC (floor, args, name);
             RETURN_IF_MATH1FUNC (round, args, name);
