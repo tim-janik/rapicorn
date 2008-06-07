@@ -7,6 +7,7 @@ PLICV       = plic-@PLIC_VERSION@
 PLICL       = plic
 
 bin_PROGRAMS = ${PLICV}
+
 # build parser
 Parser.py: Parser.g
 	yapps Parser.g xgen-$(@F) 2>&1 | tee xgen-$(@F).errors
@@ -15,11 +16,16 @@ Parser.py: Parser.g
 	cp -p xgen-$(@F) $@
 	rm -f xgen-$(@F) xgen-$(@F).errors
 EXTRA_DIST += Parser.g Parser.py
+
+CONFIGVARS = \
+	"pyutilsdir"	: "${pyutilsdir}",	\
+	"PLIC_VERSION"	: "${VERSION}"
+
 # build plic executable
 plic-@PLIC_VERSION@: plic.py Parser.py
-	cp $< xgen-$(@F)
-	sed 's|^#@PLICSUBST_PREIMPORT@|sys.path.insert (0, "${pyutilsdir}")|' -i xgen-$(@F)
-	sed 's|^"@PLICSUBST_VERSION@"|"${VERSION}"|' -i xgen-$(@F)
+	sed < $< > xgen-$(@F) \
+	  -e '1,1s|#!/usr/bin/env python\([0-9]\+\(\.[0-9]\+\)\?\)\?|#!${PYTHON}|' \
+	  -e '1,24s|^ *#@PKGINSTALL_CONFIGVARS_IN24LINES@|  ${CONFIGVARS}|'
 	chmod +x xgen-$(@F)
 	cp -p xgen-$(@F) $@
 	rm -f xgen-$(@F) xgen-$(@F).errors

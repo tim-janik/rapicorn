@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # plic - Pluggable IDL Compiler                                -*-mode:python-*-
-# Copyright (C) 2007 Tim Janik
+# Copyright (C) 2007-2008 Tim Janik
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,13 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 import sys
-true, false, length = (True, False, len)
-#@PLICSUBST_PREIMPORT@
-PLIC_VERSION=\
-"@PLICSUBST_VERSION@"   # this needs to be in column0 for @@ replacements to work
-
+pkginstall_configvars = {
+  #@PKGINSTALL_CONFIGVARS_IN24LINES@ # configvars are substituted upon script installation
+}
+sys.path.insert (0, pkginstall_configvars["pyutilsdir"])
 import yapps2runtime as runtime
 import Parser, Decls
+true, false, length = (True, False, len)
 
 debugging = 0 # causes exceptions to bypass IDL-file parser error handling
 
@@ -91,7 +91,7 @@ def parse_files_and_args ():
 
 def print_help (with_help = True):
   import os
-  print "plic (Rapicorn utils) version", PLIC_VERSION
+  print "plic (Rapicorn utils) version", pkginstall_configvars["PLIC_VERSION"]
   if not with_help:
     return
   print "Usage: %s [OPTIONS] <idlfile>" % os.path.basename (sys.argv[0])
