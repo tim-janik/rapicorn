@@ -14,14 +14,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-import sys, Decls
+import sys
 true, false, length = (True, False, len)
 #@PLICSUBST_PREIMPORT@
 PLIC_VERSION=\
 "@PLICSUBST_VERSION@"   # this needs to be in column0 for @@ replacements to work
 
 import yapps2runtime as runtime
-import Parser
+import Parser, Decls
 
 debugging = 0 # causes exceptions to bypass IDL-file parser error handling
 

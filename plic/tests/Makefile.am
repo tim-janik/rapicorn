@@ -3,6 +3,9 @@ include $(top_srcdir)/Makefile.decl
 
 PLIC = $(top_builddir)/plic/plic-@PLIC_VERSION@
 
+installcheck-local: $(srcdir)/testpass.idl
+	plic-@PLIC_VERSION@ $(srcdir)/testpass.idl
+
 check:	check-pass check-fail
 
 check-pass:	${PLIC} testpass.idl

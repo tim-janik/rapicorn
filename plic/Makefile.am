@@ -14,7 +14,7 @@ Parser.py: Parser.g
 	sed 's/^from yapps import runtime$$//' -i xgen-$(@F)	# parser.g has all imports
 	cp -p xgen-$(@F) $@
 	rm -f xgen-$(@F) xgen-$(@F).errors
-EXTRA_DIST += Parser.g
+EXTRA_DIST += Parser.g Parser.py
 # build plic executable
 plic-@PLIC_VERSION@: plic.py Parser.py
 	cp $< xgen-$(@F)
@@ -28,6 +28,7 @@ EXTRA_DIST += plic.py
 # install plic support module yapps2runtime.py
 pyutils_PYTHON = yapps2runtime.py
 pyutilsdir     = $(libdir)/rapicorn-@PLIC_VERSION@/pyutils
+pyutils_PYTHON = Decls.py Parser.py yapps2runtime.py
 
 # install/uninstall a "plic" link to "plic-PLIC_VERSION"
 install-exec-hook:
