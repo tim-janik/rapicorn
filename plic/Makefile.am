@@ -7,17 +7,23 @@ PLICV       = plic-@PLIC_VERSION@
 PLICL       = plic
 
 bin_PROGRAMS = ${PLICV}
-# build and install plic
-plic-@PLIC_VERSION@: plic.g
-	yapps plic.g xgen-$(@F) 2>&1 | tee xgen-$(@F).errors
+# build parser
+Parser.py: Parser.g
+	yapps Parser.g xgen-$(@F) 2>&1 | tee xgen-$(@F).errors
 	@! grep -q '.' xgen-$(@F).errors			# catch all yapps errors & warnings
-	sed 's/^from yapps import runtime$$//' -i xgen-$(@F)	# plic.g has all imports
+	sed 's/^from yapps import runtime$$//' -i xgen-$(@F)	# parser.g has all imports
+	cp -p xgen-$(@F) $@
+	rm -f xgen-$(@F) xgen-$(@F).errors
+EXTRA_DIST += Parser.g
+# build plic executable
+plic-@PLIC_VERSION@: plic.py Parser.py
+	cp $< xgen-$(@F)
 	sed 's|^#@PLICSUBST_PREIMPORT@|sys.path.insert (0, "${pyutilsdir}")|' -i xgen-$(@F)
 	sed 's|^"@PLICSUBST_VERSION@"|"${VERSION}"|' -i xgen-$(@F)
 	chmod +x xgen-$(@F)
 	cp -p xgen-$(@F) $@
 	rm -f xgen-$(@F) xgen-$(@F).errors
-EXTRA_DIST += plic.g
+EXTRA_DIST += plic.py
 
 # install plic support module yapps2runtime.py
 pyutils_PYTHON = yapps2runtime.py
