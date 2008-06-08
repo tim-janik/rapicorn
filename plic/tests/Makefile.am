@@ -4,13 +4,13 @@ include $(top_srcdir)/Makefile.decl
 PLIC = $(top_builddir)/plic/plic-@PLIC_VERSION@
 
 installcheck-local: $(srcdir)/testpass.idl
-	plic-@PLIC_VERSION@ $(srcdir)/testpass.idl
+	plic-@PLIC_VERSION@ $(srcdir)/testpass.idl > /dev/null
 	plic-@PLIC_VERSION@ --list-backends > /dev/null
 
 check:	check-pass check-fail
 
 check-pass:	${PLIC} testpass.idl
-	${PLIC} $(srcdir)/testpass.idl
+	${PLIC} $(srcdir)/testpass.idl > /dev/null
 
 check-fail:	${PLIC} testfail.idl
 	echo -n "testfail.idl: checked:" ; \
