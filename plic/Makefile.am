@@ -34,7 +34,13 @@ EXTRA_DIST += plic.py
 # install plic support module yapps2runtime.py
 pyutils_PYTHON = yapps2runtime.py
 pyutilsdir     = $(libdir)/rapicorn-@PLIC_VERSION@/pyutils
-pyutils_PYTHON = Decls.py Parser.py yapps2runtime.py
+pyutils_PYTHON = GType.py Decls.py Parser.py yapps2runtime.py
+
+# tests
+PLIC = ./${PLICV}
+check-list-backends:
+	${PLIC} --list-backends > /dev/null
+check-local: check-list-backends
 
 # install/uninstall a "plic" link to "plic-PLIC_VERSION"
 install-exec-hook:

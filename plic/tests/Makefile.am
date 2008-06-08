@@ -5,6 +5,7 @@ PLIC = $(top_builddir)/plic/plic-@PLIC_VERSION@
 
 installcheck-local: $(srcdir)/testpass.idl
 	plic-@PLIC_VERSION@ $(srcdir)/testpass.idl
+	plic-@PLIC_VERSION@ --list-backends > /dev/null
 
 check:	check-pass check-fail
 

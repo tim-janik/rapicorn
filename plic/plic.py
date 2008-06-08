@@ -24,7 +24,7 @@ import Parser, Decls
 true, false, length = (True, False, len)
 
 debugging = 0 # causes exceptions to bypass IDL-file parser error handling
-
+backends = [ 'GType' ]
 
 class ParseError (runtime.SyntaxError):
   def __init__ (self, msg = "Parse Error"):
@@ -34,14 +34,14 @@ class ParseError (runtime.SyntaxError):
     else: return 'ParseError@%s(%s)' % (repr (self.pos), self.msg)
 
 def main():
-  from sys import argv, stdin
-  files = parse_files_and_args()
+  from sys import stdin
+  config = parse_files_and_args()
+  files = config['files']
   if len (files) >= 1: # file IO
     f = open (files[0], 'r')
     input_string = f.read()
     filename = files[0]
   else:               # interactive
-    print >>sys.stderr, 'Usage: %s [filename]' % argv[0]
     try:
       input_string = raw_input ('IDL> ')
     except EOFError:
@@ -72,23 +72,6 @@ def main():
   else:
     print result
 
-def parse_files_and_args ():
-  from sys import argv, stdin
-  files = []
-  arg_iter = sys.argv[1:].__iter__()
-  rest = len (sys.argv) - 1
-  for arg in arg_iter:
-    rest -= 1
-    if arg == '--help' or arg == '-h':
-      print_help ()
-      sys.exit (0)
-    elif arg == '--version' or arg == '-v':
-      print_help (False)
-      sys.exit (0)
-    else:
-      files = files + [ arg ]
-  return files
-
 def print_help (with_help = True):
   import os
   print "plic (Rapicorn utils) version", pkginstall_configvars["PLIC_VERSION"]
@@ -98,6 +81,38 @@ def print_help (with_help = True):
   print "Options:"
   print "  --help, -h                print this help message"
   print "  --version, -v             print version info"
+  print "  -B,--backend=<backend>    select backend"
+  print "  --list-backends           list backend"
+
+def parse_files_and_args():
+  import re, getopt
+  config = { 'files' : [], 'backend' : None }
+  sop = 'vhB:'
+  lop = ['help', 'version', 'backend=', 'list-backends']
+  try:
+    options,args = getopt.gnu_getopt (sys.argv[1:], sop, lop)
+  except Exception, ex:
+    print >>sys.stderr, sys.argv[0] + ":", str (ex)
+    print_help(); sys.exit (1)
+  for arg,val in options:
+    if arg == '-h' or arg == '--help': print_help(); sys.exit (0)
+    if arg == '-v' or arg == '--version': print_help (false); sys.exit (0)
+    if arg == '-B' or arg == '--backend':
+      config['backend'] = val
+      if not val in backends:
+        print >>sys.stderr, sys.argv[0] + ": unknown backend:", val
+        print_help(); sys.exit (1)
+    if arg == '--list-backends':
+      print "\nAvailable backends:"
+      for be in backends:
+        bedoc = __import__ (be).__doc__
+        bedoc = re.sub ('\n\s*\n', '\n', bedoc)                         # remove empty lines
+        bedoc = re.compile (r'^', re.MULTILINE).sub ('    ', bedoc)     # indent
+        print "  %s" % be
+        print bedoc
+      sys.exit (0)
+  config['files'] += list (args)
+  return config
 
 if __name__ == '__main__':
   main()
