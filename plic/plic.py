@@ -24,7 +24,7 @@ import Parser, Decls
 true, false, length = (True, False, len)
 
 debugging = 0 # causes exceptions to bypass IDL-file parser error handling
-backends = [ 'GType' ]
+backends = [ 'GType', 'Rapicorn' ]
 
 class ParseError (runtime.SyntaxError):
   def __init__ (self, msg = "Parse Error"):
@@ -105,11 +105,12 @@ def parse_files_and_args():
     if arg == '--list-backends':
       print "\nAvailable backends:"
       for be in backends:
-        bedoc = __import__ (be).__doc__
+        bedoc = __import__ (be).__doc__.strip()
         bedoc = re.sub ('\n\s*\n', '\n', bedoc)                         # remove empty lines
         bedoc = re.compile (r'^', re.MULTILINE).sub ('    ', bedoc)     # indent
         print "  %s" % be
         print bedoc
+      print
       sys.exit (0)
   config['files'] += list (args)
   return config
