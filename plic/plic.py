@@ -16,6 +16,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 import sys
 pkginstall_configvars = {
+  'PLIC_VERSION' : '0.0-uninstalled',
+  'pyutilsdir'   : '.',
   #@PKGINSTALL_CONFIGVARS_IN24LINES@ # configvars are substituted upon script installation
 }
 sys.path.insert (0, pkginstall_configvars["pyutilsdir"])
@@ -65,12 +67,7 @@ def main():
     if exstr: exstr = ': ' + exstr
     runtime.print_error (ParseError ('%s%s' % (ex.__class__.__name__, exstr)), isp._scanner)
   if ex: sys.exit (7)
-  print 'namespaces ='
-  import pprint
-  if 1:
-    pprint.pprint (result)
-  else:
-    print result
+  __import__ (config['backend']).generate (result)
 
 def print_help (with_help = True):
   import os
@@ -86,7 +83,7 @@ def print_help (with_help = True):
 
 def parse_files_and_args():
   import re, getopt
-  config = { 'files' : [], 'backend' : None }
+  config = { 'files' : [], 'backend' : 'PrettyDump' }
   sop = 'vhB:'
   lop = ['help', 'version', 'backend=', 'list-backends']
   try:

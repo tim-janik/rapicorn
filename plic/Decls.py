@@ -40,6 +40,8 @@ class Namespace (BaseDecl):
     assert isinstance (type, TypeInfo)
     self.members += [ (type.name, type) ]
     self.type_dict[type.name] = type
+  def types (self):
+    return self.type_dict.values()
   def unknown (self, name):
     return not (self.const_dict.has_key (name) or self.type_dict.has_key (name))
   def find_const (self, name, fallback = None):
