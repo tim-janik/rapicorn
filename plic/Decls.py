@@ -60,7 +60,7 @@ class TypeInfo (BaseDecl):
     self.options = []           # holds: (ident, label, blurb, number)
     self.fields = []            # holds: (ident, TypeInfo)
     self.elements = None        # holds: ident, TypeInfo
-    self.interface = None
+    self.prerequisites = []
   def add_option (self, ident, label, blurb, number):
     assert self.storage == ENUM
     assert isinstance (ident, str)
