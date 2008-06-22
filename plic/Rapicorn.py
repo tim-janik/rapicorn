@@ -111,7 +111,7 @@ class Generator:
     s += t
     return s
   def generate_pack (self, namespace_list):
-    s = 'Rapicorn'      # magic
+    s = 'Rapicorn\r\n  '        # magic
     s += '_TP0'
     t = ''
     for ns in namespace_list:
