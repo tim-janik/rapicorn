@@ -171,4 +171,15 @@ record NewRecord {
   XFooSequence   xfs;
   NestedTypesRec ntr;
 };
+
+// namespace nesting
+namespace Inner {
+
+record InnerRecord {
+  Num           x;
+  Num           y;
+};
+
+}
+
 } // MandatoryNamespace

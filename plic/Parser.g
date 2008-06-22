@@ -29,12 +29,12 @@ keywords = ( 'TRUE', 'True', 'true', 'FALSE', 'False', 'false',
 class YYGlobals (object):
   def __init__ (self):
     self.ecounter = None
-    self.namespace = None
+    self.namespaces = []
     self.ns_list = [] # namespaces
   def nsadd_const (self, name, value):
     if not isinstance (value, (int, long, float, str)):
       raise TypeError ('constant expression does not yield string or number: ' + repr (typename))
-    self.namespace.add_const (name, value)
+    self.namespaces[0].add_const (name, value)
   def nsadd_evalue (self, evalue_ident, evalue_label, evalue_blurb, evalue_number = None):
     AS (evalue_ident)
     if evalue_number == None:
@@ -49,7 +49,7 @@ class YYGlobals (object):
     enum = Decls.TypeInfo (enum_name, Decls.ENUM)
     for ev in enum_values:
       enum.add_option (*ev)
-    self.namespace.add_type (enum)
+    self.namespaces[0].add_type (enum)
   def nsadd_record (self, name, rfields):
     AIn (name)
     if len (rfields) < 1:
@@ -61,7 +61,7 @@ class YYGlobals (object):
         raise NameError ('duplicate record field name: ' + field[0])
       fdict[field[0]] = true
       rec.add_field (field[0], field[1])
-    self.namespace.add_type (rec)
+    self.namespaces[0].add_type (rec)
   def nsadd_sequence (self, name, sfields):
     AIn (name)
     if len (sfields) < 1:
@@ -70,29 +70,34 @@ class YYGlobals (object):
       raise AttributeError ('invalid multiple fields in sequence: %s' % name)
     seq = Decls.TypeInfo (name, Decls.SEQUENCE)
     seq.set_elements (sfields[0][0], sfields[0][1])
-    self.namespace.add_type (seq)
+    self.namespaces[0].add_type (seq)
   def resolve_type (self, typename):
-    type_info = self.namespace.find_type (typename)
+    type_info = self.namespaces[0].find_type (typename)
     if not type_info:
       raise TypeError ('invalid typename: ' + repr (typename))
     return type_info
   def namespace_open (self, ident):
-    assert self.namespace == None
-    self.namespace = [ns for ns in self.ns_list if ns.name == ident]
-    self.namespace = self.namespace and self.namespace[0] or Decls.Namespace (ident)
+    full_ident = "::". join ([ns.name for ns in self.namespaces] + [ident])
+    namespace = None
+    for ns in self.ns_list:
+      if ns.name == ident:
+        namespace = ns
+    if not namespace:
+      namespace = Decls.Namespace (full_ident)
+      self.ns_list.append (namespace)
+    self.namespaces = [ namespace ] + self.namespaces
     # initialize namespace
-    self.namespace.add_type (Decls.TypeInfo ('Bool',   Decls.NUM))
-    self.namespace.add_type (Decls.TypeInfo ('Num',    Decls.NUM))
-    self.namespace.add_type (Decls.TypeInfo ('Real',   Decls.REAL))
-    self.namespace.add_type (Decls.TypeInfo ('String', Decls.STRING))
+    namespace.add_type (Decls.TypeInfo ('Bool',   Decls.NUM))
+    namespace.add_type (Decls.TypeInfo ('Num',    Decls.NUM))
+    namespace.add_type (Decls.TypeInfo ('Real',   Decls.REAL))
+    namespace.add_type (Decls.TypeInfo ('String', Decls.STRING))
   def namespace_close (self):
-    assert isinstance (self.namespace, Decls.Namespace)
-    self.ns_list.append (self.namespace)
-    self.namespace = None
+    assert len (self.namespaces)
+    self.namespaces = self.namespaces[1:]
 yy = YYGlobals() # globals
 
 def constant_lookup (variable):
-  value = yy.namespace.find_const (variable)
+  value = yy.namespaces[0].find_const (variable)
   if value == None:
     raise NameError ('undeclared constant: ' + variable)
   return value
@@ -122,9 +127,9 @@ def ASp (string_candidate, constname = None):   # assert plain string
 def ASi (string_candidate): # assert i18n string
   if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
 def AIn (identifier):   # assert new identifier
-  if not yy.namespace.unknown (identifier) or identifier in keywords:  raise KeyError ('redefining existing identifier: %s' % identifier)
+  if not yy.namespaces[0].unknown (identifier) or identifier in keywords:  raise KeyError ('redefining existing identifier: %s' % identifier)
 def ATN (typename):     # assert a typename
-  if not yy.namespace.find_type (typename):
+  if not yy.namespaces[0].find_type (typename):
     raise TypeError ('invalid typename: ' + repr (typename))
 
 %%
@@ -150,6 +155,7 @@ rule declaration:
         | enumeration
         | sequence
         | record
+        | namespace
 
 rule enumeration:
         ( 'enumeration' | 'enum' )
