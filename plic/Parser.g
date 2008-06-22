@@ -71,8 +71,39 @@ class YYGlobals (object):
     seq = Decls.TypeInfo (name, Decls.SEQUENCE)
     seq.set_elements (sfields[0][0], sfields[0][1])
     self.namespaces[0].add_type (seq)
-  def namespace_lookup (self, identifier, **flags):
+  def namespace_lookup (self, full_identifier, **flags):
+    words = full_identifier.split ('::')
+    isabs = words[0] == ''      # ::PrefixedName
+    if isabs: words = words[1:]
+    prefix = '::'.join (words[:-1])
+    identifier = words[-1]
+    nscandidates = []
+    nsdedup = {}
+    # match inner namespaces
+    if not isabs and prefix:
+      iprefix = self.namespaces[0].name + '::' + prefix
+      for ns in self.ns_list:
+        if ns.name != iprefix:
+          continue
+        if not nsdedup.get (ns, 0):
+          nscandidates += [ ns ]
+        nsdedup[ns] = 1
+    # match outer namespaces
     for ns in self.namespaces:
+      if isabs or not ns.name.endswith (prefix):
+        continue
+      if not nsdedup.get (ns, 0):
+        nscandidates += [ ns ]
+      nsdedup[ns] = 1
+    # match absolute namespaces
+    for ns in self.ns_list:
+      if ns.name != prefix:
+        continue
+      if not nsdedup.get (ns, 0):
+        nscandidates += [ ns ]
+      nsdedup[ns] = 1
+    # identifier lookup
+    for ns in nscandidates:
       if flags.get ('astype', 0):
         type_info = ns.find_type (identifier)
         if type_info:
@@ -85,7 +116,7 @@ class YYGlobals (object):
   def resolve_type (self, typename):
     type_info = self.namespace_lookup (typename, astype = True)
     if not type_info:
-      raise TypeError ('invalid typename: ' + repr (typename))
+      raise TypeError ('unknown type: ' + repr (typename))
     return type_info
   def namespace_open (self, ident):
     full_ident = "::". join ([ns.name for ns in self.namespaces] + [ident])
@@ -142,8 +173,7 @@ def AIn (identifier):   # assert new identifier
       identifier in keywords):
     raise KeyError ('redefining existing identifier: %s' % identifier)
 def ATN (typename):     # assert a typename
-  if not yy.namespace_lookup (typename, astype = True):
-    raise TypeError ('invalid typename: ' + repr (typename))
+  yy.resolve_type (typename) # raises exception
 
 %%
 parser IdlSyntaxParser:
@@ -202,8 +232,11 @@ rule enumeration_args:
         ]                                       {{ while len (l) < 3: l.append ("") }}
                                                 {{ return l }}
 
-rule typename:
-        IDENT                                   {{ ATN (IDENT); return IDENT }}
+rule typename:                                  {{ plist = [] }}
+        [ '::'                                  {{ plist += [ '' ] }}
+        ] IDENT                                 {{ plist += [ IDENT ] }}
+        ( '::' IDENT                            {{ plist.append (IDENT) }}
+          )*                                    {{ id = "::".join (plist); ATN (id); return id }}
 
 rule variable_decl:
         typename                                {{ vtype = yy.resolve_type (typename) }}

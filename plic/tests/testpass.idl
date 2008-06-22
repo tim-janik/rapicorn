@@ -174,13 +174,25 @@ record NewRecord {
 
 // namespace nesting
 namespace Inner {
-
 record InnerRecord {
   Num           x;
   Num           y;
   NewRecord     rec;
 };
+} // Inner
 
-}
+record Refer2Inner {
+  Inner::InnerRecord r;
+};
 
 } // MandatoryNamespace
+
+// cross-namespace references
+namespace OtherNamespace {
+record SomeRecord {
+  MandatoryNamespace::NewRecord            r1;
+  ::MandatoryNamespace::NewRecord          r2;
+  MandatoryNamespace::Inner::InnerRecord   r3;
+  ::MandatoryNamespace::Inner::InnerRecord r4;
+};
+}
