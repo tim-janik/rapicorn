@@ -67,32 +67,29 @@ class Generator:
     s = { Decls.NUM       : '___i',
           Decls.REAL      : '___f',
           Decls.STRING    : '___s',
-          Decls.ENUM      : '___E',
-          Decls.SEQUENCE  : '___Q',
-          Decls.RECORD    : '___R',
-          Decls.INTERFACE : '___C',
+          Decls.ENUM      : '___e',
+          Decls.SEQUENCE  : '___q',
+          Decls.RECORD    : '___r',
+          Decls.INTERFACE : '___c',
           }[type_info.storage]
     return s
+  reference_types = (Decls.ENUM, Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE)
   def type_info (self, type_name, type_info):
     tp = type_info
     aux = []
-    s = self.type_key (tp)
+    if tp.storage in self.reference_types:
+      s = '___V'
+    else:
+      s = self.type_key (tp)
     s += encode_string (type_name)
     s += self.aux_strings (aux)
     if tp.storage in (Decls.ENUM, Decls.SEQUENCE,
                       Decls.RECORD, Decls.INTERFACE):
       s += encode_string (tp.full_name())
     return encode_int (len (s)) + s
-  def type_decl_key (self, type_info):
-    s = { Decls.ENUM      : '___e',
-          Decls.SEQUENCE  : '___q',
-          Decls.RECORD    : '___r',
-          Decls.INTERFACE : '___c',
-          }.get (type_info.storage, self.type_key (type_info))
-    return s
   def type_decl (self, type_info):
     tp = type_info
-    s = self.type_decl_key (type_info)
+    s = self.type_key (type_info)
     s += encode_string (type_info.name)
     aux = []
     s += self.aux_strings (aux)
