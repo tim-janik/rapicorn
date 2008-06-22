@@ -77,33 +77,32 @@ class YYGlobals (object):
     if isabs: words = words[1:]
     prefix = '::'.join (words[:-1])
     identifier = words[-1]
-    nscandidates = []
-    nsdedup = {}
-    # match inner namespaces
-    if not isabs and prefix:
+    targetns = []
+    condidates = []
+    # match outer namespaces by identifier
+    if not isabs and not prefix:
+      condidates = self.namespaces
+    # match inner namespaces by prefix
+    if not targetns and not isabs and prefix:
       iprefix = self.namespaces[0].name + '::' + prefix
       for ns in self.ns_list:
-        if ns.name != iprefix:
-          continue
-        if not nsdedup.get (ns, 0):
-          nscandidates += [ ns ]
-        nsdedup[ns] = 1
-    # match outer namespaces
-    for ns in self.namespaces:
-      if isabs or not ns.name.endswith (prefix):
-        continue
-      if not nsdedup.get (ns, 0):
-        nscandidates += [ ns ]
-      nsdedup[ns] = 1
-    # match absolute namespaces
-    for ns in self.ns_list:
-      if ns.name != prefix:
-        continue
-      if not nsdedup.get (ns, 0):
-        nscandidates += [ ns ]
-      nsdedup[ns] = 1
+        if ns.name == iprefix:
+          targetns = [ns]
+          break
+    # match outer namespaces by prefix
+    if not targetns and not isabs and prefix:
+      for ns in self.namespaces:
+        if ns.name.endswith (prefix):
+          targetns = [ns]
+          break
+    # match absolute namespaces by prefix
+    if not targetns and prefix:
+      for ns in self.ns_list:
+        if ns.name == prefix:
+          targetns = [ns]
+          break
     # identifier lookup
-    for ns in nscandidates:
+    for ns in condidates + targetns:
       if flags.get ('astype', 0):
         type_info = ns.find_type (identifier)
         if type_info:

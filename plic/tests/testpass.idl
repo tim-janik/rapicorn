@@ -196,3 +196,15 @@ record SomeRecord {
   ::MandatoryNamespace::Inner::InnerRecord r4;
 };
 }
+
+// references to outer namespaces
+namespace Outer {
+Const FromOuter = 3;
+namespace Middle {
+Const FromMiddle = 2;
+namespace Inner {
+Const FromInner = 1;
+Const dummy = FromInner + FromMiddle + FromOuter;
+} // Outer::Middle::Inner
+} // Outer::Middle
+} // Outer
