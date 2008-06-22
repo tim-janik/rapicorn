@@ -36,6 +36,19 @@ def strcquote (string):
   result = ''
   for c in string:
     oc = ord (c)
+    ec = { 92 : r'\\',
+            7 : r'\a',
+            8 : r'\b',
+            9 : r'\t',
+           10 : r'\n',
+           11 : r'\v',
+           12 : r'\f',
+           13 : r'\r',
+           12 : r'\f'
+         }.get (oc, '')
+    if ec:
+      result += ec
+      continue
     if oc <= 31 or oc >= 127:
       result += '\\' + oct (oc)[-3:]
     elif c == '"':
