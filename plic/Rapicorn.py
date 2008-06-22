@@ -21,6 +21,8 @@ More details at http://www.testbit.eu/.
 import Decls
 
 def encode_int (int):
+  if int < 1000:
+    return "#%03u" % int
   assert int < 268435456
   chars = (128 + (int >> 21),
            128 + ((int >> 14) & 0x7f),
