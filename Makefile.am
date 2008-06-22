@@ -37,10 +37,17 @@ EXTRA_DIST += rapicorn-core.hh rapicorn.hh
 # === ChangeLog ===
 LAST_COMMITID = 3c74b440cecaba3570eecc6728bbe319ba790b59
 ChangeLog:	$(shell ls "$${GIT_DIR:-.git}/packed-refs" "$${GIT_DIR:-.git}/HEAD" "$${GIT_DIR:-.git}/`git-symbolic-ref -q HEAD || echo HEAD`" 2>/dev/null )
+	: # Generate ChangeLog with -prefixed records
 	git-log --pretty='format:%ad %an 	# %H (%cn)%n%n%s%n%n%b' \
 		${LAST_COMMITID}..HEAD		 > xgen-$(@F)
+	: # Tab-indent ChangeLog, except for record start
 	sed 's/^/	/;s/^	//;/^[ 	]*<unknown>$$/d' -i xgen-$(@F)
-	cp xgen-$(@F) $@ && rm -f xgen-$(@F)
+	: # Kill trailing whitespaces, compress multiple trailing newlines
+	$(PYTHON) -c "import sys, re; sys.stdout.write ( \
+	  re.compile (r'\n\n\n(?=^\w)', re.M).sub ('\n\n', \
+	  re.compile ('^[	 ]+$$', re.M).sub ('', \
+	  sys.stdin.read())))" < xgen-$(@F) > xgen2-$(@F)
+	cp xgen2-$(@F) $@ && rm -f xgen-$(@F) xgen2-$(@F)
 noinst_DATA += ChangeLog
 EXTRA_DIST  += ChangeLog
 
