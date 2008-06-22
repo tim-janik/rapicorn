@@ -75,13 +75,11 @@ class YYGlobals (object):
     words = full_identifier.split ('::')
     isabs = words[0] == ''      # ::PrefixedName
     if isabs: words = words[1:]
-    prefix = '::'.join (words[:-1])
-    identifier = words[-1]
-    targetns = []
-    condidates = []
+    prefix, identifier = '::'.join (words[:-1]), words[-1]
+    candidates = targetns = []
     # match outer namespaces by identifier
     if not isabs and not prefix:
-      condidates = self.namespaces
+      candidates = self.namespaces
     # match inner namespaces by prefix
     if not targetns and not isabs and prefix:
       iprefix = self.namespaces[0].name + '::' + prefix
@@ -102,7 +100,7 @@ class YYGlobals (object):
           targetns = [ns]
           break
     # identifier lookup
-    for ns in condidates + targetns:
+    for ns in candidates + targetns:
       if flags.get ('astype', 0):
         type_info = ns.find_type (identifier)
         if type_info:
