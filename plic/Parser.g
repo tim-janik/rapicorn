@@ -25,7 +25,6 @@ import yapps2runtime as runtime
 keywords = ( 'TRUE', 'True', 'true', 'FALSE', 'False', 'false',
              'namespace', 'enum', 'enumeration', 'Const', 'record', 'class', 'sequence',
              'Bool', 'Num', 'Real', 'String' )
-debugging = 0 # causes exceptions to bypass IDL-file parser error handling
 
 class YYGlobals (object):
   def __init__ (self):
