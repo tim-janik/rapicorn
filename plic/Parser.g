@@ -79,7 +79,8 @@ class YYGlobals (object):
     return type_info
   def namespace_open (self, ident):
     assert self.namespace == None
-    self.namespace = Decls.Namespace (ident)
+    self.namespace = [ns for ns in self.ns_list if ns.name == ident]
+    self.namespace = self.namespace and self.namespace[0] or Decls.Namespace (ident)
     # initialize namespace
     self.namespace.add_type (Decls.TypeInfo ('Bool',   Decls.NUM))
     self.namespace.add_type (Decls.TypeInfo ('Num',    Decls.NUM))

@@ -162,3 +162,13 @@ sequence NestedTypesSeq {
 };
 
 } // MandatoryNamespace
+
+// Test namespace continuation
+namespace MandatoryNamespace {
+record NewRecord {
+  Num            i;
+  Enum1          enum1;
+  XFooSequence   xfs;
+  NestedTypesRec ntr;
+};
+} // MandatoryNamespace
