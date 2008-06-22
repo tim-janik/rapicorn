@@ -6,6 +6,10 @@ Const a = 5; Const a = 6; // invalid reassignment
 
 Const record = 5; // keyword assignment
 
+enum E { V }; Const E = 0; // typename assignment
+
+enum E { V }; Const V = 0; // enum value assignment
+
 Const TRUE = 17; // invalid constant name
 
 Const tmp = "invalid" _("i18n string") "concatenation";
