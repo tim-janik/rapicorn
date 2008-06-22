@@ -54,52 +54,55 @@ class Generator:
     s = { Decls.NUM       : '___i',
           Decls.REAL      : '___f',
           Decls.STRING    : '___s',
-          Decls.ENUM      : '___e',
+          Decls.ENUM      : '___E',
+          Decls.SEQUENCE  : '___Q',
+          Decls.RECORD    : '___R',
+          Decls.INTERFACE : '___C',
+          }[type_info.storage]
+    return s
+  def type_info (self, type_name, type_info):
+    tp = type_info
+    aux = []
+    s = self.type_key (tp)
+    s += encode_string (type_name)
+    s += self.aux_strings (aux)
+    if tp.storage == Decls.SEQUENCE:
+      s += self.type_info (tp.elements[0], tp.elements[1])
+    elif tp.storage == Decls.RECORD:
+      s += encode_int (len (tp.fields))
+      for fl in tp.fields:
+        s += self.type_info (fl[0], fl[1])
+    elif tp.storage == Decls.ENUM:
+      s += encode_int (len (tp.options))
+      for op in tp.options:
+        s += encode_string (op[0]) # ident
+        s += encode_string (op[1]) # label
+        s += encode_string (op[2]) # blurb
+    elif tp.storage == Decls.INTERFACE:
+      tp.prerequisites = []
+      s += encode_int (len (tp.prerequisites))
+      for pr in prerequisites:
+        s += encode_string (pr)
+    return encode_int (len (s)) + s
+  def type_decl_key (self, type_info):
+    s = { Decls.ENUM      : '___e',
           Decls.SEQUENCE  : '___q',
           Decls.RECORD    : '___r',
           Decls.INTERFACE : '___c',
-          }[type_info.storage]
+          }.get (type_info.storage, self.type_key (type_info))
     return s
-  def type_info (self, type_info):
-    tp = type_info
-    aux = []
-    s = self.aux_strings (aux)
-    if tp.storage == Decls.SEQUENCE:
-      s += self.type_key (tp.elements[1])
-      s += encode_string (tp.elements[0])
-      s += self.type_info (tp.elements[1])
-    elif tp.storage == Decls.RECORD:
-      s += encode_int (len (tp.fields))
-      for fl in tp.fields:
-        s += self.type_key (fl[1])
-        s += encode_string (fl[0])
-        s += self.type_info (fl[1])
-    elif tp.storage == Decls.ENUM:
-      s += encode_int (len (tp.options))
-      for op in tp.options:
-        s += encode_string (op[0]) # ident
-        s += encode_string (op[1]) # label
-        s += encode_string (op[2]) # blurb
-    elif tp.storage == Decls.INTERFACE:
-      tp.prerequisites = []
-      s += encode_int (len (tp.prerequisites))
-      for pr in prerequisites:
-        s += encode_string (pr)
-    return encode_int (len (s)) + s
   def type_decl (self, type_info):
     tp = type_info
+    s = self.type_decl_key (type_info)
+    s += encode_string (type_info.name)
     aux = []
-    s = self.aux_strings (aux)
+    s += self.aux_strings (aux)
     if tp.storage == Decls.SEQUENCE:
-      s += self.type_key (tp.elements[1])
-      s += encode_string (tp.elements[0])
-      s += self.type_info (tp.elements[1])
+      s += self.type_info (tp.elements[0], tp.elements[1])
     elif tp.storage == Decls.RECORD:
       s += encode_int (len (tp.fields))
       for fl in tp.fields:
-        s += self.type_key (fl[1])
-        s += encode_string (fl[0])
-        s += self.type_info (fl[1])
+        s += self.type_info (fl[0], fl[1])
     elif tp.storage == Decls.ENUM:
       s += encode_int (len (tp.options))
       for op in tp.options:
@@ -112,17 +115,12 @@ class Generator:
       for pr in prerequisites:
         s += encode_string (pr)
     return encode_int (len (s)) + s
-  def type_string (self, type_info):
-    s = self.type_key (type_info)
-    s += encode_string (type_info.name)
-    s += self.type_decl (type_info)
-    return s
   def namespace_string (self, namespace):
     s = '__NS'
     s += encode_string (namespace.name)
     t = ''
     for tp in namespace.types():
-      t += self.type_string (tp)
+      t += self.type_decl (tp)
     s += encode_int (len (t))
     s += t
     return s
