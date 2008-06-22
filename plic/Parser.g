@@ -71,8 +71,19 @@ class YYGlobals (object):
     seq = Decls.TypeInfo (name, Decls.SEQUENCE)
     seq.set_elements (sfields[0][0], sfields[0][1])
     self.namespaces[0].add_type (seq)
+  def namespace_lookup (self, identifier, **flags):
+    for ns in self.namespaces:
+      if flags.get ('astype', 0):
+        type_info = ns.find_type (identifier)
+        if type_info:
+          return type_info
+      if flags.get ('asconst', 0):
+        cvalue = ns.find_const (identifier)
+        if cvalue:
+          return cvalue
+    return None
   def resolve_type (self, typename):
-    type_info = self.namespaces[0].find_type (typename)
+    type_info = self.namespace_lookup (typename, astype = True)
     if not type_info:
       raise TypeError ('invalid typename: ' + repr (typename))
     return type_info
@@ -97,10 +108,10 @@ class YYGlobals (object):
 yy = YYGlobals() # globals
 
 def constant_lookup (variable):
-  value = yy.namespaces[0].find_const (variable)
-  if value == None:
+  value = yy.namespace_lookup (variable, asconst = True)
+  if not value:
     raise NameError ('undeclared constant: ' + variable)
-  return value
+  return value[0]
 def quote (qstring):
   import rfc822
   return '"' + rfc822.quote (qstring) + '"'
@@ -127,9 +138,11 @@ def ASp (string_candidate, constname = None):   # assert plain string
 def ASi (string_candidate): # assert i18n string
   if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
 def AIn (identifier):   # assert new identifier
-  if not yy.namespaces[0].unknown (identifier) or identifier in keywords:  raise KeyError ('redefining existing identifier: %s' % identifier)
+  if (yy.namespace_lookup (identifier, astype = True, asconst = True) or
+      identifier in keywords):
+    raise KeyError ('redefining existing identifier: %s' % identifier)
 def ATN (typename):     # assert a typename
-  if not yy.namespaces[0].find_type (typename):
+  if not yy.namespace_lookup (typename, astype = True):
     raise TypeError ('invalid typename: ' + repr (typename))
 
 %%

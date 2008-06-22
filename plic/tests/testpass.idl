@@ -178,6 +178,7 @@ namespace Inner {
 record InnerRecord {
   Num           x;
   Num           y;
+  NewRecord     rec;
 };
 
 }

@@ -47,11 +47,9 @@ class Namespace (BaseDecl):
     return self.type_dict.values()
   def unknown (self, name):
     return not (self.const_dict.has_key (name) or self.type_dict.has_key (name))
-  def find_const (self, name, fallback = None):
+  def find_const (self, name):
     nc = self.const_dict.get (name, None)
-    if nc:
-      return nc[1]
-    return fallback
+    return nc and (nc[1],) or ()
   def find_type (self, name, fallback = None):
     return self.type_dict.get (name, fallback)
 
