@@ -21,6 +21,7 @@ true, false, length = (True, False, len)
 class BaseDecl (object):
   def __init__ (self):
     self.name = None
+    self.namespace = None
     self.loc = ()
     self.hint = ''
     self.docu = ()
@@ -29,6 +30,7 @@ NUM, REAL, STRING, ENUM, RECORD, SEQUENCE, INTERFACE = tuple ('ifserqc')
 
 class Namespace (BaseDecl):
   def __init__ (self, name):
+    super (Namespace, self).__init__()
     self.name = name
     self.members = [] # holds: (name, content)
     self.type_dict = {}
@@ -38,6 +40,7 @@ class Namespace (BaseDecl):
     self.const_dict[name] = self.members[-1]
   def add_type (self, type):
     assert isinstance (type, TypeInfo)
+    type.namespace = self
     self.members += [ (type.name, type) ]
     self.type_dict[type.name] = type
   def types (self):
@@ -54,6 +57,7 @@ class Namespace (BaseDecl):
 
 class TypeInfo (BaseDecl):
   def __init__ (self, name, storage):
+    super (TypeInfo, self).__init__()
     assert storage in (NUM, REAL, STRING, ENUM, RECORD, SEQUENCE, INTERFACE)
     self.name = name
     self.storage = storage
@@ -78,3 +82,10 @@ class TypeInfo (BaseDecl):
     assert isinstance (ident, str)
     assert isinstance (type, TypeInfo)
     self.elements = (ident, type)
+  def full_name (self):
+    s = self.name
+    namespace = self.namespace
+    while namespace:
+      s = namespace.name + '::' + s
+      namespace = namespace.namespace
+    return s
