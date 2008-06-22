@@ -277,12 +277,13 @@ parse_type_info (TypeInfo    &self,
   /* parse type info:
    * - LLLL                   // length of upcoming type info data
    * - ___?                   // storage type
-   * - xxxx                   // number of aux entries
-   * - [ llll AuxEntry ]*     // xxxx times aux entry strings
-   * - CHOICE:    yyyy [ llll Ident llll Label llll Blurb ]+
-   * - RECORD:    yyyy [ llll FieldName _TYPE_INFO_ ]+
-   * - SEQUENCE:  yyyy FieldName _TYPE_INFO_
-   * - INTERFACE: yyyy [ llll InterfaceTypeName ]+
+   * - kkkk                   // number of aux entries
+   * - [ llll AuxEntry ]*     // kkkk times aux entry strings
+   * - REFERENCE: llll TypeName
+   * - CHOICE:    nnnn [ llll Ident llll Label llll Blurb ]+
+   * - RECORD:    nnnn [ llll FieldName _TYPE_INFO_ ]+
+   * - SEQUENCE:  llll FieldName _TYPE_INFO_
+   * - INTERFACE: nnnn [ llll InterfaceTypeName ]+
    */
   String err;
   uint ui = 0;
