@@ -26,7 +26,7 @@ import Parser, Decls
 true, false, length = (True, False, len)
 
 debugging = 0 # causes exceptions to bypass IDL-file parser error handling
-backends = [ 'GType', 'Rapicorn' ]
+backends = [ 'GType', 'TypePackage' ]
 
 class ParseError (runtime.SyntaxError):
   def __init__ (self, msg = "Parse Error"):
@@ -71,21 +71,22 @@ def main():
 
 def print_help (with_help = True):
   import os
-  print "plic (Rapicorn utils) version", pkginstall_configvars["PLIC_VERSION"]
+  print "plic version", pkginstall_configvars["PLIC_VERSION"]
   if not with_help:
     return
   print "Usage: %s [OPTIONS] <idlfile>" % os.path.basename (sys.argv[0])
   print "Options:"
   print "  --help, -h                print this help message"
   print "  --version, -v             print version info"
-  print "  -B,--backend=<backend>    select backend"
-  print "  --list-backends           list backend"
+  print "  --output-format=<oformat>"
+  print "  -O=<oformat>              select output format"
+  print "  --list-formats            list output formats"
 
 def parse_files_and_args():
   import re, getopt
   config = { 'files' : [], 'backend' : 'PrettyDump' }
-  sop = 'vhB:'
-  lop = ['help', 'version', 'backend=', 'list-backends']
+  sop = 'vhO:'
+  lop = ['help', 'version', 'output-format=', 'list-formats']
   try:
     options,args = getopt.gnu_getopt (sys.argv[1:], sop, lop)
   except Exception, ex:
@@ -94,13 +95,13 @@ def parse_files_and_args():
   for arg,val in options:
     if arg == '-h' or arg == '--help': print_help(); sys.exit (0)
     if arg == '-v' or arg == '--version': print_help (false); sys.exit (0)
-    if arg == '-B' or arg == '--backend':
+    if arg == '-O' or arg == '--output-format':
       config['backend'] = val
       if not val in backends:
-        print >>sys.stderr, sys.argv[0] + ": unknown backend:", val
+        print >>sys.stderr, sys.argv[0] + ": unknown output format:", val
         print_help(); sys.exit (1)
-    if arg == '--list-backends':
-      print "\nAvailable backends:"
+    if arg == '--list-formats':
+      print "\nAvailable Output Formats:"
       for be in backends:
         bedoc = __import__ (be).__doc__.strip()
         bedoc = re.sub ('\n\s*\n', '\n', bedoc)                         # remove empty lines

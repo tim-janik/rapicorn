@@ -34,7 +34,7 @@ EXTRA_DIST += plic.py
 # install plic support module yapps2runtime.py
 pyutils_PYTHON = yapps2runtime.py
 pyutilsdir     = $(libdir)/plic-@PLIC_VERSION@/pyutils
-plicbackends   = PrettyDump.py Rapicorn.py GType.py
+plicbackends   = PrettyDump.py TypePackage.py GType.py
 pyutils_PYTHON = Decls.py Parser.py yapps2runtime.py ${plicbackends}
 
 # tests
