@@ -14,9 +14,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""PLIC-Rapicorn - Rapicorn type generator for PLIC
+"""PLIC-TypePackage - Binary Type Map generator for PLIC
 
-More details at http://www.testbit.eu/.
+More details at http://www.testbit.eu/plic
 """
 import Decls
 
@@ -131,7 +131,7 @@ class Generator:
       s += ts
     return s
   def generate_pack (self, namespace_list):
-    s = 'RapicornTPKG01\r\n'            # magic
+    s = 'PlicTypePkg_01\r\n'            # magic
     s += encode_string ("unnamed")      # idl file name
     nsl = []
     for ns in namespace_list:
@@ -149,7 +149,6 @@ class Generator:
 def generate (namespace_list, *args):
   import sys
   gg = Generator()
-  print >>sys.stderr, "Type-Package:"
   packdata = gg.generate_pack (namespace_list)
   # print strcquote (packdata)
   open ("rpctyp.dat", "w").write (packdata)
