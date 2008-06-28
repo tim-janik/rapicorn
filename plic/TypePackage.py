@@ -154,16 +154,40 @@ class Generator:
       s += ns
     return s
 
-def generate (namespace_list, **args):
+def error (msg):
   import sys
+  print >>sys.stderr, sys.argv[0] + ":", msg
+  sys.exit (127)
+
+def generate (namespace_list, **args):
+  import sys, tempfile, os
   config = { 'output' : 'plic.out' }
   config.update (args)
   gg = Generator()
   packdata = gg.generate_pack (namespace_list)
+  outputname = config['output']
   # print strcquote (packdata)
-  fout = open (config['output'], "w")
-  fout.write (packdata)
-  fout.close()
+  # write data into a temporary file in the same dir as outputname
+  odir = os.path.dirname (outputname) or '.'
+  try:
+    (fdout, tmpname) = tempfile.mkstemp ('-' + os.path.basename (outputname), '.tmp', odir)
+  except Exception, ex:
+    error ('Failed to create temporary file in %s: %s' % (odir, ex))
+  os.write (fdout, packdata)
+  os.close (fdout)
+  # fix up permissions for mmap-able read-only file
+  umask = os.umask (0777); os.umask (umask)     # fetch umask
+  mode = 0444 & ~umask                          # mode = a+r
+  os.chmod (tmpname, mode)
+  # atomically replace mmap-able output file
+  rex = None
+  try: os.rename (tmpname, outputname)
+  except Exception, rex: pass   # relay error after cleanup
+  # cleanup
+  try: os.remove (tmpname)
+  except: pass
+  if rex:
+    error ('Failed to atomically replace "%s": %s' % (outputname, rex))
 
 # control module exports
 __all__ = ['generate']
