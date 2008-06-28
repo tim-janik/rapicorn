@@ -45,3 +45,9 @@ sequence Seq { enum b; }; // keyword is not typename
 sequence S1 { Bool b; }; sequence S2 { _S1 s; }; // need existing typenames
 
 sequence Dup { Bool b; }; sequence Dup { Bool b; }; // duplicate definition
+
+typedef Const X; // unknown type Const
+
+typedef Bool Const; // keyword redefinition
+
+enum Enu1 { AA }; typedef Enu1 Enu1; // type redefinition

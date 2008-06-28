@@ -161,6 +161,15 @@ sequence NestedTypesSeq {
   NestedTypesRec ntr;
 };
 
+// typedef tests
+typedef Num  AliasNum;
+typedef Real AliasReal;
+typedef Bool AliasBool;
+typedef String AliasString;
+typedef XFooRecord AliasRecord;
+typedef XFooSequence AliasSequence;
+typedef ExtensiveEnum AliasEnum;
+
 } // MandatoryNamespace
 
 // Test namespace continuation

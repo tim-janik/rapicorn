@@ -23,7 +23,7 @@ PLIC_VERSION=\
 import yapps2runtime as runtime
 
 keywords = ( 'TRUE', 'True', 'true', 'FALSE', 'False', 'false',
-             'namespace', 'enum', 'enumeration', 'Const', 'record', 'class', 'sequence',
+             'namespace', 'enum', 'enumeration', 'Const', 'typedef', 'record', 'class', 'sequence',
              'Bool', 'Num', 'Real', 'String' )
 
 class YYGlobals (object):
@@ -35,6 +35,10 @@ class YYGlobals (object):
     if not isinstance (value, (int, long, float, str)):
       raise TypeError ('constant expression does not yield string or number: ' + repr (typename))
     self.namespaces[0].add_const (name, value)
+  def nsadd_typedef (self, typename, srctype):
+    AIn (typename)
+    tdf = srctype.clone (typename)
+    self.namespaces[0].add_type (tdf)
   def nsadd_evalue (self, evalue_ident, evalue_label, evalue_blurb, evalue_number = None):
     AS (evalue_ident)
     if evalue_number == None:
@@ -193,6 +197,7 @@ rule declaration:
           ';'
         | const_assignment
         | enumeration
+        | typedef
         | sequence
         | record
         | namespace
@@ -234,6 +239,12 @@ rule typename:                                  {{ plist = [] }}
         ] IDENT                                 {{ plist += [ IDENT ] }}
         ( '::' IDENT                            {{ plist.append (IDENT) }}
           )*                                    {{ id = "::".join (plist); ATN (id); return id }}
+
+rule typedef:
+        'typedef'
+        typename                                {{ tdftype = yy.resolve_type (typename) }}
+        IDENT                                   {{ tdfident = IDENT }}
+        ';'                                     {{ yy.nsadd_typedef (IDENT, tdftype) }}
 
 rule variable_decl:
         typename                                {{ vtype = yy.resolve_type (typename) }}
