@@ -3,11 +3,19 @@ include $(top_srcdir)/Makefile.decl
 
 PLIC = $(top_builddir)/plic/plic-@PLIC_VERSION@
 
+noinst_PROGRAMS = ptptest
+ptptest_SOURCES = ptptest.cc
+
+check-ptp: ptptest
+	${PLIC} $(srcdir)/testpass.idl -O TypePackage
+	./ptptest plic.out > /dev/null
+	rm -f plic.out
+
 installcheck-local: $(srcdir)/testpass.idl
 	plic-@PLIC_VERSION@ $(srcdir)/testpass.idl > /dev/null
 	plic-@PLIC_VERSION@ --list-formats > /dev/null
 
-check:	check-pass check-fail
+check:	check-pass check-fail check-ptp
 
 check-pass:	${PLIC} testpass.idl
 	${PLIC} $(srcdir)/testpass.idl > /dev/null
