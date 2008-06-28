@@ -119,29 +119,37 @@ class Generator:
   def generate_namespace (self, namespace):
     s = encode_string (namespace.name)
     tsl = []
+    # serialize types
     for tp in namespace.types():
       t = self.generate_type (tp)
       tsl += [ t ]
-    # type table
-    s += encode_int (len (tsl))
+    # build type table
+    s += encode_int (len (tsl))         # number of types
+    offset = 4 + 4 * (1 + len (tsl))    # first namespace offset
     for ts in tsl:
-      s += encode_int (len (ts))
-    # type data
+      s += encode_int (offset)          # each type index
+      offset += len (ts)
+    s += encode_int (offset)            # tail offset
+    # add type data
     for ts in tsl:
       s += ts
     return s
   def generate_pack (self, namespace_list):
     s = 'PlicTypePkg_01\r\n'            # magic
     s += encode_string ("unnamed")      # idl file name
+    # serialize namespaces
     nsl = []
     for ns in namespace_list:
       t = self.generate_namespace (ns)
       nsl += [ t ]
-    # namespace table
-    s += encode_int (len (nsl))
+    # build namespace table
+    s += encode_int (len (nsl))         # number of namespaces
+    offset = 4 + 4 * (1 + len (nsl))    # first namespace offset
     for ns in nsl:
-      s += encode_int (len (ns))
-    # namespace data
+      s += encode_int (offset)          # each namspace index
+      offset += len (ns)
+    s += encode_int (offset)            # tail offset
+    # add namespace data
     for ns in nsl:
       s += ns
     return s
