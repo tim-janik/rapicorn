@@ -78,6 +78,10 @@ noinst_PROGRAMS       += rapicorn-zintern
 rapicorn_zintern_SOURCES = rapicorn-zintern.cc
 rapicorn_zintern_LDADD   = $(RAPICORN_CORE_LIBS) -lm # $(progs_ldadd)
 
+# === plictypepkg.cc ===
+plictypepkg.cc: # FIXME.idl
+	$(PLIC) --cc-type-package-parser > gen-$@
+	mv gen-$@ $@
 
 # === enum introspection ===
 $(srcdir)/enumdefs.cc: gen-enums.cc
