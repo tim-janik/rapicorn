@@ -246,21 +246,21 @@ rule typedef:
         IDENT                                   {{ tdfident = IDENT }}
         ';'                                     {{ yy.nsadd_typedef (IDENT, tdftype) }}
 
-rule variable_decl:
+rule field_decl:
         typename                                {{ vtype = yy.resolve_type (typename) }}
         IDENT                                   {{ vars = [ (IDENT, vtype) ] }}
         ';'                                     {{ return vars }}
 
 rule record:
         'record' IDENT '{'                      {{ rfields = [] }}
-          ( variable_decl                       {{ rfields = rfields + variable_decl }}
+          ( field_decl                          {{ rfields = rfields + field_decl }}
           )+
         '}' ';'                                 {{ yy.nsadd_record (IDENT, rfields) }}
 
 rule sequence:
         'sequence' IDENT '{'                    {{ sfields = [] }}
-          ( variable_decl                       {{ if len (sfields): raise OverflowError ("too many fields in sequence") }}
-                                                {{ sfields = sfields + variable_decl }}
+          ( field_decl                          {{ if len (sfields): raise OverflowError ("too many fields in sequence") }}
+                                                {{ sfields = sfields + field_decl }}
           )
         '}' ';'                                 {{ yy.nsadd_sequence (IDENT, sfields) }}
 
