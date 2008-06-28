@@ -35,13 +35,14 @@ EXTRA_DIST += plic.py
 pyutils_PYTHON = yapps2runtime.py
 pyutilsdir     = $(libdir)/plic-@PLIC_VERSION@/pyutils
 plicbackends   = PrettyDump.py TypePackage.py GType.py
-pyutils_PYTHON = Decls.py Parser.py yapps2runtime.py ${plicbackends}
+pyutils_PYTHON = Decls.py Parser.py yapps2runtime.py ${plicbackends} PlicTypePackage.cc
 
 # tests
 PLIC = ./${PLICV}
-check-list-formats:
-	${PLIC} --list-formats > /dev/null
-check-local: check-list-formats
+check-outputs:
+	${PLIC} --list-formats | grep -q PLIC
+	${PLIC} --cc-type-package-parser | grep -q struct
+check-local: check-outputs
 
 # install/uninstall a "plic" link to "plic-PLIC_VERSION"
 install-exec-hook:
