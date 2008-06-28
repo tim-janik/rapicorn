@@ -17,7 +17,7 @@
 """PLIC-PrettyDump - Pretty printing of Plic type information
 """
 
-def generate (namespace_list, *args):
+def generate (namespace_list, **args):
   import pprint, re
   for ns in namespace_list:
     print "namespace %s:" % ns.name

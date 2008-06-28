@@ -21,7 +21,7 @@ More details at http://www.testbit.eu/.
 import sys
 
 
-def generate (namespace_list, *args):
+def generate (namespace_list, **args):
   for ns in namespace_list:
     print "NAMESPACE:", ns
 
