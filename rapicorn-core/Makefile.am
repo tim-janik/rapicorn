@@ -80,7 +80,7 @@ rapicorn_zintern_LDADD   = $(RAPICORN_CORE_LIBS) -lm # $(progs_ldadd)
 
 # === plictypepkg.cc ===
 plictypepkg.cc: # FIXME.idl
-	$(PLIC) --cc-type-package-parser > gen-$@
+	:; $(PLIC) --cc-type-package-parser > gen-$@
 	mv gen-$@ $@
 
 # === enum introspection ===
