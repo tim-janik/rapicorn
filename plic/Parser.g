@@ -240,16 +240,13 @@ rule typename:                                  {{ plist = [] }}
         ( '::' IDENT                            {{ plist.append (IDENT) }}
           )*                                    {{ id = "::".join (plist); ATN (id); return id }}
 
-rule typedef:
-        'typedef'
-        typename                                {{ tdftype = yy.resolve_type (typename) }}
-        IDENT                                   {{ tdfident = IDENT }}
-        ';'                                     {{ yy.nsadd_typedef (IDENT, tdftype) }}
-
 rule field_decl:
         typename                                {{ vtype = yy.resolve_type (typename) }}
         IDENT                                   {{ vars = [ (IDENT, vtype) ] }}
         ';'                                     {{ return vars }}
+
+rule typedef:
+        'typedef' field_decl                    {{ yy.nsadd_typedef (*field_decl[0]) }}
 
 rule record:
         'record' IDENT '{'                      {{ rfields = [] }}
