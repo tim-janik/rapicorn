@@ -39,9 +39,9 @@ pyutils_PYTHON = Decls.py Parser.py yapps2runtime.py ${plicbackends}
 
 # tests
 PLIC = ./${PLICV}
-check-list-backends:
-	${PLIC} --list-backends > /dev/null
-check-local: check-list-backends
+check-list-formats:
+	${PLIC} --list-formats > /dev/null
+check-local: check-list-formats
 
 # install/uninstall a "plic" link to "plic-PLIC_VERSION"
 install-exec-hook:
