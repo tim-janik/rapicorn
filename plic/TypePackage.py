@@ -154,12 +154,16 @@ class Generator:
       s += ns
     return s
 
-def generate (namespace_list, *args):
+def generate (namespace_list, **args):
   import sys
+  config = { 'output' : 'plic.out' }
+  config.update (args)
   gg = Generator()
   packdata = gg.generate_pack (namespace_list)
   # print strcquote (packdata)
-  open ("rpctyp.dat", "w").write (packdata)
+  fout = open (config['output'], "w")
+  fout.write (packdata)
+  fout.close()
 
 # control module exports
 __all__ = ['generate']

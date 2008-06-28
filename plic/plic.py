@@ -67,7 +67,7 @@ def main():
     if exstr: exstr = ': ' + exstr
     runtime.print_error (ParseError ('%s%s' % (ex.__class__.__name__, exstr)), isp._scanner)
   if ex: sys.exit (7)
-  __import__ (config['backend']).generate (result)
+  __import__ (config['backend']).generate (result, **config)
 
 def print_help (with_help = True):
   import os
@@ -80,12 +80,13 @@ def print_help (with_help = True):
   print "  --version, -v             print version info"
   print "  --output-format=<oformat>"
   print "  -O=<oformat>              select output format"
+  print "  -o=<outputfile>           output filename"
   print "  --list-formats            list output formats"
 
 def parse_files_and_args():
   import re, getopt
   config = { 'files' : [], 'backend' : 'PrettyDump' }
-  sop = 'vhO:'
+  sop = 'vhO:o:'
   lop = ['help', 'version', 'output-format=', 'list-formats']
   try:
     options,args = getopt.gnu_getopt (sys.argv[1:], sop, lop)
@@ -95,6 +96,8 @@ def parse_files_and_args():
   for arg,val in options:
     if arg == '-h' or arg == '--help': print_help(); sys.exit (0)
     if arg == '-v' or arg == '--version': print_help (false); sys.exit (0)
+    if arg == '-o':
+      config['output'] = val
     if arg == '-O' or arg == '--output-format':
       config['backend'] = val
       if not val in backends:
