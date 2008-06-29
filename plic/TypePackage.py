@@ -63,10 +63,10 @@ def strcquote (string):
   return '"' + result + '"'
 
 class Generator:
-  def aux_strings (self, auxlist):
-    result = encode_int (len (auxlist))
-    for ad in auxlist:
-      result += encode_string (ad)
+  def aux_strings (self, auxdata):
+    result = encode_int (len (auxdata))
+    for ad in auxdata.items():
+      result += encode_string (ad[0] + '=' + str (ad[1]))
     return result
   def type_key (self, type_info):
     s = { Decls.NUM       : '\n__i',
@@ -81,23 +81,21 @@ class Generator:
   reference_types = (Decls.ENUM, Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE)
   def generate_field (self, field_name, type_info):
     tp = type_info
-    aux = []
     if tp.storage in self.reference_types:
       s = '\n__V'
     else:
       s = self.type_key (tp)
     s += encode_string (field_name)
-    s += self.aux_strings (aux)
+    s += self.aux_strings (type_info.auxdata)
     if tp.storage in (Decls.ENUM, Decls.SEQUENCE,
                       Decls.RECORD, Decls.INTERFACE):
       s += encode_string (tp.full_name())
     return s
   def generate_type (self, type_info):
     tp = type_info
-    aux = []
     s = self.type_key (type_info)
     s += encode_string (type_info.name)
-    s += self.aux_strings (aux)
+    s += self.aux_strings (type_info.auxdata)
     if tp.storage == Decls.SEQUENCE:
       s += self.generate_field (tp.elements[0], tp.elements[1])
     elif tp.storage == Decls.RECORD:

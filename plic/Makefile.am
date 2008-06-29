@@ -35,7 +35,7 @@ EXTRA_DIST += plic.py
 pyutils_PYTHON = yapps2runtime.py
 pyutilsdir     = $(libdir)/plic-@PLIC_VERSION@/pyutils
 plicbackends   = PrettyDump.py TypePackage.py GType.py
-pyutils_PYTHON = Decls.py Parser.py yapps2runtime.py ${plicbackends} PlicTypePackage.cc
+pyutils_PYTHON = Decls.py Parser.py AuxData.py yapps2runtime.py ${plicbackends} PlicTypePackage.cc
 
 # tests
 PLIC = ./${PLICV}

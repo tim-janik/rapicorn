@@ -63,6 +63,7 @@ class TypeInfo (BaseDecl):
     self.fields = []            # holds: (ident, TypeInfo)
     self.elements = None        # holds: ident, TypeInfo
     self.prerequisites = []
+    self.auxdata = {}
   def clone (self, newname = None):
     if newname == None: newname = self.name
     ti = TypeInfo (newname, self.storage)
@@ -70,7 +71,10 @@ class TypeInfo (BaseDecl):
     ti.fields += self.fields
     ti.elements = self.elements
     ti.prerequisites += self.prerequisites
+    ti.auxdata.update (self.auxdata)
     return ti
+  def update_auxdata (self, auxdict):
+    self.auxdata.update (auxdict)
   def add_option (self, ident, label, blurb, number):
     assert self.storage == ENUM
     assert isinstance (ident, str)

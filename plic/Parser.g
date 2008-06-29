@@ -21,6 +21,7 @@ PLIC_VERSION=\
 "@PLICSUBST_VERSION@"   # this needs to be in column0 for @@ replacements to work
 
 import yapps2runtime as runtime
+import AuxData
 
 keywords = ( 'TRUE', 'True', 'true', 'FALSE', 'False', 'false',
              'namespace', 'enum', 'enumeration', 'Const', 'typedef', 'record', 'class', 'sequence',
@@ -35,10 +36,12 @@ class YYGlobals (object):
     if not isinstance (value, (int, long, float, str)):
       raise TypeError ('constant expression does not yield string or number: ' + repr (typename))
     self.namespaces[0].add_const (name, value)
-  def nsadd_typedef (self, typename, srctype):
+  def nsadd_typedef (self, fielddecl):
+    typename,srctype,auxinit = fielddecl
     AIn (typename)
-    tdf = srctype.clone (typename)
-    self.namespaces[0].add_type (tdf)
+    typeinfo = srctype.clone (typename)
+    self.parse_assign_auxdata ([ (typename, typeinfo, auxinit) ])
+    self.namespaces[0].add_type (typeinfo)
   def nsadd_evalue (self, evalue_ident, evalue_label, evalue_blurb, evalue_number = None):
     AS (evalue_ident)
     if evalue_number == None:
@@ -59,6 +62,7 @@ class YYGlobals (object):
     if len (rfields) < 1:
       raise AttributeError ('invalid empty record: %s' % name)
     rec = Decls.TypeInfo (name, Decls.RECORD)
+    self.parse_assign_auxdata (rfields)
     fdict = {}
     for field in rfields:
       if fdict.has_key (field[0]):
@@ -66,12 +70,23 @@ class YYGlobals (object):
       fdict[field[0]] = true
       rec.add_field (field[0], field[1])
     self.namespaces[0].add_type (rec)
+  def parse_assign_auxdata (self, fieldlist):
+    for field in fieldlist:
+      if not field[2]:
+        continue
+      name,typeinfo,(auxident,auxargs) = field
+      try:
+        adict = AuxData.parse2dict (typeinfo.storage, auxident, auxargs)
+      except AuxData.Error, ex:
+        raise TypeError (str (ex))
+      typeinfo.update_auxdata (adict)
   def nsadd_sequence (self, name, sfields):
     AIn (name)
     if len (sfields) < 1:
       raise AttributeError ('invalid empty sequence: %s' % name)
     if len (sfields) > 1:
       raise AttributeError ('invalid multiple fields in sequence: %s' % name)
+    self.parse_assign_auxdata (sfields)
     seq = Decls.TypeInfo (name, Decls.SEQUENCE)
     seq.set_elements (sfields[0][0], sfields[0][1])
     self.namespaces[0].add_type (seq)
@@ -241,7 +256,7 @@ rule typename:                                  {{ plist = [] }}
           )*                                    {{ id = "::".join (plist); ATN (id); return id }}
 
 rule auxinit:
-                                                {{ tiident = None }}
+                                                {{ tiident = '' }}
         [ IDENT                                 {{ tiident = IDENT }}
         ]
         r'\('                                   {{ tiargs = [] }}
@@ -249,16 +264,16 @@ rule auxinit:
             ( ',' expression                    {{ tiargs += [ expression ] }}
             )*
           ]
-        r'\)'                                   {{ print "AUXINIT:", tiident, tiargs }}
+        r'\)'                                   {{ return (tiident, tiargs) }}
 
 rule field_decl:
         typename                                {{ vtype = yy.resolve_type (typename) }}
-        IDENT                                   {{ vars = [ (IDENT, vtype) ] }}
-        [ '=' auxinit ]
-        ';'                                     {{ return vars }}
+        IDENT                                   {{ vars = (IDENT, vtype, () ) }}
+        [ '=' auxinit                           {{ vars = (vars[0], vars[1], auxinit) }}
+        ] ';'                                   {{ return [ vars ] }}
 
 rule typedef:
-        'typedef' field_decl                    {{ yy.nsadd_typedef (*field_decl[0]) }}
+        'typedef' field_decl                    {{ yy.nsadd_typedef (field_decl[0]) }}
 
 rule record:
         'record' IDENT '{'                      {{ rfields = [] }}
