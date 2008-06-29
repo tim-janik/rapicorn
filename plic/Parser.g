@@ -240,9 +240,21 @@ rule typename:                                  {{ plist = [] }}
         ( '::' IDENT                            {{ plist.append (IDENT) }}
           )*                                    {{ id = "::".join (plist); ATN (id); return id }}
 
+rule auxinit:
+                                                {{ tiident = None }}
+        [ IDENT                                 {{ tiident = IDENT }}
+        ]
+        r'\('                                   {{ tiargs = [] }}
+          [ expression                          {{ tiargs += [ expression ] }}
+            ( ',' expression                    {{ tiargs += [ expression ] }}
+            )*
+          ]
+        r'\)'                                   {{ print "AUXINIT:", tiident, tiargs }}
+
 rule field_decl:
         typename                                {{ vtype = yy.resolve_type (typename) }}
         IDENT                                   {{ vars = [ (IDENT, vtype) ] }}
+        [ '=' auxinit ]
         ';'                                     {{ return vars }}
 
 rule typedef:
