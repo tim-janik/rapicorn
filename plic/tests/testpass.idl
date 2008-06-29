@@ -221,8 +221,8 @@ Const dummy = FromInner + FromMiddle + FromOuter;
 // Auxdata tests
 namespace Auxdata {
 record RecordWithAuxdata {
-  Num bar  = Num ("Bar", "The Bar number", 0, -10, +10, +2, "rw");
-  Real x   = Real ("x", "X coordinate", 0, 0, 100.0, +.5, "ro");
-  String s = String ("texto", "Specify text here", "-notext-", "rw");
+  Num bar  = Num ("Bar", "The Bar number", 10007.000, -10, +10, +2, "rw");
+  Real x   = Real ("auxtest1", "X coordinate", 0, 0, 100.0, +.5, "ro");
+  String s = String ("auxtest2", "Specify text here", "auxtest3", "rw");
 };
 }

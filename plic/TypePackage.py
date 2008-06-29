@@ -66,7 +66,12 @@ class Generator:
   def aux_strings (self, auxdata):
     result = encode_int (len (auxdata))
     for ad in auxdata.items():
-      result += encode_string (ad[0] + '=' + str (ad[1]))
+      if isinstance (ad[1], str) and ad[1][0] in '"\'':
+        import rfc822
+        astr = rfc822.unquote (ad[1])
+      else:
+        astr = str (ad[1])
+      result += encode_string (ad[0] + '=' + astr)
     return result
   def type_key (self, type_info):
     s = { Decls.NUM       : '\n__i',

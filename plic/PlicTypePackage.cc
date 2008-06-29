@@ -130,6 +130,8 @@ struct TypeInfo {
   const byte         *tdata;    // start of data after nnnn
   uint                tlength;
   String              name ();
+  uint                n_aux_strings ();
+  const char*         aux_string (uint nth, uint *length);
   String              parse_type_info (uint        length,
                                        const byte *data);
   TypeInfo() :
@@ -199,6 +201,27 @@ TypeInfo::name ()
   String result, err = parse_string (&dp, MAXPOINTER /*prevalidated*/, &result);
   error_if (err != "", err);
   return result;
+}
+
+uint
+TypeInfo::n_aux_strings ()
+{
+  return auxdata.size();
+}
+
+const char*
+TypeInfo::aux_string (uint  nth,
+                      uint *lengthp)
+{
+  if (nth >= auxdata.size())
+    {
+      *lengthp = 0;
+      return NULL;
+    }
+  const byte *dp = auxdata[nth];
+  String err = parse_int (&dp, MAXPOINTER /*prevalidated*/, lengthp);
+  error_if (err != "", err);
+  return (const char*) dp;
 }
 
 /* --- type namespace --- */
