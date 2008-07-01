@@ -155,9 +155,9 @@ main (int   argc,
 
   /* fail for unmatched auxtests */
   if (auxtests.size())
-    printf ("ERROR: unmatched aux-tests:\n");
+    fprintf (stderr, "ERROR: unmatched aux-tests:\n");
   for (uint q = 0; q < auxtests.size(); q++)
-    printf ("  %s\n", auxtests[q].c_str());
+    fprintf (stderr, "  %s\n", auxtests[q].c_str());
   return auxtests.size() != 0;
 }
 // g++ -Wall -Os ptptest.cc && ./a.out plic.out
