@@ -34,9 +34,9 @@ protected:
   void                  assign          (int                  *vint)   { set ((int64) *vint); }
   void                  assign          (uint                 *vuint)  { set ((int64) *vuint); }
   void                  assign          (int64                *num);
-  void                  assign          (float                *vfloat) { set ((long double) *vfloat); }
+  void                  assign          (float                *real) { set ((long double) *real); }
   void                  assign          (double               *vdble)  { set ((long double) *vdble); }
-  void                  assign          (long double          *vfloat);
+  void                  assign          (long double          *real);
   void                  assign          (const String         *string);
   void                  assign          (const char          **string) { set (String (*string)); }
   void                  assign          (const StringVector   *string_vector);
@@ -51,7 +51,7 @@ protected:
 public:
   const Type::Storage   storage;
   /* non-lvalue getters */
-  long double           vfloat          () const;
+  long double           real          () const;
   int64                 num             () const;
   const String          string          () const;
   /* lvalue getters */
@@ -66,9 +66,9 @@ public:
   int                   convert         (int*          = 0)     { return num(); }
   uint                  convert         (uint*         = 0)     { return num(); }
   int64                 convert         (int64*        = 0)     { return num(); }
-  float                 convert         (float*        = 0)     { return vfloat(); }
-  double                convert         (double*       = 0)     { return vfloat(); }
-  long double           convert         (long double*  = 0)     { return vfloat(); }
+  float                 convert         (float*        = 0)     { return real(); }
+  double                convert         (double*       = 0)     { return real(); }
+  long double           convert         (long double*  = 0)     { return real(); }
   String                convert         (String*       = 0)     { return string(); }
   StringVector          convert         (StringVector* = 0)     { return string_vector(); }
   Object&               convert         (Object*       = 0)     { return object(); }

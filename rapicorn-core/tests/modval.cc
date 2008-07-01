@@ -20,6 +20,7 @@
 namespace {
 using namespace Rapicorn;
 
+#if 0
 template<typename CharArray> static String
 string_from_chars (CharArray &ca)
 {
@@ -253,6 +254,7 @@ test_variable ()
   (void) (b + i + ui + d); // silence compiler
   unref (v1);
 }
+#endif
 
 
 } // Anon
@@ -263,14 +265,14 @@ main (int   argc,
 {
   rapicorn_init_test (&argc, &argv);
 
-  Test::add ("/Type/type info", test_type_info);
-  Test::add ("/Type/basics", test_types);
-  Test::add ("/Value/num", test_value_num);
-  Test::add ("/Value/float", test_value_float);
-  Test::add ("/Value/string", test_value_string);
-  Test::add ("/Array/AutoValue", test_array_auto_value);
-  Test::add ("/Array/chess", test_array);
-  Test::add ("/Variable/notification", test_variable);
+  // Test::add ("/Type/type info", test_type_info);
+  // Test::add ("/Type/basics", test_types);
+  // Test::add ("/Value/num", test_value_num);
+  // Test::add ("/Value/float", test_value_float);
+  // Test::add ("/Value/string", test_value_string);
+  // Test::add ("/Array/AutoValue", test_array_auto_value);
+  // Test::add ("/Array/chess", test_array);
+  // Test::add ("/Variable/notification", test_variable);
 
   return Test::run();
 }

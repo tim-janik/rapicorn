@@ -29,8 +29,8 @@ rapicorn_cc_sources = $(strip 		\
         rapicorncpu.cc  rapicorndebugtools.cc	rapicornthread.cc	rapicornutils.cc  \
         rapicornmsg.cc  rapicornsignal.cc	rapicornmath.cc		rapicornutf8.cc   \
         rapicornxml.cc  markup.cc		enumdefs.cc		testutils.cc \
-        pixmap.cc	\
-	values.cc types.cc models.cc \
+        pixmap.cc	types-ptpp.cc   \
+	values.cc types.cc models.cc    \
 )
 rapicorn_private_files = $(strip	\
         rapicornsignalslot.hh		\
@@ -78,10 +78,11 @@ noinst_PROGRAMS       += rapicorn-zintern
 rapicorn_zintern_SOURCES = rapicorn-zintern.cc
 rapicorn_zintern_LDADD   = $(RAPICORN_CORE_LIBS) -lm # $(progs_ldadd)
 
-# === plictypepkg.cc ===
-plictypepkg.cc: # FIXME.idl
+# === types-ptpp.cc ===
+types-ptpp.cc: # FIXME.idl
 	:; $(PLIC) --cc-type-package-parser > gen-$@
 	mv gen-$@ $@
+types.cc: types-ptpp.cc
 
 # === enum introspection ===
 $(srcdir)/enumdefs.cc: gen-enums.cc

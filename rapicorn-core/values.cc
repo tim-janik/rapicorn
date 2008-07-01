@@ -20,12 +20,23 @@
 
 namespace Rapicorn {
 
-#define IS_RAPICORN_TYPE_STORAGE(strg)  (strchr (RAPICORN_TYPE_STORAGE_CHARS, strg))
+static inline uint32*
+memfind4 (const uint32 *mem, uint32 value, size_t n_values) // FIXME: public header
+{
+  return (uint32*) wmemchr ((const wchar_t*) mem, value, n_values);
+}
 
 BaseValue::BaseValue (Type::Storage value_type) :
   u(), storage (value_type)
 {
-  assert (IS_RAPICORN_TYPE_STORAGE (storage));
+  static const uint32 valid_storage_types[] = {
+    Type::NUM, Type::REAL, Type::STRING, Type::CHOICE,
+    Type::SEQUENCE, Type::RECORD, Type::INTERFACE,
+    Type::TYPE_REFERENCE,
+    Type::STRING_VECTOR,
+    Type::ARRAY,
+  };
+  assert (memfind4 (valid_storage_types, storage, ARRAY_SIZE (valid_storage_types)));
   assert (u.i64 == 0);
   assert (u.ldf == 0);
   assert (u.p == NULL);
@@ -47,10 +58,10 @@ BaseValue::operator= (const BaseValue &other)
     {
       switch (storage)
         {
-        case Type::NUM: case Type::FLOAT:
+        case Type::NUM: case Type::REAL:
           u = other.u;
           break;
-        case Type::STRING:
+        case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
           if (other.u.p)
             u.p = new String (*(String*) other.u.p);
           else
@@ -62,7 +73,7 @@ BaseValue::operator= (const BaseValue &other)
           else
             u.p = NULL;
           break;
-        case Type::ARRAY:
+        case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
           if (other.u.p)
             u.p = new Array (*(Array*) other.u.p);
           else
@@ -80,16 +91,16 @@ BaseValue::operator= (const BaseValue &other)
   else
     switch (other.storage)
       {
-      case Type::NUM: case Type::FLOAT:
+      case Type::NUM: case Type::REAL:
         this->set (other.u.i64);
         break;
-      case Type::STRING:
+      case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
         this->set (other.u.p ? *(String*) other.u.p : "");
         break;
       case Type::STRING_VECTOR:
         this->set (other.u.p ? *(vector<String>*) other.u.p : vector<String>());
         break;
-      case Type::ARRAY:
+      case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
         this->set (other.u.p ? *(Array*) other.u.p : Array());
         break;
       case Type::OBJECT:
@@ -106,14 +117,14 @@ BaseValue::num () const
     {
     case Type::NUM:
       return u.i64;
-    case Type::FLOAT:
+    case Type::REAL:
       return (int64) roundl (u.ldf);
-    case Type::STRING:
+    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
       if (!u.p)
         return 0;
       else
         return string_to_int (*(String*) u.p);
-    case Type::ARRAY:
+    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
       return u.p ? ((Array*) u.p)->count() : 0;
     case Type::STRING_VECTOR:
       return u.p ? ((vector<String>*) u.p)->size() : 0;
@@ -124,19 +135,19 @@ BaseValue::num () const
 }
 
 long double
-BaseValue::vfloat () const
+BaseValue::real () const
 {
   switch (storage)
     {
-    case Type::FLOAT:
+    case Type::REAL:
       return u.ldf;
-    case Type::STRING:
+    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
       if (!u.p)
         return 0;
       else
         return string_to_float (*(String*) u.p);
     case Type::NUM:
-    case Type::ARRAY:
+    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
     case Type::STRING_VECTOR:
     case Type::OBJECT:
       return num();
@@ -151,11 +162,11 @@ BaseValue::string () const
     {
     case Type::NUM:
       return string_from_int (u.i64);
-    case Type::FLOAT:
+    case Type::REAL:
       return string_from_double (u.ldf);
-    case Type::STRING:
+    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
       return u.p ? *(String*) u.p : "";
-    case Type::ARRAY:
+    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
       return u.p ? ((Array*) u.p)->to_string() : "";
     case Type::STRING_VECTOR:
       if (u.p)
@@ -187,15 +198,15 @@ BaseValue::assign (int64 *nump)
     case Type::NUM:
       u.i64 = num;
       break;
-    case Type::FLOAT:
+    case Type::REAL:
       u.ldf = num;
       break;
-    case Type::STRING:
+    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
       if (!u.p)
         u.p = new String;
       *(String*) u.p = string_from_int (num);
       break;
-    case Type::ARRAY:
+    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
     case Type::STRING_VECTOR:
     case Type::OBJECT:
       if (num == 0) // emulate 'NULL Pointer'
@@ -205,7 +216,7 @@ BaseValue::assign (int64 *nump)
         }
       goto default_error;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "num", Type::type_name (storage));
+      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "num", Type::storage_name (storage));
     }
   changed();
 }
@@ -214,21 +225,21 @@ void
 BaseValue::assign (long double *ldfp)
 {
   long double ldf = *ldfp;
-  try_retype (Type::FLOAT);
+  try_retype (Type::REAL);
   switch (storage)
     {
     case Type::NUM:
       u.i64 = (int64) roundl (ldf);
       break;
-    case Type::FLOAT:
+    case Type::REAL:
       u.ldf = ldf;
       break;
-    case Type::STRING:
+    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
       if (!u.p)
         u.p = new String;
       *(String*) u.p = string_from_double (ldf);
       break;
-    case Type::ARRAY:
+    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
     case Type::STRING_VECTOR:
     case Type::OBJECT:
       if (ldf == 0) // emulate 'NULL Pointer'
@@ -238,7 +249,7 @@ BaseValue::assign (long double *ldfp)
         }
       goto default_error;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "float", Type::type_name (storage));
+      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "float", Type::storage_name (storage));
     }
   changed();
 }
@@ -253,22 +264,22 @@ BaseValue::assign (const String *sp)
     case Type::NUM:
       u.i64 = string_to_int (s);
       break;
-    case Type::FLOAT:
+    case Type::REAL:
       u.ldf = string_to_double (s);
       break;
-    case Type::STRING:
+    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
       if (!u.p)
         u.p = new String;
       *(String*) u.p = s;
       break;
-    case Type::ARRAY:
+    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
       goto default_error;
     case Type::STRING_VECTOR:
       goto default_error;
     case Type::OBJECT:
       goto default_error;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "String", Type::type_name (storage));
+      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "String", Type::storage_name (storage));
     }
   changed();
 }
@@ -281,9 +292,9 @@ BaseValue::assign (const StringVector *svp)
   switch (storage)
     {
     case Type::NUM:
-    case Type::FLOAT:
-    case Type::STRING:
-    case Type::ARRAY:
+    case Type::REAL:
+    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
+    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
     case Type::OBJECT:
       goto default_error;
     case Type::STRING_VECTOR:
@@ -292,7 +303,7 @@ BaseValue::assign (const StringVector *svp)
       *(vector<String>*) u.p = sv;
       break;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "StringVector", Type::type_name (storage));
+      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "StringVector", Type::storage_name (storage));
     }
   changed();
 }
@@ -305,18 +316,18 @@ BaseValue::assign (const Array *ap)
   switch (storage)
     {
     case Type::NUM:
-    case Type::FLOAT:
-    case Type::STRING:
+    case Type::REAL:
+    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
     case Type::STRING_VECTOR:
     case Type::OBJECT:
       goto default_error;
-    case Type::ARRAY:
+    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
       if (!u.p)
         u.p = new Array;
       *(Array*) u.p = a;
       break;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "Array", Type::type_name (storage));
+      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "Array", Type::storage_name (storage));
     }
   changed();
 }
@@ -337,13 +348,13 @@ BaseValue::assign (Object *orefp)
       u.p = object;
       break;
     case Type::NUM:
-    case Type::FLOAT:
-    case Type::STRING:
+    case Type::REAL:
+    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
     case Type::STRING_VECTOR:
-    case Type::ARRAY:
+    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
       goto default_error;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "Object", Type::type_name (storage));
+      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "Object", Type::storage_name (storage));
     }
   changed();
 }
@@ -354,13 +365,13 @@ BaseValue::unset()
   switch (storage)
     {
     case Type::NUM:
-    case Type::FLOAT:
+    case Type::REAL:
       break;            // no release
-    case Type::STRING:
+    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
       if (u.p)
         delete (String*) u.p;
       break;
-    case Type::ARRAY:
+    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
       if (u.p)
         delete (Array*) u.p;
       break;

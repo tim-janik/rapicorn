@@ -450,6 +450,7 @@ MC_IF_VAR_EQ(GXX, yes,,
 
 # check for development tools
 AC_CHECK_PROGS(XMLLINT, xmllint, true)
+AC_CHECK_PROGS(PLIC, plic)
 
 # find installation utilities
 AC_PROG_INSTALL
