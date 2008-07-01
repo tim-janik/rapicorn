@@ -129,6 +129,9 @@ class YYGlobals (object):
         if cvalue:
           return cvalue
     return None
+  def clone_type (self, typename):
+    type_info = self.resolve_type (typename)
+    return type_info.clone (type_info.name)
   def resolve_type (self, typename):
     type_info = self.namespace_lookup (typename, astype = True)
     if not type_info:
@@ -267,7 +270,7 @@ rule auxinit:
         r'\)'                                   {{ return (tiident, tiargs) }}
 
 rule field_decl:
-        typename                                {{ vtype = yy.resolve_type (typename) }}
+        typename                                {{ vtype = yy.clone_type (typename) }}
         IDENT                                   {{ vars = (IDENT, vtype, () ) }}
         [ '=' auxinit                           {{ vars = (vars[0], vars[1], auxinit) }}
         ] ';'                                   {{ return [ vars ] }}
