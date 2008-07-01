@@ -31,8 +31,11 @@ struct TypeNamespace;   //** Handle for TypePackage namespace
 struct TypeInfo;        //** Handle for all types
 
 /* --- config --- */
-#ifndef  TRACE_ERRORS
+#ifndef TRACE_ERRORS
 #define TRACE_ERRORS 1  // adds debugging info to funcs and error strings
+#endif
+#ifndef ALLOW_EMPTY_NAMESPACES
+#define ALLOW_EMPTY_NAMESPACES 1
 #endif
 
 /* --- auxillary types --- */
@@ -262,7 +265,8 @@ TypeNamespace::parse_namespace (uint        data_length,
   uint ntypes = 0;
   err = parse_int (&dp, boundary, &ntypes);
   return_if (err != "", err);
-  return_if (ntypes < 1, "empty namespace");
+  if (!ALLOW_EMPTY_NAMESPACES)
+    return_if (ntypes < 1, "empty namespace");
   // validate tail pointer
   dp += ntypes * 4;
   return_if (dp + 4 > boundary, ERRPREMATURE);

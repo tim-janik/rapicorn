@@ -134,6 +134,13 @@ class YYGlobals (object):
     return type_info.clone (type_info.name)
   def resolve_type (self, typename):
     type_info = self.namespace_lookup (typename, astype = True)
+    if not type_info:   # builtin types
+      type_info = {
+        'Bool'    : Decls.TypeInfo ('Bool',   Decls.NUM),
+        'Num'     : Decls.TypeInfo ('Num',    Decls.NUM),
+        'Real'    : Decls.TypeInfo ('Real',   Decls.REAL),
+        'String'  : Decls.TypeInfo ('String', Decls.STRING),
+      }.get (typename, None);
     if not type_info:
       raise TypeError ('unknown type: ' + repr (typename))
     return type_info
@@ -147,11 +154,6 @@ class YYGlobals (object):
       namespace = Decls.Namespace (full_ident)
       self.ns_list.append (namespace)
     self.namespaces = [ namespace ] + self.namespaces
-    # initialize namespace
-    namespace.add_type (Decls.TypeInfo ('Bool',   Decls.NUM))
-    namespace.add_type (Decls.TypeInfo ('Num',    Decls.NUM))
-    namespace.add_type (Decls.TypeInfo ('Real',   Decls.REAL))
-    namespace.add_type (Decls.TypeInfo ('String', Decls.STRING))
   def namespace_close (self):
     assert len (self.namespaces)
     self.namespaces = self.namespaces[1:]
