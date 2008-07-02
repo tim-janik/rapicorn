@@ -79,7 +79,7 @@ rapicorn_zintern_SOURCES = rapicorn-zintern.cc
 rapicorn_zintern_LDADD   = $(RAPICORN_CORE_LIBS) -lm # $(progs_ldadd)
 
 # === types-ptpp.cc ===
-types-ptpp.cc: # FIXME.idl
+types-ptpp.cc: # FIXME: depend on a .idl file for appropriate regeneration
 	:; $(PLIC) --cc-type-package-parser > gen-$@
 	mv gen-$@ $@
 types.cc: types-ptpp.cc
