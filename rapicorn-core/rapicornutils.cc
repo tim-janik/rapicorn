@@ -1599,6 +1599,32 @@ Deletable::invoke_deletion_hooks()
 }
 
 /* --- ReferenceCountImpl --- */
+static const size_t stack_proximity_threshold = 4096; // <= page_size on most systems
+
+static __attribute__ ((noinline))
+size_t
+stack_ptrdiff (const void *stackvariable,
+               const void *data)
+{
+  size_t d = size_t (data);
+  size_t s = size_t (stackvariable);
+  return MAX (d, s) - MIN (d, s);
+}
+
+void
+ReferenceCountImpl::stackcheck (const void *data)
+{
+  auto int stackvariable = 0;
+  /* this check for ReferenceCountImpl instance allocations on the stack isn't
+   * perfect, but should catch the most common cases for growing and shrinking stacks
+   */
+  if (stack_ptrdiff (&stackvariable, data) < stack_proximity_threshold)
+    error ("ReferenceCountImpl object allocated on stack instead of heap: %u > %u (%p - %p)",
+           stack_proximity_threshold,
+           stack_ptrdiff (&stackvariable, data),
+           data, &stackvariable);
+}
+
 void
 ReferenceCountImpl::ref_diag (const char *msg) const
 {
@@ -1965,13 +1991,13 @@ malloc_aligned (gsize	  total_size,
 {
   uint8 *aligned_mem = (uint8*) g_malloc (total_size);
   *free_pointer = aligned_mem;
-  if (!alignment || !(ptrdiff_t) aligned_mem % alignment)
+  if (!alignment || !size_t (aligned_mem) % alignment)
     return aligned_mem;
   g_free (aligned_mem);
   aligned_mem = (uint8*) g_malloc (total_size + alignment - 1);
   *free_pointer = aligned_mem;
-  if ((ptrdiff_t) aligned_mem % alignment)
-    aligned_mem += alignment - (ptrdiff_t) aligned_mem % alignment;
+  if (size_t (aligned_mem) % alignment)
+    aligned_mem += alignment - size_t (aligned_mem) % alignment;
   return aligned_mem;
 }
 

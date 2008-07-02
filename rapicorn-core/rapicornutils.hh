@@ -349,6 +349,7 @@ class ReferenceCountImpl : public virtual Deletable
 {
   volatile mutable uint32 ref_field;
   static const uint32     FLOATING_FLAG = 1 << 31;
+  static void             stackcheck (const void*);
   inline bool
   ref_cas (uint32       oldv,
            uint32       newv) const
@@ -367,9 +368,12 @@ protected:
     return ref_get() & ~FLOATING_FLAG;
   }
 public:
-  ReferenceCountImpl() :
+  ReferenceCountImpl (uint allow_stack_magic = 0) :
     ref_field (FLOATING_FLAG + 1)
-  {}
+  {
+    if (allow_stack_magic != 0xbadbad)
+      stackcheck (this);
+  }
   bool
   floating() const
   {

@@ -37,9 +37,12 @@ struct TrampolineLink : public ReferenceCountImpl {
   TrampolineLink *next, *prev;
   uint            callable : 1;
   uint            with_emitter : 1;
-  explicit        TrampolineLink() : next (NULL), prev (NULL), callable (true), with_emitter (false) {}
   virtual bool    operator== (const TrampolineLink &other) const = 0;
   virtual        ~TrampolineLink();
+  TrampolineLink (uint allow_stack_magic = 0) :
+    ReferenceCountImpl (allow_stack_magic),
+    next (NULL), prev (NULL), callable (true), with_emitter (false)
+  {}
   RAPICORN_PRIVATE_CLASS_COPY (TrampolineLink);
 };
 
@@ -49,6 +52,7 @@ class SignalBase {
     virtual bool operator== (const TrampolineLink &other) const;
     virtual void delete_this ();
   public:
+    explicit     EmbeddedLink  () : TrampolineLink (0xbadbad) {}
     void         check_last_ref() const { RAPICORN_ASSERT (ref_count() == 1); }
   };
 protected:
