@@ -23,9 +23,8 @@ using namespace Rapicorn;
 static void
 test_store1_string_row ()
 {
-#if 0 // FIXME
-  /* create storage model with row type */
-  Type t1 ("RcTi;000bDummyString;s;;");
+  Type t1 = Type::lookup ("RapicornTest::SimpleString");
+  assert (t1.istype());
   Store1 *s1 = Store1::create_memory_store (t1);
   assert (s1 != NULL);
   /* assert model/store identity (for memory stores) */
@@ -38,15 +37,14 @@ test_store1_string_row ()
   ra.push_head (AutoValue ("first"));
   s1->insert_row (0, ra);
   assert (s1->count() == 1);
-#endif
 }
 
 static void
 test_store1_array ()
 {
-#if 0 // FIXME
   /* create storage model with row type */
-  Type t1 ("RcTi;000aDummyArray;A;;");
+  Type t1 = Type::lookup ("RapicornTest::SimpleRecord");
+  assert (t1.istype());
   Store1 *s1 = Store1::create_memory_store (t1);
   assert (s1 != NULL);
   assert (s1->count() == 0);
@@ -57,7 +55,6 @@ test_store1_array ()
   row[-1] = 17; // integer
   s1->insert_row (0, row);
   assert (s1->count() == 1);
-#endif
 }
 
 static void
@@ -80,6 +77,9 @@ main (int   argc,
       char *argv[])
 {
   rapicorn_init_test (&argc, &argv);
+
+  // first, load required type package
+  Type::register_package_file ("testtypes.tpg");
 
   Test::add ("/Store/string-row", test_store1_string_row);
   Test::add ("/Store/array-row", test_store1_array);

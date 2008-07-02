@@ -56,12 +56,18 @@ public:
   double                aux_float       (const String &auxname) const;
   int64                 aux_num         (const String &auxname) const;
   /* retrieve types */
+  static Type           lookup          (const String &full_name);
+  static Type           notype          ();
+  bool                  istype          () const; // false for notype()
   /*Copy*/              Type            (const Type&);
   /*Des*/              ~Type            ();
-  class Info;
+  static void           register_package      (uint          static_data_length,
+                                               const char   *static_data);
+  static void           register_package_file (const String &filename);
 private:
+  class Info;
   explicit              Type            (Info &tinfo);
-  Info                 &m_info; // FIXME: reference
+  Info                 &m_info;
   Type&                 operator=       (const Type&); // must not be used
 };
 

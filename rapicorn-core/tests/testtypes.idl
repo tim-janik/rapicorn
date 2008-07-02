@@ -1,0 +1,10 @@
+
+namespace RapicornTest {
+
+  typedef String SimpleString;
+
+  record SimpleRecord {
+    Num sample_integer;
+  };
+
+}

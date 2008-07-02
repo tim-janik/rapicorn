@@ -15,6 +15,8 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "types.hh"
+#include "rapicornthread.hh"
+#include <errno.h>
 
 namespace Rapicorn {
 
@@ -43,6 +45,9 @@ namespace Plic {
 
 struct Type::Info : public ReferenceCountImpl {
   Plic::TypeInfo plic_type_info;
+  explicit Info (const Plic::TypeInfo &tmpl) :
+    plic_type_info (tmpl)
+  {}
 };
 
 String
@@ -104,19 +109,152 @@ Type::hints () const
 }
 
 Type::Type (Info &tinfo) :
-  m_info (ref (tinfo))
+  m_info (ref_sink (tinfo))
 {}
 
 Type::Type (const Type &src) :
-  m_info (ref (src.m_info))
+  m_info (ref_sink (src.m_info))
 {}
 
 Type::~Type ()
 {
-  Info *old_info = &m_info;
-  *(Info**) &m_info = NULL;
-  if (old_info)
-    unref (old_info);
+  unref (m_info);
+}
+
+bool
+Type::istype () const // false for notype()
+{
+  return storage() != 0;
+}
+
+static Plic::TypeRegistry type_registry;
+static Mutex              type_registry_mutex;
+static Type              *type_notype = NULL;
+
+Type
+Type::notype ()
+{
+  if (!type_notype)
+    {
+      struct Null_TypeInfo : public Plic::TypeInfo {};
+      Null_TypeInfo nt;
+      static const uint8 nullname[] = "\200\200\200\200";
+      nt.namep = nullname;
+      nt.rtypep = nullname;
+      Type::Info *rawti = new Type::Info (nt);
+      ref_sink (rawti);
+      {
+        AutoLocker locker (type_registry_mutex);
+        if (!type_notype)
+          type_notype = new Type (*rawti);
+      }
+      unref (rawti);
+    }
+  return *type_notype;
+}
+
+Type
+Type::lookup (const String &full_name)
+{
+  String::size_type sl = full_name.rfind (':');
+  if (sl != full_name.npos && sl > 0 && full_name[sl-1] == ':')
+    {
+      String nspace = full_name.substr (0, sl - 1), tname = full_name.substr (sl + 1);
+      vector<Plic::TypeNamespace> tnl;
+      AutoLocker locker (type_registry_mutex);
+      tnl = type_registry.list_namespaces ();
+      for (uint i = 0; i < tnl.size(); i++)
+        if (tnl[i].fullname() == nspace)
+          {
+            vector<Plic::TypeInfo> til = tnl[i].list_types ();
+            for (uint j = 0; j < til.size(); j++)
+              if (til[j].name () == tname)
+                {
+                  Type::Info *rawti = new Type::Info (til[j]);
+                  ref_sink (rawti);
+                  Type t (*rawti);
+                  unref (rawti);
+                  return t;
+                }
+          }
+    }
+  // type_registry_mutex must be unlocked for ::notype()
+  return Type::notype();
+}
+
+void
+Type::register_package (uint        static_data_length,
+                        const char *static_data)
+{
+  AutoLocker locker (type_registry_mutex);
+  String err = type_registry.register_type_package (static_data_length,
+                                                    reinterpret_cast<const uint8*> (static_data));
+  if (err != "")
+    error ("%s", err.c_str());
+}
+
+static char* /* return malloc()-ed buffer containing a full read of FILE */
+file_memread (FILE   *stream,
+              size_t *lengthp)
+{
+  size_t sz = 256;
+  char *malloc_string = (char*) malloc (sz);
+  if (!malloc_string)
+    return NULL;
+  char *start = malloc_string;
+  errno = 0;
+  while (!feof (stream))
+    {
+      size_t bytes = fread (start, 1, sz - (start - malloc_string), stream);
+      if (bytes <= 0 && ferror (stream) && errno != EAGAIN)
+        {
+          start = malloc_string; // error/0-data
+          break;
+        }
+      start += bytes;
+      if (start == malloc_string + sz)
+        {
+          bytes = start - malloc_string;
+          sz *= 2;
+          char *newstring = (char*) realloc (malloc_string, sz);
+          if (!newstring)
+            {
+              start = malloc_string; // error/0-data
+              break;
+            }
+          malloc_string = newstring;
+          start = malloc_string + bytes;
+        }
+    }
+  int savederr = errno;
+  *lengthp = start - malloc_string;
+  if (!*lengthp)
+    {
+      free (malloc_string);
+      malloc_string = NULL;
+    }
+  errno = savederr;
+  return malloc_string;
+}
+
+void
+Type::register_package_file (const String &filename)
+{
+  FILE *file = fopen (filename.c_str(), "r");
+  if (!file)
+    error ("failed to open \"%s\": %s", filename.c_str(), strerror (errno));
+  size_t len = 0;
+  char *contents = file_memread (file, &len);
+  if (len)
+    {
+      register_package (len, contents);
+      contents = NULL; // make contents static by "leak"-ing
+    }
+  else
+    error ("failed to read \"%s\": %s", filename.c_str(), strerror (errno ? errno : ENODATA));
+  fclose (file);
+  if (contents)
+    free (contents);
 }
 
 } // Rapicorn
