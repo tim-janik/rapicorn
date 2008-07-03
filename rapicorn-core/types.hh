@@ -59,6 +59,7 @@ public:
   static Type           lookup          (const String &full_name);
   static Type           notype          ();
   bool                  istype          () const; // false for notype()
+  explicit              Type            (const String &full_name);
   /*Copy*/              Type            (const Type&);
   /*Des*/              ~Type            ();
   static void           register_package      (uint          static_data_length,

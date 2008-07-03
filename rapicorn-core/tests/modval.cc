@@ -20,7 +20,6 @@
 namespace {
 using namespace Rapicorn;
 
-#if 0
 template<typename CharArray> static String
 string_from_chars (CharArray &ca)
 {
@@ -30,65 +29,48 @@ string_from_chars (CharArray &ca)
 static void
 test_type_info ()
 {
-  String err, ts;
+  String ts;
   // fail type extraction
-  Typ2 *t0 = Typ2::from_type_info ("Invalid-Type-Definition", err);
-  assert (t0 == NULL && err != "");
+  Type t0 = Type::lookup (":invalid:::type^^^Definition");
+  assert (t0.istype() == false);
   // type extraction by reference
-  const char tchars[] = "GType001\200\200\200\201X\200\200\200\222___i\200\200\200\201\200\200\200\206foo=37";
-  Typ2 t1 = Typ2::from_type_info (tchars, sizeof (tchars));
-  assert (t1.name() == "X");
-  assert (t1.storage() == Typ2::NUM);
+  Type t1 = Type::lookup ("RapicornTest::NumWithFooAsLabel");
+  assert (t1.istype());
+  assert (t1.name() == "NumWithFooAsLabel");
+  assert (t1.storage() == Type::NUM);
+  assert (t1.aux_string ("label") == "Foo");
+  assert (t1.hints() == ":");
   // type extraction by pointer (need to check it didn't fail)
-  ts = string_from_chars ("GType001\200\200\200\201Y\200\200\200\217___f\200\200\200\201\200\200\200\203a=b");
-  Typ2 *t2 = Typ2::from_type_info (ts, err);
-  assert (t2 != NULL && err == "");
-  assert (t2->name() == "Y");
-  assert (t2->storage() == Typ2::REAL);
-  // aux keys
-  assert (t1.aux_string ("foo") == "37");
+  Type t2 = Type::lookup ("RapicornTest::RealWithBlurbBlurb");
+  assert (t2.istype());
+  assert (t2.name() == "RealWithBlurbBlurb");
+  assert (t2.storage() == Type::REAL);
+  assert (t2.aux_string ("blurb") == "Blurb");
   // check that type memory used above is still valid
-  assert (t1.name() + "postfix" == String ("Xpostfix"));
-  assert (t2->name() == String ("Y"));
+  assert (t1.name() + "-postfix" == String ("NumWithFooAsLabel-postfix"));
+  assert (t2.name() == String ("RealWithBlurbBlurb"));
 }
 
 static void
 test_types ()
 {
-  const char tchars1[] = ("GType001\200\200\200\203Foo\200\200\200\263___i\200\200\200\203"
-                          "\200\200\200\210zonk=bar\200\200\200\216SHREK=Schreck!\200\200\200\211SomeNum=7");
-  Typ2 t1 = Typ2::from_type_info (tchars1, sizeof (tchars1));
-  assert (t1.name() == "Foo");
-  assert (t1.storage() == Typ2::NUM);
-  assert (t1.ident() == "Foo");
-  assert (t1.label() == "Foo");
-  assert (t1.aux_string ("SHREK") == "Schreck!");
-  assert (t1.aux_num ("SomeNum") == 7);
-  assert (t1.aux_float ("SomeNum") == 7.0);
-  assert (t1.hints() == ":");
-  Type o1 ("RcTi;0003Foo;n;0008zonk=bar000eSHREK=Schreck!0009SomeNum=7;");
-  assert (o1.storage() == Type::NUM);
-  assert (o1.ident() == "Foo");
-  assert (o1.label() == "Foo");
-  assert (o1.aux_string ("SHREK") == "Schreck!");
-  assert (o1.aux_num ("SomeNum") == 7);
-  assert (o1.aux_float ("SomeNum") == 7.0);
-  assert (o1.hints() == ":");
-  const char tchars2[] = ("GType001\200\200\200\203Bar\200\200\200\262___i\200\200\200\203"
-                          "\200\200\200\211label=BAR\200\200\200\215blurb=nothing\200\200\200\210hints=rw");
-  Typ2 t2 = Typ2::from_type_info (tchars2, sizeof (tchars2));
-  assert (t2.name() == "Bar");
-  assert (t2.storage() == Typ2::NUM);
-  assert (t2.ident() == "Bar");
-  assert (t2.label() == "BAR");
-  assert (t2.blurb() == "nothing");
-  assert (t2.hints() == ":rw:");
-  Type o2 ("RcTi;0003Bar;n;0009label=BAR0008hints=rw000Dblurb=nothing;");
-  assert (o2.storage() == Type::NUM);
-  assert (o2.ident() == "Bar");
-  assert (o2.label() == "BAR");
-  assert (o2.blurb() == "nothing");
-  assert (o2.hints() == ":rw:");
+  Type t1 = Type::lookup ("RapicornTest::ExtendNumWithAux");
+  assert (t1.istype());
+  assert (t1.name() == "ExtendNumWithAux");
+  assert (t1.storage() == Type::NUM);
+  assert (t1.ident() == "ExtendNumWithAux");
+  assert (t1.label() == "Extended Num");
+  assert (t1.blurb() == "This Num demonstrates extensive auxillary data use");
+  assert (t1.aux_num ("default") == 33);
+  assert (t1.aux_float ("step") == -5);
+  assert (t1.hints().find (":extra-option:") != String().npos);
+  Type o1 = Type::lookup ("RapicornTest::ExtendedString");
+  assert (o1.storage() == Type::STRING);
+  assert (o1.ident() == "ExtendedString");
+  assert (o1.label() == "Extended String");
+  assert (o1.blurb() == "Demonstrate full string specification");
+  assert (o1.aux_string ("default") == "Default-String-Value");
+  assert (o1.hints().find (":ro:") != String().npos);
 }
 
 static void
@@ -120,19 +102,19 @@ test_value_num ()
 static void
 test_value_float ()
 {
-  AnyValue v1 (Type::FLOAT);
-  assert (v1.vfloat() == 0.0);
+  AnyValue v1 (Type::REAL);
+  assert (v1.real() == 0.0);
   v1 = 1.;
-  assert (v1.vfloat() == 1.0);
+  assert (v1.real() == 1.0);
   v1.set ("-1");
-  assert (v1.vfloat() == -1.0);
+  assert (v1.real() == -1.0);
   v1.set ((long double) 16.5e+6);
-  assert (v1.vfloat() > 16000000.0);
-  assert (v1.vfloat() < 17000000.0);
+  assert (v1.real() > 16000000.0);
+  assert (v1.real() < 17000000.0);
   v1 = 7;
-  assert (v1.vfloat() == 7.0);
+  assert (v1.real() == 7.0);
   v1 = false;
-  assert (v1.vfloat() == 0.0);
+  assert (v1.real() == 0.0);
 }
 
 static void
@@ -236,7 +218,7 @@ variable_changed (Variable *self)
 static void
 test_variable ()
 {
-  Type somestring ("RcTi;000aSomeString;s;;");
+  Type somestring ("RapicornTest::SimpleString");
   Variable &v1 = *new Variable (somestring);
   ref_sink (v1);
   v1.sig_changed += slot (variable_changed, &v1);
@@ -254,7 +236,6 @@ test_variable ()
   (void) (b + i + ui + d); // silence compiler
   unref (v1);
 }
-#endif
 
 
 } // Anon
@@ -265,14 +246,17 @@ main (int   argc,
 {
   rapicorn_init_test (&argc, &argv);
 
-  // Test::add ("/Type/type info", test_type_info);
-  // Test::add ("/Type/basics", test_types);
-  // Test::add ("/Value/num", test_value_num);
-  // Test::add ("/Value/float", test_value_float);
-  // Test::add ("/Value/string", test_value_string);
-  // Test::add ("/Array/AutoValue", test_array_auto_value);
-  // Test::add ("/Array/chess", test_array);
-  // Test::add ("/Variable/notification", test_variable);
+  // first, load required type package
+  Type::register_package_file ("testtypes.tpg");
+
+  Test::add ("/Type/type info", test_type_info);
+  Test::add ("/Type/basics", test_types);
+  Test::add ("/Value/num", test_value_num);
+  Test::add ("/Value/float", test_value_float);
+  Test::add ("/Value/string", test_value_string);
+  Test::add ("/Array/AutoValue", test_array_auto_value);
+  Test::add ("/Array/Chess", test_array);
+  Test::add ("/Variable/notification", test_variable);
 
   return Test::run();
 }

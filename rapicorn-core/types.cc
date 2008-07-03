@@ -108,12 +108,16 @@ Type::hints () const
   return str;
 }
 
-Type::Type (Info &tinfo) :
-  m_info (ref_sink (tinfo))
+Type::Type (const String &full_name) :
+  m_info (ref_sink (Type::lookup (full_name).m_info))
 {}
 
 Type::Type (const Type &src) :
   m_info (ref_sink (src.m_info))
+{}
+
+Type::Type (Info &tinfo) :
+  m_info (ref_sink (tinfo))
 {}
 
 Type::~Type ()

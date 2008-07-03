@@ -3,6 +3,15 @@ namespace RapicornTest {
 
   typedef String SimpleString;
 
+  typedef Num NumWithFooAsLabel = Num ("Foo");
+
+  typedef Real RealWithBlurbBlurb = Real ("Label", "Blurb");
+
+  typedef Num ExtendNumWithAux = Num ("Extended Num", "This Num demonstrates extensive auxillary data use",
+				      33, -100, +100, -5, "rw:extra-option");
+  typedef String ExtendedString = String ("Extended String", "Demonstrate full string specification",
+					  "Default-String-Value", "ro");
+
   record SimpleRecord {
     Num sample_integer;
   };
