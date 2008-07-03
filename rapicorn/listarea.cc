@@ -130,12 +130,6 @@ ItemListImpl::visual_update ()
   layout_list();
 }
 
-Container::Packer
-ItemListImpl::create_packer (Item &item)
-{
-  return void_packer(); /* no child properties */
-}
-
 void
 ItemListImpl::size_request (Requisition &requisition)
 {
@@ -231,10 +225,9 @@ ItemListImpl::position_row (ListRow *lr,
    * 1:0: row[k]-border
    * 0:*: final row-border
    */
-  Packer packer = m_table->child_packer (*lr->child);
   uint64 tablerow = (visible_slot + 1) * 2;
-  packer.set_property ("top_attach", string_printf ("%llu", tablerow + 1));
-  packer.set_property ("bottom_attach", string_printf ("%llu", tablerow));
+  lr->child->vposition (tablerow);
+  lr->child->vspan (1);
 }
 
 uint64

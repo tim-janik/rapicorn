@@ -69,8 +69,6 @@ public:
   void                  invalidate_model        (bool invalidate_heights,
                                                  bool invalidate_widgets);
   virtual void          visual_update           ();
-  virtual
-  Container::Packer     create_packer           (Item &item);
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area);
   void                  cache_row               (ListRow *lr);

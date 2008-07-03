@@ -20,14 +20,14 @@
   <def:ListArea inherit="Rapicorn::Factory::ItemList"/>
   <def:item-list inherit="Alignment" >
     <Table>
-      <Alignment hexpand="1" vexpand="1" left-attach="0" right-attach="1" bottom-attach="1" top-attach="2"
+      <Alignment hexpand="1" vexpand="1" hposition="0" vposition="1"
 		 left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
 	<Frame frame-type="in">
 	  <ListArea/>
 	</Frame>
       </Alignment>
-      <VSlider vexpand="0" adjustment-source="ancestry-vertical"   bottom-attach="1" left-attach="1" />
-      <HSlider visible="0" hexpand="0" adjustment-source="ancestry-horizontal" bottom-attach="0" />
+      <VSlider vexpand="0" adjustment-source="ancestry-vertical" vposition="1" hposition="1" />
+      <HSlider visible="0" hexpand="0" adjustment-source="ancestry-horizontal" vposition="0" />
     </Table>
   </def:item-list>
 
