@@ -40,9 +40,10 @@ def parse2dict (type, name, arglist):
     adict[arg[0]] = arglist[i]
   # assign remaining defaulting initializer positions
   for i in range (len (arglist), len (adef)):
-    eq = adef[i].find ('=')
+    arg = adef[i]
+    eq = arg.find ('=')
     if eq >= 0:
-      adict[adef[:eq]] = adef[eq+1:]
+      adict[arg[:eq]] = arg[eq+1:]
   return adict
 
 # define module exports
