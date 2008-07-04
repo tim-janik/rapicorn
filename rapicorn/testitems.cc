@@ -41,6 +41,7 @@ TestContainer::list_properties()
     MakeProperty (TestContainer, assert_top,    "Assert-Top",    "Assert positioning of the top item edge",    -INFINITY, +DBL_MAX, 3, "rw"),
     MakeProperty (TestContainer, assert_width,  "Assert-Width",  "Assert amount of the item width",            -INFINITY, +DBL_MAX, 3, "rw"),
     MakeProperty (TestContainer, assert_height, "Assert-Height", "Assert amount of the item height",           -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestContainer, paint_allocation, "Paint Allocation", "Fill allocation rectangle with a solid color",  "rw"),
     MakeProperty (TestContainer, fatal_asserts, "Fatal-Asserts", "Handle assertion failures as fatal errors",  "rw"),
     MakeProperty (TestContainer, accu,          "Accumulator",   "Store string value and keep history",        "rw"),
     MakeProperty (TestContainer, accu_history,  "Accu-History",  "Concatenated accumulator history",           "rw"),
@@ -66,6 +67,7 @@ class TestContainerImpl : public virtual SingleContainerImpl, public virtual Tes
   double m_epsilon;
   bool   m_test_container_counted;
   bool   m_fatal_asserts;
+  bool   m_paint_allocation;
 public:
   TestContainerImpl() :
     m_accu (""), m_accu_history (""),
@@ -73,7 +75,7 @@ public:
     m_assert_top (-INFINITY), m_assert_bottom (-INFINITY),
     m_assert_width (-INFINITY), m_assert_height (-INFINITY),
     m_epsilon (DFLTEPS), m_test_container_counted (false),
-    m_fatal_asserts (false)
+    m_fatal_asserts (true), m_paint_allocation (false)
   {}
   virtual double epsilon         () const        { return m_epsilon  ; }
   virtual void   epsilon         (double val)    { m_epsilon = val; invalidate(); }
@@ -89,6 +91,8 @@ public:
   virtual void   assert_width    (double val)    { m_assert_width = val; invalidate(); }
   virtual double assert_height   () const        { return m_assert_height; }
   virtual void   assert_height   (double val)    { m_assert_height = val; invalidate(); }
+  virtual bool   paint_allocation() const        { return m_paint_allocation; }
+  virtual void   paint_allocation(bool   val)    { m_paint_allocation = val; invalidate(); }
   virtual bool   fatal_asserts   () const        { return m_fatal_asserts; }
   virtual void   fatal_asserts   (bool   val)    { m_fatal_asserts = val; invalidate(); }
   virtual String accu            () const            { return m_accu; }
@@ -140,10 +144,14 @@ protected:
 
     SingleContainerImpl::render (display);
 
-    IRect ia = allocation();
-    Plane &plane = display.create_plane();
-    Painter painter (plane);
-    painter.draw_filled_rect (ia.x, ia.y, ia.width, ia.height, black());
+    if (m_paint_allocation)
+      {
+        IRect ia = allocation();
+        Plane &plane = display.create_plane();
+        Painter painter (plane);
+        painter.draw_filled_rect (ia.x, ia.y, ia.width, ia.height, black());
+      }
+
     Allocation rarea = get_root()->allocation();
     double width = allocation().width, height = allocation().height;
     double x1 = allocation().x, x2 = rarea.width - x1 - width;
