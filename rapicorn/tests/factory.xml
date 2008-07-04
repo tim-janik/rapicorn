@@ -22,7 +22,7 @@
 <rapicorn-definitions xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
 
   <!-- Multi-Level TestItem creation -->
-  <def:TestItemL0 inherit="Rapicorn::Factory::TestItem" accu="L0"/>
+  <def:TestItemL0 inherit="TestItem" accu="L0"/>
   <def:TestItemL1 inherit="TestItemL0" accu="L1"/>
   <def:TestItemL2 inherit="TestItemL1" accu="L2"/>
 

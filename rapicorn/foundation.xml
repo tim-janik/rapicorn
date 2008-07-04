@@ -159,8 +159,11 @@
   <!-- TestBox -->
   <def:TestBox inherit="Rapicorn::Factory::TestBox"/>
 
+  <!-- TestContainer -->
+  <def:TestContainer inherit="Rapicorn::Factory::TestContainer"/>
+
   <!-- TestItem -->
-  <def:TestItem inherit="Rapicorn::Factory::TestItem"/>
+  <def:TestItem inherit="TestContainer" />
 
   <!-- TextEditor -->
   <def:TextEditor inherit="Rapicorn::Factory::Text::Editor" />

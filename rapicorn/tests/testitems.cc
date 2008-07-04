@@ -67,14 +67,14 @@ test_cxx_gui ()
   window.root().enable_auto_close();
   TOK();
   /* verify and assert at least one TestItem rendering */
-  uint old_seen_test = TestItem::seen_test_items();
+  uint old_seen_test = TestContainer::seen_test_items();
   TOK();
   /* show onscreen and handle events like expose */
   window.show();
   Application::execute_loops();
   TOK();
   /* assert TestItem rendering */
-  uint seen_test = TestItem::seen_test_items();
+  uint seen_test = TestContainer::seen_test_items();
   TASSERT (seen_test > old_seen_test); // may fail due to missing exposes (locked screens) needs PNG etc. backends
   TDONE();
 }
@@ -86,7 +86,7 @@ test_test_item ()
   Window window = Factory::create_window ("alignment-test");
   TOK();
   Root &root = window.root();
-  TestItem *titem = root.interface<TestItem*>();
+  TestContainer *titem = root.interface<TestContainer*>();
   TASSERT (titem != NULL);
   titem->sig_assertion_ok += slot (assertion_ok);
   titem->sig_assertions_passed += slot (assertions_passed);
@@ -97,10 +97,10 @@ test_test_item ()
   /* close window (and exit main loop) after first expose */
   root.enable_auto_close();
   /* verify and assert at least one TestItem rendering */
-  uint old_seen_test = TestItem::seen_test_items();
+  uint old_seen_test = TestContainer::seen_test_items();
   window.show();
   Application::execute_loops();
-  uint seen_test = TestItem::seen_test_items();
+  uint seen_test = TestContainer::seen_test_items();
   TASSERT (seen_test > old_seen_test);
   /* test item rendering also executed various assertions */
   TDONE();
@@ -118,7 +118,7 @@ main (int   argc,
       test_item_fatal_asserts = false;
 
   /* initialize rapicorn */
-  Application::init_with_x11 (&argc, &argv, "TestItemTest");
+  Application::init_with_x11 (&argc, &argv, "TestItemsTest");
   
   /* parse GUI description */
   Application::auto_load ("testitems", "testitems.xml", argv[0]);

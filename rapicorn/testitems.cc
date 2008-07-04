@@ -22,7 +22,7 @@
 
 namespace Rapicorn {
 
-TestItem::TestItem() :
+TestContainer::TestContainer() :
   sig_assertion_ok (*this),
   sig_assertions_passed (*this)
 {}
@@ -30,49 +30,49 @@ TestItem::TestItem() :
 #define DFLTEPS (1e-8)
 
 const PropertyList&
-TestItem::list_properties()
+TestContainer::list_properties()
 {
-  /* not using _() here, because TestItem is just a developer tool */
+  /* not using _() here, because TestContainer is just a developer tool */
   static Property *properties[] = {
-    MakeProperty (TestItem, epsilon,       "Epsilon",       "Epsilon within which assertions must hold",  0,         +DBL_MAX, 0.01, "rw"),
-    MakeProperty (TestItem, assert_left,   "Assert-Left",   "Assert positioning of the left item edge",   -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestItem, assert_right,  "Assert-Right",  "Assert positioning of the right item edge",  -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestItem, assert_bottom, "Assert-Bottom", "Assert positioning of the bottom item edge", -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestItem, assert_top,    "Assert-Top",    "Assert positioning of the top item edge",    -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestItem, assert_width,  "Assert-Width",  "Assert amount of the item width",            -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestItem, assert_height, "Assert-Height", "Assert amount of the item height",           -INFINITY, +DBL_MAX, 3, "rw"),
-    MakeProperty (TestItem, fatal_asserts, "Fatal-Asserts", "Handle assertion failures as fatal errors",  "rw"),
-    MakeProperty (TestItem, accu,          "Accumulator",   "Store string value and keep history",        "rw"),
-    MakeProperty (TestItem, accu_history,  "Accu-History",  "Concatenated accumulator history",           "rw"),
+    MakeProperty (TestContainer, epsilon,       "Epsilon",       "Epsilon within which assertions must hold",  0,         +DBL_MAX, 0.01, "rw"),
+    MakeProperty (TestContainer, assert_left,   "Assert-Left",   "Assert positioning of the left item edge",   -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestContainer, assert_right,  "Assert-Right",  "Assert positioning of the right item edge",  -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestContainer, assert_bottom, "Assert-Bottom", "Assert positioning of the bottom item edge", -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestContainer, assert_top,    "Assert-Top",    "Assert positioning of the top item edge",    -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestContainer, assert_width,  "Assert-Width",  "Assert amount of the item width",            -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestContainer, assert_height, "Assert-Height", "Assert amount of the item height",           -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestContainer, fatal_asserts, "Fatal-Asserts", "Handle assertion failures as fatal errors",  "rw"),
+    MakeProperty (TestContainer, accu,          "Accumulator",   "Store string value and keep history",        "rw"),
+    MakeProperty (TestContainer, accu_history,  "Accu-History",  "Concatenated accumulator history",           "rw"),
   };
-  static const PropertyList property_list (properties, Item::list_properties());
+  static const PropertyList property_list (properties, Container::list_properties());
   return property_list;
 }
 
-static uint test_items_rendered = 0;
+static uint test_containers_rendered = 0;
 
 uint
-TestItem::seen_test_items ()
+TestContainer::seen_test_items ()
 {
   assert (rapicorn_thread_entered());
-  return test_items_rendered;
+  return test_containers_rendered;
 }
 
-class TestItemImpl : public virtual TestItem, public virtual ItemImpl {
+class TestContainerImpl : public virtual SingleContainerImpl, public virtual TestContainer {
   String m_accu, m_accu_history;
   double m_assert_left, m_assert_right;
   double m_assert_top, m_assert_bottom;
   double m_assert_width, m_assert_height;
   double m_epsilon;
-  bool   m_test_item_counted;
+  bool   m_test_container_counted;
   bool   m_fatal_asserts;
 public:
-  TestItemImpl() :
+  TestContainerImpl() :
     m_accu (""), m_accu_history (""),
     m_assert_left (-INFINITY), m_assert_right (-INFINITY),
     m_assert_top (-INFINITY), m_assert_bottom (-INFINITY),
     m_assert_width (-INFINITY), m_assert_height (-INFINITY),
-    m_epsilon (DFLTEPS), m_test_item_counted (false),
+    m_epsilon (DFLTEPS), m_test_container_counted (false),
     m_fatal_asserts (false)
   {}
   virtual double epsilon         () const        { return m_epsilon  ; }
@@ -99,13 +99,7 @@ protected:
   virtual void
   size_request (Requisition &requisition)
   {
-    requisition.width = 7;
-    requisition.height = 7;
-  }
-  virtual void
-  size_allocate (Allocation area)
-  {
-    allocation (area);
+    SingleContainerImpl::size_request (requisition);
   }
   void
   assert_value (const char *assertion_name,
@@ -143,6 +137,9 @@ protected:
   render (Display &display)
   {
     assert (rapicorn_thread_entered());
+
+    SingleContainerImpl::render (display);
+
     IRect ia = allocation();
     Plane &plane = display.create_plane();
     Painter painter (plane);
@@ -158,15 +155,15 @@ protected:
     assert_value ("assert-width",  m_assert_width, width, width);
     assert_value ("assert-height", m_assert_height, height, height);
     sig_assertions_passed.emit ();
-    /* count items for seen_test_items() */
-    if (!m_test_item_counted)
+    /* count containers for seen_test_containers() */
+    if (!m_test_container_counted)
       {
-        m_test_item_counted = true;
-        test_items_rendered++;
+        m_test_container_counted = true;
+        test_containers_rendered++;
       }
   }
 };
-static const ItemFactory<TestItemImpl> test_item_factory ("Rapicorn::Factory::TestItem");
+static const ItemFactory<TestContainerImpl> test_container_factory ("Rapicorn::Factory::TestContainer");
 
 const PropertyList&
 TestBox::list_properties()

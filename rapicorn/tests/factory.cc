@@ -57,7 +57,7 @@ main (int   argc,
                           argv[0]);
   Root *root;
   Item *item;
-  TestItem *titem;
+  TestContainer *titem;
 
   TSTART ("Factory Calls");
   Window testwin = Application::create_window ("test-TestItemL2");
@@ -68,13 +68,13 @@ main (int   argc,
   TOK();
   item = root->find_item ("TestItemL2");
   TASSERT (item != NULL);
-  titem = dynamic_cast<TestItem*> (item);
+  titem = dynamic_cast<TestContainer*> (item);
   TASSERT (titem != NULL);
   if (0)
     {
       printout ("\n");
-      printout ("TestItem::accu:%s\n", titem->accu().c_str());
-      printout ("TestItem::accu_history: %s\n", titem->accu_history().c_str());
+      printout ("TestContainer::accu:%s\n", titem->accu().c_str());
+      printout ("TestContainer::accu_history: %s\n", titem->accu_history().c_str());
     }
   TASSERT (titem->accu_history() == "L0L1L2Instance");
   TOK();

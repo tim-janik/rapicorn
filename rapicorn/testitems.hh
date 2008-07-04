@@ -18,9 +18,9 @@
 
 namespace Rapicorn {
 
-class TestItem : public virtual Item {
+class TestContainer : public virtual Container {
 protected:
-  explicit      TestItem         ();
+  explicit      TestContainer    ();
 public:
   virtual double epsilon         () const = 0;
   virtual void   epsilon         (double val) = 0;
@@ -43,9 +43,9 @@ public:
   virtual String accu_history    () const = 0;
   virtual void   accu_history    (const String &val) = 0;
   static uint    seen_test_items ();
-  const PropertyList&                               list_properties ();
-  Signal<TestItem, void (const String &assertion)>  sig_assertion_ok;
-  Signal<TestItem, void ()>                         sig_assertions_passed;
+  const PropertyList&                                    list_properties ();
+  Signal<TestContainer, void (const String &assertion)>  sig_assertion_ok;
+  Signal<TestContainer, void ()>                         sig_assertions_passed;
 };
 
 class TestBox : public virtual Container {
