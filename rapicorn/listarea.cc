@@ -301,7 +301,7 @@ ItemListImpl::layout_list ()
   uint64 r, current_item = get_scroll_item (&row_offset, &pixel_offset);
   RowMap rc;
   uint64 rcmin = current_item, rcmax = current_item;
-  double height_before = area_height, height_after = area_height; // FIXME: add 2 * border?
+  double height_before = area_height, height_after = area_height;
   IFDEBUG (dbg_cached = dbg_refilled = dbg_created = 0);
   /* fill rows from scroll_item towards list end */
   double accu_height = 0;
@@ -309,7 +309,8 @@ ItemListImpl::layout_list ()
     {
       ListRow *lr = fetch_row (r);
       rc[r] = lr;
-      accu_height += measure_row (lr);
+      if (r != current_item)    // current may be partially offscreen
+        accu_height += measure_row (lr);
       rcmax = MAX (rcmax, r);
     }
   double avheight = MAX (7, accu_height / MAX (r - current_item, 1));
