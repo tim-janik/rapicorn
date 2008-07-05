@@ -16,6 +16,7 @@
  */
 #include "listareaimpl.hh"
 
+//#define IFDEBUG(...)      do { /*__VA_ARGS__*/ } while (0)
 #define IFDEBUG(...)      __VA_ARGS__
 
 namespace Rapicorn {
@@ -175,7 +176,7 @@ ItemListImpl::fill_row (ListRow *lr,
     lr->child->set_property ("markup_text", string_printf ("|<br/>| <br/>| %llu<br/>|<br/>|", row));
 }
 
-IFDEBUG (static uint dbg_cached = 0, dbg_refilled = 0, dbg_created = 0);
+static uint dbg_cached = 0, dbg_refilled = 0, dbg_created = 0;
 
 ListRow*
 ItemListImpl::fetch_row (uint64 row)
