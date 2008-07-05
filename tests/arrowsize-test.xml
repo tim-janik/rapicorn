@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
+<!-- Rapicorn Example
+ ! Copyright (C) 2008 Tim Janik
+ !
+ | This work is provided "as is"; redistribution and modification
+ | in whole or in part, in any medium, physical or electronic is
+ | permitted without restriction.
+ |
+ | This work is distributed in the hope that it will be useful,
+ | but WITHOUT ANY WARRANTY; without even the implied warranty of
+ | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ |
+ | In no event shall the authors or contributors be liable for any
+ | direct, indirect, incidental, special, exemplary, or consequential
+ | damages (including, but not limited to, procurement of substitute
+ | goods or services; loss of use, data, or profits; or business
+ | interruption) however caused and on any theory of liability, whether
+ | in contract, strict liability, or tort (including negligence or
+ | otherwise) arising in any way out of the use of this software, even
+ | if advised of the possibility of such damage.
+ !-->
+<rapicorn-definitions xmlns:def="http://rapicorn.org/xmlns:def">
+
+  <!-- arrow sizing test -->
+  <def:arrow-frame inherit="Frame" child-container="child-area" >
+    <arg:center-child default="1" />
+    <Alignment id="child-area" vscale="`not 1*center_child`" hscale="`not 1*center_child`"
+	       left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
+  </def:arrow-frame>
+  <!-- This test reconstructs auto-expanding arrows like they are used in
+       scrollbars. Using center-child="0" is crucial here so the "child-area"
+       alignment surrounding the arrow properly expands its child. Also
+       the string to number conversion in `not 1*center_child` is crucial
+       for this to work.
+       The TestContainer then asserts that the arrow really is allocated with
+       a width based on its height.
+    -->
+  <def:test-dialog inherit="Root">
+    <VBox>
+      <Label markup-text="Square Arrow:"/>
+      <HBox>
+	<Alignment hexpand="1"/> <!-- space eater -->
+	<TestContainer fatal_asserts="1" assert-width="200" assert-height="200">
+	  <arrow-frame center-child="0" vspread="1" height="200">
+	    <Arrow arrow-dir="left" size-policy="width-from-height" height="33"/>
+	  </arrow-frame>
+	</TestContainer>
+      </HBox>
+    </VBox>
+  </def:test-dialog>
+
+</rapicorn-definitions>

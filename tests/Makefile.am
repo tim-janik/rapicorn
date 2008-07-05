@@ -20,8 +20,12 @@ alignment-test: $(srcdir)/alignment.xml
 	rm -f xtmp-alignment.png
 XML_FILES  += alignment.xml
 EXTRA_DIST += alignment.png
+check-am: alignment-test
+# arrowsize test
+arrowsize-test:
+	$(RAPIDRUN) -x $(srcdir)/arrowsize-test.xml
+check-am: arrowsize-test
 
-check: alignment-test
 
 xmllint-check:
 	cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES)
