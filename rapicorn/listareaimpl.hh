@@ -24,17 +24,10 @@
 
 namespace Rapicorn {
 
-struct Array {
-  /* this array is pure test code */
-  int val;
-  Array (int i) : val (i) {}
-  int aval() { return val; }
-};
-
 struct Model7 : public virtual ReferenceCountImpl {
   /* this model is pure test code */
   uint64        count   (void)       { return 20; }
-  Array         get     (uint64 nth) { return Array (nth); }
+  Array         get     (uint64 nth) { Array a; a[0] = int64 (nth); return a; }
 };
 
 
