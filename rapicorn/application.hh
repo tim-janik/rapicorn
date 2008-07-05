@@ -33,6 +33,9 @@ public:
   static void           init_with_x11   (int           *argcp,
                                          char        ***argvp,
                                          const char    *app_name);
+  static String         auto_path       (const String  &file_name,
+                                         const String  &binary_path,
+                                         bool           search_vpath = true);
   static void           auto_load       (const String  &i18n_domain,
                                          const String  &file_name,
                                          const String  &binary_path);

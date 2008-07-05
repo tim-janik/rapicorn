@@ -38,12 +38,14 @@ help_usage (bool usage_error)
   printout ("Options:\n");
   printout ("  --parse-test                  Parse GuiFile.xml and exit.\n");
   printout ("  -x                            Enable auto-exit after first expose.\n");
+  printout ("  --list                        List parsed definitions.\n");
   printout ("  -h, --help                    Display this help and exit.\n");
   printout ("  -v, --version                 Display version and exit.\n");
 }
 
 static bool parse_test = false;
 static bool auto_exit = false;
+static bool list_definitions = false;
 
 static void
 parse_args (int    *argc_p,
@@ -62,6 +64,11 @@ parse_args (int    *argc_p,
       else if (strcmp (argv[i], "-x") == 0)
         {
           auto_exit = true;
+          argv[i] = NULL;
+        }
+      else if (strcmp (argv[i], "--list") == 0)
+        {
+          list_definitions = true;
           argv[i] = NULL;
         }
       else if (strcmp (argv[i], "--help") == 0 || strcmp (argv[i], "-h") == 0)
@@ -101,8 +108,22 @@ main (int   argc,
   if (argc != 2)
     help_usage (true);
 
-  /* load GUI definition file, relative to CWD */
-  Application::auto_load ("RapicornTest", argv[1], ".");
+  /* find GUI definition file, relative to CWD */
+  String filename = Application::auto_path (argv[1], ".");
+
+  /* load GUI definitions, fancy version of Application::auto_load() */
+  vector<String> definitions;
+  int err = Factory::parse_file ("RapicornTest", filename, "", &definitions);
+  if (err)
+    error ("failed to load \"%s\": %s", filename.c_str(), string_from_errno (err).c_str());
+
+  /* print definitions */
+  if (list_definitions)
+    {
+      for (uint i = 0; i < definitions.size(); i++)
+        printout ("%s\n", definitions[i].c_str());
+      return 0;
+    }
 
   /* create root item */
   Window window = Application::create_window ("test-dialog");

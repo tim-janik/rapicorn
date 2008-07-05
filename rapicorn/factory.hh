@@ -30,7 +30,8 @@ typedef map<String,String>       VariableMap;
 typedef std::list<String>        ArgumentList;  /* elements: key=utf8string */
 int /*-errno*/  parse_file       (const String           &i18n_domain,
                                   const String           &file_name,
-                                  const String           &domain = "");
+                                  const String           &domain = "",
+                                  vector<String>         *definitions = NULL);
 Item&           create_item      (const String           &item_identifier,
                                   const ArgumentList     &arguments = ArgumentList());
 Container&      create_container (const String           &container_identifier,

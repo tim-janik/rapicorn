@@ -12,3 +12,9 @@ LDADDS		 = $(top_builddir)/rapicorn/librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_
 BIN_PROGS	+= rapidrun
 rapidrun_SOURCES = rapidrun.cc
 rapidrun_LDADD   = $(LDADDS)
+
+
+# check some options
+check-rapidrun-basics:
+	./rapidrun --list $(top_builddir)/rapicorn/foundation.xml | grep -q VSlider
+check-am: check-rapidrun-basics

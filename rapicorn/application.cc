@@ -42,20 +42,15 @@ Application::create_window (const String            &window_identifier,
   return Factory::create_window (window_identifier, arguments);
 }
 
-void
-Application::auto_load (const String  &i18n_domain,
-                        const String  &file_name,
-                        const String  &binary_path)
+String
+Application::auto_path (const String  &file_name,
+                        const String  &binary_path,
+                        bool           search_vpath)
 {
   assert (rapicorn_thread_entered());
-  /* test load absolute file_name */
+  /* test absolute file_name */
   if (Path::isabs (file_name))
-    {
-      int err = Factory::parse_file (i18n_domain, file_name);
-      if (err)
-        error ("failed to load \"%s\": %s", file_name.c_str(), string_from_errno (err).c_str());
-      return;
-    }
+    return file_name;
   /* assign bpath the absolute binary path */
   String bpath = binary_path;
   if (!Path::isabs (bpath))
@@ -71,19 +66,30 @@ Application::auto_load (const String  &i18n_domain,
     }
   /* construct search path list */
   const char *gvp = getenv ("RAPICORN_VPATH");
-  StringVector spl = Path::searchpath_split (gvp ? gvp : "");
+  StringVector spl;
+  if (search_vpath)
+    spl = Path::searchpath_split (gvp ? gvp : "");
   spl.insert (spl.begin(), bpath);
-  /* test load relative file_name */
-  int err0 = 0;
+  /* pick first existing file_name */
   for (uint i = 0; i < spl.size(); i++)
     {
-      int err = Factory::parse_file (i18n_domain, Path::join (spl[i], file_name));
-      if (err == 0)
-        return; // success
-      if (i == 0)
-        err0 = err; // save error from bpath + file_name
+      String fullname = Path::join (spl[i], file_name);
+      if (Path::check (fullname, "e"))
+        return fullname;
     }
-  error ("failed to load \"%s\": %s", file_name.c_str(), string_from_errno (err0).c_str());
+  // fallback to cwd/binary_path relative file name (non-existing)
+  return Path::join (bpath, file_name);
+}
+
+void
+Application::auto_load (const String  &i18n_domain,
+                        const String  &file_name,
+                        const String  &binary_path)
+{
+  String fullname = auto_path (file_name, binary_path, true);
+  int err = Factory::parse_file (i18n_domain, file_name);
+  if (err)
+    error ("failed to load \"%s\": %s", file_name.c_str(), string_from_errno (err).c_str());
 }
 
 void

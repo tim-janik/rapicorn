@@ -145,7 +145,8 @@ public:
   MarkupParser::Error           parse_gadget_file       (FILE                  *file,
                                                          const String          &i18n_domain,
                                                          const String          &file_name,
-                                                         const String          &domain);
+                                                         const String          &domain,
+                                                         vector<String>        *definitions);
   void                          parse_gadget_data       (const char            *input_name,
                                                          const uint             data_length,
                                                          const char            *data,
@@ -172,15 +173,17 @@ static FactorySingleton static_factory_singleton;
 
 /* --- GadgetParser --- */
 struct GadgetParser : public MarkupParser {
-  FactoryDomain          &fdomain;
-  std::stack<BaseGadget*> gadget_stack;
-  const ChildGadget     **child_container_loc;
-  String                  child_container_name;
+  FactoryDomain             &fdomain;
+  std::stack<BaseGadget*>    gadget_stack;
+  vector<const BaseGadget*> *gadget_defs;
+  const ChildGadget        **child_container_loc;
+  String                     child_container_name;
 public:
-  GadgetParser (const String  &input_name,
-                FactoryDomain &cfdomain) :
-    MarkupParser (input_name),
-    fdomain (cfdomain), child_container_loc (NULL)
+  GadgetParser (const String              &input_name,
+                FactoryDomain             &cfdomain,
+                vector<const BaseGadget*> *newdefs) :
+    MarkupParser (input_name), fdomain (cfdomain),
+    gadget_defs (newdefs), child_container_loc (NULL)
   {}
   static String
   canonify_element (const String &key)
@@ -244,6 +247,8 @@ public:
                   child_container_loc = &dgadget->child_container;
                 fdomain.definitions[ident] = dgadget;
                 gadget_stack.push (dgadget);
+                if (gadget_defs)
+                  gadget_defs->push_back (dgadget);
               }
           }
       }
@@ -390,15 +395,19 @@ FactorySingleton::add_domain (const String   &domain_name,
 
 
 MarkupParser::Error
-FactorySingleton::parse_gadget_file (FILE         *file,
-                                     const String &i18n_domain,
-                                     const String &file_name,
-                                     const String &domain)
+FactorySingleton::parse_gadget_file (FILE           *file,
+                                     const String   &i18n_domain,
+                                     const String   &file_name,
+                                     const String   &domain,
+                                     vector<String> *definitions)
 {
   FactoryDomain *fdomain = lookup_domain (domain);
   if (!fdomain)
     fdomain = add_domain (domain, i18n_domain);
-  GadgetParser gp (file_name, *fdomain);
+  vector<const BaseGadget*> *newgadgets = NULL;
+  if (definitions)
+    newgadgets = new vector<const BaseGadget*>;
+  GadgetParser gp (file_name, *fdomain, newgadgets);
   MarkupParser::Error merror;
   char buffer[1024];
   int n = fread (buffer, 1, 1024, file);
@@ -410,6 +419,11 @@ FactorySingleton::parse_gadget_file (FILE         *file,
     }
   if (!merror.code)
     gp.end_parse (&merror);
+  if (!merror.code && newgadgets)
+    for (uint i = 0; i < newgadgets->size(); i++)
+      definitions->push_back (domain + "::" + (*newgadgets)[i]->ident);
+  if (newgadgets)
+    delete newgadgets;
   return merror;
 }
 
@@ -425,7 +439,7 @@ FactorySingleton::parse_gadget_data (const char            *input_name,
   FactoryDomain *fdomain = lookup_domain (domain);
   if (!fdomain)
     fdomain = add_domain (domain, i18n_domain);
-  GadgetParser gp (file_name, *fdomain);
+  GadgetParser gp (file_name, *fdomain, NULL);
   MarkupParser::Error error;
   gp.parse (data, data_length, &error);
   if (!error.code)
@@ -727,14 +741,16 @@ namespace Rapicorn {
 int
 Factory::parse_file (const String           &i18n_domain,
                      const String           &file_name,
-                     const String           &domain)
+                     const String           &domain,
+                     vector<String>         *definitions)
 {
   initialize_standard_gadgets_lazily();
   String fdomain = domain == "" ? i18n_domain : domain;
   FILE *file = fopen (file_name.c_str(), "r");
   if (!file)
     return -errno;
-  MarkupParser::Error merror = FactorySingleton::singleton->parse_gadget_file (file, i18n_domain, file_name, fdomain);
+  MarkupParser::Error merror =
+    FactorySingleton::singleton->parse_gadget_file (file, i18n_domain, file_name, fdomain, definitions);
   if (merror.code)
     {
       // ("error(%d):", merror.code)
