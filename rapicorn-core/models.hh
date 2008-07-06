@@ -67,7 +67,7 @@ public:
   explicit              Model1          (Type         row_type);
   Store1*               store           (void)                  { return pget_store(); }
   Type                  type            (void) const            { return m_type; }
-  uint64                count           (void)                  { return pcount_rows(); }
+  int64                 count           (void)                  { return pcount_rows(); }
   Array                 get             (uint64       nth)      { return pget_row (nth); }
   /* notification */
   typedef Signal<Model1, void (uint64,uint64)> RangeSignal;
@@ -92,7 +92,7 @@ public:
   explicit              Store1          (void);
   Model1&               model           (void)                  { return pget_model(); }
   Type                  type            (void)                  { return model().type(); }
-  uint64                count           (void)                  { return model().count(); }
+  int64                 count           (void)                  { return model().count(); }
   Array                 get             (uint64       nth)      { return model().get (nth); }
   void                  set             (uint64       nth,
                                          const Array &array)    { pchange_rows (nth, 1, &array); }
