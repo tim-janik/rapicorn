@@ -538,7 +538,7 @@ Array::key (int64 index) const
 {
   if (index >= 0 && index < array->strings.size())
     return array->strings[index];
-  else if (ABS (index) <= array->strings.size())
+  else if (index < 0 && -index <= array->strings.size())
     return array->strings[array->strings.size() + index];
   String idx = string_from_int (ABS (index));
   return idx;
@@ -568,6 +568,7 @@ Array::operator[] (const String &key)
       std::pair<String,AnyValue> pnew (key, array_default_value);
       array->vmap.insert (pnew);
       it = array->vmap.find (key);
+      assert (it != array->vmap.end());
     }
   return it->second;
 }
