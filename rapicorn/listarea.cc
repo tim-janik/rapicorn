@@ -168,12 +168,12 @@ ItemListImpl::cache_row (ListRow *lr)
 
 void
 ItemListImpl::fill_row (ListRow *lr,
-                        uint64   row)
+                        uint64   nthrow)
 {
-  if (row == 10)
-    lr->child->set_property ("markup_text", string_printf ("* %llu SCROLL DIRECTION TEST", row));
-  else
-    lr->child->set_property ("markup_text", string_printf ("|<br/>| <br/>| %llu<br/>|<br/>|", row));
+  Array row = m_model->get (nthrow);
+  AnyValue &v = row[0];
+  String s = v;
+  lr->child->set_property ("markup_text", v);
 }
 
 static uint dbg_cached = 0, dbg_refilled = 0, dbg_created = 0;
@@ -305,7 +305,7 @@ ItemListImpl::layout_list ()
   IFDEBUG (dbg_cached = dbg_refilled = dbg_created = 0);
   /* fill rows from scroll_item towards list end */
   double accu_height = 0;
-  for (r = current_item; r < m_model->count() && (accu_height <= height_before || pixel_scrolling); r++)
+  for (r = current_item; r < uint64 (m_model->count()) && (accu_height <= height_before || pixel_scrolling); r++)
     {
       ListRow *lr = fetch_row (r);
       rc[r] = lr;
@@ -349,7 +349,7 @@ ItemListImpl::layout_list ()
       child.set_allocation (carea);
     }
   /* align scroll item */
-  if (current_item < m_model->count() && has_allocatable_child())
+  if (current_item < uint64 (m_model->count()) && has_allocatable_child())
     {
       const Allocation area = allocation();
       Item &child = get_child();

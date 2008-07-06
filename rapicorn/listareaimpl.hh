@@ -26,8 +26,19 @@ namespace Rapicorn {
 
 struct Model7 : public virtual ReferenceCountImpl {
   /* this model is pure test code */
-  uint64        count   (void)       { return 20; }
-  Array         get     (uint64 nth) { Array a; a[0] = int64 (nth); return a; }
+  int64         count   (void)       { return 20; }
+  Array
+  get (uint64 nth)
+  {
+    Array row;
+    String s;
+    if (nth == 10)
+      s = string_printf ("* %llu SCROLL DIRECTION TEST", nth);
+    else
+      s = string_printf ("|<br/>| <br/>| %llu<br/>|<br/>|", nth);
+    row[0] = s;
+    return row;
+  }
 };
 
 
