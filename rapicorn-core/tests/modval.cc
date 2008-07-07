@@ -31,7 +31,7 @@ test_type_info ()
 {
   String ts;
   // fail type extraction
-  Type t0 = Type::lookup (":invalid:::type^^^Definition");
+  Type t0 = Type::try_lookup (":invalid:::type^^^Definition");
   assert (t0.istype() == false);
   // type extraction by reference
   Type t1 = Type::lookup ("RapicornTest::NumWithFooAsLabel");

@@ -56,6 +56,7 @@ public:
   double                aux_float       (const String &auxname) const;
   int64                 aux_num         (const String &auxname) const;
   /* retrieve types */
+  static Type           try_lookup      (const String &full_name);
   static Type           lookup          (const String &full_name);
   static Type           notype          ();
   bool                  istype          () const; // false for notype()

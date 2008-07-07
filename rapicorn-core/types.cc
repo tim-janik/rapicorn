@@ -158,7 +158,7 @@ Type::notype ()
 }
 
 Type
-Type::lookup (const String &full_name)
+Type::try_lookup (const String &full_name)
 {
   String::size_type sl = full_name.rfind (':');
   if (sl != full_name.npos && sl > 0 && full_name[sl-1] == ':')
@@ -184,6 +184,15 @@ Type::lookup (const String &full_name)
     }
   // type_registry_mutex must be unlocked for ::notype()
   return Type::notype();
+}
+
+Type
+Type::lookup (const String &full_name)
+{
+  Type t = try_lookup (full_name);
+  if (!t.istype())
+    error ("%s: unknown/invalid typename: '%s\'", STRFUNC, full_name.c_str());
+  return t;
 }
 
 void
