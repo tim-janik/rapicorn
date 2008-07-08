@@ -1,4 +1,4 @@
-# BEAST/BSE - Bedevilled Audio System / Bedevilled Sound Engine
+# Rapicorn						-*-mode:makefile;-*-
 # Copyright (C) 2006 Tim Janik
 #
 ## GNU Lesser General Public License version 2 or any later version.
@@ -32,12 +32,46 @@ distfile-list:
 	    echo "$(subdir)/$$file" >> $(DISTFILE_LIST) ;	\
 	done ; true
 
+# === Xvfb wrapper for GUI tests ===
+XVFB = Xvfb -screen 0 800x600x16
+XIDS = 101 102 103 104 105 106 107 197 199 211 223 227 293 307 308 309 310 311 \
+   491 492 493 494 495 496 497 498 499 500 501 502 503 504 505 506 507 508 509 \
+   991 992 993 994 995 996 997 998 999 1000 1001 1002 1003 1004 1005 1006 1007 \
+  1008 1009 4703 4721 4723 4729 4733 4751 9973 9974 9975 9976 9977 9978 9979 \
+  9980 9981 9982 9983 9984 9985 9986 9987 9988 9989 9990 9991 9992 9993 9994 \
+  9995 9996 9997 9998 9999
+SKIP_GDKTARGET = \
+	test "$(gdktarget)" != "x11" \
+	&& echo "Gtk+Tests:INFO: Skipping GUI tests for non-X11 target."
+XVFB_START = \
+	${XVFB} -help 2>/dev/null 1>&2 \
+	&& XID=`for id in $(XIDS) ; do test -e /tmp/.X$$id-lock || { echo $$id; exit 0; }; done; exit 1` \
+	&& { ${XVFB} :$$XID -screen 0 800x600x16 -nolisten tcp -auth /dev/null >/dev/null 2>&1 & \
+		trap "set +x ; kill -15 $$! " 0 HUP INT QUIT TRAP USR1 PIPE TERM ; } \
+	|| { echo "Gtk+Tests:ERROR: Failed to start Xvfb environment for X11 target tests."; exit 1; } \
+	&& DISPLAY=:$$XID && export DISPLAY
+# call as: $(XVFB_START) && someprogram
+
 # === check: check-before / check-after ===
 .PHONY: check-before check-after
 check-am: check-before
 check-local: check-after
 check-local: ; @:
 TESTS=
+
+# === TEST_PROGS ===
+TEST_PROGS =
+.PHONY: check-TEST_PROGS
+check-TEST_PROGS:
+	@$(XVFB_START) && \
+	  for tst in $(TEST_PROGS) ; do \
+	    ./$$tst && echo "PASS: $$tst" || exit 1 ;	\
+	  done
+	@MESSAGETEXT="All $(words $(TEST_PROGS)) tests passed"	\
+	&& [ 0 -lt $(words $(TEST_PROGS)) ]				\
+	&& echo $$MESSAGETEXT | sed 's/./=/g' && echo $$MESSAGETEXT	\
+	&& echo $$MESSAGETEXT | sed 's/./=/g' || true
+check: check-TEST_PROGS
 
 # === slowcheck ===
 # recursive rule supported by all Makefiles to run time consuming checks
@@ -50,9 +84,10 @@ slowcheck-recursive:
 	    exit 1 ;						\
 	done
 slowcheck-SLOWTESTS:
-	@for tst in $(SLOWTESTS) ; do \
-	  ./$$tst --test-slow && echo "PASS: $$tst" || exit 1 ;		\
-	done
+	@$(XVFB_START) && \
+	  for tst in $(SLOWTESTS) ; do \
+	    ./$$tst --test-slow && echo "PASS: $$tst" || exit 1 ;	\
+	  done
 	@MESSAGETEXT="All $(words $(SLOWTESTS)) slow tests passed"	\
 	&& [ 0 -lt $(words $(SLOWTESTS)) ]				\
 	&& echo $$MESSAGETEXT | sed 's/./=/g' && echo $$MESSAGETEXT	\
@@ -70,9 +105,10 @@ perf-recursive:
 	    exit 1 ;						\
 	done
 perf-PERFTESTS:
-	@for tst in $(PERFTESTS) ; do \
-	  ./$$tst --test-perf && echo "PASS: $$tst" || exit 1 ;		\
-	done
+	@$(XVFB_START) && \
+	  for tst in $(PERFTESTS) ; do \
+	    ./$$tst --test-perf && echo "PASS: $$tst" || exit 1 ;	\
+	  done
 	@MESSAGETEXT="All $(words $(PERFTESTS)) perf tests passed"	\
 	&& [ 0 -lt $(words $(PERFTESTS)) ]				\
 	&& echo $$MESSAGETEXT | sed 's/./=/g' && echo $$MESSAGETEXT	\

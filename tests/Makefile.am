@@ -12,19 +12,21 @@ EXTRA_DIST += $(XML_FILES)
 RAPIDRUN = $(top_builddir)/tools/rapidrun
 IMGCHECK = $(top_builddir)/rapicorn-core/tests/imgcheck
 
+XVFB_RAPIDRUN = $(XVFB_START) && rrun() { echo "$(RAPIDRUN) $$@" && $(RAPIDRUN) "$$@" ; } && rrun
+
 # alignment test
 alignment-test: $(srcdir)/alignment.xml
 	rm -f xtmp-alignment.png
-	$(RAPIDRUN) -x $(srcdir)/alignment.xml
+	@$(XVFB_RAPIDRUN) -x $(srcdir)/alignment.xml
 	$(IMGCHECK) alignment.png xtmp-alignment.png
 	rm -f xtmp-alignment.png
 XML_FILES  += alignment.xml
 EXTRA_DIST += alignment.png
-check-am: alignment-test
+check: alignment-test
 # arrowsize test
 arrowsize-test:
-	$(RAPIDRUN) -x $(srcdir)/arrowsize-test.xml
-check-am: arrowsize-test
+	@$(XVFB_RAPIDRUN) -x $(srcdir)/arrowsize-test.xml
+check: arrowsize-test
 
 
 xmllint-check:

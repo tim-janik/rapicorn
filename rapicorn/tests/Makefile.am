@@ -6,7 +6,7 @@ DEFS		+= $(RAPICORN_DEP_CFLAGS) -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"'
 DEFS            += $(GLIB_CFLAGS) # FIXME
 
 # test programs
-noinst_PROGRAMS	 = $(TESTS)
+noinst_PROGRAMS	 = $(TEST_PROGS)
 noinst_DATA	 =
 LDADDS		 = $(top_builddir)/rapicorn/librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS)
 XML_FILES	 =
@@ -14,51 +14,51 @@ EXTRA_DIST	+= $(XML_FILES)
 
 # programs
 TESTS_ENVIRONMENT  = RAPICORN_VPATH=$(VPATH) # also search srcdir for XML files
-TESTS             += walker
+TEST_PROGS        += walker
 walker_SOURCES     = walker.cc
 walker_LDADD       = $(LDADDS)
-TESTS             += labelmarkup
+TEST_PROGS        += labelmarkup
 labelmarkup_SOURCES= labelmarkup.cc
 labelmarkup_LDADD  = $(LDADDS)
-TESTS             += cmdtest
+TEST_PROGS        += cmdtest
 cmdtest_SOURCES    = cmdtest.cc
 cmdtest_LDADD      = $(LDADDS)
-TESTS             += properties
+TEST_PROGS        += properties
 properties_SOURCES = properties.cc
 properties_LDADD   = $(LDADDS)
-TESTS             += primitives
+TEST_PROGS        += primitives
 SLOWTESTS         += primitives
 primitives_SOURCES = primitives.cc
 primitives_LDADD   = $(LDADDS)
-TESTS             += region
+TEST_PROGS        += region
 region_SOURCES     = region.cc
 region_LDADD       = $(LDADDS)
-TESTS             += shaderect
+TEST_PROGS        += shaderect
 shaderect_SOURCES  = shaderect.cc
 shaderect_LDADD    = $(LDADDS)
-TESTS             += sinfextest
+TEST_PROGS        += sinfextest
 sinfextest_SOURCES = sinfextest.cc
 sinfextest_LDADD   = $(LDADDS) $(READLINELIBS)
-TESTS             += pixcombine
+TEST_PROGS        += pixcombine
 pixcombine_SOURCES = pixcombine.cc
 pixcombine_LDADD   = $(LDADDS)
-TESTS             += items
+TEST_PROGS        += items
 items_SOURCES      = items.cc
 items_LDADD        = $(LDADDS)
-TESTS             += testitems
+TEST_PROGS        += testitems
 testitems_SOURCES  = testitems.cc
 testitems_LDADD    = $(LDADDS)
 XML_FILES         += testitems.xml
-TESTS             += factory
+TEST_PROGS        += factory
 factory_SOURCES    = factory.cc
 factory_LDADD      = $(LDADDS)
 XML_FILES         += factory.xml
 
-
 SINFEX=./sinfextest --shell
 SINFEXDAT=sinfextest.dat
 sinfex-check:
-	@ echo "TEST: ${SINFEXDAT}"; echo -n "Lines:"; L=0 ; \
+	@$(XVFB_START) && \
+	echo "TEST: ${SINFEXDAT}"; echo -n "Lines:"; L=0 ; \
 	while read -r line ; do \
 	  L=$$((1 + $$L)) ; \
 	  echo " $$line" | egrep -q '^[[:space:]]*(#|$$)' && continue ; \
