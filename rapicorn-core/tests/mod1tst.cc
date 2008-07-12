@@ -35,7 +35,7 @@ test_store1_string_row ()
   /* insert first row */
   Array ra;
   ra.push_head (AutoValue ("first"));
-  s1->insert_row (0, ra);
+  s1->insert (0, ra);
   assert (s1->count() == 1);
 }
 
@@ -53,8 +53,73 @@ test_store1_array ()
   row[-1] = "a C string";
   row[-1] = 0.5; // double
   row[-1] = 17; // integer
-  s1->insert_row (0, row);
+  s1->insert (0, row);
   assert (s1->count() == 1);
+}
+
+static Store1&
+create_dummy_store1 ()
+{
+  Store1 &store = *Store1::create_memory_store (Type::lookup ("RapicornTest::SimpleString"));
+  for (uint i = 0; i < 4; i++)
+    {
+      Array row;
+      for (uint j = 0; j < 4; j++)
+        row[j] = string_printf ("%u-%u", i + 1, j + 1);
+      store.insert (-1, row);
+    }
+  return store;
+}
+
+static String
+stringify_model (Model1 &model)
+{
+  String s = "[\n";
+  for (uint i = 0; i < model.count(); i++)
+    {
+      Array row = model.get (i);
+      s += "  (";
+      for (uint j = 0; j < row.count(); j++)
+        s += string_printf ("%s,", row[j].string().c_str());
+      s += "),\n";
+    }
+  s += "]";
+  return s;
+}
+
+static void
+test_store1_row_ops ()
+{
+  Store1 &store = create_dummy_store1();
+  Model1 &model = store.model();
+  Array row;
+
+  // store operations
+  row[0] = "Newly_appended_last_row";
+  store.insert (-1, row);
+  row[0] = "Newly_prepended_first_row";
+  store.insert (0, row);
+
+  row = model.get (1);
+  row[4] = "Extra_text_added_to_row_1";
+  store.update (1, row);
+
+  row = model.get (2);
+  store.remove (2);
+  row.clear();
+  row[0] = "Replacement_for_removed_row_2";
+  store.insert (2, row);
+
+  // test verification
+  String e = "[\n  (Newly_prepended_first_row,),\n  (1-1,1-2,1-3,1-4,Extra_text_added_to_row_1,),\n"
+             "  (Replacement_for_removed_row_2,),\n  (3-1,3-2,3-3,3-4,),\n  (4-1,4-2,4-3,4-4,),\n"
+             "  (Newly_appended_last_row,),\n]";
+  String s = stringify_model (model);
+  // printout ("\nMODEL: %s\n", s.c_str());
+  assert (e == s);
+
+  // cleanup
+  unref (store);
 }
 
 static void
@@ -83,6 +148,7 @@ main (int   argc,
 
   Test::add ("/Store/string-row", test_store1_string_row);
   Test::add ("/Store/array-row", test_store1_array);
+  Test::add ("/Store/row-ops", test_store1_row_ops);
   Test::add ("/Store/row-test", test_store1_row_test);
 
   return Test::run();

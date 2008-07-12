@@ -132,10 +132,12 @@ class MemoryStore1 : public virtual Model1, public virtual Store1 {
     changed (first, cnotify);
   }
   virtual void
-  pinsert_rows (uint64       first,
+  pinsert_rows (int64        first,
                 uint64       count,
                 const Array *arrays)
   {
+    if (first < 0)
+      first += avector.size() + 1;
     if (first > avector.size())
       return;
     avector.insert (avector.begin() + first, count, NULL);
@@ -144,7 +146,7 @@ class MemoryStore1 : public virtual Model1, public virtual Store1 {
     inserted (first, count);
   }
   virtual void
-  pdelete_rows (uint64 first,
+  premove_rows (uint64 first,
                 uint64 count)
   {
     if (first >= avector.size())
@@ -153,6 +155,7 @@ class MemoryStore1 : public virtual Model1, public virtual Store1 {
     end = MIN (end, avector.size());
     for (uint64 row = first; row < end; row++)
       delete avector[row];
+    avector.erase (avector.begin() + first, avector.begin() + end);
     deleted (first, end - first);
   }
   ~MemoryStore1()

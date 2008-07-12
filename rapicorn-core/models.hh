@@ -83,10 +83,10 @@ protected:
   virtual void          pchange_rows    (uint64       first,
                                          uint64       count,
                                          const Array *array) = 0;
-  virtual void          pinsert_rows    (uint64       first,
+  virtual void          pinsert_rows    (int64        first,
                                          uint64       count,
                                          const Array *arrays) = 0;
-  virtual void          pdelete_rows    (uint64       first,
+  virtual void          premove_rows    (uint64       first,
                                          uint64       count) = 0;
 public:
   explicit              Store1          (void);
@@ -96,9 +96,11 @@ public:
   Array                 get             (uint64       nth)      { return model().get (nth); }
   void                  set             (uint64       nth,
                                          const Array &array)    { pchange_rows (nth, 1, &array); }
-  void                  insert_row      (uint64       nth,
+  void                  insert          (int64        nth,
                                          const Array &array)    { pinsert_rows (nth, 1, &array); }
-  void                  delete_row      (uint64       nth)      { pdelete_rows (nth, 1); }
+  void                  remove          (uint64       nth)      { premove_rows (nth, 1); }
+  void                  update          (uint64       nth,
+                                         const Array &array)    { pchange_rows (nth, 1, &array); }
   /* premade stores */
   static Store1*        create_memory_store     (Type row_type);
 };
