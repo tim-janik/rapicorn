@@ -55,3 +55,8 @@ TEST_PROGS        += pixmaps
 pixmaps_SOURCES    = pixmaps.cc
 pixmaps_LDADD      = $(LDADDS)
 EXTRA_DIST        += testpixs.c testpixs.png
+
+check-process-handle: infotest
+	test -n `./infotest --print-process-handle`
+	test `./infotest --print-process-handle` != `./infotest --print-process-handle`
+check: check-process-handle

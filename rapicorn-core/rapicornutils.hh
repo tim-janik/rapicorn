@@ -136,6 +136,7 @@ void         rapicorn_init_core (int        *argcp,
 bool         init_value_bool    (InitValue  *value);
 double       init_value_double  (InitValue  *value);
 int64        init_value_int     (InitValue  *value);
+String       process_handle     ();
 
 /* --- initialization hooks --- */
 class InitHook {

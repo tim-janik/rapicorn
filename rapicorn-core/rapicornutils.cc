@@ -14,21 +14,22 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include <glib.h>
-#include "rapicornutils.hh"
-#include "rapicornutf8.hh"
-#include "rapicornthread.hh"
-#include "rapicornmsg.hh"
-#include "rapicorncpu.hh"
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/utsname.h>
 #include <fcntl.h>
 #include <sys/time.h>
 #include <vector>
 #include <algorithm>
 #include <cxxabi.h>
 #include <signal.h>
+#include <glib.h>
+#include "rapicornutils.hh"
+#include "rapicornutf8.hh"
+#include "rapicornthread.hh"
+#include "rapicornmsg.hh"
+#include "rapicorncpu.hh"
 
 #ifndef _
 #define _(s)    s
@@ -39,6 +40,9 @@
 #endif
 
 namespace Rapicorn {
+
+static void             process_handle_and_seed_init ();
+
 
 static Msg::CustomType debug_browser ("browser", Msg::DEBUG);
 
@@ -222,12 +226,7 @@ rapicorn_init_core (int        *argcp,
   rapicorn_parse_settings_and_args (ivalues, argcp, argvp);
 
   /* initialize random numbers */
-  {
-    struct timeval tv;
-    gettimeofday (&tv, NULL);
-    srand48 (tv.tv_usec + (tv.tv_sec << 16));
-    srand (lrand48());
-  }
+  process_handle_and_seed_init();
 
   /* initialize sub systems */
   _rapicorn_init_cpuinfo();
@@ -514,6 +513,110 @@ rapicorn_runtime_problemv (char        ewran_tag,
       BREAKPOINT();
       abort();
     }
+}
+
+/* --- process handle --- */
+static struct {
+  pid_t pid, ppid;
+  uid_t uid;
+  struct timeval tv;
+  struct timezone tz;
+  struct utsname uts;
+} process_info = { 0, };
+static bool
+seed_buffer (vector<uint8> &randbuf)
+{
+  bool have_random = false;
+
+  static const char *partial_files[] = { "/dev/urandom", "/dev/urandom$", };
+  for (uint i = 0; i < ARRAY_SIZE (partial_files) && !have_random; i++)
+    {
+      FILE *file = fopen (partial_files[i], "r");
+      if (file)
+        {
+          const uint rsz = 16;
+          size_t sz = randbuf.size();
+          randbuf.resize (randbuf.size() + rsz);
+          have_random = rsz == fread (&randbuf[sz], 1, rsz, file);
+          fclose (file);
+        }
+    }
+
+  static const char *full_files[] = { "/proc/stat", "/proc/interrupts", "/proc/uptime", };
+  for (uint i = 0; i < ARRAY_SIZE (full_files) && !have_random; i++)
+    {
+      size_t len = 0;
+      char *mem = Path::memread (full_files[i], &len);
+      if (mem)
+        {
+          randbuf.insert (randbuf.end(), mem, mem + len);
+          free (mem);
+          have_random = len > 0;
+        }
+    }
+
+#ifdef __OpenBSD__
+  if (!have_random)
+    {
+      randbuf.insert (randbuf.end(), arc4random());
+      randbuf.insert (randbuf.end(), arc4random() >> 8);
+      randbuf.insert (randbuf.end(), arc4random() >> 16);
+      randbuf.insert (randbuf.end(), arc4random() >> 24);
+      have_random = true;
+    }
+#endif
+
+  return have_random;
+}
+
+static uint32 process_hash = 0;
+
+static void
+process_handle_and_seed_init ()
+{
+  /* function should be called only once */
+  assert (process_info.pid == 0);
+
+  /* gather process info */
+  process_info.pid = getpid();
+  process_info.ppid = getppid();
+  process_info.uid = getuid();
+  gettimeofday (&process_info.tv, &process_info.tz);
+  uname (&process_info.uts);
+
+  /* gather random system entropy */
+  vector<uint8> randbuf;
+  randbuf.insert (randbuf.end(), (uint8*) &process_info, (uint8*) (&process_info + 1));
+
+  /* mangle entropy into system specific hash */
+  uint64 phash64 = 0;
+  for (uint i = 0; i < randbuf.size(); i++)
+    phash64 = (phash64 << 5) - phash64 + randbuf[i];
+  process_hash = phash64 % 4294967291U;
+
+  /* gather random seed entropy, this should include the entropy
+   * from process_hash, but not be predictable from it.
+   */
+  seed_buffer (randbuf);
+
+  /* mangle entropy into random seed */
+  uint64 rand_seed = phash64;
+  for (uint i = 0; i < randbuf.size(); i++)
+    rand_seed = (rand_seed << 5) + rand_seed + randbuf[i];
+
+  /* seed random generators */
+  union { uint64 seed64; unsigned short us[3]; } u;
+  u.seed64 = rand_seed % 0x1000000000015ULL;    // hash entropy into 48bits
+  u.seed64 ^= u.seed64 << 48;                   // keep upper bits (us[0]) filled for big-endian
+  srand48 (rand_seed); // will be overwritten by seed48() on sane systems
+  seed48 (u.us);
+  srand (lrand48());
+}
+
+String
+process_handle ()
+{
+  return string_printf ("%s/%08x", process_info.uts.nodename, process_hash);
 }
 
 /* --- VirtualTypeid --- */
