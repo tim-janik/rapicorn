@@ -260,6 +260,9 @@ bool    check           (const String &file,
                          const String &mode);
 bool    equals          (const String &file1,
                          const String &file2);
+char*   memread         (const String &filename,
+                         size_t       *lengthp);
+void    memfree         (char         *memread_mem);
 String  cwd             ();
 StringVector searchpath_split (const String &searchpath);
 extern const String     dir_separator;         /* 1char */

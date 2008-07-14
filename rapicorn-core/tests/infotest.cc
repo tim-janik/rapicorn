@@ -82,6 +82,30 @@ test_paths()
 }
 
 static void
+test_file_io()
+{
+  String fname = string_printf ("xtmp-infotest.%u", getpid());
+  FILE *f = fopen (fname.c_str(), "w");
+  assert (f != NULL);
+  static const char *data = "1234567890\nasdfghjkl\n";
+  int i = fwrite (data, 1, strlen (data), f);
+  assert (i == (int) strlen (data));
+  i = fclose (f);
+  assert (i == 0);
+  size_t l;
+  char *mem = Path::memread (fname, &l);
+  assert (mem != NULL);
+  assert (l == strlen (data));
+  assert (strncmp (mem, data, l) == 0);
+  Path::memfree (mem);
+  unlink (fname.c_str());
+  l = 17;
+  mem = Path::memread ("///", &l);
+  assert (mem == NULL);
+  assert (l == 0);
+}
+
+static void
 test_zintern()
 {
   static const unsigned char TEST_DATA[] = "x\332K\312,\312K-\321\255\312\314+I-\312S(I-.QHI,I\4\0v\317\11V";
@@ -159,6 +183,7 @@ main (int   argc,
 
   Test::add ("CpuInfo", test_cpu_info);
   Test::add ("Path handling", test_paths);
+  Test::add ("File IO", test_file_io);
   Test::add ("ZIntern", test_zintern);
   Test::add ("FileChecks", test_files, argv[0]);
   Test::add ("VirtualTypeid", test_virtual_typeid);

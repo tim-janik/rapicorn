@@ -1433,6 +1433,74 @@ searchpath_split (const String &searchpath)
 const String dir_separator = RAPICORN_DIR_SEPARATOR_S;
 const String searchpath_separator = RAPICORN_SEARCHPATH_SEPARATOR_S;
 
+static char* /* return malloc()-ed buffer containing a full read of FILE */
+file_memread (FILE   *stream,
+              size_t *lengthp)
+{
+  size_t sz = 256;
+  char *malloc_string = (char*) malloc (sz);
+  if (!malloc_string)
+    return NULL;
+  char *start = malloc_string;
+  errno = 0;
+  while (!feof (stream))
+    {
+      size_t bytes = fread (start, 1, sz - (start - malloc_string), stream);
+      if (bytes <= 0 && ferror (stream) && errno != EAGAIN)
+        {
+          start = malloc_string; // error/0-data
+          break;
+        }
+      start += bytes;
+      if (start == malloc_string + sz)
+        {
+          bytes = start - malloc_string;
+          sz *= 2;
+          char *newstring = (char*) realloc (malloc_string, sz);
+          if (!newstring)
+            {
+              start = malloc_string; // error/0-data
+              break;
+            }
+          malloc_string = newstring;
+          start = malloc_string + bytes;
+        }
+    }
+  int savederr = errno;
+  *lengthp = start - malloc_string;
+  if (!*lengthp)
+    {
+      free (malloc_string);
+      malloc_string = NULL;
+    }
+  errno = savederr;
+  return malloc_string;
+}
+
+char*
+memread (const String &filename,
+         size_t       *lengthp)
+{
+  FILE *file = fopen (filename.c_str(), "r");
+  if (!file)
+    {
+      *lengthp = 0;
+      return strdup ("");
+    }
+  char *contents = file_memread (file, lengthp);
+  int savederr = errno;
+  fclose (file);
+  errno = savederr;
+  return contents;
+}
+
+void
+memfree (char *memread_mem)
+{
+  if (memread_mem)
+    free (memread_mem);
+}
+
 } // Path
 
 /* --- Deletable --- */
