@@ -1656,18 +1656,17 @@ Deletable::DeletionHook::~DeletionHook ()
     g_error ("%s: hook is being destroyed but not unlinked: %p", G_STRFUNC, this);
 }
 
-#if 0
-static struct {
-  Mutex                                         mutex;
-  std::map<Deletable*,Deletable::DeletionHook*> dmap;
-} deletable_maps[19]; /* use prime size for hashing, sum up to roughly 1k (use 83 for 4k) */
-#endif
-
-#define DELETABLE_MAP_HASH      (19)    /* use prime size for hashing, sum up to roughly 1k (use 83 for 4k) */
-struct DeletableMap {
-  Mutex                                         mutex;
-  std::map<Deletable*,Deletable::DeletionHook*> dmap;
+#define DELETABLE_MAP_HASH (19) /* use prime size for hashing, sums up to roughly 1k (use 83 for 4k) */
+struct DeletableAuxData {
+  Deletable::DeletionHook* hooks;
+  DeletableAuxData() : hooks (NULL) {}
+  ~DeletableAuxData() { assert (hooks == NULL); }
 };
+struct DeletableMap {
+  Mutex                                 mutex;
+  std::map<Deletable*,DeletableAuxData> dmap;
+};
+typedef std::map<Deletable*,DeletableAuxData>::iterator DMapIterator;
 static DeletableMap * volatile deletable_maps = NULL;
 
 static inline void
@@ -1699,20 +1698,17 @@ Deletable::add_deletion_hook (DeletionHook *hook)
   RAPICORN_ASSERT (hook);
   RAPICORN_ASSERT (!hook->next);
   RAPICORN_ASSERT (!hook->prev);
-  std::map<Deletable*,DeletionHook*>::iterator it;
-  it = deletable_maps[hashv].dmap.find (this);
-  if (it != deletable_maps[hashv].dmap.end() && it->second)
+  DeletableAuxData &ad = deletable_maps[hashv].dmap[this];
+  if (!ad.hooks)
+    ad.hooks = hook->prev = hook->next = hook;
+  else
     {
-      hook->prev = it->second->prev;
-      hook->next = it->second;
+      hook->prev = ad.hooks->prev;
+      hook->next = ad.hooks;
       hook->prev->next = hook;
       hook->next->prev = hook;
-      it->second = hook;
+      ad.hooks = hook;
     }
-  else if (it != deletable_maps[hashv].dmap.end())
-    it->second = hook->prev = hook->next = hook;
-  else
-    deletable_maps[hashv].dmap[this] = hook->prev = hook->next = hook;
   deletable_maps[hashv].mutex.unlock();
   hook->monitoring_deletable (*this);
   //g_printerr ("DELETABLE-ADD(%p,%p)\n", this, hook);
@@ -1734,11 +1730,11 @@ Deletable::remove_deletion_hook (DeletionHook *hook)
   RAPICORN_ASSERT (hook->next && hook->prev);
   hook->next->prev = hook->prev;
   hook->prev->next = hook->next;
-  std::map<Deletable*,DeletionHook*>::iterator it;
-  it = deletable_maps[hashv].dmap.find (this);
+  DMapIterator it = deletable_maps[hashv].dmap.find (this);
   RAPICORN_ASSERT (it != deletable_maps[hashv].dmap.end());
-  if (it->second == hook)
-    it->second = hook->next != hook ? hook->next : NULL;
+  DeletableAuxData &ad = it->second;
+  if (ad.hooks == hook)
+    ad.hooks = hook->next != hook ? hook->next : NULL;
   hook->prev = NULL;
   hook->next = NULL;
   deletable_maps[hashv].mutex.unlock();
@@ -1763,12 +1759,13 @@ Deletable::invoke_deletion_hooks()
     {
       /* lookup hook list */
       deletable_maps[hashv].mutex.lock();
-      std::map<Deletable*,DeletionHook*>::iterator it;
       DeletionHook *hooks;
-      it = deletable_maps[hashv].dmap.find (this);
+      DMapIterator it = deletable_maps[hashv].dmap.find (this);
       if (it != deletable_maps[hashv].dmap.end())
         {
-          hooks = it->second;
+          DeletableAuxData &ad = it->second;
+          hooks = ad.hooks;
+          ad.hooks = NULL;
           deletable_maps[hashv].dmap.erase (it);
         }
       else
