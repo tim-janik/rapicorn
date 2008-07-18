@@ -7,7 +7,8 @@ noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
 
 # tests for auxillary data in testpass.idl
-TESTPASS_AUXTESTS = --aux-test nick=auxtest1 --aux-test auxtest2 --aux-test auxtest3 --aux-test default=10007
+TESTPASS_AUXTESTS = --aux-test label=auxtest1 --aux-test auxtest2 --aux-test auxtest3 \
+		    --aux-test default=10007 --aux-test hints=rw
 
 check-ptp: ptptest
 	${PLIC} $(srcdir)/testpass.idl -O TypePackage

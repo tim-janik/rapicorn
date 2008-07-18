@@ -18,9 +18,9 @@ import Decls
 
 
 auxillary_initializers = {
-  (Decls.NUM,       'Num')      : ('nick', 'blurb', 'default=0', 'min', 'max', 'step', 'options'),
-  (Decls.REAL,      'Real')     : ('nick', 'blurb', 'default=0', 'min', 'max', 'step', 'options'),
-  (Decls.STRING,    'String')   : ('nick', 'blurb', 'default', 'options'),
+  (Decls.NUM,       'Num')      : ('label', 'blurb', 'default=0', 'min', 'max', 'step', 'hints'),
+  (Decls.REAL,      'Real')     : ('label', 'blurb', 'default=0', 'min', 'max', 'step', 'hints'),
+  (Decls.STRING,    'String')   : ('label', 'blurb', 'default', 'hints'),
 }
 
 class Error (Exception):
