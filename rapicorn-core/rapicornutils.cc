@@ -1659,6 +1659,7 @@ Deletable::DeletionHook::~DeletionHook ()
 #define DELETABLE_MAP_HASH (19) /* use prime size for hashing, sums up to roughly 1k (use 83 for 4k) */
 struct DeletableAuxData {
   Deletable::DeletionHook* hooks;
+  String                   url;
   DeletableAuxData() : hooks (NULL) {}
   ~DeletableAuxData() { assert (hooks == NULL); }
 };
@@ -1693,7 +1694,7 @@ void
 Deletable::add_deletion_hook (DeletionHook *hook)
 {
   auto_init_deletable_maps();
-  uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
+  const uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
   deletable_maps[hashv].mutex.lock();
   RAPICORN_ASSERT (hook);
   RAPICORN_ASSERT (!hook->next);
@@ -1724,7 +1725,7 @@ void
 Deletable::remove_deletion_hook (DeletionHook *hook)
 {
   auto_init_deletable_maps();
-  uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
+  const uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
   deletable_maps[hashv].mutex.lock();
   RAPICORN_ASSERT (hook);
   RAPICORN_ASSERT (hook->next && hook->prev);
@@ -1741,6 +1742,9 @@ Deletable::remove_deletion_hook (DeletionHook *hook)
   //g_printerr ("DELETABLE-REM(%p,%p)\n", this, hook);
 }
 
+static Mutex                        object_url_mutex;
+static map<const String,Deletable*> object_url2deletable;
+
 /**
  * Invoke all deletion hooks installed on this deletable.
  */
@@ -1754,7 +1758,7 @@ Deletable::invoke_deletion_hooks()
   if (NULL == Atomic::ptr_get (&deletable_maps))
     return;
   auto_init_deletable_maps();
-  uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
+  const uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
   while (TRUE)
     {
       /* lookup hook list */
@@ -1766,7 +1770,13 @@ Deletable::invoke_deletion_hooks()
           DeletableAuxData &ad = it->second;
           hooks = ad.hooks;
           ad.hooks = NULL;
+          String url = ad.url;
           deletable_maps[hashv].dmap.erase (it);
+          if (url.size() > 0)
+            {
+              AutoLocker locker (object_url_mutex); // always acquired _after_ dmap.mutex
+              object_url2deletable.erase (url);
+            }
         }
       else
         hooks = NULL;
@@ -1786,6 +1796,48 @@ Deletable::invoke_deletion_hooks()
           hook->dismiss_deletable();
         }
     }
+}
+
+/**
+ * Provide a unique identifier to refer to this object within
+ * the current process.
+ */
+String
+Deletable::object_url () const
+{
+  auto_init_deletable_maps();
+  const uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
+  deletable_maps[hashv].mutex.lock();
+  DeletableAuxData &ad = deletable_maps[hashv].dmap[const_cast<Deletable*> (this)];
+  if (ad.url.size() > 0)
+    {
+      String url = ad.url;
+      deletable_maps[hashv].mutex.unlock();
+      return url;
+    }
+  AutoLocker locker (object_url_mutex); // always acquired _after_ dmap.mutex
+  String url, prefix = string_printf ("data:application/x-rapicorn,object-url://%s/", process_handle().c_str());
+  uint64 j = lrand48();
+  do
+    {
+      url = prefix + string_printf ("%llx", j);
+      j++;
+    }
+  while (object_url2deletable.find (url) != object_url2deletable.end());
+  ad.url = url;
+  object_url2deletable[url] = const_cast<Deletable*> (this);
+  deletable_maps[hashv].mutex.unlock();
+  return url;
+}
+
+/**
+ * Find an object by providing its object URL as obtained from object_url().
+ */
+Deletable*
+Deletable::from_object_url (const String &object_url)
+{
+  AutoLocker locker (object_url_mutex); // always acquired _after_ dmap.mutex
+  return object_url2deletable[object_url];
 }
 
 /* --- ReferenceCountImpl --- */

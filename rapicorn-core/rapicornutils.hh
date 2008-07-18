@@ -348,6 +348,8 @@ private:
 protected:
   void           invoke_deletion_hooks ();
   virtual       ~Deletable             ();
+  String         object_url            () const;
+  static Deletable* from_object_url    (const String &object_url);
 };
 
 /* --- ReferenceCountImpl --- */
