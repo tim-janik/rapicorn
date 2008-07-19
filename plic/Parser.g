@@ -29,9 +29,13 @@ keywords = ( 'TRUE', 'True', 'true', 'FALSE', 'False', 'false',
 
 class YYGlobals (object):
   def __init__ (self):
+    self.config = {}
     self.ecounter = None
     self.namespaces = []
     self.ns_list = [] # namespaces
+  def configure (self, confdict):
+    self.config = {}
+    self.config.update (confdict)
   def nsadd_const (self, name, value):
     if not isinstance (value, (int, long, float, str)):
       raise TypeError ('constant expression does not yield string or number: ' + repr (typename))
@@ -145,6 +149,8 @@ class YYGlobals (object):
       raise TypeError ('unknown type: ' + repr (typename))
     return type_info
   def namespace_open (self, ident):
+    if not self.config.get ('system-typedefs', 0) and ident.find ('$') >= 0:
+      raise NameError ('invalid characters in namespace: ' + ident)
     full_ident = "::". join ([ns.name for ns in self.namespaces] + [ident])
     namespace = None
     for ns in self.ns_list:
@@ -191,7 +197,7 @@ def ASi (string_candidate): # assert i18n string
   if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
 def AIn (identifier):   # assert new identifier
   if (yy.namespace_lookup (identifier, astype = True, asconst = True) or
-      identifier in keywords):
+      (not yy.config.get ('system-typedefs', 0) and identifier in keywords)):
     raise KeyError ('redefining existing identifier: %s' % identifier)
 def ATN (typename):     # assert a typename
   yy.resolve_type (typename) # raises exception
@@ -203,6 +209,7 @@ parser IdlSyntaxParser:
         ignore:             r'/\*([^*]|\*[^/])*\*/'         # multi line comments
         token EOF:          r'$'
         token IDENT:        r'[a-zA-Z_][a-zA-Z_0-9]*'       # identifiers
+        token NSIDENT:      r'[a-zA-Z_][a-zA-Z_0-9$]*'      # identifier + '$'
         token INTEGER:      r'[0-9]+'
         token FULLFLOAT:    r'([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-][0-9]+)?'
         token FRACTFLOAT:                     r'\.[0-9]+([eE][+-][0-9]+)?'
@@ -211,7 +218,7 @@ parser IdlSyntaxParser:
 rule IdlSyntax: ( ';' | namespace )* EOF        {{ return yy.ns_list; }}
 
 rule namespace:
-        'namespace' IDENT                       {{ yy.namespace_open (IDENT) }}
+        'namespace' NSIDENT                     {{ yy.namespace_open (NSIDENT) }}
         '{' declaration* '}'                    {{ yy.namespace_close() }}
 rule declaration:
           ';'
