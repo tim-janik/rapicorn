@@ -32,7 +32,7 @@ check-fail:	${PLIC} testfail.idl
 	      && ! ${PLIC} xgen-testfail.idl > /dev/null 2>&1 \
 	      || { echo -e "\ntestfail.idl:$$num: uncaught error: $$line" ; exit 1 ; } ; \
 	    echo -n " $$num" ; \
-	  done ; echo
+	  done || exit 1 ; echo
 	rm -f xgen-testfail.idl
 
 clean:
