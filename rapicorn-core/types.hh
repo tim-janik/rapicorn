@@ -72,6 +72,7 @@ private:
   Info                 &m_info;
   Type&                 operator=       (const Type&); // must not be used
 };
+void _rapicorn_init_types (void);
 
 } // Rapicorn
 

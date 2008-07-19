@@ -84,6 +84,16 @@ types-ptpp.cc: # FIXME: depend on a .idl file for appropriate regeneration
 	mv gen-$@ $@
 types.cc: types-ptpp.cc
 
+# === types-zgen.c ===
+types-zgen.c:  ./rapicorn-zintern $(srcdir)/types-std.idl
+	$(PLIC) --system-typedefs $(srcdir)/types-std.idl -O TypePackage -o ./types-std.tpg
+	./rapicorn-zintern -b RAPICORNSTD_RODATA ./types-std.tpg > xgen-$(@F)
+	rm -f ./types-std.tpg
+	mv xgen-$(@F) $@
+$(srcdir)/types.cc: types-zgen.c
+CLEANFILES += xgen-types-zgen.c types-zgen.c
+
+
 # === enum introspection ===
 $(srcdir)/enumdefs.cc: gen-enums.cc
 gen-enums.cc: $(srcdir)/enumdefs.hh Makefile

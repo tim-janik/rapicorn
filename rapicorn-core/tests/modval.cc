@@ -33,6 +33,13 @@ test_type_info ()
   // fail type extraction
   Type t0 = Type::try_lookup (":invalid:::type^^^Definition");
   assert (t0.istype() == false);
+  // ensure standard types
+  Type s1 = Type::try_lookup ("String");
+  assert (s1.storage() == Type::STRING);
+  Type s2 = Type::try_lookup ("Num");
+  assert (s2.storage() == Type::NUM);
+  Type s3 = Type::try_lookup ("Real");
+  assert (s3.storage() == Type::REAL);
   // type extraction by reference
   Type t1 = Type::lookup ("RapicornTest::NumWithFooAsLabel");
   assert (t1.istype());

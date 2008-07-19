@@ -160,10 +160,17 @@ Type::notype ()
 }
 
 Type
-Type::try_lookup (const String &full_name)
+Type::try_lookup (const String &lookup_name)
 {
+  String full_name = lookup_name;
   String::size_type sl = full_name.rfind (':');
-  if (sl != full_name.npos && sl > 0 && full_name[sl-1] == ':')
+  if (sl == full_name.npos)
+    {
+      // standard namespace lookup without '::'
+      full_name = "Rapicorn$$std::" + lookup_name;
+      sl = full_name.rfind (':');
+    }
+  if (sl > 0 && full_name[sl-1] == ':')
     {
       String nspace = full_name.substr (0, sl - 1), tname = full_name.substr (sl + 1);
       vector<Plic::TypeNamespace> tnl;
@@ -270,6 +277,17 @@ Type::register_package_file (const String &filename)
   fclose (file);
   if (contents)
     free (contents);
+}
+
+#include "types-zgen.c" // provides types-std.idl as .tpg in RAPICORNSTD_RODATA_*
+
+void
+_rapicorn_init_types (void)
+{
+  static bool initialized = false;
+  assert (!initialized);
+  initialized = true;
+  Type::register_package (RAPICORNSTD_RODATA_SIZE, (const char*) RAPICORNSTD_RODATA_DATA);
 }
 
 } // Rapicorn
