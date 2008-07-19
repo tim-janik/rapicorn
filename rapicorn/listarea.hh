@@ -25,8 +25,10 @@ class ItemList : public virtual Container {
 protected:
   virtual const PropertyList&   list_properties ();
 public:
-  virtual bool  browse          () const  = 0;
-  virtual void  browse          (bool b) = 0;
+  virtual bool   browse       () const  = 0;
+  virtual void   browse       (bool b) = 0;
+  virtual void   model        (const String &modelurl) = 0;
+  virtual String model        () const = 0;
 };
 
 } // Rapicorn

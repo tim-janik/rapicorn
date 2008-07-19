@@ -25,7 +25,8 @@ const PropertyList&
 ItemList::list_properties()
 {
   static Property *properties[] = {
-    MakeProperty (ItemList, browse,     _("Browse Mode"), _("Browse selection mode"), "rw"),
+    MakeProperty (ItemList, browse, _("Browse Mode"), _("Browse selection mode"), "rw"),
+    MakeProperty (ItemList, model,  _("Model URL"), _("Resource locator for 1D list model"), "rw:M1"),
   };
   static const PropertyList property_list (properties, Container::list_properties());
   return property_list;
@@ -45,7 +46,7 @@ ItemListImpl::~ItemListImpl()
       unref (m_table);
       m_table = NULL;
     }
-  Model7 *oldmodel = m_model;
+  Model1 *oldmodel = m_model;
   m_model = NULL;
   if (oldmodel)
     unref (oldmodel);
@@ -61,7 +62,24 @@ ItemListImpl::constructed ()
       this->add (m_table);
     }
   if (!m_model)
-    model (new Model7());
+    {
+      Store1 &store = *Store1::create_memory_store (Type::lookup ("String"));
+      for (uint i = 0; i < 20; i++)
+        {
+          Array row;
+          String s;
+          if (i == 10)
+            s = string_printf ("* %u SMALL ITEM (watch scroll direction)", i);
+          else
+            s = string_printf ("|<br/>| <br/>| %u<br/>|<br/>|", i);
+          row[0] = s;
+          for (uint j = 1; j < 4; j++)
+            row[j] = string_printf ("%u-%u", i + 1, j + 1);
+          store.insert (-1, row);
+        }
+      model (store.object_url());
+      unref (ref_sink (store));
+    }
 }
 
 void
@@ -107,15 +125,23 @@ ItemListImpl::get_adjustment (AdjustmentSourceType adj_source,
 }
 
 void
-ItemListImpl::model (Model7 *model)
+ItemListImpl::model (const String &modelurl)
 {
-  Model7 *oldmodel = m_model;
+  Deletable *obj = from_object_url (modelurl);
+  Model1 *model = dynamic_cast<Model1*> (obj);
+  Model1 *oldmodel = m_model;
   m_model = model;
   if (m_model)
     ref_sink (m_model);
   if (oldmodel)
     unref (oldmodel);
   invalidate_model (true, true);
+}
+
+String
+ItemListImpl::model () const
+{
+  return m_model ? m_model->object_url() : "";
 }
 
 void
