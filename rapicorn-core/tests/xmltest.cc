@@ -15,7 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 //#define TEST_VERBOSE
-#include <rapicorn-core/rapicorntests.h>
+#include <rapicorn-core/testutils.hh>
 
 #include "data.cc" // xml_data1
 
@@ -25,21 +25,17 @@ using namespace Rapicorn;
 static void
 xml_tree_test (void)
 {
-  TSTART ("RapicornXmlNode");
-  TOK();
   const char *input_file = "test-input";
   MarkupParser::Error error;
   XmlNode *xnode = XmlNode::parse_xml ("testdata", xml_data1, strlen (xml_data1), &error);
-  TOK();
   if (xnode)
     ref_sink (xnode);
-  TOK();
   if (error.code)
     Rapicorn::error ("%s:%d:%d:error.code=%d: %s", input_file, error.line_number, error.char_number, error.code, error.message.c_str());
   else
-    TASSERT (xnode != NULL);
+    TCHECK (xnode != NULL);
   /* check root */
-  TASSERT (xnode->name() == "toplevel-tag");
+  TCHECK (xnode->name() == "toplevel-tag");
   vector<XmlNode*>::const_iterator cit;
   uint testmask = 0;
   /* various checks */
@@ -48,12 +44,12 @@ xml_tree_test (void)
       {
         /* check attribute parsing */
         XmlNode *child = *cit;
-        TASSERT (child->has_attribute ("a") == true);
-        TASSERT (child->has_attribute ("A") == false);
-        TASSERT (child->get_attribute ("a") == "a");
-        TASSERT (child->get_attribute ("b") == "1234b");
-        TASSERT (child->get_attribute ("c") == "_<->^&+;");
-        TASSERT (child->get_attribute ("d") == "");
+        TCHECK (child->has_attribute ("a") == true);
+        TCHECK (child->has_attribute ("A") == false);
+        TCHECK (child->get_attribute ("a") == "a");
+        TCHECK (child->get_attribute ("b") == "1234b");
+        TCHECK (child->get_attribute ("c") == "_<->^&+;");
+        TCHECK (child->get_attribute ("d") == "");
         testmask |= 1;
       }
     else if ((*cit)->name() == "child2")
@@ -64,8 +60,8 @@ xml_tree_test (void)
         for (uint i = 0; i < ARRAY_SIZE (children); i++)
           {
             const XmlNode *c = child->first_child (children[i]);
-            TASSERT (c != NULL);
-            TASSERT (c->name() == children[i]);
+            TCHECK (c != NULL);
+            TCHECK (c->name() == children[i]);
           }
         testmask |= 2;
       }
@@ -73,35 +69,61 @@ xml_tree_test (void)
       {
         /* check simple text */
         XmlNode *child = *cit;
-        TASSERT (child->text() == "foo-blah");
+        TCHECK (child->text() == "foo-blah");
         testmask |= 4;
       }
     else if ((*cit)->name() == "child5")
       {
         /* check text reconstruction */
         const XmlNode *child = *cit;
-        TASSERT (child->text() == "foobarbaseldroehn!");
+        TCHECK (child->text() == "foobarbaseldroehn!");
         // printout ("[node:line=%u:char=%u]", child->parsed_line(), child->parsed_char());
         testmask |= 8;
       }
-  TASSERT (testmask == 15);
+  TCHECK (testmask == 15);
   /* check attribute order */
   const XmlNode *cnode = xnode->first_child ("orderedattribs");
-  TASSERT (cnode != NULL);
-  TASSERT (cnode->text() == "orderedattribs-text");
+  TCHECK (cnode != NULL);
+  TCHECK (cnode->text() == "orderedattribs-text");
   const vector<String> oa = cnode->list_attributes();
-  TASSERT (oa.size() == 6);
-  TASSERT (oa[0] == "x1");
-  TASSERT (oa[1] == "z");
-  TASSERT (oa[2] == "U");
-  TASSERT (oa[3] == "foofoo");
-  TASSERT (oa[4] == "coffee");
-  TASSERT (oa[5] == "last");
+  TCHECK (oa.size() == 6);
+  TCHECK (oa[0] == "x1");
+  TCHECK (oa[1] == "z");
+  TCHECK (oa[2] == "U");
+  TCHECK (oa[3] == "foofoo");
+  TCHECK (oa[4] == "coffee");
+  TCHECK (oa[5] == "last");
   /* cleanup */
   if (xnode)
     unref (xnode);
-  TOK();
-  TDONE();
+}
+
+static const char *xml_array = ""
+  "<Rapicorn::Array>\n"
+  "  <row> <col>1</col> <col>2</col> <col>3</col> <col>4</col> <col>5</col> </row>\n"
+  "  <row> Row Text </row>\n"
+  "</Rapicorn::Array>\n"
+  "";
+
+static void
+test_xml_array()
+{
+  String inputname = String (__FILE__) + ":xml_array[]";
+  MarkupParser::Error perror;
+  XmlNode *xnode = XmlNode::parse_xml (inputname, xml_array, -1, &perror, "Model1");
+  String err;
+  if (perror.code)
+    err = string_printf ("%s:%d:%d: %s", inputname.c_str(),
+                         perror.line_number, perror.char_number, perror.message.c_str());
+  if (xnode)
+    {
+      ref_sink (xnode);
+      if (!err.size())
+        err = ""; // use xnode
+      unref (xnode);
+    }
+  if (err.size())
+    error (err);
 }
 
 } // anon
@@ -111,6 +133,9 @@ main (int   argc,
       char *argv[])
 {
   rapicorn_init_test (&argc, &argv);
-  xml_tree_test();
-  return 0;
+
+  Test::add ("Test XmlNode", xml_tree_test);
+  Test::add ("Test XML Array", test_xml_array);
+
+  return Test::run();
 }
