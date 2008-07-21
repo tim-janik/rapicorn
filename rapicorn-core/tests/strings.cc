@@ -285,6 +285,27 @@ split_string_tests (void)
   assert (string_join ("^", Path::searchpath_split (":one:two:three:")) == "one^two^three");
 #endif
   assert (string_join ("", string_split ("all  white\tspaces\nwill\vbe\fstripped")) == "allwhitespaceswillbestripped");
+  assert (string_multiply ("x", 0) == "");
+  assert (string_multiply ("x", 1) == "x");
+  assert (string_multiply ("x", 2) == "xx");
+  assert (string_multiply ("x", 3) == "xxx");
+  assert (string_multiply ("x", 4) == "xxxx");
+  assert (string_multiply ("x", 5) == "xxxxx");
+  assert (string_multiply ("x", 6) == "xxxxxx");
+  assert (string_multiply ("x", 7) == "xxxxxxx");
+  assert (string_multiply ("x", 8) == "xxxxxxxx");
+  assert (string_multiply ("x", 9) == "xxxxxxxxx");
+  assert (string_multiply ("x", 99999).size() == 99999);
+  assert (string_multiply ("x", 99998).size() == 99998);
+  assert (string_multiply ("x", 99997).size() == 99997);
+  assert (string_multiply ("x", 99996).size() == 99996);
+  assert (string_multiply ("x", 99995).size() == 99995);
+  assert (string_multiply ("x", 99994).size() == 99994);
+  assert (string_multiply ("x", 99993).size() == 99993);
+  assert (string_multiply ("x", 99992).size() == 99992);
+  assert (string_multiply ("x", 99991).size() == 99991);
+  assert (string_multiply ("x", 99990).size() == 99990);
+  assert (string_multiply ("x", 9999999).size() == 9999999); // needs 10MB, should finish within 1 second
 }
 
 static void

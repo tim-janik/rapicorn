@@ -545,6 +545,28 @@ VirtualTypeid::cxx_demangle (const char *mangled_identifier)
 
 /* --- string utils --- */
 String
+string_multiply (const String &s,
+                 uint64        count)
+{
+  if (count == 1)
+    return s;
+  else if (count & 1)
+    {
+      String tmp = string_multiply (s, count - 1);
+      tmp += s;
+      return tmp;
+    }
+  else if (count)
+    {
+      String tmp = string_multiply (s, count / 2);
+      tmp += tmp;
+      return tmp;
+    }
+  else
+    return "";
+}
+
+String
 string_tolower (const String &str)
 {
   String s (str);

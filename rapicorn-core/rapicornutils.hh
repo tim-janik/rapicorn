@@ -175,6 +175,8 @@ inline void BREAKPOINT() { raise_sigtrap(); }
 extern RapicornThreadTable ThreadTable; /* private, provided by rapicornthreadimpl.cc */
 
 /* --- string functionality --- */
+String                          string_multiply          (const String &s,
+                                                          uint64       count);
 String  			string_tolower           (const String &str);
 String  			string_toupper           (const String &str);
 String  			string_totitle           (const String &str);
