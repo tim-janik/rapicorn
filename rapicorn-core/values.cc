@@ -479,7 +479,7 @@ Array::nexti ()
   String idx = string_from_int (array->last++);
   while (array->vmap.find (idx) != array->vmap.end())
     {
-      idx = string_from_int (array->last++);
+      idx = string_from_uint (array->last++);
       if (array->last == 0)
         {
           RAPICORN_WARNING ("Array index out of bounds: %zu", array->last - 1);
@@ -641,6 +641,195 @@ Array::to_string (const String &junction)
       result += (*this)[i].string();
     }
   return result;
+}
+
+class XmlNodeWalker {
+#warning FIXME: move XmlNodeWalker to rapicornxml.h
+protected:
+  virtual bool
+  process_children (const XmlNode &xnode)
+  {
+    for (XmlNode::ConstChildIter it = xnode.children_begin(); it != xnode.children_end(); it++)
+      if (!process_node (**it))
+        return false;
+    return true;
+  }
+  virtual bool
+  handle_node (const XmlNode &xnode)
+  {
+    return true;
+  }
+public:
+  virtual bool
+  process_node (const XmlNode &xnode)
+  {
+    if (!handle_node (xnode))
+      return false;
+    if (!process_children (xnode))
+      return false;
+    return true;
+  }
+};
+
+namespace {
+struct XmlArray : public XmlNodeWalker {
+  Array m_array;
+  virtual bool
+  process_node (const XmlNode &xnode)
+  {
+    bool valid_tree = true, nested_recurse = false;
+    if (xnode.istext())
+      {
+        m_array.push_tail (xnode.text());
+      }
+    else if (xnode.name() == "Rapicorn::Array")
+      {
+        valid_tree = xnode.parent() == NULL;
+        valid_tree &= process_children (xnode);
+      }
+    else if (xnode.name() == "row")
+      {
+        valid_tree &= xnode.parent()->name() == "Rapicorn::Array";
+        valid_tree &= process_children (xnode);
+      }
+    else if (xnode.name() == "col")
+      {
+        valid_tree &= xnode.parent()->name() == "row";
+        nested_recurse = true;
+      }
+    else if (xnode.name() == "cell")
+      {
+        valid_tree &= xnode.parent()->name() == "col";
+        nested_recurse = true;
+      }
+    if (valid_tree && nested_recurse)
+      {
+        Array oarray = m_array;
+        m_array = Array();
+        valid_tree &= process_children (xnode);
+        oarray.push_tail (m_array);
+        m_array = oarray;
+      }
+    return valid_tree;
+  }
+};
+} // Anon
+
+Array
+Array::from_xml (const String &xmlstring,
+                 const String &inputname,
+                 String       *errstrp)
+{
+  String errstr;
+  MarkupParser::Error perror;
+  XmlNode *xnode = XmlNode::parse_xml (inputname, xmlstring.data(), xmlstring.size(), &perror, "Rapicorn::Array");
+  Array result;
+  if (perror.code)
+    errstr = string_printf ("%s:%d:%d: %s", inputname.c_str(),
+                            perror.line_number, perror.char_number, perror.message.c_str());
+  if (xnode)
+    {
+      ref_sink (xnode);
+      if (!errstr.size())
+        {
+          XmlArray xarray;
+          if (xarray.process_node (*xnode) == true)
+            result = xarray.m_array;
+          else
+            errstr = string_printf ("%s: invalid array markup: %s", inputname.c_str(), xmlstring.c_str());
+        }
+      unref (xnode);
+    }
+  if (errstrp)
+    *errstrp = errstr;
+  return result;
+}
+
+XmlNode*
+Array::to_xml ()
+{
+  XmlNode *root = XmlNode::create_parent ("Array");
+  root->break_within (true);
+  StringVector k = keys();
+  for (uint64 i = 0; i < k.size(); i++)
+    {
+      AnyValue &v = (*this)[k[i]];
+      XmlNode *parentnode = NULL;
+      bool addnull = false;
+      String tag, txt;
+      switch (v.storage)
+        {
+          Object *obj;
+        case Type::NUM:
+          tag = "num";
+          txt = v.string();
+          break;
+        case Type::REAL:
+          tag = "real";
+          txt = v.string();
+          break;
+        case Type::STRING:
+          txt = v.string();
+          break;
+        case Type::CHOICE:
+          tag = "choice";
+          txt = v.string();
+          break;
+        case Type::TYPE_REFERENCE:
+          tag = "type";
+          txt = v.string();
+          break;
+        case Type::ARRAY:
+          tag = "Array";
+          parentnode = v.array().to_xml();
+          break;
+        case Type::SEQUENCE:
+          tag = "Sequence";
+          parentnode = v.array().to_xml();
+          break;
+        case Type::RECORD:
+          tag = "Record";
+          parentnode = v.array().to_xml();
+          break;
+        case Type::STRING_VECTOR:
+#warning FIXME: implement STRING_VECTOR to XmlNode
+          break;
+        case Type::OBJECT:
+          tag = "Object";
+          obj = &v.object();
+          addnull = !obj;
+          if (!addnull)
+            txt = obj->object_url();
+          break;
+        }
+      XmlNode *current = root;
+      if (1)
+        {
+          XmlNode *child = XmlNode::create_parent ("row");
+          if (i > 2147483647 || string_from_uint (i) != k[i])
+            child->set_attribute ("key", k[i]);
+          child->break_after (true);
+          current->add_child (*child);
+          current = child;
+        }
+      if (tag.size())
+        {
+          XmlNode *child = XmlNode::create_parent (tag);
+          current->add_child (*child);
+          current = child;
+        }
+      if (parentnode)
+        {
+          ref_sink (parentnode);
+          current->steal_children (*parentnode);
+          unref (parentnode);
+        }
+      if (addnull)
+        current->add_child (*XmlNode::create_parent ("null"));
+      if (txt.size())
+        current->add_child (*XmlNode::create_text (txt));
+    }
+  return root;
 }
 
 } // Rapicorn

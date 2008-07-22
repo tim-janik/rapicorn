@@ -18,6 +18,7 @@
 #define __RAPICORN_VALUES_HH__
 
 #include <rapicorn-core/types.hh>
+#include <rapicorn-core/rapicornxml.hh>
 
 namespace Rapicorn {
 
@@ -34,7 +35,7 @@ protected:
   void                  assign          (int                  *vint)   { set ((int64) *vint); }
   void                  assign          (uint                 *vuint)  { set ((int64) *vuint); }
   void                  assign          (int64                *num);
-  void                  assign          (float                *real) { set ((long double) *real); }
+  void                  assign          (float                *real)   { set ((long double) *real); }
   void                  assign          (double               *vdble)  { set ((long double) *vdble); }
   void                  assign          (long double          *real);
   void                  assign          (const String         *string);
@@ -143,6 +144,10 @@ public:
   void            clear         ();
   /* misc methods */
   String          to_string     (const String   &junction = ",");
+  XmlNode*        to_xml        ();
+  static Array    from_xml      (const String &xmlstring,
+                                 const String &inputname = "",
+                                 String       *errstrp = NULL);
 };
 
 } // Rapicorn

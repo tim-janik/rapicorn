@@ -98,32 +98,67 @@ xml_tree_test (void)
     unref (xnode);
 }
 
+static const String expected_xmlarray =
+  "<Array>\n"
+  "  <row><num>0</num></row>\n"
+  "  <row key=\"001\"><num>1</num></row>\n"
+  "  <row><num>2</num></row>\n"
+  "  <row key=\"007\"><real>7.7000000000000002</real></row>\n"
+  "  <row key=\"string\">textSTRINGtext</row>\n"
+  "  <row key=\"choice\">textCHOICEtext</row>\n"
+  "  <row key=\"typename\">textTYPEtext</row>\n"
+  "</Array>";
+
+static void
+test_xml2array()
+{
+  String errstr;
+  Array a = Array::from_xml (expected_xmlarray, __FILE__ ":expected_xmlarray", &errstr);
+  if (errstr.size())
+    error (errstr);
+#warning FIXME: test full XML->Array features
+  //printout ("XML:\n%s\n", a.to_xml()->xml_string().c_str());
+  //assert (int (a["001"]) == 1);
+  //assert (a["string"].string() == "textSTRINGtext");
+}
+
+static void
+test_array2xml()
+{
+  Array a;
+  a[0] = 0;
+  a["001"] = 1;
+  a[2] = 2;
+  a["007"] = 7.7;
+  a["string"] = "textSTRINGtext";
+  AnyValue vc (Type::CHOICE);
+  vc = "textCHOICEtext";
+  a["choice"] = vc;
+  AnyValue vt (Type::TYPE_REFERENCE);
+  vt = "textTYPEtext";
+  a["typename"] = vt;
+  XmlNode *xnode = a.to_xml();
+  assert (xnode);
+  ref_sink (xnode);
+  String result = xnode->xml_string().c_str();
+  assert (expected_xmlarray == result);
+  // printout ("XML:\n%s\n", result.c_str());
+  unref (xnode);
+}
+
 static const char *xml_array = ""
-  "<Rapicorn::Array>\n"
-  "  <row> <col>1</col> <col>2</col> <col>3</col> <col>4</col> <col>5</col> </row>\n"
-  "  <row> Row Text </row>\n"
-  "</Rapicorn::Array>\n"
+  "<row> <col>1</col> <col>2</col> <col>3</col> <col>4</col> <col>5</col> </row>\n"
+  "<row> Row Text </row>\n"
   "";
 
 static void
 test_xml_array()
 {
   String inputname = String (__FILE__) + ":xml_array[]";
-  MarkupParser::Error perror;
-  XmlNode *xnode = XmlNode::parse_xml (inputname, xml_array, -1, &perror, "Model1");
-  String err;
-  if (perror.code)
-    err = string_printf ("%s:%d:%d: %s", inputname.c_str(),
-                         perror.line_number, perror.char_number, perror.message.c_str());
-  if (xnode)
-    {
-      ref_sink (xnode);
-      if (!err.size())
-        err = ""; // use xnode
-      unref (xnode);
-    }
-  if (err.size())
-    error (err);
+  String errstr;
+  Array array = Array::from_xml (xml_array, inputname, &errstr);
+  if (errstr.size())
+    error (errstr);
 }
 
 } // anon
@@ -135,6 +170,8 @@ main (int   argc,
   rapicorn_init_test (&argc, &argv);
 
   Test::add ("Test XmlNode", xml_tree_test);
+  Test::add ("Test Array->XML", test_array2xml);
+  Test::add ("Test XML->Array", test_xml2array);
   Test::add ("Test XML Array", test_xml_array);
 
   return Test::run();
