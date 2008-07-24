@@ -17,6 +17,7 @@
 #ifndef __RAPICORN_MODELS_HH__
 #define __RAPICORN_MODELS_HH__
 
+#include <rapicorn-core/types.hh>
 #include <rapicorn-core/values.hh>
 
 namespace Rapicorn {
@@ -26,7 +27,7 @@ class Model0 : public virtual ReferenceCountImpl { // 1*Type + 1*Value
   class Model0Value : public BaseValue {
     virtual void        changed         ();
   public:
-    explicit            Model0Value     (Type::Storage s) : BaseValue (s) {}
+    explicit            Model0Value     (StorageType s) : BaseValue (s) {}
   };
   Type                  m_type;
   Model0Value           m_value;

@@ -23,22 +23,10 @@
 namespace Rapicorn {
 
 const char*
-Type::storage_name (Type::Storage storage)
+Type::storage_name (StorageType storage)
 {
-  switch (storage)
-    {
-    case Type::NUM:             return "NUM";
-    case Type::REAL:            return "REAL";
-    case Type::STRING:          return "STRING";
-    case Type::CHOICE:          return "CHOICE";
-    case Type::SEQUENCE:        return "SEQUENCE";
-    case Type::RECORD:          return "RECORD";
-    case Type::INTERFACE:       return "INTERFACE";
-    case Type::STRING_VECTOR:   return "STRING_VECTOR";
-    case Type::ARRAY:           return "ARRAY";
-    case Type::TYPE_REFERENCE:  return "TYPE_REFERENCE";
-    }
-  return NULL;
+  const EnumTypeStorageType::Value *v = EnumTypeStorageType().find_first (storage);
+  return v ? v->value_name : NULL;
 }
 
 namespace Plic {
@@ -58,10 +46,10 @@ Type::name () const
   return m_info.plic_type_info.name();
 }
 
-Type::Storage
+StorageType
 Type::storage () const
 {
-  return Storage (m_info.plic_type_info.storage);
+  return StorageType (m_info.plic_type_info.storage);
 }
 
 String

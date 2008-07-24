@@ -131,10 +131,10 @@ test_array2xml()
   a[2] = 2;
   a["007"] = 7.7;
   a["string"] = "textSTRINGtext";
-  AnyValue vc (Type::CHOICE);
+  AnyValue vc (CHOICE);
   vc = "textCHOICEtext";
   a["choice"] = vc;
-  AnyValue vt (Type::TYPE_REFERENCE);
+  AnyValue vt (TYPE_REFERENCE);
   vt = "textTYPEtext";
   a["typename"] = vt;
   XmlNode *xnode = a.to_xml();

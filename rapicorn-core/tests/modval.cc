@@ -35,23 +35,23 @@ test_type_info ()
   assert (t0.istype() == false);
   // ensure standard types
   Type s1 = Type::try_lookup ("String");
-  assert (s1.storage() == Type::STRING);
+  assert (s1.storage() == STRING);
   Type s2 = Type::try_lookup ("Num");
-  assert (s2.storage() == Type::NUM);
+  assert (s2.storage() == NUM);
   Type s3 = Type::try_lookup ("Real");
-  assert (s3.storage() == Type::REAL);
+  assert (s3.storage() == REAL);
   // type extraction by reference
   Type t1 = Type::lookup ("RapicornTest::NumWithFooAsLabel");
   assert (t1.istype());
   assert (t1.name() == "NumWithFooAsLabel");
-  assert (t1.storage() == Type::NUM);
+  assert (t1.storage() == NUM);
   assert (t1.aux_string ("label") == "Foo");
   assert (t1.hints() == ":");
   // type extraction by pointer (need to check it didn't fail)
   Type t2 = Type::lookup ("RapicornTest::RealWithBlurbBlurb");
   assert (t2.istype());
   assert (t2.name() == "RealWithBlurbBlurb");
-  assert (t2.storage() == Type::REAL);
+  assert (t2.storage() == REAL);
   assert (t2.aux_string ("blurb") == "Blurb");
   // check that type memory used above is still valid
   assert (t1.name() + "-postfix" == String ("NumWithFooAsLabel-postfix"));
@@ -64,7 +64,7 @@ test_types ()
   Type t1 = Type::lookup ("RapicornTest::ExtendNumWithAux");
   assert (t1.istype());
   assert (t1.name() == "ExtendNumWithAux");
-  assert (t1.storage() == Type::NUM);
+  assert (t1.storage() == NUM);
   assert (t1.ident() == "ExtendNumWithAux");
   assert (t1.label() == "Extended Num");
   assert (t1.blurb() == "This Num demonstrates extensive auxillary data use");
@@ -72,7 +72,7 @@ test_types ()
   assert (t1.aux_float ("step") == -5);
   assert (t1.hints().find (":extra-option:") != String().npos);
   Type o1 = Type::lookup ("RapicornTest::ExtendedString");
-  assert (o1.storage() == Type::STRING);
+  assert (o1.storage() == STRING);
   assert (o1.ident() == "ExtendedString");
   assert (o1.label() == "Extended String");
   assert (o1.blurb() == "Demonstrate full string specification");
@@ -83,7 +83,7 @@ test_types ()
 static void
 test_value_num ()
 {
-  AnyValue v1 (Type::NUM);
+  AnyValue v1 (NUM);
   assert (v1.num() == false);
   v1 = true;
   assert (v1.num() == true);
@@ -109,7 +109,7 @@ test_value_num ()
 static void
 test_value_float ()
 {
-  AnyValue v1 (Type::REAL);
+  AnyValue v1 (REAL);
   assert (v1.real() == 0.0);
   v1 = 1.;
   assert (v1.real() == 1.0);
@@ -127,7 +127,7 @@ test_value_float ()
 static void
 test_value_string ()
 {
-  AnyValue v1 (Type::STRING);
+  AnyValue v1 (STRING);
   assert (v1.string() == "");
   v1.set ("foo");
   assert (v1.string() == "foo");
@@ -162,11 +162,11 @@ test_array ()
 {
   Array a;
   // [0] == head
-  a.push_head (AnyValue (Type::NUM, 0));
+  a.push_head (AnyValue (NUM, 0));
   assert (a[0].num() == 0);
   // [-1] == tail
   assert (a[-1].num() == 0);
-  a.push_head (AnyValue (Type::NUM, 1));
+  a.push_head (AnyValue (NUM, 1));
   assert (a[0].num() == 1);
   assert (a[-1].num() == 0);
   assert (a.count() == 2);
@@ -177,12 +177,12 @@ test_array ()
   assert (a[-1].num() == 5);
   assert (5 == (int) a[-1]);
   assert (a.count() == 3);
-  a.push_tail (AnyValue (Type::NUM, 2));
+  a.push_tail (AnyValue (NUM, 2));
   assert (a[-1].num() == 2);
   assert (a.count() == 4);
 
   a.clear();
-  a["ape"] = AnyValue (Type::STRING, "affe");
+  a["ape"] = AnyValue (STRING, "affe");
   a["beard"] = "bart";
   assert (a[-1].string() == "bart");
   a["anum"] = 5;

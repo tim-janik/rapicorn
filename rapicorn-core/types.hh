@@ -18,21 +18,16 @@
 #define __RAPICORN_TYPES_HH__
 
 #include <rapicorn-core/rapicornsignal.hh>
+#include <rapicorn-core/enumdefs.hh>
 
 namespace Rapicorn {
 
 /* --- Type Information --- */
 class Type {
 public:
-  /* basic typing */
-  enum Storage {
-    NUM = 'i', REAL = 'f', STRING = 's', CHOICE = 'e',
-    SEQUENCE = 'q', RECORD = 'r', INTERFACE = 'c', OBJECT = INTERFACE,
-    STRING_VECTOR = ('V' << 8) | 's', ARRAY = ('V' << 8) | '*', TYPE_REFERENCE = 'V',
-  };
-  static const char*    storage_name    (Storage storage);
+  const char*           storage_name    (StorageType storage);
   String                name            () const;
-  Storage               storage         () const;
+  StorageType           storage         () const;
   /* enumeration values */
   struct                Entry           { const String ident, label, blurb; };
   int64                 n_entries       ();
@@ -72,6 +67,7 @@ private:
   Info                 &m_info;
   Type&                 operator=       (const Type&); // must not be used
 };
+
 void _rapicorn_init_types (void);
 
 } // Rapicorn
