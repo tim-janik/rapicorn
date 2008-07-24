@@ -14,15 +14,18 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include <rapicorn-core.hh>
+#include <rapicorncdefs.h>
 #include <glib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <zlib.h>
+#include <string>
+
+typedef RapicornUInt8 uint8;
+typedef std::string String;
 
 namespace {
-using namespace Rapicorn;
 
 static void     zintern_error  (const char     *format,
                                 ...) RAPICORN_PRINTF (1, 2);
