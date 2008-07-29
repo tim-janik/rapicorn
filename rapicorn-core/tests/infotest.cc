@@ -23,6 +23,15 @@ using namespace Rapicorn;
 #endif
 
 static void
+test_misc (void)
+{
+  const char *lstr = RAPICORN_CPP_STRINGIFY (__LINE__);
+  assert (lstr);
+  assert (lstr[0] >= '0' && lstr[0] <= '9');
+  assert (lstr[1] >= '0' && lstr[1] <= '9');
+}
+
+static void
 test_cpu_info (void)
 {
   const RapicornCPUInfo cpi = cpu_info ();
@@ -218,6 +227,7 @@ main (int   argc,
 
   rapicorn_init_test (&argc, &argv);
 
+  Test::add ("Misc", test_misc);
   Test::add ("CpuInfo", test_cpu_info);
   Test::add ("Path handling", test_paths);
   Test::add ("File IO", test_file_io);

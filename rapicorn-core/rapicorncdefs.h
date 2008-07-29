@@ -96,12 +96,14 @@ RAPICORN_EXTERN_C_BEGIN();
 #endif /* RAPICORN_INTERNALS */
 
 /* --- preprocessor pasting --- */
-#define RAPICORN_CPP_PASTE4i(a,b,c,d)             a ## b ## c ## d  /* twofold indirection is required to expand macros like __LINE__ */
+#define RAPICORN_CPP_PASTE4i(a,b,c,d)             a ## b ## c ## d
 #define RAPICORN_CPP_PASTE4(a,b,c,d)              RAPICORN_CPP_PASTE4i (a,b,c,d)
-#define RAPICORN_CPP_PASTE3i(a,b,c)               a ## b ## c	  /* twofold indirection is required to expand macros like __LINE__ */
+#define RAPICORN_CPP_PASTE3i(a,b,c)               a ## b ## c   /* indirection required to expand __LINE__ etc */
 #define RAPICORN_CPP_PASTE3(a,b,c)                RAPICORN_CPP_PASTE3i (a,b,c)
-#define RAPICORN_CPP_PASTE2i(a,b)                 a ## b      	  /* twofold indirection is required to expand macros like __LINE__ */
+#define RAPICORN_CPP_PASTE2i(a,b)                 a ## b        /* indirection required to expand __LINE__ etc */
 #define RAPICORN_CPP_PASTE2(a,b)                  RAPICORN_CPP_PASTE2i (a,b)
+#define RAPICORN_CPP_STRINGIFYi(s)                #s            /* indirection required to expand __LINE__ etc */
+#define RAPICORN_CPP_STRINGIFY(s)                 RAPICORN_CPP_STRINGIFYi (s)
 #define RAPICORN_STATIC_ASSERT_NAMED(expr,asname) typedef struct { char asname[(expr) ? 1 : -1]; } RAPICORN_CPP_PASTE2 (Rapicorn_StaticAssertion_LINE, __LINE__)
 #define RAPICORN_STATIC_ASSERT(expr)              RAPICORN_STATIC_ASSERT_NAMED (expr, compile_time_assertion_failed)
 
