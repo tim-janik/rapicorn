@@ -39,8 +39,9 @@ public:
   bool          closed          ();
   void          close           ();
   /* class */
-  /*Copy*/      Window          (const Window   &window);
+  /*Copy*/      Window          (const Window &window);
   virtual      ~Window          ();
+  static Window*from_object_url (const String &rooturl);
   /* callbacks */
   typedef Signals::Slot2<bool,          const String&, const StringVector&> CmdSlot;
   typedef Signals::Slot3<bool, Window&, const String&, const StringVector&> CmdSlotW;

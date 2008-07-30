@@ -36,6 +36,26 @@ Window::~Window ()
   m_root.unref();
 }
 
+Window*
+Window::from_object_url (const String &rooturl)
+{
+  struct DeletableAccessor : public Deletable {
+    using Deletable::from_object_url; // gain access to protected Deletable method
+  };
+  Deletable *deletable = DeletableAccessor::from_object_url (rooturl);
+  if (deletable)
+    {
+      Item *item = dynamic_cast<Item*> (deletable);
+      if (item)
+        {
+          Root *root = item->get_root();
+          if (root)
+            return new Window (*root);
+        }
+    }
+  return NULL;
+}
+
 void
 Window::ref () const
 {
