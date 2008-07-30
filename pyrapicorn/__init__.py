@@ -19,7 +19,23 @@
 More details at http://www.rapicorn.org/.
 """
 
-#CONSTANT_X = 7
-#__all__ = ['CONSTANT_X']
+from pyRapicorn import *
 
-import pyRapicorn
+app = None
+class Application (object):
+  __rapicorn_trampoline__ = pyRapicorn.__rapicorn_trampoline__
+  def __new__ (klass):
+    if app: return app # singleton
+    self = super (Application, klass).__new__ (klass)
+    return self
+  @classmethod
+  def create_window (klass, winname, **kwords):
+    args = [k + '=' + str (v) for k,v in kwords.items()]
+    print "ARGS:", args
+    return klass.__rapicorn_trampoline__ (0xA001, winname)
+  @classmethod
+  def execute_loops (klass):
+    return klass.__rapicorn_trampoline__ (0xA002)
+app = Application()
+
+del globals()['pyRapicorn']

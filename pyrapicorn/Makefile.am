@@ -5,7 +5,8 @@ INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_DEP_CFL
 DEFS	  = -DPYRAPICORN=pyRapicorn -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
 
 
-pyrapicorn_cc_sources = module.cc
+pyrapicorn_cc_sources = rpymodule.cc rpytypes.cc
+EXTRA_DIST = rpy.hh
 
 
 # === python module ===
@@ -18,13 +19,14 @@ pyRapicorn_la_LIBADD   = $(top_builddir)/rapicorn/librapicorn@RAPICORN_RELEASE@.
 
 
 # === tests ===
-test-pyprintout:
-	@echo -n "Test Rapicorn::printout(): "
+test-pywindow:
+	@echo -n "Test Rapicorn.Application: "
 	@NL=$$'\n'; PYTHONPATH="$$PYTHONPATH:$(pythondir)" ${PYTHON} -c "if 1:$$NL\
-	  import @RAPICORN_NAMESPACE_NAME@ as Rapicorn $$NL\
-	  Rapicorn.pyRapicorn.printout ('test_01')" \
-	| fgrep -q test_01
+	  from @RAPICORN_NAMESPACE_NAME@ import Application $$NL\
+	  w = Application.create_window ('Root') $$NL\
+	  w.show() $$NL" \
+	| fgrep Window-new >/dev/null
 	@echo OK
 call-info:
 	@echo 'PYTHONPATH="$$PYTHONPATH:$(pythondir)" python -c "import @RAPICORN_NAMESPACE_NAME@"'
-installcheck-local: test-pyprintout call-info
+installcheck-local: test-pywindow call-info
