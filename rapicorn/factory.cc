@@ -156,6 +156,8 @@ public:
   Item&                         construct_gadget        (const String          &gadget_identifier,
                                                          const ArgumentList    &arguments,
                                                          String                *gadget_definition = NULL);
+  bool                          check_item_factory_type (const String       &gadget_identifier,
+                                                         const String       &item_factory_type);
   /* singleton definition & initialization */
   static FactorySingleton      *singleton;
   explicit                      FactorySingleton        ()
@@ -523,6 +525,18 @@ variable_map_filter (VariableMap  &vmap,
   return result;
 }
 
+bool
+FactorySingleton::check_item_factory_type (const String &gadget_identifier,
+                                           const String &item_factory_type)
+{
+  GadgetDef *gadget = lookup_gadget (gadget_identifier);
+  while (gadget && gadget->ancestor[0] != '\177')
+    gadget = FactorySingleton::singleton->lookup_gadget (gadget->ancestor);
+  if (gadget && gadget->ancestor.find ("\177Rapicorn::Factory::") == 0)
+    return item_factory_type == gadget->ancestor.substr (18);
+  return false;
+}
+
 Item*
 FactorySingleton::inherit_gadget (const String      &ancestor_name,
                                   const VariableMap &call_arguments,
@@ -796,6 +810,12 @@ Factory::create_window (const String           &gadget_identifier,
   Window win = root->window();
   /* win does ref_sink(); */
   return win;
+}
+
+bool
+Factory::item_definition_is_root (const String &item_identifier)
+{
+  return FactorySingleton::singleton->check_item_factory_type (item_identifier, "::Root");
 }
 
 void

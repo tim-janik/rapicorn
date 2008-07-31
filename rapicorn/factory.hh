@@ -39,6 +39,8 @@ Container&      create_container (const String           &container_identifier,
 Window          create_window    (const String           &window_identifier,
                                   const ArgumentList     &arguments = ArgumentList());
 
+bool    item_definition_is_root (const String   &item_identifier);
+
 /* --- item type registration --- */
 struct ItemTypeFactory : Deletable {
   const String  qualified_type;

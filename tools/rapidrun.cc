@@ -118,15 +118,27 @@ main (int   argc,
     error ("failed to load \"%s\": %s", filename.c_str(), string_from_errno (err).c_str());
 
   /* print definitions */
-  if (list_definitions)
+  String dialog;
+  for (uint i = 0; i < definitions.size(); i++)
     {
-      for (uint i = 0; i < definitions.size(); i++)
-        printout ("%s\n", definitions[i].c_str());
-      return 0;
+      bool isroot = Factory::item_definition_is_root (definitions[i]);
+      if (list_definitions)
+        printout ("%s%s\n", definitions[i].c_str(), isroot ? " (root)" : "");
+      if (dialog == "" && isroot)
+        dialog = definitions[i];
+    }
+  if (list_definitions)
+    return 0;
+
+  /* bail out without any dialogs */
+  if (dialog == "")
+    {
+      printerr ("%s: no dialog definitions\n", filename.c_str());
+      return 1;
     }
 
   /* create root item */
-  Window window = Application::create_window ("test-dialog");
+  Window window = Application::create_window (dialog);
 
   /* hook up auto-exit handler */
   if (auto_exit)
