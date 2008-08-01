@@ -34,13 +34,15 @@ TestContainer::list_properties()
 {
   /* not using _() here, because TestContainer is just a developer tool */
   static Property *properties[] = {
-    MakeProperty (TestContainer, epsilon,       "Epsilon",       "Epsilon within which assertions must hold",  0,         +DBL_MAX, 0.01, "rw"),
+    MakeProperty (TestContainer, value,         "Value",         "Store string value for assertion",           "rw"),
+    MakeProperty (TestContainer, assert_value,  "Assert Value",  "Assert a particular string value",           "rw"),
     MakeProperty (TestContainer, assert_left,   "Assert-Left",   "Assert positioning of the left item edge",   -INFINITY, +DBL_MAX, 3, "rw"),
     MakeProperty (TestContainer, assert_right,  "Assert-Right",  "Assert positioning of the right item edge",  -INFINITY, +DBL_MAX, 3, "rw"),
     MakeProperty (TestContainer, assert_bottom, "Assert-Bottom", "Assert positioning of the bottom item edge", -INFINITY, +DBL_MAX, 3, "rw"),
     MakeProperty (TestContainer, assert_top,    "Assert-Top",    "Assert positioning of the top item edge",    -INFINITY, +DBL_MAX, 3, "rw"),
     MakeProperty (TestContainer, assert_width,  "Assert-Width",  "Assert amount of the item width",            -INFINITY, +DBL_MAX, 3, "rw"),
     MakeProperty (TestContainer, assert_height, "Assert-Height", "Assert amount of the item height",           -INFINITY, +DBL_MAX, 3, "rw"),
+    MakeProperty (TestContainer, epsilon,       "Epsilon",       "Epsilon within which assertions must hold",  0,         +DBL_MAX, 0.01, "rw"),
     MakeProperty (TestContainer, paint_allocation, "Paint Allocation", "Fill allocation rectangle with a solid color",  "rw"),
     MakeProperty (TestContainer, fatal_asserts, "Fatal-Asserts", "Handle assertion failures as fatal errors",  "rw"),
     MakeProperty (TestContainer, accu,          "Accumulator",   "Store string value and keep history",        "rw"),
@@ -60,6 +62,7 @@ TestContainer::seen_test_items ()
 }
 
 class TestContainerImpl : public virtual SingleContainerImpl, public virtual TestContainer {
+  String m_value, m_assert_value;
   String m_accu, m_accu_history;
   double m_assert_left, m_assert_right;
   double m_assert_top, m_assert_bottom;
@@ -70,6 +73,7 @@ class TestContainerImpl : public virtual SingleContainerImpl, public virtual Tes
   bool   m_paint_allocation;
 public:
   TestContainerImpl() :
+    m_value (""), m_assert_value (""),
     m_accu (""), m_accu_history (""),
     m_assert_left (-INFINITY), m_assert_right (-INFINITY),
     m_assert_top (-INFINITY), m_assert_bottom (-INFINITY),
@@ -77,8 +81,10 @@ public:
     m_epsilon (DFLTEPS), m_test_container_counted (false),
     m_fatal_asserts (true), m_paint_allocation (false)
   {}
-  virtual double epsilon         () const        { return m_epsilon  ; }
-  virtual void   epsilon         (double val)    { m_epsilon = val; invalidate(); }
+  virtual String value           () const            { return m_value; }
+  virtual void   value           (const String &val) { m_value = val; }
+  virtual String assert_value    () const            { return m_assert_value; }
+  virtual void   assert_value    (const String &val) { m_assert_value = val; }
   virtual double assert_left     () const        { return m_assert_left  ; }
   virtual void   assert_left     (double val)    { m_assert_left = val; invalidate(); }
   virtual double assert_right    () const        { return m_assert_right ; }
@@ -91,6 +97,8 @@ public:
   virtual void   assert_width    (double val)    { m_assert_width = val; invalidate(); }
   virtual double assert_height   () const        { return m_assert_height; }
   virtual void   assert_height   (double val)    { m_assert_height = val; invalidate(); }
+  virtual double epsilon         () const        { return m_epsilon  ; }
+  virtual void   epsilon         (double val)    { m_epsilon = val; invalidate(); }
   virtual bool   paint_allocation() const        { return m_paint_allocation; }
   virtual void   paint_allocation(bool   val)    { m_paint_allocation = val; invalidate(); }
   virtual bool   fatal_asserts   () const        { return m_fatal_asserts; }
@@ -162,6 +170,13 @@ protected:
     assert_value ("assert-left",   m_assert_left,   x1, x2);
     assert_value ("assert-width",  m_assert_width, width, width);
     assert_value ("assert-height", m_assert_height, height, height);
+    if (m_assert_value != m_value)
+      {
+        if (m_fatal_asserts)
+          error ("value has unexpected contents: %s (expected: %s)", m_value.c_str(), m_assert_value.c_str());
+        else
+          warning ("value has unexpected contents: %s (expected: %s)", m_value.c_str(), m_assert_value.c_str());
+      }
     sig_assertions_passed.emit ();
     /* count containers for seen_test_containers() */
     if (!m_test_container_counted)

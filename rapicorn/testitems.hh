@@ -22,8 +22,10 @@ class TestContainer : public virtual Container {
 protected:
   explicit      TestContainer     ();
 public:
-  virtual double epsilon          () const = 0;
-  virtual void   epsilon          (double val) = 0;
+  virtual String value            () const = 0;
+  virtual void   value            (const String &val) = 0;
+  virtual String assert_value     () const = 0;
+  virtual void   assert_value     (const String &val) = 0;
   virtual double assert_left      () const = 0;
   virtual void   assert_left      (double val) = 0;
   virtual double assert_right     () const = 0;
@@ -36,6 +38,8 @@ public:
   virtual void   assert_width     (double val) = 0;
   virtual double assert_height    () const = 0;
   virtual void   assert_height    (double val) = 0;
+  virtual double epsilon          () const = 0;
+  virtual void   epsilon          (double val) = 0;
   virtual bool   paint_allocation () const = 0;
   virtual void   paint_allocation (bool   val) = 0;
   virtual bool   fatal_asserts    () const = 0;
