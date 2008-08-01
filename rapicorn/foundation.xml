@@ -163,7 +163,7 @@
   <def:TestContainer inherit="Rapicorn::Factory::TestContainer"/>
 
   <!-- TestItem -->
-  <def:TestItem inherit="TestContainer" paint-allocation="1" />
+  <def:TestItem inherit="TestContainer" paint-allocation="1" width="10" height="10"/>
 
   <!-- TextEditor -->
   <def:TextEditor inherit="Rapicorn::Factory::Text::Editor" />
