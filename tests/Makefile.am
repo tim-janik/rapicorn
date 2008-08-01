@@ -27,7 +27,10 @@ check: alignment-test
 arrowsize-test:
 	@$(XVFB_RAPIDRUN) -x $(srcdir)/arrowsize-test.xml
 check: arrowsize-test
-
+# factory tests
+factory-test:
+	@$(XVFB_RAPIDRUN) -x $(srcdir)/factory-test.xml
+check: factory-test
 
 xmllint-check:
 	cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES)

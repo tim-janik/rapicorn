@@ -594,11 +594,11 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
       VariableMap::iterator ga = call_args.find (it->first);
       if (ga != call_args.end())
         {
-          custom_args[ga->first] = ga->second;
+          custom_args[ga->first] = env.parse_eval (ga->second);
           call_args.erase (ga);
         }
       else
-        custom_args[it->first] = it->second;
+        custom_args[it->first] = env.parse_eval (it->second);
     }
   env.push_map (custom_args);
   /* construct gadget from ancestor */
