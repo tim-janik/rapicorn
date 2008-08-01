@@ -25,7 +25,8 @@ typedef Evaluator::VariableMapList VariableMapList;
 
 static Sinfex::Value
 variable_map_list_lookup (const VariableMapList &env_maps,
-                          const String          &var)
+                          const String          &var,
+                          bool                  &unknown)
 {
   String key = Evaluator::canonify_key (var);
   for (VariableMapList::const_iterator it = env_maps.begin(); it != env_maps.end(); it++)
@@ -41,7 +42,10 @@ variable_map_list_lookup (const VariableMapList &env_maps,
   else if (key == "RANDOM")
     return Sinfex::Value (lrand48());
   else
-    return Sinfex::Value ("");
+    {
+      unknown = true;
+      return Sinfex::Value ("");
+    }
 }
 
 class VariableMapListScope : public Sinfex::Scope {
@@ -55,10 +59,12 @@ public:
   resolve_variable (const String &entity,
                     const String &name)
   {
-    if (entity.size())
-      return variable_map_list_lookup (m_vml, entity + "." + name);
-    else
-      return variable_map_list_lookup (m_vml, name);
+    bool unknown = false;
+    const String fullname = entity == "" ? name : entity + "." + name;
+    Value result = variable_map_list_lookup (m_vml, fullname, unknown);
+    if (unknown)
+      warning ("Evaluator: failed to resolve variable reference: %s", fullname.c_str());
+    return result;
   }
   virtual Value
   call_function (const String        &entity,
