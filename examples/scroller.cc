@@ -23,9 +23,7 @@ static void
 add_button_row (Container &area,
                 uint       row)
 {
-  std::list<String> row_args;
-  row_args.push_back ("id=row#" + string_from_uint (row));
-  Container &brow = Factory::create_container ("button-row", row_args);
+  Container &brow = Factory::create_container ("button-row", Args ("id=row#" + string_from_uint (row)));
   area.add (brow);
   for (uint i = 0; i < 20; i++)
     {

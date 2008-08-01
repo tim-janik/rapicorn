@@ -155,6 +155,7 @@ public:
                                                          const std::nothrow_t  &nt = dothrow);
   Item&                         construct_gadget        (const String          &gadget_identifier,
                                                          const ArgumentList    &arguments,
+                                                         const ArgumentList    &env_variables,
                                                          String                *gadget_definition = NULL);
   bool                          check_item_factory_type (const String       &gadget_identifier,
                                                          const String       &item_factory_type);
@@ -494,15 +495,19 @@ FactorySingleton::lookup_gadget (const String &gadget_identifier)
 Item&
 FactorySingleton::construct_gadget (const String          &gadget_identifier,
                                     const ArgumentList    &arguments,
+                                    const ArgumentList    &env_variables,
                                     String                *gadget_definition)
 {
   GadgetDef *dgadget = lookup_gadget (gadget_identifier);
   if (!dgadget)
     error ("Rapicorn::Factory: unknown widget type: " + gadget_identifier);
-  VariableMap args;
+  VariableMap evars, args;
   Evaluator::populate_map (args, arguments);
+  Evaluator::populate_map (evars, env_variables);
   Evaluator env;
+  env.push_map (evars);
   Item &item = call_gadget (dgadget, dgadget->ancestor_arguments, args, env, NULL, NULL);
+  env.pop_map (evars);
   if (gadget_definition)
     *gadget_definition = dgadget->definition();
   return item;
@@ -777,20 +782,24 @@ Factory::parse_file (const String           &i18n_domain,
 
 Item&
 Factory::create_item (const String       &gadget_identifier,
-                      const ArgumentList &arguments)
+                      const ArgumentList &arguments,
+                      const ArgumentList &env_variables)
 {
   initialize_standard_gadgets_lazily();
-  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments);
+  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments, env_variables);
   return item; // floating
 }
 
 Container&
-Factory::create_container (const String           &gadget_identifier,
-                           const ArgumentList     &arguments)
+Factory::create_container (const String       &gadget_identifier,
+                           const ArgumentList &arguments,
+                           const ArgumentList &env_variables)
 {
   initialize_standard_gadgets_lazily();
   String gadget_definition;
-  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments, &gadget_definition);
+  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier,
+                                                              arguments, env_variables,
+                                                              &gadget_definition);
   Container *container = dynamic_cast<Container*> (&item);
   if (!container)
     error ("%s: widget construction yields non container: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
@@ -798,12 +807,15 @@ Factory::create_container (const String           &gadget_identifier,
 }
 
 Window
-Factory::create_window (const String           &gadget_identifier,
-                        const ArgumentList     &arguments)
+Factory::create_window (const String       &gadget_identifier,
+                        const ArgumentList &arguments,
+                        const ArgumentList &env_variables)
 {
   initialize_standard_gadgets_lazily();
   String gadget_definition;
-  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments, &gadget_definition);
+  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier,
+                                                              arguments, env_variables,
+                                                              &gadget_definition);
   Root *root = dynamic_cast<Root*> (&item);
   if (!root)
     error ("%s: widget construction yields non window: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
@@ -860,6 +872,29 @@ Factory::ItemTypeFactory::sanity_check_identifier (const char *namespaced_ident)
 {
   if (strncmp (namespaced_ident, "Rapicorn::Factory::", 19) != 0)
     error ("item type not qualified as \"Rapicorn::Factory::\": %s", namespaced_ident);
+}
+
+Args::Args (CS &s0, CS &s1, CS &s2, CS &s3,
+            CS &s4, CS &s5, CS &s6, CS &s7,
+            CS &s8, CS &s9, CS &sA, CS &sB,
+            CS &sC, CS &sD, CS &sE, CS &sF)
+{
+  if (s0 != "") push_back (s0);
+  if (s1 != "") push_back (s1);
+  if (s2 != "") push_back (s2);
+  if (s3 != "") push_back (s3);
+  if (s4 != "") push_back (s4);
+  if (s5 != "") push_back (s5);
+  if (s6 != "") push_back (s6);
+  if (s7 != "") push_back (s7);
+  if (s8 != "") push_back (s8);
+  if (s9 != "") push_back (s9);
+  if (sA != "") push_back (sA);
+  if (sB != "") push_back (sB);
+  if (sC != "") push_back (sC);
+  if (sD != "") push_back (sD);
+  if (sE != "") push_back (sE);
+  if (sF != "") push_back (sF);
 }
 
 } // Rapicorn

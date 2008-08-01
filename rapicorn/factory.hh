@@ -23,6 +23,15 @@
 
 namespace Rapicorn {
 
+class Args : public std::list<String> {
+  typedef const String CS;
+public:
+  Args (CS &s0 = "", CS &s1 = "", CS &s2 = "", CS &s3 = "",
+        CS &s4 = "", CS &s5 = "", CS &s6 = "", CS &s7 = "",
+        CS &s8 = "", CS &s9 = "", CS &sA = "", CS &sB = "",
+        CS &sC = "", CS &sD = "", CS &sE = "", CS &sF = "");
+};
+
 namespace Factory {
 
 /* --- Factory API --- */
@@ -33,11 +42,14 @@ int /*-errno*/  parse_file       (const String           &i18n_domain,
                                   const String           &domain = "",
                                   vector<String>         *definitions = NULL);
 Item&           create_item      (const String           &item_identifier,
-                                  const ArgumentList     &arguments = ArgumentList());
+                                  const ArgumentList     &arguments = ArgumentList(),
+                                  const ArgumentList     &env_variables = ArgumentList());
 Container&      create_container (const String           &container_identifier,
-                                  const ArgumentList     &arguments = ArgumentList());
+                                  const ArgumentList     &arguments = ArgumentList(),
+                                  const ArgumentList     &env_variables = ArgumentList());
 Window          create_window    (const String           &window_identifier,
-                                  const ArgumentList     &arguments = ArgumentList());
+                                  const ArgumentList     &arguments = ArgumentList(),
+                                  const ArgumentList     &env_variables = ArgumentList());
 
 bool    item_definition_is_root (const String   &item_identifier);
 
