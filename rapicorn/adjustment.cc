@@ -122,6 +122,11 @@ public:
   value (double newval)
   {
     double old_value = m_value;
+    if (isnan (newval))
+      {
+        warning ("Adjustment::value(): invalid value: %g", newval);
+        newval = 0;
+      }
     m_value = CLAMP (newval, m_lower, m_upper - m_page);
     if (old_value != m_value && !m_freeze_count)
       sig_value_changed.emit ();
