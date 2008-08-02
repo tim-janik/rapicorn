@@ -284,9 +284,9 @@ ItemListImpl::get_scroll_item (double *row_offsetp,
    * position will always point at one particular item and the fractional
    * part is interpreted as an offset into the item's row.
    */
-  double norm_value = 1.0 - m_vadjustment->nvalue(); /* 0..1 scroll position */
-  double scroll_value = norm_value * m_model->count();
-  int64 scroll_item = MIN (m_model->count() - 1, ifloor (scroll_value));
+  const double norm_value = 1.0 - m_vadjustment->nvalue(); /* 0..1 scroll position */
+  const double scroll_value = norm_value * m_model->count();
+  const int64 scroll_item = MIN (m_model->count() - 1, ifloor (scroll_value));
   *row_offsetp = MIN (1.0, scroll_value - scroll_item);
   *pixel_offsetp = norm_value;
   return scroll_item;
@@ -324,9 +324,9 @@ ItemListImpl::layout_list ()
     return;
   const bool pixel_scrolling = need_pixel_scrolling();
   double row_offset, pixel_offset; /* 0..1 */
-  uint64 r, current_item = get_scroll_item (&row_offset, &pixel_offset);
+  const uint64 current_item = get_scroll_item (&row_offset, &pixel_offset);
   RowMap rc;
-  uint64 rcmin = current_item, rcmax = current_item;
+  uint64 r, rcmin = current_item, rcmax = current_item;
   double height_before = area_height, height_after = area_height;
   IFDEBUG (dbg_cached = dbg_refilled = dbg_created = 0);
   /* fill rows from scroll_item towards list end */
