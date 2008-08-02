@@ -37,9 +37,10 @@ Application::init_with_x11 (int           *argcp,
 
 Window
 Application::create_window (const String            &window_identifier,
-                            const std::list<String> &arguments)
+                            const std::list<String> &arguments,
+                            const std::list<String> &env_variables)
 {
-  return Factory::create_window (window_identifier, arguments);
+  return Factory::create_window (window_identifier, arguments, env_variables);
 }
 
 String
