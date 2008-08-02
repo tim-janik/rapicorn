@@ -427,7 +427,8 @@ protected:
             double clength = vertical_skid() ? allocation().height : allocation().width;
             tlength -= clength;
             pos -= m_coffset * clength;
-            pos /= tlength;
+            if (tlength > 0)
+              pos /= tlength;
             pos = CLAMP (pos, 0, 1);
             if (flipped())
               adj.flipped_nvalue (pos);
