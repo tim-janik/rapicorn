@@ -128,7 +128,7 @@ struct TypeInfo {
   uint                storage;
   const byte         *namep;    // pointer  to [ llll TypeName ]
   vector<const byte*> auxdata;  // pointers to [ llll AuxEntry ]
-  const byte         *rtypep;   // ___V: pointer to [ llll TypeReference ]
+  const byte         *rtypep;   // __Ts: pointer to [ llll TypeReference ]
   uint                nnnn;     // type specific count
   const byte         *tdata;    // start of data after nnnn
   uint                tlength;
@@ -144,18 +144,18 @@ struct TypeInfo {
 };
 
 /* TypeInfo Layout:
- * - ___?                       // storage type
+ * - __?                        // storage type
  * - llll TypeName              // type or field name
  * - aaaa                       // number of aux entries
  * - [ llll AuxEntry ]*         // kkkk times aux entry strings
- * - ___V: llll TypeReference   // non-fundamental type references
- * - ___e: nnnn                 // number of values for choice types
- * - ___e: [ llll Ident llll Label llll Blurb ]+
- * - ___r: nnnn                 // number of fields for record types
- * - ___r: [ _TYPE_INFO_ ]+
- * - ___q: _TYPE_INFO_          // field info for sequence types
- * - ___c: nnnn                 // number of prerequisites for interface types
- * - ___c: [ llll PrerequisiteName ]+
+ * - _Ts: llll TypeReference    // non-fundamental type references
+ * - _Es: nnnn                  // number of values for choice types
+ * - _Es: [ llll Ident llll Label llll Blurb ]+
+ * - _Ra: nnnn                  // number of fields for record types
+ * - _Ra: [ _TYPE_INFO_ ]+
+ * - _Qa: _TYPE_INFO_           // field info for sequence types
+ * - __c: nnnn                  // number of prerequisites for interface types
+ * - __c: [ llll PrerequisiteName ]+
  */
 
 String
@@ -166,7 +166,10 @@ TypeInfo::parse_type_info (uint        length,
   const byte *dp = data, *boundary = dp + length;
   // parse \n__? storage type
   return_if (dp + 4 > boundary, ERRPREMATURE);
-  const bool storageok = dp[0] == '\n' && dp[1] == '_' && dp[2] == '_' && strchr ("ifseqrc", dp[3]) != 0;
+  const bool storageok = dp[0] == '\n' && dp[1] == '_' &&
+                         ((dp[2] == '_' && strchr ("ifsac", dp[3]) != 0) ||
+                          (strchr ("ET", dp[2]) && dp[3] == 's') ||
+                          (strchr ("QR", dp[2]) && dp[3] == 'a'));
   return_if (!storageok, "invalid type format");
   storage = dp[3];
   dp += 4;

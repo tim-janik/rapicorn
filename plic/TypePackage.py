@@ -77,17 +77,17 @@ class Generator:
     s = { Decls.NUM       : '\n__i',
           Decls.REAL      : '\n__f',
           Decls.STRING    : '\n__s',
-          Decls.ENUM      : '\n__e',
-          Decls.SEQUENCE  : '\n__q',
-          Decls.RECORD    : '\n__r',
           Decls.INTERFACE : '\n__c',
+          Decls.ENUM      : '\n_Es',
+          Decls.SEQUENCE  : '\n_Qa',
+          Decls.RECORD    : '\n_Ra',
           }[type_info.storage]
     return s
   reference_types = (Decls.ENUM, Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE)
   def generate_field (self, field_name, type_info):
     tp = type_info
     if tp.storage in self.reference_types:
-      s = '\n__V'
+      s = '\n_Ts'
     else:
       s = self.type_key (tp)
     s += encode_string (field_name)
