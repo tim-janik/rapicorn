@@ -227,7 +227,7 @@ typedef enum /*<enum>*/
   ARRAY          = 'a',
   OBJECT         = 'c',
   INTERFACE      = OBJECT,
-  CHOICE         = ('C' * 256) + STRING,
+  CHOICE         = ('E' * 256) + STRING,
   TYPE_REFERENCE = ('T' * 256) + STRING,
   SEQUENCE       = ('Q' * 256) + ARRAY,
   RECORD         = ('R' * 256) + ARRAY,
