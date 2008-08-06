@@ -6,7 +6,7 @@ SUBDIRS = . tests
 PLICV       = plic-@PLIC_VERSION@
 PLICL       = plic
 
-bin_PROGRAMS = ${PLICV}
+bin_SCRIPTS = ${PLICV}
 
 # build parser
 Parser.py: Parser.g
@@ -32,16 +32,16 @@ plic-@PLIC_VERSION@: plic.py Parser.py
 EXTRA_DIST += plic.py
 
 # install plic support module yapps2runtime.py
-pyutils_PYTHON = yapps2runtime.py
 pyutilsdir     = $(libdir)/plic-@PLIC_VERSION@/pyutils
 plicbackends   = PrettyDump.py TypePackage.py GType.py
 pyutils_PYTHON = Decls.py Parser.py AuxData.py yapps2runtime.py ${plicbackends} PlicTypePackage.cc
 
 # tests
-PLIC = ./${PLICV}
+TESTPLIC = PYTHONPATH="$$PYTHONPATH:$(srcdir)" ./${PLICV}
+installcheck-local:
+	${TESTPLIC} --cc-type-package-parser | grep -q struct
 check-outputs:
-	${PLIC} --list-formats | grep -q PLIC
-	${PLIC} --cc-type-package-parser | grep -q struct
+	${TESTPLIC} --list-formats | grep -q PLIC
 check-local: check-outputs
 
 # install/uninstall a "plic" link to "plic-PLIC_VERSION"

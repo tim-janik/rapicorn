@@ -2,7 +2,7 @@ dnl # PLIC - Pluggable IDL Compiler                  -*- Mode: shell-script; -*-
 
 # initialize autoconf for PLIC
 AC_INIT
-AC_CONFIG_SRCDIR([plic/plic.g])
+AC_CONFIG_SRCDIR([plic/Parser.g])
 AM_CONFIG_HEADER(configure.h)
 AC_PREREQ(2.57)
 
