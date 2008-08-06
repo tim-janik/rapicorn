@@ -32,10 +32,29 @@ ItemList::list_properties()
   return property_list;
 }
 
+static uint
+n_columns_from_type (const Type &type)
+{
+  switch (type.storage())
+    {
+    case NUM:
+    case REAL:
+    case STRING:
+    case ARRAY:
+    case OBJECT:
+    case CHOICE:
+    case TYPE_REFERENCE:
+    case SEQUENCE:
+      return 1;
+    case RECORD:
+      return 1; // FIXME: type.n_fields();
+    }
+}
+
 ItemListImpl::ItemListImpl() :
   m_table (NULL), m_model (NULL),
   m_hadjustment (NULL), m_vadjustment (NULL),
-  m_browse (true)
+  m_n_cols (0), m_browse (true)
 {}
 
 ItemListImpl::~ItemListImpl()
@@ -135,6 +154,10 @@ ItemListImpl::model (const String &modelurl)
     ref_sink (m_model);
   if (oldmodel)
     unref (oldmodel);
+  if (!m_model)
+    m_n_cols = 0;
+  else
+    m_n_cols = n_columns_from_type (m_model->type());
   invalidate_model (true, true);
 }
 
@@ -189,7 +212,29 @@ void
 ItemListImpl::cache_row (ListRow *lr)
 {
   m_row_cache.push_back (lr);
-  lr->child->visible (false);
+  for (uint i = 0; i < lr->cols.size(); i++)
+    lr->cols[i]->visible (false);
+}
+
+static uint dbg_cached = 0, dbg_refilled = 0, dbg_created = 0;
+
+ListRow*
+ItemListImpl::create_row (uint64 nthrow)
+{
+  Array row = m_model->get (nthrow);
+  ListRow *lr = new ListRow();
+  for (uint i = 0; i < row.count(); i++)
+    {
+      Item *item = ref_sink (&Factory::create_item ("Label"));
+      lr->cols.push_back (item);
+    }
+  IFDEBUG (dbg_created++);
+  for (uint i = 0; i < lr->cols.size(); i++)
+    {
+      lr->cols[i]->hposition (i);
+      m_table->add (lr->cols[i]);
+    }
+  return lr;
 }
 
 void
@@ -197,12 +242,10 @@ ItemListImpl::fill_row (ListRow *lr,
                         uint64   nthrow)
 {
   Array row = m_model->get (nthrow);
-  AnyValue &v = row[0];
-  String s = v;
-  lr->child->set_property ("markup_text", v);
+  uint end = MIN (lr->cols.size(), row.count());
+  for (uint i = 0; i < end; i++)
+    lr->cols[i]->set_property ("markup_text", row[i].string());
 }
-
-static uint dbg_cached = 0, dbg_refilled = 0, dbg_created = 0;
 
 ListRow*
 ItemListImpl::fetch_row (uint64 row)
@@ -224,15 +267,11 @@ ItemListImpl::fetch_row (uint64 row)
       IFDEBUG (dbg_refilled++);
     }
   else /* create row */
-    {
-      lr = new ListRow();
-      lr->child = ref_sink (&Factory::create_item ("Label"));
-      m_table->add (*lr->child);
-      IFDEBUG (dbg_created++);
-    }
+    lr = create_row (row);
   if (!filled)
     fill_row (lr, row);
-  lr->child->visible (true);
+  for (uint i = 0; i < lr->cols.size(); i++)
+    lr->cols[i]->visible (true);
   return lr;
 }
 
@@ -253,8 +292,11 @@ ItemListImpl::position_row (ListRow *lr,
    * 0:*: final row-border
    */
   uint64 tablerow = (visible_slot + 1) * 2;
-  lr->child->vposition (tablerow);
-  lr->child->vspan (1);
+  for (uint i = 0; i < lr->cols.size(); i++)
+    {
+      lr->cols[i]->vposition (tablerow);
+      lr->cols[i]->vspan (1);
+    }
 }
 
 uint64
@@ -263,14 +305,25 @@ ItemListImpl::measure_row (ListRow *lr,
 {
   if (allocation_offset)
     {
-      Allocation carea = lr->child->allocation();
-      *allocation_offset = carea.y;
-      return carea.height;
+      uint64 height = 0;
+      for (uint i = 0; i < lr->cols.size(); i++)
+        {
+          Allocation carea = lr->cols[i]->allocation();
+          height = MAX (height, carea.height);
+          if (i == 0)
+            *allocation_offset = carea.y;
+        }
+      return height;
     }
   else
     {
-      Requisition requisition = lr->child->size_request ();
-      return requisition.height;
+      uint64 height = 0;
+      for (uint i = 0; i < lr->cols.size(); i++)
+        {
+          Requisition requisition = lr->cols[i]->size_request ();
+          height = MAX (height, requisition.height);
+        }
+      return height;
     }
 }
 

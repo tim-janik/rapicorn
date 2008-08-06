@@ -25,7 +25,7 @@
 namespace Rapicorn {
 
 struct ListRow {
-  Item *child;
+  vector<Item*> cols;
 };
 
 class ItemListImpl : public virtual SingleContainerImpl,
@@ -36,6 +36,7 @@ class ItemListImpl : public virtual SingleContainerImpl,
   Table                 *m_table;
   Model1                *m_model;
   mutable Adjustment    *m_hadjustment, *m_vadjustment;
+  uint                   m_n_cols;
   RowMap                 m_row_map;
   vector<ListRow*>       m_row_cache;
   bool                   m_browse;
@@ -60,6 +61,7 @@ public:
   void                  cache_row               (ListRow *lr);
   void                  fill_row                (ListRow *lr,
                                                  uint64   row);
+  ListRow*              create_row              (uint64 row);
   ListRow*              fetch_row               (uint64 row);
   void                  position_row            (ListRow *lr,
                                                  uint64   visible_slot);
