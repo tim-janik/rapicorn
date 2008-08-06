@@ -25,22 +25,22 @@ namespace Rapicorn {
 /* --- Type Information --- */
 class Type {
 public:
-  const char*           storage_name    (StorageType storage);
+  const char*           storage_name    () const;
   String                name            () const;
   StorageType           storage         () const;
   /* enumeration values */
   struct                Entry           { const String ident, label, blurb; };
-  int64                 n_entries       ();
-  Entry                 entry           (uint64 nth);
+  int64                 n_entries       () const;
+  Entry                 entry           (uint64 nth) const;
   /* interface */
-  StringVector          prerequisites   ();
+  StringVector          prerequisites   () const;
   /* record fields */
-  int64                 n_fields        ();
-  Type                  field           (uint64 nth);
+  int64                 n_fields        () const;
+  Type                  field           (uint64 nth) const;
   /* sequence element */
-  Type                  elements        ();
+  Type                  elements        () const;
   /* for sequence/record field types */
-  Type                  main_type       ();
+  Type                  main_type       () const;
   /* convenience API */
   String                ident           () const { return name(); }
   String                label           () const; // defaults to ident()
@@ -48,7 +48,7 @@ public:
   String                hints           () const; // ensures enclosing ':'
   /* generic auxillary data */
   String                aux_string      (const String &auxname) const;
-  double                aux_float       (const String &auxname) const;
+  double                aux_real        (const String &auxname) const;
   int64                 aux_num         (const String &auxname) const;
   /* retrieve types */
   static Type           try_lookup      (const String &full_name);
@@ -61,6 +61,7 @@ public:
   static void           register_package      (uint          static_data_length,
                                                const char   *static_data);
   static void           register_package_file (const String &filename);
+  static const char*    storage_name    (StorageType storage);
 private:
   class Info;
   explicit              Type            (Info &tinfo);

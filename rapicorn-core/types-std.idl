@@ -17,9 +17,13 @@
 
 // Standard type definitions for Rapicorn
 
-namespace Rapicorn$$std {
+namespace Rapicorn_STD {
 
-  typedef String String;
-  typedef Num    Num;
-  typedef Real   Real;
+  // typenames are mangled to avoid keyword conflicts
+  typedef String Str_ng;
+  typedef Num    N_m;
+  typedef Real   Re_l;
+  typedef Real   Array;	// Plic knows no boxed array type
+
+  // Makefile.am contains logic to demangle these standard types
 }

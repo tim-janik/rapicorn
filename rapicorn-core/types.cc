@@ -29,6 +29,14 @@ Type::storage_name (StorageType storage)
   return v ? v->value_name : NULL;
 }
 
+const char*
+Type::storage_name () const
+{
+  return storage_name (storage());
+}
+
+#warning FIXME: missing implementations: n_entries entry prerequisites n_fields field elements main_type
+
 namespace Plic {
 #include "types-ptpp.cc" // PLIC TypePackage Parser
 }
@@ -69,7 +77,7 @@ Type::aux_string (const String &auxname) const
 }
 
 double
-Type::aux_float (const String &auxname) const
+Type::aux_real (const String &auxname) const
 {
   return string_to_double (aux_string (auxname));
 }
@@ -155,7 +163,7 @@ Type::try_lookup (const String &lookup_name)
   if (sl == full_name.npos)
     {
       // standard namespace lookup without '::'
-      full_name = "Rapicorn$$std::" + lookup_name;
+      full_name = "Rapicorn*STD::" + lookup_name;
       sl = full_name.rfind (':');
     }
   if (sl > 0 && full_name[sl-1] == ':')

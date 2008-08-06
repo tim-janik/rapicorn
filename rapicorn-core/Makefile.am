@@ -29,8 +29,11 @@ rapicorn_cc_sources = $(strip 		\
         rapicorncpu.cc  rapicorndebugtools.cc	rapicornthread.cc	rapicornutils.cc  \
         rapicornmsg.cc  rapicornsignal.cc	rapicornmath.cc		rapicornutf8.cc   \
         rapicornxml.cc  markup.cc		enumdefs.cc		testutils.cc \
-        pixmap.cc	types-ptpp.cc   \
+        pixmap.cc	\
 	values.cc types.cc models.cc    \
+)
+rapicorn_uncompiled_sources = $(strip	\
+	types-ptpp.cc			\
 )
 rapicorn_private_files = $(strip	\
         rapicornsignalslot.hh		\
@@ -44,7 +47,7 @@ AM_CXXFLAGS = @FPU_FLAGS@
 # === libraries ===
 topincludedir   = $(includedir)/rapicorn@RAPICORN_RELEASE@
 topinclude_DATA = $(rapicorn_top_headers)
-EXTRA_DIST     += $(rapicorn_top_headers)
+EXTRA_DIST     += $(rapicorn_top_headers) $(rapicorn_uncompiled_sources)
 # librapicorn-core
 noinst_LTLIBRARIES			    = librapicorncore@RAPICORN_RELEASE@.la # hardcoded -release $(RAPICORN_RELEASE)
 librapicorncore@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/rapicorn-core
@@ -86,8 +89,21 @@ types.cc: types-ptpp.cc
 
 # === types-zgen.c ===
 types-zgen.c:  ./rapicorn-zintern $(srcdir)/types-std.idl
-	$(PLIC) --system-typedefs $(srcdir)/types-std.idl -O TypePackage -o ./types-std.tpg
-	./rapicorn-zintern -b RAPICORNSTD_RODATA ./types-std.tpg > xgen-$(@F)
+	: # compile IDL definitions into binary data
+	$(PLIC) $(srcdir)/types-std.idl -O TypePackage -o ./types-std.tpg
+	: # convert to .rodata and fixup standard types
+	./rapicorn-zintern -b RAPICORNSTD_RODATA -n ./types-std.tpg | \
+	  sed -e 's/12=Rapicorn_STD/12=Rapicorn*STD/'	\
+	      -e 's/__i\.\.3=N_m/__i..3=Num/'			\
+	      -e 's/__f\.\.4=Re_l/__f..4=Real/'			\
+	      -e 's/__s\.\.6=Str_ng/__s..6=String/'		\
+	      -e 's/__f\.\.5=Array/__a..5=Array/'		> xgen-$(@F)
+	: # validate standard type adaptions
+	test `grep  -F	-e '12=Rapicorn*STD'	\
+			-e '__i..3=Num'		\
+			-e '__f..4=Real'	\
+			-e '__s..6=String'	\
+			-e '__a..5=Array'   xgen-$(@F) | wc -l` = 5
 	rm -f ./types-std.tpg
 	mv xgen-$(@F) $@
 $(srcdir)/types.cc: types-zgen.c

@@ -52,32 +52,88 @@ test_type_info ()
   assert (t2.istype());
   assert (t2.name() == "RealWithBlurbBlurb");
   assert (t2.storage() == REAL);
-  assert (t2.aux_string ("blurb") == "Blurb");
+  assert (t2.aux_string ("blurb") == "Real Blurb");
   // check that type memory used above is still valid
   assert (t1.name() + "-postfix" == String ("NumWithFooAsLabel-postfix"));
   assert (t2.name() == String ("RealWithBlurbBlurb"));
 }
 
 static void
-test_types ()
+test_type_api ()
 {
-  Type t1 = Type::lookup ("RapicornTest::ExtendNumWithAux");
-  assert (t1.istype());
-  assert (t1.name() == "ExtendNumWithAux");
-  assert (t1.storage() == NUM);
-  assert (t1.ident() == "ExtendNumWithAux");
-  assert (t1.label() == "Extended Num");
-  assert (t1.blurb() == "This Num demonstrates extensive auxillary data use");
-  assert (t1.aux_num ("default") == 33);
-  assert (t1.aux_float ("step") == -5);
-  assert (t1.hints().find (":extra-option:") != String().npos);
-  Type o1 = Type::lookup ("RapicornTest::ExtendedString");
-  assert (o1.storage() == STRING);
-  assert (o1.ident() == "ExtendedString");
-  assert (o1.label() == "Extended String");
-  assert (o1.blurb() == "Demonstrate full string specification");
-  assert (o1.aux_string ("default") == "Default-String-Value");
-  assert (o1.hints().find (":ro:") != String().npos);
+  { // Num
+    Type t = Type::lookup ("RapicornTest::ExtendNumWithAux");
+    assert (t.istype());
+    assert (t.storage() == NUM);
+    assert (t.storage_name() == String ("NUM"));
+    assert (t.name() == t.ident());
+    assert (t.ident() == "ExtendNumWithAux");
+    assert (t.label() == "Extended Num");
+    assert (t.blurb() == "This Num demonstrates extensive auxillary data use");
+    assert (t.aux_num ("default") == 33);
+    assert (t.aux_real ("step") == -5);
+    assert (t.hints().find (":extra-option:") != String().npos);
+  }
+  { // Real
+    Type t = Type::lookup ("RapicornTest::RealWithBlurbBlurb");
+    assert (t.istype());
+    assert (t.storage() == REAL);
+    assert (t.storage_name() == String ("REAL"));
+    assert (t.name() == t.ident());
+    assert (t.ident() == "RealWithBlurbBlurb");
+    assert (t.label() == "Real Label");
+    assert (t.blurb() == "Real Blurb");
+    assert (t.aux_real ("default") == 97.97);
+    assert (t.hints() == ":");
+  }
+  { // String
+    Type t = Type::lookup ("RapicornTest::ExtendedString");
+    assert (t.istype());
+    assert (t.storage() == STRING);
+    assert (t.storage_name () == String ("STRING"));
+    assert (t.name() == t.ident());
+    assert (t.ident() == "ExtendedString");
+    assert (t.label() == "Extended String");
+    assert (t.blurb() == "Demonstrate full string specification");
+    assert (t.aux_string ("default") == "Default-String-Value");
+    assert (t.hints().find (":ro:") != String().npos);
+  }
+  { // Array
+    Type t = Type::lookup ("Array");
+    assert (t.istype());
+    assert (t.storage() == ARRAY);
+    assert (t.storage_name () == String ("ARRAY"));
+    assert (t.name() == t.ident());
+    assert (t.ident() == "Array");
+    assert (t.label() == "Array");
+    assert (t.blurb() == "");
+    assert (t.aux_string ("default") == "");
+    assert (t.hints() == ":");
+  }
+  { // Choice
+    Type t = Type::lookup ("RapicornTest::Enum1");
+    assert (t.istype());
+    assert (t.storage() == CHOICE);
+    assert (t.storage_name () == String ("CHOICE"));
+    assert (t.name() == t.ident());
+    assert (t.ident() == "Enum1");
+    assert (t.label() == "Enum1");
+    assert (t.blurb() == "");
+    assert (t.aux_string ("default") == "");
+    assert (t.hints() == ":");
+  }
+  { // Sequence
+    Type t = Type::lookup ("RapicornTest::SimpleSequence");
+    assert (t.istype());
+    assert (t.storage() == SEQUENCE);
+    assert (t.storage_name () == String ("SEQUENCE"));
+    assert (t.name() == t.ident());
+    assert (t.ident() == "SimpleSequence");
+    assert (t.label() == "SimpleSequence");
+    assert (t.blurb() == "");
+    assert (t.aux_string ("default") == "");
+    assert (t.hints() == ":");
+  }
 }
 
 static void
@@ -257,7 +313,7 @@ main (int   argc,
   Type::register_package_file ("testtypes.tpg");
 
   Test::add ("/Type/type info", test_type_info);
-  Test::add ("/Type/basics", test_types);
+  Test::add ("/Type/basics", test_type_api);
   Test::add ("/Value/num", test_value_num);
   Test::add ("/Value/float", test_value_float);
   Test::add ("/Value/string", test_value_string);
