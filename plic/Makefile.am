@@ -12,8 +12,8 @@ bin_PROGRAMS = ${PLICV}
 Parser.py: Parser.g
 	yapps Parser.g xgen-$(@F) 2>&1 | tee xgen-$(@F).errors
 	@! grep -q '.' xgen-$(@F).errors			# catch all yapps errors & warnings
-	sed 's/^from yapps import runtime$$//' -i xgen-$(@F)	# parser.g has all imports
-	cp -p xgen-$(@F) $@
+	sed <xgen-$(@F) >$@			\
+	    -e 's/^from yapps import runtime$$//'		# parser.g has all imports
 	rm -f xgen-$(@F) xgen-$(@F).errors
 EXTRA_DIST += Parser.g Parser.py
 
@@ -23,7 +23,7 @@ CONFIGVARS = \
 
 # build plic executable
 plic-@PLIC_VERSION@: plic.py Parser.py
-	sed < $< > xgen-$(@F) \
+	sed <$< >xgen-$(@F)			\
 	  -e '1,1s|#!/usr/bin/env python\([0-9]\+\(\.[0-9]\+\)\?\)\?|#!${PYTHON}|' \
 	  -e '1,24s|^ *#@PKGINSTALL_CONFIGVARS_IN24LINES@|  ${CONFIGVARS}|'
 	chmod +x xgen-$(@F)
