@@ -46,6 +46,7 @@ zintern_error  (const char     *format,
 
 static bool use_compression = FALSE;
 static bool use_base_name = FALSE;
+static bool break_at_newlines = FALSE;
 
 typedef struct {
   uint pos;
@@ -63,22 +64,29 @@ print_uchar (Config *config,
       config->pos = 3;
       config->pad = FALSE;
     }
-  if (d < 33 || d > 126 || d == '?')
-    {
-      printf ("\\%o", d);
-      config->pos += 1 + 1 + (d > 7) + (d > 63);
-      config->pad = d < 64;
-      return;
-    }
   if (d == '\\')
     {
       printf ("\\\\");
       config->pos += 2;
     }
+  else if (d == '\n')
+    {
+      printf ("\\n");
+      config->pos += 2;
+      if (break_at_newlines && config->pos > 3)
+        config->pos |= 1 << 31;
+    }
   else if (d == '"')
     {
       printf ("\\\"");
       config->pos += 2;
+    }
+  else if (d < 33 || d > 126 || d == '?')
+    {
+      printf ("\\%o", d);
+      config->pos += 1 + 1 + (d > 7) + (d > 63);
+      config->pad = d < 64;
+      return;
     }
   else if (config->pad && d >= '0' && d <= '9')
     {
@@ -92,7 +100,6 @@ print_uchar (Config *config,
       config->pos += 1;
     }
   config->pad = FALSE;
-  return;
 }
 
 #define to_upper(c)     ((c) >='a' && (c) <='z' ? (c) - 'a' + 'A' : (c))
@@ -198,6 +205,7 @@ help (char *arg)
   g_printerr ("usage: rapicorn-zintern [-h] [-b] [-z] [[name file]...]\n");
   g_printerr ("  -h  Print usage information\n");
   g_printerr ("  -b  Strip directories from file names\n");
+  g_printerr ("  -n  Break output lines after newlines raw data\n");
   g_printerr ("  -z  Compress data blocks with libz\n");
   g_printerr ("Parse (name, file) pairs and generate C source\n");
   g_printerr ("containing inlined data blocks of the files given.\n");
@@ -219,6 +227,10 @@ main (int   argc,
       else if (strcmp ("-b", argv[i]) == 0)
 	{
 	  use_base_name = TRUE;
+	}
+      else if (strcmp ("-n", argv[i]) == 0)
+	{
+	  break_at_newlines = TRUE;
 	}
       else if (strcmp ("-h", argv[i]) == 0)
 	{
