@@ -83,7 +83,6 @@ def print_help (with_help = True):
   print "  --output-format=<oformat>"
   print "  -O=<oformat>              select output format"
   print "  -o=<outputfile>           output filename"
-  print "  --system-typedefs         allows '$' namespace and keyword typedefs"
   print "Solitary Options:"
   print "  --list-formats            list output formats"
   print "  --cc-type-package-parser  Generate C++ type package parser"
@@ -92,7 +91,7 @@ def parse_files_and_args():
   import re, getopt
   config = { 'files' : [], 'backend' : 'PrettyDump' }
   sop = 'vhO:o:'
-  lop = ['help', 'version', 'output-format=', 'list-formats', 'cc-type-package-parser', 'system-typedefs']
+  lop = ['help', 'version', 'output-format=', 'list-formats', 'cc-type-package-parser']
   try:
     options,args = getopt.gnu_getopt (sys.argv[1:], sop, lop)
   except Exception, ex:
@@ -102,7 +101,6 @@ def parse_files_and_args():
     if arg == '-h' or arg == '--help': print_help(); sys.exit (0)
     if arg == '-v' or arg == '--version': print_help (false); sys.exit (0)
     if arg == '-o': config['output'] = val
-    if arg == '--system-typedefs': config['system-typedefs'] = true
     if arg == '-O' or arg == '--output-format':
       config['backend'] = val
       if not val in backends:
