@@ -15,21 +15,45 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include <rapicorn/rapicorn.hh>
+#include <sys/types.h>
+#include <dirent.h>
+#include <errno.h>
 
 namespace {
 using namespace Rapicorn;
+
+static void
+fill_store (Store1 &s1)
+{
+  String dirname = ".";
+  DIR *d = opendir (dirname.c_str());
+  s1.clear();
+  if (!d)
+    {
+      warning ("failed to access directory: %s: %s", dirname.c_str(), strerror (errno));
+      return;
+    }
+  struct dirent *e = readdir (d);
+  while (e)
+    {
+      Array row;
+      uint n = 0;
+      row[n++] = e->d_ino;
+      row[n++] = " - ";
+      row[n++] = e->d_type;
+      row[n++] = " - ";
+      row[n++] = e->d_name;
+      s1.insert (-1, row);
+      e = readdir (d);
+    }
+  closedir (d);
+}
 
 static Store1*
 create_store ()
 {
   Store1 *s1 = Store1::create_memory_store (Type::lookup ("String"));
-  Array row;
-  row.push_head (AutoValue ("la"));
-  s1->insert (0, row);
-  row.push_tail (AutoValue ("le"));
-  s1->insert (-1, row);
-  row.push_tail (AutoValue ("lu"));
-  s1->insert (-1, row);
+  fill_store (*s1);
   return s1;
 }
 
