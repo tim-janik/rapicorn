@@ -37,14 +37,19 @@ private:
   /*Copy*/              BaseValue       (const BaseValue&) : storage (NUM) { /* No Copies */ }
 protected:
   void                  assign          (bool                 *vbool)  { set ((int64) *vbool); }
+  void                  assign          (char                 *vint)   { set ((int64) *vint); }
+  void                  assign          (unsigned char        *vuint)  { set ((int64) *vuint); }
   void                  assign          (int                  *vint)   { set ((int64) *vint); }
   void                  assign          (uint                 *vuint)  { set ((int64) *vuint); }
+  void                  assign          (long                 *vint)   { set ((int64) *vint); }
+  void                  assign          (unsigned long        *vuint)  { set ((int64) *vuint); }
   void                  assign          (int64                *num);
   void                  assign          (float                *real)   { set ((long double) *real); }
   void                  assign          (double               *vdble)  { set ((long double) *vdble); }
   void                  assign          (long double          *real);
   void                  assign          (const String         *string);
   void                  assign          (const char          **string) { set (String (*string)); }
+  void                  assign          (char                **string) { set (String (*string)); }
   void                  assign          (const StringVector   *string_vector);
   void                  assign          (Object               *object);
   void                  assign          (const Array          *array);
