@@ -102,6 +102,7 @@ public:
   void                  remove          (uint64       nth)      { premove_rows (nth, 1); }
   void                  update          (uint64       nth,
                                          const Array &array)    { pchange_rows (nth, 1, &array); }
+  void                  clear           ()                      { premove_rows (0, count()); }
   /* premade stores */
   static Store1*        create_memory_store     (Type row_type);
 };
