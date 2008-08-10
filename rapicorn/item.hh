@@ -303,7 +303,7 @@ public: /* packing */
   double             vanchor         () const   { return valign(); } // mirrors valign
   void               vanchor         (double a) { valign (a); }      // mirrors valign
 private:
-  void               repack          (void);
+  void               repack          (const PackInfo &orig, const PackInfo &pnew);
   PackInfo&          pack_info       (bool create);
 public:
   template<typename Type>
