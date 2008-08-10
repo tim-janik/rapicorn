@@ -1042,7 +1042,7 @@ Item::repack (const PackInfo &orig,
               const PackInfo &pnew)
 {
   if (parent())
-    parent()->repack_child (*this);
+    parent()->repack_child (*this, orig, pnew);
   invalidate();
 }
 

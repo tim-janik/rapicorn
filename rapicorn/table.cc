@@ -174,10 +174,11 @@ TableImpl::~TableImpl()
 {}
 
 void
-TableImpl::repack_child (Item &item)
+TableImpl::repack_child (Item           &item,
+                         const PackInfo &orig,
+                         const PackInfo &pnew)
 {
-  const PackInfo &pi = item.pack_info();
-  resize (right_attach (pi), top_attach (pi));
+  resize (right_attach (pnew), top_attach (pnew));
 }
 
 void

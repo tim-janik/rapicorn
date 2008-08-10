@@ -311,9 +311,11 @@ Container::add (Item &item)
     }
   item.ref();
   try {
-    container.repack_child (item);
     container.add_child (item);
-    container.repack_child (item);
+    const PackInfo &pa = item.pack_info();
+    PackInfo po = pa;
+    po.hspan = po.vspan = 0; // indicate initial repack_child()
+    container.repack_child (item, po, pa);
   } catch (...) {
     item.unref();
     throw;
@@ -377,7 +379,9 @@ Container::dispose_item (Item &item)
 }
 
 void
-Container::repack_child (Item &item)
+Container::repack_child (Item           &item,
+                         const PackInfo &orig,
+                         const PackInfo &pnew)
 {}
 
 static DataKey<Item*> focus_child_key;

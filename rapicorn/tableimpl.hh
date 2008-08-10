@@ -50,7 +50,9 @@ class TableImpl : public virtual Table, public virtual MultiContainerImpl {
 protected:
   virtual void          size_request    (Requisition &requisition);
   virtual void          size_allocate   (Allocation area);
-  virtual void          repack_child    (Item   &item);
+  virtual void          repack_child    (Item           &item,
+                                         const PackInfo &orig,
+                                         const PackInfo &pnew);
 public:
   explicit              TableImpl       ();
   virtual uint          get_n_rows      ()                              { return rows.size(); }
