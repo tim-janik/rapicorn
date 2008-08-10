@@ -315,7 +315,7 @@ value_iterator_range (const Iterator &begin, const Iterator &end)
 /* --- Walker (easy to use iterator_range (begin(), end()) substitute) --- */
 template<typename Value> class Walker {
   /* auxillary Walker classes */
-  struct AdapterBase : Deletable {
+  struct AdapterBase {
     virtual bool         done    () = 0;
     virtual void         inc     () = 0;
     virtual AdapterBase* clone   () const = 0;
