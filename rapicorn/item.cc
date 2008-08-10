@@ -1065,13 +1065,6 @@ Item::pack_info (bool create)
   return *pi;
 }
 
-Point
-Item::position () // mirrors (hposition,vposition)
-{
-  const PackInfo &pi = pack_info();
-  return Point (pi.hposition, pi.vposition);
-}
-
 void
 Item::position (Point point) // mirrors (hposition,vposition)
 {

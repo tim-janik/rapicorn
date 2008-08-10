@@ -272,35 +272,35 @@ public: /* packing */
     double halign, hscale, valign, vscale;
   };
   const PackInfo&    pack_info       () const   { return const_cast<Item*> (this)->pack_info (false); }
-  double             hposition       ()         { return pack_info (false).hposition; }
+  double             hposition       () const   { return pack_info ().hposition; }
   void               hposition       (double d) { PackInfo &pa = pack_info (true); pa.hposition = d; repack(); }
-  double             hspan           ()         { return pack_info (false).hspan; }
+  double             hspan           () const   { return pack_info ().hspan; }
   void               hspan           (double d) { PackInfo &pa = pack_info (true); pa.hspan = MAX (1, d); repack(); }
-  double             vposition       ()         { return pack_info (false).vposition; }
+  double             vposition       () const   { return pack_info ().vposition; }
   void               vposition       (double d) { PackInfo &pa = pack_info (true); pa.vposition = d; repack(); }
-  double             vspan           ()         { return pack_info (false).vspan; }
+  double             vspan           () const   { return pack_info ().vspan; }
   void               vspan           (double d) { PackInfo &pa = pack_info (true); pa.vspan = MAX (1, d); repack(); }
-  uint               left_spacing    ()         { return pack_info (false).left_spacing; }
+  uint               left_spacing    () const   { return pack_info ().left_spacing; }
   void               left_spacing    (uint s)   { pack_info (true).left_spacing = s; repack(); }
-  uint               right_spacing   ()         { return pack_info (false).right_spacing; }
+  uint               right_spacing   () const   { return pack_info ().right_spacing; }
   void               right_spacing   (uint s)   { pack_info (true).right_spacing = s; repack(); }
-  uint               bottom_spacing  ()         { return pack_info (false).bottom_spacing; }
+  uint               bottom_spacing  () const   { return pack_info ().bottom_spacing; }
   void               bottom_spacing  (uint s)   { pack_info (true).bottom_spacing = s; repack(); }
-  uint               top_spacing     ()         { return pack_info (false).top_spacing; }
+  uint               top_spacing     () const   { return pack_info ().top_spacing; }
   void               top_spacing     (uint s)   { pack_info (true).top_spacing = s; repack(); }
-  double             halign          ()         { return pack_info (false).halign; }
+  double             halign          () const   { return pack_info ().halign; }
   void               halign          (double f) { pack_info (true).halign = CLAMP (f, 0, 1); repack(); }
-  double             hscale          ()         { return pack_info (false).hscale; }
+  double             hscale          () const   { return pack_info ().hscale; }
   void               hscale          (double f) { pack_info (true).hscale = f; repack(); }
-  double             valign          ()         { return pack_info (false).valign; }
+  double             valign          () const   { return pack_info ().valign; }
   void               valign          (double f) { pack_info (true).valign = CLAMP (f, 0, 1); repack(); }
-  double             vscale          ()         { return pack_info (false).vscale; }
+  double             vscale          () const   { return pack_info ().vscale; }
   void               vscale          (double f) { pack_info (true).vscale = f; repack(); }
-  Point              position        ();        // mirrors (hposition,vposition)
+  Point              position        () const   { const PackInfo &pi = pack_info(); return Point (pi.hposition, pi.vposition); }
   void               position        (Point p); // mirrors (hposition,vposition)
-  double             hanchor         ()         { return halign(); } // mirrors halign
+  double             hanchor         () const   { return halign(); } // mirrors halign
   void               hanchor         (double a) { halign (a); }      // mirrors halign
-  double             vanchor         ()         { return valign(); } // mirrors valign
+  double             vanchor         () const   { return valign(); } // mirrors valign
   void               vanchor         (double a) { valign (a); }      // mirrors valign
 private:
   void               repack          (void);
