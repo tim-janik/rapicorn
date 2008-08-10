@@ -273,29 +273,29 @@ public: /* packing */
   };
   const PackInfo&    pack_info       () const   { return const_cast<Item*> (this)->pack_info (false); }
   double             hposition       () const   { return pack_info ().hposition; }
-  void               hposition       (double d) { PackInfo &pa = pack_info (true); pa.hposition = d; repack(); }
+  void               hposition       (double d);
   double             hspan           () const   { return pack_info ().hspan; }
-  void               hspan           (double d) { PackInfo &pa = pack_info (true); pa.hspan = MAX (1, d); repack(); }
+  void               hspan           (double d);
   double             vposition       () const   { return pack_info ().vposition; }
-  void               vposition       (double d) { PackInfo &pa = pack_info (true); pa.vposition = d; repack(); }
+  void               vposition       (double d);
   double             vspan           () const   { return pack_info ().vspan; }
-  void               vspan           (double d) { PackInfo &pa = pack_info (true); pa.vspan = MAX (1, d); repack(); }
+  void               vspan           (double d);
   uint               left_spacing    () const   { return pack_info ().left_spacing; }
-  void               left_spacing    (uint s)   { pack_info (true).left_spacing = s; repack(); }
+  void               left_spacing    (uint s);
   uint               right_spacing   () const   { return pack_info ().right_spacing; }
-  void               right_spacing   (uint s)   { pack_info (true).right_spacing = s; repack(); }
+  void               right_spacing   (uint s);
   uint               bottom_spacing  () const   { return pack_info ().bottom_spacing; }
-  void               bottom_spacing  (uint s)   { pack_info (true).bottom_spacing = s; repack(); }
+  void               bottom_spacing  (uint s);
   uint               top_spacing     () const   { return pack_info ().top_spacing; }
-  void               top_spacing     (uint s)   { pack_info (true).top_spacing = s; repack(); }
+  void               top_spacing     (uint s);
   double             halign          () const   { return pack_info ().halign; }
-  void               halign          (double f) { pack_info (true).halign = CLAMP (f, 0, 1); repack(); }
+  void               halign          (double f);
   double             hscale          () const   { return pack_info ().hscale; }
-  void               hscale          (double f) { pack_info (true).hscale = f; repack(); }
+  void               hscale          (double f);
   double             valign          () const   { return pack_info ().valign; }
-  void               valign          (double f) { pack_info (true).valign = CLAMP (f, 0, 1); repack(); }
+  void               valign          (double f);
   double             vscale          () const   { return pack_info ().vscale; }
-  void               vscale          (double f) { pack_info (true).vscale = f; repack(); }
+  void               vscale          (double f);
   Point              position        () const   { const PackInfo &pi = pack_info(); return Point (pi.hposition, pi.vposition); }
   void               position        (Point p); // mirrors (hposition,vposition)
   double             hanchor         () const   { return halign(); } // mirrors halign

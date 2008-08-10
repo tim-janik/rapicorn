@@ -1066,6 +1066,78 @@ Item::pack_info (bool create)
 }
 
 void
+Item::hposition (double d)
+{
+  PackInfo &pa = pack_info (true); pa.hposition = d; repack();
+}
+
+void
+Item::hspan (double d)
+{
+  PackInfo &pa = pack_info (true); pa.hspan = MAX (1, d); repack();
+}
+
+void
+Item::vposition (double d)
+{
+  PackInfo &pa = pack_info (true); pa.vposition = d; repack();
+}
+
+void
+Item::vspan (double d)
+{
+  PackInfo &pa = pack_info (true); pa.vspan = MAX (1, d); repack();
+}
+
+void
+Item::left_spacing (uint s)
+{
+  pack_info (true).left_spacing = s; repack();
+}
+
+void
+Item::right_spacing (uint s)
+{
+  pack_info (true).right_spacing = s; repack();
+}
+
+void
+Item::bottom_spacing (uint s)
+{
+  pack_info (true).bottom_spacing = s; repack();
+}
+
+void
+Item::top_spacing (uint s)
+{
+  pack_info (true).top_spacing = s; repack();
+}
+
+void
+Item::halign (double f)
+{
+  pack_info (true).halign = CLAMP (f, 0, 1); repack();
+}
+
+void
+Item::hscale (double f)
+{
+  pack_info (true).hscale = f; repack();
+}
+
+void
+Item::valign (double f)
+{
+  pack_info (true).valign = CLAMP (f, 0, 1); repack();
+}
+
+void
+Item::vscale (double f)
+{
+  pack_info (true).vscale = f; repack();
+}
+
+void
 Item::position (Point point) // mirrors (hposition,vposition)
 {
   PackInfo &pa = pack_info (true);
