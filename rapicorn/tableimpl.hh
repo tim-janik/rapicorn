@@ -47,7 +47,9 @@ class TableImpl : public virtual Table, public virtual MultiContainerImpl {
   void                  size_allocate_init      ();
   void                  size_allocate_pass1     ();
   void                  size_allocate_pass2     ();
+  void                  resize_table    (uint n_cols, uint n_rows);
 protected:
+  virtual               ~TableImpl      ();
   virtual void          size_request    (Requisition &requisition);
   virtual void          size_allocate   (Allocation area);
   virtual void          repack_child    (Item           &item,
@@ -55,16 +57,13 @@ protected:
                                          const PackInfo &pnew);
 public:
   explicit              TableImpl       ();
+  virtual void          resize          (uint n_cols, uint n_rows) { resize (n_cols, n_rows); }
   virtual uint          get_n_rows      ()                              { return rows.size(); }
   virtual uint          get_n_cols      ()                              { return cols.size(); }
-  void                  resize          (uint n_cols, uint n_rows, bool force);
-  virtual void          resize          (uint n_cols, uint n_rows) { resize (n_cols, n_rows, false); }
   virtual bool          is_row_used     (uint row);
   virtual bool          is_col_used     (uint col);
   virtual void          insert_rows     (uint first_row, uint n_rows);
   virtual void          insert_cols     (uint first_col, uint n_cols);
-  virtual               ~TableImpl      ();
-public:
   virtual bool          homogeneous     () const                        { return homogeneous_items; }
   virtual void          homogeneous     (bool chomogeneous_items)       { homogeneous_items = chomogeneous_items; invalidate(); }
   virtual uint          col_spacing     ()                              { return default_col_spacing; }

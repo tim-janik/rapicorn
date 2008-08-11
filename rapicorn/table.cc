@@ -55,7 +55,7 @@ TableImpl::TableImpl() :
   default_col_spacing (0),
   homogeneous_items (false)
 {
-  resize (1, 1);
+  resize_table (1, 1);
 }
 
 bool
@@ -85,19 +85,21 @@ TableImpl::is_col_used (uint col)
 }
 
 void
-TableImpl::resize (uint n_cols, uint n_rows, bool force)
+TableImpl::resize_table (uint n_cols,
+                         uint n_rows)
 {
   n_rows = MAX (n_rows, 1);
   n_cols = MAX (n_cols, 1);
-  if (!force && n_rows == rows.size() && n_cols == cols.size())
+  if (n_rows == rows.size() && n_cols == cols.size())
     return;
   /* grow as children require */
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    {
-      const PackInfo &pi = cw->pack_info();
-      n_rows = MAX (n_rows, top_attach (pi));
-      n_cols = MAX (n_cols, right_attach (pi));
-    }
+  if (n_rows < rows.size() || n_cols < cols.size())
+    for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+      {
+        const PackInfo &pi = cw->pack_info();
+        n_rows = MAX (n_rows, top_attach (pi));
+        n_cols = MAX (n_cols, right_attach (pi));
+      }
   /* resize rows and cols */
   bool need_invalidate = false;
   if (n_rows != rows.size())
@@ -125,7 +127,7 @@ TableImpl::insert_rows (uint first_row, uint n_rows)
 {
   if (!n_rows)
     return;
-  resize (cols.size(), rows.size() + n_rows);
+  resize_table (cols.size(), rows.size() + n_rows);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       const PackInfo &pi = cw->pack_info();
@@ -141,7 +143,7 @@ TableImpl::insert_cols (uint first_col, uint n_cols)
 {
   if (!n_cols)
     return;
-  resize (cols.size() + n_cols, rows.size());
+  resize_table (cols.size() + n_cols, rows.size());
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       const PackInfo &pi = cw->pack_info();
@@ -178,7 +180,9 @@ TableImpl::repack_child (Item           &item,
                          const PackInfo &orig,
                          const PackInfo &pnew)
 {
-  resize (right_attach (pnew), top_attach (pnew));
+  uint n_cols = right_attach (pnew), n_rows = top_attach (pnew);
+  if (n_cols > cols.size() || n_rows > rows.size())
+    resize_table (n_cols, n_rows);
 }
 
 void
