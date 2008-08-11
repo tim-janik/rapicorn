@@ -60,16 +60,33 @@ ItemListImpl::ItemListImpl() :
 
 ItemListImpl::~ItemListImpl()
 {
+  /* destroy table */
   if (m_table->parent())
     {
       this->remove (*m_table);
       unref (m_table);
       m_table = NULL;
     }
+  /* remove model */
   Model1 *oldmodel = m_model;
   m_model = NULL;
   if (oldmodel)
     unref (oldmodel);
+  /* purge row map */
+  RowMap rc; // empty
+  m_row_map.swap (rc);
+  for (RowMap::iterator ri = rc.begin(); ri != rc.end(); ri++)
+    cache_row (ri->second);
+  /* destroy row cache */
+  while (m_row_cache.size())
+    {
+      ListRow *lr = m_row_cache.back();
+      m_row_cache.pop_back();
+      for (uint i = 0; i < lr->cols.size(); i++)
+        unref (lr->cols[i]);
+      unref (lr->hbox);
+      delete lr;
+    }
 }
 
 void
