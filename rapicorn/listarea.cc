@@ -49,6 +49,7 @@ n_columns_from_type (const Type &type)
     case RECORD:
       return 1; // FIXME: type.n_fields();
     }
+  return 0;
 }
 
 ItemListImpl::ItemListImpl() :
