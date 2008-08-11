@@ -39,9 +39,9 @@ fill_store (Store1 &s1)
       Array row;
       uint n = 0;
       row[n++] = e->d_ino;
-      row[n++] = " - ";
+      row[n++] = " | ";
       row[n++] = e->d_type;
-      row[n++] = " - ";
+      row[n++] = " | ";
       row[n++] = e->d_name;
       s1.insert (-1, row);
       e = readdir (d);
