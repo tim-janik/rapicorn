@@ -213,8 +213,7 @@ void
 ItemListImpl::cache_row (ListRow *lr)
 {
   m_row_cache.push_back (lr);
-  for (uint i = 0; i < lr->cols.size(); i++)
-    lr->cols[i]->visible (false);
+  lr->hbox->visible (false);
 }
 
 static uint dbg_cached = 0, dbg_refilled = 0, dbg_created = 0;
@@ -230,11 +229,11 @@ ItemListImpl::create_row (uint64 nthrow)
       lr->cols.push_back (item);
     }
   IFDEBUG (dbg_created++);
+  lr->hbox = &ref_sink (&Factory::create_item ("HBox"))->interface<HBox>();
+  lr->hbox->spacing (m_table->col_spacing());
   for (uint i = 0; i < lr->cols.size(); i++)
-    {
-      lr->cols[i]->hposition (i);
-      m_table->add (lr->cols[i]);
-    }
+    lr->hbox->add (lr->cols[i]);
+  m_table->add (lr->hbox);
   return lr;
 }
 
@@ -271,8 +270,7 @@ ItemListImpl::fetch_row (uint64 row)
     lr = create_row (row);
   if (!filled)
     fill_row (lr, row);
-  for (uint i = 0; i < lr->cols.size(); i++)
-    lr->cols[i]->visible (true);
+  lr->hbox->visible (true);
   return lr;
 }
 
@@ -293,11 +291,8 @@ ItemListImpl::position_row (ListRow *lr,
    * 0:*: final row-border
    */
   uint64 tablerow = (visible_slot + 1) * 2;
-  for (uint i = 0; i < lr->cols.size(); i++)
-    {
-      lr->cols[i]->vposition (tablerow);
-      lr->cols[i]->vspan (1);
-    }
+  lr->hbox->vposition (tablerow);
+  lr->hbox->vspan (1);
 }
 
 uint64
@@ -306,25 +301,14 @@ ItemListImpl::measure_row (ListRow *lr,
 {
   if (allocation_offset)
     {
-      uint64 height = 0;
-      for (uint i = 0; i < lr->cols.size(); i++)
-        {
-          Allocation carea = lr->cols[i]->allocation();
-          height = MAX (height, carea.height);
-          if (i == 0)
-            *allocation_offset = carea.y;
-        }
-      return height;
+      Allocation carea = lr->hbox->allocation();
+      *allocation_offset = carea.y;
+      return carea.height;
     }
   else
     {
-      uint64 height = 0;
-      for (uint i = 0; i < lr->cols.size(); i++)
-        {
-          Requisition requisition = lr->cols[i]->size_request ();
-          height = MAX (height, requisition.height);
-        }
-      return height;
+      Requisition requisition = lr->hbox->size_request();
+      return requisition.height;
     }
 }
 

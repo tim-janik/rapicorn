@@ -20,12 +20,15 @@
 #include <rapicorn/listarea.hh>
 #include <rapicorn/containerimpl.hh>
 #include <rapicorn/adjustment.hh>
+#include <rapicorn/layoutcontainers.hh>
 #include <rapicorn/table.hh>
 
 namespace Rapicorn {
 
 struct ListRow {
   vector<Item*> cols;
+  HBox         *hbox;
+  ListRow() : hbox (NULL) {}
 };
 
 class ItemListImpl : public virtual SingleContainerImpl,
