@@ -264,9 +264,9 @@ TableImpl::size_request_pass1()
 {
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      Requisition crq = cw->size_request();
       if (!cw->allocatable())
         continue;
+      Requisition crq = cw->size_request();
       const PackInfo &pi = cw->pack_info();
       /* fetch requisition from single-column children */
       if (left_attach (pi) + 1 == right_attach (pi))
