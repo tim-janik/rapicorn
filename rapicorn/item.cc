@@ -54,6 +54,12 @@ Item::viewable() const
 }
 
 bool
+Item::self_visible () const
+{
+  return false;
+}
+
+bool
 Item::change_flags_silently (uint32 mask,
                              bool   on)
 {
@@ -67,13 +73,18 @@ Item::change_flags_silently (uint32 mask,
 }
 
 void
-Item::propagate_flags (bool notify_changed)
+Item::propagate_state (bool notify_changed)
 {
   change_flags_silently (PARENT_SENSITIVE, !parent() || parent()->sensitive());
+  const bool wasallocatable = allocatable();
+  change_flags_silently (PARENT_VISIBLE, self_visible() ||
+                         (parent() && parent()->test_all_flags (VISIBLE | PARENT_VISIBLE)));
+  if (wasallocatable != allocatable())
+    invalidate();
   Container *container = dynamic_cast<Container*> (this);
   if (container)
     for (Container::ChildWalker it = container->local_children(); it.has_next(); it++)
-      it->propagate_flags();
+      it->propagate_state (notify_changed);
   if (notify_changed && !finalizing())
     sig_changed.emit(); /* notify changed() without invalidate() */
 }
@@ -83,7 +94,8 @@ Item::set_flag (uint32 flag,
                 bool   on)
 {
   assert ((flag & (flag - 1)) == 0); /* single bit check */
-  const uint propagate_flag_mask  = SENSITIVE | PARENT_SENSITIVE | PRELIGHT | IMPRESSED | HAS_DEFAULT;
+  const uint propagate_flag_mask = (SENSITIVE | PARENT_SENSITIVE | PRELIGHT | IMPRESSED | HAS_DEFAULT |
+                                    VISIBLE | PARENT_VISIBLE);
   const uint repack_flag_mask = HEXPAND | VEXPAND | HSPREAD | VSPREAD |
                                 HSPREAD_CONTAINER | VSPREAD_CONTAINER |
                                 HSHRINK | VSHRINK | VISIBLE;
@@ -93,7 +105,7 @@ Item::set_flag (uint32 flag,
       if (flag & propagate_flag_mask)
         {
           expose();
-          propagate_flags (false);
+          propagate_state (false);
         }
       if (flag & repack_flag_mask)
         {
@@ -840,6 +852,7 @@ Item::set_parent (Container *pcontainer)
       invalidate();
       style (NULL);
       m_parent = NULL;
+      propagate_state (false); // propagate PARENT_VISIBLE, PARENT_SENSITIVE
       if (anchored() and rtoplevel)
         sig_hierarchy_changed.emit (rtoplevel);
       unref (pc);
@@ -851,8 +864,8 @@ Item::set_parent (Container *pcontainer)
         throw Exception ("not setting non-Container item as parent: ", pcontainer->name());
       m_parent = pcontainer;
       style (m_parent->style());
-      propagate_flags();
       invalidate();
+      propagate_state (true);
       if (m_parent->anchored() and !anchored())
         sig_hierarchy_changed.emit (NULL);
     }

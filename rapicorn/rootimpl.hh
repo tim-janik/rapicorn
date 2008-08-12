@@ -44,6 +44,7 @@ public:
 private:
   /*Des*/               ~RootImpl                               ();
   virtual void          dispose_item                            (Item                   &item);
+  virtual bool          self_visible                            () const;
   /* misc */
   vector<Item*>         item_difference                         (const vector<Item*>    &clist, /* preserves order of clist */
                                                                  const vector<Item*>    &cminus);

@@ -52,7 +52,6 @@ public:
 };
 
 /* --- Item --- */
-class Item;
 typedef Signals::Slot1<void, Item&> ItemSlot;
 class Item : public virtual Convertible, public virtual DataListContainer, public virtual ReferenceCountImpl {
   friend                      class ClassDoctor;
@@ -60,9 +59,9 @@ class Item : public virtual Convertible, public virtual DataListContainer, publi
   uint32                      m_flags;          /* interface-inlined for fast read-out */
   Container                  *m_parent;         /* interface-inlined for fast read-out */
   Style                      *m_style;
-  void                        propagate_flags (bool notify_changed = true);
-  void                        propagate_style ();
-  Container**                 _parent_loc     () { return &m_parent; }
+  void                        propagate_state    (bool notify_changed = true);
+  void                        propagate_style    ();
+  Container**                 _parent_loc        () { return &m_parent; }
   RAPICORN_PRIVATE_CLASS_COPY  (Item);
 protected:
   virtual void                constructed             ();
@@ -71,33 +70,35 @@ protected:
   enum {
     ANCHORED                  = 1 <<  0,
     VISIBLE                   = 1 <<  1,
-    HIDDEN_CHILD              = 1 <<  2,
-    SENSITIVE                 = 1 <<  3,
-    PARENT_SENSITIVE          = 1 <<  4,
-    PRELIGHT                  = 1 <<  5,
-    IMPRESSED                 = 1 <<  6,
-    FOCUS_CHAIN               = 1 <<  7,
-    HAS_DEFAULT               = 1 <<  8,
-    INVALID_REQUISITION       = 1 <<  9,
-    INVALID_ALLOCATION        = 1 << 10,
-    INVALID_CONTENT           = 1 << 11,
-    HSPREAD_CONTAINER         = 1 << 12,
-    VSPREAD_CONTAINER         = 1 << 13,
-    HSPREAD                   = 1 << 14,
-    VSPREAD                   = 1 << 15,
-    HEXPAND                   = 1 << 16,
-    VEXPAND                   = 1 << 17,
-    HSHRINK                   = 1 << 18,
-    VSHRINK                   = 1 << 19,
-    ALLOCATABLE               = 1 << 20,
-    POSITIVE_ALLOCATION       = 1 << 21,
-    DEBUG                     = 1 << 22,
-    LAST_FLAG                 = 1 << 23
+    PARENT_VISIBLE            = 1 <<  2,
+    HIDDEN_CHILD              = 1 <<  3,
+    SENSITIVE                 = 1 <<  4,
+    PARENT_SENSITIVE          = 1 <<  5,
+    PRELIGHT                  = 1 <<  6,
+    IMPRESSED                 = 1 <<  7,
+    FOCUS_CHAIN               = 1 <<  8,
+    HAS_DEFAULT               = 1 <<  9,
+    INVALID_REQUISITION       = 1 << 10,
+    INVALID_ALLOCATION        = 1 << 11,
+    INVALID_CONTENT           = 1 << 12,
+    HSPREAD_CONTAINER         = 1 << 13,
+    VSPREAD_CONTAINER         = 1 << 14,
+    HSPREAD                   = 1 << 15,
+    VSPREAD                   = 1 << 16,
+    HEXPAND                   = 1 << 17,
+    VEXPAND                   = 1 << 18,
+    HSHRINK                   = 1 << 19,
+    VSHRINK                   = 1 << 20,
+    ALLOCATABLE               = 1 << 21,
+    POSITIVE_ALLOCATION       = 1 << 22,
+    DEBUG                     = 1 << 23,
+    LAST_FLAG                 = 1 << 24
   };
   void                        set_flag          (uint32 flag, bool on = true);
   void                        unset_flag        (uint32 flag) { set_flag (flag, false); }
   bool                        test_flags        (uint32 mask) const { return (m_flags & mask) != 0; }
   bool                        test_all_flags    (uint32 mask) const { return (m_flags & mask) == mask; }
+  virtual bool                self_visible      () const;
   /* size requisition and allocation */
   virtual void                size_request      (Requisition &requisition) = 0;
   virtual void                size_allocate     (Allocation   area) = 0;
@@ -130,7 +131,7 @@ public:
   bool                        anchored          () const { return test_flags (ANCHORED); }
   bool                        visible           () const { return test_flags (VISIBLE) && !test_flags (HIDDEN_CHILD); }
   void                        visible           (bool b) { set_flag (VISIBLE, b); }
-  bool                        allocatable       () const { return visible() && test_flags (ALLOCATABLE); }
+  bool                        allocatable       () const { return visible() && test_all_flags (ALLOCATABLE | PARENT_VISIBLE); }
   bool                        drawable          () const { return visible() && test_flags (POSITIVE_ALLOCATION); }
   virtual bool                viewable          () const; // drawable() && parent->viewable();
   bool                        sensitive         () const { return test_all_flags (SENSITIVE | PARENT_SENSITIVE); }

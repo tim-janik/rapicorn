@@ -151,6 +151,7 @@ RootImpl::RootImpl() :
   style (appearance->create_style ("normal"));
   unref (appearance);
   set_flag (PARENT_SENSITIVE, true);
+  set_flag (PARENT_VISIBLE, true);
   /* adjust default Viewport config */
   m_config.min_width = 13;
   m_config.min_height = 7;
@@ -179,6 +180,12 @@ RootImpl::~RootImpl()
   RAPICORN_ASSERT (m_source == NULL); // should have been destroyed with loop
   /* this should be done last */
   unref (&m_loop);
+}
+
+bool
+RootImpl::self_visible () const
+{
+  return true;
 }
 
 void
