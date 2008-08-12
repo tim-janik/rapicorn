@@ -33,12 +33,10 @@ protected:
   virtual void          do_invalidate   ();
   virtual void          do_changed      ();
   virtual bool          do_event        (const Event &event);
-  using Item::size_request;
-
   virtual String        name            () const;
   virtual void          name            (const String &str);
-  virtual const Requisition& size_request           ();
   virtual const Allocation&  allocation             ();
+  virtual Requisition        cache_requisition      (Requisition *requisition);
   virtual bool               tune_requisition       (Requisition requisition);
   using                      Item::tune_requisition;
   virtual void               set_allocation         (const Allocation &area);

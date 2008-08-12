@@ -20,6 +20,7 @@
 #include "adjustment.hh"
 #include "root.hh"
 #include "cmdlib.hh"
+#include "sizegroup.hh"
 
 namespace Rapicorn {
 
@@ -385,6 +386,7 @@ Item::finalize()
 
 Item::~Item()
 {
+  SizeGroup::delete_item (*this);
   if (parent())
     parent()->remove (this);
   if (m_style)
@@ -930,6 +932,7 @@ Item::invalidate()
         sig_invalidate.emit();
       if (parent())
         parent()->invalidate_size();
+      SizeGroup::invalidate_item (*this);
     }
 }
 
@@ -943,7 +946,42 @@ Item::invalidate_size()
         sig_invalidate.emit();
       if (parent())
         parent()->invalidate_size();
+      SizeGroup::invalidate_item (*this);
     }
+}
+
+Requisition
+Item::inner_size_request()
+{
+  Requisition ireq; // 0,0
+  if (test_flags (Item::INVALID_REQUISITION))
+    do
+      {
+        change_flags_silently (Item::INVALID_REQUISITION, false); /* skip notification */
+        if (allocatable())
+          {
+            ireq = Requisition(); // 0,0
+            size_request (ireq);
+            ireq.width = MAX (ireq.width, 0);
+            ireq.height = MAX (ireq.height, 0);
+            Requisition ovr (width(), height());
+            if (ovr.width >= 0)
+              ireq.width = ovr.width;
+            if (ovr.height >= 0)
+              ireq.height = ovr.height;
+          }
+        cache_requisition (&ireq);
+      }
+    while (test_flags (Item::INVALID_REQUISITION));
+  else if (allocatable())
+    ireq = cache_requisition();
+  return ireq;
+}
+
+Requisition
+Item::requisition ()
+{
+  return SizeGroup::item_requisition (*this);
 }
 
 bool
@@ -1215,6 +1253,14 @@ ItemImpl::name (const String &str)
   m_name = str;
 }
 
+Requisition
+ItemImpl::cache_requisition (Requisition *requisition)
+{
+  if (requisition)
+    m_requisition = *requisition;
+  return m_requisition;
+}
+
 bool
 ItemImpl::tune_requisition (Requisition requisition)
 {
@@ -1236,28 +1282,6 @@ ItemImpl::tune_requisition (Requisition requisition)
         }
     }
   return false;
-}
-
-const Requisition&
-ItemImpl::size_request ()
-{
-  while (test_flags (INVALID_REQUISITION))
-    {
-      change_flags_silently (INVALID_REQUISITION, false); /* skip notification */
-      Requisition req;
-      size_request (req);
-      req.width = MAX (req.width, 0);
-      req.height = MAX (req.height, 0);
-      Requisition ovr (width(), height());
-      if (ovr.width >= 0)
-        req.width = ovr.width;
-      if (ovr.height >= 0)
-        req.height = ovr.height;
-      if (!allocatable())
-        req = Requisition (0, 0);
-      m_requisition = req;
-    }
-  return m_requisition;
 }
 
 const Allocation&

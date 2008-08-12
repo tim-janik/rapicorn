@@ -33,6 +33,7 @@ struct Requisition {
 };
 typedef Rect Allocation;
 class Item;
+class SizeGroup;
 class Adjustment;
 class Container;
 class Root;
@@ -56,9 +57,11 @@ typedef Signals::Slot1<void, Item&> ItemSlot;
 class Item : public virtual Convertible, public virtual DataListContainer, public virtual ReferenceCountImpl {
   friend                      class ClassDoctor;
   friend                      class Container;
+  friend                      class SizeGroup;
   uint32                      m_flags;          /* interface-inlined for fast read-out */
   Container                  *m_parent;         /* interface-inlined for fast read-out */
   Style                      *m_style;
+  Requisition                 inner_size_request (); // ungrouped size requisition
   void                        propagate_state    (bool notify_changed = true);
   void                        propagate_style    ();
   Container**                 _parent_loc        () { return &m_parent; }
@@ -100,6 +103,7 @@ protected:
   bool                        test_all_flags    (uint32 mask) const { return (m_flags & mask) == mask; }
   virtual bool                self_visible      () const;
   /* size requisition and allocation */
+  virtual Requisition         cache_requisition (Requisition *requisition = NULL) = 0;
   virtual void                size_request      (Requisition &requisition) = 0;
   virtual void                size_allocate     (Allocation   area) = 0;
   virtual bool                tune_requisition  (Requisition  requisition);
@@ -236,8 +240,8 @@ public:
                                                      const Item   &target_item) const;
   bool                       viewport_point         (Point        p);           /* viewport coordinates relative */
   /* public size accessors */
-  virtual const Requisition& size_request       () = 0;                         /* re-request size */
-  const Requisition&         requisition        () { return size_request(); }   /* cached requisition */
+  Requisition                requisition        ();                             // effective size requisition
+  Requisition                size_request       () { return requisition(); }    // FIXME: remove
   virtual void               set_allocation     (const Allocation &area) = 0;   /* assign new allocation */
   virtual const Allocation&  allocation         () = 0;                         /* current allocation */
   /* display */
