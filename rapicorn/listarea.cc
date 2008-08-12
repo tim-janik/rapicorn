@@ -259,9 +259,8 @@ ItemListImpl::fill_row (ListRow *lr,
                         uint64   nthrow)
 {
   Array row = m_model->get (nthrow);
-  uint end = MIN (lr->cols.size(), row.count());
-  for (uint i = 0; i < end; i++)
-    lr->cols[i]->set_property ("markup_text", row[i].string());
+  for (uint i = 0; i < lr->cols.size(); i++)
+    lr->cols[i]->set_property ("markup_text", i < row.count() ? row[i].string() : "");
 }
 
 ListRow*
