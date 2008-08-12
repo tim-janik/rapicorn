@@ -15,6 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "listareaimpl.hh"
+#include "sizegroup.hh"
 
 //#define IFDEBUG(...)      do { /*__VA_ARGS__*/ } while (0)
 #define IFDEBUG(...)      __VA_ARGS__
@@ -86,6 +87,13 @@ ItemListImpl::~ItemListImpl()
         unref (lr->cols[i]);
       unref (lr->hbox);
       delete lr;
+    }
+  /* release size groups */
+  while (m_size_groups.size())
+    {
+      SizeGroup *sg = m_size_groups.back();
+      m_size_groups.pop_back();
+      unref (sg);
     }
 }
 
@@ -248,6 +256,12 @@ ItemListImpl::create_row (uint64 nthrow)
   IFDEBUG (dbg_created++);
   lr->hbox = &ref_sink (&Factory::create_item ("HBox"))->interface<HBox>();
   lr->hbox->spacing (m_table->col_spacing());
+
+  while (m_size_groups.size() < lr->cols.size())
+    m_size_groups.push_back (ref_sink (SizeGroup::create_hgroup()));
+  for (uint i = 0; i < lr->cols.size(); i++)
+    m_size_groups[i]->add_item (*lr->cols[i]);
+
   for (uint i = 0; i < lr->cols.size(); i++)
     lr->hbox->add (lr->cols[i]);
   m_table->add (lr->hbox);
@@ -323,7 +337,7 @@ ItemListImpl::measure_row (ListRow *lr,
     }
   else
     {
-      Requisition requisition = lr->hbox->size_request();
+      Requisition requisition = lr->hbox->requisition();
       return requisition.height;
     }
 }
@@ -383,6 +397,9 @@ ItemListImpl::layout_list ()
   uint64 r, rcmin = current_item, rcmax = current_item;
   double height_before = area_height, height_after = area_height;
   IFDEBUG (dbg_cached = dbg_refilled = dbg_created = 0);
+  /* deactivate size-groups to avoid excessive resizes upon measure_row() */
+  for (uint i = 0; i < m_size_groups.size(); i++)
+    m_size_groups[i]->active (false);
   /* fill rows from scroll_item towards list end */
   double accu_height = 0;
   for (r = current_item; r < uint64 (m_model->count()) && (accu_height <= height_before || pixel_scrolling); r++)
@@ -418,6 +435,9 @@ ItemListImpl::layout_list ()
   m_row_map.swap (rc);
   for (RowMap::iterator ri = rc.begin(); ri != rc.end(); ri++)
     cache_row (ri->second);
+  /* activate size-groups to properly layout children */
+  for (uint i = 0; i < m_size_groups.size(); i++)
+    m_size_groups[i]->active (true);
   /* assign list row coordinates */
   if (has_allocatable_child())
     {

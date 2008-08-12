@@ -42,6 +42,7 @@ class ItemListImpl : public virtual SingleContainerImpl,
   uint                   m_n_cols;
   RowMap                 m_row_map;
   vector<ListRow*>       m_row_cache;
+  vector<SizeGroup*>     m_size_groups;
   bool                   m_browse;
 public:
   explicit              ItemListImpl            ();
