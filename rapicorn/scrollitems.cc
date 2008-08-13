@@ -79,7 +79,7 @@ ScrollAreaImpl::scroll_to (double x,
   hadjustment().freeze();
   vadjustment().freeze();
   m_hadjustment->value (round (x));
-  m_vadjustment->value (round (y));
+  m_vadjustment->flipped_value (round (y));
   m_hadjustment->constrain();
   m_vadjustment->constrain();
   m_hadjustment->thaw();
@@ -191,7 +191,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
         m_vadjustment->page_increment (CLAMP (d, l, h));
       }
     m_last_xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
-    m_last_yoffset = m_vadjustment ? round (m_vadjustment->value()) : 0.0;
+    m_last_yoffset = m_vadjustment ? round (m_vadjustment->flipped_value()) : 0.0;
     if (m_hadjustment)
       m_hadjustment->constrain();
     if (m_vadjustment)
@@ -207,7 +207,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     if (!has_drawable_child())
       return;
     double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
-    double yoffset = m_vadjustment ? round (m_vadjustment->value()) : 0.0;
+    double yoffset = m_vadjustment ? round (m_vadjustment->flipped_value()) : 0.0;
     const Allocation area = allocation();
     Item &child = get_child();
     const IRect ica = child.allocation();
@@ -236,7 +236,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
   adjustment_changed()
   {
     double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
-    double yoffset = m_vadjustment ? round (m_vadjustment->value()) : 0.0;
+    double yoffset = m_vadjustment ? round (m_vadjustment->flipped_value()) : 0.0;
     double xdelta = xoffset - m_last_xoffset;
     double ydelta = yoffset - m_last_yoffset;
     Root *ritem = get_root();
@@ -270,7 +270,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
   {
     const Allocation area = allocation();
     double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
-    double yoffset = m_vadjustment ? round (m_vadjustment->value()) : 0.0;
+    double yoffset = m_vadjustment ? round (m_vadjustment->flipped_value()) : 0.0;
     return AffineTranslate (-area.x + xoffset, -area.y + yoffset);
   }
   virtual void
@@ -340,7 +340,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     if (deltax)
       m_hadjustment->value (m_hadjustment->value() + deltax);
     if (deltay)
-      m_vadjustment->value (m_vadjustment->value() + deltay);
+      m_vadjustment->flipped_value (m_vadjustment->flipped_value() + deltay);
     m_hadjustment->constrain();
     m_vadjustment->constrain();
     m_hadjustment->thaw();

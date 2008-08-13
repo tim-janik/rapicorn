@@ -263,7 +263,7 @@ protected:
             double cheight = round (adj.abs_length() * area.height);
             rq.height = MAX (cheight, rq.height);
           }
-        area.y += round (nvalue() * (area.height - rq.height));
+        area.y += round ((1.0 - nvalue()) * (area.height - rq.height));
         area.height = round (rq.height);
       }
     child.set_allocation (area);
@@ -312,7 +312,7 @@ class SliderSkidImpl : public virtual EventHandler, public virtual SingleContain
   flipped()
   {
     SliderTroughImpl &trough = parent_interface<SliderTroughImpl>();
-    return trough.flipped();
+    return trough.flipped() ^ m_vertical_skid;
   }
   bool
   vertical_skid () const

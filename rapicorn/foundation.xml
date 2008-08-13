@@ -109,7 +109,7 @@
   <def:VSlider inherit="Rapicorn::Factory::SliderArea">
     <Frame normal-frame="in" vexpand="1" hexpand="1" width="18">
       <VBox hexpand="1">
-	<UnfocusedButton on-click="increment" on-click2="page-increment" click-type="fast-repeat" hexpand="1" center-child="0" >
+	<UnfocusedButton on-click="decrement" on-click2="page-increment" click-type="fast-repeat" hexpand="1" center-child="0" >
 	  <Arrow arrow-dir="up" size-policy="height-from-width"/>
 	</UnfocusedButton>
 	<Rapicorn-slider-trough vexpand="1" hexpand="1">
@@ -123,7 +123,7 @@
 	    </Ambience>
 	  </Rapicorn-slider-skid>
 	</Rapicorn-slider-trough>
-	<UnfocusedButton on-click="decrement" on-click2="page-decrement" click-type="fast-repeat" hexpand="1" center-child="0" >
+	<UnfocusedButton on-click="increment" on-click2="page-decrement" click-type="fast-repeat" hexpand="1" center-child="0" >
 	  <Arrow arrow-dir="down" size-policy="height-from-width"/>
 	</UnfocusedButton>
       </VBox>
