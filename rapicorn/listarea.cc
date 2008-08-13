@@ -352,7 +352,7 @@ ItemListImpl::get_scroll_item (double *row_offsetp,
    * position will always point at one particular item and the fractional
    * part is interpreted as an offset into the item's row.
    */
-  const double norm_value = 1.0 - m_vadjustment->nvalue(); /* 0..1 scroll position */
+  const double norm_value = m_vadjustment->nvalue(); /* 0..1 scroll position */
   const double scroll_value = norm_value * m_model->count();
   const int64 scroll_item = MIN (m_model->count() - 1, ifloor (scroll_value));
   *row_offsetp = MIN (1.0, scroll_value - scroll_item);
