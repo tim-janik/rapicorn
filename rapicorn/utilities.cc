@@ -88,8 +88,6 @@ rapicorn_gettext (const char *text)
   return dgettext (rapicorn_i18n_domain, text);
 }
 
-OwnedMutex rapicorn_mutex;
-
 /* --- exceptions --- */
 const std::nothrow_t dothrow = {};
 
