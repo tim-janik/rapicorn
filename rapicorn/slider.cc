@@ -290,12 +290,12 @@ protected:
           handled = get_child().process_event (event);
         break;
       case SCROLL_UP:
-      case SCROLL_RIGHT:
-        exec_command ("increment");
-        break;
-      case SCROLL_DOWN:
       case SCROLL_LEFT:
         exec_command ("decrement");
+        break;
+      case SCROLL_DOWN:
+      case SCROLL_RIGHT:
+        exec_command ("increment");
         break;
       default: break;
       }
