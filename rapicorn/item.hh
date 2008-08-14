@@ -62,7 +62,7 @@ class Item : public virtual Convertible, public virtual DataListContainer, publi
   Container                  *m_parent;         /* interface-inlined for fast read-out */
   Style                      *m_style;
   Requisition                 inner_size_request (); // ungrouped size requisition
-  void                        propagate_state    (bool notify_changed = true);
+  void                        propagate_state    (bool notify_changed);
   void                        propagate_style    ();
   Container**                 _parent_loc        () { return &m_parent; }
   RAPICORN_PRIVATE_CLASS_COPY  (Item);
