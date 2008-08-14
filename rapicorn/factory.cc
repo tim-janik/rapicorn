@@ -705,8 +705,8 @@ FactorySingleton::call_gadget_children (const BaseGadget   *bgadget,
       /* create child gadget */
       const ChildGadget *child_gadget = *cw;
       /* the real call arguments are stored as ancestor arguments of the child */
-      VariableMap call_args (child_gadget->ancestor_arguments);
-      Item &child = call_gadget (child_gadget, VariableMap(), call_args, env, ccslot, container);
+      Item &child = call_gadget (child_gadget, VariableMap(),
+                                 child_gadget->ancestor_arguments, env, ccslot, container);
       /* find child container */
       if (ccslot->cgadget == child_gadget)
         ccslot->item = &child;
