@@ -22,7 +22,6 @@
 #include <glib.h> // FIXME: GTimeVal
 
 namespace Rapicorn {
-using namespace std;
 
 /* --- assert poll constants --- */
 RAPICORN_STATIC_ASSERT (PollFD::IN     == POLLIN);
@@ -81,8 +80,8 @@ static int                    rapicorn_wakeups[2] = { -1, -1 }; // [0] = readabl
 
 /* --- EventLoopImpl --- */
 class EventLoopImpl : public virtual EventLoop {
-  typedef list<Source*>         SourceList;
-  typedef map<int, SourceList>  SourceListMap;
+  typedef std::list<Source*>        SourceList;
+  typedef std::map<int, SourceList> SourceListMap;
   Mutex          m_mutex;
 public:                                 // EventLoop::iterate_loops
   int            m_max_priority;        // EventLoop::iterate_loops
@@ -198,7 +197,7 @@ public:
       error ("EventLoop::m_counter overflow, please report");
     source->m_loop_state = UNCHECKED;
     source->m_priority = priority;
-    list<Source*> &slist = m_sources[priority];
+    std::list<Source*> &slist = m_sources[priority];
     slist.push_back (source);
     wakeup_L();
     return source->m_id;
@@ -438,17 +437,17 @@ EventLoop::kill_loops()
 {
   assert (rapicorn_thread_entered());
   /* create referenced loop list */
-  list<EventLoopImpl*> loops;
+  std::list<EventLoopImpl*> loops;
   for (uint i = 0; i < rapicorn_main_loops.size(); i++)
     loops.push_back (ref (rapicorn_main_loops[i]));
   /* kill loops */
-  for (list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
+  for (std::list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
     {
       EventLoopImpl &loop = **lit;
       loop.kill_sources();
     }
   /* cleanup */
-  for (list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
+  for (std::list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
     unref (*lit);
 }
 
@@ -486,11 +485,11 @@ EventLoop::iterate_loops (bool may_block,
   int64 timeout_usecs = INT64_MAX;
   bool seen_must_dispatch = false;
   /* create referenced loop list */
-  list<EventLoopImpl*> loops;
+  std::list<EventLoopImpl*> loops;
   for (uint i = 0; i < rapicorn_main_loops.size(); i++)
     loops.push_back (ref (rapicorn_main_loops[i]));
   /* prepare */
-  for (list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
+  for (std::list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
     {
       EventLoopImpl &loop = **lit;
       ref (loop);
@@ -526,7 +525,7 @@ EventLoop::iterate_loops (bool may_block,
       read (rapicorn_wakeups[0], buffer, sizeof (buffer));
     }
   /* check */
-  for (list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
+  for (std::list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
     {
       EventLoopImpl &loop = **lit;
       ref (loop);
@@ -536,7 +535,7 @@ EventLoop::iterate_loops (bool may_block,
     }
   /* dispatch */
   if (may_dispatch && seen_must_dispatch)
-    for (list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
+    for (std::list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
       {
         EventLoopImpl &loop = **lit;
         ref (loop);
@@ -544,7 +543,7 @@ EventLoop::iterate_loops (bool may_block,
         unref (loop);
       }
   /* cleanup */
-  for (list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
+  for (std::list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
     unref (*lit);
   return seen_must_dispatch && !may_dispatch;
 }

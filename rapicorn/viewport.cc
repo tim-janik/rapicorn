@@ -16,7 +16,6 @@
  */
 #include "viewport.hh"
 #include <list>
-using namespace std;
 
 namespace Rapicorn {
 

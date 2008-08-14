@@ -19,7 +19,6 @@
 #include "root.hh"
 #include <stack>
 #include <errno.h>
-using namespace std;
 
 namespace Rapicorn {
 struct ClassDoctor {

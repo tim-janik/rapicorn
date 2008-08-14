@@ -17,7 +17,6 @@
 #include "evaluator.hh"
 #include "sinfex.hh"
 #include "../configure.h"
-using namespace std;
 
 namespace Rapicorn {
 

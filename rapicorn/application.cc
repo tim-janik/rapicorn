@@ -21,7 +21,6 @@
 #include "root.hh"
 
 namespace Rapicorn {
-using namespace std;
 
 Application::ApplicationMutex Application::mutex;
 

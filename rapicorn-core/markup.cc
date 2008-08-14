@@ -28,7 +28,6 @@
 #define _(x) x  // FIXME
 
 namespace Rapicorn {
-using namespace std;
 
 /* --- string utils --- */
 static inline bool
@@ -92,10 +91,10 @@ struct MarkupParser::Context {
    */
   String partial_chunk;
   
-  GMarkupParseState state;
-  stack<String>  tag_stack;
-  vector<string> attr_names;
-  vector<string> attr_values;
+  GMarkupParseState  state;
+  std::stack<String> tag_stack;
+  vector<String>     attr_names;
+  vector<String>     attr_values;
   
   const char  *current_text;
   ssize_t       current_text_len;      

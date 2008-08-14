@@ -18,7 +18,6 @@
 #include "root.hh"
 
 namespace Rapicorn {
-using namespace std;
 
 /* --- implementation --- */
 Window::Window (Root &root) :

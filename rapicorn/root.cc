@@ -17,7 +17,6 @@
 #include "rootimpl.hh"
 
 namespace Rapicorn {
-using namespace std;
 
 struct ClassDoctor {
   static void item_set_flag   (Item &item, uint32 flag) { item.set_flag (flag, true); }

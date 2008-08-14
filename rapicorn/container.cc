@@ -19,7 +19,6 @@
 #include "root.hh"
 
 namespace Rapicorn {
-using namespace std;
 
 struct ClassDoctor {
   static void item_set_parent (Item &item, Container *parent) { item.set_parent (parent); }

@@ -18,7 +18,6 @@
 #include "root.hh"
 
 namespace Rapicorn {
-using namespace std;
 
 /* --- ScrollArea --- */
 ScrollArea::ScrollArea()
@@ -288,7 +287,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     if (!fitem)
       return;
     /* list focus items between focus_item and out immediate child */
-    list<Item*> fitems;
+    std::list<Item*> fitems;
     while (fitem)
       {
         fitems.push_back (fitem);
