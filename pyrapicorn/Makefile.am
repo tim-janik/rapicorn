@@ -6,7 +6,7 @@ DEFS	  = -DPYRAPICORN=pyRapicorn -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RA
 
 
 pyrapicorn_cc_sources = rpymodule.cc rpytypes.cc
-EXTRA_DIST = rpy.hh
+EXTRA_DIST += rpy.hh
 
 
 # === python module ===
