@@ -38,3 +38,4 @@ stamp-autochecks: $(XML_FILES)
 	@$(MAKE) xmllint-check
 	@touch $@
 noinst_DATA += stamp-autochecks
+CLEANFILES += stamp-autochecks

@@ -100,6 +100,7 @@ stamp-autochecks: $(XML_FILES)
 	@$(MAKE) xmllint-check
 	@touch $@
 noinst_DATA = stamp-autochecks
+CLEANFILES += stamp-autochecks
 
 # === ZIntern generation ===
 gen-zintern.c:	../rapicorn-core/rapicorn-zintern $(srcdir)/foundation.xml $(srcdir)/standard.xml stamp-autochecks
