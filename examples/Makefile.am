@@ -2,13 +2,13 @@
 include $(top_srcdir)/Makefile.decl
 
 INCLUDES	+= -I$(top_srcdir)
-DEFS		+= $(RAPICORN_CFLAGS)
+DEFS		+=
 
 # example programs
 noinst_PROGRAMS	 = $(EXAMPLES)
 noinst_DATA	 =
 EXAMPLES	 =
-LDADDS		 = $(top_builddir)/rapicorn/librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS)
+LDADDS		 = $(top_builddir)/rapicorn/librapicorn@RAPICORN_RELEASE@.la
 XML_FILES	 =
 EXTRA_DIST	+= $(XML_FILES)
 

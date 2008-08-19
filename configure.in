@@ -58,18 +58,25 @@ AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
 
 # initialize automake, don't define PACKAGE and VERSION
 AM_INIT_AUTOMAKE(rapicorn, $RAPICORN_PACKAGE_VERSION, no-define)
-
-# support subdirectories.
-AC_PROG_MAKE_SET
-
-# disable automatic maintainer mode.
-AM_MAINTAINER_MODE
+AM_MAINTAINER_MODE      dnl # disable automatic maintainer mode.
+AC_PROG_MAKE_SET        dnl # support subdirectories.
 
 # declare --enable-* args and collect ac_help strings
 AC_ARG_ENABLE(debug,       [  --enable-debug=[no/minimum/yes] turn on debugging [default=yes]],,enable_debug=yes)
-AC_ARG_ENABLE(profile,     [  --enable-profile=[no/yes] turn on profiling [default=no]],,enable_profile=no)
 AC_ARG_ENABLE(devel-rules, [  --enable-devel-rules=[no/yes]   turn on developer build rules],,)
-# $enable_devel_rules
+# package library defaults
+enable_static=no ; enable_shared=yes
+
+# configure requirements
+MC_ASSERT_PROG(PKG_CONFIG, pkg-config, [pkg-config can be found at http://pkgconfig.freedesktop.org/])
+
+# check for base package requirements early on
+PKG_CHECK_MODULES(BASE_DEPENDENCIES,[
+	cairo    >= 1.2.4
+	glib-2.0 >= 2.12.4
+	pango    >= 1.14.8
+	gtk+-2.0 >= 2.8.20
+])
 
 # setup DEBUG defaults
 if test "x$enable_debug" = "xyes"; then
@@ -79,13 +86,6 @@ else if test "x$enable_debug" = "xno"; then
 else
   ADDON_CFLAGS="-DG_DISABLE_CAST_CHECKS"
 fi fi
-if test "x$enable_profile" = "xyes"; then
-  if test -z "$ADDON_CFLAGS"; then
-    ADDON_CFLAGS="-pg"
-  else
-    ADDON_CFLAGS="$ADDON_CFLAGS -pg"
-  fi
-fi
 # setup CFLAGS
 if test -z "$CFLAGS"; then
   CFLAGS="$ADDON_CFLAGS"
@@ -97,10 +97,6 @@ if test -z "$CXXFLAGS"; then
 else
   CXXFLAGS="$CXXFLAGS $ADDON_CFLAGS"
 fi
-
-# foreign defaults:
-MC_IF_VAR_EQ(enable_static, yes, , enable_static=no)
-MC_IF_VAR_EQ(enable_shared, no, , enable_shared=yes)
 
 dnl # RAPICORN_SUBST_COMPUTED_SYSVAL(IDENTIFIER, INCLUDES) - defines & AC_SUBST()s RAPICORN_SYSVAL_$1
 AC_DEFUN([RAPICORN_SUBST_COMPUTED_SYSVAL], 
@@ -218,24 +214,37 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     if test -z "$LIBZ"; then
         AC_MSG_ERROR([Compression library libz is missing, but required])
     fi
-    AC_SUBST(LIBZ)
-    RAPICORN_DEP_LIBS="$LIBZ $RAPICORN_DEP_LIBS"
 
-    dnl # --- check for GLib --- 
-    DEPENDANCIES="glib-2.0 >= 2.6.4 gthread-2.0"
-    dnl # define GLIB_CFLAGS and GLIB_LIBS:
-    PKG_CHECK_MODULES(GLIB, $DEPENDANCIES,,
-	AC_MSG_ERROR([[Failed to detect or find $DEPENDANCIES (consider adjusting \$PKG_CONFIG_PATH)]]))
-    dnl # libtool doesn't automatically figure that -pthread implies -lpthread
-    RAPICORN_DEP_CFLAGS="$GLIB_CFLAGS"
-    RAPICORN_DEP_LIBS=`echo " $GLIB_LIBS" | sed 's/\(-pthread\b\)/-lpthread \1/' `" $RAPICORN_DEP_LIBS"
+    dnl --- require libpng ---
+    if test -z "$LIBPNG"; then
+	dnl # png_set_add_alpha() exists only since libpng v1.2
+	AC_MSG_CHECKING(for libpng12)
+	if $PKG_CONFIG --exists libpng12 ; then
+	    AC_MSG_RESULT(yes)
+	    LIBPNG=`$PKG_CONFIG --libs libpng12`
+	elif $PKG_CONFIG --exists libpng13 ; then
+	    AC_MSG_RESULT(yes)
+	    LIBPNG=`$PKG_CONFIG --libs libpng13`
+	else
+	    AC_MSG_RESULT(no)
+	    AC_MSG_ERROR([PNG image library libpng (>= 1.2) is missing, but required])
+	fi
+    fi
+
+    dnl # --- check for GLib (version checked above) ---
+    PKG_CHECK_MODULES(RAPICORN_CORE, glib-2.0 gthread-2.0)
+    # libtool doesn't automatically figure that -pthread implies -lpthread
+    RAPICORN_CORE_LIBS=`echo " $RAPICORN_CORE_LIBS" | sed 's/\(-pthread\b\)/\1 -lpthread/' `
+    RAPICORN_CORE_LIBS="$RAPICORN_CORE_LIBS $LIBPNG $LIBZ"
+    AC_SUBST(RAPICORN_CORE_CFLAGS)
+    AC_SUBST(RAPICORN_CORE_LIBS)
 
     dnl # --- check for memory barriers (needs glib) ---
     AC_MSG_CHECKING([for memory barriers])
     saved_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $RAPICORN_DEP_CFLAGS"
+    CFLAGS="$CFLAGS $RAPICORN_CORE_CFLAGS"
     saved_LIBS="$LIBS"
-    LIBS="$LIBS $RAPICORN_DEP_LIBS"
+    LIBS="$LIBS $RAPICORN_CORE_LIBS"
     AC_TRY_RUN([ #include <glib.h>
 	    int main () {
 	    #if defined (G_ATOMIC_OP_MEMORY_BARRIER_NEEDED) || (!GLIB_CHECK_VERSION (2, 8, 0) && !defined (__i386__))
@@ -253,10 +262,6 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     CFLAGS="$saved_CFLAGS"
     LIBS="$saved_LIBS"
     AC_SUBST(RAPICORN_MEMORY_BARRIER_NEEDED)
-
-    dnl # --- RAPICORN_DEP_CFLAGS & RAPICORN_DEP_LIBS ---
-    AC_SUBST(RAPICORN_DEP_CFLAGS)
-    AC_SUBST(RAPICORN_DEP_LIBS)
 ])
 
 dnl # RAPICORN_I18N_REQUIREMENTS() - check for all i18n requirements
@@ -304,62 +309,15 @@ AC_DEFUN([RAPICORN_I18N_REQUIREMENTS],
 dnl # RAPICORN_REQUIREMENTS() - checks everything needed by rapicorn/
 AC_DEFUN([RAPICORN_REQUIREMENTS],
 [
-    dnl --- require libpng ---
-    if test -z "$LIBPNG"; then
-	dnl # png_set_add_alpha() exists only snice libpng v1.2
-	AC_MSG_CHECKING(for libpng12)
-	if $PKG_CONFIG --exists libpng12 ; then
-	    AC_MSG_RESULT(yes)
-	    LIBPNG=`$PKG_CONFIG --libs libpng12`
-	elif $PKG_CONFIG --exists libpng13 ; then
-	    AC_MSG_RESULT(yes)
-	    LIBPNG=`$PKG_CONFIG --libs libpng13`
-	else
-	    AC_MSG_RESULT(no)
-	    AC_MSG_ERROR([PNG image library libpng (>= 1.2) is missing, but required])
-	fi
-    fi
-    AC_SUBST(LIBPNG)
-
-    dnl --- require libz ---
-    if test -z "$LIBZ"; then
-	AC_CHECK_LIB(z, gzsetparams,
-	    [AC_CHECK_HEADER(zlib.h, LIBZ='-lz', LIBZ='')],
-	    LIBZ='')
-    fi
-    if test -z "$LIBZ"; then
-        AC_MSG_ERROR([Compression library libz is missing, but required])
-    fi
-    AC_SUBST(LIBZ)
-
-    dnl --- check for Pango --- 
-    DEPENDANCIES=
-    DEPENDANCIES="$DEPENDANCIES glib-2.0 >= 2.4.11"
-    DEPENDANCIES="$DEPENDANCIES pangoft2 >= 1.4.0"
-    dnl # define PANGO_CFLAGS and PANGO_LIBS:
-    PANGO_PKG_ERRORS=OK
-    PKG_CHECK_MODULES(PANGO, $DEPENDANCIES,,
-	AC_MSG_WARN([[Failed to detect or find pango, building without pango modules (consider adjusting \$PKG_CONFIG_PATH)]]))
-    AC_SUBST(PANGO_CFLAGS)
-    AC_SUBST(PANGO_LIBS)
-    AM_CONDITIONAL(WITH_PANGO, test "x$PANGO_PKG_ERRORS" = xOK)
-
-    dnl --- check for Gtk+ --- 
-    DEPENDANCIES=
-    DEPENDANCIES="$DEPENDANCIES glib-2.0 >= 2.4.11"
-    DEPENDANCIES="$DEPENDANCIES gtk+-2.0 >= 2.4.11"
-    dnl # define GTK_CFLAGS and GTK_LIBS:
-    GTK_PKG_ERRORS=OK
-    PKG_CHECK_MODULES(GTK, $DEPENDANCIES,,
-	AC_MSG_WARN([[Failed to detect or find Gtk+, building without gtk programs (consider adjusting \$PKG_CONFIG_PATH)]]))
-    AC_SUBST(GTK_CFLAGS)
-    AC_SUBST(GTK_LIBS)
-    AM_CONDITIONAL(WITH_GTK, test "x$GTK_PKG_ERRORS" = xOK)
-
-    RAPICORN_DEP_CFLAGS="$GTK_CFLAGS $PANGO_CFLAGS $RAPICORN_DEP_CFLAGS"
-    RAPICORN_DEP_LIBS="$GTK_LIBS $PANGO_LIBS $LIBPNG $RAPICORN_DEP_LIBS"
-    AC_SUBST(RAPICORN_DEP_CFLAGS)
-    AC_SUBST(RAPICORN_DEP_LIBS)
+    dnl # --- check for Rapicorn GUI dependencies ---
+    PKG_CHECK_MODULES(RAPICORN_GUI, cairo glib-2.0 gthread-2.0 pangoft2 gtk+-2.0)
+    # libtool doesn't automatically figure that -pthread implies -lpthread
+    RAPICORN_GUI_LIBS=`echo " $RAPICORN_GUI_LIBS" | sed 's/\(-pthread\b\)/\1 -lpthread/' `
+    RAPICORN_GUI_LIBS="$RAPICORN_GUI_LIBS $LIBZ"
+    AC_SUBST(RAPICORN_GUI_CFLAGS)
+    AC_SUBST(RAPICORN_GUI_LIBS)
+    AM_CONDITIONAL(WITH_PANGO, true)
+    AM_CONDITIONAL(WITH_GTK, true)
 ])
 
 dnl # PYRAPICORN_REQUIREMENTS() - rapicorn python binding checks
@@ -443,31 +401,6 @@ AC_DEFUN([RAPICORN_CPU_FLAGS],
     AC_SUBST(SSE3_FLAGS)
 ])
 
-# check compilers and behaviour; setup CFLAGS
-MC_PROG_CC_WITH_CFLAGS
-MC_PROG_CXX_WITH_CXXFLAGS
-AC_PROG_CPP
-AC_PROG_CXX
-AC_PROG_CXXCPP
-AC_C_CONST
-AC_C_INLINE
-AC_HEADER_STDC
-
-# initialize libtool with dynamic module support
-AC_LIBTOOL_DLOPEN
-AM_PROG_LIBTOOL
-
-# check for package requirements.
-MC_IF_VAR_EQ(GCC, yes,,
-    AC_MSG_ERROR(This package requires GNU gcc)
-)
-MC_IF_VAR_EQ(GXX, yes,,
-    AC_MSG_ERROR(This package requires GNU g++)
-)
-
-# check build requirements
-MC_ASSERT_PROG(PKG_CONFIG, pkg-config, [pkg-config can be found at http://pkgconfig.freedesktop.org/])
-
 # check for development build rules (autogen.sh based builds)
 AC_MSG_CHECKING(whether develoment build rules are to be used)
 if test x"$enable_devel_rules" = xyes ; then
@@ -492,6 +425,28 @@ AC_SUBST(DVLBUILD)
 AC_SUBST(NOTDVLBUILD)
 AM_CONDITIONAL(IF_DVLBUILD, test -z "$DVLBUILD")
 AM_CONDITIONAL(IF_NOTDVLBUILD, test -z "$NOTDVLBUILD")
+
+# check compilers and behaviour; setup CFLAGS
+MC_PROG_CC_WITH_CFLAGS
+MC_PROG_CXX_WITH_CXXFLAGS
+AC_PROG_CPP
+AC_PROG_CXX
+AC_PROG_CXXCPP
+AC_C_CONST
+AC_C_INLINE
+AC_HEADER_STDC
+
+# initialize libtool with dynamic module support
+AC_LIBTOOL_DLOPEN
+AM_PROG_LIBTOOL
+
+# check for package requirements.
+MC_IF_VAR_EQ(GCC, yes,,
+    AC_MSG_ERROR(This package requires GNU gcc)
+)
+MC_IF_VAR_EQ(GXX, yes,,
+    AC_MSG_ERROR(This package requires GNU g++)
+)
 
 # check for development tools
 AC_CHECK_PROGS(XMLLINT, xmllint, true)

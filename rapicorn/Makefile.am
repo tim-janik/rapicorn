@@ -3,8 +3,8 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS		= . tests
 
-INCLUDES	+= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_DEP_CFLAGS)
-DEFS		 = -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
+INCLUDES	+= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
+DEFS		 = -DRAPICORN_INTERNALS $(RAPICORN_GUI_CFLAGS) -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
 
 # === Source Files ===
 rapicorn_top_headers = rapicorn.hh
@@ -70,7 +70,7 @@ librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined 						\
 ) # set libtool version and export symbols for resolving
-librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(top_builddir)/rapicorn-core/librapicorncore@RAPICORN_RELEASE@.o $(RAPICORN_DEP_LIBS) -lm # -lfreetype -lfontconfig
+librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(top_builddir)/rapicorn-core/librapicorncore@RAPICORN_RELEASE@.o $(RAPICORN_GUI_LIBS) -lm # -lfreetype -lfontconfig
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES)
 
 # === API Headers ===
@@ -88,7 +88,7 @@ sinfex.cc: sinfex.lgen sinfex.ygen
 
 # === Programs (not installed) ===
 noinst_PROGRAMS        = $(ALLTESTS)
-progs_ldadd            = librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS) -lm
+progs_ldadd            = librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_GUI_LIBS) -lm
 
 # === XML Files ===
 XML_FILES   = foundation.xml standard.xml

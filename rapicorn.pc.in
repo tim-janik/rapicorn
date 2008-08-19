@@ -8,5 +8,5 @@ Name: Rapicorn
 Description: Rapicorn (experimental UI toolkit)
 Requires: glib-2.0
 Version: @VERSION@
-Libs: -L${libdir} -lrapicorn@RAPICORN_RELEASE@ @RAPICORN_DEP_LIBS@
-Cflags: -I${includedir} @RAPICORN_DEP_CFLAGS@
+Libs: -L${libdir} -lrapicorn@RAPICORN_RELEASE@ @RAPICORN_GUI_LIBS@
+Cflags: -I${includedir} @RAPICORN_GUI_CFLAGS@

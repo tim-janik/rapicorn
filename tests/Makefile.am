@@ -2,8 +2,7 @@
 include $(top_srcdir)/Makefile.decl
 
 INCLUDES	+= -I$(top_srcdir)
-DEFS		+= $(RAPICORN_DEP_CFLAGS) -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"'
-DEFS            += $(GLIB_CFLAGS) # FIXME
+DEFS		+= -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"'
 
 noinst_DATA =
 XML_FILES   =

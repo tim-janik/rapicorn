@@ -2,11 +2,11 @@
 include $(top_srcdir)/Makefile.decl
 
 INCLUDES	+= -I$(top_srcdir)
-DEFS		+= $(RAPICORN_CFLAGS)
+DEFS		+=
 
 bin_PROGRAMS	 = $(BIN_PROGS)
 BIN_PROGS	 =
-LDADDS		 = $(top_builddir)/rapicorn/librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS)
+LDADDS		 = $(top_builddir)/rapicorn/librapicorn@RAPICORN_RELEASE@.la
 
 # rapidrun
 BIN_PROGS	+= rapidrun

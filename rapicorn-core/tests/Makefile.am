@@ -2,12 +2,11 @@
 include $(top_srcdir)/Makefile.decl
 
 INCLUDES	+= -I$(top_srcdir)
-DEFS		+= $(RAPICORN_CFLAGS) -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"' -DSRCDIR='"$(srcdir)"'
-DEFS		+= $(GLIB_CFLAGS) # FIXME
+DEFS		+= $(RAPICORN_CORE_CFLAGS) -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"' -DSRCDIR='"$(srcdir)"'
 
 # test programs
 noinst_PROGRAMS	 = $(TEST_PROGS) $(NOINSTPRGS)
-LDADDS		 = $(top_builddir)/rapicorn-core/librapicorncore@RAPICORN_RELEASE@.la $(RAPICORN_LIBS)
+LDADDS		 = $(top_builddir)/rapicorn-core/librapicorncore@RAPICORN_RELEASE@.la
 NOINSTPRGS =
 
 # programs

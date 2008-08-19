@@ -3,7 +3,7 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS		 = . tests
 
-INCLUDES	+= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_DEP_CFLAGS)
+INCLUDES	+= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_CORE_CFLAGS)
 DEFS		 = -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
 GLIB_MKENUMS	 = glib-mkenums
 
@@ -49,7 +49,7 @@ librapicorncore@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPIC
 librapicorncore@RAPICORN_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
 librapicorncore@RAPICORN_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
 librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES = ldscript.map
-librapicorncore@RAPICORN_RELEASE@_la_LIBADD       = $(RAPICORN_DEP_LIBS) -lm
+librapicorncore@RAPICORN_RELEASE@_la_LIBADD       = $(RAPICORN_CORE_LIBS) -lm
 librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
@@ -70,11 +70,11 @@ api-content:
 
 # === programs (not installed) ===
 noinst_PROGRAMS        = $(ALLTESTS)
-progs_ldadd            = librapicorncore@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS) -lm
+progs_ldadd            = librapicorncore@RAPICORN_RELEASE@.la $(RAPICORN_CORE_LIBS) -lm
 # rapicorn-zintern
 noinst_PROGRAMS       += rapicorn-zintern
 rapicorn_zintern_SOURCES = rapicorn-zintern.cc
-rapicorn_zintern_LDADD   = $(RAPICORN_DEP_LIBS) -lm # $(progs_ldadd)
+rapicorn_zintern_LDADD   = $(RAPICORN_CORE_LIBS) -lm # $(progs_ldadd)
 
 
 # === enum introspection ===
