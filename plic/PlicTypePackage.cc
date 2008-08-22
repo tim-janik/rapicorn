@@ -146,7 +146,7 @@ struct TypeInfo {
 /* TypeInfo Layout:
  * - __?                        // storage type
  * - llll TypeName              // type or field name
- * - aaaa                       // number of aux entries
+ * - kkkk                       // number of aux entries
  * - [ llll AuxEntry ]*         // kkkk times aux entry strings
  * - _Ts: llll TypeReference    // non-fundamental type references
  * - _Es: nnnn                  // number of values for choice types
