@@ -122,8 +122,11 @@ class Generator:
   def generate_namespace (self, namespace):
     s = encode_string (namespace.name)
     tsl = []
+    # sort namespace types for binary lookups
+    types = namespace.types()[:]        # list copy
+    types.sort (lambda o1, o2: cmp (o1.name, o2.name))
     # serialize types
-    for tp in namespace.types():
+    for tp in types:
       t = self.generate_type (tp)
       tsl += [ t ]
     # build type table
@@ -140,6 +143,9 @@ class Generator:
   def generate_pack (self, namespace_list):
     s = 'PlicTypePkg_01\r\n'            # magic
     s += encode_string ("unnamed")      # idl file name
+    # sort namespaces for binary lookups
+    namespace_list = namespace_list[:]  # list copy
+    namespace_list.sort (lambda o1, o2: cmp (o1.name, o2.name))
     # serialize namespaces
     nsl = []
     for ns in namespace_list:
