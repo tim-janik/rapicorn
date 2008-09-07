@@ -16,6 +16,7 @@ Parser.py: Parser.g
 	    -e 's/^from yapps import runtime$$//'		# parser.g has all imports
 	rm -f xgen-$(@F) xgen-$(@F).errors
 EXTRA_DIST += Parser.g Parser.py
+MAINTAINERCLEANFILES = Parser.py
 
 CONFIGVARS = \
 	"pyutilsdir"	: "${pyutilsdir}",	\
