@@ -1,3 +1,11 @@
+Dependencies
+============
+
+This version of Plic needs the yapps2.1.1 parser generator plus some Debian
+patches on top which improve include file handling and a few other things.
+In order to allow Plic to build beyond Debian systems, a recent version of
+Debians yapps2 has been included.
+
 Installation
 ============
 
