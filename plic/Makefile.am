@@ -8,9 +8,11 @@ PLICL       = plic
 
 bin_SCRIPTS = ${PLICV}
 
+YAPPS = ${PYTHON} ${top_srcdir}/yapps2_deb/yapps2.py
+
 # build parser
 Parser.py: Parser.g
-	yapps Parser.g xgen-$(@F) 2>&1 | tee xgen-$(@F).errors
+	${YAPPS} Parser.g xgen-$(@F) 2>&1 | tee xgen-$(@F).errors
 	@! grep -q '.' xgen-$(@F).errors			# catch all yapps errors & warnings
 	sed <xgen-$(@F) >$@			\
 	    -e 's/^from yapps import runtime$$//'		# parser.g has all imports
