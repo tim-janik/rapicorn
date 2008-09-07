@@ -6,9 +6,15 @@ def lookup(map, name):
     if not globalvars.has_key(name): print 'Undefined (defaulting to 0):', name
     return globalvars.get(name, 0)
 
+def stack_input(scanner,ign):
+    """Grab more input"""
+    scanner.stack_input(raw_input(">?> "))
+
 %%
 parser Calculator:
     ignore:    "[ \r\t\n]+"
+    ignore:    "[?]"         {{ stack_input }}
+
     token END: "$"
     token NUM: "[0-9]+"
     token VAR: "[a-zA-Z_]+"
@@ -34,7 +40,7 @@ parser Calculator:
 
     # A term is a number, variable, or an expression surrounded by parentheses
     rule term<<V>>:   
-                 NUM                      {{ return atoi(NUM) }}
+                 NUM                      {{ return int(NUM) }}
                | VAR                      {{ return lookup(V, VAR) }}
                | "\\(" expr "\\)"         {{ return expr }}
                | "let" VAR "=" expr<<V>>  {{ V = [(VAR, expr)] + V }}
@@ -51,8 +57,8 @@ if __name__=='__main__':
     # one expression, get the result, enter another expression, etc.)
     while 1:
         try: s = raw_input('>>> ')
-	except EOFError: break
-        if not strip(s): break
+        except EOFError: break
+        if not s.strip(): break
         parse('goal', s)
     print 'Bye.'
 

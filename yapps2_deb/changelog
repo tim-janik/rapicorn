@@ -1,3 +1,304 @@
+ChangeSet
+  1.38 05/01/22 19:36:32 smurf@smurf.noris.de +2 -0
+  Add option to limit backtrace depth on syntax errors.
+
+  yapps/runtime.py
+    1.15 05/01/22 19:36:31 smurf@smurf.noris.de +5 -1
+    Add option to limit backtrace depth on syntax errors.
+
+  debian/changelog
+    1.20 05/01/22 19:36:31 smurf@smurf.noris.de +2 -1
+    Add option to limit backtrace depth on syntax errors.
+
+ChangeSet
+  1.37 05/01/22 03:39:56 smurf@smurf.noris.de +2 -0
+  Fix recursive includes.
+
+  yapps/runtime.py
+    1.14 05/01/22 03:39:54 smurf@smurf.noris.de +395 -381
+    Fix recursive includes.
+
+  debian/changelog
+    1.19 05/01/22 03:39:54 smurf@smurf.noris.de +6 -0
+    Fix recursive includes.
+
+ChangeSet
+  1.36 04/12/23 23:49:52 smurf@smurf.noris.de +1 -0
+  Brown paper bag -- fix Python 2.4 stuff.
+
+  debian/changelog
+    1.18 04/12/23 23:49:52 smurf@smurf.noris.de +6 -0
+    Brown paper bag -- fix Python 2.4 stuff.
+
+ChangeSet
+  1.35 04/12/23 21:00:34 smurf@smurf.noris.de +1 -0
+  typo
+
+  debian/control
+    1.10 04/12/23 21:00:33 smurf@smurf.noris.de +1 -1
+    typo
+
+ChangeSet
+  1.34 04/12/12 20:22:54 smurf@smurf.noris.de +2 -0
+  Add support for Python 2.4
+
+  debian/control
+    1.9 04/12/12 20:22:52 smurf@smurf.noris.de +1 -1
+    Add support for Python 2.4
+
+  debian/changelog
+    1.17 04/12/12 20:22:52 smurf@smurf.noris.de +6 -0
+    Add support for Python 2.4
+
+ChangeSet
+  1.33 04/09/23 11:24:16 smurf@smurf.noris.de +3 -0
+  update documentation:
+  - toss hyphens
+  - document extensions
+
+  doc/yapps2.tex
+    1.3 04/09/23 11:24:16 smurf@smurf.noris.de +21 -0
+    add a Debian Extensions section
+
+  debian/yapps.1
+    1.2 04/09/23 11:24:16 smurf@smurf.noris.de +14 -9
+    escape more hyphens (i.e., all the rest)
+
+  debian/changelog
+    1.16 04/09/23 11:24:16 smurf@smurf.noris.de +2 -0
+    update documentation:
+    - toss hyphens
+    - document extensions
+
+ChangeSet
+  1.32 04/09/23 11:23:24 smurf@smurf.noris.de +2 -0
+  turn off triggers
+
+  BitKeeper/triggers/pre-commit.upversion
+    1.2 04/09/23 11:23:24 smurf@smurf.noris.de +2 -0
+    off
+
+  BitKeeper/triggers/post-commit.changelog
+    1.2 04/09/23 11:23:24 smurf@smurf.noris.de +2 -0
+    off
+
+ChangeSet
+  1.31 04/09/23 10:55:24 smurf@smurf.noris.de +1 -0
+  ignore new package's files
+
+  BitKeeper/etc/ignore
+    1.17 04/09/23 10:55:23 smurf@smurf.noris.de +1 -0
+    added debian/yapps2-runtime/*
+
+  debian/yapps2-runtime.README
+    1.1 04/09/23 10:50:33 smurf@smurf.noris.de +11 -0
+
+ChangeSet
+  1.30 04/09/23 10:50:33 smurf@smurf.noris.de +8 -0
+  split off runtime to its own package
+  document the fact that I can't use the original runtime
+
+  debian/yapps2-runtime.dirs
+    1.6 04/09/23 10:50:33 smurf@smurf.noris.de +2 -4
+    split off runtime
+
+  debian/yapps2-runtime.README
+    1.0 04/09/23 10:50:33 smurf@smurf.noris.de +0 -0
+    BitKeeper file /daten/src/debian/python_yapps/debian/yapps2-runtime.README
+
+  debian/rules
+    1.5 04/09/23 10:50:33 smurf@smurf.noris.de +4 -1
+    move runtime files to their own package
+
+  debian/control
+    1.8 04/09/23 10:50:33 smurf@smurf.noris.de +14 -1
+    split off runtime to its own package
+
+  debian/changelog
+    1.15 04/09/23 10:50:33 smurf@smurf.noris.de +9 -0
+    document package split
+
+  debian/README
+    1.2 04/09/23 10:50:33 smurf@smurf.noris.de +21 -4
+    Updated for package split
+
+  debian/yapps2.docs
+    1.3 04/09/23 10:31:15 smurf@smurf.noris.de +0 -0
+    Rename: debian/docs -> debian/yapps2.docs
+
+  debian/yapps2-runtime.dirs
+    1.5 04/09/23 10:30:48 smurf@smurf.noris.de +0 -0
+    bk cp yapps2.dirs yapps2-runtime.dirs
+
+  debian/yapps2.dirs
+    1.4 04/09/23 10:30:42 smurf@smurf.noris.de +0 -0
+    Rename: debian/dirs -> debian/yapps2.dirs
+
+  debian/yapps2.dirs
+    1.4 04/09/23 10:30:42 smurf@smurf.noris.de +0 -0
+    Rename: debian/dirs -> debian/yapps2.dirs
+
+ChangeSet
+  1.29 04/07/19 09:30:22 smurf@smurf.noris.de +5 -0
+  latex2html => hevea
+
+  debian/yapps2.doc-base
+    1.2 04/07/19 09:30:21 smurf@smurf.noris.de +2 -2
+    latex2html => hevea
+
+  debian/rules
+    1.4 04/07/19 09:30:21 smurf@smurf.noris.de +4 -2
+    latex2html => hevea
+
+  debian/control
+    1.7 04/07/19 09:30:21 smurf@smurf.noris.de +1 -1
+    latex2html => hevea
+
+  debian/changelog
+    1.14 04/07/19 09:30:21 smurf@smurf.noris.de +6 -0
+    latex2html => hevea
+
+  BitKeeper/etc/ignore
+    1.16 04/07/19 09:30:06 smurf@smurf.noris.de +1 -0
+    added doc/yapps2.haux
+
+  BitKeeper/etc/ignore
+    1.15 04/07/19 09:29:55 smurf@smurf.noris.de +1 -0
+    added doc/yapps2.ht*
+
+ChangeSet
+  1.28 04/07/12 09:35:59 smurf@smurf.noris.de +2 -0
+  Build-Depend on python.
+
+  debian/control
+    1.6 04/07/12 09:35:58 smurf@smurf.noris.de +1 -1
+    Build-Depend on python.
+
+  debian/changelog
+    1.13 04/07/12 09:35:58 smurf@smurf.noris.de +6 -0
+    doc
+
+ChangeSet
+  1.27 04/05/16 22:02:40 smurf@smurf.noris.de +2 -0
+  ship "empty" file
+
+  yapps/__init__.py
+    1.2 04/05/16 22:02:39 smurf@smurf.noris.de +1 -0
+    ship "empty" file
+
+  debian/changelog
+    1.12 04/05/16 22:02:39 smurf@smurf.noris.de +2 -1
+    doc
+
+ChangeSet
+  1.26 04/05/16 22:01:42 smurf@smurf.noris.de +2 -0
+  Typo (made large file handling slow)
+
+  yapps/runtime.py
+    1.13 04/05/16 22:01:42 smurf@smurf.noris.de +1 -1
+    Typo
+
+  debian/changelog
+    1.11 04/05/16 22:01:42 smurf@smurf.noris.de +6 -0
+    Version 2.1.1-11
+
+ChangeSet
+  1.25 04/05/14 12:25:51 smurf@smurf.noris.de +1 -0
+  exporter: test was in wrong dir
+
+  debian/exporter
+    1.3 04/05/14 12:25:51 smurf@smurf.noris.de +1 -0
+    wrong dir
+
+ChangeSet
+  1.24 04/05/14 12:20:04 smurf@smurf.noris.de +1 -0
+  Clean up external source before generating a diff
+
+  debian/exporter
+    1.2 04/05/14 12:20:04 smurf@smurf.noris.de +7 -0
+    Clean up external source before generating a diff
+
+ChangeSet
+  1.23 04/05/14 12:14:34 smurf@linux.smurf.noris.de +13 -0
+  Documentation update:
+   build and install HTML documentation from LaTex source
+
+  debian/changelog
+    1.10 04/05/14 12:14:33 smurf@linux.smurf.noris.de +7 -0
+    Version 2.1.1-10
+
+  debian/yapps2.doc-base
+    1.1 04/05/14 12:14:32 smurf@smurf.noris.de +13 -0
+
+  yapps_grammar.g
+    1.5 04/05/14 12:14:31 smurf@smurf.noris.de +1 -0
+    add my copyright notice
+
+  yapps/runtime.py
+    1.12 04/05/14 12:14:31 smurf@smurf.noris.de +1 -0
+    add my copyright notice
+
+  debian/yapps2.doc-base
+    1.0 04/05/14 12:14:31 smurf@smurf.noris.de +0 -0
+    BitKeeper file /usr/local/src/misc/yapps/debian/yapps2.doc-base
+
+  debian/rules
+    1.3 04/05/14 12:14:31 smurf@smurf.noris.de +5 -5
+    gernerate and install html documentation
+    don't install LICENSE file
+
+  debian/yapps2-runtime.dirs
+    1.3 04/05/14 12:14:30 smurf@smurf.noris.de +1 -2
+    drop overrides
+    add doc dir +html
+
+  debian/docs
+    1.2 04/05/14 12:14:30 smurf@smurf.noris.de +1 -1
+    install latex documentation
+
+  debian/dirs
+    1.3 04/05/14 12:14:30 smurf@smurf.noris.de +1 -2
+    drop overrides
+    add doc dir +html
+
+  debian/copyright
+    1.3 04/05/14 12:14:30 smurf@smurf.noris.de +21 -3
+    include license here instead of installing a LICENSE file
+
+  debian/control
+    1.5 04/05/14 12:14:30 smurf@smurf.noris.de +6 -6
+    Dep on latex2html
+    indent list
+
+  BitKeeper/etc/ignore
+    1.14 04/05/14 12:06:12 smurf@smurf.noris.de +1 -0
+    added doc/yapps2/*
+
+  BitKeeper/etc/ignore
+    1.13 04/05/14 12:06:07 smurf@smurf.noris.de +3 -0
+    added debian/yapps2/* debian/*.substvars debian/*.debhelper
+
+  BitKeeper/deleted/.del-overrides.lintian~19711613dc4ce90f
+    1.3 04/05/14 11:51:33 smurf@smurf.noris.de +0 -0
+    Delete: debian/overrides.lintian
+
+  BitKeeper/deleted/.del-overrides.linda~b0c6fa08da170a16
+    1.2 04/05/14 11:51:33 smurf@smurf.noris.de +0 -0
+    Delete: debian/overrides.linda
+
+  doc/yapps2.tex
+    1.2 04/05/14 11:34:34 smurf@smurf.noris.de +0 -0
+    Rename: yapps2.tex -> doc/yapps2.tex
+
+ChangeSet
+  1.22 04/05/14 11:33:27 smurf@smurf.noris.de +1 -0
+  Merge bk://server/public/python_yapps
+  into smurf.noris.de:/usr/local/src/misc/yapps
+
+  BitKeeper/deleted/.del-logging_ok~530b65bc14e5cc7c
+    1.2 04/05/14 11:33:26 smurf@smurf.noris.de +0 -0
+    'Auto converge rename'
+
   BitKeeper/etc/logging_ok
     1.1 04/05/14 11:33:13 smurf@smurf.noris.de +1 -0
 
@@ -24,6 +325,10 @@ ChangeSet
     1.2 04/05/14 11:31:17 smurf@smurf.noris.de +17 -2
     Fixed name
     Updated long description
+
+  debian/yapps2-runtime.dirs
+    1.2 04/05/14 11:31:17 smurf@smurf.noris.de +1 -1
+    rename: python-yapps => yapps2
 
   debian/rules
     1.2 04/05/14 11:31:17 smurf@smurf.noris.de +8 -8
@@ -170,6 +475,9 @@ ChangeSet
     1.0 03/12/30 11:51:25 smurf@smurf.noris.de +0 -0
     BitKeeper file /usr/local/src/misc/yapps/setup.py
 
+  debian/yapps2-runtime.dirs
+    1.1 03/12/30 11:51:24 smurf@smurf.noris.de +5 -0
+
   debian/yapps.1
     1.0 03/12/30 11:51:25 smurf@smurf.noris.de +0 -0
     BitKeeper file /usr/local/src/misc/yapps/debian/yapps.1
@@ -225,6 +533,10 @@ ChangeSet
   yapps/grammar.py
     1.10 03/12/30 11:51:24 smurf@smurf.noris.de +0 -2
     Drop shebang line, this is not a program.
+
+  debian/yapps2-runtime.dirs
+    1.0 03/12/30 11:51:24 smurf@smurf.noris.de +0 -0
+    BitKeeper file /usr/local/src/misc/yapps/debian/dirs
 
   debian/overrides.linda
     1.0 03/12/30 11:51:24 smurf@smurf.noris.de +0 -0
