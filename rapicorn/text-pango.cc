@@ -1075,9 +1075,11 @@ protected:
     offset = width - dot_size;
     x += offset / 2;
     width = dot_size;
-    int xmin = MAX (x, plane.xstart()), xbound = MIN (x + width, plane.xbound());
-    int ymin = MAX (y, plane.ystart()), ybound = MIN (y + height, plane.ybound());
-    int xspan = xbound - xmin;
+    const int xmin = MAX (x, plane.xstart()), xbound = MIN (x + width, plane.xbound());
+    const int ymin = MAX (y, plane.ystart()), ybound = MIN (y + height, plane.ybound());
+    if (xbound < xmin)
+      return;
+    const int xspan = xbound - xmin;
     for (int iy = ymin; iy < ybound; iy++)
       {
         uint32 *pp = plane.poke_span (xmin, iy, xspan), *p = pp;
@@ -1147,9 +1149,12 @@ protected:
       {
         Rect area = allocation();
         area.height -= MIN (area.height, layout_rect.height); // draw vdots beneth layout
-        render_dot_gL (plane, area.x, area.y, area.width / 3, area.height, dot_size, fg);
-        render_dot_gL (plane, area.x + area.width / 3, area.y, area.width / 3, area.height, dot_size, fg);
-        render_dot_gL (plane, area.x + 2 * area.width / 3, area.y, area.width / 3, area.height, dot_size, fg);
+        if (area.height > 0)
+          {
+            render_dot_gL (plane, area.x, area.y, area.width / 3, area.height, dot_size, fg);
+            render_dot_gL (plane, area.x + area.width / 3, area.y, area.width / 3, area.height, dot_size, fg);
+            render_dot_gL (plane, area.x + 2 * area.width / 3, area.y, area.width / 3, area.height, dot_size, fg);
+          }
       }
     /* constrain rendering area */
     Rect r = plane.rect();
