@@ -692,10 +692,10 @@ public:
   int           xbound     () const { return m_x + width(); }
   int           ybound     () const { return m_y + height(); }
   int           channels   () const { return 4; }
-  uint32*       poke_span  (int x, int y, uint len)
+  uint32*       poke_span  (int x, int y, int len)
   {
     int ix = x - m_x, iy = y - m_y;
-    if (ix >= 0 && iy >= 0 && len > 0 && ix + len <= (uint) width() && iy < height())
+    if (ix >= 0 && iy >= 0 && len > 0 && ix + len <= width() && iy < height())
       return peek (ix, iy);
     return NULL;
   }
