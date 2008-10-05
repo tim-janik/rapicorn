@@ -87,9 +87,9 @@ Application::auto_load (const String  &i18n_domain,
                         const String  &binary_path)
 {
   String fullname = auto_path (file_name, binary_path, true);
-  int err = Factory::parse_file (i18n_domain, file_name);
+  int err = Factory::parse_file (i18n_domain, fullname);
   if (err)
-    error ("failed to load \"%s\": %s", file_name.c_str(), string_from_errno (err).c_str());
+    error ("failed to load \"%s\": %s", fullname.c_str(), string_from_errno (err).c_str());
 }
 
 void
