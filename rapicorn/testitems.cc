@@ -157,7 +157,7 @@ protected:
         IRect ia = allocation();
         Plane &plane = display.create_plane();
         Painter painter (plane);
-        painter.draw_filled_rect (ia.x, ia.y, ia.width, ia.height, black());
+        painter.draw_filled_rect (ia.x, ia.y, ia.width, ia.height, heritage()->black());
       }
 
     Allocation rarea = get_root()->allocation();

@@ -19,8 +19,9 @@
 namespace Rapicorn {
 
 struct ClassDoctor {
-  static void item_set_flag   (Item &item, uint32 flag) { item.set_flag (flag, true); }
-  static void item_unset_flag (Item &item, uint32 flag) { item.unset_flag (flag); }
+  static void item_set_flag     (Item &item, uint32 flag) { item.set_flag (flag, true); }
+  static void item_unset_flag   (Item &item, uint32 flag) { item.unset_flag (flag); }
+  static void set_root_heritage (Root &root, Heritage *heritage) { root.heritage (heritage); }
 };
 
 class RootWindowImpl : public Window {
@@ -146,9 +147,7 @@ RootImpl::RootImpl() :
   m_tunable_requisition_counter (0),
   m_entered (false), m_auto_close (false)
 {
-  Appearance *appearance = Appearance::create_default();
-  style (appearance->create_style ("normal"));
-  unref (appearance);
+  ClassDoctor::set_root_heritage (*this, new Heritage (*this, *this));
   set_flag (PARENT_SENSITIVE, true);
   set_flag (PARENT_VISIBLE, true);
   /* adjust default Viewport config */

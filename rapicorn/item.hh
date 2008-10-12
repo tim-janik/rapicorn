@@ -21,7 +21,7 @@
 #include <rapicorn/region.hh>
 #include <rapicorn/commands.hh>
 #include <rapicorn/properties.hh>
-#include <rapicorn/appearance.hh>
+#include <rapicorn/heritage.hh>
 
 namespace Rapicorn {
 
@@ -60,11 +60,12 @@ class Item : public virtual Convertible, public virtual DataListContainer, publi
   friend                      class SizeGroup;
   uint32                      m_flags;          /* interface-inlined for fast read-out */
   Container                  *m_parent;         /* interface-inlined for fast read-out */
-  Style                      *m_style;
+  Heritage                   *m_heritage;
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        propagate_state    (bool notify_changed);
-  void                        propagate_style    ();
   Container**                 _parent_loc        () { return &m_parent; }
+  void                        propagate_heritage ();
+  void                        heritage           (Heritage  *heritage);
   RAPICORN_PRIVATE_CLASS_COPY  (Item);
 protected:
   virtual void                constructed             ();
@@ -121,7 +122,6 @@ protected:
   virtual void                visual_update        ();
   /* misc */
   virtual                     ~Item             ();
-  virtual void                style             (Style  *st);
   virtual void                finalize          ();
   virtual void                set_parent        (Container *parent);
   virtual void                hierarchy_changed (Item *old_toplevel);
@@ -246,21 +246,18 @@ public:
   virtual const Allocation&  allocation         () = 0;                         /* current allocation */
   /* display */
   virtual void               render             (Display        &display) = 0;
-  /* styles / appearance */
+  /* heritage / appearance */
   StateType             state                   () const;
-  Style*                style                   () { return m_style; }
-  Color                 foreground              () { return style()->standard_color (state(), COLOR_FOREGROUND); }
-  Color                 background              () { return style()->standard_color (state(), COLOR_BACKGROUND); }
-  Color                 selected_foreground     () { return style()->selected_color (state(), COLOR_FOREGROUND); }
-  Color                 selected_background     () { return style()->selected_color (state(), COLOR_BACKGROUND); }
-  Color                 focus_color             () { return style()->standard_color (state(), COLOR_FOCUS); }
-  Color                 default_color           () { return style()->standard_color (state(), COLOR_DEFAULT); }
-  Color                 light_glint             () { return style()->standard_color (state(), COLOR_LIGHT_GLINT); }
-  Color                 light_shadow            () { return style()->standard_color (state(), COLOR_LIGHT_SHADOW); }
-  Color                 dark_glint              () { return style()->standard_color (state(), COLOR_DARK_GLINT); }
-  Color                 dark_shadow             () { return style()->standard_color (state(), COLOR_DARK_SHADOW); }
-  Color                 white                   () { return style()->color_scheme (Style::STANDARD).generic_color (0xffffffff); }
-  Color                 black                   () { return style()->color_scheme (Style::STANDARD).generic_color (0xff000000); }
+  Heritage*             heritage                () const { return m_heritage; }
+  Color                 foreground              () { return heritage()->foreground (state()); }
+  Color                 background              () { return heritage()->background (state()); }
+  Color                 dark_color              () { return heritage()->dark_color (state()); }
+  Color                 dark_shadow             () { return heritage()->dark_shadow (state()); }
+  Color                 dark_glint              () { return heritage()->dark_glint (state()); }
+  Color                 light_color             () { return heritage()->light_color (state()); }
+  Color                 light_shadow            () { return heritage()->light_shadow (state()); }
+  Color                 light_glint             () { return heritage()->light_glint (state()); }
+  Color                 focus_color             () { return heritage()->focus_color (state()); }
   /* convenience */
   void                  find_adjustments        (AdjustmentSourceType adjsrc1,
                                                  Adjustment         **adj1,

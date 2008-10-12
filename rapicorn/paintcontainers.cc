@@ -178,7 +178,7 @@ public:
       background_color = prelight_background();
     else
       background_color = normal_background();
-    Color background = style()->resolve_color (background_color, STATE_NORMAL, COLOR_BACKGROUND);
+    Color background = heritage()->resolve_color (background_color, STATE_NORMAL, COLOR_BACKGROUND);
     Painter painter (plane);
     if (background)
       painter.draw_filled_rect (x, y, width, height, background);

@@ -19,7 +19,6 @@
 
 /* public include files */
 #include <rapicorn-core.hh>
-#include <rapicorn/appearance.hh>
 #include <rapicorn/application.hh>
 #include <rapicorn/arrangement.hh>
 #include <rapicorn/buttons.hh>
@@ -28,6 +27,7 @@
 #include <rapicorn/evaluator.hh>
 #include <rapicorn/events.hh>
 #include <rapicorn/factory.hh>
+#include <rapicorn/heritage.hh>
 #include <rapicorn/image.hh>
 #include <rapicorn/item.hh>
 #include <rapicorn/layoutcontainers.hh>

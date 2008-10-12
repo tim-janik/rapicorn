@@ -11,8 +11,8 @@ rapicorn_top_headers = rapicorn.hh
 rapicorn_public_headers = $(strip 	\
 	keycodes.hh	$(rapicorn_impl_headers)	\
 	utilities.hh	events.hh	application.hh	cmdlib.hh	\
-	primitives.hh	region.hh	loop.hh		viewport.hh		\
-	properties.hh	commands.hh	appearance.hh	painter.hh	window.hh		\
+	primitives.hh	region.hh	loop.hh		viewport.hh	heritage.hh		\
+	properties.hh	commands.hh			painter.hh	window.hh		\
 	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
 	adjustment.hh	image.hh	paintitems.hh	slider.hh	paintcontainers.hh	\
 	buttons.hh	factory.hh	evaluator.hh	scrollitems.hh	layoutcontainers.hh	\
@@ -34,8 +34,8 @@ rapicorn_cc_sources = $(strip 		\
 	\
 	viewport-gtk.cc	regionimpl.c	blitfuncs.cc	blit-mmx.cc	\
 	utilities.cc	events.cc	application.cc	cmdlib.cc	\
-	primitives.cc	region.cc	loop.cc		viewport.cc		\
-	properties.cc	commands.cc	appearance.cc	painter.cc	window.cc		\
+	primitives.cc	region.cc	loop.cc		viewport.cc	heritage.cc		\
+	properties.cc	commands.cc			painter.cc	window.cc		\
 	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\
 	adjustment.cc	image.cc	paintitems.cc	slider.cc	paintcontainers.cc	\
 	buttons.cc	factory.cc	evaluator.cc	scrollitems.cc	layoutcontainers.cc	\

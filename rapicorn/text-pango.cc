@@ -41,7 +41,7 @@ namespace Rapicorn {
 
 /* --- prototypes --- */
 static void _rapicorn_pango_renderer_render_layout     (Plane           &plane,
-                                                        Style           &style,
+                                                        Heritage        &heritage,
                                                         Color            fg,
                                                         PangoLayout     *layout,
                                                         Rect             rect,
@@ -321,8 +321,8 @@ static LayoutCache global_layout_cache; // protected by rapicorn_gtk_threads_ent
 
 /* --- LazyColorAttr --- */
 class LazyColorAttr {
-  /* we need our own color attribute, because color names can only be
-   * resolved after items has a style assigned
+  /* we need our own color attribute, because color names can only
+   * be resolved for anchored items, that have heritage assigned
    */
   PangoAttrColor pcolor;
   String         cname;
@@ -389,11 +389,11 @@ public:
   }
   static Color
   resolve_color (const PangoAttribute *attr,
-                 Style                &style)
+                 Heritage             &heritage)
   {
     assert (attr->klass == foreground_klass() || attr->klass == background_klass());
     const LazyColorAttr *self = (const LazyColorAttr*) attr;
-    Color c = style.resolve_color (self->cname, STATE_NORMAL, self->ctype);
+    Color c = heritage.resolve_color (self->cname, STATE_NORMAL, self->ctype);
     return c;
   }
   static String
@@ -1168,7 +1168,7 @@ protected:
     pango_layout_get_extents (m_layout, NULL, &lrect);
     lx += UNITS2PIXELS (lrect.x);
     lx -= m_scoffset;
-    _rapicorn_pango_renderer_render_layout (plane, *style(), fg, m_layout, r, ifloor (lx), ifloor (ly));
+    _rapicorn_pango_renderer_render_layout (plane, *heritage(), fg, m_layout, r, ifloor (lx), ifloor (ly));
     /* and cursor */
     render_cursor_gL (plane, fg, r, lx, ly);
   }
@@ -1241,15 +1241,12 @@ protected:
       {
         const double ax = area.x, ay = area.y;
         Plane plane2 (Plane::init_from_size (plane));
+        Color insensitive_glint, insensitive_ink = heritage()->insensitive_ink (state(), &insensitive_glint);
         /* render embossed text */
         area.x = ax, area.y = ay - 1;
-        render_text_gL (plane, area, vdot_size, white());
+        render_text_gL (plane, area, vdot_size, insensitive_glint);
         area.x = ax - 1, area.y = ay;
-        Color insensitive_shadow = dark_shadow();
-        insensitive_shadow = style()->color_scheme (Style::STANDARD).make_dark_color (insensitive_shadow);
-        insensitive_shadow = style()->color_scheme (Style::STANDARD).make_dark_color (insensitive_shadow);
-        insensitive_shadow = style()->color_scheme (Style::STANDARD).make_dark_color (insensitive_shadow);
-        render_text_gL (plane2, area, vdot_size, insensitive_shadow);
+        render_text_gL (plane2, area, vdot_size, insensitive_ink);
         plane.combine (plane2, COMBINE_OVER);
       }
     else
@@ -1275,7 +1272,7 @@ static const ItemFactory<TextPangoImpl> text_pango_factory ("Rapicorn::Factory::
 struct RapicornPangoRenderer {
   PangoRenderer    parent_instance;
   Plane           *plane;
-  Style           *style;
+  Heritage        *heritage;
   Color            rfg, fg, bg;
   gint64           x, y, width, height;
 };
@@ -1290,7 +1287,7 @@ _rapicorn_pango_renderer_init (RapicornPangoRenderer *self)
 
 static void
 _rapicorn_pango_renderer_render_layout (Plane           &plane,
-                                        Style           &style,
+                                        Heritage        &heritage,
                                         Color            fg,
                                         PangoLayout     *layout,
                                         Rect             rect,
@@ -1300,7 +1297,7 @@ _rapicorn_pango_renderer_render_layout (Plane           &plane,
   RapicornPangoRenderer *self = (RapicornPangoRenderer*) g_object_new (_rapicorn_pango_renderer_get_type(), NULL);
   /* (+layout_x, -layout_y) corresponds to (rect.x, rect.y+rect.height) */
   self->plane = &plane;
-  self->style = &style;
+  self->heritage = &heritage;
   self->rfg = fg;
   self->x = ifloor (rect.x);
   self->y = ifloor (rect.y);
@@ -1320,9 +1317,9 @@ _rapicorn_pango_renderer_prepare_run (PangoRenderer  *renderer,
     {
       const PangoAttribute *attr = (const PangoAttribute*) slist->data;
       if (attr->klass == LazyColorAttr::foreground_klass())
-        self->fg = LazyColorAttr::resolve_color (attr, *self->style);
+        self->fg = LazyColorAttr::resolve_color (attr, *self->heritage);
       else if (attr->klass == LazyColorAttr::background_klass())
-        self->bg = LazyColorAttr::resolve_color (attr, *self->style);
+        self->bg = LazyColorAttr::resolve_color (attr, *self->heritage);
     }
   PANGO_RENDERER_CLASS (_rapicorn_pango_renderer_parent_class)->prepare_run (renderer, run);
 }

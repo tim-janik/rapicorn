@@ -37,7 +37,7 @@ EventHandler::handle_event (const Event &event)
 Item::Item () :
   m_flags (VISIBLE | SENSITIVE | ALLOCATABLE),
   m_parent (NULL),
-  m_style (NULL),
+  m_heritage (NULL),
   sig_finalize (*this),
   sig_changed (*this, &Item::do_changed),
   sig_invalidate (*this, &Item::do_invalidate),
@@ -389,10 +389,10 @@ Item::~Item()
   SizeGroup::delete_item (*this);
   if (parent())
     parent()->remove (this);
-  if (m_style)
+  if (m_heritage)
     {
-      m_style->unref();
-      m_style = NULL;
+      m_heritage->unref();
+      m_heritage = NULL;
     }
   uint timer_id = get_data (&visual_update_key);
   if (timer_id)
@@ -622,29 +622,28 @@ Item::list_properties ()
 }
 
 void
-Item::propagate_style ()
+Item::propagate_heritage ()
 {
   Container *container = dynamic_cast<Container*> (this);
   if (container)
     for (Container::ChildWalker it = container->local_children(); it.has_next(); it++)
-      it->style (m_style);
+      it->heritage (m_heritage);
 }
 
 void
-Item::style (Style *st)
+Item::heritage (Heritage *heritage)
 {
-  if (m_style)
+  if (m_heritage)
     {
-      m_style->unref();
-      m_style = NULL;
+      m_heritage->unref();
+      m_heritage = NULL;
     }
-  if (st)
+  if (heritage)
     {
-      m_style = st->create_style (st->name());
-      ref_sink (m_style);
+      m_heritage = ref_sink (heritage);
       invalidate();
     }
-  propagate_style ();
+  propagate_heritage ();
 }
 
 static bool
@@ -852,7 +851,8 @@ Item::set_parent (Container *pcontainer)
       Root *rtoplevel = get_root();
       pc->unparent_child (*this);
       invalidate();
-      style (NULL);
+      if (heritage())
+        heritage (NULL);
       m_parent = NULL;
       propagate_state (false); // propagate PARENT_VISIBLE, PARENT_SENSITIVE
       if (anchored() and rtoplevel)
@@ -865,7 +865,8 @@ Item::set_parent (Container *pcontainer)
       if (!dynamic_cast<Container*> (pcontainer))
         throw Exception ("not setting non-Container item as parent: ", pcontainer->name());
       m_parent = pcontainer;
-      style (m_parent->style());
+      if (m_parent->heritage())
+        heritage (m_parent->heritage());
       invalidate();
       propagate_state (true);
       if (m_parent->anchored() and !anchored())
