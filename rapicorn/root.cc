@@ -147,7 +147,7 @@ RootImpl::RootImpl() :
   m_tunable_requisition_counter (0),
   m_entered (false), m_auto_close (false)
 {
-  ClassDoctor::set_root_heritage (*this, new Heritage (*this, *this));
+  ClassDoctor::set_root_heritage (*this, Heritage::create_heritage (*this, "normal"));
   set_flag (PARENT_SENSITIVE, true);
   set_flag (PARENT_VISIBLE, true);
   /* adjust default Viewport config */

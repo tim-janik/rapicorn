@@ -23,22 +23,20 @@ namespace Rapicorn {
 
 class Root;
 class Item;
-class ThemeHandle;
 
 class Heritage : public virtual ReferenceCountImpl {
   friend        class ClassDoctor;
-  ThemeHandle  *m_theme;
-  Item         &m_item;
+  class Internals;
+  Internals    *m_internals;
   Root         &m_root;
-protected:
-  Heritage&     create_modified (const String &theme_name,
-                                 Item         &_item,
-                                 Root         &_root);
+  explicit      Heritage        (Root      &root,
+                                 Internals *internals);
+  /*Des*/      ~Heritage        ();
 public:
-  explicit      Heritage        (Item &_item,
-                                 Root &_root);
+  static
+  Heritage*     create_heritage (Item         &item,
+                                 const String &variant);
   Root&         root            () const { return m_root; }
-  Item&         heritage_item   () const { return m_item; }
   /* colors */
   Color         get_color       (StateType state,
                                  ColorType ct) const;
@@ -62,6 +60,8 @@ public:
   Color         blue            (StateType st = STATE_NORMAL) const { return get_color (st, COLOR_BLUE); }
   Color         magenta         (StateType st = STATE_NORMAL) const { return get_color (st, COLOR_MAGENTA); }
   Color         insensitive_ink (StateType st = STATE_NORMAL, Color *glint = NULL) const;
+  /* variants */
+  Heritage&     selected        ();
   /* parsing */
   Color         resolve_color   (const String  &color_name,
                                  StateType      state,

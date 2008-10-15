@@ -1252,7 +1252,15 @@ protected:
     else
       {
         /* render normal text */
-        render_text_gL (plane, area, vdot_size, foreground());
+        if (1)
+          render_text_gL (plane, area, vdot_size, foreground());
+        else
+          {
+            Heritage &hr = heritage()->selected();
+            Painter painter (plane);
+            painter.draw_filled_rect (area.x, area.y, area.width, area.height, hr.background());
+            render_text_gL (plane, area, vdot_size, hr.foreground());
+          }
       }
     rapicorn_gtk_threads_leave();
   }

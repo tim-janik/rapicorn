@@ -15,6 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "heritage.hh"
+#include "item.hh"
 
 namespace Rapicorn {
 
@@ -112,8 +113,8 @@ colorset_base (StateType state,
 {
   switch (color_type)
     {
-    case COLOR_FOREGROUND:      return 0xffeeeeee;
-    case COLOR_BACKGROUND:      return 0xff101010;
+    case COLOR_FOREGROUND:      return 0xff101010;
+    case COLOR_BACKGROUND:      return 0xfff4f4f4;
     case COLOR_BACKGROUND_EVEN: return lighten (colorset_base (state, COLOR_BACKGROUND));
     case COLOR_BACKGROUND_ODD:  return darken  (colorset_base (state, COLOR_BACKGROUND));
     default:                    return colorset_normal (state, color_type);
@@ -122,43 +123,78 @@ colorset_base (StateType state,
 
 typedef Color (*ColorFunc) (StateType, ColorType);
 
-class ThemeHandle {
-  ColorFunc cf;
+class Heritage::Internals {
+  Item     &m_item;
+  ColorFunc ncf, scf;
 public:
-  explicit ThemeHandle (ColorFunc _cf) :
-    cf (_cf)
+  Heritage *selected;
+  Internals (Item     &item,
+             ColorFunc normal_cf,
+             ColorFunc selected_cf) :
+    m_item (item), ncf (normal_cf), scf (selected_cf), selected (NULL)
   {}
-  Color get_color (StateType state, ColorType ct) const { return cf (state, ct); }
+  Color
+  get_color (const Heritage *heritage,
+             StateType       state,
+             ColorType       ct) const
+  {
+    if (heritage == selected)
+      return scf (state, ct);
+    else
+      return ncf (state, ct);
+  }
 };
 
-static ThemeHandle theme_normal   (colorset_normal);
-static ThemeHandle theme_selected (colorset_selected);
-static ThemeHandle theme_base     (colorset_base);
-
-Heritage::Heritage (Item &_item,
-                    Root &_root) :
-  m_theme (NULL), m_item (_item), m_root (_root)
+Heritage::~Heritage ()
 {
-  m_theme = &theme_normal;
+  if (m_internals)
+    {
+      if (m_internals->selected == this)
+        m_internals->selected = NULL;
+      else
+        {
+          if (m_internals->selected)
+            m_internals->selected->m_internals = NULL;
+          delete m_internals;
+          m_internals = NULL;
+        }
+    }
 }
 
-Heritage&
-Heritage::create_modified (const String &theme_name,
-                           Item         &_item,
-                           Root         &_root)
+Heritage*
+Heritage::create_heritage (Item         &item,
+                           const String &variant)
 {
-  Heritage *dest;
-  if (&_item != &heritage_item() || &_root != &root() || theme_name != "normal")
+  Root *root = item.get_root();
+  if (!root)
+    error ("Heritage: heritage created without root item for: %s", item.name().c_str());
+  ColorFunc ncf = colorset_normal;
+  if (variant == "base")
+    ncf = colorset_base;
+  Internals *internals = new Internals (item, ncf, colorset_selected);
+  Heritage *self = new Heritage (*root, internals);
+  return self;
+}
+
+Heritage::Heritage (Root      &root,
+                    Internals *internals) :
+  m_internals (internals), m_root (root)
+{}
+
+Heritage&
+Heritage::selected ()
+{
+  if (m_internals)
     {
-      dest = new Heritage (_item, _root);
-      if (theme_name == "selected")
-        dest->m_theme = &theme_selected;
-      else if (theme_name == "base")
-        dest->m_theme = &theme_base;
+      if (!m_internals->selected)
+        {
+          m_internals->selected = new Heritage (m_root, m_internals);
+          ref_sink (m_internals->selected);
+        }
+      return *m_internals->selected;
     }
   else
-    dest = ref (this);
-  return *dest;
+    return *this;
 }
 
 Color
@@ -166,8 +202,8 @@ Heritage::get_color (StateType state,
                      ColorType color_type) const
 {
   Color c;
-  if (m_theme)
-    c = m_theme->get_color (state, color_type);
+  if (m_internals)
+    c = m_internals->get_color (this, state, color_type);
   return state_color (c, state, color_type);
 }
 
