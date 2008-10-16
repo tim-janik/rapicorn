@@ -168,10 +168,12 @@ Heritage::create_heritage (Item         &item,
   Root *root = item.get_root();
   if (!root)
     error ("Heritage: heritage created without root item for: %s", item.name().c_str());
-  ColorFunc ncf = colorset_normal;
+  ColorFunc cnorm = colorset_normal, csel = colorset_selected;
   if (variant == "base")
-    ncf = colorset_base;
-  Internals *internals = new Internals (item, ncf, colorset_selected);
+    cnorm = colorset_base;
+  else if (variant == "selected")
+    cnorm = colorset_selected;
+  Internals *internals = new Internals (item, cnorm, csel);
   Heritage *self = new Heritage (*root, internals);
   return self;
 }
