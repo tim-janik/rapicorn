@@ -24,6 +24,10 @@
 
 namespace Rapicorn {
 
+struct ClassDoctor {
+  static void update_item_heritage (Item &item) { item.heritage (item.heritage()); }
+};
+
 EventHandler::EventHandler() :
   sig_event (*this, &EventHandler::handle_event)
 {}
@@ -594,13 +598,14 @@ Item::list_properties ()
     MakeProperty (Item, height,    _("Requested Height"), _("The height to request from its container for this item, -1=automatic"), -1, MAXINT, 5, "rw"),
     MakeProperty (Item, visible,   _("Visible"), _("Whether this item is visible"), "rw"),
     MakeProperty (Item, sensitive, _("Sensitive"), _("Whether this item is sensitive (receives events)"), "rw"),
+    MakeProperty (Item, color_scheme, _("Color Scheme"), _("Color scheme to render this item"), "rw"),
+    /* packing */
     MakeProperty (Item, hexpand,   _("Horizontal Expand"), _("Whether to expand this item horizontally"), "rw"),
     MakeProperty (Item, vexpand,   _("Vertical Expand"), _("Whether to expand this item vertically"), "rw"),
     MakeProperty (Item, hspread,   _("Horizontal Spread"), _("Whether to expand this item and all its parents horizontally"), "rw"),
     MakeProperty (Item, vspread,   _("Vertical Spread"), _("Whether to expand this item and all its parents vertically"), "rw"),
     MakeProperty (Item, hshrink,   _("Horizontal Shrink"), _("Whether the item may be shrunken horizontally"), "rw"),
     MakeProperty (Item, vshrink,   _("Vertical Shrink"),   _("Whether the item may be shrunken vertically"), "rw"),
-    /* packing */
     MakeProperty (Item, hposition, _("Horizontal Position"), _("Horizontal layout position for the item"), 0u, 99999u, 5u, "Prw"),
     MakeProperty (Item, hspan,     _("Horizontal Span"),     _("Horizontal span for item layout"), 1u, 100000u, 5u, "Prw"),
     MakeProperty (Item, vposition, _("Vertical Position"),   _("Vertical layout position for the item"), 0u, 99999u, 5u, "Prw"),
@@ -633,6 +638,9 @@ Item::propagate_heritage ()
 void
 Item::heritage (Heritage *heritage)
 {
+  if (heritage)
+    ref (heritage);
+  bool need_propagate = m_heritage != heritage;
   if (m_heritage)
     {
       m_heritage->unref();
@@ -640,10 +648,14 @@ Item::heritage (Heritage *heritage)
     }
   if (heritage)
     {
-      m_heritage = ref_sink (heritage);
-      invalidate();
+      m_heritage = ref_sink (heritage->adapt_heritage (*this, color_scheme()));
+      unref (heritage);
     }
-  propagate_heritage ();
+  if (need_propagate)
+    {
+      invalidate();
+      propagate_heritage ();
+    }
 }
 
 static bool
@@ -1252,6 +1264,27 @@ void
 ItemImpl::name (const String &str)
 {
   m_name = str;
+}
+
+static DataKey<ColorSchemeType> item_color_scheme_key;
+
+ColorSchemeType
+ItemImpl::color_scheme () const
+{
+  return get_data (&item_color_scheme_key);
+}
+
+void
+ItemImpl::color_scheme (ColorSchemeType cst)
+{
+  if (cst != get_data (&item_color_scheme_key))
+    {
+      if (!cst)
+        delete_data (&item_color_scheme_key);
+      else
+        set_data (&item_color_scheme_key, cst);
+      ClassDoctor::update_item_heritage (*this);
+    }
 }
 
 Requisition

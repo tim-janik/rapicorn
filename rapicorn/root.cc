@@ -22,6 +22,11 @@ struct ClassDoctor {
   static void item_set_flag     (Item &item, uint32 flag) { item.set_flag (flag, true); }
   static void item_unset_flag   (Item &item, uint32 flag) { item.unset_flag (flag); }
   static void set_root_heritage (Root &root, Heritage *heritage) { root.heritage (heritage); }
+  static Heritage*
+  root_heritage (Root &root, ColorSchemeType cst)
+  {
+    return Heritage::create_heritage (root, root, cst);
+  }
 };
 
 class RootWindowImpl : public Window {
@@ -147,7 +152,10 @@ RootImpl::RootImpl() :
   m_tunable_requisition_counter (0),
   m_entered (false), m_auto_close (false)
 {
-  ClassDoctor::set_root_heritage (*this, Heritage::create_heritage (*this, "normal"));
+  Heritage *hr = ClassDoctor::root_heritage (*this, color_scheme());
+  ref_sink (hr);
+  ClassDoctor::set_root_heritage (*this, hr);
+  unref (hr);
   set_flag (PARENT_SENSITIVE, true);
   set_flag (PARENT_VISIBLE, true);
   /* adjust default Viewport config */

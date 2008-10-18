@@ -32,10 +32,13 @@ class Heritage : public virtual ReferenceCountImpl {
   explicit      Heritage        (Root      &root,
                                  Internals *internals);
   /*Des*/      ~Heritage        ();
-public:
   static
-  Heritage*     create_heritage (Item         &item,
-                                 const String &variant);
+  Heritage*     create_heritage (Root           &root,
+                                 Item           &item,
+                                 ColorSchemeType color_scheme);
+public:
+  Heritage*     adapt_heritage  (Item           &item,
+                                 ColorSchemeType color_scheme);
   Root&         root            () const { return m_root; }
   /* colors */
   Color         get_color       (StateType state,

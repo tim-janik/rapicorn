@@ -130,6 +130,14 @@ typedef enum {
 typedef EnumType<ColorType> EnumTypeColorType;
 
 typedef enum {
+  COLOR_INHERIT,
+  COLOR_NORMAL,
+  COLOR_SELECTED,
+  COLOR_BASE,
+} ColorSchemeType;
+typedef EnumType<ColorSchemeType> EnumTypeColorSchemeType;
+
+typedef enum {
   DIR_NONE,
   DIR_RIGHT,
   DIR_UP,

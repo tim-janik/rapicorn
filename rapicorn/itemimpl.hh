@@ -35,6 +35,8 @@ protected:
   virtual bool          do_event        (const Event &event);
   virtual String        name            () const;
   virtual void          name            (const String &str);
+  virtual ColorSchemeType    color_scheme           () const;
+  virtual void               color_scheme           (ColorSchemeType cst);
   virtual const Allocation&  allocation             ();
   virtual Requisition        cache_requisition      (Requisition *requisition);
   virtual bool               tune_requisition       (Requisition requisition);

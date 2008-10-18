@@ -133,6 +133,13 @@ public:
              ColorFunc selected_cf) :
     m_item (item), ncf (normal_cf), scf (selected_cf), selected (NULL)
   {}
+  bool
+  match (Item &item,
+         ColorFunc normal_cf,
+         ColorFunc selected_cf)
+  {
+    return item == m_item && normal_cf == ncf && selected_cf == scf;
+  }
   Color
   get_color (const Heritage *heritage,
              StateType       state,
@@ -162,20 +169,45 @@ Heritage::~Heritage ()
 }
 
 Heritage*
-Heritage::create_heritage (Item         &item,
-                           const String &variant)
+Heritage::create_heritage (Root           &root,
+                           Item           &item,
+                           ColorSchemeType color_scheme)
 {
+  Root *iroot = item.get_root();
+  assert (iroot == &root);
+  ColorFunc cnorm = colorset_normal, csel = colorset_selected;
+  switch (color_scheme)
+    {
+    case COLOR_BASE:            cnorm = colorset_base; break;
+    case COLOR_SELECTED:        cnorm = colorset_selected; break;
+    case COLOR_NORMAL: case COLOR_INHERIT: ;
+    }
+  Internals *internals = new Internals (item, cnorm, csel);
+  Heritage *self = new Heritage (root, internals);
+  return self;
+}
+
+Heritage*
+Heritage::adapt_heritage (Item           &item,
+                          ColorSchemeType color_scheme)
+{
+  if (m_internals)
+    {
+      ColorFunc cnorm = colorset_normal, csel = colorset_selected;
+      switch (color_scheme)
+        {
+        case COLOR_INHERIT:     return this;
+        case COLOR_BASE:        cnorm = colorset_base; break;
+        case COLOR_SELECTED:    cnorm = colorset_selected; break;
+        case COLOR_NORMAL:      ;
+        }
+      if (m_internals->match (item, cnorm, csel))
+        return this;
+    }
   Root *root = item.get_root();
   if (!root)
-    error ("Heritage: heritage created without root item for: %s", item.name().c_str());
-  ColorFunc cnorm = colorset_normal, csel = colorset_selected;
-  if (variant == "base")
-    cnorm = colorset_base;
-  else if (variant == "selected")
-    cnorm = colorset_selected;
-  Internals *internals = new Internals (item, cnorm, csel);
-  Heritage *self = new Heritage (*root, internals);
-  return self;
+    error ("Heritage: create heritage without root item for: %s", item.name().c_str());
+  return create_heritage (*root, item, color_scheme);
 }
 
 Heritage::Heritage (Root      &root,

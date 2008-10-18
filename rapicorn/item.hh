@@ -169,6 +169,8 @@ public:
   void                        debug             (bool f) { set_flag (DEBUG, f); }
   virtual String              name              () const = 0;
   virtual void                name              (const String &str) = 0;
+  virtual ColorSchemeType     color_scheme      () const = 0;
+  virtual void                color_scheme      (ColorSchemeType cst) = 0;
   /* override requisition */
   double                      width             () const;
   void                        width             (double w);
