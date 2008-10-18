@@ -82,10 +82,9 @@ protected:
     int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
     if (width >= 2 && height >= 2)
       {
-        Color color = 0x80000000;
         Plane &plane = display.create_plane();
         Painter painter (plane);
-        painter.draw_dir_arrow (x, y, width, height, 0xff000000, m_dir);
+        painter.draw_dir_arrow (x, y, width, height, foreground(), m_dir);
       }
   }
 };
