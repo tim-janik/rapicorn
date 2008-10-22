@@ -38,6 +38,8 @@ protected:
   bool                  has_allocatable_child   () { return child_item && child_item->allocatable(); }
   virtual void          add_child               (Item   &item);
   virtual void          remove_child            (Item   &item);
+  Allocation            layout_child            (Item             &child,
+                                                 const Allocation &carea);
   explicit              SingleContainerImpl     ();
 };
 
