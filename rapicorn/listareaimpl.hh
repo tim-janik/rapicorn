@@ -27,8 +27,8 @@ namespace Rapicorn {
 
 struct ListRow {
   vector<Item*> cols;
-  HBox         *hbox;
-  ListRow() : hbox (NULL) {}
+  Container    *rowbox;
+  ListRow() : rowbox (NULL) {}
 };
 
 class ItemListImpl : public virtual SingleContainerImpl,

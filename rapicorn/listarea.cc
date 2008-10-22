@@ -85,7 +85,7 @@ ItemListImpl::~ItemListImpl()
       m_row_cache.pop_back();
       for (uint i = 0; i < lr->cols.size(); i++)
         unref (lr->cols[i]);
-      unref (lr->hbox);
+      unref (lr->rowbox);
       delete lr;
     }
   /* release size groups */
@@ -102,9 +102,10 @@ ItemListImpl::constructed ()
 {
   if (!m_table)
     {
-      m_table = Factory::create_item ("Table").interface<Table*>();
+      Item &list_table = Factory::create_item ("ListAreaTable");
+      this->add (list_table);
+      m_table = &list_table.interface<Table>();
       ref_sink (m_table);
-      this->add (m_table);
     }
   if (!m_model)
     {
@@ -238,7 +239,7 @@ void
 ItemListImpl::cache_row (ListRow *lr)
 {
   m_row_cache.push_back (lr);
-  lr->hbox->visible (false);
+  lr->rowbox->visible (false);
 }
 
 static uint dbg_cached = 0, dbg_refilled = 0, dbg_created = 0;
@@ -254,8 +255,8 @@ ItemListImpl::create_row (uint64 nthrow)
       lr->cols.push_back (item);
     }
   IFDEBUG (dbg_created++);
-  lr->hbox = &ref_sink (&Factory::create_item ("HBox"))->interface<HBox>();
-  lr->hbox->spacing (m_table->col_spacing());
+  lr->rowbox = &ref_sink (&Factory::create_item ("ListRow"))->interface<Container>();
+  lr->rowbox->interface<HBox>().spacing (m_table->col_spacing());
 
   while (m_size_groups.size() < lr->cols.size())
     m_size_groups.push_back (ref_sink (SizeGroup::create_hgroup()));
@@ -263,8 +264,8 @@ ItemListImpl::create_row (uint64 nthrow)
     m_size_groups[i]->add_item (*lr->cols[i]);
 
   for (uint i = 0; i < lr->cols.size(); i++)
-    lr->hbox->add (lr->cols[i]);
-  m_table->add (lr->hbox);
+    lr->rowbox->add (lr->cols[i]);
+  m_table->add (lr->rowbox);
   return lr;
 }
 
@@ -300,7 +301,7 @@ ItemListImpl::fetch_row (uint64 row)
     lr = create_row (row);
   if (!filled)
     fill_row (lr, row);
-  lr->hbox->visible (true);
+  lr->rowbox->visible (true);
   return lr;
 }
 
@@ -321,8 +322,8 @@ ItemListImpl::position_row (ListRow *lr,
    * 0:*: final row-border
    */
   uint64 tablerow = (visible_slot + 1) * 2;
-  lr->hbox->vposition (tablerow);
-  lr->hbox->vspan (1);
+  lr->rowbox->vposition (tablerow);
+  lr->rowbox->vspan (1);
 }
 
 uint64
@@ -331,13 +332,13 @@ ItemListImpl::measure_row (ListRow *lr,
 {
   if (allocation_offset)
     {
-      Allocation carea = lr->hbox->allocation();
+      Allocation carea = lr->rowbox->allocation();
       *allocation_offset = carea.y;
       return carea.height;
     }
   else
     {
-      Requisition requisition = lr->hbox->requisition();
+      Requisition requisition = lr->rowbox->requisition();
       return requisition.height;
     }
 }
@@ -443,10 +444,8 @@ ItemListImpl::layout_list ()
     {
       Item &child = get_child();
       Requisition requisition = child.size_request();
-      Allocation carea = allocation();
-      carea.width = requisition.width;
-      carea.height = requisition.height;
-      child.set_allocation (carea);
+      Allocation child_area = layout_child (child, allocation());
+      child.set_allocation (child_area);
     }
   /* align scroll item */
   if (current_item < uint64 (m_model->count()) && has_allocatable_child())
@@ -468,15 +467,14 @@ ItemListImpl::layout_list ()
           pixel_diff = list_pixel - row_pixel;
         }
       /* shift rows */
-      Allocation carea = area;
-      carea.width = requisition.width;
-      carea.height = requisition.height;
-      carea.y += pixel_diff;
+      Allocation child_area = layout_child (child, area);
+      child_area.y = area.y + pixel_diff;
+      child_area.height = requisition.height;
       IFDEBUG (printout ("List: cached=%u refilled=%u created=%u current=%3lld row_offset=%f pixel_offset=%f diff=%lld ps=%d\n",
                          dbg_cached, dbg_refilled, dbg_created,
                          current_item, row_offset, pixel_offset,
                          pixel_diff, pixel_scrolling));
-      child.set_allocation (carea);
+      child.set_allocation (child_area);
     }
 }
 
