@@ -42,10 +42,10 @@ Ambience::lighting (LightingType sh)
 void
 Ambience::shade (LightingType sh)
 {
-  insensitive_lighting (LIGHTING_NONE);
-  prelight_lighting (LIGHTING_NONE);
-  impressed_lighting (LIGHTING_NONE);
-  normal_lighting (sh);
+  insensitive_shade (LIGHTING_NONE);
+  prelight_shade (LIGHTING_NONE);
+  impressed_shade (LIGHTING_NONE);
+  normal_shade (sh);
 }
 
 const PropertyList&
