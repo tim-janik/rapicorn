@@ -54,9 +54,9 @@ public:
   void                          lighting                (LightingType sh);
   void                          shade                   (LightingType sh);
 private:
-  virtual String                background              () const { RAPICORN_ASSERT_NOT_REACHED(); }
-  virtual LightingType          lighting                () const { RAPICORN_ASSERT_NOT_REACHED(); }
-  virtual LightingType          shade                   () const { RAPICORN_ASSERT_NOT_REACHED(); }
+  String                        background              () const { RAPICORN_ASSERT_NOT_REACHED(); }
+  LightingType                  lighting                () const { RAPICORN_ASSERT_NOT_REACHED(); }
+  LightingType                  shade                   () const { RAPICORN_ASSERT_NOT_REACHED(); }
 };
 
 class Frame : public virtual Container {
