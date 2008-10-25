@@ -638,20 +638,16 @@ Item::propagate_heritage ()
 void
 Item::heritage (Heritage *heritage)
 {
-  if (heritage)
-    ref (heritage);
-  bool need_propagate = m_heritage != heritage;
-  if (m_heritage)
-    {
-      m_heritage->unref();
-      m_heritage = NULL;
-    }
+  Heritage *old_heritage = m_heritage;
+  m_heritage = NULL;
   if (heritage)
     {
-      m_heritage = ref_sink (heritage->adapt_heritage (*this, color_scheme()));
-      unref (heritage);
+      m_heritage = heritage->adapt_heritage (*this, color_scheme());
+      ref_sink (m_heritage);
     }
-  if (need_propagate)
+  if (old_heritage)
+    old_heritage->unref();
+  if (m_heritage != old_heritage)
     {
       invalidate();
       propagate_heritage ();
