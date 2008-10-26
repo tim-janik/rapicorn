@@ -20,7 +20,8 @@
   <!-- list construction -->
   <def:ListArea inherit="Rapicorn::Factory::ItemList"/>
   <def:ListAreaTable inherit="Table" />
-  <def:ListRow inherit="Ambience" child-container="ListRowCavity" hexpand="1" >
+  <def:ListRow inherit="Ambience" child-container="ListRowCavity" hexpand="1"
+	       normal-background="background" lighting="none" shade="none">
     <HBox id="ListRowCavity"/>
   </def:ListRow>
 

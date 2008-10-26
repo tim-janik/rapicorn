@@ -16,6 +16,7 @@
  */
 #include "listareaimpl.hh"
 #include "sizegroup.hh"
+#include "paintcontainers.hh"
 
 //#define IFDEBUG(...)      do { /*__VA_ARGS__*/ } while (0)
 #define IFDEBUG(...)      __VA_ARGS__
@@ -307,6 +308,7 @@ ItemListImpl::fetch_row (uint64 row)
 
 void
 ItemListImpl::position_row (ListRow *lr,
+                            uint64   row,
                             uint64   visible_slot)
 {
   /* List rows increase downwards, table rows increase upwards.
@@ -324,6 +326,9 @@ ItemListImpl::position_row (ListRow *lr,
   uint64 tablerow = (visible_slot + 1) * 2;
   lr->rowbox->vposition (tablerow);
   lr->rowbox->vspan (1);
+  Ambience *ambience = lr->rowbox->interface<Ambience*>();
+  if (ambience)
+    ambience->background (row & 1 ? "background-odd" : "background-even");
 }
 
 uint64
@@ -431,7 +436,7 @@ ItemListImpl::layout_list ()
   /* layout visible rows */
   if (rc.size())
     for (r = rcmin; r <= rcmax; r++)
-      position_row (rc.at (r), rcmax - r);
+      position_row (rc.at (r), r, rcmax - r);
   /* clear unused rows */
   m_row_map.swap (rc);
   for (RowMap::iterator ri = rc.begin(); ri != rc.end(); ri++)

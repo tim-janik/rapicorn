@@ -68,6 +68,7 @@ public:
   ListRow*              create_row              (uint64 row);
   ListRow*              fetch_row               (uint64 row);
   void                  position_row            (ListRow *lr,
+                                                 uint64   row,
                                                  uint64   visible_slot);
   uint64                measure_row             (ListRow *lr,
                                                  uint64  *allocation_offset = NULL);
