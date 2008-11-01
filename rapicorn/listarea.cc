@@ -57,7 +57,8 @@ n_columns_from_type (const Type &type)
 ItemListImpl::ItemListImpl() :
   m_table (NULL), m_model (NULL),
   m_hadjustment (NULL), m_vadjustment (NULL),
-  m_n_cols (0), m_browse (true), m_current_row (18446744073709551615ULL)
+  m_n_cols (0), m_row_size_offset (0),
+  m_browse (true), m_current_row (18446744073709551615ULL)
 {}
 
 ItemListImpl::~ItemListImpl()
@@ -199,6 +200,8 @@ void
 ItemListImpl::invalidate_model (bool invalidate_heights,
                                 bool invalidate_widgets)
 {
+  m_row_size_offset = 0;
+  m_row_sizes.clear();
   invalidate();
 }
 
@@ -212,16 +215,19 @@ void
 ItemListImpl::size_request (Requisition &requisition)
 {
   bool chspread = false, cvspread = false;
+  // FIXME: this should only measure current row
   if (has_allocatable_child())
     {
       Item &child = get_child();
       requisition = child.size_request ();
-      requisition.height = 12 * 5; // FIXME: request single row height
-      if (0)
-        {
-          chspread = child.hspread();
-          cvspread = child.vspread();
-        }
+      measure_rows (4096, m_vadjustment->nvalue()); // FIXME: use monitor size and get_scroll_item
+      if (m_model && m_model->count())
+        requisition.height = lookup_row_size (ifloor (m_model->count() * m_vadjustment->nvalue())); // FIXME
+      else
+        requisition.height = -1;
+      if (requisition.height < 0)
+        requisition.height = 12 * 5; // FIXME: request single row height
+      chspread = cvspread = false;
     }
   set_flag (HSPREAD_CONTAINER, chspread);
   set_flag (VSPREAD_CONTAINER, cvspread);
@@ -233,8 +239,88 @@ ItemListImpl::size_allocate (Allocation area)
   bool need_resize = allocation() != area;
   allocation (area);
   // FIXME: size_allocate must always propagate to children, not just in layout_list()
-  if (has_allocatable_child() && need_resize)
-    layout_list();
+  if (has_allocatable_child())
+    {
+      measure_rows (area.height, m_vadjustment->nvalue()); // FIXME: use get_scroll_item
+      if (need_resize)
+        layout_list();
+    }
+}
+
+int64
+ItemListImpl::lookup_row_size (int64 row)
+{
+  row -= m_row_size_offset;
+  if (row < 0 || !m_model || row >= m_model->count() || row >= m_row_sizes.size())
+    return -1;
+  return m_row_sizes[row];
+}
+
+int64
+ItemListImpl::lookup_or_measure_row (int64    row,
+                                     ListRow *cached_lr)
+{
+  int64 pixels = lookup_row_size (row);
+  if (pixels < 0)
+    {
+      fill_row (cached_lr, row);
+      pixels = measure_row (cached_lr);
+    }
+  return pixels;
+}
+
+void
+ItemListImpl::measure_rows (int64  maxpixels,
+                            double fraction)
+{
+  if (!m_model || m_model->count() < 1)
+    {
+      /* assign 0 sizes */
+      m_row_size_offset = 0;
+      m_row_sizes.clear();
+      return;
+    }
+  ListRow *lr;
+  if (m_row_cache.size())
+    {
+      lr = m_row_cache.back();
+      m_row_cache.pop_back();
+    }
+  else
+    lr = create_row (0);
+  SizeQueue row_sizes;
+  int64 current = min (m_model->count() - 1, ifloor (fraction * m_model->count()));
+  int64 row = current;
+  int64 row_size_offset = current;
+  /* measure current row */
+  row_sizes.push_back (lookup_or_measure_row (row, lr));
+  /* measure below current row */
+  int64 pixelaccu = 0;
+  row = current + 1;
+  while (pixelaccu <= maxpixels && row < m_model->count())
+    {
+      int64 pixels = lookup_or_measure_row (row, lr);
+      pixelaccu += pixels;
+      row_sizes.push_back (pixels);
+      row += 1;
+    }
+  /* measure above current row */
+  pixelaccu = 0;
+  row = current - 1;
+  while (pixelaccu <= maxpixels && row >= 0)
+    {
+      int64 pixels = lookup_or_measure_row (row, lr);
+      pixelaccu += pixels;
+      row_sizes.push_front (pixels);
+      row_size_offset -= 1;
+      row -= 1;
+    }
+  /* assign new sizes */
+  m_row_size_offset = row_size_offset;
+  m_row_sizes.swap (row_sizes);
+  /* cleanup */
+  cache_row (lr);
+  // FIXME: optimize by using std::vector as SizeQueue (construct with reverse copies)
 }
 
 void

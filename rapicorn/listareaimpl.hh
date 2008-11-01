@@ -22,6 +22,7 @@
 #include <rapicorn/adjustment.hh>
 #include <rapicorn/layoutcontainers.hh>
 #include <rapicorn/table.hh>
+#include <deque>
 
 namespace Rapicorn {
 
@@ -37,10 +38,13 @@ class ItemListImpl : public virtual SingleContainerImpl,
                      public virtual EventHandler
 {
   typedef map<uint64,ListRow*> RowMap;
+  typedef std::deque<int>      SizeQueue;
   Table                 *m_table;
   Model1                *m_model;
   mutable Adjustment    *m_hadjustment, *m_vadjustment;
   uint                   m_n_cols;
+  int64                  m_row_size_offset;
+  SizeQueue              m_row_sizes;
   RowMap                 m_row_map;
   vector<ListRow*>       m_row_cache;
   vector<SizeGroup*>     m_size_groups;
@@ -68,6 +72,11 @@ public:
   virtual void          visual_update           ();
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area);
+  void                  measure_rows            (int64    maxpixels,
+                                                 double   fraction);
+  int64                 lookup_row_size         (int64    row);
+  int64                 lookup_or_measure_row   (int64    row,
+                                                 ListRow *cached_lr);
   void                  cache_row               (ListRow *lr);
   void                  fill_row                (ListRow *lr,
                                                  uint64   row);
