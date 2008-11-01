@@ -27,14 +27,12 @@
 
   <def:item-list inherit="Alignment" >
     <Table>
-      <Alignment hexpand="1" vexpand="1" hposition="0" vposition="1"
-		 left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
-	<Frame frame-type="in">
-	  <ListArea/>
-	</Frame>
-      </Alignment>
-      <VSlider vexpand="0" adjustment-source="ancestry-vertical" vposition="1" hposition="1" />
-      <HSlider visible="0" hexpand="0" adjustment-source="ancestry-horizontal" vposition="0" />
+      <Frame     hposition="0" vposition="2" frame-type="in" hexpand="1" vexpand="1">
+	<ListArea/>
+      </Frame>
+      <Alignment hposition="1" vposition="1" width="1" height="1"/>
+      <VSlider   hposition="2" vposition="2" vexpand="0" adjustment-source="ancestry-vertical" />
+      <HSlider   hposition="0" vposition="0" hexpand="0" adjustment-source="ancestry-horizontal" />
     </Table>
   </def:item-list>
 
