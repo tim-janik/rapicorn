@@ -936,6 +936,7 @@ Item::invalidate()
 {
   if (!test_all_flags (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT))
     {
+      expose();
       change_flags_silently (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT, true); /* skip notification */
       if (!finalizing())
         sig_invalidate.emit();
