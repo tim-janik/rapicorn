@@ -323,6 +323,45 @@ ItemListImpl::measure_rows (int64  maxpixels,
   // FIXME: optimize by using std::vector as SizeQueue (construct with reverse copies)
 }
 
+#if 0
+int64
+ItemListImpl::scroll_row_layout (double *rowy)
+{
+  /* scroll position interpretation:
+   * the current slider position is interpreted as a fractional pointer into the
+   * interval [0,count[. so the integer part of the scroll position will always
+   * point at one particular item and the fractional part is interpreted as an
+   * offset into the item's row.
+   * Scrolling for large models works by interpreting the scroll adjustment
+   * values as [row_index.row_fraction]. From this, a scroll position is
+   * interpolated so that the top of the first row and the bottom of the last
+   * row are aligned with top and bottom of the list view respectively.
+   * Note that list rows increase downwards, pixel coordinates increase upwards.
+   */
+  const double norm_value = m_vadjustment->nvalue();            // 0..1 scroll position
+  const double scroll_value = norm_value * m_model->count();    // fraction into count()
+  const int64 scroll_item = MIN (m_model->count() - 1, ifloor (scroll_value));
+  scroll_value = MIN (1.0, scroll_value - scroll_item);         // fraction into scroll_item row
+  if (rowyp)
+    {
+      int64 rowheight = lookup_row_size (scroll_item);
+      return_if_fail (rowheight > 0, scroll_item);
+      int64 rowlower = rowheight * (1 - scroll_value);          // fractional lower row pixels
+      int64 listlower = allocation().height * (1 - norm_value); // fractional lower list pixels
+      *rowy = listlower - rowlower;
+    }
+  return scroll_item;
+}
+
+void
+ItemListImpl::resize_scroll () // m_model->count() >= 1
+{
+  Allocation area = allocation();
+  double current_y;
+  int64 current = scroll_row_layout (&current_y);
+}
+#endif
+
 void
 ItemListImpl::cache_row (ListRow *lr)
 {
