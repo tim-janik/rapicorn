@@ -33,7 +33,8 @@ struct ListRow {
 
 class ItemListImpl : public virtual SingleContainerImpl,
                      public virtual ItemList,
-                     public virtual AdjustmentSource
+                     public virtual AdjustmentSource,
+                     public virtual EventHandler
 {
   typedef map<uint64,ListRow*> RowMap;
   Table                 *m_table;
@@ -44,6 +45,11 @@ class ItemListImpl : public virtual SingleContainerImpl,
   vector<ListRow*>       m_row_cache;
   vector<SizeGroup*>     m_size_groups;
   bool                   m_browse;
+  uint64                 m_current_row;
+protected:
+  virtual bool          handle_event            (const Event    &event);
+  virtual void          reset                   (ResetMode       mode);
+  virtual bool          can_focus               () const { return true; }
 public:
   explicit              ItemListImpl            ();
   virtual              ~ItemListImpl            ();
@@ -66,6 +72,7 @@ public:
   void                  fill_row                (ListRow *lr,
                                                  uint64   row);
   ListRow*              create_row              (uint64 row);
+  ListRow*              lookup_row              (uint64 row);
   ListRow*              fetch_row               (uint64 row);
   void                  position_row            (ListRow *lr,
                                                  uint64   row,

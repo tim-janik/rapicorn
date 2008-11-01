@@ -57,7 +57,7 @@ n_columns_from_type (const Type &type)
 ItemListImpl::ItemListImpl() :
   m_table (NULL), m_model (NULL),
   m_hadjustment (NULL), m_vadjustment (NULL),
-  m_n_cols (0), m_browse (true)
+  m_n_cols (0), m_browse (true), m_current_row (18446744073709551615ULL)
 {}
 
 ItemListImpl::~ItemListImpl()
@@ -232,6 +232,7 @@ ItemListImpl::size_allocate (Allocation area)
 {
   bool need_resize = allocation() != area;
   allocation (area);
+  // FIXME: size_allocate must always propagate to children, not just in layout_list()
   if (has_allocatable_child() && need_resize)
     layout_list();
 }
@@ -277,6 +278,16 @@ ItemListImpl::fill_row (ListRow *lr,
   Array row = m_model->get (nthrow);
   for (uint i = 0; i < lr->cols.size(); i++)
     lr->cols[i]->set_property ("markup_text", i < row.count() ? row[i].string() : "");
+}
+
+ListRow*
+ItemListImpl::lookup_row (uint64 row)
+{
+  RowMap::iterator ri = m_row_map.find (row);
+  if (ri != m_row_map.end())
+    return ri->second;
+  else
+    return NULL;
 }
 
 ListRow*
@@ -326,6 +337,7 @@ ItemListImpl::position_row (ListRow *lr,
   uint64 tablerow = (visible_slot + 1) * 2;
   lr->rowbox->vposition (tablerow);
   lr->rowbox->vspan (1);
+  lr->rowbox->color_scheme (row == m_current_row ? COLOR_SELECTED : COLOR_NORMAL);
   Ambience *ambience = lr->rowbox->interface<Ambience*>();
   if (ambience)
     ambience->background (row & 1 ? "background-odd" : "background-even");
@@ -481,6 +493,59 @@ ItemListImpl::layout_list ()
                          pixel_diff, pixel_scrolling));
       child.set_allocation (child_area);
     }
+}
+
+void
+ItemListImpl::reset (ResetMode mode)
+{
+  // m_current_row = 18446744073709551615ULL;
+}
+
+bool
+ItemListImpl::handle_event (const Event &event)
+{
+  bool handled = false;
+  if (!m_model)
+    return handled;
+  uint64 saved_current_row = m_current_row;
+  switch (event.type)
+    {
+      const EventKey *kevent;
+    case KEY_PRESS:
+      kevent = dynamic_cast<const EventKey*> (&event);
+      switch (kevent->key)
+        {
+        case KEY_Down:
+          if (m_current_row < uint64 (m_model->count()))
+            m_current_row = MIN (int64 (m_current_row) + 1, m_model->count() - 1);
+          else
+            m_current_row = 0;
+          handled = true;
+          break;
+        case KEY_Up:
+          if (m_current_row < uint64 (m_model->count()))
+            m_current_row = MAX (m_current_row, 1) - 1;
+          else if (m_model->count())
+            m_current_row = m_model->count() - 1;
+          handled = true;
+          break;
+        }
+    case KEY_RELEASE:
+    default:
+      break;
+    }
+  if (saved_current_row != m_current_row)
+    {
+      ListRow *lr;
+      lr = lookup_row (saved_current_row);
+      if (lr)
+        lr->rowbox->color_scheme (COLOR_NORMAL);
+      lr = lookup_row (m_current_row);
+      if (lr)
+        lr->rowbox->color_scheme (COLOR_SELECTED);
+    }
+  printerr ("m_current_row=%llu\n", m_current_row);
+  return handled;
 }
 
 static const ItemFactory<ItemListImpl> item_list_factory ("Rapicorn::Factory::ItemList");
