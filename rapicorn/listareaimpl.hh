@@ -29,17 +29,18 @@ namespace Rapicorn {
 struct ListRow {
   vector<Item*> cols;
   Container    *rowbox;
-  ListRow() : rowbox (NULL) {}
+  Allocation    area;
+  uint          allocated : 1;
+  ListRow() : rowbox (NULL), allocated (0) {}
 };
 
-class ItemListImpl : public virtual SingleContainerImpl,
+class ItemListImpl : public virtual MultiContainerImpl,
                      public virtual ItemList,
                      public virtual AdjustmentSource,
                      public virtual EventHandler
 {
-  typedef map<uint64,ListRow*> RowMap;
+  typedef map<int64,ListRow*>  RowMap;
   typedef std::deque<int>      SizeQueue;
-  Table                 *m_table;
   Model1                *m_model;
   mutable Adjustment    *m_hadjustment, *m_vadjustment;
   uint                   m_n_cols;
@@ -49,7 +50,9 @@ class ItemListImpl : public virtual SingleContainerImpl,
   vector<ListRow*>       m_row_cache;
   vector<SizeGroup*>     m_size_groups;
   bool                   m_browse;
+  bool                   m_need_resize_scroll;
   uint64                 m_current_row;
+  ListRow               *m_measurement_row; // FIXME
 protected:
   virtual bool          handle_event            (const Event    &event);
   virtual void          reset                   (ResetMode       mode);
@@ -74,13 +77,21 @@ public:
   virtual void          size_allocate           (Allocation area);
   void                  measure_rows            (int64    maxpixels,
                                                  double   fraction);
+  int64                 scroll_row_layout       (ListRow *lr_current,
+                                                 int64 *scrollrowy,
+                                                 int64 *scrollrowupper,
+                                                 int64 *scrollrowlower,
+                                                 int64 *listupperp,
+                                                 int64 *listheightp);
+  void                  resize_scroll           ();
   int64                 lookup_row_size         (int64    row);
   int64                 lookup_or_measure_row   (int64    row,
                                                  ListRow *cached_lr);
   void                  cache_row               (ListRow *lr);
   void                  fill_row                (ListRow *lr,
                                                  uint64   row);
-  ListRow*              create_row              (uint64 row);
+  ListRow*              create_row              (uint64 row,
+                                                 bool   with_size_groups = true);
   ListRow*              lookup_row              (uint64 row);
   ListRow*              fetch_row               (uint64 row);
   void                  position_row            (ListRow *lr,
@@ -91,7 +102,6 @@ public:
   uint64                get_scroll_item         (double *row_offsetp,
                                                  double *pixel_offsetp);
   bool                  need_pixel_scrolling    ();
-  void                  layout_list             ();
 };
 
 } // Rapicorn

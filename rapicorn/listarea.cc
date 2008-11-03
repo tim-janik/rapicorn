@@ -55,21 +55,16 @@ n_columns_from_type (const Type &type)
 }
 
 ItemListImpl::ItemListImpl() :
-  m_table (NULL), m_model (NULL),
+  m_model (NULL),
   m_hadjustment (NULL), m_vadjustment (NULL),
   m_n_cols (0), m_row_size_offset (0),
-  m_browse (true), m_current_row (18446744073709551615ULL)
+  m_browse (true), m_need_resize_scroll (false),
+  m_current_row (18446744073709551615ULL),
+  m_measurement_row (NULL)
 {}
 
 ItemListImpl::~ItemListImpl()
 {
-  /* destroy table */
-  if (m_table->parent())
-    {
-      this->remove (*m_table);
-      unref (m_table);
-      m_table = NULL;
-    }
   /* remove model */
   Model1 *oldmodel = m_model;
   m_model = NULL;
@@ -102,13 +97,6 @@ ItemListImpl::~ItemListImpl()
 void
 ItemListImpl::constructed ()
 {
-  if (!m_table)
-    {
-      Item &list_table = Factory::create_item ("ListAreaTable");
-      this->add (list_table);
-      m_table = &list_table.interface<Table>();
-      ref_sink (m_table);
-    }
   if (!m_model)
     {
       Store1 &store = *Store1::create_memory_store (Type::lookup ("String"));
@@ -200,6 +188,7 @@ void
 ItemListImpl::invalidate_model (bool invalidate_heights,
                                 bool invalidate_widgets)
 {
+  m_need_resize_scroll = true;
   m_row_size_offset = 0;
   m_row_sizes.clear();
   invalidate();
@@ -208,27 +197,42 @@ ItemListImpl::invalidate_model (bool invalidate_heights,
 void
 ItemListImpl::visual_update ()
 {
-  layout_list();
+  m_need_resize_scroll = true; // FIXME
+  if (m_need_resize_scroll)
+    {
+      measure_rows (allocation().height, m_vadjustment->nvalue());
+      resize_scroll();
+    }
+  for (RowMap::iterator it = m_row_map.begin(); it != m_row_map.end(); it++)
+    {
+      ListRow *lr = it->second;
+      lr->rowbox->set_allocation (lr->area);
+    }
 }
 
 void
 ItemListImpl::size_request (Requisition &requisition)
 {
   bool chspread = false, cvspread = false;
+  measure_rows (4096, m_vadjustment->nvalue()); // FIXME: use monitor size
   // FIXME: this should only measure current row
-  if (has_allocatable_child())
+  requisition.width = 0;
+  requisition.height = -1;
+  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      Item &child = get_child();
-      requisition = child.size_request ();
-      measure_rows (4096, m_vadjustment->nvalue()); // FIXME: use monitor size and get_scroll_item
-      if (m_model && m_model->count())
-        requisition.height = lookup_row_size (ifloor (m_model->count() * m_vadjustment->nvalue())); // FIXME
-      else
-        requisition.height = -1;
-      if (requisition.height < 0)
-        requisition.height = 12 * 5; // FIXME: request single row height
+      /* size request all children */
+      if (!cw->allocatable())
+        continue;
+      Requisition crq = cw->size_request();
+      requisition.width = MAX (requisition.width, crq.width);
       chspread = cvspread = false;
     }
+  if (m_model && m_model->count())
+    requisition.height = lookup_row_size (ifloor (m_model->count() * m_vadjustment->nvalue())); // FIXME
+  else
+    requisition.height = -1;
+  if (requisition.height < 0)
+    requisition.height = 12 * 5; // FIXME: request single row height
   set_flag (HSPREAD_CONTAINER, chspread);
   set_flag (VSPREAD_CONTAINER, cvspread);
 }
@@ -236,14 +240,17 @@ ItemListImpl::size_request (Requisition &requisition)
 void
 ItemListImpl::size_allocate (Allocation area)
 {
-  bool need_resize = allocation() != area;
+  m_need_resize_scroll |= allocation() != area;
   allocation (area);
-  // FIXME: size_allocate must always propagate to children, not just in layout_list()
-  if (has_allocatable_child())
+  if (m_need_resize_scroll)
     {
-      measure_rows (area.height, m_vadjustment->nvalue()); // FIXME: use get_scroll_item
-      if (need_resize)
-        layout_list();
+      measure_rows (area.height, m_vadjustment->nvalue());
+      resize_scroll();
+    }
+  for (RowMap::iterator it = m_row_map.begin(); it != m_row_map.end(); it++)
+    {
+      ListRow *lr = it->second;
+      lr->rowbox->set_allocation (lr->area);
     }
 }
 
@@ -273,6 +280,7 @@ void
 ItemListImpl::measure_rows (int64  maxpixels,
                             double fraction)
 {
+  return; // FIXME
   if (!m_model || m_model->count() < 1)
     {
       /* assign 0 sizes */
@@ -280,14 +288,16 @@ ItemListImpl::measure_rows (int64  maxpixels,
       m_row_sizes.clear();
       return;
     }
-  ListRow *lr;
-  if (m_row_cache.size())
+  /* create list row for measuring */
+  if (!m_measurement_row)
     {
-      lr = m_row_cache.back();
-      m_row_cache.pop_back();
+      m_measurement_row = create_row (0, false);
+      Allocation area;
+      area.x = area.y = -1;
+      area.width = area.height = 1;
+      m_measurement_row->rowbox->set_allocation (area);
     }
-  else
-    lr = create_row (0);
+  ListRow *lr = m_measurement_row;
   SizeQueue row_sizes;
   int64 current = min (m_model->count() - 1, ifloor (fraction * m_model->count()));
   int64 row = current;
@@ -319,13 +329,17 @@ ItemListImpl::measure_rows (int64  maxpixels,
   m_row_size_offset = row_size_offset;
   m_row_sizes.swap (row_sizes);
   /* cleanup */
-  cache_row (lr);
+  // FIXME: cache_row (lr);
   // FIXME: optimize by using std::vector as SizeQueue (construct with reverse copies)
 }
 
-#if 0
 int64
-ItemListImpl::scroll_row_layout (double *rowy)
+ItemListImpl::scroll_row_layout (ListRow *lr_current,
+                                 int64 *scrollrowy,
+                                 int64 *scrollrowupper,
+                                 int64 *scrollrowlower,
+                                 int64 *listupperp,
+                                 int64 *listheightp)
 {
   /* scroll position interpretation:
    * the current slider position is interpreted as a fractional pointer into the
@@ -341,80 +355,111 @@ ItemListImpl::scroll_row_layout (double *rowy)
   const double norm_value = m_vadjustment->nvalue();            // 0..1 scroll position
   const double scroll_value = norm_value * m_model->count();    // fraction into count()
   const int64 scroll_item = MIN (m_model->count() - 1, ifloor (scroll_value));
-  scroll_value = MIN (1.0, scroll_value - scroll_item);         // fraction into scroll_item row
-  if (rowyp)
-    {
-      int64 rowheight = lookup_row_size (scroll_item);
-      return_if_fail (rowheight > 0, scroll_item);
-      int64 rowlower = rowheight * (1 - scroll_value);          // fractional lower row pixels
-      int64 listlower = allocation().height * (1 - norm_value); // fractional lower list pixels
-      *rowy = listlower - rowlower;
-    }
+  const double scroll_fraction = MIN (1.0, scroll_value - scroll_item); // fraction into scroll_item row
+
+  int64 rowheight; // FIXME: make const: const int64 rowheight = lookup_row_size (scroll_item);
+  {
+    Requisition requisition = lr_current->rowbox->size_request();
+    rowheight = requisition.height;
+  }
+
+  return_val_if_fail (rowheight > 0, scroll_item);
+  const int64 rowlower = rowheight * (1 - scroll_fraction);       // fractional lower row pixels
+  const int64 listlower = allocation().height * (1 - norm_value); // fractional lower list pixels
+  *scrollrowy = listlower - rowlower;
+  *scrollrowupper = rowheight - rowlower;
+  *scrollrowlower = rowlower;
+  *listupperp = allocation().height - listlower;
+  *listheightp = allocation().height;
   return scroll_item;
 }
 
 void
 ItemListImpl::resize_scroll () // m_model->count() >= 1
 {
+  /* flag old rows */
+  for (RowMap::iterator it = m_row_map.begin(); it != m_row_map.end(); it++)
+    it->second->allocated = 0; // FIXME
+
+  int64 current = min (m_model->count() - 1, ifloor (m_vadjustment->nvalue() * m_model->count())); // FIXME
+  ListRow *lr_current = fetch_row (current);
+
   Allocation area = allocation();
-  double current_y;
-  int64 current = scroll_row_layout (&current_y);
+  int64 current_y, currentupper, currentlower, listupper, listheight;
+  int64 current_FIXME = scroll_row_layout (lr_current, &current_y, &currentupper, &currentlower, &listupper, &listheight);
+  RowMap rmap;
+
+  cache_row (lr_current); // FIXME
 
   /* allocate current row */
+  int64 accu = 0;
   {
     ListRow *lr = fetch_row (current);
-    lrows.push_front (lr);
+    lr->rowbox->requisition(); accu = currentupper; // FIXME
+    rmap[current] = lr;
+    lr->allocated = true; // FIXME: remove field
   }
-  int64 accu = currentupper;
   int64 firstrow = current;
   /* allocate rows above current */
   for (int64 i = current - 1; accu < listupper; i--)
     {
-      int64 rowheight = lookup_row_size (i);
+      ListRow *lr = i >= 0 ? fetch_row (i) : NULL; // FIXME
+      int64 rowheight = measure_row (lr);
       if (rowheight < 0)
         break; // no more rows for layouting
-      ListRow *lr = fetch_row (i);
-      lrows.push_front (lr);
       firstrow = i;
+      rmap[firstrow] = lr;
+      lr->allocated = true;
       accu += rowheight;
     }
   int64 firstrowoffset = MIN (0, listupper - accu);
   /* allocate rows below current */
+  int64 lastrow = current;
   accu += firstrowoffset + currentlower;
   for (int64 i = current + 1; accu < listheight; i++)
     {
-      int64 rowheight = lookup_row_size (i);
+      ListRow *lr = i < m_model->count() ? fetch_row (i) : NULL; // FIXME
+      int64 rowheight = measure_row (lr);
       if (rowheight < 0)
         break; // no more rows for layouting
-      ListRow *lr = fetch_row (i);
-      lrows.push_back (lr);
+      lastrow = i;
+      rmap[lastrow] = lr;
+      lr->allocated = true;
       accu += rowheight;
     }
-  /* layout rows */
+  /* clean up remaining old rows */
+  for (RowMap::iterator it = m_row_map.begin(); it != m_row_map.end(); it++)
+    cache_row (it->second);
+  m_row_map.swap (rmap);
+  /* layout new rows */
   accu = firstrowoffset;
-  int64 ixrow = firstrow;
-  for (iter it = lrows.begin(); it != lrows.end(); it++, ixrow++)
+  //int64 ixrow = firstrow;
+  for (RowMap::iterator it = m_row_map.begin(); it != m_row_map.end(); it++) // , ixrow++)
     {
-      Allocation area = list.area;
-      area.y = accu;
-      area.height = lookup_row_size (ixrow);
-      lr->box.alloction (area);
+      Allocation area = allocation();
+      ListRow *lr = it->second;
+      area.height = measure_row (lr);
+      area.y = allocation().y + allocation().height - accu;
+      lr->area = area;
       accu += area.height;
     }
+  /* remember state */
+  m_need_resize_scroll = 0;
 }
-#endif
 
 void
 ItemListImpl::cache_row (ListRow *lr)
 {
   m_row_cache.push_back (lr);
   lr->rowbox->visible (false);
+  lr->allocated = 0;
 }
 
 static uint dbg_cached = 0, dbg_refilled = 0, dbg_created = 0;
 
 ListRow*
-ItemListImpl::create_row (uint64 nthrow)
+ItemListImpl::create_row (uint64 nthrow,
+                          bool   with_size_groups)
 {
   Array row = m_model->get (nthrow);
   ListRow *lr = new ListRow();
@@ -425,16 +470,17 @@ ItemListImpl::create_row (uint64 nthrow)
     }
   IFDEBUG (dbg_created++);
   lr->rowbox = &ref_sink (&Factory::create_item ("ListRow"))->interface<Container>();
-  lr->rowbox->interface<HBox>().spacing (m_table->col_spacing());
+  lr->rowbox->interface<HBox>().spacing (5); // FIXME
 
   while (m_size_groups.size() < lr->cols.size())
     m_size_groups.push_back (ref_sink (SizeGroup::create_hgroup()));
-  for (uint i = 0; i < lr->cols.size(); i++)
-    m_size_groups[i]->add_item (*lr->cols[i]);
+  if (with_size_groups)
+    for (uint i = 0; i < lr->cols.size(); i++)
+      m_size_groups[i]->add_item (*lr->cols[i]);
 
   for (uint i = 0; i < lr->cols.size(); i++)
     lr->rowbox->add (lr->cols[i]);
-  m_table->add (lr->rowbox);
+  add (lr->rowbox);
   return lr;
 }
 
@@ -510,7 +556,7 @@ ItemListImpl::position_row (ListRow *lr,
     ambience->background (row & 1 ? "background-odd" : "background-even");
 }
 
-uint64
+uint64 // FIXME: signed
 ItemListImpl::measure_row (ListRow *lr,
                            uint64  *allocation_offset)
 {
@@ -567,99 +613,6 @@ ItemListImpl::need_pixel_scrolling ()
   double scroll_pixels_per_row = allocation().height / m_model->count();
   double minimum_pixels_per_row = 1 + 3 + 1; /* outer border + minimum font size + inner border */
   return scroll_pixels_per_row > minimum_pixels_per_row;
-}
-
-void
-ItemListImpl::layout_list ()
-{
-  double area_height = MAX (allocation().height, 1);
-  if (!m_model || !m_table || m_model->count() < 1)
-    return;
-  const bool pixel_scrolling = need_pixel_scrolling();
-  double row_offset, pixel_offset; /* 0..1 */
-  const uint64 current_item = get_scroll_item (&row_offset, &pixel_offset);
-  RowMap rc;
-  uint64 r, rcmin = current_item, rcmax = current_item;
-  double height_before = area_height, height_after = area_height;
-  IFDEBUG (dbg_cached = dbg_refilled = dbg_created = 0);
-  /* deactivate size-groups to avoid excessive resizes upon measure_row() */
-  for (uint i = 0; i < m_size_groups.size(); i++)
-    m_size_groups[i]->active (false);
-  /* fill rows from scroll_item towards list end */
-  double accu_height = 0;
-  for (r = current_item; r < uint64 (m_model->count()) && (accu_height <= height_before || pixel_scrolling); r++)
-    {
-      ListRow *lr = fetch_row (r);
-      rc[r] = lr;
-      if (r != current_item)    // current may be partially offscreen
-        accu_height += measure_row (lr);
-      rcmax = MAX (rcmax, r);
-    }
-  double avheight = MAX (7, accu_height / MAX (r - current_item, 1));
-  /* fill rows from list start towards scroll_item */
-  uint64 rowsteps = CLAMP (iround (height_before / avheight), 1, 17);
-  uint64 first = current_item;
-  accu_height = 0;
-  while (first > 0 && (accu_height <= height_after || pixel_scrolling))
-    {
-      uint64 last = first;
-      first -= MIN (first, rowsteps);
-      for (r = first; r < last; r++)
-        {
-          ListRow *lr = fetch_row (r);
-          rc[r] = lr;
-          accu_height += measure_row (lr);
-          rcmin = MIN (rcmin, r);
-        }
-    }
-  /* layout visible rows */
-  if (rc.size())
-    for (r = rcmin; r <= rcmax; r++)
-      position_row (rc.at (r), r, rcmax - r);
-  /* clear unused rows */
-  m_row_map.swap (rc);
-  for (RowMap::iterator ri = rc.begin(); ri != rc.end(); ri++)
-    cache_row (ri->second);
-  /* activate size-groups to properly layout children */
-  for (uint i = 0; i < m_size_groups.size(); i++)
-    m_size_groups[i]->active (true);
-  /* assign list row coordinates */
-  if (has_allocatable_child())
-    {
-      Item &child = get_child();
-      Requisition requisition = child.size_request();
-      Allocation child_area = layout_child (child, allocation());
-      child.set_allocation (child_area);
-    }
-  /* align scroll item */
-  if (current_item < uint64 (m_model->count()) && has_allocatable_child())
-    {
-      const Allocation area = allocation();
-      Item &child = get_child();
-      Requisition requisition = child.size_request();
-      int64 pixel_diff;
-      if (requisition.height <= area.height)
-        pixel_diff = area.height - requisition.height;
-      else if (pixel_scrolling)
-        pixel_diff = - (1.0 - pixel_offset) * (requisition.height - area.height);
-      else /* fractional row scrolling */
-        {
-          ListRow *lr = m_row_map[current_item];
-          uint64 row_y, row_height = measure_row (lr, &row_y); // FIXME: add border
-          int64 row_pixel = row_y - area.y + row_height * (1.0 - row_offset);
-          int64 list_pixel = area.height * (1.0 - pixel_offset);
-          pixel_diff = list_pixel - row_pixel;
-        }
-      /* shift rows */
-      Allocation child_area = layout_child (child, area);
-      child_area.y = area.y + pixel_diff;
-      child_area.height = requisition.height;
-      IFDEBUG (printout ("List: cached=%u refilled=%u created=%u current=%3lld row_offset=%f pixel_offset=%f diff=%lld ps=%d\n",
-                         dbg_cached, dbg_refilled, dbg_created,
-                         current_item, row_offset, pixel_offset,
-                         pixel_diff, pixel_scrolling));
-      child.set_allocation (child_area);
-    }
 }
 
 void
