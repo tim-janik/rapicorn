@@ -391,6 +391,10 @@ ItemListImpl::resize_scroll () // m_model->count() >= 1
 
   cache_row (lr_current); // FIXME
 
+  /* deactivate size-groups to avoid excessive resizes upon measure_row() */
+  for (uint i = 0; i < m_size_groups.size(); i++)
+    m_size_groups[i]->active (false);
+
   /* allocate current row */
   int64 accu = 0;
   {
@@ -433,16 +437,18 @@ ItemListImpl::resize_scroll () // m_model->count() >= 1
   m_row_map.swap (rmap);
   /* layout new rows */
   accu = firstrowoffset;
-  //int64 ixrow = firstrow;
-  for (RowMap::iterator it = m_row_map.begin(); it != m_row_map.end(); it++) // , ixrow++)
+  for (int64 ix = firstrow; ix <= lastrow; ix++)
     {
+      ListRow *lr = m_row_map[ix];
       Allocation area = allocation();
-      ListRow *lr = it->second;
       area.height = measure_row (lr);
-      area.y = allocation().y + allocation().height - accu;
+      area.y = allocation().y + allocation().height - area.height - accu;
       lr->area = area;
       accu += area.height;
     }
+  /* reactivate size-groups for proper size allocation */
+  for (uint i = 0; i < m_size_groups.size(); i++)
+    m_size_groups[i]->active (true);
   /* remember state */
   m_need_resize_scroll = 0;
 }
@@ -491,6 +497,10 @@ ItemListImpl::fill_row (ListRow *lr,
   Array row = m_model->get (nthrow);
   for (uint i = 0; i < lr->cols.size(); i++)
     lr->cols[i]->set_property ("markup_text", i < row.count() ? row[i].string() : "");
+  Ambience *ambience = lr->rowbox->interface<Ambience*>();
+  if (ambience)
+    ambience->background (nthrow & 1 ? "background-odd" : "background-even");
+  lr->rowbox->color_scheme (nthrow == m_current_row ? COLOR_SELECTED : COLOR_NORMAL);
 }
 
 ListRow*
@@ -528,32 +538,6 @@ ItemListImpl::fetch_row (uint64 row)
     fill_row (lr, row);
   lr->rowbox->visible (true);
   return lr;
-}
-
-void
-ItemListImpl::position_row (ListRow *lr,
-                            uint64   row,
-                            uint64   visible_slot)
-{
-  /* List rows increase downwards, table rows increase upwards.
-   * Table layout (table-row:visible-slot:list-row):
-   * *:*: dummy children
-   * etc
-   * 6:2: row[i]
-   * 5:2: row[i]-border
-   * 4:1: row[j]
-   * 3:1: row[j]-border
-   * 2:0: row[k]
-   * 1:0: row[k]-border
-   * 0:*: final row-border
-   */
-  uint64 tablerow = (visible_slot + 1) * 2;
-  lr->rowbox->vposition (tablerow);
-  lr->rowbox->vspan (1);
-  lr->rowbox->color_scheme (row == m_current_row ? COLOR_SELECTED : COLOR_NORMAL);
-  Ambience *ambience = lr->rowbox->interface<Ambience*>();
-  if (ambience)
-    ambience->background (row & 1 ? "background-odd" : "background-even");
 }
 
 uint64 // FIXME: signed
