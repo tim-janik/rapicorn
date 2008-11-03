@@ -359,6 +359,48 @@ ItemListImpl::resize_scroll () // m_model->count() >= 1
   Allocation area = allocation();
   double current_y;
   int64 current = scroll_row_layout (&current_y);
+
+  /* allocate current row */
+  {
+    ListRow *lr = fetch_row (current);
+    lrows.push_front (lr);
+  }
+  int64 accu = currentupper;
+  int64 firstrow = current;
+  /* allocate rows above current */
+  for (int64 i = current - 1; accu < listupper; i--)
+    {
+      int64 rowheight = lookup_row_size (i);
+      if (rowheight < 0)
+        break; // no more rows for layouting
+      ListRow *lr = fetch_row (i);
+      lrows.push_front (lr);
+      firstrow = i;
+      accu += rowheight;
+    }
+  int64 firstrowoffset = MIN (0, listupper - accu);
+  /* allocate rows below current */
+  accu += firstrowoffset + currentlower;
+  for (int64 i = current + 1; accu < listheight; i++)
+    {
+      int64 rowheight = lookup_row_size (i);
+      if (rowheight < 0)
+        break; // no more rows for layouting
+      ListRow *lr = fetch_row (i);
+      lrows.push_back (lr);
+      accu += rowheight;
+    }
+  /* layout rows */
+  accu = firstrowoffset;
+  int64 ixrow = firstrow;
+  for (iter it = lrows.begin(); it != lrows.end(); it++, ixrow++)
+    {
+      Allocation area = list.area;
+      area.y = accu;
+      area.height = lookup_row_size (ixrow);
+      lr->box.alloction (area);
+      accu += area.height;
+    }
 }
 #endif
 
