@@ -57,8 +57,8 @@ n_columns_from_type (const Type &type)
 ItemListImpl::ItemListImpl() :
   m_model (NULL),
   m_hadjustment (NULL), m_vadjustment (NULL),
-  m_n_cols (0), m_row_size_offset (0),
-  m_browse (true), m_need_resize_scroll (false),
+  m_browse (true), m_n_cols (0),
+  m_need_resize_scroll (false),
   m_current_row (18446744073709551615ULL)
 {}
 
@@ -188,8 +188,8 @@ ItemListImpl::invalidate_model (bool invalidate_heights,
                                 bool invalidate_widgets)
 {
   m_need_resize_scroll = true;
-  m_row_size_offset = 0;
-  m_row_sizes.clear();
+  m_model_sizes.total_height = 0;
+  m_model_sizes.row_sizes.clear();
   invalidate();
 }
 
@@ -657,48 +657,6 @@ ItemListImpl::measure_row (ListRow *lr,
       Requisition requisition = lr->rowbox->requisition();
       return requisition.height;
     }
-}
-
-uint64
-ItemListImpl::get_scroll_item (double *row_offsetp,
-                               double *pixel_offsetp)
-{
-  /* scroll position interpretation:
-   * the current slider position is interpreted as a fractional pointer
-   * into the interval [0,count[. so the integer part of the scroll
-   * position will always point at one particular item and the fractional
-   * part is interpreted as an offset into the item's row.
-   */
-  const double norm_value = m_vadjustment->nvalue(); /* 0..1 scroll position */
-  const double scroll_value = norm_value * m_model->count();
-  const int64 scroll_item = MIN (m_model->count() - 1, ifloor (scroll_value));
-  *row_offsetp = MIN (1.0, scroll_value - scroll_item);
-  *pixel_offsetp = norm_value;
-  return scroll_item;
-}
-
-bool
-ItemListImpl::need_pixel_scrolling ()
-{
-  /* Scrolling for large models works by interpreting the scroll adjustment
-   * values as [row_index.row_fraction]. From this, a scroll position is
-   * interpolated so that the top of the first row and the bottom of the
-   * last row are aligned with top and bottom of the list view
-   * respectively.
-   * However, for models small enough, so that more scrollbar pixels per
-   * row are available than the size of the smallest row, a "backward"
-   * scrolling effect can be observed, resulting from the list top/bottom
-   * alignment interpolation values progressing faster than row_fraction
-   * increments.
-   * To counteract this effect and for an overall smoother scrolling
-   * behavior, we use pixel scrolling for smaller models, which requires
-   * all rows, visible and invisible rows to be layed out.
-   * In this context, this method is used to draw the distinction between
-   * "large" and "small" models.
-   */
-  double scroll_pixels_per_row = allocation().height / m_model->count();
-  double minimum_pixels_per_row = 1 + 3 + 1; /* outer border + minimum font size + inner border */
-  return scroll_pixels_per_row > minimum_pixels_per_row;
 }
 
 void

@@ -50,16 +50,13 @@ class ItemListImpl : public virtual MultiContainerImpl,
   typedef std::deque<int>      SizeQueue;
   Model1                *m_model;
   mutable Adjustment    *m_hadjustment, *m_vadjustment;
+  bool                   m_browse;
   uint                   m_n_cols;
-  int64                  m_row_size_offset;
-  SizeQueue              m_row_sizes;
   RowMap                 m_row_map;
   vector<ListRow*>       m_row_cache;
   vector<SizeGroup*>     m_size_groups;
-  bool                   m_browse;
   bool                   m_need_resize_scroll;
   uint64                 m_current_row;
-
   ModelSizes             m_model_sizes;
 protected:
   virtual bool          handle_event            (const Event    &event);
@@ -116,9 +113,6 @@ public:
   ListRow*              fetch_row               (uint64 row);
   uint64                measure_row             (ListRow *lr,
                                                  uint64  *allocation_offset = NULL);
-  uint64                get_scroll_item         (double *row_offsetp,
-                                                 double *pixel_offsetp);
-  bool                  need_pixel_scrolling    ();
 };
 
 } // Rapicorn
