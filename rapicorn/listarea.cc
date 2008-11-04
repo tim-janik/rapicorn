@@ -59,8 +59,7 @@ ItemListImpl::ItemListImpl() :
   m_hadjustment (NULL), m_vadjustment (NULL),
   m_n_cols (0), m_row_size_offset (0),
   m_browse (true), m_need_resize_scroll (false),
-  m_current_row (18446744073709551615ULL),
-  m_measurement_row (NULL)
+  m_current_row (18446744073709551615ULL)
 {}
 
 ItemListImpl::~ItemListImpl()
@@ -200,7 +199,7 @@ ItemListImpl::visual_update ()
   m_need_resize_scroll = true; // FIXME
   if (m_need_resize_scroll)
     {
-      measure_rows (allocation().height, m_vadjustment->nvalue());
+      measure_rows (allocation().height);
       resize_scroll();
     }
   for (RowMap::iterator it = m_row_map.begin(); it != m_row_map.end(); it++)
@@ -214,7 +213,7 @@ void
 ItemListImpl::size_request (Requisition &requisition)
 {
   bool chspread = false, cvspread = false;
-  measure_rows (4096, m_vadjustment->nvalue()); // FIXME: use monitor size
+  measure_rows (4096); // FIXME: use monitor size
   // FIXME: this should only measure current row
   requisition.width = 0;
   requisition.height = -1;
@@ -228,7 +227,7 @@ ItemListImpl::size_request (Requisition &requisition)
       chspread = cvspread = false;
     }
   if (m_model && m_model->count())
-    requisition.height = lookup_row_size (ifloor (m_model->count() * m_vadjustment->nvalue())); // FIXME
+    requisition.height = -1;  // FIXME: requisition.height = lookup_row_size (ifloor (m_model->count() * m_vadjustment->nvalue())); // FIXME
   else
     requisition.height = -1;
   if (requisition.height < 0)
@@ -244,7 +243,7 @@ ItemListImpl::size_allocate (Allocation area)
   allocation (area);
   if (m_need_resize_scroll)
     {
-      measure_rows (area.height, m_vadjustment->nvalue());
+      measure_rows (area.height);
       resize_scroll();
     }
   for (RowMap::iterator it = m_row_map.begin(); it != m_row_map.end(); it++)
@@ -254,83 +253,186 @@ ItemListImpl::size_allocate (Allocation area)
     }
 }
 
-int64
-ItemListImpl::lookup_row_size (int64 row)
+bool
+ItemListImpl::pixel_positioning (const int64       mcount,
+                                 const ModelSizes &ms) const
 {
-  row -= m_row_size_offset;
-  if (row < 0 || !m_model || row >= m_model->count() || row >= m_row_sizes.size())
-    return -1;
-  return m_row_sizes[row];
-}
-
-int64
-ItemListImpl::lookup_or_measure_row (int64    row,
-                                     ListRow *cached_lr)
-{
-  int64 pixels = lookup_row_size (row);
-  if (pixels < 0)
-    {
-      fill_row (cached_lr, row);
-      pixels = measure_row (cached_lr);
-    }
-  return pixels;
+  return 0;
+  return mcount == ms.row_sizes.size();
 }
 
 void
-ItemListImpl::measure_rows (int64  maxpixels,
-                            double fraction)
+ItemListImpl::measure_rows (int64 maxpixels)
 {
-  return; // FIXME
-  if (!m_model || m_model->count() < 1)
+  ModelSizes &ms = m_model_sizes;
+  /* catch cases where measuring is useless */
+  if (!m_model || m_model->count() > maxpixels)
     {
-      /* assign 0 sizes */
-      m_row_size_offset = 0;
-      m_row_sizes.clear();
+      ms.total_height = 0;
+      ms.row_sizes.clear();
       return;
     }
-  /* create list row for measuring */
-  if (!m_measurement_row)
+  /* check if measuring is needed */
+  const int64 mcount = m_model->count();
+  if (ms.total_height > 0 && mcount == ms.row_sizes.size())
+    return;
+  /* create measuring context */
+  if (!ms.measurement_row)
     {
-      m_measurement_row = create_row (0, false);
+      ms.measurement_row = create_row (0, false);
       Allocation area;
       area.x = area.y = -1;
-      area.width = area.height = 1;
-      m_measurement_row->rowbox->set_allocation (area);
+      area.width = area.height = 0;
+      ms.measurement_row->rowbox->set_allocation (area);
     }
-  ListRow *lr = m_measurement_row;
-  SizeQueue row_sizes;
-  int64 current = min (m_model->count() - 1, ifloor (fraction * m_model->count()));
-  int64 row = current;
-  int64 row_size_offset = current;
-  /* measure current row */
-  row_sizes.push_back (lookup_or_measure_row (row, lr));
-  /* measure below current row */
-  int64 pixelaccu = 0;
-  row = current + 1;
-  while (pixelaccu <= maxpixels && row < m_model->count())
+  ms.total_height = 0;
+  ms.row_sizes.clear();
+
+  return; // FIMXE
+  
+  /* measure all rows */
+  ms.row_sizes.resize (mcount);
+  ListRow *lr = ms.measurement_row;
+  for (int64 row = 0; row < mcount; row++)
     {
-      int64 pixels = lookup_or_measure_row (row, lr);
-      pixelaccu += pixels;
-      row_sizes.push_back (pixels);
-      row += 1;
+      printerr ("measure: %llu\n", row);
+      fill_row (lr, row);
+      int rowheight = measure_row (lr);
+      ms.row_sizes[row] = rowheight;
+      ms.total_height += rowheight;
     }
-  /* measure above current row */
-  pixelaccu = 0;
-  row = current - 1;
-  while (pixelaccu <= maxpixels && row >= 0)
+}
+
+int
+ItemListImpl::row_height (ModelSizes &ms,
+                          int64       list_row)
+{
+  fill_row (ms.measurement_row, list_row);
+  Requisition requisition = ms.measurement_row->rowbox->requisition();
+  // FIXME: cache result
+  return requisition.height;
+}
+
+int64 /* list bottom relative y for list_row */
+ItemListImpl::row_layout (double      vscrollpos,
+                          int64       mcount,
+                          ModelSizes &ms,
+                          int64       list_row)
+{
+  /* allocate scroll position row (list bottom relative) */
+  const double list_alignment = vscrollpos / mcount;
+  const int listpos = allocation().height * (1.0 - list_alignment);
+  const int64 scrollrow = ifloor (vscrollpos);
+  const double scrollrow_alignment = vscrollpos - scrollrow;
+  const int scrollrow_lower = row_height (ms, scrollrow) * (1.0 - scrollrow_alignment);
+  const int scrollrow_y = listpos - scrollrow_lower;
+  int64 y = scrollrow_y;
+  if (scrollrow > list_row)
+    for (int64 row = list_row + 1; row <= scrollrow; row++)
+      y += row_height (ms, row);
+  else if (scrollrow < list_row)
+    for (int64 row = scrollrow + 1; row <= list_row; row++)
+      y -= row_height (ms, row);
+  return y;
+}
+
+int64
+ItemListImpl::position2row (double   list_fraction,
+                            double  *row_fraction)
+{
+  /* scroll position interpretation depends on the available vertical scroll
+   * position resolution, which is derived from the number of pixels that
+   * are (possibly) vertically allocated for the list view:
+   * 1) Pixel size interpretation.
+   *    All list rows are measured to determine their height. The fractional
+   *    scroll position is then interpreted as a pointer into the total pixel
+   *    height of the list.
+   * 2) Positional interpretation (applicable for large models).
+   *    The scroll position is interpreted as a fractional pointer into the
+   *    interval [0,rowcount[. So the integer part of the scroll position will
+   *    always point at one particular row and the fractional part is
+   *    interpreted as an offset into the item's row, as [row_index.row_fraction].
+   *    From this, the actual scroll position is interpolated so that the top
+   *    of the first row and the bottom of the last row are aligned with top and
+   *    bottom of the list view respectively.
+   * Note that list rows increase downwards, pixel coordinates increase upwards.
+   */
+  const int64 mcount = m_model->count();
+  const ModelSizes &ms = m_model_sizes;
+  if (pixel_positioning (mcount, ms))
     {
-      int64 pixels = lookup_or_measure_row (row, lr);
-      pixelaccu += pixels;
-      row_sizes.push_front (pixels);
-      row_size_offset -= 1;
-      row -= 1;
+      /* pixel positioning */
+      const int64 lpixel = list_fraction * ms.total_height;
+      int64 row, accu = 0;
+      for (row = 0; row < mcount; row++)
+        {
+          accu += ms.row_sizes[row];
+          if (lpixel < accu)
+            break;
+        }
+      if (row < mcount)
+        {
+          if (row_fraction)
+            *row_fraction = 1.0 - (accu - lpixel) / ms.row_sizes[row];
+          return row;
+        }
+      return -1; // invalid row
     }
-  /* assign new sizes */
-  m_row_size_offset = row_size_offset;
-  m_row_sizes.swap (row_sizes);
-  /* cleanup */
-  // FIXME: cache_row (lr);
-  // FIXME: optimize by using std::vector as SizeQueue (construct with reverse copies)
+  else
+    {
+      /* fractional positioning */
+      const double scroll_value = list_fraction * mcount;
+      const int64 row = min (mcount - 1, ifloor (scroll_value));
+      if (row_fraction)
+        *row_fraction = min (1.0, scroll_value - row);
+      return row;
+    }
+}
+
+double
+ItemListImpl::row2position (const int64  list_row,
+                            const double list_alignment)
+{
+  const int64 mcount = m_model->count();
+  if (list_row < 0 || list_row >= mcount)
+    return -1; // invalid row
+  ModelSizes &ms = m_model_sizes;
+  const int64 listheight = allocation().height;
+  /* see position2row() for fractional positioning vs. pixel positioning */
+  if (pixel_positioning (mcount, ms))
+    {
+      /* pixel positioning */
+      int64 row, accu = 0;
+      for (row = 0; row < list_row; row++)
+        accu += ms.row_sizes[row];
+      /* here: accu == real_scroll_position for list_alignment == 0 */
+      accu += ms.row_sizes[row] * list_alignment;       // fractional row to align
+      accu -= listheight * list_alignment;              // fractional list to align
+      accu = max (0, accu);                             // clamp row0 to list start
+      return accu;
+    }
+  else
+    {
+      /* fractional positioning */
+      const int listpos = listheight * (1.0 - list_alignment);
+      const int rowheight = row_height (ms, list_row);
+      double lower = 0, upper = mcount;
+      double value = list_row + 0.5;
+      for (int i = 0; i <= 56; i++)
+        {
+          int64 rowy = row_layout (value, mcount, ms, list_row); // rowy measure from list bottom
+          int64 rowpos = rowy + rowheight * (1.0 - list_alignment);
+          if (rowpos < listpos)
+            lower = value;      /* value must grow */
+          else if (rowpos > listpos)
+            upper = value;      /* value must shrink */
+          else
+            break;              /* value is ideal */
+          value = (lower + upper) * 0.5;
+          // FIXME: constrain value steps to ~10, to avoid row_layout() walking millions of rows
+        }
+      return value;
+    }
 }
 
 int64
@@ -410,7 +512,7 @@ ItemListImpl::resize_scroll () // m_model->count() >= 1
       ListRow *lr = i >= 0 ? fetch_row (i) : NULL; // FIXME
       int64 rowheight = measure_row (lr);
       if (rowheight < 0)
-        break; // no more rows for layouting
+        break; // no more rows for layouting // FIXME
       firstrow = i;
       rmap[firstrow] = lr;
       lr->allocated = true;
@@ -425,7 +527,7 @@ ItemListImpl::resize_scroll () // m_model->count() >= 1
       ListRow *lr = i < m_model->count() ? fetch_row (i) : NULL; // FIXME
       int64 rowheight = measure_row (lr);
       if (rowheight < 0)
-        break; // no more rows for layouting
+        break; // no more rows for layouting // FIXME
       lastrow = i;
       rmap[lastrow] = lr;
       lr->allocated = true;
@@ -647,6 +749,11 @@ ItemListImpl::handle_event (const Event &event)
       lr = lookup_row (m_current_row);
       if (lr)
         lr->rowbox->color_scheme (COLOR_SELECTED);
+      double vscrollupper = row2position (m_current_row, 0.0) / m_model->count();
+      double vscrolllower = row2position (m_current_row, 1.0) / m_model->count();
+      double nvalue = CLAMP (m_vadjustment->nvalue(), vscrolllower, vscrollupper);
+      if (nvalue != m_vadjustment->nvalue())
+        m_vadjustment->nvalue (nvalue);
     }
   printerr ("m_current_row=%llu\n", m_current_row);
   return handled;

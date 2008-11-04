@@ -34,6 +34,13 @@ struct ListRow {
   ListRow() : rowbox (NULL), allocated (0) {}
 };
 
+struct ModelSizes {
+  vector<int>   row_sizes;
+  int64         total_height;
+  ListRow      *measurement_row;
+  ModelSizes() : total_height (0), measurement_row (NULL) {}
+};
+
 class ItemListImpl : public virtual MultiContainerImpl,
                      public virtual ItemList,
                      public virtual AdjustmentSource,
@@ -52,7 +59,8 @@ class ItemListImpl : public virtual MultiContainerImpl,
   bool                   m_browse;
   bool                   m_need_resize_scroll;
   uint64                 m_current_row;
-  ListRow               *m_measurement_row; // FIXME
+
+  ModelSizes             m_model_sizes;
 protected:
   virtual bool          handle_event            (const Event    &event);
   virtual void          reset                   (ResetMode       mode);
@@ -75,6 +83,21 @@ public:
   virtual void          visual_update           ();
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area);
+  /* sizing and positioning */
+  bool                  pixel_positioning       (const int64       mcount,
+                                                 const ModelSizes &ms) const;
+  void                  measure_rows            (int64    maxpixels);
+  int64                 position2row            (double   list_fraction,
+                                                 double  *row_fraction);
+  double                row2position            (int64    list_row,
+                                                 double   list_alignment = 0.5);
+  int                   row_height              (ModelSizes &ms,
+                                                 int64       list_row);
+  int64                 row_layout              (double      vscrollpos,
+                                                 int64       mcount,
+                                                 ModelSizes &ms,
+                                                 int64       list_row);
+
   void                  measure_rows            (int64    maxpixels,
                                                  double   fraction);
   int64                 scroll_row_layout       (ListRow *lr_current,
@@ -84,9 +107,6 @@ public:
                                                  int64 *listupperp,
                                                  int64 *listheightp);
   void                  resize_scroll           ();
-  int64                 lookup_row_size         (int64    row);
-  int64                 lookup_or_measure_row   (int64    row,
-                                                 ListRow *cached_lr);
   void                  cache_row               (ListRow *lr);
   void                  fill_row                (ListRow *lr,
                                                  uint64   row);
