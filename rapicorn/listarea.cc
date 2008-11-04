@@ -397,7 +397,7 @@ ItemListImpl::row2position (const int64  list_row,
   if (list_row < 0 || list_row >= mcount)
     return -1; // invalid row
   ModelSizes &ms = m_model_sizes;
-  const int64 listheight = allocation().height;
+  const int listheight = allocation().height;
   /* see position2row() for fractional positioning vs. pixel positioning */
   if (pixel_positioning (mcount, ms))
     {
@@ -416,9 +416,11 @@ ItemListImpl::row2position (const int64  list_row,
       /* fractional positioning */
       const int listpos = listheight * (1.0 - list_alignment);
       const int rowheight = row_height (ms, list_row);
+      const int maxstep = 16;                   // upper bound on O(row_layout())
+      int64 last_rowpos = listpos;
       double lower = 0, upper = mcount;
       double value = list_row + 0.5;
-      for (int i = 0; i <= 56; i++)
+      for (int i = 0; i <= listheight; i++)     // maximum should never be reached
         {
           int64 rowy = row_layout (value, mcount, ms, list_row); // rowy measure from list bottom
           int64 rowpos = rowy + rowheight * (1.0 - list_alignment);
@@ -428,8 +430,10 @@ ItemListImpl::row2position (const int64  list_row,
             upper = value;      /* value must shrink */
           else
             break;              /* value is ideal */
-          value = (lower + upper) * 0.5;
-          // FIXME: constrain value steps to ~10, to avoid row_layout() walking millions of rows
+          if (rowpos == last_rowpos)
+            break;              /* value cannot be refined */
+          last_rowpos = rowpos;
+          value = CLAMP (0.5 * (lower + upper), value - maxstep, value + maxstep);
         }
       return value;
     }
