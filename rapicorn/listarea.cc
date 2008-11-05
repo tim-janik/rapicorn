@@ -416,11 +416,11 @@ ItemListImpl::row2position (const int64  list_row,
       /* fractional positioning */
       const int listpos = listheight * (1.0 - list_alignment);
       const int rowheight = row_height (ms, list_row);
-      const int maxstep = 16;                   // upper bound on O(row_layout())
+      const int maxstep = 16;                           // upper bound on O(row_layout())
       int64 last_rowpos = listpos;
       double lower = 0, upper = mcount;
       double value = list_row + 0.5;
-      for (int i = 0; i <= listheight; i++)     // maximum should never be reached
+      for (int i = 0; i <= max (56, listheight); i++)   // maximum usually unreached
         {
           int64 rowy = row_layout (value, mcount, ms, list_row); // rowy measure from list bottom
           int64 rowpos = rowy + rowheight * (1.0 - list_alignment);
