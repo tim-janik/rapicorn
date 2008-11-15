@@ -107,6 +107,8 @@ Item::set_flag (uint32 flag,
   bool fchanged = change_flags_silently (flag, on);
   if (fchanged)
     {
+      if (flag & (VISIBLE | POSITIVE_ALLOCATION) == POSITIVE_ALLOCATION)
+        change_flags_silently (POSITIVE_ALLOCATION, false);
       if (flag & propagate_flag_mask)
         {
           expose();
@@ -116,6 +118,7 @@ Item::set_flag (uint32 flag,
         {
           const PackInfo &pa = pack_info();
           repack (pa, pa); // includes invalidate();
+          invalidate_parent(); // request resize even if flagged as invalid already
         }
       changed();
     }
@@ -932,6 +935,15 @@ Item::changed()
 }
 
 void
+Item::invalidate_parent ()
+{
+  /* propagate (size) invalidation from children to parents */
+  Item *p = parent();
+  if (p)
+    p->invalidate_size();
+}
+
+void
 Item::invalidate()
 {
   if (!test_all_flags (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT))
@@ -940,8 +952,7 @@ Item::invalidate()
       change_flags_silently (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT, true); /* skip notification */
       if (!finalizing())
         sig_invalidate.emit();
-      if (parent())
-        parent()->invalidate_size();
+      invalidate_parent(); /* need new size-request on parent */
       SizeGroup::invalidate_item (*this);
     }
 }
@@ -954,8 +965,7 @@ Item::invalidate_size()
       change_flags_silently (INVALID_REQUISITION | INVALID_ALLOCATION, true); /* skip notification */
       if (!finalizing())
         sig_invalidate.emit();
-      if (parent())
-        parent()->invalidate_size();
+      invalidate_parent(); /* need new size-request on parent */
       SizeGroup::invalidate_item (*this);
     }
 }
@@ -1307,7 +1317,7 @@ ItemImpl::tune_requisition (Requisition requisition)
           if (requisition.width != m_requisition.width || requisition.height != m_requisition.height)
             {
               m_requisition = requisition;
-              p->invalidate_size(); /* need new size-request on parent */
+              invalidate_parent(); /* need new size-request on parent */
               return true;
             }
         }

@@ -183,6 +183,7 @@ TableImpl::repack_child (Item           &item,
   uint n_cols = right_attach (pnew), n_rows = top_attach (pnew);
   if (n_cols > cols.size() || n_rows > rows.size())
     resize_table (n_cols, n_rows);
+  MultiContainerImpl::repack_child (item, orig, pnew);
 }
 
 void

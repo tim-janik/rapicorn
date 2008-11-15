@@ -381,7 +381,9 @@ void
 Container::repack_child (Item           &item,
                          const PackInfo &orig,
                          const PackInfo &pnew)
-{}
+{
+  item.invalidate_parent();
+}
 
 static DataKey<Item*> focus_child_key;
 

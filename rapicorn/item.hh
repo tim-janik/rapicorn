@@ -107,6 +107,7 @@ protected:
   virtual Requisition         cache_requisition (Requisition *requisition = NULL) = 0;
   virtual void                size_request      (Requisition &requisition) = 0;
   virtual void                size_allocate     (Allocation   area) = 0;
+  virtual void                invalidate_parent ();
   virtual bool                tune_requisition  (Requisition  requisition);
   bool                        tune_requisition  (double       new_width,
                                                  double       new_height);
