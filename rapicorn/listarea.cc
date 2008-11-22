@@ -103,8 +103,8 @@ ItemListImpl::constructed ()
         {
           Array row;
           String s;
-          if (i == 10)
-            s = string_printf ("* %u SMALL ITEM (watch scroll direction)", i);
+          if (i && (i % 10) == 0)
+            s = string_printf ("* %u SMALL ROW (watch scroll direction)", i);
           else
             s = string_printf ("|<br/>| <br/>| %u<br/>|<br/>|", i);
           row[0] = s;
