@@ -491,11 +491,13 @@ ItemListImpl::scroll_row_layout (ListRow *lr_current,
 void
 ItemListImpl::resize_scroll () // m_model->count() >= 1
 {
+  const int64 mcount = m_model->count();
+
   /* flag old rows */
   for (RowMap::iterator it = m_row_map.begin(); it != m_row_map.end(); it++)
     it->second->allocated = 0; // FIXME
 
-  int64 current = min (m_model->count() - 1, ifloor (m_vadjustment->nvalue() * m_model->count())); // FIXME
+  int64 current = min (mcount - 1, ifloor (m_vadjustment->nvalue() * mcount)); // FIXME
   ListRow *lr_current = fetch_row (current);
 
   Allocation area = allocation();
@@ -519,9 +521,9 @@ ItemListImpl::resize_scroll () // m_model->count() >= 1
   }
   int64 firstrow = current;
   /* allocate rows above current */
-  for (int64 i = current - 1; accu < listupper; i--)
+  for (int64 i = current - 1; i >= 0 && accu < listupper; i--)
     {
-      ListRow *lr = i >= 0 ? fetch_row (i) : NULL; // FIXME
+      ListRow *lr = fetch_row (i);
       int64 rowheight = measure_row (lr);
       firstrow = i;
       rmap[firstrow] = lr;
@@ -532,9 +534,9 @@ ItemListImpl::resize_scroll () // m_model->count() >= 1
   /* allocate rows below current */
   int64 lastrow = current;
   accu += firstrowoffset + currentlower;
-  for (int64 i = current + 1; accu < listheight; i++)
+  for (int64 i = current + 1; i < mcount && accu < listheight; i++)
     {
-      ListRow *lr = i < m_model->count() ? fetch_row (i) : NULL; // FIXME
+      ListRow *lr = fetch_row (i);
       int64 rowheight = measure_row (lr);
       lastrow = i;
       rmap[lastrow] = lr;
