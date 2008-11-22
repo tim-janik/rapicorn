@@ -35,10 +35,12 @@ struct ListRow {
 };
 
 struct ModelSizes {
-  vector<int>   row_sizes;
-  int64         total_height;
-  ListRow      *measurement_row;
-  ModelSizes() : total_height (0), measurement_row (NULL) {}
+  vector<int>    row_sizes;
+  map<int64,int> size_cache; // ca. 28bytes per node
+  int64          total_height;
+  ListRow       *measurement_row;
+  explicit ModelSizes() : total_height (0), measurement_row (NULL) {}
+  void     clear     () { row_sizes.clear(); size_cache.clear(); total_height = 0; }
 };
 
 class ItemListImpl : public virtual MultiContainerImpl,
@@ -56,8 +58,10 @@ class ItemListImpl : public virtual MultiContainerImpl,
   vector<ListRow*>       m_row_cache;
   vector<SizeGroup*>     m_size_groups;
   bool                   m_need_resize_scroll;
+  bool                   m_block_invalidate;
   uint64                 m_current_row;
   ModelSizes             m_model_sizes;
+  virtual void          invalidate_parent ();
 protected:
   virtual bool          handle_event            (const Event    &event);
   virtual void          reset                   (ResetMode       mode);
@@ -104,6 +108,7 @@ public:
                                                  int64 *listupperp,
                                                  int64 *listheightp);
   void                  resize_scroll           ();
+  void                  resize_scroll_preserving();
   void                  cache_row               (ListRow *lr);
   void                  fill_row                (ListRow *lr,
                                                  uint64   row);

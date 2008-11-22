@@ -58,7 +58,7 @@ ItemListImpl::ItemListImpl() :
   m_model (NULL),
   m_hadjustment (NULL), m_vadjustment (NULL),
   m_browse (true), m_n_cols (0),
-  m_need_resize_scroll (false),
+  m_need_resize_scroll (false), m_block_invalidate (false),
   m_current_row (18446744073709551615ULL)
 {}
 
@@ -188,8 +188,7 @@ ItemListImpl::invalidate_model (bool invalidate_heights,
                                 bool invalidate_widgets)
 {
   m_need_resize_scroll = true;
-  m_model_sizes.total_height = 0;
-  m_model_sizes.row_sizes.clear();
+  m_model_sizes.clear();
   invalidate();
 }
 
@@ -200,13 +199,20 @@ ItemListImpl::visual_update ()
   if (m_need_resize_scroll)
     {
       measure_rows (allocation().height);
-      resize_scroll();
+      resize_scroll_preserving();
     }
   for (RowMap::iterator it = m_row_map.begin(); it != m_row_map.end(); it++)
     {
       ListRow *lr = it->second;
       lr->rowbox->set_allocation (lr->area);
     }
+}
+
+void
+ItemListImpl::invalidate_parent ()
+{
+  if (!m_block_invalidate)
+    MultiContainerImpl::invalidate_parent();
 }
 
 void
@@ -265,17 +271,6 @@ void
 ItemListImpl::measure_rows (int64 maxpixels)
 {
   ModelSizes &ms = m_model_sizes;
-  /* catch cases where measuring is useless */
-  if (!m_model || m_model->count() > maxpixels)
-    {
-      ms.total_height = 0;
-      ms.row_sizes.clear();
-      return;
-    }
-  /* check if measuring is needed */
-  const int64 mcount = m_model->count();
-  if (ms.total_height > 0 && mcount == ms.row_sizes.size())
-    return;
   /* create measuring context */
   if (!ms.measurement_row)
     {
@@ -285,12 +280,21 @@ ItemListImpl::measure_rows (int64 maxpixels)
       area.width = area.height = 0;
       ms.measurement_row->rowbox->set_allocation (area);
     }
-  ms.total_height = 0;
-  ms.row_sizes.clear();
+  /* catch cases where measuring is useless */
+  if (!m_model || m_model->count() > maxpixels)
+    {
+      ms.clear();
+      return;
+    }
+  /* check if measuring is needed */
+  const int64 mcount = m_model->count();
+  if (ms.total_height > 0 && mcount == ms.row_sizes.size())
+    return;
 
-  return; // FIMXE
+  return; // FIXME
   
   /* measure all rows */
+  ms.clear();
   ms.row_sizes.resize (mcount);
   ListRow *lr = ms.measurement_row;
   for (int64 row = 0; row < mcount; row++)
@@ -307,9 +311,13 @@ int
 ItemListImpl::row_height (ModelSizes &ms,
                           int64       list_row)
 {
+  map<int64,int>::iterator it = ms.size_cache.find (list_row);
+  if (it != ms.size_cache.end())
+    return it->second;
   fill_row (ms.measurement_row, list_row);
   Requisition requisition = ms.measurement_row->rowbox->requisition();
-  // FIXME: cache result
+  ms.size_cache[list_row] = requisition.height;
+  // printerr ("CACHE: last=%lld size=%d\n", list_row, ms.size_cache.size());
   return requisition.height;
 }
 
@@ -515,8 +523,6 @@ ItemListImpl::resize_scroll () // m_model->count() >= 1
     {
       ListRow *lr = i >= 0 ? fetch_row (i) : NULL; // FIXME
       int64 rowheight = measure_row (lr);
-      if (rowheight < 0)
-        break; // no more rows for layouting // FIXME
       firstrow = i;
       rmap[firstrow] = lr;
       lr->allocated = true;
@@ -530,8 +536,6 @@ ItemListImpl::resize_scroll () // m_model->count() >= 1
     {
       ListRow *lr = i < m_model->count() ? fetch_row (i) : NULL; // FIXME
       int64 rowheight = measure_row (lr);
-      if (rowheight < 0)
-        break; // no more rows for layouting // FIXME
       lastrow = i;
       rmap[lastrow] = lr;
       lr->allocated = true;
@@ -557,6 +561,22 @@ ItemListImpl::resize_scroll () // m_model->count() >= 1
     m_size_groups[i]->active (true);
   /* remember state */
   m_need_resize_scroll = 0;
+}
+
+void
+ItemListImpl::resize_scroll_preserving () // m_model->count() >= 1
+{
+  if (!m_block_invalidate && drawable() &&
+      !test_flags (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT))
+    {
+      m_block_invalidate = true;
+      resize_scroll();
+      requisition();
+      set_allocation (allocation());
+      m_block_invalidate = false;
+    }
+  else
+    resize_scroll();
 }
 
 void
@@ -654,11 +674,15 @@ ItemListImpl::measure_row (ListRow *lr,
     {
       Allocation carea = lr->rowbox->allocation();
       *allocation_offset = carea.y;
+      if (carea.height < 0)
+        assert_not_reached(); // FIXME
       return carea.height;
     }
   else
     {
       Requisition requisition = lr->rowbox->requisition();
+      if (requisition.height < 0)
+        assert_not_reached(); // FIXME
       return requisition.height;
     }
 }
