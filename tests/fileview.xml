@@ -17,8 +17,15 @@
  !-->
 <rapicorn-definitions xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
 
-  <!-- list area -->
+  <!-- list construction -->
   <def:ListArea inherit="Rapicorn::Factory::ItemList"/>
+  <def:ListAreaTable inherit="Table" />
+  <def:ListRow inherit="Ambience" child-container="ListRowCavity" hexpand="1"
+	       normal-background="background" lighting="none" shade="none">
+    <HBox id="ListRowCavity"/>
+  </def:ListRow>
+
+  <!-- list area -->
   <def:item-list inherit="Alignment" >
     <arg:model default=""/>
     <Table>
