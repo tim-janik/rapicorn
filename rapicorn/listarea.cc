@@ -628,7 +628,10 @@ ItemListImpl::fill_row (ListRow *lr,
   Ambience *ambience = lr->rowbox->interface<Ambience*>();
   if (ambience)
     ambience->background (nthrow & 1 ? "background-odd" : "background-even");
-  lr->rowbox->color_scheme (nthrow == m_current_row ? COLOR_SELECTED : COLOR_NORMAL);
+  Frame *frame = lr->rowbox->interface<Frame*>();
+  if (frame)
+    frame->frame_type (nthrow == m_current_row ? FRAME_FOCUS : FRAME_NONE);
+  // lr->rowbox->color_scheme (nthrow == m_current_row ? COLOR_SELECTED : COLOR_NORMAL);
 }
 
 ListRow*
@@ -733,10 +736,20 @@ ItemListImpl::handle_event (const Event &event)
       ListRow *lr;
       lr = lookup_row (saved_current_row);
       if (lr)
-        lr->rowbox->color_scheme (COLOR_NORMAL);
+        {
+          // lr->rowbox->color_scheme (COLOR_NORMAL);
+          Frame *frame = lr->rowbox->interface<Frame*>();
+          if (frame)
+            frame->frame_type (FRAME_NONE);
+        }
       lr = lookup_row (m_current_row);
       if (lr)
-        lr->rowbox->color_scheme (COLOR_SELECTED);
+        {
+          // lr->rowbox->color_scheme (COLOR_SELECTED);
+          Frame *frame = lr->rowbox->interface<Frame*>();
+          if (frame)
+            frame->frame_type (FRAME_FOCUS);
+        }
       double vscrollupper = row2position (m_current_row, 0.0) / m_model->count();
       double vscrolllower = row2position (m_current_row, 1.0) / m_model->count();
       double nvalue = CLAMP (m_vadjustment->nvalue(), vscrolllower, vscrollupper);

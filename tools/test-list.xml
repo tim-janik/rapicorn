@@ -22,7 +22,9 @@
   <def:ListAreaTable inherit="Table" />
   <def:ListRow inherit="Ambience" child-container="ListRowCavity" hexpand="1"
 	       normal-background="background" lighting="none" shade="none">
-    <HBox id="ListRowCavity"/>
+    <Frame hexpand="1" frame-type="none" tight-focus="true">
+      <HBox id="ListRowCavity"/>
+    </Frame>
   </def:ListRow>
 
   <def:item-list inherit="Alignment" >
