@@ -23,9 +23,9 @@ namespace {
 using namespace Rapicorn;
 
 static void
-fill_store (Store1 &s1)
+fill_store (Store1       &s1,
+            const String &dirname)
 {
-  String dirname = ".";
   DIR *d = opendir (dirname.c_str());
   s1.clear();
   if (!d)
@@ -53,7 +53,7 @@ static Store1*
 create_store ()
 {
   Store1 *s1 = Store1::create_memory_store (Type::lookup ("String"));
-  fill_store (*s1);
+  fill_store (*s1, ".");
   return s1;
 }
 
