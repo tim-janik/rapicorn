@@ -251,7 +251,8 @@ Frame::list_properties()
     MakeProperty (Frame, normal_frame,    _("Normal Frame"),   _("The kind of frame to draw in normal state"), "rw"),
     MakeProperty (Frame, impressed_frame, _("Impresed Frame"), _("The kind of frame to draw in impressed state"), "rw"),
     MakeProperty (Frame, frame_type,      _("Frame Type"),     _("The kind of frame to draw in all states"), "w"),
-    MakeProperty (Frame, overlap_child,   _("Overlap Child"),  _("Draw frame in the same position as child"), "w"),
+    MakeProperty (Frame, overlap_child,   _("Overlap Child"),  _("Draw frame in the same position as child"), "rw"),
+    MakeProperty (Frame, tight_focus,     _("Tight Focus"),    _("Prevent extra padding around focus frames"), "rw"),
   };
   static const PropertyList property_list (properties, Container::list_properties());
   return property_list;
@@ -259,12 +260,18 @@ Frame::list_properties()
 
 class FrameImpl : public virtual SingleContainerImpl, public virtual Frame {
   FrameType m_normal_frame, m_impressed_frame;
-  bool      m_overlap_child;
+  bool      m_overlap_child, m_tight_focus;
+  bool
+  is_tight_focus()
+  {
+    return m_tight_focus && ((m_normal_frame == FRAME_FOCUS || m_normal_frame == FRAME_NONE) &&
+                             (m_impressed_frame == FRAME_FOCUS || m_impressed_frame == FRAME_NONE));
+  }
 public:
   explicit FrameImpl() :
     m_normal_frame (FRAME_ETCHED_IN),
     m_impressed_frame (FRAME_ETCHED_IN),
-    m_overlap_child (false)
+    m_overlap_child (false), m_tight_focus (false)
   {}
   ~FrameImpl()
   {}
@@ -284,20 +291,23 @@ protected:
   virtual FrameType     impressed_frame () const        { return m_impressed_frame; }
   virtual bool          overlap_child   () const        { return m_overlap_child; }
   virtual void          overlap_child   (bool ovc)      { m_overlap_child = ovc; invalidate(); changed(); }
+  virtual bool          tight_focus     () const        { return m_tight_focus; }
+  virtual void          tight_focus     (bool tf)       { m_tight_focus = tf; invalidate(); changed(); }
   virtual FrameType     current_frame   () const        { return branch_impressed() ? impressed_frame() : normal_frame(); }
   virtual void
   size_request (Requisition &requisition)
   {
     SingleContainerImpl::size_request (requisition);
+    int thickness = is_tight_focus() ? 1 : 2;
     if (m_overlap_child)
       {
-        requisition.width = MAX (requisition.width, 2 + 2);
-        requisition.height = MAX (requisition.height, 2 + 2);
+        requisition.width = MAX (requisition.width, 2 * thickness);
+        requisition.height = MAX (requisition.height, 2 * thickness);
       }
     else
       {
-        requisition.width += 2 + 2;
-        requisition.height += 2 + 2;
+        requisition.width += 2 * thickness;
+        requisition.height += 2 * thickness;
       }
   }
   virtual void
@@ -306,10 +316,11 @@ protected:
     Allocation carea = area;
     if (has_allocatable_child() && !m_overlap_child)
       {
-        carea.x += 2;
-        carea.y += 2;
-        carea.width -= 4;
-        carea.height -= 4;
+        int thickness = is_tight_focus() ? 1 : 2;
+        carea.x += thickness;
+        carea.y += thickness;
+        carea.width -= 2 * thickness;
+        carea.height -= 2 * thickness;
       }
     SingleContainerImpl::size_allocate (carea);
     allocation (area);
@@ -320,7 +331,8 @@ public:
   {
     IRect ia = allocation();
     int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
-    if (width >= 2 && height >= 2)
+    int thickness = is_tight_focus() ? 1 : 2;
+    if (width >= thickness && height >= thickness)
       {
         Color border1, border2;
         Color outer_upper_left;
@@ -354,7 +366,10 @@ public:
             outer_lower_right = dark_shadow();
             break;
           case FRAME_FOCUS:
-            border2 = focus_color();
+            if (is_tight_focus())
+              border1 = focus_color();
+            else
+              border2 = focus_color();
             break;
           case FRAME_ALERT_FOCUS:
             border1 = 0xff000000;
