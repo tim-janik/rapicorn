@@ -48,33 +48,45 @@ public:
 typedef class Model0 Variable;
 
 class Store1;
+class Selection1;
 class Model1 : public virtual ReferenceCountImpl { // 1*Type + n*Value
-  Type                  m_type;
-protected:
-  void                  changed         (uint64       first,
-                                         uint64       count);
-  void                  inserted        (uint64       first,
-                                         uint64       count);
-  void                  deleted         (uint64       first,
-                                         uint64       count);
-  virtual              ~Model1          (void);
-  virtual void          handle_changed  (uint64, uint64);
-  virtual void          handle_inserted (uint64, uint64);
-  virtual void          handle_deleted  (uint64, uint64);
-  virtual Store1*       pget_store      (void) = 0;
-  virtual uint64        pcount_rows     (void) = 0;
-  virtual Array         pget_row        (uint64       row) = 0;
-public:
-  explicit              Model1          (Type         row_type);
-  Store1*               store           (void)                  { return pget_store(); }
-  Type                  type            (void) const            { return m_type; }
-  int64                 count           (void)                  { return pcount_rows(); }
-  Array                 get             (uint64       nth)      { return pget_row (nth); }
-  /* notification */
   typedef Signal<Model1, void (uint64,uint64)> RangeSignal;
-  RangeSignal           sig_changed;
-  RangeSignal           sig_inserted;
-  RangeSignal           sig_deleted;
+  Type            m_type;
+  Selection1     &m_selection;
+protected:
+  void            changed                       (uint64         first,
+                                                 uint64         count);
+  void            inserted                      (uint64         first,
+                                                 uint64         count);
+  void            deleted                       (uint64         first,
+                                                 uint64         count);
+  virtual        ~Model1                        (void);
+  virtual void    handle_changed                (uint64, uint64);
+  virtual void    handle_inserted               (uint64, uint64);
+  virtual void    handle_deleted                (uint64, uint64);
+  virtual void    handle_selection_changed      (uint64, uint64);
+  virtual Store1* pget_store                    (void) = 0;
+  virtual uint64  pcount_rows                   (void) = 0;
+  virtual Array   pget_row                      (uint64         row) = 0;
+public:
+  explicit        Model1                        (Type           row_type,
+                                                 SelectionMode  selectionmode);
+  Type            type                          (void) const            { return m_type; }
+  int64           count                         (void)                  { return pcount_rows(); }
+  Array           get                           (uint64         nth)    { return pget_row (nth); }
+  Store1*         store                         (void)                  { return pget_store(); }
+  /* notification */
+  RangeSignal     sig_changed;
+  RangeSignal     sig_inserted;
+  RangeSignal     sig_deleted;
+  /* selection */
+  SelectionMode   selection_mode                (void);
+  void            clear_selection               ();
+  bool            selected                      (int64          nth);
+  int64           next_selected                 (int64          nth);
+  int64           prev_selected                 (int64          nth);
+  void            toggle_selected               (int64          nth);
+  RangeSignal     sig_selection_changed;
 };
 
 class Store1 : public virtual ReferenceCountImpl { // 1*Type + n*Value
@@ -104,7 +116,8 @@ public:
                                          const Array &array)    { pchange_rows (nth, 1, &array); }
   void                  clear           ()                      { premove_rows (0, count()); }
   /* premade stores */
-  static Store1*        create_memory_store     (Type row_type);
+  static Store1*        create_memory_store     (Type          row_type,
+                                                 SelectionMode selectionmode);
 };
 
 } // Rapicorn
