@@ -98,7 +98,7 @@ ItemListImpl::constructed ()
 {
   if (!m_model)
     {
-      Store1 &store = *Store1::create_memory_store (Type::lookup ("String"));
+      Store1 &store = *Store1::create_memory_store (Type::lookup ("String"), SELECTION_INTERVAL);
       for (uint i = 0; i < 20; i++)
         {
           Array row;
@@ -167,9 +167,17 @@ ItemListImpl::model (const String &modelurl)
   Model1 *oldmodel = m_model;
   m_model = model;
   if (m_model)
-    ref_sink (m_model);
+    {
+      ref_sink (m_model);
+      m_model->sig_changed += slot (*this, &ItemListImpl::model_changed);
+      m_model->sig_inserted += slot (*this, &ItemListImpl::model_inserted);
+      m_model->sig_deleted += slot (*this, &ItemListImpl::model_deleted);
+      m_model->sig_selection_changed += slot (*this, &ItemListImpl::selection_changed);
+    }
   if (oldmodel)
-    unref (oldmodel);
+    {
+      unref (oldmodel);
+    }
   if (!m_model)
     m_n_cols = 0;
   else
@@ -181,6 +189,46 @@ String
 ItemListImpl::model () const
 {
   return m_model ? m_model->object_url() : "";
+}
+
+void
+ItemListImpl::model_changed (uint64 first,
+                             uint64 count)
+{
+#warning FIXME: intersect changed rows with visible rows
+  for (uint64 i = first; count--; i++)
+    {
+      ListRow *lr = lookup_row (i);
+      if (lr)
+        lr->rowbox->invalidate();
+    }
+}
+
+void
+ItemListImpl::model_inserted (uint64 first,
+                              uint64 count)
+{
+  invalidate_model (true, true);
+}
+
+void
+ItemListImpl::model_deleted (uint64 first,
+                             uint64 count)
+{
+  invalidate_model (true, true);
+}
+
+void
+ItemListImpl::selection_changed (uint64 first,
+                                 uint64 count)
+{
+  // FIXME: intersect with visible rows
+  for (uint64 i = first; count--; i++)
+    {
+      ListRow *lr = lookup_row (i);
+      if (lr)
+        lr->rowbox->color_scheme (m_model->selected (i) ? COLOR_SELECTED : COLOR_NORMAL);
+    }
 }
 
 void
@@ -631,7 +679,7 @@ ItemListImpl::fill_row (ListRow *lr,
   Frame *frame = lr->rowbox->interface<Frame*>();
   if (frame)
     frame->frame_type (nthrow == m_current_row ? FRAME_FOCUS : FRAME_NONE);
-  // lr->rowbox->color_scheme (nthrow == m_current_row ? COLOR_SELECTED : COLOR_NORMAL);
+  lr->rowbox->color_scheme (m_model->selected (nthrow) ? COLOR_SELECTED : COLOR_NORMAL);
 }
 
 ListRow*
@@ -726,6 +774,11 @@ ItemListImpl::handle_event (const Event &event)
             m_current_row = m_model->count() - 1;
           handled = true;
           break;
+        case KEY_space:
+          if (m_current_row >= 0 && m_current_row < uint64 (m_model->count()))
+            m_model->toggle_selected (m_current_row);
+          handled = true;
+          break;
         }
     case KEY_RELEASE:
     default:
@@ -737,7 +790,6 @@ ItemListImpl::handle_event (const Event &event)
       lr = lookup_row (saved_current_row);
       if (lr)
         {
-          // lr->rowbox->color_scheme (COLOR_NORMAL);
           Frame *frame = lr->rowbox->interface<Frame*>();
           if (frame)
             frame->frame_type (FRAME_NONE);
@@ -745,7 +797,6 @@ ItemListImpl::handle_event (const Event &event)
       lr = lookup_row (m_current_row);
       if (lr)
         {
-          // lr->rowbox->color_scheme (COLOR_SELECTED);
           Frame *frame = lr->rowbox->interface<Frame*>();
           if (frame)
             frame->frame_type (FRAME_FOCUS);
@@ -755,8 +806,11 @@ ItemListImpl::handle_event (const Event &event)
       double nvalue = CLAMP (m_vadjustment->nvalue(), vscrolllower, vscrollupper);
       if (nvalue != m_vadjustment->nvalue())
         m_vadjustment->nvalue (nvalue);
+      if ((m_model->selection_mode() == SELECTION_SINGLE ||
+           m_model->selection_mode() == SELECTION_BROWSE) &&
+          m_model->selected (saved_current_row))
+        m_model->toggle_selected (m_current_row);
     }
-  printerr ("m_current_row=%llu\n", m_current_row);
   return handled;
 }
 

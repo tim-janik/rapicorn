@@ -61,6 +61,14 @@ class ItemListImpl : public virtual MultiContainerImpl,
   bool                   m_block_invalidate;
   uint64                 m_current_row;
   ModelSizes             m_model_sizes;
+  void                  model_changed           (uint64 first,
+                                                 uint64 count);
+  void                  model_inserted          (uint64 first,
+                                                 uint64 count);
+  void                  model_deleted           (uint64 first,
+                                                 uint64 count);
+  void                  selection_changed       (uint64 first,
+                                                 uint64 count);
   virtual void          invalidate_parent ();
 protected:
   virtual bool          handle_event            (const Event    &event);
