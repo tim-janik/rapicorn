@@ -28,6 +28,9 @@ AM_PROG_LIBTOOL                 # provide libtool
 AC_PROG_MAKE_SET                # enable sub directories
 AC_PROG_INSTALL                 # installation utility
 AC_PROG_LN_S                    # installation utility
+AC_PROG_CPP
+AC_PROG_CXX
+AC_PROG_CXXCPP
 
 # MC_CHECK_VERSION() extracts up to 6 decimal numbers out of given-version
 # and required-version, using any non-number letters as delimiters. it then

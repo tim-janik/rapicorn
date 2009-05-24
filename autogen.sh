@@ -146,7 +146,7 @@ echo "Running: $AUTOMAKE"
 case $CC in
 *xlc | *xlc\ * | *lcc | *lcc\ *) am_opt=--include-deps;;
 esac
-$AUTOMAKE --force-missing --add-missing $am_opt || exit $?
+$AUTOMAKE -Wno-portability --force-missing --add-missing $am_opt || exit $?
 
 echo "Running: $AUTOCONF"
 $AUTOCONF || exit $?
