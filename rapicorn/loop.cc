@@ -20,6 +20,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <glib.h> // FIXME: GTimeVal
+#include <algorithm>
+#include <cstring>
 
 namespace Rapicorn {
 

@@ -20,6 +20,7 @@
 #include <rapicorn/utilities.hh>
 #include <rapicorn/primitives.hh>
 #include <rapicorn/window.hh>
+#include <stdlib.h>
 
 namespace Rapicorn {
 

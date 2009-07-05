@@ -15,6 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "enumdefs.hh"
+#include <cstring>
 
 namespace Rapicorn {
 

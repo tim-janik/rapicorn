@@ -17,8 +17,9 @@
 #include "factory.hh"
 #include "evaluator.hh"
 #include "root.hh"
-#include <stack>
 #include <errno.h>
+#include <stack>
+#include <cstring>
 
 namespace Rapicorn {
 struct ClassDoctor {

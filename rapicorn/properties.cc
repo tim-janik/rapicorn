@@ -16,6 +16,8 @@
  */
 #include "properties.hh"
 #include <set>
+#include <cstring>
+#include <malloc.h>
 
 namespace Rapicorn {
 

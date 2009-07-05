@@ -15,6 +15,8 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "rapicornxml.hh"
+#include <string.h>
+#include <algorithm>
 
 namespace Rapicorn {
 

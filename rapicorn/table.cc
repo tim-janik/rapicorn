@@ -20,6 +20,8 @@
 #include "tableimpl.hh"
 #include "factory.hh"
 
+#include <algorithm>
+
 namespace Rapicorn {
 
 static uint

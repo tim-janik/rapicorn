@@ -16,7 +16,9 @@
  */
 #include "types.hh"
 #include "rapicornthread.hh"
+#include <cstring>
 #include <errno.h>
+#include <stdlib.h>
 
 namespace Rapicorn {
 

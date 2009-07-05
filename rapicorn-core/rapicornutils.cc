@@ -20,11 +20,13 @@
 #include <sys/utsname.h>
 #include <fcntl.h>
 #include <sys/time.h>
-#include <vector>
-#include <algorithm>
 #include <cxxabi.h>
 #include <signal.h>
 #include <glib.h>
+#include <vector>
+#include <algorithm>
+#include <cstring>
+#include <iconv.h>
 #include "rapicornutils.hh"
 #include "rapicornutf8.hh"
 #include "rapicornthread.hh"

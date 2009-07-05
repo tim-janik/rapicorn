@@ -16,6 +16,7 @@
  */
 #include <rapicorn-core/testutils.hh>
 #include <errno.h>
+#include <stdlib.h>
 
 #define PRGNAME "imgcheck"
 

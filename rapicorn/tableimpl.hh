@@ -19,6 +19,7 @@
 
 #include <rapicorn/table.hh>
 #include <rapicorn/containerimpl.hh>
+#include <string.h>
 
 namespace Rapicorn {
 

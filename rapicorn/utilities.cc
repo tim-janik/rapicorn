@@ -16,7 +16,10 @@
  */
 #include "utilities.hh"
 #include "blitfuncs.hh"
+#include <cstring>
 #include <errno.h>
+#include <libintl.h>
+#include <malloc.h>
 
 namespace Rapicorn {
 
