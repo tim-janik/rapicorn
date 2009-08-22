@@ -1081,7 +1081,17 @@ void
 Item::dump_test_data (String       &xmlstream,
                       const String &indent)
 {
-  xmlstream += string_printf ("%s<%s>\n", indent.c_str(), name().c_str());
+  xmlstream += string_printf ("%s<%s\n", indent.c_str(), name().c_str());
+  const PropertyList &plist = list_properties();
+  for (uint i = 0; i < plist.n_properties; i++)
+    {
+      Property *property = plist.properties[i];
+      if (!property->readable())
+        continue;
+      String value = get_property (property->ident);
+      xmlstream += string_printf ("%s  %s=\"%s\"\n", indent.c_str(), property->ident, value.c_str());
+    }
+  xmlstream += string_printf ("%s>\n", indent.c_str());
   data_test_dump (xmlstream, indent);
   xmlstream += string_printf ("%s</%s>\n", indent.c_str(), name().c_str());
 }
