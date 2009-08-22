@@ -1078,6 +1078,18 @@ Item::type_cast_error (const char *dest_type)
 }
 
 void
+Item::dump_test_data (String &xmlstream)
+{
+  data_test_dump (xmlstream);
+}
+
+void
+Item::data_test_dump (String &xmlstream)
+{
+  xmlstream += string_printf ("<%s/>\n", name().c_str());
+}
+
+void
 Item::find_adjustments (AdjustmentSourceType adjsrc1,
                         Adjustment         **adj1,
                         AdjustmentSourceType adjsrc2,

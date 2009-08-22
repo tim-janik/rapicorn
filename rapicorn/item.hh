@@ -261,7 +261,12 @@ public:
   Color                 light_shadow            () { return heritage()->light_shadow (state()); }
   Color                 light_glint             () { return heritage()->light_glint (state()); }
   Color                 focus_color             () { return heritage()->focus_color (state()); }
+  /* debugging/testing */
+  void                  dump_test_data          (String &xmlstream);
+protected:
+  virtual void          data_test_dump          (String &xmlstream);
   /* convenience */
+public:
   void                  find_adjustments        (AdjustmentSourceType adjsrc1,
                                                  Adjustment         **adj1,
                                                  AdjustmentSourceType adjsrc2 = ADJUSTMENT_SOURCE_NONE,

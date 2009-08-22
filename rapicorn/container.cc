@@ -669,6 +669,14 @@ Container::debug_tree (String indent)
     }
 }
 
+void
+Container::data_test_dump (String &xmlstream)
+{
+  Item::data_test_dump (xmlstream);
+  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+    cw->dump_test_data (xmlstream);
+}
+
 SingleContainerImpl::SingleContainerImpl () :
   child_item (NULL)
 {}

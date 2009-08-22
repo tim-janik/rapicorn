@@ -24,8 +24,16 @@ custom_commands (Window             &window,
                  const String       &command,
                  const StringVector &args)
 {
-  printout ("%s(): custom command: %s(%s) (window: %s)\n", __func__,
-            command.c_str(), string_join (",", args).c_str(), window.root().name().c_str());
+  if (command == "testdump")
+    {
+      Root &root = window.root();
+      String dump;
+      root.dump_test_data (dump);
+      printout ("%s", dump.c_str());
+    }
+  else
+    printout ("%s(): custom command: %s(%s) (window: %s)\n", __func__,
+              command.c_str(), string_join (",", args).c_str(), window.root().name().c_str());
   return true;
 }
 
