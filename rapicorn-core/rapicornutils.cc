@@ -1119,6 +1119,92 @@ string_strip (const String &input)
     return input.substr (a, b - a);
 }
 
+/* --- string options --- */
+static const char*
+string_option_find_value (const String   &option_string,
+                          const String   &option)
+{
+  const char *p, *match = NULL;
+  int l = strlen (option.c_str());
+  return_val_if_fail (l > 0, NULL);
+  if (option_string == "")
+    return NULL;        /* option not found */
+
+  /* try first match */
+  p = strstr (option_string.c_str(), option.c_str());
+  if (p &&
+      (p == option_string.c_str() || p[-1] == ':') &&
+      (p[l] == ':' || p[l] == 0 || p[l] == '=' ||
+       ((p[l] == '-' || p[l] == '+') && (p[l + 1] == ':' || p[l + 1] == 0))))
+    match = p;
+  /* allow later matches to override */
+  while (p)
+    {
+      p = strstr (p + l, option.c_str());
+      if (p &&
+          p[-1] == ':' &&
+          (p[l] == ':' || p[l] == 0 || p[l] == '=' ||
+           ((p[l] == '-' || p[l] == '+') && (p[l + 1] == ':' || p[l + 1] == 0))))
+        match = p;
+    }
+  return match ? match + l : NULL;
+}
+
+String
+string_option_get (const String   &option_string,
+                   const String   &option)
+{
+  const char *value = string_option_find_value (option_string, option);
+
+  if (!value)
+    return NULL;                        /* option not present */
+  else switch (value[0])
+      {
+        char *s;
+      case ':':   return "1";           /* option was present, no modifier */
+      case 0:     return "1";           /* option was present, no modifier */
+      case '+':   return "1";           /* option was present, enable modifier */
+      case '-':   return NULL;          /* option was present, disable modifier */
+      case '=':                         /* option present with assignment */
+        value++;
+        s = strchr (value, ':');
+        return s ? String (value, s - value) : value;
+      default:    return NULL;            /* anything else, undefined */
+      }
+}
+
+bool
+string_option_check (const String   &option_string,
+                     const String   &option)
+{
+  const char *value = string_option_find_value (option_string, option);
+
+  if (!value)
+    return false;                       /* option not present */
+  else switch (value[0])
+    {
+      char *s;
+    case ':':   return true;            /* option was present, no modifier */
+    case 0:     return true;            /* option was present, no modifier */
+    case '+':   return true;            /* option was present, enable modifier */
+    case '-':   return false;           /* option was present, disable modifier */
+    case '=':                           /* option present with assignment */
+      value++;
+      s = strchr (value, ':');
+      if (!s || s == value)             /* empty assignment */
+        return false;
+      else switch (s[0])
+        {
+        case '0': case 'f': case 'F':
+        case 'n': case 'N':             /* false assigments */
+          return false;
+        default: return true;           /* anything else holds true */
+        }
+    default:    return false;           /* anything else, undefined */
+    }
+}
+
+
 /* --- charset conversions --- */
 static bool
 unalias_encoding (String &name)

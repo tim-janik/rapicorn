@@ -234,6 +234,12 @@ String  string_lstrip                                    (const String &input);
 String  string_rstrip                                    (const String &input);
 String  string_strip                                     (const String &input);
 
+/* --- string options --- */
+bool    string_option_check     (const String   &option_string,
+                                 const String   &option);
+String  string_option_get       (const String   &option_string,
+                                 const String   &option);
+
 /* --- charset conversions --- */
 bool    text_convert    (const String &to_charset,
                          String       &output_string,
