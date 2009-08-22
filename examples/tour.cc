@@ -28,7 +28,7 @@ custom_commands (Window             &window,
     {
       Root &root = window.root();
       String dump;
-      root.dump_test_data (dump, "");
+      root.get_test_dump (dump, "");
       printout ("%s", dump.c_str());
     }
   else

@@ -48,7 +48,7 @@ protected:
   virtual bool        move_focus        (FocusDirType    fdir);
   void                expose_enclosure  (); /* expose without children */
   virtual void        set_focus_child   (Item           *item);
-  virtual void        data_test_dump    (String         &xmlstream,
+  virtual void        dump_test_data    (String         &xmlstream,
                                          const String   &indent);
 public:
   Item*               get_focus_child   () const;

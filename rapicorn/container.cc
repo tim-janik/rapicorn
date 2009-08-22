@@ -670,12 +670,12 @@ Container::debug_tree (String indent)
 }
 
 void
-Container::data_test_dump (String       &xmlstream,
+Container::dump_test_data (String       &xmlstream,
                            const String &indent)
 {
   String child_indent = indent + "  ";
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    cw->dump_test_data (xmlstream, child_indent);
+    cw->get_test_dump (xmlstream, child_indent);
 }
 
 SingleContainerImpl::SingleContainerImpl () :
