@@ -262,9 +262,11 @@ public:
   Color                 light_glint             () { return heritage()->light_glint (state()); }
   Color                 focus_color             () { return heritage()->focus_color (state()); }
   /* debugging/testing */
-  void                  dump_test_data          (String &xmlstream);
+  void                  dump_test_data          (String       &xmlstream,
+                                                 const String &indent);
 protected:
-  virtual void          data_test_dump          (String &xmlstream);
+  virtual void          data_test_dump          (String       &xmlstream,
+                                                 const String &indent);
   /* convenience */
 public:
   void                  find_adjustments        (AdjustmentSourceType adjsrc1,
