@@ -1092,8 +1092,8 @@ Item::get_test_dump (String       &xmlstream,
       xmlstream += string_printf ("%s  %s=\"%s\"\n", indent.c_str(), property->ident, value.c_str());
     }
   xmlstream += string_printf ("%s>\n", indent.c_str());
-  dump_private_data (xmlstream, indent);
-  dump_test_data (xmlstream, indent);
+  dump_private_data (xmlstream, indent + "  ");
+  dump_test_data (xmlstream, indent + "  ");
   xmlstream += string_printf ("%s</%s>\n", indent.c_str(), name().c_str());
 }
 

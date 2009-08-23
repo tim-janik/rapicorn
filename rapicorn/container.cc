@@ -673,9 +673,8 @@ void
 Container::dump_test_data (String       &xmlstream,
                            const String &indent)
 {
-  String child_indent = indent + "  ";
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    cw->get_test_dump (xmlstream, child_indent);
+    cw->get_test_dump (xmlstream, indent);
 }
 
 SingleContainerImpl::SingleContainerImpl () :
