@@ -219,6 +219,8 @@ template<> inline int64         string_to_type<int64>    (const String &string) 
 template<> inline String        string_from_type<int64>  (int64         value)  { return string_from_int (value); }
 template<> inline uint64        string_to_type<uint64>   (const String &string) { return string_to_uint (string); }
 template<> inline String        string_from_type<uint64> (uint64         value) { return string_from_uint (value); }
+template<> inline String        string_to_type<String>   (const String &string) { return string; }
+template<> inline String        string_from_type<String> (String         value) { return value; }
 vector<double>                  string_to_vector         (const String         &string);
 String                          string_from_vector       (const vector<double> &dvec,
                                                           const String         &delim = " ");
