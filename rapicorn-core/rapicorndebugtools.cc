@@ -108,4 +108,82 @@ DebugChannel::new_from_file_async (const String &filename)
   return dcfa;
 }
 
+TestStream::TestStream ()
+{}
+
+TestStream::~TestStream ()
+{}
+
+class TestStreamImpl : public TestStream {
+  vector<String> node_stack;
+  String         indent;
+  String         dat;
+  bool           node_open;
+  virtual void
+  ddump (Kind          kind,
+         const String &name,
+         const String &val)
+  {
+    switch (kind)
+      {
+      case TEXT:
+        return_if_fail (name == "");
+        close_node();
+        dat += val + "\n";
+        break;
+      case NODE:
+        return_if_fail (val == "");
+        close_node();
+        dat += indent + "<" + name + "\n";
+        node_open = true;
+        push_indent();
+        node_stack.push_back (name);
+        break;
+      case POPNODE:
+        close_node();
+        pop_indent();
+        dat += indent + "</" + node_stack.back() + ">\n";
+        node_stack.pop_back();
+        break;
+      case VALUE:
+        if (node_open)
+          dat += indent + name + "=\"" + val + "\"\n";
+        else
+          dat += indent + "<ATTRIBUTE " + name + "=\"" + val + "\"/>\n";
+        break;
+      case INTERN:
+        close_node();
+        dat += indent + "<INTERN " + name + "=\"" + val + "\"/>\n";
+        break;
+      case INDENT:
+        indent += "  ";
+        break;
+      case POPINDENT:
+        indent = indent.substr (0, indent.size() - 2);
+        break;
+      }
+  }
+  void
+  close_node ()
+  {
+    if (!node_open)
+      return;
+    dat += indent.substr (0, indent.size() - 2) + ">\n";
+    node_open = false;
+  }
+  virtual String
+  string ()
+  {
+    return dat;
+  }
+public:
+  TestStreamImpl() : node_open (false) {}
+};
+
+TestStream*
+TestStream::create_test_stream ()
+{
+  return new TestStreamImpl();
+}
+
 } // Rapicorn

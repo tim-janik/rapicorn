@@ -1078,10 +1078,9 @@ Item::type_cast_error (const char *dest_type)
 }
 
 void
-Item::get_test_dump (String       &xmlstream,
-                     const String &indent)
+Item::get_test_dump (TestStream &tstream)
 {
-  xmlstream += string_printf ("%s<%s\n", indent.c_str(), name().c_str());
+  tstream.push_node (name());
   const PropertyList &plist = list_properties();
   for (uint i = 0; i < plist.n_properties; i++)
     {
@@ -1089,22 +1088,21 @@ Item::get_test_dump (String       &xmlstream,
       if (!property->readable())
         continue;
       String value = get_property (property->ident);
-      xmlstream += string_printf ("%s  %s=\"%s\"\n", indent.c_str(), property->ident, value.c_str());
+      tstream.dump (property->ident, value);
     }
-  xmlstream += string_printf ("%s>\n", indent.c_str());
-  dump_private_data (xmlstream, indent + "  ");
-  dump_test_data (xmlstream, indent + "  ");
-  xmlstream += string_printf ("%s</%s>\n", indent.c_str(), name().c_str());
+  tstream.push_indent();
+  dump_private_data (tstream);
+  dump_test_data (tstream);
+  tstream.pop_indent();
+  tstream.pop_node ();
 }
 
 void
-Item::dump_test_data (String       &xmlstream,
-                      const String &indent)
+Item::dump_test_data (TestStream &tstream)
 {}
 
 void
-Item::dump_private_data (String       &xmlstream,
-                         const String &indent)
+Item::dump_private_data (TestStream &tstream)
 {}
 
 void

@@ -670,11 +670,10 @@ Container::debug_tree (String indent)
 }
 
 void
-Container::dump_test_data (String       &xmlstream,
-                           const String &indent)
+Container::dump_test_data (TestStream &tstream)
 {
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    cw->get_test_dump (xmlstream, indent);
+    cw->get_test_dump (tstream);
 }
 
 SingleContainerImpl::SingleContainerImpl () :

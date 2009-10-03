@@ -46,11 +46,10 @@ class ButtonAreaImpl : public virtual ButtonArea, public virtual EventHandler, p
   FocusFrame *m_focus_frame;
   String m_on_click[3];
   virtual void
-  dump_private_data (String       &xmlstream,
-                     const String &indent)
+  dump_private_data (TestStream &tstream)
   {
-    xmlstream += string_printf ("%s<INTERN %s=\"%u\" />\n", indent.c_str(), "m_button", m_button);
-    xmlstream += string_printf ("%s<INTERN %s=\"%u\" />\n", indent.c_str(), "m_repeater", m_repeater);
+    tstream.dump_intern ("m_button", m_button);
+    tstream.dump_intern ("m_repeater", m_repeater);
   }
 public:
   ButtonAreaImpl() :

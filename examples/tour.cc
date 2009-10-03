@@ -27,9 +27,10 @@ custom_commands (Window             &window,
   if (command == "testdump")
     {
       Root &root = window.root();
-      String dump;
-      root.get_test_dump (dump, "");
-      printout ("%s", dump.c_str());
+      TestStream *tstream = TestStream::create_test_stream();
+      root.get_test_dump (*tstream);
+      printout ("%s", tstream->string().c_str());
+      delete tstream;
     }
   else
     printout ("%s(): custom command: %s(%s) (window: %s)\n", __func__,
