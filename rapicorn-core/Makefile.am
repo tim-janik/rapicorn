@@ -12,7 +12,7 @@ rapicorn_public_headers = $(strip	\
         rapicorncpu.hh	rapicorndebugtools.hh	rapicornthread.hh	rapicornutils.hh  \
         rapicornmsg.hh	rapicornsignal.hh	rapicornmath.hh		rapicornutf8.hh   \
         rapicornxml.hh	markup.hh		enumdefs.hh		testutils.hh \
-        pixmap.hh	\
+        pixmap.hh	regex.hh	\
 	values.hh types.hh models.hh \
 	$(rapicorn_top_headers)		\
 	$(rapicorn_impl_headers)	\
@@ -29,7 +29,7 @@ rapicorn_cc_sources = $(strip 		\
         rapicorncpu.cc  rapicorndebugtools.cc	rapicornthread.cc	rapicornutils.cc  \
         rapicornmsg.cc  rapicornsignal.cc	rapicornmath.cc		rapicornutf8.cc   \
         rapicornxml.cc  markup.cc		enumdefs.cc		testutils.cc \
-        pixmap.cc	\
+        pixmap.cc	regex.cc	\
 	values.cc types.cc models.cc    \
 )
 rapicorn_uncompiled_sources = $(strip	\

@@ -30,6 +30,7 @@
 #include <rapicorn-core/rapicornutf8.hh>
 #include <rapicorn-core/rapicornutils.hh>
 #include <rapicorn-core/rapicornxml.hh>
+#include <rapicorn-core/regex.hh>
 #include <rapicorn-core/types.hh>
 #include <rapicorn-core/values.hh>
 #include <rapicorn-core/models.hh>

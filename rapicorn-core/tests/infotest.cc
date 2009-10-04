@@ -43,6 +43,12 @@ test_cpu_info (void)
 }
 
 static void
+test_regex (void)
+{
+  TASSERT (Regex::match_simple ("Lion", "Lion", Regex::EXTENDED | Regex::ANCHORED, Regex::MATCH_NORMAL) == true);
+}
+
+static void
 test_paths()
 {
   String p, s;
@@ -229,6 +235,7 @@ main (int   argc,
 
   Test::add ("Misc", test_misc);
   Test::add ("CpuInfo", test_cpu_info);
+  Test::add ("Regex Tests", test_regex);
   Test::add ("Path handling", test_paths);
   Test::add ("File IO", test_file_io);
   Test::add ("ZIntern", test_zintern);
