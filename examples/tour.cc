@@ -24,8 +24,18 @@ custom_commands (Window             &window,
                  const String       &command,
                  const StringVector &args)
 {
-  printout ("%s(): custom command: %s(%s) (window: %s)\n", __func__,
-            command.c_str(), string_join (",", args).c_str(), window.root().name().c_str());
+  if (command == "testdump")
+    {
+      Root &root = window.root();
+      TestStream *tstream = TestStream::create_test_stream();
+      // tstream->filter_matched_nodes ("Button");
+      root.get_test_dump (*tstream);
+      printout ("%s", tstream->string().c_str());
+      delete tstream;
+    }
+  else
+    printout ("%s(): custom command: %s(%s) (window: %s)\n", __func__,
+              command.c_str(), string_join (",", args).c_str(), window.root().name().c_str());
   return true;
 }
 

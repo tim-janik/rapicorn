@@ -44,6 +44,32 @@ DebugChannel::printf (const char *format,
   va_end (a);
 }
 
+/* test dump */
+class TestStream {
+public:
+  typedef enum { TEXT, NODE, VALUE, INTERN, INDENT, POPNODE, POPINDENT } Kind;
+  RAPICORN_PRIVATE_CLASS_COPY  (TestStream);
+protected:
+  /*Con*/       TestStream              ();
+  virtual void  ddump                   (Kind kind, const String &name, const String &val) = 0;
+public:
+  virtual      ~TestStream              ();
+  void          dump                    (const String &text) { ddump (TEXT, "", text); }
+  template<typename Value>
+  void          dump                    (const String &name, Value v) { ddump (VALUE, name, string_from_type (v)); }
+  template<typename Value>
+  void          dump_intern             (const String &name, Value v) { ddump (INTERN, name, string_from_type (v)); }
+  void          push_node               (const String &name) { ddump (NODE, name, ""); }
+  void          pop_node                ()     { ddump (POPNODE, "", ""); }
+  void          push_indent             (void) { ddump (INDENT, "", ""); }
+  void          pop_indent              (void) { ddump (POPINDENT, "", ""); }
+  virtual void  filter_matched_nodes    (const String &matchpattern) = 0;
+  virtual void  filter_unmatched_nodes  (const String &matchpattern) = 0;
+  virtual String string                 () = 0;
+  static
+  TestStream*   create_test_stream      ();
+};
+
 } // Rapicorn
 
 #endif /* __RAPICORN_DEBUG_TOOLS_HH__ */

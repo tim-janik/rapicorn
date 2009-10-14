@@ -64,9 +64,9 @@ Ambience::list_properties()
     MakeProperty (Ambience, prelight_shade, _("Prelight Shade"), _("The kind of shade painted when prelight"), "rw"),
     MakeProperty (Ambience, impressed_shade, _("Impressed Shade"), _("The kind of shade painted when impressed"), "rw"),
     MakeProperty (Ambience, normal_shade, _("Normal Shade"), _("The kind of shade painted when normal"), "rw"),
-    MakeProperty (Ambience, background, _("Background"), _("The kind of background painted for all modes"), "rw"),
-    MakeProperty (Ambience, lighting, _("Lighting"), _("The kind of lighting painted for all modes"), "rw"),
-    MakeProperty (Ambience, shade, _("Shade"), _("The kind of shade painted for all modes"), "rw"),
+    MakeProperty (Ambience, background, _("Background"), _("The kind of background painted for all modes"), "wo"),
+    MakeProperty (Ambience, lighting, _("Lighting"), _("The kind of lighting painted for all modes"), "wo"),
+    MakeProperty (Ambience, shade, _("Shade"), _("The kind of shade painted for all modes"), "wo"),
   };
   static const PropertyList property_list (properties, Container::list_properties());
   return property_list;

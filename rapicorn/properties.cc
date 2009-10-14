@@ -55,6 +55,22 @@ Property::~Property()
     free (hints);
 }
 
+bool
+Property::readable () const
+{
+  if (hints)
+    return string_option_check (hints, "rw") || string_option_check (hints, "ro");
+  return false;
+}
+
+bool
+Property::writable () const
+{
+  if (hints)
+    return string_option_check (hints, "rw") || string_option_check (hints, "wo");
+  return false;
+}
+
 void
 PropertyList::append_properties (uint                n_props,
                                  Property          **props,

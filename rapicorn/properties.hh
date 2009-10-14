@@ -31,6 +31,8 @@ struct Property : ReferenceCountImpl {
   virtual void   set_value   (Deletable *obj, const String &svalue) = 0;
   virtual String get_value   (Deletable *obj) = 0;
   virtual bool   get_range   (Deletable *obj, double &minimum, double &maximum, double &stepping) = 0;
+  bool           readable    () const;
+  bool           writable    () const;
 protected:
   virtual ~Property();
 };

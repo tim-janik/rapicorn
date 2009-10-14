@@ -45,6 +45,12 @@ class ButtonAreaImpl : public virtual ButtonArea, public virtual EventHandler, p
   ClickType m_click_type;
   FocusFrame *m_focus_frame;
   String m_on_click[3];
+  virtual void
+  dump_private_data (TestStream &tstream)
+  {
+    tstream.dump_intern ("m_button", m_button);
+    tstream.dump_intern ("m_repeater", m_repeater);
+  }
 public:
   ButtonAreaImpl() :
     m_button (0), m_repeater (0),
