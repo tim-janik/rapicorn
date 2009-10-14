@@ -4,15 +4,25 @@ include $(top_srcdir)/Makefile.decl
 INCLUDES	+= -I$(top_srcdir)
 DEFS		+= -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"'
 
-noinst_DATA =
-XML_FILES   =
-EXTRA_DIST += $(XML_FILES)
+noinst_PROGRAMS  = $(EXAMPLES)
+noinst_DATA      =
+XML_FILES        =
+EXAMPLES         =
+EXTRA_DIST      += $(XML_FILES)
 
+LDADDS   = $(top_builddir)/rapicorn/librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS)
 RAPIDRUN = $(top_builddir)/tools/rapidrun
 IMGCHECK = $(top_builddir)/rapicorn-core/tests/imgcheck
 
 XVFB_RAPIDRUN = $(XVFB_START) && rrun() { echo "$(RAPIDRUN) $$@" && $(RAPIDRUN) "$$@" ; } && rrun
 
+# === programs ===
+EXAMPLES        += fileview
+fileview_SOURCES = fileview.cc
+fileview_LDADD   = $(LDADDS)
+XML_FILES       += fileview.xml
+
+# === test rules ===
 # alignment test
 alignment-test: $(srcdir)/alignment.xml
 	rm -f xtmp-alignment.png

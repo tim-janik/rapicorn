@@ -17,7 +17,8 @@
 #ifndef __RAPICORN_VALUES_HH__
 #define __RAPICORN_VALUES_HH__
 
-#include <rapicorn-core/types.hh>
+#include <rapicorn-core/enumdefs.hh>
+#include <rapicorn-core/rapicornxml.hh>
 
 namespace Rapicorn {
 
@@ -26,38 +27,49 @@ class BaseValue;
 typedef ReferenceCountImpl  Object;
 
 /* --- Value handling --- */
-class BaseValue {
+struct BaseValue {
+  typedef enum {
+    NUM = Rapicorn::NUM, REAL = Rapicorn::REAL, STRING = Rapicorn::STRING,
+    ARRAY = Rapicorn::ARRAY, OBJECT = Rapicorn::OBJECT,
+  } Storage;
+private:
   union { int64 i64; long double ldf; void *p; } u;
-  /*Copy*/              BaseValue (const BaseValue&) : storage (Type::NUM) { /* No Copies */ }
+  /*Copy*/              BaseValue       (const BaseValue&) : storage (NUM) { /* No Copies */ }
 protected:
   void                  assign          (bool                 *vbool)  { set ((int64) *vbool); }
+  void                  assign          (char                 *vint)   { set ((int64) *vint); }
+  void                  assign          (unsigned char        *vuint)  { set ((int64) *vuint); }
   void                  assign          (int                  *vint)   { set ((int64) *vint); }
   void                  assign          (uint                 *vuint)  { set ((int64) *vuint); }
+  void                  assign          (long                 *vint)   { set ((int64) *vint); }
+  void                  assign          (unsigned long        *vuint)  { set ((int64) *vuint); }
   void                  assign          (int64                *num);
-  void                  assign          (float                *real) { set ((long double) *real); }
+  void                  assign          (float                *real)   { set ((long double) *real); }
   void                  assign          (double               *vdble)  { set ((long double) *vdble); }
   void                  assign          (long double          *real);
   void                  assign          (const String         *string);
   void                  assign          (const char          **string) { set (String (*string)); }
+  void                  assign          (char                **string) { set (String (*string)); }
   void                  assign          (const StringVector   *string_vector);
   void                  assign          (Object               *object);
   void                  assign          (const Array          *array);
   BaseValue&            operator=       (const BaseValue&);
   void                  unset           ();
-  explicit              BaseValue       (Type::Storage value_type);
+  explicit              BaseValue       (StorageType           value_type);
+  explicit              BaseValue       (Storage               value_type);
   virtual              ~BaseValue       ();
   virtual void          changed         ();
-  virtual void          try_retype      (Type::Storage st);
+  virtual void          try_retype      (Storage st);
 public:
-  const Type::Storage   storage;
+  const Storage         storage;
   /* non-lvalue getters */
   long double           real          () const;
   int64                 num             () const;
   const String          string          () const;
   /* lvalue getters */
-  StringVector&         string_vector   () { return storage == Type::STRING_VECTOR && u.p ? *(StringVector*) u.p : *(StringVector*) 0; }
-  Object&               object          () { return storage == Type::OBJECT && u.p ? *(Object*) u.p : *(Object*) 0; }
-  Array&                array           () { return storage == Type::ARRAY && u.p ? *(Array*) u.p : *(Array*) 0; }
+  StringVector          string_vector   ();
+  Object&               object          () { return storage == OBJECT && u.p ? *(Object*) u.p : *(Object*) 0; }
+  Array&                array           () { return storage == ARRAY && u.p ? *(Array*) u.p : *(Array*) 0; }
   /* setters */
   template<typename T>
   void                  set             (T value) { assign (&value); }
@@ -76,14 +88,15 @@ public:
 };
 
 class AnyValue : public BaseValue {
-  virtual void  try_retype      (Type::Storage st);
+  virtual void  try_retype      (Storage st);
 public:
   template<typename V>
-  explicit      AnyValue        (Type::Storage    strg,
+  explicit      AnyValue        (StorageType      strg,
                                  V                value) : BaseValue (strg) { set (value); }
-  explicit      AnyValue        (Type::Storage    strg)  : BaseValue (strg) {}
-  /*Con*/       AnyValue        (const BaseValue &other) : BaseValue (Type::NUM) { *this = other; }
-  /*Copy*/      AnyValue        (const AnyValue  &other) : BaseValue (Type::NUM) { *this = other; }
+  explicit      AnyValue        (StorageType      strgt) : BaseValue (strgt) {}
+  explicit      AnyValue        (Storage          strg)  : BaseValue (strg) {}
+  /*Con*/       AnyValue        (const BaseValue &other) : BaseValue (NUM) { *this = other; }
+  /*Copy*/      AnyValue        (const AnyValue  &other) : BaseValue (NUM) { *this = other; }
   template<typename T>
   AnyValue&     operator=       (T tvalue) { set (tvalue); return *this; }
   AnyValue&     operator=       (const BaseValue &other) { this->BaseValue::operator= (other); return *this; }
@@ -94,11 +107,11 @@ public:
 
 class AutoValue : public AnyValue {
 public:
-  /*Con*/       AutoValue       (long double           num)           : AnyValue (Type::STRING)        { set (num); }
-  /*Con*/       AutoValue       (const char           *cstring)       : AnyValue (Type::STRING)        { set (String (cstring)); }
-  /*Con*/       AutoValue       (const String         &string)        : AnyValue (Type::STRING)        { set (string); }
-  /*Con*/       AutoValue       (const StringVector   &string_vector) : AnyValue (Type::STRING_VECTOR) { set (string_vector); }
-  /*Con*/       AutoValue       (Object               &object)        : AnyValue (Type::OBJECT)        { assign (&object); }
+  /*Con*/       AutoValue       (long double           num)           : AnyValue (STRING)        { set (num); }
+  /*Con*/       AutoValue       (const char           *cstring)       : AnyValue (STRING)        { set (String (cstring)); }
+  /*Con*/       AutoValue       (const String         &string)        : AnyValue (STRING)        { set (string); }
+  /*Con*/       AutoValue       (const StringVector   &string_vector);
+  /*Con*/       AutoValue       (Object               &object)        : AnyValue (OBJECT)        { assign (&object); }
   /*Con*/       AutoValue       (const Array          &array);
 };
 
@@ -143,6 +156,10 @@ public:
   void            clear         ();
   /* misc methods */
   String          to_string     (const String   &junction = ",");
+  XmlNode*        to_xml        ();
+  static Array    from_xml      (const String &xmlstring,
+                                 const String &inputname = "",
+                                 String       *errstrp = NULL);
 };
 
 } // Rapicorn

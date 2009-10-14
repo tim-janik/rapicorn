@@ -125,6 +125,50 @@ XmlNode::first_child (const String &element_name) const
   return NULL;
 }
 
+void
+XmlNode::steal_children (XmlNode &parent)
+{
+  ConstNodes cl = parent.children();
+  for (uint i = 0; i < cl.size(); i++)
+    ref (cl[i]);
+  for (uint i = cl.size(); i > 0; i++)
+    parent.del_child (*cl[i-1]);
+  for (uint i = 0; i < cl.size(); i++)
+    add_child (*cl[i]);
+  for (uint i = 0; i < cl.size(); i++)
+    unref (cl[i]);
+}
+
+void
+XmlNode::break_after (bool newline_after_tag)
+{
+  uint64 f = flags (NULL);
+  f |= 4;
+  flags (&f);
+}
+
+bool
+XmlNode::break_after () const
+{
+  uint64 f = const_cast<XmlNode*> (this)->flags (NULL);
+  return !!(f & 4);
+}
+
+void
+XmlNode::break_within (bool newlines_around_chidlren)
+{
+  uint64 f = flags (NULL);
+  f |= 8;
+  flags (&f);
+}
+
+bool
+XmlNode::break_within () const
+{
+  uint64 f = const_cast<XmlNode*> (this)->flags (NULL);
+  return !!(f & 8);
+}
+
 } // Rapicorn
 
 namespace { // Anon
@@ -132,6 +176,8 @@ using namespace Rapicorn;
 
 class XmlNodeText : public virtual XmlNode {
   String                m_text;
+  uint64                m_flags;
+  virtual uint64        flags           (uint64 *fp) { if (fp) m_flags = *fp; return m_flags; }
   /* XmlNodeText */
   virtual String        text            () const         { return m_text; }
   /* XmlNodeParent */
@@ -142,12 +188,14 @@ public:
   XmlNodeText (const String &utf8text,
                uint          line,
                uint          _char) :
-    XmlNode ("", line, _char), m_text (utf8text)
+    XmlNode ("", line, _char), m_text (utf8text), m_flags (0)
   {}
 };
 
 class XmlNodeParent : public virtual XmlNode {
   vector<XmlNode*>      m_children;
+  uint64                m_flags;
+  virtual uint64        flags           (uint64 *fp) { if (fp) m_flags = *fp; return m_flags; }
   /* XmlNodeText */
   virtual String
   text () const
@@ -192,7 +240,7 @@ public:
   XmlNodeParent (const String &element_name,
                  uint          line,
                  uint          _char) :
-    XmlNode (element_name, line, _char)
+    XmlNode (element_name, line, _char), m_flags (0)
   {}
 };
 
@@ -300,6 +348,40 @@ XmlNode::parse_xml (const String        &input_name,
   if (error)
     *error = perror;
   return xnode;
+}
+
+String
+XmlNode::xml_string (uint64 indent)
+{
+  if (istext())
+    return text();
+#warning FIXME: XML-escape text
+  String istr = string_multiply (" ", indent);
+  String s;
+  s += "<" + name();
+  const StringVector keys = list_attributes();
+  for (uint i = 0; i < keys.size(); i++)
+    s += " " + keys[i] + "=\"" + get_attribute (keys[i]) + "\"";
+#warning FIXME: XML-escape and quote attribute values
+  ConstNodes &cl = children();
+  if (cl.size())
+    {
+      s += ">";
+      bool need_break = break_within();
+      for (uint i = 0; i < cl.size(); i++)
+        {
+          if (need_break)
+            s += "\n" + istr + "  ";
+          s += cl[i]->xml_string (indent + 2);
+          need_break = cl[i]->break_after();
+        }
+      if (break_within())
+        s += "\n" + istr;
+      s += "</" + name() + ">";
+    }
+  else
+    s += "/>";
+  return s;
 }
 
 } // Rapicorn

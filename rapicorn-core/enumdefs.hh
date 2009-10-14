@@ -198,6 +198,15 @@ inline LightingType  operator|  (LightingType  s1, LightingType s2) { return Lig
 inline LightingType& operator|= (LightingType &s1, LightingType s2) { s1 = s1 | s2; return s1; }
 
 typedef enum {
+  SELECTION_NONE,
+  SELECTION_BROWSE,
+  SELECTION_SINGLE,
+  SELECTION_INTERVAL,
+  SELECTION_MULTIPLE,
+} SelectionMode;
+typedef EnumType<SelectionMode> EnumTypeSelectionMode;
+
+typedef enum {
   SIZE_POLICY_NORMAL            = 0,
   SIZE_POLICY_WIDTH_FROM_HEIGHT,
   SIZE_POLICY_HEIGHT_FROM_WIDTH,
@@ -218,6 +227,21 @@ inline StateType  operator&  (StateType  s1, StateType s2) { return StateType (s
 inline StateType& operator&= (StateType &s1, StateType s2) { s1 = s1 & s2; return s1; }
 inline StateType  operator|  (StateType  s1, StateType s2) { return StateType (s1 | (uint64) s2); }
 inline StateType& operator|= (StateType &s1, StateType s2) { s1 = s1 | s2; return s1; }
+
+typedef enum /*<enum>*/
+{
+  NUM            = 'i',
+  REAL           = 'f',
+  STRING         = 's',
+  ARRAY          = 'a',
+  OBJECT         = 'c',
+  INTERFACE      = OBJECT,
+  CHOICE         = ('E' * 256) + STRING,
+  TYPE_REFERENCE = ('T' * 256) + STRING,
+  SEQUENCE       = ('Q' * 256) + ARRAY,
+  RECORD         = ('R' * 256) + ARRAY,
+} StorageType;
+typedef EnumType<StorageType> EnumTypeStorageType;
 
 typedef enum {
   TEXT_MODE_WRAPPED = 1,

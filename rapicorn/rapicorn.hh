@@ -31,6 +31,7 @@
 #include <rapicorn/image.hh>
 #include <rapicorn/item.hh>
 #include <rapicorn/layoutcontainers.hh>
+#include <rapicorn/listarea.hh>
 #include <rapicorn/loop.hh>
 #include <rapicorn/paintcontainers.hh>
 #include <rapicorn/paintitems.hh>

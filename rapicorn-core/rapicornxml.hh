@@ -29,6 +29,7 @@ class XmlNode : public virtual ReferenceCountImpl {
   uint                  m_line, m_char;
 protected:
   explicit              XmlNode         (const String &, uint, uint);
+  virtual uint64        flags           (uint64*) = 0;
   virtual              ~XmlNode         ();
   static void           set_parent      (XmlNode *c, XmlNode *p);
 public:
@@ -57,6 +58,12 @@ public:
   const XmlNode*        first_child     (const String   &element_name) const;
   virtual bool          add_child       (XmlNode        &child) = 0;
   virtual bool          del_child       (XmlNode        &child) = 0;
+  void                  steal_children  (XmlNode        &parent);
+  /* hints */
+  void                  break_after     (bool            newline_after_tag);
+  bool                  break_after     () const;
+  void                  break_within    (bool            newlines_around_chidlren);
+  bool                  break_within    () const;
   /* nodes */
   static XmlNode*       create_text     (const String   &utf8text,
                                          uint            line = 0,
@@ -70,6 +77,7 @@ public:
                                          ssize_t         utf8data_len,
                                          MarkupParser::Error *error,
                                          const String   &roottag = "");
+  String                xml_string      (uint64          indent = 0);
 };
 
 } // Rapicorn

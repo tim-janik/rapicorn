@@ -23,23 +23,19 @@
 namespace Rapicorn {
 
 const char*
-Type::storage_name (Type::Storage storage)
+Type::storage_name (StorageType storage)
 {
-  switch (storage)
-    {
-    case Type::NUM:             return "NUM";
-    case Type::REAL:            return "REAL";
-    case Type::STRING:          return "STRING";
-    case Type::CHOICE:          return "CHOICE";
-    case Type::SEQUENCE:        return "SEQUENCE";
-    case Type::RECORD:          return "RECORD";
-    case Type::INTERFACE:       return "INTERFACE";
-    case Type::STRING_VECTOR:   return "STRING_VECTOR";
-    case Type::ARRAY:           return "ARRAY";
-    case Type::TYPE_REFERENCE:  return "TYPE_REFERENCE";
-    }
-  return NULL;
+  const EnumTypeStorageType::Value *v = EnumTypeStorageType().find_first (storage);
+  return v ? v->value_name : NULL;
 }
+
+const char*
+Type::storage_name () const
+{
+  return storage_name (storage());
+}
+
+#warning FIXME: missing implementations: n_entries entry prerequisites n_fields field elements main_type
 
 namespace Plic {
 #include "types-ptpp.cc" // PLIC TypePackage Parser
@@ -58,10 +54,10 @@ Type::name () const
   return m_info.plic_type_info.name();
 }
 
-Type::Storage
+StorageType
 Type::storage () const
 {
-  return Storage (m_info.plic_type_info.storage);
+  return StorageType (m_info.plic_type_info.storage);
 }
 
 String
@@ -81,7 +77,7 @@ Type::aux_string (const String &auxname) const
 }
 
 double
-Type::aux_float (const String &auxname) const
+Type::aux_real (const String &auxname) const
 {
   return string_to_double (aux_string (auxname));
 }
@@ -160,10 +156,17 @@ Type::notype ()
 }
 
 Type
-Type::try_lookup (const String &full_name)
+Type::try_lookup (const String &lookup_name)
 {
+  String full_name = lookup_name;
   String::size_type sl = full_name.rfind (':');
-  if (sl != full_name.npos && sl > 0 && full_name[sl-1] == ':')
+  if (sl == full_name.npos)
+    {
+      // standard namespace lookup without '::'
+      full_name = "Rapicorn*STD::" + lookup_name;
+      sl = full_name.rfind (':');
+    }
+  if (sl > 0 && full_name[sl-1] == ':')
     {
       String nspace = full_name.substr (0, sl - 1), tname = full_name.substr (sl + 1);
       vector<Plic::TypeNamespace> tnl;
@@ -270,6 +273,17 @@ Type::register_package_file (const String &filename)
   fclose (file);
   if (contents)
     free (contents);
+}
+
+#include "types-zgen.c" // provides types-std.idl as .tpg in RAPICORNSTD_RODATA_*
+
+void
+_rapicorn_init_types (void)
+{
+  static bool initialized = false;
+  assert (!initialized);
+  initialized = true;
+  Type::register_package (RAPICORNSTD_RODATA_SIZE, (const char*) RAPICORNSTD_RODATA_DATA);
 }
 
 } // Rapicorn

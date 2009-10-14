@@ -26,17 +26,43 @@ memfind4 (const uint32 *mem, uint32 value, size_t n_values) // FIXME: public hea
   return (uint32*) wmemchr ((const wchar_t*) mem, value, n_values);
 }
 
-BaseValue::BaseValue (Type::Storage value_type) :
+static BaseValue::Storage
+value_storage (StorageType stt)
+{
+  return BaseValue::Storage (stt & 0xff);
+}
+
+static const char*
+storage_name (BaseValue::Storage storage)
+{
+  switch (storage)
+    {
+    case BaseValue::NUM:        return "NUM";
+    case BaseValue::REAL:       return "REAL";
+    case BaseValue::STRING:     return "STRING";
+    case BaseValue::ARRAY:      return "ARRAY";
+    case BaseValue::OBJECT:     return "OBJECT";
+    }
+  return NULL;
+}
+
+static const uint32 value_storage_types[] = {
+  BaseValue::NUM, BaseValue::REAL, BaseValue::STRING, BaseValue::ARRAY, BaseValue::OBJECT,
+};
+
+BaseValue::BaseValue (Storage value_type) :
   u(), storage (value_type)
 {
-  static const uint32 valid_storage_types[] = {
-    Type::NUM, Type::REAL, Type::STRING, Type::CHOICE,
-    Type::SEQUENCE, Type::RECORD, Type::INTERFACE,
-    Type::TYPE_REFERENCE,
-    Type::STRING_VECTOR,
-    Type::ARRAY,
-  };
-  assert (memfind4 (valid_storage_types, storage, ARRAY_SIZE (valid_storage_types)));
+  assert (memfind4 (value_storage_types, storage, ARRAY_SIZE (value_storage_types)));
+  assert (u.i64 == 0);
+  assert (u.ldf == 0);
+  assert (u.p == NULL);
+}
+
+BaseValue::BaseValue (StorageType value_type) :
+  u(), storage (value_storage (value_type))
+{
+  assert (memfind4 (value_storage_types, storage, ARRAY_SIZE (value_storage_types)));
   assert (u.i64 == 0);
   assert (u.ldf == 0);
   assert (u.p == NULL);
@@ -47,7 +73,7 @@ BaseValue::changed()
 {}
 
 void
-BaseValue::try_retype (Type::Storage st)
+BaseValue::try_retype (Storage st)
 {}
 
 BaseValue&
@@ -58,28 +84,22 @@ BaseValue::operator= (const BaseValue &other)
     {
       switch (storage)
         {
-        case Type::NUM: case Type::REAL:
+        case NUM: case REAL:
           u = other.u;
           break;
-        case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
+        case STRING:
           if (other.u.p)
             u.p = new String (*(String*) other.u.p);
           else
             u.p = NULL;
           break;
-        case Type::STRING_VECTOR:
-          if (other.u.p)
-            u.p = new vector<String> (*(vector<String>*) other.u.p);
-          else
-            u.p = NULL;
-          break;
-        case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
+        case ARRAY:
           if (other.u.p)
             u.p = new Array (*(Array*) other.u.p);
           else
             u.p = NULL;
           break;
-        case Type::OBJECT:
+        case OBJECT:
           if (other.u.p)
             u.p = ref ((Object*) other.u.p);
           else
@@ -91,19 +111,16 @@ BaseValue::operator= (const BaseValue &other)
   else
     switch (other.storage)
       {
-      case Type::NUM: case Type::REAL:
+      case NUM: case REAL:
         this->set (other.u.i64);
         break;
-      case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
+      case STRING:
         this->set (other.u.p ? *(String*) other.u.p : "");
         break;
-      case Type::STRING_VECTOR:
-        this->set (other.u.p ? *(vector<String>*) other.u.p : vector<String>());
-        break;
-      case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
+      case ARRAY:
         this->set (other.u.p ? *(Array*) other.u.p : Array());
         break;
-      case Type::OBJECT:
+      case OBJECT:
         assign ((Object*) other.u.p);
         break;
       }
@@ -115,20 +132,18 @@ BaseValue::num () const
 {
   switch (storage)
     {
-    case Type::NUM:
+    case NUM:
       return u.i64;
-    case Type::REAL:
+    case REAL:
       return (int64) roundl (u.ldf);
-    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
+    case STRING:
       if (!u.p)
         return 0;
       else
         return string_to_int (*(String*) u.p);
-    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
+    case ARRAY:
       return u.p ? ((Array*) u.p)->count() : 0;
-    case Type::STRING_VECTOR:
-      return u.p ? ((vector<String>*) u.p)->size() : 0;
-    case Type::OBJECT:
+    case OBJECT:
       return u.p != NULL;
     }
   return 0;
@@ -139,17 +154,16 @@ BaseValue::real () const
 {
   switch (storage)
     {
-    case Type::REAL:
+    case REAL:
       return u.ldf;
-    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
+    case STRING:
       if (!u.p)
         return 0;
       else
         return string_to_float (*(String*) u.p);
-    case Type::NUM:
-    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
-    case Type::STRING_VECTOR:
-    case Type::OBJECT:
+    case NUM:
+    case ARRAY:
+    case OBJECT:
       return num();
     }
   return 0.0;
@@ -160,55 +174,47 @@ BaseValue::string () const
 {
   switch (storage)
     {
-    case Type::NUM:
+    case NUM:
       return string_from_int (u.i64);
-    case Type::REAL:
+    case REAL:
       return string_from_double (u.ldf);
-    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
+    case STRING:
       return u.p ? *(String*) u.p : "";
-    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
+    case ARRAY:
       return u.p ? ((Array*) u.p)->to_string() : "";
-    case Type::STRING_VECTOR:
-      if (u.p)
-        {
-          vector<String> *vs = (vector<String>*) u.p;
-          String s;
-          for (uint i = 0; i < s.size(); i++)
-            if (i)
-              s += ", " + (*vs)[i];
-            else
-              s += (*vs)[i];
-          return s;
-        }
-      else
-        return "";
-    case Type::OBJECT:
+    case OBJECT:
       return "";
     }
   return "";
+}
+
+StringVector
+BaseValue::string_vector ()
+{
+#warning FIXME: BaseValue::string_vector
+  return StringVector();
 }
 
 void
 BaseValue::assign (int64 *nump)
 {
   int64 num = *nump;
-  try_retype (Type::NUM);
+  try_retype (NUM);
   switch (storage)
     {
-    case Type::NUM:
+    case NUM:
       u.i64 = num;
       break;
-    case Type::REAL:
+    case REAL:
       u.ldf = num;
       break;
-    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
+    case STRING:
       if (!u.p)
         u.p = new String;
       *(String*) u.p = string_from_int (num);
       break;
-    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
-    case Type::STRING_VECTOR:
-    case Type::OBJECT:
+    case ARRAY:
+    case OBJECT:
       if (num == 0) // emulate 'NULL Pointer'
         {
           unset();
@@ -216,7 +222,7 @@ BaseValue::assign (int64 *nump)
         }
       goto default_error;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "num", Type::storage_name (storage));
+      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "num", storage_name (storage));
     }
   changed();
 }
@@ -225,23 +231,22 @@ void
 BaseValue::assign (long double *ldfp)
 {
   long double ldf = *ldfp;
-  try_retype (Type::REAL);
+  try_retype (REAL);
   switch (storage)
     {
-    case Type::NUM:
+    case NUM:
       u.i64 = (int64) roundl (ldf);
       break;
-    case Type::REAL:
+    case REAL:
       u.ldf = ldf;
       break;
-    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
+    case STRING:
       if (!u.p)
         u.p = new String;
       *(String*) u.p = string_from_double (ldf);
       break;
-    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
-    case Type::STRING_VECTOR:
-    case Type::OBJECT:
+    case ARRAY:
+    case OBJECT:
       if (ldf == 0) // emulate 'NULL Pointer'
         {
           unset();
@@ -249,7 +254,7 @@ BaseValue::assign (long double *ldfp)
         }
       goto default_error;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "float", Type::storage_name (storage));
+      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "float", storage_name (storage));
     }
   changed();
 }
@@ -258,28 +263,26 @@ void
 BaseValue::assign (const String *sp)
 {
   const String &s = *sp;
-  try_retype (Type::STRING);
+  try_retype (STRING);
   switch (storage)
     {
-    case Type::NUM:
+    case NUM:
       u.i64 = string_to_int (s);
       break;
-    case Type::REAL:
+    case REAL:
       u.ldf = string_to_double (s);
       break;
-    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
+    case STRING:
       if (!u.p)
         u.p = new String;
       *(String*) u.p = s;
       break;
-    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
+    case ARRAY:
       goto default_error;
-    case Type::STRING_VECTOR:
-      goto default_error;
-    case Type::OBJECT:
+    case OBJECT:
       goto default_error;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "String", Type::storage_name (storage));
+      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "String", storage_name (storage));
     }
   changed();
 }
@@ -287,23 +290,19 @@ BaseValue::assign (const String *sp)
 void
 BaseValue::assign (const StringVector *svp)
 {
-  const StringVector &sv = *svp;
-  try_retype (Type::STRING_VECTOR);
+  try_retype (ARRAY);
   switch (storage)
     {
-    case Type::NUM:
-    case Type::REAL:
-    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
-    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
-    case Type::OBJECT:
+    case NUM:
+    case REAL:
+    case STRING:
+    case OBJECT:
       goto default_error;
-    case Type::STRING_VECTOR:
-      if (!u.p)
-        u.p = new vector<String>;
-      *(vector<String>*) u.p = sv;
+    case ARRAY:
+#warning FIXME: BaseValue::assign (StringVector)
       break;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "StringVector", Type::storage_name (storage));
+      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "StringVector", storage_name (storage));
     }
   changed();
 }
@@ -312,22 +311,21 @@ void
 BaseValue::assign (const Array *ap)
 {
   const Array &a = *ap;
-  try_retype (Type::ARRAY);
+  try_retype (ARRAY);
   switch (storage)
     {
-    case Type::NUM:
-    case Type::REAL:
-    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
-    case Type::STRING_VECTOR:
-    case Type::OBJECT:
+    case NUM:
+    case REAL:
+    case STRING:
+    case OBJECT:
       goto default_error;
-    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
+    case ARRAY:
       if (!u.p)
         u.p = new Array;
       *(Array*) u.p = a;
       break;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "Array", Type::storage_name (storage));
+      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "Array", storage_name (storage));
     }
   changed();
 }
@@ -336,25 +334,24 @@ void
 BaseValue::assign (Object *orefp)
 {
   Object &oref = *orefp;
-  try_retype (Type::OBJECT);
+  try_retype (OBJECT);
   Object *object = &oref;
   switch (storage)
     {
-    case Type::OBJECT:
+    case OBJECT:
       if (object)
         ref (object);
       if (u.p)
         unref ((Object*) u.p);
       u.p = object;
       break;
-    case Type::NUM:
-    case Type::REAL:
-    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
-    case Type::STRING_VECTOR:
-    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
+    case NUM:
+    case REAL:
+    case STRING:
+    case ARRAY:
       goto default_error;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "Object", Type::storage_name (storage));
+      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "Object", storage_name (storage));
     }
   changed();
 }
@@ -364,22 +361,18 @@ BaseValue::unset()
 {
   switch (storage)
     {
-    case Type::NUM:
-    case Type::REAL:
+    case NUM:
+    case REAL:
       break;            // no release
-    case Type::STRING: case Type::CHOICE: case Type::TYPE_REFERENCE:
+    case STRING:
       if (u.p)
         delete (String*) u.p;
       break;
-    case Type::ARRAY: case Type::SEQUENCE: case Type::RECORD:
+    case ARRAY:
       if (u.p)
         delete (Array*) u.p;
       break;
-    case Type::STRING_VECTOR:
-      if (u.p)
-        delete (vector<String>*) u.p;
-      break;
-    case Type::OBJECT:
+    case OBJECT:
       if (u.p)
         unref ((Object*) u.p);
       break;
@@ -396,18 +389,24 @@ BaseValue::~BaseValue ()
 }
 
 AutoValue::AutoValue (const Array &array) :
-  AnyValue (Type::ARRAY)
+  AnyValue (ARRAY)
 {
   set (array);
 }
 
+AutoValue::AutoValue (const StringVector &string_vector) :
+  AnyValue (ARRAY)
+{
+#warning FIXME: AutoValue::AutoValue()
+}
+
 void
-AnyValue::try_retype (Type::Storage strg)
+AnyValue::try_retype (Storage strg)
 {
   if (storage != strg)
     {
       unset();
-      *((Type::Storage*) &storage) = strg;
+      *((Storage*) &storage) = strg;
     }
 }
 
@@ -479,7 +478,7 @@ Array::nexti ()
   String idx = string_from_int (array->last++);
   while (array->vmap.find (idx) != array->vmap.end())
     {
-      idx = string_from_int (array->last++);
+      idx = string_from_uint (array->last++);
       if (array->last == 0)
         {
           RAPICORN_WARNING ("Array index out of bounds: %zu", array->last - 1);
@@ -512,7 +511,7 @@ AnyValue
 Array::pop_head ()
 {
   if (array->strings.size() == 0)               // OOB access
-    return AnyValue (Type::NUM, 0);
+    return AnyValue (NUM, 0);
   StringValueMap::iterator it = array->vmap.find (array->strings[0]);
   array->strings.erase (array->strings.begin() + 0);
   AnyValue v = it->second;
@@ -524,7 +523,7 @@ AnyValue
 Array::pop_tail ()
 {
   if (array->strings.size() == 0)               // OOB access
-    return AnyValue (Type::NUM, 0);
+    return AnyValue (NUM, 0);
   size_t ilast = array->strings.size() - 1;
   StringValueMap::iterator it = array->vmap.find (array->strings[ilast]);
   array->strings.erase (array->strings.begin() + ilast);
@@ -556,7 +555,7 @@ Array::operator[] (int64 index) const
   return this->operator[] (key (index));
 }
 
-static const AnyValue array_default_value (Type::NUM, 0);
+static const AnyValue array_default_value (NUM, 0);
 
 AnyValue&
 Array::operator[] (const String &key)
@@ -641,6 +640,176 @@ Array::to_string (const String &junction)
       result += (*this)[i].string();
     }
   return result;
+}
+
+class XmlNodeWalker {
+#warning FIXME: move XmlNodeWalker to rapicornxml.h
+protected:
+  virtual bool
+  process_children (const XmlNode &xnode)
+  {
+    for (XmlNode::ConstChildIter it = xnode.children_begin(); it != xnode.children_end(); it++)
+      if (!process_node (**it))
+        return false;
+    return true;
+  }
+  virtual bool
+  handle_node (const XmlNode &xnode)
+  {
+    return true;
+  }
+public:
+  virtual bool
+  process_node (const XmlNode &xnode)
+  {
+    if (!handle_node (xnode))
+      return false;
+    if (!process_children (xnode))
+      return false;
+    return true;
+  }
+};
+
+namespace {
+struct XmlArray : public XmlNodeWalker {
+  Array m_array;
+  virtual bool
+  process_node (const XmlNode &xnode)
+  {
+    bool valid_tree = true, nested_recurse = false;
+    if (xnode.istext())
+      {
+        m_array.push_tail (xnode.text());
+      }
+    else if (xnode.name() == "Rapicorn::Array")
+      {
+        valid_tree = xnode.parent() == NULL;
+        valid_tree &= process_children (xnode);
+      }
+    else if (xnode.name() == "row")
+      {
+        valid_tree &= xnode.parent()->name() == "Rapicorn::Array";
+        valid_tree &= process_children (xnode);
+      }
+    else if (xnode.name() == "col")
+      {
+        valid_tree &= xnode.parent()->name() == "row";
+        nested_recurse = true;
+      }
+    else if (xnode.name() == "cell")
+      {
+        valid_tree &= xnode.parent()->name() == "col";
+        nested_recurse = true;
+      }
+    if (valid_tree && nested_recurse)
+      {
+        Array oarray = m_array;
+        m_array = Array();
+        valid_tree &= process_children (xnode);
+        oarray.push_tail (m_array);
+        m_array = oarray;
+      }
+    return valid_tree;
+  }
+};
+} // Anon
+
+Array
+Array::from_xml (const String &xmlstring,
+                 const String &inputname,
+                 String       *errstrp)
+{
+  String errstr;
+  MarkupParser::Error perror;
+  XmlNode *xnode = XmlNode::parse_xml (inputname, xmlstring.data(), xmlstring.size(), &perror, "Rapicorn::Array");
+  Array result;
+  if (perror.code)
+    errstr = string_printf ("%s:%d:%d: %s", inputname.c_str(),
+                            perror.line_number, perror.char_number, perror.message.c_str());
+  if (xnode)
+    {
+      ref_sink (xnode);
+      if (!errstr.size())
+        {
+          XmlArray xarray;
+          if (xarray.process_node (*xnode) == true)
+            result = xarray.m_array;
+          else
+            errstr = string_printf ("%s: invalid array markup: %s", inputname.c_str(), xmlstring.c_str());
+        }
+      unref (xnode);
+    }
+  if (errstrp)
+    *errstrp = errstr;
+  return result;
+}
+
+XmlNode*
+Array::to_xml ()
+{
+  XmlNode *root = XmlNode::create_parent ("Array");
+  root->break_within (true);
+  StringVector k = keys();
+  for (uint64 i = 0; i < k.size(); i++)
+    {
+      AnyValue &v = (*this)[k[i]];
+      XmlNode *parentnode = NULL;
+      bool addnull = false;
+      String tag, txt;
+      switch (v.storage)
+        {
+          Object *obj;
+        case BaseValue::NUM:
+          tag = "num";
+          txt = v.string();
+          break;
+        case BaseValue::REAL:
+          tag = "real";
+          txt = v.string();
+          break;
+        case BaseValue::STRING:
+          txt = v.string();
+          break;
+        case BaseValue::ARRAY:
+          tag = "Array";
+          parentnode = v.array().to_xml();
+          break;
+        case BaseValue::OBJECT:
+          tag = "Object";
+          obj = &v.object();
+          addnull = !obj;
+          if (!addnull)
+            txt = obj->object_url();
+          break;
+        }
+      XmlNode *current = root;
+      if (1)
+        {
+          XmlNode *child = XmlNode::create_parent ("row");
+          if (i > 2147483647 || string_from_uint (i) != k[i])
+            child->set_attribute ("key", k[i]);
+          child->break_after (true);
+          current->add_child (*child);
+          current = child;
+        }
+      if (tag.size())
+        {
+          XmlNode *child = XmlNode::create_parent (tag);
+          current->add_child (*child);
+          current = child;
+        }
+      if (parentnode)
+        {
+          ref_sink (parentnode);
+          current->steal_children (*parentnode);
+          unref (parentnode);
+        }
+      if (addnull)
+        current->add_child (*XmlNode::create_parent ("null"));
+      if (txt.size())
+        current->add_child (*XmlNode::create_text (txt));
+    }
+  return root;
 }
 
 } // Rapicorn

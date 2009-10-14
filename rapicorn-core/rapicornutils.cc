@@ -32,6 +32,7 @@
 #include "rapicornthread.hh"
 #include "rapicornmsg.hh"
 #include "rapicorncpu.hh"
+#include "types.hh"
 
 #ifndef _
 #define _(s)    s
@@ -233,6 +234,7 @@ rapicorn_init_core (int        *argcp,
   /* initialize sub systems */
   _rapicorn_init_cpuinfo();
   _rapicorn_init_threads();
+  _rapicorn_init_types();
   if (run_init_hooks)
     run_init_hooks();
 }

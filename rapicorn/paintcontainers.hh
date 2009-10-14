@@ -71,6 +71,8 @@ public:
   virtual void                  impressed_frame (FrameType ft) = 0;
   virtual bool                  overlap_child   () const = 0;
   virtual void                  overlap_child   (bool ovc) = 0;
+  virtual bool                  tight_focus     () const = 0;
+  virtual void                  tight_focus     (bool ovc) = 0;
 };
 
 class FocusFrame : public virtual Frame {

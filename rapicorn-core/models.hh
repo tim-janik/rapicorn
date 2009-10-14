@@ -17,6 +17,7 @@
 #ifndef __RAPICORN_MODELS_HH__
 #define __RAPICORN_MODELS_HH__
 
+#include <rapicorn-core/types.hh>
 #include <rapicorn-core/values.hh>
 
 namespace Rapicorn {
@@ -26,7 +27,7 @@ class Model0 : public virtual ReferenceCountImpl { // 1*Type + 1*Value
   class Model0Value : public BaseValue {
     virtual void        changed         ();
   public:
-    explicit            Model0Value     (Type::Storage s) : BaseValue (s) {}
+    explicit            Model0Value     (StorageType s) : BaseValue (s) {}
   };
   Type                  m_type;
   Model0Value           m_value;
@@ -47,33 +48,45 @@ public:
 typedef class Model0 Variable;
 
 class Store1;
+class Selection1;
 class Model1 : public virtual ReferenceCountImpl { // 1*Type + n*Value
-  Type                  m_type;
-protected:
-  void                  changed         (uint64       first,
-                                         uint64       count);
-  void                  inserted        (uint64       first,
-                                         uint64       count);
-  void                  deleted         (uint64       first,
-                                         uint64       count);
-  virtual              ~Model1          (void);
-  virtual void          handle_changed  (uint64, uint64);
-  virtual void          handle_inserted (uint64, uint64);
-  virtual void          handle_deleted  (uint64, uint64);
-  virtual Store1*       pget_store      (void) = 0;
-  virtual uint64        pcount_rows     (void) = 0;
-  virtual Array         pget_row        (uint64       row) = 0;
-public:
-  explicit              Model1          (Type         row_type);
-  Store1*               store           (void)                  { return pget_store(); }
-  Type                  type            (void) const            { return m_type; }
-  uint64                count           (void)                  { return pcount_rows(); }
-  Array                 get             (uint64       nth)      { return pget_row (nth); }
-  /* notification */
   typedef Signal<Model1, void (uint64,uint64)> RangeSignal;
-  RangeSignal           sig_changed;
-  RangeSignal           sig_inserted;
-  RangeSignal           sig_deleted;
+  Type            m_type;
+  Selection1     &m_selection;
+protected:
+  void            changed                       (uint64         first,
+                                                 uint64         count);
+  void            inserted                      (uint64         first,
+                                                 uint64         count);
+  void            deleted                       (uint64         first,
+                                                 uint64         count);
+  virtual        ~Model1                        (void);
+  virtual void    handle_changed                (uint64, uint64);
+  virtual void    handle_inserted               (uint64, uint64);
+  virtual void    handle_deleted                (uint64, uint64);
+  virtual void    handle_selection_changed      (uint64, uint64);
+  virtual Store1* pget_store                    (void) = 0;
+  virtual uint64  pcount_rows                   (void) = 0;
+  virtual Array   pget_row                      (uint64         row) = 0;
+public:
+  explicit        Model1                        (Type           row_type,
+                                                 SelectionMode  selectionmode);
+  Type            type                          (void) const            { return m_type; }
+  int64           count                         (void)                  { return pcount_rows(); }
+  Array           get                           (uint64         nth)    { return pget_row (nth); }
+  Store1*         store                         (void)                  { return pget_store(); }
+  /* notification */
+  RangeSignal     sig_changed;
+  RangeSignal     sig_inserted;
+  RangeSignal     sig_deleted;
+  /* selection */
+  SelectionMode   selection_mode                (void);
+  void            clear_selection               ();
+  bool            selected                      (int64          nth);
+  int64           next_selected                 (int64          nth);
+  int64           prev_selected                 (int64          nth);
+  void            toggle_selected               (int64          nth);
+  RangeSignal     sig_selection_changed;
 };
 
 class Store1 : public virtual ReferenceCountImpl { // 1*Type + n*Value
@@ -92,7 +105,7 @@ public:
   explicit              Store1          (void);
   Model1&               model           (void)                  { return pget_model(); }
   Type                  type            (void)                  { return model().type(); }
-  uint64                count           (void)                  { return model().count(); }
+  int64                 count           (void)                  { return model().count(); }
   Array                 get             (uint64       nth)      { return model().get (nth); }
   void                  set             (uint64       nth,
                                          const Array &array)    { pchange_rows (nth, 1, &array); }
@@ -101,8 +114,10 @@ public:
   void                  remove          (uint64       nth)      { premove_rows (nth, 1); }
   void                  update          (uint64       nth,
                                          const Array &array)    { pchange_rows (nth, 1, &array); }
+  void                  clear           ()                      { premove_rows (0, count()); }
   /* premade stores */
-  static Store1*        create_memory_store     (Type row_type);
+  static Store1*        create_memory_store     (Type          row_type,
+                                                 SelectionMode selectionmode);
 };
 
 } // Rapicorn
