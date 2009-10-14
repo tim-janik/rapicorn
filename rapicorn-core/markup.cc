@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <vector>
 #include <stack>
+#include <cstring>
 
 #define _(x) x  // FIXME
 

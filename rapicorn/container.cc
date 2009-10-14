@@ -17,6 +17,7 @@
 #include "container.hh"
 #include "containerimpl.hh"
 #include "root.hh"
+#include <algorithm>
 
 namespace Rapicorn {
 

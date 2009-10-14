@@ -18,6 +18,7 @@
 #include "rapicornthread.hh"
 #include <errno.h>
 #include <math.h>
+#include <cstring>
 
 #define MAXDIM                          (20480) // MAXDIM*MAXDIM < 536870912
 #define ALIGN_SIZE(size,pow2align)      ((size + (pow2align - 1)) & -pow2align)
@@ -488,7 +489,7 @@ pngcontext_configure_4argb (png_structp  png_ptr,
   *widthp = pwidth;
   *heightp = pheight;
   /* sanity checks */
-  if (pwidth < 1 || pheight < 1 || pwidth > MAXDIM | pheight > MAXDIM)
+  if (pwidth < 1 || pheight < 1 || pwidth > MAXDIM || pheight > MAXDIM)
     return ENOMEM;
   if (bit_depth != 8 ||
       color_type != PNG_COLOR_TYPE_RGB_ALPHA ||

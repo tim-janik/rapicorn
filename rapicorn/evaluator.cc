@@ -18,6 +18,8 @@
 #include "sinfex.hh"
 #include "../configure.h"
 
+#include <stdlib.h>
+
 namespace Rapicorn {
 
 typedef Evaluator::VariableMapList VariableMapList;

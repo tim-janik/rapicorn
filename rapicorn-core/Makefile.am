@@ -13,6 +13,7 @@ rapicorn_public_headers = $(strip	\
         rapicornmsg.hh	rapicornsignal.hh	rapicornmath.hh		rapicornutf8.hh   \
         rapicornxml.hh	markup.hh		enumdefs.hh		testutils.hh \
         pixmap.hh	\
+	values.hh types.hh models.hh \
 	$(rapicorn_top_headers)		\
 	$(rapicorn_impl_headers)	\
 	rapicorncdefs.h	rapicorntests.h	\
@@ -28,7 +29,8 @@ rapicorn_cc_sources = $(strip 		\
         rapicorncpu.cc  rapicorndebugtools.cc	rapicornthread.cc	rapicornutils.cc  \
         rapicornmsg.cc  rapicornsignal.cc	rapicornmath.cc		rapicornutf8.cc   \
         rapicornxml.cc  markup.cc		enumdefs.cc		testutils.cc \
-        pixmap.cc	\
+        pixmap.cc	types-ptpp.cc   \
+	values.cc types.cc models.cc    \
 )
 rapicorn_private_files = $(strip	\
         rapicornsignalslot.hh		\
@@ -76,6 +78,11 @@ noinst_PROGRAMS       += rapicorn-zintern
 rapicorn_zintern_SOURCES = rapicorn-zintern.cc
 rapicorn_zintern_LDADD   = $(RAPICORN_CORE_LIBS) -lm # $(progs_ldadd)
 
+# === types-ptpp.cc ===
+types-ptpp.cc: # FIXME: depend on a .idl file for appropriate regeneration
+	:; $(PLIC) --cc-type-package-parser > gen-$@
+	mv gen-$@ $@
+types.cc: types-ptpp.cc
 
 # === enum introspection ===
 $(srcdir)/enumdefs.cc: gen-enums.cc

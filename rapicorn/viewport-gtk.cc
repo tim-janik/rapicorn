@@ -22,6 +22,8 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 
+#include <cstring>
+
 #define DEBUG_EVENTS    0
 
 namespace { // Anon

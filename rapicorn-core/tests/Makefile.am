@@ -54,6 +54,19 @@ TEST_PROGS        += pixmaps
 pixmaps_SOURCES    = pixmaps.cc
 pixmaps_LDADD      = $(LDADDS)
 EXTRA_DIST        += testpixs.c testpixs.png
+TEST_PROGS        += modval
+modval_SOURCES     = modval.cc
+modval_LDADD       = $(LDADDS)
+modval.cc:	     testtypes.tpg
+TEST_PROGS        += mod1tst
+mod1tst_SOURCES    = mod1tst.cc
+mod1tst_LDADD      = $(LDADDS)
+mod1tst.cc:          testtypes.tpg
+
+EXTRA_DIST        += testtypes.idl testtypes.tpg
+
+%.tpg: $(srcdir)/%.idl
+	$(PLIC) $< -O TypePackage -o $@
 
 # === test rules ===
 # process handle

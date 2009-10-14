@@ -16,6 +16,7 @@
  */
 //#define TEST_VERBOSE
 #include <rapicorn-core/rapicorntests.h>
+#include <stdlib.h>
 
 namespace {
 using namespace Rapicorn;
@@ -891,7 +892,7 @@ public:
   explicit      IntSequence() : accu (123456789) {}
   inline int32  gen_int    () { accu = 1664525 * accu + 1013904223; return accu; }
 };
-#define CONTENTION_PRINTF       if(1);else g_printerr
+#define CONTENTION_PRINTF       while (0) g_printerr
 struct RingBufferWriter : public virtual Rapicorn::Thread, IntSequence {
   IntRingBuffer *ring;
   uint           ring_buffer_test_length;

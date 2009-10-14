@@ -335,9 +335,10 @@ AC_DEFUN([PYRAPICORN_REQUIREMENTS],
     fi
     AC_SUBST(PYTHON_INCLUDES)
     # check for python header and Py_InitModule
-    AC_MSG_CHECKING([for working Python extension compilation])
     saved_CPPFLAGS="$CPPFLAGS"
     CPPFLAGS="-Wall -Werror $CPPFLAGS $PYTHON_INCLUDES"
+    AC_CHECK_HEADERS(Python.h, [], [AC_MSG_ERROR([please provide python-development files])])
+    AC_MSG_CHECKING([for working Python extension compilation])
     AC_TRY_COMPILE([#include <Python.h>], [Py_InitModule(0,0);], py_build=ok, py_build=failed)
     CPPFLAGS="$saved_CPPFLAGS"
     AC_MSG_RESULT($py_build)
@@ -450,6 +451,7 @@ MC_IF_VAR_EQ(GXX, yes,,
 
 # check for development tools
 AC_CHECK_PROGS(XMLLINT, xmllint, true)
+AC_CHECK_PROGS(PLIC, plic)
 
 # find installation utilities
 AC_PROG_INSTALL

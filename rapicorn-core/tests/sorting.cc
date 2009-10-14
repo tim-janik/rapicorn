@@ -16,7 +16,9 @@
  */
 // #define TEST_VERBOSE
 #include <rapicorn-core/rapicorntests.h>
+#include <stdlib.h>
 #include <math.h>
+#include <algorithm>
 
 namespace {
 using namespace Rapicorn;

@@ -22,6 +22,8 @@
 #include "itemimpl.hh"
 #include "viewport.hh"  // for rapicorn_gtk_threads_enter / rapicorn_gtk_threads_leave
 
+#include <algorithm>
+
 #if PANGO_SCALE != 1024
 #error code needs adaption to unknown PANGO_SCALE value
 #endif

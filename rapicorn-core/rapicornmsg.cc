@@ -19,6 +19,7 @@
 #include "rapicornthread.hh"
 #include <syslog.h>
 #include <errno.h>
+#include <cstring>
 
 #ifndef _ // FIXME
 #define _(x)    (x)
