@@ -28,6 +28,7 @@ custom_commands (Window             &window,
     {
       Root &root = window.root();
       TestStream *tstream = TestStream::create_test_stream();
+      // tstream->filter_matched_nodes ("Button");
       root.get_test_dump (*tstream);
       printout ("%s", tstream->string().c_str());
       delete tstream;
