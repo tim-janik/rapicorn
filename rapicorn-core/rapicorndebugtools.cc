@@ -17,6 +17,7 @@
 #include "rapicorndebugtools.hh"
 #include "rapicornthread.hh"
 #include "regex.hh"
+#include "markup.hh"
 #include <syslog.h>
 #include <errno.h>
 
@@ -115,6 +116,32 @@ TestStream::TestStream ()
 TestStream::~TestStream ()
 {}
 
+static String
+value_escape (const String &text)
+{
+  /* escape XML attribute values for test dumps */
+  const char *c = &*text.begin();
+  size_t l = text.size();
+  String str;
+  for (size_t i = 0; i < l; i++)
+    switch (c[i])
+      {
+      case '<':
+        str += "&lt;";
+        break;
+      case '&':
+        str += "&amp;";
+        break;
+      case '"':
+        str += "&quot;";
+        break;
+      default:
+        str.append (c + i, 1);
+        break;
+      }
+  return str;
+}
+
 class TestStreamImpl : public TestStream {
   vector<String> node_stack;
   vector<String> node_matches;
@@ -155,7 +182,7 @@ class TestStreamImpl : public TestStream {
         return_if_fail (name == "");
         close_node();
         if (!ignore_count || nodematch)
-          dat += val + "\n";
+          dat += value_escape (val) + "\n";
         break;
       case NODE:
         return_if_fail (val == "");
@@ -185,15 +212,15 @@ class TestStreamImpl : public TestStream {
         if (!ignore_count || nodematch)
           {
             if (node_open)
-              dat += indent + name + "=\"" + val + "\"\n";
+              dat += indent + name + "=\"" + value_escape (val) + "\"\n";
             else
-              dat += indent + "<ATTRIBUTE " + name + "=\"" + val + "\"/>\n";
+              dat += indent + "<ATTRIBUTE " + name + "=\"" + value_escape (val) + "\"/>\n";
           }
         break;
       case INTERN:
         close_node();
         if (!ignore_count || nodematch)
-          dat += indent + "<INTERN " + name + "=\"" + val + "\"/>\n";
+          dat += indent + "<INTERN " + name + "=\"" + value_escape (val) + "\"/>\n";
         break;
       case INDENT:
         if (!ignore_count || nodematch)
