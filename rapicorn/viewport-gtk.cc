@@ -504,7 +504,7 @@ configure_gtk_window (GtkWindow              *window,
   gtk_window_set_skip_taskbar_hint (window, bool (config.window_hint & Viewport::HINT_SKIP_TASKBAR));
   gtk_window_set_skip_pager_hint (window, bool (config.window_hint & Viewport::HINT_SKIP_PAGER));
   gtk_window_set_accept_focus (window, bool (config.window_hint & Viewport::HINT_ACCEPT_FOCUS));
-  gtk_window_set_focus_on_map (window, bool (config.window_hint & Viewport::HINT_UNFOCUSED));
+  gtk_window_set_focus_on_map (window, !bool (config.window_hint & Viewport::HINT_UNFOCUSED));
 #if GTK_CHECK_VERSION (2, 10, 0)
   gtk_window_set_deletable (window, bool (config.window_hint & Viewport::HINT_DELETABLE));
 #endif
