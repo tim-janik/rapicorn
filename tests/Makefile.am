@@ -13,8 +13,14 @@ EXTRA_DIST      += $(XML_FILES)
 LDADDS   = $(top_builddir)/rapicorn/librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS)
 RAPIDRUN = $(top_builddir)/tools/rapidrun
 IMGCHECK = $(top_builddir)/rapicorn-core/tests/imgcheck
-
 XVFB_RAPIDRUN = $(XVFB_START) && rrun() { echo "$(RAPIDRUN) $$@" && $(RAPIDRUN) "$$@" ; } && rrun
+RAPIDRUN_TEST_DUMP = $(strip \
+  $(XVFB_START) && \
+    rrun() { \
+      $(RAPIDRUN) -x --test-dump "$$@" \
+        2> >(egrep -v -e '^Xlib: *extension "RANDR" missing on display ":' >&2) ; \
+    } && rrun \
+)
 
 # === programs ===
 EXAMPLES        += fileview
@@ -36,10 +42,31 @@ check: alignment-test
 arrowsize-test:
 	@$(XVFB_RAPIDRUN) -x $(srcdir)/arrowsize-test.xml
 check: arrowsize-test
-# factory tests
+
+TEST_DUMP_TARGETS =
+NOUPDATE          = true
+
+# Name, Src, Item, Tmp, Ref
+TEST_DUMP_CMP_DIFF_SCRIPT = $(strip \
+  TL=`printf %-69s "$(1):"` && TR=`printf %70s "$$TL"` && echo -n "$$TR" && \
+    $(RAPIDRUN_TEST_DUMP) --test-matched-node="$(3)" $(2) > $(4) || exit $? && \
+    ${NOUPDATE} || cp -v $(4) $(5) && \
+    cmp --quiet $(5) $(4) && echo OK || \
+    { echo FAIL; diff -up $(5) $(4); exit 1; } && \
+    rm -f $(4); \
+)
+
+# factory-test
 factory-test:
-	@$(XVFB_RAPIDRUN) -x $(srcdir)/factory-test.xml
-check: factory-test
+	@$(call TEST_DUMP_CMP_DIFF_SCRIPT, \
+		FactoryTest, $(srcdir)/factory-test.xml, .* , \
+		xtmp-factory.out, factory-test.ref)
+TEST_DUMP_TARGETS += factory-test
+
+# test-dump target handling
+check: ${TEST_DUMP_TARGETS}
+force-update:
+	$(MAKE) NOUPDATE=false ${TEST_DUMP_TARGETS}
 
 xmllint-check:
 	cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES)
