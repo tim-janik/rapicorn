@@ -40,6 +40,8 @@ help_usage (bool usage_error)
   printout ("  --parse-test                  Parse GuiFile.xml and exit.\n");
   printout ("  -x                            Enable auto-exit after first expose.\n");
   printout ("  --list                        List parsed definitions.\n");
+  printout ("  --test-dump                   Dump test stream after first expose.\n");
+  printout ("  --test-matched-node PATTERN   Filter nodes in test dumps.\n");
   printout ("  -h, --help                    Display this help and exit.\n");
   printout ("  -v, --version                 Display version and exit.\n");
 }
@@ -47,6 +49,9 @@ help_usage (bool usage_error)
 static bool parse_test = false;
 static bool auto_exit = false;
 static bool list_definitions = false;
+
+static bool test_dump = false;
+static vector<String> test_dump_matched_nodes;
 
 static void
 parse_args (int    *argc_p,
@@ -70,6 +75,26 @@ parse_args (int    *argc_p,
       else if (strcmp (argv[i], "--list") == 0)
         {
           list_definitions = true;
+          argv[i] = NULL;
+        }
+      else if (strcmp (argv[i], "--test-dump") == 0)
+        {
+          test_dump = true;
+          argv[i] = NULL;
+        }
+      else  if (strcmp ("--test-matched-node", argv[i]) == 0 ||
+                strncmp ("--test-matched-node=", argv[i], 20) == 0)
+        {
+          char *v = NULL, *equal = argv[i] + 19;
+          if (*equal == '=')
+            v = equal + 1;
+          else if (i + 1 < argc)
+            {
+              argv[i++] = NULL;
+              v = argv[i];
+            }
+          if (v)
+            test_dump_matched_nodes.push_back (v);
           argv[i] = NULL;
         }
       else if (strcmp (argv[i], "--help") == 0 || strcmp (argv[i], "-h") == 0)
@@ -97,6 +122,17 @@ parse_args (int    *argc_p,
           argv[i] = NULL;
       }
   *argc_p = e;
+}
+
+static void
+root_test_dump (Root &root)
+{
+  TestStream *tstream = TestStream::create_test_stream();
+  for (uint i = 0; i < test_dump_matched_nodes.size(); i++)
+    tstream->filter_matched_nodes (test_dump_matched_nodes[i]);
+  root.get_test_dump (*tstream);
+  printout ("%s", tstream->string().c_str());
+  delete tstream;
 }
 
 extern "C" int
@@ -140,6 +176,10 @@ main (int   argc,
 
   /* create root item */
   Window window = Application::create_window (dialog);
+
+  /* hook up test-dump handler */
+  if (test_dump)
+    window.root().sig_displayed += root_test_dump;
 
   /* hook up auto-exit handler */
   if (auto_exit)
