@@ -39,7 +39,8 @@ public:
 Root::Root() :
   m_window (RootWindowImpl (*this)),
   sig_command (*this),
-  sig_window_command (m_window)
+  sig_window_command (m_window),
+  sig_displayed (*this)
 {
   change_flags_silently (ANCHORED, true);       /* root is always anchored */
 }
@@ -782,6 +783,8 @@ RootImpl::draw_now ()
           /* blit to screen */
           m_viewport->blit_plane (plane, 0); // takes over plane
         }
+      if (!has_pending_win_size())
+        sig_displayed.emit();
     }
 }
 

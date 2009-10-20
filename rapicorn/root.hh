@@ -60,11 +60,13 @@ public:
   void          remove_grab             (Item  *child)              { if (!child) RAPICORN_WARNING ("NULL item"); else return remove_grab (*child); }
   virtual Item* get_grab                (bool  *unconfined = NULL) = 0;
   Item*         find_item               (const String &name);
-  /* commands */
+  /* signals */
   typedef Signal<Root, bool (const String&, const StringVector&), CollectorWhile0<bool> >   CommandSignal;
-  CommandSignal sig_command;
   typedef Signal<Window, bool (const String&, const StringVector&), CollectorWhile0<bool> > WindowCommandSignal;
-  WindowCommandSignal sig_window_command;
+  typedef Signal<Root, void ()> NotifySignal;
+  CommandSignal         sig_command;
+  WindowCommandSignal   sig_window_command;
+  NotifySignal          sig_displayed;
   /* viewport ops */
   virtual void  create_viewport         () = 0;
   virtual bool  has_viewport            () = 0;
