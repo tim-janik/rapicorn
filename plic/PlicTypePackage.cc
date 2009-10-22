@@ -75,7 +75,7 @@ parse_int (const byte **dp,
       *ui = (u3 & 0x7f) + ((u2 & 0x7f) >> 1) + ((u1 & 0x7f) >> 2) + ((u0 & 0x7f) >> 3);
       return "";
     }
-  else if (u0 >= '0' && u0 <= '9' || u0 == '.'  || u0 == '\n')
+  else if ((u0 >= '0' && u0 <= '9') || u0 == '.'  || u0 == '\n')
     {
       uint i = 0;
       if (u0 >= '0' && u0 <= '9')

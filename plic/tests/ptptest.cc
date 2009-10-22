@@ -74,7 +74,7 @@ main (int   argc,
 {
   vector<String> auxtests;
   /* parse args */
-  for (uint i = 1; i < argc; i++)
+  for (uint i = 1; i < uint (argc); i++)
     {
       const char *str = NULL;
       if (strcmp (argv[i], "--") == 0)
@@ -95,7 +95,7 @@ main (int   argc,
     }
   /* collapse parsed args */
   uint e = 1;
-  for (uint i = 1; i < argc; i++)
+  for (uint i = 1; i < uint (argc); i++)
     if (argv[i])
       {
         argv[e++] = argv[i];
