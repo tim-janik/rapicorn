@@ -17,8 +17,7 @@ XVFB_RAPIDRUN = $(XVFB_START) && rrun() { echo "$(RAPIDRUN) $$@" && $(RAPIDRUN) 
 RAPIDRUN_TEST_DUMP = $(strip \
   $(XVFB_START) && \
     rrun() { \
-      $(RAPIDRUN) -x --test-dump "$$@" \
-        2> >(egrep -v -e '^Xlib: *extension "RANDR" missing on display ":' >&2) ; \
+      $(RAPIDRUN) -x --test-dump "$$@" $(XLIBSTDERREXTFIX) ; \
     } && rrun \
 )
 

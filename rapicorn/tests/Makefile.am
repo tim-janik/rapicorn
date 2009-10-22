@@ -63,7 +63,7 @@ sinfex-check:
 	  echo " $$line" | egrep -q '^[[:space:]]*(#|$$)' && continue ; \
 	  echo -n " $$L" ; \
 	  read -r result ; L=$$((1 + $$L)) ; \
-	  echo " $$line" | ${SINFEX} > xtmp-snfx.$$$$ && \
+	  echo " $$line" | ${SINFEX} > xtmp-snfx.$$$$ $(XLIBSTDERREXTFIX) && \
 	  egrep -q "-e$$result" < xtmp-snfx.$$$$ || { \
 	    echo ; echo -n "${SINFEXDAT}:$$L: pattern ($$result) unmatched: "; \
 	    cat xtmp-snfx.$$$$ ; rm -f xtmp-snfx.$$$$ ; echo ; exit 1 ; } ; \

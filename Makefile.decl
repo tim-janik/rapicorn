@@ -51,6 +51,7 @@ XVFB_START = \
 	|| { echo "Gtk+Tests:ERROR: Failed to start Xvfb environment for X11 target tests."; exit 1; } \
 	&& DISPLAY=:$$XID && export DISPLAY
 # call as: $(XVFB_START) && someprogram
+XLIBSTDERREXTFIX = 2> >(egrep -v -e '^Xlib: *extension "RANDR" missing on display ":' >&2)
 
 # === check: check-before / check-after ===
 .PHONY: check-before check-after
