@@ -116,7 +116,7 @@ class Generator:
     elif tp.storage == Decls.INTERFACE:
       tp.prerequisites = []
       s += encode_int (len (tp.prerequisites))
-      for pr in prerequisites:
+      for pr in tp.prerequisites:
         s += encode_string (pr)
     return s
   def generate_namespace (self, namespace):
