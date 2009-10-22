@@ -60,17 +60,27 @@ class TypeInfo (BaseDecl):
     self.name = name
     self.storage = storage
     self.options = []           # holds: (ident, label, blurb, number)
-    self.fields = []            # holds: (ident, TypeInfo)
-    self.elements = None        # holds: ident, TypeInfo
-    self.prerequisites = []
+    if (self.storage == RECORD or
+        self.storage == INTERFACE):
+      self.fields = []          # holds: (ident, TypeInfo)
+    if self.storage == SEQUENCE:
+      self.elements = None      # holds: ident, TypeInfo
+    if self.storage == INTERFACE:
+      self.prerequisites = []
+      self.methods = []
     self.auxdata = {}
   def clone (self, newname = None):
     if newname == None: newname = self.name
     ti = TypeInfo (newname, self.storage)
     ti.options += self.options
-    ti.fields += self.fields
-    ti.elements = self.elements
-    ti.prerequisites += self.prerequisites
+    if hasattr (self, 'fields'):
+      ti.fields += self.fields
+    if hasattr (self, 'elements'):
+      ti.elements = self.elements
+    if hasattr (self, 'prerequisites'):
+      ti.prerequisites += self.prerequisites
+    if hasattr (self, 'methods'):
+      ti.methods += self.methods
     ti.auxdata.update (self.auxdata)
     return ti
   def update_auxdata (self, auxdict):
@@ -83,10 +93,26 @@ class TypeInfo (BaseDecl):
     assert isinstance (number, int)
     self.options += [ (ident, label, blurb, number) ]
   def add_field (self, ident, type):
-    assert self.storage == RECORD
+    assert self.storage == RECORD or self.storage == INTERFACE
     assert isinstance (ident, str)
     assert isinstance (type, TypeInfo)
     self.fields += [ (ident, type) ]
+  def add_method (self, ident, type, args):
+    assert self.storage == INTERFACE
+    assert isinstance (ident, str)
+    assert isinstance (type, TypeInfo)
+    assert isinstance (args, list)
+    for arg in args:
+      assert isinstance (arg, tuple)
+      arg_ident, arg_type = arg
+      assert isinstance (arg_ident, str)
+      assert isinstance (arg_type, TypeInfo)
+    self.methods += [ (ident, type, args) ]
+  def add_prerequisite (self, type):
+    assert self.storage == INTERFACE
+    assert isinstance (type, TypeInfo)
+    assert type.storage == INTERFACE
+    self.prerequisites += [ type ]
   def set_elements (self, ident, type):
     assert self.storage == SEQUENCE
     assert isinstance (ident, str)

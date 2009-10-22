@@ -227,3 +227,20 @@ namespace Auxdata {
   typedef String s = String ("auxtest2", "Specify text here", "auxtest3", "rw");
 //};
 }
+
+namespace InterfaceTests {
+interface ButtonArea {
+  Real dummy;
+  Real simple_method ();
+  Real single_arg (Num n);
+  Real single_arg2 (Num n = Num ("Baz"));
+  Real two_args (Num n, Real r);
+  Real two_args2 (Num n = Num ("Baz"), Real r = Real ("Zonk"));
+  Real multi_args (Num n, Real r, Num i, String s = String ("String ding"), Real y);
+  Real self_method (ButtonArea ba1, InterfaceTests::ButtonArea ba2);
+};
+interface Parent {};
+interface Child : Parent {}; // interface inheritance
+interface Descendant : Parent, Child {}; // multiple interface inheritance
+interface GrandChild : Parent, Child, Descendant {}; // multiple interface inheritance
+}

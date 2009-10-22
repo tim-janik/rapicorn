@@ -54,6 +54,8 @@ typedef Const X; // unknown type Const
 
 typedef Bool Const; // keyword redefinition
 
+Const class = 5; // keyword redefinition
+
 enum Enu1 { AA }; typedef Enu1 Enu1; // type redefinition
 
 typedef Num x = _No_SUCH_initializer (17); // unknown type definition
@@ -63,3 +65,10 @@ typedef Num x = Num ("too", "many", "args", 1, 2, 3, 4, 5, 6, 7, 8, 9); // too m
 typedef Num string_for_num = String ("nick", "txt", "dflt", "rw"); // type/initializer mismatch
 
 record R { String s = Real ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
+
+interface I { Num method (,); }; // invalid method arg separator
+interface I { Num method (); Num method (); }; // multiple method definitions
+interface I { Num xxx; Num xxx (); }; // multiple member definitions
+interface I { Num method (Num n, Num n); }; // duplicate method argument
+interface I : Unknown {}; // invalid parent interface
+record R { String s; }; interface I : R {}; // invalid interface inheritance

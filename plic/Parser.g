@@ -23,9 +23,11 @@ PLIC_VERSION=\
 import yapps2runtime as runtime
 import AuxData
 
-keywords = ( 'TRUE', 'True', 'true', 'FALSE', 'False', 'false',
-             'namespace', 'enum', 'enumeration', 'Const', 'typedef', 'record', 'class', 'sequence',
-             'Bool', 'Num', 'Real', 'String' )
+reservedwords = ('class',)
+keywords = ('TRUE', 'True', 'true', 'FALSE', 'False', 'false',
+            'namespace', 'enum', 'enumeration', 'Const', 'typedef', 'interface',
+            'record', 'sequence', 'Bool', 'Num', 'Real', 'String')
+reservedkeywords = set (keywords + reservedwords)
 
 class YYGlobals (object):
   def __init__ (self):
@@ -70,10 +72,38 @@ class YYGlobals (object):
     fdict = {}
     for field in rfields:
       if fdict.has_key (field[0]):
-        raise NameError ('duplicate record field name: ' + field[0])
+        raise NameError ('duplicate field name: ' + field[0])
       fdict[field[0]] = true
       rec.add_field (field[0], field[1])
     self.namespaces[0].add_type (rec)
+  def nsadd_interface (self, name, prerequisites):
+    AIn (name)
+    iface = Decls.TypeInfo (name, Decls.INTERFACE)
+    for prq in prerequisites:
+      iface.add_prerequisite (yy.namespace_lookup (prq, astype = True))
+    self.namespaces[0].add_type (iface)
+    return iface
+  def interface_fill (self, iface, ifields, imethods):
+    self.parse_assign_auxdata (ifields)
+    mdict = {}
+    for field in ifields:
+      if mdict.has_key (field[0]):
+        raise NameError ('duplicate member name: ' + field[0])
+      mdict[field[0]] = true
+      iface.add_field (field[0], field[1])
+    for method in imethods:
+      if mdict.has_key (method[0]):
+        raise NameError ('duplicate member name: ' + method[0])
+      mdict[method[0]] = true
+      method_args = method[3]
+      self.parse_assign_auxdata (method_args)
+      adict = {}; args = []
+      for arg in method_args:
+        if adict.has_key (arg[0]):
+          raise NameError ('duplicate method arg name: ' + method[0] + ' (..., ' + arg[0] + '...)')
+        adict[arg[0]] = true
+        args += [ (arg[0], arg[1]) ]
+      iface.add_method (method[0], method[1], args)
   def parse_assign_auxdata (self, fieldlist):
     for field in fieldlist:
       if not field[2]:
@@ -197,8 +227,13 @@ def ASi (string_candidate): # assert i18n string
   if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
 def AIn (identifier):   # assert new identifier
   if (yy.namespace_lookup (identifier, astype = True, asconst = True) or
-      (not yy.config.get ('system-typedefs', 0) and identifier in keywords)):
+      (not yy.config.get ('system-typedefs', 0) and identifier in reservedkeywords)):
     raise KeyError ('redefining existing identifier: %s' % identifier)
+def AIi (identifier):   # assert interface identifier
+  ti = yy.namespace_lookup (identifier, astype = True)
+  if ti and ti.storage == Decls.INTERFACE:
+    return True
+  raise KeyError ('no such interface type: %s' % identifier)
 def ATN (typename):     # assert a typename
   yy.resolve_type (typename) # raises exception
 
@@ -227,6 +262,7 @@ rule declaration:
         | typedef
         | sequence
         | record
+        | interface
         | namespace
 
 rule enumeration:
@@ -284,14 +320,49 @@ rule field_decl:
         [ '=' auxinit                           {{ vars = (vars[0], vars[1], auxinit) }}
         ] ';'                                   {{ return [ vars ] }}
 
+rule method_args:
+        typename                                {{ atype = yy.clone_type (typename) }}
+        IDENT                                   {{ aident = IDENT; aaux = () }}
+        [ '=' auxinit                           {{ aaux = auxinit }}
+        ]                                       {{ args = [ (aident, atype, aaux) ] }}
+        ( ',' typename                          {{ atype = yy.clone_type (typename) }}
+          IDENT                                 {{ aident = IDENT; aaux = () }}
+          [ '=' auxinit                         {{ aaux = auxinit }}
+          ]                                     {{ args += [ (aident, atype, aaux) ] }}
+        ) *                                     {{ return args }}
+
+rule field_or_method_decl:
+        typename                                {{ dtype = yy.clone_type (typename) }}
+        IDENT                                   {{ dident = IDENT; kind = 'field'; daux = () }}
+        ( [ '=' auxinit                         {{ daux = auxinit }}
+          ]
+        | '\('                                  {{ kind = 'func'; fargs = [] }}
+              [ method_args                     {{ fargs = method_args }}
+              ] '\)'                            # [ '=' auxinit {{ daux = auxinit }} ]
+        ) ';'                                   {{ if kind == 'field': return (kind, (dident, dtype, daux)) }}
+                                                {{ return (kind, (dident, dtype, daux, fargs)) }}
+
 rule typedef:
         'typedef' field_decl                    {{ yy.nsadd_typedef (field_decl[0]) }}
 
+rule interface:
+        'interface' IDENT                       {{ iident = IDENT; iprops = []; ifuncs = []; prq = [] }}
+        [ ':' IDENT                             {{ prq += [ IDENT ]; AIi (IDENT) }}
+              ( ',' IDENT                       {{ prq += [ IDENT ]; AIi (IDENT) }}
+              ) * ]
+        '{'                                     {{ iface = yy.nsadd_interface (iident, prq) }}
+           (
+             field_or_method_decl               {{ fmd = field_or_method_decl }}
+                                                {{ if fmd[0] == 'field': iprops = iprops + [ fmd[1] ] }}
+                                                {{ if fmd[0] == 'func': ifuncs = ifuncs + [ fmd[1] ] }}
+           )*
+        '}' ';'                                 {{ yy.interface_fill (iface, iprops, ifuncs) }}
+
 rule record:
-        'record' IDENT '{'                      {{ rfields = [] }}
+        'record' IDENT '{'                      {{ rfields = []; rident = IDENT }}
           ( field_decl                          {{ rfields = rfields + field_decl }}
           )+
-        '}' ';'                                 {{ yy.nsadd_record (IDENT, rfields) }}
+        '}' ';'                                 {{ yy.nsadd_record (rident, rfields) }}
 
 rule sequence:
         'sequence' IDENT '{'                    {{ sfields = [] }}
