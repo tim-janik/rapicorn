@@ -362,6 +362,15 @@ AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
     AC_SUBST(READLINELIBS)
 ])
 
+# PLIC requirements
+AC_DEFUN([RAPICORN_PLIC_REQUIREMENTS],
+[
+    AM_PATH_PYTHON(2.4)
+    AC_CHECK_PROGS(XMLLINT, xmllint, true)
+    PLIC_VERSION="$RAPICORN_RELEASE"
+    AC_SUBST(PLIC_VERSION)
+])
+
 dnl # RAPICORN_DOC_REQUIREMENTS() - checks for documentation generation
 AC_DEFUN([RAPICORN_DOC_REQUIREMENTS],
 [
@@ -451,7 +460,6 @@ MC_IF_VAR_EQ(GXX, yes,,
 
 # check for development tools
 AC_CHECK_PROGS(XMLLINT, xmllint, true)
-AC_CHECK_PROGS(PLIC, plic)
 
 # find installation utilities
 AC_PROG_INSTALL
@@ -465,6 +473,7 @@ RAPICORN_CORE_REQUIREMENTS
 RAPICORN_REQUIREMENTS
 PYRAPICORN_REQUIREMENTS
 RAPICORN_TEST_REQUIREMENTS
+RAPICORN_PLIC_REQUIREMENTS
 RAPICORN_DOC_REQUIREMENTS
 RAPICORN_CPU_FLAGS
 
@@ -480,6 +489,8 @@ AC_CONFIG_FILES([
 Makefile
 po-helper.sh
 po/Makefile.in
+plic/Makefile
+plic/tests/Makefile
 rapicorn-core/Makefile
 rapicorn-core/tests/Makefile
 rapicorn/Makefile

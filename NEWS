@@ -1,5 +1,7 @@
 Rapicorn NEXT:
 
+* Started pluggable IDL compiler development.
+
 Incompatible changes:
 
 * Changed string_to_cquote() to add double quotes, string_to_cescape() can

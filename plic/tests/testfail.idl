@@ -1,0 +1,65 @@
+// IDL error test file					 	-*-mode:c++;-*-
+// this file is processed line by line, no statement may span multiple lines
+// each line is asserted to produce an error
+
+Const a = 5; Const a = 6; // invalid reassignment
+
+Const record = 5; // keyword assignment
+
+typedef String String; // keyword redefinition (without --system-typedefs)
+
+namespace broken$name { Const a = 5; } // invalid namespace name (without --system-typedefs)
+
+enum E { V }; Const E = 0; // typename assignment
+
+enum E { V }; Const V = 0; // enum value assignment
+
+Const TRUE = 17; // invalid constant name
+
+Const tmp = "invalid" _("i18n string") "concatenation";
+
+FrobCheck tmp = 1; // FrobCheck is no type
+
+Const zzz = 1; zzz tmp = 1; // zzz is no type
+
+record DupRecord { Num a, b, c; }; // fail on multiple fields per type
+
+record DupRecord { Num b; Num b; }; // duplicate: b
+
+record EmptyRecord { }; // record is empty
+
+enum ExtensiveEnum { record, }; // keyword as enum value
+
+enum ExtensiveEnum { Foo; }; // semicolon in enum
+
+enum ExtensiveEnum { EV1, EV2, EV1 }; // duplicate enum value
+
+enum Enu1 { AA }; enum Enu2 { AA }; // duplicate enum value
+
+enum Enu1 { AA }; enum Enu1 { BB }; // duplicate enum name
+
+Const Var = 0; enum ExtensiveEnum { Var }; // constant in enum
+
+sequence EmptySequence { }; // sequence needs 1 field
+
+sequence MultiFieldSequence { Bool one; Num toomany; }; // sequence needs 1 field
+
+sequence Seq { enum b; }; // keyword is not typename
+
+sequence S1 { Bool b; }; sequence S2 { _S1 s; }; // need existing typenames
+
+sequence Dup { Bool b; }; sequence Dup { Bool b; }; // duplicate definition
+
+typedef Const X; // unknown type Const
+
+typedef Bool Const; // keyword redefinition
+
+enum Enu1 { AA }; typedef Enu1 Enu1; // type redefinition
+
+typedef Num x = _No_SUCH_initializer (17); // unknown type definition
+
+typedef Num x = Num ("too", "many", "args", 1, 2, 3, 4, 5, 6, 7, 8, 9); // too many args
+
+typedef Num string_for_num = String ("nick", "txt", "dflt", "rw"); // type/initializer mismatch
+
+record R { String s = Real ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
