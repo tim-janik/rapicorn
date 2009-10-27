@@ -28,15 +28,40 @@ true, false, length = (True, False, len)
 debugging = 0 # causes exceptions to bypass IDL-file parser error handling
 backends = [ 'GType', 'TypePackage' ]
 
-class ParseError (runtime.SyntaxError):
-  def __init__ (self, msg = "Parse Error"):
-    runtime.SyntaxError.__init__ (self, None, msg)
-  def __str__(self):
-    if not self.pos: return 'ParseError'
-    else: return 'ParseError@%s(%s)' % (repr (self.pos), self.msg)
+class ParseError (Exception):
+  def __init__ (self, msg = "Parse Error", kind = "ParseError"):
+    Exception.__init__ (self, msg)
+    self.kind = kind
+
+def parse_main (config, input_string, filename):
+  def runtime_strerror (exception, scanner):
+    class WritableObject:
+      def __init__ (self): self.content = []
+      def write (self, string): self.content.append (string)
+    wo = WritableObject()
+    runtime.print_error (exception, isp._scanner, outputfile = wo)
+    return ''.join (wo.content).strip()
+  Parser.yy.configure (config)
+  isp = Parser.IdlSyntaxParser (Parser.IdlSyntaxParserScanner (input_string, filename = filename))
+  try:
+    #runtime.wrap_error_reporter (isp, 'IdlSyntax') # parse away
+    result = isp.IdlSyntax ()
+    return result
+  except runtime.SyntaxError, ex:
+    ex.context = None # prevent context printing
+    exstr = runtime_strerror (ex, isp._scanner)
+    raise ParseError (exstr, "SyntaxError")
+  except AssertionError: raise
+  except Exception, ex:
+    if debugging: raise # pass exceptions on when debugging
+    exstr = str (ex)
+    if exstr: exstr = ': ' + exstr
+    exstr = runtime_strerror (runtime.SyntaxError (None,
+                                                   '%s%s' % (ex.__class__.__name__, exstr)),
+                              isp._scanner)
+    raise ParseError (exstr)
 
 def main():
-  from sys import stdin
   config = parse_files_and_args()
   files = config['files']
   if len (files) >= 1: # file IO
@@ -50,24 +75,11 @@ def main():
       input_string = ""
     filename = '<stdin>'
     print
-  Parser.yy.configure (config)
-  isp = Parser.IdlSyntaxParser (Parser.IdlSyntaxParserScanner (input_string, filename = filename))
-  result = None
-  # parsing: isp.IdlSyntax ()
-  ex = None
   try:
-    #runtime.wrap_error_reporter (isp, 'IdlSyntax') # parse away
-    result = isp.IdlSyntax ()
-  except runtime.SyntaxError, ex:
-    ex.context = None # prevent context printing
-    runtime.print_error (ex, isp._scanner)
-  except AssertionError: raise
-  except Exception, ex:
-    if debugging: raise # pass exceptions on when debugging
-    exstr = str (ex)
-    if exstr: exstr = ': ' + exstr
-    runtime.print_error (ParseError ('%s%s' % (ex.__class__.__name__, exstr)), isp._scanner)
-  if ex: sys.exit (7)
+    result = parse_main (config, input_string, filename)
+  except ParseError, pe:
+    print >>sys.stderr, pe
+    sys.exit (7)
   __import__ (config['backend']).generate (result, **config)
 
 def print_help (with_help = True):
@@ -127,5 +139,28 @@ def parse_files_and_args():
   config['files'] += list (args)
   return config
 
-if __name__ == '__main__':
+if len (sys.argv) > 2 and sys.argv[1] == '--plic-fail-file-test':
+  import tempfile, os
+  infilename = sys.argv[2]
+  sys.argv.remove (sys.argv[1]) # remove --plic-fail-file-test
+  config = parse_files_and_args()
+  files = config['files']
+  if len (files) != 1:
+    raise Exception ("plic-fail-file-test requires a single input file")
+  infile = open (files[0], 'r')
+  n = 0
+  for line in infile:
+    n += 1
+    ls = line.strip()
+    if ls and not ls.startswith ('//'):
+      filename = "%s:%d" % (files[0], n)
+      try:
+        result = parse_main (config, line, filename)
+      except ParseError, pe:
+        print n,
+        # expected a failing tests
+      else:
+        raise Exception (filename + ': uncaught test:', line)
+  infile.close()
+elif __name__ == '__main__':
   main()
