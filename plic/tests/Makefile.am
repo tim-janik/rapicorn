@@ -29,12 +29,5 @@ check-pass:	testpass.idl
 	${TESTPLIC} $(srcdir)/testpass.idl > /dev/null
 
 check-fail:	testfail.idl
-	echo -n "testfail.idl: checked:" ; \
-	egrep -vn '^(//.*|\s*)$$' $(srcdir)/testfail.idl | sed 's/:/ /' | \
-	  while read num line ; do \
-	    echo -e "namespace X {\n $$line \n}" > xgen-testfail.idl \
-	      && ! ${TESTPLIC} xgen-testfail.idl > /dev/null 2>&1 \
-	      || { echo -e "\ntestfail.idl:$$num: uncaught error: $$line" ; exit 1 ; } ; \
-	    echo -n " $$num" ; \
-	  done || exit 1 ; echo
-	rm -f xgen-testfail.idl
+	echo -n "testfail.idl: checked: " ; \
+	${TESTPLIC} --plic-fail-file-test $(srcdir)/testfail.idl
