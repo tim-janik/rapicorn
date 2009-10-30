@@ -112,3 +112,6 @@
 ./testfail.idl:74: ./testfail.idl:74:1:64: KeyError: 'no such interface type: R'
 >  ...PlicFailTest { record R { String s; }; interface I : R {}; // invalid interface inheritance
 >                                                          ^
+./testfail.idl:75: ./testfail.idl:75:1:54: TypeError: non-method invalidly declared as 'signal': xxx
+>  namespace PlicFailTest { interface I { signal Num xxx; }; // invalidly declared as signal
+>                                                       ^

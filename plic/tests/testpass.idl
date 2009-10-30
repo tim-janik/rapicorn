@@ -238,6 +238,7 @@ interface ButtonArea {
   Real two_args2 (Num n = Num ("Baz"), Real r = Real ("Zonk"));
   Real multi_args (Num n, Real r, Num i, String s = String ("String ding"), Real y);
   Real self_method (ButtonArea ba1, InterfaceTests::ButtonArea ba2);
+  signal Real sample_signal (ButtonArea ba1, Num someint);
 };
 interface Parent {};
 interface Child : Parent {}; // interface inheritance

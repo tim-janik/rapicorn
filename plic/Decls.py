@@ -68,6 +68,7 @@ class TypeInfo (BaseDecl):
     if self.storage == INTERFACE:
       self.prerequisites = []
       self.methods = []
+      self.signals = []
     self.auxdata = {}
   def clone (self, newname = None):
     if newname == None: newname = self.name
@@ -81,6 +82,8 @@ class TypeInfo (BaseDecl):
       ti.prerequisites += self.prerequisites
     if hasattr (self, 'methods'):
       ti.methods += self.methods
+    if hasattr (self, 'signals'):
+      ti.signals += self.signals
     ti.auxdata.update (self.auxdata)
     return ti
   def update_auxdata (self, auxdict):
@@ -97,7 +100,7 @@ class TypeInfo (BaseDecl):
     assert isinstance (ident, str)
     assert isinstance (type, TypeInfo)
     self.fields += [ (ident, type) ]
-  def add_method (self, ident, type, args):
+  def add_method (self, ident, type, args, issignal = False):
     assert self.storage == INTERFACE
     assert isinstance (ident, str)
     assert isinstance (type, TypeInfo)
@@ -107,7 +110,10 @@ class TypeInfo (BaseDecl):
       arg_ident, arg_type = arg
       assert isinstance (arg_ident, str)
       assert isinstance (arg_type, TypeInfo)
-    self.methods += [ (ident, type, args) ]
+    if issignal:
+      self.signals += [ (ident, type, args) ]
+    else:
+      self.methods += [ (ident, type, args) ]
   def add_prerequisite (self, type):
     assert self.storage == INTERFACE
     assert isinstance (type, TypeInfo)

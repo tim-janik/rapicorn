@@ -72,3 +72,4 @@ interface I { Num xxx; Num xxx (); }; // multiple member definitions
 interface I { Num method (Num n, Num n); }; // duplicate method argument
 interface I : Unknown {}; // invalid parent interface
 record R { String s; }; interface I : R {}; // invalid interface inheritance
+interface I { signal Num xxx; }; // invalidly declared as signal

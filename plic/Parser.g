@@ -23,7 +23,7 @@ PLIC_VERSION=\
 import yapps2runtime as runtime
 import AuxData
 
-reservedwords = ('class',)
+reservedwords = ('class', 'signal')
 keywords = ('TRUE', 'True', 'true', 'FALSE', 'False', 'false',
             'namespace', 'enum', 'enumeration', 'Const', 'typedef', 'interface',
             'record', 'sequence', 'Bool', 'Num', 'Real', 'String')
@@ -85,7 +85,7 @@ class YYGlobals (object):
       iface.add_prerequisite (yy.namespace_lookup (prq, astype = True))
     self.namespaces[0].add_type (iface)
     return iface
-  def interface_fill (self, iface, ifields, imethods):
+  def interface_fill (self, iface, ifields, imethods, isignals):
     self.parse_assign_auxdata (ifields)
     mdict = {}
     for field in ifields:
@@ -93,7 +93,8 @@ class YYGlobals (object):
         raise NameError ('duplicate member name: ' + field[0])
       mdict[field[0]] = true
       iface.add_field (field[0], field[1])
-    for method in imethods:
+    sigset = set ([sig[0] for sig in isignals])
+    for method in imethods + isignals:
       if mdict.has_key (method[0]):
         raise NameError ('duplicate member name: ' + method[0])
       mdict[method[0]] = true
@@ -105,7 +106,7 @@ class YYGlobals (object):
           raise NameError ('duplicate method arg name: ' + method[0] + ' (..., ' + arg[0] + '...)')
         adict[arg[0]] = true
         args += [ (arg[0], arg[1]) ]
-      iface.add_method (method[0], method[1], args)
+      iface.add_method (method[0], method[1], args, method[0] in sigset)
   def parse_assign_auxdata (self, fieldlist):
     for field in fieldlist:
       if not field[2]:
@@ -238,6 +239,9 @@ def AIi (identifier):   # assert interface identifier
   raise KeyError ('no such interface type: %s' % identifier)
 def ATN (typename):     # assert a typename
   yy.resolve_type (typename) # raises exception
+def ANS (issignal, identifier): # assert non-signal decl
+  if issignal:
+    raise TypeError ('non-method invalidly declared as \'signal\': %s' % identifier)
 
 %%
 parser IdlSyntaxParser:
@@ -333,32 +337,37 @@ rule method_args:
           ]                                     {{ args += [ (aident, atype, aaux) ] }}
         ) *                                     {{ return args }}
 
-rule field_or_method_decl:
-        typename                                {{ dtype = yy.clone_type (typename) }}
-        IDENT                                   {{ dident = IDENT; kind = 'field'; daux = () }}
+rule field_or_method_or_signal_decl:
+                                                {{ signal = false; fargs = []; daux = () }}
+        [ 'signal'                              {{ signal = true }}
+        ] typename                              {{ dtype = yy.clone_type (typename) }}
+        IDENT                                   {{ dident = IDENT; kind = 'field' }}
         ( [ '=' auxinit                         {{ daux = auxinit }}
           ]
-        | '\('                                  {{ kind = 'func'; fargs = [] }}
+        | '\('                                  {{ kind = signal and 'signal' or 'func' }}
               [ method_args                     {{ fargs = method_args }}
               ] '\)'                            # [ '=' auxinit {{ daux = auxinit }} ]
-        ) ';'                                   {{ if kind == 'field': return (kind, (dident, dtype, daux)) }}
+        ) ';'                                   {{ if kind == 'field': ANS (signal, dident) }}
+                                                {{ if kind == 'field': return (kind, (dident, dtype, daux)) }}
                                                 {{ return (kind, (dident, dtype, daux, fargs)) }}
 
 rule typedef:
         'typedef' field_decl                    {{ yy.nsadd_typedef (field_decl[0]) }}
 
 rule interface:
-        'interface' IDENT                       {{ iident = IDENT; iprops = []; ifuncs = []; prq = [] }}
+        'interface'                             {{ ipls = []; ifls = []; prq = [] }}
+        IDENT                                   {{ iident = IDENT; isigs = [] }}
         [ ':' IDENT                             {{ prq += [ IDENT ]; AIi (IDENT) }}
               ( ',' IDENT                       {{ prq += [ IDENT ]; AIi (IDENT) }}
               ) * ]
         '{'                                     {{ iface = yy.nsadd_interface (iident, prq) }}
            (
-             field_or_method_decl               {{ fmd = field_or_method_decl }}
-                                                {{ if fmd[0] == 'field': iprops = iprops + [ fmd[1] ] }}
-                                                {{ if fmd[0] == 'func': ifuncs = ifuncs + [ fmd[1] ] }}
+             field_or_method_or_signal_decl     {{ fmd = field_or_method_or_signal_decl }}
+                                                {{ if fmd[0] == 'field': ipls = ipls + [ fmd[1] ] }}
+                                                {{ if fmd[0] == 'func': ifls = ifls + [ fmd[1] ] }}
+                                                {{ if fmd[0] == 'signal': isigs = isigs + [ fmd[1] ] }}
            )*
-        '}' ';'                                 {{ yy.interface_fill (iface, iprops, ifuncs) }}
+        '}' ';'                                 {{ yy.interface_fill (iface, ipls, ifls, isigs) }}
 
 rule record:
         'record' IDENT '{'                      {{ rfields = []; rident = IDENT }}
