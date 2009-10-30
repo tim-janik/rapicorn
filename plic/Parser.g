@@ -31,6 +31,8 @@ reservedkeywords = set (keywords + reservedwords)
 
 class YYGlobals (object):
   def __init__ (self):
+    self.reset()
+  def reset (self):
     self.config = {}
     self.ecounter = None
     self.namespaces = []

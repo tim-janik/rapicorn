@@ -154,8 +154,11 @@ if len (sys.argv) > 2 and sys.argv[1] == '--plic-fail-file-test':
     ls = line.strip()
     if ls and not ls.startswith ('//'):
       filename = "%s:%d" % (files[0], n)
+      Parser.yy.reset()
       try:
-        result = parse_main (config, line, filename)
+        result = parse_main (config,
+                             'namespace PlicFailTest { ' + line + '\n}',
+                             filename)
       except ParseError, pe:
         print n,
         # expected a failing tests
