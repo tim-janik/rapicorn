@@ -1,0 +1,114 @@
+./testfail.idl:5: ./testfail.idl:5:1:50: KeyError: 'redefining existing identifier: a'
+>  namespace PlicFailTest { Const a = 5; Const a = 6; // redefining existing identifier
+>                                                   ^
+./testfail.idl:7: ./testfail.idl:7:1:42: KeyError: 'redefining existing identifier: record'
+>  namespace PlicFailTest { Const record = 5; // keyword assignment
+>                                           ^
+./testfail.idl:9: ./testfail.idl:9:1:47: KeyError: 'redefining existing identifier: String'
+>  namespace PlicFailTest { typedef String String; // keyword redefinition (without --system-typedefs)
+>                                                ^
+./testfail.idl:11: ./testfail.idl:11:1:46: NameError: invalid characters in namespace: broken$name
+>  namespace PlicFailTest { namespace broken$name { Const a = 5; } // invalid namespace name (without --system-typedefs)
+>                                               ^
+./testfail.idl:13: ./testfail.idl:13:1:55: KeyError: 'redefining existing identifier: E'
+>  namespace PlicFailTest { enum E { VALUE }; Const E = 0; // typename assignment
+>                                                        ^
+./testfail.idl:15: ./testfail.idl:15:1:59: KeyError: 'redefining existing identifier: VALUE'
+>  namespace PlicFailTest { enum E { VALUE }; Const VALUE = 0; // enum value assignment
+>                                                            ^
+./testfail.idl:17: ./testfail.idl:17:1:41: KeyError: 'redefining existing identifier: TRUE'
+>  namespace PlicFailTest { Const TRUE = 17; // invalid constant name
+>                                          ^
+./testfail.idl:19: ./testfail.idl:19:1:47: Trying to find ';': STRING, IDENT, r'\)', '_', r'\*\*', r'\*', r'/', r'%', r'\+', r'-', ';', ',', '}', got '_'
+>  namespace PlicFailTest { Const tmp = "invalid" _("i18n string") "concatenation";
+>                                                ^
+./testfail.idl:21: ./testfail.idl:21:1:25: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF
+>  namespace PlicFailTest { FrobCheck tmp = 1; // FrobCheck is no type
+>                          ^
+./testfail.idl:23: ./testfail.idl:23:1:40: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF
+>  namespace PlicFailTest { Const zzz = 1; zzz tmp = 1; // zzz is no type
+>                                         ^
+./testfail.idl:25: ./testfail.idl:25:1:49: Trying to find one of '=', ';'
+>  namespace PlicFailTest { record DupRecord { Num a, b, c; }; // fail on multiple fields per type
+>                                                  ^
+./testfail.idl:27: ./testfail.idl:27:1:60: NameError: duplicate field name: b
+>  namespace PlicFailTest { record DupRecord { Num b; Num b; }; // duplicate: b
+>                                                             ^
+./testfail.idl:29: ./testfail.idl:29:1:46: Trying to find one of '::', IDENT
+>  namespace PlicFailTest { record EmptyRecord { }; // record is empty
+>                                               ^
+./testfail.idl:31: ./testfail.idl:31:1:52: KeyError: 'redefining existing identifier: record'
+>  namespace PlicFailTest { enum ExtensiveEnum { record, }; // keyword as enum value
+>                                                     ^
+./testfail.idl:33: ./testfail.idl:33:1:49: Trying to find one of '=', ',', '}'
+>  namespace PlicFailTest { enum ExtensiveEnum { Foo; }; // semicolon in enum
+>                                                  ^
+./testfail.idl:35: ./testfail.idl:35:1:59: KeyError: 'redefining existing identifier: EV1'
+>  namespace PlicFailTest { enum ExtensiveEnum { EV1, EV2, EV1 }; // duplicate enum value
+>                                                            ^
+./testfail.idl:37: ./testfail.idl:37:1:57: KeyError: 'redefining existing identifier: AA'
+>  namespace PlicFailTest { enum Enu1 { AA }; enum Enu2 { AA }; // duplicate enum value
+>                                                          ^
+./testfail.idl:39: ./testfail.idl:39:1:59: KeyError: 'redefining existing identifier: Enu1'
+>  namespace PlicFailTest { enum Enu1 { AA }; enum Enu1 { BB }; // duplicate enum name
+>                                                            ^
+./testfail.idl:41: ./testfail.idl:41:1:64: KeyError: 'redefining existing identifier: Var'
+>  ...PlicFailTest { Const Var = 0; enum ExtensiveEnum { Var }; // constant in enum
+>                                                          ^
+./testfail.idl:43: ./testfail.idl:43:1:50: Trying to find one of '::', IDENT
+>  namespace PlicFailTest { sequence EmptySequence { }; // sequence needs 1 field
+>                                                   ^
+./testfail.idl:45: ./testfail.idl:45:1:65: Trying to find one of '}'
+>  ...PlicFailTest { sequence MultiFieldSequence { Bool one; Num toomany; }; // sequence needs 1 field
+>                                                           ^
+./testfail.idl:47: ./testfail.idl:47:1:46: TypeError: unknown type: 'enum'
+>  namespace PlicFailTest { sequence Seq { enum b; }; // keyword is not typename
+>                                               ^
+./testfail.idl:49: ./testfail.idl:49:1:69: TypeError: unknown type: '_S1'
+>  ...lTest { sequence S1 { Bool b; }; sequence S2 { _S1 s; }; // need existing typenames
+>                                                        ^
+./testfail.idl:51: ./testfail.idl:51:1:76: KeyError: 'redefining existing identifier: Dup'
+>  ... sequence Dup { Bool b; }; sequence Dup { Bool b; }; // duplicate definition
+>                                                        ^
+./testfail.idl:53: ./testfail.idl:53:1:40: TypeError: unknown type: 'Const'
+>  namespace PlicFailTest { typedef Const X; // unknown type Const
+>                                         ^
+./testfail.idl:55: ./testfail.idl:55:1:44: KeyError: 'redefining existing identifier: Const'
+>  namespace PlicFailTest { typedef Bool Const; // keyword redefinition
+>                                             ^
+./testfail.idl:57: ./testfail.idl:57:1:41: KeyError: 'redefining existing identifier: class'
+>  namespace PlicFailTest { Const class = 5; // keyword redefinition
+>                                          ^
+./testfail.idl:59: ./testfail.idl:59:1:61: KeyError: 'redefining existing identifier: Enu1'
+>  namespace PlicFailTest { enum Enu1 { AA }; typedef Enu1 Enu1; // type redefinition
+>                                                              ^
+./testfail.idl:61: ./testfail.idl:61:1:67: TypeError: invalid type definition: = _No_SUCH_initializer (17,)
+>  ...PlicFailTest { typedef Num x = _No_SUCH_initializer (17); // unknown type definition
+>                                                             ^
+./testfail.idl:63: ./testfail.idl:63:1:96: TypeError: too many args for type definition: = Num ('"too"', '"many"', '"args"', 1, 2, 3, 4, 5, 6, 7, 8, 9)
+>  ...= Num ("too", "many", "args", 1, 2, 3, 4, 5, 6, 7, 8, 9); // too many args
+>                                                             ^
+./testfail.idl:65: ./testfail.idl:65:1:91: TypeError: invalid type definition: = String ('"nick"', '"txt"', '"dflt"', '"rw"')
+>  ...um string_for_num = String ("nick", "txt", "dflt", "rw"); // type/initializer mismatch
+>                                                             ^
+./testfail.idl:67: ./testfail.idl:67:1:96: TypeError: invalid type definition: = Real ('"x"', '"X coord"', 0, 0, 100.0, 0.5, '"ro"')
+>  ...ing s = Real ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
+>                                                             ^
+./testfail.idl:69: ./testfail.idl:69:1:51: Trying to find one of '::', IDENT, '\)'
+>  namespace PlicFailTest { interface I { Num method (,); }; // invalid method arg separator
+>                                                    ^
+./testfail.idl:70: ./testfail.idl:70:1:71: NameError: duplicate member name: method
+>  ...lTest { interface I { Num method (); Num method (); }; // multiple method definitions
+>                                                          ^
+./testfail.idl:71: ./testfail.idl:71:1:62: NameError: duplicate member name: xxx
+>  ...PlicFailTest { interface I { Num xxx; Num xxx (); }; // multiple member definitions
+>                                                        ^
+./testfail.idl:72: ./testfail.idl:72:1:68: NameError: duplicate method arg name: method (..., n...)
+>  ...PlicFailTest { interface I { Num method (Num n, Num n); }; // duplicate method argument
+>                                                              ^
+./testfail.idl:73: ./testfail.idl:73:1:46: KeyError: 'no such interface type: Unknown'
+>  namespace PlicFailTest { interface I : Unknown {}; // invalid parent interface
+>                                               ^
+./testfail.idl:74: ./testfail.idl:74:1:64: KeyError: 'no such interface type: R'
+>  ...PlicFailTest { record R { String s; }; interface I : R {}; // invalid interface inheritance
+>                                                          ^

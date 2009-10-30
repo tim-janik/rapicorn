@@ -7,6 +7,7 @@ noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
 
 EXTRA_DIST += testpass.idl testfail.idl
+NOUPDATE    = true
 
 # tests for auxillary data in testpass.idl
 TESTPASS_AUXTESTS = --aux-test label=auxtest1 --aux-test auxtest2 --aux-test auxtest3 \
@@ -26,8 +27,16 @@ installcheck-local: $(srcdir)/testpass.idl
 check:	check-pass check-fail check-ptp
 
 check-pass:	testpass.idl
-	${TESTPLIC} $(srcdir)/testpass.idl > /dev/null
+	@TL=`printf %-69s "$(@F):"` && TR=`printf %70s "$$TL"` && echo -n "$$TR"
+	@${TESTPLIC} $(srcdir)/testpass.idl > /dev/null && echo OK
 
 check-fail:	testfail.idl
-	echo -n "testfail.idl: checked: " ; \
-	${TESTPLIC} --plic-fail-file-test $(srcdir)/testfail.idl
+	@TL=`printf %-69s "$(@F):"` && TR=`printf %70s "$$TL"` && echo -n "$$TR"
+	@${TESTPLIC} --plic-fail-file-test $(srcdir)/testfail.idl >xtmp-testfail.out
+	@${NOUPDATE} || cp -v xtmp-testfail.out xtmp-testfail.ref
+	@cmp --quiet xtmp-testfail.ref xtmp-testfail.out && echo OK || \
+	  { echo FAIL; diff -up xtmp-testfail.ref xtmp-testfail.out; exit 1; }
+	@rm -f xtmp-testfail.out
+
+force-update:
+	$(MAKE) NOUPDATE=false check-fail

@@ -2,7 +2,7 @@
 // this file is processed line by line, no statement may span multiple lines
 // each line is asserted to produce an error
 
-Const a = 5; Const a = 6; // invalid reassignment
+Const a = 5; Const a = 6; // redefining existing identifier
 
 Const record = 5; // keyword assignment
 
@@ -10,9 +10,9 @@ typedef String String; // keyword redefinition (without --system-typedefs)
 
 namespace broken$name { Const a = 5; } // invalid namespace name (without --system-typedefs)
 
-enum E { V }; Const E = 0; // typename assignment
+enum E { VALUE }; Const E = 0; // typename assignment
 
-enum E { V }; Const V = 0; // enum value assignment
+enum E { VALUE }; Const VALUE = 0; // enum value assignment
 
 Const TRUE = 17; // invalid constant name
 

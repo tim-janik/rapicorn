@@ -160,7 +160,7 @@ if len (sys.argv) > 2 and sys.argv[1] == '--plic-fail-file-test':
                              'namespace PlicFailTest { ' + line + '\n}',
                              filename)
       except ParseError, pe:
-        print n,
+        print '%s:%d:' % (files[0], n), pe
         # expected a failing tests
       else:
         raise Exception (filename + ': uncaught test:', line)
