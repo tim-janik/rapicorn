@@ -23,7 +23,7 @@ PLIC_VERSION=\
 import yapps2runtime as runtime
 import AuxData
 
-reservedwords = ('class', 'signal')
+reservedwords = ('class', 'signal', 'void')
 keywords = ('TRUE', 'True', 'true', 'FALSE', 'False', 'false',
             'namespace', 'enum', 'enumeration', 'Const', 'typedef', 'interface',
             'record', 'sequence', 'Bool', 'Num', 'Real', 'String')
@@ -166,10 +166,10 @@ class YYGlobals (object):
         if cvalue:
           return cvalue
     return None
-  def clone_type (self, typename):
-    type_info = self.resolve_type (typename)
+  def clone_type (self, typename, **flags):
+    type_info = self.resolve_type (typename, flags.get ('void', 0))
     return type_info.clone (type_info.name)
-  def resolve_type (self, typename):
+  def resolve_type (self, typename, void = False):
     type_info = self.namespace_lookup (typename, astype = True)
     if not type_info:   # builtin types
       type_info = {
@@ -178,6 +178,8 @@ class YYGlobals (object):
         'Real'    : Decls.TypeInfo ('Real',   Decls.REAL),
         'String'  : Decls.TypeInfo ('String', Decls.STRING),
       }.get (typename, None);
+    if not type_info and void and typename == 'void':   # builtin void
+      type_info = Decls.TypeInfo ('void', Decls.VOID)
     if not type_info:
       raise TypeError ('unknown type: ' + repr (typename))
     return type_info
@@ -340,7 +342,10 @@ rule method_args:
 rule field_or_method_or_signal_decl:
                                                 {{ signal = false; fargs = []; daux = () }}
         [ 'signal'                              {{ signal = true }}
-        ] typename                              {{ dtype = yy.clone_type (typename) }}
+        ]
+        ( 'void'                                {{ dtname = 'void' }}
+        | typename                              {{ dtname = typename }}
+        )
         IDENT                                   {{ dident = IDENT; kind = 'field' }}
         ( [ '=' auxinit                         {{ daux = auxinit }}
           ]
@@ -348,6 +353,7 @@ rule field_or_method_or_signal_decl:
               [ method_args                     {{ fargs = method_args }}
               ] '\)'                            # [ '=' auxinit {{ daux = auxinit }} ]
         ) ';'                                   {{ if kind == 'field': ANS (signal, dident) }}
+                                                {{ dtype = yy.clone_type (dtname, void = kind != 'field') }}
                                                 {{ if kind == 'field': return (kind, (dident, dtype, daux)) }}
                                                 {{ return (kind, (dident, dtype, daux, fargs)) }}
 

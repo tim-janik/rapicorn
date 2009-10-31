@@ -115,3 +115,15 @@
 ./testfail.idl:75: ./testfail.idl:75:1:54: TypeError: non-method invalidly declared as 'signal': xxx
 >  namespace PlicFailTest { interface I { signal Num xxx; }; // invalidly declared as signal
 >                                                       ^
+./testfail.idl:76: ./testfail.idl:76:1:41: TypeError: redefining existing identifier: void
+>  namespace PlicFailTest { Const void = 17; // invalid constant name
+>                                          ^
+./testfail.idl:77: ./testfail.idl:77:1:25: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF
+>  namespace PlicFailTest { void xy = 17; // invalid property type
+>                          ^
+./testfail.idl:78: ./testfail.idl:78:1:55: Trying to find one of '::', IDENT
+>  namespace PlicFailTest { interface I { Num method (void); }; // invalid argument type
+>                                                        ^
+./testfail.idl:79: ./testfail.idl:79:1:64: TypeError: unknown type: 'void'
+>  ...PlicFailTest { interface I { Num method (Num n, void v); }; // invalid argument type
+>                                                          ^
