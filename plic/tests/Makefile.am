@@ -33,9 +33,9 @@ check-pass:	testpass.idl
 check-fail:	testfail.idl
 	@TL=`printf %-69s "$(@F):"` && TR=`printf %70s "$$TL"` && echo -n "$$TR"
 	@${TESTPLIC} --plic-fail-file-test $(srcdir)/testfail.idl >xtmp-testfail.out
-	@${NOUPDATE} || cp -v xtmp-testfail.out xtmp-testfail.ref
-	@cmp --quiet xtmp-testfail.ref xtmp-testfail.out && echo OK || \
-	  { echo FAIL; diff -up xtmp-testfail.ref xtmp-testfail.out; exit 1; }
+	@${NOUPDATE} || cp -v xtmp-testfail.out testfail.ref
+	@cmp --quiet testfail.ref xtmp-testfail.out && echo OK || \
+	  { echo FAIL; diff -up testfail.ref xtmp-testfail.out; exit 1; }
 	@rm -f xtmp-testfail.out
 
 force-update:
