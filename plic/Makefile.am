@@ -43,7 +43,7 @@ pyutils_PYTHON = Decls.py Parser.py AuxData.py yapps2runtime.py ${plicbackends} 
 # tests
 TESTPLIC = PYTHONPATH="$$PYTHONPATH:$(srcdir)" ./${PLICV}
 installcheck-local:
-	$(_@)  ${TESTPLIC} --cc-type-package-parser | grep -q struct
+	$(_@) ${TESTPLIC} --cc-type-package-parser | grep -q struct
 check-outputs:
 	$(_@) ${TESTPLIC} --list-formats | grep -q PLIC
 check-local: check-outputs
