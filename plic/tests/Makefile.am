@@ -14,18 +14,11 @@ DEBUG	    =
 TESTPASS_AUXTESTS = --aux-test label=auxtest1 --aux-test auxtest2 --aux-test auxtest3 \
 		    --aux-test default=10007 --aux-test hints=rw
 
-check-ptp: ptptest
-	${TESTPLIC} $(srcdir)/testpass.idl -O TypePackage
-	./ptptest plic.out $(TESTPASS_AUXTESTS) > /dev/null
-	rm -f plic.out
-
 installcheck-local: $(srcdir)/testpass.idl
 	plic-@PLIC_VERSION@ --cc-type-package-parser | grep -q struct
 	plic-@PLIC_VERSION@ --list-formats > /dev/null
 	plic-@PLIC_VERSION@ $(srcdir)/testpass.idl > /dev/null
 
-
-check:	check-pass check-fail check-ptp
 
 check-pass:	testpass.idl
 	@TL=`printf %-69s "$(@F):"` && TR=`printf %70s "$$TL"` && echo -n "$$TR"
@@ -38,6 +31,14 @@ check-fail:	testfail.idl
 	@cmp --quiet testfail.ref xtmp-testfail.out && echo OK || \
 	  { echo FAIL; diff -up testfail.ref xtmp-testfail.out; exit 1; }
 	@rm -f xtmp-testfail.out
+
+check-TypePackage: ptptest
+	@TL=`printf %-69s "$(@F):"` && TR=`printf %70s "$$TL"` && echo -n "$$TR"
+	@${TESTPLIC} $(srcdir)/testpass.idl -O TypePackage && \
+	  ./ptptest plic.out $(TESTPASS_AUXTESTS) > /dev/null && echo OK
+	@rm -f plic.out
+
+check:	check-pass check-fail check-TypePackage
 
 force-update:
 	$(MAKE) NOUPDATE=false check-fail
