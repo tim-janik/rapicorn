@@ -263,7 +263,7 @@ def parse_try (input_string, filename, linenumbers = True):
     exmsg = synex.msg
   except Exception, ex:
     exstr = str (ex).strip()
-    if 0 or not exstr:
+    if yy.config.get ('pass-exceptions', 0) or not exstr:
       raise                     # pass exceptions on when debugging
     exmsg = '%s: %s' % (ex.__class__.__name__, exstr)
   if exmsg:

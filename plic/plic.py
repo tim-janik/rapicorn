@@ -80,7 +80,8 @@ def parse_files_and_args():
   import re, getopt
   config = { 'files' : [], 'backend' : 'PrettyDump' }
   sop = 'vhO:o:'
-  lop = ['help', 'version', 'output-format=', 'list-formats', 'cc-type-package-parser']
+  lop = ['help', 'version', 'output-format=', 'list-formats',
+         'cc-type-package-parser', 'plic-debug']
   try:
     options,args = getopt.gnu_getopt (sys.argv[1:], sop, lop)
   except Exception, ex:
@@ -89,6 +90,7 @@ def parse_files_and_args():
   for arg,val in options:
     if arg == '-h' or arg == '--help': print_help(); sys.exit (0)
     if arg == '-v' or arg == '--version': print_help (false); sys.exit (0)
+    if arg == '--plic-debug': config['pass-exceptions'] = 1
     if arg == '-o': config['output'] = val
     if arg == '-O' or arg == '--output-format':
       config['backend'] = val

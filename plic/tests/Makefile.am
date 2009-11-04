@@ -1,13 +1,14 @@
 # PLIC - Pluggable IDL Compiler
 include $(top_srcdir)/Makefile.decl
 
-TESTPLIC = PYTHONPATH="$$PYTHONPATH:$(srcdir)/.." ../plic-@PLIC_VERSION@
+TESTPLIC = PYTHONPATH="$$PYTHONPATH:$(srcdir)/.." ../plic-@PLIC_VERSION@ $(and $(DEBUG), --plic-debug)
 
 noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
 
 EXTRA_DIST += testpass.idl testfail.idl
 NOUPDATE    = true
+DEBUG	    =
 
 # tests for auxillary data in testpass.idl
 TESTPASS_AUXTESTS = --aux-test label=auxtest1 --aux-test auxtest2 --aux-test auxtest3 \
