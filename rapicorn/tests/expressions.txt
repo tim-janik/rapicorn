@@ -1,0 +1,83 @@
+# Expression evaluation test file				-*-mode:text;-*-
+#
+# This work is provided "as is"; redistribution and modification
+# in whole or in part, in any medium, physical or electronic is
+# permitted without restriction.
+#
+# This work is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# In no event shall the authors or contributors be liable for any
+# direct, indirect, incidental, special, exemplary, or consequential
+# damages (including, but not limited to, procurement of substitute
+# goods or services; loss of use, data, or profits; or business
+# interruption) however caused and on any theory of liability, whether
+# in contract, strict liability, or tort (including negligence or
+# otherwise) arising in any way out of the use of this software, even
+# if advised of the possibility of such damage.
+
+# This file contains alternating expression/expectation lines.
+# The expressions are fed as tests, and the expected patterns
+# are fed to egrep and must match the actual result.
+
+# strings
+  'Hello'
+  "What's" + ' up?'
+
+# numbers
+  12345
+  0
+  51234566788999098E+43
+  2.e-23
+  -0.0000000000000000001E19
+  .0E+9999
+  .1e-3
+  .321e17
+  0x1234
+
+# logic tests
+  not not not 0
+  3 and "x" and 2 and not "" and (0 or "" or 11)
+  9 and not 0 and "rose"
+  bool (0) == 0 and bool (1) == 1 and bool (2) == 1 and bool (-3) == 1 and "OK"
+  strbool ("yes") and not strbool ("no") and strbool ("true") and not strbool ("false") and OK
+  strbool ("1") and not strbool ("0") and OK
+
+# comparisons
+  4 < 7 and not 7 < 4 and not 7 < 7 and not 4 > 7 and 7 > 4 and not 7 > 7 and "OK"
+  4 <= 7 and not 7 <= 4 and 7 <= 7 and not 4 >= 7 and 7 >= 4 and 7 >= 7 and "OK"
+  4 == 4 and 7 == 7 and not 4 == 7 and not 7 == 4 and "OK"
+  4 != 7 and 7 != 4 and not 4 != 4 and not 7 != 7 and "OK"
+
+# math op tests
+  33 + 99 + +12 - 10 - 4 + - 1 + --2
+  2 + (4 - 2 + 1) * 4 + 27 / 3 * 3 - 9
+  3.21 ** 0.123
+  -3.21 ** -0.123
+  (-0.321) ** 2
+
+# long tests
+  17+18+19+20+21+22+23+24+25+26+27+28+29+30+31+32+33+34+35+36+37+38+39+40+41+42+43+44+45+46+47+48+49+50+51+52+53+54+55+56+57+58+59+60+61+62+63+64+65+66+67+68+69+70+71+72+73+74+75+76+77+78+79+80+81+82+83+84+85+86+87+88+89+90+91+92+93+94+95+96+97
+
+# identifier tests
+  namespace.variable
+  testfunc (1,2,3, "string with numbers: 0,0, 0,0")
+
+# math functions
+  rand() > 0 and rand() != rand() and "OK"
+  min (6, 3, 4, 5, 2, 9, 7, 8) == 2 and min (1) == 1 and "OK"
+  max (6, 3, 4, 5, 2, 9, 7, 8) == 9 and max (1) == 1 and "OK"
+  sum (6, 3, 4, 5, 2, 9, 7, 8) == 44 and "OK"
+  avg (6, 3, 4, 5, 2, 9, 7, 8) == 5.5 and "OK"
+  hypot (3.1, -7.7)
+  exp (1)
+  log (exp (13.4))
+  log2 (64) == 6 and "OK" and log10 (1000) == 3 and "OK"
+  floor (8.8) == 8 and ceil (8.2) == 9 and round (7.3) == 7 and round (7.9) == 8 and "OK"
+
+# other functions
+  count () == 0 and count (3) == 1 and count (5,4,3,2,1) == 5 and OK
+  printout ("teststring1")
+# printerr ("teststring2")
+#	teststring2

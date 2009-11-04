@@ -54,23 +54,15 @@ factory_LDADD      = $(LDADDS)
 XML_FILES         += factory.xml
 
 SINFEX=./sinfextest --shell
-SINFEXDAT=sinfextest.dat
-sinfex-check:
-	@$(XVFB_START) && \
-	echo "TEST: ${SINFEXDAT}"; echo -n "Lines:"; L=0 ; \
-	while read -r line ; do \
-	  L=$$((1 + $$L)) ; \
-	  echo " $$line" | egrep -q '^[[:space:]]*(#|$$)' && continue ; \
-	  echo -n " $$L" ; \
-	  read -r result ; L=$$((1 + $$L)) ; \
-	  echo " $$line" | ${SINFEX} > xtmp-snfx.$$$$ $(XLIBSTDERREXTFIX) && \
-	  egrep -q "-e$$result" < xtmp-snfx.$$$$ || { \
-	    echo ; echo -n "${SINFEXDAT}:$$L: pattern ($$result) unmatched: "; \
-	    cat xtmp-snfx.$$$$ ; rm -f xtmp-snfx.$$$$ ; echo ; exit 1 ; } ; \
-	  rm -f xtmp-snfx.$$$$ ; \
-	done < ${SINFEXDAT}; echo ; \
-	echo "PASS: ${SINFEXDAT}"
-check-am: sinfex-check
+sinfex-expressions:
+	@$(call TSTTITLE)
+	$(_@) egrep -v '^[[:space:]]*(#|$$)' < $(srcdir)/expressions.txt > $(TSTTMP)
+	$(_@) $(XVFB_START) && \
+	  COLUMNS=9999 $(SINFEX) < $(TSTTMP) > $(TSTOUT) \
+	                 $(XLIBSTDERREXTFIX)
+	@$(call TSTCMP, expressions.ref)
+	$(_@) rm -f $(TSTTMP)
+check-am: sinfex-expressions
 
 xmllint-check:
 	cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES)
