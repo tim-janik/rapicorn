@@ -35,6 +35,3 @@ check-TypePackage: ptptest
 	$(_@) rm -f plic.out
 
 check:	check-pass check-fail check-TypePackage
-
-force-update:
-	$(MAKE) NOUPDATE=false check

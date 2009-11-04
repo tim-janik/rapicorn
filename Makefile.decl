@@ -123,7 +123,7 @@ PERFTESTS=
 ALLTESTS = $(TESTS) $(SLOWTESTS) $(PERFTESTS) # used in noinst_PROGRAMS
 
 # === Test-rule macros ===
-NOUPDATE = true
+FORCECHECKUPDATE = false
 # $(call TSTTITLE, [TESTNAME]) - print test title
 TSTTITLE= $(strip	\
 	TST_TitleLeft=`printf %-69s "$(strip $(or $(1), $(@F))):"` ; \
@@ -145,7 +145,7 @@ TSTCMP = $(strip	\
 	rm -f $(or $(2), $(call TSTOUT)) \
 )
 TSTCMP_KEEPOUT = $(strip	\
-	${NOUPDATE} || { \
+	${FORCECHECKUPDATE} && { \
 	  cp $(if $(_@),, -v) $(or $(2), $(call TSTOUT)) $(or $(1), $(call TSTREF)) ; \
 	  FAILOK="FAIL "" FORCED" ; \
 	} ; \
@@ -157,6 +157,11 @@ TSTCMP_KEEPOUT = $(strip	\
 	  exit 1 ; \
 	} \
 )
+
+# === force-check-update ===
+force-check-update:
+	$(MAKE) FORCECHECKUPDATE=true check
+
 
 # === report ===
 .PHONY: report
