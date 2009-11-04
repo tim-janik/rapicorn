@@ -138,12 +138,12 @@ basic_loop_test()
   loop->exec_io_handler (slot (pipe_reader), pipe_fds[0], "r");
   loop->exec_io_handler (slot (pipe_writer), pipe_fds[1], "w");
   TASSERT (pipe_reader_seen == 0);
-  while (pipe_reader_seen < 49999)
+  while (pipe_reader_seen < 4999)
     if (RapicornTester::loops_pending())
       RapicornTester::loops_dispatch (false);
     else
       RapicornTester::loops_dispatch (true);
-  TASSERT_CMP (pipe_reader_seen, ==, 49999);
+  TASSERT_CMP (pipe_reader_seen, ==, 4999);
   err = close (pipe_fds[1]);
   TASSERT (err == 0);
   while (RapicornTester::loops_pending())
@@ -240,7 +240,7 @@ static CheckSource *check_sources[997] = { NULL, };
 static void
 more_loop_test2()
 {
-  const uint max_runs = 9999;
+  const uint max_runs = 999;
   TSTART ("loop-states");
   EventLoop *loop = EventLoop::create();
   TASSERT (loop);
