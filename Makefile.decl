@@ -131,7 +131,9 @@ TSTTITLE= $(strip	\
 	echo $(_@:%=-n) "$$TST_TitleRight" \
 )
 # $(call TSTOUT, [postfix]) - test output filename
-TSTOUT = $(strip xtmp$(strip $(1))-$(@F).out)
+TSTOUT = $(strip xtst$(strip $(1))-$(@F).out)
+# $(call TSTTMP, [postfix]) - temporary test filename
+TSTTMP = $(strip xtst$(strip $(1))-$(@F).tmp)
 # $(call TSTREF) - test reference filename
 TSTREF = $(strip $(@F).ref)
 # $(call TSTRESULT, [exitcode]) - print test result (from shell exit code)
