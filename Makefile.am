@@ -88,16 +88,25 @@ api-checksum:
 distcheck-hook: # check API version upon make distcheck
 	$(MAKE) $(AM_MAKEFLAGS) -C $(top_srcdir)/ api-check
 installcheck-local:
-	cd . \
+	@$(call TSTTITLE, Create  rapicorn sample program)
+	$(_@) cd . \
 	&& echo '#include <rapicorn-core.hh>'				 > tmpx.cc \
-	&& echo '#include <rapicorn.hh>'					>> tmpx.cc \
+	&& echo '#include <rapicorn.hh>'				>> tmpx.cc \
 	&& echo 'using namespace Rapicorn;'				>> tmpx.cc \
-	&& echo 'extern "C" int main (int argc, char *argv[]) {'		>> tmpx.cc \
+	&& echo 'extern "C" int main (int argc, char *argv[]) {'	>> tmpx.cc \
 	&& echo 'Application::init_with_x11 (&argc, &argv, ".AMtest");'	>> tmpx.cc \
-	&& echo 'Application::execute_loops(); return 0; }'		>> tmpx.cc \
-	&& $(CC) `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags --libs rapicorn@RAPICORN_RELEASE@` tmpx.cc -o tmpx \
-	&& LD_LIBRARY_PATH="$(libdir):$$LD_LIBRARY_PATH" ./tmpx
-	rm -f tmpx.cc tmpx
+	&& echo 'Application::execute_loops(); return 0; }'		>> tmpx.cc
+	@$(call TSTRESULT)
+	@$(call TSTTITLE, Compile rapicorn sample program)
+	$(_@) $(CXX) `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags rapicorn@RAPICORN_RELEASE@` tmpx.cc -c ; \
+	  $(call TSTRESULT)
+	@$(call TSTTITLE, Link    rapicorn sample program)
+	$(_@) $(CXX) `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --libs rapicorn@RAPICORN_RELEASE@` tmpx.o -o tmpx ; \
+	  $(call TSTRESULT)
+	@$(call TSTTITLE, Execute rapicorn sample program)
+	$(_@) LD_LIBRARY_PATH="$(libdir):$$LD_LIBRARY_PATH" ./tmpx ; \
+	  $(call TSTRESULT)
+	$(_@) rm -f tmpx.o tmpx.cc tmpx
 
 # === source code check ===
 check-dynamic_cast:	# check for dynamic_cast of reference types which is broken in gcc <= 3.3.5
