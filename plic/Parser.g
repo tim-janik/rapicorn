@@ -198,6 +198,18 @@ class YYGlobals (object):
   def namespace_close (self):
     assert len (self.namespaces)
     self.namespaces = self.namespaces[1:]
+  def handle_include (self, includefilename, origscanner):
+    f = open (includefilename)
+    input = f.read()
+    try:
+      result = parse_try (input, includefilename)
+    except Error, ex:
+      pos_file, pos_line, pos_col = origscanner.get_pos()
+      ix = Error ('%s:%d: note: included "%s" from here' % (pos_file, pos_line, includefilename))
+      ix.exception = ex.exception
+      ex.exception = ix
+      raise ex
+    return result
 yy = YYGlobals() # globals
 
 def constant_lookup (variable):
@@ -285,9 +297,14 @@ def parse_try (input_string, filename, linenumbers = True):
 def parse_main (input_string, filename, linenumbers):
   try:
     result = parse_try (input_string, filename, linenumbers)
-    return (result, None, None)
+    return (result, None, None, [])
   except Error, ex:
-    return (None, str (ex), ex.ecaret)
+    el = []
+    cx = ex.exception
+    while cx:
+      el = [ str (cx) ] + el
+      cx = cx.exception
+    return (None, str (ex), ex.ecaret, el)
 
 %%
 parser IdlSyntaxParser:
@@ -302,11 +319,16 @@ parser IdlSyntaxParser:
         token FRACTFLOAT:                     r'\.[0-9]+([eE][+-][0-9]+)?'
         token STRING:       r'"([^"\\]+|\\.)*"'             # double quotes string
 
-rule IdlSyntax: ( ';' | namespace )* EOF        {{ return yy.ns_list; }}
+rule IdlSyntax: ( ';'
+                | namespace
+                | topincludes
+                )* EOF                          {{ return yy.ns_list; }}
 
 rule namespace:
         'namespace' NSIDENT                     {{ yy.namespace_open (NSIDENT) }}
         '{' declaration* '}'                    {{ yy.namespace_close() }}
+rule topincludes:
+        'include' STRING ';'                    {{ yy.handle_include (unquote (STRING), self._scanner) }}
 rule declaration:
           ';'
         | const_assignment

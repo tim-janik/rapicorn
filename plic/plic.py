@@ -51,11 +51,13 @@ def main():
       input_string = ""
     filename = '<stdin>'
     print
-  result, error, caret = parse_main (config, input_string, filename)
+  result, error, caret, inclist = parse_main (config, input_string, filename)
   if error:
     print >>sys.stderr, error
     if caret:
       print >>sys.stderr, caret
+    for ix in inclist:
+      print >>sys.stderr, ix
     sys.exit (7)
   __import__ (config['backend']).generate (result, **config)
 
@@ -134,13 +136,17 @@ if len (sys.argv) > 2 and sys.argv[1] == '--plic-fail-file-test':
     if ls and not ls.startswith ('//'):
       filename = "%s:%d" % (files[0], n)
       Parser.yy.reset()
-      result, error, caret = parse_main (config,
-                                         'namespace PlicFailTest { ' + line + '\n}',
-                                         filename, linenumbers = false)
+      if line.startswith ("include"):
+        code = line
+      else:
+        code = 'namespace PlicFailTest { ' + line + '\n}'
+      result, error, caret, inclist = parse_main (config, code, filename, linenumbers = false)
       if error:
         print error
         if caret:
           print caret
+        for ix in inclist:
+          print ix
         # expected a failing tests
       else:
         raise Exception (filename + ': uncaught test:', line)

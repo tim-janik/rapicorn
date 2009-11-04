@@ -255,3 +255,11 @@ interface Child : Parent {}; // interface inheritance
 interface Descendant : Parent, Child {}; // multiple interface inheritance
 interface GrandChild : Parent, Child, Descendant {}; // multiple interface inheritance
 }
+
+include "include-p1.idl"; // test includes
+namespace IncludeCheck {
+interface SomeInterface {
+  void use_record (IncludeTest::SomeRecord rr);
+};
+}
+

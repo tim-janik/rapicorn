@@ -22,10 +22,10 @@
 ./testfail.idl:19: Trying to find ';': STRING, IDENT, r'\)', '_', r'\*\*', r'\*', r'/', r'%', r'\+', r'-', ';', ',', '}', got '_'
 >  namespace PlicFailTest { Const tmp = "invalid" _("i18n string") "concatenation";
 >                                                 ^
-./testfail.idl:21: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF
+./testfail.idl:21: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
 >  namespace PlicFailTest { FrobCheck tmp = 1; // FrobCheck is no type
 >                          ^
-./testfail.idl:23: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF
+./testfail.idl:23: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
 >  namespace PlicFailTest { Const zzz = 1; zzz tmp = 1; // zzz is no type
 >                                         ^
 ./testfail.idl:25: Trying to find one of '=', ';'
@@ -118,7 +118,7 @@
 ./testfail.idl:76: TypeError: redefining existing identifier: void
 >  namespace PlicFailTest { Const void = 17; // invalid constant name
 >                                          ^
-./testfail.idl:77: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF
+./testfail.idl:77: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
 >  namespace PlicFailTest { void xy = 17; // invalid property type
 >                          ^
 ./testfail.idl:78: Trying to find one of '::', IDENT
@@ -127,3 +127,8 @@
 ./testfail.idl:79: TypeError: unknown type: 'void'
 >  ...PlicFailTest { interface I { Num method (Num n, void v); }; // invalid argument type
 >                                                          ^
+include-f2.idl:2:3: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
+>    unexisting_Num var;
+>    ^
+include-f1.idl:1: note: included "include-f2.idl" from here
+./testfail.idl:81:1: note: included "include-f1.idl" from here

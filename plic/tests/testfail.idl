@@ -77,3 +77,5 @@ Const void = 17; // invalid constant name
 void xy = 17; // invalid property type
 interface I { Num method (void); }; // invalid argument type
 interface I { Num method (Num n, void v); }; // invalid argument type
+
+include "include-f1.idl"; // test include error messages
