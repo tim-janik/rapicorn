@@ -7,7 +7,6 @@ noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
 
 EXTRA_DIST += testpass.idl testfail.idl
-NOUPDATE    = true
 DEBUG	    =
 
 # tests for auxillary data in testpass.idl

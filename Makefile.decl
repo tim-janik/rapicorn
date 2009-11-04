@@ -123,6 +123,7 @@ PERFTESTS=
 ALLTESTS = $(TESTS) $(SLOWTESTS) $(PERFTESTS) # used in noinst_PROGRAMS
 
 # === Test-rule macros ===
+NOUPDATE = true
 # $(call TSTTITLE, [TESTNAME]) - print test title
 TSTTITLE= $(strip	\
 	TST_TitleLeft=`printf %-69s "$(strip $(or $(1), $(@F))):"` ; \
