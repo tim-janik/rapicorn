@@ -13,8 +13,10 @@ GENERATED_CLEANFILES=
 GENERATED=$(strip $(GENERATED_EXTRA_DIST) $(GENERATED_CLEANFILES))
 EXTRA_DIST=$(GENERATED_EXTRA_DIST)
 
-# general verbosity prefix
+# Verbosity macros
 _@=@
+STDERR_@ = $(_@:%=2>/dev/null)
+STDOUT_@ = $(_@:%=1>/dev/null)
 
 # === distfile-list ===
 # recursive rule supported by all Makefiles to generate a list of all files
