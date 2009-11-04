@@ -27,12 +27,12 @@ CONFIGVARS = \
 
 # build plic executable
 ${PLICV}: plic.py Parser.py
-	sed <$< >xgen-$(@F)			\
+	$(_@) sed <$< >xgen-$(@F)			\
 	  -e '1,1s|#!/usr/bin/env python\([0-9]\+\(\.[0-9]\+\)\?\)\?|#!${PYTHON}|' \
 	  -e '1,24s|^ *#@PKGINSTALL_CONFIGVARS_IN24LINES@|  ${CONFIGVARS}|'
-	chmod +x xgen-$(@F)
-	cp -p xgen-$(@F) $@
-	rm -f xgen-$(@F) xgen-$(@F).errors
+	$(_@) chmod +x xgen-$(@F)
+	$(_@) cp -p xgen-$(@F) $@
+	$(_@) rm -f xgen-$(@F) xgen-$(@F).errors
 EXTRA_DIST += plic.py
 
 # install plic support module yapps2runtime.py
@@ -43,17 +43,17 @@ pyutils_PYTHON = Decls.py Parser.py AuxData.py yapps2runtime.py ${plicbackends} 
 # tests
 TESTPLIC = PYTHONPATH="$$PYTHONPATH:$(srcdir)" ./${PLICV}
 installcheck-local:
-	${TESTPLIC} --cc-type-package-parser | grep -q struct
+	$(_@)  ${TESTPLIC} --cc-type-package-parser | grep -q struct
 check-outputs:
-	${TESTPLIC} --list-formats | grep -q PLIC
+	$(_@) ${TESTPLIC} --list-formats | grep -q PLIC
 check-local: check-outputs
 
 # install/uninstall a "plic" link to "plic-PLIC_VERSION"
 install-exec-hook:
-	cd $(DESTDIR)$(bindir)			\
-	&& test -x ${PLICL}			\
-	|| $(LN_S) ${PLICV} ${PLICL}
+	$(_@) cd $(DESTDIR)$(bindir)			\
+	  && test -x ${PLICL}			\
+	  || $(LN_S) ${PLICV} ${PLICL}
 uninstall-hook:	# runs after ${PLICV} was uninstalled
-	cd $(DESTDIR)$(bindir)			\
-	&& test ! -L ${PLICL} -o -x ${PLICL}	\
-	|| rm -f ${PLICL}
+	$(_@) cd $(DESTDIR)$(bindir)			\
+	  && test ! -L ${PLICL} -o -x ${PLICL}	\
+	  || rm -f ${PLICL}
