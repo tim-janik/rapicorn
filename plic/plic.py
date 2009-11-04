@@ -120,14 +120,14 @@ def parse_files_and_args():
   config['files'] += list (args)
   return config
 
-if len (sys.argv) > 2 and sys.argv[1] == '--plic-fail-file-test':
+failtestoption = '--plic-fail-file-test'
+if len (sys.argv) > 2 and failtestoption in sys.argv:
   import tempfile, os
-  infilename = sys.argv[2]
-  sys.argv.remove (sys.argv[1]) # remove --plic-fail-file-test
+  sys.argv.remove (failtestoption) # remove --plic-fail-file-test
   config = parse_files_and_args()
   files = config['files']
   if len (files) != 1:
-    raise Exception ("plic-fail-file-test requires a single input file")
+    raise Exception (failtestoption + ': single input file required')
   infile = open (files[0], 'r')
   n = 0
   for line in infile:

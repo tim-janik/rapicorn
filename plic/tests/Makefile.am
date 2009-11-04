@@ -1,7 +1,7 @@
 # PLIC - Pluggable IDL Compiler
 include $(top_srcdir)/Makefile.decl
 
-TESTPLIC = PYTHONPATH="$$PYTHONPATH:$(srcdir)/.." ../plic-@PLIC_VERSION@ $(and $(DEBUG), --plic-debug)
+TESTPLIC = PYTHONPATH="$$PYTHONPATH:$(srcdir)/.." ../plic-@PLIC_VERSION@ $(DEBUG:%=--plic-debug)
 
 noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
