@@ -14,9 +14,12 @@ TESTPASS_AUXTESTS = --aux-test label=auxtest1 --aux-test auxtest2 --aux-test aux
 		    --aux-test default=10007 --aux-test hints=rw
 
 installcheck-local: $(srcdir)/testpass.idl
-	plic-@PLIC_VERSION@ --cc-type-package-parser | grep -q struct
-	plic-@PLIC_VERSION@ --list-formats > /dev/null
-	plic-@PLIC_VERSION@ $(srcdir)/testpass.idl > /dev/null
+	@$(call TSTTITLE, plic-@PLIC_VERSION@ --cc-type-package-parser)
+	$(_@) plic-@PLIC_VERSION@ --cc-type-package-parser | grep -q struct ; $(call TSTRESULT)
+	@$(call TSTTITLE, plic-@PLIC_VERSION@ --list-formats)
+	$(_@) plic-@PLIC_VERSION@ --list-formats > /dev/null ; $(call TSTRESULT)
+	@$(call TSTTITLE, plic-@PLIC_VERSION@ testpass.idl)
+	$(_@) plic-@PLIC_VERSION@ $(srcdir)/testpass.idl > /dev/null ; $(call TSTRESULT)
 
 
 check-pass:	testpass.idl
