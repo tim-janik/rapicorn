@@ -21,24 +21,21 @@ installcheck-local: $(srcdir)/testpass.idl
 
 
 check-pass:	testpass.idl
-	@TL=`printf %-69s "$(@F):"` && TR=`printf %70s "$$TL"` && echo -n "$$TR"
-	@${TESTPLIC} $(srcdir)/testpass.idl > /dev/null && echo OK
+	@$(call TSTTITLE)
+	$(_@) ${TESTPLIC} $(srcdir)/testpass.idl > /dev/null ; $(call TSTRESULT)
 
 check-fail:	testfail.idl
-	@TL=`printf %-69s "$(@F):"` && TR=`printf %70s "$$TL"` && echo -n "$$TR"
-	@${TESTPLIC} --plic-fail-file-test $(srcdir)/testfail.idl >xtmp-testfail.out
-	@${NOUPDATE} || cp -v xtmp-testfail.out testfail.ref
-	@cmp --quiet testfail.ref xtmp-testfail.out && echo OK || \
-	  { echo FAIL; diff -up testfail.ref xtmp-testfail.out; exit 1; }
-	@rm -f xtmp-testfail.out
+	@$(call TSTTITLE)
+	$(_@) ${TESTPLIC} --plic-fail-file-test $(srcdir)/testfail.idl > $(TSTOUT)
+	@$(call TSTCMP, testfail.ref)
 
 check-TypePackage: ptptest
-	@TL=`printf %-69s "$(@F):"` && TR=`printf %70s "$$TL"` && echo -n "$$TR"
-	@${TESTPLIC} $(srcdir)/testpass.idl -O TypePackage && \
-	  ./ptptest plic.out $(TESTPASS_AUXTESTS) > /dev/null && echo OK
-	@rm -f plic.out
+	@$(call TSTTITLE)
+	$(_@) ${TESTPLIC} $(srcdir)/testpass.idl -O TypePackage
+	$(_@) ./ptptest plic.out $(TESTPASS_AUXTESTS) > /dev/null ; $(call TSTRESULT)
+	$(_@) rm -f plic.out
 
 check:	check-pass check-fail check-TypePackage
 
 force-update:
-	$(MAKE) NOUPDATE=false check-fail
+	$(MAKE) NOUPDATE=false check
