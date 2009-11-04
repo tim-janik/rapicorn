@@ -245,6 +245,50 @@ def ANS (issignal, identifier): # assert non-signal decl
   if issignal:
     raise TypeError ('non-method invalidly declared as \'signal\': %s' % identifier)
 
+class Error (Exception):
+  def __init__ (self, msg, ecaret = None):
+    Exception.__init__ (self, msg)
+    self.ecaret = ecaret
+    self.exception = None       # chain
+
+def parse_try (input_string, filename, linenumbers = True):
+  xscanner = IdlSyntaxParserScanner (input_string, filename = filename)
+  xparser  = IdlSyntaxParser (xscanner)
+  result, exmsg = (None, None)
+  try:
+    result = xparser.IdlSyntax ()
+  except AssertionError: raise  # pass on language exceptions
+  except Error: raise           # preprocessed parsing exception
+  except runtime.SyntaxError, synex:
+    exmsg = synex.msg
+  except Exception, ex:
+    exstr = str (ex).strip()
+    if 0 or not exstr:
+      raise                     # pass exceptions on when debugging
+    exmsg = '%s: %s' % (ex.__class__.__name__, exstr)
+  if exmsg:
+    pos = xscanner.get_pos()
+    file_name, line_number, column_number = pos
+    if linenumbers:
+      errstr = '%s:%d:%d: %s' % (file_name, line_number, column_number, exmsg)
+    else:
+      errstr = '%s: %s' % (file_name, exmsg)
+    class WritableObject:
+      def __init__ (self): self.content = []
+      def write (self, string): self.content.append (string)
+    wo = WritableObject()
+    xscanner.print_line_with_pointer (pos, out = wo)
+    ecaret = ''.join (wo.content).strip()
+    raise Error (errstr, ecaret)
+  return result
+
+def parse_main (input_string, filename, linenumbers):
+  try:
+    result = parse_try (input_string, filename, linenumbers)
+    return (result, None, None)
+  except Error, ex:
+    return (None, str (ex), ex.ecaret)
+
 %%
 parser IdlSyntaxParser:
         ignore:             r'\s+'                          # spaces

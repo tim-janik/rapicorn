@@ -33,33 +33,9 @@ class ParseError (Exception):
     Exception.__init__ (self, msg)
     self.kind = kind
 
-def parse_main (config, input_string, filename):
-  def runtime_strerror (exception, scanner):
-    class WritableObject:
-      def __init__ (self): self.content = []
-      def write (self, string): self.content.append (string)
-    wo = WritableObject()
-    runtime.print_error (exception, isp._scanner, outputfile = wo)
-    return ''.join (wo.content).strip()
+def parse_main (config, input_string, filename, linenumbers = True):
   Parser.yy.configure (config)
-  isp = Parser.IdlSyntaxParser (Parser.IdlSyntaxParserScanner (input_string, filename = filename))
-  try:
-    #runtime.wrap_error_reporter (isp, 'IdlSyntax') # parse away
-    result = isp.IdlSyntax ()
-    return result
-  except runtime.SyntaxError, ex:
-    ex.context = None # prevent context printing
-    exstr = runtime_strerror (ex, isp._scanner)
-    raise ParseError (exstr, "SyntaxError")
-  except AssertionError: raise
-  except Exception, ex:
-    if debugging: raise # pass exceptions on when debugging
-    exstr = str (ex)
-    if exstr: exstr = ': ' + exstr
-    exstr = runtime_strerror (runtime.SyntaxError (None,
-                                                   '%s%s' % (ex.__class__.__name__, exstr)),
-                              isp._scanner)
-    raise ParseError (exstr)
+  return Parser.parse_main (input_string, filename, linenumbers)
 
 def main():
   config = parse_files_and_args()
@@ -75,10 +51,11 @@ def main():
       input_string = ""
     filename = '<stdin>'
     print
-  try:
-    result = parse_main (config, input_string, filename)
-  except ParseError, pe:
-    print >>sys.stderr, pe
+  result, error, caret = parse_main (config, input_string, filename)
+  if error:
+    print >>sys.stderr, error
+    if caret:
+      print >>sys.stderr, caret
     sys.exit (7)
   __import__ (config['backend']).generate (result, **config)
 
@@ -155,12 +132,13 @@ if len (sys.argv) > 2 and sys.argv[1] == '--plic-fail-file-test':
     if ls and not ls.startswith ('//'):
       filename = "%s:%d" % (files[0], n)
       Parser.yy.reset()
-      try:
-        result = parse_main (config,
-                             'namespace PlicFailTest { ' + line + '\n}',
-                             filename)
-      except ParseError, pe:
-        print '%s:%d:' % (files[0], n), pe
+      result, error, caret = parse_main (config,
+                                         'namespace PlicFailTest { ' + line + '\n}',
+                                         filename, linenumbers = false)
+      if error:
+        print error
+        if caret:
+          print caret
         # expected a failing tests
       else:
         raise Exception (filename + ': uncaught test:', line)
