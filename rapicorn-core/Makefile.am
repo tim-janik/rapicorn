@@ -33,9 +33,6 @@ rapicorn_cc_sources = $(strip 		\
         pixmap.cc	regex.cc	\
 	values.cc types.cc models.cc    \
 )
-rapicorn_uncompiled_sources = $(strip	\
-	types-ptpp.cc			\
-)
 rapicorn_private_files = $(strip	\
         rapicornsignalslot.hh		\
         rapicornsignaltemplate.hh	\
@@ -48,7 +45,7 @@ AM_CXXFLAGS = @FPU_FLAGS@
 # === libraries ===
 topincludedir   = $(includedir)/rapicorn@RAPICORN_RELEASE@
 topinclude_DATA = $(rapicorn_top_headers)
-EXTRA_DIST     += $(rapicorn_top_headers) $(rapicorn_uncompiled_sources)
+EXTRA_DIST     += $(rapicorn_top_headers)
 # librapicorn-core
 noinst_LTLIBRARIES			    = librapicorncore@RAPICORN_RELEASE@.la # hardcoded -release $(RAPICORN_RELEASE)
 librapicorncore@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/rapicorn-core
@@ -87,6 +84,11 @@ types-ptpp.cc: # FIXME: depend on a .idl file for appropriate regeneration
 	:; $(PLICV) --cc-type-package-parser > gen-$@
 	mv gen-$@ $@
 types.cc: types-ptpp.cc
+CLEANFILES += types-ptpp.cc
+check-ptpp-version:
+	@$(call TSTTITLE)
+	@$(call TSTDIFF, $(top_srcdir)/plic/PlicTypePackage.cc, types-ptpp.cc)
+check: # check-ptpp-version # sanity check the --cc-type-package-parser rule
 
 # === types-zgen.c ===
 types-zgen.c:  ./rapicorn-zintern $(srcdir)/types-std.idl
