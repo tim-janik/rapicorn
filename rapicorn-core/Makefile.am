@@ -96,13 +96,13 @@ types-zgen.c:  ./rapicorn-zintern $(srcdir)/types-std.idl
 	./rapicorn-zintern -b RAPICORNSTD_RODATA -n ./types-std.tpg | \
 	  sed -e 's/12=Rapicorn_STD/12=Rapicorn*STD/'	\
 	      -e 's/__i\.\.3=N_m/__i..3=Num/'			\
-	      -e 's/__f\.\.4=Re_l/__f..4=Real/'			\
+	      -e 's/__d\.\.4=Re_l/__d..4=Real/'			\
 	      -e 's/__s\.\.6=Str_ng/__s..6=String/'		\
-	      -e 's/__f\.\.5=Array/__a..5=Array/'		> xgen-$(@F)
+	      -e 's/__d\.\.5=Array/__a..5=Array/'		> xgen-$(@F)
 	: # validate standard type adaptions
 	test `grep  -F	-e '12=Rapicorn*STD'	\
 			-e '__i..3=Num'		\
-			-e '__f..4=Real'	\
+			-e '__d..4=Real'	\
 			-e '__s..6=String'	\
 			-e '__a..5=Array'   xgen-$(@F) | wc -l` = 5
 	rm -f ./types-std.tpg

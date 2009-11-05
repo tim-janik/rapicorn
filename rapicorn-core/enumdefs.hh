@@ -231,9 +231,10 @@ inline StateType& operator|= (StateType &s1, StateType s2) { s1 = s1 | s2; retur
 typedef enum /*<enum>*/
 {
   NUM            = 'i',
-  REAL           = 'f',
+  REAL           = 'd',
   STRING         = 's',
   ARRAY          = 'a',
+  FUNC           = 'f',
   OBJECT         = 'c',
   INTERFACE      = OBJECT,
   CHOICE         = ('E' * 256) + STRING,

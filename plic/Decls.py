@@ -26,7 +26,7 @@ class BaseDecl (object):
     self.hint = ''
     self.docu = ()
 
-VOID, NUM, REAL, STRING, ENUM, RECORD, SEQUENCE, INTERFACE = tuple ('vifserqc')
+VOID, NUM, REAL, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE = tuple ('vidserqfc')
 
 class Namespace (BaseDecl):
   def __init__ (self, name):
@@ -56,7 +56,7 @@ class Namespace (BaseDecl):
 class TypeInfo (BaseDecl):
   def __init__ (self, name, storage):
     super (TypeInfo, self).__init__()
-    assert storage in (VOID, NUM, REAL, STRING, ENUM, RECORD, SEQUENCE, INTERFACE)
+    assert storage in (VOID, NUM, REAL, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE)
     self.name = name
     self.storage = storage
     self.options = []           # holds: (ident, label, blurb, number)
@@ -65,10 +65,13 @@ class TypeInfo (BaseDecl):
       self.fields = []          # holds: (ident, TypeInfo)
     if self.storage == SEQUENCE:
       self.elements = None      # holds: ident, TypeInfo
+    if self.storage == FUNC:
+      self.args = []            # holds: (ident, TypeInfo)
+      self.rtype = None         # holds: TypeInfo
     if self.storage == INTERFACE:
       self.prerequisites = []
-      self.methods = []
-      self.signals = []
+      self.methods = []         # holds: TypeInfo
+      self.signals = []         # holds: TypeInfo
     self.auxdata = {}
   def clone (self, newname = None):
     if newname == None: newname = self.name
@@ -76,6 +79,10 @@ class TypeInfo (BaseDecl):
     ti.options += self.options
     if hasattr (self, 'fields'):
       ti.fields += self.fields
+    if hasattr (self, 'args'):
+      ti.args += self.args
+    if hasattr (self, 'rtype'):
+      ti.rtype = self.rtype
     if hasattr (self, 'elements'):
       ti.elements = self.elements
     if hasattr (self, 'prerequisites'):
@@ -100,20 +107,25 @@ class TypeInfo (BaseDecl):
     assert isinstance (ident, str)
     assert isinstance (type, TypeInfo)
     self.fields += [ (ident, type) ]
-  def add_method (self, ident, type, args, issignal = False):
-    assert self.storage == INTERFACE
+  def add_arg (self, ident, type):
+    assert self.storage == FUNC
     assert isinstance (ident, str)
     assert isinstance (type, TypeInfo)
-    assert isinstance (args, list)
-    for arg in args:
-      assert isinstance (arg, tuple)
-      arg_ident, arg_type = arg
-      assert isinstance (arg_ident, str)
-      assert isinstance (arg_type, TypeInfo)
+    self.args += [ (ident, type) ]
+  def set_rtype (self, type):
+    assert self.storage == FUNC
+    assert isinstance (type, TypeInfo)
+    assert self.rtype == None
+    self.rtype = type
+  def add_method (self, ftype, issignal = False):
+    assert self.storage == INTERFACE
+    assert isinstance (ftype, TypeInfo)
+    assert ftype.storage == FUNC
+    assert isinstance (ftype.rtype, TypeInfo)
     if issignal:
-      self.signals += [ (ident, type, args) ]
+      self.signals += [ ftype ]
     else:
-      self.methods += [ (ident, type, args) ]
+      self.methods += [ ftype ]
   def add_prerequisite (self, type):
     assert self.storage == INTERFACE
     assert isinstance (type, TypeInfo)

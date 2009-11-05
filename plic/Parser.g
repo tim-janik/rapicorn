@@ -100,13 +100,15 @@ class YYGlobals (object):
       mdict[method[0]] = true
       method_args = method[3]
       self.parse_assign_auxdata (method_args)
-      adict = {}; args = []
+      mtype = Decls.TypeInfo (method[0], Decls.FUNC)
+      mtype.set_rtype (method[1])
+      adict = {}
       for arg in method_args:
         if adict.has_key (arg[0]):
           raise NameError ('duplicate method arg name: ' + method[0] + ' (..., ' + arg[0] + '...)')
         adict[arg[0]] = true
-        args += [ (arg[0], arg[1]) ]
-      iface.add_method (method[0], method[1], args, method[0] in sigset)
+        mtype.add_arg (arg[0], arg[1])
+      iface.add_method (mtype, method[0] in sigset)
   def parse_assign_auxdata (self, fieldlist):
     for field in fieldlist:
       if not field[2]:

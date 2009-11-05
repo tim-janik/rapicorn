@@ -74,13 +74,15 @@ class Generator:
       result += encode_string (ad[0] + '=' + astr)
     return result
   def type_key (self, type_info):
-    s = { Decls.NUM       : '\n__i',
-          Decls.REAL      : '\n__f',
+    s = { Decls.VOID      : '\n__v',
+          Decls.NUM       : '\n__i',
+          Decls.REAL      : '\n__d',
           Decls.STRING    : '\n__s',
-          Decls.INTERFACE : '\n__c',
           Decls.ENUM      : '\n_Es',
           Decls.SEQUENCE  : '\n_Qa',
           Decls.RECORD    : '\n_Ra',
+          Decls.FUNC      : '\n__f',
+          Decls.INTERFACE : '\n__c',
           }[type_info.storage]
     return s
   reference_types = (Decls.ENUM, Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE)
