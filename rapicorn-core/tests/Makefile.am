@@ -68,6 +68,7 @@ EXTRA_DIST        += testtypes.idl testtypes.tpg
 
 %.tpg: $(srcdir)/%.idl
 	$(PLICV) $< -O TypePackage -o $@
+CLEANFILES += *.tpg
 
 # === test rules ===
 # process handle
