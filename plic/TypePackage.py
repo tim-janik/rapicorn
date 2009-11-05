@@ -93,10 +93,9 @@ class Generator:
     else:
       s = self.type_key (tp)
     s += encode_string (field_name)
-    s += self.aux_strings (type_info.auxdata)
-    if tp.storage in (Decls.ENUM, Decls.SEQUENCE,
-                      Decls.RECORD, Decls.INTERFACE):
+    if tp.storage in self.reference_types:
       s += encode_string (tp.full_name())
+    s += self.aux_strings (type_info.auxdata)
     return s
   def generate_type (self, type_info):
     tp = type_info

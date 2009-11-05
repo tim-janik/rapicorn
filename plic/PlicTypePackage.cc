@@ -148,16 +148,16 @@ struct TypeInfo {
 /* TypeInfo Layout:
  * - __?                        // storage type
  * - llll TypeName              // type or field name
+ * - _Ts: llll TypeReference    // non-fundamental type references
  * - kkkk                       // number of aux entries
  * - [ llll AuxEntry ]*         // kkkk times aux entry strings
- * - _Ts: llll TypeReference    // non-fundamental type references
  * - _Es: nnnn                  // number of values for choice types
  * - _Es: [ llll Ident llll Label llll Blurb ]+
+ * - __c: nnnn                  // number of prerequisites for interface types
+ * - __c: [ llll PrerequisiteName ]+
  * - _Ra: nnnn                  // number of fields for record types
  * - _Ra: [ _TYPE_INFO_ ]+
  * - _Qa: _TYPE_INFO_           // field info for sequence types
- * - __c: nnnn                  // number of prerequisites for interface types
- * - __c: [ llll PrerequisiteName ]+
  */
 
 String
