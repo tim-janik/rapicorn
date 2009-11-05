@@ -138,16 +138,21 @@ TSTREF = $(strip $(@F).ref)
 TSTRESULT = _e=$(or $(1), $$?);$(call TSTRESULT_MSG, $$_e);[ $$_e = 0 ]||exit $$_e
 TSTRESULT_MSG = echo $${FAILOK:$$(($(or $(1), $$?)?0:6)):6}
 export FAILOK = FAIL  OK
-# $(call TSTCMP, [TSTREFERENCE], [TSTOUT]) - compare and print test result
+# $(call TSTCMP, [TSTREFERENCE], [TSTOUT]) - TSTCMP_KEEPOUT + TSTOUT cleanup
 TSTCMP = $(strip	\
 	$(TSTCMP_KEEPOUT) ; \
 	rm -f $(or $(2), $(call TSTOUT)) \
 )
+# $(call TSTCMP_KEEPOUT, [TSTREFERENCE], [TSTOUT]) - TSTDIFF + forced updates
 TSTCMP_KEEPOUT = $(strip	\
 	${FORCECHECKUPDATE} && { \
 	  cp $(if $(_@),, -v) $(or $(2), $(call TSTOUT)) $(or $(1), $(call TSTREF)) ; \
 	  FAILOK="FAIL "" FORCED" ; \
 	} ; \
+	$(TSTDIFF) \
+)
+# $(call TSTDIFF, [TSTREFERENCE], [TSTOUT]) - print test result diff, abort
+TSTDIFF = $(strip	\
 	cmp --quiet $(or $(1), $(call TSTREF)) $(or $(2), $(call TSTOUT)) ; \
 	_exitcode=$$? ; \
 	$(call TSTRESULT_MSG, $$_exitcode) ; \
