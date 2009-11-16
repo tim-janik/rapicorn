@@ -26,7 +26,7 @@ import Parser, Decls
 true, false, length = (True, False, len)
 
 debugging = 0 # causes exceptions to bypass IDL-file parser error handling
-backends = [ 'GType', 'TypePackage' ]
+backends = [ 'GType', 'TypePackage', 'Rapicorn' ]
 
 class ParseError (Exception):
   def __init__ (self, msg = "Parse Error", kind = "ParseError"):
