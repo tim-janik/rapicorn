@@ -23,7 +23,7 @@ import sys
 
 def generate (namespace_list, **args):
   for ns in namespace_list:
-    print "NAMESPACE:", ns
+    print "NAMESPACE:", ns.name
 
 # control module exports
 __all__ = ['generate']
