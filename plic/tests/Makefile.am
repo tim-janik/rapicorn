@@ -37,4 +37,9 @@ check-TypePackage: ptptest
 	$(_@) ./ptptest plic.out $(TESTPASS_AUXTESTS) > /dev/null ; $(call TSTRESULT)
 	$(_@) rm -f plic.out
 
-check:	check-pass check-fail check-TypePackage
+check-Rapicorn:
+	@$(call TSTTITLE)
+	$(_@) ${TESTPLIC} $(srcdir)/testpass.idl -O Rapicorn -o $(TSTOUT)
+	@$(call TSTCMP, testrapicorn.ref)
+
+check:	check-pass check-fail check-TypePackage check-Rapicorn

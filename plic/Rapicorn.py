@@ -150,12 +150,17 @@ def error (msg):
 
 def generate (namespace_list, **args):
   import sys, tempfile, os
-  config = { 'output' : 'plic.out' }
+  config = {}
   config.update (args)
   gg = Generator()
   textstring = gg.generate_namespaces (namespace_list)
-  print >>sys.stderr, "FIXME: need output file name handling"
-  print textstring,
+  outname = config.get ('output', '-')
+  if outname != '-':
+    fout = open (outname, 'w')
+    fout.write (textstring)
+    fout.close()
+  else:
+    print textstring,
 
 # control module exports
 __all__ = ['generate']
