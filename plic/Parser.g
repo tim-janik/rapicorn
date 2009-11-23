@@ -37,17 +37,18 @@ class YYGlobals (object):
     self.ecounter = None
     self.namespaces = []
     self.ns_list = [] # namespaces
+    self.impl_includes = false
   def configure (self, confdict):
     self.config = {}
     self.config.update (confdict)
   def nsadd_const (self, name, value):
     if not isinstance (value, (int, long, float, str)):
       raise TypeError ('constant expression does not yield string or number: ' + repr (typename))
-    self.namespaces[0].add_const (name, value)
+    self.namespaces[0].add_const (name, value, yy.impl_includes)
   def nsadd_typedef (self, fielddecl):
     typename,srctype,auxinit = fielddecl
     AIn (typename)
-    typeinfo = srctype.clone (typename)
+    typeinfo = srctype.clone (typename, yy.impl_includes)
     self.parse_assign_auxdata ([ (typename, typeinfo, auxinit) ])
     self.namespaces[0].add_type (typeinfo)
   def nsadd_evalue (self, evalue_ident, evalue_label, evalue_blurb, evalue_number = None):
@@ -61,7 +62,7 @@ class YYGlobals (object):
     yy.nsadd_const (evalue_ident, evalue_number)
     return (evalue_ident, evalue_label, evalue_blurb, evalue_number)
   def nsadd_enum (self, enum_name, enum_values):
-    enum = Decls.TypeInfo (enum_name, Decls.ENUM)
+    enum = Decls.TypeInfo (enum_name, Decls.ENUM, yy.impl_includes)
     for ev in enum_values:
       enum.add_option (*ev)
     self.namespaces[0].add_type (enum)
@@ -69,7 +70,7 @@ class YYGlobals (object):
     AIn (name)
     if len (rfields) < 1:
       raise AttributeError ('invalid empty record: %s' % name)
-    rec = Decls.TypeInfo (name, Decls.RECORD)
+    rec = Decls.TypeInfo (name, Decls.RECORD, yy.impl_includes)
     self.parse_assign_auxdata (rfields)
     fdict = {}
     for field in rfields:
@@ -80,7 +81,7 @@ class YYGlobals (object):
     self.namespaces[0].add_type (rec)
   def nsadd_interface (self, name, prerequisites):
     AIn (name)
-    iface = Decls.TypeInfo (name, Decls.INTERFACE)
+    iface = Decls.TypeInfo (name, Decls.INTERFACE, yy.impl_includes)
     for prq in prerequisites:
       iface.add_prerequisite (yy.namespace_lookup (prq, astype = True))
     self.namespaces[0].add_type (iface)
@@ -100,7 +101,7 @@ class YYGlobals (object):
       mdict[method[0]] = true
       method_args = method[3]
       self.parse_assign_auxdata (method_args)
-      mtype = Decls.TypeInfo (method[0], Decls.FUNC)
+      mtype = Decls.TypeInfo (method[0], Decls.FUNC, yy.impl_includes)
       mtype.set_rtype (method[1])
       adict = {}
       for arg in method_args:
@@ -126,7 +127,7 @@ class YYGlobals (object):
     if len (sfields) > 1:
       raise AttributeError ('invalid multiple fields in sequence: %s' % name)
     self.parse_assign_auxdata (sfields)
-    seq = Decls.TypeInfo (name, Decls.SEQUENCE)
+    seq = Decls.TypeInfo (name, Decls.SEQUENCE, yy.impl_includes)
     seq.set_elements (sfields[0][0], sfields[0][1])
     self.namespaces[0].add_type (seq)
   def namespace_lookup (self, full_identifier, **flags):
@@ -170,18 +171,18 @@ class YYGlobals (object):
     return None
   def clone_type (self, typename, **flags):
     type_info = self.resolve_type (typename, flags.get ('void', 0))
-    return type_info.clone (type_info.name)
+    return type_info.clone (type_info.name, yy.impl_includes)
   def resolve_type (self, typename, void = False):
     type_info = self.namespace_lookup (typename, astype = True)
     if not type_info:   # builtin types
       type_info = {
-        'Bool'    : Decls.TypeInfo ('Bool',   Decls.NUM),
-        'Num'     : Decls.TypeInfo ('Num',    Decls.NUM),
-        'Real'    : Decls.TypeInfo ('Real',   Decls.REAL),
-        'String'  : Decls.TypeInfo ('String', Decls.STRING),
+        'Bool'    : Decls.TypeInfo ('Bool',   Decls.NUM, false),
+        'Num'     : Decls.TypeInfo ('Num',    Decls.NUM, false),
+        'Real'    : Decls.TypeInfo ('Real',   Decls.REAL, false),
+        'String'  : Decls.TypeInfo ('String', Decls.STRING, false),
       }.get (typename, None);
     if not type_info and void and typename == 'void':   # builtin void
-      type_info = Decls.TypeInfo ('void', Decls.VOID)
+      type_info = Decls.TypeInfo ('void', Decls.VOID, false)
     if not type_info:
       raise TypeError ('unknown type: ' + repr (typename))
     return type_info
@@ -200,11 +201,11 @@ class YYGlobals (object):
   def namespace_close (self):
     assert len (self.namespaces)
     self.namespaces = self.namespaces[1:]
-  def handle_include (self, includefilename, origscanner):
+  def handle_include (self, includefilename, origscanner, implinc):
     f = open (includefilename)
     input = f.read()
     try:
-      result = parse_try (input, includefilename)
+      result = parse_try (input, includefilename, implinc)
     except Error, ex:
       pos_file, pos_line, pos_col = origscanner.get_pos()
       ix = Error ('%s:%d: note: included "%s" from here' % (pos_file, pos_line, includefilename))
@@ -265,12 +266,15 @@ class Error (Exception):
     self.ecaret = ecaret
     self.exception = None       # chain
 
-def parse_try (input_string, filename, linenumbers = True):
+def parse_try (input_string, filename, implinc, linenumbers = True):
   xscanner = IdlSyntaxParserScanner (input_string, filename = filename)
   xparser  = IdlSyntaxParser (xscanner)
   result, exmsg = (None, None)
   try:
+    saved_impl_includes = yy.impl_includes
+    yy.impl_includes = implinc
     result = xparser.IdlSyntax ()
+    yy.impl_includes = saved_impl_includes
   except AssertionError: raise  # pass on language exceptions
   except Error: raise           # preprocessed parsing exception
   except runtime.SyntaxError, synex:
@@ -298,7 +302,7 @@ def parse_try (input_string, filename, linenumbers = True):
 
 def parse_main (input_string, filename, linenumbers):
   try:
-    result = parse_try (input_string, filename, linenumbers)
+    result = parse_try (input_string, filename, True, linenumbers)
     return (result, None, None, [])
   except Error, ex:
     el = []
@@ -330,7 +334,9 @@ rule namespace:
         'namespace' NSIDENT                     {{ yy.namespace_open (NSIDENT) }}
         '{' declaration* '}'                    {{ yy.namespace_close() }}
 rule topincludes:
-        'include' STRING ';'                    {{ yy.handle_include (unquote (STRING), self._scanner) }}
+        'include' STRING                        {{ include_file = unquote (STRING); as_impl = false }}
+        [ 'as implementation'                   {{ as_impl = true }}
+        ] ';'                                   {{ yy.handle_include (include_file, self._scanner, as_impl) }}
 rule declaration:
           ';'
         | const_assignment

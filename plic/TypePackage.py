@@ -125,6 +125,7 @@ class Generator:
     tsl = []
     # sort namespace types for binary lookups
     types = namespace.types()[:]        # list copy
+    # FIXME: filter types for isimpl
     types.sort (lambda o1, o2: cmp (o1.name, o2.name))
     # serialize types
     for tp in types:

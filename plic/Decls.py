@@ -35,9 +35,12 @@ class Namespace (BaseDecl):
     self.members = [] # holds: (name, content)
     self.type_dict = {}
     self.const_dict = {}
-  def add_const (self, name, content):
+    self.impl_set = set()
+  def add_const (self, name, content, isimpl):
     self.members += [ (name, content) ]
     self.const_dict[name] = self.members[-1]
+    if isimpl:
+      self.impl_set.add (name)
   def add_type (self, type):
     assert isinstance (type, TypeInfo)
     type.namespace = self
@@ -54,11 +57,12 @@ class Namespace (BaseDecl):
     return self.type_dict.get (name, fallback)
 
 class TypeInfo (BaseDecl):
-  def __init__ (self, name, storage):
+  def __init__ (self, name, storage, isimpl):
     super (TypeInfo, self).__init__()
     assert storage in (VOID, NUM, REAL, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE)
     self.name = name
     self.storage = storage
+    self.isimpl = isimpl
     self.options = []           # holds: (ident, label, blurb, number)
     if (self.storage == RECORD or
         self.storage == INTERFACE):
@@ -73,9 +77,9 @@ class TypeInfo (BaseDecl):
       self.methods = []         # holds: TypeInfo
       self.signals = []         # holds: TypeInfo
     self.auxdata = {}
-  def clone (self, newname = None):
+  def clone (self, newname, isimpl):
     if newname == None: newname = self.name
-    ti = TypeInfo (newname, self.storage)
+    ti = TypeInfo (newname, self.storage, isimpl)
     ti.options += self.options
     if hasattr (self, 'fields'):
       ti.fields += self.fields
