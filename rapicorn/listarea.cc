@@ -47,6 +47,7 @@ n_columns_from_type (const Type &type)
     case CHOICE:
     case TYPE_REFERENCE:
     case SEQUENCE:
+    case FUNC:
       return 1;
     case RECORD:
       return 1; // FIXME: type.n_fields();
