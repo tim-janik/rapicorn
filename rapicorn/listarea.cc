@@ -39,8 +39,8 @@ n_columns_from_type (const Type &type)
 {
   switch (type.storage())
     {
-    case NUM:
-    case REAL:
+    case INT:
+    case FLOAT:
     case STRING:
     case ARRAY:
     case OBJECT:

@@ -1,26 +1,26 @@
 
 namespace RapicornTest {
 
-  typedef String SimpleString;
+  typedef string SimpleString;
 
-  typedef Num NumWithFooAsLabel = Num ("Foo");
+  typedef int IntWithFooAsLabel = Int ("Foo");
 
-  typedef Real RealWithBlurbBlurb = Real ("Real Label", "Real Blurb", 97.97);
+  typedef float FloatWithBlurbBlurb = Float ("Float Label", "Float Blurb", 97.97);
 
-  typedef Num ExtendNumWithAux = Num ("Extended Num", "This Num demonstrates extensive auxillary data use",
+  typedef int ExtendIntWithAux = Int ("Extended int", "This int demonstrates extensive auxillary data use",
 				      33, -100, +100, -5, "rw:extra-option");
-  typedef String ExtendedString = String ("Extended String", "Demonstrate full string specification",
+  typedef string ExtendedString = String ("Extended String", "Demonstrate full string specification",
 					  "Default-String-Value", "ro");
   enum EnumType { ENUM_VALUE0, ENUM_VALUE1 };
 
   typedef EnumType Enum1;
 
   record SimpleRecord {
-    Num sample_integer;
+    int sample_integer;
   };
 
   sequence SimpleSequence {
-    Num sample_integer;
+    int sample_integer;
   };
 
 }

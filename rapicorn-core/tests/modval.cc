@@ -34,56 +34,56 @@ test_type_info ()
   Type t0 = Type::try_lookup (":invalid:::type^^^Definition");
   assert (t0.istype() == false);
   // ensure standard types
-  Type s1 = Type::try_lookup ("String");
+  Type s1 = Type::try_lookup ("string");
   assert (s1.storage() == STRING);
-  Type s2 = Type::try_lookup ("Num");
-  assert (s2.storage() == NUM);
-  Type s3 = Type::try_lookup ("Real");
-  assert (s3.storage() == REAL);
+  Type s2 = Type::try_lookup ("int");
+  assert (s2.storage() == INT);
+  Type s3 = Type::try_lookup ("float");
+  assert (s3.storage() == FLOAT);
   // type extraction by reference
-  Type t1 = Type::lookup ("RapicornTest::NumWithFooAsLabel");
+  Type t1 = Type::lookup ("RapicornTest::IntWithFooAsLabel");
   assert (t1.istype());
-  assert (t1.name() == "NumWithFooAsLabel");
-  assert (t1.storage() == NUM);
+  assert (t1.name() == "IntWithFooAsLabel");
+  assert (t1.storage() == INT);
   assert (t1.aux_string ("label") == "Foo");
   assert (t1.hints() == ":");
   // type extraction by pointer (need to check it didn't fail)
-  Type t2 = Type::lookup ("RapicornTest::RealWithBlurbBlurb");
+  Type t2 = Type::lookup ("RapicornTest::FloatWithBlurbBlurb");
   assert (t2.istype());
-  assert (t2.name() == "RealWithBlurbBlurb");
-  assert (t2.storage() == REAL);
-  assert (t2.aux_string ("blurb") == "Real Blurb");
+  assert (t2.name() == "FloatWithBlurbBlurb");
+  assert (t2.storage() == FLOAT);
+  assert (t2.aux_string ("blurb") == "Float Blurb");
   // check that type memory used above is still valid
-  assert (t1.name() + "-postfix" == String ("NumWithFooAsLabel-postfix"));
-  assert (t2.name() == String ("RealWithBlurbBlurb"));
+  assert (t1.name() + "-postfix" == String ("IntWithFooAsLabel-postfix"));
+  assert (t2.name() == String ("FloatWithBlurbBlurb"));
 }
 
 static void
 test_type_api ()
 {
-  { // Num
-    Type t = Type::lookup ("RapicornTest::ExtendNumWithAux");
+  { // Int
+    Type t = Type::lookup ("RapicornTest::ExtendIntWithAux");
     assert (t.istype());
-    assert (t.storage() == NUM);
-    assert (t.storage_name() == String ("NUM"));
+    assert (t.storage() == INT);
+    assert (t.storage_name() == String ("INT"));
     assert (t.name() == t.ident());
-    assert (t.ident() == "ExtendNumWithAux");
-    assert (t.label() == "Extended Num");
-    assert (t.blurb() == "This Num demonstrates extensive auxillary data use");
-    assert (t.aux_num ("default") == 33);
-    assert (t.aux_real ("step") == -5);
+    assert (t.ident() == "ExtendIntWithAux");
+    assert (t.label() == "Extended int");
+    assert (t.blurb() == "This int demonstrates extensive auxillary data use");
+    assert (t.aux_int ("default") == 33);
+    assert (t.aux_float ("step") == -5);
     assert (t.hints().find (":extra-option:") != String().npos);
   }
-  { // Real
-    Type t = Type::lookup ("RapicornTest::RealWithBlurbBlurb");
+  { // Float
+    Type t = Type::lookup ("RapicornTest::FloatWithBlurbBlurb");
     assert (t.istype());
-    assert (t.storage() == REAL);
-    assert (t.storage_name() == String ("REAL"));
+    assert (t.storage() == FLOAT);
+    assert (t.storage_name() == String ("FLOAT"));
     assert (t.name() == t.ident());
-    assert (t.ident() == "RealWithBlurbBlurb");
-    assert (t.label() == "Real Label");
-    assert (t.blurb() == "Real Blurb");
-    assert (t.aux_real ("default") == 97.97);
+    assert (t.ident() == "FloatWithBlurbBlurb");
+    assert (t.label() == "Float Label");
+    assert (t.blurb() == "Float Blurb");
+    assert (t.aux_float ("default") == 97.97);
     assert (t.hints() == ":");
   }
   { // String
@@ -137,47 +137,47 @@ test_type_api ()
 }
 
 static void
-test_value_num ()
+test_value_int ()
 {
-  AnyValue v1 (NUM);
-  assert (v1.num() == false);
+  AnyValue v1 (INT);
+  assert (v1.asint() == false);
   v1 = true;
-  assert (v1.num() == true);
+  assert (v1.asint() == true);
   AnyValue v2 (v1);
   assert ((bool) v2 == true);
   v1.set ((int64) false);
   assert ((bool) v1 == false);
   v2 = v1;
-  assert (v2.num() == false);
+  assert (v2.asint() == false);
 
   v1 = 0;
-  assert (v1.num() == 0);
+  assert (v1.asint() == 0);
   v1 = 1;
-  assert (v1.num() == 1);
+  assert (v1.asint() == 1);
   v1.set ("-2");
-  assert (v1.num() == -2.0);
+  assert (v1.asint() == -2.0);
   v1.set (9223372036854775807LL);
-  assert (v1.num() == 9223372036854775807LL);
+  assert (v1.asint() == 9223372036854775807LL);
   v1 = false;
-  assert (v1.num() == 0.0);
+  assert (v1.asint() == 0.0);
 }
 
 static void
 test_value_float ()
 {
-  AnyValue v1 (REAL);
-  assert (v1.real() == 0.0);
+  AnyValue v1 (FLOAT);
+  assert (v1.asfloat() == 0.0);
   v1 = 1.;
-  assert (v1.real() == 1.0);
+  assert (v1.asfloat() == 1.0);
   v1.set ("-1");
-  assert (v1.real() == -1.0);
+  assert (v1.asfloat() == -1.0);
   v1.set ((long double) 16.5e+6);
-  assert (v1.real() > 16000000.0);
-  assert (v1.real() < 17000000.0);
+  assert (v1.asfloat() > 16000000.0);
+  assert (v1.asfloat() < 17000000.0);
   v1 = 7;
-  assert (v1.real() == 7.0);
+  assert (v1.asfloat() == 7.0);
   v1 = false;
-  assert (v1.real() == 0.0);
+  assert (v1.asfloat() == 0.0);
 }
 
 static void
@@ -218,23 +218,23 @@ test_array ()
 {
   Array a;
   // [0] == head
-  a.push_head (AnyValue (NUM, 0));
-  assert (a[0].num() == 0);
+  a.push_head (AnyValue (INT, 0));
+  assert (a[0].asint() == 0);
   // [-1] == tail
-  assert (a[-1].num() == 0);
-  a.push_head (AnyValue (NUM, 1));
-  assert (a[0].num() == 1);
-  assert (a[-1].num() == 0);
+  assert (a[-1].asint() == 0);
+  a.push_head (AnyValue (INT, 1));
+  assert (a[0].asint() == 1);
+  assert (a[-1].asint() == 0);
   assert (a.count() == 2);
   // out-of-range-int => string-key conversion:
   a[99] = 5;
   assert (a.key (2) == "99"); // count() was 2 before inserting
-  assert (a[2].num() == 5);
-  assert (a[-1].num() == 5);
+  assert (a[2].asint() == 5);
+  assert (a[-1].asint() == 5);
   assert (5 == (int) a[-1]);
   assert (a.count() == 3);
-  a.push_tail (AnyValue (NUM, 2));
-  assert (a[-1].num() == 2);
+  a.push_tail (AnyValue (INT, 2));
+  assert (a[-1].asint() == 2);
   assert (a.count() == 4);
 
   a.clear();
@@ -246,7 +246,7 @@ test_array ()
   assert (a.pop_head().string() == "affe");
   assert (a.pop_head().string() == "bart");
   assert (a.key (-1) == "anum");
-  assert (a.pop_head().num() == 5);
+  assert (a.pop_head().asint() == 5);
   assert (a.count() == 0);
 
   const char *board[][8] = {
@@ -314,7 +314,7 @@ main (int   argc,
 
   Test::add ("/Type/type info", test_type_info);
   Test::add ("/Type/basics", test_type_api);
-  Test::add ("/Value/num", test_value_num);
+  Test::add ("/Value/int", test_value_int);
   Test::add ("/Value/float", test_value_float);
   Test::add ("/Value/string", test_value_string);
   Test::add ("/Array/AutoValue", test_array_auto_value);

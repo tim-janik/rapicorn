@@ -77,13 +77,13 @@ Type::aux_string (const String &auxname) const
 }
 
 double
-Type::aux_real (const String &auxname) const
+Type::aux_float (const String &auxname) const
 {
   return string_to_double (aux_string (auxname));
 }
 
 int64
-Type::aux_num (const String &auxname) const
+Type::aux_int (const String &auxname) const
 {
   return string_to_int (aux_string (auxname));
 }

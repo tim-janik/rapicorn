@@ -131,22 +131,22 @@ Const enum_math = V36 + V34 + V24 + V13 + V3;
 
 // record tests
 record XFooRecord {
-  Bool   single_bool;
-  Num    single_num;
-  Real   single_float;
-  String single_string;
-  Num    sibling1;
-  Num    sibling2;
-  Num    multi1;
-  Num    multi2;
-  Num    multi3;
-  Num    multi4;
+  bool   single_bool;
+  int    single_num;
+  float  single_float;
+  string single_string;
+  int    sibling1;
+  int    sibling2;
+  int    multi1;
+  int    multi2;
+  int    multi3;
+  int    multi4;
   ExtensiveEnum enum_field;
 };
 
 // sequence tests
 sequence XFooSequence {
-  Bool   single_bool;
+  bool   single_bool;
 };
 sequence ExtensiveEnumSequence {
   ExtensiveEnum enum_elements;
@@ -162,10 +162,10 @@ sequence NestedTypesSeq {
 };
 
 // typedef tests
-typedef Num  AliasNum;
-typedef Real AliasReal;
-typedef Bool AliasBool;
-typedef String AliasString;
+typedef int  AliasInt;
+typedef float AliasFloat;
+typedef bool AliasBool;
+typedef string AliasString;
 typedef XFooRecord AliasRecord;
 typedef XFooSequence AliasSequence;
 typedef ExtensiveEnum AliasEnum;
@@ -175,7 +175,7 @@ typedef ExtensiveEnum AliasEnum;
 // Test namespace continuation
 namespace MandatoryNamespace {
 record NewRecord {
-  Num            i;
+  int            i;
   Enum1          enum1;
   XFooSequence   xfs;
   NestedTypesRec ntr;
@@ -184,8 +184,8 @@ record NewRecord {
 // namespace nesting
 namespace Inner {
 record InnerRecord {
-  Num           x;
-  Num           y;
+  int           x;
+  int           y;
   NewRecord     rec;
 };
 } // Inner
@@ -222,31 +222,31 @@ Const dummy = FromInner + FromMiddle + FromOuter;
 namespace Auxdata {
 // FIXME: can't check auxdata of record fields yet
 //record RecordWithAuxdata {
-  typedef Num bar  = Num ("Bar", "The Bar number", 10007.000, -10, +10, +2, "rw");
-  typedef Real x   = Real ("auxtest1", "X coordinate", 0, 0, 100.0, +.5, "ro");
-  typedef String s = String ("auxtest2", "Specify text here", "auxtest3", "rw");
+  typedef int bar  = Int ("Bar", "The Bar number", 10007.000, -10, +10, +2, "rw");
+  typedef float x  = Float ("auxtest1", "X coordinate", 0, 0, 100.0, +.5, "ro");
+  typedef string s = String ("auxtest2", "Specify text here", "auxtest3", "rw");
 //};
 }
 
 namespace InterfaceTests {
 interface UIWidgetArea {
-  Real dummy;
-  Real simple_method ();
-  Real single_arg (Num n);
-  Real single_arg2 (Num n = Num ("Baz"));
-  Real two_args (Num n, Real r);
-  Real two_args2 (Num n = Num ("Baz"), Real r = Real ("Zonk"));
-  Real multi_args (Num n, Real r, Num i, String s = String ("String ding"), Real y);
-  Real self_method (UIWidgetArea ba1, InterfaceTests::UIWidgetArea ba2);
+  float dummy;
+  float simple_method ();
+  float single_arg (int n);
+  float single_arg2 (int n = Int ("Baz"));
+  float two_args (int n, float r);
+  float two_args2 (int n = Int ("Baz"), float r = Float ("Zonk"));
+  float multi_args (int n, float r, int i, string s = String ("String ding"), float y);
+  float self_method (UIWidgetArea ba1, InterfaceTests::UIWidgetArea ba2);
   void void_method();
   /* sample property accessors: */
-  String on_click2out ();
-  void   on_click2in  (String command);
+  string on_click2out ();
+  void   on_click2in  (string command);
   /* property: */
-  String on_click = String (_("On CLick"), _("Command on button1 click"), "rw");
+  string on_click = String (_("On CLick"), _("Command on button1 click"), "rw");
   /* signals: */
   signal void void_signal ();
-  signal Real sample_signal (UIWidgetArea ba1, Num someint);
+  signal float sample_signal (UIWidgetArea ba1, int someint);
   //bool check_activate (void) = signal (CollectUntil0);
   //void activate       (void);
 };
@@ -275,12 +275,12 @@ enum ClickType {
 
 interface ButtonArea // : public virtual Container, public virtual FocusFrame::Client
 {
-  signal<until0> Bool check_activate  ();
+  signal<until0> bool check_activate  ();
   signal void         activate        ();
   // protected: explicit              ButtonArea();
-  String        on_click;
-  String        on_click2;
-  String        on_click3;
+  string        on_click;
+  string        on_click2;
+  string        on_click3;
   ClickType     click_type;
   // virtual const PropertyList&   list_properties ();
 };

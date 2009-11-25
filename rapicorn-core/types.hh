@@ -48,8 +48,8 @@ public:
   String                hints           () const; // ensures enclosing ':'
   /* generic auxillary data */
   String                aux_string      (const String &auxname) const;
-  double                aux_real        (const String &auxname) const;
-  int64                 aux_num         (const String &auxname) const;
+  double                aux_float       (const String &auxname) const;
+  int64                 aux_int         (const String &auxname) const;
   /* retrieve types */
   static Type           try_lookup      (const String &full_name);
   static Type           lookup          (const String &full_name);

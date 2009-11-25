@@ -37,8 +37,8 @@ storage_name (BaseValue::Storage storage)
 {
   switch (storage)
     {
-    case BaseValue::NUM:        return "NUM";
-    case BaseValue::REAL:       return "REAL";
+    case BaseValue::INT:        return "INT";
+    case BaseValue::FLOAT:      return "FLOAT";
     case BaseValue::STRING:     return "STRING";
     case BaseValue::ARRAY:      return "ARRAY";
     case BaseValue::OBJECT:     return "OBJECT";
@@ -47,7 +47,7 @@ storage_name (BaseValue::Storage storage)
 }
 
 static const uint32 value_storage_types[] = {
-  BaseValue::NUM, BaseValue::REAL, BaseValue::STRING, BaseValue::ARRAY, BaseValue::OBJECT,
+  BaseValue::INT, BaseValue::FLOAT, BaseValue::STRING, BaseValue::ARRAY, BaseValue::OBJECT,
 };
 
 BaseValue::BaseValue (Storage value_type) :
@@ -84,7 +84,7 @@ BaseValue::operator= (const BaseValue &other)
     {
       switch (storage)
         {
-        case NUM: case REAL:
+        case INT: case FLOAT:
           u = other.u;
           break;
         case STRING:
@@ -111,7 +111,7 @@ BaseValue::operator= (const BaseValue &other)
   else
     switch (other.storage)
       {
-      case NUM: case REAL:
+      case INT: case FLOAT:
         this->set (other.u.i64);
         break;
       case STRING:
@@ -128,13 +128,13 @@ BaseValue::operator= (const BaseValue &other)
 }
 
 int64
-BaseValue::num () const
+BaseValue::asint () const
 {
   switch (storage)
     {
-    case NUM:
+    case INT:
       return u.i64;
-    case REAL:
+    case FLOAT:
       return (int64) roundl (u.ldf);
     case STRING:
       if (!u.p)
@@ -150,21 +150,21 @@ BaseValue::num () const
 }
 
 long double
-BaseValue::real () const
+BaseValue::asfloat () const
 {
   switch (storage)
     {
-    case REAL:
+    case FLOAT:
       return u.ldf;
     case STRING:
       if (!u.p)
         return 0;
       else
         return string_to_float (*(String*) u.p);
-    case NUM:
+    case INT:
     case ARRAY:
     case OBJECT:
-      return num();
+      return asint();
     }
   return 0.0;
 }
@@ -174,9 +174,9 @@ BaseValue::string () const
 {
   switch (storage)
     {
-    case NUM:
+    case INT:
       return string_from_int (u.i64);
-    case REAL:
+    case FLOAT:
       return string_from_double (u.ldf);
     case STRING:
       return u.p ? *(String*) u.p : "";
@@ -196,33 +196,33 @@ BaseValue::string_vector ()
 }
 
 void
-BaseValue::assign (int64 *nump)
+BaseValue::assign (int64 *i64p)
 {
-  int64 num = *nump;
-  try_retype (NUM);
+  int64 i64 = *i64p;
+  try_retype (INT);
   switch (storage)
     {
-    case NUM:
-      u.i64 = num;
+    case INT:
+      u.i64 = i64;
       break;
-    case REAL:
-      u.ldf = num;
+    case FLOAT:
+      u.ldf = i64;
       break;
     case STRING:
       if (!u.p)
         u.p = new String;
-      *(String*) u.p = string_from_int (num);
+      *(String*) u.p = string_from_int (i64);
       break;
     case ARRAY:
     case OBJECT:
-      if (num == 0) // emulate 'NULL Pointer'
+      if (i64 == 0) // emulate 'NULL Pointer'
         {
           unset();
           break;
         }
       goto default_error;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "num", storage_name (storage));
+      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "int", storage_name (storage));
     }
   changed();
 }
@@ -231,13 +231,13 @@ void
 BaseValue::assign (long double *ldfp)
 {
   long double ldf = *ldfp;
-  try_retype (REAL);
+  try_retype (FLOAT);
   switch (storage)
     {
-    case NUM:
+    case INT:
       u.i64 = (int64) roundl (ldf);
       break;
-    case REAL:
+    case FLOAT:
       u.ldf = ldf;
       break;
     case STRING:
@@ -266,10 +266,10 @@ BaseValue::assign (const String *sp)
   try_retype (STRING);
   switch (storage)
     {
-    case NUM:
+    case INT:
       u.i64 = string_to_int (s);
       break;
-    case REAL:
+    case FLOAT:
       u.ldf = string_to_double (s);
       break;
     case STRING:
@@ -282,7 +282,7 @@ BaseValue::assign (const String *sp)
     case OBJECT:
       goto default_error;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "String", storage_name (storage));
+      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "string", storage_name (storage));
     }
   changed();
 }
@@ -293,8 +293,8 @@ BaseValue::assign (const StringVector *svp)
   try_retype (ARRAY);
   switch (storage)
     {
-    case NUM:
-    case REAL:
+    case INT:
+    case FLOAT:
     case STRING:
     case OBJECT:
       goto default_error;
@@ -314,8 +314,8 @@ BaseValue::assign (const Array *ap)
   try_retype (ARRAY);
   switch (storage)
     {
-    case NUM:
-    case REAL:
+    case INT:
+    case FLOAT:
     case STRING:
     case OBJECT:
       goto default_error;
@@ -345,8 +345,8 @@ BaseValue::assign (Object *orefp)
         unref ((Object*) u.p);
       u.p = object;
       break;
-    case NUM:
-    case REAL:
+    case INT:
+    case FLOAT:
     case STRING:
     case ARRAY:
       goto default_error;
@@ -361,8 +361,8 @@ BaseValue::unset()
 {
   switch (storage)
     {
-    case NUM:
-    case REAL:
+    case INT:
+    case FLOAT:
       break;            // no release
     case STRING:
       if (u.p)
@@ -511,7 +511,7 @@ AnyValue
 Array::pop_head ()
 {
   if (array->strings.size() == 0)               // OOB access
-    return AnyValue (NUM, 0);
+    return AnyValue (INT, 0);
   StringValueMap::iterator it = array->vmap.find (array->strings[0]);
   array->strings.erase (array->strings.begin() + 0);
   AnyValue v = it->second;
@@ -523,7 +523,7 @@ AnyValue
 Array::pop_tail ()
 {
   if (array->strings.size() == 0)               // OOB access
-    return AnyValue (NUM, 0);
+    return AnyValue (INT, 0);
   size_t ilast = array->strings.size() - 1;
   StringValueMap::iterator it = array->vmap.find (array->strings[ilast]);
   array->strings.erase (array->strings.begin() + ilast);
@@ -555,7 +555,7 @@ Array::operator[] (int64 index) const
   return this->operator[] (key (index));
 }
 
-static const AnyValue array_default_value (NUM, 0);
+static const AnyValue array_default_value (INT, 0);
 
 AnyValue&
 Array::operator[] (const String &key)
@@ -759,12 +759,12 @@ Array::to_xml ()
       switch (v.storage)
         {
           Object *obj;
-        case BaseValue::NUM:
-          tag = "num";
+        case BaseValue::INT:
+          tag = "int";
           txt = v.string();
           break;
-        case BaseValue::REAL:
-          tag = "real";
+        case BaseValue::FLOAT:
+          tag = "float";
           txt = v.string();
           break;
         case BaseValue::STRING:

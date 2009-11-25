@@ -26,7 +26,7 @@ class BaseDecl (object):
     self.hint = ''
     self.docu = ()
 
-VOID, NUM, REAL, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE = tuple ('vidserqfc')
+VOID, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE = tuple ('vidserqfc')
 
 class Namespace (BaseDecl):
   def __init__ (self, name):
@@ -60,7 +60,7 @@ class TypeInfo (BaseDecl):
   collector = 'void'
   def __init__ (self, name, storage, isimpl):
     super (TypeInfo, self).__init__()
-    assert storage in (VOID, NUM, REAL, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE)
+    assert storage in (VOID, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE)
     self.name = name
     self.storage = storage
     self.isimpl = isimpl

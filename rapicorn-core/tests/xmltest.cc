@@ -100,10 +100,10 @@ xml_tree_test (void)
 
 static const String expected_xmlarray =
   "<Array>\n"
-  "  <row><num>0</num></row>\n"
-  "  <row key=\"001\"><num>1</num></row>\n"
-  "  <row><num>2</num></row>\n"
-  "  <row key=\"007\"><real>7.7000000000000002</real></row>\n"
+  "  <row><int>0</int></row>\n"
+  "  <row key=\"001\"><int>1</int></row>\n"
+  "  <row><int>2</int></row>\n"
+  "  <row key=\"007\"><float>7.7000000000000002</float></row>\n"
   "  <row key=\"string\">textSTRINGtext</row>\n"
   "  <row key=\"choice\">textCHOICEtext</row>\n"
   "  <row key=\"typename\">textTYPEtext</row>\n"

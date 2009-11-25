@@ -29,12 +29,12 @@ typedef ReferenceCountImpl  Object;
 /* --- Value handling --- */
 struct BaseValue {
   typedef enum {
-    NUM = Rapicorn::NUM, REAL = Rapicorn::REAL, STRING = Rapicorn::STRING,
+    INT = Rapicorn::INT, FLOAT = Rapicorn::FLOAT, STRING = Rapicorn::STRING,
     ARRAY = Rapicorn::ARRAY, OBJECT = Rapicorn::OBJECT,
   } Storage;
 private:
   union { int64 i64; long double ldf; void *p; } u;
-  /*Copy*/              BaseValue       (const BaseValue&) : storage (NUM) { /* No Copies */ }
+  /*Copy*/              BaseValue       (const BaseValue&) : storage (INT) { /* No Copies */ }
 protected:
   void                  assign          (bool                 *vbool)  { set ((int64) *vbool); }
   void                  assign          (char                 *vint)   { set ((int64) *vint); }
@@ -43,10 +43,10 @@ protected:
   void                  assign          (uint                 *vuint)  { set ((int64) *vuint); }
   void                  assign          (long                 *vint)   { set ((int64) *vint); }
   void                  assign          (unsigned long        *vuint)  { set ((int64) *vuint); }
-  void                  assign          (int64                *num);
-  void                  assign          (float                *real)   { set ((long double) *real); }
+  void                  assign          (int64                *i64);
+  void                  assign          (float                *vflt)   { set ((long double) *vflt); }
   void                  assign          (double               *vdble)  { set ((long double) *vdble); }
-  void                  assign          (long double          *real);
+  void                  assign          (long double          *ldbl);
   void                  assign          (const String         *string);
   void                  assign          (const char          **string) { set (String (*string)); }
   void                  assign          (char                **string) { set (String (*string)); }
@@ -63,8 +63,8 @@ protected:
 public:
   const Storage         storage;
   /* non-lvalue getters */
-  long double           real          () const;
-  int64                 num             () const;
+  long double           asfloat         () const;
+  int64                 asint           () const;
   const String          string          () const;
   /* lvalue getters */
   StringVector          string_vector   ();
@@ -74,13 +74,13 @@ public:
   template<typename T>
   void                  set             (T value) { assign (&value); }
   /* conversion */
-  bool                  convert         (bool*         = 0)     { return num(); }
-  int                   convert         (int*          = 0)     { return num(); }
-  uint                  convert         (uint*         = 0)     { return num(); }
-  int64                 convert         (int64*        = 0)     { return num(); }
-  float                 convert         (float*        = 0)     { return real(); }
-  double                convert         (double*       = 0)     { return real(); }
-  long double           convert         (long double*  = 0)     { return real(); }
+  bool                  convert         (bool*         = 0)     { return asint(); }
+  int                   convert         (int*          = 0)     { return asint(); }
+  uint                  convert         (uint*         = 0)     { return asint(); }
+  int64                 convert         (int64*        = 0)     { return asint(); }
+  float                 convert         (float*        = 0)     { return asfloat(); }
+  double                convert         (double*       = 0)     { return asfloat(); }
+  long double           convert         (long double*  = 0)     { return asfloat(); }
   String                convert         (String*       = 0)     { return string(); }
   StringVector          convert         (StringVector* = 0)     { return string_vector(); }
   Object&               convert         (Object*       = 0)     { return object(); }
@@ -95,8 +95,8 @@ public:
                                  V                value) : BaseValue (strg) { set (value); }
   explicit      AnyValue        (StorageType      strgt) : BaseValue (strgt) {}
   explicit      AnyValue        (Storage          strg)  : BaseValue (strg) {}
-  /*Con*/       AnyValue        (const BaseValue &other) : BaseValue (NUM) { *this = other; }
-  /*Copy*/      AnyValue        (const AnyValue  &other) : BaseValue (NUM) { *this = other; }
+  /*Con*/       AnyValue        (const BaseValue &other) : BaseValue (INT) { *this = other; }
+  /*Copy*/      AnyValue        (const AnyValue  &other) : BaseValue (INT) { *this = other; }
   template<typename T>
   AnyValue&     operator=       (T tvalue) { set (tvalue); return *this; }
   AnyValue&     operator=       (const BaseValue &other) { this->BaseValue::operator= (other); return *this; }
@@ -107,7 +107,7 @@ public:
 
 class AutoValue : public AnyValue {
 public:
-  /*Con*/       AutoValue       (long double           num)           : AnyValue (STRING)        { set (num); }
+  /*Con*/       AutoValue       (long double           ldbl)          : AnyValue (STRING)        { set (ldbl); }
   /*Con*/       AutoValue       (const char           *cstring)       : AnyValue (STRING)        { set (String (cstring)); }
   /*Con*/       AutoValue       (const String         &string)        : AnyValue (STRING)        { set (string); }
   /*Con*/       AutoValue       (const StringVector   &string_vector);

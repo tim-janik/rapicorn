@@ -4,8 +4,8 @@
 ./testfail.idl:7: TypeError: redefining existing identifier: record
 >  namespace PlicFailTest { Const record = 5; // keyword assignment
 >                                           ^
-./testfail.idl:9: TypeError: redefining existing identifier: String
->  namespace PlicFailTest { typedef String String; // keyword redefinition (without --system-typedefs)
+./testfail.idl:9: TypeError: redefining existing identifier: string
+>  namespace PlicFailTest { typedef string string; // keyword redefinition (without --system-typedefs)
 >                                                ^
 ./testfail.idl:11: NameError: invalid characters in namespace: broken$name
 >  namespace PlicFailTest { namespace broken$name { Const a = 5; } // invalid namespace name (without --system-typedefs)
@@ -29,10 +29,10 @@
 >  namespace PlicFailTest { Const zzz = 1; zzz tmp = 1; // zzz is no type
 >                                         ^
 ./testfail.idl:25: Trying to find one of '=', ';'
->  namespace PlicFailTest { record DupRecord { Num a, b, c; }; // fail on multiple fields per type
+>  namespace PlicFailTest { record DupRecord { int a, b, c; }; // fail on multiple fields per type
 >                                                  ^
 ./testfail.idl:27: NameError: duplicate field name: b
->  namespace PlicFailTest { record DupRecord { Num b; Num b; }; // duplicate: b
+>  namespace PlicFailTest { record DupRecord { int b; int b; }; // duplicate: b
 >                                                             ^
 ./testfail.idl:29: Trying to find one of '::', IDENT
 >  namespace PlicFailTest { record EmptyRecord { }; // record is empty
@@ -59,22 +59,22 @@
 >  namespace PlicFailTest { sequence EmptySequence { }; // sequence needs 1 field
 >                                                   ^
 ./testfail.idl:45: Trying to find one of '}'
->  ...PlicFailTest { sequence MultiFieldSequence { Bool one; Num toomany; }; // sequence needs 1 field
+>  ...PlicFailTest { sequence MultiFieldSequence { bool one; int toomany; }; // sequence needs 1 field
 >                                                           ^
 ./testfail.idl:47: TypeError: unknown type: 'enum'
 >  namespace PlicFailTest { sequence Seq { enum b; }; // keyword is not typename
 >                                               ^
 ./testfail.idl:49: TypeError: unknown type: '_S1'
->  ...lTest { sequence S1 { Bool b; }; sequence S2 { _S1 s; }; // need existing typenames
+>  ...lTest { sequence S1 { bool b; }; sequence S2 { _S1 s; }; // need existing typenames
 >                                                        ^
 ./testfail.idl:51: TypeError: redefining existing identifier: Dup
->  ... sequence Dup { Bool b; }; sequence Dup { Bool b; }; // duplicate definition
+>  ... sequence Dup { bool b; }; sequence Dup { bool b; }; // duplicate definition
 >                                                        ^
 ./testfail.idl:53: TypeError: unknown type: 'Const'
 >  namespace PlicFailTest { typedef Const X; // unknown type Const
 >                                         ^
 ./testfail.idl:55: TypeError: redefining existing identifier: Const
->  namespace PlicFailTest { typedef Bool Const; // keyword redefinition
+>  namespace PlicFailTest { typedef bool Const; // keyword redefinition
 >                                             ^
 ./testfail.idl:57: TypeError: redefining existing identifier: class
 >  namespace PlicFailTest { Const class = 5; // keyword redefinition
@@ -83,37 +83,37 @@
 >  namespace PlicFailTest { enum Enu1 { AA }; typedef Enu1 Enu1; // type redefinition
 >                                                              ^
 ./testfail.idl:61: TypeError: invalid type definition: = _No_SUCH_initializer (17,)
->  ...PlicFailTest { typedef Num x = _No_SUCH_initializer (17); // unknown type definition
+>  ...PlicFailTest { typedef int x = _No_SUCH_initializer (17); // unknown type definition
 >                                                             ^
-./testfail.idl:63: TypeError: too many args for type definition: = Num ('"too"', '"many"', '"args"', 1, 2, 3, 4, 5, 6, 7, 8, 9)
->  ...= Num ("too", "many", "args", 1, 2, 3, 4, 5, 6, 7, 8, 9); // too many args
+./testfail.idl:63: TypeError: too many args for type definition: = Int ('"too"', '"many"', '"args"', 1, 2, 3, 4, 5, 6, 7, 8, 9)
+>  ...= Int ("too", "many", "args", 1, 2, 3, 4, 5, 6, 7, 8, 9); // too many args
 >                                                             ^
 ./testfail.idl:65: TypeError: invalid type definition: = String ('"nick"', '"txt"', '"dflt"', '"rw"')
->  ...um string_for_num = String ("nick", "txt", "dflt", "rw"); // type/initializer mismatch
+>  ...nt string_for_num = String ("nick", "txt", "dflt", "rw"); // type/initializer mismatch
 >                                                             ^
-./testfail.idl:67: TypeError: invalid type definition: = Real ('"x"', '"X coord"', 0, 0, 100.0, 0.5, '"ro"')
->  ...ing s = Real ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
+./testfail.idl:67: TypeError: invalid type definition: = Float ('"x"', '"X coord"', 0, 0, 100.0, 0.5, '"ro"')
+>  ...ng s = Float ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
 >                                                             ^
 ./testfail.idl:69: Trying to find one of '::', IDENT, '\)'
->  namespace PlicFailTest { interface I { Num method (,); }; // invalid method arg separator
+>  namespace PlicFailTest { interface I { int method (,); }; // invalid method arg separator
 >                                                    ^
 ./testfail.idl:70: NameError: duplicate member name: method
->  ...lTest { interface I { Num method (); Num method (); }; // multiple method definitions
+>  ...lTest { interface I { int method (); int method (); }; // multiple method definitions
 >                                                          ^
 ./testfail.idl:71: NameError: duplicate member name: xxx
->  ...PlicFailTest { interface I { Num xxx; Num xxx (); }; // multiple member definitions
+>  ...PlicFailTest { interface I { int xxx; int xxx (); }; // multiple member definitions
 >                                                        ^
 ./testfail.idl:72: NameError: duplicate method arg name: method (..., n...)
->  ...PlicFailTest { interface I { Num method (Num n, Num n); }; // duplicate method argument
+>  ...PlicFailTest { interface I { int method (int n, int n); }; // duplicate method argument
 >                                                              ^
 ./testfail.idl:73: TypeError: no such interface type: Unknown
 >  namespace PlicFailTest { interface I : Unknown {}; // invalid parent interface
 >                                               ^
 ./testfail.idl:74: TypeError: no such interface type: R
->  ...PlicFailTest { record R { String s; }; interface I : R {}; // invalid interface inheritance
+>  ...PlicFailTest { record R { string s; }; interface I : R {}; // invalid interface inheritance
 >                                                          ^
 ./testfail.idl:75: TypeError: non-method invalidly declared as 'signal': xxx
->  namespace PlicFailTest { interface I { signal Num xxx; }; // invalidly declared as signal
+>  namespace PlicFailTest { interface I { signal int xxx; }; // invalidly declared as signal
 >                                                       ^
 ./testfail.idl:76: TypeError: redefining existing identifier: void
 >  namespace PlicFailTest { Const void = 17; // invalid constant name
@@ -122,13 +122,13 @@
 >  namespace PlicFailTest { void xy = 17; // invalid property type
 >                          ^
 ./testfail.idl:78: Trying to find one of '::', IDENT
->  namespace PlicFailTest { interface I { Num method (void); }; // invalid argument type
+>  namespace PlicFailTest { interface I { int method (void); }; // invalid argument type
 >                                                        ^
 ./testfail.idl:79: TypeError: unknown type: 'void'
->  ...PlicFailTest { interface I { Num method (Num n, void v); }; // invalid argument type
+>  ...PlicFailTest { interface I { int method (int n, void v); }; // invalid argument type
 >                                                          ^
 include-f2.idl:2:3: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
->    unexisting_Num var;
+>    unexisting_var var;
 >    ^
 include-f1.idl:1: note: included "include-f2.idl" from here
 ./testfail.idl:81:1: note: included "include-f1.idl" from here

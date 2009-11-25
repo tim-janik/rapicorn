@@ -18,8 +18,8 @@ import Decls
 
 
 auxillary_initializers = {
-  (Decls.NUM,       'Num')      : ('label', 'blurb', 'default=0', 'min', 'max', 'step', 'hints'),
-  (Decls.REAL,      'Real')     : ('label', 'blurb', 'default=0', 'min', 'max', 'step', 'hints'),
+  (Decls.INT,       'Int')      : ('label', 'blurb', 'default=0', 'min', 'max', 'step', 'hints'),
+  (Decls.FLOAT,     'Float')    : ('label', 'blurb', 'default=0', 'min', 'max', 'step', 'hints'),
   (Decls.STRING,    'String')   : ('label', 'blurb', 'default', 'hints'),
 }
 

@@ -27,7 +27,7 @@ reservedwords = ('class', 'signal', 'void')
 collectors = ('void', 'sum', 'last', 'until0', 'while0')
 keywords = ('TRUE', 'True', 'true', 'FALSE', 'False', 'false',
             'namespace', 'enum', 'enumeration', 'Const', 'typedef', 'interface',
-            'record', 'sequence', 'Bool', 'Num', 'Real', 'String')
+            'record', 'sequence', 'bool', 'int', 'float', 'string')
 reservedkeywords = set (keywords + reservedwords)
 
 class YYGlobals (object):
@@ -177,10 +177,10 @@ class YYGlobals (object):
     type_info = self.namespace_lookup (typename, astype = True)
     if not type_info:   # builtin types
       type_info = {
-        'Bool'    : Decls.TypeInfo ('Bool',   Decls.NUM, false),
-        'Num'     : Decls.TypeInfo ('Num',    Decls.NUM, false),
-        'Real'    : Decls.TypeInfo ('Real',   Decls.REAL, false),
-        'String'  : Decls.TypeInfo ('String', Decls.STRING, false),
+        'bool'    : Decls.TypeInfo ('bool',   Decls.INT, false),
+        'int'     : Decls.TypeInfo ('int',    Decls.INT, false),
+        'float'   : Decls.TypeInfo ('float',  Decls.FLOAT, false),
+        'string'  : Decls.TypeInfo ('string', Decls.STRING, false),
       }.get (typename, None);
     if not type_info and void and typename == 'void':   # builtin void
       type_info = Decls.TypeInfo ('void', Decls.VOID, false)

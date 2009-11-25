@@ -20,10 +20,10 @@
 namespace Rapicorn_STD {
 
   // typenames are mangled to avoid keyword conflicts
-  typedef String Str_ng;
-  typedef Num    N_m;
-  typedef Real   Re_l;
-  typedef Real   Array;	// Plic knows no boxed array type
+  typedef string strIng;
+  typedef int    iNt;
+  typedef float  floAt;
+  typedef float  Array;	// Plic knows no boxed array type
 
   // Makefile.am contains logic to demangle these standard types
 }
