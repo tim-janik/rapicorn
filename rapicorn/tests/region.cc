@@ -126,8 +126,8 @@ test_region2 (void)
   TASSERT ((a != b) == false);
   TASSERT ((a == b) == true);
   TASSERT (a.cmp (b) == 0);
-  TASSERT (a < b == false);
-  TASSERT (b < a == false);
+  TASSERT ((a < b) == false);
+  TASSERT ((b < a) == false);
   TDONE();
 }
 
