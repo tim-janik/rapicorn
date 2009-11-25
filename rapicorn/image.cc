@@ -18,7 +18,6 @@
 #include "itemimpl.hh"
 #include "painter.hh"
 #include "factory.hh"
-#include <ext/hash_map>
 #include <errno.h>
 
 namespace Rapicorn {
