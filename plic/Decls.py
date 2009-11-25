@@ -57,6 +57,7 @@ class Namespace (BaseDecl):
     return self.type_dict.get (name, fallback)
 
 class TypeInfo (BaseDecl):
+  collector = 'void'
   def __init__ (self, name, storage, isimpl):
     super (TypeInfo, self).__init__()
     assert storage in (VOID, NUM, REAL, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE)
@@ -121,6 +122,8 @@ class TypeInfo (BaseDecl):
     assert isinstance (type, TypeInfo)
     assert self.rtype == None
     self.rtype = type
+  def set_collector (self, collkind):
+    self.collector = collkind
   def add_method (self, ftype, issignal = False):
     assert self.storage == INTERFACE
     assert isinstance (ftype, TypeInfo)
