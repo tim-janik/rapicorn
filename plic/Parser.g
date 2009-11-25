@@ -24,6 +24,7 @@ import yapps2runtime as runtime
 import AuxData
 
 reservedwords = ('class', 'signal', 'void')
+collectors = ('void', 'sum', 'last', 'until0', 'while0')
 keywords = ('TRUE', 'True', 'true', 'FALSE', 'False', 'false',
             'namespace', 'enum', 'enumeration', 'Const', 'typedef', 'interface',
             'record', 'sequence', 'Bool', 'Num', 'Real', 'String')
@@ -259,6 +260,9 @@ def ATN (typename):     # assert a typename
 def ANS (issignal, identifier): # assert non-signal decl
   if issignal:
     raise TypeError ('non-method invalidly declared as \'signal\': %s' % identifier)
+def ASC (collkind): # assert signal collector
+  if not collkind in collectors:
+    raise TypeError ('invalid signal collector: %s' % collkind)
 
 class Error (Exception):
   def __init__ (self, msg, ecaret = None):
@@ -415,8 +419,9 @@ rule method_args:
 
 rule field_or_method_or_signal_decl:
                                                 {{ signal = false; fargs = []; daux = () }}
-        [ 'signal'                              {{ signal = true }}
-        ]
+        [ 'signal'                              {{ signal = true; coll = 'void' }}
+          [ '<' IDENT '>'                       {{ coll = IDENT; ASC (coll) }}
+          ] ]
         ( 'void'                                {{ dtname = 'void' }}
         | typename                              {{ dtname = typename }}
         )
@@ -428,6 +433,7 @@ rule field_or_method_or_signal_decl:
               ] '\)'                            # [ '=' auxinit {{ daux = auxinit }} ]
         ) ';'                                   {{ if kind == 'field': ANS (signal, dident) }}
                                                 {{ dtype = yy.clone_type (dtname, void = kind != 'field') }}
+                                                {{ if kind == 'signal': dtype.set_collector (coll) }}
                                                 {{ if kind == 'field': return (kind, (dident, dtype, daux)) }}
                                                 {{ return (kind, (dident, dtype, daux, fargs)) }}
 
