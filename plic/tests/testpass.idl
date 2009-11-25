@@ -229,7 +229,7 @@ namespace Auxdata {
 }
 
 namespace InterfaceTests {
-interface ButtonArea {
+interface UIWidgetArea {
   Real dummy;
   Real simple_method ();
   Real single_arg (Num n);
@@ -237,7 +237,7 @@ interface ButtonArea {
   Real two_args (Num n, Real r);
   Real two_args2 (Num n = Num ("Baz"), Real r = Real ("Zonk"));
   Real multi_args (Num n, Real r, Num i, String s = String ("String ding"), Real y);
-  Real self_method (ButtonArea ba1, InterfaceTests::ButtonArea ba2);
+  Real self_method (UIWidgetArea ba1, InterfaceTests::UIWidgetArea ba2);
   void void_method();
   /* sample property accessors: */
   String on_click2out ();
@@ -246,7 +246,7 @@ interface ButtonArea {
   String on_click = String (_("On CLick"), _("Command on button1 click"), "rw");
   /* signals: */
   signal void void_signal ();
-  signal Real sample_signal (ButtonArea ba1, Num someint);
+  signal Real sample_signal (UIWidgetArea ba1, Num someint);
   //bool check_activate (void) = signal (CollectUntil0);
   //void activate       (void);
 };

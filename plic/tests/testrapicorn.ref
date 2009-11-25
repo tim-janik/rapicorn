@@ -60,9 +60,9 @@ class Descendant :
   Child
 {
 };
-class ButtonArea {
-  typedef Signal<ButtonArea, void ()> Signal_void_signal;
-  typedef Signal<ButtonArea, Real (ButtonArea ba1, Num someint)> Signal_sample_signal;
+class UIWidgetArea {
+  typedef Signal<UIWidgetArea, void ()> Signal_void_signal;
+  typedef Signal<UIWidgetArea, Real (UIWidgetArea ba1, Num someint)> Signal_sample_signal;
   Real                        dummy;
   String                      on_click;
   Real                        simple_method ();
@@ -71,7 +71,7 @@ class ButtonArea {
   Real                        two_args (Num n, Real r);
   Real                        two_args2 (Num n, Real r);
   Real                        multi_args (Num n, Real r, Num i, String s, Real y);
-  Real                        self_method (ButtonArea ba1, ButtonArea ba2);
+  Real                        self_method (UIWidgetArea ba1, UIWidgetArea ba2);
   void                        void_method ();
   String                      on_click2out ();
   void                        on_click2in (String command);
