@@ -107,7 +107,7 @@ Item::set_flag (uint32 flag,
   bool fchanged = change_flags_silently (flag, on);
   if (fchanged)
     {
-      if (flag & (VISIBLE | POSITIVE_ALLOCATION) == POSITIVE_ALLOCATION)
+      if ((flag & (VISIBLE | POSITIVE_ALLOCATION)) == POSITIVE_ALLOCATION)
         change_flags_silently (POSITIVE_ALLOCATION, false);
       if (flag & propagate_flag_mask)
         {
