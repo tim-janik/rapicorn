@@ -263,3 +263,26 @@ interface SomeInterface {
 };
 }
 
+namespace RapicornPlicTest {
+
+enum ClickType {
+  CLICK_ON_PRESS        = 1,
+  CLICK_ON_RELEASE,
+  CLICK_SLOW_REPEAT,
+  CLICK_FAST_REPEAT,
+  CLICK_KEY_REPEAT,
+};
+
+interface ButtonArea // : public virtual Container, public virtual FocusFrame::Client
+{
+  signal<until0> Bool check_activate  ();
+  signal void         activate        ();
+  // protected: explicit              ButtonArea();
+  String        on_click;
+  String        on_click2;
+  String        on_click3;
+  ClickType     click_type;
+  // virtual const PropertyList&   list_properties ();
+};
+
+} // RapicornPlicTest

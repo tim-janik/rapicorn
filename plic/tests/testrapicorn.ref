@@ -90,3 +90,18 @@ class Child :
 class SomeInterface {
   void                use_record (SomeRecord rr);
 };
+class ButtonArea {
+  typedef Signal<ButtonArea, Bool (), CollectorUntil0<Bool> > Signal_check_activate;
+  typedef Signal<ButtonArea, void ()> Signal_activate;
+  Signal_check_activate       sig_check_activate;
+  Signal_activate             sig_activate;
+  virtual const PropertyList& list_properties ();
+  virtual String              on_click () const = 0;
+  virtual void                on_click (const &String) = 0;
+  virtual String              on_click2 () const = 0;
+  virtual void                on_click2 (const &String) = 0;
+  virtual String              on_click3 () const = 0;
+  virtual void                on_click3 (const &String) = 0;
+  virtual ClickType           click_type () const = 0;
+  virtual void                click_type (const &ClickType) = 0;
+};
