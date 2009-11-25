@@ -63,8 +63,13 @@ class Descendant :
 class UIWidgetArea {
   typedef Signal<UIWidgetArea, void ()> Signal_void_signal;
   typedef Signal<UIWidgetArea, Real (UIWidgetArea ba1, Num someint)> Signal_sample_signal;
-  Real                        dummy;
-  String                      on_click;
+  Signal_void_signal          sig_void_signal;
+  Signal_sample_signal        sig_sample_signal;
+  virtual const PropertyList& list_properties ();
+  virtual Real                dummy () const = 0;
+  virtual void                dummy (const &Real) = 0;
+  virtual String              on_click () const = 0;
+  virtual void                on_click (const &String) = 0;
   Real                        simple_method ();
   Real                        single_arg (Num n);
   Real                        single_arg2 (Num n);
@@ -75,8 +80,6 @@ class UIWidgetArea {
   void                        void_method ();
   String                      on_click2out ();
   void                        on_click2in (String command);
-  Signal_void_signal          sig_void_signal;
-  Signal_sample_signal        sig_sample_signal;
 };
 class Parent {
 };

@@ -60,6 +60,15 @@ class Generator:
     s = ''
     s += type.name + ' ' + ident
     return s
+  def generate_prop (self, fident, ftype):
+    v = 'virtual '
+    # getter
+    s = '  ' + self.format_to_tab (v + ftype.name) + fident + ' () const = 0;\n'
+    # setter
+    s += '  ' + self.format_to_tab (v + 'void') + fident + ' (const &' + ftype.name + ') = 0;\n'
+    return s
+  def generate_proplist (self, ctype):
+    return '  ' + self.format_to_tab ('virtual const PropertyList&') + 'list_properties ();\n'
   def generate_field (self, fident, ftype):
     return '  ' + self.format_to_tab (ftype.name) + fident + ';\n'
   def generate_method (self, ftype):
@@ -81,7 +90,11 @@ class Generator:
     for a in ftype.args:
       l += [ self.format_arg (*a) ]
     s += ', '.join (l)
-    s += ')> ' + signame + ';\n'
+    s += ')'
+    if ftype.rtype.collector != 'void':
+      s += ', Collector' + ftype.rtype.collector.capitalize()
+      s += '<' + ftype.rtype.name + '> '
+    s += '> ' + signame + ';\n'
     return s
   def generate_signal (self, ftype, ctype):
     signame = self.generate_signal_name (ftype, ctype)
@@ -111,15 +124,19 @@ class Generator:
     if tp.storage == Decls.INTERFACE:
       for sg in tp.signals:
         s += self.generate_sigdef (sg, type_info)
-    if (tp.storage == Decls.RECORD or
-        tp.storage == Decls.INTERFACE):
+      for sg in tp.signals:
+        s += self.generate_signal (sg, type_info)
+    if tp.storage == Decls.RECORD:
       for fl in tp.fields:
         s += self.generate_field (fl[0], fl[1])
     if tp.storage == Decls.INTERFACE:
+      if tp.fields:
+        s += self.generate_proplist (type_info)
+      for fl in tp.fields:
+        s += self.generate_prop (fl[0], fl[1])
+    if tp.storage == Decls.INTERFACE:
       for m in tp.methods:
         s += self.generate_method (m)
-      for sg in tp.signals:
-        s += self.generate_signal (sg, type_info)
     if (tp.storage == Decls.RECORD or
         tp.storage == Decls.INTERFACE):
       s += '};\n'
