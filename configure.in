@@ -323,28 +323,19 @@ AC_DEFUN([RAPICORN_REQUIREMENTS],
 dnl # PYRAPICORN_REQUIREMENTS() - rapicorn python binding checks
 AC_DEFUN([PYRAPICORN_REQUIREMENTS],
 [
-    # find Python development version
-    DEPVERSION_PYTHON=2.4
-    AM_PATH_PYTHON($DEPVERSION_PYTHON)
-    # figure PYTHON_INCLUDES
-    py_prefix=`$PYTHON -c "import sys; print sys.prefix"`
-    py_exec_prefix=`$PYTHON -c "import sys; print sys.exec_prefix"`
-    PYTHON_INCLUDES="-I${py_prefix}/include/python${PYTHON_VERSION}"
-    if test "$py_prefix" != "$py_exec_prefix"; then
-	PYTHON_INCLUDES="$PYTHON_INCLUDES -I${py_exec_prefix}/include/python${PYTHON_VERSION}"
-    fi
-    AC_SUBST(PYTHON_INCLUDES)
-    # check for python header and Py_InitModule
+    # Find Python execution and development environment
     saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="-Wall -Werror $CPPFLAGS $PYTHON_INCLUDES"
-    AC_CHECK_HEADERS(Python.h, [], [AC_MSG_ERROR([please provide python-development files])])
+    CPPFLAGS="-Wall -Werror $CPPFLAGS" # ensure sane Python module builds
+    AC_REQUIRE([AC_PYTHON_DEVEL])
+    AC_PYTHON_DEVEL([>= '2.4'])
+    CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS"
     AC_MSG_CHECKING([for working Python extension compilation])
     AC_TRY_COMPILE([#include <Python.h>], [Py_InitModule(0,0);], py_build=ok, py_build=failed)
-    CPPFLAGS="$saved_CPPFLAGS"
     AC_MSG_RESULT($py_build)
     if test "$py_build" != "ok" ; then
 	AC_MSG_ERROR([failed to build extension against Python (>=$DEPVERSION_PYTHON) headers])
     fi
+    CPPFLAGS="$saved_CPPFLAGS"
 ])
 
 dnl # RAPICORN_TEST_REQUIREMENTS() - checks for test programs
@@ -365,7 +356,9 @@ AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
 # PLIC requirements
 AC_DEFUN([RAPICORN_PLIC_REQUIREMENTS],
 [
-    AM_PATH_PYTHON(2.4)
+    dnl # AM_PATH_PYTHON(2.4)
+    $PYTHON -c "import sys; sys.exit (not sys.version_info >= (2,4))" ||
+    	AC_MSG_ERROR([failed to verify working \$PYTHON execution])
     AC_CHECK_PROGS(XMLLINT, xmllint, true)
     PLIC_VERSION="$RAPICORN_RELEASE"
     AC_SUBST(PLIC_VERSION)
