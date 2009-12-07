@@ -353,6 +353,9 @@ AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
 			[Whether -lreadline -lhistory works])
 		    READLINELIBS="-lreadline -lhistory"
 		    ]) ]) ]) ])
+    test -z "$READLINELIBS" && {
+      AC_MSG_ERROR(Missing readline library development files)
+    }
     AC_SUBST(READLINELIBS)
 ])
 
