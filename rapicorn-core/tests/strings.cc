@@ -16,6 +16,7 @@
  */
 #include <rapicorn-core/testutils.hh>
 #include <stdlib.h>
+#include <stdio.h>
 using namespace Rapicorn;
 
 namespace {

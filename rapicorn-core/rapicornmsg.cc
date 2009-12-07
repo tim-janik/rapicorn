@@ -18,6 +18,7 @@
 #include "rapicornmsg.hh"
 #include "rapicornthread.hh"
 #include <syslog.h>
+#include <stdio.h>
 #include <errno.h>
 #include <cstring>
 

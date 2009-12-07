@@ -16,6 +16,7 @@
  */
 //#define TEST_VERBOSE
 #include <rapicorn-core/testutils.hh>
+#include <stdio.h>
 using namespace Rapicorn;
 
 #if RAPICORN_CHECK_VERSION (2147483647, 2147483647, 2147483647) || !RAPICORN_CHECK_VERSION (0, 0, 0)

@@ -18,6 +18,7 @@
 #include "rapicornthread.hh"
 #include "regex.hh"
 #include "markup.hh"
+#include <stdio.h>
 #include <syslog.h>
 #include <errno.h>
 

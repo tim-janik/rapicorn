@@ -19,8 +19,10 @@
 
 #include <rapicorn-core/rapicornconfig.h> /* _GNU_SOURCE */
 #include <stdbool.h>
+#include <stdarg.h>
 #include <stddef.h>			/* NULL */
 #include <sys/types.h>			/* uint, ssize */
+#include <stdint.h>			/* uint64_t */
 #include <limits.h>                     /* {INT|CHAR|...}_{MIN|MAX} */
 #include <float.h>                      /* {FLT|DBL}_{MIN|MAX|EPSILON} */
 
