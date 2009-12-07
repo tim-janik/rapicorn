@@ -18,6 +18,7 @@
 #include "containerimpl.hh"
 #include "root.hh"
 #include <algorithm>
+#include <stdio.h>
 
 namespace Rapicorn {
 

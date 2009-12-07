@@ -17,6 +17,7 @@
 //#define TEST_VERBOSE
 #include <rapicorn-core/rapicorntests.h>
 #include <rapicorn/rapicorn.hh>
+#include <stdio.h>
 
 #define MakeProperty    RAPICORN_MakeProperty
 

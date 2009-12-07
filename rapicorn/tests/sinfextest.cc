@@ -17,6 +17,7 @@
 //#define TEST_VERBOSE
 #include <rapicorn-core/testutils.hh>
 #include <rapicorn/rapicorn.hh>
+#include <stdio.h>
 using namespace Rapicorn;
 
 #include "../../configure.h"    // for HAVE_READLINE_AND_HISTORY

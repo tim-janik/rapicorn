@@ -18,6 +18,7 @@
 #include "evaluator.hh"
 #include "root.hh"
 #include <errno.h>
+#include <stdio.h>
 #include <stack>
 #include <cstring>
 

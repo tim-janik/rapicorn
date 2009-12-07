@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <cstring>
 #include "sinfeximpl.hh"
+#include <stdio.h>      // needed by sinfex.lgen or sinfex.ygen
 
 namespace Rapicorn {
 
