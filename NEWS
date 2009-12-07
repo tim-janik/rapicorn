@@ -1,6 +1,7 @@
 Rapicorn NEXT:
 
 * Started pluggable IDL compiler development.
+* Updates to compile with GCC-4.4.
 
 Incompatible changes:
 
