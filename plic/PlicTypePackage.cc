@@ -28,6 +28,12 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#ifndef PlicTypePackage_NAMESPACE
+#define PlicTypePackage_NAMESPACE Plic
+#endif
+
+namespace PlicTypePackage_NAMESPACE {
+
 /* --- main types --- */
 struct TypeRegistry;    //** Registry for TypePackage streams
 struct TypeNamespace;   //** Handle for TypePackage namespace
@@ -433,3 +439,5 @@ TypeRegistry::list_namespaces ()
     }
   return namespace_vector;
 }
+
+} // PlicTypePackage_NAMESPACE

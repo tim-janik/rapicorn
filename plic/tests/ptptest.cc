@@ -17,6 +17,11 @@
 
 /* PLIC TypePackage Parser */
 #include "../PlicTypePackage.cc"
+using namespace Plic;
+using Plic::uint8;
+using Plic::uint;
+using Plic::vector;
+using Plic::String;
 
 #ifndef MAX
 #define MIN(a,b)        ((a) <= (b) ? (a) : (b))
