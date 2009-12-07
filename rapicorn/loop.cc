@@ -524,7 +524,8 @@ EventLoop::iterate_loops (bool may_block,
     {
       /* flush wakeup pipe */
       char buffer[512]; // 512 is posix pipe atomic read/write size
-      read (rapicorn_wakeups[0], buffer, sizeof (buffer));
+      int l = read (rapicorn_wakeups[0], buffer, sizeof (buffer));
+      (void) l;
     }
   /* check */
   for (std::list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
