@@ -130,7 +130,7 @@ static void
 pymodule_add_type (PyObject     *module,
                    PyTypeObject *ptyobj)
 {
-  char *objname = strrchr (ptyobj->tp_name, '.');
+  const char *objname = strrchr (ptyobj->tp_name, '.');
   assert (objname != NULL);
   PyModule_AddObject (module, objname + 1, (PyObject*) ptyobj);
 }
