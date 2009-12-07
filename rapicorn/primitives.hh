@@ -364,13 +364,7 @@ public:
     blue  (MIN (Db, 255));
     return *this;
   }
-  String
-  string() const
-  {
-    char buffer[128];
-    sprintf (buffer, "{.r=%u,.g=%u,.b=%u,.a=%u}", red(), green(), blue(), alpha());
-    return String (buffer);
-  }
+  String string() const;
 };
 
 /* --- Affine --- */

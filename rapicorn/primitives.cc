@@ -17,6 +17,7 @@
 #include "primitives.hh"
 #include "utilities.hh"
 #include "blitfuncs.hh"
+#include <stdio.h>
 
 namespace Rapicorn {
 
@@ -130,6 +131,14 @@ Rect::create_anchored (AnchorType anchor,
   Point delta = b.anchor_point (anchor);
   b.translate (-delta.x, -delta.y);
   return b;
+}
+
+String
+Color::string() const
+{
+  char buffer[128];
+  sprintf (buffer, "{.r=%u,.g=%u,.b=%u,.a=%u}", red(), green(), blue(), alpha());
+  return String (buffer);
 }
 
 void
