@@ -326,8 +326,10 @@ AC_DEFUN([PYRAPICORN_REQUIREMENTS],
     # Find Python execution and development environment
     saved_CPPFLAGS="$CPPFLAGS"
     CPPFLAGS="-Wall -Werror $CPPFLAGS" # ensure sane Python module builds
+    mypyversion=2.4
+    AM_PATH_PYTHON($mypyversion)
     AC_REQUIRE([AC_PYTHON_DEVEL])
-    AC_PYTHON_DEVEL([>= '2.4'])
+    AC_PYTHON_DEVEL([>= '$mypyversion'])
     CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS"
     AC_MSG_CHECKING([for working Python extension compilation])
     PYTHON_CPPFLAGS="$PYTHON_CPPFLAGS -fno-strict-aliasing" # needed by Python headers
@@ -357,9 +359,11 @@ AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
 # PLIC requirements
 AC_DEFUN([RAPICORN_PLIC_REQUIREMENTS],
 [
-    dnl # AM_PATH_PYTHON(2.4)
-    $PYTHON -c "import sys; sys.exit (not sys.version_info >= (2,4))" ||
-    	AC_MSG_ERROR([failed to verify working \$PYTHON execution])
+    dnl #ALREADYDONE# AM_PATH_PYTHON(2.4)
+    # Check for working $PYTHON and pythondir
+    $PYTHON -c "import sys; sys.exit (not sys.version_info >= (2,4))" &&
+      test -n "$pythondir" ||
+    	AC_MSG_ERROR([failed to check \$PYTHON and \$pythondir])
     AC_CHECK_PROGS(XMLLINT, xmllint, true)
     PLIC_VERSION="$RAPICORN_RELEASE"
     AC_SUBST(PLIC_VERSION)
