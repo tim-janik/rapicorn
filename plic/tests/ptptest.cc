@@ -14,8 +14,6 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this program; if not, see http://www.gnu.org/copyleft/.
  */
-#include <stdio.h>
-#include <stdint.h>
 
 /* PLIC TypePackage Parser */
 #include "../PlicTypePackage.cc"
