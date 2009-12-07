@@ -20,6 +20,8 @@
 #include <errno.h>
 #include <stdlib.h>
 
+#include "types-ptpp.cc" // Plic:: TypePackage definitions
+
 namespace Rapicorn {
 
 const char*
@@ -36,10 +38,6 @@ Type::storage_name () const
 }
 
 #warning FIXME: missing implementations: n_entries entry prerequisites n_fields field elements main_type
-
-namespace Plic {
-#include "types-ptpp.cc" // PLIC TypePackage Parser
-}
 
 struct Type::Info : public ReferenceCountImpl {
   Plic::TypeInfo plic_type_info;
