@@ -15,6 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include <errno.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
@@ -1160,7 +1161,7 @@ string_option_get (const String   &option_string,
     return NULL;                        /* option not present */
   else switch (value[0])
       {
-        char *s;
+        const char *s;
       case ':':   return "1";           /* option was present, no modifier */
       case 0:     return "1";           /* option was present, no modifier */
       case '+':   return "1";           /* option was present, enable modifier */
@@ -1183,7 +1184,7 @@ string_option_check (const String   &option_string,
     return false;                       /* option not present */
   else switch (value[0])
     {
-      char *s;
+      const char *s;
     case ':':   return true;            /* option was present, no modifier */
     case 0:     return true;            /* option was present, no modifier */
     case '+':   return true;            /* option was present, enable modifier */
@@ -1946,7 +1947,7 @@ stack_ptrdiff (const void *stackvariable,
 void
 ReferenceCountImpl::stackcheck (const void *data)
 {
-  auto int stackvariable = 0;
+  int stackvariable = 0;
   /* this check for ReferenceCountImpl instance allocations on the stack isn't
    * perfect, but should catch the most common cases for growing and shrinking stacks
    */
