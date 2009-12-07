@@ -330,6 +330,7 @@ AC_DEFUN([PYRAPICORN_REQUIREMENTS],
     AC_PYTHON_DEVEL([>= '2.4'])
     CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS"
     AC_MSG_CHECKING([for working Python extension compilation])
+    PYTHON_CPPFLAGS="$PYTHON_CPPFLAGS -fno-strict-aliasing" # needed by Python headers
     AC_TRY_COMPILE([#include <Python.h>], [Py_InitModule(0,0);], py_build=ok, py_build=failed)
     AC_MSG_RESULT($py_build)
     if test "$py_build" != "ok" ; then
