@@ -6,7 +6,7 @@ SUBDIRS		 = . tests
 INCLUDES	+= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_CORE_CFLAGS)
 DEFS		 = -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
 GLIB_MKENUMS	 = glib-mkenums
-PLICV       	 = $(top_builddir)/plic/plic-@PLIC_VERSION@
+PLICINT		 = $(top_builddir)/plic/plic-intern
 
 rapicorn_top_headers = rapicorn-core.hh
 rapicorn_public_headers = $(strip	\
@@ -80,8 +80,8 @@ rapicorn_zintern_SOURCES = rapicorn-zintern.cc
 rapicorn_zintern_LDADD   = $(RAPICORN_CORE_LIBS) -lm # $(progs_ldadd)
 
 # === types-ptpp.cc ===
-types-ptpp.cc: # FIXME: depend on a .idl file for appropriate regeneration
-	:; $(PLICV) --cc-type-package-parser > gen-$@
+types-ptpp.cc: $(PLICINT)
+	:; $(PLICINT) --cc-type-package-parser > gen-$@
 	mv gen-$@ $@
 types.cc: types-ptpp.cc
 CLEANFILES += types-ptpp.cc
@@ -93,7 +93,7 @@ check: # check-ptpp-version # sanity check the --cc-type-package-parser rule
 # === types-zgen.c ===
 types-zgen.c:  ./rapicorn-zintern $(srcdir)/types-std.idl
 	: # compile IDL definitions into binary data
-	$(PLICV) $(srcdir)/types-std.idl -O TypePackage -o ./types-std.tpg
+	$(PLICINT) $(srcdir)/types-std.idl -O TypePackage -o ./types-std.tpg
 	: # convert to .rodata and fixup standard types
 	./rapicorn-zintern -b RAPICORNSTD_RODATA -n ./types-std.tpg | \
 	  sed -e 's/12=Rapicorn_STD/12=Rapicorn*STD/'	\

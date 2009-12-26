@@ -3,7 +3,7 @@ include $(top_srcdir)/Makefile.decl
 
 INCLUDES	+= -I$(top_srcdir)
 DEFS		+= $(RAPICORN_CORE_CFLAGS) -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"' -DSRCDIR='"$(srcdir)"'
-PLICV            = $(top_builddir)/plic/plic-@PLIC_VERSION@
+PLICINT		 = $(top_builddir)/plic/plic-intern
 
 # test programs
 noinst_PROGRAMS	 = $(TEST_PROGS) $(NOINSTPRGS)
@@ -67,7 +67,7 @@ mod1tst.cc:          testtypes.tpg
 EXTRA_DIST        += testtypes.idl testtypes.tpg
 
 %.tpg: $(srcdir)/%.idl
-	$(PLICV) $< -O TypePackage -o $@
+	$(PLICINT) $< -O TypePackage -o $@
 CLEANFILES += *.tpg
 
 # === test rules ===
