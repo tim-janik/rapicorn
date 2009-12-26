@@ -75,7 +75,7 @@ api-check: # ensure headers don't change if RELEASE=outdated && REVISION=0
 		-o "@RAPICORN_REVISION_VERSION@" -gt 0 ]; then			\
 	     echo "$$RAPICORN_CURRENT_CHECKSUM" > api-check.md5 ;		\
 	   else \
-	     MSG1="Update Rapicorn version to reflect header changes (checksum: $$RAPICORN_CURRENT_CHECKSUM): " ; \
+	     MSG1="Rapicorn version needs updating (checksum: $$RAPICORN_CURRENT_CHECKSUM): " ; \
 	     MSG2="@RAPICORN_RELEASE_YEAR@.@RAPICORN_RELEASE_MONTH@.@RAPICORN_REVISION_VERSION@ => " ; \
 	     MSG3="$$[RAPICORN_MONTHLY_VERSION/100].$$[RAPICORN_MONTHLY_VERSION%100].0" ; \
 	     MSG="$$MSG1$$MSG2$$MSG3" ; echo $$MSG | sed 's/./=/g'; echo $$MSG; echo $$MSG | sed 's/./=/g' ; \
