@@ -5,7 +5,7 @@ Rapicorn is an experimental UI toolkit.
 It aims at bringing UI-design, UI-notation and UI-programming as close
 together as possible. To accomplish this, it provides conscise ways for
 UI notation, usable also throughout design phases.
-Simple but powerful programming mechanisms will be provided to automate
+Simple but powerful programming mechanisms are provided to automate
 binding of programming and GUI logic and to minimize manual work.
 
 Cairo is planned to be used for rendering tasks, and Pango is currently
@@ -35,7 +35,7 @@ Dependencies
 ============
 
 In order to build Rapicorn from release tarballs, a recent version of
-libpng, Pango and Gtk+ as well as Python 2.4 or 2.5 are currently needed.
+libpng, Pango and Gtk+ as well as Python 2.5 are currently needed.
 The sources for the required packages can be found here:
 
 	http://gtk.org/download.html
