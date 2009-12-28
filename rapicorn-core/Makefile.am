@@ -91,6 +91,7 @@ check-ptpp-version:
 check: # check-ptpp-version # sanity check the --cc-type-package-parser rule
 
 # === types-zgen.c ===
+EXTRA_DIST += types-std.idl
 types-zgen.c:  ./rapicorn-zintern $(srcdir)/types-std.idl
 	: # compile IDL definitions into binary data
 	$(PLICINT) $(srcdir)/types-std.idl -O TypePackage -o ./types-std.tpg
