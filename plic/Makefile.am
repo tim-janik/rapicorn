@@ -22,7 +22,7 @@ Parser.py: Parser.g
 EXTRA_DIST += Parser.g Parser.py
 MAINTAINERCLEANFILES += Parser.py
 
-CONFIGINT = "pyutilsdir" : "${abs_builddir}",	"PLIC_VERSION" : "${VERSION}"
+CONFIGINT = "pyutilsdir" : "${abs_srcdir}",	"PLIC_VERSION" : "${VERSION}"
 CONFIGBIN = "pyutilsdir" : "${pyutilsdir}",	"PLIC_VERSION" : "${VERSION}"
 
 # build plic executables
