@@ -80,9 +80,12 @@ api-content:
 .PHONY: api-content
 
 # === Flex & Bison rules ===
-GENERATED_EXTRA_DIST += sinfex.lgen sinfex.ygen
+EXTRA_DIST += sinfex.l
+GENERATED_EXTRA_DIST += sinfex.lgen
 sinfex.lgen: sinfex.l
 	flex -CFe -o$@ $<
+EXTRA_DIST += sinfex.y
+GENERATED_EXTRA_DIST += sinfex.ygen
 sinfex.ygen: sinfex.y
 	bison -o$@ $<
 sinfex.cc: sinfex.lgen sinfex.ygen
