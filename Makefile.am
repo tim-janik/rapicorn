@@ -113,7 +113,7 @@ check-dynamic_cast:	# check for dynamic_cast of reference types which is broken 
 	find $(srcdir)	-type f \( -iname '*.[hc][hc]' -o -iname '*.[hc]' \)	\
 			-exec grep -Hn 'dynamic_cast[^<]*<[^>&]*&' {} \;	\
 	| grep '.' ; exit $$[!$$?] # fail on matches
-check-list_properties: # check for list_properties() impls to be type-name prefixed
+check-list_properties: # only public interfaces should export properties
 	cd $(srcdir) \
 	&& echo "## Checking for untyped list_properties() method implementations." \
 	&& ! grep '^[[:space:]]*list_properties[[:space:]]*([^)]*)[^;]*$$' -n rapicorn/*.cc rapicorn-core/*.cc
