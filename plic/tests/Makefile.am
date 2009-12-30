@@ -6,7 +6,7 @@ TESTPLIC = PYTHONPATH="$$PYTHONPATH:$(srcdir)/.." ../plic-@PLIC_VERSION@ $(DEBUG
 noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
 
-EXTRA_DIST += testpass.idl testfail.idl
+EXTRA_DIST += testpass.idl testfail.idl include-f1.idl include-f2.idl include-p1.idl include-p2.idl
 DEBUG	    =
 
 # tests for auxillary data in testpass.idl
