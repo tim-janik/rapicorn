@@ -53,6 +53,9 @@ protected:
   virtual bool          has_children            () { return items.size() > 0; }
   virtual void          add_child               (Item   &item);
   virtual void          remove_child            (Item   &item);
+  void                  raise_child             (Item   &item);
+  void                  lower_child             (Item   &item);
+  void                  remove_all_children     ();
   explicit              MultiContainerImpl      ();
 };
 

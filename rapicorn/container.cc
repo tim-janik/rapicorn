@@ -809,10 +809,48 @@ MultiContainerImpl::remove_child (Item &item)
 }
 
 void
-MultiContainerImpl::pre_finalize()
+MultiContainerImpl::raise_child (Item &item)
+{
+  for (uint i = 0; i < items.size(); i++)
+    if (items[i] == &item)
+      {
+        if (i + 1 != items.size())
+          {
+            items.erase (items.begin() + i);
+            items.push_back (&item);
+            invalidate();
+          }
+        break;
+      }
+}
+
+void
+MultiContainerImpl::lower_child (Item &item)
+{
+  for (uint i = 0; i < items.size(); i++)
+    if (items[i] == &item)
+      {
+        if (i != 0)
+          {
+            items.erase (items.begin() + i);
+            items.insert (items.begin(), &item);
+            invalidate();
+          }
+        break;
+      }
+}
+
+void
+MultiContainerImpl::remove_all_children ()
 {
   while (items.size())
     remove (*items[items.size() - 1]);
+}
+
+void
+MultiContainerImpl::pre_finalize()
+{
+  remove_all_children();
   Container::pre_finalize();
 }
 
