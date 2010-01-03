@@ -73,6 +73,7 @@ public:
 /* --- item factory template --- */
 template<class Type>
 class ItemFactory : Factory::ItemTypeFactory {
+  String m_internal_name;
   RAPICORN_PRIVATE_CLASS_COPY (ItemFactory);
   virtual Item*
   create_item (const String &name) const
@@ -82,11 +83,21 @@ class ItemFactory : Factory::ItemTypeFactory {
     return item;
   }
 public:
-  explicit ItemFactory (const char *namespaced_ident) :
+  explicit ItemFactory (const char *namespaced_ident,
+                        bool        doregister = true) :
     ItemTypeFactory (namespaced_ident)
   {
-    register_item_factory (this);
     sanity_check_identifier (namespaced_ident);
+    if (doregister)
+      register_item_factory (this);
+    else
+      m_internal_name = namespaced_ident;
+  }
+  Item*
+  create_item_internal () const
+  {
+    RAPICORN_RETURN_VAL_IF_FAIL (m_internal_name != "", NULL);
+    return create_item (m_internal_name);
   }
 };
 
