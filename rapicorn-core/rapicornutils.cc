@@ -863,6 +863,13 @@ string_to_double (const String &string)
   return g_ascii_strtod (string.c_str(), NULL);
 }
 
+double
+string_to_double (const char  *dblstring,
+                  const char **endptr)
+{
+  return g_ascii_strtod (dblstring, (char**) endptr);
+}
+
 String
 string_from_float (float value)
 {

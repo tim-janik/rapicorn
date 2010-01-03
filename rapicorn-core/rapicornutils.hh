@@ -196,6 +196,8 @@ int64   			string_to_int            (const String &string, uint base = 10);
 String  			string_from_int          (int64 value);
 String  			string_from_float        (float value);
 double  			string_to_double         (const String &string);
+double  			string_to_double         (const char  *dblstring,
+                                                          const char **endptr);
 String                          string_from_double       (double value);
 inline String                   string_from_float        (double value)         { return string_from_double (value); }
 inline double                   string_to_float          (const String &string) { return string_to_double (string); }
