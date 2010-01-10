@@ -23,6 +23,11 @@ namespace Rapicorn {
 
 class Thread;
 
+inline bool once_enter      (volatile size_t *value_location);
+bool        once_enter_impl (volatile size_t *value_location);
+void        once_leave      (volatile size_t *value_location,
+                             size_t           initialization_value);
+
 class Mutex {
   RapicornMutex mutex;
   friend class Cond;
@@ -354,6 +359,15 @@ inline bool
 OwnedMutex::mine ()
 {
   return Atomic::ptr_get (&m_owner) == &Thread::self();
+}
+
+inline bool
+once_enter (volatile size_t *value_location)
+{
+  if (RAPICORN_LIKELY (Atomic::ptr_get ((void*volatile*) value_location) != 0))
+    return false;
+  else
+    return once_enter_impl (value_location);
 }
 
 } // Rapicorn

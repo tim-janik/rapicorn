@@ -71,8 +71,8 @@ rapicorn_thread_run (const gchar     *name,
 
 /* --- atomicity tests --- */
 static volatile guint atomic_count = 0;
-static RapicornMutex    atomic_mutex;
-static RapicornCond     atomic_cond;
+static RapicornMutex  atomic_mutex;
+static RapicornCond   atomic_cond;
 
 static void
 atomic_up_thread (gpointer data)
@@ -94,7 +94,7 @@ atomic_down_thread (gpointer data)
   for (guint i = 0; i < 25; i++)
     ThreadTable.atomic_int_add (ip, -4);
   rapicorn_mutex_lock (&atomic_mutex);
-  atomic_count -= 1;
+  atomic_count -= 1; // FIXME: make this atomic
   ThreadTable.cond_signal (&atomic_cond);
   rapicorn_mutex_unlock (&atomic_mutex);
   TASSERT (strcmp (ThreadTable.thread_name (ThreadTable.thread_self()), "AtomicTest") == 0);
@@ -127,6 +127,64 @@ test_atomic (void)
   for (int i = 0; i < count; i++)
     ThreadTable.thread_unref (threads[i]);
   TASSERT (atomic_counter == result);
+  TDONE ();
+}
+
+/* --- runonce tests --- */
+static volatile uint runonce_threadcount = 0;
+static Mutex         runonce_mutex;
+static Cond          runonce_cond;
+
+static volatile size_t runonce_value = 0;
+
+static void
+runonce_function (void *data)
+{
+  runonce_mutex.lock(); // syncronize
+  runonce_mutex.unlock();
+  volatile int *runonce_counter = (volatile int*) data;
+  if (once_enter (&runonce_value))
+    {
+      runonce_cond.broadcast();
+      usleep (1); // sched_yield replacement to force contention
+      Atomic::int_add (runonce_counter, 1);
+      usleep (500); // sched_yield replacement to force contention
+      once_leave (&runonce_value, 42);
+    }
+  TASSERT (*runonce_counter == 1);
+  TASSERT (runonce_value == 42);
+  /* sinal thread end */
+  Atomic::uint_add (&runonce_threadcount, -1);
+  runonce_cond.signal();
+}
+
+static void
+test_runonce (void)
+{
+  TSTART ("RunOnceTest");
+  int count = 44;
+  RapicornThread *threads[count];
+  volatile int runonce_counter = 0;
+  Atomic::uint_set (&runonce_threadcount, count);
+  runonce_mutex.lock();
+  for (int i = 0; i < count; i++)
+    {
+      threads[i] = rapicorn_thread_run ("RunOnceTest", runonce_function, (void*) &runonce_counter);
+      TASSERT (threads[i]);
+    }
+  TASSERT (runonce_value == 0);
+  runonce_mutex.unlock(); // syncronized thread start
+  runonce_mutex.lock();
+  while (Atomic::uint_get (&runonce_threadcount) > 0)
+    {
+      TACK();
+      runonce_cond.wait (runonce_mutex);
+    }
+  runonce_mutex.unlock();
+  for (int i = 0; i < count; i++)
+    ThreadTable.thread_unref (threads[i]);
+  TASSERT (runonce_counter == 1);
+  TASSERT (runonce_value == 42);
   TDONE ();
 }
 
@@ -1185,6 +1243,7 @@ main (int   argc,
   test_thread_cxx();
   test_thread_atomic_cxx();
   test_auto_locker_cxx();
+  test_runonce();
   test_deletable_destruction();
   test_ring_buffer(); 
   test_debug_channel(); 

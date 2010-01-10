@@ -16,6 +16,7 @@
  */
 #include "rapicornthread.hh"
 #include <list>
+#include <algorithm>
 
 #define rapicorn_threads_initialized()    ISLIKELY ((void*) ThreadTable.mutex_lock != (void*) ThreadTable.mutex_unlock)
 
@@ -339,6 +340,47 @@ OwnedMutex::~OwnedMutex()
     ThreadTable.rec_mutex_destroy (&m_rec_mutex);
   else
     ThreadTable.rec_mutex_unchain (&m_rec_mutex);
+}
+
+static Mutex once_mutex;
+static Cond  once_cond;
+static std::list<void*> once_list;
+
+bool
+once_enter_impl (volatile size_t *value_location)
+{
+  static int i = 0;
+  bool needs_init = false;
+  once_mutex.lock();
+  if (Atomic::ptr_get ((void*volatile*) value_location) == 0)
+    {
+      if (find (once_list.begin(), once_list.end(), (void*) value_location) == once_list.end())
+        {
+          needs_init = true;
+          once_list.push_front ((void*) value_location);
+        }
+      else
+        do
+          once_cond.wait (once_mutex);
+        while (find (once_list.begin(), once_list.end(), (void*) value_location) != once_list.end());
+    }
+  once_mutex.unlock();
+  return needs_init;
+}
+
+void
+once_leave (volatile size_t *value_location,
+            size_t           initialization_value)
+{
+  return_if_fail (Atomic::ptr_get ((void*volatile*) value_location) == 0);
+  return_if_fail (initialization_value != 0);
+  return_if_fail (once_list.empty() == false);
+
+  Atomic::ptr_set ((void*volatile*) value_location, (void*) initialization_value);
+  once_mutex.lock();
+  once_list.remove ((void*) value_location);
+  once_cond.broadcast();
+  once_mutex.unlock();
 }
 
 } // Rapicorn
