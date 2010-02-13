@@ -150,6 +150,9 @@ if len (sys.argv) > 2 and failtestoption in sys.argv:
         code = 'namespace PlicFailTest { ' + line + '\n}'
       result, error, caret, inclist = parse_main (config, code, filename, linenumbers = false)
       if error:
+        import re
+        # anonimize pathnames for various builddir setups (../a/b/c.idl -> .../c.idl)
+        error = re.sub (r'^[^:]*/([^/:]+):', r'.../\1:', error)
         print error
         if caret:
           print caret
