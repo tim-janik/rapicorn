@@ -73,6 +73,8 @@ CLEANFILES += *.tpg
 # === test rules ===
 # process handle
 check-process-handle: infotest
-	test -n `./infotest --print-process-handle`
-	test `./infotest --print-process-handle` != `./infotest --print-process-handle`
+	@$(call TSTTITLE, Simple process-handle check)
+	$(_@) test -n `./infotest --print-process-handle`; $(call TSTRESULT)
+	@$(call TSTTITLE, Unique process-handle test)
+	$(_@) test `./infotest --print-process-handle` != `./infotest --print-process-handle`; $(call TSTRESULT)
 check: check-process-handle
