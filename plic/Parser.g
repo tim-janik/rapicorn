@@ -203,10 +203,13 @@ class YYGlobals (object):
     assert len (self.namespaces)
     self.namespaces = self.namespaces[1:]
   def handle_include (self, includefilename, origscanner, implinc):
-    f = open (includefilename)
+    import os
+    dir = os.path.dirname (origscanner.filename) # directory for source relative includes
+    filepath = os.path.join (dir, includefilename)
+    f = open (filepath)
     input = f.read()
     try:
-      result = parse_try (input, includefilename, implinc)
+      result = parse_try (input, filepath, implinc)
     except Error, ex:
       pos_file, pos_line, pos_col = origscanner.get_pos()
       if self.config.get ('anonimize-filepaths', 0):
