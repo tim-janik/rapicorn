@@ -16,5 +16,7 @@ rapidrun_LDADD   = $(LDADDS)
 
 # check some options
 check-rapidrun-basics:
-	./rapidrun --list $(top_builddir)/rapicorn/foundation.xml | grep -q VSlider
+	@$(call TSTTITLE, Simple rapidrun VSlider test)
+	$(_@) ./rapidrun --list $(top_srcdir)/rapicorn/foundation.xml | grep -q VSlider; \
+	  $(call TSTRESULT)
 check-am: check-rapidrun-basics
