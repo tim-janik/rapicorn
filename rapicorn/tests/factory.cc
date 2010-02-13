@@ -52,8 +52,9 @@ main (int   argc,
   Application::init_with_x11 (&argc, &argv, "FactoryTest");
 
   /* find and load GUI definitions relative to argv[0] */
+  String factory_xml = Rapicorn::Path::join (SRCDIR, "factory.xml");
   Application::auto_load ("DummyTranslation",   // i18n_domain,
-                          "factory.xml",        // GUI file name
+                          factory_xml,          // GUI file name
                           argv[0]);
   Root *root;
   Item *item;
