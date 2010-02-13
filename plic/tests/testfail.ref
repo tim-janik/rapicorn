@@ -127,8 +127,8 @@
 .../testfail.idl:79: TypeError: unknown type: 'void'
 >  ...PlicFailTest { interface I { int method (int n, void v); }; // invalid argument type
 >                                                          ^
-include-f2.idl:2:3: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
+.../include-f2.idl:2:3: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
 >    unexisting_var var;
 >    ^
-include-f1.idl:1: note: included "include-f2.idl" from here
-./testfail.idl:81:1: note: included "include-f1.idl" from here
+.../include-f1.idl:1: note: included "include-f2.idl" from here
+.../testfail.idl:81:1: note: included "include-f1.idl" from here

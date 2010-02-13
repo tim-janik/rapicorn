@@ -209,6 +209,8 @@ class YYGlobals (object):
       result = parse_try (input, includefilename, implinc)
     except Error, ex:
       pos_file, pos_line, pos_col = origscanner.get_pos()
+      if self.config.get ('anonimize-filepaths', 0):
+        pos_file = re.sub (r'.*/([^/]+)$', r'.../\1', '/' + pos_file)
       ix = Error ('%s:%d: note: included "%s" from here' % (pos_file, pos_line, includefilename))
       ix.exception = ex.exception
       ex.exception = ix
@@ -291,6 +293,8 @@ def parse_try (input_string, filename, implinc, linenumbers = True):
   if exmsg:
     pos = xscanner.get_pos()
     file_name, line_number, column_number = pos
+    if yy.config.get ('anonimize-filepaths', 0):        # FIXME: global yy reference
+        file_name = re.sub (r'.*/([^/]+)$', r'.../\1', '/' + file_name)
     if linenumbers:
       errstr = '%s:%d:%d: %s' % (file_name, line_number, column_number, exmsg)
     else:
@@ -304,7 +308,8 @@ def parse_try (input_string, filename, implinc, linenumbers = True):
     raise Error (errstr, ecaret)
   return result
 
-def parse_main (input_string, filename, linenumbers):
+def parse_main (config, input_string, filename, linenumbers):
+  yy.configure (config)
   try:
     result = parse_try (input_string, filename, True, linenumbers)
     return (result, None, None, [])

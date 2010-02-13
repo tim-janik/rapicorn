@@ -34,8 +34,7 @@ class ParseError (Exception):
     self.kind = kind
 
 def parse_main (config, input_string, filename, linenumbers = True):
-  Parser.yy.configure (config)
-  return Parser.parse_main (input_string, filename, linenumbers)
+  return Parser.parse_main (config, input_string, filename, linenumbers)
 
 def main():
   config = parse_files_and_args()
@@ -133,6 +132,7 @@ if len (sys.argv) > 2 and failtestoption in sys.argv:
   import tempfile, os
   sys.argv.remove (failtestoption) # remove --plic-fail-file-test
   config = parse_files_and_args()
+  config['anonimize-filepaths'] = true # anonimize paths for varying builddirs (../a/b/c.idl -> .../c.idl)
   files = config['files']
   if len (files) != 1:
     raise Exception (failtestoption + ': single input file required')
@@ -151,7 +151,6 @@ if len (sys.argv) > 2 and failtestoption in sys.argv:
       result, error, caret, inclist = parse_main (config, code, filename, linenumbers = false)
       if error:
         import re
-        # anonimize pathnames for various builddir setups (../a/b/c.idl -> .../c.idl)
         error = re.sub (r'^[^:]*/([^/:]+):', r'.../\1:', error)
         print error
         if caret:
