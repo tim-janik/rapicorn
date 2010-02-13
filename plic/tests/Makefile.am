@@ -7,6 +7,7 @@ noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
 
 EXTRA_DIST += testpass.idl testfail.idl include-f1.idl include-f2.idl include-p1.idl include-p2.idl
+EXTRA_DIST += testfail.ref testrapicorn.ref
 DEBUG	    =
 
 # tests for auxillary data in testpass.idl
@@ -29,7 +30,7 @@ check-pass:	testpass.idl
 check-fail:	testfail.idl
 	@$(call TSTTITLE)
 	$(_@) ${TESTPLIC} --plic-fail-file-test $(srcdir)/testfail.idl > $(TSTOUT)
-	@$(call TSTCMP, testfail.ref)
+	@$(call TSTCMP, $(srcdir)/testfail.ref)
 
 check-TypePackage: ptptest
 	@$(call TSTTITLE)
@@ -40,6 +41,6 @@ check-TypePackage: ptptest
 check-Rapicorn:
 	@$(call TSTTITLE)
 	$(_@) ${TESTPLIC} $(srcdir)/testpass.idl -O Rapicorn -o $(TSTOUT)
-	@$(call TSTCMP, testrapicorn.ref)
+	@$(call TSTCMP, $(srcdir)/testrapicorn.ref)
 
 check:	check-pass check-fail check-TypePackage check-Rapicorn
