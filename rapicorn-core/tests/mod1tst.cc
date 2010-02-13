@@ -145,7 +145,7 @@ main (int   argc,
   rapicorn_init_test (&argc, &argv);
 
   // first, load required type package
-  Type::register_package_file ("testtypes.tpg");
+  Type::register_package_file (Rapicorn::Path::join (SRCDIR, "testtypes.tpg"));
 
   Test::add ("/Store/string-row", test_store1_string_row);
   Test::add ("/Store/array-row", test_store1_array);
