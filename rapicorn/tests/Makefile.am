@@ -2,7 +2,7 @@
 include $(top_srcdir)/Makefile.decl
 
 INCLUDES	+= -I$(top_srcdir)
-DEFS		+= $(RAPICORN_GUI_CFLAGS) -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"'
+DEFS		+= $(RAPICORN_GUI_CFLAGS) '-DRAPICORN_LOG_DOMAIN="$(basename $(@F))"' '-DSRCDIR="$(srcdir)"'
 
 # test programs
 noinst_PROGRAMS	 = $(TEST_PROGS)
@@ -60,8 +60,9 @@ sinfex-expressions:
 	$(_@) $(XVFB_START) && \
 	  COLUMNS=9999 $(SINFEX) < $(TSTTMP) > $(TSTOUT) \
 	                 $(XLIBSTDERREXTFIX)
-	@$(call TSTCMP, expressions.ref)
+	@$(call TSTCMP, $(srcdir)/expressions.ref)
 	$(_@) rm -f $(TSTTMP)
+EXTRA_DIST += expressions.txt expressions.ref
 check-am: sinfex-expressions
 
 xmllint-check:

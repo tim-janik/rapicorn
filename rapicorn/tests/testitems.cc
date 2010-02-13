@@ -121,7 +121,7 @@ main (int   argc,
   Application::init_with_x11 (&argc, &argv, "TestItemsTest");
   
   /* parse GUI description */
-  Application::auto_load ("testitems", "testitems.xml", argv[0]);
+  Application::auto_load ("testitems", Rapicorn::Path::join (SRCDIR, "testitems.xml"), argv[0]);
 
   /* create/run tests */
   test_cxx_gui ();
