@@ -261,7 +261,7 @@ double
 init_value_double (InitValue *value)
 {
   if (value->value_string && value->value_string[0])
-    return g_strtod (value->value_string, NULL);
+    return g_ascii_strtod (value->value_string, NULL);
   return value->value_num;
 }
 
