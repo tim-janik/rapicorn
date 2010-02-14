@@ -1,15 +1,28 @@
 Rapicorn NEXT:
 
-* Started pluggable IDL compiler development.
+* Introduced Cairo dependency.
 * Updates to compile with GCC-4.4.
-
-Incompatible changes:
-
-* Changed string_to_cquote() to add double quotes, string_to_cescape() can
-  be used instead.
-* The expression syntax for property values in GUI descriptions changed
-  from $(function)-expressions to `backtick enclosed infix expressions`.
-  A sample evaluator is provided by: rapicorn/tests/sinfextest --shell
+* Added PLIC, a pluggable IDL compiler.
+* Renamed string_to_cquote() to string_to_cescape().
+* Made string_to_cquote() add real quotes.
+* Added simple expression parser to evaluate property value assignments.
+* Added sample expression evaluator as: rapicorn/tests/sinfextest --shell
+* Changed packing properties into regular Item properties.
+* Merged h/v-scale and -align into Item pack properties.
+* Replaced hfill/vfill in Table by h/v-scale and -align properties.
+* Replaced *_attach in table by Item's h/v-position and -span properties.
+* Got rid of the packer class entirely.
+* Added testing framework with macros and reference files.
+* Added '-x' to rapidrun to auto-exit.
+* Added '--list' to rapidrun to list gadgets from a GUI file.
+* Provide PCRE parser API in rapicorn-core.
+* Introduced a basic typed value system and model APIs.
+* Started list area/widget development.
+* Imported XML UI file error reporting.
+* Optimized resizing performance.
+* Implemented horizontal and vertical size groups.
+* Cosmetic fixups in colors and gradients.
+* Loads of cleanups and bug fixes.
 
 Rapicorn 8.4.0: - Thu Apr 24 23:19:39 CEST 2008
 
