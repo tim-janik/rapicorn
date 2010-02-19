@@ -53,7 +53,7 @@ fill_store (Store1       &s1,
 static Store1*
 create_store ()
 {
-  Store1 *s1 = Store1::create_memory_store (Type::lookup ("String"), SELECTION_BROWSE);
+  Store1 *s1 = Store1::create_memory_store (Type::lookup ("string"), SELECTION_BROWSE);
   fill_store (*s1, ".");
   return s1;
 }

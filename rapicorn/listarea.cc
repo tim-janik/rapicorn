@@ -99,7 +99,7 @@ ItemListImpl::constructed ()
 {
   if (!m_model)
     {
-      Store1 &store = *Store1::create_memory_store (Type::lookup ("String"), SELECTION_INTERVAL);
+      Store1 &store = *Store1::create_memory_store (Type::lookup ("string"), SELECTION_INTERVAL);
       for (uint i = 0; i < 20; i++)
         {
           Array row;
