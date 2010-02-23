@@ -9,4 +9,8 @@ strings
 systest
 threads
 xmltest
+imgcheck
+mod1tst
+modval
+testtypes.tpg
 stamp-xmlcopy
