@@ -27,7 +27,7 @@
 @item	@uri{@top_webdir/roadmap.html,		Roadmap}
 @item	@uri{@top_webdir/techbits.html,		Tech Bits}
 @item	@uri{@top_webdir/versioning.html,	Versioning}
-@item	@uri{@top_webdir/rdocu-rapicorn/,	API Reference}
+@item	@uri{@top_webdir/rdocu-ui/,	API Reference}
 @item	@uri{@top_webdir/cmpgtk.html,		Observing Gtk+}
 @done
 @* @doxer_fontsize{+1,@*} @*

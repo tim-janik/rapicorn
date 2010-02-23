@@ -19,7 +19,7 @@
 
 #include <Python.h> // must be included first to configure std headers
 
-#include <rapicorn/rapicorn.hh>
+#include <ui/rapicorn.hh>
 using namespace Rapicorn;
 
 

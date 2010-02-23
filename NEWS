@@ -6,7 +6,7 @@ Rapicorn NEXT:
 * Renamed string_to_cquote() to string_to_cescape().
 * Made string_to_cquote() add real quotes.
 * Added simple expression parser to evaluate property value assignments.
-* Added sample expression evaluator as: rapicorn/tests/sinfextest --shell
+* Added sample expression evaluator as: ui/tests/sinfextest --shell
 * Changed packing properties into regular Item properties.
 * Merged h/v-scale and -align into Item pack properties.
 * Replaced hfill/vfill in Table by h/v-scale and -align properties.

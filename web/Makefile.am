@@ -13,10 +13,10 @@ HTML_TARGETS = $(strip                  	\
 	rapicorn-html/doxer-style.css		\
 )
 RDOCU_TARGETS = $(strip                 	\
-	rapicorn-html/rdocu-rapicorn/index.html	\
+	rapicorn-html/rdocu-ui/index.html	\
 )
 
-TARGET_DIRS   = rapicorn-html/ tmpdoxi-rapicorn/ rapicorn-html/rdocu-rapicorn/
+TARGET_DIRS   = rapicorn-html/ tmpdoxi-ui/ rapicorn-html/rdocu-ui/
 DOXIDEFS      = -D RAPICORN_VERSION ${RAPICORN_VERSION} -I $(srcdir)
 DOCFRAME_DEFS = -D DOXI_INCLUDE_FILE \"definitions.doxi\"    # $(if $(findstring $(<F), ${WEBMENU_DOXI_FILES}), \"webmenu.doxi\", \"webframe.doxi\")
 
@@ -24,21 +24,21 @@ DOCFRAME_DEFS = -D DOXI_INCLUDE_FILE \"definitions.doxi\"    # $(if $(findstring
 ../docs/psource/rapicorn-core.psrc ../docs/psource/rapicorn-gui.psrc: PHONY-TARGET
 	@$(MAKE) -C ../docs $(patsubst ../docs/%, %, $@)
 # Rapicorn reference docu
-tmpdoxi-rapicorn/index.doxi: ../docs/psource/rapicorn-core.psrc ../docs/psource/rapicorn-gui.psrc rdocu-template.doxi definitions.doxi
-	rm -f tmpdoxi-rapicorn/*
+tmpdoxi-ui/index.doxi: ../docs/psource/rapicorn-core.psrc ../docs/psource/rapicorn-gui.psrc rdocu-template.doxi definitions.doxi
+	rm -f tmpdoxi-ui/*
 	$(DOXER) pickle2doxi $(strip -i -D TOP_WEBDIR ".."             		\
 		../docs/psource/rapicorn-core.psrc				\
 		../docs/psource/rapicorn-gui.psrc				\
-		 -d tmpdoxi-rapicorn/ $(DOXIDEFS) -T rdocu-template.doxi 	\
+		 -d tmpdoxi-ui/ $(DOXIDEFS) -T rdocu-template.doxi 	\
 		 -D DOCU_TEMPLATE_TITLE "Rapicorn - Interface Reference"        \
 		 -D DOCU_TEMPLATE_HEADING "Rapicorn Interface Reference" )
-rapicorn-html/rdocu-rapicorn/index.html: tmpdoxi-rapicorn/index.doxi $(wildcard tmpdoxi-rapicorn/*.doxi)
-	rm -f rapicorn-html/rdocu-rapicorn/*
+rapicorn-html/rdocu-ui/index.html: tmpdoxi-ui/index.doxi $(wildcard tmpdoxi-ui/*.doxi)
+	rm -f rapicorn-html/rdocu-ui/*
 	$(DOXER) doxi2html $(strip                      -D TOP_WEBDIR ".."      \
-		 -d rapicorn-html/rdocu-rapicorn/ $(DOXIDEFS) $(call DOCFRAME_DEFS)      \
-		 $(filter-out $<, $(shell echo tmpdoxi-rapicorn/*.doxi)) )
+		 -d rapicorn-html/rdocu-ui/ $(DOXIDEFS) $(call DOCFRAME_DEFS)      \
+		 $(filter-out $<, $(shell echo tmpdoxi-ui/*.doxi)) )
 	$(DOXER) doxi2html $(strip                      -D TOP_WEBDIR ".."      \
-		 -d rapicorn-html/rdocu-rapicorn/ $(DOXIDEFS) $(call DOCFRAME_DEFS) $< )
+		 -d rapicorn-html/rdocu-ui/ $(DOXIDEFS) $(call DOCFRAME_DEFS) $< )
 EXTRA_DIST += rdocu-template.doxi
 
 # rule: mkdir
@@ -68,8 +68,8 @@ noinst_DATA = @DOXERDEP@ # rapicorn-site.tar.bz2
 clean-local:
 	rm -f screenshotdir/*.THUMB.jpg
 	rm -f ${intermediate_files} ${CLEANFILES}
-	rm -f tmpdoxi-rapicorn/* rapicorn-html/rdocu-rapicorn/*
-	-rmdir -p tmpdoxi-rapicorn/ rapicorn-html/rdocu-rapicorn/
+	rm -f tmpdoxi-ui/* rapicorn-html/rdocu-ui/*
+	-rmdir -p tmpdoxi-ui/ rapicorn-html/rdocu-ui/
 	rm -fr rapicorn-html/screenshotdir/ rapicorn-html/web-images/ rapicorn-html/images/ rapicorn-html/style/
 	rm -f rapicorn-html/* rapicorn-html/.htaccess
 	rmdir rapicorn-html/ 2>/dev/null ; true

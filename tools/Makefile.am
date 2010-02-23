@@ -6,7 +6,7 @@ DEFS		+=
 
 bin_PROGRAMS	 = $(BIN_PROGS)
 BIN_PROGS	 =
-LDADDS		 = $(top_builddir)/rapicorn/librapicorn@RAPICORN_RELEASE@.la
+LDADDS		 = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
 
 # rapidrun
 BIN_PROGS	+= rapidrun
@@ -17,6 +17,6 @@ rapidrun_LDADD   = $(LDADDS)
 # check some options
 check-rapidrun-basics:
 	@$(call TSTTITLE, Simple rapidrun VSlider test)
-	$(_@) ./rapidrun --list $(top_srcdir)/rapicorn/foundation.xml | grep -q VSlider; \
+	$(_@) ./rapidrun --list $(top_srcdir)/ui/foundation.xml | grep -q VSlider; \
 	  $(call TSTRESULT)
 check-am: check-rapidrun-basics

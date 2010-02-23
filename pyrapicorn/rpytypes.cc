@@ -16,7 +16,7 @@
  */
 #include "rpy.hh" // must be included first to configure std headers
 
-#include <rapicorn/rapicorn.hh>
+#include <ui/rapicorn.hh>
 using namespace Rapicorn;
 
 #define rpy_is_pywindow(pyval)  PyObject_TypeCheck (pyval, &rpy_window_type)

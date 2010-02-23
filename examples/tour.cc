@@ -14,7 +14,7 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include <rapicorn/rapicorn.hh>
+#include <ui/rapicorn.hh>
 
 namespace {
 using namespace Rapicorn;
@@ -39,7 +39,7 @@ custom_commands (Window             &window,
   return true;
 }
 
-#include "../rapicorn-core/tests/testpixs.c" // alpha_rle alpha_raw rgb_rle rgb_raw
+#include "../core/tests/testpixs.c" // alpha_rle alpha_raw rgb_rle rgb_raw
 
 extern "C" int
 main (int   argc,

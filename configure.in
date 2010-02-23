@@ -7,7 +7,7 @@ builtin(include, acrapicorn.m4)dnl # include special macros
 
 # initialize autoconf for Rapicorn
 AC_INIT
-AC_CONFIG_SRCDIR([rapicorn/rapicorn.hh])
+AC_CONFIG_SRCDIR([ui/rapicorn.hh])
 AM_CONFIG_HEADER(configure.h)
 AC_PREREQ(2.57)
 
@@ -338,7 +338,7 @@ AC_DEFUN([RAPICORN_I18N_REQUIREMENTS],
     AC_PROG_INTLTOOL
 ])
 
-dnl # RAPICORN_REQUIREMENTS() - checks everything needed by rapicorn/
+dnl # RAPICORN_REQUIREMENTS() - checks everything needed by ui/
 AC_DEFUN([RAPICORN_REQUIREMENTS],
 [
     dnl # --- check for Rapicorn GUI dependencies ---
@@ -540,10 +540,10 @@ po-helper.sh
 po/Makefile.in
 plic/Makefile
 plic/tests/Makefile
-rapicorn-core/Makefile
-rapicorn-core/tests/Makefile
-rapicorn/Makefile
-rapicorn/tests/Makefile
+core/Makefile
+core/tests/Makefile
+ui/Makefile
+ui/tests/Makefile
 tools/Makefile
 pyrapicorn/Makefile
 tests/Makefile
