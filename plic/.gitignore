@@ -1,4 +1,5 @@
 .deps
+plic-[0-9][0-9][0-9][0-9]
+plic-intern
 Parser.py
 *.pyc
-plic-[0-9].[0-9]
