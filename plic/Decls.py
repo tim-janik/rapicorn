@@ -32,22 +32,25 @@ class Namespace (BaseDecl):
   def __init__ (self, name):
     super (Namespace, self).__init__()
     self.name = name
-    self.members = [] # holds: (name, content)
+    self.cmembers = [] # holds: (name, content)
+    self.tmembers = [] # holds: (name, content)
     self.type_dict = {}
     self.const_dict = {}
     self.impl_set = set()
   def add_const (self, name, content, isimpl):
-    self.members += [ (name, content) ]
-    self.const_dict[name] = self.members[-1]
+    self.cmembers += [ (name, content) ]
+    self.const_dict[name] = self.cmembers[-1]
     if isimpl:
       self.impl_set.add (name)
   def add_type (self, type):
     assert isinstance (type, TypeInfo)
     type.namespace = self
-    self.members += [ (type.name, type) ]
+    self.tmembers += [ (type.name, type) ]
     self.type_dict[type.name] = type
   def types (self):
     return self.type_dict.values()
+  def consts (self):
+    return self.cmembers
   def unknown (self, name):
     return not (self.const_dict.has_key (name) or self.type_dict.has_key (name))
   def find_const (self, name):

@@ -21,9 +21,10 @@ def generate (namespace_list, **args):
   import pprint, re
   for ns in namespace_list:
     print "namespace %s:" % ns.name
-    if ns.members:
-      print "  Members:"
-      str = pprint.pformat (ns.members, 2)
+    consts = ns.consts()
+    if consts:
+      print "  Constants:"
+      str = pprint.pformat (consts, 2)
       print re.compile (r'^', re.MULTILINE).sub ('    ', str)
     types = ns.types()
     if types:
