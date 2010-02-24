@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-import sys
+import sys, os
 pkginstall_configvars = {
   'PLIC_VERSION' : '0.0-uninstalled',
   'pyutilsdir'   : '.',
@@ -35,6 +35,22 @@ class ParseError (Exception):
 
 def parse_main (config, input_string, filename, linenumbers = True):
   return Parser.parse_main (config, input_string, filename, linenumbers)
+
+def module_import (module_or_file):
+  if os.path.isabs (module_or_file):
+    module_dir, module_file = os.path.split (module_or_file)
+    module_name, module_ext = os.path.splitext (module_file)
+    savedpath = sys.path
+    sys.path = [ module_dir ]
+    try:
+      module_obj = __import__ (module_name)
+    except:
+      sys.path = savedpath
+      raise
+    sys.path = savedpath
+    return module_obj
+  else:
+    return __import__ (module_or_file)
 
 def main():
   config = parse_files_and_args()
@@ -58,10 +74,9 @@ def main():
     for ix in inclist:
       print >>sys.stderr, ix
     sys.exit (7)
-  __import__ (config['backend']).generate (result, **config)
+  module_import (config['backend']).generate (result, **config)
 
 def print_help (with_help = True):
-  import os
   print "plic version", pkginstall_configvars["PLIC_VERSION"]
   if not with_help:
     return
@@ -94,12 +109,19 @@ def parse_files_and_args():
     if arg == '--plic-debug': config['pass-exceptions'] = 1
     if arg == '-o': config['output'] = val
     if arg == '-O' or arg == '--output-format':
-      config['backend'] = val
-      if not val in backends:
-        print >>sys.stderr, sys.argv[0] + ": unknown output format:", val
-        print_help(); sys.exit (1)
+      if val[0] == '=': val = val[1:]
+      if val in backends:
+        config['backend'] = val
+      else:
+        ap = os.path.abspath (val)
+        if os.access (ap + ".py", os.R_OK):
+          config['backend'] = ap + ".py"
+        elif os.access (ap + ".pyc", os.R_OK):
+          config['backend'] = ap + ".pyc"
+        else:
+          print >>sys.stderr, sys.argv[0] + ": unknown output format:", val
+          print_help(); sys.exit (1)
     if arg == '--cc-type-package-parser':
-      import os
       source = os.path.join (pkginstall_configvars["pyutilsdir"],'PlicTypePackage.cc')
       f = open (source)
       outtext = f.read()
@@ -116,8 +138,11 @@ def parse_files_and_args():
       sys.exit (0)
     if arg == '--list-formats':
       print "\nAvailable Output Formats:"
-      for be in backends:
-        bedoc = __import__ (be).__doc__.strip()
+      b = backends
+      if os.path.isabs (config['backend']):
+        b = b + [ config['backend'] ]
+      for be in b:
+        bedoc = module_import (be).__doc__.strip()
         bedoc = re.sub ('\n\s*\n', '\n', bedoc)                         # remove empty lines
         bedoc = re.compile (r'^', re.MULTILINE).sub ('    ', bedoc)     # indent
         print "  %s" % be
