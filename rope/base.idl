@@ -19,6 +19,23 @@ namespace Rapicorn {
 namespace Rope {
 // void  init_with_x11   (args, app_name);
 
+sequence StringArray {
+  string        strings;
+};
+
+interface Window {
+  bool          viewable        ();
+  void          show            ();
+  bool          closed          ();
+  void          close           ();
+  signal bool   commands        (string cmdname, StringArray    args);
+};
+
+interface Application {
+  Window        create_window   (string         window_identifier,
+                                 StringArray    arguments,
+                                 StringArray    env_variables);
+};
 
 } // Rope
 } // Rapicorn
