@@ -540,6 +540,7 @@ po-helper.sh
 po/Makefile.in
 plic/Makefile
 plic/tests/Makefile
+rope/Makefile
 core/Makefile
 core/tests/Makefile
 ui/Makefile
