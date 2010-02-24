@@ -232,6 +232,14 @@ main (int   argc,
       return 0;
     }
 
+  if (argc >= 2 && String ("--print-object-url") == argv[1])
+    {
+      rapicorn_init_core (&argc, &argv, __FILE__);
+      SomeObject *obj = new SomeObject();
+      printout ("%s", obj->object_url().c_str());
+      return 0;
+    }
+
   rapicorn_init_test (&argc, &argv);
 
   Test::add ("Misc", test_misc);

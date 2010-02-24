@@ -78,3 +78,10 @@ check-process-handle: infotest
 	@$(call TSTTITLE, Unique process-handle test)
 	$(_@) test `./infotest --print-process-handle` != `./infotest --print-process-handle`; $(call TSTRESULT)
 check: check-process-handle
+# process handle
+check-object-url: infotest
+	@$(call TSTTITLE, Simple object-url check)
+	$(_@) test -n `./infotest --print-object-url`; $(call TSTRESULT)
+	@$(call TSTTITLE, Unique object-url test)
+	$(_@) test `./infotest --print-object-url` != `./infotest --print-object-url`; $(call TSTRESULT)
+check: check-object-url
