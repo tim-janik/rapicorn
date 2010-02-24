@@ -14,9 +14,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""PLIC-Rapicorn - C++ Rapicorn glue code generator for PLIC
+"""Rapicorn-PyGlue - Python Glue code generator for Rapicorn
 
-More details at http://www.testbit.eu/plic
+More details at http://www.rapicorn.org
 """
 import Decls
 
@@ -45,6 +45,21 @@ def strcquote (string):
       result += c
   return '"' + result + '"'
 
+def reindent (prefix, lines):
+  import re
+  return re.compile (r'^', re.M).sub (prefix, lines)
+
+base_code = """
+class __BaseRecord__:
+  def __init__ (self, **entries):
+    self.__dict__.update (entries)
+class __BaseClass__ (object):
+  pass
+class __Signal__:
+  def __init__ (self, signame):
+    self.name = signame
+"""
+
 class Generator:
   def __init__ (self):
     self.ntab = 26
@@ -71,15 +86,6 @@ class Generator:
     return '  ' + self.format_to_tab ('virtual const PropertyList&') + 'list_properties ();\n'
   def generate_field (self, fident, ftype):
     return '  ' + self.format_to_tab (ftype.name) + fident + ';\n'
-  def generate_method (self, ftype):
-    s = ''
-    s += '  ' + self.format_to_tab (ftype.rtype.name) + ftype.name + ' ('
-    l = []
-    for a in ftype.args:
-      l += [ self.format_arg (*a) ]
-    s += ', '.join (l)
-    s += ');\n'
-    return s
   def generate_signal_name (self, ftype, ctype):
     return 'Signal_%s' % ftype.name
   def generate_sigdef (self, ftype, ctype):
@@ -96,50 +102,66 @@ class Generator:
       s += '<' + ftype.rtype.name + '> '
     s += '> ' + signame + ';\n'
     return s
-  def generate_signal (self, ftype, ctype):
-    signame = self.generate_signal_name (ftype, ctype)
-    return '  ' + self.format_to_tab (signame) + 'sig_%s;\n' % ftype.name
+  def default_value (self, type):
+    return { 'float' : '0' }[type.name]
+  def generate_record (self, type_info):
+    s = ''
+    s += 'class %s (__BaseRecord__):\n' % type_info.name
+    s += '  def __init__ (self, **entries):\n'
+    s += '    defaults = {'
+    for fl in type_info.fields:
+      s += " '%s' : %s, " % (fl[0], self.default_value (fl[1]))
+    s += '}\n'
+    s += '    self.__dict__.update (defaults)\n'
+    s += '    __BaseRecord__.__init__ (self, **entries)\n'
+    return s
+  def generate_sighandler (self, ftype, ctype):
+    s = ''
+    s += 'def __sig_%s__ (self): pass # default handler' % ftype.name
+    return s
+  def generate_method (self, ftype):
+    s = ''
+    s += 'def %s (' % ftype.name
+    l = [ 'self' ]
+    for a in ftype.args:
+      l += [ a[0] ]
+    s += ', '.join (l)
+    if ftype.rtype.name == 'void':
+      s += '): # one way\n'
+    else:
+      s += '): # %s\n' % ftype.rtype.name
+    s += '  pass'
+    return s
+  def generate_class (self, type_info):
+    s = ''
+    l = []
+    for pr in type_info.prerequisites:
+      l += [ pr.name ]
+    if not l:
+      l = [ '__BaseClass__' ]
+    s += 'class %s (%s):\n' % (type_info.name, ', '.join (l))
+    s += '  def __init__ (self):\n'
+    s += '    super (%s, self).__init__()\n' % type_info.name
+    for sg in type_info.signals:
+      s += "    self.sig_%s = __Signal__ ('%s')\n" % (sg.name, sg.name)
+    for m in type_info.methods:
+      s += reindent ('  ', self.generate_method (m)) + '\n'
+    for sg in type_info.signals:
+      s += reindent ('  ', self.generate_sighandler (sg, type_info)) + '\n'
+    return s
   def generate_type (self, type_info):
     self.tabwidth (16)
     s = ''
     tp = type_info
     if tp.storage == Decls.RECORD:
-      s += 'struct %s {\n' % type_info.name
+      s += self.generate_record (tp) + '\n'
     elif tp.storage == Decls.INTERFACE:
-      if tp.signals:
-        self.tabwidth (20 + 8)
-      else:
-        self.tabwidth (20)
-      s += 'class %s' % type_info.name
-      if tp.prerequisites:
-        s += ' :\n  '
-        l = []
-        for pr in tp.prerequisites:
-          l += [ pr.name ]
-        s += ',\n  '.join (l)
-        s += '\n'
-      else:
-        s += ' '
-      s += '{\n'
-    if tp.storage == Decls.INTERFACE:
-      for sg in tp.signals:
-        s += self.generate_sigdef (sg, type_info)
-      for sg in tp.signals:
-        s += self.generate_signal (sg, type_info)
-    if tp.storage == Decls.RECORD:
-      for fl in tp.fields:
-        s += self.generate_field (fl[0], fl[1])
-    if tp.storage == Decls.INTERFACE:
-      if tp.fields:
-        s += self.generate_proplist (type_info)
-      for fl in tp.fields:
-        s += self.generate_prop (fl[0], fl[1])
-    if tp.storage == Decls.INTERFACE:
-      for m in tp.methods:
-        s += self.generate_method (m)
-    if (tp.storage == Decls.RECORD or
-        tp.storage == Decls.INTERFACE):
-      s += '};\n'
+      s = self.generate_class (type_info) + '\n'
+    #if tp.storage == Decls.INTERFACE:
+    #  if tp.fields:
+    #    s += self.generate_proplist (type_info)
+    #  for fl in tp.fields:
+    #    s += self.generate_prop (fl[0], fl[1])
     return s
   def collect_impl_types (self, namespace):
     types = []
@@ -148,7 +170,8 @@ class Generator:
         types += [ t ]
     return types
   def generate_namespaces (self, namespace_list):
-    s = '/* Generated by Plic-Rapicorn */\n'    # magic
+    s = '### --- Generated by Rapicorn-PyGlue --- ###\n'
+    s += base_code + '\n'
     # collect impl types
     types = []
     for ns in namespace_list:
