@@ -23,6 +23,11 @@ sequence StringArray {
   string        strings;
 };
 
+record Requisition {
+  float width;
+  float height;
+};
+
 interface Window {
   bool          viewable        ();
   void          show            ();
