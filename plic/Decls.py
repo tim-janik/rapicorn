@@ -48,7 +48,7 @@ class Namespace (BaseDecl):
     self.tmembers += [ (type.name, type) ]
     self.type_dict[type.name] = type
   def types (self):
-    return self.type_dict.values()
+    return [mb[1] for mb in self.tmembers]
   def consts (self):
     return self.cmembers
   def unknown (self, name):
