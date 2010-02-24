@@ -7,8 +7,9 @@ PLICV	= plic-@PLIC_VERSION@
 PLICINT	= ./plic-intern
 BINPLIC	= plic
 
-bin_SCRIPTS = ${PLICINT} ${PLICV}
-CLEANFILES += ${PLICINT} ${PLICV}
+bin_SCRIPTS    = ${PLICV}
+noinst_SCRIPTS = ${PLICINT}
+CLEANFILES    += ${PLICINT} ${PLICV}
 
 YAPPS = ${PYTHON} ${top_srcdir}/yapps2_deb/yapps2.py
 
