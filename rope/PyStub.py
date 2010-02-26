@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-# plic - Pluggable IDL Compiler                                -*-mode:python-*-
-# Copyright (C) 2009 Tim Janik
+# Rapicorn-PyStub                                              -*-mode:python-*-
+# Copyright (C) 2009-2010 Tim Janik
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""Rapicorn-PyGlue - Python Glue code generator for Rapicorn
+"""Rapicorn-PyStub - Python Stub (client glue code) generator for Rapicorn
 
 More details at http://www.rapicorn.org
 """
