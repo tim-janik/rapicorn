@@ -43,7 +43,7 @@ check-base-idl:
 	$(_@) ${PLICINT} $(srcdir)/base.idl > /dev/null ; $(call TSTRESULT)
 EXTRA_DIST += base.idl
 check-local: check-base-idl
-check-pyglue-syntax:
+check-pystub-syntax:
 	@$(call TSTTITLE)
-	$(_@) ${PLICINT} -O=$(srcdir)/PyGlue $(srcdir)/base.idl | $(PYTHON) ; $(call TSTRESULT)
-check-local: check-pyglue-syntax
+	$(_@) ${PLICINT} -O=$(srcdir)/PyStub $(srcdir)/base.idl | $(PYTHON) ; $(call TSTRESULT)
+check-local: check-pystub-syntax
