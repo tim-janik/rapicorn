@@ -102,15 +102,21 @@ class Generator:
       s += '<' + ftype.rtype.name + '> '
     s += '> ' + signame + ';\n'
     return s
-  def default_value (self, type):
-    return { 'float' : '0' }[type.name]
+  def zero_value (self, type):
+    return { Decls.FLOAT    : '0',
+             Decls.INT      : '0',
+             Decls.ENUM     : '0',
+             Decls.RECORD   : 'None',
+             Decls.SEQUENCE : 'None',
+             Decls.STRING   : "''",
+           }[type.storage]
   def generate_record (self, type_info):
     s = ''
     s += 'class %s (__BaseRecord__):\n' % type_info.name
     s += '  def __init__ (self, **entries):\n'
     s += '    defaults = {'
     for fl in type_info.fields:
-      s += " '%s' : %s, " % (fl[0], self.default_value (fl[1]))
+      s += " '%s' : %s, " % (fl[0], self.zero_value (fl[1]))
     s += '}\n'
     s += '    self.__dict__.update (defaults)\n'
     s += '    __BaseRecord__.__init__ (self, **entries)\n'
