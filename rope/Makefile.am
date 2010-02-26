@@ -47,3 +47,10 @@ check-pystub-syntax:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} -O=$(srcdir)/PyStub $(srcdir)/base.idl | $(PYTHON) ; $(call TSTRESULT)
 check-local: check-pystub-syntax
+
+check-CppStub:
+	@$(call TSTTITLE)
+	$(_@) ${PLICINT} -O=$(srcdir)/CppStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
+	@$(call TSTCMP, $(srcdir)/testcppstub.ref)
+EXTRA_DIST += testcppstub.ref
+check-local: check-CppStub
