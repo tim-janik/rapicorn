@@ -50,14 +50,7 @@ def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines)
 
 base_code = """
-class __BaseRecord__:
-  def __init__ (self, **entries):
-    self.__dict__.update (entries)
-class __BaseClass__ (object):
-  pass
-class __Signal__:
-  def __init__ (self, signame):
-    self.name = signame
+// Base classes...
 """
 
 class Generator:
@@ -84,8 +77,8 @@ class Generator:
     return s
   def generate_proplist (self, ctype):
     return '  ' + self.format_to_tab ('virtual const PropertyList&') + 'list_properties ();\n'
-  def generate_field (self, fident, ftype):
-    return '  ' + self.format_to_tab (ftype.name) + fident + ';\n'
+  def generate_field (self, fident, ftype_name):
+    return '  ' + self.format_to_tab (ftype_name) + fident + ';\n'
   def generate_signal_name (self, ftype, ctype):
     return 'Signal_%s' % ftype.name
   def generate_sigdef (self, ftype, ctype):
@@ -102,52 +95,49 @@ class Generator:
       s += '<' + ftype.rtype.name + '> '
     s += '> ' + signame + ';\n'
     return s
-  def default_value (self, type):
-    return { 'float' : '0' }[type.name]
   def generate_record (self, type_info):
     s = ''
-    s += 'class %s (__BaseRecord__):\n' % type_info.name
-    s += '  def __init__ (self, **entries):\n'
-    s += '    defaults = {'
+    s += 'struct %s {\n' % type_info.name
     for fl in type_info.fields:
-      s += " '%s' : %s, " % (fl[0], self.default_value (fl[1]))
-    s += '}\n'
-    s += '    self.__dict__.update (defaults)\n'
-    s += '    __BaseRecord__.__init__ (self, **entries)\n'
+      type = fl[1].name
+      if type == 'float': type = 'double'
+      s += self.generate_field (fl[0], type)
+    s += '  inline %s () {' % type_info.name
+    for fl in type_info.fields:
+      if fl[1].storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
+        s += " %s = 0;" % fl[0]
+    s += ' }\n'
+    s += '};'
     return s
-  def generate_sighandler (self, ftype, ctype):
-    s = ''
-    s += 'def __sig_%s__ (self): pass # default handler' % ftype.name
-    return s
+  def generate_signal (self, ftype, ctype):
+    signame = self.generate_signal_name (ftype, ctype)
+    return '  ' + self.format_to_tab (signame) + 'sig_%s;\n' % ftype.name
   def generate_method (self, ftype):
     s = ''
-    s += 'def %s (' % ftype.name
-    l = [ 'self' ]
+    s += '  ' + self.format_to_tab (ftype.rtype.name) + ftype.name + ' ('
+    argindent = len (s)
+    l = []
     for a in ftype.args:
-      l += [ a[0] ]
-    s += ', '.join (l)
-    if ftype.rtype.name == 'void':
-      s += '): # one way\n'
-    else:
-      s += '): # %s\n' % ftype.rtype.name
-    s += '  pass'
+      l += [ self.format_arg (*a) ]
+    s += (',\n' + argindent * ' ').join (l)
+    s += ');\n'
     return s
   def generate_class (self, type_info):
     s = ''
     l = []
     for pr in type_info.prerequisites:
       l += [ pr.name ]
-    if not l:
-      l = [ '__BaseClass__' ]
-    s += 'class %s (%s):\n' % (type_info.name, ', '.join (l))
-    s += '  def __init__ (self):\n'
-    s += '    super (%s, self).__init__()\n' % type_info.name
+    s += 'class %s' % type_info.name
+    if l:
+      s += ': %s' % ', '.join (l)
+    s += '\n{\n'
     for sg in type_info.signals:
-      s += "    self.sig_%s = __Signal__ ('%s')\n" % (sg.name, sg.name)
+      s += self.generate_sigdef (sg, type_info)
+    for sg in type_info.signals:
+      s += self.generate_signal (sg, type_info)
     for m in type_info.methods:
-      s += reindent ('  ', self.generate_method (m)) + '\n'
-    for sg in type_info.signals:
-      s += reindent ('  ', self.generate_sighandler (sg, type_info)) + '\n'
+      s += self.generate_method (m)
+    s += '};'
     return s
   def generate_type (self, type_info):
     self.tabwidth (16)
