@@ -81,10 +81,11 @@ class TypeInfo (BaseDecl):
   def __init__ (self, name, storage, isimpl):
     super (TypeInfo, self).__init__()
     assert storage in (VOID, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE)
-    self.typedef_origin = None
     self.name = name
     self.storage = storage
     self.isimpl = isimpl
+    # clonable fields:
+    self.typedef_origin = None
     self.options = []           # holds: (ident, label, blurb, number)
     if (self.storage == RECORD or
         self.storage == INTERFACE):
@@ -102,6 +103,7 @@ class TypeInfo (BaseDecl):
   def clone (self, newname, isimpl):
     if newname == None: newname = self.name
     ti = TypeInfo (newname, self.storage, isimpl)
+    ti.typedef_origin = self.typedef_origin
     ti.options += self.options
     if hasattr (self, 'fields'):
       ti.fields += self.fields
