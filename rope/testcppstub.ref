@@ -158,26 +158,26 @@ typedef std::string s;
 
 class UIWidgetArea {
   typedef Rapicorn::Signals::Signal<UIWidgetArea, void ()> Signal_void_signal;
-  typedef Rapicorn::Signals::Signal<UIWidgetArea, float (UIWidgetArea ba1, int someint)> Signal_sample_signal;
+  typedef Rapicorn::Signals::Signal<UIWidgetArea, double (UIWidgetArea ba1, int someint)> Signal_sample_signal;
   Signal_void_signal sig_void_signal;
   Signal_sample_signal sig_sample_signal;
-  float           simple_method ();
-  float           single_arg (int n);
-  float           single_arg2 (int n);
-  float           two_args (int n,
-                            float r);
-  float           two_args2 (int n,
-                             float r);
-  float           multi_args (int n,
-                              float r,
+  double          simple_method ();
+  double          single_arg (int n);
+  double          single_arg2 (int n);
+  double          two_args (int n,
+                            double r);
+  double          two_args2 (int n,
+                             double r);
+  double          multi_args (int n,
+                              double r,
                               int i,
-                              string s,
-                              float y);
-  float           self_method (UIWidgetArea ba1,
+                              std::string s,
+                              double y);
+  double          self_method (UIWidgetArea ba1,
                                UIWidgetArea ba2);
   void            void_method ();
-  string          on_click2out ();
-  void            on_click2in (string command);
+  std::string     on_click2out ();
+  void            on_click2in (std::string command);
 };
 
 class Parent {

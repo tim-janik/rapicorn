@@ -41,7 +41,7 @@ class Generator:
       return indent + f % string
   def format_arg (self, ident, type):
     s = ''
-    s += type.name + ' ' + ident
+    s += self.type2cpp (type.name) + ' ' + ident
     return s
   def generate_prop (self, fident, ftype):
     v = 'virtual '
@@ -54,20 +54,21 @@ class Generator:
     return '  ' + self.format_to_tab ('virtual const PropertyList&') + 'list_properties ();\n'
   def generate_field (self, fident, ftype_name):
     return '  ' + self.format_to_tab (ftype_name) + fident + ';\n'
-  def generate_signal_name (self, ftype, ctype):
-    return 'Signal_%s' % ftype.name
-  def generate_sigdef (self, ftype, ctype):
-    signame = self.generate_signal_name (ftype, ctype)
+  def generate_signal_name (self, functype, ctype):
+    return 'Signal_%s' % functype.name
+  def generate_sigdef (self, functype, ctype):
+    signame = self.generate_signal_name (functype, ctype)
     s = ''
-    s += '  typedef Rapicorn::Signals::Signal<%s, %s (' % (ctype.name, ftype.rtype.name)
+    cpp_rtype = self.type2cpp (functype.rtype.name)
+    s += '  typedef Rapicorn::Signals::Signal<%s, %s (' % (self.type2cpp (ctype.name), cpp_rtype)
     l = []
-    for a in ftype.args:
+    for a in functype.args:
       l += [ self.format_arg (*a) ]
     s += ', '.join (l)
     s += ')'
-    if ftype.rtype.collector != 'void':
-      s += ', Collector' + ftype.rtype.collector.capitalize()
-      s += '<' + ftype.rtype.name + '> '
+    if functype.rtype.collector != 'void':
+      s += ', Collector' + functype.rtype.collector.capitalize()
+      s += '<' + cpp_rtype + '> '
     s += '> ' + signame + ';\n'
     return s
   def type2cpp (self, typename):
@@ -76,7 +77,7 @@ class Generator:
     return typename
   def mkzero (self, type):
     if type.storage == Decls.ENUM:
-      return type.name + ' (0)'
+      return self.type2cpp (type.name) + ' (0)'
     return '0'
   def generate_record (self, type_info):
     s = ''
@@ -96,15 +97,15 @@ class Generator:
       s += ' }\n'
     s += '};'
     return s
-  def generate_signal (self, ftype, ctype):
-    signame = self.generate_signal_name (ftype, ctype)
-    return '  ' + self.format_to_tab (signame) + 'sig_%s;\n' % ftype.name
-  def generate_method (self, ftype):
+  def generate_signal (self, functype, ctype):
+    signame = self.generate_signal_name (functype, ctype)
+    return '  ' + self.format_to_tab (signame) + 'sig_%s;\n' % functype.name
+  def generate_method (self, functype):
     s = ''
-    s += '  ' + self.format_to_tab (ftype.rtype.name) + ftype.name + ' ('
+    s += '  ' + self.format_to_tab (self.type2cpp (functype.rtype.name)) + functype.name + ' ('
     argindent = len (s)
     l = []
-    for a in ftype.args:
+    for a in functype.args:
       l += [ self.format_arg (*a) ]
     s += (',\n' + argindent * ' ').join (l)
     s += ');\n'
