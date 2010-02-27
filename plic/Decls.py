@@ -27,6 +27,21 @@ class BaseDecl (object):
     self.docu = ()
 
 VOID, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE = tuple ('vidserqfc')
+def storage_name (storage):
+  name = {
+    VOID      : 'VOID',
+    INT       : 'INT',
+    FLOAT     : 'FLOAT',
+    STRING    : 'STRING',
+    ENUM      : 'ENUM',
+    RECORD    : 'RECORD',
+    SEQUENCE  : 'SEQUENCE',
+    FUNC      : 'FUNC',
+    INTERFACE : 'INTERFACE',
+  }.get (storage, None)
+  if not name:
+    raise RuntimeError ("Invalid storage type: " + storage)
+  return name
 
 class Namespace (BaseDecl):
   def __init__ (self, name, impl_list):
