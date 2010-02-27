@@ -120,60 +120,13 @@ struct NestedTypesRec {
 struct NestedTypesSeq {
   std::vector<NestedTypesRec> ntr;
 };
-struct AliasRecord {
-  bool            single_bool;
-  int             single_num;
-  double          single_float;
-  std::string     single_string;
-  int             sibling1;
-  int             sibling2;
-  int             multi1;
-  int             multi2;
-  int             multi3;
-  int             multi4;
-  ExtensiveEnum   enum_field;
-  inline AliasRecord () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
-};
-struct AliasSequence {
-  std::vector<bool> single_bool;
-};
-enum AliasEnum {
-  V1a = 1,
-  V1b = 1,
-  V2 = 2,
-  V3 = 3,
-  V4 = 4,
-  V5 = 5, // "V5"
-  V6 = 6, // "V6"
-  V7 = 7, // _("V7")
-  V8 = 8, // _("V8")
-  V9 = 9,
-  V10 = 10,
-  V11 = 11,
-  V12 = 12,
-  V13 = 13,
-  V14 = 14,
-  V15 = 15, // "V15"
-  V16 = 16, // "V16"
-  V17 = 17, // _("V17")
-  V18 = 18, // _("V18")
-  V20 = 20,
-  V21 = 21,
-  V22 = 22,
-  V23 = 23,
-  V24 = 24,
-  V25 = -16,
-  V26 = 16,
-  V27 = -16,
-  V28 = -28,
-  V30 = 42,
-  V31 = 43,
-  V32 = 42,
-  V33 = 43,
-  V34 = 44, // "foo"
-  V35 = 42,
-  V36 = 42, // "foo""4"
-};
+typedef int AliasInt;
+typedef double AliasFloat;
+typedef bool AliasBool;
+typedef std::string AliasString;
+typedef XFooRecord AliasRecord;
+typedef XFooSequence AliasSequence;
+typedef ExtensiveEnum AliasEnum;
 struct NewRecord {
   int             i;
   Enum1           enum1;
@@ -198,6 +151,9 @@ struct SomeRecord {
   InnerRecord     r4;
   inline SomeRecord () { }
 };
+typedef int bar;
+typedef double x;
+typedef std::string s;
 class UIWidgetArea
 {
   typedef Signal<UIWidgetArea, void ()> Signal_void_signal;

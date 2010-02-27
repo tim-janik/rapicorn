@@ -141,7 +141,9 @@ class Generator:
     self.tabwidth (16)
     s = ''
     tp = type_info
-    if tp.storage == Decls.RECORD:
+    if tp.typedef_origin:
+      s += 'typedef %s %s;\n' % (self.type2cpp (tp.typedef_origin.name), tp.name)
+    elif tp.storage == Decls.RECORD:
       s += self.generate_record (tp) + '\n'
     elif tp.storage == Decls.SEQUENCE:
       s += self.generate_record (tp) + '\n'
