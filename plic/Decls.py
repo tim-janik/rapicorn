@@ -64,6 +64,7 @@ class TypeInfo (BaseDecl):
   def __init__ (self, name, storage, isimpl):
     super (TypeInfo, self).__init__()
     assert storage in (VOID, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE)
+    self.typedef_origin = None
     self.name = name
     self.storage = storage
     self.isimpl = isimpl

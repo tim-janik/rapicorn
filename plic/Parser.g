@@ -50,6 +50,7 @@ class YYGlobals (object):
     typename,srctype,auxinit = fielddecl
     AIn (typename)
     typeinfo = srctype.clone (typename, yy.impl_includes)
+    typeinfo.typedef_origin = srctype
     self.parse_assign_auxdata ([ (typename, typeinfo, auxinit) ])
     self.namespaces[0].add_type (typeinfo)
   def nsadd_evalue (self, evalue_ident, evalue_label, evalue_blurb, evalue_number = None):
