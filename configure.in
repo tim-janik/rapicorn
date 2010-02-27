@@ -117,6 +117,7 @@ AC_DEFUN([RAPICORN_LIBPROTOBUF_CHECK],
     [PROTOBUF_LIBS="-lprotobuf"; AC_MSG_RESULT(ok) ],[ AC_MSG_RESULT(build error)
     AC_MSG_ERROR([Missing libprotobuf, on Debian/Fedora provided by
 	libprotobuf-dev/protobuf-devel, see also: http://code.google.com/p/protobuf/])])
+  AC_SUBST(PROTOBUF_LIBS)
   LDFLAGS="$SAVED_LDFLAGS"
   AC_LANG_POP()
   # check for Google Proto Compiler
