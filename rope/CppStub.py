@@ -18,10 +18,11 @@
 
 More details at http://www.rapicorn.org
 """
-import Decls
+import Decls, re
 
 base_code = """
 #include <string>
+#include <vector>
 
 // Base classes...
 """
@@ -72,16 +73,26 @@ class Generator:
     if typename == 'float': return 'double'
     if typename == 'string': return 'std::string'
     return typename
+  def mkzero (self, type):
+    if type.storage == Decls.ENUM:
+      return type.name + ' (0)'
+    return '0'
   def generate_record (self, type_info):
     s = ''
     s += 'struct %s {\n' % type_info.name
-    for fl in type_info.fields:
-      s += self.generate_field (fl[0], self.type2cpp (fl[1].name))
-    s += '  inline %s () {' % type_info.name
-    for fl in type_info.fields:
-      if fl[1].storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
-        s += " %s = 0;" % fl[0]
-    s += ' }\n'
+    if type_info.storage == Decls.RECORD:
+      fieldlist = type_info.fields
+      for fl in fieldlist:
+        s += self.generate_field (fl[0], self.type2cpp (fl[1].name))
+    elif type_info.storage == Decls.SEQUENCE:
+      fl = type_info.elements
+      s += self.generate_field (fl[0], 'std::vector<' + self.type2cpp (fl[1].name) + '>')
+    if type_info.storage == Decls.RECORD:
+      s += '  inline %s () {' % type_info.name
+      for fl in fieldlist:
+        if fl[1].storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
+          s += " %s = %s;" % (fl[0], self.mkzero (fl[1]))
+      s += ' }\n'
     s += '};'
     return s
   def generate_signal (self, ftype, ctype):
@@ -114,14 +125,30 @@ class Generator:
       s += self.generate_method (m)
     s += '};'
     return s
+  def generate_enum (self, type_info):
+    s = ''
+    l = []
+    s += 'enum %s {\n' % type_info.name
+    for opt in type_info.options:
+      (ident, label, blurb, number) = opt
+      s += '  %s = %s,' % (ident, number)
+      if blurb:
+        s += ' // %s' % re.sub ('\n', ' ', blurb)
+      s += '\n'
+    s += '};'
+    return s
   def generate_type (self, type_info):
     self.tabwidth (16)
     s = ''
     tp = type_info
     if tp.storage == Decls.RECORD:
       s += self.generate_record (tp) + '\n'
+    elif tp.storage == Decls.SEQUENCE:
+      s += self.generate_record (tp) + '\n'
     elif tp.storage == Decls.INTERFACE:
       s = self.generate_class (type_info) + '\n'
+    elif tp.storage == Decls.ENUM:
+      s = self.generate_enum (type_info) + '\n'
     #if tp.storage == Decls.INTERFACE:
     #  if tp.fields:
     #    s += self.generate_proplist (type_info)
