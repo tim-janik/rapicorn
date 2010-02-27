@@ -1,0 +1,55 @@
+/* Rapicorn Rope - Remote Object Programming Extension          -*-mode:idl;-*-
+ * Copyright (C) 2010 Tim Janik
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * A copy of the GNU Lesser General Public License should ship along
+ * with this library; if not, see http://www.gnu.org/copyleft/.
+ */
+package Rapicorn.Rope;
+
+message RemoteProcedure {
+  required int32 proc_id = 1; 		// message / procedure ID
+  required bool  needs_return = 2;	// procedure
+
+  enum ValueType {
+    VOID      = 0x76; // 'v'
+    INT       = 0x69; // 'i'
+    FLOAT     = 0x64; // 'd'
+    STRING    = 0x73; // 's'
+    ENUM      = 0x65; // 'e'
+    RECORD    = 0x72; // 'r'
+    SEQUENCE  = 0x71; // 'q'
+    FUNC      = 0x66; // 'f'
+    INTERFACE = 0x63; // 'c'
+  }
+
+  message Sequence {
+    repeated sfixed64  vint64 = 2;  // INT, ENUM
+    repeated double    vdouble = 3; // FLOAT
+    repeated string    vstring = 4; // STRING, INTERFACE
+    repeated Record    vrec = 5;    // RECORD
+    repeated Sequence  vseq = 6;    // SEQUENCE
+  }
+  message Record {
+    repeated Argument fields = 1;
+  }
+  message Argument {
+    required ValueType type = 1;
+    optional sfixed64  vint64 = 2;  // INT, ENUM
+    optional double    vdouble = 3; // FLOAT
+    optional string    vstring = 4; // STRING, INTERFACE
+    optional Record    vrec = 5;    // RECORD
+    optional Sequence  vseq = 6;    // SEQUENCE
+  }
+
+  repeated Argument args = 3;
+}
