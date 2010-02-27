@@ -51,6 +51,10 @@ check-cppstub:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} -O=$(srcdir)/CppStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testcppstub.ref)
+	@$(call TSTTITLE,check-cppstub-syntax)
+	$(_@) cp $(srcdir)/testcppstub.ref testcppstub.cc
+	$(_@) $(CXXCOMPILE) testcppstub.cc -c ; $(call TSTRESULT)
+	$(_@) rm -f testcppstub.cc testcppstub.o
 EXTRA_DIST += testcppstub.ref
 check-local: check-cppstub
 
