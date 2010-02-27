@@ -113,10 +113,10 @@ class Generator:
     l = []
     for pr in type_info.prerequisites:
       l += [ pr.name ]
-    s += 'class %s' % type_info.name
+    s += '\nclass %s' % type_info.name
     if l:
-      s += ': %s' % ', '.join (l)
-    s += '\n{\n'
+      s += ' : %s' % ', '.join (l)
+    s += ' {\n'
     for sg in type_info.signals:
       s += self.generate_sigdef (sg, type_info)
     for sg in type_info.signals:

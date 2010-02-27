@@ -154,8 +154,8 @@ struct SomeRecord {
 typedef int bar;
 typedef double x;
 typedef std::string s;
-class UIWidgetArea
-{
+
+class UIWidgetArea {
   typedef Signal<UIWidgetArea, void ()> Signal_void_signal;
   typedef Signal<UIWidgetArea, float (UIWidgetArea ba1, int someint)> Signal_sample_signal;
   Signal_void_signal sig_void_signal;
@@ -178,20 +178,20 @@ class UIWidgetArea
   string          on_click2out ();
   void            on_click2in (string command);
 };
-class Parent
-{
+
+class Parent {
 };
-class Child: Parent
-{
+
+class Child : Parent {
 };
-class Descendant: Parent, Child
-{
+
+class Descendant : Parent, Child {
 };
-class GrandChild: Parent, Child, Descendant
-{
+
+class GrandChild : Parent, Child, Descendant {
 };
-class SomeInterface
-{
+
+class SomeInterface {
   void            use_record (SomeRecord rr);
 };
 enum ClickType {
@@ -201,8 +201,8 @@ enum ClickType {
   CLICK_FAST_REPEAT = 4,
   CLICK_KEY_REPEAT = 5,
 };
-class ButtonArea
-{
+
+class ButtonArea {
   typedef Signal<ButtonArea, bool (), CollectorUntil0<bool> > Signal_check_activate;
   typedef Signal<ButtonArea, void ()> Signal_activate;
   Signal_check_activate sig_check_activate;
