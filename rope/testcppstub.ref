@@ -186,10 +186,10 @@ class Parent {
 class Child : public Parent {
 };
 
-class Descendant : public Parent, public Child {
+class Descendant : public Child {
 };
 
-class GrandChild : public Parent, public Child, public Descendant {
+class GrandChild : public Descendant {
 };
 
 class SomeInterface {

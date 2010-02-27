@@ -100,6 +100,24 @@ class Generator:
   def generate_signal (self, functype, ctype):
     signame = self.generate_signal_name (functype, ctype)
     return '  ' + self.format_to_tab (signame) + 'sig_%s;\n' % functype.name
+  def inherit_reduce (self, type_list):
+    def hasancestor (child, parent):
+      if child == parent:
+        return True
+      for childpre in child.prerequisites:
+        if hasancestor (childpre, parent):
+          return True
+    reduced = []
+    while type_list:
+      p = type_list.pop()
+      skip = 0
+      for c in type_list + reduced:
+        if hasancestor (c, p):
+          skip = 1
+          break
+      if not skip:
+        reduced = [ p ] + reduced
+    return reduced
   def generate_method (self, functype):
     s = ''
     s += '  ' + self.format_to_tab (self.type2cpp (functype.rtype.name)) + functype.name + ' ('
@@ -114,7 +132,9 @@ class Generator:
     s = ''
     l = []
     for pr in type_info.prerequisites:
-      l += [ 'public ' + pr.name ]
+      l += [ pr ]
+    l = self.inherit_reduce (l)
+    l = ['public ' + pr.name for pr in l] # types -> names
     s += '\nclass %s' % type_info.name
     if l:
       s += ' : %s' % ', '.join (l)
