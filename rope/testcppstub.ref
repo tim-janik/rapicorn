@@ -134,15 +134,15 @@ struct NewRecord {
   NestedTypesRec  ntr;
   inline NewRecord () { i = 0; enum1 = Enum1 (0); }
 };
-struct Refer2Inner {
-  InnerRecord     r;
-  inline Refer2Inner () { }
-};
 struct InnerRecord {
   int             x;
   int             y;
   NewRecord       rec;
   inline InnerRecord () { x = 0; y = 0; }
+};
+struct Refer2Inner {
+  InnerRecord     r;
+  inline Refer2Inner () { }
 };
 struct SomeRecord {
   NewRecord       r1;
