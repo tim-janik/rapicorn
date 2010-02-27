@@ -38,26 +38,28 @@ all-am: librapicornrope@RAPICORN_RELEASE@.o
 CLEANFILES += librapicornrope@RAPICORN_RELEASE@.lo librapicornrope@RAPICORN_RELEASE@.o
 
 # tests
+check-pystub:
+	@$(call TSTTITLE)
+	$(_@) ${PLICINT} -O=$(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
+	@$(call TSTCMP, $(srcdir)/testpystub.ref)
+	@$(call TSTTITLE,check-pystub-syntax)
+	$(_@) $(PYTHON) $(srcdir)/testpystub.ref ; $(call TSTRESULT)
+EXTRA_DIST += testpystub.ref
+check-local: check-pystub
+
+check-cppstub:
+	@$(call TSTTITLE)
+	$(_@) ${PLICINT} -O=$(srcdir)/CppStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
+	@$(call TSTCMP, $(srcdir)/testcppstub.ref)
+EXTRA_DIST += testcppstub.ref
+check-local: check-cppstub
+
 check-base-idl:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} $(srcdir)/base.idl > /dev/null ; $(call TSTRESULT)
 EXTRA_DIST += base.idl
 check-local: check-base-idl
-check-pystub-syntax:
+check-pystub-for-base.idl:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} -O=$(srcdir)/PyStub $(srcdir)/base.idl | $(PYTHON) ; $(call TSTRESULT)
-check-local: check-pystub-syntax
-
-check-PyStub:
-	@$(call TSTTITLE)
-	$(_@) ${PLICINT} -O=$(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
-	@$(call TSTCMP, $(srcdir)/testpystub.ref)
-EXTRA_DIST += testpystub.ref
-check-local: check-PyStub
-
-check-CppStub:
-	@$(call TSTTITLE)
-	$(_@) ${PLICINT} -O=$(srcdir)/CppStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
-	@$(call TSTCMP, $(srcdir)/testcppstub.ref)
-EXTRA_DIST += testcppstub.ref
-check-local: check-CppStub
+check-local: check-pystub-for-base.idl
