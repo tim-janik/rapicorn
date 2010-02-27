@@ -23,6 +23,7 @@ import Decls, re
 base_code = """
 #include <string>
 #include <vector>
+#include <core/rapicornsignal.hh>
 
 // Base classes...
 """
@@ -58,7 +59,7 @@ class Generator:
   def generate_sigdef (self, ftype, ctype):
     signame = self.generate_signal_name (ftype, ctype)
     s = ''
-    s += '  typedef Signal<%s, %s (' % (ctype.name, ftype.rtype.name)
+    s += '  typedef Rapicorn::Signals::Signal<%s, %s (' % (ctype.name, ftype.rtype.name)
     l = []
     for a in ftype.args:
       l += [ self.format_arg (*a) ]
