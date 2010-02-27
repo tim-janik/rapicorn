@@ -138,11 +138,31 @@ class Generator:
       s += '): # %s\n' % ftype.rtype.name
     s += '  pass'
     return s
+  def inherit_reduce (self, type_list):
+    def hasancestor (child, parent):
+      if child == parent:
+        return True
+      for childpre in child.prerequisites:
+        if hasancestor (childpre, parent):
+          return True
+    reduced = []
+    while type_list:
+      p = type_list.pop()
+      skip = 0
+      for c in type_list + reduced:
+        if hasancestor (c, p):
+          skip = 1
+          break
+      if not skip:
+        reduced = [ p ] + reduced
+    return reduced
   def generate_class (self, type_info):
     s = ''
     l = []
     for pr in type_info.prerequisites:
-      l += [ pr.name ]
+      l += [ pr ]
+    l = self.inherit_reduce (l)
+    l = [pr.name for pr in l] # types -> names
     if not l:
       l = [ '__BaseClass__' ]
     s += 'class %s (%s):\n' % (type_info.name, ', '.join (l))

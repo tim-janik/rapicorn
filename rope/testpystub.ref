@@ -87,11 +87,11 @@ class Child (Parent):
   def __init__ (self):
     super (Child, self).__init__()
 
-class Descendant (Parent, Child):
+class Descendant (Child):
   def __init__ (self):
     super (Descendant, self).__init__()
 
-class GrandChild (Parent, Child, Descendant):
+class GrandChild (Descendant):
   def __init__ (self):
     super (GrandChild, self).__init__()
 
