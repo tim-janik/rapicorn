@@ -114,7 +114,7 @@ class Generator:
     s = ''
     l = []
     for pr in type_info.prerequisites:
-      l += [ pr.name ]
+      l += [ 'public ' + pr.name ]
     s += '\nclass %s' % type_info.name
     if l:
       s += ' : %s' % ', '.join (l)
