@@ -38,6 +38,7 @@ class YYGlobals (object):
     self.ecounter = None
     self.namespaces = []
     self.ns_list = [] # namespaces
+    self.impl_list = [] # ordered impl types list
     self.impl_includes = false
   def configure (self, confdict):
     self.config = {}
@@ -197,7 +198,7 @@ class YYGlobals (object):
       if ns.name == ident:
         namespace = ns
     if not namespace:
-      namespace = Decls.Namespace (full_ident)
+      namespace = Decls.Namespace (full_ident, self.impl_list)
       self.ns_list.append (namespace)
     self.namespaces = [ namespace ] + self.namespaces
   def namespace_close (self):
@@ -341,7 +342,7 @@ parser IdlSyntaxParser:
 rule IdlSyntax: ( ';'
                 | namespace
                 | topincludes
-                )* EOF                          {{ return yy.ns_list; }}
+                )* EOF                          {{ return yy.impl_list; }}
 
 rule namespace:
         'namespace' NSIDENT                     {{ yy.namespace_open (NSIDENT) }}

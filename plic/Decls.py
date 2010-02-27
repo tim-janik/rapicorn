@@ -29,7 +29,7 @@ class BaseDecl (object):
 VOID, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE = tuple ('vidserqfc')
 
 class Namespace (BaseDecl):
-  def __init__ (self, name):
+  def __init__ (self, name, impl_list):
     super (Namespace, self).__init__()
     self.name = name
     self.cmembers = [] # holds: (name, content)
@@ -37,6 +37,7 @@ class Namespace (BaseDecl):
     self.type_dict = {}
     self.const_dict = {}
     self.impl_set = set()
+    self.global_impl_list = impl_list
   def add_const (self, name, content, isimpl):
     self.cmembers += [ (name, content) ]
     self.const_dict[name] = self.cmembers[-1]
@@ -47,6 +48,7 @@ class Namespace (BaseDecl):
     type.namespace = self
     self.tmembers += [ (type.name, type) ]
     self.type_dict[type.name] = type
+    self.global_impl_list += [ type ]
   def types (self):
     return [mb[1] for mb in self.tmembers]
   def consts (self):

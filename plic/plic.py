@@ -34,7 +34,15 @@ class ParseError (Exception):
     self.kind = kind
 
 def parse_main (config, input_string, filename, linenumbers = True):
-  return Parser.parse_main (config, input_string, filename, linenumbers)
+  impltypes, error, caret, inclist = Parser.parse_main (config, input_string, filename, linenumbers)
+  nsdict = {}
+  nslist = []
+  if impltypes:
+    for type in impltypes:
+      if not nsdict.get (type.namespace, None):
+        nsdict[type.namespace] = 1
+        nslist += [ type.namespace ]
+  return (nslist, impltypes, error, caret, inclist)
 
 def module_import (module_or_file):
   if os.path.isabs (module_or_file):
@@ -66,7 +74,7 @@ def main():
       input_string = ""
     filename = '<stdin>'
     print
-  result, error, caret, inclist = parse_main (config, input_string, filename)
+  nslist, impltypes, error, caret, inclist = parse_main (config, input_string, filename)
   if error:
     print >>sys.stderr, error
     if caret:
@@ -74,7 +82,7 @@ def main():
     for ix in inclist:
       print >>sys.stderr, ix
     sys.exit (7)
-  module_import (config['backend']).generate (result, **config)
+  module_import (config['backend']).generate (nslist, implementation_types = impltypes, **config)
 
 def print_help (with_help = True):
   print "plic version", pkginstall_configvars["PLIC_VERSION"]
@@ -173,7 +181,7 @@ if len (sys.argv) > 2 and failtestoption in sys.argv:
         code = line
       else:
         code = 'namespace PlicFailTest { ' + line + '\n}'
-      result, error, caret, inclist = parse_main (config, code, filename, linenumbers = false)
+      nslist, impltypes, error, caret, inclist = parse_main (config, code, filename, linenumbers = false)
       if error:
         import re
         error = re.sub (r'^[^:]*/([^/:]+):', r'.../\1:', error)
