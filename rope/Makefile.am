@@ -37,6 +37,17 @@ librapicornrope@RAPICORN_RELEASE@.o: $(librapicornrope@RAPICORN_RELEASE@_la_OBJE
 all-am: librapicornrope@RAPICORN_RELEASE@.o
 CLEANFILES += librapicornrope@RAPICORN_RELEASE@.lo librapicornrope@RAPICORN_RELEASE@.o
 
+# build protocol glue
+build-proto-glue:
+	rm -f protocol.pb.h protocol.pb.cc
+	$(PROTOC) $(srcdir)/protocol.proto --cpp_out=.
+	mv protocol.pb.h protocol-pb2.hh
+	sed 's/^#include "protocol.pb.h"/#include "protocol-pb2.hh"/' <protocol.pb.cc >protocol-pb2.cc
+	rm -f protocol.pb.cc
+	$(CXXCOMPILE) protocol-pb2.cc -c $(PROTOBUF_LIBS)
+EXTRA_DIST += protocol.proto
+check-local: build-proto-glue
+
 # tests
 check-pystub:
 	@$(call TSTTITLE)
