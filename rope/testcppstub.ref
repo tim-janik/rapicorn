@@ -204,7 +204,7 @@ enum ClickType {
 };
 
 class ButtonArea {
-  typedef Rapicorn::Signals::Signal<ButtonArea, bool (), CollectorUntil0<bool> > Signal_check_activate;
+  typedef Rapicorn::Signals::Signal<ButtonArea, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
   typedef Rapicorn::Signals::Signal<ButtonArea, void ()> Signal_activate;
   Signal_check_activate sig_check_activate;
   Signal_activate sig_activate;

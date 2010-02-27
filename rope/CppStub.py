@@ -67,7 +67,7 @@ class Generator:
     s += ', '.join (l)
     s += ')'
     if functype.rtype.collector != 'void':
-      s += ', Collector' + functype.rtype.collector.capitalize()
+      s += ', Rapicorn::Signals::Collector' + functype.rtype.collector.capitalize()
       s += '<' + cpp_rtype + '> '
     s += '> ' + signame + ';\n'
     return s
