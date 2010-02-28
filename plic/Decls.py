@@ -95,6 +95,7 @@ class TypeInfo (BaseDecl):
     if self.storage == FUNC:
       self.args = []            # holds: (ident, TypeInfo)
       self.rtype = None         # holds: TypeInfo
+      self.ownertype = None    # TypeInfo
     if self.storage == INTERFACE:
       self.prerequisites = []
       self.methods = []         # holds: TypeInfo
@@ -117,6 +118,8 @@ class TypeInfo (BaseDecl):
       ti.prerequisites += self.prerequisites
     if hasattr (self, 'methods'):
       ti.methods += self.methods
+    if hasattr (self, 'ownertype'):
+      ti.ownertype = self.ownertype
     if hasattr (self, 'signals'):
       ti.signals += self.signals
     ti.auxdata.update (self.auxdata)
@@ -152,6 +155,7 @@ class TypeInfo (BaseDecl):
     assert isinstance (ftype, TypeInfo)
     assert ftype.storage == FUNC
     assert isinstance (ftype.rtype, TypeInfo)
+    ftype.ownertype = self
     if issignal:
       self.signals += [ ftype ]
     else:
