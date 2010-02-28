@@ -18,7 +18,7 @@ package Rapicorn.Rope;
 
 message RemoteProcedure {
   required int32 proc_id = 1; 		// message / procedure ID
-  required bool  needs_return = 2;	// procedure
+  repeated Argument args = 2;
 
   enum ValueType {
     VOID      = 0x76; // 'v'
@@ -50,6 +50,4 @@ message RemoteProcedure {
     optional Record    vrec = 5;    // RECORD
     optional Sequence  vseq = 6;    // SEQUENCE
   }
-
-  repeated Argument args = 3;
 }

@@ -558,13 +558,11 @@ bool SomeRecord::from_proto (const ProtoRecord &src) {
 double UIWidgetArea::simple_method () {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0001);
-  rp.set_needs_return (1);
   return 0; // FIXME
 }
 double UIWidgetArea::single_arg (int n) {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0002);
-  rp.set_needs_return (1);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_type (RemoteProcedure::INT);
@@ -574,7 +572,6 @@ double UIWidgetArea::single_arg (int n) {
 double UIWidgetArea::single_arg2 (int n) {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0003);
-  rp.set_needs_return (1);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_type (RemoteProcedure::INT);
@@ -585,7 +582,6 @@ double UIWidgetArea::two_args (int n,
                                double r) {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0004);
-  rp.set_needs_return (1);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_type (RemoteProcedure::INT);
@@ -599,7 +595,6 @@ double UIWidgetArea::two_args2 (int n,
                                 double r) {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0005);
-  rp.set_needs_return (1);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_type (RemoteProcedure::INT);
@@ -616,7 +611,6 @@ double UIWidgetArea::multi_args (int n,
                                  double y) {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0006);
-  rp.set_needs_return (1);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_type (RemoteProcedure::INT);
@@ -639,7 +633,6 @@ double UIWidgetArea::self_method (UIWidgetArea &ba1,
                                   UIWidgetArea &ba2) {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0007);
-  rp.set_needs_return (1);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_type (RemoteProcedure::INTERFACE);
@@ -652,18 +645,15 @@ double UIWidgetArea::self_method (UIWidgetArea &ba1,
 void UIWidgetArea::void_method () {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0008);
-  rp.set_needs_return (0);
 }
 std::string UIWidgetArea::on_click2out () {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0009);
-  rp.set_needs_return (1);
   return 0; // FIXME
 }
 void UIWidgetArea::on_click2in (std::string command) {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000a);
-  rp.set_needs_return (0);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_type (RemoteProcedure::STRING);
@@ -805,7 +795,6 @@ static bool handle_UIWidgetArea_on_click2in (const RemoteProcedure &_rope_rp,
 void SomeInterface::use_record (SomeRecord rr) {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000b);
-  rp.set_needs_return (0);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_type (RemoteProcedure::RECORD);

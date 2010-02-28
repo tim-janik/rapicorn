@@ -294,7 +294,6 @@ class Generator:
       s += ') {\n'
       s += '  RemoteProcedure rp;\n'
       s += '  rp.set_proc_id (0x%08x);\n' % self.type_id (m)
-      s += '  rp.set_needs_return (%d);\n' % (m.rtype.storage != Decls.VOID)
       if m.args:
         s += '  RemoteProcedure_Argument *arg;\n'
       for a in m.args:
