@@ -213,16 +213,14 @@ class Generator:
     s = ''
     s += 'bool %s::to_proto (ProtoRecord &dst) const {\n' % type_info.name
     s += '  RemoteProcedure_Record &rpr = RPRecordCast (dst);\n'
-    s += '  RemoteProcedure_Argument *field; int field_counter = 0;\n'
-    field_counter = 0
+    s += '  RemoteProcedure_Argument *field;\n'
     for fl in type_info.fields:
-      s += '  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);\n'
+      s += '  field = rpr.add_fields();\n'
       s += self.generate_to_proto ('field', fl[1], fl[0])
-      field_counter += 1
     s += '  return true;\n}\n'
     s += 'bool %s::from_proto (const ProtoRecord &src) {\n' % type_info.name
     s += '  const RemoteProcedure_Record &rpr = RPRecordCast (src);\n'
-    s += '  if (rpr.fields_size() < %d) return false;\n' % field_counter
+    s += '  if (rpr.fields_size() < %d) return false;\n' % len (type_info.fields)
     s += '  const RemoteProcedure_Argument *field;\n'
     field_counter = 0
     for fl in type_info.fields:
@@ -298,9 +296,9 @@ class Generator:
       s += '  rp.set_proc_id (0x%08x);\n' % self.type_id (m)
       s += '  rp.set_needs_return (%d);\n' % (m.rtype.storage != Decls.VOID)
       if m.args:
-        s += '  RemoteProcedure_Argument *arg; int arg_counter = 0;\n'
+        s += '  RemoteProcedure_Argument *arg;\n'
       for a in m.args:
-        s += '  rp.add_args(); arg = rp.mutable_args (arg_counter++);\n'
+        s += '  arg = rp.add_args();\n'
         s += self.generate_to_proto ('arg', a[1], a[0], 'die()')
       if m.rtype.storage != Decls.VOID:
         s += '  return 0; // FIXME\n'

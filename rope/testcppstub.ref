@@ -283,38 +283,38 @@ public:
 // --- Stubs ---
 bool XFooRecord::to_proto (ProtoRecord &dst) const {
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
-  RemoteProcedure_Argument *field; int field_counter = 0;
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  RemoteProcedure_Argument *field;
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::INT);
   field->set_vint64 (single_bool);
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::INT);
   field->set_vint64 (single_num);
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::FLOAT);
   field->set_vdouble (single_float);
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::STRING);
   field->set_vstring (single_string);
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::INT);
   field->set_vint64 (sibling1);
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::INT);
   field->set_vint64 (sibling2);
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::INT);
   field->set_vint64 (multi1);
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::INT);
   field->set_vint64 (multi2);
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::INT);
   field->set_vint64 (multi3);
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::INT);
   field->set_vint64 (multi4);
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::ENUM);
   field->set_vint64 (enum_field);
   return true;
@@ -395,11 +395,11 @@ bool ExtensiveEnumSequence::from_proto (const ProtoSequence &src) {
 
 bool NestedTypesRec::to_proto (ProtoRecord &dst) const {
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
-  RemoteProcedure_Argument *field; int field_counter = 0;
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  RemoteProcedure_Argument *field;
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::RECORD);
   if (!rec.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::SEQUENCE);
   if (!seq.to_proto (ProtoSequenceCast (*field->mutable_vseq()))) return false;
   return true;
@@ -437,17 +437,17 @@ bool NestedTypesSeq::from_proto (const ProtoSequence &src) {
 
 bool NewRecord::to_proto (ProtoRecord &dst) const {
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
-  RemoteProcedure_Argument *field; int field_counter = 0;
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  RemoteProcedure_Argument *field;
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::INT);
   field->set_vint64 (i);
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::ENUM);
   field->set_vint64 (enum1);
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::SEQUENCE);
   if (!xfs.to_proto (ProtoSequenceCast (*field->mutable_vseq()))) return false;
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::RECORD);
   if (!ntr.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
   return true;
@@ -473,14 +473,14 @@ bool NewRecord::from_proto (const ProtoRecord &src) {
 
 bool InnerRecord::to_proto (ProtoRecord &dst) const {
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
-  RemoteProcedure_Argument *field; int field_counter = 0;
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  RemoteProcedure_Argument *field;
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::INT);
   field->set_vint64 (x);
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::INT);
   field->set_vint64 (y);
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::RECORD);
   if (!rec.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
   return true;
@@ -503,8 +503,8 @@ bool InnerRecord::from_proto (const ProtoRecord &src) {
 
 bool Refer2Inner::to_proto (ProtoRecord &dst) const {
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
-  RemoteProcedure_Argument *field; int field_counter = 0;
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  RemoteProcedure_Argument *field;
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::RECORD);
   if (!r.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
   return true;
@@ -521,17 +521,17 @@ bool Refer2Inner::from_proto (const ProtoRecord &src) {
 
 bool SomeRecord::to_proto (ProtoRecord &dst) const {
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
-  RemoteProcedure_Argument *field; int field_counter = 0;
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  RemoteProcedure_Argument *field;
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::RECORD);
   if (!r1.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::RECORD);
   if (!r2.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::RECORD);
   if (!r3.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
-  rpr.add_fields(); field = rpr.mutable_fields (field_counter++);
+  field = rpr.add_fields();
   field->set_type (RemoteProcedure::RECORD);
   if (!r4.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
   return true;
@@ -565,8 +565,8 @@ double UIWidgetArea::single_arg (int n) {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0002);
   rp.set_needs_return (1);
-  RemoteProcedure_Argument *arg; int arg_counter = 0;
-  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
   arg->set_type (RemoteProcedure::INT);
   arg->set_vint64 (n);
   return 0; // FIXME
@@ -575,8 +575,8 @@ double UIWidgetArea::single_arg2 (int n) {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0003);
   rp.set_needs_return (1);
-  RemoteProcedure_Argument *arg; int arg_counter = 0;
-  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
   arg->set_type (RemoteProcedure::INT);
   arg->set_vint64 (n);
   return 0; // FIXME
@@ -586,11 +586,11 @@ double UIWidgetArea::two_args (int n,
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0004);
   rp.set_needs_return (1);
-  RemoteProcedure_Argument *arg; int arg_counter = 0;
-  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
   arg->set_type (RemoteProcedure::INT);
   arg->set_vint64 (n);
-  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg = rp.add_args();
   arg->set_type (RemoteProcedure::FLOAT);
   arg->set_vdouble (r);
   return 0; // FIXME
@@ -600,11 +600,11 @@ double UIWidgetArea::two_args2 (int n,
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0005);
   rp.set_needs_return (1);
-  RemoteProcedure_Argument *arg; int arg_counter = 0;
-  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
   arg->set_type (RemoteProcedure::INT);
   arg->set_vint64 (n);
-  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg = rp.add_args();
   arg->set_type (RemoteProcedure::FLOAT);
   arg->set_vdouble (r);
   return 0; // FIXME
@@ -617,20 +617,20 @@ double UIWidgetArea::multi_args (int n,
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0006);
   rp.set_needs_return (1);
-  RemoteProcedure_Argument *arg; int arg_counter = 0;
-  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
   arg->set_type (RemoteProcedure::INT);
   arg->set_vint64 (n);
-  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg = rp.add_args();
   arg->set_type (RemoteProcedure::FLOAT);
   arg->set_vdouble (r);
-  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg = rp.add_args();
   arg->set_type (RemoteProcedure::INT);
   arg->set_vint64 (i);
-  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg = rp.add_args();
   arg->set_type (RemoteProcedure::STRING);
   arg->set_vstring (s);
-  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg = rp.add_args();
   arg->set_type (RemoteProcedure::FLOAT);
   arg->set_vdouble (y);
   return 0; // FIXME
@@ -640,11 +640,11 @@ double UIWidgetArea::self_method (UIWidgetArea &ba1,
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0007);
   rp.set_needs_return (1);
-  RemoteProcedure_Argument *arg; int arg_counter = 0;
-  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
   arg->set_type (RemoteProcedure::INTERFACE);
   arg->set_vstring (Instance2StringCast (ba1));
-  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg = rp.add_args();
   arg->set_type (RemoteProcedure::INTERFACE);
   arg->set_vstring (Instance2StringCast (ba2));
   return 0; // FIXME
@@ -664,8 +664,8 @@ void UIWidgetArea::on_click2in (std::string command) {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000a);
   rp.set_needs_return (0);
-  RemoteProcedure_Argument *arg; int arg_counter = 0;
-  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
   arg->set_type (RemoteProcedure::STRING);
   arg->set_vstring (command);
 }
@@ -806,8 +806,8 @@ void SomeInterface::use_record (SomeRecord rr) {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000b);
   rp.set_needs_return (0);
-  RemoteProcedure_Argument *arg; int arg_counter = 0;
-  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
   arg->set_type (RemoteProcedure::RECORD);
   if (!rr.to_proto (ProtoRecordCast (*arg->mutable_vrec()))) die();
 }
