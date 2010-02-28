@@ -60,6 +60,10 @@ static inline ProtoSequence& ProtoSequenceCast (RemoteProcedure_Sequence &r) {
 static inline const ProtoSequence& ProtoSequenceCast (const RemoteProcedure_Sequence &r) {
   return *(const ProtoSequence*) &r;
 }
+template<class CLASS> static inline std::string Instance2StringCast (const CLASS &obj) {
+  return ""; // FIXME
+}
+#define die()      (void) 0 // FIXME
 
 // Base classes...
 """
@@ -67,6 +71,23 @@ static inline const ProtoSequence& ProtoSequenceCast (const RemoteProcedure_Sequ
 class Generator:
   def __init__ (self):
     self.ntab = 26
+    self.iddict = {}
+    self.idcounter = 0x0def0000
+  def type_id (self, type):
+    types = []
+    while type:
+      types += [ type ]
+      if hasattr (type, 'ownertype'):
+        type = type.ownertype
+      elif hasattr (type, 'namespace'):
+        type = type.namespace
+      else:
+        type = None
+    types = tuple (types)
+    if not self.iddict.has_key (types):
+      self.idcounter += 1
+      self.iddict[types] = self.idcounter
+    return self.iddict[types]
   def tabwidth (self, n):
     self.ntab = n
   def format_to_tab (self, string, indent = ''):
@@ -77,7 +98,10 @@ class Generator:
       return indent + f % string
   def format_arg (self, ident, type):
     s = ''
-    s += self.type2cpp (type.name) + ' ' + ident
+    s += self.type2cpp (type.name) + ' '
+    if type.storage == Decls.INTERFACE:
+      s += '&'
+    s += ident
     return s
   def generate_prop (self, fident, ftype):
     v = 'virtual '
@@ -137,7 +161,7 @@ class Generator:
       s += ' }\n'
     s += '};'
     return s
-  def generate_to_proto (self, argname, type_info, valname):
+  def generate_to_proto (self, argname, type_info, valname, onerror = 'return false'):
     s = '  %s->set_type (RemoteProcedure::%s);\n' % (argname, Decls.storage_name (type_info.storage))
     if type_info.storage == Decls.VOID:
       pass
@@ -145,12 +169,14 @@ class Generator:
       s += '  %s->set_vint64 (%s);\n' % (argname, valname)
     elif type_info.storage == Decls.FLOAT:
       s += '  %s->set_vdouble (%s);\n' % (argname, valname)
-    elif type_info.storage in (Decls.STRING, Decls.INTERFACE):
+    elif type_info.storage == Decls.STRING:
       s += '  %s->set_vstring (%s);\n' % (argname, valname)
+    elif type_info.storage == Decls.INTERFACE:
+      s += '  %s->set_vstring (Instance2StringCast (%s));\n' % (argname, valname)
     elif type_info.storage == Decls.RECORD:
-      s += '  if (!%s.to_proto (ProtoRecordCast (*%s->mutable_vrec()))) return false;\n' % (valname, argname)
+      s += '  if (!%s.to_proto (ProtoRecordCast (*%s->mutable_vrec()))) %s;\n' % (valname, argname, onerror)
     elif type_info.storage == Decls.SEQUENCE:
-      s += '  if (!%s.to_proto (ProtoSequenceCast (*%s->mutable_vseq()))) return false;\n' % (valname, argname)
+      s += '  if (!%s.to_proto (ProtoSequenceCast (*%s->mutable_vseq()))) %s;\n' % (valname, argname, onerror)
     else: # FUNC
       raise RuntimeError ("Unexpected storage type: " + type_info.storage)
     return s
@@ -251,6 +277,29 @@ class Generator:
     s += '  }\n'
     s += '  return true;\n}\n'
     return s
+  def generate_class_proto (self, type_info):
+    s = ''
+    for m in type_info.methods:
+      q = '%s %s::%s (' % (self.type2cpp (m.rtype.name), type_info.name, m.name)
+      s += q
+      argindent = len (q)
+      l = []
+      for a in m.args:
+        l += [ self.format_arg (*a) ]
+      s += (',\n' + argindent * ' ').join (l)
+      s += ') {\n'
+      s += '  RemoteProcedure rp;\n'
+      s += '  rp.set_proc_id (0x%08x);\n' % self.type_id (m)
+      s += '  rp.set_needs_return (%d);\n' % (m.rtype.storage != Decls.VOID)
+      if m.args:
+        s += '  RemoteProcedure_Argument *arg; int arg_counter = 0;\n'
+      for a in m.args:
+        s += '  rp.add_args(); arg = rp.mutable_args (arg_counter++);\n'
+        s += self.generate_to_proto ('arg', a[1], a[0], 'die()')
+      if m.rtype.storage != Decls.VOID:
+        s += '  return 0; // FIXME\n'
+      s += '}\n'
+    return s
   def generate_signal (self, functype, ctype):
     signame = self.generate_signal_name (functype, ctype)
     return '  ' + self.format_to_tab (signame) + 'sig_%s;\n' % functype.name
@@ -292,7 +341,7 @@ class Generator:
     s += '\nclass %s' % type_info.name
     if l:
       s += ' : %s' % ', '.join (l)
-    s += ' {\n'
+    s += ' {\npublic:\n'
     for sg in type_info.signals:
       s += self.generate_sigdef (sg, type_info)
     for sg in type_info.signals:
@@ -354,6 +403,8 @@ class Generator:
         s += self.generate_record_proto (tp) + '\n'
       elif tp.storage == Decls.SEQUENCE:
         s += self.generate_sequence_proto (tp) + '\n'
+      elif tp.storage == Decls.INTERFACE:
+        s += self.generate_class_proto (tp) + '\n'
     return s
 
 def error (msg):

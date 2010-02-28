@@ -39,6 +39,10 @@ static inline ProtoSequence& ProtoSequenceCast (RemoteProcedure_Sequence &r) {
 static inline const ProtoSequence& ProtoSequenceCast (const RemoteProcedure_Sequence &r) {
   return *(const ProtoSequence*) &r;
 }
+template<class CLASS> static inline std::string Instance2StringCast (const CLASS &obj) {
+  return ""; // FIXME
+}
+#define die()      (void) 0 // FIXME
 
 // Base classes...
 
@@ -213,8 +217,9 @@ typedef double x;
 typedef std::string s;
 
 class UIWidgetArea {
+public:
   typedef Rapicorn::Signals::Signal<UIWidgetArea, void ()> Signal_void_signal;
-  typedef Rapicorn::Signals::Signal<UIWidgetArea, double (UIWidgetArea ba1, int someint)> Signal_sample_signal;
+  typedef Rapicorn::Signals::Signal<UIWidgetArea, double (UIWidgetArea &ba1, int someint)> Signal_sample_signal;
   Signal_void_signal sig_void_signal;
   Signal_sample_signal sig_sample_signal;
   double          simple_method ();
@@ -229,26 +234,31 @@ class UIWidgetArea {
                               int i,
                               std::string s,
                               double y);
-  double          self_method (UIWidgetArea ba1,
-                               UIWidgetArea ba2);
+  double          self_method (UIWidgetArea &ba1,
+                               UIWidgetArea &ba2);
   void            void_method ();
   std::string     on_click2out ();
   void            on_click2in (std::string command);
 };
 
 class Parent {
+public:
 };
 
 class Child : public Parent {
+public:
 };
 
 class Descendant : public Child {
+public:
 };
 
 class GrandChild : public Descendant {
+public:
 };
 
 class SomeInterface {
+public:
   void            use_record (SomeRecord rr);
 };
 enum ClickType {
@@ -260,6 +270,7 @@ enum ClickType {
 };
 
 class ButtonArea {
+public:
   typedef Rapicorn::Signals::Signal<ButtonArea, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
   typedef Rapicorn::Signals::Signal<ButtonArea, void ()> Signal_activate;
   Signal_check_activate sig_check_activate;
@@ -540,4 +551,134 @@ bool SomeRecord::from_proto (const ProtoRecord &src) {
   if (!field->has_vrec() || !r4.from_proto (ProtoRecordCast (field->vrec()))) return false;
   return true;
 }
+
+double UIWidgetArea::simple_method () {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def0001);
+  rp.set_needs_return (1);
+  return 0; // FIXME
+}
+double UIWidgetArea::single_arg (int n) {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def0002);
+  rp.set_needs_return (1);
+  RemoteProcedure_Argument *arg; int arg_counter = 0;
+  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg->set_type (RemoteProcedure::INT);
+  arg->set_vint64 (n);
+  return 0; // FIXME
+}
+double UIWidgetArea::single_arg2 (int n) {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def0003);
+  rp.set_needs_return (1);
+  RemoteProcedure_Argument *arg; int arg_counter = 0;
+  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg->set_type (RemoteProcedure::INT);
+  arg->set_vint64 (n);
+  return 0; // FIXME
+}
+double UIWidgetArea::two_args (int n,
+                               double r) {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def0004);
+  rp.set_needs_return (1);
+  RemoteProcedure_Argument *arg; int arg_counter = 0;
+  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg->set_type (RemoteProcedure::INT);
+  arg->set_vint64 (n);
+  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg->set_type (RemoteProcedure::FLOAT);
+  arg->set_vdouble (r);
+  return 0; // FIXME
+}
+double UIWidgetArea::two_args2 (int n,
+                                double r) {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def0005);
+  rp.set_needs_return (1);
+  RemoteProcedure_Argument *arg; int arg_counter = 0;
+  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg->set_type (RemoteProcedure::INT);
+  arg->set_vint64 (n);
+  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg->set_type (RemoteProcedure::FLOAT);
+  arg->set_vdouble (r);
+  return 0; // FIXME
+}
+double UIWidgetArea::multi_args (int n,
+                                 double r,
+                                 int i,
+                                 std::string s,
+                                 double y) {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def0006);
+  rp.set_needs_return (1);
+  RemoteProcedure_Argument *arg; int arg_counter = 0;
+  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg->set_type (RemoteProcedure::INT);
+  arg->set_vint64 (n);
+  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg->set_type (RemoteProcedure::FLOAT);
+  arg->set_vdouble (r);
+  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg->set_type (RemoteProcedure::INT);
+  arg->set_vint64 (i);
+  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg->set_type (RemoteProcedure::STRING);
+  arg->set_vstring (s);
+  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg->set_type (RemoteProcedure::FLOAT);
+  arg->set_vdouble (y);
+  return 0; // FIXME
+}
+double UIWidgetArea::self_method (UIWidgetArea &ba1,
+                                  UIWidgetArea &ba2) {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def0007);
+  rp.set_needs_return (1);
+  RemoteProcedure_Argument *arg; int arg_counter = 0;
+  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg->set_type (RemoteProcedure::INTERFACE);
+  arg->set_vstring (Instance2StringCast (ba1));
+  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg->set_type (RemoteProcedure::INTERFACE);
+  arg->set_vstring (Instance2StringCast (ba2));
+  return 0; // FIXME
+}
+void UIWidgetArea::void_method () {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def0008);
+  rp.set_needs_return (0);
+}
+std::string UIWidgetArea::on_click2out () {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def0009);
+  rp.set_needs_return (1);
+  return 0; // FIXME
+}
+void UIWidgetArea::on_click2in (std::string command) {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def000a);
+  rp.set_needs_return (0);
+  RemoteProcedure_Argument *arg; int arg_counter = 0;
+  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg->set_type (RemoteProcedure::STRING);
+  arg->set_vstring (command);
+}
+
+
+
+
+
+void SomeInterface::use_record (SomeRecord rr) {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def000b);
+  rp.set_needs_return (0);
+  RemoteProcedure_Argument *arg; int arg_counter = 0;
+  rp.add_args(); arg = rp.mutable_args (arg_counter++);
+  arg->set_type (RemoteProcedure::RECORD);
+  if (!rr.to_proto (ProtoRecordCast (*arg->mutable_vrec()))) die();
+}
+
 
