@@ -63,6 +63,9 @@ static inline const ProtoSequence& ProtoSequenceCast (const RemoteProcedure_Sequ
 template<class CLASS> static inline std::string Instance2StringCast (const CLASS &obj) {
   return ""; // FIXME
 }
+template<class CLASS> static inline CLASS* Instance4StringCast (const std::string &objstring) {
+  return NULL; // FIXME
+}
 #define die()      (void) 0 // FIXME
 
 // Base classes...
@@ -96,11 +99,11 @@ class Generator:
     else:
       f = '%%-%ds' % self.ntab  # '%-20s'
       return indent + f % string
-  def format_arg (self, ident, type):
+  def format_arg (self, ident, type, interfacechar = '&'):
     s = ''
     s += self.type2cpp (type.name) + ' '
     if type.storage == Decls.INTERFACE:
-      s += '&'
+      s += interfacechar
     s += ident
     return s
   def generate_prop (self, fident, ftype):
@@ -193,9 +196,12 @@ class Generator:
     elif type_info.storage == Decls.FLOAT:
       s += '  if (!%s->has_vdouble()) return false;' % argname
       s += '  %s = %s->vdouble();\n' % (valname, argname)
-    elif type_info.storage in (Decls.STRING, Decls.INTERFACE):
+    elif type_info.storage == Decls.STRING:
       s += '  if (!%s->has_vstring()) return false;' % argname
       s += '  %s = %s->vstring();\n' % (valname, argname)
+    elif type_info.storage in Decls.INTERFACE:
+      s += '  if (!%s->has_vstring()) return false;' % argname
+      s += '  %s = Instance4StringCast<%s> (%s->vstring());\n' % (valname, type_info.name, argname)
     elif type_info.storage == Decls.RECORD:
       s += '  if (!%s->has_vrec() || !%s.from_proto (ProtoRecordCast (%s->vrec()))) return false;\n' % (argname, valname, argname)
     elif type_info.storage == Decls.SEQUENCE:
@@ -300,6 +306,43 @@ class Generator:
         s += '  return 0; // FIXME\n'
       s += '}\n'
     return s
+  def generate_class_callee_impl (self, type_info, swl):
+    s = ''
+    for m in type_info.methods:
+      swl += [ 'case 0x%08x: // %s::%s\n' % (self.type_id (m), type_info.name, m.name) ]
+      swl += [ '  return handle_%s_%s (_rope_rp, _rope_aret);\n' % (type_info.name, m.name) ]
+      s += 'static bool handle_%s_%s (const RemoteProcedure &_rope_rp,\n' % (type_info.name, m.name)
+      s += '                          RemoteProcedure_Argument *_rope_aret) {\n'
+      for a in m.args:
+        s += '  ' + self.format_arg (a[0], a[1], '*') + ';\n'
+      #s += '  RemoteProcedure_Argument *arg; int arg_counter = 0;\n'
+      #q = '%s %s::%s (' % (self.type2cpp (m.rtype.name), type_info.name, m.name)
+      s += '  if (_rope_rp.args_size() != %d) return false;\n' % len (m.args)
+      if m.args:
+        s += '  const RemoteProcedure_Argument *_rope_arg;\n'
+      arg_counter = 0
+      for arg in m.args:
+        s += '  _rope_arg = &_rope_rp.args (%d);\n' % arg_counter
+        s += self.generate_from_proto ('_rope_arg', arg[1], arg[0])
+        arg_counter += 1
+      if m.rtype.storage != Decls.VOID:
+        pass
+      s += '  (void) _rope_aret;\n'
+      s += '  return true;\n}\n'
+    return s
+  def generate_callee_impl (self, switchlines):
+    s = ''
+    s += 'bool rope_callee_handler () {\n'
+    s += '  const RemoteProcedure _rope_rp;\n'
+    s += '  RemoteProcedure_Argument _rope_aretmem, *_rope_aret = &_rope_aretmem;\n'
+    s += '  switch (_rope_rp.proc_id()) {\n'
+    s += '  '.join (switchlines)
+    s += '  default:\n'
+    s += '    die();\n'
+    s += '  }\n'
+    s += '  return false;\n'
+    s += '}\n'
+    return s
   def generate_signal (self, functype, ctype):
     signame = self.generate_signal_name (functype, ctype)
     return '  ' + self.format_to_tab (signame) + 'sig_%s;\n' % functype.name
@@ -386,6 +429,7 @@ class Generator:
         s += self.generate_enum_interface (tp) + '\n'
     # generate type stubs
     s += '\n// --- Stubs ---\n'
+    switchlines = [ '' ]
     for tp in types:
       if tp.typedef_origin:
         pass
@@ -395,7 +439,8 @@ class Generator:
         s += self.generate_sequence_impl (tp) + '\n'
       elif tp.storage == Decls.INTERFACE:
         s += self.generate_class_caller_impl (tp) + '\n'
-        #s += self.generate_class_callee_impl (tp) + '\n'
+        s += self.generate_class_callee_impl (tp, switchlines) + '\n'
+    s += self.generate_callee_impl (switchlines) + '\n'
     return s
 
 def error (msg):
