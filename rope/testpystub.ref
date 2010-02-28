@@ -33,15 +33,15 @@ class NewRecord (__BaseRecord__):
     self.__dict__.update (defaults)
     __BaseRecord__.__init__ (self, **entries)
 
-class Refer2Inner (__BaseRecord__):
-  def __init__ (self, **entries):
-    defaults = { 'r' : None, }
-    self.__dict__.update (defaults)
-    __BaseRecord__.__init__ (self, **entries)
-
 class InnerRecord (__BaseRecord__):
   def __init__ (self, **entries):
     defaults = { 'x' : 0,  'y' : 0,  'rec' : None, }
+    self.__dict__.update (defaults)
+    __BaseRecord__.__init__ (self, **entries)
+
+class Refer2Inner (__BaseRecord__):
+  def __init__ (self, **entries):
+    defaults = { 'r' : None, }
     self.__dict__.update (defaults)
     __BaseRecord__.__init__ (self, **entries)
 
