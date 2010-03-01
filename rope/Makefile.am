@@ -54,7 +54,9 @@ check-pystub:
 	$(_@) ${PLICINT} -O=$(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testpystub.ref)
 	@$(call TSTTITLE,check-pystub-syntax)
-	$(_@) $(PYTHON) $(srcdir)/testpystub.ref ; $(call TSTRESULT)
+	$(_@) $(PYTHON) -c "import py_compile; py_compile.compile ('$(srcdir)/testpystub.ref', 'testpystub.pyc')" && \
+	  $(PYTHON) $(srcdir)/testpystub.ref ; $(call TSTRESULT)
+#	rm -f testpystub.pyc
 EXTRA_DIST += testpystub.ref
 check-local: check-pystub
 
