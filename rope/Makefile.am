@@ -40,6 +40,7 @@ CLEANFILES += librapicornrope@RAPICORN_RELEASE@.lo librapicornrope@RAPICORN_RELE
 # build protocol glue
 build-proto-glue:
 	rm -f protocol.pb.h protocol.pb.cc
+	$(PROTOC) $(srcdir)/protocol.proto --python_out=.
 	$(PROTOC) $(srcdir)/protocol.proto --cpp_out=.
 	mv protocol.pb.h protocol-pb2.hh
 	sed 's/^#include "protocol.pb.h"/#include "protocol-pb2.hh"/' <protocol.pb.cc >protocol-pb2.cc
