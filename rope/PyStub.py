@@ -18,7 +18,7 @@
 
 More details at http://www.rapicorn.org
 """
-import Decls
+import Decls, re
 
 def strcquote (string):
   result = ''
@@ -46,10 +46,11 @@ def strcquote (string):
   return '"' + result + '"'
 
 def reindent (prefix, lines):
-  import re
-  return re.compile (r'^', re.M).sub (prefix, lines)
+  return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
 
 base_code = """
+import protocol_pb2 as RapicornRope
+
 class __BaseRecord__:
   def __init__ (self, **entries):
     self.__dict__.update (entries)
@@ -110,7 +111,7 @@ class Generator:
              Decls.SEQUENCE : 'None',
              Decls.STRING   : "''",
            }[type.storage]
-  def generate_record (self, type_info):
+  def generate_record_impl (self, type_info):
     s = ''
     s += 'class %s (__BaseRecord__):\n' % type_info.name
     s += '  def __init__ (self, **entries):\n'
@@ -120,23 +121,66 @@ class Generator:
     s += '}\n'
     s += '    self.__dict__.update (defaults)\n'
     s += '    __BaseRecord__.__init__ (self, **entries)\n'
+    s += '  @staticmethod\n'
+    s += '  def create (args):\n'
+    s += '    self = %s()\n' % type_info.name
+    s += '    if hasattr (args, "__iter__") and len (args) == %d:\n' % len (type_info.fields)
+    n = 0
+    for fl in type_info.fields:
+      s += '      self.%s = args[%d]\n' % (fl[0], n)
+      s += reindent ('      #', self.generate_to_proto ('self.' + fl[0], fl[1], 'args[%d]' % n)) + '\n'
+      n += 1
+    s += '    elif isinstance (args, dict):\n'
+    for fl in type_info.fields:
+      s += '      self.%s = args["%s"]\n' % (fl[0], fl[0])
+    s += '    else: raise RuntimeError ("invalid or missing record initializers")\n'
+    s += '    return self\n'
+    s += '  @staticmethod\n'
+    s += '  def to_proto (self, _plic_rec):\n'
+    for a in type_info.fields:
+      s += '    _plic_field = _plic_rp.fields.add()\n'
+      s += reindent ('  ', self.generate_to_proto ('_plic_field', a[1], 'self.' + a[0])) + '\n'
     return s
   def generate_sighandler (self, ftype, ctype):
     s = ''
     s += 'def __sig_%s__ (self): pass # default handler' % ftype.name
     return s
-  def generate_method (self, ftype):
+  def generate_to_proto (self, argname, type_info, valname, onerror = 'return false'):
     s = ''
-    s += 'def %s (' % ftype.name
+    if type_info.storage == Decls.VOID:
+      pass
+    elif type_info.storage in (Decls.INT, Decls.ENUM):
+      s += '  %s.vint64 = %s\n' % (argname, valname)
+    elif type_info.storage == Decls.FLOAT:
+      s += '  %s.vdouble = %s\n' % (argname, valname)
+    elif type_info.storage == Decls.STRING:
+      s += '  %s.vstring = %s\n' % (argname, valname)
+    elif type_info.storage == Decls.INTERFACE:
+      s += '  %s.vstring (Instance2StringCast (%s))\n' % (argname, valname)
+    elif type_info.storage == Decls.RECORD:
+      s += '  %s.to_proto (%s.vrec, %s)\n' % (type_info.name, argname, valname)
+    elif type_info.storage == Decls.SEQUENCE:
+      s += '  %s.to_proto (%s.vseq, %s)\n' % (type_info.name, argname, valname)
+    else: # FUNC
+      raise RuntimeError ("Unexpected storage type: " + type_info.storage)
+    return s
+  def generate_method_caller_impl (self, m):
+    s = ''
+    s += 'def %s (' % m.name
     l = [ 'self' ]
-    for a in ftype.args:
+    for a in m.args:
       l += [ a[0] ]
     s += ', '.join (l)
-    if ftype.rtype.name == 'void':
+    if m.rtype.name == 'void':
       s += '): # one way\n'
     else:
-      s += '): # %s\n' % ftype.rtype.name
-    s += '  pass'
+      s += '): # %s\n' % m.rtype.name
+    s += '  _plic_rp = RapicornRope.RemoteProcedure()\n'
+    for a in m.args:
+      s += '  _plic_arg = _plic_rp.args.add()\n'
+      if a[1].storage in (Decls.RECORD, Decls.SEQUENCE):
+        s += '  _plic_arg = %s.create (%s)\n' % (a[1].name, a[0])
+      s += self.generate_to_proto ('_plic_arg', a[1], a[0])
     return s
   def inherit_reduce (self, type_list):
     def hasancestor (child, parent):
@@ -171,7 +215,7 @@ class Generator:
     for sg in type_info.signals:
       s += "    self.sig_%s = __Signal__ ('%s')\n" % (sg.name, sg.name)
     for m in type_info.methods:
-      s += reindent ('  ', self.generate_method (m)) + '\n'
+      s += reindent ('  ', self.generate_method_caller_impl (m)) + '\n'
     for sg in type_info.signals:
       s += reindent ('  ', self.generate_sighandler (sg, type_info)) + '\n'
     return s
@@ -187,7 +231,7 @@ class Generator:
     # generate types
     for tp in types:
       if tp.storage == Decls.RECORD:
-        s += self.generate_record (tp) + '\n'
+        s += self.generate_record_impl (tp) + '\n'
       elif tp.storage == Decls.INTERFACE:
         s += self.generate_class (tp) + '\n'
     return s
