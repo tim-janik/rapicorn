@@ -3,7 +3,7 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = . # tests
 
-INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_ROPE_CFLAGS)
+INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_ROPE_CFLAGS) $(PYTHON_CPPFLAGS)
 DEFS      = -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
 PLICINT   = $(top_builddir)/plic/plic-intern
 
@@ -60,6 +60,17 @@ check-pystub:
 #	rm -f testpystub.pyc
 EXTRA_DIST += testpystub.ref
 check-local: check-pystub
+
+check-pycstub:
+	@$(call TSTTITLE)
+	$(_@) ${PLICINT} -O=$(srcdir)/PyCStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
+	@$(call TSTCMP, $(srcdir)/testpycstub.ref)
+	@$(call TSTTITLE,check-pycstub-syntax)
+	$(_@) cp $(srcdir)/testpycstub.ref testpycstub.cc
+	$(_@) $(CXXCOMPILE) testpycstub.cc -c ; $(call TSTRESULT)
+	$(_@) rm -f testpycstub.cc testpycstub.o
+EXTRA_DIST += testpycstub.ref
+check-local: check-pycstub
 
 check-cppstub:
 	@$(call TSTTITLE)
