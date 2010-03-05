@@ -3,6 +3,12 @@
 #include <Python.h> // must be included first to configure std headers
 #include <string>
 
+#include "protocol-pb2.hh"
+typedef Rapicorn::Rope::RemoteProcedure RemoteProcedure;
+typedef Rapicorn::Rope::RemoteProcedure_Sequence RemoteProcedure_Sequence;
+typedef Rapicorn::Rope::RemoteProcedure_Record RemoteProcedure_Record;
+typedef Rapicorn::Rope::RemoteProcedure_Argument RemoteProcedure_Argument;
+
 static inline PY_LONG_LONG
 PyIntLong_AsLongLong (PyObject *intlong)
 {
@@ -67,28 +73,28 @@ struct XFooRecord {
   int             multi4;
   ExtensiveEnum   enum_field;
 };
-static bool rope_frompy_XFooRecord (PyObject*, XFooRecord*);
+static bool rope_frompy_XFooRecord (PyObject*, RemoteProcedure_Record&);
 
 struct XFooSequence {
   bool            single_bool;
 };
-static bool rope_frompy_XFooSequence (PyObject*, XFooSequence*);
+static bool rope_frompy_XFooSequence (PyObject*, RemoteProcedure_Sequence&);
 
 struct ExtensiveEnumSequence {
   ExtensiveEnum   enum_elements;
 };
-static bool rope_frompy_ExtensiveEnumSequence (PyObject*, ExtensiveEnumSequence*);
+static bool rope_frompy_ExtensiveEnumSequence (PyObject*, RemoteProcedure_Sequence&);
 
 struct NestedTypesRec {
   XFooRecord      *rec;
   XFooSequence    *seq;
 };
-static bool rope_frompy_NestedTypesRec (PyObject*, NestedTypesRec*);
+static bool rope_frompy_NestedTypesRec (PyObject*, RemoteProcedure_Record&);
 
 struct NestedTypesSeq {
   NestedTypesRec  *ntr;
 };
-static bool rope_frompy_NestedTypesSeq (PyObject*, NestedTypesSeq*);
+static bool rope_frompy_NestedTypesSeq (PyObject*, RemoteProcedure_Sequence&);
 
 struct NewRecord {
   int             i;
@@ -96,19 +102,19 @@ struct NewRecord {
   XFooSequence    *xfs;
   NestedTypesRec  *ntr;
 };
-static bool rope_frompy_NewRecord (PyObject*, NewRecord*);
+static bool rope_frompy_NewRecord (PyObject*, RemoteProcedure_Record&);
 
 struct InnerRecord {
   int             x;
   int             y;
   NewRecord       *rec;
 };
-static bool rope_frompy_InnerRecord (PyObject*, InnerRecord*);
+static bool rope_frompy_InnerRecord (PyObject*, RemoteProcedure_Record&);
 
 struct Refer2Inner {
   InnerRecord     *r;
 };
-static bool rope_frompy_Refer2Inner (PyObject*, Refer2Inner*);
+static bool rope_frompy_Refer2Inner (PyObject*, RemoteProcedure_Record&);
 
 struct SomeRecord {
   NewRecord       *r1;
@@ -116,36 +122,48 @@ struct SomeRecord {
   InnerRecord     *r3;
   InnerRecord     *r4;
 };
-static bool rope_frompy_SomeRecord (PyObject*, SomeRecord*);
+static bool rope_frompy_SomeRecord (PyObject*, RemoteProcedure_Record&);
 
 static bool
-rope_frompy_XFooRecord (PyObject *instance, XFooRecord *rec)
+rope_frompy_XFooRecord (PyObject *instance, RemoteProcedure_Record &rpr)
 {
+  RemoteProcedure_Argument *field;
   PyObject *dictR = NULL, *item = NULL;
   bool success = false;
   dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
   item = PyDict_GetItemString (dictR, "single_bool"); if (!dictR) goto error;
-  rec->single_bool = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
   item = PyDict_GetItemString (dictR, "single_num"); if (!dictR) goto error;
-  rec->single_num = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
   item = PyDict_GetItemString (dictR, "single_float"); if (!dictR) goto error;
-  rec->single_float = PyFloat_AsDouble (item); if (PyErr_Occurred()) goto error;
+  field = rpr.add_fields();
+  field->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) goto error;
   item = PyDict_GetItemString (dictR, "single_string"); if (!dictR) goto error;
-  rec->single_string = PyString_AsString (item); if (PyErr_Occurred()) goto error;
+  field = rpr.add_fields();
+  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) goto error;
   item = PyDict_GetItemString (dictR, "sibling1"); if (!dictR) goto error;
-  rec->sibling1 = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
   item = PyDict_GetItemString (dictR, "sibling2"); if (!dictR) goto error;
-  rec->sibling2 = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
   item = PyDict_GetItemString (dictR, "multi1"); if (!dictR) goto error;
-  rec->multi1 = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
   item = PyDict_GetItemString (dictR, "multi2"); if (!dictR) goto error;
-  rec->multi2 = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
   item = PyDict_GetItemString (dictR, "multi3"); if (!dictR) goto error;
-  rec->multi3 = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
   item = PyDict_GetItemString (dictR, "multi4"); if (!dictR) goto error;
-  rec->multi4 = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
   item = PyDict_GetItemString (dictR, "enum_field"); if (!dictR) goto error;
-  rec->enum_field = ExtensiveEnum (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
   success = true;
  error:
   Py_XDECREF (dictR);
@@ -153,15 +171,18 @@ rope_frompy_XFooRecord (PyObject *instance, XFooRecord *rec)
 }
 
 static bool
-rope_frompy_NestedTypesRec (PyObject *instance, NestedTypesRec *rec)
+rope_frompy_NestedTypesRec (PyObject *instance, RemoteProcedure_Record &rpr)
 {
+  RemoteProcedure_Argument *field;
   PyObject *dictR = NULL, *item = NULL;
   bool success = false;
   dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
   item = PyDict_GetItemString (dictR, "rec"); if (!dictR) goto error;
-  if (!rope_frompy_XFooRecord (item, rec->rec)) goto error;
+  field = rpr.add_fields();
+  if (!rope_frompy_XFooRecord (item, *field->mutable_vrec())) goto error;
   item = PyDict_GetItemString (dictR, "seq"); if (!dictR) goto error;
-  if (!rope_frompy_XFooSequence (item, rec->seq)) goto error;
+  field = rpr.add_fields();
+  if (!rope_frompy_XFooSequence (item, *field->mutable_vseq())) goto error;
   success = true;
  error:
   Py_XDECREF (dictR);
@@ -169,19 +190,24 @@ rope_frompy_NestedTypesRec (PyObject *instance, NestedTypesRec *rec)
 }
 
 static bool
-rope_frompy_NewRecord (PyObject *instance, NewRecord *rec)
+rope_frompy_NewRecord (PyObject *instance, RemoteProcedure_Record &rpr)
 {
+  RemoteProcedure_Argument *field;
   PyObject *dictR = NULL, *item = NULL;
   bool success = false;
   dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
   item = PyDict_GetItemString (dictR, "i"); if (!dictR) goto error;
-  rec->i = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
   item = PyDict_GetItemString (dictR, "enum1"); if (!dictR) goto error;
-  rec->enum1 = Enum1 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
   item = PyDict_GetItemString (dictR, "xfs"); if (!dictR) goto error;
-  if (!rope_frompy_XFooSequence (item, rec->xfs)) goto error;
+  field = rpr.add_fields();
+  if (!rope_frompy_XFooSequence (item, *field->mutable_vseq())) goto error;
   item = PyDict_GetItemString (dictR, "ntr"); if (!dictR) goto error;
-  if (!rope_frompy_NestedTypesRec (item, rec->ntr)) goto error;
+  field = rpr.add_fields();
+  if (!rope_frompy_NestedTypesRec (item, *field->mutable_vrec())) goto error;
   success = true;
  error:
   Py_XDECREF (dictR);
@@ -189,17 +215,21 @@ rope_frompy_NewRecord (PyObject *instance, NewRecord *rec)
 }
 
 static bool
-rope_frompy_InnerRecord (PyObject *instance, InnerRecord *rec)
+rope_frompy_InnerRecord (PyObject *instance, RemoteProcedure_Record &rpr)
 {
+  RemoteProcedure_Argument *field;
   PyObject *dictR = NULL, *item = NULL;
   bool success = false;
   dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
   item = PyDict_GetItemString (dictR, "x"); if (!dictR) goto error;
-  rec->x = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
   item = PyDict_GetItemString (dictR, "y"); if (!dictR) goto error;
-  rec->y = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
   item = PyDict_GetItemString (dictR, "rec"); if (!dictR) goto error;
-  if (!rope_frompy_NewRecord (item, rec->rec)) goto error;
+  field = rpr.add_fields();
+  if (!rope_frompy_NewRecord (item, *field->mutable_vrec())) goto error;
   success = true;
  error:
   Py_XDECREF (dictR);
@@ -207,13 +237,15 @@ rope_frompy_InnerRecord (PyObject *instance, InnerRecord *rec)
 }
 
 static bool
-rope_frompy_Refer2Inner (PyObject *instance, Refer2Inner *rec)
+rope_frompy_Refer2Inner (PyObject *instance, RemoteProcedure_Record &rpr)
 {
+  RemoteProcedure_Argument *field;
   PyObject *dictR = NULL, *item = NULL;
   bool success = false;
   dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
   item = PyDict_GetItemString (dictR, "r"); if (!dictR) goto error;
-  if (!rope_frompy_InnerRecord (item, rec->r)) goto error;
+  field = rpr.add_fields();
+  if (!rope_frompy_InnerRecord (item, *field->mutable_vrec())) goto error;
   success = true;
  error:
   Py_XDECREF (dictR);
@@ -221,19 +253,24 @@ rope_frompy_Refer2Inner (PyObject *instance, Refer2Inner *rec)
 }
 
 static bool
-rope_frompy_SomeRecord (PyObject *instance, SomeRecord *rec)
+rope_frompy_SomeRecord (PyObject *instance, RemoteProcedure_Record &rpr)
 {
+  RemoteProcedure_Argument *field;
   PyObject *dictR = NULL, *item = NULL;
   bool success = false;
   dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
   item = PyDict_GetItemString (dictR, "r1"); if (!dictR) goto error;
-  if (!rope_frompy_NewRecord (item, rec->r1)) goto error;
+  field = rpr.add_fields();
+  if (!rope_frompy_NewRecord (item, *field->mutable_vrec())) goto error;
   item = PyDict_GetItemString (dictR, "r2"); if (!dictR) goto error;
-  if (!rope_frompy_NewRecord (item, rec->r2)) goto error;
+  field = rpr.add_fields();
+  if (!rope_frompy_NewRecord (item, *field->mutable_vrec())) goto error;
   item = PyDict_GetItemString (dictR, "r3"); if (!dictR) goto error;
-  if (!rope_frompy_InnerRecord (item, rec->r3)) goto error;
+  field = rpr.add_fields();
+  if (!rope_frompy_InnerRecord (item, *field->mutable_vrec())) goto error;
   item = PyDict_GetItemString (dictR, "r4"); if (!dictR) goto error;
-  if (!rope_frompy_InnerRecord (item, rec->r4)) goto error;
+  field = rpr.add_fields();
+  if (!rope_frompy_InnerRecord (item, *field->mutable_vrec())) goto error;
   success = true;
  error:
   Py_XDECREF (dictR);

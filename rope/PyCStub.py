@@ -52,6 +52,12 @@ base_code = """
 #include <Python.h> // must be included first to configure std headers
 #include <string>
 
+#include "protocol-pb2.hh"
+typedef Rapicorn::Rope::RemoteProcedure RemoteProcedure;
+typedef Rapicorn::Rope::RemoteProcedure_Sequence RemoteProcedure_Sequence;
+typedef Rapicorn::Rope::RemoteProcedure_Record RemoteProcedure_Record;
+typedef Rapicorn::Rope::RemoteProcedure_Argument RemoteProcedure_Argument;
+
 static inline PY_LONG_LONG
 PyIntLong_AsLongLong (PyObject *intlong)
 {
@@ -131,29 +137,34 @@ class Generator:
       pstar = '*' if fl[1].storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE) else ''
       s += '  ' + self.format_to_tab (self.type2cpp (fl[1].name)) + pstar + fl[0] + ';\n'
     s += '};\n'
-    s += 'static bool rope_frompy_%s (PyObject*, %s*);\n' % (type_info.name, type_info.name)
+    s += 'static bool rope_frompy_%s (PyObject*, RemoteProcedure_Record&);\n' % type_info.name
     return s
   def generate_record_funcs (self, type_info):
     s = ''
     s += 'static bool\n'
-    s += 'rope_frompy_%s (PyObject *instance, %s *rec)\n' % (type_info.name, type_info.name)
+    s += 'rope_frompy_%s (PyObject *instance, RemoteProcedure_Record &rpr)\n' % type_info.name
     s += '{\n'
+    s += '  RemoteProcedure_Argument *field;\n'
     s += '  PyObject *dictR = NULL, *item = NULL;\n'
     s += '  bool success = false;\n'
     s += '  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;\n'
     for fl in type_info.fields:
       s += '  item = PyDict_GetItemString (dictR, "%s"); if (!dictR) goto error;\n' % (fl[0])
+      s += '  field = rpr.add_fields();\n'
       if fl[1].storage == Decls.INT:
-        s += '  rec->%s = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;\n' % (fl[0])
+        s += '  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;\n'
       elif fl[1].storage == Decls.FLOAT:
-        s += '  rec->%s = PyFloat_AsDouble (item); if (PyErr_Occurred()) goto error;\n' % (fl[0])
+        s += '  field->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) goto error;\n'
       elif fl[1].storage == Decls.STRING:
-        s += '  rec->%s = PyString_AsString (item); if (PyErr_Occurred()) goto error;\n' % (fl[0])
+        s += '  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) goto error;\n'
       elif fl[1].storage == Decls.ENUM:
-        s += '  rec->%s = %s (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;\n' \
-             % (fl[0], fl[1].name)
-      elif fl[1].storage in (Decls.RECORD, Decls.SEQUENCE, Decls.INTERFACE):
-        s += '  if (!rope_frompy_%s (item, rec->%s)) goto error;\n' % (fl[1].name, fl[0])
+        s += '  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;\n'
+      elif fl[1].storage == Decls.RECORD:
+        s += '  if (!rope_frompy_%s (item, *field->mutable_vrec())) goto error;\n' % fl[1].name
+      elif fl[1].storage == Decls.SEQUENCE:
+        s += '  if (!rope_frompy_%s (item, *field->mutable_vseq())) goto error;\n' % fl[1].name
+      elif fl[1].storage == Decls.INTERFACE:
+        s += '  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) goto error;\n'
       else:
         raise RuntimeError ("Unexpected storage type: " + fl[1].storage)
     s += '  success = true;\n'
@@ -169,7 +180,7 @@ class Generator:
       pstar = '*' if fl[1].storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE) else ''
       s += '  ' + self.format_to_tab (self.type2cpp (fl[1].name)) + pstar + fl[0] + ';\n'
     s += '};\n'
-    s += 'static bool rope_frompy_%s (PyObject*, %s*);\n' % (type_info.name, type_info.name)
+    s += 'static bool rope_frompy_%s (PyObject*, RemoteProcedure_Sequence&);\n' % type_info.name
     return s
   def generate_sighandler (self, ftype, ctype):
     s = ''
