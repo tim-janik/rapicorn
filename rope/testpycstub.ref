@@ -171,6 +171,34 @@ rope_frompy_XFooRecord (PyObject *instance, RemoteProcedure_Record &rpr)
 }
 
 static bool
+rope_frompy_XFooSequence (PyObject *list, RemoteProcedure_Sequence &rps)
+{
+  bool success = false;
+  const ssize_t len = PyList_Size (list); if (len < 0) goto error;
+  for (size_t k = 0; k < len; k++) {
+    PyObject *item = PyList_GET_ITEM (list, k);
+    rps.add_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
+  }
+  success = true;
+ error:
+  return success;
+}
+
+static bool
+rope_frompy_ExtensiveEnumSequence (PyObject *list, RemoteProcedure_Sequence &rps)
+{
+  bool success = false;
+  const ssize_t len = PyList_Size (list); if (len < 0) goto error;
+  for (size_t k = 0; k < len; k++) {
+    PyObject *item = PyList_GET_ITEM (list, k);
+    rps.add_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
+  }
+  success = true;
+ error:
+  return success;
+}
+
+static bool
 rope_frompy_NestedTypesRec (PyObject *instance, RemoteProcedure_Record &rpr)
 {
   RemoteProcedure_Argument *field;
@@ -186,6 +214,20 @@ rope_frompy_NestedTypesRec (PyObject *instance, RemoteProcedure_Record &rpr)
   success = true;
  error:
   Py_XDECREF (dictR);
+  return success;
+}
+
+static bool
+rope_frompy_NestedTypesSeq (PyObject *list, RemoteProcedure_Sequence &rps)
+{
+  bool success = false;
+  const ssize_t len = PyList_Size (list); if (len < 0) goto error;
+  for (size_t k = 0; k < len; k++) {
+    PyObject *item = PyList_GET_ITEM (list, k);
+    if (!rope_frompy_NestedTypesRec (item, *rps.add_vrec())) goto error;
+  }
+  success = true;
+ error:
   return success;
 }
 
