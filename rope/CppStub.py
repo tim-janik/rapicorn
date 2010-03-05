@@ -252,11 +252,9 @@ class Generator:
     if el[1].storage in (Decls.INT, Decls.ENUM, Decls.FLOAT, Decls.STRING, Decls.INTERFACE):
       s += '    rps.add_%s (%s[k]);\n' % (self.storage_fieldname (el[1].storage), el[0])
     elif el[1].storage == Decls.RECORD:
-      s += '    rps.add_vrec();'
-      s += '    if (!%s[k].to_proto (ProtoRecordCast (*rps.mutable_vrec (k)))) return false;\n' % el[0]
+      s += '    if (!%s[k].to_proto (ProtoRecordCast (*rps.add_vrec()))) return false;\n' % el[0]
     elif el[1].storage == Decls.SEQUENCE:
-      s += '    rps.add_vseq();'
-      s += '    if (!%s[k].to_proto (ProtoSequenceCast (*rps.mutable_vseq (k)))) return false;\n' % el[0]
+      s += '    if (!%s[k].to_proto (ProtoSequenceCast (*rps.add_vseq()))) return false;\n' % el[0]
     else: # FUNC VOID
       raise RuntimeError ("Unexpected storage type: " + el[1].storage)
     s += '  }\n'

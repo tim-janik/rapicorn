@@ -473,7 +473,7 @@ bool RecordSequence::to_proto (ProtoSequence &dst) const {
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
   const size_t len = repeatedfield.size();
   for (size_t k = 0; k < len; k++) {
-    rps.add_vrec();    if (!repeatedfield[k].to_proto (ProtoRecordCast (*rps.mutable_vrec (k)))) return false;
+    if (!repeatedfield[k].to_proto (ProtoRecordCast (*rps.add_vrec()))) return false;
   }
   return true;
 }
@@ -491,7 +491,7 @@ bool SequenceSequence::to_proto (ProtoSequence &dst) const {
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
   const size_t len = moreints.size();
   for (size_t k = 0; k < len; k++) {
-    rps.add_vseq();    if (!moreints[k].to_proto (ProtoSequenceCast (*rps.mutable_vseq (k)))) return false;
+    if (!moreints[k].to_proto (ProtoSequenceCast (*rps.add_vseq()))) return false;
   }
   return true;
 }
@@ -533,7 +533,7 @@ bool NestedTypesSeq::to_proto (ProtoSequence &dst) const {
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
   const size_t len = ntr.size();
   for (size_t k = 0; k < len; k++) {
-    rps.add_vrec();    if (!ntr[k].to_proto (ProtoRecordCast (*rps.mutable_vrec (k)))) return false;
+    if (!ntr[k].to_proto (ProtoRecordCast (*rps.add_vrec()))) return false;
   }
   return true;
 }
