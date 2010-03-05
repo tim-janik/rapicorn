@@ -238,7 +238,7 @@ class Generator:
       return 'vstring'
     elif storage == Decls.RECORD:
       return 'vrec'
-    elif storage == Decls.SEQ:
+    elif storage == Decls.SEQUENCE:
       return 'vseq'
     else: # FUNC VOID
       raise RuntimeError ("Unexpected storage type: " + storage)
