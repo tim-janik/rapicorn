@@ -159,8 +159,33 @@ struct XFooSequence {
   bool to_proto   (ProtoSequence &) const;
   bool from_proto (const ProtoSequence &);
 };
+struct IntSequence {
+  std::vector<int> numx;
+  bool to_proto   (ProtoSequence &) const;
+  bool from_proto (const ProtoSequence &);
+};
+struct FloatSequence {
+  std::vector<double> fractalvalue;
+  bool to_proto   (ProtoSequence &) const;
+  bool from_proto (const ProtoSequence &);
+};
+struct StringSequence {
+  std::vector<std::string> blurb;
+  bool to_proto   (ProtoSequence &) const;
+  bool from_proto (const ProtoSequence &);
+};
 struct ExtensiveEnumSequence {
   std::vector<ExtensiveEnum> enum_elements;
+  bool to_proto   (ProtoSequence &) const;
+  bool from_proto (const ProtoSequence &);
+};
+struct RecordSequence {
+  std::vector<XFooRecord> repeatedfield;
+  bool to_proto   (ProtoSequence &) const;
+  bool from_proto (const ProtoSequence &);
+};
+struct SequenceSequence {
+  std::vector<IntSequence> moreints;
   bool to_proto   (ProtoSequence &) const;
   bool from_proto (const ProtoSequence &);
 };
@@ -376,6 +401,57 @@ bool XFooSequence::from_proto (const ProtoSequence &src) {
   return true;
 }
 
+bool IntSequence::to_proto (ProtoSequence &dst) const {
+  RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
+  const size_t len = numx.size();
+  for (size_t k = 0; k < len; k++) {
+    rps.add_vint64 (numx[k]);
+  }
+  return true;
+}
+bool IntSequence::from_proto (const ProtoSequence &src) {
+  const RemoteProcedure_Sequence &rps = RPSequenceCast (src);
+  const size_t len = rps.vint64_size();
+  for (size_t k = 0; k < len; k++) {
+    numx.push_back (rps.vint64 (k));
+  }
+  return true;
+}
+
+bool FloatSequence::to_proto (ProtoSequence &dst) const {
+  RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
+  const size_t len = fractalvalue.size();
+  for (size_t k = 0; k < len; k++) {
+    rps.add_vdouble (fractalvalue[k]);
+  }
+  return true;
+}
+bool FloatSequence::from_proto (const ProtoSequence &src) {
+  const RemoteProcedure_Sequence &rps = RPSequenceCast (src);
+  const size_t len = rps.vdouble_size();
+  for (size_t k = 0; k < len; k++) {
+    fractalvalue.push_back (rps.vdouble (k));
+  }
+  return true;
+}
+
+bool StringSequence::to_proto (ProtoSequence &dst) const {
+  RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
+  const size_t len = blurb.size();
+  for (size_t k = 0; k < len; k++) {
+    rps.add_vstring (blurb[k]);
+  }
+  return true;
+}
+bool StringSequence::from_proto (const ProtoSequence &src) {
+  const RemoteProcedure_Sequence &rps = RPSequenceCast (src);
+  const size_t len = rps.vstring_size();
+  for (size_t k = 0; k < len; k++) {
+    blurb.push_back (rps.vstring (k));
+  }
+  return true;
+}
+
 bool ExtensiveEnumSequence::to_proto (ProtoSequence &dst) const {
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
   const size_t len = enum_elements.size();
@@ -389,6 +465,42 @@ bool ExtensiveEnumSequence::from_proto (const ProtoSequence &src) {
   const size_t len = rps.vint64_size();
   for (size_t k = 0; k < len; k++) {
     enum_elements.push_back (ExtensiveEnum (rps.vint64 (k)));
+  }
+  return true;
+}
+
+bool RecordSequence::to_proto (ProtoSequence &dst) const {
+  RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
+  const size_t len = repeatedfield.size();
+  for (size_t k = 0; k < len; k++) {
+    rps.add_vrec();    if (!repeatedfield[k].to_proto (ProtoRecordCast (*rps.mutable_vrec (k)))) return false;
+  }
+  return true;
+}
+bool RecordSequence::from_proto (const ProtoSequence &src) {
+  const RemoteProcedure_Sequence &rps = RPSequenceCast (src);
+  const size_t len = rps.vrec_size();
+  repeatedfield.resize (len);
+  for (size_t k = 0; k < len; k++) {
+    if (!repeatedfield[k].from_proto (ProtoRecordCast (rps.vrec (k)))) return false;
+  }
+  return true;
+}
+
+bool SequenceSequence::to_proto (ProtoSequence &dst) const {
+  RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
+  const size_t len = moreints.size();
+  for (size_t k = 0; k < len; k++) {
+    rps.add_vseq();    if (!moreints[k].to_proto (ProtoSequenceCast (*rps.mutable_vseq (k)))) return false;
+  }
+  return true;
+}
+bool SequenceSequence::from_proto (const ProtoSequence &src) {
+  const RemoteProcedure_Sequence &rps = RPSequenceCast (src);
+  const size_t len = rps.vseq_size();
+  moreints.resize (len);
+  for (size_t k = 0; k < len; k++) {
+    if (!moreints[k].from_proto (ProtoSequenceCast (rps.vseq (k)))) return false;
   }
   return true;
 }

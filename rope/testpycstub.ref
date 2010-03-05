@@ -80,10 +80,35 @@ struct XFooSequence {
 };
 static bool rope_frompy_XFooSequence (PyObject*, RemoteProcedure_Sequence&);
 
+struct IntSequence {
+  int             numx;
+};
+static bool rope_frompy_IntSequence (PyObject*, RemoteProcedure_Sequence&);
+
+struct FloatSequence {
+  double          fractalvalue;
+};
+static bool rope_frompy_FloatSequence (PyObject*, RemoteProcedure_Sequence&);
+
+struct StringSequence {
+  std::string     blurb;
+};
+static bool rope_frompy_StringSequence (PyObject*, RemoteProcedure_Sequence&);
+
 struct ExtensiveEnumSequence {
   ExtensiveEnum   enum_elements;
 };
 static bool rope_frompy_ExtensiveEnumSequence (PyObject*, RemoteProcedure_Sequence&);
+
+struct RecordSequence {
+  XFooRecord      *repeatedfield;
+};
+static bool rope_frompy_RecordSequence (PyObject*, RemoteProcedure_Sequence&);
+
+struct SequenceSequence {
+  IntSequence     *moreints;
+};
+static bool rope_frompy_SequenceSequence (PyObject*, RemoteProcedure_Sequence&);
 
 struct NestedTypesRec {
   XFooRecord      *rec;
@@ -185,6 +210,48 @@ rope_frompy_XFooSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 }
 
 static bool
+rope_frompy_IntSequence (PyObject *list, RemoteProcedure_Sequence &rps)
+{
+  bool success = false;
+  const ssize_t len = PyList_Size (list); if (len < 0) goto error;
+  for (size_t k = 0; k < len; k++) {
+    PyObject *item = PyList_GET_ITEM (list, k);
+    rps.add_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
+  }
+  success = true;
+ error:
+  return success;
+}
+
+static bool
+rope_frompy_FloatSequence (PyObject *list, RemoteProcedure_Sequence &rps)
+{
+  bool success = false;
+  const ssize_t len = PyList_Size (list); if (len < 0) goto error;
+  for (size_t k = 0; k < len; k++) {
+    PyObject *item = PyList_GET_ITEM (list, k);
+    rps.add_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) goto error;
+  }
+  success = true;
+ error:
+  return success;
+}
+
+static bool
+rope_frompy_StringSequence (PyObject *list, RemoteProcedure_Sequence &rps)
+{
+  bool success = false;
+  const ssize_t len = PyList_Size (list); if (len < 0) goto error;
+  for (size_t k = 0; k < len; k++) {
+    PyObject *item = PyList_GET_ITEM (list, k);
+    rps.add_vstring (PyString_AsString (item)); if (PyErr_Occurred()) goto error;
+  }
+  success = true;
+ error:
+  return success;
+}
+
+static bool
 rope_frompy_ExtensiveEnumSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
@@ -192,6 +259,34 @@ rope_frompy_ExtensiveEnumSequence (PyObject *list, RemoteProcedure_Sequence &rps
   for (size_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
     rps.add_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
+  }
+  success = true;
+ error:
+  return success;
+}
+
+static bool
+rope_frompy_RecordSequence (PyObject *list, RemoteProcedure_Sequence &rps)
+{
+  bool success = false;
+  const ssize_t len = PyList_Size (list); if (len < 0) goto error;
+  for (size_t k = 0; k < len; k++) {
+    PyObject *item = PyList_GET_ITEM (list, k);
+    if (!rope_frompy_XFooRecord (item, *rps.add_vrec())) goto error;
+  }
+  success = true;
+ error:
+  return success;
+}
+
+static bool
+rope_frompy_SequenceSequence (PyObject *list, RemoteProcedure_Sequence &rps)
+{
+  bool success = false;
+  const ssize_t len = PyList_Size (list); if (len < 0) goto error;
+  for (size_t k = 0; k < len; k++) {
+    PyObject *item = PyList_GET_ITEM (list, k);
+    if (!rope_frompy_IntSequence (item, *rps.add_vseq())) goto error;
   }
   success = true;
  error:

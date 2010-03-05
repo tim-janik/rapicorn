@@ -148,8 +148,23 @@ record XFooRecord {
 sequence XFooSequence {
   bool   single_bool;
 };
+sequence IntSequence {
+  int   numx;
+};
+sequence FloatSequence {
+  float fractalvalue;
+};
+sequence StringSequence {
+  string blurb;
+};
 sequence ExtensiveEnumSequence {
   ExtensiveEnum enum_elements;
+};
+sequence RecordSequence {
+  XFooRecord repeatedfield;
+};
+sequence SequenceSequence {
+  IntSequence moreints;
 };
 
 // test nested types
