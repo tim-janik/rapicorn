@@ -200,7 +200,7 @@ rope_frompy_XFooSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
   const ssize_t len = PyList_Size (list); if (len < 0) goto error;
-  for (size_t k = 0; k < len; k++) {
+  for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
     rps.add_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
   }
@@ -214,7 +214,7 @@ rope_frompy_IntSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
   const ssize_t len = PyList_Size (list); if (len < 0) goto error;
-  for (size_t k = 0; k < len; k++) {
+  for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
     rps.add_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
   }
@@ -228,7 +228,7 @@ rope_frompy_FloatSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
   const ssize_t len = PyList_Size (list); if (len < 0) goto error;
-  for (size_t k = 0; k < len; k++) {
+  for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
     rps.add_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) goto error;
   }
@@ -242,7 +242,7 @@ rope_frompy_StringSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
   const ssize_t len = PyList_Size (list); if (len < 0) goto error;
-  for (size_t k = 0; k < len; k++) {
+  for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
     rps.add_vstring (PyString_AsString (item)); if (PyErr_Occurred()) goto error;
   }
@@ -256,7 +256,7 @@ rope_frompy_ExtensiveEnumSequence (PyObject *list, RemoteProcedure_Sequence &rps
 {
   bool success = false;
   const ssize_t len = PyList_Size (list); if (len < 0) goto error;
-  for (size_t k = 0; k < len; k++) {
+  for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
     rps.add_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
   }
@@ -270,7 +270,7 @@ rope_frompy_RecordSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
   const ssize_t len = PyList_Size (list); if (len < 0) goto error;
-  for (size_t k = 0; k < len; k++) {
+  for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
     if (!rope_frompy_XFooRecord (item, *rps.add_vrec())) goto error;
   }
@@ -284,7 +284,7 @@ rope_frompy_SequenceSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
   const ssize_t len = PyList_Size (list); if (len < 0) goto error;
-  for (size_t k = 0; k < len; k++) {
+  for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
     if (!rope_frompy_IntSequence (item, *rps.add_vseq())) goto error;
   }
@@ -317,7 +317,7 @@ rope_frompy_NestedTypesSeq (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
   const ssize_t len = PyList_Size (list); if (len < 0) goto error;
-  for (size_t k = 0; k < len; k++) {
+  for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
     if (!rope_frompy_NestedTypesRec (item, *rps.add_vrec())) goto error;
   }

@@ -190,7 +190,7 @@ class Generator:
     el = type_info.elements
     s += '  bool success = false;\n'
     s += '  const ssize_t len = PyList_Size (list); if (len < 0) goto error;\n'
-    s += '  for (size_t k = 0; k < len; k++) {\n'
+    s += '  for (ssize_t k = 0; k < len; k++) {\n'
     s += '    PyObject *item = PyList_GET_ITEM (list, k);\n'
     if el[1].storage in (Decls.INT, Decls.ENUM):
       s += '    rps.add_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;\n'
