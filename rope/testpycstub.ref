@@ -118,3 +118,125 @@ struct SomeRecord {
 };
 static bool rope_frompy_SomeRecord (PyObject*, SomeRecord*);
 
+static bool
+rope_frompy_XFooRecord (PyObject *instance, XFooRecord *rec)
+{
+  PyObject *dictR = NULL, *item = NULL;
+  bool success = false;
+  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
+  item = PyDict_GetItemString (dictR, "single_bool"); if (!dictR) goto error;
+  rec->single_bool = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  item = PyDict_GetItemString (dictR, "single_num"); if (!dictR) goto error;
+  rec->single_num = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  item = PyDict_GetItemString (dictR, "single_float"); if (!dictR) goto error;
+  rec->single_float = PyFloat_AsDouble (item); if (PyErr_Occurred()) goto error;
+  item = PyDict_GetItemString (dictR, "single_string"); if (!dictR) goto error;
+  rec->single_string = PyString_AsString (item); if (PyErr_Occurred()) goto error;
+  item = PyDict_GetItemString (dictR, "sibling1"); if (!dictR) goto error;
+  rec->sibling1 = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  item = PyDict_GetItemString (dictR, "sibling2"); if (!dictR) goto error;
+  rec->sibling2 = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  item = PyDict_GetItemString (dictR, "multi1"); if (!dictR) goto error;
+  rec->multi1 = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  item = PyDict_GetItemString (dictR, "multi2"); if (!dictR) goto error;
+  rec->multi2 = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  item = PyDict_GetItemString (dictR, "multi3"); if (!dictR) goto error;
+  rec->multi3 = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  item = PyDict_GetItemString (dictR, "multi4"); if (!dictR) goto error;
+  rec->multi4 = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  item = PyDict_GetItemString (dictR, "enum_field"); if (!dictR) goto error;
+  rec->enum_field = ExtensiveEnum (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
+  success = true;
+ error:
+  Py_XDECREF (dictR);
+  return success;
+}
+
+static bool
+rope_frompy_NestedTypesRec (PyObject *instance, NestedTypesRec *rec)
+{
+  PyObject *dictR = NULL, *item = NULL;
+  bool success = false;
+  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
+  item = PyDict_GetItemString (dictR, "rec"); if (!dictR) goto error;
+  if (!rope_frompy_XFooRecord (item, rec->rec)) goto error;
+  item = PyDict_GetItemString (dictR, "seq"); if (!dictR) goto error;
+  if (!rope_frompy_XFooSequence (item, rec->seq)) goto error;
+  success = true;
+ error:
+  Py_XDECREF (dictR);
+  return success;
+}
+
+static bool
+rope_frompy_NewRecord (PyObject *instance, NewRecord *rec)
+{
+  PyObject *dictR = NULL, *item = NULL;
+  bool success = false;
+  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
+  item = PyDict_GetItemString (dictR, "i"); if (!dictR) goto error;
+  rec->i = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  item = PyDict_GetItemString (dictR, "enum1"); if (!dictR) goto error;
+  rec->enum1 = Enum1 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
+  item = PyDict_GetItemString (dictR, "xfs"); if (!dictR) goto error;
+  if (!rope_frompy_XFooSequence (item, rec->xfs)) goto error;
+  item = PyDict_GetItemString (dictR, "ntr"); if (!dictR) goto error;
+  if (!rope_frompy_NestedTypesRec (item, rec->ntr)) goto error;
+  success = true;
+ error:
+  Py_XDECREF (dictR);
+  return success;
+}
+
+static bool
+rope_frompy_InnerRecord (PyObject *instance, InnerRecord *rec)
+{
+  PyObject *dictR = NULL, *item = NULL;
+  bool success = false;
+  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
+  item = PyDict_GetItemString (dictR, "x"); if (!dictR) goto error;
+  rec->x = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  item = PyDict_GetItemString (dictR, "y"); if (!dictR) goto error;
+  rec->y = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;
+  item = PyDict_GetItemString (dictR, "rec"); if (!dictR) goto error;
+  if (!rope_frompy_NewRecord (item, rec->rec)) goto error;
+  success = true;
+ error:
+  Py_XDECREF (dictR);
+  return success;
+}
+
+static bool
+rope_frompy_Refer2Inner (PyObject *instance, Refer2Inner *rec)
+{
+  PyObject *dictR = NULL, *item = NULL;
+  bool success = false;
+  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
+  item = PyDict_GetItemString (dictR, "r"); if (!dictR) goto error;
+  if (!rope_frompy_InnerRecord (item, rec->r)) goto error;
+  success = true;
+ error:
+  Py_XDECREF (dictR);
+  return success;
+}
+
+static bool
+rope_frompy_SomeRecord (PyObject *instance, SomeRecord *rec)
+{
+  PyObject *dictR = NULL, *item = NULL;
+  bool success = false;
+  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
+  item = PyDict_GetItemString (dictR, "r1"); if (!dictR) goto error;
+  if (!rope_frompy_NewRecord (item, rec->r1)) goto error;
+  item = PyDict_GetItemString (dictR, "r2"); if (!dictR) goto error;
+  if (!rope_frompy_NewRecord (item, rec->r2)) goto error;
+  item = PyDict_GetItemString (dictR, "r3"); if (!dictR) goto error;
+  if (!rope_frompy_InnerRecord (item, rec->r3)) goto error;
+  item = PyDict_GetItemString (dictR, "r4"); if (!dictR) goto error;
+  if (!rope_frompy_InnerRecord (item, rec->r4)) goto error;
+  success = true;
+ error:
+  Py_XDECREF (dictR);
+  return success;
+}
+

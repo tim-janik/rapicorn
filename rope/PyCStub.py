@@ -133,6 +133,35 @@ class Generator:
     s += '};\n'
     s += 'static bool rope_frompy_%s (PyObject*, %s*);\n' % (type_info.name, type_info.name)
     return s
+  def generate_record_funcs (self, type_info):
+    s = ''
+    s += 'static bool\n'
+    s += 'rope_frompy_%s (PyObject *instance, %s *rec)\n' % (type_info.name, type_info.name)
+    s += '{\n'
+    s += '  PyObject *dictR = NULL, *item = NULL;\n'
+    s += '  bool success = false;\n'
+    s += '  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;\n'
+    for fl in type_info.fields:
+      s += '  item = PyDict_GetItemString (dictR, "%s"); if (!dictR) goto error;\n' % (fl[0])
+      if fl[1].storage == Decls.INT:
+        s += '  rec->%s = PyIntLong_AsLongLong (item); if (PyErr_Occurred()) goto error;\n' % (fl[0])
+      elif fl[1].storage == Decls.FLOAT:
+        s += '  rec->%s = PyFloat_AsDouble (item); if (PyErr_Occurred()) goto error;\n' % (fl[0])
+      elif fl[1].storage == Decls.STRING:
+        s += '  rec->%s = PyString_AsString (item); if (PyErr_Occurred()) goto error;\n' % (fl[0])
+      elif fl[1].storage == Decls.ENUM:
+        s += '  rec->%s = %s (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;\n' \
+             % (fl[0], fl[1].name)
+      elif fl[1].storage in (Decls.RECORD, Decls.SEQUENCE, Decls.INTERFACE):
+        s += '  if (!rope_frompy_%s (item, rec->%s)) goto error;\n' % (fl[1].name, fl[0])
+      else:
+        raise RuntimeError ("Unexpected storage type: " + fl[1].storage)
+    s += '  success = true;\n'
+    s += ' error:\n'
+    s += '  Py_XDECREF (dictR);\n'
+    s += '  return success;\n'
+    s += '}\n'
+    return s
   def generate_sequence_impl (self, type_info):
     s = ''
     s += 'struct %s {\n' % type_info.name
@@ -249,6 +278,16 @@ class Generator:
         s += self.generate_record_impl (tp) + '\n'
       elif tp.storage == Decls.SEQUENCE:
         s += self.generate_sequence_impl (tp) + '\n'
+      elif tp.storage == Decls.INTERFACE:
+        s += '' # self.generate_class (tp) + '\n'
+    # generate accessors
+    for tp in types:
+      if tp.typedef_origin:
+        pass
+      elif tp.storage == Decls.RECORD:
+        s += self.generate_record_funcs (tp) + '\n'
+      elif tp.storage == Decls.SEQUENCE:
+        s += '' # self.generate_sequence_impl (tp) + '\n'
       elif tp.storage == Decls.INTERFACE:
         s += '' # self.generate_class (tp) + '\n'
     return s
