@@ -11,6 +11,8 @@ typedef Rapicorn::Rope::RemoteProcedure_Argument RemoteProcedure_Argument;
 
 #include <core/rapicornsignal.hh>
 
+#define GOTO_ERROR()    goto error
+
 static inline PY_LONG_LONG
 PyIntLong_AsLongLong (PyObject *intlong)
 {
@@ -157,40 +159,40 @@ rope_frompy_XFooRecord (PyObject *instance, RemoteProcedure_Record &rpr)
   RemoteProcedure_Argument *field;
   PyObject *dictR = NULL, *item = NULL;
   bool success = false;
-  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
-  item = PyDict_GetItemString (dictR, "single_bool"); if (!dictR) goto error;
+  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "single_bool"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
-  item = PyDict_GetItemString (dictR, "single_num"); if (!dictR) goto error;
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "single_num"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
-  item = PyDict_GetItemString (dictR, "single_float"); if (!dictR) goto error;
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "single_float"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  field->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) goto error;
-  item = PyDict_GetItemString (dictR, "single_string"); if (!dictR) goto error;
+  field->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "single_string"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) goto error;
-  item = PyDict_GetItemString (dictR, "sibling1"); if (!dictR) goto error;
+  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "sibling1"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
-  item = PyDict_GetItemString (dictR, "sibling2"); if (!dictR) goto error;
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "sibling2"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
-  item = PyDict_GetItemString (dictR, "multi1"); if (!dictR) goto error;
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "multi1"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
-  item = PyDict_GetItemString (dictR, "multi2"); if (!dictR) goto error;
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "multi2"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
-  item = PyDict_GetItemString (dictR, "multi3"); if (!dictR) goto error;
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "multi3"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
-  item = PyDict_GetItemString (dictR, "multi4"); if (!dictR) goto error;
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "multi4"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
-  item = PyDict_GetItemString (dictR, "enum_field"); if (!dictR) goto error;
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "enum_field"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
   success = true;
  error:
   Py_XDECREF (dictR);
@@ -202,75 +204,75 @@ rope_topy_XFooRecord (const RemoteProcedure_Record &rpr, PyObject **pyop)
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL;
   const RemoteProcedure_Argument *field;
   bool success = false;
-  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) goto error;
-  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) goto error;
-  if (rpr.fields_size() < 11) goto error;
+  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) GOTO_ERROR();
+  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) GOTO_ERROR();
+  if (rpr.fields_size() < 11) GOTO_ERROR();
   field = &rpr.fields (0);
-  if (!field->has_vint64()) goto error;
-  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "single_bool", pyfoR) < 0) goto error;
+  if (!field->has_vint64()) GOTO_ERROR();
+  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "single_bool", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (1);
-  if (!field->has_vint64()) goto error;
-  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "single_num", pyfoR) < 0) goto error;
+  if (!field->has_vint64()) GOTO_ERROR();
+  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "single_num", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (2);
-  if (!field->has_vdouble()) goto error;
-  pyfoR = PyFloat_FromDouble (field->vdouble()); if (!pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "single_float", pyfoR) < 0) goto error;
+  if (!field->has_vdouble()) GOTO_ERROR();
+  pyfoR = PyFloat_FromDouble (field->vdouble()); if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "single_float", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (3);
-  if (!field->has_vstring()) goto error;
+  if (!field->has_vstring()) GOTO_ERROR();
   { const std::string &sp = field->vstring();
     pyfoR = PyString_FromStringAndSize (sp.data(), sp.size()); }
-  if (!pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "single_string", pyfoR) < 0) goto error;
+  if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "single_string", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (4);
-  if (!field->has_vint64()) goto error;
-  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "sibling1", pyfoR) < 0) goto error;
+  if (!field->has_vint64()) GOTO_ERROR();
+  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "sibling1", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (5);
-  if (!field->has_vint64()) goto error;
-  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "sibling2", pyfoR) < 0) goto error;
+  if (!field->has_vint64()) GOTO_ERROR();
+  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "sibling2", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (6);
-  if (!field->has_vint64()) goto error;
-  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "multi1", pyfoR) < 0) goto error;
+  if (!field->has_vint64()) GOTO_ERROR();
+  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "multi1", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (7);
-  if (!field->has_vint64()) goto error;
-  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "multi2", pyfoR) < 0) goto error;
+  if (!field->has_vint64()) GOTO_ERROR();
+  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "multi2", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (8);
-  if (!field->has_vint64()) goto error;
-  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "multi3", pyfoR) < 0) goto error;
+  if (!field->has_vint64()) GOTO_ERROR();
+  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "multi3", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (9);
-  if (!field->has_vint64()) goto error;
-  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "multi4", pyfoR) < 0) goto error;
+  if (!field->has_vint64()) GOTO_ERROR();
+  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "multi4", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (10);
-  if (!field->has_vint64()) goto error;
-  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "enum_field", pyfoR) < 0) goto error;
+  if (!field->has_vint64()) GOTO_ERROR();
+  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "enum_field", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   *pyop = (Py_INCREF (pyinstR), pyinstR);
@@ -286,10 +288,10 @@ static bool RAPICORN_UNUSED
 rope_frompy_XFooSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
-  const ssize_t len = PyList_Size (list); if (len < 0) goto error;
+  const ssize_t len = PyList_Size (list); if (len < 0) GOTO_ERROR();
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
-    rps.add_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
+    rps.add_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
   }
   success = true;
  error:
@@ -301,10 +303,10 @@ rope_topy_XFooSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop)
   PyObject *listR = NULL, *pyfoR = NULL;
   bool success = false;
   const size_t len = rps.vint64_size();
-  listR = PyList_New (len); if (!listR) goto error;
+  listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
-    pyfoR = PyLong_FromLongLong (rps.vint64 (k)); if (!pyfoR) goto error;
-    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;
+    pyfoR = PyLong_FromLongLong (rps.vint64 (k)); if (!pyfoR) GOTO_ERROR();
+    if (PyList_SetItem (listR, k, pyfoR) < 0) GOTO_ERROR();
     pyfoR = NULL;
   }
   *pyop = (Py_INCREF (listR), listR);
@@ -319,10 +321,10 @@ static bool RAPICORN_UNUSED
 rope_frompy_IntSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
-  const ssize_t len = PyList_Size (list); if (len < 0) goto error;
+  const ssize_t len = PyList_Size (list); if (len < 0) GOTO_ERROR();
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
-    rps.add_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
+    rps.add_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
   }
   success = true;
  error:
@@ -334,10 +336,10 @@ rope_topy_IntSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop)
   PyObject *listR = NULL, *pyfoR = NULL;
   bool success = false;
   const size_t len = rps.vint64_size();
-  listR = PyList_New (len); if (!listR) goto error;
+  listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
-    pyfoR = PyLong_FromLongLong (rps.vint64 (k)); if (!pyfoR) goto error;
-    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;
+    pyfoR = PyLong_FromLongLong (rps.vint64 (k)); if (!pyfoR) GOTO_ERROR();
+    if (PyList_SetItem (listR, k, pyfoR) < 0) GOTO_ERROR();
     pyfoR = NULL;
   }
   *pyop = (Py_INCREF (listR), listR);
@@ -352,10 +354,10 @@ static bool RAPICORN_UNUSED
 rope_frompy_FloatSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
-  const ssize_t len = PyList_Size (list); if (len < 0) goto error;
+  const ssize_t len = PyList_Size (list); if (len < 0) GOTO_ERROR();
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
-    rps.add_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) goto error;
+    rps.add_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
   }
   success = true;
  error:
@@ -367,10 +369,10 @@ rope_topy_FloatSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop)
   PyObject *listR = NULL, *pyfoR = NULL;
   bool success = false;
   const size_t len = rps.vdouble_size();
-  listR = PyList_New (len); if (!listR) goto error;
+  listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
-    pyfoR = PyFloat_FromDouble (rps.vdouble (k)); if (!pyfoR) goto error;
-    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;
+    pyfoR = PyFloat_FromDouble (rps.vdouble (k)); if (!pyfoR) GOTO_ERROR();
+    if (PyList_SetItem (listR, k, pyfoR) < 0) GOTO_ERROR();
     pyfoR = NULL;
   }
   *pyop = (Py_INCREF (listR), listR);
@@ -385,10 +387,10 @@ static bool RAPICORN_UNUSED
 rope_frompy_StringSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
-  const ssize_t len = PyList_Size (list); if (len < 0) goto error;
+  const ssize_t len = PyList_Size (list); if (len < 0) GOTO_ERROR();
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
-    rps.add_vstring (PyString_AsString (item)); if (PyErr_Occurred()) goto error;
+    rps.add_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
   }
   success = true;
  error:
@@ -400,12 +402,12 @@ rope_topy_StringSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop)
   PyObject *listR = NULL, *pyfoR = NULL;
   bool success = false;
   const size_t len = rps.vstring_size();
-  listR = PyList_New (len); if (!listR) goto error;
+  listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
     { const std::string &sp = rps.vstring (k);
       pyfoR = PyString_FromStringAndSize (sp.data(), sp.size()); }
-    if (!pyfoR) goto error;
-    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;
+    if (!pyfoR) GOTO_ERROR();
+    if (PyList_SetItem (listR, k, pyfoR) < 0) GOTO_ERROR();
     pyfoR = NULL;
   }
   *pyop = (Py_INCREF (listR), listR);
@@ -420,10 +422,10 @@ static bool RAPICORN_UNUSED
 rope_frompy_ExtensiveEnumSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
-  const ssize_t len = PyList_Size (list); if (len < 0) goto error;
+  const ssize_t len = PyList_Size (list); if (len < 0) GOTO_ERROR();
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
-    rps.add_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
+    rps.add_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
   }
   success = true;
  error:
@@ -435,10 +437,10 @@ rope_topy_ExtensiveEnumSequence (const RemoteProcedure_Sequence &rps, PyObject *
   PyObject *listR = NULL, *pyfoR = NULL;
   bool success = false;
   const size_t len = rps.vint64_size();
-  listR = PyList_New (len); if (!listR) goto error;
+  listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
-    pyfoR = PyLong_FromLongLong (rps.vint64 (k)); if (!pyfoR) goto error;
-    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;
+    pyfoR = PyLong_FromLongLong (rps.vint64 (k)); if (!pyfoR) GOTO_ERROR();
+    if (PyList_SetItem (listR, k, pyfoR) < 0) GOTO_ERROR();
     pyfoR = NULL;
   }
   *pyop = (Py_INCREF (listR), listR);
@@ -453,10 +455,10 @@ static bool RAPICORN_UNUSED
 rope_frompy_RecordSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
-  const ssize_t len = PyList_Size (list); if (len < 0) goto error;
+  const ssize_t len = PyList_Size (list); if (len < 0) GOTO_ERROR();
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
-    if (!rope_frompy_XFooRecord (item, *rps.add_vrec())) goto error;
+    if (!rope_frompy_XFooRecord (item, *rps.add_vrec())) GOTO_ERROR();
   }
   success = true;
  error:
@@ -468,10 +470,10 @@ rope_topy_RecordSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop)
   PyObject *listR = NULL, *pyfoR = NULL;
   bool success = false;
   const size_t len = rps.vrec_size();
-  listR = PyList_New (len); if (!listR) goto error;
+  listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
-    if (!rope_topy_XFooRecord (rps.vrec (k), &pyfoR) || !pyfoR) goto error;
-    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;
+    if (!rope_topy_XFooRecord (rps.vrec (k), &pyfoR) || !pyfoR) GOTO_ERROR();
+    if (PyList_SetItem (listR, k, pyfoR) < 0) GOTO_ERROR();
     pyfoR = NULL;
   }
   *pyop = (Py_INCREF (listR), listR);
@@ -486,10 +488,10 @@ static bool RAPICORN_UNUSED
 rope_frompy_SequenceSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
-  const ssize_t len = PyList_Size (list); if (len < 0) goto error;
+  const ssize_t len = PyList_Size (list); if (len < 0) GOTO_ERROR();
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
-    if (!rope_frompy_IntSequence (item, *rps.add_vseq())) goto error;
+    if (!rope_frompy_IntSequence (item, *rps.add_vseq())) GOTO_ERROR();
   }
   success = true;
  error:
@@ -501,10 +503,10 @@ rope_topy_SequenceSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop
   PyObject *listR = NULL, *pyfoR = NULL;
   bool success = false;
   const size_t len = rps.vseq_size();
-  listR = PyList_New (len); if (!listR) goto error;
+  listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
-    if (!rope_topy_IntSequence (rps.vseq (k), &pyfoR) || !pyfoR) goto error;
-    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;
+    if (!rope_topy_IntSequence (rps.vseq (k), &pyfoR) || !pyfoR) GOTO_ERROR();
+    if (PyList_SetItem (listR, k, pyfoR) < 0) GOTO_ERROR();
     pyfoR = NULL;
   }
   *pyop = (Py_INCREF (listR), listR);
@@ -521,13 +523,13 @@ rope_frompy_NestedTypesRec (PyObject *instance, RemoteProcedure_Record &rpr)
   RemoteProcedure_Argument *field;
   PyObject *dictR = NULL, *item = NULL;
   bool success = false;
-  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
-  item = PyDict_GetItemString (dictR, "rec"); if (!dictR) goto error;
+  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "rec"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  if (!rope_frompy_XFooRecord (item, *field->mutable_vrec())) goto error;
-  item = PyDict_GetItemString (dictR, "seq"); if (!dictR) goto error;
+  if (!rope_frompy_XFooRecord (item, *field->mutable_vrec())) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "seq"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  if (!rope_frompy_XFooSequence (item, *field->mutable_vseq())) goto error;
+  if (!rope_frompy_XFooSequence (item, *field->mutable_vseq())) GOTO_ERROR();
   success = true;
  error:
   Py_XDECREF (dictR);
@@ -539,19 +541,19 @@ rope_topy_NestedTypesRec (const RemoteProcedure_Record &rpr, PyObject **pyop)
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL;
   const RemoteProcedure_Argument *field;
   bool success = false;
-  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) goto error;
-  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) goto error;
-  if (rpr.fields_size() < 2) goto error;
+  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) GOTO_ERROR();
+  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) GOTO_ERROR();
+  if (rpr.fields_size() < 2) GOTO_ERROR();
   field = &rpr.fields (0);
-  if (!field->has_vrec()) goto error;
-  if (!rope_topy_XFooRecord (field->vrec(), &pyfoR) || !pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "rec", pyfoR) < 0) goto error;
+  if (!field->has_vrec()) GOTO_ERROR();
+  if (!rope_topy_XFooRecord (field->vrec(), &pyfoR) || !pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "rec", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (1);
-  if (!field->has_vseq()) goto error;
-  if (!rope_topy_XFooSequence (field->vseq(), &pyfoR) || !pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "seq", pyfoR) < 0) goto error;
+  if (!field->has_vseq()) GOTO_ERROR();
+  if (!rope_topy_XFooSequence (field->vseq(), &pyfoR) || !pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "seq", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   *pyop = (Py_INCREF (pyinstR), pyinstR);
@@ -567,10 +569,10 @@ static bool RAPICORN_UNUSED
 rope_frompy_NestedTypesSeq (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
-  const ssize_t len = PyList_Size (list); if (len < 0) goto error;
+  const ssize_t len = PyList_Size (list); if (len < 0) GOTO_ERROR();
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
-    if (!rope_frompy_NestedTypesRec (item, *rps.add_vrec())) goto error;
+    if (!rope_frompy_NestedTypesRec (item, *rps.add_vrec())) GOTO_ERROR();
   }
   success = true;
  error:
@@ -582,10 +584,10 @@ rope_topy_NestedTypesSeq (const RemoteProcedure_Sequence &rps, PyObject **pyop)
   PyObject *listR = NULL, *pyfoR = NULL;
   bool success = false;
   const size_t len = rps.vrec_size();
-  listR = PyList_New (len); if (!listR) goto error;
+  listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
-    if (!rope_topy_NestedTypesRec (rps.vrec (k), &pyfoR) || !pyfoR) goto error;
-    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;
+    if (!rope_topy_NestedTypesRec (rps.vrec (k), &pyfoR) || !pyfoR) GOTO_ERROR();
+    if (PyList_SetItem (listR, k, pyfoR) < 0) GOTO_ERROR();
     pyfoR = NULL;
   }
   *pyop = (Py_INCREF (listR), listR);
@@ -602,19 +604,19 @@ rope_frompy_NewRecord (PyObject *instance, RemoteProcedure_Record &rpr)
   RemoteProcedure_Argument *field;
   PyObject *dictR = NULL, *item = NULL;
   bool success = false;
-  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
-  item = PyDict_GetItemString (dictR, "i"); if (!dictR) goto error;
+  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "i"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
-  item = PyDict_GetItemString (dictR, "enum1"); if (!dictR) goto error;
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "enum1"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
-  item = PyDict_GetItemString (dictR, "xfs"); if (!dictR) goto error;
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "xfs"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  if (!rope_frompy_XFooSequence (item, *field->mutable_vseq())) goto error;
-  item = PyDict_GetItemString (dictR, "ntr"); if (!dictR) goto error;
+  if (!rope_frompy_XFooSequence (item, *field->mutable_vseq())) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "ntr"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  if (!rope_frompy_NestedTypesRec (item, *field->mutable_vrec())) goto error;
+  if (!rope_frompy_NestedTypesRec (item, *field->mutable_vrec())) GOTO_ERROR();
   success = true;
  error:
   Py_XDECREF (dictR);
@@ -626,31 +628,31 @@ rope_topy_NewRecord (const RemoteProcedure_Record &rpr, PyObject **pyop)
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL;
   const RemoteProcedure_Argument *field;
   bool success = false;
-  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) goto error;
-  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) goto error;
-  if (rpr.fields_size() < 4) goto error;
+  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) GOTO_ERROR();
+  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) GOTO_ERROR();
+  if (rpr.fields_size() < 4) GOTO_ERROR();
   field = &rpr.fields (0);
-  if (!field->has_vint64()) goto error;
-  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "i", pyfoR) < 0) goto error;
+  if (!field->has_vint64()) GOTO_ERROR();
+  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "i", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (1);
-  if (!field->has_vint64()) goto error;
-  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "enum1", pyfoR) < 0) goto error;
+  if (!field->has_vint64()) GOTO_ERROR();
+  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "enum1", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (2);
-  if (!field->has_vseq()) goto error;
-  if (!rope_topy_XFooSequence (field->vseq(), &pyfoR) || !pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "xfs", pyfoR) < 0) goto error;
+  if (!field->has_vseq()) GOTO_ERROR();
+  if (!rope_topy_XFooSequence (field->vseq(), &pyfoR) || !pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "xfs", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (3);
-  if (!field->has_vrec()) goto error;
-  if (!rope_topy_NestedTypesRec (field->vrec(), &pyfoR) || !pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "ntr", pyfoR) < 0) goto error;
+  if (!field->has_vrec()) GOTO_ERROR();
+  if (!rope_topy_NestedTypesRec (field->vrec(), &pyfoR) || !pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "ntr", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   *pyop = (Py_INCREF (pyinstR), pyinstR);
@@ -668,16 +670,16 @@ rope_frompy_InnerRecord (PyObject *instance, RemoteProcedure_Record &rpr)
   RemoteProcedure_Argument *field;
   PyObject *dictR = NULL, *item = NULL;
   bool success = false;
-  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
-  item = PyDict_GetItemString (dictR, "x"); if (!dictR) goto error;
+  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "x"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
-  item = PyDict_GetItemString (dictR, "y"); if (!dictR) goto error;
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "y"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;
-  item = PyDict_GetItemString (dictR, "rec"); if (!dictR) goto error;
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "rec"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  if (!rope_frompy_NewRecord (item, *field->mutable_vrec())) goto error;
+  if (!rope_frompy_NewRecord (item, *field->mutable_vrec())) GOTO_ERROR();
   success = true;
  error:
   Py_XDECREF (dictR);
@@ -689,25 +691,25 @@ rope_topy_InnerRecord (const RemoteProcedure_Record &rpr, PyObject **pyop)
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL;
   const RemoteProcedure_Argument *field;
   bool success = false;
-  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) goto error;
-  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) goto error;
-  if (rpr.fields_size() < 3) goto error;
+  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) GOTO_ERROR();
+  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) GOTO_ERROR();
+  if (rpr.fields_size() < 3) GOTO_ERROR();
   field = &rpr.fields (0);
-  if (!field->has_vint64()) goto error;
-  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "x", pyfoR) < 0) goto error;
+  if (!field->has_vint64()) GOTO_ERROR();
+  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "x", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (1);
-  if (!field->has_vint64()) goto error;
-  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "y", pyfoR) < 0) goto error;
+  if (!field->has_vint64()) GOTO_ERROR();
+  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "y", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (2);
-  if (!field->has_vrec()) goto error;
-  if (!rope_topy_NewRecord (field->vrec(), &pyfoR) || !pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "rec", pyfoR) < 0) goto error;
+  if (!field->has_vrec()) GOTO_ERROR();
+  if (!rope_topy_NewRecord (field->vrec(), &pyfoR) || !pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "rec", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   *pyop = (Py_INCREF (pyinstR), pyinstR);
@@ -725,10 +727,10 @@ rope_frompy_Refer2Inner (PyObject *instance, RemoteProcedure_Record &rpr)
   RemoteProcedure_Argument *field;
   PyObject *dictR = NULL, *item = NULL;
   bool success = false;
-  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
-  item = PyDict_GetItemString (dictR, "r"); if (!dictR) goto error;
+  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "r"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  if (!rope_frompy_InnerRecord (item, *field->mutable_vrec())) goto error;
+  if (!rope_frompy_InnerRecord (item, *field->mutable_vrec())) GOTO_ERROR();
   success = true;
  error:
   Py_XDECREF (dictR);
@@ -740,13 +742,13 @@ rope_topy_Refer2Inner (const RemoteProcedure_Record &rpr, PyObject **pyop)
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL;
   const RemoteProcedure_Argument *field;
   bool success = false;
-  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) goto error;
-  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) goto error;
-  if (rpr.fields_size() < 1) goto error;
+  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) GOTO_ERROR();
+  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) GOTO_ERROR();
+  if (rpr.fields_size() < 1) GOTO_ERROR();
   field = &rpr.fields (0);
-  if (!field->has_vrec()) goto error;
-  if (!rope_topy_InnerRecord (field->vrec(), &pyfoR) || !pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "r", pyfoR) < 0) goto error;
+  if (!field->has_vrec()) GOTO_ERROR();
+  if (!rope_topy_InnerRecord (field->vrec(), &pyfoR) || !pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "r", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   *pyop = (Py_INCREF (pyinstR), pyinstR);
@@ -764,19 +766,19 @@ rope_frompy_SomeRecord (PyObject *instance, RemoteProcedure_Record &rpr)
   RemoteProcedure_Argument *field;
   PyObject *dictR = NULL, *item = NULL;
   bool success = false;
-  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;
-  item = PyDict_GetItemString (dictR, "r1"); if (!dictR) goto error;
+  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "r1"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  if (!rope_frompy_NewRecord (item, *field->mutable_vrec())) goto error;
-  item = PyDict_GetItemString (dictR, "r2"); if (!dictR) goto error;
+  if (!rope_frompy_NewRecord (item, *field->mutable_vrec())) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "r2"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  if (!rope_frompy_NewRecord (item, *field->mutable_vrec())) goto error;
-  item = PyDict_GetItemString (dictR, "r3"); if (!dictR) goto error;
+  if (!rope_frompy_NewRecord (item, *field->mutable_vrec())) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "r3"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  if (!rope_frompy_InnerRecord (item, *field->mutable_vrec())) goto error;
-  item = PyDict_GetItemString (dictR, "r4"); if (!dictR) goto error;
+  if (!rope_frompy_InnerRecord (item, *field->mutable_vrec())) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "r4"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  if (!rope_frompy_InnerRecord (item, *field->mutable_vrec())) goto error;
+  if (!rope_frompy_InnerRecord (item, *field->mutable_vrec())) GOTO_ERROR();
   success = true;
  error:
   Py_XDECREF (dictR);
@@ -788,31 +790,31 @@ rope_topy_SomeRecord (const RemoteProcedure_Record &rpr, PyObject **pyop)
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL;
   const RemoteProcedure_Argument *field;
   bool success = false;
-  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) goto error;
-  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) goto error;
-  if (rpr.fields_size() < 4) goto error;
+  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) GOTO_ERROR();
+  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) GOTO_ERROR();
+  if (rpr.fields_size() < 4) GOTO_ERROR();
   field = &rpr.fields (0);
-  if (!field->has_vrec()) goto error;
-  if (!rope_topy_NewRecord (field->vrec(), &pyfoR) || !pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "r1", pyfoR) < 0) goto error;
+  if (!field->has_vrec()) GOTO_ERROR();
+  if (!rope_topy_NewRecord (field->vrec(), &pyfoR) || !pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "r1", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (1);
-  if (!field->has_vrec()) goto error;
-  if (!rope_topy_NewRecord (field->vrec(), &pyfoR) || !pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "r2", pyfoR) < 0) goto error;
+  if (!field->has_vrec()) GOTO_ERROR();
+  if (!rope_topy_NewRecord (field->vrec(), &pyfoR) || !pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "r2", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (2);
-  if (!field->has_vrec()) goto error;
-  if (!rope_topy_InnerRecord (field->vrec(), &pyfoR) || !pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "r3", pyfoR) < 0) goto error;
+  if (!field->has_vrec()) GOTO_ERROR();
+  if (!rope_topy_InnerRecord (field->vrec(), &pyfoR) || !pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "r3", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (3);
-  if (!field->has_vrec()) goto error;
-  if (!rope_topy_InnerRecord (field->vrec(), &pyfoR) || !pyfoR) goto error;
-  if (PyDict_SetItemString (dictR, "r4", pyfoR) < 0) goto error;
+  if (!field->has_vrec()) GOTO_ERROR();
+  if (!rope_topy_InnerRecord (field->vrec(), &pyfoR) || !pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "r4", pyfoR) < 0) GOTO_ERROR();
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   *pyop = (Py_INCREF (pyinstR), pyinstR);

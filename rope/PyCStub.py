@@ -60,6 +60,8 @@ typedef Rapicorn::Rope::RemoteProcedure_Argument RemoteProcedure_Argument;
 
 #include <core/rapicornsignal.hh>
 
+#define GOTO_ERROR()    goto error
+
 static inline PY_LONG_LONG
 PyIntLong_AsLongLong (PyObject *intlong)
 {
@@ -132,36 +134,36 @@ class Generator:
         s += '\n'
     s += '};'
     return s
-  def generate_frompy_convert (self, prefix, argname, argtype, errlabel = 'error'):
+  def generate_frompy_convert (self, prefix, argname, argtype):
     s = ''
     if argtype.storage in (Decls.INT, Decls.ENUM):
-      s += '  %s_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;\n' % prefix
+      s += '  %s_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();\n' % prefix
     elif argtype.storage == Decls.FLOAT:
-      s += '  %s_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) goto error;\n' % prefix
+      s += '  %s_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();\n' % prefix
     elif argtype.storage == Decls.STRING:
-      s += '  %s_vstring (PyString_AsString (item)); if (PyErr_Occurred()) goto error;\n' % prefix
+      s += '  %s_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();\n' % prefix
     elif argtype.storage == Decls.RECORD:
-      s += '  if (!rope_frompy_%s (item, *%s_vrec())) goto %s;\n' % (argtype.name, prefix, errlabel)
+      s += '  if (!rope_frompy_%s (item, *%s_vrec())) GOTO_ERROR();\n' % (argtype.name, prefix)
     elif argtype.storage == Decls.SEQUENCE:
-      s += '  if (!rope_frompy_%s (item, *%s_vseq())) goto %s;\n' % (argtype.name, prefix, errlabel)
+      s += '  if (!rope_frompy_%s (item, *%s_vseq())) GOTO_ERROR();\n' % (argtype.name, prefix)
     else: # FUNC VOID
       raise RuntimeError ("Unexpected storage type: " + argtype.storage)
     return s
   def generate_topy_convert (self, field, argname, argtype, hascheck = '', errlabel = 'error'):
     s = ''
-    s += '  if (!%s) goto %s;\n' % (hascheck, errlabel) if hascheck else ''
+    s += '  if (!%s) GOTO_ERROR();\n' % hascheck if hascheck else ''
     if argtype.storage in (Decls.INT, Decls.ENUM):
-      s += '  pyfoR = PyLong_FromLongLong (%s); if (!pyfoR) goto %s;\n' % (field, errlabel)
+      s += '  pyfoR = PyLong_FromLongLong (%s); if (!pyfoR) GOTO_ERROR();\n' % field
     elif argtype.storage == Decls.FLOAT:
-      s += '  pyfoR = PyFloat_FromDouble (%s); if (!pyfoR) goto %s;\n' % (field, errlabel)
+      s += '  pyfoR = PyFloat_FromDouble (%s); if (!pyfoR) GOTO_ERROR();\n' % field
     elif argtype.storage in (Decls.STRING, Decls.INTERFACE):
       s += '  { const std::string &sp = %s;\n' % field
       s += '    pyfoR = PyString_FromStringAndSize (sp.data(), sp.size()); }\n'
-      s += '  if (!pyfoR) goto %s;\n' % errlabel
+      s += '  if (!pyfoR) GOTO_ERROR();\n'
     elif argtype.storage == Decls.RECORD:
-      s += '  if (!rope_topy_%s (%s, &pyfoR) || !pyfoR) goto %s;\n' % (argtype.name, field, errlabel)
+      s += '  if (!rope_topy_%s (%s, &pyfoR) || !pyfoR) GOTO_ERROR();\n' % (argtype.name, field)
     elif argtype.storage == Decls.SEQUENCE:
-      s += '  if (!rope_topy_%s (%s, &pyfoR) || !pyfoR) goto %s;\n' % (argtype.name, field, errlabel)
+      s += '  if (!rope_topy_%s (%s, &pyfoR) || !pyfoR) GOTO_ERROR();\n' % (argtype.name, field)
     else:
       raise RuntimeError ("Unexpected storage type: " + argtype.storage)
     return s
@@ -182,9 +184,9 @@ class Generator:
     s += '  RemoteProcedure_Argument *field;\n'
     s += '  PyObject *dictR = NULL, *item = NULL;\n'
     s += '  bool success = false;\n'
-    s += '  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) goto error;\n'
+    s += '  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) GOTO_ERROR();\n'
     for fl in type_info.fields:
-      s += '  item = PyDict_GetItemString (dictR, "%s"); if (!dictR) goto error;\n' % (fl[0])
+      s += '  item = PyDict_GetItemString (dictR, "%s"); if (!dictR) GOTO_ERROR();\n' % (fl[0])
       s += '  field = rpr.add_fields();\n'
       if fl[1].storage in (Decls.RECORD, Decls.SEQUENCE):
         s += self.generate_frompy_convert ('field->mutable', fl[0], fl[1])
@@ -201,15 +203,15 @@ class Generator:
     s += '  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL;\n'
     s += '  const RemoteProcedure_Argument *field;\n'
     s += '  bool success = false;\n'
-    s += '  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) goto error;\n'
-    s += '  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) goto error;\n'
-    s += '  if (rpr.fields_size() < %d) goto error;\n' % len (type_info.fields)
+    s += '  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) GOTO_ERROR();\n'
+    s += '  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) GOTO_ERROR();\n'
+    s += '  if (rpr.fields_size() < %d) GOTO_ERROR();\n' % len (type_info.fields)
     field_counter = 0
     for fl in type_info.fields:
       s += '  field = &rpr.fields (%d);\n' % field_counter
       ftname = self.storage_fieldname (fl[1].storage)
       s += self.generate_topy_convert ('field->%s()' % ftname, fl[0], fl[1], 'field->has_%s()' % ftname)
-      s += '  if (PyDict_SetItemString (dictR, "%s", pyfoR) < 0) goto error;\n' % (fl[0])
+      s += '  if (PyDict_SetItemString (dictR, "%s", pyfoR) < 0) GOTO_ERROR();\n' % (fl[0])
       s += '  else Py_DECREF (pyfoR);\n'
       s += '  pyfoR = NULL;\n'
       field_counter += 1
@@ -238,7 +240,7 @@ class Generator:
     s += '{\n'
     el = type_info.elements
     s += '  bool success = false;\n'
-    s += '  const ssize_t len = PyList_Size (list); if (len < 0) goto error;\n'
+    s += '  const ssize_t len = PyList_Size (list); if (len < 0) GOTO_ERROR();\n'
     s += '  for (ssize_t k = 0; k < len; k++) {\n'
     s += '    PyObject *item = PyList_GET_ITEM (list, k);\n'
     s += reindent ('  ', self.generate_frompy_convert ('rps.add', el[0], el[1])) + '\n'
@@ -254,10 +256,10 @@ class Generator:
     s += '  bool success = false;\n'
     ftname = self.storage_fieldname (el[1].storage)
     s += '  const size_t len = rps.%s_size();\n' % ftname
-    s += '  listR = PyList_New (len); if (!listR) goto error;\n'
+    s += '  listR = PyList_New (len); if (!listR) GOTO_ERROR();\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
     s += reindent ('  ', self.generate_topy_convert ('rps.%s (k)' % ftname, el[0], el[1])) + '\n'
-    s += '    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;\n'
+    s += '    if (PyList_SetItem (listR, k, pyfoR) < 0) GOTO_ERROR();\n'
     s += '    pyfoR = NULL;\n'
     s += '  }\n'
     s += '  *pyop = (Py_INCREF (listR), listR);\n'
