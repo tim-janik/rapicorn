@@ -14,22 +14,13 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef __RAPICORN_PYPRIVATE_HH__
-#define __RAPICORN_PYPRIVATE_HH__
+#ifndef __RAPICORN_PYROPE_HH__
+#define __RAPICORN_PYROPE_HH__
 
 #include <Python.h> // must be included first to configure std headers
 
 #include <ui/rapicorn.hh>
 using namespace Rapicorn;
-
-
-// Makefile.am: -DPYRAPICORN=pyRapicorn0001
-#ifndef PYRAPICORN
-#error  Missing definition of PYRAPICORN
-#endif
-
-#define PYRAPICORNSTR   RAPICORN_CPP_STRINGIFY (PYRAPICORN) // "pyRapicorn0001"
-
 
 // convenience casts
 #define PYCF(func)      ((PyCFunction) func)
@@ -39,12 +30,7 @@ using namespace Rapicorn;
 
 
 // convenience functions
-#define rpy_incref_None()       ({ Py_INCREF (Py_None); Py_None; })
+#define None_INCREF()   ({ Py_INCREF (Py_None); Py_None; })
 
 
-// functions
-void            rpy_types_init     (PyObject *module);
-PyObject*       rpy_window_create  (Window &w);
-
-
-#endif /* __RAPICORN_PYPRIVATE_HH__ */
+#endif /* __RAPICORN_PYROPE_HH__ */

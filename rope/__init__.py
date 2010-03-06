@@ -23,7 +23,7 @@ from pyRapicorn import *
 
 app = None
 class Application (object):
-  __rapicorn_trampoline__ = pyRapicorn.__rapicorn_trampoline__
+  __pyrope_trampoline__ = pyRapicorn.__pyrope_trampoline__
   def __new__ (klass):
     if app: return app # singleton
     self = super (Application, klass).__new__ (klass)

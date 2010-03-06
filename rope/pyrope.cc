@@ -14,17 +14,19 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include "rpy.hh" // must be included first to configure std headers
+#include "pyrope.hh" // must be included first to configure std headers
 
 /* construct conventional Python module initializer name */
-#define initpyRapicorn RAPICORN_CPP_PASTE2 (init, PYRAPICORN)  // initpyRapicorn0001
+#define MODULE_NAME             pyRapicorn
+#define MODULE_NAME_STRING      STRINGIFY (MODULE_NAME)
+#define MODULE_INIT_FUNCTION    RAPICORN_CPP_PASTE2 (init, MODULE_NAME)
 
 
 static PyObject *rapicorn_exception = NULL;
 
 static PyObject*
-rapicorn_trampoline (PyObject *self,
-                     PyObject *args)
+pyrope_trampoline (PyObject *self,
+                   PyObject *args)
 {
   uint32 ui = 0;
   if (PyTuple_Check (args) && PyTuple_Size (args) > 0)
@@ -41,66 +43,71 @@ rapicorn_trampoline (PyObject *self,
         {
           printout ("createwindow: %s\n", string1);
           Window w = Factory::create_window (string1);
-          PyObject *po = rpy_window_create (w);
+          PyObject *po = None_INCREF();
           return po;
         }
       else
         return NULL;
     case 0xA002:
       Application::execute_loops();
-      return rpy_incref_None();
+      return None_INCREF();
     default:
       return PyErr_Format (PyExc_NotImplementedError, "invalid rapicorn trampoline invokation (code=%u)", ui);
     }
 }
 
 static PyObject*
-rpy_printout (PyObject *self,
-              PyObject *args)
+pyrope_printout (PyObject *self,
+                 PyObject *args)
 {
   const char *stringarg = NULL;
   if (!PyArg_ParseTuple (args, "s", &stringarg))
     return NULL;
-  printout (stringarg);
-  return rpy_incref_None();
+  printout ("%s", stringarg);
+  return None_INCREF();
 }
 
-static PyMethodDef rapicorn_vtable[] = {
-  { "printout",         rpy_printout,           METH_VARARGS,
+static PyMethodDef pyrope_vtable[] = {
+  { "printout",                 pyrope_printout,                METH_VARARGS,
     "Rapicorn::printout() - print to stdout." },
-  { "__rapicorn_trampoline__",  rapicorn_trampoline,        METH_VARARGS,
+  { "__pyrope_trampoline__",    pyrope_trampoline,              METH_VARARGS,
     "Rapicorn function invokation trampoline." },
   { NULL, } // sentinel
 };
-static const char rapicorn_doc[] = "Rapicorn C++ glue module.";
+static const char rapicorn_doc[] = "Rapicorn Python Language Binding Module.";
 
 PyMODINIT_FUNC
-initpyRapicorn (void) // conventional dlmodule initializer
+MODULE_INIT_FUNCTION (void) // conventional dlmodule initializer
 {
-  PyObject *m = Py_InitModule3 (PYRAPICORNSTR, rapicorn_vtable, (char*) rapicorn_doc);
+  // register module
+  PyObject *m = Py_InitModule3 (MODULE_NAME_STRING, pyrope_vtable, (char*) rapicorn_doc);
   if (!m)
     return;
+
+  // register Rypicorn exception
   if (!rapicorn_exception)
-    rapicorn_exception = PyErr_NewException ((char*) PYRAPICORNSTR ".exception", NULL, NULL);
+    rapicorn_exception = PyErr_NewException ((char*) MODULE_NAME_STRING ".exception", NULL, NULL);
   if (!rapicorn_exception)
     return;
   Py_INCREF (rapicorn_exception);
   PyModule_AddObject (m, "exception", rapicorn_exception);
-  rpy_types_init (m);
 
+  // retrieve argv[0]
   char *argv0;
-  { // retrieve argv[0]
+  {
     PyObject *sysmod = PyImport_ImportModule ("sys");
     PyObject *astr   = sysmod ? PyObject_GetAttrString (sysmod, "argv") : NULL;
     PyObject *arg0   = astr ? PySequence_GetItem (astr, 0) : NULL;
     argv0            = arg0 ? strdup (PyString_AsString (arg0)) : NULL;
-    Py_XDECREF (sysmod);
-    Py_XDECREF (astr);
     Py_XDECREF (arg0);
+    Py_XDECREF (astr);
+    Py_XDECREF (sysmod);
     if (!argv0)
       return; // exception set
   }
-  { // initialize Rapicorn with dummy argv, hardcode X11 temporarily
+
+  // initialize Rapicorn with dummy argv, hardcode X11 temporarily
+  {
     int dummyargc = 1;
     char *dummyargs[] = { NULL, NULL };
     dummyargs[0] = argv0[0] ? argv0 : (char*) "Python>>>";

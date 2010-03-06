@@ -5,17 +5,12 @@ INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(PYTHON_CPPFLAGS)
 DEFS	  = -DPYRAPICORN=pyRapicorn -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
 
 
-pyrapicorn_cc_sources = rpymodule.cc rpytypes.cc
+pyrapicorn_cc_sources = rpytypes.cc
 EXTRA_DIST += rpy.hh
 
 
 # === python module ===
 pyrapicorndir          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
-pyrapicorn_PYTHON      = __init__.py
-pyrapicorn_LTLIBRARIES = pyRapicorn.la
-pyRapicorn_la_SOURCES  = $(pyrapicorn_cc_sources)
-pyRapicorn_la_LDFLAGS  = -module -avoid-version -no-undefined -export-symbols-regex pyRapicorn
-pyRapicorn_la_LIBADD   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
 
 
 # === tests ===
@@ -29,4 +24,4 @@ test-pywindow:
 	@echo OK
 call-info:
 	@echo 'PYTHONPATH="$$PYTHONPATH:$(pythondir)" python -c "import @RAPICORN_NAMESPACE_NAME@"'
-installcheck-local: test-pywindow call-info
+installcheck-local: call-info # test-pywindow
