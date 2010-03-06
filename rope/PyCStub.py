@@ -147,20 +147,21 @@ class Generator:
     else: # FUNC VOID
       raise RuntimeError ("Unexpected storage type: " + argtype.storage)
     return s
-  def generate_topy_convert (self, prefix, argname, argtype, errlabel = 'error'):
+  def generate_topy_convert (self, field, argname, argtype, hascheck = '', errlabel = 'error'):
     s = ''
+    s += '  if (!%s) goto %s;\n' % (hascheck, errlabel) if hascheck else ''
     if argtype.storage in (Decls.INT, Decls.ENUM):
-      s += '  pyfoR = PyLong_FromLongLong (%s); if (!pyfoR) goto %s;\n' % (prefix, errlabel)
+      s += '  pyfoR = PyLong_FromLongLong (%s); if (!pyfoR) goto %s;\n' % (field, errlabel)
     elif argtype.storage == Decls.FLOAT:
-      s += '  pyfoR = PyFloat_FromDouble (%s); if (!pyfoR) goto %s;\n' % (prefix, errlabel)
+      s += '  pyfoR = PyFloat_FromDouble (%s); if (!pyfoR) goto %s;\n' % (field, errlabel)
     elif argtype.storage in (Decls.STRING, Decls.INTERFACE):
-      s += '  { const std::string &sp = %s;\n' % prefix
+      s += '  { const std::string &sp = %s;\n' % field
       s += '    pyfoR = PyString_FromStringAndSize (sp.data(), sp.size()); }\n'
       s += '  if (!pyfoR) goto %s;\n' % errlabel
     elif argtype.storage == Decls.RECORD:
-      s += '  if (!rope_topy_%s (%s, &pyfoR) || !pyfoR) goto %s;\n' % (argtype.name, prefix, errlabel)
+      s += '  if (!rope_topy_%s (%s, &pyfoR) || !pyfoR) goto %s;\n' % (argtype.name, field, errlabel)
     elif argtype.storage == Decls.SEQUENCE:
-      s += '  if (!rope_topy_%s (%s, &pyfoR) || !pyfoR) goto %s;\n' % (argtype.name, prefix, errlabel)
+      s += '  if (!rope_topy_%s (%s, &pyfoR) || !pyfoR) goto %s;\n' % (argtype.name, field, errlabel)
     else:
       raise RuntimeError ("Unexpected storage type: " + argtype.storage)
     return s
@@ -206,7 +207,7 @@ class Generator:
     for fl in type_info.fields:
       s += '  field = &rpr.fields (%d);\n' % field_counter
       ftname = self.storage_fieldname (fl[1].storage)
-      s += self.generate_topy_convert ('field->%s()' % ftname, fl[0], fl[1])
+      s += self.generate_topy_convert ('field->%s()' % ftname, fl[0], fl[1], 'field->has_%s()' % ftname)
       s += '  if (PyDict_SetItemString (dictR, "%s", pyfoR) < 0) goto error;\n' % (fl[0])
       s += '  else Py_DECREF (pyfoR);\n'
       s += '  pyfoR = NULL;\n'
