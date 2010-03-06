@@ -135,15 +135,15 @@ class Generator:
   def generate_frompy_convert (self, prefix, argname, argtype, errlabel = 'error'):
     s = ''
     if argtype.storage in (Decls.INT, Decls.ENUM):
-      s += '    %s_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;\n' % prefix
+      s += '  %s_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;\n' % prefix
     elif argtype.storage == Decls.FLOAT:
-      s += '    %s_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) goto error;\n' % prefix
+      s += '  %s_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) goto error;\n' % prefix
     elif argtype.storage == Decls.STRING:
-      s += '    %s_vstring (PyString_AsString (item)); if (PyErr_Occurred()) goto error;\n' % prefix
+      s += '  %s_vstring (PyString_AsString (item)); if (PyErr_Occurred()) goto error;\n' % prefix
     elif argtype.storage == Decls.RECORD:
-      s += '    if (!rope_frompy_%s (item, *%s_vrec())) goto error;\n' % (argtype.name, prefix)
+      s += '  if (!rope_frompy_%s (item, *%s_vrec())) goto error;\n' % (argtype.name, prefix)
     elif argtype.storage == Decls.SEQUENCE:
-      s += '    if (!rope_frompy_%s (item, *%s_vseq())) goto error;\n' % (argtype.name, prefix)
+      s += '  if (!rope_frompy_%s (item, *%s_vseq())) goto error;\n' % (argtype.name, prefix)
     else: # FUNC VOID
       raise RuntimeError ("Unexpected storage type: " + argtype.storage)
     return s
@@ -168,22 +168,10 @@ class Generator:
     for fl in type_info.fields:
       s += '  item = PyDict_GetItemString (dictR, "%s"); if (!dictR) goto error;\n' % (fl[0])
       s += '  field = rpr.add_fields();\n'
-      if fl[1].storage == Decls.INT:
-        s += '  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;\n'
-      elif fl[1].storage == Decls.FLOAT:
-        s += '  field->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) goto error;\n'
-      elif fl[1].storage == Decls.STRING:
-        s += '  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) goto error;\n'
-      elif fl[1].storage == Decls.ENUM:
-        s += '  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;\n'
-      elif fl[1].storage == Decls.RECORD:
-        s += '  if (!rope_frompy_%s (item, *field->mutable_vrec())) goto error;\n' % fl[1].name
-      elif fl[1].storage == Decls.SEQUENCE:
-        s += '  if (!rope_frompy_%s (item, *field->mutable_vseq())) goto error;\n' % fl[1].name
-      elif fl[1].storage == Decls.INTERFACE:
-        s += '  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) goto error;\n'
+      if fl[1].storage in (Decls.RECORD, Decls.SEQUENCE):
+        s += self.generate_frompy_convert ('field->mutable', fl[0], fl[1])
       else:
-        raise RuntimeError ("Unexpected storage type: " + fl[1].storage)
+        s += self.generate_frompy_convert ('field->set', fl[0], fl[1])
     s += '  success = true;\n'
     s += ' error:\n'
     s += '  Py_XDECREF (dictR);\n'
@@ -246,7 +234,7 @@ class Generator:
     s += '  const ssize_t len = PyList_Size (list); if (len < 0) goto error;\n'
     s += '  for (ssize_t k = 0; k < len; k++) {\n'
     s += '    PyObject *item = PyList_GET_ITEM (list, k);\n'
-    s += self.generate_frompy_convert ('rps.add', el[0], el[1])
+    s += reindent ('  ', self.generate_frompy_convert ('rps.add', el[0], el[1])) + '\n'
     s += '  }\n'
     s += '  success = true;\n'
     s += ' error:\n'
