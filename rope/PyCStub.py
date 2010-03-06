@@ -132,6 +132,21 @@ class Generator:
         s += '\n'
     s += '};'
     return s
+  def generate_frompy_convert (self, prefix, argname, argtype, errlabel = 'error'):
+    s = ''
+    if argtype.storage in (Decls.INT, Decls.ENUM):
+      s += '    %s_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;\n' % prefix
+    elif argtype.storage == Decls.FLOAT:
+      s += '    %s_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) goto error;\n' % prefix
+    elif argtype.storage == Decls.STRING:
+      s += '    %s_vstring (PyString_AsString (item)); if (PyErr_Occurred()) goto error;\n' % prefix
+    elif argtype.storage == Decls.RECORD:
+      s += '    if (!rope_frompy_%s (item, *%s_vrec())) goto error;\n' % (argtype.name, prefix)
+    elif argtype.storage == Decls.SEQUENCE:
+      s += '    if (!rope_frompy_%s (item, *%s_vseq())) goto error;\n' % (argtype.name, prefix)
+    else: # FUNC VOID
+      raise RuntimeError ("Unexpected storage type: " + argtype.storage)
+    return s
   def generate_record_impl (self, type_info):
     s = ''
     s += 'struct %s {\n' % type_info.name
@@ -231,18 +246,7 @@ class Generator:
     s += '  const ssize_t len = PyList_Size (list); if (len < 0) goto error;\n'
     s += '  for (ssize_t k = 0; k < len; k++) {\n'
     s += '    PyObject *item = PyList_GET_ITEM (list, k);\n'
-    if el[1].storage in (Decls.INT, Decls.ENUM):
-      s += '    rps.add_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) goto error;\n'
-    elif el[1].storage == Decls.FLOAT:
-      s += '    rps.add_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) goto error;\n'
-    elif el[1].storage == Decls.STRING:
-      s += '    rps.add_vstring (PyString_AsString (item)); if (PyErr_Occurred()) goto error;\n'
-    elif el[1].storage == Decls.RECORD:
-      s += '    if (!rope_frompy_%s (item, *rps.add_vrec())) goto error;\n' % el[1].name
-    elif el[1].storage == Decls.SEQUENCE:
-      s += '    if (!rope_frompy_%s (item, *rps.add_vseq())) goto error;\n' % el[1].name
-    else: # FUNC VOID
-      raise RuntimeError ("Unexpected storage type: " + el[1].storage)
+    s += self.generate_frompy_convert ('rps.add', el[0], el[1])
     s += '  }\n'
     s += '  success = true;\n'
     s += ' error:\n'
