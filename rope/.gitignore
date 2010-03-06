@@ -1,5 +1,7 @@
 librapicornrope[0-9][0-9][0-9][0-9].la
 CppStub.pyc
 PyStub.pyc
+PyCStub.pyc
 protocol-pb2.hh
 protocol-pb2.cc
+testpystub.pyc
