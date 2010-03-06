@@ -58,6 +58,8 @@ typedef Rapicorn::Rope::RemoteProcedure_Sequence RemoteProcedure_Sequence;
 typedef Rapicorn::Rope::RemoteProcedure_Record RemoteProcedure_Record;
 typedef Rapicorn::Rope::RemoteProcedure_Argument RemoteProcedure_Argument;
 
+#include <core/rapicornsignal.hh>
+
 static inline PY_LONG_LONG
 PyIntLong_AsLongLong (PyObject *intlong)
 {
@@ -141,7 +143,7 @@ class Generator:
     return s
   def generate_record_funcs (self, type_info):
     s = ''
-    s += 'static bool\n'
+    s += 'static bool RAPICORN_UNUSED\n'
     s += 'rope_frompy_%s (PyObject *instance, RemoteProcedure_Record &rpr)\n' % type_info.name
     s += '{\n'
     s += '  RemoteProcedure_Argument *field;\n'
@@ -184,7 +186,7 @@ class Generator:
     return s
   def generate_sequence_funcs (self, type_info):
     s = ''
-    s += 'static bool\n'
+    s += 'static bool RAPICORN_UNUSED\n'
     s += 'rope_frompy_%s (PyObject *list, RemoteProcedure_Sequence &rps)\n' % type_info.name
     s += '{\n'
     el = type_info.elements

@@ -9,6 +9,8 @@ typedef Rapicorn::Rope::RemoteProcedure_Sequence RemoteProcedure_Sequence;
 typedef Rapicorn::Rope::RemoteProcedure_Record RemoteProcedure_Record;
 typedef Rapicorn::Rope::RemoteProcedure_Argument RemoteProcedure_Argument;
 
+#include <core/rapicornsignal.hh>
+
 static inline PY_LONG_LONG
 PyIntLong_AsLongLong (PyObject *intlong)
 {
@@ -149,7 +151,7 @@ struct SomeRecord {
 };
 static bool rope_frompy_SomeRecord (PyObject*, RemoteProcedure_Record&);
 
-static bool
+static bool RAPICORN_UNUSED
 rope_frompy_XFooRecord (PyObject *instance, RemoteProcedure_Record &rpr)
 {
   RemoteProcedure_Argument *field;
@@ -195,7 +197,7 @@ rope_frompy_XFooRecord (PyObject *instance, RemoteProcedure_Record &rpr)
   return success;
 }
 
-static bool
+static bool RAPICORN_UNUSED
 rope_frompy_XFooSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
@@ -209,7 +211,7 @@ rope_frompy_XFooSequence (PyObject *list, RemoteProcedure_Sequence &rps)
   return success;
 }
 
-static bool
+static bool RAPICORN_UNUSED
 rope_frompy_IntSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
@@ -223,7 +225,7 @@ rope_frompy_IntSequence (PyObject *list, RemoteProcedure_Sequence &rps)
   return success;
 }
 
-static bool
+static bool RAPICORN_UNUSED
 rope_frompy_FloatSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
@@ -237,7 +239,7 @@ rope_frompy_FloatSequence (PyObject *list, RemoteProcedure_Sequence &rps)
   return success;
 }
 
-static bool
+static bool RAPICORN_UNUSED
 rope_frompy_StringSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
@@ -251,7 +253,7 @@ rope_frompy_StringSequence (PyObject *list, RemoteProcedure_Sequence &rps)
   return success;
 }
 
-static bool
+static bool RAPICORN_UNUSED
 rope_frompy_ExtensiveEnumSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
@@ -265,7 +267,7 @@ rope_frompy_ExtensiveEnumSequence (PyObject *list, RemoteProcedure_Sequence &rps
   return success;
 }
 
-static bool
+static bool RAPICORN_UNUSED
 rope_frompy_RecordSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
@@ -279,7 +281,7 @@ rope_frompy_RecordSequence (PyObject *list, RemoteProcedure_Sequence &rps)
   return success;
 }
 
-static bool
+static bool RAPICORN_UNUSED
 rope_frompy_SequenceSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
@@ -293,7 +295,7 @@ rope_frompy_SequenceSequence (PyObject *list, RemoteProcedure_Sequence &rps)
   return success;
 }
 
-static bool
+static bool RAPICORN_UNUSED
 rope_frompy_NestedTypesRec (PyObject *instance, RemoteProcedure_Record &rpr)
 {
   RemoteProcedure_Argument *field;
@@ -312,7 +314,7 @@ rope_frompy_NestedTypesRec (PyObject *instance, RemoteProcedure_Record &rpr)
   return success;
 }
 
-static bool
+static bool RAPICORN_UNUSED
 rope_frompy_NestedTypesSeq (PyObject *list, RemoteProcedure_Sequence &rps)
 {
   bool success = false;
@@ -326,7 +328,7 @@ rope_frompy_NestedTypesSeq (PyObject *list, RemoteProcedure_Sequence &rps)
   return success;
 }
 
-static bool
+static bool RAPICORN_UNUSED
 rope_frompy_NewRecord (PyObject *instance, RemoteProcedure_Record &rpr)
 {
   RemoteProcedure_Argument *field;
@@ -351,7 +353,7 @@ rope_frompy_NewRecord (PyObject *instance, RemoteProcedure_Record &rpr)
   return success;
 }
 
-static bool
+static bool RAPICORN_UNUSED
 rope_frompy_InnerRecord (PyObject *instance, RemoteProcedure_Record &rpr)
 {
   RemoteProcedure_Argument *field;
@@ -373,7 +375,7 @@ rope_frompy_InnerRecord (PyObject *instance, RemoteProcedure_Record &rpr)
   return success;
 }
 
-static bool
+static bool RAPICORN_UNUSED
 rope_frompy_Refer2Inner (PyObject *instance, RemoteProcedure_Record &rpr)
 {
   RemoteProcedure_Argument *field;
@@ -389,7 +391,7 @@ rope_frompy_Refer2Inner (PyObject *instance, RemoteProcedure_Record &rpr)
   return success;
 }
 
-static bool
+static bool RAPICORN_UNUSED
 rope_frompy_SomeRecord (PyObject *instance, RemoteProcedure_Record &rpr)
 {
   RemoteProcedure_Argument *field;
