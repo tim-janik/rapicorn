@@ -203,6 +203,7 @@ class Generator:
     s += '  bool success = false;\n'
     s += '  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) goto error;\n'
     s += '  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) goto error;\n'
+    s += '  if (rpr.fields_size() < %d) goto error;\n' % len (type_info.fields)
     field_counter = 0
     for fl in type_info.fields:
       s += '  field = &rpr.fields (%d);\n' % field_counter
@@ -211,6 +212,7 @@ class Generator:
       s += '  if (PyDict_SetItemString (dictR, "%s", pyfoR) < 0) goto error;\n' % (fl[0])
       s += '  else Py_DECREF (pyfoR);\n'
       s += '  pyfoR = NULL;\n'
+      field_counter += 1
     s += '  *pyop = (Py_INCREF (pyinstR), pyinstR);\n'
     s += '  success = true;\n'
     s += ' error:\n'
