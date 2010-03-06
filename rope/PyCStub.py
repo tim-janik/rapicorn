@@ -131,7 +131,7 @@ class Generator:
       s += '  %s = %s,' % (ident, number)
       if blurb:
         s += ' // %s' % re.sub ('\n', ' ', blurb)
-        s += '\n'
+      s += '\n'
     s += '};'
     return s
   def generate_frompy_convert (self, prefix, argname, argtype):
