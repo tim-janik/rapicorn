@@ -353,8 +353,8 @@ AC_DEFUN([RAPICORN_REQUIREMENTS],
     AM_CONDITIONAL(WITH_GTK, true)
 ])
 
-dnl # PYRAPICORN_REQUIREMENTS() - rapicorn python binding checks
-AC_DEFUN([PYRAPICORN_REQUIREMENTS],
+dnl # PYROPE_REQUIREMENTS() - rapicorn python binding checks
+AC_DEFUN([PYROPE_REQUIREMENTS],
 [
     # Find Python execution and development environment
     saved_CPPFLAGS="$CPPFLAGS"
@@ -521,7 +521,7 @@ RAPICORN_I18N_REQUIREMENTS
 RAPICORN_GCC_REQUIREMENTS
 RAPICORN_CORE_REQUIREMENTS
 RAPICORN_REQUIREMENTS
-PYRAPICORN_REQUIREMENTS
+PYROPE_REQUIREMENTS
 RAPICORN_TEST_REQUIREMENTS
 RAPICORN_PLIC_REQUIREMENTS
 RAPICORN_DOC_REQUIREMENTS
@@ -547,7 +547,6 @@ core/tests/Makefile
 ui/Makefile
 ui/tests/Makefile
 tools/Makefile
-pyrapicorn/Makefile
 tests/Makefile
 examples/Makefile
 docs/Makefile
