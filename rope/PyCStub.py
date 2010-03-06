@@ -141,10 +141,27 @@ class Generator:
     elif argtype.storage == Decls.STRING:
       s += '  %s_vstring (PyString_AsString (item)); if (PyErr_Occurred()) goto error;\n' % prefix
     elif argtype.storage == Decls.RECORD:
-      s += '  if (!rope_frompy_%s (item, *%s_vrec())) goto error;\n' % (argtype.name, prefix)
+      s += '  if (!rope_frompy_%s (item, *%s_vrec())) goto %s;\n' % (argtype.name, prefix, errlabel)
     elif argtype.storage == Decls.SEQUENCE:
-      s += '  if (!rope_frompy_%s (item, *%s_vseq())) goto error;\n' % (argtype.name, prefix)
+      s += '  if (!rope_frompy_%s (item, *%s_vseq())) goto %s;\n' % (argtype.name, prefix, errlabel)
     else: # FUNC VOID
+      raise RuntimeError ("Unexpected storage type: " + argtype.storage)
+    return s
+  def generate_topy_convert (self, prefix, argname, argtype, errlabel = 'error'):
+    s = ''
+    if argtype.storage in (Decls.INT, Decls.ENUM):
+      s += '  pyfoR = PyLong_FromLongLong (%s); if (!pyfoR) goto %s;\n' % (prefix, errlabel)
+    elif argtype.storage == Decls.FLOAT:
+      s += '  pyfoR = PyFloat_FromDouble (%s); if (!pyfoR) goto %s;\n' % (prefix, errlabel)
+    elif argtype.storage in (Decls.STRING, Decls.INTERFACE):
+      s += '  { const std::string &sp = %s;\n' % prefix
+      s += '    pyfoR = PyString_FromStringAndSize (sp.data(), sp.size()); }\n'
+      s += '  if (!pyfoR) goto %s;\n' % errlabel
+    elif argtype.storage == Decls.RECORD:
+      s += '  if (!rope_topy_%s (%s, &pyfoR) || !pyfoR) goto %s;\n' % (argtype.name, prefix, errlabel)
+    elif argtype.storage == Decls.SEQUENCE:
+      s += '  if (!rope_topy_%s (%s, &pyfoR) || !pyfoR) goto %s;\n' % (argtype.name, prefix, errlabel)
+    else:
       raise RuntimeError ("Unexpected storage type: " + argtype.storage)
     return s
   def generate_record_impl (self, type_info):
@@ -186,23 +203,10 @@ class Generator:
     s += '  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) goto error;\n'
     s += '  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) goto error;\n'
     field_counter = 0
-    stringp = '  const std::string *sp;\n'
     for fl in type_info.fields:
       s += '  field = &rpr.fields (%d);\n' % field_counter
-      if fl[1].storage in (Decls.INT, Decls.ENUM):
-        s += '  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) goto error;\n'
-      elif fl[1].storage == Decls.FLOAT:
-        s += '  pyfoR = PyFloat_FromDouble (field->vdouble()); if (!pyfoR) goto error;\n'
-      elif fl[1].storage in (Decls.STRING, Decls.INTERFACE):
-        s += stringp; stringp = ''
-        s += '  sp = &field->vstring();\n'
-        s += '  pyfoR = PyString_FromStringAndSize (sp->data(), sp->size()); if (!pyfoR) goto error;\n'
-      elif fl[1].storage == Decls.RECORD:
-        s += '  if (!rope_topy_%s (field->vrec(), &pyfoR) || !pyfoR) goto error;\n' % fl[1].name
-      elif fl[1].storage == Decls.SEQUENCE:
-        s += '  if (!rope_topy_%s (field->vseq(), &pyfoR) || !pyfoR) goto error;\n' % fl[1].name
-      else:
-        raise RuntimeError ("Unexpected storage type: " + fl[1].storage)
+      ftname = self.storage_fieldname (fl[1].storage)
+      s += self.generate_topy_convert ('field->%s()' % ftname, fl[0], fl[1])
       s += '  if (PyDict_SetItemString (dictR, "%s", pyfoR) < 0) goto error;\n' % (fl[0])
       s += '  else Py_DECREF (pyfoR);\n'
       s += '  pyfoR = NULL;\n'
@@ -243,9 +247,37 @@ class Generator:
     s += 'static bool RAPICORN_UNUSED\n'
     s += 'rope_topy_%s (const RemoteProcedure_Sequence &rps, PyObject **pyop)\n' % type_info.name
     s += '{\n'
-    s += '  return false;\n' # FIXME
+    s += '  PyObject *listR = NULL, *pyfoR = NULL;\n'
+    s += '  bool success = false;\n'
+    ftname = self.storage_fieldname (el[1].storage)
+    s += '  const size_t len = rps.%s_size();\n' % ftname
+    s += '  listR = PyList_New (len); if (!listR) goto error;\n'
+    s += '  for (size_t k = 0; k < len; k++) {\n'
+    s += reindent ('  ', self.generate_topy_convert ('rps.%s (k)' % ftname, el[0], el[1])) + '\n'
+    s += '    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;\n'
+    s += '    pyfoR = NULL;\n'
+    s += '  }\n'
+    s += '  *pyop = (Py_INCREF (listR), listR);\n'
+    s += '  success = true;\n'
+    s += ' error:\n'
+    s += '  Py_XDECREF (pyfoR);\n'
+    s += '  Py_XDECREF (listR);\n'
+    s += '  return success;\n'
     s += '}\n'
     return s
+  def storage_fieldname (self, storage):
+    if storage in (Decls.INT, Decls.ENUM):
+      return 'vint64'
+    elif storage == Decls.FLOAT:
+      return 'vdouble'
+    elif storage in (Decls.STRING, Decls.INTERFACE):
+      return 'vstring'
+    elif storage == Decls.RECORD:
+      return 'vrec'
+    elif storage == Decls.SEQUENCE:
+      return 'vseq'
+    else: # FUNC VOID
+      raise RuntimeError ("Unexpected storage type: " + storage)
   def generate_sighandler (self, ftype, ctype):
     s = ''
     s += 'def __sig_%s__ (self): pass # default handler' % ftype.name

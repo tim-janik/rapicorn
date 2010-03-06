@@ -220,9 +220,9 @@ rope_topy_XFooRecord (const RemoteProcedure_Record &rpr, PyObject **pyop)
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
   field = &rpr.fields (0);
-  const std::string *sp;
-  sp = &field->vstring();
-  pyfoR = PyString_FromStringAndSize (sp->data(), sp->size()); if (!pyfoR) goto error;
+  { const std::string &sp = field->vstring();
+    pyfoR = PyString_FromStringAndSize (sp.data(), sp.size()); }
+  if (!pyfoR) goto error;
   if (PyDict_SetItemString (dictR, "single_string", pyfoR) < 0) goto error;
   else Py_DECREF (pyfoR);
   pyfoR = NULL;
@@ -286,7 +286,21 @@ rope_frompy_XFooSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 static bool RAPICORN_UNUSED
 rope_topy_XFooSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop)
 {
-  return false;
+  PyObject *listR = NULL, *pyfoR = NULL;
+  bool success = false;
+  const size_t len = rps.vint64_size();
+  listR = PyList_New (len); if (!listR) goto error;
+  for (size_t k = 0; k < len; k++) {
+    pyfoR = PyLong_FromLongLong (rps.vint64 (k)); if (!pyfoR) goto error;
+    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;
+    pyfoR = NULL;
+  }
+  *pyop = (Py_INCREF (listR), listR);
+  success = true;
+ error:
+  Py_XDECREF (pyfoR);
+  Py_XDECREF (listR);
+  return success;
 }
 
 static bool RAPICORN_UNUSED
@@ -305,7 +319,21 @@ rope_frompy_IntSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 static bool RAPICORN_UNUSED
 rope_topy_IntSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop)
 {
-  return false;
+  PyObject *listR = NULL, *pyfoR = NULL;
+  bool success = false;
+  const size_t len = rps.vint64_size();
+  listR = PyList_New (len); if (!listR) goto error;
+  for (size_t k = 0; k < len; k++) {
+    pyfoR = PyLong_FromLongLong (rps.vint64 (k)); if (!pyfoR) goto error;
+    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;
+    pyfoR = NULL;
+  }
+  *pyop = (Py_INCREF (listR), listR);
+  success = true;
+ error:
+  Py_XDECREF (pyfoR);
+  Py_XDECREF (listR);
+  return success;
 }
 
 static bool RAPICORN_UNUSED
@@ -324,7 +352,21 @@ rope_frompy_FloatSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 static bool RAPICORN_UNUSED
 rope_topy_FloatSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop)
 {
-  return false;
+  PyObject *listR = NULL, *pyfoR = NULL;
+  bool success = false;
+  const size_t len = rps.vdouble_size();
+  listR = PyList_New (len); if (!listR) goto error;
+  for (size_t k = 0; k < len; k++) {
+    pyfoR = PyFloat_FromDouble (rps.vdouble (k)); if (!pyfoR) goto error;
+    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;
+    pyfoR = NULL;
+  }
+  *pyop = (Py_INCREF (listR), listR);
+  success = true;
+ error:
+  Py_XDECREF (pyfoR);
+  Py_XDECREF (listR);
+  return success;
 }
 
 static bool RAPICORN_UNUSED
@@ -343,7 +385,23 @@ rope_frompy_StringSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 static bool RAPICORN_UNUSED
 rope_topy_StringSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop)
 {
-  return false;
+  PyObject *listR = NULL, *pyfoR = NULL;
+  bool success = false;
+  const size_t len = rps.vstring_size();
+  listR = PyList_New (len); if (!listR) goto error;
+  for (size_t k = 0; k < len; k++) {
+    { const std::string &sp = rps.vstring (k);
+      pyfoR = PyString_FromStringAndSize (sp.data(), sp.size()); }
+    if (!pyfoR) goto error;
+    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;
+    pyfoR = NULL;
+  }
+  *pyop = (Py_INCREF (listR), listR);
+  success = true;
+ error:
+  Py_XDECREF (pyfoR);
+  Py_XDECREF (listR);
+  return success;
 }
 
 static bool RAPICORN_UNUSED
@@ -362,7 +420,21 @@ rope_frompy_ExtensiveEnumSequence (PyObject *list, RemoteProcedure_Sequence &rps
 static bool RAPICORN_UNUSED
 rope_topy_ExtensiveEnumSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop)
 {
-  return false;
+  PyObject *listR = NULL, *pyfoR = NULL;
+  bool success = false;
+  const size_t len = rps.vint64_size();
+  listR = PyList_New (len); if (!listR) goto error;
+  for (size_t k = 0; k < len; k++) {
+    pyfoR = PyLong_FromLongLong (rps.vint64 (k)); if (!pyfoR) goto error;
+    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;
+    pyfoR = NULL;
+  }
+  *pyop = (Py_INCREF (listR), listR);
+  success = true;
+ error:
+  Py_XDECREF (pyfoR);
+  Py_XDECREF (listR);
+  return success;
 }
 
 static bool RAPICORN_UNUSED
@@ -381,7 +453,21 @@ rope_frompy_RecordSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 static bool RAPICORN_UNUSED
 rope_topy_RecordSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop)
 {
-  return false;
+  PyObject *listR = NULL, *pyfoR = NULL;
+  bool success = false;
+  const size_t len = rps.vrec_size();
+  listR = PyList_New (len); if (!listR) goto error;
+  for (size_t k = 0; k < len; k++) {
+    if (!rope_topy_XFooRecord (rps.vrec (k), &pyfoR) || !pyfoR) goto error;
+    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;
+    pyfoR = NULL;
+  }
+  *pyop = (Py_INCREF (listR), listR);
+  success = true;
+ error:
+  Py_XDECREF (pyfoR);
+  Py_XDECREF (listR);
+  return success;
 }
 
 static bool RAPICORN_UNUSED
@@ -400,7 +486,21 @@ rope_frompy_SequenceSequence (PyObject *list, RemoteProcedure_Sequence &rps)
 static bool RAPICORN_UNUSED
 rope_topy_SequenceSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop)
 {
-  return false;
+  PyObject *listR = NULL, *pyfoR = NULL;
+  bool success = false;
+  const size_t len = rps.vseq_size();
+  listR = PyList_New (len); if (!listR) goto error;
+  for (size_t k = 0; k < len; k++) {
+    if (!rope_topy_IntSequence (rps.vseq (k), &pyfoR) || !pyfoR) goto error;
+    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;
+    pyfoR = NULL;
+  }
+  *pyop = (Py_INCREF (listR), listR);
+  success = true;
+ error:
+  Py_XDECREF (pyfoR);
+  Py_XDECREF (listR);
+  return success;
 }
 
 static bool RAPICORN_UNUSED
@@ -464,7 +564,21 @@ rope_frompy_NestedTypesSeq (PyObject *list, RemoteProcedure_Sequence &rps)
 static bool RAPICORN_UNUSED
 rope_topy_NestedTypesSeq (const RemoteProcedure_Sequence &rps, PyObject **pyop)
 {
-  return false;
+  PyObject *listR = NULL, *pyfoR = NULL;
+  bool success = false;
+  const size_t len = rps.vrec_size();
+  listR = PyList_New (len); if (!listR) goto error;
+  for (size_t k = 0; k < len; k++) {
+    if (!rope_topy_NestedTypesRec (rps.vrec (k), &pyfoR) || !pyfoR) goto error;
+    if (PyList_SetItem (listR, k, pyfoR) < 0) goto error;
+    pyfoR = NULL;
+  }
+  *pyop = (Py_INCREF (listR), listR);
+  success = true;
+ error:
+  Py_XDECREF (pyfoR);
+  Py_XDECREF (listR);
+  return success;
 }
 
 static bool RAPICORN_UNUSED
