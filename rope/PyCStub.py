@@ -20,31 +20,6 @@ More details at http://www.rapicorn.org
 """
 import Decls, re
 
-def strcquote (string):
-  result = ''
-  for c in string:
-    oc = ord (c)
-    ec = { 92 : r'\\',
-            7 : r'\a',
-            8 : r'\b',
-            9 : r'\t',
-           10 : r'\n',
-           11 : r'\v',
-           12 : r'\f',
-           13 : r'\r',
-           12 : r'\f'
-         }.get (oc, '')
-    if ec:
-      result += ec
-      continue
-    if oc <= 31 or oc >= 127:
-      result += '\\' + oct (oc)[-3:]
-    elif c == '"':
-      result += r'\"'
-    else:
-      result += c
-  return '"' + result + '"'
-
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
 
@@ -83,45 +58,6 @@ class Generator:
     else:
       f = '%%-%ds' % self.ntab  # '%-20s'
       return indent + f % string
-  def format_arg (self, ident, type):
-    s = ''
-    s += type.name + ' ' + ident
-    return s
-  def generate_prop (self, fident, ftype):
-    v = 'virtual '
-    # getter
-    s = '  ' + self.format_to_tab (v + ftype.name) + fident + ' () const = 0;\n'
-    # setter
-    s += '  ' + self.format_to_tab (v + 'void') + fident + ' (const &' + ftype.name + ') = 0;\n'
-    return s
-  def generate_proplist (self, ctype):
-    return '  ' + self.format_to_tab ('virtual const PropertyList&') + 'list_properties ();\n'
-  def generate_field (self, fident, ftype):
-    return '  ' + self.format_to_tab (ftype.name) + fident + ';\n'
-  def generate_signal_name (self, ftype, ctype):
-    return 'Signal_%s' % ftype.name
-  def generate_sigdef (self, ftype, ctype):
-    signame = self.generate_signal_name (ftype, ctype)
-    s = ''
-    s += '  typedef Signal<%s, %s (' % (ctype.name, ftype.rtype.name)
-    l = []
-    for a in ftype.args:
-      l += [ self.format_arg (*a) ]
-    s += ', '.join (l)
-    s += ')'
-    if ftype.rtype.collector != 'void':
-      s += ', Collector' + ftype.rtype.collector.capitalize()
-      s += '<' + ftype.rtype.name + '> '
-    s += '> ' + signame + ';\n'
-    return s
-  def zero_value (self, type):
-    return { Decls.FLOAT    : '0',
-             Decls.INT      : '0',
-             Decls.ENUM     : '0',
-             Decls.RECORD   : 'None',
-             Decls.SEQUENCE : 'None',
-             Decls.STRING   : "''",
-           }[type.storage]
   def generate_enum_impl (self, type_info):
     s = ''
     l = []
@@ -283,47 +219,6 @@ class Generator:
       return 'vseq'
     else: # FUNC VOID
       raise RuntimeError ("Unexpected storage type: " + storage)
-  def generate_sighandler (self, ftype, ctype):
-    s = ''
-    s += 'def __sig_%s__ (self): pass # default handler' % ftype.name
-    return s
-  def generate_to_proto (self, argname, type_info, valname, onerror = 'return false'):
-    s = ''
-    if type_info.storage == Decls.VOID:
-      pass
-    elif type_info.storage in (Decls.INT, Decls.ENUM):
-      s += '  %s.vint64 = %s\n' % (argname, valname)
-    elif type_info.storage == Decls.FLOAT:
-      s += '  %s.vdouble = %s\n' % (argname, valname)
-    elif type_info.storage == Decls.STRING:
-      s += '  %s.vstring = %s\n' % (argname, valname)
-    elif type_info.storage == Decls.INTERFACE:
-      s += '  %s.vstring (Instance2StringCast (%s))\n' % (argname, valname)
-    elif type_info.storage == Decls.RECORD:
-      s += '  %s.to_proto (%s.vrec, %s)\n' % (type_info.name, argname, valname)
-    elif type_info.storage == Decls.SEQUENCE:
-      s += '  %s.to_proto (%s.vseq, %s)\n' % (type_info.name, argname, valname)
-    else: # FUNC
-      raise RuntimeError ("Unexpected storage type: " + type_info.storage)
-    return s
-  def generate_method_caller_impl (self, m):
-    s = ''
-    s += 'def %s (' % m.name
-    l = [ 'self' ]
-    for a in m.args:
-      l += [ a[0] ]
-    s += ', '.join (l)
-    if m.rtype.name == 'void':
-      s += '): # one way\n'
-    else:
-      s += '): # %s\n' % m.rtype.name
-    s += '  _plic_rp = RapicornRope.RemoteProcedure()\n'
-    for a in m.args:
-      s += '  _plic_arg = _plic_rp.args.add()\n'
-      if a[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  _plic_arg = %s.create (%s)\n' % (a[1].name, a[0])
-      s += self.generate_to_proto ('_plic_arg', a[1], a[0])
-    return s
   def inherit_reduce (self, type_list):
     def hasancestor (child, parent):
       if child == parent:
@@ -342,25 +237,6 @@ class Generator:
       if not skip:
         reduced = [ p ] + reduced
     return reduced
-  def generate_class (self, type_info):
-    s = ''
-    l = []
-    for pr in type_info.prerequisites:
-      l += [ pr ]
-    l = self.inherit_reduce (l)
-    l = [pr.name for pr in l] # types -> names
-    if not l:
-      l = [ '__BaseClass__' ]
-    s += 'class %s (%s):\n' % (type_info.name, ', '.join (l))
-    s += '  def __init__ (self):\n'
-    s += '    super (%s, self).__init__()\n' % type_info.name
-    for sg in type_info.signals:
-      s += "    self.sig_%s = __Signal__ ('%s')\n" % (sg.name, sg.name)
-    for m in type_info.methods:
-      s += reindent ('  ', self.generate_method_caller_impl (m)) + '\n'
-    for sg in type_info.signals:
-      s += reindent ('  ', self.generate_sighandler (sg, type_info)) + '\n'
-    return s
   def type2cpp (self, typename):
     if typename == 'float': return 'double'
     if typename == 'string': return 'std::string'
@@ -391,7 +267,7 @@ class Generator:
       elif tp.storage == Decls.SEQUENCE:
         s += self.generate_sequence_impl (tp) + '\n'
       elif tp.storage == Decls.INTERFACE:
-        s += '' # self.generate_class (tp) + '\n'
+        s += ''
     # generate accessors
     for tp in types:
       if tp.typedef_origin:
@@ -401,7 +277,7 @@ class Generator:
       elif tp.storage == Decls.SEQUENCE:
         s += self.generate_sequence_funcs (tp) + '\n'
       elif tp.storage == Decls.INTERFACE:
-        s += '' # self.generate_class (tp) + '\n'
+        s += ''
     return s
 
 def error (msg):
