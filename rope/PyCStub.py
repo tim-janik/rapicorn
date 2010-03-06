@@ -174,6 +174,43 @@ class Generator:
     s += '  Py_XDECREF (dictR);\n'
     s += '  return success;\n'
     s += '}\n'
+    s += 'static bool RAPICORN_UNUSED\n'
+    s += 'rope_topy_%s (const RemoteProcedure_Record &rpr, PyObject **pyop)\n' % type_info.name
+    s += '{\n'
+    s += '  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL;\n'
+    s += '  const RemoteProcedure_Argument *field;\n'
+    s += '  bool success = false;\n'
+    s += '  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) goto error;\n'
+    s += '  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) goto error;\n'
+    field_counter = 0
+    stringp = '  const std::string *sp;\n'
+    for fl in type_info.fields:
+      s += '  field = &rpr.fields (%d);\n' % field_counter
+      if fl[1].storage in (Decls.INT, Decls.ENUM):
+        s += '  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) goto error;\n'
+      elif fl[1].storage == Decls.FLOAT:
+        s += '  pyfoR = PyFloat_FromDouble (field->vdouble()); if (!pyfoR) goto error;\n'
+      elif fl[1].storage in (Decls.STRING, Decls.INTERFACE):
+        s += stringp; stringp = ''
+        s += '  sp = &field->vstring();\n'
+        s += '  pyfoR = PyString_FromStringAndSize (sp->data(), sp->size()); if (!pyfoR) goto error;\n'
+      elif fl[1].storage == Decls.RECORD:
+        s += '  if (!rope_topy_%s (field->vrec(), &pyfoR) || !pyfoR) goto error;\n' % fl[1].name
+      elif fl[1].storage == Decls.SEQUENCE:
+        s += '  if (!rope_topy_%s (field->vseq(), &pyfoR) || !pyfoR) goto error;\n' % fl[1].name
+      else:
+        raise RuntimeError ("Unexpected storage type: " + fl[1].storage)
+      s += '  if (PyDict_SetItemString (dictR, "%s", pyfoR) < 0) goto error;\n' % (fl[0])
+      s += '  else Py_DECREF (pyfoR);\n'
+      s += '  pyfoR = NULL;\n'
+    s += '  *pyop = (Py_INCREF (pyinstR), pyinstR);\n'
+    s += '  success = true;\n'
+    s += ' error:\n'
+    s += '  Py_XDECREF (pyfoR);\n'
+    s += '  Py_XDECREF (pyinstR);\n'
+    s += '  Py_XDECREF (dictR);\n'
+    s += '  return success;\n'
+    s += '}\n'
     return s
   def generate_sequence_impl (self, type_info):
     s = ''
@@ -210,6 +247,11 @@ class Generator:
     s += '  success = true;\n'
     s += ' error:\n'
     s += '  return success;\n'
+    s += '}\n'
+    s += 'static bool RAPICORN_UNUSED\n'
+    s += 'rope_topy_%s (const RemoteProcedure_Sequence &rps, PyObject **pyop)\n' % type_info.name
+    s += '{\n'
+    s += '  return false;\n' # FIXME
     s += '}\n'
     return s
   def generate_sighandler (self, ftype, ctype):
