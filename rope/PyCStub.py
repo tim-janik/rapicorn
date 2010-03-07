@@ -257,28 +257,14 @@ class Generator:
     return s
   def generate_caller_impl (self, switchlines):
     s = ''
-    s += 'static bool\n'
-    s += 'trampoline_switch (unsigned int _py_id, PyObject *_py_self, PyObject *_py_args, PyObject **_py_retp)\n'
+    s += 'static bool RAPICORN_UNUSED\n'
+    s += 'pyrope_trampoline_switch (unsigned int _py_id, PyObject *_py_self, PyObject *_py_args, PyObject **_py_retp)\n'
     s += '{\n'
     s += '  switch (_py_id) {\n'
     s += '  '.join (switchlines)
     s += '  default:\n'
     s += '    return false;\n'
     s += '  }\n'
-    s += '}\n'
-    s += 'static PyObject*\n'
-    s += 'method_trampoline (PyObject *self, PyObject *args)\n'
-    s += '{\n'
-    s += '  PyObject *arg0 = NULL, *ret = NULL;\n'
-    s += '  unsigned int method_id;\n'
-    s += '  bool success = false;\n'
-    s += '  if (PyTuple_Size (args) < 1) GOTO_ERROR();\n'
-    s += '  arg0 = PyTuple_GET_ITEM (args, 0); if (!arg0) GOTO_ERROR();\n'
-    s += '  method_id = PyIntLong_AsLongLong (arg0);\n'
-    s += '  success = trampoline_switch (method_id, self, args, &ret);\n'
-    s += ' error:\n'
-    s += '  if (!success) Rapicorn::printerr (' + r'"Method call failed: 0x%08x\n"' + ', method_id);\n'
-    s += '  return ret;\n'
     s += '}\n'
     return s
   def storage_fieldname (self, storage):

@@ -27,7 +27,7 @@ pyrapicorn_PYTHON      = __init__.py
 pyrapicorn_LTLIBRARIES = pyRapicorn.la
 pyRapicorn_la_SOURCES  = $(pyrapicorn_cc_sources)
 pyRapicorn_la_LDFLAGS  = -module -avoid-version -no-undefined -export-symbols-regex pyRapicorn
-pyRapicorn_la_LIBADD   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
+pyRapicorn_la_LIBADD   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la $(PROTOBUF_LIBS)
 python-call-info:
 	@echo 'PYTHONPATH="$$PYTHONPATH:$(pythondir)" python # -c "import @RAPICORN_NAMESPACE_NAME@"'
 
@@ -50,19 +50,32 @@ librapicornrope@RAPICORN_RELEASE@.o: $(librapicornrope@RAPICORN_RELEASE@_la_OBJE
 all-am: librapicornrope@RAPICORN_RELEASE@.o
 CLEANFILES += librapicornrope@RAPICORN_RELEASE@.lo librapicornrope@RAPICORN_RELEASE@.o
 
-# build protocol glue
+# === protocol glue ===
+EXTRA_DIST += protocol.proto
 build-proto-glue:
-	rm -f protocol.pb.h protocol.pb.cc
 	$(PROTOC) $(srcdir)/protocol.proto --python_out=.
+CLEANFILES += protocol_pb2.py  protocol_pb2.pyc
+check-local: build-proto-glue
+
+# === protocol-pb2.[hc][hc] ===
+protocol-pb2.hh: $(srcdir)/protocol.proto
+	rm -f protocol.pb.h protocol.pb.cc
 	$(PROTOC) $(srcdir)/protocol.proto --cpp_out=.
 	mv protocol.pb.h protocol-pb2.hh
 	sed 's/^#include "protocol.pb.h"/#include "protocol-pb2.hh"/' <protocol.pb.cc >protocol-pb2.cc
 	rm -f protocol.pb.cc
-	$(CXXCOMPILE) protocol-pb2.cc -c $(PROTOBUF_LIBS)
-EXTRA_DIST += protocol.proto
-check-local: build-proto-glue
+protocol-pb2.cc: protocol-pb2.hh
+CLEANFILES += protocol.pb.h protocol.pb.cc protocol-pb2.cc protocol-pb2.hh
 
-# tests
+# === pycstub.cc ===
+pycstub.cc: $(srcdir)/PyCStub.py $(srcdir)/base.idl
+	: # compile IDL definitions into pycstub.cc
+	${PLICINT} -O=$(srcdir)/PyCStub $(srcdir)/base.idl -o xgen-$(@F)
+	mv xgen-$(@F) $@
+$(srcdir)/pyrope.cc: pycstub.cc
+CLEANFILES += xgen-pycstub.cc pycstub.cc
+
+# === tests ===
 check-pystub:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} -O=$(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)

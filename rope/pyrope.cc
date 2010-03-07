@@ -24,36 +24,28 @@
 
 static PyObject *rapicorn_exception = NULL;
 
+static bool pyrope_trampoline_switch (unsigned int, PyObject*, PyObject*, PyObject**); // generated
+
 static PyObject*
 pyrope_trampoline (PyObject *self,
                    PyObject *args)
 {
-  uint32 ui = 0;
-  if (PyTuple_Check (args) && PyTuple_Size (args) > 0)
-    {
-      PyObject *first = PyTuple_GetItem (args, 0);
-      if (PyInt_Check (first))
-        ui = PyInt_AsLong (first);
-    }
-  switch (ui)
-    {
-      const char *string1;
-    case 0xA001:
-      if (PyArg_ParseTuple (args, "Is", &ui, &string1))
-        {
-          printout ("createwindow: %s\n", string1);
-          Window w = Factory::create_window (string1);
-          PyObject *po = None_INCREF();
-          return po;
-        }
-      else
-        return NULL;
-    case 0xA002:
-      Application::execute_loops();
-      return None_INCREF();
-    default:
-      return PyErr_Format (PyExc_NotImplementedError, "invalid rapicorn trampoline invokation (code=%u)", ui);
-    }
+  PyObject *arg0 = NULL, *ret = NULL;
+  uint32 method_id = 0;
+  if (PyTuple_Size (args) < 1)
+    goto error;
+  arg0 = PyTuple_GET_ITEM (args, 0);
+  if (!arg0 || PyErr_Occurred())
+    goto error;
+  method_id = PyInt_AsLong (arg0);
+  if (PyErr_Occurred())
+    goto error;
+  if (pyrope_trampoline_switch (method_id, self, args, &ret) && ret)
+    return ret;
+ error:
+  if (!PyErr_Occurred())
+    return PyErr_Format (PyExc_NotImplementedError, "method call failed: 0x%08x", method_id);
+  return NULL;
 }
 
 static PyObject*
@@ -116,3 +108,7 @@ MODULE_INIT_FUNCTION (void) // conventional dlmodule initializer
   }
   free (argv0);
 }
+
+// === include generated stubs ===
+#include "pycstub.cc"
+#include "protocol-pb2.cc"

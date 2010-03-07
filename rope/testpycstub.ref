@@ -1062,8 +1062,8 @@ method_SomeInterface_use_record (PyObject *self, PyObject *args, PyObject **retp
 }
 
 
-static bool
-trampoline_switch (unsigned int _py_id, PyObject *_py_self, PyObject *_py_args, PyObject **_py_retp)
+static bool RAPICORN_UNUSED
+pyrope_trampoline_switch (unsigned int _py_id, PyObject *_py_self, PyObject *_py_args, PyObject **_py_retp)
 {
   switch (_py_id) {
   case 0x0def0001: // UIWidgetArea::simple_method
@@ -1091,18 +1091,4 @@ trampoline_switch (unsigned int _py_id, PyObject *_py_self, PyObject *_py_args, 
   default:
     return false;
   }
-}
-static PyObject*
-method_trampoline (PyObject *self, PyObject *args)
-{
-  PyObject *arg0 = NULL, *ret = NULL;
-  unsigned int method_id;
-  bool success = false;
-  if (PyTuple_Size (args) < 1) GOTO_ERROR();
-  arg0 = PyTuple_GET_ITEM (args, 0); if (!arg0) GOTO_ERROR();
-  method_id = PyIntLong_AsLongLong (arg0);
-  success = trampoline_switch (method_id, self, args, &ret);
- error:
-  if (!success) Rapicorn::printerr ("Method call failed: 0x%08x\n", method_id);
-  return ret;
 }
