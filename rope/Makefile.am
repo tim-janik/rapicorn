@@ -50,13 +50,6 @@ librapicornrope@RAPICORN_RELEASE@.o: $(librapicornrope@RAPICORN_RELEASE@_la_OBJE
 all-am: librapicornrope@RAPICORN_RELEASE@.o
 CLEANFILES += librapicornrope@RAPICORN_RELEASE@.lo librapicornrope@RAPICORN_RELEASE@.o
 
-# === protocol glue ===
-EXTRA_DIST += protocol.proto
-build-proto-glue:
-	$(PROTOC) $(srcdir)/protocol.proto --python_out=.
-CLEANFILES += protocol_pb2.py  protocol_pb2.pyc
-check-local: build-proto-glue
-
 # === protocol-pb2.[hc][hc] ===
 protocol-pb2.hh: $(srcdir)/protocol.proto
 	rm -f protocol.pb.h protocol.pb.cc
@@ -75,16 +68,19 @@ pycstub.cc: $(srcdir)/PyCStub.py $(srcdir)/base.idl
 $(srcdir)/pyrope.cc: pycstub.cc
 CLEANFILES += xgen-pycstub.cc pycstub.cc
 
-# === tests ===
+EXTRA_DIST += protocol.proto
+
+# === PyStub test ===
+EXTRA_DIST += testpystub.ref
 check-pystub:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} -O=$(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testpystub.ref)
 	@$(call TSTTITLE,check-pystub-syntax)
+	$(_@) $(PROTOC) $(srcdir)/protocol.proto --python_out=. # protocol_pb2.py
 	$(_@) $(PYTHON) -c "import py_compile; py_compile.compile ('$(srcdir)/testpystub.ref', 'testpystub.pyc')" && \
 	  $(PYTHON) $(srcdir)/testpystub.ref ; $(call TSTRESULT)
-#	rm -f testpystub.pyc
-EXTRA_DIST += testpystub.ref
+#	$(_@) rm -f testpystub.pyc protocol_pb2.py  protocol_pb2.pyc
 check-local: check-pystub
 
 check-pycstub:
