@@ -33,7 +33,7 @@ typedef Rapicorn::Rope::RemoteProcedure_Sequence RemoteProcedure_Sequence;
 typedef Rapicorn::Rope::RemoteProcedure_Record RemoteProcedure_Record;
 typedef Rapicorn::Rope::RemoteProcedure_Argument RemoteProcedure_Argument;
 
-#include <core/rapicornsignal.hh>
+#include <core/rapicorn-core.hh>
 
 #define GOTO_ERROR()    goto error
 
@@ -50,6 +50,23 @@ PyIntLong_AsLongLong (PyObject *intlong)
 class Generator:
   def __init__ (self):
     self.ntab = 26
+    self.iddict = {}
+    self.idcounter = 0x0def0000
+  def type_id (self, type):
+    types = []
+    while type:
+      types += [ type ]
+      if hasattr (type, 'ownertype'):
+        type = type.ownertype
+      elif hasattr (type, 'namespace'):
+        type = type.namespace
+      else:
+        type = None
+    types = tuple (types)
+    if not self.iddict.has_key (types):
+      self.idcounter += 1
+      self.iddict[types] = self.idcounter
+    return self.iddict[types]
   def tabwidth (self, n):
     self.ntab = n
   def format_to_tab (self, string, indent = ''):
@@ -76,7 +93,7 @@ class Generator:
       s += '  %s_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();\n' % prefix
     elif argtype.storage == Decls.FLOAT:
       s += '  %s_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();\n' % prefix
-    elif argtype.storage == Decls.STRING:
+    elif argtype.storage in (Decls.STRING, Decls.INTERFACE):
       s += '  %s_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();\n' % prefix
     elif argtype.storage == Decls.RECORD:
       s += '  if (!rope_frompy_%s (item, *%s_vrec())) GOTO_ERROR();\n' % (argtype.name, prefix)
@@ -206,6 +223,64 @@ class Generator:
     s += '  return success;\n'
     s += '}\n'
     return s
+  def generate_caller_funcs (self, type_info, swl):
+    s = ''
+    for m in type_info.methods:
+      s += self.generate_caller_func (type_info, m, swl)
+    return s
+  def generate_caller_func (self, type_info, m, swl):
+    s = ''
+    swl += [ 'case 0x%08x: // %s::%s\n' % (self.type_id (m), type_info.name, m.name) ]
+    swl += [ '  return method_%s_%s (_py_self, _py_args, _py_retp);\n' % (type_info.name, m.name) ]
+    s += 'static bool\n'
+    s += 'method_%s_%s (PyObject *self, PyObject *args, PyObject **retp)\n' % (type_info.name, m.name)
+    s += '{\n'
+    s += '  RemoteProcedure_Record rpr;\n'
+    if m.args:
+      s += '  RemoteProcedure_Argument *field;\n'
+      s += '  PyObject *item;\n'
+    s += '  bool success = false;\n'
+    s += '  if (PyTuple_Size (args) < %d) GOTO_ERROR();\n' % len (m.args)
+    field_counter = 0
+    for fl in m.args:
+      s += '  item = PyTuple_GET_ITEM (args, %d);\n' % field_counter
+      field_counter += 1
+      s += '  field = rpr.add_fields();\n'
+      if fl[1].storage in (Decls.RECORD, Decls.SEQUENCE):
+        s += self.generate_frompy_convert ('field->mutable', fl[0], fl[1])
+      else:
+        s += self.generate_frompy_convert ('field->set', fl[0], fl[1])
+    s += '  success = true;\n'
+    s += ' error:\n'
+    s += '  return success;\n'
+    s += '}\n'
+    return s
+  def generate_caller_impl (self, switchlines):
+    s = ''
+    s += 'static bool\n'
+    s += 'trampoline_switch (unsigned int _py_id, PyObject *_py_self, PyObject *_py_args, PyObject **_py_retp)\n'
+    s += '{\n'
+    s += '  switch (_py_id) {\n'
+    s += '  '.join (switchlines)
+    s += '  default:\n'
+    s += '    return false;\n'
+    s += '  }\n'
+    s += '}\n'
+    s += 'static PyObject*\n'
+    s += 'method_trampoline (PyObject *self, PyObject *args)\n'
+    s += '{\n'
+    s += '  PyObject *arg0 = NULL, *ret = NULL;\n'
+    s += '  unsigned int method_id;\n'
+    s += '  bool success = false;\n'
+    s += '  if (PyTuple_Size (args) < 1) GOTO_ERROR();\n'
+    s += '  arg0 = PyTuple_GET_ITEM (args, 0); if (!arg0) GOTO_ERROR();\n'
+    s += '  method_id = PyIntLong_AsLongLong (arg0);\n'
+    s += '  success = trampoline_switch (method_id, self, args, &ret);\n'
+    s += ' error:\n'
+    s += '  if (!success) Rapicorn::printerr (' + r'"Method call failed: 0x%08x\n"' + ', method_id);\n'
+    s += '  return ret;\n'
+    s += '}\n'
+    return s
   def storage_fieldname (self, storage):
     if storage in (Decls.INT, Decls.ENUM):
       return 'vint64'
@@ -269,6 +344,7 @@ class Generator:
       elif tp.storage == Decls.INTERFACE:
         s += ''
     # generate accessors
+    switchlines = [ '' ]
     for tp in types:
       if tp.typedef_origin:
         pass
@@ -277,7 +353,8 @@ class Generator:
       elif tp.storage == Decls.SEQUENCE:
         s += self.generate_sequence_funcs (tp) + '\n'
       elif tp.storage == Decls.INTERFACE:
-        s += ''
+        s += self.generate_caller_funcs (tp, switchlines) + '\n'
+    s += self.generate_caller_impl (switchlines)
     return s
 
 def error (msg):

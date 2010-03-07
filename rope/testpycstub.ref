@@ -9,7 +9,7 @@ typedef Rapicorn::Rope::RemoteProcedure_Sequence RemoteProcedure_Sequence;
 typedef Rapicorn::Rope::RemoteProcedure_Record RemoteProcedure_Record;
 typedef Rapicorn::Rope::RemoteProcedure_Argument RemoteProcedure_Argument;
 
-#include <core/rapicornsignal.hh>
+#include <core/rapicorn-core.hh>
 
 #define GOTO_ERROR()    goto error
 
@@ -884,3 +884,225 @@ rope_topy_SomeRecord (const RemoteProcedure_Record &rpr, PyObject **pyop)
   return success;
 }
 
+static bool
+method_UIWidgetArea_simple_method (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  bool success = false;
+  if (PyTuple_Size (args) < 0) GOTO_ERROR();
+  success = true;
+ error:
+  return success;
+}
+static bool
+method_UIWidgetArea_single_arg (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  RemoteProcedure_Argument *field;
+  PyObject *item;
+  bool success = false;
+  if (PyTuple_Size (args) < 1) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 0);
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  success = true;
+ error:
+  return success;
+}
+static bool
+method_UIWidgetArea_single_arg2 (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  RemoteProcedure_Argument *field;
+  PyObject *item;
+  bool success = false;
+  if (PyTuple_Size (args) < 1) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 0);
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  success = true;
+ error:
+  return success;
+}
+static bool
+method_UIWidgetArea_two_args (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  RemoteProcedure_Argument *field;
+  PyObject *item;
+  bool success = false;
+  if (PyTuple_Size (args) < 2) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 0);
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 1);
+  field = rpr.add_fields();
+  field->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  success = true;
+ error:
+  return success;
+}
+static bool
+method_UIWidgetArea_two_args2 (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  RemoteProcedure_Argument *field;
+  PyObject *item;
+  bool success = false;
+  if (PyTuple_Size (args) < 2) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 0);
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 1);
+  field = rpr.add_fields();
+  field->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  success = true;
+ error:
+  return success;
+}
+static bool
+method_UIWidgetArea_multi_args (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  RemoteProcedure_Argument *field;
+  PyObject *item;
+  bool success = false;
+  if (PyTuple_Size (args) < 5) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 0);
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 1);
+  field = rpr.add_fields();
+  field->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 2);
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 3);
+  field = rpr.add_fields();
+  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 4);
+  field = rpr.add_fields();
+  field->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  success = true;
+ error:
+  return success;
+}
+static bool
+method_UIWidgetArea_self_method (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  RemoteProcedure_Argument *field;
+  PyObject *item;
+  bool success = false;
+  if (PyTuple_Size (args) < 2) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 0);
+  field = rpr.add_fields();
+  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 1);
+  field = rpr.add_fields();
+  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  success = true;
+ error:
+  return success;
+}
+static bool
+method_UIWidgetArea_void_method (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  bool success = false;
+  if (PyTuple_Size (args) < 0) GOTO_ERROR();
+  success = true;
+ error:
+  return success;
+}
+static bool
+method_UIWidgetArea_on_click2out (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  bool success = false;
+  if (PyTuple_Size (args) < 0) GOTO_ERROR();
+  success = true;
+ error:
+  return success;
+}
+static bool
+method_UIWidgetArea_on_click2in (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  RemoteProcedure_Argument *field;
+  PyObject *item;
+  bool success = false;
+  if (PyTuple_Size (args) < 1) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 0);
+  field = rpr.add_fields();
+  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  success = true;
+ error:
+  return success;
+}
+
+
+
+
+
+static bool
+method_SomeInterface_use_record (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  RemoteProcedure_Argument *field;
+  PyObject *item;
+  bool success = false;
+  if (PyTuple_Size (args) < 1) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 0);
+  field = rpr.add_fields();
+  if (!rope_frompy_SomeRecord (item, *field->mutable_vrec())) GOTO_ERROR();
+  success = true;
+ error:
+  return success;
+}
+
+
+static bool
+trampoline_switch (unsigned int _py_id, PyObject *_py_self, PyObject *_py_args, PyObject **_py_retp)
+{
+  switch (_py_id) {
+  case 0x0def0001: // UIWidgetArea::simple_method
+    return method_UIWidgetArea_simple_method (_py_self, _py_args, _py_retp);
+  case 0x0def0002: // UIWidgetArea::single_arg
+    return method_UIWidgetArea_single_arg (_py_self, _py_args, _py_retp);
+  case 0x0def0003: // UIWidgetArea::single_arg2
+    return method_UIWidgetArea_single_arg2 (_py_self, _py_args, _py_retp);
+  case 0x0def0004: // UIWidgetArea::two_args
+    return method_UIWidgetArea_two_args (_py_self, _py_args, _py_retp);
+  case 0x0def0005: // UIWidgetArea::two_args2
+    return method_UIWidgetArea_two_args2 (_py_self, _py_args, _py_retp);
+  case 0x0def0006: // UIWidgetArea::multi_args
+    return method_UIWidgetArea_multi_args (_py_self, _py_args, _py_retp);
+  case 0x0def0007: // UIWidgetArea::self_method
+    return method_UIWidgetArea_self_method (_py_self, _py_args, _py_retp);
+  case 0x0def0008: // UIWidgetArea::void_method
+    return method_UIWidgetArea_void_method (_py_self, _py_args, _py_retp);
+  case 0x0def0009: // UIWidgetArea::on_click2out
+    return method_UIWidgetArea_on_click2out (_py_self, _py_args, _py_retp);
+  case 0x0def000a: // UIWidgetArea::on_click2in
+    return method_UIWidgetArea_on_click2in (_py_self, _py_args, _py_retp);
+  case 0x0def000b: // SomeInterface::use_record
+    return method_SomeInterface_use_record (_py_self, _py_args, _py_retp);
+  default:
+    return false;
+  }
+}
+static PyObject*
+method_trampoline (PyObject *self, PyObject *args)
+{
+  PyObject *arg0 = NULL, *ret = NULL;
+  unsigned int method_id;
+  bool success = false;
+  if (PyTuple_Size (args) < 1) GOTO_ERROR();
+  arg0 = PyTuple_GET_ITEM (args, 0); if (!arg0) GOTO_ERROR();
+  method_id = PyIntLong_AsLongLong (arg0);
+  success = trampoline_switch (method_id, self, args, &ret);
+ error:
+  if (!success) Rapicorn::printerr ("Method call failed: 0x%08x\n", method_id);
+  return ret;
+}
