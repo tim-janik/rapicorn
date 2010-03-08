@@ -37,6 +37,8 @@ interface Window {
 };
 
 interface Application {
+  Application   _init_with_x11  (string         application_name,
+                                 StringArray    cmdline_args);
   Window        create_window   (string         window_identifier,
                                  StringArray    arguments,
                                  StringArray    env_variables);
