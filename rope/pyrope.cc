@@ -110,5 +110,14 @@ MODULE_INIT_FUNCTION (void) // conventional dlmodule initializer
 }
 
 // === include generated stubs ===
-#include "pycstub.cc"
 #include "protocol-pb2.cc"
+
+static bool
+pyrope_send_message (uint32                                  msgid,
+                     Rapicorn::Rope::RemoteProcedure_Record &rec)
+{
+  return false;
+#define HAVE_PYROPE_SEND_MESSAGE 1
+}
+
+#include "pycstub.cc"

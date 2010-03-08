@@ -45,6 +45,12 @@ PyIntLong_AsLongLong (PyObject *intlong)
   else
     return PyLong_AsLongLong (intlong);
 }
+
+static bool pyrope_send_message (unsigned int, RemoteProcedure_Record&);
+#ifndef HAVE_PYROPE_SEND_MESSAGE
+static bool pyrope_send_message (unsigned int, RemoteProcedure_Record&)
+{ return false; } // testing stub
+#endif
 """
 
 class Generator:
@@ -231,9 +237,9 @@ class Generator:
   def generate_caller_func (self, type_info, m, swl):
     s = ''
     swl += [ 'case 0x%08x: // %s::%s\n' % (self.type_id (m), type_info.name, m.name) ]
-    swl += [ '  return method_%s_%s (_py_self, _py_args, _py_retp);\n' % (type_info.name, m.name) ]
+    swl += [ '  return pyrope__%s_%s (_py_self, _py_args, _py_retp);\n' % (type_info.name, m.name) ]
     s += 'static bool\n'
-    s += 'method_%s_%s (PyObject *self, PyObject *args, PyObject **retp)\n' % (type_info.name, m.name)
+    s += 'pyrope__%s_%s (PyObject *self, PyObject *args, PyObject **retp)\n' % (type_info.name, m.name)
     s += '{\n'
     s += '  RemoteProcedure_Record rpr;\n'
     if m.args:
@@ -250,7 +256,7 @@ class Generator:
         s += self.generate_frompy_convert ('field->mutable', fl[0], fl[1])
       else:
         s += self.generate_frompy_convert ('field->set', fl[0], fl[1])
-    s += '  success = true;\n'
+    s += '  success = pyrope_send_message (0x%08x, rpr);\n' % self.type_id (m)
     s += ' error:\n'
     s += '  return success;\n'
     s += '}\n'

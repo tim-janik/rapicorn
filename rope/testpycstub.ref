@@ -22,6 +22,12 @@ PyIntLong_AsLongLong (PyObject *intlong)
     return PyLong_AsLongLong (intlong);
 }
 
+static bool pyrope_send_message (unsigned int, RemoteProcedure_Record&);
+#ifndef HAVE_PYROPE_SEND_MESSAGE
+static bool pyrope_send_message (unsigned int, RemoteProcedure_Record&)
+{ return false; } // testing stub
+#endif
+
 enum Empty {
 };
 enum Enum1 {
@@ -885,17 +891,17 @@ rope_topy_SomeRecord (const RemoteProcedure_Record &rpr, PyObject **pyop)
 }
 
 static bool
-method_UIWidgetArea_simple_method (PyObject *self, PyObject *args, PyObject **retp)
+pyrope__UIWidgetArea_simple_method (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure_Record rpr;
   bool success = false;
   if (PyTuple_Size (args) < 0) GOTO_ERROR();
-  success = true;
+  success = pyrope_send_message (0x0def0001, rpr);
  error:
   return success;
 }
 static bool
-method_UIWidgetArea_single_arg (PyObject *self, PyObject *args, PyObject **retp)
+pyrope__UIWidgetArea_single_arg (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure_Record rpr;
   RemoteProcedure_Argument *field;
@@ -905,12 +911,12 @@ method_UIWidgetArea_single_arg (PyObject *self, PyObject *args, PyObject **retp)
   item = PyTuple_GET_ITEM (args, 0);
   field = rpr.add_fields();
   field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = true;
+  success = pyrope_send_message (0x0def0002, rpr);
  error:
   return success;
 }
 static bool
-method_UIWidgetArea_single_arg2 (PyObject *self, PyObject *args, PyObject **retp)
+pyrope__UIWidgetArea_single_arg2 (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure_Record rpr;
   RemoteProcedure_Argument *field;
@@ -920,12 +926,12 @@ method_UIWidgetArea_single_arg2 (PyObject *self, PyObject *args, PyObject **retp
   item = PyTuple_GET_ITEM (args, 0);
   field = rpr.add_fields();
   field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = true;
+  success = pyrope_send_message (0x0def0003, rpr);
  error:
   return success;
 }
 static bool
-method_UIWidgetArea_two_args (PyObject *self, PyObject *args, PyObject **retp)
+pyrope__UIWidgetArea_two_args (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure_Record rpr;
   RemoteProcedure_Argument *field;
@@ -938,12 +944,12 @@ method_UIWidgetArea_two_args (PyObject *self, PyObject *args, PyObject **retp)
   item = PyTuple_GET_ITEM (args, 1);
   field = rpr.add_fields();
   field->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = true;
+  success = pyrope_send_message (0x0def0004, rpr);
  error:
   return success;
 }
 static bool
-method_UIWidgetArea_two_args2 (PyObject *self, PyObject *args, PyObject **retp)
+pyrope__UIWidgetArea_two_args2 (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure_Record rpr;
   RemoteProcedure_Argument *field;
@@ -956,12 +962,12 @@ method_UIWidgetArea_two_args2 (PyObject *self, PyObject *args, PyObject **retp)
   item = PyTuple_GET_ITEM (args, 1);
   field = rpr.add_fields();
   field->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = true;
+  success = pyrope_send_message (0x0def0005, rpr);
  error:
   return success;
 }
 static bool
-method_UIWidgetArea_multi_args (PyObject *self, PyObject *args, PyObject **retp)
+pyrope__UIWidgetArea_multi_args (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure_Record rpr;
   RemoteProcedure_Argument *field;
@@ -983,12 +989,12 @@ method_UIWidgetArea_multi_args (PyObject *self, PyObject *args, PyObject **retp)
   item = PyTuple_GET_ITEM (args, 4);
   field = rpr.add_fields();
   field->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = true;
+  success = pyrope_send_message (0x0def0006, rpr);
  error:
   return success;
 }
 static bool
-method_UIWidgetArea_self_method (PyObject *self, PyObject *args, PyObject **retp)
+pyrope__UIWidgetArea_self_method (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure_Record rpr;
   RemoteProcedure_Argument *field;
@@ -1001,32 +1007,32 @@ method_UIWidgetArea_self_method (PyObject *self, PyObject *args, PyObject **retp
   item = PyTuple_GET_ITEM (args, 1);
   field = rpr.add_fields();
   field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = true;
+  success = pyrope_send_message (0x0def0007, rpr);
  error:
   return success;
 }
 static bool
-method_UIWidgetArea_void_method (PyObject *self, PyObject *args, PyObject **retp)
+pyrope__UIWidgetArea_void_method (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure_Record rpr;
   bool success = false;
   if (PyTuple_Size (args) < 0) GOTO_ERROR();
-  success = true;
+  success = pyrope_send_message (0x0def0008, rpr);
  error:
   return success;
 }
 static bool
-method_UIWidgetArea_on_click2out (PyObject *self, PyObject *args, PyObject **retp)
+pyrope__UIWidgetArea_on_click2out (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure_Record rpr;
   bool success = false;
   if (PyTuple_Size (args) < 0) GOTO_ERROR();
-  success = true;
+  success = pyrope_send_message (0x0def0009, rpr);
  error:
   return success;
 }
 static bool
-method_UIWidgetArea_on_click2in (PyObject *self, PyObject *args, PyObject **retp)
+pyrope__UIWidgetArea_on_click2in (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure_Record rpr;
   RemoteProcedure_Argument *field;
@@ -1036,7 +1042,7 @@ method_UIWidgetArea_on_click2in (PyObject *self, PyObject *args, PyObject **retp
   item = PyTuple_GET_ITEM (args, 0);
   field = rpr.add_fields();
   field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = true;
+  success = pyrope_send_message (0x0def000a, rpr);
  error:
   return success;
 }
@@ -1046,7 +1052,7 @@ method_UIWidgetArea_on_click2in (PyObject *self, PyObject *args, PyObject **retp
 
 
 static bool
-method_SomeInterface_use_record (PyObject *self, PyObject *args, PyObject **retp)
+pyrope__SomeInterface_use_record (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure_Record rpr;
   RemoteProcedure_Argument *field;
@@ -1056,7 +1062,7 @@ method_SomeInterface_use_record (PyObject *self, PyObject *args, PyObject **retp
   item = PyTuple_GET_ITEM (args, 0);
   field = rpr.add_fields();
   if (!rope_frompy_SomeRecord (item, *field->mutable_vrec())) GOTO_ERROR();
-  success = true;
+  success = pyrope_send_message (0x0def000b, rpr);
  error:
   return success;
 }
@@ -1067,27 +1073,27 @@ pyrope_trampoline_switch (unsigned int _py_id, PyObject *_py_self, PyObject *_py
 {
   switch (_py_id) {
   case 0x0def0001: // UIWidgetArea::simple_method
-    return method_UIWidgetArea_simple_method (_py_self, _py_args, _py_retp);
+    return pyrope__UIWidgetArea_simple_method (_py_self, _py_args, _py_retp);
   case 0x0def0002: // UIWidgetArea::single_arg
-    return method_UIWidgetArea_single_arg (_py_self, _py_args, _py_retp);
+    return pyrope__UIWidgetArea_single_arg (_py_self, _py_args, _py_retp);
   case 0x0def0003: // UIWidgetArea::single_arg2
-    return method_UIWidgetArea_single_arg2 (_py_self, _py_args, _py_retp);
+    return pyrope__UIWidgetArea_single_arg2 (_py_self, _py_args, _py_retp);
   case 0x0def0004: // UIWidgetArea::two_args
-    return method_UIWidgetArea_two_args (_py_self, _py_args, _py_retp);
+    return pyrope__UIWidgetArea_two_args (_py_self, _py_args, _py_retp);
   case 0x0def0005: // UIWidgetArea::two_args2
-    return method_UIWidgetArea_two_args2 (_py_self, _py_args, _py_retp);
+    return pyrope__UIWidgetArea_two_args2 (_py_self, _py_args, _py_retp);
   case 0x0def0006: // UIWidgetArea::multi_args
-    return method_UIWidgetArea_multi_args (_py_self, _py_args, _py_retp);
+    return pyrope__UIWidgetArea_multi_args (_py_self, _py_args, _py_retp);
   case 0x0def0007: // UIWidgetArea::self_method
-    return method_UIWidgetArea_self_method (_py_self, _py_args, _py_retp);
+    return pyrope__UIWidgetArea_self_method (_py_self, _py_args, _py_retp);
   case 0x0def0008: // UIWidgetArea::void_method
-    return method_UIWidgetArea_void_method (_py_self, _py_args, _py_retp);
+    return pyrope__UIWidgetArea_void_method (_py_self, _py_args, _py_retp);
   case 0x0def0009: // UIWidgetArea::on_click2out
-    return method_UIWidgetArea_on_click2out (_py_self, _py_args, _py_retp);
+    return pyrope__UIWidgetArea_on_click2out (_py_self, _py_args, _py_retp);
   case 0x0def000a: // UIWidgetArea::on_click2in
-    return method_UIWidgetArea_on_click2in (_py_self, _py_args, _py_retp);
+    return pyrope__UIWidgetArea_on_click2in (_py_self, _py_args, _py_retp);
   case 0x0def000b: // SomeInterface::use_record
-    return method_SomeInterface_use_record (_py_self, _py_args, _py_retp);
+    return pyrope__SomeInterface_use_record (_py_self, _py_args, _py_retp);
   default:
     return false;
   }
