@@ -250,7 +250,9 @@ rope_frompy_XFooRecord (PyObject *instance, RemoteProcedure_Record &rpr)
   field->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
   item = PyDict_GetItemString (dictR, "single_string"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
-  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  { char *s = NULL; Py_ssize_t len = 0;
+    if (PyString_AsStringAndSize (item, &s, &len) < 0) GOTO_ERROR();
+    field->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
   item = PyDict_GetItemString (dictR, "sibling1"); if (!dictR) GOTO_ERROR();
   field = rpr.add_fields();
   field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
@@ -469,7 +471,9 @@ rope_frompy_StringSequence (PyObject *list, RemoteProcedure_Sequence &rps)
   const ssize_t len = PyList_Size (list); if (len < 0) GOTO_ERROR();
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (list, k);
-    rps.add_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
+    { char *s = NULL; Py_ssize_t len = 0;
+      if (PyString_AsStringAndSize (item, &s, &len) < 0) GOTO_ERROR();
+      rps.add_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
   }
   success = true;
  error:
@@ -1000,7 +1004,9 @@ pyrope__UIWidgetArea_multi_args (PyObject *self, PyObject *args, PyObject **retp
   field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 3);
   field = rpr.add_fields();
-  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  { char *s = NULL; Py_ssize_t len = 0;
+    if (PyString_AsStringAndSize (item, &s, &len) < 0) GOTO_ERROR();
+    field->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
   item = PyTuple_GET_ITEM (args, 4);
   field = rpr.add_fields();
   field->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
@@ -1018,10 +1024,14 @@ pyrope__UIWidgetArea_self_method (PyObject *self, PyObject *args, PyObject **ret
   if (PyTuple_Size (args) < 2) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 0);
   field = rpr.add_fields();
-  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  { char *s = NULL; Py_ssize_t len = 0;
+    if (PyString_AsStringAndSize (item, &s, &len) < 0) GOTO_ERROR();
+    field->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
   item = PyTuple_GET_ITEM (args, 1);
   field = rpr.add_fields();
-  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  { char *s = NULL; Py_ssize_t len = 0;
+    if (PyString_AsStringAndSize (item, &s, &len) < 0) GOTO_ERROR();
+    field->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
   success = pyrope_send_message (0x0def0007, rpr);
  error:
   return success;
@@ -1056,7 +1066,9 @@ pyrope__UIWidgetArea_on_click2in (PyObject *self, PyObject *args, PyObject **ret
   if (PyTuple_Size (args) < 1) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 0);
   field = rpr.add_fields();
-  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  { char *s = NULL; Py_ssize_t len = 0;
+    if (PyString_AsStringAndSize (item, &s, &len) < 0) GOTO_ERROR();
+    field->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
   success = pyrope_send_message (0x0def000a, rpr);
  error:
   return success;
@@ -1202,7 +1214,9 @@ pyrope__MethodTestInterface_method_with_string (PyObject *self, PyObject *args, 
   if (PyTuple_Size (args) < 1) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 0);
   field = rpr.add_fields();
-  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  { char *s = NULL; Py_ssize_t len = 0;
+    if (PyString_AsStringAndSize (item, &s, &len) < 0) GOTO_ERROR();
+    field->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
   success = pyrope_send_message (0x0def000e, rpr);
  error:
   return success;
@@ -1262,7 +1276,9 @@ pyrope__MethodTestInterface_method_with_interface (PyObject *self, PyObject *arg
   if (PyTuple_Size (args) < 1) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 0);
   field = rpr.add_fields();
-  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  { char *s = NULL; Py_ssize_t len = 0;
+    if (PyString_AsStringAndSize (item, &s, &len) < 0) GOTO_ERROR();
+    field->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
   success = pyrope_send_message (0x0def0012, rpr);
  error:
   return success;

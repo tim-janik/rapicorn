@@ -100,7 +100,9 @@ class Generator:
     elif argtype.storage == Decls.FLOAT:
       s += '  %s_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();\n' % prefix
     elif argtype.storage in (Decls.STRING, Decls.INTERFACE):
-      s += '  %s_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();\n' % prefix
+      s += '  { char *s = NULL; Py_ssize_t len = 0;\n'
+      s += '    if (PyString_AsStringAndSize (item, &s, &len) < 0) GOTO_ERROR();\n'
+      s += '    %s_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }\n' % prefix
     elif argtype.storage == Decls.RECORD:
       s += '  if (!rope_frompy_%s (item, *%s_vrec())) GOTO_ERROR();\n' % (argtype.name, prefix)
     elif argtype.storage == Decls.SEQUENCE:
