@@ -121,6 +121,10 @@ struct NewRecord;
 struct InnerRecord;
 struct Refer2Inner;
 struct SomeRecord;
+enum QuickEnum {
+  ZERO = 0,
+};
+struct QuickRecord;
 enum ClickType {
   CLICK_ON_PRESS = 1,
   CLICK_ON_RELEASE = 2,
@@ -216,6 +220,17 @@ struct SomeRecord {
   InnerRecord     *r4;
 };
 static bool rope_frompy_SomeRecord (PyObject*, RemoteProcedure_Record&);
+
+struct QuickRecord {
+  int             int1;
+  int             int2;
+};
+static bool rope_frompy_QuickRecord (PyObject*, RemoteProcedure_Record&);
+
+struct QuickSequence {
+  double          somefloat;
+};
+static bool rope_frompy_QuickSequence (PyObject*, RemoteProcedure_Sequence&);
 
 static bool RAPICORN_UNUSED
 rope_frompy_XFooRecord (PyObject *instance, RemoteProcedure_Record &rpr)
@@ -1051,6 +1066,208 @@ pyrope__UIWidgetArea_on_click2in (PyObject *self, PyObject *args, PyObject **ret
 
 
 
+static bool RAPICORN_UNUSED
+rope_frompy_QuickRecord (PyObject *instance, RemoteProcedure_Record &rpr)
+{
+  RemoteProcedure_Argument *field;
+  PyObject *dictR = NULL, *item = NULL;
+  bool success = false;
+  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "int1"); if (!dictR) GOTO_ERROR();
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyDict_GetItemString (dictR, "int2"); if (!dictR) GOTO_ERROR();
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  success = true;
+ error:
+  Py_XDECREF (dictR);
+  return success;
+}
+static bool RAPICORN_UNUSED
+rope_topy_QuickRecord (const RemoteProcedure_Record &rpr, PyObject **pyop)
+{
+  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL;
+  const RemoteProcedure_Argument *field;
+  bool success = false;
+  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) GOTO_ERROR();
+  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) GOTO_ERROR();
+  if (rpr.fields_size() < 2) GOTO_ERROR();
+  field = &rpr.fields (0);
+  if (!field->has_vint64()) GOTO_ERROR();
+  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "int1", pyfoR) < 0) GOTO_ERROR();
+  else Py_DECREF (pyfoR);
+  pyfoR = NULL;
+  field = &rpr.fields (1);
+  if (!field->has_vint64()) GOTO_ERROR();
+  pyfoR = PyLong_FromLongLong (field->vint64()); if (!pyfoR) GOTO_ERROR();
+  if (PyDict_SetItemString (dictR, "int2", pyfoR) < 0) GOTO_ERROR();
+  else Py_DECREF (pyfoR);
+  pyfoR = NULL;
+  *pyop = (Py_INCREF (pyinstR), pyinstR);
+  success = true;
+ error:
+  Py_XDECREF (pyfoR);
+  Py_XDECREF (pyinstR);
+  Py_XDECREF (dictR);
+  return success;
+}
+
+static bool RAPICORN_UNUSED
+rope_frompy_QuickSequence (PyObject *list, RemoteProcedure_Sequence &rps)
+{
+  bool success = false;
+  const ssize_t len = PyList_Size (list); if (len < 0) GOTO_ERROR();
+  for (ssize_t k = 0; k < len; k++) {
+    PyObject *item = PyList_GET_ITEM (list, k);
+    rps.add_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  }
+  success = true;
+ error:
+  return success;
+}
+static bool RAPICORN_UNUSED
+rope_topy_QuickSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop)
+{
+  PyObject *listR = NULL, *pyfoR = NULL;
+  bool success = false;
+  const size_t len = rps.vdouble_size();
+  listR = PyList_New (len); if (!listR) GOTO_ERROR();
+  for (size_t k = 0; k < len; k++) {
+    pyfoR = PyFloat_FromDouble (rps.vdouble (k)); if (!pyfoR) GOTO_ERROR();
+    if (PyList_SetItem (listR, k, pyfoR) < 0) GOTO_ERROR();
+    pyfoR = NULL;
+  }
+  *pyop = (Py_INCREF (listR), listR);
+  success = true;
+ error:
+  Py_XDECREF (pyfoR);
+  Py_XDECREF (listR);
+  return success;
+}
+
+static bool
+pyrope__MethodTestInterface_method_with_bools (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  RemoteProcedure_Argument *field;
+  PyObject *item;
+  bool success = false;
+  if (PyTuple_Size (args) < 1) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 0);
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  success = pyrope_send_message (0x0def000b, rpr);
+ error:
+  return success;
+}
+static bool
+pyrope__MethodTestInterface_method_with_ints (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  RemoteProcedure_Argument *field;
+  PyObject *item;
+  bool success = false;
+  if (PyTuple_Size (args) < 1) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 0);
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  success = pyrope_send_message (0x0def000c, rpr);
+ error:
+  return success;
+}
+static bool
+pyrope__MethodTestInterface_method_with_floats (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  RemoteProcedure_Argument *field;
+  PyObject *item;
+  bool success = false;
+  if (PyTuple_Size (args) < 1) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 0);
+  field = rpr.add_fields();
+  field->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  success = pyrope_send_message (0x0def000d, rpr);
+ error:
+  return success;
+}
+static bool
+pyrope__MethodTestInterface_method_with_string (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  RemoteProcedure_Argument *field;
+  PyObject *item;
+  bool success = false;
+  if (PyTuple_Size (args) < 1) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 0);
+  field = rpr.add_fields();
+  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  success = pyrope_send_message (0x0def000e, rpr);
+ error:
+  return success;
+}
+static bool
+pyrope__MethodTestInterface_method_with_enum (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  RemoteProcedure_Argument *field;
+  PyObject *item;
+  bool success = false;
+  if (PyTuple_Size (args) < 1) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 0);
+  field = rpr.add_fields();
+  field->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  success = pyrope_send_message (0x0def000f, rpr);
+ error:
+  return success;
+}
+static bool
+pyrope__MethodTestInterface_method_with_record (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  RemoteProcedure_Argument *field;
+  PyObject *item;
+  bool success = false;
+  if (PyTuple_Size (args) < 1) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 0);
+  field = rpr.add_fields();
+  if (!rope_frompy_QuickRecord (item, *field->mutable_vrec())) GOTO_ERROR();
+  success = pyrope_send_message (0x0def0010, rpr);
+ error:
+  return success;
+}
+static bool
+pyrope__MethodTestInterface_method_with_sequence (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  RemoteProcedure_Argument *field;
+  PyObject *item;
+  bool success = false;
+  if (PyTuple_Size (args) < 1) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 0);
+  field = rpr.add_fields();
+  if (!rope_frompy_QuickSequence (item, *field->mutable_vseq())) GOTO_ERROR();
+  success = pyrope_send_message (0x0def0011, rpr);
+ error:
+  return success;
+}
+static bool
+pyrope__MethodTestInterface_method_with_interface (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure_Record rpr;
+  RemoteProcedure_Argument *field;
+  PyObject *item;
+  bool success = false;
+  if (PyTuple_Size (args) < 1) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 0);
+  field = rpr.add_fields();
+  field->set_vstring (PyString_AsString (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  success = pyrope_send_message (0x0def0012, rpr);
+ error:
+  return success;
+}
+
 static bool
 pyrope__SomeInterface_use_record (PyObject *self, PyObject *args, PyObject **retp)
 {
@@ -1062,7 +1279,7 @@ pyrope__SomeInterface_use_record (PyObject *self, PyObject *args, PyObject **ret
   item = PyTuple_GET_ITEM (args, 0);
   field = rpr.add_fields();
   if (!rope_frompy_SomeRecord (item, *field->mutable_vrec())) GOTO_ERROR();
-  success = pyrope_send_message (0x0def000b, rpr);
+  success = pyrope_send_message (0x0def0013, rpr);
  error:
   return success;
 }
@@ -1092,7 +1309,23 @@ pyrope_trampoline_switch (unsigned int _py_id, PyObject *_py_self, PyObject *_py
     return pyrope__UIWidgetArea_on_click2out (_py_self, _py_args, _py_retp);
   case 0x0def000a: // UIWidgetArea::on_click2in
     return pyrope__UIWidgetArea_on_click2in (_py_self, _py_args, _py_retp);
-  case 0x0def000b: // SomeInterface::use_record
+  case 0x0def000b: // MethodTestInterface::method_with_bools
+    return pyrope__MethodTestInterface_method_with_bools (_py_self, _py_args, _py_retp);
+  case 0x0def000c: // MethodTestInterface::method_with_ints
+    return pyrope__MethodTestInterface_method_with_ints (_py_self, _py_args, _py_retp);
+  case 0x0def000d: // MethodTestInterface::method_with_floats
+    return pyrope__MethodTestInterface_method_with_floats (_py_self, _py_args, _py_retp);
+  case 0x0def000e: // MethodTestInterface::method_with_string
+    return pyrope__MethodTestInterface_method_with_string (_py_self, _py_args, _py_retp);
+  case 0x0def000f: // MethodTestInterface::method_with_enum
+    return pyrope__MethodTestInterface_method_with_enum (_py_self, _py_args, _py_retp);
+  case 0x0def0010: // MethodTestInterface::method_with_record
+    return pyrope__MethodTestInterface_method_with_record (_py_self, _py_args, _py_retp);
+  case 0x0def0011: // MethodTestInterface::method_with_sequence
+    return pyrope__MethodTestInterface_method_with_sequence (_py_self, _py_args, _py_retp);
+  case 0x0def0012: // MethodTestInterface::method_with_interface
+    return pyrope__MethodTestInterface_method_with_interface (_py_self, _py_args, _py_retp);
+  case 0x0def0013: // SomeInterface::use_record
     return pyrope__SomeInterface_use_record (_py_self, _py_args, _py_retp);
   default:
     return false;

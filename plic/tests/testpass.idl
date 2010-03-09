@@ -269,6 +269,22 @@ interface Parent {};
 interface Child : Parent {}; // interface inheritance
 interface Descendant : Parent, Child {}; // multiple interface inheritance
 interface GrandChild : Parent, Child, Descendant {}; // multiple interface inheritance
+
+enum QuickEnum         { ZERO = 0, };
+record   QuickRecord   { int   int1; int int2; };
+sequence QuickSequence { float somefloat; };
+
+interface MethodTestInterface {
+  bool   method_with_bools  (bool   input);
+  int    method_with_ints   (int    input);
+  float  method_with_floats (float  input);
+  string method_with_string (string input);
+  QuickEnum     method_with_enum      (QuickEnum     input);
+  QuickRecord   method_with_record    (QuickRecord   input);
+  QuickSequence method_with_sequence  (QuickSequence input);
+  GrandChild    method_with_interface (GrandChild input);
+};
+
 }
 
 include "include-p1.idl"; // test includes

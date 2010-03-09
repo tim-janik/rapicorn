@@ -368,6 +368,69 @@ class GrandChild (Descendant):
   def __init__ (self):
     super (GrandChild, self).__init__()
 
+class QuickRecord (__BaseRecord__):
+  def __init__ (self, **entries):
+    defaults = { 'int1' : 0,  'int2' : 0, }
+    self.__dict__.update (defaults)
+    __BaseRecord__.__init__ (self, **entries)
+  @staticmethod
+  def create (args):
+    self = QuickRecord()
+    if hasattr (args, "__iter__") and len (args) == 2:
+      self.int1 = args[0]
+      #  self.int1.vint64 = args[0]
+      self.int2 = args[1]
+      #  self.int2.vint64 = args[1]
+    elif isinstance (args, dict):
+      self.int1 = args["int1"]
+      self.int2 = args["int2"]
+    else: raise RuntimeError ("invalid or missing record initializers")
+    return self
+  @staticmethod
+  def to_proto (self, _plic_rec):
+    _plic_field = _plic_rp.fields.add()
+    _plic_field.vint64 = self.int1
+    _plic_field = _plic_rp.fields.add()
+    _plic_field.vint64 = self.int2
+
+class MethodTestInterface (__BaseClass__):
+  def __init__ (self):
+    super (MethodTestInterface, self).__init__()
+  def method_with_bools (self, input): # bool
+    _plic_rp = RapicornRope.RemoteProcedure()
+    _plic_arg = _plic_rp.args.add()
+    _plic_arg.vint64 = input
+  def method_with_ints (self, input): # int
+    _plic_rp = RapicornRope.RemoteProcedure()
+    _plic_arg = _plic_rp.args.add()
+    _plic_arg.vint64 = input
+  def method_with_floats (self, input): # float
+    _plic_rp = RapicornRope.RemoteProcedure()
+    _plic_arg = _plic_rp.args.add()
+    _plic_arg.vdouble = input
+  def method_with_string (self, input): # string
+    _plic_rp = RapicornRope.RemoteProcedure()
+    _plic_arg = _plic_rp.args.add()
+    _plic_arg.vstring = input
+  def method_with_enum (self, input): # QuickEnum
+    _plic_rp = RapicornRope.RemoteProcedure()
+    _plic_arg = _plic_rp.args.add()
+    _plic_arg.vint64 = input
+  def method_with_record (self, input): # QuickRecord
+    _plic_rp = RapicornRope.RemoteProcedure()
+    _plic_arg = _plic_rp.args.add()
+    _plic_arg = QuickRecord.create (input)
+    QuickRecord.to_proto (_plic_arg.vrec, input)
+  def method_with_sequence (self, input): # QuickSequence
+    _plic_rp = RapicornRope.RemoteProcedure()
+    _plic_arg = _plic_rp.args.add()
+    _plic_arg = QuickSequence.create (input)
+    QuickSequence.to_proto (_plic_arg.vseq, input)
+  def method_with_interface (self, input): # GrandChild
+    _plic_rp = RapicornRope.RemoteProcedure()
+    _plic_arg = _plic_rp.args.add()
+    _plic_arg.vstring (Instance2StringCast (input))
+
 class SomeInterface (__BaseClass__):
   def __init__ (self):
     super (SomeInterface, self).__init__()

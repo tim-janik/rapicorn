@@ -284,6 +284,33 @@ public:
 class GrandChild : public Descendant {
 public:
 };
+enum QuickEnum {
+  ZERO = 0,
+};
+struct QuickRecord {
+  int             int1;
+  int             int2;
+  bool to_proto   (ProtoRecord &) const;
+  bool from_proto (const ProtoRecord &);
+  inline QuickRecord () { int1 = 0; int2 = 0; }
+};
+struct QuickSequence {
+  std::vector<double> somefloat;
+  bool to_proto   (ProtoSequence &) const;
+  bool from_proto (const ProtoSequence &);
+};
+
+class MethodTestInterface {
+public:
+  bool            method_with_bools (bool input);
+  int             method_with_ints (int input);
+  double          method_with_floats (double input);
+  std::string     method_with_string (std::string input);
+  QuickEnum       method_with_enum (QuickEnum input);
+  QuickRecord     method_with_record (QuickRecord input);
+  QuickSequence   method_with_sequence (QuickSequence input);
+  GrandChild&     method_with_interface (GrandChild &input);
+};
 
 class SomeInterface {
 public:
@@ -904,9 +931,212 @@ static bool handle_UIWidgetArea_on_click2in (const RemoteProcedure &_rope_rp,
 
 
 
-void SomeInterface::use_record (SomeRecord rr) {
+bool QuickRecord::to_proto (ProtoRecord &dst) const {
+  RemoteProcedure_Record &rpr = RPRecordCast (dst);
+  RemoteProcedure_Argument *field;
+  field = rpr.add_fields();
+  field->set_type (RemoteProcedure::INT);
+  field->set_vint64 (int1);
+  field = rpr.add_fields();
+  field->set_type (RemoteProcedure::INT);
+  field->set_vint64 (int2);
+  return true;
+}
+bool QuickRecord::from_proto (const ProtoRecord &src) {
+  const RemoteProcedure_Record &rpr = RPRecordCast (src);
+  if (rpr.fields_size() < 2) return false;
+  const RemoteProcedure_Argument *field;
+  field = &rpr.fields (0);
+  if (field->type() != RemoteProcedure::INT) return false;
+  if (!field->has_vint64()) return false;  int1 = field->vint64();
+  field = &rpr.fields (1);
+  if (field->type() != RemoteProcedure::INT) return false;
+  if (!field->has_vint64()) return false;  int2 = field->vint64();
+  return true;
+}
+
+bool QuickSequence::to_proto (ProtoSequence &dst) const {
+  RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
+  const size_t len = somefloat.size();
+  for (size_t k = 0; k < len; k++) {
+    rps.add_vdouble (somefloat[k]);
+  }
+  return true;
+}
+bool QuickSequence::from_proto (const ProtoSequence &src) {
+  const RemoteProcedure_Sequence &rps = RPSequenceCast (src);
+  const size_t len = rps.vdouble_size();
+  for (size_t k = 0; k < len; k++) {
+    somefloat.push_back (rps.vdouble (k));
+  }
+  return true;
+}
+
+bool MethodTestInterface::method_with_bools (bool input) {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000b);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
+  arg->set_type (RemoteProcedure::INT);
+  arg->set_vint64 (input);
+  return 0; // FIXME
+}
+int MethodTestInterface::method_with_ints (int input) {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def000c);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
+  arg->set_type (RemoteProcedure::INT);
+  arg->set_vint64 (input);
+  return 0; // FIXME
+}
+double MethodTestInterface::method_with_floats (double input) {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def000d);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
+  arg->set_type (RemoteProcedure::FLOAT);
+  arg->set_vdouble (input);
+  return 0; // FIXME
+}
+std::string MethodTestInterface::method_with_string (std::string input) {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def000e);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
+  arg->set_type (RemoteProcedure::STRING);
+  arg->set_vstring (input);
+  return 0; // FIXME
+}
+QuickEnum MethodTestInterface::method_with_enum (QuickEnum input) {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def000f);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
+  arg->set_type (RemoteProcedure::ENUM);
+  arg->set_vint64 (input);
+  return QuickEnum (0); // FIXME
+}
+QuickRecord MethodTestInterface::method_with_record (QuickRecord input) {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def0010);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
+  arg->set_type (RemoteProcedure::RECORD);
+  if (!input.to_proto (ProtoRecordCast (*arg->mutable_vrec()))) die();
+  return QuickRecord(); // FIXME
+}
+QuickSequence MethodTestInterface::method_with_sequence (QuickSequence input) {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def0011);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
+  arg->set_type (RemoteProcedure::SEQUENCE);
+  if (!input.to_proto (ProtoSequenceCast (*arg->mutable_vseq()))) die();
+  return QuickSequence(); // FIXME
+}
+GrandChild& MethodTestInterface::method_with_interface (GrandChild &input) {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def0012);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
+  arg->set_type (RemoteProcedure::INTERFACE);
+  arg->set_vstring (Instance2StringCast (input));
+  return *(GrandChild*) NULL; // FIXME
+}
+
+static bool handle_MethodTestInterface_method_with_bools (const RemoteProcedure &_rope_rp,
+                          RemoteProcedure_Argument *_rope_aret) {
+  bool input;
+  if (_rope_rp.args_size() != 1) return false;
+  const RemoteProcedure_Argument *_rope_arg;
+  _rope_arg = &_rope_rp.args (0);
+  if (_rope_arg->type() != RemoteProcedure::INT) return false;
+  if (!_rope_arg->has_vint64()) return false;  input = _rope_arg->vint64();
+  (void) _rope_aret;
+  return true;
+}
+static bool handle_MethodTestInterface_method_with_ints (const RemoteProcedure &_rope_rp,
+                          RemoteProcedure_Argument *_rope_aret) {
+  int input;
+  if (_rope_rp.args_size() != 1) return false;
+  const RemoteProcedure_Argument *_rope_arg;
+  _rope_arg = &_rope_rp.args (0);
+  if (_rope_arg->type() != RemoteProcedure::INT) return false;
+  if (!_rope_arg->has_vint64()) return false;  input = _rope_arg->vint64();
+  (void) _rope_aret;
+  return true;
+}
+static bool handle_MethodTestInterface_method_with_floats (const RemoteProcedure &_rope_rp,
+                          RemoteProcedure_Argument *_rope_aret) {
+  double input;
+  if (_rope_rp.args_size() != 1) return false;
+  const RemoteProcedure_Argument *_rope_arg;
+  _rope_arg = &_rope_rp.args (0);
+  if (_rope_arg->type() != RemoteProcedure::FLOAT) return false;
+  if (!_rope_arg->has_vdouble()) return false;  input = _rope_arg->vdouble();
+  (void) _rope_aret;
+  return true;
+}
+static bool handle_MethodTestInterface_method_with_string (const RemoteProcedure &_rope_rp,
+                          RemoteProcedure_Argument *_rope_aret) {
+  std::string input;
+  if (_rope_rp.args_size() != 1) return false;
+  const RemoteProcedure_Argument *_rope_arg;
+  _rope_arg = &_rope_rp.args (0);
+  if (_rope_arg->type() != RemoteProcedure::STRING) return false;
+  if (!_rope_arg->has_vstring()) return false;  input = _rope_arg->vstring();
+  (void) _rope_aret;
+  return true;
+}
+static bool handle_MethodTestInterface_method_with_enum (const RemoteProcedure &_rope_rp,
+                          RemoteProcedure_Argument *_rope_aret) {
+  QuickEnum input;
+  if (_rope_rp.args_size() != 1) return false;
+  const RemoteProcedure_Argument *_rope_arg;
+  _rope_arg = &_rope_rp.args (0);
+  if (_rope_arg->type() != RemoteProcedure::ENUM) return false;
+  if (!_rope_arg->has_vint64()) return false;  input = QuickEnum (_rope_arg->vint64());
+  (void) _rope_aret;
+  return true;
+}
+static bool handle_MethodTestInterface_method_with_record (const RemoteProcedure &_rope_rp,
+                          RemoteProcedure_Argument *_rope_aret) {
+  QuickRecord input;
+  if (_rope_rp.args_size() != 1) return false;
+  const RemoteProcedure_Argument *_rope_arg;
+  _rope_arg = &_rope_rp.args (0);
+  if (_rope_arg->type() != RemoteProcedure::RECORD) return false;
+  if (!_rope_arg->has_vrec() || !input.from_proto (ProtoRecordCast (_rope_arg->vrec()))) return false;
+  (void) _rope_aret;
+  return true;
+}
+static bool handle_MethodTestInterface_method_with_sequence (const RemoteProcedure &_rope_rp,
+                          RemoteProcedure_Argument *_rope_aret) {
+  QuickSequence input;
+  if (_rope_rp.args_size() != 1) return false;
+  const RemoteProcedure_Argument *_rope_arg;
+  _rope_arg = &_rope_rp.args (0);
+  if (_rope_arg->type() != RemoteProcedure::SEQUENCE) return false;
+  if (!_rope_arg->has_vseq() || !input.from_proto (ProtoSequenceCast (_rope_arg->vseq()))) return false;
+  (void) _rope_aret;
+  return true;
+}
+static bool handle_MethodTestInterface_method_with_interface (const RemoteProcedure &_rope_rp,
+                          RemoteProcedure_Argument *_rope_aret) {
+  GrandChild *input;
+  if (_rope_rp.args_size() != 1) return false;
+  const RemoteProcedure_Argument *_rope_arg;
+  _rope_arg = &_rope_rp.args (0);
+  if (_rope_arg->type() != RemoteProcedure::INTERFACE) return false;
+  if (!_rope_arg->has_vstring()) return false;  input = Instance4StringCast<GrandChild> (_rope_arg->vstring());
+  (void) _rope_aret;
+  return true;
+}
+
+void SomeInterface::use_record (SomeRecord rr) {
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def0013);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_type (RemoteProcedure::RECORD);
@@ -951,7 +1181,23 @@ bool rope_callee_handler () {
     return handle_UIWidgetArea_on_click2out (_rope_rp, _rope_aret);
   case 0x0def000a: // UIWidgetArea::on_click2in
     return handle_UIWidgetArea_on_click2in (_rope_rp, _rope_aret);
-  case 0x0def000b: // SomeInterface::use_record
+  case 0x0def000b: // MethodTestInterface::method_with_bools
+    return handle_MethodTestInterface_method_with_bools (_rope_rp, _rope_aret);
+  case 0x0def000c: // MethodTestInterface::method_with_ints
+    return handle_MethodTestInterface_method_with_ints (_rope_rp, _rope_aret);
+  case 0x0def000d: // MethodTestInterface::method_with_floats
+    return handle_MethodTestInterface_method_with_floats (_rope_rp, _rope_aret);
+  case 0x0def000e: // MethodTestInterface::method_with_string
+    return handle_MethodTestInterface_method_with_string (_rope_rp, _rope_aret);
+  case 0x0def000f: // MethodTestInterface::method_with_enum
+    return handle_MethodTestInterface_method_with_enum (_rope_rp, _rope_aret);
+  case 0x0def0010: // MethodTestInterface::method_with_record
+    return handle_MethodTestInterface_method_with_record (_rope_rp, _rope_aret);
+  case 0x0def0011: // MethodTestInterface::method_with_sequence
+    return handle_MethodTestInterface_method_with_sequence (_rope_rp, _rope_aret);
+  case 0x0def0012: // MethodTestInterface::method_with_interface
+    return handle_MethodTestInterface_method_with_interface (_rope_rp, _rope_aret);
+  case 0x0def0013: // SomeInterface::use_record
     return handle_SomeInterface_use_record (_rope_rp, _rope_aret);
   default:
     die();

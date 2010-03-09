@@ -87,6 +87,20 @@ class GrandChild :
   Descendant
 {
 };
+struct QuickRecord {
+  int             int1;
+  int             int2;
+};
+class MethodTestInterface {
+  bool                method_with_bools (bool input);
+  int                 method_with_ints (int input);
+  float               method_with_floats (float input);
+  string              method_with_string (string input);
+  QuickEnum           method_with_enum (QuickEnum input);
+  QuickRecord         method_with_record (QuickRecord input);
+  QuickSequence       method_with_sequence (QuickSequence input);
+  GrandChild          method_with_interface (GrandChild input);
+};
 class SomeInterface {
   void                use_record (SomeRecord rr);
 };
