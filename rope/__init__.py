@@ -36,6 +36,9 @@ class Application (object):
   @classmethod
   def execute_loops (klass):
     return klass.__rapicorn_trampoline__ (0xA002)
-app = Application()
+# app = Application()
 
 del globals()['pyRapicorn']
+
+print "TEST0:" # FIXME
+print Application.__pyrope_trampoline__ (0x0def0005, "AppName", [ "--first-arg", "--second-arg"])
