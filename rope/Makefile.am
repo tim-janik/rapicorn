@@ -23,11 +23,12 @@ pyrapicorn_cc_sources = $(strip		\
 
 # === Python module ===
 pyrapicorndir          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
-pyrapicorn_PYTHON      = __init__.py
+pyrapicorn_PYTHON      = __init__.py pyRapicornStub.py
 pyrapicorn_LTLIBRARIES = pyRapicorn.la
 pyRapicorn_la_SOURCES  = $(pyrapicorn_cc_sources)
 pyRapicorn_la_LDFLAGS  = -module -avoid-version -no-undefined -export-symbols-regex pyRapicorn
 pyRapicorn_la_LIBADD   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la $(PROTOBUF_LIBS)
+$(pyrapicorn_LTLIBRARIES): $(pyrapicorn_PYTHON) # force python source creation
 python-call-info:
 	@echo 'PYTHONPATH="$$PYTHONPATH:$(pythondir)" python # -c "import @RAPICORN_NAMESPACE_NAME@"'
 
@@ -61,7 +62,7 @@ protocol-pb2.cc: protocol-pb2.hh
 CLEANFILES += protocol.pb.h protocol.pb.cc protocol-pb2.cc protocol-pb2.hh
 
 # === pycstub.cc ===
-pycstub.cc: $(srcdir)/PyCStub.py $(srcdir)/base.idl
+pycstub.cc: $(srcdir)/base.idl $(srcdir)/PyCStub.py
 	: # compile IDL definitions into pycstub.cc
 	${PLICINT} -O=$(srcdir)/PyCStub $(srcdir)/base.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
@@ -69,6 +70,12 @@ $(srcdir)/pyrope.cc: pycstub.cc
 CLEANFILES += xgen-pycstub.cc pycstub.cc
 
 EXTRA_DIST += protocol.proto
+
+# === pyRapicornStub.py ===
+pyRapicornStub.py: $(srcdir)/base.idl $(srcdir)/PyStub.py
+	${PLICINT} -O=$(srcdir)/PyStub $(srcdir)/base.idl -o xgen-$(@F)
+	mv xgen-$(@F) $@
+CLEANFILES += xgen-pyRapicornStub.py pyRapicornStub.py
 
 # === PyStub test ===
 EXTRA_DIST += testpystub.ref
