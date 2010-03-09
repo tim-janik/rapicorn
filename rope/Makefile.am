@@ -31,7 +31,7 @@ pyRapicorn_la_LIBADD   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la $(P
 python-call-info:
 	@echo 'PYTHONPATH="$$PYTHONPATH:$(pythondir)" python # -c "import @RAPICORN_NAMESPACE_NAME@"'
 
-# === libraries ===
+# === C++ Binding lib ===
 noinst_LTLIBRARIES                                = librapicornrope@RAPICORN_RELEASE@.la
 librapicornrope@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/rope
 librapicornrope@RAPICORN_RELEASE@include_HEADERS  = $(rope_public_headers)
@@ -83,6 +83,7 @@ check-pystub:
 #	$(_@) rm -f testpystub.pyc protocol_pb2.py  protocol_pb2.pyc
 check-local: check-pystub
 
+# === PyCStub test ===
 check-pycstub:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} -O=$(srcdir)/PyCStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
@@ -94,6 +95,7 @@ check-pycstub:
 EXTRA_DIST += testpycstub.ref
 check-local: check-pycstub
 
+# === CppStub test ===
 check-cppstub:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} -O=$(srcdir)/CppStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
@@ -105,11 +107,14 @@ check-cppstub:
 EXTRA_DIST += testcppstub.ref
 check-local: check-cppstub
 
+# === base.idl test with PLIC ===
 check-base-idl:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} $(srcdir)/base.idl > /dev/null ; $(call TSTRESULT)
 EXTRA_DIST += base.idl
 check-local: check-base-idl
+
+# === PyStub base.idl test ===
 check-pystub-for-base.idl:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} -O=$(srcdir)/PyStub $(srcdir)/base.idl | $(PYTHON) ; $(call TSTRESULT)
