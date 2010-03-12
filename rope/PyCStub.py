@@ -46,9 +46,9 @@ PyIntLong_AsLongLong (PyObject *intlong)
     return PyLong_AsLongLong (intlong);
 }
 
-static bool pyrope_send_message (unsigned int, RemoteProcedure_Record&);
+static bool pyrope_send_message (RemoteProcedure&);
 #ifndef HAVE_PYROPE_SEND_MESSAGE
-static bool pyrope_send_message (unsigned int, RemoteProcedure_Record&)
+static bool pyrope_send_message (RemoteProcedure&)
 { return false; } // testing stub
 #endif
 """
@@ -244,22 +244,23 @@ class Generator:
     s += 'static bool\n'
     s += 'pyrope__%s_%s (PyObject *self, PyObject *args, PyObject **retp)\n' % (type_info.name, m.name)
     s += '{\n'
-    s += '  RemoteProcedure_Record rpr;\n'
+    s += '  RemoteProcedure rp;\n'
+    s += '  rp.set_proc_id (0x%08x);\n' % self.type_id (m)
     if m.args:
-      s += '  RemoteProcedure_Argument *field;\n'
+      s += '  RemoteProcedure_Argument *arg;\n'
       s += '  PyObject *item;\n'
     s += '  bool success = false;\n'
     s += '  if (PyTuple_Size (args) < %d) GOTO_ERROR();\n' % (pytoff + len (m.args))
-    field_counter = 0
+    arg_counter = 0
     for fl in m.args:
-      s += '  item = PyTuple_GET_ITEM (args, %d);\n' % (pytoff + field_counter)
-      field_counter += 1
-      s += '  field = rpr.add_fields();\n'
+      s += '  item = PyTuple_GET_ITEM (args, %d);\n' % (pytoff + arg_counter)
+      arg_counter += 1
+      s += '  arg = rp.add_args();\n'
       if fl[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += self.generate_frompy_convert ('field->mutable', fl[0], fl[1])
+        s += self.generate_frompy_convert ('arg->mutable', fl[0], fl[1])
       else:
-        s += self.generate_frompy_convert ('field->set', fl[0], fl[1])
-    s += '  success = pyrope_send_message (0x%08x, rpr);\n' % self.type_id (m)
+        s += self.generate_frompy_convert ('arg->set', fl[0], fl[1])
+    s += '  success = pyrope_send_message (rp);\n'
     s += ' error:\n'
     s += '  return success;\n'
     s += '}\n'

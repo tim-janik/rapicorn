@@ -114,14 +114,13 @@ MODULE_INIT_FUNCTION (void) // conventional dlmodule initializer
 #include <google/protobuf/text_format.h>
 
 static bool
-pyrope_send_message (uint32                                  msgid,
-                     Rapicorn::Rope::RemoteProcedure_Record &rec)
+pyrope_send_message (Rapicorn::Rope::RemoteProcedure &proc)
 {
   // FIXME: debugging stub
   std::string string;
-  if (!google::protobuf::TextFormat::PrintToString (rec, &string))
+  if (!google::protobuf::TextFormat::PrintToString (proc, &string))
     string = "<ERROR/>";
-  printf ("Remote Procedure Call, id=0x%08x:\n%s\n", msgid, string.c_str());
+  printf ("Remote Procedure Call, id=0x%08x:\n%s\n", proc.proc_id(), string.c_str());
 
   return false;
 #define HAVE_PYROPE_SEND_MESSAGE 1
