@@ -238,6 +238,7 @@ class Generator:
     return s
   def generate_caller_func (self, type_info, m, swl):
     s = ''
+    pytoff = 1 # tuple offset
     swl += [ 'case 0x%08x: // %s::%s\n' % (self.type_id (m), type_info.name, m.name) ]
     swl += [ '  return pyrope__%s_%s (_py_self, _py_args, _py_retp);\n' % (type_info.name, m.name) ]
     s += 'static bool\n'
@@ -248,10 +249,10 @@ class Generator:
       s += '  RemoteProcedure_Argument *field;\n'
       s += '  PyObject *item;\n'
     s += '  bool success = false;\n'
-    s += '  if (PyTuple_Size (args) < %d) GOTO_ERROR();\n' % len (m.args)
+    s += '  if (PyTuple_Size (args) < %d) GOTO_ERROR();\n' % (pytoff + len (m.args))
     field_counter = 0
     for fl in m.args:
-      s += '  item = PyTuple_GET_ITEM (args, %d);\n' % field_counter
+      s += '  item = PyTuple_GET_ITEM (args, %d);\n' % (pytoff + field_counter)
       field_counter += 1
       s += '  field = rpr.add_fields();\n'
       if fl[1].storage in (Decls.RECORD, Decls.SEQUENCE):
