@@ -302,25 +302,25 @@ class UIWidgetArea (__BaseClass__):
     self.sig_void_signal = __Signal__ ('void_signal')
     self.sig_sample_signal = __Signal__ ('sample_signal')
   def simple_method (self): # float
-    return self.__pyrope_trampoline__ (0x0def0001, )
+    return self.__pyrope_trampoline__ (0x0def0001, self)
   def single_arg (self, n): # float
-    return self.__pyrope_trampoline__ (0x0def0002, n)
+    return self.__pyrope_trampoline__ (0x0def0002, self, n)
   def single_arg2 (self, n): # float
-    return self.__pyrope_trampoline__ (0x0def0003, n)
+    return self.__pyrope_trampoline__ (0x0def0003, self, n)
   def two_args (self, n, r): # float
-    return self.__pyrope_trampoline__ (0x0def0004, n, r)
+    return self.__pyrope_trampoline__ (0x0def0004, self, n, r)
   def two_args2 (self, n, r): # float
-    return self.__pyrope_trampoline__ (0x0def0005, n, r)
+    return self.__pyrope_trampoline__ (0x0def0005, self, n, r)
   def multi_args (self, n, r, i, s, y): # float
-    return self.__pyrope_trampoline__ (0x0def0006, n, r, i, s, y)
+    return self.__pyrope_trampoline__ (0x0def0006, self, n, r, i, s, y)
   def self_method (self, ba1, ba2): # float
-    return self.__pyrope_trampoline__ (0x0def0007, ba1, ba2)
+    return self.__pyrope_trampoline__ (0x0def0007, self, ba1, ba2)
   def void_method (self): # one way
-    return self.__pyrope_trampoline__ (0x0def0008, )
+    return self.__pyrope_trampoline__ (0x0def0008, self)
   def on_click2out (self): # string
-    return self.__pyrope_trampoline__ (0x0def0009, )
+    return self.__pyrope_trampoline__ (0x0def0009, self)
   def on_click2in (self, command): # one way
-    return self.__pyrope_trampoline__ (0x0def000a, command)
+    return self.__pyrope_trampoline__ (0x0def000a, self, command)
   def __sig_void_signal__ (self): pass # default handler
   def __sig_sample_signal__ (self): pass # default handler
 
@@ -369,27 +369,27 @@ class MethodTestInterface (__BaseClass__):
   def __init__ (self):
     super (MethodTestInterface, self).__init__()
   def method_with_bools (self, input): # bool
-    return self.__pyrope_trampoline__ (0x0def000b, input)
+    return self.__pyrope_trampoline__ (0x0def000b, self, input)
   def method_with_ints (self, input): # int
-    return self.__pyrope_trampoline__ (0x0def000c, input)
+    return self.__pyrope_trampoline__ (0x0def000c, self, input)
   def method_with_floats (self, input): # float
-    return self.__pyrope_trampoline__ (0x0def000d, input)
+    return self.__pyrope_trampoline__ (0x0def000d, self, input)
   def method_with_string (self, input): # string
-    return self.__pyrope_trampoline__ (0x0def000e, input)
+    return self.__pyrope_trampoline__ (0x0def000e, self, input)
   def method_with_enum (self, input): # QuickEnum
-    return self.__pyrope_trampoline__ (0x0def000f, input)
+    return self.__pyrope_trampoline__ (0x0def000f, self, input)
   def method_with_record (self, input): # QuickRecord
-    return self.__pyrope_trampoline__ (0x0def0010, input)
+    return self.__pyrope_trampoline__ (0x0def0010, self, input)
   def method_with_sequence (self, input): # QuickSequence
-    return self.__pyrope_trampoline__ (0x0def0011, input)
+    return self.__pyrope_trampoline__ (0x0def0011, self, input)
   def method_with_interface (self, input): # GrandChild
-    return self.__pyrope_trampoline__ (0x0def0012, input)
+    return self.__pyrope_trampoline__ (0x0def0012, self, input)
 
 class SomeInterface (__BaseClass__):
   def __init__ (self):
     super (SomeInterface, self).__init__()
   def use_record (self, rr): # one way
-    return self.__pyrope_trampoline__ (0x0def0013, rr)
+    return self.__pyrope_trampoline__ (0x0def0013, self, rr)
 
 class ButtonArea (__BaseClass__):
   def __init__ (self):

@@ -99,7 +99,7 @@ class Generator:
       s += '  %s_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();\n' % prefix
     elif argtype.storage == Decls.FLOAT:
       s += '  %s_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();\n' % prefix
-    elif argtype.storage in (Decls.STRING, Decls.INTERFACE):
+    elif argtype.storage == Decls.STRING:
       s += '  { char *s = NULL; Py_ssize_t len = 0;\n'
       s += '    if (PyString_AsStringAndSize (item, &s, &len) < 0) GOTO_ERROR();\n'
       s += '    %s_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }\n' % prefix
@@ -107,6 +107,11 @@ class Generator:
       s += '  if (!rope_frompy_%s (item, *%s_vrec())) GOTO_ERROR();\n' % (argtype.name, prefix)
     elif argtype.storage == Decls.SEQUENCE:
       s += '  if (!rope_frompy_%s (item, *%s_vseq())) GOTO_ERROR();\n' % (argtype.name, prefix)
+    elif argtype.storage == Decls.INTERFACE:
+      s += '  { char *s = NULL; Py_ssize_t len = 0;\n'
+      s += '    PyObject *iobj = PyObject_GetAttrString (item, "__pyrope__object__"); if (!iobj) GOTO_ERROR();\n'
+      s += '    if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();\n'
+      s += '    %s_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }\n' % prefix
     else: # FUNC VOID
       raise RuntimeError ("Unexpected storage type: " + argtype.storage)
     return s
@@ -238,7 +243,7 @@ class Generator:
     return s
   def generate_caller_func (self, type_info, m, swl):
     s = ''
-    pytoff = 1 # tuple offset
+    pytoff = 2 # tuple offset, skip method id and self
     swl += [ 'case 0x%08x: // %s::%s\n' % (self.type_id (m), type_info.name, m.name) ]
     swl += [ '  return pyrope__%s_%s (_py_self, _py_args, _py_retp);\n' % (type_info.name, m.name) ]
     s += 'static bool\n'
@@ -246,14 +251,17 @@ class Generator:
     s += '{\n'
     s += '  RemoteProcedure rp;\n'
     s += '  rp.set_proc_id (0x%08x);\n' % self.type_id (m)
-    if m.args:
-      s += '  RemoteProcedure_Argument *arg;\n'
-      s += '  PyObject *item;\n'
+    s += '  PyObject *item;\n'
+    s += '  RemoteProcedure_Argument *arg;\n'
     s += '  bool success = false;\n'
     s += '  if (PyTuple_Size (args) < %d) GOTO_ERROR();\n' % (pytoff + len (m.args))
-    arg_counter = 0
+    arg_counter = pytoff - 1
+    s += '  item = PyTuple_GET_ITEM (args, %d);  // self\n' % arg_counter
+    arg_counter += 1
+    s += '  arg = rp.add_args();\n'
+    s += self.generate_frompy_convert ('arg->set', 'self', type_info)
     for fl in m.args:
-      s += '  item = PyTuple_GET_ITEM (args, %d);\n' % (pytoff + arg_counter)
+      s += '  item = PyTuple_GET_ITEM (args, %d); // %s\n' % (arg_counter, fl[0])
       arg_counter += 1
       s += '  arg = rp.add_args();\n'
       if fl[1].storage in (Decls.RECORD, Decls.SEQUENCE):

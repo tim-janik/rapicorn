@@ -193,7 +193,7 @@ class Generator:
     else:
       s += '): # %s\n' % m.rtype.name
     s += '  return self.__pyrope_trampoline__ (0x%08x, ' % self.type_id (m)
-    s += ', '.join (l[1:])
+    s += ', '.join (l)
     s += ')\n'
     return s
   def inherit_reduce (self, type_list):

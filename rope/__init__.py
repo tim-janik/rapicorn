@@ -27,4 +27,6 @@ Application.__pyrope_trampoline__ = pyRapicorn.__pyrope_trampoline__
 del globals()['pyRapicorn']
 
 print "TEST0:" # FIXME
-print Application()._init_with_x11 ("AppName", [ "--first-arg", "--second-arg"])
+app = Application()
+app.__pyrope__object__ = 'dummy'
+print app._init_with_x11 ("AppName", [ "--first-arg", "--second-arg"])
