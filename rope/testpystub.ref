@@ -302,53 +302,25 @@ class UIWidgetArea (__BaseClass__):
     self.sig_void_signal = __Signal__ ('void_signal')
     self.sig_sample_signal = __Signal__ ('sample_signal')
   def simple_method (self): # float
-    _plic_rp = RapicornRope.RemoteProcedure()
+    return self.__pyrope_trampoline__ (0x0def0001, )
   def single_arg (self, n): # float
-    _plic_rp = RapicornRope.RemoteProcedure()
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vint64 = n
+    return self.__pyrope_trampoline__ (0x0def0002, n)
   def single_arg2 (self, n): # float
-    _plic_rp = RapicornRope.RemoteProcedure()
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vint64 = n
+    return self.__pyrope_trampoline__ (0x0def0003, n)
   def two_args (self, n, r): # float
-    _plic_rp = RapicornRope.RemoteProcedure()
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vint64 = n
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vdouble = r
+    return self.__pyrope_trampoline__ (0x0def0004, n, r)
   def two_args2 (self, n, r): # float
-    _plic_rp = RapicornRope.RemoteProcedure()
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vint64 = n
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vdouble = r
+    return self.__pyrope_trampoline__ (0x0def0005, n, r)
   def multi_args (self, n, r, i, s, y): # float
-    _plic_rp = RapicornRope.RemoteProcedure()
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vint64 = n
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vdouble = r
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vint64 = i
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vstring = s
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vdouble = y
+    return self.__pyrope_trampoline__ (0x0def0006, n, r, i, s, y)
   def self_method (self, ba1, ba2): # float
-    _plic_rp = RapicornRope.RemoteProcedure()
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vstring (Instance2StringCast (ba1))
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vstring (Instance2StringCast (ba2))
+    return self.__pyrope_trampoline__ (0x0def0007, ba1, ba2)
   def void_method (self): # one way
-    _plic_rp = RapicornRope.RemoteProcedure()
+    return self.__pyrope_trampoline__ (0x0def0008, )
   def on_click2out (self): # string
-    _plic_rp = RapicornRope.RemoteProcedure()
+    return self.__pyrope_trampoline__ (0x0def0009, )
   def on_click2in (self, command): # one way
-    _plic_rp = RapicornRope.RemoteProcedure()
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vstring = command
+    return self.__pyrope_trampoline__ (0x0def000a, command)
   def __sig_void_signal__ (self): pass # default handler
   def __sig_sample_signal__ (self): pass # default handler
 
@@ -397,48 +369,27 @@ class MethodTestInterface (__BaseClass__):
   def __init__ (self):
     super (MethodTestInterface, self).__init__()
   def method_with_bools (self, input): # bool
-    _plic_rp = RapicornRope.RemoteProcedure()
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vint64 = input
+    return self.__pyrope_trampoline__ (0x0def000b, input)
   def method_with_ints (self, input): # int
-    _plic_rp = RapicornRope.RemoteProcedure()
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vint64 = input
+    return self.__pyrope_trampoline__ (0x0def000c, input)
   def method_with_floats (self, input): # float
-    _plic_rp = RapicornRope.RemoteProcedure()
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vdouble = input
+    return self.__pyrope_trampoline__ (0x0def000d, input)
   def method_with_string (self, input): # string
-    _plic_rp = RapicornRope.RemoteProcedure()
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vstring = input
+    return self.__pyrope_trampoline__ (0x0def000e, input)
   def method_with_enum (self, input): # QuickEnum
-    _plic_rp = RapicornRope.RemoteProcedure()
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vint64 = input
+    return self.__pyrope_trampoline__ (0x0def000f, input)
   def method_with_record (self, input): # QuickRecord
-    _plic_rp = RapicornRope.RemoteProcedure()
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg = QuickRecord.create (input)
-    QuickRecord.to_proto (_plic_arg.vrec, input)
+    return self.__pyrope_trampoline__ (0x0def0010, input)
   def method_with_sequence (self, input): # QuickSequence
-    _plic_rp = RapicornRope.RemoteProcedure()
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg = QuickSequence.create (input)
-    QuickSequence.to_proto (_plic_arg.vseq, input)
+    return self.__pyrope_trampoline__ (0x0def0011, input)
   def method_with_interface (self, input): # GrandChild
-    _plic_rp = RapicornRope.RemoteProcedure()
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg.vstring (Instance2StringCast (input))
+    return self.__pyrope_trampoline__ (0x0def0012, input)
 
 class SomeInterface (__BaseClass__):
   def __init__ (self):
     super (SomeInterface, self).__init__()
   def use_record (self, rr): # one way
-    _plic_rp = RapicornRope.RemoteProcedure()
-    _plic_arg = _plic_rp.args.add()
-    _plic_arg = SomeRecord.create (rr)
-    SomeRecord.to_proto (_plic_arg.vrec, rr)
+    return self.__pyrope_trampoline__ (0x0def0013, rr)
 
 class ButtonArea (__BaseClass__):
   def __init__ (self):

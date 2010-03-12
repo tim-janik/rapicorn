@@ -64,6 +64,23 @@ class __Signal__:
 class Generator:
   def __init__ (self):
     self.ntab = 26
+    self.iddict = {}
+    self.idcounter = 0x0def0000
+  def type_id (self, type):
+    types = []
+    while type:
+      types += [ type ]
+      if hasattr (type, 'ownertype'):
+        type = type.ownertype
+      elif hasattr (type, 'namespace'):
+        type = type.namespace
+      else:
+        type = None
+    types = tuple (types)
+    if not self.iddict.has_key (types):
+      self.idcounter += 1
+      self.iddict[types] = self.idcounter
+    return self.iddict[types]
   def tabwidth (self, n):
     self.ntab = n
   def format_to_tab (self, string, indent = ''):
@@ -175,12 +192,9 @@ class Generator:
       s += '): # one way\n'
     else:
       s += '): # %s\n' % m.rtype.name
-    s += '  _plic_rp = RapicornRope.RemoteProcedure()\n'
-    for a in m.args:
-      s += '  _plic_arg = _plic_rp.args.add()\n'
-      if a[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  _plic_arg = %s.create (%s)\n' % (a[1].name, a[0])
-      s += self.generate_to_proto ('_plic_arg', a[1], a[0])
+    s += '  return self.__pyrope_trampoline__ (0x%08x, ' % self.type_id (m)
+    s += ', '.join (l[1:])
+    s += ')\n'
     return s
   def inherit_reduce (self, type_list):
     def hasancestor (child, parent):

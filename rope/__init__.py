@@ -21,24 +21,10 @@ More details at http://www.rapicorn.org/.
 
 from pyRapicorn import *
 
-app = None
-class Application (object):
-  __pyrope_trampoline__ = pyRapicorn.__pyrope_trampoline__
-  def __new__ (klass):
-    if app: return app # singleton
-    self = super (Application, klass).__new__ (klass)
-    return self
-  @classmethod
-  def create_window (klass, winname, **kwords):
-    args = [k + '=' + str (v) for k,v in kwords.items()]
-    print "ARGS:", args
-    return klass.__rapicorn_trampoline__ (0xA001, winname)
-  @classmethod
-  def execute_loops (klass):
-    return klass.__rapicorn_trampoline__ (0xA002)
-# app = Application()
+from pyRapicornStub import *
+Application.__pyrope_trampoline__ = pyRapicorn.__pyrope_trampoline__
 
 del globals()['pyRapicorn']
 
 print "TEST0:" # FIXME
-print Application.__pyrope_trampoline__ (0x0def0005, "AppName", [ "--first-arg", "--second-arg"])
+print Application()._init_with_x11 ("AppName", [ "--first-arg", "--second-arg"])
