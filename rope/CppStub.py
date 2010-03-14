@@ -99,7 +99,7 @@ class Generator:
     else:
       f = '%%-%ds' % self.ntab  # '%-20s'
       return indent + f % string
-  def format_arg (self, ident, type, interfacechar = '&'):
+  def format_arg (self, ident, type, defaultinit, interfacechar = '&'):
     s = ''
     s += self.type2cpp (type.name) + ' '
     if type.storage == Decls.INTERFACE:
@@ -318,7 +318,7 @@ class Generator:
       s += 'static bool handle_%s_%s (const RemoteProcedure &_rope_rp,\n' % (type_info.name, m.name)
       s += '                          RemoteProcedure_Argument *_rope_aret) {\n'
       for a in m.args:
-        s += '  ' + self.format_arg (a[0], a[1], '*') + ';\n'
+        s += '  ' + self.format_arg (a[0], a[1], a[2], '*') + ';\n'
       #s += '  RemoteProcedure_Argument *arg; int arg_counter = 0;\n'
       #q = '%s %s::%s (' % (self.type2cpp (m.rtype.name), type_info.name, m.name)
       s += '  if (_rope_rp.args_size() != %d) return false;\n' % len (m.args)

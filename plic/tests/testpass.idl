@@ -248,10 +248,10 @@ interface UIWidgetArea {
   float dummy;
   float simple_method ();
   float single_arg (int n);
-  float single_arg2 (int n = Int ("Baz"));
+  float single_arg2 (int n = 5);
   float two_args (int n, float r);
-  float two_args2 (int n = Int ("Baz"), float r = Float ("Zonk"));
-  float multi_args (int n, float r, int i, string s = String ("String ding"), float y);
+  float two_args2 (int n = 6, float r = 7.7);
+  float multi_args (int n, float r, int i, string s = ("String ding"), float y);
   float self_method (UIWidgetArea ba1, InterfaceTests::UIWidgetArea ba2);
   void void_method();
   /* sample property accessors: */

@@ -56,7 +56,7 @@ class Generator:
     else:
       f = '%%-%ds' % self.ntab  # '%-20s'
       return indent + f % string
-  def format_arg (self, ident, type):
+  def format_arg (self, ident, type, defaultinit):
     s = ''
     s += type.name + ' ' + ident
     return s

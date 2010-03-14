@@ -93,7 +93,7 @@ class TypeInfo (BaseDecl):
     if self.storage == SEQUENCE:
       self.elements = None      # holds: ident, TypeInfo
     if self.storage == FUNC:
-      self.args = []            # holds: (ident, TypeInfo)
+      self.args = []            # holds: (ident, TypeInfo, defaultinit)
       self.rtype = None         # holds: TypeInfo
       self.ownertype = None    # TypeInfo
     if self.storage == INTERFACE:
@@ -138,11 +138,11 @@ class TypeInfo (BaseDecl):
     assert isinstance (ident, str)
     assert isinstance (type, TypeInfo)
     self.fields += [ (ident, type) ]
-  def add_arg (self, ident, type):
+  def add_arg (self, ident, type, defaultinit):
     assert self.storage == FUNC
     assert isinstance (ident, str)
     assert isinstance (type, TypeInfo)
-    self.args += [ (ident, type) ]
+    self.args += [ (ident, type, defaultinit) ]
   def set_rtype (self, type):
     assert self.storage == FUNC
     assert isinstance (type, TypeInfo)

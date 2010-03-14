@@ -103,7 +103,7 @@ class YYGlobals (object):
         raise NameError ('duplicate member name: ' + method[0])
       mdict[method[0]] = true
       method_args = method[3]
-      self.parse_assign_auxdata (method_args)
+      # self.parse_assign_auxdata (method_args)
       mtype = Decls.TypeInfo (method[0], Decls.FUNC, yy.impl_includes)
       mtype.set_rtype (method[1])
       adict = {}
@@ -111,7 +111,7 @@ class YYGlobals (object):
         if adict.has_key (arg[0]):
           raise NameError ('duplicate method arg name: ' + method[0] + ' (..., ' + arg[0] + '...)')
         adict[arg[0]] = true
-        mtype.add_arg (arg[0], arg[1])
+        mtype.add_arg (arg[0], arg[1], arg[2])
       iface.add_method (mtype, method[0] in sigset)
   def parse_assign_auxdata (self, fieldlist):
     for field in fieldlist:
@@ -123,6 +123,21 @@ class YYGlobals (object):
       except AuxData.Error, ex:
         raise TypeError (str (ex))
       typeinfo.update_auxdata (adict)
+  def argcheck (self, aident, atype, adef):
+    if adef == None:
+      pass # no default arg
+    elif atype.storage in (Decls.INT, Decls.FLOAT):
+      if not isinstance (adef, (bool, int, float)):
+        raise AttributeError ('expecting numeric initializer: %s = %s' % (aident, adef))
+    elif atype.storage in (Decls.RECORD, Decls.SEQUENCE, Decls.FUNC, Decls.INTERFACE):
+      if adef != 0:
+        raise AttributeError ('expecting null initializer for structured argument: %s = %s' % (aident, adef))
+    elif atype.storage in (Decls.STRING):
+      if not TS (adef):
+        raise AttributeError ('expecting string initializer: %s = %s' % (aident, adef))
+    else:
+      raise AttributeError ('invalid default initializer: %s = %s' % (aident, adef))
+    return (aident, atype, adef)
   def nsadd_sequence (self, name, sfields):
     AIn (name)
     if len (sfields) < 1:
@@ -418,13 +433,13 @@ rule field_decl:
 
 rule method_args:
         typename                                {{ atype = yy.clone_type (typename) }}
-        IDENT                                   {{ aident = IDENT; aaux = () }}
-        [ '=' auxinit                           {{ aaux = auxinit }}
-        ]                                       {{ args = [ (aident, atype, aaux) ] }}
+        IDENT                                   {{ aident = IDENT; adef = None }}
+        [ '=' expression                        {{ adef = expression }}
+        ]                                       {{ a = yy.argcheck (aident, atype, adef); args = [ a ] }}
         ( ',' typename                          {{ atype = yy.clone_type (typename) }}
-          IDENT                                 {{ aident = IDENT; aaux = () }}
-          [ '=' auxinit                         {{ aaux = auxinit }}
-          ]                                     {{ args += [ (aident, atype, aaux) ] }}
+          IDENT                                 {{ aident = IDENT; adef = None }}
+          [ '=' expression                      {{ adef = expression }}
+          ]                                     {{ a = yy.argcheck (aident, atype, adef); args += [ a ] }}
         ) *                                     {{ return args }}
 
 rule field_or_method_or_signal_decl:
@@ -438,9 +453,9 @@ rule field_or_method_or_signal_decl:
         IDENT                                   {{ dident = IDENT; kind = 'field' }}
         ( [ '=' auxinit                         {{ daux = auxinit }}
           ]
-        | '\('                                  {{ kind = signal and 'signal' or 'func' }}
+        | r'\('                                 {{ kind = signal and 'signal' or 'func' }}
               [ method_args                     {{ fargs = method_args }}
-              ] '\)'                            # [ '=' auxinit {{ daux = auxinit }} ]
+              ] r'\)'                           # [ '=' auxinit {{ daux = auxinit }} ]
         ) ';'                                   {{ if kind == 'field': ANS (signal, dident) }}
                                                 {{ dtype = yy.clone_type (dtname, void = kind != 'field') }}
                                                 {{ if kind == 'signal': dtype.set_collector (coll) }}

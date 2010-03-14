@@ -94,7 +94,7 @@
 .../testfail.idl:67: TypeError: invalid type definition: = Float ('"x"', '"X coord"', 0, 0, 100.0, 0.5, '"ro"')
 >  ...ng s = Float ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
 >                                                             ^
-.../testfail.idl:69: Trying to find one of '::', IDENT, '\)'
+.../testfail.idl:69: Trying to find one of '::', IDENT, r'\)'
 >  namespace PlicFailTest { interface I { int method (,); }; // invalid method arg separator
 >                                                    ^
 .../testfail.idl:70: NameError: duplicate member name: method
