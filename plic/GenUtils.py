@@ -17,3 +17,28 @@
 import Decls
 true, false, length = (True, False, len)
 
+def static_vars (*varname_value_list):
+  def decorate (func):
+    for tup in varname_value_list:
+      varname, value = tup
+      setattr (func, varname, value)
+    return func
+  return decorate
+
+@static_vars (("iddict", {}), ("idcounter", 0x0def0000))
+def type_id (type):
+  self = type_id
+  types = []
+  while type:
+    types += [ type ]
+    if hasattr (type, 'ownertype'):
+      type = type.ownertype
+    elif hasattr (type, 'namespace'):
+      type = type.namespace
+    else:
+      type = None
+  types = tuple (types)
+  if not self.iddict.has_key (types):
+    self.idcounter += 1
+    self.iddict[types] = self.idcounter
+  return self.iddict[types]
