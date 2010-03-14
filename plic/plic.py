@@ -25,7 +25,6 @@ import yapps2runtime as runtime
 import Parser, Decls, GenUtils # pre-import modules for Generator modules
 true, false, length = (True, False, len)
 
-debugging = 0 # causes exceptions to bypass IDL-file parser error handling
 backends = [ 'GType', 'TypePackage', 'Rapicorn' ]
 
 class ParseError (Exception):
