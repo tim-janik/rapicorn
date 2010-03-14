@@ -368,22 +368,22 @@ class QuickRecord (__BaseRecord__):
 class MethodTestInterface (__BaseClass__):
   def __init__ (self):
     super (MethodTestInterface, self).__init__()
-  def method_with_bools (self, input): # bool
-    return self.__pyrope_trampoline__ (0x0def000b, self, input)
-  def method_with_ints (self, input): # int
-    return self.__pyrope_trampoline__ (0x0def000c, self, input)
-  def method_with_floats (self, input): # float
-    return self.__pyrope_trampoline__ (0x0def000d, self, input)
-  def method_with_string (self, input): # string
-    return self.__pyrope_trampoline__ (0x0def000e, self, input)
-  def method_with_enum (self, input): # QuickEnum
-    return self.__pyrope_trampoline__ (0x0def000f, self, input)
-  def method_with_record (self, input): # QuickRecord
-    return self.__pyrope_trampoline__ (0x0def0010, self, input)
-  def method_with_sequence (self, input): # QuickSequence
-    return self.__pyrope_trampoline__ (0x0def0011, self, input)
-  def method_with_interface (self, input): # GrandChild
-    return self.__pyrope_trampoline__ (0x0def0012, self, input)
+  def method_with_bools (self, input, optval): # bool
+    return self.__pyrope_trampoline__ (0x0def000b, self, input, optval)
+  def method_with_ints (self, input, optval): # int
+    return self.__pyrope_trampoline__ (0x0def000c, self, input, optval)
+  def method_with_floats (self, input, optval): # float
+    return self.__pyrope_trampoline__ (0x0def000d, self, input, optval)
+  def method_with_string (self, input, optval): # string
+    return self.__pyrope_trampoline__ (0x0def000e, self, input, optval)
+  def method_with_enum (self, input, optval): # QuickEnum
+    return self.__pyrope_trampoline__ (0x0def000f, self, input, optval)
+  def method_with_record (self, input, optval): # QuickRecord
+    return self.__pyrope_trampoline__ (0x0def0010, self, input, optval)
+  def method_with_sequence (self, input, optval): # QuickSequence
+    return self.__pyrope_trampoline__ (0x0def0011, self, input, optval)
+  def method_with_interface (self, input, optval): # GrandChild
+    return self.__pyrope_trampoline__ (0x0def0012, self, input, optval)
 
 class SomeInterface (__BaseClass__):
   def __init__ (self):

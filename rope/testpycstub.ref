@@ -1245,7 +1245,7 @@ pyrope__MethodTestInterface_method_with_bools (PyObject *self, PyObject *args, P
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
-  if (PyTuple_Size (args) < 3) GOTO_ERROR();
+  if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
   { char *s = NULL; Py_ssize_t len = 0;
@@ -1253,6 +1253,9 @@ pyrope__MethodTestInterface_method_with_bools (PyObject *self, PyObject *args, P
     if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
     arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
   item = PyTuple_GET_ITEM (args, 2); // input
+  arg = rp.add_args();
+  arg->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 3); // optval
   arg = rp.add_args();
   arg->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
   success = pyrope_send_message (rp);
@@ -1267,7 +1270,7 @@ pyrope__MethodTestInterface_method_with_ints (PyObject *self, PyObject *args, Py
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
-  if (PyTuple_Size (args) < 3) GOTO_ERROR();
+  if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
   { char *s = NULL; Py_ssize_t len = 0;
@@ -1275,6 +1278,9 @@ pyrope__MethodTestInterface_method_with_ints (PyObject *self, PyObject *args, Py
     if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
     arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
   item = PyTuple_GET_ITEM (args, 2); // input
+  arg = rp.add_args();
+  arg->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 3); // optval
   arg = rp.add_args();
   arg->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
   success = pyrope_send_message (rp);
@@ -1289,7 +1295,7 @@ pyrope__MethodTestInterface_method_with_floats (PyObject *self, PyObject *args, 
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
-  if (PyTuple_Size (args) < 3) GOTO_ERROR();
+  if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
   { char *s = NULL; Py_ssize_t len = 0;
@@ -1297,6 +1303,9 @@ pyrope__MethodTestInterface_method_with_floats (PyObject *self, PyObject *args, 
     if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
     arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
   item = PyTuple_GET_ITEM (args, 2); // input
+  arg = rp.add_args();
+  arg->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 3); // optval
   arg = rp.add_args();
   arg->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
   success = pyrope_send_message (rp);
@@ -1311,7 +1320,7 @@ pyrope__MethodTestInterface_method_with_string (PyObject *self, PyObject *args, 
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
-  if (PyTuple_Size (args) < 3) GOTO_ERROR();
+  if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
   { char *s = NULL; Py_ssize_t len = 0;
@@ -1319,6 +1328,11 @@ pyrope__MethodTestInterface_method_with_string (PyObject *self, PyObject *args, 
     if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
     arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
   item = PyTuple_GET_ITEM (args, 2); // input
+  arg = rp.add_args();
+  { char *s = NULL; Py_ssize_t len = 0;
+    if (PyString_AsStringAndSize (item, &s, &len) < 0) GOTO_ERROR();
+    arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
+  item = PyTuple_GET_ITEM (args, 3); // optval
   arg = rp.add_args();
   { char *s = NULL; Py_ssize_t len = 0;
     if (PyString_AsStringAndSize (item, &s, &len) < 0) GOTO_ERROR();
@@ -1335,7 +1349,7 @@ pyrope__MethodTestInterface_method_with_enum (PyObject *self, PyObject *args, Py
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
-  if (PyTuple_Size (args) < 3) GOTO_ERROR();
+  if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
   { char *s = NULL; Py_ssize_t len = 0;
@@ -1343,6 +1357,9 @@ pyrope__MethodTestInterface_method_with_enum (PyObject *self, PyObject *args, Py
     if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
     arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
   item = PyTuple_GET_ITEM (args, 2); // input
+  arg = rp.add_args();
+  arg->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 3); // optval
   arg = rp.add_args();
   arg->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
   success = pyrope_send_message (rp);
@@ -1357,7 +1374,7 @@ pyrope__MethodTestInterface_method_with_record (PyObject *self, PyObject *args, 
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
-  if (PyTuple_Size (args) < 3) GOTO_ERROR();
+  if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
   { char *s = NULL; Py_ssize_t len = 0;
@@ -1365,6 +1382,9 @@ pyrope__MethodTestInterface_method_with_record (PyObject *self, PyObject *args, 
     if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
     arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
   item = PyTuple_GET_ITEM (args, 2); // input
+  arg = rp.add_args();
+  if (!rope_frompy_QuickRecord (item, *arg->mutable_vrec())) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 3); // optval
   arg = rp.add_args();
   if (!rope_frompy_QuickRecord (item, *arg->mutable_vrec())) GOTO_ERROR();
   success = pyrope_send_message (rp);
@@ -1379,7 +1399,7 @@ pyrope__MethodTestInterface_method_with_sequence (PyObject *self, PyObject *args
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
-  if (PyTuple_Size (args) < 3) GOTO_ERROR();
+  if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
   { char *s = NULL; Py_ssize_t len = 0;
@@ -1387,6 +1407,9 @@ pyrope__MethodTestInterface_method_with_sequence (PyObject *self, PyObject *args
     if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
     arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
   item = PyTuple_GET_ITEM (args, 2); // input
+  arg = rp.add_args();
+  if (!rope_frompy_QuickSequence (item, *arg->mutable_vseq())) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 3); // optval
   arg = rp.add_args();
   if (!rope_frompy_QuickSequence (item, *arg->mutable_vseq())) GOTO_ERROR();
   success = pyrope_send_message (rp);
@@ -1401,7 +1424,7 @@ pyrope__MethodTestInterface_method_with_interface (PyObject *self, PyObject *arg
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
-  if (PyTuple_Size (args) < 3) GOTO_ERROR();
+  if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
   { char *s = NULL; Py_ssize_t len = 0;
@@ -1409,6 +1432,12 @@ pyrope__MethodTestInterface_method_with_interface (PyObject *self, PyObject *arg
     if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
     arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
   item = PyTuple_GET_ITEM (args, 2); // input
+  arg = rp.add_args();
+  { char *s = NULL; Py_ssize_t len = 0;
+    PyObject *iobj = PyObject_GetAttrString (item, "__pyrope__object__"); if (!iobj) GOTO_ERROR();
+    if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
+    arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
+  item = PyTuple_GET_ITEM (args, 3); // optval
   arg = rp.add_args();
   { char *s = NULL; Py_ssize_t len = 0;
     PyObject *iobj = PyObject_GetAttrString (item, "__pyrope__object__"); if (!iobj) GOTO_ERROR();

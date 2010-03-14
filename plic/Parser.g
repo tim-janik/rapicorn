@@ -135,6 +135,9 @@ class YYGlobals (object):
     elif atype.storage in (Decls.STRING):
       if not TS (adef):
         raise AttributeError ('expecting string initializer: %s = %s' % (aident, adef))
+    elif atype.storage in (Decls.ENUM):
+      if not atype.has_option (number = adef):
+        raise AttributeError ('encountered invalid enum initializer: %s = %s' % (aident, adef))
     else:
       raise AttributeError ('invalid default initializer: %s = %s' % (aident, adef))
     return (aident, atype, adef)

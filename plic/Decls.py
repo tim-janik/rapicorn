@@ -133,6 +133,17 @@ class TypeInfo (BaseDecl):
     assert isinstance (blurb, str)
     assert isinstance (number, int)
     self.options += [ (ident, label, blurb, number) ]
+  def has_option (self, ident = None, label = None, blurb = None, number = None):
+    assert self.storage == ENUM
+    if (ident, label, blurb, number) == (None, None, None, None):
+      return len (self.options) > 0
+    for o in self.options:
+      if ((ident  == None or o[0] == ident) and
+          (label  == None or o[1] == label) and
+          (blurb  == None or o[2] == blurb) and
+          (number == None or o[3] == number)):
+        return true
+    return false
   def add_field (self, ident, type):
     assert self.storage == RECORD or self.storage == INTERFACE
     assert isinstance (ident, str)

@@ -275,14 +275,14 @@ record   QuickRecord   { int   int1; int int2; };
 sequence QuickSequence { float somefloat; };
 
 interface MethodTestInterface {
-  bool   method_with_bools  (bool   input);
-  int    method_with_ints   (int    input);
-  float  method_with_floats (float  input);
-  string method_with_string (string input);
-  QuickEnum     method_with_enum      (QuickEnum     input);
-  QuickRecord   method_with_record    (QuickRecord   input);
-  QuickSequence method_with_sequence  (QuickSequence input);
-  GrandChild    method_with_interface (GrandChild input);
+  bool   method_with_bools  (bool   input, bool   optval = FALSE);
+  int    method_with_ints   (int    input, int    optval = -3 - -1);
+  float  method_with_floats (float  input, float  optval = 9.9 + 3.e+2);
+  string method_with_string (string input, string optval = "default");
+  QuickEnum     method_with_enum      (QuickEnum     input, QuickEnum     optval = ZERO);
+  QuickRecord   method_with_record    (QuickRecord   input, QuickRecord   optval = 0);
+  QuickSequence method_with_sequence  (QuickSequence input, QuickSequence optval = 0);
+  GrandChild    method_with_interface (GrandChild    input, GrandChild    optval = 0);
 };
 
 }
