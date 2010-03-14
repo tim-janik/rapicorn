@@ -87,7 +87,7 @@ check-pystub:
 	$(_@) $(PROTOC) $(srcdir)/protocol.proto --python_out=. # protocol_pb2.py
 	$(_@) $(PYTHON) -c "import py_compile; py_compile.compile ('$(srcdir)/testpystub.ref', 'testpystub.pyc')" && \
 	  $(PYTHON) $(srcdir)/testpystub.ref ; $(call TSTRESULT)
-#	$(_@) rm -f testpystub.pyc protocol_pb2.py  protocol_pb2.pyc
+CLEANFILES += testpystub.pyc protocol_pb2.py  protocol_pb2.pyc
 check-local: check-pystub
 
 # === PyCStub test ===
