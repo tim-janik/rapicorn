@@ -115,6 +115,8 @@ class TypeInfo (BaseDecl):
     ti = TypeInfo (newname, self.storage, isimpl)
     ti.typedef_origin = self.typedef_origin
     ti.options += self.options
+    if hasattr (self, 'namespace'):
+      ti.namespace = self.namespace
     if hasattr (self, 'fields'):
       ti.fields += self.fields
     if hasattr (self, 'args'):
