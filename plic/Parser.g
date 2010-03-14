@@ -391,9 +391,9 @@ rule enumeration_rest:                          {{ evalues = [] }}
 rule enumeration_value:
         IDENT                                   {{ l = [IDENT, None, "", ""]; AIn (IDENT) }}
         [ '='
-          ( r'\(' enumeration_args              {{ l = [ IDENT ] + enumeration_args }}
-            r'\)'
-          | r'(?!\()'                           # disambiguate from enumeration arg list
+          ( '\(' enumeration_args               {{ l = [ IDENT ] + enumeration_args }}
+            '\)'
+          | '(?!\()'                            # disambiguate from enumeration arg list
             expression                          {{ if TS (expression): l = [ None, expression ]; }}
                                                 {{ else:               l = [ expression, "" ] }}
                                                 {{ l = [ IDENT ] + l + [ "" ] }}
@@ -418,12 +418,12 @@ rule auxinit:
                                                 {{ tiident = '' }}
         [ IDENT                                 {{ tiident = IDENT }}
         ]
-        r'\('                                   {{ tiargs = [] }}
+        '\('                                    {{ tiargs = [] }}
           [ expression                          {{ tiargs += [ expression ] }}
             ( ',' expression                    {{ tiargs += [ expression ] }}
             )*
           ]
-        r'\)'                                   {{ return (tiident, tiargs) }}
+        '\)'                                    {{ return (tiident, tiargs) }}
 
 rule field_decl:
         typename                                {{ vtype = yy.clone_type (typename) }}
@@ -453,9 +453,9 @@ rule field_or_method_or_signal_decl:
         IDENT                                   {{ dident = IDENT; kind = 'field' }}
         ( [ '=' auxinit                         {{ daux = auxinit }}
           ]
-        | r'\('                                 {{ kind = signal and 'signal' or 'func' }}
+        | '\('                                  {{ kind = signal and 'signal' or 'func' }}
               [ method_args                     {{ fargs = method_args }}
-              ] r'\)'                           # [ '=' auxinit {{ daux = auxinit }} ]
+              ] '\)'                            # [ '=' auxinit {{ daux = auxinit }} ]
         ) ';'                                   {{ if kind == 'field': ANS (signal, dident) }}
                                                 {{ dtype = yy.clone_type (dtname, void = kind != 'field') }}
                                                 {{ if kind == 'signal': dtype.set_collector (coll) }}
@@ -499,22 +499,22 @@ rule const_assignment:
 rule expression: summation                      {{ return summation }}
 rule summation:
           factor                                {{ result = factor }}
-        ( r'\+' factor                          {{ AN (result); result = result + factor }}
-        | r'-'  factor                          {{ result = result - factor }}
+        ( '\+' factor                           {{ AN (result); result = result + factor }}
+        | '-'  factor                           {{ result = result - factor }}
         )*                                      {{ return result }}
 rule factor:
           signed                                {{ result = signed }}
-        ( r'\*' signed                          {{ result = result * signed }}
-        | r'/'  signed                          {{ result = result / signed }}
-        | r'%'  signed                          {{ AN (result); result = result % signed }}
+        ( '\*' signed                           {{ result = result * signed }}
+        | '/'  signed                           {{ result = result / signed }}
+        | '%'  signed                           {{ AN (result); result = result % signed }}
         )*                                      {{ return result }}
 rule signed:
           power                                 {{ return power }}
-        | r'\+' signed                          {{ return +signed }}
-        | r'-'  signed                          {{ return -signed }}
+        | '\+' signed                           {{ return +signed }}
+        | '-'  signed                           {{ return -signed }}
 rule power:
           term                                  {{ result = term }}
-        ( r'\*\*' signed                        {{ result = result ** signed }}
+        ( '\*\*' signed                         {{ result = result ** signed }}
         )*                                      {{ return result }}
 rule term:                                      # numerical/string term
           '(TRUE|True|true)'                    {{ return 1; }}
@@ -525,11 +525,11 @@ rule term:                                      # numerical/string term
         | INTEGER                               {{ return int (INTEGER); }}
         | FULLFLOAT                             {{ return float (FULLFLOAT); }}
         | FRACTFLOAT                            {{ return float (FRACTFLOAT); }}
-        | r'\(' expression r'\)'                {{ return expression; }}
+        | '\(' expression '\)'                  {{ return expression; }}
         | string                                {{ return string; }}
 
 rule string:
-          '_' r'\(' plain_string r'\)'          {{ return '_(' + plain_string + ')' }}
+          '_' '\(' plain_string '\)'            {{ return '_(' + plain_string + ')' }}
         | plain_string                          {{ return plain_string }}
 rule plain_string:
         STRING                                  {{ result = quote (eval (STRING)) }}

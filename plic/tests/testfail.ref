@@ -19,7 +19,7 @@
 .../testfail.idl:17: TypeError: redefining existing identifier: TRUE
 >  namespace PlicFailTest { Const TRUE = 17; // invalid constant name
 >                                          ^
-.../testfail.idl:19: Trying to find ';': STRING, IDENT, r'\)', '_', r'\*\*', r'\*', r'/', r'%', r'\+', r'-', ';', ',', '}', got '_'
+.../testfail.idl:19: Trying to find ';': STRING, IDENT, '\)', '_', '\*\*', '\*', '/', '%', '\+', '-', ';', ',', '}', got '_'
 >  namespace PlicFailTest { Const tmp = "invalid" _("i18n string") "concatenation";
 >                                                 ^
 .../testfail.idl:21: Trying to find one of '}', ';', 'namespace', 'Const', 'enumeration', 'enum', 'typedef', 'sequence', 'record', 'interface', EOF, 'include'
@@ -94,7 +94,7 @@
 .../testfail.idl:67: TypeError: invalid type definition: = Float ('"x"', '"X coord"', 0, 0, 100.0, 0.5, '"ro"')
 >  ...ng s = Float ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
 >                                                             ^
-.../testfail.idl:69: Trying to find one of '::', IDENT, r'\)'
+.../testfail.idl:69: Trying to find one of '::', IDENT, '\)'
 >  namespace PlicFailTest { interface I { int method (,); }; // invalid method arg separator
 >                                                    ^
 .../testfail.idl:70: NameError: duplicate member name: method
