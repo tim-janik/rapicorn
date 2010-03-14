@@ -25,6 +25,13 @@ class BaseDecl (object):
     self.loc = ()
     self.hint = ''
     self.docu = ()
+  def list_namespaces (self):
+    nslist = []
+    ns = self.namespace
+    while ns:
+      nslist = [ ns ] + nslist
+      ns = ns.namespace
+    return nslist
 
 VOID, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE = tuple ('vidserqfc')
 def storage_name (storage):
@@ -44,15 +51,17 @@ def storage_name (storage):
   return name
 
 class Namespace (BaseDecl):
-  def __init__ (self, name, impl_list):
+  def __init__ (self, name, outer, impl_list):
     super (Namespace, self).__init__()
     self.name = name
+    self.namespace = outer
     self.cmembers = [] # holds: (name, content)
     self.tmembers = [] # holds: (name, content)
     self.type_dict = {}
     self.const_dict = {}
     self.impl_set = set()
     self.global_impl_list = impl_list
+    self.full_name = "::". join ([x.name for x in self.list_namespaces()] + [self.name])
   def add_const (self, name, content, isimpl):
     self.cmembers += [ (name, content) ]
     self.const_dict[name] = self.cmembers[-1]

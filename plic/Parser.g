@@ -46,14 +46,14 @@ class YYGlobals (object):
   def nsadd_const (self, name, value):
     if not isinstance (value, (int, long, float, str)):
       raise TypeError ('constant expression does not yield string or number: ' + repr (typename))
-    self.namespaces[0].add_const (name, value, yy.impl_includes)
+    self.namespaces[-1].add_const (name, value, yy.impl_includes)
   def nsadd_typedef (self, fielddecl):
     typename,srctype,auxinit = fielddecl
     AIn (typename)
     typeinfo = srctype.clone (typename, yy.impl_includes)
     typeinfo.typedef_origin = srctype
     self.parse_assign_auxdata ([ (typename, typeinfo, auxinit) ])
-    self.namespaces[0].add_type (typeinfo)
+    self.namespaces[-1].add_type (typeinfo)
   def nsadd_evalue (self, evalue_ident, evalue_label, evalue_blurb, evalue_number = None):
     AS (evalue_ident)
     if evalue_number == None:
@@ -68,7 +68,7 @@ class YYGlobals (object):
     enum = Decls.TypeInfo (enum_name, Decls.ENUM, yy.impl_includes)
     for ev in enum_values:
       enum.add_option (*ev)
-    self.namespaces[0].add_type (enum)
+    self.namespaces[-1].add_type (enum)
   def nsadd_record (self, name, rfields):
     AIn (name)
     if len (rfields) < 1:
@@ -81,13 +81,13 @@ class YYGlobals (object):
         raise NameError ('duplicate field name: ' + field[0])
       fdict[field[0]] = true
       rec.add_field (field[0], field[1])
-    self.namespaces[0].add_type (rec)
+    self.namespaces[-1].add_type (rec)
   def nsadd_interface (self, name, prerequisites):
     AIn (name)
     iface = Decls.TypeInfo (name, Decls.INTERFACE, yy.impl_includes)
     for prq in prerequisites:
       iface.add_prerequisite (yy.namespace_lookup (prq, astype = True))
-    self.namespaces[0].add_type (iface)
+    self.namespaces[-1].add_type (iface)
     return iface
   def interface_fill (self, iface, ifields, imethods, isignals):
     self.parse_assign_auxdata (ifields)
@@ -150,7 +150,7 @@ class YYGlobals (object):
     self.parse_assign_auxdata (sfields)
     seq = Decls.TypeInfo (name, Decls.SEQUENCE, yy.impl_includes)
     seq.set_elements (sfields[0][0], sfields[0][1])
-    self.namespaces[0].add_type (seq)
+    self.namespaces[-1].add_type (seq)
   def namespace_lookup (self, full_identifier, **flags):
     words = full_identifier.split ('::')
     isabs = words[0] == ''      # ::PrefixedName
@@ -162,21 +162,21 @@ class YYGlobals (object):
       candidates = self.namespaces
     # match inner namespaces by prefix
     if not targetns and not isabs and prefix:
-      iprefix = self.namespaces[0].name + '::' + prefix
+      iprefix = self.namespaces[-1].full_name + '::' + prefix
       for ns in self.ns_list:
-        if ns.name == iprefix:
+        if ns.full_name == iprefix:
           targetns = [ns]
           break
     # match outer namespaces by prefix
     if not targetns and not isabs and prefix:
       for ns in self.namespaces:
-        if ns.name.endswith (prefix):
+        if ns.full_name.endswith (prefix):
           targetns = [ns]
           break
     # match absolute namespaces by prefix
     if not targetns and prefix:
       for ns in self.ns_list:
-        if ns.name == prefix:
+        if ns.full_name == prefix:
           targetns = [ns]
           break
     # identifier lookup
@@ -213,15 +213,17 @@ class YYGlobals (object):
     full_ident = "::". join ([ns.name for ns in self.namespaces] + [ident])
     namespace = None
     for ns in self.ns_list:
-      if ns.name == ident:
+      if ns.full_name == full_ident:
         namespace = ns
+        break
     if not namespace:
-      namespace = Decls.Namespace (full_ident, self.impl_list)
+      outer = self.namespaces[-1] if self.namespaces else None
+      namespace = Decls.Namespace (ident, outer, self.impl_list)
       self.ns_list.append (namespace)
-    self.namespaces = [ namespace ] + self.namespaces
+    self.namespaces += [ namespace ]
   def namespace_close (self):
     assert len (self.namespaces)
-    self.namespaces = self.namespaces[1:]
+    self.namespaces = self.namespaces[:-1]
   def handle_include (self, includefilename, origscanner, implinc):
     import os
     dir = os.path.dirname (origscanner.filename) # directory for source relative includes
