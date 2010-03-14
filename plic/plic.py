@@ -22,7 +22,7 @@ pkginstall_configvars = {
 }
 sys.path.insert (0, pkginstall_configvars["pyutilsdir"])
 import yapps2runtime as runtime
-import Parser, Decls
+import Parser, Decls, GenUtils # pre-import modules for Generator modules
 true, false, length = (True, False, len)
 
 debugging = 0 # causes exceptions to bypass IDL-file parser error handling
