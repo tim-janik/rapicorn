@@ -18,7 +18,7 @@
 
 More details at http://www.rapicorn.org
 """
-import Decls, re
+import Decls, GenUtils, re
 
 base_code = """
 #include <core/rapicornsignal.hh>
@@ -74,23 +74,6 @@ template<class CLASS> static inline CLASS* Instance4StringCast (const std::strin
 class Generator:
   def __init__ (self):
     self.ntab = 26
-    self.iddict = {}
-    self.idcounter = 0x0def0000
-  def type_id (self, type):
-    types = []
-    while type:
-      types += [ type ]
-      if hasattr (type, 'ownertype'):
-        type = type.ownertype
-      elif hasattr (type, 'namespace'):
-        type = type.namespace
-      else:
-        type = None
-    types = tuple (types)
-    if not self.iddict.has_key (types):
-      self.idcounter += 1
-      self.iddict[types] = self.idcounter
-    return self.iddict[types]
   def tabwidth (self, n):
     self.ntab = n
   def format_to_tab (self, string, indent = ''):
@@ -292,7 +275,7 @@ class Generator:
       s += (',\n' + argindent * ' ').join (l)
       s += ') {\n'
       s += '  RemoteProcedure rp;\n'
-      s += '  rp.set_proc_id (0x%08x);\n' % self.type_id (m)
+      s += '  rp.set_proc_id (0x%08x);\n' % GenUtils.type_id (m)
       if m.args:
         s += '  RemoteProcedure_Argument *arg;\n'
       for a in m.args:
@@ -313,7 +296,7 @@ class Generator:
   def generate_class_callee_impl (self, type_info, swl):
     s = ''
     for m in type_info.methods:
-      swl += [ 'case 0x%08x: // %s::%s\n' % (self.type_id (m), type_info.name, m.name) ]
+      swl += [ 'case 0x%08x: // %s::%s\n' % (GenUtils.type_id (m), type_info.name, m.name) ]
       swl += [ '  return handle_%s_%s (_rope_rp, _rope_aret);\n' % (type_info.name, m.name) ]
       s += 'static bool handle_%s_%s (const RemoteProcedure &_rope_rp,\n' % (type_info.name, m.name)
       s += '                          RemoteProcedure_Argument *_rope_aret) {\n'

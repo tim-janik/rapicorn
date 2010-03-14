@@ -18,7 +18,7 @@
 
 More details at http://www.rapicorn.org
 """
-import Decls, re
+import Decls, GenUtils, re
 
 def strcquote (string):
   result = ''
@@ -64,23 +64,6 @@ class __Signal__:
 class Generator:
   def __init__ (self):
     self.ntab = 26
-    self.iddict = {}
-    self.idcounter = 0x0def0000
-  def type_id (self, type):
-    types = []
-    while type:
-      types += [ type ]
-      if hasattr (type, 'ownertype'):
-        type = type.ownertype
-      elif hasattr (type, 'namespace'):
-        type = type.namespace
-      else:
-        type = None
-    types = tuple (types)
-    if not self.iddict.has_key (types):
-      self.idcounter += 1
-      self.iddict[types] = self.idcounter
-    return self.iddict[types]
   def tabwidth (self, n):
     self.ntab = n
   def format_to_tab (self, string, indent = ''):
@@ -192,7 +175,7 @@ class Generator:
       s += '): # one way\n'
     else:
       s += '): # %s\n' % m.rtype.name
-    s += '  return self.__pyrope_trampoline__ (0x%08x, ' % self.type_id (m)
+    s += '  return self.__pyrope_trampoline__ (0x%08x, ' % GenUtils.type_id (m)
     s += ', '.join (l)
     s += ')\n'
     return s
