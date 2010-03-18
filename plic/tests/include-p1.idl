@@ -1,1 +1,7 @@
 include "include-p2.idl";
+
+namespace IncludeCheck {
+interface SomeInterface {
+  void use_record (IncludeTest::SomeRecord rr);
+};
+}

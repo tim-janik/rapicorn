@@ -385,12 +385,6 @@ class MethodTestInterface (__BaseClass__):
   def method_with_interface (self, input, optval): # GrandChild
     return self.__pyrope_trampoline__ (0x0def0012, self, input, optval)
 
-class SomeInterface (__BaseClass__):
-  def __init__ (self):
-    super (SomeInterface, self).__init__()
-  def use_record (self, rr): # one way
-    return self.__pyrope_trampoline__ (0x0def0013, self, rr)
-
 class ButtonArea (__BaseClass__):
   def __init__ (self):
     super (ButtonArea, self).__init__()

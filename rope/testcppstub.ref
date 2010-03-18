@@ -319,11 +319,6 @@ public:
   GrandChild&     method_with_interface (GrandChild &input,
                                          GrandChild &optval);
 };
-
-class SomeInterface {
-public:
-  void            use_record (SomeRecord rr);
-};
 enum ClickType {
   CLICK_ON_PRESS = 1,
   CLICK_ON_RELEASE = 2,
@@ -1206,27 +1201,6 @@ static bool handle_MethodTestInterface_method_with_interface (const RemoteProced
   return true;
 }
 
-void SomeInterface::use_record (SomeRecord rr) {
-  RemoteProcedure rp;
-  rp.set_proc_id (0x0def0013);
-  RemoteProcedure_Argument *arg;
-  arg = rp.add_args();
-  arg->set_type (RemoteProcedure::RECORD);
-  if (!rr.to_proto (ProtoRecordCast (*arg->mutable_vrec()))) die();
-}
-
-static bool handle_SomeInterface_use_record (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
-  SomeRecord rr;
-  if (_rope_rp.args_size() != 1) return false;
-  const RemoteProcedure_Argument *_rope_arg;
-  _rope_arg = &_rope_rp.args (0);
-  if (_rope_arg->type() != RemoteProcedure::RECORD) return false;
-  if (!_rope_arg->has_vrec() || !rr.from_proto (ProtoRecordCast (_rope_arg->vrec()))) return false;
-  (void) _rope_aret;
-  return true;
-}
-
 
 
 bool rope_callee_handler () {
@@ -1269,8 +1243,6 @@ bool rope_callee_handler () {
     return handle_MethodTestInterface_method_with_sequence (_rope_rp, _rope_aret);
   case 0x0def0012: // MethodTestInterface::method_with_interface
     return handle_MethodTestInterface_method_with_interface (_rope_rp, _rope_aret);
-  case 0x0def0013: // SomeInterface::use_record
-    return handle_SomeInterface_use_record (_rope_rp, _rope_aret);
   default:
     die();
   }

@@ -24,8 +24,10 @@ installcheck-local: $(srcdir)/testpass.idl
 
 
 check-pass:	testpass.idl
-	@$(call TSTTITLE)
+	@$(call TSTTITLE, check testpass.idl)
 	$(_@) ${TESTPLIC} $(srcdir)/testpass.idl > /dev/null ; $(call TSTRESULT)
+	@$(call TSTTITLE, check include-p1.idl)
+	$(_@) ${TESTPLIC} $(srcdir)/include-p1.idl > /dev/null ; $(call TSTRESULT)
 
 check-fail:	testfail.idl
 	@$(call TSTTITLE)

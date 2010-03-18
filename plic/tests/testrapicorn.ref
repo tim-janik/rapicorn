@@ -101,9 +101,6 @@ class MethodTestInterface {
   QuickSequence       method_with_sequence (QuickSequence input, QuickSequence optval);
   GrandChild          method_with_interface (GrandChild input, GrandChild optval);
 };
-class SomeInterface {
-  void                use_record (SomeRecord rr);
-};
 class ButtonArea {
   typedef Signal<ButtonArea, bool (), CollectorUntil0<bool> > Signal_check_activate;
   typedef Signal<ButtonArea, void ()> Signal_activate;

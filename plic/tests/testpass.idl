@@ -288,11 +288,6 @@ interface MethodTestInterface {
 }
 
 include "include-p1.idl"; // test includes
-namespace IncludeCheck {
-interface SomeInterface {
-  void use_record (IncludeTest::SomeRecord rr);
-};
-}
 
 namespace RapicornPlicTest {
 
