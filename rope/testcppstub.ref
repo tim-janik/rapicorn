@@ -833,7 +833,7 @@ UIWidgetArea::single_arg2 (int n)
 }
 double
 UIWidgetArea::two_args (int n,
-                               double r)
+                        double r)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0004);
@@ -848,7 +848,7 @@ UIWidgetArea::two_args (int n,
 }
 double
 UIWidgetArea::two_args2 (int n,
-                                double r)
+                         double r)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0005);
@@ -863,10 +863,10 @@ UIWidgetArea::two_args2 (int n,
 }
 double
 UIWidgetArea::multi_args (int n,
-                                 double r,
-                                 int i,
-                                 std::string s,
-                                 double y)
+                          double r,
+                          int i,
+                          std::string s,
+                          double y)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0006);
@@ -890,7 +890,7 @@ UIWidgetArea::multi_args (int n,
 }
 double
 UIWidgetArea::self_method (UIWidgetArea &ba1,
-                                  UIWidgetArea &ba2)
+                           UIWidgetArea &ba2)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0007);
@@ -1130,7 +1130,7 @@ QuickSequence::from_proto (const ProtoSequence &src)
 
 bool
 MethodTestInterface::method_with_bools (bool input,
-                                             bool optval)
+                                        bool optval)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000b);
@@ -1145,7 +1145,7 @@ MethodTestInterface::method_with_bools (bool input,
 }
 int
 MethodTestInterface::method_with_ints (int input,
-                                           int optval)
+                                       int optval)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000c);
@@ -1160,7 +1160,7 @@ MethodTestInterface::method_with_ints (int input,
 }
 double
 MethodTestInterface::method_with_floats (double input,
-                                                double optval)
+                                         double optval)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000d);
@@ -1175,7 +1175,7 @@ MethodTestInterface::method_with_floats (double input,
 }
 std::string
 MethodTestInterface::method_with_string (std::string input,
-                                                     std::string optval)
+                                         std::string optval)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000e);
@@ -1190,7 +1190,7 @@ MethodTestInterface::method_with_string (std::string input,
 }
 QuickEnum
 MethodTestInterface::method_with_enum (QuickEnum input,
-                                                 QuickEnum optval)
+                                       QuickEnum optval)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000f);
@@ -1205,7 +1205,7 @@ MethodTestInterface::method_with_enum (QuickEnum input,
 }
 QuickRecord
 MethodTestInterface::method_with_record (QuickRecord input,
-                                                     QuickRecord optval)
+                                         QuickRecord optval)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0010);
@@ -1220,7 +1220,7 @@ MethodTestInterface::method_with_record (QuickRecord input,
 }
 QuickSequence
 MethodTestInterface::method_with_sequence (QuickSequence input,
-                                                         QuickSequence optval)
+                                           QuickSequence optval)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0011);
@@ -1235,7 +1235,7 @@ MethodTestInterface::method_with_sequence (QuickSequence input,
 }
 GrandChild&
 MethodTestInterface::method_with_interface (GrandChild &input,
-                                                        GrandChild &optval)
+                                            GrandChild &optval)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0012);
@@ -1392,10 +1392,10 @@ namespace RapicornPlicTest {
 
 
 } // RapicornPlicTest
+
 bool
-rope_callee_handler ()
+rope_callee_handler (const RemoteProcedure _rope_rp)
 {
-  const RemoteProcedure _rope_rp;
   RemoteProcedure_Argument _rope_aretmem, *_rope_aret = &_rope_aretmem;
   switch (_rope_rp.proc_id()) {
   case 0x0def0001: // UIWidgetArea::simple_method

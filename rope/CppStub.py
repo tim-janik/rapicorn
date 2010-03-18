@@ -318,7 +318,8 @@ class Generator:
     s = ''
     for m in type_info.methods:
       interfacechar = '&' if m.rtype.storage == Decls.INTERFACE else ''
-      q = '%s%s\n%s::%s (' % (self.type2cpp (m.rtype), interfacechar, type_info.name, m.name)
+      s += '%s%s\n' % (self.type2cpp (m.rtype), interfacechar)
+      q = '%s::%s (' % (type_info.name, m.name)
       s += q
       argindent = len (q)
       l = []
@@ -372,8 +373,7 @@ class Generator:
     return s
   def generate_callee_impl (self, switchlines):
     s = ''
-    s += 'bool\nrope_callee_handler ()\n{\n'
-    s += '  const RemoteProcedure _rope_rp;\n'
+    s += '\nbool\nrope_callee_handler (const RemoteProcedure _rope_rp)\n{\n'
     s += '  RemoteProcedure_Argument _rope_aretmem, *_rope_aret = &_rope_aretmem;\n'
     s += '  switch (_rope_rp.proc_id()) {\n'
     for swcase in switchlines:
