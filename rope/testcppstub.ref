@@ -15,34 +15,54 @@ typedef Rapicorn::Rope::RemoteProcedure RemoteProcedure;
 typedef Rapicorn::Rope::RemoteProcedure_Sequence RemoteProcedure_Sequence;
 typedef Rapicorn::Rope::RemoteProcedure_Record RemoteProcedure_Record;
 typedef Rapicorn::Rope::RemoteProcedure_Argument RemoteProcedure_Argument;
-static inline RemoteProcedure_Record& RPRecordCast (ProtoRecord &r) {
+static inline RemoteProcedure_Record&
+RPRecordCast (ProtoRecord &r)
+{
   return *(RemoteProcedure_Record*) &r;
 }
-static inline const RemoteProcedure_Record& RPRecordCast (const ProtoRecord &r) {
+static inline const RemoteProcedure_Record&
+RPRecordCast (const ProtoRecord &r)
+{
   return *(const RemoteProcedure_Record*) &r;
 }
-static inline ProtoRecord& ProtoRecordCast (RemoteProcedure_Record &r) {
+static inline ProtoRecord&
+ProtoRecordCast (RemoteProcedure_Record &r)
+{
   return *(ProtoRecord*) &r;
 }
-static inline const ProtoRecord& ProtoRecordCast (const RemoteProcedure_Record &r) {
+static inline const ProtoRecord&
+ProtoRecordCast (const RemoteProcedure_Record &r)
+{
   return *(const ProtoRecord*) &r;
 }
-static inline RemoteProcedure_Sequence& RPSequenceCast (ProtoSequence &r) {
+static inline RemoteProcedure_Sequence&
+RPSequenceCast (ProtoSequence &r)
+{
   return *(RemoteProcedure_Sequence*) &r;
 }
-static inline const RemoteProcedure_Sequence& RPSequenceCast (const ProtoSequence &r) {
+static inline const RemoteProcedure_Sequence&
+RPSequenceCast (const ProtoSequence &r)
+{
   return *(const RemoteProcedure_Sequence*) &r;
 }
-static inline ProtoSequence& ProtoSequenceCast (RemoteProcedure_Sequence &r) {
+static inline ProtoSequence&
+ProtoSequenceCast (RemoteProcedure_Sequence &r)
+{
   return *(ProtoSequence*) &r;
 }
-static inline const ProtoSequence& ProtoSequenceCast (const RemoteProcedure_Sequence &r) {
+static inline const ProtoSequence&
+ProtoSequenceCast (const RemoteProcedure_Sequence &r)
+{
   return *(const ProtoSequence*) &r;
 }
-template<class CLASS> static inline std::string Instance2StringCast (const CLASS &obj) {
+template<class CLASS> static inline std::string
+Instance2StringCast (const CLASS &obj)
+{
   return ""; // FIXME
 }
-template<class CLASS> static inline CLASS* Instance4StringCast (const std::string &objstring) {
+template<class CLASS> static inline CLASS*
+Instance4StringCast (const std::string &objstring)
+{
   return NULL; // FIXME
 }
 #define die()      (void) 0 // FIXME
@@ -51,6 +71,7 @@ template<class CLASS> static inline CLASS* Instance4StringCast (const std::strin
 
 
 // --- Interfaces ---
+
 namespace MandatoryNamespace {
 enum Empty {
 };
@@ -218,6 +239,7 @@ struct NewRecord {
   bool from_proto (const ProtoRecord &);
   inline NewRecord () { i = 0; enum1 = Enum1 (0); }
 };
+
 namespace Inner {
 struct InnerRecord {
   int             x;
@@ -235,6 +257,7 @@ struct Refer2Inner {
   inline Refer2Inner () { }
 };
 } // MandatoryNamespace
+
 namespace OtherNamespace {
 struct SomeRecord {
   MandatoryNamespace::NewRecord r1;
@@ -246,11 +269,13 @@ struct SomeRecord {
   inline SomeRecord () { }
 };
 } // OtherNamespace
+
 namespace Auxdata {
 typedef int bar;
 typedef double x;
 typedef std::string s;
 } // Auxdata
+
 namespace InterfaceTests {
 
 class UIWidgetArea {
@@ -260,22 +285,22 @@ public:
   Signal_void_signal sig_void_signal;
   Signal_sample_signal sig_sample_signal;
   double          simple_method ();
-  double          single_arg (int n);
-  double          single_arg2 (int n);
-  double          two_args (int n,
-                            double r);
-  double          two_args2 (int n,
-                             double r);
-  double          multi_args (int n,
-                              double r,
-                              int i,
-                              std::string s,
-                              double y);
-  double          self_method (UIWidgetArea &ba1,
-                               UIWidgetArea &ba2);
-  void            void_method ();
-  std::string     on_click2out ();
-  void            on_click2in (std::string command);
+  double          single_arg    (int n);
+  double          single_arg2   (int n);
+  double          two_args      (int n,
+                                 double r);
+  double          two_args2     (int n,
+                                 double r);
+  double          multi_args    (int n,
+                                 double r,
+                                 int i,
+                                 std::string s,
+                                 double y);
+  double          self_method   (UIWidgetArea &ba1,
+                                 UIWidgetArea &ba2);
+  void            void_method   ();
+  std::string     on_click2out  ();
+  void            on_click2in   (std::string command);
 };
 
 class Parent {
@@ -311,24 +336,25 @@ struct QuickSequence {
 
 class MethodTestInterface {
 public:
-  bool            method_with_bools (bool input,
-                                     bool optval);
-  int             method_with_ints (int input,
-                                    int optval);
-  double          method_with_floats (double input,
-                                      double optval);
-  std::string     method_with_string (std::string input,
-                                      std::string optval);
-  QuickEnum       method_with_enum (QuickEnum input,
-                                    QuickEnum optval);
-  QuickRecord     method_with_record (QuickRecord input,
-                                      QuickRecord optval);
-  QuickSequence   method_with_sequence (QuickSequence input,
-                                        QuickSequence optval);
+  bool            method_with_bools     (bool input,
+                                         bool optval);
+  int             method_with_ints      (int input,
+                                         int optval);
+  double          method_with_floats    (double input,
+                                         double optval);
+  std::string     method_with_string    (std::string input,
+                                         std::string optval);
+  QuickEnum       method_with_enum      (QuickEnum input,
+                                         QuickEnum optval);
+  QuickRecord     method_with_record    (QuickRecord input,
+                                         QuickRecord optval);
+  QuickSequence   method_with_sequence  (QuickSequence input,
+                                         QuickSequence optval);
   GrandChild&     method_with_interface (GrandChild &input,
                                          GrandChild &optval);
 };
 } // InterfaceTests
+
 namespace RapicornPlicTest {
 enum ClickType {
   CLICK_ON_PRESS = 1,
@@ -348,8 +374,11 @@ public:
 } // RapicornPlicTest
 
 // --- Client Stubs ---
+
 namespace MandatoryNamespace {
-bool XFooRecord::to_proto (ProtoRecord &dst) const {
+bool
+XFooRecord::to_proto (ProtoRecord &dst) const
+{
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
   RemoteProcedure_Argument *field;
   field = rpr.add_fields();
@@ -387,7 +416,9 @@ bool XFooRecord::to_proto (ProtoRecord &dst) const {
   field->set_vint64 (enum_field);
   return true;
 }
-bool XFooRecord::from_proto (const ProtoRecord &src) {
+bool
+XFooRecord::from_proto (const ProtoRecord &src)
+{
   const RemoteProcedure_Record &rpr = RPRecordCast (src);
   if (rpr.fields_size() < 11) return false;
   const RemoteProcedure_Argument *field;
@@ -427,7 +458,9 @@ bool XFooRecord::from_proto (const ProtoRecord &src) {
   return true;
 }
 
-bool XFooSequence::to_proto (ProtoSequence &dst) const {
+bool
+XFooSequence::to_proto (ProtoSequence &dst) const
+{
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
   const size_t len = single_bool.size();
   for (size_t k = 0; k < len; k++) {
@@ -435,7 +468,9 @@ bool XFooSequence::to_proto (ProtoSequence &dst) const {
   }
   return true;
 }
-bool XFooSequence::from_proto (const ProtoSequence &src) {
+bool
+XFooSequence::from_proto (const ProtoSequence &src)
+{
   const RemoteProcedure_Sequence &rps = RPSequenceCast (src);
   const size_t len = rps.vint64_size();
   for (size_t k = 0; k < len; k++) {
@@ -444,7 +479,9 @@ bool XFooSequence::from_proto (const ProtoSequence &src) {
   return true;
 }
 
-bool IntSequence::to_proto (ProtoSequence &dst) const {
+bool
+IntSequence::to_proto (ProtoSequence &dst) const
+{
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
   const size_t len = numx.size();
   for (size_t k = 0; k < len; k++) {
@@ -452,7 +489,9 @@ bool IntSequence::to_proto (ProtoSequence &dst) const {
   }
   return true;
 }
-bool IntSequence::from_proto (const ProtoSequence &src) {
+bool
+IntSequence::from_proto (const ProtoSequence &src)
+{
   const RemoteProcedure_Sequence &rps = RPSequenceCast (src);
   const size_t len = rps.vint64_size();
   for (size_t k = 0; k < len; k++) {
@@ -461,7 +500,9 @@ bool IntSequence::from_proto (const ProtoSequence &src) {
   return true;
 }
 
-bool FloatSequence::to_proto (ProtoSequence &dst) const {
+bool
+FloatSequence::to_proto (ProtoSequence &dst) const
+{
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
   const size_t len = fractalvalue.size();
   for (size_t k = 0; k < len; k++) {
@@ -469,7 +510,9 @@ bool FloatSequence::to_proto (ProtoSequence &dst) const {
   }
   return true;
 }
-bool FloatSequence::from_proto (const ProtoSequence &src) {
+bool
+FloatSequence::from_proto (const ProtoSequence &src)
+{
   const RemoteProcedure_Sequence &rps = RPSequenceCast (src);
   const size_t len = rps.vdouble_size();
   for (size_t k = 0; k < len; k++) {
@@ -478,7 +521,9 @@ bool FloatSequence::from_proto (const ProtoSequence &src) {
   return true;
 }
 
-bool StringSequence::to_proto (ProtoSequence &dst) const {
+bool
+StringSequence::to_proto (ProtoSequence &dst) const
+{
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
   const size_t len = blurb.size();
   for (size_t k = 0; k < len; k++) {
@@ -486,7 +531,9 @@ bool StringSequence::to_proto (ProtoSequence &dst) const {
   }
   return true;
 }
-bool StringSequence::from_proto (const ProtoSequence &src) {
+bool
+StringSequence::from_proto (const ProtoSequence &src)
+{
   const RemoteProcedure_Sequence &rps = RPSequenceCast (src);
   const size_t len = rps.vstring_size();
   for (size_t k = 0; k < len; k++) {
@@ -495,7 +542,9 @@ bool StringSequence::from_proto (const ProtoSequence &src) {
   return true;
 }
 
-bool ExtensiveEnumSequence::to_proto (ProtoSequence &dst) const {
+bool
+ExtensiveEnumSequence::to_proto (ProtoSequence &dst) const
+{
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
   const size_t len = enum_elements.size();
   for (size_t k = 0; k < len; k++) {
@@ -503,7 +552,9 @@ bool ExtensiveEnumSequence::to_proto (ProtoSequence &dst) const {
   }
   return true;
 }
-bool ExtensiveEnumSequence::from_proto (const ProtoSequence &src) {
+bool
+ExtensiveEnumSequence::from_proto (const ProtoSequence &src)
+{
   const RemoteProcedure_Sequence &rps = RPSequenceCast (src);
   const size_t len = rps.vint64_size();
   for (size_t k = 0; k < len; k++) {
@@ -512,7 +563,9 @@ bool ExtensiveEnumSequence::from_proto (const ProtoSequence &src) {
   return true;
 }
 
-bool RecordSequence::to_proto (ProtoSequence &dst) const {
+bool
+RecordSequence::to_proto (ProtoSequence &dst) const
+{
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
   const size_t len = repeatedfield.size();
   for (size_t k = 0; k < len; k++) {
@@ -520,7 +573,9 @@ bool RecordSequence::to_proto (ProtoSequence &dst) const {
   }
   return true;
 }
-bool RecordSequence::from_proto (const ProtoSequence &src) {
+bool
+RecordSequence::from_proto (const ProtoSequence &src)
+{
   const RemoteProcedure_Sequence &rps = RPSequenceCast (src);
   const size_t len = rps.vrec_size();
   repeatedfield.resize (len);
@@ -530,7 +585,9 @@ bool RecordSequence::from_proto (const ProtoSequence &src) {
   return true;
 }
 
-bool SequenceSequence::to_proto (ProtoSequence &dst) const {
+bool
+SequenceSequence::to_proto (ProtoSequence &dst) const
+{
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
   const size_t len = moreints.size();
   for (size_t k = 0; k < len; k++) {
@@ -538,7 +595,9 @@ bool SequenceSequence::to_proto (ProtoSequence &dst) const {
   }
   return true;
 }
-bool SequenceSequence::from_proto (const ProtoSequence &src) {
+bool
+SequenceSequence::from_proto (const ProtoSequence &src)
+{
   const RemoteProcedure_Sequence &rps = RPSequenceCast (src);
   const size_t len = rps.vseq_size();
   moreints.resize (len);
@@ -548,7 +607,9 @@ bool SequenceSequence::from_proto (const ProtoSequence &src) {
   return true;
 }
 
-bool NestedTypesRec::to_proto (ProtoRecord &dst) const {
+bool
+NestedTypesRec::to_proto (ProtoRecord &dst) const
+{
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
   RemoteProcedure_Argument *field;
   field = rpr.add_fields();
@@ -559,7 +620,9 @@ bool NestedTypesRec::to_proto (ProtoRecord &dst) const {
   if (!seq.to_proto (ProtoSequenceCast (*field->mutable_vseq()))) return false;
   return true;
 }
-bool NestedTypesRec::from_proto (const ProtoRecord &src) {
+bool
+NestedTypesRec::from_proto (const ProtoRecord &src)
+{
   const RemoteProcedure_Record &rpr = RPRecordCast (src);
   if (rpr.fields_size() < 2) return false;
   const RemoteProcedure_Argument *field;
@@ -572,7 +635,9 @@ bool NestedTypesRec::from_proto (const ProtoRecord &src) {
   return true;
 }
 
-bool NestedTypesSeq::to_proto (ProtoSequence &dst) const {
+bool
+NestedTypesSeq::to_proto (ProtoSequence &dst) const
+{
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
   const size_t len = ntr.size();
   for (size_t k = 0; k < len; k++) {
@@ -580,7 +645,9 @@ bool NestedTypesSeq::to_proto (ProtoSequence &dst) const {
   }
   return true;
 }
-bool NestedTypesSeq::from_proto (const ProtoSequence &src) {
+bool
+NestedTypesSeq::from_proto (const ProtoSequence &src)
+{
   const RemoteProcedure_Sequence &rps = RPSequenceCast (src);
   const size_t len = rps.vrec_size();
   ntr.resize (len);
@@ -590,7 +657,9 @@ bool NestedTypesSeq::from_proto (const ProtoSequence &src) {
   return true;
 }
 
-bool NewRecord::to_proto (ProtoRecord &dst) const {
+bool
+NewRecord::to_proto (ProtoRecord &dst) const
+{
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
   RemoteProcedure_Argument *field;
   field = rpr.add_fields();
@@ -607,7 +676,9 @@ bool NewRecord::to_proto (ProtoRecord &dst) const {
   if (!ntr.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
   return true;
 }
-bool NewRecord::from_proto (const ProtoRecord &src) {
+bool
+NewRecord::from_proto (const ProtoRecord &src)
+{
   const RemoteProcedure_Record &rpr = RPRecordCast (src);
   if (rpr.fields_size() < 4) return false;
   const RemoteProcedure_Argument *field;
@@ -626,8 +697,11 @@ bool NewRecord::from_proto (const ProtoRecord &src) {
   return true;
 }
 
+
 namespace Inner {
-bool InnerRecord::to_proto (ProtoRecord &dst) const {
+bool
+InnerRecord::to_proto (ProtoRecord &dst) const
+{
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
   RemoteProcedure_Argument *field;
   field = rpr.add_fields();
@@ -641,7 +715,9 @@ bool InnerRecord::to_proto (ProtoRecord &dst) const {
   if (!rec.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
   return true;
 }
-bool InnerRecord::from_proto (const ProtoRecord &src) {
+bool
+InnerRecord::from_proto (const ProtoRecord &src)
+{
   const RemoteProcedure_Record &rpr = RPRecordCast (src);
   if (rpr.fields_size() < 3) return false;
   const RemoteProcedure_Argument *field;
@@ -658,7 +734,9 @@ bool InnerRecord::from_proto (const ProtoRecord &src) {
 }
 
 } // Inner
-bool Refer2Inner::to_proto (ProtoRecord &dst) const {
+bool
+Refer2Inner::to_proto (ProtoRecord &dst) const
+{
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
   RemoteProcedure_Argument *field;
   field = rpr.add_fields();
@@ -666,7 +744,9 @@ bool Refer2Inner::to_proto (ProtoRecord &dst) const {
   if (!r.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
   return true;
 }
-bool Refer2Inner::from_proto (const ProtoRecord &src) {
+bool
+Refer2Inner::from_proto (const ProtoRecord &src)
+{
   const RemoteProcedure_Record &rpr = RPRecordCast (src);
   if (rpr.fields_size() < 1) return false;
   const RemoteProcedure_Argument *field;
@@ -677,8 +757,11 @@ bool Refer2Inner::from_proto (const ProtoRecord &src) {
 }
 
 } // MandatoryNamespace
+
 namespace OtherNamespace {
-bool SomeRecord::to_proto (ProtoRecord &dst) const {
+bool
+SomeRecord::to_proto (ProtoRecord &dst) const
+{
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
   RemoteProcedure_Argument *field;
   field = rpr.add_fields();
@@ -695,7 +778,9 @@ bool SomeRecord::to_proto (ProtoRecord &dst) const {
   if (!r4.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
   return true;
 }
-bool SomeRecord::from_proto (const ProtoRecord &src) {
+bool
+SomeRecord::from_proto (const ProtoRecord &src)
+{
   const RemoteProcedure_Record &rpr = RPRecordCast (src);
   if (rpr.fields_size() < 4) return false;
   const RemoteProcedure_Argument *field;
@@ -715,13 +800,18 @@ bool SomeRecord::from_proto (const ProtoRecord &src) {
 }
 
 } // OtherNamespace
+
 namespace InterfaceTests {
-double UIWidgetArea::simple_method () {
+double
+UIWidgetArea::simple_method ()
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0001);
   return 0; // FIXME
 }
-double UIWidgetArea::single_arg (int n) {
+double
+UIWidgetArea::single_arg (int n)
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0002);
   RemoteProcedure_Argument *arg;
@@ -730,7 +820,9 @@ double UIWidgetArea::single_arg (int n) {
   arg->set_vint64 (n);
   return 0; // FIXME
 }
-double UIWidgetArea::single_arg2 (int n) {
+double
+UIWidgetArea::single_arg2 (int n)
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0003);
   RemoteProcedure_Argument *arg;
@@ -739,8 +831,10 @@ double UIWidgetArea::single_arg2 (int n) {
   arg->set_vint64 (n);
   return 0; // FIXME
 }
-double UIWidgetArea::two_args (int n,
-                               double r) {
+double
+UIWidgetArea::two_args (int n,
+                               double r)
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0004);
   RemoteProcedure_Argument *arg;
@@ -752,8 +846,10 @@ double UIWidgetArea::two_args (int n,
   arg->set_vdouble (r);
   return 0; // FIXME
 }
-double UIWidgetArea::two_args2 (int n,
-                                double r) {
+double
+UIWidgetArea::two_args2 (int n,
+                                double r)
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0005);
   RemoteProcedure_Argument *arg;
@@ -765,11 +861,13 @@ double UIWidgetArea::two_args2 (int n,
   arg->set_vdouble (r);
   return 0; // FIXME
 }
-double UIWidgetArea::multi_args (int n,
+double
+UIWidgetArea::multi_args (int n,
                                  double r,
                                  int i,
                                  std::string s,
-                                 double y) {
+                                 double y)
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0006);
   RemoteProcedure_Argument *arg;
@@ -790,8 +888,10 @@ double UIWidgetArea::multi_args (int n,
   arg->set_vdouble (y);
   return 0; // FIXME
 }
-double UIWidgetArea::self_method (UIWidgetArea &ba1,
-                                  UIWidgetArea &ba2) {
+double
+UIWidgetArea::self_method (UIWidgetArea &ba1,
+                                  UIWidgetArea &ba2)
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0007);
   RemoteProcedure_Argument *arg;
@@ -803,16 +903,22 @@ double UIWidgetArea::self_method (UIWidgetArea &ba1,
   arg->set_vstring (Instance2StringCast (ba2));
   return 0; // FIXME
 }
-void UIWidgetArea::void_method () {
+void
+UIWidgetArea::void_method ()
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0008);
 }
-std::string UIWidgetArea::on_click2out () {
+std::string
+UIWidgetArea::on_click2out ()
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0009);
   return 0; // FIXME
 }
-void UIWidgetArea::on_click2in (std::string command) {
+void
+UIWidgetArea::on_click2in (std::string command)
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000a);
   RemoteProcedure_Argument *arg;
@@ -821,14 +927,18 @@ void UIWidgetArea::on_click2in (std::string command) {
   arg->set_vstring (command);
 }
 
-static bool handle_UIWidgetArea_simple_method (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_UIWidgetArea_simple_method (const RemoteProcedure    &_rope_rp,
+                                   RemoteProcedure_Argument *_rope_aret)
+{
   if (_rope_rp.args_size() != 0) return false;
   (void) _rope_aret;
   return true;
 }
-static bool handle_UIWidgetArea_single_arg (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_UIWidgetArea_single_arg (const RemoteProcedure    &_rope_rp,
+                                RemoteProcedure_Argument *_rope_aret)
+{
   int n;
   if (_rope_rp.args_size() != 1) return false;
   const RemoteProcedure_Argument *_rope_arg;
@@ -838,8 +948,10 @@ static bool handle_UIWidgetArea_single_arg (const RemoteProcedure &_rope_rp,
   (void) _rope_aret;
   return true;
 }
-static bool handle_UIWidgetArea_single_arg2 (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_UIWidgetArea_single_arg2 (const RemoteProcedure    &_rope_rp,
+                                 RemoteProcedure_Argument *_rope_aret)
+{
   int n;
   if (_rope_rp.args_size() != 1) return false;
   const RemoteProcedure_Argument *_rope_arg;
@@ -849,8 +961,10 @@ static bool handle_UIWidgetArea_single_arg2 (const RemoteProcedure &_rope_rp,
   (void) _rope_aret;
   return true;
 }
-static bool handle_UIWidgetArea_two_args (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_UIWidgetArea_two_args (const RemoteProcedure    &_rope_rp,
+                              RemoteProcedure_Argument *_rope_aret)
+{
   int n;
   double r;
   if (_rope_rp.args_size() != 2) return false;
@@ -864,8 +978,10 @@ static bool handle_UIWidgetArea_two_args (const RemoteProcedure &_rope_rp,
   (void) _rope_aret;
   return true;
 }
-static bool handle_UIWidgetArea_two_args2 (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_UIWidgetArea_two_args2 (const RemoteProcedure    &_rope_rp,
+                               RemoteProcedure_Argument *_rope_aret)
+{
   int n;
   double r;
   if (_rope_rp.args_size() != 2) return false;
@@ -879,8 +995,10 @@ static bool handle_UIWidgetArea_two_args2 (const RemoteProcedure &_rope_rp,
   (void) _rope_aret;
   return true;
 }
-static bool handle_UIWidgetArea_multi_args (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_UIWidgetArea_multi_args (const RemoteProcedure    &_rope_rp,
+                                RemoteProcedure_Argument *_rope_aret)
+{
   int n;
   double r;
   int i;
@@ -906,8 +1024,10 @@ static bool handle_UIWidgetArea_multi_args (const RemoteProcedure &_rope_rp,
   (void) _rope_aret;
   return true;
 }
-static bool handle_UIWidgetArea_self_method (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_UIWidgetArea_self_method (const RemoteProcedure    &_rope_rp,
+                                 RemoteProcedure_Argument *_rope_aret)
+{
   UIWidgetArea *ba1;
   UIWidgetArea *ba2;
   if (_rope_rp.args_size() != 2) return false;
@@ -921,20 +1041,26 @@ static bool handle_UIWidgetArea_self_method (const RemoteProcedure &_rope_rp,
   (void) _rope_aret;
   return true;
 }
-static bool handle_UIWidgetArea_void_method (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_UIWidgetArea_void_method (const RemoteProcedure    &_rope_rp,
+                                 RemoteProcedure_Argument *_rope_aret)
+{
   if (_rope_rp.args_size() != 0) return false;
   (void) _rope_aret;
   return true;
 }
-static bool handle_UIWidgetArea_on_click2out (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_UIWidgetArea_on_click2out (const RemoteProcedure    &_rope_rp,
+                                  RemoteProcedure_Argument *_rope_aret)
+{
   if (_rope_rp.args_size() != 0) return false;
   (void) _rope_aret;
   return true;
 }
-static bool handle_UIWidgetArea_on_click2in (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_UIWidgetArea_on_click2in (const RemoteProcedure    &_rope_rp,
+                                 RemoteProcedure_Argument *_rope_aret)
+{
   std::string command;
   if (_rope_rp.args_size() != 1) return false;
   const RemoteProcedure_Argument *_rope_arg;
@@ -953,7 +1079,9 @@ static bool handle_UIWidgetArea_on_click2in (const RemoteProcedure &_rope_rp,
 
 
 
-bool QuickRecord::to_proto (ProtoRecord &dst) const {
+bool
+QuickRecord::to_proto (ProtoRecord &dst) const
+{
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
   RemoteProcedure_Argument *field;
   field = rpr.add_fields();
@@ -964,7 +1092,9 @@ bool QuickRecord::to_proto (ProtoRecord &dst) const {
   field->set_vint64 (int2);
   return true;
 }
-bool QuickRecord::from_proto (const ProtoRecord &src) {
+bool
+QuickRecord::from_proto (const ProtoRecord &src)
+{
   const RemoteProcedure_Record &rpr = RPRecordCast (src);
   if (rpr.fields_size() < 2) return false;
   const RemoteProcedure_Argument *field;
@@ -977,7 +1107,9 @@ bool QuickRecord::from_proto (const ProtoRecord &src) {
   return true;
 }
 
-bool QuickSequence::to_proto (ProtoSequence &dst) const {
+bool
+QuickSequence::to_proto (ProtoSequence &dst) const
+{
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
   const size_t len = somefloat.size();
   for (size_t k = 0; k < len; k++) {
@@ -985,7 +1117,9 @@ bool QuickSequence::to_proto (ProtoSequence &dst) const {
   }
   return true;
 }
-bool QuickSequence::from_proto (const ProtoSequence &src) {
+bool
+QuickSequence::from_proto (const ProtoSequence &src)
+{
   const RemoteProcedure_Sequence &rps = RPSequenceCast (src);
   const size_t len = rps.vdouble_size();
   for (size_t k = 0; k < len; k++) {
@@ -994,8 +1128,10 @@ bool QuickSequence::from_proto (const ProtoSequence &src) {
   return true;
 }
 
-bool MethodTestInterface::method_with_bools (bool input,
-                                             bool optval) {
+bool
+MethodTestInterface::method_with_bools (bool input,
+                                             bool optval)
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000b);
   RemoteProcedure_Argument *arg;
@@ -1007,8 +1143,10 @@ bool MethodTestInterface::method_with_bools (bool input,
   arg->set_vint64 (optval);
   return 0; // FIXME
 }
-int MethodTestInterface::method_with_ints (int input,
-                                           int optval) {
+int
+MethodTestInterface::method_with_ints (int input,
+                                           int optval)
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000c);
   RemoteProcedure_Argument *arg;
@@ -1020,8 +1158,10 @@ int MethodTestInterface::method_with_ints (int input,
   arg->set_vint64 (optval);
   return 0; // FIXME
 }
-double MethodTestInterface::method_with_floats (double input,
-                                                double optval) {
+double
+MethodTestInterface::method_with_floats (double input,
+                                                double optval)
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000d);
   RemoteProcedure_Argument *arg;
@@ -1033,8 +1173,10 @@ double MethodTestInterface::method_with_floats (double input,
   arg->set_vdouble (optval);
   return 0; // FIXME
 }
-std::string MethodTestInterface::method_with_string (std::string input,
-                                                     std::string optval) {
+std::string
+MethodTestInterface::method_with_string (std::string input,
+                                                     std::string optval)
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000e);
   RemoteProcedure_Argument *arg;
@@ -1046,8 +1188,10 @@ std::string MethodTestInterface::method_with_string (std::string input,
   arg->set_vstring (optval);
   return 0; // FIXME
 }
-QuickEnum MethodTestInterface::method_with_enum (QuickEnum input,
-                                                 QuickEnum optval) {
+QuickEnum
+MethodTestInterface::method_with_enum (QuickEnum input,
+                                                 QuickEnum optval)
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000f);
   RemoteProcedure_Argument *arg;
@@ -1059,8 +1203,10 @@ QuickEnum MethodTestInterface::method_with_enum (QuickEnum input,
   arg->set_vint64 (optval);
   return QuickEnum (0); // FIXME
 }
-QuickRecord MethodTestInterface::method_with_record (QuickRecord input,
-                                                     QuickRecord optval) {
+QuickRecord
+MethodTestInterface::method_with_record (QuickRecord input,
+                                                     QuickRecord optval)
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0010);
   RemoteProcedure_Argument *arg;
@@ -1072,8 +1218,10 @@ QuickRecord MethodTestInterface::method_with_record (QuickRecord input,
   if (!optval.to_proto (ProtoRecordCast (*arg->mutable_vrec()))) die();
   return QuickRecord(); // FIXME
 }
-QuickSequence MethodTestInterface::method_with_sequence (QuickSequence input,
-                                                         QuickSequence optval) {
+QuickSequence
+MethodTestInterface::method_with_sequence (QuickSequence input,
+                                                         QuickSequence optval)
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0011);
   RemoteProcedure_Argument *arg;
@@ -1085,8 +1233,10 @@ QuickSequence MethodTestInterface::method_with_sequence (QuickSequence input,
   if (!optval.to_proto (ProtoSequenceCast (*arg->mutable_vseq()))) die();
   return QuickSequence(); // FIXME
 }
-GrandChild& MethodTestInterface::method_with_interface (GrandChild &input,
-                                                        GrandChild &optval) {
+GrandChild&
+MethodTestInterface::method_with_interface (GrandChild &input,
+                                                        GrandChild &optval)
+{
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0012);
   RemoteProcedure_Argument *arg;
@@ -1099,8 +1249,10 @@ GrandChild& MethodTestInterface::method_with_interface (GrandChild &input,
   return *(GrandChild*) NULL; // FIXME
 }
 
-static bool handle_MethodTestInterface_method_with_bools (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_MethodTestInterface_method_with_bools (const RemoteProcedure    &_rope_rp,
+                                              RemoteProcedure_Argument *_rope_aret)
+{
   bool input;
   bool optval;
   if (_rope_rp.args_size() != 2) return false;
@@ -1114,8 +1266,10 @@ static bool handle_MethodTestInterface_method_with_bools (const RemoteProcedure 
   (void) _rope_aret;
   return true;
 }
-static bool handle_MethodTestInterface_method_with_ints (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_MethodTestInterface_method_with_ints (const RemoteProcedure    &_rope_rp,
+                                             RemoteProcedure_Argument *_rope_aret)
+{
   int input;
   int optval;
   if (_rope_rp.args_size() != 2) return false;
@@ -1129,8 +1283,10 @@ static bool handle_MethodTestInterface_method_with_ints (const RemoteProcedure &
   (void) _rope_aret;
   return true;
 }
-static bool handle_MethodTestInterface_method_with_floats (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_MethodTestInterface_method_with_floats (const RemoteProcedure    &_rope_rp,
+                                               RemoteProcedure_Argument *_rope_aret)
+{
   double input;
   double optval;
   if (_rope_rp.args_size() != 2) return false;
@@ -1144,8 +1300,10 @@ static bool handle_MethodTestInterface_method_with_floats (const RemoteProcedure
   (void) _rope_aret;
   return true;
 }
-static bool handle_MethodTestInterface_method_with_string (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_MethodTestInterface_method_with_string (const RemoteProcedure    &_rope_rp,
+                                               RemoteProcedure_Argument *_rope_aret)
+{
   std::string input;
   std::string optval;
   if (_rope_rp.args_size() != 2) return false;
@@ -1159,8 +1317,10 @@ static bool handle_MethodTestInterface_method_with_string (const RemoteProcedure
   (void) _rope_aret;
   return true;
 }
-static bool handle_MethodTestInterface_method_with_enum (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_MethodTestInterface_method_with_enum (const RemoteProcedure    &_rope_rp,
+                                             RemoteProcedure_Argument *_rope_aret)
+{
   QuickEnum input;
   QuickEnum optval;
   if (_rope_rp.args_size() != 2) return false;
@@ -1174,8 +1334,10 @@ static bool handle_MethodTestInterface_method_with_enum (const RemoteProcedure &
   (void) _rope_aret;
   return true;
 }
-static bool handle_MethodTestInterface_method_with_record (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_MethodTestInterface_method_with_record (const RemoteProcedure    &_rope_rp,
+                                               RemoteProcedure_Argument *_rope_aret)
+{
   QuickRecord input;
   QuickRecord optval;
   if (_rope_rp.args_size() != 2) return false;
@@ -1189,8 +1351,10 @@ static bool handle_MethodTestInterface_method_with_record (const RemoteProcedure
   (void) _rope_aret;
   return true;
 }
-static bool handle_MethodTestInterface_method_with_sequence (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_MethodTestInterface_method_with_sequence (const RemoteProcedure    &_rope_rp,
+                                                 RemoteProcedure_Argument *_rope_aret)
+{
   QuickSequence input;
   QuickSequence optval;
   if (_rope_rp.args_size() != 2) return false;
@@ -1204,8 +1368,10 @@ static bool handle_MethodTestInterface_method_with_sequence (const RemoteProcedu
   (void) _rope_aret;
   return true;
 }
-static bool handle_MethodTestInterface_method_with_interface (const RemoteProcedure &_rope_rp,
-                          RemoteProcedure_Argument *_rope_aret) {
+static bool
+handle_MethodTestInterface_method_with_interface (const RemoteProcedure    &_rope_rp,
+                                                  RemoteProcedure_Argument *_rope_aret)
+{
   GrandChild *input;
   GrandChild *optval;
   if (_rope_rp.args_size() != 2) return false;
@@ -1221,11 +1387,14 @@ static bool handle_MethodTestInterface_method_with_interface (const RemoteProced
 }
 
 } // InterfaceTests
+
 namespace RapicornPlicTest {
 
 
 } // RapicornPlicTest
-bool rope_callee_handler () {
+bool
+rope_callee_handler ()
+{
   const RemoteProcedure _rope_rp;
   RemoteProcedure_Argument _rope_aretmem, *_rope_aret = &_rope_aretmem;
   switch (_rope_rp.proc_id()) {

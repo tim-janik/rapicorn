@@ -36,34 +36,54 @@ typedef Rapicorn::Rope::RemoteProcedure RemoteProcedure;
 typedef Rapicorn::Rope::RemoteProcedure_Sequence RemoteProcedure_Sequence;
 typedef Rapicorn::Rope::RemoteProcedure_Record RemoteProcedure_Record;
 typedef Rapicorn::Rope::RemoteProcedure_Argument RemoteProcedure_Argument;
-static inline RemoteProcedure_Record& RPRecordCast (ProtoRecord &r) {
+static inline RemoteProcedure_Record&
+RPRecordCast (ProtoRecord &r)
+{
   return *(RemoteProcedure_Record*) &r;
 }
-static inline const RemoteProcedure_Record& RPRecordCast (const ProtoRecord &r) {
+static inline const RemoteProcedure_Record&
+RPRecordCast (const ProtoRecord &r)
+{
   return *(const RemoteProcedure_Record*) &r;
 }
-static inline ProtoRecord& ProtoRecordCast (RemoteProcedure_Record &r) {
+static inline ProtoRecord&
+ProtoRecordCast (RemoteProcedure_Record &r)
+{
   return *(ProtoRecord*) &r;
 }
-static inline const ProtoRecord& ProtoRecordCast (const RemoteProcedure_Record &r) {
+static inline const ProtoRecord&
+ProtoRecordCast (const RemoteProcedure_Record &r)
+{
   return *(const ProtoRecord*) &r;
 }
-static inline RemoteProcedure_Sequence& RPSequenceCast (ProtoSequence &r) {
+static inline RemoteProcedure_Sequence&
+RPSequenceCast (ProtoSequence &r)
+{
   return *(RemoteProcedure_Sequence*) &r;
 }
-static inline const RemoteProcedure_Sequence& RPSequenceCast (const ProtoSequence &r) {
+static inline const RemoteProcedure_Sequence&
+RPSequenceCast (const ProtoSequence &r)
+{
   return *(const RemoteProcedure_Sequence*) &r;
 }
-static inline ProtoSequence& ProtoSequenceCast (RemoteProcedure_Sequence &r) {
+static inline ProtoSequence&
+ProtoSequenceCast (RemoteProcedure_Sequence &r)
+{
   return *(ProtoSequence*) &r;
 }
-static inline const ProtoSequence& ProtoSequenceCast (const RemoteProcedure_Sequence &r) {
+static inline const ProtoSequence&
+ProtoSequenceCast (const RemoteProcedure_Sequence &r)
+{
   return *(const ProtoSequence*) &r;
 }
-template<class CLASS> static inline std::string Instance2StringCast (const CLASS &obj) {
+template<class CLASS> static inline std::string
+Instance2StringCast (const CLASS &obj)
+{
   return ""; // FIXME
 }
-template<class CLASS> static inline CLASS* Instance4StringCast (const std::string &objstring) {
+template<class CLASS> static inline CLASS*
+Instance4StringCast (const std::string &objstring)
+{
   return NULL; // FIXME
 }
 #define die()      (void) 0 // FIXME
@@ -79,7 +99,7 @@ class Generator:
     return '} // %s\n' % self.namespaces.pop().name
   def open_inner_namespace (self, namespace):
     self.namespaces += [ namespace ]
-    return 'namespace %s {\n' % self.namespaces[-1].name
+    return '\nnamespace %s {\n' % self.namespaces[-1].name
   def open_namespace (self, type):
     s = ''
     newspaces = []
@@ -226,14 +246,14 @@ class Generator:
     return s
   def generate_record_impl (self, type_info):
     s = ''
-    s += 'bool %s::to_proto (ProtoRecord &dst) const {\n' % type_info.name
+    s += 'bool\n%s::to_proto (ProtoRecord &dst) const\n{\n' % type_info.name
     s += '  RemoteProcedure_Record &rpr = RPRecordCast (dst);\n'
     s += '  RemoteProcedure_Argument *field;\n'
     for fl in type_info.fields:
       s += '  field = rpr.add_fields();\n'
       s += self.generate_to_proto ('field', fl[1], fl[0])
     s += '  return true;\n}\n'
-    s += 'bool %s::from_proto (const ProtoRecord &src) {\n' % type_info.name
+    s += 'bool\n%s::from_proto (const ProtoRecord &src)\n{\n' % type_info.name
     s += '  const RemoteProcedure_Record &rpr = RPRecordCast (src);\n'
     s += '  if (rpr.fields_size() < %d) return false;\n' % len (type_info.fields)
     s += '  const RemoteProcedure_Argument *field;\n'
@@ -259,7 +279,7 @@ class Generator:
       raise RuntimeError ("Unexpected storage type: " + storage)
   def generate_sequence_impl (self, type_info):
     s = ''
-    s += 'bool %s::to_proto (ProtoSequence &dst) const {\n' % type_info.name
+    s += 'bool\n%s::to_proto (ProtoSequence &dst) const\n{\n' % type_info.name
     s += '  RemoteProcedure_Sequence &rps = RPSequenceCast (dst);\n'
     el = type_info.elements
     s += '  const size_t len = %s.size();\n' % el[0]
@@ -274,7 +294,7 @@ class Generator:
       raise RuntimeError ("Unexpected storage type: " + el[1].storage)
     s += '  }\n'
     s += '  return true;\n}\n'
-    s += 'bool %s::from_proto (const ProtoSequence &src) {\n' % type_info.name
+    s += 'bool\n%s::from_proto (const ProtoSequence &src)\n{\n' % type_info.name
     s += '  const RemoteProcedure_Sequence &rps = RPSequenceCast (src);\n'
     s += '  const size_t len = rps.%s_size();\n' % self.storage_fieldname (el[1].storage)
     if el[1].storage in (Decls.RECORD, Decls.SEQUENCE):
@@ -298,14 +318,14 @@ class Generator:
     s = ''
     for m in type_info.methods:
       interfacechar = '&' if m.rtype.storage == Decls.INTERFACE else ''
-      q = '%s%s %s::%s (' % (self.type2cpp (m.rtype), interfacechar, type_info.name, m.name)
+      q = '%s%s\n%s::%s (' % (self.type2cpp (m.rtype), interfacechar, type_info.name, m.name)
       s += q
       argindent = len (q)
       l = []
       for a in m.args:
         l += [ self.format_arg (*a) ]
       s += (',\n' + argindent * ' ').join (l)
-      s += ') {\n'
+      s += ')\n{\n'
       s += '  RemoteProcedure rp;\n'
       s += '  rp.set_proc_id (0x%08x);\n' % GenUtils.type_id (m)
       if m.args:
@@ -329,8 +349,10 @@ class Generator:
     s = ''
     for m in type_info.methods:
       switchlines += [ (GenUtils.type_id (m), type_info, m) ]
-      s += 'static bool handle_%s_%s (const RemoteProcedure &_rope_rp,\n' % (type_info.name, m.name)
-      s += '                          RemoteProcedure_Argument *_rope_aret) {\n'
+      s += 'static bool\n'
+      c = 'handle_%s_%s ' % (type_info.name, m.name)
+      s += c + '(const RemoteProcedure    &_rope_rp,\n'
+      s += ' ' * len (c) + ' RemoteProcedure_Argument *_rope_aret)\n{\n'
       for a in m.args:
         s += '  ' + self.format_arg (a[0], a[1], a[2], '*') + ';\n'
       #s += '  RemoteProcedure_Argument *arg; int arg_counter = 0;\n'
@@ -350,7 +372,7 @@ class Generator:
     return s
   def generate_callee_impl (self, switchlines):
     s = ''
-    s += 'bool rope_callee_handler () {\n'
+    s += 'bool\nrope_callee_handler ()\n{\n'
     s += '  const RemoteProcedure _rope_rp;\n'
     s += '  RemoteProcedure_Argument _rope_aretmem, *_rope_aret = &_rope_aretmem;\n'
     s += '  switch (_rope_rp.proc_id()) {\n'
@@ -386,11 +408,13 @@ class Generator:
       if not skip:
         reduced = [ p ] + reduced
     return reduced
-  def generate_method (self, functype):
+  def generate_method (self, functype, pad = 0):
     s = ''
     interfacechar = '&' if functype.rtype.storage == Decls.INTERFACE else ''
     s += '  ' + self.format_to_tab (self.type2cpp (functype.rtype) + interfacechar)
-    s += functype.name + ' ('
+    s += functype.name
+    s += ' ' * max (0, pad - len (functype.name))
+    s += ' ('
     argindent = len (s)
     l = []
     for a in functype.args:
@@ -413,8 +437,11 @@ class Generator:
       s += self.generate_sigdef (sg, type_info)
     for sg in type_info.signals:
       s += self.generate_signal (sg, type_info)
+    ml = 0
+    if type_info.methods:
+      ml = max (len (m.name) for m in type_info.methods)
     for m in type_info.methods:
-      s += self.generate_method (m)
+      s += self.generate_method (m, ml)
     s += '};'
     return s
   def generate_enum_interface (self, type_info):
