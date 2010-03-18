@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Rapicorn-CppStub                                             -*-mode:python-*-
+# PLIC-CppStub                                                 -*-mode:python-*-
 # Copyright (C) 2009-2010 Tim Janik
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,9 +14,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""Rapicorn-CppStub - C++ Stub (client glue code) generator for Rapicorn
+"""PLIC-CppStub - C++ Stub (glue code) generator for PLIC
 
-More details at http://www.rapicorn.org
+More details at http://www.testbit.eu/PLIC
 """
 import Decls, GenUtils, re
 
@@ -74,6 +74,42 @@ template<class CLASS> static inline CLASS* Instance4StringCast (const std::strin
 class Generator:
   def __init__ (self):
     self.ntab = 26
+    self.namespaces = []
+  def close_inner_namespace (self):
+    return '} // %s\n' % self.namespaces.pop().name
+  def open_inner_namespace (self, namespace):
+    self.namespaces += [ namespace ]
+    return 'namespace %s {\n' % self.namespaces[-1].name
+  def open_namespace (self, type):
+    s = ''
+    newspaces = []
+    if type:
+      newspaces = type.list_namespaces()
+      # s += '// ' + str ([n.name for n in newspaces]) + '\n'
+    while len (self.namespaces) > len (newspaces):
+      s += self.close_inner_namespace()
+    while self.namespaces and newspaces[0:len (self.namespaces)] != self.namespaces:
+      s += self.close_inner_namespace()
+    for n in newspaces[len (self.namespaces):]:
+      s += self.open_inner_namespace (n)
+    return s
+  def type_relative_namespaces (self, type_node):
+    tnsl = type_node.list_namespaces() # type namespace list
+    print 'INFO:', '::'.join (d.name for d in tnsl + [ type_node ]), type_node.namespace
+    # remove common prefix with global namespace list
+    for n in self.namespaces:
+      if tnsl and tnsl[0] == n:
+        tnsl = tnsl[1:]
+      else:
+        break
+    namespace_names = [d.name for d in tnsl]
+    return namespace_names
+  def type2cpp (self, type_node):
+    typename = type_node.name
+    if typename == 'float': return 'double'
+    if typename == 'string': return 'std::string'
+    fullnsname = '::'.join (self.type_relative_namespaces (type_node) + [ type_node.name ])
+    return fullnsname
   def tabwidth (self, n):
     self.ntab = n
   def format_to_tab (self, string, indent = ''):
@@ -84,7 +120,7 @@ class Generator:
       return indent + f % string
   def format_arg (self, ident, type, defaultinit, interfacechar = '&'):
     s = ''
-    s += self.type2cpp (type.name) + ' '
+    s += self.type2cpp (type) + ' '
     if type.storage == Decls.INTERFACE:
       s += interfacechar
     s += ident
@@ -105,8 +141,8 @@ class Generator:
   def generate_sigdef (self, functype, ctype):
     signame = self.generate_signal_name (functype, ctype)
     s = ''
-    cpp_rtype = self.type2cpp (functype.rtype.name)
-    s += '  typedef Rapicorn::Signals::Signal<%s, %s (' % (self.type2cpp (ctype.name), cpp_rtype)
+    cpp_rtype = self.type2cpp (functype.rtype)
+    s += '  typedef Rapicorn::Signals::Signal<%s, %s (' % (self.type2cpp (ctype), cpp_rtype)
     l = []
     for a in functype.args:
       l += [ self.format_arg (*a) ]
@@ -117,13 +153,9 @@ class Generator:
       s += '<' + cpp_rtype + '> '
     s += '> ' + signame + ';\n'
     return s
-  def type2cpp (self, typename):
-    if typename == 'float': return 'double'
-    if typename == 'string': return 'std::string'
-    return typename
   def mkzero (self, type):
     if type.storage == Decls.ENUM:
-      return self.type2cpp (type.name) + ' (0)'
+      return self.type2cpp (type) + ' (0)'
     return '0'
   def generate_record_interface (self, type_info):
     s = ''
@@ -131,10 +163,10 @@ class Generator:
     if type_info.storage == Decls.RECORD:
       fieldlist = type_info.fields
       for fl in fieldlist:
-        s += self.generate_field (fl[0], self.type2cpp (fl[1].name))
+        s += self.generate_field (fl[0], self.type2cpp (fl[1]))
     elif type_info.storage == Decls.SEQUENCE:
       fl = type_info.elements
-      s += self.generate_field (fl[0], 'std::vector<' + self.type2cpp (fl[1].name) + '>')
+      s += self.generate_field (fl[0], 'std::vector<' + self.type2cpp (fl[1]) + '>')
       s += '  bool to_proto   (ProtoSequence &) const;\n'
       s += '  bool from_proto (const ProtoSequence &);\n'
     if type_info.storage == Decls.RECORD:
@@ -175,7 +207,7 @@ class Generator:
       s += '  %s = %s->vint64();\n' % (valname, argname)
     elif type_info.storage == Decls.ENUM:
       s += '  if (!%s->has_vint64()) return false;' % argname
-      s += '  %s = %s (%s->vint64());\n' % (valname, self.type2cpp (type_info.name), argname)
+      s += '  %s = %s (%s->vint64());\n' % (valname, self.type2cpp (type_info), argname)
     elif type_info.storage == Decls.FLOAT:
       s += '  if (!%s->has_vdouble()) return false;' % argname
       s += '  %s = %s->vdouble();\n' % (valname, argname)
@@ -252,7 +284,7 @@ class Generator:
       s += '    %s.push_back (rps.%s (k));\n' % (el[0], self.storage_fieldname (el[1].storage))
     elif el[1].storage == Decls.ENUM:
       s += '    %s.push_back (%s (rps.%s (k)));\n' % \
-           (el[0], self.type2cpp (el[1].name), self.storage_fieldname (el[1].storage))
+           (el[0], self.type2cpp (el[1]), self.storage_fieldname (el[1].storage))
     elif el[1].storage == Decls.RECORD:
       s += '    if (!%s[k].from_proto (ProtoRecordCast (rps.vrec (k)))) return false;\n' % el[0]
     elif el[1].storage == Decls.SEQUENCE:
@@ -266,7 +298,7 @@ class Generator:
     s = ''
     for m in type_info.methods:
       interfacechar = '&' if m.rtype.storage == Decls.INTERFACE else ''
-      q = '%s%s %s::%s (' % (self.type2cpp (m.rtype.name), interfacechar, type_info.name, m.name)
+      q = '%s%s %s::%s (' % (self.type2cpp (m.rtype), interfacechar, type_info.name, m.name)
       s += q
       argindent = len (q)
       l = []
@@ -284,26 +316,25 @@ class Generator:
       if m.rtype.storage == Decls.VOID:
         pass
       elif m.rtype.storage == Decls.ENUM:
-        s += '  return %s (0); // FIXME\n' % self.type2cpp (m.rtype.name)
+        s += '  return %s (0); // FIXME\n' % self.type2cpp (m.rtype)
       elif m.rtype.storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  return %s(); // FIXME\n' % self.type2cpp (m.rtype.name)
+        s += '  return %s(); // FIXME\n' % self.type2cpp (m.rtype)
       elif m.rtype.storage == Decls.INTERFACE:
-        s += '  return *(%s*) NULL; // FIXME\n' % self.type2cpp (m.rtype.name)
+        s += '  return *(%s*) NULL; // FIXME\n' % self.type2cpp (m.rtype)
       else:
         s += '  return 0; // FIXME\n'
       s += '}\n'
     return s
-  def generate_class_callee_impl (self, type_info, swl):
+  def generate_class_callee_impl (self, type_info, switchlines):
     s = ''
     for m in type_info.methods:
-      swl += [ 'case 0x%08x: // %s::%s\n' % (GenUtils.type_id (m), type_info.name, m.name) ]
-      swl += [ '  return handle_%s_%s (_rope_rp, _rope_aret);\n' % (type_info.name, m.name) ]
+      switchlines += [ (GenUtils.type_id (m), type_info, m) ]
       s += 'static bool handle_%s_%s (const RemoteProcedure &_rope_rp,\n' % (type_info.name, m.name)
       s += '                          RemoteProcedure_Argument *_rope_aret) {\n'
       for a in m.args:
         s += '  ' + self.format_arg (a[0], a[1], a[2], '*') + ';\n'
       #s += '  RemoteProcedure_Argument *arg; int arg_counter = 0;\n'
-      #q = '%s %s::%s (' % (self.type2cpp (m.rtype.name), type_info.name, m.name)
+      #q = '%s %s::%s (' % (self.type2cpp (m.rtype), type_info.name, m.name)
       s += '  if (_rope_rp.args_size() != %d) return false;\n' % len (m.args)
       if m.args:
         s += '  const RemoteProcedure_Argument *_rope_arg;\n'
@@ -323,7 +354,11 @@ class Generator:
     s += '  const RemoteProcedure _rope_rp;\n'
     s += '  RemoteProcedure_Argument _rope_aretmem, *_rope_aret = &_rope_aretmem;\n'
     s += '  switch (_rope_rp.proc_id()) {\n'
-    s += '  '.join (switchlines)
+    for swcase in switchlines:
+      mid, type_info, m = swcase
+      s += '  case 0x%08x: // %s::%s\n' % (mid, type_info.name, m.name)
+      nsname = '::'.join (self.type_relative_namespaces (type_info))
+      s += '    return %s::handle_%s_%s (_rope_rp, _rope_aret);\n' % (nsname, type_info.name, m.name)
     s += '  default:\n'
     s += '    die();\n'
     s += '  }\n'
@@ -354,7 +389,7 @@ class Generator:
   def generate_method (self, functype):
     s = ''
     interfacechar = '&' if functype.rtype.storage == Decls.INTERFACE else ''
-    s += '  ' + self.format_to_tab (self.type2cpp (functype.rtype.name) + interfacechar)
+    s += '  ' + self.format_to_tab (self.type2cpp (functype.rtype) + interfacechar)
     s += functype.name + ' ('
     argindent = len (s)
     l = []
@@ -395,41 +430,48 @@ class Generator:
     s += '};'
     return s
   def generate_impl_types (self, implementation_types):
-    s = '/* --- Generated by Rapicorn-CppStub --- */\n'
+    s = '/* --- Generated by PLIC-CppStub --- */\n'
     s += base_code + '\n'
     self.tabwidth (16)
+    s += self.open_namespace (None)
     # collect impl types
     types = []
     for tp in implementation_types:
       if tp.isimpl:
         types += [ tp ]
     # generate type skeletons
-    s += '\n// --- Skeletons ---\n'
-    for tp in types:
-      if tp.typedef_origin:
-        s += 'typedef %s %s;\n' % (self.type2cpp (tp.typedef_origin.name), tp.name)
-      elif tp.storage == Decls.RECORD:
-        s += self.generate_record_interface (tp) + '\n'
-      elif tp.storage == Decls.SEQUENCE:
-        s += self.generate_record_interface (tp) + '\n'
-      elif tp.storage == Decls.INTERFACE:
-        s += self.generate_class_interface (tp) + '\n'
-      elif tp.storage == Decls.ENUM:
-        s += self.generate_enum_interface (tp) + '\n'
-    # generate type stubs
-    s += '\n// --- Stubs ---\n'
-    switchlines = [ '' ]
-    for tp in types:
-      if tp.typedef_origin:
-        pass
-      elif tp.storage == Decls.RECORD:
-        s += self.generate_record_impl (tp) + '\n'
-      elif tp.storage == Decls.SEQUENCE:
-        s += self.generate_sequence_impl (tp) + '\n'
-      elif tp.storage == Decls.INTERFACE:
-        s += self.generate_class_caller_impl (tp) + '\n'
-        s += self.generate_class_callee_impl (tp, switchlines) + '\n'
-    s += self.generate_callee_impl (switchlines) + '\n'
+    if self.gen_iface:
+      s += '\n// --- Interfaces ---\n'
+      for tp in types:
+        s += self.open_namespace (tp)
+        if tp.typedef_origin:
+          s += 'typedef %s %s;\n' % (self.type2cpp (tp.typedef_origin), tp.name)
+        elif tp.storage == Decls.RECORD:
+          s += self.generate_record_interface (tp) + '\n'
+        elif tp.storage == Decls.SEQUENCE:
+          s += self.generate_record_interface (tp) + '\n'
+        elif tp.storage == Decls.INTERFACE:
+          s += self.generate_class_interface (tp) + '\n'
+        elif tp.storage == Decls.ENUM:
+          s += self.generate_enum_interface (tp) + '\n'
+      s += self.open_namespace (None)
+    # generate client stubs
+    if self.gen_client:
+      s += '\n// --- Client Stubs ---\n'
+      switchlines = []
+      for tp in types:
+        if tp.typedef_origin:
+          continue
+        s += self.open_namespace (tp)
+        if tp.storage == Decls.RECORD:
+          s += self.generate_record_impl (tp) + '\n'
+        elif tp.storage == Decls.SEQUENCE:
+          s += self.generate_sequence_impl (tp) + '\n'
+        elif tp.storage == Decls.INTERFACE:
+          s += self.generate_class_caller_impl (tp) + '\n'
+          s += self.generate_class_callee_impl (tp, switchlines) + '\n'
+      s += self.open_namespace (None)
+      s += self.generate_callee_impl (switchlines) + '\n'
     return s
 
 def error (msg):
@@ -442,6 +484,8 @@ def generate (namespace_list, **args):
   config = {}
   config.update (args)
   gg = Generator()
+  gg.gen_iface = 1
+  gg.gen_client = 1
   textstring = gg.generate_impl_types (config['implementation_types']) # namespace_list
   outname = config.get ('output', '-')
   if outname != '-':
