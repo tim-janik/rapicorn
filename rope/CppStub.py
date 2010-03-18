@@ -115,7 +115,6 @@ class Generator:
     return s
   def type_relative_namespaces (self, type_node):
     tnsl = type_node.list_namespaces() # type namespace list
-    print 'INFO:', '::'.join (d.name for d in tnsl + [ type_node ]), type_node.namespace
     # remove common prefix with global namespace list
     for n in self.namespaces:
       if tnsl and tnsl[0] == n:
