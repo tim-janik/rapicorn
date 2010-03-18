@@ -382,37 +382,26 @@ XFooRecord::to_proto (ProtoRecord &dst) const
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
   RemoteProcedure_Argument *field;
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::INT);
   field->set_vint64 (single_bool);
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::INT);
   field->set_vint64 (single_num);
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::FLOAT);
   field->set_vdouble (single_float);
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::STRING);
   field->set_vstring (single_string);
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::INT);
   field->set_vint64 (sibling1);
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::INT);
   field->set_vint64 (sibling2);
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::INT);
   field->set_vint64 (multi1);
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::INT);
   field->set_vint64 (multi2);
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::INT);
   field->set_vint64 (multi3);
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::INT);
   field->set_vint64 (multi4);
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::ENUM);
   field->set_vint64 (enum_field);
   return true;
 }
@@ -423,37 +412,26 @@ XFooRecord::from_proto (const ProtoRecord &src)
   if (rpr.fields_size() < 11) return false;
   const RemoteProcedure_Argument *field;
   field = &rpr.fields (0);
-  if (field->type() != RemoteProcedure::INT) return false;
   if (!field->has_vint64()) return false;  single_bool = field->vint64();
   field = &rpr.fields (1);
-  if (field->type() != RemoteProcedure::INT) return false;
   if (!field->has_vint64()) return false;  single_num = field->vint64();
   field = &rpr.fields (2);
-  if (field->type() != RemoteProcedure::FLOAT) return false;
   if (!field->has_vdouble()) return false;  single_float = field->vdouble();
   field = &rpr.fields (3);
-  if (field->type() != RemoteProcedure::STRING) return false;
   if (!field->has_vstring()) return false;  single_string = field->vstring();
   field = &rpr.fields (4);
-  if (field->type() != RemoteProcedure::INT) return false;
   if (!field->has_vint64()) return false;  sibling1 = field->vint64();
   field = &rpr.fields (5);
-  if (field->type() != RemoteProcedure::INT) return false;
   if (!field->has_vint64()) return false;  sibling2 = field->vint64();
   field = &rpr.fields (6);
-  if (field->type() != RemoteProcedure::INT) return false;
   if (!field->has_vint64()) return false;  multi1 = field->vint64();
   field = &rpr.fields (7);
-  if (field->type() != RemoteProcedure::INT) return false;
   if (!field->has_vint64()) return false;  multi2 = field->vint64();
   field = &rpr.fields (8);
-  if (field->type() != RemoteProcedure::INT) return false;
   if (!field->has_vint64()) return false;  multi3 = field->vint64();
   field = &rpr.fields (9);
-  if (field->type() != RemoteProcedure::INT) return false;
   if (!field->has_vint64()) return false;  multi4 = field->vint64();
   field = &rpr.fields (10);
-  if (field->type() != RemoteProcedure::ENUM) return false;
   if (!field->has_vint64()) return false;  enum_field = ExtensiveEnum (field->vint64());
   return true;
 }
@@ -613,10 +591,8 @@ NestedTypesRec::to_proto (ProtoRecord &dst) const
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
   RemoteProcedure_Argument *field;
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::RECORD);
   if (!rec.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::SEQUENCE);
   if (!seq.to_proto (ProtoSequenceCast (*field->mutable_vseq()))) return false;
   return true;
 }
@@ -627,10 +603,8 @@ NestedTypesRec::from_proto (const ProtoRecord &src)
   if (rpr.fields_size() < 2) return false;
   const RemoteProcedure_Argument *field;
   field = &rpr.fields (0);
-  if (field->type() != RemoteProcedure::RECORD) return false;
   if (!field->has_vrec() || !rec.from_proto (ProtoRecordCast (field->vrec()))) return false;
   field = &rpr.fields (1);
-  if (field->type() != RemoteProcedure::SEQUENCE) return false;
   if (!field->has_vseq() || !seq.from_proto (ProtoSequenceCast (field->vseq()))) return false;
   return true;
 }
@@ -663,16 +637,12 @@ NewRecord::to_proto (ProtoRecord &dst) const
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
   RemoteProcedure_Argument *field;
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::INT);
   field->set_vint64 (i);
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::ENUM);
   field->set_vint64 (enum1);
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::SEQUENCE);
   if (!xfs.to_proto (ProtoSequenceCast (*field->mutable_vseq()))) return false;
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::RECORD);
   if (!ntr.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
   return true;
 }
@@ -683,16 +653,12 @@ NewRecord::from_proto (const ProtoRecord &src)
   if (rpr.fields_size() < 4) return false;
   const RemoteProcedure_Argument *field;
   field = &rpr.fields (0);
-  if (field->type() != RemoteProcedure::INT) return false;
   if (!field->has_vint64()) return false;  i = field->vint64();
   field = &rpr.fields (1);
-  if (field->type() != RemoteProcedure::ENUM) return false;
   if (!field->has_vint64()) return false;  enum1 = Enum1 (field->vint64());
   field = &rpr.fields (2);
-  if (field->type() != RemoteProcedure::SEQUENCE) return false;
   if (!field->has_vseq() || !xfs.from_proto (ProtoSequenceCast (field->vseq()))) return false;
   field = &rpr.fields (3);
-  if (field->type() != RemoteProcedure::RECORD) return false;
   if (!field->has_vrec() || !ntr.from_proto (ProtoRecordCast (field->vrec()))) return false;
   return true;
 }
@@ -705,13 +671,10 @@ InnerRecord::to_proto (ProtoRecord &dst) const
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
   RemoteProcedure_Argument *field;
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::INT);
   field->set_vint64 (x);
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::INT);
   field->set_vint64 (y);
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::RECORD);
   if (!rec.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
   return true;
 }
@@ -722,13 +685,10 @@ InnerRecord::from_proto (const ProtoRecord &src)
   if (rpr.fields_size() < 3) return false;
   const RemoteProcedure_Argument *field;
   field = &rpr.fields (0);
-  if (field->type() != RemoteProcedure::INT) return false;
   if (!field->has_vint64()) return false;  x = field->vint64();
   field = &rpr.fields (1);
-  if (field->type() != RemoteProcedure::INT) return false;
   if (!field->has_vint64()) return false;  y = field->vint64();
   field = &rpr.fields (2);
-  if (field->type() != RemoteProcedure::RECORD) return false;
   if (!field->has_vrec() || !rec.from_proto (ProtoRecordCast (field->vrec()))) return false;
   return true;
 }
@@ -740,7 +700,6 @@ Refer2Inner::to_proto (ProtoRecord &dst) const
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
   RemoteProcedure_Argument *field;
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::RECORD);
   if (!r.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
   return true;
 }
@@ -751,7 +710,6 @@ Refer2Inner::from_proto (const ProtoRecord &src)
   if (rpr.fields_size() < 1) return false;
   const RemoteProcedure_Argument *field;
   field = &rpr.fields (0);
-  if (field->type() != RemoteProcedure::RECORD) return false;
   if (!field->has_vrec() || !r.from_proto (ProtoRecordCast (field->vrec()))) return false;
   return true;
 }
@@ -765,16 +723,12 @@ SomeRecord::to_proto (ProtoRecord &dst) const
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
   RemoteProcedure_Argument *field;
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::RECORD);
   if (!r1.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::RECORD);
   if (!r2.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::RECORD);
   if (!r3.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::RECORD);
   if (!r4.to_proto (ProtoRecordCast (*field->mutable_vrec()))) return false;
   return true;
 }
@@ -785,16 +739,12 @@ SomeRecord::from_proto (const ProtoRecord &src)
   if (rpr.fields_size() < 4) return false;
   const RemoteProcedure_Argument *field;
   field = &rpr.fields (0);
-  if (field->type() != RemoteProcedure::RECORD) return false;
   if (!field->has_vrec() || !r1.from_proto (ProtoRecordCast (field->vrec()))) return false;
   field = &rpr.fields (1);
-  if (field->type() != RemoteProcedure::RECORD) return false;
   if (!field->has_vrec() || !r2.from_proto (ProtoRecordCast (field->vrec()))) return false;
   field = &rpr.fields (2);
-  if (field->type() != RemoteProcedure::RECORD) return false;
   if (!field->has_vrec() || !r3.from_proto (ProtoRecordCast (field->vrec()))) return false;
   field = &rpr.fields (3);
-  if (field->type() != RemoteProcedure::RECORD) return false;
   if (!field->has_vrec() || !r4.from_proto (ProtoRecordCast (field->vrec()))) return false;
   return true;
 }
@@ -816,7 +766,6 @@ UIWidgetArea::single_arg (int n)
   rp.set_proc_id (0x0def0002);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::INT);
   arg->set_vint64 (n);
   return 0; // FIXME
 }
@@ -827,7 +776,6 @@ UIWidgetArea::single_arg2 (int n)
   rp.set_proc_id (0x0def0003);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::INT);
   arg->set_vint64 (n);
   return 0; // FIXME
 }
@@ -839,10 +787,8 @@ UIWidgetArea::two_args (int n,
   rp.set_proc_id (0x0def0004);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::INT);
   arg->set_vint64 (n);
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::FLOAT);
   arg->set_vdouble (r);
   return 0; // FIXME
 }
@@ -854,10 +800,8 @@ UIWidgetArea::two_args2 (int n,
   rp.set_proc_id (0x0def0005);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::INT);
   arg->set_vint64 (n);
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::FLOAT);
   arg->set_vdouble (r);
   return 0; // FIXME
 }
@@ -872,19 +816,14 @@ UIWidgetArea::multi_args (int n,
   rp.set_proc_id (0x0def0006);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::INT);
   arg->set_vint64 (n);
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::FLOAT);
   arg->set_vdouble (r);
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::INT);
   arg->set_vint64 (i);
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::STRING);
   arg->set_vstring (s);
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::FLOAT);
   arg->set_vdouble (y);
   return 0; // FIXME
 }
@@ -896,10 +835,8 @@ UIWidgetArea::self_method (UIWidgetArea &ba1,
   rp.set_proc_id (0x0def0007);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::INTERFACE);
   arg->set_vstring (Instance2StringCast (ba1));
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::INTERFACE);
   arg->set_vstring (Instance2StringCast (ba2));
   return 0; // FIXME
 }
@@ -923,7 +860,6 @@ UIWidgetArea::on_click2in (std::string command)
   rp.set_proc_id (0x0def000a);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::STRING);
   arg->set_vstring (command);
 }
 
@@ -943,7 +879,6 @@ handle_UIWidgetArea_single_arg (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 1) return false;
   const RemoteProcedure_Argument *_rope_arg;
   _rope_arg = &_rope_rp.args (0);
-  if (_rope_arg->type() != RemoteProcedure::INT) return false;
   if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
   (void) _rope_aret;
   return true;
@@ -956,7 +891,6 @@ handle_UIWidgetArea_single_arg2 (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 1) return false;
   const RemoteProcedure_Argument *_rope_arg;
   _rope_arg = &_rope_rp.args (0);
-  if (_rope_arg->type() != RemoteProcedure::INT) return false;
   if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
   (void) _rope_aret;
   return true;
@@ -970,10 +904,8 @@ handle_UIWidgetArea_two_args (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 2) return false;
   const RemoteProcedure_Argument *_rope_arg;
   _rope_arg = &_rope_rp.args (0);
-  if (_rope_arg->type() != RemoteProcedure::INT) return false;
   if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
   _rope_arg = &_rope_rp.args (1);
-  if (_rope_arg->type() != RemoteProcedure::FLOAT) return false;
   if (!_rope_arg->has_vdouble()) return false;  r = _rope_arg->vdouble();
   (void) _rope_aret;
   return true;
@@ -987,10 +919,8 @@ handle_UIWidgetArea_two_args2 (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 2) return false;
   const RemoteProcedure_Argument *_rope_arg;
   _rope_arg = &_rope_rp.args (0);
-  if (_rope_arg->type() != RemoteProcedure::INT) return false;
   if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
   _rope_arg = &_rope_rp.args (1);
-  if (_rope_arg->type() != RemoteProcedure::FLOAT) return false;
   if (!_rope_arg->has_vdouble()) return false;  r = _rope_arg->vdouble();
   (void) _rope_aret;
   return true;
@@ -1007,19 +937,14 @@ handle_UIWidgetArea_multi_args (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 5) return false;
   const RemoteProcedure_Argument *_rope_arg;
   _rope_arg = &_rope_rp.args (0);
-  if (_rope_arg->type() != RemoteProcedure::INT) return false;
   if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
   _rope_arg = &_rope_rp.args (1);
-  if (_rope_arg->type() != RemoteProcedure::FLOAT) return false;
   if (!_rope_arg->has_vdouble()) return false;  r = _rope_arg->vdouble();
   _rope_arg = &_rope_rp.args (2);
-  if (_rope_arg->type() != RemoteProcedure::INT) return false;
   if (!_rope_arg->has_vint64()) return false;  i = _rope_arg->vint64();
   _rope_arg = &_rope_rp.args (3);
-  if (_rope_arg->type() != RemoteProcedure::STRING) return false;
   if (!_rope_arg->has_vstring()) return false;  s = _rope_arg->vstring();
   _rope_arg = &_rope_rp.args (4);
-  if (_rope_arg->type() != RemoteProcedure::FLOAT) return false;
   if (!_rope_arg->has_vdouble()) return false;  y = _rope_arg->vdouble();
   (void) _rope_aret;
   return true;
@@ -1033,10 +958,8 @@ handle_UIWidgetArea_self_method (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 2) return false;
   const RemoteProcedure_Argument *_rope_arg;
   _rope_arg = &_rope_rp.args (0);
-  if (_rope_arg->type() != RemoteProcedure::INTERFACE) return false;
   if (!_rope_arg->has_vstring()) return false;  ba1 = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
   _rope_arg = &_rope_rp.args (1);
-  if (_rope_arg->type() != RemoteProcedure::INTERFACE) return false;
   if (!_rope_arg->has_vstring()) return false;  ba2 = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
   (void) _rope_aret;
   return true;
@@ -1065,7 +988,6 @@ handle_UIWidgetArea_on_click2in (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 1) return false;
   const RemoteProcedure_Argument *_rope_arg;
   _rope_arg = &_rope_rp.args (0);
-  if (_rope_arg->type() != RemoteProcedure::STRING) return false;
   if (!_rope_arg->has_vstring()) return false;  command = _rope_arg->vstring();
   (void) _rope_aret;
   return true;
@@ -1085,10 +1007,8 @@ QuickRecord::to_proto (ProtoRecord &dst) const
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
   RemoteProcedure_Argument *field;
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::INT);
   field->set_vint64 (int1);
   field = rpr.add_fields();
-  field->set_type (RemoteProcedure::INT);
   field->set_vint64 (int2);
   return true;
 }
@@ -1099,10 +1019,8 @@ QuickRecord::from_proto (const ProtoRecord &src)
   if (rpr.fields_size() < 2) return false;
   const RemoteProcedure_Argument *field;
   field = &rpr.fields (0);
-  if (field->type() != RemoteProcedure::INT) return false;
   if (!field->has_vint64()) return false;  int1 = field->vint64();
   field = &rpr.fields (1);
-  if (field->type() != RemoteProcedure::INT) return false;
   if (!field->has_vint64()) return false;  int2 = field->vint64();
   return true;
 }
@@ -1136,10 +1054,8 @@ MethodTestInterface::method_with_bools (bool input,
   rp.set_proc_id (0x0def000b);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::INT);
   arg->set_vint64 (input);
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::INT);
   arg->set_vint64 (optval);
   return 0; // FIXME
 }
@@ -1151,10 +1067,8 @@ MethodTestInterface::method_with_ints (int input,
   rp.set_proc_id (0x0def000c);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::INT);
   arg->set_vint64 (input);
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::INT);
   arg->set_vint64 (optval);
   return 0; // FIXME
 }
@@ -1166,10 +1080,8 @@ MethodTestInterface::method_with_floats (double input,
   rp.set_proc_id (0x0def000d);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::FLOAT);
   arg->set_vdouble (input);
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::FLOAT);
   arg->set_vdouble (optval);
   return 0; // FIXME
 }
@@ -1181,10 +1093,8 @@ MethodTestInterface::method_with_string (std::string input,
   rp.set_proc_id (0x0def000e);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::STRING);
   arg->set_vstring (input);
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::STRING);
   arg->set_vstring (optval);
   return 0; // FIXME
 }
@@ -1196,10 +1106,8 @@ MethodTestInterface::method_with_enum (QuickEnum input,
   rp.set_proc_id (0x0def000f);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::ENUM);
   arg->set_vint64 (input);
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::ENUM);
   arg->set_vint64 (optval);
   return QuickEnum (0); // FIXME
 }
@@ -1211,10 +1119,8 @@ MethodTestInterface::method_with_record (QuickRecord input,
   rp.set_proc_id (0x0def0010);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::RECORD);
   if (!input.to_proto (ProtoRecordCast (*arg->mutable_vrec()))) die();
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::RECORD);
   if (!optval.to_proto (ProtoRecordCast (*arg->mutable_vrec()))) die();
   return QuickRecord(); // FIXME
 }
@@ -1226,10 +1132,8 @@ MethodTestInterface::method_with_sequence (QuickSequence input,
   rp.set_proc_id (0x0def0011);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::SEQUENCE);
   if (!input.to_proto (ProtoSequenceCast (*arg->mutable_vseq()))) die();
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::SEQUENCE);
   if (!optval.to_proto (ProtoSequenceCast (*arg->mutable_vseq()))) die();
   return QuickSequence(); // FIXME
 }
@@ -1241,10 +1145,8 @@ MethodTestInterface::method_with_interface (GrandChild &input,
   rp.set_proc_id (0x0def0012);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::INTERFACE);
   arg->set_vstring (Instance2StringCast (input));
   arg = rp.add_args();
-  arg->set_type (RemoteProcedure::INTERFACE);
   arg->set_vstring (Instance2StringCast (optval));
   return *(GrandChild*) NULL; // FIXME
 }
@@ -1258,10 +1160,8 @@ handle_MethodTestInterface_method_with_bools (const RemoteProcedure    &_rope_rp
   if (_rope_rp.args_size() != 2) return false;
   const RemoteProcedure_Argument *_rope_arg;
   _rope_arg = &_rope_rp.args (0);
-  if (_rope_arg->type() != RemoteProcedure::INT) return false;
   if (!_rope_arg->has_vint64()) return false;  input = _rope_arg->vint64();
   _rope_arg = &_rope_rp.args (1);
-  if (_rope_arg->type() != RemoteProcedure::INT) return false;
   if (!_rope_arg->has_vint64()) return false;  optval = _rope_arg->vint64();
   (void) _rope_aret;
   return true;
@@ -1275,10 +1175,8 @@ handle_MethodTestInterface_method_with_ints (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 2) return false;
   const RemoteProcedure_Argument *_rope_arg;
   _rope_arg = &_rope_rp.args (0);
-  if (_rope_arg->type() != RemoteProcedure::INT) return false;
   if (!_rope_arg->has_vint64()) return false;  input = _rope_arg->vint64();
   _rope_arg = &_rope_rp.args (1);
-  if (_rope_arg->type() != RemoteProcedure::INT) return false;
   if (!_rope_arg->has_vint64()) return false;  optval = _rope_arg->vint64();
   (void) _rope_aret;
   return true;
@@ -1292,10 +1190,8 @@ handle_MethodTestInterface_method_with_floats (const RemoteProcedure    &_rope_r
   if (_rope_rp.args_size() != 2) return false;
   const RemoteProcedure_Argument *_rope_arg;
   _rope_arg = &_rope_rp.args (0);
-  if (_rope_arg->type() != RemoteProcedure::FLOAT) return false;
   if (!_rope_arg->has_vdouble()) return false;  input = _rope_arg->vdouble();
   _rope_arg = &_rope_rp.args (1);
-  if (_rope_arg->type() != RemoteProcedure::FLOAT) return false;
   if (!_rope_arg->has_vdouble()) return false;  optval = _rope_arg->vdouble();
   (void) _rope_aret;
   return true;
@@ -1309,10 +1205,8 @@ handle_MethodTestInterface_method_with_string (const RemoteProcedure    &_rope_r
   if (_rope_rp.args_size() != 2) return false;
   const RemoteProcedure_Argument *_rope_arg;
   _rope_arg = &_rope_rp.args (0);
-  if (_rope_arg->type() != RemoteProcedure::STRING) return false;
   if (!_rope_arg->has_vstring()) return false;  input = _rope_arg->vstring();
   _rope_arg = &_rope_rp.args (1);
-  if (_rope_arg->type() != RemoteProcedure::STRING) return false;
   if (!_rope_arg->has_vstring()) return false;  optval = _rope_arg->vstring();
   (void) _rope_aret;
   return true;
@@ -1326,10 +1220,8 @@ handle_MethodTestInterface_method_with_enum (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 2) return false;
   const RemoteProcedure_Argument *_rope_arg;
   _rope_arg = &_rope_rp.args (0);
-  if (_rope_arg->type() != RemoteProcedure::ENUM) return false;
   if (!_rope_arg->has_vint64()) return false;  input = QuickEnum (_rope_arg->vint64());
   _rope_arg = &_rope_rp.args (1);
-  if (_rope_arg->type() != RemoteProcedure::ENUM) return false;
   if (!_rope_arg->has_vint64()) return false;  optval = QuickEnum (_rope_arg->vint64());
   (void) _rope_aret;
   return true;
@@ -1343,10 +1235,8 @@ handle_MethodTestInterface_method_with_record (const RemoteProcedure    &_rope_r
   if (_rope_rp.args_size() != 2) return false;
   const RemoteProcedure_Argument *_rope_arg;
   _rope_arg = &_rope_rp.args (0);
-  if (_rope_arg->type() != RemoteProcedure::RECORD) return false;
   if (!_rope_arg->has_vrec() || !input.from_proto (ProtoRecordCast (_rope_arg->vrec()))) return false;
   _rope_arg = &_rope_rp.args (1);
-  if (_rope_arg->type() != RemoteProcedure::RECORD) return false;
   if (!_rope_arg->has_vrec() || !optval.from_proto (ProtoRecordCast (_rope_arg->vrec()))) return false;
   (void) _rope_aret;
   return true;
@@ -1360,10 +1250,8 @@ handle_MethodTestInterface_method_with_sequence (const RemoteProcedure    &_rope
   if (_rope_rp.args_size() != 2) return false;
   const RemoteProcedure_Argument *_rope_arg;
   _rope_arg = &_rope_rp.args (0);
-  if (_rope_arg->type() != RemoteProcedure::SEQUENCE) return false;
   if (!_rope_arg->has_vseq() || !input.from_proto (ProtoSequenceCast (_rope_arg->vseq()))) return false;
   _rope_arg = &_rope_rp.args (1);
-  if (_rope_arg->type() != RemoteProcedure::SEQUENCE) return false;
   if (!_rope_arg->has_vseq() || !optval.from_proto (ProtoSequenceCast (_rope_arg->vseq()))) return false;
   (void) _rope_aret;
   return true;
@@ -1377,10 +1265,8 @@ handle_MethodTestInterface_method_with_interface (const RemoteProcedure    &_rop
   if (_rope_rp.args_size() != 2) return false;
   const RemoteProcedure_Argument *_rope_arg;
   _rope_arg = &_rope_rp.args (0);
-  if (_rope_arg->type() != RemoteProcedure::INTERFACE) return false;
   if (!_rope_arg->has_vstring()) return false;  input = Instance4StringCast<GrandChild> (_rope_arg->vstring());
   _rope_arg = &_rope_rp.args (1);
-  if (_rope_arg->type() != RemoteProcedure::INTERFACE) return false;
   if (!_rope_arg->has_vstring()) return false;  optval = Instance4StringCast<GrandChild> (_rope_arg->vstring());
   (void) _rope_aret;
   return true;

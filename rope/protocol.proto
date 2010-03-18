@@ -43,7 +43,7 @@ message RemoteProcedure {
     repeated Argument fields = 1;
   }
   message Argument {
-    required ValueType type = 1;
+    // required ValueType type = 1;
     optional sfixed64  vint64 = 2;  // INT, ENUM
     optional double    vdouble = 3; // FLOAT
     optional string    vstring = 4; // STRING, INTERFACE

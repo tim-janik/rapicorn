@@ -200,7 +200,7 @@ class Generator:
     s += '};'
     return s
   def generate_to_proto (self, argname, type_info, valname, onerror = 'return false'):
-    s = '  %s->set_type (RemoteProcedure::%s);\n' % (argname, Decls.storage_name (type_info.storage))
+    s = ''
     if type_info.storage == Decls.VOID:
       pass
     elif type_info.storage in (Decls.INT, Decls.ENUM):
@@ -219,7 +219,7 @@ class Generator:
       raise RuntimeError ("Unexpected storage type: " + type_info.storage)
     return s
   def generate_from_proto (self, argname, type_info, valname):
-    s = '  if (%s->type() != RemoteProcedure::%s) return false;\n' % (argname, Decls.storage_name (type_info.storage))
+    s = ''
     if type_info.storage == Decls.VOID:
       pass
     elif type_info.storage == Decls.INT:
