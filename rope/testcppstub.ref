@@ -4,13 +4,22 @@
 #include <string>
 #include <vector>
 
+#include "protocol-pb2.hh"
+
+#if     __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
+#define __UNUSED__      __attribute__ ((__unused__))
+#else
+#define __UNUSED__
+#endif
+
+namespace { // Anonymous
+
 class ProtoRecord;
 class ProtoSequence;
 class ProtoArg;
 class ProtoMessage;
 
 // FIXME:
-#include "protocol-pb2.hh"
 typedef Rapicorn::Rope::RemoteProcedure RemoteProcedure;
 typedef Rapicorn::Rope::RemoteProcedure_Sequence RemoteProcedure_Sequence;
 typedef Rapicorn::Rope::RemoteProcedure_Record RemoteProcedure_Record;
@@ -67,7 +76,7 @@ Instance4StringCast (const std::string &objstring)
 }
 #define die()      (void) 0 // FIXME
 
-// Base classes...
+} // Anonymous
 
 
 // --- Interfaces ---
@@ -1279,7 +1288,7 @@ namespace RapicornPlicTest {
 
 } // RapicornPlicTest
 
-bool
+static bool __UNUSED__
 rope_callee_handler (const RemoteProcedure _rope_rp)
 {
   RemoteProcedure_Argument _rope_aretmem, *_rope_aret = &_rope_aretmem;
