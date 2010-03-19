@@ -4,7 +4,7 @@
 ## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = . po plic core rope ui tools tests examples docs web
+SUBDIRS = . po plic core ui rope tools tests examples docs web
 
 docdir  = ${datarootdir}/doc/${PACKAGE}${RAPICORN_RELEASE}
 noinst_DATA =
