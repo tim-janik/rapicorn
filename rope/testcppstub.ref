@@ -382,7 +382,7 @@ public:
 };
 } // RapicornPlicTest
 
-// --- Client Stubs ---
+// --- Server Stubs ---
 
 namespace MandatoryNamespace {
 bool
