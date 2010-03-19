@@ -93,7 +93,7 @@ def print_help (with_help = True):
   print "  --help, -h                print this help message"
   print "  --version, -v             print version info"
   print "  --output-format=<oformat>"
-  print "  -O=<oformat>              select output format"
+  print "  -G=<oformat>              select output format"
   print "  -o=<outputfile>           output filename"
   print "Solitary Options:"
   print "  --list-formats            list output formats"
@@ -102,7 +102,7 @@ def print_help (with_help = True):
 def parse_files_and_args():
   import re, getopt
   config = { 'files' : [], 'backend' : 'PrettyDump' }
-  sop = 'vhO:o:'
+  sop = 'vhG:o:'
   lop = ['help', 'version', 'output-format=', 'list-formats',
          'cc-type-package-parser', 'plic-debug']
   try:
@@ -115,7 +115,7 @@ def parse_files_and_args():
     if arg == '-v' or arg == '--version': print_help (false); sys.exit (0)
     if arg == '--plic-debug': config['pass-exceptions'] = 1
     if arg == '-o': config['output'] = val
-    if arg == '-O' or arg == '--output-format':
+    if arg == '-G' or arg == '--generator':
       if val[0] == '=': val = val[1:]
       if val in backends:
         config['backend'] = val

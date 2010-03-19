@@ -36,13 +36,13 @@ check-fail:	testfail.idl
 
 check-TypePackage: ptptest
 	@$(call TSTTITLE)
-	$(_@) ${TESTPLIC} $(srcdir)/testpass.idl -O TypePackage
+	$(_@) ${TESTPLIC} $(srcdir)/testpass.idl -G TypePackage
 	$(_@) ./ptptest plic.out $(TESTPASS_AUXTESTS) > /dev/null ; $(call TSTRESULT)
 	$(_@) rm -f plic.out
 
 check-Rapicorn:
 	@$(call TSTTITLE)
-	$(_@) ${TESTPLIC} $(srcdir)/testpass.idl -O Rapicorn -o $(TSTOUT)
+	$(_@) ${TESTPLIC} $(srcdir)/testpass.idl -G Rapicorn -o $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testrapicorn.ref)
 
 check:	check-pass check-fail check-TypePackage check-Rapicorn

@@ -94,7 +94,7 @@ check: # check-ptpp-version # sanity check the --cc-type-package-parser rule
 EXTRA_DIST += types-std.idl
 types-zgen.c:  ./rapicorn-zintern $(srcdir)/types-std.idl
 	: # compile IDL definitions into binary data
-	$(PLICINT) $(srcdir)/types-std.idl -O TypePackage -o ./types-std.tpg
+	$(PLICINT) $(srcdir)/types-std.idl -G TypePackage -o ./types-std.tpg
 	: # convert to .rodata and fixup standard types
 	./rapicorn-zintern -b RAPICORNSTD_RODATA -n ./types-std.tpg | \
 	  sed -e 's/12=Rapicorn_STD/12=Rapicorn*STD/'	\

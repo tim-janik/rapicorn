@@ -67,7 +67,7 @@ mod1tst.cc:          testtypes.tpg
 EXTRA_DIST        += testtypes.idl testtypes.tpg
 
 %.tpg: $(srcdir)/%.idl
-	$(PLICINT) $< -O TypePackage -o $@
+	$(PLICINT) $< -G TypePackage -o $@
 CLEANFILES += *.tpg
 
 # === test rules ===

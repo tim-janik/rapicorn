@@ -64,7 +64,7 @@ CLEANFILES += protocol.pb.h protocol.pb.cc protocol-pb2.cc protocol-pb2.hh
 # === pycstub.cc ===
 pycstub.cc: $(srcdir)/base.idl $(srcdir)/PyCStub.py
 	: # compile IDL definitions into pycstub.cc
-	${PLICINT} -O=$(srcdir)/PyCStub $(srcdir)/base.idl -o xgen-$(@F)
+	${PLICINT} -G $(srcdir)/PyCStub $(srcdir)/base.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 $(srcdir)/pyrope.cc: pycstub.cc
 CLEANFILES += xgen-pycstub.cc pycstub.cc
@@ -73,7 +73,7 @@ EXTRA_DIST += protocol.proto
 
 # === pyRapicornStub.py ===
 pyRapicornStub.py: $(srcdir)/base.idl $(srcdir)/PyStub.py
-	${PLICINT} -O=$(srcdir)/PyStub $(srcdir)/base.idl -o xgen-$(@F)
+	${PLICINT} -G $(srcdir)/PyStub $(srcdir)/base.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += xgen-pyRapicornStub.py pyRapicornStub.py
 
@@ -81,7 +81,7 @@ CLEANFILES += xgen-pyRapicornStub.py pyRapicornStub.py
 EXTRA_DIST += testpystub.ref
 check-pystub:
 	@$(call TSTTITLE)
-	$(_@) ${PLICINT} -O=$(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
+	$(_@) ${PLICINT} -G $(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testpystub.ref)
 	@$(call TSTTITLE,check-pystub-syntax)
 	$(_@) $(PROTOC) $(srcdir)/protocol.proto --python_out=. # protocol_pb2.py
@@ -93,7 +93,7 @@ check-local: check-pystub
 # === PyCStub test ===
 check-pycstub:
 	@$(call TSTTITLE)
-	$(_@) ${PLICINT} -O=$(srcdir)/PyCStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
+	$(_@) ${PLICINT} -G $(srcdir)/PyCStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testpycstub.ref)
 	@$(call TSTTITLE,check-pycstub-syntax)
 	$(_@) cp $(srcdir)/testpycstub.ref testpycstub.cc
@@ -105,7 +105,7 @@ check-local: check-pycstub
 # === CppStub test ===
 check-cppstub:
 	@$(call TSTTITLE)
-	$(_@) ${PLICINT} -O=$(srcdir)/CppStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
+	$(_@) ${PLICINT} -G $(srcdir)/CppStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testcppstub.ref)
 	@$(call TSTTITLE,check-cppstub-syntax)
 	$(_@) cp $(srcdir)/testcppstub.ref testcppstub.cc
@@ -124,5 +124,5 @@ check-local: check-base-idl
 # === PyStub base.idl test ===
 check-pystub-for-base.idl:
 	@$(call TSTTITLE)
-	$(_@) ${PLICINT} -O=$(srcdir)/PyStub $(srcdir)/base.idl | $(PYTHON) ; $(call TSTRESULT)
+	$(_@) ${PLICINT} -G $(srcdir)/PyStub $(srcdir)/base.idl | $(PYTHON) ; $(call TSTRESULT)
 check-local: check-pystub-for-base.idl
