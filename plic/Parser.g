@@ -23,7 +23,7 @@ PLIC_VERSION=\
 import yapps2runtime as runtime
 import AuxData
 
-reservedwords = ('class', 'signal', 'void')
+reservedwords = ('class', 'signal', 'void', 'self')
 collectors = ('void', 'sum', 'last', 'until0', 'while0')
 keywords = ('TRUE', 'True', 'true', 'FALSE', 'False', 'false',
             'namespace', 'enum', 'enumeration', 'Const', 'typedef', 'interface',
@@ -93,6 +93,8 @@ class YYGlobals (object):
     self.parse_assign_auxdata (ifields)
     mdict = {}
     for field in ifields:
+      if field[0] in reservedkeywords:
+        raise NameError ('invalid property name: ' + field[0])
       if mdict.has_key (field[0]):
         raise NameError ('duplicate member name: ' + field[0])
       mdict[field[0]] = true
@@ -108,8 +110,10 @@ class YYGlobals (object):
       mtype.set_rtype (method[1])
       adict = {}
       for arg in method_args:
+        if arg[0] in reservedkeywords:
+          raise NameError ('invalid method arg name: ' + method[0] + ' (...' + arg[0] + '...)')
         if adict.has_key (arg[0]):
-          raise NameError ('duplicate method arg name: ' + method[0] + ' (..., ' + arg[0] + '...)')
+          raise NameError ('duplicate method arg name: ' + method[0] + ' (...' + arg[0] + '...)')
         adict[arg[0]] = true
         mtype.add_arg (arg[0], arg[1], arg[2])
       iface.add_method (mtype, method[0] in sigset)

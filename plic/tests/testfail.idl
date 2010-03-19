@@ -83,3 +83,7 @@ include "include-f1.idl"; // test include error messages
 namespace B { enum E { E1 }; } namespace B { enum E { E1 }; } // namespaced type redefinition
 
 namespace A { namespace B { enum E { E1 }; } namespace B { enum E { E1 }; } } // namespaced type redefinition
+
+interface I { int method (I self); }; // invalid method arg name
+
+interface I { int self; }; // invalid property name

@@ -103,7 +103,7 @@
 .../testfail.idl:71: NameError: duplicate member name: xxx
 >  ...PlicFailTest { interface I { int xxx; int xxx (); }; // multiple member definitions
 >                                                        ^
-.../testfail.idl:72: NameError: duplicate method arg name: method (..., n...)
+.../testfail.idl:72: NameError: duplicate method arg name: method (...n...)
 >  ...PlicFailTest { interface I { int method (int n, int n); }; // duplicate method argument
 >                                                              ^
 .../testfail.idl:73: TypeError: no such interface type: Unknown
@@ -138,3 +138,9 @@
 .../testfail.idl:85: TypeError: redefining existing identifier: E1
 >  ... namespace B { enum E { E1 }; } namespace B { enum E { E1 }; } } // namespaced type redefinition
 >                                                             ^
+.../testfail.idl:87: NameError: invalid method arg name: method (...self...)
+>  ...PlicFailTest { interface I { int method (I self); }; // invalid method arg name
+>                                                        ^
+.../testfail.idl:89: NameError: invalid property name: self
+>  namespace PlicFailTest { interface I { int self; }; // invalid property name
+>                                                    ^
