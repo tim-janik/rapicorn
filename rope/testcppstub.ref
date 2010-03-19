@@ -382,7 +382,7 @@ public:
 };
 } // RapicornPlicTest
 
-// --- Server Stubs ---
+// --- Client Stubs ---
 
 namespace MandatoryNamespace {
 bool
@@ -872,140 +872,6 @@ UIWidgetArea::on_click2in (std::string command)
   arg->set_vstring (command);
 }
 
-static bool
-handle_UIWidgetArea_simple_method (const RemoteProcedure    &_rope_rp,
-                                   RemoteProcedure_Argument *_rope_aret)
-{
-  if (_rope_rp.args_size() != 0) return false;
-  (void) _rope_aret;
-  return true;
-}
-static bool
-handle_UIWidgetArea_single_arg (const RemoteProcedure    &_rope_rp,
-                                RemoteProcedure_Argument *_rope_aret)
-{
-  int n;
-  if (_rope_rp.args_size() != 1) return false;
-  const RemoteProcedure_Argument *_rope_arg;
-  _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
-  (void) _rope_aret;
-  return true;
-}
-static bool
-handle_UIWidgetArea_single_arg2 (const RemoteProcedure    &_rope_rp,
-                                 RemoteProcedure_Argument *_rope_aret)
-{
-  int n;
-  if (_rope_rp.args_size() != 1) return false;
-  const RemoteProcedure_Argument *_rope_arg;
-  _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
-  (void) _rope_aret;
-  return true;
-}
-static bool
-handle_UIWidgetArea_two_args (const RemoteProcedure    &_rope_rp,
-                              RemoteProcedure_Argument *_rope_aret)
-{
-  int n;
-  double r;
-  if (_rope_rp.args_size() != 2) return false;
-  const RemoteProcedure_Argument *_rope_arg;
-  _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
-  _rope_arg = &_rope_rp.args (1);
-  if (!_rope_arg->has_vdouble()) return false;  r = _rope_arg->vdouble();
-  (void) _rope_aret;
-  return true;
-}
-static bool
-handle_UIWidgetArea_two_args2 (const RemoteProcedure    &_rope_rp,
-                               RemoteProcedure_Argument *_rope_aret)
-{
-  int n;
-  double r;
-  if (_rope_rp.args_size() != 2) return false;
-  const RemoteProcedure_Argument *_rope_arg;
-  _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
-  _rope_arg = &_rope_rp.args (1);
-  if (!_rope_arg->has_vdouble()) return false;  r = _rope_arg->vdouble();
-  (void) _rope_aret;
-  return true;
-}
-static bool
-handle_UIWidgetArea_multi_args (const RemoteProcedure    &_rope_rp,
-                                RemoteProcedure_Argument *_rope_aret)
-{
-  int n;
-  double r;
-  int i;
-  std::string s;
-  double y;
-  if (_rope_rp.args_size() != 5) return false;
-  const RemoteProcedure_Argument *_rope_arg;
-  _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
-  _rope_arg = &_rope_rp.args (1);
-  if (!_rope_arg->has_vdouble()) return false;  r = _rope_arg->vdouble();
-  _rope_arg = &_rope_rp.args (2);
-  if (!_rope_arg->has_vint64()) return false;  i = _rope_arg->vint64();
-  _rope_arg = &_rope_rp.args (3);
-  if (!_rope_arg->has_vstring()) return false;  s = _rope_arg->vstring();
-  _rope_arg = &_rope_rp.args (4);
-  if (!_rope_arg->has_vdouble()) return false;  y = _rope_arg->vdouble();
-  (void) _rope_aret;
-  return true;
-}
-static bool
-handle_UIWidgetArea_self_method (const RemoteProcedure    &_rope_rp,
-                                 RemoteProcedure_Argument *_rope_aret)
-{
-  UIWidgetArea *ba1;
-  UIWidgetArea *ba2;
-  if (_rope_rp.args_size() != 2) return false;
-  const RemoteProcedure_Argument *_rope_arg;
-  _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vstring()) return false;  ba1 = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
-  _rope_arg = &_rope_rp.args (1);
-  if (!_rope_arg->has_vstring()) return false;  ba2 = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
-  (void) _rope_aret;
-  return true;
-}
-static bool
-handle_UIWidgetArea_void_method (const RemoteProcedure    &_rope_rp,
-                                 RemoteProcedure_Argument *_rope_aret)
-{
-  if (_rope_rp.args_size() != 0) return false;
-  (void) _rope_aret;
-  return true;
-}
-static bool
-handle_UIWidgetArea_on_click2out (const RemoteProcedure    &_rope_rp,
-                                  RemoteProcedure_Argument *_rope_aret)
-{
-  if (_rope_rp.args_size() != 0) return false;
-  (void) _rope_aret;
-  return true;
-}
-static bool
-handle_UIWidgetArea_on_click2in (const RemoteProcedure    &_rope_rp,
-                                 RemoteProcedure_Argument *_rope_aret)
-{
-  std::string command;
-  if (_rope_rp.args_size() != 1) return false;
-  const RemoteProcedure_Argument *_rope_arg;
-  _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vstring()) return false;  command = _rope_arg->vstring();
-  (void) _rope_aret;
-  return true;
-}
-
-
-
-
-
 
 
 
@@ -1160,6 +1026,158 @@ MethodTestInterface::method_with_interface (GrandChild &input,
   return *(GrandChild*) NULL; // FIXME
 }
 
+} // InterfaceTests
+
+namespace RapicornPlicTest {
+
+
+// --- Server Stubs ---
+} // RapicornPlicTest
+
+namespace MandatoryNamespace {
+
+namespace Inner {
+} // Inner
+} // MandatoryNamespace
+
+namespace OtherNamespace {
+} // OtherNamespace
+
+namespace InterfaceTests {
+static bool
+handle_UIWidgetArea_simple_method (const RemoteProcedure    &_rope_rp,
+                                   RemoteProcedure_Argument *_rope_aret)
+{
+  if (_rope_rp.args_size() != 0) return false;
+  (void) _rope_aret;
+  return true;
+}
+static bool
+handle_UIWidgetArea_single_arg (const RemoteProcedure    &_rope_rp,
+                                RemoteProcedure_Argument *_rope_aret)
+{
+  int n;
+  if (_rope_rp.args_size() != 1) return false;
+  const RemoteProcedure_Argument *_rope_arg;
+  _rope_arg = &_rope_rp.args (0);
+  if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
+  (void) _rope_aret;
+  return true;
+}
+static bool
+handle_UIWidgetArea_single_arg2 (const RemoteProcedure    &_rope_rp,
+                                 RemoteProcedure_Argument *_rope_aret)
+{
+  int n;
+  if (_rope_rp.args_size() != 1) return false;
+  const RemoteProcedure_Argument *_rope_arg;
+  _rope_arg = &_rope_rp.args (0);
+  if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
+  (void) _rope_aret;
+  return true;
+}
+static bool
+handle_UIWidgetArea_two_args (const RemoteProcedure    &_rope_rp,
+                              RemoteProcedure_Argument *_rope_aret)
+{
+  int n;
+  double r;
+  if (_rope_rp.args_size() != 2) return false;
+  const RemoteProcedure_Argument *_rope_arg;
+  _rope_arg = &_rope_rp.args (0);
+  if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
+  _rope_arg = &_rope_rp.args (1);
+  if (!_rope_arg->has_vdouble()) return false;  r = _rope_arg->vdouble();
+  (void) _rope_aret;
+  return true;
+}
+static bool
+handle_UIWidgetArea_two_args2 (const RemoteProcedure    &_rope_rp,
+                               RemoteProcedure_Argument *_rope_aret)
+{
+  int n;
+  double r;
+  if (_rope_rp.args_size() != 2) return false;
+  const RemoteProcedure_Argument *_rope_arg;
+  _rope_arg = &_rope_rp.args (0);
+  if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
+  _rope_arg = &_rope_rp.args (1);
+  if (!_rope_arg->has_vdouble()) return false;  r = _rope_arg->vdouble();
+  (void) _rope_aret;
+  return true;
+}
+static bool
+handle_UIWidgetArea_multi_args (const RemoteProcedure    &_rope_rp,
+                                RemoteProcedure_Argument *_rope_aret)
+{
+  int n;
+  double r;
+  int i;
+  std::string s;
+  double y;
+  if (_rope_rp.args_size() != 5) return false;
+  const RemoteProcedure_Argument *_rope_arg;
+  _rope_arg = &_rope_rp.args (0);
+  if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
+  _rope_arg = &_rope_rp.args (1);
+  if (!_rope_arg->has_vdouble()) return false;  r = _rope_arg->vdouble();
+  _rope_arg = &_rope_rp.args (2);
+  if (!_rope_arg->has_vint64()) return false;  i = _rope_arg->vint64();
+  _rope_arg = &_rope_rp.args (3);
+  if (!_rope_arg->has_vstring()) return false;  s = _rope_arg->vstring();
+  _rope_arg = &_rope_rp.args (4);
+  if (!_rope_arg->has_vdouble()) return false;  y = _rope_arg->vdouble();
+  (void) _rope_aret;
+  return true;
+}
+static bool
+handle_UIWidgetArea_self_method (const RemoteProcedure    &_rope_rp,
+                                 RemoteProcedure_Argument *_rope_aret)
+{
+  UIWidgetArea *ba1;
+  UIWidgetArea *ba2;
+  if (_rope_rp.args_size() != 2) return false;
+  const RemoteProcedure_Argument *_rope_arg;
+  _rope_arg = &_rope_rp.args (0);
+  if (!_rope_arg->has_vstring()) return false;  ba1 = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  _rope_arg = &_rope_rp.args (1);
+  if (!_rope_arg->has_vstring()) return false;  ba2 = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  (void) _rope_aret;
+  return true;
+}
+static bool
+handle_UIWidgetArea_void_method (const RemoteProcedure    &_rope_rp,
+                                 RemoteProcedure_Argument *_rope_aret)
+{
+  if (_rope_rp.args_size() != 0) return false;
+  (void) _rope_aret;
+  return true;
+}
+static bool
+handle_UIWidgetArea_on_click2out (const RemoteProcedure    &_rope_rp,
+                                  RemoteProcedure_Argument *_rope_aret)
+{
+  if (_rope_rp.args_size() != 0) return false;
+  (void) _rope_aret;
+  return true;
+}
+static bool
+handle_UIWidgetArea_on_click2in (const RemoteProcedure    &_rope_rp,
+                                 RemoteProcedure_Argument *_rope_aret)
+{
+  std::string command;
+  if (_rope_rp.args_size() != 1) return false;
+  const RemoteProcedure_Argument *_rope_arg;
+  _rope_arg = &_rope_rp.args (0);
+  if (!_rope_arg->has_vstring()) return false;  command = _rope_arg->vstring();
+  (void) _rope_aret;
+  return true;
+}
+
+
+
+
+
 static bool
 handle_MethodTestInterface_method_with_bools (const RemoteProcedure    &_rope_rp,
                                               RemoteProcedure_Argument *_rope_aret)
@@ -1284,7 +1302,6 @@ handle_MethodTestInterface_method_with_interface (const RemoteProcedure    &_rop
 } // InterfaceTests
 
 namespace RapicornPlicTest {
-
 
 } // RapicornPlicTest
 

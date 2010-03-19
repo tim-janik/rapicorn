@@ -491,9 +491,9 @@ class Generator:
         elif tp.storage == Decls.ENUM:
           s += self.generate_enum_interface (tp) + '\n'
       s += self.open_namespace (None)
-    # generate server stubs
-    if self.gen_server:
-      s += '\n// --- Server Stubs ---\n'
+    # generate client stubs
+    if self.gen_client:
+      s += '\n// --- Client Stubs ---\n'
       switchlines = []
       for tp in types:
         if tp.typedef_origin:
@@ -505,9 +505,23 @@ class Generator:
           s += self.generate_sequence_impl (tp) + '\n'
         elif tp.storage == Decls.INTERFACE:
           s += self.generate_class_caller_impl (tp) + '\n'
+    # generate server stubs
+    if self.gen_server:
+      s += '\n// --- Server Stubs ---\n'
+      switchlines = []
+      for tp in types:
+        if tp.typedef_origin:
+          continue
+        s += self.open_namespace (tp)
+        if tp.storage == Decls.RECORD:
+          pass # s += self.generate_record_impl (tp) + '\n'
+        elif tp.storage == Decls.SEQUENCE:
+          pass # s += self.generate_sequence_impl (tp) + '\n'
+        elif tp.storage == Decls.INTERFACE:
           s += self.generate_class_callee_impl (tp, switchlines) + '\n'
       s += self.open_namespace (None)
       s += self.generate_callee_impl (switchlines) + '\n'
+    s += self.open_namespace (None) # close all namespaces
     return s
 
 def error (msg):
@@ -523,6 +537,7 @@ def generate (namespace_list, **args):
   all = config['backend-options'] == []
   gg.gen_iface = all or 'interface' in config['backend-options']
   gg.gen_server = all or 'server' in config['backend-options']
+  gg.gen_client = all or 'client' in config['backend-options']
   textstring = gg.generate_impl_types (config['implementation_types']) # namespace_list
   outname = config.get ('output', '-')
   if outname != '-':
