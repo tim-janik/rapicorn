@@ -93,16 +93,17 @@ def print_help (with_help = True):
   print "  --help, -h                print this help message"
   print "  --version, -v             print version info"
   print "  --output-format=<oformat>"
-  print "  -G=<oformat>              select output format"
   print "  -o=<outputfile>           output filename"
+  print "  -G=<oformat>              select output format"
+  print "  -g=<generator-option>     set output generator option"
   print "Solitary Options:"
   print "  --list-formats            list output formats"
   print "  --cc-type-package-parser  Generate C++ type package parser"
 
 def parse_files_and_args():
   import re, getopt
-  config = { 'files' : [], 'backend' : 'PrettyDump' }
-  sop = 'vhG:o:'
+  config = { 'files' : [], 'backend' : 'PrettyDump', 'backend-options' : [] }
+  sop = 'vhG:g:o:'
   lop = ['help', 'version', 'output-format=', 'list-formats',
          'cc-type-package-parser', 'plic-debug']
   try:
@@ -115,6 +116,7 @@ def parse_files_and_args():
     if arg == '-v' or arg == '--version': print_help (false); sys.exit (0)
     if arg == '--plic-debug': config['pass-exceptions'] = 1
     if arg == '-o': config['output'] = val
+    if arg == '-g': config['backend-options'] += [ val ]
     if arg == '-G' or arg == '--generator':
       if val[0] == '=': val = val[1:]
       if val in backends:
