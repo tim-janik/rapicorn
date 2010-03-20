@@ -237,19 +237,19 @@ class Generator:
     if type_info.storage == Decls.VOID:
       pass
     elif type_info.storage == Decls.INT:
-      s += '  if (!%s->has_vint64()) return false;' % argname
+      s += '  if (!%s->has_vint64()) return false;\n' % argname
       s += '  %s = %s->vint64();\n' % (valname, argname)
     elif type_info.storage == Decls.ENUM:
-      s += '  if (!%s->has_vint64()) return false;' % argname
+      s += '  if (!%s->has_vint64()) return false;\n' % argname
       s += '  %s = %s (%s->vint64());\n' % (valname, self.type2cpp (type_info), argname)
     elif type_info.storage == Decls.FLOAT:
-      s += '  if (!%s->has_vdouble()) return false;' % argname
+      s += '  if (!%s->has_vdouble()) return false;\n' % argname
       s += '  %s = %s->vdouble();\n' % (valname, argname)
     elif type_info.storage == Decls.STRING:
-      s += '  if (!%s->has_vstring()) return false;' % argname
+      s += '  if (!%s->has_vstring()) return false;\n' % argname
       s += '  %s = %s->vstring();\n' % (valname, argname)
     elif type_info.storage in Decls.INTERFACE:
-      s += '  if (!%s->has_vstring()) return false;' % argname
+      s += '  if (!%s->has_vstring()) return false;\n' % argname
       s += '  %s = Instance4StringCast<%s> (%s->vstring());\n' % (valname, type_info.name, argname)
     elif type_info.storage == Decls.RECORD:
       s += '  if (!%s->has_vrec() || !%s.from_proto (ProtoRecordCast (%s->vrec()))) return false;\n' % (argname, valname, argname)
