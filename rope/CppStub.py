@@ -491,9 +491,9 @@ class Generator:
     f = open (filename, 'r')
     key = None
     for line in f:
-      m = re.match ('class_scope:(\w+):\s*$', line)
+      m = re.match ('class_scope:(\w+):\s*(//.*)?$', line)
       if not m:
-        m = re.match ('(IGNORE):\s*$', line)
+        m = re.match ('(IGNORE):\s*(//.*)?$', line)
       if m:
         key = m.group (1)
         continue
