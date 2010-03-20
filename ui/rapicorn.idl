@@ -16,10 +16,8 @@
  */
 
 namespace Rapicorn {
-namespace Rope {
-// void  init_with_x11   (args, app_name);
 
-sequence StringArray {
+sequence StringList {
   string        strings;
 };
 
@@ -33,16 +31,16 @@ interface Window {
   void          show            ();
   bool          closed          ();
   void          close           ();
-  signal bool   commands        (string cmdname, StringArray    args);
+  signal bool   commands        (string     cmdname,
+                                 StringList args);
 };
 
 interface Application {
   Application   _init_with_x11  (string         application_name,
-                                 StringArray    cmdline_args);
+                                 StringList     cmdline_args);
   Window        create_window   (string         window_identifier,
-                                 StringArray    arguments,
-                                 StringArray    env_variables);
+                                 StringList     arguments,
+                                 StringList     env_variables);
 };
 
-} // Rope
 } // Rapicorn
