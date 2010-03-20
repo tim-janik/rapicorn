@@ -75,7 +75,15 @@ librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(top_builddir)/rcore/librapicor
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES)
 
 # === Rapicorn IDL ===
+ROPE        = $(srcdir)/../rope
+PLICINT     = $(top_builddir)/plic/plic-intern
 EXTRA_DIST += rapicorn.idl
+interface.hh: $(srcdir)/rapicorn.idl $(ROPE)/PyCStub.py
+	: # build interface.hh from rapicorn.idl
+	${PLICINT} -G $(ROPE)/CppStub -g interface $(srcdir)/rapicorn.idl -o xgen-$(@F)
+	mv xgen-$(@F) $@
+$(rapicorn_cc_sources): interface.hh
+CLEANFILES += xgen-interface.hh interface.hh
 
 # === API Headers ===
 api-content:
