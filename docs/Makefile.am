@@ -18,9 +18,9 @@ DOXIDEFS = -D RAPICORN_VERSION ${RAPICORN_VERSION} -I $(srcdir) -D TOP_WEBDIR ".
 # Reference Documentation
 make_psource = $(strip $(DOXER) src2pickle -o $(1) $(DOXIDEFS) $(2))
 # RAPICORN reference docu
-rapicorn_core_globs   = $(top_srcdir)/core/*.[hc] $(top_srcdir)/core/*.[hc][hc]
+rapicorn_core_globs   = $(top_srcdir)/rcore/*.[hc] $(top_srcdir)/rcore/*.[hc][hc]
 rapicorn_core_exclude = rapicornconfig.h
-rapicorn_core_files   = $(filter-out $(foreach f, $(rapicorn_core_exclude), $(wildcard $(top_srcdir)/core/$(f))), $(wildcard $(rapicorn_core_globs)))
+rapicorn_core_files   = $(filter-out $(foreach f, $(rapicorn_core_exclude), $(wildcard $(top_srcdir)/rcore/$(f))), $(wildcard $(rapicorn_core_globs)))
 rapicorn_gui_globs    = $(top_srcdir)/ui/*.[hc] $(top_srcdir)/ui/*.[hc][hc]
 rapicorn_gui_exclude  = rapicornconfig.h
 rapicorn_gui_files    = $(filter-out $(foreach f, $(rapicorn_gui_exclude), $(wildcard $(top_srcdir)/ui/$(f))), $(wildcard $(rapicorn_gui_globs)))

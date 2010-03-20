@@ -186,7 +186,7 @@ static struct _InternalConstructorTest_lrcc0 { int v; _InternalConstructorTest_l
  * @param app_name      Application name as needed g_set_application_name()
  * @param ivalues       program specific initialization values
  *
- * Initialize rapicorn's core components like random number
+ * Initialize rapicorn's rcore components like random number
  * generators, CPU detection or the thread system.
  * Pre-parses the arguments passed in to main() for rapicorn
  * specific arguments.

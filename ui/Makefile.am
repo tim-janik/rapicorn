@@ -65,13 +65,13 @@ lib_LTLIBRARIES                         = librapicorn@RAPICORN_RELEASE@.la	# har
 librapicorn@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/ui
 librapicorn@RAPICORN_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
 librapicorn@RAPICORN_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES = $(top_builddir)/core/librapicorncore@RAPICORN_RELEASE@.o ldscript.map
+librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.o ldscript.map
 librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined 						\
 ) # set libtool version and export symbols for resolving
-librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(top_builddir)/core/librapicorncore@RAPICORN_RELEASE@.o $(RAPICORN_GUI_LIBS) -lm # -lfreetype -lfontconfig
+librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.o $(RAPICORN_GUI_LIBS) -lm # -lfreetype -lfontconfig
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES)
 
 # === API Headers ===
@@ -107,8 +107,8 @@ noinst_DATA = stamp-autochecks
 CLEANFILES += stamp-autochecks
 
 # === ZIntern generation ===
-gen-zintern.c:	../core/rapicorn-zintern $(srcdir)/foundation.xml $(srcdir)/standard.xml stamp-autochecks
-	../core/rapicorn-zintern -b -z FOUNDATION_XML \
+gen-zintern.c:	../rcore/rapicorn-zintern $(srcdir)/foundation.xml $(srcdir)/standard.xml stamp-autochecks
+	../rcore/rapicorn-zintern -b -z FOUNDATION_XML \
 	  $(srcdir)/foundation.xml STANDARD_XML $(srcdir)/standard.xml > xgen-$(@F)
 	mv xgen-$(@F) $@
 $(srcdir)/factory.cc: gen-zintern.c

@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_REGEX_HH__
 #define __RAPICORN_REGEX_HH__
 
-#include <core/rapicornutils.hh>
+#include <rcore/rapicornutils.hh>
 
 namespace Rapicorn {
 

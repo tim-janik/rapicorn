@@ -176,7 +176,7 @@ struct _RapicornRegion {
  * rectangles in the same places (of the same width, of course).
  *
  * Adam de Boor wrote most of the original region code.  Joel McCormack
- * substantially modified or rewrote most of the core arithmetic routines,
+ * substantially modified or rewrote most of the rcore arithmetic routines,
  * and added miRegionValidate in order to support several speed improvements
  * to miValidateTree.  Bob Scheifler changed the representation to be more
  * compact when empty or a single rectangle, and did a bunch of gratuitous

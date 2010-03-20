@@ -248,7 +248,7 @@ RootImpl::resize_all (Allocation *new_area)
     }
   if (!test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
     return;
-  /* this is the core of the resizing loop. via Item.tune_requisition(), we
+  /* this is the rcore of the resizing loop. via Item.tune_requisition(), we
    * allow items to adjust the requisition from within size_allocate().
    * whether the tuned requisition is honored at all, depends on
    * m_tunable_requisition_counter.

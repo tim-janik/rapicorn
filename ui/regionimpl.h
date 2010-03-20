@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_REGION_IMPL_H__
 #define __RAPICORN_REGION_IMPL_H__
 
-#include <core/rapicorncdefs.h>
+#include <rcore/rapicorncdefs.h>
 
 RAPICORN_EXTERN_C_BEGIN();
 

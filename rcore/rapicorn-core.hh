@@ -17,23 +17,23 @@
 #ifndef __RAPICORN_CORE_HH__
 #define __RAPICORN_CORE_HH__
 
-#include <core/rapicornconfig.h>
-#include <core/enumdefs.hh>
-#include <core/rapicorncpu.hh>
-#include <core/rapicorndebugtools.hh>
-#include <core/markup.hh>
-#include <core/pixmap.hh>
-#include <core/rapicornmath.hh>
-#include <core/rapicornmsg.hh>
-#include <core/rapicornsignal.hh>
-#include <core/rapicornthread.hh>
-#include <core/rapicornutf8.hh>
-#include <core/rapicornutils.hh>
-#include <core/rapicornxml.hh>
-#include <core/regex.hh>
-#include <core/types.hh>
-#include <core/values.hh>
-#include <core/models.hh>
+#include <rcore/rapicornconfig.h>
+#include <rcore/enumdefs.hh>
+#include <rcore/rapicorncpu.hh>
+#include <rcore/rapicorndebugtools.hh>
+#include <rcore/markup.hh>
+#include <rcore/pixmap.hh>
+#include <rcore/rapicornmath.hh>
+#include <rcore/rapicornmsg.hh>
+#include <rcore/rapicornsignal.hh>
+#include <rcore/rapicornthread.hh>
+#include <rcore/rapicornutf8.hh>
+#include <rcore/rapicornutils.hh>
+#include <rcore/rapicornxml.hh>
+#include <rcore/regex.hh>
+#include <rcore/types.hh>
+#include <rcore/values.hh>
+#include <rcore/models.hh>
 
 #endif // __RAPICORN_CORE_HH__
 /* vim:set ts=8 sts=2 sw=2: */

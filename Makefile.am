@@ -4,7 +4,7 @@
 ## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = . po plic core ui rope tools tests examples docs web
+SUBDIRS = . po plic rcore ui rope tools tests examples docs web
 
 docdir  = ${datarootdir}/doc/${PACKAGE}${RAPICORN_RELEASE}
 noinst_DATA =
@@ -61,7 +61,7 @@ EXTRA_DIST += rapicorn.pc.in
 
 # === API version check ===
 MAKE_API_CHECKSUM=$(strip							\
-	( $(MAKE) -C $(top_srcdir)/core/ $(AM_MAKEFLAGS) api-content &&		\
+	( $(MAKE) -C $(top_srcdir)/rcore/ $(AM_MAKEFLAGS) api-content &&		\
 	  $(MAKE) -C $(top_srcdir)/ui/   $(AM_MAKEFLAGS) api-content    ) | 	\
 	md5sum | sed 's/ .*//'							\
 )
@@ -116,10 +116,10 @@ check-dynamic_cast:	# check for dynamic_cast of reference types which is broken 
 check-list_properties: # only public interfaces should export properties
 	cd $(srcdir) \
 	&& echo "## Checking for untyped list_properties() method implementations." \
-	&& ! grep '^[[:space:]]*list_properties[[:space:]]*([^)]*)[^;]*$$' -n ui/*.cc core/*.cc
+	&& ! grep '^[[:space:]]*list_properties[[:space:]]*([^)]*)[^;]*$$' -n ui/*.cc rcore/*.cc
 	cd $(srcdir) \
 	&& echo "## Checking for non-interface list_properties() method implementations." \
-	&& ! grep 'Impl::list_properties[[:space:]]*([^)]*)[^;]*$$' -n ui/*.cc core/*.cc
+	&& ! grep 'Impl::list_properties[[:space:]]*([^)]*)[^;]*$$' -n ui/*.cc rcore/*.cc
 check-am: check-dynamic_cast check-list_properties # run source code checks before all others
 
 # === automake fixes ===

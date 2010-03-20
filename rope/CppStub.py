@@ -21,7 +21,7 @@ More details at http://www.testbit.eu/PLIC
 import Decls, GenUtils, re
 
 base_code = """
-#include <core/rapicornsignal.hh>
+#include <rcore/rapicornsignal.hh>
 #include <string>
 #include <vector>
 

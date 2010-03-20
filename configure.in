@@ -542,8 +542,8 @@ po/Makefile.in
 plic/Makefile
 plic/tests/Makefile
 rope/Makefile
-core/Makefile
-core/tests/Makefile
+rcore/Makefile
+rcore/tests/Makefile
 ui/Makefile
 ui/tests/Makefile
 tools/Makefile

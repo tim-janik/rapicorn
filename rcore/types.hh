@@ -17,8 +17,8 @@
 #ifndef __RAPICORN_TYPES_HH__
 #define __RAPICORN_TYPES_HH__
 
-#include <core/rapicornsignal.hh>
-#include <core/enumdefs.hh>
+#include <rcore/rapicornsignal.hh>
+#include <rcore/enumdefs.hh>
 
 namespace Rapicorn {
 

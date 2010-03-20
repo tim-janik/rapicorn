@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_ENUMDEFS_HH__
 #define __RAPICORN_ENUMDEFS_HH__
 
-#include <core/rapicornutils.hh>
+#include <rcore/rapicornutils.hh>
 
 namespace Rapicorn {
 

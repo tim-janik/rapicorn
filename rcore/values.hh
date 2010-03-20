@@ -17,8 +17,8 @@
 #ifndef __RAPICORN_VALUES_HH__
 #define __RAPICORN_VALUES_HH__
 
-#include <core/enumdefs.hh>
-#include <core/rapicornxml.hh>
+#include <rcore/enumdefs.hh>
+#include <rcore/rapicornxml.hh>
 
 namespace Rapicorn {
 
@@ -136,7 +136,7 @@ public:
   void            swap          (Array          &other);       /* swap contents */
   bool            operator!=    (const Array    &other) const;
   bool            operator==    (const Array    &other) const { return !operator!= (other); }
-  /* core access */
+  /* rcore access */
   int64           count         () const;
   StringVector    keys          ();
   Array           values        (); // copies & renumbers

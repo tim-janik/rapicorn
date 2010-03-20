@@ -39,7 +39,7 @@ custom_commands (Window             &window,
   return true;
 }
 
-#include "../core/tests/testpixs.c" // alpha_rle alpha_raw rgb_rle rgb_raw
+#include "../rcore/tests/testpixs.c" // alpha_rle alpha_raw rgb_rle rgb_raw
 
 extern "C" int
 main (int   argc,

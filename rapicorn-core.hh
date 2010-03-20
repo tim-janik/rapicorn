@@ -1,1 +1,1 @@
-core/rapicorn-core.hh
+rcore/rapicorn-core.hh

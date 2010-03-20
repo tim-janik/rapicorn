@@ -7,7 +7,7 @@ PLICINT		 = $(top_builddir)/plic/plic-intern
 
 # test programs
 noinst_PROGRAMS	 = $(TEST_PROGS) $(NOINSTPRGS)
-LDADDS		 = $(top_builddir)/core/librapicorncore@RAPICORN_RELEASE@.la
+LDADDS		 = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la
 NOINSTPRGS =
 
 # programs

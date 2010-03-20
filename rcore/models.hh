@@ -17,8 +17,8 @@
 #ifndef __RAPICORN_MODELS_HH__
 #define __RAPICORN_MODELS_HH__
 
-#include <core/types.hh>
-#include <core/values.hh>
+#include <rcore/types.hh>
+#include <rcore/values.hh>
 
 namespace Rapicorn {
 

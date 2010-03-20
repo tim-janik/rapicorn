@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_UTILS_XX_HH__
 #define __RAPICORN_UTILS_XX_HH__
 
-#include <core/rapicorncdefs.h>
+#include <rcore/rapicorncdefs.h>
 #include <string>
 #include <vector>
 #include <map>
