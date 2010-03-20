@@ -7,7 +7,7 @@ INCLUDES	+= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
 DEFS		 = -DRAPICORN_INTERNALS $(RAPICORN_GUI_CFLAGS) -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
 
 # === Source Files ===
-rapicorn_top_headers = rapicorn.hh
+rapicorn_top_headers = ui.hh
 rapicorn_public_headers = $(strip 	\
 	keycodes.hh	$(rapicorn_impl_headers)	\
 	utilities.hh	events.hh	application.hh	cmdlib.hh	\

@@ -16,7 +16,7 @@
  */
 //#define TEST_VERBOSE
 #include <rcore/rapicorntests.h>
-#include <ui/rapicorn.hh>
+#include <rapicorn.hh>
 
 namespace {
 using namespace Rapicorn;

@@ -19,7 +19,7 @@
  * if advised of the possibility of such damage.
  */
 #include <rcore/rapicorntests.h>
-#include <ui/rapicorn.hh>
+#include <rapicorn.hh>
 #include <ui/testitems.hh>
 
 

@@ -18,7 +18,7 @@
  * otherwise) arising in any way out of the use of this software, even
  * if advised of the possibility of such damage.
  */
-#include <ui/rapicorn.hh>
+#include <rapicorn.hh>
 
 namespace {
 using namespace Rapicorn;

@@ -16,7 +16,7 @@
  */
 //#define TEST_VERBOSE
 #include <rcore/rapicorntests.h>
-#include <ui/rapicorn.hh>
+#include <rapicorn.hh>
 
 #include <rcore/tests/data.cc> // xml_data1
 

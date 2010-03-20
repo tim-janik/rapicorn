@@ -15,7 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include <rcore/testutils.hh>
-#include <ui/rapicorn.hh>
+#include <rapicorn.hh>
 using namespace Rapicorn;
 
 static String
