@@ -59,6 +59,7 @@ protocol-pb2.hh: $(srcdir)/protocol.proto
 	sed 's/^#include "protocol.pb.h"/#include "protocol-pb2.hh"/' <protocol.pb.cc >protocol-pb2.cc
 	rm -f protocol.pb.cc
 protocol-pb2.cc: protocol-pb2.hh
+$(srcdir)/pyrope.cc: protocol-pb2.cc
 CLEANFILES += protocol.pb.h protocol.pb.cc protocol-pb2.cc protocol-pb2.hh
 
 # === pycstub.cc ===
