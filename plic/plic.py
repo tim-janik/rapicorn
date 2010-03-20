@@ -96,16 +96,18 @@ def print_help (with_help = True):
   print "  -o=<outputfile>           output filename"
   print "  -G=<oformat>              select output format"
   print "  -g=<generator-option>     set output generator option"
+  print "  --insertions=<insfile>    file for insertion points"
   print "Solitary Options:"
   print "  --list-formats            list output formats"
   print "  --cc-type-package-parser  Generate C++ type package parser"
 
 def parse_files_and_args():
   import re, getopt
-  config = { 'files' : [], 'backend' : 'PrettyDump', 'backend-options' : [] }
+  config = { 'files' : [], 'backend' : 'PrettyDump', 'backend-options' : [],
+             'insertions' : [] }
   sop = 'vhG:g:o:'
   lop = ['help', 'version', 'output-format=', 'list-formats',
-         'cc-type-package-parser', 'plic-debug']
+         'cc-type-package-parser', 'plic-debug', 'insertions=']
   try:
     options,args = getopt.gnu_getopt (sys.argv[1:], sop, lop)
   except Exception, ex:
@@ -116,6 +118,7 @@ def parse_files_and_args():
     if arg == '-v' or arg == '--version': print_help (false); sys.exit (0)
     if arg == '--plic-debug': config['pass-exceptions'] = 1
     if arg == '-o': config['output'] = val
+    if arg == '--insertions': config['insertions'] += [ val ]
     if arg == '-g': config['backend-options'] += [ val ]
     if arg == '-G' or arg == '--generator':
       if val[0] == '=': val = val[1:]
