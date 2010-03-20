@@ -382,8 +382,6 @@ class Generator:
         s += '  _rope_arg = &_rope_rp.args (%d);\n' % arg_counter
         s += self.generate_from_proto ('_rope_arg', arg[1], arg[0])
         arg_counter += 1
-      if m.rtype.storage != Decls.VOID:
-        pass
       s += '  '
       if hasret:
         s += '%s _rope_retval = ' % self.type2cpp (m.rtype)
