@@ -153,6 +153,12 @@ class Generator:
       s += interfacechar
     s += ident
     return s
+  def use_arg (self, ident, type, interfacechar = '*'):
+    s = ''
+    if type.storage == Decls.INTERFACE:
+      s += interfacechar
+    s += ident
+    return s
   def generate_prop (self, fident, ftype):
     v = 'virtual '
     # getter
@@ -358,25 +364,33 @@ class Generator:
     s = ''
     for m in type_info.methods:
       switchlines += [ (GenUtils.type_id (m), type_info, m) ]
+      hasret = m.rtype.storage != Decls.VOID
       s += 'static bool\n'
       c = 'handle_%s_%s ' % (type_info.name, m.name)
       s += c + '(const RemoteProcedure    &_rope_rp,\n'
       s += ' ' * len (c) + ' RemoteProcedure_Argument *_rope_aret)\n{\n'
+      s += '  const RemoteProcedure_Argument *_rope_arg;\n'
+      s += '  %s *self;\n' % self.type2cpp (type_info)
       for a in m.args:
         s += '  ' + self.format_arg (a[0], a[1], a[2], '*') + ';\n'
-      #s += '  RemoteProcedure_Argument *arg; int arg_counter = 0;\n'
-      #q = '%s %s::%s (' % (self.type2cpp (m.rtype), type_info.name, m.name)
-      s += '  if (_rope_rp.args_size() != %d) return false;\n' % len (m.args)
-      if m.args:
-        s += '  const RemoteProcedure_Argument *_rope_arg;\n'
-      arg_counter = 0
+      s += '  if (_rope_rp.args_size() != %d) return false;\n' % (1 + len (m.args))
+      s += '  _rope_arg = &_rope_rp.args (0);\n'
+      s += self.generate_from_proto ('_rope_arg', type_info, 'self')
+      arg_counter = 1
       for arg in m.args:
         s += '  _rope_arg = &_rope_rp.args (%d);\n' % arg_counter
         s += self.generate_from_proto ('_rope_arg', arg[1], arg[0])
         arg_counter += 1
       if m.rtype.storage != Decls.VOID:
         pass
-      s += '  (void) _rope_aret;\n'
+      s += '  '
+      if hasret:
+        s += '%s _rope_retval = ' % self.type2cpp (m.rtype)
+      s += 'self->' + m.name + ' ('
+      s += ', '.join (self.use_arg (a[0], a[1]) for a in m.args)
+      s += ');\n'
+      if hasret:
+        s += self.generate_to_proto ('_rope_aret', m.rtype, '_rope_retval')
       s += '  return true;\n}\n'
     return s
   def generate_callee_impl (self, switchlines):

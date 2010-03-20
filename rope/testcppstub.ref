@@ -1048,129 +1048,170 @@ static bool
 handle_UIWidgetArea_simple_method (const RemoteProcedure    &_rope_rp,
                                    RemoteProcedure_Argument *_rope_aret)
 {
-  if (_rope_rp.args_size() != 0) return false;
-  (void) _rope_aret;
+  const RemoteProcedure_Argument *_rope_arg;
+  UIWidgetArea *self;
+  if (_rope_rp.args_size() != 1) return false;
+  _rope_arg = &_rope_rp.args (0);
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  double _rope_retval = self->simple_method ();
+  _rope_aret->set_vdouble (_rope_retval);
   return true;
 }
 static bool
 handle_UIWidgetArea_single_arg (const RemoteProcedure    &_rope_rp,
                                 RemoteProcedure_Argument *_rope_aret)
 {
-  int n;
-  if (_rope_rp.args_size() != 1) return false;
   const RemoteProcedure_Argument *_rope_arg;
+  UIWidgetArea *self;
+  int n;
+  if (_rope_rp.args_size() != 2) return false;
   _rope_arg = &_rope_rp.args (0);
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
-  (void) _rope_aret;
+  double _rope_retval = self->single_arg (n);
+  _rope_aret->set_vdouble (_rope_retval);
   return true;
 }
 static bool
 handle_UIWidgetArea_single_arg2 (const RemoteProcedure    &_rope_rp,
                                  RemoteProcedure_Argument *_rope_aret)
 {
-  int n;
-  if (_rope_rp.args_size() != 1) return false;
   const RemoteProcedure_Argument *_rope_arg;
+  UIWidgetArea *self;
+  int n;
+  if (_rope_rp.args_size() != 2) return false;
   _rope_arg = &_rope_rp.args (0);
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
-  (void) _rope_aret;
+  double _rope_retval = self->single_arg2 (n);
+  _rope_aret->set_vdouble (_rope_retval);
   return true;
 }
 static bool
 handle_UIWidgetArea_two_args (const RemoteProcedure    &_rope_rp,
                               RemoteProcedure_Argument *_rope_aret)
 {
+  const RemoteProcedure_Argument *_rope_arg;
+  UIWidgetArea *self;
   int n;
   double r;
-  if (_rope_rp.args_size() != 2) return false;
-  const RemoteProcedure_Argument *_rope_arg;
+  if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
   _rope_arg = &_rope_rp.args (1);
+  if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
+  _rope_arg = &_rope_rp.args (2);
   if (!_rope_arg->has_vdouble()) return false;  r = _rope_arg->vdouble();
-  (void) _rope_aret;
+  double _rope_retval = self->two_args (n, r);
+  _rope_aret->set_vdouble (_rope_retval);
   return true;
 }
 static bool
 handle_UIWidgetArea_two_args2 (const RemoteProcedure    &_rope_rp,
                                RemoteProcedure_Argument *_rope_aret)
 {
+  const RemoteProcedure_Argument *_rope_arg;
+  UIWidgetArea *self;
   int n;
   double r;
-  if (_rope_rp.args_size() != 2) return false;
-  const RemoteProcedure_Argument *_rope_arg;
+  if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
   _rope_arg = &_rope_rp.args (1);
+  if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
+  _rope_arg = &_rope_rp.args (2);
   if (!_rope_arg->has_vdouble()) return false;  r = _rope_arg->vdouble();
-  (void) _rope_aret;
+  double _rope_retval = self->two_args2 (n, r);
+  _rope_aret->set_vdouble (_rope_retval);
   return true;
 }
 static bool
 handle_UIWidgetArea_multi_args (const RemoteProcedure    &_rope_rp,
                                 RemoteProcedure_Argument *_rope_aret)
 {
+  const RemoteProcedure_Argument *_rope_arg;
+  UIWidgetArea *self;
   int n;
   double r;
   int i;
   std::string s;
   double y;
-  if (_rope_rp.args_size() != 5) return false;
-  const RemoteProcedure_Argument *_rope_arg;
+  if (_rope_rp.args_size() != 6) return false;
   _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
   _rope_arg = &_rope_rp.args (1);
-  if (!_rope_arg->has_vdouble()) return false;  r = _rope_arg->vdouble();
+  if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
   _rope_arg = &_rope_rp.args (2);
-  if (!_rope_arg->has_vint64()) return false;  i = _rope_arg->vint64();
+  if (!_rope_arg->has_vdouble()) return false;  r = _rope_arg->vdouble();
   _rope_arg = &_rope_rp.args (3);
-  if (!_rope_arg->has_vstring()) return false;  s = _rope_arg->vstring();
+  if (!_rope_arg->has_vint64()) return false;  i = _rope_arg->vint64();
   _rope_arg = &_rope_rp.args (4);
+  if (!_rope_arg->has_vstring()) return false;  s = _rope_arg->vstring();
+  _rope_arg = &_rope_rp.args (5);
   if (!_rope_arg->has_vdouble()) return false;  y = _rope_arg->vdouble();
-  (void) _rope_aret;
+  double _rope_retval = self->multi_args (n, r, i, s, y);
+  _rope_aret->set_vdouble (_rope_retval);
   return true;
 }
 static bool
 handle_UIWidgetArea_self_method (const RemoteProcedure    &_rope_rp,
                                  RemoteProcedure_Argument *_rope_aret)
 {
+  const RemoteProcedure_Argument *_rope_arg;
+  UIWidgetArea *self;
   UIWidgetArea *ba1;
   UIWidgetArea *ba2;
-  if (_rope_rp.args_size() != 2) return false;
-  const RemoteProcedure_Argument *_rope_arg;
+  if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vstring()) return false;  ba1 = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
   _rope_arg = &_rope_rp.args (1);
+  if (!_rope_arg->has_vstring()) return false;  ba1 = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  _rope_arg = &_rope_rp.args (2);
   if (!_rope_arg->has_vstring()) return false;  ba2 = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
-  (void) _rope_aret;
+  double _rope_retval = self->self_method (*ba1, *ba2);
+  _rope_aret->set_vdouble (_rope_retval);
   return true;
 }
 static bool
 handle_UIWidgetArea_void_method (const RemoteProcedure    &_rope_rp,
                                  RemoteProcedure_Argument *_rope_aret)
 {
-  if (_rope_rp.args_size() != 0) return false;
-  (void) _rope_aret;
+  const RemoteProcedure_Argument *_rope_arg;
+  UIWidgetArea *self;
+  if (_rope_rp.args_size() != 1) return false;
+  _rope_arg = &_rope_rp.args (0);
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  self->void_method ();
   return true;
 }
 static bool
 handle_UIWidgetArea_on_click2out (const RemoteProcedure    &_rope_rp,
                                   RemoteProcedure_Argument *_rope_aret)
 {
-  if (_rope_rp.args_size() != 0) return false;
-  (void) _rope_aret;
+  const RemoteProcedure_Argument *_rope_arg;
+  UIWidgetArea *self;
+  if (_rope_rp.args_size() != 1) return false;
+  _rope_arg = &_rope_rp.args (0);
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  std::string _rope_retval = self->on_click2out ();
+  _rope_aret->set_vstring (_rope_retval);
   return true;
 }
 static bool
 handle_UIWidgetArea_on_click2in (const RemoteProcedure    &_rope_rp,
                                  RemoteProcedure_Argument *_rope_aret)
 {
-  std::string command;
-  if (_rope_rp.args_size() != 1) return false;
   const RemoteProcedure_Argument *_rope_arg;
+  UIWidgetArea *self;
+  std::string command;
+  if (_rope_rp.args_size() != 2) return false;
   _rope_arg = &_rope_rp.args (0);
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vstring()) return false;  command = _rope_arg->vstring();
-  (void) _rope_aret;
+  self->on_click2in (command);
   return true;
 }
 
@@ -1182,120 +1223,152 @@ static bool
 handle_MethodTestInterface_method_with_bools (const RemoteProcedure    &_rope_rp,
                                               RemoteProcedure_Argument *_rope_aret)
 {
+  const RemoteProcedure_Argument *_rope_arg;
+  MethodTestInterface *self;
   bool input;
   bool optval;
-  if (_rope_rp.args_size() != 2) return false;
-  const RemoteProcedure_Argument *_rope_arg;
+  if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vint64()) return false;  input = _rope_arg->vint64();
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
   _rope_arg = &_rope_rp.args (1);
+  if (!_rope_arg->has_vint64()) return false;  input = _rope_arg->vint64();
+  _rope_arg = &_rope_rp.args (2);
   if (!_rope_arg->has_vint64()) return false;  optval = _rope_arg->vint64();
-  (void) _rope_aret;
+  bool _rope_retval = self->method_with_bools (input, optval);
+  _rope_aret->set_vint64 (_rope_retval);
   return true;
 }
 static bool
 handle_MethodTestInterface_method_with_ints (const RemoteProcedure    &_rope_rp,
                                              RemoteProcedure_Argument *_rope_aret)
 {
+  const RemoteProcedure_Argument *_rope_arg;
+  MethodTestInterface *self;
   int input;
   int optval;
-  if (_rope_rp.args_size() != 2) return false;
-  const RemoteProcedure_Argument *_rope_arg;
+  if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vint64()) return false;  input = _rope_arg->vint64();
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
   _rope_arg = &_rope_rp.args (1);
+  if (!_rope_arg->has_vint64()) return false;  input = _rope_arg->vint64();
+  _rope_arg = &_rope_rp.args (2);
   if (!_rope_arg->has_vint64()) return false;  optval = _rope_arg->vint64();
-  (void) _rope_aret;
+  int _rope_retval = self->method_with_ints (input, optval);
+  _rope_aret->set_vint64 (_rope_retval);
   return true;
 }
 static bool
 handle_MethodTestInterface_method_with_floats (const RemoteProcedure    &_rope_rp,
                                                RemoteProcedure_Argument *_rope_aret)
 {
+  const RemoteProcedure_Argument *_rope_arg;
+  MethodTestInterface *self;
   double input;
   double optval;
-  if (_rope_rp.args_size() != 2) return false;
-  const RemoteProcedure_Argument *_rope_arg;
+  if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vdouble()) return false;  input = _rope_arg->vdouble();
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
   _rope_arg = &_rope_rp.args (1);
+  if (!_rope_arg->has_vdouble()) return false;  input = _rope_arg->vdouble();
+  _rope_arg = &_rope_rp.args (2);
   if (!_rope_arg->has_vdouble()) return false;  optval = _rope_arg->vdouble();
-  (void) _rope_aret;
+  double _rope_retval = self->method_with_floats (input, optval);
+  _rope_aret->set_vdouble (_rope_retval);
   return true;
 }
 static bool
 handle_MethodTestInterface_method_with_string (const RemoteProcedure    &_rope_rp,
                                                RemoteProcedure_Argument *_rope_aret)
 {
+  const RemoteProcedure_Argument *_rope_arg;
+  MethodTestInterface *self;
   std::string input;
   std::string optval;
-  if (_rope_rp.args_size() != 2) return false;
-  const RemoteProcedure_Argument *_rope_arg;
+  if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vstring()) return false;  input = _rope_arg->vstring();
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
   _rope_arg = &_rope_rp.args (1);
+  if (!_rope_arg->has_vstring()) return false;  input = _rope_arg->vstring();
+  _rope_arg = &_rope_rp.args (2);
   if (!_rope_arg->has_vstring()) return false;  optval = _rope_arg->vstring();
-  (void) _rope_aret;
+  std::string _rope_retval = self->method_with_string (input, optval);
+  _rope_aret->set_vstring (_rope_retval);
   return true;
 }
 static bool
 handle_MethodTestInterface_method_with_enum (const RemoteProcedure    &_rope_rp,
                                              RemoteProcedure_Argument *_rope_aret)
 {
+  const RemoteProcedure_Argument *_rope_arg;
+  MethodTestInterface *self;
   QuickEnum input;
   QuickEnum optval;
-  if (_rope_rp.args_size() != 2) return false;
-  const RemoteProcedure_Argument *_rope_arg;
+  if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vint64()) return false;  input = QuickEnum (_rope_arg->vint64());
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
   _rope_arg = &_rope_rp.args (1);
+  if (!_rope_arg->has_vint64()) return false;  input = QuickEnum (_rope_arg->vint64());
+  _rope_arg = &_rope_rp.args (2);
   if (!_rope_arg->has_vint64()) return false;  optval = QuickEnum (_rope_arg->vint64());
-  (void) _rope_aret;
+  QuickEnum _rope_retval = self->method_with_enum (input, optval);
+  _rope_aret->set_vint64 (_rope_retval);
   return true;
 }
 static bool
 handle_MethodTestInterface_method_with_record (const RemoteProcedure    &_rope_rp,
                                                RemoteProcedure_Argument *_rope_aret)
 {
+  const RemoteProcedure_Argument *_rope_arg;
+  MethodTestInterface *self;
   QuickRecord input;
   QuickRecord optval;
-  if (_rope_rp.args_size() != 2) return false;
-  const RemoteProcedure_Argument *_rope_arg;
+  if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vrec() || !input.from_proto (ProtoRecordCast (_rope_arg->vrec()))) return false;
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
   _rope_arg = &_rope_rp.args (1);
+  if (!_rope_arg->has_vrec() || !input.from_proto (ProtoRecordCast (_rope_arg->vrec()))) return false;
+  _rope_arg = &_rope_rp.args (2);
   if (!_rope_arg->has_vrec() || !optval.from_proto (ProtoRecordCast (_rope_arg->vrec()))) return false;
-  (void) _rope_aret;
+  QuickRecord _rope_retval = self->method_with_record (input, optval);
+  if (!_rope_retval.to_proto (ProtoRecordCast (*_rope_aret->mutable_vrec()))) return false;
   return true;
 }
 static bool
 handle_MethodTestInterface_method_with_sequence (const RemoteProcedure    &_rope_rp,
                                                  RemoteProcedure_Argument *_rope_aret)
 {
+  const RemoteProcedure_Argument *_rope_arg;
+  MethodTestInterface *self;
   QuickSequence input;
   QuickSequence optval;
-  if (_rope_rp.args_size() != 2) return false;
-  const RemoteProcedure_Argument *_rope_arg;
+  if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vseq() || !input.from_proto (ProtoSequenceCast (_rope_arg->vseq()))) return false;
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
   _rope_arg = &_rope_rp.args (1);
+  if (!_rope_arg->has_vseq() || !input.from_proto (ProtoSequenceCast (_rope_arg->vseq()))) return false;
+  _rope_arg = &_rope_rp.args (2);
   if (!_rope_arg->has_vseq() || !optval.from_proto (ProtoSequenceCast (_rope_arg->vseq()))) return false;
-  (void) _rope_aret;
+  QuickSequence _rope_retval = self->method_with_sequence (input, optval);
+  if (!_rope_retval.to_proto (ProtoSequenceCast (*_rope_aret->mutable_vseq()))) return false;
   return true;
 }
 static bool
 handle_MethodTestInterface_method_with_interface (const RemoteProcedure    &_rope_rp,
                                                   RemoteProcedure_Argument *_rope_aret)
 {
+  const RemoteProcedure_Argument *_rope_arg;
+  MethodTestInterface *self;
   GrandChild *input;
   GrandChild *optval;
-  if (_rope_rp.args_size() != 2) return false;
-  const RemoteProcedure_Argument *_rope_arg;
+  if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
-  if (!_rope_arg->has_vstring()) return false;  input = Instance4StringCast<GrandChild> (_rope_arg->vstring());
+  if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
   _rope_arg = &_rope_rp.args (1);
+  if (!_rope_arg->has_vstring()) return false;  input = Instance4StringCast<GrandChild> (_rope_arg->vstring());
+  _rope_arg = &_rope_rp.args (2);
   if (!_rope_arg->has_vstring()) return false;  optval = Instance4StringCast<GrandChild> (_rope_arg->vstring());
-  (void) _rope_aret;
+  GrandChild _rope_retval = self->method_with_interface (*input, *optval);
+  _rope_aret->set_vstring (Instance2StringCast (_rope_retval));
   return true;
 }
 
