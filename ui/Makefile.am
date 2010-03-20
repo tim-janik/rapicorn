@@ -74,6 +74,9 @@ librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.o $(RAPICORN_GUI_LIBS) -lm # -lfreetype -lfontconfig
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES)
 
+# === Rapicorn IDL ===
+EXTRA_DIST += rapicorn.idl
+
 # === API Headers ===
 api-content:
 	cat $(sort $(rapicorn_public_headers) $(rapicorn_top_headers) $(rapicorn_generated_headers))

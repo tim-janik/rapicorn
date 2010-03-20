@@ -6,7 +6,7 @@ SUBDIRS = . # tests
 INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_ROPE_CFLAGS) $(PYTHON_CPPFLAGS)
 DEFS      = -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RAPICORN-ROPE\" # "
 PLICINT   = $(top_builddir)/plic/plic-intern
-
+RAPICORNIDL = $(srcdir)/../ui/rapicorn.idl
 
 # === sources ===
 rope_public_headers = $(strip		\
@@ -63,9 +63,9 @@ $(srcdir)/pyrope.cc: protocol-pb2.cc
 CLEANFILES += protocol.pb.h protocol.pb.cc protocol-pb2.cc protocol-pb2.hh
 
 # === pycstub.cc ===
-pycstub.cc: $(srcdir)/base.idl $(srcdir)/PyCStub.py
+pycstub.cc: $(RAPICORNIDL) $(srcdir)/PyCStub.py
 	: # compile IDL definitions into pycstub.cc
-	${PLICINT} -G $(srcdir)/PyCStub $(srcdir)/base.idl -o xgen-$(@F)
+	${PLICINT} -G $(srcdir)/PyCStub $(RAPICORNIDL) -o xgen-$(@F)
 	mv xgen-$(@F) $@
 $(srcdir)/pyrope.cc: pycstub.cc
 CLEANFILES += xgen-pycstub.cc pycstub.cc
@@ -73,8 +73,8 @@ CLEANFILES += xgen-pycstub.cc pycstub.cc
 EXTRA_DIST += protocol.proto
 
 # === pyRapicornStub.py ===
-pyRapicornStub.py: $(srcdir)/base.idl $(srcdir)/PyStub.py
-	${PLICINT} -G $(srcdir)/PyStub $(srcdir)/base.idl -o xgen-$(@F)
+pyRapicornStub.py: $(RAPICORNIDL) $(srcdir)/PyStub.py
+	${PLICINT} -G $(srcdir)/PyStub $(RAPICORNIDL) -o xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += xgen-pyRapicornStub.py pyRapicornStub.py
 
@@ -115,15 +115,14 @@ check-cppstub:
 EXTRA_DIST += testcppstub.ref
 check-local: check-cppstub
 
-# === base.idl test with PLIC ===
-check-base-idl:
+# === rapicorn.idl test with PLIC ===
+check-rapicorn-idl:
 	@$(call TSTTITLE)
-	$(_@) ${PLICINT} $(srcdir)/base.idl > /dev/null ; $(call TSTRESULT)
-EXTRA_DIST += base.idl
-check-local: check-base-idl
+	$(_@) ${PLICINT} $(RAPICORNIDL) > /dev/null ; $(call TSTRESULT)
+check-local: check-rapicorn-idl
 
-# === PyStub base.idl test ===
-check-pystub-for-base.idl:
+# === PyStub rapicorn.idl test ===
+check-pystub-for-rapicorn.idl:
 	@$(call TSTTITLE)
-	$(_@) ${PLICINT} -G $(srcdir)/PyStub $(srcdir)/base.idl | $(PYTHON) ; $(call TSTRESULT)
-check-local: check-pystub-for-base.idl
+	$(_@) ${PLICINT} -G $(srcdir)/PyStub $(RAPICORNIDL) | $(PYTHON) ; $(call TSTRESULT)
+check-local: check-pystub-for-rapicorn.idl
