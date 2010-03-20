@@ -77,10 +77,10 @@ EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPEN
 # === Rapicorn IDL ===
 ROPE        = $(srcdir)/../rope
 PLICINT     = $(top_builddir)/plic/plic-intern
-EXTRA_DIST += rapicorn.idl
+EXTRA_DIST += rapicorn.idl insertions.cc
 interface.hh: $(srcdir)/rapicorn.idl $(ROPE)/PyCStub.py
 	: # build interface.hh from rapicorn.idl
-	${PLICINT} -G $(ROPE)/CppStub -g interface $(srcdir)/rapicorn.idl -o xgen-$(@F)
+	${PLICINT} -G $(ROPE)/CppStub -g interface --insertions insertions.cc $(srcdir)/rapicorn.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 $(rapicorn_cc_sources): interface.hh
 CLEANFILES += xgen-interface.hh interface.hh
