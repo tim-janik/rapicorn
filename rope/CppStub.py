@@ -376,6 +376,7 @@ class Generator:
       s += '  if (_rope_rp.args_size() != %d) return false;\n' % (1 + len (m.args))
       s += '  _rope_arg = &_rope_rp.args (0);\n'
       s += self.generate_from_proto ('_rope_arg', type_info, 'self')
+      s += '  if (!self) return false;\n'
       arg_counter = 1
       for arg in m.args:
         s += '  _rope_arg = &_rope_rp.args (%d);\n' % arg_counter

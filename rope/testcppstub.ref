@@ -1053,6 +1053,7 @@ handle_UIWidgetArea_simple_method (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 1) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  if (!self) return false;
   double _rope_retval = self->simple_method ();
   _rope_aret->set_vdouble (_rope_retval);
   return true;
@@ -1067,6 +1068,7 @@ handle_UIWidgetArea_single_arg (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 2) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  if (!self) return false;
   _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
   double _rope_retval = self->single_arg (n);
@@ -1083,6 +1085,7 @@ handle_UIWidgetArea_single_arg2 (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 2) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  if (!self) return false;
   _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
   double _rope_retval = self->single_arg2 (n);
@@ -1100,6 +1103,7 @@ handle_UIWidgetArea_two_args (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  if (!self) return false;
   _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
   _rope_arg = &_rope_rp.args (2);
@@ -1119,6 +1123,7 @@ handle_UIWidgetArea_two_args2 (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  if (!self) return false;
   _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
   _rope_arg = &_rope_rp.args (2);
@@ -1141,6 +1146,7 @@ handle_UIWidgetArea_multi_args (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 6) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  if (!self) return false;
   _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vint64()) return false;  n = _rope_arg->vint64();
   _rope_arg = &_rope_rp.args (2);
@@ -1166,6 +1172,7 @@ handle_UIWidgetArea_self_method (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  if (!self) return false;
   _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vstring()) return false;  ba1 = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
   _rope_arg = &_rope_rp.args (2);
@@ -1183,6 +1190,7 @@ handle_UIWidgetArea_void_method (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 1) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  if (!self) return false;
   self->void_method ();
   return true;
 }
@@ -1195,6 +1203,7 @@ handle_UIWidgetArea_on_click2out (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 1) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  if (!self) return false;
   std::string _rope_retval = self->on_click2out ();
   _rope_aret->set_vstring (_rope_retval);
   return true;
@@ -1209,6 +1218,7 @@ handle_UIWidgetArea_on_click2in (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 2) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<UIWidgetArea> (_rope_arg->vstring());
+  if (!self) return false;
   _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vstring()) return false;  command = _rope_arg->vstring();
   self->on_click2in (command);
@@ -1230,6 +1240,7 @@ handle_MethodTestInterface_method_with_bools (const RemoteProcedure    &_rope_rp
   if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
+  if (!self) return false;
   _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vint64()) return false;  input = _rope_arg->vint64();
   _rope_arg = &_rope_rp.args (2);
@@ -1249,6 +1260,7 @@ handle_MethodTestInterface_method_with_ints (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
+  if (!self) return false;
   _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vint64()) return false;  input = _rope_arg->vint64();
   _rope_arg = &_rope_rp.args (2);
@@ -1268,6 +1280,7 @@ handle_MethodTestInterface_method_with_floats (const RemoteProcedure    &_rope_r
   if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
+  if (!self) return false;
   _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vdouble()) return false;  input = _rope_arg->vdouble();
   _rope_arg = &_rope_rp.args (2);
@@ -1287,6 +1300,7 @@ handle_MethodTestInterface_method_with_string (const RemoteProcedure    &_rope_r
   if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
+  if (!self) return false;
   _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vstring()) return false;  input = _rope_arg->vstring();
   _rope_arg = &_rope_rp.args (2);
@@ -1306,6 +1320,7 @@ handle_MethodTestInterface_method_with_enum (const RemoteProcedure    &_rope_rp,
   if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
+  if (!self) return false;
   _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vint64()) return false;  input = QuickEnum (_rope_arg->vint64());
   _rope_arg = &_rope_rp.args (2);
@@ -1325,6 +1340,7 @@ handle_MethodTestInterface_method_with_record (const RemoteProcedure    &_rope_r
   if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
+  if (!self) return false;
   _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vrec() || !input.from_proto (ProtoRecordCast (_rope_arg->vrec()))) return false;
   _rope_arg = &_rope_rp.args (2);
@@ -1344,6 +1360,7 @@ handle_MethodTestInterface_method_with_sequence (const RemoteProcedure    &_rope
   if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
+  if (!self) return false;
   _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vseq() || !input.from_proto (ProtoSequenceCast (_rope_arg->vseq()))) return false;
   _rope_arg = &_rope_rp.args (2);
@@ -1363,6 +1380,7 @@ handle_MethodTestInterface_method_with_interface (const RemoteProcedure    &_rop
   if (_rope_rp.args_size() != 3) return false;
   _rope_arg = &_rope_rp.args (0);
   if (!_rope_arg->has_vstring()) return false;  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
+  if (!self) return false;
   _rope_arg = &_rope_rp.args (1);
   if (!_rope_arg->has_vstring()) return false;  input = Instance4StringCast<GrandChild> (_rope_arg->vstring());
   _rope_arg = &_rope_rp.args (2);
