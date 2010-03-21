@@ -30,6 +30,7 @@ rapicorn_impl_headers = $(strip 	\
 	tableimpl.hh			\
 )
 rapicorn_generated_headers = $(strip	\
+	interface.hh			\
 )
 rapicorn_cc_sources = $(strip 		\
 	\
