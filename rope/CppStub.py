@@ -147,13 +147,25 @@ class Generator:
     else:
       f = '%%-%ds' % self.ntab  # '%-20s'
       return indent + f % string
-  def format_arg (self, ident, type, defaultinit, interfacechar = '&'):
-    return self.format_default_arg (ident, type, None, interfacechar)
-  def format_default_arg (self, ident, type, defaultinit, interfacechar = '&'):
+  def format_var (self, ident, type, interfacechar = '&'):
     s = ''
     s += self.type2cpp (type) + ' '
     if type.storage == Decls.INTERFACE:
       s += interfacechar
+    s += ident
+    return s
+  def format_arg (self, ident, type, defaultinit, interfacechar = '&'):
+    return self.format_default_arg (ident, type, None, interfacechar)
+  def format_default_arg (self, ident, type, defaultinit, interfacechar = '&'):
+    s = ''
+    constref = type.storage in (Decls.STRING, Decls.SEQUENCE, Decls.RECORD)
+    if constref:
+      s += 'const '
+    s += self.type2cpp (type) + ' '
+    if type.storage == Decls.INTERFACE:
+      s += interfacechar
+    if constref:
+      s += '&'
     s += ident
     if defaultinit:
       s += ' = %s' % defaultinit
@@ -378,7 +390,7 @@ class Generator:
       s += '  const RemoteProcedure_Argument *_rope_arg;\n'
       s += '  %s *self;\n' % self.type2cpp (type_info)
       for a in m.args:
-        s += '  ' + self.format_arg (a[0], a[1], a[2], '*') + ';\n'
+        s += '  ' + self.format_var (a[0], a[1], '*') + ';\n'
       s += '  if (_rope_rp.args_size() != %d) return false;\n' % (1 + len (m.args))
       s += '  _rope_arg = &_rope_rp.args (0);\n'
       s += self.generate_from_proto ('_rope_arg', type_info, 'self')

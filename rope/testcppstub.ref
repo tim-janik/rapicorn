@@ -303,13 +303,13 @@ public:
   double          multi_args    (int n,
                                  double r,
                                  int i,
-                                 std::string s = "String ding",
+                                 const std::string &s = "String ding",
                                  double y = 5);
   double          self_method   (UIWidgetArea &ba1,
                                  UIWidgetArea &ba2);
   void            void_method   ();
   std::string     on_click2out  ();
-  void            on_click2in   (std::string command);
+  void            on_click2in   (const std::string &command);
 };
 
 class Parent {
@@ -351,14 +351,14 @@ public:
                                          int optval = -2);
   double          method_with_floats    (double input,
                                          double optval = 309.9);
-  std::string     method_with_string    (std::string input,
-                                         std::string optval = "default");
+  std::string     method_with_string    (const std::string &input,
+                                         const std::string &optval = "default");
   QuickEnum       method_with_enum      (QuickEnum input,
                                          QuickEnum optval);
-  QuickRecord     method_with_record    (QuickRecord input,
-                                         QuickRecord optval);
-  QuickSequence   method_with_sequence  (QuickSequence input,
-                                         QuickSequence optval);
+  QuickRecord     method_with_record    (const QuickRecord &input,
+                                         const QuickRecord &optval);
+  QuickSequence   method_with_sequence  (const QuickSequence &input,
+                                         const QuickSequence &optval);
   GrandChild&     method_with_interface (GrandChild &input,
                                          GrandChild &optval);
 };
@@ -833,7 +833,7 @@ double
 UIWidgetArea::multi_args (int n,
                           double r,
                           int i,
-                          std::string s,
+                          const std::string &s,
                           double y)
 {
   RemoteProcedure rp;
@@ -878,7 +878,7 @@ UIWidgetArea::on_click2out ()
   return 0; // FIXME
 }
 void
-UIWidgetArea::on_click2in (std::string command)
+UIWidgetArea::on_click2in (const std::string &command)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000a);
@@ -978,8 +978,8 @@ MethodTestInterface::method_with_floats (double input,
   return 0; // FIXME
 }
 std::string
-MethodTestInterface::method_with_string (std::string input,
-                                         std::string optval)
+MethodTestInterface::method_with_string (const std::string &input,
+                                         const std::string &optval)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def000e);
@@ -1004,8 +1004,8 @@ MethodTestInterface::method_with_enum (QuickEnum input,
   return QuickEnum (0); // FIXME
 }
 QuickRecord
-MethodTestInterface::method_with_record (QuickRecord input,
-                                         QuickRecord optval)
+MethodTestInterface::method_with_record (const QuickRecord &input,
+                                         const QuickRecord &optval)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0010);
@@ -1017,8 +1017,8 @@ MethodTestInterface::method_with_record (QuickRecord input,
   return QuickRecord(); // FIXME
 }
 QuickSequence
-MethodTestInterface::method_with_sequence (QuickSequence input,
-                                           QuickSequence optval)
+MethodTestInterface::method_with_sequence (const QuickSequence &input,
+                                           const QuickSequence &optval)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0def0011);
