@@ -22,15 +22,11 @@
 #include <ui/commands.hh>
 #include <ui/properties.hh>
 #include <ui/heritage.hh>
+#include <ui/interface.hh>
 
 namespace Rapicorn {
 
 /* --- Item structures and forward decls --- */
-struct Requisition {
-  double width, height;
-  Requisition () : width (0), height (0) {}
-  Requisition (double w, double h) : width (w), height (h) {}
-};
 typedef Rect Allocation;
 class Item;
 class SizeGroup;
