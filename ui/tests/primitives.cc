@@ -549,7 +549,7 @@ main (int   argc,
 {
   rapicorn_init_test (&argc, &argv);
   /* initialize rapicorn */
-  Application::init_with_x11 (&argc, &argv, "PrimitivesTest");
+  App.init_with_x11 (&argc, &argv, "PrimitivesTest");
   
   basic_loop_test();
   more_loop_test2();

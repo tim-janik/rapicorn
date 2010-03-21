@@ -48,20 +48,20 @@ Every programming or toolkit library comes with the obligatory "Hello World" exa
   <!--- paragraph break -->
   <ol>
     <li>
-Every program using Rapicorn needs to first initialize the core library and also initialize a particular viewport backend. Both can be accomplished by this call: <code>Application::init_with_x11 (&amp;argc, &amp;argv, "Program Name");</code>
+Every program using Rapicorn needs to first initialize the core library and also initialize a particular viewport backend. Both can be accomplished by this call: <code>App.init_with_x11 (&amp;argc, &amp;argv, "Program Name");</code>
     </li>
     <li>
 Programs that display graphical user interfaces with Rapicorn generally need to load user interface description files, which can be accomplished by:
-<code>Application::auto_load ("i18n-domain", "ui-description.xml", argv[0]);</code>
+<code>App.auto_load ("i18n-domain", "ui-description.xml", argv[0]);</code>
     </li>
     <li>
 Windows defined in the user interface description files then need to be created and at some point shown to the user:
-      <pre>    Window window = Application::create_window ("main-window");
+      <pre>    Window window = App.create_window ("main-window");
     window.show();
 </pre>
     </li>
     <li>
-Most GUI programs will handle user input on demand after windows have initialy been displayed. For this, they enter an <a href="http://en.wikipedia.org/wiki/Event_loop">event loop</a> and remain until users initiate application exit. In Rapicorn this is done by: <code>Application::execute_loops();</code>
+Most GUI programs will handle user input on demand after windows have initialy been displayed. For this, they enter an <a href="http://en.wikipedia.org/wiki/Event_loop">event loop</a> and remain until users initiate application exit. In Rapicorn this is done by: <code>App.execute_loops();</code>
     </li>
     <li>
 Last but not least, GUI programs need a way to specify program actions to be executed when certain user interface elements like buttons are activated. In Rapicorn, such actions are hooked up as "command handlers" on a window: <code>window.commands += handle_commands;</code>. For this to work, a <code>handle_commands()</code> function needs to be supplied by the program, e.g.:

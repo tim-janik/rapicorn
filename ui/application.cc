@@ -22,6 +22,16 @@
 
 namespace Rapicorn {
 
+class AppImpl : public Application {};
+
+Application &App = *new AppImpl();
+
+Application::Application() :
+  sig_missing_primary (*this)
+{
+  assert (&App == NULL);
+}
+
 Application::ApplicationMutex Application::mutex;
 
 void

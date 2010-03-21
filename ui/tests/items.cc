@@ -27,7 +27,7 @@ main (int   argc,
 {
   rapicorn_init_test (&argc, &argv);
   /* initialize rapicorn */
-  Application::init_with_x11 (&argc, &argv, "ItemTest");
+  App.init_with_x11 (&argc, &argv, "ItemTest");
 
   TSTART ("RapicornItems");
   /* parse standard GUI descriptions and create example item */

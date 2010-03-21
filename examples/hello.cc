@@ -40,15 +40,15 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn for X11 backend with application name */
-  Application::init_with_x11 (&argc, &argv, "HelloWorld");
+  App.init_with_x11 (&argc, &argv, "HelloWorld");
 
   /* find and load GUI definitions relative to argv[0] */
-  Application::auto_load ("DummyTranslation",   // i18n_domain,
+  App.auto_load ("DummyTranslation",   // i18n_domain,
                           "hello.xml",          // GUI file name
                           argv[0]);
 
   /* create main window */
-  Window window = Application::create_window ("main-window");
+  Window window = App.create_window ("main-window");
 
   /* connect custom callback to handle UI commands */
   window.commands += handle_commands;
@@ -57,7 +57,7 @@ main (int   argc,
   window.show();
 
   /* run event loops while windows are on screen */
-  Application::execute_loops();
+  App.execute_loops();
 
   return 0;
 }

@@ -94,8 +94,8 @@ installcheck-local:
 	&& echo '#include <rapicorn.hh>'				>> tmpx.cc \
 	&& echo 'using namespace Rapicorn;'				>> tmpx.cc \
 	&& echo 'extern "C" int main (int argc, char *argv[]) {'	>> tmpx.cc \
-	&& echo 'Application::init_with_x11 (&argc, &argv, ".AMtest");'	>> tmpx.cc \
-	&& echo 'Application::execute_loops(); return 0; }'		>> tmpx.cc
+	&& echo 'App.init_with_x11 (&argc, &argv, ".AMtest");'	>> tmpx.cc \
+	&& echo 'App.execute_loops(); return 0; }'		>> tmpx.cc
 	@$(call TSTRESULT)
 	@$(call TSTTITLE, Compile rapicorn sample program)
 	$(_@) $(CXX) `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags rapicorn@RAPICORN_RELEASE@` tmpx.cc -c ; \

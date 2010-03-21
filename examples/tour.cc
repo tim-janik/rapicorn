@@ -46,7 +46,7 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn and its gtk backend */
-  Application::init_with_x11 (&argc, &argv, "TourTest");
+  App.init_with_x11 (&argc, &argv, "TourTest");
   /* initialization acquired global Rapicorn mutex */
 
   /* register builtin images */
@@ -56,15 +56,15 @@ main (int   argc,
   Application::pixstream ("testimage-rgb-raw", rgb_raw);
 
   /* load GUI definition file, relative to argv[0] */
-  Application::auto_load ("RapicornTest", "tour.xml", argv[0]);
+  App.auto_load ("RapicornTest", "tour.xml", argv[0]);
 
   /* create root item */
-  Window window = Application::create_window ("tour-dialog");
+  Window window = App.create_window ("tour-dialog");
   window.commands += custom_commands;
 
   window.show();
 
-  Application::execute_loops();
+  App.execute_loops();
 
   return 0;
 }

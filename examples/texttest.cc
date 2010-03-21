@@ -24,17 +24,17 @@ main (int   argc,
       char *argv[])
 {
   /* initialize rapicorn */
-  Application::init_with_x11 (&argc, &argv, "TextTest");
+  App.init_with_x11 (&argc, &argv, "TextTest");
 
   /* parse GUI description */
-  Application::auto_load ("RapicornTest", "texttest.xml", argv[0]);
+  App.auto_load ("RapicornTest", "texttest.xml", argv[0]);
 
   /* create main window */
-  Window window = Application::create_window ("main-shell");
+  Window window = App.create_window ("main-shell");
 
   /* show and process */
   window.show();
-  Application::execute_loops();
+  App.execute_loops();
 
   return 0;
 }

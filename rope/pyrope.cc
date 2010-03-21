@@ -104,7 +104,7 @@ MODULE_INIT_FUNCTION (void) // conventional dlmodule initializer
     char *dummyargs[] = { NULL, NULL };
     dummyargs[0] = argv0[0] ? argv0 : (char*) "Python>>>";
     char **dummyargv = dummyargs;
-    Application::init_with_x11 (&dummyargc, &dummyargv, dummyargs[0]);
+    App.init_with_x11 (&dummyargc, &dummyargv, dummyargs[0]);
   }
   free (argv0);
 }

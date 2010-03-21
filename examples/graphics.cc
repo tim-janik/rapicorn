@@ -40,14 +40,14 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn and its gtk backend */
-  Application::init_with_x11 (&argc, &argv, "Graphics");
+  App.init_with_x11 (&argc, &argv, "Graphics");
   /* initialization acquired global Rapicorn mutex */
 
   /* load GUI definition file, relative to argv[0] */
-  Application::auto_load ("RapicornTest", "graphics.xml", argv[0]);
+  App.auto_load ("RapicornTest", "graphics.xml", argv[0]);
 
   /* create root item */
-  Window window = Application::create_window ("graphics-dialog");
+  Window window = App.create_window ("graphics-dialog");
 
   /* hook up drawable test */
   Root &root = window.root();
@@ -56,7 +56,7 @@ main (int   argc,
 
   window.show();
 
-  Application::execute_loops();
+  App.execute_loops();
 
   return 0;
 }

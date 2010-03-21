@@ -71,7 +71,7 @@ test_cxx_gui ()
   TOK();
   /* show onscreen and handle events like expose */
   window.show();
-  Application::execute_loops();
+  App.execute_loops();
   TOK();
   /* assert TestItem rendering */
   uint seen_test = TestContainer::seen_test_items();
@@ -99,7 +99,7 @@ test_test_item ()
   /* verify and assert at least one TestItem rendering */
   uint old_seen_test = TestContainer::seen_test_items();
   window.show();
-  Application::execute_loops();
+  App.execute_loops();
   uint seen_test = TestContainer::seen_test_items();
   TASSERT (seen_test > old_seen_test);
   /* test item rendering also executed various assertions */
@@ -118,10 +118,10 @@ main (int   argc,
       test_item_fatal_asserts = false;
 
   /* initialize rapicorn */
-  Application::init_with_x11 (&argc, &argv, "TestItemsTest");
+  App.init_with_x11 (&argc, &argv, "TestItemsTest");
   
   /* parse GUI description */
-  Application::auto_load ("testitems", Rapicorn::Path::join (SRCDIR, "testitems.xml"), argv[0]);
+  App.auto_load ("testitems", Rapicorn::Path::join (SRCDIR, "testitems.xml"), argv[0]);
 
   /* create/run tests */
   test_cxx_gui ();

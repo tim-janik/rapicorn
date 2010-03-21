@@ -49,11 +49,11 @@ main (int   argc,
   rapicorn_init_test (&argc, &argv);
 
   /* initialize Rapicorn for X11 backend with application name */
-  Application::init_with_x11 (&argc, &argv, "FactoryTest");
+  App.init_with_x11 (&argc, &argv, "FactoryTest");
 
   /* find and load GUI definitions relative to argv[0] */
   String factory_xml = Rapicorn::Path::join (SRCDIR, "factory.xml");
-  Application::auto_load ("DummyTranslation",   // i18n_domain,
+  App.auto_load ("DummyTranslation",   // i18n_domain,
                           factory_xml,          // GUI file name
                           argv[0]);
   Root *root;
@@ -61,7 +61,7 @@ main (int   argc,
   TestContainer *titem;
 
   TSTART ("Factory Calls");
-  Window testwin = Application::create_window ("test-TestItemL2");
+  Window testwin = App.create_window ("test-TestItemL2");
   root = &testwin.root();
   testwin.show();
   while (RapicornTester::loops_pending()) /* complete showing */

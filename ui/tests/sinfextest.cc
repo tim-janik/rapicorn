@@ -231,7 +231,7 @@ main (int   argc,
   if (!shell_mode)
     rapicorn_init_test (&argc, &argv);
   else
-    Application::init_with_x11 (&argc, &argv, "sinfextest");
+    App.init_with_x11 (&argc, &argv, "sinfextest");
 
   if (shell_mode)
     {

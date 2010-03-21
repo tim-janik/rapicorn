@@ -63,20 +63,20 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn for X11 */
-  Application::init_with_x11 (&argc, &argv, "FileView");
+  App.init_with_x11 (&argc, &argv, "FileView");
   /* initialization acquired global Rapicorn mutex */
 
   /* load GUI definition file, relative to argv[0] */
-  Application::auto_load ("RapicornTest", "fileview.xml", argv[0]);
+  App.auto_load ("RapicornTest", "fileview.xml", argv[0]);
 
   /* create root item */
   Store1 *s1 = create_store();
-  Window window = Application::create_window ("main-dialog",
+  Window window = App.create_window ("main-dialog",
                                               Args (""),
                                               Args ("ListModel=" + s1->model().object_url()));
   window.show();
 
-  Application::execute_loops();
+  App.execute_loops();
 
   return 0;
 }

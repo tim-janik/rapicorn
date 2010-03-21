@@ -25,31 +25,32 @@
 namespace Rapicorn {
 
 class Application {
+protected:
   explicit              Application     ();
   RAPICORN_PRIVATE_CLASS_COPY (Application);
+  static Application    self;           // singleton
 public:
   /* --- public API --- */
-  static Application    self;           // singleton
   /* startup */
-  static void           init_with_x11   (int           *argcp,
-                                         char        ***argvp,
-                                         const char    *app_name);
-  static String         auto_path       (const String  &file_name,
-                                         const String  &binary_path,
-                                         bool           search_vpath = true);
-  static void           auto_load       (const String  &i18n_domain,
-                                         const String  &file_name,
-                                         const String  &binary_path);
+  void           init_with_x11   (int           *argcp,
+                                  char        ***argvp,
+                                  const char    *app_name);
+  String         auto_path       (const String  &file_name,
+                                  const String  &binary_path,
+                                  bool           search_vpath = true);
+  void           auto_load       (const String  &i18n_domain,
+                                  const String  &file_name,
+                                  const String  &binary_path);
   static void           pixstream       (const String  &pix_name,
                                          const uint8   *static_const_pixstream);
   /* windows */
-  static Window         create_window   (const String            &window_identifier,
-                                         const std::list<String> &arguments = std::list<String>(),
-                                         const std::list<String> &env_variables = std::list<String>());
-  static vector<Window> list_windows    ();
+  Window         create_window   (const String            &window_identifier,
+                                  const std::list<String> &arguments = std::list<String>(),
+                                  const std::list<String> &env_variables = std::list<String>());
+  vector<Window> list_windows    ();
   /* execution */
-  static uint           execute_loops   ();
-  static void           exit            (uint   code = 0);
+  uint           execute_loops   ();
+  void           exit            (uint   code = 0);
   /* notifications */
   Signal<Application, void ()> sig_missing_primary;
   /* global mutex */
@@ -60,6 +61,8 @@ public:
   };
   static ApplicationMutex mutex;  // singleton
 };
+
+extern Application &App;
 
 } // Rapicorn
 
