@@ -148,11 +148,15 @@ class Generator:
       f = '%%-%ds' % self.ntab  # '%-20s'
       return indent + f % string
   def format_arg (self, ident, type, defaultinit, interfacechar = '&'):
+    return self.format_default_arg (ident, type, None, interfacechar)
+  def format_default_arg (self, ident, type, defaultinit, interfacechar = '&'):
     s = ''
     s += self.type2cpp (type) + ' '
     if type.storage == Decls.INTERFACE:
       s += interfacechar
     s += ident
+    if defaultinit:
+      s += ' = %s' % defaultinit
     return s
   def use_arg (self, ident, type, interfacechar = '*'):
     s = ''
@@ -441,7 +445,7 @@ class Generator:
     argindent = len (s)
     l = []
     for a in functype.args:
-      l += [ self.format_arg (*a) ]
+      l += [ self.format_default_arg (*a) ]
     s += (',\n' + argindent * ' ').join (l)
     s += ');\n'
     return s

@@ -295,16 +295,16 @@ public:
   Signal_sample_signal sig_sample_signal;
   double          simple_method ();
   double          single_arg    (int n);
-  double          single_arg2   (int n);
+  double          single_arg2   (int n = 5);
   double          two_args      (int n,
                                  double r);
-  double          two_args2     (int n,
-                                 double r);
+  double          two_args2     (int n = 6,
+                                 double r = 7.7);
   double          multi_args    (int n,
                                  double r,
                                  int i,
-                                 std::string s,
-                                 double y);
+                                 std::string s = "String ding",
+                                 double y = 5);
   double          self_method   (UIWidgetArea &ba1,
                                  UIWidgetArea &ba2);
   void            void_method   ();
@@ -348,11 +348,11 @@ public:
   bool            method_with_bools     (bool input,
                                          bool optval);
   int             method_with_ints      (int input,
-                                         int optval);
+                                         int optval = -2);
   double          method_with_floats    (double input,
-                                         double optval);
+                                         double optval = 309.9);
   std::string     method_with_string    (std::string input,
-                                         std::string optval);
+                                         std::string optval = "default");
   QuickEnum       method_with_enum      (QuickEnum input,
                                          QuickEnum optval);
   QuickRecord     method_with_record    (QuickRecord input,
