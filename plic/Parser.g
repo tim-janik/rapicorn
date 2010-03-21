@@ -109,11 +109,15 @@ class YYGlobals (object):
       mtype = Decls.TypeInfo (method[0], Decls.FUNC, yy.impl_includes)
       mtype.set_rtype (method[1])
       adict = {}
+      need_default = false
       for arg in method_args:
+        need_default = need_default or arg[2] != None
         if arg[0] in reservedkeywords:
           raise NameError ('invalid method arg name: ' + method[0] + ' (...' + arg[0] + '...)')
         if adict.has_key (arg[0]):
           raise NameError ('duplicate method arg name: ' + method[0] + ' (...' + arg[0] + '...)')
+        if need_default and arg[2] == None:
+          raise AttributeError ('missing subsequent default initializer: ' + method[0] + ' (...' + arg[0] + '...)')
         adict[arg[0]] = true
         mtype.add_arg (arg[0], arg[1], arg[2])
       iface.add_method (mtype, method[0] in sigset)

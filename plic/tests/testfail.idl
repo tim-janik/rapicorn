@@ -87,3 +87,4 @@ namespace A { namespace B { enum E { E1 }; } namespace B { enum E { E1 }; } } //
 interface I { int method (I self); }; // invalid method arg name
 
 interface I { int self; }; // invalid property name
+interface I { int method (int a, int b = 2, int c); }; // missing subsequent default initializer

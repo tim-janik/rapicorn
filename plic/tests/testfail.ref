@@ -144,3 +144,6 @@
 .../testfail.idl:89: NameError: invalid property name: self
 >  namespace PlicFailTest { interface I { int self; }; // invalid property name
 >                                                    ^
+.../testfail.idl:90: AttributeError: missing subsequent default initializer: method (...c...)
+>  ... interface I { int method (int a, int b = 2, int c); }; // missing subsequent default initializer
+>                                                           ^
