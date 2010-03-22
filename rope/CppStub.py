@@ -167,8 +167,15 @@ class Generator:
     if constref:
       s += '&'
     s += ident
-    if defaultinit:
-      s += ' = %s' % defaultinit
+    if defaultinit != None:
+      if type.storage == Decls.ENUM:
+        s += ' = %s (%s)' % (self.type2cpp (type), defaultinit)
+      elif type.storage in (Decls.SEQUENCE, Decls.RECORD):
+        s += ' = %s()' % self.type2cpp (type)
+      elif type.storage == Decls.INTERFACE:
+        s += ' = *(%s*) NULL' % self.type2cpp (type)
+      else:
+        s += ' = %s' % defaultinit
     return s
   def use_arg (self, ident, type, interfacechar = '*'):
     s = ''

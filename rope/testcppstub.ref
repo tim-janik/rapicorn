@@ -346,7 +346,7 @@ struct QuickSequence {
 class MethodTestInterface {
 public:
   bool            method_with_bools     (bool input,
-                                         bool optval);
+                                         bool optval = 0);
   int             method_with_ints      (int input,
                                          int optval = -2);
   double          method_with_floats    (double input,
@@ -354,13 +354,13 @@ public:
   std::string     method_with_string    (const std::string &input,
                                          const std::string &optval = "default");
   QuickEnum       method_with_enum      (QuickEnum input,
-                                         QuickEnum optval);
+                                         QuickEnum optval = QuickEnum (0));
   QuickRecord     method_with_record    (const QuickRecord &input,
-                                         const QuickRecord &optval);
+                                         const QuickRecord &optval = QuickRecord());
   QuickSequence   method_with_sequence  (const QuickSequence &input,
-                                         const QuickSequence &optval);
+                                         const QuickSequence &optval = QuickSequence());
   GrandChild&     method_with_interface (GrandChild &input,
-                                         GrandChild &optval);
+                                         GrandChild &optval = *(GrandChild*) NULL);
 };
 } // InterfaceTests
 
