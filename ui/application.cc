@@ -44,10 +44,22 @@ Application::init_with_x11 (int           *argcp,
   rapicorn_thread_enter();
 }
 
+void
+Application::init_with_x11 (const std::string &application_name,
+                            const StringList  &cmdline_args)
+{
+  int dummy_argc = cmdline_args.strings.size();
+  char **dummy_argv = (char**) alloca ((sizeof (char*) + 1) * dummy_argc);
+  for (int i = 0; i < dummy_argc; i++)
+    dummy_argv[i] = const_cast<char*> (cmdline_args.strings[i].c_str());
+  dummy_argv[dummy_argc] = NULL;
+  Application::init_with_x11 (&dummy_argc, &dummy_argv, application_name.c_str());
+}
+
 WinPtr
-Application::create_winptr (const String            &window_identifier,
-                            const std::list<String> &arguments,
-                            const std::list<String> &env_variables)
+Application::create_winptr (const std::string         &window_identifier,
+                            const std::vector<String> &arguments,
+                            const std::vector<String> &env_variables)
 {
   return Factory::create_winptr (window_identifier, arguments, env_variables);
 }
@@ -111,7 +123,7 @@ Application::pixstream (const String  &pix_name,
 
 static uint     exit_code = 0;
 
-uint
+int
 Application::execute_loops ()
 {
   assert (rapicorn_thread_entered());           // guards exit_code
@@ -123,7 +135,7 @@ Application::execute_loops ()
 }
 
 void
-Application::exit (uint code)
+Application::exit (int code)
 {
   assert (rapicorn_thread_entered());           // guards exit_code
   if (!exit_code)

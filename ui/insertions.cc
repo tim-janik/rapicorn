@@ -22,11 +22,29 @@
 struct DUMMY { // dummy class for auto indentation
 
 class_scope:Requisition:
-
   inline Requisition (double w, double h) : width (w), height (h) {}
 
-
-
+class_scope:Application:
+  static Application self;       // singleton
+  static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
+  static void        init_with_x11 (int        *argcp,
+                                    char     ***argvp,
+                                    const char *app_name);
+  WinPtr             create_winptr (const std::string  &window_identifier,
+                                    const std::vector<String> &arguments = std::vector<String>(),
+                                    const std::vector<String> &env_variables = std::vector<String>());
+  /* global mutex */
+  struct ApplicationMutex {
+    static void lock    () { rapicorn_thread_enter (); }
+    static bool trylock () { return rapicorn_thread_try_enter (); }
+    static void unlock  () { rapicorn_thread_leave (); }
+  };
+  static ApplicationMutex mutex;  // singleton
+  /* singleton defs */
+protected:
+  explicit           Application ();
+private:
+  RAPICORN_PRIVATE_CLASS_COPY (Application);
 
 IGNORE: // close last _scope
 }; // close dummy class scope

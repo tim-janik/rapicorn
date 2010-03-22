@@ -15,6 +15,8 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 
+include "hardcoded.idl";
+
 namespace Rapicorn {
 
 sequence StringList {
@@ -37,14 +39,26 @@ record Requisition {
  * };
  */
 
-/*
- * interface Application {
- *   Application   _init_with_x11  (string         application_name,
- *                                  StringList     cmdline_args);
- *   Window        create_window   (string         window_identifier,
- *                                  StringList     arguments,
- *                                  StringList     env_variables);
- * };
- */
+interface Application {
+  /* startup */
+  void          init_with_x11   (string         application_name,
+                                 StringList     cmdline_args);
+  string        auto_path       (string         file_name,
+                                 string         binary_path,
+                                 bool           search_vpath = true);
+  void          auto_load       (string         i18n_domain,
+                                 string         file_name,
+                                 string         binary_path);
+  /* windows */
+  // WindowList    list_windows    ();
+  // Window        create_window   (string     window_identifier,
+  //                                StringList arguments = 0,
+  //                                StringList env_variables = 0);
+  /* execution */
+  int           execute_loops   ();
+  void          exit            (int            code = 0);
+  /* notifications */
+  signal void   missing_primary ();
+};
 
 } // Rapicorn

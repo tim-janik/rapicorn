@@ -23,7 +23,7 @@
 
 namespace Rapicorn {
 
-class Args : public std::list<String> {
+class Args : public std::vector<String> {
   typedef const String CS;
 public:
   Args (CS &s0 = "", CS &s1 = "", CS &s2 = "", CS &s3 = "",
@@ -36,7 +36,7 @@ namespace Factory {
 
 /* --- Factory API --- */
 typedef map<String,String>       VariableMap;
-typedef std::list<String>        ArgumentList;  /* elements: key=utf8string */
+typedef std::vector<String>      ArgumentList;  /* elements: key=utf8string */
 int /*-errno*/  parse_file       (const String           &i18n_domain,
                                   const String           &file_name,
                                   const String           &domain = "",

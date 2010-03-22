@@ -1,5 +1,5 @@
-/* Rapicorn
- * Copyright (C) 2007 Tim Janik
+/* Rapicorn Rope - Remote Object Programming Extension          -*-mode:c++;-*-
+ * Copyright (C) 2010 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,19 +14,10 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef __RAPICORN_APPLICATION_HH__
-#define __RAPICORN_APPLICATION_HH__
-
-#include <ui/utilities.hh>
-#include <ui/primitives.hh>
-#include <ui/window.hh>
-#include <ui/item.hh>
-#include <stdlib.h>
 
 namespace Rapicorn {
 
-extern Application &App;
+interface Window {};    // see window.hh
+interface Root {};      // see root.hh
 
 } // Rapicorn
-
-#endif  /* __RAPICORN_APPLICATION_HH__ */

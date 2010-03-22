@@ -23,7 +23,7 @@
 namespace Rapicorn {
 
 struct Evaluator {
-  typedef std::list<String>             ArgumentList; /* elements: key=utf8string */
+  typedef std::vector<String>           ArgumentList; /* elements: key=utf8string */
   typedef std::map<String,String>       VariableMap;
   typedef std::list<const VariableMap*> VariableMapList;
   static String     canonify_name   (const String       &key); /* chars => [A-Za-z0-9_] */
