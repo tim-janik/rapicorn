@@ -71,7 +71,7 @@ main (int   argc,
 
   /* create root item */
   Store1 *s1 = create_store();
-  Window window = App.create_window ("main-dialog",
+  WinPtr window = App.create_winptr ("main-dialog",
                                               Args (""),
                                               Args ("ListModel=" + s1->model().object_url()));
   window.show();

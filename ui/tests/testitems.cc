@@ -57,7 +57,7 @@ static void
 test_cxx_gui ()
 {
   TSTART ("C++GUI Test");
-  Window window = Factory::create_window ("Root");
+  WinPtr window = Factory::create_winptr ("Root");
   TOK();
   Item &titem = Factory::create_item ("TestItem");
   TOK();
@@ -83,7 +83,7 @@ static void
 test_test_item ()
 {
   TSTART ("alignment-test");
-  Window window = Factory::create_window ("alignment-test");
+  WinPtr window = Factory::create_winptr ("alignment-test");
   TOK();
   Root &root = window.root();
   TestContainer *titem = root.interface<TestContainer*>();

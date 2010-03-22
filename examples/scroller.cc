@@ -47,7 +47,7 @@ main (int   argc,
   App.auto_load ("RapicornTest", "scroller.xml", argv[0]);
 
   /* create main window */
-  Window window = App.create_window ("main-shell");
+  WinPtr window = App.create_winptr ("main-shell");
   Container &mshell = window.root().interface<Container>();
 
   /* create button rows */

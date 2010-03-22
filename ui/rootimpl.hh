@@ -78,7 +78,7 @@ private:
   virtual bool          has_viewport                            ();
   virtual void          destroy_viewport                        ();
   void                  idle_show                               ();
-  virtual Window        window                                  ();
+  virtual WinPtr        window                                  ();
   virtual bool          prepare                                 (uint64                  current_time_usecs,
                                                                  int64                  *timeout_usecs_p);
   virtual bool          check                                   (uint64                  current_time_usecs);

@@ -20,23 +20,23 @@
 namespace Rapicorn {
 
 /* --- implementation --- */
-Window::Window (Root &root) :
+WinPtr::WinPtr (Root &root) :
   m_root (ref_sink (root)),
   commands (*this)
 {}
 
-Window::Window (const Window &window) :
+WinPtr::WinPtr (const WinPtr &window) :
   m_root (ref_sink (window.m_root)),
   commands (*this)
 {}
 
-Window::~Window ()
+WinPtr::~WinPtr ()
 {
   m_root.unref();
 }
 
-Window*
-Window::from_object_url (const String &rooturl)
+WinPtr*
+WinPtr::from_object_url (const String &rooturl)
 {
   struct DeletableAccessor : public Deletable {
     using Deletable::from_object_url; // gain access to protected Deletable method
@@ -49,107 +49,107 @@ Window::from_object_url (const String &rooturl)
         {
           Root *root = item->get_root();
           if (root)
-            return new Window (*root);
+            return new WinPtr (*root);
         }
     }
   return NULL;
 }
 
 void
-Window::ref () const
+WinPtr::ref () const
 {
   return m_root.ref();
 }
 
 Root&
-Window::root () const
+WinPtr::root () const
 {
   assert (rapicorn_thread_entered());
   return m_root;
 }
 
 void
-Window::unref () const
+WinPtr::unref () const
 {
   return m_root.unref();
 }
 
 bool
-Window::viewable ()
+WinPtr::viewable ()
 {
   assert (rapicorn_thread_entered());
   return m_root.viewable();
 }
 
 void
-Window::show ()
+WinPtr::show ()
 {
   assert (rapicorn_thread_entered());
   m_root.create_viewport();
 }
 
 bool
-Window::closed ()
+WinPtr::closed ()
 {
   assert (rapicorn_thread_entered());
   return m_root.has_viewport();
 }
 
 void
-Window::close ()
+WinPtr::close ()
 {
   assert (rapicorn_thread_entered());
   m_root.destroy_viewport();
 }
 
-Window::Commands::Commands (Window &w) :
+WinPtr::Commands::Commands (WinPtr &w) :
   window (w)
 {}
 
 void
-Window::Commands::operator+= (const CmdSlot &s)
+WinPtr::Commands::operator+= (const CmdSlot &s)
 {
   window.m_root.sig_command += s;
 }
 
 void
-Window::Commands::operator-= (const CmdSlot &s)
+WinPtr::Commands::operator-= (const CmdSlot &s)
 {
   window.m_root.sig_command -= s;
 }
 
 void
-Window::Commands::operator+= (const CmdSlotW &s)
+WinPtr::Commands::operator+= (const CmdSlotW &s)
 {
   window.m_root.sig_window_command += s;
 }
 
 void
-Window::Commands::operator-= (const CmdSlotW &s)
+WinPtr::Commands::operator-= (const CmdSlotW &s)
 {
   window.m_root.sig_window_command -= s;
 }
 
 void
-Window::Commands::operator+= (bool (*callback) (const String&, const StringVector&))
+WinPtr::Commands::operator+= (bool (*callback) (const String&, const StringVector&))
 {
   return operator+= (slot (callback));
 }
 
 void
-Window::Commands::operator-= (bool (*callback) (const String&, const StringVector&))
+WinPtr::Commands::operator-= (bool (*callback) (const String&, const StringVector&))
 {
   return operator-= (slot (callback));
 }
 
 void
-Window::Commands::operator+= (bool (*callback) (Window&, const String&, const StringVector&))
+WinPtr::Commands::operator+= (bool (*callback) (WinPtr&, const String&, const StringVector&))
 {
   return operator+= (slot (callback));
 }
 
 void
-Window::Commands::operator-= (bool (*callback) (Window&, const String&, const StringVector&))
+WinPtr::Commands::operator-= (bool (*callback) (WinPtr&, const String&, const StringVector&))
 {
   return operator-= (slot (callback));
 }

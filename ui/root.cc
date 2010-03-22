@@ -29,10 +29,10 @@ struct ClassDoctor {
   }
 };
 
-class RootWindowImpl : public Window {
+class RootWindowImpl : public WinPtr {
 public:
   RootWindowImpl (Root &r) :
-    Window (r)
+    WinPtr (r)
   {}
 };
 
@@ -1079,7 +1079,7 @@ RootImpl::destroy_viewport ()
   unref (this);
 }
 
-Window
+WinPtr
 RootImpl::window ()
 {
   return RootWindowImpl (*this);

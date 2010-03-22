@@ -23,11 +23,11 @@
 namespace Rapicorn {
 
 class Root;
-class Window : virtual public Deletable {
+class WinPtr : virtual public Deletable {
   Root         &m_root;
-  Window&       operator=       (const Window   &window);
+  WinPtr&       operator=       (const WinPtr   &window);
 protected:
-  explicit      Window          (Root           &root);
+  explicit      WinPtr          (Root           &root);
 public:
   /* reference ops */
   void          ref             () const;       // m_root.ref();
@@ -39,16 +39,16 @@ public:
   bool          closed          ();
   void          close           ();
   /* class */
-  /*Copy*/      Window          (const Window &window);
-  virtual      ~Window          ();
-  static Window*from_object_url (const String &rooturl);
+  /*Copy*/      WinPtr          (const WinPtr &window);
+  virtual      ~WinPtr          ();
+  static WinPtr*from_object_url (const String &rooturl);
   /* callbacks */
   typedef Signals::Slot2<bool,          const String&, const StringVector&> CmdSlot;
-  typedef Signals::Slot3<bool, Window&, const String&, const StringVector&> CmdSlotW;
+  typedef Signals::Slot3<bool, WinPtr&, const String&, const StringVector&> CmdSlotW;
   class Commands {
-    Window  &window;
-    explicit Commands (Window &w);
-    friend   class Window;
+    WinPtr  &window;
+    explicit Commands (WinPtr &w);
+    friend   class WinPtr;
   public:
     void operator+= (const CmdSlot  &s);
     void operator-= (const CmdSlot  &s);
@@ -56,8 +56,8 @@ public:
     void operator-= (const CmdSlotW &s);
     void operator+= (bool (*callback) (const String&, const StringVector&));
     void operator-= (bool (*callback) (const String&, const StringVector&));
-    void operator+= (bool (*callback) (Window&, const String&, const StringVector&));
-    void operator-= (bool (*callback) (Window&, const String&, const StringVector&));
+    void operator+= (bool (*callback) (WinPtr&, const String&, const StringVector&));
+    void operator-= (bool (*callback) (WinPtr&, const String&, const StringVector&));
   };
   Commands      commands;
 }; 

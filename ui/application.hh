@@ -44,10 +44,10 @@ public:
   static void           pixstream       (const String  &pix_name,
                                          const uint8   *static_const_pixstream);
   /* windows */
-  Window         create_window   (const String            &window_identifier,
+  WinPtr         create_winptr   (const String            &window_identifier,
                                   const std::list<String> &arguments = std::list<String>(),
                                   const std::list<String> &env_variables = std::list<String>());
-  vector<Window> list_windows    ();
+  vector<WinPtr> list_windows    ();
   /* execution */
   uint           execute_loops   ();
   void           exit            (uint   code = 0);

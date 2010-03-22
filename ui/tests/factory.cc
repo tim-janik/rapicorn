@@ -61,7 +61,7 @@ main (int   argc,
   TestContainer *titem;
 
   TSTART ("Factory Calls");
-  Window testwin = App.create_window ("test-TestItemL2");
+  WinPtr testwin = App.create_winptr ("test-TestItemL2");
   root = &testwin.root();
   testwin.show();
   while (RapicornTester::loops_pending()) /* complete showing */

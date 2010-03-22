@@ -20,7 +20,7 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-custom_commands (Window             &window,
+custom_commands (WinPtr             &window,
                  const String       &command,
                  const StringVector &args)
 {
@@ -59,7 +59,7 @@ main (int   argc,
   App.auto_load ("RapicornTest", "tour.xml", argv[0]);
 
   /* create root item */
-  Window window = App.create_window ("tour-dialog");
+  WinPtr window = App.create_winptr ("tour-dialog");
   window.commands += custom_commands;
 
   window.show();

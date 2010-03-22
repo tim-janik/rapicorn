@@ -31,7 +31,7 @@ main (int   argc,
 
   TSTART ("RapicornItems");
   /* parse standard GUI descriptions and create example item */
-  Window window = Factory::create_window ("Root");
+  WinPtr window = Factory::create_winptr ("Root");
   TOK();
   /* get thread safe window handle */
   TOK();

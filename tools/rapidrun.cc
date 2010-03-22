@@ -175,7 +175,7 @@ main (int   argc,
     }
 
   /* create root item */
-  Window window = App.create_window (dialog);
+  WinPtr window = App.create_winptr (dialog);
 
   /* hook up test-dump handler */
   if (test_dump)

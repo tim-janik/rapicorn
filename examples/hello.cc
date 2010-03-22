@@ -24,7 +24,7 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-handle_commands (Window             &window,
+handle_commands (WinPtr             &window,
                  const String       &command,
                  const StringVector &args)
 {
@@ -48,7 +48,7 @@ main (int   argc,
                           argv[0]);
 
   /* create main window */
-  Window window = App.create_window ("main-window");
+  WinPtr window = App.create_winptr ("main-window");
 
   /* connect custom callback to handle UI commands */
   window.commands += handle_commands;
