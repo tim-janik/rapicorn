@@ -27,8 +27,7 @@ add_button_row (Container &area,
   area.add (brow);
   for (uint i = 0; i < 20; i++)
     {
-      std::list<String> args;
-      args.push_back ("test-button-text=\"(" + string_from_uint (row) + "," + string_from_uint (i) + ")\"");
+      Args args ("test-button-text=\"(" + string_from_uint (row) + "," + string_from_uint (i) + ")\"");
       Item &tb = Factory::create_item ("test-button", args);
       ButtonArea *b = tb.interface<ButtonArea*>();
       b->on_click (string_printf ("button_%d_%d", row, i));
