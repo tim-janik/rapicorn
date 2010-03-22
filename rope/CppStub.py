@@ -133,6 +133,8 @@ class Generator:
         break
     namespace_names = [d.name for d in tnsl]
     return namespace_names
+  def rtype2cpp (self, type_node):
+    return self.type2cpp (type_node)
   def type2cpp (self, type_node):
     typename = type_node.name
     if typename == 'float': return 'double'
@@ -199,7 +201,7 @@ class Generator:
   def generate_sigdef (self, functype, ctype):
     signame = self.generate_signal_name (functype, ctype)
     s = ''
-    cpp_rtype = self.type2cpp (functype.rtype)
+    cpp_rtype = self.rtype2cpp (functype.rtype)
     s += '  typedef Rapicorn::Signals::Signal<%s, %s (' % (self.type2cpp (ctype), cpp_rtype)
     l = []
     for a in functype.args:
@@ -356,8 +358,8 @@ class Generator:
   def generate_class_caller_impl (self, type_info):
     s = ''
     for m in type_info.methods:
-      interfacechar = '&' if m.rtype.storage == Decls.INTERFACE else ''
-      s += '%s%s\n' % (self.type2cpp (m.rtype), interfacechar)
+      interfacechar = '*' if m.rtype.storage == Decls.INTERFACE else ''
+      s += '%s%s\n' % (self.rtype2cpp (m.rtype), interfacechar)
       q = '%s::%s (' % (type_info.name, m.name)
       s += q
       argindent = len (q)
@@ -376,11 +378,11 @@ class Generator:
       if m.rtype.storage == Decls.VOID:
         pass
       elif m.rtype.storage == Decls.ENUM:
-        s += '  return %s (0); // FIXME\n' % self.type2cpp (m.rtype)
+        s += '  return %s (0); // FIXME\n' % self.rtype2cpp (m.rtype)
       elif m.rtype.storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  return %s(); // FIXME\n' % self.type2cpp (m.rtype)
+        s += '  return %s(); // FIXME\n' % self.rtype2cpp (m.rtype)
       elif m.rtype.storage == Decls.INTERFACE:
-        s += '  return *(%s*) NULL; // FIXME\n' % self.type2cpp (m.rtype)
+        s += '  return (%s*) NULL; // FIXME\n' % self.rtype2cpp (m.rtype)
       else:
         s += '  return 0; // FIXME\n'
       s += '}\n'
@@ -409,7 +411,8 @@ class Generator:
         arg_counter += 1
       s += '  '
       if hasret:
-        s += '%s _rope_retval = ' % self.type2cpp (m.rtype)
+        interfacechar = '*' if m.rtype.storage == Decls.INTERFACE else ''
+        s += '%s%s _rope_retval = ' % (self.rtype2cpp (m.rtype), interfacechar)
       s += 'self->' + m.name + ' ('
       s += ', '.join (self.use_arg (a[0], a[1]) for a in m.args)
       s += ');\n'
@@ -456,8 +459,8 @@ class Generator:
     return reduced
   def generate_method (self, functype, pad = 0):
     s = ''
-    interfacechar = '&' if functype.rtype.storage == Decls.INTERFACE else ''
-    s += '  ' + self.format_to_tab (self.type2cpp (functype.rtype) + interfacechar)
+    interfacechar = '*' if functype.rtype.storage == Decls.INTERFACE else ''
+    s += '  ' + self.format_to_tab (self.rtype2cpp (functype.rtype) + interfacechar)
     s += functype.name
     s += ' ' * max (0, pad - len (functype.name))
     s += ' ('

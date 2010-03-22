@@ -359,7 +359,7 @@ public:
                                          const QuickRecord &optval = QuickRecord());
   QuickSequence   method_with_sequence  (const QuickSequence &input,
                                          const QuickSequence &optval = QuickSequence());
-  GrandChild&     method_with_interface (GrandChild &input,
+  GrandChild*     method_with_interface (GrandChild &input,
                                          GrandChild &optval = *(GrandChild*) NULL);
 };
 } // InterfaceTests
@@ -1029,7 +1029,7 @@ MethodTestInterface::method_with_sequence (const QuickSequence &input,
   if (!optval.to_proto (ProtoSequenceCast (*arg->mutable_vseq()))) die();
   return QuickSequence(); // FIXME
 }
-GrandChild&
+GrandChild*
 MethodTestInterface::method_with_interface (GrandChild &input,
                                             GrandChild &optval)
 {
@@ -1040,7 +1040,7 @@ MethodTestInterface::method_with_interface (GrandChild &input,
   arg->set_vstring (Instance2StringCast (input));
   arg = rp.add_args();
   arg->set_vstring (Instance2StringCast (optval));
-  return *(GrandChild*) NULL; // FIXME
+  return (GrandChild*) NULL; // FIXME
 }
 
 } // InterfaceTests
@@ -1446,7 +1446,7 @@ handle_MethodTestInterface_method_with_interface (const RemoteProcedure    &_rop
   _rope_arg = &_rope_rp.args (2);
   if (!_rope_arg->has_vstring()) return false;
   optval = Instance4StringCast<GrandChild> (_rope_arg->vstring());
-  GrandChild _rope_retval = self->method_with_interface (*input, *optval);
+  GrandChild* _rope_retval = self->method_with_interface (*input, *optval);
   _rope_aret->set_vstring (Instance2StringCast (_rope_retval));
   return true;
 }
