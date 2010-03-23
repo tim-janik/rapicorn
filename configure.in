@@ -4,6 +4,7 @@ dnl #
 dnl # GNU Lesser General Public License version 2 or any later version.
 dnl
 builtin(include, acrapicorn.m4)dnl # include special macros
+builtin(include, ld-symbolic.m4)dnl # include special macros
 
 # initialize autoconf for Rapicorn
 AC_INIT
@@ -495,6 +496,12 @@ AC_PROG_CXXCPP
 AC_C_CONST
 AC_C_INLINE
 AC_HEADER_STDC
+AC_LIB_PROG_LD
+AC_LIB_PROG_LD_GNU
+ACX_PROG_LD_GNU_SYMBOLIC
+AC_SUBST([SYMBOLIC_LDFLAGS])
+ACX_PROG_LD_GNU_DYNAMIC_LIST_CPP_NEW
+AC_SUBST([DYNAMIC_LIST_CPP_NEW_LDFLAGS])
 
 # initialize libtool with dynamic module support
 AC_LIBTOOL_DLOPEN

@@ -47,16 +47,16 @@ topincludedir   = $(includedir)/rapicorn@RAPICORN_RELEASE@
 topinclude_DATA = $(rapicorn_top_headers)
 EXTRA_DIST     += $(rapicorn_top_headers)
 # librapicorn-core
-noinst_LTLIBRARIES			    = librapicorncore@RAPICORN_RELEASE@.la # hardcoded -release $(RAPICORN_RELEASE)
+noinst_LTLIBRARIES = librapicorncore@RAPICORN_RELEASE@.la # hardcoded -release $(RAPICORN_RELEASE)
 librapicorncore@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/rcore
 librapicorncore@RAPICORN_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
 librapicorncore@RAPICORN_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
 librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES = ldscript.map
 librapicorncore@RAPICORN_RELEASE@_la_LIBADD       = $(RAPICORN_CORE_LIBS) -lm
-librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
+librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
-	-no-undefined 						\
+	-no-undefined $(SYMBOLIC_LDFLAGS)			\
 ) # set libtool version and export symbols for resolving
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
 

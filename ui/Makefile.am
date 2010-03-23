@@ -62,7 +62,7 @@ topincludedir   = $(includedir)/rapicorn@RAPICORN_RELEASE@
 topinclude_DATA = $(rapicorn_top_headers)
 EXTRA_DIST     += $(rapicorn_top_headers)
 # librapicorn
-lib_LTLIBRARIES                         = librapicorn@RAPICORN_RELEASE@.la	# hardcoded -release $(RAPICORN_RELEASE)
+lib_LTLIBRARIES = librapicorn@RAPICORN_RELEASE@.la	# hardcoded -release $(RAPICORN_RELEASE)
 librapicorn@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/ui
 librapicorn@RAPICORN_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
 librapicorn@RAPICORN_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
@@ -70,7 +70,7 @@ librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicor
 librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
-	-no-undefined 						\
+	-no-undefined $(SYMBOLIC_LDFLAGS)			\
 ) # set libtool version and export symbols for resolving
 librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.o $(RAPICORN_GUI_LIBS) -lm # -lfreetype -lfontconfig
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES)

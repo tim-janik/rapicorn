@@ -26,22 +26,26 @@ pyrapicorndir          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
 pyrapicorn_PYTHON      = __init__.py pyRapicornStub.py
 pyrapicorn_LTLIBRARIES = pyRapicorn.la
 pyRapicorn_la_SOURCES  = $(pyrapicorn_cc_sources)
-pyRapicorn_la_LDFLAGS  = -module -avoid-version -no-undefined -export-symbols-regex pyRapicorn
 pyRapicorn_la_LIBADD   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la $(PROTOBUF_LIBS)
+pyRapicorn_la_LDFLAGS  = $(strip				\
+	-module -avoid-version -export-symbols-regex pyRapicorn	\
+	-no-undefined $(SYMBOLIC_LDFLAGS)			\
+)
 $(pyrapicorn_LTLIBRARIES): $(pyrapicorn_PYTHON) # force python source creation
 python-call-info:
 	@echo 'PYTHONPATH="$$PYTHONPATH:$(pythondir)" python # -c "import @RAPICORN_NAMESPACE_NAME@"'
 
 # === C++ Binding lib ===
-noinst_LTLIBRARIES                                = librapicornrope@RAPICORN_RELEASE@.la
+noinst_LTLIBRARIES = librapicornrope@RAPICORN_RELEASE@.la
 librapicornrope@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/rope
 librapicornrope@RAPICORN_RELEASE@include_HEADERS  = $(rope_public_headers)
 librapicornrope@RAPICORN_RELEASE@_la_SOURCES      = $(rope_cc_sources)
 librapicornrope@RAPICORN_RELEASE@_la_DEPENDENCIES = ldscript.map
 librapicornrope@RAPICORN_RELEASE@_la_LIBADD       = $(RAPICORN_ROPE_LIBS) -lm
-librapicornrope@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	  \
-	-Wl,--version-script=$(srcdir)/ldscript.map -no-undefined \
-	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)	  \
+librapicornrope@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
+	-Wl,--version-script=$(srcdir)/ldscript.map		\
+	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)	\
+	-no-undefined $(SYMBOLIC_LDFLAGS)			\
 ) # set libtool version and export symbols for resolving
 EXTRA_DIST += $(rope_private_files) $(librapicornrope@RAPICORN_RELEASE@_la_DEPENDENCIES)
 
