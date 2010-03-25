@@ -84,7 +84,7 @@ command_lib_exec (Item               &item,
   Root *root = item.get_root();
   if (root)
     {
-      WinPtr window = root->window();
+      WinPtr window = root->winptr();
       for (uint ui = 0; ui < ARRAY_SIZE (window_cmds); ui++)
         if (window_cmds[ui].name == cmd_name)
           {

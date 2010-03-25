@@ -1080,7 +1080,7 @@ RootImpl::destroy_viewport ()
 }
 
 WinPtr
-RootImpl::window ()
+RootImpl::winptr ()
 {
   return RootWindowImpl (*this);
 }

@@ -820,7 +820,7 @@ Factory::create_winptr (const String       &gadget_identifier,
   Root *root = dynamic_cast<Root*> (&item);
   if (!root)
     error ("%s: widget construction yields non window: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
-  WinPtr win = root->window();
+  WinPtr win = root->winptr();
   /* win does ref_sink(); */
   return win;
 }
