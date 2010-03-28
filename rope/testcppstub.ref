@@ -288,43 +288,53 @@ typedef std::string s;
 namespace InterfaceTests {
 
 class UIWidgetArea {
+protected:
+  virtual /*Des*/         ~UIWidgetArea () {}
 public:
   typedef Rapicorn::Signals::Signal<UIWidgetArea, void ()> Signal_void_signal;
   typedef Rapicorn::Signals::Signal<UIWidgetArea, double (UIWidgetArea &ba1, int someint)> Signal_sample_signal;
   // Signal_void_signal sig_void_signal;
   // Signal_sample_signal sig_sample_signal;
-  double          simple_method ();
-  double          single_arg    (int n);
-  double          single_arg2   (int n = 5);
-  double          two_args      (int n,
-                                 double r);
-  double          two_args2     (int n = 6,
-                                 double r = 7.7);
-  double          multi_args    (int n,
-                                 double r,
-                                 int i,
-                                 const std::string &s = "String ding",
-                                 double y = 5);
-  double          self_method   (UIWidgetArea &ba1,
-                                 UIWidgetArea &ba2);
-  void            void_method   ();
-  std::string     on_click2out  ();
-  void            on_click2in   (const std::string &command);
+  virtual double          simple_method ();
+  virtual double          single_arg    (int n);
+  virtual double          single_arg2   (int n = 5);
+  virtual double          two_args      (int n,
+                                         double r);
+  virtual double          two_args2     (int n = 6,
+                                         double r = 7.7);
+  virtual double          multi_args    (int n,
+                                         double r,
+                                         int i,
+                                         const std::string &s = "String ding",
+                                         double y = 5);
+  virtual double          self_method   (UIWidgetArea &ba1,
+                                         UIWidgetArea &ba2);
+  virtual void            void_method   ();
+  virtual std::string     on_click2out  ();
+  virtual void            on_click2in   (const std::string &command);
 };
 
 class Parent {
+protected:
+  virtual /*Des*/         ~Parent () {}
 public:
 };
 
 class Child : public Parent {
+protected:
+  virtual /*Des*/         ~Child () {}
 public:
 };
 
 class Descendant : public Child {
+protected:
+  virtual /*Des*/         ~Descendant () {}
 public:
 };
 
 class GrandChild : public Descendant {
+protected:
+  virtual /*Des*/         ~GrandChild () {}
 public:
 };
 enum QuickEnum {
@@ -344,23 +354,25 @@ struct QuickSequence {
 };
 
 class MethodTestInterface {
+protected:
+  virtual /*Des*/         ~MethodTestInterface () {}
 public:
-  bool            method_with_bools     (bool input,
-                                         bool optval = 0);
-  int             method_with_ints      (int input,
-                                         int optval = -2);
-  double          method_with_floats    (double input,
-                                         double optval = 309.9);
-  std::string     method_with_string    (const std::string &input,
-                                         const std::string &optval = "default");
-  QuickEnum       method_with_enum      (QuickEnum input,
-                                         QuickEnum optval = QuickEnum (0));
-  QuickRecord     method_with_record    (const QuickRecord &input,
-                                         const QuickRecord &optval = QuickRecord());
-  QuickSequence   method_with_sequence  (const QuickSequence &input,
-                                         const QuickSequence &optval = QuickSequence());
-  GrandChild*     method_with_interface (GrandChild &input,
-                                         GrandChild &optval = *(GrandChild*) NULL);
+  virtual bool            method_with_bools     (bool input,
+                                                 bool optval = 0);
+  virtual int             method_with_ints      (int input,
+                                                 int optval = -2);
+  virtual double          method_with_floats    (double input,
+                                                 double optval = 309.9);
+  virtual std::string     method_with_string    (const std::string &input,
+                                                 const std::string &optval = "default");
+  virtual QuickEnum       method_with_enum      (QuickEnum input,
+                                                 QuickEnum optval = QuickEnum (0));
+  virtual QuickRecord     method_with_record    (const QuickRecord &input,
+                                                 const QuickRecord &optval = QuickRecord());
+  virtual QuickSequence   method_with_sequence  (const QuickSequence &input,
+                                                 const QuickSequence &optval = QuickSequence());
+  virtual GrandChild*     method_with_interface (GrandChild &input,
+                                                 GrandChild &optval = *(GrandChild*) NULL);
 };
 } // InterfaceTests
 
@@ -374,6 +386,8 @@ enum ClickType {
 };
 
 class ButtonArea {
+protected:
+  virtual /*Des*/         ~ButtonArea () {}
 public:
   typedef Rapicorn::Signals::Signal<ButtonArea, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
   typedef Rapicorn::Signals::Signal<ButtonArea, void ()> Signal_activate;

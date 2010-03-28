@@ -457,10 +457,10 @@ class Generator:
       if not skip:
         reduced = [ p ] + reduced
     return reduced
-  def generate_method (self, functype, pad = 0):
+  def generate_virtual_method (self, functype, pad = 0):
     s = ''
     interfacechar = '*' if functype.rtype.storage == Decls.INTERFACE else ''
-    s += '  ' + self.format_to_tab (self.rtype2cpp (functype.rtype) + interfacechar)
+    s += '  virtual ' + self.format_to_tab (self.rtype2cpp (functype.rtype) + interfacechar)
     s += functype.name
     s += ' ' * max (0, pad - len (functype.name))
     s += ' ('
@@ -481,7 +481,10 @@ class Generator:
     s += '\nclass %s' % type_info.name
     if l:
       s += ' : %s' % ', '.join (l)
-    s += ' {\npublic:\n'
+    s += ' {\n'
+    s += 'protected:\n'
+    s += '  virtual ' + self.format_to_tab ('/*Des*/') + '~%s () {}\n' % type_info.name
+    s += 'public:\n'
     for sg in type_info.signals:
       s += self.generate_sigdef (sg, type_info)
     for sg in type_info.signals:
@@ -490,7 +493,7 @@ class Generator:
     if type_info.methods:
       ml = max (len (m.name) for m in type_info.methods)
     for m in type_info.methods:
-      s += self.generate_method (m, ml)
+      s += self.generate_virtual_method (m, ml)
     s += self.insertion_text (type_info.name)
     s += '};'
     return s
