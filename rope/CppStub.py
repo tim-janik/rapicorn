@@ -438,7 +438,7 @@ class Generator:
     return s
   def generate_signal (self, functype, ctype):
     signame = self.generate_signal_name (functype, ctype)
-    return '  ' + self.format_to_tab (signame) + 'sig_%s;\n' % functype.name
+    return '  // ' + self.format_to_tab (signame) + 'sig_%s;\n' % functype.name
   def inherit_reduce (self, type_list):
     def hasancestor (child, parent):
       if child == parent:

@@ -291,8 +291,8 @@ class UIWidgetArea {
 public:
   typedef Rapicorn::Signals::Signal<UIWidgetArea, void ()> Signal_void_signal;
   typedef Rapicorn::Signals::Signal<UIWidgetArea, double (UIWidgetArea &ba1, int someint)> Signal_sample_signal;
-  Signal_void_signal sig_void_signal;
-  Signal_sample_signal sig_sample_signal;
+  // Signal_void_signal sig_void_signal;
+  // Signal_sample_signal sig_sample_signal;
   double          simple_method ();
   double          single_arg    (int n);
   double          single_arg2   (int n = 5);
@@ -377,8 +377,8 @@ class ButtonArea {
 public:
   typedef Rapicorn::Signals::Signal<ButtonArea, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
   typedef Rapicorn::Signals::Signal<ButtonArea, void ()> Signal_activate;
-  Signal_check_activate sig_check_activate;
-  Signal_activate sig_activate;
+  // Signal_check_activate sig_check_activate;
+  // Signal_activate sig_activate;
 };
 } // RapicornPlicTest
 
