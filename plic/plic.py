@@ -97,6 +97,7 @@ def print_help (with_help = True):
   print "  -G=<oformat>              select output format"
   print "  -g=<generator-option>     set output generator option"
   print "  --insertions=<insfile>    file for insertion points"
+  print '  --inclusions=<"include">  include statements'
   print "Solitary Options:"
   print "  --list-formats            list output formats"
   print "  --cc-type-package-parser  Generate C++ type package parser"
@@ -104,10 +105,10 @@ def print_help (with_help = True):
 def parse_files_and_args():
   import re, getopt
   config = { 'files' : [], 'backend' : 'PrettyDump', 'backend-options' : [],
-             'insertions' : [] }
+             'insertions' : [], 'inclusions' : [] }
   sop = 'vhG:g:o:'
   lop = ['help', 'version', 'output-format=', 'list-formats',
-         'cc-type-package-parser', 'plic-debug', 'insertions=']
+         'cc-type-package-parser', 'plic-debug', 'insertions=', 'inclusions=']
   try:
     options,args = getopt.gnu_getopt (sys.argv[1:], sop, lop)
   except Exception, ex:
@@ -119,6 +120,7 @@ def parse_files_and_args():
     if arg == '--plic-debug': config['pass-exceptions'] = 1
     if arg == '-o': config['output'] = val
     if arg == '--insertions': config['insertions'] += [ val ]
+    if arg == '--inclusions': config['inclusions'] += [ val ]
     if arg == '-g': config['backend-options'] += [ val ]
     if arg == '-G' or arg == '--generator':
       if val[0] == '=': val = val[1:]
