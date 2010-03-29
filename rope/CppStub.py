@@ -483,7 +483,7 @@ class Generator:
       s += ' : %s' % ', '.join (l)
     s += ' {\n'
     s += 'protected:\n'
-    s += '  virtual ' + self.format_to_tab ('/*Des*/') + '~%s () {}\n' % type_info.name
+    s += '  virtual ' + self.format_to_tab ('/*Des*/') + '~%s () = 0;\n' % type_info.name
     s += 'public:\n'
     for sg in type_info.signals:
       s += self.generate_sigdef (sg, type_info)
@@ -496,6 +496,10 @@ class Generator:
       s += self.generate_virtual_method (m, ml)
     s += self.insertion_text (type_info.name)
     s += '};'
+    return s
+  def generate_interface_impl (self, type_info):
+    s = ''
+    s += '%s::~%s () {}\n' % (type_info.name, type_info.name)
     return s
   def generate_enum_interface (self, type_info):
     s = ''
@@ -587,6 +591,15 @@ class Generator:
           s += self.generate_class_callee_impl (tp, switchlines) + '\n'
       s += self.open_namespace (None)
       s += self.generate_callee_impl (switchlines) + '\n'
+    # generate interface impls
+    if self.gen_iface_impl:
+      s += '\n// --- Interface Implementation Helpers ---\n'
+      for tp in types:
+        if tp.typedef_origin:
+          continue
+        elif tp.storage == Decls.INTERFACE:
+          s += self.open_namespace (tp)
+          s += self.generate_interface_impl (tp) + '\n'
     s += self.open_namespace (None) # close all namespaces
     return s
 
@@ -602,6 +615,8 @@ def generate (namespace_list, **args):
   gg = Generator()
   all = config['backend-options'] == []
   gg.gen_iface = all or 'interface' in config['backend-options']
+  gg.gen_iface_impl = all or 'interface-impl' in config['backend-options']
+  gg.gen_iface_skel = all or 'interface-skel' in config['backend-options']
   gg.gen_server = all or 'server' in config['backend-options']
   gg.gen_client = all or 'client' in config['backend-options']
   for ifile in config['insertions']:

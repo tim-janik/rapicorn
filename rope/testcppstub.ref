@@ -289,7 +289,7 @@ namespace InterfaceTests {
 
 class UIWidgetArea {
 protected:
-  virtual /*Des*/         ~UIWidgetArea () {}
+  virtual /*Des*/         ~UIWidgetArea () = 0;
 public:
   typedef Rapicorn::Signals::Signal<UIWidgetArea, void ()> Signal_void_signal;
   typedef Rapicorn::Signals::Signal<UIWidgetArea, double (UIWidgetArea &ba1, int someint)> Signal_sample_signal;
@@ -316,25 +316,25 @@ public:
 
 class Parent {
 protected:
-  virtual /*Des*/         ~Parent () {}
+  virtual /*Des*/         ~Parent () = 0;
 public:
 };
 
 class Child : public Parent {
 protected:
-  virtual /*Des*/         ~Child () {}
+  virtual /*Des*/         ~Child () = 0;
 public:
 };
 
 class Descendant : public Child {
 protected:
-  virtual /*Des*/         ~Descendant () {}
+  virtual /*Des*/         ~Descendant () = 0;
 public:
 };
 
 class GrandChild : public Descendant {
 protected:
-  virtual /*Des*/         ~GrandChild () {}
+  virtual /*Des*/         ~GrandChild () = 0;
 public:
 };
 enum QuickEnum {
@@ -355,7 +355,7 @@ struct QuickSequence {
 
 class MethodTestInterface {
 protected:
-  virtual /*Des*/         ~MethodTestInterface () {}
+  virtual /*Des*/         ~MethodTestInterface () = 0;
 public:
   virtual bool            method_with_bools     (bool input,
                                                  bool optval = 0);
@@ -387,7 +387,7 @@ enum ClickType {
 
 class ButtonArea {
 protected:
-  virtual /*Des*/         ~ButtonArea () {}
+  virtual /*Des*/         ~ButtonArea () = 0;
 public:
   typedef Rapicorn::Signals::Signal<ButtonArea, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
   typedef Rapicorn::Signals::Signal<ButtonArea, void ()> Signal_activate;
@@ -1518,3 +1518,25 @@ rope_callee_handler (const RemoteProcedure _rope_rp)
   return false;
 }
 
+
+// --- Interface Implementation Helpers ---
+
+namespace InterfaceTests {
+UIWidgetArea::~UIWidgetArea () {}
+
+Parent::~Parent () {}
+
+Child::~Child () {}
+
+Descendant::~Descendant () {}
+
+GrandChild::~GrandChild () {}
+
+MethodTestInterface::~MethodTestInterface () {}
+
+} // InterfaceTests
+
+namespace RapicornPlicTest {
+ButtonArea::~ButtonArea () {}
+
+} // RapicornPlicTest
