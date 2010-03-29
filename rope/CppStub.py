@@ -105,6 +105,7 @@ class Generator:
     self.ntab = 26
     self.namespaces = []
     self.insertions = {}
+    self.gen_inclusions = []
   def close_inner_namespace (self):
     return '} // %s\n' % self.namespaces.pop().name
   def open_inner_namespace (self, namespace):
@@ -539,6 +540,9 @@ class Generator:
     if self.gen_server:
       s += base_code + '\n'
     self.tabwidth (16)
+    # inclusions
+    for i in self.gen_inclusions:
+      s += '#include %s\n' % i
     s += self.open_namespace (None)
     # collect impl types
     types = []
@@ -619,6 +623,7 @@ def generate (namespace_list, **args):
   gg.gen_iface_skel = all or 'interface-skel' in config['backend-options']
   gg.gen_server = all or 'server' in config['backend-options']
   gg.gen_client = all or 'client' in config['backend-options']
+  gg.gen_inclusions = config['inclusions']
   for ifile in config['insertions']:
     gg.insertion_file (ifile)
   textstring = gg.generate_impl_types (config['implementation_types']) # namespace_list
