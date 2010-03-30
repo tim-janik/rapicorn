@@ -108,6 +108,7 @@ class YYGlobals (object):
       # self.parse_assign_auxdata (method_args)
       mtype = Decls.TypeInfo (method[0], Decls.FUNC, yy.impl_includes)
       mtype.set_rtype (method[1])
+      mtype.set_pure (method[4])
       adict = {}
       need_default = false
       for arg in method_args:
@@ -295,6 +296,9 @@ def ATN (typename):     # assert a typename
 def ANS (issignal, identifier): # assert non-signal decl
   if issignal:
     raise TypeError ('non-method invalidly declared as \'signal\': %s' % identifier)
+def ANP (isfunc, identifier): # assert pure non-func decl
+  if not isfunc:
+    raise TypeError ('non-method invalidly declared as pure: %s' % identifier)
 def ASC (collkind): # assert signal collector
   if not collkind in collectors:
     raise TypeError ('invalid signal collector: %s' % collkind)
@@ -456,7 +460,7 @@ rule method_args:
         ) *                                     {{ return args }}
 
 rule field_or_method_or_signal_decl:
-                                                {{ signal = false; fargs = []; daux = () }}
+                                                {{ signal = false; pure = 0; fargs = []; daux = () }}
         [ 'signal'                              {{ signal = true; coll = 'void' }}
           [ '<' IDENT '>'                       {{ coll = IDENT; ASC (coll) }}
           ] ]
@@ -469,11 +473,12 @@ rule field_or_method_or_signal_decl:
         | '\('                                  {{ kind = signal and 'signal' or 'func' }}
               [ method_args                     {{ fargs = method_args }}
               ] '\)'                            # [ '=' auxinit {{ daux = auxinit }} ]
-        ) ';'                                   {{ if kind == 'field': ANS (signal, dident) }}
+        ) [ '=' '0'                             {{ pure = 1; ANP (kind == 'func', dident) }}
+          ] ';'                                 {{ if kind == 'field': ANS (signal, dident) }}
                                                 {{ dtype = yy.clone_type (dtname, void = kind != 'field') }}
                                                 {{ if kind == 'signal': dtype.set_collector (coll) }}
                                                 {{ if kind == 'field': return (kind, (dident, dtype, daux)) }}
-                                                {{ return (kind, (dident, dtype, daux, fargs)) }}
+                                                {{ return (kind, (dident, dtype, daux, fargs, pure)) }}
 
 rule typedef:
         'typedef' field_decl                    {{ yy.nsadd_typedef (field_decl[0]) }}

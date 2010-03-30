@@ -147,3 +147,6 @@
 .../testfail.idl:90: AttributeError: missing subsequent default initializer: method (...c...)
 >  ... interface I { int method (int a, int b = 2, int c); }; // missing subsequent default initializer
 >                                                           ^
+.../testfail.idl:91: TypeError: non-method invalidly declared as pure: m
+>  namespace PlicFailTest { interface I { signal int m() = 0; }; // invalid pure decl for non-method
+>                                                          ^

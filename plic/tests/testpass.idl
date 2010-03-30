@@ -311,4 +311,8 @@ interface ButtonArea // : public virtual Container, public virtual FocusFrame::C
   // virtual const PropertyList&   list_properties ();
 };
 
+interface PureMethods {
+  int pure_method (float f) = 0;
+};
+
 } // RapicornPlicTest

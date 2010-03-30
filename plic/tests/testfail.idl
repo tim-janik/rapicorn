@@ -88,3 +88,4 @@ interface I { int method (I self); }; // invalid method arg name
 
 interface I { int self; }; // invalid property name
 interface I { int method (int a, int b = 2, int c); }; // missing subsequent default initializer
+interface I { signal int m() = 0; }; // invalid pure decl for non-method

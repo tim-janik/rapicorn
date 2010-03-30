@@ -105,6 +105,7 @@ class TypeInfo (BaseDecl):
       self.args = []            # holds: (ident, TypeInfo, defaultinit)
       self.rtype = None         # holds: TypeInfo
       self.ownertype = None    # TypeInfo
+      self.pure = False
     if self.storage == INTERFACE:
       self.prerequisites = []
       self.methods = []         # holds: TypeInfo
@@ -123,6 +124,8 @@ class TypeInfo (BaseDecl):
       ti.args += self.args
     if hasattr (self, 'rtype'):
       ti.rtype = self.rtype
+    if hasattr (self, 'pure'):
+      ti.pure = self.pure
     if hasattr (self, 'elements'):
       ti.elements = self.elements
     if hasattr (self, 'prerequisites'):
@@ -170,6 +173,9 @@ class TypeInfo (BaseDecl):
     assert isinstance (type, TypeInfo)
     assert self.rtype == None
     self.rtype = type
+  def set_pure (self, vbool):
+    assert self.storage == FUNC
+    self.pure = bool (vbool)
   def set_collector (self, collkind):
     self.collector = collkind
   def add_method (self, ftype, issignal = False):
