@@ -399,7 +399,7 @@ class PureMethods {
 protected:
   virtual /*Des*/         ~PureMethods () = 0;
 public:
-  virtual int             pure_method (double f);
+  virtual int             pure_method (double f) = 0;
 };
 } // RapicornPlicTest
 

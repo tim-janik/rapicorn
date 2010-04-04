@@ -470,7 +470,10 @@ class Generator:
     for a in functype.args:
       l += [ self.format_default_arg (*a) ]
     s += (',\n' + argindent * ' ').join (l)
-    s += ');\n'
+    s += ')'
+    if functype.pure:
+      s += ' = 0'
+    s += ';\n'
     return s
   def generate_class_interface (self, type_info):
     s = ''
