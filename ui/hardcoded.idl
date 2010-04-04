@@ -17,7 +17,5 @@
 
 namespace Rapicorn {
 
-interface Window {};    // see window.hh
-interface Root {};      // see root.hh
 
 } // Rapicorn

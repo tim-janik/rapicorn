@@ -28,16 +28,14 @@ record Requisition {
   float height;
 };
 
-/*
- * interface Window {
- *   bool          viewable        ();
- *   void          show            ();
- *   bool          closed          ();
- *   void          close           ();
- *   signal bool   commands        (string     cmdname,
- *                                  StringList args);
- * };
- */
+interface Window {
+  bool          viewable        () = 0;
+  void          show            () = 0;
+  bool          closed          () = 0;
+  void          close           () = 0;
+  signal bool   commands        (string     cmdname,
+                                 StringList args);
+};
 
 interface Application {
   /* startup */
@@ -50,10 +48,10 @@ interface Application {
                                  string         file_name,
                                  string         binary_path);
   /* windows */
+  Window        create_window   (string         window_identifier,
+                                 StringList     arguments = 0,
+                                 StringList     env_variables = 0);
   // WindowList    list_windows    ();
-  // Window        create_window   (string     window_identifier,
-  //                                StringList arguments = 0,
-  //                                StringList env_variables = 0);
   /* execution */
   int           execute_loops   ();
   void          exit            (int            code = 0);

@@ -60,7 +60,7 @@ public:
     void operator-= (bool (*callback) (WinPtr&, const String&, const StringVector&));
   };
   Commands      commands;
-}; 
+};
 
 } // Rapicorn
 

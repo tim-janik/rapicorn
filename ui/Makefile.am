@@ -43,6 +43,7 @@ rapicorn_cc_sources = $(strip 		\
 	buttons.cc	factory.cc	evaluator.cc	scrollitems.cc	layoutcontainers.cc	\
 	text-editor.cc	text-pango.cc	sinfex.cc	testitems.cc	\
 	sizegroup.cc	listarea.cc	\
+	interface.cc	\
 )
 rapicorn_private_files = $(strip 	\
 	blitfuncs.hh			\
@@ -86,6 +87,12 @@ interface.hh: $(ROPE)/CppStub.py $(srcdir)/rapicorn.idl $(srcdir)/insertions.cc
 	mv xgen-$(@F) $@
 $(rapicorn_cc_sources): interface.hh
 CLEANFILES += xgen-interface.hh interface.hh
+interface.cc: $(ROPE)/CppStub.py $(srcdir)/rapicorn.idl
+	: # build interface.cc from rapicorn.idl
+	${PLICINT} -G $(ROPE)/CppStub -g interface-impl \
+	  --inclusions '"item.hh"' $(srcdir)/rapicorn.idl -o xgen-$(@F)
+	mv xgen-$(@F) $@
+CLEANFILES += interface.cc
 
 # === API Headers ===
 api-content:

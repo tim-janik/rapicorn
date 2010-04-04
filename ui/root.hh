@@ -75,7 +75,8 @@ public:
   virtual EventLoop* get_loop           () = 0;
   virtual void       enable_auto_close  ();
   /* MT-safe */
-  virtual WinPtr winptr                 () = 0;
+  virtual WinPtr  winptr                () = 0;
+  virtual Window& window                () = 0;
 };
 
 } // Rapicorn

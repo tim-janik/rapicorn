@@ -26,8 +26,7 @@ class AppImpl : public Application {};
 
 Application &App = *new AppImpl();
 
-Application::Application() :
-  sig_missing_primary (*this)
+Application::Application() // : sig_missing_primary (*this)
 {
   assert (&App == NULL);
 }
@@ -62,6 +61,16 @@ Application::create_winptr (const std::string         &window_identifier,
                             const std::vector<String> &env_variables)
 {
   return Factory::create_winptr (window_identifier, arguments, env_variables);
+}
+
+Window*
+Application::create_window (const std::string    &window_identifier,
+                            const StringList     &arguments,
+                            const StringList     &env_variables)
+{
+  return &Factory::create_winptr (window_identifier,
+                                  arguments.strings,
+                                  env_variables.strings).root().window();
 }
 
 String

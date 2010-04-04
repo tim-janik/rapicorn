@@ -25,7 +25,6 @@ class_scope:Requisition:
   inline Requisition (double w, double h) : width (w), height (h) {}
 
 class_scope:Application:
-  static Application self;       // singleton
   static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
   static void        init_with_x11 (int        *argcp,
                                     char     ***argvp,

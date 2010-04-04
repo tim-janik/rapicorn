@@ -1079,10 +1079,34 @@ RootImpl::destroy_viewport ()
   unref (this);
 }
 
+void
+RootImpl::show ()
+{
+  create_viewport();
+}
+
+bool
+RootImpl::closed ()
+{
+  return has_viewport();
+}
+
+void
+RootImpl::close ()
+{
+  destroy_viewport();
+}
+
 WinPtr
 RootImpl::winptr ()
 {
   return RootWindowImpl (*this);
+}
+
+Window&
+RootImpl::window ()
+{
+  return *this;
 }
 
 static const ItemFactory<RootImpl> root_factory ("Rapicorn::Factory::Root");
