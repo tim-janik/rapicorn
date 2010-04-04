@@ -112,12 +112,31 @@ check-cppstub:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} -G $(srcdir)/CppStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testcppstub.ref)
-	@$(call TSTTITLE,check-cppstub-syntax)
+	@$(call TSTTITLE, check-cppstub-syntax)
 	$(_@) cp $(srcdir)/testcppstub.ref testcppstub.cc
 	$(_@) $(CXXCOMPILE) testcppstub.cc -c ; $(call TSTRESULT)
 	$(_@) rm -f testcppstub.cc testcppstub.o
 EXTRA_DIST += testcppstub.ref
 check-local: check-cppstub
+
+# === CppStub Skeleton test ===
+check-cppskels:
+	@$(call TSTTITLE)
+	@echo -e "#include <rapicorn.hh>\n" \
+	  "class ProtoRecord; class ProtoSequence; class ProtoArg; class ProtoMessage;" \
+	  > $(TSTOUT)
+	$(_@) ${PLICINT} -G $(srcdir)/CppStub -g interface \
+	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT)
+	$(_@) ${PLICINT} -G $(srcdir)/CppStub -g interface-skel \
+	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT)
+	@$(call TSTCMP, $(srcdir)/testcppskels.ref)
+	@$(call TSTTITLE, check-cppskels-syntax)
+	$(_@) cp $(srcdir)/testcppskels.ref testcppskels.cc
+	$(_@) $(CXXCOMPILE) testcppskels.cc -c ; $(call TSTRESULT)
+	$(_@) rm -f testcppskels.cc testcppskels.o
+# $(TSTOUT)
+EXTRA_DIST += testcppskels.ref
+check-local: check-cppskels
 
 # === rapicorn.idl test with PLIC ===
 check-rapicorn-idl:

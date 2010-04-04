@@ -475,6 +475,32 @@ class Generator:
       s += ' = 0'
     s += ';\n'
     return s
+  def generate_virtual_method_skel (self, functype, type_info):
+    if functype.pure:
+      return ''
+    s = self.open_namespace (type_info)
+    interfacechar = '*' if functype.rtype.storage == Decls.INTERFACE else ''
+    sret = self.rtype2cpp (functype.rtype) + interfacechar + '\n'
+    fs = type_info.name + '::' + functype.name + ' ('
+    argindent = len (fs)
+    s += '\n' + sret + fs
+    l = []
+    for a in functype.args:
+      l += [ self.format_arg (*a) ]
+    s += (',\n' + argindent * ' ').join (l)
+    s += ')\n{\n'
+    if functype.rtype.storage == Decls.VOID:
+      pass
+    elif functype.rtype.storage == Decls.ENUM:
+      s += '  return %s (0); // FIXME\n' % self.rtype2cpp (functype.rtype)
+    elif functype.rtype.storage in (Decls.RECORD, Decls.SEQUENCE):
+      s += '  return %s(); // FIXME\n' % self.rtype2cpp (functype.rtype)
+    elif functype.rtype.storage == Decls.INTERFACE:
+      s += '  return (%s*) NULL; // FIXME\n' % self.rtype2cpp (functype.rtype)
+    else:
+      s += '  return 0; // FIXME\n'
+    s += '}\n'
+    return s
   def generate_class_interface (self, type_info):
     s = ''
     l = []
@@ -504,6 +530,11 @@ class Generator:
   def generate_interface_impl (self, type_info):
     s = ''
     s += '%s::~%s () {}\n' % (type_info.name, type_info.name)
+    return s
+  def generate_interface_skel (self, type_info):
+    s = ''
+    for m in type_info.methods:
+      s += self.generate_virtual_method_skel (m, type_info)
     return s
   def generate_enum_interface (self, type_info):
     s = ''
@@ -607,6 +638,14 @@ class Generator:
         elif tp.storage == Decls.INTERFACE:
           s += self.open_namespace (tp)
           s += self.generate_interface_impl (tp) + '\n'
+    # generate interface method skeletons
+    if self.gen_iface_skel:
+      s += '\n// --- Interface Skeletons ---\n'
+      for tp in types:
+        if tp.typedef_origin:
+          continue
+        elif tp.storage == Decls.INTERFACE:
+          s += self.generate_interface_skel (tp)
     s += self.open_namespace (None) # close all namespaces
     return s
 
@@ -623,7 +662,7 @@ def generate (namespace_list, **args):
   all = config['backend-options'] == []
   gg.gen_iface = all or 'interface' in config['backend-options']
   gg.gen_iface_impl = all or 'interface-impl' in config['backend-options']
-  gg.gen_iface_skel = all or 'interface-skel' in config['backend-options']
+  gg.gen_iface_skel = 'interface-skel' in config['backend-options']
   gg.gen_server = all or 'server' in config['backend-options']
   gg.gen_client = all or 'client' in config['backend-options']
   gg.gen_inclusions = config['inclusions']
