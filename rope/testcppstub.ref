@@ -394,6 +394,13 @@ public:
   // Signal_check_activate sig_check_activate;
   // Signal_activate sig_activate;
 };
+
+class PureMethods {
+protected:
+  virtual /*Des*/         ~PureMethods () = 0;
+public:
+  virtual int             pure_method (double f);
+};
 } // RapicornPlicTest
 
 // --- Client Stubs ---
@@ -1061,6 +1068,17 @@ MethodTestInterface::method_with_interface (GrandChild &input,
 
 namespace RapicornPlicTest {
 
+int
+PureMethods::pure_method (double f)
+{
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def0013);
+  RemoteProcedure_Argument *arg;
+  arg = rp.add_args();
+  arg->set_vdouble (f);
+  return 0; // FIXME
+}
+
 
 // --- Server Stubs ---
 } // RapicornPlicTest
@@ -1469,6 +1487,26 @@ handle_MethodTestInterface_method_with_interface (const RemoteProcedure    &_rop
 
 namespace RapicornPlicTest {
 
+static bool
+handle_PureMethods_pure_method (const RemoteProcedure    &_rope_rp,
+                                RemoteProcedure_Argument *_rope_aret)
+{
+  const RemoteProcedure_Argument *_rope_arg;
+  PureMethods *self;
+  double f;
+  if (_rope_rp.args_size() != 2) return false;
+  _rope_arg = &_rope_rp.args (0);
+  if (!_rope_arg->has_vstring()) return false;
+  self = Instance4StringCast<PureMethods> (_rope_arg->vstring());
+  if (!self) return false;
+  _rope_arg = &_rope_rp.args (1);
+  if (!_rope_arg->has_vdouble()) return false;
+  f = _rope_arg->vdouble();
+  int _rope_retval = self->pure_method (f);
+  _rope_aret->set_vint64 (_rope_retval);
+  return true;
+}
+
 } // RapicornPlicTest
 
 static bool __UNUSED__
@@ -1512,6 +1550,8 @@ rope_callee_handler (const RemoteProcedure _rope_rp)
     return InterfaceTests::handle_MethodTestInterface_method_with_sequence (_rope_rp, _rope_aret);
   case 0x0def0012: // MethodTestInterface::method_with_interface
     return InterfaceTests::handle_MethodTestInterface_method_with_interface (_rope_rp, _rope_aret);
+  case 0x0def0013: // PureMethods::pure_method
+    return RapicornPlicTest::handle_PureMethods_pure_method (_rope_rp, _rope_aret);
   default:
     die();
   }
@@ -1538,5 +1578,7 @@ MethodTestInterface::~MethodTestInterface () {}
 
 namespace RapicornPlicTest {
 ButtonArea::~ButtonArea () {}
+
+PureMethods::~PureMethods () {}
 
 } // RapicornPlicTest

@@ -393,3 +393,9 @@ class ButtonArea (__BaseClass__):
   def __sig_check_activate__ (self): pass # default handler
   def __sig_activate__ (self): pass # default handler
 
+class PureMethods (__BaseClass__):
+  def __init__ (self):
+    super (PureMethods, self).__init__()
+  def pure_method (self, f): # int
+    return self.__pyrope_trampoline__ (0x0def0013, self, f)
+

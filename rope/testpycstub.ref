@@ -1449,6 +1449,29 @@ pyrope__MethodTestInterface_method_with_interface (PyObject *self, PyObject *arg
 }
 
 
+static bool
+pyrope__PureMethods_pure_method (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0def0013);
+  PyObject *item;
+  RemoteProcedure_Argument *arg;
+  bool success = false;
+  if (PyTuple_Size (args) < 3) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 1);  // self
+  arg = rp.add_args();
+  { char *s = NULL; Py_ssize_t len = 0;
+    PyObject *iobj = PyObject_GetAttrString (item, "__pyrope__object__"); if (!iobj) GOTO_ERROR();
+    if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
+    arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
+  item = PyTuple_GET_ITEM (args, 2); // f
+  arg = rp.add_args();
+  arg->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
+  success = pyrope_send_message (rp);
+ error:
+  return success;
+}
+
 static bool RAPICORN_UNUSED
 pyrope_trampoline_switch (unsigned int _py_id, PyObject *_py_self, PyObject *_py_args, PyObject **_py_retp)
 {
@@ -1489,6 +1512,8 @@ pyrope_trampoline_switch (unsigned int _py_id, PyObject *_py_self, PyObject *_py
     return pyrope__MethodTestInterface_method_with_sequence (_py_self, _py_args, _py_retp);
   case 0x0def0012: // MethodTestInterface::method_with_interface
     return pyrope__MethodTestInterface_method_with_interface (_py_self, _py_args, _py_retp);
+  case 0x0def0013: // PureMethods::pure_method
+    return pyrope__PureMethods_pure_method (_py_self, _py_args, _py_retp);
   default:
     return false;
   }
