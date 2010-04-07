@@ -93,6 +93,16 @@ interface.cc: $(ROPE)/CppStub.py $(srcdir)/rapicorn.idl
 	  --inclusions '"item.hh"' $(srcdir)/rapicorn.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += interface.cc
+skeletons.cc: $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS)
+	for obj in $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS) ; do case "$$obj" in \
+	  *.lo) . "./$$obj" ; o="$$pic_object" ;; *.o|*) o="$$obj" ;; esac ; \
+	  nm -C "$$o" ; done | grep -v '^[[:space:]]*U[[:space:]]' | \
+	  sed 's/\b@RAPICORN_NAMESPACE_NAME@::/Rapicorn::/g' > xgen-syms-$(@F)
+	${PLICINT} -G $(ROPE)/CppStub -g skeletons.cc --skip-skels xgen-syms-$(@F) \
+	  -g interface-skel $(srcdir)/rapicorn.idl -o xgen-$(@F)
+	rm -f xgen-syms-$(@F)
+	mv xgen-$(@F) $@
+$(LTLIBRARIES): skeletons.cc
 
 # === API Headers ===
 api-content:
