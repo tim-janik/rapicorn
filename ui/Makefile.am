@@ -93,6 +93,7 @@ interface.cc: $(ROPE)/CppStub.py $(srcdir)/rapicorn.idl
 	  --inclusions '"item.hh"' $(srcdir)/rapicorn.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += interface.cc
+# generate skeletons for non-virtual methods, skipping existing symbols
 skeletons.cc: $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS)
 	for obj in $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS) ; do case "$$obj" in \
 	  *.lo) . "./$$obj" ; o="$$pic_object" ;; *.o|*) o="$$obj" ;; esac ; \
