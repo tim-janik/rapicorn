@@ -7,7 +7,6 @@ include $(top_srcdir)/Makefile.decl
 SUBDIRS = . po plic rcore ui rope tools tests examples docs web
 
 docdir  = ${datarootdir}/doc/${PACKAGE}${RAPICORN_RELEASE}
-noinst_DATA =
 
 # === setup ===
 AUTOMAKE_OPTIONS = 1.9 dist-bzip2 no-dist-gzip
@@ -33,23 +32,6 @@ EXTRA_DIST += intltool-extract.in intltool-merge.in intltool-update.in
 
 # === include file links ===
 EXTRA_DIST += rapicorn-core.hh rapicorn.hh
-
-# === ChangeLog ===
-LAST_COMMITID = 3c74b440cecaba3570eecc6728bbe319ba790b59
-ChangeLog:	$(shell ls "$${GIT_DIR:-.git}/packed-refs" "$${GIT_DIR:-.git}/HEAD" "$${GIT_DIR:-.git}/`git symbolic-ref -q HEAD || echo HEAD`" 2>/dev/null )
-	: # Generate ChangeLog with -prefixed records
-	git log --pretty='format:%ad %an 	# %H (%cn)%n%n%s%n%n%b' \
-		${LAST_COMMITID}..HEAD		 > xgen-$(@F)
-	: # Tab-indent ChangeLog, except for record start
-	sed 's/^/	/;s/^	//;/^[ 	]*<unknown>$$/d' -i xgen-$(@F)
-	: # Kill trailing whitespaces, compress multiple trailing newlines
-	$(PYTHON) -c "import sys, re; sys.stdout.write ( \
-	  re.compile (r'\n\n\n(?=^\w)', re.M).sub ('\n\n', \
-	  re.compile ('^[	 ]+$$', re.M).sub ('', \
-	  sys.stdin.read())))" < xgen-$(@F) > xgen2-$(@F)
-	cp xgen2-$(@F) $@ && rm -f xgen-$(@F) xgen2-$(@F)
-noinst_DATA += ChangeLog
-EXTRA_DIST  += ChangeLog
 
 # === rapicorn*.pc ===
 pkgconfigdir = $(libdir)/pkgconfig
@@ -126,3 +108,16 @@ check-am: check-dynamic_cast check-list_properties # run source code checks befo
 # disable bogus cleanup checks
 distcleancheck_listfiles = true # find . -type f -print
 # distuninstallcheck_listfiles = true # find . -type f -print
+
+# === Release auxillary rule configuration ===
+RELAUX_VERSION   = $(RAPICORN_VERSION)
+RELAUX_REVNAME   = RAPICORN_REVISION_VERSION
+RELAUX_FILE      = $(shell echo $(distdir).tar.?z*)
+RELAUX_DESTHOST  = testbit.eu
+RELAUX_DESTPATH  = dist/rapicorn
+RELAUX_REVISION  = $($(RELAUX_REVNAME))
+RELAUX_REVNEXT   = $(shell echo '1 + $(RELAUX_REVISION)' | bc)
+RELAUX_CHANGELOG = ChangeLog
+RELAUX_CHL_RANGE = 3c74b440cecaba3570eecc6728bbe319ba790b59..HEAD
+# Makefile.decl introduced rules: ChangeLog release-upload
+
