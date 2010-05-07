@@ -65,8 +65,8 @@ struct _RapicornThread
   gint8		         got_wakeup;
   gint8                  accounting;
   volatile void*         guard_cache;
-  Rapicorn::Cond	         wakeup_cond;
-  RapicornThreadWakeup     wakeup_func;
+  Rapicorn::Cond	 wakeup_cond;
+  RapicornThreadWakeup   wakeup_func;
   gpointer	         wakeup_data;
   GDestroyNotify         wakeup_destroy;
   guint64	         awake_stamp;
