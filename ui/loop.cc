@@ -195,7 +195,7 @@ public:
     ref_sink (source);
     source->m_main_loop = this;
     source->m_id = m_counter++;
-    if (!source->m_id)
+    if (!source->m_id) // FIXME: need simple counter/id allocation scheme
       error ("EventLoop::m_counter overflow, please report");
     source->m_loop_state = UNCHECKED;
     source->m_priority = priority;
