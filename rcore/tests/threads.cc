@@ -145,7 +145,9 @@ runonce_function (void *data)
   volatile int *runonce_counter = (volatile int*) data;
   if (once_enter (&runonce_value))
     {
+      runonce_mutex.lock();
       runonce_cond.broadcast();
+      runonce_mutex.unlock();
       usleep (1); // sched_yield replacement to force contention
       Atomic::int_add (runonce_counter, 1);
       usleep (500); // sched_yield replacement to force contention
@@ -155,7 +157,9 @@ runonce_function (void *data)
   TASSERT (runonce_value == 42);
   /* sinal thread end */
   Atomic::uint_add (&runonce_threadcount, -1);
+  runonce_mutex.lock();
   runonce_cond.signal();
+  runonce_mutex.unlock();
 }
 
 static void
@@ -1272,11 +1276,11 @@ main (int   argc,
   test_auto_locker_cxx();
   test_runonce();
   test_deletable_destruction();
-  test_ring_buffer(); 
-  test_debug_channel(); 
+  test_ring_buffer();
+  test_debug_channel();
   if (init_settings().test_perf)
     bench_auto_locker_cxx();
-  
+
   return 0;
 }
 
