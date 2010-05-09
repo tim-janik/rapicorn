@@ -264,6 +264,57 @@ Thread::Self::exit (void *retval)
   ThreadTable.thread_exit (retval);
 }
 
+#define M_SPINPTR       ((pthread_spinlock_t*) &this->spinspace)
+
+SpinLock::SpinLock ()
+{
+#ifdef USE_POSIX_SPINLOCK
+  pthread_spin_init (M_SPINPTR, 0);
+#else
+  spinspace.fallback = new Mutex();
+#endif
+}
+
+void
+SpinLock::lock ()
+{
+#ifdef USE_POSIX_SPINLOCK
+  pthread_spin_lock (M_SPINPTR);
+#else
+  spinspace.fallback->lock();
+#endif
+}
+
+void
+SpinLock::unlock ()
+{
+#ifdef USE_POSIX_SPINLOCK
+  pthread_spin_unlock (M_SPINPTR);
+#else
+  spinspace.fallback->unlock();
+#endif
+}
+
+bool
+SpinLock::trylock ()
+{
+#ifdef USE_POSIX_SPINLOCK
+  return pthread_spin_trylock (M_SPINPTR);
+#else
+  return spinspace.fallback->trylock();
+#endif
+}
+
+SpinLock::~SpinLock ()
+{
+#ifdef USE_POSIX_SPINLOCK
+  pthread_spin_destroy (M_SPINPTR);
+#else
+  delete spinspace.fallback;
+#endif
+  spinspace.fallback = NULL;
+}
+
 static const RapicornMutex zero_mutex = { 0, };
 
 Mutex::Mutex () :
@@ -349,7 +400,6 @@ static std::list<void*> once_list;
 bool
 once_enter_impl (volatile size_t *value_location)
 {
-  static int i = 0;
   bool needs_init = false;
   once_mutex.lock();
   if (Atomic::ptr_get ((void*volatile*) value_location) == 0)

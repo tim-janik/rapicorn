@@ -64,6 +64,19 @@ public:
   /*Des*/       ~Cond         ();
 };
 
+class SpinLock {
+  volatile union {
+    Mutex *fallback;                                    // union needs pointer alignment
+    char   chars[RAPICORN_SIZEOF_PTHREADH_SPINLOCK];    // char may_alias any type
+  } spinspace;
+public:
+  explicit SpinLock ();
+  void     lock     ();
+  void     unlock   ();
+  bool     trylock  ();
+  /*Des*/ ~SpinLock ();
+};
+
 namespace Atomic {
 inline void    read_barrier  (void)                                { RAPICORN_MEMORY_BARRIER_RO (ThreadTable); }
 inline void    write_barrier (void)                                { RAPICORN_MEMORY_BARRIER_WO (ThreadTable); }

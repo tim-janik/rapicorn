@@ -218,6 +218,11 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     RAPICORN_SIZEOF_PTH_COND_T="$glib_cv_sizeof_pth_cond_t"
     AC_SUBST(RAPICORN_SIZEOF_PTH_COND_T)
 
+    # --- sizeof pthread_spinlock_t ---
+    GLIB_SIZEOF([#include <pthread.h>], pthread_spinlock_t, rapicorn_pthreadh_spinlock)
+    RAPICORN_SIZEOF_PTHREADH_SPINLOCK="$glib_cv_sizeof_rapicorn_pthreadh_spinlock"
+    AC_SUBST(RAPICORN_SIZEOF_PTHREADH_SPINLOCK) dnl # for rapicornconfig.h
+
     dnl # --- pthread_mutexattr_settype ---
     AC_MSG_CHECKING([for pthread_mutexattr_settype()])
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[

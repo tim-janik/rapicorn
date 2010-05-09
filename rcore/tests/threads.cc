@@ -374,6 +374,32 @@ test_thread_cxx (void)
   TDONE();
 }
 
+// simple spin lock test
+static void
+test_spin_lock_simple (void)
+{
+  TSTART ("C++SpinLock");
+  {
+    SpinLock sp;
+    bool l;
+    l = sp.trylock();
+    TASSERT (l);
+    l = sp.trylock();
+    TASSERT (!l);
+    sp.unlock();
+    l = sp.trylock();
+    TASSERT (l);
+    l = sp.trylock();
+    TASSERT (!l);
+    sp.unlock();
+    sp.lock();
+    l = sp.trylock();
+    TASSERT (!l);
+    sp.unlock();
+  }
+  TDONE();
+}
+
 /* --- auto locker tests --- */
 static void
 test_simple_auto_lock (Mutex &mutex1,
@@ -1241,6 +1267,7 @@ main (int   argc,
   test_threads();
   test_atomic();
   test_thread_cxx();
+  test_spin_lock_simple();
   test_thread_atomic_cxx();
   test_auto_locker_cxx();
   test_runonce();

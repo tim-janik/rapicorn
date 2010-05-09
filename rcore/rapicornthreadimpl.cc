@@ -1572,6 +1572,9 @@ get_fallback_thread_table (void)
 /* --- POSIX threads table --- */
 #if	(RAPICORN_HAVE_MUTEXATTR_SETTYPE > 0)
 #include <pthread.h>
+#if _POSIX_SPIN_LOCKS >= 200112L
+#define USE_POSIX_SPINLOCK
+#endif
 static pthread_key_t pth_thread_table_key = 0;
 static void
 pth_thread_set_handle (RapicornThread *handle)
