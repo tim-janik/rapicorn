@@ -49,7 +49,6 @@ def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
 
 base_code = """
-import protocol_pb2 as RapicornRope
 
 class __BaseRecord__:
   def __init__ (self, **entries):
