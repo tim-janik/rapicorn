@@ -9,9 +9,7 @@ PLICINT   = $(top_builddir)/plic/plic-intern
 RAPICORNIDL = $(srcdir)/../ui/rapicorn.idl
 
 # === sources ===
-pyrapicorn_cc_sources = $(strip		\
-	pyrope.cc			\
-)
+pyrapicorn_cc_sources = rope.cc
 
 # === Python module ===
 pyrapicorndir          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
@@ -35,7 +33,7 @@ protocol-pb2.hh: $(srcdir)/protocol.proto
 	sed 's/^#include "protocol.pb.h"/#include "protocol-pb2.hh"/' <protocol.pb.cc >protocol-pb2.cc
 	rm -f protocol.pb.cc
 protocol-pb2.cc: protocol-pb2.hh
-$(srcdir)/pyrope.cc: protocol-pb2.cc
+$(srcdir)/rope.cc: protocol-pb2.cc
 CLEANFILES += protocol.pb.h protocol.pb.cc protocol-pb2.cc protocol-pb2.hh
 
 # === cpy2rope.cc ===
@@ -43,7 +41,7 @@ cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/CxxPyStub.py
 	: # compile IDL definitions into cpy2rope.cc
 	${PLICINT} -G $(srcdir)/CxxPyStub $(RAPICORNIDL) -o xgen-$(@F)
 	mv xgen-$(@F) $@
-$(srcdir)/pyrope.cc: cpy2rope.cc
+$(srcdir)/rope.cc: cpy2rope.cc
 CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
 
 EXTRA_DIST += protocol.proto

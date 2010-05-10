@@ -174,7 +174,7 @@ class Generator:
       s += '): # one way\n'
     else:
       s += '): # %s\n' % m.rtype.name
-    s += '  return self.__pyrope_trampoline__ (0x%08x, ' % GenUtils.type_id (m)
+    s += '  return self.__rope_pytrampoline__ (0x%08x, ' % GenUtils.type_id (m)
     s += ', '.join (l)
     s += ')\n'
     return s

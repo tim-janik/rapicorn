@@ -46,9 +46,9 @@ PyIntLong_AsLongLong (PyObject *intlong)
     return PyLong_AsLongLong (intlong);
 }
 
-static bool pyrope_send_message (RemoteProcedure&);
-#ifndef HAVE_PYROPE_SEND_MESSAGE
-static bool pyrope_send_message (RemoteProcedure&)
+static bool rope_call_remote (RemoteProcedure&);
+#ifndef HAVE_ROPE_CALL_REMOTE
+static bool rope_call_remote (RemoteProcedure&)
 { return false; } // testing stub
 #endif
 """
@@ -92,7 +92,7 @@ class Generator:
       s += '  if (!rope_frompy_%s (item, *%s_vseq())) GOTO_ERROR();\n' % (argtype.name, prefix)
     elif argtype.storage == Decls.INTERFACE:
       s += '  { char *s = NULL; Py_ssize_t len = 0;\n'
-      s += '    PyObject *iobj = PyObject_GetAttrString (item, "__pyrope__object__"); if (!iobj) GOTO_ERROR();\n'
+      s += '    PyObject *iobj = PyObject_GetAttrString (item, "__rope__object__"); if (!iobj) GOTO_ERROR();\n'
       s += '    if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();\n'
       s += '    %s_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }\n' % prefix
     else: # FUNC VOID
@@ -228,9 +228,9 @@ class Generator:
     s = ''
     pytoff = 2 # tuple offset, skip method id and self
     swl += [ 'case 0x%08x: // %s::%s\n' % (GenUtils.type_id (m), type_info.name, m.name) ]
-    swl += [ '  return pyrope__%s_%s (_py_self, _py_args, _py_retp);\n' % (type_info.name, m.name) ]
+    swl += [ '  return rope__%s_%s (_py_self, _py_args, _py_retp);\n' % (type_info.name, m.name) ]
     s += 'static bool\n'
-    s += 'pyrope__%s_%s (PyObject *self, PyObject *args, PyObject **retp)\n' % (type_info.name, m.name)
+    s += 'rope__%s_%s (PyObject *self, PyObject *args, PyObject **retp)\n' % (type_info.name, m.name)
     s += '{\n'
     s += '  RemoteProcedure rp;\n'
     s += '  rp.set_proc_id (0x%08x);\n' % GenUtils.type_id (m)
@@ -251,7 +251,7 @@ class Generator:
         s += self.generate_frompy_convert ('arg->mutable', fl[0], fl[1])
       else:
         s += self.generate_frompy_convert ('arg->set', fl[0], fl[1])
-    s += '  success = pyrope_send_message (rp);\n'
+    s += '  success = rope_call_remote (rp);\n'
     s += ' error:\n'
     s += '  return success;\n'
     s += '}\n'
@@ -259,7 +259,7 @@ class Generator:
   def generate_caller_impl (self, switchlines):
     s = ''
     s += 'static bool RAPICORN_UNUSED\n'
-    s += 'pyrope_trampoline_switch (unsigned int _py_id, PyObject *_py_self, PyObject *_py_args, PyObject **_py_retp)\n'
+    s += 'rope_trampoline_switch (unsigned int _py_id, PyObject *_py_self, PyObject *_py_args, PyObject **_py_retp)\n'
     s += '{\n'
     s += '  switch (_py_id) {\n'
     s += '  '.join (switchlines)

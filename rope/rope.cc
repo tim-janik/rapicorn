@@ -14,7 +14,7 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include "pyrope.hh" // must be included first to configure std headers
+#include "rope.hh" // must be included first to configure std headers
 #include <rapicorn.hh>
 #include <deque>
 
@@ -32,14 +32,14 @@
 namespace {
 
 // --- py2rope stubs (generated) ---
-static bool pyrope_trampoline_switch (unsigned int, PyObject*, PyObject*, PyObject**); // generated
-static bool pyrope_send_message      (Rapicorn::Rope::RemoteProcedure &proc);
-#define HAVE_PYROPE_SEND_MESSAGE 1
+static bool rope_trampoline_switch (unsigned int, PyObject*, PyObject*, PyObject**); // generated
+static bool rope_call_remote       (Rapicorn::Rope::RemoteProcedure &proc);
+#define HAVE_ROPE_CALL_REMOTE 1
 #include "cpy2rope.cc"
 typedef RemoteProcedure RemoteReturn;
 
 // --- prototypes ---
-static bool pyrope_create_dispatch_thread (const String              &application_name,
+static bool rope_create_dispatch_thread (const String              &application_name,
                                            const std::vector<String> &cmdline_args);
 
 // --- globals ---
@@ -246,7 +246,7 @@ public:
 UIThread *UIThread::ui_thread = NULL;
 
 static bool
-pyrope_send_message (Rapicorn::Rope::RemoteProcedure &proc)
+rope_call_remote (Rapicorn::Rope::RemoteProcedure &proc)
 {
   bool success = UIThread::ui_thread_call_remote (proc);
   if (!success)
@@ -256,7 +256,7 @@ pyrope_send_message (Rapicorn::Rope::RemoteProcedure &proc)
 
 // --- PyC functions ---
 static PyObject*
-pyrope_trampoline (PyObject *self,
+rope_pytrampoline (PyObject *self,
                    PyObject *args)
 {
   PyObject *arg0 = NULL, *ret = NULL;
@@ -269,7 +269,7 @@ pyrope_trampoline (PyObject *self,
   method_id = PyInt_AsLong (arg0);
   if (PyErr_Occurred())
     goto error;
-  if (pyrope_trampoline_switch (method_id, self, args, &ret) && ret)
+  if (rope_trampoline_switch (method_id, self, args, &ret) && ret)
     return ret;
  error:
   if (PyErr_Occurred())
@@ -278,7 +278,7 @@ pyrope_trampoline (PyObject *self,
 }
 
 static PyObject*
-pyrope_printout (PyObject *self,
+rope_printout (PyObject *self,
                  PyObject *args)
 {
   const char *ns = NULL;
@@ -291,7 +291,7 @@ pyrope_printout (PyObject *self,
 }
 
 static PyObject*
-pyrope_init_dispatcher (PyObject *self,
+rope_init_dispatcher (PyObject *self,
                         PyObject *args)
 {
   const char *ns = NULL;
@@ -322,12 +322,12 @@ pyrope_init_dispatcher (PyObject *self,
 } // Anon
 
 // --- Python module definitions (global namespace) ---
-static PyMethodDef pyrope_vtable[] = {
-  { "_init_dispatcher",         pyrope_init_dispatcher,         METH_VARARGS,
+static PyMethodDef rope_vtable[] = {
+  { "_init_dispatcher",         rope_init_dispatcher,         METH_VARARGS,
     "Rapicorn::_init_dispatcher() - initial setup." },
-  { "__pyrope_trampoline__",    pyrope_trampoline,              METH_VARARGS,
+  { "__rope_pytrampoline__",    rope_pytrampoline,            METH_VARARGS,
     "Rapicorn function invokation trampoline." },
-  { "printout",                 pyrope_printout,                METH_VARARGS,
+  { "printout",                 rope_printout,                METH_VARARGS,
     "Rapicorn::printout() - print to stdout." },
   { NULL, } // sentinel
 };
@@ -337,7 +337,7 @@ PyMODINIT_FUNC
 MODULE_INIT_FUNCTION (void) // conventional dlmodule initializer
 {
   // register module
-  PyObject *m = Py_InitModule3 (MODULE_NAME_STRING, pyrope_vtable, (char*) rapicorn_doc);
+  PyObject *m = Py_InitModule3 (MODULE_NAME_STRING, rope_vtable, (char*) rapicorn_doc);
   if (!m)
     return;
 

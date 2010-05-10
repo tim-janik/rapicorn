@@ -301,25 +301,25 @@ class UIWidgetArea (__BaseClass__):
     self.sig_void_signal = __Signal__ ('void_signal')
     self.sig_sample_signal = __Signal__ ('sample_signal')
   def simple_method (self): # float
-    return self.__pyrope_trampoline__ (0x02000001, self)
+    return self.__rope_pytrampoline__ (0x02000001, self)
   def single_arg (self, n): # float
-    return self.__pyrope_trampoline__ (0x02000002, self, n)
+    return self.__rope_pytrampoline__ (0x02000002, self, n)
   def single_arg2 (self, n): # float
-    return self.__pyrope_trampoline__ (0x02000003, self, n)
+    return self.__rope_pytrampoline__ (0x02000003, self, n)
   def two_args (self, n, r): # float
-    return self.__pyrope_trampoline__ (0x02000004, self, n, r)
+    return self.__rope_pytrampoline__ (0x02000004, self, n, r)
   def two_args2 (self, n, r): # float
-    return self.__pyrope_trampoline__ (0x02000005, self, n, r)
+    return self.__rope_pytrampoline__ (0x02000005, self, n, r)
   def multi_args (self, n, r, i, s, y): # float
-    return self.__pyrope_trampoline__ (0x02000006, self, n, r, i, s, y)
+    return self.__rope_pytrampoline__ (0x02000006, self, n, r, i, s, y)
   def self_method (self, ba1, ba2): # float
-    return self.__pyrope_trampoline__ (0x02000007, self, ba1, ba2)
+    return self.__rope_pytrampoline__ (0x02000007, self, ba1, ba2)
   def void_method (self): # one way
-    return self.__pyrope_trampoline__ (0x01000008, self)
+    return self.__rope_pytrampoline__ (0x01000008, self)
   def on_click2out (self): # string
-    return self.__pyrope_trampoline__ (0x02000009, self)
+    return self.__rope_pytrampoline__ (0x02000009, self)
   def on_click2in (self, command): # one way
-    return self.__pyrope_trampoline__ (0x0100000a, self, command)
+    return self.__rope_pytrampoline__ (0x0100000a, self, command)
   def __sig_void_signal__ (self): pass # default handler
   def __sig_sample_signal__ (self): pass # default handler
 
@@ -368,23 +368,23 @@ class MethodTestInterface (__BaseClass__):
   def __init__ (self):
     super (MethodTestInterface, self).__init__()
   def method_with_void (self): # one way
-    return self.__pyrope_trampoline__ (0x0100000b, self)
+    return self.__rope_pytrampoline__ (0x0100000b, self)
   def method_with_bools (self, input, optval): # bool
-    return self.__pyrope_trampoline__ (0x0200000c, self, input, optval)
+    return self.__rope_pytrampoline__ (0x0200000c, self, input, optval)
   def method_with_ints (self, input, optval): # int
-    return self.__pyrope_trampoline__ (0x0200000d, self, input, optval)
+    return self.__rope_pytrampoline__ (0x0200000d, self, input, optval)
   def method_with_floats (self, input, optval): # float
-    return self.__pyrope_trampoline__ (0x0200000e, self, input, optval)
+    return self.__rope_pytrampoline__ (0x0200000e, self, input, optval)
   def method_with_string (self, input, optval): # string
-    return self.__pyrope_trampoline__ (0x0200000f, self, input, optval)
+    return self.__rope_pytrampoline__ (0x0200000f, self, input, optval)
   def method_with_enum (self, input, optval): # QuickEnum
-    return self.__pyrope_trampoline__ (0x02000010, self, input, optval)
+    return self.__rope_pytrampoline__ (0x02000010, self, input, optval)
   def method_with_record (self, input, optval): # QuickRecord
-    return self.__pyrope_trampoline__ (0x02000011, self, input, optval)
+    return self.__rope_pytrampoline__ (0x02000011, self, input, optval)
   def method_with_sequence (self, input, optval): # QuickSequence
-    return self.__pyrope_trampoline__ (0x02000012, self, input, optval)
+    return self.__rope_pytrampoline__ (0x02000012, self, input, optval)
   def method_with_interface (self, input, optval): # GrandChild
-    return self.__pyrope_trampoline__ (0x02000013, self, input, optval)
+    return self.__rope_pytrampoline__ (0x02000013, self, input, optval)
 
 class ButtonArea (__BaseClass__):
   def __init__ (self):
@@ -398,5 +398,5 @@ class PureMethods (__BaseClass__):
   def __init__ (self):
     super (PureMethods, self).__init__()
   def pure_method (self, f): # int
-    return self.__pyrope_trampoline__ (0x02000014, self, f)
+    return self.__rope_pytrampoline__ (0x02000014, self, f)
 

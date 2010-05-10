@@ -22,7 +22,7 @@ More details at http://www.rapicorn.org/.
 from pyRapicorn import *
 
 from py2cpy import *
-Application.__pyrope_trampoline__ = pyRapicorn.__pyrope_trampoline__
+Application.__rope_pytrampoline__ = pyRapicorn.__rope_pytrampoline__
 
 app = None
 def app_init_with_x11 (application_name = None, cmdline_args = None):
@@ -33,7 +33,7 @@ def app_init_with_x11 (application_name = None, cmdline_args = None):
     cmdline_args = sys.argv
   print "_init_dispatcher:", pyRapicorn._init_dispatcher (application_name, cmdline_args)
   a = Application()
-  a.__pyrope__object__ = 'dummy'
+  a.__rope__object__ = 'dummy'
   ret = a.init_with_x11 (application_name, cmdline_args)
   global app
   # app = pyRapicorn.__app_init_with_x11__ (application_name, cmdline_args)
