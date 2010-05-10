@@ -24,9 +24,26 @@ from pyRapicorn import *
 from pyRapicornStub import *
 Application.__pyrope_trampoline__ = pyRapicorn.__pyrope_trampoline__
 
+app = None
+def app_init_with_x11 (application_name = None, cmdline_args = None):
+  import sys
+  if application_name == None:
+    application_name = sys.argv[0]
+  if cmdline_args == None:
+    cmdline_args = sys.argv
+  print "_init_dispatcher:", pyRapicorn._init_dispatcher (application_name, cmdline_args)
+  a = Application()
+  a.__pyrope__object__ = 'dummy'
+  ret = a.init_with_x11 (application_name, cmdline_args)
+  global app
+  # app = pyRapicorn.__app_init_with_x11__ (application_name, cmdline_args)
+  return app
+
+pyRapicorn.printout ("printout test\n");
+print "app_init_with_x11:", app_init_with_x11 ("AppName", [ "--first-arg", "--second-arg"])
+print "app:", app
+
 del globals()['pyRapicorn']
 
-print "TEST0:" # FIXME
-app = Application()
-app.__pyrope__object__ = 'dummy'
-print app._init_with_x11 ("AppName", [ "--first-arg", "--second-arg"])
+print "execute_loops():"
+app.execute_loops()
