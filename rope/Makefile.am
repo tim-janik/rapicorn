@@ -78,26 +78,26 @@ check-cxxpystub:
 	$(_@) rm -f testcxxpystub.cc testcxxpystub.o
 EXTRA_DIST += testcxxpystub.ref
 check-local: check-cxxpystub
-# test CppStub
-check-cppstub:
+# test CxxCaller
+check-cxxcaller:
 	@$(call TSTTITLE)
-	$(_@) ${PLICINT} -G $(srcdir)/CppStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
-	@$(call TSTCMP, $(srcdir)/testcppstub.ref)
-	@$(call TSTTITLE, check-cppstub-syntax)
-	$(_@) cp $(srcdir)/testcppstub.ref testcppstub.cc
-	$(_@) $(CXXCOMPILE) testcppstub.cc -c ; $(call TSTRESULT)
-	$(_@) rm -f testcppstub.cc testcppstub.o
-EXTRA_DIST += testcppstub.ref
-check-local: check-cppstub
-# test CppStub Skeleton
+	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
+	@$(call TSTCMP, $(srcdir)/testcxxcaller.ref)
+	@$(call TSTTITLE, check-cxxcaller-syntax)
+	$(_@) cp $(srcdir)/testcxxcaller.ref testcxxcaller.cc
+	$(_@) $(CXXCOMPILE) testcxxcaller.cc -c ; $(call TSTRESULT)
+	$(_@) rm -f testcxxcaller.cc testcxxcaller.o
+EXTRA_DIST += testcxxcaller.ref
+check-local: check-cxxcaller
+# test CxxCaller Skeleton
 check-cppskels:
 	@$(call TSTTITLE)
 	@echo -e "#include <rapicorn.hh>\n" \
 	  "class ProtoRecord; class ProtoSequence; class ProtoArg; class ProtoMessage;" \
 	  > $(TSTOUT)
-	$(_@) ${PLICINT} -G $(srcdir)/CppStub -g interface \
+	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g interface \
 	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT)
-	$(_@) ${PLICINT} -G $(srcdir)/CppStub -g interface-skel \
+	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g interface-skel \
 	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testcppskels.ref)
 	@$(call TSTTITLE, check-cppskels-syntax)
