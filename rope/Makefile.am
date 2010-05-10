@@ -9,14 +9,6 @@ PLICINT   = $(top_builddir)/plic/plic-intern
 RAPICORNIDL = $(srcdir)/../ui/rapicorn.idl
 
 # === sources ===
-rope_public_headers = $(strip		\
-	message.hh			\
-)
-rope_cc_sources = $(strip		\
-	message.cc			\
-)
-rope_private_files = $(strip		\
-)
 pyrapicorn_cc_sources = $(strip		\
 	pyrope.cc			\
 )
@@ -34,26 +26,6 @@ pyRapicorn_la_LDFLAGS  = $(strip				\
 $(pyrapicorn_LTLIBRARIES): $(pyrapicorn_PYTHON) # force python source creation
 python-call-info:
 	@echo 'PYTHONPATH="$$PYTHONPATH:$(pythondir)" python # -c "import @RAPICORN_NAMESPACE_NAME@"'
-
-# === C++ Binding lib ===
-noinst_LTLIBRARIES = librapicornrope@RAPICORN_RELEASE@.la
-librapicornrope@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/rope
-librapicornrope@RAPICORN_RELEASE@include_HEADERS  = $(rope_public_headers)
-librapicornrope@RAPICORN_RELEASE@_la_SOURCES      = $(rope_cc_sources)
-librapicornrope@RAPICORN_RELEASE@_la_DEPENDENCIES = ldscript.map
-librapicornrope@RAPICORN_RELEASE@_la_LIBADD       = $(RAPICORN_ROPE_LIBS) -lm
-librapicornrope@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
-	-Wl,--version-script=$(srcdir)/ldscript.map		\
-	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)	\
-	-no-undefined $(SYMBOLIC_LDFLAGS)			\
-) # set libtool version and export symbols for resolving
-EXTRA_DIST += $(rope_private_files) $(librapicornrope@RAPICORN_RELEASE@_la_DEPENDENCIES)
-
-# keep this .o rule in sync with the corresponding .la rule from Makefile.in
-librapicornrope@RAPICORN_RELEASE@.o: $(librapicornrope@RAPICORN_RELEASE@_la_OBJECTS) $(librapicornrope@RAPICORN_RELEASE@_la_DEPENDENCIES)
-	$(CXXLINK) -rpath $(libdir) $(librapicornrope@RAPICORN_RELEASE@_la_LDFLAGS) $(librapicornrope@RAPICORN_RELEASE@_la_OBJECTS) # $(librapicornrope@RAPICORN_RELEASE@_la_LIBADD) $(LIBS)
-all-am: librapicornrope@RAPICORN_RELEASE@.o
-CLEANFILES += librapicornrope@RAPICORN_RELEASE@.lo librapicornrope@RAPICORN_RELEASE@.o
 
 # === protocol-pb2.[hc][hc] ===
 protocol-pb2.hh: $(srcdir)/protocol.proto
@@ -82,20 +54,20 @@ pyRapicornStub.py: $(RAPICORNIDL) $(srcdir)/PyStub.py
 	mv xgen-$(@F) $@
 CLEANFILES += xgen-pyRapicornStub.py pyRapicornStub.py
 
-# === PyStub test ===
+# === TESTS ===
+# test PyStub
 EXTRA_DIST += testpystub.ref
 check-pystub:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} -G $(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testpystub.ref)
 	@$(call TSTTITLE,check-pystub-syntax)
-	$(_@) $(PROTOC) $(srcdir)/protocol.proto --python_out=. # protocol_pb2.py
+	@ # $(_@) $(PROTOC) $(srcdir)/protocol.proto --python_out=. # protocol_pb2.py
 	$(_@) $(PYTHON) -c "import py_compile; py_compile.compile ('$(srcdir)/testpystub.ref', 'testpystub.pyc')" && \
 	  $(PYTHON) $(srcdir)/testpystub.ref ; $(call TSTRESULT)
 CLEANFILES += testpystub.pyc protocol_pb2.py  protocol_pb2.pyc
 check-local: check-pystub
-
-# === PyCStub test ===
+# test PyCStub
 check-pycstub:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} -G $(srcdir)/PyCStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
@@ -106,8 +78,7 @@ check-pycstub:
 	$(_@) rm -f testpycstub.cc testpycstub.o
 EXTRA_DIST += testpycstub.ref
 check-local: check-pycstub
-
-# === CppStub test ===
+# test CppStub
 check-cppstub:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} -G $(srcdir)/CppStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
@@ -118,8 +89,7 @@ check-cppstub:
 	$(_@) rm -f testcppstub.cc testcppstub.o
 EXTRA_DIST += testcppstub.ref
 check-local: check-cppstub
-
-# === CppStub Skeleton test ===
+# test CppStub Skeleton
 check-cppskels:
 	@$(call TSTTITLE)
 	@echo -e "#include <rapicorn.hh>\n" \
@@ -137,14 +107,12 @@ check-cppskels:
 # $(TSTOUT)
 EXTRA_DIST += testcppskels.ref
 check-local: check-cppskels
-
-# === rapicorn.idl test with PLIC ===
+# test rapicorn.idl with PLIC
 check-rapicorn-idl:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} $(RAPICORNIDL) > /dev/null ; $(call TSTRESULT)
 check-local: check-rapicorn-idl
-
-# === PyStub rapicorn.idl test ===
+# test PyStub with rapicorn.idl
 check-pystub-for-rapicorn.idl:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} -G $(srcdir)/PyStub $(RAPICORNIDL) | $(PYTHON) ; $(call TSTRESULT)
