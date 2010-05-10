@@ -21,7 +21,7 @@ More details at http://www.rapicorn.org/.
 
 from pyRapicorn import *
 
-from pyRapicornStub import *
+from py2cpy import *
 Application.__pyrope_trampoline__ = pyRapicorn.__pyrope_trampoline__
 
 app = None
