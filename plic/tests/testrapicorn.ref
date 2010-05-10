@@ -92,6 +92,7 @@ struct QuickRecord {
   int             int2;
 };
 class MethodTestInterface {
+  void                method_with_void ();
   bool                method_with_bools (bool input, bool optval);
   int                 method_with_ints (int input, int optval);
   float               method_with_floats (float input, float optval);

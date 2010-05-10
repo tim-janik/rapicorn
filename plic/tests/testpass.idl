@@ -275,6 +275,7 @@ record   QuickRecord   { int   int1; int int2; };
 sequence QuickSequence { float somefloat; };
 
 interface MethodTestInterface {
+  void   method_with_void   ();
   bool   method_with_bools  (bool   input, bool   optval = FALSE);
   int    method_with_ints   (int    input, int    optval = -3 - -1);
   float  method_with_floats (float  input, float  optval = 9.9 + 3.e+2);
