@@ -913,7 +913,7 @@ static bool
 pyrope__UIWidgetArea_simple_method (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0001);
+  rp.set_proc_id (0x02000001);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -932,7 +932,7 @@ static bool
 pyrope__UIWidgetArea_single_arg (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0002);
+  rp.set_proc_id (0x02000002);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -954,7 +954,7 @@ static bool
 pyrope__UIWidgetArea_single_arg2 (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0003);
+  rp.set_proc_id (0x02000003);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -976,7 +976,7 @@ static bool
 pyrope__UIWidgetArea_two_args (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0004);
+  rp.set_proc_id (0x02000004);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -1001,7 +1001,7 @@ static bool
 pyrope__UIWidgetArea_two_args2 (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0005);
+  rp.set_proc_id (0x02000005);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -1026,7 +1026,7 @@ static bool
 pyrope__UIWidgetArea_multi_args (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0006);
+  rp.set_proc_id (0x02000006);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -1062,7 +1062,7 @@ static bool
 pyrope__UIWidgetArea_self_method (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0007);
+  rp.set_proc_id (0x02000007);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -1093,7 +1093,7 @@ static bool
 pyrope__UIWidgetArea_void_method (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0008);
+  rp.set_proc_id (0x01000008);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -1112,7 +1112,7 @@ static bool
 pyrope__UIWidgetArea_on_click2out (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0009);
+  rp.set_proc_id (0x02000009);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -1131,7 +1131,7 @@ static bool
 pyrope__UIWidgetArea_on_click2in (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def000a);
+  rp.set_proc_id (0x0100000a);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -1238,10 +1238,29 @@ rope_topy_QuickSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop)
 }
 
 static bool
+pyrope__MethodTestInterface_method_with_void (PyObject *self, PyObject *args, PyObject **retp)
+{
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0100000b);
+  PyObject *item;
+  RemoteProcedure_Argument *arg;
+  bool success = false;
+  if (PyTuple_Size (args) < 2) GOTO_ERROR();
+  item = PyTuple_GET_ITEM (args, 1);  // self
+  arg = rp.add_args();
+  { char *s = NULL; Py_ssize_t len = 0;
+    PyObject *iobj = PyObject_GetAttrString (item, "__pyrope__object__"); if (!iobj) GOTO_ERROR();
+    if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
+    arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
+  success = pyrope_send_message (rp);
+ error:
+  return success;
+}
+static bool
 pyrope__MethodTestInterface_method_with_bools (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def000b);
+  rp.set_proc_id (0x0200000c);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -1266,7 +1285,7 @@ static bool
 pyrope__MethodTestInterface_method_with_ints (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def000c);
+  rp.set_proc_id (0x0200000d);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -1291,7 +1310,7 @@ static bool
 pyrope__MethodTestInterface_method_with_floats (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def000d);
+  rp.set_proc_id (0x0200000e);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -1316,7 +1335,7 @@ static bool
 pyrope__MethodTestInterface_method_with_string (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def000e);
+  rp.set_proc_id (0x0200000f);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -1345,7 +1364,7 @@ static bool
 pyrope__MethodTestInterface_method_with_enum (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def000f);
+  rp.set_proc_id (0x02000010);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -1370,7 +1389,7 @@ static bool
 pyrope__MethodTestInterface_method_with_record (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0010);
+  rp.set_proc_id (0x02000011);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -1395,7 +1414,7 @@ static bool
 pyrope__MethodTestInterface_method_with_sequence (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0011);
+  rp.set_proc_id (0x02000012);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -1420,7 +1439,7 @@ static bool
 pyrope__MethodTestInterface_method_with_interface (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0012);
+  rp.set_proc_id (0x02000013);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -1453,7 +1472,7 @@ static bool
 pyrope__PureMethods_pure_method (PyObject *self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0013);
+  rp.set_proc_id (0x02000014);
   PyObject *item;
   RemoteProcedure_Argument *arg;
   bool success = false;
@@ -1476,43 +1495,45 @@ static bool RAPICORN_UNUSED
 pyrope_trampoline_switch (unsigned int _py_id, PyObject *_py_self, PyObject *_py_args, PyObject **_py_retp)
 {
   switch (_py_id) {
-  case 0x0def0001: // UIWidgetArea::simple_method
+  case 0x02000001: // UIWidgetArea::simple_method
     return pyrope__UIWidgetArea_simple_method (_py_self, _py_args, _py_retp);
-  case 0x0def0002: // UIWidgetArea::single_arg
+  case 0x02000002: // UIWidgetArea::single_arg
     return pyrope__UIWidgetArea_single_arg (_py_self, _py_args, _py_retp);
-  case 0x0def0003: // UIWidgetArea::single_arg2
+  case 0x02000003: // UIWidgetArea::single_arg2
     return pyrope__UIWidgetArea_single_arg2 (_py_self, _py_args, _py_retp);
-  case 0x0def0004: // UIWidgetArea::two_args
+  case 0x02000004: // UIWidgetArea::two_args
     return pyrope__UIWidgetArea_two_args (_py_self, _py_args, _py_retp);
-  case 0x0def0005: // UIWidgetArea::two_args2
+  case 0x02000005: // UIWidgetArea::two_args2
     return pyrope__UIWidgetArea_two_args2 (_py_self, _py_args, _py_retp);
-  case 0x0def0006: // UIWidgetArea::multi_args
+  case 0x02000006: // UIWidgetArea::multi_args
     return pyrope__UIWidgetArea_multi_args (_py_self, _py_args, _py_retp);
-  case 0x0def0007: // UIWidgetArea::self_method
+  case 0x02000007: // UIWidgetArea::self_method
     return pyrope__UIWidgetArea_self_method (_py_self, _py_args, _py_retp);
-  case 0x0def0008: // UIWidgetArea::void_method
+  case 0x01000008: // UIWidgetArea::void_method
     return pyrope__UIWidgetArea_void_method (_py_self, _py_args, _py_retp);
-  case 0x0def0009: // UIWidgetArea::on_click2out
+  case 0x02000009: // UIWidgetArea::on_click2out
     return pyrope__UIWidgetArea_on_click2out (_py_self, _py_args, _py_retp);
-  case 0x0def000a: // UIWidgetArea::on_click2in
+  case 0x0100000a: // UIWidgetArea::on_click2in
     return pyrope__UIWidgetArea_on_click2in (_py_self, _py_args, _py_retp);
-  case 0x0def000b: // MethodTestInterface::method_with_bools
+  case 0x0100000b: // MethodTestInterface::method_with_void
+    return pyrope__MethodTestInterface_method_with_void (_py_self, _py_args, _py_retp);
+  case 0x0200000c: // MethodTestInterface::method_with_bools
     return pyrope__MethodTestInterface_method_with_bools (_py_self, _py_args, _py_retp);
-  case 0x0def000c: // MethodTestInterface::method_with_ints
+  case 0x0200000d: // MethodTestInterface::method_with_ints
     return pyrope__MethodTestInterface_method_with_ints (_py_self, _py_args, _py_retp);
-  case 0x0def000d: // MethodTestInterface::method_with_floats
+  case 0x0200000e: // MethodTestInterface::method_with_floats
     return pyrope__MethodTestInterface_method_with_floats (_py_self, _py_args, _py_retp);
-  case 0x0def000e: // MethodTestInterface::method_with_string
+  case 0x0200000f: // MethodTestInterface::method_with_string
     return pyrope__MethodTestInterface_method_with_string (_py_self, _py_args, _py_retp);
-  case 0x0def000f: // MethodTestInterface::method_with_enum
+  case 0x02000010: // MethodTestInterface::method_with_enum
     return pyrope__MethodTestInterface_method_with_enum (_py_self, _py_args, _py_retp);
-  case 0x0def0010: // MethodTestInterface::method_with_record
+  case 0x02000011: // MethodTestInterface::method_with_record
     return pyrope__MethodTestInterface_method_with_record (_py_self, _py_args, _py_retp);
-  case 0x0def0011: // MethodTestInterface::method_with_sequence
+  case 0x02000012: // MethodTestInterface::method_with_sequence
     return pyrope__MethodTestInterface_method_with_sequence (_py_self, _py_args, _py_retp);
-  case 0x0def0012: // MethodTestInterface::method_with_interface
+  case 0x02000013: // MethodTestInterface::method_with_interface
     return pyrope__MethodTestInterface_method_with_interface (_py_self, _py_args, _py_retp);
-  case 0x0def0013: // PureMethods::pure_method
+  case 0x02000014: // PureMethods::pure_method
     return pyrope__PureMethods_pure_method (_py_self, _py_args, _py_retp);
   default:
     return false;

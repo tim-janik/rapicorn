@@ -357,6 +357,7 @@ class MethodTestInterface {
 protected:
   virtual /*Des*/         ~MethodTestInterface () = 0;
 public:
+  virtual void            method_with_void      ();
   virtual bool            method_with_bools     (bool input,
                                                  bool optval = 0);
   virtual int             method_with_ints      (int input,
@@ -801,14 +802,14 @@ double
 UIWidgetArea::simple_method ()
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0001);
+  rp.set_proc_id (0x02000001);
   return 0; // FIXME
 }
 double
 UIWidgetArea::single_arg (int n)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0002);
+  rp.set_proc_id (0x02000002);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_vint64 (n);
@@ -818,7 +819,7 @@ double
 UIWidgetArea::single_arg2 (int n)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0003);
+  rp.set_proc_id (0x02000003);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_vint64 (n);
@@ -829,7 +830,7 @@ UIWidgetArea::two_args (int n,
                         double r)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0004);
+  rp.set_proc_id (0x02000004);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_vint64 (n);
@@ -842,7 +843,7 @@ UIWidgetArea::two_args2 (int n,
                          double r)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0005);
+  rp.set_proc_id (0x02000005);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_vint64 (n);
@@ -858,7 +859,7 @@ UIWidgetArea::multi_args (int n,
                           double y)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0006);
+  rp.set_proc_id (0x02000006);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_vint64 (n);
@@ -877,7 +878,7 @@ UIWidgetArea::self_method (UIWidgetArea &ba1,
                            UIWidgetArea &ba2)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0007);
+  rp.set_proc_id (0x02000007);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_vstring (Instance2StringCast (ba1));
@@ -889,20 +890,20 @@ void
 UIWidgetArea::void_method ()
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0008);
+  rp.set_proc_id (0x01000008);
 }
 std::string
 UIWidgetArea::on_click2out ()
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0009);
+  rp.set_proc_id (0x02000009);
   return 0; // FIXME
 }
 void
 UIWidgetArea::on_click2in (const std::string &command)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def000a);
+  rp.set_proc_id (0x0100000a);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_vstring (command);
@@ -959,12 +960,18 @@ QuickSequence::from_proto (const ProtoSequence &src)
   return true;
 }
 
+void
+MethodTestInterface::method_with_void ()
+{
+  RemoteProcedure rp;
+  rp.set_proc_id (0x0100000b);
+}
 bool
 MethodTestInterface::method_with_bools (bool input,
                                         bool optval)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def000b);
+  rp.set_proc_id (0x0200000c);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_vint64 (input);
@@ -977,7 +984,7 @@ MethodTestInterface::method_with_ints (int input,
                                        int optval)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def000c);
+  rp.set_proc_id (0x0200000d);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_vint64 (input);
@@ -990,7 +997,7 @@ MethodTestInterface::method_with_floats (double input,
                                          double optval)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def000d);
+  rp.set_proc_id (0x0200000e);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_vdouble (input);
@@ -1003,7 +1010,7 @@ MethodTestInterface::method_with_string (const std::string &input,
                                          const std::string &optval)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def000e);
+  rp.set_proc_id (0x0200000f);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_vstring (input);
@@ -1016,7 +1023,7 @@ MethodTestInterface::method_with_enum (QuickEnum input,
                                        QuickEnum optval)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def000f);
+  rp.set_proc_id (0x02000010);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_vint64 (input);
@@ -1029,7 +1036,7 @@ MethodTestInterface::method_with_record (const QuickRecord &input,
                                          const QuickRecord &optval)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0010);
+  rp.set_proc_id (0x02000011);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   if (!input.to_proto (ProtoRecordCast (*arg->mutable_vrec()))) die();
@@ -1042,7 +1049,7 @@ MethodTestInterface::method_with_sequence (const QuickSequence &input,
                                            const QuickSequence &optval)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0011);
+  rp.set_proc_id (0x02000012);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   if (!input.to_proto (ProtoSequenceCast (*arg->mutable_vseq()))) die();
@@ -1055,7 +1062,7 @@ MethodTestInterface::method_with_interface (GrandChild &input,
                                             GrandChild &optval)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0012);
+  rp.set_proc_id (0x02000013);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_vstring (Instance2StringCast (input));
@@ -1072,7 +1079,7 @@ int
 PureMethods::pure_method (double f)
 {
   RemoteProcedure rp;
-  rp.set_proc_id (0x0def0013);
+  rp.set_proc_id (0x02000014);
   RemoteProcedure_Argument *arg;
   arg = rp.add_args();
   arg->set_vdouble (f);
@@ -1303,6 +1310,20 @@ handle_UIWidgetArea_on_click2in (const RemoteProcedure    &_rope_rp,
 
 
 static bool
+handle_MethodTestInterface_method_with_void (const RemoteProcedure    &_rope_rp,
+                                             RemoteProcedure_Argument *_rope_aret)
+{
+  const RemoteProcedure_Argument *_rope_arg;
+  MethodTestInterface *self;
+  if (_rope_rp.args_size() != 1) return false;
+  _rope_arg = &_rope_rp.args (0);
+  if (!_rope_arg->has_vstring()) return false;
+  self = Instance4StringCast<MethodTestInterface> (_rope_arg->vstring());
+  if (!self) return false;
+  self->method_with_void ();
+  return true;
+}
+static bool
 handle_MethodTestInterface_method_with_bools (const RemoteProcedure    &_rope_rp,
                                               RemoteProcedure_Argument *_rope_aret)
 {
@@ -1514,43 +1535,45 @@ rope_callee_handler (const RemoteProcedure _rope_rp)
 {
   RemoteProcedure_Argument _rope_aretmem, *_rope_aret = &_rope_aretmem;
   switch (_rope_rp.proc_id()) {
-  case 0x0def0001: // UIWidgetArea::simple_method
+  case 0x02000001: // UIWidgetArea::simple_method
     return InterfaceTests::handle_UIWidgetArea_simple_method (_rope_rp, _rope_aret);
-  case 0x0def0002: // UIWidgetArea::single_arg
+  case 0x02000002: // UIWidgetArea::single_arg
     return InterfaceTests::handle_UIWidgetArea_single_arg (_rope_rp, _rope_aret);
-  case 0x0def0003: // UIWidgetArea::single_arg2
+  case 0x02000003: // UIWidgetArea::single_arg2
     return InterfaceTests::handle_UIWidgetArea_single_arg2 (_rope_rp, _rope_aret);
-  case 0x0def0004: // UIWidgetArea::two_args
+  case 0x02000004: // UIWidgetArea::two_args
     return InterfaceTests::handle_UIWidgetArea_two_args (_rope_rp, _rope_aret);
-  case 0x0def0005: // UIWidgetArea::two_args2
+  case 0x02000005: // UIWidgetArea::two_args2
     return InterfaceTests::handle_UIWidgetArea_two_args2 (_rope_rp, _rope_aret);
-  case 0x0def0006: // UIWidgetArea::multi_args
+  case 0x02000006: // UIWidgetArea::multi_args
     return InterfaceTests::handle_UIWidgetArea_multi_args (_rope_rp, _rope_aret);
-  case 0x0def0007: // UIWidgetArea::self_method
+  case 0x02000007: // UIWidgetArea::self_method
     return InterfaceTests::handle_UIWidgetArea_self_method (_rope_rp, _rope_aret);
-  case 0x0def0008: // UIWidgetArea::void_method
+  case 0x01000008: // UIWidgetArea::void_method
     return InterfaceTests::handle_UIWidgetArea_void_method (_rope_rp, _rope_aret);
-  case 0x0def0009: // UIWidgetArea::on_click2out
+  case 0x02000009: // UIWidgetArea::on_click2out
     return InterfaceTests::handle_UIWidgetArea_on_click2out (_rope_rp, _rope_aret);
-  case 0x0def000a: // UIWidgetArea::on_click2in
+  case 0x0100000a: // UIWidgetArea::on_click2in
     return InterfaceTests::handle_UIWidgetArea_on_click2in (_rope_rp, _rope_aret);
-  case 0x0def000b: // MethodTestInterface::method_with_bools
+  case 0x0100000b: // MethodTestInterface::method_with_void
+    return InterfaceTests::handle_MethodTestInterface_method_with_void (_rope_rp, _rope_aret);
+  case 0x0200000c: // MethodTestInterface::method_with_bools
     return InterfaceTests::handle_MethodTestInterface_method_with_bools (_rope_rp, _rope_aret);
-  case 0x0def000c: // MethodTestInterface::method_with_ints
+  case 0x0200000d: // MethodTestInterface::method_with_ints
     return InterfaceTests::handle_MethodTestInterface_method_with_ints (_rope_rp, _rope_aret);
-  case 0x0def000d: // MethodTestInterface::method_with_floats
+  case 0x0200000e: // MethodTestInterface::method_with_floats
     return InterfaceTests::handle_MethodTestInterface_method_with_floats (_rope_rp, _rope_aret);
-  case 0x0def000e: // MethodTestInterface::method_with_string
+  case 0x0200000f: // MethodTestInterface::method_with_string
     return InterfaceTests::handle_MethodTestInterface_method_with_string (_rope_rp, _rope_aret);
-  case 0x0def000f: // MethodTestInterface::method_with_enum
+  case 0x02000010: // MethodTestInterface::method_with_enum
     return InterfaceTests::handle_MethodTestInterface_method_with_enum (_rope_rp, _rope_aret);
-  case 0x0def0010: // MethodTestInterface::method_with_record
+  case 0x02000011: // MethodTestInterface::method_with_record
     return InterfaceTests::handle_MethodTestInterface_method_with_record (_rope_rp, _rope_aret);
-  case 0x0def0011: // MethodTestInterface::method_with_sequence
+  case 0x02000012: // MethodTestInterface::method_with_sequence
     return InterfaceTests::handle_MethodTestInterface_method_with_sequence (_rope_rp, _rope_aret);
-  case 0x0def0012: // MethodTestInterface::method_with_interface
+  case 0x02000013: // MethodTestInterface::method_with_interface
     return InterfaceTests::handle_MethodTestInterface_method_with_interface (_rope_rp, _rope_aret);
-  case 0x0def0013: // PureMethods::pure_method
+  case 0x02000014: // PureMethods::pure_method
     return RapicornPlicTest::handle_PureMethods_pure_method (_rope_rp, _rope_aret);
   default:
     die();

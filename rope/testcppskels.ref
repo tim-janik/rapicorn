@@ -280,6 +280,7 @@ class MethodTestInterface {
 protected:
   virtual /*Des*/         ~MethodTestInterface () = 0;
 public:
+  virtual void            method_with_void      ();
   virtual bool            method_with_bools     (bool input,
                                                  bool optval = 0);
   virtual int             method_with_ints      (int input,
@@ -393,6 +394,11 @@ UIWidgetArea::on_click2out ()
 
 void
 UIWidgetArea::on_click2in (const std::string &command)
+{
+}
+
+void
+MethodTestInterface::method_with_void ()
 {
 }
 
