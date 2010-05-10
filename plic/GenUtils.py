@@ -25,9 +25,10 @@ def static_vars (*varname_value_list):
     return func
   return decorate
 
-@static_vars (("iddict", {}), ("idcounter", 0x0def0000))
+@static_vars (("iddict", {}), ("idcounter", 0))
 def type_id (type):
   self = type_id
+  otype = type
   types = []
   while type:
     types += [ type ]
@@ -40,5 +41,11 @@ def type_id (type):
   types = tuple (types)
   if not self.iddict.has_key (types):
     self.idcounter += 1
-    self.iddict[types] = self.idcounter
+    if otype.storage == Decls.FUNC:
+      if otype.rtype == None or otype.rtype.storage == Decls.VOID:
+        self.iddict[types] = self.idcounter + 0x01000000
+      else:
+        self.iddict[types] = self.idcounter + 0x02000000
+    else:
+      self.iddict[types] = self.idcounter + 0x03000000
   return self.iddict[types]
