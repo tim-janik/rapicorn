@@ -35,7 +35,7 @@ namespace {
 static bool pyrope_trampoline_switch (unsigned int, PyObject*, PyObject*, PyObject**); // generated
 static bool pyrope_send_message      (Rapicorn::Rope::RemoteProcedure &proc);
 #define HAVE_PYROPE_SEND_MESSAGE 1
-#include "pycstub.cc"
+#include "cpy2rope.cc"
 typedef RemoteProcedure RemoteReturn;
 
 // --- prototypes ---

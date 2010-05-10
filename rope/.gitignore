@@ -1,12 +1,7 @@
-librapicornrope[0-9][0-9][0-9][0-9].la
 pyRapicorn.la
-pyRapicornStub.py
-CppStub.pyc
-PyStub.pyc
-PyCStub.pyc
-pycstub.cc
 protocol-pb2.hh
 protocol-pb2.cc
-protocol_pb2.py
-protocol_pb2.pyc
 testpystub.pyc
+cpy2rope.cc
+py2cpy.py
+*.pyc

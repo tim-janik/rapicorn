@@ -15,7 +15,7 @@ pyrapicorn_cc_sources = $(strip		\
 
 # === Python module ===
 pyrapicorndir          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
-pyrapicorn_PYTHON      = __init__.py pyRapicornStub.py
+pyrapicorn_PYTHON      = __init__.py py2cpy.py
 pyrapicorn_LTLIBRARIES = pyRapicorn.la
 pyRapicorn_la_SOURCES  = $(pyrapicorn_cc_sources)
 pyRapicorn_la_LIBADD   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la $(PROTOBUF_LIBS)
@@ -38,21 +38,21 @@ protocol-pb2.cc: protocol-pb2.hh
 $(srcdir)/pyrope.cc: protocol-pb2.cc
 CLEANFILES += protocol.pb.h protocol.pb.cc protocol-pb2.cc protocol-pb2.hh
 
-# === pycstub.cc ===
-pycstub.cc: $(RAPICORNIDL) $(srcdir)/PyCStub.py
-	: # compile IDL definitions into pycstub.cc
-	${PLICINT} -G $(srcdir)/PyCStub $(RAPICORNIDL) -o xgen-$(@F)
+# === cpy2rope.cc ===
+cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/CxxPyStub.py
+	: # compile IDL definitions into cpy2rope.cc
+	${PLICINT} -G $(srcdir)/CxxPyStub $(RAPICORNIDL) -o xgen-$(@F)
 	mv xgen-$(@F) $@
-$(srcdir)/pyrope.cc: pycstub.cc
-CLEANFILES += xgen-pycstub.cc pycstub.cc
+$(srcdir)/pyrope.cc: cpy2rope.cc
+CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
 
 EXTRA_DIST += protocol.proto
 
-# === pyRapicornStub.py ===
-pyRapicornStub.py: $(RAPICORNIDL) $(srcdir)/PyStub.py
+# === py2cpy.py ===
+py2cpy.py: $(RAPICORNIDL) $(srcdir)/PyStub.py
 	${PLICINT} -G $(srcdir)/PyStub $(RAPICORNIDL) -o xgen-$(@F)
 	mv xgen-$(@F) $@
-CLEANFILES += xgen-pyRapicornStub.py pyRapicornStub.py
+CLEANFILES += xgen-py2cpy.py py2cpy.py
 
 # === TESTS ===
 # test PyStub
@@ -67,17 +67,17 @@ check-pystub:
 	  $(PYTHON) $(srcdir)/testpystub.ref ; $(call TSTRESULT)
 CLEANFILES += testpystub.pyc protocol_pb2.py  protocol_pb2.pyc
 check-local: check-pystub
-# test PyCStub
-check-pycstub:
+# test CxxPyStub
+check-cxxpystub:
 	@$(call TSTTITLE)
-	$(_@) ${PLICINT} -G $(srcdir)/PyCStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
-	@$(call TSTCMP, $(srcdir)/testpycstub.ref)
-	@$(call TSTTITLE,check-pycstub-syntax)
-	$(_@) cp $(srcdir)/testpycstub.ref testpycstub.cc
-	$(_@) $(CXXCOMPILE) testpycstub.cc -c ; $(call TSTRESULT)
-	$(_@) rm -f testpycstub.cc testpycstub.o
-EXTRA_DIST += testpycstub.ref
-check-local: check-pycstub
+	$(_@) ${PLICINT} -G $(srcdir)/CxxPyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
+	@$(call TSTCMP, $(srcdir)/testcxxpystub.ref)
+	@$(call TSTTITLE,check-cxxpystub-syntax)
+	$(_@) cp $(srcdir)/testcxxpystub.ref testcxxpystub.cc
+	$(_@) $(CXXCOMPILE) testcxxpystub.cc -c ; $(call TSTRESULT)
+	$(_@) rm -f testcxxpystub.cc testcxxpystub.o
+EXTRA_DIST += testcxxpystub.ref
+check-local: check-cxxpystub
 # test CppStub
 check-cppstub:
 	@$(call TSTTITLE)
