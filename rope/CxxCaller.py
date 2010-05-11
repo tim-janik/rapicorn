@@ -20,7 +20,7 @@ More details at http://www.testbit.eu/PLIC
 """
 import Decls, GenUtils, re
 
-base_code = """
+base_code = r"""
 // #include <rcore/rapicornsignal.hh>
 // #include <ui/interface.hh>
 #include <rapicorn.hh>
@@ -98,6 +98,7 @@ Instance4StringCast (const std::string &objstring)
   return NULL; // FIXME
 }
 #define die()      (void) 0 // FIXME
+#define rope_check(cond,errmsg) do { if (!(cond)) { Rapicorn::printerr ("ROPE:error: %s\n", errmsg); return false; } } while (0)
 
 } // Anonymous
 """
@@ -399,15 +400,15 @@ class Generator:
       s += 'static bool\n'
       c = 'handle_%s_%s ' % (type_info.name, m.name)
       s += c + '(const RemoteProcedure    &_rope_rp,\n'
-      s += ' ' * len (c) + ' RemoteProcedure_Argument *_rope_aret)\n{\n'
+      s += ' ' * len (c) + ' RemoteProcedure_Argument &_rope_aret)\n{\n'
       s += '  const RemoteProcedure_Argument *_rope_arg;\n'
       s += '  %s *self;\n' % self.type2cpp (type_info)
       for a in m.args:
         s += '  ' + self.format_var (a[0], a[1], '*') + ';\n'
-      s += '  if (_rope_rp.args_size() != %d) return false;\n' % (1 + len (m.args))
+      s += '  rope_check (_rope_rp.args_size() == %d, "invalid nuber of args");\n' % (1 + len (m.args))
       s += '  _rope_arg = &_rope_rp.args (0);\n'
       s += self.generate_from_proto ('_rope_arg', type_info, 'self')
-      s += '  if (!self) return false;\n'
+      s += '  rope_check (self, "self must be non-NULL");\n'
       arg_counter = 1
       for arg in m.args:
         s += '  _rope_arg = &_rope_rp.args (%d);\n' % arg_counter
@@ -421,13 +422,13 @@ class Generator:
       s += ', '.join (self.use_arg (a[0], a[1]) for a in m.args)
       s += ');\n'
       if hasret:
-        s += self.generate_to_proto ('_rope_aret', m.rtype, '_rope_retval')
+        s += self.generate_to_proto ('(&_rope_aret)', m.rtype, '_rope_retval')
       s += '  return true;\n}\n'
     return s
   def generate_callee_impl (self, switchlines):
     s = ''
-    s += '\nstatic bool __UNUSED__\nrope_callee_handler (const RemoteProcedure _rope_rp)\n{\n'
-    s += '  RemoteProcedure_Argument _rope_aretmem, *_rope_aret = &_rope_aretmem;\n'
+    s += '\nstatic bool __UNUSED__\nrope_callee_handler (const RemoteProcedure _rope_rp,\n'
+    s += '                     RemoteProcedure_Argument &_rope_aret)\n{\n'
     s += '  switch (_rope_rp.proc_id()) {\n'
     for swcase in switchlines:
       mid, type_info, m = swcase

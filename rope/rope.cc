@@ -40,10 +40,6 @@ static bool rope_call_remote       (Rapicorn::Rope::RemoteProcedure &proc);
 #include "cpy2rope.cc"
 typedef RemoteProcedure RemoteReturn;
 
-// --- prototypes ---
-static bool rope_create_dispatch_thread (const String              &application_name,
-                                           const std::vector<String> &cmdline_args);
-
 // --- globals ---
 static PyObject *rapicorn_exception = NULL;
 
@@ -65,6 +61,9 @@ class UIThread : public Thread {
     {
       RemoteProcedure *rp = new RemoteProcedure();
       rp->set_proc_id (0x01000000);
+      RemoteProcedure_Argument *arg = rp->add_args();
+      Deletable *dapp = reinterpret_cast<Deletable*> (&App); // FIXME: shouldn't be needed
+      arg->set_vstring (dapp->object_url());
       push_return (rp);
     }
     printerr ("UIThread::run(): execute_loops()...\n");
@@ -85,6 +84,10 @@ class UIThread : public Thread {
               string = "{*protobuf::TextFormat ERROR*}";
             printerr ("UIThread::call:\n%s\n", string.c_str());
           }
+        RemoteProcedure_Argument aret;
+        bool success = rope_callee_handler (*proc, aret);
+        if (!success)
+          printerr ("UIThread::call error (see logs)\n");
         delete proc;
       }
     return true;
@@ -206,11 +209,11 @@ public:
 private:
   static UIThread *ui_thread;
 public:
-  static bool
+  static String
   ui_thread_create (const String              &application_name,
                     const std::vector<String> &cmdline_args)
   {
-    return_val_if_fail (ui_thread == NULL, false);
+    return_val_if_fail (ui_thread == NULL, "");
     /* initialize core */
     RapicornInitValue ivalues[] = {
       { NULL }
@@ -225,9 +228,15 @@ public:
     ui_thread->cmdline_args = cmdline_args;
     ui_thread->start();
     RemoteProcedure *rpret = ui_thread->fetch_return();
-    printerr ("INIT-RETURN: 0x%08x\n", rpret->proc_id()); // 0x01000000
+    String appurl;
+    if (rpret && rpret->proc_id() == 0x01000000 && rpret->args_size() > 0)
+      {
+        const RemoteProcedure_Argument &arg = rpret->args (0);
+        if (arg.has_vstring())
+          appurl = arg.vstring();
+      }
     delete rpret;
-    return true;
+    return appurl;
   }
   static bool
   ui_thread_call_remote (Rapicorn::Rope::RemoteProcedure &proc)
@@ -316,9 +325,10 @@ rope_init_dispatcher (PyObject *self,
     }
   if (PyErr_Occurred())
     return NULL;
-  if (!UIThread::ui_thread_create (String (ns, nl), strv))
+  String appurl = UIThread::ui_thread_create (String (ns, nl), strv);
+  if (appurl.size() == 0)
     ; // FIXME: throw exception
-  return None_INCREF();
+  return PyString_FromStringAndSize (appurl.data(), appurl.size());
 }
 
 } // Anon
