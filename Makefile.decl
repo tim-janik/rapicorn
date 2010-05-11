@@ -189,7 +189,7 @@ RELAUX_DESTHOST  = example.com
 RELAUX_DESTPATH  = distpath/projectname
 RELAUX_REVISION  = $($(RELAUX_REVNAME))
 RELAUX_REVNEXT   = $(shell echo '1 + $(RELAUX_REVISION)' | bc)
-RELAUX_CHANGELOG = ChangeLog
+RELAUX_CHANGELOG =
 RELAUX_CHL_RANGE = HEAD
 RELAUX_CHL_ADD   =
 # --- ChangeLog ---
