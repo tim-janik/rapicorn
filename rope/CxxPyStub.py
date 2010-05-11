@@ -76,7 +76,7 @@ class Generator:
       s += '\n'
     s += '};'
     return s
-  def generate_frompy_convert (self, prefix, argname, argtype):
+  def generate_frompy_convert (self, prefix, argtype):
     s = ''
     if argtype.storage in (Decls.INT, Decls.ENUM):
       s += '  %s_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();\n' % prefix
@@ -98,7 +98,7 @@ class Generator:
     else: # FUNC VOID
       raise RuntimeError ("Unexpected storage type: " + argtype.storage)
     return s
-  def generate_topy_convert (self, field, argname, argtype, hascheck = '', errlabel = 'error'):
+  def generate_topy_convert (self, field, argtype, hascheck = '', errlabel = 'error'):
     s = ''
     s += '  if (!%s) GOTO_ERROR();\n' % hascheck if hascheck else ''
     if argtype.storage in (Decls.INT, Decls.ENUM):
@@ -138,9 +138,9 @@ class Generator:
       s += '  item = PyDict_GetItemString (dictR, "%s"); if (!dictR) GOTO_ERROR();\n' % (fl[0])
       s += '  field = rpr.add_fields();\n'
       if fl[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += self.generate_frompy_convert ('field->mutable', fl[0], fl[1])
+        s += self.generate_frompy_convert ('field->mutable', fl[1])
       else:
-        s += self.generate_frompy_convert ('field->set', fl[0], fl[1])
+        s += self.generate_frompy_convert ('field->set', fl[1])
     s += '  success = true;\n'
     s += ' error:\n'
     s += '  Py_XDECREF (dictR);\n'
@@ -159,7 +159,7 @@ class Generator:
     for fl in type_info.fields:
       s += '  field = &rpr.fields (%d);\n' % field_counter
       ftname = self.storage_fieldname (fl[1].storage)
-      s += self.generate_topy_convert ('field->%s()' % ftname, fl[0], fl[1], 'field->has_%s()' % ftname)
+      s += self.generate_topy_convert ('field->%s()' % ftname, fl[1], 'field->has_%s()' % ftname)
       s += '  if (PyDict_SetItemString (dictR, "%s", pyfoR) < 0) GOTO_ERROR();\n' % (fl[0])
       s += '  else Py_DECREF (pyfoR);\n'
       s += '  pyfoR = NULL;\n'
@@ -192,7 +192,7 @@ class Generator:
     s += '  const ssize_t len = PyList_Size (list); if (len < 0) GOTO_ERROR();\n'
     s += '  for (ssize_t k = 0; k < len; k++) {\n'
     s += '    PyObject *item = PyList_GET_ITEM (list, k);\n'
-    s += reindent ('  ', self.generate_frompy_convert ('rps.add', el[0], el[1])) + '\n'
+    s += reindent ('  ', self.generate_frompy_convert ('rps.add', el[1])) + '\n'
     s += '  }\n'
     s += '  success = true;\n'
     s += ' error:\n'
@@ -207,7 +207,7 @@ class Generator:
     s += '  const size_t len = rps.%s_size();\n' % ftname
     s += '  listR = PyList_New (len); if (!listR) GOTO_ERROR();\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
-    s += reindent ('  ', self.generate_topy_convert ('rps.%s (k)' % ftname, el[0], el[1])) + '\n'
+    s += reindent ('  ', self.generate_topy_convert ('rps.%s (k)' % ftname, el[1])) + '\n'
     s += '    if (PyList_SetItem (listR, k, pyfoR) < 0) GOTO_ERROR();\n'
     s += '    pyfoR = NULL;\n'
     s += '  }\n'
@@ -230,7 +230,7 @@ class Generator:
     swl += [ 'case 0x%08x: // %s::%s\n' % (GenUtils.type_id (m), type_info.name, m.name) ]
     swl += [ '  return rope__%s_%s (_py_self, _py_args, _py_retp);\n' % (type_info.name, m.name) ]
     s += 'static bool\n'
-    s += 'rope__%s_%s (PyObject *self, PyObject *args, PyObject **retp)\n' % (type_info.name, m.name)
+    s += 'rope__%s_%s (PyObject *_py_self, PyObject *args, PyObject **retp)\n' % (type_info.name, m.name)
     s += '{\n'
     s += '  RemoteProcedure rp;\n'
     s += '  rp.set_proc_id (0x%08x);\n' % GenUtils.type_id (m)
@@ -242,15 +242,15 @@ class Generator:
     s += '  item = PyTuple_GET_ITEM (args, %d);  // self\n' % arg_counter
     arg_counter += 1
     s += '  arg = rp.add_args();\n'
-    s += self.generate_frompy_convert ('arg->set', 'self', type_info)
+    s += self.generate_frompy_convert ('arg->set', type_info)
     for fl in m.args:
       s += '  item = PyTuple_GET_ITEM (args, %d); // %s\n' % (arg_counter, fl[0])
       arg_counter += 1
       s += '  arg = rp.add_args();\n'
       if fl[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += self.generate_frompy_convert ('arg->mutable', fl[0], fl[1])
+        s += self.generate_frompy_convert ('arg->mutable', fl[1])
       else:
-        s += self.generate_frompy_convert ('arg->set', fl[0], fl[1])
+        s += self.generate_frompy_convert ('arg->set', fl[1])
     s += '  success = rope_call_remote (rp);\n'
     s += ' error:\n'
     s += '  return success;\n'

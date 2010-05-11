@@ -910,7 +910,7 @@ rope_topy_SomeRecord (const RemoteProcedure_Record &rpr, PyObject **pyop)
 }
 
 static bool
-rope__UIWidgetArea_simple_method (PyObject *self, PyObject *args, PyObject **retp)
+rope__UIWidgetArea_simple_method (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x02000001);
@@ -929,7 +929,7 @@ rope__UIWidgetArea_simple_method (PyObject *self, PyObject *args, PyObject **ret
   return success;
 }
 static bool
-rope__UIWidgetArea_single_arg (PyObject *self, PyObject *args, PyObject **retp)
+rope__UIWidgetArea_single_arg (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x02000002);
@@ -951,7 +951,7 @@ rope__UIWidgetArea_single_arg (PyObject *self, PyObject *args, PyObject **retp)
   return success;
 }
 static bool
-rope__UIWidgetArea_single_arg2 (PyObject *self, PyObject *args, PyObject **retp)
+rope__UIWidgetArea_single_arg2 (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x02000003);
@@ -973,7 +973,7 @@ rope__UIWidgetArea_single_arg2 (PyObject *self, PyObject *args, PyObject **retp)
   return success;
 }
 static bool
-rope__UIWidgetArea_two_args (PyObject *self, PyObject *args, PyObject **retp)
+rope__UIWidgetArea_two_args (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x02000004);
@@ -998,7 +998,7 @@ rope__UIWidgetArea_two_args (PyObject *self, PyObject *args, PyObject **retp)
   return success;
 }
 static bool
-rope__UIWidgetArea_two_args2 (PyObject *self, PyObject *args, PyObject **retp)
+rope__UIWidgetArea_two_args2 (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x02000005);
@@ -1023,7 +1023,7 @@ rope__UIWidgetArea_two_args2 (PyObject *self, PyObject *args, PyObject **retp)
   return success;
 }
 static bool
-rope__UIWidgetArea_multi_args (PyObject *self, PyObject *args, PyObject **retp)
+rope__UIWidgetArea_multi_args (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x02000006);
@@ -1059,7 +1059,7 @@ rope__UIWidgetArea_multi_args (PyObject *self, PyObject *args, PyObject **retp)
   return success;
 }
 static bool
-rope__UIWidgetArea_self_method (PyObject *self, PyObject *args, PyObject **retp)
+rope__UIWidgetArea_self_method (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x02000007);
@@ -1090,7 +1090,7 @@ rope__UIWidgetArea_self_method (PyObject *self, PyObject *args, PyObject **retp)
   return success;
 }
 static bool
-rope__UIWidgetArea_void_method (PyObject *self, PyObject *args, PyObject **retp)
+rope__UIWidgetArea_void_method (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x01000008);
@@ -1109,7 +1109,7 @@ rope__UIWidgetArea_void_method (PyObject *self, PyObject *args, PyObject **retp)
   return success;
 }
 static bool
-rope__UIWidgetArea_on_click2out (PyObject *self, PyObject *args, PyObject **retp)
+rope__UIWidgetArea_on_click2out (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x02000009);
@@ -1128,7 +1128,7 @@ rope__UIWidgetArea_on_click2out (PyObject *self, PyObject *args, PyObject **retp
   return success;
 }
 static bool
-rope__UIWidgetArea_on_click2in (PyObject *self, PyObject *args, PyObject **retp)
+rope__UIWidgetArea_on_click2in (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0100000a);
@@ -1238,7 +1238,7 @@ rope_topy_QuickSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop)
 }
 
 static bool
-rope__MethodTestInterface_method_with_void (PyObject *self, PyObject *args, PyObject **retp)
+rope__MethodTestInterface_method_with_void (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0100000b);
@@ -1257,7 +1257,7 @@ rope__MethodTestInterface_method_with_void (PyObject *self, PyObject *args, PyOb
   return success;
 }
 static bool
-rope__MethodTestInterface_method_with_bools (PyObject *self, PyObject *args, PyObject **retp)
+rope__MethodTestInterface_method_with_bools (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0200000c);
@@ -1282,7 +1282,7 @@ rope__MethodTestInterface_method_with_bools (PyObject *self, PyObject *args, PyO
   return success;
 }
 static bool
-rope__MethodTestInterface_method_with_ints (PyObject *self, PyObject *args, PyObject **retp)
+rope__MethodTestInterface_method_with_ints (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0200000d);
@@ -1307,7 +1307,7 @@ rope__MethodTestInterface_method_with_ints (PyObject *self, PyObject *args, PyOb
   return success;
 }
 static bool
-rope__MethodTestInterface_method_with_floats (PyObject *self, PyObject *args, PyObject **retp)
+rope__MethodTestInterface_method_with_floats (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0200000e);
@@ -1332,7 +1332,7 @@ rope__MethodTestInterface_method_with_floats (PyObject *self, PyObject *args, Py
   return success;
 }
 static bool
-rope__MethodTestInterface_method_with_string (PyObject *self, PyObject *args, PyObject **retp)
+rope__MethodTestInterface_method_with_string (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x0200000f);
@@ -1361,7 +1361,7 @@ rope__MethodTestInterface_method_with_string (PyObject *self, PyObject *args, Py
   return success;
 }
 static bool
-rope__MethodTestInterface_method_with_enum (PyObject *self, PyObject *args, PyObject **retp)
+rope__MethodTestInterface_method_with_enum (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x02000010);
@@ -1386,7 +1386,7 @@ rope__MethodTestInterface_method_with_enum (PyObject *self, PyObject *args, PyOb
   return success;
 }
 static bool
-rope__MethodTestInterface_method_with_record (PyObject *self, PyObject *args, PyObject **retp)
+rope__MethodTestInterface_method_with_record (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x02000011);
@@ -1411,7 +1411,7 @@ rope__MethodTestInterface_method_with_record (PyObject *self, PyObject *args, Py
   return success;
 }
 static bool
-rope__MethodTestInterface_method_with_sequence (PyObject *self, PyObject *args, PyObject **retp)
+rope__MethodTestInterface_method_with_sequence (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x02000012);
@@ -1436,7 +1436,7 @@ rope__MethodTestInterface_method_with_sequence (PyObject *self, PyObject *args, 
   return success;
 }
 static bool
-rope__MethodTestInterface_method_with_interface (PyObject *self, PyObject *args, PyObject **retp)
+rope__MethodTestInterface_method_with_interface (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x02000013);
@@ -1469,7 +1469,7 @@ rope__MethodTestInterface_method_with_interface (PyObject *self, PyObject *args,
 
 
 static bool
-rope__PureMethods_pure_method (PyObject *self, PyObject *args, PyObject **retp)
+rope__PureMethods_pure_method (PyObject *_py_self, PyObject *args, PyObject **retp)
 {
   RemoteProcedure rp;
   rp.set_proc_id (0x02000014);
