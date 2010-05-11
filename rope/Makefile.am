@@ -10,6 +10,7 @@ RAPICORNIDL = $(srcdir)/../ui/rapicorn.idl
 
 # === sources ===
 pyrapicorn_cc_sources = rope.cc
+EXTRA_DIST           += rope.hh
 
 # === Python module ===
 pyrapicorndir          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
@@ -28,7 +29,7 @@ python-call-info:
 # === protocol-pb2.[hc][hc] ===
 protocol-pb2.hh: $(srcdir)/protocol.proto
 	rm -f protocol.pb.h protocol.pb.cc
-	$(PROTOC) $(srcdir)/protocol.proto --cpp_out=.
+	$(PROTOC) $(srcdir)/protocol.proto --cpp_out=. --proto_path=$(srcdir)
 	mv protocol.pb.h protocol-pb2.hh
 	sed 's/^#include "protocol.pb.h"/#include "protocol-pb2.hh"/' <protocol.pb.cc >protocol-pb2.cc
 	rm -f protocol.pb.cc
@@ -70,6 +71,7 @@ check-pystub:
 	@ # $(_@) $(PROTOC) $(srcdir)/protocol.proto --python_out=. # protocol_pb2.py
 	$(_@) $(PYTHON) -c "import py_compile; py_compile.compile ('$(srcdir)/testpystub.ref', 'testpystub.pyc')" && \
 	  $(PYTHON) $(srcdir)/testpystub.ref ; $(call TSTRESULT)
+EXTRA_DIST += PyStub.py
 CLEANFILES += testpystub.pyc protocol_pb2.py  protocol_pb2.pyc
 check-local: check-pystub
 # test CxxPyStub
@@ -81,7 +83,7 @@ check-cxxpystub:
 	$(_@) cp $(srcdir)/testcxxpystub.ref testcxxpystub.cc
 	$(_@) $(CXXCOMPILE) testcxxpystub.cc -c ; $(call TSTRESULT)
 	$(_@) rm -f testcxxpystub.cc testcxxpystub.o
-EXTRA_DIST += testcxxpystub.ref
+EXTRA_DIST += CxxPyStub.py testcxxpystub.ref
 check-local: check-cxxpystub
 # test CxxCaller
 check-cxxcaller:
@@ -92,7 +94,7 @@ check-cxxcaller:
 	$(_@) cp $(srcdir)/testcxxcaller.ref testcxxcaller.cc
 	$(_@) $(CXXCOMPILE) testcxxcaller.cc -c ; $(call TSTRESULT)
 	$(_@) rm -f testcxxcaller.cc testcxxcaller.o
-EXTRA_DIST += testcxxcaller.ref
+EXTRA_DIST += CxxCaller.py testcxxcaller.ref
 check-local: check-cxxcaller
 # test CxxCaller Skeleton
 check-cppskels:
