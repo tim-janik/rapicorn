@@ -15,7 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include <rcore/testutils.hh>
-#include <rcore/rapicorn-core.hh>
+#include <rapicorn-core.hh>
 
 namespace {
 using namespace Rapicorn;

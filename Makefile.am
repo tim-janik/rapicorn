@@ -30,8 +30,10 @@ EXTRA_DIST   += $(maindocs_DATA)
 CLEANFILES += intltool-extract intltool-merge intltool-update
 EXTRA_DIST += intltool-extract.in intltool-merge.in intltool-update.in
 
-# === include file links ===
-EXTRA_DIST += rapicorn-core.hh rapicorn.hh
+# === rapicorn toplevel include file ===
+toprapicorn_includedir      = $(includedir)/rapicorn@RAPICORN_RELEASE@/
+toprapicorn_include_HEADERS = rapicorn-core.hh rapicorn.hh
+EXTRA_DIST += $(toprapicorn_include_HEADERS)
 
 # === rapicorn*.pc ===
 pkgconfigdir = $(libdir)/pkgconfig

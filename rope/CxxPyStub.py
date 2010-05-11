@@ -33,7 +33,7 @@ typedef Rapicorn::Rope::RemoteProcedure_Sequence RemoteProcedure_Sequence;
 typedef Rapicorn::Rope::RemoteProcedure_Record RemoteProcedure_Record;
 typedef Rapicorn::Rope::RemoteProcedure_Argument RemoteProcedure_Argument;
 
-#include <rcore/rapicorn-core.hh>
+#include <rapicorn-core.hh>
 
 #define GOTO_ERROR()    goto error
 

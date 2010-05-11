@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_TESTUTILS_HH__
 #define __RAPICORN_TESTUTILS_HH__
 
-#include <rcore/rapicorn-core.hh>
+#include <rcore/rcore.hh>
 #include <rcore/rapicorntests.h>
 
 namespace Rapicorn {

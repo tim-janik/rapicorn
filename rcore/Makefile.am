@@ -8,14 +8,12 @@ DEFS		 = -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
 GLIB_MKENUMS	 = glib-mkenums
 PLICINT		 = $(top_builddir)/plic/plic-intern
 
-rapicorn_top_headers = rapicorn-core.hh
 rapicorn_public_headers = $(strip	\
         rapicorncpu.hh	rapicorndebugtools.hh	rapicornthread.hh	rapicornutils.hh  \
         rapicornmsg.hh	rapicornsignal.hh	rapicornmath.hh		rapicornutf8.hh   \
         rapicornxml.hh	markup.hh		enumdefs.hh		testutils.hh \
-        pixmap.hh	regex.hh	\
+        pixmap.hh	regex.hh		rcore.hh \
 	values.hh types.hh models.hh \
-	$(rapicorn_top_headers)		\
 	$(rapicorn_impl_headers)	\
 	rapicorncdefs.h	rapicorntests.h	\
 )
@@ -43,9 +41,6 @@ rapicorn_private_files = $(strip	\
 AM_CXXFLAGS = @FPU_FLAGS@
 
 # === libraries ===
-topincludedir   = $(includedir)/rapicorn@RAPICORN_RELEASE@
-topinclude_DATA = $(rapicorn_top_headers)
-EXTRA_DIST     += $(rapicorn_top_headers)
 # librapicorn-core
 noinst_LTLIBRARIES = librapicorncore@RAPICORN_RELEASE@.la # hardcoded -release $(RAPICORN_RELEASE)
 librapicorncore@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/rcore

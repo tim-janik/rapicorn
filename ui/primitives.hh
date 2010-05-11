@@ -20,7 +20,7 @@
 #include <list>
 #include <math.h>
 #include <values.h> /* MAXDOUBLE, etc. */
-#include <rcore/rapicorn-core.hh>
+#include <rapicorn-core.hh>
 
 namespace Rapicorn {
 
