@@ -20,7 +20,7 @@
 #include <rapicorn-core.hh>
 #include <typeinfo>
 
-#if !defined __RAPICORN_HH__ && !defined RAPICORN_INTERNALS
+#if !defined __RAPICORN_UI_HH__ && !defined RAPICORN_INTERNALS
 #error Only <rapicorn.hh> can be included directly.
 #endif
 

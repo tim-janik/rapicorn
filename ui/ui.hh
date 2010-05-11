@@ -14,8 +14,8 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef __RAPICORN_HH__
-#define __RAPICORN_HH__
+#ifndef __RAPICORN_UI_HH__
+#define __RAPICORN_UI_HH__
 
 /* public include files */
 #include <rapicorn-core.hh>
@@ -49,5 +49,5 @@
 #include <ui/utilities.hh>
 #include <ui/viewport.hh>
 #include <ui/window.hh>
-                      
-#endif  // __RAPICORN_HH__
+
+#endif  // __RAPICORN_UI_HH__

@@ -7,7 +7,6 @@ INCLUDES	+= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
 DEFS		 = -DRAPICORN_INTERNALS $(RAPICORN_GUI_CFLAGS) -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
 
 # === Source Files ===
-rapicorn_top_headers = ui.hh
 rapicorn_public_headers = $(strip 	\
 	keycodes.hh	$(rapicorn_impl_headers)	\
 	utilities.hh	events.hh	application.hh	cmdlib.hh	\
@@ -17,7 +16,7 @@ rapicorn_public_headers = $(strip 	\
 	adjustment.hh	image.hh	paintitems.hh	slider.hh	paintcontainers.hh	\
 	buttons.hh	factory.hh	evaluator.hh	scrollitems.hh	layoutcontainers.hh	\
 	text-editor.hh	text-pango.hh	sinfex.hh	testitems.hh	\
-	sizegroup.hh	listarea.hh	\
+	sizegroup.hh	listarea.hh	ui.hh \
 )
 rapicorn_impl_headers = $(strip 	\
 	arrangementimpl.hh		\
@@ -59,9 +58,6 @@ CPU_FLAGS = $(or	\
 AM_CXXFLAGS = $(CPU_FLAGS)
 
 # === Libraries ===
-topincludedir   = $(includedir)/rapicorn@RAPICORN_RELEASE@
-topinclude_DATA = $(rapicorn_top_headers)
-EXTRA_DIST     += $(rapicorn_top_headers)
 # librapicorn
 lib_LTLIBRARIES = librapicorn@RAPICORN_RELEASE@.la	# hardcoded -release $(RAPICORN_RELEASE)
 librapicorn@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/ui
@@ -107,7 +103,7 @@ $(LTLIBRARIES): skeletons.cc
 
 # === API Headers ===
 api-content:
-	cat $(sort $(rapicorn_public_headers) $(rapicorn_top_headers) $(rapicorn_generated_headers))
+	cat $(sort $(rapicorn_public_headers) $(rapicorn_generated_headers))
 .PHONY: api-content
 
 # === Flex & Bison rules ===
