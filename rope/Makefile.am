@@ -35,6 +35,7 @@ protocol-pb2.hh: $(srcdir)/protocol.proto
 protocol-pb2.cc: protocol-pb2.hh
 $(srcdir)/rope.cc: protocol-pb2.cc
 CLEANFILES += protocol.pb.h protocol.pb.cc protocol-pb2.cc protocol-pb2.hh
+EXTRA_DIST += protocol.proto
 
 # === cpy2rope.cc ===
 cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/CxxPyStub.py
@@ -44,7 +45,13 @@ cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/CxxPyStub.py
 $(srcdir)/rope.cc: cpy2rope.cc
 CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
 
-EXTRA_DIST += protocol.proto
+# === rope2cxx.cc ===
+rope2cxx.cc: $(RAPICORNIDL) $(srcdir)/CxxCaller.py
+	: # compile IDL definitions into rope2cxx.cc
+	${PLICINT} -G $(srcdir)/CxxCaller -g server $(RAPICORNIDL) -o xgen-$(@F)
+	mv xgen-$(@F) $@
+$(srcdir)/rope.cc: rope2cxx.cc
+CLEANFILES += xgen-rope2cxx.cc rope2cxx.cc
 
 # === py2cpy.py ===
 py2cpy.py: $(RAPICORNIDL) $(srcdir)/PyStub.py

@@ -15,7 +15,6 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "rope.hh" // must be included first to configure std headers
-#include <rapicorn.hh>
 #include <deque>
 
 
@@ -28,10 +27,13 @@
 #include "protocol-pb2.cc"
 #include <google/protobuf/text_format.h>
 
+// --- rope2cxx stubs (generated) ---
+#include "rope2cxx.cc"
+
 // --- Anonymous namespacing
 namespace {
 
-// --- py2rope stubs (generated) ---
+// --- cpy2rope stubs (generated) ---
 static bool rope_trampoline_switch (unsigned int, PyObject*, PyObject*, PyObject**); // generated
 static bool rope_call_remote       (Rapicorn::Rope::RemoteProcedure &proc);
 #define HAVE_ROPE_CALL_REMOTE 1

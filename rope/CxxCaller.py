@@ -21,7 +21,10 @@ More details at http://www.testbit.eu/PLIC
 import Decls, GenUtils, re
 
 base_code = """
-#include <rcore/rapicornsignal.hh>
+// #include <rcore/rapicornsignal.hh>
+// #include <ui/interface.hh>
+#include <rapicorn.hh>
+
 #include <string>
 #include <vector>
 
@@ -35,12 +38,11 @@ base_code = """
 
 namespace { // Anonymous
 
-class ProtoRecord;
-class ProtoSequence;
-class ProtoArg;
-class ProtoMessage;
-
 // FIXME:
+typedef Rapicorn::ProtoRecord ProtoRecord;
+typedef Rapicorn::ProtoSequence ProtoSequence;
+typedef Rapicorn::ProtoArg ProtoArg;
+typedef Rapicorn::ProtoMessage ProtoMessage;
 typedef Rapicorn::Rope::RemoteProcedure RemoteProcedure;
 typedef Rapicorn::Rope::RemoteProcedure_Sequence RemoteProcedure_Sequence;
 typedef Rapicorn::Rope::RemoteProcedure_Record RemoteProcedure_Record;
