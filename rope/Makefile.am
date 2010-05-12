@@ -26,18 +26,6 @@ $(pyrapicorn_LTLIBRARIES): $(pyrapicorn_PYTHON) # force python source creation
 python-call-info:
 	@echo 'PYTHONPATH="$$PYTHONPATH:$(pythondir)" python # -c "import @RAPICORN_NAMESPACE_NAME@"'
 
-# === protocol-pb2.[hc][hc] ===
-protocol-pb2.hh: $(srcdir)/protocol.proto
-	rm -f protocol.pb.h protocol.pb.cc
-	$(PROTOC) $(srcdir)/protocol.proto --cpp_out=. --proto_path=$(srcdir)
-	mv protocol.pb.h protocol-pb2.hh
-	sed 's/^#include "protocol.pb.h"/#include "protocol-pb2.hh"/' <protocol.pb.cc >protocol-pb2.cc
-	rm -f protocol.pb.cc
-protocol-pb2.cc: protocol-pb2.hh
-$(srcdir)/rope.cc: protocol-pb2.cc
-CLEANFILES += protocol.pb.h protocol.pb.cc protocol-pb2.cc protocol-pb2.hh
-EXTRA_DIST += protocol.proto
-
 # === cpy2rope.cc ===
 cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/CxxPyStub.py
 	: # compile IDL definitions into cpy2rope.cc

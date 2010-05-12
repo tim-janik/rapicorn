@@ -24,7 +24,7 @@
 #define MODULE_INIT_FUNCTION    RAPICORN_CPP_PASTE2 (init, MODULE_NAME)
 
 // --- protocol buffers (generated) ---
-#include "protocol-pb2.cc"
+#include "ui/protocol-pb2.hh"
 #include <google/protobuf/text_format.h>
 
 // --- rope2cxx stubs (generated) ---

@@ -42,7 +42,7 @@ rapicorn_cc_sources = $(strip 		\
 	buttons.cc	factory.cc	evaluator.cc	scrollitems.cc	layoutcontainers.cc	\
 	text-editor.cc	text-pango.cc	sinfex.cc	testitems.cc	\
 	sizegroup.cc	listarea.cc	\
-	interface.cc	\
+	interface.cc	protocol-pb2.cc	\
 )
 rapicorn_private_files = $(strip 	\
 	blitfuncs.hh			\
@@ -69,8 +69,23 @@ librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined $(SYMBOLIC_LDFLAGS)			\
 ) # set libtool version and export symbols for resolving
-librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.o $(RAPICORN_GUI_LIBS) -lm # -lfreetype -lfontconfig
+librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(strip		\
+	$(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.o \
+	$(RAPICORN_GUI_LIBS) $(PROTOBUF_LIBS) -lm \
+) # -lfreetype -lfontconfig
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES)
+
+# === protocol-pb2.[hc][hc] ===
+protocol-pb2.hh: $(top_srcdir)/rope/protocol.proto
+	rm -f protocol.pb.h protocol.pb.cc
+	$(PROTOC) $(top_srcdir)/rope/protocol.proto --cpp_out=. --proto_path=$(top_srcdir)/rope
+	sed 's/^#include <string>/#include "rapicorn-core.hh"/' <protocol.pb.h >protocol-pb2.hh
+	sed 's/^#include "protocol.pb.h"/#include "protocol-pb2.hh"/' <protocol.pb.cc >protocol-pb2.cc
+	rm -f protocol.pb.h protocol.pb.cc
+protocol-pb2.cc: protocol-pb2.hh
+$(srcdir)/rope.cc: protocol-pb2.cc
+CLEANFILES += protocol.pb.h protocol.pb.cc protocol-pb2.cc protocol-pb2.hh
+EXTRA_DIST += protocol.proto
 
 # === Rapicorn IDL ===
 ROPE        = $(srcdir)/../rope
@@ -83,7 +98,7 @@ interface.hh: $(ROPE)/CxxCaller.py $(srcdir)/rapicorn.idl $(srcdir)/insertions.c
 	mv xgen-$(@F) $@
 $(rapicorn_cc_sources): interface.hh
 CLEANFILES += xgen-interface.hh interface.hh
-interface.cc: $(ROPE)/CxxCaller.py $(srcdir)/rapicorn.idl
+interface.cc: $(ROPE)/CxxCaller.py $(srcdir)/rapicorn.idl protocol-pb2.hh
 	: # build interface.cc from rapicorn.idl
 	${PLICINT} -G $(ROPE)/CxxCaller -g interface-impl \
 	  --inclusions '"item.hh"' $(srcdir)/rapicorn.idl -o xgen-$(@F)

@@ -3,11 +3,10 @@
 // #include <rcore/rapicornsignal.hh>
 // #include <ui/interface.hh>
 #include <rapicorn.hh>
+#include <ui/protocol-pb2.hh>
 
 #include <string>
 #include <vector>
-
-#include "protocol-pb2.hh"
 
 #if     __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
 #define __UNUSED__      __attribute__ ((__unused__))
@@ -67,14 +66,25 @@ ProtoSequenceCast (const RemoteProcedure_Sequence &r)
   return *(const ProtoSequence*) &r;
 }
 template<class CLASS> static inline std::string
+Instance2StringCast (CLASS *obj)
+{
+  return dynamic_cast<const Rapicorn::Deletable*> (obj)->object_url();
+}
+template<class CLASS> static inline std::string
 Instance2StringCast (const CLASS &obj)
 {
-  return ""; // FIXME
+  return dynamic_cast<const Rapicorn::Deletable*> (&obj)->object_url();
 }
 template<class CLASS> static inline CLASS*
 Instance4StringCast (const std::string &objstring)
 {
-  return NULL; // FIXME
+  struct _DeletableWrapper : public Rapicorn::Deletable {
+    static Deletable* _from_object_url (const std::string &ou) { return from_object_url (ou); }
+  };
+  Rapicorn::Deletable *dobj = _DeletableWrapper::_from_object_url (objstring);
+  if (dobj)
+    return dynamic_cast<CLASS*> (dobj);
+  return NULL;
 }
 #define die()      (void) 0 // FIXME
 #define rope_check(cond,errmsg) do { if (!(cond)) { Rapicorn::printerr ("ROPE:error: %s\n", errmsg); return false; } } while (0)

@@ -27,7 +27,7 @@ base_code = """
 #include <Python.h> // must be included first to configure std headers
 #include <string>
 
-#include "protocol-pb2.hh"
+#include <ui/protocol-pb2.hh>
 typedef Rapicorn::Rope::RemoteProcedure RemoteProcedure;
 typedef Rapicorn::Rope::RemoteProcedure_Sequence RemoteProcedure_Sequence;
 typedef Rapicorn::Rope::RemoteProcedure_Record RemoteProcedure_Record;
