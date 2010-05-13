@@ -62,7 +62,7 @@ class UIThread : public Thread {
       RemoteProcedure *rp = new RemoteProcedure();
       rp->set_proc_id (0x01000000);
       RemoteProcedure_Argument *arg = rp->add_args();
-      Deletable *dapp = reinterpret_cast<Deletable*> (&App); // FIXME: shouldn't be needed
+      Deletable *dapp = &App;
       arg->set_vstring (dapp->object_url());
       push_return (rp);
     }
