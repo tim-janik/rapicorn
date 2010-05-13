@@ -243,19 +243,19 @@ protected:
 public:
 };
 
-class Child : public Parent {
+class Child : public virtual Parent {
 protected:
   virtual /*Des*/         ~Child () = 0;
 public:
 };
 
-class Descendant : public Child {
+class Descendant : public virtual Child {
 protected:
   virtual /*Des*/         ~Descendant () = 0;
 public:
 };
 
-class GrandChild : public Descendant {
+class GrandChild : public virtual Descendant {
 protected:
   virtual /*Des*/         ~GrandChild () = 0;
 public:

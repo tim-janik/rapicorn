@@ -82,9 +82,10 @@ Instance4StringCast (const std::string &objstring)
     static Deletable* _from_object_url (const std::string &ou) { return from_object_url (ou); }
   };
   Rapicorn::Deletable *dobj = _DeletableWrapper::_from_object_url (objstring);
-  if (dobj)
-    return dynamic_cast<CLASS*> (dobj);
-  return NULL;
+  CLASS *target = dobj ? dynamic_cast<CLASS*> (dobj) : NULL;
+  if (!target)
+    printerr ("NULL-CAST: %s -> %p -> %p\n", objstring.c_str(), dobj, target); // FIXME
+  return target;
 }
 #define die()      (void) 0 // FIXME
 #define rope_check(cond,errmsg) do { if (!(cond)) { Rapicorn::printerr ("ROPE:error: %s\n", errmsg); return false; } } while (0)
@@ -333,19 +334,19 @@ protected:
 public:
 };
 
-class Child : public Parent {
+class Child : public virtual Parent {
 protected:
   virtual /*Des*/         ~Child () = 0;
 public:
 };
 
-class Descendant : public Child {
+class Descendant : public virtual Child {
 protected:
   virtual /*Des*/         ~Descendant () = 0;
 public:
 };
 
-class GrandChild : public Descendant {
+class GrandChild : public virtual Descendant {
 protected:
   virtual /*Des*/         ~GrandChild () = 0;
 public:

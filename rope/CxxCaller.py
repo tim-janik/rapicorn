@@ -103,9 +103,10 @@ Instance4StringCast (const std::string &objstring)
     static Deletable* _from_object_url (const std::string &ou) { return from_object_url (ou); }
   };
   Rapicorn::Deletable *dobj = _DeletableWrapper::_from_object_url (objstring);
-  if (dobj)
-    return dynamic_cast<CLASS*> (dobj);
-  return NULL;
+  CLASS *target = dobj ? dynamic_cast<CLASS*> (dobj) : NULL;
+  if (!target)
+    printerr ("NULL-CAST: %s -> %p -> %p\n", objstring.c_str(), dobj, target); // FIXME
+  return target;
 }
 #define die()      (void) 0 // FIXME
 #define rope_check(cond,errmsg) do { if (!(cond)) { Rapicorn::printerr ("ROPE:error: %s\n", errmsg); return false; } } while (0)
@@ -526,7 +527,7 @@ class Generator:
     for pr in type_info.prerequisites:
       l += [ pr ]
     l = self.inherit_reduce (l)
-    l = ['public ' + pr.name for pr in l] # types -> names
+    l = ['public virtual ' + pr.name for pr in l] # types -> names
     s += '\nclass %s' % type_info.name
     if l:
       s += ' : %s' % ', '.join (l)
