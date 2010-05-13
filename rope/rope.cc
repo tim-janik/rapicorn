@@ -34,8 +34,9 @@
 namespace {
 
 // --- cpy2rope stubs (generated) ---
-static bool rope_trampoline_switch (unsigned int, PyObject*, PyObject*, PyObject**); // generated
-static bool rope_call_remote       (Rapicorn::Rope::RemoteProcedure &proc);
+static PyObject* rope_cpy_trampoline    (unsigned int, PyObject*, PyObject*); // generated
+static Rapicorn::Rope::RemoteProcedure*         \
+                 rope_call_remote       (Rapicorn::Rope::RemoteProcedure &proc);
 #define HAVE_ROPE_CALL_REMOTE 1
 #include "cpy2rope.cc"
 typedef RemoteProcedure RemoteReturn;
@@ -60,7 +61,7 @@ class UIThread : public Thread {
     esource->exitable (false);
     {
       RemoteProcedure *rp = new RemoteProcedure();
-      rp->set_proc_id (0x01000000);
+      rp->set_proc_id (0x02000000);
       RemoteProcedure_Argument *arg = rp->add_args();
       Deletable *dapp = &App;
       arg->set_vstring (dapp->object_url());
@@ -77,7 +78,7 @@ class UIThread : public Thread {
     printerr ("UIThread::dispatch()!\n");
     if (proc)
       {
-        if (1)
+        if (0)
           {
             std::string string;
             if (!google::protobuf::TextFormat::PrintToString (*proc, &string))
@@ -85,9 +86,29 @@ class UIThread : public Thread {
             printerr ("UIThread::call:\n%s\n", string.c_str());
           }
         RemoteProcedure_Argument aret;
+        printerr ("UIThread::call: 0x%08x:\n", proc->proc_id());
         bool success = rope_callee_handler (*proc, aret);
+        printerr ("UIThread::ret: %s\n", success ? "OK" : "FAIL");
         if (!success)
-          printerr ("UIThread::call error (see logs)\n");
+          {
+            printerr ("UIThread::call error (see logs)\n");
+            if (proc->proc_id() >= 0x02000000)
+              {
+                RemoteProcedure *rp = new RemoteProcedure();
+                rp->set_proc_id (0x02000000);
+                RemoteProcedure_Argument *arg = rp->add_args();
+                arg->set_vstring ("*ERROR*");
+                push_return (rp);
+              }
+          }
+        else if (proc->proc_id() >= 0x02000000)
+          {
+            RemoteProcedure *rp = new RemoteProcedure();
+            rp->set_proc_id (0x02000000);
+            RemoteProcedure_Argument *arg = rp->add_args();
+            *arg = aret;
+            push_return (rp);
+          }
         delete proc;
       }
     return true;
@@ -229,7 +250,7 @@ public:
     ui_thread->start();
     RemoteProcedure *rpret = ui_thread->fetch_return();
     String appurl;
-    if (rpret && rpret->proc_id() == 0x01000000 && rpret->args_size() > 0)
+    if (rpret && rpret->proc_id() == 0x02000000 && rpret->args_size() > 0)
       {
         const RemoteProcedure_Argument &arg = rpret->args (0);
         if (arg.has_vstring())
@@ -238,7 +259,7 @@ public:
     delete rpret;
     return appurl;
   }
-  static bool
+  static Rapicorn::Rope::RemoteProcedure*
   ui_thread_call_remote (Rapicorn::Rope::RemoteProcedure &proc)
   {
     if (!ui_thread)
@@ -250,19 +271,17 @@ public:
       {
         RemoteProcedure *rpret = ui_thread->fetch_return();
         printerr ("Remote Procedure Return: 0x%08x\n", rpret->proc_id());
+        return rpret;
       }
-    return true;
+    return NULL;
   }
 };
 UIThread *UIThread::ui_thread = NULL;
 
-static bool
+static Rapicorn::Rope::RemoteProcedure*
 rope_call_remote (Rapicorn::Rope::RemoteProcedure &proc)
 {
-  bool success = UIThread::ui_thread_call_remote (proc);
-  if (!success)
-    return false;       // FIXME: throw python exception
-  return true;
+  return UIThread::ui_thread_call_remote (proc);
 }
 
 // --- PyC functions ---
@@ -270,22 +289,17 @@ static PyObject*
 rope_pytrampoline (PyObject *self,
                    PyObject *args)
 {
-  PyObject *arg0 = NULL, *ret = NULL;
+  PyObject *arg0 = NULL;
   uint32 method_id = 0;
   if (PyTuple_Size (args) < 1)
-    goto error;
+    return PyErr_Format (PyExc_RuntimeError, "method call failed: missing arguments");
   arg0 = PyTuple_GET_ITEM (args, 0);
   if (!arg0)
-    goto error;
+    return NULL;
   method_id = PyInt_AsLong (arg0);
   if (PyErr_Occurred())
-    goto error;
-  if (rope_trampoline_switch (method_id, self, args, &ret) && ret)
-    return ret;
- error:
-  if (PyErr_Occurred())
     return NULL;
-  return PyErr_Format (PyExc_RuntimeError, "method call failed: 0x%08x (unimplemented?)", method_id);
+  return rope_cpy_trampoline (method_id, self, args);
 }
 
 static PyObject*

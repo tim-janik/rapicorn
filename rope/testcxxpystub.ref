@@ -11,6 +11,7 @@ typedef Rapicorn::Rope::RemoteProcedure_Argument RemoteProcedure_Argument;
 
 #include <rapicorn-core.hh>
 
+#define None_INCREF()   ({ Py_INCREF (Py_None); Py_None; })
 #define GOTO_ERROR()    goto error
 
 static inline PY_LONG_LONG
@@ -22,10 +23,10 @@ PyIntLong_AsLongLong (PyObject *intlong)
     return PyLong_AsLongLong (intlong);
 }
 
-static bool rope_call_remote (RemoteProcedure&);
+static Rapicorn::Rope::RemoteProcedure* rope_call_remote (RemoteProcedure&);
 #ifndef HAVE_ROPE_CALL_REMOTE
-static bool rope_call_remote (RemoteProcedure&)
-{ return false; } // testing stub
+static Rapicorn::Rope::RemoteProcedure* rope_call_remote (RemoteProcedure&)
+{ return NULL; } // testing stub
 #endif
 
 enum Empty {
@@ -909,14 +910,14 @@ rope_topy_SomeRecord (const RemoteProcedure_Record &rpr, PyObject **pyop)
   return success;
 }
 
-static bool
-rope__UIWidgetArea_simple_method (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__UIWidgetArea_simple_method (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x02000001);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 2) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -924,18 +925,24 @@ rope__UIWidgetArea_simple_method (PyObject *_py_self, PyObject *args, PyObject *
     PyObject *iobj = PyObject_GetAttrString (item, "__rope__object__"); if (!iobj) GOTO_ERROR();
     if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
     arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vdouble()) GOTO_ERROR();
+    pyfoR = PyFloat_FromDouble (cret.vdouble()); if (!pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__UIWidgetArea_single_arg (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__UIWidgetArea_single_arg (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x02000002);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 3) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -946,18 +953,24 @@ rope__UIWidgetArea_single_arg (PyObject *_py_self, PyObject *args, PyObject **re
   item = PyTuple_GET_ITEM (args, 2); // n
   arg = rp.add_args();
   arg->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vdouble()) GOTO_ERROR();
+    pyfoR = PyFloat_FromDouble (cret.vdouble()); if (!pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__UIWidgetArea_single_arg2 (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__UIWidgetArea_single_arg2 (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x02000003);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 3) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -968,18 +981,24 @@ rope__UIWidgetArea_single_arg2 (PyObject *_py_self, PyObject *args, PyObject **r
   item = PyTuple_GET_ITEM (args, 2); // n
   arg = rp.add_args();
   arg->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vdouble()) GOTO_ERROR();
+    pyfoR = PyFloat_FromDouble (cret.vdouble()); if (!pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__UIWidgetArea_two_args (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__UIWidgetArea_two_args (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x02000004);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -993,18 +1012,24 @@ rope__UIWidgetArea_two_args (PyObject *_py_self, PyObject *args, PyObject **retp
   item = PyTuple_GET_ITEM (args, 3); // r
   arg = rp.add_args();
   arg->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vdouble()) GOTO_ERROR();
+    pyfoR = PyFloat_FromDouble (cret.vdouble()); if (!pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__UIWidgetArea_two_args2 (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__UIWidgetArea_two_args2 (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x02000005);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -1018,18 +1043,24 @@ rope__UIWidgetArea_two_args2 (PyObject *_py_self, PyObject *args, PyObject **ret
   item = PyTuple_GET_ITEM (args, 3); // r
   arg = rp.add_args();
   arg->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vdouble()) GOTO_ERROR();
+    pyfoR = PyFloat_FromDouble (cret.vdouble()); if (!pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__UIWidgetArea_multi_args (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__UIWidgetArea_multi_args (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x02000006);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 7) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -1054,18 +1085,24 @@ rope__UIWidgetArea_multi_args (PyObject *_py_self, PyObject *args, PyObject **re
   item = PyTuple_GET_ITEM (args, 6); // y
   arg = rp.add_args();
   arg->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vdouble()) GOTO_ERROR();
+    pyfoR = PyFloat_FromDouble (cret.vdouble()); if (!pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__UIWidgetArea_self_method (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__UIWidgetArea_self_method (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x02000007);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -1085,18 +1122,23 @@ rope__UIWidgetArea_self_method (PyObject *_py_self, PyObject *args, PyObject **r
     PyObject *iobj = PyObject_GetAttrString (item, "__rope__object__"); if (!iobj) GOTO_ERROR();
     if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
     arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vdouble()) GOTO_ERROR();
+    pyfoR = PyFloat_FromDouble (cret.vdouble()); if (!pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__UIWidgetArea_void_method (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__UIWidgetArea_void_method (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x01000008);
   PyObject *item;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 2) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -1104,18 +1146,21 @@ rope__UIWidgetArea_void_method (PyObject *_py_self, PyObject *args, PyObject **r
     PyObject *iobj = PyObject_GetAttrString (item, "__rope__object__"); if (!iobj) GOTO_ERROR();
     if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
     arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (_rpret) { delete _rpret; _rpret = NULL; }
+  return None_INCREF();
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__UIWidgetArea_on_click2out (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__UIWidgetArea_on_click2out (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x02000009);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 2) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -1123,18 +1168,25 @@ rope__UIWidgetArea_on_click2out (PyObject *_py_self, PyObject *args, PyObject **
     PyObject *iobj = PyObject_GetAttrString (item, "__rope__object__"); if (!iobj) GOTO_ERROR();
     if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
     arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vstring()) GOTO_ERROR();
+    { const std::string &sp = cret.vstring();
+      pyfoR = PyString_FromStringAndSize (sp.data(), sp.size()); }
+    if (!pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__UIWidgetArea_on_click2in (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__UIWidgetArea_on_click2in (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x0100000a);
   PyObject *item;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 3) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -1147,9 +1199,12 @@ rope__UIWidgetArea_on_click2in (PyObject *_py_self, PyObject *args, PyObject **r
   { char *s = NULL; Py_ssize_t len = 0;
     if (PyString_AsStringAndSize (item, &s, &len) < 0) GOTO_ERROR();
     arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (_rpret) { delete _rpret; _rpret = NULL; }
+  return None_INCREF();
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
 
 
@@ -1237,14 +1292,13 @@ rope_topy_QuickSequence (const RemoteProcedure_Sequence &rps, PyObject **pyop)
   return success;
 }
 
-static bool
-rope__MethodTestInterface_method_with_void (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__MethodTestInterface_method_with_void (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x0100000b);
   PyObject *item;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 2) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -1252,18 +1306,21 @@ rope__MethodTestInterface_method_with_void (PyObject *_py_self, PyObject *args, 
     PyObject *iobj = PyObject_GetAttrString (item, "__rope__object__"); if (!iobj) GOTO_ERROR();
     if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
     arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (_rpret) { delete _rpret; _rpret = NULL; }
+  return None_INCREF();
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__MethodTestInterface_method_with_bools (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__MethodTestInterface_method_with_bools (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x0200000c);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -1277,18 +1334,24 @@ rope__MethodTestInterface_method_with_bools (PyObject *_py_self, PyObject *args,
   item = PyTuple_GET_ITEM (args, 3); // optval
   arg = rp.add_args();
   arg->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vint64()) GOTO_ERROR();
+    pyfoR = PyLong_FromLongLong (cret.vint64()); if (!pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__MethodTestInterface_method_with_ints (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__MethodTestInterface_method_with_ints (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x0200000d);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -1302,18 +1365,24 @@ rope__MethodTestInterface_method_with_ints (PyObject *_py_self, PyObject *args, 
   item = PyTuple_GET_ITEM (args, 3); // optval
   arg = rp.add_args();
   arg->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vint64()) GOTO_ERROR();
+    pyfoR = PyLong_FromLongLong (cret.vint64()); if (!pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__MethodTestInterface_method_with_floats (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__MethodTestInterface_method_with_floats (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x0200000e);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -1327,18 +1396,24 @@ rope__MethodTestInterface_method_with_floats (PyObject *_py_self, PyObject *args
   item = PyTuple_GET_ITEM (args, 3); // optval
   arg = rp.add_args();
   arg->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vdouble()) GOTO_ERROR();
+    pyfoR = PyFloat_FromDouble (cret.vdouble()); if (!pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__MethodTestInterface_method_with_string (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__MethodTestInterface_method_with_string (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x0200000f);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -1356,18 +1431,26 @@ rope__MethodTestInterface_method_with_string (PyObject *_py_self, PyObject *args
   { char *s = NULL; Py_ssize_t len = 0;
     if (PyString_AsStringAndSize (item, &s, &len) < 0) GOTO_ERROR();
     arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vstring()) GOTO_ERROR();
+    { const std::string &sp = cret.vstring();
+      pyfoR = PyString_FromStringAndSize (sp.data(), sp.size()); }
+    if (!pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__MethodTestInterface_method_with_enum (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__MethodTestInterface_method_with_enum (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x02000010);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -1381,18 +1464,24 @@ rope__MethodTestInterface_method_with_enum (PyObject *_py_self, PyObject *args, 
   item = PyTuple_GET_ITEM (args, 3); // optval
   arg = rp.add_args();
   arg->set_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vint64()) GOTO_ERROR();
+    pyfoR = PyLong_FromLongLong (cret.vint64()); if (!pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__MethodTestInterface_method_with_record (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__MethodTestInterface_method_with_record (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x02000011);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -1406,18 +1495,24 @@ rope__MethodTestInterface_method_with_record (PyObject *_py_self, PyObject *args
   item = PyTuple_GET_ITEM (args, 3); // optval
   arg = rp.add_args();
   if (!rope_frompy_QuickRecord (item, *arg->mutable_vrec())) GOTO_ERROR();
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vrec()) GOTO_ERROR();
+    if (!rope_topy_QuickRecord (cret.vrec(), &pyfoR) || !pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__MethodTestInterface_method_with_sequence (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__MethodTestInterface_method_with_sequence (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x02000012);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -1431,18 +1526,24 @@ rope__MethodTestInterface_method_with_sequence (PyObject *_py_self, PyObject *ar
   item = PyTuple_GET_ITEM (args, 3); // optval
   arg = rp.add_args();
   if (!rope_frompy_QuickSequence (item, *arg->mutable_vseq())) GOTO_ERROR();
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vseq()) GOTO_ERROR();
+    if (!rope_topy_QuickSequence (cret.vseq(), &pyfoR) || !pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
-static bool
-rope__MethodTestInterface_method_with_interface (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__MethodTestInterface_method_with_interface (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x02000013);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 4) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -1462,20 +1563,28 @@ rope__MethodTestInterface_method_with_interface (PyObject *_py_self, PyObject *a
     PyObject *iobj = PyObject_GetAttrString (item, "__rope__object__"); if (!iobj) GOTO_ERROR();
     if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();
     arg->set_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vstring()) GOTO_ERROR();
+    { const std::string &sp = cret.vstring();
+      pyfoR = PyString_FromStringAndSize (sp.data(), sp.size()); }
+    if (!pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
 
 
-static bool
-rope__PureMethods_pure_method (PyObject *_py_self, PyObject *args, PyObject **retp)
+static PyObject*
+rope__PureMethods_pure_method (PyObject *_py_self, PyObject *args)
 {
-  RemoteProcedure rp;
+  RemoteProcedure rp, *_rpret = NULL;
   rp.set_proc_id (0x02000014);
   PyObject *item;
+  PyObject *pyfoR;
   RemoteProcedure_Argument *arg;
-  bool success = false;
   if (PyTuple_Size (args) < 3) GOTO_ERROR();
   item = PyTuple_GET_ITEM (args, 1);  // self
   arg = rp.add_args();
@@ -1486,56 +1595,62 @@ rope__PureMethods_pure_method (PyObject *_py_self, PyObject *args, PyObject **re
   item = PyTuple_GET_ITEM (args, 2); // f
   arg = rp.add_args();
   arg->set_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();
-  success = rope_call_remote (rp);
+  _rpret = rope_call_remote (rp);
+  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)
+    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }
+  { const RemoteProcedure_Argument &cret = _rpret->args (0);
+    if (!cret.has_vint64()) GOTO_ERROR();
+    pyfoR = PyLong_FromLongLong (cret.vint64()); if (!pyfoR) GOTO_ERROR();    return pyfoR; }
  error:
-  return success;
+  if (_rpret) delete _rpret;
+  return NULL;
 }
 
-static bool RAPICORN_UNUSED
-rope_trampoline_switch (unsigned int _py_id, PyObject *_py_self, PyObject *_py_args, PyObject **_py_retp)
+static RAPICORN_UNUSED PyObject*
+rope_cpy_trampoline (unsigned int _proc_id, PyObject *_py_self, PyObject *_py_args)
 {
-  switch (_py_id) {
+  switch (_proc_id) {
   case 0x02000001: // UIWidgetArea::simple_method
-    return rope__UIWidgetArea_simple_method (_py_self, _py_args, _py_retp);
+    return rope__UIWidgetArea_simple_method (_py_self, _py_args);
   case 0x02000002: // UIWidgetArea::single_arg
-    return rope__UIWidgetArea_single_arg (_py_self, _py_args, _py_retp);
+    return rope__UIWidgetArea_single_arg (_py_self, _py_args);
   case 0x02000003: // UIWidgetArea::single_arg2
-    return rope__UIWidgetArea_single_arg2 (_py_self, _py_args, _py_retp);
+    return rope__UIWidgetArea_single_arg2 (_py_self, _py_args);
   case 0x02000004: // UIWidgetArea::two_args
-    return rope__UIWidgetArea_two_args (_py_self, _py_args, _py_retp);
+    return rope__UIWidgetArea_two_args (_py_self, _py_args);
   case 0x02000005: // UIWidgetArea::two_args2
-    return rope__UIWidgetArea_two_args2 (_py_self, _py_args, _py_retp);
+    return rope__UIWidgetArea_two_args2 (_py_self, _py_args);
   case 0x02000006: // UIWidgetArea::multi_args
-    return rope__UIWidgetArea_multi_args (_py_self, _py_args, _py_retp);
+    return rope__UIWidgetArea_multi_args (_py_self, _py_args);
   case 0x02000007: // UIWidgetArea::self_method
-    return rope__UIWidgetArea_self_method (_py_self, _py_args, _py_retp);
+    return rope__UIWidgetArea_self_method (_py_self, _py_args);
   case 0x01000008: // UIWidgetArea::void_method
-    return rope__UIWidgetArea_void_method (_py_self, _py_args, _py_retp);
+    return rope__UIWidgetArea_void_method (_py_self, _py_args);
   case 0x02000009: // UIWidgetArea::on_click2out
-    return rope__UIWidgetArea_on_click2out (_py_self, _py_args, _py_retp);
+    return rope__UIWidgetArea_on_click2out (_py_self, _py_args);
   case 0x0100000a: // UIWidgetArea::on_click2in
-    return rope__UIWidgetArea_on_click2in (_py_self, _py_args, _py_retp);
+    return rope__UIWidgetArea_on_click2in (_py_self, _py_args);
   case 0x0100000b: // MethodTestInterface::method_with_void
-    return rope__MethodTestInterface_method_with_void (_py_self, _py_args, _py_retp);
+    return rope__MethodTestInterface_method_with_void (_py_self, _py_args);
   case 0x0200000c: // MethodTestInterface::method_with_bools
-    return rope__MethodTestInterface_method_with_bools (_py_self, _py_args, _py_retp);
+    return rope__MethodTestInterface_method_with_bools (_py_self, _py_args);
   case 0x0200000d: // MethodTestInterface::method_with_ints
-    return rope__MethodTestInterface_method_with_ints (_py_self, _py_args, _py_retp);
+    return rope__MethodTestInterface_method_with_ints (_py_self, _py_args);
   case 0x0200000e: // MethodTestInterface::method_with_floats
-    return rope__MethodTestInterface_method_with_floats (_py_self, _py_args, _py_retp);
+    return rope__MethodTestInterface_method_with_floats (_py_self, _py_args);
   case 0x0200000f: // MethodTestInterface::method_with_string
-    return rope__MethodTestInterface_method_with_string (_py_self, _py_args, _py_retp);
+    return rope__MethodTestInterface_method_with_string (_py_self, _py_args);
   case 0x02000010: // MethodTestInterface::method_with_enum
-    return rope__MethodTestInterface_method_with_enum (_py_self, _py_args, _py_retp);
+    return rope__MethodTestInterface_method_with_enum (_py_self, _py_args);
   case 0x02000011: // MethodTestInterface::method_with_record
-    return rope__MethodTestInterface_method_with_record (_py_self, _py_args, _py_retp);
+    return rope__MethodTestInterface_method_with_record (_py_self, _py_args);
   case 0x02000012: // MethodTestInterface::method_with_sequence
-    return rope__MethodTestInterface_method_with_sequence (_py_self, _py_args, _py_retp);
+    return rope__MethodTestInterface_method_with_sequence (_py_self, _py_args);
   case 0x02000013: // MethodTestInterface::method_with_interface
-    return rope__MethodTestInterface_method_with_interface (_py_self, _py_args, _py_retp);
+    return rope__MethodTestInterface_method_with_interface (_py_self, _py_args);
   case 0x02000014: // PureMethods::pure_method
-    return rope__PureMethods_pure_method (_py_self, _py_args, _py_retp);
+    return rope__PureMethods_pure_method (_py_self, _py_args);
   default:
-    return false;
+    return PyErr_Format (PyExc_RuntimeError, "ROPE: unknown method id: 0x%08x", _proc_id);
   }
 }

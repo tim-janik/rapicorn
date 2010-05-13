@@ -35,6 +35,7 @@ typedef Rapicorn::Rope::RemoteProcedure_Argument RemoteProcedure_Argument;
 
 #include <rapicorn-core.hh>
 
+#define None_INCREF()   ({ Py_INCREF (Py_None); Py_None; })
 #define GOTO_ERROR()    goto error
 
 static inline PY_LONG_LONG
@@ -46,10 +47,10 @@ PyIntLong_AsLongLong (PyObject *intlong)
     return PyLong_AsLongLong (intlong);
 }
 
-static bool rope_call_remote (RemoteProcedure&);
+static Rapicorn::Rope::RemoteProcedure* rope_call_remote (RemoteProcedure&);
 #ifndef HAVE_ROPE_CALL_REMOTE
-static bool rope_call_remote (RemoteProcedure&)
-{ return false; } // testing stub
+static Rapicorn::Rope::RemoteProcedure* rope_call_remote (RemoteProcedure&)
+{ return NULL; } // testing stub
 #endif
 """
 
@@ -219,24 +220,25 @@ class Generator:
     s += '  return success;\n'
     s += '}\n'
     return s
-  def generate_caller_funcs (self, type_info, swl):
+  def generate_caller_funcs (self, type_info, switchlines):
     s = ''
     for m in type_info.methods:
-      s += self.generate_caller_func (type_info, m, swl)
+      s += self.generate_caller_func (type_info, m, switchlines)
     return s
-  def generate_caller_func (self, type_info, m, swl):
+  def generate_caller_func (self, type_info, m, switchlines):
     s = ''
     pytoff = 2 # tuple offset, skip method id and self
-    swl += [ 'case 0x%08x: // %s::%s\n' % (GenUtils.type_id (m), type_info.name, m.name) ]
-    swl += [ '  return rope__%s_%s (_py_self, _py_args, _py_retp);\n' % (type_info.name, m.name) ]
-    s += 'static bool\n'
-    s += 'rope__%s_%s (PyObject *_py_self, PyObject *args, PyObject **retp)\n' % (type_info.name, m.name)
+    switchlines += [ 'case 0x%08x: // %s::%s\n' % (GenUtils.type_id (m), type_info.name, m.name) ]
+    switchlines += [ '  return rope__%s_%s (_py_self, _py_args);\n' % (type_info.name, m.name) ]
+    s += 'static PyObject*\n'
+    s += 'rope__%s_%s (PyObject *_py_self, PyObject *args)\n' % (type_info.name, m.name)
     s += '{\n'
-    s += '  RemoteProcedure rp;\n'
+    s += '  RemoteProcedure rp, *_rpret = NULL;\n'
     s += '  rp.set_proc_id (0x%08x);\n' % GenUtils.type_id (m)
     s += '  PyObject *item;\n'
+    if m.rtype.storage != Decls.VOID:
+      s += '  PyObject *pyfoR;\n'
     s += '  RemoteProcedure_Argument *arg;\n'
-    s += '  bool success = false;\n'
     s += '  if (PyTuple_Size (args) < %d) GOTO_ERROR();\n' % (pytoff + len (m.args))
     arg_counter = pytoff - 1
     s += '  item = PyTuple_GET_ITEM (args, %d);  // self\n' % arg_counter
@@ -251,20 +253,31 @@ class Generator:
         s += self.generate_frompy_convert ('arg->mutable', fl[1])
       else:
         s += self.generate_frompy_convert ('arg->set', fl[1])
-    s += '  success = rope_call_remote (rp);\n'
+    s += '  _rpret = rope_call_remote (rp);\n'
+    if m.rtype.storage == Decls.VOID:
+      s += '  if (_rpret) { delete _rpret; _rpret = NULL; }\n'
+      s += '  return None_INCREF();\n'
+    else:
+      s += '  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)\n'
+      s += '    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }\n'
+      rtname = self.storage_fieldname (m.rtype.storage)
+      s += '  { const RemoteProcedure_Argument &cret = _rpret->args (0);\n'
+      s += reindent ('  ', self.generate_topy_convert ('cret.%s()' % rtname, m.rtype, 'cret.has_%s()' % rtname))
+      s += '    return pyfoR; }\n'
     s += ' error:\n'
-    s += '  return success;\n'
+    s += '  if (_rpret) delete _rpret;\n'
+    s += '  return NULL;\n'
     s += '}\n'
     return s
   def generate_caller_impl (self, switchlines):
     s = ''
-    s += 'static bool RAPICORN_UNUSED\n'
-    s += 'rope_trampoline_switch (unsigned int _py_id, PyObject *_py_self, PyObject *_py_args, PyObject **_py_retp)\n'
+    s += 'static RAPICORN_UNUSED PyObject*\n'
+    s += 'rope_cpy_trampoline (unsigned int _proc_id, PyObject *_py_self, PyObject *_py_args)\n'
     s += '{\n'
-    s += '  switch (_py_id) {\n'
+    s += '  switch (_proc_id) {\n'
     s += '  '.join (switchlines)
     s += '  default:\n'
-    s += '    return false;\n'
+    s += '    return PyErr_Format (PyExc_RuntimeError, "ROPE: unknown method id: 0x%08x", _proc_id);\n'
     s += '  }\n'
     s += '}\n'
     return s
