@@ -485,6 +485,9 @@ template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
 template<class Obj> static void sink     (Obj &obj) { obj.ref_sink(); obj.unref(); }
 template<class Obj> static void sink     (Obj *obj) { obj->ref_sink(); obj->unref(); }
 
+/* --- ReferenceCountable --- */
+typedef ReferenceCountImpl ReferenceCountable; // FIXME: ReferenceCountImpl should be intern
+
 /* --- Binary Lookups --- */
 template<typename RandIter, class Cmp, typename Arg, int case_lookup_or_sibling_or_insertion>
 static inline std::pair<RandIter,bool>
