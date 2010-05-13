@@ -1903,6 +1903,7 @@ Deletable::invoke_deletion_hooks()
 String
 Deletable::object_url () const
 {
+  return_val_if_fail (this != NULL, "(*NULL)");
   auto_init_deletable_maps();
   const uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
   deletable_maps[hashv].mutex.lock();
