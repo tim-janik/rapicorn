@@ -45,7 +45,8 @@ CLEANFILES += xgen-rope2cxx.cc rope2cxx.cc
 # === py2cpy.py ===
 py2cpy.py: $(RAPICORNIDL) $(srcdir)/PyStub.py
 	${PLICINT} -G $(srcdir)/PyStub $(RAPICORNIDL) -o xgen-$(@F)
-	mv xgen-$(@F) $@
+	(echo "class ReferenceCountable (object): pass" ; cat xgen-$(@F) ) > $@
+	rm -f xgen-$(@F)
 CLEANFILES += xgen-py2cpy.py py2cpy.py
 
 # === TESTS ===
@@ -110,5 +111,6 @@ check-local: check-rapicorn-idl
 # test PyStub with rapicorn.idl
 check-pystub-for-rapicorn.idl:
 	@$(call TSTTITLE)
-	$(_@) ${PLICINT} -G $(srcdir)/PyStub $(RAPICORNIDL) | $(PYTHON) ; $(call TSTRESULT)
+	$(_@) (echo "class ReferenceCountable: pass"; \
+	       ${PLICINT} -G $(srcdir)/PyStub $(RAPICORNIDL) ) | $(PYTHON) ; $(call TSTRESULT)
 check-local: check-pystub-for-rapicorn.idl
