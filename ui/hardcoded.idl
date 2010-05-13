@@ -17,5 +17,6 @@
 
 namespace Rapicorn {
 
+interface ReferenceCountable {}; // provided by rapicorn-core
 
 } // Rapicorn
