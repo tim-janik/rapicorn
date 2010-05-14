@@ -34,7 +34,7 @@
 namespace {
 
 // --- cpy2rope stubs (generated) ---
-static PyObject* rope_cpy_trampoline    (unsigned int, PyObject*, PyObject*); // generated
+static PyObject* rope_cpy_trampoline    (PyObject*, PyObject*); // generated
 static Rapicorn::Rope::RemoteProcedure*         \
                  rope_call_remote       (Rapicorn::Rope::RemoteProcedure &proc);
 #define HAVE_ROPE_CALL_REMOTE 1
@@ -286,23 +286,6 @@ rope_call_remote (Rapicorn::Rope::RemoteProcedure &proc)
 
 // --- PyC functions ---
 static PyObject*
-rope_pytrampoline (PyObject *self,
-                   PyObject *args)
-{
-  PyObject *arg0 = NULL;
-  uint32 method_id = 0;
-  if (PyTuple_Size (args) < 1)
-    return PyErr_Format (PyExc_RuntimeError, "method call failed: missing arguments");
-  arg0 = PyTuple_GET_ITEM (args, 0);
-  if (!arg0)
-    return NULL;
-  method_id = PyInt_AsLong (arg0);
-  if (PyErr_Occurred())
-    return NULL;
-  return rope_cpy_trampoline (method_id, self, args);
-}
-
-static PyObject*
 rope_printout (PyObject *self,
                  PyObject *args)
 {
@@ -351,7 +334,7 @@ rope_init_dispatcher (PyObject *self,
 static PyMethodDef rope_vtable[] = {
   { "_init_dispatcher",         rope_init_dispatcher,         METH_VARARGS,
     "Rapicorn::_init_dispatcher() - initial setup." },
-  { "__rope_pytrampoline__",    rope_pytrampoline,            METH_VARARGS,
+  { "__rope_pytrampoline__",    rope_cpy_trampoline,          METH_VARARGS,
     "Rapicorn function invokation trampoline." },
   { "printout",                 rope_printout,                METH_VARARGS,
     "Rapicorn::printout() - print to stdout." },

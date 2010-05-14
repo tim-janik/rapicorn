@@ -1607,9 +1607,15 @@ rope__PureMethods_pure_method (PyObject *_py_self, PyObject *args)
 }
 
 static RAPICORN_UNUSED PyObject*
-rope_cpy_trampoline (unsigned int _proc_id, PyObject *_py_self, PyObject *_py_args)
-{
-  switch (_proc_id) {
+rope_cpy_trampoline (PyObject *_py_self, PyObject *_py_args){
+  PyObject *arg0 = NULL;
+  unsigned int procid = 0;
+  if (PyTuple_Size (_py_args) < 1)
+    return PyErr_Format (PyExc_RuntimeError, "trampoline call without arguments");
+  arg0 = PyTuple_GET_ITEM (_py_args, 0);
+  procid = PyInt_AsLong (arg0);
+  if (PyErr_Occurred()) return NULL;
+  switch (procid) {
   case 0x02000001: // UIWidgetArea::simple_method
     return rope__UIWidgetArea_simple_method (_py_self, _py_args);
   case 0x02000002: // UIWidgetArea::single_arg
@@ -1651,6 +1657,6 @@ rope_cpy_trampoline (unsigned int _proc_id, PyObject *_py_self, PyObject *_py_ar
   case 0x02000014: // PureMethods::pure_method
     return rope__PureMethods_pure_method (_py_self, _py_args);
   default:
-    return PyErr_Format (PyExc_RuntimeError, "ROPE: unknown method id: 0x%08x", _proc_id);
+    return PyErr_Format (PyExc_RuntimeError, "ROPE: unknown method id: 0x%08x", procid);
   }
 }

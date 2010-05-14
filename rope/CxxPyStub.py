@@ -272,12 +272,19 @@ class Generator:
   def generate_caller_impl (self, switchlines):
     s = ''
     s += 'static RAPICORN_UNUSED PyObject*\n'
-    s += 'rope_cpy_trampoline (unsigned int _proc_id, PyObject *_py_self, PyObject *_py_args)\n'
+    s += 'rope_cpy_trampoline (PyObject *_py_self, PyObject *_py_args)'
     s += '{\n'
-    s += '  switch (_proc_id) {\n'
+    s += '  PyObject *arg0 = NULL;\n'
+    s += '  unsigned int procid = 0;\n'
+    s += '  if (PyTuple_Size (_py_args) < 1)\n'
+    s += '    return PyErr_Format (PyExc_RuntimeError, "trampoline call without arguments");\n'
+    s += '  arg0 = PyTuple_GET_ITEM (_py_args, 0);\n'
+    s += '  procid = PyInt_AsLong (arg0);\n'
+    s += '  if (PyErr_Occurred()) return NULL;\n'
+    s += '  switch (procid) {\n'
     s += '  '.join (switchlines)
     s += '  default:\n'
-    s += '    return PyErr_Format (PyExc_RuntimeError, "ROPE: unknown method id: 0x%08x", _proc_id);\n'
+    s += '    return PyErr_Format (PyExc_RuntimeError, "ROPE: unknown method id: 0x%08x", procid);\n'
     s += '  }\n'
     s += '}\n'
     return s
