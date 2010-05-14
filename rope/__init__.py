@@ -41,7 +41,9 @@ app_init_with_x11 ("AppName", [ "--first-arg", "--second-arg"])
 del globals()['pyRapicorn']
 
 print "app:", app
-print "auto_path:", app.auto_path (".", ".", True)
-
-print "execute_loops():"
-app.execute_loops()
+apath = app.auto_path (".", ".", True)
+print "auto_path:", apath
+if apath.find ('rapicorn/rope/.'):
+  import sys
+  print "OK."
+  sys.exit (0)
