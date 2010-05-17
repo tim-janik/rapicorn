@@ -26,7 +26,8 @@ class AppImpl : public Application {};
 
 Application &App = *new AppImpl();
 
-Application::Application() // : sig_missing_primary (*this)
+Application::Application() : // : sig_missing_primary (*this)
+  m_tc (0)
 {
   assert (&App == NULL);
 }
@@ -150,6 +151,30 @@ Application::exit (int code)
   if (!exit_code)
     exit_code = code;
   return EventLoop::kill_loops ();
+}
+
+void
+Application::test_counter_set (int val)
+{
+  m_tc = val;
+}
+
+void
+Application::test_counter_add (int val)
+{
+  m_tc += val;
+}
+
+int
+Application::test_counter_get ()
+{
+  return m_tc;
+}
+
+int
+Application::test_counter_inc_fetch ()
+{
+  return ++m_tc;
 }
 
 } // Rapicorn

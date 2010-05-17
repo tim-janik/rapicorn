@@ -43,7 +43,31 @@ del globals()['pyRapicorn']
 print "app:", app
 apath = app.auto_path (".", ".", True)
 print "auto_path:", apath
-if apath.find ('rapicorn/rope/.'):
-  import sys
-  print "OK."
-  sys.exit (0)
+if not apath.find ('rapicorn/rope/.'):
+  raise RuntimeError ('Test procedure failed...')
+
+import time
+
+app.test_counter_set (0)
+t0 = time.clock()
+for i in range (0, 300000):
+  app.test_counter_inc_fetch() # two way test
+t1 = time.clock()
+tc = app.test_counter_get()
+print "two-way test counter:", tc
+print "elapsed:", t1 - t0, "seconds"
+print "spent:", 1000000 * (t1 - t0) / tc, "us/call"
+print "per second:", tc / (t1 - t0), "calls"
+
+app.test_counter_set (0)
+t0 = time.clock()
+for i in range (0, 300000):
+  app.test_counter_add (1) # one way test
+t1 = time.clock()
+tc = app.test_counter_get()
+print "one-way test counter:", tc
+print "elapsed:", t1 - t0, "seconds"
+print "spent:", 1000000 * (t1 - t0) / tc, "us/call"
+print "per second:", tc / (t1 - t0), "calls"
+
+print 'OK, done.'

@@ -57,6 +57,11 @@ interface Application : ReferenceCountable {
   void          exit            (int            code = 0);
   /* notifications */
   signal void   missing_primary ();
+  /* testing */
+  void          test_counter_set        (int val);
+  void          test_counter_add        (int val);
+  int           test_counter_get        ();
+  int           test_counter_inc_fetch  ();
 };
 
 } // Rapicorn

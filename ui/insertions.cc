@@ -43,6 +43,7 @@ class_scope:Application:
 protected:
   explicit           Application ();
 private:
+  int                m_tc;
   RAPICORN_PRIVATE_CLASS_COPY (Application);
 
 IGNORE: // close last _scope

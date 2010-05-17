@@ -23,6 +23,8 @@
 #define MODULE_NAME_STRING      STRINGIFY (MODULE_NAME)
 #define MODULE_INIT_FUNCTION    RAPICORN_CPP_PASTE2 (init, MODULE_NAME)
 
+static int cpu_affinity (int cpu); // FIXME
+
 // --- protocol buffers (generated) ---
 #include "ui/protocol-pb2.hh"
 #include <google/protobuf/text_format.h>
@@ -50,10 +52,10 @@ class UIThread : public Thread {
   virtual void
   run ()
   {
+    cpu_affinity (m_cpu);
     // rapicorn_init_core() already called
     Rapicorn::StringList slist;
     slist.strings = this->cmdline_args;
-    printerr ("UIThread::run(): initializing...\n");
     App.init_with_x11 (this->application_name, slist);
     m_loop = ref_sink (EventLoop::create());
     EventLoop::Source *esource = new ProcSource (*this);
@@ -67,15 +69,12 @@ class UIThread : public Thread {
       arg->set_vstring (dapp->object_url());
       push_return (rp);
     }
-    printerr ("UIThread::run(): execute_loops()...\n");
     App.execute_loops();
-    printerr ("UIThread::run(): done, exiting.\n");
   }
   bool
   dispatch ()
   {
     RemoteProcedure *proc = pop_proc();
-    printerr ("UIThread::dispatch()!\n");
     if (proc)
       {
         if (0)
@@ -83,15 +82,13 @@ class UIThread : public Thread {
             std::string string;
             if (!google::protobuf::TextFormat::PrintToString (*proc, &string))
               string = "{*protobuf::TextFormat ERROR*}";
-            printerr ("UIThread::call:\n%s\n", string.c_str());
+            printerr ("Rapicorn::UIThread::call:\n%s\n", string.c_str());
           }
         RemoteProcedure_Argument aret;
-        printerr ("UIThread::call: 0x%08x:\n", proc->proc_id());
         bool success = rope_callee_handler (*proc, aret);
-        printerr ("UIThread::ret: %s\n", success ? "OK" : "FAIL");
         if (!success)
           {
-            printerr ("UIThread::call error (see logs)\n");
+            printerr ("UIThread::call error (see logs)\n"); // FIXME
             if (proc->proc_id() >= 0x02000000)
               {
                 RemoteProcedure *rp = new RemoteProcedure();
@@ -127,10 +124,12 @@ protected:
     explicit     ProcSource (UIThread &thread) : m_thread (thread) {}
   };
 public:
+  int            m_cpu;
   String         application_name;
   vector<String> cmdline_args;
   UIThread (const String &name) :
     Thread (name),
+    m_cpu (-1),
     m_loop (NULL),
     rpx (0)
   {}
@@ -169,18 +168,27 @@ public:
       {
         if (rrx)
           rro.resize (0);
+        /* fetch result */
         rrm.lock();
-        while (rrv.size() == 0)
-          rrc.wait (rrm);
-        rrv.swap (rro);
+        if (rrv.size())
+          rrv.swap (rro);
         rrm.unlock();
+        if (rro.size() == 0) // no result yet
+          {
+            Thread::Self::yield(); // give way to rapicorn thread on single core
+            rrm.lock();
+            while (rrv.size() == 0)
+              rrc.wait (rrm);
+            rrv.swap (rro);
+            rrm.unlock();
+          }
         rrx = 0;
       }
     // rrx < rro.size()
     return rro[rrx++];
   }
 private:
-  SpinLock                      rps;
+  SpinLock /*Mutex*/            rps;
   vector<RemoteProcedure*>      rpv, rpi, rpo;
   size_t                        rpx;
 public:
@@ -247,7 +255,9 @@ public:
     ref_sink (ui_thread);
     ui_thread->application_name = application_name;
     ui_thread->cmdline_args = cmdline_args;
+    ui_thread->m_cpu = !cpu_affinity (-1);
     ui_thread->start();
+    cpu_affinity (-1);
     RemoteProcedure *rpret = ui_thread->fetch_return();
     String appurl;
     if (rpret && rpret->proc_id() == 0x02000000 && rpret->args_size() > 0)
@@ -265,12 +275,14 @@ public:
     if (!ui_thread)
       return false;
     ui_thread->push_proc (new RemoteProcedure (proc));
-    printf ("Remote Procedure Call, id=0x%08x (%s-way)\n",
-            proc.proc_id(), proc.proc_id() >= 0x02000000 ? "two" : "one");
+    if (0) // debug
+      printf ("Remote Procedure Call, id=0x%08x (%s-way)\n",
+              proc.proc_id(), proc.proc_id() >= 0x02000000 ? "two" : "one");
     if (proc.proc_id() >= 0x02000000)
       {
         RemoteProcedure *rpret = ui_thread->fetch_return();
-        printerr ("Remote Procedure Return: 0x%08x\n", rpret->proc_id());
+        if (0)
+          printerr ("Remote Procedure Return: 0x%08x\n", rpret->proc_id());
         return rpret;
       }
     return NULL;
@@ -383,3 +395,38 @@ MODULE_INIT_FUNCTION (void) // conventional dlmodule initializer
   free (argv0);
 }
 // using global namespace for Python module initialization
+
+
+
+// FIXME: move...
+//#define _GNU_SOURCE
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+
+static int
+cpu_affinity (int cpu)
+{
+  pthread_t thread = pthread_self();
+  cpu_set_t cpuset;
+
+  if (cpu >= 0 && cpu < CPU_SETSIZE)
+    {
+      CPU_ZERO (&cpuset);
+      CPU_SET (cpu, &cpuset);
+      if (pthread_setaffinity_np (thread, sizeof (cpu_set_t), &cpuset) != 0)
+        perror ("pthread_setaffinity_np");
+    }
+
+  if (pthread_getaffinity_np (thread, sizeof (cpu_set_t), &cpuset) != 0)
+    perror ("pthread_getaffinity_np");
+  printf ("Affinity(%d/%d cpus): thread=%p", sysconf (_SC_NPROCESSORS_ONLN), CPU_SETSIZE, thread);
+  for (int j = 0; j < CPU_SETSIZE; j++)
+    if (CPU_ISSET (j, &cpuset))
+      {
+        printf ("    CPU %d\n", j);
+        return j;
+      }
+  return -1;
+}
