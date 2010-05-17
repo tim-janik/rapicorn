@@ -17,22 +17,7 @@
 import os, sys, re, shutil;
 true, false, length = (True, False, len)
 
-# --- declarations ---
-class BaseDecl (object):
-  def __init__ (self):
-    self.name = None
-    self.namespace = None
-    self.loc = ()
-    self.hint = ''
-    self.docu = ()
-  def list_namespaces (self):
-    nslist = []
-    ns = self.namespace
-    while ns:
-      nslist = [ ns ] + nslist
-      ns = ns.namespace
-    return nslist
-
+# --- types ---
 VOID, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE = tuple ('vidserqfc')
 def storage_name (storage):
   name = {
@@ -49,6 +34,22 @@ def storage_name (storage):
   if not name:
     raise RuntimeError ("Invalid storage type: " + storage)
   return name
+
+# --- declarations ---
+class BaseDecl (object):
+  def __init__ (self):
+    self.name = None
+    self.namespace = None
+    self.loc = ()
+    self.hint = ''
+    self.docu = ()
+  def list_namespaces (self):
+    nslist = []
+    ns = self.namespace
+    while ns:
+      nslist = [ ns ] + nslist
+      ns = ns.namespace
+    return nslist
 
 class Namespace (BaseDecl):
   def __init__ (self, name, outer, impl_list):
