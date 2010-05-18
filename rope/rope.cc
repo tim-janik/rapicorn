@@ -36,10 +36,12 @@ static int cpu_affinity (int cpu); // FIXME
 namespace {
 
 // --- cpy2rope stubs (generated) ---
-static PyObject* rope_cpy_trampoline    (PyObject*, PyObject*); // generated
-static Rapicorn::Rope::RemoteProcedure*         \
-                 rope_call_remote       (Rapicorn::Rope::RemoteProcedure &proc);
-#define HAVE_ROPE_CALL_REMOTE 1
+#define HAVE_PLIC_CALL_REMOTE   1
+static Rapicorn::Plic::FieldBuffer* plic_call_remote    (Rapicorn::Plic::FieldBuffer&);
+static PyObject*                    plic_cpy_trampoline (PyObject *pyself, PyObject *pyargs); // generated
+#define HAVE_ROPE_CALL_REMOTE   1
+static Rapicorn::Rope::RemoteProcedure* rope_call_remote    (Rapicorn::Rope::RemoteProcedure &proc);
+static PyObject*                        rope_cpy_trampoline (PyObject*, PyObject*); // generated
 #include "cpy2rope.cc"
 typedef RemoteProcedure RemoteReturn;
 
@@ -294,6 +296,12 @@ static Rapicorn::Rope::RemoteProcedure*
 rope_call_remote (Rapicorn::Rope::RemoteProcedure &proc)
 {
   return UIThread::ui_thread_call_remote (proc);
+}
+
+static Rapicorn::Plic::FieldBuffer*
+plic_call_remote (Rapicorn::Plic::FieldBuffer &call)
+{
+  return NULL; // UIThread::ui_thread_call_remote (call);
 }
 
 // --- PyC functions ---

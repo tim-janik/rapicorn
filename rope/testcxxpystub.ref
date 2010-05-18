@@ -2798,7 +2798,8 @@ rope_cpy_trampoline (PyObject *_py_self, PyObject *_py_args){
   }
 }
 static RAPICORN_UNUSED PyObject*
-plic_cpy_trampoline (PyObject *pyself, PyObject *pyargs){
+plic_cpy_trampoline (PyObject *pyself, PyObject *pyargs)
+{
   PyObject *arg0 = NULL;
   unsigned int procid = 0;
   if (PyTuple_Size (pyargs) < 1)

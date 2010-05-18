@@ -473,7 +473,7 @@ class Generator:
   def generate_rpc_call_switch (self, switchlines):
     s = ''
     s += 'static RAPICORN_UNUSED PyObject*\n'
-    s += 'plic_cpy_trampoline (PyObject *pyself, PyObject *pyargs)'
+    s += 'plic_cpy_trampoline (PyObject *pyself, PyObject *pyargs)\n'
     s += '{\n'
     s += '  PyObject *arg0 = NULL;\n'
     s += '  unsigned int procid = 0;\n'
