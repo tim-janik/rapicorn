@@ -341,7 +341,7 @@ class Generator:
       if type.storage in (Decls.RECORD, Decls.SEQUENCE):
         s += '  if (!%s.proto_add (%s)) return false;\n' % (ident, fb)
       elif type.storage == Decls.INTERFACE:
-        s += '  %s.add_%s (Instance2StringCast (%s));\n' % (fb, self.accessor_name (type.storage), ident)
+        s += '  %s.add_object (Instance2StringCast (%s));\n' % (fb, ident)
       else:
         s += '  %s.add_%s (%s);\n' % (fb, self.accessor_name (type.storage), ident)
     return s
