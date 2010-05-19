@@ -17,7 +17,6 @@
 #include "rope.hh" // must be included first to configure std headers
 #include <deque>
 
-
 // --- conventional Python module initializers ---
 #define MODULE_NAME             pyRapicorn
 #define MODULE_NAME_STRING      STRINGIFY (MODULE_NAME)
@@ -160,7 +159,6 @@ public:
       {
         if (rrx)
           rro.resize (0);
-        // Thread::Self::yield(); // give way to rapicorn thread on single core
         rrm.lock();
         while (rrv.size() == 0)
           rrc.wait (rrm);
@@ -172,17 +170,23 @@ public:
     return rro[rrx++];
   }
 private:
-  SpinLock /*Mutex*/            rps;
-  vector<FieldBuffer*>          rpv, rpo;
-  size_t                        rpx;
+  Mutex                rps;
+  vector<FieldBuffer*> rpv, rpo;
+  size_t               rpx;
 public:
   void
   push_proc (FieldBuffer *proc)
   {
+    int64 call_id = proc->first_id();
+    size_t sz;
     rps.lock();
     rpv.push_back (proc);
+    sz = rpv.size();
     rps.unlock();
     m_loop->wakeup();
+    if (call_id >= 0x02000000 || // minimize turn-around times for two-way calls
+        sz >= 1009)              // allow batch processing of one-way call queue
+      Thread::Self::yield();     // useless if threads have different CPU affinity
   }
   FieldBuffer*
   pop_proc (bool advance = true)
