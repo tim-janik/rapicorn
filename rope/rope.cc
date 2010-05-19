@@ -250,9 +250,8 @@ public:
     ref_sink (ui_thread);
     ui_thread->application_name = application_name;
     ui_thread->cmdline_args = cmdline_args;
-    ui_thread->m_cpu = !cpu_affinity (-1);
+    ui_thread->m_cpu = cpu_affinity (-1);
     ui_thread->start();
-    cpu_affinity (-1);
     FieldBuffer *rpret = ui_thread->fetch_return();
     String appurl;
     if (rpret && rpret->first_id() == 0x02000000)
