@@ -37,6 +37,7 @@ static Rapicorn::Plic::FieldBuffer* plic_call_remote    (Rapicorn::Plic::FieldBu
 static PyObject*                    plic_cpy_trampoline (PyObject *pyself, PyObject *pyargs); // generated
 #include "cpy2rope.cc"
 typedef Rapicorn::Plic::FieldBuffer FieldBuffer;
+typedef Rapicorn::Plic::FieldBuffer8 FieldBuffer8;
 
 // --- globals ---
 static PyObject *rapicorn_exception = NULL;
@@ -57,7 +58,7 @@ class UIThread : public Thread {
     (*m_loop).add_source (esource, MAXINT);
     esource->exitable (false);
     {
-      FieldBuffer *fb = new FieldBuffer (2);
+      FieldBuffer *fb = FieldBuffer::_new (2);
       fb->add_int64 (0x02000000); // proc_id
       Deletable *dapp = &App;
       fb->add_string (dapp->object_url());
@@ -80,9 +81,10 @@ class UIThread : public Thread {
             printerr ("Rapicorn::UIThread::call:\n%s\n", string.c_str());
 #endif
           }
-        FieldBuffer fdummy (2), *fr;
+        FieldBuffer *fr;
+        FieldBuffer8 fdummy (2);
         if (call->first_id() >= 0x02000000)
-          fr = new FieldBuffer (2);
+          fr = FieldBuffer::_new (2);
         else
           fr = &fdummy;
         bool success = plic_call_wrapper_switch (*call, *fr);
@@ -91,7 +93,7 @@ class UIThread : public Thread {
             printerr ("UIThread::call error (see logs)\n"); // FIXME
             if (call->first_id() >= 0x02000000)
               {
-                FieldBuffer *fb = new FieldBuffer (2);
+                FieldBuffer *fb = FieldBuffer::_new (2);
                 fb->add_int64 (0x02000000); // proc_id
                 fb->add_string ("*ERROR*"); // FIXME
                 push_return (fb);
@@ -128,7 +130,9 @@ public:
     m_cpu (-1),
     rrx (0),
     rpx (0)
-  {}
+  {
+    rrv.reserve (1);
+  }
   ~UIThread()
   {
     unref (m_loop);
@@ -137,26 +141,17 @@ public:
 private:
   Mutex                         rrm;
   Cond                          rrc;
-  vector<FieldBuffer*>          rrv, rri, rro;
+  vector<FieldBuffer*>          rrv, rro;
   size_t                        rrx;
 public:
   void
   push_return (FieldBuffer *rret)
   {
     rrm.lock();
-    if (rrv.size() < rrv.capacity())
-      rrv.push_back (rret);     // fast path, no realloc required
-    else
-      {
-        rrv.swap (rri);
-        rrm.unlock();
-        rri.push_back (rret);   // realloc possible
-        rrm.lock();
-        rrv.swap (rri);
-      }
+    rrv.push_back (rret);
     rrc.signal();
     rrm.unlock();
-    Thread::Self::yield(); // allow fast return value handling
+    Thread::Self::yield(); // allow fast return value handling on single core
   }
   FieldBuffer*
   fetch_return (void)
@@ -165,20 +160,12 @@ public:
       {
         if (rrx)
           rro.resize (0);
-        /* fetch result */
+        // Thread::Self::yield(); // give way to rapicorn thread on single core
         rrm.lock();
-        if (rrv.size())
-          rrv.swap (rro);
+        while (rrv.size() == 0)
+          rrc.wait (rrm);
+        rrv.swap (rro); // fetch result
         rrm.unlock();
-        if (rro.size() == 0) // no result yet
-          {
-            Thread::Self::yield(); // give way to rapicorn thread on single core
-            rrm.lock();
-            while (rrv.size() == 0)
-              rrc.wait (rrm);
-            rrv.swap (rro);
-            rrm.unlock();
-          }
         rrx = 0;
       }
     // rrx < rro.size()
@@ -186,23 +173,14 @@ public:
   }
 private:
   SpinLock /*Mutex*/            rps;
-  vector<FieldBuffer*>          rpv, rpi, rpo;
+  vector<FieldBuffer*>          rpv, rpo;
   size_t                        rpx;
 public:
   void
   push_proc (FieldBuffer *proc)
   {
     rps.lock();
-    if (rpv.size() < rpv.capacity())
-      rpv.push_back (proc);     // fast path, no realloc required
-    else
-      {
-        rpv.swap (rpi);
-        rps.unlock();
-        rpi.push_back (proc);   // realloc possible
-        rps.lock();
-        rpv.swap (rpi);
-      }
+    rpv.push_back (proc);
     rps.unlock();
     m_loop->wakeup();
   }
@@ -252,7 +230,7 @@ public:
     ref_sink (ui_thread);
     ui_thread->application_name = application_name;
     ui_thread->cmdline_args = cmdline_args;
-    ui_thread->m_cpu = cpu_affinity (-1);
+    ui_thread->m_cpu = cpu_affinity (1);
     ui_thread->start();
     FieldBuffer *rpret = ui_thread->fetch_return();
     String appurl;

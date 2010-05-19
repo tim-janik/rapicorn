@@ -1812,7 +1812,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_simple_method (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 0), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 0), *fr = NULL;
   fb.add_int64 (0x02000001); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 0) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1836,7 +1836,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_single_arg (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 1), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
   fb.add_int64 (0x02000002); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1862,7 +1862,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_single_arg2 (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 1), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
   fb.add_int64 (0x02000003); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1888,7 +1888,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_two_args (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 2), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000004); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1916,7 +1916,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_two_args2 (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 2), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000005); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1944,7 +1944,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_multi_args (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 5), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 5), *fr = NULL;
   fb.add_int64 (0x02000006); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 5) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1978,7 +1978,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_self_method (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 2), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000007); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -2006,7 +2006,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_void_method (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 0), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 0), *fr = NULL;
   fb.add_int64 (0x01000008); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 0) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -2022,7 +2022,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_on_click2out (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 0), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 0), *fr = NULL;
   fb.add_int64 (0x02000009); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 0) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -2046,7 +2046,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_on_click2in (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 1), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
   fb.add_int64 (0x0100000a); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -2433,7 +2433,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_void (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 0), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 0), *fr = NULL;
   fb.add_int64 (0x0100000b); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 0) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -2449,7 +2449,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_bools (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 2), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x0200000c); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -2477,7 +2477,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_ints (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 2), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x0200000d); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -2505,7 +2505,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_floats (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 2), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x0200000e); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -2533,7 +2533,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_string (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 2), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x0200000f); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -2561,7 +2561,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_enum (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 2), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000010); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -2589,7 +2589,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_record (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 2), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000011); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -2617,7 +2617,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_sequence (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 2), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000012); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -2645,7 +2645,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_interface (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 2), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000013); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -2704,7 +2704,7 @@ static PyObject*
 plic_pycall_PureMethods_pure_method (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *new Rapicorn::Plic::FieldBuffer (1 + 1 + 1), *fr = NULL;
+  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
   fb.add_int64 (0x02000014); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self

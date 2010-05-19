@@ -394,7 +394,7 @@ class Generator:
     s += 'plic_pycall_%s_%s (PyObject *pyself, PyObject *pyargs)\n' % (class_info.name, mtype.name)
     s += '{\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
-    s += '  ' + FieldBuffer + ' &fb = *new ' + FieldBuffer + ' (1 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # proc_id self
+    s += '  ' + FieldBuffer + ' &fb = *' + FieldBuffer + '::_new (1 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # proc_id self
     s += '  fb.add_int64 (0x%08x); // proc_id\n' % GenUtils.type_id (mtype)
     s += '  if (PyTuple_Size (pyargs) != 1 + 1 + %u) ERRORpy ("PLIC: wrong number of arguments");\n' % len (mtype.args) # proc_id self
     arg_counter = 1 # skip proc_od
