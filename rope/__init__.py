@@ -46,28 +46,47 @@ print "auto_path:", apath
 if not apath.find ('rapicorn/rope/.'):
   raise RuntimeError ('Test procedure failed...')
 
-import time
+import time, random
 
-app.test_counter_set (0)
-t0 = time.clock()
-for i in range (0, 300000):
-  app.test_counter_inc_fetch() # two way test
-t1 = time.clock()
-tc = app.test_counter_get()
-print "two-way test counter:", tc
-print "elapsed:", t1 - t0, "seconds"
-print "spent:", 1000000 * (t1 - t0) / tc, "us/call"
-print "per second:", tc / (t1 - t0), "calls"
+# while True: app.test_counter_inc_fetch() # two way call
 
-app.test_counter_set (0)
-t0 = time.clock()
-for i in range (0, 300000):
-  app.test_counter_add (1) # one way test
-t1 = time.clock()
-tc = app.test_counter_get()
-print "one-way test counter:", tc
-print "elapsed:", t1 - t0, "seconds"
-print "spent:", 1000000 * (t1 - t0) / tc, "us/call"
-print "per second:", tc / (t1 - t0), "calls"
+niter = 29
+w2samples, w1samples = [], []
+
+for n in range (0, niter):
+  app.test_counter_set (0)
+  r = random.randrange (7000, 20000)
+  t0 = time.clock()
+  for i in range (0, r):
+    app.test_counter_inc_fetch() # two way test
+  tc = app.test_counter_get()
+  t1 = time.clock()
+  assert tc == r
+  w2samples += [ r / (t1 - t0) ]
+
+mc = max (w2samples)
+fs = 1000000 / mc
+sl = 1000000 / min (w2samples)
+er = (sl - fs) / sl
+print "2way: best: %u calls/s; fastest: %.2fus; slowest: %.2fus; err: %.2f%%" %\
+    (mc, fs, sl, er * 100)
+
+for n in range (0, niter):
+  app.test_counter_set (0)
+  r = random.randrange (10000, 25000)
+  t0 = time.clock()
+  for i in range (0, r):
+    app.test_counter_add (1)  # one way test
+  tc = app.test_counter_get() # enforce queue flush before timer stops
+  t1 = time.clock()
+  assert tc == r
+  w1samples += [ r / (t1 - t0) ]
+
+mc = max (w1samples)
+fs = 1000000 / mc
+sl = 1000000 / min (w1samples)
+er = (sl - fs) / sl
+print "1way: best: %u calls/s; fastest: %.2fus; slowest: %.2fus; err: %.2f%%" %\
+    (mc, fs, sl, er * 100)
 
 print 'OK, done.'
