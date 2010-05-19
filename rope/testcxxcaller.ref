@@ -4,6 +4,7 @@
 // #include <ui/interface.hh>
 #include <rapicorn.hh>
 #include <ui/protocol-pb2.hh>
+#include <rcore/plicutils.hh>
 
 #include <string>
 #include <vector>
@@ -195,54 +196,74 @@ struct XFooRecord {
   int             multi3;
   int             multi4;
   ExtensiveEnum   enum_field;
+  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
+  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
   bool to_proto   (ProtoRecord &) const;
   bool from_proto (const ProtoRecord &);
   inline XFooRecord () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
 struct XFooSequence {
   std::vector<bool> single_bool;
+  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
+  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
   bool to_proto   (ProtoSequence &) const;
   bool from_proto (const ProtoSequence &);
 };
 struct IntSequence {
   std::vector<int> numx;
+  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
+  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
   bool to_proto   (ProtoSequence &) const;
   bool from_proto (const ProtoSequence &);
 };
 struct FloatSequence {
   std::vector<double> fractalvalue;
+  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
+  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
   bool to_proto   (ProtoSequence &) const;
   bool from_proto (const ProtoSequence &);
 };
 struct StringSequence {
   std::vector<std::string> blurb;
+  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
+  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
   bool to_proto   (ProtoSequence &) const;
   bool from_proto (const ProtoSequence &);
 };
 struct ExtensiveEnumSequence {
   std::vector<ExtensiveEnum> enum_elements;
+  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
+  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
   bool to_proto   (ProtoSequence &) const;
   bool from_proto (const ProtoSequence &);
 };
 struct RecordSequence {
   std::vector<XFooRecord> repeatedfield;
+  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
+  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
   bool to_proto   (ProtoSequence &) const;
   bool from_proto (const ProtoSequence &);
 };
 struct SequenceSequence {
   std::vector<IntSequence> moreints;
+  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
+  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
   bool to_proto   (ProtoSequence &) const;
   bool from_proto (const ProtoSequence &);
 };
 struct NestedTypesRec {
   XFooRecord      rec;
   XFooSequence    seq;
+  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
+  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
   bool to_proto   (ProtoRecord &) const;
   bool from_proto (const ProtoRecord &);
   inline NestedTypesRec () { }
 };
 struct NestedTypesSeq {
   std::vector<NestedTypesRec> ntr;
+  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
+  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
   bool to_proto   (ProtoSequence &) const;
   bool from_proto (const ProtoSequence &);
 };
@@ -258,6 +279,8 @@ struct NewRecord {
   Enum1           enum1;
   XFooSequence    xfs;
   NestedTypesRec  ntr;
+  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
+  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
   bool to_proto   (ProtoRecord &) const;
   bool from_proto (const ProtoRecord &);
   inline NewRecord () { i = 0; enum1 = Enum1 (0); }
@@ -268,6 +291,8 @@ struct InnerRecord {
   int             x;
   int             y;
   NewRecord       rec;
+  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
+  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
   bool to_proto   (ProtoRecord &) const;
   bool from_proto (const ProtoRecord &);
   inline InnerRecord () { x = 0; y = 0; }
@@ -275,6 +300,8 @@ struct InnerRecord {
 } // Inner
 struct Refer2Inner {
   Inner::InnerRecord r;
+  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
+  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
   bool to_proto   (ProtoRecord &) const;
   bool from_proto (const ProtoRecord &);
   inline Refer2Inner () { }
@@ -287,6 +314,8 @@ struct SomeRecord {
   MandatoryNamespace::NewRecord r2;
   MandatoryNamespace::Inner::InnerRecord r3;
   MandatoryNamespace::Inner::InnerRecord r4;
+  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
+  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
   bool to_proto   (ProtoRecord &) const;
   bool from_proto (const ProtoRecord &);
   inline SomeRecord () { }
@@ -357,12 +386,16 @@ enum QuickEnum {
 struct QuickRecord {
   int             int1;
   int             int2;
+  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
+  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
   bool to_proto   (ProtoRecord &) const;
   bool from_proto (const ProtoRecord &);
   inline QuickRecord () { int1 = 0; int2 = 0; }
 };
 struct QuickSequence {
   std::vector<double> somefloat;
+  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
+  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
   bool to_proto   (ProtoSequence &) const;
   bool from_proto (const ProtoSequence &);
 };
@@ -421,6 +454,41 @@ public:
 // --- Client Stubs ---
 
 namespace MandatoryNamespace {
+bool
+XFooRecord::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
+{
+  Rapicorn::Plic::FieldBuffer &fb = dst.add_rec (11);
+  fb.add_int64 (this->single_bool);
+  fb.add_int64 (this->single_num);
+  fb.add_double (this->single_float);
+  fb.add_string (this->single_string);
+  fb.add_int64 (this->sibling1);
+  fb.add_int64 (this->sibling2);
+  fb.add_int64 (this->multi1);
+  fb.add_int64 (this->multi2);
+  fb.add_int64 (this->multi3);
+  fb.add_int64 (this->multi4);
+  fb.add_evalue (this->enum_field);
+  return true;
+}
+bool
+XFooRecord::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (src.pop_rec());
+  if (fbr.remaining() != 11) return false;
+  this->single_bool = fbr.pop_int64();
+  this->single_num = fbr.pop_int64();
+  this->single_float = fbr.pop_double();
+  this->single_string = fbr.pop_string();
+  this->sibling1 = fbr.pop_int64();
+  this->sibling2 = fbr.pop_int64();
+  this->multi1 = fbr.pop_int64();
+  this->multi2 = fbr.pop_int64();
+  this->multi3 = fbr.pop_int64();
+  this->multi4 = fbr.pop_int64();
+  this->enum_field = ExtensiveEnum (fbr.pop_evalue());
+  return true;
+}
 bool
 XFooRecord::to_proto (ProtoRecord &dst) const
 {
@@ -493,6 +561,27 @@ XFooRecord::from_proto (const ProtoRecord &src)
 }
 
 bool
+XFooSequence::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
+{
+  const size_t len = single_bool.size();
+  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  for (size_t k = 0; k < len; k++) {
+    fb.add_int64 (this->single_bool[k]);
+  }
+  return true;
+}
+bool
+XFooSequence::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  const size_t len = fbr.remaining();
+  this->single_bool.reserve (len);
+  for (size_t k = 0; k < len; k++) {
+    this->single_bool.push_back (fbr.pop_int64());
+  }
+  return true;
+}
+bool
 XFooSequence::to_proto (ProtoSequence &dst) const
 {
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
@@ -513,6 +602,27 @@ XFooSequence::from_proto (const ProtoSequence &src)
   return true;
 }
 
+bool
+IntSequence::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
+{
+  const size_t len = numx.size();
+  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  for (size_t k = 0; k < len; k++) {
+    fb.add_int64 (this->numx[k]);
+  }
+  return true;
+}
+bool
+IntSequence::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  const size_t len = fbr.remaining();
+  this->numx.reserve (len);
+  for (size_t k = 0; k < len; k++) {
+    this->numx.push_back (fbr.pop_int64());
+  }
+  return true;
+}
 bool
 IntSequence::to_proto (ProtoSequence &dst) const
 {
@@ -535,6 +645,27 @@ IntSequence::from_proto (const ProtoSequence &src)
 }
 
 bool
+FloatSequence::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
+{
+  const size_t len = fractalvalue.size();
+  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  for (size_t k = 0; k < len; k++) {
+    fb.add_double (this->fractalvalue[k]);
+  }
+  return true;
+}
+bool
+FloatSequence::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  const size_t len = fbr.remaining();
+  this->fractalvalue.reserve (len);
+  for (size_t k = 0; k < len; k++) {
+    this->fractalvalue.push_back (fbr.pop_double());
+  }
+  return true;
+}
+bool
 FloatSequence::to_proto (ProtoSequence &dst) const
 {
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
@@ -555,6 +686,27 @@ FloatSequence::from_proto (const ProtoSequence &src)
   return true;
 }
 
+bool
+StringSequence::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
+{
+  const size_t len = blurb.size();
+  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  for (size_t k = 0; k < len; k++) {
+    fb.add_string (this->blurb[k]);
+  }
+  return true;
+}
+bool
+StringSequence::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  const size_t len = fbr.remaining();
+  this->blurb.reserve (len);
+  for (size_t k = 0; k < len; k++) {
+    this->blurb.push_back (fbr.pop_string());
+  }
+  return true;
+}
 bool
 StringSequence::to_proto (ProtoSequence &dst) const
 {
@@ -577,6 +729,27 @@ StringSequence::from_proto (const ProtoSequence &src)
 }
 
 bool
+ExtensiveEnumSequence::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
+{
+  const size_t len = enum_elements.size();
+  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  for (size_t k = 0; k < len; k++) {
+    fb.add_evalue (this->enum_elements[k]);
+  }
+  return true;
+}
+bool
+ExtensiveEnumSequence::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  const size_t len = fbr.remaining();
+  this->enum_elements.reserve (len);
+  for (size_t k = 0; k < len; k++) {
+    this->enum_elements.push_back (ExtensiveEnum (fbr.pop_evalue()));
+  }
+  return true;
+}
+bool
 ExtensiveEnumSequence::to_proto (ProtoSequence &dst) const
 {
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
@@ -597,6 +770,27 @@ ExtensiveEnumSequence::from_proto (const ProtoSequence &src)
   return true;
 }
 
+bool
+RecordSequence::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
+{
+  const size_t len = repeatedfield.size();
+  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  for (size_t k = 0; k < len; k++) {
+    if (!this->repeatedfield[k].proto_add (fb)) return false;
+  }
+  return true;
+}
+bool
+RecordSequence::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  const size_t len = fbr.remaining();
+  this->repeatedfield.resize (len);
+  for (size_t k = 0; k < len; k++) {
+    if (!this->repeatedfield[k].proto_pop (fbr)) return false;
+  }
+  return true;
+}
 bool
 RecordSequence::to_proto (ProtoSequence &dst) const
 {
@@ -620,6 +814,27 @@ RecordSequence::from_proto (const ProtoSequence &src)
 }
 
 bool
+SequenceSequence::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
+{
+  const size_t len = moreints.size();
+  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  for (size_t k = 0; k < len; k++) {
+    if (!this->moreints[k].proto_add (fb)) return false;
+  }
+  return true;
+}
+bool
+SequenceSequence::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  const size_t len = fbr.remaining();
+  this->moreints.resize (len);
+  for (size_t k = 0; k < len; k++) {
+    if (!this->moreints[k].proto_pop (fbr)) return false;
+  }
+  return true;
+}
+bool
 SequenceSequence::to_proto (ProtoSequence &dst) const
 {
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
@@ -641,6 +856,23 @@ SequenceSequence::from_proto (const ProtoSequence &src)
   return true;
 }
 
+bool
+NestedTypesRec::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
+{
+  Rapicorn::Plic::FieldBuffer &fb = dst.add_rec (2);
+  if (!this->rec.proto_add (fb)) return false;
+  if (!this->seq.proto_add (fb)) return false;
+  return true;
+}
+bool
+NestedTypesRec::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (src.pop_rec());
+  if (fbr.remaining() != 2) return false;
+  if (!this->rec.proto_pop (fbr)) return false;
+  if (!this->seq.proto_pop (fbr)) return false;
+  return true;
+}
 bool
 NestedTypesRec::to_proto (ProtoRecord &dst) const
 {
@@ -666,6 +898,27 @@ NestedTypesRec::from_proto (const ProtoRecord &src)
 }
 
 bool
+NestedTypesSeq::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
+{
+  const size_t len = ntr.size();
+  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  for (size_t k = 0; k < len; k++) {
+    if (!this->ntr[k].proto_add (fb)) return false;
+  }
+  return true;
+}
+bool
+NestedTypesSeq::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  const size_t len = fbr.remaining();
+  this->ntr.resize (len);
+  for (size_t k = 0; k < len; k++) {
+    if (!this->ntr[k].proto_pop (fbr)) return false;
+  }
+  return true;
+}
+bool
 NestedTypesSeq::to_proto (ProtoSequence &dst) const
 {
   RemoteProcedure_Sequence &rps = RPSequenceCast (dst);
@@ -687,6 +940,27 @@ NestedTypesSeq::from_proto (const ProtoSequence &src)
   return true;
 }
 
+bool
+NewRecord::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
+{
+  Rapicorn::Plic::FieldBuffer &fb = dst.add_rec (4);
+  fb.add_int64 (this->i);
+  fb.add_evalue (this->enum1);
+  if (!this->xfs.proto_add (fb)) return false;
+  if (!this->ntr.proto_add (fb)) return false;
+  return true;
+}
+bool
+NewRecord::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (src.pop_rec());
+  if (fbr.remaining() != 4) return false;
+  this->i = fbr.pop_int64();
+  this->enum1 = Enum1 (fbr.pop_evalue());
+  if (!this->xfs.proto_pop (fbr)) return false;
+  if (!this->ntr.proto_pop (fbr)) return false;
+  return true;
+}
 bool
 NewRecord::to_proto (ProtoRecord &dst) const
 {
@@ -724,6 +998,25 @@ NewRecord::from_proto (const ProtoRecord &src)
 
 namespace Inner {
 bool
+InnerRecord::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
+{
+  Rapicorn::Plic::FieldBuffer &fb = dst.add_rec (3);
+  fb.add_int64 (this->x);
+  fb.add_int64 (this->y);
+  if (!this->rec.proto_add (fb)) return false;
+  return true;
+}
+bool
+InnerRecord::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (src.pop_rec());
+  if (fbr.remaining() != 3) return false;
+  this->x = fbr.pop_int64();
+  this->y = fbr.pop_int64();
+  if (!this->rec.proto_pop (fbr)) return false;
+  return true;
+}
+bool
 InnerRecord::to_proto (ProtoRecord &dst) const
 {
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
@@ -755,6 +1048,21 @@ InnerRecord::from_proto (const ProtoRecord &src)
 
 } // Inner
 bool
+Refer2Inner::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
+{
+  Rapicorn::Plic::FieldBuffer &fb = dst.add_rec (1);
+  if (!this->r.proto_add (fb)) return false;
+  return true;
+}
+bool
+Refer2Inner::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (src.pop_rec());
+  if (fbr.remaining() != 1) return false;
+  if (!this->r.proto_pop (fbr)) return false;
+  return true;
+}
+bool
 Refer2Inner::to_proto (ProtoRecord &dst) const
 {
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
@@ -777,6 +1085,27 @@ Refer2Inner::from_proto (const ProtoRecord &src)
 } // MandatoryNamespace
 
 namespace OtherNamespace {
+bool
+SomeRecord::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
+{
+  Rapicorn::Plic::FieldBuffer &fb = dst.add_rec (4);
+  if (!this->r1.proto_add (fb)) return false;
+  if (!this->r2.proto_add (fb)) return false;
+  if (!this->r3.proto_add (fb)) return false;
+  if (!this->r4.proto_add (fb)) return false;
+  return true;
+}
+bool
+SomeRecord::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (src.pop_rec());
+  if (fbr.remaining() != 4) return false;
+  if (!this->r1.proto_pop (fbr)) return false;
+  if (!this->r2.proto_pop (fbr)) return false;
+  if (!this->r3.proto_pop (fbr)) return false;
+  if (!this->r4.proto_pop (fbr)) return false;
+  return true;
+}
 bool
 SomeRecord::to_proto (ProtoRecord &dst) const
 {
@@ -928,6 +1257,23 @@ UIWidgetArea::on_click2in (const std::string &command)
 
 
 bool
+QuickRecord::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
+{
+  Rapicorn::Plic::FieldBuffer &fb = dst.add_rec (2);
+  fb.add_int64 (this->int1);
+  fb.add_int64 (this->int2);
+  return true;
+}
+bool
+QuickRecord::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (src.pop_rec());
+  if (fbr.remaining() != 2) return false;
+  this->int1 = fbr.pop_int64();
+  this->int2 = fbr.pop_int64();
+  return true;
+}
+bool
 QuickRecord::to_proto (ProtoRecord &dst) const
 {
   RemoteProcedure_Record &rpr = RPRecordCast (dst);
@@ -953,6 +1299,27 @@ QuickRecord::from_proto (const ProtoRecord &src)
   return true;
 }
 
+bool
+QuickSequence::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
+{
+  const size_t len = somefloat.size();
+  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  for (size_t k = 0; k < len; k++) {
+    fb.add_double (this->somefloat[k]);
+  }
+  return true;
+}
+bool
+QuickSequence::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  const size_t len = fbr.remaining();
+  this->somefloat.reserve (len);
+  for (size_t k = 0; k < len; k++) {
+    this->somefloat.push_back (fbr.pop_double());
+  }
+  return true;
+}
 bool
 QuickSequence::to_proto (ProtoSequence &dst) const
 {
@@ -1114,6 +1481,149 @@ namespace OtherNamespace {
 } // OtherNamespace
 
 namespace InterfaceTests {
+static bool
+call_UIWidgetArea_simple_method (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 0) return false;
+  UIWidgetArea *self;
+  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  double rval = self->simple_method ();
+  rb.add_double (rval);
+  return true;
+}
+static bool
+call_UIWidgetArea_single_arg (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 1) return false;
+  UIWidgetArea *self;
+  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  int arg_n = fbr.pop_int64();
+  double rval = self->single_arg (arg_n);
+  rb.add_double (rval);
+  return true;
+}
+static bool
+call_UIWidgetArea_single_arg2 (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 1) return false;
+  UIWidgetArea *self;
+  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  int arg_n = fbr.pop_int64();
+  double rval = self->single_arg2 (arg_n);
+  rb.add_double (rval);
+  return true;
+}
+static bool
+call_UIWidgetArea_two_args (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 2) return false;
+  UIWidgetArea *self;
+  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  int arg_n = fbr.pop_int64();
+  double arg_r = fbr.pop_double();
+  double rval = self->two_args (arg_n, arg_r);
+  rb.add_double (rval);
+  return true;
+}
+static bool
+call_UIWidgetArea_two_args2 (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 2) return false;
+  UIWidgetArea *self;
+  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  int arg_n = fbr.pop_int64();
+  double arg_r = fbr.pop_double();
+  double rval = self->two_args2 (arg_n, arg_r);
+  rb.add_double (rval);
+  return true;
+}
+static bool
+call_UIWidgetArea_multi_args (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 5) return false;
+  UIWidgetArea *self;
+  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  int arg_n = fbr.pop_int64();
+  double arg_r = fbr.pop_double();
+  int arg_i = fbr.pop_int64();
+  std::string arg_s = fbr.pop_string();
+  double arg_y = fbr.pop_double();
+  double rval = self->multi_args (arg_n, arg_r, arg_i, arg_s, arg_y);
+  rb.add_double (rval);
+  return true;
+}
+static bool
+call_UIWidgetArea_self_method (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 2) return false;
+  UIWidgetArea *self;
+  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  UIWidgetArea *arg_ba1 = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  UIWidgetArea *arg_ba2 = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  double rval = self->self_method (*arg_ba1, *arg_ba2);
+  rb.add_double (rval);
+  return true;
+}
+static bool
+call_UIWidgetArea_void_method (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 0) return false;
+  UIWidgetArea *self;
+  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  self->void_method ();
+  return true;
+}
+static bool
+call_UIWidgetArea_on_click2out (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 0) return false;
+  UIWidgetArea *self;
+  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  std::string rval = self->on_click2out ();
+  rb.add_string (rval);
+  return true;
+}
+static bool
+call_UIWidgetArea_on_click2in (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 1) return false;
+  UIWidgetArea *self;
+  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  std::string arg_command = fbr.pop_string();
+  self->on_click2in (arg_command);
+  return true;
+}
+
 static bool
 handle_UIWidgetArea_simple_method (const RemoteProcedure    &_rope_rp,
                                    RemoteProcedure_Argument &_rope_aret)
@@ -1323,6 +1833,147 @@ handle_UIWidgetArea_on_click2in (const RemoteProcedure    &_rope_rp,
 
 
 
+
+
+
+
+static bool
+call_MethodTestInterface_method_with_void (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 0) return false;
+  MethodTestInterface *self;
+  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  self->method_with_void ();
+  return true;
+}
+static bool
+call_MethodTestInterface_method_with_bools (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 2) return false;
+  MethodTestInterface *self;
+  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  bool arg_input = fbr.pop_int64();
+  bool arg_optval = fbr.pop_int64();
+  bool rval = self->method_with_bools (arg_input, arg_optval);
+  rb.add_int64 (rval);
+  return true;
+}
+static bool
+call_MethodTestInterface_method_with_ints (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 2) return false;
+  MethodTestInterface *self;
+  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  int arg_input = fbr.pop_int64();
+  int arg_optval = fbr.pop_int64();
+  int rval = self->method_with_ints (arg_input, arg_optval);
+  rb.add_int64 (rval);
+  return true;
+}
+static bool
+call_MethodTestInterface_method_with_floats (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 2) return false;
+  MethodTestInterface *self;
+  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  double arg_input = fbr.pop_double();
+  double arg_optval = fbr.pop_double();
+  double rval = self->method_with_floats (arg_input, arg_optval);
+  rb.add_double (rval);
+  return true;
+}
+static bool
+call_MethodTestInterface_method_with_string (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 2) return false;
+  MethodTestInterface *self;
+  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  std::string arg_input = fbr.pop_string();
+  std::string arg_optval = fbr.pop_string();
+  std::string rval = self->method_with_string (arg_input, arg_optval);
+  rb.add_string (rval);
+  return true;
+}
+static bool
+call_MethodTestInterface_method_with_enum (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 2) return false;
+  MethodTestInterface *self;
+  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  QuickEnum arg_input = QuickEnum (fbr.pop_evalue());
+  QuickEnum arg_optval = QuickEnum (fbr.pop_evalue());
+  QuickEnum rval = self->method_with_enum (arg_input, arg_optval);
+  rb.add_evalue (rval);
+  return true;
+}
+static bool
+call_MethodTestInterface_method_with_record (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 2) return false;
+  MethodTestInterface *self;
+  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  QuickRecord arg_input;
+  if (!arg_input.proto_pop (fbr)) return false;
+  QuickRecord arg_optval;
+  if (!arg_optval.proto_pop (fbr)) return false;
+  QuickRecord rval = self->method_with_record (arg_input, arg_optval);
+  if (!rval.proto_add (rb)) return false;
+  return true;
+}
+static bool
+call_MethodTestInterface_method_with_sequence (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 2) return false;
+  MethodTestInterface *self;
+  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  QuickSequence arg_input;
+  if (!arg_input.proto_pop (fbr)) return false;
+  QuickSequence arg_optval;
+  if (!arg_optval.proto_pop (fbr)) return false;
+  QuickSequence rval = self->method_with_sequence (arg_input, arg_optval);
+  if (!rval.proto_add (rb)) return false;
+  return true;
+}
+static bool
+call_MethodTestInterface_method_with_interface (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 2) return false;
+  MethodTestInterface *self;
+  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  GrandChild *arg_input = Instance4StringCast<GrandChild> (fbr.pop_object());
+  GrandChild *arg_optval = Instance4StringCast<GrandChild> (fbr.pop_object());
+  GrandChild *rval = self->method_with_interface (*arg_input, *arg_optval);
+  rb.add_object (Instance2StringCast (rval));
+  return true;
+}
+
 static bool
 handle_MethodTestInterface_method_with_void (const RemoteProcedure    &_rope_rp,
                                              RemoteProcedure_Argument &_rope_aret)
@@ -1522,6 +2173,22 @@ handle_MethodTestInterface_method_with_interface (const RemoteProcedure    &_rop
 
 namespace RapicornPlicTest {
 
+
+static bool
+call_PureMethods_pure_method (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  Rapicorn::Plic::FieldBufferReader fbr (fb);
+  fbr.skip(); // proc_id
+  if (fbr.remaining() != 1 + 1) return false;
+  PureMethods *self;
+  self = Instance4StringCast<PureMethods> (fbr.pop_object());
+  rope_check (self, "self must be non-NULL");
+  double arg_f = fbr.pop_double();
+  int rval = self->pure_method (arg_f);
+  rb.add_int64 (rval);
+  return true;
+}
+
 static bool
 handle_PureMethods_pure_method (const RemoteProcedure    &_rope_rp,
                                 RemoteProcedure_Argument &_rope_aret)
@@ -1543,6 +2210,57 @@ handle_PureMethods_pure_method (const RemoteProcedure    &_rope_rp,
 }
 
 } // RapicornPlicTest
+
+static bool __UNUSED__
+plic_call_wrapper_switch (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+{
+  switch (fb.first_id()) {
+  case 0x02000001: // UIWidgetArea::simple_method
+    return InterfaceTests::call_UIWidgetArea_simple_method (fb, rb);
+  case 0x02000002: // UIWidgetArea::single_arg
+    return InterfaceTests::call_UIWidgetArea_single_arg (fb, rb);
+  case 0x02000003: // UIWidgetArea::single_arg2
+    return InterfaceTests::call_UIWidgetArea_single_arg2 (fb, rb);
+  case 0x02000004: // UIWidgetArea::two_args
+    return InterfaceTests::call_UIWidgetArea_two_args (fb, rb);
+  case 0x02000005: // UIWidgetArea::two_args2
+    return InterfaceTests::call_UIWidgetArea_two_args2 (fb, rb);
+  case 0x02000006: // UIWidgetArea::multi_args
+    return InterfaceTests::call_UIWidgetArea_multi_args (fb, rb);
+  case 0x02000007: // UIWidgetArea::self_method
+    return InterfaceTests::call_UIWidgetArea_self_method (fb, rb);
+  case 0x01000008: // UIWidgetArea::void_method
+    return InterfaceTests::call_UIWidgetArea_void_method (fb, rb);
+  case 0x02000009: // UIWidgetArea::on_click2out
+    return InterfaceTests::call_UIWidgetArea_on_click2out (fb, rb);
+  case 0x0100000a: // UIWidgetArea::on_click2in
+    return InterfaceTests::call_UIWidgetArea_on_click2in (fb, rb);
+  case 0x0100000b: // MethodTestInterface::method_with_void
+    return InterfaceTests::call_MethodTestInterface_method_with_void (fb, rb);
+  case 0x0200000c: // MethodTestInterface::method_with_bools
+    return InterfaceTests::call_MethodTestInterface_method_with_bools (fb, rb);
+  case 0x0200000d: // MethodTestInterface::method_with_ints
+    return InterfaceTests::call_MethodTestInterface_method_with_ints (fb, rb);
+  case 0x0200000e: // MethodTestInterface::method_with_floats
+    return InterfaceTests::call_MethodTestInterface_method_with_floats (fb, rb);
+  case 0x0200000f: // MethodTestInterface::method_with_string
+    return InterfaceTests::call_MethodTestInterface_method_with_string (fb, rb);
+  case 0x02000010: // MethodTestInterface::method_with_enum
+    return InterfaceTests::call_MethodTestInterface_method_with_enum (fb, rb);
+  case 0x02000011: // MethodTestInterface::method_with_record
+    return InterfaceTests::call_MethodTestInterface_method_with_record (fb, rb);
+  case 0x02000012: // MethodTestInterface::method_with_sequence
+    return InterfaceTests::call_MethodTestInterface_method_with_sequence (fb, rb);
+  case 0x02000013: // MethodTestInterface::method_with_interface
+    return InterfaceTests::call_MethodTestInterface_method_with_interface (fb, rb);
+  case 0x02000014: // PureMethods::pure_method
+    return RapicornPlicTest::call_PureMethods_pure_method (fb, rb);
+  default:
+    die();
+  }
+  return false;
+}
+
 
 static bool __UNUSED__
 rope_callee_handler (const RemoteProcedure _rope_rp,

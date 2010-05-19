@@ -129,8 +129,8 @@ public:
   vector<String> cmdline_args;
   UIThread (const String &name) :
     Thread (name),
-    m_cpu (-1),
     m_loop (NULL),
+    m_cpu (-1),
     rpx (0)
   {}
   ~UIThread()
@@ -386,10 +386,10 @@ MODULE_INIT_FUNCTION (void) // conventional dlmodule initializer
 
   // initialize Rapicorn with dummy argv, hardcode X11 temporarily
   {
-    int dummyargc = 1;
+    // int dummyargc = 1;
     char *dummyargs[] = { NULL, NULL };
     dummyargs[0] = argv0[0] ? argv0 : (char*) "Python>>>";
-    char **dummyargv = dummyargs;
+    // char **dummyargv = dummyargs;
     // FIXME: // App.init_with_x11 (&dummyargc, &dummyargv, dummyargs[0]);
   }
   free (argv0);
@@ -421,7 +421,7 @@ cpu_affinity (int cpu)
 
   if (pthread_getaffinity_np (thread, sizeof (cpu_set_t), &cpuset) != 0)
     perror ("pthread_getaffinity_np");
-  printf ("Affinity(%d/%d cpus): thread=%p", sysconf (_SC_NPROCESSORS_ONLN), CPU_SETSIZE, thread);
+  printf ("Affinity(%ld/%d cpus): thread=%p", sysconf (_SC_NPROCESSORS_ONLN), CPU_SETSIZE, (void*)thread);
   for (int j = 0; j < CPU_SETSIZE; j++)
     if (CPU_ISSET (j, &cpuset))
       {
