@@ -126,6 +126,7 @@ public:
     Thread (name),
     m_loop (NULL),
     m_cpu (-1),
+    rrx (0),
     rpx (0)
   {}
   ~UIThread()
@@ -155,6 +156,7 @@ public:
       }
     rrc.signal();
     rrm.unlock();
+    Thread::Self::yield(); // allow fast return value handling
   }
   FieldBuffer*
   fetch_return (void)
