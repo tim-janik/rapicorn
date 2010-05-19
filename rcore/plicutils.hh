@@ -17,6 +17,7 @@
 #ifndef __RAPICORN_PLICUTILS_HH__
 #define __RAPICORN_PLICUTILS_HH__
 
+#include "rapicornutils.hh"
 #include <string>
 #include <vector>
 
@@ -44,12 +45,13 @@ public:
 };
 
 union FieldUnion;
+class _FakeFB_Size { FieldUnion *u; virtual ~_FakeFB_Size() {}; };
 
 union FieldUnion {
   int64        vint64;
   double       vdouble;
   uint64       smem[(sizeof (String) + 7) / 8];         // String
-  uint64       bmem[(sizeof (FieldUnion*) + 7) / 8];    // FieldBuffer
+  uint64       bmem[(sizeof (_FakeFB_Size) + 7) / 8];   // FieldBuffer
   uint8        bytes[8];                // FieldBuffer types
   struct { uint capacity, index; };     // FieldBuffer.buffermem[0]
 };
@@ -57,6 +59,8 @@ union FieldUnion {
 class FieldBufferReader;
 
 class FieldBuffer {
+  friend class FieldBufferReader;
+protected:
   FieldUnion        *buffermem;
   inline uint        offset () const { const uint offs = 1 + (n_types() + 7) / 8; return offs; }
   inline FieldType   type_at (uint n) const { return FieldType (buffermem[1 + n/8].bytes[n%8]); }
@@ -66,9 +70,11 @@ class FieldBuffer {
   inline FieldUnion& getu () const    { return buffermem[offset() + nth()]; }
   inline FieldUnion& addu (FieldType ft) { set_type (ft); FieldUnion &u = getu(); buffermem[0].index++; return u; }
   inline void        check() { /* FIXME: n_types() shouldn't be exceeded */ }
-  friend class FieldBufferReader;
   inline FieldUnion& uat (uint n) const { return n < n_types() ? buffermem[offset() + n] : *(FieldUnion*) NULL; }
+  explicit           FieldBuffer (uint _ntypes);
+  explicit           FieldBuffer (uint, FieldUnion*, uint);
 public:
+  virtual     ~FieldBuffer();
   inline int64 first_id () const { return buffermem && type_at (0) == INT ? uat (0).vint64 : 0; }
   inline void add_int64  (int64  vint64)  { FieldUnion &u = addu (INT); u.vint64 = vint64; check(); }
   inline void add_evalue (int64  vint64)  { FieldUnion &u = addu (ENUM); u.vint64 = vint64; check(); }
@@ -78,42 +84,15 @@ public:
   inline void add_object (const String &s) { FieldUnion &u = addu (INSTANCE); new (&u) String (s); check(); }
   inline FieldBuffer& add_rec (uint nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); check(); }
   inline FieldBuffer& add_seq (uint nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); check(); }
-  inline FieldBuffer     (uint _ntypes) :
-    buffermem (NULL)
-  {
-    if (_ntypes > 61440)
-      ; // FIXME: _ntypes OOB
-    // buffermem layout: [{n_types,nth}] [{type nibble} * n_types]... [field]...
-    const uint _offs = 1 + (_ntypes + 7) / 8;
-    buffermem = new FieldUnion[_offs + _ntypes];
-    wmemset ((wchar_t*) buffermem, 0, sizeof (FieldUnion[_offs + _ntypes]) / sizeof (wchar_t));
-    buffermem[0].capacity = _ntypes;
-    buffermem[0].index = 0;
-  }
-  inline const uint8&
-  buffer  (uint *l = NULL) const
-  {
-    if (l)
-      *l = sizeof (FieldUnion[offset() + n_types()]);
-    return *(uint8*) buffermem;
-  }
-  inline ~FieldBuffer()
-  {
-    while (nth() > 0)
-      {
-        buffermem[0].index--; // nth()--
-        switch (type_at (nth()))
-          {
-          case INSTANCE:
-          case STRING:
-          case FUNC:    { FieldUnion &u = getu(); ((String*) &u)->~String(); }; break;
-          case SEQUENCE:
-          case RECORD:  { FieldUnion &u = getu(); ((FieldBuffer*) &u)->~FieldBuffer(); }; break;
-          default: ;
-          }
-      }
-    delete [] buffermem;
-  }
+  static FieldBuffer* _new (uint _ntypes);
+  inline void         reset();
+};
+
+class FieldBuffer8 : public FieldBuffer {
+  FieldUnion bmem[1 + 1 + 8];
+public:
+  virtual ~FieldBuffer8 () { reset(); buffermem = NULL; }
+  inline   FieldBuffer8 (uint ntypes = 8) : FieldBuffer (ntypes, bmem, sizeof (bmem)) {}
 };
 
 class FieldBufferReader {
@@ -145,6 +124,27 @@ public:
   inline const FieldBuffer& pop_rec () { FieldUnion &u = fb_popu(); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& pop_seq () { FieldUnion &u = fb_popu(); return *(FieldBuffer*) &u; }
 };
+
+/* === inline implementations === */
+inline void
+FieldBuffer::reset()
+{
+  if (!buffermem)
+    return;
+  while (nth() > 0)
+    {
+      buffermem[0].index--; // nth()--
+      switch (type_at (nth()))
+        {
+        case INSTANCE:
+        case STRING:
+        case FUNC:    { FieldUnion &u = getu(); ((String*) &u)->~String(); }; break;
+        case SEQUENCE:
+        case RECORD:  { FieldUnion &u = getu(); ((FieldBuffer*) &u)->~FieldBuffer(); }; break;
+        default: ;
+        }
+    }
+}
 
 } // Plic
 } // Rapicorn
