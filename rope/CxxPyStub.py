@@ -100,10 +100,10 @@ PyList_Take_Item (PyObject *pylist, PyObject **pyitemp)
   return r;
 }
 
-static Rapicorn::Plic::FieldBuffer* plic_call_remote (Rapicorn::Plic::FieldBuffer&);
+static Rapicorn::Plic::FieldBuffer* plic_call_remote (Rapicorn::Plic::FieldBuffer*);
 #ifndef HAVE_PLIC_CALL_REMOTE
-static Rapicorn::Plic::FieldBuffer* plic_call_remote (Rapicorn::Plic::FieldBuffer&)
-{ return NULL; } // testing stub
+static Rapicorn::Plic::FieldBuffer* plic_call_remote (Rapicorn::Plic::FieldBuffer *fb)
+{ delete fb; return NULL; } // testing stub
 #endif
 
 static Rapicorn::Rope::RemoteProcedure* rope_call_remote (RemoteProcedure&);
@@ -207,7 +207,7 @@ class Generator:
       s += '  %s = plic_py%s_proto_pop (%s); ERRORif (!pyfoR);\n' % (var, type.name, fbr)
     elif type.storage == Decls.INTERFACE:
       s += '  %s = PyString_From_std_string (%s.pop_string()); ERRORifpy();\n' % (var, fbr)
-      s += '  // FIXME: convert to "__rope__object__"\n'
+      s += '  // FIXME: convert to "__plic__object__"\n'
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
@@ -394,7 +394,7 @@ class Generator:
     s += 'plic_pycall_%s_%s (PyObject *pyself, PyObject *pyargs)\n' % (class_info.name, mtype.name)
     s += '{\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
-    s += '  ' + FieldBuffer + ' fb (1 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # proc_id self
+    s += '  ' + FieldBuffer + ' &fb = *new ' + FieldBuffer + ' (1 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # proc_id self
     s += '  fb.add_int64 (0x%08x); // proc_id\n' % GenUtils.type_id (mtype)
     s += '  if (PyTuple_Size (pyargs) != 1 + 1 + %u) ERRORpy ("PLIC: wrong number of arguments");\n' % len (mtype.args) # proc_id self
     arg_counter = 1 # skip proc_od
@@ -405,21 +405,20 @@ class Generator:
       s += '  item = PyTuple_GET_ITEM (pyargs, %d); // %s\n' % (arg_counter, ma[0])
       s += self.generate_proto_add_py ('fb', ma[1], 'item')
       arg_counter += 1
-    s += '  fr = plic_call_remote (fb);\n'
+    s += '  fr = plic_call_remote (&fb); // deletes fb\n'
     if mtype.rtype.storage == Decls.VOID:
       s += '  if (fr) { delete fr; fr = NULL; }\n'
       s += '  return None_INCREF();\n'
     else:
       s += '  if (fr) {\n'
-      s += '    ' + FieldBuffer + 'Reader fbr (*fr);\n'
-      s += '    if (fbr.pop_int64() == 0x02000000) { // proc_id\n'
-      s += '      if (fbr.remaining() == 1) {\n'
-      s += reindent ('        ', self.generate_proto_pop_py ('fbr', mtype.rtype, 'pyfoR')) + '\n'
+      s += '    ' + FieldBuffer + 'Reader frr (*fr);\n'
+      s += '    if (frr.pop_int64() == 0x02000000) { // proc_id\n'
+      s += '      if (frr.remaining() == 1) {\n'
+      s += reindent ('        ', self.generate_proto_pop_py ('frr', mtype.rtype, 'pyfoR')) + '\n'
       s += '      }\n'
       s += '    }\n'
       s += '    delete fr; fr = NULL;\n'
       s += '  }\n'
-      s += '  if (!pyfoR) ERRORpy ("PLIC: marshalling error: invalid method return");\n'
       s += '  return pyfoR;\n'
     s += ' error:\n'
     s += '  if (fr) delete fr;\n'

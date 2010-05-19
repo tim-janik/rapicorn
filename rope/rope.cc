@@ -25,10 +25,6 @@
 
 static int cpu_affinity (int cpu); // FIXME
 
-// --- protocol buffers (generated) ---
-#include "ui/protocol-pb2.hh"
-#include <google/protobuf/text_format.h>
-
 // --- rope2cxx stubs (generated) ---
 #include "rope2cxx.cc"
 
@@ -37,13 +33,10 @@ namespace {
 
 // --- cpy2rope stubs (generated) ---
 #define HAVE_PLIC_CALL_REMOTE   1
-static Rapicorn::Plic::FieldBuffer* plic_call_remote    (Rapicorn::Plic::FieldBuffer&);
+static Rapicorn::Plic::FieldBuffer* plic_call_remote    (Rapicorn::Plic::FieldBuffer*);
 static PyObject*                    plic_cpy_trampoline (PyObject *pyself, PyObject *pyargs); // generated
-#define HAVE_ROPE_CALL_REMOTE   1
-static Rapicorn::Rope::RemoteProcedure* rope_call_remote    (Rapicorn::Rope::RemoteProcedure &proc);
-static PyObject*                        rope_cpy_trampoline (PyObject*, PyObject*); // generated
 #include "cpy2rope.cc"
-typedef RemoteProcedure RemoteReturn;
+typedef Rapicorn::Plic::FieldBuffer FieldBuffer;
 
 // --- globals ---
 static PyObject *rapicorn_exception = NULL;
@@ -64,51 +57,51 @@ class UIThread : public Thread {
     (*m_loop).add_source (esource, MAXINT);
     esource->exitable (false);
     {
-      RemoteProcedure *rp = new RemoteProcedure();
-      rp->set_proc_id (0x02000000);
-      RemoteProcedure_Argument *arg = rp->add_args();
+      FieldBuffer *fb = new FieldBuffer (2);
+      fb->add_int64 (0x02000000); // proc_id
       Deletable *dapp = &App;
-      arg->set_vstring (dapp->object_url());
-      push_return (rp);
+      fb->add_string (dapp->object_url());
+      push_return (fb);
     }
     App.execute_loops();
   }
   bool
   dispatch ()
   {
-    RemoteProcedure *proc = pop_proc();
-    if (proc)
+    FieldBuffer *call = pop_proc();
+    if (call)
       {
         if (0)
           {
+#if 0
             std::string string;
             if (!google::protobuf::TextFormat::PrintToString (*proc, &string))
               string = "{*protobuf::TextFormat ERROR*}";
             printerr ("Rapicorn::UIThread::call:\n%s\n", string.c_str());
+#endif
           }
-        RemoteProcedure_Argument aret;
-        bool success = rope_callee_handler (*proc, aret);
+        FieldBuffer fdummy (2), *fr;
+        if (call->first_id() >= 0x02000000)
+          fr = new FieldBuffer (2);
+        else
+          fr = &fdummy;
+        bool success = plic_call_wrapper_switch (*call, *fr);
         if (!success)
           {
             printerr ("UIThread::call error (see logs)\n"); // FIXME
-            if (proc->proc_id() >= 0x02000000)
+            if (call->first_id() >= 0x02000000)
               {
-                RemoteProcedure *rp = new RemoteProcedure();
-                rp->set_proc_id (0x02000000);
-                RemoteProcedure_Argument *arg = rp->add_args();
-                arg->set_vstring ("*ERROR*");
-                push_return (rp);
+                FieldBuffer *fb = new FieldBuffer (2);
+                fb->add_int64 (0x02000000); // proc_id
+                fb->add_string ("*ERROR*"); // FIXME
+                push_return (fb);
               }
+            if (call->first_id() >= 0x02000000)
+              delete fr;
           }
-        else if (proc->proc_id() >= 0x02000000)
-          {
-            RemoteProcedure *rp = new RemoteProcedure();
-            rp->set_proc_id (0x02000000);
-            RemoteProcedure_Argument *arg = rp->add_args();
-            *arg = aret;
-            push_return (rp);
-          }
-        delete proc;
+        else if (call->first_id() >= 0x02000000)
+            push_return (fr);
+        delete call;
       }
     return true;
   }
@@ -143,11 +136,11 @@ public:
 private:
   Mutex                         rrm;
   Cond                          rrc;
-  vector<RemoteReturn*>         rrv, rri, rro;
+  vector<FieldBuffer*>          rrv, rri, rro;
   size_t                        rrx;
 public:
   void
-  push_return (RemoteReturn *rret)
+  push_return (FieldBuffer *rret)
   {
     rrm.lock();
     if (rrv.size() < rrv.capacity())
@@ -163,7 +156,7 @@ public:
     rrc.signal();
     rrm.unlock();
   }
-  RemoteReturn*
+  FieldBuffer*
   fetch_return (void)
   {
     if (rrx >= rro.size())
@@ -191,11 +184,11 @@ public:
   }
 private:
   SpinLock /*Mutex*/            rps;
-  vector<RemoteProcedure*>      rpv, rpi, rpo;
+  vector<FieldBuffer*>          rpv, rpi, rpo;
   size_t                        rpx;
 public:
   void
-  push_proc (RemoteProcedure *proc)
+  push_proc (FieldBuffer *proc)
   {
     rps.lock();
     if (rpv.size() < rpv.capacity())
@@ -211,7 +204,7 @@ public:
     rps.unlock();
     m_loop->wakeup();
   }
-  RemoteProcedure*
+  FieldBuffer*
   pop_proc (bool advance = true)
   {
     if (rpx >= rpo.size())
@@ -260,31 +253,33 @@ public:
     ui_thread->m_cpu = !cpu_affinity (-1);
     ui_thread->start();
     cpu_affinity (-1);
-    RemoteProcedure *rpret = ui_thread->fetch_return();
+    FieldBuffer *rpret = ui_thread->fetch_return();
     String appurl;
-    if (rpret && rpret->proc_id() == 0x02000000 && rpret->args_size() > 0)
+    if (rpret && rpret->first_id() == 0x02000000)
       {
-        const RemoteProcedure_Argument &arg = rpret->args (0);
-        if (arg.has_vstring())
-          appurl = arg.vstring();
+        Rapicorn::Plic::FieldBufferReader rpr (*rpret);
+        rpr.skip(); // proc_id
+        if (rpr.remaining() > 0 && rpr.get_type() == Rapicorn::Plic::STRING)
+          appurl = rpr.pop_string();
       }
     delete rpret;
     return appurl;
   }
-  static Rapicorn::Rope::RemoteProcedure*
-  ui_thread_call_remote (Rapicorn::Rope::RemoteProcedure &proc)
+  static FieldBuffer*
+  ui_thread_call_remote (FieldBuffer *call)
   {
     if (!ui_thread)
       return false;
-    ui_thread->push_proc (new RemoteProcedure (proc));
+    int64 call_id = call->first_id();
+    ui_thread->push_proc (call); // deletes call
     if (0) // debug
-      printf ("Remote Procedure Call, id=0x%08x (%s-way)\n",
-              proc.proc_id(), proc.proc_id() >= 0x02000000 ? "two" : "one");
-    if (proc.proc_id() >= 0x02000000)
+      printf ("Remote Procedure Call, id=0x%08llx (%s-way)\n",
+              call_id, call_id >= 0x02000000 ? "two" : "one");
+    if (call_id >= 0x02000000)
       {
-        RemoteProcedure *rpret = ui_thread->fetch_return();
+        FieldBuffer *rpret = ui_thread->fetch_return();
         if (0)
-          printerr ("Remote Procedure Return: 0x%08x\n", rpret->proc_id());
+          printerr ("Remote Procedure Return: 0x%08llx\n", rpret->first_id());
         return rpret;
       }
     return NULL;
@@ -292,16 +287,10 @@ public:
 };
 UIThread *UIThread::ui_thread = NULL;
 
-static Rapicorn::Rope::RemoteProcedure*
-rope_call_remote (Rapicorn::Rope::RemoteProcedure &proc)
-{
-  return UIThread::ui_thread_call_remote (proc);
-}
-
 static Rapicorn::Plic::FieldBuffer*
-plic_call_remote (Rapicorn::Plic::FieldBuffer &call)
+plic_call_remote (Rapicorn::Plic::FieldBuffer *call)
 {
-  return NULL; // UIThread::ui_thread_call_remote (call);
+  return UIThread::ui_thread_call_remote (call);
 }
 
 // --- PyC functions ---
@@ -354,7 +343,7 @@ rope_init_dispatcher (PyObject *self,
 static PyMethodDef rope_vtable[] = {
   { "_init_dispatcher",         rope_init_dispatcher,         METH_VARARGS,
     "Rapicorn::_init_dispatcher() - initial setup." },
-  { "__rope_pytrampoline__",    rope_cpy_trampoline,          METH_VARARGS,
+  { "__rope_pytrampoline__",    plic_cpy_trampoline,          METH_VARARGS,
     "Rapicorn function invokation trampoline." },
   { "printout",                 rope_printout,                METH_VARARGS,
     "Rapicorn::printout() - print to stdout." },

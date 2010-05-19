@@ -32,7 +32,7 @@ def app_init_with_x11 (application_name = None, cmdline_args = None):
   if cmdline_args == None:
     cmdline_args = sys.argv
   a = Application()
-  a.__rope__object__ = pyRapicorn._init_dispatcher (application_name, cmdline_args)
+  a.__plic__object__ = pyRapicorn._init_dispatcher (application_name, cmdline_args)
   global app
   app = a
   return app

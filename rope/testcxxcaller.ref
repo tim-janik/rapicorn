@@ -1491,6 +1491,7 @@ call_UIWidgetArea_simple_method (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic
   self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   double rval = self->simple_method ();
+  rb.add_int64 (0x02000000); // proc_id for return value
   rb.add_double (rval);
   return true;
 }
@@ -1505,6 +1506,7 @@ call_UIWidgetArea_single_arg (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::F
   rope_check (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double rval = self->single_arg (arg_n);
+  rb.add_int64 (0x02000000); // proc_id for return value
   rb.add_double (rval);
   return true;
 }
@@ -1519,6 +1521,7 @@ call_UIWidgetArea_single_arg2 (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::
   rope_check (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double rval = self->single_arg2 (arg_n);
+  rb.add_int64 (0x02000000); // proc_id for return value
   rb.add_double (rval);
   return true;
 }
@@ -1534,6 +1537,7 @@ call_UIWidgetArea_two_args (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::Fie
   int arg_n = fbr.pop_int64();
   double arg_r = fbr.pop_double();
   double rval = self->two_args (arg_n, arg_r);
+  rb.add_int64 (0x02000000); // proc_id for return value
   rb.add_double (rval);
   return true;
 }
@@ -1549,6 +1553,7 @@ call_UIWidgetArea_two_args2 (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::Fi
   int arg_n = fbr.pop_int64();
   double arg_r = fbr.pop_double();
   double rval = self->two_args2 (arg_n, arg_r);
+  rb.add_int64 (0x02000000); // proc_id for return value
   rb.add_double (rval);
   return true;
 }
@@ -1567,6 +1572,7 @@ call_UIWidgetArea_multi_args (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::F
   std::string arg_s = fbr.pop_string();
   double arg_y = fbr.pop_double();
   double rval = self->multi_args (arg_n, arg_r, arg_i, arg_s, arg_y);
+  rb.add_int64 (0x02000000); // proc_id for return value
   rb.add_double (rval);
   return true;
 }
@@ -1582,6 +1588,7 @@ call_UIWidgetArea_self_method (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::
   UIWidgetArea *arg_ba1 = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
   UIWidgetArea *arg_ba2 = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
   double rval = self->self_method (*arg_ba1, *arg_ba2);
+  rb.add_int64 (0x02000000); // proc_id for return value
   rb.add_double (rval);
   return true;
 }
@@ -1607,6 +1614,7 @@ call_UIWidgetArea_on_click2out (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic:
   self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   std::string rval = self->on_click2out ();
+  rb.add_int64 (0x02000000); // proc_id for return value
   rb.add_string (rval);
   return true;
 }
@@ -1861,6 +1869,7 @@ call_MethodTestInterface_method_with_bools (Rapicorn::Plic::FieldBuffer &fb, Rap
   bool arg_input = fbr.pop_int64();
   bool arg_optval = fbr.pop_int64();
   bool rval = self->method_with_bools (arg_input, arg_optval);
+  rb.add_int64 (0x02000000); // proc_id for return value
   rb.add_int64 (rval);
   return true;
 }
@@ -1876,6 +1885,7 @@ call_MethodTestInterface_method_with_ints (Rapicorn::Plic::FieldBuffer &fb, Rapi
   int arg_input = fbr.pop_int64();
   int arg_optval = fbr.pop_int64();
   int rval = self->method_with_ints (arg_input, arg_optval);
+  rb.add_int64 (0x02000000); // proc_id for return value
   rb.add_int64 (rval);
   return true;
 }
@@ -1891,6 +1901,7 @@ call_MethodTestInterface_method_with_floats (Rapicorn::Plic::FieldBuffer &fb, Ra
   double arg_input = fbr.pop_double();
   double arg_optval = fbr.pop_double();
   double rval = self->method_with_floats (arg_input, arg_optval);
+  rb.add_int64 (0x02000000); // proc_id for return value
   rb.add_double (rval);
   return true;
 }
@@ -1906,6 +1917,7 @@ call_MethodTestInterface_method_with_string (Rapicorn::Plic::FieldBuffer &fb, Ra
   std::string arg_input = fbr.pop_string();
   std::string arg_optval = fbr.pop_string();
   std::string rval = self->method_with_string (arg_input, arg_optval);
+  rb.add_int64 (0x02000000); // proc_id for return value
   rb.add_string (rval);
   return true;
 }
@@ -1921,6 +1933,7 @@ call_MethodTestInterface_method_with_enum (Rapicorn::Plic::FieldBuffer &fb, Rapi
   QuickEnum arg_input = QuickEnum (fbr.pop_evalue());
   QuickEnum arg_optval = QuickEnum (fbr.pop_evalue());
   QuickEnum rval = self->method_with_enum (arg_input, arg_optval);
+  rb.add_int64 (0x02000000); // proc_id for return value
   rb.add_evalue (rval);
   return true;
 }
@@ -1938,6 +1951,7 @@ call_MethodTestInterface_method_with_record (Rapicorn::Plic::FieldBuffer &fb, Ra
   QuickRecord arg_optval;
   if (!arg_optval.proto_pop (fbr)) return false;
   QuickRecord rval = self->method_with_record (arg_input, arg_optval);
+  rb.add_int64 (0x02000000); // proc_id for return value
   if (!rval.proto_add (rb)) return false;
   return true;
 }
@@ -1955,6 +1969,7 @@ call_MethodTestInterface_method_with_sequence (Rapicorn::Plic::FieldBuffer &fb, 
   QuickSequence arg_optval;
   if (!arg_optval.proto_pop (fbr)) return false;
   QuickSequence rval = self->method_with_sequence (arg_input, arg_optval);
+  rb.add_int64 (0x02000000); // proc_id for return value
   if (!rval.proto_add (rb)) return false;
   return true;
 }
@@ -1970,6 +1985,7 @@ call_MethodTestInterface_method_with_interface (Rapicorn::Plic::FieldBuffer &fb,
   GrandChild *arg_input = Instance4StringCast<GrandChild> (fbr.pop_object());
   GrandChild *arg_optval = Instance4StringCast<GrandChild> (fbr.pop_object());
   GrandChild *rval = self->method_with_interface (*arg_input, *arg_optval);
+  rb.add_int64 (0x02000000); // proc_id for return value
   rb.add_object (Instance2StringCast (rval));
   return true;
 }
@@ -2185,6 +2201,7 @@ call_PureMethods_pure_method (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::F
   rope_check (self, "self must be non-NULL");
   double arg_f = fbr.pop_double();
   int rval = self->pure_method (arg_f);
+  rb.add_int64 (0x02000000); // proc_id for return value
   rb.add_int64 (rval);
   return true;
 }

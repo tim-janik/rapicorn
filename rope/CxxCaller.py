@@ -523,6 +523,7 @@ class Generator:
     s += ');\n'
     # store return value
     if hasret:
+      s += '  rb.add_int64 (0x02000000); // proc_id for return value\n'
       s += self.generate_proto_add_args ('rb', class_info, '', [('rval', mtype.rtype)], '')
     # done
     s += '  return true;\n'
