@@ -99,36 +99,6 @@ else
   CXXFLAGS="$CXXFLAGS $ADDON_CFLAGS"
 fi
 
-dnl ###---### Google Proto Buffers ###---###
-AC_DEFUN([RAPICORN_LIBPROTOBUF_CHECK],
-[
-  # check for libprotobuf (which lacks a .pc file)
-  AC_LANG_PUSH([C++])
-  AC_MSG_CHECKING([for Google Proto Buffers])
-  SAVED_LDFLAGS="$LDFLAGS"
-  LDFLAGS="$LDFLAGS -lprotobuf"
-  PROTOBUF_LIBS=
-  AC_LINK_IFELSE([
-    AC_LANG_PROGRAM([
-	#include <google/protobuf/descriptor.h>
-        #if GOOGLE_PROTOBUF_VERSION < 2000002
-        # error Protobuf version is older than 2.1.0.
-        #endif
-      ],[google::protobuf::FileDescriptor* file;])],
-    [PROTOBUF_LIBS="-lprotobuf"; AC_MSG_RESULT(ok) ],[ AC_MSG_RESULT(build error)
-    AC_MSG_ERROR([Missing libprotobuf, on Debian/Fedora provided by
-	libprotobuf-dev/protobuf-devel, see also: http://code.google.com/p/protobuf/])])
-  AC_SUBST(PROTOBUF_LIBS)
-  LDFLAGS="$SAVED_LDFLAGS"
-  AC_LANG_POP()
-  # check for Google Proto Compiler
-  AC_PATH_PROG([PROTOC],[protoc],[None])
-  if test "x$PROTOC" = "xNone" ; then
-    AC_MSG_ERROR([Failed to find the protoc compiler.
-	On Debian or Fedora this can be found in protobuf-compiler.])
-  fi
-])
-
 dnl # RAPICORN_SUBST_COMPUTED_SYSVAL(IDENTIFIER, INCLUDES) - defines & AC_SUBST()s RAPICORN_SYSVAL_$1
 AC_DEFUN([RAPICORN_SUBST_COMPUTED_SYSVAL], 
     [_AC_COMPUTE_INT([$1], [RAPICORN_SYSVAL_$1], [$2],
@@ -298,9 +268,6 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     CFLAGS="$saved_CFLAGS"
     LIBS="$saved_LIBS"
     AC_SUBST(RAPICORN_MEMORY_BARRIER_NEEDED)
-
-    dnl # --- Google Proto Buffers ---
-    RAPICORN_LIBPROTOBUF_CHECK
 ])
 
 dnl # RAPICORN_I18N_REQUIREMENTS() - check for all i18n requirements
@@ -413,15 +380,6 @@ AC_DEFUN([RAPICORN_PLIC_REQUIREMENTS],
     fi
     PLIC_VERSION="$RAPICORN_RELEASE"
     AC_SUBST(PLIC_VERSION)
-
-    # check for libprotobuf availability
-    AC_MSG_CHECKING([for google.protobuf Python module])
-    if $PYTHON -c "from google.protobuf import descriptor" ; then
-      AC_MSG_RESULT(ok)
-    else
-      AC_MSG_RESULT(fail)
-      AC_MSG_ERROR([failed to import google.protobufcheck in python])
-    fi
 
     # XML linting check
     AC_CHECK_PROGS(XMLLINT, xmllint, true)
@@ -591,8 +549,6 @@ Autoconfiguration complete.
 
 	Python extension:		enabled (curently mandatory)
 	Readline libs:			$READLINELIBS
-	Proto Buffers Library:		$PROTOBUF_LIBS
-	Proto Buffers Compiler:		$PROTOC
 
 	Binaries:			`printexpandvar $prefix/bin`
 	Libraries:			`printexpandvar $prefix/lib`

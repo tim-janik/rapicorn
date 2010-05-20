@@ -17,7 +17,7 @@ pyrapicorndir          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
 pyrapicorn_PYTHON      = __init__.py py2cpy.py
 pyrapicorn_LTLIBRARIES = pyRapicorn.la
 pyRapicorn_la_SOURCES  = $(pyrapicorn_cc_sources)
-pyRapicorn_la_LIBADD   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la $(PROTOBUF_LIBS)
+pyRapicorn_la_LIBADD   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
 pyRapicorn_la_LDFLAGS  = $(strip				\
 	-module -avoid-version -export-symbols-regex pyRapicorn	\
 	-no-undefined $(SYMBOLIC_LDFLAGS)			\
@@ -57,11 +57,10 @@ check-pystub:
 	$(_@) ${PLICINT} -G $(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testpystub.ref)
 	@$(call TSTTITLE,check-pystub-syntax)
-	@ # $(_@) $(PROTOC) $(srcdir)/protocol.proto --python_out=. # protocol_pb2.py
 	$(_@) $(PYTHON) -c "import py_compile; py_compile.compile ('$(srcdir)/testpystub.ref', 'testpystub.pyc')" && \
 	  $(PYTHON) $(srcdir)/testpystub.ref ; $(call TSTRESULT)
 EXTRA_DIST += PyStub.py
-CLEANFILES += testpystub.pyc protocol_pb2.py  protocol_pb2.pyc
+CLEANFILES += testpystub.pyc
 check-local: check-pystub
 # test CxxPyStub
 check-cxxpystub:

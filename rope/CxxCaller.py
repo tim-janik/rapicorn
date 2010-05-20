@@ -24,7 +24,6 @@ base_code = r"""
 // #include <rcore/rapicornsignal.hh>
 // #include <ui/interface.hh>
 #include <rapicorn.hh>
-#include <ui/protocol-pb2.hh>
 #include <rcore/plicutils.hh>
 
 #include <string>
@@ -43,50 +42,6 @@ typedef Rapicorn::ProtoRecord ProtoRecord;
 typedef Rapicorn::ProtoSequence ProtoSequence;
 typedef Rapicorn::ProtoArg ProtoArg;
 typedef Rapicorn::ProtoMessage ProtoMessage;
-typedef Rapicorn::Rope::RemoteProcedure RemoteProcedure;
-typedef Rapicorn::Rope::RemoteProcedure_Sequence RemoteProcedure_Sequence;
-typedef Rapicorn::Rope::RemoteProcedure_Record RemoteProcedure_Record;
-typedef Rapicorn::Rope::RemoteProcedure_Argument RemoteProcedure_Argument;
-static inline RemoteProcedure_Record&
-RPRecordCast (ProtoRecord &r)
-{
-  return *(RemoteProcedure_Record*) &r;
-}
-static inline const RemoteProcedure_Record&
-RPRecordCast (const ProtoRecord &r)
-{
-  return *(const RemoteProcedure_Record*) &r;
-}
-static inline ProtoRecord&
-ProtoRecordCast (RemoteProcedure_Record &r)
-{
-  return *(ProtoRecord*) &r;
-}
-static inline const ProtoRecord&
-ProtoRecordCast (const RemoteProcedure_Record &r)
-{
-  return *(const ProtoRecord*) &r;
-}
-static inline RemoteProcedure_Sequence&
-RPSequenceCast (ProtoSequence &r)
-{
-  return *(RemoteProcedure_Sequence*) &r;
-}
-static inline const RemoteProcedure_Sequence&
-RPSequenceCast (const ProtoSequence &r)
-{
-  return *(const RemoteProcedure_Sequence*) &r;
-}
-static inline ProtoSequence&
-ProtoSequenceCast (RemoteProcedure_Sequence &r)
-{
-  return *(ProtoSequence*) &r;
-}
-static inline const ProtoSequence&
-ProtoSequenceCast (const RemoteProcedure_Sequence &r)
-{
-  return *(const ProtoSequence*) &r;
-}
 template<class CLASS> static inline std::string
 Instance2StringCast (CLASS *obj)
 {
@@ -252,13 +207,9 @@ class Generator:
       s += self.generate_field (fl[0], 'std::vector<' + self.type2cpp (fl[1]) + '>')
       s += '  bool proto_add  (' + FieldBuffer + '&) const;\n'
       s += '  bool proto_pop  (' + FieldBuffer + 'Reader&);\n'
-      s += '  bool to_proto   (ProtoSequence &) const;\n'
-      s += '  bool from_proto (const ProtoSequence &);\n'
     if type_info.storage == Decls.RECORD:
       s += '  bool proto_add  (' + FieldBuffer + '&) const;\n'
       s += '  bool proto_pop  (' + FieldBuffer + 'Reader&);\n'
-      s += '  bool to_proto   (ProtoRecord &) const;\n'
-      s += '  bool from_proto (const ProtoRecord &);\n'
       s += '  inline %s () {' % type_info.name
       for fl in fieldlist:
         if fl[1].storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
@@ -266,51 +217,6 @@ class Generator:
       s += ' }\n'
     s += self.insertion_text (type_info.name)
     s += '};'
-    return s
-  def generate_to_proto (self, argname, type_info, valname, onerror = 'return false'):
-    s = ''
-    if type_info.storage == Decls.VOID:
-      pass
-    elif type_info.storage in (Decls.INT, Decls.ENUM):
-      s += '  %s->set_vint64 (%s);\n' % (argname, valname)
-    elif type_info.storage == Decls.FLOAT:
-      s += '  %s->set_vdouble (%s);\n' % (argname, valname)
-    elif type_info.storage == Decls.STRING:
-      s += '  %s->set_vstring (%s);\n' % (argname, valname)
-    elif type_info.storage == Decls.INTERFACE:
-      s += '  %s->set_vstring (Instance2StringCast (%s));\n' % (argname, valname)
-    elif type_info.storage == Decls.RECORD:
-      s += '  if (!%s.to_proto (ProtoRecordCast (*%s->mutable_vrec()))) %s;\n' % (valname, argname, onerror)
-    elif type_info.storage == Decls.SEQUENCE:
-      s += '  if (!%s.to_proto (ProtoSequenceCast (*%s->mutable_vseq()))) %s;\n' % (valname, argname, onerror)
-    else: # FUNC
-      raise RuntimeError ("Unexpected storage type: " + type_info.storage)
-    return s
-  def generate_from_proto (self, argname, type_info, valname):
-    s = ''
-    if type_info.storage == Decls.VOID:
-      pass
-    elif type_info.storage == Decls.INT:
-      s += '  if (!%s->has_vint64()) return false;\n' % argname
-      s += '  %s = %s->vint64();\n' % (valname, argname)
-    elif type_info.storage == Decls.ENUM:
-      s += '  if (!%s->has_vint64()) return false;\n' % argname
-      s += '  %s = %s (%s->vint64());\n' % (valname, self.type2cpp (type_info), argname)
-    elif type_info.storage == Decls.FLOAT:
-      s += '  if (!%s->has_vdouble()) return false;\n' % argname
-      s += '  %s = %s->vdouble();\n' % (valname, argname)
-    elif type_info.storage == Decls.STRING:
-      s += '  if (!%s->has_vstring()) return false;\n' % argname
-      s += '  %s = %s->vstring();\n' % (valname, argname)
-    elif type_info.storage in Decls.INTERFACE:
-      s += '  if (!%s->has_vstring()) return false;\n' % argname
-      s += '  %s = Instance4StringCast<%s> (%s->vstring());\n' % (valname, type_info.name, argname)
-    elif type_info.storage == Decls.RECORD:
-      s += '  if (!%s->has_vrec() || !%s.from_proto (ProtoRecordCast (%s->vrec()))) return false;\n' % (argname, valname, argname)
-    elif type_info.storage == Decls.SEQUENCE:
-      s += '  if (!%s->has_vseq() || !%s.from_proto (ProtoSequenceCast (%s->vseq()))) return false;\n' % (argname, valname, argname)
-    else: # FUNC
-      raise RuntimeError ("Unexpected storage type: " + type_info.storage)
     return s
   def storage_fieldname (self, storage):
     if storage in (Decls.INT, Decls.ENUM):
@@ -372,23 +278,6 @@ class Generator:
     s += self.generate_proto_pop_args ('fbr', type_info, 'this->', type_info.fields, '')
     s += '  return true;\n'
     s += '}\n'
-    s += 'bool\n%s::to_proto (ProtoRecord &dst) const\n{\n' % type_info.name
-    s += '  RemoteProcedure_Record &rpr = RPRecordCast (dst);\n'
-    s += '  RemoteProcedure_Argument *field;\n'
-    for fl in type_info.fields:
-      s += '  field = rpr.add_fields();\n'
-      s += self.generate_to_proto ('field', fl[1], fl[0])
-    s += '  return true;\n}\n'
-    s += 'bool\n%s::from_proto (const ProtoRecord &src)\n{\n' % type_info.name
-    s += '  const RemoteProcedure_Record &rpr = RPRecordCast (src);\n'
-    s += '  if (rpr.fields_size() < %d) return false;\n' % len (type_info.fields)
-    s += '  const RemoteProcedure_Argument *field;\n'
-    field_counter = 0
-    for fl in type_info.fields:
-      s += '  field = &rpr.fields (%d);\n' % field_counter
-      s += self.generate_from_proto ('field', fl[1], fl[0])
-      field_counter += 1
-    s += '  return true;\n}\n'
     return s
   def generate_sequence_impl (self, type_info):
     s = ''
@@ -424,71 +313,6 @@ class Generator:
     s += '  }\n'
     s += '  return true;\n'
     s += '}\n'
-    s += 'bool\n%s::to_proto (ProtoSequence &dst) const\n{\n' % type_info.name
-    s += '  RemoteProcedure_Sequence &rps = RPSequenceCast (dst);\n'
-    s += '  const size_t len = %s.size();\n' % el[0]
-    s += '  for (size_t k = 0; k < len; k++) {\n'
-    if el[1].storage in (Decls.INT, Decls.ENUM, Decls.FLOAT, Decls.STRING, Decls.INTERFACE):
-      s += '    rps.add_%s (%s[k]);\n' % (self.storage_fieldname (el[1].storage), el[0])
-    elif el[1].storage == Decls.RECORD:
-      s += '    if (!%s[k].to_proto (ProtoRecordCast (*rps.add_vrec()))) return false;\n' % el[0]
-    elif el[1].storage == Decls.SEQUENCE:
-      s += '    if (!%s[k].to_proto (ProtoSequenceCast (*rps.add_vseq()))) return false;\n' % el[0]
-    else: # FUNC VOID
-      raise RuntimeError ("Unexpected storage type: " + el[1].storage)
-    s += '  }\n'
-    s += '  return true;\n}\n'
-    s += 'bool\n%s::from_proto (const ProtoSequence &src)\n{\n' % type_info.name
-    s += '  const RemoteProcedure_Sequence &rps = RPSequenceCast (src);\n'
-    s += '  const size_t len = rps.%s_size();\n' % self.storage_fieldname (el[1].storage)
-    if el[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += '  %s.resize (len);\n' % el[0]
-    s += '  for (size_t k = 0; k < len; k++) {\n'
-    if el[1].storage in (Decls.INT, Decls.FLOAT, Decls.STRING, Decls.INTERFACE):
-      s += '    %s.push_back (rps.%s (k));\n' % (el[0], self.storage_fieldname (el[1].storage))
-    elif el[1].storage == Decls.ENUM:
-      s += '    %s.push_back (%s (rps.%s (k)));\n' % \
-           (el[0], self.type2cpp (el[1]), self.storage_fieldname (el[1].storage))
-    elif el[1].storage == Decls.RECORD:
-      s += '    if (!%s[k].from_proto (ProtoRecordCast (rps.vrec (k)))) return false;\n' % el[0]
-    elif el[1].storage == Decls.SEQUENCE:
-      s += '    if (!%s[k].from_proto (ProtoSequenceCast (rps.vseq (k)))) return false;\n' % el[0]
-    else: # FUNC VOID
-      raise RuntimeError ("Unexpected storage type: " + el[1].storage)
-    s += '  }\n'
-    s += '  return true;\n}\n'
-    return s
-  def generate_class_caller_impl (self, type_info):
-    s = ''
-    for m in type_info.methods:
-      interfacechar = '*' if m.rtype.storage == Decls.INTERFACE else ''
-      s += '%s%s\n' % (self.rtype2cpp (m.rtype), interfacechar)
-      q = '%s::%s (' % (type_info.name, m.name)
-      s += q
-      argindent = len (q)
-      l = []
-      for a in m.args:
-        l += [ self.format_arg (*a) ]
-      s += (',\n' + argindent * ' ').join (l)
-      s += ')\n{\n'
-      s += '  RemoteProcedure rp;\n'
-      s += '  rp.set_proc_id (0x%08x);\n' % GenUtils.type_id (m)
-      if m.args:
-        s += '  RemoteProcedure_Argument *arg;\n'
-      for a in m.args:
-        s += '  arg = rp.add_args();\n'
-        s += self.generate_to_proto ('arg', a[1], a[0], 'die()')
-      if m.rtype.storage == Decls.VOID:
-        pass
-      elif m.rtype.storage == Decls.ENUM:
-        s += '  return %s (0); // FIXME\n' % self.rtype2cpp (m.rtype)
-      elif m.rtype.storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  return %s(); // FIXME\n' % self.rtype2cpp (m.rtype)
-      elif m.rtype.storage == Decls.INTERFACE:
-        s += '  return (%s*) NULL; // FIXME\n' % self.rtype2cpp (m.rtype)
-      else:
-        s += '  return 0; // FIXME\n'
-      s += '}\n'
     return s
   def generate_class_call_wrapper (self, class_info, mtype, switchlines):
     s = ''
@@ -540,55 +364,6 @@ class Generator:
       s += '  case 0x%08x: // %s::%s\n' % (mid, type_info.name, m.name)
       nsname = '::'.join (self.type_relative_namespaces (type_info))
       s += '    return %s::call_%s_%s (fb, rb);\n' % (nsname, type_info.name, m.name)
-    s += '  default:\n'
-    s += '    die();\n'
-    s += '  }\n'
-    s += '  return false;\n'
-    s += '}\n'
-    return s
-  def generate_class_callee_impl (self, type_info, switchlines):
-    s = ''
-    for m in type_info.methods:
-      switchlines += [ (GenUtils.type_id (m), type_info, m) ]
-      hasret = m.rtype.storage != Decls.VOID
-      s += 'static bool\n'
-      c = 'handle_%s_%s ' % (type_info.name, m.name)
-      s += c + '(const RemoteProcedure    &_rope_rp,\n'
-      s += ' ' * len (c) + ' RemoteProcedure_Argument &_rope_aret)\n{\n'
-      s += '  const RemoteProcedure_Argument *_rope_arg;\n'
-      s += '  %s *self;\n' % self.type2cpp (type_info)
-      for a in m.args:
-        s += '  ' + self.format_var (a[0], a[1], '*') + ';\n'
-      s += '  rope_check (_rope_rp.args_size() == %d, "invalid nuber of args");\n' % (1 + len (m.args))
-      s += '  _rope_arg = &_rope_rp.args (0);\n'
-      s += self.generate_from_proto ('_rope_arg', type_info, 'self')
-      s += '  rope_check (self, "self must be non-NULL");\n'
-      arg_counter = 1
-      for arg in m.args:
-        s += '  _rope_arg = &_rope_rp.args (%d);\n' % arg_counter
-        s += self.generate_from_proto ('_rope_arg', arg[1], arg[0])
-        arg_counter += 1
-      s += '  '
-      if hasret:
-        interfacechar = '*' if m.rtype.storage == Decls.INTERFACE else ''
-        s += '%s%s _rope_retval = ' % (self.rtype2cpp (m.rtype), interfacechar)
-      s += 'self->' + m.name + ' ('
-      s += ', '.join (self.use_arg (a[0], a[1]) for a in m.args)
-      s += ');\n'
-      if hasret:
-        s += self.generate_to_proto ('(&_rope_aret)', m.rtype, '_rope_retval')
-      s += '  return true;\n}\n'
-    return s
-  def generate_callee_impl (self, switchlines):
-    s = ''
-    s += '\nstatic bool __UNUSED__\nrope_callee_handler (const RemoteProcedure _rope_rp,\n'
-    s += '                     RemoteProcedure_Argument &_rope_aret)\n{\n'
-    s += '  switch (_rope_rp.proc_id()) {\n'
-    for swcase in switchlines:
-      mid, type_info, m = swcase
-      s += '  case 0x%08x: // %s::%s\n' % (mid, type_info.name, m.name)
-      nsname = '::'.join (self.type_relative_namespaces (type_info))
-      s += '    return %s::handle_%s_%s (_rope_rp, _rope_aret);\n' % (nsname, type_info.name, m.name)
     s += '  default:\n'
     s += '    die();\n'
     s += '  }\n'
@@ -783,11 +558,10 @@ class Generator:
         elif tp.storage == Decls.SEQUENCE:
           s += self.generate_sequence_impl (tp) + '\n'
         elif tp.storage == Decls.INTERFACE:
-          s += self.generate_class_caller_impl (tp) + '\n'
+          pass # FIXME
     # generate server stubs
     if self.gen_server:
       s += '\n// --- Server Stubs ---\n'
-      switchlinesO = []
       switchlines = []
       for tp in types:
         if tp.typedef_origin:
@@ -801,10 +575,8 @@ class Generator:
           for m in tp.methods:
             s += self.generate_class_call_wrapper (tp, m, switchlines)
           s += '\n'
-          s += self.generate_class_callee_impl (tp, switchlinesO) + '\n'
       s += self.open_namespace (None)
       s += self.generate_class_call_switch (switchlines) + '\n'
-      s += self.generate_callee_impl (switchlinesO) + '\n'
     # generate interface impls
     if self.gen_iface_impl:
       s += '\n// --- Interface Implementation Helpers ---\n'

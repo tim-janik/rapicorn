@@ -29,12 +29,6 @@ base_code = """
 #include <Python.h> // must be included first to configure std headers
 #include <string>
 
-#include <ui/protocol-pb2.hh>
-typedef Rapicorn::Rope::RemoteProcedure RemoteProcedure;
-typedef Rapicorn::Rope::RemoteProcedure_Sequence RemoteProcedure_Sequence;
-typedef Rapicorn::Rope::RemoteProcedure_Record RemoteProcedure_Record;
-typedef Rapicorn::Rope::RemoteProcedure_Argument RemoteProcedure_Argument;
-
 #include <rapicorn-core.hh>
 
 #define None_INCREF()   ({ Py_INCREF (Py_None); Py_None; })
@@ -104,12 +98,6 @@ static Rapicorn::Plic::FieldBuffer* plic_call_remote (Rapicorn::Plic::FieldBuffe
 #ifndef HAVE_PLIC_CALL_REMOTE
 static Rapicorn::Plic::FieldBuffer* plic_call_remote (Rapicorn::Plic::FieldBuffer *fb)
 { delete fb; return NULL; } // testing stub
-#endif
-
-static Rapicorn::Rope::RemoteProcedure* rope_call_remote (RemoteProcedure&);
-#ifndef HAVE_ROPE_CALL_REMOTE
-static Rapicorn::Rope::RemoteProcedure* rope_call_remote (RemoteProcedure&)
-{ return NULL; } // testing stub
 #endif
 """
 
@@ -250,54 +238,6 @@ class Generator:
     s += '  return pyret;\n'
     s += '}\n'
     return s
-  def generate_record_funcs (self, type_info):
-    s = ''
-    s += 'static RAPICORN_UNUSED bool\n'
-    s += 'rope_frompy_%s (PyObject *instance, RemoteProcedure_Record &rpr)\n' % type_info.name
-    s += '{\n'
-    s += '  RemoteProcedure_Argument *field;\n'
-    s += '  PyObject *dictR = NULL, *item = NULL;\n'
-    s += '  bool success = false;\n'
-    s += '  dictR = PyObject_GetAttrString (instance, "__dict__"); if (!dictR) GOTO_ERROR();\n'
-    for fl in type_info.fields:
-      s += '  item = PyDict_GetItemString (dictR, "%s"); if (!dictR) GOTO_ERROR();\n' % (fl[0])
-      s += '  field = rpr.add_fields();\n'
-      if fl[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += self.generate_frompy_convert ('field->mutable', fl[1])
-      else:
-        s += self.generate_frompy_convert ('field->set', fl[1])
-    s += '  success = true;\n'
-    s += ' error:\n'
-    s += '  Py_XDECREF (dictR);\n'
-    s += '  return success;\n'
-    s += '}\n'
-    s += 'static RAPICORN_UNUSED bool\n'
-    s += 'rope_topy_%s (const RemoteProcedure_Record &rpr, PyObject **pyop)\n' % type_info.name
-    s += '{\n'
-    s += '  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL;\n'
-    s += '  const RemoteProcedure_Argument *field;\n'
-    s += '  bool success = false;\n'
-    s += '  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); if (!pyinstR) GOTO_ERROR();\n'
-    s += '  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); if (!dictR) GOTO_ERROR();\n'
-    s += '  if (rpr.fields_size() < %d) GOTO_ERROR();\n' % len (type_info.fields)
-    field_counter = 0
-    for fl in type_info.fields:
-      s += '  field = &rpr.fields (%d);\n' % field_counter
-      ftname = self.storage_fieldname (fl[1].storage)
-      s += self.generate_topy_convert ('field->%s()' % ftname, fl[1], 'field->has_%s()' % ftname)
-      s += '  if (PyDict_SetItemString (dictR, "%s", pyfoR) < 0) GOTO_ERROR();\n' % (fl[0])
-      s += '  else Py_DECREF (pyfoR);\n'
-      s += '  pyfoR = NULL;\n'
-      field_counter += 1
-    s += '  *pyop = (Py_INCREF (pyinstR), pyinstR);\n'
-    s += '  success = true;\n'
-    s += ' error:\n'
-    s += '  Py_XDECREF (pyfoR);\n'
-    s += '  Py_XDECREF (pyinstR);\n'
-    s += '  Py_XDECREF (dictR);\n'
-    s += '  return success;\n'
-    s += '}\n'
-    return s
   def generate_sequence_impl (self, type_info):
     s = ''
     s += 'struct %s {\n' % type_info.name
@@ -305,8 +245,6 @@ class Generator:
       pstar = '*' if fl[1].storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE) else ''
       s += '  ' + self.format_to_tab (self.type2cpp (fl[1].name)) + pstar + fl[0] + ';\n'
     s += '};\n'
-    s += 'static bool rope_frompy_%s (PyObject*, RemoteProcedure_Sequence&);\n' % type_info.name
-
     el = type_info.elements
     # sequence proto add
     s += 'static RAPICORN_UNUSED bool\n'
@@ -341,43 +279,6 @@ class Generator:
     s += '  if (pyret != listR)\n'
     s += '    Py_XDECREF (listR);\n'
     s += '  return pyret;\n'
-    s += '}\n'
-    return s
-  def generate_sequence_funcs (self, type_info):
-    s = ''
-    s += 'static bool RAPICORN_UNUSED\n'
-    s += 'rope_frompy_%s (PyObject *list, RemoteProcedure_Sequence &rps)\n' % type_info.name
-    s += '{\n'
-    el = type_info.elements
-    s += '  bool success = false;\n'
-    s += '  const ssize_t len = PyList_Size (list); if (len < 0) GOTO_ERROR();\n'
-    s += '  for (ssize_t k = 0; k < len; k++) {\n'
-    s += '    PyObject *item = PyList_GET_ITEM (list, k);\n'
-    s += reindent ('  ', self.generate_frompy_convert ('rps.add', el[1])) + '\n'
-    s += '  }\n'
-    s += '  success = true;\n'
-    s += ' error:\n'
-    s += '  return success;\n'
-    s += '}\n'
-    s += 'static bool RAPICORN_UNUSED\n'
-    s += 'rope_topy_%s (const RemoteProcedure_Sequence &rps, PyObject **pyop)\n' % type_info.name
-    s += '{\n'
-    s += '  PyObject *listR = NULL, *pyfoR = NULL;\n'
-    s += '  bool success = false;\n'
-    ftname = self.storage_fieldname (el[1].storage)
-    s += '  const size_t len = rps.%s_size();\n' % ftname
-    s += '  listR = PyList_New (len); if (!listR) GOTO_ERROR();\n'
-    s += '  for (size_t k = 0; k < len; k++) {\n'
-    s += reindent ('  ', self.generate_topy_convert ('rps.%s (k)' % ftname, el[1])) + '\n'
-    s += '    if (PyList_SetItem (listR, k, pyfoR) < 0) GOTO_ERROR();\n'
-    s += '    pyfoR = NULL;\n'
-    s += '  }\n'
-    s += '  *pyop = (Py_INCREF (listR), listR);\n'
-    s += '  success = true;\n'
-    s += ' error:\n'
-    s += '  Py_XDECREF (pyfoR);\n'
-    s += '  Py_XDECREF (listR);\n'
-    s += '  return success;\n'
     s += '}\n'
     return s
   def generate_caller_funcs (self, type_info, switchlines):
@@ -422,50 +323,6 @@ class Generator:
       s += '  return pyfoR;\n'
     s += ' error:\n'
     s += '  if (fr) delete fr;\n'
-    s += '  return NULL;\n'
-    s += '}\n'
-    return s
-  def generate_caller_func (self, type_info, m, switchlines):
-    s = ''
-    pytoff = 2 # tuple offset, skip method id and self
-    switchlines += [ 'case 0x%08x: // %s::%s\n' % (GenUtils.type_id (m), type_info.name, m.name) ]
-    switchlines += [ '  return rope__%s_%s (_py_self, _py_args);\n' % (type_info.name, m.name) ]
-    s += 'static PyObject*\n'
-    s += 'rope__%s_%s (PyObject *_py_self, PyObject *args)\n' % (type_info.name, m.name)
-    s += '{\n'
-    s += '  RemoteProcedure rp, *_rpret = NULL;\n'
-    s += '  rp.set_proc_id (0x%08x);\n' % GenUtils.type_id (m)
-    s += '  PyObject *item;\n'
-    if m.rtype.storage != Decls.VOID:
-      s += '  PyObject *pyfoR;\n'
-    s += '  RemoteProcedure_Argument *arg;\n'
-    s += '  if (PyTuple_Size (args) < %d) GOTO_ERROR();\n' % (pytoff + len (m.args))
-    arg_counter = pytoff - 1
-    s += '  item = PyTuple_GET_ITEM (args, %d);  // self\n' % arg_counter
-    arg_counter += 1
-    s += '  arg = rp.add_args();\n'
-    s += self.generate_frompy_convert ('arg->set', type_info)
-    for fl in m.args:
-      s += '  item = PyTuple_GET_ITEM (args, %d); // %s\n' % (arg_counter, fl[0])
-      arg_counter += 1
-      s += '  arg = rp.add_args();\n'
-      if fl[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += self.generate_frompy_convert ('arg->mutable', fl[1])
-      else:
-        s += self.generate_frompy_convert ('arg->set', fl[1])
-    s += '  _rpret = rope_call_remote (rp);\n'
-    if m.rtype.storage == Decls.VOID:
-      s += '  if (_rpret) { delete _rpret; _rpret = NULL; }\n'
-      s += '  return None_INCREF();\n'
-    else:
-      s += '  if (!_rpret || _rpret->proc_id() != 0x02000000 || _rpret->args_size() != 1)\n'
-      s += '    { PyErr_Format (PyExc_RuntimeError, "ROPE: missing method return"); goto error; }\n'
-      rtname = self.storage_fieldname (m.rtype.storage)
-      s += '  { const RemoteProcedure_Argument &cret = _rpret->args (0);\n'
-      s += reindent ('  ', self.generate_topy_convert ('cret.%s()' % rtname, m.rtype, 'cret.has_%s()' % rtname))
-      s += '    return pyfoR; }\n'
-    s += ' error:\n'
-    s += '  if (_rpret) delete _rpret;\n'
     s += '  return NULL;\n'
     s += '}\n'
     return s
@@ -570,20 +427,18 @@ class Generator:
       elif tp.storage == Decls.INTERFACE:
         s += ''
     # generate accessors
-    switchlinesO = [ '' ]
     switchlines = [ '' ]
     for tp in types:
       if tp.typedef_origin:
         pass
       elif tp.storage == Decls.RECORD:
-        s += self.generate_record_funcs (tp) + '\n'
+        pass
       elif tp.storage == Decls.SEQUENCE:
-        s += self.generate_sequence_funcs (tp) + '\n'
+        pass
       elif tp.storage == Decls.INTERFACE:
-        s += self.generate_caller_funcs (tp, switchlinesO) + '\n'
+        pass
         for m in tp.methods:
           s += self.generate_rpc_call_wrapper (tp, m, switchlines)
-    s += self.generate_caller_impl (switchlinesO)
     s += self.generate_rpc_call_switch (switchlines)
     return s
 
