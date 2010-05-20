@@ -74,7 +74,7 @@ class UIThread : public Thread {
   bool
   dispatch ()
   {
-    FieldBuffer *call = pop_proc();
+    const FieldBuffer *call = pop_proc();
     if (call)
       {
         if (0)

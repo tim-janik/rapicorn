@@ -1482,7 +1482,7 @@ namespace OtherNamespace {
 
 namespace InterfaceTests {
 static bool
-call_UIWidgetArea_simple_method (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_UIWidgetArea_simple_method (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1496,7 +1496,7 @@ call_UIWidgetArea_simple_method (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic
   return true;
 }
 static bool
-call_UIWidgetArea_single_arg (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_UIWidgetArea_single_arg (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1511,7 +1511,7 @@ call_UIWidgetArea_single_arg (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::F
   return true;
 }
 static bool
-call_UIWidgetArea_single_arg2 (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_UIWidgetArea_single_arg2 (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1526,7 +1526,7 @@ call_UIWidgetArea_single_arg2 (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::
   return true;
 }
 static bool
-call_UIWidgetArea_two_args (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_UIWidgetArea_two_args (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1542,7 +1542,7 @@ call_UIWidgetArea_two_args (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::Fie
   return true;
 }
 static bool
-call_UIWidgetArea_two_args2 (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_UIWidgetArea_two_args2 (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1558,7 +1558,7 @@ call_UIWidgetArea_two_args2 (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::Fi
   return true;
 }
 static bool
-call_UIWidgetArea_multi_args (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_UIWidgetArea_multi_args (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1577,7 +1577,7 @@ call_UIWidgetArea_multi_args (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::F
   return true;
 }
 static bool
-call_UIWidgetArea_self_method (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_UIWidgetArea_self_method (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1593,7 +1593,7 @@ call_UIWidgetArea_self_method (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::
   return true;
 }
 static bool
-call_UIWidgetArea_void_method (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_UIWidgetArea_void_method (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1605,7 +1605,7 @@ call_UIWidgetArea_void_method (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::
   return true;
 }
 static bool
-call_UIWidgetArea_on_click2out (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_UIWidgetArea_on_click2out (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1619,7 +1619,7 @@ call_UIWidgetArea_on_click2out (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic:
   return true;
 }
 static bool
-call_UIWidgetArea_on_click2in (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_UIWidgetArea_on_click2in (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1846,7 +1846,7 @@ handle_UIWidgetArea_on_click2in (const RemoteProcedure    &_rope_rp,
 
 
 static bool
-call_MethodTestInterface_method_with_void (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_MethodTestInterface_method_with_void (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1858,7 +1858,7 @@ call_MethodTestInterface_method_with_void (Rapicorn::Plic::FieldBuffer &fb, Rapi
   return true;
 }
 static bool
-call_MethodTestInterface_method_with_bools (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_MethodTestInterface_method_with_bools (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1874,7 +1874,7 @@ call_MethodTestInterface_method_with_bools (Rapicorn::Plic::FieldBuffer &fb, Rap
   return true;
 }
 static bool
-call_MethodTestInterface_method_with_ints (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_MethodTestInterface_method_with_ints (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1890,7 +1890,7 @@ call_MethodTestInterface_method_with_ints (Rapicorn::Plic::FieldBuffer &fb, Rapi
   return true;
 }
 static bool
-call_MethodTestInterface_method_with_floats (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_MethodTestInterface_method_with_floats (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1906,7 +1906,7 @@ call_MethodTestInterface_method_with_floats (Rapicorn::Plic::FieldBuffer &fb, Ra
   return true;
 }
 static bool
-call_MethodTestInterface_method_with_string (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_MethodTestInterface_method_with_string (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1922,7 +1922,7 @@ call_MethodTestInterface_method_with_string (Rapicorn::Plic::FieldBuffer &fb, Ra
   return true;
 }
 static bool
-call_MethodTestInterface_method_with_enum (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_MethodTestInterface_method_with_enum (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1938,7 +1938,7 @@ call_MethodTestInterface_method_with_enum (Rapicorn::Plic::FieldBuffer &fb, Rapi
   return true;
 }
 static bool
-call_MethodTestInterface_method_with_record (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_MethodTestInterface_method_with_record (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1956,7 +1956,7 @@ call_MethodTestInterface_method_with_record (Rapicorn::Plic::FieldBuffer &fb, Ra
   return true;
 }
 static bool
-call_MethodTestInterface_method_with_sequence (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_MethodTestInterface_method_with_sequence (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -1974,7 +1974,7 @@ call_MethodTestInterface_method_with_sequence (Rapicorn::Plic::FieldBuffer &fb, 
   return true;
 }
 static bool
-call_MethodTestInterface_method_with_interface (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_MethodTestInterface_method_with_interface (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -2191,7 +2191,7 @@ namespace RapicornPlicTest {
 
 
 static bool
-call_PureMethods_pure_method (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+call_PureMethods_pure_method (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   Rapicorn::Plic::FieldBufferReader fbr (fb);
   fbr.skip(); // proc_id
@@ -2229,7 +2229,7 @@ handle_PureMethods_pure_method (const RemoteProcedure    &_rope_rp,
 } // RapicornPlicTest
 
 static bool __UNUSED__
-plic_call_wrapper_switch (Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
+plic_call_wrapper_switch (const Rapicorn::Plic::FieldBuffer &fb, Rapicorn::Plic::FieldBuffer &rb)
 {
   switch (fb.first_id()) {
   case 0x02000001: // UIWidgetArea::simple_method

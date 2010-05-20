@@ -494,7 +494,7 @@ class Generator:
     s = ''
     switchlines += [ (GenUtils.type_id (mtype), class_info, mtype) ]
     s += 'static bool\n'
-    call = 'call_%s_%s (' % (class_info.name, mtype.name)
+    call = 'call_%s_%s (const ' % (class_info.name, mtype.name)
     s += call + FieldBuffer + ' &fb, ' + FieldBuffer + ' &rb)\n'
     s += '{\n'
     s += '  ' + FieldBuffer + 'Reader fbr (fb);\n'
@@ -531,7 +531,7 @@ class Generator:
     return s
   def generate_class_call_switch (self, switchlines):
     s = ''
-    s += '\nstatic bool __UNUSED__\nplic_call_wrapper_switch ('
+    s += '\nstatic bool __UNUSED__\nplic_call_wrapper_switch (const '
     s += FieldBuffer + ' &fb, ' + FieldBuffer + ' &rb)\n'
     s += '{\n'
     s += '  switch (fb.first_id()) {\n'
