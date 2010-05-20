@@ -8,11 +8,15 @@ DEFS      = -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RAPICORN-ROPE\" # "
 PLICINT   = $(top_builddir)/plic/plic-intern
 RAPICORNIDL = $(srcdir)/../ui/rapicorn.idl
 
-# === sources ===
+# === CxxRapicorn ===
+noinst_PROGRAMS     = cxxrapicorn
+cxxrapicorn_SOURCES = cxx-rope.cc
+cxxrapicorn_LDADD   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
+EXTRA_DIST         += cxx-rope.hh
+
+# === PyRapicorn ===
 pyrapicorn_cc_sources = rope.cc
 EXTRA_DIST           += rope.hh
-
-# === Python module ===
 pyrapicorndir          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
 pyrapicorn_PYTHON      = __init__.py py2cpy.py
 pyrapicorn_LTLIBRARIES = pyRapicorn.la

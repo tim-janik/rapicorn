@@ -40,6 +40,7 @@ namespace { // Anonymous
 
 // FIXME:
 typedef Rapicorn::Plic::FieldBuffer FieldBuffer;
+typedef Rapicorn::Plic::FieldBuffer8 FieldBuffer8;
 typedef Rapicorn::Plic::FieldBufferReader FieldBufferReader;
 typedef Rapicorn::ProtoRecord ProtoRecord;
 typedef Rapicorn::ProtoSequence ProtoSequence;
