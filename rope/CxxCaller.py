@@ -28,6 +28,7 @@ base_code = r"""
 
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 #if     __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
 #define __UNUSED__      __attribute__ ((__unused__))
@@ -38,6 +39,8 @@ base_code = r"""
 namespace { // Anonymous
 
 // FIXME:
+typedef Rapicorn::Plic::FieldBuffer FieldBuffer;
+typedef Rapicorn::Plic::FieldBufferReader FieldBufferReader;
 typedef Rapicorn::ProtoRecord ProtoRecord;
 typedef Rapicorn::ProtoSequence ProtoSequence;
 typedef Rapicorn::ProtoArg ProtoArg;
@@ -65,7 +68,15 @@ Instance4StringCast (const std::string &objstring)
   return target;
 }
 #define die()      (void) 0 // FIXME
+#define THROW_ERROR()   throw std::runtime_error ("PLIC: Marshalling failed")
 #define rope_check(cond,errmsg) do { if (!(cond)) { Rapicorn::printerr ("ROPE:error: %s\n", errmsg); return false; } } while (0)
+
+static FieldBuffer* plic_call_remote (FieldBuffer*);
+#ifndef HAVE_PLIC_CALL_REMOTE
+static FieldBuffer* plic_call_remote (FieldBuffer *fb)
+{ delete fb; return NULL; } // testing stub
+#define HAVE_PLIC_CALL_REMOTE
+#endif
 
 } // Anonymous
 """
@@ -239,25 +250,27 @@ class Generator:
              Decls.STRING:    'string',
              Decls.FUNC:      'func',
              Decls.INTERFACE: 'object' }.get (decls_type, None)
-  def generate_proto_add_args (self, fb, type_info, aprefix, arg_info_list, apostfix):
+  def generate_proto_add_args (self, fb, type_info, aprefix, arg_info_list, apostfix,
+                               onerr = 'return false'):
     s = ''
     for arg_it in arg_info_list:
       ident, type = arg_it
       ident = aprefix + ident + apostfix
       if type.storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  if (!%s.proto_add (%s)) return false;\n' % (ident, fb)
+        s += '  if (!%s.proto_add (%s)) %s;\n' % (ident, fb, onerr)
       elif type.storage == Decls.INTERFACE:
         s += '  %s.add_object (Instance2StringCast (%s));\n' % (fb, ident)
       else:
         s += '  %s.add_%s (%s);\n' % (fb, self.accessor_name (type.storage), ident)
     return s
-  def generate_proto_pop_args (self, fbr, type_info, aprefix, arg_info_list, apostfix):
+  def generate_proto_pop_args (self, fbr, type_info, aprefix, arg_info_list, apostfix,
+                               onerr = 'return false'):
     s = ''
     for arg_it in arg_info_list:
       ident, type = arg_it
       ident = aprefix + ident + apostfix
       if type.storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  if (!%s.proto_pop (%s)) return false;\n' % (ident, fbr)
+        s += '  if (!%s.proto_pop (%s)) %s;\n' % (ident, fbr, onerr)
       elif type.storage == Decls.ENUM:
         s += '  %s = %s (%s.pop_evalue());\n' % (ident, self.type2cpp (type), fbr)
       elif type.storage == Decls.INTERFACE:
@@ -312,6 +325,47 @@ class Generator:
       s += '    %s.push_back (fbr.pop_%s());\n' % (eident, self.accessor_name (el[1].storage))
     s += '  }\n'
     s += '  return true;\n'
+    s += '}\n'
+    return s
+  def generate_class_call_client_stub (self, class_info, mtype):
+    s = ''
+    therr = 'THROW_ERROR()'
+    hasret = mtype.rtype.storage != Decls.VOID
+    interfacechar = '*' if mtype.rtype.storage == Decls.INTERFACE else ''
+    # prototype
+    s += '%s%s\n' % (self.rtype2cpp (mtype.rtype), interfacechar)
+    q = '%s::%s (' % (class_info.name, mtype.name)
+    s += q
+    argindent = len (q)
+    l = []
+    for a in mtype.args:
+      l += [ self.format_arg ('arg_' + a[0], a[1], a[2]) ]
+    s += (',\n' + argindent * ' ').join (l)
+    s += ')\n{\n'
+    # vars, procedure
+    rdecl = ', *fr = NULL' if hasret else ''
+    s += '  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + %u)%s;\n' % (len (mtype.args), rdecl)
+    s += '  fb.add_int64 (0x%08x); // proc_id\n' % GenUtils.type_id (mtype)
+    # marshal args
+    s += self.generate_proto_add_args ('fb', class_info, '', [('this', class_info)], '')
+    ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
+    s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '', therr)
+    # call out
+    s += '  fr = ' if hasret else '  '
+    s += 'plic_call_remote (&fb); // deletes fb\n'
+    # unmarshal return
+    if hasret:
+      rarg = ('retval', mtype.rtype)
+      s += '  FieldBufferReader frr (*fr);\n'
+      s += '  frr.skip(); // proc_id\n'
+      # FIXME: check return error and return type
+      if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
+        s += '  ' + self.format_var (rarg[0], rarg[1], '*') + ';\n'
+        s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '', therr)
+      else:
+        vtype = self.format_vartype (rarg[1], '*') # 'int*' + ...
+        s += self.generate_proto_pop_args ('frr', class_info, vtype, [rarg], '', therr) # ... + 'x = 5;'
+      s += '  return retval;\n'
     s += '}\n'
     return s
   def generate_class_call_wrapper (self, class_info, mtype, switchlines):
@@ -558,7 +612,8 @@ class Generator:
         elif tp.storage == Decls.SEQUENCE:
           s += self.generate_sequence_impl (tp) + '\n'
         elif tp.storage == Decls.INTERFACE:
-          pass # FIXME
+          for m in tp.methods:
+            s += self.generate_class_call_client_stub (tp, m)
     # generate server stubs
     if self.gen_server:
       s += '\n// --- Server Stubs ---\n'

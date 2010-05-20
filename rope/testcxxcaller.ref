@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 #if     __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
 #define __UNUSED__      __attribute__ ((__unused__))
@@ -17,6 +18,8 @@
 namespace { // Anonymous
 
 // FIXME:
+typedef Rapicorn::Plic::FieldBuffer FieldBuffer;
+typedef Rapicorn::Plic::FieldBufferReader FieldBufferReader;
 typedef Rapicorn::ProtoRecord ProtoRecord;
 typedef Rapicorn::ProtoSequence ProtoSequence;
 typedef Rapicorn::ProtoArg ProtoArg;
@@ -44,7 +47,15 @@ Instance4StringCast (const std::string &objstring)
   return target;
 }
 #define die()      (void) 0 // FIXME
+#define THROW_ERROR()   throw std::runtime_error ("PLIC: Marshalling failed")
 #define rope_check(cond,errmsg) do { if (!(cond)) { Rapicorn::printerr ("ROPE:error: %s\n", errmsg); return false; } } while (0)
+
+static FieldBuffer* plic_call_remote (FieldBuffer*);
+#ifndef HAVE_PLIC_CALL_REMOTE
+static FieldBuffer* plic_call_remote (FieldBuffer *fb)
+{ delete fb; return NULL; } // testing stub
+#define HAVE_PLIC_CALL_REMOTE
+#endif
 
 } // Anonymous
 
@@ -696,6 +707,139 @@ SomeRecord::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
 } // OtherNamespace
 
 namespace InterfaceTests {
+double
+UIWidgetArea::simple_method ()
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0), *fr = NULL;
+  fb.add_int64 (0x02000001); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  double retval = frr.pop_double();
+  return retval;
+}
+double
+UIWidgetArea::single_arg (int arg_n)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
+  fb.add_int64 (0x02000002); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  fb.add_int64 (arg_n);
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  double retval = frr.pop_double();
+  return retval;
+}
+double
+UIWidgetArea::single_arg2 (int arg_n)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
+  fb.add_int64 (0x02000003); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  fb.add_int64 (arg_n);
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  double retval = frr.pop_double();
+  return retval;
+}
+double
+UIWidgetArea::two_args (int arg_n,
+                        double arg_r)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  fb.add_int64 (0x02000004); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  fb.add_int64 (arg_n);
+  fb.add_double (arg_r);
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  double retval = frr.pop_double();
+  return retval;
+}
+double
+UIWidgetArea::two_args2 (int arg_n,
+                         double arg_r)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  fb.add_int64 (0x02000005); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  fb.add_int64 (arg_n);
+  fb.add_double (arg_r);
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  double retval = frr.pop_double();
+  return retval;
+}
+double
+UIWidgetArea::multi_args (int arg_n,
+                          double arg_r,
+                          int arg_i,
+                          const std::string &arg_s,
+                          double arg_y)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 5), *fr = NULL;
+  fb.add_int64 (0x02000006); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  fb.add_int64 (arg_n);
+  fb.add_double (arg_r);
+  fb.add_int64 (arg_i);
+  fb.add_string (arg_s);
+  fb.add_double (arg_y);
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  double retval = frr.pop_double();
+  return retval;
+}
+double
+UIWidgetArea::self_method (UIWidgetArea &arg_ba1,
+                           UIWidgetArea &arg_ba2)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  fb.add_int64 (0x02000007); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2StringCast (arg_ba1));
+  fb.add_object (Instance2StringCast (arg_ba2));
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  double retval = frr.pop_double();
+  return retval;
+}
+void
+UIWidgetArea::void_method ()
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
+  fb.add_int64 (0x01000008); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  plic_call_remote (&fb); // deletes fb
+}
+std::string
+UIWidgetArea::on_click2out ()
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0), *fr = NULL;
+  fb.add_int64 (0x02000009); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  std::string retval = frr.pop_string();
+  return retval;
+}
+void
+UIWidgetArea::on_click2in (const std::string &arg_command)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1);
+  fb.add_int64 (0x0100000a); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  fb.add_string (arg_command);
+  plic_call_remote (&fb); // deletes fb
+}
 bool
 QuickRecord::proto_add (Rapicorn::Plic::FieldBuffer &dst) const
 {
@@ -736,9 +880,152 @@ QuickSequence::proto_pop (Rapicorn::Plic::FieldBufferReader &src)
   return true;
 }
 
+void
+MethodTestInterface::method_with_void ()
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
+  fb.add_int64 (0x0100000b); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  plic_call_remote (&fb); // deletes fb
+}
+bool
+MethodTestInterface::method_with_bools (bool arg_input,
+                                        bool arg_optval)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  fb.add_int64 (0x0200000c); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  fb.add_int64 (arg_input);
+  fb.add_int64 (arg_optval);
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  bool retval = frr.pop_int64();
+  return retval;
+}
+int
+MethodTestInterface::method_with_ints (int arg_input,
+                                       int arg_optval)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  fb.add_int64 (0x0200000d); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  fb.add_int64 (arg_input);
+  fb.add_int64 (arg_optval);
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  int retval = frr.pop_int64();
+  return retval;
+}
+double
+MethodTestInterface::method_with_floats (double arg_input,
+                                         double arg_optval)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  fb.add_int64 (0x0200000e); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  fb.add_double (arg_input);
+  fb.add_double (arg_optval);
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  double retval = frr.pop_double();
+  return retval;
+}
+std::string
+MethodTestInterface::method_with_string (const std::string &arg_input,
+                                         const std::string &arg_optval)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  fb.add_int64 (0x0200000f); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  fb.add_string (arg_input);
+  fb.add_string (arg_optval);
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  std::string retval = frr.pop_string();
+  return retval;
+}
+QuickEnum
+MethodTestInterface::method_with_enum (QuickEnum arg_input,
+                                       QuickEnum arg_optval)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  fb.add_int64 (0x02000010); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  fb.add_evalue (arg_input);
+  fb.add_evalue (arg_optval);
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  QuickEnum retval = QuickEnum (frr.pop_evalue());
+  return retval;
+}
+QuickRecord
+MethodTestInterface::method_with_record (const QuickRecord &arg_input,
+                                         const QuickRecord &arg_optval)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  fb.add_int64 (0x02000011); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  if (!arg_input.proto_add (fb)) THROW_ERROR();
+  if (!arg_optval.proto_add (fb)) THROW_ERROR();
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  QuickRecord retval;
+  if (!retval.proto_pop (frr)) THROW_ERROR();
+  return retval;
+}
+QuickSequence
+MethodTestInterface::method_with_sequence (const QuickSequence &arg_input,
+                                           const QuickSequence &arg_optval)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  fb.add_int64 (0x02000012); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  if (!arg_input.proto_add (fb)) THROW_ERROR();
+  if (!arg_optval.proto_add (fb)) THROW_ERROR();
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  QuickSequence retval;
+  if (!retval.proto_pop (frr)) THROW_ERROR();
+  return retval;
+}
+GrandChild*
+MethodTestInterface::method_with_interface (GrandChild &arg_input,
+                                            GrandChild &arg_optval)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  fb.add_int64 (0x02000013); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2StringCast (arg_input));
+  fb.add_object (Instance2StringCast (arg_optval));
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  GrandChild *retval = Instance4StringCast<GrandChild> (frr.pop_object());
+  return retval;
+}
 } // InterfaceTests
 
 namespace RapicornPlicTest {
+int
+PureMethods::pure_method (double arg_f)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
+  fb.add_int64 (0x02000014); // proc_id
+  fb.add_object (Instance2StringCast (this));
+  fb.add_double (arg_f);
+  fr = plic_call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  int retval = frr.pop_int64();
+  return retval;
+}
 
 // --- Server Stubs ---
 } // RapicornPlicTest

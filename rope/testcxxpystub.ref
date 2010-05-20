@@ -72,6 +72,7 @@ static Rapicorn::Plic::FieldBuffer* plic_call_remote (Rapicorn::Plic::FieldBuffe
 #ifndef HAVE_PLIC_CALL_REMOTE
 static Rapicorn::Plic::FieldBuffer* plic_call_remote (Rapicorn::Plic::FieldBuffer *fb)
 { delete fb; return NULL; } // testing stub
+#define HAVE_PLIC_CALL_REMOTE
 #endif
 
 enum Empty {

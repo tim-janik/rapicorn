@@ -24,6 +24,8 @@
 
 static int cpu_affinity (int cpu); // FIXME
 
+#define HAVE_PLIC_CALL_REMOTE   1
+
 // --- rope2cxx stubs (generated) ---
 #include "rope2cxx.cc"
 
@@ -31,7 +33,6 @@ static int cpu_affinity (int cpu); // FIXME
 namespace {
 
 // --- cpy2rope stubs (generated) ---
-#define HAVE_PLIC_CALL_REMOTE   1
 static Rapicorn::Plic::FieldBuffer* plic_call_remote    (Rapicorn::Plic::FieldBuffer*);
 static PyObject*                    plic_cpy_trampoline (PyObject *pyself, PyObject *pyargs); // generated
 #include "cpy2rope.cc"
