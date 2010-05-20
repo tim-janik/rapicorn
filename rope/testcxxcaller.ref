@@ -17,13 +17,41 @@
 
 namespace { // Anonymous
 
+class PlicProxyBase {
+  std::string m_object_url;
+protected:
+  static inline const std::string& url (const PlicProxyBase &obj) { return obj.m_object_url; }
+public:
+  explicit PlicProxyBase (const std::string &object_url) : m_object_url (object_url) {}
+  virtual ~PlicProxyBase() {}
+};
+
 // FIXME:
 typedef Rapicorn::Plic::FieldBuffer FieldBuffer;
+typedef Rapicorn::Plic::FieldBuffer8 FieldBuffer8;
 typedef Rapicorn::Plic::FieldBufferReader FieldBufferReader;
 typedef Rapicorn::ProtoRecord ProtoRecord;
 typedef Rapicorn::ProtoSequence ProtoSequence;
 typedef Rapicorn::ProtoArg ProtoArg;
 typedef Rapicorn::ProtoMessage ProtoMessage;
+template<class CLASS> static inline const std::string&
+Instance2Url (CLASS *obj)
+{
+  struct Wrapper : protected CLASS {
+  static inline const std::string& url (const CLASS &obj) { return PlicProxyBase::url (obj); }
+  };
+  static std::string nullurl ("NULL");
+  return obj ? Wrapper::url (*obj) : nullurl;
+}
+template<class CLASS> static inline const std::string&
+Instance2Url (CLASS &obj)
+{
+  struct Wrapper : protected CLASS {
+  static inline const std::string& url (const CLASS &obj) { return PlicProxyBase::url (obj); }
+  };
+  static std::string nullurl ("NULL");
+  return &obj ? Wrapper::url (obj) : nullurl;
+}
 template<class CLASS> static inline std::string
 Instance2StringCast (CLASS *obj)
 {
@@ -268,7 +296,7 @@ typedef std::string s;
 
 namespace InterfaceTests {
 
-class UIWidgetArea {
+class UIWidgetArea : protected virtual PlicProxyBase {
 protected:
   virtual /*Des*/         ~UIWidgetArea () = 0;
 public:
@@ -295,25 +323,25 @@ public:
   virtual void            on_click2in   (const std::string &command);
 };
 
-class Parent {
+class Parent : protected virtual PlicProxyBase {
 protected:
   virtual /*Des*/         ~Parent () = 0;
 public:
 };
 
-class Child : public virtual Parent {
+class Child : protected virtual PlicProxyBase, public virtual Parent {
 protected:
   virtual /*Des*/         ~Child () = 0;
 public:
 };
 
-class Descendant : public virtual Child {
+class Descendant : protected virtual PlicProxyBase, public virtual Child {
 protected:
   virtual /*Des*/         ~Descendant () = 0;
 public:
 };
 
-class GrandChild : public virtual Descendant {
+class GrandChild : protected virtual PlicProxyBase, public virtual Descendant {
 protected:
   virtual /*Des*/         ~GrandChild () = 0;
 public:
@@ -334,7 +362,7 @@ struct QuickSequence {
   bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
 };
 
-class MethodTestInterface {
+class MethodTestInterface : protected virtual PlicProxyBase {
 protected:
   virtual /*Des*/         ~MethodTestInterface () = 0;
 public:
@@ -367,7 +395,7 @@ enum ClickType {
   CLICK_KEY_REPEAT = 5,
 };
 
-class ButtonArea {
+class ButtonArea : protected virtual PlicProxyBase {
 protected:
   virtual /*Des*/         ~ButtonArea () = 0;
 public:
@@ -377,7 +405,7 @@ public:
   // Signal_activate sig_activate;
 };
 
-class PureMethods {
+class PureMethods : protected virtual PlicProxyBase {
 protected:
   virtual /*Des*/         ~PureMethods () = 0;
 public:
@@ -712,7 +740,7 @@ UIWidgetArea::simple_method ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0), *fr = NULL;
   fb.add_int64 (0x02000001); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   fr = plic_call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
@@ -724,7 +752,7 @@ UIWidgetArea::single_arg (int arg_n)
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
   fb.add_int64 (0x02000002); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   fb.add_int64 (arg_n);
   fr = plic_call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
@@ -737,7 +765,7 @@ UIWidgetArea::single_arg2 (int arg_n)
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
   fb.add_int64 (0x02000003); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   fb.add_int64 (arg_n);
   fr = plic_call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
@@ -751,7 +779,7 @@ UIWidgetArea::two_args (int arg_n,
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000004); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   fb.add_int64 (arg_n);
   fb.add_double (arg_r);
   fr = plic_call_remote (&fb); // deletes fb
@@ -766,7 +794,7 @@ UIWidgetArea::two_args2 (int arg_n,
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000005); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   fb.add_int64 (arg_n);
   fb.add_double (arg_r);
   fr = plic_call_remote (&fb); // deletes fb
@@ -784,7 +812,7 @@ UIWidgetArea::multi_args (int arg_n,
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 5), *fr = NULL;
   fb.add_int64 (0x02000006); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   fb.add_int64 (arg_n);
   fb.add_double (arg_r);
   fb.add_int64 (arg_i);
@@ -802,9 +830,9 @@ UIWidgetArea::self_method (UIWidgetArea &arg_ba1,
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000007); // proc_id
-  fb.add_object (Instance2StringCast (this));
-  fb.add_object (Instance2StringCast (arg_ba1));
-  fb.add_object (Instance2StringCast (arg_ba2));
+  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2Url (arg_ba1));
+  fb.add_object (Instance2Url (arg_ba2));
   fr = plic_call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
@@ -816,7 +844,7 @@ UIWidgetArea::void_method ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
   fb.add_int64 (0x01000008); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   plic_call_remote (&fb); // deletes fb
 }
 std::string
@@ -824,7 +852,7 @@ UIWidgetArea::on_click2out ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0), *fr = NULL;
   fb.add_int64 (0x02000009); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   fr = plic_call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
@@ -836,7 +864,7 @@ UIWidgetArea::on_click2in (const std::string &arg_command)
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1);
   fb.add_int64 (0x0100000a); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   fb.add_string (arg_command);
   plic_call_remote (&fb); // deletes fb
 }
@@ -885,7 +913,7 @@ MethodTestInterface::method_with_void ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
   fb.add_int64 (0x0100000b); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   plic_call_remote (&fb); // deletes fb
 }
 bool
@@ -894,7 +922,7 @@ MethodTestInterface::method_with_bools (bool arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x0200000c); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   fb.add_int64 (arg_input);
   fb.add_int64 (arg_optval);
   fr = plic_call_remote (&fb); // deletes fb
@@ -909,7 +937,7 @@ MethodTestInterface::method_with_ints (int arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x0200000d); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   fb.add_int64 (arg_input);
   fb.add_int64 (arg_optval);
   fr = plic_call_remote (&fb); // deletes fb
@@ -924,7 +952,7 @@ MethodTestInterface::method_with_floats (double arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x0200000e); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   fb.add_double (arg_input);
   fb.add_double (arg_optval);
   fr = plic_call_remote (&fb); // deletes fb
@@ -939,7 +967,7 @@ MethodTestInterface::method_with_string (const std::string &arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x0200000f); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   fb.add_string (arg_input);
   fb.add_string (arg_optval);
   fr = plic_call_remote (&fb); // deletes fb
@@ -954,7 +982,7 @@ MethodTestInterface::method_with_enum (QuickEnum arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000010); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   fb.add_evalue (arg_input);
   fb.add_evalue (arg_optval);
   fr = plic_call_remote (&fb); // deletes fb
@@ -969,7 +997,7 @@ MethodTestInterface::method_with_record (const QuickRecord &arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000011); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   if (!arg_input.proto_add (fb)) THROW_ERROR();
   if (!arg_optval.proto_add (fb)) THROW_ERROR();
   fr = plic_call_remote (&fb); // deletes fb
@@ -985,7 +1013,7 @@ MethodTestInterface::method_with_sequence (const QuickSequence &arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000012); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   if (!arg_input.proto_add (fb)) THROW_ERROR();
   if (!arg_optval.proto_add (fb)) THROW_ERROR();
   fr = plic_call_remote (&fb); // deletes fb
@@ -1001,9 +1029,9 @@ MethodTestInterface::method_with_interface (GrandChild &arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000013); // proc_id
-  fb.add_object (Instance2StringCast (this));
-  fb.add_object (Instance2StringCast (arg_input));
-  fb.add_object (Instance2StringCast (arg_optval));
+  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2Url (arg_input));
+  fb.add_object (Instance2Url (arg_optval));
   fr = plic_call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
@@ -1018,7 +1046,7 @@ PureMethods::pure_method (double arg_f)
 {
   FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
   fb.add_int64 (0x02000014); // proc_id
-  fb.add_object (Instance2StringCast (this));
+  fb.add_object (Instance2Url (this));
   fb.add_double (arg_f);
   fr = plic_call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
@@ -1336,7 +1364,7 @@ call_MethodTestInterface_method_with_interface (const Rapicorn::Plic::FieldBuffe
   GrandChild *arg_optval = Instance4StringCast<GrandChild> (fbr.pop_object());
   GrandChild *rval = self->method_with_interface (*arg_input, *arg_optval);
   rb.add_int64 (0x02000000); // proc_id for return value
-  rb.add_object (Instance2StringCast (rval));
+  rb.add_object (Instance2Url (rval));
   return true;
 }
 

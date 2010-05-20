@@ -38,6 +38,15 @@ base_code = r"""
 
 namespace { // Anonymous
 
+class PlicProxyBase {
+  std::string m_object_url;
+protected:
+  static inline const std::string& url (const PlicProxyBase &obj) { return obj.m_object_url; }
+public:
+  explicit PlicProxyBase (const std::string &object_url) : m_object_url (object_url) {}
+  virtual ~PlicProxyBase() {}
+};
+
 // FIXME:
 typedef Rapicorn::Plic::FieldBuffer FieldBuffer;
 typedef Rapicorn::Plic::FieldBuffer8 FieldBuffer8;
@@ -46,6 +55,24 @@ typedef Rapicorn::ProtoRecord ProtoRecord;
 typedef Rapicorn::ProtoSequence ProtoSequence;
 typedef Rapicorn::ProtoArg ProtoArg;
 typedef Rapicorn::ProtoMessage ProtoMessage;
+template<class CLASS> static inline const std::string&
+Instance2Url (CLASS *obj)
+{
+  struct Wrapper : protected CLASS {
+  static inline const std::string& url (const CLASS &obj) { return PlicProxyBase::url (obj); }
+  };
+  static std::string nullurl ("NULL");
+  return obj ? Wrapper::url (*obj) : nullurl;
+}
+template<class CLASS> static inline const std::string&
+Instance2Url (CLASS &obj)
+{
+  struct Wrapper : protected CLASS {
+  static inline const std::string& url (const CLASS &obj) { return PlicProxyBase::url (obj); }
+  };
+  static std::string nullurl ("NULL");
+  return &obj ? Wrapper::url (obj) : nullurl;
+}
 template<class CLASS> static inline std::string
 Instance2StringCast (CLASS *obj)
 {
@@ -260,7 +287,10 @@ class Generator:
       if type.storage in (Decls.RECORD, Decls.SEQUENCE):
         s += '  if (!%s.proto_add (%s)) %s;\n' % (ident, fb, onerr)
       elif type.storage == Decls.INTERFACE:
-        s += '  %s.add_object (Instance2StringCast (%s));\n' % (fb, ident)
+        if self.gen_client:
+          s += '  %s.add_object (Instance2Url (%s));\n' % (fb, ident)
+        else:
+          s += '  %s.add_object (Instance2StringCast (%s));\n' % (fb, ident)
       else:
         s += '  %s.add_%s (%s);\n' % (fb, self.accessor_name (type.storage), ident)
     return s
@@ -501,6 +531,8 @@ class Generator:
       l += [ pr ]
     l = self.inherit_reduce (l)
     l = ['public virtual ' + pr.name for pr in l] # types -> names
+    if self.gen_client:
+      l = ['protected virtual PlicProxyBase'] + l
     s += '\nclass %s' % type_info.name
     if l:
       s += ' : %s' % ', '.join (l)
