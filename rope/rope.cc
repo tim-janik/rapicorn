@@ -42,7 +42,7 @@ typedef Rapicorn::Plic::FieldBuffer8 FieldBuffer8;
 static PyObject *rapicorn_exception = NULL;
 
 // --- rapicorn thread ---
-static int  max_call_stack_size = 0;
+static uint  max_call_stack_size = 0;
 static void print_max_call_stack_size()
 {
   printerr ("DEBUG:atexit: max_call_stack_size: %u\n", max_call_stack_size);
