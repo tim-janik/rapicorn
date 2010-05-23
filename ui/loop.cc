@@ -484,6 +484,7 @@ EventLoop::iterate_loops (bool may_block,
         error ("EventLoop: failed to create wakeup pipe: %s", strerror (errno));
     }
   vector<PollFD> pfds;
+  pfds.reserve (7);
   int64 timeout_usecs = INT64_MAX;
   bool seen_must_dispatch = false;
   /* create referenced loop list */
