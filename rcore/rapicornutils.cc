@@ -327,36 +327,33 @@ void
 warning (const char *format,
          ...)
 {
-  fflush (stdout);
   va_list args;
   va_start (args, format);
   String ers = string_vprintf (format, args);
   va_end (args);
   warning (ers);
-  fflush (stderr);
 }
 
 void
 warning (const String &s)
 {
-  fflush (stdout);
   String msg ("\nWARNING: ");
   msg += s;
   msg += '\n';
+  fflush (stdout);
   fputs (msg.c_str(), stderr);
+  fflush (stderr);
 }
 
 void
 diag (const char *format,
       ...)
 {
-  fflush (stdout);
   va_list args;
   va_start (args, format);
   String ers = string_vprintf (format, args);
   va_end (args);
   diag (ers);
-  fflush (stderr);
 }
 
 void
@@ -365,7 +362,27 @@ diag (const String &s)
   String msg ("DIAG: ");
   msg += s;
   msg += '\n';
+  fflush (stdout);
   fputs (msg.c_str(), stderr);
+  fflush (stderr);
+}
+
+void
+diag_errno (const char *format, ...)
+{
+  int errno_val = errno;
+  va_list args;
+  va_start (args, format);
+  String ers = string_vprintf (format, args);
+  va_end (args);
+  diag (ers + ": " + string_from_errno (errno_val));
+}
+
+void
+diag_errno (const String &s)
+{
+  int errno_val = errno;
+  diag (s + ": " + string_from_errno (errno_val));
 }
 
 void
@@ -379,7 +396,6 @@ errmsg (const String &entity,
   String ers = string_vprintf (format, args);
   va_end (args);
   errmsg (entity, ers);
-  fflush (stderr);
 }
 
 void
@@ -390,7 +406,9 @@ errmsg (const String &entity,
   msg += entity.size() ? ": " : "DEBUG: ";
   msg += s;
   msg += '\n';
+  fflush (stdout);
   fputs (msg.c_str(), stderr);
+  fflush (stderr);
 }
 
 void

@@ -158,6 +158,8 @@ void        warning             (const char   *format, ...) RAPICORN_PRINTF (1, 
 void        warning             (const String &s);
 void        diag                (const char   *format, ...) RAPICORN_PRINTF (1, 2);
 void        diag                (const String &s);
+void        diag_errno          (const char   *format, ...) RAPICORN_PRINTF (1, 2);
+void        diag_errno          (const String &s);
 void        errmsg              (const String &entity, const char *format, ...) RAPICORN_PRINTF (2, 3);
 void        errmsg              (const String &entity, const String &s);
 void        printerr            (const char   *format, ...) RAPICORN_PRINTF (1, 2);
