@@ -16,6 +16,8 @@
  */
 #include "plicutils.hh"
 #include <assert.h>
+#include <stdio.h>
+#include <map>
 
 /* === Auxillary macros === */
 #define PLIC_CPP_PASTE2i(a,b)                   a ## b // indirection required to expand __LINE__ etc
@@ -26,6 +28,50 @@
 
 namespace Plic {
 
+/* === TypeHash === */
+String
+TypeHash::to_string() const
+{
+  String s;
+  for (uint i = 0; i < hash_size; i++)
+    {
+      char t[16 + 1];
+      snprintf (t, sizeof (t), "%016llx", qwords[i]);
+      s += t;
+    }
+  return s;
+}
+
+/* === Dispatchers === */
+typedef std::map<TypeHash, DispatchFunc> TypeHashMap;
+static TypeHashMap dispatcher_map;
+
+static inline void
+dispatcher_initializer ()
+{
+  if (PLIC_LIKELY (dispatcher_map.size()))
+    return;
+  // FIXME
+}
+
+void
+DispatcherRegistry::register_dispatcher (const DispatcherEntry &dentry)
+{
+  dispatcher_initializer();
+  dispatcher_map[TypeHash (dentry.hash_qwords)] = dentry.dispatcher;
+}
+
+FieldBuffer*
+DispatcherRegistry::dispatch_call (const FieldBuffer &call)
+{
+  const TypeHash &thash = call.first_type_hash();
+  DispatchFunc dispatcher = dispatcher_map[thash];
+  if (PLIC_UNLIKELY (!dispatcher))
+    return FieldBuffer::new_error ("unknown method hash: " + thash.to_string(), "PLIC");
+  return dispatcher (call);
+}
+
+/* === FieldBuffer === */
 FieldBuffer::FieldBuffer (uint _ntypes) :
   buffermem (NULL)
 {
@@ -55,6 +101,34 @@ FieldBuffer::~FieldBuffer()
   reset();
   if (buffermem)
     delete [] buffermem;
+}
+
+String
+FieldBuffer::first_id_str() const
+{
+  uint64 fid = first_id();
+  char t[16 + 1];
+  snprintf (t, sizeof (t), "%016llx", fid);
+  return t;
+}
+
+FieldBuffer*
+FieldBuffer::new_error (const String &msg,
+                        const String &domain)
+{
+  FieldBuffer *fr = FieldBuffer::_new (3);
+  fr->add_int64 (Plic::callid_error); // proc_id
+  fr->add_string (msg);
+  fr->add_string (domain);
+  return fr;
+}
+
+FieldBuffer*
+FieldBuffer::new_return()
+{
+  FieldBuffer *fr = FieldBuffer::_new (2);
+  fr->add_int64 (Plic::callid_return); // proc_id
+  return fr;
 }
 
 class OneChunkFieldBuffer : public FieldBuffer {

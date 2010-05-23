@@ -51,6 +51,43 @@ typedef uint32_t        uint;
 typedef int64_t         int64;
 typedef uint64_t        uint64;
 
+/* === Constants === */
+static const uint64 callid_return = 0x0ca0000000000000ULL;
+static const uint64 callid_oneway = 0x0ca1000000000000ULL;
+static const uint64 callid_twoway = 0x0ca2000000000000ULL;
+static const uint64 callid_error  = 0x0cae000000000000ULL;
+inline bool is_callid_return (const uint64 id) { return id >> 32 == callid_return >> 32; }
+inline bool is_callid_oneway (const uint64 id) { return id >> 32 == callid_oneway >> 32; }
+inline bool is_callid_twoway (const uint64 id) { return id >> 32 == callid_twoway >> 32; }
+inline bool is_callid_error  (const uint64 id) { return id >> 32 == callid_error  >> 32; }
+
+/* === Forward Declarations === */
+union FieldUnion;
+class FieldBuffer;
+class FieldBufferReader;
+typedef FieldBuffer* (*DispatchFunc) (const FieldBuffer&);
+
+/* === TypeHash === */
+struct TypeHash {
+  static const uint hash_size = 4;
+  uint64            qwords[hash_size];
+  inline bool       operator< (const TypeHash &rhs) const;
+  inline            TypeHash (const uint64 qw[hash_size]);
+  inline            TypeHash (uint64 qwa, uint64 qwb, uint64 qwc, uint64 qwd);
+  String            to_string() const;
+};
+
+/* === Dispatchers === */
+struct DispatcherEntry {
+  uint64            hash_qwords[TypeHash::hash_size];
+  DispatchFunc      dispatcher;
+};
+struct DispatcherRegistry {
+  static FieldBuffer* dispatch_call       (const FieldBuffer &call);
+  static void         register_dispatcher (const DispatcherEntry &dentry);
+  template<class T, size_t S> inline DispatcherRegistry (T (&)[S]);
+};
+
 /* === FieldBuffer === */
 typedef enum {
   VOID = 0,
@@ -58,8 +95,6 @@ typedef enum {
   RECORD, SEQUENCE, FUNC, INSTANCE
 } FieldType;
 
-class FieldBufferReader;
-union FieldUnion;
 class _FakeFieldBuffer { FieldUnion *u; virtual ~_FakeFieldBuffer() {}; };
 
 union FieldUnion {
@@ -88,7 +123,7 @@ protected:
   explicit           FieldBuffer (uint, FieldUnion*, uint);
 public:
   virtual     ~FieldBuffer();
-  inline int64 first_id () const { return buffermem && type_at (0) == INT ? uat (0).vint64 : 0; }
+  inline uint64 first_id () const { return buffermem && type_at (0) == INT ? uat (0).vint64 : 0; }
   inline void add_int64  (int64  vint64)  { FieldUnion &u = addu (INT); u.vint64 = vint64; check(); }
   inline void add_evalue (int64  vint64)  { FieldUnion &u = addu (ENUM); u.vint64 = vint64; check(); }
   inline void add_double (double vdouble) { FieldUnion &u = addu (FLOAT); u.vdouble = vdouble; check(); }
@@ -97,8 +132,13 @@ public:
   inline void add_object (const String &s) { FieldUnion &u = addu (INSTANCE); new (&u) String (s); check(); }
   inline FieldBuffer& add_rec (uint nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); check(); }
   inline FieldBuffer& add_seq (uint nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); check(); }
-  static FieldBuffer* _new (uint _ntypes); // Heap allocated FieldBuffer
+  inline TypeHash first_type_hash () const;
+  inline void     add_type_hash (uint64 a, uint64 b, uint64 c, uint64 d);
   inline void         reset();
+  String              first_id_str() const;
+  static FieldBuffer* _new (uint _ntypes); // Heap allocated FieldBuffer
+  static FieldBuffer* new_error (const String &msg, const String &domain = "");
+  static FieldBuffer* new_return();
 };
 
 class FieldBuffer8 : public FieldBuffer { // Stack contained buffer for up to 8 fields
@@ -118,6 +158,7 @@ public:
   FieldBufferReader (const FieldBuffer &_fb) : m_fb (_fb), m_nth (0) {}
   inline uint               remaining  () { return n_types() - m_nth; }
   inline void               skip       () { m_nth++; check(); }
+  inline void               skip4      () { m_nth += 4; check(); }
   inline uint               n_types    () { return m_fb.n_types(); }
   inline FieldType          get_type   () { return m_fb.type_at (m_nth); }
   inline int64              get_int64  () { FieldUnion &u = fb_getu(); return u.vint64; }
@@ -139,6 +180,63 @@ public:
 };
 
 /* === inline implementations === */
+inline
+TypeHash::TypeHash (const uint64 qw[hash_size])
+{
+  wmemcpy ((wchar_t*) qwords, (wchar_t*) qw, sizeof (qwords) / sizeof (wchar_t));
+}
+
+inline
+TypeHash::TypeHash (uint64 qwa, uint64 qwb, uint64 qwc, uint64 qwd)
+{
+  qwords[0] = qwa;
+  qwords[1] = qwb;
+  qwords[2] = qwc;
+  qwords[3] = qwd;
+}
+
+inline bool
+TypeHash::operator< (const TypeHash &rhs) const
+{
+  if (qwords[0] < rhs.qwords[0])
+    return 1;
+  else if (rhs.qwords[0] < qwords[0])
+    return 0;
+  for (uint i = 1; i < hash_size; i++)
+    if (qwords[i] < rhs.qwords[i])
+      return 1;
+    else if (rhs.qwords[i] < qwords[i])
+      return 0;
+  return 0; // equal
+}
+
+template<class T, size_t S> inline
+DispatcherRegistry::DispatcherRegistry (T (&ha)[S])
+{
+  for (uint i = 0; i < S; i++)
+    register_dispatcher (ha[i]);
+}
+
+inline TypeHash
+FieldBuffer::first_type_hash () const
+{
+  return buffermem &&
+    type_at (0) == INT && type_at (1) == INT && type_at (2) == INT && type_at (3) == INT ?
+    TypeHash (uat (0).vint64, uat (1).vint64, uat (2).vint64, uat (3).vint64) :
+    TypeHash (0, 0, 0, 0);
+}
+
+inline void
+FieldBuffer::add_type_hash (uint64 a, uint64 b, uint64 c, uint64 d)
+{
+  FieldUnion &ua = addu (INT), &ub = addu (INT), &uc = addu (INT), &ud = addu (INT);
+  ua.vint64 = a;
+  ub.vint64 = b;
+  uc.vint64 = c;
+  ud.vint64 = d;
+  check();
+}
+
 inline void
 FieldBuffer::reset()
 {
