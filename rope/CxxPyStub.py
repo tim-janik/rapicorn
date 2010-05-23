@@ -20,7 +20,7 @@ More details at http://www.rapicorn.org
 """
 import Decls, GenUtils, re
 
-FieldBuffer = 'Rapicorn::Plic::FieldBuffer'
+FieldBuffer = 'Plic::FieldBuffer'
 
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
@@ -94,9 +94,9 @@ PyList_Take_Item (PyObject *pylist, PyObject **pyitemp)
   return r;
 }
 
-static Rapicorn::Plic::FieldBuffer* plic_call_remote (Rapicorn::Plic::FieldBuffer*);
+static Plic::FieldBuffer* plic_call_remote (Plic::FieldBuffer*);
 #ifndef HAVE_PLIC_CALL_REMOTE
-static Rapicorn::Plic::FieldBuffer* plic_call_remote (Rapicorn::Plic::FieldBuffer *fb)
+static Plic::FieldBuffer* plic_call_remote (Plic::FieldBuffer *fb)
 { delete fb; return NULL; } // testing stub
 #define HAVE_PLIC_CALL_REMOTE
 #endif

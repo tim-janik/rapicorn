@@ -33,11 +33,11 @@ static int cpu_affinity (int cpu); // FIXME
 namespace {
 
 // --- cpy2rope stubs (generated) ---
-static Rapicorn::Plic::FieldBuffer* plic_call_remote    (Rapicorn::Plic::FieldBuffer*);
+static Plic::FieldBuffer* plic_call_remote    (Plic::FieldBuffer*);
 static PyObject*                    plic_cpy_trampoline (PyObject *pyself, PyObject *pyargs); // generated
 #include "cpy2rope.cc"
-typedef Rapicorn::Plic::FieldBuffer FieldBuffer;
-typedef Rapicorn::Plic::FieldBuffer8 FieldBuffer8;
+typedef Plic::FieldBuffer FieldBuffer;
+typedef Plic::FieldBuffer8 FieldBuffer8;
 
 // --- globals ---
 static PyObject *rapicorn_exception = NULL;
@@ -249,9 +249,9 @@ public:
     String appurl;
     if (rpret && rpret->first_id() == 0x02000000)
       {
-        Rapicorn::Plic::FieldBufferReader rpr (*rpret);
+        Plic::FieldBufferReader rpr (*rpret);
         rpr.skip(); // proc_id
-        if (rpr.remaining() > 0 && rpr.get_type() == Rapicorn::Plic::STRING)
+        if (rpr.remaining() > 0 && rpr.get_type() == Plic::STRING)
           appurl = rpr.pop_string();
       }
     delete rpret;
@@ -279,8 +279,8 @@ public:
 };
 UIThread *UIThread::ui_thread = NULL;
 
-static Rapicorn::Plic::FieldBuffer*
-plic_call_remote (Rapicorn::Plic::FieldBuffer *call)
+static Plic::FieldBuffer*
+plic_call_remote (Plic::FieldBuffer *call)
 {
   return UIThread::ui_thread_call_remote (call);
 }

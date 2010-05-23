@@ -68,9 +68,9 @@ PyList_Take_Item (PyObject *pylist, PyObject **pyitemp)
   return r;
 }
 
-static Rapicorn::Plic::FieldBuffer* plic_call_remote (Rapicorn::Plic::FieldBuffer*);
+static Plic::FieldBuffer* plic_call_remote (Plic::FieldBuffer*);
 #ifndef HAVE_PLIC_CALL_REMOTE
-static Rapicorn::Plic::FieldBuffer* plic_call_remote (Rapicorn::Plic::FieldBuffer *fb)
+static Plic::FieldBuffer* plic_call_remote (Plic::FieldBuffer *fb)
 { delete fb; return NULL; } // testing stub
 #define HAVE_PLIC_CALL_REMOTE
 #endif
@@ -180,9 +180,9 @@ enum ClickType {
   CLICK_KEY_REPEAT = 5,
 };
 static RAPICORN_UNUSED bool
-plic_pyXFooRecord_proto_add (PyObject *pyrec, Rapicorn::Plic::FieldBuffer &dst)
+plic_pyXFooRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
 {
-  Rapicorn::Plic::FieldBuffer &fb = dst.add_rec (11);
+  Plic::FieldBuffer &fb = dst.add_rec (11);
   bool success = false;
   PyObject *dictR = NULL, *item = NULL;
   dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
@@ -214,10 +214,10 @@ plic_pyXFooRecord_proto_add (PyObject *pyrec, Rapicorn::Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyXFooRecord_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+plic_pyXFooRecord_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Plic::FieldBufferReader fbr (src.pop_rec());
+  Plic::FieldBufferReader fbr (src.pop_rec());
   if (fbr.remaining() != 11) ERRORpy ("PLIC: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -256,10 +256,10 @@ struct XFooSequence {
   bool            single_bool;
 };
 static RAPICORN_UNUSED bool
-plic_pyXFooSequence_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer &dst)
+plic_pyXFooSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
   const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
-  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (pylist, k);
@@ -270,10 +270,10 @@ plic_pyXFooSequence_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer &ds
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyXFooSequence_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+plic_pyXFooSequence_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -292,10 +292,10 @@ struct IntSequence {
   int             numx;
 };
 static RAPICORN_UNUSED bool
-plic_pyIntSequence_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer &dst)
+plic_pyIntSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
   const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
-  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (pylist, k);
@@ -306,10 +306,10 @@ plic_pyIntSequence_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer &dst
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyIntSequence_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+plic_pyIntSequence_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -328,10 +328,10 @@ struct FloatSequence {
   double          fractalvalue;
 };
 static RAPICORN_UNUSED bool
-plic_pyFloatSequence_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer &dst)
+plic_pyFloatSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
   const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
-  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (pylist, k);
@@ -342,10 +342,10 @@ plic_pyFloatSequence_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer &d
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyFloatSequence_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+plic_pyFloatSequence_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -364,10 +364,10 @@ struct StringSequence {
   std::string     blurb;
 };
 static RAPICORN_UNUSED bool
-plic_pyStringSequence_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer &dst)
+plic_pyStringSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
   const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
-  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (pylist, k);
@@ -378,10 +378,10 @@ plic_pyStringSequence_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer &
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyStringSequence_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+plic_pyStringSequence_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -400,10 +400,10 @@ struct ExtensiveEnumSequence {
   ExtensiveEnum   enum_elements;
 };
 static RAPICORN_UNUSED bool
-plic_pyExtensiveEnumSequence_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer &dst)
+plic_pyExtensiveEnumSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
   const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
-  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (pylist, k);
@@ -414,10 +414,10 @@ plic_pyExtensiveEnumSequence_proto_add (PyObject *pylist, Rapicorn::Plic::FieldB
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyExtensiveEnumSequence_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+plic_pyExtensiveEnumSequence_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -436,10 +436,10 @@ struct RecordSequence {
   XFooRecord      *repeatedfield;
 };
 static RAPICORN_UNUSED bool
-plic_pyRecordSequence_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer &dst)
+plic_pyRecordSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
   const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
-  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (pylist, k);
@@ -450,10 +450,10 @@ plic_pyRecordSequence_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer &
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyRecordSequence_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+plic_pyRecordSequence_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -472,10 +472,10 @@ struct SequenceSequence {
   IntSequence     *moreints;
 };
 static RAPICORN_UNUSED bool
-plic_pySequenceSequence_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer &dst)
+plic_pySequenceSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
   const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
-  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (pylist, k);
@@ -486,10 +486,10 @@ plic_pySequenceSequence_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pySequenceSequence_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+plic_pySequenceSequence_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -505,9 +505,9 @@ plic_pySequenceSequence_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyNestedTypesRec_proto_add (PyObject *pyrec, Rapicorn::Plic::FieldBuffer &dst)
+plic_pyNestedTypesRec_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
 {
-  Rapicorn::Plic::FieldBuffer &fb = dst.add_rec (2);
+  Plic::FieldBuffer &fb = dst.add_rec (2);
   bool success = false;
   PyObject *dictR = NULL, *item = NULL;
   dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
@@ -521,10 +521,10 @@ plic_pyNestedTypesRec_proto_add (PyObject *pyrec, Rapicorn::Plic::FieldBuffer &d
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyNestedTypesRec_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+plic_pyNestedTypesRec_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Plic::FieldBufferReader fbr (src.pop_rec());
+  Plic::FieldBufferReader fbr (src.pop_rec());
   if (fbr.remaining() != 2) ERRORpy ("PLIC: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -545,10 +545,10 @@ struct NestedTypesSeq {
   NestedTypesRec  *ntr;
 };
 static RAPICORN_UNUSED bool
-plic_pyNestedTypesSeq_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer &dst)
+plic_pyNestedTypesSeq_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
   const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
-  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (pylist, k);
@@ -559,10 +559,10 @@ plic_pyNestedTypesSeq_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer &
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyNestedTypesSeq_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+plic_pyNestedTypesSeq_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -578,9 +578,9 @@ plic_pyNestedTypesSeq_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyNewRecord_proto_add (PyObject *pyrec, Rapicorn::Plic::FieldBuffer &dst)
+plic_pyNewRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
 {
-  Rapicorn::Plic::FieldBuffer &fb = dst.add_rec (4);
+  Plic::FieldBuffer &fb = dst.add_rec (4);
   bool success = false;
   PyObject *dictR = NULL, *item = NULL;
   dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
@@ -598,10 +598,10 @@ plic_pyNewRecord_proto_add (PyObject *pyrec, Rapicorn::Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyNewRecord_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+plic_pyNewRecord_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Plic::FieldBufferReader fbr (src.pop_rec());
+  Plic::FieldBufferReader fbr (src.pop_rec());
   if (fbr.remaining() != 4) ERRORpy ("PLIC: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -623,9 +623,9 @@ plic_pyNewRecord_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyInnerRecord_proto_add (PyObject *pyrec, Rapicorn::Plic::FieldBuffer &dst)
+plic_pyInnerRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
 {
-  Rapicorn::Plic::FieldBuffer &fb = dst.add_rec (3);
+  Plic::FieldBuffer &fb = dst.add_rec (3);
   bool success = false;
   PyObject *dictR = NULL, *item = NULL;
   dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
@@ -641,10 +641,10 @@ plic_pyInnerRecord_proto_add (PyObject *pyrec, Rapicorn::Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyInnerRecord_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+plic_pyInnerRecord_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Plic::FieldBufferReader fbr (src.pop_rec());
+  Plic::FieldBufferReader fbr (src.pop_rec());
   if (fbr.remaining() != 3) ERRORpy ("PLIC: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -664,9 +664,9 @@ plic_pyInnerRecord_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyRefer2Inner_proto_add (PyObject *pyrec, Rapicorn::Plic::FieldBuffer &dst)
+plic_pyRefer2Inner_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
 {
-  Rapicorn::Plic::FieldBuffer &fb = dst.add_rec (1);
+  Plic::FieldBuffer &fb = dst.add_rec (1);
   bool success = false;
   PyObject *dictR = NULL, *item = NULL;
   dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
@@ -678,10 +678,10 @@ plic_pyRefer2Inner_proto_add (PyObject *pyrec, Rapicorn::Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyRefer2Inner_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+plic_pyRefer2Inner_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Plic::FieldBufferReader fbr (src.pop_rec());
+  Plic::FieldBufferReader fbr (src.pop_rec());
   if (fbr.remaining() != 1) ERRORpy ("PLIC: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -697,9 +697,9 @@ plic_pyRefer2Inner_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pySomeRecord_proto_add (PyObject *pyrec, Rapicorn::Plic::FieldBuffer &dst)
+plic_pySomeRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
 {
-  Rapicorn::Plic::FieldBuffer &fb = dst.add_rec (4);
+  Plic::FieldBuffer &fb = dst.add_rec (4);
   bool success = false;
   PyObject *dictR = NULL, *item = NULL;
   dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
@@ -717,10 +717,10 @@ plic_pySomeRecord_proto_add (PyObject *pyrec, Rapicorn::Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pySomeRecord_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+plic_pySomeRecord_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Plic::FieldBufferReader fbr (src.pop_rec());
+  Plic::FieldBufferReader fbr (src.pop_rec());
   if (fbr.remaining() != 4) ERRORpy ("PLIC: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -742,9 +742,9 @@ plic_pySomeRecord_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyQuickRecord_proto_add (PyObject *pyrec, Rapicorn::Plic::FieldBuffer &dst)
+plic_pyQuickRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
 {
-  Rapicorn::Plic::FieldBuffer &fb = dst.add_rec (2);
+  Plic::FieldBuffer &fb = dst.add_rec (2);
   bool success = false;
   PyObject *dictR = NULL, *item = NULL;
   dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
@@ -758,10 +758,10 @@ plic_pyQuickRecord_proto_add (PyObject *pyrec, Rapicorn::Plic::FieldBuffer &dst)
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyQuickRecord_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+plic_pyQuickRecord_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Plic::FieldBufferReader fbr (src.pop_rec());
+  Plic::FieldBufferReader fbr (src.pop_rec());
   if (fbr.remaining() != 2) ERRORpy ("PLIC: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
@@ -782,10 +782,10 @@ struct QuickSequence {
   double          somefloat;
 };
 static RAPICORN_UNUSED bool
-plic_pyQuickSequence_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer &dst)
+plic_pyQuickSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
   const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
-  Rapicorn::Plic::FieldBuffer &fb = dst.add_seq (len);
+  Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
     PyObject *item = PyList_GET_ITEM (pylist, k);
@@ -796,10 +796,10 @@ plic_pyQuickSequence_proto_add (PyObject *pylist, Rapicorn::Plic::FieldBuffer &d
   return success;
 }
 static RAPICORN_UNUSED PyObject*
-plic_pyQuickSequence_proto_pop (Rapicorn::Plic::FieldBufferReader &src)
+plic_pyQuickSequence_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
-  Rapicorn::Plic::FieldBufferReader fbr (src.pop_seq());
+  Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
@@ -818,14 +818,14 @@ static PyObject*
 plic_pycall_UIWidgetArea_simple_method (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 0), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 0), *fr = NULL;
   fb.add_int64 (0x02000001); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 0) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
   fb.add_string (PyAttr_As_std_string (item, "__plic__object__")); ERRORifpy();
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -842,7 +842,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_single_arg (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
   fb.add_int64 (0x02000002); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -851,7 +851,7 @@ plic_pycall_UIWidgetArea_single_arg (PyObject *pyself, PyObject *pyargs)
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -868,7 +868,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_single_arg2 (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
   fb.add_int64 (0x02000003); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -877,7 +877,7 @@ plic_pycall_UIWidgetArea_single_arg2 (PyObject *pyself, PyObject *pyargs)
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -894,7 +894,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_two_args (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000004); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -905,7 +905,7 @@ plic_pycall_UIWidgetArea_two_args (PyObject *pyself, PyObject *pyargs)
   fb.add_double (PyFloat_AsDouble (item)); ERRORifpy();
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -922,7 +922,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_two_args2 (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000005); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -933,7 +933,7 @@ plic_pycall_UIWidgetArea_two_args2 (PyObject *pyself, PyObject *pyargs)
   fb.add_double (PyFloat_AsDouble (item)); ERRORifpy();
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -950,7 +950,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_multi_args (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 5), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 5), *fr = NULL;
   fb.add_int64 (0x02000006); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 5) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -967,7 +967,7 @@ plic_pycall_UIWidgetArea_multi_args (PyObject *pyself, PyObject *pyargs)
   fb.add_double (PyFloat_AsDouble (item)); ERRORifpy();
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -984,7 +984,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_self_method (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000007); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -995,7 +995,7 @@ plic_pycall_UIWidgetArea_self_method (PyObject *pyself, PyObject *pyargs)
   fb.add_string (PyAttr_As_std_string (item, "__plic__object__")); ERRORifpy();
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1012,7 +1012,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_void_method (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 0), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 0), *fr = NULL;
   fb.add_int64 (0x01000008); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 0) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1028,14 +1028,14 @@ static PyObject*
 plic_pycall_UIWidgetArea_on_click2out (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 0), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 0), *fr = NULL;
   fb.add_int64 (0x02000009); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 0) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
   fb.add_string (PyAttr_As_std_string (item, "__plic__object__")); ERRORifpy();
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = PyString_From_std_string (frr.pop_string()); ERRORifpy();
@@ -1052,7 +1052,7 @@ static PyObject*
 plic_pycall_UIWidgetArea_on_click2in (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
   fb.add_int64 (0x0100000a); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1070,7 +1070,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_void (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 0), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 0), *fr = NULL;
   fb.add_int64 (0x0100000b); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 0) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1086,7 +1086,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_bools (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x0200000c); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1097,7 +1097,7 @@ plic_pycall_MethodTestInterface_method_with_bools (PyObject *pyself, PyObject *p
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
@@ -1114,7 +1114,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_ints (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x0200000d); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1125,7 +1125,7 @@ plic_pycall_MethodTestInterface_method_with_ints (PyObject *pyself, PyObject *py
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
@@ -1142,7 +1142,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_floats (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x0200000e); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1153,7 +1153,7 @@ plic_pycall_MethodTestInterface_method_with_floats (PyObject *pyself, PyObject *
   fb.add_double (PyFloat_AsDouble (item)); ERRORifpy();
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = PyFloat_FromDouble (frr.pop_double()); ERRORifpy();
@@ -1170,7 +1170,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_string (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x0200000f); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1181,7 +1181,7 @@ plic_pycall_MethodTestInterface_method_with_string (PyObject *pyself, PyObject *
   fb.add_string (PyString_As_std_string (item)); ERRORifpy();
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = PyString_From_std_string (frr.pop_string()); ERRORifpy();
@@ -1198,7 +1198,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_enum (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000010); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1209,7 +1209,7 @@ plic_pycall_MethodTestInterface_method_with_enum (PyObject *pyself, PyObject *py
   fb.add_evalue (PyIntLong_AsLongLong (item)); ERRORifpy();
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = PyLong_FromLongLong (frr.pop_evalue()); ERRORifpy();
@@ -1226,7 +1226,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_record (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000011); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1237,7 +1237,7 @@ plic_pycall_MethodTestInterface_method_with_record (PyObject *pyself, PyObject *
   if (!plic_pyQuickRecord_proto_add (item, fb)) goto error;
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = plic_pyQuickRecord_proto_pop (frr); ERRORif (!pyfoR);
@@ -1254,7 +1254,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_sequence (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000012); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1265,7 +1265,7 @@ plic_pycall_MethodTestInterface_method_with_sequence (PyObject *pyself, PyObject
   if (!plic_pyQuickSequence_proto_add (item, fb)) goto error;
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = plic_pyQuickSequence_proto_pop (frr); ERRORif (!pyfoR);
@@ -1282,7 +1282,7 @@ static PyObject*
 plic_pycall_MethodTestInterface_method_with_interface (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 2), *fr = NULL;
   fb.add_int64 (0x02000013); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1293,7 +1293,7 @@ plic_pycall_MethodTestInterface_method_with_interface (PyObject *pyself, PyObjec
   fb.add_string (PyAttr_As_std_string (item, "__plic__object__")); ERRORifpy();
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = PyString_From_std_string (frr.pop_string()); ERRORifpy();
@@ -1311,7 +1311,7 @@ static PyObject*
 plic_pycall_PureMethods_pure_method (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
-  Rapicorn::Plic::FieldBuffer &fb = *Rapicorn::Plic::FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + 1), *fr = NULL;
   fb.add_int64 (0x02000014); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 1);  // self
@@ -1320,7 +1320,7 @@ plic_pycall_PureMethods_pure_method (PyObject *pyself, PyObject *pyargs)
   fb.add_double (PyFloat_AsDouble (item)); ERRORifpy();
   fr = plic_call_remote (&fb); // deletes fb
   if (fr) {
-    Rapicorn::Plic::FieldBufferReader frr (*fr);
+    Plic::FieldBufferReader frr (*fr);
     if (frr.pop_int64() == 0x02000000) { // proc_id
       if (frr.remaining() == 1) {
           pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();

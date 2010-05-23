@@ -104,56 +104,56 @@ struct XFooRecord {
   int             multi3;
   int             multi4;
   ExtensiveEnum   enum_field;
-  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
-  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
+  bool proto_add  (Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::FieldBufferReader&);
   inline XFooRecord () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
 struct XFooSequence {
   std::vector<bool> single_bool;
-  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
-  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
+  bool proto_add  (Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::FieldBufferReader&);
 };
 struct IntSequence {
   std::vector<int> numx;
-  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
-  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
+  bool proto_add  (Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::FieldBufferReader&);
 };
 struct FloatSequence {
   std::vector<double> fractalvalue;
-  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
-  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
+  bool proto_add  (Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::FieldBufferReader&);
 };
 struct StringSequence {
   std::vector<std::string> blurb;
-  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
-  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
+  bool proto_add  (Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::FieldBufferReader&);
 };
 struct ExtensiveEnumSequence {
   std::vector<ExtensiveEnum> enum_elements;
-  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
-  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
+  bool proto_add  (Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::FieldBufferReader&);
 };
 struct RecordSequence {
   std::vector<XFooRecord> repeatedfield;
-  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
-  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
+  bool proto_add  (Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::FieldBufferReader&);
 };
 struct SequenceSequence {
   std::vector<IntSequence> moreints;
-  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
-  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
+  bool proto_add  (Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::FieldBufferReader&);
 };
 struct NestedTypesRec {
   XFooRecord      rec;
   XFooSequence    seq;
-  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
-  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
+  bool proto_add  (Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::FieldBufferReader&);
   inline NestedTypesRec () { }
 };
 struct NestedTypesSeq {
   std::vector<NestedTypesRec> ntr;
-  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
-  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
+  bool proto_add  (Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::FieldBufferReader&);
 };
 typedef int AliasInt;
 typedef double AliasFloat;
@@ -167,8 +167,8 @@ struct NewRecord {
   Enum1           enum1;
   XFooSequence    xfs;
   NestedTypesRec  ntr;
-  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
-  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
+  bool proto_add  (Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::FieldBufferReader&);
   inline NewRecord () { i = 0; enum1 = Enum1 (0); }
 };
 
@@ -177,15 +177,15 @@ struct InnerRecord {
   int             x;
   int             y;
   NewRecord       rec;
-  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
-  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
+  bool proto_add  (Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::FieldBufferReader&);
   inline InnerRecord () { x = 0; y = 0; }
 };
 } // Inner
 struct Refer2Inner {
   Inner::InnerRecord r;
-  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
-  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
+  bool proto_add  (Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::FieldBufferReader&);
   inline Refer2Inner () { }
 };
 } // MandatoryNamespace
@@ -196,8 +196,8 @@ struct SomeRecord {
   MandatoryNamespace::NewRecord r2;
   MandatoryNamespace::Inner::InnerRecord r3;
   MandatoryNamespace::Inner::InnerRecord r4;
-  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
-  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
+  bool proto_add  (Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::FieldBufferReader&);
   inline SomeRecord () { }
 };
 } // OtherNamespace
@@ -266,14 +266,14 @@ enum QuickEnum {
 struct QuickRecord {
   int             int1;
   int             int2;
-  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
-  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
+  bool proto_add  (Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::FieldBufferReader&);
   inline QuickRecord () { int1 = 0; int2 = 0; }
 };
 struct QuickSequence {
   std::vector<double> somefloat;
-  bool proto_add  (Rapicorn::Plic::FieldBuffer&) const;
-  bool proto_pop  (Rapicorn::Plic::FieldBufferReader&);
+  bool proto_add  (Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::FieldBufferReader&);
 };
 
 class MethodTestInterface {

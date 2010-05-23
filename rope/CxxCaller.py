@@ -48,13 +48,9 @@ public:
 };
 
 // FIXME:
-typedef Rapicorn::Plic::FieldBuffer FieldBuffer;
-typedef Rapicorn::Plic::FieldBuffer8 FieldBuffer8;
-typedef Rapicorn::Plic::FieldBufferReader FieldBufferReader;
-typedef Rapicorn::ProtoRecord ProtoRecord;
-typedef Rapicorn::ProtoSequence ProtoSequence;
-typedef Rapicorn::ProtoArg ProtoArg;
-typedef Rapicorn::ProtoMessage ProtoMessage;
+typedef Plic::FieldBuffer FieldBuffer;
+typedef Plic::FieldBuffer8 FieldBuffer8;
+typedef Plic::FieldBufferReader FieldBufferReader;
 template<class CLASS> static inline const std::string&
 Instance2Url (CLASS *obj)
 {
@@ -109,7 +105,7 @@ static FieldBuffer* plic_call_remote (FieldBuffer *fb)
 } // Anonymous
 """
 
-FieldBuffer = 'Rapicorn::Plic::FieldBuffer'
+FieldBuffer = 'Plic::FieldBuffer'
 
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())

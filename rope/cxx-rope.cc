@@ -231,9 +231,9 @@ public:
     String appurl;
     if (rpret && rpret->first_id() == 0x02000000)
       {
-        Rapicorn::Plic::FieldBufferReader rpr (*rpret);
+        Plic::FieldBufferReader rpr (*rpret);
         rpr.skip(); // proc_id
-        if (rpr.remaining() > 0 && rpr.get_type() == Rapicorn::Plic::STRING)
+        if (rpr.remaining() > 0 && rpr.get_type() == Plic::STRING)
           appurl = rpr.pop_string();
       }
     delete rpret;
@@ -261,8 +261,8 @@ public:
 };
 UIThread *UIThread::ui_thread = NULL;
 
-static Rapicorn::Plic::FieldBuffer*
-plic_call_remote (Rapicorn::Plic::FieldBuffer *call)
+static Plic::FieldBuffer*
+plic_call_remote (Plic::FieldBuffer *call)
 {
   return UIThread::ui_thread_call_remote (call);
 }
