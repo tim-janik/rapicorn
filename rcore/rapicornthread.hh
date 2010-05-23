@@ -134,18 +134,22 @@ public:
   void                  wakeup          ();
   bool                  running         ();
   void                  wait_for_exit   ();
+  int                   last_affinity   () const;
+  int                   affinity        (int cpu = -1);
   /* event loop */
   void                  exec_loop       ();
   void                  quit_loop       ();
   /* global methods */
   static void           emit_wakeups    (uint64             stamp);
   static Thread&        self            ();
+  static int            online_cpus     ();
   /* Self thread */
   struct Self {
     static String       name            ();
     static void         name            (const String      &name);
     static bool         sleep           (long               max_useconds);
     static bool         aborted         ();
+    static int          affinity        (int cpu = -1);
     static int          pid             ();
     static void         awake_after     (uint64             stamp);
     static void         set_wakeup      (RapicornThreadWakeup wakeup_func,
@@ -166,8 +170,9 @@ public:
   /* implementaiton details */
 private:
   DataList              data_list;
-  RapicornThread         *bthread;
+  RapicornThread       *bthread;
   OwnedMutex            m_omutex;
+  int                   last_cpu;
   explicit              Thread          (RapicornThread      *thread);
   void                  thread_lock     ()                              { m_omutex.lock(); }
   bool                  thread_trylock  ()                              { return m_omutex.trylock(); }

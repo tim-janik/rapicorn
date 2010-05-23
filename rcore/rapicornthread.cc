@@ -85,7 +85,8 @@ Thread::threadxx_delete (void *cxxthread)
 }
 
 Thread::Thread (RapicornThread* thread) :
-  bthread (NULL)
+  bthread (NULL),
+  last_cpu (-1)
 {
   ThreadTable.thread_ref (thread);
   if (ThreadTable.thread_setxx (thread, this))
@@ -97,6 +98,62 @@ Thread::Thread (RapicornThread* thread) :
   else
     ; /* invalid object state; this should be reaped by thread_from_c() */
   ThreadTable.thread_unref (thread);
+}
+
+int
+Thread::online_cpus ()
+{
+  int cpus = -1;
+#ifdef _SC_NPROCESSORS_ONLN
+  cpus = sysconf (_SC_NPROCESSORS_ONLN);
+#endif
+  return cpus;
+}
+
+static int
+cpu_affinity (int cpu)
+{
+#ifdef __USE_GNU
+  pthread_t thread = pthread_self();
+  cpu_set_t cpuset;
+  if (cpu >= 0 && cpu < CPU_SETSIZE)
+    {
+      CPU_ZERO (&cpuset);
+      CPU_SET (cpu, &cpuset);
+      if (pthread_setaffinity_np (thread, sizeof (cpu_set_t), &cpuset) != 0)
+        diag_errno ("pthread_setaffinity_np");
+    }
+  if (pthread_getaffinity_np (thread, sizeof (cpu_set_t), &cpuset) != 0)
+    diag_errno ("pthread_getaffinity_np");
+  for (int j = 0; j < CPU_SETSIZE; j++)
+    if (CPU_ISSET (j, &cpuset))
+      return j;
+#endif
+  return -1;
+}
+
+int
+Thread::Self::affinity (int cpu)
+{
+  int real = cpu_affinity (cpu);
+  if (cpu >= 0 && real >= 0)
+    info ("Thread::Self: affinitiy: cpu%u", real);
+  return real;
+}
+
+int
+Thread::affinity (int cpu)
+{
+  last_cpu = cpu_affinity (cpu);
+  if (cpu >= 0 && last_cpu >= 0)
+    info ("%s: affinitiy: cpu%u", name().c_str(), last_cpu);
+  return last_cpu;
+}
+
+int
+Thread::last_affinity() const
+{
+  return last_cpu;
 }
 
 static RapicornThread*

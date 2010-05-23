@@ -1769,8 +1769,10 @@ _rapicorn_init_threads (void)
       cond_init_chain = (RapicornCond*) cond->cond_pointer;
       ThreadTable.cond_init (cond);
     }
-  
-  ThreadTable.thread_self ();
+
+  RapicornThread *init_self = ThreadTable.thread_self();
+  RAPICORN_ASSERT (init_self != NULL);
+  Thread::self().affinity (-1);
 }
 
 } // Rapicorn
