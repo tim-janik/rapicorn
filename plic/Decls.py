@@ -112,16 +112,21 @@ class TypeInfo (BaseDecl):
       self.methods = []         # holds: TypeInfo
       self.signals = []         # holds: TypeInfo
     self.auxdata = {}
-  def sha256digest (self):
+  def sha224digest (self):
     assert self.storage == FUNC
     idt = [self.rtype, self.ownertype, self] + [a[1] for a in self.args] # rtype, owner, self, arg0type, ...
     idn = [type.full_name() for type in idt] # float MethodObject method_name int string
     hashstr = ','.join (idn) # float,MethodObject,method_name,int,string
-    sha256 = hashlib.sha256()
-    sha256.update (hashstr)
-    return sha256.digest()
-  def sha256digest_bytes (self):
-    t = tuple ([ord (c) for c in self.sha256digest()])
+    sha224 = hashlib.sha224()
+    sha224.update (hashstr)
+    return sha224.digest()
+  def type_hash (self):
+    if self.rtype.storage == VOID:
+      l = '\x0c\xa1\x00\x00'
+    else:
+      l = '\x0c\xa2\x00\x00'
+    bytes = l + self.sha224digest()
+    t = tuple ([ord (c) for c in bytes])
     return t
   def clone (self, newname, isimpl):
     if newname == None: newname = self.name
