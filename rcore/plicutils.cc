@@ -16,7 +16,12 @@
  */
 #include "plicutils.hh"
 #include <assert.h>
+#include <stdarg.h>
+#include <string.h>
 #include <stdio.h>
+#include <sched.h>
+#include <unistd.h>
+#include <pthread.h>
 #include <map>
 
 /* === Auxillary macros === */
@@ -28,44 +33,176 @@
 
 namespace Plic {
 
+/* === Prototypes === */
+static String string_printf (const char *format, ...) PLIC_PRINTF (1, 2);
+static void   printerr      (const char *format, ...) PLIC_PRINTF (1, 2);
+
+/* === Utilities === */
+static String // FIXME: support error format
+string_printf (const char *format, ...)
+{
+  String str;
+  va_list args;
+  va_start (args, format);
+  char buffer[512 + 1];
+  vsnprintf (buffer, 512, format, args);
+  va_end (args);
+  buffer[512] = 0; // force termination
+  return buffer;
+}
+
+static void
+printerr (const char *format, ...)
+{
+  String str;
+  va_list args;
+  va_start (args, format);
+  char buffer[512 + 1];
+  vsnprintf (buffer, 512, format, args);
+  va_end (args);
+  buffer[512] = 0; // force termination
+  size_t l = write (2, buffer, strlen (buffer));
+  (void) l;
+}
+
 /* === TypeHash === */
 String
 TypeHash::to_string() const
 {
   String s;
   for (uint i = 0; i < hash_size; i++)
-    {
-      char t[16 + 1];
-      snprintf (t, sizeof (t), "%016llx", qwords[i]);
-      s += t;
-    }
+    s += string_printf ("%016llx", qwords[i]);
   return s;
 }
 
 /* === Dispatchers === */
 typedef std::map<TypeHash, DispatchFunc> TypeHashMap;
-static TypeHashMap dispatcher_map;
+static TypeHashMap               dispatcher_type_map;
+static pthread_mutex_t           dispatcher_call_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t            dispatcher_call_cond = PTHREAD_COND_INITIALIZER;
+static std::vector<FieldBuffer*> dispatcher_call_vector, dispatcher_call_queue;
+static size_t                    dispatcher_call_index = 0;
+static pthread_mutex_t           dispatcher_return_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t            dispatcher_return_cond = PTHREAD_COND_INITIALIZER;
+static std::vector<FieldBuffer*> dispatcher_return_vector, dispatcher_return_queue;
+static size_t                    dispatcher_return_index = 0;
 
-static inline void
-dispatcher_initializer ()
+bool
+DispatcherRegistry::push_call (FieldBuffer *call)
 {
-  if (PLIC_LIKELY (dispatcher_map.size()))
-    return;
-  // FIXME
+  const int64 call_id = call->first_id();
+  const bool twoway = is_callid_twoway (call_id);
+  pthread_mutex_lock (&dispatcher_call_mutex);
+  dispatcher_call_vector.push_back (call);
+  const uint sz = dispatcher_call_vector.size();
+  pthread_cond_signal (&dispatcher_call_cond);
+  pthread_mutex_unlock (&dispatcher_call_mutex);
+  bool may_block = twoway ||    // minimize turn-around times for two-way calls
+                   sz >= 509;   // want one-way batch processing below POSIX atomic buffer limit
+  return may_block;             // should yield on single-cores
+}
+
+FieldBuffer*
+DispatcherRegistry::pop_call (bool advance)
+{
+  if (dispatcher_call_index >= dispatcher_call_queue.size())
+    {
+      if (dispatcher_call_index)
+        dispatcher_call_queue.resize (0);
+      dispatcher_call_index = 0;
+      pthread_mutex_lock (&dispatcher_call_mutex);
+      dispatcher_call_vector.swap (dispatcher_call_queue);
+      pthread_mutex_unlock (&dispatcher_call_mutex);
+    }
+  if (dispatcher_call_index < dispatcher_call_queue.size())
+    {
+      const size_t index = dispatcher_call_index;
+      if (advance)
+        dispatcher_call_index++;
+      return dispatcher_call_queue[index];
+    }
+  return NULL;
+}
+
+void
+DispatcherRegistry::push_return (FieldBuffer *rret)
+{
+  pthread_mutex_lock (&dispatcher_return_mutex);
+  dispatcher_return_vector.push_back (rret);
+  pthread_cond_signal (&dispatcher_return_cond);
+  pthread_mutex_unlock (&dispatcher_return_mutex);
+  sched_yield(); // allow fast return value handling on single core
+}
+
+FieldBuffer*
+DispatcherRegistry::fetch_return (void)
+{
+  if (dispatcher_return_index >= dispatcher_return_queue.size())
+    {
+      if (dispatcher_return_index)
+        dispatcher_return_queue.resize (0);
+      else
+        dispatcher_return_queue.reserve (1);
+      dispatcher_return_index = 0;
+      pthread_mutex_lock (&dispatcher_return_mutex);
+      while (dispatcher_return_vector.size() == 0)
+        pthread_cond_wait (&dispatcher_return_cond, &dispatcher_return_mutex);
+      dispatcher_return_vector.swap (dispatcher_return_queue); // fetch result
+      pthread_mutex_unlock (&dispatcher_return_mutex);
+    }
+  // dispatcher_return_index < dispatcher_return_queue.size()
+  return dispatcher_return_queue[dispatcher_return_index++];
+}
+
+bool
+DispatcherRegistry::check_dispatch ()
+{
+  return pop_call (false) != NULL;
+}
+
+bool
+DispatcherRegistry::dispatch ()
+{
+  const FieldBuffer *call = pop_call();
+  if (!call)
+    return false;
+  const int64 call_id = call->first_id();
+  const bool twoway = Plic::is_callid_twoway (call_id);
+  FieldBuffer *fr = Plic::DispatcherRegistry::dispatch_call (*call);
+  delete call;
+  if (twoway)
+    {
+      if (!fr)
+        fr = FieldBuffer::new_error (string_printf ("missing return from 0x%016llx", call_id), "PLIC");
+      push_return (fr);
+    }
+  else if (fr && !twoway)
+    {
+      FieldBufferReader frr (*fr);
+      const int64 ret_id = frr.pop_int64(); // first_id
+      if (Plic::is_callid_error (ret_id))
+        printerr ("PLIC: error during oneway call 0x%016llx: %s\n",
+                  call_id, frr.pop_string().c_str()); // FIXME: logging?
+      else if (Plic::is_callid_return (ret_id))
+        printerr ("PLIC: unexpected return from oneway 0x%016llx\n", call_id); // FIXME: logging?
+      else /* ? */
+        printerr ("PLIC: invalid return garbage from 0x%016llx\n", call_id); // FIXME: logging?
+      delete fr;
+    }
+  return true;
 }
 
 void
 DispatcherRegistry::register_dispatcher (const DispatcherEntry &dentry)
 {
-  dispatcher_initializer();
-  dispatcher_map[TypeHash (dentry.hash_qwords)] = dentry.dispatcher;
+  dispatcher_type_map[TypeHash (dentry.hash_qwords)] = dentry.dispatcher;
 }
 
 FieldBuffer*
 DispatcherRegistry::dispatch_call (const FieldBuffer &call)
 {
   const TypeHash &thash = call.first_type_hash();
-  DispatchFunc dispatcher = dispatcher_map[thash];
+  DispatchFunc dispatcher = dispatcher_type_map[thash];
   if (PLIC_UNLIKELY (!dispatcher))
     return FieldBuffer::new_error ("unknown method hash: " + thash.to_string(), "PLIC");
   return dispatcher (call);
@@ -107,9 +244,7 @@ String
 FieldBuffer::first_id_str() const
 {
   uint64 fid = first_id();
-  char t[16 + 1];
-  snprintf (t, sizeof (t), "%016llx", fid);
-  return t;
+  return string_printf ("%016llx", fid);
 }
 
 FieldBuffer*

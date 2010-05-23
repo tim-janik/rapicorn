@@ -29,12 +29,14 @@ namespace Plic {
 #if     __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
 #define PLIC_UNUSED             __attribute__ ((__unused__))
 #define PLIC_DEPRECATED         __attribute__ ((__deprecated__))
+#define PLIC_PRINTF(fix, arx)   __attribute__ ((__format__ (__printf__, fix, arx)))
 #define PLIC_BOOLi(expr)        __extension__ ({ bool _plic__bool; if (expr) _plic__bool = 1; else _plic__bool = 0; _plic__bool; })
 #define PLIC_ISLIKELY(expr)     __builtin_expect (PLIC_BOOLi (expr), 1)
 #define PLIC_UNLIKELY(expr)     __builtin_expect (PLIC_BOOLi (expr), 0)
 #else   /* !__GNUC__ */
 #define PLIC_UNUSED
 #define PLIC_DEPRECATED
+#define PLIC_PRINTF(fix, arx)
 #define PLIC_ISLIKELY(expr)     expr
 #define PLIC_UNLIKELY(expr)     expr
 #endif
@@ -77,14 +79,21 @@ struct TypeHash {
   String            to_string() const;
 };
 
-/* === Dispatchers === */
+/* === Dispatching === */
 struct DispatcherEntry {
   uint64            hash_qwords[TypeHash::hash_size];
   DispatchFunc      dispatcher;
 };
-struct DispatcherRegistry {
-  static FieldBuffer* dispatch_call       (const FieldBuffer &call);
-  static void         register_dispatcher (const DispatcherEntry &dentry);
+class DispatcherRegistry {
+  static void           push_return             (FieldBuffer *rret);
+  static FieldBuffer*   pop_call                (bool advance = true);
+public:
+  static bool           check_dispatch          ();
+  static bool           dispatch                ();
+  static bool           push_call               (FieldBuffer *call);
+  static FieldBuffer*   fetch_return            (void);
+  static FieldBuffer*   dispatch_call           (const FieldBuffer &call);
+  static void           register_dispatcher     (const DispatcherEntry &dentry);
   template<class T, size_t S> inline DispatcherRegistry (T (&)[S]);
 };
 
