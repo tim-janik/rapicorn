@@ -39,6 +39,7 @@
 #include <ui/primitives.hh>
 #include <ui/properties.hh>
 #include <ui/region.hh>
+#include <ui/rope.hh>
 #include <ui/root.hh>
 #include <ui/scrollitems.hh>
 #include <ui/sinfex.hh>
