@@ -17,13 +17,12 @@
 #include "plicutils.hh"
 #include <assert.h>
 
+/* === Auxillary macros === */
 #define PLIC_CPP_PASTE2i(a,b)                   a ## b // indirection required to expand __LINE__ etc
 #define PLIC_CPP_PASTE2(a,b)                    PLIC_CPP_PASTE2i (a,b)
 #define PLIC_STATIC_ASSERT_NAMED(expr,asname)   typedef struct { char asname[(expr) ? 1 : -1]; } PLIC_CPP_PASTE2 (Plic_StaticAssertion_LINE, __LINE__)
 #define PLIC_STATIC_ASSERT(expr)                PLIC_STATIC_ASSERT_NAMED (expr, compile_time_assertion_failed)
-
-
-#define ALIGN4(sz,unit) (sizeof (unit) * ((sz + sizeof (unit) - 1) / sizeof (unit)))
+#define ALIGN4(sz,unit)                         (sizeof (unit) * ((sz + sizeof (unit) - 1) / sizeof (unit)))
 
 namespace Plic {
 
@@ -59,30 +58,29 @@ FieldBuffer::~FieldBuffer()
 }
 
 class OneChunkFieldBuffer : public FieldBuffer {
-  virtual ~OneChunkFieldBuffer();
-public:
+  virtual ~OneChunkFieldBuffer () { reset(); buffermem = NULL; }
   explicit OneChunkFieldBuffer (uint        _ntypes,
                                 FieldUnion *_bmem,
                                 uint        _bmemlen) :
     FieldBuffer (_ntypes, _bmem, _bmemlen)
   {}
+public:
+  static OneChunkFieldBuffer*
+  _new (uint _ntypes)
+  {
+    const uint _offs = 1 + (_ntypes + 7) / 8;
+    size_t bmemlen = sizeof (FieldUnion[_offs + _ntypes]);
+    size_t objlen = ALIGN4 (sizeof (OneChunkFieldBuffer), int64);
+    uint8 *omem = new uint8[objlen + bmemlen];
+    FieldUnion *bmem = (FieldUnion*) (omem + objlen);
+    return new (omem) OneChunkFieldBuffer (_ntypes, bmem, bmemlen);
+  }
 };
-
-OneChunkFieldBuffer::~OneChunkFieldBuffer()
-{
-  reset();
-  buffermem = NULL;
-}
 
 FieldBuffer*
 FieldBuffer::_new (uint _ntypes)
 {
-  const uint _offs = 1 + (_ntypes + 7) / 8;
-  size_t bmemlen = sizeof (FieldUnion[_offs + _ntypes]);
-  size_t objlen = ALIGN4 (sizeof (OneChunkFieldBuffer), int64);
-  uint8 *omem = new uint8[objlen + bmemlen];
-  FieldUnion *bmem = (FieldUnion*) (omem + objlen);
-  return new (omem) OneChunkFieldBuffer (_ntypes, bmem, bmemlen);
+  return OneChunkFieldBuffer::_new (_ntypes);
 }
 
 } // Plic

@@ -21,6 +21,8 @@
 #include <vector>
 #include <stdint.h>             // uint64_t
 
+namespace Plic {
+
 /* === Auxillary macros === */
 #define PLIC_CPP_STRINGIFYi(s)  #s // indirection required to expand __LINE__ etc
 #define PLIC_CPP_STRINGIFY(s)   PLIC_CPP_STRINGIFYi (s)
@@ -38,8 +40,7 @@
 #endif
 #define PLIC_LIKELY             PLIC_ISLIKELY
 
-
-namespace Plic {
+/* === Standard Types === */
 typedef std::string String;
 using std::vector;
 typedef signed char     int8;
@@ -50,34 +51,27 @@ typedef uint32_t        uint;
 typedef int64_t         int64;
 typedef uint64_t        uint64;
 
+/* === FieldBuffer === */
 typedef enum {
   VOID = 0,
   INT, FLOAT, STRING, ENUM,
   RECORD, SEQUENCE, FUNC, INSTANCE
 } FieldType;
 
-class PlicRec;
-class PlicSeq;
-
-class MsgBuffer {
-public:
-};
-
+class FieldBufferReader;
 union FieldUnion;
-class _FakeFB_Size { FieldUnion *u; virtual ~_FakeFB_Size() {}; };
+class _FakeFieldBuffer { FieldUnion *u; virtual ~_FakeFieldBuffer() {}; };
 
 union FieldUnion {
   int64        vint64;
   double       vdouble;
-  uint64       smem[(sizeof (String) + 7) / 8];         // String
-  uint64       bmem[(sizeof (_FakeFB_Size) + 7) / 8];   // FieldBuffer
+  uint64       smem[(sizeof (String) + 7) / 8];           // String
+  uint64       bmem[(sizeof (_FakeFieldBuffer) + 7) / 8]; // FieldBuffer
   uint8        bytes[8];                // FieldBuffer types
   struct { uint capacity, index; };     // FieldBuffer.buffermem[0]
 };
 
-class FieldBufferReader;
-
-class FieldBuffer {
+class FieldBuffer { // buffer for marshalling procedure calls
   friend class FieldBufferReader;
 protected:
   FieldUnion        *buffermem;
@@ -103,18 +97,18 @@ public:
   inline void add_object (const String &s) { FieldUnion &u = addu (INSTANCE); new (&u) String (s); check(); }
   inline FieldBuffer& add_rec (uint nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); check(); }
   inline FieldBuffer& add_seq (uint nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); check(); }
-  static FieldBuffer* _new (uint _ntypes);
+  static FieldBuffer* _new (uint _ntypes); // Heap allocated FieldBuffer
   inline void         reset();
 };
 
-class FieldBuffer8 : public FieldBuffer {
+class FieldBuffer8 : public FieldBuffer { // Stack contained buffer for up to 8 fields
   FieldUnion bmem[1 + 1 + 8];
 public:
   virtual ~FieldBuffer8 () { reset(); buffermem = NULL; }
   inline   FieldBuffer8 (uint ntypes = 8) : FieldBuffer (ntypes, bmem, sizeof (bmem)) {}
 };
 
-class FieldBufferReader {
+class FieldBufferReader { // read field buffer contents
   const FieldBuffer &m_fb;
   uint               m_nth;
   inline FieldUnion& fb_getu () { return m_fb.uat (m_nth); }
