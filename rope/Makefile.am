@@ -15,8 +15,8 @@ cxxrapicorn_LDADD   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
 EXTRA_DIST         += cxx-rope.hh
 
 # === PyRapicorn ===
-pyrapicorn_cc_sources = rope.cc
-EXTRA_DIST           += rope.hh
+pyrapicorn_cc_sources = py-rope.cc
+EXTRA_DIST           += py-rope.hh
 pyrapicorndir          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
 pyrapicorn_PYTHON      = __init__.py py2cpy.py
 pyrapicorn_LTLIBRARIES = pyRapicorn.la
@@ -35,7 +35,7 @@ cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/CxxPyStub.py
 	: # compile IDL definitions into cpy2rope.cc
 	${PLICINT} -G $(srcdir)/CxxPyStub $(RAPICORNIDL) -o xgen-$(@F)
 	mv xgen-$(@F) $@
-$(srcdir)/rope.cc: cpy2rope.cc
+$(srcdir)/py-rope.cc: cpy2rope.cc
 CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
 
 # === rope2cxx.cc ===
@@ -43,7 +43,7 @@ rope2cxx.cc: $(RAPICORNIDL) $(srcdir)/CxxCaller.py
 	: # compile IDL definitions into rope2cxx.cc
 	${PLICINT} -G $(srcdir)/CxxCaller -g server $(RAPICORNIDL) -o xgen-$(@F)
 	mv xgen-$(@F) $@
-$(srcdir)/rope.cc: rope2cxx.cc
+$(srcdir)/py-rope.cc: rope2cxx.cc
 CLEANFILES += xgen-rope2cxx.cc rope2cxx.cc
 
 # === py2cpy.py ===
