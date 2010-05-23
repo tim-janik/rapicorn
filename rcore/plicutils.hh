@@ -1,4 +1,4 @@
-/* Plic
+/* Plic Binding utilities
  * Copyright (C) 2010 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -14,22 +14,41 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef __RAPICORN_PLICUTILS_HH__
-#define __RAPICORN_PLICUTILS_HH__
+#ifndef __PLIC_UTILITIES_HH__
+#define __PLIC_UTILITIES_HH__
 
-#include "rapicornutils.hh"
 #include <string>
 #include <vector>
+#include <stdint.h>             // uint64_t
 
-namespace Rapicorn {
+/* === Auxillary macros === */
+#define PLIC_CPP_STRINGIFYi(s)  #s // indirection required to expand __LINE__ etc
+#define PLIC_CPP_STRINGIFY(s)   PLIC_CPP_STRINGIFYi (s)
+#if     __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
+#define PLIC_UNUSED             __attribute__ ((__unused__))
+#define PLIC_DEPRECATED         __attribute__ ((__deprecated__))
+#define PLIC_BOOLi(expr)        __extension__ ({ bool _plic__bool; if (expr) _plic__bool = 1; else _plic__bool = 0; _plic__bool; })
+#define PLIC_ISLIKELY(expr)     __builtin_expect (PLIC_BOOLi (expr), 1)
+#define PLIC_UNLIKELY(expr)     __builtin_expect (PLIC_BOOLi (expr), 0)
+#else   /* !__GNUC__ */
+#define PLIC_UNUSED
+#define PLIC_DEPRECATED
+#define PLIC_ISLIKELY(expr)     expr
+#define PLIC_UNLIKELY(expr)     expr
+#endif
+#define PLIC_LIKELY             PLIC_ISLIKELY
+
+
 namespace Plic {
 typedef std::string String;
 using std::vector;
-typedef long long signed int   int64;
-typedef long long unsigned int uint64;
-typedef unsigned int uint;
-typedef unsigned short int uint16;
-typedef unsigned char uint8;
+typedef signed char     int8;
+typedef unsigned char   uint8;
+typedef int16_t         int16;
+typedef uint16_t        uint16;
+typedef uint32_t        uint;
+typedef int64_t         int64;
+typedef uint64_t        uint64;
 
 typedef enum {
   VOID = 0,
@@ -147,6 +166,5 @@ FieldBuffer::reset()
 }
 
 } // Plic
-} // Rapicorn
 
-#endif /* __RAPICORN_PLICUTILS_HH__ */
+#endif /* __PLIC_UTILITIES_HH__ */

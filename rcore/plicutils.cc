@@ -1,4 +1,4 @@
-/* Plic
+/* Plic Binding utilities
  * Copyright (C) 2010 Tim Janik
  *
  * This library is free software; you can redistribute it and/or
@@ -17,15 +17,20 @@
 #include "plicutils.hh"
 #include <assert.h>
 
+#define PLIC_CPP_PASTE2i(a,b)                   a ## b // indirection required to expand __LINE__ etc
+#define PLIC_CPP_PASTE2(a,b)                    PLIC_CPP_PASTE2i (a,b)
+#define PLIC_STATIC_ASSERT_NAMED(expr,asname)   typedef struct { char asname[(expr) ? 1 : -1]; } PLIC_CPP_PASTE2 (Plic_StaticAssertion_LINE, __LINE__)
+#define PLIC_STATIC_ASSERT(expr)                PLIC_STATIC_ASSERT_NAMED (expr, compile_time_assertion_failed)
+
+
 #define ALIGN4(sz,unit) (sizeof (unit) * ((sz + sizeof (unit) - 1) / sizeof (unit)))
 
-namespace Rapicorn {
 namespace Plic {
 
 FieldBuffer::FieldBuffer (uint _ntypes) :
   buffermem (NULL)
 {
-  RAPICORN_STATIC_ASSERT (sizeof (FieldBuffer) <= sizeof (FieldUnion));
+  PLIC_STATIC_ASSERT (sizeof (FieldBuffer) <= sizeof (FieldUnion));
   // buffermem layout: [{n_types,nth}] [{type nibble} * n_types]... [field]...
   const uint _offs = 1 + (_ntypes + 7) / 8;
   buffermem = new FieldUnion[_offs + _ntypes];
@@ -81,4 +86,3 @@ FieldBuffer::_new (uint _ntypes)
 }
 
 } // Plic
-} // Rapicorn
