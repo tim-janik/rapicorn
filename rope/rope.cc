@@ -34,7 +34,6 @@ namespace {
 
 // --- cpy2rope stubs (generated) ---
 static Plic::FieldBuffer* plic_call_remote    (Plic::FieldBuffer*);
-static PyObject*                    plic_cpy_trampoline (PyObject *pyself, PyObject *pyargs); // generated
 #include "cpy2rope.cc"
 typedef Plic::FieldBuffer FieldBuffer;
 typedef Plic::FieldBuffer8 FieldBuffer8;
@@ -65,7 +64,7 @@ class UIThread : public Thread {
     esource->exitable (false);
     {
       FieldBuffer *fb = FieldBuffer::_new (2);
-      fb->add_int64 (0x02000000); // proc_id
+      fb->add_int64 (Plic::callid_return); // proc_id
       Deletable *dapp = &App;
       fb->add_string (dapp->object_url());
       push_return (fb);
@@ -78,37 +77,36 @@ class UIThread : public Thread {
     const FieldBuffer *call = pop_proc();
     if (call)
       {
-        if (0)
-          {
-#if 0
-            std::string string;
-            if (!google::protobuf::TextFormat::PrintToString (*proc, &string))
-              string = "{*protobuf::TextFormat ERROR*}";
-            printerr ("Rapicorn::UIThread::call:\n%s\n", string.c_str());
-#endif
-          }
+        const int64 call_id = call->first_id();
+        const bool twoway = Plic::is_callid_twoway (call_id);
         FieldBuffer *fr;
-        FieldBuffer8 fdummy (2);
-        if (call->first_id() >= 0x02000000)
-          fr = FieldBuffer::_new (2);
-        else
-          fr = &fdummy;
-        bool success = plic_call_wrapper_switch (*call, *fr);
-        if (!success)
+        // bool success = plic_call_wrapper_switch (*call, *fr);
+        fr = Plic::DispatcherRegistry::dispatch_call (*call);
+        if (twoway && !fr)
+          fr = FieldBuffer::new_error (string_printf ("missing return from 0x%016llx",
+                                                      call_id), "PLIC");
+        else if (fr && !twoway)
           {
-            printerr ("UIThread::call error (see logs)\n"); // FIXME
-            if (call->first_id() >= 0x02000000)
+            const int64 ret_id = fr->first_id();
+            FieldBufferReader frr (*fr);
+            if (Plic::is_callid_error (ret_id))
               {
-                FieldBuffer *fb = FieldBuffer::_new (2);
-                fb->add_int64 (0x02000000); // proc_id
-                fb->add_string ("*ERROR*"); // FIXME
-                push_return (fb);
+                frr.skip();
+                printerr ("PLIC: error during oneway call 0x%016llx: %s\n",
+                          call_id, frr.pop_string().c_str());
               }
-            if (call->first_id() >= 0x02000000)
-              delete fr;
+            else if (Plic::is_callid_return (ret_id))
+              {
+                frr.skip();
+                printerr ("PLIC: unexpected return from oneway 0x%016llx\n", call_id);
+              }
+            else /* ? */
+              printerr ("PLIC: invalid return garbage from 0x%016llx\n", call_id);
+            delete fr;
+            fr = NULL;
           }
-        else if (call->first_id() >= 0x02000000)
-            push_return (fr);
+        if (fr)
+          push_return (fr);
         delete call;
       }
     return true;
@@ -186,15 +184,16 @@ public:
   push_proc (FieldBuffer *proc)
   {
     int64 call_id = proc->first_id();
+    bool twoway = Plic::is_callid_twoway (call_id);
     size_t sz;
     rps.lock();
     rpv.push_back (proc);
     sz = rpv.size();
     rps.unlock();
     m_loop->wakeup();
-    if (call_id >= 0x02000000 || // minimize turn-around times for two-way calls
-        sz >= 1009)              // allow batch processing of one-way call queue
-      Thread::Self::yield();     // useless if threads have different CPU affinity
+    if (twoway ||               // minimize turn-around times for two-way calls
+        sz >= 1009)             // allow batch processing of one-way call queue
+      Thread::Self::yield();    // useless if threads have different CPU affinity
   }
   FieldBuffer*
   pop_proc (bool advance = true)
@@ -247,7 +246,7 @@ public:
     ui_thread->start();
     FieldBuffer *rpret = ui_thread->fetch_return();
     String appurl;
-    if (rpret && rpret->first_id() == 0x02000000)
+    if (rpret && Plic::is_callid_return (rpret->first_id()))
       {
         Plic::FieldBufferReader rpr (*rpret);
         rpr.skip(); // proc_id
@@ -262,17 +261,12 @@ public:
   {
     if (!ui_thread)
       return false;
-    int64 call_id = call->first_id();
+    const int64 call_id = call->first_id();
     ui_thread->push_proc (call); // deletes call
-    if (0) // debug
-      printf ("Remote Procedure Call, id=0x%08llx (%s-way)\n",
-              call_id, call_id >= 0x02000000 ? "two" : "one");
-    if (call_id >= 0x02000000)
+    if (Plic::is_callid_twoway (call_id))
       {
-        FieldBuffer *rpret = ui_thread->fetch_return();
-        if (0)
-          printerr ("Remote Procedure Return: 0x%08llx\n", rpret->first_id());
-        return rpret;
+        FieldBuffer *fr = ui_thread->fetch_return();
+        return fr;
       }
     return NULL;
   }
@@ -335,10 +329,9 @@ rope_init_dispatcher (PyObject *self,
 static PyMethodDef rope_vtable[] = {
   { "_init_dispatcher",         rope_init_dispatcher,         METH_VARARGS,
     "Rapicorn::_init_dispatcher() - initial setup." },
-  { "__rope_pytrampoline__",    plic_cpy_trampoline,          METH_VARARGS,
-    "Rapicorn function invokation trampoline." },
   { "printout",                 rope_printout,                METH_VARARGS,
     "Rapicorn::printout() - print to stdout." },
+  PLIC_PYSTUB_METHOD_DEFS(),
   { NULL, } // sentinel
 };
 static const char rapicorn_doc[] = "Rapicorn Python Language Binding Module.";

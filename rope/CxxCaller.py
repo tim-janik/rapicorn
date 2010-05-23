@@ -145,6 +145,8 @@ class Generator:
         break
     namespace_names = [d.name for d in tnsl]
     return namespace_names
+  def namespaced_identifier (self, ident):
+    return '::'.join ([d.name for d in self.namespaces] + [ident])
   def rtype2cpp (self, type_node):
     return self.type2cpp (type_node)
   def type2cpp (self, type_node):
@@ -371,8 +373,8 @@ class Generator:
     s += ')\n{\n'
     # vars, procedure
     rdecl = ', *fr = NULL' if hasret else ''
-    s += '  FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + %u)%s;\n' % (len (mtype.args), rdecl)
-    s += '  fb.add_int64 (0x%08x); // proc_id\n' % GenUtils.type_id (mtype)
+    s += '  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + %u)%s;\n' % (len (mtype.args), rdecl)
+    s += '  fb.add_type_hash (%s); // proc_id\n' % self.method_digest (mtype)
     # marshal args
     s += self.generate_proto_add_args ('fb', class_info, '', [('this', class_info)], '')
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
@@ -395,15 +397,16 @@ class Generator:
       s += '  return retval;\n'
     s += '}\n'
     return s
-  def generate_class_call_wrapper (self, class_info, mtype, switchlines):
+  def generate_class_call_wrapper (self, class_info, mtype, switchlines, reglines):
     s = ''
-    switchlines += [ (GenUtils.type_id (mtype), class_info, mtype) ]
-    s += 'static bool\n'
-    call = 'call_%s_%s (const ' % (class_info.name, mtype.name)
-    s += call + FieldBuffer + ' &fb, ' + FieldBuffer + ' &rb)\n'
+    wrapper_name = 'call_%s_%s' % (class_info.name, mtype.name)
+    # switchlines += [ (GenUtils.type_id (mtype), class_info, mtype) ]
+    reglines += [ (self.method_digest (mtype), self.namespaced_identifier (wrapper_name)) ]
+    s += 'static FieldBuffer*\n'
+    s += wrapper_name + ' (const FieldBuffer &fb)\n'
     s += '{\n'
     s += '  ' + FieldBuffer + 'Reader fbr (fb);\n'
-    s += '  fbr.skip(); // proc_id\n'
+    s += '  fbr.skip4(); // TypeHash\n'
     s += '  if (fbr.remaining() != 1 + %u) return false;\n' % len (mtype.args)
     # fetch self
     s += '  %s *self;\n' % self.type2cpp (class_info)
@@ -428,10 +431,12 @@ class Generator:
     s += ');\n'
     # store return value
     if hasret:
-      s += '  rb.add_int64 (0x02000000); // proc_id for return value\n'
+      s += '  FieldBuffer &rb  = *FieldBuffer::new_return();\n'
       s += self.generate_proto_add_args ('rb', class_info, '', [('rval', mtype.rtype)], '')
+      s += '  return &rb;\n'
+    else:
+      s += '  return NULL;\n'
     # done
-    s += '  return true;\n'
     s += '}\n'
     return s
   def generate_class_call_switch (self, switchlines):
@@ -450,6 +455,22 @@ class Generator:
     s += '  }\n'
     s += '  return false;\n'
     s += '}\n'
+    return s
+  def digest2cbytes (self, digest):
+    return ('0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL, ' +
+            '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL') % \
+            digest
+  def method_digest (self, mtype):
+    return self.digest2cbytes (mtype.type_hash())
+  def generate_class_call_registry (self, reglines):
+    s = ''
+    s += 'static const Plic::DispatcherEntry _dispatcher_entries[] = {\n'
+    for dispatcher in reglines:
+      cdigest, wrapper_name = dispatcher
+      s += '  { { ' + cdigest + ' }, '
+      s += wrapper_name + ', },\n'
+    s += '};\n'
+    s += 'static Plic::DispatcherRegistry _dispatcher_registry (_dispatcher_entries);\n'
     return s
   def generate_signal (self, functype, ctype):
     signame = self.generate_signal_name (functype, ctype)
@@ -647,6 +668,7 @@ class Generator:
     if self.gen_server:
       s += '\n// --- Server Stubs ---\n'
       switchlines = []
+      reglines = []
       for tp in types:
         if tp.typedef_origin:
           continue
@@ -657,8 +679,9 @@ class Generator:
           pass # s += self.generate_sequence_impl (tp) + '\n'
         elif tp.storage == Decls.INTERFACE:
           for m in tp.methods:
-            s += self.generate_class_call_wrapper (tp, m, switchlines)
+            s += self.generate_class_call_wrapper (tp, m, switchlines, reglines)
           s += '\n'
+      s += self.generate_class_call_registry (reglines) + '\n'
       s += self.open_namespace (None)
       s += self.generate_class_call_switch (switchlines) + '\n'
     # generate interface impls

@@ -174,7 +174,10 @@ class Generator:
       s += '): # one way\n'
     else:
       s += '): # %s\n' % m.rtype.name
-    s += '  return self.__rope_pytrampoline__ (0x%08x, ' % GenUtils.type_id (m)
+    mth = m.type_hash()
+    mid = ('%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x' +
+           '%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x') % mth
+    s += '  return _PLIC_%s (' % mid
     s += ', '.join (l)
     s += ')\n'
     return s

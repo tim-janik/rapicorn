@@ -70,6 +70,8 @@ check-local: check-pystub
 check-cxxpystub:
 	@$(call TSTTITLE)
 	$(_@) ${PLICINT} -G $(srcdir)/CxxPyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
+	@echo "static PLIC_UNUSED PyMethodDef dummy[] = { PLIC_PYSTUB_METHOD_DEFS(), { 0 } };" \
+	  >> $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testcxxpystub.ref)
 	@$(call TSTTITLE,check-cxxpystub-syntax)
 	$(_@) cp $(srcdir)/testcxxpystub.ref testcxxpystub.cc

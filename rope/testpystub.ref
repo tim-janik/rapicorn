@@ -301,25 +301,25 @@ class UIWidgetArea (__BaseClass__):
     self.sig_void_signal = __Signal__ ('void_signal')
     self.sig_sample_signal = __Signal__ ('sample_signal')
   def simple_method (self): # float
-    return self.__rope_pytrampoline__ (0x02000001, self)
+    return _PLIC_0ca200003a5e02ed169b0d3b86dc10cdc07a85a6dfe104ade8554a515ffc84b1 (self)
   def single_arg (self, n): # float
-    return self.__rope_pytrampoline__ (0x02000002, self, n)
+    return _PLIC_0ca20000f96d1b2e54efdddfc11d9638b5d0abcc8a0f16c8957078d12b4b2fc0 (self, n)
   def single_arg2 (self, n): # float
-    return self.__rope_pytrampoline__ (0x02000003, self, n)
+    return _PLIC_0ca20000afefb8c4b9d9952905d41bfda2c44e813b1a8c4d8e440d5ecaeecec8 (self, n)
   def two_args (self, n, r): # float
-    return self.__rope_pytrampoline__ (0x02000004, self, n, r)
+    return _PLIC_0ca20000d1f5823f8538f2ffa1581dd0c9e7d9d486336a46c941f5292b4dcdfc (self, n, r)
   def two_args2 (self, n, r): # float
-    return self.__rope_pytrampoline__ (0x02000005, self, n, r)
+    return _PLIC_0ca20000255fafa4429116798ce5813e5eacea949f7cfe8e1f41fe0ca4311729 (self, n, r)
   def multi_args (self, n, r, i, s, y): # float
-    return self.__rope_pytrampoline__ (0x02000006, self, n, r, i, s, y)
+    return _PLIC_0ca200005e6e8ea56f4fdd2d1d4b3bb3be7de84f81bcc35391710698705b209a (self, n, r, i, s, y)
   def self_method (self, ba1, ba2): # float
-    return self.__rope_pytrampoline__ (0x02000007, self, ba1, ba2)
+    return _PLIC_0ca20000abd1f74a3f2d1aefb6d12a66100e83849c14475879488ee1596dab87 (self, ba1, ba2)
   def void_method (self): # one way
-    return self.__rope_pytrampoline__ (0x01000008, self)
+    return _PLIC_0ca1000027be4746de7d9d84a2281ae4dccb312da0062c8362d76268f178e709 (self)
   def on_click2out (self): # string
-    return self.__rope_pytrampoline__ (0x02000009, self)
+    return _PLIC_0ca20000a3ce0a03aaaf9478a83b0f7c2664b179bda29105b1f6ad88c5a0c98a (self)
   def on_click2in (self, command): # one way
-    return self.__rope_pytrampoline__ (0x0100000a, self, command)
+    return _PLIC_0ca10000e511187c9ea59f646fca1b626180b0bf59637495a99463469b646df9 (self, command)
   def __sig_void_signal__ (self): pass # default handler
   def __sig_sample_signal__ (self): pass # default handler
 
@@ -368,23 +368,23 @@ class MethodTestInterface (__BaseClass__):
   def __init__ (self):
     super (MethodTestInterface, self).__init__()
   def method_with_void (self): # one way
-    return self.__rope_pytrampoline__ (0x0100000b, self)
+    return _PLIC_0ca10000f91c872ea90ceaec3b16df51887b366247a3a6126f4b7fab28f1ab12 (self)
   def method_with_bools (self, input, optval): # bool
-    return self.__rope_pytrampoline__ (0x0200000c, self, input, optval)
+    return _PLIC_0ca200008ffdba44c998c0ffa6b486b19b4ea9f5a23d9c6da7746e46026b843e (self, input, optval)
   def method_with_ints (self, input, optval): # int
-    return self.__rope_pytrampoline__ (0x0200000d, self, input, optval)
+    return _PLIC_0ca20000cec55716747c3602672780d11852bd2e467d1e9161085ceb1b2bf816 (self, input, optval)
   def method_with_floats (self, input, optval): # float
-    return self.__rope_pytrampoline__ (0x0200000e, self, input, optval)
+    return _PLIC_0ca200006ede6737c9ee1722db2fc5834e5788c84a81be268c32f39e18ad9ab6 (self, input, optval)
   def method_with_string (self, input, optval): # string
-    return self.__rope_pytrampoline__ (0x0200000f, self, input, optval)
+    return _PLIC_0ca20000d07cd262fc81ef2c220a8d4559d0faae36ce56ea0990ad1d3c49827d (self, input, optval)
   def method_with_enum (self, input, optval): # QuickEnum
-    return self.__rope_pytrampoline__ (0x02000010, self, input, optval)
+    return _PLIC_0ca20000d1a935c9c1bdc5f48521c942ebcb3ede7a3fcbdcba634e15fbfde688 (self, input, optval)
   def method_with_record (self, input, optval): # QuickRecord
-    return self.__rope_pytrampoline__ (0x02000011, self, input, optval)
+    return _PLIC_0ca2000093f684d6345260c4f912f67fa8f6c2af19dc877e176ffee81397fa2e (self, input, optval)
   def method_with_sequence (self, input, optval): # QuickSequence
-    return self.__rope_pytrampoline__ (0x02000012, self, input, optval)
+    return _PLIC_0ca20000f8d6703f9af82486dc8ce5aa3a6095e0829ba18574e0fc82dbfa4b77 (self, input, optval)
   def method_with_interface (self, input, optval): # GrandChild
-    return self.__rope_pytrampoline__ (0x02000013, self, input, optval)
+    return _PLIC_0ca20000ed320c14672f050fc4be01b7239a6c63e8d3bb3e106046b369f7e804 (self, input, optval)
 
 class ButtonArea (__BaseClass__):
   def __init__ (self):
@@ -398,5 +398,5 @@ class PureMethods (__BaseClass__):
   def __init__ (self):
     super (PureMethods, self).__init__()
   def pure_method (self, f): # int
-    return self.__rope_pytrampoline__ (0x02000014, self, f)
+    return _PLIC_0ca20000ac480384d1df259f1d53b082995d5e5b4bb2fcb483f6a92ee477fcd6 (self, f)
 

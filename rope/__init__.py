@@ -20,9 +20,10 @@ More details at http://www.rapicorn.org/.
 """
 
 from pyRapicorn import *
-
 from py2cpy import *
-Application.__rope_pytrampoline__ = pyRapicorn.__rope_pytrampoline__
+for s in dir (pyRapicorn):
+  if s.startswith ('_PLIC_'):
+    setattr (py2cpy, s, getattr (pyRapicorn, s))
 
 app = None
 def app_init_with_x11 (application_name = None, cmdline_args = None):

@@ -36,6 +36,28 @@ base_code = """
 #define ERRORif(cond)   if (cond) goto error
 #define ERRORifpy()     if (PyErr_Occurred()) goto error
 #define ERRORpy(msg)    do { PyErr_Format (PyExc_RuntimeError, msg); goto error; } while (0)
+#define ERRORifnotret(fr) do { if (PLIC_UNLIKELY (!fr) || \\
+                                   PLIC_UNLIKELY (!Plic::is_callid_return (fr->first_id()))) { \\
+                                 PyErr_Format_from_PLIC_error (fr); \\
+                                 goto error; } } while (0)
+
+static PyObject*
+PyErr_Format_from_PLIC_error (const Plic::FieldBuffer *fr)
+{
+  if (!fr)
+    return PyErr_Format (PyExc_RuntimeError, "PLIC: missing return value");
+  if (Plic::is_callid_error (fr->first_id()))
+    {
+      Plic::FieldBufferReader frr (*fr);
+      frr.skip(); // proc_id
+      std::string msg = frr.pop_string(), domain = frr.pop_string();
+      if (domain.size()) domain += ": ";
+      msg = domain + msg;
+      return PyErr_Format (PyExc_RuntimeError, "%s", msg.c_str());
+    }
+
+  return PyErr_Format (PyExc_RuntimeError, "PLIC: garbage return: 0x%s", fr->first_id_str().c_str());
+}
 
 static inline PY_LONG_LONG
 PyIntLong_AsLongLong (PyObject *intlong)
@@ -124,46 +146,6 @@ class Generator:
         s += ' // %s' % re.sub ('\n', ' ', blurb)
       s += '\n'
     s += '};'
-    return s
-  def generate_frompy_convert (self, prefix, argtype):
-    s = ''
-    if argtype.storage in (Decls.INT, Decls.ENUM):
-      s += '  %s_vint64 (PyIntLong_AsLongLong (item)); if (PyErr_Occurred()) GOTO_ERROR();\n' % prefix
-    elif argtype.storage == Decls.FLOAT:
-      s += '  %s_vdouble (PyFloat_AsDouble (item)); if (PyErr_Occurred()) GOTO_ERROR();\n' % prefix
-    elif argtype.storage == Decls.STRING:
-      s += '  { char *s = NULL; Py_ssize_t len = 0;\n'
-      s += '    if (PyString_AsStringAndSize (item, &s, &len) < 0) GOTO_ERROR();\n'
-      s += '    %s_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }\n' % prefix
-    elif argtype.storage == Decls.RECORD:
-      s += '  if (!rope_frompy_%s (item, *%s_vrec())) GOTO_ERROR();\n' % (argtype.name, prefix)
-    elif argtype.storage == Decls.SEQUENCE:
-      s += '  if (!rope_frompy_%s (item, *%s_vseq())) GOTO_ERROR();\n' % (argtype.name, prefix)
-    elif argtype.storage == Decls.INTERFACE:
-      s += '  { char *s = NULL; Py_ssize_t len = 0;\n'
-      s += '    PyObject *iobj = PyObject_GetAttrString (item, "__rope__object__"); if (!iobj) GOTO_ERROR();\n'
-      s += '    if (PyString_AsStringAndSize (iobj, &s, &len) < 0) GOTO_ERROR();\n'
-      s += '    %s_vstring (std::string (s, len)); if (PyErr_Occurred()) GOTO_ERROR(); }\n' % prefix
-    else: # FUNC VOID
-      raise RuntimeError ("Unexpected storage type: " + argtype.storage)
-    return s
-  def generate_topy_convert (self, field, argtype, hascheck = '', errlabel = 'error'):
-    s = ''
-    s += '  if (!%s) GOTO_ERROR();\n' % hascheck if hascheck else ''
-    if argtype.storage in (Decls.INT, Decls.ENUM):
-      s += '  pyfoR = PyLong_FromLongLong (%s); if (!pyfoR) GOTO_ERROR();\n' % field
-    elif argtype.storage == Decls.FLOAT:
-      s += '  pyfoR = PyFloat_FromDouble (%s); if (!pyfoR) GOTO_ERROR();\n' % field
-    elif argtype.storage in (Decls.STRING, Decls.INTERFACE):
-      s += '  { const std::string &sp = %s;\n' % field
-      s += '    pyfoR = PyString_FromStringAndSize (sp.data(), sp.size()); }\n'
-      s += '  if (!pyfoR) GOTO_ERROR();\n'
-    elif argtype.storage == Decls.RECORD:
-      s += '  if (!rope_topy_%s (%s, &pyfoR) || !pyfoR) GOTO_ERROR();\n' % (argtype.name, field)
-    elif argtype.storage == Decls.SEQUENCE:
-      s += '  if (!rope_topy_%s (%s, &pyfoR) || !pyfoR) GOTO_ERROR();\n' % (argtype.name, field)
-    else:
-      raise RuntimeError ("Unexpected storage type: " + argtype.storage)
     return s
   def generate_proto_add_py (self, fb, type, var):
     s = ''
@@ -282,24 +264,26 @@ class Generator:
     s += '  return pyret;\n'
     s += '}\n'
     return s
-  def generate_caller_funcs (self, type_info, switchlines):
+  def method_digest (self, mtype):
+    d = mtype.type_hash()
+    return ('0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL, ' +
+            '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL') % d
+  def generate_rpc_call_wrapper (self, class_info, mtype, mdefs):
     s = ''
-    for m in type_info.methods:
-      s += self.generate_caller_func (type_info, m, switchlines)
-    return s
-  def generate_rpc_call_wrapper (self, class_info, mtype, switchlines):
-    s = ''
-    switchlines += [ 'case 0x%08x: // %s::%s\n' % (GenUtils.type_id (mtype), class_info.name, mtype.name) ]
-    switchlines += [ '  return plic_pycall_%s_%s (pyself, pyargs);\n' % (class_info.name, mtype.name) ]
+    mth = mtype.type_hash()
+    mname = ('%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x' +
+             '%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x') % mth
+    mdefs += [ '{ "_PLIC_%s", plic_pycall_%s_%s, METH_VARARGS, "pyRapicorn glue call" }' %
+               (mname, class_info.name, mtype.name) ]
     hasret = mtype.rtype.storage != Decls.VOID
     s += 'static PyObject*\n'
     s += 'plic_pycall_%s_%s (PyObject *pyself, PyObject *pyargs)\n' % (class_info.name, mtype.name)
     s += '{\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
-    s += '  ' + FieldBuffer + ' &fb = *' + FieldBuffer + '::_new (1 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # proc_id self
-    s += '  fb.add_int64 (0x%08x); // proc_id\n' % GenUtils.type_id (mtype)
-    s += '  if (PyTuple_Size (pyargs) != 1 + 1 + %u) ERRORpy ("PLIC: wrong number of arguments");\n' % len (mtype.args) # proc_id self
-    arg_counter = 1 # skip proc_od
+    s += '  ' + FieldBuffer + ' &fb = *' + FieldBuffer + '::_new (4 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # proc_id self
+    s += '  fb.add_type_hash (%s); // proc_id\n' % self.method_digest (mtype)
+    s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("PLIC: wrong number of arguments");\n' % len (mtype.args) # proc_id self
+    arg_counter = 0
     s += '  item = PyTuple_GET_ITEM (pyargs, %d);  // self\n' % arg_counter
     s += self.generate_proto_add_py ('fb', class_info, 'item')
     arg_counter += 1
@@ -312,12 +296,12 @@ class Generator:
       s += '  if (fr) { delete fr; fr = NULL; }\n'
       s += '  return None_INCREF();\n'
     else:
+      s += '  ERRORifnotret (fr);\n'
       s += '  if (fr) {\n'
       s += '    ' + FieldBuffer + 'Reader frr (*fr);\n'
-      s += '    if (frr.pop_int64() == 0x02000000) { // proc_id\n'
-      s += '      if (frr.remaining() == 1) {\n'
-      s += reindent ('        ', self.generate_proto_pop_py ('frr', mtype.rtype, 'pyfoR')) + '\n'
-      s += '      }\n'
+      s += '    frr.skip(); // proc_id for return\n'
+      s += '    if (frr.remaining() == 1) {\n'
+      s += reindent ('      ', self.generate_proto_pop_py ('frr', mtype.rtype, 'pyfoR')) + '\n'
       s += '    }\n'
       s += '    delete fr; fr = NULL;\n'
       s += '  }\n'
@@ -327,75 +311,6 @@ class Generator:
     s += '  return NULL;\n'
     s += '}\n'
     return s
-  def generate_rpc_call_switch (self, switchlines):
-    s = ''
-    s += 'static RAPICORN_UNUSED PyObject*\n'
-    s += 'plic_cpy_trampoline (PyObject *pyself, PyObject *pyargs)\n'
-    s += '{\n'
-    s += '  PyObject *arg0 = NULL;\n'
-    s += '  unsigned int procid = 0;\n'
-    s += '  if (PyTuple_Size (pyargs) < 1)\n'
-    s += '    return PyErr_Format (PyExc_RuntimeError, "PLIC: pyc trampoline without arguments");\n'
-    s += '  arg0 = PyTuple_GET_ITEM (pyargs, 0);\n'
-    s += '  procid = PyInt_AsLong (arg0);\n'
-    s += '  if (PyErr_Occurred()) return NULL;\n'
-    s += '  switch (procid) {\n'
-    s += '  '.join (switchlines)
-    s += '  default:\n'
-    s += '    return PyErr_Format (PyExc_RuntimeError, "PLIC: unknown method id: 0x%08x", procid);\n'
-    s += '  }\n'
-    s += '}\n'
-    return s
-  def generate_caller_impl (self, switchlines):
-    s = ''
-    s += 'static RAPICORN_UNUSED PyObject*\n'
-    s += 'rope_cpy_trampoline (PyObject *_py_self, PyObject *_py_args)'
-    s += '{\n'
-    s += '  PyObject *arg0 = NULL;\n'
-    s += '  unsigned int procid = 0;\n'
-    s += '  if (PyTuple_Size (_py_args) < 1)\n'
-    s += '    return PyErr_Format (PyExc_RuntimeError, "trampoline call without arguments");\n'
-    s += '  arg0 = PyTuple_GET_ITEM (_py_args, 0);\n'
-    s += '  procid = PyInt_AsLong (arg0);\n'
-    s += '  if (PyErr_Occurred()) return NULL;\n'
-    s += '  switch (procid) {\n'
-    s += '  '.join (switchlines)
-    s += '  default:\n'
-    s += '    return PyErr_Format (PyExc_RuntimeError, "ROPE: unknown method id: 0x%08x", procid);\n'
-    s += '  }\n'
-    s += '}\n'
-    return s
-  def storage_fieldname (self, storage):
-    if storage in (Decls.INT, Decls.ENUM):
-      return 'vint64'
-    elif storage == Decls.FLOAT:
-      return 'vdouble'
-    elif storage in (Decls.STRING, Decls.INTERFACE):
-      return 'vstring'
-    elif storage == Decls.RECORD:
-      return 'vrec'
-    elif storage == Decls.SEQUENCE:
-      return 'vseq'
-    else: # FUNC VOID
-      raise RuntimeError ("Unexpected storage type: " + storage)
-  def inherit_reduce (self, type_list):
-    def hasancestor (child, parent):
-      if child == parent:
-        return True
-      for childpre in child.prerequisites:
-        if hasancestor (childpre, parent):
-          return True
-    reduced = []
-    while type_list:
-      p = type_list.pop()
-      skip = 0
-      for c in type_list + reduced:
-        if hasancestor (c, p):
-          skip = 1
-          break
-      if not skip:
-        reduced = [ p ] + reduced
-    return reduced
   def type2cpp (self, typename):
     if typename == 'float': return 'double'
     if typename == 'string': return 'std::string'
@@ -428,7 +343,7 @@ class Generator:
       elif tp.storage == Decls.INTERFACE:
         s += ''
     # generate accessors
-    switchlines = [ '' ]
+    mdefs = []
     for tp in types:
       if tp.typedef_origin:
         pass
@@ -439,8 +354,10 @@ class Generator:
       elif tp.storage == Decls.INTERFACE:
         pass
         for m in tp.methods:
-          s += self.generate_rpc_call_wrapper (tp, m, switchlines)
-    s += self.generate_rpc_call_switch (switchlines)
+          s += self.generate_rpc_call_wrapper (tp, m, mdefs)
+    # method def array
+    if mdefs:
+      s += '#define PLIC_PYSTUB_METHOD_DEFS() \\\n  ' + ',\\\n  '.join (mdefs) + '\n'
     return s
 
 def error (msg):
