@@ -160,6 +160,8 @@ void        diag                (const char   *format, ...) RAPICORN_PRINTF (1, 
 void        diag                (const String &s);
 void        diag_errno          (const char   *format, ...) RAPICORN_PRINTF (1, 2);
 void        diag_errno          (const String &s);
+inline void info                (const char   *format, ...) RAPICORN_PRINTF (1, 2);
+inline void info                (const String &s);
 void        errmsg              (const String &entity, const char *format, ...) RAPICORN_PRINTF (2, 3);
 void        errmsg              (const String &entity, const String &s);
 void        printerr            (const char   *format, ...) RAPICORN_PRINTF (1, 2);
@@ -685,6 +687,26 @@ public: /* generic data API */
 
 /* --- implementation --- */
 void _rapicorn_init_threads (void);
+extern bool info_needed;
+void info_always (const String &s);
+inline void
+info (const char   *format, ...)
+{
+  if (RAPICORN_UNLIKELY (info_needed))
+    {
+      va_list args;
+      va_start (args, format);
+      String s = string_vprintf (format, args);
+      va_end (args);
+      info_always (s);
+    }
+}
+inline void
+info (const String &s)
+{
+  if (RAPICORN_UNLIKELY (info_needed))
+    info_always (s);
+}
 
 } // Rapicorn
 

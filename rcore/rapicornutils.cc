@@ -178,6 +178,27 @@ rapicorn_parse_settings_and_args (InitValue *value,
   *argc_p = e;
 }
 
+static bool
+string_find_word (const String &cs,
+                  const String &cw)
+{
+  String s = cs, w = cw;
+  std::transform (s.begin(), s.end(), s.begin(), ::tolower);
+  std::transform (w.begin(), w.end(), w.begin(), ::tolower);
+  size_t start = 0, p;
+  while (p = s.find (w, start),
+         p != s.npos)
+    {
+      start = p + 1;
+      if (p > 0 && isalnum (s[p - 1]))
+        continue; // no preceding word boundary
+      if (p + w.size() < s.size() && isalnum (s[p + w.size()]))
+        continue; // no subsequent word boundary
+      return true;
+    }
+  return false;
+}
+
 static struct _InternalConstructorTest_lrcc0 { int v; _InternalConstructorTest_lrcc0() : v (0x12affe17) {} } _internalconstructortest;
 
 /**
@@ -202,6 +223,11 @@ rapicorn_init_core (int        *argcp,
   /* mandatory initial initialization */
   if (!g_threads_got_initialized)
     g_thread_init (NULL);
+
+  {
+    const char *s = getenv ("RAPICORN_LOG");
+    info_needed = s && (string_find_word (s, "all") || string_find_word (s, "info"));
+  }
 
   /* update program/application name upon repeated initilization */
   char *prg_name = argcp && *argcp ? g_path_get_basename ((*argvp)[0]) : NULL;
@@ -384,6 +410,18 @@ diag_errno (const String &s)
   int errno_val = errno;
   diag (s + ": " + string_from_errno (errno_val));
 }
+
+void
+info_always (const String &s)
+{
+  String msg ("INFO: ");
+  msg += s;
+  msg += '\n';
+  fflush (stdout);
+  fputs (msg.c_str(), stderr);
+  fflush (stderr);
+}
+bool info_needed = true;
 
 void
 errmsg (const String &entity,
