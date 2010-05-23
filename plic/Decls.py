@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-import os, sys, re, shutil;
+import os, sys, re, shutil, hashlib;
 true, false, length = (True, False, len)
 
 # --- types ---
@@ -112,6 +112,17 @@ class TypeInfo (BaseDecl):
       self.methods = []         # holds: TypeInfo
       self.signals = []         # holds: TypeInfo
     self.auxdata = {}
+  def sha256digest (self):
+    assert self.storage == FUNC
+    idt = [self.rtype, self.ownertype, self] + [a[1] for a in self.args] # rtype, owner, self, arg0type, ...
+    idn = [type.full_name() for type in idt] # float MethodObject method_name int string
+    hashstr = ','.join (idn) # float,MethodObject,method_name,int,string
+    sha256 = hashlib.sha256()
+    sha256.update (hashstr)
+    return sha256.digest()
+  def sha256digest_bytes (self):
+    t = tuple ([ord (c) for c in self.sha256digest()])
+    return t
   def clone (self, newname, isimpl):
     if newname == None: newname = self.name
     ti = TypeInfo (newname, self.storage, isimpl)
