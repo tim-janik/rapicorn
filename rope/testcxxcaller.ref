@@ -1068,7 +1068,7 @@ static FieldBuffer*
 call_UIWidgetArea_simple_method (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
   UIWidgetArea *self;
   self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
@@ -1082,7 +1082,7 @@ static FieldBuffer*
 call_UIWidgetArea_single_arg (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
   UIWidgetArea *self;
   self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
@@ -1097,7 +1097,7 @@ static FieldBuffer*
 call_UIWidgetArea_single_arg2 (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
   UIWidgetArea *self;
   self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
@@ -1112,7 +1112,7 @@ static FieldBuffer*
 call_UIWidgetArea_two_args (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   UIWidgetArea *self;
   self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
@@ -1128,7 +1128,7 @@ static FieldBuffer*
 call_UIWidgetArea_two_args2 (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   UIWidgetArea *self;
   self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
@@ -1144,7 +1144,7 @@ static FieldBuffer*
 call_UIWidgetArea_multi_args (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 5) return false;
   UIWidgetArea *self;
   self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
@@ -1163,7 +1163,7 @@ static FieldBuffer*
 call_UIWidgetArea_self_method (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   UIWidgetArea *self;
   self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
@@ -1179,7 +1179,7 @@ static FieldBuffer*
 call_UIWidgetArea_void_method (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
   UIWidgetArea *self;
   self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
@@ -1191,7 +1191,7 @@ static FieldBuffer*
 call_UIWidgetArea_on_click2out (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
   UIWidgetArea *self;
   self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
@@ -1205,7 +1205,7 @@ static FieldBuffer*
 call_UIWidgetArea_on_click2in (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
   UIWidgetArea *self;
   self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
@@ -1223,7 +1223,7 @@ static FieldBuffer*
 call_MethodTestInterface_method_with_void (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
   MethodTestInterface *self;
   self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
@@ -1235,7 +1235,7 @@ static FieldBuffer*
 call_MethodTestInterface_method_with_bools (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   MethodTestInterface *self;
   self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
@@ -1251,7 +1251,7 @@ static FieldBuffer*
 call_MethodTestInterface_method_with_ints (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   MethodTestInterface *self;
   self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
@@ -1267,7 +1267,7 @@ static FieldBuffer*
 call_MethodTestInterface_method_with_floats (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   MethodTestInterface *self;
   self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
@@ -1283,7 +1283,7 @@ static FieldBuffer*
 call_MethodTestInterface_method_with_string (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   MethodTestInterface *self;
   self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
@@ -1299,7 +1299,7 @@ static FieldBuffer*
 call_MethodTestInterface_method_with_enum (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   MethodTestInterface *self;
   self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
@@ -1315,7 +1315,7 @@ static FieldBuffer*
 call_MethodTestInterface_method_with_record (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   MethodTestInterface *self;
   self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
@@ -1333,7 +1333,7 @@ static FieldBuffer*
 call_MethodTestInterface_method_with_sequence (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   MethodTestInterface *self;
   self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
@@ -1351,7 +1351,7 @@ static FieldBuffer*
 call_MethodTestInterface_method_with_interface (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   MethodTestInterface *self;
   self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
@@ -1372,7 +1372,7 @@ static FieldBuffer*
 call_PureMethods_pure_method (const FieldBuffer &fb)
 {
   Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // proc_id
+  fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
   PureMethods *self;
   self = Instance4StringCast<PureMethods> (fbr.pop_object());

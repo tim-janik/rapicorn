@@ -50,6 +50,9 @@ static void print_max_call_stack_size()
 
 class UIThread : public Thread {
   EventLoop * volatile m_loop;
+  Mutex                m_init_mutex;
+  Cond                 m_init_cond;
+  String               m_init_app;
   virtual void
   run ()
   {
@@ -62,54 +65,12 @@ class UIThread : public Thread {
     EventLoop::Source *esource = new ProcSource (*this);
     (*m_loop).add_source (esource, MAXINT);
     esource->exitable (false);
-    {
-      FieldBuffer *fb = FieldBuffer::_new (2);
-      fb->add_int64 (Plic::callid_return); // proc_id
-      Deletable *dapp = &App;
-      fb->add_string (dapp->object_url());
-      push_return (fb);
-    }
+    m_init_mutex.lock();
+    Deletable *dapp = &App;
+    m_init_app = dapp->object_url();
+    m_init_cond.signal();
+    m_init_mutex.unlock();
     App.execute_loops();
-  }
-  bool
-  dispatch ()
-  {
-    const FieldBuffer *call = pop_proc();
-    if (call)
-      {
-        const int64 call_id = call->first_id();
-        const bool twoway = Plic::is_callid_twoway (call_id);
-        FieldBuffer *fr;
-        // bool success = plic_call_wrapper_switch (*call, *fr);
-        fr = Plic::DispatcherRegistry::dispatch_call (*call);
-        if (twoway && !fr)
-          fr = FieldBuffer::new_error (string_printf ("missing return from 0x%016llx",
-                                                      call_id), "PLIC");
-        else if (fr && !twoway)
-          {
-            const int64 ret_id = fr->first_id();
-            FieldBufferReader frr (*fr);
-            if (Plic::is_callid_error (ret_id))
-              {
-                frr.skip();
-                printerr ("PLIC: error during oneway call 0x%016llx: %s\n",
-                          call_id, frr.pop_string().c_str());
-              }
-            else if (Plic::is_callid_return (ret_id))
-              {
-                frr.skip();
-                printerr ("PLIC: unexpected return from oneway 0x%016llx\n", call_id);
-              }
-            else /* ? */
-              printerr ("PLIC: invalid return garbage from 0x%016llx\n", call_id);
-            delete fr;
-            fr = NULL;
-          }
-        if (fr)
-          push_return (fr);
-        delete call;
-      }
-    return true;
   }
 protected:
   class ProcSource : public virtual EventLoop::Source {
@@ -117,10 +78,23 @@ protected:
     RAPICORN_PRIVATE_CLASS_COPY (ProcSource);
   protected:
     /*Des*/     ~ProcSource() {}
-    virtual bool prepare  (uint64 current_time_usecs,
-                           int64 *timeout_usecs_p)      { return m_thread.check_dispatch(); }
-    virtual bool check    (uint64 current_time_usecs)   { return m_thread.check_dispatch(); }
-    virtual bool dispatch ()                            { return m_thread.dispatch(); }
+    virtual bool
+    prepare  (uint64 current_time_usecs,
+              int64 *timeout_usecs_p)
+    {
+      return Plic::DispatcherRegistry::check_dispatch();
+    }
+    virtual bool
+    check    (uint64 current_time_usecs)
+    {
+      return Plic::DispatcherRegistry::check_dispatch();
+    }
+    virtual bool
+    dispatch ()
+    {
+      Plic::DispatcherRegistry::dispatch();
+      return true; // keep alive
+    }
   public:
     explicit     ProcSource (UIThread &thread) : m_thread (thread) {}
   };
@@ -131,96 +105,14 @@ public:
   UIThread (const String &name) :
     Thread (name),
     m_loop (NULL),
-    m_cpu (-1),
-    rrx (0),
-    rpx (0)
+    m_cpu (-1)
   {
-    rrv.reserve (1);
     atexit (print_max_call_stack_size);
   }
   ~UIThread()
   {
     unref (m_loop);
     m_loop = NULL;
-  }
-private:
-  Mutex                         rrm;
-  Cond                          rrc;
-  vector<FieldBuffer*>          rrv, rro;
-  size_t                        rrx;
-public:
-  void
-  push_return (FieldBuffer *rret)
-  {
-    rrm.lock();
-    rrv.push_back (rret);
-    rrc.signal();
-    rrm.unlock();
-    Thread::Self::yield(); // allow fast return value handling on single core
-  }
-  FieldBuffer*
-  fetch_return (void)
-  {
-    if (rrx >= rro.size())
-      {
-        if (rrx)
-          rro.resize (0);
-        rrm.lock();
-        while (rrv.size() == 0)
-          rrc.wait (rrm);
-        rrv.swap (rro); // fetch result
-        rrm.unlock();
-        rrx = 0;
-      }
-    // rrx < rro.size()
-    return rro[rrx++];
-  }
-private:
-  Mutex                rps;
-  vector<FieldBuffer*> rpv, rpo;
-  size_t               rpx;
-public:
-  void
-  push_proc (FieldBuffer *proc)
-  {
-    int64 call_id = proc->first_id();
-    bool twoway = Plic::is_callid_twoway (call_id);
-    size_t sz;
-    rps.lock();
-    rpv.push_back (proc);
-    sz = rpv.size();
-    rps.unlock();
-    m_loop->wakeup();
-    if (twoway ||               // minimize turn-around times for two-way calls
-        sz >= 1009)             // allow batch processing of one-way call queue
-      Thread::Self::yield();    // useless if threads have different CPU affinity
-  }
-  FieldBuffer*
-  pop_proc (bool advance = true)
-  {
-    if (rpx >= rpo.size())
-      {
-        if (rpx)
-          rpo.resize (0);
-        rps.lock();
-        rpv.swap (rpo);
-        rps.unlock();
-        rpx = 0;
-        max_call_stack_size = MAX (max_call_stack_size, rpo.size());
-      }
-    if (rpx < rpo.size())
-      {
-        size_t indx = rpx;
-        if (advance)
-          rpx++;
-        return rpo[indx];
-      }
-    return NULL;
-  }
-  bool
-  check_dispatch ()
-  {
-    return pop_proc (false) != NULL;
   }
 private:
   static UIThread *ui_thread;
@@ -244,16 +136,11 @@ public:
     ui_thread->cmdline_args = cmdline_args;
     ui_thread->m_cpu = cpu_affinity (1);
     ui_thread->start();
-    FieldBuffer *rpret = ui_thread->fetch_return();
-    String appurl;
-    if (rpret && Plic::is_callid_return (rpret->first_id()))
-      {
-        Plic::FieldBufferReader rpr (*rpret);
-        rpr.skip(); // proc_id
-        if (rpr.remaining() > 0 && rpr.get_type() == Plic::STRING)
-          appurl = rpr.pop_string();
-      }
-    delete rpret;
+    ui_thread->m_init_mutex.lock();
+    while (ui_thread->m_init_app.size() == 0)
+      ui_thread->m_init_cond.wait (ui_thread->m_init_mutex);
+    String appurl = ui_thread->m_init_app;
+    ui_thread->m_init_mutex.unlock();
     return appurl;
   }
   static FieldBuffer*
@@ -262,10 +149,13 @@ public:
     if (!ui_thread)
       return false;
     const int64 call_id = call->first_id();
-    ui_thread->push_proc (call); // deletes call
+    bool mayblock = Plic::DispatcherRegistry::push_call (call); // deletes call
+    ui_thread->m_loop->wakeup();
+    if (mayblock)
+      Thread::Self::yield(); // allow fast return value handling on single core
     if (Plic::is_callid_twoway (call_id))
       {
-        FieldBuffer *fr = ui_thread->fetch_return();
+        FieldBuffer *fr = Plic::DispatcherRegistry::fetch_return();
         return fr;
       }
     return NULL;
