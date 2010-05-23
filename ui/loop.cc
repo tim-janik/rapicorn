@@ -102,7 +102,7 @@ private:
   {
     for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
       {
-        SourceList slist = (*it).second;
+        SourceList &slist = (*it).second;
         for (SourceList::iterator lit = slist.begin(); lit != slist.end(); lit++)
           return *lit;
       }
@@ -113,7 +113,7 @@ private:
   {
     for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
       {
-        SourceList slist = (*it).second;
+        SourceList &slist = (*it).second;
         for (SourceList::iterator lit = slist.begin(); lit != slist.end(); lit++)
           if (id == (*lit)->m_id)
             return *lit;
@@ -199,7 +199,7 @@ public:
       error ("EventLoop::m_counter overflow, please report");
     source->m_loop_state = UNCHECKED;
     source->m_priority = priority;
-    std::list<Source*> &slist = m_sources[priority];
+    SourceList &slist = m_sources[priority];
     slist.push_back (source);
     wakeup_L();
     return source->m_id;
@@ -249,7 +249,7 @@ public:
     AutoLocker locker (m_mutex);
     for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
       {
-        SourceList slist = (*it).second;
+        SourceList &slist = (*it).second;
         for (SourceList::iterator lit = slist.begin(); lit != slist.end(); lit++)
           if (!(*lit)->exitable())
             return false;
@@ -270,7 +270,7 @@ EventLoopImpl::prepare_sources (int            &max_priority,
   SourceList sources;
   for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
     {
-      SourceList slist = (*it).second;
+      SourceList &slist = (*it).second;
       for (SourceList::iterator lit = slist.begin(); lit != slist.end(); lit++)
         if ((*lit)->m_main_loop == this && /* test undestroyed */
             (!(*lit)->m_dispatching || (*lit)->m_may_recurse))
@@ -335,7 +335,7 @@ EventLoopImpl::check_sources (const int             max_priority,
   SourceList sources;
   for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
     {
-      SourceList slist = (*it).second;
+      SourceList &slist = (*it).second;
       for (SourceList::iterator lit = slist.begin(); lit != slist.end(); lit++)
         if ((*lit)->m_main_loop == this && /* test undestroyed */
             ((*lit)->m_loop_state == PREPARED ||
@@ -389,7 +389,7 @@ EventLoopImpl::dispatch_sources (const int max_priority)
   SourceList sources;
   for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
     {
-      SourceList slist = (*it).second;
+      SourceList &slist = (*it).second;
       for (SourceList::iterator lit = slist.begin(); lit != slist.end(); lit++)
         if ((*lit)->m_main_loop == this && /* test undestroyed */
             (*lit)->m_loop_state == NEEDS_DISPATCH)
