@@ -75,7 +75,7 @@ class UIThread : public Thread {
           fr = FieldBuffer::_new (2);
         else
           fr = &fdummy;
-        bool success = plic_call_wrapper_switch (*call, *fr);
+        bool success = true; // plic_call_wrapper_switch (*call, *fr);
         if (!success)
           {
             printerr ("UIThread::call error (see logs)\n"); // FIXME

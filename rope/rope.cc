@@ -42,12 +42,6 @@ typedef Plic::FieldBuffer8 FieldBuffer8;
 static PyObject *rapicorn_exception = NULL;
 
 // --- rapicorn thread ---
-static uint  max_call_stack_size = 0;
-static void print_max_call_stack_size()
-{
-  printerr ("DEBUG:atexit: max_call_stack_size: %u\n", max_call_stack_size);
-}
-
 class UIThread : public Thread {
   EventLoop * volatile m_loop;
   Mutex                m_init_mutex;
@@ -106,9 +100,7 @@ public:
     Thread (name),
     m_loop (NULL),
     m_cpu (-1)
-  {
-    atexit (print_max_call_stack_size);
-  }
+  {}
   ~UIThread()
   {
     unref (m_loop);
@@ -172,7 +164,7 @@ plic_call_remote (Plic::FieldBuffer *call)
 // --- PyC functions ---
 static PyObject*
 rope_printout (PyObject *self,
-                 PyObject *args)
+               PyObject *args)
 {
   const char *ns = NULL;
   unsigned int nl = 0;
@@ -185,7 +177,7 @@ rope_printout (PyObject *self,
 
 static PyObject*
 rope_init_dispatcher (PyObject *self,
-                        PyObject *args)
+                      PyObject *args)
 {
   const char *ns = NULL;
   unsigned int nl = 0;

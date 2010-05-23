@@ -1410,17 +1410,6 @@ static Plic::DispatcherRegistry _dispatcher_registry (_dispatcher_entries);
 
 } // RapicornPlicTest
 
-static bool __UNUSED__
-plic_call_wrapper_switch (const Plic::FieldBuffer &fb, Plic::FieldBuffer &rb)
-{
-  switch (fb.first_id()) {
-  default:
-    die();
-  }
-  return false;
-}
-
-
 // --- Interface Implementation Helpers ---
 
 namespace InterfaceTests {

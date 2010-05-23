@@ -200,14 +200,14 @@ class Generator:
       s += interfacechar
     s += ident
     return s
-  def generate_prop (self, fident, ftype):
+  def generate_prop (self, fident, ftype): # FIXME: properties
     v = 'virtual '
     # getter
     s = '  ' + self.format_to_tab (v + ftype.name) + fident + ' () const = 0;\n'
     # setter
     s += '  ' + self.format_to_tab (v + 'void') + fident + ' (const &' + ftype.name + ') = 0;\n'
     return s
-  def generate_proplist (self, ctype):
+  def generate_proplist (self, ctype): # FIXME: properties
     return '  ' + self.format_to_tab ('virtual const PropertyList&') + 'list_properties ();\n'
   def generate_field (self, fident, ftype_name):
     return '  ' + self.format_to_tab (ftype_name) + fident + ';\n'
@@ -255,19 +255,6 @@ class Generator:
     s += self.insertion_text (type_info.name)
     s += '};'
     return s
-  def storage_fieldname (self, storage):
-    if storage in (Decls.INT, Decls.ENUM):
-      return 'vint64'
-    elif storage == Decls.FLOAT:
-      return 'vdouble'
-    elif storage in (Decls.STRING, Decls.INTERFACE):
-      return 'vstring'
-    elif storage == Decls.RECORD:
-      return 'vrec'
-    elif storage == Decls.SEQUENCE:
-      return 'vseq'
-    else: # FUNC VOID
-      raise RuntimeError ("Unexpected storage type: " + storage)
   def accessor_name (self, decls_type):
     # map Decls storage to FieldBuffer accessors
     return { Decls.INT:       'int64',
@@ -397,10 +384,9 @@ class Generator:
       s += '  return retval;\n'
     s += '}\n'
     return s
-  def generate_class_call_wrapper (self, class_info, mtype, switchlines, reglines):
+  def generate_class_call_wrapper (self, class_info, mtype, reglines):
     s = ''
     wrapper_name = 'call_%s_%s' % (class_info.name, mtype.name)
-    # switchlines += [ (GenUtils.type_id (mtype), class_info, mtype) ]
     reglines += [ (self.method_digest (mtype), self.namespaced_identifier (wrapper_name)) ]
     s += 'static FieldBuffer*\n'
     s += wrapper_name + ' (const FieldBuffer &fb)\n'
@@ -437,23 +423,6 @@ class Generator:
     else:
       s += '  return NULL;\n'
     # done
-    s += '}\n'
-    return s
-  def generate_class_call_switch (self, switchlines):
-    s = ''
-    s += '\nstatic bool __UNUSED__\nplic_call_wrapper_switch (const '
-    s += FieldBuffer + ' &fb, ' + FieldBuffer + ' &rb)\n'
-    s += '{\n'
-    s += '  switch (fb.first_id()) {\n'
-    for swcase in switchlines:
-      mid, type_info, m = swcase
-      s += '  case 0x%08x: // %s::%s\n' % (mid, type_info.name, m.name)
-      nsname = '::'.join (self.type_relative_namespaces (type_info))
-      s += '    return %s::call_%s_%s (fb, rb);\n' % (nsname, type_info.name, m.name)
-    s += '  default:\n'
-    s += '    die();\n'
-    s += '  }\n'
-    s += '  return false;\n'
     s += '}\n'
     return s
   def digest2cbytes (self, digest):
@@ -667,7 +636,6 @@ class Generator:
     # generate server stubs
     if self.gen_server:
       s += '\n// --- Server Stubs ---\n'
-      switchlines = []
       reglines = []
       for tp in types:
         if tp.typedef_origin:
@@ -679,11 +647,10 @@ class Generator:
           pass # s += self.generate_sequence_impl (tp) + '\n'
         elif tp.storage == Decls.INTERFACE:
           for m in tp.methods:
-            s += self.generate_class_call_wrapper (tp, m, switchlines, reglines)
+            s += self.generate_class_call_wrapper (tp, m, reglines)
           s += '\n'
       s += self.generate_class_call_registry (reglines) + '\n'
       s += self.open_namespace (None)
-      s += self.generate_class_call_switch (switchlines) + '\n'
     # generate interface impls
     if self.gen_iface_impl:
       s += '\n// --- Interface Implementation Helpers ---\n'
