@@ -52,11 +52,12 @@ import time, random
 # while True: app.test_counter_inc_fetch() # two way call
 
 niter = 29
+bounds = (7000, 7001)
 w2samples, w1samples = [], []
 
 for n in range (0, niter):
   app.test_counter_set (0)
-  r = random.randrange (7000, 20000)
+  r = random.randrange (*bounds)
   t0 = time.clock()
   for i in range (0, r):
     app.test_counter_inc_fetch() # two way test
@@ -74,7 +75,7 @@ print "2way: best: %u calls/s; fastest: %.2fus; slowest: %.2fus; err: %.2f%%" %\
 
 for n in range (0, niter):
   app.test_counter_set (0)
-  r = random.randrange (10000, 25000)
+  r = random.randrange (bounds[0] + 10000, bounds[1] + 10000)
   t0 = time.clock()
   for i in range (0, r):
     app.test_counter_add (1)  # one way test
