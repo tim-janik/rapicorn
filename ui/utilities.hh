@@ -58,12 +58,6 @@ inline double min     (int64  a, double b) { return min<double> (a, b); }
 inline double max     (double a, int64  b) { return max<double> (a, b); }
 inline double max     (int64  a, double b) { return max<double> (a, b); }
 
-/* --- Rope Protocoll structures --- */
-class ProtoRecord;
-class ProtoSequence;
-class ProtoArg;
-class ProtoMessage;
-
 /* --- exceptions --- */
 struct Exception : std::exception {
 public:
