@@ -173,15 +173,12 @@ Msg::register_type (const char *ident,
     default_ouput = NONE;
   /* lock messages */
   uint8 *old_mbits = NULL;
-  if (ThreadTable.mutex_lock)
-    msg_mutex.lock();
+  ScopedLock<Mutex> locker (msg_mutex);
   /* allow duplicate registration */
   for (int i = 0; i < n_msg_types; i++)
     if (strcmp (msg_types[i].ident, ident) == 0)
       {
         /* found duplicate */
-        if (ThreadTable.mutex_unlock)
-          msg_mutex.unlock();
         return Type (i);
       }
   /* add new message type */
@@ -208,8 +205,6 @@ Msg::register_type (const char *ident,
   set_msg_type_L (mtype, msg_types[default_ouput].flags, msg_types[default_ouput].enabled);
   // FIXME: msg_type_bits should be registered as hazard pointer so we don't g_free() while other threads read old_mbits[*]
   g_free (old_mbits);
-  if (ThreadTable.mutex_unlock)
-    msg_mutex.unlock();
   return mtype;
 }
 

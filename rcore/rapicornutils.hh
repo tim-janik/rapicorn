@@ -382,17 +382,10 @@ class ReferenceCountable : public virtual Deletable {
   volatile mutable uint32 ref_field;
   static const uint32     FLOATING_FLAG = 1 << 31;
   static void             stackcheck (const void*);
-  inline bool
-  ref_cas (uint32       oldv,
-           uint32       newv) const
-  {
-    return ThreadTable.atomic_uint_cas (&ref_field, oldv, newv);
-  }
-  inline uint32
-  ref_get() const
-  {
-    return ThreadTable.atomic_uint_get (&ref_field);
-  }
+  inline bool             ref_cas (uint32 oldv, uint32 newv) const
+  { return __sync_bool_compare_and_swap (&ref_field, oldv, newv); }
+  inline uint32           ref_get() const
+  { /*read_barrier:*/ __sync_synchronize(); return ref_field; }
 protected:
   inline uint32
   ref_count() const
