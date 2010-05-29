@@ -151,7 +151,7 @@ public:
     m_counter (1),
     m_istate (WILL_CHECK)
   {
-    AutoLocker locker (m_mutex);
+    ScopedLock<Mutex> locker (m_mutex);
     return_if_fail (find (rapicorn_main_loops.begin(), rapicorn_main_loops.end(), this) == rapicorn_main_loops.end());
     assert (rapicorn_thread_entered());
     rapicorn_main_loops.push_back (this);
@@ -159,7 +159,7 @@ public:
   ~EventLoopImpl()
   {
     kill_sources();
-    AutoLocker locker (m_mutex);
+    ScopedLock<Mutex> locker (m_mutex);
     remove_loop_M();
   }
   virtual bool prepare_sources  (int                  &max_priority,
@@ -183,14 +183,14 @@ public:
   virtual void
   wakeup (void)
   {
-    AutoLocker locker (m_mutex);
+    ScopedLock<Mutex> locker (m_mutex);
     wakeup_L();
   }
   virtual uint
   add_source (Source   *source,
               int       priority)
   {
-    AutoLocker locker (m_mutex);
+    ScopedLock<Mutex> locker (m_mutex);
     return_val_if_fail (source->m_main_loop == NULL, 0);
     ref_sink (source);
     source->m_main_loop = this;
@@ -217,7 +217,7 @@ public:
   virtual bool
   try_remove (uint id)
   {
-    AutoLocker locker (m_mutex);
+    ScopedLock<Mutex> locker (m_mutex);
     Source *source = find_source (id);
     if (source)
       {
@@ -229,7 +229,7 @@ public:
   virtual void
   kill_sources (void)
   {
-    AutoLocker locker (m_mutex);
+    ScopedLock<Mutex> locker (m_mutex);
     bool keepref = !finalizing();
     if (keepref)
       ref (this);
@@ -246,7 +246,7 @@ public:
   virtual bool
   exitable (void)
   {
-    AutoLocker locker (m_mutex);
+    ScopedLock<Mutex> locker (m_mutex);
     for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
       {
         SourceList &slist = (*it).second;
@@ -264,7 +264,7 @@ EventLoopImpl::prepare_sources (int            &max_priority,
                                 vector<PollFD> &pfds,
                                 int64          &timeout_usecs)
 {
-  AutoLocker locker (m_mutex);
+  ScopedLock<Mutex> locker (m_mutex);
   bool must_dispatch = false;
   /* create source list to operate on */
   SourceList sources;
@@ -289,7 +289,7 @@ EventLoopImpl::prepare_sources (int            &max_priority,
         int64 timeout = -1;
         locker.unlock();
         bool need_dispatch = source.prepare (current_time_usecs, &timeout);
-        locker.relock();
+        locker.lock();
         if (source.m_main_loop != this)
           continue;
         if (need_dispatch)
@@ -329,7 +329,7 @@ bool
 EventLoopImpl::check_sources (const int             max_priority,
                               const vector<PollFD> &pfds)
 {
-  AutoLocker locker (m_mutex);
+  ScopedLock<Mutex> locker (m_mutex);
   bool must_dispatch = false;
   /* create source list to operate on */
   SourceList sources;
@@ -364,7 +364,7 @@ EventLoopImpl::check_sources (const int             max_priority,
             Source &source = **lit;
             locker.unlock();
             bool need_dispatch = source.check (current_time_usecs);
-            locker.relock();
+            locker.lock();
             if (source.m_main_loop == this && need_dispatch)
               {
                 source.m_loop_state = NEEDS_DISPATCH;
@@ -384,7 +384,7 @@ EventLoopImpl::check_sources (const int             max_priority,
 void
 EventLoopImpl::dispatch_sources (const int max_priority)
 {
-  AutoLocker locker (m_mutex);
+  ScopedLock<Mutex> locker (m_mutex);
   /* create source list to operate on */
   SourceList sources;
   for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
@@ -409,7 +409,7 @@ EventLoopImpl::dispatch_sources (const int max_priority)
             source.m_dispatching = true;
             locker.unlock();
             bool keep_alive = source.dispatch ();
-            locker.relock();
+            locker.lock();
             source.m_dispatching = source.m_was_dispatching;
             source.m_was_dispatching = was_dispatching;
             if (source.m_main_loop == this && !keep_alive)

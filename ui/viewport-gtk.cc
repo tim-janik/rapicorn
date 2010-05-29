@@ -45,7 +45,7 @@ typedef enum {
 static BackingStore gdk_window_enable_backing        (GdkWindow  *window,
                                                       BackingStore bs_type);
 
-/* --- GDK_THREADS_* / AutoLocker glue --- */
+/* --- GDK_THREADS_* / Mutex glue --- */
 struct RapicronGdkSyncLock {
   void
   lock()
@@ -153,7 +153,7 @@ ViewportGtk::ViewportGtk (const String  &backend_name,
   m_window_state (WindowState (0)), m_average_background (0xff808080)
 {
   m_info.window_type = viewport_type;
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   rapicorn_viewport__alive_counter++;
   bool is_override_redirect = (m_info.window_type == WINDOW_TYPE_DESKTOP ||
                                m_info.window_type == WINDOW_TYPE_DROPDOWN_MENU ||
@@ -218,7 +218,7 @@ rapicorn_viewport_get_my_window (RapicornViewport *rviewport)
 void
 ViewportGtk::present_viewport ()
 {
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   GtkWindow *window = rapicorn_viewport_get_toplevel_window (m_viewport);
   if (window && GTK_WIDGET_DRAWABLE (window))
     gtk_window_present (window);
@@ -227,7 +227,7 @@ ViewportGtk::present_viewport ()
 void
 ViewportGtk::enqueue_locked (Event *event)
 {
-  // AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  // ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   m_receiver.enqueue_async (event);
 }
 
@@ -236,7 +236,7 @@ ViewportGtk::start_user_move (uint           button,
                               double         root_x,
                               double         root_y)
 {
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   GtkWindow *window = rapicorn_viewport_get_toplevel_window (m_viewport);
   if (window && GTK_WIDGET_DRAWABLE (window))
     gtk_window_begin_move_drag (window, button, iround (root_x), iround (root_y), GDK_CURRENT_TIME);
@@ -267,7 +267,7 @@ ViewportGtk::start_user_resize (uint           button,
                                 double         root_y,
                                 AnchorType     edge)
 {
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   GtkWindow *window = rapicorn_viewport_get_toplevel_window (m_viewport);
   if (window && GTK_WIDGET_DRAWABLE (window))
     gtk_window_begin_resize_drag (window, get_gdk_window_edge (edge), button, iround (root_x), iround (root_y), GDK_CURRENT_TIME);
@@ -276,7 +276,7 @@ ViewportGtk::start_user_resize (uint           button,
 void
 ViewportGtk::show (void)
 {
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   if (m_viewport)
     {
       gtk_widget_show (m_widget);
@@ -289,7 +289,7 @@ ViewportGtk::show (void)
 bool
 ViewportGtk::visible (void)
 {
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   if (m_viewport)
     {
       GtkWindow *window = rapicorn_viewport_get_my_window (m_viewport);
@@ -303,7 +303,7 @@ ViewportGtk::visible (void)
 bool
 ViewportGtk::viewable (void)
 {
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   if (m_viewport)
     {
       if (!m_widget->window)
@@ -323,7 +323,7 @@ ViewportGtk::viewable (void)
 void
 ViewportGtk::hide (void)
 {
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   if (m_viewport)
     {
       GtkWindow *window = rapicorn_viewport_get_my_window (m_viewport);
@@ -340,7 +340,7 @@ void
 ViewportGtk::blit_plane (Plane *plane,
                          uint   draw_stamp)
 {
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   if (m_viewport)
     {
       int priority;
@@ -379,7 +379,7 @@ ViewportGtk::copy_area (double          src_x,
                         double          dest_x,
                         double          dest_y)
 {
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   if (GTK_WIDGET_DRAWABLE (m_widget))
     {
       /* copy the area */
@@ -405,7 +405,7 @@ ViewportGtk::copy_area (double          src_x,
 void
 ViewportGtk::enqueue_win_draws (void)
 {
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   if (GTK_WIDGET_DRAWABLE (m_widget))
     gdk_window_process_updates (m_widget->window, TRUE);
 }
@@ -425,7 +425,7 @@ ViewportGtk::get_info ()
 Viewport::State
 ViewportGtk::get_state ()
 {
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   GtkWindow *window = rapicorn_viewport_get_toplevel_window (m_viewport);
   State state;
   state.local_blitting = m_viewport->fast_local_blitting;
@@ -547,7 +547,7 @@ void
 ViewportGtk::set_config (const Config &config,
                          bool          force_resize_draw)
 {
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   GtkWindow *window = rapicorn_viewport_get_my_window (m_viewport);
   m_root_x = config.root_x;
   m_root_y = config.root_y;
@@ -577,7 +577,7 @@ ViewportGtk::set_config (const Config &config,
 void
 ViewportGtk::beep()
 {
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   if (GTK_WIDGET_DRAWABLE (m_widget))
     {
 #if GTK_CHECK_VERSION (2, 12, 0)
@@ -591,7 +591,7 @@ ViewportGtk::beep()
 void
 ViewportGtk::trigger_hint_action (WindowHint window_hint)
 {
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   GtkWindow *window = rapicorn_viewport_get_my_window (m_viewport);
   if (window)
     adjust_gtk_window (window, window_hint);
@@ -1280,7 +1280,7 @@ public:
   virtual void
   run ()
   {
-    AutoLocker locker (GTK_GDK_THREAD_SYNC);
+    ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
     gtk_main(); /* does GDK_THREADS_LEAVE(); ... GDK_THREADS_ENTER(); */
   }
 };
@@ -1301,7 +1301,7 @@ rapicorn_init_with_gtk_thread (int        *argcp,
   g_type_init();
   /* setup GDK_THREADS_ENTER/GDK_THREADS_LEAVE */
   gdk_threads_init();
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   /* GTK intilization */
   gtk_init (argcp, argvp);
   gtkthread = new RapicornGtkThread ();
@@ -1320,7 +1320,7 @@ rapicorn_init_with_foreign_gtk (int        *argcp,
   g_type_init();
   /* setup GDK_THREADS_ENTER/GDK_THREADS_LEAVE */
   gdk_threads_init();
-  AutoLocker locker (GTK_GDK_THREAD_SYNC);
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   rapicorn_viewport__auto_quit_gtk = auto_quit_gtk;
   /* GTK intilization */
   return gtk_init_check (argcp, argvp); // allow $DISPLAY initialisation to fail

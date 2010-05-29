@@ -406,7 +406,7 @@ void
 Pixmap::add_stock (const String &stock_name,
                    const uint8  *pixstream)
 {
-  AutoLocker locker (stock_mutex);
+  ScopedLock<Mutex> locker (stock_mutex);
   stock_map[stock_name] = pixstream;
 }
 
@@ -415,7 +415,7 @@ Pixmap::stock (const String &stock_name)
 {
   const uint8 *pixstream = NULL;
   {
-    AutoLocker locker (stock_mutex);
+    ScopedLock<Mutex> locker (stock_mutex);
     pixstream = stock_map[stock_name];
   }
   return pixstream ? Pixmap::pixstream (pixstream) : NULL;

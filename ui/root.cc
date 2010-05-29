@@ -945,14 +945,14 @@ bool
 RootImpl::prepare (uint64 current_time_usecs,
                    int64 *timeout_usecs_p)
 {
-  AutoLocker aelocker (m_async_mutex);
+  ScopedLock<Mutex> aelocker (m_async_mutex);
   return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewport && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
 }
 
 bool
 RootImpl::check (uint64 current_time_usecs)
 {
-  AutoLocker aelocker (m_async_mutex);
+  ScopedLock<Mutex> aelocker (m_async_mutex);
   return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewport && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
 }
 
@@ -1003,14 +1003,14 @@ RootImpl::dispatch ()
 EventLoop*
 RootImpl::get_loop ()
 {
-  AutoLocker aelocker (m_async_mutex);
+  ScopedLock<Mutex> aelocker (m_async_mutex);
   return &m_loop;
 }
 
 void
 RootImpl::enqueue_async (Event *event)
 {
-  AutoLocker aelocker (m_async_mutex);
+  ScopedLock<Mutex> aelocker (m_async_mutex);
   m_async_event_queue.push_back (event);
   m_loop.wakeup(); /* thread safe */
 }

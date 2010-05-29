@@ -231,7 +231,7 @@ static struct AutoConstruct {
 Msg::Type
 Msg::lookup_type (const String &ident)
 {
-  AutoLocker locker (msg_mutex);
+  ScopedLock<Mutex> locker (msg_mutex);
   for (int i = 0; i < n_msg_types; i++)
     if (ident == msg_types[i].ident)
       return Type (i);
@@ -241,7 +241,7 @@ Msg::lookup_type (const String &ident)
 void
 Msg::enable (Type mtype)
 {
-  AutoLocker locker (msg_mutex);
+  ScopedLock<Mutex> locker (msg_mutex);
   if (mtype > 1 && mtype < (int) n_msg_types)
     set_msg_type_L (mtype, msg_types[mtype].flags, true);
 }
@@ -249,7 +249,7 @@ Msg::enable (Type mtype)
 void
 Msg::disable (Type mtype)
 {
-  AutoLocker locker (msg_mutex);
+  ScopedLock<Mutex> locker (msg_mutex);
   if (mtype > 1 && mtype < (int) n_msg_types)
     set_msg_type_L (mtype, msg_types[mtype].flags, false);
 }
@@ -266,7 +266,7 @@ Msg::disable (Type mtype)
 const char*
 Msg::type_ident (Type mtype)
 {
-  AutoLocker locker (msg_mutex);
+  ScopedLock<Mutex> locker (msg_mutex);
   if (mtype >= 0 && mtype < n_msg_types)
     return msg_types[mtype].ident;
   return NULL;
@@ -284,7 +284,7 @@ Msg::type_ident (Type mtype)
 const char*
 Msg::type_label (Type mtype)
 {
-  AutoLocker locker (msg_mutex);
+  ScopedLock<Mutex> locker (msg_mutex);
   if (mtype >= 0 && mtype < n_msg_types)
     return msg_types[mtype].label;
   return NULL;
@@ -294,7 +294,7 @@ uint32
 Msg::type_flags (Type mtype)
 {
   uint flags = 0;
-  AutoLocker locker (msg_mutex);
+  ScopedLock<Mutex> locker (msg_mutex);
   if (mtype >= 0 && mtype < n_msg_types)
     flags = msg_types[mtype].flags;
   return flags;
@@ -305,7 +305,7 @@ Msg::configure (Type                mtype,
                 LogFlags            log_mask,
                 const String       &logfile)
 {
-  AutoLocker locker (msg_mutex);
+  ScopedLock<Mutex> locker (msg_mutex);
   if (mtype > 1 && mtype < n_msg_types)
     set_msg_type_L (mtype, log_mask, msg_types[mtype].enabled);
 }
@@ -355,7 +355,7 @@ Msg::key_list_change_L (const String &keylist,
 void
 Msg::allow_msgs (const String &key)
 {
-  AutoLocker locker (msg_mutex);
+  ScopedLock<Mutex> locker (msg_mutex);
   if (key.size())
     key_list_change_L (key, true);
 #if 0
@@ -370,7 +370,7 @@ Msg::allow_msgs (const String &key)
 void
 Msg::deny_msgs (const String &key)
 {
-  AutoLocker locker (msg_mutex);
+  ScopedLock<Mutex> locker (msg_mutex);
   if (key.size())
     key_list_change_L (key, false);
 }
@@ -380,7 +380,7 @@ Msg::configure_stdlog (bool                redirect_stdlog_to_stderr,
                        const String       &stdlog_filename,
                        uint                syslog_priority)
 {
-  AutoLocker locker (msg_mutex);
+  ScopedLock<Mutex> locker (msg_mutex);
   msg_log_to_stderr = redirect_stdlog_to_stderr;
   if (msg_log_file && msg_log_file != stdout && msg_log_file != stderr)
     fclose (msg_log_file);

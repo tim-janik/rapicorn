@@ -187,53 +187,25 @@ protected:
 };
 
 /**
- * The AutoLocker class locks mutex like objects on construction, and automatically
- * unlocks on destruction. So putting an AutoLocker object on the stack conveniently
- * ensures that a mutex will be automatically locked and properly unlocked when
- * the function returns or throws an exception.
- * Objects intended to be used by an AutoLocker need to provide the public methods
- * lock() and unlock().
+ * The ScopedLock class can lock a mutex on construction, and will automatically
+ * unlock on destruction when the scope is left.
+ * So putting a ScopedLock object on the stack conveniently ensures that its mutex
+ * will be automatically locked and properly unlocked when the function returns or
+ * throws an exception. Objects to be used by a ScopedLock need to provide the
+ * public methods lock() and unlock().
  */
-class AutoLocker {
-  struct Locker {
-    explicit     Locker  () {}
-    virtual     ~Locker  () {}
-    virtual void lock    () const = 0;
-    virtual void unlock  () const = 0;
-    RAPICORN_PRIVATE_CLASS_COPY (Locker);
-  };
-  template<class Lockable>
-  struct LockerImpl : public Locker {
-    Lockable    *lockable;
-    explicit     LockerImpl (Lockable *l) : lockable (l) {}
-    virtual     ~LockerImpl () {}
-    virtual void lock       () const      { lockable->lock(); }
-    virtual void unlock     () const      { lockable->unlock(); }
-    RAPICORN_PRIVATE_CLASS_COPY (LockerImpl);
-  };
-  union {
-    void       *pointers[sizeof (LockerImpl<Mutex>) / sizeof (void*)];  // union needs pointer alignment
-    char        chars[sizeof (LockerImpl<Mutex>)];                      // char may_alias any type
-  }             space;                                                  // RAPICORN_MAY_ALIAS; ICE: GCC#30894
-  volatile uint lcount;
-  inline const Locker*          locker      () const             { return static_cast<const Locker*> ((const void*) &space); }
-  RAPICORN_PRIVATE_CLASS_COPY (AutoLocker);
-protected:
-  template<class Lockable> void initlock () { RAPICORN_STATIC_ASSERT (sizeof (LockerImpl<Lockable>) <= sizeof (space)); relock(); }
-  /* assert implicit assumption of the AutoLocker implementation */
-  template<class Lockable> void
-  assert_impl (Lockable &lockable)
-  {
-    RAPICORN_ASSERT (sizeof (LockerImpl<Lockable>) <= sizeof (space));
-    Locker *laddr = new (&space) LockerImpl<Lockable> (&lockable);
-    RAPICORN_ASSERT (laddr == locker());
-  }
+template<class MUTEX>
+class ScopedLock {
+  MUTEX         &m_mutex;
+  volatile uint  m_count;
+  RAPICORN_PRIVATE_CLASS_COPY (ScopedLock);
 public:
-  /*Des*/                      ~AutoLocker  ()                                { while (lcount) unlock(); }
-  template<class Lockable>      AutoLocker  (Lockable *lockable) : lcount (0) { new (&space) LockerImpl<Lockable>  (lockable); initlock<Lockable>(); }
-  template<class Lockable>      AutoLocker  (Lockable &lockable) : lcount (0) { new (&space) LockerImpl<Lockable> (&lockable); initlock<Lockable>(); }
-  inline void                   relock      ()                                { locker()->lock(); lcount++; }
-  inline void                   unlock      ()                                { RAPICORN_ASSERT (lcount > 0); lcount--; locker()->unlock(); }
+  /*Des*/ ~ScopedLock () { while (m_count) unlock(); }
+  void     lock       () { m_mutex.lock(); m_count++; }
+  void     unlock     () { RAPICORN_ASSERT (m_count > 0); m_count--; m_mutex.unlock(); }
+  explicit ScopedLock (MUTEX &mutex, bool initlocked = true) :
+    m_mutex (mutex), m_count (0)
+  { if (initlocked) lock(); }
 };
 
 namespace Atomic {

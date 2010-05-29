@@ -144,7 +144,7 @@ Type::notype ()
       Type::Info *rawti = new Type::Info (nt);
       ref_sink (rawti);
       {
-        AutoLocker locker (type_registry_mutex);
+        ScopedLock<Mutex> locker (type_registry_mutex);
         if (!type_notype)
           type_notype = new Type (*rawti);
       }
@@ -168,7 +168,7 @@ Type::try_lookup (const String &lookup_name)
     {
       String nspace = full_name.substr (0, sl - 1), tname = full_name.substr (sl + 1);
       vector<Plic::TypeNamespace> tnl;
-      AutoLocker locker (type_registry_mutex);
+      ScopedLock<Mutex> locker (type_registry_mutex);
       tnl = type_registry.list_namespaces ();
       for (uint i = 0; i < tnl.size(); i++)
         if (tnl[i].fullname() == nspace)
@@ -202,7 +202,7 @@ void
 Type::register_package (uint        static_data_length,
                         const char *static_data)
 {
-  AutoLocker locker (type_registry_mutex);
+  ScopedLock<Mutex> locker (type_registry_mutex);
   String err = type_registry.register_type_package (static_data_length,
                                                     reinterpret_cast<const uint8*> (static_data));
   if (err != "")
