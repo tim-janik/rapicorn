@@ -221,6 +221,123 @@ test_object_urls ()
   unref (ref_sink (o3));
 }
 
+static void
+test_id_allocator ()
+{
+  IdAllocator &ida = *IdAllocator::_new (77);
+  assert (&ida);
+  const uint ulength = 11; // minimum number of unique ids expected
+  uint buffer[11];
+  /* initial set of unique ids */
+  for (uint i = 0; i < ulength; i++)
+    {
+      buffer[i] = ida.alloc_id();
+      if (i)
+        assert (buffer[i] != buffer[i - 1]);
+    }
+  for (uint i = 0; i < ulength; i++)
+    ida.release_id (buffer[i]);
+  /* check infrequent reoccourance */
+  uint j = 0;
+  for (; j < ulength; j++)
+    {
+      uint id = ida.alloc_id();
+      assert (true == ida.seen_id (id));
+      for (uint i = 0; i < ulength; i++)
+        assert (buffer[i] != id);
+    }
+  /* large scale id allocations and releases */
+  const uint big = 99999;
+  uint *b = new uint[big];
+  for (j = 0; j < big; j++)
+    {
+      b[j] = ida.alloc_id();
+      if (j)
+        assert (b[j] != b[j - 1]);
+    }
+  for (j = 0; j < big; j++)
+    ida.release_id (b[j]);
+  for (j = 0; j < big / 2 + big / 4; j++)
+    {
+      b[j] = ida.alloc_id();
+      if (j)
+        assert (b[j] != b[j - 1]);
+    }
+  for (j = 0; j < big / 2 + big / 4; j++)
+    ida.release_id (b[j]);
+  for (j = 0; j < big; j++)
+    {
+      b[j] = ida.alloc_id();
+      if (j)
+        assert (b[j] != b[j - 1]);
+    }
+  for (j = 0; j < big; j++)
+    ida.release_id (b[j]);
+  /* cleanups */
+  delete[] b;
+  delete &ida;
+}
+
+static void
+test_locatable_ids ()
+{
+  SomeObject *o1 = new SomeObject();
+  SomeObject *o2 = new SomeObject();
+  SomeObject *o3 = new SomeObject();
+  uint64 id1 = o1->locatable_id();
+  uint64 id2 = o2->locatable_id();
+  uint64 id3 = o3->locatable_id();
+  assert (id1 != id2);
+  assert (id2 != id3);
+  assert (id1 != id3);
+  Locatable *l0 = Locatable::from_locatable_id (0x00ff00ff00ff00ffULL);
+  assert (l0 == NULL);
+  Locatable *l1 = Locatable::from_locatable_id (id1);
+  Locatable *l2 = Locatable::from_locatable_id (id2);
+  Locatable *l3 = Locatable::from_locatable_id (id3);
+  assert (l1 == o1);
+  assert (l2 == o2);
+  assert (l3 == o3);
+  assert (id1 == l1->locatable_id());
+  assert (id2 == l2->locatable_id());
+  assert (id3 == l3->locatable_id());
+  unref (ref_sink (o1));
+  unref (ref_sink (o2));
+  unref (ref_sink (o3));
+  l1 = Locatable::from_locatable_id (id1);
+  l2 = Locatable::from_locatable_id (id2);
+  l3 = Locatable::from_locatable_id (id3);
+  assert (l1 == NULL);
+  assert (l2 == NULL);
+  assert (l3 == NULL);
+  o1 = new SomeObject();
+  assert (o1->locatable_id() != id1);
+  assert (o1->locatable_id() != id2);
+  assert (o1->locatable_id() != id3);
+  o2 = new SomeObject();
+  assert (o2->locatable_id() != id1);
+  assert (o2->locatable_id() != id2);
+  assert (o2->locatable_id() != id3);
+  o3 = new SomeObject();
+  assert (o3->locatable_id() != id1);
+  assert (o3->locatable_id() != id2);
+  assert (o3->locatable_id() != id3);
+  assert (o1 == Locatable::from_locatable_id (o1->locatable_id()));
+  assert (o2 == Locatable::from_locatable_id (o2->locatable_id()));
+  assert (o3 == Locatable::from_locatable_id (o3->locatable_id()));
+  unref (ref_sink (o1));
+  unref (ref_sink (o2));
+  unref (ref_sink (o3));
+  const uint big = 999;
+  SomeObject *buffer[big];
+  for (uint j = 0; j < big; j++)
+    buffer[j] = ref_sink (new SomeObject());
+  for (uint j = 0; j < big; j++)
+    assert (buffer[j] == Locatable::from_locatable_id (buffer[j]->locatable_id()));
+  for (uint j = 0; j < big; j++)
+    unref (buffer[j]);
+}
+
 int
 main (int   argc,
       char *argv[])
@@ -250,6 +367,8 @@ main (int   argc,
   Test::add ("ZIntern", test_zintern);
   Test::add ("FileChecks", test_files, argv[0]);
   Test::add ("VirtualTypeid", test_virtual_typeid);
+  Test::add ("Id Allocator", test_id_allocator);
+  Test::add ("Locatable IDs", test_locatable_ids);
   Test::add ("Object URLs", test_object_urls);
   Test::add ("Message Types", test_messaging);
 

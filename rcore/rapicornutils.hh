@@ -309,6 +309,19 @@ void* malloc_aligned            (size_t                total_size,
                                  size_t                alignment,
                                  uint8               **free_pointer);
 
+/* --- Id Allocator --- */
+class IdAllocator {
+  RAPICORN_PRIVATE_CLASS_COPY (IdAllocator);
+protected:
+  explicit            IdAllocator ();
+public:
+  virtual            ~IdAllocator ();
+  virtual uint        alloc_id    () = 0;
+  virtual void        release_id  (uint unique_id) = 0;
+  virtual bool        seen_id     (uint unique_id) = 0;
+  static IdAllocator* _new        (uint startval = 1);
+};
+
 /* --- C++ demangling --- */
 char*   cxx_demangle	        (const char  *mangled_identifier); /* in rapicornutilsxx.cc */
 
@@ -366,8 +379,19 @@ protected:
   static Deletable* from_object_url    (const String &object_url);
 };
 
+/* --- Locatable --- */
+class Locatable : public virtual Deletable {
+  mutable uint m_locatable_index;
+protected:
+  explicit          Locatable         ();
+  virtual          ~Locatable         ();
+public:
+  uint64            locatable_id      () const;
+  static Locatable* from_locatable_id (uint64 locatable_id);
+};
+
 /* --- ReferenceCountImpl --- */
-class ReferenceCountImpl : public virtual Deletable
+class ReferenceCountImpl : public virtual Locatable
 {
   volatile mutable uint32 ref_field;
   static const uint32     FLOATING_FLAG = 1 << 31;
