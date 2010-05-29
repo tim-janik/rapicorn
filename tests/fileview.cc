@@ -53,7 +53,8 @@ fill_store (Store1       &s1,
 static Store1*
 create_store ()
 {
-  Store1 *s1 = Store1::create_memory_store (Type::lookup ("string"), SELECTION_BROWSE);
+  Store1 *s1 = Store1::create_memory_store ("models/files",
+                                            Type::lookup ("string"), SELECTION_BROWSE);
   fill_store (*s1, ".");
   return s1;
 }
@@ -73,7 +74,7 @@ main (int   argc,
   Store1 *s1 = create_store();
   WinPtr window = App.create_winptr ("main-dialog",
                                      Args (""),
-                                     Args ("ListModel=")); // FIXME: + s1->model().object_url()));
+                                     Args ("ListModel=" + s1->model().plor_name()));
   window.show();
 
   App.execute_loops();

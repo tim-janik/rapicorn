@@ -99,7 +99,8 @@ ItemListImpl::constructed ()
 {
   if (!m_model)
     {
-      Store1 &store = *Store1::create_memory_store (Type::lookup ("string"), SELECTION_INTERVAL);
+      Store1 &store = *Store1::create_memory_store ("models/ItemListImpl/test",
+                                                    Type::lookup ("string"), SELECTION_INTERVAL);
       for (uint i = 0; i < 20; i++)
         {
           Array row;
@@ -113,7 +114,7 @@ ItemListImpl::constructed ()
             row[j] = string_printf ("%u-%u", i + 1, j + 1);
           store.insert (-1, row);
         }
-      // FIXME: model (store.object_url());
+      model (store.plor_name());
       unref (ref_sink (store));
     }
 }
@@ -163,7 +164,7 @@ ItemListImpl::get_adjustment (AdjustmentSourceType adj_source,
 void
 ItemListImpl::model (const String &modelurl)
 {
-  Deletable *obj = NULL; // FIXME: from_object_url (modelurl);
+  BaseObject *obj = plor_get (modelurl);
   Model1 *model = dynamic_cast<Model1*> (obj);
   Model1 *oldmodel = m_model;
   m_model = model;
@@ -189,7 +190,7 @@ ItemListImpl::model (const String &modelurl)
 String
 ItemListImpl::model () const
 {
-  return ""; // FIXME: return m_model ? m_model->object_url() : "";
+  return m_model ? m_model->plor_name() : "";
 }
 
 void

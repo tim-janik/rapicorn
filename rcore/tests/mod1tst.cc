@@ -25,7 +25,7 @@ test_store1_string_row ()
 {
   Type t1 = Type::lookup ("RapicornTest::SimpleString");
   assert (t1.istype());
-  Store1 *s1 = Store1::create_memory_store (t1, SELECTION_NONE);
+  Store1 *s1 = Store1::create_memory_store ("models/mod1tst/string-row", t1, SELECTION_NONE);
   assert (s1 != NULL);
   /* assert model/store identity (for memory stores) */
   Model1 &m1 = s1->model();
@@ -45,7 +45,7 @@ test_store1_array ()
   /* create storage model with row type */
   Type t1 = Type::lookup ("RapicornTest::SimpleRecord");
   assert (t1.istype());
-  Store1 *s1 = Store1::create_memory_store (t1, SELECTION_NONE);
+  Store1 *s1 = Store1::create_memory_store ("models/mod1tst/array", t1, SELECTION_NONE);
   assert (s1 != NULL);
   assert (s1->count() == 0);
   /* insert first row */
@@ -60,7 +60,8 @@ test_store1_array ()
 static Store1&
 create_dummy_store1 ()
 {
-  Store1 &store = *Store1::create_memory_store (Type::lookup ("RapicornTest::SimpleString"),
+  Store1 &store = *Store1::create_memory_store ("models/mod1tst/dummy",
+                                                Type::lookup ("RapicornTest::SimpleString"),
                                                 SELECTION_NONE);
   for (uint i = 0; i < 4; i++)
     {

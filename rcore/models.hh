@@ -116,7 +116,8 @@ public:
                                          const Array &array)    { pchange_rows (nth, 1, &array); }
   void                  clear           ()                      { premove_rows (0, count()); }
   /* premade stores */
-  static Store1*        create_memory_store     (Type          row_type,
+  static Store1*        create_memory_store     (const String &plor_name,
+                                                 Type          row_type,
                                                  SelectionMode selectionmode);
 };
 

@@ -2463,6 +2463,77 @@ memset4 (guint32        *mem,
   wmemset ((wchar_t*) mem, filler, length);
 }
 
+/* --- BaseObject --- */
+static Mutex                        plor_mutex;
+static std::map<String,BaseObject*> plor_map; // Process Local Object Repository
+
+static bool
+plor_remove (const String &plor_name)
+{
+  ScopedLock<Mutex> locker (plor_mutex);
+  std::map<String,BaseObject*>::iterator mit = plor_map.find (plor_name);
+  if (mit != plor_map.end())
+    {
+      plor_map.erase (mit);
+      return true;
+    }
+  return false;
+}
+
+static const char *plor_subs[] = { // FIXME: need registry
+  "models",
+  NULL,
+};
+
+static bool
+plor_add (BaseObject   &object,
+          const String &name)
+{
+  ScopedLock<Mutex> locker (plor_mutex);
+  size_t p = name.find ('/');
+  if (p != name.npos && p < name.size())
+    {
+      String s = name.substr (0, p);
+      for (uint i = 0; plor_subs[i]; i++)
+        if (s == plor_subs[i])
+          {
+            plor_map[name] = &object;
+            return true;
+          }
+    }
+  return false;
+}
+
+BaseObject*
+BaseObject::plor_get (const String &plor_url)
+{
+  ScopedLock<Mutex> locker (plor_mutex);
+  std::map<String,BaseObject*>::iterator mit = plor_map.find (plor_url);
+  if (mit != plor_map.end())
+    return mit->second;
+  return NULL;
+}
+
+static class PlorDataKey : public DataKey<String> {
+  virtual void destroy (String data) { plor_remove (data); }
+} plor_name_key;
+
+String
+BaseObject::plor_name () const
+{
+  return get_data (&plor_name_key);
+}
+
+void
+BaseObject::plor_name (const String &_plor_name)
+{
+  return_if_fail (plor_name() == "");
+  if (plor_add (*this, _plor_name))
+    set_data (&plor_name_key, _plor_name);
+  else
+    warning ("invalid plor name for object (%p): %s", this, _plor_name.c_str());
+}
+
 /* --- memory utils --- */
 void*
 malloc_aligned (gsize	  total_size,

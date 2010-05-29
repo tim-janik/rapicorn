@@ -51,7 +51,7 @@ public:
 
 /* --- Item --- */
 typedef Signals::Slot1<void, Item&> ItemSlot;
-class Item : public virtual Convertible, public virtual DataListContainer {
+class Item : public virtual Convertible {
   friend                      class ClassDoctor;
   friend                      class Container;
   friend                      class SizeGroup;

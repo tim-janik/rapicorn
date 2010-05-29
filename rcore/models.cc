@@ -513,10 +513,13 @@ public:
 };
 
 Store1*
-Store1::create_memory_store (Type          row_type,
+Store1::create_memory_store (const String &plor_name,
+                             Type          row_type,
                              SelectionMode selectionmode)
 {
-  return new MemoryStore1 (row_type, selectionmode);
+  Store1 *store = new MemoryStore1 (row_type, selectionmode);
+  store->plor_name (plor_name);
+  return store;
 }
 
 } // Rapicorn

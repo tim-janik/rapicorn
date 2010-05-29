@@ -497,9 +497,6 @@ public:
   static Locatable* from_locatable_id (uint64 locatable_id);
 };
 
-/* --- BaseObject --- */
-class BaseObject : public virtual Locatable {};
-
 /* --- Binary Lookups --- */
 template<typename RandIter, class Cmp, typename Arg, int case_lookup_or_sibling_or_insertion>
 static inline std::pair<RandIter,bool>
@@ -691,6 +688,15 @@ public: /* generic data API */
   template<typename Type> inline Type swap_data   (DataKey<Type> *key, Type data) { return data_list.swap (key, data); }
   template<typename Type> inline Type swap_data   (DataKey<Type> *key)            { return data_list.swap (key); }
   template<typename Type> inline void delete_data (DataKey<Type> *key)            { data_list.del (key); }
+};
+
+/* --- BaseObject --- */
+class BaseObject : public virtual Locatable, public virtual DataListContainer {
+protected:
+  static BaseObject* plor_get  (const String &plor_url);
+  void               plor_name (const String &plor_name);
+public:
+  String             plor_name () const;
 };
 
 /* --- implementation --- */
