@@ -56,6 +56,8 @@ struct RapicronGdkSyncLock {
   void
   unlock()
   {
+    /* unprotect Gtk/Gdk */
+    GDK_THREADS_LEAVE();
     /* X commands enqueued by any Gtk/Gdk functions so far
      * may still be queued and need to be flushed. also, any
      * X events that may have arrived already need to be
@@ -64,8 +66,6 @@ struct RapicronGdkSyncLock {
      * and call XPending() which flushes any queued events.
      */
     g_main_context_wakeup (NULL);
-    /* unprotect Gtk/Gdk */
-    GDK_THREADS_LEAVE();
   }
 };
 static RapicronGdkSyncLock GTK_GDK_THREAD_SYNC;
