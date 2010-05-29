@@ -70,7 +70,7 @@ struct DebugChannelFileAsync : public virtual DebugChannel, public virtual Threa
           buffer[l++] = 0;
         uint n = aring.write (l, buffer, false);
         if (!n)
-          Atomic::uint_swap_add (&skip_count, 1);
+          Atomic::uint_add (&skip_count, 1);
       }
   }
   virtual void

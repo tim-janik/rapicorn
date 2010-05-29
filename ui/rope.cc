@@ -109,7 +109,7 @@ rope_thread_start (const String              &application_name,
 {
   return_val_if_fail (rope_thread == NULL, 0);
   static volatile size_t initialized = 0;
-  if (1) // FIXME: once_enter (&initialized)
+  if (once_enter (&initialized))
     {
       /* start parallel thread */
       Initializer init;
@@ -124,7 +124,7 @@ rope_thread_start (const String              &application_name,
         init.cond.wait (init.mutex);
       app_id = init.app_id;
       init.mutex.unlock();
-      // FIXME: once_leave (&initialized, 1);
+      once_leave (&initialized, 1);
     }
   return app_id;
 }

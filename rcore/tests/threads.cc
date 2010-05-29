@@ -925,11 +925,11 @@ test_thread_atomic_cxx (void)
   TASSERT (r == true);
   r = Atomic::int_get (&ai);
   TASSERT (r == 19);
-  r = Atomic::int_swap_add (&ai, 1);
+  r = Atomic::int_add (&ai, 1);
   TASSERT (r == 19);
   r = Atomic::int_get (&ai);
   TASSERT (r == 20);
-  r = Atomic::int_swap_add (&ai, -20);
+  r = Atomic::int_add (&ai, -20);
   TASSERT (r == 20);
   r = Atomic::int_get (&ai);
   TASSERT (r == 0);

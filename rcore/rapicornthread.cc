@@ -17,6 +17,7 @@
 #include "rapicornthread.hh"
 #include <list>
 #include <algorithm>
+#include <sys/time.h>
 
 #define rapicorn_threads_initialized()    ISLIKELY ((void*) ThreadTable.mutex_lock != (void*) ThreadTable.mutex_unlock)
 
@@ -188,7 +189,7 @@ Thread::start ()
     {
       success = ThreadTable.thread_start (bthread, Thread::ThreadWrapperInternal::run_static, this);
       if (!success)
-        ThreadTable.thread_yield();
+        Thread::Self::yield();
     }
 }
 
@@ -312,7 +313,7 @@ Thread::Self::owned_mutex ()
 void
 Thread::Self::yield ()
 {
-  ThreadTable.thread_yield ();
+  sched_yield();
 }
 
 void
@@ -377,18 +378,34 @@ static const RapicornMutex zero_mutex = { 0, };
 Mutex::Mutex () :
   mutex (zero_mutex)
 {
-  if (rapicorn_threads_initialized())
-    ThreadTable.mutex_init (&mutex);
-  else
-    ThreadTable.mutex_chain4init (&mutex);
+  /* need NULL attribute here, which is the fast mutex in glibc
+   * and cannot be chosen through pthread_mutexattr_settype()
+   */
+  pthread_mutex_init ((pthread_mutex_t*) &mutex, NULL);
+}
+
+void
+Mutex::lock ()
+{
+  pthread_mutex_lock ((pthread_mutex_t*) &mutex);
+}
+
+void
+Mutex::unlock ()
+{
+  pthread_mutex_unlock ((pthread_mutex_t*) &mutex);
+}
+
+bool
+Mutex::trylock ()
+{
+  // TRUE indicates success
+  return 0 == pthread_mutex_trylock ((pthread_mutex_t*) &mutex);
 }
 
 Mutex::~Mutex ()
 {
-  if (rapicorn_threads_initialized())
-    ThreadTable.mutex_destroy (&mutex);
-  else
-    ThreadTable.mutex_unchain (&mutex);
+  pthread_mutex_destroy ((pthread_mutex_t*) &mutex);
 }
 
 static const RapicornRecMutex zero_rec_mutex = { { 0, }, };
@@ -396,18 +413,36 @@ static const RapicornRecMutex zero_rec_mutex = { { 0, }, };
 RecMutex::RecMutex () :
   rmutex (zero_rec_mutex)
 {
-  if (rapicorn_threads_initialized())
-    ThreadTable.rec_mutex_init (&rmutex);
-  else
-    ThreadTable.rec_mutex_chain4init (&rmutex);
+  RAPICORN_STATIC_ASSERT (offsetof (RapicornRecMutex, mutex) == 0);
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init (&attr);
+  pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
+  pthread_mutex_init ((pthread_mutex_t*) &rmutex, &attr);
+  pthread_mutexattr_destroy (&attr);
+}
+
+void
+RecMutex::lock ()
+{
+  pthread_mutex_lock ((pthread_mutex_t*) &rmutex);
+}
+
+void
+RecMutex::unlock ()
+{
+  pthread_mutex_unlock ((pthread_mutex_t*) &rmutex);
+}
+
+bool
+RecMutex::trylock ()
+{
+  // TRUE indicates success
+  return 0 == pthread_mutex_trylock ((pthread_mutex_t*) &rmutex);
 }
 
 RecMutex::~RecMutex ()
 {
-  if (rapicorn_threads_initialized())
-    ThreadTable.rec_mutex_destroy (&rmutex);
-  else
-    ThreadTable.rec_mutex_unchain (&rmutex);
+  pthread_mutex_destroy ((pthread_mutex_t*) &rmutex);
 }
 
 static const RapicornCond zero_cond = { 0, };
@@ -415,61 +450,101 @@ static const RapicornCond zero_cond = { 0, };
 Cond::Cond () :
   cond (zero_cond)
 {
-  if (rapicorn_threads_initialized())
-    ThreadTable.cond_init (&cond);
+  pthread_cond_init ((pthread_cond_t*) &cond, NULL);
+}
+
+void
+Cond::signal ()
+{
+  pthread_cond_signal ((pthread_cond_t*) &cond);
+}
+
+void
+Cond::broadcast ()
+{
+  pthread_cond_broadcast ((pthread_cond_t*) &cond);
+}
+
+void
+Cond::wait (Mutex &m)
+{
+  pthread_cond_wait ((pthread_cond_t*) &cond, (pthread_mutex_t*) &m.mutex);
+}
+
+static bool
+common_split_useconds (RapicornInt64   max_useconds,
+                       RapicornUInt64 *abs_secs,
+                       RapicornUInt64 *abs_usecs)
+{
+  if (max_useconds < 0)
+    return false;
+  struct timeval now;
+  gettimeofday (&now, NULL);
+  RapicornUInt64 secs = max_useconds / 1000000;
+  RapicornUInt64 limit_sec = now.tv_sec + secs;
+  max_useconds -= secs * 1000000;
+  RapicornUInt64 limit_usec = now.tv_usec + max_useconds;
+  if (limit_usec >= 1000000)
+    {
+      limit_usec -= 1000000;
+      limit_sec += 1;
+    }
+  *abs_secs = limit_sec;
+  *abs_usecs = limit_usec;
+  return true;
+}
+
+void
+Cond::wait_timed (Mutex &m, int64 max_usecs)
+{
+  RapicornUInt64 abs_secs, abs_usecs;
+  if (common_split_useconds (max_usecs, &abs_secs, &abs_usecs))
+    {
+      struct timespec abstime;
+      abstime.tv_sec = abs_secs;
+      abstime.tv_nsec = abs_usecs * 1000;
+      pthread_cond_timedwait ((pthread_cond_t*) &cond, (pthread_mutex_t*) &m.mutex, &abstime);
+    }
   else
-    ThreadTable.cond_chain4init (&cond);
+    pthread_cond_wait ((pthread_cond_t*) &cond, (pthread_mutex_t*) &m.mutex);
 }
 
 Cond::~Cond ()
 {
-  if (rapicorn_threads_initialized())
-    ThreadTable.cond_destroy (&cond);
-  else
-    ThreadTable.cond_unchain (&cond);
+  pthread_cond_destroy ((pthread_cond_t*) &cond);
 }
 
 OwnedMutex::OwnedMutex () :
-  m_rec_mutex (zero_rec_mutex),
   m_owner (NULL),
   m_count (0)
-{
-  if (rapicorn_threads_initialized())
-    ThreadTable.rec_mutex_init (&m_rec_mutex);
-  else
-    ThreadTable.rec_mutex_chain4init (&m_rec_mutex);
-}
+{}
 
 OwnedMutex::~OwnedMutex()
 {
   RAPICORN_ASSERT (m_owner == NULL);
   RAPICORN_ASSERT (m_count == 0);
-  if (rapicorn_threads_initialized())
-    ThreadTable.rec_mutex_destroy (&m_rec_mutex);
-  else
-    ThreadTable.rec_mutex_unchain (&m_rec_mutex);
 }
 
-static Mutex once_mutex;
-static Cond  once_cond;
-static std::list<void*> once_list;
+static Mutex                       once_mutex;
+static Cond                        once_cond;
+static std::list<volatile size_t*> once_list;
 
 bool
 once_enter_impl (volatile size_t *value_location)
 {
   bool needs_init = false;
   once_mutex.lock();
-  if (Atomic::ptr_get ((void*volatile*) value_location) == 0)
+  if (Atomic::sizet_get (value_location) == 0)
     {
-      if (find (once_list.begin(), once_list.end(), (void*) value_location) == once_list.end())
+      if (find (once_list.begin(), once_list.end(), value_location) == once_list.end())
         {
           needs_init = true;
-          once_list.push_front ((void*) value_location);
+          once_list.push_front (value_location);
         }
       else
         do
           once_cond.wait (once_mutex);
-        while (find (once_list.begin(), once_list.end(), (void*) value_location) != once_list.end());
+        while (find (once_list.begin(), once_list.end(), value_location) != once_list.end());
     }
   once_mutex.unlock();
   return needs_init;
@@ -479,13 +554,13 @@ void
 once_leave (volatile size_t *value_location,
             size_t           initialization_value)
 {
-  return_if_fail (Atomic::ptr_get ((void*volatile*) value_location) == 0);
+  return_if_fail (Atomic::sizet_get (value_location) == 0);
   return_if_fail (initialization_value != 0);
   return_if_fail (once_list.empty() == false);
 
-  Atomic::ptr_set ((void*volatile*) value_location, (void*) initialization_value);
+  Atomic::sizet_set (value_location, initialization_value);
   once_mutex.lock();
-  once_list.remove ((void*) value_location);
+  once_list.remove (value_location);
   once_cond.broadcast();
   once_mutex.unlock();
 }

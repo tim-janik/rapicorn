@@ -379,7 +379,7 @@ common_thread_self (void)
        * so not all library components are yet usable
        */
       static volatile int anon_count = 1;
-      guint id = Atomic::int_swap_add (&anon_count, 1);
+      guint id = Atomic::int_add (&anon_count, 1);
       gchar name[256];
       g_snprintf (name, 256, "Anon%u", id);
       thread = ThreadTable.thread_new (name);

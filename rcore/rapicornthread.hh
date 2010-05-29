@@ -34,9 +34,9 @@ class Mutex {
   RAPICORN_PRIVATE_CLASS_COPY (Mutex);
 public:
   explicit      Mutex   ();
-  void          lock    ()                      { ThreadTable.mutex_lock (&mutex); }
-  void          unlock  ()                      { ThreadTable.mutex_unlock (&mutex); }
-  bool          trylock ()                      { return 0 == ThreadTable.mutex_trylock (&mutex); /* TRUE indicates success */ }
+  void          lock    ();
+  void          unlock  ();
+  bool          trylock (); // TRUE indicates success
   /*Des*/       ~Mutex  ();
 };
 
@@ -45,9 +45,9 @@ class RecMutex {
   RAPICORN_PRIVATE_CLASS_COPY (RecMutex);
 public:
   explicit      RecMutex  ();
-  void          lock      ()                    { ThreadTable.rec_mutex_lock (&rmutex); }
-  void          unlock    ()                    { ThreadTable.rec_mutex_unlock (&rmutex); }
-  bool          trylock   ()                    { return 0 == ThreadTable.rec_mutex_trylock (&rmutex); /* TRUE indicates success */ }
+  void          lock      ();
+  void          unlock    ();
+  bool          trylock   ();
   /*Des*/       ~RecMutex ();
 };
 
@@ -56,11 +56,10 @@ class Cond {
   RAPICORN_PRIVATE_CLASS_COPY (Cond);
 public:
   explicit      Cond          ();
-  void          signal        ()                { ThreadTable.cond_signal (&cond); }
-  void          broadcast     ()                { ThreadTable.cond_broadcast (&cond); }
-  void          wait          (Mutex &m)        { ThreadTable.cond_wait (&cond, &m.mutex); }
-  void          wait_timed    (Mutex &m,
-                               int64 max_usecs) { ThreadTable.cond_wait_timed (&cond, &m.mutex, max_usecs); }
+  void          signal        ();
+  void          broadcast     ();
+  void          wait          (Mutex &m);
+  void          wait_timed    (Mutex &m, int64 max_usecs);
   /*Des*/       ~Cond         ();
 };
 
@@ -78,34 +77,37 @@ public:
 };
 
 namespace Atomic {
-inline void    read_barrier  (void)                                { RAPICORN_MEMORY_BARRIER_RO (ThreadTable); }
-inline void    write_barrier (void)                                { RAPICORN_MEMORY_BARRIER_WO (ThreadTable); }
-inline void    full_barrier  (void)                                { RAPICORN_MEMORY_BARRIER_RW (ThreadTable); }
+inline void    read_barrier  (void)                           { __sync_synchronize(); }
+inline void    write_barrier (void)                           { __sync_synchronize(); }
+inline void    full_barrier  (void)                           { __sync_synchronize(); }
 /* atomic integers */
-inline void    int_set       (volatile int  *iptr, int value)      { ThreadTable.atomic_int_set (iptr, value); }
-inline int     int_get       (volatile int  *iptr)                 { return ThreadTable.atomic_int_get (iptr); }
-inline bool    int_cas       (volatile int  *iptr, int o, int n)   { return ThreadTable.atomic_int_cas (iptr, o, n); }
-inline void    int_add       (volatile int  *iptr, int diff)       { ThreadTable.atomic_int_add (iptr, diff); }
-inline int     int_swap_add  (volatile int  *iptr, int diff)       { return ThreadTable.atomic_int_swap_add (iptr, diff); }
+inline void    int_set  (volatile int  *iptr, int value)      { *iptr = value; write_barrier(); }
+inline int     int_get  (volatile int  *iptr)                 { read_barrier(); return *iptr; }
+inline bool    int_cas  (volatile int  *iptr, int o, int n)   { return __sync_bool_compare_and_swap (iptr, o, n); }
+inline int     int_add  (volatile int  *iptr, int diff)       { return __sync_fetch_and_add (iptr, diff); }
 /* atomic unsigned integers */
-inline void    uint_set      (volatile uint *uptr, uint value)     { ThreadTable.atomic_uint_set (uptr, value); }
-inline uint    uint_get      (volatile uint *uptr)                 { return ThreadTable.atomic_uint_get (uptr); }
-inline bool    uint_cas      (volatile uint *uptr, uint o, uint n) { return ThreadTable.atomic_uint_cas (uptr, o, n); }
-inline void    uint_add      (volatile uint *uptr, uint diff)      { ThreadTable.atomic_uint_add (uptr, diff); }
-inline uint    uint_swap_add (volatile uint *uptr, uint diff)      { return ThreadTable.atomic_uint_swap_add (uptr, diff); }
+inline void    uint_set (volatile uint *uptr, uint value)     { *uptr = value; write_barrier(); }
+inline uint    uint_get (volatile uint *uptr)                 { read_barrier(); return *uptr; }
+inline bool    uint_cas (volatile uint *uptr, uint o, uint n) { return __sync_bool_compare_and_swap (uptr, o, n); }
+inline uint    uint_add (volatile uint *uptr, uint diff)      { return __sync_fetch_and_add (uptr, diff); }
+/* atomic size_t */
+inline void    sizet_set (volatile size_t *sptr, size_t value)       { *sptr = value; write_barrier(); }
+inline uint    sizet_get (volatile size_t *sptr)                     { read_barrier(); return *sptr; }
+inline bool    sizet_cas (volatile size_t *sptr, size_t o, size_t n) { return __sync_bool_compare_and_swap (sptr, o, n); }
+inline uint    sizet_add (volatile size_t *sptr, size_t diff)        { return __sync_fetch_and_add (sptr, diff); }
 /* atomic pointers */
 template<class V>
-inline void    ptr_set       (V* volatile *ptr_addr, V *n)      { ThreadTable.atomic_pointer_set ((void**) ptr_addr, (void*) n); }
+inline void    ptr_set       (V* volatile *ptr_addr, V *n)      { *ptr_addr = n; write_barrier(); }
 template<class V>
-inline V*      ptr_get       (V* volatile *ptr_addr)            { return (V*) ThreadTable.atomic_pointer_get ((void**) ptr_addr); }
+inline V*      ptr_get       (V* volatile *ptr_addr)            { read_barrier(); return *ptr_addr; }
 template<class V>
-inline V*      ptr_get       (V* volatile const *ptr_addr)      { return (V*) ThreadTable.atomic_pointer_get ((void**) ptr_addr); }
+inline V*      ptr_get       (V* volatile const *ptr_addr)      { read_barrier(); return *ptr_addr; }
 template<class V>
-inline bool    ptr_cas       (V* volatile *ptr_adr, V *o, V *n) { return ThreadTable.atomic_pointer_cas ((void**) ptr_adr, (void*) o, (void*) n); }
+inline bool    ptr_cas       (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
 } // Atomic
 
 class OwnedMutex {
-  RapicornRecMutex    m_rec_mutex;
+  RecMutex m_rec_mutex;
   Thread * volatile m_owner;
   uint     volatile m_count;
   RAPICORN_PRIVATE_CLASS_COPY (OwnedMutex);
@@ -341,7 +343,7 @@ public:
 inline void
 OwnedMutex::lock ()
 {
-  ThreadTable.rec_mutex_lock (&m_rec_mutex);
+  m_rec_mutex.lock();
   Atomic::ptr_set (&m_owner, &Thread::self());
   m_count++;
 }
@@ -349,7 +351,7 @@ OwnedMutex::lock ()
 inline bool
 OwnedMutex::trylock ()
 {
-  if (ThreadTable.rec_mutex_trylock (&m_rec_mutex) == 0)
+  if (m_rec_mutex.trylock())
     {
       Atomic::ptr_set (&m_owner, &Thread::self());
       m_count++;
@@ -364,7 +366,7 @@ OwnedMutex::unlock ()
 {
   if (--m_count == 0)
     Atomic::ptr_set (&m_owner, (Thread*) 0);
-  ThreadTable.rec_mutex_unlock (&m_rec_mutex);
+  m_rec_mutex.unlock();
 }
 
 inline Thread*
@@ -382,7 +384,7 @@ OwnedMutex::mine ()
 inline bool
 once_enter (volatile size_t *value_location)
 {
-  if (RAPICORN_LIKELY (Atomic::ptr_get ((void*volatile*) value_location) != 0))
+  if (RAPICORN_LIKELY (Atomic::sizet_get (value_location) != 0))
     return false;
   else
     return once_enter_impl (value_location);
