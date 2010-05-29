@@ -779,7 +779,7 @@ Array::to_xml ()
           obj = &v.object();
           addnull = !obj;
           if (!addnull)
-            txt = obj->object_url();
+            txt = string_printf ("0x%016llx", obj->locatable_id());
           break;
         }
       XmlNode *current = root;

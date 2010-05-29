@@ -79,9 +79,9 @@ check-process-handle: infotest
 	$(_@) test `./infotest --print-process-handle` != `./infotest --print-process-handle`; $(call TSTRESULT)
 check: check-process-handle
 # process handle
-check-object-url: infotest
-	@$(call TSTTITLE, Simple object-url check)
-	$(_@) test -n `./infotest --print-object-url`; $(call TSTRESULT)
-	@$(call TSTTITLE, Unique object-url test)
-	$(_@) test `./infotest --print-object-url` != `./infotest --print-object-url`; $(call TSTRESULT)
-check: check-object-url
+check-locatable-id: infotest
+	@$(call TSTTITLE, Simple locatable-id check)
+	$(_@) test -n `./infotest --print-locatable-id`; $(call TSTRESULT)
+	@$(call TSTTITLE, Unique locatable-id test)
+	$(_@) test `./infotest --print-locatable-id` != `./infotest --print-locatable-id`; $(call TSTRESULT)
+check: check-locatable-id

@@ -41,7 +41,7 @@ public:
   /* class */
   /*Copy*/      WinPtr          (const WinPtr &window);
   virtual      ~WinPtr          ();
-  static WinPtr*from_object_url (const String &rooturl);
+  static WinPtr*from_locatable_id (uint64 objid);
   /* callbacks */
   typedef Signals::Slot2<bool,          const String&, const StringVector&> CmdSlot;
   typedef Signals::Slot3<bool, WinPtr&, const String&, const StringVector&> CmdSlotW;

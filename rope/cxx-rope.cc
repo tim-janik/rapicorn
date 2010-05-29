@@ -49,7 +49,7 @@ class UIThread : public Thread {
       FieldBuffer *fb = FieldBuffer::_new (2);
       fb->add_int64 (0x02000000); // proc_id
       Deletable *dapp = &App;
-      fb->add_string (dapp->object_url());
+      fb->add_string (""); // FIXME: dapp->object_url()
       push_return (fb);
     }
     App.execute_loops();

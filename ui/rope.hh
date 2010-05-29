@@ -25,7 +25,7 @@ namespace Rapicorn {
 typedef Plic::FieldBuffer       FieldBuffer;
 typedef Plic::FieldBufferReader FieldBufferReader;
 
-String          rope_thread_start (const String         &application_name,
+uint64          rope_thread_start (const String         &application_name,
                                    const vector<String> &cmdline_args,
                                    int                   cpu = -1);
 FieldBuffer*    rope_thread_call  (FieldBuffer *call);

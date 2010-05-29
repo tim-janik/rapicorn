@@ -45,8 +45,8 @@ namespace Plic {
 /* === Standard Types === */
 typedef std::string String;
 using std::vector;
-typedef signed char     int8;
-typedef unsigned char   uint8;
+typedef int8_t          int8;
+typedef uint8_t         uint8;
 typedef int16_t         int16;
 typedef uint16_t        uint16;
 typedef uint32_t        uint;
@@ -138,7 +138,7 @@ public:
   inline void add_double (double vdouble) { FieldUnion &u = addu (FLOAT); u.vdouble = vdouble; check(); }
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); check(); }
   inline void add_func   (const String &s) { FieldUnion &u = addu (FUNC); new (&u) String (s); check(); }
-  inline void add_object (const String &s) { FieldUnion &u = addu (INSTANCE); new (&u) String (s); check(); }
+  inline void add_object (uint64 objid) { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; check(); }
   inline FieldBuffer& add_rec (uint nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); check(); }
   inline FieldBuffer& add_seq (uint nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); check(); }
   inline TypeHash first_type_hash () const;
@@ -175,7 +175,7 @@ public:
   inline double             get_double () { FieldUnion &u = fb_getu(); return u.vdouble; }
   inline const String&      get_string () { FieldUnion &u = fb_getu(); return *(String*) &u; }
   inline const String&      get_func   () { FieldUnion &u = fb_getu(); return *(String*) &u; }
-  inline const String&      get_object () { FieldUnion &u = fb_getu(); return *(String*) &u; }
+  inline uint64             get_object () { FieldUnion &u = fb_getu(); return u.vint64; }
   inline const FieldBuffer& get_rec () { FieldUnion &u = fb_getu(); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& get_seq () { FieldUnion &u = fb_getu(); return *(FieldBuffer*) &u; }
   inline int64              pop_int64  () { FieldUnion &u = fb_popu(); return u.vint64; }
@@ -183,7 +183,7 @@ public:
   inline double             pop_double () { FieldUnion &u = fb_popu(); return u.vdouble; }
   inline const String&      pop_string () { FieldUnion &u = fb_popu(); return *(String*) &u; }
   inline const String&      pop_func   () { FieldUnion &u = fb_popu(); return *(String*) &u; }
-  inline const String&      pop_object () { FieldUnion &u = fb_popu(); return *(String*) &u; }
+  inline uint64             pop_object () { FieldUnion &u = fb_popu(); return u.vint64; }
   inline const FieldBuffer& pop_rec () { FieldUnion &u = fb_popu(); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& pop_seq () { FieldUnion &u = fb_popu(); return *(FieldBuffer*) &u; }
 };
@@ -256,7 +256,6 @@ FieldBuffer::reset()
       buffermem[0].index--; // nth()--
       switch (type_at (nth()))
         {
-        case INSTANCE:
         case STRING:
         case FUNC:    { FieldUnion &u = getu(); ((String*) &u)->~String(); }; break;
         case SEQUENCE:

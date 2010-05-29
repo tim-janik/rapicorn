@@ -36,15 +36,12 @@ WinPtr::~WinPtr ()
 }
 
 WinPtr*
-WinPtr::from_object_url (const String &rooturl)
+WinPtr::from_locatable_id (uint64 objid)
 {
-  struct DeletableAccessor : public Deletable {
-    using Deletable::from_object_url; // gain access to protected Deletable method
-  };
-  Deletable *deletable = DeletableAccessor::from_object_url (rooturl);
-  if (deletable)
+  Locatable *locatable = Locatable::from_locatable_id (objid);
+  if (locatable)
     {
-      Item *item = dynamic_cast<Item*> (deletable);
+      Item *item = dynamic_cast<Item*> (locatable);
       if (item)
         {
           Root *root = item->get_root();

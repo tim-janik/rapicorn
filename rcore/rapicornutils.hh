@@ -369,14 +369,12 @@ struct Deletable : public virtual VirtualTypeid {
     bool         deletable_remove_hook (void      *any)              { return false; }
     bool         deletable_remove_hook (Deletable *deletable);
   };
-  String         object_url            () const;
 private:
   void           add_deletion_hook     (DeletionHook *hook);
   void           remove_deletion_hook  (DeletionHook *hook);
 protected:
   void           invoke_deletion_hooks ();
   virtual       ~Deletable             ();
-  static Deletable* from_object_url    (const String &object_url);
 };
 
 /* --- Locatable --- */

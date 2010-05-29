@@ -156,21 +156,20 @@ typedef unsigned int		uint;	/* for systems that don't define uint in types.h */
 RAPICORN_STATIC_ASSERT (RAPICORN_SIZEOF_SYS_TYPESH_UINT == 4);
 #endif
 RAPICORN_STATIC_ASSERT (sizeof (uint) == 4);
-typedef unsigned int		RapicornUInt8  __attribute__ ((__mode__ (__QI__)));
-typedef unsigned int		RapicornUInt16 __attribute__ ((__mode__ (__HI__)));
-typedef unsigned int		RapicornUInt32 __attribute__ ((__mode__ (__SI__)));
-// typedef unsigned int         RapicornUInt64 __attribute__ ((__mode__ (__DI__)));
-typedef unsigned long long int  RapicornUInt64; // AMD64 needs this for %llu printf format strings
+typedef uint8_t                 RapicornUInt8;  // __attribute__ ((__mode__ (__QI__)))
+typedef uint16_t                RapicornUInt16; // __attribute__ ((__mode__ (__HI__)))
+typedef uint32_t                RapicornUInt32; // __attribute__ ((__mode__ (__SI__)))
+typedef uint64_t                RapicornUInt64; // __attribute__ ((__mode__ (__DI__)))
+// Using stdint.h defines here for type compatibility with standard APIs (references, printf, ...)
 // provided by rapicorncdefs.h: uint;
 RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt8)  == 1);
 RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt16) == 2);
 RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt32) == 4);
 RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt64) == 8);
-typedef signed int		RapicornInt8  __attribute__ ((__mode__ (__QI__)));
-typedef signed int		RapicornInt16 __attribute__ ((__mode__ (__HI__)));
-typedef signed int		RapicornInt32 __attribute__ ((__mode__ (__SI__)));
-// typedef signed long long int RapicornInt64 __attribute__ ((__mode__ (__DI__)));
-typedef signed long long int	RapicornInt64;  // AMD64 needs this for %lld printf format strings
+typedef int8_t                  RapicornInt8;  // __attribute__ ((__mode__ (__QI__)))
+typedef int16_t                 RapicornInt16; // __attribute__ ((__mode__ (__HI__)))
+typedef int32_t                 RapicornInt32; // __attribute__ ((__mode__ (__SI__)))
+typedef int64_t                 RapicornInt64; // __attribute__ ((__mode__ (__DI__)))
 // provided by compiler       int;
 RAPICORN_STATIC_ASSERT (sizeof (RapicornInt8)  == 1);
 RAPICORN_STATIC_ASSERT (sizeof (RapicornInt16) == 2);

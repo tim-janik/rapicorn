@@ -1954,49 +1954,6 @@ Deletable::invoke_deletion_hooks()
     }
 }
 
-/**
- * Provide a unique identifier to refer to this object within
- * the current process.
- */
-String
-Deletable::object_url () const
-{
-  return_val_if_fail (this != NULL, "(*NULL)");
-  auto_init_deletable_maps();
-  const uint32 hashv = ((gsize) (void*) this) % DELETABLE_MAP_HASH;
-  deletable_maps[hashv].mutex.lock();
-  DeletableAuxData &ad = deletable_maps[hashv].dmap[const_cast<Deletable*> (this)];
-  if (ad.url.size() > 0)
-    {
-      String url = ad.url;
-      deletable_maps[hashv].mutex.unlock();
-      return url;
-    }
-  AutoLocker locker (object_url_mutex); // always acquired _after_ dmap.mutex
-  String url, prefix = string_printf ("data:application/x-rapicorn,object-url://%s/", process_handle().c_str());
-  uint64 j = lrand48();
-  do
-    {
-      url = prefix + string_printf ("%llx", j);
-      j++;
-    }
-  while (object_url2deletable.find (url) != object_url2deletable.end());
-  ad.url = url;
-  object_url2deletable[url] = const_cast<Deletable*> (this);
-  deletable_maps[hashv].mutex.unlock();
-  return url;
-}
-
-/**
- * Find an object by providing its object URL as obtained from object_url().
- */
-Deletable*
-Deletable::from_object_url (const String &object_url)
-{
-  AutoLocker locker (object_url_mutex); // always acquired _after_ dmap.mutex
-  return object_url2deletable[object_url];
-}
-
 /* --- Id Allocator --- */
 IdAllocator::IdAllocator ()
 {}

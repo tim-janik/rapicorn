@@ -113,7 +113,7 @@ ItemListImpl::constructed ()
             row[j] = string_printf ("%u-%u", i + 1, j + 1);
           store.insert (-1, row);
         }
-      model (store.object_url());
+      // FIXME: model (store.object_url());
       unref (ref_sink (store));
     }
 }
@@ -163,7 +163,7 @@ ItemListImpl::get_adjustment (AdjustmentSourceType adj_source,
 void
 ItemListImpl::model (const String &modelurl)
 {
-  Deletable *obj = from_object_url (modelurl);
+  Deletable *obj = NULL; // FIXME: from_object_url (modelurl);
   Model1 *model = dynamic_cast<Model1*> (obj);
   Model1 *oldmodel = m_model;
   m_model = model;
@@ -189,7 +189,7 @@ ItemListImpl::model (const String &modelurl)
 String
 ItemListImpl::model () const
 {
-  return m_model ? m_model->object_url() : "";
+  return ""; // FIXME: return m_model ? m_model->object_url() : "";
 }
 
 void

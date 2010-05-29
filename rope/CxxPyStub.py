@@ -77,13 +77,13 @@ PyString_As_std_string (PyObject *pystr)
   return std::string (s, len);
 }
 
-static inline std::string
-PyAttr_As_std_string (PyObject *pyobj, const char *attr_name)
+static inline Plic::uint64
+PyAttr_As_uint64 (PyObject *pyobj, const char *attr_name)
 {
   PyObject *o = PyObject_GetAttrString (pyobj, attr_name);
   if (o)
-     return PyString_As_std_string (o);
-  return "";
+     return PyLong_AsUnsignedLongLong (o);
+  return 0;
 }
 
 static inline PyObject*
@@ -160,7 +160,7 @@ class Generator:
     elif type.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += '  if (!plic_py%s_proto_add (%s, %s)) goto error;\n' % (type.name, var, fb)
     elif type.storage == Decls.INTERFACE:
-      s += '  %s.add_string (PyAttr_As_std_string (%s, "__plic__object__")); ERRORifpy();\n' % (fb, var)
+      s += '  %s.add_object (PyAttr_As_uint64 (%s, "__plic__object__")); ERRORifpy();\n' % (fb, var)
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
@@ -177,7 +177,7 @@ class Generator:
     elif type.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += '  %s = plic_py%s_proto_pop (%s); ERRORif (!pyfoR);\n' % (var, type.name, fbr)
     elif type.storage == Decls.INTERFACE:
-      s += '  %s = PyString_From_std_string (%s.pop_string()); ERRORifpy();\n' % (var, fbr)
+      s += '  %s = PyLong_FromUnsignedLongLong (%s.pop_object()); ERRORifpy();\n' % (var, fbr)
       s += '  // FIXME: convert to "__plic__object__"\n'
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)

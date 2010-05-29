@@ -49,7 +49,8 @@ struct Initializer {
   int            cpu;
   Mutex          mutex;
   Cond           cond;
-  String         app;
+  uint64         app_id;
+  Initializer() : cpu (-1), app_id (0) {}
 };
 
 class RopeThread : public Thread {
@@ -89,8 +90,8 @@ private:
     (*m_loop).add_source (esource, MAXINT);
     esource->exitable (false);
     m_init->mutex.lock();
-    Deletable *dapp = &App;
-    m_init->app = dapp->object_url();
+    Locatable *lapp = &App;
+    m_init->app_id = lapp->locatable_id();
     m_init->cond.signal();
     m_init->mutex.unlock();
     m_init = NULL;
@@ -99,14 +100,14 @@ private:
 };
 
 static RopeThread *rope_thread = NULL;
-static String      app_url;
+static uint64      app_id = 0;
 
-String
+uint64
 rope_thread_start (const String              &application_name,
                    const std::vector<String> &cmdline_args,
                    int                        cpu)
 {
-  return_val_if_fail (rope_thread == NULL, "");
+  return_val_if_fail (rope_thread == NULL, 0);
   static volatile size_t initialized = 0;
   if (1) // FIXME: once_enter (&initialized)
     {
@@ -119,13 +120,13 @@ rope_thread_start (const String              &application_name,
       ref_sink (rope_thread);
       rope_thread->start();
       init.mutex.lock();
-      while (init.app.size() == 0)
+      while (init.app_id == 0)
         init.cond.wait (init.mutex);
-      app_url = init.app;
+      app_id = init.app_id;
       init.mutex.unlock();
       // FIXME: once_leave (&initialized, 1);
     }
-  return app_url;
+  return app_id;
 }
 
 FieldBuffer*

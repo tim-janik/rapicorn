@@ -37,13 +37,12 @@ base_code = r"""
 #endif
 
 namespace { // Anonymous
+using Plic::uint64;
 
 class PlicProxyBase {
-  std::string m_object_url;
-protected:
-  static inline const std::string& url (const PlicProxyBase &obj) { return obj.m_object_url; }
+  uint64 m_locator_id;
 public:
-  explicit PlicProxyBase (const std::string &object_url) : m_object_url (object_url) {}
+  explicit PlicProxyBase (uint64 locator_id) : m_locator_id (locator_id) {}
   virtual ~PlicProxyBase() {}
 };
 
@@ -51,44 +50,31 @@ public:
 typedef Plic::FieldBuffer FieldBuffer;
 typedef Plic::FieldBuffer8 FieldBuffer8;
 typedef Plic::FieldBufferReader FieldBufferReader;
-template<class CLASS> static inline const std::string&
-Instance2Url (CLASS *obj)
+template<class CLASS> static inline uint64
+Instance2IdCast (CLASS *obj)
 {
-  struct Wrapper : protected CLASS {
-  static inline const std::string& url (const CLASS &obj) { return PlicProxyBase::url (obj); }
-  };
-  static std::string nullurl ("NULL");
-  return obj ? Wrapper::url (*obj) : nullurl;
+  if (!obj) return 0;
+  else return dynamic_cast<const Rapicorn::Locatable*> (obj)->locatable_id();
 }
-template<class CLASS> static inline const std::string&
-Instance2Url (CLASS &obj)
+template<class CLASS> static uint64
+Instance2IdCast (const CLASS *obj)
 {
-  struct Wrapper : protected CLASS {
-  static inline const std::string& url (const CLASS &obj) { return PlicProxyBase::url (obj); }
-  };
-  static std::string nullurl ("NULL");
-  return &obj ? Wrapper::url (obj) : nullurl;
+  if (!obj) return 0;
+  else return dynamic_cast<const Rapicorn::Locatable*> (obj)->locatable_id();
 }
-template<class CLASS> static inline std::string
-Instance2StringCast (CLASS *obj)
+template<class CLASS> static inline uint64
+Instance2IdCast (CLASS &obj)
 {
-  return dynamic_cast<const Rapicorn::Deletable*> (obj)->object_url();
-}
-template<class CLASS> static inline std::string
-Instance2StringCast (const CLASS &obj)
-{
-  return dynamic_cast<const Rapicorn::Deletable*> (&obj)->object_url();
+  if (!&obj) return 0;
+  else return dynamic_cast<const Rapicorn::Locatable*> (&obj)->locatable_id();
 }
 template<class CLASS> static inline CLASS*
-Instance4StringCast (const std::string &objstring)
+Instance4IdCast (uint64 locator_id)
 {
-  struct _DeletableWrapper : public Rapicorn::Deletable {
-    static Deletable* _from_object_url (const std::string &ou) { return from_object_url (ou); }
-  };
-  Rapicorn::Deletable *dobj = _DeletableWrapper::_from_object_url (objstring);
+  Rapicorn::Locatable *dobj = Rapicorn::Locatable::from_locatable_id (locator_id);
   CLASS *target = dobj ? dynamic_cast<CLASS*> (dobj) : NULL;
   if (!target)
-    printerr ("NULL-CAST: %s -> %p -> %p\n", objstring.c_str(), dobj, target); // FIXME
+    printerr ("NULL-CAST: 0x%016llx -> %p -> %p\n", locator_id, dobj, target); // FIXME
   return target;
 }
 #define die()      (void) 0 // FIXME
@@ -273,9 +259,9 @@ class Generator:
         s += '  if (!%s.proto_add (%s)) %s;\n' % (ident, fb, onerr)
       elif type.storage == Decls.INTERFACE:
         if self.gen_client:
-          s += '  %s.add_object (Instance2Url (%s));\n' % (fb, ident)
+          s += '  %s.add_object (Instance2IdCast (%s));\n' % (fb, ident)
         else:
-          s += '  %s.add_object (Instance2StringCast (%s));\n' % (fb, ident)
+          s += '  %s.add_object (Instance2IdCast (%s));\n' % (fb, ident)
       else:
         s += '  %s.add_%s (%s);\n' % (fb, self.accessor_name (type.storage), ident)
     return s
@@ -290,7 +276,7 @@ class Generator:
       elif type.storage == Decls.ENUM:
         s += '  %s = %s (%s.pop_evalue());\n' % (ident, self.type2cpp (type), fbr)
       elif type.storage == Decls.INTERFACE:
-        s += '  %s = Instance4StringCast<%s> (%s.pop_%s());\n' % (ident, type.name, fbr, self.accessor_name (type.storage))
+        s += '  %s = Instance4IdCast<%s> (%s.pop_%s());\n' % (ident, type.name, fbr, self.accessor_name (type.storage))
       else:
         s += '  %s = %s.pop_%s();\n' % (ident, fbr, self.accessor_name (type.storage))
     return s
@@ -336,7 +322,7 @@ class Generator:
     elif el[1].storage == Decls.ENUM:
       s += '    %s.push_back (%s (fbr.pop_evalue()));\n' % (eident, self.type2cpp (el[1]))
     elif el[1].storage == Decls.INTERFACE:
-      s += '    %s.push_back (Instance4StringCast<%s> (fbr.pop_%s()));\n' % (eident, el[1].name, self.accessor_name (el[1].storage))
+      s += '    %s.push_back (Instance4IdCast<%s> (fbr.pop_%s()));\n' % (eident, el[1].name, self.accessor_name (el[1].storage))
     else:
       s += '    %s.push_back (fbr.pop_%s());\n' % (eident, self.accessor_name (el[1].storage))
     s += '  }\n'

@@ -16,13 +16,12 @@
 #endif
 
 namespace { // Anonymous
+using Plic::uint64;
 
 class PlicProxyBase {
-  std::string m_object_url;
-protected:
-  static inline const std::string& url (const PlicProxyBase &obj) { return obj.m_object_url; }
+  uint64 m_locator_id;
 public:
-  explicit PlicProxyBase (const std::string &object_url) : m_object_url (object_url) {}
+  explicit PlicProxyBase (uint64 locator_id) : m_locator_id (locator_id) {}
   virtual ~PlicProxyBase() {}
 };
 
@@ -30,44 +29,31 @@ public:
 typedef Plic::FieldBuffer FieldBuffer;
 typedef Plic::FieldBuffer8 FieldBuffer8;
 typedef Plic::FieldBufferReader FieldBufferReader;
-template<class CLASS> static inline const std::string&
-Instance2Url (CLASS *obj)
+template<class CLASS> static inline uint64
+Instance2IdCast (CLASS *obj)
 {
-  struct Wrapper : protected CLASS {
-  static inline const std::string& url (const CLASS &obj) { return PlicProxyBase::url (obj); }
-  };
-  static std::string nullurl ("NULL");
-  return obj ? Wrapper::url (*obj) : nullurl;
+  if (!obj) return 0;
+  else return dynamic_cast<const Rapicorn::Locatable*> (obj)->locatable_id();
 }
-template<class CLASS> static inline const std::string&
-Instance2Url (CLASS &obj)
+template<class CLASS> static uint64
+Instance2IdCast (const CLASS *obj)
 {
-  struct Wrapper : protected CLASS {
-  static inline const std::string& url (const CLASS &obj) { return PlicProxyBase::url (obj); }
-  };
-  static std::string nullurl ("NULL");
-  return &obj ? Wrapper::url (obj) : nullurl;
+  if (!obj) return 0;
+  else return dynamic_cast<const Rapicorn::Locatable*> (obj)->locatable_id();
 }
-template<class CLASS> static inline std::string
-Instance2StringCast (CLASS *obj)
+template<class CLASS> static inline uint64
+Instance2IdCast (CLASS &obj)
 {
-  return dynamic_cast<const Rapicorn::Deletable*> (obj)->object_url();
-}
-template<class CLASS> static inline std::string
-Instance2StringCast (const CLASS &obj)
-{
-  return dynamic_cast<const Rapicorn::Deletable*> (&obj)->object_url();
+  if (!&obj) return 0;
+  else return dynamic_cast<const Rapicorn::Locatable*> (&obj)->locatable_id();
 }
 template<class CLASS> static inline CLASS*
-Instance4StringCast (const std::string &objstring)
+Instance4IdCast (uint64 locator_id)
 {
-  struct _DeletableWrapper : public Rapicorn::Deletable {
-    static Deletable* _from_object_url (const std::string &ou) { return from_object_url (ou); }
-  };
-  Rapicorn::Deletable *dobj = _DeletableWrapper::_from_object_url (objstring);
+  Rapicorn::Locatable *dobj = Rapicorn::Locatable::from_locatable_id (locator_id);
   CLASS *target = dobj ? dynamic_cast<CLASS*> (dobj) : NULL;
   if (!target)
-    printerr ("NULL-CAST: %s -> %p -> %p\n", objstring.c_str(), dobj, target); // FIXME
+    printerr ("NULL-CAST: 0x%016llx -> %p -> %p\n", locator_id, dobj, target); // FIXME
   return target;
 }
 #define die()      (void) 0 // FIXME
@@ -736,7 +722,7 @@ UIWidgetArea::simple_method ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
   fb.add_type_hash (0x0ca200003a5e02edULL, 0x169b0d3b86dc10cdULL, 0xc07a85a6dfe104adULL, 0xe8554a515ffc84b1ULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   fr = plic_call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
@@ -748,7 +734,7 @@ UIWidgetArea::single_arg (int arg_n)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
   fb.add_type_hash (0x0ca20000f96d1b2eULL, 0x54efdddfc11d9638ULL, 0xb5d0abcc8a0f16c8ULL, 0x957078d12b4b2fc0ULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   fb.add_int64 (arg_n);
   fr = plic_call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
@@ -761,7 +747,7 @@ UIWidgetArea::single_arg2 (int arg_n)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
   fb.add_type_hash (0x0ca20000afefb8c4ULL, 0xb9d9952905d41bfdULL, 0xa2c44e813b1a8c4dULL, 0x8e440d5ecaeecec8ULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   fb.add_int64 (arg_n);
   fr = plic_call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
@@ -775,7 +761,7 @@ UIWidgetArea::two_args (int arg_n,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000d1f5823fULL, 0x8538f2ffa1581dd0ULL, 0xc9e7d9d486336a46ULL, 0xc941f5292b4dcdfcULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   fb.add_int64 (arg_n);
   fb.add_double (arg_r);
   fr = plic_call_remote (&fb); // deletes fb
@@ -790,7 +776,7 @@ UIWidgetArea::two_args2 (int arg_n,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000255fafa4ULL, 0x429116798ce5813eULL, 0x5eacea949f7cfe8eULL, 0x1f41fe0ca4311729ULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   fb.add_int64 (arg_n);
   fb.add_double (arg_r);
   fr = plic_call_remote (&fb); // deletes fb
@@ -808,7 +794,7 @@ UIWidgetArea::multi_args (int arg_n,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 5), *fr = NULL;
   fb.add_type_hash (0x0ca200005e6e8ea5ULL, 0x6f4fdd2d1d4b3bb3ULL, 0xbe7de84f81bcc353ULL, 0x91710698705b209aULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   fb.add_int64 (arg_n);
   fb.add_double (arg_r);
   fb.add_int64 (arg_i);
@@ -826,9 +812,9 @@ UIWidgetArea::self_method (UIWidgetArea &arg_ba1,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000abd1f74aULL, 0x3f2d1aefb6d12a66ULL, 0x100e83849c144758ULL, 0x79488ee1596dab87ULL); // proc_id
-  fb.add_object (Instance2Url (this));
-  fb.add_object (Instance2Url (arg_ba1));
-  fb.add_object (Instance2Url (arg_ba2));
+  fb.add_object (Instance2IdCast (this));
+  fb.add_object (Instance2IdCast (arg_ba1));
+  fb.add_object (Instance2IdCast (arg_ba2));
   fr = plic_call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
@@ -840,7 +826,7 @@ UIWidgetArea::void_method ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0);
   fb.add_type_hash (0x0ca1000027be4746ULL, 0xde7d9d84a2281ae4ULL, 0xdccb312da0062c83ULL, 0x62d76268f178e709ULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   plic_call_remote (&fb); // deletes fb
 }
 std::string
@@ -848,7 +834,7 @@ UIWidgetArea::on_click2out ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
   fb.add_type_hash (0x0ca20000a3ce0a03ULL, 0xaaaf9478a83b0f7cULL, 0x2664b179bda29105ULL, 0xb1f6ad88c5a0c98aULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   fr = plic_call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
@@ -860,7 +846,7 @@ UIWidgetArea::on_click2in (const std::string &arg_command)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1);
   fb.add_type_hash (0x0ca10000e511187cULL, 0x9ea59f646fca1b62ULL, 0x6180b0bf59637495ULL, 0xa99463469b646df9ULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   fb.add_string (arg_command);
   plic_call_remote (&fb); // deletes fb
 }
@@ -909,7 +895,7 @@ MethodTestInterface::method_with_void ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0);
   fb.add_type_hash (0x0ca10000f91c872eULL, 0xa90ceaec3b16df51ULL, 0x887b366247a3a612ULL, 0x6f4b7fab28f1ab12ULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   plic_call_remote (&fb); // deletes fb
 }
 bool
@@ -918,7 +904,7 @@ MethodTestInterface::method_with_bools (bool arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca200008ffdba44ULL, 0xc998c0ffa6b486b1ULL, 0x9b4ea9f5a23d9c6dULL, 0xa7746e46026b843eULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   fb.add_int64 (arg_input);
   fb.add_int64 (arg_optval);
   fr = plic_call_remote (&fb); // deletes fb
@@ -933,7 +919,7 @@ MethodTestInterface::method_with_ints (int arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000cec55716ULL, 0x747c3602672780d1ULL, 0x1852bd2e467d1e91ULL, 0x61085ceb1b2bf816ULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   fb.add_int64 (arg_input);
   fb.add_int64 (arg_optval);
   fr = plic_call_remote (&fb); // deletes fb
@@ -948,7 +934,7 @@ MethodTestInterface::method_with_floats (double arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca200006ede6737ULL, 0xc9ee1722db2fc583ULL, 0x4e5788c84a81be26ULL, 0x8c32f39e18ad9ab6ULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   fb.add_double (arg_input);
   fb.add_double (arg_optval);
   fr = plic_call_remote (&fb); // deletes fb
@@ -963,7 +949,7 @@ MethodTestInterface::method_with_string (const std::string &arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000d07cd262ULL, 0xfc81ef2c220a8d45ULL, 0x59d0faae36ce56eaULL, 0x0990ad1d3c49827dULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   fb.add_string (arg_input);
   fb.add_string (arg_optval);
   fr = plic_call_remote (&fb); // deletes fb
@@ -978,7 +964,7 @@ MethodTestInterface::method_with_enum (QuickEnum arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000d1a935c9ULL, 0xc1bdc5f48521c942ULL, 0xebcb3ede7a3fcbdcULL, 0xba634e15fbfde688ULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   fb.add_evalue (arg_input);
   fb.add_evalue (arg_optval);
   fr = plic_call_remote (&fb); // deletes fb
@@ -993,7 +979,7 @@ MethodTestInterface::method_with_record (const QuickRecord &arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca2000093f684d6ULL, 0x345260c4f912f67fULL, 0xa8f6c2af19dc877eULL, 0x176ffee81397fa2eULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   if (!arg_input.proto_add (fb)) THROW_ERROR();
   if (!arg_optval.proto_add (fb)) THROW_ERROR();
   fr = plic_call_remote (&fb); // deletes fb
@@ -1009,7 +995,7 @@ MethodTestInterface::method_with_sequence (const QuickSequence &arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000f8d6703fULL, 0x9af82486dc8ce5aaULL, 0x3a6095e0829ba185ULL, 0x74e0fc82dbfa4b77ULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   if (!arg_input.proto_add (fb)) THROW_ERROR();
   if (!arg_optval.proto_add (fb)) THROW_ERROR();
   fr = plic_call_remote (&fb); // deletes fb
@@ -1025,13 +1011,13 @@ MethodTestInterface::method_with_interface (GrandChild &arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000ed320c14ULL, 0x672f050fc4be01b7ULL, 0x239a6c63e8d3bb3eULL, 0x106046b369f7e804ULL); // proc_id
-  fb.add_object (Instance2Url (this));
-  fb.add_object (Instance2Url (arg_input));
-  fb.add_object (Instance2Url (arg_optval));
+  fb.add_object (Instance2IdCast (this));
+  fb.add_object (Instance2IdCast (arg_input));
+  fb.add_object (Instance2IdCast (arg_optval));
   fr = plic_call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
-  GrandChild *retval = Instance4StringCast<GrandChild> (frr.pop_object());
+  GrandChild *retval = Instance4IdCast<GrandChild> (frr.pop_object());
   return retval;
 }
 } // InterfaceTests
@@ -1042,7 +1028,7 @@ PureMethods::pure_method (double arg_f)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
   fb.add_type_hash (0x0ca20000ac480384ULL, 0xd1df259f1d53b082ULL, 0x995d5e5b4bb2fcb4ULL, 0x83f6a92ee477fcd6ULL); // proc_id
-  fb.add_object (Instance2Url (this));
+  fb.add_object (Instance2IdCast (this));
   fb.add_double (arg_f);
   fr = plic_call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
@@ -1071,7 +1057,7 @@ call_UIWidgetArea_simple_method (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
   UIWidgetArea *self;
-  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  self = Instance4IdCast<UIWidgetArea> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   double rval = self->simple_method ();
   FieldBuffer &rb  = *FieldBuffer::new_return();
@@ -1085,7 +1071,7 @@ call_UIWidgetArea_single_arg (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
   UIWidgetArea *self;
-  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  self = Instance4IdCast<UIWidgetArea> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double rval = self->single_arg (arg_n);
@@ -1100,7 +1086,7 @@ call_UIWidgetArea_single_arg2 (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
   UIWidgetArea *self;
-  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  self = Instance4IdCast<UIWidgetArea> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double rval = self->single_arg2 (arg_n);
@@ -1115,7 +1101,7 @@ call_UIWidgetArea_two_args (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   UIWidgetArea *self;
-  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  self = Instance4IdCast<UIWidgetArea> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double arg_r = fbr.pop_double();
@@ -1131,7 +1117,7 @@ call_UIWidgetArea_two_args2 (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   UIWidgetArea *self;
-  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  self = Instance4IdCast<UIWidgetArea> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double arg_r = fbr.pop_double();
@@ -1147,7 +1133,7 @@ call_UIWidgetArea_multi_args (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 5) return false;
   UIWidgetArea *self;
-  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  self = Instance4IdCast<UIWidgetArea> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double arg_r = fbr.pop_double();
@@ -1166,10 +1152,10 @@ call_UIWidgetArea_self_method (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   UIWidgetArea *self;
-  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  self = Instance4IdCast<UIWidgetArea> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
-  UIWidgetArea *arg_ba1 = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
-  UIWidgetArea *arg_ba2 = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  UIWidgetArea *arg_ba1 = Instance4IdCast<UIWidgetArea> (fbr.pop_object());
+  UIWidgetArea *arg_ba2 = Instance4IdCast<UIWidgetArea> (fbr.pop_object());
   double rval = self->self_method (*arg_ba1, *arg_ba2);
   FieldBuffer &rb  = *FieldBuffer::new_return();
   rb.add_double (rval);
@@ -1182,7 +1168,7 @@ call_UIWidgetArea_void_method (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
   UIWidgetArea *self;
-  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  self = Instance4IdCast<UIWidgetArea> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   self->void_method ();
   return NULL;
@@ -1194,7 +1180,7 @@ call_UIWidgetArea_on_click2out (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
   UIWidgetArea *self;
-  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  self = Instance4IdCast<UIWidgetArea> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   std::string rval = self->on_click2out ();
   FieldBuffer &rb  = *FieldBuffer::new_return();
@@ -1208,7 +1194,7 @@ call_UIWidgetArea_on_click2in (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
   UIWidgetArea *self;
-  self = Instance4StringCast<UIWidgetArea> (fbr.pop_object());
+  self = Instance4IdCast<UIWidgetArea> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   std::string arg_command = fbr.pop_string();
   self->on_click2in (arg_command);
@@ -1226,7 +1212,7 @@ call_MethodTestInterface_method_with_void (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
   MethodTestInterface *self;
-  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  self = Instance4IdCast<MethodTestInterface> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   self->method_with_void ();
   return NULL;
@@ -1238,7 +1224,7 @@ call_MethodTestInterface_method_with_bools (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   MethodTestInterface *self;
-  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  self = Instance4IdCast<MethodTestInterface> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   bool arg_input = fbr.pop_int64();
   bool arg_optval = fbr.pop_int64();
@@ -1254,7 +1240,7 @@ call_MethodTestInterface_method_with_ints (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   MethodTestInterface *self;
-  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  self = Instance4IdCast<MethodTestInterface> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   int arg_input = fbr.pop_int64();
   int arg_optval = fbr.pop_int64();
@@ -1270,7 +1256,7 @@ call_MethodTestInterface_method_with_floats (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   MethodTestInterface *self;
-  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  self = Instance4IdCast<MethodTestInterface> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   double arg_input = fbr.pop_double();
   double arg_optval = fbr.pop_double();
@@ -1286,7 +1272,7 @@ call_MethodTestInterface_method_with_string (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   MethodTestInterface *self;
-  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  self = Instance4IdCast<MethodTestInterface> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   std::string arg_input = fbr.pop_string();
   std::string arg_optval = fbr.pop_string();
@@ -1302,7 +1288,7 @@ call_MethodTestInterface_method_with_enum (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   MethodTestInterface *self;
-  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  self = Instance4IdCast<MethodTestInterface> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   QuickEnum arg_input = QuickEnum (fbr.pop_evalue());
   QuickEnum arg_optval = QuickEnum (fbr.pop_evalue());
@@ -1318,7 +1304,7 @@ call_MethodTestInterface_method_with_record (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   MethodTestInterface *self;
-  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  self = Instance4IdCast<MethodTestInterface> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   QuickRecord arg_input;
   if (!arg_input.proto_pop (fbr)) return false;
@@ -1336,7 +1322,7 @@ call_MethodTestInterface_method_with_sequence (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   MethodTestInterface *self;
-  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  self = Instance4IdCast<MethodTestInterface> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   QuickSequence arg_input;
   if (!arg_input.proto_pop (fbr)) return false;
@@ -1354,13 +1340,13 @@ call_MethodTestInterface_method_with_interface (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   MethodTestInterface *self;
-  self = Instance4StringCast<MethodTestInterface> (fbr.pop_object());
+  self = Instance4IdCast<MethodTestInterface> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
-  GrandChild *arg_input = Instance4StringCast<GrandChild> (fbr.pop_object());
-  GrandChild *arg_optval = Instance4StringCast<GrandChild> (fbr.pop_object());
+  GrandChild *arg_input = Instance4IdCast<GrandChild> (fbr.pop_object());
+  GrandChild *arg_optval = Instance4IdCast<GrandChild> (fbr.pop_object());
   GrandChild *rval = self->method_with_interface (*arg_input, *arg_optval);
   FieldBuffer &rb  = *FieldBuffer::new_return();
-  rb.add_object (Instance2Url (rval));
+  rb.add_object (Instance2IdCast (rval));
   return &rb;
 }
 
@@ -1375,7 +1361,7 @@ call_PureMethods_pure_method (const FieldBuffer &fb)
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
   PureMethods *self;
-  self = Instance4StringCast<PureMethods> (fbr.pop_object());
+  self = Instance4IdCast<PureMethods> (fbr.pop_object());
   rope_check (self, "self must be non-NULL");
   double arg_f = fbr.pop_double();
   int rval = self->pure_method (arg_f);

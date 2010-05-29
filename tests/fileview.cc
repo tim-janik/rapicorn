@@ -72,8 +72,8 @@ main (int   argc,
   /* create root item */
   Store1 *s1 = create_store();
   WinPtr window = App.create_winptr ("main-dialog",
-                                              Args (""),
-                                              Args ("ListModel=" + s1->model().object_url()));
+                                     Args (""),
+                                     Args ("ListModel=")); // FIXME: + s1->model().object_url()));
   window.show();
 
   App.execute_loops();

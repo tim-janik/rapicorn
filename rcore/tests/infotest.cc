@@ -192,34 +192,7 @@ test_virtual_typeid()
 }
 
 struct SomeObject : public ReferenceCountImpl {
-  using ReferenceCountImpl::object_url;
-  using ReferenceCountImpl::from_object_url;
 };
-
-static void
-test_object_urls ()
-{
-  SomeObject *o1 = new SomeObject();
-  SomeObject *o2 = new SomeObject();
-  SomeObject *o3 = new SomeObject();
-  String u1 = o1->object_url();
-  String u2 = o2->object_url();
-  assert (u1 != u2);
-  // printout ("%s != %s\n", u1.c_str(), u2.c_str());
-  Deletable *r1 = SomeObject::from_object_url (u1);
-  Deletable *r2 = SomeObject::from_object_url (u2);
-  Deletable *r3 = SomeObject::from_object_url ("junk");
-  assert (r1 == o1);
-  assert (r2 == o2);
-  assert (r3 == NULL);
-  assert (u1 == o1->object_url());
-  assert (u2 == o2->object_url());
-  unref (ref_sink (o1));
-  r1 = SomeObject::from_object_url (u1);
-  assert (r1 == NULL);
-  unref (ref_sink (o2));
-  unref (ref_sink (o3));
-}
 
 static void
 test_id_allocator ()
@@ -349,11 +322,11 @@ main (int   argc,
       return 0;
     }
 
-  if (argc >= 2 && String ("--print-object-url") == argv[1])
+  if (argc >= 2 && String ("--print-locatable-id") == argv[1])
     {
       rapicorn_init_core (&argc, &argv, __FILE__);
       SomeObject *obj = new SomeObject();
-      printout ("%s", obj->object_url().c_str());
+      printout ("0x%016llx\n", obj->locatable_id());
       return 0;
     }
 
@@ -369,7 +342,6 @@ main (int   argc,
   Test::add ("VirtualTypeid", test_virtual_typeid);
   Test::add ("Id Allocator", test_id_allocator);
   Test::add ("Locatable IDs", test_locatable_ids);
-  Test::add ("Object URLs", test_object_urls);
   Test::add ("Message Types", test_messaging);
 
   return Test::run();

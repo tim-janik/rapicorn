@@ -86,10 +86,10 @@ rope_init_dispatcher (PyObject *self,
   argv[0] = (char*) String (ns, nl).c_str(); // application_name
   rapicorn_init_core (&argc, &ap, NULL, ivalues);
   int cpu = Thread::Self::affinity (1);
-  String appurl = rope_thread_start (String (ns, nl), strv, cpu);
-  if (appurl.size() == 0)
+  uint64 app_id = rope_thread_start (String (ns, nl), strv, cpu);
+  if (app_id == 0)
     ; // FIXME: throw exception
-  return PyString_FromStringAndSize (appurl.data(), appurl.size());
+  return PyLong_FromUnsignedLongLong (app_id);
 }
 
 } // Anon
