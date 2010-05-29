@@ -2040,11 +2040,10 @@ Locatable::~Locatable ()
 {
   if (UNLIKELY (m_locatable_index))
     {
-      return_if_fail (m_locatable_index <= locatable_objs.size()); // FIXME: use autolocker and protect this
+      ScopedLock<SpinLock> locker (locatable_mutex);
+      return_if_fail (m_locatable_index <= locatable_objs.size());
       const uint index = m_locatable_index - 1;
-      locatable_mutex.lock();
       locatable_objs[index] = NULL;
-      locatable_mutex.unlock();
       locator_ids.release_id (m_locatable_index);
       m_locatable_index = 0;
     }
@@ -2057,11 +2056,10 @@ Locatable::locatable_id () const
     {
       m_locatable_index = locator_ids.alloc_id();
       const uint index = m_locatable_index - 1;
-      locatable_mutex.lock();
+      ScopedLock<SpinLock> locker (locatable_mutex);
       if (index >= locatable_objs.size())
         locatable_objs.resize (index + 1);
       locatable_objs[index] = const_cast<Locatable*> (this);
-      locatable_mutex.unlock();
     }
   return locatable_process_hash64 + m_locatable_index;
 }
@@ -2074,10 +2072,9 @@ Locatable::from_locatable_id (uint64 locatable_id)
   if (locatable_id >> 32 != locatable_process_hash64 >> 32)
     return NULL; // id from wrong process
   const uint index = locatable_id - locatable_process_hash64  - 1;
-  return_val_if_fail (index < locatable_objs.size(), NULL); // FIXME: use autolocker and protect this
-  locatable_mutex.lock();
+  ScopedLock<SpinLock> locker (locatable_mutex);
+  return_val_if_fail (index < locatable_objs.size(), NULL);
   Locatable *_this = locatable_objs[index];
-  locatable_mutex.unlock();
   return _this;
 }
 
