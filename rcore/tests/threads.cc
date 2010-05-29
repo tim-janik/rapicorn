@@ -40,39 +40,10 @@ rapicorn_thread_run (const gchar     *name,
     }
 }
 
-#define rapicorn_mutex_init(mtx)        (ThreadTable.mutex_init (mtx))
-#define rapicorn_mutex_lock(mtx)        (ThreadTable.mutex_lock (mtx))
-#define rapicorn_mutex_trylock(mtx)     (0 == ThreadTable.mutex_trylock (mtx))
-#define rapicorn_mutex_unlock(mtx)      (ThreadTable.mutex_unlock (mtx))
-#define rapicorn_mutex_destroy(mtx)     (ThreadTable.mutex_destroy (mtx))
-#define rapicorn_rec_mutex_init(mtx)    (ThreadTable.rec_mutex_init (mtx))
-#define rapicorn_rec_mutex_lock(mtx)    (ThreadTable.rec_mutex_lock (mtx))
-#define rapicorn_rec_mutex_trylock(mtx) (0 == ThreadTable.rec_mutex_trylock (mtx))
-#define rapicorn_rec_mutex_unlock(mtx)  (ThreadTable.rec_mutex_unlock (mtx))
-#define rapicorn_rec_mutex_destroy(mtx) (ThreadTable.rec_mutex_destroy (mtx))
-
-#define RAPICORN_MUTEX_DECLARE_INITIALIZED(mutexname)                             \
-  RapicornMutex mutexname = { 0 };                                                \
-  static void RAPICORN_CONSTRUCTOR                                                \
-  RAPICORN_CPP_PASTE4 (__rapicorn_mutex__autoinit, __LINE__, __, mutexname) (void)  \
-  { ThreadTable.mutex_chain4init (&mutexname); }
-
-#define RAPICORN_REC_MUTEX_DECLARE_INITIALIZED(recmtx)                            \
-  RapicornRecMutex recmtx = { { 0 } };                                            \
-  static void RAPICORN_CONSTRUCTOR                                                \
-  RAPICORN_CPP_PASTE4 (__rapicorn_rec_mutex__autoinit, __LINE__, __, recmtx) (void) \
-  { ThreadTable.rec_mutex_chain4init (&recmtx); }
-
-#define RAPICORN_COND_DECLARE_INITIALIZED(condname)                               \
-  RapicornCond condname = { 0 };                                                  \
-  static void RAPICORN_CONSTRUCTOR                                                \
-  RAPICORN_CPP_PASTE4 (__rapicorn_cond__autoinit, __LINE__, __, condname) (void)    \
-  { ThreadTable.cond_chain4init (&condname); }
-
 /* --- atomicity tests --- */
 static volatile guint atomic_count = 0;
-static RapicornMutex  atomic_mutex;
-static RapicornCond   atomic_cond;
+static Mutex          atomic_mutex;
+static Cond           atomic_cond;
 
 static void
 atomic_up_thread (gpointer data)
@@ -80,10 +51,10 @@ atomic_up_thread (gpointer data)
   volatile int *ip = (int*) data;
   for (guint i = 0; i < 25; i++)
     ThreadTable.atomic_int_add (ip, +3);
-  rapicorn_mutex_lock (&atomic_mutex);
+  atomic_mutex.lock();
   atomic_count -= 1;
-  ThreadTable.cond_signal (&atomic_cond);
-  rapicorn_mutex_unlock (&atomic_mutex);
+  atomic_cond.signal();
+  atomic_mutex.unlock();
   TASSERT (strcmp (ThreadTable.thread_name (ThreadTable.thread_self()), "AtomicTest") == 0);
 }
 
@@ -93,10 +64,10 @@ atomic_down_thread (gpointer data)
   volatile int *ip = (int*) data;
   for (guint i = 0; i < 25; i++)
     ThreadTable.atomic_int_add (ip, -4);
-  rapicorn_mutex_lock (&atomic_mutex);
+  atomic_mutex.lock();
   atomic_count -= 1; // FIXME: make this atomic
-  ThreadTable.cond_signal (&atomic_cond);
-  rapicorn_mutex_unlock (&atomic_mutex);
+  atomic_cond.signal();
+  atomic_mutex.unlock();
   TASSERT (strcmp (ThreadTable.thread_name (ThreadTable.thread_self()), "AtomicTest") == 0);
 }
 
@@ -107,21 +78,19 @@ test_atomic (void)
   int count = 44;
   RapicornThread *threads[count];
   volatile int atomic_counter = 0;
-  rapicorn_mutex_init (&atomic_mutex);
-  ThreadTable.cond_init (&atomic_cond);
   atomic_count = count;
   for (int i = 0; i < count; i++)
     {
       threads[i] = rapicorn_thread_run ("AtomicTest", (i&1) ? atomic_up_thread : atomic_down_thread, (void*) &atomic_counter);
       TASSERT (threads[i]);
     }
-  rapicorn_mutex_lock (&atomic_mutex);
+  atomic_mutex.lock();
   while (atomic_count > 0)
     {
       TACK();
-      ThreadTable.cond_wait (&atomic_cond, &atomic_mutex);
+      atomic_cond.wait (atomic_mutex);
     }
-  rapicorn_mutex_unlock (&atomic_mutex);
+  atomic_mutex.unlock();
   int result = count / 2 * 25 * +3 + count / 2 * 25 * -4;
   // g_printerr ("{ %d ?= %d }", atomic_counter, result);
   for (int i = 0; i < count; i++)
@@ -203,48 +172,46 @@ plus1_thread (gpointer data)
     ThreadTable.thread_sleep (-1);
 }
 
-static RAPICORN_MUTEX_DECLARE_INITIALIZED (static_mutex);
-static RAPICORN_REC_MUTEX_DECLARE_INITIALIZED (static_rec_mutex);
-static RAPICORN_COND_DECLARE_INITIALIZED (static_cond);
+static Mutex    static_mutex;
+static RecMutex static_rec_mutex;
+static Cond     static_cond;
 
 static void
 test_threads (void)
 {
-  static RapicornMutex test_mutex;
+  static Mutex test_mutex;
   gboolean locked;
   TSTART ("Threading");
   /* test C mutex */
-  rapicorn_mutex_init (&test_mutex);
-  locked = rapicorn_mutex_trylock (&test_mutex);
+  locked = test_mutex.trylock();
   TASSERT (locked);
-  locked = rapicorn_mutex_trylock (&test_mutex);
+  locked = test_mutex.trylock();
   TASSERT (!locked);
-  rapicorn_mutex_unlock (&test_mutex);
-  rapicorn_mutex_destroy (&test_mutex);
+  test_mutex.unlock();
   /* not initializing static_mutex */
-  locked = rapicorn_mutex_trylock (&static_mutex);
+  locked = static_mutex.trylock();
   TASSERT (locked);
-  locked = rapicorn_mutex_trylock (&static_mutex);
+  locked = static_mutex.trylock();
   TASSERT (!locked);
-  rapicorn_mutex_unlock (&static_mutex);
-  locked = rapicorn_mutex_trylock (&static_mutex);
+  static_mutex.unlock();
+  locked = static_mutex.trylock();
   TASSERT (locked);
-  rapicorn_mutex_unlock (&static_mutex);
+  static_mutex.unlock();
   /* not initializing static_rec_mutex */
-  locked = rapicorn_rec_mutex_trylock (&static_rec_mutex);
+  locked = static_rec_mutex.trylock();
   TASSERT (locked);
-  rapicorn_rec_mutex_lock (&static_rec_mutex);
-  locked = rapicorn_rec_mutex_trylock (&static_rec_mutex);
+  static_rec_mutex.lock();
+  locked = static_rec_mutex.trylock();
   TASSERT (locked);
-  rapicorn_rec_mutex_unlock (&static_rec_mutex);
-  rapicorn_rec_mutex_unlock (&static_rec_mutex);
-  rapicorn_rec_mutex_unlock (&static_rec_mutex);
-  locked = rapicorn_rec_mutex_trylock (&static_rec_mutex);
+  static_rec_mutex.unlock();
+  static_rec_mutex.unlock();
+  static_rec_mutex.unlock();
+  locked = static_rec_mutex.trylock();
   TASSERT (locked);
-  rapicorn_rec_mutex_unlock (&static_rec_mutex);
+  static_rec_mutex.unlock();
   /* not initializing static_cond */
-  ThreadTable.cond_signal (&static_cond);
-  ThreadTable.cond_broadcast (&static_cond);
+  static_cond.signal();
+  static_cond.broadcast();
   /* test C++ mutex */
   static Mutex mutex;
   static RecMutex rmutex;
