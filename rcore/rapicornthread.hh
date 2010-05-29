@@ -82,26 +82,26 @@ inline void    write_barrier (void)                           { __sync_synchroni
 inline void    full_barrier  (void)                           { __sync_synchronize(); }
 /* atomic integers */
 inline void    int_set  (volatile int  *iptr, int value)      { *iptr = value; write_barrier(); }
-inline int     int_get  (volatile int  *iptr)                 { read_barrier(); return *iptr; }
+inline int     int_get  (volatile int  *iptr)                 { return __sync_fetch_and_add (iptr, 0); }
 inline bool    int_cas  (volatile int  *iptr, int o, int n)   { return __sync_bool_compare_and_swap (iptr, o, n); }
 inline int     int_add  (volatile int  *iptr, int diff)       { return __sync_fetch_and_add (iptr, diff); }
 /* atomic unsigned integers */
 inline void    uint_set (volatile uint *uptr, uint value)     { *uptr = value; write_barrier(); }
-inline uint    uint_get (volatile uint *uptr)                 { read_barrier(); return *uptr; }
+inline uint    uint_get (volatile uint *uptr)                 { return __sync_fetch_and_add (uptr, 0); }
 inline bool    uint_cas (volatile uint *uptr, uint o, uint n) { return __sync_bool_compare_and_swap (uptr, o, n); }
 inline uint    uint_add (volatile uint *uptr, uint diff)      { return __sync_fetch_and_add (uptr, diff); }
 /* atomic size_t */
 inline void    sizet_set (volatile size_t *sptr, size_t value)       { *sptr = value; write_barrier(); }
-inline uint    sizet_get (volatile size_t *sptr)                     { read_barrier(); return *sptr; }
+inline uint    sizet_get (volatile size_t *sptr)                     { return __sync_fetch_and_add (sptr, 0); }
 inline bool    sizet_cas (volatile size_t *sptr, size_t o, size_t n) { return __sync_bool_compare_and_swap (sptr, o, n); }
 inline uint    sizet_add (volatile size_t *sptr, size_t diff)        { return __sync_fetch_and_add (sptr, diff); }
 /* atomic pointers */
 template<class V>
 inline void    ptr_set       (V* volatile *ptr_addr, V *n)      { *ptr_addr = n; write_barrier(); }
 template<class V>
-inline V*      ptr_get       (V* volatile *ptr_addr)            { read_barrier(); return *ptr_addr; }
+inline V*      ptr_get       (V* volatile *ptr_addr)            { return __sync_fetch_and_add (ptr_addr, 0); }
 template<class V>
-inline V*      ptr_get       (V* volatile const *ptr_addr)      { read_barrier(); return *ptr_addr; }
+inline V*      ptr_get       (V* volatile const *ptr_addr)      { return __sync_fetch_and_add (ptr_addr, 0); }
 template<class V>
 inline bool    ptr_cas       (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
 } // Atomic
@@ -200,10 +200,10 @@ class ScopedLock {
   volatile uint  m_count;
   RAPICORN_PRIVATE_CLASS_COPY (ScopedLock);
 public:
-  /*Des*/ ~ScopedLock () { while (m_count) unlock(); }
-  void     lock       () { m_mutex.lock(); m_count++; }
-  void     unlock     () { RAPICORN_ASSERT (m_count > 0); m_count--; m_mutex.unlock(); }
-  explicit ScopedLock (MUTEX &mutex, bool initlocked = true) :
+  inline     ~ScopedLock () { while (m_count) unlock(); }
+  inline void lock       () { m_mutex.lock(); m_count++; }
+  inline void unlock     () { RAPICORN_ASSERT (m_count > 0); m_count--; m_mutex.unlock(); }
+  inline      ScopedLock (MUTEX &mutex, bool initlocked = true) :
     m_mutex (mutex), m_count (0)
   { if (initlocked) lock(); }
 };
