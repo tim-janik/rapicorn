@@ -19,7 +19,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <glib.h> // FIXME: GTimeVal
+#include <sys/time.h>
 #include <algorithm>
 #include <cstring>
 
@@ -64,16 +64,17 @@ EventLoop::~EventLoop ()
 uint64
 EventLoop::get_current_time_usecs ()
 {
-  GTimeVal current_time;
-  g_get_current_time (&current_time);
-  return current_time.tv_sec * 1000000ULL + current_time.tv_usec;
+  struct timeval tv;
+  gettimeofday (&tv, NULL);
+  uint64 usecs = tv.tv_sec; // promote to 64 bit
+  return usecs * 1000000 + tv.tv_usec;
 }
 
 void
 EventLoop::remove (uint   id)
 {
   if (!try_remove (id))
-    g_warning ("%s: failed to remove loop source: %u", G_STRFUNC, id);
+    warning ("%s: failed to remove loop source: %u", RAPICORN_SIMPLE_FUNCTION, id);
 }
 
 class EventLoopImpl;
@@ -674,7 +675,7 @@ EventLoop::TimedSource::TimedSource (Signals::Trampoline0<bool> &bt,
 
 bool
 EventLoop::TimedSource::prepare (uint64 current_time_usecs,
-                                 int64   *timeout_usecs_p)
+                                 int64 *timeout_usecs_p)
 {
   if (current_time_usecs >= m_expiration_usecs)
     return true;                                            /* timeout expired */
@@ -684,7 +685,7 @@ EventLoop::TimedSource::prepare (uint64 current_time_usecs,
       if (current_time_usecs + interval < m_expiration_usecs)
         m_expiration_usecs = current_time_usecs + interval; /* clock warped back in time */
     }
-  *timeout_usecs_p = MIN (G_MAXINT, m_expiration_usecs - current_time_usecs);
+  *timeout_usecs_p = MIN (INT_MAX, m_expiration_usecs - current_time_usecs);
   return 0 == *timeout_usecs_p;
 }
 
