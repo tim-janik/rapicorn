@@ -1815,7 +1815,6 @@ Deletable::DeletionHook::~DeletionHook ()
 #define DELETABLE_MAP_HASH (19) /* use prime size for hashing, sums up to roughly 1k (use 83 for 4k) */
 struct DeletableAuxData {
   Deletable::DeletionHook* hooks;
-  String                   url;
   DeletableAuxData() : hooks (NULL) {}
   ~DeletableAuxData() { assert (hooks == NULL); }
 };
@@ -1898,9 +1897,6 @@ Deletable::remove_deletion_hook (DeletionHook *hook)
   //g_printerr ("DELETABLE-REM(%p,%p)\n", this, hook);
 }
 
-static Mutex                        object_url_mutex;
-static map<const String,Deletable*> object_url2deletable;
-
 /**
  * Invoke all deletion hooks installed on this deletable.
  */
@@ -1926,13 +1922,7 @@ Deletable::invoke_deletion_hooks()
           DeletableAuxData &ad = it->second;
           hooks = ad.hooks;
           ad.hooks = NULL;
-          String url = ad.url;
           deletable_maps[hashv].dmap.erase (it);
-          if (url.size() > 0)
-            {
-              AutoLocker locker (object_url_mutex); // always acquired _after_ dmap.mutex
-              object_url2deletable.erase (url);
-            }
         }
       else
         hooks = NULL;
