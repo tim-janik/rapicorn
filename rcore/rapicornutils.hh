@@ -385,7 +385,7 @@ class ReferenceCountable : public virtual Deletable {
   inline bool             ref_cas (uint32 oldv, uint32 newv) const
   { return __sync_bool_compare_and_swap (&ref_field, oldv, newv); }
   inline uint32           ref_get() const
-  { /*read_barrier:*/ __sync_synchronize(); return ref_field; }
+  { return __sync_fetch_and_add (&ref_field, 0); }
 protected:
   inline uint32
   ref_count() const
@@ -407,17 +407,11 @@ public:
   void
   ref() const
   {
-    uint32 old_ref = ref_get();
-    uint32 current_ref_count = old_ref & ~FLOATING_FLAG;
-    RAPICORN_ASSERT (current_ref_count > 0);
-    uint32 new_ref = old_ref + 1;
-    RAPICORN_ASSERT (new_ref & ~FLOATING_FLAG);       /* catch overflow */
-    while (RAPICORN_UNLIKELY (!ref_cas (old_ref, new_ref)))
-      {
-        old_ref = ref_get();
-        new_ref = old_ref + 1;
-        RAPICORN_ASSERT (new_ref & ~FLOATING_FLAG);   /* catch overflow */
-      }
+    // fast-path: use one atomic op and deferred checks
+    uint32 old_ref = __sync_fetch_and_add (&ref_field, 1);
+    uint32 new_ref = old_ref + 1;                       // ...and_add (,1)
+    RAPICORN_ASSERT (old_ref & ~FLOATING_FLAG);         // check dead objects
+    RAPICORN_ASSERT (new_ref & ~FLOATING_FLAG);         // check overflow
   }
   void
   ref_sink() const
@@ -444,28 +438,28 @@ public:
   void
   unref() const
   {
-    uint32 old_ref = ref_get();
-    uint32 current_ref_count = old_ref & ~FLOATING_FLAG;
-    RAPICORN_ASSERT (current_ref_count > 0);
+    uint32 old_ref = ref_field; // skip read-barrier for fast-path
+    if (RAPICORN_LIKELY (old_ref & ~(FLOATING_FLAG | 1)) && // old_ref >= 2
+        RAPICORN_LIKELY (ref_cas (old_ref, old_ref - 1)))
+      return; // trying fast-path with single atomic op
+    old_ref = ref_get();
     if (RAPICORN_UNLIKELY (1 == (old_ref & ~FLOATING_FLAG)))
       {
         ReferenceCountable *self = const_cast<ReferenceCountable*> (this);
         self->pre_finalize();
         old_ref = ref_get();
       }
-    uint32 new_ref = old_ref - 1;
-    RAPICORN_ASSERT (old_ref & ~FLOATING_FLAG);       /* catch underflow */
-    while (RAPICORN_UNLIKELY (!ref_cas (old_ref, new_ref)))
+    RAPICORN_ASSERT (old_ref & ~FLOATING_FLAG);         // old_ref > 1 ?
+    while (RAPICORN_UNLIKELY (!ref_cas (old_ref, old_ref - 1)))
       {
         old_ref = ref_get();
-        RAPICORN_ASSERT (old_ref & ~FLOATING_FLAG);   /* catch underflow */
-        new_ref = old_ref - 1;
+        RAPICORN_ASSERT (old_ref & ~FLOATING_FLAG);     // catch underflow
       }
-    if (RAPICORN_UNLIKELY (0 == (new_ref & ~FLOATING_FLAG)))
+    if (RAPICORN_UNLIKELY (1 == (old_ref & ~FLOATING_FLAG)))
       {
         ReferenceCountable *self = const_cast<ReferenceCountable*> (this);
         self->finalize();
-        self->delete_this(); // effectively: delete this;
+        self->delete_this();                            // usually: delete this;
       }
   }
   void                            ref_diag (const char *msg = NULL) const;
