@@ -24,7 +24,7 @@ namespace Rapicorn {
 
 class Array;
 class BaseValue;
-typedef ReferenceCountImpl  Object;
+typedef BaseObject Object;
 
 /* --- Value handling --- */
 struct BaseValue {

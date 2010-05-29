@@ -43,7 +43,7 @@ public:
                              const String &comment);
 };
 
-class Pixmap : public Pixbuf, public virtual ReferenceCountImpl {
+class Pixmap : public Pixbuf, public virtual BaseObject {
   String          m_comment;
 protected:
   virtual        ~Pixmap    ();

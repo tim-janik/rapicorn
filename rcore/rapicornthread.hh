@@ -119,7 +119,7 @@ public:
   /*Des*/       ~OwnedMutex ();
 };
 
-class Thread : public virtual ReferenceCountImpl {
+class Thread : public virtual BaseObject {
 protected:
   explicit              Thread          (const String      &name);
   virtual void          run             () = 0;

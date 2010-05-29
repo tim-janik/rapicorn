@@ -36,7 +36,7 @@ class Container;
 class Root;
 
 /* --- event handler --- */
-class EventHandler : public virtual ReferenceCountImpl {
+class EventHandler : public virtual BaseObject {
   typedef Signal<EventHandler, bool (const Event&), CollectorWhile0<bool> > EventSignal;
 protected:
   virtual bool  handle_event    (const Event    &event);
@@ -51,7 +51,7 @@ public:
 
 /* --- Item --- */
 typedef Signals::Slot1<void, Item&> ItemSlot;
-class Item : public virtual Convertible, public virtual DataListContainer, public virtual ReferenceCountImpl {
+class Item : public virtual Convertible, public virtual DataListContainer {
   friend                      class ClassDoctor;
   friend                      class Container;
   friend                      class SizeGroup;

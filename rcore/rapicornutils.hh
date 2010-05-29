@@ -377,20 +377,8 @@ protected:
   virtual       ~Deletable             ();
 };
 
-/* --- Locatable --- */
-class Locatable : public virtual Deletable {
-  mutable uint m_locatable_index;
-protected:
-  explicit          Locatable         ();
-  virtual          ~Locatable         ();
-public:
-  uint64            locatable_id      () const;
-  static Locatable* from_locatable_id (uint64 locatable_id);
-};
-
-/* --- ReferenceCountImpl --- */
-class ReferenceCountImpl : public virtual Locatable
-{
+/* --- ReferenceCountable --- */
+class ReferenceCountable : public virtual Deletable {
   volatile mutable uint32 ref_field;
   static const uint32     FLOATING_FLAG = 1 << 31;
   static void             stackcheck (const void*);
@@ -412,7 +400,7 @@ protected:
     return ref_get() & ~FLOATING_FLAG;
   }
 public:
-  ReferenceCountImpl (uint allow_stack_magic = 0) :
+  ReferenceCountable (uint allow_stack_magic = 0) :
     ref_field (FLOATING_FLAG + 1)
   {
     if (allow_stack_magic != 0xbadbad)
@@ -468,7 +456,7 @@ public:
     RAPICORN_ASSERT (current_ref_count > 0);
     if (RAPICORN_UNLIKELY (1 == (old_ref & ~FLOATING_FLAG)))
       {
-        ReferenceCountImpl *self = const_cast<ReferenceCountImpl*> (this);
+        ReferenceCountable *self = const_cast<ReferenceCountable*> (this);
         self->pre_finalize();
         old_ref = ref_get();
       }
@@ -482,7 +470,7 @@ public:
       }
     if (RAPICORN_UNLIKELY (0 == (new_ref & ~FLOATING_FLAG)))
       {
-        ReferenceCountImpl *self = const_cast<ReferenceCountImpl*> (this);
+        ReferenceCountable *self = const_cast<ReferenceCountable*> (this);
         self->finalize();
         self->delete_this(); // effectively: delete this;
       }
@@ -500,7 +488,7 @@ protected:
   virtual void pre_finalize       ();
   virtual void finalize           ();
   virtual void delete_this        ();
-  virtual     ~ReferenceCountImpl ();
+  virtual     ~ReferenceCountable ();
 };
 template<class Obj> static Obj& ref      (Obj &obj) { obj.ref();       return obj; }
 template<class Obj> static Obj* ref      (Obj *obj) { obj->ref();      return obj; }
@@ -511,8 +499,19 @@ template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
 template<class Obj> static void sink     (Obj &obj) { obj.ref_sink(); obj.unref(); }
 template<class Obj> static void sink     (Obj *obj) { obj->ref_sink(); obj->unref(); }
 
-/* --- ReferenceCountable --- */
-typedef ReferenceCountImpl ReferenceCountable; // FIXME: ReferenceCountImpl should be intern
+/* --- Locatable --- */
+class Locatable : public virtual ReferenceCountable {
+  mutable uint m_locatable_index;
+protected:
+  explicit          Locatable         ();
+  virtual          ~Locatable         ();
+public:
+  uint64            locatable_id      () const;
+  static Locatable* from_locatable_id (uint64 locatable_id);
+};
+
+/* --- BaseObject --- */
+class BaseObject : public virtual Locatable {};
 
 /* --- Binary Lookups --- */
 template<typename RandIter, class Cmp, typename Arg, int case_lookup_or_sibling_or_insertion>

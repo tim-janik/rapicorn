@@ -411,7 +411,7 @@ value_walker (const Iterator &begin, const Iterator &end)
 }
 
 /* --- Convertible --- */
-class Convertible : public virtual ReferenceCountImpl {
+class Convertible : public virtual BaseObject {
 public:
   /* interface matching base class */
   class InterfaceMatch {

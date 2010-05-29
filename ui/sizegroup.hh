@@ -22,7 +22,7 @@
 namespace Rapicorn {
 
 /* --- SizeGroup --- */
-class SizeGroup : public virtual ReferenceCountImpl {
+class SizeGroup : public virtual BaseObject {
   friend            class ClassDoctor;
   friend            class Item;
 protected:

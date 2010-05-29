@@ -21,7 +21,7 @@
 
 namespace Rapicorn {
 
-struct Command : ReferenceCountImpl {
+struct Command : ReferenceCountable {
   const String ident;
   const String blurb;
   bool         needs_arg;

@@ -22,7 +22,7 @@
 
 namespace Rapicorn {
 
-class DebugChannel : public virtual ReferenceCountImpl {
+class DebugChannel : public virtual ReferenceCountable {
   RAPICORN_PRIVATE_CLASS_COPY (DebugChannel);
 protected:
   explicit              DebugChannel        ();

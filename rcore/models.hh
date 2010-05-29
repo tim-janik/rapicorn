@@ -23,7 +23,7 @@
 namespace Rapicorn {
 
 /* --- Data Models --- */
-class Model0 : public virtual ReferenceCountImpl { // 1*Type + 1*Value
+class Model0 : public virtual BaseObject { // 1*Type + 1*Value
   class Model0Value : public BaseValue {
     virtual void        changed         ();
   public:
@@ -49,7 +49,7 @@ typedef class Model0 Variable;
 
 class Store1;
 class Selection1;
-class Model1 : public virtual ReferenceCountImpl { // 1*Type + n*Value
+class Model1 : public virtual BaseObject { // 1*Type + n*Value
   typedef Signal<Model1, void (uint64,uint64)> RangeSignal;
   Type            m_type;
   Selection1     &m_selection;
@@ -89,7 +89,7 @@ public:
   RangeSignal     sig_selection_changed;
 };
 
-class Store1 : public virtual ReferenceCountImpl { // 1*Type + n*Value
+class Store1 : public virtual BaseObject { // 1*Type + n*Value
 protected:
   virtual              ~Store1          (void);
   virtual Model1&       pget_model      (void) = 0;

@@ -28,7 +28,7 @@ record Requisition {
   float height;
 };
 
-interface Window : ReferenceCountable {
+interface Window : BaseObject {
   bool          viewable        () = 0;
   void          show            () = 0;
   bool          closed          () = 0;
@@ -37,7 +37,7 @@ interface Window : ReferenceCountable {
                                  StringList args);
 };
 
-interface Application : ReferenceCountable {
+interface Application : BaseObject {
   /* startup */
   void          init_with_x11   (string         application_name,
                                  StringList     cmdline_args);

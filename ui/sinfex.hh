@@ -21,7 +21,7 @@
 
 namespace Rapicorn {
 
-class Sinfex : public virtual ReferenceCountImpl {
+class Sinfex : public virtual ReferenceCountable {
   RAPICORN_PRIVATE_CLASS_COPY (Sinfex);
 protected:
   uint          *m_start;

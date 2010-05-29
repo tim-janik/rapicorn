@@ -24,7 +24,7 @@ namespace Rapicorn {
 class Root;
 class Item;
 
-class Heritage : public virtual ReferenceCountImpl {
+class Heritage : public virtual BaseObject {
   friend        class ClassDoctor;
   class Internals;
   Internals    *m_internals;

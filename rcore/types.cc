@@ -39,7 +39,7 @@ Type::storage_name () const
 
 #warning FIXME: missing implementations: n_entries entry prerequisites n_fields field elements main_type
 
-struct Type::Info : public ReferenceCountImpl {
+struct Type::Info : public ReferenceCountable {
   Plic::TypeInfo plic_type_info;
   explicit Info (const Plic::TypeInfo &tmpl) :
     plic_type_info (tmpl)

@@ -195,7 +195,7 @@ test_value_string ()
   assert (v1.string() == "x");
 }
 
-struct TestObject : public virtual ReferenceCountImpl {};
+struct TestObject : public virtual BaseObject {};
 
 static void
 test_array_auto_value ()

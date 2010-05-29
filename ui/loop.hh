@@ -44,7 +44,7 @@ struct PollFD // mirror struct pollfd for poll(3posix)
 };
 
 /* --- EventLoop --- */
-class EventLoop : public virtual ReferenceCountImpl {
+class EventLoop : public virtual BaseObject {
   friend class RapicornTester;
   friend class Application;
   class TimedSource;
@@ -110,7 +110,7 @@ public:
 };
 
 /* --- EventLoop::Source --- */
-class EventLoop::Source : public virtual ReferenceCountImpl {
+class EventLoop::Source : public virtual ReferenceCountable {
   friend       class EventLoopImpl;
   EventLoop    *m_main_loop;
   struct {

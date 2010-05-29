@@ -191,8 +191,7 @@ test_virtual_typeid()
   TASSERT (strstr (b.typeid_pretty_name().c_str(), "TypeB") != NULL);
 }
 
-struct SomeObject : public ReferenceCountImpl {
-};
+struct SomeObject : public BaseObject {};
 
 static void
 test_id_allocator ()

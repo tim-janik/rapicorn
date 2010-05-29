@@ -21,7 +21,7 @@
 
 namespace Rapicorn {
 
-class XmlNode : public virtual ReferenceCountImpl {
+class XmlNode : public virtual BaseObject {
   String                m_name; // element name
   XmlNode              *m_parent;
   StringVector          m_attribute_names;

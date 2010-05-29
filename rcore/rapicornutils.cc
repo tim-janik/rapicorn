@@ -2091,7 +2091,7 @@ Locatable::from_locatable_id (uint64 locatable_id)
   return _this;
 }
 
-/* --- ReferenceCountImpl --- */
+/* --- ReferenceCountable --- */
 static const size_t stack_proximity_threshold = 4096; // <= page_size on most systems
 
 static __attribute__ ((noinline))
@@ -2105,40 +2105,40 @@ stack_ptrdiff (const void *stackvariable,
 }
 
 void
-ReferenceCountImpl::stackcheck (const void *data)
+ReferenceCountable::stackcheck (const void *data)
 {
   int stackvariable = 0;
-  /* this check for ReferenceCountImpl instance allocations on the stack isn't
+  /* this check for ReferenceCountable instance allocations on the stack isn't
    * perfect, but should catch the most common cases for growing and shrinking stacks
    */
   if (stack_ptrdiff (&stackvariable, data) < stack_proximity_threshold)
-    error ("ReferenceCountImpl object allocated on stack instead of heap: %u > %u (%p - %p)",
+    error ("ReferenceCountable object allocated on stack instead of heap: %u > %u (%p - %p)",
            stack_proximity_threshold,
            stack_ptrdiff (&stackvariable, data),
            data, &stackvariable);
 }
 
 void
-ReferenceCountImpl::ref_diag (const char *msg) const
+ReferenceCountable::ref_diag (const char *msg) const
 {
-  fprintf (stderr, "%s: this=%p ref_count=%d floating=%d", msg ? msg : "ReferenceCountImpl", this, ref_count(), floating());
+  fprintf (stderr, "%s: this=%p ref_count=%d floating=%d", msg ? msg : "ReferenceCountable", this, ref_count(), floating());
 }
 
 void
-ReferenceCountImpl::pre_finalize ()
+ReferenceCountable::pre_finalize ()
 {}
 
 void
-ReferenceCountImpl::finalize ()
+ReferenceCountable::finalize ()
 {}
 
 void
-ReferenceCountImpl::delete_this ()
+ReferenceCountable::delete_this ()
 {
   delete this;
 }
 
-ReferenceCountImpl::~ReferenceCountImpl ()
+ReferenceCountable::~ReferenceCountable ()
 {
   RAPICORN_ASSERT (ref_count() == 0);
 }

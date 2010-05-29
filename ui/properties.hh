@@ -22,7 +22,7 @@
 
 namespace Rapicorn {
 
-struct Property : ReferenceCountImpl {
+struct Property : ReferenceCountable {
   const char *ident;
   char       *label;
   char       *blurb;

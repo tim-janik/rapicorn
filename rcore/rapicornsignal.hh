@@ -33,14 +33,14 @@ struct EmissionBase {
 };
 
 /* --- TrampolineLink --- */
-struct TrampolineLink : public ReferenceCountImpl {
+struct TrampolineLink : public ReferenceCountable {
   TrampolineLink *next, *prev;
   uint            callable : 1;
   uint            with_emitter : 1;
   virtual bool    operator== (const TrampolineLink &other) const = 0;
   virtual        ~TrampolineLink();
   TrampolineLink (uint allow_stack_magic = 0) :
-    ReferenceCountImpl (allow_stack_magic),
+    ReferenceCountable (allow_stack_magic),
     next (NULL), prev (NULL), callable (true), with_emitter (false)
   {}
   RAPICORN_PRIVATE_CLASS_COPY (TrampolineLink);
