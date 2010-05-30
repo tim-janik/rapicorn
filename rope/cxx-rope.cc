@@ -98,7 +98,6 @@ class UIThread : public Thread {
 protected:
   class ProcSource : public virtual EventLoop::Source {
     UIThread &m_thread;
-    RAPICORN_PRIVATE_CLASS_COPY (ProcSource);
   protected:
     /*Des*/     ~ProcSource() {}
     virtual bool prepare  (uint64 current_time_usecs,

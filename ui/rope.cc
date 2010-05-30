@@ -20,7 +20,6 @@
 namespace Rapicorn {
 
 class DispatchSource : public virtual EventLoop::Source {
-  RAPICORN_PRIVATE_CLASS_COPY (DispatchSource);
 protected:
   virtual bool
   prepare  (uint64 current_time_usecs,

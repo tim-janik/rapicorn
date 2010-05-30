@@ -156,7 +156,6 @@ struct Signal3 : SignalEmittable3<Emitter, R0, A1, A2, A3, Collector>
   Signal3&    operator-= (const SlotE &s) { disconnect (s); return *this; }
   Signal3&    operator-= (R0 (*callback) (A1, A2, A3))            { disconnect (slot (callback)); return *this; }
   Signal3&    operator-= (R0 (*callback) (Emitter&, A1, A2, A3))  { disconnect (slot (callback)); return *this; }
-  RAPICORN_PRIVATE_CLASS_COPY (Signal3);
 };
 
 /* --- Signal<> --- */
@@ -170,6 +169,5 @@ struct Signal<Emitter, R0 (A1, A2, A3), Collector> : Signal3<Emitter, R0, A1, A2
   explicit Signal (Emitter &emitter, R0 (Emitter::*method) (A1, A2, A3)) :
     Signal3Base (emitter, method)
     {}
-  RAPICORN_PRIVATE_CLASS_COPY (Signal);
 };
 

@@ -31,7 +31,6 @@ Event::~Event()
 {}
 
 class EventImpl : public Event {
-  RAPICORN_PRIVATE_CLASS_COPY (EventImpl);
 public:
   explicit EventImpl (EventType           etype,
                       const EventContext &econtext) :

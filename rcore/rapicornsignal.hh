@@ -33,7 +33,7 @@ struct EmissionBase {
 };
 
 /* --- TrampolineLink --- */
-struct TrampolineLink : public ReferenceCountable {
+struct TrampolineLink : public ReferenceCountable, protected NonCopyable {
   TrampolineLink *next, *prev;
   uint            callable : 1;
   uint            with_emitter : 1;
@@ -43,11 +43,10 @@ struct TrampolineLink : public ReferenceCountable {
     ReferenceCountable (allow_stack_magic),
     next (NULL), prev (NULL), callable (true), with_emitter (false)
   {}
-  RAPICORN_PRIVATE_CLASS_COPY (TrampolineLink);
 };
 
 /* --- SignalBase --- */
-class SignalBase {
+class SignalBase : protected NonCopyable {
   class EmbeddedLink : public TrampolineLink {
     virtual bool operator== (const TrampolineLink &other) const;
     virtual void delete_this ();
@@ -114,7 +113,6 @@ private:
     link->prev = link->next = NULL;
     link->unref();
   }
-  RAPICORN_PRIVATE_CLASS_COPY (SignalBase);
 };
 
 /* --- Signal Iterator --- */
@@ -439,7 +437,6 @@ struct SignalFinalize : Signal0 <Emitter, void, ScopeReferenceFinalizationMark> 
   typedef Signal0<Emitter, void, ScopeReferenceFinalizationMark> Signal0Base;
   explicit SignalFinalize (Emitter &emitter)                             : Signal0Base (emitter) {}
   explicit SignalFinalize (Emitter &emitter, void (Emitter::*method) ()) : Signal0Base (emitter, method) {}
-  RAPICORN_PRIVATE_CLASS_COPY (SignalFinalize);
 };
 
 template<class Emitter>
@@ -447,7 +444,6 @@ struct SignalVoid : Signal0 <Emitter, void> {
   typedef Signal0<Emitter, void> Signal0Base;
   explicit SignalVoid (Emitter &emitter)                                 : Signal0Base (emitter) {}
   explicit SignalVoid (Emitter &emitter, void (Emitter::*method) (void)) : Signal0Base (emitter, method) {}
-  RAPICORN_PRIVATE_CLASS_COPY (SignalVoid);
 };
 
 } // Signals

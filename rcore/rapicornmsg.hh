@@ -23,7 +23,7 @@
 namespace Rapicorn {
 
 /* --- messaging --- */
-struct Msg {
+struct Msg : protected NonCopyable {
   /* message parts */
   struct Part;                           /* base for Text* and Check */
   struct Text0; typedef Text0 Title;     /* message title */
@@ -110,7 +110,6 @@ protected:
                                       Type                message_type,
                                       const char         *format,
                                       va_list             args);
-  RAPICORN_PRIVATE_CLASS_COPY (Msg);
 private:
   static volatile int    n_msg_types;
   static uint8 *volatile msg_type_bits;
@@ -145,14 +144,13 @@ public:
     explicit RAPICORN_PRINTF (3, 4) Custom (uint8 ctype, const char *format, ...) { va_list a; va_start (a, format); setup (ctype | 0x80, format, a); va_end (a); }
     explicit                      Custom (uint8 ctype, const String &s)         { setup (ctype | 0x80, s); }
   };
-  struct CustomType {
+  struct CustomType : protected NonCopyable {
     Type type;
     explicit CustomType (const char         *ident,
                          Type                default_ouput,
                          const char         *label = NULL) :
       type (register_type (ident, default_ouput, label))
     {}
-    RAPICORN_PRIVATE_CLASS_COPY (CustomType);
   };
 };
 

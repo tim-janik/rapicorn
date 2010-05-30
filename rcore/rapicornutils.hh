@@ -116,10 +116,17 @@ void rapicorn_runtime_problemv (char        ewran_tag,
                                 const char *msgformat,
                                 va_list     msgargs);
 
+/* --- NonCopyable --- */
+class NonCopyable {
+  NonCopyable& operator=   (const NonCopyable&);
+  /*Copy*/     NonCopyable (const NonCopyable&);
+protected:
+  /*Con*/      NonCopyable () {}
+  /*Des*/     ~NonCopyable () {}
+};
+
 /* --- private class copies, class ClassDoctor --- */
-#define RAPICORN_PRIVATE_CLASS_COPY(Class)        private: Class (const Class&); Class& operator= (const Class&);
 #ifdef  RAPICORN_INTERNALS
-#define PRIVATE_CLASS_COPY                      RAPICORN_PRIVATE_CLASS_COPY
 class ClassDoctor;
 #else   /* !RAPICORN_INTERNALS */
 class ClassDoctor {};
@@ -139,12 +146,11 @@ int64        init_value_int     (InitValue  *value);
 String       process_handle     ();
 
 /* --- initialization hooks --- */
-class InitHook {
+class InitHook : protected NonCopyable {
   typedef void (*InitHookFunc) (void);
   InitHook    *next;
   int          priority;
   InitHookFunc hook;
-  RAPICORN_PRIVATE_CLASS_COPY (InitHook);
   static void  invoke_hooks (void);
 public:
   explicit InitHook (InitHookFunc _func,
@@ -310,8 +316,7 @@ void* malloc_aligned            (size_t                total_size,
                                  uint8               **free_pointer);
 
 /* --- Id Allocator --- */
-class IdAllocator {
-  RAPICORN_PRIVATE_CLASS_COPY (IdAllocator);
+class IdAllocator : protected NonCopyable {
 protected:
   explicit            IdAllocator ();
 public:
@@ -691,7 +696,7 @@ public: /* generic data API */
 };
 
 /* --- BaseObject --- */
-class BaseObject : public virtual Locatable, public virtual DataListContainer {
+class BaseObject : public virtual Locatable, public virtual DataListContainer, protected NonCopyable {
 protected:
   static BaseObject* plor_get  (const String &plor_url);
   void               plor_name (const String &plor_name);

@@ -63,7 +63,6 @@ class Item : public virtual Convertible {
   Container**                 _parent_loc        () { return &m_parent; }
   void                        propagate_heritage ();
   void                        heritage           (Heritage  *heritage);
-  RAPICORN_PRIVATE_CLASS_COPY  (Item);
 protected:
   virtual void                constructed             ();
   /* flag handling */

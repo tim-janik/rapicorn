@@ -22,8 +22,7 @@
 
 namespace Rapicorn {
 
-class DebugChannel : public virtual ReferenceCountable {
-  RAPICORN_PRIVATE_CLASS_COPY (DebugChannel);
+class DebugChannel : public virtual ReferenceCountable, protected NonCopyable {
 protected:
   explicit              DebugChannel        ();
   virtual               ~DebugChannel       ();
@@ -45,10 +44,9 @@ DebugChannel::printf (const char *format,
 }
 
 /* test dump */
-class TestStream {
+class TestStream : protected NonCopyable {
 public:
   typedef enum { TEXT, NODE, VALUE, INTERN, INDENT, POPNODE, POPINDENT } Kind;
-  RAPICORN_PRIVATE_CLASS_COPY  (TestStream);
 protected:
   /*Con*/       TestStream              ();
   virtual void  ddump                   (Kind kind, const String &name, const String &val) = 0;

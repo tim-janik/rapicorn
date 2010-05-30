@@ -664,10 +664,9 @@ struct AffineShear : Affine {
 };
 
 /* --- Plane --- */
-class Plane : public virtual Pixbuf {
+class Plane : public virtual Pixbuf, protected NonCopyable {
   int     m_x, m_y;
   Color   peek_color (uint x, uint y) const { const uint32 *p = peek (x, y); return Color::from_premultiplied (*p); }
-  RAPICORN_PRIVATE_CLASS_COPY (Plane);
   struct Initializer {
     int m_x, m_y, m_width, m_height;
     Initializer (int x, int y, int width, int height) : m_x (x), m_y (y), m_width (width), m_height (height) {}
@@ -748,7 +747,7 @@ public:
 };
 
 /* --- Display --- */
-class Display {
+class Display : protected NonCopyable {
   struct Layer {
     Plane      *plane;
     CombineType ctype;
@@ -756,7 +755,6 @@ class Display {
   };
   std::list<Layer> layer_stack;
   std::list<Rect>  clip_stack;
-  RAPICORN_PRIVATE_CLASS_COPY (Display);
 public:
   explicit      Display();
   virtual       ~Display();

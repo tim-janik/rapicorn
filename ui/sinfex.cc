@@ -184,7 +184,6 @@ class SinfexExpression : public virtual Sinfex {
       }
   }
   Value eval_op (Scope &scope, uint opx);
-  RAPICORN_PRIVATE_CLASS_COPY (SinfexExpression);
 public:
   SinfexExpression (const SinfexExpressionStack &estk)
   {

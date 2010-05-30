@@ -54,9 +54,8 @@ WinPtr          create_winptr    (const String           &window_identifier,
 bool    item_definition_is_root (const String   &item_identifier);
 
 /* --- item type registration --- */
-struct ItemTypeFactory : Deletable {
+struct ItemTypeFactory : protected Deletable, protected NonCopyable {
   const String  qualified_type;
-  RAPICORN_PRIVATE_CLASS_COPY (ItemTypeFactory);
 protected:
   static void   register_item_factory   (const ItemTypeFactory  *itfactory);
   static void   sanity_check_identifier (const char             *namespaced_ident);
@@ -74,7 +73,6 @@ public:
 template<class Type>
 class ItemFactory : Factory::ItemTypeFactory {
   String m_internal_name;
-  RAPICORN_PRIVATE_CLASS_COPY (ItemFactory);
   virtual Item*
   create_item (const String &name) const
   {

@@ -21,8 +21,7 @@
 
 namespace Rapicorn {
 
-class Viewport : public virtual Deletable {
-  RAPICORN_PRIVATE_CLASS_COPY (Viewport);
+class Viewport : public virtual Deletable, protected NonCopyable {
 protected:
   explicit              Viewport                () {}
 public:
@@ -134,8 +133,7 @@ public:
                                                  double          dest_x,
                                                  double          dest_y) = 0;
   /* --- backend API --- */
-  class FactoryBase {
-    RAPICORN_PRIVATE_CLASS_COPY (FactoryBase);
+  class FactoryBase : protected NonCopyable {
     friend class Viewport;
   protected:
     virtual          ~FactoryBase      ();
@@ -147,7 +145,6 @@ public:
   };
   template<class Backend>
   class Factory : public virtual FactoryBase {
-    RAPICORN_PRIVATE_CLASS_COPY (Factory);
   public:
     explicit          Factory          (const String  &name) : FactoryBase (name) { register_backend (*this); }
     virtual Viewport* create_viewport  (WindowType     viewport_type,

@@ -53,7 +53,6 @@ class EventLoop : public virtual BaseObject {
                                  bool may_dispatch);
   static void   kill_loops      ();
   static bool   loops_exitable  ();
-  RAPICORN_PRIVATE_CLASS_COPY (EventLoop);
 protected:
   typedef Signals::Slot1<void,PollFD&> VPfdSlot;
   typedef Signals::Slot1<bool,PollFD&> BPfdSlot;
@@ -110,7 +109,7 @@ public:
 };
 
 /* --- EventLoop::Source --- */
-class EventLoop::Source : public virtual ReferenceCountable {
+class EventLoop::Source : public virtual ReferenceCountable, protected NonCopyable {
   friend       class EventLoopImpl;
   EventLoop    *m_main_loop;
   struct {
@@ -125,7 +124,6 @@ class EventLoop::Source : public virtual ReferenceCountable {
   uint         m_was_dispatching : 1;
   uint         m_exitable : 1;
   uint         n_pfds      ();
-  RAPICORN_PRIVATE_CLASS_COPY (Source);
 protected:
   explicit     Source      ();
 public:
@@ -154,7 +152,6 @@ class EventLoop::TimedSource : public virtual EventLoop::Source {
     Signals::Trampoline0<bool> *m_btrampoline;
     Signals::Trampoline0<void> *m_vtrampoline;
   };
-  RAPICORN_PRIVATE_CLASS_COPY (TimedSource);
 protected:
   virtual     ~TimedSource  ();
   virtual bool prepare      (uint64 current_time_usecs,
@@ -198,7 +195,6 @@ private:
     Signals::Trampoline1<bool,PollFD&> *m_btrampoline;
     Signals::Trampoline1<void,PollFD&> *m_vtrampoline;
   };
-  RAPICORN_PRIVATE_CLASS_COPY (PollFDSource);
 public:
   explicit      PollFDSource    (Signals::Trampoline1<bool,PollFD&> &bt,
                                  int                                 fd,

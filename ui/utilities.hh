@@ -414,8 +414,7 @@ value_walker (const Iterator &begin, const Iterator &end)
 class Convertible : public virtual BaseObject {
 public:
   /* interface matching base class */
-  class InterfaceMatch {
-    RAPICORN_PRIVATE_CLASS_COPY (InterfaceMatch);
+  class InterfaceMatch : protected NonCopyable {
   public:
     virtual            ~InterfaceMatch  () {}
     explicit            InterfaceMatch  (const String &ident) : m_ident (ident), m_match_found (false) {}

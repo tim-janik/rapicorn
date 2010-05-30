@@ -28,10 +28,9 @@ bool        once_enter_impl (volatile size_t *value_location);
 void        once_leave      (volatile size_t *value_location,
                              size_t           initialization_value);
 
-class Mutex {
+class Mutex : protected NonCopyable {
   RapicornMutex mutex;
   friend class Cond;
-  RAPICORN_PRIVATE_CLASS_COPY (Mutex);
 public:
   explicit      Mutex   ();
   void          lock    ();
@@ -40,9 +39,8 @@ public:
   /*Des*/       ~Mutex  ();
 };
 
-class RecMutex {
+class RecMutex : protected NonCopyable {
   RapicornRecMutex rmutex;
-  RAPICORN_PRIVATE_CLASS_COPY (RecMutex);
 public:
   explicit      RecMutex  ();
   void          lock      ();
@@ -51,9 +49,8 @@ public:
   /*Des*/       ~RecMutex ();
 };
 
-class Cond {
+class Cond : protected NonCopyable {
   RapicornCond cond;
-  RAPICORN_PRIVATE_CLASS_COPY (Cond);
 public:
   explicit      Cond          ();
   void          signal        ();
@@ -106,11 +103,10 @@ template<class V>
 inline bool    ptr_cas       (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
 } // Atomic
 
-class OwnedMutex {
+class OwnedMutex : protected NonCopyable {
   RecMutex m_rec_mutex;
   Thread * volatile m_owner;
   uint     volatile m_count;
-  RAPICORN_PRIVATE_CLASS_COPY (OwnedMutex);
 public:
   explicit       OwnedMutex ();
   inline void    lock       ();
@@ -179,7 +175,6 @@ private:
   void                  thread_lock     ()                              { m_omutex.lock(); }
   bool                  thread_trylock  ()                              { return m_omutex.trylock(); }
   void                  thread_unlock   ()                              { m_omutex.unlock(); }
-  RAPICORN_PRIVATE_CLASS_COPY (Thread);
 protected:
   class ThreadWrapperInternal;
   static void threadxx_wrap   (RapicornThread *cthread);
@@ -195,10 +190,9 @@ protected:
  * public methods lock() and unlock().
  */
 template<class MUTEX>
-class ScopedLock {
+class ScopedLock : protected NonCopyable {
   MUTEX         &m_mutex;
   volatile uint  m_count;
-  RAPICORN_PRIVATE_CLASS_COPY (ScopedLock);
 public:
   inline     ~ScopedLock () { while (m_count) unlock(); }
   inline void lock       () { m_mutex.lock(); m_count++; }
@@ -211,11 +205,10 @@ public:
 namespace Atomic {
 
 template<typename T>
-class RingBuffer {
+class RingBuffer : protected NonCopyable {
   const uint    m_size;
   T            *m_buffer;
   volatile uint m_wmark, m_rmark;
-  RAPICORN_PRIVATE_CLASS_COPY (RingBuffer);
 public:
   explicit
   RingBuffer (uint bsize) :
