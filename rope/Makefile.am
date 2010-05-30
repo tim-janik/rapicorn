@@ -96,9 +96,9 @@ check-cppskels:
 	@echo -e "#include <rapicorn.hh>\n" \
 	  "class ProtoRecord; class ProtoSequence; class ProtoArg; class ProtoMessage;" \
 	  > $(TSTOUT)
-	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g interface \
+	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g serverhh \
 	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT)
-	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g interface-skel \
+	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g server-skel \
 	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testcppskels.ref)
 	@$(call TSTTITLE, check-cppskels-syntax)
