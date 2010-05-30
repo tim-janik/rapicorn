@@ -27,6 +27,7 @@
 #include <vector>
 #include <algorithm>
 #include <cstring>
+#include <stdexcept>
 #include <iconv.h>
 #include "rapicornutils.hh"
 #include "rapicornutf8.hh"
@@ -325,6 +326,39 @@ RAPICORN_STATIC_ASSERT (LDBL_MAX     >= 1E+37);
 RAPICORN_STATIC_ASSERT (LDBL_EPSILON <= 1E-9);
 
 /* --- assertions, warnings, errors --- */
+static String
+prgname_prefix (const String &kind = "")
+{
+  const char *prgname = g_get_prgname();
+  const String mkind = kind + (kind.empty() ? "" : ":");
+  if (prgname)
+    return string_printf ("%s[%u]:%s ", prgname, Thread::Self::pid(), kind.c_str());
+  else
+    return string_printf ("[PID=%u]:%s ", Thread::Self::pid(), kind.c_str());
+}
+
+struct RuntimeError : public std::runtime_error {
+  virtual ~RuntimeError () throw() {}
+  explicit RuntimeError (const String &str) : runtime_error (str) {}
+};
+
+void
+throw_error (const char *format, ...)
+{
+  va_list args;
+  va_start (args, format);
+  String ers = prgname_prefix() + string_vprintf (format, args);
+  va_end (args);
+  throw RuntimeError (ers);
+}
+
+void
+throw_error (const String &s)
+{
+  String ers = prgname_prefix() + s;
+  throw RuntimeError (ers);
+}
+
 void
 error (const char *format,
        ...)
@@ -340,9 +374,7 @@ void
 error (const String &s)
 {
   fflush (stdout);
-  String msg ("\nERROR: ");
-  msg += s;
-  msg += "\naborting...\n";
+  String msg ("\n" + prgname_prefix ("ERROR") + s + "\naborting...\n");
   fputs (msg.c_str(), stderr);
   fflush (stderr);
   BREAKPOINT();
@@ -363,9 +395,7 @@ warning (const char *format,
 void
 warning (const String &s)
 {
-  String msg ("\nWARNING: ");
-  msg += s;
-  msg += '\n';
+  String msg (prgname_prefix ("WARNING") + s + '\n');
   fflush (stdout);
   fputs (msg.c_str(), stderr);
   fflush (stderr);
@@ -385,9 +415,7 @@ diag (const char *format,
 void
 diag (const String &s)
 {
-  String msg ("DIAG: ");
-  msg += s;
-  msg += '\n';
+  String msg (prgname_prefix ("DIAG") + s + '\n');
   fflush (stdout);
   fputs (msg.c_str(), stderr);
   fflush (stderr);
@@ -414,40 +442,12 @@ diag_errno (const String &s)
 void
 info_always (const String &s)
 {
-  String msg ("INFO: ");
-  msg += s;
-  msg += '\n';
+  String msg (prgname_prefix ("INFO") + s + '\n');
   fflush (stdout);
   fputs (msg.c_str(), stderr);
   fflush (stderr);
 }
-bool info_needed = true;
-
-void
-errmsg (const String &entity,
-        const char *format,
-        ...)
-{
-  fflush (stdout);
-  va_list args;
-  va_start (args, format);
-  String ers = string_vprintf (format, args);
-  va_end (args);
-  errmsg (entity, ers);
-}
-
-void
-errmsg (const String &entity,
-        const String &s)
-{
-  String msg (entity);
-  msg += entity.size() ? ": " : "DEBUG: ";
-  msg += s;
-  msg += '\n';
-  fflush (stdout);
-  fputs (msg.c_str(), stderr);
-  fflush (stderr);
-}
+bool info_needed = true; // adjusted upon Rapicorn initialization
 
 void
 printerr (const char   *format,

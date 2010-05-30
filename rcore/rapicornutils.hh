@@ -158,6 +158,8 @@ public:
 };
 
 /* --- assertions, warnings, errors --- */
+void        throw_error         (const char *format, ...) RAPICORN_PRINTF (1, 2);
+void        throw_error         (const String &s);
 void        error               (const char   *format, ...) RAPICORN_PRINTF (1, 2) RAPICORN_NORETURN;
 void        error               (const String &s) RAPICORN_NORETURN;
 void        warning             (const char   *format, ...) RAPICORN_PRINTF (1, 2);
@@ -168,8 +170,6 @@ void        diag_errno          (const char   *format, ...) RAPICORN_PRINTF (1, 
 void        diag_errno          (const String &s);
 inline void info                (const char   *format, ...) RAPICORN_PRINTF (1, 2);
 inline void info                (const String &s);
-void        errmsg              (const String &entity, const char *format, ...) RAPICORN_PRINTF (2, 3);
-void        errmsg              (const String &entity, const String &s);
 void        printerr            (const char   *format, ...) RAPICORN_PRINTF (1, 2);
 void        printout            (const char   *format, ...) RAPICORN_PRINTF (1, 2);
 void        raise_sigtrap       ();
