@@ -461,7 +461,7 @@ class Generator:
     else:
       l = ['public ' + pr.name for pr in l] # types -> names
       if not l:
-        l = ['public virtual Plic::SimpleProxy']
+        l = ['public virtual Plic::SmartHandle']
     s += 'class %s%s' % (type_info.name, _Iface)
     if l:
       s += ' : %s' % ', '.join (l)

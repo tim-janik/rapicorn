@@ -240,7 +240,7 @@ public:
   virtual std::string     on_click2out  ();
   virtual void            on_click2in   (const std::string &command);
 };
-class UIWidgetArea : public virtual Plic::SimpleProxy {
+class UIWidgetArea : public virtual Plic::SmartHandle {
 public:
   // double          simple_method ();
   // double          single_arg    (int);
@@ -262,7 +262,7 @@ protected:
   virtual /*Des*/         ~Parent_Iface () = 0;
 public:
 };
-class Parent : public virtual Plic::SimpleProxy {
+class Parent : public virtual Plic::SmartHandle {
 public:
   inline Parent_Iface&  operator*  () const { return *dynamic_cast<Parent_Iface*> (_iface()); }
   inline Parent_Iface*  operator-> () const { return dynamic_cast<Parent_Iface*> (_iface()); }
@@ -342,7 +342,7 @@ public:
   virtual GrandChild_Iface* method_with_interface (GrandChild_Iface &input,
                                                    GrandChild_Iface &optval = *(GrandChild_Iface*) NULL);
 };
-class MethodTestInterface : public virtual Plic::SimpleProxy {
+class MethodTestInterface : public virtual Plic::SmartHandle {
 public:
   // void            method_with_void      ();
   // bool            method_with_bools     (bool, bool);
@@ -377,7 +377,7 @@ public:
   // Signal_check_activate sig_check_activate;
   // Signal_activate sig_activate;
 };
-class ButtonArea : public virtual Plic::SimpleProxy {
+class ButtonArea : public virtual Plic::SmartHandle {
 public:
   inline ButtonArea_Iface&  operator*  () const { return *dynamic_cast<ButtonArea_Iface*> (_iface()); }
   inline ButtonArea_Iface*  operator-> () const { return dynamic_cast<ButtonArea_Iface*> (_iface()); }
@@ -390,7 +390,7 @@ protected:
 public:
   virtual int             pure_method (double f) = 0;
 };
-class PureMethods : public virtual Plic::SimpleProxy {
+class PureMethods : public virtual Plic::SmartHandle {
 public:
   // int             pure_method (double);
   inline PureMethods_Iface&  operator*  () const { return *dynamic_cast<PureMethods_Iface*> (_iface()); }

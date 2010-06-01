@@ -240,7 +240,7 @@ typedef std::string s;
 
 namespace InterfaceTests {
 
-class UIWidgetArea : public virtual Plic::SimpleProxy {
+class UIWidgetArea : public virtual Plic::SmartHandle {
 public:
   double          simple_method ();
   double          single_arg    (int n);
@@ -288,7 +288,7 @@ public:
   virtual void            on_click2in   (const std::string &command);
 };
 
-class Parent : public virtual Plic::SimpleProxy {
+class Parent : public virtual Plic::SmartHandle {
 public:
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
@@ -343,7 +343,7 @@ struct QuickSequence {
   bool proto_pop  (Plic::FieldBufferReader&);
 };
 
-class MethodTestInterface : public virtual Plic::SimpleProxy {
+class MethodTestInterface : public virtual Plic::SmartHandle {
 public:
   void            method_with_void      ();
   bool            method_with_bools     (bool input,
@@ -397,7 +397,7 @@ enum ClickType {
   CLICK_KEY_REPEAT = 5,
 };
 
-class ButtonArea : public virtual Plic::SimpleProxy {
+class ButtonArea : public virtual Plic::SmartHandle {
 public:
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
@@ -411,7 +411,7 @@ public:
   // Signal_activate sig_activate;
 };
 
-class PureMethods : public virtual Plic::SimpleProxy {
+class PureMethods : public virtual Plic::SmartHandle {
 public:
   int             pure_method (double f);
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }

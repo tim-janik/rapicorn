@@ -66,46 +66,46 @@ printerr (const char *format, ...)
   (void) l;
 }
 
-/* === SimpleProxy === */
-const SimpleProxy &SimpleProxy::None = SimpleProxy (0);
+/* === SmartHandle === */
+const SmartHandle &SmartHandle::None = SmartHandle (0);
 
-SimpleProxy::SimpleProxy (uint64 rpc_id) :
+SmartHandle::SmartHandle (uint64 rpc_id) :
   m_rpc_id (rpc_id)
 {
-  if (&SimpleProxy::None)
+  if (&SmartHandle::None)
     assert (rpc_id != 0);
 }
 
 uint64
-SimpleProxy::_rpc_id () const
+SmartHandle::_rpc_id () const
 {
   return m_rpc_id;
 }
 
 bool
-SimpleProxy::_is_null () const
+SmartHandle::_is_null () const
 {
   return m_rpc_id == 0;
 }
 
 SimpleServer*
-SimpleProxy::_iface () const
+SmartHandle::_iface () const
 {
   return NULL; // FIXME
 }
 
-SimpleProxy::~SimpleProxy()
+SmartHandle::~SmartHandle()
 {}
 
-SimpleProxy*
-SimpleProxy::_rpc_id2obj (uint64 rpc_id)
+SmartHandle*
+SmartHandle::_rpc_id2obj (uint64 rpc_id)
 {
   if (rpc_id == 0)
-    return const_cast<SimpleProxy*> (&None);
+    return const_cast<SmartHandle*> (&None);
   return NULL; // FIXME
 }
 
-/* === SimpleProxy === */
+/* === SimpleServer === */
 static pthread_mutex_t         simple_server_mutex = PTHREAD_MUTEX_INITIALIZER;
 static std::set<SimpleServer*> simple_server_set;
 

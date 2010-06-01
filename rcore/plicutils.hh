@@ -80,23 +80,23 @@ struct TypeHash {
   String            to_string() const;
 };
 
-/* === Proxy class === */
-class SimpleProxy {
+/* === SmartHandle === */
+class SmartHandle {
   uint64 m_rpc_id;
 protected:
-  typedef bool (SimpleProxy::*_unspecified_bool_type) () const; // non-numeric operator bool() result
-  static inline _unspecified_bool_type _unspecified_bool_true () { return &Plic::SimpleProxy::_is_null; }
+  typedef bool (SmartHandle::*_unspecified_bool_type) () const; // non-numeric operator bool() result
+  static inline _unspecified_bool_type _unspecified_bool_true () { return &Plic::SmartHandle::_is_null; }
   SimpleServer*             _iface      () const;
 public:
-  explicit                  SimpleProxy (uint64 rpc_id);
+  explicit                  SmartHandle (uint64 rpc_id);
   uint64                    _rpc_id     () const;
   bool                      _is_null    () const;
-  virtual                  ~SimpleProxy ();
-  static SimpleProxy*       _rpc_id2obj (uint64 rpc_id);
-  static const SimpleProxy &None;
+  virtual                  ~SmartHandle ();
+  static SmartHandle*       _rpc_id2obj (uint64 rpc_id);
+  static const SmartHandle &None;
 };
 
-/* === Server class === */
+/* === SimpleServer === */
 class SimpleServer {
 public:
   explicit             SimpleServer ();
