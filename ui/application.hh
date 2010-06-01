@@ -25,7 +25,7 @@
 
 namespace Rapicorn {
 
-extern Application &App;
+extern ApplicationBase &App;
 
 } // Rapicorn
 

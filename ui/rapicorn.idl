@@ -40,28 +40,28 @@ interface Window : BaseObject {
 interface Application : BaseObject {
   /* startup */
   void          init_with_x11   (string         application_name,
-                                 StringList     cmdline_args);
+                                 StringList     cmdline_args) = 0;
   string        auto_path       (string         file_name,
                                  string         binary_path,
-                                 bool           search_vpath = true);
+                                 bool           search_vpath = true) = 0;
   void          auto_load       (string         i18n_domain,
                                  string         file_name,
-                                 string         binary_path);
+                                 string         binary_path) = 0;
   /* windows */
   Window        create_window   (string         window_identifier,
                                  StringList     arguments = 0,
-                                 StringList     env_variables = 0);
-  // WindowList    list_windows    ();
+                                 StringList     env_variables = 0) = 0;
+  // WindowList    list_windows    () = 0;
   /* execution */
-  int           execute_loops   ();
-  void          exit            (int            code = 0);
+  int           execute_loops   () = 0;
+  void          exit            (int            code = 0) = 0;
   /* notifications */
   signal void   missing_primary ();
   /* testing */
-  void          test_counter_set        (int val);
-  void          test_counter_add        (int val);
-  int           test_counter_get        ();
-  int           test_counter_inc_fetch  ();
+  void          test_counter_set        (int val) = 0;
+  void          test_counter_add        (int val) = 0;
+  int           test_counter_get        () = 0;
+  int           test_counter_inc_fetch  () = 0;
 };
 
 } // Rapicorn

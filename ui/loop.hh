@@ -46,7 +46,7 @@ struct PollFD // mirror struct pollfd for poll(3posix)
 /* --- EventLoop --- */
 class EventLoop : public virtual BaseObject {
   friend class RapicornTester;
-  friend class Application;
+  friend class ApplicationImpl;
   class TimedSource;
   class PollFDSource;
   static bool   iterate_loops   (bool may_block,

@@ -22,52 +22,77 @@
 
 namespace Rapicorn {
 
-class AppImpl : public Application {};
+ApplicationBase::ApplicationMutex ApplicationBase::mutex;
 
-Application &App = *new AppImpl();
-
-Application::Application() : // : sig_missing_primary (*this)
+ApplicationBase::ApplicationBase() : // : sig_missing_primary (*this)
   m_tc (0)
 {
   assert (&App == NULL);
 }
 
-Application::ApplicationMutex Application::mutex;
+void
+ApplicationBase::pixstream (const String  &pix_name,
+                              const uint8   *static_const_pixstream)
+{
+  Pixmap::add_stock (pix_name, static_const_pixstream);
+}
 
 void
-Application::init_with_x11 (int           *argcp,
-                            char        ***argvp,
-                            const char    *app_name)
+ApplicationBase::init_with_x11 (int           *argcp,
+                                  char        ***argvp,
+                                  const char    *app_name)
 {
   rapicorn_init_with_gtk_thread (argcp, argvp, app_name);
   assert (rapicorn_thread_entered() == false);
   rapicorn_thread_enter();
 }
 
+WinPtr
+ApplicationBase::create_winptr (const std::string         &window_identifier,
+                                  const std::vector<String> &arguments,
+                                  const std::vector<String> &env_variables)
+{
+  return Factory::create_winptr (window_identifier, arguments, env_variables);
+}
+
+class ApplicationImpl : public ApplicationBase {
+  virtual void            init_with_x11          (const std::string &application_name,
+                                                  const StringList  &cmdline_args);
+  virtual String          auto_path              (const String  &file_name,
+                                                  const String  &binary_path,
+                                                  bool           search_vpath);
+  virtual void            auto_load              (const std::string &i18n_domain,
+                                                  const std::string &file_name,
+                                                  const std::string &binary_path);
+  virtual WindowBase*   create_window          (const std::string &window_identifier,
+                                                  const StringList &arguments = StringList(),
+                                                  const StringList &env_variables = StringList());
+  virtual int             execute_loops          ();
+  virtual void            exit                   (int code = 0);
+  virtual void            test_counter_set       (int val);
+  virtual void            test_counter_add       (int val);
+  virtual int             test_counter_get       ();
+  virtual int             test_counter_inc_fetch ();
+};
+
+ApplicationBase &App = *new ApplicationImpl();
+
 void
-Application::init_with_x11 (const std::string &application_name,
-                            const StringList  &cmdline_args)
+ApplicationImpl::init_with_x11 (const std::string &application_name,
+                                const StringList  &cmdline_args)
 {
   int dummy_argc = cmdline_args.strings.size();
   char **dummy_argv = (char**) alloca ((sizeof (char*) + 1) * dummy_argc);
   for (int i = 0; i < dummy_argc; i++)
     dummy_argv[i] = const_cast<char*> (cmdline_args.strings[i].c_str());
   dummy_argv[dummy_argc] = NULL;
-  Application::init_with_x11 (&dummy_argc, &dummy_argv, application_name.c_str());
+  ApplicationBase::init_with_x11 (&dummy_argc, &dummy_argv, application_name.c_str());
 }
 
-WinPtr
-Application::create_winptr (const std::string         &window_identifier,
-                            const std::vector<String> &arguments,
-                            const std::vector<String> &env_variables)
-{
-  return Factory::create_winptr (window_identifier, arguments, env_variables);
-}
-
-Window*
-Application::create_window (const std::string    &window_identifier,
-                            const StringList     &arguments,
-                            const StringList     &env_variables)
+WindowBase*
+ApplicationImpl::create_window (const std::string    &window_identifier,
+                                const StringList     &arguments,
+                                const StringList     &env_variables)
 {
   return &Factory::create_winptr (window_identifier,
                                   arguments.strings,
@@ -75,9 +100,9 @@ Application::create_window (const std::string    &window_identifier,
 }
 
 String
-Application::auto_path (const String  &file_name,
-                        const String  &binary_path,
-                        bool           search_vpath)
+ApplicationImpl::auto_path (const String  &file_name,
+                            const String  &binary_path,
+                            bool           search_vpath)
 {
   assert (rapicorn_thread_entered());
   /* test absolute file_name */
@@ -114,9 +139,9 @@ Application::auto_path (const String  &file_name,
 }
 
 void
-Application::auto_load (const String  &i18n_domain,
-                        const String  &file_name,
-                        const String  &binary_path)
+ApplicationImpl::auto_load (const String  &i18n_domain,
+                            const String  &file_name,
+                            const String  &binary_path)
 {
   String fullname = auto_path (file_name, binary_path, true);
   int err = Factory::parse_file (i18n_domain, fullname);
@@ -124,17 +149,10 @@ Application::auto_load (const String  &i18n_domain,
     error ("failed to load \"%s\": %s", fullname.c_str(), string_from_errno (err).c_str());
 }
 
-void
-Application::pixstream (const String  &pix_name,
-                        const uint8   *static_const_pixstream)
-{
-  Pixmap::add_stock (pix_name, static_const_pixstream);
-}
-
 static uint     exit_code = 0;
 
 int
-Application::execute_loops ()
+ApplicationImpl::execute_loops ()
 {
   assert (rapicorn_thread_entered());           // guards exit_code
   while (!EventLoop::loops_exitable())
@@ -145,7 +163,7 @@ Application::execute_loops ()
 }
 
 void
-Application::exit (int code)
+ApplicationImpl::exit (int code)
 {
   assert (rapicorn_thread_entered());           // guards exit_code
   if (!exit_code)
@@ -154,25 +172,25 @@ Application::exit (int code)
 }
 
 void
-Application::test_counter_set (int val)
+ApplicationImpl::test_counter_set (int val)
 {
   m_tc = val;
 }
 
 void
-Application::test_counter_add (int val)
+ApplicationImpl::test_counter_add (int val)
 {
   m_tc += val;
 }
 
 int
-Application::test_counter_get ()
+ApplicationImpl::test_counter_get ()
 {
   return m_tc;
 }
 
 int
-Application::test_counter_inc_fetch ()
+ApplicationImpl::test_counter_inc_fetch ()
 {
   return ++m_tc;
 }

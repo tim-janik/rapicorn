@@ -1103,7 +1103,7 @@ RootImpl::winptr ()
   return RootWindowImpl (*this);
 }
 
-Window&
+WindowBase&
 RootImpl::window ()
 {
   return *this;

@@ -50,10 +50,10 @@ main (int   argc,
   /* initialization acquired global Rapicorn mutex */
 
   /* register builtin images */
-  Application::pixstream ("testimage-alpha-rle", alpha_rle);
-  Application::pixstream ("testimage-alpha-raw", alpha_raw);
-  Application::pixstream ("testimage-rgb-rle", rgb_rle);
-  Application::pixstream ("testimage-rgb-raw", rgb_raw);
+  ApplicationBase::pixstream ("testimage-alpha-rle", alpha_rle);
+  ApplicationBase::pixstream ("testimage-alpha-raw", alpha_raw);
+  ApplicationBase::pixstream ("testimage-rgb-rle", rgb_rle);
+  ApplicationBase::pixstream ("testimage-rgb-raw", rgb_raw);
 
   /* load GUI definition file, relative to argv[0] */
   App.auto_load ("RapicornTest", "tour.xml", argv[0]);
