@@ -443,38 +443,7 @@ class Generator:
       s += ' = 0'
     s += ';\n'
     return s
-  def generate_virtual_method_skel (self, functype, type_info):
-    if functype.pure:
-      return ''
-    fs = type_info.name + _IFACE + '::' + functype.name
-    tnsl = type_info.list_namespaces() # type namespace list
-    absname = '::'.join ([n.name for n in tnsl] + [ fs ])
-    if absname in self.skip_symbols:
-      return ''
-    s = self.open_namespace (type_info)
-    rtpostfix = _IFACE + '*' if functype.rtype.storage == Decls.INTERFACE else ''
-    sret = self.rtype2cpp (functype.rtype) + rtpostfix + '\n'
-    fs += ' ('
-    argindent = len (fs)
-    s += '\n' + sret + fs
-    l = []
-    for a in functype.args:
-      l += [ self.format_arg (a[0], a[1], _IFACE) ]
-    s += (',\n' + argindent * ' ').join (l)
-    s += ')\n{\n'
-    if functype.rtype.storage == Decls.VOID:
-      pass
-    elif functype.rtype.storage == Decls.ENUM:
-      s += '  return %s (0); // FIXME\n' % self.rtype2cpp (functype.rtype)
-    elif functype.rtype.storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += '  return %s(); // FIXME\n' % self.rtype2cpp (functype.rtype)
-    elif functype.rtype.storage == Decls.INTERFACE:
-      s += '  return (%s%s*) NULL; // FIXME\n' % (self.rtype2cpp (functype.rtype), _IFACE)
-    else:
-      s += '  return 0; // FIXME\n'
-    s += '}\n'
-    return s
-  def generate_interface_decl (self, type_info, gen4server):
+  def generate_interface_class (self, type_info, gen4server):
     s = ''
     _iface = _IFACE if gen4server else ''
     l = []
@@ -516,6 +485,37 @@ class Generator:
     s = ''
     tname = type_info.name + _IFACE
     s += '%s::~%s () {}\n' % (tname, tname)
+    return s
+  def generate_virtual_method_skel (self, functype, type_info):
+    if functype.pure:
+      return ''
+    fs = type_info.name + _IFACE + '::' + functype.name
+    tnsl = type_info.list_namespaces() # type namespace list
+    absname = '::'.join ([n.name for n in tnsl] + [ fs ])
+    if absname in self.skip_symbols:
+      return ''
+    s = self.open_namespace (type_info)
+    rtpostfix = _IFACE + '*' if functype.rtype.storage == Decls.INTERFACE else ''
+    sret = self.rtype2cpp (functype.rtype) + rtpostfix + '\n'
+    fs += ' ('
+    argindent = len (fs)
+    s += '\n' + sret + fs
+    l = []
+    for a in functype.args:
+      l += [ self.format_arg (a[0], a[1], _IFACE) ]
+    s += (',\n' + argindent * ' ').join (l)
+    s += ')\n{\n'
+    if functype.rtype.storage == Decls.VOID:
+      pass
+    elif functype.rtype.storage == Decls.ENUM:
+      s += '  return %s (0); // FIXME\n' % self.rtype2cpp (functype.rtype)
+    elif functype.rtype.storage in (Decls.RECORD, Decls.SEQUENCE):
+      s += '  return %s(); // FIXME\n' % self.rtype2cpp (functype.rtype)
+    elif functype.rtype.storage == Decls.INTERFACE:
+      s += '  return (%s%s*) NULL; // FIXME\n' % (self.rtype2cpp (functype.rtype), _IFACE)
+    else:
+      s += '  return 0; // FIXME\n'
+    s += '}\n'
     return s
   def generate_interface_skel (self, type_info):
     s = ''
@@ -606,9 +606,9 @@ class Generator:
         elif tp.storage == Decls.INTERFACE:
           s += '\n'
           if self.gen_clienthh:
-            s += self.generate_interface_decl (tp, False) + '\n'
+            s += self.generate_interface_class (tp, False) + '\n'
           if self.gen_serverhh:
-            s += self.generate_interface_decl (tp, True) + '\n'
+            s += self.generate_interface_class (tp, True) + '\n'
       s += self.open_namespace (None)
     # generate client/server impls
     if self.gen_clientcc or self.gen_servercc:
