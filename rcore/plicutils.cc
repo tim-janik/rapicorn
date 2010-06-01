@@ -88,6 +88,12 @@ SimpleProxy::_is_null () const
   return m_rpc_id == 0;
 }
 
+SimpleServer*
+SimpleProxy::_iface () const
+{
+  return NULL; // FIXME
+}
+
 SimpleProxy::~SimpleProxy()
 {}
 

@@ -259,6 +259,7 @@ public:
   void            void_method   ();
   std::string     on_click2out  ();
   void            on_click2in   (const std::string &command);
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class UIWidgetArea_Iface : public virtual Plic::SimpleServer {
 protected:
@@ -289,6 +290,7 @@ public:
 
 class Parent : public virtual Plic::SimpleProxy {
 public:
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class Parent_Iface : public virtual Plic::SimpleServer {
 protected:
@@ -298,6 +300,7 @@ public:
 
 class Child : public Parent {
 public:
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class Child_Iface : public virtual Parent_Iface {
 protected:
@@ -307,6 +310,7 @@ public:
 
 class Descendant : public Child {
 public:
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class Descendant_Iface : public virtual Child_Iface {
 protected:
@@ -316,6 +320,7 @@ public:
 
 class GrandChild : public Descendant {
 public:
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class GrandChild_Iface : public virtual Descendant_Iface {
 protected:
@@ -357,6 +362,7 @@ public:
                                          const QuickSequence &optval = QuickSequence());
   GrandChild*     method_with_interface (GrandChild &input,
                                          GrandChild &optval = *(GrandChild*) NULL);
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class MethodTestInterface_Iface : public virtual Plic::SimpleServer {
 protected:
@@ -393,6 +399,7 @@ enum ClickType {
 
 class ButtonArea : public virtual Plic::SimpleProxy {
 public:
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class ButtonArea_Iface : public virtual Plic::SimpleServer {
 protected:
@@ -407,6 +414,7 @@ public:
 class PureMethods : public virtual Plic::SimpleProxy {
 public:
   int             pure_method (double f);
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class PureMethods_Iface : public virtual Plic::SimpleServer {
 protected:

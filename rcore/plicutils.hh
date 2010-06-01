@@ -64,6 +64,7 @@ inline bool is_callid_twoway (const uint64 id) { return id >> 32 == callid_twowa
 inline bool is_callid_error  (const uint64 id) { return id >> 32 == callid_error  >> 32; }
 
 /* === Forward Declarations === */
+class SimpleServer;
 union FieldUnion;
 class FieldBuffer;
 class FieldBufferReader;
@@ -82,6 +83,10 @@ struct TypeHash {
 /* === Proxy class === */
 class SimpleProxy {
   uint64 m_rpc_id;
+protected:
+  typedef bool (SimpleProxy::*_unspecified_bool_type) () const; // non-numeric operator bool() result
+  static inline _unspecified_bool_type _unspecified_bool_true () { return &Plic::SimpleProxy::_is_null; }
+  SimpleServer*             _iface      () const;
 public:
   explicit                  SimpleProxy (uint64 rpc_id);
   uint64                    _rpc_id     () const;

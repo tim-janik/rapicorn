@@ -240,11 +240,33 @@ public:
   virtual std::string     on_click2out  ();
   virtual void            on_click2in   (const std::string &command);
 };
+class UIWidgetArea : public virtual Plic::SimpleProxy {
+public:
+  // double          simple_method ();
+  // double          single_arg    (int);
+  // double          single_arg2   (int);
+  // double          two_args      (int, double);
+  // double          two_args2     (int, double);
+  // double          multi_args    (int, double, int, const std::string&, double);
+  // double          self_method   (UIWidgetArea&, UIWidgetArea&);
+  // void            void_method   ();
+  // std::string     on_click2out  ();
+  // void            on_click2in   (const std::string&);
+  inline UIWidgetArea_Iface&  operator*  () const { return *dynamic_cast<UIWidgetArea_Iface*> (_iface()); }
+  inline UIWidgetArea_Iface*  operator-> () const { return dynamic_cast<UIWidgetArea_Iface*> (_iface()); }
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
 
 class Parent_Iface : public virtual Plic::SimpleServer {
 protected:
   virtual /*Des*/         ~Parent_Iface () = 0;
 public:
+};
+class Parent : public virtual Plic::SimpleProxy {
+public:
+  inline Parent_Iface&  operator*  () const { return *dynamic_cast<Parent_Iface*> (_iface()); }
+  inline Parent_Iface*  operator-> () const { return dynamic_cast<Parent_Iface*> (_iface()); }
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class Child_Iface : public virtual Parent_Iface {
@@ -252,17 +274,35 @@ protected:
   virtual /*Des*/         ~Child_Iface () = 0;
 public:
 };
+class Child : public Parent {
+public:
+  inline Child_Iface&  operator*  () const { return *dynamic_cast<Child_Iface*> (_iface()); }
+  inline Child_Iface*  operator-> () const { return dynamic_cast<Child_Iface*> (_iface()); }
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
 
 class Descendant_Iface : public virtual Child_Iface {
 protected:
   virtual /*Des*/         ~Descendant_Iface () = 0;
 public:
 };
+class Descendant : public Child {
+public:
+  inline Descendant_Iface&  operator*  () const { return *dynamic_cast<Descendant_Iface*> (_iface()); }
+  inline Descendant_Iface*  operator-> () const { return dynamic_cast<Descendant_Iface*> (_iface()); }
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
 
 class GrandChild_Iface : public virtual Descendant_Iface {
 protected:
   virtual /*Des*/         ~GrandChild_Iface () = 0;
 public:
+};
+class GrandChild : public Descendant {
+public:
+  inline GrandChild_Iface&  operator*  () const { return *dynamic_cast<GrandChild_Iface*> (_iface()); }
+  inline GrandChild_Iface*  operator-> () const { return dynamic_cast<GrandChild_Iface*> (_iface()); }
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 enum QuickEnum {
   ZERO = 0,
@@ -302,6 +342,21 @@ public:
   virtual GrandChild_Iface* method_with_interface (GrandChild_Iface &input,
                                                    GrandChild_Iface &optval = *(GrandChild_Iface*) NULL);
 };
+class MethodTestInterface : public virtual Plic::SimpleProxy {
+public:
+  // void            method_with_void      ();
+  // bool            method_with_bools     (bool, bool);
+  // int             method_with_ints      (int, int);
+  // double          method_with_floats    (double, double);
+  // std::string     method_with_string    (const std::string&, const std::string&);
+  // QuickEnum       method_with_enum      (QuickEnum, QuickEnum);
+  // QuickRecord     method_with_record    (const QuickRecord&, const QuickRecord&);
+  // QuickSequence   method_with_sequence  (const QuickSequence&, const QuickSequence&);
+  // GrandChild*     method_with_interface (GrandChild&, GrandChild&);
+  inline MethodTestInterface_Iface&  operator*  () const { return *dynamic_cast<MethodTestInterface_Iface*> (_iface()); }
+  inline MethodTestInterface_Iface*  operator-> () const { return dynamic_cast<MethodTestInterface_Iface*> (_iface()); }
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
 } // InterfaceTests
 
 namespace RapicornPlicTest {
@@ -322,12 +377,25 @@ public:
   // Signal_check_activate sig_check_activate;
   // Signal_activate sig_activate;
 };
+class ButtonArea : public virtual Plic::SimpleProxy {
+public:
+  inline ButtonArea_Iface&  operator*  () const { return *dynamic_cast<ButtonArea_Iface*> (_iface()); }
+  inline ButtonArea_Iface*  operator-> () const { return dynamic_cast<ButtonArea_Iface*> (_iface()); }
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
 
 class PureMethods_Iface : public virtual Plic::SimpleServer {
 protected:
   virtual /*Des*/         ~PureMethods_Iface () = 0;
 public:
   virtual int             pure_method (double f) = 0;
+};
+class PureMethods : public virtual Plic::SimpleProxy {
+public:
+  // int             pure_method (double);
+  inline PureMethods_Iface&  operator*  () const { return *dynamic_cast<PureMethods_Iface*> (_iface()); }
+  inline PureMethods_Iface*  operator-> () const { return dynamic_cast<PureMethods_Iface*> (_iface()); }
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 } // RapicornPlicTest
 

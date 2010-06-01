@@ -28,7 +28,7 @@ record Requisition {
   float height;
 };
 
-interface Window : BaseObject {
+interface Window {
   bool          viewable        () = 0;
   void          show            () = 0;
   bool          closed          () = 0;
@@ -37,7 +37,7 @@ interface Window : BaseObject {
                                  StringList args);
 };
 
-interface Application : BaseObject {
+interface Application {
   /* startup */
   void          init_with_x11   (string         application_name,
                                  StringList     cmdline_args) = 0;
