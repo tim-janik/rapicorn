@@ -21,75 +21,42 @@ More details at http://www.testbit.eu/PLIC
 import Decls, GenUtils, re
 
 _IFACE = '_Iface'
-base_code = r"""
-// #include <rcore/rapicornsignal.hh>
-// #include <ui/interface.hh>
-#include <rapicorn.hh>
-#include <rcore/plicutils.hh>
 
+clienthh_boilerplate = r"""
+// --- ClientHH Boilerplate ---
+#include <rcore/plicutils.hh>
+"""
+
+serverhh_boilerplate = r"""
+// --- ServerHH Boilerplate ---
+#include <rcore/plicutils.hh>
+#include <rcore/rapicornsignal.hh>
+"""
+
+gencc_boilerplate = r"""
+// --- ClientCC/ServerCC Boilerplate ---
 #include <string>
 #include <vector>
 #include <stdexcept>
+#ifndef __PLIC_GENERIC_CC_BOILERPLATE__
+#define __PLIC_GENERIC_CC_BOILERPLATE__
 
-#if     __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
-#define __UNUSED__      __attribute__ ((__unused__))
-#else
-#define __UNUSED__
-#endif
+#define THROW_ERROR()   throw std::runtime_error ("PLIC: Marshalling failed")
+#define PLIC_CHECK(cond,errmsg) do { if (cond) break; throw std::runtime_error (std::string ("PLIC-ERROR: ") + errmsg); } while (0)
 
 namespace { // Anonymous
 using Plic::uint64;
-
-class PlicProxyBase {
-  uint64 m_locator_id;
-public:
-  explicit PlicProxyBase (uint64 locator_id) : m_locator_id (locator_id) {}
-  virtual ~PlicProxyBase() {}
-};
-
-// FIXME:
 typedef Plic::FieldBuffer FieldBuffer;
 typedef Plic::FieldBuffer8 FieldBuffer8;
 typedef Plic::FieldBufferReader FieldBufferReader;
-template<class CLASS> static inline uint64
-Instance2IdCast (CLASS *obj)
-{
-  if (!obj) return 0;
-  else return dynamic_cast<const Rapicorn::Locatable*> (obj)->locatable_id();
-}
-template<class CLASS> static uint64
-Instance2IdCast (const CLASS *obj)
-{
-  if (!obj) return 0;
-  else return dynamic_cast<const Rapicorn::Locatable*> (obj)->locatable_id();
-}
-template<class CLASS> static inline uint64
-Instance2IdCast (CLASS &obj)
-{
-  if (!&obj) return 0;
-  else return dynamic_cast<const Rapicorn::Locatable*> (&obj)->locatable_id();
-}
-template<class CLASS> static inline CLASS*
-Instance4IdCast (uint64 locator_id)
-{
-  Rapicorn::Locatable *dobj = Rapicorn::Locatable::from_locatable_id (locator_id);
-  CLASS *target = dobj ? dynamic_cast<CLASS*> (dobj) : NULL;
-  if (!target)
-    printerr ("NULL-CAST: 0x%016llx -> %p -> %p\n", locator_id, dobj, target); // FIXME
-  return target;
-}
-#define die()      (void) 0 // FIXME
-#define THROW_ERROR()   throw std::runtime_error ("PLIC: Marshalling failed")
-#define rope_check(cond,errmsg) do { if (!(cond)) { Rapicorn::printerr ("ROPE:error: %s\n", errmsg); return false; } } while (0)
 
-static FieldBuffer* plic_call_remote (FieldBuffer*);
-#ifndef HAVE_PLIC_CALL_REMOTE
-static FieldBuffer* plic_call_remote (FieldBuffer *fb)
-{ delete fb; return NULL; } // testing stub
-#define HAVE_PLIC_CALL_REMOTE
+#ifndef PLIC_CALL_REMOTE
+#define PLIC_CALL_REMOTE        _plic_call_remote
+static FieldBuffer* _plic_call_remote (FieldBuffer *fb) { delete fb; return NULL; } // testing stub
 #endif
 
 } // Anonymous
+#endif // __PLIC_GENERIC_CC_BOILERPLATE__
 """
 
 FieldBuffer = 'Plic::FieldBuffer'
@@ -264,9 +231,9 @@ class Generator:
         s += '  if (!%s.proto_add (%s)) %s;\n' % (ident, fb, onerr)
       elif type.storage == Decls.INTERFACE:
         if self.gen_clientcc:
-          s += '  %s.add_object (Instance2IdCast (%s));\n' % (fb, ident)
+          s += '  %s.add_object (Plic::_rpc_id (%s));\n' % (fb, ident)
         else:
-          s += '  %s.add_object (Instance2IdCast (%s));\n' % (fb, ident)
+          s += '  %s.add_object (Plic::_rpc_id (%s));\n' % (fb, ident)
       else:
         s += '  %s.add_%s (%s);\n' % (fb, self.accessor_name (type.storage), ident)
     return s
@@ -281,7 +248,7 @@ class Generator:
       elif type.storage == Decls.ENUM:
         s += '  %s = %s (%s.pop_evalue());\n' % (ident, self.type2cpp (type), fbr)
       elif type.storage == Decls.INTERFACE:
-        s += '  %s = Instance4IdCast<%s%s> (%s.pop_%s());\n' \
+        s += '  %s = Plic::_rpc_ptr4id<%s%s> (%s.pop_%s());\n' \
             % (ident, type.name, _iface, fbr, self.accessor_name (type.storage))
       else:
         s += '  %s = %s.pop_%s();\n' % (ident, fbr, self.accessor_name (type.storage))
@@ -328,7 +295,7 @@ class Generator:
     elif el[1].storage == Decls.ENUM:
       s += '    %s.push_back (%s (fbr.pop_evalue()));\n' % (eident, self.type2cpp (el[1]))
     elif el[1].storage == Decls.INTERFACE:
-      s += '    %s.push_back (Instance4IdCast<%s> (fbr.pop_%s()));\n' % (eident, el[1].name, self.accessor_name (el[1].storage))
+      s += '    %s.push_back (Plic::_rpc_ptr4id<%s> (fbr.pop_%s()));\n' % (eident, el[1].name, self.accessor_name (el[1].storage))
     else:
       s += '    %s.push_back (fbr.pop_%s());\n' % (eident, self.accessor_name (el[1].storage))
     s += '  }\n'
@@ -360,7 +327,7 @@ class Generator:
     s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '', therr)
     # call out
     s += '  fr = ' if hasret else '  '
-    s += 'plic_call_remote (&fb); // deletes fb\n'
+    s += 'PLIC_CALL_REMOTE (&fb); // deletes fb\n'
     # unmarshal return
     if hasret:
       rarg = ('retval', mtype.rtype)
@@ -389,7 +356,7 @@ class Generator:
     # fetch self
     s += '  %s%s *self;\n' % (self.type2cpp (class_info), _IFACE)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)], '', _IFACE)
-    s += '  rope_check (self, "self must be non-NULL");\n'
+    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
     # fetch args
     for a in mtype.args:
       if a[1].storage in (Decls.RECORD, Decls.SEQUENCE):
@@ -516,10 +483,12 @@ class Generator:
     l = self.inherit_reduce (l)
     if gen4server:
       l = ['public virtual ' + pr.name + _iface for pr in l] # types -> names
+      if not l:
+        l = ['public virtual Plic::SimpleServer']
     else:
       l = ['public ' + pr.name for pr in l] # types -> names
       if not l:
-        l = ['protected PlicProxyBase']
+        l = ['public virtual Plic::SimpleProxy']
     s += 'class %s%s' % (type_info.name, _iface)
     if l:
       s += ' : %s' % ', '.join (l)
@@ -601,13 +570,21 @@ class Generator:
   def generate_impl_types (self, implementation_types):
     s = '/* --- Generated by PLIC-CxxCaller --- */\n'
     # inclusions
-    for i in self.gen_inclusions:
+    if self.gen_inclusions:
       s += '\n// --- Custom Includes ---\n'
+    if self.gen_inclusions and (self.gen_clientcc or self.gen_servercc):
+      s += '#ifndef __PLIC_UTILITIES_HH__\n'
+    for i in self.gen_inclusions:
       s += '#include %s\n' % i
+    if self.gen_inclusions and (self.gen_clientcc or self.gen_servercc):
+      s += '#endif\n'
     s += self.insertion_text ('global_scope')
-    s += '\n// --- Boilerplate ---\n'
-    if self.gen_servercc:
-      s += base_code + '\n'
+    if self.gen_clienthh:
+      s += clienthh_boilerplate
+    if self.gen_serverhh:
+      s += serverhh_boilerplate
+    if self.gen_clientcc or self.gen_servercc:
+      s += gencc_boilerplate + '\n'
     self.tabwidth (16)
     s += self.open_namespace (None)
     # collect impl types
@@ -675,6 +652,7 @@ class Generator:
         elif tp.storage == Decls.INTERFACE:
           s += self.generate_interface_skel (tp)
     s += self.open_namespace (None) # close all namespaces
+    s += '\n'
     return s
 
 def error (msg):

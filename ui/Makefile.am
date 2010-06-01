@@ -88,8 +88,9 @@ $(rapicorn_cc_sources): interface.hh
 CLEANFILES += xgen-interface.hh interface.hh
 interface.cc: $(ROPE)/CxxCaller.py $(srcdir)/rapicorn.idl
 	: # build interface.cc from rapicorn.idl
+	echo "#define PLIC_CALL_REMOTE // dummy" > xgen-$(@F)
 	${PLICINT} -G $(ROPE)/CxxCaller -g servercc -g iface-postfix=Base \
-	  --inclusions '"item.hh"' $(srcdir)/rapicorn.idl -o xgen-$(@F)
+	  --inclusions '"item.hh"' $(srcdir)/rapicorn.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += interface.cc
 # generate skeletons for non-virtual methods, skipping existing symbols

@@ -17,6 +17,6 @@
 #ifndef __RAPICORN_ROPE_CXX_HH__
 #define __RAPICORN_ROPE_CXX_HH__
 
-#include <rapicorn-rcore.hh>
+#include <rapicorn-core.hh>
 
 #endif /* __RAPICORN_ROPE_CXX_HH__ */

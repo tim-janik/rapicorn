@@ -14,25 +14,13 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include "py-rope.hh" // must be included first to configure std headers
+#include "cxx-rope.hh"
 using namespace Rapicorn;
+#include "cxx-client.hh"        // generated client API
+#include <ui/rope.hh>
 
-#define HAVE_PLIC_CALL_REMOTE   1
+namespace { // Anonymous
 
-// --- rope2cxx stubs (generated) ---
-#include "rope2cxx.cc"
-
-// --- Anonymous namespacing
-namespace {
-
-// --- rapicorn thread ---
-static Plic::FieldBuffer*
-plic_call_remote (Plic::FieldBuffer *call)
-{
-  return rope_thread_call (call);
-}
-
-/* --- initialization --- */
 static void
 cxxrope_init_dispatcher (const String         &appname,
                          const vector<String> &cmdline_args)
@@ -58,3 +46,7 @@ main (int   argc,
   cxxrope_init_dispatcher (argv[0], cmdline_args);
   return 0;
 }
+
+// generated client implementation
+#define PLIC_CALL_REMOTE        rope_thread_call
+#include "cxx-client.cc"

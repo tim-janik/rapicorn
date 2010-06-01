@@ -500,6 +500,9 @@ protected:
 public:
   uint64            locatable_id      () const;
   static Locatable* from_locatable_id (uint64 locatable_id);
+  // methods needed as Plic::Server
+  inline uint64            _rpc_id      () const        { return locatable_id(); }
+  static inline Locatable* _rpc_id2obj  (uint64 rpc_id) { return from_locatable_id (rpc_id); }
 };
 
 /* --- Binary Lookups --- */

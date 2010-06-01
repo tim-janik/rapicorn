@@ -79,6 +79,32 @@ struct TypeHash {
   String            to_string() const;
 };
 
+/* === Proxy class === */
+class SimpleProxy {
+  uint64 m_rpc_id;
+public:
+  explicit                  SimpleProxy (uint64 rpc_id);
+  uint64                    _rpc_id     () const;
+  bool                      _is_null    () const;
+  virtual                  ~SimpleProxy ();
+  static SimpleProxy*       _rpc_id2obj (uint64 rpc_id);
+  static const SimpleProxy &None;
+};
+
+/* === Server class === */
+class SimpleServer {
+public:
+  explicit             SimpleServer ();
+  virtual             ~SimpleServer ();
+  virtual uint64       _rpc_id      () const;
+  static SimpleServer* _rpc_id2obj  (uint64 rpc_id);
+};
+
+/* === RPC Id handling === */
+template<class C> inline uint64 _rpc_id (C *const c) { return c ? c->_rpc_id() : 0; }
+template<class C> inline uint64 _rpc_id (const C &c) { return &c ? c._rpc_id() : 0; }
+template<class C> inline C* _rpc_ptr4id (uint64 i) { return dynamic_cast<C*> (C::_rpc_id2obj (i)); }
+
 /* === Dispatching === */
 struct DispatcherEntry {
   uint64            hash_qwords[TypeHash::hash_size];

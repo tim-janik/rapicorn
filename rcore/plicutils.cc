@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <map>
+#include <set>
 
 /* === Auxillary macros === */
 #define PLIC_CPP_PASTE2i(a,b)                   a ## b // indirection required to expand __LINE__ etc
@@ -63,6 +64,73 @@ printerr (const char *format, ...)
   buffer[512] = 0; // force termination
   size_t l = write (2, buffer, strlen (buffer));
   (void) l;
+}
+
+/* === SimpleProxy === */
+const SimpleProxy &SimpleProxy::None = SimpleProxy (0);
+
+SimpleProxy::SimpleProxy (uint64 rpc_id) :
+  m_rpc_id (rpc_id)
+{
+  if (&SimpleProxy::None)
+    assert (rpc_id != 0);
+}
+
+uint64
+SimpleProxy::_rpc_id () const
+{
+  return m_rpc_id;
+}
+
+bool
+SimpleProxy::_is_null () const
+{
+  return m_rpc_id == 0;
+}
+
+SimpleProxy::~SimpleProxy()
+{}
+
+SimpleProxy*
+SimpleProxy::_rpc_id2obj (uint64 rpc_id)
+{
+  if (rpc_id == 0)
+    return const_cast<SimpleProxy*> (&None);
+  return NULL; // FIXME
+}
+
+/* === SimpleProxy === */
+static pthread_mutex_t         simple_server_mutex = PTHREAD_MUTEX_INITIALIZER;
+static std::set<SimpleServer*> simple_server_set;
+
+SimpleServer::SimpleServer ()
+{
+  pthread_mutex_lock (&simple_server_mutex);
+  simple_server_set.insert (this);
+  pthread_mutex_unlock (&simple_server_mutex);
+}
+
+SimpleServer::~SimpleServer ()
+{
+  pthread_mutex_lock (&simple_server_mutex);
+  simple_server_set.erase (this);
+  pthread_mutex_unlock (&simple_server_mutex);
+}
+
+uint64
+SimpleServer::_rpc_id () const
+{
+  return uint64 (this);
+}
+
+SimpleServer*
+SimpleServer::_rpc_id2obj (uint64 rpc_id)
+{
+  pthread_mutex_lock (&simple_server_mutex);
+  std::set<SimpleServer*>::const_iterator it = simple_server_set.find ((SimpleServer*) rpc_id);
+  SimpleServer *self = it == simple_server_set.end() ? NULL : *it;
+  pthread_mutex_unlock (&simple_server_mutex);
+  return self;
 }
 
 /* === TypeHash === */

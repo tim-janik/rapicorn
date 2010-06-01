@@ -6,13 +6,14 @@ SUBDIRS = . # tests
 INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_ROPE_CFLAGS) $(PYTHON_CPPFLAGS)
 DEFS      = -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RAPICORN-ROPE\" # "
 PLICINT   = $(top_builddir)/plic/plic-intern
-RAPICORNIDL = $(srcdir)/../ui/rapicorn.idl
+RAPICORNIDL  = $(srcdir)/../ui/rapicorn.idl
+HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
 
 # === CxxRapicorn ===
 noinst_PROGRAMS     = cxxrapicorn
 cxxrapicorn_SOURCES = cxx-rope.cc
 cxxrapicorn_LDADD   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
-EXTRA_DIST         += cxx-rope.hh
+EXTRA_DIST         += cxx-rope.hh cxx-client.hh
 
 # === PyRapicorn ===
 pyrapicorn_cc_sources = py-rope.cc
@@ -38,13 +39,19 @@ cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/CxxPyStub.py
 $(srcdir)/py-rope.cc: cpy2rope.cc
 CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
 
-# === rope2cxx.cc ===
-rope2cxx.cc: $(RAPICORNIDL) $(srcdir)/CxxCaller.py
-	: # compile IDL definitions into rope2cxx.cc
-	${PLICINT} -G $(srcdir)/CxxCaller -g server $(RAPICORNIDL) -o xgen-$(@F)
+# === cxx-client ===
+cxx-client.hh: $(RAPICORNIDL) $(HARDCODEDIDL) $(srcdir)/CxxCaller.py
+	: # build cxx-client.hh from rapicorn.idl
+	: # ${PLICINT} -G $(srcdir)/CxxCaller -g clienthh $(HARDCODEDIDL) -o xgen-$(@F)
+	${PLICINT} -G $(srcdir)/CxxCaller -g clienthh $(RAPICORNIDL) -o xgen-$(@F)
 	mv xgen-$(@F) $@
-$(srcdir)/py-rope.cc: rope2cxx.cc
-CLEANFILES += xgen-rope2cxx.cc rope2cxx.cc
+cxx-client.cc: $(RAPICORNIDL) $(HARDCODEDIDL) $(srcdir)/CxxCaller.py
+	: # build cxx-client.cc from rapicorn.idl
+	: # ${PLICINT} -G $(srcdir)/CxxCaller -g clientcc $(HARDCODEDIDL) --inclusions '"cxx-client.hh"' -o xgen-$(@F)
+	${PLICINT} -G $(srcdir)/CxxCaller -g clientcc $(RAPICORNIDL) --inclusions '"cxx-client.hh"' -o - > xgen-$(@F)
+	mv xgen-$(@F) $@
+$(srcdir)/cxx-rope.cc: cxx-client.hh cxx-client.cc
+CLEANFILES += xgen-cxx-client.hh xgen-cxx-client.cc cxx-client.hh cxx-client.cc
 
 # === py2cpy.py ===
 py2cpy.py: $(RAPICORNIDL) $(srcdir)/PyStub.py

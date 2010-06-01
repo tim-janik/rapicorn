@@ -24,9 +24,6 @@
 
 #define HAVE_PLIC_CALL_REMOTE   1
 
-// --- rope2cxx stubs (generated) ---
-#include "rope2cxx.cc"
-
 // --- Anonymous namespacing
 namespace {
 
