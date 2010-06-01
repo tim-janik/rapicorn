@@ -105,7 +105,6 @@ check-cppskels:
 	$(_@) cp $(srcdir)/testcppskels.ref testcppskels.cc
 	$(_@) $(CXXCOMPILE) testcppskels.cc -c ; $(call TSTRESULT)
 	$(_@) rm -f testcppskels.cc testcppskels.o
-# $(TSTOUT)
 EXTRA_DIST += testcppskels.ref
 check-local: check-cppskels
 # test rapicorn.idl with PLIC

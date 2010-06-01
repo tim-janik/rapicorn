@@ -70,7 +70,7 @@ static FieldBuffer* plic_call_remote (FieldBuffer *fb)
 } // Anonymous
 
 
-// --- Interfaces ---
+// --- Interfaces (class declarations) ---
 
 namespace MandatoryNamespace {
 enum Empty {
@@ -395,7 +395,7 @@ public:
 };
 } // RapicornPlicTest
 
-// --- Client Stubs ---
+// --- Implementations ---
 
 namespace MandatoryNamespace {
 bool
@@ -717,6 +717,8 @@ SomeRecord::proto_pop (Plic::FieldBufferReader &src)
 } // OtherNamespace
 
 namespace InterfaceTests {
+UIWidgetArea::~UIWidgetArea () {}
+
 double
 UIWidgetArea::simple_method ()
 {
@@ -850,6 +852,14 @@ UIWidgetArea::on_click2in (const std::string &arg_command)
   fb.add_string (arg_command);
   plic_call_remote (&fb); // deletes fb
 }
+Parent::~Parent () {}
+
+Child::~Child () {}
+
+Descendant::~Descendant () {}
+
+GrandChild::~GrandChild () {}
+
 bool
 QuickRecord::proto_add (Plic::FieldBuffer &dst) const
 {
@@ -889,6 +899,8 @@ QuickSequence::proto_pop (Plic::FieldBufferReader &src)
   }
   return true;
 }
+
+MethodTestInterface::~MethodTestInterface () {}
 
 void
 MethodTestInterface::method_with_void ()
@@ -1023,6 +1035,10 @@ MethodTestInterface::method_with_interface (GrandChild &arg_input,
 } // InterfaceTests
 
 namespace RapicornPlicTest {
+ButtonArea::~ButtonArea () {}
+
+PureMethods::~PureMethods () {}
+
 int
 PureMethods::pure_method (double arg_f)
 {
@@ -1037,7 +1053,7 @@ PureMethods::pure_method (double arg_f)
   return retval;
 }
 
-// --- Server Stubs ---
+// --- Method Dispatchers & Registry ---
 } // RapicornPlicTest
 
 namespace MandatoryNamespace {
@@ -1393,29 +1409,5 @@ static const Plic::DispatcherEntry _dispatcher_entries[] = {
   { { 0x0ca20000ac480384ULL, 0xd1df259f1d53b082ULL, 0x995d5e5b4bb2fcb4ULL, 0x83f6a92ee477fcd6ULL }, RapicornPlicTest::call_PureMethods_pure_method, },
 };
 static Plic::DispatcherRegistry _dispatcher_registry (_dispatcher_entries);
-
-} // RapicornPlicTest
-
-// --- Interface Implementation Helpers ---
-
-namespace InterfaceTests {
-UIWidgetArea::~UIWidgetArea () {}
-
-Parent::~Parent () {}
-
-Child::~Child () {}
-
-Descendant::~Descendant () {}
-
-GrandChild::~GrandChild () {}
-
-MethodTestInterface::~MethodTestInterface () {}
-
-} // InterfaceTests
-
-namespace RapicornPlicTest {
-ButtonArea::~ButtonArea () {}
-
-PureMethods::~PureMethods () {}
 
 } // RapicornPlicTest

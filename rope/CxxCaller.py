@@ -218,7 +218,7 @@ class Generator:
     if type.storage == Decls.ENUM:
       return self.type2cpp (type) + ' (0)'
     return '0'
-  def generate_record_interface (self, type_info):
+  def generate_recseq_decl (self, type_info):
     s = ''
     s += 'struct %s {\n' % type_info.name
     if type_info.storage == Decls.RECORD:
@@ -496,7 +496,7 @@ class Generator:
       s += '  return 0; // FIXME\n'
     s += '}\n'
     return s
-  def generate_class_interface (self, type_info):
+  def generate_interface_decl (self, type_info):
     s = ''
     l = []
     for pr in type_info.prerequisites:
@@ -533,7 +533,7 @@ class Generator:
     for m in type_info.methods:
       s += self.generate_virtual_method_skel (m, type_info)
     return s
-  def generate_enum_interface (self, type_info):
+  def generate_enum_decl (self, type_info):
     s = ''
     l = []
     s += 'enum %s {\n' % type_info.name
@@ -589,69 +589,53 @@ class Generator:
     for tp in implementation_types:
       if tp.isimpl:
         types += [ tp ]
-    # generate type skeletons
-    if self.gen_serverhh:
-      s += '\n// --- Interfaces ---\n'
+    # generate client/server decls
+    if self.gen_clienthh or self.gen_serverhh:
+      s += '\n// --- Interfaces (class declarations) ---\n'
       for tp in types:
         s += self.open_namespace (tp)
         if tp.typedef_origin:
           s += 'typedef %s %s;\n' % (self.type2cpp (tp.typedef_origin), tp.name)
-        elif tp.storage == Decls.RECORD:
-          s += self.generate_record_interface (tp) + '\n'
-        elif tp.storage == Decls.SEQUENCE:
-          s += self.generate_record_interface (tp) + '\n'
-        elif tp.storage == Decls.INTERFACE:
-          s += self.generate_class_interface (tp) + '\n'
+        elif tp.storage in (Decls.RECORD, Decls.SEQUENCE):
+          s += self.generate_recseq_decl (tp) + '\n'
         elif tp.storage == Decls.ENUM:
-          s += self.generate_enum_interface (tp) + '\n'
+          s += self.generate_enum_decl (tp) + '\n'
+        elif tp.storage == Decls.INTERFACE:
+          s += self.generate_interface_decl (tp) + '\n'
       s += self.open_namespace (None)
-    # generate client stubs
-    if self.gen_clienthh or self.gen_clientcc:
-      s += '\n// --- Client Stubs ---\n'
+    # generate client/server impls
+    if self.gen_clientcc or self.gen_servercc:
+      s += '\n// --- Implementations ---\n'
       for tp in types:
         if tp.typedef_origin:
           continue
-        s += self.open_namespace (tp)
         if tp.storage == Decls.RECORD:
+          s += self.open_namespace (tp)
           s += self.generate_record_impl (tp) + '\n'
         elif tp.storage == Decls.SEQUENCE:
+          s += self.open_namespace (tp)
           s += self.generate_sequence_impl (tp) + '\n'
         elif tp.storage == Decls.INTERFACE:
-          for m in tp.methods:
-            s += self.generate_class_call_client_stub (tp, m)
-    # generate server stubs
+          s += self.open_namespace (tp)
+          if self.gen_servercc:
+            s += self.generate_interface_impl (tp) + '\n'
+          if self.gen_clientcc:
+            for m in tp.methods:
+              s += self.generate_class_call_client_stub (tp, m)
+    # generate unmarshalling server calls
     if self.gen_servercc:
-      s += '\n// --- Server Stubs ---\n'
+      s += '\n// --- Method Dispatchers & Registry ---\n'
       reglines = []
       for tp in types:
         if tp.typedef_origin:
           continue
         s += self.open_namespace (tp)
-        if tp.storage == Decls.RECORD:
-          pass # s += self.generate_record_impl (tp) + '\n'
-        elif tp.storage == Decls.SEQUENCE:
-          pass # s += self.generate_sequence_impl (tp) + '\n'
-        elif tp.storage == Decls.INTERFACE:
+        if tp.storage == Decls.INTERFACE:
           for m in tp.methods:
             s += self.generate_class_call_wrapper (tp, m, reglines)
           s += '\n'
       s += self.generate_class_call_registry (reglines) + '\n'
       s += self.open_namespace (None)
-    # generate interface impls
-    if self.gen_servercc:
-      s += '\n// --- Interface Implementation Helpers ---\n'
-      for tp in types:
-        if tp.typedef_origin:
-          continue
-        elif tp.storage == Decls.INTERFACE:
-          s += self.open_namespace (tp)
-          s += self.generate_interface_impl (tp) + '\n'
-        elif tp.storage == Decls.RECORD and not self.gen_clientcc:
-          s += self.open_namespace (tp)
-          s += self.generate_record_impl (tp) + '\n'
-        elif tp.storage == Decls.SEQUENCE and not self.gen_clientcc:
-          s += self.open_namespace (tp)
-          s += self.generate_sequence_impl (tp) + '\n'
     # generate interface method skeletons
     if self.gen_server_skel:
       s += '\n// --- Interface Skeletons ---\n'
