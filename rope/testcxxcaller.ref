@@ -242,9 +242,9 @@ namespace InterfaceTests {
 
 class UIWidgetArea : public virtual Plic::SmartHandle {
 protected:
-  explicit UIWidgetArea () {}
+  inline UIWidgetArea () {}
 public:
-  explicit UIWidgetArea (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline UIWidgetArea (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   double          simple_method ();
   double          single_arg    (int n);
   double          single_arg2   (int n = 5);
@@ -293,9 +293,9 @@ public:
 
 class Parent : public virtual Plic::SmartHandle {
 protected:
-  explicit Parent () {}
+  inline Parent () {}
 public:
-  explicit Parent (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline Parent (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class Parent_Iface : public virtual Plic::SimpleServer {
@@ -306,9 +306,9 @@ public:
 
 class Child : public Parent {
 protected:
-  explicit Child () {}
+  inline Child () {}
 public:
-  explicit Child (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline Child (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class Child_Iface : public virtual Parent_Iface {
@@ -319,9 +319,9 @@ public:
 
 class Descendant : public Child {
 protected:
-  explicit Descendant () {}
+  inline Descendant () {}
 public:
-  explicit Descendant (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline Descendant (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class Descendant_Iface : public virtual Child_Iface {
@@ -332,9 +332,9 @@ public:
 
 class GrandChild : public Descendant {
 protected:
-  explicit GrandChild () {}
+  inline GrandChild () {}
 public:
-  explicit GrandChild (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline GrandChild (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class GrandChild_Iface : public virtual Descendant_Iface {
@@ -360,9 +360,9 @@ struct QuickSequence {
 
 class MethodTestInterface : public virtual Plic::SmartHandle {
 protected:
-  explicit MethodTestInterface () {}
+  inline MethodTestInterface () {}
 public:
-  explicit MethodTestInterface (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline MethodTestInterface (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   void            method_with_void      ();
   bool            method_with_bools     (bool input,
                                          bool optval = 0);
@@ -417,9 +417,9 @@ enum ClickType {
 
 class ButtonArea : public virtual Plic::SmartHandle {
 protected:
-  explicit ButtonArea () {}
+  inline ButtonArea () {}
 public:
-  explicit ButtonArea (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline ButtonArea (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class ButtonArea_Iface : public virtual Plic::SimpleServer {
@@ -434,9 +434,9 @@ public:
 
 class PureMethods : public virtual Plic::SmartHandle {
 protected:
-  explicit PureMethods () {}
+  inline PureMethods () {}
 public:
-  explicit PureMethods (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline PureMethods (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   int             pure_method (double f);
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };

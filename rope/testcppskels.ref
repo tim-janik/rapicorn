@@ -243,9 +243,9 @@ public:
 class UIWidgetArea : public virtual Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  explicit UIWidgetArea () {}
+  inline UIWidgetArea () {}
 public:
-  explicit UIWidgetArea (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline UIWidgetArea (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   // double          simple_method ();
   // double          single_arg    (int);
   // double          single_arg2   (int);
@@ -270,9 +270,9 @@ public:
 class Parent : public virtual Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  explicit Parent () {}
+  inline Parent () {}
 public:
-  explicit Parent (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline Parent (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   inline Parent_Iface& operator*  () const { return *dynamic_cast<Parent_Iface*> (_iface()); }
   inline Parent_Iface* operator-> () const { return dynamic_cast<Parent_Iface*> (_iface()); }
   inline operator  Parent_Iface&  () const { return operator*(); }
@@ -287,9 +287,9 @@ public:
 class Child : public Parent {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  explicit Child () {}
+  inline Child () {}
 public:
-  explicit Child (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline Child (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   inline Child_Iface& operator*  () const { return *dynamic_cast<Child_Iface*> (_iface()); }
   inline Child_Iface* operator-> () const { return dynamic_cast<Child_Iface*> (_iface()); }
   inline operator  Child_Iface&  () const { return operator*(); }
@@ -304,9 +304,9 @@ public:
 class Descendant : public Child {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  explicit Descendant () {}
+  inline Descendant () {}
 public:
-  explicit Descendant (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline Descendant (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   inline Descendant_Iface& operator*  () const { return *dynamic_cast<Descendant_Iface*> (_iface()); }
   inline Descendant_Iface* operator-> () const { return dynamic_cast<Descendant_Iface*> (_iface()); }
   inline operator  Descendant_Iface&  () const { return operator*(); }
@@ -321,9 +321,9 @@ public:
 class GrandChild : public Descendant {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  explicit GrandChild () {}
+  inline GrandChild () {}
 public:
-  explicit GrandChild (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline GrandChild (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   inline GrandChild_Iface& operator*  () const { return *dynamic_cast<GrandChild_Iface*> (_iface()); }
   inline GrandChild_Iface* operator-> () const { return dynamic_cast<GrandChild_Iface*> (_iface()); }
   inline operator  GrandChild_Iface&  () const { return operator*(); }
@@ -370,9 +370,9 @@ public:
 class MethodTestInterface : public virtual Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  explicit MethodTestInterface () {}
+  inline MethodTestInterface () {}
 public:
-  explicit MethodTestInterface (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline MethodTestInterface (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   // void            method_with_void      ();
   // bool            method_with_bools     (bool, bool);
   // int             method_with_ints      (int, int);
@@ -410,9 +410,9 @@ public:
 class ButtonArea : public virtual Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  explicit ButtonArea () {}
+  inline ButtonArea () {}
 public:
-  explicit ButtonArea (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline ButtonArea (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   inline ButtonArea_Iface& operator*  () const { return *dynamic_cast<ButtonArea_Iface*> (_iface()); }
   inline ButtonArea_Iface* operator-> () const { return dynamic_cast<ButtonArea_Iface*> (_iface()); }
   inline operator  ButtonArea_Iface&  () const { return operator*(); }
@@ -428,9 +428,9 @@ public:
 class PureMethods : public virtual Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  explicit PureMethods () {}
+  inline PureMethods () {}
 public:
-  explicit PureMethods (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline PureMethods (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   // int             pure_method (double);
   inline PureMethods_Iface& operator*  () const { return *dynamic_cast<PureMethods_Iface*> (_iface()); }
   inline PureMethods_Iface* operator-> () const { return dynamic_cast<PureMethods_Iface*> (_iface()); }

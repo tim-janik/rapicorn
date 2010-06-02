@@ -471,12 +471,12 @@ class Generator:
       s += '  inline %s* _iface() const { return (%s*) _void_iface(); }\n' \
           % (self._iface_base, self._iface_base)
     if self.gen4smarthandle:
-      s += '  explicit %s () {}\n' % type_info.name
+      s += '  inline %s () {}\n' % type_info.name
     else: # not self.gen4smarthandle:
       s += '  virtual ' + self.format_to_tab ('/*Des*/') + '~%s%s () = 0;\n' % (type_info.name, _Iface)
     s += 'public:\n'
     if self.gen4smarthandle:
-      s += '  explicit %s (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) ' % type_info.name
+      s += '  inline %s (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) ' % type_info.name
       s += '{ _pop_rpc (cc, fbr); }\n'
     if not self.gen4smarthandle:
       for sg in type_info.signals:
