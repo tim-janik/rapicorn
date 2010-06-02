@@ -86,34 +86,35 @@ check-cxxpystub:
 	$(_@) rm -f testcxxpystub.cc testcxxpystub.o
 EXTRA_DIST += CxxPyStub.py testcxxpystub.ref
 check-local: check-cxxpystub
-# test CxxCaller
+# test CxxCaller server and client
 check-cxxcaller:
-	@$(call TSTTITLE)
-	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
-	@$(call TSTCMP, $(srcdir)/testcxxcaller.ref)
-	@$(call TSTTITLE, check-cxxcaller-syntax)
-	$(_@) cp $(srcdir)/testcxxcaller.ref testcxxcaller.cc
-	$(_@) $(CXXCOMPILE) testcxxcaller.cc -c ; $(call TSTRESULT)
-	$(_@) rm -f testcxxcaller.cc testcxxcaller.o
-EXTRA_DIST += CxxCaller.py testcxxcaller.ref
+	@$(call TSTTITLE, '"check CxxCaller server generation"')
+	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g serverhh -g servercc \
+	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
+	@$(call TSTCMP, $(srcdir)/testcxxserver.ref)
+	@$(call TSTTITLE, '"check CxxCaller client generation"')
+	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g clienthh -g clientcc \
+	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
+	@$(call TSTCMP, $(srcdir)/testcxxclient.ref)
+	@$(call TSTTITLE, '"check CxxCaller skeleton generation"')
+	@echo -e "#include <rapicorn.hh>\n" > $(TSTOUT)
+	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g serverhh -g server-skel \
+	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT)
+	@$(call TSTCMP, $(srcdir)/testcxxskels.ref)
+	@$(call TSTTITLE, '"check CxxCaller server code"')
+	$(_@) cp $(srcdir)/testcxxserver.ref testcxxserver.cc
+	$(_@) $(CXXCOMPILE) testcxxserver.cc -c ; $(call TSTRESULT)
+	$(_@) rm -f testcxxserver.cc testcxxserver.o
+	@$(call TSTTITLE, '"check CxxCaller client code"')
+	$(_@) cp $(srcdir)/testcxxclient.ref testcxxclient.cc
+	$(_@) $(CXXCOMPILE) testcxxclient.cc -c ; $(call TSTRESULT)
+	$(_@) rm -f testcxxclient.cc testcxxclient.o
+	@$(call TSTTITLE, '"check CxxCaller skeleton code"')
+	$(_@) cp $(srcdir)/testcxxskels.ref testcxxskels.cc
+	$(_@) $(CXXCOMPILE) testcxxskels.cc -c ; $(call TSTRESULT)
+	$(_@) rm -f testcxxskels.cc testcxxskels.o
+EXTRA_DIST += CxxCaller.py testcxxserver.ref testcxxclient.ref testcxxskels.ref
 check-local: check-cxxcaller
-# test CxxCaller Skeleton
-check-cppskels:
-	@$(call TSTTITLE)
-	@echo -e "#include <rapicorn.hh>\n" \
-	  "class ProtoRecord; class ProtoSequence; class ProtoArg; class ProtoMessage;" \
-	  > $(TSTOUT)
-	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g serverhh \
-	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT)
-	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g server-skel \
-	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT)
-	@$(call TSTCMP, $(srcdir)/testcppskels.ref)
-	@$(call TSTTITLE, check-cppskels-syntax)
-	$(_@) cp $(srcdir)/testcppskels.ref testcppskels.cc
-	$(_@) $(CXXCOMPILE) testcppskels.cc -c ; $(call TSTRESULT)
-	$(_@) rm -f testcppskels.cc testcppskels.o
-EXTRA_DIST += testcppskels.ref
-check-local: check-cppskels
 # test rapicorn.idl with PLIC
 check-rapicorn-idl:
 	@$(call TSTTITLE)
