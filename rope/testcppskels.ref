@@ -241,7 +241,11 @@ public:
   virtual void            on_click2in   (const std::string &command);
 };
 class UIWidgetArea : public virtual Plic::SmartHandle {
+protected:
+  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
+  explicit UIWidgetArea () {}
 public:
+  explicit UIWidgetArea (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   // double          simple_method ();
   // double          single_arg    (int);
   // double          single_arg2   (int);
@@ -252,8 +256,9 @@ public:
   // void            void_method   ();
   // std::string     on_click2out  ();
   // void            on_click2in   (const std::string&);
-  inline UIWidgetArea_Iface&  operator*  () const { return *dynamic_cast<UIWidgetArea_Iface*> (_iface()); }
-  inline UIWidgetArea_Iface*  operator-> () const { return dynamic_cast<UIWidgetArea_Iface*> (_iface()); }
+  inline UIWidgetArea_Iface& operator*  () const { return *dynamic_cast<UIWidgetArea_Iface*> (_iface()); }
+  inline UIWidgetArea_Iface* operator-> () const { return dynamic_cast<UIWidgetArea_Iface*> (_iface()); }
+  inline operator  UIWidgetArea_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
@@ -263,9 +268,14 @@ protected:
 public:
 };
 class Parent : public virtual Plic::SmartHandle {
+protected:
+  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
+  explicit Parent () {}
 public:
-  inline Parent_Iface&  operator*  () const { return *dynamic_cast<Parent_Iface*> (_iface()); }
-  inline Parent_Iface*  operator-> () const { return dynamic_cast<Parent_Iface*> (_iface()); }
+  explicit Parent (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline Parent_Iface& operator*  () const { return *dynamic_cast<Parent_Iface*> (_iface()); }
+  inline Parent_Iface* operator-> () const { return dynamic_cast<Parent_Iface*> (_iface()); }
+  inline operator  Parent_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
@@ -275,9 +285,14 @@ protected:
 public:
 };
 class Child : public Parent {
+protected:
+  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
+  explicit Child () {}
 public:
-  inline Child_Iface&  operator*  () const { return *dynamic_cast<Child_Iface*> (_iface()); }
-  inline Child_Iface*  operator-> () const { return dynamic_cast<Child_Iface*> (_iface()); }
+  explicit Child (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline Child_Iface& operator*  () const { return *dynamic_cast<Child_Iface*> (_iface()); }
+  inline Child_Iface* operator-> () const { return dynamic_cast<Child_Iface*> (_iface()); }
+  inline operator  Child_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
@@ -287,9 +302,14 @@ protected:
 public:
 };
 class Descendant : public Child {
+protected:
+  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
+  explicit Descendant () {}
 public:
-  inline Descendant_Iface&  operator*  () const { return *dynamic_cast<Descendant_Iface*> (_iface()); }
-  inline Descendant_Iface*  operator-> () const { return dynamic_cast<Descendant_Iface*> (_iface()); }
+  explicit Descendant (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline Descendant_Iface& operator*  () const { return *dynamic_cast<Descendant_Iface*> (_iface()); }
+  inline Descendant_Iface* operator-> () const { return dynamic_cast<Descendant_Iface*> (_iface()); }
+  inline operator  Descendant_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
@@ -299,9 +319,14 @@ protected:
 public:
 };
 class GrandChild : public Descendant {
+protected:
+  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
+  explicit GrandChild () {}
 public:
-  inline GrandChild_Iface&  operator*  () const { return *dynamic_cast<GrandChild_Iface*> (_iface()); }
-  inline GrandChild_Iface*  operator-> () const { return dynamic_cast<GrandChild_Iface*> (_iface()); }
+  explicit GrandChild (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline GrandChild_Iface& operator*  () const { return *dynamic_cast<GrandChild_Iface*> (_iface()); }
+  inline GrandChild_Iface* operator-> () const { return dynamic_cast<GrandChild_Iface*> (_iface()); }
+  inline operator  GrandChild_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 enum QuickEnum {
@@ -343,7 +368,11 @@ public:
                                                    GrandChild_Iface &optval = *(GrandChild_Iface*) NULL);
 };
 class MethodTestInterface : public virtual Plic::SmartHandle {
+protected:
+  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
+  explicit MethodTestInterface () {}
 public:
+  explicit MethodTestInterface (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   // void            method_with_void      ();
   // bool            method_with_bools     (bool, bool);
   // int             method_with_ints      (int, int);
@@ -353,8 +382,9 @@ public:
   // QuickRecord     method_with_record    (const QuickRecord&, const QuickRecord&);
   // QuickSequence   method_with_sequence  (const QuickSequence&, const QuickSequence&);
   // GrandChild*     method_with_interface (GrandChild&, GrandChild&);
-  inline MethodTestInterface_Iface&  operator*  () const { return *dynamic_cast<MethodTestInterface_Iface*> (_iface()); }
-  inline MethodTestInterface_Iface*  operator-> () const { return dynamic_cast<MethodTestInterface_Iface*> (_iface()); }
+  inline MethodTestInterface_Iface& operator*  () const { return *dynamic_cast<MethodTestInterface_Iface*> (_iface()); }
+  inline MethodTestInterface_Iface* operator-> () const { return dynamic_cast<MethodTestInterface_Iface*> (_iface()); }
+  inline operator  MethodTestInterface_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 } // InterfaceTests
@@ -378,9 +408,14 @@ public:
   // Signal_activate sig_activate;
 };
 class ButtonArea : public virtual Plic::SmartHandle {
+protected:
+  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
+  explicit ButtonArea () {}
 public:
-  inline ButtonArea_Iface&  operator*  () const { return *dynamic_cast<ButtonArea_Iface*> (_iface()); }
-  inline ButtonArea_Iface*  operator-> () const { return dynamic_cast<ButtonArea_Iface*> (_iface()); }
+  explicit ButtonArea (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline ButtonArea_Iface& operator*  () const { return *dynamic_cast<ButtonArea_Iface*> (_iface()); }
+  inline ButtonArea_Iface* operator-> () const { return dynamic_cast<ButtonArea_Iface*> (_iface()); }
+  inline operator  ButtonArea_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
@@ -391,10 +426,15 @@ public:
   virtual int             pure_method (double f) = 0;
 };
 class PureMethods : public virtual Plic::SmartHandle {
+protected:
+  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
+  explicit PureMethods () {}
 public:
+  explicit PureMethods (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
   // int             pure_method (double);
-  inline PureMethods_Iface&  operator*  () const { return *dynamic_cast<PureMethods_Iface*> (_iface()); }
-  inline PureMethods_Iface*  operator-> () const { return dynamic_cast<PureMethods_Iface*> (_iface()); }
+  inline PureMethods_Iface& operator*  () const { return *dynamic_cast<PureMethods_Iface*> (_iface()); }
+  inline PureMethods_Iface* operator-> () const { return dynamic_cast<PureMethods_Iface*> (_iface()); }
+  inline operator  PureMethods_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 } // RapicornPlicTest

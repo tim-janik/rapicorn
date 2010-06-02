@@ -70,7 +70,7 @@ class Generator:
     self.gen_inclusions = []
     self.skip_symbols = set()
     self._IFACE_postfix = '_Iface'
-    self._iface_base = 'public virtual Plic::SimpleServer'
+    self._iface_base = 'Plic::SimpleServer'
     self.gen4smarthandle = True
     self.gen4fakehandle = False
   def close_inner_namespace (self):
@@ -454,24 +454,30 @@ class Generator:
     for pr in type_info.prerequisites:
       l += [ pr ]
     l = self.inherit_reduce (l)
-    if not self.gen4smarthandle:
-      l = ['public virtual ' + pr.name + _Iface for pr in l] # types -> names
-      if not l:
-        l = [self._iface_base]
-    else:
+    if self.gen4smarthandle:
       l = ['public ' + pr.name for pr in l] # types -> names
       if not l:
         l = ['public virtual Plic::SmartHandle']
+    else:
+      l = ['public virtual ' + pr.name + _Iface for pr in l] # types -> names
+      if not l:
+        l = ['public virtual ' + self._iface_base]
     s += 'class %s%s' % (type_info.name, _Iface)
     if l:
       s += ' : %s' % ', '.join (l)
     s += ' {\n'
-    if not self.gen4smarthandle:
-      s += 'protected:\n'
+    s += 'protected:\n'
+    if self.gen4fakehandle:
+      s += '  inline %s* _iface() const { return (%s*) _void_iface(); }\n' \
+          % (self._iface_base, self._iface_base)
+    if self.gen4smarthandle:
+      s += '  explicit %s () {}\n' % type_info.name
+    else: # not self.gen4smarthandle:
       s += '  virtual ' + self.format_to_tab ('/*Des*/') + '~%s%s () = 0;\n' % (type_info.name, _Iface)
-    else:
-      pass # s += '  ' + self.format_to_tab ('virtual /*Des*/') + '~%s%s ();\n' % (type_info.name, _Iface)
     s += 'public:\n'
+    if self.gen4smarthandle:
+      s += '  explicit %s (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) ' % type_info.name
+      s += '{ _pop_rpc (cc, fbr); }\n'
     if not self.gen4smarthandle:
       for sg in type_info.signals:
         s += self.generate_sigdef (sg, type_info)
@@ -483,10 +489,11 @@ class Generator:
     for m in type_info.methods:
       s += self.generate_method_decl (m, ml)
     if self.gen4fakehandle:
-      s += '  inline %s%s&  operator*  () const { return *dynamic_cast<%s%s*> (_iface()); }\n' \
-          % (type_info.name, self._IFACE_postfix, type_info.name, self._IFACE_postfix)
-      s += '  inline %s%s*  operator-> () const { return dynamic_cast<%s%s*> (_iface()); }\n' \
-          % (type_info.name, self._IFACE_postfix, type_info.name, self._IFACE_postfix)
+      ifacename = type_info.name + self._IFACE_postfix
+      ifn2 = (ifacename, ifacename)
+      s += '  inline %s& operator*  () const { return *dynamic_cast<%s*> (_iface()); }\n' % ifn2
+      s += '  inline %s* operator-> () const { return dynamic_cast<%s*> (_iface()); }\n' % ifn2
+      s += '  inline operator  %s&  () const { return operator*(); }\n' % ifacename
     if self.gen4smarthandle or self.gen4fakehandle:
       s += '  inline operator _unspecified_bool_type () const ' # return non-NULL pointer to member on true
       s += '{ return _is_null() ? NULL : _unspecified_bool_true(); }\n' # avoids auto-bool conversions on: float (*this)
