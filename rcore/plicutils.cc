@@ -22,15 +22,21 @@
 #include <sched.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <stdexcept>
 #include <map>
 #include <set>
 
 /* === Auxillary macros === */
+#ifndef __GNUC__
+#define __PRETTY_FUNCTION__                     __func__
+#endif
 #define PLIC_CPP_PASTE2i(a,b)                   a ## b // indirection required to expand __LINE__ etc
 #define PLIC_CPP_PASTE2(a,b)                    PLIC_CPP_PASTE2i (a,b)
 #define PLIC_STATIC_ASSERT_NAMED(expr,asname)   typedef struct { char asname[(expr) ? 1 : -1]; } PLIC_CPP_PASTE2 (Plic_StaticAssertion_LINE, __LINE__)
 #define PLIC_STATIC_ASSERT(expr)                PLIC_STATIC_ASSERT_NAMED (expr, compile_time_assertion_failed)
 #define ALIGN4(sz,unit)                         (sizeof (unit) * ((sz + sizeof (unit) - 1) / sizeof (unit)))
+#define PLIC_THROW_IF_FAIL(expr)                do { if (expr) break; PLIC_THROW ("failed to assert (" + #expr + ")"); } while (0)
+#define PLIC_THROW(msg)                         throw std::runtime_error (std::string() + __PRETTY_FUNCTION__ + ": " + msg)
 
 namespace Plic {
 
@@ -67,13 +73,36 @@ printerr (const char *format, ...)
 }
 
 /* === SmartHandle === */
-const SmartHandle &SmartHandle::None = SmartHandle (0);
+struct SmartHandle0 : public SmartHandle {
+  explicit SmartHandle0 () : SmartHandle () {}
+};
+const SmartHandle &SmartHandle::None = SmartHandle0();
 
-SmartHandle::SmartHandle (uint64 rpc_id) :
-  m_rpc_id (rpc_id)
+SmartHandle::SmartHandle () :
+  m_rpc_id (0)
+{}
+
+void
+SmartHandle::_reset ()
 {
-  if (&SmartHandle::None)
-    assert (rpc_id != 0);
+  m_rpc_id = 0;
+}
+
+void
+SmartHandle::_pop_rpc (CallContext       &cc,
+                       FieldBufferReader &fbr)
+{
+  _reset();
+  m_rpc_id = cc.pop_rpc_handle (fbr);
+}
+
+void*
+SmartHandle::_cast_iface () const
+{
+  // unoptimized version of _void_iface()
+  if (m_rpc_id & 3)
+    PLIC_THROW ("invalid cast from rpc-id to class pointer");
+  return (void*) m_rpc_id;
 }
 
 uint64
@@ -86,12 +115,6 @@ bool
 SmartHandle::_is_null () const
 {
   return m_rpc_id == 0;
-}
-
-SimpleServer*
-SmartHandle::_iface () const
-{
-  return NULL; // FIXME
 }
 
 SmartHandle::~SmartHandle()
@@ -147,6 +170,38 @@ TypeHash::to_string() const
   for (uint i = 0; i < hash_size; i++)
     s += string_printf ("%016llx", qwords[i]);
   return s;
+}
+
+/* === CallContext === */
+CallContext::CallContext () :
+  m_field_buffer (NULL)
+{}
+
+void
+CallContext::reset ()
+{
+  if (m_field_buffer)
+    {
+      delete m_field_buffer;
+      m_field_buffer = NULL;
+    }
+}
+
+void
+CallContext::push_msg (FieldBuffer &fb)
+{
+  m_field_buffer = &fb;
+}
+
+uint64
+CallContext::pop_rpc_handle (FieldBufferReader &fbr)
+{
+  return fbr.pop_object();
+}
+
+CallContext::~CallContext ()
+{
+  reset();
 }
 
 /* === Dispatchers === */

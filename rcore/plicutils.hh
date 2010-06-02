@@ -65,6 +65,8 @@ inline bool is_callid_error  (const uint64 id) { return id >> 32 == callid_error
 
 /* === Forward Declarations === */
 class SimpleServer;
+class CallContext;
+class Connection;
 union FieldUnion;
 class FieldBuffer;
 class FieldBufferReader;
@@ -82,13 +84,18 @@ struct TypeHash {
 
 /* === SmartHandle === */
 class SmartHandle {
+  friend class CallContext;
   uint64 m_rpc_id;
 protected:
   typedef bool (SmartHandle::*_unspecified_bool_type) () const; // non-numeric operator bool() result
   static inline _unspecified_bool_type _unspecified_bool_true () { return &Plic::SmartHandle::_is_null; }
-  SimpleServer*             _iface      () const;
+  typedef uint64 RpcId;
+  explicit                  SmartHandle ();
+  void                      _reset      ();
+  void                      _pop_rpc    (CallContext&, FieldBufferReader&);
+  void*                     _cast_iface () const;
+  inline void*              _void_iface () const;
 public:
-  explicit                  SmartHandle (uint64 rpc_id);
   uint64                    _rpc_id     () const;
   bool                      _is_null    () const;
   virtual                  ~SmartHandle ();
@@ -109,6 +116,20 @@ public:
 template<class C> inline uint64 _rpc_id (C *const c) { return c ? c->_rpc_id() : 0; }
 template<class C> inline uint64 _rpc_id (const C &c) { return &c ? c._rpc_id() : 0; }
 template<class C> inline C* _rpc_ptr4id (uint64 i) { return dynamic_cast<C*> (C::_rpc_id2obj (i)); }
+
+/* === CallContext === */
+class CallContext {
+  CallContext&          operator=        (const CallContext&); // not assignable
+  /*Copy*/              CallContext      (const CallContext&); // not copyable
+  FieldBuffer          *m_field_buffer;
+public:
+  explicit              CallContext      ();
+  void                  reset            ();
+  void                  push_msg         (FieldBuffer&); // deletes fb later
+  inline FieldBuffer&   field_buffer     () const { return *m_field_buffer; }
+  uint64                pop_rpc_handle   (FieldBufferReader&);
+  virtual              ~CallContext      ();
+};
 
 /* === Dispatching === */
 struct DispatcherEntry {
@@ -248,6 +269,14 @@ TypeHash::operator< (const TypeHash &rhs) const
     else if (rhs.qwords[i] < qwords[i])
       return 0;
   return 0; // equal
+}
+
+inline void*
+SmartHandle::_void_iface () const
+{
+  if (PLIC_UNLIKELY (m_rpc_id & 3))
+    return _cast_iface();
+  return (void*) m_rpc_id;
 }
 
 template<class T, size_t S> inline
