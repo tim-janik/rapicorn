@@ -245,7 +245,7 @@ protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline UIWidgetArea () {}
 public:
-  inline UIWidgetArea (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline UIWidgetArea (Plic::Coupler &c) { _pop_rpc (c); }
   // double          simple_method ();
   // double          single_arg    (int);
   // double          single_arg2   (int);
@@ -272,7 +272,7 @@ protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline Parent () {}
 public:
-  inline Parent (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline Parent (Plic::Coupler &c) { _pop_rpc (c); }
   inline Parent_Iface& operator*  () const { return *dynamic_cast<Parent_Iface*> (_iface()); }
   inline Parent_Iface* operator-> () const { return dynamic_cast<Parent_Iface*> (_iface()); }
   inline operator  Parent_Iface&  () const { return operator*(); }
@@ -289,7 +289,7 @@ protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline Child () {}
 public:
-  inline Child (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline Child (Plic::Coupler &c) { _pop_rpc (c); }
   inline Child_Iface& operator*  () const { return *dynamic_cast<Child_Iface*> (_iface()); }
   inline Child_Iface* operator-> () const { return dynamic_cast<Child_Iface*> (_iface()); }
   inline operator  Child_Iface&  () const { return operator*(); }
@@ -306,7 +306,7 @@ protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline Descendant () {}
 public:
-  inline Descendant (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline Descendant (Plic::Coupler &c) { _pop_rpc (c); }
   inline Descendant_Iface& operator*  () const { return *dynamic_cast<Descendant_Iface*> (_iface()); }
   inline Descendant_Iface* operator-> () const { return dynamic_cast<Descendant_Iface*> (_iface()); }
   inline operator  Descendant_Iface&  () const { return operator*(); }
@@ -323,7 +323,7 @@ protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline GrandChild () {}
 public:
-  inline GrandChild (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline GrandChild (Plic::Coupler &c) { _pop_rpc (c); }
   inline GrandChild_Iface& operator*  () const { return *dynamic_cast<GrandChild_Iface*> (_iface()); }
   inline GrandChild_Iface* operator-> () const { return dynamic_cast<GrandChild_Iface*> (_iface()); }
   inline operator  GrandChild_Iface&  () const { return operator*(); }
@@ -372,7 +372,7 @@ protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline MethodTestInterface () {}
 public:
-  inline MethodTestInterface (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline MethodTestInterface (Plic::Coupler &c) { _pop_rpc (c); }
   // void            method_with_void      ();
   // bool            method_with_bools     (bool, bool);
   // int             method_with_ints      (int, int);
@@ -412,7 +412,7 @@ protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline ButtonArea () {}
 public:
-  inline ButtonArea (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline ButtonArea (Plic::Coupler &c) { _pop_rpc (c); }
   inline ButtonArea_Iface& operator*  () const { return *dynamic_cast<ButtonArea_Iface*> (_iface()); }
   inline ButtonArea_Iface* operator-> () const { return dynamic_cast<ButtonArea_Iface*> (_iface()); }
   inline operator  ButtonArea_Iface&  () const { return operator*(); }
@@ -430,7 +430,7 @@ protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline PureMethods () {}
 public:
-  inline PureMethods (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline PureMethods (Plic::Coupler &c) { _pop_rpc (c); }
   // int             pure_method (double);
   inline PureMethods_Iface& operator*  () const { return *dynamic_cast<PureMethods_Iface*> (_iface()); }
   inline PureMethods_Iface* operator-> () const { return dynamic_cast<PureMethods_Iface*> (_iface()); }

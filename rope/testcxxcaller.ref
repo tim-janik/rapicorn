@@ -244,7 +244,7 @@ class UIWidgetArea : public virtual Plic::SmartHandle {
 protected:
   inline UIWidgetArea () {}
 public:
-  inline UIWidgetArea (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline UIWidgetArea (Plic::Coupler &c) { _pop_rpc (c); }
   double          simple_method ();
   double          single_arg    (int n);
   double          single_arg2   (int n = 5);
@@ -295,7 +295,7 @@ class Parent : public virtual Plic::SmartHandle {
 protected:
   inline Parent () {}
 public:
-  inline Parent (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline Parent (Plic::Coupler &c) { _pop_rpc (c); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class Parent_Iface : public virtual Plic::SimpleServer {
@@ -308,7 +308,7 @@ class Child : public Parent {
 protected:
   inline Child () {}
 public:
-  inline Child (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline Child (Plic::Coupler &c) { _pop_rpc (c); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class Child_Iface : public virtual Parent_Iface {
@@ -321,7 +321,7 @@ class Descendant : public Child {
 protected:
   inline Descendant () {}
 public:
-  inline Descendant (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline Descendant (Plic::Coupler &c) { _pop_rpc (c); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class Descendant_Iface : public virtual Child_Iface {
@@ -334,7 +334,7 @@ class GrandChild : public Descendant {
 protected:
   inline GrandChild () {}
 public:
-  inline GrandChild (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline GrandChild (Plic::Coupler &c) { _pop_rpc (c); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class GrandChild_Iface : public virtual Descendant_Iface {
@@ -362,7 +362,7 @@ class MethodTestInterface : public virtual Plic::SmartHandle {
 protected:
   inline MethodTestInterface () {}
 public:
-  inline MethodTestInterface (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline MethodTestInterface (Plic::Coupler &c) { _pop_rpc (c); }
   void            method_with_void      ();
   bool            method_with_bools     (bool input,
                                          bool optval = 0);
@@ -419,7 +419,7 @@ class ButtonArea : public virtual Plic::SmartHandle {
 protected:
   inline ButtonArea () {}
 public:
-  inline ButtonArea (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline ButtonArea (Plic::Coupler &c) { _pop_rpc (c); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 class ButtonArea_Iface : public virtual Plic::SimpleServer {
@@ -436,7 +436,7 @@ class PureMethods : public virtual Plic::SmartHandle {
 protected:
   inline PureMethods () {}
 public:
-  inline PureMethods (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) { _pop_rpc (cc, fbr); }
+  inline PureMethods (Plic::Coupler &c) { _pop_rpc (c); }
   int             pure_method (double f);
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };

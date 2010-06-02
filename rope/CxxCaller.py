@@ -476,8 +476,8 @@ class Generator:
       s += '  virtual ' + self.format_to_tab ('/*Des*/') + '~%s%s () = 0;\n' % (type_info.name, _Iface)
     s += 'public:\n'
     if self.gen4smarthandle:
-      s += '  inline %s (Plic::CallContext &cc, Plic::FieldBufferReader &fbr) ' % type_info.name
-      s += '{ _pop_rpc (cc, fbr); }\n'
+      s += '  inline %s (Plic::Coupler &c) ' % type_info.name
+      s += '{ _pop_rpc (c); }\n'
     if not self.gen4smarthandle:
       for sg in type_info.signals:
         s += self.generate_sigdef (sg, type_info)

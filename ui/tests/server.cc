@@ -26,9 +26,9 @@ test_smart_handle (void)
   ApplicationBase *ab = &App;
   Plic::FieldBuffer8 fb (4);
   fb.add_object (uint64 ((BaseObject*) ab));
-  Plic::CallContext c;
-  Plic::FieldBufferReader fbr (fb);
-  Application sh (c, fbr);
+  Plic::Coupler c;
+  c.reader.reset (fb);
+  Application sh (c);
   ApplicationBase &shab = *sh;
   assert (ab == &shab);
   assert (ab == sh.operator->());

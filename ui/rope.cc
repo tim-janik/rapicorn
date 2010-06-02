@@ -20,26 +20,27 @@
 namespace Rapicorn {
 
 class DispatchSource : public virtual EventLoop::Source {
+  Plic::Coupler &coupler;
 protected:
   virtual bool
   prepare  (uint64 current_time_usecs,
             int64 *timeout_usecs_p)
   {
-    return Plic::DispatcherRegistry::check_dispatch();
+    return coupler.check_dispatch();
   }
   virtual bool
   check    (uint64 current_time_usecs)
   {
-    return Plic::DispatcherRegistry::check_dispatch();
+    return coupler.check_dispatch();
   }
   virtual bool
   dispatch ()
   {
-    Plic::DispatcherRegistry::dispatch();
+    coupler.dispatch();
     return true; // keep alive
   }
 public:
-  DispatchSource() {}
+  DispatchSource (Plic::Coupler &_c) : coupler (_c) {}
 };
 
 struct Initializer {
@@ -49,12 +50,13 @@ struct Initializer {
   Mutex          mutex;
   Cond           cond;
   uint64         app_id;
-  Initializer() : cpu (-1), app_id (0) {}
+  Plic::Coupler *coupler;
+  Initializer() : cpu (-1), app_id (0), coupler (NULL) {}
 };
 
 class RopeThread : public Thread {
-  Initializer *m_init;
-  EventLoop   *m_loop;
+  Initializer   *m_init;
+  EventLoop     *m_loop;
   ~RopeThread()
   {
     m_init = NULL;
@@ -85,7 +87,7 @@ private:
     slist.strings = m_init->cmdline_args;
     App.init_with_x11 (m_init->application_name, slist);
     m_loop = ref_sink (EventLoop::create());
-    EventLoop::Source *esource = new DispatchSource();
+    EventLoop::Source *esource = new DispatchSource (*m_init->coupler);
     (*m_loop).add_source (esource, MAXINT);
     esource->exitable (false);
     m_init->mutex.lock();
@@ -98,8 +100,9 @@ private:
   }
 };
 
-static RopeThread *rope_thread = NULL;
-static uint64      app_id = 0;
+static RopeThread    *rope_thread = NULL;
+static uint64         app_id = 0;
+static Plic::Coupler *plic_coupler = NULL;
 
 uint64
 rope_thread_start (const String              &application_name,
@@ -111,10 +114,12 @@ rope_thread_start (const String              &application_name,
   if (once_enter (&initialized))
     {
       /* start parallel thread */
+      plic_coupler = new Plic::Coupler();
       Initializer init;
       init.application_name = application_name;
       init.cmdline_args = cmdline_args;
       init.cpu = cpu;
+      init.coupler = plic_coupler;
       rope_thread = new RopeThread ("RapicornUI", &init);
       ref_sink (rope_thread);
       rope_thread->start();
@@ -129,18 +134,18 @@ rope_thread_start (const String              &application_name,
 }
 
 FieldBuffer*
-rope_thread_call (FieldBuffer *call)
+rope_thread_call (FieldBuffer *fbcall)
 {
   return_val_if_fail (rope_thread != NULL, NULL);
 
-  const int64 call_id = call->first_id();
-  bool mayblock = Plic::DispatcherRegistry::push_call (call); // deletes call
+  const int64 call_id = fbcall->first_id();
+  bool mayblock = plic_coupler->send_call (fbcall); // deletes fbcall
   rope_thread->wakeup_loop();
   if (mayblock)
     Thread::Self::yield(); // allow fast return value handling on single core
   FieldBuffer *fr = NULL;
   if (Plic::is_callid_twoway (call_id))
-    fr = Plic::DispatcherRegistry::fetch_return();
+    fr = plic_coupler->receive_result();
   return fr;
 }
 

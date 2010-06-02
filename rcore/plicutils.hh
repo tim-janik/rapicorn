@@ -65,8 +65,7 @@ inline bool is_callid_error  (const uint64 id) { return id >> 32 == callid_error
 
 /* === Forward Declarations === */
 class SimpleServer;
-class CallContext;
-class Connection;
+class Coupler;
 union FieldUnion;
 class FieldBuffer;
 class FieldBufferReader;
@@ -84,7 +83,6 @@ struct TypeHash {
 
 /* === SmartHandle === */
 class SmartHandle {
-  friend class CallContext;
   uint64 m_rpc_id;
 protected:
   typedef bool (SmartHandle::*_unspecified_bool_type) () const; // non-numeric operator bool() result
@@ -92,7 +90,7 @@ protected:
   typedef uint64 RpcId;
   explicit                  SmartHandle ();
   void                      _reset      ();
-  void                      _pop_rpc    (CallContext&, FieldBufferReader&);
+  void                      _pop_rpc    (Coupler&);
   void*                     _cast_iface () const;
   inline void*              _void_iface () const;
 public:
@@ -117,36 +115,17 @@ template<class C> inline uint64 _rpc_id (C *const c) { return c ? c->_rpc_id() :
 template<class C> inline uint64 _rpc_id (const C &c) { return &c ? c._rpc_id() : 0; }
 template<class C> inline C* _rpc_ptr4id (uint64 i) { return dynamic_cast<C*> (C::_rpc_id2obj (i)); }
 
-/* === CallContext === */
-class CallContext {
-  CallContext&          operator=        (const CallContext&); // not assignable
-  /*Copy*/              CallContext      (const CallContext&); // not copyable
-  FieldBuffer          *m_field_buffer;
-public:
-  explicit              CallContext      ();
-  void                  reset            ();
-  void                  push_msg         (FieldBuffer&); // deletes fb later
-  inline FieldBuffer&   field_buffer     () const { return *m_field_buffer; }
-  uint64                pop_rpc_handle   (FieldBufferReader&);
-  virtual              ~CallContext      ();
-};
-
 /* === Dispatching === */
 struct DispatcherEntry {
   uint64            hash_qwords[TypeHash::hash_size];
   DispatchFunc      dispatcher;
 };
 class DispatcherRegistry {
-  static void           push_return             (FieldBuffer *rret);
-  static FieldBuffer*   pop_call                (bool advance = true);
 public:
-  static bool           check_dispatch          ();
-  static bool           dispatch                ();
-  static bool           push_call               (FieldBuffer *call);
-  static FieldBuffer*   fetch_return            (void);
-  static FieldBuffer*   dispatch_call           (const FieldBuffer &call);
-  static void           register_dispatcher     (const DispatcherEntry &dentry);
-  template<class T, size_t S> inline DispatcherRegistry (T (&)[S]);
+  template<class T, size_t S>
+  inline                DispatcherRegistry  (T (&)[S]);
+  static void           register_dispatcher (const DispatcherEntry &dentry);
+  static DispatchFunc   find_dispatcher     (const TypeHash        &type_hash);
 };
 
 /* === FieldBuffer === */
@@ -210,18 +189,20 @@ public:
 };
 
 class FieldBufferReader { // read field buffer contents
-  const FieldBuffer &m_fb;
+  const FieldBuffer *m_fb;
   uint               m_nth;
-  inline FieldUnion& fb_getu () { return m_fb.uat (m_nth); }
-  inline FieldUnion& fb_popu () { FieldUnion &u = m_fb.uat (m_nth++); check(); return u; }
+  inline FieldUnion& fb_getu () { return m_fb->uat (m_nth); }
+  inline FieldUnion& fb_popu () { FieldUnion &u = m_fb->uat (m_nth++); check(); return u; }
   inline void        check() { /* FIXME: n_types() shouldn't be exceeded */ }
 public:
-  FieldBufferReader (const FieldBuffer &_fb) : m_fb (_fb), m_nth (0) {}
+  FieldBufferReader (const FieldBuffer &fb) : m_fb (&fb), m_nth (0) {}
+  inline void reset (const FieldBuffer &fb) { m_fb = &fb; m_nth = 0; }
+  inline void               reset      () { m_fb = NULL; m_nth = 0; }
   inline uint               remaining  () { return n_types() - m_nth; }
   inline void               skip       () { m_nth++; check(); }
   inline void               skip4      () { m_nth += 4; check(); }
-  inline uint               n_types    () { return m_fb.n_types(); }
-  inline FieldType          get_type   () { return m_fb.type_at (m_nth); }
+  inline uint               n_types    () { return m_fb->n_types(); }
+  inline FieldType          get_type   () { return m_fb->type_at (m_nth); }
   inline int64              get_int64  () { FieldUnion &u = fb_getu(); return u.vint64; }
   inline int64              get_evalue () { FieldUnion &u = fb_getu(); return u.vint64; }
   inline double             get_double () { FieldUnion &u = fb_getu(); return u.vdouble; }
@@ -238,6 +219,30 @@ public:
   inline uint64             pop_object () { FieldUnion &u = fb_popu(); return u.vint64; }
   inline const FieldBuffer& pop_rec () { FieldUnion &u = fb_popu(); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& pop_seq () { FieldUnion &u = fb_popu(); return *(FieldBuffer*) &u; }
+  inline const FieldBuffer* get     () { return m_fb; }
+};
+
+/* === Coupler === */
+class Coupler {
+  Coupler&              operator=       (const Coupler&); // not assignable
+  /*Copy*/              Coupler         (const Coupler&); // not copyable
+  class Priv; Priv     &priv;
+  FieldBuffer*          pop_call        (bool advance = true);
+  FieldBuffer*          dispatch_call   (const FieldBuffer &fbcall);
+public:
+  explicit              Coupler         ();
+  virtual              ~Coupler         ();
+  // client API
+  bool                  send_call       (FieldBuffer *fbcall); // deletes fbcall
+  FieldBuffer*          receive_result  (void);
+  // server loop integration
+  bool                  check_dispatch  () { return pop_call (false) != NULL; }
+  bool                  dispatch        ();
+  // API for DispatchFunc
+  FieldBufferReader     reader;
+  void                  push_return     (FieldBuffer *rret);
+  // SmartHandle API
+  inline uint64         pop_rpc_handle  () { return reader.pop_object(); }
 };
 
 /* === inline implementations === */
