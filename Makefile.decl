@@ -228,7 +228,7 @@ release-upload: $(RELAUX_CHANGELOG) # serialized steps, for parallel invocation
 	@echo "OK"
 	@echo -n "  Checking age of release file $(RELAUX_FILE)...           "
 	@test "$(RELAUX_FILE)" -nt $(RELAUX_CHANGELOG) \
-	|| (echo FAIL && echo "note: $(RELAUX_CHANGELOG) appears to be newer; make dist" && false)
+	|| (echo FAIL && echo "note: $(RELAUX_CHANGELOG) appears to be newer; make distcheck" && false)
 	@echo "OK"
 	@echo -n "  Checking uniqueness of release tarball $(RELAUX_FILE)... "
 	@ssh $(RELAUX_DESTHOST) test ! -e "$(RELAUX_DESTPATH)/$(RELAUX_FILE)" \
