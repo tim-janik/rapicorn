@@ -69,7 +69,7 @@ class Coupler;
 union FieldUnion;
 class FieldBuffer;
 class FieldBufferReader;
-typedef FieldBuffer* (*DispatchFunc) (const FieldBuffer&);
+typedef FieldBuffer* (*DispatchFunc) (Coupler&);
 
 /* === TypeHash === */
 struct TypeHash {
@@ -90,9 +90,10 @@ protected:
   typedef uint64 RpcId;
   explicit                  SmartHandle ();
   void                      _reset      ();
-  void                      _pop_rpc    (Coupler&);
+  void                      _pop_rpc    (Coupler&, FieldBufferReader&);
   void*                     _cast_iface () const;
   inline void*              _void_iface () const;
+  void                      _void_iface (void *rpc_id_ptr);
 public:
   uint64                    _rpc_id     () const;
   bool                      _is_null    () const;
@@ -109,11 +110,6 @@ public:
   virtual uint64       _rpc_id      () const;
   static SimpleServer* _rpc_id2obj  (uint64 rpc_id);
 };
-
-/* === RPC Id handling === */
-template<class C> inline uint64 _rpc_id (C *const c) { return c ? c->_rpc_id() : 0; }
-template<class C> inline uint64 _rpc_id (const C &c) { return &c ? c._rpc_id() : 0; }
-template<class C> inline C* _rpc_ptr4id (uint64 i) { return dynamic_cast<C*> (C::_rpc_id2obj (i)); }
 
 /* === Dispatching === */
 struct DispatcherEntry {
@@ -233,6 +229,7 @@ public:
   explicit              Coupler         ();
   virtual              ~Coupler         ();
   // client API
+  virtual FieldBuffer*  call_remote     (FieldBuffer *fbcall) = 0;
   bool                  send_call       (FieldBuffer *fbcall); // deletes fbcall
   FieldBuffer*          receive_result  (void);
   // server loop integration
@@ -242,7 +239,7 @@ public:
   FieldBufferReader     reader;
   void                  push_return     (FieldBuffer *rret);
   // SmartHandle API
-  inline uint64         pop_rpc_handle  () { return reader.pop_object(); }
+  inline uint64         pop_rpc_handle  (FieldBufferReader &fbr) { return fbr.pop_object(); }
 };
 
 /* === inline implementations === */

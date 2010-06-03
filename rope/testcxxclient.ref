@@ -3,10 +3,6 @@
 // --- ClientHH Boilerplate ---
 #include <rcore/plicutils.hh>
 
-// --- ServerHH Boilerplate ---
-#include <rcore/plicutils.hh>
-#include <rcore/rapicornsignal.hh>
-
 // --- ClientCC/ServerCC Boilerplate ---
 #include <string>
 #include <vector>
@@ -23,9 +19,20 @@ typedef Plic::FieldBuffer FieldBuffer;
 typedef Plic::FieldBuffer8 FieldBuffer8;
 typedef Plic::FieldBufferReader FieldBufferReader;
 
-#ifndef PLIC_CALL_REMOTE
-#define PLIC_CALL_REMOTE        _plic_call_remote
-static FieldBuffer* _plic_call_remote (FieldBuffer *fb) { delete fb; return NULL; } // testing stub
+#ifndef PLIC_COUPLER
+#define PLIC_COUPLER()  _plic_coupler_static
+static struct _DummyCoupler : public Plic::Coupler {
+  virtual Plic::FieldBuffer* call_remote (Plic::FieldBuffer *fbcall)
+  {
+    bool twoway = Plic::is_callid_twoway (fbcall->first_id());
+    if (send_call (fbcall)) // deletes fbcall
+      ; // threaded dispatcher needs CPU
+    // wakeup dispatcher
+    while (check_dispatch())
+      dispatch();
+    return !twoway ? NULL : receive_result();
+  }
+} _plic_coupler_static;
 #endif
 
 } // Anonymous
@@ -244,7 +251,7 @@ class UIWidgetArea : public virtual Plic::SmartHandle {
 protected:
   inline UIWidgetArea () {}
 public:
-  inline UIWidgetArea (Plic::Coupler &c) { _pop_rpc (c); }
+  inline UIWidgetArea (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   double          simple_method ();
   double          single_arg    (int n);
   double          single_arg2   (int n = 5);
@@ -264,83 +271,37 @@ public:
   void            on_click2in   (const std::string &command);
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-class UIWidgetArea_Iface : public virtual Plic::SimpleServer {
-protected:
-  virtual /*Des*/         ~UIWidgetArea_Iface () = 0;
-public:
-  typedef Rapicorn::Signals::Signal<UIWidgetArea_Iface, void ()> Signal_void_signal;
-  typedef Rapicorn::Signals::Signal<UIWidgetArea_Iface, double (UIWidgetArea_Iface &ba1, int someint)> Signal_sample_signal;
-  // Signal_void_signal sig_void_signal;
-  // Signal_sample_signal sig_sample_signal;
-  virtual double          simple_method ();
-  virtual double          single_arg    (int n);
-  virtual double          single_arg2   (int n = 5);
-  virtual double          two_args      (int n,
-                                         double r);
-  virtual double          two_args2     (int n = 6,
-                                         double r = 7.7);
-  virtual double          multi_args    (int n,
-                                         double r,
-                                         int i,
-                                         const std::string &s = "String ding",
-                                         double y = 5);
-  virtual double          self_method   (UIWidgetArea_Iface &ba1,
-                                         UIWidgetArea_Iface &ba2);
-  virtual void            void_method   ();
-  virtual std::string     on_click2out  ();
-  virtual void            on_click2in   (const std::string &command);
-};
 
 class Parent : public virtual Plic::SmartHandle {
 protected:
   inline Parent () {}
 public:
-  inline Parent (Plic::Coupler &c) { _pop_rpc (c); }
+  inline Parent (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
-};
-class Parent_Iface : public virtual Plic::SimpleServer {
-protected:
-  virtual /*Des*/         ~Parent_Iface () = 0;
-public:
 };
 
 class Child : public Parent {
 protected:
   inline Child () {}
 public:
-  inline Child (Plic::Coupler &c) { _pop_rpc (c); }
+  inline Child (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
-};
-class Child_Iface : public virtual Parent_Iface {
-protected:
-  virtual /*Des*/         ~Child_Iface () = 0;
-public:
 };
 
 class Descendant : public Child {
 protected:
   inline Descendant () {}
 public:
-  inline Descendant (Plic::Coupler &c) { _pop_rpc (c); }
+  inline Descendant (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
-};
-class Descendant_Iface : public virtual Child_Iface {
-protected:
-  virtual /*Des*/         ~Descendant_Iface () = 0;
-public:
 };
 
 class GrandChild : public Descendant {
 protected:
   inline GrandChild () {}
 public:
-  inline GrandChild (Plic::Coupler &c) { _pop_rpc (c); }
+  inline GrandChild (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
-};
-class GrandChild_Iface : public virtual Descendant_Iface {
-protected:
-  virtual /*Des*/         ~GrandChild_Iface () = 0;
-public:
 };
 enum QuickEnum {
   ZERO = 0,
@@ -362,7 +323,7 @@ class MethodTestInterface : public virtual Plic::SmartHandle {
 protected:
   inline MethodTestInterface () {}
 public:
-  inline MethodTestInterface (Plic::Coupler &c) { _pop_rpc (c); }
+  inline MethodTestInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   void            method_with_void      ();
   bool            method_with_bools     (bool input,
                                          bool optval = 0);
@@ -378,31 +339,9 @@ public:
                                          const QuickRecord &optval = QuickRecord());
   QuickSequence   method_with_sequence  (const QuickSequence &input,
                                          const QuickSequence &optval = QuickSequence());
-  GrandChild*     method_with_interface (GrandChild &input,
+  GrandChild      method_with_interface (GrandChild &input,
                                          GrandChild &optval = *(GrandChild*) NULL);
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
-};
-class MethodTestInterface_Iface : public virtual Plic::SimpleServer {
-protected:
-  virtual /*Des*/         ~MethodTestInterface_Iface () = 0;
-public:
-  virtual void            method_with_void      ();
-  virtual bool            method_with_bools     (bool input,
-                                                 bool optval = 0);
-  virtual int             method_with_ints      (int input,
-                                                 int optval = -2);
-  virtual double          method_with_floats    (double input,
-                                                 double optval = 309.9);
-  virtual std::string     method_with_string    (const std::string &input,
-                                                 const std::string &optval = "default");
-  virtual QuickEnum       method_with_enum      (QuickEnum input,
-                                                 QuickEnum optval = QuickEnum (0));
-  virtual QuickRecord     method_with_record    (const QuickRecord &input,
-                                                 const QuickRecord &optval = QuickRecord());
-  virtual QuickSequence   method_with_sequence  (const QuickSequence &input,
-                                                 const QuickSequence &optval = QuickSequence());
-  virtual GrandChild_Iface* method_with_interface (GrandChild_Iface &input,
-                                                   GrandChild_Iface &optval = *(GrandChild_Iface*) NULL);
 };
 } // InterfaceTests
 
@@ -419,32 +358,17 @@ class ButtonArea : public virtual Plic::SmartHandle {
 protected:
   inline ButtonArea () {}
 public:
-  inline ButtonArea (Plic::Coupler &c) { _pop_rpc (c); }
+  inline ButtonArea (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
-};
-class ButtonArea_Iface : public virtual Plic::SimpleServer {
-protected:
-  virtual /*Des*/         ~ButtonArea_Iface () = 0;
-public:
-  typedef Rapicorn::Signals::Signal<ButtonArea_Iface, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
-  typedef Rapicorn::Signals::Signal<ButtonArea_Iface, void ()> Signal_activate;
-  // Signal_check_activate sig_check_activate;
-  // Signal_activate sig_activate;
 };
 
 class PureMethods : public virtual Plic::SmartHandle {
 protected:
   inline PureMethods () {}
 public:
-  inline PureMethods (Plic::Coupler &c) { _pop_rpc (c); }
+  inline PureMethods (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   int             pure_method (double f);
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
-};
-class PureMethods_Iface : public virtual Plic::SimpleServer {
-protected:
-  virtual /*Des*/         ~PureMethods_Iface () = 0;
-public:
-  virtual int             pure_method (double f) = 0;
 };
 } // RapicornPlicTest
 
@@ -770,15 +694,13 @@ SomeRecord::proto_pop (Plic::FieldBufferReader &src)
 } // OtherNamespace
 
 namespace InterfaceTests {
-UIWidgetArea_Iface::~UIWidgetArea_Iface () {}
-
 double
 UIWidgetArea::simple_method ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
   fb.add_type_hash (0x0ca200003a5e02edULL, 0x169b0d3b86dc10cdULL, 0xc07a85a6dfe104adULL, 0xe8554a515ffc84b1ULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   double retval = frr.pop_double();
@@ -789,9 +711,9 @@ UIWidgetArea::single_arg (int arg_n)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
   fb.add_type_hash (0x0ca20000f96d1b2eULL, 0x54efdddfc11d9638ULL, 0xb5d0abcc8a0f16c8ULL, 0x957078d12b4b2fc0ULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
+  fb.add_object ((*this)._rpc_id());
   fb.add_int64 (arg_n);
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   double retval = frr.pop_double();
@@ -802,9 +724,9 @@ UIWidgetArea::single_arg2 (int arg_n)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
   fb.add_type_hash (0x0ca20000afefb8c4ULL, 0xb9d9952905d41bfdULL, 0xa2c44e813b1a8c4dULL, 0x8e440d5ecaeecec8ULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
+  fb.add_object ((*this)._rpc_id());
   fb.add_int64 (arg_n);
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   double retval = frr.pop_double();
@@ -816,10 +738,10 @@ UIWidgetArea::two_args (int arg_n,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000d1f5823fULL, 0x8538f2ffa1581dd0ULL, 0xc9e7d9d486336a46ULL, 0xc941f5292b4dcdfcULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
+  fb.add_object ((*this)._rpc_id());
   fb.add_int64 (arg_n);
   fb.add_double (arg_r);
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   double retval = frr.pop_double();
@@ -831,10 +753,10 @@ UIWidgetArea::two_args2 (int arg_n,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000255fafa4ULL, 0x429116798ce5813eULL, 0x5eacea949f7cfe8eULL, 0x1f41fe0ca4311729ULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
+  fb.add_object ((*this)._rpc_id());
   fb.add_int64 (arg_n);
   fb.add_double (arg_r);
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   double retval = frr.pop_double();
@@ -849,13 +771,13 @@ UIWidgetArea::multi_args (int arg_n,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 5), *fr = NULL;
   fb.add_type_hash (0x0ca200005e6e8ea5ULL, 0x6f4fdd2d1d4b3bb3ULL, 0xbe7de84f81bcc353ULL, 0x91710698705b209aULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
+  fb.add_object ((*this)._rpc_id());
   fb.add_int64 (arg_n);
   fb.add_double (arg_r);
   fb.add_int64 (arg_i);
   fb.add_string (arg_s);
   fb.add_double (arg_y);
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   double retval = frr.pop_double();
@@ -867,10 +789,10 @@ UIWidgetArea::self_method (UIWidgetArea &arg_ba1,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000abd1f74aULL, 0x3f2d1aefb6d12a66ULL, 0x100e83849c144758ULL, 0x79488ee1596dab87ULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
-  fb.add_object (Plic::_rpc_id (arg_ba1));
-  fb.add_object (Plic::_rpc_id (arg_ba2));
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fb.add_object ((*this)._rpc_id());
+  fb.add_object (arg_ba1._rpc_id());
+  fb.add_object (arg_ba2._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   double retval = frr.pop_double();
@@ -879,18 +801,18 @@ UIWidgetArea::self_method (UIWidgetArea &arg_ba1,
 void
 UIWidgetArea::void_method ()
 {
-  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0);
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
   fb.add_type_hash (0x0ca1000027be4746ULL, 0xde7d9d84a2281ae4ULL, 0xdccb312da0062c83ULL, 0x62d76268f178e709ULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
-  PLIC_CALL_REMOTE (&fb); // deletes fb
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
 }
 std::string
 UIWidgetArea::on_click2out ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
   fb.add_type_hash (0x0ca20000a3ce0a03ULL, 0xaaaf9478a83b0f7cULL, 0x2664b179bda29105ULL, 0xb1f6ad88c5a0c98aULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   std::string retval = frr.pop_string();
@@ -899,20 +821,12 @@ UIWidgetArea::on_click2out ()
 void
 UIWidgetArea::on_click2in (const std::string &arg_command)
 {
-  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1);
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
   fb.add_type_hash (0x0ca10000e511187cULL, 0x9ea59f646fca1b62ULL, 0x6180b0bf59637495ULL, 0xa99463469b646df9ULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
+  fb.add_object ((*this)._rpc_id());
   fb.add_string (arg_command);
-  PLIC_CALL_REMOTE (&fb); // deletes fb
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
 }
-Parent_Iface::~Parent_Iface () {}
-
-Child_Iface::~Child_Iface () {}
-
-Descendant_Iface::~Descendant_Iface () {}
-
-GrandChild_Iface::~GrandChild_Iface () {}
-
 bool
 QuickRecord::proto_add (Plic::FieldBuffer &dst) const
 {
@@ -953,15 +867,13 @@ QuickSequence::proto_pop (Plic::FieldBufferReader &src)
   return true;
 }
 
-MethodTestInterface_Iface::~MethodTestInterface_Iface () {}
-
 void
 MethodTestInterface::method_with_void ()
 {
-  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0);
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
   fb.add_type_hash (0x0ca10000f91c872eULL, 0xa90ceaec3b16df51ULL, 0x887b366247a3a612ULL, 0x6f4b7fab28f1ab12ULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
-  PLIC_CALL_REMOTE (&fb); // deletes fb
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
 }
 bool
 MethodTestInterface::method_with_bools (bool arg_input,
@@ -969,10 +881,10 @@ MethodTestInterface::method_with_bools (bool arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca200008ffdba44ULL, 0xc998c0ffa6b486b1ULL, 0x9b4ea9f5a23d9c6dULL, 0xa7746e46026b843eULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
+  fb.add_object ((*this)._rpc_id());
   fb.add_int64 (arg_input);
   fb.add_int64 (arg_optval);
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   bool retval = frr.pop_int64();
@@ -984,10 +896,10 @@ MethodTestInterface::method_with_ints (int arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000cec55716ULL, 0x747c3602672780d1ULL, 0x1852bd2e467d1e91ULL, 0x61085ceb1b2bf816ULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
+  fb.add_object ((*this)._rpc_id());
   fb.add_int64 (arg_input);
   fb.add_int64 (arg_optval);
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   int retval = frr.pop_int64();
@@ -999,10 +911,10 @@ MethodTestInterface::method_with_floats (double arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca200006ede6737ULL, 0xc9ee1722db2fc583ULL, 0x4e5788c84a81be26ULL, 0x8c32f39e18ad9ab6ULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
+  fb.add_object ((*this)._rpc_id());
   fb.add_double (arg_input);
   fb.add_double (arg_optval);
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   double retval = frr.pop_double();
@@ -1014,10 +926,10 @@ MethodTestInterface::method_with_string (const std::string &arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000d07cd262ULL, 0xfc81ef2c220a8d45ULL, 0x59d0faae36ce56eaULL, 0x0990ad1d3c49827dULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
+  fb.add_object ((*this)._rpc_id());
   fb.add_string (arg_input);
   fb.add_string (arg_optval);
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   std::string retval = frr.pop_string();
@@ -1029,10 +941,10 @@ MethodTestInterface::method_with_enum (QuickEnum arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000d1a935c9ULL, 0xc1bdc5f48521c942ULL, 0xebcb3ede7a3fcbdcULL, 0xba634e15fbfde688ULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
+  fb.add_object ((*this)._rpc_id());
   fb.add_evalue (arg_input);
   fb.add_evalue (arg_optval);
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   QuickEnum retval = QuickEnum (frr.pop_evalue());
@@ -1044,10 +956,10 @@ MethodTestInterface::method_with_record (const QuickRecord &arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca2000093f684d6ULL, 0x345260c4f912f67fULL, 0xa8f6c2af19dc877eULL, 0x176ffee81397fa2eULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
+  fb.add_object ((*this)._rpc_id());
   if (!arg_input.proto_add (fb)) THROW_ERROR();
   if (!arg_optval.proto_add (fb)) THROW_ERROR();
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   QuickRecord retval;
@@ -1060,408 +972,46 @@ MethodTestInterface::method_with_sequence (const QuickSequence &arg_input,
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000f8d6703fULL, 0x9af82486dc8ce5aaULL, 0x3a6095e0829ba185ULL, 0x74e0fc82dbfa4b77ULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
+  fb.add_object ((*this)._rpc_id());
   if (!arg_input.proto_add (fb)) THROW_ERROR();
   if (!arg_optval.proto_add (fb)) THROW_ERROR();
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   QuickSequence retval;
   if (!retval.proto_pop (frr)) THROW_ERROR();
   return retval;
 }
-GrandChild*
+GrandChild
 MethodTestInterface::method_with_interface (GrandChild &arg_input,
                                             GrandChild &arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000ed320c14ULL, 0x672f050fc4be01b7ULL, 0x239a6c63e8d3bb3eULL, 0x106046b369f7e804ULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
-  fb.add_object (Plic::_rpc_id (arg_input));
-  fb.add_object (Plic::_rpc_id (arg_optval));
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fb.add_object ((*this)._rpc_id());
+  fb.add_object (arg_input._rpc_id());
+  fb.add_object (arg_optval._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
-  GrandChild *retval = Plic::_rpc_ptr4id<GrandChild> (frr.pop_object());
+  GrandChild retval = GrandChild (PLIC_COUPLER(), frr);
   return retval;
 }
 } // InterfaceTests
 
 namespace RapicornPlicTest {
-ButtonArea_Iface::~ButtonArea_Iface () {}
-
-PureMethods_Iface::~PureMethods_Iface () {}
-
 int
 PureMethods::pure_method (double arg_f)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
   fb.add_type_hash (0x0ca20000ac480384ULL, 0xd1df259f1d53b082ULL, 0x995d5e5b4bb2fcb4ULL, 0x83f6a92ee477fcd6ULL); // proc_id
-  fb.add_object (Plic::_rpc_id (this));
+  fb.add_object ((*this)._rpc_id());
   fb.add_double (arg_f);
-  fr = PLIC_CALL_REMOTE (&fb); // deletes fb
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   int retval = frr.pop_int64();
   return retval;
 }
-
-// --- Method Dispatchers & Registry ---
-} // RapicornPlicTest
-
-namespace MandatoryNamespace {
-
-namespace Inner {
-} // Inner
-} // MandatoryNamespace
-
-namespace OtherNamespace {
-} // OtherNamespace
-
-namespace InterfaceTests {
-static FieldBuffer*
-_dispatch__UIWidgetArea_simple_method (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 0) return false;
-  UIWidgetArea_Iface *self;
-  self = Plic::_rpc_ptr4id<UIWidgetArea_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  double rval = self->simple_method ();
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  rb.add_double (rval);
-  return &rb;
-}
-static FieldBuffer*
-_dispatch__UIWidgetArea_single_arg (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 1) return false;
-  UIWidgetArea_Iface *self;
-  self = Plic::_rpc_ptr4id<UIWidgetArea_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  int arg_n = fbr.pop_int64();
-  double rval = self->single_arg (arg_n);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  rb.add_double (rval);
-  return &rb;
-}
-static FieldBuffer*
-_dispatch__UIWidgetArea_single_arg2 (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 1) return false;
-  UIWidgetArea_Iface *self;
-  self = Plic::_rpc_ptr4id<UIWidgetArea_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  int arg_n = fbr.pop_int64();
-  double rval = self->single_arg2 (arg_n);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  rb.add_double (rval);
-  return &rb;
-}
-static FieldBuffer*
-_dispatch__UIWidgetArea_two_args (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
-  UIWidgetArea_Iface *self;
-  self = Plic::_rpc_ptr4id<UIWidgetArea_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  int arg_n = fbr.pop_int64();
-  double arg_r = fbr.pop_double();
-  double rval = self->two_args (arg_n, arg_r);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  rb.add_double (rval);
-  return &rb;
-}
-static FieldBuffer*
-_dispatch__UIWidgetArea_two_args2 (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
-  UIWidgetArea_Iface *self;
-  self = Plic::_rpc_ptr4id<UIWidgetArea_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  int arg_n = fbr.pop_int64();
-  double arg_r = fbr.pop_double();
-  double rval = self->two_args2 (arg_n, arg_r);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  rb.add_double (rval);
-  return &rb;
-}
-static FieldBuffer*
-_dispatch__UIWidgetArea_multi_args (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 5) return false;
-  UIWidgetArea_Iface *self;
-  self = Plic::_rpc_ptr4id<UIWidgetArea_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  int arg_n = fbr.pop_int64();
-  double arg_r = fbr.pop_double();
-  int arg_i = fbr.pop_int64();
-  std::string arg_s = fbr.pop_string();
-  double arg_y = fbr.pop_double();
-  double rval = self->multi_args (arg_n, arg_r, arg_i, arg_s, arg_y);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  rb.add_double (rval);
-  return &rb;
-}
-static FieldBuffer*
-_dispatch__UIWidgetArea_self_method (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
-  UIWidgetArea_Iface *self;
-  self = Plic::_rpc_ptr4id<UIWidgetArea_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  UIWidgetArea_Iface *arg_ba1 = Plic::_rpc_ptr4id<UIWidgetArea_Iface> (fbr.pop_object());
-  UIWidgetArea_Iface *arg_ba2 = Plic::_rpc_ptr4id<UIWidgetArea_Iface> (fbr.pop_object());
-  double rval = self->self_method (*arg_ba1, *arg_ba2);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  rb.add_double (rval);
-  return &rb;
-}
-static FieldBuffer*
-_dispatch__UIWidgetArea_void_method (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 0) return false;
-  UIWidgetArea_Iface *self;
-  self = Plic::_rpc_ptr4id<UIWidgetArea_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  self->void_method ();
-  return NULL;
-}
-static FieldBuffer*
-_dispatch__UIWidgetArea_on_click2out (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 0) return false;
-  UIWidgetArea_Iface *self;
-  self = Plic::_rpc_ptr4id<UIWidgetArea_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  std::string rval = self->on_click2out ();
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  rb.add_string (rval);
-  return &rb;
-}
-static FieldBuffer*
-_dispatch__UIWidgetArea_on_click2in (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 1) return false;
-  UIWidgetArea_Iface *self;
-  self = Plic::_rpc_ptr4id<UIWidgetArea_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  std::string arg_command = fbr.pop_string();
-  self->on_click2in (arg_command);
-  return NULL;
-}
-
-
-
-
-
-static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_void (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 0) return false;
-  MethodTestInterface_Iface *self;
-  self = Plic::_rpc_ptr4id<MethodTestInterface_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  self->method_with_void ();
-  return NULL;
-}
-static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_bools (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
-  self = Plic::_rpc_ptr4id<MethodTestInterface_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  bool arg_input = fbr.pop_int64();
-  bool arg_optval = fbr.pop_int64();
-  bool rval = self->method_with_bools (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  rb.add_int64 (rval);
-  return &rb;
-}
-static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_ints (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
-  self = Plic::_rpc_ptr4id<MethodTestInterface_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  int arg_input = fbr.pop_int64();
-  int arg_optval = fbr.pop_int64();
-  int rval = self->method_with_ints (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  rb.add_int64 (rval);
-  return &rb;
-}
-static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_floats (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
-  self = Plic::_rpc_ptr4id<MethodTestInterface_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  double arg_input = fbr.pop_double();
-  double arg_optval = fbr.pop_double();
-  double rval = self->method_with_floats (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  rb.add_double (rval);
-  return &rb;
-}
-static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_string (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
-  self = Plic::_rpc_ptr4id<MethodTestInterface_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  std::string arg_input = fbr.pop_string();
-  std::string arg_optval = fbr.pop_string();
-  std::string rval = self->method_with_string (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  rb.add_string (rval);
-  return &rb;
-}
-static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_enum (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
-  self = Plic::_rpc_ptr4id<MethodTestInterface_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  QuickEnum arg_input = QuickEnum (fbr.pop_evalue());
-  QuickEnum arg_optval = QuickEnum (fbr.pop_evalue());
-  QuickEnum rval = self->method_with_enum (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  rb.add_evalue (rval);
-  return &rb;
-}
-static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_record (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
-  self = Plic::_rpc_ptr4id<MethodTestInterface_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  QuickRecord arg_input;
-  if (!arg_input.proto_pop (fbr)) return false;
-  QuickRecord arg_optval;
-  if (!arg_optval.proto_pop (fbr)) return false;
-  QuickRecord rval = self->method_with_record (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  if (!rval.proto_add (rb)) return false;
-  return &rb;
-}
-static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_sequence (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
-  self = Plic::_rpc_ptr4id<MethodTestInterface_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  QuickSequence arg_input;
-  if (!arg_input.proto_pop (fbr)) return false;
-  QuickSequence arg_optval;
-  if (!arg_optval.proto_pop (fbr)) return false;
-  QuickSequence rval = self->method_with_sequence (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  if (!rval.proto_add (rb)) return false;
-  return &rb;
-}
-static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_interface (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
-  self = Plic::_rpc_ptr4id<MethodTestInterface_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  GrandChild_Iface *arg_input = Plic::_rpc_ptr4id<GrandChild_Iface> (fbr.pop_object());
-  GrandChild_Iface *arg_optval = Plic::_rpc_ptr4id<GrandChild_Iface> (fbr.pop_object());
-  GrandChild_Iface *rval = self->method_with_interface (*arg_input, *arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  rb.add_object (Plic::_rpc_id (rval));
-  return &rb;
-}
-
-} // InterfaceTests
-
-namespace RapicornPlicTest {
-
-static FieldBuffer*
-_dispatch__PureMethods_pure_method (const FieldBuffer &fb)
-{
-  Plic::FieldBufferReader fbr (fb);
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 1) return false;
-  PureMethods_Iface *self;
-  self = Plic::_rpc_ptr4id<PureMethods_Iface> (fbr.pop_object());
-  PLIC_CHECK (self, "self must be non-NULL");
-  double arg_f = fbr.pop_double();
-  int rval = self->pure_method (arg_f);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
-  rb.add_int64 (rval);
-  return &rb;
-}
-
-static const Plic::DispatcherEntry _dispatcher_entries[] = {
-  { { 0x0ca200003a5e02edULL, 0x169b0d3b86dc10cdULL, 0xc07a85a6dfe104adULL, 0xe8554a515ffc84b1ULL }, InterfaceTests::_dispatch__UIWidgetArea_simple_method, },
-  { { 0x0ca20000f96d1b2eULL, 0x54efdddfc11d9638ULL, 0xb5d0abcc8a0f16c8ULL, 0x957078d12b4b2fc0ULL }, InterfaceTests::_dispatch__UIWidgetArea_single_arg, },
-  { { 0x0ca20000afefb8c4ULL, 0xb9d9952905d41bfdULL, 0xa2c44e813b1a8c4dULL, 0x8e440d5ecaeecec8ULL }, InterfaceTests::_dispatch__UIWidgetArea_single_arg2, },
-  { { 0x0ca20000d1f5823fULL, 0x8538f2ffa1581dd0ULL, 0xc9e7d9d486336a46ULL, 0xc941f5292b4dcdfcULL }, InterfaceTests::_dispatch__UIWidgetArea_two_args, },
-  { { 0x0ca20000255fafa4ULL, 0x429116798ce5813eULL, 0x5eacea949f7cfe8eULL, 0x1f41fe0ca4311729ULL }, InterfaceTests::_dispatch__UIWidgetArea_two_args2, },
-  { { 0x0ca200005e6e8ea5ULL, 0x6f4fdd2d1d4b3bb3ULL, 0xbe7de84f81bcc353ULL, 0x91710698705b209aULL }, InterfaceTests::_dispatch__UIWidgetArea_multi_args, },
-  { { 0x0ca20000abd1f74aULL, 0x3f2d1aefb6d12a66ULL, 0x100e83849c144758ULL, 0x79488ee1596dab87ULL }, InterfaceTests::_dispatch__UIWidgetArea_self_method, },
-  { { 0x0ca1000027be4746ULL, 0xde7d9d84a2281ae4ULL, 0xdccb312da0062c83ULL, 0x62d76268f178e709ULL }, InterfaceTests::_dispatch__UIWidgetArea_void_method, },
-  { { 0x0ca20000a3ce0a03ULL, 0xaaaf9478a83b0f7cULL, 0x2664b179bda29105ULL, 0xb1f6ad88c5a0c98aULL }, InterfaceTests::_dispatch__UIWidgetArea_on_click2out, },
-  { { 0x0ca10000e511187cULL, 0x9ea59f646fca1b62ULL, 0x6180b0bf59637495ULL, 0xa99463469b646df9ULL }, InterfaceTests::_dispatch__UIWidgetArea_on_click2in, },
-  { { 0x0ca10000f91c872eULL, 0xa90ceaec3b16df51ULL, 0x887b366247a3a612ULL, 0x6f4b7fab28f1ab12ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_void, },
-  { { 0x0ca200008ffdba44ULL, 0xc998c0ffa6b486b1ULL, 0x9b4ea9f5a23d9c6dULL, 0xa7746e46026b843eULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_bools, },
-  { { 0x0ca20000cec55716ULL, 0x747c3602672780d1ULL, 0x1852bd2e467d1e91ULL, 0x61085ceb1b2bf816ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_ints, },
-  { { 0x0ca200006ede6737ULL, 0xc9ee1722db2fc583ULL, 0x4e5788c84a81be26ULL, 0x8c32f39e18ad9ab6ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_floats, },
-  { { 0x0ca20000d07cd262ULL, 0xfc81ef2c220a8d45ULL, 0x59d0faae36ce56eaULL, 0x0990ad1d3c49827dULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_string, },
-  { { 0x0ca20000d1a935c9ULL, 0xc1bdc5f48521c942ULL, 0xebcb3ede7a3fcbdcULL, 0xba634e15fbfde688ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_enum, },
-  { { 0x0ca2000093f684d6ULL, 0x345260c4f912f67fULL, 0xa8f6c2af19dc877eULL, 0x176ffee81397fa2eULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_record, },
-  { { 0x0ca20000f8d6703fULL, 0x9af82486dc8ce5aaULL, 0x3a6095e0829ba185ULL, 0x74e0fc82dbfa4b77ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_sequence, },
-  { { 0x0ca20000ed320c14ULL, 0x672f050fc4be01b7ULL, 0x239a6c63e8d3bb3eULL, 0x106046b369f7e804ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_interface, },
-  { { 0x0ca20000ac480384ULL, 0xd1df259f1d53b082ULL, 0x995d5e5b4bb2fcb4ULL, 0x83f6a92ee477fcd6ULL }, RapicornPlicTest::_dispatch__PureMethods_pure_method, },
-};
-static Plic::DispatcherRegistry _dispatcher_registry (_dispatcher_entries);
-
 } // RapicornPlicTest
 

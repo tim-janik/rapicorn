@@ -22,21 +22,12 @@
 #define MODULE_NAME_STRING      STRINGIFY (MODULE_NAME)
 #define MODULE_INIT_FUNCTION    RAPICORN_CPP_PASTE2 (init, MODULE_NAME)
 
-#define HAVE_PLIC_CALL_REMOTE   1
-
 // --- Anonymous namespacing
 namespace {
 
 // --- cpy2rope stubs (generated) ---
-static Plic::FieldBuffer* plic_call_remote    (Plic::FieldBuffer*);
+#define PLIC_COUPLER() (*rope_thread_coupler())
 #include "cpy2rope.cc"
-
-// --- globals ---
-static Plic::FieldBuffer*
-plic_call_remote (Plic::FieldBuffer *call)
-{
-  return rope_thread_call (call);
-}
 
 // --- PyC functions ---
 static PyObject*

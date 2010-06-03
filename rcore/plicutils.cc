@@ -89,10 +89,11 @@ SmartHandle::_reset ()
 }
 
 void
-SmartHandle::_pop_rpc (Coupler &c)
+SmartHandle::_pop_rpc (Coupler           &c,
+                       FieldBufferReader &fbr)
 {
   _reset();
-  m_rpc_id = c.pop_rpc_handle();
+  m_rpc_id = c.pop_rpc_handle (fbr);
 }
 
 void*
@@ -102,6 +103,15 @@ SmartHandle::_cast_iface () const
   if (m_rpc_id & 3)
     PLIC_THROW ("invalid cast from rpc-id to class pointer");
   return (void*) m_rpc_id;
+}
+
+void
+SmartHandle::_void_iface (void *rpc_id_ptr)
+{
+  uint64 rpcid = uint64 (rpc_id_ptr);
+  if (rpcid & 3)
+    PLIC_THROW ("invalid rpc-id assignment from unaligned class pointer");
+  m_rpc_id = rpcid;
 }
 
 uint64
@@ -243,7 +253,8 @@ Coupler::dispatch_call (const FieldBuffer &fbcall)
   DispatchFunc dispatcher_func = DispatcherRegistry::find_dispatcher (thash);
   if (PLIC_UNLIKELY (!dispatcher_func))
     return FieldBuffer::new_error ("unknown method hash: " + thash.to_string(), "PLIC");
-  return dispatcher_func (fbcall);
+  reader.reset (fbcall);
+  return dispatcher_func (*this);
 }
 
 void

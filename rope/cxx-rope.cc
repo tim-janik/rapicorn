@@ -48,5 +48,5 @@ main (int   argc,
 }
 
 // generated client implementation
-#define PLIC_CALL_REMOTE        rope_thread_call
+#define PLIC_COUPLER() (*rope_thread_coupler())
 #include "cxx-client.cc"

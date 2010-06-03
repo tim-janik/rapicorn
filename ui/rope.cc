@@ -91,8 +91,7 @@ private:
     (*m_loop).add_source (esource, MAXINT);
     esource->exitable (false);
     m_init->mutex.lock();
-    Locatable *lapp = &App;
-    m_init->app_id = lapp->locatable_id();
+    m_init->app_id = Application (&App)._rpc_id();
     m_init->cond.signal();
     m_init->mutex.unlock();
     m_init = NULL;
@@ -102,7 +101,31 @@ private:
 
 static RopeThread    *rope_thread = NULL;
 static uint64         app_id = 0;
-static Plic::Coupler *plic_coupler = NULL;
+
+class RopeCoupler : public Plic::Coupler {
+  virtual FieldBuffer*
+  call_remote (FieldBuffer *fbcall)
+  {
+    return_val_if_fail (rope_thread != NULL, NULL);
+
+    const int64 call_id = fbcall->first_id();
+    bool mayblock = send_call (fbcall); // deletes fbcall
+    rope_thread->wakeup_loop();
+    if (mayblock)
+      Thread::Self::yield(); // allow fast return value handling on single core
+    FieldBuffer *fr = NULL;
+    if (Plic::is_callid_twoway (call_id))
+      fr = receive_result();
+    return fr;
+  }
+};
+static RopeCoupler rope_coupler;
+
+Plic::Coupler*
+rope_thread_coupler ()
+{
+  return &rope_coupler;
+}
 
 uint64
 rope_thread_start (const String              &application_name,
@@ -114,12 +137,11 @@ rope_thread_start (const String              &application_name,
   if (once_enter (&initialized))
     {
       /* start parallel thread */
-      plic_coupler = new Plic::Coupler();
       Initializer init;
       init.application_name = application_name;
       init.cmdline_args = cmdline_args;
       init.cpu = cpu;
-      init.coupler = plic_coupler;
+      init.coupler = &rope_coupler;
       rope_thread = new RopeThread ("RapicornUI", &init);
       ref_sink (rope_thread);
       rope_thread->start();
@@ -131,22 +153,6 @@ rope_thread_start (const String              &application_name,
       once_leave (&initialized, 1);
     }
   return app_id;
-}
-
-FieldBuffer*
-rope_thread_call (FieldBuffer *fbcall)
-{
-  return_val_if_fail (rope_thread != NULL, NULL);
-
-  const int64 call_id = fbcall->first_id();
-  bool mayblock = plic_coupler->send_call (fbcall); // deletes fbcall
-  rope_thread->wakeup_loop();
-  if (mayblock)
-    Thread::Self::yield(); // allow fast return value handling on single core
-  FieldBuffer *fr = NULL;
-  if (Plic::is_callid_twoway (call_id))
-    fr = plic_coupler->receive_result();
-  return fr;
 }
 
 } // Rapicorn

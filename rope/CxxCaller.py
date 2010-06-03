@@ -48,9 +48,20 @@ typedef Plic::FieldBuffer FieldBuffer;
 typedef Plic::FieldBuffer8 FieldBuffer8;
 typedef Plic::FieldBufferReader FieldBufferReader;
 
-#ifndef PLIC_CALL_REMOTE
-#define PLIC_CALL_REMOTE        _plic_call_remote
-static FieldBuffer* _plic_call_remote (FieldBuffer *fb) { delete fb; return NULL; } // testing stub
+#ifndef PLIC_COUPLER
+#define PLIC_COUPLER()  _plic_coupler_static
+static struct _DummyCoupler : public Plic::Coupler {
+  virtual Plic::FieldBuffer* call_remote (Plic::FieldBuffer *fbcall)
+  {
+    bool twoway = Plic::is_callid_twoway (fbcall->first_id());
+    if (send_call (fbcall)) // deletes fbcall
+      ; // threaded dispatcher needs CPU
+    // wakeup dispatcher
+    while (check_dispatch())
+      dispatch();
+    return !twoway ? NULL : receive_result();
+  }
+} _plic_coupler_static;
 #endif
 
 } // Anonymous
@@ -123,7 +134,7 @@ class Generator:
     s, _Iface = '', self._IFACE
     s += self.type2cpp (type)
     if type.storage == Decls.INTERFACE:
-      s += _Iface + ' *'
+      s += _Iface + ' ' + ('' if self.gen4smarthandle else '*')
     else:
       s += ' '
     return s
@@ -233,15 +244,16 @@ class Generator:
         s += '  if (!%s.proto_add (%s)) %s;\n' % (ident, fb, onerr)
       elif type.storage == Decls.INTERFACE:
         if self.gen_clientcc:
-          s += '  %s.add_object (Plic::_rpc_id (%s));\n' % (fb, ident)
+          s += '  %s.add_object (%s._rpc_id());\n' % (fb, ident)
         else:
-          s += '  %s.add_object (Plic::_rpc_id (%s));\n' % (fb, ident)
+          s += '  %s.add_object (%s (%s)._rpc_id());\n' % (fb, type.name, ident)
       else:
         s += '  %s.add_%s (%s);\n' % (fb, self.accessor_name (type.storage), ident)
     return s
-  def generate_proto_pop_args (self, fbr, type_info, aprefix, arg_info_list, apostfix = '',
+  def generate_proto_pop_args (self, cplfbr, type_info, aprefix, arg_info_list, apostfix = '',
                                onerr = 'return false'):
     s, _Iface = '', self._IFACE
+    cpl, fbr = cplfbr
     for arg_it in arg_info_list:
       ident, type = arg_it
       ident = aprefix + ident + apostfix
@@ -250,8 +262,9 @@ class Generator:
       elif type.storage == Decls.ENUM:
         s += '  %s = %s (%s.pop_evalue());\n' % (ident, self.type2cpp (type), fbr)
       elif type.storage == Decls.INTERFACE:
-        s += '  %s = Plic::_rpc_ptr4id<%s%s> (%s.pop_%s());\n' \
-            % (ident, type.name, _Iface, fbr, self.accessor_name (type.storage))
+        op_ptr = '' if self.gen4smarthandle else '.operator->()'
+        s += '  %s = %s (%s, %s)%s;\n' \
+            % (ident, type.name, cpl, fbr, op_ptr)
       else:
         s += '  %s = %s.pop_%s();\n' % (ident, fbr, self.accessor_name (type.storage))
     return s
@@ -265,12 +278,14 @@ class Generator:
     s += 'bool\n%s::proto_pop (' % type_info.name + FieldBuffer + 'Reader &src)\n{\n'
     s += '  ' + FieldBuffer + 'Reader fbr (src.pop_rec());\n'
     s += '  if (fbr.remaining() != %u) return false;\n' % len (type_info.fields)
-    s += self.generate_proto_pop_args ('fbr', type_info, 'this->', type_info.fields)
+    cplfbr = ('cpl', 'fbr')
+    s += self.generate_proto_pop_args (cplfbr, type_info, 'this->', type_info.fields)
     s += '  return true;\n'
     s += '}\n'
     return s
   def generate_sequence_impl (self, type_info):
     s = ''
+    cplfbr = ('cpl', 'fbr')
     el = type_info.elements
     s += 'bool\n%s::proto_add (' % type_info.name + FieldBuffer + ' &dst) const\n{\n'
     s += '  const size_t len = %s.size();\n' % el[0]
@@ -291,7 +306,7 @@ class Generator:
       s += '  %s.reserve (len);\n' % eident
     s += '  for (size_t k = 0; k < len; k++) {\n'
     if el[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += reindent ('  ', self.generate_proto_pop_args ('fbr', type_info,
+      s += reindent ('  ', self.generate_proto_pop_args (cplfbr, type_info,
                                                          'this->',
                                                          [type_info.elements], '[k]')) + '\n'
     elif el[1].storage == Decls.ENUM:
@@ -308,9 +323,8 @@ class Generator:
     s = ''
     therr = 'THROW_ERROR()'
     hasret = mtype.rtype.storage != Decls.VOID
-    interfacechar = '*' if mtype.rtype.storage == Decls.INTERFACE else ''
     # prototype
-    s += '%s%s\n' % (self.rtype2cpp (mtype.rtype), interfacechar)
+    s += '%s\n' % self.rtype2cpp (mtype.rtype)
     q = '%s::%s (' % (class_info.name, mtype.name)
     s += q
     argindent = len (q)
@@ -320,53 +334,53 @@ class Generator:
     s += (',\n' + argindent * ' ').join (l)
     s += ')\n{\n'
     # vars, procedure
-    rdecl = ', *fr = NULL' if hasret else ''
-    s += '  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + %u)%s;\n' % (len (mtype.args), rdecl)
+    s += '  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + %u), *fr = NULL;\n' % len (mtype.args)
     s += '  fb.add_type_hash (%s); // proc_id\n' % self.method_digest (mtype)
     # marshal args
-    s += self.generate_proto_add_args ('fb', class_info, '', [('this', class_info)], '')
+    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
     s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '', therr)
     # call out
-    s += '  fr = ' if hasret else '  '
-    s += 'PLIC_CALL_REMOTE (&fb); // deletes fb\n'
+    s += '  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb\n'
     # unmarshal return
     if hasret:
       rarg = ('retval', mtype.rtype)
       s += '  FieldBufferReader frr (*fr);\n'
       s += '  frr.skip(); // proc_id\n'
       # FIXME: check return error and return type
+      cplfbr = ('PLIC_COUPLER()', 'frr')
       if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
         s += '  ' + self.format_var (rarg[0], rarg[1]) + ';\n'
-        s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '', therr)
+        s += self.generate_proto_pop_args (cplfbr, class_info, '', [rarg], '', therr)
       else:
         vtype = self.format_vartype (rarg[1]) # 'int*' + ...
-        s += self.generate_proto_pop_args ('frr', class_info, vtype, [rarg], '', therr) # ... + 'x = 5;'
+        s += self.generate_proto_pop_args (cplfbr, class_info, vtype, [rarg], '', therr) # ... + 'x = 5;'
       s += '  return retval;\n'
     s += '}\n'
     return s
   def generate_server_method_dispatcher (self, class_info, mtype, reglines):
     s, _Iface = '', self._IFACE
+    cplfbr = ('cpl', 'fbr')
     dispatcher_name = '_dispatch__%s_%s' % (class_info.name, mtype.name)
     reglines += [ (self.method_digest (mtype), self.namespaced_identifier (dispatcher_name)) ]
     s += 'static FieldBuffer*\n'
-    s += dispatcher_name + ' (const FieldBuffer &fb)\n'
+    s += dispatcher_name + ' (Plic::Coupler &cpl)\n'
     s += '{\n'
-    s += '  ' + FieldBuffer + 'Reader fbr (fb);\n'
+    s += '  ' + FieldBuffer + 'Reader &fbr = cpl.reader;\n'
     s += '  fbr.skip4(); // TypeHash\n'
     s += '  if (fbr.remaining() != 1 + %u) return false;\n' % len (mtype.args)
     # fetch self
     s += '  %s%s *self;\n' % (self.type2cpp (class_info), _Iface)
-    s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
+    s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
     # fetch args
     for a in mtype.args:
       if a[1].storage in (Decls.RECORD, Decls.SEQUENCE):
         s += '  ' + self.format_var ('arg_' + a[0], a[1]) + ';\n'
-        s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(a[0], a[1])])
+        s += self.generate_proto_pop_args (cplfbr, class_info, 'arg_', [(a[0], a[1])])
       else:
         tstr = self.format_vartype (a[1]) + 'arg_'
-        s += self.generate_proto_pop_args ('fbr', class_info, tstr, [(a[0], a[1])])
+        s += self.generate_proto_pop_args (cplfbr, class_info, tstr, [(a[0], a[1])])
     # return var
     s += '  '
     hasret = mtype.rtype.storage != Decls.VOID
@@ -428,7 +442,7 @@ class Generator:
     s += '  // ' if comment else '  '
     s += '' if self.gen4smarthandle else 'virtual '
     if functype.rtype.storage == Decls.INTERFACE:
-      rtpostfix = '*' if self.gen4smarthandle else _Iface + '*'
+      rtpostfix = '' if self.gen4smarthandle else _Iface + '*'
     else:
       rtpostfix = ''
     s += self.format_to_tab (self.rtype2cpp (functype.rtype) + rtpostfix)
@@ -470,14 +484,19 @@ class Generator:
     if self.gen4fakehandle:
       s += '  inline %s* _iface() const { return (%s*) _void_iface(); }\n' \
           % (self._iface_base, self._iface_base)
+      s += '  inline void _iface (%s *_iface) { _void_iface (_iface); }\n' % self._iface_base
     if self.gen4smarthandle:
       s += '  inline %s () {}\n' % type_info.name
     else: # not self.gen4smarthandle:
       s += '  virtual ' + self.format_to_tab ('/*Des*/') + '~%s%s () = 0;\n' % (type_info.name, _Iface)
     s += 'public:\n'
     if self.gen4smarthandle:
-      s += '  inline %s (Plic::Coupler &c) ' % type_info.name
-      s += '{ _pop_rpc (c); }\n'
+      s += '  inline %s (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) ' % type_info.name
+      s += '{ _pop_rpc (cpl, fbr); }\n'
+    if self.gen4fakehandle:
+      ifacename = type_info.name + self._IFACE_postfix
+      s += '  inline %s (%s *iface) { _iface (iface); }\n' % (type_info.name, ifacename)
+      s += '  inline %s (%s &iface) { _iface (&iface); }\n' % (type_info.name, ifacename)
     if not self.gen4smarthandle:
       for sg in type_info.signals:
         s += self.generate_sigdef (sg, type_info)
@@ -489,7 +508,6 @@ class Generator:
     for m in type_info.methods:
       s += self.generate_method_decl (m, ml)
     if self.gen4fakehandle:
-      ifacename = type_info.name + self._IFACE_postfix
       ifn2 = (ifacename, ifacename)
       s += '  inline %s& operator*  () const { return *dynamic_cast<%s*> (_iface()); }\n' % ifn2
       s += '  inline %s* operator-> () const { return dynamic_cast<%s*> (_iface()); }\n' % ifn2
@@ -626,14 +644,13 @@ class Generator:
           s += self.generate_enum_decl (tp) + '\n'
         elif tp.storage == Decls.INTERFACE:
           s += '\n'
-          if self.gen_clienthh:
+          if self.gen_clienthh and not self.gen_serverhh:
             s += self.generate_interface_class (tp) + '\n' # Class smart handle
           if self.gen_serverhh:
             self.gen4smarthandle, self._IFACE = False, self._IFACE_postfix
             s += self.generate_interface_class (tp) + '\n' # Class_Iface server base
-            if not self.gen_clienthh:
-              self.gen4smarthandle, self.gen4fakehandle, self._IFACE = True, True, ''
-              s += self.generate_interface_class (tp) + '\n' # Class smart handle
+            self.gen4smarthandle, self.gen4fakehandle, self._IFACE = True, True, ''
+            s += self.generate_interface_class (tp) + '\n' # Class smart handle
             self.gen4smarthandle, self.gen4fakehandle, self._IFACE = True, False, ''
       s += self.open_namespace (None)
     # generate client/server impls

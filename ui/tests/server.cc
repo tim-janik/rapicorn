@@ -21,14 +21,14 @@ using namespace Rapicorn;
 static Application * volatile smart_app_p = NULL;
 
 static void
-test_smart_handle (void)
+test_server_smart_handle (void)
 {
   ApplicationBase *ab = &App;
   Plic::FieldBuffer8 fb (4);
   fb.add_object (uint64 ((BaseObject*) ab));
-  Plic::Coupler c;
+  Plic::Coupler &c = *rope_thread_coupler();
   c.reader.reset (fb);
-  Application sh (c);
+  Application sh (c, c.reader);
   ApplicationBase &shab = *sh;
   assert (ab == &shab);
   assert (ab == sh.operator->());
@@ -40,7 +40,7 @@ main (int   argc,
 {
   rapicorn_init_test (&argc, &argv);
 
-  Test::add ("Server/Smart Handle", test_smart_handle);
+  Test::add ("Server/Smart Handle", test_server_smart_handle);
 
   return Test::run();
 }

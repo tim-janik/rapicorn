@@ -116,11 +116,11 @@ PyList_Take_Item (PyObject *pylist, PyObject **pyitemp)
   return r;
 }
 
-static Plic::FieldBuffer* plic_call_remote (Plic::FieldBuffer*);
-#ifndef HAVE_PLIC_CALL_REMOTE
-static Plic::FieldBuffer* plic_call_remote (Plic::FieldBuffer *fb)
-{ delete fb; return NULL; } // testing stub
-#define HAVE_PLIC_CALL_REMOTE
+#ifndef PLIC_COUPLER
+#define PLIC_COUPLER()  _plic_coupler_static
+static struct _UnimplementedCoupler : public Plic::Coupler {
+  virtual Plic::FieldBuffer* call_remote (Plic::FieldBuffer *fbcall) { return NULL; }
+} _plic_coupler_static;
 #endif
 """
 
@@ -291,7 +291,8 @@ class Generator:
       s += '  item = PyTuple_GET_ITEM (pyargs, %d); // %s\n' % (arg_counter, ma[0])
       s += self.generate_proto_add_py ('fb', ma[1], 'item')
       arg_counter += 1
-    s += '  fr = plic_call_remote (&fb); // deletes fb\n'
+    # call out
+    s += '  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb\n'
     if mtype.rtype.storage == Decls.VOID:
       s += '  if (fr) { delete fr; fr = NULL; }\n'
       s += '  return None_INCREF();\n'
