@@ -204,7 +204,7 @@ enum ClickType {
 static RAPICORN_UNUSED bool
 plic_pyXFooRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
 {
-  Plic::FieldBuffer &fb = dst.add_rec (11);
+  Plic::FieldBuffer &fb = dst.add_rec (14);
   bool success = false;
   PyObject *dictR = NULL, *item = NULL;
   dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
@@ -230,6 +230,12 @@ plic_pyXFooRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
   item = PyDict_GetItemString (dictR, "enum_field"); ERRORif (!item);
   fb.add_evalue (PyIntLong_AsLongLong (item)); ERRORifpy();
+  item = PyDict_GetItemString (dictR, "iface1"); ERRORif (!item);
+  fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
+  item = PyDict_GetItemString (dictR, "iface2"); ERRORif (!item);
+  fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
+  item = PyDict_GetItemString (dictR, "iface3"); ERRORif (!item);
+  fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   success = true;
  error:
   Py_XDECREF (dictR);
@@ -240,7 +246,7 @@ plic_pyXFooRecord_proto_pop (Plic::FieldBufferReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Plic::FieldBufferReader fbr (src.pop_rec());
-  if (fbr.remaining() != 11) ERRORpy ("PLIC: marshalling error: invalid record length");
+  if (fbr.remaining() != 14) ERRORpy ("PLIC: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
@@ -265,6 +271,15 @@ plic_pyXFooRecord_proto_pop (Plic::FieldBufferReader &src)
   if (PyDict_Take_Item (dictR, "multi4", &pyfoR) < 0) goto error;
   pyfoR = PyLong_FromLongLong (fbr.pop_evalue()); ERRORifpy();
   if (PyDict_Take_Item (dictR, "enum_field", &pyfoR) < 0) goto error;
+  pyfoR = PyLong_FromUnsignedLongLong (fbr.pop_object()); ERRORifpy();
+  // FIXME: convert to "__plic__object__"
+  if (PyDict_Take_Item (dictR, "iface1", &pyfoR) < 0) goto error;
+  pyfoR = PyLong_FromUnsignedLongLong (fbr.pop_object()); ERRORifpy();
+  // FIXME: convert to "__plic__object__"
+  if (PyDict_Take_Item (dictR, "iface2", &pyfoR) < 0) goto error;
+  pyfoR = PyLong_FromUnsignedLongLong (fbr.pop_object()); ERRORifpy();
+  // FIXME: convert to "__plic__object__"
+  if (PyDict_Take_Item (dictR, "iface3", &pyfoR) < 0) goto error;
   pyret = pyinstR;
  error:
   Py_XDECREF (pyfoR);
@@ -274,9 +289,6 @@ plic_pyXFooRecord_proto_pop (Plic::FieldBufferReader &src)
   return pyret;
 }
 
-struct XFooSequence {
-  bool            single_bool;
-};
 static RAPICORN_UNUSED bool
 plic_pyXFooSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
@@ -310,9 +322,6 @@ plic_pyXFooSequence_proto_pop (Plic::FieldBufferReader &src)
   return pyret;
 }
 
-struct IntSequence {
-  int             numx;
-};
 static RAPICORN_UNUSED bool
 plic_pyIntSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
@@ -346,9 +355,6 @@ plic_pyIntSequence_proto_pop (Plic::FieldBufferReader &src)
   return pyret;
 }
 
-struct FloatSequence {
-  double          fractalvalue;
-};
 static RAPICORN_UNUSED bool
 plic_pyFloatSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
@@ -382,9 +388,6 @@ plic_pyFloatSequence_proto_pop (Plic::FieldBufferReader &src)
   return pyret;
 }
 
-struct StringSequence {
-  std::string     blurb;
-};
 static RAPICORN_UNUSED bool
 plic_pyStringSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
@@ -418,9 +421,6 @@ plic_pyStringSequence_proto_pop (Plic::FieldBufferReader &src)
   return pyret;
 }
 
-struct ExtensiveEnumSequence {
-  ExtensiveEnum   enum_elements;
-};
 static RAPICORN_UNUSED bool
 plic_pyExtensiveEnumSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
@@ -454,9 +454,6 @@ plic_pyExtensiveEnumSequence_proto_pop (Plic::FieldBufferReader &src)
   return pyret;
 }
 
-struct RecordSequence {
-  XFooRecord      *repeatedfield;
-};
 static RAPICORN_UNUSED bool
 plic_pyRecordSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
@@ -490,9 +487,6 @@ plic_pyRecordSequence_proto_pop (Plic::FieldBufferReader &src)
   return pyret;
 }
 
-struct SequenceSequence {
-  IntSequence     *moreints;
-};
 static RAPICORN_UNUSED bool
 plic_pySequenceSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
@@ -516,6 +510,40 @@ plic_pySequenceSequence_proto_pop (Plic::FieldBufferReader &src)
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
     pyfoR = plic_pyIntSequence_proto_pop (fbr); ERRORif (!pyfoR);
+    if (PyList_Take_Item (listR, &pyfoR) < 0) goto error;
+  }
+  pyret = listR;
+ error:
+  Py_XDECREF (pyfoR);
+  if (pyret != listR)
+    Py_XDECREF (listR);
+  return pyret;
+}
+
+static RAPICORN_UNUSED bool
+plic_pyInterfaceSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
+{
+  const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
+  Plic::FieldBuffer &fb = dst.add_seq (len);
+  bool success = false;
+  for (ssize_t k = 0; k < len; k++) {
+    PyObject *item = PyList_GET_ITEM (pylist, k);
+    fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
+  }
+  success = true;
+ error:
+  return success;
+}
+static RAPICORN_UNUSED PyObject*
+plic_pyInterfaceSequence_proto_pop (Plic::FieldBufferReader &src)
+{
+  PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
+  Plic::FieldBufferReader fbr (src.pop_seq());
+  const size_t len = fbr.remaining();
+  listR = PyList_New (len); if (!listR) GOTO_ERROR();
+  for (size_t k = 0; k < len; k++) {
+    pyfoR = PyLong_FromUnsignedLongLong (fbr.pop_object()); ERRORifpy();
+    // FIXME: convert to "__plic__object__"
     if (PyList_Take_Item (listR, &pyfoR) < 0) goto error;
   }
   pyret = listR;
@@ -563,9 +591,6 @@ plic_pyNestedTypesRec_proto_pop (Plic::FieldBufferReader &src)
   return pyret;
 }
 
-struct NestedTypesSeq {
-  NestedTypesRec  *ntr;
-};
 static RAPICORN_UNUSED bool
 plic_pyNestedTypesSeq_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
@@ -800,9 +825,6 @@ plic_pyQuickRecord_proto_pop (Plic::FieldBufferReader &src)
   return pyret;
 }
 
-struct QuickSequence {
-  double          somefloat;
-};
 static RAPICORN_UNUSED bool
 plic_pyQuickSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
 {
@@ -836,6 +858,22 @@ plic_pyQuickSequence_proto_pop (Plic::FieldBufferReader &src)
   return pyret;
 }
 
+static PyObject*
+plic_pycall_FirstInterface_void_func (PyObject *pyself, PyObject *pyargs)
+{
+  PyObject *item;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
+  fb.add_type_hash (0x0ca10000511e8482ULL, 0xd7fca76824ef1339ULL, 0x9c10110ffb6e89b8ULL, 0x7aee6371c6eb9333ULL); // proc_id
+  if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("PLIC: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);  // self
+  fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) { delete fr; fr = NULL; }
+  return None_INCREF();
+ error:
+  if (fr) delete fr;
+  return NULL;
+}
 static PyObject*
 plic_pycall_UIWidgetArea_simple_method (PyObject *pyself, PyObject *pyargs)
 {
@@ -1089,6 +1127,24 @@ plic_pycall_UIWidgetArea_on_click2in (PyObject *pyself, PyObject *pyargs)
   return NULL;
 }
 static PyObject*
+plic_pycall_QuickIface_simple_function (PyObject *pyself, PyObject *pyargs)
+{
+  PyObject *item;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x0ca100007178342eULL, 0x2c84375ab4c874afULL, 0xb5578ad147fe3033ULL, 0x392cdc1a7eebbb31ULL); // proc_id
+  if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);  // self
+  fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
+  item = PyTuple_GET_ITEM (pyargs, 1); // i
+  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) { delete fr; fr = NULL; }
+  return None_INCREF();
+ error:
+  if (fr) delete fr;
+  return NULL;
+}
+static PyObject*
 plic_pycall_MethodTestInterface_method_with_void (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
@@ -1330,6 +1386,35 @@ plic_pycall_MethodTestInterface_method_with_interface (PyObject *pyself, PyObjec
   return NULL;
 }
 static PyObject*
+plic_pycall_MethodTestInterface_method_with_quickiface (PyObject *pyself, PyObject *pyargs)
+{
+  PyObject *item, *pyfoR = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
+  fb.add_type_hash (0x0ca200003fcf3b3dULL, 0x9eeea2d03769389cULL, 0xb168e0c6140b94e5ULL, 0x5b03b11a28cd7427ULL); // proc_id
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);  // self
+  fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
+  item = PyTuple_GET_ITEM (pyargs, 1); // input
+  fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
+  item = PyTuple_GET_ITEM (pyargs, 2); // iface0
+  fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  ERRORifnotret (fr);
+  if (fr) {
+    Plic::FieldBufferReader frr (*fr);
+    frr.skip(); // proc_id for return
+    if (frr.remaining() == 1) {
+        pyfoR = PyLong_FromUnsignedLongLong (frr.pop_object()); ERRORifpy();
+        // FIXME: convert to "__plic__object__"
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  return NULL;
+}
+static PyObject*
 plic_pycall_PureMethods_pure_method (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
@@ -1356,6 +1441,7 @@ plic_pycall_PureMethods_pure_method (PyObject *pyself, PyObject *pyargs)
   return NULL;
 }
 #define PLIC_PYSTUB_METHOD_DEFS() \
+  { "_PLIC_0ca10000511e8482d7fca76824ef13399c10110ffb6e89b87aee6371c6eb9333", plic_pycall_FirstInterface_void_func, METH_VARARGS, "pyRapicorn glue call" },\
   { "_PLIC_0ca200003a5e02ed169b0d3b86dc10cdc07a85a6dfe104ade8554a515ffc84b1", plic_pycall_UIWidgetArea_simple_method, METH_VARARGS, "pyRapicorn glue call" },\
   { "_PLIC_0ca20000f96d1b2e54efdddfc11d9638b5d0abcc8a0f16c8957078d12b4b2fc0", plic_pycall_UIWidgetArea_single_arg, METH_VARARGS, "pyRapicorn glue call" },\
   { "_PLIC_0ca20000afefb8c4b9d9952905d41bfda2c44e813b1a8c4d8e440d5ecaeecec8", plic_pycall_UIWidgetArea_single_arg2, METH_VARARGS, "pyRapicorn glue call" },\
@@ -1366,6 +1452,7 @@ plic_pycall_PureMethods_pure_method (PyObject *pyself, PyObject *pyargs)
   { "_PLIC_0ca1000027be4746de7d9d84a2281ae4dccb312da0062c8362d76268f178e709", plic_pycall_UIWidgetArea_void_method, METH_VARARGS, "pyRapicorn glue call" },\
   { "_PLIC_0ca20000a3ce0a03aaaf9478a83b0f7c2664b179bda29105b1f6ad88c5a0c98a", plic_pycall_UIWidgetArea_on_click2out, METH_VARARGS, "pyRapicorn glue call" },\
   { "_PLIC_0ca10000e511187c9ea59f646fca1b626180b0bf59637495a99463469b646df9", plic_pycall_UIWidgetArea_on_click2in, METH_VARARGS, "pyRapicorn glue call" },\
+  { "_PLIC_0ca100007178342e2c84375ab4c874afb5578ad147fe3033392cdc1a7eebbb31", plic_pycall_QuickIface_simple_function, METH_VARARGS, "pyRapicorn glue call" },\
   { "_PLIC_0ca10000f91c872ea90ceaec3b16df51887b366247a3a6126f4b7fab28f1ab12", plic_pycall_MethodTestInterface_method_with_void, METH_VARARGS, "pyRapicorn glue call" },\
   { "_PLIC_0ca200008ffdba44c998c0ffa6b486b19b4ea9f5a23d9c6da7746e46026b843e", plic_pycall_MethodTestInterface_method_with_bools, METH_VARARGS, "pyRapicorn glue call" },\
   { "_PLIC_0ca20000cec55716747c3602672780d11852bd2e467d1e9161085ceb1b2bf816", plic_pycall_MethodTestInterface_method_with_ints, METH_VARARGS, "pyRapicorn glue call" },\
@@ -1375,5 +1462,6 @@ plic_pycall_PureMethods_pure_method (PyObject *pyself, PyObject *pyargs)
   { "_PLIC_0ca2000093f684d6345260c4f912f67fa8f6c2af19dc877e176ffee81397fa2e", plic_pycall_MethodTestInterface_method_with_record, METH_VARARGS, "pyRapicorn glue call" },\
   { "_PLIC_0ca20000f8d6703f9af82486dc8ce5aa3a6095e0829ba18574e0fc82dbfa4b77", plic_pycall_MethodTestInterface_method_with_sequence, METH_VARARGS, "pyRapicorn glue call" },\
   { "_PLIC_0ca20000ed320c14672f050fc4be01b7239a6c63e8d3bb3e106046b369f7e804", plic_pycall_MethodTestInterface_method_with_interface, METH_VARARGS, "pyRapicorn glue call" },\
+  { "_PLIC_0ca200003fcf3b3d9eeea2d03769389cb168e0c6140b94e55b03b11a28cd7427", plic_pycall_MethodTestInterface_method_with_quickiface, METH_VARARGS, "pyRapicorn glue call" },\
   { "_PLIC_0ca20000ac480384d1df259f1d53b082995d5e5b4bb2fcb483f6a92ee477fcd6", plic_pycall_PureMethods_pure_method, METH_VARARGS, "pyRapicorn glue call" }
 static PLIC_UNUSED PyMethodDef dummy[] = { PLIC_PYSTUB_METHOD_DEFS(), { 0 } };

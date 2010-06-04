@@ -10,15 +10,21 @@ class __Signal__:
   def __init__ (self, signame):
     self.name = signame
 
+class FirstInterface (__BaseClass__):
+  def __init__ (self):
+    super (FirstInterface, self).__init__()
+  def void_func (self): # one way
+    return _PLIC_0ca10000511e8482d7fca76824ef13399c10110ffb6e89b87aee6371c6eb9333 (self)
+
 class XFooRecord (__BaseRecord__):
   def __init__ (self, **entries):
-    defaults = { 'single_bool' : 0,  'single_num' : 0,  'single_float' : 0,  'single_string' : '',  'sibling1' : 0,  'sibling2' : 0,  'multi1' : 0,  'multi2' : 0,  'multi3' : 0,  'multi4' : 0,  'enum_field' : 0, }
+    defaults = { 'single_bool' : 0,  'single_num' : 0,  'single_float' : 0,  'single_string' : '',  'sibling1' : 0,  'sibling2' : 0,  'multi1' : 0,  'multi2' : 0,  'multi3' : 0,  'multi4' : 0,  'enum_field' : 0,  'iface1' : None,  'iface2' : None,  'iface3' : None, }
     self.__dict__.update (defaults)
     __BaseRecord__.__init__ (self, **entries)
   @staticmethod
   def create (args):
     self = XFooRecord()
-    if hasattr (args, "__iter__") and len (args) == 11:
+    if hasattr (args, "__iter__") and len (args) == 14:
       self.single_bool = args[0]
       #  self.single_bool.vint64 = args[0]
       self.single_num = args[1]
@@ -41,6 +47,12 @@ class XFooRecord (__BaseRecord__):
       #  self.multi4.vint64 = args[9]
       self.enum_field = args[10]
       #  self.enum_field.vint64 = args[10]
+      self.iface1 = args[11]
+      #  self.iface1.vstring (Instance2StringCast (args[11]))
+      self.iface2 = args[12]
+      #  self.iface2.vstring (Instance2StringCast (args[12]))
+      self.iface3 = args[13]
+      #  self.iface3.vstring (Instance2StringCast (args[13]))
     elif isinstance (args, dict):
       self.single_bool = args["single_bool"]
       self.single_num = args["single_num"]
@@ -53,6 +65,9 @@ class XFooRecord (__BaseRecord__):
       self.multi3 = args["multi3"]
       self.multi4 = args["multi4"]
       self.enum_field = args["enum_field"]
+      self.iface1 = args["iface1"]
+      self.iface2 = args["iface2"]
+      self.iface3 = args["iface3"]
     else: raise RuntimeError ("invalid or missing record initializers")
     return self
   @staticmethod
@@ -79,6 +94,12 @@ class XFooRecord (__BaseRecord__):
     _plic_field.vint64 = self.multi4
     _plic_field = _plic_rp.fields.add()
     _plic_field.vint64 = self.enum_field
+    _plic_field = _plic_rp.fields.add()
+    _plic_field.vstring (Instance2StringCast (self.iface1))
+    _plic_field = _plic_rp.fields.add()
+    _plic_field.vstring (Instance2StringCast (self.iface2))
+    _plic_field = _plic_rp.fields.add()
+    _plic_field.vstring (Instance2StringCast (self.iface3))
 
 class NestedTypesRec (__BaseRecord__):
   def __init__ (self, **entries):
@@ -107,13 +128,13 @@ class NestedTypesRec (__BaseRecord__):
 
 class AliasRecord (__BaseRecord__):
   def __init__ (self, **entries):
-    defaults = { 'single_bool' : 0,  'single_num' : 0,  'single_float' : 0,  'single_string' : '',  'sibling1' : 0,  'sibling2' : 0,  'multi1' : 0,  'multi2' : 0,  'multi3' : 0,  'multi4' : 0,  'enum_field' : 0, }
+    defaults = { 'single_bool' : 0,  'single_num' : 0,  'single_float' : 0,  'single_string' : '',  'sibling1' : 0,  'sibling2' : 0,  'multi1' : 0,  'multi2' : 0,  'multi3' : 0,  'multi4' : 0,  'enum_field' : 0,  'iface1' : None,  'iface2' : None,  'iface3' : None, }
     self.__dict__.update (defaults)
     __BaseRecord__.__init__ (self, **entries)
   @staticmethod
   def create (args):
     self = AliasRecord()
-    if hasattr (args, "__iter__") and len (args) == 11:
+    if hasattr (args, "__iter__") and len (args) == 14:
       self.single_bool = args[0]
       #  self.single_bool.vint64 = args[0]
       self.single_num = args[1]
@@ -136,6 +157,12 @@ class AliasRecord (__BaseRecord__):
       #  self.multi4.vint64 = args[9]
       self.enum_field = args[10]
       #  self.enum_field.vint64 = args[10]
+      self.iface1 = args[11]
+      #  self.iface1.vstring (Instance2StringCast (args[11]))
+      self.iface2 = args[12]
+      #  self.iface2.vstring (Instance2StringCast (args[12]))
+      self.iface3 = args[13]
+      #  self.iface3.vstring (Instance2StringCast (args[13]))
     elif isinstance (args, dict):
       self.single_bool = args["single_bool"]
       self.single_num = args["single_num"]
@@ -148,6 +175,9 @@ class AliasRecord (__BaseRecord__):
       self.multi3 = args["multi3"]
       self.multi4 = args["multi4"]
       self.enum_field = args["enum_field"]
+      self.iface1 = args["iface1"]
+      self.iface2 = args["iface2"]
+      self.iface3 = args["iface3"]
     else: raise RuntimeError ("invalid or missing record initializers")
     return self
   @staticmethod
@@ -174,6 +204,12 @@ class AliasRecord (__BaseRecord__):
     _plic_field.vint64 = self.multi4
     _plic_field = _plic_rp.fields.add()
     _plic_field.vint64 = self.enum_field
+    _plic_field = _plic_rp.fields.add()
+    _plic_field.vstring (Instance2StringCast (self.iface1))
+    _plic_field = _plic_rp.fields.add()
+    _plic_field.vstring (Instance2StringCast (self.iface2))
+    _plic_field = _plic_rp.fields.add()
+    _plic_field.vstring (Instance2StringCast (self.iface3))
 
 class NewRecord (__BaseRecord__):
   def __init__ (self, **entries):
@@ -364,6 +400,12 @@ class QuickRecord (__BaseRecord__):
     _plic_field = _plic_rp.fields.add()
     _plic_field.vint64 = self.int2
 
+class QuickIface (__BaseClass__):
+  def __init__ (self):
+    super (QuickIface, self).__init__()
+  def simple_function (self, i): # one way
+    return _PLIC_0ca100007178342e2c84375ab4c874afb5578ad147fe3033392cdc1a7eebbb31 (self, i)
+
 class MethodTestInterface (__BaseClass__):
   def __init__ (self):
     super (MethodTestInterface, self).__init__()
@@ -385,6 +427,8 @@ class MethodTestInterface (__BaseClass__):
     return _PLIC_0ca20000f8d6703f9af82486dc8ce5aa3a6095e0829ba18574e0fc82dbfa4b77 (self, input, optval)
   def method_with_interface (self, input, optval): # GrandChild
     return _PLIC_0ca20000ed320c14672f050fc4be01b7239a6c63e8d3bb3e106046b369f7e804 (self, input, optval)
+  def method_with_quickiface (self, input, iface0): # QuickIface
+    return _PLIC_0ca200003fcf3b3d9eeea2d03769389cb168e0c6140b94e55b03b11a28cd7427 (self, input, iface0)
 
 class ButtonArea (__BaseClass__):
   def __init__ (self):

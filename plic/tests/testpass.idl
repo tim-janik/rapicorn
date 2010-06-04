@@ -129,6 +129,11 @@ enum ExtensiveEnum {
 // reassignment: Const V36 = 36;
 Const enum_math = V36 + V34 + V24 + V13 + V3;
 
+// simple interface
+interface FirstInterface {
+  void void_func ();
+};
+
 // record tests
 record XFooRecord {
   bool   single_bool;
@@ -142,6 +147,9 @@ record XFooRecord {
   int    multi3;
   int    multi4;
   ExtensiveEnum enum_field;
+  FirstInterface iface1;
+  FirstInterface iface2;
+  FirstInterface iface3;
 };
 
 // sequence tests
@@ -165,6 +173,9 @@ sequence RecordSequence {
 };
 sequence SequenceSequence {
   IntSequence moreints;
+};
+sequence InterfaceSequence {
+  FirstInterface iface1;
 };
 
 // test nested types
@@ -274,16 +285,21 @@ enum QuickEnum         { ZERO = 0, };
 record   QuickRecord   { int   int1; int int2; };
 sequence QuickSequence { float somefloat; };
 
+interface QuickIface {
+  void simple_function (int i = 9);
+};
+
 interface MethodTestInterface {
-  void   method_with_void   ();
-  bool   method_with_bools  (bool   input, bool   optval = FALSE);
-  int    method_with_ints   (int    input, int    optval = -3 - -1);
-  float  method_with_floats (float  input, float  optval = 9.9 + 3.e+2);
-  string method_with_string (string input, string optval = "default");
-  QuickEnum     method_with_enum      (QuickEnum     input, QuickEnum     optval = ZERO);
-  QuickRecord   method_with_record    (QuickRecord   input, QuickRecord   optval = 0);
-  QuickSequence method_with_sequence  (QuickSequence input, QuickSequence optval = 0);
-  GrandChild    method_with_interface (GrandChild    input, GrandChild    optval = 0);
+  void           method_with_void       ();
+  bool           method_with_bools      (bool   input, bool   optval = FALSE);
+  int            method_with_ints       (int    input, int    optval = -3 - -1);
+  float          method_with_floats     (float  input, float  optval = 9.9 + 3.e+2);
+  string         method_with_string     (string input, string optval = "default");
+  QuickEnum      method_with_enum       (QuickEnum      input, QuickEnum     optval = ZERO);
+  QuickRecord    method_with_record     (QuickRecord    input, QuickRecord   optval = 0);
+  QuickSequence  method_with_sequence   (QuickSequence  input, QuickSequence optval = 0);
+  GrandChild     method_with_interface  (GrandChild     input, GrandChild    optval = 0);
+  QuickIface     method_with_quickiface (QuickIface     input, QuickIface    iface0 = 0);
 };
 
 }

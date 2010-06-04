@@ -44,14 +44,15 @@ gencc_boilerplate = r"""
 
 namespace { // Anonymous
 using Plic::uint64;
+typedef Plic::Coupler Coupler;
 typedef Plic::FieldBuffer FieldBuffer;
 typedef Plic::FieldBuffer8 FieldBuffer8;
 typedef Plic::FieldBufferReader FieldBufferReader;
 
 #ifndef PLIC_COUPLER
 #define PLIC_COUPLER()  _plic_coupler_static
-static struct _DummyCoupler : public Plic::Coupler {
-  virtual Plic::FieldBuffer* call_remote (Plic::FieldBuffer *fbcall)
+static struct _DummyCoupler : public Coupler {
+  virtual FieldBuffer* call_remote (FieldBuffer *fbcall)
   {
     bool twoway = Plic::is_callid_twoway (fbcall->first_id());
     if (send_call (fbcall)) // deletes fbcall
@@ -213,11 +214,11 @@ class Generator:
     elif type_info.storage == Decls.SEQUENCE:
       fl = type_info.elements
       s += self.generate_field (fl[0], 'std::vector<' + self.type2cpp (fl[1]) + '>')
-      s += '  bool proto_add  (' + FieldBuffer + '&) const;\n'
-      s += '  bool proto_pop  (' + FieldBuffer + 'Reader&);\n'
+      s += '  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;\n'
+      s += '  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);\n'
     if type_info.storage == Decls.RECORD:
-      s += '  bool proto_add  (' + FieldBuffer + '&) const;\n'
-      s += '  bool proto_pop  (' + FieldBuffer + 'Reader&);\n'
+      s += '  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;\n'
+      s += '  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);\n'
       s += '  inline %s () {' % type_info.name
       for fl in fieldlist:
         if fl[1].storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
@@ -234,14 +235,15 @@ class Generator:
              Decls.STRING:    'string',
              Decls.FUNC:      'func',
              Decls.INTERFACE: 'object' }.get (decls_type, None)
-  def generate_proto_add_args (self, fb, type_info, aprefix, arg_info_list, apostfix,
+  def generate_proto_add_args (self, cplfb, type_info, aprefix, arg_info_list, apostfix,
                                onerr = 'return false'):
     s = ''
+    cpl, fb = cplfb
     for arg_it in arg_info_list:
       ident, type = arg_it
       ident = aprefix + ident + apostfix
       if type.storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  if (!%s.proto_add (%s)) %s;\n' % (ident, fb, onerr)
+        s += '  if (!%s.proto_add (%s, %s)) %s;\n' % (ident, cpl, fb, onerr) # FIXME cpl var
       elif type.storage == Decls.INTERFACE:
         if self.gen_clientcc:
           s += '  %s.add_object (%s._rpc_id());\n' % (fb, ident)
@@ -258,7 +260,7 @@ class Generator:
       ident, type = arg_it
       ident = aprefix + ident + apostfix
       if type.storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  if (!%s.proto_pop (%s)) %s;\n' % (ident, fbr, onerr)
+        s += '  if (!%s.proto_pop (%s, %s)) %s;\n' % (ident, cpl, fbr, onerr)
       elif type.storage == Decls.ENUM:
         s += '  %s = %s (%s.pop_evalue());\n' % (ident, self.type2cpp (type), fbr)
       elif type.storage == Decls.INTERFACE:
@@ -270,12 +272,13 @@ class Generator:
     return s
   def generate_record_impl (self, type_info):
     s = ''
-    s += 'bool\n%s::proto_add (' % type_info.name + FieldBuffer + ' &dst) const\n{\n'
+    cplfb = ('cpl', 'fb')
+    s += 'bool\n%s::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const\n{\n' % type_info.name
     s += '  ' + FieldBuffer + ' &fb = dst.add_rec (%u);\n' % len (type_info.fields)
-    s += self.generate_proto_add_args ('fb', type_info, 'this->', type_info.fields, '')
+    s += self.generate_proto_add_args (cplfb, type_info, 'this->', type_info.fields, '')
     s += '  return true;\n'
     s += '}\n'
-    s += 'bool\n%s::proto_pop (' % type_info.name + FieldBuffer + 'Reader &src)\n{\n'
+    s += 'bool\n%s::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)\n{\n' % type_info.name
     s += '  ' + FieldBuffer + 'Reader fbr (src.pop_rec());\n'
     s += '  if (fbr.remaining() != %u) return false;\n' % len (type_info.fields)
     cplfbr = ('cpl', 'fbr')
@@ -285,19 +288,20 @@ class Generator:
     return s
   def generate_sequence_impl (self, type_info):
     s = ''
+    cplfb = ('cpl', 'fb')
     cplfbr = ('cpl', 'fbr')
     el = type_info.elements
-    s += 'bool\n%s::proto_add (' % type_info.name + FieldBuffer + ' &dst) const\n{\n'
+    s += 'bool\n%s::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const\n{\n' % type_info.name
     s += '  const size_t len = %s.size();\n' % el[0]
     s += '  ' + FieldBuffer + ' &fb = dst.add_seq (len);\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
-    s += reindent ('  ', self.generate_proto_add_args ('fb', type_info, 'this->',
+    s += reindent ('  ', self.generate_proto_add_args (cplfb, type_info, 'this->',
                                                        [type_info.elements], '[k]')) + '\n'
     s += '  }\n'
     s += '  return true;\n'
     s += '}\n'
     eident = 'this->%s' % el[0]
-    s += 'bool\n%s::proto_pop (' % type_info.name + FieldBuffer + 'Reader &src)\n{\n'
+    s += 'bool\n%s::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)\n{\n' % type_info.name
     s += '  ' + FieldBuffer + 'Reader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
     if el[1].storage in (Decls.RECORD, Decls.SEQUENCE):
@@ -311,8 +315,9 @@ class Generator:
                                                          [type_info.elements], '[k]')) + '\n'
     elif el[1].storage == Decls.ENUM:
       s += '    %s.push_back (%s (fbr.pop_evalue()));\n' % (eident, self.type2cpp (el[1]))
+
     elif el[1].storage == Decls.INTERFACE:
-      s += '    %s.push_back (Plic::_rpc_ptr4id<%s> (fbr.pop_%s()));\n' % (eident, el[1].name, self.accessor_name (el[1].storage))
+      s += '    %s.push_back (%s (cpl, fbr));\n' % (eident, el[1].name)
     else:
       s += '    %s.push_back (fbr.pop_%s());\n' % (eident, self.accessor_name (el[1].storage))
     s += '  }\n'
@@ -321,6 +326,7 @@ class Generator:
     return s
   def generate_client_method_stub (self, class_info, mtype):
     s = ''
+    cplfb = ('PLIC_COUPLER()', 'fb') # FIXME: optimize PLIC_COUPLER() accessor?
     therr = 'THROW_ERROR()'
     hasret = mtype.rtype.storage != Decls.VOID
     # prototype
@@ -337,24 +343,24 @@ class Generator:
     s += '  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + %u), *fr = NULL;\n' % len (mtype.args)
     s += '  fb.add_type_hash (%s); // proc_id\n' % self.method_digest (mtype)
     # marshal args
-    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
+    s += self.generate_proto_add_args (cplfb, class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
-    s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '', therr)
+    s += self.generate_proto_add_args (cplfb, class_info, '', ident_type_args, '', therr)
     # call out
-    s += '  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb\n'
+    s += '  fr = %s.call_remote (&fb); // deletes fb\n' % cplfb[0]
     # unmarshal return
     if hasret:
       rarg = ('retval', mtype.rtype)
       s += '  FieldBufferReader frr (*fr);\n'
       s += '  frr.skip(); // proc_id\n'
+      cplfrr = (cplfb[0], 'frr')
       # FIXME: check return error and return type
-      cplfbr = ('PLIC_COUPLER()', 'frr')
       if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
         s += '  ' + self.format_var (rarg[0], rarg[1]) + ';\n'
-        s += self.generate_proto_pop_args (cplfbr, class_info, '', [rarg], '', therr)
+        s += self.generate_proto_pop_args (cplfrr, class_info, '', [rarg], '', therr)
       else:
         vtype = self.format_vartype (rarg[1]) # 'int*' + ...
-        s += self.generate_proto_pop_args (cplfbr, class_info, vtype, [rarg], '', therr) # ... + 'x = 5;'
+        s += self.generate_proto_pop_args (cplfrr, class_info, vtype, [rarg], '', therr) # ... + 'x = 5;'
       s += '  return retval;\n'
     s += '}\n'
     return s
@@ -364,7 +370,7 @@ class Generator:
     dispatcher_name = '_dispatch__%s_%s' % (class_info.name, mtype.name)
     reglines += [ (self.method_digest (mtype), self.namespaced_identifier (dispatcher_name)) ]
     s += 'static FieldBuffer*\n'
-    s += dispatcher_name + ' (Plic::Coupler &cpl)\n'
+    s += dispatcher_name + ' (Coupler &cpl)\n'
     s += '{\n'
     s += '  ' + FieldBuffer + 'Reader &fbr = cpl.reader;\n'
     s += '  fbr.skip4(); // TypeHash\n'
@@ -392,8 +398,9 @@ class Generator:
     s += ');\n'
     # store return value
     if hasret:
+      cplrb = (cplfbr[0], 'rb')
       s += '  FieldBuffer &rb  = *FieldBuffer::new_return();\n'
-      s += self.generate_proto_add_args ('rb', class_info, '', [('rval', mtype.rtype)], '')
+      s += self.generate_proto_add_args (cplrb, class_info, '', [('rval', mtype.rtype)], '')
       s += '  return &rb;\n'
     else:
       s += '  return NULL;\n'
@@ -485,11 +492,11 @@ class Generator:
       s += '  inline %s* _iface() const { return (%s*) _void_iface(); }\n' \
           % (self._iface_base, self._iface_base)
       s += '  inline void _iface (%s *_iface) { _void_iface (_iface); }\n' % self._iface_base
-    if self.gen4smarthandle:
-      s += '  inline %s () {}\n' % type_info.name
-    else: # not self.gen4smarthandle:
+    if not self.gen4smarthandle:
       s += '  virtual ' + self.format_to_tab ('/*Des*/') + '~%s%s () = 0;\n' % (type_info.name, _Iface)
     s += 'public:\n'
+    if self.gen4smarthandle:
+      s += '  inline %s () {}\n' % type_info.name
     if self.gen4smarthandle:
       s += '  inline %s (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) ' % type_info.name
       s += '{ _pop_rpc (cpl, fbr); }\n'

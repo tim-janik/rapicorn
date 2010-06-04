@@ -15,14 +15,15 @@
 
 namespace { // Anonymous
 using Plic::uint64;
+typedef Plic::Coupler Coupler;
 typedef Plic::FieldBuffer FieldBuffer;
 typedef Plic::FieldBuffer8 FieldBuffer8;
 typedef Plic::FieldBufferReader FieldBufferReader;
 
 #ifndef PLIC_COUPLER
 #define PLIC_COUPLER()  _plic_coupler_static
-static struct _DummyCoupler : public Plic::Coupler {
-  virtual Plic::FieldBuffer* call_remote (Plic::FieldBuffer *fbcall)
+static struct _DummyCoupler : public Coupler {
+  virtual FieldBuffer* call_remote (FieldBuffer *fbcall)
   {
     bool twoway = Plic::is_callid_twoway (fbcall->first_id());
     if (send_call (fbcall)) // deletes fbcall
@@ -129,6 +130,15 @@ enum ExtensiveEnum {
   V35 = 42,
   V36 = 42, // "foo""4"
 };
+
+class FirstInterface : public virtual Plic::SmartHandle {
+protected:
+public:
+  inline FirstInterface () {}
+  inline FirstInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  void            void_func ();
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
 struct XFooRecord {
   bool            single_bool;
   int             single_num;
@@ -141,56 +151,64 @@ struct XFooRecord {
   int             multi3;
   int             multi4;
   ExtensiveEnum   enum_field;
-  bool proto_add  (Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::FieldBufferReader&);
+  FirstInterface  iface1;
+  FirstInterface  iface2;
+  FirstInterface  iface3;
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
   inline XFooRecord () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
 struct XFooSequence {
   std::vector<bool> single_bool;
-  bool proto_add  (Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::FieldBufferReader&);
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 struct IntSequence {
   std::vector<int> numx;
-  bool proto_add  (Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::FieldBufferReader&);
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 struct FloatSequence {
   std::vector<double> fractalvalue;
-  bool proto_add  (Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::FieldBufferReader&);
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 struct StringSequence {
   std::vector<std::string> blurb;
-  bool proto_add  (Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::FieldBufferReader&);
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 struct ExtensiveEnumSequence {
   std::vector<ExtensiveEnum> enum_elements;
-  bool proto_add  (Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::FieldBufferReader&);
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 struct RecordSequence {
   std::vector<XFooRecord> repeatedfield;
-  bool proto_add  (Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::FieldBufferReader&);
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 struct SequenceSequence {
   std::vector<IntSequence> moreints;
-  bool proto_add  (Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::FieldBufferReader&);
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
+};
+struct InterfaceSequence {
+  std::vector<FirstInterface> iface1;
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 struct NestedTypesRec {
   XFooRecord      rec;
   XFooSequence    seq;
-  bool proto_add  (Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::FieldBufferReader&);
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
   inline NestedTypesRec () { }
 };
 struct NestedTypesSeq {
   std::vector<NestedTypesRec> ntr;
-  bool proto_add  (Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::FieldBufferReader&);
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 typedef int AliasInt;
 typedef double AliasFloat;
@@ -204,8 +222,8 @@ struct NewRecord {
   Enum1           enum1;
   XFooSequence    xfs;
   NestedTypesRec  ntr;
-  bool proto_add  (Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::FieldBufferReader&);
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
   inline NewRecord () { i = 0; enum1 = Enum1 (0); }
 };
 
@@ -214,15 +232,15 @@ struct InnerRecord {
   int             x;
   int             y;
   NewRecord       rec;
-  bool proto_add  (Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::FieldBufferReader&);
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
   inline InnerRecord () { x = 0; y = 0; }
 };
 } // Inner
 struct Refer2Inner {
   Inner::InnerRecord r;
-  bool proto_add  (Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::FieldBufferReader&);
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
   inline Refer2Inner () { }
 };
 } // MandatoryNamespace
@@ -233,8 +251,8 @@ struct SomeRecord {
   MandatoryNamespace::NewRecord r2;
   MandatoryNamespace::Inner::InnerRecord r3;
   MandatoryNamespace::Inner::InnerRecord r4;
-  bool proto_add  (Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::FieldBufferReader&);
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
   inline SomeRecord () { }
 };
 } // OtherNamespace
@@ -249,8 +267,8 @@ namespace InterfaceTests {
 
 class UIWidgetArea : public virtual Plic::SmartHandle {
 protected:
-  inline UIWidgetArea () {}
 public:
+  inline UIWidgetArea () {}
   inline UIWidgetArea (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   double          simple_method ();
   double          single_arg    (int n);
@@ -274,32 +292,32 @@ public:
 
 class Parent : public virtual Plic::SmartHandle {
 protected:
-  inline Parent () {}
 public:
+  inline Parent () {}
   inline Parent (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class Child : public Parent {
 protected:
-  inline Child () {}
 public:
+  inline Child () {}
   inline Child (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class Descendant : public Child {
 protected:
-  inline Descendant () {}
 public:
+  inline Descendant () {}
   inline Descendant (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class GrandChild : public Descendant {
 protected:
-  inline GrandChild () {}
 public:
+  inline GrandChild () {}
   inline GrandChild (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
@@ -309,38 +327,49 @@ enum QuickEnum {
 struct QuickRecord {
   int             int1;
   int             int2;
-  bool proto_add  (Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::FieldBufferReader&);
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
   inline QuickRecord () { int1 = 0; int2 = 0; }
 };
 struct QuickSequence {
   std::vector<double> somefloat;
-  bool proto_add  (Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::FieldBufferReader&);
+  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
+  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
+};
+
+class QuickIface : public virtual Plic::SmartHandle {
+protected:
+public:
+  inline QuickIface () {}
+  inline QuickIface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  void            simple_function (int i = 9);
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class MethodTestInterface : public virtual Plic::SmartHandle {
 protected:
-  inline MethodTestInterface () {}
 public:
+  inline MethodTestInterface () {}
   inline MethodTestInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  void            method_with_void      ();
-  bool            method_with_bools     (bool input,
-                                         bool optval = 0);
-  int             method_with_ints      (int input,
-                                         int optval = -2);
-  double          method_with_floats    (double input,
-                                         double optval = 309.9);
-  std::string     method_with_string    (const std::string &input,
-                                         const std::string &optval = "default");
-  QuickEnum       method_with_enum      (QuickEnum input,
-                                         QuickEnum optval = QuickEnum (0));
-  QuickRecord     method_with_record    (const QuickRecord &input,
-                                         const QuickRecord &optval = QuickRecord());
-  QuickSequence   method_with_sequence  (const QuickSequence &input,
-                                         const QuickSequence &optval = QuickSequence());
-  GrandChild      method_with_interface (GrandChild &input,
-                                         GrandChild &optval = *(GrandChild*) NULL);
+  void            method_with_void       ();
+  bool            method_with_bools      (bool input,
+                                          bool optval = 0);
+  int             method_with_ints       (int input,
+                                          int optval = -2);
+  double          method_with_floats     (double input,
+                                          double optval = 309.9);
+  std::string     method_with_string     (const std::string &input,
+                                          const std::string &optval = "default");
+  QuickEnum       method_with_enum       (QuickEnum input,
+                                          QuickEnum optval = QuickEnum (0));
+  QuickRecord     method_with_record     (const QuickRecord &input,
+                                          const QuickRecord &optval = QuickRecord());
+  QuickSequence   method_with_sequence   (const QuickSequence &input,
+                                          const QuickSequence &optval = QuickSequence());
+  GrandChild      method_with_interface  (GrandChild &input,
+                                          GrandChild &optval = *(GrandChild*) NULL);
+  QuickIface      method_with_quickiface (QuickIface &input,
+                                          QuickIface &iface0 = *(QuickIface*) NULL);
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 } // InterfaceTests
@@ -356,16 +385,16 @@ enum ClickType {
 
 class ButtonArea : public virtual Plic::SmartHandle {
 protected:
-  inline ButtonArea () {}
 public:
+  inline ButtonArea () {}
   inline ButtonArea (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class PureMethods : public virtual Plic::SmartHandle {
 protected:
-  inline PureMethods () {}
 public:
+  inline PureMethods () {}
   inline PureMethods (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   int             pure_method (double f);
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
@@ -375,10 +404,18 @@ public:
 // --- Implementations ---
 
 namespace MandatoryNamespace {
-bool
-XFooRecord::proto_add (Plic::FieldBuffer &dst) const
+void
+FirstInterface::void_func ()
 {
-  Plic::FieldBuffer &fb = dst.add_rec (11);
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
+  fb.add_type_hash (0x0ca10000511e8482ULL, 0xd7fca76824ef1339ULL, 0x9c10110ffb6e89b8ULL, 0x7aee6371c6eb9333ULL); // proc_id
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+}
+bool
+XFooRecord::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
+{
+  Plic::FieldBuffer &fb = dst.add_rec (14);
   fb.add_int64 (this->single_bool);
   fb.add_int64 (this->single_num);
   fb.add_double (this->single_float);
@@ -390,13 +427,16 @@ XFooRecord::proto_add (Plic::FieldBuffer &dst) const
   fb.add_int64 (this->multi3);
   fb.add_int64 (this->multi4);
   fb.add_evalue (this->enum_field);
+  fb.add_object (this->iface1._rpc_id());
+  fb.add_object (this->iface2._rpc_id());
+  fb.add_object (this->iface3._rpc_id());
   return true;
 }
 bool
-XFooRecord::proto_pop (Plic::FieldBufferReader &src)
+XFooRecord::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 {
   Plic::FieldBufferReader fbr (src.pop_rec());
-  if (fbr.remaining() != 11) return false;
+  if (fbr.remaining() != 14) return false;
   this->single_bool = fbr.pop_int64();
   this->single_num = fbr.pop_int64();
   this->single_float = fbr.pop_double();
@@ -408,11 +448,14 @@ XFooRecord::proto_pop (Plic::FieldBufferReader &src)
   this->multi3 = fbr.pop_int64();
   this->multi4 = fbr.pop_int64();
   this->enum_field = ExtensiveEnum (fbr.pop_evalue());
+  this->iface1 = FirstInterface (cpl, fbr);
+  this->iface2 = FirstInterface (cpl, fbr);
+  this->iface3 = FirstInterface (cpl, fbr);
   return true;
 }
 
 bool
-XFooSequence::proto_add (Plic::FieldBuffer &dst) const
+XFooSequence::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
 {
   const size_t len = single_bool.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -422,7 +465,7 @@ XFooSequence::proto_add (Plic::FieldBuffer &dst) const
   return true;
 }
 bool
-XFooSequence::proto_pop (Plic::FieldBufferReader &src)
+XFooSequence::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 {
   Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -434,7 +477,7 @@ XFooSequence::proto_pop (Plic::FieldBufferReader &src)
 }
 
 bool
-IntSequence::proto_add (Plic::FieldBuffer &dst) const
+IntSequence::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
 {
   const size_t len = numx.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -444,7 +487,7 @@ IntSequence::proto_add (Plic::FieldBuffer &dst) const
   return true;
 }
 bool
-IntSequence::proto_pop (Plic::FieldBufferReader &src)
+IntSequence::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 {
   Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -456,7 +499,7 @@ IntSequence::proto_pop (Plic::FieldBufferReader &src)
 }
 
 bool
-FloatSequence::proto_add (Plic::FieldBuffer &dst) const
+FloatSequence::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
 {
   const size_t len = fractalvalue.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -466,7 +509,7 @@ FloatSequence::proto_add (Plic::FieldBuffer &dst) const
   return true;
 }
 bool
-FloatSequence::proto_pop (Plic::FieldBufferReader &src)
+FloatSequence::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 {
   Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -478,7 +521,7 @@ FloatSequence::proto_pop (Plic::FieldBufferReader &src)
 }
 
 bool
-StringSequence::proto_add (Plic::FieldBuffer &dst) const
+StringSequence::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
 {
   const size_t len = blurb.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -488,7 +531,7 @@ StringSequence::proto_add (Plic::FieldBuffer &dst) const
   return true;
 }
 bool
-StringSequence::proto_pop (Plic::FieldBufferReader &src)
+StringSequence::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 {
   Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -500,7 +543,7 @@ StringSequence::proto_pop (Plic::FieldBufferReader &src)
 }
 
 bool
-ExtensiveEnumSequence::proto_add (Plic::FieldBuffer &dst) const
+ExtensiveEnumSequence::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
 {
   const size_t len = enum_elements.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -510,7 +553,7 @@ ExtensiveEnumSequence::proto_add (Plic::FieldBuffer &dst) const
   return true;
 }
 bool
-ExtensiveEnumSequence::proto_pop (Plic::FieldBufferReader &src)
+ExtensiveEnumSequence::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 {
   Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -522,147 +565,169 @@ ExtensiveEnumSequence::proto_pop (Plic::FieldBufferReader &src)
 }
 
 bool
-RecordSequence::proto_add (Plic::FieldBuffer &dst) const
+RecordSequence::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
 {
   const size_t len = repeatedfield.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    if (!this->repeatedfield[k].proto_add (fb)) return false;
+    if (!this->repeatedfield[k].proto_add (cpl, fb)) return false;
   }
   return true;
 }
 bool
-RecordSequence::proto_pop (Plic::FieldBufferReader &src)
+RecordSequence::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 {
   Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   this->repeatedfield.resize (len);
   for (size_t k = 0; k < len; k++) {
-    if (!this->repeatedfield[k].proto_pop (fbr)) return false;
+    if (!this->repeatedfield[k].proto_pop (cpl, fbr)) return false;
   }
   return true;
 }
 
 bool
-SequenceSequence::proto_add (Plic::FieldBuffer &dst) const
+SequenceSequence::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
 {
   const size_t len = moreints.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    if (!this->moreints[k].proto_add (fb)) return false;
+    if (!this->moreints[k].proto_add (cpl, fb)) return false;
   }
   return true;
 }
 bool
-SequenceSequence::proto_pop (Plic::FieldBufferReader &src)
+SequenceSequence::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 {
   Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   this->moreints.resize (len);
   for (size_t k = 0; k < len; k++) {
-    if (!this->moreints[k].proto_pop (fbr)) return false;
+    if (!this->moreints[k].proto_pop (cpl, fbr)) return false;
   }
   return true;
 }
 
 bool
-NestedTypesRec::proto_add (Plic::FieldBuffer &dst) const
+InterfaceSequence::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
 {
-  Plic::FieldBuffer &fb = dst.add_rec (2);
-  if (!this->rec.proto_add (fb)) return false;
-  if (!this->seq.proto_add (fb)) return false;
+  const size_t len = iface1.size();
+  Plic::FieldBuffer &fb = dst.add_seq (len);
+  for (size_t k = 0; k < len; k++) {
+    fb.add_object (this->iface1[k]._rpc_id());
+  }
   return true;
 }
 bool
-NestedTypesRec::proto_pop (Plic::FieldBufferReader &src)
+InterfaceSequence::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 {
-  Plic::FieldBufferReader fbr (src.pop_rec());
-  if (fbr.remaining() != 2) return false;
-  if (!this->rec.proto_pop (fbr)) return false;
-  if (!this->seq.proto_pop (fbr)) return false;
+  Plic::FieldBufferReader fbr (src.pop_seq());
+  const size_t len = fbr.remaining();
+  this->iface1.reserve (len);
+  for (size_t k = 0; k < len; k++) {
+    this->iface1.push_back (FirstInterface (cpl, fbr));
+  }
   return true;
 }
 
 bool
-NestedTypesSeq::proto_add (Plic::FieldBuffer &dst) const
+NestedTypesRec::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
+{
+  Plic::FieldBuffer &fb = dst.add_rec (2);
+  if (!this->rec.proto_add (cpl, fb)) return false;
+  if (!this->seq.proto_add (cpl, fb)) return false;
+  return true;
+}
+bool
+NestedTypesRec::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
+{
+  Plic::FieldBufferReader fbr (src.pop_rec());
+  if (fbr.remaining() != 2) return false;
+  if (!this->rec.proto_pop (cpl, fbr)) return false;
+  if (!this->seq.proto_pop (cpl, fbr)) return false;
+  return true;
+}
+
+bool
+NestedTypesSeq::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
 {
   const size_t len = ntr.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    if (!this->ntr[k].proto_add (fb)) return false;
+    if (!this->ntr[k].proto_add (cpl, fb)) return false;
   }
   return true;
 }
 bool
-NestedTypesSeq::proto_pop (Plic::FieldBufferReader &src)
+NestedTypesSeq::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 {
   Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   this->ntr.resize (len);
   for (size_t k = 0; k < len; k++) {
-    if (!this->ntr[k].proto_pop (fbr)) return false;
+    if (!this->ntr[k].proto_pop (cpl, fbr)) return false;
   }
   return true;
 }
 
 bool
-NewRecord::proto_add (Plic::FieldBuffer &dst) const
+NewRecord::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
 {
   Plic::FieldBuffer &fb = dst.add_rec (4);
   fb.add_int64 (this->i);
   fb.add_evalue (this->enum1);
-  if (!this->xfs.proto_add (fb)) return false;
-  if (!this->ntr.proto_add (fb)) return false;
+  if (!this->xfs.proto_add (cpl, fb)) return false;
+  if (!this->ntr.proto_add (cpl, fb)) return false;
   return true;
 }
 bool
-NewRecord::proto_pop (Plic::FieldBufferReader &src)
+NewRecord::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 {
   Plic::FieldBufferReader fbr (src.pop_rec());
   if (fbr.remaining() != 4) return false;
   this->i = fbr.pop_int64();
   this->enum1 = Enum1 (fbr.pop_evalue());
-  if (!this->xfs.proto_pop (fbr)) return false;
-  if (!this->ntr.proto_pop (fbr)) return false;
+  if (!this->xfs.proto_pop (cpl, fbr)) return false;
+  if (!this->ntr.proto_pop (cpl, fbr)) return false;
   return true;
 }
 
 
 namespace Inner {
 bool
-InnerRecord::proto_add (Plic::FieldBuffer &dst) const
+InnerRecord::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
 {
   Plic::FieldBuffer &fb = dst.add_rec (3);
   fb.add_int64 (this->x);
   fb.add_int64 (this->y);
-  if (!this->rec.proto_add (fb)) return false;
+  if (!this->rec.proto_add (cpl, fb)) return false;
   return true;
 }
 bool
-InnerRecord::proto_pop (Plic::FieldBufferReader &src)
+InnerRecord::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 {
   Plic::FieldBufferReader fbr (src.pop_rec());
   if (fbr.remaining() != 3) return false;
   this->x = fbr.pop_int64();
   this->y = fbr.pop_int64();
-  if (!this->rec.proto_pop (fbr)) return false;
+  if (!this->rec.proto_pop (cpl, fbr)) return false;
   return true;
 }
 
 } // Inner
 bool
-Refer2Inner::proto_add (Plic::FieldBuffer &dst) const
+Refer2Inner::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
 {
   Plic::FieldBuffer &fb = dst.add_rec (1);
-  if (!this->r.proto_add (fb)) return false;
+  if (!this->r.proto_add (cpl, fb)) return false;
   return true;
 }
 bool
-Refer2Inner::proto_pop (Plic::FieldBufferReader &src)
+Refer2Inner::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 {
   Plic::FieldBufferReader fbr (src.pop_rec());
   if (fbr.remaining() != 1) return false;
-  if (!this->r.proto_pop (fbr)) return false;
+  if (!this->r.proto_pop (cpl, fbr)) return false;
   return true;
 }
 
@@ -670,24 +735,24 @@ Refer2Inner::proto_pop (Plic::FieldBufferReader &src)
 
 namespace OtherNamespace {
 bool
-SomeRecord::proto_add (Plic::FieldBuffer &dst) const
+SomeRecord::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
 {
   Plic::FieldBuffer &fb = dst.add_rec (4);
-  if (!this->r1.proto_add (fb)) return false;
-  if (!this->r2.proto_add (fb)) return false;
-  if (!this->r3.proto_add (fb)) return false;
-  if (!this->r4.proto_add (fb)) return false;
+  if (!this->r1.proto_add (cpl, fb)) return false;
+  if (!this->r2.proto_add (cpl, fb)) return false;
+  if (!this->r3.proto_add (cpl, fb)) return false;
+  if (!this->r4.proto_add (cpl, fb)) return false;
   return true;
 }
 bool
-SomeRecord::proto_pop (Plic::FieldBufferReader &src)
+SomeRecord::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 {
   Plic::FieldBufferReader fbr (src.pop_rec());
   if (fbr.remaining() != 4) return false;
-  if (!this->r1.proto_pop (fbr)) return false;
-  if (!this->r2.proto_pop (fbr)) return false;
-  if (!this->r3.proto_pop (fbr)) return false;
-  if (!this->r4.proto_pop (fbr)) return false;
+  if (!this->r1.proto_pop (cpl, fbr)) return false;
+  if (!this->r2.proto_pop (cpl, fbr)) return false;
+  if (!this->r3.proto_pop (cpl, fbr)) return false;
+  if (!this->r4.proto_pop (cpl, fbr)) return false;
   return true;
 }
 
@@ -828,7 +893,7 @@ UIWidgetArea::on_click2in (const std::string &arg_command)
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
 }
 bool
-QuickRecord::proto_add (Plic::FieldBuffer &dst) const
+QuickRecord::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
 {
   Plic::FieldBuffer &fb = dst.add_rec (2);
   fb.add_int64 (this->int1);
@@ -836,7 +901,7 @@ QuickRecord::proto_add (Plic::FieldBuffer &dst) const
   return true;
 }
 bool
-QuickRecord::proto_pop (Plic::FieldBufferReader &src)
+QuickRecord::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 {
   Plic::FieldBufferReader fbr (src.pop_rec());
   if (fbr.remaining() != 2) return false;
@@ -846,7 +911,7 @@ QuickRecord::proto_pop (Plic::FieldBufferReader &src)
 }
 
 bool
-QuickSequence::proto_add (Plic::FieldBuffer &dst) const
+QuickSequence::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
 {
   const size_t len = somefloat.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
@@ -856,7 +921,7 @@ QuickSequence::proto_add (Plic::FieldBuffer &dst) const
   return true;
 }
 bool
-QuickSequence::proto_pop (Plic::FieldBufferReader &src)
+QuickSequence::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 {
   Plic::FieldBufferReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
@@ -867,6 +932,15 @@ QuickSequence::proto_pop (Plic::FieldBufferReader &src)
   return true;
 }
 
+void
+QuickIface::simple_function (int arg_i)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x0ca100007178342eULL, 0x2c84375ab4c874afULL, 0xb5578ad147fe3033ULL, 0x392cdc1a7eebbb31ULL); // proc_id
+  fb.add_object ((*this)._rpc_id());
+  fb.add_int64 (arg_i);
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+}
 void
 MethodTestInterface::method_with_void ()
 {
@@ -957,13 +1031,13 @@ MethodTestInterface::method_with_record (const QuickRecord &arg_input,
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca2000093f684d6ULL, 0x345260c4f912f67fULL, 0xa8f6c2af19dc877eULL, 0x176ffee81397fa2eULL); // proc_id
   fb.add_object ((*this)._rpc_id());
-  if (!arg_input.proto_add (fb)) THROW_ERROR();
-  if (!arg_optval.proto_add (fb)) THROW_ERROR();
+  if (!arg_input.proto_add (PLIC_COUPLER(), fb)) THROW_ERROR();
+  if (!arg_optval.proto_add (PLIC_COUPLER(), fb)) THROW_ERROR();
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   QuickRecord retval;
-  if (!retval.proto_pop (frr)) THROW_ERROR();
+  if (!retval.proto_pop (PLIC_COUPLER(), frr)) THROW_ERROR();
   return retval;
 }
 QuickSequence
@@ -973,13 +1047,13 @@ MethodTestInterface::method_with_sequence (const QuickSequence &arg_input,
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x0ca20000f8d6703fULL, 0x9af82486dc8ce5aaULL, 0x3a6095e0829ba185ULL, 0x74e0fc82dbfa4b77ULL); // proc_id
   fb.add_object ((*this)._rpc_id());
-  if (!arg_input.proto_add (fb)) THROW_ERROR();
-  if (!arg_optval.proto_add (fb)) THROW_ERROR();
+  if (!arg_input.proto_add (PLIC_COUPLER(), fb)) THROW_ERROR();
+  if (!arg_optval.proto_add (PLIC_COUPLER(), fb)) THROW_ERROR();
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   QuickSequence retval;
-  if (!retval.proto_pop (frr)) THROW_ERROR();
+  if (!retval.proto_pop (PLIC_COUPLER(), frr)) THROW_ERROR();
   return retval;
 }
 GrandChild
@@ -995,6 +1069,21 @@ MethodTestInterface::method_with_interface (GrandChild &arg_input,
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   GrandChild retval = GrandChild (PLIC_COUPLER(), frr);
+  return retval;
+}
+QuickIface
+MethodTestInterface::method_with_quickiface (QuickIface &arg_input,
+                                             QuickIface &arg_iface0)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
+  fb.add_type_hash (0x0ca200003fcf3b3dULL, 0x9eeea2d03769389cULL, 0xb168e0c6140b94e5ULL, 0x5b03b11a28cd7427ULL); // proc_id
+  fb.add_object ((*this)._rpc_id());
+  fb.add_object (arg_input._rpc_id());
+  fb.add_object (arg_iface0._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // proc_id
+  QuickIface retval = QuickIface (PLIC_COUPLER(), frr);
   return retval;
 }
 } // InterfaceTests

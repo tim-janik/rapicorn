@@ -223,11 +223,6 @@ class Generator:
     return s
   def generate_sequence_impl (self, type_info):
     s = ''
-    s += 'struct %s {\n' % type_info.name
-    for fl in [ type_info.elements ]:
-      pstar = '*' if fl[1].storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE) else ''
-      s += '  ' + self.format_to_tab (self.type2cpp (fl[1].name)) + pstar + fl[0] + ';\n'
-    s += '};\n'
     el = type_info.elements
     # sequence proto add
     s += 'static RAPICORN_UNUSED bool\n'

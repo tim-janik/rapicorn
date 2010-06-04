@@ -103,12 +103,13 @@ class Generator:
     s += '> ' + signame + ';\n'
     return s
   def zero_value (self, type):
-    return { Decls.FLOAT    : '0',
-             Decls.INT      : '0',
-             Decls.ENUM     : '0',
-             Decls.RECORD   : 'None',
-             Decls.SEQUENCE : 'None',
-             Decls.STRING   : "''",
+    return { Decls.FLOAT     : '0',
+             Decls.INT       : '0',
+             Decls.ENUM      : '0',
+             Decls.RECORD    : 'None',
+             Decls.SEQUENCE  : 'None',
+             Decls.STRING    : "''",
+             Decls.INTERFACE : "None",
            }[type.storage]
   def generate_record_impl (self, type_info):
     s = ''
