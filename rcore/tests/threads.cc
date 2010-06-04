@@ -50,7 +50,7 @@ atomic_up_thread (gpointer data)
 {
   volatile int *ip = (int*) data;
   for (guint i = 0; i < 25; i++)
-    ThreadTable.atomic_int_add (ip, +3);
+    Atomic::int_add (ip, +3);
   atomic_mutex.lock();
   atomic_count -= 1;
   atomic_cond.signal();
@@ -63,7 +63,7 @@ atomic_down_thread (gpointer data)
 {
   volatile int *ip = (int*) data;
   for (guint i = 0; i < 25; i++)
-    ThreadTable.atomic_int_add (ip, -4);
+    Atomic::int_add (ip, -4);
   atomic_mutex.lock();
   atomic_count -= 1; // FIXME: make this atomic
   atomic_cond.signal();
@@ -264,7 +264,7 @@ struct ThreadA : public virtual Rapicorn::Thread {
     TASSERT (this->name() == "ThreadA");
     TASSERT (this->name() == Thread::Self::name());
     for (int j = 0; j < 17905; j++)
-      ThreadTable.atomic_int_add (counter, value);
+      Atomic::int_add (counter, value);
   }
 };
 

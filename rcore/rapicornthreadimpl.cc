@@ -40,20 +40,6 @@
 
 /* --- some GLib compat --- */
 #define HAVE_GSLICE     GLIB_CHECK_VERSION (2, 9, 1)
-#if !GLIB_CHECK_VERSION (2, 10, 0)
-static void
-g_atomic_int_set (volatile int *atomic,
-                  int           value)
-{
-  while (!g_atomic_int_compare_and_exchange ((int*) atomic, *atomic, value));
-}
-static void
-g_atomic_pointer_set (volatile gpointer *atomic,
-                      gpointer           value)
-{
-  while (!g_atomic_pointer_compare_and_exchange ((gpointer*) atomic, *atomic, value));
-}
-#endif
 
 /* --- structures --- */
 struct _RapicornThread
@@ -104,9 +90,6 @@ static Cond        global_thread_cond;
 static Mutex       global_startup_mutex;
 static GSList     *global_thread_list = NULL;
 static GSList     *thread_awaken_list = NULL;
-static RapicornMutex *mutex_init_chain = NULL;
-static RapicornMutex *rec_mutex_init_chain = NULL;
-static RapicornCond  *cond_init_chain = NULL;
 
 
 /* --- functions --- */
@@ -121,7 +104,7 @@ common_thread_new (const gchar *name)
   thread = g_new0 (RapicornThread, 1);
 #endif
 
-  ThreadTable.atomic_pointer_set (&thread->threadxx, NULL);
+  Atomic::ptr_set<void> (&thread->threadxx, NULL);
   thread->ref_field = FLOATING_FLAG + 1;
   thread->name = g_strdup (name);
   thread->aborted = FALSE;
@@ -180,7 +163,7 @@ common_thread_unref (RapicornThread *thread)
   if (0 == (new_ref & ~FLOATING_FLAG))
     {
       g_assert (thread->qdata == NULL);
-      g_assert (ThreadTable.atomic_pointer_get (&thread->threadxx) == NULL);
+      g_assert (Atomic::ptr_get (&thread->threadxx) == NULL);
       /* final cleanup code, all custom hooks have been processed now */
       rapicorn_guard_deregister_all (thread);
       thread->wakeup_cond.~Cond();
@@ -207,7 +190,7 @@ rapicorn_thread_handle_exit (RapicornThread *thread)
       wakeup_destroy (thread->wakeup_data);
     }
   g_datalist_clear (&thread->qdata);
-  void *threadcxx = ThreadTable.atomic_pointer_get (&thread->threadxx);
+  void *threadcxx = Atomic::ptr_get (&thread->threadxx);
   while (threadcxx)
     {
       struct ThreadAccessWrapper : public Thread {
@@ -216,7 +199,7 @@ rapicorn_thread_handle_exit (RapicornThread *thread)
       };
       ThreadAccessWrapper::tdelete (threadcxx);
       g_datalist_clear (&thread->qdata);
-      threadcxx = ThreadTable.atomic_pointer_get (&thread->threadxx);
+      threadcxx = Atomic::ptr_get (&thread->threadxx);
     }
   global_thread_mutex.lock();
   global_thread_list = g_slist_remove (global_thread_list, thread);
@@ -396,7 +379,7 @@ common_thread_self (void)
 static inline void*
 common_thread_getxx (RapicornThread *thread)
 {
-  void *ptr = ThreadTable.atomic_pointer_get (&thread->threadxx);
+  void *ptr = Atomic::ptr_get (&thread->threadxx);
   if (UNLIKELY (!ptr))
     {
       struct ThreadAccessWrapper : public Thread {
@@ -404,7 +387,7 @@ common_thread_getxx (RapicornThread *thread)
         static void wrap (RapicornThread *cthread) { return threadxx_wrap (cthread); }
       };
       ThreadAccessWrapper::wrap (thread);
-      ptr = ThreadTable.atomic_pointer_get (&thread->threadxx);
+      ptr = Atomic::ptr_get (&thread->threadxx);
     }
   return ptr;
 }
@@ -424,9 +407,9 @@ common_thread_setxx (RapicornThread *thread,
 {
   global_thread_mutex.lock();
   bool success = false;
-  if (!ThreadTable.atomic_pointer_get (&thread->threadxx) || !xxdata)
+  if (!Atomic::ptr_get (&thread->threadxx) || !xxdata)
     {
-      ThreadTable.atomic_pointer_set (&thread->threadxx, xxdata);
+      Atomic::ptr_set (&thread->threadxx, xxdata);
       success = true;
     }
   else
@@ -752,29 +735,6 @@ common_thread_steal_qdata (GQuark quark)
   return quark ? g_datalist_id_remove_no_notify (&self->qdata, quark) : NULL;
 }
 
-static bool
-common_split_useconds (RapicornInt64   max_useconds,
-                       RapicornUInt64 *abs_secs,
-                       RapicornUInt64 *abs_usecs)
-{
-  if (max_useconds < 0)
-    return false;
-  struct timeval now;
-  gettimeofday (&now, NULL);
-  RapicornUInt64 secs = max_useconds / 1000000;
-  RapicornUInt64 limit_sec = now.tv_sec + secs;
-  max_useconds -= secs * 1000000;
-  RapicornUInt64 limit_usec = now.tv_usec + max_useconds;
-  if (limit_usec >= 1000000)
-    {
-      limit_usec -= 1000000;
-      limit_sec += 1;
-    }
-  *abs_secs = limit_sec;
-  *abs_usecs = limit_usec;
-  return true;
-}
-
 static inline guint
 cached_getpid (void)
 {
@@ -961,78 +921,6 @@ common_thread_info_free (RapicornThreadInfo  *info)
   g_free (info);
 }
 
-/* --- structure chaining for initialization --- */
-static void
-common_mutex_chain4init (RapicornMutex *mutex)
-{
-  g_assert (mutex->mutex_pointer == NULL);
-  mutex->mutex_pointer = mutex_init_chain;
-  mutex_init_chain = mutex;
-}
-
-static void
-common_mutex_unchain (RapicornMutex *mutex)
-{
-  RapicornMutex *last = NULL, *m = mutex_init_chain;
-  while (m != mutex)
-    {
-      last = m;
-      m = (RapicornMutex*) last->mutex_pointer;
-    }
-  if (last)
-    last->mutex_pointer = mutex->mutex_pointer;
-  else
-    mutex_init_chain = (RapicornMutex*) mutex->mutex_pointer;
-}
-
-static void
-common_rec_mutex_chain4init (RapicornRecMutex *rec_mutex)
-{
-  RAPICORN_STATIC_ASSERT (offsetof (RapicornRecMutex, mutex) == 0);
-  g_assert (rec_mutex->mutex.mutex_pointer == NULL);
-  rec_mutex->mutex.mutex_pointer = rec_mutex_init_chain;
-  rec_mutex_init_chain = &rec_mutex->mutex;
-}
-
-static void
-common_rec_mutex_unchain (RapicornRecMutex *rec_mutex)
-{
-  RapicornMutex *mutex = (RapicornMutex*) rec_mutex;
-  RapicornMutex *last = NULL, *m = rec_mutex_init_chain;
-  while (m != mutex)
-    {
-      last = m;
-      m = (RapicornMutex*) last->mutex_pointer;
-    }
-  if (last)
-    last->mutex_pointer = mutex->mutex_pointer;
-  else
-    rec_mutex_init_chain = (RapicornMutex*) mutex->mutex_pointer;
-}
-
-static void
-common_cond_chain4init (RapicornCond *cond)
-{
-  g_assert (cond->cond_pointer == NULL);
-  cond->cond_pointer = cond_init_chain;
-  cond_init_chain = cond;
-}
-
-static void
-common_cond_unchain (RapicornCond *cond)
-{
-  RapicornCond *last = NULL, *c = cond_init_chain;
-  while (c != cond)
-    {
-      last = c;
-      c = (RapicornCond*) last->cond_pointer;
-    }
-  if (last)
-    last->cond_pointer = cond->cond_pointer;
-  else
-    cond_init_chain = (RapicornCond*) cond->cond_pointer;
-}
-
 /* --- hazard pointer guards --- */
 struct RapicornGuard
 {
@@ -1089,8 +977,8 @@ rapicorn_guard_register (guint n_hazards)
       guard->n_values = n_hazards;
       guard->thread = thread;
       do
-        guard->next = (volatile RapicornGuard*) ThreadTable.atomic_pointer_get ((volatile void*) &guard_list);
-      while (!ThreadTable.atomic_pointer_cas (&guard_list, guard->next, guard));
+        guard->next = (volatile RapicornGuard*) Atomic::ptr_get (&guard_list);
+      while (!Atomic::ptr_cas (&guard_list, guard->next, guard));
     }
   return (volatile RapicornGuard*) guard2values (guard);
 }
@@ -1118,12 +1006,12 @@ rapicorn_guard_deregister_all (RapicornThread *thread)
 {
   volatile RapicornGuard *guard;
   thread->guard_cache = NULL;
-  for (guard = (volatile RapicornGuard*) ThreadTable.atomic_pointer_get (&guard_list); guard; guard = guard->next)
+  for (guard = (volatile RapicornGuard*) Atomic::ptr_get (&guard_list); guard; guard = guard->next)
     if (guard->thread == thread)
       {
         memset ((guint8*) guard->values, 0, sizeof (guard->values[0]) * guard->n_values);
         guard->cache_next = NULL;
-        ThreadTable.atomic_pointer_cas (&guard->thread, thread, NULL); /* reset ->thread with memory barrier */
+        Atomic::ptr_cas<RapicornThread> (&guard->thread, thread, NULL); /* reset ->thread with memory barrier */
       }
 }
 
@@ -1214,7 +1102,7 @@ rapicorn_guard_snap_values (guint          *n_values,
 {
   guint i, n = 0;
   volatile RapicornGuard *guard;
-  for (guard = (volatile RapicornGuard*) ThreadTable.atomic_pointer_get (&guard_list); guard; guard = guard->next)
+  for (guard = (volatile RapicornGuard*) Atomic::ptr_get (&guard_list); guard; guard = guard->next)
     if (guard->thread)
       for (i = 0; i < guard->n_values; i++)
         {
@@ -1253,7 +1141,7 @@ rapicorn_guard_is_protected (gpointer value)
     {
       volatile RapicornGuard *guard;
       guint i;
-      for (guard = (volatile RapicornGuard*) ThreadTable.atomic_pointer_get (&guard_list); guard; guard = guard->next)
+      for (guard = (volatile RapicornGuard*) Atomic::ptr_get (&guard_list); guard; guard = guard->next)
         if (guard->thread)
           for (i = 0; i < guard->n_values; i++)
             if (guard->values[i] == value)
@@ -1277,196 +1165,6 @@ fallback_thread_get_handle (void)
   return (RapicornThread*) g_private_get (fallback_thread_table_key);
 }
 
-static void
-fallback_mutex_init (RapicornMutex *mutex)
-{
-  g_return_if_fail (mutex != NULL);
-  mutex->mutex_pointer = g_mutex_new ();
-}
-
-static int
-fallback_mutex_trylock (RapicornMutex *mutex)
-{
-  return g_mutex_trylock ((GMutex*) mutex->mutex_pointer) ? 0 : -1;
-}
-
-static void
-fallback_mutex_lock (RapicornMutex *mutex)
-{
-  static gboolean is_smp_system = FALSE; // FIXME
-  
-  /* spin locks should be held only very short times,
-   * so usually, we should succeed here.
-   */
-  if (g_mutex_trylock ((GMutex*) mutex->mutex_pointer))
-    return;
-  
-  if (!is_smp_system)
-    {
-      /* on uni processor systems, there's no point in busy spinning */
-      do
-	{
-	  ThreadTable.thread_yield();
-	  if (g_mutex_trylock ((GMutex*) mutex->mutex_pointer))
-	    return;
-	}
-      while (TRUE);
-    }
-  else
-    {
-      /* for multi processor systems, mutex_lock() is hopefully implemented
-       * via spinning. note that we can't implement spinning ourselves with
-       * mutex_trylock(), since on some architectures that'd block memory
-       * bandwith due to constant bus locks
-       */
-      g_mutex_lock ((GMutex*) mutex->mutex_pointer);
-    }
-}
-
-static void
-fallback_mutex_unlock (RapicornMutex *mutex)
-{
-  g_mutex_unlock ((GMutex*) mutex->mutex_pointer);
-}
-
-static void
-fallback_mutex_destroy (RapicornMutex *mutex)
-{
-  g_mutex_free ((GMutex*) mutex->mutex_pointer);
-  memset (mutex, 0, sizeof (*mutex));
-}
-
-static void
-fallback_rec_mutex_init (RapicornRecMutex *rec_mutex)
-{
-  rec_mutex->owner = NULL;
-  rec_mutex->depth = 0;
-  ThreadTable.mutex_init (&rec_mutex->mutex);
-}
-
-static int
-fallback_rec_mutex_trylock (RapicornRecMutex *rec_mutex)
-{
-  RapicornThread *self = ThreadTable.thread_self ();
-  
-  if (rec_mutex->owner == self)
-    {
-      g_assert (rec_mutex->depth > 0);  /* paranoid */
-      rec_mutex->depth += 1;
-      return 0;
-    }
-  else
-    {
-      if (ThreadTable.mutex_trylock (&rec_mutex->mutex))
-	{
-	  g_assert (rec_mutex->owner == NULL && rec_mutex->depth == 0); /* paranoid */
-	  rec_mutex->owner = self;
-	  rec_mutex->depth = 1;
-	  return 0;
-	}
-    }
-  return -1;
-}
-
-static void
-fallback_rec_mutex_lock (RapicornRecMutex *rec_mutex)
-{
-  RapicornThread *self = ThreadTable.thread_self ();
-  
-  if (rec_mutex->owner == self)
-    {
-      g_assert (rec_mutex->depth > 0);  /* paranoid */
-      rec_mutex->depth += 1;
-    }
-  else
-    {
-      ThreadTable.mutex_lock (&rec_mutex->mutex);
-      g_assert (rec_mutex->owner == NULL && rec_mutex->depth == 0); /* paranoid */
-      rec_mutex->owner = self;
-      rec_mutex->depth = 1;
-    }
-}
-
-static void
-fallback_rec_mutex_unlock (RapicornRecMutex *rec_mutex)
-{
-  RapicornThread *self = ThreadTable.thread_self ();
-  
-  if (rec_mutex->owner == self && rec_mutex->depth > 0)
-    {
-      rec_mutex->depth -= 1;
-      if (!rec_mutex->depth)
-	{
-	  rec_mutex->owner = NULL;
-	  ThreadTable.mutex_unlock (&rec_mutex->mutex);
-	}
-    }
-  else
-    g_warning ("unable to unlock recursive mutex with self %p != %p or depth %u < 1",
-	       rec_mutex->owner, self, rec_mutex->depth);
-}
-
-static void
-fallback_rec_mutex_destroy (RapicornRecMutex *rec_mutex)
-{
-  if (rec_mutex->owner || rec_mutex->depth)
-    g_warning ("recursive mutex still locked during destruction");
-  else
-    {
-      ThreadTable.mutex_destroy (&rec_mutex->mutex);
-      g_assert (rec_mutex->owner == NULL && rec_mutex->depth == 0);
-    }
-}
-
-static void
-fallback_cond_init (RapicornCond *cond)
-{
-  cond->cond_pointer = g_cond_new ();
-}
-
-static void
-fallback_cond_signal (RapicornCond *cond)
-{
-  g_cond_signal ((GCond*) cond->cond_pointer);
-}
-
-static void
-fallback_cond_broadcast (RapicornCond *cond)
-{
-  g_cond_broadcast ((GCond*) cond->cond_pointer);
-}
-
-static void
-fallback_cond_wait (RapicornCond  *cond,
-                    RapicornMutex *mutex)
-{
-  /* infinite wait */
-  g_cond_wait ((GCond*) cond->cond_pointer, (GMutex*) mutex->mutex_pointer);
-}
-
-static void
-fallback_cond_wait_timed (RapicornCond  *cond,
-                          RapicornMutex *mutex,
-                          RapicornInt64  max_useconds)
-{
-  RapicornUInt64 abs_secs, abs_usecs;
-  if (common_split_useconds (max_useconds, &abs_secs, &abs_usecs))
-    {
-      GTimeVal gtime;
-      gtime.tv_sec = abs_secs;
-      gtime.tv_usec = abs_usecs;
-      g_cond_timed_wait ((GCond*) cond->cond_pointer, (GMutex*) mutex->mutex_pointer, &gtime);
-    }
-  else
-    g_cond_wait ((GCond*) cond->cond_pointer, (GMutex*) mutex->mutex_pointer);
-}
-
-static void
-fallback_cond_destroy (RapicornCond *cond)
-{
-  g_cond_free ((GCond*) cond->cond_pointer);
-}
-
 static void G_GNUC_NORETURN
 fallback_thread_exit (gpointer retval)
 {
@@ -1474,43 +1172,7 @@ fallback_thread_exit (gpointer retval)
   abort(); /* silence compiler */
 }
 
-#ifdef g_atomic_int_get
-static int
-(g_atomic_int_get) (volatile int *atomic)
-{
-  return g_atomic_int_get (atomic);
-}
-#endif
-
-#ifdef g_atomic_pointer_get
-static void*
-(g_atomic_pointer_get) (volatile void **atomic)
-{
-  return (void*) g_atomic_pointer_get (atomic);
-}
-#endif
-
-
 static RapicornThreadTable fallback_thread_table = {
-  NULL, /* mutex_chain4init */
-  NULL, /* mutex_unchain */
-  NULL, /* rec_mutex_chain4init */
-  NULL, /* rec_mutex_unchain */
-  NULL, /* cond_chain4init */
-  NULL, /* cond_unchain */
-  (void (*) (volatile void*, volatile void*))                 g_atomic_pointer_set,
-  (void*(*) (volatile void*))                                 g_atomic_pointer_get,
-  (int  (*) (volatile void*, volatile void*, volatile void*)) g_atomic_pointer_compare_and_exchange,
-  g_atomic_int_set,
-  g_atomic_int_get,
-  (int  (*) (volatile  int*,  int,  int)) g_atomic_int_compare_and_exchange,
-  (void (*) (volatile  int*,  int))       g_atomic_int_add,
-  (int  (*) (volatile  int*,  int))       g_atomic_int_exchange_and_add,
-  (void (*) (volatile uint*, uint))       g_atomic_int_set,
-  (uint (*) (volatile uint*))             g_atomic_int_get,
-  (int  (*) (volatile uint*, uint, uint)) g_atomic_int_compare_and_exchange,
-  (void (*) (volatile uint*, uint))       g_atomic_int_add,
-  (uint (*) (volatile uint*, uint))       g_atomic_int_exchange_and_add,
   common_thread_new,
   common_thread_ref,
   common_thread_ref_sink,
@@ -1543,22 +1205,6 @@ static RapicornThreadTable fallback_thread_table = {
   common_thread_get_qdata,
   common_thread_set_qdata_full,
   common_thread_steal_qdata,
-  fallback_mutex_init,
-  fallback_mutex_lock,
-  fallback_mutex_trylock,
-  fallback_mutex_unlock,
-  fallback_mutex_destroy,
-  fallback_rec_mutex_init,
-  fallback_rec_mutex_lock,
-  fallback_rec_mutex_trylock,
-  fallback_rec_mutex_unlock,
-  fallback_rec_mutex_destroy,
-  fallback_cond_init,
-  fallback_cond_signal,
-  fallback_cond_broadcast,
-  fallback_cond_wait,
-  fallback_cond_wait_timed,
-  fallback_cond_destroy,
 };
 
 static RapicornThreadTable*
@@ -1590,69 +1236,7 @@ pth_thread_get_handle (void)
   return (RapicornThread*) pthread_getspecific (pth_thread_table_key);
 }
 
-static void
-pth_mutex_init (RapicornMutex *mutex)
-{
-  /* need NULL attribute here, which is the fast mutex in glibc
-   * and cannot be chosen through pthread_mutexattr_settype()
-   */
-  pthread_mutex_init ((pthread_mutex_t*) mutex, NULL);
-}
-
-static void
-pth_rec_mutex_init (RapicornRecMutex *mutex)
-{
-  RAPICORN_STATIC_ASSERT (offsetof (RapicornRecMutex, mutex) == 0);
-  pthread_mutexattr_t attr;
-  pthread_mutexattr_init (&attr);
-  pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
-  pthread_mutex_init ((pthread_mutex_t*) mutex, &attr);
-  pthread_mutexattr_destroy (&attr);
-}
-
-static void
-pth_cond_init (RapicornCond *cond)
-{
-  pthread_cond_init ((pthread_cond_t*) cond, NULL);
-}
-
-static void
-pth_cond_wait_timed (RapicornCond  *cond,
-                     RapicornMutex *mutex,
-                     RapicornInt64  max_useconds)
-{
-  RapicornUInt64 abs_secs, abs_usecs;
-  if (common_split_useconds (max_useconds, &abs_secs, &abs_usecs))
-    {
-      struct timespec abstime;
-      abstime.tv_sec = abs_secs;
-      abstime.tv_nsec = abs_usecs * 1000;
-      pthread_cond_timedwait ((pthread_cond_t*) cond, (pthread_mutex_t*) mutex, &abstime);
-    }
-  else
-    pthread_cond_wait ((pthread_cond_t*) cond, (pthread_mutex_t    *) mutex);
-}
-
 static RapicornThreadTable pth_thread_table = {
-  NULL, /* mutex_chain4init */
-  NULL, /* mutex_unchain */
-  NULL, /* rec_mutex_chain4init */
-  NULL, /* rec_mutex_unchain */
-  NULL, /* cond_chain4init */
-  NULL, /* cond_unchain */
-  (void (*) (volatile void*, volatile void*))                 g_atomic_pointer_set,
-  (void*(*) (volatile void*))                                 g_atomic_pointer_get,
-  (int  (*) (volatile void*, volatile void*, volatile void*)) g_atomic_pointer_compare_and_exchange,
-  g_atomic_int_set,
-  g_atomic_int_get,
-  (int  (*) (volatile  int*,  int,  int)) g_atomic_int_compare_and_exchange,
-  (void (*) (volatile  int*,  int))       g_atomic_int_add,
-  (int  (*) (volatile  int*,  int))       g_atomic_int_exchange_and_add,
-  (void (*) (volatile uint*, uint))       g_atomic_int_set,
-  (uint (*) (volatile uint*))             g_atomic_int_get,
-  (int  (*) (volatile uint*, uint, uint)) g_atomic_int_compare_and_exchange,
-  (void (*) (volatile uint*, uint))       g_atomic_int_add,
-  (uint (*) (volatile uint*, uint))       g_atomic_int_exchange_and_add,
   common_thread_new,
   common_thread_ref,
   common_thread_ref_sink,
@@ -1685,22 +1269,6 @@ static RapicornThreadTable pth_thread_table = {
   common_thread_get_qdata,
   common_thread_set_qdata_full,
   common_thread_steal_qdata,
-  pth_mutex_init,
-  (void (*) (RapicornMutex*)) pthread_mutex_lock,
-  (int  (*) (RapicornMutex*)) pthread_mutex_trylock,
-  (void (*) (RapicornMutex*)) pthread_mutex_unlock,
-  (void (*) (RapicornMutex*)) pthread_mutex_destroy,
-  pth_rec_mutex_init,
-  (void (*) (RapicornRecMutex*)) pthread_mutex_lock,
-  (int  (*) (RapicornRecMutex*)) pthread_mutex_trylock,
-  (void (*) (RapicornRecMutex*)) pthread_mutex_unlock,
-  (void (*) (RapicornRecMutex*)) pthread_mutex_destroy,
-  pth_cond_init,
-  (void (*) (RapicornCond*))               pthread_cond_signal,
-  (void (*) (RapicornCond*))               pthread_cond_broadcast,
-  (void (*) (RapicornCond*, RapicornMutex*)) pthread_cond_wait,
-  pth_cond_wait_timed,
-  (void (*) (RapicornCond*))               pthread_cond_destroy,
 };
 static RapicornThreadTable*
 get_pth_thread_table (void)
@@ -1719,28 +1287,7 @@ get_pth_thread_table (void)
 #endif	/* !RAPICORN_HAVE_MUTEXATTR_SETTYPE */
 
 /* ::Rapicorn::ThreadTable must be a RapicornThreadTable, not a reference for the C API wrapper to work */
-RapicornThreadTable ThreadTable = {
-  common_mutex_chain4init,
-  common_mutex_unchain,
-  common_rec_mutex_chain4init,
-  common_rec_mutex_unchain,
-  common_cond_chain4init,
-  common_cond_unchain,
-  (void (*) (volatile void*, volatile void*))                 g_atomic_pointer_set,
-  (void*(*) (volatile void*))                                 g_atomic_pointer_get,
-  (int  (*) (volatile void*, volatile void*, volatile void*)) g_atomic_pointer_compare_and_exchange,
-  g_atomic_int_set,
-  g_atomic_int_get,
-  (int  (*) (volatile  int*,  int,  int)) g_atomic_int_compare_and_exchange,
-  (void (*) (volatile  int*,  int))       g_atomic_int_add,
-  (int  (*) (volatile  int*,  int))       g_atomic_int_exchange_and_add,
-  (void (*) (volatile uint*, uint))       g_atomic_int_set,
-  (uint (*) (volatile uint*))             g_atomic_int_get,
-  (int  (*) (volatile uint*, uint, uint)) g_atomic_int_compare_and_exchange,
-  (void (*) (volatile uint*, uint))       g_atomic_int_add,
-  (uint (*) (volatile uint*, uint))       g_atomic_int_exchange_and_add,
-  NULL,
-};
+RapicornThreadTable ThreadTable = { NULL };
 
 void
 _rapicorn_init_threads (void)
@@ -1749,26 +1296,6 @@ _rapicorn_init_threads (void)
   if (!table)
     table = get_fallback_thread_table ();
   ThreadTable = *table;
-  
-  while (mutex_init_chain)
-    {
-      RapicornMutex *mutex = mutex_init_chain;
-      mutex_init_chain = (RapicornMutex*) mutex->mutex_pointer;
-      ThreadTable.mutex_init (mutex);
-    }
-  while (rec_mutex_init_chain)
-    {
-      RapicornMutex *mutex = rec_mutex_init_chain;
-      rec_mutex_init_chain = (RapicornMutex*) mutex->mutex_pointer;
-      RAPICORN_STATIC_ASSERT (offsetof (RapicornRecMutex, mutex) == 0);
-      ThreadTable.rec_mutex_init ((RapicornRecMutex*) mutex);
-    }
-  while (cond_init_chain)
-    {
-      RapicornCond *cond = cond_init_chain;
-      cond_init_chain = (RapicornCond*) cond->cond_pointer;
-      ThreadTable.cond_init (cond);
-    }
 
   RapicornThread *init_self = ThreadTable.thread_self();
   RAPICORN_ASSERT (init_self != NULL);

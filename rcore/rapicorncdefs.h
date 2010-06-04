@@ -263,38 +263,6 @@ typedef struct {
   uint 		depth;
 } RapicornRecMutex;
 typedef struct {
-  void              (*mutex_chain4init)     (RapicornMutex       *mutex);
-  void              (*mutex_unchain)        (RapicornMutex       *mutex);
-  void              (*rec_mutex_chain4init) (RapicornRecMutex    *mutex);
-  void              (*rec_mutex_unchain)    (RapicornRecMutex    *mutex);
-  void              (*cond_chain4init)      (RapicornCond        *cond);
-  void              (*cond_unchain)         (RapicornCond        *cond);
-  void		    (*atomic_pointer_set)   (volatile void     *atomic,
-					     volatile void     *value);
-  void*		    (*atomic_pointer_get)   (volatile void     *atomic);
-  int/*bool*/	    (*atomic_pointer_cas)   (volatile void     *atomic,
-					     volatile void     *oldval,
-					     volatile void     *newval);
-  void		    (*atomic_int_set)	    (volatile int      *atomic,
-					     int                newval);
-  int		    (*atomic_int_get)	    (volatile int      *atomic);
-  int/*bool*/	    (*atomic_int_cas)	    (volatile int      *atomic,
-					     int           	oldval,
-					     int           	newval);
-  void		    (*atomic_int_add)	    (volatile int      *atomic,
-					     int           	diff);
-  int		    (*atomic_int_swap_add)  (volatile int      *atomic,
-					     int           	diff);
-  void		    (*atomic_uint_set)	    (volatile uint     *atomic,
-					     uint               newval);
-  uint		    (*atomic_uint_get)	    (volatile uint     *atomic);
-  int/*bool*/	    (*atomic_uint_cas)	    (volatile uint     *atomic,
-					     uint           	oldval,
-					     uint           	newval);
-  void		    (*atomic_uint_add)	    (volatile uint     *atomic,
-					     uint           	diff);
-  uint		    (*atomic_uint_swap_add) (volatile uint     *atomic,
-					     uint           	diff);
   RapicornThread*     (*thread_new)           (const char        *name);
   RapicornThread*     (*thread_ref)           (RapicornThread      *thread);
   RapicornThread*     (*thread_ref_sink)      (RapicornThread      *thread);
@@ -334,25 +302,6 @@ typedef struct {
 					     void              *data,
                                              void             (*destroy_data) (void*));
   void*		    (*qdata_steal)	    (uint		glib_quark);
-  void              (*mutex_init)           (RapicornMutex       *mutex);
-  void              (*mutex_lock)           (RapicornMutex       *mutex);
-  int               (*mutex_trylock)        (RapicornMutex       *mutex); /* 0==has_lock */
-  void              (*mutex_unlock)         (RapicornMutex       *mutex);
-  void              (*mutex_destroy)        (RapicornMutex       *mutex);
-  void              (*rec_mutex_init)       (RapicornRecMutex    *mutex);
-  void              (*rec_mutex_lock)       (RapicornRecMutex    *mutex);
-  int               (*rec_mutex_trylock)    (RapicornRecMutex    *mutex); /* 0==has_lock */
-  void              (*rec_mutex_unlock)     (RapicornRecMutex    *mutex);
-  void              (*rec_mutex_destroy)    (RapicornRecMutex    *mutex);
-  void              (*cond_init)            (RapicornCond        *cond);
-  void              (*cond_signal)          (RapicornCond        *cond);
-  void              (*cond_broadcast)       (RapicornCond        *cond);
-  void              (*cond_wait)            (RapicornCond        *cond,
-					     RapicornMutex       *mutex);
-  void		    (*cond_wait_timed)      (RapicornCond        *cond,
-					     RapicornMutex       *mutex,
-					     RapicornInt64 	max_useconds);
-  void              (*cond_destroy)         (RapicornCond        *cond);
 } RapicornThreadTable;
 
 /* --- implementation bits --- */
@@ -360,15 +309,6 @@ typedef struct {
 // RAPICORN__RUNTIME_PROBLEM(ErrorWarningReturnAssertNotreach,domain,file,line,funcname,exprformat,...); // noreturn cases: 'E', 'A', 'N'
 extern inline void rapicorn_abort_noreturn (void) RAPICORN_NORETURN;
 extern inline void rapicorn_abort_noreturn (void) { while (1) *(void*volatile*)0; }
-#if RAPICORN_MEMORY_BARRIER_NEEDED
-#define RAPICORN_MEMORY_BARRIER_RO(tht)   do { int _b_dummy; tht.atomic_int_get (&_b_dummy); } while (0)
-#define RAPICORN_MEMORY_BARRIER_WO(tht)   do { int _b_dummy; tht.atomic_int_set (&_b_dummy, 0); } while (0)
-#define RAPICORN_MEMORY_BARRIER_RW(tht)   do { RAPICORN_MEMORY_BARRIER_WO (tht); RAPICORN_MEMORY_BARRIER_RO (tht); } while (0)
-#else
-#define RAPICORN_MEMORY_BARRIER_RO(tht)   do { } while (0)
-#define RAPICORN_MEMORY_BARRIER_WO(tht)   do { } while (0)
-#define RAPICORN_MEMORY_BARRIER_RW(tht)   do { } while (0)
-#endif         
 RAPICORN_EXTERN_C_END();
 
 #endif /* __RAPICORN_CDEFS_H__ */
