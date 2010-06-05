@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <sched.h>
 #include <unistd.h>
+#include <semaphore.h>
 #include <pthread.h>
 #include <stdexcept>
 #include <map>
@@ -182,12 +183,14 @@ TypeHash::to_string() const
 }
 
 /* === Coupler === */
+#define USE_SEM 1
 struct Coupler::Priv {
   pthread_mutex_t           call_mutex;
   pthread_cond_t            call_cond;
   std::vector<FieldBuffer*> call_vector;
   std::vector<FieldBuffer*> call_queue;
   size_t                    call_index;
+  sem_t                     result_sem;
   pthread_mutex_t           result_mutex;
   pthread_cond_t            result_cond;
   std::vector<FieldBuffer*> result_vector;
@@ -199,6 +202,7 @@ struct Coupler::Priv {
   {
     pthread_mutex_init (&call_mutex, NULL);
     pthread_cond_init (&call_cond, NULL);
+    sem_init (&result_sem, /* unshared */ 0, /* init */ 0);
     pthread_mutex_init (&result_mutex, NULL);
     pthread_cond_init (&result_cond, NULL);
   }
@@ -262,8 +266,13 @@ Coupler::push_return (FieldBuffer *rret)
 {
   pthread_mutex_lock (&priv.result_mutex);
   priv.result_vector.push_back (rret);
+#if USE_SEM
+  pthread_mutex_unlock (&priv.result_mutex);
+  sem_post (&priv.result_sem);
+#else
   pthread_cond_signal (&priv.result_cond);
   pthread_mutex_unlock (&priv.result_mutex);
+#endif
   sched_yield(); // allow fast return value handling on single core
 }
 
@@ -277,11 +286,19 @@ Coupler::receive_result (void)
       else
         priv.result_queue.reserve (1);
       priv.result_index = 0;
+#if USE_SEM
+      sem_wait (&priv.result_sem);
+      pthread_mutex_lock (&priv.result_mutex);
+      priv.result_vector.swap (priv.result_queue); // fetch result
+      pthread_mutex_unlock (&priv.result_mutex);
+      assert (priv.result_queue.size() > 0);
+#else
       pthread_mutex_lock (&priv.result_mutex);
       while (priv.result_vector.size() == 0)
         pthread_cond_wait (&priv.result_cond, &priv.result_mutex);
       priv.result_vector.swap (priv.result_queue); // fetch result
       pthread_mutex_unlock (&priv.result_mutex);
+#endif
     }
   // priv.result_index < priv.result_queue.size()
   return priv.result_queue[priv.result_index++];
