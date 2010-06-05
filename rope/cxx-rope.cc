@@ -44,6 +44,7 @@ int
 main (int   argc,
       char *argv[])
 {
+  const int clockid = CLOCK_REALTIME; // CLOCK_MONOTONIC
   RapicornInitValue ivalues[] = { { NULL } };
   rapicorn_init_core (&argc, &argv, NULL, ivalues);
   vector<String> cmdline_args;
@@ -56,10 +57,10 @@ main (int   argc,
       app.test_counter_set (0);
       struct timespec ts0, ts1;
       const uint count = 7000;
-      clock_gettime (CLOCK_MONOTONIC, &ts0);
+      clock_gettime (clockid, &ts0);
       for (uint i = 0; i < count; i++)
         app.test_counter_inc_fetch ();
-      clock_gettime (CLOCK_MONOTONIC, &ts1);
+      clock_gettime (clockid, &ts1);
       assert (app.test_counter_get() == count);
       double t0 = ts0.tv_sec + ts0.tv_nsec / 1000000000.;
       double t1 = ts1.tv_sec + ts1.tv_nsec / 1000000000.;
