@@ -21,7 +21,7 @@ using namespace Rapicorn;
 
 namespace { // Anonymous
 
-static void
+static Application
 cxxrope_init_dispatcher (const String         &appname,
                          const vector<String> &cmdline_args)
 {
@@ -29,7 +29,13 @@ cxxrope_init_dispatcher (const String         &appname,
   uint64 app_id = rope_thread_start (appname, cmdline_args, cpu);
   if (app_id == 0)
     throw_error ("failed to initialize rapicorn thread");
-  printout ("APPURL: 0x%016llx\n", app_id);
+  // printout ("APPURL: 0x%016llx\n", app_id);
+  /* minor hack to create the initial smart handler for an Application */
+  Plic::FieldBuffer8 fb (4);
+  fb.add_object (uint64 (app_id));
+  Plic::FieldBufferReader fbr (fb);
+  Application app (*rope_thread_coupler(), fbr);
+  return app;
 }
 
 } // Anon
@@ -43,7 +49,29 @@ main (int   argc,
   vector<String> cmdline_args;
   for (int i = 1; i < argc; i++)
     cmdline_args.push_back (argv[i]);
-  cxxrope_init_dispatcher (argv[0], cmdline_args);
+  Application app = cxxrope_init_dispatcher (argv[0], cmdline_args);
+  double calls = 0, slowest = 0, fastest = 9e+9;
+  for (uint j = 0; j < 29; j++)
+    {
+      app.test_counter_set (0);
+      struct timespec ts0, ts1;
+      const uint count = 7000;
+      clock_gettime (CLOCK_MONOTONIC, &ts0);
+      for (uint i = 0; i < count; i++)
+        app.test_counter_inc_fetch ();
+      clock_gettime (CLOCK_MONOTONIC, &ts1);
+      assert (app.test_counter_get() == count);
+      double t0 = ts0.tv_sec + ts0.tv_nsec / 1000000000.;
+      double t1 = ts1.tv_sec + ts1.tv_nsec / 1000000000.;
+      double call1 = (t1 - t0) / count;
+      slowest = MAX (slowest, call1 * 1000000.);
+      fastest = MIN (fastest, call1 * 1000000.);
+      double this_calls = 1 / call1;
+      calls = MAX (calls, this_calls);
+    }
+  double err = (slowest - fastest) / slowest;
+  printout ("2way: best: %g calls/s; fastest: %.2fus; slowest: %.2fus; err: %.2f%%\n",
+            calls, fastest, slowest, err * 100);
   return 0;
 }
 
