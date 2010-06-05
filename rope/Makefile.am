@@ -89,16 +89,16 @@ check-local: check-cxxpystub
 # test CxxCaller server and client
 check-cxxcaller:
 	@$(call TSTTITLE, '"check CxxCaller server generation"')
-	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g serverhh -g servercc \
+	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g iface-prefix=I_ -g serverhh -g servercc \
 	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testcxxserver.ref)
 	@$(call TSTTITLE, '"check CxxCaller client generation"')
-	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g clienthh -g clientcc \
+	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g iface-prefix=I_ -g clienthh -g clientcc \
 	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testcxxclient.ref)
 	@$(call TSTTITLE, '"check CxxCaller skeleton generation"')
 	@echo -e "#include <rapicorn.hh>\n" > $(TSTOUT)
-	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g serverhh -g server-skel \
+	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g iface-prefix=I_ -g serverhh -g server-skel \
 	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testcxxskels.ref)
 	@$(call TSTTITLE, '"check CxxCaller server code"')

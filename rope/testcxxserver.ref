@@ -132,9 +132,9 @@ enum ExtensiveEnum {
   V36 = 42, // "foo""4"
 };
 
-class FirstInterface_Iface : public virtual Plic::SimpleServer {
+class I_FirstInterface_Iface : public virtual Plic::SimpleServer {
 protected:
-  virtual /*Des*/         ~FirstInterface_Iface () = 0;
+  virtual /*Des*/         ~I_FirstInterface_Iface () = 0;
 public:
   virtual void            void_func ();
 };
@@ -145,12 +145,12 @@ protected:
 public:
   inline FirstInterface () {}
   inline FirstInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline FirstInterface (FirstInterface_Iface *iface) { _iface (iface); }
-  inline FirstInterface (FirstInterface_Iface &iface) { _iface (&iface); }
+  inline FirstInterface (I_FirstInterface_Iface *iface) { _iface (iface); }
+  inline FirstInterface (I_FirstInterface_Iface &iface) { _iface (&iface); }
   // void            void_func ();
-  inline FirstInterface_Iface& operator*  () const { return *dynamic_cast<FirstInterface_Iface*> (_iface()); }
-  inline FirstInterface_Iface* operator-> () const { return dynamic_cast<FirstInterface_Iface*> (_iface()); }
-  inline operator  FirstInterface_Iface&  () const { return operator*(); }
+  inline I_FirstInterface_Iface& operator*  () const { return *dynamic_cast<I_FirstInterface_Iface*> (_iface()); }
+  inline I_FirstInterface_Iface* operator-> () const { return dynamic_cast<I_FirstInterface_Iface*> (_iface()); }
+  inline operator  I_FirstInterface_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 struct XFooRecord {
@@ -279,12 +279,12 @@ typedef std::string s;
 
 namespace InterfaceTests {
 
-class UIWidgetArea_Iface : public virtual Plic::SimpleServer {
+class I_UIWidgetArea_Iface : public virtual Plic::SimpleServer {
 protected:
-  virtual /*Des*/         ~UIWidgetArea_Iface () = 0;
+  virtual /*Des*/         ~I_UIWidgetArea_Iface () = 0;
 public:
-  typedef Rapicorn::Signals::Signal<UIWidgetArea_Iface, void ()> Signal_void_signal;
-  typedef Rapicorn::Signals::Signal<UIWidgetArea_Iface, double (UIWidgetArea_Iface &ba1, int someint)> Signal_sample_signal;
+  typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Iface, void ()> Signal_void_signal;
+  typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Iface, double (I_UIWidgetArea_Iface &ba1, int someint)> Signal_sample_signal;
   // Signal_void_signal sig_void_signal;
   // Signal_sample_signal sig_sample_signal;
   virtual double          simple_method ();
@@ -299,8 +299,8 @@ public:
                                          int i,
                                          const std::string &s = "String ding",
                                          double y = 5);
-  virtual double          self_method   (UIWidgetArea_Iface &ba1,
-                                         UIWidgetArea_Iface &ba2);
+  virtual double          self_method   (I_UIWidgetArea_Iface &ba1,
+                                         I_UIWidgetArea_Iface &ba2);
   virtual void            void_method   ();
   virtual std::string     on_click2out  ();
   virtual void            on_click2in   (const std::string &command);
@@ -312,8 +312,8 @@ protected:
 public:
   inline UIWidgetArea () {}
   inline UIWidgetArea (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline UIWidgetArea (UIWidgetArea_Iface *iface) { _iface (iface); }
-  inline UIWidgetArea (UIWidgetArea_Iface &iface) { _iface (&iface); }
+  inline UIWidgetArea (I_UIWidgetArea_Iface *iface) { _iface (iface); }
+  inline UIWidgetArea (I_UIWidgetArea_Iface &iface) { _iface (&iface); }
   // double          simple_method ();
   // double          single_arg    (int);
   // double          single_arg2   (int);
@@ -324,15 +324,15 @@ public:
   // void            void_method   ();
   // std::string     on_click2out  ();
   // void            on_click2in   (const std::string&);
-  inline UIWidgetArea_Iface& operator*  () const { return *dynamic_cast<UIWidgetArea_Iface*> (_iface()); }
-  inline UIWidgetArea_Iface* operator-> () const { return dynamic_cast<UIWidgetArea_Iface*> (_iface()); }
-  inline operator  UIWidgetArea_Iface&  () const { return operator*(); }
+  inline I_UIWidgetArea_Iface& operator*  () const { return *dynamic_cast<I_UIWidgetArea_Iface*> (_iface()); }
+  inline I_UIWidgetArea_Iface* operator-> () const { return dynamic_cast<I_UIWidgetArea_Iface*> (_iface()); }
+  inline operator  I_UIWidgetArea_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class Parent_Iface : public virtual Plic::SimpleServer {
+class I_Parent_Iface : public virtual Plic::SimpleServer {
 protected:
-  virtual /*Des*/         ~Parent_Iface () = 0;
+  virtual /*Des*/         ~I_Parent_Iface () = 0;
 public:
 };
 class Parent : public virtual Plic::SmartHandle {
@@ -342,17 +342,17 @@ protected:
 public:
   inline Parent () {}
   inline Parent (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline Parent (Parent_Iface *iface) { _iface (iface); }
-  inline Parent (Parent_Iface &iface) { _iface (&iface); }
-  inline Parent_Iface& operator*  () const { return *dynamic_cast<Parent_Iface*> (_iface()); }
-  inline Parent_Iface* operator-> () const { return dynamic_cast<Parent_Iface*> (_iface()); }
-  inline operator  Parent_Iface&  () const { return operator*(); }
+  inline Parent (I_Parent_Iface *iface) { _iface (iface); }
+  inline Parent (I_Parent_Iface &iface) { _iface (&iface); }
+  inline I_Parent_Iface& operator*  () const { return *dynamic_cast<I_Parent_Iface*> (_iface()); }
+  inline I_Parent_Iface* operator-> () const { return dynamic_cast<I_Parent_Iface*> (_iface()); }
+  inline operator  I_Parent_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class Child_Iface : public virtual Parent_Iface {
+class I_Child_Iface : public virtual I_Parent_Iface {
 protected:
-  virtual /*Des*/         ~Child_Iface () = 0;
+  virtual /*Des*/         ~I_Child_Iface () = 0;
 public:
 };
 class Child : public Parent {
@@ -362,17 +362,17 @@ protected:
 public:
   inline Child () {}
   inline Child (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline Child (Child_Iface *iface) { _iface (iface); }
-  inline Child (Child_Iface &iface) { _iface (&iface); }
-  inline Child_Iface& operator*  () const { return *dynamic_cast<Child_Iface*> (_iface()); }
-  inline Child_Iface* operator-> () const { return dynamic_cast<Child_Iface*> (_iface()); }
-  inline operator  Child_Iface&  () const { return operator*(); }
+  inline Child (I_Child_Iface *iface) { _iface (iface); }
+  inline Child (I_Child_Iface &iface) { _iface (&iface); }
+  inline I_Child_Iface& operator*  () const { return *dynamic_cast<I_Child_Iface*> (_iface()); }
+  inline I_Child_Iface* operator-> () const { return dynamic_cast<I_Child_Iface*> (_iface()); }
+  inline operator  I_Child_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class Descendant_Iface : public virtual Child_Iface {
+class I_Descendant_Iface : public virtual I_Child_Iface {
 protected:
-  virtual /*Des*/         ~Descendant_Iface () = 0;
+  virtual /*Des*/         ~I_Descendant_Iface () = 0;
 public:
 };
 class Descendant : public Child {
@@ -382,17 +382,17 @@ protected:
 public:
   inline Descendant () {}
   inline Descendant (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline Descendant (Descendant_Iface *iface) { _iface (iface); }
-  inline Descendant (Descendant_Iface &iface) { _iface (&iface); }
-  inline Descendant_Iface& operator*  () const { return *dynamic_cast<Descendant_Iface*> (_iface()); }
-  inline Descendant_Iface* operator-> () const { return dynamic_cast<Descendant_Iface*> (_iface()); }
-  inline operator  Descendant_Iface&  () const { return operator*(); }
+  inline Descendant (I_Descendant_Iface *iface) { _iface (iface); }
+  inline Descendant (I_Descendant_Iface &iface) { _iface (&iface); }
+  inline I_Descendant_Iface& operator*  () const { return *dynamic_cast<I_Descendant_Iface*> (_iface()); }
+  inline I_Descendant_Iface* operator-> () const { return dynamic_cast<I_Descendant_Iface*> (_iface()); }
+  inline operator  I_Descendant_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class GrandChild_Iface : public virtual Descendant_Iface {
+class I_GrandChild_Iface : public virtual I_Descendant_Iface {
 protected:
-  virtual /*Des*/         ~GrandChild_Iface () = 0;
+  virtual /*Des*/         ~I_GrandChild_Iface () = 0;
 public:
 };
 class GrandChild : public Descendant {
@@ -402,11 +402,11 @@ protected:
 public:
   inline GrandChild () {}
   inline GrandChild (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline GrandChild (GrandChild_Iface *iface) { _iface (iface); }
-  inline GrandChild (GrandChild_Iface &iface) { _iface (&iface); }
-  inline GrandChild_Iface& operator*  () const { return *dynamic_cast<GrandChild_Iface*> (_iface()); }
-  inline GrandChild_Iface* operator-> () const { return dynamic_cast<GrandChild_Iface*> (_iface()); }
-  inline operator  GrandChild_Iface&  () const { return operator*(); }
+  inline GrandChild (I_GrandChild_Iface *iface) { _iface (iface); }
+  inline GrandChild (I_GrandChild_Iface &iface) { _iface (&iface); }
+  inline I_GrandChild_Iface& operator*  () const { return *dynamic_cast<I_GrandChild_Iface*> (_iface()); }
+  inline I_GrandChild_Iface* operator-> () const { return dynamic_cast<I_GrandChild_Iface*> (_iface()); }
+  inline operator  I_GrandChild_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 enum QuickEnum {
@@ -425,9 +425,9 @@ struct QuickSequence {
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 
-class QuickIface_Iface : public virtual Plic::SimpleServer {
+class I_QuickIface_Iface : public virtual Plic::SimpleServer {
 protected:
-  virtual /*Des*/         ~QuickIface_Iface () = 0;
+  virtual /*Des*/         ~I_QuickIface_Iface () = 0;
 public:
   virtual void            simple_function (int i = 9);
 };
@@ -438,18 +438,18 @@ protected:
 public:
   inline QuickIface () {}
   inline QuickIface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline QuickIface (QuickIface_Iface *iface) { _iface (iface); }
-  inline QuickIface (QuickIface_Iface &iface) { _iface (&iface); }
+  inline QuickIface (I_QuickIface_Iface *iface) { _iface (iface); }
+  inline QuickIface (I_QuickIface_Iface &iface) { _iface (&iface); }
   // void            simple_function (int);
-  inline QuickIface_Iface& operator*  () const { return *dynamic_cast<QuickIface_Iface*> (_iface()); }
-  inline QuickIface_Iface* operator-> () const { return dynamic_cast<QuickIface_Iface*> (_iface()); }
-  inline operator  QuickIface_Iface&  () const { return operator*(); }
+  inline I_QuickIface_Iface& operator*  () const { return *dynamic_cast<I_QuickIface_Iface*> (_iface()); }
+  inline I_QuickIface_Iface* operator-> () const { return dynamic_cast<I_QuickIface_Iface*> (_iface()); }
+  inline operator  I_QuickIface_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class MethodTestInterface_Iface : public virtual Plic::SimpleServer {
+class I_MethodTestInterface_Iface : public virtual Plic::SimpleServer {
 protected:
-  virtual /*Des*/         ~MethodTestInterface_Iface () = 0;
+  virtual /*Des*/         ~I_MethodTestInterface_Iface () = 0;
 public:
   virtual void            method_with_void       ();
   virtual bool            method_with_bools      (bool input,
@@ -466,10 +466,10 @@ public:
                                                   const QuickRecord &optval = QuickRecord());
   virtual QuickSequence   method_with_sequence   (const QuickSequence &input,
                                                   const QuickSequence &optval = QuickSequence());
-  virtual GrandChild_Iface* method_with_interface  (GrandChild_Iface &input,
-                                                    GrandChild_Iface &optval = *(GrandChild_Iface*) NULL);
-  virtual QuickIface_Iface* method_with_quickiface (QuickIface_Iface &input,
-                                                    QuickIface_Iface &iface0 = *(QuickIface_Iface*) NULL);
+  virtual I_GrandChild_Iface* method_with_interface  (I_GrandChild_Iface &input,
+                                                      I_GrandChild_Iface &optval = *(I_GrandChild_Iface*) NULL);
+  virtual I_QuickIface_Iface* method_with_quickiface (I_QuickIface_Iface &input,
+                                                      I_QuickIface_Iface &iface0 = *(I_QuickIface_Iface*) NULL);
 };
 class MethodTestInterface : public virtual Plic::SmartHandle {
 protected:
@@ -478,8 +478,8 @@ protected:
 public:
   inline MethodTestInterface () {}
   inline MethodTestInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline MethodTestInterface (MethodTestInterface_Iface *iface) { _iface (iface); }
-  inline MethodTestInterface (MethodTestInterface_Iface &iface) { _iface (&iface); }
+  inline MethodTestInterface (I_MethodTestInterface_Iface *iface) { _iface (iface); }
+  inline MethodTestInterface (I_MethodTestInterface_Iface &iface) { _iface (&iface); }
   // void            method_with_void       ();
   // bool            method_with_bools      (bool, bool);
   // int             method_with_ints       (int, int);
@@ -490,9 +490,9 @@ public:
   // QuickSequence   method_with_sequence   (const QuickSequence&, const QuickSequence&);
   // GrandChild      method_with_interface  (GrandChild&, GrandChild&);
   // QuickIface      method_with_quickiface (QuickIface&, QuickIface&);
-  inline MethodTestInterface_Iface& operator*  () const { return *dynamic_cast<MethodTestInterface_Iface*> (_iface()); }
-  inline MethodTestInterface_Iface* operator-> () const { return dynamic_cast<MethodTestInterface_Iface*> (_iface()); }
-  inline operator  MethodTestInterface_Iface&  () const { return operator*(); }
+  inline I_MethodTestInterface_Iface& operator*  () const { return *dynamic_cast<I_MethodTestInterface_Iface*> (_iface()); }
+  inline I_MethodTestInterface_Iface* operator-> () const { return dynamic_cast<I_MethodTestInterface_Iface*> (_iface()); }
+  inline operator  I_MethodTestInterface_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 } // InterfaceTests
@@ -506,12 +506,12 @@ enum ClickType {
   CLICK_KEY_REPEAT = 5,
 };
 
-class ButtonArea_Iface : public virtual Plic::SimpleServer {
+class I_ButtonArea_Iface : public virtual Plic::SimpleServer {
 protected:
-  virtual /*Des*/         ~ButtonArea_Iface () = 0;
+  virtual /*Des*/         ~I_ButtonArea_Iface () = 0;
 public:
-  typedef Rapicorn::Signals::Signal<ButtonArea_Iface, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
-  typedef Rapicorn::Signals::Signal<ButtonArea_Iface, void ()> Signal_activate;
+  typedef Rapicorn::Signals::Signal<I_ButtonArea_Iface, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
+  typedef Rapicorn::Signals::Signal<I_ButtonArea_Iface, void ()> Signal_activate;
   // Signal_check_activate sig_check_activate;
   // Signal_activate sig_activate;
 };
@@ -522,17 +522,17 @@ protected:
 public:
   inline ButtonArea () {}
   inline ButtonArea (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline ButtonArea (ButtonArea_Iface *iface) { _iface (iface); }
-  inline ButtonArea (ButtonArea_Iface &iface) { _iface (&iface); }
-  inline ButtonArea_Iface& operator*  () const { return *dynamic_cast<ButtonArea_Iface*> (_iface()); }
-  inline ButtonArea_Iface* operator-> () const { return dynamic_cast<ButtonArea_Iface*> (_iface()); }
-  inline operator  ButtonArea_Iface&  () const { return operator*(); }
+  inline ButtonArea (I_ButtonArea_Iface *iface) { _iface (iface); }
+  inline ButtonArea (I_ButtonArea_Iface &iface) { _iface (&iface); }
+  inline I_ButtonArea_Iface& operator*  () const { return *dynamic_cast<I_ButtonArea_Iface*> (_iface()); }
+  inline I_ButtonArea_Iface* operator-> () const { return dynamic_cast<I_ButtonArea_Iface*> (_iface()); }
+  inline operator  I_ButtonArea_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class PureMethods_Iface : public virtual Plic::SimpleServer {
+class I_PureMethods_Iface : public virtual Plic::SimpleServer {
 protected:
-  virtual /*Des*/         ~PureMethods_Iface () = 0;
+  virtual /*Des*/         ~I_PureMethods_Iface () = 0;
 public:
   virtual int             pure_method (double f) = 0;
 };
@@ -543,12 +543,12 @@ protected:
 public:
   inline PureMethods () {}
   inline PureMethods (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline PureMethods (PureMethods_Iface *iface) { _iface (iface); }
-  inline PureMethods (PureMethods_Iface &iface) { _iface (&iface); }
+  inline PureMethods (I_PureMethods_Iface *iface) { _iface (iface); }
+  inline PureMethods (I_PureMethods_Iface &iface) { _iface (&iface); }
   // int             pure_method (double);
-  inline PureMethods_Iface& operator*  () const { return *dynamic_cast<PureMethods_Iface*> (_iface()); }
-  inline PureMethods_Iface* operator-> () const { return dynamic_cast<PureMethods_Iface*> (_iface()); }
-  inline operator  PureMethods_Iface&  () const { return operator*(); }
+  inline I_PureMethods_Iface& operator*  () const { return *dynamic_cast<I_PureMethods_Iface*> (_iface()); }
+  inline I_PureMethods_Iface* operator-> () const { return dynamic_cast<I_PureMethods_Iface*> (_iface()); }
+  inline operator  I_PureMethods_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 } // RapicornPlicTest
@@ -556,7 +556,7 @@ public:
 // --- Implementations ---
 
 namespace MandatoryNamespace {
-FirstInterface_Iface::~FirstInterface_Iface () {}
+I_FirstInterface_Iface::~I_FirstInterface_Iface () {}
 
 bool
 XFooRecord::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
@@ -905,15 +905,15 @@ SomeRecord::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 } // OtherNamespace
 
 namespace InterfaceTests {
-UIWidgetArea_Iface::~UIWidgetArea_Iface () {}
+I_UIWidgetArea_Iface::~I_UIWidgetArea_Iface () {}
 
-Parent_Iface::~Parent_Iface () {}
+I_Parent_Iface::~I_Parent_Iface () {}
 
-Child_Iface::~Child_Iface () {}
+I_Child_Iface::~I_Child_Iface () {}
 
-Descendant_Iface::~Descendant_Iface () {}
+I_Descendant_Iface::~I_Descendant_Iface () {}
 
-GrandChild_Iface::~GrandChild_Iface () {}
+I_GrandChild_Iface::~I_GrandChild_Iface () {}
 
 bool
 QuickRecord::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
@@ -955,16 +955,16 @@ QuickSequence::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
   return true;
 }
 
-QuickIface_Iface::~QuickIface_Iface () {}
+I_QuickIface_Iface::~I_QuickIface_Iface () {}
 
-MethodTestInterface_Iface::~MethodTestInterface_Iface () {}
+I_MethodTestInterface_Iface::~I_MethodTestInterface_Iface () {}
 
 } // InterfaceTests
 
 namespace RapicornPlicTest {
-ButtonArea_Iface::~ButtonArea_Iface () {}
+I_ButtonArea_Iface::~I_ButtonArea_Iface () {}
 
-PureMethods_Iface::~PureMethods_Iface () {}
+I_PureMethods_Iface::~I_PureMethods_Iface () {}
 
 
 // --- Method Dispatchers & Registry ---
@@ -977,7 +977,7 @@ _dispatch__FirstInterface_void_func (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
-  FirstInterface_Iface *self;
+  I_FirstInterface_Iface *self;
   self = FirstInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   self->void_func ();
@@ -999,7 +999,7 @@ _dispatch__UIWidgetArea_simple_method (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
-  UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   double rval = self->simple_method ();
@@ -1013,7 +1013,7 @@ _dispatch__UIWidgetArea_single_arg (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
-  UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
@@ -1028,7 +1028,7 @@ _dispatch__UIWidgetArea_single_arg2 (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
-  UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
@@ -1043,7 +1043,7 @@ _dispatch__UIWidgetArea_two_args (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
-  UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
@@ -1059,7 +1059,7 @@ _dispatch__UIWidgetArea_two_args2 (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
-  UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
@@ -1075,7 +1075,7 @@ _dispatch__UIWidgetArea_multi_args (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 5) return false;
-  UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
@@ -1094,11 +1094,11 @@ _dispatch__UIWidgetArea_self_method (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
-  UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
-  UIWidgetArea_Iface *arg_ba1 = UIWidgetArea (cpl, fbr).operator->();
-  UIWidgetArea_Iface *arg_ba2 = UIWidgetArea (cpl, fbr).operator->();
+  I_UIWidgetArea_Iface *arg_ba1 = UIWidgetArea (cpl, fbr).operator->();
+  I_UIWidgetArea_Iface *arg_ba2 = UIWidgetArea (cpl, fbr).operator->();
   double rval = self->self_method (*arg_ba1, *arg_ba2);
   FieldBuffer &rb  = *FieldBuffer::new_return();
   rb.add_double (rval);
@@ -1110,7 +1110,7 @@ _dispatch__UIWidgetArea_void_method (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
-  UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   self->void_method ();
@@ -1122,7 +1122,7 @@ _dispatch__UIWidgetArea_on_click2out (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
-  UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   std::string rval = self->on_click2out ();
@@ -1136,7 +1136,7 @@ _dispatch__UIWidgetArea_on_click2in (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
-  UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   std::string arg_command = fbr.pop_string();
@@ -1154,7 +1154,7 @@ _dispatch__QuickIface_simple_function (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
-  QuickIface_Iface *self;
+  I_QuickIface_Iface *self;
   self = QuickIface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_i = fbr.pop_int64();
@@ -1168,7 +1168,7 @@ _dispatch__MethodTestInterface_method_with_void (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
-  MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   self->method_with_void ();
@@ -1180,7 +1180,7 @@ _dispatch__MethodTestInterface_method_with_bools (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   bool arg_input = fbr.pop_int64();
@@ -1196,7 +1196,7 @@ _dispatch__MethodTestInterface_method_with_ints (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_input = fbr.pop_int64();
@@ -1212,7 +1212,7 @@ _dispatch__MethodTestInterface_method_with_floats (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   double arg_input = fbr.pop_double();
@@ -1228,7 +1228,7 @@ _dispatch__MethodTestInterface_method_with_string (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   std::string arg_input = fbr.pop_string();
@@ -1244,7 +1244,7 @@ _dispatch__MethodTestInterface_method_with_enum (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   QuickEnum arg_input = QuickEnum (fbr.pop_evalue());
@@ -1260,7 +1260,7 @@ _dispatch__MethodTestInterface_method_with_record (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   QuickRecord arg_input;
@@ -1278,7 +1278,7 @@ _dispatch__MethodTestInterface_method_with_sequence (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   QuickSequence arg_input;
@@ -1296,12 +1296,12 @@ _dispatch__MethodTestInterface_method_with_interface (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
-  GrandChild_Iface *arg_input = GrandChild (cpl, fbr).operator->();
-  GrandChild_Iface *arg_optval = GrandChild (cpl, fbr).operator->();
-  GrandChild_Iface *rval = self->method_with_interface (*arg_input, *arg_optval);
+  I_GrandChild_Iface *arg_input = GrandChild (cpl, fbr).operator->();
+  I_GrandChild_Iface *arg_optval = GrandChild (cpl, fbr).operator->();
+  I_GrandChild_Iface *rval = self->method_with_interface (*arg_input, *arg_optval);
   FieldBuffer &rb  = *FieldBuffer::new_return();
   rb.add_object (GrandChild (rval)._rpc_id());
   return &rb;
@@ -1312,12 +1312,12 @@ _dispatch__MethodTestInterface_method_with_quickiface (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
-  MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
-  QuickIface_Iface *arg_input = QuickIface (cpl, fbr).operator->();
-  QuickIface_Iface *arg_iface0 = QuickIface (cpl, fbr).operator->();
-  QuickIface_Iface *rval = self->method_with_quickiface (*arg_input, *arg_iface0);
+  I_QuickIface_Iface *arg_input = QuickIface (cpl, fbr).operator->();
+  I_QuickIface_Iface *arg_iface0 = QuickIface (cpl, fbr).operator->();
+  I_QuickIface_Iface *rval = self->method_with_quickiface (*arg_input, *arg_iface0);
   FieldBuffer &rb  = *FieldBuffer::new_return();
   rb.add_object (QuickIface (rval)._rpc_id());
   return &rb;
@@ -1333,7 +1333,7 @@ _dispatch__PureMethods_pure_method (Coupler &cpl)
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
-  PureMethods_Iface *self;
+  I_PureMethods_Iface *self;
   self = PureMethods (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   double arg_f = fbr.pop_double();
