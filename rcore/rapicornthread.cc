@@ -138,7 +138,7 @@ Thread::Self::affinity (int cpu)
 {
   int real = cpu_affinity (cpu);
   if (cpu >= 0 && real >= 0)
-    info ("Thread::Self: affinitiy: cpu%u", real);
+    info ("Thread::Self: affinitiy: cpu#%u", 1 + real);
   return real;
 }
 
@@ -147,7 +147,7 @@ Thread::affinity (int cpu)
 {
   last_cpu = cpu_affinity (cpu);
   if (cpu >= 0 && last_cpu >= 0)
-    info ("%s: affinitiy: cpu%u", name().c_str(), last_cpu);
+    info ("%s: affinitiy: cpu#%u", name().c_str(), 1 + last_cpu);
   return last_cpu;
 }
 
