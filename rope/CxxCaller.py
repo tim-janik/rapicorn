@@ -74,6 +74,13 @@ FieldBuffer = 'Plic::FieldBuffer'
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
 
+I_prefix_postfix = ('', '_Iface')
+Iswitch = True
+def Iwrap (name):
+  return I_prefix_postfix[0] + name + I_prefix_postfix[1]
+def I (name, wrap_for_iface = True):
+  return Iwrap (name) if Iswitch and wrap_for_iface else name
+
 class Generator:
   def __init__ (self):
     self.ntab = 26
@@ -81,7 +88,6 @@ class Generator:
     self.insertions = {}
     self.gen_inclusions = []
     self.skip_symbols = set()
-    self._IFACE_postfix = '_Iface'
     self._iface_base = 'Plic::SimpleServer'
     self.gen4smarthandle = True
     self.gen4fakehandle = False
@@ -132,23 +138,22 @@ class Generator:
       f = '%%-%ds' % self.ntab  # '%-20s'
       return indent + f % string
   def format_vartype (self, type):
-    s, _Iface = '', self._IFACE
-    s += self.type2cpp (type)
+    s = ''
     if type.storage == Decls.INTERFACE:
-      s += _Iface + ' ' + ('' if self.gen4smarthandle else '*')
+      s += I (self.type2cpp (type)) + ' ' + ('' if self.gen4smarthandle else '*')
     else:
-      s += ' '
+      s += self.type2cpp (type) + ' '
     return s
   def format_var (self, ident, type):
     return self.format_vartype (type) + ident
   def format_arg (self, ident, type, defaultinit = None):
-    s, _Iface = '', self._IFACE
+    s = ''
     constref = type.storage in (Decls.STRING, Decls.SEQUENCE, Decls.RECORD)
     if constref:
       s += 'const '                             # <const >int foo = 3
-    s += self.type2cpp (type)                   # const <int> foo = 3
-    if type.storage == Decls.INTERFACE:
-      s += _Iface                               # Object<_Iface> &self
+    n = self.type2cpp (type)                    # const <int> foo = 3
+    isiface = type.storage == Decls.INTERFACE
+    s += I (self.type2cpp (type), isiface)      # Object<_Iface> &self
     s += ' ' if ident else ''                   # const int< >foo = 3
     if type.storage == Decls.INTERFACE:
       s += '&'                                  # Object_Iface <&>self
@@ -161,7 +166,7 @@ class Generator:
       elif type.storage in (Decls.SEQUENCE, Decls.RECORD):
         s += ' = %s()' % self.type2cpp (type)
       elif type.storage == Decls.INTERFACE:
-        s += ' = *(%s%s*) NULL' % (self.type2cpp (type), _Iface)
+        s += ' = *(%s*) NULL' % I (self.type2cpp (type))
       else:
         s += ' = %s' % defaultinit
     return s
@@ -185,11 +190,11 @@ class Generator:
   def generate_signal_name (self, functype, ctype):
     return 'Signal_%s' % functype.name
   def generate_sigdef (self, functype, ctype):
-    s, _Iface = '', self._IFACE
+    s = ''
     signame = self.generate_signal_name (functype, ctype)
     cpp_rtype = self.rtype2cpp (functype.rtype)
-    rtiface = _Iface if functype.rtype.storage == Decls.INTERFACE else ''
-    s += '  typedef Rapicorn::Signals::Signal<%s%s, %s%s (' % (ctype.name, _Iface, cpp_rtype, rtiface)
+    rtisiface = functype.rtype.storage == Decls.INTERFACE
+    s += '  typedef Rapicorn::Signals::Signal<%s, %s (' % (I (ctype.name), I (cpp_rtype, rtisiface))
     l = []
     for a in functype.args:
       l += [ self.format_arg (a[0], a[1]) ]
@@ -254,7 +259,7 @@ class Generator:
     return s
   def generate_proto_pop_args (self, cplfbr, type_info, aprefix, arg_info_list, apostfix = '',
                                onerr = 'return false'):
-    s, _Iface = '', self._IFACE
+    s = ''
     cpl, fbr = cplfbr
     for arg_it in arg_info_list:
       ident, type = arg_it
@@ -365,7 +370,7 @@ class Generator:
     s += '}\n'
     return s
   def generate_server_method_dispatcher (self, class_info, mtype, reglines):
-    s, _Iface = '', self._IFACE
+    s = ''
     cplfbr = ('cpl', 'fbr')
     dispatcher_name = '_dispatch__%s_%s' % (class_info.name, mtype.name)
     reglines += [ (self.method_digest (mtype), self.namespaced_identifier (dispatcher_name)) ]
@@ -376,7 +381,7 @@ class Generator:
     s += '  fbr.skip4(); // TypeHash\n'
     s += '  if (fbr.remaining() != 1 + %u) return false;\n' % len (mtype.args)
     # fetch self
-    s += '  %s%s *self;\n' % (self.type2cpp (class_info), _Iface)
+    s += '  %s *self;\n' % I (self.type2cpp (class_info))
     s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
     # fetch args
@@ -445,14 +450,12 @@ class Generator:
         reduced = [ p ] + reduced
     return reduced
   def generate_method_decl (self, functype, pad):
-    s, _Iface, comment = '', self._IFACE, self.gen4fakehandle
+    s, comment = '', self.gen4fakehandle
     s += '  // ' if comment else '  '
     s += '' if self.gen4smarthandle else 'virtual '
-    if functype.rtype.storage == Decls.INTERFACE:
-      rtpostfix = '' if self.gen4smarthandle else _Iface + '*'
-    else:
-      rtpostfix = ''
-    s += self.format_to_tab (self.rtype2cpp (functype.rtype) + rtpostfix)
+    rtisiface = functype.rtype.storage == Decls.INTERFACE and not self.gen4smarthandle
+    s += self.format_to_tab (I (self.rtype2cpp (functype.rtype), rtisiface) +
+                             ('*' if rtisiface else ''))
     s += functype.name
     s += ' ' * max (0, pad - len (functype.name))
     s += ' ('
@@ -470,7 +473,7 @@ class Generator:
     s += ';\n'
     return s
   def generate_interface_class (self, type_info):
-    s, _Iface = '', self._IFACE
+    s = ''
     l = []
     for pr in type_info.prerequisites:
       l += [ pr ]
@@ -480,10 +483,10 @@ class Generator:
       if not l:
         l = ['public virtual Plic::SmartHandle']
     else:
-      l = ['public virtual ' + pr.name + _Iface for pr in l] # types -> names
+      l = ['public virtual ' + I (pr.name) for pr in l] # types -> names
       if not l:
         l = ['public virtual ' + self._iface_base]
-    s += 'class %s%s' % (type_info.name, _Iface)
+    s += 'class %s' % I (type_info.name)
     if l:
       s += ' : %s' % ', '.join (l)
     s += ' {\n'
@@ -493,7 +496,7 @@ class Generator:
           % (self._iface_base, self._iface_base)
       s += '  inline void _iface (%s *_iface) { _void_iface (_iface); }\n' % self._iface_base
     if not self.gen4smarthandle:
-      s += '  virtual ' + self.format_to_tab ('/*Des*/') + '~%s%s () = 0;\n' % (type_info.name, _Iface)
+      s += '  virtual ' + self.format_to_tab ('/*Des*/') + '~%s () = 0;\n' % I (type_info.name)
     s += 'public:\n'
     if self.gen4smarthandle:
       s += '  inline %s () {}\n' % type_info.name
@@ -501,7 +504,7 @@ class Generator:
       s += '  inline %s (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) ' % type_info.name
       s += '{ _pop_rpc (cpl, fbr); }\n'
     if self.gen4fakehandle:
-      ifacename = type_info.name + self._IFACE_postfix
+      ifacename = Iwrap (type_info.name)
       s += '  inline %s (%s *iface) { _iface (iface); }\n' % (type_info.name, ifacename)
       s += '  inline %s (%s &iface) { _iface (&iface); }\n' % (type_info.name, ifacename)
     if not self.gen4smarthandle:
@@ -522,26 +525,27 @@ class Generator:
     if self.gen4smarthandle or self.gen4fakehandle:
       s += '  inline operator _unspecified_bool_type () const ' # return non-NULL pointer to member on true
       s += '{ return _is_null() ? NULL : _unspecified_bool_true(); }\n' # avoids auto-bool conversions on: float (*this)
-    s += self.insertion_text ('class_scope:' + type_info.name + _Iface)
+    s += self.insertion_text ('class_scope:' + I (type_info.name))
     s += '};'
     return s
   def generate_interface_impl (self, type_info):
-    s, _Iface = '', self._IFACE
-    tname = type_info.name + _Iface
+    s = ''
+    tname = I (type_info.name)
     s += '%s::~%s () {}\n' % (tname, tname)
     return s
   def generate_virtual_method_skel (self, functype, type_info):
-    s, _Iface = '', self._IFACE
+    s = ''
     if functype.pure:
       return s
-    fs = type_info.name + _Iface + '::' + functype.name
+    fs = I (type_info.name) + '::' + functype.name
     tnsl = type_info.list_namespaces() # type namespace list
     absname = '::'.join ([n.name for n in tnsl] + [ fs ])
     if absname in self.skip_symbols:
       return ''
     s += self.open_namespace (type_info)
-    rtpostfix = _Iface + '*' if functype.rtype.storage == Decls.INTERFACE else ''
-    sret = self.rtype2cpp (functype.rtype) + rtpostfix + '\n'
+    rtisiface = functype.rtype.storage == Decls.INTERFACE
+    sret = I (self.rtype2cpp (functype.rtype), rtisiface)
+    sret += '*\n' if rtisiface else '\n'
     fs += ' ('
     argindent = len (fs)
     s += '\n' + sret + fs
@@ -557,7 +561,7 @@ class Generator:
     elif functype.rtype.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += '  return %s(); // FIXME\n' % self.rtype2cpp (functype.rtype)
     elif functype.rtype.storage == Decls.INTERFACE:
-      s += '  return (%s%s*) NULL; // FIXME\n' % (self.rtype2cpp (functype.rtype), _Iface)
+      s += '  return (%s*) NULL; // FIXME\n' % I (self.rtype2cpp (functype.rtype))
     else:
       s += '  return 0; // FIXME\n'
     s += '}\n'
@@ -632,7 +636,8 @@ class Generator:
       s += gencc_boilerplate + '\n'
     self.tabwidth (16)
     s += self.open_namespace (None)
-    self.gen4smarthandle, self.gen4fakehandle, self._IFACE = True, False, ''
+    global Iswitch
+    self.gen4smarthandle, self.gen4fakehandle, Iswitch = True, False, False
     # collect impl types
     types = []
     for tp in implementation_types:
@@ -654,11 +659,11 @@ class Generator:
           if self.gen_clienthh and not self.gen_serverhh:
             s += self.generate_interface_class (tp) + '\n' # Class smart handle
           if self.gen_serverhh:
-            self.gen4smarthandle, self._IFACE = False, self._IFACE_postfix
+            self.gen4smarthandle, Iswitch = False, True
             s += self.generate_interface_class (tp) + '\n' # Class_Iface server base
-            self.gen4smarthandle, self.gen4fakehandle, self._IFACE = True, True, ''
+            self.gen4smarthandle, self.gen4fakehandle, Iswitch = True, True, False
             s += self.generate_interface_class (tp) + '\n' # Class smart handle
-            self.gen4smarthandle, self.gen4fakehandle, self._IFACE = True, False, ''
+            self.gen4smarthandle, self.gen4fakehandle = True, False
       s += self.open_namespace (None)
     # generate client/server impls
     if self.gen_clientcc or self.gen_servercc:
@@ -675,16 +680,16 @@ class Generator:
         elif tp.storage == Decls.INTERFACE:
           s += self.open_namespace (tp)
           if self.gen_servercc:
-            self.gen4smarthandle, self._IFACE = False, self._IFACE_postfix
+            self.gen4smarthandle, Iswitch = False, True
             s += self.generate_interface_impl (tp) + '\n'
-            self.gen4smarthandle, self._IFACE = True, ''
+            self.gen4smarthandle, Iswitch = True, True
           if self.gen_clientcc:
             for m in tp.methods:
               s += self.generate_client_method_stub (tp, m)
     # generate unmarshalling server calls
     if self.gen_servercc:
       s += '\n// --- Method Dispatchers & Registry ---\n'
-      self.gen4smarthandle, self._IFACE = False, self._IFACE_postfix
+      self.gen4smarthandle, Iswitch = False, True
       reglines = []
       for tp in types:
         if tp.typedef_origin:
@@ -696,17 +701,17 @@ class Generator:
           s += '\n'
       s += self.generate_server_method_registry (reglines) + '\n'
       s += self.open_namespace (None)
-      self.gen4smarthandle, self._IFACE = True, ''
+      self.gen4smarthandle, Iswitch = True, False
     # generate interface method skeletons
     if self.gen_server_skel:
       s += '\n// --- Interface Skeletons ---\n'
-      self.gen4smarthandle, self._IFACE = False, self._IFACE_postfix
+      self.gen4smarthandle, Iswitch = False, True
       for tp in types:
         if tp.typedef_origin:
           continue
         elif tp.storage == Decls.INTERFACE:
           s += self.generate_interface_skel (tp)
-      self.gen4smarthandle, self._IFACE = True, ''
+      self.gen4smarthandle, Iswitch = True, False
     s += self.open_namespace (None) # close all namespaces
     s += '\n'
     return s
@@ -718,6 +723,7 @@ def error (msg):
 
 def generate (namespace_list, **args):
   import sys, tempfile, os
+  global I_prefix_postfix
   config = {}
   config.update (args)
   gg = Generator()
@@ -730,7 +736,9 @@ def generate (namespace_list, **args):
   gg.gen_inclusions = config['inclusions']
   for opt in config['backend-options']:
     if opt.startswith ('iface-postfix='):
-      gg._IFACE_postfix = opt[14:]
+      I_prefix_postfix = (I_prefix_postfix[0], opt[14:])
+    if opt.startswith ('iface-prefix='):
+      I_prefix_postfix = (opt[13:], I_prefix_postfix[1])
     if opt.startswith ('iface-base='):
       gg._iface_base = opt[11:]
   for ifile in config['insertions']:
