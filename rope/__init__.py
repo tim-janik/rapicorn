@@ -51,6 +51,9 @@ import time, random
 
 # while True: app.test_counter_inc_fetch() # two way call
 
+def time_seconds():
+  return time.time();
+
 niter = 29
 bounds = (7000, 7001)
 w2samples, w1samples = [], []
@@ -58,11 +61,11 @@ w2samples, w1samples = [], []
 for n in range (0, niter):
   app.test_counter_set (0)
   r = random.randrange (*bounds)
-  t0 = time.clock()
+  t0 = time_seconds()
   for i in range (0, r):
     app.test_counter_inc_fetch() # two way test
   tc = app.test_counter_get()
-  t1 = time.clock()
+  t1 = time_seconds()
   assert tc == r
   w2samples += [ r / (t1 - t0) ]
 
@@ -76,11 +79,11 @@ print "2way: best: %u calls/s; fastest: %.2fus; slowest: %.2fus; err: %.2f%%" %\
 for n in range (0, niter):
   app.test_counter_set (0)
   r = random.randrange (bounds[0] + 10000, bounds[1] + 10000)
-  t0 = time.clock()
+  t0 = time_seconds()
   for i in range (0, r):
     app.test_counter_add (1)  # one way test
   tc = app.test_counter_get() # enforce queue flush before timer stops
-  t1 = time.clock()
+  t1 = time_seconds()
   assert tc == r
   w1samples += [ r / (t1 - t0) ]
 
