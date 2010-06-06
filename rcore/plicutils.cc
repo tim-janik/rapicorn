@@ -183,7 +183,7 @@ TypeHash::to_string() const
 }
 
 /* === Coupler === */
-#define USE_SEM 1
+#define USE_SEM_AND_SPIN 1
 struct Coupler::Priv {
   pthread_mutex_t           call_mutex;
   pthread_cond_t            call_cond;
@@ -191,6 +191,7 @@ struct Coupler::Priv {
   std::vector<FieldBuffer*> call_queue;
   size_t                    call_index;
   sem_t                     result_sem;
+  pthread_spinlock_t        result_spinlock;
   pthread_mutex_t           result_mutex;
   pthread_cond_t            result_cond;
   std::vector<FieldBuffer*> result_vector;
@@ -203,6 +204,7 @@ struct Coupler::Priv {
     pthread_mutex_init (&call_mutex, NULL);
     pthread_cond_init (&call_cond, NULL);
     sem_init (&result_sem, /* unshared */ 0, /* init */ 0);
+    pthread_spin_init (&result_spinlock, 0 /*pshared*/);
     pthread_mutex_init (&result_mutex, NULL);
     pthread_cond_init (&result_cond, NULL);
   }
@@ -264,12 +266,14 @@ Coupler::dispatch_call (const FieldBuffer &fbcall)
 void
 Coupler::push_return (FieldBuffer *rret)
 {
-  pthread_mutex_lock (&priv.result_mutex);
+#if USE_SEM_AND_SPIN
+  pthread_spin_lock (&priv.result_spinlock);
   priv.result_vector.push_back (rret);
-#if USE_SEM
-  pthread_mutex_unlock (&priv.result_mutex);
+  pthread_spin_unlock (&priv.result_spinlock);
   sem_post (&priv.result_sem);
 #else
+  pthread_mutex_lock (&priv.result_mutex);
+  priv.result_vector.push_back (rret);
   pthread_cond_signal (&priv.result_cond);
   pthread_mutex_unlock (&priv.result_mutex);
 #endif
@@ -286,11 +290,11 @@ Coupler::receive_result (void)
       else
         priv.result_queue.reserve (1);
       priv.result_index = 0;
-#if USE_SEM
+#if USE_SEM_AND_SPIN
       sem_wait (&priv.result_sem);
-      pthread_mutex_lock (&priv.result_mutex);
+      pthread_spin_lock (&priv.result_spinlock);
       priv.result_vector.swap (priv.result_queue); // fetch result
-      pthread_mutex_unlock (&priv.result_mutex);
+      pthread_spin_unlock (&priv.result_spinlock);
       assert (priv.result_queue.size() > 0);
 #else
       pthread_mutex_lock (&priv.result_mutex);
