@@ -18,6 +18,9 @@
 #include <list>
 #include <algorithm>
 #include <sys/time.h>
+#if _POSIX_SPIN_LOCKS >= 200112L
+#define USE_POSIX_SPINLOCK
+#endif
 
 #define rapicorn_threads_initialized()    ISLIKELY ((void*) ThreadTable.mutex_lock != (void*) ThreadTable.mutex_unlock)
 
@@ -357,7 +360,7 @@ bool
 SpinLock::trylock ()
 {
 #ifdef USE_POSIX_SPINLOCK
-  return pthread_spin_trylock (M_SPINPTR);
+  return pthread_spin_trylock (M_SPINPTR) == 0;
 #else
   return spinspace.fallback->trylock();
 #endif
