@@ -12,7 +12,6 @@ GENERATED_EXTRA_DIST=
 GENERATED_CLEANFILES=
 GENERATED=$(strip $(GENERATED_EXTRA_DIST) $(GENERATED_CLEANFILES))
 EXTRA_DIST=$(GENERATED_EXTRA_DIST)
-noinst_DATA =
 
 # Verbosity macros
 _@=@
@@ -210,7 +209,7 @@ ${RELAUX_CHANGELOG}:	${RELAUX_CHL_ADD} ${RELAUX_GITSTAMPS} Makefile.am
 	@ # Cleanup, replace atomically
 	rm -f xgen-1$(@F)
 	mv xgen-0$(@F) $@
-noinst_DATA += ${RELAUX_CHANGELOG}
+all-am: ${RELAUX_CHANGELOG}
 EXTRA_DIST  += ${RELAUX_CHANGELOG}
 # --- release-upload ---
 release-upload: $(RELAUX_CHANGELOG) # serialized steps, for parallel invocation
