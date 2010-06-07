@@ -168,6 +168,9 @@ $ACLOCAL $ACLOCAL_FLAGS	|| exit $?
 echo "Running: $AUTOHEADER"
 $AUTOHEADER || exit $?
 
+echo "Ensure: ChangeLog"
+test -e ChangeLog || TZ=GMT0 touch ChangeLog -t 190112132145.52 # automake *requires* ChangeLog
+
 echo "Running: $AUTOMAKE"
 case $CC in
 *xlc | *xlc\ * | *lcc | *lcc\ *) am_opt=--include-deps;;
