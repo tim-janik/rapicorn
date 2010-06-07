@@ -117,11 +117,11 @@ api-content:
 EXTRA_DIST += sinfex.l
 GENERATED_EXTRA_DIST += sinfex.lgen
 sinfex.lgen: sinfex.l
-	flex -CFe -o$@ $<
+	$(FLEX) -CFe -o$@ $<
 EXTRA_DIST += sinfex.y
 GENERATED_EXTRA_DIST += sinfex.ygen
 sinfex.ygen: sinfex.y
-	bison -o$@ $<
+	$(BISON) -o$@ $<
 sinfex.cc: sinfex.lgen sinfex.ygen
 
 # === Programs (not installed) ===

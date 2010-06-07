@@ -324,6 +324,9 @@ AC_DEFUN([RAPICORN_REQUIREMENTS],
     AC_SUBST(RAPICORN_GUI_LIBS)
     AM_CONDITIONAL(WITH_PANGO, true)
     AM_CONDITIONAL(WITH_GTK, true)
+    # --- Rapicorn build tools ---
+    MC_ASSERT_PROG(BISON, bison, [See: http://ftp.gnu.org/gnu/bison/])
+    MC_ASSERT_PROG(FLEX, flex, [See: http://flex.sourceforge.net/])
 ])
 
 dnl # PYROPE_REQUIREMENTS() - rapicorn python binding checks
