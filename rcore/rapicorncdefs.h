@@ -159,7 +159,8 @@ RAPICORN_STATIC_ASSERT (sizeof (uint) == 4);
 typedef uint8_t                 RapicornUInt8;  // __attribute__ ((__mode__ (__QI__)))
 typedef uint16_t                RapicornUInt16; // __attribute__ ((__mode__ (__HI__)))
 typedef uint32_t                RapicornUInt32; // __attribute__ ((__mode__ (__SI__)))
-typedef uint64_t                RapicornUInt64; // __attribute__ ((__mode__ (__DI__)))
+typedef unsigned long long int  RapicornUInt64; // __attribute__ ((__mode__ (__DI__)))
+// typedef uint64_t RapicornUInt64; // uint64_t is a long on AMD64 which breaks printf
 // Using stdint.h defines here for type compatibility with standard APIs (references, printf, ...)
 // provided by rapicorncdefs.h: uint;
 RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt8)  == 1);
@@ -169,7 +170,8 @@ RAPICORN_STATIC_ASSERT (sizeof (RapicornUInt64) == 8);
 typedef int8_t                  RapicornInt8;  // __attribute__ ((__mode__ (__QI__)))
 typedef int16_t                 RapicornInt16; // __attribute__ ((__mode__ (__HI__)))
 typedef int32_t                 RapicornInt32; // __attribute__ ((__mode__ (__SI__)))
-typedef int64_t                 RapicornInt64; // __attribute__ ((__mode__ (__DI__)))
+typedef signed long long int    RapicornInt64; // __attribute__ ((__mode__ (__DI__)))
+// typedef int64_t RapicornInt64; // int64_t is a long on AMD64 which breaks printf
 // provided by compiler       int;
 RAPICORN_STATIC_ASSERT (sizeof (RapicornInt8)  == 1);
 RAPICORN_STATIC_ASSERT (sizeof (RapicornInt16) == 2);
