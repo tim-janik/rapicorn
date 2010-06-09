@@ -83,7 +83,7 @@ class SinfexExpressionStack {
     *mark.up++ = l;
     memcpy (mark.cp, &s[0], l);
     mark.cp += l;
-    while ((int) mark.cp & 3)
+    while (ptrdiff_t (mark.cp) & 3)
       *mark.cp++ = 0;
   }
 public:
