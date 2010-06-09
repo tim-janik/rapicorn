@@ -351,7 +351,7 @@ SinfexExpression::eval_op (Scope &scope,
       }
     case SINFEX_ARG: ;
     }
-  error ("Expression with invalid op code: (%p:%u:%u)", m_start, mark.up - 1 - m_start, *(mark.up-1));
+  error ("Expression with invalid op code: (%p:%zu:%u)", m_start, mark.up - 1 - m_start, *(mark.up-1));
 }
 
 /* --- Parser Class --- */
