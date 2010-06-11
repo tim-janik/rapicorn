@@ -750,7 +750,7 @@ RootImpl::expose_now ()
         }
     }
   else
-    m_expose_region.clear();
+    m_expose_region.clear(); // nuke stale exposes
 }
 
 void
@@ -786,6 +786,8 @@ RootImpl::draw_now ()
       if (!has_pending_win_size())
         sig_displayed.emit();
     }
+  else
+    m_expose_region.clear(); // nuke stale exposes
 }
 
 void
@@ -897,6 +899,8 @@ RootImpl::has_pending_win_size ()
 bool
 RootImpl::dispatch_event (const Event &event)
 {
+  if (!m_viewport)
+    return false;       // we can only handle events on viewports
   if (0)
     diag ("Root: event: %s", string_from_event_type (event.type));
   switch (event.type)
@@ -1075,6 +1079,8 @@ RootImpl::destroy_viewport ()
           m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
           m_source->exitable (TRUE);
         }
+      // reset item state where needed
+      cancel_item_events (NULL);
     }
   unref (this);
 }
