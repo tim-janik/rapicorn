@@ -111,15 +111,11 @@ check-am: check-dynamic_cast check-list_properties # run source code checks befo
 distcleancheck_listfiles = true # find . -type f -print
 # distuninstallcheck_listfiles = true # find . -type f -print
 
-# === Release auxillary rule configuration ===
-RELAUX_VERSION   = $(RAPICORN_VERSION)
-RELAUX_REVNAME   = RAPICORN_REVISION_VERSION
-RELAUX_FILE      = $(shell echo $(distdir).tar.?z*)
-RELAUX_DESTHOST  = testbit.eu
-RELAUX_DESTPATH  = dist/rapicorn
-RELAUX_REVISION  = $($(RELAUX_REVNAME))
-RELAUX_REVNEXT   = $(shell echo '1 + $(RELAUX_REVISION)' | bc)
-RELAUX_CHANGELOG = ChangeLog
-RELAUX_CHL_RANGE = 3c74b440cecaba3570eecc6728bbe319ba790b59..HEAD
+# === Release Rule Configuration ===
+RELEASE_VERSION   = $(RAPICORN_VERSION)
+RELEASE_REVNAME   = RAPICORN_REVISION_VERSION
+RELEASE_DESTHOST  = testbit.eu
+RELEASE_DESTPATH  = dist/rapicorn
+RELEASE_CHANGELOG = ChangeLog
+RELEASE_CHL_RANGE = 3c74b440cecaba3570eecc6728bbe319ba790b59..HEAD
 # Makefile.decl introduced rules: ChangeLog release-upload
-

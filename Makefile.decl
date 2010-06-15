@@ -180,17 +180,28 @@ report: all
 	) 2>&1 | tee "$$REPORTFILE"
 
 
+# === Release Configuration ===
+# RELEASE_VERSION   # defaults to, default: $(VERSION)
+# RELEASE_REVNAME   # micro revision variable name, default: VERSION_PATCHLEVEL
+# RELEASE_TARBALL   # release tarball name, default: $(distdir).tar.?z*
+# RELEASE_DESTHOST  # destination host for tarball uploads
+# RELEASE_DESTPATH  # destination host path for tarball uploads
+# RELEASE_REVISION  # micro revision, defaults to expanding $(RELEASE_REVNAME)
+# RELEASE_REVNEXT   # next micro revision, defaults to incrementing $(RELEASE_REVISION)
+# RELEASE_CHANGELOG # generated ChangeLog file name, if generation desired
+# RELEASE_CHL_RANGE # ChangeLog revision range for git log, default: HEAD
+# RELEASE_CHL_ADD   # plaint text file to be appended to generated ChangeLog
 # === Release auxillary rule defaults ===
-RELAUX_VERSION   = $(VERSION)
-RELAUX_REVNAME   = VERSION_PATCHLEVEL
-RELAUX_FILE      = $(shell echo $(distdir).tar.?z*)
-RELAUX_DESTHOST  = example.com
-RELAUX_DESTPATH  = distpath/projectname
+RELAUX_VERSION   = $(strip $(or $(RELEASE_VERSION), $(VERSION)))
+RELAUX_REVNAME   = $(strip $(or $(RELEASE_REVNAME), VERSION_PATCHLEVEL))
+RELAUX_FILE      = $(strip $(or $(RELEASE_TARBALL), $(word 1, $(shell echo $(distdir).tar.?z*))))
+RELAUX_DESTHOST  = $(strip $(or $(RELEASE_DESTHOST), example.com))
+RELAUX_DESTPATH  = $(strip $(or $(RELEASE_DESTPATH), distpath/projectname))
 RELAUX_REVISION  = $($(RELAUX_REVNAME))
-RELAUX_REVNEXT   = $(shell echo '1 + $(RELAUX_REVISION)' | bc)
-RELAUX_CHANGELOG =
-RELAUX_CHL_RANGE = HEAD
-RELAUX_CHL_ADD   =
+RELAUX_REVNEXT   = $(strip $(or $(RELEASE_REVNEXT), $(shell echo '1 + $(RELAUX_REVISION)' | bc)))
+RELAUX_CHANGELOG = $(strip $(RELEASE_CHANGELOG))
+RELAUX_CHL_RANGE = $(strip $(or $(RELEASE_CHL_RANGE), HEAD))
+RELAUX_CHL_ADD   = $(strip $(RELEASE_CHL_ADD))
 # --- ChangeLog ---
 RELAUX_GITSTAMPS = $(shell ls "$${GIT_DIR:-.git}/`git symbolic-ref -q HEAD || echo HEAD`" \
 			   "$${GIT_DIR:-.git}/packed-refs"  "$${GIT_DIR:-.git}/HEAD" 2>/dev/null )
