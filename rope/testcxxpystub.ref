@@ -272,13 +272,10 @@ plic_pyXFooRecord_proto_pop (Plic::FieldBufferReader &src)
   pyfoR = PyLong_FromLongLong (fbr.pop_evalue()); ERRORifpy();
   if (PyDict_Take_Item (dictR, "enum_field", &pyfoR) < 0) goto error;
   pyfoR = PyLong_FromUnsignedLongLong (fbr.pop_object()); ERRORifpy();
-  // FIXME: convert to "__plic__object__"
   if (PyDict_Take_Item (dictR, "iface1", &pyfoR) < 0) goto error;
   pyfoR = PyLong_FromUnsignedLongLong (fbr.pop_object()); ERRORifpy();
-  // FIXME: convert to "__plic__object__"
   if (PyDict_Take_Item (dictR, "iface2", &pyfoR) < 0) goto error;
   pyfoR = PyLong_FromUnsignedLongLong (fbr.pop_object()); ERRORifpy();
-  // FIXME: convert to "__plic__object__"
   if (PyDict_Take_Item (dictR, "iface3", &pyfoR) < 0) goto error;
   pyret = pyinstR;
  error:
@@ -551,7 +548,6 @@ plic_pyInterfaceSequence_proto_pop (Plic::FieldBufferReader &src)
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
     pyfoR = PyLong_FromUnsignedLongLong (fbr.pop_object()); ERRORifpy();
-    // FIXME: convert to "__plic__object__"
     if (PyList_Take_Item (listR, &pyfoR) < 0) goto error;
   }
   pyret = listR;
@@ -1386,7 +1382,6 @@ plic_pycall_MethodTestInterface_method_with_interface (PyObject *pyself, PyObjec
     frr.skip(); // proc_id for return
     if (frr.remaining() == 1) {
         pyfoR = PyLong_FromUnsignedLongLong (frr.pop_object()); ERRORifpy();
-        // FIXME: convert to "__plic__object__"
     }
     delete fr; fr = NULL;
   }
@@ -1415,7 +1410,6 @@ plic_pycall_MethodTestInterface_method_with_quickiface (PyObject *pyself, PyObje
     frr.skip(); // proc_id for return
     if (frr.remaining() == 1) {
         pyfoR = PyLong_FromUnsignedLongLong (frr.pop_object()); ERRORifpy();
-        // FIXME: convert to "__plic__object__"
     }
     delete fr; fr = NULL;
   }

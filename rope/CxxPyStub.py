@@ -178,7 +178,6 @@ class Generator:
       s += '  %s = plic_py%s_proto_pop (%s); ERRORif (!pyfoR);\n' % (var, type.name, fbr)
     elif type.storage == Decls.INTERFACE:
       s += '  %s = PyLong_FromUnsignedLongLong (%s.pop_object()); ERRORifpy();\n' % (var, fbr)
-      s += '  // FIXME: convert to "__plic__object__"\n'
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s

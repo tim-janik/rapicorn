@@ -50,11 +50,16 @@ def reindent (prefix, lines):
 
 base_code = """
 
-class __BaseRecord__:
+class _BaseRecord_:
   def __init__ (self, **entries):
     self.__dict__.update (entries)
-class __BaseClass__ (object):
-  pass
+class _BaseClass_ (object):
+  class _PlicID_:
+    def __init__ (self, _plicid):
+      self.id = _plicid
+  def __init__ (self, _plic_id):
+    assert isinstance (_plic_id, _BaseClass_._PlicID_)
+    self.__plic__object__ = _plic_id.id
 class __Signal__:
   def __init__ (self, signame):
     self.name = signame
@@ -117,14 +122,14 @@ class Generator:
     return self.zero_value (type) # zero is the only default for these types
   def generate_record_impl (self, type_info):
     s = ''
-    s += 'class %s (__BaseRecord__):\n' % type_info.name
+    s += 'class %s (_BaseRecord_):\n' % type_info.name
     s += '  def __init__ (self, **entries):\n'
     s += '    defaults = {'
     for fl in type_info.fields:
       s += " '%s' : %s, " % (fl[0], self.zero_value (fl[1]))
     s += '}\n'
     s += '    self.__dict__.update (defaults)\n'
-    s += '    __BaseRecord__.__init__ (self, **entries)\n'
+    s += '    _BaseRecord_.__init__ (self, **entries)\n'
     s += '  @staticmethod\n'
     s += '  def create (args):\n'
     s += '    self = %s()\n' % type_info.name
@@ -187,9 +192,12 @@ class Generator:
     mth = m.type_hash()
     mid = ('%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x' +
            '%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x') % mth
-    s += '  return _PLIC_%s (' % mid
+    s += '  ___ret = _PLIC_%s (' % mid
     s += ', '.join (vals)
     s += ')\n'
+    if m.rtype.storage == Decls.INTERFACE:
+      s += '  ___ret = %s (_BaseClass_._PlicID_ (___ret))\n' % m.rtype.name
+    s += '  return ___ret'
     return s
   def inherit_reduce (self, type_list):
     def hasancestor (child, parent):
@@ -217,10 +225,10 @@ class Generator:
     l = self.inherit_reduce (l)
     l = [pr.name for pr in l] # types -> names
     if not l:
-      l = [ '__BaseClass__' ]
+      l = [ '_BaseClass_' ]
     s += 'class %s (%s):\n' % (type_info.name, ', '.join (l))
-    s += '  def __init__ (self):\n'
-    s += '    super (%s, self).__init__()\n' % type_info.name
+    s += '  def __init__ (self, _plic_id):\n'
+    s += '    super (%s, self).__init__ (_plic_id)\n' % type_info.name
     for sg in type_info.signals:
       s += "    self.sig_%s = __Signal__ ('%s')\n" % (sg.name, sg.name)
     for m in type_info.methods:

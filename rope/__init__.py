@@ -33,8 +33,8 @@ def app_init (application_name = None):
     application_name = os.path.abspath (sys.argv[0] or '-')
   if cmdline_args == None:
     cmdline_args = sys.argv
-  a = Application()
-  a.__plic__object__ = app_init._init_dispatcher (application_name, cmdline_args)
+  plic_id = app_init._init_dispatcher (application_name, cmdline_args)
+  a = py2cpy.Application (py2cpy._BaseClass_._PlicID_ (plic_id))
   global app
   app = a
   return app
