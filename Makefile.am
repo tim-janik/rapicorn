@@ -6,7 +6,7 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = . po plic rcore ui rope tools tests examples docs web
 
-docdir  = ${datarootdir}/doc/${PACKAGE}${RAPICORN_RELEASE}
+docdir  = ${datarootdir}/doc/rapicorn@RAPICORN_RELEASE@
 
 # === setup ===
 AUTOMAKE_OPTIONS = 1.9 dist-bzip2 no-dist-gzip
