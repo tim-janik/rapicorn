@@ -226,13 +226,14 @@ class Generator:
     el = type_info.elements
     # sequence proto add
     s += 'static RAPICORN_UNUSED bool\n'
-    s += 'plic_py%s_proto_add (PyObject *pylist, %s &dst)\n' % (type_info.name, FieldBuffer)
+    s += 'plic_py%s_proto_add (PyObject *pyinput, %s &dst)\n' % (type_info.name, FieldBuffer)
     s += '{\n'
-    s += '  const ssize_t len = PyList_Size (pylist); if (len < 0) return false;\n'
+    s += '  PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;\n'
+    s += '  const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;\n'
     s += '  %s &fb = dst.add_seq (len);\n' % FieldBuffer
     s += '  bool success = false;\n'
     s += '  for (ssize_t k = 0; k < len; k++) {\n'
-    s += '    PyObject *item = PyList_GET_ITEM (pylist, k);\n'
+    s += '    PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);\n'
     s += reindent ('  ', self.generate_proto_add_py ('fb', el[1], 'item')) + '\n'
     s += '  }\n'
     s += '  success = true;\n'

@@ -290,13 +290,14 @@ plic_pyXFooRecord_proto_pop (Plic::FieldBufferReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyXFooSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
+plic_pyXFooSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
 {
-  const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
+  PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
+  const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
   Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
-    PyObject *item = PyList_GET_ITEM (pylist, k);
+    PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
     fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
   }
   success = true;
@@ -323,13 +324,14 @@ plic_pyXFooSequence_proto_pop (Plic::FieldBufferReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyIntSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
+plic_pyIntSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
 {
-  const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
+  PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
+  const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
   Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
-    PyObject *item = PyList_GET_ITEM (pylist, k);
+    PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
     fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
   }
   success = true;
@@ -356,13 +358,14 @@ plic_pyIntSequence_proto_pop (Plic::FieldBufferReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyFloatSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
+plic_pyFloatSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
 {
-  const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
+  PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
+  const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
   Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
-    PyObject *item = PyList_GET_ITEM (pylist, k);
+    PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
     fb.add_double (PyFloat_AsDouble (item)); ERRORifpy();
   }
   success = true;
@@ -389,13 +392,14 @@ plic_pyFloatSequence_proto_pop (Plic::FieldBufferReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyStringSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
+plic_pyStringSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
 {
-  const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
+  PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
+  const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
   Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
-    PyObject *item = PyList_GET_ITEM (pylist, k);
+    PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
     fb.add_string (PyString_As_std_string (item)); ERRORifpy();
   }
   success = true;
@@ -422,13 +426,14 @@ plic_pyStringSequence_proto_pop (Plic::FieldBufferReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyExtensiveEnumSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
+plic_pyExtensiveEnumSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
 {
-  const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
+  PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
+  const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
   Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
-    PyObject *item = PyList_GET_ITEM (pylist, k);
+    PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
     fb.add_evalue (PyIntLong_AsLongLong (item)); ERRORifpy();
   }
   success = true;
@@ -455,13 +460,14 @@ plic_pyExtensiveEnumSequence_proto_pop (Plic::FieldBufferReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyRecordSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
+plic_pyRecordSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
 {
-  const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
+  PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
+  const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
   Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
-    PyObject *item = PyList_GET_ITEM (pylist, k);
+    PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
     if (!plic_pyXFooRecord_proto_add (item, fb)) goto error;
   }
   success = true;
@@ -488,13 +494,14 @@ plic_pyRecordSequence_proto_pop (Plic::FieldBufferReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pySequenceSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
+plic_pySequenceSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
 {
-  const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
+  PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
+  const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
   Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
-    PyObject *item = PyList_GET_ITEM (pylist, k);
+    PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
     if (!plic_pyIntSequence_proto_add (item, fb)) goto error;
   }
   success = true;
@@ -521,13 +528,14 @@ plic_pySequenceSequence_proto_pop (Plic::FieldBufferReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyInterfaceSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
+plic_pyInterfaceSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
 {
-  const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
+  PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
+  const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
   Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
-    PyObject *item = PyList_GET_ITEM (pylist, k);
+    PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
     fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   }
   success = true;
@@ -592,13 +600,14 @@ plic_pyNestedTypesRec_proto_pop (Plic::FieldBufferReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyNestedTypesSeq_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
+plic_pyNestedTypesSeq_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
 {
-  const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
+  PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
+  const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
   Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
-    PyObject *item = PyList_GET_ITEM (pylist, k);
+    PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
     if (!plic_pyNestedTypesRec_proto_add (item, fb)) goto error;
   }
   success = true;
@@ -826,13 +835,14 @@ plic_pyQuickRecord_proto_pop (Plic::FieldBufferReader &src)
 }
 
 static RAPICORN_UNUSED bool
-plic_pyQuickSequence_proto_add (PyObject *pylist, Plic::FieldBuffer &dst)
+plic_pyQuickSequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
 {
-  const ssize_t len = PyList_Size (pylist); if (len < 0) return false;
+  PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
+  const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
   Plic::FieldBuffer &fb = dst.add_seq (len);
   bool success = false;
   for (ssize_t k = 0; k < len; k++) {
-    PyObject *item = PyList_GET_ITEM (pylist, k);
+    PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
     fb.add_double (PyFloat_AsDouble (item)); ERRORifpy();
   }
   success = true;

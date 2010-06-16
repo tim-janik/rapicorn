@@ -107,10 +107,14 @@ class Generator:
              Decls.INT       : '0',
              Decls.ENUM      : '0',
              Decls.RECORD    : 'None',
-             Decls.SEQUENCE  : 'None',
+             Decls.SEQUENCE  : '()',
              Decls.STRING    : "''",
              Decls.INTERFACE : "None",
            }[type.storage]
+  def default_value (self, type, vdefault):
+    if type.storage in (Decls.FLOAT, Decls.INT, Decls.ENUM, Decls.STRING):
+      return vdefault # number litrals or string
+    return self.zero_value (type) # zero is the only default for these types
   def generate_record_impl (self, type_info):
     s = ''
     s += 'class %s (__BaseRecord__):\n' % type_info.name
@@ -171,7 +175,7 @@ class Generator:
     vals = [ 'self' ]
     for a in m.args:
       if a[2] != None:
-        args += [ '%s = %s' % (a[0], a[2]) ]
+        args += [ '%s = %s' % (a[0], self.default_value (a[1], a[2])) ]
       else:
         args += [ a[0] ]
       vals += [ a[0] ]

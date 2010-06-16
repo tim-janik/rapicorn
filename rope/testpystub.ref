@@ -103,7 +103,7 @@ class XFooRecord (__BaseRecord__):
 
 class NestedTypesRec (__BaseRecord__):
   def __init__ (self, **entries):
-    defaults = { 'rec' : None,  'seq' : None, }
+    defaults = { 'rec' : None,  'seq' : (), }
     self.__dict__.update (defaults)
     __BaseRecord__.__init__ (self, **entries)
   @staticmethod
@@ -213,7 +213,7 @@ class AliasRecord (__BaseRecord__):
 
 class NewRecord (__BaseRecord__):
   def __init__ (self, **entries):
-    defaults = { 'i' : 0,  'enum1' : 0,  'xfs' : None,  'ntr' : None, }
+    defaults = { 'i' : 0,  'enum1' : 0,  'xfs' : (),  'ntr' : None, }
     self.__dict__.update (defaults)
     __BaseRecord__.__init__ (self, **entries)
   @staticmethod
@@ -421,13 +421,13 @@ class MethodTestInterface (__BaseClass__):
     return _PLIC_0ca20000d07cd262fc81ef2c220a8d4559d0faae36ce56ea0990ad1d3c49827d (self, input, optval)
   def method_with_enum (self, input, optval = 0): # QuickEnum
     return _PLIC_0ca20000d1a935c9c1bdc5f48521c942ebcb3ede7a3fcbdcba634e15fbfde688 (self, input, optval)
-  def method_with_record (self, input, optval = 0): # QuickRecord
+  def method_with_record (self, input, optval = None): # QuickRecord
     return _PLIC_0ca2000093f684d6345260c4f912f67fa8f6c2af19dc877e176ffee81397fa2e (self, input, optval)
-  def method_with_sequence (self, input, optval = 0): # QuickSequence
+  def method_with_sequence (self, input, optval = ()): # QuickSequence
     return _PLIC_0ca20000f8d6703f9af82486dc8ce5aa3a6095e0829ba18574e0fc82dbfa4b77 (self, input, optval)
-  def method_with_interface (self, input, optval = 0): # GrandChild
+  def method_with_interface (self, input, optval = None): # GrandChild
     return _PLIC_0ca20000ed320c14672f050fc4be01b7239a6c63e8d3bb3e106046b369f7e804 (self, input, optval)
-  def method_with_quickiface (self, input, iface0 = 0): # QuickIface
+  def method_with_quickiface (self, input, iface0 = None): # QuickIface
     return _PLIC_0ca200003fcf3b3d9eeea2d03769389cb168e0c6140b94e55b03b11a28cd7427 (self, input, iface0)
 
 class ButtonArea (__BaseClass__):
