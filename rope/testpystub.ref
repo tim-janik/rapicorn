@@ -340,13 +340,13 @@ class UIWidgetArea (__BaseClass__):
     return _PLIC_0ca200003a5e02ed169b0d3b86dc10cdc07a85a6dfe104ade8554a515ffc84b1 (self)
   def single_arg (self, n): # float
     return _PLIC_0ca20000f96d1b2e54efdddfc11d9638b5d0abcc8a0f16c8957078d12b4b2fc0 (self, n)
-  def single_arg2 (self, n): # float
+  def single_arg2 (self, n = 5): # float
     return _PLIC_0ca20000afefb8c4b9d9952905d41bfda2c44e813b1a8c4d8e440d5ecaeecec8 (self, n)
   def two_args (self, n, r): # float
     return _PLIC_0ca20000d1f5823f8538f2ffa1581dd0c9e7d9d486336a46c941f5292b4dcdfc (self, n, r)
-  def two_args2 (self, n, r): # float
+  def two_args2 (self, n = 6, r = 7.7): # float
     return _PLIC_0ca20000255fafa4429116798ce5813e5eacea949f7cfe8e1f41fe0ca4311729 (self, n, r)
-  def multi_args (self, n, r, i, s, y): # float
+  def multi_args (self, n, r, i, s = "String ding", y = 5): # float
     return _PLIC_0ca200005e6e8ea56f4fdd2d1d4b3bb3be7de84f81bcc35391710698705b209a (self, n, r, i, s, y)
   def self_method (self, ba1, ba2): # float
     return _PLIC_0ca20000abd1f74a3f2d1aefb6d12a66100e83849c14475879488ee1596dab87 (self, ba1, ba2)
@@ -403,7 +403,7 @@ class QuickRecord (__BaseRecord__):
 class QuickIface (__BaseClass__):
   def __init__ (self):
     super (QuickIface, self).__init__()
-  def simple_function (self, i): # one way
+  def simple_function (self, i = 9): # one way
     return _PLIC_0ca100007178342e2c84375ab4c874afb5578ad147fe3033392cdc1a7eebbb31 (self, i)
 
 class MethodTestInterface (__BaseClass__):
@@ -411,23 +411,23 @@ class MethodTestInterface (__BaseClass__):
     super (MethodTestInterface, self).__init__()
   def method_with_void (self): # one way
     return _PLIC_0ca10000f91c872ea90ceaec3b16df51887b366247a3a6126f4b7fab28f1ab12 (self)
-  def method_with_bools (self, input, optval): # bool
+  def method_with_bools (self, input, optval = 0): # bool
     return _PLIC_0ca200008ffdba44c998c0ffa6b486b19b4ea9f5a23d9c6da7746e46026b843e (self, input, optval)
-  def method_with_ints (self, input, optval): # int
+  def method_with_ints (self, input, optval = -2): # int
     return _PLIC_0ca20000cec55716747c3602672780d11852bd2e467d1e9161085ceb1b2bf816 (self, input, optval)
-  def method_with_floats (self, input, optval): # float
+  def method_with_floats (self, input, optval = 309.9): # float
     return _PLIC_0ca200006ede6737c9ee1722db2fc5834e5788c84a81be268c32f39e18ad9ab6 (self, input, optval)
-  def method_with_string (self, input, optval): # string
+  def method_with_string (self, input, optval = "default"): # string
     return _PLIC_0ca20000d07cd262fc81ef2c220a8d4559d0faae36ce56ea0990ad1d3c49827d (self, input, optval)
-  def method_with_enum (self, input, optval): # QuickEnum
+  def method_with_enum (self, input, optval = 0): # QuickEnum
     return _PLIC_0ca20000d1a935c9c1bdc5f48521c942ebcb3ede7a3fcbdcba634e15fbfde688 (self, input, optval)
-  def method_with_record (self, input, optval): # QuickRecord
+  def method_with_record (self, input, optval = 0): # QuickRecord
     return _PLIC_0ca2000093f684d6345260c4f912f67fa8f6c2af19dc877e176ffee81397fa2e (self, input, optval)
-  def method_with_sequence (self, input, optval): # QuickSequence
+  def method_with_sequence (self, input, optval = 0): # QuickSequence
     return _PLIC_0ca20000f8d6703f9af82486dc8ce5aa3a6095e0829ba18574e0fc82dbfa4b77 (self, input, optval)
-  def method_with_interface (self, input, optval): # GrandChild
+  def method_with_interface (self, input, optval = 0): # GrandChild
     return _PLIC_0ca20000ed320c14672f050fc4be01b7239a6c63e8d3bb3e106046b369f7e804 (self, input, optval)
-  def method_with_quickiface (self, input, iface0): # QuickIface
+  def method_with_quickiface (self, input, iface0 = 0): # QuickIface
     return _PLIC_0ca200003fcf3b3d9eeea2d03769389cb168e0c6140b94e55b03b11a28cd7427 (self, input, iface0)
 
 class ButtonArea (__BaseClass__):

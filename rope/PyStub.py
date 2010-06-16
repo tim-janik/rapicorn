@@ -167,10 +167,15 @@ class Generator:
   def generate_method_caller_impl (self, m):
     s = ''
     s += 'def %s (' % m.name
-    l = [ 'self' ]
+    args = [ 'self' ]
+    vals = [ 'self' ]
     for a in m.args:
-      l += [ a[0] ]
-    s += ', '.join (l)
+      if a[2] != None:
+        args += [ '%s = %s' % (a[0], a[2]) ]
+      else:
+        args += [ a[0] ]
+      vals += [ a[0] ]
+    s += ', '.join (args)
     if m.rtype.name == 'void':
       s += '): # one way\n'
     else:
@@ -179,7 +184,7 @@ class Generator:
     mid = ('%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x' +
            '%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x') % mth
     s += '  return _PLIC_%s (' % mid
-    s += ', '.join (l)
+    s += ', '.join (vals)
     s += ')\n'
     return s
   def inherit_reduce (self, type_list):
