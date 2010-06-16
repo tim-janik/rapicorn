@@ -41,6 +41,10 @@ int /*-errno*/  parse_file       (const String           &i18n_domain,
                                   const String           &file_name,
                                   const String           &domain = "",
                                   vector<String>         *definitions = NULL);
+int /*-errno*/ parse_string      (const String           &xml_string,
+                                  const String           &i18n_domain,
+                                  const String           &domain = "",
+                                  vector<String>         *definitions = NULL);
 Item&           create_item      (const String           &item_identifier,
                                   const ArgumentList     &arguments = ArgumentList(),
                                   const ArgumentList     &env_variables = ArgumentList());

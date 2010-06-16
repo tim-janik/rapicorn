@@ -143,7 +143,8 @@ class FactorySingleton {
   Item&                         create_from_item_type   (const String          &ident);
 public:
   void                          register_item_factory   (const ItemTypeFactory &itfactory);
-  MarkupParser::Error           parse_gadget_file       (FILE                  *file,
+  MarkupParser::Error           parse_gadget_from_xml   (FILE                  *xml_file,
+                                                         const String          &xml_string,
                                                          const String          &i18n_domain,
                                                          const String          &file_name,
                                                          const String          &domain,
@@ -399,11 +400,12 @@ FactorySingleton::add_domain (const String   &domain_name,
 
 
 MarkupParser::Error
-FactorySingleton::parse_gadget_file (FILE           *file,
-                                     const String   &i18n_domain,
-                                     const String   &file_name,
-                                     const String   &domain,
-                                     vector<String> *definitions)
+FactorySingleton::parse_gadget_from_xml (FILE           *xml_file,
+                                         const String   &xml_string,
+                                         const String   &i18n_domain,
+                                         const String   &file_name,
+                                         const String   &domain,
+                                         vector<String> *definitions)
 {
   FactoryDomain *fdomain = lookup_domain (domain);
   if (!fdomain)
@@ -413,13 +415,22 @@ FactorySingleton::parse_gadget_file (FILE           *file,
     newgadgets = new vector<const BaseGadget*>;
   GadgetParser gp (file_name, *fdomain, newgadgets);
   MarkupParser::Error merror;
-  char buffer[1024];
-  int n = fread (buffer, 1, 1024, file);
-  while (n > 0)
+  if (xml_file)
     {
-      if (!gp.parse (buffer, n, &merror))
-        break;
-      n = fread (buffer, 1, 1024, file);
+      char buffer[1024];
+      int n = fread (buffer, 1, 1024, xml_file);
+      while (n > 0)
+        {
+          if (!gp.parse (buffer, n, &merror))
+            break;
+          n = fread (buffer, 1, 1024, xml_file);
+        }
+    }
+  else
+    {
+      int n = xml_string.size();
+      if (n > 0)
+        gp.parse (xml_string.data(), n, &merror);
     }
   if (!merror.code)
     gp.end_parse (&merror);
@@ -770,7 +781,7 @@ Factory::parse_file (const String           &i18n_domain,
   if (!file)
     return -errno;
   MarkupParser::Error merror =
-    FactorySingleton::singleton->parse_gadget_file (file, i18n_domain, file_name, fdomain, definitions);
+    FactorySingleton::singleton->parse_gadget_from_xml (file, "", i18n_domain, file_name, fdomain, definitions);
   if (merror.code)
     {
       // ("error(%d):", merror.code)
@@ -778,6 +789,26 @@ Factory::parse_file (const String           &i18n_domain,
       error (ers);
     }
   fclose (file);
+  return 0;
+}
+
+int
+Factory::parse_string (const String           &xml_string,
+                       const String           &i18n_domain,
+                       const String           &domain,
+                       vector<String>         *definitions)
+{
+  initialize_standard_gadgets_lazily();
+  String fdomain = domain == "" ? i18n_domain : domain;
+  const String file_name = "#<String>";
+  MarkupParser::Error merror =
+    FactorySingleton::singleton->parse_gadget_from_xml (NULL, xml_string, i18n_domain, file_name, fdomain, definitions);
+  if (merror.code)
+    {
+      // ("error(%d):", merror.code)
+      String ers = string_printf ("%s:%d:%d: %s", file_name.c_str(), merror.line_number, merror.char_number, merror.message.c_str());
+      error (ers);
+    }
   return 0;
 }
 

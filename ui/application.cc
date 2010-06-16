@@ -64,6 +64,8 @@ class ApplicationImpl : public ApplicationBase {
   virtual void            auto_load              (const std::string &i18n_domain,
                                                   const std::string &file_name,
                                                   const std::string &binary_path);
+  virtual void            load_string            (const std::string &xml_string,
+                                                  const std::string &i18n_domain = "");
   virtual WindowBase*   create_window          (const std::string &window_identifier,
                                                   const StringList &arguments = StringList(),
                                                   const StringList &env_variables = StringList());
@@ -147,6 +149,15 @@ ApplicationImpl::auto_load (const String  &i18n_domain,
   int err = Factory::parse_file (i18n_domain, fullname);
   if (err)
     error ("failed to load \"%s\": %s", fullname.c_str(), string_from_errno (err).c_str());
+}
+
+void
+ApplicationImpl::load_string (const std::string &xml_string,
+                              const std::string &i18n_domain)
+{
+  int err = Factory::parse_string (xml_string, i18n_domain);
+  if (err)
+    error ("failed to parse string: %s\n%s", string_from_errno (err).c_str(), xml_string.c_str());
 }
 
 static uint     exit_code = 0;

@@ -47,6 +47,8 @@ interface Application {
   void          auto_load       (string         i18n_domain,
                                  string         file_name,
                                  string         binary_path) = 0;
+  void          load_string     (string         xml_string,
+                                 string         i18n_domain = "") = 0;
   /* windows */
   Window        create_window   (string         window_identifier,
                                  StringList     arguments = 0,
