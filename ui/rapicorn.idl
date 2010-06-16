@@ -55,7 +55,6 @@ interface Application {
                                  StringList     env_variables = 0) = 0;
   // WindowList    list_windows    () = 0;
   /* execution */
-  int           execute_loops   () = 0;
   void          exit            (int            code = 0) = 0;
   /* notifications */
   signal void   missing_primary ();

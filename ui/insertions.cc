@@ -32,6 +32,7 @@ class_scope:ApplicationBase:
   WinPtr             create_winptr (const std::string  &window_identifier,
                                     const std::vector<String> &arguments = std::vector<String>(),
                                     const std::vector<String> &env_variables = std::vector<String>());
+  int                execute_loops ();
   static bool        plor_add      (Item &item, const String &plor_name);
   static Item*       plor_remove   (const String &plor_name);
   /* global mutex */

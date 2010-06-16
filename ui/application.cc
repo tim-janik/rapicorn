@@ -69,7 +69,6 @@ class ApplicationImpl : public ApplicationBase {
   virtual WindowBase*   create_window          (const std::string &window_identifier,
                                                   const StringList &arguments = StringList(),
                                                   const StringList &env_variables = StringList());
-  virtual int             execute_loops          ();
   virtual void            exit                   (int code = 0);
   virtual void            test_counter_set       (int val);
   virtual void            test_counter_add       (int val);
@@ -163,7 +162,7 @@ ApplicationImpl::load_string (const std::string &xml_string,
 static uint     exit_code = 0;
 
 int
-ApplicationImpl::execute_loops ()
+ApplicationBase::execute_loops ()
 {
   assert (rapicorn_thread_entered());           // guards exit_code
   while (!EventLoop::loops_exitable())
@@ -179,7 +178,7 @@ ApplicationImpl::exit (int code)
   assert (rapicorn_thread_entered());           // guards exit_code
   if (!exit_code)
     exit_code = code;
-  return EventLoop::kill_loops ();
+  EventLoop::kill_loops ();
 }
 
 void

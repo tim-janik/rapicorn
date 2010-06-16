@@ -46,13 +46,8 @@ struct PollFD // mirror struct pollfd for poll(3posix)
 /* --- EventLoop --- */
 class EventLoop : public virtual BaseObject {
   friend class RapicornTester;
-  friend class ApplicationImpl;
   class TimedSource;
   class PollFDSource;
-  static bool   iterate_loops   (bool may_block,
-                                 bool may_dispatch);
-  static void   kill_loops      ();
-  static bool   loops_exitable  ();
 protected:
   typedef Signals::Slot1<void,PollFD&> VPfdSlot;
   typedef Signals::Slot1<bool,PollFD&> BPfdSlot;
@@ -70,6 +65,10 @@ public:
   static const int PRIORITY_BACKGROUND = +300 + 500;    /* unimportant, used when everything else done (G*LOW) */
   static EventLoop* create      ();
   /* run state */
+  static bool   iterate_loops   (bool may_block,
+                                 bool may_dispatch);
+  static void   kill_loops      ();
+  static bool   loops_exitable  ();
   virtual void  kill_sources    (void) = 0;
   virtual bool  exitable        (void) = 0;
   virtual void  wakeup          (void) = 0;             /* thread-safe, as long as loop is undestructed */
