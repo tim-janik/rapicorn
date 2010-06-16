@@ -37,8 +37,8 @@ Once initialized, we need to load the widget tree definition for later use:
 
 	# Import versioned Rapicorn module
 	import Rapicorn1002 as Rapicorn
-	# Initialize Rapicorn applicaiton with unique name
-	app = Rapicorn.init ("Hello-World")
+	# Initialize Rapicorn application with unique name
+	app = Rapicorn.app_init ("Hello-World")
 	# Load widget tree into Rapicorn
 	app.load_string (hello_window_widgets)
 
