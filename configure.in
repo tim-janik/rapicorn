@@ -524,6 +524,7 @@ tests/Makefile
 examples/Makefile
 docs/Makefile
 docs/imports/Makefile
+docs/tutorial/Makefile
 web/Makefile
 ])
 

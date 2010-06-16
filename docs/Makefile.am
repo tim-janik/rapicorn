@@ -4,7 +4,7 @@
 ## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = imports
+SUBDIRS = imports tutorial
 
 # extract source code documentation as psrc
 PSOURCE_TARGETS = $(strip			\
