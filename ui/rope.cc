@@ -40,7 +40,15 @@ protected:
     return true; // keep alive
   }
 public:
-  DispatchSource (Plic::Coupler &_c) : coupler (_c) {}
+  DispatchSource (Plic::Coupler    &_c,
+                  EventLoop        &loop) : coupler (_c)
+  {
+    coupler.set_dispatcher_wakeup (loop, &EventLoop::wakeup);
+  }
+  virtual ~DispatchSource()
+  {
+    coupler.set_dispatcher_wakeup (NULL);
+  }
 };
 
 struct Initializer {
@@ -71,12 +79,6 @@ public:
     m_init (init),
     m_loop (NULL)
   {}
-  void
-  wakeup_loop ()
-  {
-    if (m_loop)
-      m_loop->wakeup();
-  }
 private:
   virtual void
   run ()
@@ -87,7 +89,7 @@ private:
     slist.strings = m_init->cmdline_args;
     App.init_with_x11 (m_init->application_name, slist);
     m_loop = ref_sink (EventLoop::create());
-    EventLoop::Source *esource = new DispatchSource (*m_init->coupler);
+    EventLoop::Source *esource = new DispatchSource (*m_init->coupler, *m_loop);
     (*m_loop).add_source (esource, MAXINT);
     esource->exitable (false);
     m_init->mutex.lock();
@@ -109,13 +111,12 @@ class RopeCoupler : public Plic::Coupler {
     return_val_if_fail (rope_thread != NULL, NULL);
 
     const int64 call_id = fbcall->first_id();
-    bool mayblock = send_call (fbcall); // deletes fbcall
-    rope_thread->wakeup_loop();
+    bool mayblock = push_call (fbcall); // deletes fbcall
     if (mayblock)
       Thread::Self::yield(); // allow fast return value handling on single core
     FieldBuffer *fr = NULL;
     if (Plic::is_callid_twoway (call_id))
-      fr = receive_result();
+      fr = pop_result();
     return fr;
   }
 };

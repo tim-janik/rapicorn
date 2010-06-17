@@ -55,12 +55,12 @@ static struct _DummyCoupler : public Coupler {
   virtual FieldBuffer* call_remote (FieldBuffer *fbcall)
   {
     bool twoway = Plic::is_callid_twoway (fbcall->first_id());
-    if (send_call (fbcall)) // deletes fbcall
+    if (push_call (fbcall)) // deletes fbcall
       ; // threaded dispatcher needs CPU
     // wakeup dispatcher
     while (check_dispatch())
       dispatch();
-    return !twoway ? NULL : receive_result();
+    return !twoway ? NULL : pop_result();
   }
 } _plic_coupler_static;
 #endif

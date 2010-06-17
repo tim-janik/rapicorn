@@ -271,7 +271,7 @@ Coupler::dispatch ()
   const int64 ret_id = fr ? fr->first_id() : 0;
   if (is_callid_return (ret_id))
     {
-      push_return (fr);
+      push_result (fr);
       sched_yield(); // allow fast return value handling on single core
       fr = NULL;
     }
