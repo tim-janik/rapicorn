@@ -182,168 +182,117 @@ TypeHash::to_string() const
   return s;
 }
 
-/* === Coupler === */
-#define USE_SEM_AND_SPIN 1
-struct Coupler::Priv {
-  pthread_mutex_t           call_mutex;
-  pthread_cond_t            call_cond;
-  std::vector<FieldBuffer*> call_vector;
-  std::vector<FieldBuffer*> call_queue;
-  size_t                    call_index;
-  sem_t                     result_sem;
-  pthread_spinlock_t        result_spinlock;
-  pthread_mutex_t           result_mutex;
-  pthread_cond_t            result_cond;
-  std::vector<FieldBuffer*> result_vector;
-  std::vector<FieldBuffer*> result_queue;
-  size_t                    result_index;
+/* === Channel === */
+struct Channel::Priv {
+  pthread_spinlock_t        msg_spinlock;
+  sem_t                     msg_sem;
+  std::vector<FieldBuffer*> msg_vector;
+  std::vector<FieldBuffer*> msg_queue;
+  size_t                    msg_index;
   Priv() :
-    call_index (0),
-    result_index (0)
+    msg_index (0)
   {
-    pthread_mutex_init (&call_mutex, NULL);
-    pthread_cond_init (&call_cond, NULL);
-    sem_init (&result_sem, /* unshared */ 0, /* init */ 0);
-    pthread_spin_init (&result_spinlock, 0 /*pshared*/);
-    pthread_mutex_init (&result_mutex, NULL);
-    pthread_cond_init (&result_cond, NULL);
+    pthread_spin_init (&msg_spinlock, 0 /* pshared */);
+    sem_init (&msg_sem, 0 /* unshared */, 0 /* init */);
+  }
+  ~Priv()
+  {
+    sem_destroy (&msg_sem);
+    pthread_spin_destroy (&msg_spinlock);
   }
 };
 
-Coupler::Coupler () :
-  priv (*new Priv()),
-  reader (*(FieldBuffer*) NULL)
+Channel::Channel () :
+  priv (*new Priv())
 {}
 
 bool
-Coupler::send_call (FieldBuffer *fbcall) // deletes fbcall
+Channel::push_msg (FieldBuffer *fbmsg) // takes fbmsg ownership
 {
-  const int64 call_id = fbcall->first_id();
-  const bool twoway = is_callid_twoway (call_id);
-  pthread_mutex_lock (&priv.call_mutex);
-  priv.call_vector.push_back (fbcall);
-  const uint sz = priv.call_vector.size();
-  pthread_cond_signal (&priv.call_cond);
-  pthread_mutex_unlock (&priv.call_mutex);
-  bool may_block = twoway ||    // minimize turn-around times for two-way calls
-                   sz >= 509;   // want one-way batch processing below POSIX atomic buffer limit
+  pthread_spin_lock (&priv.msg_spinlock);
+  priv.msg_vector.push_back (fbmsg);
+  const uint sz = priv.msg_vector.size();
+  pthread_spin_unlock (&priv.msg_spinlock);
+  sem_post (&priv.msg_sem);
+  if (wakeup0.callable())
+    wakeup0();
+  bool may_block = sz >= 257;   // recommend sched_yield below POSIX atomic buffer limit
   return may_block;             // should yield on single-cores
 }
 
 FieldBuffer*
-Coupler::pop_call (bool advance)
+Channel::fetch_msg (bool advance,
+                    bool block)
 {
-  if (priv.call_index >= priv.call_queue.size())
+  while (true)
     {
-      if (priv.call_index)
-        priv.call_queue.resize (0);
-      priv.call_index = 0;
-      pthread_mutex_lock (&priv.call_mutex);
-      priv.call_vector.swap (priv.call_queue);
-      pthread_mutex_unlock (&priv.call_mutex);
+      if (priv.msg_index >= priv.msg_queue.size())
+        {
+          if (priv.msg_index)
+            priv.msg_queue.resize (0);
+          priv.msg_index = 0;
+          pthread_spin_lock (&priv.msg_spinlock);
+          priv.msg_vector.swap (priv.msg_queue);
+          pthread_spin_unlock (&priv.msg_spinlock);
+        }
+      if (priv.msg_index < priv.msg_queue.size())
+        {
+          const size_t index = priv.msg_index;
+          if (advance)
+            priv.msg_index++;
+          return priv.msg_queue[index];
+        }
+      if (!block)
+        return NULL;
+      sem_wait (&priv.msg_sem);
     }
-  if (priv.call_index < priv.call_queue.size())
-    {
-      const size_t index = priv.call_index;
-      if (advance)
-        priv.call_index++;
-      return priv.call_queue[index];
-    }
-  return NULL;
 }
 
-FieldBuffer*
-Coupler::dispatch_call (const FieldBuffer &fbcall)
+Channel::~Channel ()
 {
-  const TypeHash &thash = fbcall.first_type_hash();
-  DispatchFunc dispatcher_func = DispatcherRegistry::find_dispatcher (thash);
-  if (PLIC_UNLIKELY (!dispatcher_func))
-    return FieldBuffer::new_error ("unknown method hash: " + thash.to_string(), "PLIC");
-  reader.reset (fbcall);
-  return dispatcher_func (*this);
+  delete &priv;
 }
 
-void
-Coupler::push_return (FieldBuffer *rret)
-{
-#if USE_SEM_AND_SPIN
-  pthread_spin_lock (&priv.result_spinlock);
-  priv.result_vector.push_back (rret);
-  pthread_spin_unlock (&priv.result_spinlock);
-  sem_post (&priv.result_sem);
-#else
-  pthread_mutex_lock (&priv.result_mutex);
-  priv.result_vector.push_back (rret);
-  pthread_cond_signal (&priv.result_cond);
-  pthread_mutex_unlock (&priv.result_mutex);
-#endif
-  sched_yield(); // allow fast return value handling on single core
-}
-
-FieldBuffer*
-Coupler::receive_result (void)
-{
-  if (priv.result_index >= priv.result_queue.size())
-    {
-      if (priv.result_index)
-        priv.result_queue.resize (0);
-      else
-        priv.result_queue.reserve (1);
-      priv.result_index = 0;
-#if USE_SEM_AND_SPIN
-      sem_wait (&priv.result_sem);
-      pthread_spin_lock (&priv.result_spinlock);
-      priv.result_vector.swap (priv.result_queue); // fetch result
-      pthread_spin_unlock (&priv.result_spinlock);
-      assert (priv.result_queue.size() > 0);
-#else
-      pthread_mutex_lock (&priv.result_mutex);
-      while (priv.result_vector.size() == 0)
-        pthread_cond_wait (&priv.result_cond, &priv.result_mutex);
-      priv.result_vector.swap (priv.result_queue); // fetch result
-      pthread_mutex_unlock (&priv.result_mutex);
-#endif
-    }
-  // priv.result_index < priv.result_queue.size()
-  return priv.result_queue[priv.result_index++];
-}
+/* === Coupler === */
+Coupler::Coupler () :
+  reader (*(FieldBuffer*) NULL)
+{}
 
 bool
 Coupler::dispatch ()
 {
-  const FieldBuffer *call = pop_call();
+  const FieldBuffer *call = callc.pop_msg();
   if (!call)
     return false;
-  const int64 call_id = call->first_id();
-  const bool twoway = is_callid_twoway (call_id);
-  FieldBuffer *fr = dispatch_call (*call);
-  delete call;
-  if (twoway)
+  reader.reset (*call);
+  FieldBuffer *fr = DispatcherRegistry::dispatch_call (*call, *this);
+  reader.reset();
+  bool success = true;
+  const int64 ret_id = fr ? fr->first_id() : 0;
+  if (is_callid_return (ret_id))
     {
-      if (!fr)
-        fr = FieldBuffer::new_error (string_printf ("missing return from 0x%016llx", call_id), "PLIC");
       push_return (fr);
+      sched_yield(); // allow fast return value handling on single core
+      fr = NULL;
     }
-  else if (fr && !twoway)
+  else if (is_callid_error (ret_id))
     {
       FieldBufferReader frr (*fr);
-      const int64 ret_id = frr.pop_int64(); // first_id
-      if (is_callid_error (ret_id))
-        printerr ("PLIC: error during oneway call 0x%016llx: %s\n",
-                  call_id, frr.pop_string().c_str()); // FIXME: logging?
-      else if (is_callid_return (ret_id))
-        printerr ("PLIC: unexpected return from oneway 0x%016llx\n", call_id); // FIXME: logging?
-      else /* ? */
-        printerr ("PLIC: invalid return garbage from 0x%016llx\n", call_id); // FIXME: logging?
-      delete fr;
+      frr.pop_int64(); // ret_id
+      printerr ("PLIC: error during oneway call 0x%016llx: %s\n",
+                call->first_id(), frr.pop_string().c_str());
+      success = false;
     }
-  return true;
+  // callid_ok
+  if (fr)
+    delete fr; // ok
+  delete call;
+  return success;
 }
 
 Coupler::~Coupler ()
 {
   reader.reset();
-  delete &priv;
 }
 
 /* === Dispatchers === */
@@ -366,6 +315,37 @@ DispatcherRegistry::find_dispatcher (const TypeHash &type_hash)
   DispatchFunc dispatcher_func = dispatcher_type_map[type_hash];
   pthread_mutex_unlock (&dispatcher_type_mutex);
   return dispatcher_func;
+}
+
+FieldBuffer*
+DispatcherRegistry::dispatch_call (const FieldBuffer &fbcall,
+                                   Coupler           &coupler)
+{
+  const TypeHash thash = fbcall.first_type_hash();
+  const int64 call_id = thash.id (0);
+  const bool twoway = is_callid_twoway (call_id);
+  DispatchFunc dispatcher_func = DispatcherRegistry::find_dispatcher (thash);
+  if (PLIC_UNLIKELY (!dispatcher_func))
+    return FieldBuffer::new_error ("unknown method hash: " + thash.to_string(), "PLIC");
+  FieldBuffer *fr = dispatcher_func (coupler);
+  if (!fr)
+    {
+      if (twoway)
+        return FieldBuffer::new_error (string_printf ("missing return from 0x%016llx", call_id), "PLIC");
+      else
+        return NULL; // FieldBuffer::new_ok();
+    }
+  const int64 ret_id = fr->first_id();
+  if (is_callid_error (ret_id) ||
+      (twoway && is_callid_return (ret_id)))
+    return fr;
+  if (!twoway && is_callid_ok (ret_id))
+    {
+      delete fr;
+      return NULL; // FieldBuffer::new_ok();
+    }
+  delete fr; // bogus
+  return FieldBuffer::new_error (string_printf ("bogus return from 0x%016llx: 0x%016llx", call_id, ret_id), "PLIC");
 }
 
 /* === FieldBuffer === */
@@ -423,6 +403,14 @@ FieldBuffer::new_return()
 {
   FieldBuffer *fr = FieldBuffer::_new (2);
   fr->add_int64 (Plic::callid_return); // proc_id
+  return fr;
+}
+
+FieldBuffer*
+FieldBuffer::new_ok()
+{
+  FieldBuffer *fr = FieldBuffer::_new (2);
+  fr->add_int64 (Plic::callid_ok); // proc_id
   return fr;
 }
 

@@ -19,6 +19,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>               // auto_ptr
 #include <stdint.h>             // uint64_t
 
 namespace Plic {
@@ -57,10 +58,12 @@ typedef uint64_t        uint64;
 static const uint64 callid_return = 0x0ca0000000000000ULL;
 static const uint64 callid_oneway = 0x0ca1000000000000ULL;
 static const uint64 callid_twoway = 0x0ca2000000000000ULL;
+static const uint64 callid_ok     = 0x0cad000000000000ULL;
 static const uint64 callid_error  = 0x0cae000000000000ULL;
 inline bool is_callid_return (const uint64 id) { return id >> 32 == callid_return >> 32; }
 inline bool is_callid_oneway (const uint64 id) { return id >> 32 == callid_oneway >> 32; }
 inline bool is_callid_twoway (const uint64 id) { return id >> 32 == callid_twoway >> 32; }
+inline bool is_callid_ok     (const uint64 id) { return id >> 32 == callid_ok     >> 32; }
 inline bool is_callid_error  (const uint64 id) { return id >> 32 == callid_error  >> 32; }
 
 /* === Forward Declarations === */
@@ -71,6 +74,31 @@ class FieldBuffer;
 class FieldBufferReader;
 typedef FieldBuffer* (*DispatchFunc) (Coupler&);
 
+/* === Callback Wrapper === */
+template<class R>
+struct Callback0 {
+  bool                   callable   () { return p.get() != NULL; }
+  R                      operator() () { return (*p) (); }
+  template<class F> void set (F f) { p.reset (new CallFun<F> (f)); }
+  template<class C> void set (C &c, R (C::*m) ()) { p.reset (new CallMem<C> (c, m));}
+private:
+  struct CallBase {
+    virtual  ~CallBase   () {}
+    virtual R operator() () = 0;
+  };
+  template<class C> struct CallMem : CallBase {
+    explicit  CallMem    (C &o, R (C::*p) ()) : c (o), m (p) {}
+    virtual R operator() () { return (c.*m) (); }
+  private: C &c; R (C::*m) ();
+  };
+  template<class F> struct CallFun : CallBase {
+    explicit  CallFun    (F p) : f (p) {}
+    virtual R operator() () { return f (); }
+  private: F f;
+  };
+  std::auto_ptr<CallBase> p;
+};
+
 /* === TypeHash === */
 struct TypeHash {
   static const uint hash_size = 4;
@@ -78,6 +106,7 @@ struct TypeHash {
   inline bool       operator< (const TypeHash &rhs) const;
   inline            TypeHash (const uint64 qw[hash_size]);
   inline            TypeHash (uint64 qwa, uint64 qwb, uint64 qwc, uint64 qwd);
+  inline uint64     id (uint n) const { return n < hash_size ? qwords[n] : 0; }
   String            to_string() const;
 };
 
@@ -122,6 +151,8 @@ public:
   inline                DispatcherRegistry  (T (&)[S]);
   static void           register_dispatcher (const DispatcherEntry &dentry);
   static DispatchFunc   find_dispatcher     (const TypeHash        &type_hash);
+  static FieldBuffer*   dispatch_call       (const FieldBuffer     &fbcall,
+                                             Coupler               &coupler);
 };
 
 /* === FieldBuffer === */
@@ -175,6 +206,7 @@ public:
   static FieldBuffer* _new (uint _ntypes); // Heap allocated FieldBuffer
   static FieldBuffer* new_error (const String &msg, const String &domain = "");
   static FieldBuffer* new_return();
+  static FieldBuffer* new_ok();
 };
 
 class FieldBuffer8 : public FieldBuffer { // Stack contained buffer for up to 8 fields
@@ -218,26 +250,41 @@ public:
   inline const FieldBuffer* get     () { return m_fb; }
 };
 
+/* === Channel === */
+class Channel {
+  class Priv; Priv &priv;
+  Callback0<void>   wakeup0;
+  FieldBuffer*      fetch_msg   (bool advance, bool block = false);
+public:
+  explicit      Channel         ();
+  bool          push_msg        (FieldBuffer *fbmsg);           // takes fbmsg ownership
+  bool          has_msg         () { return fetch_msg (false); }
+  FieldBuffer*  pop_msg         () { return fetch_msg (true); } // passes fbmsg ownership
+  void          wait_msg        () { fetch_msg (false, true); }
+  virtual      ~Channel         ();
+  void          set_wakeup      (void (*f) ()) { wakeup0.set (f); }
+  template<class C>
+  void          set_wakeup      (C &c, void (C::*m) ()) { wakeup0.set (c, m); }
+};
+
 /* === Coupler === */
 class Coupler {
   Coupler&              operator=       (const Coupler&); // not assignable
   /*Copy*/              Coupler         (const Coupler&); // not copyable
-  class Priv; Priv     &priv;
-  FieldBuffer*          pop_call        (bool advance = true);
-  FieldBuffer*          dispatch_call   (const FieldBuffer &fbcall);
+  Channel               callc, resultc;
 public:
   explicit              Coupler         ();
   virtual              ~Coupler         ();
   // client API
   virtual FieldBuffer*  call_remote     (FieldBuffer *fbcall) = 0;
-  bool                  send_call       (FieldBuffer *fbcall); // deletes fbcall
-  FieldBuffer*          receive_result  (void);
+  bool                  send_call       (FieldBuffer *fbcall) { return callc.push_msg (fbcall); }
+  FieldBuffer*          receive_result  (void) { resultc.wait_msg(); return resultc.pop_msg(); }
   // server loop integration
-  bool                  check_dispatch  () { return pop_call (false) != NULL; }
+  bool                  check_dispatch  () { return callc.has_msg(); }
   bool                  dispatch        ();
   // API for DispatchFunc
   FieldBufferReader     reader;
-  void                  push_return     (FieldBuffer *rret);
+  void                  push_return     (FieldBuffer *rret) { resultc.push_msg (rret); }
   // SmartHandle API
   inline uint64         pop_rpc_handle  (FieldBufferReader &fbr) { return fbr.pop_object(); }
 };
