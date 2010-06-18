@@ -112,19 +112,29 @@ class TypeInfo (BaseDecl):
       self.methods = []         # holds: TypeInfo
       self.signals = []         # holds: TypeInfo
     self.auxdata = {}
+  def string_digest (self):
+    typelist = [] # owner, self, rtype, arg*type, ...
+    if self.__dict__.get ('ownertype', None): typelist += [self.ownertype]
+    typelist += [self]
+    if self.__dict__.get ('rtype', None): typelist += [self.rtype]
+    if self.__dict__.get ('args', []): typelist += [a[1] for a in self.args]
+    namelist = [type.full_name() for type in typelist] # MethodObject method_name float int string
+    digest = '_'.join (namelist)
+    return digest
+  def ident_digest (self):
+    digest = self.string_digest()
+    digest = re.sub ('[^a-zA-Z0-9]', '_', digest)
+    return digest
   def sha224digest (self):
-    assert self.storage == FUNC
-    idt = [self.rtype, self.ownertype, self] + [a[1] for a in self.args] # rtype, owner, self, arg0type, ...
-    idn = [type.full_name() for type in idt] # float MethodObject method_name int string
-    hashstr = ','.join (idn) # float,MethodObject,method_name,int,string
+    digest = self.string_digest()
     sha224 = hashlib.sha224()
-    sha224.update (hashstr)
+    sha224.update (digest)
     return sha224.digest()
   def type_hash (self):
     if self.rtype.storage == VOID:
-      l = '\x0c\xa1\x00\x00'
+      l = '\x10\x00\x00\x00'
     else:
-      l = '\x0c\xa2\x00\x00'
+      l = '\x20\x00\x00\x00'
     bytes = l + self.sha224digest()
     t = tuple ([ord (c) for c in bytes])
     return t

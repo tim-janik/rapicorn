@@ -189,10 +189,7 @@ class Generator:
       s += '): # one way\n'
     else:
       s += '): # %s\n' % m.rtype.name
-    mth = m.type_hash()
-    mid = ('%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x' +
-           '%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x') % mth
-    s += '  ___ret = _PLIC_%s (' % mid
+    s += '  ___ret = _PLIC_%s (' % m.ident_digest()
     s += ', '.join (vals)
     s += ')\n'
     if m.rtype.storage == Decls.INTERFACE:

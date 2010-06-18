@@ -269,13 +269,13 @@ Coupler::dispatch ()
   reader.reset();
   bool success = true;
   const int64 ret_id = fr ? fr->first_id() : 0;
-  if (is_callid_return (ret_id))
+  if (is_msgid_result (ret_id))
     {
       push_result (fr);
       sched_yield(); // allow fast return value handling on single core
       fr = NULL;
     }
-  else if (is_callid_error (ret_id))
+  else if (is_msgid_error (ret_id))
     {
       FieldBufferReader frr (*fr);
       frr.pop_int64(); // ret_id
@@ -283,7 +283,7 @@ Coupler::dispatch ()
                 call->first_id(), frr.pop_string().c_str());
       success = false;
     }
-  // callid_ok
+  // msgid_ok
   if (fr)
     delete fr; // ok
   delete call;
@@ -323,7 +323,7 @@ DispatcherRegistry::dispatch_call (const FieldBuffer &fbcall,
 {
   const TypeHash thash = fbcall.first_type_hash();
   const int64 call_id = thash.id (0);
-  const bool twoway = is_callid_twoway (call_id);
+  const bool twoway = is_msgid_twoway (call_id);
   DispatchFunc dispatcher_func = DispatcherRegistry::find_dispatcher (thash);
   if (PLIC_UNLIKELY (!dispatcher_func))
     return FieldBuffer::new_error ("unknown method hash: " + thash.to_string(), "PLIC");
@@ -336,10 +336,10 @@ DispatcherRegistry::dispatch_call (const FieldBuffer &fbcall,
         return NULL; // FieldBuffer::new_ok();
     }
   const int64 ret_id = fr->first_id();
-  if (is_callid_error (ret_id) ||
-      (twoway && is_callid_return (ret_id)))
+  if (is_msgid_error (ret_id) ||
+      (twoway && is_msgid_result (ret_id)))
     return fr;
-  if (!twoway && is_callid_ok (ret_id))
+  if (!twoway && is_msgid_ok (ret_id))
     {
       delete fr;
       return NULL; // FieldBuffer::new_ok();
@@ -392,17 +392,17 @@ FieldBuffer::new_error (const String &msg,
                         const String &domain)
 {
   FieldBuffer *fr = FieldBuffer::_new (3);
-  fr->add_int64 (Plic::callid_error); // proc_id
+  fr->add_int64 (Plic::msgid_error); // proc_id
   fr->add_string (msg);
   fr->add_string (domain);
   return fr;
 }
 
 FieldBuffer*
-FieldBuffer::new_return()
+FieldBuffer::new_result()
 {
   FieldBuffer *fr = FieldBuffer::_new (2);
-  fr->add_int64 (Plic::callid_return); // proc_id
+  fr->add_int64 (Plic::msgid_result); // proc_id
   return fr;
 }
 
@@ -410,7 +410,7 @@ FieldBuffer*
 FieldBuffer::new_ok()
 {
   FieldBuffer *fr = FieldBuffer::_new (2);
-  fr->add_int64 (Plic::callid_ok); // proc_id
+  fr->add_int64 (Plic::msgid_ok); // proc_id
   return fr;
 }
 

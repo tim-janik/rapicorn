@@ -54,7 +54,7 @@ typedef Plic::FieldBufferReader FieldBufferReader;
 static struct _DummyCoupler : public Coupler {
   virtual FieldBuffer* call_remote (FieldBuffer *fbcall)
   {
-    bool twoway = Plic::is_callid_twoway (fbcall->first_id());
+    bool twoway = Plic::is_msgid_twoway (fbcall->first_id());
     if (push_call (fbcall)) // deletes fbcall
       ; // threaded dispatcher needs CPU
     // wakeup dispatcher
@@ -404,7 +404,7 @@ class Generator:
     # store return value
     if hasret:
       cplrb = (cplfbr[0], 'rb')
-      s += '  FieldBuffer &rb  = *FieldBuffer::new_return();\n'
+      s += '  FieldBuffer &rb  = *FieldBuffer::new_result();\n'
       s += self.generate_proto_add_args (cplrb, class_info, '', [('rval', mtype.rtype)], '')
       s += '  return &rb;\n'
     else:

@@ -37,7 +37,7 @@ base_code = """
 #define ERRORifpy()     if (PyErr_Occurred()) goto error
 #define ERRORpy(msg)    do { PyErr_Format (PyExc_RuntimeError, msg); goto error; } while (0)
 #define ERRORifnotret(fr) do { if (PLIC_UNLIKELY (!fr) || \\
-                                   PLIC_UNLIKELY (!Plic::is_callid_return (fr->first_id()))) { \\
+                                   PLIC_UNLIKELY (!Plic::is_msgid_result (fr->first_id()))) { \\
                                  PyErr_Format_from_PLIC_error (fr); \\
                                  goto error; } } while (0)
 
@@ -46,7 +46,7 @@ PyErr_Format_from_PLIC_error (const Plic::FieldBuffer *fr)
 {
   if (!fr)
     return PyErr_Format (PyExc_RuntimeError, "PLIC: missing return value");
-  if (Plic::is_callid_error (fr->first_id()))
+  if (Plic::is_msgid_error (fr->first_id()))
     {
       Plic::FieldBufferReader frr (*fr);
       frr.skip(); // proc_id
@@ -265,11 +265,8 @@ class Generator:
             '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL') % d
   def generate_rpc_call_wrapper (self, class_info, mtype, mdefs):
     s = ''
-    mth = mtype.type_hash()
-    mname = ('%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x' +
-             '%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x') % mth
     mdefs += [ '{ "_PLIC_%s", plic_pycall_%s_%s, METH_VARARGS, "pyRapicorn glue call" }' %
-               (mname, class_info.name, mtype.name) ]
+               (mtype.ident_digest(), class_info.name, mtype.name) ]
     hasret = mtype.rtype.storage != Decls.VOID
     s += 'static PyObject*\n'
     s += 'plic_pycall_%s_%s (PyObject *pyself, PyObject *pyargs)\n' % (class_info.name, mtype.name)

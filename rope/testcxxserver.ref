@@ -26,7 +26,7 @@ typedef Plic::FieldBufferReader FieldBufferReader;
 static struct _DummyCoupler : public Coupler {
   virtual FieldBuffer* call_remote (FieldBuffer *fbcall)
   {
-    bool twoway = Plic::is_callid_twoway (fbcall->first_id());
+    bool twoway = Plic::is_msgid_twoway (fbcall->first_id());
     if (push_call (fbcall)) // deletes fbcall
       ; // threaded dispatcher needs CPU
     // wakeup dispatcher
@@ -1003,7 +1003,7 @@ _dispatch__UIWidgetArea_simple_method (Coupler &cpl)
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   double rval = self->simple_method ();
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   rb.add_double (rval);
   return &rb;
 }
@@ -1018,7 +1018,7 @@ _dispatch__UIWidgetArea_single_arg (Coupler &cpl)
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double rval = self->single_arg (arg_n);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   rb.add_double (rval);
   return &rb;
 }
@@ -1033,7 +1033,7 @@ _dispatch__UIWidgetArea_single_arg2 (Coupler &cpl)
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double rval = self->single_arg2 (arg_n);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   rb.add_double (rval);
   return &rb;
 }
@@ -1049,7 +1049,7 @@ _dispatch__UIWidgetArea_two_args (Coupler &cpl)
   int arg_n = fbr.pop_int64();
   double arg_r = fbr.pop_double();
   double rval = self->two_args (arg_n, arg_r);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   rb.add_double (rval);
   return &rb;
 }
@@ -1065,7 +1065,7 @@ _dispatch__UIWidgetArea_two_args2 (Coupler &cpl)
   int arg_n = fbr.pop_int64();
   double arg_r = fbr.pop_double();
   double rval = self->two_args2 (arg_n, arg_r);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   rb.add_double (rval);
   return &rb;
 }
@@ -1084,7 +1084,7 @@ _dispatch__UIWidgetArea_multi_args (Coupler &cpl)
   std::string arg_s = fbr.pop_string();
   double arg_y = fbr.pop_double();
   double rval = self->multi_args (arg_n, arg_r, arg_i, arg_s, arg_y);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   rb.add_double (rval);
   return &rb;
 }
@@ -1100,7 +1100,7 @@ _dispatch__UIWidgetArea_self_method (Coupler &cpl)
   I_UIWidgetArea_Iface *arg_ba1 = UIWidgetArea (cpl, fbr).operator->();
   I_UIWidgetArea_Iface *arg_ba2 = UIWidgetArea (cpl, fbr).operator->();
   double rval = self->self_method (*arg_ba1, *arg_ba2);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   rb.add_double (rval);
   return &rb;
 }
@@ -1126,7 +1126,7 @@ _dispatch__UIWidgetArea_on_click2out (Coupler &cpl)
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   std::string rval = self->on_click2out ();
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   rb.add_string (rval);
   return &rb;
 }
@@ -1186,7 +1186,7 @@ _dispatch__MethodTestInterface_method_with_bools (Coupler &cpl)
   bool arg_input = fbr.pop_int64();
   bool arg_optval = fbr.pop_int64();
   bool rval = self->method_with_bools (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   rb.add_int64 (rval);
   return &rb;
 }
@@ -1202,7 +1202,7 @@ _dispatch__MethodTestInterface_method_with_ints (Coupler &cpl)
   int arg_input = fbr.pop_int64();
   int arg_optval = fbr.pop_int64();
   int rval = self->method_with_ints (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   rb.add_int64 (rval);
   return &rb;
 }
@@ -1218,7 +1218,7 @@ _dispatch__MethodTestInterface_method_with_floats (Coupler &cpl)
   double arg_input = fbr.pop_double();
   double arg_optval = fbr.pop_double();
   double rval = self->method_with_floats (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   rb.add_double (rval);
   return &rb;
 }
@@ -1234,7 +1234,7 @@ _dispatch__MethodTestInterface_method_with_string (Coupler &cpl)
   std::string arg_input = fbr.pop_string();
   std::string arg_optval = fbr.pop_string();
   std::string rval = self->method_with_string (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   rb.add_string (rval);
   return &rb;
 }
@@ -1250,7 +1250,7 @@ _dispatch__MethodTestInterface_method_with_enum (Coupler &cpl)
   QuickEnum arg_input = QuickEnum (fbr.pop_evalue());
   QuickEnum arg_optval = QuickEnum (fbr.pop_evalue());
   QuickEnum rval = self->method_with_enum (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   rb.add_evalue (rval);
   return &rb;
 }
@@ -1268,7 +1268,7 @@ _dispatch__MethodTestInterface_method_with_record (Coupler &cpl)
   QuickRecord arg_optval;
   if (!arg_optval.proto_pop (cpl, fbr)) return false;
   QuickRecord rval = self->method_with_record (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   if (!rval.proto_add (cpl, rb)) return false;
   return &rb;
 }
@@ -1286,7 +1286,7 @@ _dispatch__MethodTestInterface_method_with_sequence (Coupler &cpl)
   QuickSequence arg_optval;
   if (!arg_optval.proto_pop (cpl, fbr)) return false;
   QuickSequence rval = self->method_with_sequence (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   if (!rval.proto_add (cpl, rb)) return false;
   return &rb;
 }
@@ -1302,7 +1302,7 @@ _dispatch__MethodTestInterface_method_with_interface (Coupler &cpl)
   I_GrandChild_Iface *arg_input = GrandChild (cpl, fbr).operator->();
   I_GrandChild_Iface *arg_optval = GrandChild (cpl, fbr).operator->();
   I_GrandChild_Iface *rval = self->method_with_interface (*arg_input, *arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   rb.add_object (GrandChild (rval)._rpc_id());
   return &rb;
 }
@@ -1318,7 +1318,7 @@ _dispatch__MethodTestInterface_method_with_quickiface (Coupler &cpl)
   I_QuickIface_Iface *arg_input = QuickIface (cpl, fbr).operator->();
   I_QuickIface_Iface *arg_iface0 = QuickIface (cpl, fbr).operator->();
   I_QuickIface_Iface *rval = self->method_with_quickiface (*arg_input, *arg_iface0);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   rb.add_object (QuickIface (rval)._rpc_id());
   return &rb;
 }
@@ -1338,35 +1338,35 @@ _dispatch__PureMethods_pure_method (Coupler &cpl)
   PLIC_CHECK (self, "self must be non-NULL");
   double arg_f = fbr.pop_double();
   int rval = self->pure_method (arg_f);
-  FieldBuffer &rb  = *FieldBuffer::new_return();
+  FieldBuffer &rb  = *FieldBuffer::new_result();
   rb.add_int64 (rval);
   return &rb;
 }
 
 static const Plic::DispatcherEntry _dispatcher_entries[] = {
-  { { 0x0ca10000511e8482ULL, 0xd7fca76824ef1339ULL, 0x9c10110ffb6e89b8ULL, 0x7aee6371c6eb9333ULL }, MandatoryNamespace::_dispatch__FirstInterface_void_func, },
-  { { 0x0ca200003a5e02edULL, 0x169b0d3b86dc10cdULL, 0xc07a85a6dfe104adULL, 0xe8554a515ffc84b1ULL }, InterfaceTests::_dispatch__UIWidgetArea_simple_method, },
-  { { 0x0ca20000f96d1b2eULL, 0x54efdddfc11d9638ULL, 0xb5d0abcc8a0f16c8ULL, 0x957078d12b4b2fc0ULL }, InterfaceTests::_dispatch__UIWidgetArea_single_arg, },
-  { { 0x0ca20000afefb8c4ULL, 0xb9d9952905d41bfdULL, 0xa2c44e813b1a8c4dULL, 0x8e440d5ecaeecec8ULL }, InterfaceTests::_dispatch__UIWidgetArea_single_arg2, },
-  { { 0x0ca20000d1f5823fULL, 0x8538f2ffa1581dd0ULL, 0xc9e7d9d486336a46ULL, 0xc941f5292b4dcdfcULL }, InterfaceTests::_dispatch__UIWidgetArea_two_args, },
-  { { 0x0ca20000255fafa4ULL, 0x429116798ce5813eULL, 0x5eacea949f7cfe8eULL, 0x1f41fe0ca4311729ULL }, InterfaceTests::_dispatch__UIWidgetArea_two_args2, },
-  { { 0x0ca200005e6e8ea5ULL, 0x6f4fdd2d1d4b3bb3ULL, 0xbe7de84f81bcc353ULL, 0x91710698705b209aULL }, InterfaceTests::_dispatch__UIWidgetArea_multi_args, },
-  { { 0x0ca20000abd1f74aULL, 0x3f2d1aefb6d12a66ULL, 0x100e83849c144758ULL, 0x79488ee1596dab87ULL }, InterfaceTests::_dispatch__UIWidgetArea_self_method, },
-  { { 0x0ca1000027be4746ULL, 0xde7d9d84a2281ae4ULL, 0xdccb312da0062c83ULL, 0x62d76268f178e709ULL }, InterfaceTests::_dispatch__UIWidgetArea_void_method, },
-  { { 0x0ca20000a3ce0a03ULL, 0xaaaf9478a83b0f7cULL, 0x2664b179bda29105ULL, 0xb1f6ad88c5a0c98aULL }, InterfaceTests::_dispatch__UIWidgetArea_on_click2out, },
-  { { 0x0ca10000e511187cULL, 0x9ea59f646fca1b62ULL, 0x6180b0bf59637495ULL, 0xa99463469b646df9ULL }, InterfaceTests::_dispatch__UIWidgetArea_on_click2in, },
-  { { 0x0ca100007178342eULL, 0x2c84375ab4c874afULL, 0xb5578ad147fe3033ULL, 0x392cdc1a7eebbb31ULL }, InterfaceTests::_dispatch__QuickIface_simple_function, },
-  { { 0x0ca10000f91c872eULL, 0xa90ceaec3b16df51ULL, 0x887b366247a3a612ULL, 0x6f4b7fab28f1ab12ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_void, },
-  { { 0x0ca200008ffdba44ULL, 0xc998c0ffa6b486b1ULL, 0x9b4ea9f5a23d9c6dULL, 0xa7746e46026b843eULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_bools, },
-  { { 0x0ca20000cec55716ULL, 0x747c3602672780d1ULL, 0x1852bd2e467d1e91ULL, 0x61085ceb1b2bf816ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_ints, },
-  { { 0x0ca200006ede6737ULL, 0xc9ee1722db2fc583ULL, 0x4e5788c84a81be26ULL, 0x8c32f39e18ad9ab6ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_floats, },
-  { { 0x0ca20000d07cd262ULL, 0xfc81ef2c220a8d45ULL, 0x59d0faae36ce56eaULL, 0x0990ad1d3c49827dULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_string, },
-  { { 0x0ca20000d1a935c9ULL, 0xc1bdc5f48521c942ULL, 0xebcb3ede7a3fcbdcULL, 0xba634e15fbfde688ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_enum, },
-  { { 0x0ca2000093f684d6ULL, 0x345260c4f912f67fULL, 0xa8f6c2af19dc877eULL, 0x176ffee81397fa2eULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_record, },
-  { { 0x0ca20000f8d6703fULL, 0x9af82486dc8ce5aaULL, 0x3a6095e0829ba185ULL, 0x74e0fc82dbfa4b77ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_sequence, },
-  { { 0x0ca20000ed320c14ULL, 0x672f050fc4be01b7ULL, 0x239a6c63e8d3bb3eULL, 0x106046b369f7e804ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_interface, },
-  { { 0x0ca200003fcf3b3dULL, 0x9eeea2d03769389cULL, 0xb168e0c6140b94e5ULL, 0x5b03b11a28cd7427ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_quickiface, },
-  { { 0x0ca20000ac480384ULL, 0xd1df259f1d53b082ULL, 0x995d5e5b4bb2fcb4ULL, 0x83f6a92ee477fcd6ULL }, RapicornPlicTest::_dispatch__PureMethods_pure_method, },
+  { { 0x100000001dfd7256ULL, 0xdec25cd632ee83caULL, 0x06b4549d6fedf832ULL, 0x9a1e54caedf1db9bULL }, MandatoryNamespace::_dispatch__FirstInterface_void_func, },
+  { { 0x20000000fd8072dfULL, 0x591f7cce6e74034aULL, 0x419df82c635c78d1ULL, 0x1e2fc6cf88d761faULL }, InterfaceTests::_dispatch__UIWidgetArea_simple_method, },
+  { { 0x2000000075ce4c8bULL, 0x1a40a9c8bd145a39ULL, 0x37b83f96f1d3168bULL, 0x3f57c461185c3752ULL }, InterfaceTests::_dispatch__UIWidgetArea_single_arg, },
+  { { 0x20000000179c202fULL, 0xa554850da029f547ULL, 0xe2591a43b7c79a61ULL, 0xe19a6853f11b1b99ULL }, InterfaceTests::_dispatch__UIWidgetArea_single_arg2, },
+  { { 0x200000006a210506ULL, 0xa76bb7cd90d84838ULL, 0x8000823cfb905b8cULL, 0x39826abcf9caba00ULL }, InterfaceTests::_dispatch__UIWidgetArea_two_args, },
+  { { 0x20000000ac125ff1ULL, 0xac6be3d45e25ada6ULL, 0x040efc8ab508b1d3ULL, 0x15e48df9e26c0caaULL }, InterfaceTests::_dispatch__UIWidgetArea_two_args2, },
+  { { 0x200000000361838dULL, 0xc298afde820561a5ULL, 0x8fe8c83788c4bb38ULL, 0xb3179ae3d510e7b2ULL }, InterfaceTests::_dispatch__UIWidgetArea_multi_args, },
+  { { 0x20000000b9d64621ULL, 0x3a96692d3e1ef7dbULL, 0xdced671b586f7aa7ULL, 0x1d3870f7ed0285e5ULL }, InterfaceTests::_dispatch__UIWidgetArea_self_method, },
+  { { 0x100000000ff38422ULL, 0x440e8e84942acf8eULL, 0x0c4945e5794d8356ULL, 0x2e2e61471f31bfbfULL }, InterfaceTests::_dispatch__UIWidgetArea_void_method, },
+  { { 0x200000004b649644ULL, 0x8a9b2140ad7fc83dULL, 0x10b67ed382387b14ULL, 0xe7b6cc0714a17f30ULL }, InterfaceTests::_dispatch__UIWidgetArea_on_click2out, },
+  { { 0x10000000f671167cULL, 0xdfc42ce42beb58f7ULL, 0x15afc969aae521d6ULL, 0xadbec8ab9522f6f8ULL }, InterfaceTests::_dispatch__UIWidgetArea_on_click2in, },
+  { { 0x10000000be855008ULL, 0x6bf2269ff6939544ULL, 0x6a0846e9f5a62da8ULL, 0x59c8e2a4e4629e80ULL }, InterfaceTests::_dispatch__QuickIface_simple_function, },
+  { { 0x10000000a426153aULL, 0x0a2f5758267a2651ULL, 0xd9bff16cf6755833ULL, 0x8959ddaf9e5b8a44ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_void, },
+  { { 0x200000003917295eULL, 0x76cb59d18d695319ULL, 0x0fe6acdaa38d48dfULL, 0xa26ca0854c18e565ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_bools, },
+  { { 0x2000000015f688dcULL, 0x4db9c06f4357aa4eULL, 0x902ee7647790de7cULL, 0x18aa217be2c83cbaULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_ints, },
+  { { 0x20000000bfc2d47bULL, 0x70b13d1cdf2c9488ULL, 0x77c2ea3ad44c2625ULL, 0xd6093e05e70ea643ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_floats, },
+  { { 0x200000002732b2feULL, 0x6dfd49db44b97641ULL, 0x010dcacac6eb8ed7ULL, 0xa79383e035fc64e1ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_string, },
+  { { 0x200000003f676d86ULL, 0x903cbdda7f9bf8e6ULL, 0xb56b87771cbd4b69ULL, 0x5723ee9d219ddda5ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_enum, },
+  { { 0x2000000004a0b014ULL, 0x7eef09335a6cd6afULL, 0xd80237b6e1df12f6ULL, 0x70618be70ed6e858ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_record, },
+  { { 0x20000000e92eb1f1ULL, 0xbc6d5e758278964aULL, 0xe88f958f88ca346cULL, 0xf29e446630c57f23ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_sequence, },
+  { { 0x2000000001640ae0ULL, 0xf5403244c684c076ULL, 0x208c721dda088467ULL, 0x425f3425b0dcfad4ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_interface, },
+  { { 0x2000000082dc142eULL, 0x7d16cadebfca9b39ULL, 0x168d05eb3cf56adbULL, 0x31e28c41cf8bb4f9ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_quickiface, },
+  { { 0x20000000e96382b8ULL, 0x8c16fe069c1d6b1eULL, 0x002e82b90c7db308ULL, 0x9c8a9e5a95b6ea99ULL }, RapicornPlicTest::_dispatch__PureMethods_pure_method, },
 };
 static Plic::DispatcherRegistry _dispatcher_registry (_dispatcher_entries);
 

@@ -55,16 +55,24 @@ typedef int64_t         int64;
 typedef uint64_t        uint64;
 
 /* === Constants === */
-static const uint64 callid_return = 0x0ca0000000000000ULL;
-static const uint64 callid_oneway = 0x0ca1000000000000ULL;
-static const uint64 callid_twoway = 0x0ca2000000000000ULL;
-static const uint64 callid_ok     = 0x0cad000000000000ULL;
-static const uint64 callid_error  = 0x0cae000000000000ULL;
-inline bool is_callid_return (const uint64 id) { return id >> 32 == callid_return >> 32; }
-inline bool is_callid_oneway (const uint64 id) { return id >> 32 == callid_oneway >> 32; }
-inline bool is_callid_twoway (const uint64 id) { return id >> 32 == callid_twoway >> 32; }
-inline bool is_callid_ok     (const uint64 id) { return id >> 32 == callid_ok     >> 32; }
-inline bool is_callid_error  (const uint64 id) { return id >> 32 == callid_error  >> 32; }
+static const uint64 msgid_ok     = 0x0000000000000000ULL;
+static const uint64 msgid_oneway = 0x1000000000000000ULL;
+static const uint64 msgid_twoway = 0x2000000000000000ULL;
+static const uint64 msgid_result = 0x3000000000000000ULL;
+static const uint64 msgid_con    = 0x4000000000000000ULL;
+static const uint64 msgid_event  = 0x5000000000000000ULL;
+static const uint64 msgid_discon = 0x6000000000000000ULL;
+static const uint64 msgid_error  = 0x7000000000000000ULL;
+static const uint64 msgid_conid  = 0x8000000000000000ULL;
+inline bool is_msgid_ok     (const uint64 id) { return id >> 32 == msgid_ok     >> 32; }
+inline bool is_msgid_oneway (const uint64 id) { return id >> 56 == msgid_oneway >> 56; }
+inline bool is_msgid_twoway (const uint64 id) { return id >> 56 == msgid_twoway >> 56; }
+inline bool is_msgid_result (const uint64 id) { return id >> 56 == msgid_result >> 56; }
+inline bool is_msgid_con    (const uint64 id) { return id >> 56 == msgid_con    >> 56; }
+inline bool is_msgid_event  (const uint64 id) { return id >> 56 == msgid_event  >> 56; }
+inline bool is_msgid_discon (const uint64 id) { return id >> 56 == msgid_discon >> 56; }
+inline bool is_msgid_error  (const uint64 id) { return id >> 56 == msgid_error  >> 56; }
+inline bool is_msgid_conid  (const uint64 id) { return id >> 56 == msgid_conid  >> 56; }
 
 /* === Forward Declarations === */
 class SimpleServer;
@@ -205,7 +213,7 @@ public:
   String              first_id_str() const;
   static FieldBuffer* _new (uint _ntypes); // Heap allocated FieldBuffer
   static FieldBuffer* new_error (const String &msg, const String &domain = "");
-  static FieldBuffer* new_return();
+  static FieldBuffer* new_result();
   static FieldBuffer* new_ok();
 };
 
