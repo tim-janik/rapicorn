@@ -20,8 +20,10 @@
 namespace {
 using namespace Rapicorn;
 
+static uint ExtraType_deletions = 0;
+
 struct ExtraType {
-  virtual            ~ExtraType  () {}
+  virtual            ~ExtraType  () { ExtraType_deletions++; }
   virtual const char* message    () { return "ExtraType::message()"; }
   bool                operator== (const ExtraType &other) const { return false; }
 };
@@ -220,7 +222,19 @@ struct Connection3 {
   }
 };
 
-static uint assertion_counter = 0;
+//bool
+//operator== (const std::auto_ptr<ExtraType> &a, const std::auto_ptr<ExtraType> &b)
+//{ return a.get() == b.get(); } // needed for signal data
+
+static uint emission_counter = 0;
+
+void
+shared_ptr_callback (int i, String s, float f, shared_ptr<ExtraType> data)
+{
+  emission_counter++;
+  TPRINT ("  callback: %s (%d, %s, %f, %s);\n", __func__, i, s.c_str(), f, data.message());
+}
+
 struct TemporaryObject : public virtual Deletable {
   String msg, msg2;
   TemporaryObject() :
@@ -228,25 +242,36 @@ struct TemporaryObject : public virtual Deletable {
   {}
   String string_callback (int i, String s, float f)
   {
-    assertion_counter++;
+    emission_counter++;
     TPRINT ("  callback: %s (%d, %s, %f); [%s]\n", __func__, i, s.c_str(), f, msg.c_str());
+    TASSERT (msg2 == "Blub");
     return __func__;
   }
   String string_emitter_callback (Emitter3 &emitter, int i, String s, float f)
   {
-    assertion_counter++;
+    emission_counter++;
     TPRINT ("  callback: %s (%d, %s, %f); [%s]\n", __func__, i, s.c_str(), f, msg.c_str());
+    TASSERT (msg2 == "Blub");
     return __func__;
   }
   void void_callback (int i, String s, float f)
   {
-    assertion_counter++;
+    emission_counter++;
     TPRINT ("  callback: %s (%d, %s, %f); [%s]\n", __func__, i, s.c_str(), f, msg2.c_str());
+    TASSERT (msg2 == "Blub");
+  }
+  void shared_ptr_method (int i, String s, float f, shared_ptr<ExtraType> data)
+  {
+    emission_counter++;
+    TPRINT ("  callback: %s (%d, %s, %f, %s); [%s]\n", __func__, i, s.c_str(), f,
+            data.message(), msg2.c_str());
+    TASSERT (msg2 == "Blub");
   }
   void void_emitter_callback (Emitter3 &emitter, int i, String s, float f)
   {
-    assertion_counter++;
+    emission_counter++;
     TPRINT ("  callback: %s (%d, %s, %f); [%s]\n", __func__, i, s.c_str(), f, msg2.c_str());
+    TASSERT (msg2 == "Blub");
   }
   void never_ever_call_me (int i, String s, float f)
   {
@@ -256,7 +281,10 @@ struct TemporaryObject : public virtual Deletable {
   test_temporary_object (Emitter3 &e3)
   {
     TSTART ("Signals, temporary object");
-    uint ac = assertion_counter;
+    uint ac = emission_counter;
+    uint edata_deletions;
+
+    // Signal destructor tests
     {
       TemporaryObject tobj;
       e3.sig_mixed += slot (tobj, &TemporaryObject::string_emitter_callback);
@@ -265,8 +293,7 @@ struct TemporaryObject : public virtual Deletable {
       {
         TemporaryObject tmp2;
         e3.sig_void_mixed += slot (tmp2, &TemporaryObject::never_ever_call_me);
-        /* auto-disconnected at end of scope */
-      }
+      } // auto-disconnect through ~TemporaryObject
       {
         Emitter3 tmp_emitter;
         tmp_emitter.sig_mixed += slot (tobj, &TemporaryObject::string_emitter_callback);
@@ -276,23 +303,99 @@ struct TemporaryObject : public virtual Deletable {
         tmp_emitter.sig_void_mixed += slot (tobj2, &TemporaryObject::never_ever_call_me);
         tmp_emitter.sig_void_mixed += slot (tobj2, &TemporaryObject::never_ever_call_me);
         tmp_emitter.sig_void_mixed -= slot (tobj2, &TemporaryObject::never_ever_call_me);
-        /* remove all slots from tmp_emitter */
-      }
+      } // removes all slots from tmp_emitter
       e3.sig_void_mixed -= slot (tobj, &TemporaryObject::never_ever_call_me);
-      TASSERT (ac == assertion_counter);
+      TASSERT (ac == emission_counter);
       e3.test_emissions();
-      TASSERT (ac < assertion_counter);
+      TASSERT (ac < emission_counter);
       e3.sig_void_mixed += slot (tobj, &TemporaryObject::void_emitter_callback);
       e3.sig_void_mixed += slot (tobj, &TemporaryObject::void_callback);
-      ac = assertion_counter;
+      ac = emission_counter;
       e3.test_emissions();
-      TASSERT (ac < assertion_counter);
+      TASSERT (ac < emission_counter);
       e3.sig_void_mixed += slot (tobj, &TemporaryObject::never_ever_call_me);
-      /* here, Deletable::invoke_destruction_hooks() is called */
+    } // calls TemporaryObject->Deletable::invoke_destruction_hooks()
+
+    // check shared_ptr<ExtraType> destruction
+    {
+      edata_deletions = ExtraType_deletions;
+      shared_ptr<ExtraType> sp (new ExtraType()); // ExtraType will be deleted at scope end
+      TASSERT (edata_deletions == ExtraType_deletions);
+    } // ~shared_ptr<ExtraType> -> ~ExtraType
+    TASSERT (edata_deletions + 1 == ExtraType_deletions);
+
+    // check ExtraType destruction upon disconnection
+    {
+      TemporaryObject tobj;
+      edata_deletions = ExtraType_deletions;
+      Signals::ConId cid;
+      {
+        shared_ptr<ExtraType> sp (new ExtraType());
+        TASSERT (edata_deletions == ExtraType_deletions); // undestructed
+        cid = e3.sig_void_mixed.connect (slot (tobj, &TemporaryObject::shared_ptr_method, sp));
+        TASSERT (edata_deletions == ExtraType_deletions); // undestructed
+      } // ~shared_ptr<ExtraType>
+      TASSERT (edata_deletions == ExtraType_deletions); // undestructed
+      ac = emission_counter;
+      e3.test_emissions();
+      TASSERT (ac < emission_counter);
+      TASSERT (edata_deletions == ExtraType_deletions); // undestructed across emission
+      uint dels = e3.sig_void_mixed.disconnect (cid); // ~ConId -> ~ExtraType
+      TASSERT (dels == 1);
+      TASSERT (edata_deletions + 1 == ExtraType_deletions); // destructed
     }
-    ac = assertion_counter;
-    e3.test_emissions(); // all handlers got disconnected
-    TASSERT (ac == assertion_counter);
+
+    // check signal connection destruction upon TemporaryObject death (emitter remains)
+    {
+      TemporaryObject tobj;
+      edata_deletions = ExtraType_deletions;
+      {
+        shared_ptr<ExtraType> sp (new ExtraType());
+        TASSERT (edata_deletions == ExtraType_deletions); // undestructed
+        e3.sig_void_mixed += slot (tobj, &TemporaryObject::shared_ptr_method, sp);
+      } // ~shared_ptr<ExtraType>
+      TASSERT (edata_deletions == ExtraType_deletions); // undestructed
+      ac = emission_counter;
+      e3.test_emissions();
+      TASSERT (ac < emission_counter);
+      TASSERT (edata_deletions == ExtraType_deletions); // undestructed
+      ac = emission_counter;
+      e3.test_emissions();
+      TASSERT (ac < emission_counter);
+      TASSERT (edata_deletions == ExtraType_deletions); // undestructed
+    } // implicit disconnection through ~TemporaryObject -> ~ExtraType
+    TASSERT (edata_deletions + 1 == ExtraType_deletions);
+
+    // check shared_ptr<ExtraType> for function slots
+    {
+      edata_deletions = ExtraType_deletions;
+      Signals::ConId cid;
+      {
+        shared_ptr<ExtraType> sp (new ExtraType());
+        TASSERT (edata_deletions == ExtraType_deletions); // undestructed
+        cid = e3.sig_void_mixed.connect (slot (shared_ptr_callback, sp));
+      } // ~shared_ptr<ExtraType>
+      TASSERT (edata_deletions == ExtraType_deletions); // undestructed
+      ac = emission_counter;
+      e3.test_emissions();
+      TASSERT (ac < emission_counter);
+      TASSERT (edata_deletions == ExtraType_deletions); // undestructed
+      ac = emission_counter;
+      e3.test_emissions();
+      TASSERT (ac < emission_counter);
+      TASSERT (edata_deletions == ExtraType_deletions); // undestructed
+      uint dels = e3.sig_void_mixed.disconnect (cid); // ~ConId -> ~ExtraType
+      TASSERT (dels == 1);
+      TASSERT (edata_deletions + 1 == ExtraType_deletions);
+      // check bogus disconnection
+      dels = e3.sig_void_mixed.disconnect (cid); // junk cid
+      TASSERT (dels == 0); // none found
+    }
+
+    // check proper handler disconnections
+    ac = emission_counter;
+    e3.test_emissions(); // no increment since all handlers got disconnected
+    TASSERT (ac == emission_counter);
     TDONE();
   }
 };
