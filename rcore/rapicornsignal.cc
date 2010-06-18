@@ -24,8 +24,7 @@ TrampolineLink::~TrampolineLink()
 {
   if (next || prev)
     {
-      next->prev = prev;
-      prev->next = next;
+      // disconnect_equal_link() might have left next and prev != NULL
       prev = next = NULL;
     }
 }
