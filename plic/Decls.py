@@ -107,6 +107,7 @@ class TypeInfo (BaseDecl):
       self.rtype = None         # holds: TypeInfo
       self.ownertype = None    # TypeInfo
       self.pure = False
+      self.issignal = False
     if self.storage == INTERFACE:
       self.prerequisites = []
       self.methods = []         # holds: TypeInfo
@@ -131,10 +132,12 @@ class TypeInfo (BaseDecl):
     sha224.update (digest)
     return sha224.digest()
   def type_hash (self):
-    if self.rtype.storage == VOID:
-      l = '\x10\x00\x00\x00'
+    if self.issignal:
+      l = '\x90\x00\x00\x00' # signal
+    elif self.rtype.storage == VOID:
+      l = '\x10\x00\x00\x00' # oneway
     else:
-      l = '\x20\x00\x00\x00'
+      l = '\xa0\x00\x00\x00' # twoway
     bytes = l + self.sha224digest()
     t = tuple ([ord (c) for c in bytes])
     return t
@@ -153,6 +156,8 @@ class TypeInfo (BaseDecl):
       ti.rtype = self.rtype
     if hasattr (self, 'pure'):
       ti.pure = self.pure
+    if hasattr (self, 'issignal'):
+      ti.issignal = self.issignal
     if hasattr (self, 'elements'):
       ti.elements = self.elements
     if hasattr (self, 'prerequisites'):
@@ -211,6 +216,7 @@ class TypeInfo (BaseDecl):
     assert ftype.storage == FUNC
     assert isinstance (ftype.rtype, TypeInfo)
     ftype.ownertype = self
+    ftype.issignal = issignal
     if issignal:
       self.signals += [ ftype ]
     else:

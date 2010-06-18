@@ -115,7 +115,7 @@ class RopeCoupler : public Plic::Coupler {
     if (mayblock)
       Thread::Self::yield(); // allow fast return value handling on single core
     FieldBuffer *fr = NULL;
-    if (Plic::is_msgid_twoway (call_id))
+    if (Plic::msgid_has_result (call_id))
       fr = pop_result();
     return fr;
   }

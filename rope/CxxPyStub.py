@@ -259,17 +259,48 @@ class Generator:
     s += '  return pyret;\n'
     s += '}\n'
     return s
+  def generate_rpc_signal_call (self, class_info, mtype, mdefs):
+    s = ''
+    mdefs += [ '{ "_PLIC_%s", _plic_sig_%s, METH_VARARGS, "pyRapicorn signal call" }' %
+               (mtype.ident_digest(), mtype.ident_digest()) ]
+    s += 'static PyObject*\n'
+    s += '_plic_sig_%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
+    s += '{\n'
+    s += '  PyObject *item, *pyfoR = NULL;\n'
+    s += '  ' + FieldBuffer + ' &fb = *' + FieldBuffer + '::_new (4 + 1 + 2), *fr = NULL;\n' # proc_id self ConId ClosureId
+    s += '  fb.add_type_hash (%s); // proc_id\n' % self.method_digest (mtype)
+    s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");\n'
+    s += '  item = PyTuple_GET_ITEM (pyargs, 0);  // self\n'
+    s += self.generate_proto_add_py ('fb', class_info, 'item')
+    s += '  item = PyTuple_GET_ITEM (pyargs, 0);  // ConId for disconnect\n'
+    s += '  %s.add_int64 (PyIntLong_AsLongLong (%s)); ERRORifpy();\n' % ('fb', 'item')
+    s += '  item = PyTuple_GET_ITEM (pyargs, 0);  // Closure\n'
+    s += '  %s.add_int64 (1 /*FIXME: PyIntLong_AsLongLong (%s)*/); ERRORifpy();\n' % ('fb', 'item')
+    s += '  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb\n'
+    s += '  ERRORifnotret (fr);\n'
+    s += '  if (fr) {\n'
+    s += '    ' + FieldBuffer + 'Reader frr (*fr);\n'
+    s += '    frr.skip(); // proc_id for return\n' # FIXME: check errors
+    s += '    if (frr.remaining() == 1) {\n'
+    s += '      %s = PyLong_FromLongLong (%s.pop_int64()); ERRORifpy ();\n' % ('pyfoR', 'frr')
+    s += '    }\n'
+    s += '  }\n'
+    s += ' error:\n'
+    s += '  if (fr) delete fr;\n'
+    s += '  return pyfoR;\n'
+    s += '}\n'
+    return s
   def method_digest (self, mtype):
     d = mtype.type_hash()
     return ('0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL, ' +
             '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL') % d
   def generate_rpc_call_wrapper (self, class_info, mtype, mdefs):
     s = ''
-    mdefs += [ '{ "_PLIC_%s", plic_pycall_%s_%s, METH_VARARGS, "pyRapicorn glue call" }' %
-               (mtype.ident_digest(), class_info.name, mtype.name) ]
+    mdefs += [ '{ "_PLIC_%s", _plic_rpc_%s, METH_VARARGS, "pyRapicorn rpc call" }' %
+               (mtype.ident_digest(), mtype.ident_digest()) ]
     hasret = mtype.rtype.storage != Decls.VOID
     s += 'static PyObject*\n'
-    s += 'plic_pycall_%s_%s (PyObject *pyself, PyObject *pyargs)\n' % (class_info.name, mtype.name)
+    s += '_plic_rpc_%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
     s += '{\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
     s += '  ' + FieldBuffer + ' &fb = *' + FieldBuffer + '::_new (4 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # proc_id self
@@ -292,7 +323,7 @@ class Generator:
       s += '  ERRORifnotret (fr);\n'
       s += '  if (fr) {\n'
       s += '    ' + FieldBuffer + 'Reader frr (*fr);\n'
-      s += '    frr.skip(); // proc_id for return\n'
+      s += '    frr.skip(); // proc_id for return\n' # FIXME: check errors
       s += '    if (frr.remaining() == 1) {\n'
       s += reindent ('      ', self.generate_proto_pop_py ('frr', mtype.rtype, 'pyfoR')) + '\n'
       s += '    }\n'
@@ -348,6 +379,8 @@ class Generator:
         pass
         for m in tp.methods:
           s += self.generate_rpc_call_wrapper (tp, m, mdefs)
+        for sg in tp.signals:
+          s += self.generate_rpc_signal_call (tp, sg, mdefs)
     # method def array
     if mdefs:
       s += '#define PLIC_PYSTUB_METHOD_DEFS() \\\n  ' + ',\\\n  '.join (mdefs) + '\n'

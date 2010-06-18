@@ -323,23 +323,23 @@ DispatcherRegistry::dispatch_call (const FieldBuffer &fbcall,
 {
   const TypeHash thash = fbcall.first_type_hash();
   const int64 call_id = thash.id (0);
-  const bool twoway = is_msgid_twoway (call_id);
+  const bool hasresult = msgid_has_result (call_id);
   DispatchFunc dispatcher_func = DispatcherRegistry::find_dispatcher (thash);
   if (PLIC_UNLIKELY (!dispatcher_func))
     return FieldBuffer::new_error ("unknown method hash: " + thash.to_string(), "PLIC");
   FieldBuffer *fr = dispatcher_func (coupler);
   if (!fr)
     {
-      if (twoway)
+      if (hasresult)
         return FieldBuffer::new_error (string_printf ("missing return from 0x%016llx", call_id), "PLIC");
       else
         return NULL; // FieldBuffer::new_ok();
     }
   const int64 ret_id = fr->first_id();
   if (is_msgid_error (ret_id) ||
-      (twoway && is_msgid_result (ret_id)))
+      (hasresult && is_msgid_result (ret_id)))
     return fr;
-  if (!twoway && is_msgid_ok (ret_id))
+  if (!hasresult && is_msgid_ok (ret_id))
     {
       delete fr;
       return NULL; // FieldBuffer::new_ok();

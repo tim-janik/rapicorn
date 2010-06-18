@@ -54,13 +54,13 @@ typedef Plic::FieldBufferReader FieldBufferReader;
 static struct _DummyCoupler : public Coupler {
   virtual FieldBuffer* call_remote (FieldBuffer *fbcall)
   {
-    bool twoway = Plic::is_msgid_twoway (fbcall->first_id());
+    bool hasresult = Plic::msgid_has_result (fbcall->first_id());
     if (push_call (fbcall)) // deletes fbcall
       ; // threaded dispatcher needs CPU
     // wakeup dispatcher
     while (check_dispatch())
       dispatch();
-    return !twoway ? NULL : pop_result();
+    return !hasresult ? NULL : pop_result();
   }
 } _plic_coupler_static;
 #endif

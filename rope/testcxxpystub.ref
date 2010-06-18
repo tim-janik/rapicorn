@@ -865,7 +865,7 @@ plic_pyQuickSequence_proto_pop (Plic::FieldBufferReader &src)
 }
 
 static PyObject*
-plic_pycall_FirstInterface_void_func (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_MandatoryNamespace__FirstInterface_void_func_void (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
@@ -881,11 +881,11 @@ plic_pycall_FirstInterface_void_func (PyObject *pyself, PyObject *pyargs)
   return NULL;
 }
 static PyObject*
-plic_pycall_UIWidgetArea_simple_method (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__UIWidgetArea_simple_method_float (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
-  fb.add_type_hash (0x20000000fd8072dfULL, 0x591f7cce6e74034aULL, 0x419df82c635c78d1ULL, 0x1e2fc6cf88d761faULL); // proc_id
+  fb.add_type_hash (0xa0000000fd8072dfULL, 0x591f7cce6e74034aULL, 0x419df82c635c78d1ULL, 0x1e2fc6cf88d761faULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -905,11 +905,11 @@ plic_pycall_UIWidgetArea_simple_method (PyObject *pyself, PyObject *pyargs)
   return NULL;
 }
 static PyObject*
-plic_pycall_UIWidgetArea_single_arg (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__UIWidgetArea_single_arg_float_int (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
-  fb.add_type_hash (0x2000000075ce4c8bULL, 0x1a40a9c8bd145a39ULL, 0x37b83f96f1d3168bULL, 0x3f57c461185c3752ULL); // proc_id
+  fb.add_type_hash (0xa000000075ce4c8bULL, 0x1a40a9c8bd145a39ULL, 0x37b83f96f1d3168bULL, 0x3f57c461185c3752ULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -931,11 +931,11 @@ plic_pycall_UIWidgetArea_single_arg (PyObject *pyself, PyObject *pyargs)
   return NULL;
 }
 static PyObject*
-plic_pycall_UIWidgetArea_single_arg2 (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__UIWidgetArea_single_arg2_float_int (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
-  fb.add_type_hash (0x20000000179c202fULL, 0xa554850da029f547ULL, 0xe2591a43b7c79a61ULL, 0xe19a6853f11b1b99ULL); // proc_id
+  fb.add_type_hash (0xa0000000179c202fULL, 0xa554850da029f547ULL, 0xe2591a43b7c79a61ULL, 0xe19a6853f11b1b99ULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -957,11 +957,11 @@ plic_pycall_UIWidgetArea_single_arg2 (PyObject *pyself, PyObject *pyargs)
   return NULL;
 }
 static PyObject*
-plic_pycall_UIWidgetArea_two_args (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__UIWidgetArea_two_args_float_int_float (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x200000006a210506ULL, 0xa76bb7cd90d84838ULL, 0x8000823cfb905b8cULL, 0x39826abcf9caba00ULL); // proc_id
+  fb.add_type_hash (0xa00000006a210506ULL, 0xa76bb7cd90d84838ULL, 0x8000823cfb905b8cULL, 0x39826abcf9caba00ULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -985,11 +985,11 @@ plic_pycall_UIWidgetArea_two_args (PyObject *pyself, PyObject *pyargs)
   return NULL;
 }
 static PyObject*
-plic_pycall_UIWidgetArea_two_args2 (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__UIWidgetArea_two_args2_float_int_float (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x20000000ac125ff1ULL, 0xac6be3d45e25ada6ULL, 0x040efc8ab508b1d3ULL, 0x15e48df9e26c0caaULL); // proc_id
+  fb.add_type_hash (0xa0000000ac125ff1ULL, 0xac6be3d45e25ada6ULL, 0x040efc8ab508b1d3ULL, 0x15e48df9e26c0caaULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -1013,11 +1013,11 @@ plic_pycall_UIWidgetArea_two_args2 (PyObject *pyself, PyObject *pyargs)
   return NULL;
 }
 static PyObject*
-plic_pycall_UIWidgetArea_multi_args (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__UIWidgetArea_multi_args_float_int_float_int_string_float (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 5), *fr = NULL;
-  fb.add_type_hash (0x200000000361838dULL, 0xc298afde820561a5ULL, 0x8fe8c83788c4bb38ULL, 0xb3179ae3d510e7b2ULL); // proc_id
+  fb.add_type_hash (0xa00000000361838dULL, 0xc298afde820561a5ULL, 0x8fe8c83788c4bb38ULL, 0xb3179ae3d510e7b2ULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 5) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -1047,11 +1047,11 @@ plic_pycall_UIWidgetArea_multi_args (PyObject *pyself, PyObject *pyargs)
   return NULL;
 }
 static PyObject*
-plic_pycall_UIWidgetArea_self_method (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__UIWidgetArea_self_method_float_InterfaceTests__UIWidgetArea_InterfaceTests__UIWidgetArea (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x20000000b9d64621ULL, 0x3a96692d3e1ef7dbULL, 0xdced671b586f7aa7ULL, 0x1d3870f7ed0285e5ULL); // proc_id
+  fb.add_type_hash (0xa0000000b9d64621ULL, 0x3a96692d3e1ef7dbULL, 0xdced671b586f7aa7ULL, 0x1d3870f7ed0285e5ULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -1075,7 +1075,7 @@ plic_pycall_UIWidgetArea_self_method (PyObject *pyself, PyObject *pyargs)
   return NULL;
 }
 static PyObject*
-plic_pycall_UIWidgetArea_void_method (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__UIWidgetArea_void_method_void (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
@@ -1091,11 +1091,11 @@ plic_pycall_UIWidgetArea_void_method (PyObject *pyself, PyObject *pyargs)
   return NULL;
 }
 static PyObject*
-plic_pycall_UIWidgetArea_on_click2out (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__UIWidgetArea_on_click2out_string (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
-  fb.add_type_hash (0x200000004b649644ULL, 0x8a9b2140ad7fc83dULL, 0x10b67ed382387b14ULL, 0xe7b6cc0714a17f30ULL); // proc_id
+  fb.add_type_hash (0xa00000004b649644ULL, 0x8a9b2140ad7fc83dULL, 0x10b67ed382387b14ULL, 0xe7b6cc0714a17f30ULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 0) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -1115,7 +1115,7 @@ plic_pycall_UIWidgetArea_on_click2out (PyObject *pyself, PyObject *pyargs)
   return NULL;
 }
 static PyObject*
-plic_pycall_UIWidgetArea_on_click2in (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__UIWidgetArea_on_click2in_void_string (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
@@ -1133,7 +1133,59 @@ plic_pycall_UIWidgetArea_on_click2in (PyObject *pyself, PyObject *pyargs)
   return NULL;
 }
 static PyObject*
-plic_pycall_QuickIface_simple_function (PyObject *pyself, PyObject *pyargs)
+_plic_sig_InterfaceTests__UIWidgetArea_void_signal_void (PyObject *pyself, PyObject *pyargs)
+{
+  PyObject *item, *pyfoR = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
+  fb.add_type_hash (0x90000000257c7180ULL, 0xfac77ebb19c6ab72ULL, 0xb34dd194f62b665dULL, 0x0c329a03aebf472bULL); // proc_id
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);  // self
+  fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
+  item = PyTuple_GET_ITEM (pyargs, 0);  // ConId for disconnect
+  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
+  item = PyTuple_GET_ITEM (pyargs, 0);  // Closure
+  fb.add_int64 (1 /*FIXME: PyIntLong_AsLongLong (item)*/); ERRORifpy();
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  ERRORifnotret (fr);
+  if (fr) {
+    Plic::FieldBufferReader frr (*fr);
+    frr.skip(); // proc_id for return
+    if (frr.remaining() == 1) {
+      pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
+    }
+  }
+ error:
+  if (fr) delete fr;
+  return pyfoR;
+}
+static PyObject*
+_plic_sig_InterfaceTests__UIWidgetArea_sample_signal_float_InterfaceTests__UIWidgetArea_int (PyObject *pyself, PyObject *pyargs)
+{
+  PyObject *item, *pyfoR = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
+  fb.add_type_hash (0x90000000a31a6e24ULL, 0xfe2020b5b9671356ULL, 0x11e8a29ccb87db27ULL, 0xcbe662a2887ef78fULL); // proc_id
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);  // self
+  fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
+  item = PyTuple_GET_ITEM (pyargs, 0);  // ConId for disconnect
+  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
+  item = PyTuple_GET_ITEM (pyargs, 0);  // Closure
+  fb.add_int64 (1 /*FIXME: PyIntLong_AsLongLong (item)*/); ERRORifpy();
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  ERRORifnotret (fr);
+  if (fr) {
+    Plic::FieldBufferReader frr (*fr);
+    frr.skip(); // proc_id for return
+    if (frr.remaining() == 1) {
+      pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
+    }
+  }
+ error:
+  if (fr) delete fr;
+  return pyfoR;
+}
+static PyObject*
+_plic_rpc_InterfaceTests__QuickIface_simple_function_void_int (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
@@ -1151,7 +1203,7 @@ plic_pycall_QuickIface_simple_function (PyObject *pyself, PyObject *pyargs)
   return NULL;
 }
 static PyObject*
-plic_pycall_MethodTestInterface_method_with_void (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__MethodTestInterface_method_with_void_void (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
@@ -1167,11 +1219,11 @@ plic_pycall_MethodTestInterface_method_with_void (PyObject *pyself, PyObject *py
   return NULL;
 }
 static PyObject*
-plic_pycall_MethodTestInterface_method_with_bools (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__MethodTestInterface_method_with_bools_bool_bool_bool (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x200000003917295eULL, 0x76cb59d18d695319ULL, 0x0fe6acdaa38d48dfULL, 0xa26ca0854c18e565ULL); // proc_id
+  fb.add_type_hash (0xa00000003917295eULL, 0x76cb59d18d695319ULL, 0x0fe6acdaa38d48dfULL, 0xa26ca0854c18e565ULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -1195,11 +1247,11 @@ plic_pycall_MethodTestInterface_method_with_bools (PyObject *pyself, PyObject *p
   return NULL;
 }
 static PyObject*
-plic_pycall_MethodTestInterface_method_with_ints (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__MethodTestInterface_method_with_ints_int_int_int (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x2000000015f688dcULL, 0x4db9c06f4357aa4eULL, 0x902ee7647790de7cULL, 0x18aa217be2c83cbaULL); // proc_id
+  fb.add_type_hash (0xa000000015f688dcULL, 0x4db9c06f4357aa4eULL, 0x902ee7647790de7cULL, 0x18aa217be2c83cbaULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -1223,11 +1275,11 @@ plic_pycall_MethodTestInterface_method_with_ints (PyObject *pyself, PyObject *py
   return NULL;
 }
 static PyObject*
-plic_pycall_MethodTestInterface_method_with_floats (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__MethodTestInterface_method_with_floats_float_float_float (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x20000000bfc2d47bULL, 0x70b13d1cdf2c9488ULL, 0x77c2ea3ad44c2625ULL, 0xd6093e05e70ea643ULL); // proc_id
+  fb.add_type_hash (0xa0000000bfc2d47bULL, 0x70b13d1cdf2c9488ULL, 0x77c2ea3ad44c2625ULL, 0xd6093e05e70ea643ULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -1251,11 +1303,11 @@ plic_pycall_MethodTestInterface_method_with_floats (PyObject *pyself, PyObject *
   return NULL;
 }
 static PyObject*
-plic_pycall_MethodTestInterface_method_with_string (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__MethodTestInterface_method_with_string_string_string_string (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x200000002732b2feULL, 0x6dfd49db44b97641ULL, 0x010dcacac6eb8ed7ULL, 0xa79383e035fc64e1ULL); // proc_id
+  fb.add_type_hash (0xa00000002732b2feULL, 0x6dfd49db44b97641ULL, 0x010dcacac6eb8ed7ULL, 0xa79383e035fc64e1ULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -1279,11 +1331,11 @@ plic_pycall_MethodTestInterface_method_with_string (PyObject *pyself, PyObject *
   return NULL;
 }
 static PyObject*
-plic_pycall_MethodTestInterface_method_with_enum (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__MethodTestInterface_method_with_enum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x200000003f676d86ULL, 0x903cbdda7f9bf8e6ULL, 0xb56b87771cbd4b69ULL, 0x5723ee9d219ddda5ULL); // proc_id
+  fb.add_type_hash (0xa00000003f676d86ULL, 0x903cbdda7f9bf8e6ULL, 0xb56b87771cbd4b69ULL, 0x5723ee9d219ddda5ULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -1307,11 +1359,11 @@ plic_pycall_MethodTestInterface_method_with_enum (PyObject *pyself, PyObject *py
   return NULL;
 }
 static PyObject*
-plic_pycall_MethodTestInterface_method_with_record (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__MethodTestInterface_method_with_record_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x2000000004a0b014ULL, 0x7eef09335a6cd6afULL, 0xd80237b6e1df12f6ULL, 0x70618be70ed6e858ULL); // proc_id
+  fb.add_type_hash (0xa000000004a0b014ULL, 0x7eef09335a6cd6afULL, 0xd80237b6e1df12f6ULL, 0x70618be70ed6e858ULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -1335,11 +1387,11 @@ plic_pycall_MethodTestInterface_method_with_record (PyObject *pyself, PyObject *
   return NULL;
 }
 static PyObject*
-plic_pycall_MethodTestInterface_method_with_sequence (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__MethodTestInterface_method_with_sequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x20000000e92eb1f1ULL, 0xbc6d5e758278964aULL, 0xe88f958f88ca346cULL, 0xf29e446630c57f23ULL); // proc_id
+  fb.add_type_hash (0xa0000000e92eb1f1ULL, 0xbc6d5e758278964aULL, 0xe88f958f88ca346cULL, 0xf29e446630c57f23ULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -1363,11 +1415,11 @@ plic_pycall_MethodTestInterface_method_with_sequence (PyObject *pyself, PyObject
   return NULL;
 }
 static PyObject*
-plic_pycall_MethodTestInterface_method_with_interface (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__MethodTestInterface_method_with_interface_InterfaceTests__GrandChild_InterfaceTests__GrandChild_InterfaceTests__GrandChild (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x2000000001640ae0ULL, 0xf5403244c684c076ULL, 0x208c721dda088467ULL, 0x425f3425b0dcfad4ULL); // proc_id
+  fb.add_type_hash (0xa000000001640ae0ULL, 0xf5403244c684c076ULL, 0x208c721dda088467ULL, 0x425f3425b0dcfad4ULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -1391,11 +1443,11 @@ plic_pycall_MethodTestInterface_method_with_interface (PyObject *pyself, PyObjec
   return NULL;
 }
 static PyObject*
-plic_pycall_MethodTestInterface_method_with_quickiface (PyObject *pyself, PyObject *pyargs)
+_plic_rpc_InterfaceTests__MethodTestInterface_method_with_quickiface_InterfaceTests__QuickIface_InterfaceTests__QuickIface_InterfaceTests__QuickIface (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x2000000082dc142eULL, 0x7d16cadebfca9b39ULL, 0x168d05eb3cf56adbULL, 0x31e28c41cf8bb4f9ULL); // proc_id
+  fb.add_type_hash (0xa000000082dc142eULL, 0x7d16cadebfca9b39ULL, 0x168d05eb3cf56adbULL, 0x31e28c41cf8bb4f9ULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -1419,11 +1471,63 @@ plic_pycall_MethodTestInterface_method_with_quickiface (PyObject *pyself, PyObje
   return NULL;
 }
 static PyObject*
-plic_pycall_PureMethods_pure_method (PyObject *pyself, PyObject *pyargs)
+_plic_sig_RapicornPlicTest__ButtonArea_check_activate_bool (PyObject *pyself, PyObject *pyargs)
+{
+  PyObject *item, *pyfoR = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
+  fb.add_type_hash (0x900000002002b254ULL, 0x237b6d00631699f2ULL, 0xaa4a2bf137175f39ULL, 0x16724232857b7195ULL); // proc_id
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);  // self
+  fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
+  item = PyTuple_GET_ITEM (pyargs, 0);  // ConId for disconnect
+  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
+  item = PyTuple_GET_ITEM (pyargs, 0);  // Closure
+  fb.add_int64 (1 /*FIXME: PyIntLong_AsLongLong (item)*/); ERRORifpy();
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  ERRORifnotret (fr);
+  if (fr) {
+    Plic::FieldBufferReader frr (*fr);
+    frr.skip(); // proc_id for return
+    if (frr.remaining() == 1) {
+      pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
+    }
+  }
+ error:
+  if (fr) delete fr;
+  return pyfoR;
+}
+static PyObject*
+_plic_sig_RapicornPlicTest__ButtonArea_activate_void (PyObject *pyself, PyObject *pyargs)
+{
+  PyObject *item, *pyfoR = NULL;
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
+  fb.add_type_hash (0x900000001eea842bULL, 0xdb7ee9164c9f8a60ULL, 0x1d0b0a314944036aULL, 0xfc73ff4aec88f8ffULL); // proc_id
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);  // self
+  fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
+  item = PyTuple_GET_ITEM (pyargs, 0);  // ConId for disconnect
+  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
+  item = PyTuple_GET_ITEM (pyargs, 0);  // Closure
+  fb.add_int64 (1 /*FIXME: PyIntLong_AsLongLong (item)*/); ERRORifpy();
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  ERRORifnotret (fr);
+  if (fr) {
+    Plic::FieldBufferReader frr (*fr);
+    frr.skip(); // proc_id for return
+    if (frr.remaining() == 1) {
+      pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
+    }
+  }
+ error:
+  if (fr) delete fr;
+  return pyfoR;
+}
+static PyObject*
+_plic_rpc_RapicornPlicTest__PureMethods_pure_method_int_float (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
-  fb.add_type_hash (0x20000000e96382b8ULL, 0x8c16fe069c1d6b1eULL, 0x002e82b90c7db308ULL, 0x9c8a9e5a95b6ea99ULL); // proc_id
+  fb.add_type_hash (0xa0000000e96382b8ULL, 0x8c16fe069c1d6b1eULL, 0x002e82b90c7db308ULL, 0x9c8a9e5a95b6ea99ULL); // proc_id
   if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
@@ -1445,27 +1549,31 @@ plic_pycall_PureMethods_pure_method (PyObject *pyself, PyObject *pyargs)
   return NULL;
 }
 #define PLIC_PYSTUB_METHOD_DEFS() \
-  { "_PLIC_MandatoryNamespace__FirstInterface_void_func_void", plic_pycall_FirstInterface_void_func, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__UIWidgetArea_simple_method_float", plic_pycall_UIWidgetArea_simple_method, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__UIWidgetArea_single_arg_float_int", plic_pycall_UIWidgetArea_single_arg, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__UIWidgetArea_single_arg2_float_int", plic_pycall_UIWidgetArea_single_arg2, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__UIWidgetArea_two_args_float_int_float", plic_pycall_UIWidgetArea_two_args, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__UIWidgetArea_two_args2_float_int_float", plic_pycall_UIWidgetArea_two_args2, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__UIWidgetArea_multi_args_float_int_float_int_string_float", plic_pycall_UIWidgetArea_multi_args, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__UIWidgetArea_self_method_float_InterfaceTests__UIWidgetArea_InterfaceTests__UIWidgetArea", plic_pycall_UIWidgetArea_self_method, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__UIWidgetArea_void_method_void", plic_pycall_UIWidgetArea_void_method, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__UIWidgetArea_on_click2out_string", plic_pycall_UIWidgetArea_on_click2out, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__UIWidgetArea_on_click2in_void_string", plic_pycall_UIWidgetArea_on_click2in, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__QuickIface_simple_function_void_int", plic_pycall_QuickIface_simple_function, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_void_void", plic_pycall_MethodTestInterface_method_with_void, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_bools_bool_bool_bool", plic_pycall_MethodTestInterface_method_with_bools, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_ints_int_int_int", plic_pycall_MethodTestInterface_method_with_ints, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_floats_float_float_float", plic_pycall_MethodTestInterface_method_with_floats, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_string_string_string_string", plic_pycall_MethodTestInterface_method_with_string, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_enum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum", plic_pycall_MethodTestInterface_method_with_enum, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_record_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord", plic_pycall_MethodTestInterface_method_with_record, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_sequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence", plic_pycall_MethodTestInterface_method_with_sequence, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_interface_InterfaceTests__GrandChild_InterfaceTests__GrandChild_InterfaceTests__GrandChild", plic_pycall_MethodTestInterface_method_with_interface, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_quickiface_InterfaceTests__QuickIface_InterfaceTests__QuickIface_InterfaceTests__QuickIface", plic_pycall_MethodTestInterface_method_with_quickiface, METH_VARARGS, "pyRapicorn glue call" },\
-  { "_PLIC_RapicornPlicTest__PureMethods_pure_method_int_float", plic_pycall_PureMethods_pure_method, METH_VARARGS, "pyRapicorn glue call" }
+  { "_PLIC_MandatoryNamespace__FirstInterface_void_func_void", _plic_rpc_MandatoryNamespace__FirstInterface_void_func_void, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__UIWidgetArea_simple_method_float", _plic_rpc_InterfaceTests__UIWidgetArea_simple_method_float, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__UIWidgetArea_single_arg_float_int", _plic_rpc_InterfaceTests__UIWidgetArea_single_arg_float_int, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__UIWidgetArea_single_arg2_float_int", _plic_rpc_InterfaceTests__UIWidgetArea_single_arg2_float_int, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__UIWidgetArea_two_args_float_int_float", _plic_rpc_InterfaceTests__UIWidgetArea_two_args_float_int_float, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__UIWidgetArea_two_args2_float_int_float", _plic_rpc_InterfaceTests__UIWidgetArea_two_args2_float_int_float, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__UIWidgetArea_multi_args_float_int_float_int_string_float", _plic_rpc_InterfaceTests__UIWidgetArea_multi_args_float_int_float_int_string_float, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__UIWidgetArea_self_method_float_InterfaceTests__UIWidgetArea_InterfaceTests__UIWidgetArea", _plic_rpc_InterfaceTests__UIWidgetArea_self_method_float_InterfaceTests__UIWidgetArea_InterfaceTests__UIWidgetArea, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__UIWidgetArea_void_method_void", _plic_rpc_InterfaceTests__UIWidgetArea_void_method_void, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__UIWidgetArea_on_click2out_string", _plic_rpc_InterfaceTests__UIWidgetArea_on_click2out_string, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__UIWidgetArea_on_click2in_void_string", _plic_rpc_InterfaceTests__UIWidgetArea_on_click2in_void_string, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__UIWidgetArea_void_signal_void", _plic_sig_InterfaceTests__UIWidgetArea_void_signal_void, METH_VARARGS, "pyRapicorn signal call" },\
+  { "_PLIC_InterfaceTests__UIWidgetArea_sample_signal_float_InterfaceTests__UIWidgetArea_int", _plic_sig_InterfaceTests__UIWidgetArea_sample_signal_float_InterfaceTests__UIWidgetArea_int, METH_VARARGS, "pyRapicorn signal call" },\
+  { "_PLIC_InterfaceTests__QuickIface_simple_function_void_int", _plic_rpc_InterfaceTests__QuickIface_simple_function_void_int, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_void_void", _plic_rpc_InterfaceTests__MethodTestInterface_method_with_void_void, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_bools_bool_bool_bool", _plic_rpc_InterfaceTests__MethodTestInterface_method_with_bools_bool_bool_bool, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_ints_int_int_int", _plic_rpc_InterfaceTests__MethodTestInterface_method_with_ints_int_int_int, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_floats_float_float_float", _plic_rpc_InterfaceTests__MethodTestInterface_method_with_floats_float_float_float, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_string_string_string_string", _plic_rpc_InterfaceTests__MethodTestInterface_method_with_string_string_string_string, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_enum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum", _plic_rpc_InterfaceTests__MethodTestInterface_method_with_enum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum_InterfaceTests__QuickEnum, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_record_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord", _plic_rpc_InterfaceTests__MethodTestInterface_method_with_record_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_sequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence", _plic_rpc_InterfaceTests__MethodTestInterface_method_with_sequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_interface_InterfaceTests__GrandChild_InterfaceTests__GrandChild_InterfaceTests__GrandChild", _plic_rpc_InterfaceTests__MethodTestInterface_method_with_interface_InterfaceTests__GrandChild_InterfaceTests__GrandChild_InterfaceTests__GrandChild, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__MethodTestInterface_method_with_quickiface_InterfaceTests__QuickIface_InterfaceTests__QuickIface_InterfaceTests__QuickIface", _plic_rpc_InterfaceTests__MethodTestInterface_method_with_quickiface_InterfaceTests__QuickIface_InterfaceTests__QuickIface_InterfaceTests__QuickIface, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_RapicornPlicTest__ButtonArea_check_activate_bool", _plic_sig_RapicornPlicTest__ButtonArea_check_activate_bool, METH_VARARGS, "pyRapicorn signal call" },\
+  { "_PLIC_RapicornPlicTest__ButtonArea_activate_void", _plic_sig_RapicornPlicTest__ButtonArea_activate_void, METH_VARARGS, "pyRapicorn signal call" },\
+  { "_PLIC_RapicornPlicTest__PureMethods_pure_method_int_float", _plic_rpc_RapicornPlicTest__PureMethods_pure_method_int_float, METH_VARARGS, "pyRapicorn rpc call" }
 static PLIC_UNUSED PyMethodDef dummy[] = { PLIC_PYSTUB_METHOD_DEFS(), { 0 } };

@@ -373,7 +373,15 @@ class UIWidgetArea (_BaseClass_):
     ___ret = _PLIC_InterfaceTests__UIWidgetArea_on_click2in_void_string (self, command)
     return ___ret
   def __sig_void_signal__ (self): pass # default handler
+  def sig_void_signal_connect (self, func):
+    return _PLIC_InterfaceTests__UIWidgetArea_void_signal_void (self, 0, func)
+  def sig_void_signal_disconnect (self, connection_id):
+    return _PLIC_InterfaceTests__UIWidgetArea_void_signal_void (self, connection_id, None)
   def __sig_sample_signal__ (self): pass # default handler
+  def sig_sample_signal_connect (self, func):
+    return _PLIC_InterfaceTests__UIWidgetArea_sample_signal_float_InterfaceTests__UIWidgetArea_int (self, 0, func)
+  def sig_sample_signal_disconnect (self, connection_id):
+    return _PLIC_InterfaceTests__UIWidgetArea_sample_signal_float_InterfaceTests__UIWidgetArea_int (self, connection_id, None)
 
 class Parent (_BaseClass_):
   def __init__ (self, _plic_id):
@@ -465,7 +473,15 @@ class ButtonArea (_BaseClass_):
     self.sig_check_activate = __Signal__ ('check_activate')
     self.sig_activate = __Signal__ ('activate')
   def __sig_check_activate__ (self): pass # default handler
+  def sig_check_activate_connect (self, func):
+    return _PLIC_RapicornPlicTest__ButtonArea_check_activate_bool (self, 0, func)
+  def sig_check_activate_disconnect (self, connection_id):
+    return _PLIC_RapicornPlicTest__ButtonArea_check_activate_bool (self, connection_id, None)
   def __sig_activate__ (self): pass # default handler
+  def sig_activate_connect (self, func):
+    return _PLIC_RapicornPlicTest__ButtonArea_activate_void (self, 0, func)
+  def sig_activate_disconnect (self, connection_id):
+    return _PLIC_RapicornPlicTest__ButtonArea_activate_void (self, connection_id, None)
 
 class PureMethods (_BaseClass_):
   def __init__ (self, _plic_id):
