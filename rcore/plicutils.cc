@@ -258,36 +258,21 @@ Coupler::Coupler () :
   reader (*(FieldBuffer*) NULL)
 {}
 
-bool
+void
 Coupler::dispatch ()
 {
   const FieldBuffer *call = callc.pop_msg();
   if (!call)
-    return false;
+    return;
   reader.reset (*call);
   FieldBuffer *fr = DispatcherRegistry::dispatch_call (*call, *this);
   reader.reset();
-  bool success = true;
-  const int64 ret_id = fr ? fr->first_id() : 0;
-  if (is_msgid_result (ret_id))
+  delete call;
+  if (fr)
     {
       push_result (fr);
       sched_yield(); // allow fast return value handling on single core
-      fr = NULL;
     }
-  else if (is_msgid_error (ret_id))
-    {
-      FieldBufferReader frr (*fr);
-      frr.pop_int64(); // ret_id
-      printerr ("PLIC: error during oneway call 0x%016llx: %s\n",
-                call->first_id(), frr.pop_string().c_str());
-      success = false;
-    }
-  // msgid_ok
-  if (fr)
-    delete fr; // ok
-  delete call;
-  return success;
 }
 
 Coupler::~Coupler ()
@@ -323,23 +308,23 @@ DispatcherRegistry::dispatch_call (const FieldBuffer &fbcall,
 {
   const TypeHash thash = fbcall.first_type_hash();
   const int64 call_id = thash.id (0);
-  const bool hasresult = msgid_has_result (call_id);
+  const bool needsresult = msgid_has_result (call_id);
   DispatchFunc dispatcher_func = DispatcherRegistry::find_dispatcher (thash);
   if (PLIC_UNLIKELY (!dispatcher_func))
     return FieldBuffer::new_error ("unknown method hash: " + thash.to_string(), "PLIC");
   FieldBuffer *fr = dispatcher_func (coupler);
   if (!fr)
     {
-      if (hasresult)
+      if (needsresult)
         return FieldBuffer::new_error (string_printf ("missing return from 0x%016llx", call_id), "PLIC");
       else
         return NULL; // FieldBuffer::new_ok();
     }
   const int64 ret_id = fr->first_id();
   if (is_msgid_error (ret_id) ||
-      (hasresult && is_msgid_result (ret_id)))
+      (needsresult && is_msgid_result (ret_id)))
     return fr;
-  if (!hasresult && is_msgid_ok (ret_id))
+  if (!needsresult && is_msgid_ok (ret_id))
     {
       delete fr;
       return NULL; // FieldBuffer::new_ok();

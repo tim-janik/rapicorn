@@ -291,7 +291,7 @@ public:
   void                 set_caller_wakeup (C &c, void (C::*m) ()) { resultc.set_wakeup (c, m); }
   // server loop integration
   bool             check_dispatch        () { return callc.has_msg(); }
-  bool             dispatch              ();
+  void             dispatch              ();
   void             set_dispatcher_wakeup (void (*f) ()) { callc.set_wakeup (f); }
   template<class C>
   void             set_dispatcher_wakeup (C &c, void (C::*m) ()) { callc.set_wakeup (c, m); }
