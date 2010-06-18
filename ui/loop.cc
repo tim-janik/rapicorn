@@ -700,9 +700,9 @@ EventLoop::TimedSource::dispatch()
 {
   bool repeat = false;
   m_first_interval = false;
-  if (m_oneshot && m_vtrampoline->callable)
+  if (m_oneshot && m_vtrampoline->callable())
     (*m_vtrampoline) ();
-  else if (!m_oneshot && m_btrampoline->callable)
+  else if (!m_oneshot && m_btrampoline->callable())
     repeat = (*m_btrampoline) ();
   if (repeat)
     m_expiration_usecs = EventLoop::get_current_time_usecs() + 1000ULL * m_interval_msecs;
@@ -791,9 +791,9 @@ EventLoop::PollFDSource::dispatch()
     ; // close down
   else if (m_pfd.fd >= 0 && !m_ignore_hangup && (m_pfd.revents & PollFD::HUP))
     ; // close down
-  else if (m_oneshot && m_vtrampoline->callable)
+  else if (m_oneshot && m_vtrampoline->callable())
     (*m_vtrampoline) (m_pfd);
-  else if (!m_oneshot && m_btrampoline->callable)
+  else if (!m_oneshot && m_btrampoline->callable())
     keep_alive = (*m_btrampoline) (m_pfd);
   /* close down */
   if (!keep_alive)
