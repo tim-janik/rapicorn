@@ -272,9 +272,9 @@ class Generator:
     s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 0);  // self\n'
     s += self.generate_proto_add_py ('fb', class_info, 'item')
-    s += '  item = PyTuple_GET_ITEM (pyargs, 0);  // ConId for disconnect\n'
+    s += '  item = PyTuple_GET_ITEM (pyargs, 1);  // ConId for disconnect\n'
     s += '  %s.add_int64 (PyIntLong_AsLongLong (%s)); ERRORifpy();\n' % ('fb', 'item')
-    s += '  item = PyTuple_GET_ITEM (pyargs, 0);  // Closure\n'
+    s += '  item = PyTuple_GET_ITEM (pyargs, 2);  // Closure\n'
     s += '  %s.add_int64 (1 /*FIXME: PyIntLong_AsLongLong (%s)*/); ERRORifpy();\n' % ('fb', 'item')
     s += '  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb\n'
     s += '  ERRORifnotret (fr);\n'

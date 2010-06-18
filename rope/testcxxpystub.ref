@@ -1141,9 +1141,9 @@ _plic_sig_InterfaceTests__UIWidgetArea_void_signal_void (PyObject *pyself, PyObj
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
-  item = PyTuple_GET_ITEM (pyargs, 0);  // ConId for disconnect
+  item = PyTuple_GET_ITEM (pyargs, 1);  // ConId for disconnect
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
-  item = PyTuple_GET_ITEM (pyargs, 0);  // Closure
+  item = PyTuple_GET_ITEM (pyargs, 2);  // Closure
   fb.add_int64 (1 /*FIXME: PyIntLong_AsLongLong (item)*/); ERRORifpy();
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
@@ -1167,9 +1167,9 @@ _plic_sig_InterfaceTests__UIWidgetArea_sample_signal_float_InterfaceTests__UIWid
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
-  item = PyTuple_GET_ITEM (pyargs, 0);  // ConId for disconnect
+  item = PyTuple_GET_ITEM (pyargs, 1);  // ConId for disconnect
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
-  item = PyTuple_GET_ITEM (pyargs, 0);  // Closure
+  item = PyTuple_GET_ITEM (pyargs, 2);  // Closure
   fb.add_int64 (1 /*FIXME: PyIntLong_AsLongLong (item)*/); ERRORifpy();
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
@@ -1479,9 +1479,9 @@ _plic_sig_RapicornPlicTest__ButtonArea_check_activate_bool (PyObject *pyself, Py
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
-  item = PyTuple_GET_ITEM (pyargs, 0);  // ConId for disconnect
+  item = PyTuple_GET_ITEM (pyargs, 1);  // ConId for disconnect
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
-  item = PyTuple_GET_ITEM (pyargs, 0);  // Closure
+  item = PyTuple_GET_ITEM (pyargs, 2);  // Closure
   fb.add_int64 (1 /*FIXME: PyIntLong_AsLongLong (item)*/); ERRORifpy();
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
@@ -1505,9 +1505,9 @@ _plic_sig_RapicornPlicTest__ButtonArea_activate_void (PyObject *pyself, PyObject
   if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
   item = PyTuple_GET_ITEM (pyargs, 0);  // self
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
-  item = PyTuple_GET_ITEM (pyargs, 0);  // ConId for disconnect
+  item = PyTuple_GET_ITEM (pyargs, 1);  // ConId for disconnect
   fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
-  item = PyTuple_GET_ITEM (pyargs, 0);  // Closure
+  item = PyTuple_GET_ITEM (pyargs, 2);  // Closure
   fb.add_int64 (1 /*FIXME: PyIntLong_AsLongLong (item)*/); ERRORifpy();
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   ERRORifnotret (fr);
