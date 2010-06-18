@@ -74,7 +74,7 @@ class DataFunctionTrampoline3 : public Trampoline3 <R0, A1, A2, A3> {
     const DataFunctionTrampoline3 *other = dynamic_cast<const DataFunctionTrampoline3*> (&bother);
     return other and other->callback == callback and other->data == data; }
 public:
-  DataFunctionTrampoline3 (Callback c, const Data d) :
+  DataFunctionTrampoline3 (Callback c, Data d) :
     callback (c), data (d)
   {}
 };
@@ -91,7 +91,7 @@ class DataMethodTrampoline3 : public Trampoline3 <R0, A1, A2, A3>, public virtua
   virtual void monitoring_deletable  (Deletable &deletable) { /* deletable == instance */ }
   virtual void dismiss_deletable     ()                     { instance = NULL; this->callable = false; }
 public:
-  DataMethodTrampoline3 (Class &obj, Method m, const Data d) :
+  DataMethodTrampoline3 (Class &obj, Method m, Data d) :
     instance (&obj), method (m), data (d)               { deletable_add_hook (instance); }
 };
 
@@ -109,7 +109,7 @@ slot (R0 (*callback) (A1, A2, A3))
   return Slot3<R0, A1, A2, A3> (new FunctionTrampoline3<R0, A1, A2, A3> (callback));
 }
 template<typename R0, typename A1, typename A2, typename A3, typename Data> Slot3<R0, A1, A2, A3>
-slot (R0 (*callback) (A1, A2, A3, Data), const Data data)
+slot (R0 (*callback) (A1, A2, A3, Data), Data data)
 {
   return Slot3<R0, A1, A2, A3> (new DataFunctionTrampoline3<R0, A1, A2, A3, Data> (callback, data));
 }
@@ -124,7 +124,7 @@ slot (Class &obj, R0 (Class::*method) (A1, A2, A3))
   return Slot3<R0, A1, A2, A3> (new MethodTrampoline3<Class, R0, A1, A2, A3> (obj, method));
 }
 template<class Class, typename R0, typename A1, typename A2, typename A3, typename Data> Slot3<R0, A1, A2, A3>
-slot (Class &obj, R0 (Class::*method) (A1, A2, A3, Data), const Data data)
+slot (Class &obj, R0 (Class::*method) (A1, A2, A3, Data), Data data)
 {
   return Slot3<R0, A1, A2, A3> (new DataMethodTrampoline3<Class, R0, A1, A2, A3, Data> (obj, method, data));
 }
