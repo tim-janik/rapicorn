@@ -37,16 +37,16 @@ struct Emission3 : public EmissionBase {
   {
     if (m_last_link != link)
       {
-        if (link->with_emitter)
+        if (link->with_emitter())
           {
             TrampolineE *trampoline = trampoline_cast<TrampolineE*> (link);
-            if (trampoline->callable)
+            if (trampoline->callable())
               m_result = (*trampoline) (*m_emitter, m_a1, m_a2, m_a3);
           }
         else
           {
             Trampoline *trampoline = trampoline_cast<Trampoline*> (link);
-            if (trampoline->callable)
+            if (trampoline->callable())
               m_result = (*trampoline) (m_a1, m_a2, m_a3);
           }
         m_last_link = link;
@@ -66,16 +66,16 @@ struct Emission3 <Emitter, void, A1, A2, A3> : public EmissionBase {
   /* call the trampoline and ignore result, so trampoline templates need no <void> specialization */
   void call (TrampolineLink *link)
   {
-    if (link->with_emitter)
+    if (link->with_emitter())
       {
         TrampolineE *trampoline = trampoline_cast<TrampolineE*> (link);
-        if (trampoline->callable)
+        if (trampoline->callable())
           (*trampoline) (*m_emitter, m_a1, m_a2, m_a3);
       }
     else
       {
         Trampoline *trampoline = trampoline_cast<Trampoline*> (link);
-        if (trampoline->callable)
+        if (trampoline->callable())
           (*trampoline) (m_a1, m_a2, m_a3);
       }
   }
@@ -144,10 +144,11 @@ struct Signal3 : SignalEmittable3<Emitter, R0, A1, A2, A3, Collector>
     RAPICORN_ASSERT (&emitter != NULL);
     connect (slot (emitter, method));
   }
-  inline void connect    (const Slot  &s) { connect_link (s.get_trampoline_link()); }
-  inline void connect    (const SlotE &s) { connect_link (s.get_trampoline_link(), true); }
+  inline ConId connect   (const Slot  &s) { return connect_link (s.get_trampoline_link()); }
+  inline ConId connect   (const SlotE &s) { return connect_link (s.get_trampoline_link(), true); }
   inline uint disconnect (const Slot  &s) { return disconnect_equal_link (*s.get_trampoline_link()); }
   inline uint disconnect (const SlotE &s) { return disconnect_equal_link (*s.get_trampoline_link(), true); }
+  inline uint disconnect (ConId    conid) { return this->disconnect_link_id (conid); }
   Signal3&    operator+= (const Slot  &s) { connect (s); return *this; }
   Signal3&    operator+= (const SlotE &s) { connect (s); return *this; }
   Signal3&    operator+= (R0 (*callback) (A1, A2, A3))            { connect (slot (callback)); return *this; }

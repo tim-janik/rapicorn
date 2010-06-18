@@ -56,7 +56,7 @@ class MethodTrampoline3 : public Trampoline3 <R0, A1, A2, A3>, public virtual De
     return other and other->instance == instance and other->method == method; }
   virtual     ~MethodTrampoline3    ()                     { deletable_remove_hook (instance); }
   virtual void monitoring_deletable (Deletable &deletable) { /* deletable == instance */ }
-  virtual void dismiss_deletable    ()                     { instance = NULL; this->callable = false; }
+  virtual void dismiss_deletable    ()                     { instance = NULL; this->unlink(); }
 public:
   MethodTrampoline3 (Class &obj, Method m) :
     instance (&obj), method (m)                         { deletable_add_hook (instance); }
@@ -89,7 +89,7 @@ class DataMethodTrampoline3 : public Trampoline3 <R0, A1, A2, A3>, public virtua
     return other and other->instance == instance and other->method == method and other->data == data; }
   virtual     ~DataMethodTrampoline3 ()                     { deletable_remove_hook (instance); }
   virtual void monitoring_deletable  (Deletable &deletable) { /* deletable == instance */ }
-  virtual void dismiss_deletable     ()                     { instance = NULL; this->callable = false; }
+  virtual void dismiss_deletable     ()                     { instance = NULL; this->unlink(); }
 public:
   DataMethodTrampoline3 (Class &obj, Method m, Data d) :
     instance (&obj), method (m), data (d)               { deletable_add_hook (instance); }

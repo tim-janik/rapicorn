@@ -33,85 +33,54 @@ struct EmissionBase {
 };
 
 /* --- TrampolineLink --- */
-struct TrampolineLink : public ReferenceCountable, protected NonCopyable {
+typedef ptrdiff_t ConId;
+class TrampolineLink : public ReferenceCountable, protected NonCopyable {
+  friend    class SignalBase;
   TrampolineLink *next, *prev;
-  uint            callable : 1;
-  uint            with_emitter : 1;
-  virtual bool    operator== (const TrampolineLink &other) const = 0;
+  uint            m_callable : 1;
+  uint            m_with_emitter : 1;
+  uint            m_linking_owner : 1;
+  inline void     with_emitter  (bool b) { m_with_emitter = b; }
+protected:
+  inline void     callable      (bool b) { m_callable = b; }
+  inline ConId    con_id        () const { return (ptrdiff_t) this; }
+public:
+  void            owner_ref     ();
+  inline bool     callable      () { return m_callable; }
+  inline bool     with_emitter  () { return m_with_emitter; }
+  virtual bool    operator==    (const TrampolineLink &other) const = 0;
   virtual        ~TrampolineLink();
+  void            unlink        ();
   TrampolineLink (uint allow_stack_magic = 0) :
     ReferenceCountable (allow_stack_magic),
-    next (NULL), prev (NULL), callable (true), with_emitter (false)
+    next (NULL), prev (NULL), m_callable (true), m_with_emitter (false), m_linking_owner (false)
   {}
 };
 
 /* --- SignalBase --- */
 class SignalBase : protected NonCopyable {
   class EmbeddedLink : public TrampolineLink {
-    virtual bool operator== (const TrampolineLink &other) const;
-    virtual void delete_this ();
+    virtual bool           operator==            (const TrampolineLink &other) const;
+    virtual void           delete_this           (); // NOP for embedded link
   public:
-    explicit     EmbeddedLink  () : TrampolineLink (0xbadbad) {}
-    void         check_last_ref() const { RAPICORN_ASSERT (ref_count() == 1); }
+    explicit               EmbeddedLink          () : TrampolineLink (0xbadbad) {}
+    void                   check_last_ref        () const { RAPICORN_ASSERT (ref_count() == 1); }
   };
 protected:
-  EmbeddedLink   start;
-  void
-  connect_link (TrampolineLink *link,
-                bool            with_emitter = false)
-  {
-    RAPICORN_ASSERT (link->prev == NULL && link->next == NULL);
-    link->ref_sink();
-    link->prev = start.prev;
-    link->next = &start;
-    start.prev->next = link;
-    start.prev = link;
-    link->with_emitter = with_emitter;
-  }
-  uint
-  disconnect_equal_link (const TrampolineLink &link,
-                         bool                  with_emitter = false)
-  {
-    for (TrampolineLink *walk = start.next; walk != &start; walk = walk->next)
-      if (walk->with_emitter == with_emitter and *walk == link)
-        {
-          walk->callable = false;
-          /* unlink */
-          walk->next->prev = walk->prev;
-          walk->prev->next = walk->next;
-          /* leave ->next, ->prev intact for iterators */
-          walk->unref();
-          return 1;
-        }
-    return 0;
-  }
   template<class Emission> struct Iterator;
+  EmbeddedLink             start;
+  ConId                    connect_link          (TrampolineLink       *link,
+                                                  bool                  with_emitter = false);
+  uint                     disconnect_equal_link (const TrampolineLink &link,
+                                                  bool                  with_emitter = false);
+  uint                     disconnect_link_id    (ConId                 id);
 public:
-  SignalBase ()
+  /*Des*/                 ~SignalBase();
+  explicit                 SignalBase ()
   {
     start.next = &start;
     start.prev = &start;
     start.ref_sink();
-  }
-  ~SignalBase()
-  {
-    while (start.next != &start)
-      destruct_link (start.next);
-    RAPICORN_ASSERT (start.next == &start);
-    RAPICORN_ASSERT (start.prev == &start);
-    start.prev = start.next = NULL;
-    start.check_last_ref();
-    start.unref();
-  }
-private:
-  void
-  destruct_link (TrampolineLink *link)
-  {
-    link->callable = false;
-    link->next->prev = link->prev;
-    link->prev->next = link->next;
-    link->prev = link->next = NULL;
-    link->unref();
   }
 };
 
@@ -157,7 +126,7 @@ public:
           current->unref();
           current = next;
         }
-      while (!current->callable && current != start);
+      while (!current->callable() && current != start);
     if (emission.stop_emission)
       {
         current->unref();
