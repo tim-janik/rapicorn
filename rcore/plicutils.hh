@@ -21,8 +21,13 @@
 #include <vector>
 #include <memory>               // auto_ptr
 #include <stdint.h>             // uint64_t
+#include <tr1/memory>           // shared_ptr
 
 namespace Plic {
+using std::tr1::bad_weak_ptr;
+using std::tr1::enable_shared_from_this;
+using std::tr1::shared_ptr;
+using std::tr1::weak_ptr;
 
 /* === Auxillary macros === */
 #define PLIC_CPP_STRINGIFYi(s)  #s // indirection required to expand __LINE__ etc
