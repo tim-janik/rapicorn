@@ -433,7 +433,7 @@ class Generator:
     args2fb = self.generate_proto_add_args (cplfb, class_info, '', ident_type_args, '', therr)
     if args2fb:
       s += reindent ('  ', args2fb) + '\n'
-    s += '    sp->m_coupler.call_remote (&fb); // deletes fb\n' # FIXME: queue event
+    s += '    sp->m_coupler.push_event (&fb); // deletes fb\n'
     if stype.rtype.storage != Decls.VOID:
       s += '    return %s;\n' % self.mkzero (stype.rtype)
     s += '  }\n'

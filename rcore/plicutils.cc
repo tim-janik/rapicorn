@@ -43,7 +43,6 @@ namespace Plic {
 
 /* === Prototypes === */
 static String string_printf (const char *format, ...) PLIC_PRINTF (1, 2);
-static void   printerr      (const char *format, ...) PLIC_PRINTF (1, 2);
 
 /* === Utilities === */
 static String // FIXME: support error format
@@ -59,6 +58,7 @@ string_printf (const char *format, ...)
   return buffer;
 }
 
+#if 0
 static void
 printerr (const char *format, ...)
 {
@@ -72,6 +72,7 @@ printerr (const char *format, ...)
   size_t l = write (2, buffer, strlen (buffer));
   (void) l;
 }
+#endif
 
 /* === SmartHandle === */
 struct SmartHandle0 : public SmartHandle {

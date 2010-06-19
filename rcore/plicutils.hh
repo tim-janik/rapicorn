@@ -283,28 +283,36 @@ public:
 class Coupler {
   Coupler&             operator=         (const Coupler&); // not assignable
   /*Copy*/             Coupler           (const Coupler&); // not copyable
-  Channel              callc, resultc;
+  Channel              callc, resultc, eventc;
 public:
   explicit             Coupler           ();
   virtual             ~Coupler           ();
   // client API
-  virtual FieldBuffer* call_remote       (FieldBuffer *fbcall) = 0;
-  bool                 push_call         (FieldBuffer *fbcall) { return callc.push_msg (fbcall); }
-  FieldBuffer*         pop_result        (void) { resultc.wait_msg(); return resultc.pop_msg(); }
-  void                 set_caller_wakeup (void (*f) ()) { resultc.set_wakeup (f); }
   template<class C>
   void                 set_caller_wakeup (C &c, void (C::*m) ()) { resultc.set_wakeup (c, m); }
-  // server loop integration
-  bool             check_dispatch        () { return callc.has_msg(); }
-  void             dispatch              ();
-  void             set_dispatcher_wakeup (void (*f) ()) { callc.set_wakeup (f); }
+  void                 set_caller_wakeup (void (*f) ()) { resultc.set_wakeup (f); }
+  FieldBuffer*         pop_result        (void) { resultc.wait_msg(); return resultc.pop_msg(); }
+  bool                 push_call         (FieldBuffer *fbcall) { return callc.push_msg (fbcall); }
+  virtual FieldBuffer* call_remote       (FieldBuffer *fbcall) = 0;
+  // async msg queue
   template<class C>
-  void             set_dispatcher_wakeup (C &c, void (C::*m) ()) { callc.set_wakeup (c, m); }
+  void                 set_event_wakeup  (C &c, void (C::*m) ()) { eventc.set_wakeup (c, m); }
+  void                 set_event_wakeup  (void (*f) ()) { eventc.set_wakeup (f); }
+  void                 wait_event        (void) { eventc.wait_msg(); }
+  bool                 has_event         (void) { return eventc.has_msg(); }
+  FieldBuffer*         pop_event         (void) { eventc.wait_msg(); return eventc.pop_msg(); }
   // API for DispatchFunc
   FieldBufferReader    reader;
   void                 push_result       (FieldBuffer *rret) { resultc.push_msg (rret); }
+  void                 push_event        (FieldBuffer *fbev) { eventc.push_msg (fbev); }
   // SmartHandle API
   inline uint64        pop_rpc_handle    (FieldBufferReader &fbr) { return fbr.pop_object(); }
+  // server loop integration
+  template<class C>
+  void             set_dispatcher_wakeup (C &c, void (C::*m) ()) { callc.set_wakeup (c, m); }
+  void             set_dispatcher_wakeup (void (*f) ()) { callc.set_wakeup (f); }
+  bool             check_dispatch        () { return callc.has_msg(); }
+  void             dispatch              ();
 };
 
 /* === inline implementations === */

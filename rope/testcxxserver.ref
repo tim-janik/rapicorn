@@ -1185,7 +1185,7 @@ struct _CLOSURE_UIWidgetArea_void_signal {
     FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0);
     fb.add_type_hash (0x60000000257c7180ULL, 0xfac77ebb19c6ab72ULL, 0xb34dd194f62b665dULL, 0x0c329a03aebf472bULL); // event_id
     fb.add_int64 (sp->m_handler);
-    sp->m_coupler.call_remote (&fb); // deletes fb
+    sp->m_coupler.push_event (&fb); // deletes fb
   }
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
@@ -1220,7 +1220,7 @@ _dispatch__UIWidgetArea_void_signal (Coupler &cpl)
     fb.add_int64 (sp->m_handler);
     fb.add_object (UIWidgetArea (arg_ba1)._rpc_id());
     fb.add_int64 (arg_someint);
-    sp->m_coupler.call_remote (&fb); // deletes fb
+    sp->m_coupler.push_event (&fb); // deletes fb
     return 0;
   }
   private: Plic::Coupler &m_coupler; uint64 m_handler;
@@ -1435,7 +1435,7 @@ struct _CLOSURE_ButtonArea_check_activate {
     FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0);
     fb.add_type_hash (0x600000002002b254ULL, 0x237b6d00631699f2ULL, 0xaa4a2bf137175f39ULL, 0x16724232857b7195ULL); // event_id
     fb.add_int64 (sp->m_handler);
-    sp->m_coupler.call_remote (&fb); // deletes fb
+    sp->m_coupler.push_event (&fb); // deletes fb
     return 0;
   }
   private: Plic::Coupler &m_coupler; uint64 m_handler;
@@ -1467,7 +1467,7 @@ _dispatch__ButtonArea_check_activate (Coupler &cpl)
     FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0);
     fb.add_type_hash (0x600000001eea842bULL, 0xdb7ee9164c9f8a60ULL, 0x1d0b0a314944036aULL, 0xfc73ff4aec88f8ffULL); // event_id
     fb.add_int64 (sp->m_handler);
-    sp->m_coupler.call_remote (&fb); // deletes fb
+    sp->m_coupler.push_event (&fb); // deletes fb
   }
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
