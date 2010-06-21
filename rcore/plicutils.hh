@@ -152,7 +152,13 @@ public:
   static SimpleServer* _rpc_id2obj  (uint64 rpc_id);
 };
 
-/* === Dispatching === */
+/* === EventDispatcher === */
+struct EventDispatcher {
+  virtual             ~EventDispatcher  ();
+  virtual FieldBuffer* dispatch_event   (Coupler&) = 0;
+};
+
+/* === DispatchRegistry === */
 struct DispatcherEntry {
   uint64            hash_qwords[TypeHash::hash_size];
   DispatchFunc      dispatcher;
@@ -281,6 +287,7 @@ public:
 
 /* === Coupler === */
 class Coupler {
+  class Priv; Priv    &priv;
   Coupler&             operator=         (const Coupler&); // not assignable
   /*Copy*/             Coupler           (const Coupler&); // not copyable
   Channel              callc, resultc, eventc;
@@ -300,11 +307,14 @@ public:
   void                 set_event_wakeup  (void (*f) ()) { eventc.set_wakeup (f); }
   void                 wait_event        (void) { eventc.wait_msg(); }
   bool                 has_event         (void) { return eventc.has_msg(); }
-  FieldBuffer*         pop_event         (void) { eventc.wait_msg(); return eventc.pop_msg(); }
+  FieldBuffer*         pop_event         (void) { return eventc.pop_msg(); }
   // API for DispatchFunc
   FieldBufferReader    reader;
   void                 push_result       (FieldBuffer *rret) { resultc.push_msg (rret); }
   void                 push_event        (FieldBuffer *fbev) { eventc.push_msg (fbev); }
+  uint                 dispatcher_add    (std::auto_ptr<EventDispatcher> evd); // takes object
+  EventDispatcher*     dispatcher_lookup (uint         dfunc_id);
+  void                 dispatcher_delete (uint         dfunc_id);
   // SmartHandle API
   inline uint64        pop_rpc_handle    (FieldBufferReader &fbr) { return fbr.pop_object(); }
   // server loop integration

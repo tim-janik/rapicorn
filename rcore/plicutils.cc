@@ -58,7 +58,6 @@ string_printf (const char *format, ...)
   return buffer;
 }
 
-#if 0
 static void
 printerr (const char *format, ...)
 {
@@ -72,7 +71,6 @@ printerr (const char *format, ...)
   size_t l = write (2, buffer, strlen (buffer));
   (void) l;
 }
-#endif
 
 /* === SmartHandle === */
 struct SmartHandle0 : public SmartHandle {
@@ -138,6 +136,10 @@ SmartHandle::_rpc_id2obj (uint64 rpc_id)
     return const_cast<SmartHandle*> (&None);
   return NULL; // FIXME
 }
+
+/* === EventDispatcher === */
+EventDispatcher::~EventDispatcher ()
+{}
 
 /* === SimpleServer === */
 static pthread_mutex_t         simple_server_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -255,7 +257,47 @@ Channel::~Channel ()
 }
 
 /* === Coupler === */
+struct Coupler::Priv {
+  vector<EventDispatcher*> edispatchers;
+  uint                     next_free;
+  Priv() : next_free (0xffffffffULL) {}
+  uint
+  add_edispatcher (EventDispatcher *evd)
+  {
+    uint ix = next_free < edispatchers.size() ? uint (edispatchers[next_free]) : next_free;
+    if (ix < edispatchers.size())
+      { // this implements minor free-id shuffling
+        edispatchers[next_free] = edispatchers[ix];
+        edispatchers[ix] = evd;
+        return ix;
+      }
+    edispatchers.push_back (evd);
+    return edispatchers.size() - 1;
+  }
+  void
+  remove_edispatcher (uint ix)
+  {
+    if (ix < edispatchers.size())
+      {
+        EventDispatcher *evd = edispatchers[ix];
+        edispatchers[ix] = (EventDispatcher*) next_free;
+        next_free = ix;
+        if (evd)
+          delete evd;
+      }
+  }
+  bool
+  isfree (uint ix)
+  {
+    for (uint jx = next_free; jx < edispatchers.size(); jx = uint (edispatchers[jx]))
+      if (jx == ix)
+        return true;
+    return false;
+  }
+};
+
 Coupler::Coupler () :
+  priv (*new Coupler::Priv()),
   reader (*(FieldBuffer*) NULL)
 {}
 
@@ -279,9 +321,33 @@ Coupler::dispatch ()
 Coupler::~Coupler ()
 {
   reader.reset();
+  delete &priv;
 }
 
-/* === Dispatchers === */
+uint
+Coupler::dispatcher_add (std::auto_ptr<EventDispatcher> evd)
+{
+  return 1 + priv.add_edispatcher (evd.release());
+}
+
+EventDispatcher*
+Coupler::dispatcher_lookup (uint edispatcher_id)
+{
+  uint ix = edispatcher_id - 1;
+  return ix < priv.edispatchers.size() ? priv.edispatchers[ix] : NULL;
+}
+
+void
+Coupler::dispatcher_delete (uint edispatcher_id)
+{
+  uint ix = edispatcher_id - 1;
+  if (ix < priv.edispatchers.size() && !priv.isfree (ix))
+    priv.remove_edispatcher (ix);
+  else
+    printerr ("PLIC:Coupler::%s(): invalid id: %u", __func__, edispatcher_id);
+}
+
+/* === DispatchRegistry === */
 typedef std::map<TypeHash, DispatchFunc> TypeHashMap;
 static TypeHashMap              dispatcher_type_map;
 static pthread_mutex_t          dispatcher_type_mutex = PTHREAD_MUTEX_INITIALIZER;
