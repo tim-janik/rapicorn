@@ -133,11 +133,11 @@ class TypeInfo (BaseDecl):
     return sha224.digest()
   def type_hash (self):
     if self.issignal:
-      l = '\x90\x00\x00\x00' # signal
+      l = '\x50\x00\x00\x00' # signal
     elif self.rtype.storage == VOID:
-      l = '\x10\x00\x00\x00' # oneway
+      l = '\x20\x00\x00\x00' # oneway
     else:
-      l = '\xa0\x00\x00\x00' # twoway
+      l = '\x30\x00\x00\x00' # twoway
     bytes = l + self.sha224digest()
     t = tuple ([ord (c) for c in bytes])
     return t
