@@ -131,11 +131,9 @@ class TypeInfo (BaseDecl):
     sha224 = hashlib.sha224()
     sha224.update (digest)
     return sha224.digest()
-  def type_hash (self, isevent = False):
-    if self.issignal and isevent:
-      l = '\x60\x00\x00\x00' # event
-    elif self.issignal:
-      l = '\x50\x00\x00\x00' # signal
+  def type_hash (self):
+    if self.issignal:
+      l = '\x50\x00\x00\x00' # sigcon
     elif self.rtype.storage == VOID:
       l = '\x20\x00\x00\x00' # oneway
     else:

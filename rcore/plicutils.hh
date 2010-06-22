@@ -65,18 +65,20 @@ static const uint64 msgid_result = 0x1000000000000000ULL; // result bit
 static const uint64 msgid_oneway = 0x2000000000000000ULL;
 static const uint64 msgid_twoway = 0x3000000000000000ULL; // result bit
 static const uint64 msgid_discon = 0x4000000000000000ULL;
-static const uint64 msgid_signal = 0x5000000000000000ULL; // result bit
+static const uint64 msgid_sigcon = 0x5000000000000000ULL; // result bit
 static const uint64 msgid_event  = 0x6000000000000000ULL;
-static const uint64 msgid_error  = 0x8000000000000000ULL;
+//     const uint64 msgid_signal = 0x7000000000000000ULL; // result bit
+static const uint64 msgid_error  = 0x8000000000000000ULL; // error bit
 inline bool msgid_has_result (const uint64 id) { return id & msgid_result; }
 inline bool is_msgid_ok      (const uint64 id) { return id >> 60 == msgid_ok     >> 60; }
 inline bool is_msgid_result  (const uint64 id) { return id >> 60 == msgid_result >> 60; }
 inline bool is_msgid_oneway  (const uint64 id) { return id >> 60 == msgid_oneway >> 60; }
 inline bool is_msgid_twoway  (const uint64 id) { return id >> 60 == msgid_twoway >> 60; }
 inline bool is_msgid_discon  (const uint64 id) { return id >> 60 == msgid_discon >> 60; }
-inline bool is_msgid_signal  (const uint64 id) { return id >> 60 == msgid_signal >> 60; }
+inline bool is_msgid_sigcon  (const uint64 id) { return id >> 60 == msgid_sigcon >> 60; }
 inline bool is_msgid_event   (const uint64 id) { return id >> 60 == msgid_event  >> 60; }
 inline bool is_msgid_error   (const uint64 id) { return id >> 60 == msgid_error  >> 60; }
+inline bool msgid_has_error  (const uint64 id) { return id & msgid_result; }
 
 /* === Forward Declarations === */
 class SimpleServer;
