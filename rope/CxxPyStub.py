@@ -41,16 +41,22 @@ base_code = """
                                  PyErr_Format_from_PLIC_error (fr); \\
                                  goto error; } } while (0)
 
+using Plic::uint64;
+using Plic::FieldBuffer;
+using Plic::FieldBufferReader;
+
 static PyObject*
-PyErr_Format_from_PLIC_error (const Plic::FieldBuffer *fr)
+PyErr_Format_from_PLIC_error (const FieldBuffer *fr)
 {
   if (!fr)
     return PyErr_Format (PyExc_RuntimeError, "PLIC: missing return value");
-  if (Plic::is_msgid_error (fr->first_id()))
+  if (Plic::msgid_has_error (fr->first_id()))
     {
-      Plic::FieldBufferReader frr (*fr);
+      FieldBufferReader frr (*fr);
+      std::string msg = "unknown message", domain;
       frr.skip(); // proc_id
-      std::string msg = frr.pop_string(), domain = frr.pop_string();
+      if (Plic::is_msgid_error (frr.pop_int64()))
+        msg = frr.pop_string(), domain = frr.pop_string();
       if (domain.size()) domain += ": ";
       msg = domain + msg;
       return PyErr_Format (PyExc_RuntimeError, "%s", msg.c_str());
@@ -119,7 +125,7 @@ PyList_Take_Item (PyObject *pylist, PyObject **pyitemp)
 #ifndef PLIC_COUPLER
 #define PLIC_COUPLER()  _plic_coupler_static
 static struct _UnimplementedCoupler : public Plic::Coupler {
-  virtual Plic::FieldBuffer* call_remote (Plic::FieldBuffer *fbcall) { return NULL; }
+  virtual FieldBuffer* call_remote (FieldBuffer *fbcall) { return NULL; }
 } _plic_coupler_static;
 #endif
 """
@@ -175,7 +181,7 @@ class Generator:
     elif type.storage == Decls.STRING:
       s += '  %s = PyString_From_std_string (%s.pop_string()); ERRORifpy();\n' % (var, fbr)
     elif type.storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += '  %s = plic_py%s_proto_pop (%s); ERRORif (!pyfoR);\n' % (var, type.name, fbr)
+      s += '  %s = plic_py%s_proto_pop (%s); ERRORif (!%s);\n' % (var, type.name, fbr, var)
     elif type.storage == Decls.INTERFACE:
       s += '  %s = PyLong_FromUnsignedLongLong (%s.pop_object()); ERRORifpy();\n' % (var, fbr)
     else: # FUNC VOID
@@ -261,31 +267,67 @@ class Generator:
     return s
   def generate_rpc_signal_call (self, class_info, mtype, mdefs):
     s = ''
-    mdefs += [ '{ "_PLIC_%s", _plic_sig_%s, METH_VARARGS, "pyRapicorn signal call" }' %
+    mdefs += [ '{ "_PLIC_%s", _plic_marshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
                (mtype.ident_digest(), mtype.ident_digest()) ]
+    evd_class = '_EventDispatcher_%s' % mtype.ident_digest()
+    s += 'class %s : public Plic::EventDispatcher {\n' % evd_class
+    s += '  PyObject *m_callable;\n'
+    s += 'public:\n'
+    s += '  ~%s() { Py_DECREF (m_callable); }\n' % evd_class
+    s += '  %s (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}\n' % evd_class
+    s += '  virtual FieldBuffer*\n'
+    s += '  dispatch_event (Plic::Coupler &cpl)\n'
+    s += '  {\n'
+    if mtype.args:
+      s += '    FieldBufferReader &fbr = cpl.reader;\n'
+    s += '    // uint64 msgid = frr.pop_int64();\n'
+    s += '    // assert (Plic::is_msgid_event (msgid));\n'
+    s += '    // uint handler_id = uint (frr.pop_int64());\n'
+    s += '    const uint length = %u;\n' % len (mtype.args)
+    s += '    PyObject *result, *tuple = PyTuple_New (length)%s;\n' % (', *item' if mtype.args else '')
+    arg_counter = 0
+    for a in mtype.args:
+      s += '  ' + self.generate_proto_pop_py ('fbr', a[1], 'item')
+      s += '    PyTuple_SET_ITEM (tuple, %u, item);\n' % arg_counter
+      arg_counter += 1
+    s += '    if (PyErr_Occurred()) goto error;\n'
+    s += '    result = PyObject_Call (m_callable, tuple, NULL);\n'
+    s += '    Py_XDECREF (result);\n'
+    s += '   error:\n'
+    s += '    Py_XDECREF (tuple);\n'
+    s += '    return NULL;\n'
+    s += '  }\n'
+    s += '};\n'
     s += 'static PyObject*\n'
-    s += '_plic_sig_%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
+    s += '_plic_marshal__%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
     s += '{\n'
+    s += '  Plic::Coupler &cpl = PLIC_COUPLER();\n'
     s += '  PyObject *item, *pyfoR = NULL;\n'
-    s += '  ' + FieldBuffer + ' &fb = *' + FieldBuffer + '::_new (4 + 1 + 2), *fr = NULL;\n' # proc_id self ConId ClosureId
+    s += '  FieldBuffer *fm = FieldBuffer::_new (4 + 1 + 2), &fb = *fm, *fr = NULL;\n' # proc_id self ConId ClosureId
     s += '  fb.add_type_hash (%s); // proc_id\n' % self.method_digest (mtype)
-    s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");\n'
+    s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 0);  // self\n'
     s += self.generate_proto_add_py ('fb', class_info, 'item')
-    s += '  item = PyTuple_GET_ITEM (pyargs, 1);  // ConId for disconnect\n'
-    s += '  %s.add_int64 (PyIntLong_AsLongLong (%s)); ERRORifpy();\n' % ('fb', 'item')
-    s += '  item = PyTuple_GET_ITEM (pyargs, 2);  // Closure\n'
-    s += '  %s.add_int64 (1 /*FIXME: PyIntLong_AsLongLong (%s)*/); ERRORifpy();\n' % ('fb', 'item')
-    s += '  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb\n'
+    s += '  item = PyTuple_GET_ITEM (pyargs, 1);  // Closure\n'
+    s += '  if (item == Py_None) fb.add_int64 (0);\n'
+    s += '  else {\n'
+    s += '    if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");\n'
+    s += '    std::auto_ptr<Plic::EventDispatcher> ap (new %s (item));\n' % evd_class
+    s += '    uint64 handler_id = cpl.dispatcher_add (ap);\n'
+    s += '    fb.add_int64 (handler_id); }\n'
+    s += '  item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect\n'
+    s += '  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();\n'
+    s += '  fr = cpl.call_remote (&fb); fm = NULL; // deletes fb\n'
     s += '  ERRORifnotret (fr);\n'
     s += '  if (fr) {\n'
-    s += '    ' + FieldBuffer + 'Reader frr (*fr);\n'
+    s += '    FieldBufferReader frr (*fr);\n'
     s += '    frr.skip(); // proc_id for return\n' # FIXME: check errors
     s += '    if (frr.remaining() == 1) {\n'
-    s += '      %s = PyLong_FromLongLong (%s.pop_int64()); ERRORifpy ();\n' % ('pyfoR', 'frr')
+    s += '      pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();\n'
     s += '    }\n'
     s += '  }\n'
     s += ' error:\n'
+    s += '  if (fm) delete fm;\n'
     s += '  if (fr) delete fr;\n'
     s += '  return pyfoR;\n'
     s += '}\n'

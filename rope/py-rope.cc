@@ -80,12 +80,52 @@ rope_init_dispatcher (PyObject *self,
   return PyLong_FromUnsignedLongLong (app_id);
 }
 
+static PyObject*
+rope_check_event (PyObject *self, PyObject *args)
+{
+  if (self || PyTuple_Size (args) != 0)
+    { PyErr_Format (PyExc_TypeError, "no arguments expected"); return NULL; }
+  Plic::Coupler &cpl = PLIC_COUPLER();
+  bool hasevent = cpl.has_event();
+  PyObject *pybool = hasevent ? Py_True : Py_False;
+  Py_INCREF (pybool);
+  return pybool;
+}
+
+static PyObject*
+rope_dispatch_event (PyObject *self, PyObject *args)
+{
+  if (self || PyTuple_Size (args) != 0)
+    { PyErr_Format (PyExc_TypeError, "no arguments expected"); return NULL; }
+  Plic::Coupler &cpl = PLIC_COUPLER();
+  FieldBuffer *fb = cpl.pop_event();
+  if (!fb)
+    return None_INCREF();
+  Plic::FieldBufferReader &fbr = cpl.reader;
+  fbr.reset (*fb);
+  uint64 msgid = fbr.pop_int64();
+  assert (Plic::is_msgid_event (msgid)); // FIXME
+  uint64 handler_id = fbr.pop_int64();
+  Plic::EventDispatcher *evd = cpl.dispatcher_lookup (uint (handler_id));
+  assert (evd != NULL); // FIXME
+  FieldBuffer *fr = evd->dispatch_event (cpl); // continues to use cpl.reader
+  cpl.reader.reset();
+  delete fb;
+  if (fr)
+    delete fr; // FIXME: check errors
+  return PyErr_Occurred() ? NULL : None_INCREF();
+}
+
 } // Anon
 
 // --- Python module definitions (global namespace) ---
 static PyMethodDef rope_vtable[] = {
   { "_init_dispatcher",         rope_init_dispatcher,         METH_VARARGS,
-    "Rapicorn::_init_dispatcher() - initial setup." },
+    "Run initial Rapicorn setup code." },
+  { "_check_event",             rope_check_event,             METH_VARARGS,
+    "Check for pending Rapicorn events." },
+  { "_dispatch_event",          rope_dispatch_event,          METH_VARARGS,
+    "Dispatch pending Rapicorn events." },
   { "printout",                 rope_printout,                METH_VARARGS,
     "Rapicorn::printout() - print to stdout." },
   PLIC_PYSTUB_METHOD_DEFS(),

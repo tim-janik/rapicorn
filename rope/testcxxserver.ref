@@ -1179,11 +1179,18 @@ _dispatch__UIWidgetArea_on_click2in (Coupler &cpl)
 struct _CLOSURE_UIWidgetArea_void_signal {
   typedef Plic::shared_ptr<_CLOSURE_UIWidgetArea_void_signal> SharedPtr;
   _CLOSURE_UIWidgetArea_void_signal (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_UIWidgetArea_void_signal()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (4 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
   static void
   handler (SharedPtr sp)
   {
     FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0);
-    fb.add_type_hash (0x60000000257c7180ULL, 0xfac77ebb19c6ab72ULL, 0xb34dd194f62b665dULL, 0x0c329a03aebf472bULL); // event_id
+    fb.add_int64 (Plic::msgid_event);
     fb.add_int64 (sp->m_handler);
     sp->m_coupler.push_event (&fb); // deletes fb
   }
@@ -1198,8 +1205,8 @@ _dispatch__UIWidgetArea_void_signal (Coupler &cpl)
   I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 con_id = fbr.pop_int64();
   uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_void_signal.disconnect (con_id);
   if (handler_id) {
     _CLOSURE_UIWidgetArea_void_signal::SharedPtr sp (new _CLOSURE_UIWidgetArea_void_signal (cpl, handler_id));
@@ -1210,13 +1217,20 @@ _dispatch__UIWidgetArea_void_signal (Coupler &cpl)
 }struct _CLOSURE_UIWidgetArea_sample_signal {
   typedef Plic::shared_ptr<_CLOSURE_UIWidgetArea_sample_signal> SharedPtr;
   _CLOSURE_UIWidgetArea_sample_signal (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_UIWidgetArea_sample_signal()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (4 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
   static double
   handler (I_UIWidgetArea_Iface &arg_ba1,
            int arg_someint,
            SharedPtr sp)
   {
     FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2);
-    fb.add_type_hash (0x60000000a31a6e24ULL, 0xfe2020b5b9671356ULL, 0x11e8a29ccb87db27ULL, 0xcbe662a2887ef78fULL); // event_id
+    fb.add_int64 (Plic::msgid_event);
     fb.add_int64 (sp->m_handler);
     fb.add_object (UIWidgetArea (arg_ba1)._rpc_id());
     fb.add_int64 (arg_someint);
@@ -1234,8 +1248,8 @@ _dispatch__UIWidgetArea_sample_signal (Coupler &cpl)
   I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 con_id = fbr.pop_int64();
   uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_sample_signal.disconnect (con_id);
   if (handler_id) {
     _CLOSURE_UIWidgetArea_sample_signal::SharedPtr sp (new _CLOSURE_UIWidgetArea_sample_signal (cpl, handler_id));
@@ -1429,11 +1443,18 @@ namespace RapicornPlicTest {
 struct _CLOSURE_ButtonArea_check_activate {
   typedef Plic::shared_ptr<_CLOSURE_ButtonArea_check_activate> SharedPtr;
   _CLOSURE_ButtonArea_check_activate (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_ButtonArea_check_activate()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (4 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
   static bool
   handler (SharedPtr sp)
   {
     FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0);
-    fb.add_type_hash (0x600000002002b254ULL, 0x237b6d00631699f2ULL, 0xaa4a2bf137175f39ULL, 0x16724232857b7195ULL); // event_id
+    fb.add_int64 (Plic::msgid_event);
     fb.add_int64 (sp->m_handler);
     sp->m_coupler.push_event (&fb); // deletes fb
     return 0;
@@ -1449,8 +1470,8 @@ _dispatch__ButtonArea_check_activate (Coupler &cpl)
   I_ButtonArea_Iface *self;
   self = ButtonArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 con_id = fbr.pop_int64();
   uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_check_activate.disconnect (con_id);
   if (handler_id) {
     _CLOSURE_ButtonArea_check_activate::SharedPtr sp (new _CLOSURE_ButtonArea_check_activate (cpl, handler_id));
@@ -1461,11 +1482,18 @@ _dispatch__ButtonArea_check_activate (Coupler &cpl)
 }struct _CLOSURE_ButtonArea_activate {
   typedef Plic::shared_ptr<_CLOSURE_ButtonArea_activate> SharedPtr;
   _CLOSURE_ButtonArea_activate (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_ButtonArea_activate()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (4 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
   static void
   handler (SharedPtr sp)
   {
     FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0);
-    fb.add_type_hash (0x600000001eea842bULL, 0xdb7ee9164c9f8a60ULL, 0x1d0b0a314944036aULL, 0xfc73ff4aec88f8ffULL); // event_id
+    fb.add_int64 (Plic::msgid_event);
     fb.add_int64 (sp->m_handler);
     sp->m_coupler.push_event (&fb); // deletes fb
   }
@@ -1480,8 +1508,8 @@ _dispatch__ButtonArea_activate (Coupler &cpl)
   I_ButtonArea_Iface *self;
   self = ButtonArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 con_id = fbr.pop_int64();
   uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_activate.disconnect (con_id);
   if (handler_id) {
     _CLOSURE_ButtonArea_activate::SharedPtr sp (new _CLOSURE_ButtonArea_activate (cpl, handler_id));

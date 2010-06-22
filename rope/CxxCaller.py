@@ -417,17 +417,24 @@ class Generator:
     therr = 'THROW_ERROR()'
     dispatcher_name = '_dispatch__%s_%s' % (class_info.name, stype.name)
     reglines += [ (self.method_digest (stype), self.namespaced_identifier (dispatcher_name)) ]
-    closure = '_CLOSURE_%s_%s' % (class_info.name, stype.name)
+    closure_class = '_CLOSURE_%s_%s' % (class_info.name, stype.name)
     cplfb = ('sp->m_coupler', 'fb')
-    s += 'struct %s {\n' % closure
-    s += '  typedef Plic::shared_ptr<%s> SharedPtr;\n' % closure
-    s += '  %s (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}\n' % closure
+    s += 'struct %s {\n' % closure_class
+    s += '  typedef Plic::shared_ptr<%s> SharedPtr;\n' % closure_class
+    s += '  %s (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}\n' % closure_class
+    s += '  ~%s()\n' % closure_class
+    s += '  {\n'
+    s += '    FieldBuffer &fb = *FieldBuffer::_new (4 + 1);\n'
+    s += '    fb.add_int64 (Plic::msgid_discon);\n' # self.method_digest (stype)
+    s += '    fb.add_int64 (m_handler);\n'
+    s += '    m_coupler.push_event (&fb); // deletes fb\n'
+    s += '  }\n'
     s += '  static %s\n' % self.rtype2cpp (stype.rtype)
     s += '  handler ('
     s += self.format_func_args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
     s += 'SharedPtr sp)\n  {\n'
     s += '    FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + %u);\n' % len (stype.args)
-    s += '    fb.add_type_hash (%s); // event_id\n' % self.method_digest (stype, True)
+    s += '    fb.add_int64 (Plic::msgid_event);\n' # self.method_digest (stype)
     s += '    fb.add_int64 (sp->m_handler);\n'
     ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
     args2fb = self.generate_proto_add_args (cplfb, class_info, '', ident_type_args, '', therr)
@@ -449,11 +456,11 @@ class Generator:
     s += '  %s *self;\n' % I (self.type2cpp (class_info))
     s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
-    s += '  uint64 con_id = %s.pop_int64();\n' % cplfbr[1]
     s += '  uint64 cid = 0, handler_id = %s.pop_int64();\n' % cplfbr[1]
+    s += '  uint64 con_id = %s.pop_int64();\n' % cplfbr[1]
     s += '  if (con_id) self->sig_%s.disconnect (con_id);\n' % stype.name
     s += '  if (handler_id) {\n'
-    s += '    %s::SharedPtr sp (new %s (cpl, handler_id));\n' % (closure, closure)
+    s += '    %s::SharedPtr sp (new %s (cpl, handler_id));\n' % (closure_class, closure_class)
     s += '    cid = self->sig_%s.connect (slot (sp->handler, sp)); }\n' % stype.name
     s += '  FieldBuffer &rb  = *FieldBuffer::new_result();\n'
     s += '  rb.add_int64 (cid);\n'
@@ -464,8 +471,8 @@ class Generator:
     return ('0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL, ' +
             '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL') % \
             digest
-  def method_digest (self, mtype, isevent = False):
-    return self.digest2cbytes (mtype.type_hash (isevent))
+  def method_digest (self, mtype):
+    return self.digest2cbytes (mtype.type_hash())
   def generate_server_method_registry (self, reglines):
     s = ''
     s += 'static const Plic::DispatcherEntry _dispatcher_entries[] = {\n'

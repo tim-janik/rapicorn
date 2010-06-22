@@ -154,9 +154,9 @@ class Generator:
     s = ''
     s += 'def __sig_%s__ (self): pass # default handler\n' % ftype.name
     s += 'def sig_%s_connect (self, func):\n' % ftype.name
-    s += '  return _PLIC_%s (self, 0, func)\n' % ftype.ident_digest()
+    s += '  return _PLIC_%s (self, func, 0)\n' % ftype.ident_digest()
     s += 'def sig_%s_disconnect (self, connection_id):\n' % ftype.name
-    s += '  return _PLIC_%s (self, connection_id, None)\n' % ftype.ident_digest()
+    s += '  return _PLIC_%s (self, None, connection_id)\n' % ftype.ident_digest()
     return s
   def generate_to_proto (self, argname, type_info, valname, onerror = 'return false'):
     s = ''

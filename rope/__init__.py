@@ -27,16 +27,23 @@ for s in dir (pyRapicorn): # allow py2cpy to access generated methods
 
 app = None
 def app_init (application_name = None):
-  import sys
+  import sys, pyRapicorn, py2cpy
   cmdline_args = None
   if application_name == None:
     application_name = os.path.abspath (sys.argv[0] or '-')
   if cmdline_args == None:
     cmdline_args = sys.argv
-  plic_id = app_init._init_dispatcher (application_name, cmdline_args)
+  plic_id = pyRapicorn._init_dispatcher (application_name, cmdline_args)
   a = py2cpy.Application (py2cpy._BaseClass_._PlicID_ (plic_id))
   global app
   app = a
   return app
-app_init._init_dispatcher = pyRapicorn._init_dispatcher # save for app_init() use
+def check_event ():
+  import pyRapicorn
+  return pyRapicorn._check_event()
+def dispatch_event ():
+  import pyRapicorn
+  return pyRapicorn._dispatch_event()
+#app_init._init_dispatcher = pyRapicorn._init_dispatcher # save for app_init() use
 del globals()['pyRapicorn']
+del globals()['py2cpy']
