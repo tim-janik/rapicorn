@@ -317,7 +317,7 @@ class Generator:
     s += '    fb.add_int64 (handler_id); }\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect\n'
     s += '  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();\n'
-    s += '  fr = cpl.call_remote (&fb); fm = NULL; // deletes fb\n'
+    s += '  fm = NULL; fr = cpl.call_remote (&fb); // deletes fb\n'
     s += '  ERRORifnotret (fr);\n'
     s += '  if (fr) {\n'
     s += '    FieldBufferReader frr (*fr);\n'
@@ -345,7 +345,7 @@ class Generator:
     s += '_plic_rpc_%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
     s += '{\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
-    s += '  ' + FieldBuffer + ' &fb = *' + FieldBuffer + '::_new (4 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # proc_id self
+    s += '  FieldBuffer *fm = FieldBuffer::_new (4 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # proc_id self
     s += '  fb.add_type_hash (%s); // proc_id\n' % self.method_digest (mtype)
     s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("PLIC: wrong number of arguments");\n' % len (mtype.args) # proc_id self
     arg_counter = 0
@@ -357,7 +357,7 @@ class Generator:
       s += self.generate_proto_add_py ('fb', ma[1], 'item')
       arg_counter += 1
     # call out
-    s += '  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb\n'
+    s += '  fm = NULL; fr = PLIC_COUPLER().call_remote (&fb); // deletes fb\n'
     if mtype.rtype.storage == Decls.VOID:
       s += '  if (fr) { delete fr; fr = NULL; }\n'
       s += '  return None_INCREF();\n'
@@ -374,6 +374,7 @@ class Generator:
       s += '  return pyfoR;\n'
     s += ' error:\n'
     s += '  if (fr) delete fr;\n'
+    s += '  if (fm) delete fm;\n'
     s += '  return NULL;\n'
     s += '}\n'
     return s
