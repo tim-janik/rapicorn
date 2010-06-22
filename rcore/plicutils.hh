@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 #include <memory>               // auto_ptr
-#include <stdint.h>             // uint64_t
+#include <stdint.h>             // uint32_t
 #include <tr1/memory>           // shared_ptr
 
 namespace Plic {
@@ -51,13 +51,13 @@ using std::tr1::weak_ptr;
 /* === Standard Types === */
 typedef std::string String;
 using std::vector;
-typedef int8_t          int8;
-typedef uint8_t         uint8;
-typedef int16_t         int16;
-typedef uint16_t        uint16;
-typedef uint32_t        uint;
-typedef int64_t         int64;
-typedef uint64_t        uint64;
+typedef int8_t                 int8;
+typedef uint8_t                uint8;
+typedef int16_t                int16;
+typedef uint16_t               uint16;
+typedef uint32_t               uint;
+typedef signed long long int   int64; // int64_t is a long on AMD64 which breaks printf
+typedef unsigned long long int uint64; // int64_t is a long on AMD64 which breaks printf
 
 /* === Constants === */
 static const uint64 msgid_ok     = 0x0000000000000000ULL;

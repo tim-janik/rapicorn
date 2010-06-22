@@ -264,7 +264,7 @@ struct Coupler::Priv {
   uint
   add_edispatcher (EventDispatcher *evd)
   {
-    uint ix = next_free < edispatchers.size() ? uint (edispatchers[next_free]) : next_free;
+    uint ix = next_free < edispatchers.size() ? ptrdiff_t (edispatchers[next_free]) : next_free;
     if (ix < edispatchers.size())
       { // this implements minor free-id shuffling
         edispatchers[next_free] = edispatchers[ix];
@@ -289,7 +289,7 @@ struct Coupler::Priv {
   bool
   isfree (uint ix)
   {
-    for (uint jx = next_free; jx < edispatchers.size(); jx = uint (edispatchers[jx]))
+    for (uint jx = next_free; jx < edispatchers.size(); jx = ptrdiff_t (edispatchers[jx]))
       if (jx == ix)
         return true;
     return false;
