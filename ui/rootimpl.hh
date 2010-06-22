@@ -81,6 +81,8 @@ private:
   void                  idle_show                               ();
   virtual WinPtr        winptr                                  ();
   virtual WindowBase&   window                                  ();
+  virtual bool          custom_command                          (const String       &command_name,
+                                                                 const StringVector &command_args);
   virtual bool          prepare                                 (uint64                  current_time_usecs,
                                                                  int64                  *timeout_usecs_p);
   virtual bool          check                                   (uint64                  current_time_usecs);

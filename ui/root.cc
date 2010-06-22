@@ -54,12 +54,19 @@ Root::set_parent (Container *parent)
 }
 
 bool
-Root::custom_command (const String       &command_name,
-                      const StringVector &command_args)
+RootImpl::custom_command (const String       &command_name,
+                          const StringVector &command_args)
 {
   bool handled = sig_command.emit (command_name, command_args);
   if (!handled)
     handled = sig_window_command.emit (command_name, command_args);
+  if (!handled)
+    {
+      StringList args;
+      args.strings = command_args;
+      printerr ("Root::%s(): emitting WindowBase::sig_commands: %s\n", __func__, command_name.c_str());
+      handled = sig_commands.emit (command_name, args);
+    }
   return handled;
 }
 

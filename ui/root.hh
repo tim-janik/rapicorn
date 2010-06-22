@@ -39,7 +39,7 @@ protected:
   virtual bool  dispatch_event          (const Event  &event) = 0;
   virtual void  set_parent              (Container    *parent);
   virtual bool  custom_command          (const String       &command_name,
-                                         const StringVector &command_args);
+                                         const StringVector &command_args) = 0;
   /* loop source (FIXME) */
   virtual bool  prepare                 (uint64 current_time_usecs,
                                          int64 *timeout_usecs_p) = 0;
