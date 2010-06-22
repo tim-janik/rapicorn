@@ -3,6 +3,7 @@
 // --- ServerHH Boilerplate ---
 #include <rcore/plicutils.hh>
 #include <rcore/rapicornsignal.hh>
+using Rapicorn::Signals::slot;
 
 // --- ClientCC/ServerCC Boilerplate ---
 #include <string>
@@ -134,6 +135,7 @@ enum ExtensiveEnum {
 
 class I_FirstInterface_Iface : public virtual Plic::SimpleServer {
 protected:
+  explicit                 I_FirstInterface_Iface ();
   virtual /*Des*/         ~I_FirstInterface_Iface () = 0;
 public:
   virtual void            void_func ();
@@ -281,12 +283,13 @@ namespace InterfaceTests {
 
 class I_UIWidgetArea_Iface : public virtual Plic::SimpleServer {
 protected:
+  explicit                 I_UIWidgetArea_Iface ();
   virtual /*Des*/         ~I_UIWidgetArea_Iface () = 0;
 public:
   typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Iface, void ()> Signal_void_signal;
   typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Iface, double (I_UIWidgetArea_Iface &ba1, int someint)> Signal_sample_signal;
-  // Signal_void_signal sig_void_signal;
-  // Signal_sample_signal sig_sample_signal;
+  Signal_void_signal sig_void_signal;
+  Signal_sample_signal sig_sample_signal;
   virtual double          simple_method ();
   virtual double          single_arg    (int n);
   virtual double          single_arg2   (int n = 5);
@@ -332,6 +335,7 @@ public:
 
 class I_Parent_Iface : public virtual Plic::SimpleServer {
 protected:
+  explicit                 I_Parent_Iface ();
   virtual /*Des*/         ~I_Parent_Iface () = 0;
 public:
 };
@@ -352,6 +356,7 @@ public:
 
 class I_Child_Iface : public virtual I_Parent_Iface {
 protected:
+  explicit                 I_Child_Iface ();
   virtual /*Des*/         ~I_Child_Iface () = 0;
 public:
 };
@@ -372,6 +377,7 @@ public:
 
 class I_Descendant_Iface : public virtual I_Child_Iface {
 protected:
+  explicit                 I_Descendant_Iface ();
   virtual /*Des*/         ~I_Descendant_Iface () = 0;
 public:
 };
@@ -392,6 +398,7 @@ public:
 
 class I_GrandChild_Iface : public virtual I_Descendant_Iface {
 protected:
+  explicit                 I_GrandChild_Iface ();
   virtual /*Des*/         ~I_GrandChild_Iface () = 0;
 public:
 };
@@ -427,6 +434,7 @@ struct QuickSequence {
 
 class I_QuickIface_Iface : public virtual Plic::SimpleServer {
 protected:
+  explicit                 I_QuickIface_Iface ();
   virtual /*Des*/         ~I_QuickIface_Iface () = 0;
 public:
   virtual void            simple_function (int i = 9);
@@ -449,6 +457,7 @@ public:
 
 class I_MethodTestInterface_Iface : public virtual Plic::SimpleServer {
 protected:
+  explicit                 I_MethodTestInterface_Iface ();
   virtual /*Des*/         ~I_MethodTestInterface_Iface () = 0;
 public:
   virtual void            method_with_void       ();
@@ -508,12 +517,13 @@ enum ClickType {
 
 class I_ButtonArea_Iface : public virtual Plic::SimpleServer {
 protected:
+  explicit                 I_ButtonArea_Iface ();
   virtual /*Des*/         ~I_ButtonArea_Iface () = 0;
 public:
   typedef Rapicorn::Signals::Signal<I_ButtonArea_Iface, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
   typedef Rapicorn::Signals::Signal<I_ButtonArea_Iface, void ()> Signal_activate;
-  // Signal_check_activate sig_check_activate;
-  // Signal_activate sig_activate;
+  Signal_check_activate sig_check_activate;
+  Signal_activate sig_activate;
 };
 class ButtonArea : public virtual Plic::SmartHandle {
 protected:
@@ -532,6 +542,7 @@ public:
 
 class I_PureMethods_Iface : public virtual Plic::SimpleServer {
 protected:
+  explicit                 I_PureMethods_Iface ();
   virtual /*Des*/         ~I_PureMethods_Iface () = 0;
 public:
   virtual int             pure_method (double f) = 0;
@@ -556,6 +567,8 @@ public:
 // --- Implementations ---
 
 namespace MandatoryNamespace {
+I_FirstInterface_Iface::I_FirstInterface_Iface ()
+{}
 I_FirstInterface_Iface::~I_FirstInterface_Iface () {}
 
 bool
@@ -905,14 +918,25 @@ SomeRecord::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 } // OtherNamespace
 
 namespace InterfaceTests {
+I_UIWidgetArea_Iface::I_UIWidgetArea_Iface () :
+  sig_void_signal (*this), sig_sample_signal (*this)
+{}
 I_UIWidgetArea_Iface::~I_UIWidgetArea_Iface () {}
 
+I_Parent_Iface::I_Parent_Iface ()
+{}
 I_Parent_Iface::~I_Parent_Iface () {}
 
+I_Child_Iface::I_Child_Iface ()
+{}
 I_Child_Iface::~I_Child_Iface () {}
 
+I_Descendant_Iface::I_Descendant_Iface ()
+{}
 I_Descendant_Iface::~I_Descendant_Iface () {}
 
+I_GrandChild_Iface::I_GrandChild_Iface ()
+{}
 I_GrandChild_Iface::~I_GrandChild_Iface () {}
 
 bool
@@ -955,15 +979,24 @@ QuickSequence::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
   return true;
 }
 
+I_QuickIface_Iface::I_QuickIface_Iface ()
+{}
 I_QuickIface_Iface::~I_QuickIface_Iface () {}
 
+I_MethodTestInterface_Iface::I_MethodTestInterface_Iface ()
+{}
 I_MethodTestInterface_Iface::~I_MethodTestInterface_Iface () {}
 
 } // InterfaceTests
 
 namespace RapicornPlicTest {
+I_ButtonArea_Iface::I_ButtonArea_Iface () :
+  sig_check_activate (*this), sig_activate (*this)
+{}
 I_ButtonArea_Iface::~I_ButtonArea_Iface () {}
 
+I_PureMethods_Iface::I_PureMethods_Iface ()
+{}
 I_PureMethods_Iface::~I_PureMethods_Iface () {}
 
 
@@ -974,7 +1007,7 @@ namespace MandatoryNamespace {
 static FieldBuffer*
 _dispatch__FirstInterface_void_func (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
   I_FirstInterface_Iface *self;
@@ -996,7 +1029,7 @@ namespace InterfaceTests {
 static FieldBuffer*
 _dispatch__UIWidgetArea_simple_method (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
   I_UIWidgetArea_Iface *self;
@@ -1010,7 +1043,7 @@ _dispatch__UIWidgetArea_simple_method (Coupler &cpl)
 static FieldBuffer*
 _dispatch__UIWidgetArea_single_arg (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
   I_UIWidgetArea_Iface *self;
@@ -1025,7 +1058,7 @@ _dispatch__UIWidgetArea_single_arg (Coupler &cpl)
 static FieldBuffer*
 _dispatch__UIWidgetArea_single_arg2 (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
   I_UIWidgetArea_Iface *self;
@@ -1040,7 +1073,7 @@ _dispatch__UIWidgetArea_single_arg2 (Coupler &cpl)
 static FieldBuffer*
 _dispatch__UIWidgetArea_two_args (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   I_UIWidgetArea_Iface *self;
@@ -1056,7 +1089,7 @@ _dispatch__UIWidgetArea_two_args (Coupler &cpl)
 static FieldBuffer*
 _dispatch__UIWidgetArea_two_args2 (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   I_UIWidgetArea_Iface *self;
@@ -1072,7 +1105,7 @@ _dispatch__UIWidgetArea_two_args2 (Coupler &cpl)
 static FieldBuffer*
 _dispatch__UIWidgetArea_multi_args (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 5) return false;
   I_UIWidgetArea_Iface *self;
@@ -1091,7 +1124,7 @@ _dispatch__UIWidgetArea_multi_args (Coupler &cpl)
 static FieldBuffer*
 _dispatch__UIWidgetArea_self_method (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   I_UIWidgetArea_Iface *self;
@@ -1107,7 +1140,7 @@ _dispatch__UIWidgetArea_self_method (Coupler &cpl)
 static FieldBuffer*
 _dispatch__UIWidgetArea_void_method (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
   I_UIWidgetArea_Iface *self;
@@ -1119,7 +1152,7 @@ _dispatch__UIWidgetArea_void_method (Coupler &cpl)
 static FieldBuffer*
 _dispatch__UIWidgetArea_on_click2out (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
   I_UIWidgetArea_Iface *self;
@@ -1133,7 +1166,7 @@ _dispatch__UIWidgetArea_on_click2out (Coupler &cpl)
 static FieldBuffer*
 _dispatch__UIWidgetArea_on_click2in (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
   I_UIWidgetArea_Iface *self;
@@ -1143,7 +1176,74 @@ _dispatch__UIWidgetArea_on_click2in (Coupler &cpl)
   self->on_click2in (arg_command);
   return NULL;
 }
-
+struct _CLOSURE_UIWidgetArea_void_signal {
+  typedef Plic::shared_ptr<_CLOSURE_UIWidgetArea_void_signal> SharedPtr;
+  _CLOSURE_UIWidgetArea_void_signal (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  static void
+  handler (SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0);
+    fb.add_type_hash (0x60000000257c7180ULL, 0xfac77ebb19c6ab72ULL, 0xb34dd194f62b665dULL, 0x0c329a03aebf472bULL); // event_id
+    fb.add_int64 (sp->m_handler);
+    sp->m_coupler.call_remote (&fb); // deletes fb
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__UIWidgetArea_void_signal (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip4(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return false;
+  I_UIWidgetArea_Iface *self;
+  self = UIWidgetArea (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 con_id = fbr.pop_int64();
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  if (con_id) self->sig_void_signal.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_UIWidgetArea_void_signal::SharedPtr sp (new _CLOSURE_UIWidgetArea_void_signal (cpl, handler_id));
+    cid = self->sig_void_signal.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb  = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}struct _CLOSURE_UIWidgetArea_sample_signal {
+  typedef Plic::shared_ptr<_CLOSURE_UIWidgetArea_sample_signal> SharedPtr;
+  _CLOSURE_UIWidgetArea_sample_signal (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  static double
+  handler (I_UIWidgetArea_Iface &arg_ba1,
+           int arg_someint,
+           SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2);
+    fb.add_type_hash (0x60000000a31a6e24ULL, 0xfe2020b5b9671356ULL, 0x11e8a29ccb87db27ULL, 0xcbe662a2887ef78fULL); // event_id
+    fb.add_int64 (sp->m_handler);
+    fb.add_object (UIWidgetArea (arg_ba1)._rpc_id());
+    fb.add_int64 (arg_someint);
+    sp->m_coupler.call_remote (&fb); // deletes fb
+    return 0;
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__UIWidgetArea_sample_signal (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip4(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return false;
+  I_UIWidgetArea_Iface *self;
+  self = UIWidgetArea (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 con_id = fbr.pop_int64();
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  if (con_id) self->sig_sample_signal.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_UIWidgetArea_sample_signal::SharedPtr sp (new _CLOSURE_UIWidgetArea_sample_signal (cpl, handler_id));
+    cid = self->sig_sample_signal.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb  = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
 
 
 
@@ -1151,7 +1251,7 @@ _dispatch__UIWidgetArea_on_click2in (Coupler &cpl)
 static FieldBuffer*
 _dispatch__QuickIface_simple_function (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
   I_QuickIface_Iface *self;
@@ -1165,7 +1265,7 @@ _dispatch__QuickIface_simple_function (Coupler &cpl)
 static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_void (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 0) return false;
   I_MethodTestInterface_Iface *self;
@@ -1177,7 +1277,7 @@ _dispatch__MethodTestInterface_method_with_void (Coupler &cpl)
 static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_bools (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   I_MethodTestInterface_Iface *self;
@@ -1193,7 +1293,7 @@ _dispatch__MethodTestInterface_method_with_bools (Coupler &cpl)
 static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_ints (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   I_MethodTestInterface_Iface *self;
@@ -1209,7 +1309,7 @@ _dispatch__MethodTestInterface_method_with_ints (Coupler &cpl)
 static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_floats (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   I_MethodTestInterface_Iface *self;
@@ -1225,7 +1325,7 @@ _dispatch__MethodTestInterface_method_with_floats (Coupler &cpl)
 static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_string (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   I_MethodTestInterface_Iface *self;
@@ -1241,7 +1341,7 @@ _dispatch__MethodTestInterface_method_with_string (Coupler &cpl)
 static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_enum (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   I_MethodTestInterface_Iface *self;
@@ -1257,7 +1357,7 @@ _dispatch__MethodTestInterface_method_with_enum (Coupler &cpl)
 static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_record (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   I_MethodTestInterface_Iface *self;
@@ -1275,7 +1375,7 @@ _dispatch__MethodTestInterface_method_with_record (Coupler &cpl)
 static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_sequence (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   I_MethodTestInterface_Iface *self;
@@ -1293,7 +1393,7 @@ _dispatch__MethodTestInterface_method_with_sequence (Coupler &cpl)
 static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_interface (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   I_MethodTestInterface_Iface *self;
@@ -1309,7 +1409,7 @@ _dispatch__MethodTestInterface_method_with_interface (Coupler &cpl)
 static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_quickiface (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 2) return false;
   I_MethodTestInterface_Iface *self;
@@ -1326,11 +1426,74 @@ _dispatch__MethodTestInterface_method_with_quickiface (Coupler &cpl)
 } // InterfaceTests
 
 namespace RapicornPlicTest {
-
+struct _CLOSURE_ButtonArea_check_activate {
+  typedef Plic::shared_ptr<_CLOSURE_ButtonArea_check_activate> SharedPtr;
+  _CLOSURE_ButtonArea_check_activate (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  static bool
+  handler (SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0);
+    fb.add_type_hash (0x600000002002b254ULL, 0x237b6d00631699f2ULL, 0xaa4a2bf137175f39ULL, 0x16724232857b7195ULL); // event_id
+    fb.add_int64 (sp->m_handler);
+    sp->m_coupler.call_remote (&fb); // deletes fb
+    return 0;
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__ButtonArea_check_activate (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip4(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return false;
+  I_ButtonArea_Iface *self;
+  self = ButtonArea (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 con_id = fbr.pop_int64();
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  if (con_id) self->sig_check_activate.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_ButtonArea_check_activate::SharedPtr sp (new _CLOSURE_ButtonArea_check_activate (cpl, handler_id));
+    cid = self->sig_check_activate.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb  = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}struct _CLOSURE_ButtonArea_activate {
+  typedef Plic::shared_ptr<_CLOSURE_ButtonArea_activate> SharedPtr;
+  _CLOSURE_ButtonArea_activate (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  static void
+  handler (SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0);
+    fb.add_type_hash (0x600000001eea842bULL, 0xdb7ee9164c9f8a60ULL, 0x1d0b0a314944036aULL, 0xfc73ff4aec88f8ffULL); // event_id
+    fb.add_int64 (sp->m_handler);
+    sp->m_coupler.call_remote (&fb); // deletes fb
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__ButtonArea_activate (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip4(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return false;
+  I_ButtonArea_Iface *self;
+  self = ButtonArea (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 con_id = fbr.pop_int64();
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  if (con_id) self->sig_activate.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_ButtonArea_activate::SharedPtr sp (new _CLOSURE_ButtonArea_activate (cpl, handler_id));
+    cid = self->sig_activate.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb  = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
 static FieldBuffer*
 _dispatch__PureMethods_pure_method (Coupler &cpl)
 {
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  FieldBufferReader &fbr = cpl.reader;
   fbr.skip4(); // TypeHash
   if (fbr.remaining() != 1 + 1) return false;
   I_PureMethods_Iface *self;
@@ -1355,6 +1518,8 @@ static const Plic::DispatcherEntry _dispatcher_entries[] = {
   { { 0x200000000ff38422ULL, 0x440e8e84942acf8eULL, 0x0c4945e5794d8356ULL, 0x2e2e61471f31bfbfULL }, InterfaceTests::_dispatch__UIWidgetArea_void_method, },
   { { 0x300000004b649644ULL, 0x8a9b2140ad7fc83dULL, 0x10b67ed382387b14ULL, 0xe7b6cc0714a17f30ULL }, InterfaceTests::_dispatch__UIWidgetArea_on_click2out, },
   { { 0x20000000f671167cULL, 0xdfc42ce42beb58f7ULL, 0x15afc969aae521d6ULL, 0xadbec8ab9522f6f8ULL }, InterfaceTests::_dispatch__UIWidgetArea_on_click2in, },
+  { { 0x50000000257c7180ULL, 0xfac77ebb19c6ab72ULL, 0xb34dd194f62b665dULL, 0x0c329a03aebf472bULL }, InterfaceTests::_dispatch__UIWidgetArea_void_signal, },
+  { { 0x50000000a31a6e24ULL, 0xfe2020b5b9671356ULL, 0x11e8a29ccb87db27ULL, 0xcbe662a2887ef78fULL }, InterfaceTests::_dispatch__UIWidgetArea_sample_signal, },
   { { 0x20000000be855008ULL, 0x6bf2269ff6939544ULL, 0x6a0846e9f5a62da8ULL, 0x59c8e2a4e4629e80ULL }, InterfaceTests::_dispatch__QuickIface_simple_function, },
   { { 0x20000000a426153aULL, 0x0a2f5758267a2651ULL, 0xd9bff16cf6755833ULL, 0x8959ddaf9e5b8a44ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_void, },
   { { 0x300000003917295eULL, 0x76cb59d18d695319ULL, 0x0fe6acdaa38d48dfULL, 0xa26ca0854c18e565ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_bools, },
@@ -1366,6 +1531,8 @@ static const Plic::DispatcherEntry _dispatcher_entries[] = {
   { { 0x30000000e92eb1f1ULL, 0xbc6d5e758278964aULL, 0xe88f958f88ca346cULL, 0xf29e446630c57f23ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_sequence, },
   { { 0x3000000001640ae0ULL, 0xf5403244c684c076ULL, 0x208c721dda088467ULL, 0x425f3425b0dcfad4ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_interface, },
   { { 0x3000000082dc142eULL, 0x7d16cadebfca9b39ULL, 0x168d05eb3cf56adbULL, 0x31e28c41cf8bb4f9ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_quickiface, },
+  { { 0x500000002002b254ULL, 0x237b6d00631699f2ULL, 0xaa4a2bf137175f39ULL, 0x16724232857b7195ULL }, RapicornPlicTest::_dispatch__ButtonArea_check_activate, },
+  { { 0x500000001eea842bULL, 0xdb7ee9164c9f8a60ULL, 0x1d0b0a314944036aULL, 0xfc73ff4aec88f8ffULL }, RapicornPlicTest::_dispatch__ButtonArea_activate, },
   { { 0x30000000e96382b8ULL, 0x8c16fe069c1d6b1eULL, 0x002e82b90c7db308ULL, 0x9c8a9e5a95b6ea99ULL }, RapicornPlicTest::_dispatch__PureMethods_pure_method, },
 };
 static Plic::DispatcherRegistry _dispatcher_registry (_dispatcher_entries);

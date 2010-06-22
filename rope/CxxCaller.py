@@ -29,6 +29,7 @@ serverhh_boilerplate = r"""
 // --- ServerHH Boilerplate ---
 #include <rcore/plicutils.hh>
 #include <rcore/rapicornsignal.hh>
+using Rapicorn::Signals::slot;
 """
 
 gencc_boilerplate = r"""
@@ -329,6 +330,11 @@ class Generator:
     s += '  return true;\n'
     s += '}\n'
     return s
+  def format_func_args (self, ftype, prefix, argindent = 2):
+    l = []
+    for a in ftype.args:
+      l += [ self.format_arg (prefix + a[0], a[1]) ]
+    return (',\n' + argindent * ' ').join (l)
   def generate_client_method_stub (self, class_info, mtype):
     s = ''
     cplfb = ('PLIC_COUPLER()', 'fb') # FIXME: optimize PLIC_COUPLER() accessor?
@@ -337,13 +343,7 @@ class Generator:
     # prototype
     s += '%s\n' % self.rtype2cpp (mtype.rtype)
     q = '%s::%s (' % (class_info.name, mtype.name)
-    s += q
-    argindent = len (q)
-    l = []
-    for a in mtype.args:
-      l += [ self.format_arg ('arg_' + a[0], a[1]) ]
-    s += (',\n' + argindent * ' ').join (l)
-    s += ')\n{\n'
+    s += q + self.format_func_args (mtype, 'arg_', len (q)) + ')\n{\n'
     # vars, procedure
     s += '  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + %u), *fr = NULL;\n' % len (mtype.args)
     s += '  fb.add_type_hash (%s); // proc_id\n' % self.method_digest (mtype)
@@ -377,7 +377,7 @@ class Generator:
     s += 'static FieldBuffer*\n'
     s += dispatcher_name + ' (Coupler &cpl)\n'
     s += '{\n'
-    s += '  ' + FieldBuffer + 'Reader &fbr = cpl.reader;\n'
+    s += '  FieldBufferReader &fbr = cpl.reader;\n'
     s += '  fbr.skip4(); // TypeHash\n'
     s += '  if (fbr.remaining() != 1 + %u) return false;\n' % len (mtype.args)
     # fetch self
@@ -412,12 +412,60 @@ class Generator:
     # done
     s += '}\n'
     return s
+  def generate_server_signal_dispatcher (self, class_info, stype, reglines):
+    s = ''
+    therr = 'THROW_ERROR()'
+    dispatcher_name = '_dispatch__%s_%s' % (class_info.name, stype.name)
+    reglines += [ (self.method_digest (stype), self.namespaced_identifier (dispatcher_name)) ]
+    closure = '_CLOSURE_%s_%s' % (class_info.name, stype.name)
+    cplfb = ('sp->m_coupler', 'fb')
+    s += 'struct %s {\n' % closure
+    s += '  typedef Plic::shared_ptr<%s> SharedPtr;\n' % closure
+    s += '  %s (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}\n' % closure
+    s += '  static %s\n' % self.rtype2cpp (stype.rtype)
+    s += '  handler ('
+    s += self.format_func_args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
+    s += 'SharedPtr sp)\n  {\n'
+    s += '    FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + %u);\n' % len (stype.args)
+    s += '    fb.add_type_hash (%s); // event_id\n' % self.method_digest (stype, True)
+    s += '    fb.add_int64 (sp->m_handler);\n'
+    ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
+    args2fb = self.generate_proto_add_args (cplfb, class_info, '', ident_type_args, '', therr)
+    if args2fb:
+      s += reindent ('  ', args2fb) + '\n'
+    s += '    sp->m_coupler.call_remote (&fb); // deletes fb\n' # FIXME: queue event
+    if stype.rtype.storage != Decls.VOID:
+      s += '    return %s;\n' % self.mkzero (stype.rtype)
+    s += '  }\n'
+    s += '  private: Plic::Coupler &m_coupler; uint64 m_handler;\n'
+    s += '};\n'
+    cplfbr = ('cpl', 'fbr')
+    s += 'static FieldBuffer*\n'
+    s += dispatcher_name + ' (Coupler &cpl)\n'
+    s += '{\n'
+    s += '  FieldBufferReader &fbr = cpl.reader;\n'
+    s += '  fbr.skip4(); // TypeHash\n'
+    s += '  if (fbr.remaining() != 1 + 2) return false;\n'
+    s += '  %s *self;\n' % I (self.type2cpp (class_info))
+    s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
+    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
+    s += '  uint64 con_id = %s.pop_int64();\n' % cplfbr[1]
+    s += '  uint64 cid = 0, handler_id = %s.pop_int64();\n' % cplfbr[1]
+    s += '  if (con_id) self->sig_%s.disconnect (con_id);\n' % stype.name
+    s += '  if (handler_id) {\n'
+    s += '    %s::SharedPtr sp (new %s (cpl, handler_id));\n' % (closure, closure)
+    s += '    cid = self->sig_%s.connect (slot (sp->handler, sp)); }\n' % stype.name
+    s += '  FieldBuffer &rb  = *FieldBuffer::new_result();\n'
+    s += '  rb.add_int64 (cid);\n'
+    s += '  return &rb;\n'
+    s += '}'
+    return s
   def digest2cbytes (self, digest):
     return ('0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL, ' +
             '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL') % \
             digest
-  def method_digest (self, mtype):
-    return self.digest2cbytes (mtype.type_hash())
+  def method_digest (self, mtype, isevent = False):
+    return self.digest2cbytes (mtype.type_hash (isevent))
   def generate_server_method_registry (self, reglines):
     s = ''
     s += 'static const Plic::DispatcherEntry _dispatcher_entries[] = {\n'
@@ -428,9 +476,6 @@ class Generator:
     s += '};\n'
     s += 'static Plic::DispatcherRegistry _dispatcher_registry (_dispatcher_entries);\n'
     return s
-  def generate_signal (self, functype, ctype):
-    signame = self.generate_signal_name (functype, ctype)
-    return '  // ' + self.format_to_tab (signame) + 'sig_%s;\n' % functype.name
   def inherit_reduce (self, type_list):
     def hasancestor (child, parent):
       if child == parent:
@@ -496,6 +541,7 @@ class Generator:
           % (self._iface_base, self._iface_base)
       s += '  inline void _iface (%s *_iface) { _void_iface (_iface); }\n' % self._iface_base
     if not self.gen4smarthandle:
+      s += '  explicit ' + self.format_to_tab ('') + '%s ();\n' % I (type_info.name)
       s += '  virtual ' + self.format_to_tab ('/*Des*/') + '~%s () = 0;\n' % I (type_info.name)
     s += 'public:\n'
     if self.gen4smarthandle:
@@ -511,7 +557,7 @@ class Generator:
       for sg in type_info.signals:
         s += self.generate_sigdef (sg, type_info)
       for sg in type_info.signals:
-        s += self.generate_signal (sg, type_info)
+        s += '  ' + self.generate_signal_name (sg, type_info) + ' sig_%s;\n' % sg.name
     ml = 0
     if type_info.methods:
       ml = max (len (m.name) for m in type_info.methods)
@@ -531,6 +577,13 @@ class Generator:
   def generate_interface_impl (self, type_info):
     s = ''
     tname = I (type_info.name)
+    s += '%s::%s ()' % (tname, tname)
+    l = [] # constructor agument list
+    for sg in type_info.signals:
+      l += ['sig_%s (*this)' % sg.name]
+    if l:
+      s += ' :\n  ' + ', '.join (l)
+    s += '\n{}\n'
     s += '%s::~%s () {}\n' % (tname, tname)
     return s
   def generate_virtual_method_skel (self, functype, type_info):
@@ -698,6 +751,8 @@ class Generator:
         if tp.storage == Decls.INTERFACE:
           for m in tp.methods:
             s += self.generate_server_method_dispatcher (tp, m, reglines)
+          for sg in tp.signals:
+            s += self.generate_server_signal_dispatcher (tp, sg, reglines)
           s += '\n'
       s += self.generate_server_method_registry (reglines) + '\n'
       s += self.open_namespace (None)

@@ -44,8 +44,7 @@ class_scope:ApplicationBase:
   static ApplicationMutex mutex;  // singleton
   /* singleton defs */
 protected:
-  explicit           ApplicationBase ();
-  int                m_tc;
+  int                m_tc; // FIXME: uninitialized
 
 IGNORE: // close last _scope
 }; // close dummy class scope

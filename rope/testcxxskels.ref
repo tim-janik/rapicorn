@@ -5,6 +5,7 @@
 // --- ServerHH Boilerplate ---
 #include <rcore/plicutils.hh>
 #include <rcore/rapicornsignal.hh>
+using Rapicorn::Signals::slot;
 
 // --- Interfaces (class declarations) ---
 
@@ -99,6 +100,7 @@ enum ExtensiveEnum {
 
 class I_FirstInterface_Iface : public virtual Plic::SimpleServer {
 protected:
+  explicit                 I_FirstInterface_Iface ();
   virtual /*Des*/         ~I_FirstInterface_Iface () = 0;
 public:
   virtual void            void_func ();
@@ -246,12 +248,13 @@ namespace InterfaceTests {
 
 class I_UIWidgetArea_Iface : public virtual Plic::SimpleServer {
 protected:
+  explicit                 I_UIWidgetArea_Iface ();
   virtual /*Des*/         ~I_UIWidgetArea_Iface () = 0;
 public:
   typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Iface, void ()> Signal_void_signal;
   typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Iface, double (I_UIWidgetArea_Iface &ba1, int someint)> Signal_sample_signal;
-  // Signal_void_signal sig_void_signal;
-  // Signal_sample_signal sig_sample_signal;
+  Signal_void_signal sig_void_signal;
+  Signal_sample_signal sig_sample_signal;
   virtual double          simple_method ();
   virtual double          single_arg    (int n);
   virtual double          single_arg2   (int n = 5);
@@ -297,6 +300,7 @@ public:
 
 class I_Parent_Iface : public virtual Plic::SimpleServer {
 protected:
+  explicit                 I_Parent_Iface ();
   virtual /*Des*/         ~I_Parent_Iface () = 0;
 public:
 };
@@ -317,6 +321,7 @@ public:
 
 class I_Child_Iface : public virtual I_Parent_Iface {
 protected:
+  explicit                 I_Child_Iface ();
   virtual /*Des*/         ~I_Child_Iface () = 0;
 public:
 };
@@ -337,6 +342,7 @@ public:
 
 class I_Descendant_Iface : public virtual I_Child_Iface {
 protected:
+  explicit                 I_Descendant_Iface ();
   virtual /*Des*/         ~I_Descendant_Iface () = 0;
 public:
 };
@@ -357,6 +363,7 @@ public:
 
 class I_GrandChild_Iface : public virtual I_Descendant_Iface {
 protected:
+  explicit                 I_GrandChild_Iface ();
   virtual /*Des*/         ~I_GrandChild_Iface () = 0;
 public:
 };
@@ -392,6 +399,7 @@ struct QuickSequence {
 
 class I_QuickIface_Iface : public virtual Plic::SimpleServer {
 protected:
+  explicit                 I_QuickIface_Iface ();
   virtual /*Des*/         ~I_QuickIface_Iface () = 0;
 public:
   virtual void            simple_function (int i = 9);
@@ -414,6 +422,7 @@ public:
 
 class I_MethodTestInterface_Iface : public virtual Plic::SimpleServer {
 protected:
+  explicit                 I_MethodTestInterface_Iface ();
   virtual /*Des*/         ~I_MethodTestInterface_Iface () = 0;
 public:
   virtual void            method_with_void       ();
@@ -473,12 +482,13 @@ enum ClickType {
 
 class I_ButtonArea_Iface : public virtual Plic::SimpleServer {
 protected:
+  explicit                 I_ButtonArea_Iface ();
   virtual /*Des*/         ~I_ButtonArea_Iface () = 0;
 public:
   typedef Rapicorn::Signals::Signal<I_ButtonArea_Iface, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
   typedef Rapicorn::Signals::Signal<I_ButtonArea_Iface, void ()> Signal_activate;
-  // Signal_check_activate sig_check_activate;
-  // Signal_activate sig_activate;
+  Signal_check_activate sig_check_activate;
+  Signal_activate sig_activate;
 };
 class ButtonArea : public virtual Plic::SmartHandle {
 protected:
@@ -497,6 +507,7 @@ public:
 
 class I_PureMethods_Iface : public virtual Plic::SimpleServer {
 protected:
+  explicit                 I_PureMethods_Iface ();
   virtual /*Des*/         ~I_PureMethods_Iface () = 0;
 public:
   virtual int             pure_method (double f) = 0;

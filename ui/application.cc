@@ -24,12 +24,6 @@ namespace Rapicorn {
 
 ApplicationBase::ApplicationMutex ApplicationBase::mutex;
 
-ApplicationBase::ApplicationBase() : // : sig_missing_primary (*this)
-  m_tc (0)
-{
-  assert (&App == NULL);
-}
-
 void
 ApplicationBase::pixstream (const String  &pix_name,
                               const uint8   *static_const_pixstream)
