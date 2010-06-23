@@ -79,7 +79,7 @@ EventLoop::remove (uint   id)
 
 class EventLoopImpl;
 static vector<EventLoopImpl*> rapicorn_main_loops;
-static int                    rapicorn_wakeups[2] = { -1, -1 }; // [0] = readable; [1] = writable
+static Plic::EventFd          rapicorn_eventfd;
 
 /* --- EventLoopImpl --- */
 class EventLoopImpl : public virtual EventLoop {
@@ -172,14 +172,7 @@ public:
   void
   wakeup_L (void)
   {
-    if (rapicorn_wakeups[1] >= 0)
-      {
-        char w = 'w';
-        int err;
-        do
-          err = write (rapicorn_wakeups[1], &w, 1);
-        while (err < 0 && (errno == EINTR || errno == EAGAIN));
-      }
+    rapicorn_eventfd.wakeup();
   }
   virtual void
   wakeup (void)
@@ -459,31 +452,9 @@ EventLoop::iterate_loops (bool may_block,
                           bool may_dispatch)
 {
   assert (rapicorn_thread_entered());   // acquire global lock
-  if (rapicorn_wakeups[0] < 0)
-    {
-      int err;
-      do
-        err = pipe (rapicorn_wakeups);
-      while (err < 0 && (errno == EAGAIN || errno == EINTR));
-      if (err >= 0)
-        {
-          long nflags = fcntl (rapicorn_wakeups[0], F_GETFL, 0);
-          nflags |= O_NONBLOCK;
-          do
-            err = fcntl (rapicorn_wakeups[0], F_SETFL, nflags);
-          while (err < 0 && (errno == EINTR || errno == EAGAIN));
-        }
-      if (err >= 0)
-        {
-          long nflags = fcntl (rapicorn_wakeups[1], F_GETFL, 0);
-          nflags |= O_NONBLOCK;
-          do
-            err = fcntl (rapicorn_wakeups[1], F_SETFL, nflags);
-          while (err < 0 && (errno == EINTR || errno == EAGAIN));
-        }
-      if (err < 0)
-        error ("EventLoop: failed to create wakeup pipe: %s", strerror (errno));
-    }
+  int err = rapicorn_eventfd.open();
+  if (err < 0)
+    error ("EventLoop: failed to create wakeup pipe: %s", strerror (-err));
   vector<PollFD> pfds;
   pfds.reserve (7);
   int64 timeout_usecs = INT64_MAX;
@@ -503,7 +474,7 @@ EventLoop::iterate_loops (bool may_block,
       unref (loop);
     }
   /* allow poll wakeups */
-  PollFD wakeup = { rapicorn_wakeups[0], PollFD::IN, 0 };
+  PollFD wakeup = { rapicorn_eventfd.inputfd(), PollFD::IN, 0 };
   uint wakeup_idx = pfds.size();
   pfds.push_back (wakeup);
   /* poll file descriptors */
@@ -524,10 +495,8 @@ EventLoop::iterate_loops (bool may_block,
     warning ("failure during main loop poll: %s", strerror (errno));
   else if (pfds[wakeup_idx].revents)
     {
-      /* flush wakeup pipe */
-      char buffer[512]; // 512 is posix pipe atomic read/write size
-      int l = read (rapicorn_wakeups[0], buffer, sizeof (buffer));
-      (void) l;
+      /* discard pending wakeups */
+      rapicorn_eventfd.flush();
     }
   /* check */
   for (std::list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
