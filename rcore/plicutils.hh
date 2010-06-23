@@ -88,6 +88,18 @@ class FieldBuffer;
 class FieldBufferReader;
 typedef FieldBuffer* (*DispatchFunc) (Coupler&);
 
+/* === EventFd === */
+class EventFd {
+  int fds[2];
+public:
+  explicit EventFd   ();
+  int      open      (); // -errno
+  void     wakeup    (); // wakeup polling end
+  int      inputfd   (); // fd for POLLIN
+  void     flush     (); // clear pending wakeups
+  /*Des*/ ~EventFd   ();
+};
+
 /* === Callback Wrapper === */
 template<class R>
 struct Callback0 {

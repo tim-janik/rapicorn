@@ -21,11 +21,16 @@
 #include <stdio.h>
 #include <sched.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <semaphore.h>
 #include <pthread.h>
 #include <stdexcept>
 #include <map>
 #include <set>
+#if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 10
+#  include <sys/eventfd.h>
+#endif
 
 /* === Auxillary macros === */
 #ifndef __GNUC__
@@ -70,6 +75,100 @@ printerr (const char *format, ...)
   buffer[512] = 0; // force termination
   size_t l = write (2, buffer, strlen (buffer));
   (void) l;
+}
+
+/* === EventFd === */
+EventFd::EventFd ()
+{
+  fds[0] = -1;
+  fds[1] = -1;
+}
+
+int
+EventFd::open ()
+{
+  if (fds[0] >= 0)
+    return 0;
+  int err;
+  long nflags;
+#ifdef EFD_SEMAPHORE
+  do
+    fds[0] = eventfd (0 /*initval*/, 0 /*flags*/);
+  while (fds[0] < 0 && (errno == EAGAIN || errno == EINTR));
+#else
+  do
+    err = pipe (fds);
+  while (err < 0 && (errno == EAGAIN || errno == EINTR));
+  if (fds[1] >= 0)
+    {
+      nflags = fcntl (fds[1], F_GETFL, 0);
+      nflags |= O_NONBLOCK;
+      do
+        err = fcntl (fds[1], F_SETFL, nflags);
+      while (err < 0 && (errno == EINTR || errno == EAGAIN));
+    }
+#endif
+  if (fds[0] >= 0)
+    {
+      nflags = fcntl (fds[0], F_GETFL, 0);
+      nflags |= O_NONBLOCK;
+      do
+        err = fcntl (fds[0], F_SETFL, nflags);
+      while (err < 0 && (errno == EINTR || errno == EAGAIN));
+      return 0;
+    }
+  return -errno;
+}
+
+void
+EventFd::wakeup () // wakeup polling end
+{
+  int err;
+#ifdef EFD_SEMAPHORE
+  do
+    err = eventfd_write (fds[0], 1);
+  while (err < 0 && errno == EINTR);
+#else
+  char w = 'w';
+  do
+    err = write (fds[1], &w, 1);
+  while (err < 0 && errno == EINTR);
+#endif
+  // EAGAIN occours if too many wakeups are pending
+}
+
+int
+EventFd::inputfd () // fd for POLLIN
+{
+  return fds[0];
+}
+
+void
+EventFd::flush () // clear pending wakeups
+{
+  int err;
+#ifdef EFD_SEMAPHORE
+  eventfd_t bytes8;
+  do
+    err = eventfd_read (fds[0], &bytes8);
+  while (err < 0 && errno == EINTR);
+#else
+  char buffer[512]; // 512 is posix pipe atomic read/write size
+  do
+    err = read (fds[0], buffer, sizeof (buffer));
+  while (err < 0 && errno == EINTR);
+#endif
+  // EAGAIN occours if no wakeups are pending
+}
+
+EventFd::~EventFd ()
+{
+#ifdef EFD_SEMAPHORE
+  close (fds[0]);
+#else
+  close (fds[0]);
+  close (fds[1]);
+#endif
 }
 
 /* === SmartHandle === */
