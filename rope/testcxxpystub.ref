@@ -27,15 +27,15 @@ PyErr_Format_from_PLIC_error (const FieldBuffer *fr)
   if (Plic::msgid_has_error (fr->first_id()))
     {
       FieldBufferReader frr (*fr);
-      std::string msg = "unknown message", domain;
-      frr.skip(); // proc_id
+      std::string msg, domain;
       if (Plic::is_msgid_error (frr.pop_int64()))
         msg = frr.pop_string(), domain = frr.pop_string();
+      else
+        msg = "unknown message: 0x" + fr->first_id_str();
       if (domain.size()) domain += ": ";
       msg = domain + msg;
       return PyErr_Format (PyExc_RuntimeError, "%s", msg.c_str());
     }
-
   return PyErr_Format (PyExc_RuntimeError, "PLIC: garbage return: 0x%s", fr->first_id_str().c_str());
 }
 

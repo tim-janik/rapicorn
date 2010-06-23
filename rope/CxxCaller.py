@@ -378,8 +378,8 @@ class Generator:
     s += dispatcher_name + ' (Coupler &cpl)\n'
     s += '{\n'
     s += '  FieldBufferReader &fbr = cpl.reader;\n'
-    s += '  fbr.skip4(); // TypeHash\n'
-    s += '  if (fbr.remaining() != 1 + %u) return false;\n' % len (mtype.args)
+    s += '  fbr.skip_hash(); // TypeHash\n'
+    s += '  if (fbr.remaining() != 1 + %u) return FieldBuffer::new_error ("invalid number of arguments", __func__);\n' % len (mtype.args)
     # fetch self
     s += '  %s *self;\n' % I (self.type2cpp (class_info))
     s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
@@ -404,7 +404,7 @@ class Generator:
     # store return value
     if hasret:
       cplrb = (cplfbr[0], 'rb')
-      s += '  FieldBuffer &rb  = *FieldBuffer::new_result();\n'
+      s += '  FieldBuffer &rb = *FieldBuffer::new_result();\n'
       s += self.generate_proto_add_args (cplrb, class_info, '', [('rval', mtype.rtype)], '')
       s += '  return &rb;\n'
     else:
@@ -424,7 +424,7 @@ class Generator:
     s += '  %s (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}\n' % closure_class
     s += '  ~%s()\n' % closure_class
     s += '  {\n'
-    s += '    FieldBuffer &fb = *FieldBuffer::_new (4 + 1);\n'
+    s += '    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);\n'
     s += '    fb.add_int64 (Plic::msgid_discon);\n' # self.method_digest (stype)
     s += '    fb.add_int64 (m_handler);\n'
     s += '    m_coupler.push_event (&fb); // deletes fb\n'
@@ -433,7 +433,7 @@ class Generator:
     s += '  handler ('
     s += self.format_func_args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
     s += 'SharedPtr sp)\n  {\n'
-    s += '    FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + %u);\n' % len (stype.args)
+    s += '    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + %u);\n' % len (stype.args)
     s += '    fb.add_int64 (Plic::msgid_event);\n' # self.method_digest (stype)
     s += '    fb.add_int64 (sp->m_handler);\n'
     ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
@@ -451,8 +451,8 @@ class Generator:
     s += dispatcher_name + ' (Coupler &cpl)\n'
     s += '{\n'
     s += '  FieldBufferReader &fbr = cpl.reader;\n'
-    s += '  fbr.skip4(); // TypeHash\n'
-    s += '  if (fbr.remaining() != 1 + 2) return false;\n'
+    s += '  fbr.skip_hash(); // TypeHash\n'
+    s += '  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     s += '  %s *self;\n' % I (self.type2cpp (class_info))
     s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
@@ -462,7 +462,7 @@ class Generator:
     s += '  if (handler_id) {\n'
     s += '    %s::SharedPtr sp (new %s (cpl, handler_id));\n' % (closure_class, closure_class)
     s += '    cid = self->sig_%s.connect (slot (sp->handler, sp)); }\n' % stype.name
-    s += '  FieldBuffer &rb  = *FieldBuffer::new_result();\n'
+    s += '  FieldBuffer &rb = *FieldBuffer::new_result();\n'
     s += '  rb.add_int64 (cid);\n'
     s += '  return &rb;\n'
     s += '}'

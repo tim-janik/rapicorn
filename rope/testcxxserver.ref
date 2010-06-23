@@ -1008,8 +1008,8 @@ static FieldBuffer*
 _dispatch__FirstInterface_void_func (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 0) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 0) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_FirstInterface_Iface *self;
   self = FirstInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1030,13 +1030,13 @@ static FieldBuffer*
 _dispatch__UIWidgetArea_simple_method (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 0) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 0) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   double rval = self->simple_method ();
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_double (rval);
   return &rb;
 }
@@ -1044,14 +1044,14 @@ static FieldBuffer*
 _dispatch__UIWidgetArea_single_arg (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 1) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double rval = self->single_arg (arg_n);
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_double (rval);
   return &rb;
 }
@@ -1059,14 +1059,14 @@ static FieldBuffer*
 _dispatch__UIWidgetArea_single_arg2 (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 1) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double rval = self->single_arg2 (arg_n);
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_double (rval);
   return &rb;
 }
@@ -1074,15 +1074,15 @@ static FieldBuffer*
 _dispatch__UIWidgetArea_two_args (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double arg_r = fbr.pop_double();
   double rval = self->two_args (arg_n, arg_r);
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_double (rval);
   return &rb;
 }
@@ -1090,15 +1090,15 @@ static FieldBuffer*
 _dispatch__UIWidgetArea_two_args2 (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double arg_r = fbr.pop_double();
   double rval = self->two_args2 (arg_n, arg_r);
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_double (rval);
   return &rb;
 }
@@ -1106,8 +1106,8 @@ static FieldBuffer*
 _dispatch__UIWidgetArea_multi_args (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 5) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 5) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1117,7 +1117,7 @@ _dispatch__UIWidgetArea_multi_args (Coupler &cpl)
   std::string arg_s = fbr.pop_string();
   double arg_y = fbr.pop_double();
   double rval = self->multi_args (arg_n, arg_r, arg_i, arg_s, arg_y);
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_double (rval);
   return &rb;
 }
@@ -1125,15 +1125,15 @@ static FieldBuffer*
 _dispatch__UIWidgetArea_self_method (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   I_UIWidgetArea_Iface *arg_ba1 = UIWidgetArea (cpl, fbr).operator->();
   I_UIWidgetArea_Iface *arg_ba2 = UIWidgetArea (cpl, fbr).operator->();
   double rval = self->self_method (*arg_ba1, *arg_ba2);
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_double (rval);
   return &rb;
 }
@@ -1141,8 +1141,8 @@ static FieldBuffer*
 _dispatch__UIWidgetArea_void_method (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 0) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 0) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1153,13 +1153,13 @@ static FieldBuffer*
 _dispatch__UIWidgetArea_on_click2out (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 0) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 0) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   std::string rval = self->on_click2out ();
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_string (rval);
   return &rb;
 }
@@ -1167,8 +1167,8 @@ static FieldBuffer*
 _dispatch__UIWidgetArea_on_click2in (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 1) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1181,7 +1181,7 @@ struct _CLOSURE_UIWidgetArea_void_signal {
   _CLOSURE_UIWidgetArea_void_signal (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
   ~_CLOSURE_UIWidgetArea_void_signal()
   {
-    FieldBuffer &fb = *FieldBuffer::_new (4 + 1);
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
     fb.add_int64 (m_handler);
     m_coupler.push_event (&fb); // deletes fb
@@ -1189,7 +1189,7 @@ struct _CLOSURE_UIWidgetArea_void_signal {
   static void
   handler (SharedPtr sp)
   {
-    FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0);
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
     fb.add_int64 (Plic::msgid_event);
     fb.add_int64 (sp->m_handler);
     sp->m_coupler.push_event (&fb); // deletes fb
@@ -1200,8 +1200,8 @@ static FieldBuffer*
 _dispatch__UIWidgetArea_void_signal (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1211,7 +1211,7 @@ _dispatch__UIWidgetArea_void_signal (Coupler &cpl)
   if (handler_id) {
     _CLOSURE_UIWidgetArea_void_signal::SharedPtr sp (new _CLOSURE_UIWidgetArea_void_signal (cpl, handler_id));
     cid = self->sig_void_signal.connect (slot (sp->handler, sp)); }
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }struct _CLOSURE_UIWidgetArea_sample_signal {
@@ -1219,7 +1219,7 @@ _dispatch__UIWidgetArea_void_signal (Coupler &cpl)
   _CLOSURE_UIWidgetArea_sample_signal (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
   ~_CLOSURE_UIWidgetArea_sample_signal()
   {
-    FieldBuffer &fb = *FieldBuffer::_new (4 + 1);
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
     fb.add_int64 (m_handler);
     m_coupler.push_event (&fb); // deletes fb
@@ -1229,7 +1229,7 @@ _dispatch__UIWidgetArea_void_signal (Coupler &cpl)
            int arg_someint,
            SharedPtr sp)
   {
-    FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2);
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2);
     fb.add_int64 (Plic::msgid_event);
     fb.add_int64 (sp->m_handler);
     fb.add_object (UIWidgetArea (arg_ba1)._rpc_id());
@@ -1243,8 +1243,8 @@ static FieldBuffer*
 _dispatch__UIWidgetArea_sample_signal (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Iface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1254,7 +1254,7 @@ _dispatch__UIWidgetArea_sample_signal (Coupler &cpl)
   if (handler_id) {
     _CLOSURE_UIWidgetArea_sample_signal::SharedPtr sp (new _CLOSURE_UIWidgetArea_sample_signal (cpl, handler_id));
     cid = self->sig_sample_signal.connect (slot (sp->handler, sp)); }
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
@@ -1266,8 +1266,8 @@ static FieldBuffer*
 _dispatch__QuickIface_simple_function (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 1) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_QuickIface_Iface *self;
   self = QuickIface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1280,8 +1280,8 @@ static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_void (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 0) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 0) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1292,15 +1292,15 @@ static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_bools (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   bool arg_input = fbr.pop_int64();
   bool arg_optval = fbr.pop_int64();
   bool rval = self->method_with_bools (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (rval);
   return &rb;
 }
@@ -1308,15 +1308,15 @@ static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_ints (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_input = fbr.pop_int64();
   int arg_optval = fbr.pop_int64();
   int rval = self->method_with_ints (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (rval);
   return &rb;
 }
@@ -1324,15 +1324,15 @@ static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_floats (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   double arg_input = fbr.pop_double();
   double arg_optval = fbr.pop_double();
   double rval = self->method_with_floats (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_double (rval);
   return &rb;
 }
@@ -1340,15 +1340,15 @@ static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_string (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   std::string arg_input = fbr.pop_string();
   std::string arg_optval = fbr.pop_string();
   std::string rval = self->method_with_string (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_string (rval);
   return &rb;
 }
@@ -1356,15 +1356,15 @@ static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_enum (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   QuickEnum arg_input = QuickEnum (fbr.pop_evalue());
   QuickEnum arg_optval = QuickEnum (fbr.pop_evalue());
   QuickEnum rval = self->method_with_enum (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_evalue (rval);
   return &rb;
 }
@@ -1372,8 +1372,8 @@ static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_record (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1382,7 +1382,7 @@ _dispatch__MethodTestInterface_method_with_record (Coupler &cpl)
   QuickRecord arg_optval;
   if (!arg_optval.proto_pop (cpl, fbr)) return false;
   QuickRecord rval = self->method_with_record (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   if (!rval.proto_add (cpl, rb)) return false;
   return &rb;
 }
@@ -1390,8 +1390,8 @@ static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_sequence (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1400,7 +1400,7 @@ _dispatch__MethodTestInterface_method_with_sequence (Coupler &cpl)
   QuickSequence arg_optval;
   if (!arg_optval.proto_pop (cpl, fbr)) return false;
   QuickSequence rval = self->method_with_sequence (arg_input, arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   if (!rval.proto_add (cpl, rb)) return false;
   return &rb;
 }
@@ -1408,15 +1408,15 @@ static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_interface (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   I_GrandChild_Iface *arg_input = GrandChild (cpl, fbr).operator->();
   I_GrandChild_Iface *arg_optval = GrandChild (cpl, fbr).operator->();
   I_GrandChild_Iface *rval = self->method_with_interface (*arg_input, *arg_optval);
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_object (GrandChild (rval)._rpc_id());
   return &rb;
 }
@@ -1424,15 +1424,15 @@ static FieldBuffer*
 _dispatch__MethodTestInterface_method_with_quickiface (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Iface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   I_QuickIface_Iface *arg_input = QuickIface (cpl, fbr).operator->();
   I_QuickIface_Iface *arg_iface0 = QuickIface (cpl, fbr).operator->();
   I_QuickIface_Iface *rval = self->method_with_quickiface (*arg_input, *arg_iface0);
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_object (QuickIface (rval)._rpc_id());
   return &rb;
 }
@@ -1445,7 +1445,7 @@ struct _CLOSURE_ButtonArea_check_activate {
   _CLOSURE_ButtonArea_check_activate (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
   ~_CLOSURE_ButtonArea_check_activate()
   {
-    FieldBuffer &fb = *FieldBuffer::_new (4 + 1);
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
     fb.add_int64 (m_handler);
     m_coupler.push_event (&fb); // deletes fb
@@ -1453,7 +1453,7 @@ struct _CLOSURE_ButtonArea_check_activate {
   static bool
   handler (SharedPtr sp)
   {
-    FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0);
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
     fb.add_int64 (Plic::msgid_event);
     fb.add_int64 (sp->m_handler);
     sp->m_coupler.push_event (&fb); // deletes fb
@@ -1465,8 +1465,8 @@ static FieldBuffer*
 _dispatch__ButtonArea_check_activate (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_ButtonArea_Iface *self;
   self = ButtonArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1476,7 +1476,7 @@ _dispatch__ButtonArea_check_activate (Coupler &cpl)
   if (handler_id) {
     _CLOSURE_ButtonArea_check_activate::SharedPtr sp (new _CLOSURE_ButtonArea_check_activate (cpl, handler_id));
     cid = self->sig_check_activate.connect (slot (sp->handler, sp)); }
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }struct _CLOSURE_ButtonArea_activate {
@@ -1484,7 +1484,7 @@ _dispatch__ButtonArea_check_activate (Coupler &cpl)
   _CLOSURE_ButtonArea_activate (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
   ~_CLOSURE_ButtonArea_activate()
   {
-    FieldBuffer &fb = *FieldBuffer::_new (4 + 1);
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
     fb.add_int64 (m_handler);
     m_coupler.push_event (&fb); // deletes fb
@@ -1492,7 +1492,7 @@ _dispatch__ButtonArea_check_activate (Coupler &cpl)
   static void
   handler (SharedPtr sp)
   {
-    FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0);
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
     fb.add_int64 (Plic::msgid_event);
     fb.add_int64 (sp->m_handler);
     sp->m_coupler.push_event (&fb); // deletes fb
@@ -1503,8 +1503,8 @@ static FieldBuffer*
 _dispatch__ButtonArea_activate (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 2) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_ButtonArea_Iface *self;
   self = ButtonArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1514,7 +1514,7 @@ _dispatch__ButtonArea_activate (Coupler &cpl)
   if (handler_id) {
     _CLOSURE_ButtonArea_activate::SharedPtr sp (new _CLOSURE_ButtonArea_activate (cpl, handler_id));
     cid = self->sig_activate.connect (slot (sp->handler, sp)); }
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
@@ -1522,14 +1522,14 @@ static FieldBuffer*
 _dispatch__PureMethods_pure_method (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
-  fbr.skip4(); // TypeHash
-  if (fbr.remaining() != 1 + 1) return false;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_PureMethods_Iface *self;
   self = PureMethods (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   double arg_f = fbr.pop_double();
   int rval = self->pure_method (arg_f);
-  FieldBuffer &rb  = *FieldBuffer::new_result();
+  FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (rval);
   return &rb;
 }

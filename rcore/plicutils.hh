@@ -78,7 +78,7 @@ inline bool is_msgid_discon  (const uint64 id) { return id >> 60 == msgid_discon
 inline bool is_msgid_sigcon  (const uint64 id) { return id >> 60 == msgid_sigcon >> 60; }
 inline bool is_msgid_event   (const uint64 id) { return id >> 60 == msgid_event  >> 60; }
 inline bool is_msgid_error   (const uint64 id) { return id >> 60 == msgid_error  >> 60; }
-inline bool msgid_has_error  (const uint64 id) { return id & msgid_result; }
+inline bool msgid_has_error  (const uint64 id) { return id & msgid_error; }
 
 /* === Forward Declarations === */
 class SimpleServer;
@@ -248,7 +248,7 @@ public:
   inline void               reset      () { m_fb = NULL; m_nth = 0; }
   inline uint               remaining  () { return n_types() - m_nth; }
   inline void               skip       () { m_nth++; check(); }
-  inline void               skip4      () { m_nth += 4; check(); }
+  inline void               skip_hash  () { m_nth += 4; check(); }
   inline uint               n_types    () { return m_fb->n_types(); }
   inline FieldType          get_type   () { return m_fb->type_at (m_nth); }
   inline int64              get_int64  () { FieldUnion &u = fb_getu(); return u.vint64; }
