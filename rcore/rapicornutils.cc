@@ -2227,7 +2227,7 @@ url_test_show (const char *url)
     { "dillo",                  NULL,           "", "", 1 }, /* opens in foreground, correct exit_code */
   };
   uint i;
-  for (i = 0; i < G_N_ELEMENTS (www_browsers); i++)
+  for (i = 0; i < ARRAY_SIZE (www_browsers); i++)
     if (!www_browsers[i].disabled)
       {
         char *args[128] = { 0, };
@@ -2274,7 +2274,7 @@ url_test_show (const char *url)
         www_browsers[i].disabled = true;
       }
   /* reset all disabled states if no browser could be found */
-  for (i = 0; i < G_N_ELEMENTS (www_browsers); i++)
+  for (i = 0; i < ARRAY_SIZE (www_browsers); i++)
     www_browsers[i].disabled = false;
   return false;
 }
