@@ -98,21 +98,52 @@ rope_dispatch_event (PyObject *self, PyObject *args)
   if (self || PyTuple_Size (args) != 0)
     { PyErr_Format (PyExc_TypeError, "no arguments expected"); return NULL; }
   Plic::Coupler &cpl = PLIC_COUPLER();
-  FieldBuffer *fb = cpl.pop_event();
+  FieldBuffer *fr = NULL, *fb = cpl.pop_event();
   if (!fb)
     return None_INCREF();
   Plic::FieldBufferReader &fbr = cpl.reader;
   fbr.reset (*fb);
   uint64 msgid = fbr.pop_int64();
-  assert (Plic::is_msgid_event (msgid)); // FIXME
-  uint64 handler_id = fbr.pop_int64();
-  Plic::EventDispatcher *evd = cpl.dispatcher_lookup (uint (handler_id));
-  assert (evd != NULL); // FIXME
-  FieldBuffer *fr = evd->dispatch_event (cpl); // continues to use cpl.reader
+  switch (msgid >> PLIC_MSGID_SHIFT)
+    {
+    case Plic::msgid_event >> PLIC_MSGID_SHIFT:
+      {
+        uint64 handler_id = fbr.pop_int64();
+        Plic::EventDispatcher *evd = cpl.dispatcher_lookup (uint (handler_id));
+        if (evd)
+          fr = evd->dispatch_event (cpl); // continues to use cpl.reader
+        else
+          fr = FieldBuffer::new_error (string_printf ("invalid signal handler id in %s: %u", "event", uint (handler_id)), "PLIC");
+      }
+      break;
+    case Plic::msgid_discon >> PLIC_MSGID_SHIFT:
+      {
+        uint64 handler_id = fbr.pop_int64();
+        bool deleted = cpl.dispatcher_delete (uint (handler_id));
+        if (!deleted)
+          fr = FieldBuffer::new_error (string_printf ("invalid signal handler id in %s: %u", "disconnect", uint (handler_id)), "PLIC");
+      }
+      break;
+    default:
+      fr = FieldBuffer::new_error (string_printf ("unhandled message id: 0x%x", uint (msgid >> PLIC_MSGID_SHIFT)), "PLIC");
+      break;
+    }
   cpl.reader.reset();
   delete fb;
   if (fr)
-    delete fr; // FIXME: check errors
+    {
+      Plic::FieldBufferReader frr (*fr);
+      uint64 frid = frr.pop_int64();
+      if (Plic::is_msgid_error (frid))
+        {
+          String msg = frr.pop_string(), domain = frr.pop_string();
+          if (domain.size())
+            domain += ": ";
+          msg = domain + msg;
+          PyErr_Format (PyExc_RuntimeError, "%s", msg.c_str());
+        }
+      delete fr;
+    }
   return PyErr_Occurred() ? NULL : None_INCREF();
 }
 
