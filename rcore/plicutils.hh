@@ -208,6 +208,7 @@ union FieldUnion {
 
 class FieldBuffer { // buffer for marshalling procedure calls
   friend class FieldBufferReader;
+  void               check_internal ();
 protected:
   FieldUnion        *buffermem;
   inline uint        offset () const { const uint offs = 1 + (n_types() + 7) / 8; return offs; }
@@ -216,22 +217,22 @@ protected:
   inline uint        n_types () const { return buffermem[0].capacity; }
   inline uint        nth () const     { return buffermem[0].index; }
   inline FieldUnion& getu () const    { return buffermem[offset() + nth()]; }
-  inline FieldUnion& addu (FieldType ft) { set_type (ft); FieldUnion &u = getu(); buffermem[0].index++; return u; }
-  inline void        check() { /* FIXME: n_types() shouldn't be exceeded */ }
+  inline FieldUnion& addu (FieldType ft) { set_type (ft); FieldUnion &u = getu(); buffermem[0].index++; check(); return u; }
+  inline void        check() { if (PLIC_UNLIKELY (nth() > n_types())) check_internal(); }
   inline FieldUnion& uat (uint n) const { return n < n_types() ? buffermem[offset() + n] : *(FieldUnion*) NULL; }
   explicit           FieldBuffer (uint _ntypes);
   explicit           FieldBuffer (uint, FieldUnion*, uint);
 public:
   virtual     ~FieldBuffer();
   inline uint64 first_id () const { return buffermem && type_at (0) == INT ? uat (0).vint64 : 0; }
-  inline void add_int64  (int64  vint64)  { FieldUnion &u = addu (INT); u.vint64 = vint64; check(); }
-  inline void add_evalue (int64  vint64)  { FieldUnion &u = addu (ENUM); u.vint64 = vint64; check(); }
-  inline void add_double (double vdouble) { FieldUnion &u = addu (FLOAT); u.vdouble = vdouble; check(); }
-  inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); check(); }
-  inline void add_func   (const String &s) { FieldUnion &u = addu (FUNC); new (&u) String (s); check(); }
-  inline void add_object (uint64 objid) { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; check(); }
-  inline FieldBuffer& add_rec (uint nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); check(); }
-  inline FieldBuffer& add_seq (uint nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); check(); }
+  inline void add_int64  (int64  vint64)  { FieldUnion &u = addu (INT); u.vint64 = vint64; }
+  inline void add_evalue (int64  vint64)  { FieldUnion &u = addu (ENUM); u.vint64 = vint64; }
+  inline void add_double (double vdouble) { FieldUnion &u = addu (FLOAT); u.vdouble = vdouble; }
+  inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
+  inline void add_func   (const String &s) { FieldUnion &u = addu (FUNC); new (&u) String (s); }
+  inline void add_object (uint64 objid) { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
+  inline FieldBuffer& add_rec (uint nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); }
+  inline FieldBuffer& add_seq (uint nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); }
   inline TypeHash first_type_hash () const;
   inline void     add_type_hash (uint64 a, uint64 b, uint64 c, uint64 d);
   inline void         reset();
@@ -254,7 +255,8 @@ class FieldBufferReader { // read field buffer contents
   uint               m_nth;
   inline FieldUnion& fb_getu () { return m_fb->uat (m_nth); }
   inline FieldUnion& fb_popu () { FieldUnion &u = m_fb->uat (m_nth++); check(); return u; }
-  inline void        check() { /* FIXME: n_types() shouldn't be exceeded */ }
+  inline void        check() { if (PLIC_UNLIKELY (m_nth > n_types())) check_internal(); }
+  void               check_internal ();
 public:
   FieldBufferReader (const FieldBuffer &fb) : m_fb (&fb), m_nth (0) {}
   inline void reset (const FieldBuffer &fb) { m_fb = &fb; m_nth = 0; }
@@ -403,7 +405,6 @@ FieldBuffer::add_type_hash (uint64 a, uint64 b, uint64 c, uint64 d)
   ub.vint64 = b;
   uc.vint64 = c;
   ud.vint64 = d;
-  check();
 }
 
 inline void

@@ -63,6 +63,7 @@ string_printf (const char *format, ...)
   return buffer;
 }
 
+#if 0
 static void
 printerr (const char *format, ...)
 {
@@ -76,6 +77,7 @@ printerr (const char *format, ...)
   size_t l = write (2, buffer, strlen (buffer));
   (void) l;
 }
+#endif
 
 /* === EventFd === */
 EventFd::EventFd ()
@@ -531,6 +533,28 @@ FieldBuffer::~FieldBuffer()
   reset();
   if (buffermem)
     delete [] buffermem;
+}
+
+void
+FieldBuffer::check_internal ()
+{
+  if (nth() >= n_types())
+    {
+      String msg = string_printf ("FieldBuffer(this=%p): capacity=%u index=%u",
+                                  this, n_types(), nth());
+      throw std::out_of_range (msg);
+    }
+}
+
+void
+FieldBufferReader::check_internal ()
+{
+  if (m_nth >= n_types())
+    {
+      String msg = string_printf ("FieldBufferReader(this=%p): capacity=%u index=%u",
+                                  this, n_types(), m_nth);
+      throw std::out_of_range (msg);
+    }
 }
 
 String
