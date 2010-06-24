@@ -436,14 +436,16 @@ Coupler::dispatcher_lookup (uint edispatcher_id)
   return ix < priv.edispatchers.size() ? priv.edispatchers[ix] : NULL;
 }
 
-void
+bool
 Coupler::dispatcher_delete (uint edispatcher_id)
 {
   uint ix = edispatcher_id - 1;
   if (ix < priv.edispatchers.size() && !priv.isfree (ix))
-    priv.remove_edispatcher (ix);
-  else
-    printerr ("PLIC:Coupler::%s(): invalid id: %u", __func__, edispatcher_id);
+    {
+      priv.remove_edispatcher (ix);
+      return true;
+    }
+  return false;
 }
 
 /* === DispatchRegistry === */

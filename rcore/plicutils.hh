@@ -47,6 +47,7 @@ using std::tr1::weak_ptr;
 #define PLIC_UNLIKELY(expr)     expr
 #endif
 #define PLIC_LIKELY             PLIC_ISLIKELY
+#define PLIC_MSGID_SHIFT        60
 
 /* === Standard Types === */
 typedef std::string String;
@@ -70,14 +71,14 @@ static const uint64 msgid_event  = 0x6000000000000000ULL;
 //     const uint64 msgid_signal = 0x7000000000000000ULL; // result bit
 static const uint64 msgid_error  = 0x8000000000000000ULL; // error bit
 inline bool msgid_has_result (const uint64 id) { return id & msgid_result; }
-inline bool is_msgid_ok      (const uint64 id) { return id >> 60 == msgid_ok     >> 60; }
-inline bool is_msgid_result  (const uint64 id) { return id >> 60 == msgid_result >> 60; }
-inline bool is_msgid_oneway  (const uint64 id) { return id >> 60 == msgid_oneway >> 60; }
-inline bool is_msgid_twoway  (const uint64 id) { return id >> 60 == msgid_twoway >> 60; }
-inline bool is_msgid_discon  (const uint64 id) { return id >> 60 == msgid_discon >> 60; }
-inline bool is_msgid_sigcon  (const uint64 id) { return id >> 60 == msgid_sigcon >> 60; }
-inline bool is_msgid_event   (const uint64 id) { return id >> 60 == msgid_event  >> 60; }
-inline bool is_msgid_error   (const uint64 id) { return id >> 60 == msgid_error  >> 60; }
+inline bool is_msgid_ok      (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_ok     >> PLIC_MSGID_SHIFT; }
+inline bool is_msgid_result  (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_result >> PLIC_MSGID_SHIFT; }
+inline bool is_msgid_oneway  (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_oneway >> PLIC_MSGID_SHIFT; }
+inline bool is_msgid_twoway  (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_twoway >> PLIC_MSGID_SHIFT; }
+inline bool is_msgid_discon  (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_discon >> PLIC_MSGID_SHIFT; }
+inline bool is_msgid_sigcon  (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_sigcon >> PLIC_MSGID_SHIFT; }
+inline bool is_msgid_event   (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_event  >> PLIC_MSGID_SHIFT; }
+inline bool is_msgid_error   (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_error  >> PLIC_MSGID_SHIFT; }
 inline bool msgid_has_error  (const uint64 id) { return id & msgid_error; }
 
 /* === Forward Declarations === */
@@ -328,7 +329,7 @@ public:
   void                 push_event        (FieldBuffer *fbev) { eventc.push_msg (fbev); }
   uint                 dispatcher_add    (std::auto_ptr<EventDispatcher> evd); // takes object
   EventDispatcher*     dispatcher_lookup (uint         dfunc_id);
-  void                 dispatcher_delete (uint         dfunc_id);
+  bool                 dispatcher_delete (uint         dfunc_id);
   // SmartHandle API
   inline uint64        pop_rpc_handle    (FieldBufferReader &fbr) { return fbr.pop_object(); }
   // server loop integration
