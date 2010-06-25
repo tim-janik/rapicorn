@@ -128,18 +128,32 @@ rope_thread_coupler ()
   return &rope_coupler;
 }
 
+static Plic::EventFd * volatile initevd = NULL;
+
 int
 rope_thread_inputfd ()
 {
-  static Plic::EventFd * volatile initevd = NULL;
   if (once_enter ((volatile size_t*) &initevd))
     {
       Plic::EventFd *evd = new Plic::EventFd();
       rope_coupler.set_event_wakeup (*evd, &Plic::EventFd::wakeup);
+      int err = evd->open();
+      if (err < 0)
+        error ("failed to open EventFd: %s", string_from_errno (err).c_str());
       once_leave ((volatile size_t*) &initevd, size_t (evd));
     }
   Plic::EventFd *e = (Plic::EventFd*) initevd;
   return e->inputfd(); // fd for POLLIN
+}
+
+void
+rope_thread_flush_input ()
+{
+  if (initevd)
+    {
+      Plic::EventFd *evd = (Plic::EventFd*) initevd;
+      evd->flush();
+    }
 }
 
 uint64

@@ -25,11 +25,12 @@ namespace Rapicorn {
 typedef Plic::FieldBuffer       FieldBuffer;
 typedef Plic::FieldBufferReader FieldBufferReader;
 
-uint64          rope_thread_start   (const String         &application_name,
-                                     const vector<String> &cmdline_args,
-                                     int                   cpu = -1);
-Plic::Coupler*  rope_thread_coupler ();
-int             rope_thread_inputfd ();
+uint64          rope_thread_start       (const String         &application_name,
+                                         const vector<String> &cmdline_args,
+                                         int                   cpu = -1);
+Plic::Coupler*  rope_thread_coupler     ();
+int             rope_thread_inputfd     ();
+void            rope_thread_flush_input ();
 
 } // Rapicorn
 
