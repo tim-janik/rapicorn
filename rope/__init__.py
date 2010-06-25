@@ -19,31 +19,58 @@
 More details at http://www.rapicorn.org/.
 """
 
-from pyRapicorn import *   # generated _PLIC_0XXX... cpy methods
-from py2cpy import *       # generated Python classes, Application, etc
-for s in dir (pyRapicorn): # allow py2cpy to access generated methods
-  if s.startswith ('_PLIC_'):
-    setattr (py2cpy, s, getattr (pyRapicorn, s))
-
 app = None
 def app_init (application_name = None):
-  import sys, pyRapicorn, py2cpy
+  global app
+  assert app == None
+  _CPY, _PY = app_init._CPY, app_init._PY # from _module_init_once_
+  del globals()['app_init'] # run once only
+  # initialize dispatching Rapicorn thread
   cmdline_args = None
+  import sys
   if application_name == None:
+    import os
     application_name = os.path.abspath (sys.argv[0] or '-')
   if cmdline_args == None:
     cmdline_args = sys.argv
-  plic_id = pyRapicorn._init_dispatcher (application_name, cmdline_args)
-  a = py2cpy.Application (py2cpy._BaseClass_._PlicID_ (plic_id))
-  global app
-  app = a
+  plic_id = _CPY._init_dispatcher (application_name, cmdline_args)
+  # integrate Rapicorn dispatching with main loop
+  class RapicornSource (main.Source):
+    def __init__ (self):
+      super (RapicornSource, self).__init__ (_CPY._event_dispatch)
+      import select
+      fd, pollmask = _CPY._event_fd()
+      if fd >= 0:
+        self.set_poll (fd, pollmask)
+    def prepare (self, current_time, timeout):
+      return _CPY._event_check()
+    def check (self, current_time, fdevents):
+      return _CPY._event_check()
+    def dispatch (self, fdevents):
+      self.callable() # _event_dispatch
+      return True
+  main.RapicornSource = RapicornSource
+  # setup global Application
+  app = Application (_PY._BaseClass_._PlicID_ (plic_id))
+  def main_loop (self):
+    self.loop = main.Loop()
+    self.loop += main.RapicornSource()
+    exit_status = self.loop.loop()
+    del self.loop
+    return exit_status
+  app.__class__.main_loop = main_loop # extend for main loop integration
   return app
-def check_event ():
-  import pyRapicorn
-  return pyRapicorn._check_event()
-def dispatch_event ():
-  import pyRapicorn
-  return pyRapicorn._dispatch_event()
-#app_init._init_dispatcher = pyRapicorn._init_dispatcher # save for app_init() use
-del globals()['pyRapicorn']
-del globals()['py2cpy']
+
+def _module_init_once_():
+  global _module_init_once_ ; del _module_init_once_
+  import pyRapicorn     # generated _PLIC_... cpy methods
+  import py2cpy         # generated Python classes, Application, etc
+  py2cpy.__plic_module_init_once__ (pyRapicorn)
+  app_init._CPY, app_init._PY = (pyRapicorn, py2cpy) # app_init() internals
+  del globals()['pyRapicorn']
+  del globals()['py2cpy']
+_module_init_once_()
+
+# introduce module symbols
+from py2cpy import *
+import main

@@ -81,7 +81,21 @@ rope_init_dispatcher (PyObject *self,
 }
 
 static PyObject*
-rope_check_event (PyObject *self, PyObject *args)
+rope_event_fd (PyObject *self, PyObject *args)
+{
+  PyObject *tuple = PyTuple_New (2);
+  PyTuple_SET_ITEM (tuple, 0, PyLong_FromLongLong (rope_thread_inputfd()));
+  PyTuple_SET_ITEM (tuple, 1, PyString_FromString ("i")); // POLLIN
+  if (PyErr_Occurred())
+    {
+      Py_DECREF (tuple);
+      tuple = NULL;
+    }
+  return tuple;
+}
+
+static PyObject*
+rope_event_check (PyObject *self, PyObject *args)
 {
   if (self || PyTuple_Size (args) != 0)
     { PyErr_Format (PyExc_TypeError, "no arguments expected"); return NULL; }
@@ -93,10 +107,11 @@ rope_check_event (PyObject *self, PyObject *args)
 }
 
 static PyObject*
-rope_dispatch_event (PyObject *self, PyObject *args)
+rope_event_dispatch (PyObject *self, PyObject *args)
 {
   if (self || PyTuple_Size (args) != 0)
     { PyErr_Format (PyExc_TypeError, "no arguments expected"); return NULL; }
+  rope_thread_flush_input();
   Plic::Coupler &cpl = PLIC_COUPLER();
   FieldBuffer *fr = NULL, *fb = cpl.pop_event();
   if (!fb)
@@ -153,9 +168,11 @@ rope_dispatch_event (PyObject *self, PyObject *args)
 static PyMethodDef rope_vtable[] = {
   { "_init_dispatcher",         rope_init_dispatcher,         METH_VARARGS,
     "Run initial Rapicorn setup code." },
-  { "_check_event",             rope_check_event,             METH_VARARGS,
+  { "_event_fd",                rope_event_fd,                METH_VARARGS,
+    "Rapicorn event notification file descriptor." },
+  { "_event_check",             rope_event_check,             METH_VARARGS,
     "Check for pending Rapicorn events." },
-  { "_dispatch_event",          rope_dispatch_event,          METH_VARARGS,
+  { "_event_dispatch",          rope_event_dispatch,          METH_VARARGS,
     "Dispatch pending Rapicorn events." },
   { "printout",                 rope_printout,                METH_VARARGS,
     "Rapicorn::printout() - print to stdout." },

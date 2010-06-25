@@ -50,6 +50,11 @@ def reindent (prefix, lines):
 
 base_code = """
 
+def __plic_module_init_once__ (cpy_module):
+  del globals()['__plic_module_init_once__'] # run once only
+  global _CPY
+  _CPY = cpy_module
+
 class _BaseRecord_:
   def __init__ (self, **entries):
     self.__dict__.update (entries)
@@ -154,9 +159,9 @@ class Generator:
     s = ''
     s += 'def __sig_%s__ (self): pass # default handler\n' % ftype.name
     s += 'def sig_%s_connect (self, func):\n' % ftype.name
-    s += '  return _PLIC_%s (self, func, 0)\n' % ftype.ident_digest()
+    s += '  return _CPY._PLIC_%s (self, func, 0)\n' % ftype.ident_digest()
     s += 'def sig_%s_disconnect (self, connection_id):\n' % ftype.name
-    s += '  return _PLIC_%s (self, None, connection_id)\n' % ftype.ident_digest()
+    s += '  return _CPY._PLIC_%s (self, None, connection_id)\n' % ftype.ident_digest()
     return s
   def generate_to_proto (self, argname, type_info, valname, onerror = 'return false'):
     s = ''
@@ -193,7 +198,7 @@ class Generator:
       s += '): # one way\n'
     else:
       s += '): # %s\n' % m.rtype.name
-    s += '  ___ret = _PLIC_%s (' % m.ident_digest()
+    s += '  ___ret = _CPY._PLIC_%s (' % m.ident_digest()
     s += ', '.join (vals)
     s += ')\n'
     if m.rtype.storage == Decls.INTERFACE:
