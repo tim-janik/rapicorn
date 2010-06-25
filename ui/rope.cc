@@ -128,6 +128,20 @@ rope_thread_coupler ()
   return &rope_coupler;
 }
 
+int
+rope_thread_inputfd ()
+{
+  static Plic::EventFd * volatile initevd = NULL;
+  if (once_enter ((volatile size_t*) &initevd))
+    {
+      Plic::EventFd *evd = new Plic::EventFd();
+      rope_coupler.set_event_wakeup (*evd, &Plic::EventFd::wakeup);
+      once_leave ((volatile size_t*) &initevd, size_t (evd));
+    }
+  Plic::EventFd *e = (Plic::EventFd*) initevd;
+  return e->inputfd(); // fd for POLLIN
+}
+
 uint64
 rope_thread_start (const String              &application_name,
                    const std::vector<String> &cmdline_args,
