@@ -51,5 +51,4 @@ loop, that'll by default last as long as the window exists.
 	window = app.create_window ("hello-window")
 	window.show()
 	# Run main loop to process window events
-	app.execute_loops()
-
+	app.main_loop()
