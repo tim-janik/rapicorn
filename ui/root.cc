@@ -64,7 +64,6 @@ RootImpl::custom_command (const String       &command_name,
     {
       StringList args;
       args.strings = command_args;
-      printerr ("Root::%s(): emitting WindowBase::sig_commands: %s\n", __func__, command_name.c_str());
       handled = sig_commands.emit (command_name, args);
     }
   return handled;
