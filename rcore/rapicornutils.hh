@@ -707,6 +707,7 @@ protected:
   void               plor_name (const String &plor_name);
 public:
   String             plor_name () const;
+  virtual void       dispose   ();
 };
 
 /* --- implementation --- */

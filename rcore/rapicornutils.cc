@@ -2534,6 +2534,10 @@ BaseObject::plor_name (const String &_plor_name)
     warning ("invalid plor name for object (%p): %s", this, _plor_name.c_str());
 }
 
+void
+BaseObject::dispose ()
+{}
+
 /* --- memory utils --- */
 void*
 malloc_aligned (gsize	  total_size,
