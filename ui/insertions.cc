@@ -19,7 +19,7 @@
 // Here we provide insertion snippets to be included in struct
 // definitions when generating interface.hh from rapicorn.idl
 
-global_scope:
+includes:
 #include <ui/utilities.hh>
 namespace Rapicorn {
 class Root;
@@ -59,3 +59,8 @@ protected:
 
 IGNORE: // close last _scope
 }; // close dummy class scope
+
+global_scope:
+namespace Rapicorn {
+extern ApplicationBase &app;
+}

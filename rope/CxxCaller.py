@@ -658,7 +658,8 @@ class Generator:
     f = open (filename, 'r')
     key = None
     for line in f:
-      m = (re.match ('(class_scope:\w+):\s*(//.*)?$', line) or
+      m = (re.match ('(includes):\s*(//.*)?$', line) or
+           re.match ('(class_scope:\w+):\s*(//.*)?$', line) or
            re.match ('(global_scope):\s*(//.*)?$', line))
       if not m:
         m = re.match ('(IGNORE):\s*(//.*)?$', line)
@@ -687,7 +688,7 @@ class Generator:
       s += '#include %s\n' % i
     if self.gen_inclusions and (self.gen_clientcc or self.gen_servercc):
       s += '#endif\n'
-    s += self.insertion_text ('global_scope')
+    s += self.insertion_text ('includes')
     if self.gen_clienthh:
       s += clienthh_boilerplate
     if self.gen_serverhh:
@@ -776,6 +777,7 @@ class Generator:
       self.gen4smarthandle, Iswitch = True, False
     s += self.open_namespace (None) # close all namespaces
     s += '\n'
+    s += self.insertion_text ('global_scope')
     return s
 
 def error (msg):
