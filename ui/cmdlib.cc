@@ -22,13 +22,14 @@ namespace Rapicorn {
 
 static void
 item_print (Item               &item,
-            const StringVector &args)
+            const StringList   &args)
 {
   bool last_empty = false;
-  for (uint i = 0; i < args.size(); i++)
+  const StringVector &strings = args.strings;
+  for (uint i = 0; i < strings.size(); i++)
     {
-      String str = command_string_unquote (args[i]);
-      last_empty = str == "" && string_strip (args[i]) == "";
+      String str = command_string_unquote (strings[i]);
+      last_empty = str == "" && string_strip (strings[i]) == "";
       printout ("%s%s", i ? " " : "", str.c_str());
     }
   if (!last_empty)
@@ -36,7 +37,7 @@ item_print (Item               &item,
 }
 
 static struct {
-  void      (*cmd) (Item&, const StringVector&);
+  void      (*cmd) (Item&, const StringList&);
   const char *name;
 } item_cmds[] = {
   { item_print,         "Item::print" },
@@ -44,13 +45,13 @@ static struct {
 
 static void
 window_close (WindowBase         &window,
-              const StringVector &args)
+              const StringList   &args)
 {
   window.close();
 }
 
 static struct {
-  void      (*cmd) (WindowBase&, const StringVector&);
+  void      (*cmd) (WindowBase&, const StringList&);
   const char *name;
 } window_cmds[] = {
   { window_close,       "Window::close" },
@@ -58,13 +59,13 @@ static struct {
 
 static void
 application_close (Item               &item,
-                   const StringVector &args)
+                   const StringList   &args)
 {
   printout ("app.close()\n");
 }
 
 static struct {
-  void      (*cmd) (Item&, const StringVector&);
+  void      (*cmd) (Item&, const StringList&);
   const char *name;
 } application_cmds[] = {
   { application_close,  "Application::close" },
@@ -73,7 +74,7 @@ static struct {
 bool
 command_lib_exec (Item               &item,
                   const String       &cmd_name,
-                  const StringVector &args)
+                  const StringList   &args)
 {
   for (uint ui = 0; ui < ARRAY_SIZE (item_cmds); ui++)
     if (item_cmds[ui].name == cmd_name)
@@ -186,12 +187,12 @@ static const char *whitespaces = " \t\v\f\n\r";
 bool
 command_scan (const String &input,
               String       *cmd_name,
-              StringVector *args)
+              StringList   *args)
 {
   const char *ident0 = "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const char *identn = "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ:0123456789";
   *cmd_name = "";
-  args->resize (0);
+  args->strings.resize (0);
   uint i = 0;
   /* skip leading spaces */
   while (i < input.size() && strchr (whitespaces, input[i]))
@@ -220,13 +221,13 @@ command_scan (const String &input,
       String arg;
       if (!parse_arg (input, &i, &arg))
         return false; // invalid arg syntax
-      args->push_back (arg);
+      args->strings.push_back (arg);
       while (i < input.size() && input[i] == ',')
         {
           i++;
           if (!parse_arg (input, &i, &arg))
             return false; // invalid arg syntax
-          args->push_back (arg);
+          args->strings.push_back (arg);
         }
       if (i >= input.size() || input[i] != ')')
         {

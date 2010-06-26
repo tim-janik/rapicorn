@@ -16,6 +16,7 @@
  */
 #include "container.hh"
 #include "containerimpl.hh"
+#include "application.hh"
 #include "root.hh"
 #include <algorithm>
 #include <stdio.h>

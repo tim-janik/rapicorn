@@ -22,7 +22,6 @@
 #include <ui/commands.hh>
 #include <ui/properties.hh>
 #include <ui/heritage.hh>
-#include <ui/interface.hh>
 
 namespace Rapicorn {
 
@@ -123,7 +122,7 @@ protected:
   virtual void                hierarchy_changed (Item *old_toplevel);
   virtual bool                move_focus        (FocusDirType fdir);
   virtual bool                custom_command    (const String       &command_name,
-                                                 const StringVector &command_args);
+                                                 const StringList   &command_args);
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
   void                        notify_key_error  ();
 public:

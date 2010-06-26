@@ -19,6 +19,14 @@
 // Here we provide insertion snippets to be included in struct
 // definitions when generating interface.hh from rapicorn.idl
 
+global_scope:
+#include <ui/utilities.hh>
+namespace Rapicorn {
+class Root;
+class Item;
+}
+
+IGNORE:
 struct DUMMY { // dummy class for auto indentation
 
 class_scope:Requisition:

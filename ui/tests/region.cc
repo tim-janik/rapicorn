@@ -18,6 +18,7 @@
 #include <rcore/rapicorntests.h>
 #include <rapicorn.hh>
 #include <stdio.h>
+#include <stdlib.h>     // lrand48
 
 namespace {
 using namespace Rapicorn;

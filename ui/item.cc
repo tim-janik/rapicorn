@@ -444,7 +444,7 @@ bool
 Item::exec_command (const String &command_call_string)
 {
   String cmd_name;
-  StringVector args;
+  StringList args;
   if (!command_scan (command_call_string, &cmd_name, &args))
     {
       warning ("Invalid command syntax: %s", command_call_string.c_str());
@@ -480,7 +480,7 @@ Item::exec_command (const String &command_call_string)
 
 bool
 Item::custom_command (const String       &command_name,
-                      const StringVector &command_args)
+                      const StringList   &command_args)
 {
   return false;
 }

@@ -44,15 +44,12 @@ Root::set_parent (Container *parent)
 }
 
 bool
-RootImpl::custom_command (const String       &command_name,
-                          const StringVector &command_args)
+RootImpl::custom_command (const String     &command_name,
+                          const StringList &command_args)
 {
   bool handled = false;
   if (!handled)
-    {
-      StringList args (command_args);
-      handled = sig_commands.emit (command_name, args);
-    }
+    handled = sig_commands.emit (command_name, command_args);
   return handled;
 }
 

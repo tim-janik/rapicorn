@@ -16,6 +16,7 @@
  */
 #include <rapicorn.hh>
 #include <string.h>
+#include <stdlib.h>
 
 namespace {
 using namespace Rapicorn;

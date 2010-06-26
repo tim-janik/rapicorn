@@ -17,10 +17,7 @@
 #ifndef __RAPICORN_APPLICATION_HH__
 #define __RAPICORN_APPLICATION_HH__
 
-#include <ui/utilities.hh>
-#include <ui/primitives.hh>
-#include <ui/item.hh>
-#include <stdlib.h>
+#include <ui/commands.hh>
 
 namespace Rapicorn {
 

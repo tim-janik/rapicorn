@@ -17,7 +17,9 @@
 #ifndef __RAPICORN_COMMANDS_HH__
 #define __RAPICORN_COMMANDS_HH__
 
+#include <ui/utilities.hh>
 #include <ui/primitives.hh>
+#include <ui/interface.hh>
 
 namespace Rapicorn {
 
@@ -26,7 +28,7 @@ struct Command : ReferenceCountable {
   const String blurb;
   bool         needs_arg;
   Command (const char *cident, const char *cblurb, bool has_arg);
-  virtual bool   exec (Deletable *obj, const StringVector &args) = 0;
+  virtual bool   exec (Deletable *obj, const StringList &args) = 0;
 protected:
   virtual ~Command();
 };
@@ -67,12 +69,12 @@ struct CommandList {
 /* command with data and arg string */
 template<class Class, class Data>
 struct CommandDataArg : Command {
-  typedef bool (Class::*CommandMethod) (Data data, const StringVector &args);
-  bool (Class::*command_method) (Data data, const StringVector &args);
+  typedef bool (Class::*CommandMethod) (Data data, const StringList &args);
+  bool (Class::*command_method) (Data data, const StringList &args);
   Data data;
   CommandDataArg (bool (Class::*method) (Data, const String&),
                   const char *cident, const char *cblurb, const Data &method_data);
-  virtual bool exec (Deletable *obj, const StringVector &args);
+  virtual bool exec (Deletable *obj, const StringList &args);
 };
 template<class Class, class Data> inline Command*
 create_command (bool (Class::*method) (Data, const String&),
@@ -87,7 +89,7 @@ struct CommandData : Command {
   Data data;
   CommandData (bool (Class::*method) (Data),
                const char *cident, const char *cblurb, const Data &method_data);
-  virtual bool exec (Deletable *obj, const StringVector&);
+  virtual bool exec (Deletable *obj, const StringList&);
 };
 template<class Class, class Data> inline Command*
 create_command (bool (Class::*method) (Data),
@@ -97,11 +99,11 @@ create_command (bool (Class::*method) (Data),
 /* command with arg string */
 template<class Class>
 struct CommandArg: Command {
-  typedef bool (Class::*CommandMethod) (const StringVector &args);
-  bool (Class::*command_method) (const StringVector &args);
+  typedef bool (Class::*CommandMethod) (const StringList &args);
+  bool (Class::*command_method) (const StringList &args);
   CommandArg (bool (Class::*method) (const String&),
               const char *cident, const char *cblurb);
-  virtual bool exec (Deletable *obj, const StringVector &args);
+  virtual bool exec (Deletable *obj, const StringList &args);
 };
 template<class Class> inline Command*
 create_command (bool (Class::*method) (const String&),
@@ -115,7 +117,7 @@ struct CommandSimple : Command {
   bool (Class::*command_method) ();
   CommandSimple (bool (Class::*method) (),
                  const char *cident, const char *cblurb);
-  virtual bool exec (Deletable *obj, const StringVector&);
+  virtual bool exec (Deletable *obj, const StringList&);
 };
 template<class Class> inline Command*
 create_command (bool (Class::*method) (),
@@ -132,7 +134,7 @@ CommandDataArg<Class,Data>::CommandDataArg (bool (Class::*method) (Data, const S
   data (method_data)
 {}
 template<class Class, typename Data> bool
-CommandDataArg<Class,Data>::exec (Deletable *obj, const StringVector &args)
+CommandDataArg<Class,Data>::exec (Deletable *obj, const StringList &args)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   if (!instance)
@@ -148,7 +150,7 @@ CommandArg<Class>::CommandArg (bool (Class::*method) (const String&),
   command_method (method)
 {}
 template<class Class> bool
-CommandArg<Class>::exec (Deletable *obj, const StringVector &args)
+CommandArg<Class>::exec (Deletable *obj, const StringList &args)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   if (!instance)
@@ -165,7 +167,7 @@ CommandData<Class,Data>::CommandData (bool (Class::*method) (Data),
   data (method_data)
 {}
 template<class Class, typename Data> bool
-CommandData<Class,Data>::exec (Deletable *obj, const StringVector&)
+CommandData<Class,Data>::exec (Deletable *obj, const StringList&)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   if (!instance)
@@ -181,7 +183,7 @@ CommandSimple<Class>::CommandSimple (bool (Class::*method) (),
   command_method (method)
 {}
 template<class Class> bool
-CommandSimple<Class>::exec (Deletable *obj, const StringVector&)
+CommandSimple<Class>::exec (Deletable *obj, const StringList&)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   if (!instance)

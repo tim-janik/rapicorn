@@ -20,16 +20,16 @@ using namespace Rapicorn;
 
 static String
 cmdjoin (const String       &name,
-         const StringVector &args)
+         const StringList   &args)
 {
-  return name + ";" + string_join (";", args);
+  return name + ";" + string_join (";", args.strings);
 }
 
 static void
 test_command_scanning (void)
 {
   String name;
-  StringVector args;
+  StringList args;
   bool success;
   success = command_scan (" cmd ", &name, &args);
   assert (success && cmdjoin (name, args) == "cmd;");

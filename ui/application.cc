@@ -15,10 +15,11 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "application.hh"
+#include "root.hh"
 #include "factory.hh"
 #include "viewport.hh"
 #include "image.hh"
-#include "root.hh"
+#include <stdlib.h>
 
 namespace Rapicorn {
 
