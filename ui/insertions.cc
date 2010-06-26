@@ -40,9 +40,6 @@ class_scope:WindowBase:
   virtual Root&      root          () = 0;
 class_scope:ApplicationBase:
   static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
-  static void        init_with_x11 (int        *argcp,
-                                    char     ***argvp,
-                                    const char *app_name);
   int                execute_loops ();
   static bool        plor_add      (Item &item, const String &plor_name);
   static Item*       plor_remove   (const String &plor_name);
@@ -60,7 +57,4 @@ protected:
 IGNORE: // close last _scope
 }; // close dummy class scope
 
-global_scope:
-namespace Rapicorn {
-extern ApplicationBase &app;
-}
+// global_scope:

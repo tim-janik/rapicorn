@@ -15,6 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "rootimpl.hh"
+#include "application.hh"
 
 namespace Rapicorn {
 
@@ -158,6 +159,13 @@ RootImpl::RootImpl() :
   RAPICORN_ASSERT (m_source == source);
   m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
   m_source->primary (false);
+  app.add_window (*this);
+}
+
+void
+RootImpl::dispose ()
+{
+  app.remove_window (*this);
 }
 
 RootImpl::~RootImpl()

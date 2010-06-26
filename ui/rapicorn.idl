@@ -37,6 +37,10 @@ interface Window {
                                  StringList args);
 };
 
+sequence WindowList {
+  Window windows;
+};
+
 interface Application {
   /* startup */
   void          init_with_x11   (string         application_name,
@@ -53,7 +57,7 @@ interface Application {
   Window        create_window   (string         window_identifier,
                                  StringList     arguments = 0,
                                  StringList     env_variables = 0) = 0;
-  // WindowList    list_windows    () = 0;
+  WindowList    list_windows    () = 0;
   bool          has_primary     ();
   signal void   missing_primary ();
   void          close           ();

@@ -19,9 +19,12 @@
 #include "factory.hh"
 #include "viewport.hh"
 #include "image.hh"
+#include <algorithm>
 #include <stdlib.h>
 
 namespace Rapicorn {
+
+ApplicationImpl &app = *new ApplicationImpl();
 
 ApplicationBase::ApplicationMutex ApplicationBase::mutex;
 
@@ -33,36 +36,14 @@ ApplicationBase::pixstream (const String  &pix_name,
 }
 
 void
-ApplicationBase::init_with_x11 (int           *argcp,
-                                  char        ***argvp,
-                                  const char    *app_name)
+ApplicationImpl::init_with_x11 (int           *argcp,
+                                char        ***argvp,
+                                const char    *app_name)
 {
   rapicorn_init_with_gtk_thread (argcp, argvp, app_name);
   assert (rapicorn_thread_entered() == false);
   rapicorn_thread_enter();
 }
-
-class ApplicationImpl : public ApplicationBase {
-  virtual void            init_with_x11          (const std::string &application_name,
-                                                  const StringList  &cmdline_args);
-  virtual String          auto_path              (const String  &file_name,
-                                                  const String  &binary_path,
-                                                  bool           search_vpath);
-  virtual void            auto_load              (const std::string &i18n_domain,
-                                                  const std::string &file_name,
-                                                  const std::string &binary_path);
-  virtual void            load_string            (const std::string &xml_string,
-                                                  const std::string &i18n_domain = "");
-  virtual WindowBase*   create_window          (const std::string &window_identifier,
-                                                  const StringList &arguments = StringList(),
-                                                  const StringList &env_variables = StringList());
-  virtual void            test_counter_set       (int val);
-  virtual void            test_counter_add       (int val);
-  virtual int             test_counter_get       ();
-  virtual int             test_counter_inc_fetch ();
-};
-
-ApplicationBase &app = *new ApplicationImpl();
 
 void
 ApplicationImpl::init_with_x11 (const std::string &application_name,
@@ -73,7 +54,7 @@ ApplicationImpl::init_with_x11 (const std::string &application_name,
   for (int i = 0; i < dummy_argc; i++)
     dummy_argv[i] = const_cast<char*> (cmdline_args.strings[i].c_str());
   dummy_argv[dummy_argc] = NULL;
-  ApplicationBase::init_with_x11 (&dummy_argc, &dummy_argv, application_name.c_str());
+  init_with_x11 (&dummy_argc, &dummy_argv, application_name.c_str());
 }
 
 WindowBase*
@@ -163,6 +144,33 @@ ApplicationBase::has_primary ()
 void
 ApplicationBase::close ()
 {
+}
+
+WindowList
+ApplicationImpl::list_windows ()
+{
+  WindowList wl;
+  for (uint i = 0; i < m_windows.size(); i++)
+    wl.windows.push_back (m_windows[i]);
+  return wl;
+}
+
+void
+ApplicationImpl::add_window (WindowBase &window)
+{
+  ref_sink (window);
+  m_windows.push_back (&window);
+}
+
+bool
+ApplicationImpl::remove_window (WindowBase &window)
+{
+  vector<WindowBase*>::iterator it = std::find (m_windows.begin(), m_windows.end(), &window);
+  if (it == m_windows.end())
+    return false;
+  m_windows.erase (it);
+  unref (window);
+  return true;
 }
 
 void

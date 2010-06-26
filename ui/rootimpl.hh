@@ -42,6 +42,8 @@ class RootImpl : public virtual Root,
   Viewport::Config      m_config;
 public:
   explicit              RootImpl                                ();
+protected:
+  virtual void          dispose                                 ();
 private:
   /*Des*/               ~RootImpl                               ();
   virtual void          dispose_item                            (Item                   &item);

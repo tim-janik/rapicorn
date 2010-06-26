@@ -18,7 +18,6 @@
 #define __RAPICORN_LOOP_HH__
 
 #include <ui/primitives.hh>
-#include <ui/application.hh>
 
 namespace Rapicorn {
 

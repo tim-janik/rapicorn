@@ -15,6 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "loop.hh"
+#include "commands.hh"
 #include <sys/poll.h>
 #include <errno.h>
 #include <unistd.h>

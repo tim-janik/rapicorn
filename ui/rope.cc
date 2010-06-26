@@ -16,6 +16,7 @@
  */
 #include "rope.hh" // must be included first to configure std headers
 #include "loop.hh"
+#include "application.hh"
 
 namespace Rapicorn {
 
