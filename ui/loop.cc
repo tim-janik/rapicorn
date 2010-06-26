@@ -238,17 +238,17 @@ public:
       unref (this);
   }
   virtual bool
-  exitable (void)
+  has_primary (void)
   {
     ScopedLock<Mutex> locker (m_mutex);
     for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
       {
         SourceList &slist = (*it).second;
         for (SourceList::iterator lit = slist.begin(); lit != slist.end(); lit++)
-          if (!(*lit)->exitable())
-            return false;
+          if ((*lit)->primary())
+            return true;
       }
-    return true;
+    return false;
   }
 };
 
@@ -423,7 +423,7 @@ EventLoop::loops_exitable ()
   assert (rapicorn_thread_entered());
   /* loop list shouldn't be modified by querying exitable state */
   for (uint i = 0; i < rapicorn_main_loops.size(); i++)
-    if (!rapicorn_main_loops[i]->exitable())
+    if (rapicorn_main_loops[i]->has_primary())
       return false;
   return true;
 }
@@ -538,7 +538,7 @@ EventLoop::Source::Source () :
   m_may_recurse (0),
   m_dispatching (0),
   m_was_dispatching (0),
-  m_exitable (0)
+  m_primary (0)
 {}
 
 uint
@@ -564,15 +564,15 @@ EventLoop::Source::may_recurse () const
 }
 
 bool
-EventLoop::Source::exitable () const
+EventLoop::Source::primary () const
 {
-  return m_exitable;
+  return m_primary;
 }
 
 void
-EventLoop::Source::exitable (bool is_exitable)
+EventLoop::Source::primary (bool is_primary)
 {
-  m_exitable = is_exitable;
+  m_primary = is_primary;
 }
 
 bool

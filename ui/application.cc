@@ -56,7 +56,6 @@ class ApplicationImpl : public ApplicationBase {
   virtual WindowBase*   create_window          (const std::string &window_identifier,
                                                   const StringList &arguments = StringList(),
                                                   const StringList &env_variables = StringList());
-  virtual void            exit                   (int code = 0);
   virtual void            test_counter_set       (int val);
   virtual void            test_counter_add       (int val);
   virtual int             test_counter_get       ();
@@ -146,26 +145,24 @@ ApplicationImpl::load_string (const std::string &xml_string,
     error ("failed to parse string: %s\n%s", string_from_errno (err).c_str(), xml_string.c_str());
 }
 
-static uint     exit_code = 0;
-
 int
 ApplicationBase::execute_loops ()
 {
   assert (rapicorn_thread_entered());           // guards exit_code
   while (!EventLoop::loops_exitable())
     EventLoop::iterate_loops (true, true);      // prepare/check/dispatch and may_block
-  uint ecode = exit_code;
-  exit_code = 0;
-  return ecode;
+  return 0;
+}
+
+bool
+ApplicationBase::has_primary ()
+{
+  return !EventLoop::loops_exitable();
 }
 
 void
-ApplicationImpl::exit (int code)
+ApplicationBase::close ()
 {
-  assert (rapicorn_thread_entered());           // guards exit_code
-  if (!exit_code)
-    exit_code = code;
-  EventLoop::kill_loops ();
 }
 
 void

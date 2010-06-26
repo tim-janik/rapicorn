@@ -91,13 +91,14 @@ private:
     m_loop = ref_sink (EventLoop::create());
     EventLoop::Source *esource = new DispatchSource (*m_init->coupler, *m_loop);
     (*m_loop).add_source (esource, MAXINT);
-    esource->exitable (false);
+    esource->primary (false);
     m_init->mutex.lock();
     m_init->app_id = Application (&app)._rpc_id();
     m_init->cond.signal();
     m_init->mutex.unlock();
     m_init = NULL;
-    app.execute_loops();
+    while (true) // !EventLoop::loops_exitable()
+      EventLoop::iterate_loops (true, true);      // prepare/check/dispatch and may_block
   }
 };
 

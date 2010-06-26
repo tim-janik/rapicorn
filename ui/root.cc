@@ -157,7 +157,7 @@ RootImpl::RootImpl() :
   EventLoop::Source *source = new RootSource (*this);
   RAPICORN_ASSERT (m_source == source);
   m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
-  m_source->exitable (TRUE);
+  m_source->primary (false);
 }
 
 RootImpl::~RootImpl()
@@ -1039,7 +1039,7 @@ RootImpl::create_viewport ()
           resize_all (NULL);
         }
       RAPICORN_ASSERT (m_viewport != NULL);
-      m_source->exitable (FALSE);
+      m_source->primary (true); // FIXME: depends on WM-managable
       VoidSlot sl = slot (*this, &RootImpl::idle_show);
       m_loop.exec_now (sl);
     }
@@ -1067,7 +1067,7 @@ RootImpl::destroy_viewport ()
           EventLoop::Source *source = new RootSource (*this);
           RAPICORN_ASSERT (m_source == source);
           m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
-          m_source->exitable (TRUE);
+          m_source->primary (false);
         }
       // reset item state where needed
       cancel_item_events (NULL);

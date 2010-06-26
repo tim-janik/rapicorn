@@ -70,7 +70,7 @@ public:
   static void   kill_loops      ();
   static bool   loops_exitable  ();
   virtual void  kill_sources    (void) = 0;
-  virtual bool  exitable        (void) = 0;
+  virtual bool  has_primary     (void) = 0;
   virtual void  wakeup          (void) = 0;             /* thread-safe, as long as loop is undestructed */
   /* source handling */
   class Source;
@@ -121,7 +121,7 @@ class EventLoop::Source : public virtual ReferenceCountable, protected NonCopyab
   uint         m_may_recurse : 1;
   uint         m_dispatching : 1;
   uint         m_was_dispatching : 1;
-  uint         m_exitable : 1;
+  uint         m_primary : 1;
   uint         n_pfds      ();
 protected:
   explicit     Source      ();
@@ -134,8 +134,8 @@ public:
   virtual void destroy     ();
   bool         may_recurse () const;
   void         may_recurse (bool           may_recurse);
-  bool         exitable    () const;
-  void         exitable    (bool           is_exitable);
+  bool         primary     () const;
+  void         primary     (bool           is_primary);
   bool         recursion   () const;
   void         add_poll    (PollFD * const pfd);
   void         remove_poll (PollFD * const pfd);
