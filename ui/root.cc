@@ -1091,6 +1091,12 @@ RootImpl::destroy_viewport ()
   unref (this);
 }
 
+Root&
+RootImpl::root ()
+{
+  return *this;
+}
+
 void
 RootImpl::show ()
 {

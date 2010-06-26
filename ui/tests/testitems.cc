@@ -57,7 +57,7 @@ static void
 test_cxx_gui ()
 {
   TSTART ("C++GUI Test");
-  WinPtr window = Factory::create_winptr ("Root");
+  WindowBase &window = *app.create_window ("Root");
   TOK();
   Item &titem = Factory::create_item ("TestItem");
   TOK();
@@ -71,7 +71,7 @@ test_cxx_gui ()
   TOK();
   /* show onscreen and handle events like expose */
   window.show();
-  App.execute_loops();
+  app.execute_loops();
   TOK();
   /* assert TestItem rendering */
   uint seen_test = TestContainer::seen_test_items();
@@ -83,7 +83,7 @@ static void
 test_test_item ()
 {
   TSTART ("alignment-test");
-  WinPtr window = Factory::create_winptr ("alignment-test");
+  WindowBase &window = *app.create_window ("alignment-test");
   TOK();
   Root &root = window.root();
   TestContainer *titem = root.interface<TestContainer*>();
@@ -99,7 +99,7 @@ test_test_item ()
   /* verify and assert at least one TestItem rendering */
   uint old_seen_test = TestContainer::seen_test_items();
   window.show();
-  App.execute_loops();
+  app.execute_loops();
   uint seen_test = TestContainer::seen_test_items();
   TASSERT (seen_test > old_seen_test);
   /* test item rendering also executed various assertions */
@@ -118,10 +118,10 @@ main (int   argc,
       test_item_fatal_asserts = false;
 
   /* initialize rapicorn */
-  App.init_with_x11 (&argc, &argv, "TestItemsTest");
-  
+  app.init_with_x11 (&argc, &argv, "TestItemsTest");
+
   /* parse GUI description */
-  App.auto_load ("testitems", Rapicorn::Path::join (SRCDIR, "testitems.xml"), argv[0]);
+  app.auto_load ("testitems", Rapicorn::Path::join (SRCDIR, "testitems.xml"), argv[0]);
 
   /* create/run tests */
   test_cxx_gui ();

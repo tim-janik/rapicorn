@@ -87,17 +87,17 @@ private:
     // rapicorn_init_core() already called
     Rapicorn::StringList slist;
     slist.strings = m_init->cmdline_args;
-    App.init_with_x11 (m_init->application_name, slist);
+    app.init_with_x11 (m_init->application_name, slist);
     m_loop = ref_sink (EventLoop::create());
     EventLoop::Source *esource = new DispatchSource (*m_init->coupler, *m_loop);
     (*m_loop).add_source (esource, MAXINT);
     esource->exitable (false);
     m_init->mutex.lock();
-    m_init->app_id = Application (&App)._rpc_id();
+    m_init->app_id = Application (&app)._rpc_id();
     m_init->cond.signal();
     m_init->mutex.unlock();
     m_init = NULL;
-    App.execute_loops();
+    app.execute_loops();
   }
 };
 

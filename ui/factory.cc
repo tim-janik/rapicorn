@@ -838,8 +838,8 @@ Factory::create_container (const String       &gadget_identifier,
   return *container; // floating
 }
 
-WinPtr
-Factory::create_winptr (const String       &gadget_identifier,
+WindowBase&
+Factory::create_window (const String       &gadget_identifier,
                         const ArgumentList &arguments,
                         const ArgumentList &env_variables)
 {
@@ -851,9 +851,9 @@ Factory::create_winptr (const String       &gadget_identifier,
   Root *root = dynamic_cast<Root*> (&item);
   if (!root)
     error ("%s: widget construction yields non window: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
-  WinPtr win = root->winptr();
+  WindowBase &window = root->window();
   /* win does ref_sink(); */
-  return win;
+  return window;
 }
 
 bool

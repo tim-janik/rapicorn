@@ -24,14 +24,14 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-handle_commands (WinPtr             &window,
+handle_commands (WindowBase         &window,
                  const String       &command,
-                 const StringVector &args)
+                 const StringList   &args)
 {
   if (command == "close")
     window.close();
   else
-    printout ("%s(): custom command: %s(%s)\n", __func__, command.c_str(), string_join (",", args).c_str());
+    printout ("%s(): custom command: %s(%s)\n", __func__, command.c_str(), string_join (",", args.strings).c_str());
   return true;
 }
 
@@ -40,24 +40,24 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn for X11 backend with application name */
-  App.init_with_x11 (&argc, &argv, "HelloWorld");
+  app.init_with_x11 (&argc, &argv, "HelloWorld");
 
   /* find and load GUI definitions relative to argv[0] */
-  App.auto_load ("DummyTranslation",   // i18n_domain,
-                          "hello.xml",          // GUI file name
-                          argv[0]);
+  app.auto_load ("DummyTranslation",   // i18n_domain,
+                 "hello.xml",          // GUI file name
+                 argv[0]);
 
   /* create main window */
-  WinPtr window = App.create_winptr ("main-window");
+  WindowBase &window = *app.create_window ("main-window");
 
   /* connect custom callback to handle UI commands */
-  window.commands += handle_commands;
+  window.sig_commands += handle_commands;
 
   /* display window on screen */
   window.show();
 
   /* run event loops while windows are on screen */
-  App.execute_loops();
+  app.execute_loops();
 
   return 0;
 }

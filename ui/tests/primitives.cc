@@ -549,8 +549,8 @@ main (int   argc,
 {
   rapicorn_init_test (&argc, &argv);
   /* initialize rapicorn */
-  App.init_with_x11 (&argc, &argv, "PrimitivesTest");
-  
+  app.init_with_x11 (&argc, &argv, "PrimitivesTest");
+
   basic_loop_test();
   more_loop_test2();
   async_loop_test();

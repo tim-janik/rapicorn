@@ -153,7 +153,7 @@ main (int   argc,
   rapicorn_init_test (&argc, &argv);
   rapicorn_markup_parser_test();
   /* initialize rapicorn */
-  App.init_with_x11 (&argc, &argv, "MarkupTest"); // FIXME: should work offscreen
+  app.init_with_x11 (&argc, &argv, "MarkupTest"); // FIXME: should work offscreen
   text_markup_test();
   return 0;
 }

@@ -20,9 +20,9 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-custom_commands (WinPtr             &window,
+custom_commands (WindowBase         &window,
                  const String       &command,
-                 const StringVector &args)
+                 const StringList   &args)
 {
   if (command == "testdump")
     {
@@ -35,7 +35,7 @@ custom_commands (WinPtr             &window,
     }
   else
     printout ("%s(): custom command: %s(%s) (window: %s)\n", __func__,
-              command.c_str(), string_join (",", args).c_str(), window.root().name().c_str());
+              command.c_str(), string_join (",", args.strings).c_str(), window.root().name().c_str());
   return true;
 }
 
@@ -46,7 +46,7 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn and its gtk backend */
-  App.init_with_x11 (&argc, &argv, "TourTest");
+  app.init_with_x11 (&argc, &argv, "TourTest");
   /* initialization acquired global Rapicorn mutex */
 
   /* register builtin images */
@@ -56,15 +56,15 @@ main (int   argc,
   ApplicationBase::pixstream ("testimage-rgb-raw", rgb_raw);
 
   /* load GUI definition file, relative to argv[0] */
-  App.auto_load ("RapicornTest", "tour.xml", argv[0]);
+  app.auto_load ("RapicornTest", "tour.xml", argv[0]);
 
   /* create root item */
-  WinPtr window = App.create_winptr ("tour-dialog");
-  window.commands += custom_commands;
+  WindowBase &window = *app.create_window ("tour-dialog");
+  window.sig_commands += custom_commands;
 
   window.show();
 
-  App.execute_loops();
+  app.execute_loops();
 
   return 0;
 }

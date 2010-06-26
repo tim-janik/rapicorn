@@ -24,14 +24,17 @@ struct DUMMY { // dummy class for auto indentation
 class_scope:Requisition:
   inline Requisition (double w, double h) : width (w), height (h) {}
 
+class_scope:StringList:
+  /*Con*/  StringList () {}
+  /*Con*/  StringList (const std::vector<String> &strv) : strings (strv) {}
+
+class_scope:WindowBase:
+  virtual Root&      root          () = 0;
 class_scope:ApplicationBase:
   static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
   static void        init_with_x11 (int        *argcp,
                                     char     ***argvp,
                                     const char *app_name);
-  WinPtr             create_winptr (const std::string  &window_identifier,
-                                    const std::vector<String> &arguments = std::vector<String>(),
-                                    const std::vector<String> &env_variables = std::vector<String>());
   int                execute_loops ();
   static bool        plor_add      (Item &item, const String &plor_name);
   static Item*       plor_remove   (const String &plor_name);

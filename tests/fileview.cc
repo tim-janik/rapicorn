@@ -64,20 +64,20 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn for X11 */
-  App.init_with_x11 (&argc, &argv, "FileView");
+  app.init_with_x11 (&argc, &argv, "FileView");
   /* initialization acquired global Rapicorn mutex */
 
   /* load GUI definition file, relative to argv[0] */
-  App.auto_load ("RapicornTest", "fileview.xml", argv[0]);
+  app.auto_load ("RapicornTest", "fileview.xml", argv[0]);
 
   /* create root item */
   Store1 *s1 = create_store();
-  WinPtr window = App.create_winptr ("main-dialog",
-                                     Args (""),
-                                     Args ("ListModel=" + s1->model().plor_name()));
+  WindowBase &window = *app.create_window ("main-dialog",
+                                           Args (""),
+                                           Args ("ListModel=" + s1->model().plor_name()));
   window.show();
 
-  App.execute_loops();
+  app.execute_loops();
 
   return 0;
 }

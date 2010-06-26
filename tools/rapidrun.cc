@@ -140,15 +140,15 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn and its X11 (Gtk+) backend */
-  App.init_with_x11 (&argc, &argv, "Rapidrun"); // acquires Rapicorn mutex
+  app.init_with_x11 (&argc, &argv, "Rapidrun"); // acquires Rapicorn mutex
   parse_args (&argc, &argv);
   if (argc != 2)
     help_usage (true);
 
   /* find GUI definition file, relative to CWD */
-  String filename = App.auto_path (argv[1], ".");
+  String filename = app.auto_path (argv[1], ".");
 
-  /* load GUI definitions, fancy version of App.auto_load() */
+  /* load GUI definitions, fancy version of app.auto_load() */
   vector<String> definitions;
   int err = Factory::parse_file ("RapicornTest", filename, "", &definitions);
   if (err)
@@ -175,7 +175,7 @@ main (int   argc,
     }
 
   /* create root item */
-  WinPtr window = App.create_winptr (dialog);
+  WindowBase &window = *app.create_window (dialog);
 
   /* hook up test-dump handler */
   if (test_dump)
@@ -187,7 +187,7 @@ main (int   argc,
 
   /* show window and process events */
   window.show();
-  App.execute_loops();
+  app.execute_loops();
 
   return 0;
 }

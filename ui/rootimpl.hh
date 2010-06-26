@@ -90,6 +90,7 @@ private:
   virtual void          enable_auto_close                       ();
   virtual EventLoop*    get_loop                                ();
   /* Window */
+  virtual Root&         root                                    ();
   virtual void          show                                    ();
   virtual bool          closed                                  ();
   virtual void          close                                   ();

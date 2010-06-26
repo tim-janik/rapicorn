@@ -40,13 +40,13 @@ main (int   argc,
       char *argv[])
 {
   /* initialize rapicorn */
-  App.init_with_x11 (&argc, &argv, "Scroller");
+  app.init_with_x11 (&argc, &argv, "Scroller");
 
   /* parse GUI description */
-  App.auto_load ("RapicornTest", "scroller.xml", argv[0]);
+  app.auto_load ("RapicornTest", "scroller.xml", argv[0]);
 
   /* create main window */
-  WinPtr window = App.create_winptr ("main-shell");
+  WindowBase &window = *app.create_window ("main-shell");
   Container &mshell = window.root().interface<Container>();
 
   /* create button rows */
@@ -55,7 +55,7 @@ main (int   argc,
 
   /* show and process */
   window.show();
-  App.execute_loops();
+  app.execute_loops();
 
   return 0;
 }

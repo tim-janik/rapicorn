@@ -41,14 +41,6 @@ ApplicationBase::init_with_x11 (int           *argcp,
   rapicorn_thread_enter();
 }
 
-WinPtr
-ApplicationBase::create_winptr (const std::string         &window_identifier,
-                                  const std::vector<String> &arguments,
-                                  const std::vector<String> &env_variables)
-{
-  return Factory::create_winptr (window_identifier, arguments, env_variables);
-}
-
 class ApplicationImpl : public ApplicationBase {
   virtual void            init_with_x11          (const std::string &application_name,
                                                   const StringList  &cmdline_args);
@@ -70,7 +62,7 @@ class ApplicationImpl : public ApplicationBase {
   virtual int             test_counter_inc_fetch ();
 };
 
-ApplicationBase &App = *new ApplicationImpl();
+ApplicationBase &app = *new ApplicationImpl();
 
 void
 ApplicationImpl::init_with_x11 (const std::string &application_name,
@@ -89,7 +81,7 @@ ApplicationImpl::create_window (const std::string    &window_identifier,
                                 const StringList     &arguments,
                                 const StringList     &env_variables)
 {
-  return &Factory::create_winptr (window_identifier,
+  return &Factory::create_window (window_identifier,
                                   arguments.strings,
                                   env_variables.strings).root().window();
 }

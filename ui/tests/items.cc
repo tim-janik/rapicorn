@@ -27,11 +27,11 @@ main (int   argc,
 {
   rapicorn_init_test (&argc, &argv);
   /* initialize rapicorn */
-  App.init_with_x11 (&argc, &argv, "ItemTest");
+  app.init_with_x11 (&argc, &argv, "ItemTest");
 
   TSTART ("RapicornItems");
   /* parse standard GUI descriptions and create example item */
-  WinPtr window = Factory::create_winptr ("Root");
+  WindowBase &window = *app.create_window ("Root");
   TOK();
   /* get thread safe window handle */
   TOK();
