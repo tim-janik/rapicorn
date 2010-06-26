@@ -162,6 +162,13 @@ ApplicationImpl::add_window (WindowBase &window)
   m_windows.push_back (&window);
 }
 
+void
+ApplicationImpl::check_primaries()
+{
+  if (m_windows.size() == 0) // FIXME: check temporary window types
+    sig_missing_primary.emit();
+}
+
 bool
 ApplicationImpl::remove_window (WindowBase &window)
 {
@@ -170,6 +177,7 @@ ApplicationImpl::remove_window (WindowBase &window)
     return false;
   m_windows.erase (it);
   unref (window);
+  check_primaries(); // FIXME: should exec_update
   return true;
 }
 

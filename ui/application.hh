@@ -23,6 +23,7 @@ namespace Rapicorn {
 
 class ApplicationImpl : public ApplicationBase {
   vector<WindowBase*> m_windows;
+  void                check_primaries        ();
 public:
   virtual void        init_with_x11          (const std::string &application_name,
                                               const StringList  &cmdline_args);
