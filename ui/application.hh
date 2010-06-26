@@ -19,7 +19,6 @@
 
 #include <ui/utilities.hh>
 #include <ui/primitives.hh>
-#include <ui/window.hh>
 #include <ui/item.hh>
 #include <stdlib.h>
 

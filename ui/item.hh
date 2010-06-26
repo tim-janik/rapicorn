@@ -22,7 +22,6 @@
 #include <ui/commands.hh>
 #include <ui/properties.hh>
 #include <ui/heritage.hh>
-#include <ui/window.hh> // FIXME: for interface.hh
 #include <ui/interface.hh>
 
 namespace Rapicorn {

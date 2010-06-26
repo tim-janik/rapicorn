@@ -49,6 +49,5 @@
 /* conditional: #include <ui/text-pango.hh> */
 #include <ui/utilities.hh>
 #include <ui/viewport.hh>
-#include <ui/window.hh>
 
 #endif  // __RAPICORN_UI_HH__

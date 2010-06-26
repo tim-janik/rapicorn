@@ -79,7 +79,6 @@ private:
   virtual bool          has_viewport                            ();
   virtual void          destroy_viewport                        ();
   void                  idle_show                               ();
-  virtual WinPtr        winptr                                  ();
   virtual WindowBase&   window                                  ();
   virtual bool          custom_command                          (const String       &command_name,
                                                                  const StringVector &command_args);

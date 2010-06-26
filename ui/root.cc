@@ -29,17 +29,7 @@ struct ClassDoctor {
   }
 };
 
-class RootWindowImpl : public WinPtr {
-public:
-  RootWindowImpl (Root &r) :
-    WinPtr (r)
-  {}
-};
-
 Root::Root() :
-  m_window (RootWindowImpl (*this)),
-  sig_command (*this),
-  sig_window_command (m_window),
   sig_displayed (*this)
 {
   change_flags_silently (ANCHORED, true);       /* root is always anchored */
@@ -57,13 +47,10 @@ bool
 RootImpl::custom_command (const String       &command_name,
                           const StringVector &command_args)
 {
-  bool handled = sig_command.emit (command_name, command_args);
-  if (!handled)
-    handled = sig_window_command.emit (command_name, command_args);
+  bool handled = false;
   if (!handled)
     {
-      StringList args;
-      args.strings = command_args;
+      StringList args (command_args);
       handled = sig_commands.emit (command_name, args);
     }
   return handled;
@@ -1113,12 +1100,6 @@ void
 RootImpl::close ()
 {
   destroy_viewport();
-}
-
-WinPtr
-RootImpl::winptr ()
-{
-  return RootWindowImpl (*this);
 }
 
 WindowBase&

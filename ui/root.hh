@@ -18,7 +18,6 @@
 #define __RAPICORN_ROOT_HH__
 
 #include <ui/container.hh>
-#include <ui/window.hh>
 #include <ui/loop.hh>
 
 namespace Rapicorn {
@@ -27,7 +26,6 @@ namespace Rapicorn {
 class Root : public virtual Container, public virtual EventLoop::Source {
   friend class  Item;
   void          uncross_focus           (Item        &fitem);
-  WinPtr        m_window; // for WindowCommandSignal
 protected:
   virtual void  beep                    (void) = 0;
   void          set_focus               (Item         *item);
@@ -62,10 +60,7 @@ public:
   Item*         find_item               (const String &name);
   /* signals */
   typedef Signal<Root, bool (const String&, const StringVector&), CollectorWhile0<bool> >   CommandSignal;
-  typedef Signal<WinPtr, bool (const String&, const StringVector&), CollectorWhile0<bool> > WindowCommandSignal;
   typedef Signal<Root, void ()> NotifySignal;
-  CommandSignal         sig_command;
-  WindowCommandSignal   sig_window_command;
   NotifySignal          sig_displayed;
   /* viewport ops */
   virtual void  create_viewport         () = 0;
@@ -75,7 +70,6 @@ public:
   virtual EventLoop* get_loop           () = 0;
   virtual void       enable_auto_close  ();
   /* MT-safe */
-  virtual WinPtr      winptr          () = 0;
   virtual WindowBase& window          () = 0;
 };
 
