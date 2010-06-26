@@ -219,7 +219,15 @@ class Generator:
         s += self.generate_field (fl[0], self.type2cpp (fl[1]))
     elif type_info.storage == Decls.SEQUENCE:
       fl = type_info.elements
-      s += self.generate_field (fl[0], 'std::vector<' + self.type2cpp (fl[1]) + '>')
+      s += '  typedef std::vector<' + self.type2cpp (fl[1]) + '> Sequence;\n'
+      s += '  typedef Sequence::size_type              size_type;\n'
+      s += '  typedef Sequence::value_type             value_type;\n'
+      s += '  typedef Sequence::allocator_type         allocator_type;\n'
+      s += '  typedef Sequence::iterator               iterator;\n'
+      s += '  typedef Sequence::const_iterator         const_iterator;\n'
+      s += '  typedef Sequence::reverse_iterator       reverse_iterator;\n'
+      s += '  typedef Sequence::const_reverse_iterator const_reverse_iterator;\n'
+      s += self.generate_field (fl[0], 'Sequence')
       s += '  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;\n'
       s += '  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);\n'
     if type_info.storage == Decls.RECORD:

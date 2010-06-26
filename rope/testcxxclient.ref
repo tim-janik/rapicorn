@@ -159,42 +159,106 @@ struct XFooRecord {
   inline XFooRecord () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
 struct XFooSequence {
-  std::vector<bool> single_bool;
+  typedef std::vector<bool> Sequence;
+  typedef Sequence::size_type              size_type;
+  typedef Sequence::value_type             value_type;
+  typedef Sequence::allocator_type         allocator_type;
+  typedef Sequence::iterator               iterator;
+  typedef Sequence::const_iterator         const_iterator;
+  typedef Sequence::reverse_iterator       reverse_iterator;
+  typedef Sequence::const_reverse_iterator const_reverse_iterator;
+  Sequence        single_bool;
   bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 struct IntSequence {
-  std::vector<int> numx;
+  typedef std::vector<int> Sequence;
+  typedef Sequence::size_type              size_type;
+  typedef Sequence::value_type             value_type;
+  typedef Sequence::allocator_type         allocator_type;
+  typedef Sequence::iterator               iterator;
+  typedef Sequence::const_iterator         const_iterator;
+  typedef Sequence::reverse_iterator       reverse_iterator;
+  typedef Sequence::const_reverse_iterator const_reverse_iterator;
+  Sequence        numx;
   bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 struct FloatSequence {
-  std::vector<double> fractalvalue;
+  typedef std::vector<double> Sequence;
+  typedef Sequence::size_type              size_type;
+  typedef Sequence::value_type             value_type;
+  typedef Sequence::allocator_type         allocator_type;
+  typedef Sequence::iterator               iterator;
+  typedef Sequence::const_iterator         const_iterator;
+  typedef Sequence::reverse_iterator       reverse_iterator;
+  typedef Sequence::const_reverse_iterator const_reverse_iterator;
+  Sequence        fractalvalue;
   bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 struct StringSequence {
-  std::vector<std::string> blurb;
+  typedef std::vector<std::string> Sequence;
+  typedef Sequence::size_type              size_type;
+  typedef Sequence::value_type             value_type;
+  typedef Sequence::allocator_type         allocator_type;
+  typedef Sequence::iterator               iterator;
+  typedef Sequence::const_iterator         const_iterator;
+  typedef Sequence::reverse_iterator       reverse_iterator;
+  typedef Sequence::const_reverse_iterator const_reverse_iterator;
+  Sequence        blurb;
   bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 struct ExtensiveEnumSequence {
-  std::vector<ExtensiveEnum> enum_elements;
+  typedef std::vector<ExtensiveEnum> Sequence;
+  typedef Sequence::size_type              size_type;
+  typedef Sequence::value_type             value_type;
+  typedef Sequence::allocator_type         allocator_type;
+  typedef Sequence::iterator               iterator;
+  typedef Sequence::const_iterator         const_iterator;
+  typedef Sequence::reverse_iterator       reverse_iterator;
+  typedef Sequence::const_reverse_iterator const_reverse_iterator;
+  Sequence        enum_elements;
   bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 struct RecordSequence {
-  std::vector<XFooRecord> repeatedfield;
+  typedef std::vector<XFooRecord> Sequence;
+  typedef Sequence::size_type              size_type;
+  typedef Sequence::value_type             value_type;
+  typedef Sequence::allocator_type         allocator_type;
+  typedef Sequence::iterator               iterator;
+  typedef Sequence::const_iterator         const_iterator;
+  typedef Sequence::reverse_iterator       reverse_iterator;
+  typedef Sequence::const_reverse_iterator const_reverse_iterator;
+  Sequence        repeatedfield;
   bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 struct SequenceSequence {
-  std::vector<IntSequence> moreints;
+  typedef std::vector<IntSequence> Sequence;
+  typedef Sequence::size_type              size_type;
+  typedef Sequence::value_type             value_type;
+  typedef Sequence::allocator_type         allocator_type;
+  typedef Sequence::iterator               iterator;
+  typedef Sequence::const_iterator         const_iterator;
+  typedef Sequence::reverse_iterator       reverse_iterator;
+  typedef Sequence::const_reverse_iterator const_reverse_iterator;
+  Sequence        moreints;
   bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 struct InterfaceSequence {
-  std::vector<FirstInterface> iface1;
+  typedef std::vector<FirstInterface> Sequence;
+  typedef Sequence::size_type              size_type;
+  typedef Sequence::value_type             value_type;
+  typedef Sequence::allocator_type         allocator_type;
+  typedef Sequence::iterator               iterator;
+  typedef Sequence::const_iterator         const_iterator;
+  typedef Sequence::reverse_iterator       reverse_iterator;
+  typedef Sequence::const_reverse_iterator const_reverse_iterator;
+  Sequence        iface1;
   bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
@@ -206,7 +270,15 @@ struct NestedTypesRec {
   inline NestedTypesRec () { }
 };
 struct NestedTypesSeq {
-  std::vector<NestedTypesRec> ntr;
+  typedef std::vector<NestedTypesRec> Sequence;
+  typedef Sequence::size_type              size_type;
+  typedef Sequence::value_type             value_type;
+  typedef Sequence::allocator_type         allocator_type;
+  typedef Sequence::iterator               iterator;
+  typedef Sequence::const_iterator         const_iterator;
+  typedef Sequence::reverse_iterator       reverse_iterator;
+  typedef Sequence::const_reverse_iterator const_reverse_iterator;
+  Sequence        ntr;
   bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
@@ -332,7 +404,15 @@ struct QuickRecord {
   inline QuickRecord () { int1 = 0; int2 = 0; }
 };
 struct QuickSequence {
-  std::vector<double> somefloat;
+  typedef std::vector<double> Sequence;
+  typedef Sequence::size_type              size_type;
+  typedef Sequence::value_type             value_type;
+  typedef Sequence::allocator_type         allocator_type;
+  typedef Sequence::iterator               iterator;
+  typedef Sequence::const_iterator         const_iterator;
+  typedef Sequence::reverse_iterator       reverse_iterator;
+  typedef Sequence::const_reverse_iterator const_reverse_iterator;
+  Sequence        somefloat;
   bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
