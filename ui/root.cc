@@ -675,6 +675,7 @@ RootImpl::dispatch_win_delete_event (const Event &event)
   if (devent)
     {
       destroy_viewport();
+      dispose();
       handled = true;
     }
   return handled;
@@ -1062,24 +1063,23 @@ RootImpl::has_viewport ()
 void
 RootImpl::destroy_viewport ()
 {
+  if (!m_viewport)
+    return; // during destruction, ref_count == 0
   ref (this);
-  if (m_viewport)
+  m_viewport->hide();
+  delete m_viewport;
+  m_viewport = NULL;
+  if (m_source)
     {
-      m_viewport->hide();
-      delete m_viewport;
-      m_viewport = NULL;
-      if (m_source)
-        {
-          m_loop.kill_sources(); // calls m_source methods
-          RAPICORN_ASSERT (m_source == NULL);
-          EventLoop::Source *source = new RootSource (*this);
-          RAPICORN_ASSERT (m_source == source);
-          m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
-          m_source->primary (false);
-        }
-      // reset item state where needed
-      cancel_item_events (NULL);
+      m_loop.kill_sources(); // calls m_source methods
+      RAPICORN_ASSERT (m_source == NULL);
+      EventLoop::Source *source = new RootSource (*this);
+      RAPICORN_ASSERT (m_source == source);
+      m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
+      m_source->primary (false);
     }
+  // reset item state where needed
+  cancel_item_events (NULL);
   unref (this);
 }
 
