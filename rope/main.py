@@ -96,6 +96,7 @@ class Loop:
     self.pollfds = {}
     self.fddict = {}
     self.cached_primary = True
+    self.primary_sig = 0
   def update_poll (self, src):
     fd = self.pollfds.get (src, -1)
     if fd >= 0:
@@ -107,7 +108,11 @@ class Loop:
     assert isinstance (status, int)
     if self.quit_status == None:
       self.quit_status = status
+  def lost_primary (self):
+    self.cached_primary = False
   def loop (self):
+    if not self.primary_sig:
+      self.primary_sig = app.sig_missing_primary_connect (self.lost_primary)
     while self.iterate (False, True):
       pass # handle all pending events
     self.cached_primary = app.has_primary()
