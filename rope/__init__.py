@@ -58,6 +58,7 @@ def app_init (application_name = None):
     exit_status = self.loop.loop()
     del self.loop
     return exit_status
+  main.app = app # integrate main loop with app
   app.__class__.main_loop = main_loop # extend for main loop integration
   return app
 

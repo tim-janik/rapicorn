@@ -21,6 +21,8 @@ import time, select
 
 NEEDS_DISPATCH, PREPARED, UNCHECKED, DESTROYED = 'NpuD'
 
+app = None      # set from __init__.py
+
 class Source (object):
   def __init__ (self, callable, loop = None):
     self.priority = 0
@@ -89,11 +91,11 @@ class Loop:
       return int (msecs)
   def __init__ (self):
     self.sources = []
-    self.quitting = False
-    self.exit_status = 0
+    self.quit_status = None
     self.poll = select.poll()
     self.pollfds = {}
     self.fddict = {}
+    self.cached_primary = True
   def update_poll (self, src):
     fd = self.pollfds.get (src, -1)
     if fd >= 0:
@@ -102,13 +104,18 @@ class Loop:
       self.pollfds[src] = src.pollfd
       self.poll.register (src.pollfd, src.pollevents)
   def quit (self, status = 0):
-    if not self.quitting:
-      self.quitting = True
-      self.exit_status = status
+    assert isinstance (status, int)
+    if self.quit_status == None:
+      self.quit_status = status
   def loop (self):
-    while not self.quitting:
+    while self.iterate (False, True):
+      pass # handle all pending events
+    self.cached_primary = app.has_primary()
+    if not self.cached_primary:
+      return self.quit_status
+    while self.cached_primary and self.quit_status == None:
       self.iterate (True, True)
-    return self.exit_status
+    return self.quit_status
   def __iadd__ (self, source):
     assert isinstance (source, Source)
     self.add_source (source)
@@ -193,5 +200,4 @@ class Loop:
     needs_dispatch |= self.check_sources()
     if may_dispatch and needs_dispatch:
       self.dispatch_sources ()
-    return needs_dispatch and not may_dispatch
-
+    return needs_dispatch
