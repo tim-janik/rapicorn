@@ -12,6 +12,7 @@ class _BaseRecord_:
 class _BaseClass_ (object):
   class _PlicID_:
     def __init__ (self, _plicid):
+      assert isinstance (_plicid, (int, long))
       self.id = _plicid
   def __init__ (self, _plic_id):
     assert isinstance (_plic_id, _BaseClass_._PlicID_)
@@ -465,11 +466,9 @@ class MethodTestInterface (_BaseClass_):
     return ___ret
   def method_with_interface (self, input, optval = None): # GrandChild
     ___ret = _CPY._PLIC_InterfaceTests__MethodTestInterface_method_with_interface_InterfaceTests__GrandChild_InterfaceTests__GrandChild_InterfaceTests__GrandChild (self, input, optval)
-    ___ret = GrandChild (_BaseClass_._PlicID_ (___ret))
     return ___ret
   def method_with_quickiface (self, input, iface0 = None): # QuickIface
     ___ret = _CPY._PLIC_InterfaceTests__MethodTestInterface_method_with_quickiface_InterfaceTests__QuickIface_InterfaceTests__QuickIface_InterfaceTests__QuickIface (self, input, iface0)
-    ___ret = QuickIface (_BaseClass_._PlicID_ (___ret))
     return ___ret
 
 class ButtonArea (_BaseClass_):

@@ -62,11 +62,21 @@ def app_init (application_name = None):
   app.__class__.main_loop = main_loop # extend for main loop integration
   return app
 
+class PlicObjectFactory:
+  def __init__ (self, _PY):
+    self._PY = _PY
+    self.PlicID = _PY._BaseClass_._PlicID_
+  def __call__ (self, type_name, rpc_id):
+    klass = getattr (self._PY, type_name)
+    return klass (self.PlicID (rpc_id))
+
 def _module_init_once_():
   global _module_init_once_ ; del _module_init_once_
   import pyRapicorn     # generated _PLIC_... cpy methods
   import py2cpy         # generated Python classes, Application, etc
   py2cpy.__plic_module_init_once__ (pyRapicorn)
+  pyRapicorn._PLIC___register_object_factory_callable (PlicObjectFactory (py2cpy))
+  del globals()['PlicObjectFactory']
   app_init._CPY, app_init._PY = (pyRapicorn, py2cpy) # app_init() internals
   del globals()['pyRapicorn']
   del globals()['py2cpy']

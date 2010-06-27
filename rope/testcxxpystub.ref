@@ -84,6 +84,42 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
   return r;
 }
 
+static PyObject *_plic_object_factory_callable = NULL;
+
+static PyObject*
+_plic___register_object_factory_callable (PyObject *pyself, PyObject *pyargs)
+{
+  if (_plic_object_factory_callable)
+    return PyErr_Format (PyExc_RuntimeError, "object_factory_callable already registered");
+  if (PyTuple_Size (pyargs) != 1)
+    return PyErr_Format (PyExc_RuntimeError, "wrong number of arguments");
+  PyObject *item = PyTuple_GET_ITEM (pyargs, 0);
+  if (!PyCallable_Check (item))
+    return PyErr_Format (PyExc_RuntimeError, "argument must be callable");
+  Py_INCREF (item);
+  _plic_object_factory_callable = item;
+  return None_INCREF();
+}
+
+static inline PyObject*
+plic_PyObject_4uint64 (const char *type_name, uint64 rpc_id)
+{
+  if (!_plic_object_factory_callable)
+    return PyErr_Format (PyExc_RuntimeError, "object_factory_callable not registered");
+  PyObject *result = NULL, *pyid = PyLong_FromUnsignedLongLong (rpc_id);
+  if (pyid) {
+    PyObject *tuple = PyTuple_New (2);
+    if (tuple) {
+      PyTuple_SET_ITEM (tuple, 0, PyString_FromString (type_name));
+      PyTuple_SET_ITEM (tuple, 1, pyid), pyid = NULL;
+      result = PyObject_Call (_plic_object_factory_callable, tuple, NULL);
+      Py_DECREF (tuple);
+    }
+    Py_XDECREF (pyid);
+  }
+  return result;
+}
+
 #ifndef PLIC_COUPLER
 #define PLIC_COUPLER()  _plic_coupler_static
 static struct _UnimplementedCoupler : public Plic::Coupler {
@@ -265,11 +301,11 @@ plic_pyXFooRecord_proto_pop (Plic::FieldBufferReader &src)
   if (PyDict_Take_Item (dictR, "multi4", &pyfoR) < 0) goto error;
   pyfoR = PyLong_FromLongLong (fbr.pop_evalue()); ERRORifpy();
   if (PyDict_Take_Item (dictR, "enum_field", &pyfoR) < 0) goto error;
-  pyfoR = PyLong_FromUnsignedLongLong (fbr.pop_object()); ERRORifpy();
+  pyfoR = plic_PyObject_4uint64 ("FirstInterface", fbr.pop_object()); ERRORifpy();
   if (PyDict_Take_Item (dictR, "iface1", &pyfoR) < 0) goto error;
-  pyfoR = PyLong_FromUnsignedLongLong (fbr.pop_object()); ERRORifpy();
+  pyfoR = plic_PyObject_4uint64 ("FirstInterface", fbr.pop_object()); ERRORifpy();
   if (PyDict_Take_Item (dictR, "iface2", &pyfoR) < 0) goto error;
-  pyfoR = PyLong_FromUnsignedLongLong (fbr.pop_object()); ERRORifpy();
+  pyfoR = plic_PyObject_4uint64 ("FirstInterface", fbr.pop_object()); ERRORifpy();
   if (PyDict_Take_Item (dictR, "iface3", &pyfoR) < 0) goto error;
   pyret = pyinstR;
  error:
@@ -541,7 +577,7 @@ plic_pyInterfaceSequence_proto_pop (Plic::FieldBufferReader &src)
   const size_t len = fbr.remaining();
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
-    pyfoR = PyLong_FromUnsignedLongLong (fbr.pop_object()); ERRORifpy();
+    pyfoR = plic_PyObject_4uint64 ("FirstInterface", fbr.pop_object()); ERRORifpy();
     PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
   }
   pyret = listR;
@@ -1205,7 +1241,7 @@ public:
     // uint handler_id = uint (frr.pop_int64());
     const uint length = 2;
     PyObject *result, *tuple = PyTuple_New (length), *item;
-    item = PyLong_FromUnsignedLongLong (fbr.pop_object()); ERRORifpy();
+    item = plic_PyObject_4uint64 ("UIWidgetArea", fbr.pop_object()); ERRORifpy();
     PyTuple_SET_ITEM (tuple, 0, item);
     item = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
     PyTuple_SET_ITEM (tuple, 1, item);
@@ -1508,7 +1544,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface_method_with_interface_InterfaceTes
     Plic::FieldBufferReader frr (*fr);
     frr.skip(); // proc_id for return
     if (frr.remaining() == 1) {
-        pyfoR = PyLong_FromUnsignedLongLong (frr.pop_object()); ERRORifpy();
+        pyfoR = plic_PyObject_4uint64 ("GrandChild", frr.pop_object()); ERRORifpy();
     }
     delete fr; fr = NULL;
   }
@@ -1537,7 +1573,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface_method_with_quickiface_InterfaceTe
     Plic::FieldBufferReader frr (*fr);
     frr.skip(); // proc_id for return
     if (frr.remaining() == 1) {
-        pyfoR = PyLong_FromUnsignedLongLong (frr.pop_object()); ERRORifpy();
+        pyfoR = plic_PyObject_4uint64 ("QuickIface", frr.pop_object()); ERRORifpy();
     }
     delete fr; fr = NULL;
   }
@@ -1683,6 +1719,7 @@ _plic_rpc_RapicornPlicTest__PureMethods_pure_method_int_float (PyObject *pyself,
   return NULL;
 }
 #define PLIC_PYSTUB_METHOD_DEFS() \
+  { "_PLIC___register_object_factory_callable", _plic___register_object_factory_callable, METH_VARARGS, "Register Python object factory callable" },\
   { "_PLIC_MandatoryNamespace__FirstInterface_void_func_void", _plic_rpc_MandatoryNamespace__FirstInterface_void_func_void, METH_VARARGS, "pyRapicorn rpc call" },\
   { "_PLIC_InterfaceTests__UIWidgetArea_simple_method_float", _plic_rpc_InterfaceTests__UIWidgetArea_simple_method_float, METH_VARARGS, "pyRapicorn rpc call" },\
   { "_PLIC_InterfaceTests__UIWidgetArea_single_arg_float_int", _plic_rpc_InterfaceTests__UIWidgetArea_single_arg_float_int, METH_VARARGS, "pyRapicorn rpc call" },\

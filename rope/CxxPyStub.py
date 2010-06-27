@@ -110,6 +110,42 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
   return r;
 }
 
+static PyObject *_plic_object_factory_callable = NULL;
+
+static PyObject*
+_plic___register_object_factory_callable (PyObject *pyself, PyObject *pyargs)
+{
+  if (_plic_object_factory_callable)
+    return PyErr_Format (PyExc_RuntimeError, "object_factory_callable already registered");
+  if (PyTuple_Size (pyargs) != 1)
+    return PyErr_Format (PyExc_RuntimeError, "wrong number of arguments");
+  PyObject *item = PyTuple_GET_ITEM (pyargs, 0);
+  if (!PyCallable_Check (item))
+    return PyErr_Format (PyExc_RuntimeError, "argument must be callable");
+  Py_INCREF (item);
+  _plic_object_factory_callable = item;
+  return None_INCREF();
+}
+
+static inline PyObject*
+plic_PyObject_4uint64 (const char *type_name, uint64 rpc_id)
+{
+  if (!_plic_object_factory_callable)
+    return PyErr_Format (PyExc_RuntimeError, "object_factory_callable not registered");
+  PyObject *result = NULL, *pyid = PyLong_FromUnsignedLongLong (rpc_id);
+  if (pyid) {
+    PyObject *tuple = PyTuple_New (2);
+    if (tuple) {
+      PyTuple_SET_ITEM (tuple, 0, PyString_FromString (type_name));
+      PyTuple_SET_ITEM (tuple, 1, pyid), pyid = NULL;
+      result = PyObject_Call (_plic_object_factory_callable, tuple, NULL);
+      Py_DECREF (tuple);
+    }
+    Py_XDECREF (pyid);
+  }
+  return result;
+}
+
 #ifndef PLIC_COUPLER
 #define PLIC_COUPLER()  _plic_coupler_static
 static struct _UnimplementedCoupler : public Plic::Coupler {
@@ -171,7 +207,7 @@ class Generator:
     elif type.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += '  %s = plic_py%s_proto_pop (%s); ERRORif (!%s);\n' % (var, type.name, fbr, var)
     elif type.storage == Decls.INTERFACE:
-      s += '  %s = PyLong_FromUnsignedLongLong (%s.pop_object()); ERRORifpy();\n' % (var, fbr)
+      s += '  %s = plic_PyObject_4uint64 ("%s", %s.pop_object()); ERRORifpy();\n' % (var, type.name, fbr)
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
@@ -414,7 +450,8 @@ class Generator:
           s += self.generate_rpc_signal_call (tp, sg, mdefs)
     # method def array
     if mdefs:
-      s += '#define PLIC_PYSTUB_METHOD_DEFS() \\\n  ' + ',\\\n  '.join (mdefs) + '\n'
+      aux = '{ "_PLIC___register_object_factory_callable", _plic___register_object_factory_callable, METH_VARARGS, "Register Python object factory callable" }'
+      s += '#define PLIC_PYSTUB_METHOD_DEFS() \\\n  ' + ',\\\n  '.join ([aux] + mdefs) + '\n'
     return s
 
 def error (msg):

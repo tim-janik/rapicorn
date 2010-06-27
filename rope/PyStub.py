@@ -61,6 +61,7 @@ class _BaseRecord_:
 class _BaseClass_ (object):
   class _PlicID_:
     def __init__ (self, _plicid):
+      assert isinstance (_plicid, (int, long))
       self.id = _plicid
   def __init__ (self, _plic_id):
     assert isinstance (_plic_id, _BaseClass_._PlicID_)
@@ -201,8 +202,6 @@ class Generator:
     s += '  ___ret = _CPY._PLIC_%s (' % m.ident_digest()
     s += ', '.join (vals)
     s += ')\n'
-    if m.rtype.storage == Decls.INTERFACE:
-      s += '  ___ret = %s (_BaseClass_._PlicID_ (___ret))\n' % m.rtype.name
     s += '  return ___ret'
     return s
   def inherit_reduce (self, type_list):
