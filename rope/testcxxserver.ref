@@ -666,9 +666,9 @@ XFooRecord::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
   fb.add_int64 (this->multi3);
   fb.add_int64 (this->multi4);
   fb.add_evalue (this->enum_field);
-  fb.add_object (FirstInterface (this->iface1)._rpc_id());
-  fb.add_object (FirstInterface (this->iface2)._rpc_id());
-  fb.add_object (FirstInterface (this->iface3)._rpc_id());
+  fb.add_object (this->iface1._rpc_id());
+  fb.add_object (this->iface2._rpc_id());
+  fb.add_object (this->iface3._rpc_id());
   return true;
 }
 bool
@@ -853,7 +853,7 @@ InterfaceSequence::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
   const size_t len = iface1.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb.add_object (FirstInterface (this->iface1[k])._rpc_id());
+    fb.add_object (this->iface1[k]._rpc_id());
   }
   return true;
 }
@@ -1312,7 +1312,7 @@ _dispatch__UIWidgetArea_void_signal (Coupler &cpl)
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 2);
     fb.add_int64 (Plic::msgid_event);
     fb.add_int64 (sp->m_handler);
-    fb.add_object (UIWidgetArea (arg_ba1)._rpc_id());
+    fb.add_object (arg_ba1._rpc_id());
     fb.add_int64 (arg_someint);
     sp->m_coupler.push_event (&fb); // deletes fb
     return 0;

@@ -259,10 +259,8 @@ class Generator:
       if type.storage in (Decls.RECORD, Decls.SEQUENCE):
         s += '  if (!%s.proto_add (%s, %s)) %s;\n' % (ident, cpl, fb, onerr) # FIXME cpl var
       elif type.storage == Decls.INTERFACE:
-        if self.gen_clientcc:
-          s += '  %s.add_object (%s._rpc_id());\n' % (fb, ident)
-        else:
-          s += '  %s.add_object (%s (%s)._rpc_id());\n' % (fb, type.name, ident)
+        s += '  %s.add_object (%s._rpc_id());\n' % (fb, ident)
+        # if not self.gen_clientcc: s += '  %s.add_object (%s (%s)._rpc_id());\n' % (fb, type.name, ident)
       else:
         s += '  %s.add_%s (%s);\n' % (fb, self.accessor_name (type.storage), ident)
     return s
@@ -413,7 +411,10 @@ class Generator:
     if hasret:
       cplrb = (cplfbr[0], 'rb')
       s += '  FieldBuffer &rb = *FieldBuffer::new_result();\n'
-      s += self.generate_proto_add_args (cplrb, class_info, '', [('rval', mtype.rtype)], '')
+      rval = 'rval'
+      if mtype.rtype.storage == Decls.INTERFACE:
+        rval = '%s (rval)' % mtype.rtype.name   # FooBase -> Foo smart handle
+      s += self.generate_proto_add_args (cplrb, class_info, '', [(rval, mtype.rtype)], '')
       s += '  return &rb;\n'
     else:
       s += '  return NULL;\n'
