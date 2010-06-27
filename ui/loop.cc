@@ -167,7 +167,7 @@ public:
   virtual bool prepare_sources  (int                  &max_priority,
                                  vector<PollFD>       &pfds,
                                  int64                &timeout_usecs);
-  virtual bool check_sources    (const int             max_priority,
+  virtual bool check_sources    (int                  &max_priority,
                                  const vector<PollFD> &pfds);
   virtual void dispatch_sources (const int             max_priority);
   void
@@ -289,7 +289,7 @@ EventLoopImpl::prepare_sources (int            &max_priority,
           continue;
         if (need_dispatch)
           {
-            max_priority = source.m_priority;
+            max_priority = source.m_priority; // starve lower priority sources
             source.m_loop_state = NEEDS_DISPATCH;
             must_dispatch = true;
           }
@@ -321,7 +321,7 @@ EventLoopImpl::prepare_sources (int            &max_priority,
 }
 
 bool
-EventLoopImpl::check_sources (const int             max_priority,
+EventLoopImpl::check_sources (int                  &max_priority,
                               const vector<PollFD> &pfds)
 {
   ScopedLock<Mutex> locker (m_mutex);
@@ -362,6 +362,7 @@ EventLoopImpl::check_sources (const int             max_priority,
             locker.lock();
             if (source.m_main_loop == this && need_dispatch)
               {
+                max_priority = source.m_priority; // starve lower priority sources
                 source.m_loop_state = NEEDS_DISPATCH;
                 must_dispatch = true;
               }
