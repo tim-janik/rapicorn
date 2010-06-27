@@ -84,18 +84,6 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
   return r;
 }
 
-static inline int
-PyList_Take_Item (PyObject *pylist, PyObject **pyitemp)
-{
-  int r = PyList_Append (pylist, *pyitemp);
-  if (r >= 0)
-    {
-      Py_DECREF (*pyitemp);
-      *pyitemp = NULL;
-    }
-  return r;
-}
-
 #ifndef PLIC_COUPLER
 #define PLIC_COUPLER()  _plic_coupler_static
 static struct _UnimplementedCoupler : public Plic::Coupler {
@@ -316,7 +304,7 @@ plic_pyXFooSequence_proto_pop (Plic::FieldBufferReader &src)
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
     pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
-    if (PyList_Take_Item (listR, &pyfoR) < 0) goto error;
+    PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
   }
   pyret = listR;
  error:
@@ -350,7 +338,7 @@ plic_pyIntSequence_proto_pop (Plic::FieldBufferReader &src)
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
     pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
-    if (PyList_Take_Item (listR, &pyfoR) < 0) goto error;
+    PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
   }
   pyret = listR;
  error:
@@ -384,7 +372,7 @@ plic_pyFloatSequence_proto_pop (Plic::FieldBufferReader &src)
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
     pyfoR = PyFloat_FromDouble (fbr.pop_double()); ERRORifpy();
-    if (PyList_Take_Item (listR, &pyfoR) < 0) goto error;
+    PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
   }
   pyret = listR;
  error:
@@ -418,7 +406,7 @@ plic_pyStringSequence_proto_pop (Plic::FieldBufferReader &src)
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
     pyfoR = PyString_From_std_string (fbr.pop_string()); ERRORifpy();
-    if (PyList_Take_Item (listR, &pyfoR) < 0) goto error;
+    PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
   }
   pyret = listR;
  error:
@@ -452,7 +440,7 @@ plic_pyExtensiveEnumSequence_proto_pop (Plic::FieldBufferReader &src)
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
     pyfoR = PyLong_FromLongLong (fbr.pop_evalue()); ERRORifpy();
-    if (PyList_Take_Item (listR, &pyfoR) < 0) goto error;
+    PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
   }
   pyret = listR;
  error:
@@ -486,7 +474,7 @@ plic_pyRecordSequence_proto_pop (Plic::FieldBufferReader &src)
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
     pyfoR = plic_pyXFooRecord_proto_pop (fbr); ERRORif (!pyfoR);
-    if (PyList_Take_Item (listR, &pyfoR) < 0) goto error;
+    PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
   }
   pyret = listR;
  error:
@@ -520,7 +508,7 @@ plic_pySequenceSequence_proto_pop (Plic::FieldBufferReader &src)
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
     pyfoR = plic_pyIntSequence_proto_pop (fbr); ERRORif (!pyfoR);
-    if (PyList_Take_Item (listR, &pyfoR) < 0) goto error;
+    PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
   }
   pyret = listR;
  error:
@@ -554,7 +542,7 @@ plic_pyInterfaceSequence_proto_pop (Plic::FieldBufferReader &src)
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
     pyfoR = PyLong_FromUnsignedLongLong (fbr.pop_object()); ERRORifpy();
-    if (PyList_Take_Item (listR, &pyfoR) < 0) goto error;
+    PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
   }
   pyret = listR;
  error:
@@ -625,7 +613,7 @@ plic_pyNestedTypesSeq_proto_pop (Plic::FieldBufferReader &src)
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
     pyfoR = plic_pyNestedTypesRec_proto_pop (fbr); ERRORif (!pyfoR);
-    if (PyList_Take_Item (listR, &pyfoR) < 0) goto error;
+    PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
   }
   pyret = listR;
  error:
@@ -860,7 +848,7 @@ plic_pyQuickSequence_proto_pop (Plic::FieldBufferReader &src)
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
     pyfoR = PyFloat_FromDouble (fbr.pop_double()); ERRORifpy();
-    if (PyList_Take_Item (listR, &pyfoR) < 0) goto error;
+    PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
   }
   pyret = listR;
  error:

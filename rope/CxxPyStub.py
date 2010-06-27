@@ -110,18 +110,6 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
   return r;
 }
 
-static inline int
-PyList_Take_Item (PyObject *pylist, PyObject **pyitemp)
-{
-  int r = PyList_Append (pylist, *pyitemp);
-  if (r >= 0)
-    {
-      Py_DECREF (*pyitemp);
-      *pyitemp = NULL;
-    }
-  return r;
-}
-
 #ifndef PLIC_COUPLER
 #define PLIC_COUPLER()  _plic_coupler_static
 static struct _UnimplementedCoupler : public Plic::Coupler {
@@ -255,7 +243,7 @@ class Generator:
     s += '  listR = PyList_New (len); if (!listR) GOTO_ERROR();\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
     s += reindent ('  ', self.generate_proto_pop_py ('fbr', el[1], 'pyfoR')) + '\n'
-    s += '    if (PyList_Take_Item (listR, &pyfoR) < 0) goto error;\n'
+    s += '    PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;\n'
     s += '  }\n'
     s += '  pyret = listR;\n'
     s += ' error:\n'
