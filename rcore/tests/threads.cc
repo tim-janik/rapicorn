@@ -50,7 +50,7 @@ atomic_up_thread (gpointer data)
 {
   volatile int *ip = (int*) data;
   for (guint i = 0; i < 25; i++)
-    Atomic::int_add (ip, +3);
+    Atomic::add (ip, +3);
   atomic_mutex.lock();
   atomic_count -= 1;
   atomic_cond.signal();
@@ -63,7 +63,7 @@ atomic_down_thread (gpointer data)
 {
   volatile int *ip = (int*) data;
   for (guint i = 0; i < 25; i++)
-    Atomic::int_add (ip, -4);
+    Atomic::add (ip, -4);
   atomic_mutex.lock();
   atomic_count -= 1; // FIXME: make this atomic
   atomic_cond.signal();
@@ -118,14 +118,14 @@ runonce_function (void *data)
       runonce_cond.broadcast();
       runonce_mutex.unlock();
       usleep (1); // sched_yield replacement to force contention
-      Atomic::int_add (runonce_counter, 1);
+      Atomic::add (runonce_counter, 1);
       usleep (500); // sched_yield replacement to force contention
-      once_leave (&runonce_value, 42);
+      once_leave (&runonce_value, size_t (42));
     }
   TASSERT (*runonce_counter == 1);
   TASSERT (runonce_value == 42);
   /* sinal thread end */
-  Atomic::uint_add (&runonce_threadcount, -1);
+  Atomic::add (&runonce_threadcount, -1);
   runonce_mutex.lock();
   runonce_cond.signal();
   runonce_mutex.unlock();
@@ -138,7 +138,7 @@ test_runonce (void)
   int count = 44;
   RapicornThread *threads[count];
   volatile int runonce_counter = 0;
-  Atomic::uint_set (&runonce_threadcount, count);
+  Atomic::set (&runonce_threadcount, count);
   runonce_mutex.lock();
   for (int i = 0; i < count; i++)
     {
@@ -148,7 +148,7 @@ test_runonce (void)
   TASSERT (runonce_value == 0);
   runonce_mutex.unlock(); // syncronized thread start
   runonce_mutex.lock();
-  while (Atomic::uint_get (&runonce_threadcount) > 0)
+  while (Atomic::get (&runonce_threadcount) > 0)
     {
       TACK();
       runonce_cond.wait (runonce_mutex);
@@ -264,7 +264,7 @@ struct ThreadA : public virtual Rapicorn::Thread {
     TASSERT (this->name() == "ThreadA");
     TASSERT (this->name() == Thread::Self::name());
     for (int j = 0; j < 17905; j++)
-      Atomic::int_add (counter, value);
+      Atomic::add (counter, value);
   }
 };
 
@@ -437,38 +437,38 @@ test_thread_atomic_cxx (void)
   TSTART ("C++AtomicThreading");
   /* integer functions */
   volatile int ai, r;
-  Atomic::int_set (&ai, 17);
+  Atomic::set (&ai, 17);
   TASSERT (ai == 17);
-  r = Atomic::int_get (&ai);
+  r = Atomic::get (&ai);
   TASSERT (r == 17);
-  Atomic::int_add (&ai, 9);
-  r = Atomic::int_get (&ai);
+  Atomic::add (&ai, 9);
+  r = Atomic::get (&ai);
   TASSERT (r == 26);
-  Atomic::int_set (&ai, -1147483648);
+  Atomic::set (&ai, -1147483648);
   TASSERT (ai == -1147483648);
-  r = Atomic::int_get (&ai);
+  r = Atomic::get (&ai);
   TASSERT (r == -1147483648);
-  Atomic::int_add (&ai, 9);
-  r = Atomic::int_get (&ai);
+  Atomic::add (&ai, 9);
+  r = Atomic::get (&ai);
   TASSERT (r == -1147483639);
-  Atomic::int_add (&ai, -20);
-  r = Atomic::int_get (&ai);
+  Atomic::add (&ai, -20);
+  r = Atomic::get (&ai);
   TASSERT (r == -1147483659);
-  r = Atomic::int_cas (&ai, 17, 19);
+  r = Atomic::cas (&ai, 17, 19);
   TASSERT (r == false);
-  r = Atomic::int_get (&ai);
+  r = Atomic::get (&ai);
   TASSERT (r == -1147483659);
-  r = Atomic::int_cas (&ai, -1147483659, 19);
+  r = Atomic::cas (&ai, -1147483659, 19);
   TASSERT (r == true);
-  r = Atomic::int_get (&ai);
+  r = Atomic::get (&ai);
   TASSERT (r == 19);
-  r = Atomic::int_add (&ai, 1);
+  r = Atomic::add (&ai, 1);
   TASSERT (r == 19);
-  r = Atomic::int_get (&ai);
+  r = Atomic::get (&ai);
   TASSERT (r == 20);
-  r = Atomic::int_add (&ai, -20);
+  r = Atomic::add (&ai, -20);
   TASSERT (r == 20);
-  r = Atomic::int_get (&ai);
+  r = Atomic::get (&ai);
   TASSERT (r == 0);
   /* pointer functions */
   void * volatile ap, * volatile p;

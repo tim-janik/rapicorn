@@ -23,10 +23,9 @@ namespace Rapicorn {
 
 class Thread;
 
-inline bool once_enter      (volatile size_t *value_location);
-bool        once_enter_impl (volatile size_t *value_location);
-void        once_leave      (volatile size_t *value_location,
-                             size_t           initialization_value);
+template<class Value> inline bool once_enter (volatile Value *value_location);
+template<class Value> inline void once_leave (volatile Value *value_location,
+                                              Value           initialization_value);
 
 class Mutex : protected NonCopyable {
   RapicornMutex mutex;
@@ -77,30 +76,26 @@ namespace Atomic {
 inline void    read_barrier  (void)                           { __sync_synchronize(); }
 inline void    write_barrier (void)                           { __sync_synchronize(); }
 inline void    full_barrier  (void)                           { __sync_synchronize(); }
-/* atomic integers */
-inline void    int_set  (volatile int  *iptr, int value)      { *iptr = value; write_barrier(); }
-inline int     int_get  (volatile int  *iptr)                 { return __sync_fetch_and_add (iptr, 0); }
-inline bool    int_cas  (volatile int  *iptr, int o, int n)   { return __sync_bool_compare_and_swap (iptr, o, n); }
-inline int     int_add  (volatile int  *iptr, int diff)       { return __sync_fetch_and_add (iptr, diff); }
-/* atomic unsigned integers */
-inline void    uint_set (volatile uint *uptr, uint value)     { *uptr = value; write_barrier(); }
-inline uint    uint_get (volatile uint *uptr)                 { return __sync_fetch_and_add (uptr, 0); }
-inline bool    uint_cas (volatile uint *uptr, uint o, uint n) { return __sync_bool_compare_and_swap (uptr, o, n); }
-inline uint    uint_add (volatile uint *uptr, uint diff)      { return __sync_fetch_and_add (uptr, diff); }
-/* atomic size_t */
-inline void    sizet_set (volatile size_t *sptr, size_t value)       { *sptr = value; write_barrier(); }
-inline uint    sizet_get (volatile size_t *sptr)                     { return __sync_fetch_and_add (sptr, 0); }
-inline bool    sizet_cas (volatile size_t *sptr, size_t o, size_t n) { return __sync_bool_compare_and_swap (sptr, o, n); }
-inline uint    sizet_add (volatile size_t *sptr, size_t diff)        { return __sync_fetch_and_add (sptr, diff); }
-/* atomic pointers */
-template<class V>
-inline void    ptr_set       (V* volatile *ptr_addr, V *n)      { *ptr_addr = n; write_barrier(); }
-template<class V>
-inline V*      ptr_get       (V* volatile *ptr_addr)            { return __sync_fetch_and_add (ptr_addr, 0); }
-template<class V>
-inline V*      ptr_get       (V* volatile const *ptr_addr)      { return __sync_fetch_and_add (ptr_addr, 0); }
-template<class V>
-inline bool    ptr_cas       (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
+/* atomic values */
+template<class V> inline void value_set (volatile V *value_addr, V n)      { *value_addr = n; write_barrier(); }
+template<class V> inline V    value_get (volatile V *value_addr)           { return __sync_fetch_and_add (value_addr, 0); }
+template<class V> inline bool value_cas (volatile V *value_addr, V o, V n) { return __sync_bool_compare_and_swap (value_addr, o, n); }
+template<class V> inline V    value_add (volatile V *value_addr, V diff)   { return __sync_fetch_and_add (value_addr, diff); }
+/* atomic numeric operations */
+#define RAPICORN_ATOMIC_OPS(type) \
+  inline void set (volatile type  *p, type v)         { return value_set (p, v); } \
+  inline int  get (volatile type  *p)                 { return value_get (p); } \
+  inline bool cas (volatile type  *p, type o, type n) { return value_cas (p, o, n); } \
+  inline int  add (volatile type  *p, type d)         { return value_add (p, d); }
+RAPICORN_ATOMIC_OPS (int);
+RAPICORN_ATOMIC_OPS (uint);
+RAPICORN_ATOMIC_OPS (int64);
+RAPICORN_ATOMIC_OPS (uint64);
+/* atomic pointer operations */
+template<class V> inline void ptr_set (V* volatile *ptr_addr, V *n)      { *ptr_addr = n; write_barrier(); }
+template<class V> inline V*   ptr_get (V* volatile *ptr_addr)            { return __sync_fetch_and_add (ptr_addr, 0); }
+template<class V> inline V*   ptr_get (V* volatile const *ptr_addr)      { return __sync_fetch_and_add (ptr_addr, 0); }
+template<class V> inline bool ptr_cas (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
 } // Atomic
 
 class OwnedMutex : protected NonCopyable {
@@ -215,21 +210,21 @@ public:
     m_size (bsize + 1), m_wmark (0), m_rmark (bsize)
   {
     m_buffer = new T[m_size];
-    Atomic::uint_set (&m_wmark, 0);
-    Atomic::uint_set (&m_rmark, 0);
+    Atomic::set (&m_wmark, 0);
+    Atomic::set (&m_rmark, 0);
   }
   ~RingBuffer()
   {
-    Atomic::uint_set ((volatile uint*) &m_size, 0);
-    Atomic::uint_set (&m_rmark, 0);
-    Atomic::uint_set (&m_wmark, 0);
+    // Atomic::set (&m_size, 0);
+    Atomic::set (&m_rmark, 0);
+    Atomic::set (&m_wmark, 0);
     delete[] m_buffer;
   }
   uint
   n_writable()
   {
-    const uint rm = Atomic::uint_get (&m_rmark);
-    const uint wm = Atomic::uint_get (&m_wmark);
+    const uint rm = Atomic::get (&m_rmark);
+    const uint wm = Atomic::get (&m_wmark);
     uint space = (m_size - 1 + rm - wm) % m_size;
     return space;
   }
@@ -239,8 +234,8 @@ public:
          bool     partial = true)
   {
     const uint orig_length = length;
-    const uint rm = Atomic::uint_get (&m_rmark);
-    uint wm = Atomic::uint_get (&m_wmark);
+    const uint rm = Atomic::get (&m_rmark);
+    uint wm = Atomic::get (&m_wmark);
     uint space = (m_size - 1 + rm - wm) % m_size;
     if (!partial && length > space)
       return 0;
@@ -260,14 +255,14 @@ public:
       }
     Atomic::write_barrier();
     /* the barrier ensures m_buffer writes are seen before the m_wmark update */
-    Atomic::uint_set (&m_wmark, wm);
+    Atomic::set (&m_wmark, wm);
     return orig_length - length;
   }
   uint
   n_readable()
   {
-    const uint wm = Atomic::uint_get (&m_wmark);
-    const uint rm = Atomic::uint_get (&m_rmark);
+    const uint wm = Atomic::get (&m_wmark);
+    const uint rm = Atomic::get (&m_rmark);
     uint space = (m_size + wm - rm) % m_size;
     return space;
   }
@@ -278,8 +273,8 @@ public:
   {
     const uint orig_length = length;
     /* need Atomic::read_barrier() here to ensure m_buffer writes are seen before m_wmark updates */
-    const uint wm = Atomic::uint_get (&m_wmark); /* includes Atomic::read_barrier(); */
-    uint rm = Atomic::uint_get (&m_rmark);
+    const uint wm = Atomic::get (&m_wmark); /* includes Atomic::read_barrier(); */
+    uint rm = Atomic::get (&m_rmark);
     uint space = (m_size + wm - rm) % m_size;
     if (!partial && length > space)
       return 0;
@@ -297,7 +292,7 @@ public:
         data += space;
         length -= space;
       }
-    Atomic::uint_set (&m_rmark, rm);
+    Atomic::set (&m_rmark, rm);
     return orig_length - length;
   }
 };
@@ -346,13 +341,34 @@ OwnedMutex::mine ()
   return Atomic::ptr_get (&m_owner) == &Thread::self();
 }
 
-inline bool
-once_enter (volatile size_t *value_location)
+void once_list_enter  ();
+bool once_list_bounce (volatile void *ptr);
+bool once_list_leave  (volatile void *ptr);
+
+template<class Value> inline bool
+once_enter (volatile Value *value_location)
 {
-  if (RAPICORN_LIKELY (Atomic::sizet_get (value_location) != 0))
+  if (RAPICORN_LIKELY (Atomic::value_get (value_location) != 0))
     return false;
   else
-    return once_enter_impl (value_location);
+    {
+      once_list_enter();
+      const bool initialized = Atomic::value_get (value_location) != 0;
+      const bool needs_init = once_list_bounce (initialized ? NULL : value_location);
+      return needs_init;
+    }
+}
+
+template<class Value> inline void
+once_leave (volatile Value *value_location,
+            Value           initialization_value)
+{
+  RAPICORN_RETURN_IF_FAIL (Atomic::value_get (value_location) == 0);
+  RAPICORN_RETURN_IF_FAIL (initialization_value != 0);
+
+  Atomic::value_set (value_location, initialization_value);
+  const bool found_and_removed = once_list_leave (value_location);
+  RAPICORN_RETURN_IF_FAIL (found_and_removed == true);
 }
 
 } // Rapicorn

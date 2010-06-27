@@ -200,7 +200,7 @@ Msg::register_type (const char *ident,
   msg_types[mtype].ident = g_strdup (ident);
   msg_types[mtype].label = g_strdup (label ? label : "");
   msg_types[mtype].default_type = default_ouput; /* couple to default_ouput */
-  Atomic::int_set (&n_msg_types, n_mtypes); /* only ever grows */
+  Atomic::set (&n_msg_types, n_mtypes); /* only ever grows */
   /* adjust msg type config (after n_msg_types was incremented) */
   set_msg_type_L (mtype, msg_types[default_ouput].flags, msg_types[default_ouput].enabled);
   // FIXME: msg_type_bits should be registered as hazard pointer so we don't g_free() while other threads read old_mbits[*]

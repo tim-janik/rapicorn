@@ -36,7 +36,7 @@
 
 #define FLOATING_FLAG                           (1 << 31)
 #define THREAD_REF_COUNT(thread)                (thread->ref_field & ~FLOATING_FLAG)
-#define THREAD_CAS(thread, oldval, newval)      Atomic::uint_cas (&thread->ref_field, oldval, newval)
+#define THREAD_CAS(thread, oldval, newval)      Atomic::cas (&thread->ref_field, oldval, newval)
 
 /* --- some GLib compat --- */
 #define HAVE_GSLICE     GLIB_CHECK_VERSION (2, 9, 1)
@@ -127,7 +127,7 @@ common_thread_ref (RapicornThread *thread)
   RAPICORN_ASSERT (THREAD_REF_COUNT (thread) > 0);
   uint32 old_ref, new_ref;
   do {
-    old_ref = Atomic::uint_get (&thread->ref_field);
+    old_ref = Atomic::get (&thread->ref_field);
     new_ref = old_ref + 1;
     RAPICORN_ASSERT (new_ref & ~FLOATING_FLAG); /* catch overflow */
   } while (!THREAD_CAS (thread, old_ref, new_ref));
@@ -142,7 +142,7 @@ common_thread_ref_sink (RapicornThread *thread)
   ThreadTable.thread_ref (thread);
   uint32 old_ref, new_ref;
   do {
-    old_ref = Atomic::uint_get (&thread->ref_field);
+    old_ref = Atomic::get (&thread->ref_field);
     new_ref = old_ref & ~FLOATING_FLAG;
   } while (!THREAD_CAS (thread, old_ref, new_ref));
   if (old_ref & FLOATING_FLAG)
@@ -156,7 +156,7 @@ common_thread_unref (RapicornThread *thread)
   RAPICORN_ASSERT (THREAD_REF_COUNT (thread) > 0);
   uint32 old_ref, new_ref;
   do {
-    old_ref = Atomic::uint_get (&thread->ref_field);
+    old_ref = Atomic::get (&thread->ref_field);
     RAPICORN_ASSERT (old_ref & ~FLOATING_FLAG); /* catch underflow */
     new_ref = old_ref - 1;
   } while (!THREAD_CAS (thread, old_ref, new_ref));
@@ -362,7 +362,7 @@ common_thread_self (void)
        * so not all library components are yet usable
        */
       static volatile int anon_count = 1;
-      guint id = Atomic::int_add (&anon_count, 1);
+      guint id = Atomic::add (&anon_count, 1);
       gchar name[256];
       g_snprintf (name, 256, "Anon%u", id);
       thread = ThreadTable.thread_new (name);
@@ -972,7 +972,7 @@ rapicorn_guard_register (guint n_hazards)
   if (!guard)
     {
       n_hazards = ((MAX (n_hazards, 3) + RAPICORN_GUARD_ALIGN - 1) / RAPICORN_GUARD_ALIGN) * RAPICORN_GUARD_ALIGN;
-      Atomic::int_add (&guard_list_length, n_hazards);
+      Atomic::add (&guard_list_length, n_hazards);
       guard = (volatile Rapicorn::RapicornGuard*) g_malloc0 (sizeof (RapicornGuard) + (n_hazards - 1) * sizeof (guard->values[0]));
       guard->n_values = n_hazards;
       guard->thread = thread;
@@ -1065,7 +1065,7 @@ void rapicorn_guard_protect (volatile RapicornGuard *guard,  /* defined in rapic
 static guint RAPICORN_UNUSED
 rapicorn_guard_n_snap_values (void)
 {
-  return Atomic::int_get (&guard_list_length);
+  return Atomic::get (&guard_list_length);
 }
 
 /**

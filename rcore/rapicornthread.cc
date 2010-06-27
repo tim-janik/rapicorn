@@ -528,44 +528,47 @@ OwnedMutex::~OwnedMutex()
   RAPICORN_ASSERT (m_count == 0);
 }
 
-static Mutex                       once_mutex;
-static Cond                        once_cond;
-static std::list<volatile size_t*> once_list;
+static Mutex                      once_mutex;
+static Cond                       once_cond;
+static std::list<volatile void *> once_list;
+
+void
+once_list_enter()
+{
+  once_mutex.lock();
+}
 
 bool
-once_enter_impl (volatile size_t *value_location)
+once_list_bounce (volatile void *ptr)
 {
-  bool needs_init = false;
-  once_mutex.lock();
-  if (Atomic::sizet_get (value_location) == 0)
+  bool ptr_listed = false;
+  if (ptr)
     {
-      if (find (once_list.begin(), once_list.end(), value_location) == once_list.end())
+      if (find (once_list.begin(), once_list.end(), ptr) == once_list.end())
         {
-          needs_init = true;
-          once_list.push_front (value_location);
+          ptr_listed = true;
+          once_list.push_front (ptr);
         }
       else
         do
           once_cond.wait (once_mutex);
-        while (find (once_list.begin(), once_list.end(), value_location) != once_list.end());
+        while (find (once_list.begin(), once_list.end(), ptr) != once_list.end());
     }
   once_mutex.unlock();
-  return needs_init;
+  return ptr_listed;
 }
 
-void
-once_leave (volatile size_t *value_location,
-            size_t           initialization_value)
+bool
+once_list_leave (volatile void *ptr)
 {
-  return_if_fail (Atomic::sizet_get (value_location) == 0);
-  return_if_fail (initialization_value != 0);
-  return_if_fail (once_list.empty() == false);
-
-  Atomic::sizet_set (value_location, initialization_value);
   once_mutex.lock();
-  once_list.remove (value_location);
+  std::list<volatile void *>::iterator it = find (once_list.begin(), once_list.end(), ptr);
+  bool found_removed = it != once_list.end();
+  if (found_removed)
+    once_list.erase (it);
   once_cond.broadcast();
   once_mutex.unlock();
+  return found_removed;
 }
 
 } // Rapicorn

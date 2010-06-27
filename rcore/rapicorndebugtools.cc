@@ -70,7 +70,7 @@ struct DebugChannelFileAsync : public virtual DebugChannel, public virtual Threa
           buffer[l++] = 0;
         uint n = aring.write (l, buffer, false);
         if (!n)
-          Atomic::uint_add (&skip_count, 1);
+          Atomic::add (&skip_count, 1);
       }
   }
   virtual void
@@ -92,8 +92,8 @@ struct DebugChannelFileAsync : public virtual DebugChannel, public virtual Threa
               {
                 uint j;
                 do
-                  j = Atomic::uint_get (&skip_count);
-                while (!Atomic::uint_cas (&skip_count, j, 0));
+                  j = Atomic::get (&skip_count);
+                while (!Atomic::cas (&skip_count, j, 0));
                 if (j)
                   fprintf (fout, "...[skipped %u messages]\n", j);
               }

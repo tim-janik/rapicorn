@@ -135,16 +135,16 @@ static Plic::EventFd * volatile initevd = NULL;
 int
 rope_thread_inputfd ()
 {
-  if (once_enter ((volatile size_t*) &initevd))
+  if (once_enter (&initevd))
     {
       Plic::EventFd *evd = new Plic::EventFd();
       rope_coupler.set_event_wakeup (*evd, &Plic::EventFd::wakeup);
       int err = evd->open();
       if (err < 0)
         error ("failed to open EventFd: %s", string_from_errno (err).c_str());
-      once_leave ((volatile size_t*) &initevd, size_t (evd));
+      once_leave (&initevd, evd);
     }
-  Plic::EventFd *e = (Plic::EventFd*) initevd;
+  Plic::EventFd *e = initevd;
   return e->inputfd(); // fd for POLLIN
 }
 
@@ -153,7 +153,7 @@ rope_thread_flush_input ()
 {
   if (initevd)
     {
-      Plic::EventFd *evd = (Plic::EventFd*) initevd;
+      Plic::EventFd *evd = initevd;
       evd->flush();
     }
 }
@@ -181,7 +181,7 @@ rope_thread_start (const String              &application_name,
         init.cond.wait (init.mutex);
       app_id = init.app_id;
       init.mutex.unlock();
-      once_leave (&initialized, 1);
+      once_leave (&initialized, size_t (1));
     }
   return app_id;
 }
