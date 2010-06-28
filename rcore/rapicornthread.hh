@@ -77,7 +77,7 @@ inline void    read_barrier  (void)                           { __sync_synchroni
 inline void    write_barrier (void)                           { __sync_synchronize(); }
 inline void    full_barrier  (void)                           { __sync_synchronize(); }
 /* atomic values */
-template<class V> inline void value_set (volatile V *value_addr, V n)      { *value_addr = n; write_barrier(); }
+template<class V> inline void value_set (volatile V *value_addr, V n)      { while (!__sync_bool_compare_and_swap (value_addr, *value_addr, n)); }
 template<class V> inline V    value_get (volatile V *value_addr)           { return __sync_fetch_and_add (value_addr, 0); }
 template<class V> inline bool value_cas (volatile V *value_addr, V o, V n) { return __sync_bool_compare_and_swap (value_addr, o, n); }
 template<class V> inline V    value_add (volatile V *value_addr, V diff)   { return __sync_fetch_and_add (value_addr, diff); }
@@ -92,7 +92,7 @@ RAPICORN_ATOMIC_OPS (uint);
 RAPICORN_ATOMIC_OPS (int64);
 RAPICORN_ATOMIC_OPS (uint64);
 /* atomic pointer operations */
-template<class V> inline void ptr_set (V* volatile *ptr_addr, V *n)      { *ptr_addr = n; write_barrier(); }
+template<class V> inline void ptr_set (V* volatile *ptr_addr, V *n)      { while (!__sync_bool_compare_and_swap (ptr_addr, *ptr_addr, n)); }
 template<class V> inline V*   ptr_get (V* volatile *ptr_addr)            { return __sync_fetch_and_add (ptr_addr, 0); }
 template<class V> inline V*   ptr_get (V* volatile const *ptr_addr)      { return __sync_fetch_and_add (ptr_addr, 0); }
 template<class V> inline bool ptr_cas (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
@@ -254,7 +254,7 @@ public:
         length -= space;
       }
     Atomic::write_barrier();
-    /* the barrier ensures m_buffer writes are seen before the m_wmark update */
+    /* the write barrier ensures m_buffer writes are made visible before the m_wmark update */
     Atomic::set (&m_wmark, wm);
     return orig_length - length;
   }
@@ -272,8 +272,9 @@ public:
         bool partial = true)
   {
     const uint orig_length = length;
-    /* need Atomic::read_barrier() here to ensure m_buffer writes are seen before m_wmark updates */
-    const uint wm = Atomic::get (&m_wmark); /* includes Atomic::read_barrier(); */
+    Atomic::read_barrier();
+    /* the read barrier ensures m_buffer writes are seen before m_wmark updates */
+    const uint wm = Atomic::get (&m_wmark);
     uint rm = Atomic::get (&m_rmark);
     uint space = (m_size + wm - rm) % m_size;
     if (!partial && length > space)
