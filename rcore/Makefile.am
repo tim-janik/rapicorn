@@ -159,6 +159,11 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "      (@RAPICORN_RELEASE_MONTH@ > (month) || \\"				>> xgen-$(@F) \
 	&& echo "        (@RAPICORN_RELEASE_MONTH@ == (month) && \\"				>> xgen-$(@F) \
 	&& echo "          (@RAPICORN_REVISION_VERSION@ >= (revv))))))"				>> xgen-$(@F) \
+	&& echo '#define RAPICORN_DEVEL_VERSION  (1 & @RAPICORN_REVISION_VERSION@)' 		>> xgen-$(@F) \
+	&& echo '#define RAPICORN_STABLE_VERSION (!RAPICORN_DEVEL_VERSION)' 			>> xgen-$(@F) \
+	&& echo "#if defined (RAPICORN_INTERNALS) && !defined (RAPICORN_CONVENIENCE)"		>> xgen-$(@F) \
+	&& echo "#define RAPICORN_CONVENIENCE	1"						>> xgen-$(@F) \
+	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- log & i18n domains --- */"						>> xgen-$(@F) \
 	&& echo "#ifndef RAPICORN_LOG_DOMAIN"							>> xgen-$(@F) \
