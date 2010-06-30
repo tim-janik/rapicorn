@@ -24,7 +24,8 @@
 
 #include <cstring>
 
-#define DEBUG_EVENTS    0
+static Rapicorn::Logging gtk_events ("gtk-events", Rapicorn::Logging::CURTLY);
+#define DEBUG(...)      RAPICORN_DEBUG (gtk_events, __VA_ARGS__)
 
 namespace { // Anon
 using namespace Rapicorn;
@@ -984,16 +985,17 @@ debug_dump_event (GtkWidget          *widget,
                   const EventContext &econtext)
 {
   GEnumClass *eclass = (GEnumClass*) g_type_class_ref (GDK_TYPE_EVENT_TYPE);
-  const gchar *name = g_enum_get_value (eclass, event->type)->value_name;
-  if (strncmp (name, "GDK_", 4) == 0)
-    name += 4;
+  const gchar *ename = g_enum_get_value (eclass, event->type)->value_name;
+  if (strncmp (ename, "GDK_", 4) == 0)
+    ename += 4;
+  String name = ename + String (")");
   gint wx, wy, ww, wh;
   gdk_window_get_position (widget->window, &wx, &wy);
   gdk_window_get_size (widget->window, &ww, &wh);
-  g_printerr ("Rapicorn-EVENT:%s %-20s) time=0x%08x synth=%d x=%+7.2f y=%+7.2f state=0x%04x ewin=%p", prefix,
-              name, econtext.time, econtext.synthesized,
-              econtext.x, econtext.y, econtext.modifiers,
-              event->any.window);
+  String dmsg = string_printf ("%s%-14s t=0x%08x xy=%+7.2f,%+7.2f state=0x%04x ewin=%p",
+                               prefix, name.c_str(), econtext.time,
+                               econtext.x, econtext.y, econtext.modifiers,
+                               event->any.window);
   switch (event->type)
     {
       const gchar *mode, *detail;
@@ -1014,15 +1016,15 @@ debug_dump_event (GtkWidget          *widget,
       case GDK_NOTIFY_NONLINEAR_VIRTUAL:    detail = "nolinvirt"; break;
       default:                              detail = "unknown";   break;
       }
-      g_printerr (" %s/%s sub=%p", mode, detail, event->crossing.subwindow);
+      dmsg += string_printf (" %s/%s sub=%p", mode, detail, event->crossing.subwindow);
       break;
     case GDK_MOTION_NOTIFY:
-      g_printerr (" is_hint=%d", event->motion.is_hint);
+      dmsg += string_printf (" is_hint=%d", event->motion.is_hint);
       break;
     case GDK_EXPOSE:
       {
         GdkRectangle &area = event->expose.area;
-        g_printerr (" (bbox: %d,%d %dx%d)", area.x, area.y, area.width, area.height);
+        dmsg += string_printf (" (bbox: %d,%d %dx%d)", area.x, area.y, area.width, area.height);
       }
       break;
     case GDK_SCROLL:
@@ -1030,20 +1032,22 @@ debug_dump_event (GtkWidget          *widget,
       detail = g_enum_get_value (ec1, event->scroll.direction)->value_name;
       if (strncmp (detail, "GDK_", 4) == 0)
         detail += 4;
-      g_printerr (" %s", detail);
+      dmsg += string_printf (" %s", detail);
       g_type_class_unref (ec1);
       break;
     case GDK_VISIBILITY_NOTIFY:
       switch (event->visibility.state)
         {
-        case GDK_VISIBILITY_UNOBSCURED:         g_printerr (" unobscured"); break;
-        case GDK_VISIBILITY_FULLY_OBSCURED:     g_printerr (" fully-obscured"); break;
-        case GDK_VISIBILITY_PARTIAL:            g_printerr (" partial"); break;
+        case GDK_VISIBILITY_UNOBSCURED:         dmsg += string_printf (" unobscured"); break;
+        case GDK_VISIBILITY_FULLY_OBSCURED:     dmsg += string_printf (" fully-obscured"); break;
+        case GDK_VISIBILITY_PARTIAL:            dmsg += string_printf (" partial"); break;
         }
       break;
     default: ;
     }
-  g_printerr (" (wwin=%p %d,%d %dx%d)\n", widget->window, wx, wy, ww, wh);
+  dmsg += string_printf (" (wwin=%p %d,%d %dx%d)%s", widget->window, wx, wy, ww, wh,
+                         econtext.synthesized ? " (synth)" : "");
+  DEBUG ("%s", dmsg.c_str());
   g_type_class_unref (eclass);
 }
 
@@ -1056,8 +1060,8 @@ rapicorn_viewport_event (GtkWidget *widget,
   bool handled = false;
   int window_height = 0;
   EventContext econtext = rapicorn_viewport_event_context (self, event, &window_height);
-  if (DEBUG_EVENTS) /* debug events */
-    debug_dump_event (widget, "", event, econtext);
+  if (Rapicorn::Logging::debug_enabled()) /* debug events */
+    debug_dump_event (widget, ".", event, econtext);
   if (!viewport)
     return false;
   /* translate events */
@@ -1081,8 +1085,7 @@ rapicorn_viewport_event (GtkWidget *widget,
             {
               econtext = rapicorn_viewport_event_context (self, event, NULL, tcoords[i]);
               self->last_motion_time = self->last_time;
-              if (DEBUG_EVENTS)
-                g_printerr ("Rapicorn-MOTION-HISTORY: time=0x%08x x=%+7.2f y=%+7.2f\n", tcoords[i]->time, tcoords[i]->axes[0], tcoords[i]->axes[1]);
+              DEBUG ("MOTION-HISTORY: time=0x%08x x=%+7.2f y=%+7.2f", tcoords[i]->time, tcoords[i]->axes[0], tcoords[i]->axes[1]);
               viewport->enqueue_locked (create_event_mouse (MOUSE_MOVE, econtext));
             }
           gdk_device_free_history (tcoords, n);
@@ -1210,8 +1213,8 @@ rapicorn_viewport_ancestor_event (GtkWidget *ancestor,
   EventContext econtext = rapicorn_viewport_event_context (self, event);
   if (!viewport)
     return false;
-  if (DEBUG_EVENTS) /* debug events */
-    debug_dump_event (widget, "GtkWindow:", event, econtext);
+  if (Rapicorn::Logging::debug_enabled()) /* debug events */
+    debug_dump_event (widget, "+", event, econtext);
   bool handled = false;
   switch (event->type)
     {
