@@ -18,6 +18,7 @@
 using namespace Rapicorn;
 #include "cxx-client.hh"        // generated client API
 #include <ui/rope.hh>
+#include <stdexcept>
 
 namespace { // Anonymous
 
@@ -28,7 +29,7 @@ cxxrope_init_dispatcher (const String         &appname,
   int cpu = Thread::Self::affinity (1);
   uint64 app_id = rope_thread_start (appname, cmdline_args, cpu);
   if (app_id == 0)
-    throw_error ("failed to initialize rapicorn thread");
+    throw std::runtime_error ("failed to initialize rapicorn thread");
   // printout ("APPURL: 0x%016llx\n", app_id);
   /* minor hack to create the initial smart handler for an Application */
   Plic::FieldBuffer8 fb (4);
