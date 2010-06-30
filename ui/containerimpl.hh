@@ -28,7 +28,7 @@ class SingleContainerImpl : public virtual ItemImpl, public virtual Container {
 protected:
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area);
-  Item&                 get_child               () { if (!child_item) RAPICORN_WARNING ("NULL item"); return *child_item; }
+  Item&                 get_child               () { RAPICORN_CHECK (child_item != NULL); return *child_item; }
   virtual void          pre_finalize            ();
   virtual              ~SingleContainerImpl     ();
   virtual ChildWalker   local_children          () const;

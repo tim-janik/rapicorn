@@ -57,7 +57,7 @@ public:
   virtual ChildWalker   local_children  () const = 0;
   virtual bool          has_children    () = 0;
   void                  remove          (Item           &item);
-  void                  remove          (Item           *item)  { if (!item) RAPICORN_WARNING ("NULL item"); remove (*item); }
+  void                  remove          (Item           *item)  { RAPICORN_CHECK (item != NULL); remove (*item); }
   void                  add             (Item                   &item);
   void                  add             (Item                   *item);
   virtual Affine        child_affine    (const Item             &item); /* container => item affine */

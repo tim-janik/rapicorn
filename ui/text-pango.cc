@@ -922,7 +922,7 @@ protected:
       }
     rapicorn_gtk_threads_leave();
     if (err.size())
-      warning (err);
+      warning ("%s", err.c_str());
     invalidate();
   }
   virtual int

@@ -22,6 +22,8 @@
 #include <stack>
 #include <cstring>
 
+#define ERROR(...)      RAPICORN_LOGD ("Rapicorn::Factory", ERROR, __VA_ARGS__)
+
 namespace Rapicorn {
 struct ClassDoctor {
   static void item_constructed (Item &item) { item.constructed(); }
@@ -166,7 +168,7 @@ public:
   explicit                      FactorySingleton        ()
   {
     if (singleton)
-      error (STRFUNC + String() + ": non-singleton initialization");
+      ERROR ("%s: non-singleton initialization", STRFUNC);
     else
       singleton = this;
     /* register backlog */
@@ -466,7 +468,7 @@ FactorySingleton::parse_gadget_data (const char            *input_name,
       if (&nt == &dothrow)
         throw Exception (ers);
       else
-        Rapicorn::error (ers);
+        ERROR ("%s", ers.c_str());
     }
 }
 
@@ -512,7 +514,7 @@ FactorySingleton::construct_gadget (const String          &gadget_identifier,
 {
   GadgetDef *dgadget = lookup_gadget (gadget_identifier);
   if (!dgadget)
-    error ("Rapicorn::Factory: unknown widget type: " + gadget_identifier);
+    ERROR ("%s: unknown widget type: %s", STRFUNC, gadget_identifier.c_str());
   VariableMap evars, args;
   Evaluator::populate_map (args, arguments);
   Evaluator::populate_map (evars, env_variables);
@@ -589,7 +591,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
     {
       real_dgadget = lookup_gadget (bgadget->ancestor);
       if (!real_dgadget)
-        error ("%s: invalid or unknown widget type: %s",
+        ERROR ("%s: invalid or unknown widget type: %s",
                bgadget->location().c_str(), bgadget->ancestor.c_str());
     }
   VariableMap call_args (const_call_arguments);
@@ -625,7 +627,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
     itemp = NULL;
   }
   if (!itemp)
-    error ("%s: failed to inherit: %s", bgadget->definition().c_str(),
+    ERROR ("%s: failed to inherit: %s", bgadget->definition().c_str(),
            reason.size() ? reason.c_str() : String ("unknown widget type: " + bgadget->ancestor).c_str());
   Item &item = *itemp;
   /* apply arguments */
@@ -636,7 +638,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
         unused_args[it->first] = it->second;
     call_args = unused_args;
   } catch (...) {
-    error ("%s: failed to assign properties", bgadget->definition().c_str());
+    ERROR ("%s: failed to assign properties", bgadget->definition().c_str());
     sink (item);
     env.pop_map (custom_args);
     throw;
@@ -659,10 +661,10 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
         else if (item_container && container)
           item_container->child_container (container);
         else if (outer_ccslot.cgadget)
-          error ("%s: failed to find child container: %s", bgadget->definition().c_str(), outer_ccslot.cgadget->ident.c_str());
+          ERROR ("%s: failed to find child container: %s", bgadget->definition().c_str(), outer_ccslot.cgadget->ident.c_str());
       }
   } catch (std::exception &exc) {
-    error ("%s: construction failed: %s", bgadget->definition().c_str(), exc.what());
+    ERROR ("%s: construction failed: %s", bgadget->definition().c_str(), exc.what());
     sink (item);
     env.pop_map (custom_args);
     throw;
@@ -676,7 +678,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
     if (parent)
       parent->add (item); /* pack into parent */
   } catch (std::exception &exc) {
-    error ("%s: adding to parent (%s) failed: %s", bgadget->definition().c_str(), parent->name().c_str(), exc.what());
+    ERROR ("%s: adding to parent (%s) failed: %s", bgadget->definition().c_str(), parent->name().c_str(), exc.what());
     sink (item);
     env.pop_map (custom_args);
     throw;
@@ -688,7 +690,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
   /* cleanups */
   env.pop_map (custom_args);
   for (VariableMap::const_iterator it = call_args.begin(); it != call_args.end(); it++)
-    error ("%s: unknown property: %s", bgadget->definition().c_str(), String (it->first + "=" + it->second).c_str());
+    ERROR ("%s: unknown property: %s", bgadget->definition().c_str(), String (it->first + "=" + it->second).c_str());
   return item;
 }
 
@@ -710,7 +712,7 @@ FactorySingleton::call_gadget_children (const BaseGadget   *bgadget,
     diag ("%d) %s", nth++, (*cw)->ident.c_str());
 #endif
   if (!container)
-    error ("parent widget fails to implement Container interface: "+ bgadget->ident);
+    ERROR ("parent widget lacks Container interface: %s", bgadget->ident.c_str());
   /* create children */
   for (Walker<ChildGadget*const> cw = walker (bgadget->children); cw.has_next(); cw++)
     {
@@ -731,7 +733,7 @@ FactorySingleton::register_item_factory (const ItemTypeFactory &itfactory)
   const char *ident = itfactory.qualified_type.c_str();
   const char *base = strrchr (ident, ':');
   if (!base || base <= ident || base[-1] != ':')
-    error ("invalid/missing domain name in item type: " + String() + ident);
+    ERROR ("%s: invalid/missing domain name in item type: %s", STRFUNC, ident);
   String domain_name;
   domain_name.assign (ident, base - ident - 1);
   FactoryDomain *fdomain = lookup_domain (domain_name);
@@ -761,7 +763,10 @@ FactorySingleton::create_from_item_type (const String &ident)
   if (itfactory)
     return *itfactory->create_item (ident);
   else
-    error ("Rapicorn::Factory: unknown item type: " + ident);
+    {
+      ERROR ("unknown item type: %s", ident.c_str());
+      return *(Item*) NULL;
+    }
 }
 
 } // Anon
@@ -786,7 +791,7 @@ Factory::parse_file (const String           &i18n_domain,
     {
       // ("error(%d):", merror.code)
       String ers = string_printf ("%s:%d:%d: %s", file_name.c_str(), merror.line_number, merror.char_number, merror.message.c_str());
-      error (ers);
+      ERROR ("%s", ers.c_str());
     }
   fclose (file);
   return 0;
@@ -807,7 +812,7 @@ Factory::parse_string (const String           &xml_string,
     {
       // ("error(%d):", merror.code)
       String ers = string_printf ("%s:%d:%d: %s", file_name.c_str(), merror.line_number, merror.char_number, merror.message.c_str());
-      error (ers);
+      ERROR ("%s", ers.c_str());
     }
   return 0;
 }
@@ -834,7 +839,7 @@ Factory::create_container (const String       &gadget_identifier,
                                                               &gadget_definition);
   Container *container = dynamic_cast<Container*> (&item);
   if (!container)
-    error ("%s: widget construction yields non container: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
+    ERROR ("%s: constructed widget lacks container interface: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
   return *container; // floating
 }
 
@@ -850,7 +855,7 @@ Factory::create_window (const String       &gadget_identifier,
                                                               &gadget_definition);
   Root *root = dynamic_cast<Root*> (&item);
   if (!root)
-    error ("%s: widget construction yields non window: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
+    ERROR ("%s: constructed widget lacks window interface: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
   WindowBase &window = root->window();
   /* win does ref_sink(); */
   return window;
@@ -903,7 +908,7 @@ void
 Factory::ItemTypeFactory::sanity_check_identifier (const char *namespaced_ident)
 {
   if (strncmp (namespaced_ident, "Rapicorn::Factory::", 19) != 0)
-    error ("item type not qualified as \"Rapicorn::Factory::\": %s", namespaced_ident);
+    ERROR ("item type lacks \"Rapicorn::Factory::\" qualification: %s", namespaced_ident);
 }
 
 Args::Args (CS &s0, CS &s1, CS &s2, CS &s3,

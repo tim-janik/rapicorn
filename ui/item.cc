@@ -1074,7 +1074,7 @@ Item::expose (const Region &region) /* item coordinates relative */
 void
 Item::type_cast_error (const char *dest_type)
 {
-  error ("failed to dynamic_cast<%s> item: %s", VirtualTypeid::cxx_demangle (dest_type).c_str(), name().c_str());
+  fatal ("failed to dynamic_cast<%s> item: %s", VirtualTypeid::cxx_demangle (dest_type).c_str(), name().c_str());
 }
 
 void

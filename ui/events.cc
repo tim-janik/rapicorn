@@ -152,7 +152,7 @@ create_event_transformed (const Event  &source_event,
     case WIN_DELETE:            return create_event_win_delete (dcontext);
     case EVENT_NONE:
     case EVENT_LAST:
-    default:                    error ("uncopyable event type: %s", string_from_event_type (source_event.type));
+    default:                    fatal ("uncopyable event type: %s", string_from_event_type (source_event.type));
     }
 }
 
