@@ -115,7 +115,7 @@ test_xml2array()
   String errstr;
   Array a = Array::from_xml (expected_xmlarray, __FILE__ ":expected_xmlarray", &errstr);
   if (errstr.size())
-    error (errstr);
+    error ("%s", errstr.c_str());
 #warning FIXME: test full XML->Array features
   //printout ("XML:\n%s\n", a.to_xml()->xml_string().c_str());
   //assert (int (a["001"]) == 1);
@@ -158,7 +158,7 @@ test_xml_array()
   String errstr;
   Array array = Array::from_xml (xml_array, inputname, &errstr);
   if (errstr.size())
-    error (errstr);
+    error ("%s", errstr.c_str());
 }
 
 } // anon

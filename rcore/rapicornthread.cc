@@ -125,10 +125,10 @@ cpu_affinity (int cpu)
       CPU_ZERO (&cpuset);
       CPU_SET (cpu, &cpuset);
       if (pthread_setaffinity_np (thread, sizeof (cpu_set_t), &cpuset) != 0)
-        diag_errno ("pthread_setaffinity_np");
+        pdiag ("pthread_setaffinity_np");
     }
   if (pthread_getaffinity_np (thread, sizeof (cpu_set_t), &cpuset) != 0)
-    diag_errno ("pthread_getaffinity_np");
+    pdiag ("pthread_getaffinity_np");
   for (int j = 0; j < CPU_SETSIZE; j++)
     if (CPU_ISSET (j, &cpuset))
       return j;
@@ -141,7 +141,7 @@ Thread::Self::affinity (int cpu)
 {
   int real = cpu_affinity (cpu);
   if (cpu >= 0 && real >= 0)
-    info ("Thread::Self: affinitiy: cpu#%u", 1 + real);
+    diag ("Thread::Self: affinitiy: cpu#%u", 1 + real);
   return real;
 }
 
@@ -150,7 +150,7 @@ Thread::affinity (int cpu)
 {
   last_cpu = cpu_affinity (cpu);
   if (cpu >= 0 && last_cpu >= 0)
-    info ("%s: affinitiy: cpu#%u", name().c_str(), 1 + last_cpu);
+    diag ("%s: affinitiy: cpu#%u", name().c_str(), 1 + last_cpu);
   return last_cpu;
 }
 

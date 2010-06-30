@@ -18,6 +18,8 @@
 #include "rapicornmath.hh"
 #include <deque>
 
+#define VALUE_TYPE_MISMATCH(object, sname) RAPICORN_LOG (ERROR, "value type mismatch for %s setter: %s", object, sname)
+
 namespace Rapicorn {
 
 static inline uint32*
@@ -222,7 +224,7 @@ BaseValue::assign (int64 *i64p)
         }
       goto default_error;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "int", storage_name (storage));
+      VALUE_TYPE_MISMATCH ("int", storage_name (storage));
     }
   changed();
 }
@@ -254,7 +256,7 @@ BaseValue::assign (long double *ldfp)
         }
       goto default_error;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "float", storage_name (storage));
+      VALUE_TYPE_MISMATCH ("float", storage_name (storage));
     }
   changed();
 }
@@ -282,7 +284,7 @@ BaseValue::assign (const String *sp)
     case OBJECT:
       goto default_error;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "string", storage_name (storage));
+      VALUE_TYPE_MISMATCH ("string", storage_name (storage));
     }
   changed();
 }
@@ -302,7 +304,7 @@ BaseValue::assign (const StringVector *svp)
 #warning FIXME: BaseValue::assign (StringVector)
       break;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "StringVector", storage_name (storage));
+      VALUE_TYPE_MISMATCH ("StringVector", storage_name (storage));
     }
   changed();
 }
@@ -325,7 +327,7 @@ BaseValue::assign (const Array *ap)
       *(Array*) u.p = a;
       break;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "Array", storage_name (storage));
+      VALUE_TYPE_MISMATCH ("Array", storage_name (storage));
     }
   changed();
 }
@@ -351,7 +353,7 @@ BaseValue::assign (Object *orefp)
     case ARRAY:
       goto default_error;
     default_error:
-      RAPICORN_ERROR ("value type mismatch for %s setter: %s", "Object", storage_name (storage));
+      VALUE_TYPE_MISMATCH ("Object", storage_name (storage));
     }
   changed();
 }
@@ -481,7 +483,7 @@ Array::nexti ()
       idx = string_from_uint (array->last++);
       if (array->last == 0)
         {
-          RAPICORN_WARNING ("Array index out of bounds: %zu", array->last - 1);
+          RAPICORN_LOG (WARNING, "Array index out of bounds: %zu", array->last - 1);
           idx = "Rapicorn::Array::OOB";
           break;
         }
