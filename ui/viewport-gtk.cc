@@ -1055,6 +1055,8 @@ static gboolean
 rapicorn_viewport_event (GtkWidget *widget,
                          GdkEvent  *event)
 {
+  if (!widget->window)
+    return FALSE; // protected against events when unrealized, e.g. FOCUS_CHANGE
   RapicornViewport *self = RAPICORN_VIEWPORT (widget);
   ViewportGtk *viewport = self->viewport;
   bool handled = false;
