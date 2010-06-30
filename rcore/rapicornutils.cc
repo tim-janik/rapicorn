@@ -27,8 +27,8 @@
 #include <vector>
 #include <algorithm>
 #include <cstring>
-#include <stdexcept>
 #include <iconv.h>
+#include <syslog.h>
 #include "rapicornutils.hh"
 #include "rapicornutf8.hh"
 #include "rapicornthread.hh"
@@ -179,28 +179,15 @@ rapicorn_parse_settings_and_args (InitValue *value,
   *argc_p = e;
 }
 
-static bool
-string_find_word (const String &cs,
-                  const String &cw)
-{
-  String s = cs, w = cw;
-  std::transform (s.begin(), s.end(), s.begin(), ::tolower);
-  std::transform (w.begin(), w.end(), w.begin(), ::tolower);
-  size_t start = 0, p;
-  while (p = s.find (w, start),
-         p != s.npos)
-    {
-      start = p + 1;
-      if (p > 0 && isalnum (s[p - 1]))
-        continue; // no preceding word boundary
-      if (p + w.size() < s.size() && isalnum (s[p + w.size()]))
-        continue; // no subsequent word boundary
-      return true;
-    }
-  return false;
-}
-
 static struct _InternalConstructorTest_lrcc0 { int v; _InternalConstructorTest_lrcc0() : v (0x12affe17) {} } _internalconstructortest;
+
+static String program_argv0 = "";
+
+String
+process_name ()
+{
+  return program_argv0;
+}
 
 /**
  * @param argcp         location of the 'argc' argument to main()
@@ -225,12 +212,9 @@ rapicorn_init_core (int        *argcp,
   if (!g_threads_got_initialized)
     g_thread_init (NULL);
 
-  {
-    const char *s = getenv ("RAPICORN_LOG");
-    info_needed = s && (string_find_word (s, "all") || string_find_word (s, "info"));
-  }
-
   /* update program/application name upon repeated initilization */
+  if (argcp && *argcp && argvp && (*argvp)[0] && (*argvp)[0][0] != 0 && program_argv0.size() == 0)
+    program_argv0 = (*argvp)[0];
   char *prg_name = argcp && *argcp ? g_path_get_basename ((*argvp)[0]) : NULL;
   if (rapicorn_init_settings != NULL)
     {
@@ -241,6 +225,8 @@ rapicorn_init_core (int        *argcp,
         g_set_application_name (app_name);
       return;   /* simply ignore repeated initializations */
     }
+
+  Logging::setup();
 
   /* normal initialization */
   rapicorn_init_settings = &global_init_settings;
@@ -325,133 +311,219 @@ RAPICORN_STATIC_ASSERT (LDBL_MIN     <= 1E-37);
 RAPICORN_STATIC_ASSERT (LDBL_MAX     >= 1E+37);
 RAPICORN_STATIC_ASSERT (LDBL_EPSILON <= 1E-9);
 
-/* --- assertions, warnings, errors --- */
-static String
-prgname_prefix (const String &kind = "")
+/* === printing, errors, warnings, assertions, debugging === */
+#define LSTRING_OFFSET  16
+static inline bool
+inword (char c)
 {
-  const char *prgname = g_get_prgname();
-  const String mkind = kind + (kind.empty() ? "" : ":");
-  if (prgname)
-    return string_printf ("%s[%u]:%s ", prgname, Thread::Self::pid(), kind.c_str());
+  return isalnum (c) || strchr ("+-_/*$!%()", c);
+}
+
+static ssize_t
+lstring_find_word (const String &s,
+                   const String &w,
+                   char          postfix = 0)
+{
+  size_t start = 0, p;
+  ssize_t last = -1;
+  while (p = s.find (w, start),
+         p != s.npos)
+    {
+      start = p + 1;
+      if (p > 0 && inword (s[p - 1]))
+        continue; // no preceding word boundary
+      if (!postfix && p + w.size() < s.size() && inword (s[p + w.size()]))
+        continue; // no subsequent word boundary
+      if (postfix && (p + w.size() >= s.size() || s[p + w.size()] != postfix))
+        continue; // missing required postfix
+      last = MAX (last, ssize_t (p)); // match
+    }
+  return last < 0 ? 0 : last + LSTRING_OFFSET;
+}
+
+bool   Logging::cdebug = true;
+bool   Logging::cany = true;
+bool   Logging::cdiag = true;
+bool   Logging::cdevel = true;
+bool   Logging::cverbose = false;
+bool   Logging::cstderr = true;
+bool   Logging::csyslog = false;
+String Logging::config = "debug";
+
+void
+Logging::setup ()
+{
+  const char *s = getenv ("RAPICORN");
+  String str = s ? s : "";
+  std::transform (str.begin(), str.end(), str.begin(), ::tolower);
+  config = str;
+  const ssize_t wall = lstring_find_word (str, "all");
+  const ssize_t wvrb = lstring_find_word (str, "verbose");
+  const ssize_t wbrf = lstring_find_word (str, "brief");
+  const ssize_t wdbg = lstring_find_word (str, "debug"); // debug any
+  const ssize_t wndg = lstring_find_word (str, "no-debug");
+  const ssize_t wdev = lstring_find_word (str, "devel");
+  const ssize_t wndv = lstring_find_word (str, "no-devel");
+  const ssize_t wstb = lstring_find_word (str, "stable");
+  const ssize_t wdag = lstring_find_word (str, "diag");
+  const ssize_t wdng = lstring_find_word (str, "no-diag");
+  const ssize_t wyse = lstring_find_word (str, "stderr");
+  const ssize_t wnse = lstring_find_word (str, "no-stderr");
+  const ssize_t wsys = lstring_find_word (str, "syslog");
+  const ssize_t wnsy = lstring_find_word (str, "no-syslog");
+  const ssize_t whlp = lstring_find_word (str, "help");
+  // due to LSTRING_OFFSET, we can use bool(default)
+  const ssize_t devel1 = MAX (bool (RAPICORN_DEVEL_VERSION), MAX (wall, wdev));
+  const ssize_t devel0 = MAX (wstb, wndv);
+  cdevel = devel1 > devel0;
+  cdiag = MAX (bool (cdevel), MAX (wall, wdag)) > wdng;
+  cverbose = MAX (bool (wall), wvrb) > wbrf;
+  cany = MAX (bool (wall), wdbg) > wndg;
+  cdebug = cany || lstring_find_word (str, "debug", '-');
+  cstderr = MAX (bool (1), wyse) > wnse;
+  csyslog = wsys > wnsy;
+  if (whlp)
+    {
+      String keys = "  all:verbose:brief:debug:no-debug:devel:stable:help\n"
+                    "  diag:no-diag:stderr:no-stderr:syslog:no-syslog\n"
+                    "  debug-*:no-debug-*: (where * is a custom debug prefix)";
+      vector<String> dk = Logging::debug_keys();
+      for (uint i = 0; i < dk.size(); i++)
+        {
+          keys += i % 6 ? ":" : "\n  ";
+          keys += dk[i];
+        }
+      printerr ("Rapicorn::Logging: configuration help, available keys for $RAPICORN:\n%s\n",
+                keys.c_str());
+    }
+}
+
+void
+Logging::abort()
+{
+  printerr ("aborting...\n");
+  ::abort();
+}
+
+void
+Logging::dmessage (const char *file, int line, const char *func, const char *domain,
+                   const Logging *detail, const char *format, ...)
+{
+  va_list args;
+  va_start (args, format);
+  Logging::vmessage (file, line, func, domain, detail, format, args);
+  va_end (args);
+}
+
+void
+Logging::vmessage (const char *file, int line, const char *func, const char *domain,
+                   const Logging *detail, const char *format, va_list vargs)
+{
+  const int saved_errno = errno;
+  const ptrdiff_t a = ptrdiff_t (detail);
+  const bool debugging = a >= 256;
+  bool curtly = false;
+  char kind = 0, perrno = 0;
+  int syl = LOG_DEBUG;
+  String key;
+  if (debugging)
+    {
+      perrno = detail->m_flags & PERRNO;
+      curtly = detail->m_flags & CURTLY;
+      key = String ("debug-") + detail->m_detail;
+      String lookup = key;
+      std::transform (lookup.begin(), lookup.end(), lookup.begin(), ::tolower);
+      const ssize_t wyes = lstring_find_word (config, lookup);
+      const ssize_t w_no = lstring_find_word (config, "no-" + lookup);
+      if (MAX (bool (cany), wyes) < w_no)
+        return;
+    }
   else
-    return string_printf ("[PID=%u]:%s ", Thread::Self::pid(), kind.c_str());
+    {
+      perrno = bool (a & 0x80);
+      kind = a & 0x7f;
+      switch (kind)
+        {
+        case 'f': syl = LOG_ERR;     key = "FATAL";    break; // LOG_CRIT uses system-level routing
+        case 'e': syl = LOG_ERR;     key = "ERROR";    break;
+        case 'w': syl = LOG_WARNING; key = "WARNING";  break;
+        case 'd': syl = LOG_NOTICE;  key = "";         break;
+        default: break;
+        }
+    }
+  String u = string_vprintf (format, vargs);
+  String e = perrno ? String (": ") + strerror (saved_errno) : "";
+  bool fatal_abort = kind == 'f' || (kind == 'e' && cdevel);
+  // stderr
+  if (cstderr || fatal_abort)
+    {
+      String n = process_name();
+      if (n.empty()) n = file ? file : "/";
+      if (!cverbose)
+        { // simplistic basename implementation
+          const char *ptr = strrchr (n.c_str(), RAPICORN_DIR_SEPARATOR);
+          if (ptr && *ptr && ptr[1])
+            n = n.substr (ptr - n.c_str() + 1);
+        }
+      String p = string_printf ("%s[%u]:", n.c_str(), Thread::Self::pid());
+      String l = file ? string_printf ("%s:%u:", file, line) : "";
+      String d = domain && !file ? string_printf ("%s:", domain) : "";
+      String f = func ? string_printf ("%s():", func) : "";
+      String k = !key.empty() ? string_printf ("%s:", key.c_str()) : "";
+      String sk = " " + k;
+      String m = kind && strchr ("feau", kind) ? "\n" : ""; // newline before aborting
+      if (curtly)
+        m += k + " " + string_vprintf (format, vargs) + e;
+      else if (cverbose)
+        m += p + l + d + f + sk + " " + u + e;
+      else if (debugging)
+        m += l + d + sk + " " + string_vprintf (format, vargs) + e;
+      else
+        m += p + sk + " " + string_vprintf (format, vargs) + e;
+      if (m[m.size() - 1] != '\n') m += "\n"; // newline termination
+      printerr ("%s", m.c_str());
+    }
+  // syslog
+  if (csyslog)
+    {
+      static bool opened = false;
+      if (!opened)
+        {
+          opened = true;
+          openlog (NULL, LOG_PID, LOG_USER);
+        }
+      String k = !key.empty() ? string_printf ("%s:", key.c_str()) : "";
+      String c;
+      if (cverbose && file)
+        c = string_printf ("(%s:%u) ", file, line);
+      else if (cverbose && func)
+        c = string_printf ("(%s) ", func);
+      else if (cverbose && domain)
+        c = string_printf ("(%s) ", domain);
+      if (!key.empty() && !c.empty())
+        c = " " + c;
+      syslog (syl, "%s%s%s%s", k.c_str(), c.c_str(), u.c_str(), e.c_str());
+    }
+  // aborting
+  if (fatal_abort)
+    Logging::abort();
 }
 
-struct RuntimeError : public std::runtime_error {
-  virtual ~RuntimeError () throw() {}
-  explicit RuntimeError (const String &str) : runtime_error (str) {}
-};
-
 void
-throw_error (const char *format, ...)
+Logging::add ()
 {
-  va_list args;
-  va_start (args, format);
-  String ers = prgname_prefix() + string_vprintf (format, args);
-  va_end (args);
-  throw RuntimeError (ers);
+  if (detail)
+    ; // register keys?
 }
 
-void
-throw_error (const String &s)
+vector<String>
+Logging::debug_keys()
 {
-  String ers = prgname_prefix() + s;
-  throw RuntimeError (ers);
+  return vector<String>(); // not currently registering
 }
 
 void
-error (const char *format,
-       ...)
-{
-  va_list args;
-  va_start (args, format);
-  String ers = string_vprintf (format, args);
-  va_end (args);
-  error (ers);
-}
-
-void
-error (const String &s)
-{
-  fflush (stdout);
-  String msg ("\n" + prgname_prefix ("ERROR") + s + "\naborting...\n");
-  fputs (msg.c_str(), stderr);
-  fflush (stderr);
-  BREAKPOINT();
-  abort();
-}
-
-void
-warning (const char *format,
-         ...)
-{
-  va_list args;
-  va_start (args, format);
-  String ers = string_vprintf (format, args);
-  va_end (args);
-  warning (ers);
-}
-
-void
-warning (const String &s)
-{
-  String msg (prgname_prefix ("WARNING") + s + '\n');
-  fflush (stdout);
-  fputs (msg.c_str(), stderr);
-  fflush (stderr);
-}
-
-void
-diag (const char *format,
-      ...)
-{
-  va_list args;
-  va_start (args, format);
-  String ers = string_vprintf (format, args);
-  va_end (args);
-  diag (ers);
-}
-
-void
-diag (const String &s)
-{
-  String msg (prgname_prefix ("DIAG") + s + '\n');
-  fflush (stdout);
-  fputs (msg.c_str(), stderr);
-  fflush (stderr);
-}
-
-void
-diag_errno (const char *format, ...)
-{
-  int errno_val = errno;
-  va_list args;
-  va_start (args, format);
-  String ers = string_vprintf (format, args);
-  va_end (args);
-  diag (ers + ": " + string_from_errno (errno_val));
-}
-
-void
-diag_errno (const String &s)
-{
-  int errno_val = errno;
-  diag (s + ": " + string_from_errno (errno_val));
-}
-
-void
-info_always (const String &s)
-{
-  String msg (prgname_prefix ("INFO") + s + '\n');
-  fflush (stdout);
-  fputs (msg.c_str(), stderr);
-  fflush (stderr);
-}
-bool info_needed = true; // adjusted upon Rapicorn initialization
-
-void
-printerr (const char   *format,
-          ...)
+printerr (const char *format, ...)
 {
   va_list args;
   va_start (args, format);
@@ -463,8 +535,7 @@ printerr (const char   *format,
 }
 
 void
-printout (const char   *format,
-          ...)
+printout (const char *format, ...)
 {
   va_list args;
   va_start (args, format);
@@ -473,107 +544,6 @@ printout (const char   *format,
   fflush (stderr);
   fputs (ers.c_str(), stdout);
   fflush (stdout);
-}
-
-void
-raise_sigtrap ()
-{
-  raise (SIGTRAP);
-}
-
-static void
-stderr_print (bool        bail_out,
-              const char *prefix,
-              const char *domain,
-              const char *file,
-              int         line,
-              const char *funcname,
-              const char *pmsg,
-              const char *str)
-{
-  fflush (stdout);
-  String msg (bail_out ? "\n" : "");
-  if (domain)
-    msg += domain + String ("-") + prefix;
-  else
-    msg += prefix;
-  if (file)
-    {
-      char buffer[64];
-      sprintf (buffer, "%d", line);
-      msg += String (":") + file + String (":") + String (buffer);
-    }
-  if (funcname)
-    msg += String (": ") + funcname + "()";
-  if (pmsg)
-    msg += String (": ") + pmsg;
-  if (str)
-    msg += String (": ") + str;
-  msg += "\n";
-  if (bail_out)
-    msg += "aborting...\n";
-  fputs (msg.c_str(), stderr);
-  fflush (stderr);
-}
-
-void
-rapicorn_runtime_problem (char        ewran_tag,
-                          const char *domain,
-                          const char *file,
-                          int         line,
-                          const char *funcname,
-                          const char *msgformat,
-                          ...)
-{
-  va_list args;
-  va_start (args, msgformat);
-  rapicorn_runtime_problemv (ewran_tag, domain, file, line, funcname, msgformat, args);
-  va_end (args);
-}
-
-void
-rapicorn_runtime_problemv (char        ewran_tag,
-                           const char *domain,
-                           const char *file,
-                           int         line,
-                           const char *funcname,
-                           const char *msgformat,
-                           va_list     args)
-{
-  const bool noreturn_case = ewran_tag == 'E' || ewran_tag == 'A' || ewran_tag == 'N';
-  char *msg = NULL;
-  if (msgformat && msgformat[0])
-    msg = g_strdup_vprintf (msgformat, args);
-  const char *prefix, *pmsg = NULL;
-  switch (ewran_tag)
-    {
-    case 'E':
-      prefix = "ERROR";
-      break;
-    case 'W':
-      prefix = "WARNING";
-      break;
-    case 'R':
-      prefix = "WARNING:";
-      pmsg = "Check failed";
-      break;
-    case 'A':
-      prefix = "ERROR";
-      pmsg = "Assertion failed";
-      break;
-    default:
-    case 'N':
-      prefix = "ERROR";
-      pmsg = "Assertion should not be reached";
-      break;
-    }
-  stderr_print (noreturn_case, prefix, domain, file, line, funcname, pmsg, msg);
-  g_free (msg);
-  if (noreturn_case)
-    {
-      BREAKPOINT();
-      abort();
-    }
 }
 
 /* --- process handle --- */

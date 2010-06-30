@@ -37,8 +37,6 @@
 #define SEARCHPATH_SEPARATOR            RAPICORN_SEARCHPATH_SEPARATOR
 #define SEARCHPATH_SEPARATOR_S          RAPICORN_SEARCHPATH_SEPARATOR_S
 #define CODELOC()                       RAPICORN_CODELOC()
-#define ERROR(format,...)               RAPICORN_ERROR (format, __VA_ARGS__)
-#define WARNING(format,...)             RAPICORN_WARNING (format, __VA_ARGS__)
 #endif // RAPICORN_INTERNALS
 
 namespace Rapicorn {
@@ -101,26 +99,6 @@ public:
   static String cxx_demangle       (const char *mangled_identifier);
 };
 
-/* --- implement assertion macros --- */
-#ifndef RAPICORN__RUNTIME_PROBLEM
-#define RAPICORN__RUNTIME_PROBLEM(ErrorWarningReturnAssertNotreach,domain,file,line,funcname,...) \
-        ::Rapicorn::rapicorn_runtime_problem (ErrorWarningReturnAssertNotreach, domain, file, line, funcname, __VA_ARGS__)
-#endif
-void rapicorn_runtime_problem  (char        ewran_tag,
-                                const char *domain,
-                                const char *file,
-                                int         line,
-                                const char *funcname,
-                                const char *msgformat,
-                                ...) RAPICORN_PRINTF (6, 7);
-void rapicorn_runtime_problemv (char        ewran_tag,
-                                const char *domain,
-                                const char *file,
-                                int         line,
-                                const char *funcname,
-                                const char *msgformat,
-                                va_list     msgargs);
-
 /* --- NonCopyable --- */
 class NonCopyable {
   NonCopyable& operator=   (const NonCopyable&);
@@ -149,6 +127,7 @@ bool         init_value_bool    (InitValue  *value);
 double       init_value_double  (InitValue  *value);
 int64        init_value_int     (InitValue  *value);
 String       process_handle     ();
+String       process_name       ();
 
 /* --- initialization hooks --- */
 class InitHook : protected NonCopyable {
@@ -162,30 +141,83 @@ public:
                      int          _priority = 0);
 };
 
-/* --- assertions, warnings, errors --- */
-void        throw_error         (const char *format, ...) RAPICORN_PRINTF (1, 2);
-void        throw_error         (const String &s);
-void        error               (const char   *format, ...) RAPICORN_PRINTF (1, 2) RAPICORN_NORETURN;
-void        error               (const String &s) RAPICORN_NORETURN;
-void        warning             (const char   *format, ...) RAPICORN_PRINTF (1, 2);
-void        warning             (const String &s);
-void        diag                (const char   *format, ...) RAPICORN_PRINTF (1, 2);
-void        diag                (const String &s);
-void        diag_errno          (const char   *format, ...) RAPICORN_PRINTF (1, 2);
-void        diag_errno          (const String &s);
-inline void info                (const char   *format, ...) RAPICORN_PRINTF (1, 2);
-inline void info                (const String &s);
-void        printerr            (const char   *format, ...) RAPICORN_PRINTF (1, 2);
-void        printout            (const char   *format, ...) RAPICORN_PRINTF (1, 2);
-void        raise_sigtrap       ();
-inline void BREAKPOINT          ();
+/* === printing, errors, warnings, debugging === */
+void        printerr   (const char   *format, ...) RAPICORN_PRINTF (1, 2);
+void        printerr   (const std::string &msg);
+void        printout   (const char   *format, ...) RAPICORN_PRINTF (1, 2);
+inline void fatal      (const char   *format, ...) RAPICORN_PRINTF (1, 2) RAPICORN_NORETURN;
+inline void pfatal     (const char   *format, ...) RAPICORN_PRINTF (1, 2) RAPICORN_NORETURN;
+inline void error      (const char   *format, ...) RAPICORN_PRINTF (1, 2);
+inline void perror     (const char   *format, ...) RAPICORN_PRINTF (1, 2);
+inline void warning    (const char   *format, ...) RAPICORN_PRINTF (1, 2);
+inline void pwarning   (const char   *format, ...) RAPICORN_PRINTF (1, 2);
+inline void diag       (const char   *format, ...) RAPICORN_PRINTF (1, 2);
+inline void pdiag      (const char   *format, ...) RAPICORN_PRINTF (1, 2);
+inline void breakpoint ();
+
+/* === internal convenience === */
+#ifdef  RAPICORN_CONVENIENCE
+#define CHECK              RAPICORN_CHECK              // (condition)
+#define PCHECK             RAPICORN_PCHECK             // (condition)
+#define ASSERT             RAPICORN_ASSERT             // (condition)
+#define PASSERT            RAPICORN_PASSERT            // (condition)
+#define return_if_fail     RAPICORN_RETURN_IF_FAIL     // (condition)
+#define return_val_if_fail RAPICORN_RETURN_VAL_IF_FAIL // (condition, value)
+#define assert_unreached   RAPICORN_ASSERT_UNREACHED   // ()
+#define assert_not_reached RAPICORN_ASSERT_UNREACHED   // ()
+#define BREAKPOINT         Rapicorn::breakpoint        // ()
+#endif // RAPICORN_CONVENIENCE
+
+/* === logging macros === */
+#define RAPICORN_LOG(detail, ...)      do { Rapicorn::Logging::dmessage (__FILE__, __LINE__, __func__, RAPICORN_LOG_DOMAIN, (Rapicorn::Logging*) Rapicorn::Logging::Kind::detail, __VA_ARGS__); if ((Rapicorn::Logging::Kind::detail & 0x7f) == 'f') Rapicorn::Logging::abort(); } while (0)
+#define RAPICORN_PLOG(detail, ...)     do { Rapicorn::Logging::dmessage (__FILE__, __LINE__, __func__, RAPICORN_LOG_DOMAIN, (Rapicorn::Logging*) (Rapicorn::Logging::Kind::detail + 128), __VA_ARGS__); if ((Rapicorn::Logging::Kind::detail & 0x7f) == 'f') Rapicorn::Logging::abort(); } while (0)
+#define RAPICORN_LOGD(dom,detail,...)  do { Rapicorn::Logging::dmessage (NULL, -1, NULL, dom, (Rapicorn::Logging*) Rapicorn::Logging::Kind::detail, __VA_ARGS__); if ((Rapicorn::Logging::Kind::detail & 0x7f) == 'f') Rapicorn::Logging::abort(); } while (0)
+#define RAPICORN_PLOGD(dom,detail,...) do { Rapicorn::Logging::dmessage (NULL, -1, NULL, dom, (Rapicorn::Logging*) (Rapicorn::Logging::Kind::detail + 128), __VA_ARGS__); if ((Rapicorn::Logging::Kind::detail & 0x7f) == 'f') Rapicorn::Logging::abort(); } while (0)
+#define RAPICORN_DEBUG(logging, ...)   do { if (Rapicorn::Logging::debug_enabled()) { Rapicorn::Logging::dmessage (__FILE__, __LINE__, __func__, RAPICORN_LOG_DOMAIN, &logging, __VA_ARGS__); } } while (0)
+#define RAPICORN_CHECK(expr)           do { if (RAPICORN_LIKELY (expr)) break; RAPICORN_LOG (WARNING, "check failed: %s", #expr ); } while (0)
+#define RAPICORN_PCHECK(expr)          do { if (RAPICORN_LIKELY (expr)) break; RAPICORN_LOG (PWARNING, "check failed: %s", #expr ); } while (0)
+#define RAPICORN_ASSERT(expr)          do { if (RAPICORN_LIKELY (expr)) break; RAPICORN_LOG (FATAL, "assertion failed: %s", #expr ); } while (0)
+#define RAPICORN_PASSERT(expr)         do { if (RAPICORN_LIKELY (expr)) break; RAPICORN_LOG (PFATAL, "assertion failed: %s", #expr ); } while (0)
+#define RAPICORN_ASSERT_UNREACHED()    do { RAPICORN_LOG (FATAL, "unreachable assertion failed"); } while (0)
+#define RAPICORN_ASSERT_NOT_REACHED    RAPICORN_ASSERT_UNREACHED
+#define RAPICORN_RETURN_IF_FAIL(e)       do { if (RAPICORN_ISLIKELY (e)) break; RAPICORN_LOG (WARNING, "check failed: %s", #e); return; } while (0)
+#define RAPICORN_RETURN_VAL_IF_FAIL(e,v) do { if (RAPICORN_ISLIKELY (e)) break; RAPICORN_LOG (WARNING, "check failed: %s", #e); return v; } while (0)
+
+/* === implementeation details === */
+class Logging {
+  static bool   cdebug, cany, cdiag, cdevel, cverbose, cstderr, csyslog;
+  static String config;
+  const char   *detail;
+  void          add    ();
+public:
+  enum Flags { PERRNO = 1, CURTLY = 2 };
+  inline      Logging  (const char *static_detail, Flags flg = Flags (0)) : m_detail (static_detail), m_flags (flg) { add(); }
+  static void dmessage (const char *file, int line, const char *func, const char *domain,
+                        const Logging *detail, const char *format, ...) RAPICORN_PRINTF (6, 7);
+  static void vmessage (const char *file, int line, const char *func, const char *domain,
+                        const Logging *detail, const char *format, va_list vargs);
+  static void abort    () RAPICORN_NORETURN;
+  static void setup    ();
+  static inline bool debug_enabled () { return RAPICORN_UNLIKELY (cdebug); }
+  static inline bool diag_enabled  () { return RAPICORN_UNLIKELY (cdiag); }
+  struct Kind {
+    enum { FATAL = 'f', PFATAL = FATAL + 128, ERROR = 'e', PERROR = ERROR + 128,
+           WARNING = 'w', PWARNING = WARNING + 128, DIAG = 'd', PDIAG = DIAG + 128, };
+  };
+  static vector<String> debug_keys();
+private:
+  const char *m_detail;
+  const Flags m_flags;
+};
+inline Logging::Flags operator| (Logging::Flags x, Logging::Flags y) { return Logging::Flags (x | uint64 (y)); }
+inline Logging::Flags operator& (Logging::Flags x, Logging::Flags y) { return Logging::Flags (x & uint64 (y)); }
 #if (defined __i386__ || defined __x86_64__) && defined __GNUC__ && __GNUC__ >= 2
-inline void BREAKPOINT() { __asm__ __volatile__ ("int $03"); }
+inline void breakpoint() { __asm__ __volatile__ ("int $03"); }
 #elif defined __alpha__ && !defined __osf__ && defined __GNUC__ && __GNUC__ >= 2
-inline void BREAKPOINT() { __asm__ __volatile__ ("bpt"); }
+inline void breakpoint() { __asm__ __volatile__ ("bpt"); }
 #else   /* !__i386__ && !__alpha__ */
-inline void BREAKPOINT() { raise_sigtrap(); }
-#endif  /* __i386__ */
+inline void breakpoint() { __builtin_trap(); }
+#endif
 
 /* --- threading implementaiton bit --- */
 extern RapicornThreadTable ThreadTable; /* private, provided by rapicornthreadimpl.cc */
@@ -712,26 +744,22 @@ public:
 
 /* --- implementation --- */
 void _rapicorn_init_threads (void);
-extern bool info_needed;
-void info_always (const String &s);
-inline void
-info (const char   *format, ...)
-{
-  if (RAPICORN_UNLIKELY (info_needed))
-    {
-      va_list args;
-      va_start (args, format);
-      String s = string_vprintf (format, args);
-      va_end (args);
-      info_always (s);
-    }
-}
-inline void
-info (const String &s)
-{
-  if (RAPICORN_UNLIKELY (info_needed))
-    info_always (s);
-}
+#define RAPICORN_MESSAGE_DEFUN(func,detail,preop,postop)                \
+  inline void func (const char *format, ...) { preop;                   \
+  va_list args; va_start (args, format);                                \
+  Rapicorn::Logging::vmessage (NULL, -1, NULL, RAPICORN_LOG_DOMAIN,     \
+                               (const Rapicorn::Logging*) (detail),     \
+                               format, args);                           \
+  va_end (args); postop; }
+RAPICORN_MESSAGE_DEFUN (fatal, 'f',, Rapicorn::Logging::abort());
+RAPICORN_MESSAGE_DEFUN (pfatal, 'f' + 128,, Rapicorn::Logging::abort());
+RAPICORN_MESSAGE_DEFUN (error, 'e',,);
+RAPICORN_MESSAGE_DEFUN (perror, 'e' + 128,,);
+RAPICORN_MESSAGE_DEFUN (warning, 'w',,);
+RAPICORN_MESSAGE_DEFUN (pwarning, 'w' + 128,,);
+RAPICORN_MESSAGE_DEFUN (diag, 'd', if (!Rapicorn::Logging::diag_enabled()) return,);
+RAPICORN_MESSAGE_DEFUN (pdiag, 'd' + 128, if (!Rapicorn::Logging::diag_enabled()) return,);
+#undef RAPICORN_MESSAGE_DEFUN
 
 } // Rapicorn
 

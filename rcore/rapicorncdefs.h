@@ -77,6 +77,7 @@ RAPICORN_EXTERN_C_BEGIN();
 #define	RAPICORN_LIKELY			RAPICORN_ISLIKELY
 
 /* --- assertions and runtime errors --- */
+#ifndef __cplusplus
 #define RAPICORN_RETURN_IF_FAIL(e)	 do { if (RAPICORN_ISLIKELY (e)) break; RAPICORN__RUNTIME_PROBLEM ('R', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, "%s", #e); return; } while (0)
 #define RAPICORN_RETURN_VAL_IF_FAIL(e,v) do { if (RAPICORN_ISLIKELY (e)) break; RAPICORN__RUNTIME_PROBLEM ('R', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, "%s", #e); return v; } while (0)
 #define RAPICORN_ASSERT(e)		 do { if (RAPICORN_ISLIKELY (e)) break; RAPICORN__RUNTIME_PROBLEM ('A', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, "%s", #e); while (1) *(void*volatile*)0; } while (0)
@@ -84,6 +85,7 @@ RAPICORN_EXTERN_C_BEGIN();
 #define RAPICORN_WARNING(...)		 do { RAPICORN__RUNTIME_PROBLEM ('W', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, __VA_ARGS__); } while (0)
 #define RAPICORN_ERROR(...)		 do { RAPICORN__RUNTIME_PROBLEM ('E', RAPICORN_LOG_DOMAIN, __FILE__, __LINE__, RAPICORN_SIMPLE_FUNCTION, __VA_ARGS__); RAPICORN_ABORT_NORETURN(); } while (0)
 #define RAPICORN_ABORT_NORETURN()	 rapicorn_abort_noreturn()
+#endif
 
 /* --- convenient aliases --- */
 #ifdef  RAPICORN_INTERNALS
@@ -91,11 +93,6 @@ RAPICORN_EXTERN_C_BEGIN();
 #define	UNLIKELY		RAPICORN_UNLIKELY
 #define	LIKELY			RAPICORN_LIKELY
 #define	STRINGIFY               RAPICORN_CPP_STRINGIFY
-#define	return_if_fail		RAPICORN_RETURN_IF_FAIL
-#define	return_val_if_fail	RAPICORN_RETURN_VAL_IF_FAIL
-#define	assert_not_reached	RAPICORN_ASSERT_NOT_REACHED
-#undef  assert
-#define	assert			RAPICORN_ASSERT
 #endif /* RAPICORN_INTERNALS */
 
 /* --- preprocessor pasting --- */
