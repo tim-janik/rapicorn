@@ -182,11 +182,18 @@ rapicorn_parse_settings_and_args (InitValue *value,
 static struct _InternalConstructorTest_lrcc0 { int v; _InternalConstructorTest_lrcc0() : v (0x12affe17) {} } _internalconstructortest;
 
 static String program_argv0 = "";
+static String program_cwd = "";
 
 String
 process_name ()
 {
   return program_argv0;
+}
+
+String
+process_cwd ()
+{
+  return program_cwd;
 }
 
 /**
@@ -215,6 +222,8 @@ rapicorn_init_core (int        *argcp,
   /* update program/application name upon repeated initilization */
   if (argcp && *argcp && argvp && (*argvp)[0] && (*argvp)[0][0] != 0 && program_argv0.size() == 0)
     program_argv0 = (*argvp)[0];
+  if (program_cwd.empty())
+    program_cwd = Path::cwd();
   char *prg_name = argcp && *argcp ? g_path_get_basename ((*argvp)[0]) : NULL;
   if (rapicorn_init_settings != NULL)
     {
@@ -348,6 +357,7 @@ bool   Logging::cdevel = true;
 bool   Logging::cverbose = false;
 bool   Logging::cstderr = true;
 bool   Logging::csyslog = false;
+String Logging::logfile = "";
 String Logging::config = "debug";
 
 void
@@ -395,6 +405,24 @@ Logging::setup ()
         }
       printerr ("Rapicorn::Logging: configuration help, available keys for $RAPICORN:\n%s\n",
                 keys.c_str());
+    }
+  if (logfile.empty())
+    {
+      const char *start = str.c_str(), *p = start, *last = NULL;
+      while ((p = strstr (p, "logfile=")) && *p)
+        {
+          if (p == start || strchr (":;,", p[-1]))
+            last = p;
+          p++;
+        }
+      if (last && last[8])
+        {
+          start = last + 8;
+          p = start;
+          while (*p && !strchr (":;,", *p))
+            p++;
+          logfile = String (start, p - start);
+        }
     }
 }
 
@@ -451,6 +479,9 @@ Logging::vmessage (const char *file, int line, const char *func, const char *dom
         default: break;
         }
     }
+  String l = file ? string_printf ("%s:%u:", file, line) : "";
+  String d = domain && !file ? string_printf ("%s:", domain) : "";
+  String f = func ? string_printf ("%s():", func) : "";
   String u = string_vprintf (format, vargs);
   String e = perrno ? String (": ") + strerror (saved_errno) : "";
   bool fatal_abort = kind == 'f' || (kind == 'e' && cdevel);
@@ -466,39 +497,69 @@ Logging::vmessage (const char *file, int line, const char *func, const char *dom
             n = n.substr (ptr - n.c_str() + 1);
         }
       String p = string_printf ("%s[%u]:", n.c_str(), Thread::Self::pid());
-      String l = file ? string_printf ("%s:%u:", file, line) : "";
-      String d = domain && !file ? string_printf ("%s:", domain) : "";
-      String f = func ? string_printf ("%s():", func) : "";
       String k = !key.empty() ? string_printf ("%s:", key.c_str()) : "";
-      String sk = " " + k;
+      String sk = key.empty() ? "" : " " + k;
       String m = kind && strchr ("feau", kind) ? "\n" : ""; // newline before aborting
       if (curtly)
-        m += k + " " + string_vprintf (format, vargs) + e;
+        m += k + " " + u + e;
       else if (cverbose)
         m += p + l + d + f + sk + " " + u + e;
       else if (debugging)
-        m += l + d + sk + " " + string_vprintf (format, vargs) + e;
+        m += l + d + sk + " " + u + e;
       else
-        m += p + sk + " " + string_vprintf (format, vargs) + e;
+        m += p + sk + " " + u + e;
       if (m[m.size() - 1] != '\n') m += "\n"; // newline termination
       printerr ("%s", m.c_str());
     }
+  // logfile
+  if (!logfile.empty())
+    {
+      static int logfd = 0;
+      if (once_enter (&logfd))
+        {
+          int fd;
+          do
+            fd = open (Path::abspath (logfile).c_str(), O_WRONLY | O_CREAT | O_APPEND | O_NOCTTY, 0666);
+          while (logfd < 0 && errno == EINTR);
+          if (fd == 0) // invalid initialization value
+            {
+              fd = dup (fd);
+              close (0);
+            }
+          once_leave (&logfd, fd);
+        }
+      String n = process_name();
+      String p = string_printf ("%s[%u]:", n.c_str(), Thread::Self::pid());
+      if (logfd > 0)
+        {
+          String k = !key.empty() ? string_printf (" %s:", key.c_str()) : "";
+          String m = p + l + d + f + k + " " + u + e;
+          if (m[m.size() - 1] != '\n') m += "\n"; // newline termination
+          if (fatal_abort)
+            m += "aborting...\n";
+          int err;
+          do
+            err = write (logfd, m.data(), m.size());
+          while (err < 0 && (errno == EINTR || errno == EAGAIN));
+        }
+    }
   // syslog
-  if (csyslog)
+  if (csyslog || fatal_abort)
     {
       static bool opened = false;
-      if (!opened)
+      if (once_enter (&opened))
         {
-          opened = true;
           openlog (NULL, LOG_PID, LOG_USER);
+          once_leave (&opened, true);
         }
+      bool verbose = cverbose || fatal_abort;
       String k = !key.empty() ? string_printf ("%s:", key.c_str()) : "";
       String c;
-      if (cverbose && file)
+      if (verbose && file)
         c = string_printf ("(%s:%u) ", file, line);
-      else if (cverbose && func)
+      else if (verbose && func)
         c = string_printf ("(%s) ", func);
-      else if (cverbose && domain)
+      else if (verbose && domain)
         c = string_printf ("(%s) ", domain);
       if (!key.empty() && !c.empty())
         c = " " + c;
@@ -1446,6 +1507,20 @@ basename (const String &path)
   String bname = gbase;
   g_free (gbase);
   return bname;
+}
+
+String
+abspath (const String &path,
+         const String &incwd)
+{
+  if (isabs (path))
+    return path;
+  if (!incwd.empty())
+    return join (incwd, path);
+  String pcwd = process_cwd();
+  if (!pcwd.empty())
+    return join (pcwd, path);
+  return join (cwd(), path);
 }
 
 bool

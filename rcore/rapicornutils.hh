@@ -128,6 +128,7 @@ double       init_value_double  (InitValue  *value);
 int64        init_value_int     (InitValue  *value);
 String       process_handle     ();
 String       process_name       ();
+String       process_cwd        ();
 
 /* --- initialization hooks --- */
 class InitHook : protected NonCopyable {
@@ -186,7 +187,7 @@ inline void breakpoint ();
 /* === implementeation details === */
 class Logging {
   static bool   cdebug, cany, cdiag, cdevel, cverbose, cstderr, csyslog;
-  static String config;
+  static String config, logfile;
   const char   *detail;
   void          add    ();
 public:
@@ -303,6 +304,7 @@ bool    text_convert    (const String &to_charset,
 namespace Path {
 String  dirname         (const String &path);
 String  basename        (const String &path);
+String  abspath         (const String &path, const String &incwd = "");
 bool    isabs           (const String &path);
 bool    isdirname       (const String &path);
 String  skip_root       (const String &path);
