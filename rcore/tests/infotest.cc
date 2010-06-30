@@ -331,6 +331,16 @@ main (int   argc,
 
   rapicorn_init_test (&argc, &argv);
 
+  if (argc >= 2 && String ("--test-logging") == argv[1])
+    {
+      static Rapicorn::Logging testing_debug = Rapicorn::Logging ("testing");
+      RAPICORN_DEBUG (testing_debug, "logging test selected via: --test-logging");
+      pdiag ("diagnostics on the last errno assignment");
+      warning ("the next logging message might abort the program");
+      error ("we're approaching serious conditions that may lead to abort()");
+      fatal ("at this point, program aborting is certain");
+    }
+
   Test::add ("Misc", test_misc);
   Test::add ("CpuInfo", test_cpu_info);
   Test::add ("Regex Tests", test_regex);
