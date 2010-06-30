@@ -66,24 +66,28 @@ public:
   virtual ClickType click_type () const                 { return m_click_type; }
   virtual void      click_type (ClickType click_type_v) { reset(); m_click_type = click_type_v; }
   bool
-  activate_command()
+  activate_button_command (int button)
   {
-    if (m_button >= 1 && m_button <= 3 && m_on_click[m_button - 1] != "")
+    if (button >= 1 && button <= 3 && m_on_click[button - 1] != "")
       {
-        exec_command (m_on_click[m_button - 1]);
+        exec_command (m_on_click[button - 1]);
         return TRUE;
       }
     else
       return FALSE;
   }
+  bool
+  activate_command()
+  { return activate_button_command (m_button); }
   void
-  activate_click (EventType etype)
+  activate_click (int       button,
+                  EventType etype)
   {
     bool need_repeat = etype == BUTTON_PRESS && (m_click_type == CLICK_KEY_REPEAT || m_click_type == CLICK_SLOW_REPEAT || m_click_type == CLICK_FAST_REPEAT);
     bool need_click = need_repeat;
     need_click |= etype == BUTTON_PRESS && m_click_type == CLICK_ON_PRESS;
     need_click |= etype == BUTTON_RELEASE && m_click_type == CLICK_ON_RELEASE;
-    bool can_exec = need_click && activate_command();
+    bool can_exec = need_click && activate_button_command (button);
     need_repeat &= can_exec;
     if (need_repeat && !m_repeater)
       {
@@ -154,7 +158,7 @@ public:
             if (inbutton && can_focus())
               grab_focus();
             view.get_root()->add_grab (view);
-            activate_click (inbutton ? BUTTON_PRESS : BUTTON_CANCELED);
+            activate_click (bevent->button, inbutton ? BUTTON_PRESS : BUTTON_CANCELED);
             handled = true;
           }
         break;
@@ -168,9 +172,10 @@ public:
           {
             bool inbutton = view.prelight();
             view.get_root()->remove_grab (view);
-            activate_click (inbutton && proper_release ? BUTTON_RELEASE : BUTTON_CANCELED);
-            view.impressed (false);
             m_button = 0;
+            // activation may recurse here
+            activate_click (bevent->button, inbutton && proper_release ? BUTTON_RELEASE : BUTTON_CANCELED);
+            view.impressed (false);
             handled = true;
           }
         break;
