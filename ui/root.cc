@@ -406,7 +406,7 @@ RootImpl::dispatch_button_press (const EventButton &bevent)
         if (m_button_state_map[bs] == 0)                /* no press delivered for <button> on <item> yet */
           {
             m_button_state_map[bs] = press_count;       /* record single press */
-            handled = (*it)->process_event (bevent);
+            handled = (*it)->process_event (bevent);    // modifies m_last_entered_children + this
           }
       }
   return handled;
@@ -416,11 +416,12 @@ bool
 RootImpl::dispatch_button_release (const EventButton &bevent)
 {
   bool handled = false;
-  for (map<ButtonState,uint>::iterator it = m_button_state_map.begin(); it != m_button_state_map.end();)
+ restart:
+  for (map<ButtonState,uint>::iterator it = m_button_state_map.begin();
+       it != m_button_state_map.end(); it++)
     {
-      const ButtonState &bs = it->first;
+      const ButtonState bs = it->first;
       // uint press_count = it->second;
-      map<ButtonState,uint>::iterator current = it++;
       if (bs.button == bevent.button)
         {
 #if 0 // FIXME
@@ -429,8 +430,9 @@ RootImpl::dispatch_button_release (const EventButton &bevent)
           else if (press_count == 2)
             bevent.type = BUTTON_2RELEASE;
 #endif
-          handled |= bs.item->process_event (bevent);
-          m_button_state_map.erase (current);
+          m_button_state_map.erase (it);
+          handled |= bs.item->process_event (bevent); // modifies m_button_state_map + this
+          goto restart; // restart bs.button search
         }
     }
   // bevent.type = BUTTON_RELEASE;
@@ -454,16 +456,16 @@ RootImpl::cancel_item_events (Item *item)
         }
     }
   /* cancel button press events */
-  for (map<ButtonState,uint>::iterator it = m_button_state_map.begin(); it != m_button_state_map.end();)
+  while (m_button_state_map.begin() != m_button_state_map.end())
     {
-      const ButtonState &bs = it->first;
-      map<ButtonState,uint>::iterator current = it++;
+      map<ButtonState,uint>::iterator it = m_button_state_map.begin();
+      const ButtonState bs = it->first;
+      m_button_state_map.erase (it);
       if (bs.item == item || !item)
         {
           EventButton *bevent = create_event_button (BUTTON_CANCELED, m_last_event_context, bs.button);
-          bs.item->process_event (*bevent);
+          bs.item->process_event (*bevent); // modifies m_button_state_map + this
           delete bevent;
-          m_button_state_map.erase (current);
         }
     }
 }
