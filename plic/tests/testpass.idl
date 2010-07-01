@@ -302,6 +302,29 @@ interface MethodTestInterface {
   QuickIface     method_with_quickiface (QuickIface     input, QuickIface    iface0 = 0);
 };
 
+interface SignalTestInterface {
+  signal void                void_result      ();
+  signal bool                bool_result      ();
+  signal int                 int_result       ();
+  signal float               float_result     ();
+  signal string              string_result    ();
+  signal QuickEnum           enum_result      ();
+  signal QuickRecord         record_result    ();
+  signal QuickSequence       sequence_result  ();
+  signal GrandChild          interface_result ();
+  signal SignalTestInterface self_result      ();
+  signal void                void_arg         ();
+  signal void                bool_arg         (bool b);
+  signal void                int_arg          (int i);
+  signal void                float_arg        (float f);
+  signal void                string_arg       (string s);
+  signal void                enum_arg         (QuickEnum e);
+  signal void                record_arg       (QuickRecord r);
+  signal void                sequence_arg     (QuickSequence s);
+  signal void                interface_arg    (GrandChild i);
+  signal void                self_args        (SignalTestInterface self_);
+};
+
 }
 
 include "include-p1.idl"; // test includes
