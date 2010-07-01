@@ -427,6 +427,14 @@ Logging::setup ()
           logfile = String (start, p - start);
         }
     }
+  /* Logging configuration implemented in here:
+   * Message  Syslog Stable Devel Abort Option
+   * fatal:     [*]   [*]   [*]   [*]     -
+   * error:     [D]   [*]   [*]   [D]     -
+   * warning:   [ ]   [*]   [*]   [ ]     -
+   * diag:      [ ]   [ ]   [*]   [ ]   diag/devel/log-all
+   * debug:     [ ]   [ ]   [ ]   [ ]   log-all/debug/debug-*
+   */
 }
 
 void
