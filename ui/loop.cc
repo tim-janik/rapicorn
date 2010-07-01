@@ -170,16 +170,10 @@ public:
   virtual bool check_sources    (int                  &max_priority,
                                  const vector<PollFD> &pfds);
   virtual void dispatch_sources (const int             max_priority);
-  void
-  wakeup_L (void)
-  {
-    rapicorn_eventfd.wakeup();
-  }
   virtual void
   wakeup (void)
   {
-    ScopedLock<Mutex> locker (m_mutex);
-    wakeup_L();
+    rapicorn_eventfd.wakeup();
   }
   virtual uint
   add_source (Source   *source,
@@ -196,7 +190,7 @@ public:
     source->m_priority = priority;
     SourceList &slist = m_sources[priority];
     slist.push_back (source);
-    wakeup_L();
+    wakeup();
     return source->m_id;
   }
   void
@@ -234,7 +228,7 @@ public:
         real_remove_Lm (source);
         source = find_first();
       }
-    wakeup_L();
+    wakeup();
     if (keepref)
       unref (this);
   }
