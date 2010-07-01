@@ -368,7 +368,7 @@ Logging::setup ()
   String str = s ? s : "";
   std::transform (str.begin(), str.end(), str.begin(), ::tolower);
   config = str;
-  const ssize_t wall = lstring_find_word (str, "all");
+  const ssize_t wall = lstring_find_word (str, "log-all");
   const ssize_t wvrb = lstring_find_word (str, "verbose");
   const ssize_t wbrf = lstring_find_word (str, "brief");
   const ssize_t wdbg = lstring_find_word (str, "debug"); // debug any
@@ -397,8 +397,8 @@ Logging::setup ()
   cnfsyslog = bool (wnfs);
   if (whlp)
     {
-      String keys = "  all:verbose:brief:debug:no-debug:devel:stable:help\n"
-                    "  diag:no-diag:stderr:no-stderr:syslog:no-syslog\n"
+      String keys = "  log-all:verbose:brief:debug:no-debug:devel:stable\n"
+                    "  help:diag:no-diag:stderr:no-stderr:syslog:no-syslog\n"
                     "  debug-*:no-debug-*: (where * is a custom debug prefix)";
       vector<String> dk = Logging::debug_keys();
       for (uint i = 0; i < dk.size(); i++)
