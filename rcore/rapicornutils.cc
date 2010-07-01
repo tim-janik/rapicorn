@@ -357,6 +357,7 @@ bool   Logging::cdevel = true;
 bool   Logging::cverbose = false;
 bool   Logging::cstderr = true;
 bool   Logging::csyslog = false;
+bool   Logging::cnfsyslog = false;
 String Logging::logfile = "";
 String Logging::config = "debug";
 
@@ -382,6 +383,7 @@ Logging::setup ()
   const ssize_t wsys = lstring_find_word (str, "syslog");
   const ssize_t wnsy = lstring_find_word (str, "no-syslog");
   const ssize_t whlp = lstring_find_word (str, "help");
+  const ssize_t wnfs = lstring_find_word (str, "no-fatal-syslog");
   // due to LSTRING_OFFSET, we can use bool(default)
   const ssize_t devel1 = MAX (bool (RAPICORN_DEVEL_VERSION), MAX (wall, wdev));
   const ssize_t devel0 = MAX (wstb, wndv);
@@ -392,6 +394,7 @@ Logging::setup ()
   cdebug = cany || lstring_find_word (str, "debug", '-');
   cstderr = MAX (bool (1), wyse) > wnse;
   csyslog = wsys > wnsy;
+  cnfsyslog = bool (wnfs);
   if (whlp)
     {
       String keys = "  all:verbose:brief:debug:no-debug:devel:stable:help\n"
@@ -435,7 +438,7 @@ Logging::abort()
 
 void
 Logging::dmessage (const char *file, int line, const char *func, const char *domain,
-                   const Logging *detail, const char *format, ...)
+                   const Logging &detail, const char *format, ...)
 {
   va_list args;
   va_start (args, format);
@@ -445,10 +448,10 @@ Logging::dmessage (const char *file, int line, const char *func, const char *dom
 
 void
 Logging::vmessage (const char *file, int line, const char *func, const char *domain,
-                   const Logging *detail, const char *format, va_list vargs)
+                   const Logging &detail, const char *format, va_list vargs)
 {
   const int saved_errno = errno;
-  const ptrdiff_t a = ptrdiff_t (detail);
+  const size_t a = size_t (&detail);
   const bool debugging = a >= 256;
   bool curtly = false;
   char kind = 0, perrno = 0;
@@ -456,9 +459,9 @@ Logging::vmessage (const char *file, int line, const char *func, const char *dom
   String key;
   if (debugging)
     {
-      perrno = detail->m_flags & PERRNO;
-      curtly = detail->m_flags & CURTLY;
-      key = String ("debug-") + detail->m_detail;
+      perrno = detail.m_flags & PERRNO;
+      curtly = detail.m_flags & CURTLY;
+      key = String ("debug-") + detail.m_detail;
       String lookup = key;
       std::transform (lookup.begin(), lookup.end(), lookup.begin(), ::tolower);
       const ssize_t wyes = lstring_find_word (config, lookup);
@@ -544,7 +547,7 @@ Logging::vmessage (const char *file, int line, const char *func, const char *dom
         }
     }
   // syslog
-  if (csyslog || fatal_abort)
+  if (csyslog || (fatal_abort && !cnfsyslog))
     {
       static bool opened = false;
       if (once_enter (&opened))

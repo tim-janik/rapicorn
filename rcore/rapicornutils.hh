@@ -170,11 +170,11 @@ inline void breakpoint ();
 #endif // RAPICORN_CONVENIENCE
 
 /* === logging macros === */
-#define RAPICORN_LOG(detail, ...)      do { Rapicorn::Logging::dmessage (__FILE__, __LINE__, __func__, RAPICORN_LOG_DOMAIN, (Rapicorn::Logging*) Rapicorn::Logging::Kind::detail, __VA_ARGS__); if ((Rapicorn::Logging::Kind::detail & 0x7f) == 'f') Rapicorn::Logging::abort(); } while (0)
-#define RAPICORN_PLOG(detail, ...)     do { Rapicorn::Logging::dmessage (__FILE__, __LINE__, __func__, RAPICORN_LOG_DOMAIN, (Rapicorn::Logging*) (Rapicorn::Logging::Kind::detail + 128), __VA_ARGS__); if ((Rapicorn::Logging::Kind::detail & 0x7f) == 'f') Rapicorn::Logging::abort(); } while (0)
-#define RAPICORN_LOGD(dom,detail,...)  do { Rapicorn::Logging::dmessage (NULL, -1, NULL, dom, (Rapicorn::Logging*) Rapicorn::Logging::Kind::detail, __VA_ARGS__); if ((Rapicorn::Logging::Kind::detail & 0x7f) == 'f') Rapicorn::Logging::abort(); } while (0)
-#define RAPICORN_PLOGD(dom,detail,...) do { Rapicorn::Logging::dmessage (NULL, -1, NULL, dom, (Rapicorn::Logging*) (Rapicorn::Logging::Kind::detail + 128), __VA_ARGS__); if ((Rapicorn::Logging::Kind::detail & 0x7f) == 'f') Rapicorn::Logging::abort(); } while (0)
-#define RAPICORN_DEBUG(logging, ...)   do { if (Rapicorn::Logging::debug_enabled()) { Rapicorn::Logging::dmessage (__FILE__, __LINE__, __func__, RAPICORN_LOG_DOMAIN, &logging, __VA_ARGS__); } } while (0)
+#define RAPICORN_LOG(detail, ...)      do { Rapicorn::Logging::dmessage (__FILE__, __LINE__, __func__, RAPICORN_LOG_DOMAIN, *(Rapicorn::Logging*) Rapicorn::Logging::Kind::detail, __VA_ARGS__); if ((Rapicorn::Logging::Kind::detail & 0x7f) == 'f') Rapicorn::Logging::abort(); } while (0)
+#define RAPICORN_PLOG(detail, ...)     do { Rapicorn::Logging::dmessage (__FILE__, __LINE__, __func__, RAPICORN_LOG_DOMAIN, *(Rapicorn::Logging*) (Rapicorn::Logging::Kind::detail + 128), __VA_ARGS__); if ((Rapicorn::Logging::Kind::detail & 0x7f) == 'f') Rapicorn::Logging::abort(); } while (0)
+#define RAPICORN_LOGD(dom,detail,...)  do { Rapicorn::Logging::dmessage (NULL, -1, NULL, dom, *(Rapicorn::Logging*) Rapicorn::Logging::Kind::detail, __VA_ARGS__); if ((Rapicorn::Logging::Kind::detail & 0x7f) == 'f') Rapicorn::Logging::abort(); } while (0)
+#define RAPICORN_PLOGD(dom,detail,...) do { Rapicorn::Logging::dmessage (NULL, -1, NULL, dom, *(Rapicorn::Logging*) (Rapicorn::Logging::Kind::detail + 128), __VA_ARGS__); if ((Rapicorn::Logging::Kind::detail & 0x7f) == 'f') Rapicorn::Logging::abort(); } while (0)
+#define RAPICORN_DEBUG(logging, ...)   do { if (Rapicorn::Logging::debug_enabled()) { Rapicorn::Logging::dmessage (__FILE__, __LINE__, __func__, RAPICORN_LOG_DOMAIN, logging, __VA_ARGS__); } } while (0)
 #define RAPICORN_CHECK(expr)           do { if (RAPICORN_LIKELY (expr)) break; RAPICORN_LOG (WARNING, "check failed: %s", #expr ); } while (0)
 #define RAPICORN_PCHECK(expr)          do { if (RAPICORN_LIKELY (expr)) break; RAPICORN_LOG (PWARNING, "check failed: %s", #expr ); } while (0)
 #define RAPICORN_ASSERT(expr)          do { if (RAPICORN_LIKELY (expr)) break; RAPICORN_LOG (FATAL, "assertion failed: %s", #expr ); } while (0)
@@ -186,7 +186,7 @@ inline void breakpoint ();
 
 /* === implementeation details === */
 class Logging {
-  static bool   cdebug, cany, cdiag, cdevel, cverbose, cstderr, csyslog;
+  static bool   cdebug, cany, cdiag, cdevel, cverbose, cstderr, csyslog, cnfsyslog;
   static String config, logfile;
   const char   *detail;
   void          add    ();
@@ -194,9 +194,9 @@ public:
   enum Flags { PERRNO = 1, CURTLY = 2 };
   inline      Logging  (const char *static_detail, Flags flg = Flags (0)) : m_detail (static_detail), m_flags (flg) { add(); }
   static void dmessage (const char *file, int line, const char *func, const char *domain,
-                        const Logging *detail, const char *format, ...) RAPICORN_PRINTF (6, 7);
+                        const Logging &detail, const char *format, ...) RAPICORN_PRINTF (6, 7);
   static void vmessage (const char *file, int line, const char *func, const char *domain,
-                        const Logging *detail, const char *format, va_list vargs);
+                        const Logging &detail, const char *format, va_list vargs);
   static void abort    () RAPICORN_NORETURN;
   static void setup    ();
   static inline bool debug_enabled () { return RAPICORN_UNLIKELY (cdebug); }
@@ -750,7 +750,7 @@ void _rapicorn_init_threads (void);
   inline void func (const char *format, ...) { preop;                   \
   va_list args; va_start (args, format);                                \
   Rapicorn::Logging::vmessage (NULL, -1, NULL, RAPICORN_LOG_DOMAIN,     \
-                               (const Rapicorn::Logging*) (detail),     \
+                               *(const Rapicorn::Logging*) (detail),    \
                                format, args);                           \
   va_end (args); postop; }
 RAPICORN_MESSAGE_DEFUN (fatal, 'f',, Rapicorn::Logging::abort());
