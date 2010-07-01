@@ -135,7 +135,7 @@ TSTTMP = $(strip xtst$(strip $(1))-$(@F).tmp)
 # $(call TSTREF) - test reference filename
 TSTREF = $(strip $(@F).ref)
 # $(call TSTRESULT, [exitcode]) - print test result (from shell exit code)
-TSTRESULT = _e=$(or $(1), $$?);$(call TSTRESULT_MSG, $$_e);[ $$_e = 0 ]||exit $$_e
+TSTRESULT = { _e=$(or $(1), $$?);$(call TSTRESULT_MSG, $$_e);[ $$_e = 0 ]||exit $$_e ;}
 TSTRESULT_MSG = echo $${FAILOK:$$(($(or $(1), $$?)?0:6)):6}
 export FAILOK = FAIL  OK
 # $(call TSTCMP, [TSTREFERENCE], [TSTOUT]) - TSTCMP_KEEPOUT + TSTOUT cleanup
