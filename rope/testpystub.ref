@@ -471,6 +471,130 @@ class MethodTestInterface (_BaseClass_):
     ___ret = _CPY._PLIC_InterfaceTests__MethodTestInterface_method_with_quickiface_InterfaceTests__QuickIface_InterfaceTests__QuickIface_InterfaceTests__QuickIface (self, input, iface0)
     return ___ret
 
+class SignalTestInterface (_BaseClass_):
+  def __init__ (self, _plic_id):
+    super (SignalTestInterface, self).__init__ (_plic_id)
+    self.sig_void_result = __Signal__ ('void_result')
+    self.sig_bool_result = __Signal__ ('bool_result')
+    self.sig_int_result = __Signal__ ('int_result')
+    self.sig_float_result = __Signal__ ('float_result')
+    self.sig_string_result = __Signal__ ('string_result')
+    self.sig_enum_result = __Signal__ ('enum_result')
+    self.sig_record_result = __Signal__ ('record_result')
+    self.sig_sequence_result = __Signal__ ('sequence_result')
+    self.sig_interface_result = __Signal__ ('interface_result')
+    self.sig_self_result = __Signal__ ('self_result')
+    self.sig_void_arg = __Signal__ ('void_arg')
+    self.sig_bool_arg = __Signal__ ('bool_arg')
+    self.sig_int_arg = __Signal__ ('int_arg')
+    self.sig_float_arg = __Signal__ ('float_arg')
+    self.sig_string_arg = __Signal__ ('string_arg')
+    self.sig_enum_arg = __Signal__ ('enum_arg')
+    self.sig_record_arg = __Signal__ ('record_arg')
+    self.sig_sequence_arg = __Signal__ ('sequence_arg')
+    self.sig_interface_arg = __Signal__ ('interface_arg')
+    self.sig_self_args = __Signal__ ('self_args')
+  def __sig_void_result__ (self): pass # default handler
+  def sig_void_result_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_void_result_void (self, func, 0)
+  def sig_void_result_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_void_result_void (self, None, connection_id)
+  def __sig_bool_result__ (self): pass # default handler
+  def sig_bool_result_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_bool_result_bool (self, func, 0)
+  def sig_bool_result_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_bool_result_bool (self, None, connection_id)
+  def __sig_int_result__ (self): pass # default handler
+  def sig_int_result_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_int_result_int (self, func, 0)
+  def sig_int_result_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_int_result_int (self, None, connection_id)
+  def __sig_float_result__ (self): pass # default handler
+  def sig_float_result_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_float_result_float (self, func, 0)
+  def sig_float_result_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_float_result_float (self, None, connection_id)
+  def __sig_string_result__ (self): pass # default handler
+  def sig_string_result_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_string_result_string (self, func, 0)
+  def sig_string_result_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_string_result_string (self, None, connection_id)
+  def __sig_enum_result__ (self): pass # default handler
+  def sig_enum_result_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_enum_result_InterfaceTests__QuickEnum (self, func, 0)
+  def sig_enum_result_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_enum_result_InterfaceTests__QuickEnum (self, None, connection_id)
+  def __sig_record_result__ (self): pass # default handler
+  def sig_record_result_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_record_result_InterfaceTests__QuickRecord (self, func, 0)
+  def sig_record_result_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_record_result_InterfaceTests__QuickRecord (self, None, connection_id)
+  def __sig_sequence_result__ (self): pass # default handler
+  def sig_sequence_result_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_sequence_result_InterfaceTests__QuickSequence (self, func, 0)
+  def sig_sequence_result_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_sequence_result_InterfaceTests__QuickSequence (self, None, connection_id)
+  def __sig_interface_result__ (self): pass # default handler
+  def sig_interface_result_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_interface_result_InterfaceTests__GrandChild (self, func, 0)
+  def sig_interface_result_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_interface_result_InterfaceTests__GrandChild (self, None, connection_id)
+  def __sig_self_result__ (self): pass # default handler
+  def sig_self_result_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_self_result_InterfaceTests__SignalTestInterface (self, func, 0)
+  def sig_self_result_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_self_result_InterfaceTests__SignalTestInterface (self, None, connection_id)
+  def __sig_void_arg__ (self): pass # default handler
+  def sig_void_arg_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_void_arg_void (self, func, 0)
+  def sig_void_arg_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_void_arg_void (self, None, connection_id)
+  def __sig_bool_arg__ (self): pass # default handler
+  def sig_bool_arg_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_bool_arg_void_bool (self, func, 0)
+  def sig_bool_arg_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_bool_arg_void_bool (self, None, connection_id)
+  def __sig_int_arg__ (self): pass # default handler
+  def sig_int_arg_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_int_arg_void_int (self, func, 0)
+  def sig_int_arg_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_int_arg_void_int (self, None, connection_id)
+  def __sig_float_arg__ (self): pass # default handler
+  def sig_float_arg_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_float_arg_void_float (self, func, 0)
+  def sig_float_arg_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_float_arg_void_float (self, None, connection_id)
+  def __sig_string_arg__ (self): pass # default handler
+  def sig_string_arg_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_string_arg_void_string (self, func, 0)
+  def sig_string_arg_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_string_arg_void_string (self, None, connection_id)
+  def __sig_enum_arg__ (self): pass # default handler
+  def sig_enum_arg_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_enum_arg_void_InterfaceTests__QuickEnum (self, func, 0)
+  def sig_enum_arg_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_enum_arg_void_InterfaceTests__QuickEnum (self, None, connection_id)
+  def __sig_record_arg__ (self): pass # default handler
+  def sig_record_arg_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_record_arg_void_InterfaceTests__QuickRecord (self, func, 0)
+  def sig_record_arg_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_record_arg_void_InterfaceTests__QuickRecord (self, None, connection_id)
+  def __sig_sequence_arg__ (self): pass # default handler
+  def sig_sequence_arg_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_sequence_arg_void_InterfaceTests__QuickSequence (self, func, 0)
+  def sig_sequence_arg_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_sequence_arg_void_InterfaceTests__QuickSequence (self, None, connection_id)
+  def __sig_interface_arg__ (self): pass # default handler
+  def sig_interface_arg_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_interface_arg_void_InterfaceTests__GrandChild (self, func, 0)
+  def sig_interface_arg_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_interface_arg_void_InterfaceTests__GrandChild (self, None, connection_id)
+  def __sig_self_args__ (self): pass # default handler
+  def sig_self_args_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_self_args_void_InterfaceTests__SignalTestInterface (self, func, 0)
+  def sig_self_args_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface_self_args_void_InterfaceTests__SignalTestInterface (self, None, connection_id)
+
 class ButtonArea (_BaseClass_):
   def __init__ (self, _plic_id):
     super (ButtonArea, self).__init__ (_plic_id)

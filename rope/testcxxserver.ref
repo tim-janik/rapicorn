@@ -584,6 +584,67 @@ public:
   inline operator  I_MethodTestInterface_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
+class I_SignalTestInterface_Iface : public virtual Plic::SimpleServer {
+protected:
+  explicit                 I_SignalTestInterface_Iface ();
+  virtual /*Des*/         ~I_SignalTestInterface_Iface () = 0;
+public:
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void ()> Signal_void_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, bool ()> Signal_bool_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, int ()> Signal_int_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, double ()> Signal_float_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, std::string ()> Signal_string_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, QuickEnum ()> Signal_enum_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, QuickRecord ()> Signal_record_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, QuickSequence ()> Signal_sequence_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, I_GrandChild_Iface* ()> Signal_interface_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, I_SignalTestInterface_Iface* ()> Signal_self_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void ()> Signal_void_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (bool b)> Signal_bool_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (int i)> Signal_int_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (double f)> Signal_float_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (const std::string &s)> Signal_string_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (QuickEnum e)> Signal_enum_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (const QuickRecord &r)> Signal_record_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (const QuickSequence &s)> Signal_sequence_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (I_GrandChild_Iface &i)> Signal_interface_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (I_SignalTestInterface_Iface &self_)> Signal_self_args;
+  Signal_void_result sig_void_result;
+  Signal_bool_result sig_bool_result;
+  Signal_int_result sig_int_result;
+  Signal_float_result sig_float_result;
+  Signal_string_result sig_string_result;
+  Signal_enum_result sig_enum_result;
+  Signal_record_result sig_record_result;
+  Signal_sequence_result sig_sequence_result;
+  Signal_interface_result sig_interface_result;
+  Signal_self_result sig_self_result;
+  Signal_void_arg sig_void_arg;
+  Signal_bool_arg sig_bool_arg;
+  Signal_int_arg sig_int_arg;
+  Signal_float_arg sig_float_arg;
+  Signal_string_arg sig_string_arg;
+  Signal_enum_arg sig_enum_arg;
+  Signal_record_arg sig_record_arg;
+  Signal_sequence_arg sig_sequence_arg;
+  Signal_interface_arg sig_interface_arg;
+  Signal_self_args sig_self_args;
+};
+class SignalTestInterface : public virtual Plic::SmartHandle {
+protected:
+  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
+  inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
+public:
+  inline SignalTestInterface () {}
+  inline SignalTestInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline SignalTestInterface (I_SignalTestInterface_Iface *iface) { _iface (iface); }
+  inline SignalTestInterface (I_SignalTestInterface_Iface &iface) { _iface (&iface); }
+  inline I_SignalTestInterface_Iface& operator*  () const { return *dynamic_cast<I_SignalTestInterface_Iface*> (_iface()); }
+  inline I_SignalTestInterface_Iface* operator-> () const { return dynamic_cast<I_SignalTestInterface_Iface*> (_iface()); }
+  inline operator  I_SignalTestInterface_Iface&  () const { return operator*(); }
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
 } // InterfaceTests
 
 namespace RapicornPlicTest {
@@ -1067,6 +1128,11 @@ I_MethodTestInterface_Iface::I_MethodTestInterface_Iface ()
 {}
 I_MethodTestInterface_Iface::~I_MethodTestInterface_Iface () {}
 
+I_SignalTestInterface_Iface::I_SignalTestInterface_Iface () :
+  sig_void_result (*this), sig_bool_result (*this), sig_int_result (*this), sig_float_result (*this), sig_string_result (*this), sig_enum_result (*this), sig_record_result (*this), sig_sequence_result (*this), sig_interface_result (*this), sig_self_result (*this), sig_void_arg (*this), sig_bool_arg (*this), sig_int_arg (*this), sig_float_arg (*this), sig_string_arg (*this), sig_enum_arg (*this), sig_record_arg (*this), sig_sequence_arg (*this), sig_interface_arg (*this), sig_self_args (*this)
+{}
+I_SignalTestInterface_Iface::~I_SignalTestInterface_Iface () {}
+
 } // InterfaceTests
 
 namespace RapicornPlicTest {
@@ -1294,7 +1360,8 @@ _dispatch__UIWidgetArea_void_signal (Coupler &cpl)
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
-}struct _CLOSURE_UIWidgetArea_sample_signal {
+}
+struct _CLOSURE_UIWidgetArea_sample_signal {
   typedef Plic::shared_ptr<_CLOSURE_UIWidgetArea_sample_signal> SharedPtr;
   _CLOSURE_UIWidgetArea_sample_signal (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
   ~_CLOSURE_UIWidgetArea_sample_signal()
@@ -1338,6 +1405,7 @@ _dispatch__UIWidgetArea_sample_signal (Coupler &cpl)
   rb.add_int64 (cid);
   return &rb;
 }
+
 
 
 
@@ -1517,6 +1585,814 @@ _dispatch__MethodTestInterface_method_with_quickiface (Coupler &cpl)
   return &rb;
 }
 
+struct _CLOSURE_SignalTestInterface_void_result {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_void_result> SharedPtr;
+  _CLOSURE_SignalTestInterface_void_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_void_result()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static void
+  handler (SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    sp->m_coupler.push_event (&fb); // deletes fb
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_void_result (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_void_result.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_void_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_void_result (cpl, handler_id));
+    cid = self->sig_void_result.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_bool_result {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_bool_result> SharedPtr;
+  _CLOSURE_SignalTestInterface_bool_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_bool_result()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static bool
+  handler (SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    sp->m_coupler.push_event (&fb); // deletes fb
+    return 0;
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_bool_result (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_bool_result.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_bool_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_bool_result (cpl, handler_id));
+    cid = self->sig_bool_result.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_int_result {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_int_result> SharedPtr;
+  _CLOSURE_SignalTestInterface_int_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_int_result()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static int
+  handler (SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    sp->m_coupler.push_event (&fb); // deletes fb
+    return 0;
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_int_result (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_int_result.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_int_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_int_result (cpl, handler_id));
+    cid = self->sig_int_result.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_float_result {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_float_result> SharedPtr;
+  _CLOSURE_SignalTestInterface_float_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_float_result()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static double
+  handler (SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    sp->m_coupler.push_event (&fb); // deletes fb
+    return 0;
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_float_result (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_float_result.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_float_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_float_result (cpl, handler_id));
+    cid = self->sig_float_result.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_string_result {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_string_result> SharedPtr;
+  _CLOSURE_SignalTestInterface_string_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_string_result()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static std::string
+  handler (SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    sp->m_coupler.push_event (&fb); // deletes fb
+    return "";
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_string_result (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_string_result.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_string_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_string_result (cpl, handler_id));
+    cid = self->sig_string_result.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_enum_result {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_enum_result> SharedPtr;
+  _CLOSURE_SignalTestInterface_enum_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_enum_result()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static QuickEnum
+  handler (SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    sp->m_coupler.push_event (&fb); // deletes fb
+    return QuickEnum (0);
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_enum_result (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_enum_result.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_enum_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_enum_result (cpl, handler_id));
+    cid = self->sig_enum_result.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_record_result {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_record_result> SharedPtr;
+  _CLOSURE_SignalTestInterface_record_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_record_result()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static QuickRecord
+  handler (SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    sp->m_coupler.push_event (&fb); // deletes fb
+    return QuickRecord();
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_record_result (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_record_result.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_record_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_record_result (cpl, handler_id));
+    cid = self->sig_record_result.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_sequence_result {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_sequence_result> SharedPtr;
+  _CLOSURE_SignalTestInterface_sequence_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_sequence_result()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static QuickSequence
+  handler (SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    sp->m_coupler.push_event (&fb); // deletes fb
+    return QuickSequence();
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_sequence_result (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_sequence_result.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_sequence_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_sequence_result (cpl, handler_id));
+    cid = self->sig_sequence_result.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_interface_result {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_interface_result> SharedPtr;
+  _CLOSURE_SignalTestInterface_interface_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_interface_result()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static I_GrandChild_Iface*
+  handler (SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    sp->m_coupler.push_event (&fb); // deletes fb
+    return 0;
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_interface_result (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_interface_result.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_interface_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_interface_result (cpl, handler_id));
+    cid = self->sig_interface_result.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_self_result {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_self_result> SharedPtr;
+  _CLOSURE_SignalTestInterface_self_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_self_result()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static I_SignalTestInterface_Iface*
+  handler (SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    sp->m_coupler.push_event (&fb); // deletes fb
+    return 0;
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_self_result (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_self_result.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_self_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_self_result (cpl, handler_id));
+    cid = self->sig_self_result.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_void_arg {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_void_arg> SharedPtr;
+  _CLOSURE_SignalTestInterface_void_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_void_arg()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static void
+  handler (SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    sp->m_coupler.push_event (&fb); // deletes fb
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_void_arg (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_void_arg.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_void_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_void_arg (cpl, handler_id));
+    cid = self->sig_void_arg.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_bool_arg {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_bool_arg> SharedPtr;
+  _CLOSURE_SignalTestInterface_bool_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_bool_arg()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static void
+  handler (bool arg_b,
+           SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    fb.add_int64 (arg_b);
+    sp->m_coupler.push_event (&fb); // deletes fb
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_bool_arg (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_bool_arg.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_bool_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_bool_arg (cpl, handler_id));
+    cid = self->sig_bool_arg.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_int_arg {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_int_arg> SharedPtr;
+  _CLOSURE_SignalTestInterface_int_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_int_arg()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static void
+  handler (int arg_i,
+           SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    fb.add_int64 (arg_i);
+    sp->m_coupler.push_event (&fb); // deletes fb
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_int_arg (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_int_arg.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_int_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_int_arg (cpl, handler_id));
+    cid = self->sig_int_arg.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_float_arg {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_float_arg> SharedPtr;
+  _CLOSURE_SignalTestInterface_float_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_float_arg()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static void
+  handler (double arg_f,
+           SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    fb.add_double (arg_f);
+    sp->m_coupler.push_event (&fb); // deletes fb
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_float_arg (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_float_arg.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_float_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_float_arg (cpl, handler_id));
+    cid = self->sig_float_arg.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_string_arg {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_string_arg> SharedPtr;
+  _CLOSURE_SignalTestInterface_string_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_string_arg()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static void
+  handler (const std::string &arg_s,
+           SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    fb.add_string (arg_s);
+    sp->m_coupler.push_event (&fb); // deletes fb
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_string_arg (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_string_arg.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_string_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_string_arg (cpl, handler_id));
+    cid = self->sig_string_arg.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_enum_arg {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_enum_arg> SharedPtr;
+  _CLOSURE_SignalTestInterface_enum_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_enum_arg()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static void
+  handler (QuickEnum arg_e,
+           SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    fb.add_evalue (arg_e);
+    sp->m_coupler.push_event (&fb); // deletes fb
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_enum_arg (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_enum_arg.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_enum_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_enum_arg (cpl, handler_id));
+    cid = self->sig_enum_arg.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_record_arg {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_record_arg> SharedPtr;
+  _CLOSURE_SignalTestInterface_record_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_record_arg()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static void
+  handler (const QuickRecord &arg_r,
+           SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    if (!arg_r.proto_add (sp->m_coupler, fb)) THROW_ERROR();
+    sp->m_coupler.push_event (&fb); // deletes fb
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_record_arg (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_record_arg.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_record_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_record_arg (cpl, handler_id));
+    cid = self->sig_record_arg.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_sequence_arg {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_sequence_arg> SharedPtr;
+  _CLOSURE_SignalTestInterface_sequence_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_sequence_arg()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static void
+  handler (const QuickSequence &arg_s,
+           SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    if (!arg_s.proto_add (sp->m_coupler, fb)) THROW_ERROR();
+    sp->m_coupler.push_event (&fb); // deletes fb
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_sequence_arg (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_sequence_arg.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_sequence_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_sequence_arg (cpl, handler_id));
+    cid = self->sig_sequence_arg.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_interface_arg {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_interface_arg> SharedPtr;
+  _CLOSURE_SignalTestInterface_interface_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_interface_arg()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static void
+  handler (I_GrandChild_Iface &arg_i,
+           SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    fb.add_object (arg_i._rpc_id());
+    sp->m_coupler.push_event (&fb); // deletes fb
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_interface_arg (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_interface_arg.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_interface_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_interface_arg (cpl, handler_id));
+    cid = self->sig_interface_arg.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+struct _CLOSURE_SignalTestInterface_self_args {
+  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_self_args> SharedPtr;
+  _CLOSURE_SignalTestInterface_self_args (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_CLOSURE_SignalTestInterface_self_args()
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
+    fb.add_int64 (Plic::msgid_discon);
+    fb.add_int64 (m_handler);
+    m_coupler.push_event (&fb); // deletes fb
+  }
+  static void
+  handler (I_SignalTestInterface_Iface &arg_self_,
+           SharedPtr sp)
+  {
+    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1);
+    fb.add_int64 (Plic::msgid_event);
+    fb.add_int64 (sp->m_handler);
+    fb.add_object (arg_self_._rpc_id());
+    sp->m_coupler.push_event (&fb); // deletes fb
+  }
+  private: Plic::Coupler &m_coupler; uint64 m_handler;
+};
+static FieldBuffer*
+_dispatch__SignalTestInterface_self_args (Coupler &cpl)
+{
+  FieldBufferReader &fbr = cpl.reader;
+  fbr.skip_hash(); // TypeHash
+  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
+  I_SignalTestInterface_Iface *self;
+  self = SignalTestInterface (cpl, fbr).operator->();
+  PLIC_CHECK (self, "self must be non-NULL");
+  uint64 cid = 0, handler_id = fbr.pop_int64();
+  uint64 con_id = fbr.pop_int64();
+  if (con_id) self->sig_self_args.disconnect (con_id);
+  if (handler_id) {
+    _CLOSURE_SignalTestInterface_self_args::SharedPtr sp (new _CLOSURE_SignalTestInterface_self_args (cpl, handler_id));
+    cid = self->sig_self_args.connect (slot (sp->handler, sp)); }
+  FieldBuffer &rb = *FieldBuffer::new_result();
+  rb.add_int64 (cid);
+  return &rb;
+}
+
 } // InterfaceTests
 
 namespace RapicornPlicTest {
@@ -1559,7 +2435,8 @@ _dispatch__ButtonArea_check_activate (Coupler &cpl)
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
-}struct _CLOSURE_ButtonArea_activate {
+}
+struct _CLOSURE_ButtonArea_activate {
   typedef Plic::shared_ptr<_CLOSURE_ButtonArea_activate> SharedPtr;
   _CLOSURE_ButtonArea_activate (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
   ~_CLOSURE_ButtonArea_activate()
@@ -1598,6 +2475,7 @@ _dispatch__ButtonArea_activate (Coupler &cpl)
   rb.add_int64 (cid);
   return &rb;
 }
+
 static FieldBuffer*
 _dispatch__PureMethods_pure_method (Coupler &cpl)
 {
@@ -1639,6 +2517,26 @@ static const Plic::DispatcherEntry _dispatcher_entries[] = {
   { { 0x30000000e92eb1f1ULL, 0xbc6d5e758278964aULL, 0xe88f958f88ca346cULL, 0xf29e446630c57f23ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_sequence, },
   { { 0x3000000001640ae0ULL, 0xf5403244c684c076ULL, 0x208c721dda088467ULL, 0x425f3425b0dcfad4ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_interface, },
   { { 0x3000000082dc142eULL, 0x7d16cadebfca9b39ULL, 0x168d05eb3cf56adbULL, 0x31e28c41cf8bb4f9ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_quickiface, },
+  { { 0x50000000d7b0d37dULL, 0x9a68ffaf1056fc04ULL, 0xb24f3d15ee791645ULL, 0x979c5c3dbb482dbdULL }, InterfaceTests::_dispatch__SignalTestInterface_void_result, },
+  { { 0x5000000088395bfcULL, 0xb616815b8edaee44ULL, 0x37cc8b54b7500777ULL, 0xfe7258a75f8cb6b8ULL }, InterfaceTests::_dispatch__SignalTestInterface_bool_result, },
+  { { 0x500000007d3c1951ULL, 0xf389540a04382db9ULL, 0xc26a2ee92fb29b95ULL, 0x1197b72e8fa6cfb2ULL }, InterfaceTests::_dispatch__SignalTestInterface_int_result, },
+  { { 0x5000000021a8c164ULL, 0xecca5d4028d51f60ULL, 0x5e48820b0f116b7aULL, 0x1dcb611973ca7901ULL }, InterfaceTests::_dispatch__SignalTestInterface_float_result, },
+  { { 0x5000000036e51367ULL, 0x21d4eda0c22f5ae7ULL, 0xb4663cb8cc9c5b6cULL, 0xaed8617878324d33ULL }, InterfaceTests::_dispatch__SignalTestInterface_string_result, },
+  { { 0x500000006e50988aULL, 0x8edca7e533dbb84aULL, 0xc4d53e76a28e2cb2ULL, 0xe873a3116ee5f47bULL }, InterfaceTests::_dispatch__SignalTestInterface_enum_result, },
+  { { 0x5000000055dcef7fULL, 0x8478d3457cd87d65ULL, 0x9749c1b1c287f9a7ULL, 0xb21d98dd311f88a0ULL }, InterfaceTests::_dispatch__SignalTestInterface_record_result, },
+  { { 0x500000007ede93d1ULL, 0xc6d90e002209318dULL, 0xac81039a018518edULL, 0xb4d95ba887b99c60ULL }, InterfaceTests::_dispatch__SignalTestInterface_sequence_result, },
+  { { 0x50000000c6e0f2dbULL, 0xf7660a7b33a76e14ULL, 0xcbdade8c0d53d333ULL, 0x235f30d69ba62708ULL }, InterfaceTests::_dispatch__SignalTestInterface_interface_result, },
+  { { 0x500000000f7a484aULL, 0x8668cf9bda70ae96ULL, 0x6404938807ad413fULL, 0x48f1a8d3ba35d215ULL }, InterfaceTests::_dispatch__SignalTestInterface_self_result, },
+  { { 0x50000000390ef9ebULL, 0x5fe021fa95e46c90ULL, 0xbb481496867f8fbbULL, 0xd0d4f522490eed0fULL }, InterfaceTests::_dispatch__SignalTestInterface_void_arg, },
+  { { 0x500000008ae3eb10ULL, 0x0cd818645da43e38ULL, 0x28c3e51ddb121821ULL, 0x2c1f84e70ce9d966ULL }, InterfaceTests::_dispatch__SignalTestInterface_bool_arg, },
+  { { 0x50000000c91ca108ULL, 0xcf9f85d25bb75bc8ULL, 0xa19af414c58a3ac6ULL, 0x688d4f1445624c0cULL }, InterfaceTests::_dispatch__SignalTestInterface_int_arg, },
+  { { 0x5000000075078428ULL, 0x45d29e0377897dd2ULL, 0xb04599be75058416ULL, 0xa4be1bdf79af6b27ULL }, InterfaceTests::_dispatch__SignalTestInterface_float_arg, },
+  { { 0x50000000cd2031d7ULL, 0xb127c8f2134a7e92ULL, 0x994f8b257e7550c1ULL, 0x86752a8f56f3202eULL }, InterfaceTests::_dispatch__SignalTestInterface_string_arg, },
+  { { 0x500000007c8c24a8ULL, 0x6a34b5ca6ff1a9b1ULL, 0xa8421ac9442d7da7ULL, 0x397d7a2d9c23b69eULL }, InterfaceTests::_dispatch__SignalTestInterface_enum_arg, },
+  { { 0x500000001ca9536aULL, 0x3a697b01329fe581ULL, 0xf253e5509e7ec080ULL, 0x99bab63bc8358923ULL }, InterfaceTests::_dispatch__SignalTestInterface_record_arg, },
+  { { 0x500000003a8b02acULL, 0x350183fe2aaeadfeULL, 0x632ab314011b5d27ULL, 0xd1eb9724fd6133d9ULL }, InterfaceTests::_dispatch__SignalTestInterface_sequence_arg, },
+  { { 0x50000000e570b3a9ULL, 0x414baa2ef0267861ULL, 0x7bb2d4e5515d1d91ULL, 0xfa502a9c448db3c8ULL }, InterfaceTests::_dispatch__SignalTestInterface_interface_arg, },
+  { { 0x50000000c376b929ULL, 0xe5199bbf5bd2533aULL, 0x52977526a9c4e2c9ULL, 0x4b15ebcfa292e18fULL }, InterfaceTests::_dispatch__SignalTestInterface_self_args, },
   { { 0x500000002002b254ULL, 0x237b6d00631699f2ULL, 0xaa4a2bf137175f39ULL, 0x16724232857b7195ULL }, RapicornPlicTest::_dispatch__ButtonArea_check_activate, },
   { { 0x500000001eea842bULL, 0xdb7ee9164c9f8a60ULL, 0x1d0b0a314944036aULL, 0xfc73ff4aec88f8ffULL }, RapicornPlicTest::_dispatch__ButtonArea_activate, },
   { { 0x30000000e96382b8ULL, 0x8c16fe069c1d6b1eULL, 0x002e82b90c7db308ULL, 0x9c8a9e5a95b6ea99ULL }, RapicornPlicTest::_dispatch__PureMethods_pure_method, },

@@ -549,6 +549,67 @@ public:
   inline operator  I_MethodTestInterface_Iface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
+class I_SignalTestInterface_Iface : public virtual Plic::SimpleServer {
+protected:
+  explicit                 I_SignalTestInterface_Iface ();
+  virtual /*Des*/         ~I_SignalTestInterface_Iface () = 0;
+public:
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void ()> Signal_void_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, bool ()> Signal_bool_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, int ()> Signal_int_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, double ()> Signal_float_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, std::string ()> Signal_string_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, QuickEnum ()> Signal_enum_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, QuickRecord ()> Signal_record_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, QuickSequence ()> Signal_sequence_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, I_GrandChild_Iface* ()> Signal_interface_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, I_SignalTestInterface_Iface* ()> Signal_self_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void ()> Signal_void_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (bool b)> Signal_bool_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (int i)> Signal_int_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (double f)> Signal_float_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (const std::string &s)> Signal_string_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (QuickEnum e)> Signal_enum_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (const QuickRecord &r)> Signal_record_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (const QuickSequence &s)> Signal_sequence_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (I_GrandChild_Iface &i)> Signal_interface_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (I_SignalTestInterface_Iface &self_)> Signal_self_args;
+  Signal_void_result sig_void_result;
+  Signal_bool_result sig_bool_result;
+  Signal_int_result sig_int_result;
+  Signal_float_result sig_float_result;
+  Signal_string_result sig_string_result;
+  Signal_enum_result sig_enum_result;
+  Signal_record_result sig_record_result;
+  Signal_sequence_result sig_sequence_result;
+  Signal_interface_result sig_interface_result;
+  Signal_self_result sig_self_result;
+  Signal_void_arg sig_void_arg;
+  Signal_bool_arg sig_bool_arg;
+  Signal_int_arg sig_int_arg;
+  Signal_float_arg sig_float_arg;
+  Signal_string_arg sig_string_arg;
+  Signal_enum_arg sig_enum_arg;
+  Signal_record_arg sig_record_arg;
+  Signal_sequence_arg sig_sequence_arg;
+  Signal_interface_arg sig_interface_arg;
+  Signal_self_args sig_self_args;
+};
+class SignalTestInterface : public virtual Plic::SmartHandle {
+protected:
+  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
+  inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
+public:
+  inline SignalTestInterface () {}
+  inline SignalTestInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline SignalTestInterface (I_SignalTestInterface_Iface *iface) { _iface (iface); }
+  inline SignalTestInterface (I_SignalTestInterface_Iface &iface) { _iface (&iface); }
+  inline I_SignalTestInterface_Iface& operator*  () const { return *dynamic_cast<I_SignalTestInterface_Iface*> (_iface()); }
+  inline I_SignalTestInterface_Iface* operator-> () const { return dynamic_cast<I_SignalTestInterface_Iface*> (_iface()); }
+  inline operator  I_SignalTestInterface_Iface&  () const { return operator*(); }
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
 } // InterfaceTests
 
 namespace RapicornPlicTest {

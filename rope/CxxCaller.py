@@ -194,8 +194,9 @@ class Generator:
     s = ''
     signame = self.generate_signal_name (functype, ctype)
     cpp_rtype = self.rtype2cpp (functype.rtype)
-    rtisiface = functype.rtype.storage == Decls.INTERFACE
-    s += '  typedef Rapicorn::Signals::Signal<%s, %s (' % (I (ctype.name), I (cpp_rtype, rtisiface))
+    if functype.rtype.storage == Decls.INTERFACE:
+      cpp_rtype = I (cpp_rtype) + '*'
+    s += '  typedef Rapicorn::Signals::Signal<%s, %s (' % (I (ctype.name), cpp_rtype)
     l = []
     for a in functype.args:
       l += [ self.format_arg (a[0], a[1]) ]
@@ -207,8 +208,14 @@ class Generator:
     s += '> ' + signame + ';\n'
     return s
   def mkzero (self, type):
+    if type.storage == Decls.STRING:
+      return '""'
     if type.storage == Decls.ENUM:
       return self.type2cpp (type) + ' (0)'
+    if type.storage == Decls.RECORD:
+      return self.type2cpp (type) + '()'
+    if type.storage == Decls.SEQUENCE:
+      return self.type2cpp (type) + '()'
     return '0'
   def generate_recseq_decl (self, type_info):
     s = ''
@@ -438,7 +445,10 @@ class Generator:
     s += '    fb.add_int64 (m_handler);\n'
     s += '    m_coupler.push_event (&fb); // deletes fb\n'
     s += '  }\n'
-    s += '  static %s\n' % self.rtype2cpp (stype.rtype)
+    cpp_rtype = self.rtype2cpp (stype.rtype)
+    if stype.rtype.storage == Decls.INTERFACE:
+      cpp_rtype = I (cpp_rtype) + '*'
+    s += '  static %s\n' % cpp_rtype
     s += '  handler ('
     s += self.format_func_args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
     s += 'SharedPtr sp)\n  {\n'
@@ -474,7 +484,7 @@ class Generator:
     s += '  FieldBuffer &rb = *FieldBuffer::new_result();\n'
     s += '  rb.add_int64 (cid);\n'
     s += '  return &rb;\n'
-    s += '}'
+    s += '}\n'
     return s
   def digest2cbytes (self, digest):
     return ('0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL, ' +

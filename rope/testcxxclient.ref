@@ -452,6 +452,14 @@ public:
                                           QuickIface &iface0 = *(QuickIface*) NULL);
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
+class SignalTestInterface : public virtual Plic::SmartHandle {
+protected:
+public:
+  inline SignalTestInterface () {}
+  inline SignalTestInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
 } // InterfaceTests
 
 namespace RapicornPlicTest {
