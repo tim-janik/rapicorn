@@ -74,9 +74,10 @@ CLEANFILES += *.tpg
 # simple logging check
 check-logging-simple: infotest
 	@$(call TSTTITLE, Simple logging function check)
-	$(_@) ( RAPICORN=stable:debug:no-syslog:no-fatal-syslog \
+	$(_@) ( RAPICORN=diag:stable:debug:no-syslog:no-fatal-syslog \
 	        ./infotest --test-logging 2>$(TSTOUT) ; true ) 2>/dev/null
 	$(_@) grep -q 'debug-.*logging test' $(TSTOUT) || $(call TSTRESULT)
+	$(_@) grep -q 'diagnostic.*errno' $(TSTOUT) || $(call TSTRESULT)
 	$(_@) grep -q 'WARNING:.*logging message' $(TSTOUT) || $(call TSTRESULT)
 	$(_@) grep -q 'ERROR:.*serious' $(TSTOUT) || $(call TSTRESULT)
 	$(_@) grep -q 'FATAL:.*abort' $(TSTOUT) || $(call TSTRESULT)
