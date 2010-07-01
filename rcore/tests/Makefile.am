@@ -71,6 +71,19 @@ EXTRA_DIST        += testtypes.idl testtypes.tpg
 CLEANFILES += *.tpg
 
 # === test rules ===
+# simple logging check
+check-logging-simple: infotest
+	@$(call TSTTITLE, Simple logging function check)
+	$(_@) ( RAPICORN=stable:debug:no-syslog:no-fatal-syslog \
+	        ./infotest --test-logging 2>$(TSTOUT) ; true ) 2>/dev/null
+	$(_@) grep -q 'debug-.*logging test' $(TSTOUT) || $(call TSTRESULT)
+	$(_@) grep -q 'WARNING:.*logging message' $(TSTOUT) || $(call TSTRESULT)
+	$(_@) grep -q 'ERROR:.*serious' $(TSTOUT) || $(call TSTRESULT)
+	$(_@) grep -q 'FATAL:.*abort' $(TSTOUT) || $(call TSTRESULT)
+	$(_@) grep -qi '^abort' $(TSTOUT) || $(call TSTRESULT)
+	$(_@) $(call TSTRESULT)
+	$(_@) rm -f $(TSTOUT)
+check: check-logging-simple
 # process handle
 check-process-handle: infotest
 	@$(call TSTTITLE, Simple process-handle check)
