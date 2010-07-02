@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <sched.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <semaphore.h>
@@ -459,8 +460,19 @@ void
 DispatcherRegistry::register_dispatcher (const DispatcherEntry &dentry)
 {
   pthread_mutex_lock (&dispatcher_type_mutex);
+  TypeHashMap::size_type size_before = dispatcher_type_map.size();
   dispatcher_type_map[TypeHash (dentry.hash_qwords)] = dentry.dispatcher;
+  TypeHashMap::size_type size_after = dispatcher_type_map.size();
   pthread_mutex_unlock (&dispatcher_type_mutex);
+  // simple hash collision check
+  if (!PLIC_LIKELY (size_before < size_after))
+    {
+      errno = EKEYREJECTED;
+      perror (string_printf ("%s:%u:DispatcherRegistry::register_dispatcher: "
+                             "collision with existing hash: %s\n", __FILE__, __LINE__,
+                             TypeHash (dentry.hash_qwords).to_string().c_str()).c_str());
+      abort();
+    }
 }
 
 DispatchFunc
