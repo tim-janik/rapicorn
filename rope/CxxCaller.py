@@ -379,6 +379,7 @@ class Generator:
       else:
         vtype = self.format_vartype (rarg[1]) # 'int*' + ...
         s += self.generate_proto_pop_args (cplfrr, class_info, vtype, [rarg], '', therr) # ... + 'x = 5;'
+      s += '  delete fr;\n'
       s += '  return retval;\n'
     s += '}\n'
     return s

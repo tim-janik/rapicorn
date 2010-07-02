@@ -857,6 +857,7 @@ UIWidgetArea::simple_method ()
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   double retval = frr.pop_double();
+  delete fr;
   return retval;
 }
 double
@@ -870,6 +871,7 @@ UIWidgetArea::single_arg (int arg_n)
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   double retval = frr.pop_double();
+  delete fr;
   return retval;
 }
 double
@@ -883,6 +885,7 @@ UIWidgetArea::single_arg2 (int arg_n)
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   double retval = frr.pop_double();
+  delete fr;
   return retval;
 }
 double
@@ -898,6 +901,7 @@ UIWidgetArea::two_args (int arg_n,
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   double retval = frr.pop_double();
+  delete fr;
   return retval;
 }
 double
@@ -913,6 +917,7 @@ UIWidgetArea::two_args2 (int arg_n,
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   double retval = frr.pop_double();
+  delete fr;
   return retval;
 }
 double
@@ -934,6 +939,7 @@ UIWidgetArea::multi_args (int arg_n,
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   double retval = frr.pop_double();
+  delete fr;
   return retval;
 }
 double
@@ -949,6 +955,7 @@ UIWidgetArea::self_method (UIWidgetArea &arg_ba1,
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   double retval = frr.pop_double();
+  delete fr;
   return retval;
 }
 void
@@ -969,6 +976,7 @@ UIWidgetArea::on_click2out ()
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   std::string retval = frr.pop_string();
+  delete fr;
   return retval;
 }
 void
@@ -1050,6 +1058,7 @@ MethodTestInterface::method_with_bools (bool arg_input,
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   bool retval = frr.pop_int64();
+  delete fr;
   return retval;
 }
 int
@@ -1065,6 +1074,7 @@ MethodTestInterface::method_with_ints (int arg_input,
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   int retval = frr.pop_int64();
+  delete fr;
   return retval;
 }
 double
@@ -1080,6 +1090,7 @@ MethodTestInterface::method_with_floats (double arg_input,
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   double retval = frr.pop_double();
+  delete fr;
   return retval;
 }
 std::string
@@ -1095,6 +1106,7 @@ MethodTestInterface::method_with_string (const std::string &arg_input,
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   std::string retval = frr.pop_string();
+  delete fr;
   return retval;
 }
 QuickEnum
@@ -1110,6 +1122,7 @@ MethodTestInterface::method_with_enum (QuickEnum arg_input,
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   QuickEnum retval = QuickEnum (frr.pop_evalue());
+  delete fr;
   return retval;
 }
 QuickRecord
@@ -1126,6 +1139,7 @@ MethodTestInterface::method_with_record (const QuickRecord &arg_input,
   frr.skip(); // proc_id
   QuickRecord retval;
   if (!retval.proto_pop (PLIC_COUPLER(), frr)) THROW_ERROR();
+  delete fr;
   return retval;
 }
 QuickSequence
@@ -1142,6 +1156,7 @@ MethodTestInterface::method_with_sequence (const QuickSequence &arg_input,
   frr.skip(); // proc_id
   QuickSequence retval;
   if (!retval.proto_pop (PLIC_COUPLER(), frr)) THROW_ERROR();
+  delete fr;
   return retval;
 }
 GrandChild
@@ -1157,6 +1172,7 @@ MethodTestInterface::method_with_interface (GrandChild &arg_input,
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   GrandChild retval = GrandChild (PLIC_COUPLER(), frr);
+  delete fr;
   return retval;
 }
 QuickIface
@@ -1172,6 +1188,7 @@ MethodTestInterface::method_with_quickiface (QuickIface &arg_input,
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   QuickIface retval = QuickIface (PLIC_COUPLER(), frr);
+  delete fr;
   return retval;
 }
 } // InterfaceTests
@@ -1188,6 +1205,7 @@ PureMethods::pure_method (double arg_f)
   FieldBufferReader frr (*fr);
   frr.skip(); // proc_id
   int retval = frr.pop_int64();
+  delete fr;
   return retval;
 }
 } // RapicornPlicTest
