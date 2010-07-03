@@ -98,29 +98,7 @@ struct SignalEmittable3 : SignalBase {
     Iterator it (emission, &start), last (emission, &start);
     ++it; /* walk from start to first */
     Collector collector;
-    Result result = collector (it, last);
-    return result;
-  }
-private:
-  Emitter *m_emitter;
-};
-/* SignalEmittable3 for void returns */
-template<class Emitter, typename A1, typename A2, typename A3, class Collector>
-struct SignalEmittable3 <Emitter, void, A1, A2, A3, Collector> : SignalBase {
-  typedef Emission3 <Emitter, void, A1, A2, A3> Emission;
-  struct Iterator : public SignalBase::Iterator<Emission> {
-    Iterator (Emission &emission, TrampolineLink *link) : SignalBase::Iterator<Emission> (emission, link) {}
-    void operator* () { return this->emission.call (this->current); }
-  };
-  explicit SignalEmittable3 (Emitter *emitter) : m_emitter (emitter) {}
-  inline void emit (A1 a1, A2 a2, A3 a3)
-  {
-    ScopeReference<Emitter, Collector> lref (*m_emitter);
-    Emission emission (m_emitter, a1, a2, a3);
-    Iterator it (emission, &start), last (emission, &start);
-    ++it; /* walk from start to first */
-    Collector collector;
-    collector (it, last);
+    return collector (it, last); // Result may be void
   }
 private:
   Emitter *m_emitter;
