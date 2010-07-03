@@ -581,7 +581,7 @@ FieldBuffer::new_error (const String &msg,
                         const String &domain)
 {
   FieldBuffer *fr = FieldBuffer::_new (3);
-  fr->add_int64 (Plic::msgid_error); // proc_id
+  fr->add_int64 (Plic::msgid_error);
   fr->add_string (msg);
   fr->add_string (domain);
   return fr;
@@ -591,7 +591,7 @@ FieldBuffer*
 FieldBuffer::new_result()
 {
   FieldBuffer *fr = FieldBuffer::_new (2);
-  fr->add_int64 (Plic::msgid_result); // proc_id
+  fr->add_int64 (Plic::msgid_result);
   return fr;
 }
 
@@ -599,7 +599,7 @@ FieldBuffer*
 FieldBuffer::new_ok()
 {
   FieldBuffer *fr = FieldBuffer::_new (2);
-  fr->add_int64 (Plic::msgid_ok); // proc_id
+  fr->add_int64 (Plic::msgid_ok);
   return fr;
 }
 
