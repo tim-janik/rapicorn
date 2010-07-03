@@ -90,7 +90,8 @@ static Cond        global_thread_cond;
 static Mutex       global_startup_mutex;
 static GSList     *global_thread_list = NULL;
 static GSList     *thread_awaken_list = NULL;
-
+/* ::Rapicorn::ThreadTable must be a RapicornThreadTable, not a reference for the C API wrapper to work */
+RapicornThreadTable ThreadTable = { NULL }; /* private, provided by rapicornthreadimpl.cc */
 
 /* --- functions --- */
 static RapicornThread*
@@ -1282,9 +1283,6 @@ get_pth_thread_table (void)
 #else	/* !RAPICORN_HAVE_MUTEXATTR_SETTYPE */
 #define	get_pth_thread_table()	NULL
 #endif	/* !RAPICORN_HAVE_MUTEXATTR_SETTYPE */
-
-/* ::Rapicorn::ThreadTable must be a RapicornThreadTable, not a reference for the C API wrapper to work */
-RapicornThreadTable ThreadTable = { NULL };
 
 void
 _rapicorn_init_threads (void)

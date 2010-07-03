@@ -21,67 +21,63 @@
 namespace {
 using namespace Rapicorn;
 
-/* --- utilities --- */
-RapicornThread*
-rapicorn_thread_run (const gchar     *name,
-                     RapicornThreadFunc func,
-                     gpointer         user_data)
-{
-  g_return_val_if_fail (name && name[0], NULL);
-
-  RapicornThread *thread = ThreadTable.thread_new (name);
-  ThreadTable.thread_ref_sink (thread);
-  if (ThreadTable.thread_start (thread, func, user_data))
-    return thread;
-  else
-    {
-      ThreadTable.thread_unref (thread);
-      return NULL;
-    }
-}
-
 /* --- atomicity tests --- */
 static volatile guint atomic_count = 0;
 static Mutex          atomic_mutex;
 static Cond           atomic_cond;
 
-static void
-atomic_up_thread (gpointer data)
-{
-  volatile int *ip = (int*) data;
-  for (guint i = 0; i < 25; i++)
-    Atomic::add (ip, +3);
-  atomic_mutex.lock();
-  atomic_count -= 1;
-  atomic_cond.signal();
-  atomic_mutex.unlock();
-  TASSERT (strcmp (ThreadTable.thread_name (ThreadTable.thread_self()), "AtomicTest") == 0);
-}
+class Thread_AtomicUp : public Thread {
+  void *data;
+  virtual void
+  run ()
+  {
+    TASSERT (name() == "AtomicTest");
+    volatile int *ip = (int*) data;
+    for (guint i = 0; i < 25; i++)
+      Atomic::add (ip, +3);
+    atomic_mutex.lock();
+    atomic_count -= 1;
+    atomic_cond.signal();
+    atomic_mutex.unlock();
+  }
+public:
+  Thread_AtomicUp (const String &name, void *udata) : Thread (name), data (udata) {}
+};
 
-static void
-atomic_down_thread (gpointer data)
-{
-  volatile int *ip = (int*) data;
-  for (guint i = 0; i < 25; i++)
-    Atomic::add (ip, -4);
-  atomic_mutex.lock();
-  atomic_count -= 1; // FIXME: make this atomic
-  atomic_cond.signal();
-  atomic_mutex.unlock();
-  TASSERT (strcmp (ThreadTable.thread_name (ThreadTable.thread_self()), "AtomicTest") == 0);
-}
+class Thread_AtomicDown : public Thread {
+  void *data;
+  virtual void
+  run ()
+  {
+    TASSERT (name() == "AtomicTest");
+    volatile int *ip = (int*) data;
+    for (guint i = 0; i < 25; i++)
+      Atomic::add (ip, -4);
+    atomic_mutex.lock();
+    atomic_count -= 1; // FIXME: make this atomic
+    atomic_cond.signal();
+    atomic_mutex.unlock();
+  }
+public:
+  Thread_AtomicDown (const String &name, void *udata) : Thread (name), data (udata) {}
+};
 
 static void
 test_atomic (void)
 {
   TSTART ("AtomicThreading");
   int count = 44;
-  RapicornThread *threads[count];
+  Thread *threads[count];
   volatile int atomic_counter = 0;
   atomic_count = count;
   for (int i = 0; i < count; i++)
     {
-      threads[i] = rapicorn_thread_run ("AtomicTest", (i&1) ? atomic_up_thread : atomic_down_thread, (void*) &atomic_counter);
+      if (i&1)
+        threads[i] = new Thread_AtomicUp ("AtomicTest", (void*) &atomic_counter);
+      else
+        threads[i] = new Thread_AtomicDown ("AtomicTest", (void*) &atomic_counter);
+      ref_sink (threads[i]);
+      threads[i]->start();
       TASSERT (threads[i]);
     }
   atomic_mutex.lock();
@@ -94,7 +90,7 @@ test_atomic (void)
   int result = count / 2 * 25 * +3 + count / 2 * 25 * -4;
   // g_printerr ("{ %d ?= %d }", atomic_counter, result);
   for (int i = 0; i < count; i++)
-    ThreadTable.thread_unref (threads[i]);
+    unref (threads[i]);
   TASSERT (atomic_counter == result);
   TDONE ();
 }
@@ -106,43 +102,50 @@ static Cond          runonce_cond;
 
 static volatile size_t runonce_value = 0;
 
-static void
-runonce_function (void *data)
-{
-  runonce_mutex.lock(); // syncronize
-  runonce_mutex.unlock();
-  volatile int *runonce_counter = (volatile int*) data;
-  if (once_enter (&runonce_value))
-    {
-      runonce_mutex.lock();
-      runonce_cond.broadcast();
-      runonce_mutex.unlock();
-      usleep (1); // sched_yield replacement to force contention
-      Atomic::add (runonce_counter, 1);
-      usleep (500); // sched_yield replacement to force contention
-      once_leave (&runonce_value, size_t (42));
-    }
-  TASSERT (*runonce_counter == 1);
-  TASSERT (runonce_value == 42);
-  /* sinal thread end */
-  Atomic::add (&runonce_threadcount, -1);
-  runonce_mutex.lock();
-  runonce_cond.signal();
-  runonce_mutex.unlock();
-}
+class Thread_RunOnce : public Thread {
+  volatile void *data;
+  virtual void
+  run ()
+  {
+    runonce_mutex.lock(); // syncronize
+    runonce_mutex.unlock();
+    volatile int *runonce_counter = (volatile int*) data;
+    if (once_enter (&runonce_value))
+      {
+        runonce_mutex.lock();
+        runonce_cond.broadcast();
+        runonce_mutex.unlock();
+        usleep (1); // sched_yield replacement to force contention
+        Atomic::add (runonce_counter, 1);
+        usleep (500); // sched_yield replacement to force contention
+        once_leave (&runonce_value, size_t (42));
+      }
+    TASSERT (*runonce_counter == 1);
+    TASSERT (runonce_value == 42);
+    /* sinal thread end */
+    Atomic::add (&runonce_threadcount, -1);
+    runonce_mutex.lock();
+    runonce_cond.signal();
+    runonce_mutex.unlock();
+  }
+public:
+  Thread_RunOnce (const String &name, volatile void *udata) : Thread (name), data (udata) {}
+};
 
 static void
 test_runonce (void)
 {
   TSTART ("RunOnceTest");
   int count = 44;
-  RapicornThread *threads[count];
+  Thread *threads[count];
   volatile int runonce_counter = 0;
   Atomic::set (&runonce_threadcount, count);
   runonce_mutex.lock();
   for (int i = 0; i < count; i++)
     {
-      threads[i] = rapicorn_thread_run ("RunOnceTest", runonce_function, (void*) &runonce_counter);
+      threads[i] = new Thread_RunOnce ("RunOnceTest", &runonce_counter);
+      ref_sink (threads[i]);
+      threads[i]->start();
       TASSERT (threads[i]);
     }
   TASSERT (runonce_value == 0);
@@ -155,22 +158,27 @@ test_runonce (void)
     }
   runonce_mutex.unlock();
   for (int i = 0; i < count; i++)
-    ThreadTable.thread_unref (threads[i]);
+    unref (threads[i]);
   TASSERT (runonce_counter == 1);
   TASSERT (runonce_value == 42);
   TDONE ();
 }
 
 /* --- basic threading tests --- */
-static void
-plus1_thread (gpointer data)
-{
-  guint *tdata = (guint*) data;
-  ThreadTable.thread_sleep (-1);
-  *tdata += 1;
-  while (!ThreadTable.thread_aborted ())
-    ThreadTable.thread_sleep (-1);
-}
+class Thread_Plus1 : public Thread {
+  void *data;
+  virtual void
+  run ()
+  {
+    guint *tdata = (guint*) data;
+    Thread::Self::sleep (-1);
+    *tdata += 1;
+    while (!Thread::Self::aborted ())
+      Thread::Self::sleep (-1);
+  }
+public:
+  Thread_Plus1 (const String &name, void *udata) : Thread (name), data (udata) {}
+};
 
 static Mutex    static_mutex;
 static RecMutex static_rec_mutex;
@@ -220,32 +228,38 @@ test_threads (void)
   mutex.unlock();
   rmutex.unlock();
   guint thread_data1 = 0;
-  RapicornThread *thread1 = rapicorn_thread_run ("plus1", plus1_thread, &thread_data1);
+  Thread *thread1 = new Thread_Plus1 ("plus1", &thread_data1);
+  ref_sink (thread1);
+  thread1->start();
   guint thread_data2 = 0;
-  RapicornThread *thread2 = rapicorn_thread_run ("plus2", plus1_thread, &thread_data2);
+  Thread *thread2 = new Thread_Plus1 ("plus2", &thread_data2);
+  ref_sink (thread2);
+  thread2->start();
   guint thread_data3 = 0;
-  RapicornThread *thread3 = rapicorn_thread_run ("plus3", plus1_thread, &thread_data3);
+  Thread *thread3 = new Thread_Plus1 ("plus3", &thread_data3);
+  ref_sink (thread3);
+  thread3->start();
   TASSERT (thread1 != NULL);
   TASSERT (thread2 != NULL);
   TASSERT (thread3 != NULL);
   TASSERT (thread_data1 == 0);
   TASSERT (thread_data2 == 0);
   TASSERT (thread_data3 == 0);
-  TASSERT (ThreadTable.thread_get_running (thread1) == TRUE);
-  TASSERT (ThreadTable.thread_get_running (thread2) == TRUE);
-  TASSERT (ThreadTable.thread_get_running (thread3) == TRUE);
-  ThreadTable.thread_wakeup (thread1);
-  ThreadTable.thread_wakeup (thread2);
-  ThreadTable.thread_wakeup (thread3);
-  ThreadTable.thread_abort (thread1);
-  ThreadTable.thread_abort (thread2);
-  ThreadTable.thread_abort (thread3);
+  TASSERT (thread1->running() == TRUE);
+  TASSERT (thread2->running() == TRUE);
+  TASSERT (thread3->running() == TRUE);
+  thread1->wakeup();
+  thread2->wakeup();
+  thread3->wakeup();
+  thread1->abort();
+  thread2->abort();
+  thread3->abort();
   TASSERT (thread_data1 > 0);
   TASSERT (thread_data2 > 0);
   TASSERT (thread_data3 > 0);
-  ThreadTable.thread_unref (thread1);
-  ThreadTable.thread_unref (thread2);
-  ThreadTable.thread_unref (thread3);
+  unref (thread1);
+  unref (thread2);
+  unref (thread3);
   TDONE ();
 }
 

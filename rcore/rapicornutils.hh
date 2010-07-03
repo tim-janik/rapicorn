@@ -220,9 +220,6 @@ inline void breakpoint() { __asm__ __volatile__ ("bpt"); }
 inline void breakpoint() { __builtin_trap(); }
 #endif
 
-/* --- threading implementaiton bit --- */
-extern RapicornThreadTable ThreadTable; /* private, provided by rapicornthreadimpl.cc */
-
 /* --- string functionality --- */
 String                          string_multiply          (const String &s,
                                                           uint64       count);

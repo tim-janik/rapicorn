@@ -25,6 +25,7 @@
 #define rapicorn_threads_initialized()    ISLIKELY ((void*) ThreadTable.mutex_lock != (void*) ThreadTable.mutex_unlock)
 
 namespace Rapicorn {
+extern RapicornThreadTable ThreadTable; /* private, provided by rapicornthreadimpl.cc */
 
 /* --- Thread::ThreadWrapperInternal --- */
 struct Thread::ThreadWrapperInternal : public Thread {
