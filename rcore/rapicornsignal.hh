@@ -23,7 +23,7 @@ namespace Rapicorn {
 namespace Signals {
 
 /* --- EmissionBase --- */
-struct EmissionBase {
+struct EmissionBase : protected NonCopyable {
   bool restart_emission;
   bool stop_emission;
   EmissionBase() :
@@ -86,7 +86,7 @@ public:
 
 /* --- Signal Iterator --- */
 template<class Emission>
-class SignalBase::Iterator {
+class SignalBase::Iterator : protected NonCopyable {
   Iterator& operator= (const Iterator&);
 public:
   Emission &emission;
@@ -152,7 +152,7 @@ public:
 
 /* --- Collector --- */
 template<typename Result>
-struct CollectorLast {
+struct CollectorLast : protected NonCopyable {
   typedef Result result_type;
   template<typename InputIterator>
   Result operator() (InputIterator begin, InputIterator end)
@@ -166,9 +166,10 @@ struct CollectorLast {
     return result;
   }
 };
-template<typename Result> struct CollectorDefault : CollectorLast<Result> {};
+template<typename Result>
+struct CollectorDefault : CollectorLast<Result> {};
 template<>
-struct CollectorDefault<void> {
+struct CollectorDefault<void> : protected NonCopyable {
   typedef void result_type;
   template<typename InputIterator>
   void operator() (InputIterator begin, InputIterator end)
@@ -181,7 +182,7 @@ struct CollectorDefault<void> {
   }
 };
 template<typename Result>
-struct CollectorSum {
+struct CollectorSum : protected NonCopyable {
   typedef Result result_type;
   template<typename InputIterator>
   Result operator() (InputIterator begin, InputIterator end)
@@ -196,7 +197,7 @@ struct CollectorSum {
   }
 };
 template<typename Result>
-struct CollectorWhile0 {
+struct CollectorWhile0 : protected NonCopyable {
   typedef Result result_type;
   template<typename InputIterator>
   Result operator() (InputIterator begin, InputIterator end)
@@ -213,7 +214,7 @@ struct CollectorWhile0 {
   }
 };
 template<typename Result>
-struct CollectorUntil0 {
+struct CollectorUntil0 : protected NonCopyable {
   typedef Result result_type;
   template<typename InputIterator>
   Result operator() (InputIterator begin, InputIterator end)
@@ -232,7 +233,7 @@ struct CollectorUntil0 {
 
 /* --- ScopeReference --- */
 template<class Instance, typename Mark>
-class ScopeReference {
+class ScopeReference : protected NonCopyable {
   Instance &m_instance;
 public:
   ScopeReference  (Instance &instance) : m_instance (instance) { m_instance.ref(); }
@@ -240,7 +241,7 @@ public:
 };
 struct ScopeReferenceFinalizationMark : CollectorDefault<void> {};
 template<class Instance>
-class ScopeReference<Instance, ScopeReferenceFinalizationMark> {
+class ScopeReference<Instance, ScopeReferenceFinalizationMark> : protected NonCopyable {
   Instance &m_instance;
 public:
   ScopeReference  (Instance &instance) : m_instance (instance) { RAPICORN_ASSERT (m_instance.finalizing() == true); }
@@ -248,7 +249,7 @@ public:
 };
 
 /* --- SlotBase --- */
-class SlotBase {
+class SlotBase : protected NonCopyable {
 protected:
   TrampolineLink *m_link;
   void
