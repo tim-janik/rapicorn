@@ -496,7 +496,7 @@ void
 FirstInterface::void_func ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
-  fb.add_type_hash (0x200000001dfd7256ULL, 0xdec25cd632ee83caULL, 0x06b4549d6fedf832ULL, 0x9a1e54caedf1db9bULL); // proc_id
+  fb.add_type_hash (0x200000001dfd7256ULL, 0xdec25cd632ee83caULL, 0x06b4549d6fedf832ULL, 0x9a1e54caedf1db9bULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
 }
@@ -851,11 +851,11 @@ double
 UIWidgetArea::simple_method ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
-  fb.add_type_hash (0x30000000fd8072dfULL, 0x591f7cce6e74034aULL, 0x419df82c635c78d1ULL, 0x1e2fc6cf88d761faULL); // proc_id
+  fb.add_type_hash (0x30000000fd8072dfULL, 0x591f7cce6e74034aULL, 0x419df82c635c78d1ULL, 0x1e2fc6cf88d761faULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   double retval = frr.pop_double();
   delete fr;
   return retval;
@@ -864,12 +864,12 @@ double
 UIWidgetArea::single_arg (int arg_n)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
-  fb.add_type_hash (0x3000000075ce4c8bULL, 0x1a40a9c8bd145a39ULL, 0x37b83f96f1d3168bULL, 0x3f57c461185c3752ULL); // proc_id
+  fb.add_type_hash (0x3000000075ce4c8bULL, 0x1a40a9c8bd145a39ULL, 0x37b83f96f1d3168bULL, 0x3f57c461185c3752ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fb.add_int64 (arg_n);
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   double retval = frr.pop_double();
   delete fr;
   return retval;
@@ -878,12 +878,12 @@ double
 UIWidgetArea::single_arg2 (int arg_n)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
-  fb.add_type_hash (0x30000000179c202fULL, 0xa554850da029f547ULL, 0xe2591a43b7c79a61ULL, 0xe19a6853f11b1b99ULL); // proc_id
+  fb.add_type_hash (0x30000000179c202fULL, 0xa554850da029f547ULL, 0xe2591a43b7c79a61ULL, 0xe19a6853f11b1b99ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fb.add_int64 (arg_n);
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   double retval = frr.pop_double();
   delete fr;
   return retval;
@@ -893,13 +893,13 @@ UIWidgetArea::two_args (int arg_n,
                         double arg_r)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x300000006a210506ULL, 0xa76bb7cd90d84838ULL, 0x8000823cfb905b8cULL, 0x39826abcf9caba00ULL); // proc_id
+  fb.add_type_hash (0x300000006a210506ULL, 0xa76bb7cd90d84838ULL, 0x8000823cfb905b8cULL, 0x39826abcf9caba00ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fb.add_int64 (arg_n);
   fb.add_double (arg_r);
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   double retval = frr.pop_double();
   delete fr;
   return retval;
@@ -909,13 +909,13 @@ UIWidgetArea::two_args2 (int arg_n,
                          double arg_r)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x30000000ac125ff1ULL, 0xac6be3d45e25ada6ULL, 0x040efc8ab508b1d3ULL, 0x15e48df9e26c0caaULL); // proc_id
+  fb.add_type_hash (0x30000000ac125ff1ULL, 0xac6be3d45e25ada6ULL, 0x040efc8ab508b1d3ULL, 0x15e48df9e26c0caaULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fb.add_int64 (arg_n);
   fb.add_double (arg_r);
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   double retval = frr.pop_double();
   delete fr;
   return retval;
@@ -928,7 +928,7 @@ UIWidgetArea::multi_args (int arg_n,
                           double arg_y)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 5), *fr = NULL;
-  fb.add_type_hash (0x300000000361838dULL, 0xc298afde820561a5ULL, 0x8fe8c83788c4bb38ULL, 0xb3179ae3d510e7b2ULL); // proc_id
+  fb.add_type_hash (0x300000000361838dULL, 0xc298afde820561a5ULL, 0x8fe8c83788c4bb38ULL, 0xb3179ae3d510e7b2ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fb.add_int64 (arg_n);
   fb.add_double (arg_r);
@@ -937,7 +937,7 @@ UIWidgetArea::multi_args (int arg_n,
   fb.add_double (arg_y);
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   double retval = frr.pop_double();
   delete fr;
   return retval;
@@ -947,13 +947,13 @@ UIWidgetArea::self_method (UIWidgetArea &arg_ba1,
                            UIWidgetArea &arg_ba2)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x30000000b9d64621ULL, 0x3a96692d3e1ef7dbULL, 0xdced671b586f7aa7ULL, 0x1d3870f7ed0285e5ULL); // proc_id
+  fb.add_type_hash (0x30000000b9d64621ULL, 0x3a96692d3e1ef7dbULL, 0xdced671b586f7aa7ULL, 0x1d3870f7ed0285e5ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fb.add_object (arg_ba1._rpc_id());
   fb.add_object (arg_ba2._rpc_id());
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   double retval = frr.pop_double();
   delete fr;
   return retval;
@@ -962,7 +962,7 @@ void
 UIWidgetArea::void_method ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
-  fb.add_type_hash (0x200000000ff38422ULL, 0x440e8e84942acf8eULL, 0x0c4945e5794d8356ULL, 0x2e2e61471f31bfbfULL); // proc_id
+  fb.add_type_hash (0x200000000ff38422ULL, 0x440e8e84942acf8eULL, 0x0c4945e5794d8356ULL, 0x2e2e61471f31bfbfULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
 }
@@ -970,11 +970,11 @@ std::string
 UIWidgetArea::on_click2out ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
-  fb.add_type_hash (0x300000004b649644ULL, 0x8a9b2140ad7fc83dULL, 0x10b67ed382387b14ULL, 0xe7b6cc0714a17f30ULL); // proc_id
+  fb.add_type_hash (0x300000004b649644ULL, 0x8a9b2140ad7fc83dULL, 0x10b67ed382387b14ULL, 0xe7b6cc0714a17f30ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   std::string retval = frr.pop_string();
   delete fr;
   return retval;
@@ -983,7 +983,7 @@ void
 UIWidgetArea::on_click2in (const std::string &arg_command)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
-  fb.add_type_hash (0x20000000f671167cULL, 0xdfc42ce42beb58f7ULL, 0x15afc969aae521d6ULL, 0xadbec8ab9522f6f8ULL); // proc_id
+  fb.add_type_hash (0x20000000f671167cULL, 0xdfc42ce42beb58f7ULL, 0x15afc969aae521d6ULL, 0xadbec8ab9522f6f8ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fb.add_string (arg_command);
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
@@ -1032,7 +1032,7 @@ void
 QuickIface::simple_function (int arg_i)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
-  fb.add_type_hash (0x20000000be855008ULL, 0x6bf2269ff6939544ULL, 0x6a0846e9f5a62da8ULL, 0x59c8e2a4e4629e80ULL); // proc_id
+  fb.add_type_hash (0x20000000be855008ULL, 0x6bf2269ff6939544ULL, 0x6a0846e9f5a62da8ULL, 0x59c8e2a4e4629e80ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fb.add_int64 (arg_i);
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
@@ -1041,7 +1041,7 @@ void
 MethodTestInterface::method_with_void ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
-  fb.add_type_hash (0x20000000a426153aULL, 0x0a2f5758267a2651ULL, 0xd9bff16cf6755833ULL, 0x8959ddaf9e5b8a44ULL); // proc_id
+  fb.add_type_hash (0x20000000a426153aULL, 0x0a2f5758267a2651ULL, 0xd9bff16cf6755833ULL, 0x8959ddaf9e5b8a44ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
 }
@@ -1050,13 +1050,13 @@ MethodTestInterface::method_with_bools (bool arg_input,
                                         bool arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x300000003917295eULL, 0x76cb59d18d695319ULL, 0x0fe6acdaa38d48dfULL, 0xa26ca0854c18e565ULL); // proc_id
+  fb.add_type_hash (0x300000003917295eULL, 0x76cb59d18d695319ULL, 0x0fe6acdaa38d48dfULL, 0xa26ca0854c18e565ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fb.add_int64 (arg_input);
   fb.add_int64 (arg_optval);
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   bool retval = frr.pop_int64();
   delete fr;
   return retval;
@@ -1066,13 +1066,13 @@ MethodTestInterface::method_with_ints (int arg_input,
                                        int arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x3000000015f688dcULL, 0x4db9c06f4357aa4eULL, 0x902ee7647790de7cULL, 0x18aa217be2c83cbaULL); // proc_id
+  fb.add_type_hash (0x3000000015f688dcULL, 0x4db9c06f4357aa4eULL, 0x902ee7647790de7cULL, 0x18aa217be2c83cbaULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fb.add_int64 (arg_input);
   fb.add_int64 (arg_optval);
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   int retval = frr.pop_int64();
   delete fr;
   return retval;
@@ -1082,13 +1082,13 @@ MethodTestInterface::method_with_floats (double arg_input,
                                          double arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x30000000bfc2d47bULL, 0x70b13d1cdf2c9488ULL, 0x77c2ea3ad44c2625ULL, 0xd6093e05e70ea643ULL); // proc_id
+  fb.add_type_hash (0x30000000bfc2d47bULL, 0x70b13d1cdf2c9488ULL, 0x77c2ea3ad44c2625ULL, 0xd6093e05e70ea643ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fb.add_double (arg_input);
   fb.add_double (arg_optval);
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   double retval = frr.pop_double();
   delete fr;
   return retval;
@@ -1098,13 +1098,13 @@ MethodTestInterface::method_with_string (const std::string &arg_input,
                                          const std::string &arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x300000002732b2feULL, 0x6dfd49db44b97641ULL, 0x010dcacac6eb8ed7ULL, 0xa79383e035fc64e1ULL); // proc_id
+  fb.add_type_hash (0x300000002732b2feULL, 0x6dfd49db44b97641ULL, 0x010dcacac6eb8ed7ULL, 0xa79383e035fc64e1ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fb.add_string (arg_input);
   fb.add_string (arg_optval);
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   std::string retval = frr.pop_string();
   delete fr;
   return retval;
@@ -1114,13 +1114,13 @@ MethodTestInterface::method_with_enum (QuickEnum arg_input,
                                        QuickEnum arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x300000003f676d86ULL, 0x903cbdda7f9bf8e6ULL, 0xb56b87771cbd4b69ULL, 0x5723ee9d219ddda5ULL); // proc_id
+  fb.add_type_hash (0x300000003f676d86ULL, 0x903cbdda7f9bf8e6ULL, 0xb56b87771cbd4b69ULL, 0x5723ee9d219ddda5ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fb.add_evalue (arg_input);
   fb.add_evalue (arg_optval);
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   QuickEnum retval = QuickEnum (frr.pop_evalue());
   delete fr;
   return retval;
@@ -1130,13 +1130,13 @@ MethodTestInterface::method_with_record (const QuickRecord &arg_input,
                                          const QuickRecord &arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x3000000004a0b014ULL, 0x7eef09335a6cd6afULL, 0xd80237b6e1df12f6ULL, 0x70618be70ed6e858ULL); // proc_id
+  fb.add_type_hash (0x3000000004a0b014ULL, 0x7eef09335a6cd6afULL, 0xd80237b6e1df12f6ULL, 0x70618be70ed6e858ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   if (!arg_input.proto_add (PLIC_COUPLER(), fb)) THROW_ERROR();
   if (!arg_optval.proto_add (PLIC_COUPLER(), fb)) THROW_ERROR();
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   QuickRecord retval;
   if (!retval.proto_pop (PLIC_COUPLER(), frr)) THROW_ERROR();
   delete fr;
@@ -1147,13 +1147,13 @@ MethodTestInterface::method_with_sequence (const QuickSequence &arg_input,
                                            const QuickSequence &arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x30000000e92eb1f1ULL, 0xbc6d5e758278964aULL, 0xe88f958f88ca346cULL, 0xf29e446630c57f23ULL); // proc_id
+  fb.add_type_hash (0x30000000e92eb1f1ULL, 0xbc6d5e758278964aULL, 0xe88f958f88ca346cULL, 0xf29e446630c57f23ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   if (!arg_input.proto_add (PLIC_COUPLER(), fb)) THROW_ERROR();
   if (!arg_optval.proto_add (PLIC_COUPLER(), fb)) THROW_ERROR();
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   QuickSequence retval;
   if (!retval.proto_pop (PLIC_COUPLER(), frr)) THROW_ERROR();
   delete fr;
@@ -1164,13 +1164,13 @@ MethodTestInterface::method_with_interface (GrandChild &arg_input,
                                             GrandChild &arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x3000000001640ae0ULL, 0xf5403244c684c076ULL, 0x208c721dda088467ULL, 0x425f3425b0dcfad4ULL); // proc_id
+  fb.add_type_hash (0x3000000001640ae0ULL, 0xf5403244c684c076ULL, 0x208c721dda088467ULL, 0x425f3425b0dcfad4ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fb.add_object (arg_input._rpc_id());
   fb.add_object (arg_optval._rpc_id());
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   GrandChild retval = GrandChild (PLIC_COUPLER(), frr);
   delete fr;
   return retval;
@@ -1180,13 +1180,13 @@ MethodTestInterface::method_with_quickiface (QuickIface &arg_input,
                                              QuickIface &arg_iface0)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
-  fb.add_type_hash (0x3000000082dc142eULL, 0x7d16cadebfca9b39ULL, 0x168d05eb3cf56adbULL, 0x31e28c41cf8bb4f9ULL); // proc_id
+  fb.add_type_hash (0x3000000082dc142eULL, 0x7d16cadebfca9b39ULL, 0x168d05eb3cf56adbULL, 0x31e28c41cf8bb4f9ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fb.add_object (arg_input._rpc_id());
   fb.add_object (arg_iface0._rpc_id());
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   QuickIface retval = QuickIface (PLIC_COUPLER(), frr);
   delete fr;
   return retval;
@@ -1198,12 +1198,12 @@ int
 PureMethods::pure_method (double arg_f)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
-  fb.add_type_hash (0x30000000e96382b8ULL, 0x8c16fe069c1d6b1eULL, 0x002e82b90c7db308ULL, 0x9c8a9e5a95b6ea99ULL); // proc_id
+  fb.add_type_hash (0x30000000e96382b8ULL, 0x8c16fe069c1d6b1eULL, 0x002e82b90c7db308ULL, 0x9c8a9e5a95b6ea99ULL); // msgid
   fb.add_object ((*this)._rpc_id());
   fb.add_double (arg_f);
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
-  frr.skip(); // proc_id
+  frr.skip(); // msgid
   int retval = frr.pop_int64();
   delete fr;
   return retval;

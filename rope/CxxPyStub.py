@@ -327,8 +327,8 @@ class Generator:
     s += '{\n'
     s += '  Plic::Coupler &cpl = PLIC_COUPLER();\n'
     s += '  PyObject *item, *pyfoR = NULL;\n'
-    s += '  FieldBuffer *fm = FieldBuffer::_new (4 + 1 + 2), &fb = *fm, *fr = NULL;\n' # proc_id self ConId ClosureId
-    s += '  fb.add_type_hash (%s); // proc_id\n' % self.method_digest (mtype)
+    s += '  FieldBuffer *fm = FieldBuffer::_new (4 + 1 + 2), &fb = *fm, *fr = NULL;\n' # msgid self ConId ClosureId
+    s += '  fb.add_type_hash (%s); // msgid\n' % self.method_digest (mtype)
     s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 0);  // self\n'
     s += self.generate_proto_add_py ('fb', class_info, 'item')
@@ -345,7 +345,7 @@ class Generator:
     s += '  ERRORifnotret (fr);\n'
     s += '  if (fr) {\n'
     s += '    FieldBufferReader frr (*fr);\n'
-    s += '    frr.skip(); // proc_id for return\n' # FIXME: check errors
+    s += '    frr.skip(); // msgid for return\n' # FIXME: check errors
     s += '    if (frr.remaining() == 1) {\n'
     s += '      pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();\n'
     s += '    }\n'
@@ -369,9 +369,9 @@ class Generator:
     s += '_plic_rpc_%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
     s += '{\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
-    s += '  FieldBuffer *fm = FieldBuffer::_new (4 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # proc_id self
-    s += '  fb.add_type_hash (%s); // proc_id\n' % self.method_digest (mtype)
-    s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("PLIC: wrong number of arguments");\n' % len (mtype.args) # proc_id self
+    s += '  FieldBuffer *fm = FieldBuffer::_new (4 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # msgid self
+    s += '  fb.add_type_hash (%s); // msgid\n' % self.method_digest (mtype)
+    s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("PLIC: wrong number of arguments");\n' % len (mtype.args) # msgid self
     arg_counter = 0
     s += '  item = PyTuple_GET_ITEM (pyargs, %d);  // self\n' % arg_counter
     s += self.generate_proto_add_py ('fb', class_info, 'item')
@@ -389,7 +389,7 @@ class Generator:
       s += '  ERRORifnotret (fr);\n'
       s += '  if (fr) {\n'
       s += '    ' + FieldBuffer + 'Reader frr (*fr);\n'
-      s += '    frr.skip(); // proc_id for return\n' # FIXME: check errors
+      s += '    frr.skip(); // msgid for return\n' # FIXME: check errors
       s += '    if (frr.remaining() == 1) {\n'
       s += reindent ('      ', self.generate_proto_pop_py ('frr', mtype.rtype, 'pyfoR')) + '\n'
       s += '    }\n'

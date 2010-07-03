@@ -359,7 +359,7 @@ class Generator:
     s += q + self.format_func_args (mtype, 'arg_', len (q)) + ')\n{\n'
     # vars, procedure
     s += '  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + %u), *fr = NULL;\n' % len (mtype.args)
-    s += '  fb.add_type_hash (%s); // proc_id\n' % self.method_digest (mtype)
+    s += '  fb.add_type_hash (%s); // msgid\n' % self.method_digest (mtype)
     # marshal args
     s += self.generate_proto_add_args (cplfb, class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
@@ -370,7 +370,7 @@ class Generator:
     if hasret:
       rarg = ('retval', mtype.rtype)
       s += '  FieldBufferReader frr (*fr);\n'
-      s += '  frr.skip(); // proc_id\n'
+      s += '  frr.skip(); // msgid\n'
       cplfrr = (cplfb[0], 'frr')
       # FIXME: check return error and return type
       if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
