@@ -336,6 +336,7 @@ main (int   argc,
       static Rapicorn::Logging testing_debug = Rapicorn::Logging ("testing");
       RAPICORN_DEBUG (testing_debug, "logging test selected via: --test-logging");
       pdiag ("diagnostics on the last errno assignment");
+      Logging::override_config (""); // cancel fatal-warnings, usually enforced for tests
       warning ("the next logging message might abort the program");
       error ("we're approaching serious conditions that may lead to abort()");
       fatal ("at this point, program aborting is certain");

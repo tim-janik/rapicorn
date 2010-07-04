@@ -81,7 +81,7 @@ check-logging-simple: infotest
 	$(_@) grep -q 'WARNING:.*logging message' $(TSTOUT) || $(call TSTRESULT)
 	$(_@) grep -q 'ERROR:.*serious' $(TSTOUT) || $(call TSTRESULT)
 	$(_@) grep -q 'FATAL:.*abort' $(TSTOUT) || $(call TSTRESULT)
-	$(_@) grep -qi '^abort' $(TSTOUT) || $(call TSTRESULT)
+	$(_@) grep -qi 'aborting..' $(TSTOUT) || $(call TSTRESULT)
 	$(_@) $(call TSTRESULT)
 	$(_@) rm -f $(TSTOUT)
 check: check-logging-simple

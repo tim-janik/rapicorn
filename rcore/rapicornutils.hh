@@ -186,11 +186,14 @@ inline void breakpoint ();
 
 /* === implementeation details === */
 class Logging {
-  static bool   cdebug, cany, cdiag, cdevel, cverbose, cstderr, csyslog, cnfsyslog;
-  static String config, logfile;
+  static bool   cdebug, cany, cdiag, cdevel, cverbose;
+  static bool   cwfatal, cstderr, csyslog, cnfsyslog;
+  static String config, ovrconfig, logfile;
   const char   *detail;
   void          add    ();
 public:
+  static String override_config ();
+  static void   override_config (const String &cfg);
   enum Flags { PERRNO = 1, CURTLY = 2 };
   inline      Logging  (const char *static_detail, Flags flg = Flags (0)) : m_detail (static_detail), m_flags (flg) { add(); }
   static void dmessage (const char *file, int line, const char *func, const char *domain,

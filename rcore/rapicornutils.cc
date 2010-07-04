@@ -355,11 +355,28 @@ bool   Logging::cany = true;
 bool   Logging::cdiag = true;
 bool   Logging::cdevel = true;
 bool   Logging::cverbose = false;
+bool   Logging::cwfatal = false;
 bool   Logging::cstderr = true;
 bool   Logging::csyslog = false;
 bool   Logging::cnfsyslog = false;
 String Logging::logfile = "";
 String Logging::config = "debug";
+String Logging::ovrconfig = "";
+
+String
+Logging::override_config ()
+{
+  return ovrconfig;
+}
+
+void
+Logging::override_config (const String &cfg)
+{
+  String str = cfg;
+  std::transform (str.begin(), str.end(), str.begin(), ::tolower);
+  ovrconfig = str;
+  setup();
+}
 
 void
 Logging::setup ()
@@ -368,8 +385,11 @@ Logging::setup ()
   String str = s ? s : "";
   std::transform (str.begin(), str.end(), str.begin(), ::tolower);
   config = str;
+  str = config + ":" + ovrconfig;
   const ssize_t wall = lstring_find_word (str, "log-all");
   const ssize_t wvrb = lstring_find_word (str, "verbose");
+  const ssize_t wfat = lstring_find_word (str, "fatal-warnings");
+  const ssize_t wnft = lstring_find_word (str, "no-fatal-warnings");
   const ssize_t wbrf = lstring_find_word (str, "brief");
   const ssize_t wdbg = lstring_find_word (str, "debug"); // debug any
   const ssize_t wndg = lstring_find_word (str, "no-debug");
@@ -390,6 +410,7 @@ Logging::setup ()
   cdevel = devel1 > devel0;
   cdiag = MAX (bool (cdevel), MAX (wall, wdag)) > wdng;
   cverbose = MAX (bool (wall), wvrb) > wbrf;
+  cwfatal = wfat > wnft;
   cany = MAX (bool (wall), wdbg) > wndg;
   cdebug = cany || lstring_find_word (str, "debug", '-');
   cstderr = MAX (bool (1), wyse) > wnse;
@@ -399,6 +420,7 @@ Logging::setup ()
     {
       String keys = "  log-all:verbose:brief:debug:no-debug:devel:stable\n"
                     "  help:diag:no-diag:stderr:no-stderr:syslog:no-syslog\n"
+                    "  fatal-warnings:no-fatal-warnings\n";
                     "  debug-*:no-debug-*: (where * is a custom debug prefix)";
       vector<String> dk = Logging::debug_keys();
       for (uint i = 0; i < dk.size(); i++)
@@ -495,7 +517,11 @@ Logging::vmessage (const char *file, int line, const char *func, const char *dom
   String f = func ? string_printf ("%s():", func) : "";
   String u = string_vprintf (format, vargs);
   String e = perrno ? String (": ") + strerror (saved_errno) : "";
-  bool fatal_abort = kind == 'f' || (kind == 'e' && cdevel);
+  bool fatal_abort = kind == 'f' ||
+                     (kind == 'e' && cdevel) ||
+                     (kind == 'e' && cwfatal) ||
+                     (kind == 'w' && cwfatal);
+  const char *wfatal = kind == 'w' && cwfatal ? "(fatal warnings) " : "";
   // stderr
   if (cstderr || fatal_abort)
     {
@@ -520,6 +546,7 @@ Logging::vmessage (const char *file, int line, const char *func, const char *dom
       else
         m += p + sk + " " + u + e;
       if (m[m.size() - 1] != '\n') m += "\n"; // newline termination
+      m += wfatal;
       printerr ("%s", m.c_str());
     }
   // logfile
@@ -547,7 +574,7 @@ Logging::vmessage (const char *file, int line, const char *func, const char *dom
           String m = p + l + d + f + k + " " + u + e;
           if (m[m.size() - 1] != '\n') m += "\n"; // newline termination
           if (fatal_abort)
-            m += "aborting...\n";
+            m += String (wfatal) + "aborting...\n";
           int err;
           do
             err = write (logfd, m.data(), m.size());

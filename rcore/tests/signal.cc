@@ -440,11 +440,6 @@ main (int   argc,
 {
   rapicorn_init_test (&argc, &argv);
   test_slot_trampoline ();
-#if 0
-  SignalTest signal_test;
-  signal_test.basic_signal_tests();
-  signal_test.member_pointer_tests();
-#endif
   Emitter3 e3;
   TemporaryObject::test_temporary_object (e3);
   Connection3 c3;
