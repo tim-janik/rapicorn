@@ -7,6 +7,7 @@ INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_ROPE_CF
 DEFS      = -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RAPICORN-ROPE\" # "
 PLICINT   = $(top_builddir)/plic/plic-intern
 RAPICORNIDL  = $(srcdir)/../ui/rapicorn.idl
+RAPICORNINS  = $(srcdir)/../ui/insertions.cc
 HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
 
 # === CxxRapicorn ===
@@ -40,10 +41,11 @@ $(srcdir)/py-rope.cc: cpy2rope.cc
 CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
 
 # === cxx-client ===
-cxx-client.hh: $(RAPICORNIDL) $(HARDCODEDIDL) $(srcdir)/CxxCaller.py
+cxx-client.hh: $(RAPICORNIDL) $(HARDCODEDIDL) $(RAPICORNINS) $(srcdir)/CxxCaller.py
 	: # build cxx-client.hh from rapicorn.idl
 	: # ${PLICINT} -G $(srcdir)/CxxCaller -g clienthh $(HARDCODEDIDL) -o xgen-$(@F)
-	${PLICINT} -G $(srcdir)/CxxCaller -g clienthh $(RAPICORNIDL) -o xgen-$(@F)
+	${PLICINT} -G $(srcdir)/CxxCaller -g clienthh $(RAPICORNIDL) \
+	  --insertions $(RAPICORNINS) -o xgen-$(@F)
 	mv xgen-$(@F) $@
 cxx-client.cc: $(RAPICORNIDL) $(HARDCODEDIDL) $(srcdir)/CxxCaller.py
 	: # build cxx-client.cc from rapicorn.idl
