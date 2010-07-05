@@ -133,10 +133,10 @@ enum ExtensiveEnum {
   V36 = 42, // "foo""4"
 };
 
-class I_FirstInterface_Iface : public virtual Plic::SimpleServer {
+class I_FirstInterface_Interface : public virtual Plic::SimpleServer {
 protected:
-  explicit                 I_FirstInterface_Iface ();
-  virtual /*Des*/         ~I_FirstInterface_Iface () = 0;
+  explicit                 I_FirstInterface_Interface ();
+  virtual /*Des*/         ~I_FirstInterface_Interface () = 0;
 public:
   virtual void            void_func ();
 };
@@ -147,12 +147,12 @@ protected:
 public:
   inline FirstInterface () {}
   inline FirstInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline FirstInterface (I_FirstInterface_Iface *iface) { _iface (iface); }
-  inline FirstInterface (I_FirstInterface_Iface &iface) { _iface (&iface); }
+  inline FirstInterface (I_FirstInterface_Interface *iface) { _iface (iface); }
+  inline FirstInterface (I_FirstInterface_Interface &iface) { _iface (&iface); }
   // void            void_func ();
-  inline I_FirstInterface_Iface& operator*  () const { return *dynamic_cast<I_FirstInterface_Iface*> (_iface()); }
-  inline I_FirstInterface_Iface* operator-> () const { return dynamic_cast<I_FirstInterface_Iface*> (_iface()); }
-  inline operator  I_FirstInterface_Iface&  () const { return operator*(); }
+  inline I_FirstInterface_Interface& operator*  () const { return *dynamic_cast<I_FirstInterface_Interface*> (_iface()); }
+  inline I_FirstInterface_Interface* operator-> () const { return dynamic_cast<I_FirstInterface_Interface*> (_iface()); }
+  inline operator  I_FirstInterface_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 struct XFooRecord {
@@ -353,13 +353,13 @@ typedef std::string s;
 
 namespace InterfaceTests {
 
-class I_UIWidgetArea_Iface : public virtual Plic::SimpleServer {
+class I_UIWidgetArea_Interface : public virtual Plic::SimpleServer {
 protected:
-  explicit                 I_UIWidgetArea_Iface ();
-  virtual /*Des*/         ~I_UIWidgetArea_Iface () = 0;
+  explicit                 I_UIWidgetArea_Interface ();
+  virtual /*Des*/         ~I_UIWidgetArea_Interface () = 0;
 public:
-  typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Iface, void ()> Signal_void_signal;
-  typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Iface, double (I_UIWidgetArea_Iface &ba1, int someint)> Signal_sample_signal;
+  typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Interface, void ()> Signal_void_signal;
+  typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Interface, double (I_UIWidgetArea_Interface &ba1, int someint)> Signal_sample_signal;
   Signal_void_signal sig_void_signal;
   Signal_sample_signal sig_sample_signal;
   virtual double          simple_method ();
@@ -374,8 +374,8 @@ public:
                                          int i,
                                          const std::string &s = "String ding",
                                          double y = 5);
-  virtual double          self_method   (I_UIWidgetArea_Iface &ba1,
-                                         I_UIWidgetArea_Iface &ba2);
+  virtual double          self_method   (I_UIWidgetArea_Interface &ba1,
+                                         I_UIWidgetArea_Interface &ba2);
   virtual void            void_method   ();
   virtual std::string     on_click2out  ();
   virtual void            on_click2in   (const std::string &command);
@@ -387,8 +387,8 @@ protected:
 public:
   inline UIWidgetArea () {}
   inline UIWidgetArea (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline UIWidgetArea (I_UIWidgetArea_Iface *iface) { _iface (iface); }
-  inline UIWidgetArea (I_UIWidgetArea_Iface &iface) { _iface (&iface); }
+  inline UIWidgetArea (I_UIWidgetArea_Interface *iface) { _iface (iface); }
+  inline UIWidgetArea (I_UIWidgetArea_Interface &iface) { _iface (&iface); }
   // double          simple_method ();
   // double          single_arg    (int);
   // double          single_arg2   (int);
@@ -399,16 +399,16 @@ public:
   // void            void_method   ();
   // std::string     on_click2out  ();
   // void            on_click2in   (const std::string&);
-  inline I_UIWidgetArea_Iface& operator*  () const { return *dynamic_cast<I_UIWidgetArea_Iface*> (_iface()); }
-  inline I_UIWidgetArea_Iface* operator-> () const { return dynamic_cast<I_UIWidgetArea_Iface*> (_iface()); }
-  inline operator  I_UIWidgetArea_Iface&  () const { return operator*(); }
+  inline I_UIWidgetArea_Interface& operator*  () const { return *dynamic_cast<I_UIWidgetArea_Interface*> (_iface()); }
+  inline I_UIWidgetArea_Interface* operator-> () const { return dynamic_cast<I_UIWidgetArea_Interface*> (_iface()); }
+  inline operator  I_UIWidgetArea_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class I_Parent_Iface : public virtual Plic::SimpleServer {
+class I_Parent_Interface : public virtual Plic::SimpleServer {
 protected:
-  explicit                 I_Parent_Iface ();
-  virtual /*Des*/         ~I_Parent_Iface () = 0;
+  explicit                 I_Parent_Interface ();
+  virtual /*Des*/         ~I_Parent_Interface () = 0;
 public:
 };
 class Parent : public virtual Plic::SmartHandle {
@@ -418,18 +418,18 @@ protected:
 public:
   inline Parent () {}
   inline Parent (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline Parent (I_Parent_Iface *iface) { _iface (iface); }
-  inline Parent (I_Parent_Iface &iface) { _iface (&iface); }
-  inline I_Parent_Iface& operator*  () const { return *dynamic_cast<I_Parent_Iface*> (_iface()); }
-  inline I_Parent_Iface* operator-> () const { return dynamic_cast<I_Parent_Iface*> (_iface()); }
-  inline operator  I_Parent_Iface&  () const { return operator*(); }
+  inline Parent (I_Parent_Interface *iface) { _iface (iface); }
+  inline Parent (I_Parent_Interface &iface) { _iface (&iface); }
+  inline I_Parent_Interface& operator*  () const { return *dynamic_cast<I_Parent_Interface*> (_iface()); }
+  inline I_Parent_Interface* operator-> () const { return dynamic_cast<I_Parent_Interface*> (_iface()); }
+  inline operator  I_Parent_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class I_Child_Iface : public virtual I_Parent_Iface {
+class I_Child_Interface : public virtual I_Parent_Interface {
 protected:
-  explicit                 I_Child_Iface ();
-  virtual /*Des*/         ~I_Child_Iface () = 0;
+  explicit                 I_Child_Interface ();
+  virtual /*Des*/         ~I_Child_Interface () = 0;
 public:
 };
 class Child : public Parent {
@@ -439,18 +439,18 @@ protected:
 public:
   inline Child () {}
   inline Child (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline Child (I_Child_Iface *iface) { _iface (iface); }
-  inline Child (I_Child_Iface &iface) { _iface (&iface); }
-  inline I_Child_Iface& operator*  () const { return *dynamic_cast<I_Child_Iface*> (_iface()); }
-  inline I_Child_Iface* operator-> () const { return dynamic_cast<I_Child_Iface*> (_iface()); }
-  inline operator  I_Child_Iface&  () const { return operator*(); }
+  inline Child (I_Child_Interface *iface) { _iface (iface); }
+  inline Child (I_Child_Interface &iface) { _iface (&iface); }
+  inline I_Child_Interface& operator*  () const { return *dynamic_cast<I_Child_Interface*> (_iface()); }
+  inline I_Child_Interface* operator-> () const { return dynamic_cast<I_Child_Interface*> (_iface()); }
+  inline operator  I_Child_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class I_Descendant_Iface : public virtual I_Child_Iface {
+class I_Descendant_Interface : public virtual I_Child_Interface {
 protected:
-  explicit                 I_Descendant_Iface ();
-  virtual /*Des*/         ~I_Descendant_Iface () = 0;
+  explicit                 I_Descendant_Interface ();
+  virtual /*Des*/         ~I_Descendant_Interface () = 0;
 public:
 };
 class Descendant : public Child {
@@ -460,18 +460,18 @@ protected:
 public:
   inline Descendant () {}
   inline Descendant (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline Descendant (I_Descendant_Iface *iface) { _iface (iface); }
-  inline Descendant (I_Descendant_Iface &iface) { _iface (&iface); }
-  inline I_Descendant_Iface& operator*  () const { return *dynamic_cast<I_Descendant_Iface*> (_iface()); }
-  inline I_Descendant_Iface* operator-> () const { return dynamic_cast<I_Descendant_Iface*> (_iface()); }
-  inline operator  I_Descendant_Iface&  () const { return operator*(); }
+  inline Descendant (I_Descendant_Interface *iface) { _iface (iface); }
+  inline Descendant (I_Descendant_Interface &iface) { _iface (&iface); }
+  inline I_Descendant_Interface& operator*  () const { return *dynamic_cast<I_Descendant_Interface*> (_iface()); }
+  inline I_Descendant_Interface* operator-> () const { return dynamic_cast<I_Descendant_Interface*> (_iface()); }
+  inline operator  I_Descendant_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class I_GrandChild_Iface : public virtual I_Descendant_Iface {
+class I_GrandChild_Interface : public virtual I_Descendant_Interface {
 protected:
-  explicit                 I_GrandChild_Iface ();
-  virtual /*Des*/         ~I_GrandChild_Iface () = 0;
+  explicit                 I_GrandChild_Interface ();
+  virtual /*Des*/         ~I_GrandChild_Interface () = 0;
 public:
 };
 class GrandChild : public Descendant {
@@ -481,11 +481,11 @@ protected:
 public:
   inline GrandChild () {}
   inline GrandChild (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline GrandChild (I_GrandChild_Iface *iface) { _iface (iface); }
-  inline GrandChild (I_GrandChild_Iface &iface) { _iface (&iface); }
-  inline I_GrandChild_Iface& operator*  () const { return *dynamic_cast<I_GrandChild_Iface*> (_iface()); }
-  inline I_GrandChild_Iface* operator-> () const { return dynamic_cast<I_GrandChild_Iface*> (_iface()); }
-  inline operator  I_GrandChild_Iface&  () const { return operator*(); }
+  inline GrandChild (I_GrandChild_Interface *iface) { _iface (iface); }
+  inline GrandChild (I_GrandChild_Interface &iface) { _iface (&iface); }
+  inline I_GrandChild_Interface& operator*  () const { return *dynamic_cast<I_GrandChild_Interface*> (_iface()); }
+  inline I_GrandChild_Interface* operator-> () const { return dynamic_cast<I_GrandChild_Interface*> (_iface()); }
+  inline operator  I_GrandChild_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 enum QuickEnum {
@@ -512,10 +512,10 @@ struct QuickSequence {
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 
-class I_QuickIface_Iface : public virtual Plic::SimpleServer {
+class I_QuickIface_Interface : public virtual Plic::SimpleServer {
 protected:
-  explicit                 I_QuickIface_Iface ();
-  virtual /*Des*/         ~I_QuickIface_Iface () = 0;
+  explicit                 I_QuickIface_Interface ();
+  virtual /*Des*/         ~I_QuickIface_Interface () = 0;
 public:
   virtual void            simple_function (int i = 9);
 };
@@ -526,19 +526,19 @@ protected:
 public:
   inline QuickIface () {}
   inline QuickIface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline QuickIface (I_QuickIface_Iface *iface) { _iface (iface); }
-  inline QuickIface (I_QuickIface_Iface &iface) { _iface (&iface); }
+  inline QuickIface (I_QuickIface_Interface *iface) { _iface (iface); }
+  inline QuickIface (I_QuickIface_Interface &iface) { _iface (&iface); }
   // void            simple_function (int);
-  inline I_QuickIface_Iface& operator*  () const { return *dynamic_cast<I_QuickIface_Iface*> (_iface()); }
-  inline I_QuickIface_Iface* operator-> () const { return dynamic_cast<I_QuickIface_Iface*> (_iface()); }
-  inline operator  I_QuickIface_Iface&  () const { return operator*(); }
+  inline I_QuickIface_Interface& operator*  () const { return *dynamic_cast<I_QuickIface_Interface*> (_iface()); }
+  inline I_QuickIface_Interface* operator-> () const { return dynamic_cast<I_QuickIface_Interface*> (_iface()); }
+  inline operator  I_QuickIface_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class I_MethodTestInterface_Iface : public virtual Plic::SimpleServer {
+class I_MethodTestInterface_Interface : public virtual Plic::SimpleServer {
 protected:
-  explicit                 I_MethodTestInterface_Iface ();
-  virtual /*Des*/         ~I_MethodTestInterface_Iface () = 0;
+  explicit                 I_MethodTestInterface_Interface ();
+  virtual /*Des*/         ~I_MethodTestInterface_Interface () = 0;
 public:
   virtual void            method_with_void       ();
   virtual bool            method_with_bools      (bool input,
@@ -555,10 +555,10 @@ public:
                                                   const QuickRecord &optval = QuickRecord());
   virtual QuickSequence   method_with_sequence   (const QuickSequence &input,
                                                   const QuickSequence &optval = QuickSequence());
-  virtual I_GrandChild_Iface* method_with_interface  (I_GrandChild_Iface &input,
-                                                      I_GrandChild_Iface &optval = *(I_GrandChild_Iface*) NULL);
-  virtual I_QuickIface_Iface* method_with_quickiface (I_QuickIface_Iface &input,
-                                                      I_QuickIface_Iface &iface0 = *(I_QuickIface_Iface*) NULL);
+  virtual I_GrandChild_Interface* method_with_interface  (I_GrandChild_Interface &input,
+                                                          I_GrandChild_Interface &optval = *(I_GrandChild_Interface*) NULL);
+  virtual I_QuickIface_Interface* method_with_quickiface (I_QuickIface_Interface &input,
+                                                          I_QuickIface_Interface &iface0 = *(I_QuickIface_Interface*) NULL);
 };
 class MethodTestInterface : public virtual Plic::SmartHandle {
 protected:
@@ -567,8 +567,8 @@ protected:
 public:
   inline MethodTestInterface () {}
   inline MethodTestInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline MethodTestInterface (I_MethodTestInterface_Iface *iface) { _iface (iface); }
-  inline MethodTestInterface (I_MethodTestInterface_Iface &iface) { _iface (&iface); }
+  inline MethodTestInterface (I_MethodTestInterface_Interface *iface) { _iface (iface); }
+  inline MethodTestInterface (I_MethodTestInterface_Interface &iface) { _iface (&iface); }
   // void            method_with_void       ();
   // bool            method_with_bools      (bool, bool);
   // int             method_with_ints       (int, int);
@@ -579,37 +579,37 @@ public:
   // QuickSequence   method_with_sequence   (const QuickSequence&, const QuickSequence&);
   // GrandChild      method_with_interface  (GrandChild&, GrandChild&);
   // QuickIface      method_with_quickiface (QuickIface&, QuickIface&);
-  inline I_MethodTestInterface_Iface& operator*  () const { return *dynamic_cast<I_MethodTestInterface_Iface*> (_iface()); }
-  inline I_MethodTestInterface_Iface* operator-> () const { return dynamic_cast<I_MethodTestInterface_Iface*> (_iface()); }
-  inline operator  I_MethodTestInterface_Iface&  () const { return operator*(); }
+  inline I_MethodTestInterface_Interface& operator*  () const { return *dynamic_cast<I_MethodTestInterface_Interface*> (_iface()); }
+  inline I_MethodTestInterface_Interface* operator-> () const { return dynamic_cast<I_MethodTestInterface_Interface*> (_iface()); }
+  inline operator  I_MethodTestInterface_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class I_SignalTestInterface_Iface : public virtual Plic::SimpleServer {
+class I_SignalTestInterface_Interface : public virtual Plic::SimpleServer {
 protected:
-  explicit                 I_SignalTestInterface_Iface ();
-  virtual /*Des*/         ~I_SignalTestInterface_Iface () = 0;
+  explicit                 I_SignalTestInterface_Interface ();
+  virtual /*Des*/         ~I_SignalTestInterface_Interface () = 0;
 public:
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void ()> Signal_void_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, bool ()> Signal_bool_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, int ()> Signal_int_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, double ()> Signal_float_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, std::string ()> Signal_string_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, QuickEnum ()> Signal_enum_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, QuickRecord ()> Signal_record_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, QuickSequence ()> Signal_sequence_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, I_GrandChild_Iface* ()> Signal_interface_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, I_SignalTestInterface_Iface* ()> Signal_self_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void ()> Signal_void_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (bool b)> Signal_bool_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (int i)> Signal_int_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (double f)> Signal_float_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (const std::string &s)> Signal_string_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (QuickEnum e)> Signal_enum_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (const QuickRecord &r)> Signal_record_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (const QuickSequence &s)> Signal_sequence_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (I_GrandChild_Iface &i)> Signal_interface_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Iface, void (I_SignalTestInterface_Iface &self_)> Signal_self_args;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void ()> Signal_void_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, bool ()> Signal_bool_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, int ()> Signal_int_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, double ()> Signal_float_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, std::string ()> Signal_string_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, QuickEnum ()> Signal_enum_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, QuickRecord ()> Signal_record_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, QuickSequence ()> Signal_sequence_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, I_GrandChild_Interface* ()> Signal_interface_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, I_SignalTestInterface_Interface* ()> Signal_self_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void ()> Signal_void_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (bool b)> Signal_bool_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (int i)> Signal_int_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (double f)> Signal_float_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const std::string &s)> Signal_string_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (QuickEnum e)> Signal_enum_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const QuickRecord &r)> Signal_record_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const QuickSequence &s)> Signal_sequence_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (I_GrandChild_Interface &i)> Signal_interface_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (I_SignalTestInterface_Interface &self_)> Signal_self_args;
   Signal_void_result sig_void_result;
   Signal_bool_result sig_bool_result;
   Signal_int_result sig_int_result;
@@ -638,11 +638,11 @@ protected:
 public:
   inline SignalTestInterface () {}
   inline SignalTestInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline SignalTestInterface (I_SignalTestInterface_Iface *iface) { _iface (iface); }
-  inline SignalTestInterface (I_SignalTestInterface_Iface &iface) { _iface (&iface); }
-  inline I_SignalTestInterface_Iface& operator*  () const { return *dynamic_cast<I_SignalTestInterface_Iface*> (_iface()); }
-  inline I_SignalTestInterface_Iface* operator-> () const { return dynamic_cast<I_SignalTestInterface_Iface*> (_iface()); }
-  inline operator  I_SignalTestInterface_Iface&  () const { return operator*(); }
+  inline SignalTestInterface (I_SignalTestInterface_Interface *iface) { _iface (iface); }
+  inline SignalTestInterface (I_SignalTestInterface_Interface &iface) { _iface (&iface); }
+  inline I_SignalTestInterface_Interface& operator*  () const { return *dynamic_cast<I_SignalTestInterface_Interface*> (_iface()); }
+  inline I_SignalTestInterface_Interface* operator-> () const { return dynamic_cast<I_SignalTestInterface_Interface*> (_iface()); }
+  inline operator  I_SignalTestInterface_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 } // InterfaceTests
@@ -656,13 +656,13 @@ enum ClickType {
   CLICK_KEY_REPEAT = 5,
 };
 
-class I_ButtonArea_Iface : public virtual Plic::SimpleServer {
+class I_ButtonArea_Interface : public virtual Plic::SimpleServer {
 protected:
-  explicit                 I_ButtonArea_Iface ();
-  virtual /*Des*/         ~I_ButtonArea_Iface () = 0;
+  explicit                 I_ButtonArea_Interface ();
+  virtual /*Des*/         ~I_ButtonArea_Interface () = 0;
 public:
-  typedef Rapicorn::Signals::Signal<I_ButtonArea_Iface, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
-  typedef Rapicorn::Signals::Signal<I_ButtonArea_Iface, void ()> Signal_activate;
+  typedef Rapicorn::Signals::Signal<I_ButtonArea_Interface, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
+  typedef Rapicorn::Signals::Signal<I_ButtonArea_Interface, void ()> Signal_activate;
   Signal_check_activate sig_check_activate;
   Signal_activate sig_activate;
 };
@@ -673,18 +673,18 @@ protected:
 public:
   inline ButtonArea () {}
   inline ButtonArea (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline ButtonArea (I_ButtonArea_Iface *iface) { _iface (iface); }
-  inline ButtonArea (I_ButtonArea_Iface &iface) { _iface (&iface); }
-  inline I_ButtonArea_Iface& operator*  () const { return *dynamic_cast<I_ButtonArea_Iface*> (_iface()); }
-  inline I_ButtonArea_Iface* operator-> () const { return dynamic_cast<I_ButtonArea_Iface*> (_iface()); }
-  inline operator  I_ButtonArea_Iface&  () const { return operator*(); }
+  inline ButtonArea (I_ButtonArea_Interface *iface) { _iface (iface); }
+  inline ButtonArea (I_ButtonArea_Interface &iface) { _iface (&iface); }
+  inline I_ButtonArea_Interface& operator*  () const { return *dynamic_cast<I_ButtonArea_Interface*> (_iface()); }
+  inline I_ButtonArea_Interface* operator-> () const { return dynamic_cast<I_ButtonArea_Interface*> (_iface()); }
+  inline operator  I_ButtonArea_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class I_PureMethods_Iface : public virtual Plic::SimpleServer {
+class I_PureMethods_Interface : public virtual Plic::SimpleServer {
 protected:
-  explicit                 I_PureMethods_Iface ();
-  virtual /*Des*/         ~I_PureMethods_Iface () = 0;
+  explicit                 I_PureMethods_Interface ();
+  virtual /*Des*/         ~I_PureMethods_Interface () = 0;
 public:
   virtual int             pure_method (double f) = 0;
 };
@@ -695,12 +695,12 @@ protected:
 public:
   inline PureMethods () {}
   inline PureMethods (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline PureMethods (I_PureMethods_Iface *iface) { _iface (iface); }
-  inline PureMethods (I_PureMethods_Iface &iface) { _iface (&iface); }
+  inline PureMethods (I_PureMethods_Interface *iface) { _iface (iface); }
+  inline PureMethods (I_PureMethods_Interface &iface) { _iface (&iface); }
   // int             pure_method (double);
-  inline I_PureMethods_Iface& operator*  () const { return *dynamic_cast<I_PureMethods_Iface*> (_iface()); }
-  inline I_PureMethods_Iface* operator-> () const { return dynamic_cast<I_PureMethods_Iface*> (_iface()); }
-  inline operator  I_PureMethods_Iface&  () const { return operator*(); }
+  inline I_PureMethods_Interface& operator*  () const { return *dynamic_cast<I_PureMethods_Interface*> (_iface()); }
+  inline I_PureMethods_Interface* operator-> () const { return dynamic_cast<I_PureMethods_Interface*> (_iface()); }
+  inline operator  I_PureMethods_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 } // RapicornPlicTest
@@ -708,9 +708,9 @@ public:
 // --- Implementations ---
 
 namespace MandatoryNamespace {
-I_FirstInterface_Iface::I_FirstInterface_Iface ()
+I_FirstInterface_Interface::I_FirstInterface_Interface ()
 {}
-I_FirstInterface_Iface::~I_FirstInterface_Iface () {}
+I_FirstInterface_Interface::~I_FirstInterface_Interface () {}
 
 bool
 XFooRecord::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
@@ -1059,26 +1059,26 @@ SomeRecord::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 } // OtherNamespace
 
 namespace InterfaceTests {
-I_UIWidgetArea_Iface::I_UIWidgetArea_Iface () :
+I_UIWidgetArea_Interface::I_UIWidgetArea_Interface () :
   sig_void_signal (*this), sig_sample_signal (*this)
 {}
-I_UIWidgetArea_Iface::~I_UIWidgetArea_Iface () {}
+I_UIWidgetArea_Interface::~I_UIWidgetArea_Interface () {}
 
-I_Parent_Iface::I_Parent_Iface ()
+I_Parent_Interface::I_Parent_Interface ()
 {}
-I_Parent_Iface::~I_Parent_Iface () {}
+I_Parent_Interface::~I_Parent_Interface () {}
 
-I_Child_Iface::I_Child_Iface ()
+I_Child_Interface::I_Child_Interface ()
 {}
-I_Child_Iface::~I_Child_Iface () {}
+I_Child_Interface::~I_Child_Interface () {}
 
-I_Descendant_Iface::I_Descendant_Iface ()
+I_Descendant_Interface::I_Descendant_Interface ()
 {}
-I_Descendant_Iface::~I_Descendant_Iface () {}
+I_Descendant_Interface::~I_Descendant_Interface () {}
 
-I_GrandChild_Iface::I_GrandChild_Iface ()
+I_GrandChild_Interface::I_GrandChild_Interface ()
 {}
-I_GrandChild_Iface::~I_GrandChild_Iface () {}
+I_GrandChild_Interface::~I_GrandChild_Interface () {}
 
 bool
 QuickRecord::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const
@@ -1120,30 +1120,30 @@ QuickSequence::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
   return true;
 }
 
-I_QuickIface_Iface::I_QuickIface_Iface ()
+I_QuickIface_Interface::I_QuickIface_Interface ()
 {}
-I_QuickIface_Iface::~I_QuickIface_Iface () {}
+I_QuickIface_Interface::~I_QuickIface_Interface () {}
 
-I_MethodTestInterface_Iface::I_MethodTestInterface_Iface ()
+I_MethodTestInterface_Interface::I_MethodTestInterface_Interface ()
 {}
-I_MethodTestInterface_Iface::~I_MethodTestInterface_Iface () {}
+I_MethodTestInterface_Interface::~I_MethodTestInterface_Interface () {}
 
-I_SignalTestInterface_Iface::I_SignalTestInterface_Iface () :
+I_SignalTestInterface_Interface::I_SignalTestInterface_Interface () :
   sig_void_result (*this), sig_bool_result (*this), sig_int_result (*this), sig_float_result (*this), sig_string_result (*this), sig_enum_result (*this), sig_record_result (*this), sig_sequence_result (*this), sig_interface_result (*this), sig_self_result (*this), sig_void_arg (*this), sig_bool_arg (*this), sig_int_arg (*this), sig_float_arg (*this), sig_string_arg (*this), sig_enum_arg (*this), sig_record_arg (*this), sig_sequence_arg (*this), sig_interface_arg (*this), sig_self_args (*this)
 {}
-I_SignalTestInterface_Iface::~I_SignalTestInterface_Iface () {}
+I_SignalTestInterface_Interface::~I_SignalTestInterface_Interface () {}
 
 } // InterfaceTests
 
 namespace RapicornPlicTest {
-I_ButtonArea_Iface::I_ButtonArea_Iface () :
+I_ButtonArea_Interface::I_ButtonArea_Interface () :
   sig_check_activate (*this), sig_activate (*this)
 {}
-I_ButtonArea_Iface::~I_ButtonArea_Iface () {}
+I_ButtonArea_Interface::~I_ButtonArea_Interface () {}
 
-I_PureMethods_Iface::I_PureMethods_Iface ()
+I_PureMethods_Interface::I_PureMethods_Interface ()
 {}
-I_PureMethods_Iface::~I_PureMethods_Iface () {}
+I_PureMethods_Interface::~I_PureMethods_Interface () {}
 
 
 // --- Method Dispatchers & Registry ---
@@ -1156,7 +1156,7 @@ _dispatch__FirstInterface_void_func (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 0) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_FirstInterface_Iface *self;
+  I_FirstInterface_Interface *self;
   self = FirstInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   self->void_func ();
@@ -1178,7 +1178,7 @@ _dispatch__UIWidgetArea_simple_method (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 0) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Interface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   double rval = self->simple_method ();
@@ -1192,7 +1192,7 @@ _dispatch__UIWidgetArea_single_arg (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Interface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
@@ -1207,7 +1207,7 @@ _dispatch__UIWidgetArea_single_arg2 (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Interface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
@@ -1222,7 +1222,7 @@ _dispatch__UIWidgetArea_two_args (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Interface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
@@ -1238,7 +1238,7 @@ _dispatch__UIWidgetArea_two_args2 (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Interface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
@@ -1254,7 +1254,7 @@ _dispatch__UIWidgetArea_multi_args (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 5) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Interface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
@@ -1273,11 +1273,11 @@ _dispatch__UIWidgetArea_self_method (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Interface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
-  I_UIWidgetArea_Iface *arg_ba1 = UIWidgetArea (cpl, fbr).operator->();
-  I_UIWidgetArea_Iface *arg_ba2 = UIWidgetArea (cpl, fbr).operator->();
+  I_UIWidgetArea_Interface *arg_ba1 = UIWidgetArea (cpl, fbr).operator->();
+  I_UIWidgetArea_Interface *arg_ba2 = UIWidgetArea (cpl, fbr).operator->();
   double rval = self->self_method (*arg_ba1, *arg_ba2);
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_double (rval);
@@ -1289,7 +1289,7 @@ _dispatch__UIWidgetArea_void_method (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 0) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Interface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   self->void_method ();
@@ -1301,7 +1301,7 @@ _dispatch__UIWidgetArea_on_click2out (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 0) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Interface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   std::string rval = self->on_click2out ();
@@ -1315,7 +1315,7 @@ _dispatch__UIWidgetArea_on_click2in (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Interface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   std::string arg_command = fbr.pop_string();
@@ -1348,7 +1348,7 @@ _dispatch__UIWidgetArea_void_signal (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Interface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -1372,7 +1372,7 @@ struct _CLOSURE_UIWidgetArea_sample_signal {
     m_coupler.push_event (&fb); // deletes fb
   }
   static double
-  handler (I_UIWidgetArea_Iface &arg_ba1,
+  handler (I_UIWidgetArea_Interface &arg_ba1,
            int arg_someint,
            SharedPtr sp)
   {
@@ -1392,7 +1392,7 @@ _dispatch__UIWidgetArea_sample_signal (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_UIWidgetArea_Iface *self;
+  I_UIWidgetArea_Interface *self;
   self = UIWidgetArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -1416,7 +1416,7 @@ _dispatch__QuickIface_simple_function (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_QuickIface_Iface *self;
+  I_QuickIface_Interface *self;
   self = QuickIface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_i = fbr.pop_int64();
@@ -1430,7 +1430,7 @@ _dispatch__MethodTestInterface_method_with_void (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 0) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Interface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   self->method_with_void ();
@@ -1442,7 +1442,7 @@ _dispatch__MethodTestInterface_method_with_bools (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Interface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   bool arg_input = fbr.pop_int64();
@@ -1458,7 +1458,7 @@ _dispatch__MethodTestInterface_method_with_ints (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Interface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_input = fbr.pop_int64();
@@ -1474,7 +1474,7 @@ _dispatch__MethodTestInterface_method_with_floats (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Interface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   double arg_input = fbr.pop_double();
@@ -1490,7 +1490,7 @@ _dispatch__MethodTestInterface_method_with_string (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Interface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   std::string arg_input = fbr.pop_string();
@@ -1506,7 +1506,7 @@ _dispatch__MethodTestInterface_method_with_enum (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Interface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   QuickEnum arg_input = QuickEnum (fbr.pop_evalue());
@@ -1522,7 +1522,7 @@ _dispatch__MethodTestInterface_method_with_record (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Interface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   QuickRecord arg_input;
@@ -1540,7 +1540,7 @@ _dispatch__MethodTestInterface_method_with_sequence (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Interface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   QuickSequence arg_input;
@@ -1558,12 +1558,12 @@ _dispatch__MethodTestInterface_method_with_interface (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Interface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
-  I_GrandChild_Iface *arg_input = GrandChild (cpl, fbr).operator->();
-  I_GrandChild_Iface *arg_optval = GrandChild (cpl, fbr).operator->();
-  I_GrandChild_Iface *rval = self->method_with_interface (*arg_input, *arg_optval);
+  I_GrandChild_Interface *arg_input = GrandChild (cpl, fbr).operator->();
+  I_GrandChild_Interface *arg_optval = GrandChild (cpl, fbr).operator->();
+  I_GrandChild_Interface *rval = self->method_with_interface (*arg_input, *arg_optval);
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_object (GrandChild (rval)._rpc_id());
   return &rb;
@@ -1574,12 +1574,12 @@ _dispatch__MethodTestInterface_method_with_quickiface (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_MethodTestInterface_Iface *self;
+  I_MethodTestInterface_Interface *self;
   self = MethodTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
-  I_QuickIface_Iface *arg_input = QuickIface (cpl, fbr).operator->();
-  I_QuickIface_Iface *arg_iface0 = QuickIface (cpl, fbr).operator->();
-  I_QuickIface_Iface *rval = self->method_with_quickiface (*arg_input, *arg_iface0);
+  I_QuickIface_Interface *arg_input = QuickIface (cpl, fbr).operator->();
+  I_QuickIface_Interface *arg_iface0 = QuickIface (cpl, fbr).operator->();
+  I_QuickIface_Interface *rval = self->method_with_quickiface (*arg_input, *arg_iface0);
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_object (QuickIface (rval)._rpc_id());
   return &rb;
@@ -1611,7 +1611,7 @@ _dispatch__SignalTestInterface_void_result (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -1651,7 +1651,7 @@ _dispatch__SignalTestInterface_bool_result (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -1691,7 +1691,7 @@ _dispatch__SignalTestInterface_int_result (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -1731,7 +1731,7 @@ _dispatch__SignalTestInterface_float_result (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -1771,7 +1771,7 @@ _dispatch__SignalTestInterface_string_result (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -1811,7 +1811,7 @@ _dispatch__SignalTestInterface_enum_result (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -1851,7 +1851,7 @@ _dispatch__SignalTestInterface_record_result (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -1891,7 +1891,7 @@ _dispatch__SignalTestInterface_sequence_result (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -1914,7 +1914,7 @@ struct _CLOSURE_SignalTestInterface_interface_result {
     fb.add_int64 (m_handler);
     m_coupler.push_event (&fb); // deletes fb
   }
-  static I_GrandChild_Iface*
+  static I_GrandChild_Interface*
   handler (SharedPtr sp)
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
@@ -1931,7 +1931,7 @@ _dispatch__SignalTestInterface_interface_result (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -1954,7 +1954,7 @@ struct _CLOSURE_SignalTestInterface_self_result {
     fb.add_int64 (m_handler);
     m_coupler.push_event (&fb); // deletes fb
   }
-  static I_SignalTestInterface_Iface*
+  static I_SignalTestInterface_Interface*
   handler (SharedPtr sp)
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 0);
@@ -1971,7 +1971,7 @@ _dispatch__SignalTestInterface_self_result (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -2010,7 +2010,7 @@ _dispatch__SignalTestInterface_void_arg (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -2051,7 +2051,7 @@ _dispatch__SignalTestInterface_bool_arg (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -2092,7 +2092,7 @@ _dispatch__SignalTestInterface_int_arg (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -2133,7 +2133,7 @@ _dispatch__SignalTestInterface_float_arg (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -2174,7 +2174,7 @@ _dispatch__SignalTestInterface_string_arg (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -2215,7 +2215,7 @@ _dispatch__SignalTestInterface_enum_arg (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -2256,7 +2256,7 @@ _dispatch__SignalTestInterface_record_arg (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -2297,7 +2297,7 @@ _dispatch__SignalTestInterface_sequence_arg (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -2321,7 +2321,7 @@ struct _CLOSURE_SignalTestInterface_interface_arg {
     m_coupler.push_event (&fb); // deletes fb
   }
   static void
-  handler (I_GrandChild_Iface &arg_i,
+  handler (I_GrandChild_Interface &arg_i,
            SharedPtr sp)
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1);
@@ -2338,7 +2338,7 @@ _dispatch__SignalTestInterface_interface_arg (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -2362,7 +2362,7 @@ struct _CLOSURE_SignalTestInterface_self_args {
     m_coupler.push_event (&fb); // deletes fb
   }
   static void
-  handler (I_SignalTestInterface_Iface &arg_self_,
+  handler (I_SignalTestInterface_Interface &arg_self_,
            SharedPtr sp)
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + 1);
@@ -2379,7 +2379,7 @@ _dispatch__SignalTestInterface_self_args (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_SignalTestInterface_Iface *self;
+  I_SignalTestInterface_Interface *self;
   self = SignalTestInterface (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -2423,7 +2423,7 @@ _dispatch__ButtonArea_check_activate (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_ButtonArea_Iface *self;
+  I_ButtonArea_Interface *self;
   self = ButtonArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -2462,7 +2462,7 @@ _dispatch__ButtonArea_activate (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_ButtonArea_Iface *self;
+  I_ButtonArea_Interface *self;
   self = ButtonArea (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
@@ -2482,7 +2482,7 @@ _dispatch__PureMethods_pure_method (Coupler &cpl)
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);
-  I_PureMethods_Iface *self;
+  I_PureMethods_Interface *self;
   self = PureMethods (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   double arg_f = fbr.pop_double();

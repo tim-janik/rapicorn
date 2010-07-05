@@ -75,7 +75,7 @@ FieldBuffer = 'Plic::FieldBuffer'
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
 
-I_prefix_postfix = ('', '_Iface')
+I_prefix_postfix = ('', '_Interface')
 Iswitch = True
 def Iwrap (name):
   return I_prefix_postfix[0] + name + I_prefix_postfix[1]
