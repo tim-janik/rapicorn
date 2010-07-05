@@ -203,11 +203,11 @@ public:
     /* chars => [A-Za-z0-9_-] */
     String s = key;
     for (uint i = 0; i < s.size(); i++)
-      if (!((s[i] >= 'A' && s[i] <= 'Z') ||
-            (s[i] >= 'a' && s[i] <= 'z') ||
-            (s[i] >= '0' && s[i] <= '9') ||
-            s[i] == '_' || s[i] == '-'))
-        s[i] = '_';
+      if (!((key[i] >= 'A' && key[i] <= 'Z') ||
+            (key[i] >= 'a' && key[i] <= 'z') ||
+            (key[i] >= '0' && key[i] <= '9') ||
+            key[i] == '_' || key[i] == '-'))
+        s[i] = '_'; // unshares string
     return s;
   }
   virtual void
@@ -247,7 +247,7 @@ public:
               }
             if (error.set())
               ;
-            else if (inherit[0] == 0)
+            else if (inherit.empty())
               error.set (INVALID_CONTENT, String ("missing ancestor in widget definition: ") + qualified_ident);
             else
               {
@@ -255,7 +255,7 @@ public:
                 const char *input_name;
                 get_position (&line_number, &char_number, &input_name);
                 dgadget = new GadgetDef (ident, inherit, input_name, line_number, vmap);
-                if (child_container_name[0])
+                if (!child_container_name.empty())
                   child_container_loc = &dgadget->child_container;
                 fdomain.definitions[ident] = dgadget;
                 gadget_stack.push (dgadget);
@@ -884,10 +884,8 @@ Factory::factory_context_name (FactoryContext *fc)
 {
   return_val_if_fail (fc != NULL, "");
   BaseGadget *gadget = static_cast<BaseGadget*> (fc);
-  String name = gadget ? gadget->ident : "";
-  if (name[0] == '\177') // factory mark
-    name = name.substr (1);
-  return name;
+  return gadget ? gadget->ident : "";
+  // hand out gadget->ident directly, ident never contains the '\177' factory mark
 }
 
 void
