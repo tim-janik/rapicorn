@@ -1289,16 +1289,39 @@ ItemImpl::do_event (const Event &event)
   return false;
 }
 
+static DataKey<String> item_name_key;
+
 String
 ItemImpl::name () const
 {
-  return m_name;
+  String s = get_data (&item_name_key);
+  if (s.empty())
+    return Factory::factory_context_name (factory_context());
+  else
+    return s;
 }
 
 void
 ItemImpl::name (const String &str)
 {
-  m_name = str;
+  if (str.empty())
+    delete_data (&item_name_key);
+  else
+    set_data (&item_name_key, str);
+}
+
+FactoryContext*
+ItemImpl::factory_context () const
+{
+  return m_factory_context;
+}
+
+void
+ItemImpl::factory_context (FactoryContext *fc)
+{
+  if (fc)
+    return_if_fail (m_factory_context == NULL);
+  m_factory_context = fc;
 }
 
 static DataKey<ColorSchemeType> item_color_scheme_key;

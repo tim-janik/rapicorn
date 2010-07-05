@@ -54,6 +54,7 @@ WindowBase&     create_window    (const String           &window_identifier,
                                   const ArgumentList     &arguments = ArgumentList(),
                                   const ArgumentList     &env_variables = ArgumentList());
 
+String  factory_context_name    (FactoryContext *fc);
 bool    item_definition_is_root (const String   &item_identifier);
 
 /* --- item type registration --- */
@@ -64,7 +65,7 @@ protected:
   static void   sanity_check_identifier (const char             *namespaced_ident);
 public:
   explicit      ItemTypeFactory         (const char             *namespaced_ident);
-  virtual Item* create_item             (const String           &name) const = 0;
+  virtual Item* create_item             (FactoryContext         *fc) const = 0;
   static void   initialize_factories    ();
 };
 
@@ -75,30 +76,19 @@ public:
 /* --- item factory template --- */
 template<class Type>
 class ItemFactory : Factory::ItemTypeFactory {
-  String m_internal_name;
   virtual Item*
-  create_item (const String &name) const
+  create_item (FactoryContext *fc) const
   {
     Item *item = new Type();
-    item->name (name);
+    item->factory_context (fc);
     return item;
   }
 public:
-  explicit ItemFactory (const char *namespaced_ident,
-                        bool        doregister = true) :
+  explicit ItemFactory (const char *namespaced_ident) :
     ItemTypeFactory (namespaced_ident)
   {
     sanity_check_identifier (namespaced_ident);
-    if (doregister)
-      register_item_factory (this);
-    else
-      m_internal_name = namespaced_ident;
-  }
-  Item*
-  create_item_internal () const
-  {
-    RAPICORN_RETURN_VAL_IF_FAIL (m_internal_name != "", NULL);
-    return create_item (m_internal_name);
+    register_item_factory (this);
   }
 };
 

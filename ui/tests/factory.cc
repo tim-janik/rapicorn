@@ -79,6 +79,16 @@ main (int   argc,
     }
   TASSERT (titem->accu_history() == "L0L1L2Instance");
   TOK();
+  // test Item::name()
+  TASSERT (item->name().empty() == false); // has factory default
+  String factory_default = item->name();
+  item->name ("FooBar_4356786453567");
+  TASSERT (item->name() == "FooBar_4356786453567");
+  item->name ("");
+  TASSERT (item->name() != "FooBar_4356786453567");
+  TASSERT (item->name().empty() == false); // back to factory default
+  TASSERT (item->name() == factory_default);
+  TOK();
   testwin.close();
   TDONE();
 

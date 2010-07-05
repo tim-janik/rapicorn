@@ -29,6 +29,8 @@ struct ClassDoctor {
   static void item_constructed (Item &item) { item.constructed(); }
 };
 
+struct FactoryContext {}; // see primitives.hh
+
 } // Rapicorn
 
 namespace { // Anon
@@ -41,7 +43,7 @@ static void initialize_standard_gadgets_lazily (void);
 /* --- Gadget definition --- */
 struct ChildGadget;
 
-struct BaseGadget {
+struct BaseGadget : public FactoryContext {
   const String         ident, ancestor, m_input_name;
   int                  m_line_number;
   VariableMap          ancestor_arguments;
@@ -128,13 +130,15 @@ class FactorySingleton {
   GadgetDef*                    lookup_gadget           (const String       &gadget_identifier);
   Item*                         inherit_gadget          (const String       &ancestor_name,
                                                          const VariableMap  &call_arguments,
-                                                         Evaluator          &env);
+                                                         Evaluator          &env,
+                                                         FactoryContext     *fc);
   Item&                         call_gadget             (const BaseGadget   *bgadget,
                                                          const VariableMap  &const_ancestor_arguments,
                                                          const VariableMap  &const_call_arguments,
                                                          Evaluator          &env,
                                                          ChildContainerSlot *ccslot,
-                                                         Container          *parent);
+                                                         Container          *parent,
+                                                         FactoryContext     *fc);
   void                          call_gadget_children    (const BaseGadget   *bgadget,
                                                          Item               &item,
                                                          Evaluator          &env,
@@ -142,7 +146,8 @@ class FactorySingleton {
   /* type registration */
   std::list<const ItemTypeFactory*> types;
   const ItemTypeFactory*        lookup_item_factory     (String                 namespaced_ident);
-  Item&                         create_from_item_type   (const String          &ident);
+  Item&                         create_from_item_type   (const String          &ident,
+                                                         FactoryContext        *fc);
 public:
   void                          register_item_factory   (const ItemTypeFactory &itfactory);
   MarkupParser::Error           parse_gadget_from_xml   (FILE                  *xml_file,
@@ -520,7 +525,7 @@ FactorySingleton::construct_gadget (const String          &gadget_identifier,
   Evaluator::populate_map (evars, env_variables);
   Evaluator env;
   env.push_map (evars);
-  Item &item = call_gadget (dgadget, dgadget->ancestor_arguments, args, env, NULL, NULL);
+  Item &item = call_gadget (dgadget, dgadget->ancestor_arguments, args, env, NULL, NULL, dgadget);
   env.pop_map (evars);
   if (gadget_definition)
     *gadget_definition = dgadget->definition();
@@ -559,11 +564,13 @@ FactorySingleton::check_item_factory_type (const String &gadget_identifier,
 Item*
 FactorySingleton::inherit_gadget (const String      &ancestor_name,
                                   const VariableMap &call_arguments,
-                                  Evaluator         &env)
+                                  Evaluator         &env,
+                                  FactoryContext    *fc)
 {
+  return_val_if_fail (fc != NULL, NULL);
   if (ancestor_name[0] == '\177')      /* item factory type */
     {
-      Item *item = &create_from_item_type (&ancestor_name[1]);
+      Item *item = &create_from_item_type (&ancestor_name[1], fc);
       assert (call_arguments.size() == 0); // see FactorySingleton::register_item_factory()
       return item;
     }
@@ -572,7 +579,7 @@ FactorySingleton::inherit_gadget (const String      &ancestor_name,
       GadgetDef *dgadget = lookup_gadget (ancestor_name);
       Item *item = NULL;
       if (dgadget)
-        item = &call_gadget (dgadget, dgadget->ancestor_arguments, call_arguments, env, NULL, NULL);
+        item = &call_gadget (dgadget, dgadget->ancestor_arguments, call_arguments, env, NULL, NULL, fc);
       return item;
     }
 }
@@ -583,8 +590,10 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
                                const VariableMap  &const_call_arguments,
                                Evaluator          &env,
                                ChildContainerSlot *ccslot,
-                               Container          *parent)
+                               Container          *parent,
+                               FactoryContext     *fc)
 {
+  return_val_if_fail (fc != NULL, *(Item*)NULL);
   const GadgetDef *dgadget = dynamic_cast<const GadgetDef*> (bgadget);
   const GadgetDef *real_dgadget = dgadget;
   if (!real_dgadget)
@@ -619,7 +628,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
   Item *itemp;
   String reason;
   try {
-    itemp = inherit_gadget (bgadget->ancestor, const_ancestor_arguments, env);
+    itemp = inherit_gadget (bgadget->ancestor, const_ancestor_arguments, env, fc);
   } catch (std::exception &exc) {
     itemp = NULL;
     reason = exc.what();
@@ -650,7 +659,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
     ChildContainerSlot outer_ccslot (dgadget ? dgadget->child_container : NULL);
     call_gadget_children (bgadget, item, env, ccslot ? ccslot : &outer_ccslot);
     /* assign specials */
-    item.name (name);
+    // already set by create_item: item.name (name);
     /* setup child container */
     if (!ccslot) /* outer call */
       {
@@ -718,9 +727,11 @@ FactorySingleton::call_gadget_children (const BaseGadget   *bgadget,
     {
       /* create child gadget */
       const ChildGadget *child_gadget = *cw;
+      const FactoryContext *cfc = child_gadget;
+      FactoryContext *fc = const_cast<FactoryContext*> (cfc);
       /* the real call arguments are stored as ancestor arguments of the child */
       Item &child = call_gadget (child_gadget, VariableMap(),
-                                 child_gadget->ancestor_arguments, env, ccslot, container);
+                                 child_gadget->ancestor_arguments, env, ccslot, container, fc);
       /* find child container */
       if (ccslot->cgadget == child_gadget)
         ccslot->item = &child;
@@ -757,11 +768,12 @@ FactorySingleton::lookup_item_factory (String namespaced_ident)
 }
 
 Item&
-FactorySingleton::create_from_item_type (const String &ident)
+FactorySingleton::create_from_item_type (const String   &ident,
+                                         FactoryContext *fc)
 {
   const ItemTypeFactory *itfactory = lookup_item_factory (ident);
   if (itfactory)
-    return *itfactory->create_item (ident);
+    return *itfactory->create_item (fc);
   else
     {
       ERROR ("unknown item type: %s", ident.c_str());
@@ -865,6 +877,17 @@ bool
 Factory::item_definition_is_root (const String &item_identifier)
 {
   return FactorySingleton::singleton->check_item_factory_type (item_identifier, "::Root");
+}
+
+String
+Factory::factory_context_name (FactoryContext *fc)
+{
+  return_val_if_fail (fc != NULL, "");
+  BaseGadget *gadget = static_cast<BaseGadget*> (fc);
+  String name = gadget ? gadget->ident : "";
+  if (name[0] == '\177') // factory mark
+    name = name.substr (1);
+  return name;
 }
 
 void

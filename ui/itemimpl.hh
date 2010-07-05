@@ -25,9 +25,9 @@ namespace Rapicorn {
 class ItemImpl : public virtual Item {
   Requisition           m_requisition;
   Allocation            m_allocation;
-  String                m_name;
+  FactoryContext       *m_factory_context;
 protected:
-  ItemImpl() { /* removing this breaks g++ pre-4.2.0 20060530 */ }
+  ItemImpl() : m_factory_context (NULL) { /* removing this breaks g++ pre-4.2.0 20060530 */ }
   virtual void          allocation      (const Allocation &area);
   /* signal methods */
   virtual void          do_invalidate   ();
@@ -35,6 +35,8 @@ protected:
   virtual bool          do_event        (const Event &event);
   virtual String        name            () const;
   virtual void          name            (const String &str);
+  virtual FactoryContext*    factory_context        () const;
+  virtual void               factory_context        (FactoryContext *fc);
   virtual ColorSchemeType    color_scheme           () const;
   virtual void               color_scheme           (ColorSchemeType cst);
   virtual const Allocation&  allocation             ();

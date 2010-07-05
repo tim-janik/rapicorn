@@ -32,6 +32,9 @@ static const double LN_INV255 = -5.5412635451584261462455391880218; // ln(1/255)
 inline double RAPICORN_CONST degree  (double radians) { return radians * (180. / PI); }
 inline double RAPICORN_CONST radians (double degree)  { return degree * (PI / 180.); }
 
+/* --- forward declarations --- */
+struct FactoryContext; // see factory.cc
+
 /* --- enums --- */
 typedef enum {
   COMBINE_NORMAL,       /* A OVER B */
