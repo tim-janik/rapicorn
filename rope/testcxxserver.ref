@@ -140,21 +140,23 @@ protected:
 public:
   virtual void            void_func ();
 };
-class FirstInterface : public virtual Plic::SmartHandle {
+
+class FirstInterface_SmartHandle : public virtual Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
 public:
-  inline FirstInterface () {}
-  inline FirstInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline FirstInterface (I_FirstInterface_Interface *iface) { _iface (iface); }
-  inline FirstInterface (I_FirstInterface_Interface &iface) { _iface (&iface); }
+  inline FirstInterface_SmartHandle () {}
+  inline FirstInterface_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline FirstInterface_SmartHandle (I_FirstInterface_Interface *iface) { _iface (iface); }
+  inline FirstInterface_SmartHandle (I_FirstInterface_Interface &iface) { _iface (&iface); }
   // void            void_func ();
   inline I_FirstInterface_Interface& operator*  () const { return *dynamic_cast<I_FirstInterface_Interface*> (_iface()); }
   inline I_FirstInterface_Interface* operator-> () const { return dynamic_cast<I_FirstInterface_Interface*> (_iface()); }
   inline operator  I_FirstInterface_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
 struct XFooRecord {
   bool            single_bool;
   int             single_num;
@@ -167,9 +169,9 @@ struct XFooRecord {
   int             multi3;
   int             multi4;
   ExtensiveEnum   enum_field;
-  FirstInterface  iface1;
-  FirstInterface  iface2;
-  FirstInterface  iface3;
+  FirstInterface_SmartHandle iface1;
+  FirstInterface_SmartHandle iface2;
+  FirstInterface_SmartHandle iface3;
   bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
   inline XFooRecord () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
@@ -266,7 +268,7 @@ struct SequenceSequence {
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 struct InterfaceSequence {
-  typedef std::vector<FirstInterface> Sequence;
+  typedef std::vector<FirstInterface_SmartHandle> Sequence;
   typedef Sequence::size_type              size_type;
   typedef Sequence::value_type             value_type;
   typedef Sequence::allocator_type         allocator_type;
@@ -380,22 +382,23 @@ public:
   virtual std::string     on_click2out  ();
   virtual void            on_click2in   (const std::string &command);
 };
-class UIWidgetArea : public virtual Plic::SmartHandle {
+
+class UIWidgetArea_SmartHandle : public virtual Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
 public:
-  inline UIWidgetArea () {}
-  inline UIWidgetArea (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline UIWidgetArea (I_UIWidgetArea_Interface *iface) { _iface (iface); }
-  inline UIWidgetArea (I_UIWidgetArea_Interface &iface) { _iface (&iface); }
+  inline UIWidgetArea_SmartHandle () {}
+  inline UIWidgetArea_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline UIWidgetArea_SmartHandle (I_UIWidgetArea_Interface *iface) { _iface (iface); }
+  inline UIWidgetArea_SmartHandle (I_UIWidgetArea_Interface &iface) { _iface (&iface); }
   // double          simple_method ();
   // double          single_arg    (int);
   // double          single_arg2   (int);
   // double          two_args      (int, double);
   // double          two_args2     (int, double);
   // double          multi_args    (int, double, int, const std::string&, double);
-  // double          self_method   (UIWidgetArea&, UIWidgetArea&);
+  // double          self_method   (UIWidgetArea_SmartHandle&, UIWidgetArea_SmartHandle&);
   // void            void_method   ();
   // std::string     on_click2out  ();
   // void            on_click2in   (const std::string&);
@@ -405,26 +408,29 @@ public:
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
+
 class I_Parent_Interface : public virtual Plic::SimpleServer {
 protected:
   explicit                 I_Parent_Interface ();
   virtual /*Des*/         ~I_Parent_Interface () = 0;
 public:
 };
-class Parent : public virtual Plic::SmartHandle {
+
+class Parent_SmartHandle : public virtual Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
 public:
-  inline Parent () {}
-  inline Parent (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline Parent (I_Parent_Interface *iface) { _iface (iface); }
-  inline Parent (I_Parent_Interface &iface) { _iface (&iface); }
+  inline Parent_SmartHandle () {}
+  inline Parent_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline Parent_SmartHandle (I_Parent_Interface *iface) { _iface (iface); }
+  inline Parent_SmartHandle (I_Parent_Interface &iface) { _iface (&iface); }
   inline I_Parent_Interface& operator*  () const { return *dynamic_cast<I_Parent_Interface*> (_iface()); }
   inline I_Parent_Interface* operator-> () const { return dynamic_cast<I_Parent_Interface*> (_iface()); }
   inline operator  I_Parent_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
 
 class I_Child_Interface : public virtual I_Parent_Interface {
 protected:
@@ -432,20 +438,22 @@ protected:
   virtual /*Des*/         ~I_Child_Interface () = 0;
 public:
 };
-class Child : public Parent {
+
+class Child_SmartHandle : public Parent_SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
 public:
-  inline Child () {}
-  inline Child (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline Child (I_Child_Interface *iface) { _iface (iface); }
-  inline Child (I_Child_Interface &iface) { _iface (&iface); }
+  inline Child_SmartHandle () {}
+  inline Child_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline Child_SmartHandle (I_Child_Interface *iface) { _iface (iface); }
+  inline Child_SmartHandle (I_Child_Interface &iface) { _iface (&iface); }
   inline I_Child_Interface& operator*  () const { return *dynamic_cast<I_Child_Interface*> (_iface()); }
   inline I_Child_Interface* operator-> () const { return dynamic_cast<I_Child_Interface*> (_iface()); }
   inline operator  I_Child_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
 
 class I_Descendant_Interface : public virtual I_Child_Interface {
 protected:
@@ -453,20 +461,22 @@ protected:
   virtual /*Des*/         ~I_Descendant_Interface () = 0;
 public:
 };
-class Descendant : public Child {
+
+class Descendant_SmartHandle : public Child_SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
 public:
-  inline Descendant () {}
-  inline Descendant (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline Descendant (I_Descendant_Interface *iface) { _iface (iface); }
-  inline Descendant (I_Descendant_Interface &iface) { _iface (&iface); }
+  inline Descendant_SmartHandle () {}
+  inline Descendant_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline Descendant_SmartHandle (I_Descendant_Interface *iface) { _iface (iface); }
+  inline Descendant_SmartHandle (I_Descendant_Interface &iface) { _iface (&iface); }
   inline I_Descendant_Interface& operator*  () const { return *dynamic_cast<I_Descendant_Interface*> (_iface()); }
   inline I_Descendant_Interface* operator-> () const { return dynamic_cast<I_Descendant_Interface*> (_iface()); }
   inline operator  I_Descendant_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
 
 class I_GrandChild_Interface : public virtual I_Descendant_Interface {
 protected:
@@ -474,20 +484,22 @@ protected:
   virtual /*Des*/         ~I_GrandChild_Interface () = 0;
 public:
 };
-class GrandChild : public Descendant {
+
+class GrandChild_SmartHandle : public Descendant_SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
 public:
-  inline GrandChild () {}
-  inline GrandChild (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline GrandChild (I_GrandChild_Interface *iface) { _iface (iface); }
-  inline GrandChild (I_GrandChild_Interface &iface) { _iface (&iface); }
+  inline GrandChild_SmartHandle () {}
+  inline GrandChild_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline GrandChild_SmartHandle (I_GrandChild_Interface *iface) { _iface (iface); }
+  inline GrandChild_SmartHandle (I_GrandChild_Interface &iface) { _iface (&iface); }
   inline I_GrandChild_Interface& operator*  () const { return *dynamic_cast<I_GrandChild_Interface*> (_iface()); }
   inline I_GrandChild_Interface* operator-> () const { return dynamic_cast<I_GrandChild_Interface*> (_iface()); }
   inline operator  I_GrandChild_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
 enum QuickEnum {
   ZERO = 0,
 };
@@ -519,21 +531,23 @@ protected:
 public:
   virtual void            simple_function (int i = 9);
 };
-class QuickIface : public virtual Plic::SmartHandle {
+
+class QuickIface_SmartHandle : public virtual Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
 public:
-  inline QuickIface () {}
-  inline QuickIface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline QuickIface (I_QuickIface_Interface *iface) { _iface (iface); }
-  inline QuickIface (I_QuickIface_Interface &iface) { _iface (&iface); }
+  inline QuickIface_SmartHandle () {}
+  inline QuickIface_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline QuickIface_SmartHandle (I_QuickIface_Interface *iface) { _iface (iface); }
+  inline QuickIface_SmartHandle (I_QuickIface_Interface &iface) { _iface (&iface); }
   // void            simple_function (int);
   inline I_QuickIface_Interface& operator*  () const { return *dynamic_cast<I_QuickIface_Interface*> (_iface()); }
   inline I_QuickIface_Interface* operator-> () const { return dynamic_cast<I_QuickIface_Interface*> (_iface()); }
   inline operator  I_QuickIface_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
 
 class I_MethodTestInterface_Interface : public virtual Plic::SimpleServer {
 protected:
@@ -560,15 +574,16 @@ public:
   virtual I_QuickIface_Interface* method_with_quickiface (I_QuickIface_Interface &input,
                                                           I_QuickIface_Interface &iface0 = *(I_QuickIface_Interface*) NULL);
 };
-class MethodTestInterface : public virtual Plic::SmartHandle {
+
+class MethodTestInterface_SmartHandle : public virtual Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
 public:
-  inline MethodTestInterface () {}
-  inline MethodTestInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline MethodTestInterface (I_MethodTestInterface_Interface *iface) { _iface (iface); }
-  inline MethodTestInterface (I_MethodTestInterface_Interface &iface) { _iface (&iface); }
+  inline MethodTestInterface_SmartHandle () {}
+  inline MethodTestInterface_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline MethodTestInterface_SmartHandle (I_MethodTestInterface_Interface *iface) { _iface (iface); }
+  inline MethodTestInterface_SmartHandle (I_MethodTestInterface_Interface &iface) { _iface (&iface); }
   // void            method_with_void       ();
   // bool            method_with_bools      (bool, bool);
   // int             method_with_ints       (int, int);
@@ -577,13 +592,14 @@ public:
   // QuickEnum       method_with_enum       (QuickEnum, QuickEnum);
   // QuickRecord     method_with_record     (const QuickRecord&, const QuickRecord&);
   // QuickSequence   method_with_sequence   (const QuickSequence&, const QuickSequence&);
-  // GrandChild      method_with_interface  (GrandChild&, GrandChild&);
-  // QuickIface      method_with_quickiface (QuickIface&, QuickIface&);
+  // GrandChild_SmartHandle method_with_interface  (GrandChild_SmartHandle&, GrandChild_SmartHandle&);
+  // QuickIface_SmartHandle method_with_quickiface (QuickIface_SmartHandle&, QuickIface_SmartHandle&);
   inline I_MethodTestInterface_Interface& operator*  () const { return *dynamic_cast<I_MethodTestInterface_Interface*> (_iface()); }
   inline I_MethodTestInterface_Interface* operator-> () const { return dynamic_cast<I_MethodTestInterface_Interface*> (_iface()); }
   inline operator  I_MethodTestInterface_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
 
 class I_SignalTestInterface_Interface : public virtual Plic::SimpleServer {
 protected:
@@ -631,20 +647,22 @@ public:
   Signal_interface_arg sig_interface_arg;
   Signal_self_args sig_self_args;
 };
-class SignalTestInterface : public virtual Plic::SmartHandle {
+
+class SignalTestInterface_SmartHandle : public virtual Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
 public:
-  inline SignalTestInterface () {}
-  inline SignalTestInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline SignalTestInterface (I_SignalTestInterface_Interface *iface) { _iface (iface); }
-  inline SignalTestInterface (I_SignalTestInterface_Interface &iface) { _iface (&iface); }
+  inline SignalTestInterface_SmartHandle () {}
+  inline SignalTestInterface_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline SignalTestInterface_SmartHandle (I_SignalTestInterface_Interface *iface) { _iface (iface); }
+  inline SignalTestInterface_SmartHandle (I_SignalTestInterface_Interface &iface) { _iface (&iface); }
   inline I_SignalTestInterface_Interface& operator*  () const { return *dynamic_cast<I_SignalTestInterface_Interface*> (_iface()); }
   inline I_SignalTestInterface_Interface* operator-> () const { return dynamic_cast<I_SignalTestInterface_Interface*> (_iface()); }
   inline operator  I_SignalTestInterface_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
 } // InterfaceTests
 
 namespace RapicornPlicTest {
@@ -666,20 +684,22 @@ public:
   Signal_check_activate sig_check_activate;
   Signal_activate sig_activate;
 };
-class ButtonArea : public virtual Plic::SmartHandle {
+
+class ButtonArea_SmartHandle : public virtual Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
 public:
-  inline ButtonArea () {}
-  inline ButtonArea (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline ButtonArea (I_ButtonArea_Interface *iface) { _iface (iface); }
-  inline ButtonArea (I_ButtonArea_Interface &iface) { _iface (&iface); }
+  inline ButtonArea_SmartHandle () {}
+  inline ButtonArea_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline ButtonArea_SmartHandle (I_ButtonArea_Interface *iface) { _iface (iface); }
+  inline ButtonArea_SmartHandle (I_ButtonArea_Interface &iface) { _iface (&iface); }
   inline I_ButtonArea_Interface& operator*  () const { return *dynamic_cast<I_ButtonArea_Interface*> (_iface()); }
   inline I_ButtonArea_Interface* operator-> () const { return dynamic_cast<I_ButtonArea_Interface*> (_iface()); }
   inline operator  I_ButtonArea_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
 
 class I_PureMethods_Interface : public virtual Plic::SimpleServer {
 protected:
@@ -688,21 +708,23 @@ protected:
 public:
   virtual int             pure_method (double f) = 0;
 };
-class PureMethods : public virtual Plic::SmartHandle {
+
+class PureMethods_SmartHandle : public virtual Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
 public:
-  inline PureMethods () {}
-  inline PureMethods (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline PureMethods (I_PureMethods_Interface *iface) { _iface (iface); }
-  inline PureMethods (I_PureMethods_Interface &iface) { _iface (&iface); }
+  inline PureMethods_SmartHandle () {}
+  inline PureMethods_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline PureMethods_SmartHandle (I_PureMethods_Interface *iface) { _iface (iface); }
+  inline PureMethods_SmartHandle (I_PureMethods_Interface &iface) { _iface (&iface); }
   // int             pure_method (double);
   inline I_PureMethods_Interface& operator*  () const { return *dynamic_cast<I_PureMethods_Interface*> (_iface()); }
   inline I_PureMethods_Interface* operator-> () const { return dynamic_cast<I_PureMethods_Interface*> (_iface()); }
   inline operator  I_PureMethods_Interface&  () const { return operator*(); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
 } // RapicornPlicTest
 
 // --- Implementations ---
@@ -748,9 +770,9 @@ XFooRecord::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
   this->multi3 = fbr.pop_int64();
   this->multi4 = fbr.pop_int64();
   this->enum_field = ExtensiveEnum (fbr.pop_evalue());
-  this->iface1 = FirstInterface (cpl, fbr);
-  this->iface2 = FirstInterface (cpl, fbr);
-  this->iface3 = FirstInterface (cpl, fbr);
+  this->iface1 = FirstInterface_SmartHandle (cpl, fbr);
+  this->iface2 = FirstInterface_SmartHandle (cpl, fbr);
+  this->iface3 = FirstInterface_SmartHandle (cpl, fbr);
   return true;
 }
 
@@ -925,7 +947,7 @@ InterfaceSequence::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
   const size_t len = fbr.remaining();
   this->iface1.reserve (len);
   for (size_t k = 0; k < len; k++) {
-    this->iface1.push_back (FirstInterface (cpl, fbr));
+    this->iface1.push_back (FirstInterface_SmartHandle (cpl, fbr));
   }
   return true;
 }
@@ -1157,7 +1179,7 @@ _dispatch__FirstInterface_void_func (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 0) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_FirstInterface_Interface *self;
-  self = FirstInterface (cpl, fbr).operator->();
+  self = FirstInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   self->void_func ();
   return NULL;
@@ -1179,7 +1201,7 @@ _dispatch__UIWidgetArea_simple_method (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 0) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Interface *self;
-  self = UIWidgetArea (cpl, fbr).operator->();
+  self = UIWidgetArea_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   double rval = self->simple_method ();
   FieldBuffer &rb = *FieldBuffer::new_result();
@@ -1193,7 +1215,7 @@ _dispatch__UIWidgetArea_single_arg (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Interface *self;
-  self = UIWidgetArea (cpl, fbr).operator->();
+  self = UIWidgetArea_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double rval = self->single_arg (arg_n);
@@ -1208,7 +1230,7 @@ _dispatch__UIWidgetArea_single_arg2 (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Interface *self;
-  self = UIWidgetArea (cpl, fbr).operator->();
+  self = UIWidgetArea_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double rval = self->single_arg2 (arg_n);
@@ -1223,7 +1245,7 @@ _dispatch__UIWidgetArea_two_args (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Interface *self;
-  self = UIWidgetArea (cpl, fbr).operator->();
+  self = UIWidgetArea_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double arg_r = fbr.pop_double();
@@ -1239,7 +1261,7 @@ _dispatch__UIWidgetArea_two_args2 (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Interface *self;
-  self = UIWidgetArea (cpl, fbr).operator->();
+  self = UIWidgetArea_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double arg_r = fbr.pop_double();
@@ -1255,7 +1277,7 @@ _dispatch__UIWidgetArea_multi_args (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 5) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Interface *self;
-  self = UIWidgetArea (cpl, fbr).operator->();
+  self = UIWidgetArea_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_n = fbr.pop_int64();
   double arg_r = fbr.pop_double();
@@ -1274,10 +1296,10 @@ _dispatch__UIWidgetArea_self_method (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Interface *self;
-  self = UIWidgetArea (cpl, fbr).operator->();
+  self = UIWidgetArea_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
-  I_UIWidgetArea_Interface *arg_ba1 = UIWidgetArea (cpl, fbr).operator->();
-  I_UIWidgetArea_Interface *arg_ba2 = UIWidgetArea (cpl, fbr).operator->();
+  I_UIWidgetArea_Interface *arg_ba1 = UIWidgetArea_SmartHandle (cpl, fbr).operator->();
+  I_UIWidgetArea_Interface *arg_ba2 = UIWidgetArea_SmartHandle (cpl, fbr).operator->();
   double rval = self->self_method (*arg_ba1, *arg_ba2);
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_double (rval);
@@ -1290,7 +1312,7 @@ _dispatch__UIWidgetArea_void_method (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 0) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Interface *self;
-  self = UIWidgetArea (cpl, fbr).operator->();
+  self = UIWidgetArea_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   self->void_method ();
   return NULL;
@@ -1302,7 +1324,7 @@ _dispatch__UIWidgetArea_on_click2out (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 0) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Interface *self;
-  self = UIWidgetArea (cpl, fbr).operator->();
+  self = UIWidgetArea_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   std::string rval = self->on_click2out ();
   FieldBuffer &rb = *FieldBuffer::new_result();
@@ -1316,7 +1338,7 @@ _dispatch__UIWidgetArea_on_click2in (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Interface *self;
-  self = UIWidgetArea (cpl, fbr).operator->();
+  self = UIWidgetArea_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   std::string arg_command = fbr.pop_string();
   self->on_click2in (arg_command);
@@ -1349,7 +1371,7 @@ _dispatch__UIWidgetArea_void_signal (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Interface *self;
-  self = UIWidgetArea (cpl, fbr).operator->();
+  self = UIWidgetArea_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -1393,7 +1415,7 @@ _dispatch__UIWidgetArea_sample_signal (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_UIWidgetArea_Interface *self;
-  self = UIWidgetArea (cpl, fbr).operator->();
+  self = UIWidgetArea_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -1417,7 +1439,7 @@ _dispatch__QuickIface_simple_function (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_QuickIface_Interface *self;
-  self = QuickIface (cpl, fbr).operator->();
+  self = QuickIface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_i = fbr.pop_int64();
   self->simple_function (arg_i);
@@ -1431,7 +1453,7 @@ _dispatch__MethodTestInterface_method_with_void (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 0) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Interface *self;
-  self = MethodTestInterface (cpl, fbr).operator->();
+  self = MethodTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   self->method_with_void ();
   return NULL;
@@ -1443,7 +1465,7 @@ _dispatch__MethodTestInterface_method_with_bools (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Interface *self;
-  self = MethodTestInterface (cpl, fbr).operator->();
+  self = MethodTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   bool arg_input = fbr.pop_int64();
   bool arg_optval = fbr.pop_int64();
@@ -1459,7 +1481,7 @@ _dispatch__MethodTestInterface_method_with_ints (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Interface *self;
-  self = MethodTestInterface (cpl, fbr).operator->();
+  self = MethodTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   int arg_input = fbr.pop_int64();
   int arg_optval = fbr.pop_int64();
@@ -1475,7 +1497,7 @@ _dispatch__MethodTestInterface_method_with_floats (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Interface *self;
-  self = MethodTestInterface (cpl, fbr).operator->();
+  self = MethodTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   double arg_input = fbr.pop_double();
   double arg_optval = fbr.pop_double();
@@ -1491,7 +1513,7 @@ _dispatch__MethodTestInterface_method_with_string (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Interface *self;
-  self = MethodTestInterface (cpl, fbr).operator->();
+  self = MethodTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   std::string arg_input = fbr.pop_string();
   std::string arg_optval = fbr.pop_string();
@@ -1507,7 +1529,7 @@ _dispatch__MethodTestInterface_method_with_enum (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Interface *self;
-  self = MethodTestInterface (cpl, fbr).operator->();
+  self = MethodTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   QuickEnum arg_input = QuickEnum (fbr.pop_evalue());
   QuickEnum arg_optval = QuickEnum (fbr.pop_evalue());
@@ -1523,7 +1545,7 @@ _dispatch__MethodTestInterface_method_with_record (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Interface *self;
-  self = MethodTestInterface (cpl, fbr).operator->();
+  self = MethodTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   QuickRecord arg_input;
   if (!arg_input.proto_pop (cpl, fbr)) return false;
@@ -1541,7 +1563,7 @@ _dispatch__MethodTestInterface_method_with_sequence (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Interface *self;
-  self = MethodTestInterface (cpl, fbr).operator->();
+  self = MethodTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   QuickSequence arg_input;
   if (!arg_input.proto_pop (cpl, fbr)) return false;
@@ -1559,13 +1581,13 @@ _dispatch__MethodTestInterface_method_with_interface (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Interface *self;
-  self = MethodTestInterface (cpl, fbr).operator->();
+  self = MethodTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
-  I_GrandChild_Interface *arg_input = GrandChild (cpl, fbr).operator->();
-  I_GrandChild_Interface *arg_optval = GrandChild (cpl, fbr).operator->();
+  I_GrandChild_Interface *arg_input = GrandChild_SmartHandle (cpl, fbr).operator->();
+  I_GrandChild_Interface *arg_optval = GrandChild_SmartHandle (cpl, fbr).operator->();
   I_GrandChild_Interface *rval = self->method_with_interface (*arg_input, *arg_optval);
   FieldBuffer &rb = *FieldBuffer::new_result();
-  rb.add_object (GrandChild (rval)._rpc_id());
+  rb.add_object (GrandChild_SmartHandle (rval)._rpc_id());
   return &rb;
 }
 static FieldBuffer*
@@ -1575,13 +1597,13 @@ _dispatch__MethodTestInterface_method_with_quickiface (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_MethodTestInterface_Interface *self;
-  self = MethodTestInterface (cpl, fbr).operator->();
+  self = MethodTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
-  I_QuickIface_Interface *arg_input = QuickIface (cpl, fbr).operator->();
-  I_QuickIface_Interface *arg_iface0 = QuickIface (cpl, fbr).operator->();
+  I_QuickIface_Interface *arg_input = QuickIface_SmartHandle (cpl, fbr).operator->();
+  I_QuickIface_Interface *arg_iface0 = QuickIface_SmartHandle (cpl, fbr).operator->();
   I_QuickIface_Interface *rval = self->method_with_quickiface (*arg_input, *arg_iface0);
   FieldBuffer &rb = *FieldBuffer::new_result();
-  rb.add_object (QuickIface (rval)._rpc_id());
+  rb.add_object (QuickIface_SmartHandle (rval)._rpc_id());
   return &rb;
 }
 
@@ -1612,7 +1634,7 @@ _dispatch__SignalTestInterface_void_result (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -1652,7 +1674,7 @@ _dispatch__SignalTestInterface_bool_result (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -1692,7 +1714,7 @@ _dispatch__SignalTestInterface_int_result (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -1732,7 +1754,7 @@ _dispatch__SignalTestInterface_float_result (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -1772,7 +1794,7 @@ _dispatch__SignalTestInterface_string_result (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -1812,7 +1834,7 @@ _dispatch__SignalTestInterface_enum_result (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -1852,7 +1874,7 @@ _dispatch__SignalTestInterface_record_result (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -1892,7 +1914,7 @@ _dispatch__SignalTestInterface_sequence_result (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -1932,7 +1954,7 @@ _dispatch__SignalTestInterface_interface_result (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -1972,7 +1994,7 @@ _dispatch__SignalTestInterface_self_result (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -2011,7 +2033,7 @@ _dispatch__SignalTestInterface_void_arg (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -2052,7 +2074,7 @@ _dispatch__SignalTestInterface_bool_arg (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -2093,7 +2115,7 @@ _dispatch__SignalTestInterface_int_arg (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -2134,7 +2156,7 @@ _dispatch__SignalTestInterface_float_arg (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -2175,7 +2197,7 @@ _dispatch__SignalTestInterface_string_arg (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -2216,7 +2238,7 @@ _dispatch__SignalTestInterface_enum_arg (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -2257,7 +2279,7 @@ _dispatch__SignalTestInterface_record_arg (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -2298,7 +2320,7 @@ _dispatch__SignalTestInterface_sequence_arg (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -2339,7 +2361,7 @@ _dispatch__SignalTestInterface_interface_arg (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -2380,7 +2402,7 @@ _dispatch__SignalTestInterface_self_args (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_SignalTestInterface_Interface *self;
-  self = SignalTestInterface (cpl, fbr).operator->();
+  self = SignalTestInterface_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -2424,7 +2446,7 @@ _dispatch__ButtonArea_check_activate (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_ButtonArea_Interface *self;
-  self = ButtonArea (cpl, fbr).operator->();
+  self = ButtonArea_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -2463,7 +2485,7 @@ _dispatch__ButtonArea_activate (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_ButtonArea_Interface *self;
-  self = ButtonArea (cpl, fbr).operator->();
+  self = ButtonArea_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   uint64 cid = 0, handler_id = fbr.pop_int64();
   uint64 con_id = fbr.pop_int64();
@@ -2483,7 +2505,7 @@ _dispatch__PureMethods_pure_method (Coupler &cpl)
   fbr.skip_hash(); // TypeHash
   if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);
   I_PureMethods_Interface *self;
-  self = PureMethods (cpl, fbr).operator->();
+  self = PureMethods_SmartHandle (cpl, fbr).operator->();
   PLIC_CHECK (self, "self must be non-NULL");
   double arg_f = fbr.pop_double();
   int rval = self->pure_method (arg_f);

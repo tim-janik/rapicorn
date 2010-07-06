@@ -26,11 +26,11 @@ namespace Rapicorn {
 
 ApplicationImpl &app = *new ApplicationImpl();
 
-ApplicationBase::ApplicationMutex ApplicationBase::mutex;
+Application::ApplicationMutex Application::mutex;
 
 void
-ApplicationBase::pixstream (const String  &pix_name,
-                              const uint8   *static_const_pixstream)
+Application::pixstream (const String  &pix_name,
+                        const uint8   *static_const_pixstream)
 {
   Pixmap::add_stock (pix_name, static_const_pixstream);
 }
@@ -57,7 +57,7 @@ ApplicationImpl::init_with_x11 (const std::string &application_name,
   init_with_x11 (&dummy_argc, &dummy_argv, application_name.c_str());
 }
 
-WindowBase*
+Window*
 ApplicationImpl::create_window (const std::string    &window_identifier,
                                 const StringList     &arguments,
                                 const StringList     &env_variables)
@@ -127,7 +127,7 @@ ApplicationImpl::load_string (const std::string &xml_string,
 }
 
 int
-ApplicationBase::execute_loops ()
+Application::execute_loops ()
 {
   assert (rapicorn_thread_entered());           // guards exit_code
   while (!EventLoop::loops_exitable())
@@ -136,13 +136,13 @@ ApplicationBase::execute_loops ()
 }
 
 bool
-ApplicationBase::has_primary ()
+Application::has_primary ()
 {
   return !EventLoop::loops_exitable();
 }
 
 void
-ApplicationBase::close ()
+Application::close ()
 {
 }
 
@@ -156,7 +156,7 @@ ApplicationImpl::list_windows ()
 }
 
 void
-ApplicationImpl::add_window (WindowBase &window)
+ApplicationImpl::add_window (Window &window)
 {
   ref_sink (window);
   m_windows.push_back (&window);
@@ -170,9 +170,9 @@ ApplicationImpl::check_primaries()
 }
 
 bool
-ApplicationImpl::remove_window (WindowBase &window)
+ApplicationImpl::remove_window (Window &window)
 {
-  vector<WindowBase*>::iterator it = std::find (m_windows.begin(), m_windows.end(), &window);
+  vector<Window*>::iterator it = std::find (m_windows.begin(), m_windows.end(), &window);
   if (it == m_windows.end())
     return false;
   m_windows.erase (it);

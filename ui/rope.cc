@@ -94,7 +94,7 @@ private:
     (*m_loop).add_source (esource, MAXINT);
     esource->primary (false);
     m_init->mutex.lock();
-    m_init->app_id = Application (&app)._rpc_id();
+    m_init->app_id = Application_SmartHandle (&app)._rpc_id();
     m_init->cond.signal();
     m_init->mutex.unlock();
     m_init = NULL;

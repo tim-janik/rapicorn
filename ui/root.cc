@@ -1109,7 +1109,7 @@ RootImpl::close ()
   destroy_viewport();
 }
 
-WindowBase&
+Window&
 RootImpl::window ()
 {
   return *this;

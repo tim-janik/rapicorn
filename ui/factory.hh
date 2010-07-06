@@ -50,7 +50,7 @@ Item&           create_item      (const String           &item_identifier,
 Container&      create_container (const String           &container_identifier,
                                   const ArgumentList     &arguments = ArgumentList(),
                                   const ArgumentList     &env_variables = ArgumentList());
-WindowBase&     create_window    (const String           &window_identifier,
+Window&         create_window    (const String           &window_identifier,
                                   const ArgumentList     &arguments = ArgumentList(),
                                   const ArgumentList     &env_variables = ArgumentList());
 

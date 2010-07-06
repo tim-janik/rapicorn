@@ -47,7 +47,7 @@ main (int   argc,
   app.auto_load ("RapicornTest", "graphics.xml", argv[0]);
 
   /* create root item */
-  WindowBase &window = *app.create_window ("graphics-dialog");
+  Window &window = *app.create_window ("graphics-dialog");
 
   /* hook up drawable test */
   Root &root = window.root();

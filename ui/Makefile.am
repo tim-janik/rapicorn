@@ -81,8 +81,8 @@ PLICINT     = $(top_builddir)/plic/plic-intern
 EXTRA_DIST += rapicorn.idl insertions.cc hardcoded.idl
 interface.hh: $(ROPE)/CxxCaller.py $(srcdir)/rapicorn.idl $(srcdir)/insertions.cc
 	: # build interface.hh from rapicorn.idl
-	${PLICINT} -G $(ROPE)/CxxCaller -g serverhh -g iface-postfix=Base \
-	  -g iface-base=BaseObject \
+	${PLICINT} -G $(ROPE)/CxxCaller -g serverhh \
+	  -g iface-base=BaseObject -g shortalias \
 	  --insertions $(srcdir)/insertions.cc $(srcdir)/rapicorn.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 $(rapicorn_cc_sources): interface.hh
@@ -90,7 +90,7 @@ CLEANFILES += xgen-interface.hh interface.hh
 interface.cc: $(ROPE)/CxxCaller.py $(srcdir)/rapicorn.idl
 	: # build interface.cc from rapicorn.idl
 	echo "#define PLIC_CALL_REMOTE // dummy" > xgen-$(@F)
-	${PLICINT} -G $(ROPE)/CxxCaller -g servercc -g iface-postfix=Base \
+	${PLICINT} -G $(ROPE)/CxxCaller -g servercc \
 	  -g iface-base=BaseObject \
 	  --inclusions '"item.hh"' $(srcdir)/rapicorn.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
@@ -101,7 +101,7 @@ skeletons.cc: $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS)
 	  *.lo) . "./$$obj" ; o="$$pic_object" ;; *.o|*) o="$$obj" ;; esac ; \
 	  nm -C "$$o" ; done | grep -v '^[[:space:]]*U[[:space:]]' | \
 	  sed 's/\b@RAPICORN_NAMESPACE_NAME@::/Rapicorn::/g' > xgen-syms-$(@F)
-	${PLICINT} -G $(ROPE)/CxxCaller -g server-skel -g iface-postfix=Base \
+	${PLICINT} -G $(ROPE)/CxxCaller -g server-skel \
 	  --skip-skels xgen-syms-$(@F) \
 	  $(srcdir)/rapicorn.idl -o xgen-$(@F)
 	rm -f xgen-syms-$(@F)

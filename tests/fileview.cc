@@ -72,9 +72,9 @@ main (int   argc,
 
   /* create root item */
   Store1 *s1 = create_store();
-  WindowBase &window = *app.create_window ("main-dialog",
-                                           Args (""),
-                                           Args ("ListModel=" + s1->model().plor_name()));
+  Window &window = *app.create_window ("main-dialog",
+                                       Args (""),
+                                       Args ("ListModel=" + s1->model().plor_name()));
   window.show();
 
   app.execute_loops();

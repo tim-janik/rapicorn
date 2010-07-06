@@ -24,9 +24,9 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-handle_commands (WindowBase         &window,
-                 const String       &command,
-                 const StringList   &args)
+handle_commands (Window           &window,
+                 const String     &command,
+                 const StringList &args)
 {
   if (command == "close")
     window.close();
@@ -48,7 +48,7 @@ main (int   argc,
                  argv[0]);
 
   /* create main window */
-  WindowBase &window = *app.create_window ("main-window");
+  Window &window = *app.create_window ("main-window");
 
   /* connect custom callback to handle UI commands */
   window.sig_commands += handle_commands;

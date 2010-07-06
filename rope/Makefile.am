@@ -44,7 +44,7 @@ CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
 cxx-client.hh: $(RAPICORNIDL) $(HARDCODEDIDL) $(RAPICORNINS) $(srcdir)/CxxCaller.py
 	: # build cxx-client.hh from rapicorn.idl
 	: # ${PLICINT} -G $(srcdir)/CxxCaller -g clienthh $(HARDCODEDIDL) -o xgen-$(@F)
-	${PLICINT} -G $(srcdir)/CxxCaller -g clienthh $(RAPICORNIDL) \
+	${PLICINT} -G $(srcdir)/CxxCaller -g clienthh $(RAPICORNIDL) -g shortalias \
 	  --insertions $(RAPICORNINS) -o xgen-$(@F)
 	mv xgen-$(@F) $@
 cxx-client.cc: $(RAPICORNIDL) $(HARDCODEDIDL) $(srcdir)/CxxCaller.py

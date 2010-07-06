@@ -176,7 +176,7 @@ main (int   argc,
     }
 
   /* create root item */
-  WindowBase &window = *app.create_window (dialog);
+  Window &window = *app.create_window (dialog);
 
   /* hook up test-dump handler */
   if (test_dump)

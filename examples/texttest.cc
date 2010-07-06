@@ -30,7 +30,7 @@ main (int   argc,
   app.auto_load ("RapicornTest", "texttest.xml", argv[0]);
 
   /* create main window */
-  WindowBase &window = *app.create_window ("main-shell");
+  Window &window = *app.create_window ("main-shell");
 
   /* show and process */
   window.show();

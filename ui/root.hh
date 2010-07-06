@@ -70,7 +70,7 @@ public:
   virtual EventLoop* get_loop           () = 0;
   virtual void       enable_auto_close  ();
   /* MT-safe */
-  virtual WindowBase& window          () = 0;
+  virtual Window&    window          () = 0;
 };
 
 } // Rapicorn

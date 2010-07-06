@@ -31,7 +31,7 @@ main (int   argc,
 
   TSTART ("RapicornItems");
   /* parse standard GUI descriptions and create example item */
-  WindowBase &window = *app.create_window ("Root");
+  Window &window = *app.create_window ("Root");
   TOK();
   /* get thread safe window handle */
   TOK();

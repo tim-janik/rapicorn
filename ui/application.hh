@@ -21,8 +21,8 @@
 
 namespace Rapicorn {
 
-class ApplicationImpl : public ApplicationBase {
-  vector<WindowBase*> m_windows;
+class ApplicationImpl : public Application {
+  vector<Window*>     m_windows;
   void                check_primaries        ();
 public:
   virtual void        init_with_x11          (const std::string &application_name,
@@ -35,12 +35,12 @@ public:
                                               const std::string &binary_path);
   virtual void        load_string            (const std::string &xml_string,
                                               const std::string &i18n_domain = "");
-  virtual WindowBase* create_window          (const std::string &window_identifier,
+  virtual Window*     create_window          (const std::string &window_identifier,
                                               const StringList &arguments = StringList(),
                                               const StringList &env_variables = StringList());
   virtual WindowList  list_windows           ();
-  void                add_window             (WindowBase &window);
-  bool                remove_window          (WindowBase &window);
+  void                add_window             (Window &window);
+  bool                remove_window          (Window &window);
   virtual void        test_counter_set       (int val);
   virtual void        test_counter_add       (int val);
   virtual int         test_counter_get       ();

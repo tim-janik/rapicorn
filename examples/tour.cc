@@ -20,9 +20,9 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-custom_commands (WindowBase         &window,
-                 const String       &command,
-                 const StringList   &args)
+custom_commands (Window           &window,
+                 const String     &command,
+                 const StringList &args)
 {
   if (command == "testdump")
     {
@@ -50,16 +50,16 @@ main (int   argc,
   /* initialization acquired global Rapicorn mutex */
 
   /* register builtin images */
-  ApplicationBase::pixstream ("testimage-alpha-rle", alpha_rle);
-  ApplicationBase::pixstream ("testimage-alpha-raw", alpha_raw);
-  ApplicationBase::pixstream ("testimage-rgb-rle", rgb_rle);
-  ApplicationBase::pixstream ("testimage-rgb-raw", rgb_raw);
+  Application::pixstream ("testimage-alpha-rle", alpha_rle);
+  Application::pixstream ("testimage-alpha-raw", alpha_raw);
+  Application::pixstream ("testimage-rgb-rle", rgb_rle);
+  Application::pixstream ("testimage-rgb-raw", rgb_raw);
 
   /* load GUI definition file, relative to argv[0] */
   app.auto_load ("RapicornTest", "tour.xml", argv[0]);
 
   /* create root item */
-  WindowBase &window = *app.create_window ("tour-dialog");
+  Window &window = *app.create_window ("tour-dialog");
   window.sig_commands += custom_commands;
 
   window.show();

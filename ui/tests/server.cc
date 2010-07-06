@@ -23,13 +23,13 @@ static Application * volatile smart_app_p = NULL;
 static void
 test_server_smart_handle (void)
 {
-  ApplicationBase *ab = &app;
+  Application *ab = &app;
   Plic::FieldBuffer8 fb (4);
   fb.add_object (uint64 ((BaseObject*) ab));
   Plic::Coupler &c = *rope_thread_coupler();
   c.reader.reset (fb);
-  Application sh (c, c.reader);
-  ApplicationBase &shab = *sh;
+  Application_SmartHandle sh (c, c.reader);
+  Application &shab = *sh;
   assert (ab == &shab);
   assert (ab == sh.operator->());
 }

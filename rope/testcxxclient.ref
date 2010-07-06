@@ -131,14 +131,15 @@ enum ExtensiveEnum {
   V36 = 42, // "foo""4"
 };
 
-class FirstInterface : public virtual Plic::SmartHandle {
+class FirstInterface_SmartHandle : public virtual Plic::SmartHandle {
 protected:
 public:
-  inline FirstInterface () {}
-  inline FirstInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline FirstInterface_SmartHandle () {}
+  inline FirstInterface_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   void            void_func ();
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
 struct XFooRecord {
   bool            single_bool;
   int             single_num;
@@ -151,9 +152,9 @@ struct XFooRecord {
   int             multi3;
   int             multi4;
   ExtensiveEnum   enum_field;
-  FirstInterface  iface1;
-  FirstInterface  iface2;
-  FirstInterface  iface3;
+  FirstInterface_SmartHandle iface1;
+  FirstInterface_SmartHandle iface2;
+  FirstInterface_SmartHandle iface3;
   bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
   inline XFooRecord () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
@@ -250,7 +251,7 @@ struct SequenceSequence {
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 struct InterfaceSequence {
-  typedef std::vector<FirstInterface> Sequence;
+  typedef std::vector<FirstInterface_SmartHandle> Sequence;
   typedef Sequence::size_type              size_type;
   typedef Sequence::value_type             value_type;
   typedef Sequence::allocator_type         allocator_type;
@@ -337,11 +338,11 @@ typedef std::string s;
 
 namespace InterfaceTests {
 
-class UIWidgetArea : public virtual Plic::SmartHandle {
+class UIWidgetArea_SmartHandle : public virtual Plic::SmartHandle {
 protected:
 public:
-  inline UIWidgetArea () {}
-  inline UIWidgetArea (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline UIWidgetArea_SmartHandle () {}
+  inline UIWidgetArea_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   double          simple_method ();
   double          single_arg    (int n);
   double          single_arg2   (int n = 5);
@@ -354,45 +355,50 @@ public:
                                  int i,
                                  const std::string &s = "String ding",
                                  double y = 5);
-  double          self_method   (UIWidgetArea &ba1,
-                                 UIWidgetArea &ba2);
+  double          self_method   (UIWidgetArea_SmartHandle &ba1,
+                                 UIWidgetArea_SmartHandle &ba2);
   void            void_method   ();
   std::string     on_click2out  ();
   void            on_click2in   (const std::string &command);
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class Parent : public virtual Plic::SmartHandle {
+
+class Parent_SmartHandle : public virtual Plic::SmartHandle {
 protected:
 public:
-  inline Parent () {}
-  inline Parent (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline Parent_SmartHandle () {}
+  inline Parent_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class Child : public Parent {
+
+class Child_SmartHandle : public Parent_SmartHandle {
 protected:
 public:
-  inline Child () {}
-  inline Child (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline Child_SmartHandle () {}
+  inline Child_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class Descendant : public Child {
+
+class Descendant_SmartHandle : public Child_SmartHandle {
 protected:
 public:
-  inline Descendant () {}
-  inline Descendant (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline Descendant_SmartHandle () {}
+  inline Descendant_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class GrandChild : public Descendant {
+
+class GrandChild_SmartHandle : public Descendant_SmartHandle {
 protected:
 public:
-  inline GrandChild () {}
-  inline GrandChild (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline GrandChild_SmartHandle () {}
+  inline GrandChild_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
 enum QuickEnum {
   ZERO = 0,
 };
@@ -417,20 +423,21 @@ struct QuickSequence {
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 
-class QuickIface : public virtual Plic::SmartHandle {
+class QuickIface_SmartHandle : public virtual Plic::SmartHandle {
 protected:
 public:
-  inline QuickIface () {}
-  inline QuickIface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline QuickIface_SmartHandle () {}
+  inline QuickIface_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   void            simple_function (int i = 9);
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class MethodTestInterface : public virtual Plic::SmartHandle {
+
+class MethodTestInterface_SmartHandle : public virtual Plic::SmartHandle {
 protected:
 public:
-  inline MethodTestInterface () {}
-  inline MethodTestInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline MethodTestInterface_SmartHandle () {}
+  inline MethodTestInterface_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   void            method_with_void       ();
   bool            method_with_bools      (bool input,
                                           bool optval = 0);
@@ -446,20 +453,22 @@ public:
                                           const QuickRecord &optval = QuickRecord());
   QuickSequence   method_with_sequence   (const QuickSequence &input,
                                           const QuickSequence &optval = QuickSequence());
-  GrandChild      method_with_interface  (GrandChild &input,
-                                          GrandChild &optval = *(GrandChild*) NULL);
-  QuickIface      method_with_quickiface (QuickIface &input,
-                                          QuickIface &iface0 = *(QuickIface*) NULL);
+  GrandChild_SmartHandle method_with_interface  (GrandChild_SmartHandle &input,
+                                                 GrandChild_SmartHandle &optval = *(GrandChild_SmartHandle*) NULL);
+  QuickIface_SmartHandle method_with_quickiface (QuickIface_SmartHandle &input,
+                                                 QuickIface_SmartHandle &iface0 = *(QuickIface_SmartHandle*) NULL);
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class SignalTestInterface : public virtual Plic::SmartHandle {
+
+class SignalTestInterface_SmartHandle : public virtual Plic::SmartHandle {
 protected:
 public:
-  inline SignalTestInterface () {}
-  inline SignalTestInterface (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline SignalTestInterface_SmartHandle () {}
+  inline SignalTestInterface_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
 } // InterfaceTests
 
 namespace RapicornPlicTest {
@@ -471,29 +480,31 @@ enum ClickType {
   CLICK_KEY_REPEAT = 5,
 };
 
-class ButtonArea : public virtual Plic::SmartHandle {
+class ButtonArea_SmartHandle : public virtual Plic::SmartHandle {
 protected:
 public:
-  inline ButtonArea () {}
-  inline ButtonArea (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline ButtonArea_SmartHandle () {}
+  inline ButtonArea_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
-class PureMethods : public virtual Plic::SmartHandle {
+
+class PureMethods_SmartHandle : public virtual Plic::SmartHandle {
 protected:
 public:
-  inline PureMethods () {}
-  inline PureMethods (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline PureMethods_SmartHandle () {}
+  inline PureMethods_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   int             pure_method (double f);
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+
 } // RapicornPlicTest
 
 // --- Implementations ---
 
 namespace MandatoryNamespace {
 void
-FirstInterface::void_func ()
+FirstInterface_SmartHandle::void_func ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
   fb.add_type_hash (0x200000001dfd7256ULL, 0xdec25cd632ee83caULL, 0x06b4549d6fedf832ULL, 0x9a1e54caedf1db9bULL); // msgid
@@ -536,9 +547,9 @@ XFooRecord::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
   this->multi3 = fbr.pop_int64();
   this->multi4 = fbr.pop_int64();
   this->enum_field = ExtensiveEnum (fbr.pop_evalue());
-  this->iface1 = FirstInterface (cpl, fbr);
-  this->iface2 = FirstInterface (cpl, fbr);
-  this->iface3 = FirstInterface (cpl, fbr);
+  this->iface1 = FirstInterface_SmartHandle (cpl, fbr);
+  this->iface2 = FirstInterface_SmartHandle (cpl, fbr);
+  this->iface3 = FirstInterface_SmartHandle (cpl, fbr);
   return true;
 }
 
@@ -713,7 +724,7 @@ InterfaceSequence::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
   const size_t len = fbr.remaining();
   this->iface1.reserve (len);
   for (size_t k = 0; k < len; k++) {
-    this->iface1.push_back (FirstInterface (cpl, fbr));
+    this->iface1.push_back (FirstInterface_SmartHandle (cpl, fbr));
   }
   return true;
 }
@@ -848,7 +859,7 @@ SomeRecord::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 
 namespace InterfaceTests {
 double
-UIWidgetArea::simple_method ()
+UIWidgetArea_SmartHandle::simple_method ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
   fb.add_type_hash (0x30000000fd8072dfULL, 0x591f7cce6e74034aULL, 0x419df82c635c78d1ULL, 0x1e2fc6cf88d761faULL); // msgid
@@ -861,7 +872,7 @@ UIWidgetArea::simple_method ()
   return retval;
 }
 double
-UIWidgetArea::single_arg (int arg_n)
+UIWidgetArea_SmartHandle::single_arg (int arg_n)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
   fb.add_type_hash (0x3000000075ce4c8bULL, 0x1a40a9c8bd145a39ULL, 0x37b83f96f1d3168bULL, 0x3f57c461185c3752ULL); // msgid
@@ -875,7 +886,7 @@ UIWidgetArea::single_arg (int arg_n)
   return retval;
 }
 double
-UIWidgetArea::single_arg2 (int arg_n)
+UIWidgetArea_SmartHandle::single_arg2 (int arg_n)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
   fb.add_type_hash (0x30000000179c202fULL, 0xa554850da029f547ULL, 0xe2591a43b7c79a61ULL, 0xe19a6853f11b1b99ULL); // msgid
@@ -889,8 +900,8 @@ UIWidgetArea::single_arg2 (int arg_n)
   return retval;
 }
 double
-UIWidgetArea::two_args (int arg_n,
-                        double arg_r)
+UIWidgetArea_SmartHandle::two_args (int arg_n,
+                                    double arg_r)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x300000006a210506ULL, 0xa76bb7cd90d84838ULL, 0x8000823cfb905b8cULL, 0x39826abcf9caba00ULL); // msgid
@@ -905,8 +916,8 @@ UIWidgetArea::two_args (int arg_n,
   return retval;
 }
 double
-UIWidgetArea::two_args2 (int arg_n,
-                         double arg_r)
+UIWidgetArea_SmartHandle::two_args2 (int arg_n,
+                                     double arg_r)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x30000000ac125ff1ULL, 0xac6be3d45e25ada6ULL, 0x040efc8ab508b1d3ULL, 0x15e48df9e26c0caaULL); // msgid
@@ -921,11 +932,11 @@ UIWidgetArea::two_args2 (int arg_n,
   return retval;
 }
 double
-UIWidgetArea::multi_args (int arg_n,
-                          double arg_r,
-                          int arg_i,
-                          const std::string &arg_s,
-                          double arg_y)
+UIWidgetArea_SmartHandle::multi_args (int arg_n,
+                                      double arg_r,
+                                      int arg_i,
+                                      const std::string &arg_s,
+                                      double arg_y)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 5), *fr = NULL;
   fb.add_type_hash (0x300000000361838dULL, 0xc298afde820561a5ULL, 0x8fe8c83788c4bb38ULL, 0xb3179ae3d510e7b2ULL); // msgid
@@ -943,8 +954,8 @@ UIWidgetArea::multi_args (int arg_n,
   return retval;
 }
 double
-UIWidgetArea::self_method (UIWidgetArea &arg_ba1,
-                           UIWidgetArea &arg_ba2)
+UIWidgetArea_SmartHandle::self_method (UIWidgetArea_SmartHandle &arg_ba1,
+                                       UIWidgetArea_SmartHandle &arg_ba2)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x30000000b9d64621ULL, 0x3a96692d3e1ef7dbULL, 0xdced671b586f7aa7ULL, 0x1d3870f7ed0285e5ULL); // msgid
@@ -959,7 +970,7 @@ UIWidgetArea::self_method (UIWidgetArea &arg_ba1,
   return retval;
 }
 void
-UIWidgetArea::void_method ()
+UIWidgetArea_SmartHandle::void_method ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
   fb.add_type_hash (0x200000000ff38422ULL, 0x440e8e84942acf8eULL, 0x0c4945e5794d8356ULL, 0x2e2e61471f31bfbfULL); // msgid
@@ -967,7 +978,7 @@ UIWidgetArea::void_method ()
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
 }
 std::string
-UIWidgetArea::on_click2out ()
+UIWidgetArea_SmartHandle::on_click2out ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
   fb.add_type_hash (0x300000004b649644ULL, 0x8a9b2140ad7fc83dULL, 0x10b67ed382387b14ULL, 0xe7b6cc0714a17f30ULL); // msgid
@@ -980,7 +991,7 @@ UIWidgetArea::on_click2out ()
   return retval;
 }
 void
-UIWidgetArea::on_click2in (const std::string &arg_command)
+UIWidgetArea_SmartHandle::on_click2in (const std::string &arg_command)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
   fb.add_type_hash (0x20000000f671167cULL, 0xdfc42ce42beb58f7ULL, 0x15afc969aae521d6ULL, 0xadbec8ab9522f6f8ULL); // msgid
@@ -1029,7 +1040,7 @@ QuickSequence::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 }
 
 void
-QuickIface::simple_function (int arg_i)
+QuickIface_SmartHandle::simple_function (int arg_i)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
   fb.add_type_hash (0x20000000be855008ULL, 0x6bf2269ff6939544ULL, 0x6a0846e9f5a62da8ULL, 0x59c8e2a4e4629e80ULL); // msgid
@@ -1038,7 +1049,7 @@ QuickIface::simple_function (int arg_i)
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
 }
 void
-MethodTestInterface::method_with_void ()
+MethodTestInterface_SmartHandle::method_with_void ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
   fb.add_type_hash (0x20000000a426153aULL, 0x0a2f5758267a2651ULL, 0xd9bff16cf6755833ULL, 0x8959ddaf9e5b8a44ULL); // msgid
@@ -1046,8 +1057,8 @@ MethodTestInterface::method_with_void ()
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
 }
 bool
-MethodTestInterface::method_with_bools (bool arg_input,
-                                        bool arg_optval)
+MethodTestInterface_SmartHandle::method_with_bools (bool arg_input,
+                                                    bool arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x300000003917295eULL, 0x76cb59d18d695319ULL, 0x0fe6acdaa38d48dfULL, 0xa26ca0854c18e565ULL); // msgid
@@ -1062,8 +1073,8 @@ MethodTestInterface::method_with_bools (bool arg_input,
   return retval;
 }
 int
-MethodTestInterface::method_with_ints (int arg_input,
-                                       int arg_optval)
+MethodTestInterface_SmartHandle::method_with_ints (int arg_input,
+                                                   int arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x3000000015f688dcULL, 0x4db9c06f4357aa4eULL, 0x902ee7647790de7cULL, 0x18aa217be2c83cbaULL); // msgid
@@ -1078,8 +1089,8 @@ MethodTestInterface::method_with_ints (int arg_input,
   return retval;
 }
 double
-MethodTestInterface::method_with_floats (double arg_input,
-                                         double arg_optval)
+MethodTestInterface_SmartHandle::method_with_floats (double arg_input,
+                                                     double arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x30000000bfc2d47bULL, 0x70b13d1cdf2c9488ULL, 0x77c2ea3ad44c2625ULL, 0xd6093e05e70ea643ULL); // msgid
@@ -1094,8 +1105,8 @@ MethodTestInterface::method_with_floats (double arg_input,
   return retval;
 }
 std::string
-MethodTestInterface::method_with_string (const std::string &arg_input,
-                                         const std::string &arg_optval)
+MethodTestInterface_SmartHandle::method_with_string (const std::string &arg_input,
+                                                     const std::string &arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x300000002732b2feULL, 0x6dfd49db44b97641ULL, 0x010dcacac6eb8ed7ULL, 0xa79383e035fc64e1ULL); // msgid
@@ -1110,8 +1121,8 @@ MethodTestInterface::method_with_string (const std::string &arg_input,
   return retval;
 }
 QuickEnum
-MethodTestInterface::method_with_enum (QuickEnum arg_input,
-                                       QuickEnum arg_optval)
+MethodTestInterface_SmartHandle::method_with_enum (QuickEnum arg_input,
+                                                   QuickEnum arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x300000003f676d86ULL, 0x903cbdda7f9bf8e6ULL, 0xb56b87771cbd4b69ULL, 0x5723ee9d219ddda5ULL); // msgid
@@ -1126,8 +1137,8 @@ MethodTestInterface::method_with_enum (QuickEnum arg_input,
   return retval;
 }
 QuickRecord
-MethodTestInterface::method_with_record (const QuickRecord &arg_input,
-                                         const QuickRecord &arg_optval)
+MethodTestInterface_SmartHandle::method_with_record (const QuickRecord &arg_input,
+                                                     const QuickRecord &arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x3000000004a0b014ULL, 0x7eef09335a6cd6afULL, 0xd80237b6e1df12f6ULL, 0x70618be70ed6e858ULL); // msgid
@@ -1143,8 +1154,8 @@ MethodTestInterface::method_with_record (const QuickRecord &arg_input,
   return retval;
 }
 QuickSequence
-MethodTestInterface::method_with_sequence (const QuickSequence &arg_input,
-                                           const QuickSequence &arg_optval)
+MethodTestInterface_SmartHandle::method_with_sequence (const QuickSequence &arg_input,
+                                                       const QuickSequence &arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x30000000e92eb1f1ULL, 0xbc6d5e758278964aULL, 0xe88f958f88ca346cULL, 0xf29e446630c57f23ULL); // msgid
@@ -1159,9 +1170,9 @@ MethodTestInterface::method_with_sequence (const QuickSequence &arg_input,
   delete fr;
   return retval;
 }
-GrandChild
-MethodTestInterface::method_with_interface (GrandChild &arg_input,
-                                            GrandChild &arg_optval)
+GrandChild_SmartHandle
+MethodTestInterface_SmartHandle::method_with_interface (GrandChild_SmartHandle &arg_input,
+                                                        GrandChild_SmartHandle &arg_optval)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x3000000001640ae0ULL, 0xf5403244c684c076ULL, 0x208c721dda088467ULL, 0x425f3425b0dcfad4ULL); // msgid
@@ -1171,13 +1182,13 @@ MethodTestInterface::method_with_interface (GrandChild &arg_input,
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // msgid
-  GrandChild retval = GrandChild (PLIC_COUPLER(), frr);
+  GrandChild_SmartHandle retval = GrandChild_SmartHandle (PLIC_COUPLER(), frr);
   delete fr;
   return retval;
 }
-QuickIface
-MethodTestInterface::method_with_quickiface (QuickIface &arg_input,
-                                             QuickIface &arg_iface0)
+QuickIface_SmartHandle
+MethodTestInterface_SmartHandle::method_with_quickiface (QuickIface_SmartHandle &arg_input,
+                                                         QuickIface_SmartHandle &arg_iface0)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 2), *fr = NULL;
   fb.add_type_hash (0x3000000082dc142eULL, 0x7d16cadebfca9b39ULL, 0x168d05eb3cf56adbULL, 0x31e28c41cf8bb4f9ULL); // msgid
@@ -1187,7 +1198,7 @@ MethodTestInterface::method_with_quickiface (QuickIface &arg_input,
   fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
   FieldBufferReader frr (*fr);
   frr.skip(); // msgid
-  QuickIface retval = QuickIface (PLIC_COUPLER(), frr);
+  QuickIface_SmartHandle retval = QuickIface_SmartHandle (PLIC_COUPLER(), frr);
   delete fr;
   return retval;
 }
@@ -1195,7 +1206,7 @@ MethodTestInterface::method_with_quickiface (QuickIface &arg_input,
 
 namespace RapicornPlicTest {
 int
-PureMethods::pure_method (double arg_f)
+PureMethods_SmartHandle::pure_method (double arg_f)
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
   fb.add_type_hash (0x30000000e96382b8ULL, 0x8c16fe069c1d6b1eULL, 0x002e82b90c7db308ULL, 0x9c8a9e5a95b6ea99ULL); // msgid

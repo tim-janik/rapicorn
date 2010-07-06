@@ -36,9 +36,9 @@ class_scope:StringList:
   /*Con*/  StringList () {}
   /*Con*/  StringList (const std::vector<String> &strv) : strings (strv) {}
 
-class_scope:WindowBase:
+class_scope:Window_Interface:
   virtual Root&      root          () = 0;
-class_scope:ApplicationBase:
+class_scope:Application_Interface:
   static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
   int                execute_loops ();
   static bool        plor_add      (Item &item, const String &plor_name);

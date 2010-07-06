@@ -2,3 +2,12 @@
 
 // --- Interface Skeletons ---
 
+namespace Rapicorn {
+
+bool
+Rapicorn::Application_Interface::has_primary ()
+{
+  return 0; // FIXME
+}
+} // Rapicorn
+
