@@ -170,7 +170,7 @@ class Generator:
   def format_vartype (self, type, tag = None):
     s = ''
     s += self.C (type, tag) + ' '
-    if not self.gen4smarthandle and type.storage == Decls.INTERFACE:
+    if self.gen4class == C4INTERFACE and type.storage == Decls.INTERFACE:
       s += '*'
     return s
   def format_var (self, ident, type):
@@ -313,9 +313,9 @@ class Generator:
       elif type.storage == Decls.ENUM:
         s += '  %s = %s (%s.pop_evalue());\n' % (ident, self.type2cpp (type), fbr)
       elif type.storage == Decls.INTERFACE:
-        op_ptr = '' if self.gen4smarthandle else '.operator->()'
+        op_ptr = '.operator->()' if self.gen4class == C4INTERFACE else ''
         s += '  %s = %s (%s, %s)%s;\n' \
-            % (ident, self.C (type), cpl, fbr, op_ptr)
+            % (ident, self.C (type, C4SERVER), cpl, fbr, op_ptr)
       else:
         s += '  %s = %s.pop_%s();\n' % (ident, fbr, self.accessor_name (type.storage))
     return s
@@ -793,6 +793,7 @@ class Generator:
     # generate unmarshalling server calls
     if self.gen_servercc:
       s += '\n// --- Method Dispatchers & Registry ---\n'
+      self.gen4class = C4INTERFACE
       self.gen4smarthandle = False
       reglines = []
       for tp in types:
@@ -808,6 +809,7 @@ class Generator:
       s += self.generate_server_method_registry (reglines) + '\n'
       s += self.open_namespace (None)
       self.gen4smarthandle = True
+      self.gen4class = C4CLIENT
     # generate interface method skeletons
     if self.gen_server_skel:
       s += '\n// --- Interface Skeletons ---\n'
