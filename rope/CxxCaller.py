@@ -100,7 +100,6 @@ class Generator:
     self.gen_inclusions = []
     self.skip_symbols = set()
     self._iface_base = 'Plic::SimpleServer'
-    self.gen4smarthandle = True
     self.gen4class = None
     self.gen_shortalias = False
   def close_inner_namespace (self):
@@ -741,7 +740,7 @@ class Generator:
       s += gencc_boilerplate + '\n'
     self.tabwidth (16)
     s += self.open_namespace (None)
-    self.gen4smarthandle, self.gen4class = True, C4CLIENT
+    self.gen4class = C4CLIENT
     # collect impl types
     types = []
     for tp in implementation_types:
@@ -763,11 +762,11 @@ class Generator:
           if self.gen_clienthh and not self.gen_serverhh:
             s += self.generate_interface_class (tp) + '\n' # Class smart handle
           if self.gen_serverhh:
-            self.gen4smarthandle, self.gen4class = False, C4INTERFACE
+            self.gen4class = C4INTERFACE
             s += self.generate_interface_class (tp) + '\n' # Class_Interface server base
-            self.gen4smarthandle, self.gen4class = True, C4SERVER
+            self.gen4class = C4SERVER
             s += self.generate_interface_class (tp) + '\n' # Class smart handle
-            self.gen4smarthandle, self.gen4class = True, C4CLIENT
+            self.gen4class = C4CLIENT
       s += self.open_namespace (None)
     # generate client/server impls
     if self.gen_clientcc or self.gen_servercc:
@@ -784,9 +783,9 @@ class Generator:
         elif tp.storage == Decls.INTERFACE:
           s += self.open_namespace (tp)
           if self.gen_servercc:
-            self.gen4smarthandle, self.gen4class = False, C4INTERFACE
+            self.gen4class = C4INTERFACE
             s += self.generate_interface_impl (tp) + '\n'
-            self.gen4smarthandle, self.gen4class = True, C4CLIENT
+            self.gen4class = C4CLIENT
           if self.gen_clientcc:
             for m in tp.methods:
               s += self.generate_client_method_stub (tp, m)
@@ -794,7 +793,6 @@ class Generator:
     if self.gen_servercc:
       s += '\n// --- Method Dispatchers & Registry ---\n'
       self.gen4class = C4INTERFACE
-      self.gen4smarthandle = False
       reglines = []
       for tp in types:
         if tp.typedef_origin:
@@ -808,20 +806,17 @@ class Generator:
           s += '\n'
       s += self.generate_server_method_registry (reglines) + '\n'
       s += self.open_namespace (None)
-      self.gen4smarthandle = True
       self.gen4class = C4CLIENT
     # generate interface method skeletons
     if self.gen_server_skel:
       s += '\n// --- Interface Skeletons ---\n'
-      self.gen4smarthandle = False
+      self.gen4class = C4INTERFACE
       for tp in types:
         if tp.typedef_origin:
           continue
         elif tp.storage == Decls.INTERFACE:
-          self.gen4class = C4INTERFACE
           s += self.generate_interface_skel (tp)
-          self.gen4class = C4CLIENT
-      self.gen4smarthandle = True
+      self.gen4class = C4CLIENT
     s += self.open_namespace (None) # close all namespaces
     s += '\n'
     s += self.insertion_text ('global_scope')
