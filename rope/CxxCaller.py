@@ -155,7 +155,7 @@ class Generator:
       return Iwrap (tname)
     elif tag in (C4CLIENT, C4SERVER):
       return H (tname)
-    if self.gen4smarthandle or self.gen4class in (C4CLIENT, C4SERVER):
+    if self.gen4class in (C4CLIENT, C4SERVER):
       return H (tname)
     else:
       return Iwrap (tname)
@@ -549,8 +549,9 @@ class Generator:
   def generate_method_decl (self, functype, pad):
     s, comment = '', self.gen4class == C4SERVER
     s += '  // ' if comment else '  '
-    s += '' if self.gen4smarthandle else 'virtual '
-    s += self.format_to_tab (self.Cp (functype.rtype, '' if self.gen4smarthandle else '*'))
+    if self.gen4class == C4INTERFACE:
+      s += 'virtual '
+    s += self.format_to_tab (self.Cp (functype.rtype, '*' if self.gen4class == C4INTERFACE else ''))
     s += functype.name
     s += ' ' * max (0, pad - len (functype.name))
     s += ' ('
@@ -563,7 +564,7 @@ class Generator:
     else:
       s += (',\n' + argindent * ' ').join (l)
     s += ')'
-    if not self.gen4smarthandle and functype.pure and not comment:
+    if self.gen4class == C4INTERFACE and functype.pure and not comment:
       s += ' = 0'
     s += ';\n'
     return s
@@ -573,14 +574,14 @@ class Generator:
     for pr in type_info.prerequisites:
       l += [ pr ]
     l = self.inherit_reduce (l)
-    if self.gen4smarthandle:
-      l = ['public ' + self.C (pr) for pr in l] # types -> names
-      if not l:
-        l = ['public virtual Plic::SmartHandle']
-    else:
+    if self.gen4class == C4INTERFACE:
       l = ['public virtual ' + self.C (pr) for pr in l] # types -> names
       if not l:
         l = ['public virtual ' + self._iface_base]
+    else:
+      l = ['public ' + self.C (pr) for pr in l] # types -> names
+      if not l:
+        l = ['public virtual Plic::SmartHandle']
     s += 'class %s' % self.C (type_info)
     if l:
       s += ' : %s' % ', '.join (l)
@@ -590,20 +591,19 @@ class Generator:
       s += '  inline %s* _iface() const { return (%s*) _void_iface(); }\n' \
           % (self._iface_base, self._iface_base)
       s += '  inline void _iface (%s *_iface) { _void_iface (_iface); }\n' % self._iface_base
-    if not self.gen4smarthandle:
+    if self.gen4class == C4INTERFACE:
       s += '  explicit ' + self.format_to_tab ('') + '%s ();\n' % self.C (type_info)
       s += '  virtual ' + self.format_to_tab ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info)
     s += 'public:\n'
-    if self.gen4smarthandle:
+    if self.gen4class in (C4CLIENT, C4SERVER):
       s += '  inline %s () {}\n' % H (type_info.name)
-    if self.gen4smarthandle:
       s += '  inline %s (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) ' % H (type_info.name)
       s += '{ _pop_rpc (cpl, fbr); }\n'
     if self.gen4class == C4SERVER:
       ifacename = Iwrap (type_info.name)
       s += '  inline %s (%s *iface) { _iface (iface); }\n' % (self.C (type_info), ifacename)
       s += '  inline %s (%s &iface) { _iface (&iface); }\n' % (self.C (type_info), ifacename)
-    if not self.gen4smarthandle:
+    if self.gen4class == C4INTERFACE:
       for sg in type_info.signals:
         s += self.generate_sigdef (sg, type_info)
       for sg in type_info.signals:
@@ -618,7 +618,7 @@ class Generator:
       s += '  inline %s& operator*  () const { return *dynamic_cast<%s*> (_iface()); }\n' % ifn2
       s += '  inline %s* operator-> () const { return dynamic_cast<%s*> (_iface()); }\n' % ifn2
       s += '  inline operator  %s&  () const { return operator*(); }\n' % ifacename
-    if self.gen4smarthandle or self.gen4class == C4SERVER:
+    if self.gen4class in (C4CLIENT, C4SERVER):
       s += '  inline operator _unspecified_bool_type () const ' # return non-NULL pointer to member on true
       s += '{ return _is_null() ? NULL : _unspecified_bool_true(); }\n' # avoids auto-bool conversions on: float (*this)
     s += self.insertion_text ('class_scope:' + self.C (type_info))
@@ -661,13 +661,13 @@ class Generator:
     if functype.rtype.storage == Decls.VOID:
       pass
     elif functype.rtype.storage == Decls.ENUM:
-      s += '  return %s (0); // FIXME\n' % self.rtype2cpp (functype.rtype)
+      s += '  return %s (0);\n' % self.rtype2cpp (functype.rtype)
     elif functype.rtype.storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += '  return %s(); // FIXME\n' % self.rtype2cpp (functype.rtype)
+      s += '  return %s();\n' % self.rtype2cpp (functype.rtype)
     elif functype.rtype.storage == Decls.INTERFACE:
-      s += '  return (%s*) NULL; // FIXME\n' % self.C (functype.rtype)
+      s += '  return (%s*) NULL;\n' % self.C (functype.rtype)
     else:
-      s += '  return 0; // FIXME\n'
+      s += '  return 0;\n'
     s += '}\n'
     return s
   def generate_interface_skel (self, type_info):

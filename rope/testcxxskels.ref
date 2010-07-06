@@ -707,33 +707,33 @@ namespace InterfaceTests {
 double
 InterfaceTests::I_UIWidgetArea_Interface::simple_method ()
 {
-  return 0; // FIXME
+  return 0;
 }
 
 double
 I_UIWidgetArea_Interface::single_arg (int n)
 {
-  return 0; // FIXME
+  return 0;
 }
 
 double
 I_UIWidgetArea_Interface::single_arg2 (int n)
 {
-  return 0; // FIXME
+  return 0;
 }
 
 double
 I_UIWidgetArea_Interface::two_args (int n,
                                     double r)
 {
-  return 0; // FIXME
+  return 0;
 }
 
 double
 I_UIWidgetArea_Interface::two_args2 (int n,
                                      double r)
 {
-  return 0; // FIXME
+  return 0;
 }
 
 double
@@ -743,14 +743,14 @@ I_UIWidgetArea_Interface::multi_args (int n,
                                       const std::string &s,
                                       double y)
 {
-  return 0; // FIXME
+  return 0;
 }
 
 double
 I_UIWidgetArea_Interface::self_method (I_UIWidgetArea_Interface &ba1,
                                        I_UIWidgetArea_Interface &ba2)
 {
-  return 0; // FIXME
+  return 0;
 }
 
 void
@@ -761,7 +761,7 @@ I_UIWidgetArea_Interface::void_method ()
 std::string
 I_UIWidgetArea_Interface::on_click2out ()
 {
-  return 0; // FIXME
+  return 0;
 }
 
 void
@@ -783,63 +783,63 @@ bool
 I_MethodTestInterface_Interface::method_with_bools (bool input,
                                                     bool optval)
 {
-  return 0; // FIXME
+  return 0;
 }
 
 int
 I_MethodTestInterface_Interface::method_with_ints (int input,
                                                    int optval)
 {
-  return 0; // FIXME
+  return 0;
 }
 
 double
 I_MethodTestInterface_Interface::method_with_floats (double input,
                                                      double optval)
 {
-  return 0; // FIXME
+  return 0;
 }
 
 std::string
 I_MethodTestInterface_Interface::method_with_string (const std::string &input,
                                                      const std::string &optval)
 {
-  return 0; // FIXME
+  return 0;
 }
 
 QuickEnum
 I_MethodTestInterface_Interface::method_with_enum (QuickEnum input,
                                                    QuickEnum optval)
 {
-  return QuickEnum (0); // FIXME
+  return QuickEnum (0);
 }
 
 QuickRecord
 I_MethodTestInterface_Interface::method_with_record (const QuickRecord &input,
                                                      const QuickRecord &optval)
 {
-  return QuickRecord(); // FIXME
+  return QuickRecord();
 }
 
 QuickSequence
 I_MethodTestInterface_Interface::method_with_sequence (const QuickSequence &input,
                                                        const QuickSequence &optval)
 {
-  return QuickSequence(); // FIXME
+  return QuickSequence();
 }
 
 I_GrandChild_Interface*
 I_MethodTestInterface_Interface::method_with_interface (I_GrandChild_Interface &input,
                                                         I_GrandChild_Interface &optval)
 {
-  return (I_GrandChild_Interface*) NULL; // FIXME
+  return (I_GrandChild_Interface*) NULL;
 }
 
 I_QuickIface_Interface*
 I_MethodTestInterface_Interface::method_with_quickiface (I_QuickIface_Interface &input,
                                                          I_QuickIface_Interface &iface0)
 {
-  return (I_QuickIface_Interface*) NULL; // FIXME
+  return (I_QuickIface_Interface*) NULL;
 }
 } // InterfaceTests
 
