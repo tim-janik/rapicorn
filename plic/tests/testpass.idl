@@ -325,6 +325,19 @@ interface SignalTestInterface {
   signal void                self_args        (SignalTestInterface self_);
 };
 
+interface PropertyTester {
+  // void        void_prop;
+  bool           bool_prop;
+  int            int_prop;
+  float          float_prop;
+  string         string_prop;
+  QuickEnum      enum_prop;
+  QuickRecord    record_prop;
+  QuickSequence  sequence_prop;
+  GrandChild     interface_prop;
+  PropertyTester self_prop;
+};
+
 }
 
 include "include-p1.idl"; // test includes

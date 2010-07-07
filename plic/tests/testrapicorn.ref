@@ -65,9 +65,9 @@ class UIWidgetArea {
   Signal_sample_signal        sig_sample_signal;
   virtual const PropertyList& list_properties ();
   virtual float               dummy () const = 0;
-  virtual void                dummy (const &float) = 0;
+  virtual void                dummy (const float&) = 0;
   virtual string              on_click () const = 0;
-  virtual void                on_click (const &string) = 0;
+  virtual void                on_click (const string&) = 0;
   float                       simple_method ();
   float                       single_arg (int n);
   float                       single_arg2 (int n);
@@ -157,6 +157,27 @@ class SignalTestInterface {
   Signal_interface_arg        sig_interface_arg;
   Signal_self_args            sig_self_args;
 };
+class PropertyTester {
+  virtual const PropertyList& list_properties ();
+  virtual bool        bool_prop () const = 0;
+  virtual void        bool_prop (const bool&) = 0;
+  virtual int         int_prop () const = 0;
+  virtual void        int_prop (const int&) = 0;
+  virtual float       float_prop () const = 0;
+  virtual void        float_prop (const float&) = 0;
+  virtual string      string_prop () const = 0;
+  virtual void        string_prop (const string&) = 0;
+  virtual QuickEnum   enum_prop () const = 0;
+  virtual void        enum_prop (const QuickEnum&) = 0;
+  virtual QuickRecord record_prop () const = 0;
+  virtual void        record_prop (const QuickRecord&) = 0;
+  virtual QuickSequence sequence_prop () const = 0;
+  virtual void        sequence_prop (const QuickSequence&) = 0;
+  virtual GrandChild  interface_prop () const = 0;
+  virtual void        interface_prop (const GrandChild&) = 0;
+  virtual PropertyTester self_prop () const = 0;
+  virtual void        self_prop (const PropertyTester&) = 0;
+};
 class ButtonArea {
   typedef Signal<ButtonArea, bool (), CollectorUntil0<bool> > Signal_check_activate;
   typedef Signal<ButtonArea, void ()> Signal_activate;
@@ -164,13 +185,13 @@ class ButtonArea {
   Signal_activate             sig_activate;
   virtual const PropertyList& list_properties ();
   virtual string              on_click () const = 0;
-  virtual void                on_click (const &string) = 0;
+  virtual void                on_click (const string&) = 0;
   virtual string              on_click2 () const = 0;
-  virtual void                on_click2 (const &string) = 0;
+  virtual void                on_click2 (const string&) = 0;
   virtual string              on_click3 () const = 0;
-  virtual void                on_click3 (const &string) = 0;
+  virtual void                on_click3 (const string&) = 0;
   virtual ClickType           click_type () const = 0;
-  virtual void                click_type (const &ClickType) = 0;
+  virtual void                click_type (const ClickType&) = 0;
 };
 class PureMethods {
   int                 pure_method (float f);

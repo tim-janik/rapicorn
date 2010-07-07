@@ -65,7 +65,7 @@ class Generator:
     # getter
     s = '  ' + self.format_to_tab (v + ftype.name) + fident + ' () const = 0;\n'
     # setter
-    s += '  ' + self.format_to_tab (v + 'void') + fident + ' (const &' + ftype.name + ') = 0;\n'
+    s += '  ' + self.format_to_tab (v + 'void') + fident + ' (const ' + ftype.name + '&) = 0;\n'
     return s
   def generate_proplist (self, ctype):
     return '  ' + self.format_to_tab ('virtual const PropertyList&') + 'list_properties ();\n'

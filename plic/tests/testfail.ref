@@ -150,3 +150,6 @@
 .../testfail.idl:91: TypeError: non-method invalidly declared as pure: m
 >  namespace PlicFailTest { interface I { signal int m() = 0; }; // invalid pure decl for non-method
 >                                                          ^
+.../testfail.idl:93: TypeError: unknown type: 'void'
+>  namespace PlicFailTest { interface P { void void_prop; }; // invalid property type
+>                                                       ^
