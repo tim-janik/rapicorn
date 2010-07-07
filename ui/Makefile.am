@@ -82,7 +82,8 @@ EXTRA_DIST += rapicorn.idl insertions.cc hardcoded.idl
 interface.hh: $(ROPE)/CxxCaller.py $(srcdir)/rapicorn.idl $(srcdir)/insertions.cc
 	: # build interface.hh from rapicorn.idl
 	${PLICINT} -G $(ROPE)/CxxCaller -g serverhh \
-	  -g iface-base=BaseObject -g shortalias \
+	  -g iface-base=BaseObject -g filter-out=Item \
+	  -g shortalias -g cppguard=__RAPICORN_INTERFACE_HH_ \
 	  --insertions $(srcdir)/insertions.cc $(srcdir)/rapicorn.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 $(rapicorn_cc_sources): interface.hh
@@ -91,7 +92,7 @@ interface.cc: $(ROPE)/CxxCaller.py $(srcdir)/rapicorn.idl
 	: # build interface.cc from rapicorn.idl
 	echo "#define PLIC_CALL_REMOTE // dummy" > xgen-$(@F)
 	${PLICINT} -G $(ROPE)/CxxCaller -g servercc \
-	  -g iface-base=BaseObject \
+	  -g iface-base=BaseObject -g filter-out=Item \
 	  --inclusions '"item.hh"' $(srcdir)/rapicorn.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += interface.cc

@@ -28,7 +28,13 @@ record Requisition {
   float height;
 };
 
-interface Window {
+interface It3m {
+};
+
+interface Item : It3m {
+};
+
+interface Window : Item {
   bool          viewable        () = 0;
   void          show            () = 0;
   bool          closed          () = 0;

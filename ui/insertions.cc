@@ -23,7 +23,12 @@ includes:
 #include <ui/utilities.hh>
 namespace Rapicorn {
 class Root;
-class Item;
+}
+
+filtered_class_hh:Item:
+#include <ui/item.hh>
+namespace Rapicorn {
+typedef Item Item_Interface;
 }
 
 IGNORE:

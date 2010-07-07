@@ -351,10 +351,10 @@ namespace Auxdata {
 typedef int bar;
 typedef double x;
 typedef std::string s;
+
 } // Auxdata
 
 namespace InterfaceTests {
-
 class I_UIWidgetArea_Interface : public virtual Plic::SimpleServer {
 protected:
   explicit                 I_UIWidgetArea_Interface ();

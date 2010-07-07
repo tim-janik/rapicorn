@@ -14,12 +14,10 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
+#include <ui/item.hh> // unguarded, because item.hh includes commands.hh
+
 #ifndef __RAPICORN_COMMANDS_HH__
 #define __RAPICORN_COMMANDS_HH__
-
-#include <ui/utilities.hh>
-#include <ui/primitives.hh>
-#include <ui/interface.hh>
 
 namespace Rapicorn {
 

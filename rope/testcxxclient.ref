@@ -334,10 +334,10 @@ namespace Auxdata {
 typedef int bar;
 typedef double x;
 typedef std::string s;
+
 } // Auxdata
 
 namespace InterfaceTests {
-
 class UIWidgetArea_SmartHandle : public virtual Plic::SmartHandle {
 protected:
 public:
