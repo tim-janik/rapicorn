@@ -595,6 +595,10 @@ class SignalTestInterface (_BaseClass_):
   def sig_self_args_disconnect (self, connection_id):
     return _CPY._PLIC_InterfaceTests__SignalTestInterface_self_args_void_InterfaceTests__SignalTestInterface (self, None, connection_id)
 
+class PropertyTester (_BaseClass_):
+  def __init__ (self, _plic_id):
+    super (PropertyTester, self).__init__ (_plic_id)
+
 class ButtonArea (_BaseClass_):
   def __init__ (self, _plic_id):
     super (ButtonArea, self).__init__ (_plic_id)

@@ -663,6 +663,29 @@ public:
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
+
+class I_PropertyTester_Interface : public virtual Plic::SimpleServer {
+protected:
+  explicit                 I_PropertyTester_Interface ();
+  virtual /*Des*/         ~I_PropertyTester_Interface () = 0;
+public:
+};
+
+class PropertyTester_SmartHandle : public virtual Plic::SmartHandle {
+protected:
+  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
+  inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
+public:
+  inline PropertyTester_SmartHandle () {}
+  inline PropertyTester_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline PropertyTester_SmartHandle (I_PropertyTester_Interface *iface) { _iface (iface); }
+  inline PropertyTester_SmartHandle (I_PropertyTester_Interface &iface) { _iface (&iface); }
+  inline I_PropertyTester_Interface& operator*  () const { return *dynamic_cast<I_PropertyTester_Interface*> (_iface()); }
+  inline I_PropertyTester_Interface* operator-> () const { return dynamic_cast<I_PropertyTester_Interface*> (_iface()); }
+  inline operator  I_PropertyTester_Interface&  () const { return operator*(); }
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
+
 } // InterfaceTests
 
 namespace RapicornPlicTest {
@@ -1154,6 +1177,10 @@ I_SignalTestInterface_Interface::I_SignalTestInterface_Interface () :
   sig_void_result (*this), sig_bool_result (*this), sig_int_result (*this), sig_float_result (*this), sig_string_result (*this), sig_enum_result (*this), sig_record_result (*this), sig_sequence_result (*this), sig_interface_result (*this), sig_self_result (*this), sig_void_arg (*this), sig_bool_arg (*this), sig_int_arg (*this), sig_float_arg (*this), sig_string_arg (*this), sig_enum_arg (*this), sig_record_arg (*this), sig_sequence_arg (*this), sig_interface_arg (*this), sig_self_args (*this)
 {}
 I_SignalTestInterface_Interface::~I_SignalTestInterface_Interface () {}
+
+I_PropertyTester_Interface::I_PropertyTester_Interface ()
+{}
+I_PropertyTester_Interface::~I_PropertyTester_Interface () {}
 
 } // InterfaceTests
 
@@ -2414,6 +2441,7 @@ _dispatch__SignalTestInterface_self_args (Coupler &cpl)
   rb.add_int64 (cid);
   return &rb;
 }
+
 
 } // InterfaceTests
 

@@ -628,6 +628,29 @@ public:
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
+
+class I_PropertyTester_Interface : public virtual Plic::SimpleServer {
+protected:
+  explicit                 I_PropertyTester_Interface ();
+  virtual /*Des*/         ~I_PropertyTester_Interface () = 0;
+public:
+};
+
+class PropertyTester_SmartHandle : public virtual Plic::SmartHandle {
+protected:
+  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
+  inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
+public:
+  inline PropertyTester_SmartHandle () {}
+  inline PropertyTester_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline PropertyTester_SmartHandle (I_PropertyTester_Interface *iface) { _iface (iface); }
+  inline PropertyTester_SmartHandle (I_PropertyTester_Interface &iface) { _iface (&iface); }
+  inline I_PropertyTester_Interface& operator*  () const { return *dynamic_cast<I_PropertyTester_Interface*> (_iface()); }
+  inline I_PropertyTester_Interface* operator-> () const { return dynamic_cast<I_PropertyTester_Interface*> (_iface()); }
+  inline operator  I_PropertyTester_Interface&  () const { return operator*(); }
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
+
 } // InterfaceTests
 
 namespace RapicornPlicTest {

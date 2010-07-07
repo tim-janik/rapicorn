@@ -469,6 +469,15 @@ public:
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
+
+class PropertyTester_SmartHandle : public virtual Plic::SmartHandle {
+protected:
+public:
+  inline PropertyTester_SmartHandle () {}
+  inline PropertyTester_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
+
 } // InterfaceTests
 
 namespace RapicornPlicTest {
