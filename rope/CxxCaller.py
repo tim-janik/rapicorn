@@ -210,17 +210,68 @@ class Generator:
       s += interfacechar
     s += ident
     return s
-  def generate_prop (self, fident, ftype): # FIXME: properties
-    v = 'virtual '
-    # getter
-    s = '  ' + self.format_to_tab (v + ftype.name) + fident + ' () const = 0;\n'
-    # setter
-    s += '  ' + self.format_to_tab (v + 'void') + fident + ' (const &' + ftype.name + ') = 0;\n'
-    return s
-  def generate_proplist (self, ctype): # FIXME: properties
-    return '  ' + self.format_to_tab ('virtual const PropertyList&') + 'list_properties ();\n'
   def generate_field (self, fident, ftype_name):
     return '  ' + self.format_to_tab (ftype_name) + fident + ';\n'
+  def generate_proplist (self, ctype): # FIXME: properties
+    return '  ' + self.format_to_tab ('virtual const PropertyList&') + 'list_properties ();\n'
+  def generate_property (self, fident, ftype):
+    s, v, v0, ptr = '', '', '', ''
+    if self.gen4class == C4INTERFACE:
+      v, v0, ptr = 'virtual ', ' = 0', '*'
+    tname = self.C (ftype)
+    if ftype.storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
+      s += '  ' + v + self.format_to_tab (tname)  + fident + ' () const%s;\n' % v0
+      s += '  ' + v + self.format_to_tab ('void') + fident + ' (' + tname + ')%s;\n' % v0
+    elif ftype.storage in (Decls.STRING, Decls.RECORD, Decls.SEQUENCE):
+      s += '  ' + v + self.format_to_tab (tname)  + fident + ' () const%s;\n' % v0
+      s += '  ' + v + self.format_to_tab ('void') + fident + ' (const ' + tname + '&)%s;\n' % v0
+    elif ftype.storage == Decls.INTERFACE:
+      s += '  ' + v + self.format_to_tab (tname + ptr)  + fident + ' () const%s;\n' % v0
+      s += '  ' + v + self.format_to_tab ('void') + fident + ' (' + tname + ptr + ')%s;\n' % v0
+    return s
+  def generate_client_property_stub (self, class_info, fident, ftype):
+    s = ''
+    cplfb = ('PLIC_COUPLER()', 'fb') # FIXME: optimize PLIC_COUPLER() accessor?
+    therr = 'THROW_ERROR()'
+    tname = self.C (ftype)
+    # getter prototype
+    s += tname + '\n'
+    q = '%s::%s (' % (self.C (class_info), fident)
+    s += q + ') const\n{\n'
+    s += '  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;\n'
+    s += '  fb.add_type_hash (%s); // msgid\n' % self.getter_digest (class_info, fident, ftype)
+    s += self.generate_proto_add_args (cplfb, class_info, '', [('(*this)', class_info)], '')
+    s += '  fr = %s.call_remote (&fb); // deletes fb\n' % cplfb[0]
+    if 1: # hasret
+      rarg = ('retval', ftype)
+      s += '  FieldBufferReader frr (*fr);\n'
+      s += '  frr.skip(); // msgid\n' # FIXME: check fr return type
+      cplfrr = (cplfb[0], 'frr')
+      # FIXME: check return error and return type
+      if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
+        s += '  ' + self.format_var (rarg[0], rarg[1]) + ';\n'
+        s += self.generate_proto_pop_args (cplfrr, class_info, '', [rarg], '', therr)
+      else:
+        vtype = self.format_vartype (rarg[1]) # 'int*' + ...
+        s += self.generate_proto_pop_args (cplfrr, class_info, vtype, [rarg], '', therr) # ... + 'x = 5;'
+      s += '  delete fr;\n'
+      s += '  return retval;\n'
+    s += '}\n'
+    # setter prototype
+    s += 'void\n'
+    if ftype.storage in (Decls.STRING, Decls.RECORD, Decls.SEQUENCE):
+      s += q + 'const ' + tname + ' &value)\n{\n'
+    else:
+      s += q + tname + ' value)\n{\n'
+    s += '  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;\n'
+    s += '  fb.add_type_hash (%s); // msgid\n' % self.setter_digest (class_info, fident, ftype)
+    s += self.generate_proto_add_args (cplfb, class_info, '', [('(*this)', class_info)], '')
+    ident_type_args = [('value', ftype)]
+    s += self.generate_proto_add_args (cplfb, class_info, '', ident_type_args, '', therr)
+    s += '  fr = %s.call_remote (&fb); // deletes fb\n' % cplfb[0]
+    s += '  if (fr) delete fr;\n' # FIXME: check return error
+    s += '}\n'
+    return s
   def generate_signal_name (self, functype, ctype):
     return 'Signal_%s' % functype.name
   def generate_sigdef (self, functype, ctype):
@@ -396,7 +447,7 @@ class Generator:
     if hasret:
       rarg = ('retval', mtype.rtype)
       s += '  FieldBufferReader frr (*fr);\n'
-      s += '  frr.skip(); // msgid\n'
+      s += '  frr.skip(); // msgid\n' # FIXME: check fr return type
       cplfrr = (cplfb[0], 'frr')
       # FIXME: check return error and return type
       if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
@@ -407,6 +458,66 @@ class Generator:
         s += self.generate_proto_pop_args (cplfrr, class_info, vtype, [rarg], '', therr) # ... + 'x = 5;'
       s += '  delete fr;\n'
       s += '  return retval;\n'
+    s += '}\n'
+    return s
+  def generate_server_property_set_dispatcher (self, class_info, fident, ftype, reglines):
+    s = ''
+    cplfbr = ('cpl', 'fbr')
+    dispatcher_name = '_dispatch_setter__%s_%s' % (class_info.name, fident)
+    setter_hash = self.setter_digest (class_info, fident, ftype)
+    reglines += [ (setter_hash, self.namespaced_identifier (dispatcher_name)) ]
+    s += 'static FieldBuffer*\n'
+    s += dispatcher_name + ' (Coupler &cpl)\n'
+    s += '{\n'
+    s += '  FieldBufferReader &fbr = cpl.reader;\n'
+    s += '  fbr.skip_hash(); // TypeHash\n'
+    s += '  if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
+    # fetch self
+    s += '  %s *self;\n' % self.C (class_info, C4INTERFACE)
+    s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
+    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
+    # fetch property
+    if ftype.storage in (Decls.RECORD, Decls.SEQUENCE):
+      s += '  ' + self.format_var ('arg_' + fident, ftype) + ';\n'
+      s += self.generate_proto_pop_args (cplfbr, class_info, 'arg_', [(fident, ftype)])
+    else:
+      tstr = self.format_vartype (ftype, C4INTERFACE) + 'arg_'
+      s += self.generate_proto_pop_args (cplfbr, class_info, tstr, [(fident, ftype)])
+    ref = '&' if ftype.storage == Decls.INTERFACE else ''
+    # call out
+    s += '  self->' + fident + ' (' + ref + self.use_arg ('arg_' + fident, ftype) + ');\n'
+    s += '  return NULL;\n'
+    s += '}\n'
+    return s
+  def generate_server_property_get_dispatcher (self, class_info, fident, ftype, reglines):
+    s = ''
+    cplfbr = ('cpl', 'fbr')
+    dispatcher_name = '_dispatch_getter__%s_%s' % (class_info.name, fident)
+    getter_hash = self.getter_digest (class_info, fident, ftype)
+    reglines += [ (getter_hash, self.namespaced_identifier (dispatcher_name)) ]
+    s += 'static FieldBuffer*\n'
+    s += dispatcher_name + ' (Coupler &cpl)\n'
+    s += '{\n'
+    s += '  FieldBufferReader &fbr = cpl.reader;\n'
+    s += '  fbr.skip_hash(); // TypeHash\n'
+    s += '  if (fbr.remaining() != 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
+    # fetch self
+    s += '  %s *self;\n' % self.C (class_info, C4INTERFACE)
+    s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
+    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
+    # return var
+    s += '  '
+    s += self.format_vartype (ftype, C4INTERFACE) + 'rval = '
+    # call out
+    s += 'self->' + fident + ' ();\n'
+    # store return value
+    cplrb = (cplfbr[0], 'rb')
+    s += '  FieldBuffer &rb = *FieldBuffer::new_result();\n'
+    rval = 'rval'
+    if ftype.storage == Decls.INTERFACE:
+      rval = '%s (rval)' % H (ftype.name) # FooBase -> Foo smart handle
+    s += self.generate_proto_add_args (cplrb, class_info, '', [(rval, ftype)], '')
+    s += '  return &rb;\n'
     s += '}\n'
     return s
   def generate_server_method_dispatcher (self, class_info, mtype, reglines):
@@ -519,6 +630,12 @@ class Generator:
             digest
   def method_digest (self, mtype):
     return self.digest2cbytes (mtype.type_hash())
+  def setter_digest (self, class_info, fident, ftype):
+    setter_hash = class_info.property_hash ((fident, ftype), True)
+    return self.digest2cbytes (setter_hash)
+  def getter_digest (self, class_info, fident, ftype):
+    setter_hash = class_info.property_hash ((fident, ftype), False)
+    return self.digest2cbytes (setter_hash)
   def generate_server_method_registry (self, reglines):
     s = ''
     s += 'static const Plic::DispatcherEntry _dispatcher_entries[] = {\n'
@@ -572,6 +689,7 @@ class Generator:
   def generate_interface_class (self, type_info):
     s = ''
     l = []
+    # declare and inherit
     for pr in type_info.prerequisites:
       l += [ pr ]
     l = self.inherit_reduce (l)
@@ -587,6 +705,7 @@ class Generator:
     if l:
       s += ' : %s' % ', '.join (l)
     s += ' {\n'
+    # constructors
     s += 'protected:\n'
     if self.gen4class == C4SERVER:
       s += '  inline %s* _iface() const { return (%s*) _void_iface(); }\n' \
@@ -604,16 +723,22 @@ class Generator:
       ifacename = Iwrap (type_info.name)
       s += '  inline %s (%s *iface) { _iface (iface); }\n' % (self.C (type_info), ifacename)
       s += '  inline %s (%s &iface) { _iface (&iface); }\n' % (self.C (type_info), ifacename)
+    # properties
+    for fl in type_info.fields:
+      s += self.generate_property (fl[0], fl[1])
+    # signals
     if self.gen4class == C4INTERFACE:
       for sg in type_info.signals:
         s += self.generate_sigdef (sg, type_info)
       for sg in type_info.signals:
         s += '  ' + self.generate_signal_name (sg, type_info) + ' sig_%s;\n' % sg.name
+    # methods
     ml = 0
     if type_info.methods:
       ml = max (len (m.name) for m in type_info.methods)
     for m in type_info.methods:
       s += self.generate_method_decl (m, ml)
+    # specials (operators)
     if self.gen4class == C4SERVER:
       ifn2 = (ifacename, ifacename)
       s += '  inline %s& operator*  () const { return *dynamic_cast<%s*> (_iface()); }\n' % ifn2
@@ -624,6 +749,7 @@ class Generator:
       s += '{ return _is_null() ? NULL : _unspecified_bool_true(); }\n' # avoids auto-bool conversions on: float (*this)
     s += self.insertion_text ('class_scope:' + self.C (type_info))
     s += '};\n'
+    # aliasing
     if self.gen_shortalias and self.gen4class in (C4CLIENT, C4INTERFACE):
       s += 'typedef %s %s;\n' % (self.C (type_info), self.type2cpp (type_info))
     return s
@@ -807,6 +933,10 @@ class Generator:
               s += self.open_namespace (tp)
               s += self.generate_interface_impl (tp) + '\n'
             self.gen4class = C4CLIENT
+          if self.gen_clientcc and tp.fields:
+            s += self.open_namespace (tp)
+            for fl in tp.fields:
+              s += self.generate_client_property_stub (tp, fl[0], fl[1])
           if self.gen_clientcc and tp.methods:
             s += self.open_namespace (tp)
             for m in tp.methods:
@@ -821,6 +951,9 @@ class Generator:
           continue
         s += self.open_namespace (tp)
         if tp.storage == Decls.INTERFACE and not tp.name in self.skip_classes:
+          for fl in tp.fields:
+            s += self.generate_server_property_get_dispatcher (tp, fl[0], fl[1], reglines)
+            s += self.generate_server_property_set_dispatcher (tp, fl[0], fl[1], reglines)
           for m in tp.methods:
             s += self.generate_server_method_dispatcher (tp, m, reglines)
           for sg in tp.signals:

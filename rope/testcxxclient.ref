@@ -343,6 +343,10 @@ protected:
 public:
   inline UIWidgetArea_SmartHandle () {}
   inline UIWidgetArea_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  double          dummy () const;
+  void            dummy (double);
+  std::string     on_click () const;
+  void            on_click (const std::string&);
   double          simple_method ();
   double          single_arg    (int n);
   double          single_arg2   (int n = 5);
@@ -475,6 +479,24 @@ protected:
 public:
   inline PropertyTester_SmartHandle () {}
   inline PropertyTester_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  bool            bool_prop () const;
+  void            bool_prop (bool);
+  int             int_prop () const;
+  void            int_prop (int);
+  double          float_prop () const;
+  void            float_prop (double);
+  std::string     string_prop () const;
+  void            string_prop (const std::string&);
+  QuickEnum       enum_prop () const;
+  void            enum_prop (QuickEnum);
+  QuickRecord     record_prop () const;
+  void            record_prop (const QuickRecord&);
+  QuickSequence   sequence_prop () const;
+  void            sequence_prop (const QuickSequence&);
+  GrandChild_SmartHandle interface_prop () const;
+  void            interface_prop (GrandChild_SmartHandle);
+  PropertyTester_SmartHandle self_prop () const;
+  void            self_prop (PropertyTester_SmartHandle);
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
@@ -494,6 +516,14 @@ protected:
 public:
   inline ButtonArea_SmartHandle () {}
   inline ButtonArea_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
+  std::string     on_click () const;
+  void            on_click (const std::string&);
+  std::string     on_click2 () const;
+  void            on_click2 (const std::string&);
+  std::string     on_click3 () const;
+  void            on_click3 (const std::string&);
+  ClickType       click_type () const;
+  void            click_type (ClickType);
   inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
@@ -868,6 +898,52 @@ SomeRecord::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)
 
 namespace InterfaceTests {
 double
+UIWidgetArea_SmartHandle::dummy () const
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;
+  fb.add_type_hash (0x300000000f640b0bULL, 0xf898d6c052acbc0eULL, 0x3a37468e43084f56ULL, 0x95a4007bdf2e01f2ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // msgid
+  double retval = frr.pop_double();
+  delete fr;
+  return retval;
+}
+void
+UIWidgetArea_SmartHandle::dummy (double value)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x20000000c31cebd0ULL, 0xe29449d8d5a3f3d7ULL, 0xcf867abd6680ac57ULL, 0x381384b98fd02eb0ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fb.add_double (value);
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+std::string
+UIWidgetArea_SmartHandle::on_click () const
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;
+  fb.add_type_hash (0x30000000770dc86aULL, 0x7df1dcbc4a6c4e83ULL, 0x2840e8030d9c3204ULL, 0x50000718b02d0721ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // msgid
+  std::string retval = frr.pop_string();
+  delete fr;
+  return retval;
+}
+void
+UIWidgetArea_SmartHandle::on_click (const std::string &value)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x20000000b37c8bffULL, 0x5f7d07992ee34f4eULL, 0x7cc7f29e4f917d38ULL, 0xd4714e6aa95f1e68ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fb.add_string (value);
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+double
 UIWidgetArea_SmartHandle::simple_method ()
 {
   FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 0), *fr = NULL;
@@ -1211,9 +1287,310 @@ MethodTestInterface_SmartHandle::method_with_quickiface (QuickIface_SmartHandle 
   delete fr;
   return retval;
 }
+bool
+PropertyTester_SmartHandle::bool_prop () const
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;
+  fb.add_type_hash (0x30000000b0144864ULL, 0xc643901d97f360ddULL, 0x57a9071058ac07aaULL, 0xfc6b7a41bf635ad1ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // msgid
+  bool retval = frr.pop_int64();
+  delete fr;
+  return retval;
+}
+void
+PropertyTester_SmartHandle::bool_prop (bool value)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x20000000a18d314bULL, 0x26151171e3bb39dcULL, 0x1a443db8b1c01c6cULL, 0xfcb6e633dd2e9613ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fb.add_int64 (value);
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+int
+PropertyTester_SmartHandle::int_prop () const
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;
+  fb.add_type_hash (0x30000000181e8779ULL, 0x0f77dae854e0b84fULL, 0x637dec96e0c074cbULL, 0x6ea8e58f8853d3c7ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // msgid
+  int retval = frr.pop_int64();
+  delete fr;
+  return retval;
+}
+void
+PropertyTester_SmartHandle::int_prop (int value)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x20000000eb780228ULL, 0xeee26b84cc028ea1ULL, 0x5208210fdb93be48ULL, 0xbc262f6d750d0de7ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fb.add_int64 (value);
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+double
+PropertyTester_SmartHandle::float_prop () const
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;
+  fb.add_type_hash (0x3000000063885e5eULL, 0x73736be8a1ddb81cULL, 0x0837119897127c62ULL, 0x254bfc525be1d520ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // msgid
+  double retval = frr.pop_double();
+  delete fr;
+  return retval;
+}
+void
+PropertyTester_SmartHandle::float_prop (double value)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x200000000f38d4d9ULL, 0xe580a2e95eb8a99eULL, 0x2b253a5868c02d21ULL, 0xa41bb895557ed355ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fb.add_double (value);
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+std::string
+PropertyTester_SmartHandle::string_prop () const
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;
+  fb.add_type_hash (0x30000000d158fbc9ULL, 0x05c7627c89588141ULL, 0x13e53815a987f9a7ULL, 0x87fca26102aca1b0ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // msgid
+  std::string retval = frr.pop_string();
+  delete fr;
+  return retval;
+}
+void
+PropertyTester_SmartHandle::string_prop (const std::string &value)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x20000000a6029496ULL, 0x5af74c144238b1b1ULL, 0x656a73acc800a8bbULL, 0x88efc321d6f74b0cULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fb.add_string (value);
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+QuickEnum
+PropertyTester_SmartHandle::enum_prop () const
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;
+  fb.add_type_hash (0x3000000069369270ULL, 0xb5f6ccbefcd8a46dULL, 0xaee75a418197773dULL, 0xf32203a882a1817eULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // msgid
+  QuickEnum retval = QuickEnum (frr.pop_evalue());
+  delete fr;
+  return retval;
+}
+void
+PropertyTester_SmartHandle::enum_prop (QuickEnum value)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x2000000005e65481ULL, 0xd9f07e1cdf167a17ULL, 0xceed8910f029e869ULL, 0xd4d0e67731680533ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fb.add_evalue (value);
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+QuickRecord
+PropertyTester_SmartHandle::record_prop () const
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;
+  fb.add_type_hash (0x30000000ecbe5f0fULL, 0x49863133875c84dbULL, 0x6ab95eefcc9ecc34ULL, 0xc2138d9daee43a04ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // msgid
+  QuickRecord retval;
+  if (!retval.proto_pop (PLIC_COUPLER(), frr)) THROW_ERROR();
+  delete fr;
+  return retval;
+}
+void
+PropertyTester_SmartHandle::record_prop (const QuickRecord &value)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x200000008acccdfcULL, 0x0c89ae0a721e3ff1ULL, 0x478c936633c08d26ULL, 0x6fb14f7161390c2cULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  if (!value.proto_add (PLIC_COUPLER(), fb)) THROW_ERROR();
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+QuickSequence
+PropertyTester_SmartHandle::sequence_prop () const
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;
+  fb.add_type_hash (0x30000000b8af2543ULL, 0xb58f78e8919bee21ULL, 0x2d5000b118cd647fULL, 0x95fcfef75f8e8174ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // msgid
+  QuickSequence retval;
+  if (!retval.proto_pop (PLIC_COUPLER(), frr)) THROW_ERROR();
+  delete fr;
+  return retval;
+}
+void
+PropertyTester_SmartHandle::sequence_prop (const QuickSequence &value)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x2000000016bc9f59ULL, 0x029c4a74204a0fe2ULL, 0x850c99c1f01af8b1ULL, 0xb190eb2442c7255aULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  if (!value.proto_add (PLIC_COUPLER(), fb)) THROW_ERROR();
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+GrandChild_SmartHandle
+PropertyTester_SmartHandle::interface_prop () const
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;
+  fb.add_type_hash (0x30000000294a1e88ULL, 0xb69eb6f2b1545a61ULL, 0x05811c63352b9dceULL, 0x6d0cf06dbf6200e9ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // msgid
+  GrandChild_SmartHandle retval = GrandChild_SmartHandle (PLIC_COUPLER(), frr);
+  delete fr;
+  return retval;
+}
+void
+PropertyTester_SmartHandle::interface_prop (GrandChild_SmartHandle value)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x200000006871f741ULL, 0x25fe233d750ca71dULL, 0x5a0570311b480850ULL, 0x12b776dab1102b61ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fb.add_object (value._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+PropertyTester_SmartHandle
+PropertyTester_SmartHandle::self_prop () const
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;
+  fb.add_type_hash (0x30000000493b60d9ULL, 0xa9d1286fc302f3dbULL, 0xdfab7e8d1c2e0c08ULL, 0x91a4c03a3a37c6a1ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // msgid
+  PropertyTester_SmartHandle retval = PropertyTester_SmartHandle (PLIC_COUPLER(), frr);
+  delete fr;
+  return retval;
+}
+void
+PropertyTester_SmartHandle::self_prop (PropertyTester_SmartHandle value)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x2000000054baf216ULL, 0x8d311910e92e61b2ULL, 0x6abbb85e2edb7f36ULL, 0xbc35ff08d9903c42ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fb.add_object (value._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
 } // InterfaceTests
 
 namespace RapicornPlicTest {
+std::string
+ButtonArea_SmartHandle::on_click () const
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;
+  fb.add_type_hash (0x30000000491d784bULL, 0xb29d170c81c582faULL, 0xf38eb9a29bb01ea0ULL, 0xae5244cb9938a581ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // msgid
+  std::string retval = frr.pop_string();
+  delete fr;
+  return retval;
+}
+void
+ButtonArea_SmartHandle::on_click (const std::string &value)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x20000000af8c1a29ULL, 0x560ed695ce4df779ULL, 0x54767d09a29524ebULL, 0xa184187eacb770cfULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fb.add_string (value);
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+std::string
+ButtonArea_SmartHandle::on_click2 () const
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;
+  fb.add_type_hash (0x300000000d3108d8ULL, 0x4f5ba9ee776a43d2ULL, 0xa831d7cea44cc5faULL, 0xcc2d97f07926cef0ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // msgid
+  std::string retval = frr.pop_string();
+  delete fr;
+  return retval;
+}
+void
+ButtonArea_SmartHandle::on_click2 (const std::string &value)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x2000000068d757d8ULL, 0x6dde3c79e1c855a5ULL, 0x7383e3212d1dde0bULL, 0x16fee72f3c653aa2ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fb.add_string (value);
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+std::string
+ButtonArea_SmartHandle::on_click3 () const
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;
+  fb.add_type_hash (0x30000000f0c2da03ULL, 0x29fb66fef42c8334ULL, 0xabd9ab6b8df662eeULL, 0x3a7eb8700de84064ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // msgid
+  std::string retval = frr.pop_string();
+  delete fr;
+  return retval;
+}
+void
+ButtonArea_SmartHandle::on_click3 (const std::string &value)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x2000000094c7d2abULL, 0xea107cd9f9ec9512ULL, 0x262c4644988b3a63ULL, 0x76720081bc8f5f79ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fb.add_string (value);
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+ClickType
+ButtonArea_SmartHandle::click_type () const
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;
+  fb.add_type_hash (0x300000001c03071bULL, 0xf4a8efb57ac62e96ULL, 0x4f3d3a414afe1025ULL, 0x43a202534ab618a7ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  FieldBufferReader frr (*fr);
+  frr.skip(); // msgid
+  ClickType retval = ClickType (frr.pop_evalue());
+  delete fr;
+  return retval;
+}
+void
+ButtonArea_SmartHandle::click_type (ClickType value)
+{
+  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;
+  fb.add_type_hash (0x20000000a83e3165ULL, 0xa181aec34685c438ULL, 0x0b56a49d59dbd00cULL, 0x3d758ee49bb0a338ULL); // msgid
+  fb.add_object ((*this)._rpc_id());
+  fb.add_evalue (value);
+  fr = PLIC_COUPLER().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
 int
 PureMethods_SmartHandle::pure_method (double arg_f)
 {

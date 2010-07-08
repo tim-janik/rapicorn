@@ -325,6 +325,10 @@ protected:
   explicit                 I_UIWidgetArea_Interface ();
   virtual /*Des*/         ~I_UIWidgetArea_Interface () = 0;
 public:
+  virtual double          dummy () const = 0;
+  virtual void            dummy (double) = 0;
+  virtual std::string     on_click () const = 0;
+  virtual void            on_click (const std::string&) = 0;
   typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Interface, void ()> Signal_void_signal;
   typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Interface, double (I_UIWidgetArea_Interface &ba1, int someint)> Signal_sample_signal;
   Signal_void_signal sig_void_signal;
@@ -357,6 +361,10 @@ public:
   inline UIWidgetArea_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline UIWidgetArea_SmartHandle (I_UIWidgetArea_Interface *iface) { _iface (iface); }
   inline UIWidgetArea_SmartHandle (I_UIWidgetArea_Interface &iface) { _iface (&iface); }
+  double          dummy () const;
+  void            dummy (double);
+  std::string     on_click () const;
+  void            on_click (const std::string&);
   // double          simple_method ();
   // double          single_arg    (int);
   // double          single_arg2   (int);
@@ -634,6 +642,24 @@ protected:
   explicit                 I_PropertyTester_Interface ();
   virtual /*Des*/         ~I_PropertyTester_Interface () = 0;
 public:
+  virtual bool            bool_prop () const = 0;
+  virtual void            bool_prop (bool) = 0;
+  virtual int             int_prop () const = 0;
+  virtual void            int_prop (int) = 0;
+  virtual double          float_prop () const = 0;
+  virtual void            float_prop (double) = 0;
+  virtual std::string     string_prop () const = 0;
+  virtual void            string_prop (const std::string&) = 0;
+  virtual QuickEnum       enum_prop () const = 0;
+  virtual void            enum_prop (QuickEnum) = 0;
+  virtual QuickRecord     record_prop () const = 0;
+  virtual void            record_prop (const QuickRecord&) = 0;
+  virtual QuickSequence   sequence_prop () const = 0;
+  virtual void            sequence_prop (const QuickSequence&) = 0;
+  virtual I_GrandChild_Interface* interface_prop () const = 0;
+  virtual void            interface_prop (I_GrandChild_Interface*) = 0;
+  virtual I_PropertyTester_Interface* self_prop () const = 0;
+  virtual void            self_prop (I_PropertyTester_Interface*) = 0;
 };
 
 class PropertyTester_SmartHandle : public virtual Plic::SmartHandle {
@@ -645,6 +671,24 @@ public:
   inline PropertyTester_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline PropertyTester_SmartHandle (I_PropertyTester_Interface *iface) { _iface (iface); }
   inline PropertyTester_SmartHandle (I_PropertyTester_Interface &iface) { _iface (&iface); }
+  bool            bool_prop () const;
+  void            bool_prop (bool);
+  int             int_prop () const;
+  void            int_prop (int);
+  double          float_prop () const;
+  void            float_prop (double);
+  std::string     string_prop () const;
+  void            string_prop (const std::string&);
+  QuickEnum       enum_prop () const;
+  void            enum_prop (QuickEnum);
+  QuickRecord     record_prop () const;
+  void            record_prop (const QuickRecord&);
+  QuickSequence   sequence_prop () const;
+  void            sequence_prop (const QuickSequence&);
+  GrandChild_SmartHandle interface_prop () const;
+  void            interface_prop (GrandChild_SmartHandle);
+  PropertyTester_SmartHandle self_prop () const;
+  void            self_prop (PropertyTester_SmartHandle);
   inline I_PropertyTester_Interface& operator*  () const { return *dynamic_cast<I_PropertyTester_Interface*> (_iface()); }
   inline I_PropertyTester_Interface* operator-> () const { return dynamic_cast<I_PropertyTester_Interface*> (_iface()); }
   inline operator  I_PropertyTester_Interface&  () const { return operator*(); }
@@ -667,6 +711,14 @@ protected:
   explicit                 I_ButtonArea_Interface ();
   virtual /*Des*/         ~I_ButtonArea_Interface () = 0;
 public:
+  virtual std::string     on_click () const = 0;
+  virtual void            on_click (const std::string&) = 0;
+  virtual std::string     on_click2 () const = 0;
+  virtual void            on_click2 (const std::string&) = 0;
+  virtual std::string     on_click3 () const = 0;
+  virtual void            on_click3 (const std::string&) = 0;
+  virtual ClickType       click_type () const = 0;
+  virtual void            click_type (ClickType) = 0;
   typedef Rapicorn::Signals::Signal<I_ButtonArea_Interface, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
   typedef Rapicorn::Signals::Signal<I_ButtonArea_Interface, void ()> Signal_activate;
   Signal_check_activate sig_check_activate;
@@ -682,6 +734,14 @@ public:
   inline ButtonArea_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
   inline ButtonArea_SmartHandle (I_ButtonArea_Interface *iface) { _iface (iface); }
   inline ButtonArea_SmartHandle (I_ButtonArea_Interface &iface) { _iface (&iface); }
+  std::string     on_click () const;
+  void            on_click (const std::string&);
+  std::string     on_click2 () const;
+  void            on_click2 (const std::string&);
+  std::string     on_click3 () const;
+  void            on_click3 (const std::string&);
+  ClickType       click_type () const;
+  void            click_type (ClickType);
   inline I_ButtonArea_Interface& operator*  () const { return *dynamic_cast<I_ButtonArea_Interface*> (_iface()); }
   inline I_ButtonArea_Interface* operator-> () const { return dynamic_cast<I_ButtonArea_Interface*> (_iface()); }
   inline operator  I_ButtonArea_Interface&  () const { return operator*(); }
