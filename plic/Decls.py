@@ -141,6 +141,16 @@ class TypeInfo (BaseDecl):
     bytes = l + self.sha224digest()
     t = tuple ([ord (c) for c in bytes])
     return t
+  def property_hash (self, field, setter):
+    digest = self.string_digest()
+    digest += ' set: ' if setter else ' get: '
+    digest += field[1].full_name() + ' ' + field[0]
+    sha224 = hashlib.sha224()
+    sha224.update (digest)
+    l = '\x20\x00\x00\x00' if setter else '\x30\x00\x00\x00'
+    bytes = l + sha224.digest()
+    t = tuple ([ord (c) for c in bytes])
+    return t
   def clone (self, newname, isimpl):
     if newname == None: newname = self.name
     ti = TypeInfo (newname, self.storage, isimpl)
