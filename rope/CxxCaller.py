@@ -301,22 +301,17 @@ class Generator:
     return '0'
   def generate_recseq_decl (self, type_info):
     s = ''
-    s += 'struct %s {\n' % type_info.name
+    if type_info.storage == Decls.SEQUENCE:
+      fl = type_info.elements
+      s += 'struct ' + type_info.name + ' : public std::vector<' + self.C (fl[1]) + '> {\n'
+    else:
+      s += 'struct %s {\n' % type_info.name
     if type_info.storage == Decls.RECORD:
       fieldlist = type_info.fields
       for fl in fieldlist:
         s += self.generate_field (fl[0], self.C (fl[1]))
     elif type_info.storage == Decls.SEQUENCE:
-      fl = type_info.elements
       s += '  typedef std::vector<' + self.C (fl[1]) + '> Sequence;\n'
-      s += '  typedef Sequence::size_type              size_type;\n'
-      s += '  typedef Sequence::value_type             value_type;\n'
-      s += '  typedef Sequence::allocator_type         allocator_type;\n'
-      s += '  typedef Sequence::iterator               iterator;\n'
-      s += '  typedef Sequence::const_iterator         const_iterator;\n'
-      s += '  typedef Sequence::reverse_iterator       reverse_iterator;\n'
-      s += '  typedef Sequence::const_reverse_iterator const_reverse_iterator;\n'
-      s += self.generate_field (fl[0], 'Sequence')
       s += '  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;\n'
       s += '  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);\n'
     if type_info.storage == Decls.RECORD:
@@ -393,34 +388,34 @@ class Generator:
     cplfbr = ('cpl', 'fbr')
     el = type_info.elements
     s += 'bool\n%s::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const\n{\n' % type_info.name
-    s += '  const size_t len = %s.size();\n' % el[0]
+    s += '  const size_t len = this->size();\n'
     s += '  ' + FieldBuffer + ' &fb = dst.add_seq (len);\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
-    s += reindent ('  ', self.generate_proto_add_args (cplfb, type_info, 'this->',
-                                                       [type_info.elements], '[k]')) + '\n'
+    s += reindent ('  ', self.generate_proto_add_args (cplfb, type_info, '',
+                                                       [('(*this)', type_info.elements[1])],
+                                                       '[k]')) + '\n'
     s += '  }\n'
     s += '  return true;\n'
     s += '}\n'
-    eident = 'this->%s' % el[0]
     s += 'bool\n%s::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)\n{\n' % type_info.name
     s += '  ' + FieldBuffer + 'Reader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
     if el[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += '  %s.resize (len);\n' % eident
+      s += '  this->resize (len);\n'
     else:
-      s += '  %s.reserve (len);\n' % eident
+      s += '  this->reserve (len);\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
     if el[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += reindent ('  ', self.generate_proto_pop_args (cplfbr, type_info,
-                                                         'this->',
-                                                         [type_info.elements], '[k]')) + '\n'
+      s += reindent ('  ', self.generate_proto_pop_args (cplfbr, type_info, '',
+                                                         [('(*this)', type_info.elements[1])],
+                                                         '[k]')) + '\n'
     elif el[1].storage == Decls.ENUM:
-      s += '    %s.push_back (%s (fbr.pop_evalue()));\n' % (eident, self.type2cpp (el[1]))
+      s += '    this->push_back (%s (fbr.pop_evalue()));\n' % self.type2cpp (el[1])
 
     elif el[1].storage == Decls.INTERFACE:
-      s += '    %s.push_back (%s (cpl, fbr));\n' % (eident, self.C (el[1]))
+      s += '    this->push_back (%s (cpl, fbr));\n' % self.C (el[1])
     else:
-      s += '    %s.push_back (fbr.pop_%s());\n' % (eident, self.accessor_name (el[1].storage))
+      s += '    this->push_back (fbr.pop_%s());\n' % self.accessor_name (el[1].storage)
     s += '  }\n'
     s += '  return true;\n'
     s += '}\n'

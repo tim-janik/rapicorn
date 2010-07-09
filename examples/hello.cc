@@ -31,7 +31,7 @@ handle_commands (Window           &window,
   if (command == "close")
     window.close();
   else
-    printout ("%s(): custom command: %s(%s)\n", __func__, command.c_str(), string_join (",", args.strings).c_str());
+    printout ("%s(): custom command: %s(%s)\n", __func__, command.c_str(), string_join (",", args).c_str());
   return true;
 }
 

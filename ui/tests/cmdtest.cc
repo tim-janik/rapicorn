@@ -22,7 +22,7 @@ static String
 cmdjoin (const String       &name,
          const StringList   &args)
 {
-  return name + ";" + string_join (";", args.strings);
+  return name + ";" + string_join (";", args);
 }
 
 static void

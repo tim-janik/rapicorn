@@ -132,11 +132,11 @@ idl_test_item_test ()
   Requisition r (123, 765);
   titem.record_prop (r); TASSERT (titem.record_prop().width == r.width && titem.record_prop().height == r.height);
   StringList sl;
-  sl.strings.push_back ("one");
-  sl.strings.push_back ("2");
-  sl.strings.push_back ("THREE");
+  sl.push_back ("one");
+  sl.push_back ("2");
+  sl.push_back ("THREE");
   titem.sequence_prop (sl); StringList sv = titem.sequence_prop();
-  TASSERT (sv.strings.size() == sl.strings.size()); TASSERT (sv.strings[2] == "THREE");
+  TASSERT (sv.size() == sl.size()); TASSERT (sv[2] == "THREE");
   titem.self_prop (NULL); TASSERT (titem.self_prop() == NULL);
   titem.self_prop (titemp); TASSERT (titem.self_prop() == titemp);
   window.close();

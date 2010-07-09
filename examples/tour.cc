@@ -35,7 +35,7 @@ custom_commands (Window           &window,
     }
   else
     printout ("%s(): custom command: %s(%s) (window: %s)\n", __func__,
-              command.c_str(), string_join (",", args.strings).c_str(), window.root().name().c_str());
+              command.c_str(), string_join (",", args).c_str(), window.root().name().c_str());
   return true;
 }
 

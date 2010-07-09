@@ -87,7 +87,7 @@ private:
     affinity (m_init->cpu);
     // rapicorn_init_core() already called
     Rapicorn::StringList slist;
-    slist.strings = m_init->cmdline_args;
+    slist = m_init->cmdline_args;
     app.init_with_x11 (m_init->application_name, slist);
     m_loop = ref_sink (EventLoop::create());
     EventLoop::Source *esource = new DispatchSource (*m_init->coupler, *m_loop);

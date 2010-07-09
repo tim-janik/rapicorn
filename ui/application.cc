@@ -49,10 +49,10 @@ void
 ApplicationImpl::init_with_x11 (const std::string &application_name,
                                 const StringList  &cmdline_args)
 {
-  int dummy_argc = cmdline_args.strings.size();
+  int dummy_argc = cmdline_args.size();
   char **dummy_argv = (char**) alloca ((sizeof (char*) + 1) * dummy_argc);
   for (int i = 0; i < dummy_argc; i++)
-    dummy_argv[i] = const_cast<char*> (cmdline_args.strings[i].c_str());
+    dummy_argv[i] = const_cast<char*> (cmdline_args[i].c_str());
   dummy_argv[dummy_argc] = NULL;
   init_with_x11 (&dummy_argc, &dummy_argv, application_name.c_str());
 }
@@ -63,8 +63,8 @@ ApplicationImpl::create_window (const std::string    &window_identifier,
                                 const StringList     &env_variables)
 {
   return &Factory::create_window (window_identifier,
-                                  arguments.strings,
-                                  env_variables.strings).root().window();
+                                  arguments,
+                                  env_variables).root().window();
 }
 
 String
@@ -151,7 +151,7 @@ ApplicationImpl::list_windows ()
 {
   WindowList wl;
   for (uint i = 0; i < m_windows.size(); i++)
-    wl.windows.push_back (m_windows[i]);
+    wl.push_back (m_windows[i]);
   return wl;
 }
 

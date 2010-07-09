@@ -39,7 +39,7 @@ class_scope:Requisition:
 
 class_scope:StringList:
   /*Con*/  StringList () {}
-  /*Con*/  StringList (const std::vector<String> &strv) : strings (strv) {}
+  /*Con*/  StringList (const std::vector<String> &strv) : Sequence (strv) {}
 
 class_scope:Window_Interface:
   virtual Root&      root          () = 0;

@@ -25,7 +25,7 @@ item_print (Item               &item,
             const StringList   &args)
 {
   bool last_empty = false;
-  const StringVector &strings = args.strings;
+  const StringVector &strings = args;
   for (uint i = 0; i < strings.size(); i++)
     {
       String str = command_string_unquote (strings[i]);
@@ -192,7 +192,7 @@ command_scan (const String &input,
   const char *ident0 = "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const char *identn = "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ:0123456789";
   *cmd_name = "";
-  args->strings.resize (0);
+  args->resize (0);
   uint i = 0;
   /* skip leading spaces */
   while (i < input.size() && strchr (whitespaces, input[i]))
@@ -221,13 +221,13 @@ command_scan (const String &input,
       String arg;
       if (!parse_arg (input, &i, &arg))
         return false; // invalid arg syntax
-      args->strings.push_back (arg);
+      args->push_back (arg);
       while (i < input.size() && input[i] == ',')
         {
           i++;
           if (!parse_arg (input, &i, &arg))
             return false; // invalid arg syntax
-          args->strings.push_back (arg);
+          args->push_back (arg);
         }
       if (i >= input.size() || input[i] != ')')
         {
