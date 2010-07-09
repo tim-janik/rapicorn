@@ -25,4 +25,9 @@
     </Alignment>
   </def:alignment-test>
 
+  <!-- idl-test-item test -->
+  <def:idl-test-item-window inherit="Root">
+    <IdlTestItem />
+  </def:idl-test-item-window>
+
 </rapicorn-definitions>

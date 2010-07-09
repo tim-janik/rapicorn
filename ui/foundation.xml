@@ -156,6 +156,9 @@
   <def:HBox inherit="Rapicorn::Factory::HBox" />
   <def:VBox inherit="Rapicorn::Factory::VBox" />
 
+  <!-- IdlTestItem -->
+  <def:IdlTestItem inherit="Rapicorn::Factory::IdlTestItem"/>
+
   <!-- TestBox -->
   <def:TestBox inherit="Rapicorn::Factory::TestBox"/>
 

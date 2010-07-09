@@ -104,7 +104,43 @@ test_test_item ()
   TASSERT (seen_test > old_seen_test);
   /* test item rendering also executed various assertions */
   TDONE();
-  return;
+}
+
+static void
+idl_test_item_test ()
+{
+  TSTART ("idl-test-item");
+  Window &window = *app.create_window ("idl-test-item-window");
+  TOK();
+  Root &root = window.root();
+  IdlTestItem *titemp = root.interface<IdlTestItem*>();
+  TASSERT (titemp != NULL);
+  IdlTestItem &titem = *titemp;
+  titem.bool_prop (0); TASSERT (titem.bool_prop() == 0);
+  titem.bool_prop (1); TASSERT (titem.bool_prop() == 1);
+  titem.bool_prop (0); TASSERT (titem.bool_prop() == 0);
+  titem.int_prop (765760); TASSERT (titem.int_prop() == 765760);
+  titem.int_prop (-211232); TASSERT (titem.int_prop() == -211232);
+  double f = 32.1231;
+  titem.float_prop (f); TASSERT (abs (titem.float_prop() - f) < 1e-11); // assert double precision
+  titem.string_prop (""); TASSERT (titem.string_prop() == "");
+  titem.string_prop ("5768trzg"); TASSERT (titem.string_prop() == "5768trzg");
+  titem.string_prop ("äöü"); TASSERT (titem.string_prop() == "äöü");
+  titem.enum_prop (TEST_ENUM_VALUE1); TASSERT (titem.enum_prop() == TEST_ENUM_VALUE1);
+  titem.enum_prop (TEST_ENUM_VALUE2); TASSERT (titem.enum_prop() == TEST_ENUM_VALUE2);
+  titem.enum_prop (TEST_ENUM_VALUE3); TASSERT (titem.enum_prop() == TEST_ENUM_VALUE3);
+  Requisition r (123, 765);
+  titem.record_prop (r); TASSERT (titem.record_prop().width == r.width && titem.record_prop().height == r.height);
+  StringList sl;
+  sl.strings.push_back ("one");
+  sl.strings.push_back ("2");
+  sl.strings.push_back ("THREE");
+  titem.sequence_prop (sl); StringList sv = titem.sequence_prop();
+  TASSERT (sv.strings.size() == sl.strings.size()); TASSERT (sv.strings[2] == "THREE");
+  titem.self_prop (NULL); TASSERT (titem.self_prop() == NULL);
+  titem.self_prop (titemp); TASSERT (titem.self_prop() == titemp);
+  window.close();
+  TDONE();
 }
 
 extern "C" int
@@ -124,8 +160,9 @@ main (int   argc,
   app.auto_load ("testitems", Rapicorn::Path::join (SRCDIR, "testitems.xml"), argv[0]);
 
   /* create/run tests */
-  test_cxx_gui ();
-  test_test_item ();
+  test_cxx_gui();
+  test_test_item();
+  idl_test_item_test();
 
   return 0;
 }

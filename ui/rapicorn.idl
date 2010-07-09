@@ -74,4 +74,21 @@ interface Application {
   int           test_counter_inc_fetch  () = 0;
 };
 
+enum TestEnum {
+  TEST_ENUM_VALUE1,
+  TEST_ENUM_VALUE2,
+  TEST_ENUM_VALUE3,
+};
+
+interface IdlTestItem : Item {
+  bool           bool_prop;
+  int            int_prop;
+  float          float_prop;
+  string         string_prop;
+  TestEnum       enum_prop;
+  Requisition    record_prop;
+  StringList     sequence_prop;
+  IdlTestItem    self_prop;
+};
+
 } // Rapicorn

@@ -253,5 +253,29 @@ public:
 };
 static const ItemFactory<TestBoxImpl> test_box_factory ("Rapicorn::Factory::TestBox");
 
+class IdlTestItemImpl : public virtual ItemImpl, public virtual IdlTestItem {
+  bool m_bool; int m_int; double m_float; std::string m_string; TestEnum m_enum;
+  Requisition m_rec; StringList m_seq; IdlTestItem *m_self;
+  virtual bool          bool_prop () const                      { return m_bool; }
+  virtual void          bool_prop (bool b)                      { m_bool = b; }
+  virtual int           int_prop () const                       { return m_int; }
+  virtual void          int_prop (int i)                        { m_int = i; }
+  virtual double        float_prop () const                     { return m_float; }
+  virtual void          float_prop (double f)                   { m_float = f; }
+  virtual std::string   string_prop () const                    { return m_string; }
+  virtual void          string_prop (const std::string &s)      { m_string = s; }
+  virtual TestEnum      enum_prop () const                      { return m_enum; }
+  virtual void          enum_prop (TestEnum v)                  { m_enum = v; }
+  virtual Requisition   record_prop () const                    { return m_rec; }
+  virtual void          record_prop (const Requisition &r)      { m_rec = r; }
+  virtual StringList    sequence_prop () const                  { return m_seq; }
+  virtual void          sequence_prop (const StringList &s)     { m_seq = s; }
+  virtual IdlTestItem*  self_prop () const                      { return m_self; }
+  virtual void          self_prop (IdlTestItem *s)              { m_self = s; }
+  virtual void          size_request (Requisition &req)         { req = Requisition (12, 12); }
+  virtual void          size_allocate (Allocation area)         { allocation (area); }
+  virtual void          render (Display &display)               {}
+};
+static const ItemFactory<IdlTestItemImpl> test_item_factory ("Rapicorn::Factory::IdlTestItem");
 
 } // Rapicorn
