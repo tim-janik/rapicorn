@@ -1100,7 +1100,7 @@ RootImpl::show ()
 bool
 RootImpl::closed ()
 {
-  return has_viewport();
+  return !has_viewport();
 }
 
 void
