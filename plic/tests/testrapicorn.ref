@@ -194,5 +194,7 @@ class ButtonArea {
   virtual void                click_type (const ClickType&) = 0;
 };
 class PureMethods {
+};
+class PureMethods {
   int                 pure_method (float f);
 };

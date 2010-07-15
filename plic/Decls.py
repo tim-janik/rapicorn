@@ -96,6 +96,7 @@ class TypeInfo (BaseDecl):
     self.isimpl = isimpl
     # clonable fields:
     self.typedef_origin = None
+    self.is_forward = False
     self.options = []           # holds: (ident, label, blurb, number)
     if (self.storage == RECORD or
         self.storage == INTERFACE):
@@ -155,6 +156,7 @@ class TypeInfo (BaseDecl):
     if newname == None: newname = self.name
     ti = TypeInfo (newname, self.storage, isimpl)
     ti.typedef_origin = self.typedef_origin
+    ti.is_forward = self.is_forward
     ti.options += self.options
     if hasattr (self, 'namespace'):
       ti.namespace = self.namespace

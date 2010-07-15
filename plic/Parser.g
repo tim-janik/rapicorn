@@ -82,14 +82,21 @@ class YYGlobals (object):
       fdict[field[0]] = true
       rec.add_field (field[0], field[1])
     self.namespaces[-1].add_type (rec)
-  def nsadd_interface (self, name, prerequisites):
-    AIn (name)
-    iface = Decls.TypeInfo (name, Decls.INTERFACE, yy.impl_includes)
+  def nsadd_interface (self, name, addproto = False):
+    iface = yy.namespace_lookup (name, astype = True)
+    if not iface or (iface.storage == Decls.INTERFACE and
+                     iface.is_forward and not addproto):
+      iface = Decls.TypeInfo (name, Decls.INTERFACE, yy.impl_includes)
+      if addproto:
+        iface.is_forward = True
+      self.namespaces[-1].add_type (iface)
+    elif (iface.storage != Decls.INTERFACE or # exists as different identifier
+          (not iface.is_forward and not addproto)): # interface redefinition
+      AIn (name)
+    return iface
+  def interface_fill (self, iface, prerequisites, ifields, imethods, isignals):
     for prq in prerequisites:
       iface.add_prerequisite (yy.namespace_lookup (prq, astype = True))
-    self.namespaces[-1].add_type (iface)
-    return iface
-  def interface_fill (self, iface, ifields, imethods, isignals):
     self.parse_assign_auxdata (ifields)
     mdict = {}
     for field in ifields:
@@ -486,17 +493,20 @@ rule typedef:
 rule interface:
         'interface'                             {{ ipls = []; ifls = []; prq = [] }}
         IDENT                                   {{ iident = IDENT; isigs = [] }}
-        [ ':' IDENT                             {{ prq += [ IDENT ]; AIi (IDENT) }}
+        ( ';'                                   {{ iface = yy.nsadd_interface (iident, True) }}
+        |
+          [ ':' IDENT                           {{ prq += [ IDENT ]; AIi (IDENT) }}
               ( ',' IDENT                       {{ prq += [ IDENT ]; AIi (IDENT) }}
               ) * ]
-        '{'                                     {{ iface = yy.nsadd_interface (iident, prq) }}
-           (
-             field_or_method_or_signal_decl     {{ fmd = field_or_method_or_signal_decl }}
+          '{'                                   {{ iface = yy.nsadd_interface (iident) }}
+             (
+               field_or_method_or_signal_decl   {{ fmd = field_or_method_or_signal_decl }}
                                                 {{ if fmd[0] == 'field': ipls = ipls + [ fmd[1] ] }}
                                                 {{ if fmd[0] == 'func': ifls = ifls + [ fmd[1] ] }}
                                                 {{ if fmd[0] == 'signal': isigs = isigs + [ fmd[1] ] }}
-           )*
-        '}' ';'                                 {{ yy.interface_fill (iface, ipls, ifls, isigs) }}
+             )*
+          '}' ';'                               {{ yy.interface_fill (iface, prq, ipls, ifls, isigs) }}
+        )
 
 rule record:
         'record' IDENT '{'                      {{ rfields = []; rident = IDENT }}

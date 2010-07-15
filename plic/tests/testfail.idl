@@ -91,3 +91,5 @@ interface I { int method (int a, int b = 2, int c); }; // missing subsequent def
 interface I { signal int m() = 0; }; // invalid pure decl for non-method
 
 interface P { void void_prop; }; // invalid property type
+
+interface I; interface I {}; interface I; interface I {}; // interface redefinition

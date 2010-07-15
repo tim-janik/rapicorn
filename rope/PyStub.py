@@ -252,7 +252,9 @@ class Generator:
         types += [ tp ]
     # generate types
     for tp in types:
-      if tp.storage == Decls.RECORD:
+      if tp.is_forward: # or tp.typedef_origin
+        pass
+      elif tp.storage == Decls.RECORD:
         s += self.generate_record_impl (tp) + '\n'
       elif tp.storage == Decls.INTERFACE:
         s += self.generate_class (tp) + '\n'

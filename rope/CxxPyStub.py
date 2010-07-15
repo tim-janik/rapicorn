@@ -417,7 +417,7 @@ class Generator:
         types += [ tp ]
     # generate prototypes
     for tp in types:
-      if tp.typedef_origin:
+      if tp.typedef_origin or tp.is_forward:
         pass # s += 'typedef %s %s;\n' % (self.type2cpp (tp.typedef_origin.name), tp.name)
       elif tp.storage == Decls.RECORD:
         s += 'struct %s;\n' % tp.name
@@ -425,7 +425,7 @@ class Generator:
         s += self.generate_enum_impl (tp) + '\n'
     # generate types
     for tp in types:
-      if tp.typedef_origin:
+      if tp.typedef_origin or tp.is_forward:
         pass
       elif tp.storage == Decls.RECORD:
         s += self.generate_record_impl (tp) + '\n'
@@ -436,7 +436,7 @@ class Generator:
     # generate accessors
     mdefs = []
     for tp in types:
-      if tp.typedef_origin:
+      if tp.typedef_origin or tp.is_forward:
         pass
       elif tp.storage == Decls.RECORD:
         pass

@@ -878,7 +878,18 @@ class Generator:
     if self.gen_clienthh or self.gen_serverhh:
       s += '\n// --- Interfaces (class declarations) ---\n'
       for tp in types:
-        if tp.typedef_origin:
+        if tp.is_forward:
+          s += self.open_namespace (tp) + '\n'
+          if self.gen_serverhh:
+            self.gen4class = C4INTERFACE
+            s += 'class %s;\n' % self.C (tp)    # C4INTERFACE
+            self.gen4class = C4SERVER
+            s += 'class %s;\n' % self.C (tp)    # C4SERVER
+            self.gen4class = C4CLIENT
+          elif self.gen_clienthh:
+            s += 'class %s;\n' % self.C (tp)    # C4CLIENT
+          s += '\n'
+        elif tp.typedef_origin:
           s += self.open_namespace (tp)
           s += 'typedef %s %s;\n' % (self.type2cpp (tp.typedef_origin), tp.name)
         elif tp.storage in (Decls.RECORD, Decls.SEQUENCE):
@@ -910,7 +921,7 @@ class Generator:
     if self.gen_clientcc or self.gen_servercc:
       s += '\n// --- Implementations ---\n'
       for tp in types:
-        if tp.typedef_origin:
+        if tp.typedef_origin or tp.is_forward:
           continue
         if tp.storage == Decls.RECORD:
           s += self.open_namespace (tp)
@@ -942,7 +953,7 @@ class Generator:
       self.gen4class = C4INTERFACE
       reglines = []
       for tp in types:
-        if tp.typedef_origin:
+        if tp.typedef_origin or tp.is_forward:
           continue
         s += self.open_namespace (tp)
         if tp.storage == Decls.INTERFACE and not tp.name in self.skip_classes:
@@ -962,7 +973,7 @@ class Generator:
       s += '\n// --- Interface Skeletons ---\n'
       self.gen4class = C4INTERFACE
       for tp in types:
-        if tp.typedef_origin:
+        if tp.typedef_origin or tp.is_forward:
           continue
         elif tp.storage == Decls.INTERFACE and not tp.name in self.skip_classes:
           s += self.generate_interface_skel (tp)

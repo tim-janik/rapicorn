@@ -153,3 +153,6 @@
 .../testfail.idl:93: TypeError: unknown type: 'void'
 >  namespace PlicFailTest { interface P { void void_prop; }; // invalid property type
 >                                                       ^
+.../testfail.idl:95: TypeError: redefining existing identifier: I
+>  ... interface I; interface I {}; interface I; interface I {}; // interface redefinition
+>                                                            ^

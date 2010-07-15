@@ -448,6 +448,9 @@ public:
 };
 
 
+class PureMethods_SmartHandle;
+
+
 class PureMethods_SmartHandle : public virtual Plic::SmartHandle {
 protected:
 public:
