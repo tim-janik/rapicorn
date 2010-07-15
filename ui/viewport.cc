@@ -20,7 +20,7 @@
 namespace Rapicorn {
 
 /* --- Viewport::FactoryBase --- */
-static std::list<Viewport::FactoryBase*> viewport_backends;
+static std::list<Viewport::FactoryBase*> *viewport_backends = NULL;
 
 Viewport::FactoryBase::~FactoryBase ()
 {}
@@ -28,7 +28,9 @@ Viewport::FactoryBase::~FactoryBase ()
 void
 Viewport::FactoryBase::register_backend (FactoryBase &factory)
 {
-  viewport_backends.push_back (&factory);
+  if (once_enter (&viewport_backends))
+    once_leave (&viewport_backends, new std::list<Viewport::FactoryBase*>());
+  viewport_backends->push_back (&factory);
 }
 
 /* --- Viewport --- */
@@ -38,14 +40,14 @@ Viewport::create_viewport (const String            &backend_name,
                            Viewport::EventReceiver &receiver)
 {
   std::list<Viewport::FactoryBase*>::iterator it;
-  for (it = viewport_backends.begin(); it != viewport_backends.end(); it++)
+  for (it = viewport_backends->begin(); it != viewport_backends->end(); it++)
     if (backend_name == (*it)->m_name)
       return (*it)->create_viewport (viewport_type, receiver);
   if (backend_name == "auto")
     {
       /* cruel approximation of automatic selection logic */
-      it = viewport_backends.begin();
-      if (it != viewport_backends.end())
+      it = viewport_backends->begin();
+      if (it != viewport_backends->end())
         return (*it)->create_viewport (viewport_type, receiver);
     }
   return NULL;
