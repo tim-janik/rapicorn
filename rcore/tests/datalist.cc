@@ -114,6 +114,22 @@ data_list_test ()
   TDONE();
 }
 
+class A {};
+class D : public A {};
+
+static void
+trait_convertible_test()
+{
+  TSTART ("trait_convertible_test");
+  TASSERT ((TraitConvertible<int,int>::TRUTH == true));
+  TASSERT ((TraitConvertible<void*,float>::TRUTH == false));
+  TASSERT ((TraitConvertible<A,A>::TRUTH == true));
+  TASSERT ((TraitConvertible<D,D>::TRUTH == true));
+  TASSERT ((TraitConvertible<A,D>::TRUTH == true));
+  TASSERT ((TraitConvertible<D,A>::TRUTH == false));
+  TDONE();
+}
+
 } // anon
 
 int
@@ -122,5 +138,6 @@ main (int   argc,
 {
   rapicorn_init_test (&argc, &argv);
   data_list_test();
+  trait_convertible_test();
   return 0;
 }

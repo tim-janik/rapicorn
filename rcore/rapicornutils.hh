@@ -83,6 +83,14 @@ clamp (const T &value, const T &minimum, const T &maximum)
   return value;
 }
 
+/* --- template utilities --- */
+template<class X, class Y> class TraitConvertible {
+  static bool f (...);
+  static int  f (X*);
+public:
+  enum { TRUTH = sizeof (f()) != sizeof (f ((Y*) 0)), };
+};
+
 /* --- helper macros --- */
 #define RAPICORN_STRINGIFY(macro_or_string)     RAPICORN_STRINGIFY_ARG (macro_or_string)
 #define RAPICORN_STRINGIFY_ARG(arg)             #arg
