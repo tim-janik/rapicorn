@@ -191,7 +191,6 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "#define RAPICORN_HAVE_MUTEXATTR_SETTYPE	(@RAPICORN_HAVE_MUTEXATTR_SETTYPE@ && \\" >> xgen-$(@F) \
 	&& echo "                                        RAPICORN_SIZEOF_PTH_MUTEX_T && \\" 	>> xgen-$(@F) \
 	&& echo "                                        RAPICORN_SIZEOF_PTH_COND_T)" 		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_MEMORY_BARRIER_NEEDED   (@RAPICORN_MEMORY_BARRIER_NEEDED@)"	>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "#define RAPICORN_SYSVAL_POLLIN 		(@RAPICORN_SYSVAL_POLLIN@)"		>> xgen-$(@F) \
 	&& echo "#define RAPICORN_SYSVAL_POLLPRI		(@RAPICORN_SYSVAL_POLLPRI@)"		>> xgen-$(@F) \

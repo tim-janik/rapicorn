@@ -244,30 +244,6 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     RAPICORN_CORE_LIBS="$RAPICORN_CORE_LIBS $LIBPNG $LIBZ"
     AC_SUBST(RAPICORN_CORE_CFLAGS)
     AC_SUBST(RAPICORN_CORE_LIBS)
-
-    dnl # --- check for memory barriers (needs glib) ---
-    AC_MSG_CHECKING([for memory barriers])
-    saved_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $RAPICORN_CORE_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $RAPICORN_CORE_LIBS"
-    AC_TRY_RUN([ #include <glib.h>
-	    int main () {
-	    #if defined (G_ATOMIC_OP_MEMORY_BARRIER_NEEDED) || (!GLIB_CHECK_VERSION (2, 8, 0) && !defined (__i386__))
-		return 1;
-	    #else
-		return 0;
-	    #endif
-	    }],
-	RAPICORN_MEMORY_BARRIER_NEEDED=0
-	AC_MSG_RESULT(none needed)
-        ,
-	RAPICORN_MEMORY_BARRIER_NEEDED=1
-	AC_MSG_RESULT(required)
-        ,)
-    CFLAGS="$saved_CFLAGS"
-    LIBS="$saved_LIBS"
-    AC_SUBST(RAPICORN_MEMORY_BARRIER_NEEDED)
 ])
 
 dnl # RAPICORN_I18N_REQUIREMENTS() - check for all i18n requirements
