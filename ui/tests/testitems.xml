@@ -33,7 +33,7 @@
   <!-- complex-window -->
   <def:complex-dialog inherit="Root">
     <Ambience normal-lighting="upper-left">
-      <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
+      <Alignment padding="5">
 	<VBox spacing="3" hexpand="1">
 	  <VBox hexpand="1">
 	    <Frame>

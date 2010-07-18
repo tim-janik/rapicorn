@@ -28,6 +28,7 @@ Alignment::list_properties()
     MakeProperty (Alignment, right_padding,  _("Right Padding"),  _("Amount of padding to add at the child's right side"), 0, 65535, 3, "rw"),
     MakeProperty (Alignment, bottom_padding, _("Bottom Padding"), _("Amount of padding to add at the child's bottom side"), 0, 65535, 3, "rw"),
     MakeProperty (Alignment, top_padding,    _("Top Padding"),    _("Amount of padding to add at the child's top side"), 0, 65535, 3, "rw"),
+    MakeProperty (Alignment, padding,        _("Padding"),        _("Amount of padding to add at the child's sides"), 0, 65535, 3, "w"),
   };
   static const PropertyList property_list (properties, Container::list_properties());
   return property_list;
@@ -98,6 +99,12 @@ public:
   virtual void  bottom_padding (uint c)  { m_bottom_padding = c; invalidate(); }
   virtual uint  top_padding    () const  { return m_top_padding; }
   virtual void  top_padding    (uint c)  { m_top_padding = c; invalidate(); }
+  virtual uint  padding        () const  { assert_unreached(); return 0; }
+  virtual void  padding        (uint c)
+  {
+    m_left_padding = m_right_padding = m_bottom_padding = m_top_padding = c;
+    invalidate();
+  }
 };
 static const ItemFactory<AlignmentImpl> alignment_factory ("Rapicorn::Factory::Alignment");
 

@@ -22,6 +22,7 @@
 namespace Rapicorn {
 
 class Alignment : public virtual Container {
+  virtual uint  padding         () const  = 0;
 protected:
   virtual const PropertyList&   list_properties ();
 public:
@@ -33,6 +34,7 @@ public:
   virtual void  bottom_padding  (uint c)  = 0;
   virtual uint  top_padding     () const  = 0;
   virtual void  top_padding     (uint c)  = 0;
+  virtual void  padding         (uint c)  = 0;
 };
 
 class HBox : public virtual Container {
