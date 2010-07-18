@@ -293,6 +293,9 @@ String  string_from_cquote                               (const String &input);
 String  string_lstrip                                    (const String &input);
 String  string_rstrip                                    (const String &input);
 String  string_strip                                     (const String &input);
+String  string_substitute_char                           (const String &input,
+                                                          const char    match,
+                                                          const char    subst);
 
 /* --- string options --- */
 bool    string_option_check     (const String   &option_string,

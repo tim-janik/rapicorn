@@ -1254,6 +1254,19 @@ string_strip (const String &input)
     return input.substr (a, b - a);
 }
 
+String
+string_substitute_char (const String &input,
+                        const char    match,
+                        const char    subst)
+{
+  String output = input;
+  if (match != subst)
+    for (String::size_type i = 0; i < output.size(); i++)
+      if (output.data()[i] == match)
+        output[i] = subst; // unshares string
+  return output;
+}
+
 /* --- string options --- */
 static const char*
 string_option_find_value (const String   &option_string,
