@@ -47,6 +47,8 @@ static void
 test_regex (void)
 {
   TASSERT (Regex::match_simple ("Lion", "Lion", Regex::EXTENDED | Regex::ANCHORED, Regex::MATCH_NORMAL) == true);
+  TASSERT (Regex::match_simple ("Ok", "<TEXT>Close</TEXT>", Regex::COMPILE_NORMAL, Regex::MATCH_NORMAL) == false);
+  TASSERT (Regex::match_simple ("\\bOk", "<TEXT>Ok</TEXT>", Regex::COMPILE_NORMAL, Regex::MATCH_NORMAL) == true);
 }
 
 static void
