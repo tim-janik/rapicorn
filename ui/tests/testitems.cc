@@ -145,6 +145,15 @@ idl_test_item_test ()
 
 static bool run_dialogs = false;
 
+template<class C> C*
+interface (It3m *it3m)
+{
+  Item *item = dynamic_cast<Item*> (it3m);
+  if (item)
+    return item->interface<C*>();
+  return NULL;
+}
+
 static void
 complex_dialog_test ()
 {
@@ -183,6 +192,11 @@ complex_dialog_test ()
   TASSERT (item == NULL); // not unique
   item = app.unique_component ("/#complex-dialog/Button / Label [ @markup-text =~ '\\bOk' ]");
   TASSERT (item != NULL);
+  TASSERT (dynamic_cast<Text::Editor::Client*> (item) != NULL);
+  item = app.unique_component ("/#complex-dialog/Button [ /Label [ @markup-text=~'\\bOk\\b' ] ]");
+  TASSERT (item != NULL);
+  TASSERT (dynamic_cast<ButtonArea*> (item) != NULL);
+  TASSERT (dynamic_cast<Text::Editor::Client*> (item) == NULL);
   item = app.unique_component ("/#"); // invalid path
   TASSERT (item == NULL);
   TDONE();
