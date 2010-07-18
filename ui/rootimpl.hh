@@ -95,6 +95,14 @@ private:
   virtual void          show                                    ();
   virtual bool          closed                                  ();
   virtual void          close                                   ();
+  virtual bool          synthesize_enter                        (double xalign = 0.5,
+                                                                 double yalign = 0.5);
+  virtual bool          synthesize_leave                        ();
+  virtual bool          synthesize_click                        (Item  &item,
+                                                                 int    button,
+                                                                 double xalign = 0.5,
+                                                                 double yalign = 0.5);
+  virtual bool            synthesize_delete                     ();
   /* event handling */
   virtual void          enqueue_async                           (Event                  *event);
   virtual void          cancel_item_events                      (Item                   *item);

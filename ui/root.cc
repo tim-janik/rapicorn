@@ -1109,6 +1109,63 @@ RootImpl::close ()
   destroy_viewport();
 }
 
+bool
+RootImpl::synthesize_enter (double xalign,
+                            double yalign)
+{
+  if (!has_viewport())
+    return false;
+  const Allocation &area = allocation();
+  Point p (area.x + xalign * (max (1, area.width) - 1),
+           area.y + yalign * (max (1, area.height) - 1));
+  p = point_to_viewport (p);
+  EventContext ec;
+  ec.x = p.x;
+  ec.y = p.y;
+  enqueue_async (create_event_mouse (MOUSE_ENTER, ec));
+  return true;
+}
+
+bool
+RootImpl::synthesize_leave ()
+{
+  if (!has_viewport())
+    return false;
+  EventContext ec;
+  enqueue_async (create_event_mouse (MOUSE_LEAVE, ec));
+  return true;
+}
+
+bool
+RootImpl::synthesize_click (Item  &item,
+                            int    button,
+                            double xalign,
+                            double yalign)
+{
+  if (!has_viewport())
+    return false;
+  const Allocation &area = item.allocation();
+  Point p (area.x + xalign * (max (1, area.width) - 1),
+           area.y + yalign * (max (1, area.height) - 1));
+  p = item.point_to_viewport (p);
+  EventContext ec;
+  ec.x = p.x;
+  ec.y = p.y;
+  enqueue_async (create_event_button (BUTTON_PRESS, ec, button));
+  enqueue_async (create_event_button (BUTTON_RELEASE, ec, button));
+  return true;
+}
+
+bool
+RootImpl::synthesize_delete ()
+{
+  if (!has_viewport())
+    return false;
+  EventContext ec;
+  enqueue_async (create_event_win_delete (ec));
+  return true;
+}
+
 Window&
 RootImpl::window ()
 {

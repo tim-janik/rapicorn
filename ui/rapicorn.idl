@@ -42,12 +42,20 @@ interface It3m {
 interface Item : It3m { /* temporarily manually implemented */ };
 
 interface Window : Item {
-  bool          viewable        () = 0;
-  void          show            () = 0;
-  bool          closed          () = 0;
-  void          close           () = 0;
-  signal bool   commands        (string     cmdname,
-                                 StringList args);
+  bool          viewable                () = 0;
+  void          show                    () = 0;
+  bool          closed                  () = 0;
+  void          close                   () = 0;
+  signal bool   commands                (string     cmdname,
+                                         StringList args);
+  bool          synthesize_click        (Item       item,
+                                         int        button,
+                                         float      xalign = 0.5,
+                                         float      yalign = 0.5) = 0;
+  bool          synthesize_enter        (float      xalign = 0.5,
+                                         float      yalign = 0.5) = 0;
+  bool          synthesize_leave        () = 0;
+  bool          synthesize_delete       () = 0;
 };
 
 sequence WindowList {
