@@ -86,7 +86,7 @@ interface.hh: $(ROPE)/CxxCaller.py $(srcdir)/rapicorn.idl $(srcdir)/insertions.c
 	mv xgen-$(@F) $@
 $(rapicorn_cc_sources): interface.hh
 CLEANFILES += xgen-interface.hh interface.hh
-interface.cc: $(ROPE)/CxxCaller.py $(srcdir)/rapicorn.idl
+interface.cc: $(ROPE)/CxxCaller.py $(srcdir)/rapicorn.idl interface.hh
 	: # build interface.cc from rapicorn.idl
 	echo "#define PLIC_CALL_REMOTE // dummy" > xgen-$(@F)
 	${PLICINT} -G $(ROPE)/CxxCaller -g servercc \
