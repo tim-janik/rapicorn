@@ -160,7 +160,6 @@ It3m*
 ApplicationImpl::unique_component (const String &path)
 {
   ItemSeq items = collect_components (path);
-  printerr ("FINAL-RESULT: %d items for: %s\n", items.size(), path.c_str());
   if (items.size() == 1)
     return &*items[0];
   return NULL;
