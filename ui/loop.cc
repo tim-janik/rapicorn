@@ -88,7 +88,6 @@ class EventLoopImpl : public virtual EventLoop {
   typedef std::map<int, SourceList> SourceListMap;
   Mutex          m_mutex;
 public:                                 // EventLoop::iterate_loops
-  int            m_max_priority;        // EventLoop::iterate_loops
   bool           m_must_dispatch;       // EventLoop::iterate_loops
 private:
   uint           m_counter;             // FIXME: need to handle wrapping at some point
@@ -148,7 +147,6 @@ private:
   }
 public:
   EventLoopImpl () :
-    m_max_priority (INT_MAX),
     m_must_dispatch (0),
     m_counter (1),
     m_istate (WILL_CHECK)
@@ -460,12 +458,12 @@ EventLoop::iterate_loops (bool may_block,
   for (uint i = 0; i < rapicorn_main_loops.size(); i++)
     loops.push_back (ref (rapicorn_main_loops[i]));
   /* prepare */
+  int max_priority = INT_MAX;
   for (std::list<EventLoopImpl*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
     {
       EventLoopImpl &loop = **lit;
       ref (loop);
-      loop.m_max_priority = INT_MAX;
-      loop.m_must_dispatch = loop.prepare_sources (loop.m_max_priority, pfds, timeout_usecs);
+      loop.m_must_dispatch = loop.prepare_sources (max_priority, pfds, timeout_usecs);
       seen_must_dispatch |= loop.m_must_dispatch;
       unref (loop);
     }
@@ -499,7 +497,7 @@ EventLoop::iterate_loops (bool may_block,
     {
       EventLoopImpl &loop = **lit;
       ref (loop);
-      loop.m_must_dispatch |= loop.check_sources (loop.m_max_priority, pfds);
+      loop.m_must_dispatch |= loop.check_sources (max_priority, pfds);
       seen_must_dispatch |= loop.m_must_dispatch;
       unref (loop);
     }
@@ -509,7 +507,7 @@ EventLoop::iterate_loops (bool may_block,
       {
         EventLoopImpl &loop = **lit;
         ref (loop);
-        loop.dispatch_sources (loop.m_max_priority);
+        loop.dispatch_sources (max_priority);
         unref (loop);
       }
   /* cleanup */
