@@ -91,7 +91,7 @@ private:
     app.init_with_x11 (m_init->application_name, slist);
     m_loop = ref_sink (EventLoop::create());
     EventLoop::Source *esource = new DispatchSource (*m_init->coupler, *m_loop);
-    (*m_loop).add_source (esource, MAXINT);
+    (*m_loop).add_source (esource, EventLoop::PRIORITY_NORMAL);
     esource->primary (false);
     m_init->mutex.lock();
     m_init->app_id = Application_SmartHandle (&app)._rpc_id();
