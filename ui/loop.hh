@@ -206,13 +206,13 @@ public:
 inline uint
 EventLoop::exec_now (const VoidSlot &sl)
 {
-  return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_HIGH);
+  return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_NOW);
 }
 
 inline uint
 EventLoop::exec_now (const BoolSlot &sl)
 {
-  return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_HIGH);
+  return add_source (new TimedSource (*sl.get_trampoline()), PRIORITY_NOW);
 }
 
 inline uint
