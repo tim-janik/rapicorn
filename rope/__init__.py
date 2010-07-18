@@ -52,14 +52,27 @@ def app_init (application_name = None):
   main.RapicornSource = RapicornSource
   # setup global Application
   app = Application (_PY._BaseClass_._PlicID_ (plic_id))
-  def main_loop (self):
-    self.loop = main.Loop()
-    self.loop += main.RapicornSource()
-    exit_status = self.loop.loop()
-    del self.loop
+  def iterate (self, may_block, may_dispatch):
+    if hasattr (self, "main_loop"):
+      loop = self.main_loop
+      dloop = None
+    else:
+      dloop = main.Loop()
+      loop = dloop
+      loop += main.RapicornSource()
+    needs_dispatch = loop.iterate (may_block, may_dispatch)
+    loop = None
+    del dloop
+    return needs_dispatch
+  app.__class__.iterate = iterate # extend for main loop integration
+  def loop (self):
+    self.main_loop = main.Loop()
+    self.main_loop += main.RapicornSource()
+    exit_status = self.main_loop.loop()
+    del self.main_loop
     return exit_status
+  app.__class__.loop = loop # extend for main loop integration
   main.app = app # integrate main loop with app
-  app.__class__.main_loop = main_loop # extend for main loop integration
   return app
 
 class PlicObjectFactory:
