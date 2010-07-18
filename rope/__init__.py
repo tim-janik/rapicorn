@@ -68,6 +68,8 @@ class PlicObjectFactory:
     self.PlicID = _PY._BaseClass_._PlicID_
   def __call__ (self, type_name, rpc_id):
     klass = getattr (self._PY, type_name)
+    if not klass or not rpc_id:
+      return None
     return klass (self.PlicID (rpc_id))
 
 def _module_init_once_():
