@@ -54,8 +54,9 @@ Window&         create_window    (const String           &window_identifier,
                                   const ArgumentList     &arguments = ArgumentList(),
                                   const ArgumentList     &env_variables = ArgumentList());
 
-String  factory_context_name    (FactoryContext *fc);
-bool    item_definition_is_root (const String   &item_identifier);
+String     factory_context_name    (FactoryContext *fc);
+StringList factory_context_tags    (FactoryContext *fc);
+bool       item_definition_is_root (const String   &item_identifier);
 
 /* --- item type registration --- */
 struct ItemTypeFactory : protected Deletable, protected NonCopyable {
@@ -64,9 +65,12 @@ protected:
   static void   register_item_factory   (const ItemTypeFactory  *itfactory);
   static void   sanity_check_identifier (const char             *namespaced_ident);
 public:
-  explicit      ItemTypeFactory         (const char             *namespaced_ident);
+  explicit      ItemTypeFactory         (const char             *namespaced_ident,
+                                         bool _isevh, bool _iscontainer, bool);
   virtual Item* create_item             (FactoryContext         *fc) const = 0;
+  inline String type_name               () const { return qualified_type; }
   static void   initialize_factories    ();
+  const bool iseventhandler, iscontainer;
 };
 
 } // Factory
@@ -85,7 +89,10 @@ class ItemFactory : Factory::ItemTypeFactory {
   }
 public:
   explicit ItemFactory (const char *namespaced_ident) :
-    ItemTypeFactory (namespaced_ident)
+    ItemTypeFactory (namespaced_ident,
+                     TraitConvertible<EventHandler,Type>::TRUTH,
+                     TraitConvertible<Container,Type>::TRUTH,
+                     TraitConvertible<int,Type>::TRUTH)
   {
     sanity_check_identifier (namespaced_ident);
     register_item_factory (this);

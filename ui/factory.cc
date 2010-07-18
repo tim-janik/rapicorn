@@ -127,7 +127,6 @@ class FactorySingleton {
   FactoryDomain*                add_domain              (const String       &domain_name,
                                                          const String       &i18n_domain);
   /* gadgets */
-  GadgetDef*                    lookup_gadget           (const String       &gadget_identifier);
   Item*                         inherit_gadget          (const String       &ancestor_name,
                                                          const VariableMap  &call_arguments,
                                                          Evaluator          &env,
@@ -145,10 +144,11 @@ class FactorySingleton {
                                                          ChildContainerSlot *ccslot);
   /* type registration */
   std::list<const ItemTypeFactory*> types;
-  const ItemTypeFactory*        lookup_item_factory     (String                 namespaced_ident);
   Item&                         create_from_item_type   (const String          &ident,
                                                          FactoryContext        *fc);
 public:
+  const ItemTypeFactory*        lookup_item_factory     (String                 namespaced_ident);
+  GadgetDef*                    lookup_gadget           (const String          &gadget_identifier);
   void                          register_item_factory   (const ItemTypeFactory &itfactory);
   MarkupParser::Error           parse_gadget_from_xml   (FILE                  *xml_file,
                                                          const String          &xml_string,
@@ -888,6 +888,36 @@ Factory::factory_context_name (FactoryContext *fc)
   // hand out gadget->ident directly, ident never contains the '\177' factory mark
 }
 
+StringList
+Factory::factory_context_tags (FactoryContext *fc)
+{
+  StringList strings;
+  return_val_if_fail (fc != NULL, strings);
+  BaseGadget *gadget = static_cast<BaseGadget*> (fc);
+  while (gadget)
+    {
+      if (strings.empty() || strings.back() != gadget->ident)
+        strings.push_back (gadget->ident);
+      String ancestor = gadget->ancestor;
+      if (ancestor[0] == '\177')      /* item factory type */
+        {
+          const ItemTypeFactory *itfactory = FactorySingleton::singleton->lookup_item_factory (ancestor.substr (1));
+          if (itfactory)
+            {
+              strings.push_back (itfactory->type_name());
+              if (itfactory->iseventhandler)
+                strings.push_back ("Rapicorn::Factory::EventHandler");
+              if (itfactory->iscontainer)
+                strings.push_back ("Rapicorn::Factory::Container");
+              strings.push_back ("Rapicorn::Factory::Item");
+            }
+          break;
+        }
+      gadget = FactorySingleton::singleton->lookup_gadget (ancestor);
+    }
+  return strings;
+}
+
 void
 Factory::ItemTypeFactory::register_item_factory (const ItemTypeFactory *itfactory)
 {
@@ -921,8 +951,10 @@ Factory::ItemTypeFactory::initialize_factories ()
   register_item_factory (NULL);
 }
 
-Factory::ItemTypeFactory::ItemTypeFactory (const char *namespaced_ident) :
-  qualified_type (namespaced_ident)
+Factory::ItemTypeFactory::ItemTypeFactory (const char *namespaced_ident,
+                                           bool _isevh, bool _iscontainer, bool) :
+  qualified_type (namespaced_ident),
+  iseventhandler (_isevh), iscontainer (_iscontainer)
 {}
 
 void
