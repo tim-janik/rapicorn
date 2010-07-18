@@ -496,7 +496,7 @@ Logging::vmessage (const char *file, int line, const char *func, const char *dom
       std::transform (lookup.begin(), lookup.end(), lookup.begin(), ::tolower);
       const ssize_t wyes = lstring_find_word (config, lookup);
       const ssize_t w_no = lstring_find_word (config, "no-" + lookup);
-      if (MAX (bool (cany), wyes) < w_no)
+      if (MAX (bool (cany), wyes) <= w_no)
         return;
     }
   else
