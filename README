@@ -54,7 +54,7 @@ Compiling with a different compiler version than the default on your
 system and running all checks Rapicorn offers (they should all succeed)
 can be done with commands like:
 
-  export CC=gcc-3.4 CXX=g++-3.4 CPP=gcc-3.4\ -E CPPCXX=g++-3.4\ -E
+  export CC=gcc-4.2 CXX=g++-4.2 CPP=gcc-4.2\ -E CPPCXX=g++-4.2\ -E
   ./configure
   make all install
   make report # report runs fast tests, slow tests and performance tests

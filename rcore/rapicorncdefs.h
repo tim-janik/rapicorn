@@ -109,20 +109,20 @@ RAPICORN_EXTERN_C_BEGIN();
 
 /* --- attributes --- */
 #if     __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
-#define RAPICORN_PURE                             __attribute__ ((__pure__))
-#define RAPICORN_MALLOC                           __attribute__ ((__malloc__))
-#define RAPICORN_PRINTF(format_idx, arg_idx)      __attribute__ ((__format__ (__printf__, format_idx, arg_idx)))
-#define RAPICORN_SCANF(format_idx, arg_idx)       __attribute__ ((__format__ (__scanf__, format_idx, arg_idx)))
-#define RAPICORN_FORMAT(arg_idx)                  __attribute__ ((__format_arg__ (arg_idx)))
-#define RAPICORN_NORETURN                         __attribute__ ((__noreturn__))
-#define RAPICORN_CONST                            __attribute__ ((__const__))
-#define RAPICORN_UNUSED                           __attribute__ ((__unused__))
-#define RAPICORN_NO_INSTRUMENT                    __attribute__ ((__no_instrument_function__))
-#define RAPICORN_DEPRECATED                       __attribute__ ((__deprecated__))
+#define RAPICORN_PURE                           __attribute__ ((__pure__))
+#define RAPICORN_MALLOC                         __attribute__ ((__malloc__))
+#define RAPICORN_PRINTF(format_idx, arg_idx)    __attribute__ ((__format__ (__printf__, format_idx, arg_idx)))
+#define RAPICORN_SCANF(format_idx, arg_idx)     __attribute__ ((__format__ (__scanf__, format_idx, arg_idx)))
+#define RAPICORN_FORMAT(arg_idx)                __attribute__ ((__format_arg__ (arg_idx)))
+#define RAPICORN_NORETURN                       __attribute__ ((__noreturn__))
+#define RAPICORN_CONST                          __attribute__ ((__const__))
+#define RAPICORN_UNUSED                         __attribute__ ((__unused__))
+#define RAPICORN_NO_INSTRUMENT                  __attribute__ ((__no_instrument_function__))
+#define RAPICORN_DEPRECATED                     __attribute__ ((__deprecated__))
 #define RAPICORN_ALWAYS_INLINE			__attribute__ ((always_inline))
 #define RAPICORN_NEVER_INLINE			__attribute__ ((noinline))
 #define RAPICORN_CONSTRUCTOR			__attribute__ ((constructor,used)) /* gcc-3.3 also needs "used" to emit code */
-#define RAPICORN_MAY_ALIAS                        __attribute__ ((may_alias))
+#define RAPICORN_MAY_ALIAS                      __attribute__ ((may_alias))
 #else   /* !__GNUC__ */
 #define RAPICORN_PURE
 #define RAPICORN_MALLOC
