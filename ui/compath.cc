@@ -21,6 +21,9 @@
 #include <memory>
 #include <string.h>
 
+static Rapicorn::Logging compath ("compath", Rapicorn::Logging::CURTLY);
+#define DEBUG(...)      RAPICORN_DEBUG (compath, __VA_ARGS__)
+
 namespace Rapicorn {
 using std::auto_ptr;
 
@@ -330,10 +333,13 @@ match_tags (const String     &typetag,
           (i == 0 || tag.data()[i - 1] == ':')) // namespace boundary?
         result = true;
     }
-  printerr ("MATCH: %s in (", typetag.c_str());
-  for (StringList::const_iterator it = tags.begin(); it != tags.end(); it++)
-    printerr ("%s%s", it == tags.begin() ? "" : " ", it->c_str());
-  printerr ("): %u\n", result);
+  if (Rapicorn::Logging::debug_enabled())
+    {
+      String stags;
+      for (StringList::const_iterator it = tags.begin(); it != tags.end(); it++)
+        stags += string_printf ("%s%s", it == tags.begin() ? "" : " ", it->c_str());
+      DEBUG ("MATCH: %s in (%s): %u", typetag.c_str(), stags.c_str(), result);
+    }
   return result;
 }
 
@@ -371,8 +377,8 @@ match_predicate (ComponentMatcher &cm,
           default:
             assert_unreached();
           }
-        printerr ("PREDICATE: %s %u %s (%s): %u\n", cmex.attribute().c_str(), cmex.operator_(),
-                  cmex.value().c_str(), pvalue.c_str(), result);
+        DEBUG ("PREDICATE: %s %u %s (%s): %u\n", cmex.attribute().c_str(), cmex.operator_(),
+               cmex.value().c_str(), pvalue.c_str(), result);
         return result;
       }
     default: ;
