@@ -510,6 +510,8 @@ Item::lookup_property (const String &property_name)
       plist_map[&plist] = pmap;
     }
   PropertyMap::iterator it = pmap->find (property_name);
+  if (it == pmap->end())        // try canonicalized
+    it = pmap->find (string_substitute_char (property_name, '-', '_'));
   if (it != pmap->end())
     return it->second;
   else
