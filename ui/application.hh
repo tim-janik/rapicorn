@@ -38,9 +38,11 @@ public:
   virtual Window*     create_window          (const std::string &window_identifier,
                                               const StringList &arguments = StringList(),
                                               const StringList &env_variables = StringList());
-  virtual WindowList  list_windows           ();
   void                add_window             (Window &window);
   bool                remove_window          (Window &window);
+  virtual WindowList  list_windows           ();
+  virtual It3m*       unique_component       (const String &path);
+  virtual ItemSeq     collect_components     (const String &path);
   virtual void        test_counter_set       (int val);
   virtual void        test_counter_add       (int val);
   virtual int         test_counter_get       ();

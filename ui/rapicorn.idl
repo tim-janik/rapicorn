@@ -28,11 +28,18 @@ record Requisition {
   float height;
 };
 
-interface It3m {
+interface It3m;
+
+sequence ItemSeq {
+  It3m  items;
 };
 
-interface Item : It3m {
+interface It3m {
+  It3m          unique_component        (string path) = 0;
+  ItemSeq       collect_components      (string path) = 0;
 };
+
+interface Item : It3m { /* temporarily manually implemented */ };
 
 interface Window : Item {
   bool          viewable        () = 0;
@@ -63,10 +70,12 @@ interface Application {
   Window        create_window   (string         window_identifier,
                                  StringList     arguments = 0,
                                  StringList     env_variables = 0) = 0;
-  WindowList    list_windows    () = 0;
   bool          has_primary     ();
   signal void   missing_primary ();
   void          close           ();
+  WindowList    list_windows            () = 0;
+  It3m          unique_component        (string path) = 0;
+  ItemSeq       collect_components      (string path) = 0;
   /* testing */
   void          test_counter_set        (int val) = 0;
   void          test_counter_add        (int val) = 0;

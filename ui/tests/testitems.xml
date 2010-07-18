@@ -25,9 +25,50 @@
     </Alignment>
   </def:alignment-test>
 
-  <!-- idl-test-item test -->
-  <def:idl-test-item-window inherit="Root">
+  <!-- test-item test -->
+  <def:test-item-window inherit="Root">
     <IdlTestItem />
-  </def:idl-test-item-window>
+  </def:test-item-window>
+
+  <!-- complex-window -->
+  <def:complex-dialog inherit="Root">
+    <Ambience normal-lighting="upper-left">
+      <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
+	<VBox spacing="3" hexpand="1">
+	  <VBox hexpand="1">
+	    <Frame>
+	      <VBox spacing="5">
+		<Label markup-text="Test Buttons:"/>
+		<Button on-click="Item::print('click on first button')">
+		  <Label markup-text="First Button"/>
+		</Button>
+		<HBox hexpand="1" spacing="3">
+		  <Button on-click="Item::print('Normal Button')">
+		    <Label vexpand="0" markup-text="Normal Button" />
+		  </Button>
+		</HBox>
+	      </VBox>
+	    </Frame>
+	    <ScrollArea hspread="1" vspread="1">
+	      <Label id="scroll-text">
+		<prop:markup-text>
+		  <larger><larger><larger><larger>
+			  Some Large Scroll Text
+		  </larger></larger></larger></larger>
+		</prop:markup-text>
+	      </Label>
+	    </ScrollArea>
+	  </VBox>
+	  <Frame>
+	    <Arrow id="special-arrow" arrow-dir="right" />
+	  </Frame>
+	  <HBox spacing="5" homogeneous="0" >
+	    <Button hexpand="1" on-click='Item::print ("ok")' > <Label markup-text="Ok"/> </Button>
+	    <Button hexpand="1" on-click="Window::close()" > <Label markup-text="Close"/> </Button>
+	  </HBox>
+	</VBox>
+      </Alignment>
+    </Ambience>
+  </def:complex-dialog>
 
 </rapicorn-definitions>

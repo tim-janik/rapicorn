@@ -19,6 +19,7 @@
 #include "factory.hh"
 #include "viewport.hh"
 #include "image.hh"
+#include "compath.hh"
 #include <algorithm>
 #include <stdlib.h>
 
@@ -153,6 +154,33 @@ ApplicationImpl::list_windows ()
   for (uint i = 0; i < m_windows.size(); i++)
     wl.push_back (m_windows[i]);
   return wl;
+}
+
+It3m*
+ApplicationImpl::unique_component (const String &path)
+{
+  ItemSeq items = collect_components (path);
+  printerr ("FINAL-RESULT: %d items for: %s\n", items.size(), path.c_str());
+  if (items.size() == 1)
+    return &*items[0];
+  return NULL;
+}
+
+ItemSeq
+ApplicationImpl::collect_components (const String &path)
+{
+  ComponentMatcher *cmatcher = ComponentMatcher::parse_path (path);
+  ItemSeq result;
+  if (cmatcher) // valid path
+    {
+      for (uint i = 0; i < m_windows.size(); i++)
+        {
+          vector<Item*> more = collect_items (*m_windows[i], *cmatcher);
+          result.insert (result.end(), more.begin(), more.end());
+        }
+      delete cmatcher;
+    }
+  return result;
 }
 
 void

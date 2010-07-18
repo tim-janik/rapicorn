@@ -110,7 +110,7 @@ static void
 idl_test_item_test ()
 {
   TSTART ("idl-test-item");
-  Window &window = *app.create_window ("idl-test-item-window");
+  Window &window = *app.create_window ("test-item-window");
   TOK();
   Root &root = window.root();
   IdlTestItem *titemp = root.interface<IdlTestItem*>();
@@ -143,6 +143,51 @@ idl_test_item_test ()
   TDONE();
 }
 
+static bool run_dialogs = false;
+
+static void
+complex_dialog_test ()
+{
+  TSTART ("complex-dialog-test");
+  It3m *item = app.unique_component ("/#"); // invalid path
+  TASSERT (item == NULL);
+  item = app.unique_component ("/#complex-dialog"); // non-existing window
+  TASSERT (item == NULL);
+  Window &window = *app.create_window ("complex-dialog");
+  TOK();
+  if (run_dialogs)
+    {
+      window.show();
+      app.execute_loops();
+    }
+  TOK();
+  item = app.unique_component ("/#complex-dialog");
+  TASSERT (item != NULL);
+  item = app.unique_component ("/Item#complex-dialog");
+  TASSERT (item != NULL);
+  item = app.unique_component ("/#complex-dialog/VBox/ScrollArea/Item");
+  TASSERT (item != NULL);
+  item = app.unique_component ("/#complex-dialog/VBox/Item");
+  TASSERT (item == NULL); // not unique
+  item = app.unique_component ("/#complex-dialog/Alignment");
+  TASSERT (item != NULL);
+  item = app.unique_component (" / #complex-dialog / Alignment / VBox ");
+  TASSERT (item != NULL);
+  item = app.unique_component ("/#complex-dialog/Alignment/VBox/#scroll-text");
+  TASSERT (item != NULL);
+  item = app.unique_component ("/#complex-dialog/Frame");
+  TASSERT (item == NULL); // not unique
+  item = app.unique_component ("/#complex-dialog/Frame[/Arrow#special-arrow]");
+  TASSERT (item != NULL);
+  item = app.unique_component ("/#complex-dialog/Button / Label");
+  TASSERT (item == NULL); // not unique
+  item = app.unique_component ("/#complex-dialog/Button / Label [ @markup-text =~ '\\bOk' ]");
+  TASSERT (item != NULL);
+  item = app.unique_component ("/#"); // invalid path
+  TASSERT (item == NULL);
+  TDONE();
+}
+
 extern "C" int
 main (int   argc,
       char *argv[])
@@ -152,6 +197,8 @@ main (int   argc,
   for (int i = 0; i < argc; i++)
     if (String (argv[i]) == "--non-fatal")
       test_item_fatal_asserts = false;
+    else if (String (argv[i]) == "--run")
+      run_dialogs = true;
 
   /* initialize rapicorn */
   app.init_with_x11 (&argc, &argv, "TestItemsTest");
@@ -163,6 +210,7 @@ main (int   argc,
   test_cxx_gui();
   test_test_item();
   idl_test_item_test();
+  complex_dialog_test();
 
   return 0;
 }

@@ -10,7 +10,7 @@ DEFS		 = -DRAPICORN_INTERNALS $(RAPICORN_GUI_CFLAGS) -DRAPICORN_LOG_DOMAIN=\"RAP
 rapicorn_public_headers = $(strip 	\
 	utilities.hh	events.hh	application.hh	cmdlib.hh	\
 	primitives.hh	region.hh	loop.hh		viewport.hh	heritage.hh		\
-	properties.hh	commands.hh	rope.hh		painter.hh	\
+	properties.hh	commands.hh	rope.hh		painter.hh	compath.hh		\
 	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
 	adjustment.hh	image.hh	paintitems.hh	slider.hh	paintcontainers.hh	\
 	buttons.hh	factory.hh	evaluator.hh	scrollitems.hh	layoutcontainers.hh	\
@@ -21,7 +21,7 @@ rapicorn_public_headers = $(strip 	\
 rapicorn_cc_sources = $(sort 		\
 	utilities.cc	events.cc	application.cc	cmdlib.cc	\
 	primitives.cc	region.cc	loop.cc		viewport.cc	heritage.cc		\
-	properties.cc	commands.cc	rope.cc		painter.cc	\
+	properties.cc	commands.cc	rope.cc		painter.cc	compath.cc		\
 	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\
 	adjustment.cc	image.cc	paintitems.cc	slider.cc	paintcontainers.cc	\
 	buttons.cc	factory.cc	evaluator.cc	scrollitems.cc	layoutcontainers.cc	\

@@ -315,6 +315,8 @@ private:
   void               repack          (const PackInfo &orig, const PackInfo &pnew);
   PackInfo&          pack_info       (bool create);
 public:
+  virtual It3m*      unique_component   (const String &path);
+  virtual ItemSeq    collect_components (const String &path);
   template<typename Type>
   typename
   InterfaceType<Type>::Result parent_interface  (const String &ident = String(), const std::nothrow_t &nt = dothrow) const

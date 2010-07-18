@@ -17,6 +17,7 @@
 #include "item.hh"
 #include "itemimpl.hh"
 #include "container.hh"
+#include "compath.hh"
 #include "adjustment.hh"
 #include "root.hh"
 #include "cmdlib.hh"
@@ -294,6 +295,29 @@ Item::match_toplevel_interface (InterfaceMatch &imatch) const
   if (imatch.match (const_cast<Item*> (this), name()))
     return true;
   return false;
+}
+
+It3m*
+Item::unique_component (const String &path)
+{
+  ItemSeq items = collect_components (path);
+  if (items.size() == 1)
+    return &*items[0];
+  return NULL;
+}
+
+ItemSeq
+Item::collect_components (const String &path)
+{
+  ComponentMatcher *cmatcher = ComponentMatcher::parse_path (path);
+  ItemSeq result;
+  if (cmatcher) // valid path
+    {
+      vector<Item*> more = collect_items (*this, *cmatcher);
+      result.insert (result.end(), more.begin(), more.end());
+      delete cmatcher;
+    }
+  return result;
 }
 
 uint
