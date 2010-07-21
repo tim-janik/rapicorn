@@ -497,6 +497,7 @@ ui/Makefile
 ui/tests/Makefile
 tools/Makefile
 tests/Makefile
+pytests/Makefile
 examples/Makefile
 docs/Makefile
 docs/imports/Makefile
