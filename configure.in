@@ -88,6 +88,7 @@ else
   ADDON_CFLAGS="-DG_DISABLE_CAST_CHECKS"
 fi fi
 # setup CFLAGS
+AC_PROG_CC
 if test -z "$CFLAGS"; then
   CFLAGS="$ADDON_CFLAGS"
 else
@@ -97,6 +98,12 @@ if test -z "$CXXFLAGS"; then
   CXXFLAGS="$ADDON_CFLAGS"
 else
   CXXFLAGS="$CXXFLAGS $ADDON_CFLAGS"
+fi
+# setup LDFLAGS
+AC_PROG_CXX
+if ${CC} -dumpspecs | grep -q -- '--hash-style=\(both\|gnu\)' && \
+   ${CC} -dumpspecs | grep -q -- '--as-needed' ; then
+  LDFLAGS="$LDFLAGS -Wl,--hash-style=both -Wl,--as-needed -Wl,-O1"
 fi
 
 dnl # RAPICORN_SUBST_COMPUTED_SYSVAL(IDENTIFIER, INCLUDES) - defines & AC_SUBST()s RAPICORN_SYSVAL_$1
