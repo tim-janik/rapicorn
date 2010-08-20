@@ -1,30 +1,34 @@
 The Rapicorn Toolkit
 ====================
 
-Rapicorn is an experimental UI toolkit.
-It aims at bringing UI-design, UI-notation and UI-programming as close
-together as possible. To accomplish this, it provides conscise ways for
-UI notation, usable also throughout design phases.
+We believe most things in a toolkit implementation will benefit from
+proper application of modern technologies (e.g. pthreads, XCB, Cairo,
+compositing, IDL, XML notation, path evaluation, DSLs, unit tests, SVG).
+Based on this, Rapicorn is developed and aims to significantly improve
+developer efficiency and user experience.
+
+Rapicorn brings UI-design, UI-notation and UI-programming as close
+together as possible. To accomplish this, it provides conscise ways
+for UI notation, usable also throughout design phases.
 Simple but powerful programming mechanisms are provided to automate
 binding of programming and GUI logic and to minimize manual work.
 
 Cairo is planned to be used for rendering tasks, and Pango is currently
 used for text rendering. A more extensive overview is provided online:
-  http://testbit.eu/wiki/Rapicorn-Introduction
+  http://rapicorn.org/introduction.html
 
 A programming tutorial can be found under:
   ${prefix}/doc/rapicorn<VERSION>/tutorial/
-  http://testbit.eu/book/Rapicorn-Tutorial
-
+  http://rapicorn.org/tutorial.html
 
 Existing Features
 -----------------
 
 Rapicorn supports an item hierarchy with cross-references, type safe
 per-object signal emissions, a Gtk+ based blitting backend, a Pango
-based text rendering backend, Event processing and focus handling.
+based text rendering backend, event processing and focus handling.
 It comes with a set of core widgets such as buttons, sliders, a scroll
-area, table like layout containers and widgets to paint foreground
+area, table based layout containers and widgets to paint foreground
 or background elements.
 It provides an XML markup parser that allows full GUI specifications
 to be written in XML, more of which is detailed here:
@@ -61,16 +65,16 @@ can be done with commands like:
 
 Web pages and further resources can be found at:
 
-	http://rapicorn.org
+  http://rapicorn.org
 
 A mailing list for Rapicorn development and feedback:
 
-	http://rapicorn.org/pipermail/rapicorn-list/
-	http://rapicorn.org/mailman/listinfo/rapicorn-list
+  http://rapicorn.org/pipermail/rapicorn-list/
+  http://rapicorn.org/mailman/listinfo/rapicorn-list
 
 Roadmap and planning of steps ahead:
 
-	http://testbit.eu/wiki/Rapicorn-Roadmap-and-Steps-Ahead
+  http://rapicorn.org/roadmap.html
 
 
 Installation
