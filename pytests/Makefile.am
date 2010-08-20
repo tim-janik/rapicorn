@@ -5,7 +5,7 @@ INCLUDES	+= -I$(top_srcdir)
 DEFS		+= -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"'
 
 # variables
-noinst_PROGRAMS  = $(TEST_PROGS)
+noinst_PROGRAMS  = $(TEST_PYPROGS)
 noinst_DATA      =
 XML_FILES        =
 EXTRA_DIST      += $(XML_FILES)
@@ -31,14 +31,16 @@ python-call-info:
 check-TEST_PYPROGS:
 	@$(XVFB_START) && \
 	  for tst in $(TEST_PYPROGS) ; do \
-	    $(RPYTHON) ./$$tst && echo "PASS: $$tst" || exit 1 ;   \
+	    [ -f ./"$$tst" ] && rt=./"$$tst" || rt="$(srcdir)/$$tst" ;   \
+	    $(RPYTHON) $$rt && echo "PASS: $$tst" || exit 1 ; 		 \
 	  done
-	@MESSAGETEXT="All $(words $(TEST_PROGS)) tests passed"  \
-	&& [ 0 -lt $(words $(TEST_PROGS)) ]                             \
-	&& echo $$MESSAGETEXT | sed 's/./=/g' && echo $$MESSAGETEXT     \
+	@MESSAGETEXT="All $(words $(TEST_PYPROGS)) tests passed"	 \
+	&& [ 0 -lt $(words $(TEST_PYPROGS)) ]                            \
+	&& echo $$MESSAGETEXT | sed 's/./=/g' && echo $$MESSAGETEXT      \
 	&& echo $$MESSAGETEXT | sed 's/./=/g' || true
-check: check-TEST_PYPROGS
-
+installcheck-local: check-TEST_PYPROGS
+check-local:
+	@echo "*** Run test with: $(MAKE) installcheck"
 
 # === XML Linting ===
 xmllint-check:
@@ -49,4 +51,3 @@ stamp-autochecks: $(XML_FILES)
 	@touch $@
 noinst_DATA += stamp-autochecks
 CLEANFILES  += stamp-autochecks
-
