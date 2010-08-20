@@ -5,7 +5,7 @@ INCLUDES	+= -I$(top_srcdir)
 DEFS		+= -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"'
 
 # variables
-noinst_PROGRAMS  = $(TEST_PYPROGS)
+noinst_PROGRAMS  = # $(TEST_PYPROGS) # auto-cleaned
 noinst_DATA      =
 XML_FILES        =
 EXTRA_DIST      += $(XML_FILES)
@@ -39,12 +39,10 @@ check-TEST_PYPROGS:
 	&& echo $$MESSAGETEXT | sed 's/./=/g' && echo $$MESSAGETEXT      \
 	&& echo $$MESSAGETEXT | sed 's/./=/g' || true
 installcheck-local: check-TEST_PYPROGS
-check-local:
-	@echo "*** Run test with: $(MAKE) installcheck"
 
 # === XML Linting ===
 xmllint-check:
-	cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES)
+	cd $(srcdir) && [ -z "$(XML_FILES)" ] || $(XMLLINT) --noout $(XML_FILES)
 .PHONY: xmllint-check
 stamp-autochecks: $(XML_FILES)
 	@$(MAKE) xmllint-check
