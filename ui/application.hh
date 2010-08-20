@@ -30,9 +30,10 @@ public:
   virtual String      auto_path              (const String  &file_name,
                                               const String  &binary_path,
                                               bool           search_vpath = true);
-  virtual void        auto_load              (const std::string &i18n_domain,
+  virtual void        auto_load              (const std::string &defs_domain,
                                               const std::string &file_name,
-                                              const std::string &binary_path);
+                                              const std::string &binary_path,
+                                              const std::string &i18n_domain = "");
   virtual void        load_string            (const std::string &xml_string,
                                               const std::string &i18n_domain = "");
   virtual Window*     create_window          (const std::string &window_identifier,

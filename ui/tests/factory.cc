@@ -53,8 +53,8 @@ main (int   argc,
 
   /* find and load GUI definitions relative to argv[0] */
   String factory_xml = Rapicorn::Path::join (SRCDIR, "factory.xml");
-  app.auto_load ("DummyTranslation",   // i18n_domain,
-                 factory_xml,          // GUI file name
+  app.auto_load ("RapicornTest",        // namespace domain,
+                 factory_xml,           // GUI file name
                  argv[0]);
   Root *root;
   Item *item;

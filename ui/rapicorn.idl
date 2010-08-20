@@ -69,9 +69,10 @@ interface Application {
   string        auto_path       (string         file_name,
                                  string         binary_path,
                                  bool           search_vpath = true) = 0;
-  void          auto_load       (string         i18n_domain,
+  void          auto_load       (string         defs_domain,
                                  string         file_name,
-                                 string         binary_path) = 0;
+                                 string         binary_path,
+                                 string         i18n_domain = "") = 0;
   void          load_string     (string         xml_string,
                                  string         i18n_domain = "") = 0;
   /* windows */

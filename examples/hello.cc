@@ -43,8 +43,8 @@ main (int   argc,
   app.init_with_x11 (&argc, &argv, "HelloWorld");
 
   /* find and load GUI definitions relative to argv[0] */
-  app.auto_load ("DummyTranslation",   // i18n_domain,
-                 "hello.xml",          // GUI file name
+  app.auto_load ("RapicornTest",        // namespace domain
+                 "hello.xml",           // GUI file name
                  argv[0]);
 
   /* create main window */
