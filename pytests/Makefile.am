@@ -5,8 +5,9 @@ INCLUDES	+= -I$(top_srcdir)
 DEFS		+= -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"'
 
 # variables
-noinst_PROGRAMS  = # $(TEST_PYPROGS) # auto-cleaned
+noinst_PROGRAMS  = # auto-cleaned
 noinst_DATA      =
+EXTRA_DIST       = $(TEST_PYPROGS)
 XML_FILES        =
 EXTRA_DIST      += $(XML_FILES)
 RPYTHON          = PYTHONPATH="$$PYTHONPATH:$(pythondir)" $(PYTHON) # -c "import @RAPICORN_NAMESPACE_NAME@"
