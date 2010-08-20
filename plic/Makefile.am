@@ -63,7 +63,7 @@ installcheck-local:
 install-exec-hook:
 	$(_@) cd $(DESTDIR)$(bindir)			\
 	  && test -x ${BINPLIC}			\
-	  || $(LN_S) ${PLICV} ${BINPLIC}
+	  || (rm -f ${BINPLIC} && $(LN_S) ${PLICV} ${BINPLIC} )
 uninstall-hook:	# runs after ${PLICV} was uninstalled
 	$(_@) cd $(DESTDIR)$(bindir)			\
 	  && test ! -L ${BINPLIC} -o -x ${BINPLIC}	\
