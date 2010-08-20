@@ -420,7 +420,7 @@ Logging::setup ()
     {
       String keys = "  log-all:verbose:brief:debug:no-debug:devel:stable\n"
                     "  help:diag:no-diag:stderr:no-stderr:syslog:no-syslog\n"
-                    "  fatal-warnings:no-fatal-warnings\n";
+                    "  fatal-warnings:no-fatal-warnings\n"
                     "  debug-*:no-debug-*: (where * is a custom debug prefix)";
       vector<String> dk = Logging::debug_keys();
       for (uint i = 0; i < dk.size(); i++)
