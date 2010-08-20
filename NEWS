@@ -34,7 +34,7 @@ Rapicorn NEXT:
 * Hand optimized threading primitives and main loop handling.
 * Applied fixes for AMD64 compilation. [Stefan Westerfeld]
 * Updates to compile with GCC-4.4.
-* Link with -Bsymbolic-functions to optimize ELF relocations.
+* Linker optimizations to improve ELF relocations.
 * Loads of other cleanups and bug fixes.
 
 Rapicorn 8.4.0: - Thu Apr 24 23:19:39 CEST 2008
