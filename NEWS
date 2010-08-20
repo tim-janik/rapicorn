@@ -1,12 +1,15 @@
 Rapicorn NEXT:
 
 * Introduced Cairo dependency.
-* Updates to compile with GCC-4.4.
+* Introduced C++ TR1 dependency (for shared_ptr, etc).
+* Added $RAPICORN environment variable to control logging and more.
 * Added PLIC, a pluggable IDL compiler.
-* Renamed string_to_cquote() to string_to_cescape().
-* Made string_to_cquote() add real quotes.
+* Added Remote Object Programming Extension.
+* Added window and widget addressing functionality.
+* Allow signal disconnections by Id.
 * Added simple expression parser to evaluate property value assignments.
 * Added sample expression evaluator as: ui/tests/sinfextest --shell
+* Added XML UI file error reporting.
 * Changed packing properties into regular Item properties.
 * Merged h/v-scale and -align into Item pack properties.
 * Replaced hfill/vfill in Table by h/v-scale and -align properties.
@@ -15,14 +18,24 @@ Rapicorn NEXT:
 * Added testing framework with macros and reference files.
 * Added '-x' to rapidrun to auto-exit.
 * Added '--list' to rapidrun to list gadgets from a GUI file.
-* Provide PCRE parser API in rapicorn-core.
+* Provide regular expression parser API in rapicorn-core.
 * Introduced a basic typed value system and model APIs.
 * Started list area/widget development.
-* Imported XML UI file error reporting.
 * Optimized resizing performance.
-* Implemented horizontal and vertical size groups.
 * Cosmetic fixups in colors and gradients.
-* Loads of cleanups and bug fixes.
+* Implemented horizontal and vertical size groups.
+* Renamed string_to_cescape() and fixed string_to_cquote() quoting.
+* Generate internal C++ bindings (to IDL specifications).
+* Provide a main loop implementation in Python.
+* Generate external Python bindings.
+* Majorly extended test suite.
+* Optimized remote invocations and reference counting.
+* Started migrating interfaces from headers to IDL.
+* Hand optimized threading primitives and main loop handling.
+* Applied fixes for AMD64 compilation. [Stefan Westerfeld]
+* Updates to compile with GCC-4.4.
+* Link with -Bsymbolic-functions to optimize ELF relocations.
+* Loads of other cleanups and bug fixes.
 
 Rapicorn 8.4.0: - Thu Apr 24 23:19:39 CEST 2008
 
