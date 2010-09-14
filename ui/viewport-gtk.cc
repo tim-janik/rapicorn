@@ -21,11 +21,12 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
+#include <cairo/cairo-xlib.h>
 
 #include <cstring>
 
 static Rapicorn::Logging gtk_events ("gtk-events", Rapicorn::Logging::CURTLY);
-#define DEBUG(...)      RAPICORN_DEBUG (gtk_events, __VA_ARGS__)
+#define DEBUG(...)       RAPICORN_DEBUG (gtk_events, __VA_ARGS__)
 
 namespace { // Anon
 using namespace Rapicorn;
@@ -350,6 +351,51 @@ ViewportGtk::blit_plane (Plane *plane,
       else
         priority = GTK_PRIORITY_REDRAW; /* allow event processing to interrupt blitting on remote displays */
       if (GTK_WIDGET_DRAWABLE (m_widget))
+        {
+          GdkVisual *gvisual = gdk_drawable_get_visual (m_widget->window);
+          int gwidth, gheight;
+          gdk_drawable_get_size (m_widget->window, &gwidth, &gheight);
+          cairo_surface_t *xsurface = cairo_xlib_surface_create (GDK_WINDOW_XDISPLAY (m_widget->window),
+                                                                 GDK_WINDOW_XID (m_widget->window),
+                                                                 GDK_VISUAL_XVISUAL (gvisual),
+                                                                 gwidth, gheight);
+          return_if_fail (xsurface);
+          return_if_fail (cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
+          cairo_xlib_surface_set_size (xsurface, gwidth, gheight);
+          return_if_fail (cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
+
+          cairo_t *xcr = cairo_create (xsurface);
+          return_if_fail (xcr);
+          return_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
+          cairo_surface_t *isurface =
+            cairo_image_surface_create_for_data ((unsigned char*)
+                                                 plane->poke_span (plane->xstart(),
+                                                                   plane->ystart(), 1),
+                                                 CAIRO_FORMAT_RGB24,
+                                                 plane->width(),
+                                                 plane->height(),
+                                                 plane->pixstride());
+          return_if_fail (isurface);
+          return_if_fail (CAIRO_STATUS_SUCCESS == cairo_surface_status (isurface));
+          cairo_scale (xcr, 1, -1);
+          cairo_translate (xcr, 0, -gheight);
+          cairo_set_source_surface (xcr, isurface, plane->xstart(), plane->ystart());
+          cairo_paint (xcr);
+          assert (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
+          gdk_flush();
+          cairo_surface_destroy (isurface);
+          if (xcr)
+            {
+              cairo_destroy (xcr);
+              xcr = NULL;
+            }
+          if (xsurface)
+            {
+              cairo_surface_destroy (xsurface);
+              xsurface = NULL;
+            }
+        }
+      if (0 && GTK_WIDGET_DRAWABLE (m_widget))
         {
           /* convert to pixbuf */
           GdkPixbuf *pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE /* alpha */, 8 /* bits */, plane->width(), plane->height());
