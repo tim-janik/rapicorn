@@ -543,6 +543,8 @@ Logging::vmessage (const char *file, int line, const char *func, const char *dom
         m += p + l + d + f + sk + " " + u + e;
       else if (debugging)
         m += l + d + sk + " " + u + e;
+      else if (file || func) // assertion or check failed
+        m += l + d + f + sk + " " + u + e;
       else
         m += p + sk + " " + u + e;
       if (m[m.size() - 1] != '\n') m += "\n"; // newline termination
