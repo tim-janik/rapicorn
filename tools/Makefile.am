@@ -1,7 +1,7 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES	+= -I$(top_srcdir)
+INCLUDES	+= -I$(top_srcdir) $(RAPICORN_GUI_CFLAGS)
 DEFS		+=
 
 bin_PROGRAMS	 = $(BIN_PROGS)

@@ -1,7 +1,7 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES	+= -I$(top_srcdir)
+INCLUDES	+= -I$(top_srcdir) $(RAPICORN_GUI_CFLAGS)
 DEFS		+= -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"'
 
 noinst_PROGRAMS  = $(EXAMPLES)

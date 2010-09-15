@@ -3,7 +3,8 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = . # tests
 
-INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_ROPE_CFLAGS) $(PYTHON_CPPFLAGS)
+INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. \
+	    $(RAPICORN_ROPE_CFLAGS) $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
 DEFS      = -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RAPICORN-ROPE\" # "
 PLICINT   = $(top_builddir)/plic/plic-intern
 RAPICORNIDL  = $(srcdir)/../ui/rapicorn.idl
