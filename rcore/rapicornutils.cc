@@ -1539,6 +1539,17 @@ text_convert (const String &to_charset,
 
 }
 
+/* --- timestamp handling --- */
+uint64 // system clock in usecs
+timestamp_now ()
+{
+  struct timeval now = { 0, 0 };
+  gettimeofday (&now, NULL);
+  uint64 stamp = now.tv_sec; // promotes to 64bit
+  stamp = 1000000 * stamp + now.tv_usec;
+  return stamp;
+}
+
 /* --- file/path functionality --- */
 namespace Path {
 

@@ -311,6 +311,9 @@ bool    text_convert    (const String &to_charset,
                          const String &fallback_charset = "ISO-8859-15",
                          const String &output_mark = "");
 
+/* --- timestamp handling --- */
+uint64  timestamp_now   ();
+
 /* --- file/path functionality --- */
 namespace Path {
 String  dirname         (const String &path);
