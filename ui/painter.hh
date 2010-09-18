@@ -21,6 +21,18 @@
 
 namespace Rapicorn {
 
+class CPainter {
+protected:
+  cairo_t *cr;
+public:
+  explicit      CPainter                (cairo_t *context);
+  virtual      ~CPainter                ();
+  void          draw_border             (int x, int y, int width, int height, Color border, const vector<double> &dashes = vector<double>(), double dash_offset = 0.5);
+  void          draw_shadow             (int x, int y, int width, int height,
+                                         Color outer_upper_left, Color inner_upper_left,
+                                         Color inner_lower_right, Color outer_lower_right);
+};
+
 class Painter {
   inline void   draw_trapezoid_run      (double by, double bx1, double bx2, double ty, double tx1, double tx2, Color fg_premul);
   inline void   draw_trapezoid_row      (double by, double bx1, double bx2, double ty, double tx1, double tx2, Color fg_premul);
@@ -28,7 +40,7 @@ protected:
   Plane &m_plane;
 public:
   explicit      Painter                 (Plane &plane);
-  virtual       ~Painter                ();
+  virtual      ~Painter                 ();
   int           xstart                  () const { return m_plane.xstart(); }
   int           ystart                  () const { return m_plane.ystart(); }
   int           width                   () const { return m_plane.width(); }

@@ -80,6 +80,72 @@ struct Dasher {
   }
 };
 
+/* --- CPainter --- */
+CPainter::CPainter (cairo_t *_context) :
+  cr (_context)
+{}
+
+CPainter::~CPainter ()
+{}
+
+void
+CPainter::draw_border (int x, int y, int width, int height, Color border, const vector<double> &dashes, double dash_offset)
+{
+  const double line_width = 1.0, l2 = line_width / 2.;
+  cairo_set_line_width (cr, line_width);
+  if (width && height)
+    {
+      Rect r (x + l2, y + l2, width - 1, height - 1);
+      cairo_set_source_rgba (cr, border.red1(), border.green1(), border.blue1(), border.alpha1());
+      cairo_rectangle (cr, r.x, r.y, r.width, r.height);
+      cairo_set_dash (cr, dashes.data(), dashes.size(), dash_offset);
+      cairo_stroke (cr);
+    }
+}
+
+void
+CPainter::draw_shadow (int x, int y, int width, int height,
+                       Color outer_upper_left, Color inner_upper_left,
+                       Color inner_lower_right, Color outer_lower_right)
+{
+  const double line_width = 1.0, l2 = line_width / 2.;
+  cairo_set_line_width (cr, line_width);
+  // draw outer
+  if (width >= 1 && height >= 1)
+    {
+      Rect r (x + l2, y + l2, width - 1, height - 1);
+      Point g1 = r.lr_tangent(), g2 = r.lr();
+      cairo_pattern_t *gradient = cairo_pattern_create_linear (g1.x, g1.y, g2.x, g2.y);
+      cairo_pattern_add_color_stop_rgba (gradient, 0,
+                                         outer_upper_left.red1(), outer_upper_left.green1(),
+                                         outer_upper_left.blue1(), outer_upper_left.alpha1());
+      cairo_pattern_add_color_stop_rgba (gradient, 0, // sharp color edge at 0
+                                         outer_lower_right.red1(), outer_lower_right.green1(),
+                                         outer_lower_right.blue1(), outer_lower_right.alpha1());
+      cairo_set_source (cr, gradient);
+      cairo_pattern_destroy (gradient);
+      cairo_rectangle (cr, r.x, r.y, r.width, r.height);
+      cairo_stroke (cr);
+    }
+  // draw inner
+  if (width >= 3 && height >= 3)
+    {
+      Rect r (x + 1 + l2, y + 1 + l2, width - 3, height - 3);
+      Point g1 = r.lr_tangent(), g2 = r.lr();
+      cairo_pattern_t *gradient = cairo_pattern_create_linear (g1.x, g1.y, g2.x, g2.y);
+      cairo_pattern_add_color_stop_rgba (gradient, 0,
+                                         inner_upper_left.red1(), inner_upper_left.green1(),
+                                         inner_upper_left.blue1(), inner_upper_left.alpha1());
+      cairo_pattern_add_color_stop_rgba (gradient, 0, // sharp color edge at 0
+                                         inner_lower_right.red1(), inner_lower_right.green1(),
+                                         inner_lower_right.blue1(), inner_lower_right.alpha1());
+      cairo_set_source (cr, gradient);
+      cairo_pattern_destroy (gradient);
+      cairo_rectangle (cr, r.x, r.y, r.width, r.height);
+      cairo_stroke (cr);
+    }
+}
+
 /* --- Painter --- */
 Painter::Painter (Plane &plane) :
   m_plane (plane)

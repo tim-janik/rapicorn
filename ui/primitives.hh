@@ -709,7 +709,7 @@ class Plane : public virtual Pixbuf, protected NonCopyable {
 public:
   explicit      Plane      (int x, int y, uint width, uint height, Color c = 0x00000000);
   explicit      Plane      (const Initializer &initializer);
-  virtual       ~Plane     ();
+  virtual      ~Plane      ();
   int           pixstride  () const { return m_rowstride * 4; }
   Rect          rect       () const { return Rect (Point (m_x, m_y), width(), height()); }
   Point         origin     () const { return Point (m_x, m_y); }
@@ -789,17 +789,18 @@ class Display : protected NonCopyable {
   std::list<Layer> layer_stack;
   std::list<Rect>  clip_stack;
 public:
-  explicit      Display();
-  virtual       ~Display();
-  void          push_clip_rect  (int x, int y, uint width, uint height) { push_clip_rect (Rect (Point (x, y), width, height)); }
-  void          push_clip_rect  (const Rect &rect);
-  Rect          current_rect    ();
-  Plane&        create_plane    (Color       c = 0x00000000,
-                                 CombineType ctype = COMBINE_NORMAL,
-                                 double      alpha = 1.0); /* 0..1 */
-  bool          empty           () const;
-  void          pop_clip_rect   ();
-  void          render_combined (Plane &plane);
+  explicit         Display              ();
+  virtual         ~Display              ();
+  void             push_clip_rect       (int x, int y, uint width, uint height) { push_clip_rect (Rect (Point (x, y), width, height)); }
+  void             push_clip_rect       (const Rect &rect);
+  Rect             current_rect         ();
+  Plane&           create_plane         (Color       c = 0x00000000,
+                                         CombineType ctype = COMBINE_NORMAL,
+                                         double      alpha = 1.0); /* 0..1 */
+  cairo_t*         create_cairo         ();
+  bool             empty                () const;
+  void             pop_clip_rect        ();
+  void             render_combined      (Plane &plane);
 };
 
 /* --- implementations --- */

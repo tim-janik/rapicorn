@@ -828,6 +828,26 @@ Display::create_plane (Color       c,
   return *l.plane;
 }
 
+cairo_t*
+Display::create_cairo ()
+{
+  Plane &plane = create_plane();
+  cairo_surface_t *isurface =
+    cairo_image_surface_create_for_data ((unsigned char*)
+                                         plane.poke_span (plane.xstart(), plane.ystart(), 1),
+                                         CAIRO_FORMAT_ARGB32,
+                                         plane.width(),
+                                         plane.height(),
+                                         plane.pixstride());
+  return_val_if_fail (isurface != NULL, NULL);
+  return_val_if_fail (CAIRO_STATUS_SUCCESS == cairo_surface_status (isurface), NULL);
+  cairo_t *cr = ::cairo_create (isurface);
+  cairo_surface_destroy (isurface);
+  return_val_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (cr), NULL);
+  cairo_translate (cr, -plane.xstart(), -plane.ystart());
+  return cr;
+}
+
 void
 Display::render_combined (Plane &plane)
 {

@@ -395,14 +395,15 @@ public:
         dashes.push_back (1);
         dashes.push_back (4);
 #endif
-        Plane &plane = display.create_plane();
-        Painter painter (plane);
+        cairo_t *cr = display.create_cairo ();
+        CPainter painter (cr);
         if (outer_upper_left || inner_upper_left || inner_lower_right || outer_lower_right)
           painter.draw_shadow (x, y, width, height, outer_upper_left, inner_upper_left, inner_lower_right, outer_lower_right);
         if (border1)
           painter.draw_border (x, y, width, height, border1, dashes);
         if (border2)
           painter.draw_border (x + 1, y + 1, width - 2, height - 2, border2, dashes);
+        cairo_destroy (cr);
       }
     SingleContainerImpl::render (display);
   }
