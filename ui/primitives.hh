@@ -72,9 +72,23 @@ public:
   inline double
   dist (double px, double py) const
   {
-    double dx = px - x;
-    double dy = py - y;
-    return sqrt (dx * dx + dy * dy);
+    // avoid destructive underflow or overflow in (dx^2 + dy^2) ^ .5
+    double dx = fabs (px - x);
+    double dy = fabs (py - y);
+    if (dx == 0.0)
+      return dy;
+    else if (dy == 0.0)
+      return dx;
+    else if (dx > dy)
+      {
+        const double r = dy / dx;
+        return dx * sqrt (1.0 + r * r);
+      }
+    else // dy < dx
+      {
+        const double r = dx / dy;
+        return dy * sqrt (1.0 + r * r);
+      }
   }
   inline double dist2 (const Point &p = Point (0, 0)) const { return dist2 (p.x, p.y); }
   inline double dist  (const Point &p = Point (0, 0)) const { return dist (p.x, p.y); }
