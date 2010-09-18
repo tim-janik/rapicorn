@@ -22,11 +22,11 @@ namespace Rapicorn {
 
 /* auxillary structure to count dash state for stippled outlines */
 struct Dasher {
-  const vector<int> &dashes;
+  const vector<double> &dashes;
   int total;
   uint index, counter;
-  Dasher (const vector<int> &d,
-          int                offset) :
+  Dasher (const vector<double> &d,
+          int                   offset) :
     dashes (d), total (0), index (0), counter (0)
   {
     for (uint i = 0; i < dashes.size(); i++)
@@ -89,7 +89,7 @@ Painter::~Painter ()
 {}
 
 void
-Painter::draw_hline (int x0, int x1, int y, Color c, const vector<int> &dashes, int dash_offset)
+Painter::draw_hline (int x0, int x1, int y, Color c, const vector<double> &dashes, int dash_offset)
 {
   Dasher dd (dashes, dash_offset);
   int xmin = MAX (MIN (x0, x1), xstart());
@@ -117,7 +117,7 @@ Painter::draw_hline (int x0, int x1, int y, Color c, const vector<int> &dashes, 
 }
 
 void
-Painter::draw_vline (int x, int y0, int y1, Color c, const vector<int> &dashes, int dash_offset)
+Painter::draw_vline (int x, int y0, int y1, Color c, const vector<double> &dashes, int dash_offset)
 {
   Dasher dd (dashes, dash_offset);
   int ymin = MAX (MIN (y0, y1), ystart());
@@ -176,7 +176,7 @@ Painter::draw_shadow (int x, int y, int width, int height,
 }
 
 void
-Painter::draw_border (int x, int y, int width, int height, Color border, const vector<int> &dashes, int dash_offset)
+Painter::draw_border (int x, int y, int width, int height, Color border, const vector<double> &dashes, int dash_offset)
 {
   if (width && height)
     {

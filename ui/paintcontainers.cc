@@ -379,7 +379,7 @@ public:
           case FRAME_BACKGROUND: /* space available, but frame is invisible */
           default: ;
           }
-        vector<int> dashes;
+        vector<double> dashes;
 #if 1
         dashes.push_back (3);
         dashes.push_back (2);

@@ -37,12 +37,12 @@ public:
   int           ybound                  () const { return m_plane.ybound(); }
   void          set_premultiplied       (int x, int y, Color c) { m_plane.set_premultiplied (x, y, c); }
   void          set                     (int x, int y, Color c) { m_plane.set (x, y, c); }
-  void          draw_hline              (int x0, int x1, int y, Color c, const vector<int> &dashes = vector<int>(), int dash_offset = 0);
-  void          draw_vline              (int x, int y0, int y1, Color c, const vector<int> &dashes = vector<int>(), int dash_offset = 0);
+  void          draw_hline              (int x0, int x1, int y, Color c, const vector<double> &dashes = vector<double>(), int dash_offset = 0);
+  void          draw_vline              (int x, int y0, int y1, Color c, const vector<double> &dashes = vector<double>(), int dash_offset = 0);
   void          draw_shadow             (int x, int y, int width, int height,
                                          Color outer_upper_left, Color inner_upper_left,
                                          Color inner_lower_right, Color outer_lower_right);
-  void          draw_border             (int x, int y, int width, int height, Color border, const vector<int> &dashes = vector<int>(), int dash_offset = 0);
+  void          draw_border             (int x, int y, int width, int height, Color border, const vector<double> &dashes = vector<double>(), int dash_offset = 0);
   void          draw_gradient_rect      (int64 recx, int64 recy, int64 recwidth, int64 recheight,
                                          int64 c0x, int64 c0y, Color color0,
                                          int64 c1x, int64 c1y, Color color1);
