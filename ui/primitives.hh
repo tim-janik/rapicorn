@@ -261,10 +261,14 @@ public:
   }
   uint32        rgb    () const { return argb_pixel & 0x00ffffff; }
   uint32        argb   () const { return argb_pixel; }
-  uint          alpha  () const { return argb_pixel >> 24; }
   uint          red    () const { return (argb_pixel >> 16) & 0xff; }
   uint          green  () const { return (argb_pixel >> 8) & 0xff; }
   uint          blue   () const { return argb_pixel & 0xff; }
+  uint          alpha  () const { return argb_pixel >> 24; }
+  double        red1   () const { return red() / 256.; }
+  double        green1 () const { return green() / 256.; }
+  double        blue1  () const { return blue() / 256.; }
+  double        alpha1 () const { return alpha() / 256.; }
   operator      uint32 () const { return argb(); }
   Color&        alpha  (uint8 v) { argb_pixel &= 0x00ffffff; argb_pixel |= v << 24; return *this; }
   Color&        red    (uint8 v) { argb_pixel &= 0xff00ffff; argb_pixel |= v << 16; return *this; }
