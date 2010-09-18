@@ -159,6 +159,15 @@ public:
   Point         upper_right     () const { return Point (x + width, y + height); }
   Point         lower_right     () const { return Point (x + width, y); }
   Point         lower_left      () const { return Point (x, y); }
+  Point         ul              () const { return upper_left(); }
+  Point         ur              () const { return upper_right(); }
+  Point         lr              () const { return lower_right(); }
+  Point         ll              () const { return lower_left(); }
+  double        diagonal        () const { return ll().dist (ur()); }
+  Point         ul_tangent      () const;
+  Point         ur_tangent      () const;
+  Point         lr_tangent      () const;
+  Point         ll_tangent      () const;
   Point         center          () const { return Point (x + width * 0.5, y + height * 0.5); }
   Point         north           () const { return Point (x + width * 0.5, y); }
   Point         north_east      () const { return upper_right(); }

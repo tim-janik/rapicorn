@@ -96,6 +96,47 @@ Rect::dist (const Point &p) const
   return 0; /* inside */
 }
 
+static inline Point
+tangent_intersection (Point l1, Point l2, Point c)
+{
+  // crossing point of tangent through c for line (l1, l2) is: p = l1 + t (l2 - l1)
+  // solving the dot product of the line and tangent: (c - p) dot (l2 - l1) = 0
+  // gives: t = ( (cx-l1x)*(l2x-l1x) + (cy-l1y)*(l2y-l1y) ) / dist (l1, l2) ^ 2
+  const double td = l1.dist2 (l2);
+  if (td == 0.0)
+    return c;
+  const double tx = (c.x - l1.x) * (l2.x - l1.x);
+  const double ty = (c.y - l1.y) * (l2.y - l1.y);
+  const double t = (tx + ty) / td;
+  const double px = l1.x + t * (l2.x - l1.x);
+  const double py = l1.y + t * (l2.y - l1.y);
+  return Point (px, py);
+}
+
+Point
+Rect::ul_tangent () const
+{
+  return tangent_intersection (ll(), ur(), ul());
+}
+
+Point
+Rect::ur_tangent () const
+{
+  return tangent_intersection (ul(), lr(), ur());
+}
+
+Point
+Rect::lr_tangent () const
+{
+  return tangent_intersection (ll(), ur(), lr());
+}
+
+Point
+Rect::ll_tangent () const
+{
+  return tangent_intersection (ul(), lr(), ll());
+}
+
 String
 Rect::string() const
 {
