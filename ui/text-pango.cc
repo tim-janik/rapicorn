@@ -1086,7 +1086,7 @@ protected:
       {
         uint32 *pp = plane.poke_span (xmin, iy, xspan), *p = pp;
         while (p < pp + xspan)
-          *p++ = fg;
+          *p++ = fg.argb();
       }
   }
   void
@@ -1366,7 +1366,7 @@ _rapicorn_pango_renderer_draw_glyphs (PangoRenderer     *renderer,
       while (p < pp + xspan)
         {
           uint8 alpha = *ba++;
-          *p = Color (*p).blend_premultiplied (fg, alpha);
+          *p = Color (*p).blend_premultiplied (fg, alpha).argb();
           p++;
         }
     }

@@ -376,7 +376,7 @@ Painter::fill_scan_line (int64 yy,
   uint32 *pixel = m_plane.poke_span (sx, yy, len);
   if (pixel)
     {
-      uint32 col = pre0;
+      uint32 col = pre0.argb();
       memset4 (pixel, col, len);
     }
 }
@@ -565,7 +565,7 @@ Painter::draw_trapezoid_run (const double by,
       double left_area = left_trapezoid_area (by, bx1, bx2, ty, tx1, tx2, dy, sx);
       double area = left_area - last_left_area;
       int alpha = dtoi32 (area * 255);
-      *d = Color (*d).add_premultiplied (fg_premul, alpha);
+      *d = Color (*d).add_premultiplied (fg_premul, alpha).argb();
       last_left_area = left_area;
       d++;
     }

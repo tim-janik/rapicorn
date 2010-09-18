@@ -218,6 +218,8 @@ struct IRect {
 /* --- Color --- */
 class Color {
   uint32              argb_pixel;
+  typedef uint32 (Color::*_unspecified_bool_type) () const; // non-numeric operator bool() result
+  static inline _unspecified_bool_type _unspecified_bool_true () { return &Color::argb; }
 public:
   static inline uint8 IMUL    (uint8 v, uint8 alpha)            { return (v * (uint32) 0x010102 * alpha) >> 24; }
   static inline uint8 IDIV    (uint8 v, uint8 alpha)            { return (v * (uint32) 0xff) / alpha; }
@@ -256,7 +258,7 @@ public:
     r = IMUL (r, a);
     g = IMUL (g, a);
     b = IMUL (b, a);
-    return Color (r, g, b, a);
+    return Color (r, g, b, a).argb();
   }
   void
   set (uint8 red, uint8 green, uint8 blue)
@@ -278,7 +280,7 @@ public:
   double        green1 () const { return green() / 256.; }
   double        blue1  () const { return blue() / 256.; }
   double        alpha1 () const { return alpha() / 256.; }
-  operator      uint32 () const { return argb(); }
+  inline operator _unspecified_bool_type () const { return alpha() ? _unspecified_bool_true() : 0; }
   Color&        alpha  (uint8 v) { argb_pixel &= 0x00ffffff; argb_pixel |= v << 24; return *this; }
   Color&        red    (uint8 v) { argb_pixel &= 0xff00ffff; argb_pixel |= v << 16; return *this; }
   Color&        green  (uint8 v) { argb_pixel &= 0xffff00ff; argb_pixel |= v << 8; return *this; }
@@ -732,7 +734,7 @@ public:
     if (ix >= 0 && iy >= 0 && ix < width() && iy < height())
       {
         uint32 *pix = peek (ix, iy);
-        *pix = c;
+        *pix = c.argb();
       }
   }
   void   set         (int x, int y, Color c) { set_premultiplied (x, y, c.premultiplied()); }
