@@ -85,6 +85,7 @@ protected:
         cairo_t *cairo = display.create_cairo();
         CPainter painter (cairo);
         painter.draw_dir_arrow (x, y, width, height, foreground(), m_dir);
+        cairo_destroy (cairo);
       }
   }
 };
@@ -194,8 +195,8 @@ public:
             n_vdots = 1 + h / (3 * ythick);
           }
         Color color = 0x80000000;
-        Plane &plane = display.create_plane();
-        Painter rp (plane);
+        cairo_t *cairo = display.create_cairo();
+        CPainter rp (cairo);
         for (int j = 0; j < n_vdots; j++)
           {
             int xtmp = 0;
@@ -207,6 +208,7 @@ public:
               }
             y += 3 * ythick;
           }
+        cairo_destroy (cairo);
       }
   }
 };

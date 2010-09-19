@@ -200,6 +200,7 @@ public:
       render_shade (cairo, Affine(), x, y, width, height, prelight_shade());
     if (!bimpressed && !insensitive() && !bprelight && normal_shade())
       render_shade (cairo, Affine(), x, y, width, height, normal_shade());
+    cairo_destroy (cairo);
     SingleContainerImpl::render (display);
   }
 };
