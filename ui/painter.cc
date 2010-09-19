@@ -108,40 +108,45 @@ CPainter::draw_shadow (int x, int y, int width, int height,
                        Color outer_upper_left, Color inner_upper_left,
                        Color inner_lower_right, Color outer_lower_right)
 {
-  const double line_width = 1.0, l2 = line_width / 2.;
-  cairo_set_line_width (cr, line_width);
-  // draw outer
+  cairo_set_line_width (cr, 1.0);
+  // outer upper left triangle
   if (width >= 1 && height >= 1)
     {
-      Rect r (x + l2, y + l2, width - 1, height - 1);
-      Point g1 = r.lr_tangent(), g2 = r.lr();
-      cairo_pattern_t *gradient = cairo_pattern_create_linear (g1.x, g1.y, g2.x, g2.y);
-      cairo_pattern_add_color_stop_rgba (gradient, 0,
-                                         outer_upper_left.red1(), outer_upper_left.green1(),
-                                         outer_upper_left.blue1(), outer_upper_left.alpha1());
-      cairo_pattern_add_color_stop_rgba (gradient, 0, // sharp color edge at 0
-                                         outer_lower_right.red1(), outer_lower_right.green1(),
-                                         outer_lower_right.blue1(), outer_lower_right.alpha1());
-      cairo_set_source (cr, gradient);
-      cairo_pattern_destroy (gradient);
-      cairo_rectangle (cr, r.x, r.y, r.width, r.height);
+      cairo_set_source_rgba (cr, outer_upper_left.red1(), outer_upper_left.green1(),
+                             outer_upper_left.blue1(), outer_upper_left.alpha1());
+      cairo_move_to (cr, x + .5, y);
+      cairo_rel_line_to (cr, 0, +height - .5);
+      cairo_rel_line_to (cr, +width - .5, 0);
       cairo_stroke (cr);
     }
-  // draw inner
+  // outer lower right triangle
+  if (width >= 2 && height >= 2)
+    {
+      cairo_set_source_rgba (cr, outer_lower_right.red1(), outer_lower_right.green1(),
+                             outer_lower_right.blue1(), outer_lower_right.alpha1());
+      cairo_move_to (cr, x + 1, y + .5);
+      cairo_rel_line_to (cr, +width - 1.5, 0);
+      cairo_rel_line_to (cr, 0, +height - 1.5);
+      cairo_stroke (cr);
+    }
+  // inner upper left triangle
   if (width >= 3 && height >= 3)
     {
-      Rect r (x + 1 + l2, y + 1 + l2, width - 3, height - 3);
-      Point g1 = r.lr_tangent(), g2 = r.lr();
-      cairo_pattern_t *gradient = cairo_pattern_create_linear (g1.x, g1.y, g2.x, g2.y);
-      cairo_pattern_add_color_stop_rgba (gradient, 0,
-                                         inner_upper_left.red1(), inner_upper_left.green1(),
-                                         inner_upper_left.blue1(), inner_upper_left.alpha1());
-      cairo_pattern_add_color_stop_rgba (gradient, 0, // sharp color edge at 0
-                                         inner_lower_right.red1(), inner_lower_right.green1(),
-                                         inner_lower_right.blue1(), inner_lower_right.alpha1());
-      cairo_set_source (cr, gradient);
-      cairo_pattern_destroy (gradient);
-      cairo_rectangle (cr, r.x, r.y, r.width, r.height);
+      cairo_set_source_rgba (cr, inner_upper_left.red1(), inner_upper_left.green1(),
+                             inner_upper_left.blue1(), inner_upper_left.alpha1());
+      cairo_move_to (cr, x + 1.5, y + 1);
+      cairo_rel_line_to (cr, 0, +height - 2.5);
+      cairo_rel_line_to (cr, +width - 2.5, 0);
+      cairo_stroke (cr);
+    }
+  // inner lower right triangle
+  if (width >= 4 && height >= 4)
+    {
+      cairo_set_source_rgba (cr, inner_lower_right.red1(), inner_lower_right.green1(),
+                             inner_lower_right.blue1(), inner_lower_right.alpha1());
+      cairo_move_to (cr, x + 2, y + 1.5);
+      cairo_rel_line_to (cr, +width - 3.5, 0);
+      cairo_rel_line_to (cr, 0, +height - 3.5);
       cairo_stroke (cr);
     }
 }
@@ -176,6 +181,42 @@ void
 CPainter::draw_center_shade_rect (int xc0, int yc0, Color color0, int xc1, int yc1, Color color1)
 {
   draw_shaded_rect (xc0, yc0, color0, xc1, yc1, color1);
+}
+
+void
+CPainter::draw_dir_arrow (double x, double y, double width, double height, Color fill, DirType dir)
+{
+  double xhalf = width / 2., yhalf = height / 2.;
+  switch (dir)
+    {
+    case DIR_RIGHT:
+      cairo_move_to (cr, x + width, y + yhalf);
+      cairo_rel_line_to (cr, -width, +yhalf);
+      cairo_rel_line_to (cr, 0, -height);
+      cairo_close_path (cr);
+      break;
+    case DIR_UP:
+      cairo_move_to (cr, x, y);
+      cairo_rel_line_to (cr, +width, 0);
+      cairo_rel_line_to (cr, -xhalf, height);
+      cairo_close_path (cr);
+      break;
+    case DIR_LEFT:
+      cairo_move_to (cr, x, y + yhalf);
+      cairo_rel_line_to (cr, +width, -yhalf);
+      cairo_rel_line_to (cr, 0, +height);
+      cairo_close_path (cr);
+      break;
+    case DIR_DOWN:
+      cairo_move_to (cr, x + width, y + height);
+      cairo_rel_line_to (cr, -width, 0);
+      cairo_rel_line_to (cr, +xhalf, -height);
+      cairo_close_path (cr);
+      break;
+    default: ;
+    }
+  cairo_set_source_rgba (cr, fill.red1(), fill.green1(), fill.blue1(), fill.alpha1());
+  cairo_fill (cr);
 }
 
 /* --- Painter --- */
