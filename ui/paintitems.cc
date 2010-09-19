@@ -82,8 +82,8 @@ protected:
     int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
     if (width >= 2 && height >= 2)
       {
-        Plane &plane = display.create_plane();
-        Painter painter (plane);
+        cairo_t *cairo = display.create_cairo();
+        CPainter painter (cairo);
         painter.draw_dir_arrow (x, y, width, height, foreground(), m_dir);
       }
   }
