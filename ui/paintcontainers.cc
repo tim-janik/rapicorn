@@ -348,21 +348,8 @@ public:
           default: ;
           }
         vector<double> dashes;
-#if 1
         dashes.push_back (3);
         dashes.push_back (2);
-#else
-        dashes.push_back (5);
-        dashes.push_back (4);
-        dashes.push_back (4);
-        dashes.push_back (4);
-        dashes.push_back (3);
-        dashes.push_back (4);
-        dashes.push_back (2);
-        dashes.push_back (4);
-        dashes.push_back (1);
-        dashes.push_back (4);
-#endif
         cairo_t *cr = display.create_cairo ();
         CPainter painter (cr);
         if (outer_upper_left || inner_upper_left || inner_lower_right || outer_lower_right)
