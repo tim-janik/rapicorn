@@ -155,9 +155,10 @@ protected:
     if (m_paint_allocation)
       {
         IRect ia = allocation();
-        Plane &plane = display.create_plane();
-        Painter painter (plane);
+        cairo_t *cairo = display.create_cairo();
+        CPainter painter (cairo);
         painter.draw_filled_rect (ia.x, ia.y, ia.width, ia.height, heritage()->black());
+        cairo_destroy (cairo);
       }
 
     Allocation rarea = get_root()->allocation();
