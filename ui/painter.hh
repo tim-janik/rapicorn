@@ -27,6 +27,9 @@ protected:
 public:
   explicit      CPainter                (cairo_t *context);
   virtual      ~CPainter                ();
+  void          draw_filled_rect        (int x, int y, int width, int height, Color fill_color);
+  void          draw_shaded_rect        (int xc0, int yc0, Color color0, int xc1, int yc1, Color color1);
+  void          draw_center_shade_rect  (int xc0, int yc0, Color color0, int xc1, int yc1, Color color1);
   void          draw_border             (int x, int y, int width, int height, Color border, const vector<double> &dashes = vector<double>(), double dash_offset = 0.5);
   void          draw_shadow             (int x, int y, int width, int height,
                                          Color outer_upper_left, Color inner_upper_left,

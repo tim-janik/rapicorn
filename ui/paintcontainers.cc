@@ -119,7 +119,7 @@ public:
   virtual LightingType  normal_shade            () const              { return m_normal_shade; }
 private:
   void
-  render_shade (Plane        &plane,
+  render_shade (cairo_t      *cairo,
                 Affine        affine,
                 int           x,
                 int           y,
@@ -130,7 +130,7 @@ private:
     int shade_alpha = 0x3b;
     Color light = light_glint().shade (shade_alpha), dark = dark_glint().shade (shade_alpha);
     LightingType dark_flag = st & LIGHTING_DARK_FLAG;
-    Painter painter (plane);
+    CPainter painter (cairo);
     if (dark_flag)
       swap (light, dark);
     switch (st & ~LIGHTING_DARK_FLAG)
@@ -148,10 +148,10 @@ private:
         painter.draw_center_shade_rect (x + width - 1, y, light, x, y + height - 1, dark);
         break;
       case LIGHTING_CENTER:
-        render_shade (plane, affine, x, y, width / 2, height / 2, LIGHTING_UPPER_RIGHT | dark_flag);
-        render_shade (plane, affine, x, y + height / 2, width / 2, height / 2, LIGHTING_LOWER_RIGHT | dark_flag);
-        render_shade (plane, affine, x + width / 2, y + height / 2, width / 2, height / 2, LIGHTING_LOWER_LEFT | dark_flag);
-        render_shade (plane, affine, x + width / 2, y, width / 2, height / 2, LIGHTING_UPPER_LEFT | dark_flag);
+        render_shade (cairo, affine, x, y, width / 2, height / 2, LIGHTING_UPPER_RIGHT | dark_flag);
+        render_shade (cairo, affine, x, y + height / 2, width / 2, height / 2, LIGHTING_LOWER_RIGHT | dark_flag);
+        render_shade (cairo, affine, x + width / 2, y + height / 2, width / 2, height / 2, LIGHTING_LOWER_LEFT | dark_flag);
+        render_shade (cairo, affine, x + width / 2, y, width / 2, height / 2, LIGHTING_UPPER_LEFT | dark_flag);
         break;
       case LIGHTING_DIFFUSE:
         painter.draw_shaded_rect (x, y, light, x + width - 1, y + height - 1, light);
@@ -164,9 +164,9 @@ public:
   void
   render (Display &display)
   {
-    Plane &plane = display.create_plane();
+    cairo_t *cairo = display.create_cairo();
     IRect ia = allocation();
-    int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
+    const int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
     bool bimpressed = branch_impressed(), bprelight = branch_prelight();
     /* render background */
     String background_color;
@@ -179,59 +179,27 @@ public:
     else
       background_color = normal_background();
     Color background = heritage()->resolve_color (background_color, STATE_NORMAL, COLOR_BACKGROUND);
-    Painter painter (plane);
+    CPainter painter (cairo);
     if (background)
       painter.draw_filled_rect (x, y, width, height, background);
     /* render lighting (mutually exclusive) */
     if (bimpressed && impressed_lighting())
-      {
-        Plane shade (Plane::init_from_size (plane));
-        render_shade (shade, Affine(), x, y, width, height, impressed_lighting());
-        plane.combine (shade, COMBINE_OVER);
-      }
+      render_shade (cairo, Affine(), x, y, width, height, impressed_lighting());
     else if (insensitive() && insensitive_lighting())
-      {
-        Plane shade (Plane::init_from_size (plane));
-        render_shade (shade, Affine(), x, y, width, height, insensitive_lighting());
-        plane.combine (shade, COMBINE_OVER);
-      }
+      render_shade (cairo, Affine(), x, y, width, height, insensitive_lighting());
     else if (bprelight && prelight_lighting())
-      {
-        Plane shade (Plane::init_from_size (plane));
-        render_shade (shade, Affine(), x, y, width, height, prelight_lighting());
-        plane.combine (shade, COMBINE_OVER);
-      }
+      render_shade (cairo, Affine(), x, y, width, height, prelight_lighting());
     else if (normal_lighting() && !bimpressed && !insensitive() && !bprelight)
-      {
-        Plane shade (Plane::init_from_size (plane));
-        render_shade (shade, Affine(), x, y, width, height, normal_lighting());
-        plane.combine (shade, COMBINE_OVER);
-      }
+      render_shade (cairo, Affine(), x, y, width, height, normal_lighting());
     /* render shade (combinatoric) */
     if (bimpressed && impressed_shade())
-      {
-        Plane shade (Plane::init_from_size (plane));
-        render_shade (shade, Affine(), x, y, width, height, impressed_shade());
-        plane.combine (shade, COMBINE_OVER);
-      }
+      render_shade (cairo, Affine(), x, y, width, height, impressed_shade());
     if (insensitive() && insensitive_shade())
-      {
-        Plane shade (Plane::init_from_size (plane));
-        render_shade (shade, Affine(), x, y, width, height, insensitive_shade());
-        plane.combine (shade, COMBINE_OVER);
-      }
+      render_shade (cairo, Affine(), x, y, width, height, insensitive_shade());
     if (bprelight && prelight_shade())
-      {
-        Plane shade (Plane::init_from_size (plane));
-        render_shade (shade, Affine(), x, y, width, height, prelight_shade());
-        plane.combine (shade, COMBINE_OVER);
-      }
+      render_shade (cairo, Affine(), x, y, width, height, prelight_shade());
     if (!bimpressed && !insensitive() && !bprelight && normal_shade())
-      {
-        Plane shade (Plane::init_from_size (plane));
-        render_shade (shade, Affine(), x, y, width, height, normal_shade());
-        plane.combine (shade, COMBINE_OVER);
-      }
+      render_shade (cairo, Affine(), x, y, width, height, normal_shade());
     SingleContainerImpl::render (display);
   }
 };

@@ -146,6 +146,38 @@ CPainter::draw_shadow (int x, int y, int width, int height,
     }
 }
 
+void
+CPainter::draw_filled_rect (int x, int y, int width, int height, Color fill)
+{
+  cairo_set_source_rgba (cr, fill.red1(), fill.green1(), fill.blue1(), fill.alpha1());
+  cairo_rectangle (cr, x, y, width, height);
+  cairo_fill (cr);
+}
+
+void
+CPainter::draw_shaded_rect (int xc0, int yc0, Color color0, int xc1, int yc1, Color color1)
+{
+  cairo_pattern_t *gradient = cairo_pattern_create_linear (xc0, yc0, xc1, yc1);
+  cairo_pattern_add_color_stop_rgba (gradient, 0,
+                                     color0.red1(), color0.green1(),
+                                     color0.blue1(), color0.alpha1());
+  cairo_pattern_add_color_stop_rgba (gradient, 1,
+                                     color1.red1(), color1.green1(),
+                                     color1.blue1(), color1.alpha1());
+  cairo_set_source (cr, gradient);
+  cairo_pattern_destroy (gradient);
+  cairo_rectangle (cr, MIN (xc0, xc1), MIN (yc0, yc1),
+                   MAX (xc0, xc1) - MIN (xc0, xc1) + 1,
+                   MAX (yc0, yc1) - MIN (yc0, yc1) + 1);
+  cairo_fill (cr);
+}
+
+void
+CPainter::draw_center_shade_rect (int xc0, int yc0, Color color0, int xc1, int yc1, Color color1)
+{
+  draw_shaded_rect (xc0, yc0, color0, xc1, yc1, color1);
+}
+
 /* --- Painter --- */
 Painter::Painter (Plane &plane) :
   m_plane (plane)
