@@ -1177,7 +1177,7 @@ protected:
   Rect
   layout_area (uint *vdot_size)
   {
-    /* once PANGO_VERSION_CHECK (1, 19, 3) succeeds, this
+    /* FIXME: once PANGO_VERSION_CHECK (1, 19, 3) succeeds, this
      * should use pango_layout_set_height() instead.
      */
     Rect area = allocation();
