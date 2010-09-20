@@ -96,9 +96,8 @@
       Nested tags &lt;tt&gt;: <tt><b>bold<u>+underline<i>+italic<s>+strike</s></i></u></b></tt> <br/>
       Font Families: <font family="serif">Serif-Text</font> <font family="sans">Sans-Text</font> <font family="mono">Mono-Text</font> <font family="arial">Arial-Text</font> <font family="times">Times-Text</font> <br/>
       Colors:
-      normal <fg color='blue'>blue foreground</fg>
-      normal <bg color='red'>red background</bg>
-      normal <bg color='red'>red-bg <fg color='blue'>blue-fg</fg> red-bg</bg> normal
+      foregrounds: <fg color='red'>red</fg> <fg color='green'>green</fg> <fg color='blue'>blue</fg>
+      backgrounds: <fg color='white'> <bg color='red'>red</bg> <bg color='green'>green</bg> <bg color='blue'>blue</bg> </fg>
     </prop:markup-text>
   </def:markup-test>
 
