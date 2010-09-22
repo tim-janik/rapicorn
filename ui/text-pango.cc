@@ -17,12 +17,15 @@
 #include "text-pango.hh"
 #if     RAPICORN_WITH_PANGO
 #include <pango/pangoft2.h>
+#include <pango/pangocairo.h>
 #include "factory.hh"
 #include "painter.hh"
 #include "itemimpl.hh"
 #include "viewport.hh"  // for rapicorn_gtk_threads_enter / rapicorn_gtk_threads_leave
 
 #include <algorithm>
+
+#define USE_FT2 0 // we have cairo code in place now
 
 #if PANGO_SCALE != 1024
 #error code needs adaption to unknown PANGO_SCALE value
@@ -108,6 +111,27 @@ default_pango_font_description()
 }
 
 static void
+default_pango_cairo_font_options (PangoContext *pcontext,
+                                  cairo_t      *cairo)
+{
+  cairo_font_options_t *fopt = cairo_font_options_create();
+  return_if_fail (fopt != NULL);
+  cairo_font_options_set_hint_metrics (fopt, CAIRO_HINT_METRICS_ON); // ON, OFF
+  cairo_font_options_set_hint_style (fopt, CAIRO_HINT_STYLE_FULL); // NONE, SLIGHT, MEDIUM, FULL
+  cairo_font_options_set_antialias (fopt, CAIRO_ANTIALIAS_SUBPIXEL); // NONE, GRAY, SUBPIXEL
+  cairo_font_options_set_subpixel_order (fopt, CAIRO_SUBPIXEL_ORDER_DEFAULT); // RGB, BGR, VRGB, VBGR
+  return_if_fail (CAIRO_STATUS_SUCCESS == cairo_font_options_status (fopt));
+  if (cairo)
+    cairo_set_font_options (cairo, fopt);
+  if (pcontext)
+    {
+      pango_cairo_context_set_font_options (pcontext, fopt);
+      pango_cairo_context_set_resolution (pcontext, 106);
+    }
+  cairo_font_options_destroy (fopt);
+}
+
+static void
 default_font_config_func (FcPattern *pattern,
                           gpointer   data)
 {
@@ -116,7 +140,7 @@ default_font_config_func (FcPattern *pattern,
   int subpxorder = 1; /* 0:unset, 1:none, 2:RGB, 3:BGR, 4:VRGB, 5:VBGR */
   // subpixel order != none needs FT_PIXEL_MODE_LCD or FT_PIXEL_MODE_LCD_V
   FcValue v;
-  
+
   if (FcPatternGet (pattern, FC_ANTIALIAS, 0, &v) == FcResultNoMatch)
     FcPatternAddBool (pattern, FC_ANTIALIAS, antialias);
   if (FcPatternGet (pattern, FC_HINTING, 0, &v) == FcResultNoMatch)
@@ -225,11 +249,18 @@ class LayoutCache {
     PangoContext *pcontext = context_cache[key];
     if (!pcontext)
       {
+#if USE_FT2
         PangoFontMap *fontmap = pango_ft2_font_map_new();
         pango_ft2_font_map_set_default_substitute (PANGO_FT2_FONT_MAP (fontmap), default_font_config_func, NULL, NULL);
         pango_ft2_font_map_set_resolution (PANGO_FT2_FONT_MAP (fontmap), key.dpi.x, key.dpi.y);
         pcontext = pango_ft2_font_map_create_context (PANGO_FT2_FONT_MAP (fontmap));
         g_object_unref (fontmap);
+#else
+        PangoFontMap *fontmap = pango_cairo_font_map_new ();
+        pango_cairo_font_map_set_resolution (PANGO_CAIRO_FONT_MAP (fontmap), key.dpi.x);
+        pcontext = pango_font_map_create_context (fontmap);
+        default_pango_cairo_font_options (pcontext, NULL);
+#endif
         pango_context_set_base_dir (pcontext, key.direction);
         pango_context_set_language (pcontext, pango_language_from_string (key.language.c_str()));
         pango_context_set_font_description (pcontext, default_pango_font_description());
@@ -323,8 +354,10 @@ static LayoutCache global_layout_cache; // protected by rapicorn_gtk_threads_ent
 
 /* --- LazyColorAttr --- */
 class LazyColorAttr {
-  /* we need our own color attribute, because color names can only
-   * be resolved for anchored items, that have heritage assigned
+  /* We need to implement our own color attribute here, because color names can
+   * only be resolved for anchored items which happens after parsing and span
+   * attribute assignments. And we need to be able to read the original color
+   * string back from span attributes.
    */
   PangoAttrColor pcolor;
   String         cname;
@@ -334,7 +367,7 @@ protected:
   copy (const PangoAttribute *attr)
   {
     const LazyColorAttr *self = (const LazyColorAttr*) attr;
-    const PangoAttrColor *cattr = (const PangoAttrColor*) self;
+    const PangoAttrColor *cattr = &self->pcolor;
     return create (attr->klass, cattr->color.red, cattr->color.green, cattr->color.blue, self->cname, self->ctype);
   }
   static void
@@ -383,11 +416,22 @@ public:
     return &klass;
   }
   static PangoAttribute*
-  create_color (const PangoAttrClass *klass,
-                const String         &cname,
-                ColorType             ctype)
+  create_lazy_color (const PangoAttrClass *klass,
+                     const String         &cname,
+                     ColorType             ctype)
   {
-    return create (klass, 0x4041, 0xd0d2, 0x8083, cname, ctype);
+    // 0xfd1bfe marks unresolved lazy colors
+    return create (klass, 0xfdfd, 0x1b1b, 0xfefe, cname, ctype);
+  }
+  static PangoAttribute*
+  create_preset_color (const PangoAttrClass *klass,
+                       guint16               red,
+                       guint16               green,
+                       guint16               blue,
+                       const String         &cname,
+                       ColorType             ctype)
+  {
+    return create (klass, red, green, blue, cname, ctype);
   }
   static Color
   resolve_color (const PangoAttribute *attr,
@@ -620,9 +664,29 @@ class XmlToPango : Rapicorn::MarkupParser {
         {
           String col = xnode.get_attribute ("color", true);
           if (col.size() && token == '0')
-            pa = LazyColorAttr::create_color (LazyColorAttr::background_klass(), col, COLOR_BACKGROUND);
+            {
+#if ! USE_FT2
+              PangoColor pcolor;
+              if (pango_color_parse (&pcolor, col.c_str()))
+                pa = LazyColorAttr::create_preset_color (LazyColorAttr::background_klass(),
+                                                         pcolor.red, pcolor.green, pcolor.blue,
+                                                         col, COLOR_BACKGROUND);
+              else
+#endif
+                pa = LazyColorAttr::create_lazy_color (LazyColorAttr::background_klass(), col, COLOR_BACKGROUND);
+            }
           else if (col.size() && token == '1')
-            pa = LazyColorAttr::create_color (LazyColorAttr::foreground_klass(), col, COLOR_FOREGROUND);
+            {
+#if ! USE_FT2
+              PangoColor pcolor;
+              if (pango_color_parse (&pcolor, col.c_str()))
+                pa = LazyColorAttr::create_preset_color (LazyColorAttr::foreground_klass(),
+                                                         pcolor.red, pcolor.green, pcolor.blue,
+                                                         col, COLOR_FOREGROUND);
+              else
+#endif
+                pa = LazyColorAttr::create_lazy_color (LazyColorAttr::foreground_klass(), col, COLOR_FOREGROUND);
+            }
         }
         break;
       default:
@@ -747,6 +811,7 @@ public:
   {
     Text::ParaState pstate; // retrieve defaults
     rapicorn_gtk_threads_enter();
+    // FIXME: using pstate.font_family as font_desc string here bypasses our default font settings
     m_layout = global_layout_cache.create_layout (pstate.font_family, pstate.align,
                                                   PANGO_WRAP_WORD_CHAR, pstate.ellipsize,
                                                   iround (pstate.indent), iround (pstate.line_spacing),
@@ -802,6 +867,7 @@ protected:
   text_requisition (uint          n_chars,
                     uint          n_digits)
   {
+    // FIXME: we need to setup a dummy cairo context here for pango_cairo_update_layout
     rapicorn_gtk_threads_enter();
     PangoContext *pcontext = pango_layout_get_context (m_layout);
     const PangoFontDescription *cfdesc = LayoutCache::font_description_from_layout (m_layout);
@@ -1091,6 +1157,7 @@ protected:
   }
   void
   render_cursor_gL (Plane        &plane,
+                    cairo_t      *cairo,
                     Color         col,
                     Rect          layout_rect,
                     double        layout_x,
@@ -1110,11 +1177,38 @@ protected:
     Color fg (col.premultiplied());
     int xpos = iround (x);
     int ymin = iround (MAX (y, plane.ystart())), ymax = iround (MIN (y + height, plane.ybound()) - 1);
-    Painter pp (plane);
-    const double cw = 3, cl = cw - 1, cr = cw;
-    pp.draw_trapezoid (ymax, xpos - cl, xpos + cr, ymax - 3, xpos + .5, xpos + .5, col);
-    pp.draw_vline (xpos, ymin + 2, ymax - 3, col);
-    pp.draw_trapezoid (ymin, xpos - cl, xpos + cr, ymin + 3, xpos + .5, xpos + .5, col);
+    if (cairo)
+      {
+        const double cw = 2, ch = 2;
+        cairo_set_source_rgba (cairo, col.red1(), col.green1(), col.blue1(), col.alpha1());
+        // upper triangle
+        cairo_move_to (cairo, xpos,          ymax - ch);
+        cairo_line_to (cairo, xpos - cw,     ymax);
+        cairo_line_to (cairo, xpos + 1 + cw, ymax);
+        cairo_line_to (cairo, xpos + 1,      ymax - ch);
+        cairo_close_path (cairo);
+        // lower triangle
+        cairo_move_to (cairo, xpos,          ymin + ch);
+        cairo_line_to (cairo, xpos - cw,     ymin);
+        cairo_line_to (cairo, xpos + 1 + cw, ymin);
+        cairo_line_to (cairo, xpos + 1,      ymin + ch);
+        cairo_close_path (cairo);
+        // show triangles
+        cairo_fill (cairo);
+        // draw bar
+        cairo_move_to (cairo, xpos + .5, ymin + ch);
+        cairo_line_to (cairo, xpos + .5, ymax - ch);
+        cairo_set_line_width (cairo, 1);
+        cairo_stroke (cairo);
+      }
+    else
+      {
+        Painter pp (plane);
+        const double cw = 3, cl = cw - 1, cr = cw;
+        pp.draw_trapezoid (ymax, xpos - cl, xpos + cr, ymax - 3, xpos + .5, xpos + .5, col);
+        pp.draw_vline (xpos, ymin + 2, ymax - 3, col);
+        pp.draw_trapezoid (ymin, xpos - cl, xpos + cr, ymin + 3, xpos + .5, xpos + .5, col);
+      }
 #if 0
     pp.draw_hline (xpos - 1, xpos + 1, ymax, col);
     pp.draw_vline (xpos, ymin + 1, ymax - 1, col);
@@ -1143,6 +1237,7 @@ protected:
   }
   void
   render_text_gL (Plane        &plane,
+                  cairo_t      *cairo,
                   Rect          layout_rect,
                   int           dot_size,
                   Color         fg)
@@ -1151,8 +1246,9 @@ protected:
       {
         Rect area = allocation();
         area.height -= MIN (area.height, layout_rect.height); // draw vdots beneth layout
-        if (area.height > 0)
+        if (area.height > 0) // some partially visible lines have been clipped
           {
+            // display vellipsis
             render_dot_gL (plane, area.x, area.y, area.width / 3, area.height, dot_size, fg);
             render_dot_gL (plane, area.x + area.width / 3, area.y, area.width / 3, area.height, dot_size, fg);
             render_dot_gL (plane, area.x + 2 * area.width / 3, area.y, area.width / 3, area.height, dot_size, fg);
@@ -1170,9 +1266,19 @@ protected:
     pango_layout_get_extents (m_layout, NULL, &lrect);
     lx += UNITS2PIXELS (lrect.x);
     lx -= m_scoffset;
-    _rapicorn_pango_renderer_render_layout (plane, *heritage(), fg, m_layout, r, ifloor (lx), ifloor (ly));
+    cairo_save (cairo);
+    cairo_set_source_rgba (cairo, fg.red1(), fg.green1(), fg.blue1(), fg.alpha1());
+    // translate cairo surface so current_point=(0,0) becomes layout origin
+    cairo_translate (cairo, layout_rect.x - m_scoffset, layout_rect.height + layout_rect.y);
+    cairo_scale (cairo, 1, -1);
+    // clip to layout_rect, which has been shrunken to clip partial lines
+    cairo_rectangle (cairo, m_scoffset, 0, layout_rect.width, layout_rect.height);
+    cairo_clip (cairo);
+    pango_cairo_show_layout (cairo, m_layout);
+    cairo_restore (cairo);
     /* and cursor */
-    render_cursor_gL (plane, fg, r, lx, ly);
+    render_cursor_gL (plane, cairo, fg, r, lx, ly);
+#endif
   }
   Rect
   layout_area (uint *vdot_size)
@@ -1238,6 +1344,11 @@ protected:
       return;
     /* render text */
     Plane &plane = display.create_plane ();
+    cairo_t *cairo = display.create_cairo();
+    default_pango_cairo_font_options (NULL, cairo);
+#if ! USE_FT2
+    pango_cairo_update_layout (cairo, m_layout);
+#endif
     rapicorn_gtk_threads_enter();
     if (insensitive())
       {
@@ -1246,25 +1357,26 @@ protected:
         Color insensitive_glint, insensitive_ink = heritage()->insensitive_ink (state(), &insensitive_glint);
         /* render embossed text */
         area.x = ax, area.y = ay - 1;
-        render_text_gL (plane, area, vdot_size, insensitive_glint);
+        render_text_gL (plane, cairo, area, vdot_size, insensitive_glint);
         area.x = ax - 1, area.y = ay;
-        render_text_gL (plane2, area, vdot_size, insensitive_ink);
+        render_text_gL (plane2, cairo, area, vdot_size, insensitive_ink);
         plane.combine (plane2, COMBINE_OVER);
       }
     else
       {
         /* render normal text */
         if (1)
-          render_text_gL (plane, area, vdot_size, foreground());
+          render_text_gL (plane, cairo, area, vdot_size, foreground());
         else
           {
             Heritage &hr = heritage()->selected();
             Painter painter (plane);
             painter.draw_filled_rect (area.x, area.y, area.width, area.height, hr.background());
-            render_text_gL (plane, area, vdot_size, hr.foreground());
+            render_text_gL (plane, cairo, area, vdot_size, hr.foreground());
           }
       }
     rapicorn_gtk_threads_leave();
+    cairo_destroy (cairo);
   }
   virtual const PropertyList&
   list_properties() // escape check-list_properties ';'
@@ -1278,6 +1390,7 @@ protected:
 static const ItemFactory<TextPangoImpl> text_pango_factory ("Rapicorn::Factory::TextPango");
 
 /* --- RapicornPangoRenderer --- */
+#if USE_FT2
 #include <pango/pango-renderer.h>
 struct RapicornPangoRenderer {
   PangoRenderer    parent_instance;
@@ -1400,6 +1513,7 @@ _rapicorn_pango_renderer_class_init (RapicornPangoRendererClass *klass)
   renderer_class->draw_glyphs = _rapicorn_pango_renderer_draw_glyphs;
   renderer_class->draw_trapezoid = _rapicorn_pango_renderer_draw_trapezoid; // needed for UNDERLINE
 }
+#endif // USE_FT2
 
 } // Rapicorn
 
