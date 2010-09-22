@@ -35,6 +35,21 @@ Image::list_properties()
 
 static const uint8* get_broken16_pixdata (void);
 
+static cairo_surface_t*
+cairo_surface_from_pixmap (Pixmap &pixmap)
+{
+  int stride = 0;
+  uint32 *data = pixmap.data (&stride);
+  cairo_surface_t *isurface =
+    cairo_image_surface_create_for_data ((unsigned char*) data,
+                                         CAIRO_FORMAT_ARGB32,
+                                         pixmap.width(),
+                                         pixmap.height(),
+                                         stride);
+  return_val_if_fail (CAIRO_STATUS_SUCCESS == cairo_surface_status (isurface), NULL);
+  return isurface;
+}
+
 class ImageImpl : public virtual ItemImpl, public virtual Image {
   Pixmap           *m_pixmap;
   int               m_xoffset, m_yoffset;
@@ -132,17 +147,17 @@ public:
         int ix = iround (allocation().x + m_xoffset), iy = iround (allocation().y + m_yoffset);
         int ih = m_pixmap->height();
         display.push_clip_rect (ix, iy, m_pixmap->width(), ih);
-        Plane &plane = display.create_plane();
-        for (int y = plane.ystart(); y < plane.ybound(); y++)
-          {
-            uint nth = y - iy;
-            const uint32 *row = m_pixmap->row (ih - (1 + nth));
-            row += plane.xstart() - ix;
-            uint32 *span = plane.poke_span (plane.xstart(), y, plane.width());
-            uint32 *limit = span + plane.width();
-            while (span < limit)
-              *span++ = Color (*row++).premultiplied();
-          }
+        cairo_t *cr = display.create_cairo();
+        cairo_surface_t *isurface = cairo_surface_from_pixmap (*m_pixmap);
+        cairo_set_source_surface (cr, isurface, 0, 0); // (ix,iy) are set in the matrix below
+        cairo_matrix_t matrix;
+        cairo_matrix_init_identity (&matrix);
+        cairo_matrix_translate (&matrix, -ix, iy + m_pixmap->height());
+        cairo_matrix_scale (&matrix, 1, -1);
+        cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
+        cairo_paint (cr);
+        cairo_surface_destroy (isurface);
+        cairo_destroy (cr);
         display.pop_clip_rect();
       }
   }
