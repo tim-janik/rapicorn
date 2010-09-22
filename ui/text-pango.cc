@@ -1064,36 +1064,25 @@ protected:
   }
 protected:
   void
-  render_dot_gL (Plane        &plane,
-                 int           x,
-                 int           y,
-                 int           width,
-                 int           height,
-                 int           dot_size,
-                 Color         col)
+  render_dots_gL (cairo_t      *cr,
+                  int           x,
+                  int           y,
+                  int           width,
+                  int           height,
+                  int           dot_size,
+                  Color         col)
   {
-    Color fg (col.premultiplied());
-    int offset = height - dot_size;
-    y += offset / 2;
-    height = dot_size;
-    offset = width - dot_size;
-    x += offset / 2;
-    width = dot_size;
-    const int xmin = MAX (x, plane.xstart()), xbound = MIN (x + width, plane.xbound());
-    const int ymin = MAX (y, plane.ystart()), ybound = MIN (y + height, plane.ybound());
-    if (xbound < xmin)
-      return;
-    const int xspan = xbound - xmin;
-    for (int iy = ymin; iy < ybound; iy++)
-      {
-        uint32 *pp = plane.poke_span (xmin, iy, xspan), *p = pp;
-        while (p < pp + xspan)
-          *p++ = fg.argb();
-      }
+    double w3 = width / 3., r = dot_size / 2.;
+    cairo_save (cr);
+    cairo_set_source_rgba (cr, col.red1(), col.green1(), col.blue1(), col.alpha1());
+    cairo_arc (cr, x + .5 + w3,       y + .5 + height / 2, r, 0, 2 * M_PI);
+    cairo_arc (cr, x + .5 + w3 * 1.5, y + .5 + height / 2, r, 0, 2 * M_PI);
+    cairo_arc (cr, x + .5 + w3 * 2,   y + .5 + height / 2, r, 0, 2 * M_PI);
+    cairo_fill (cr);
+    cairo_restore (cr);
   }
   void
-  render_cursor_gL (Plane        &plane,
-                    cairo_t      *cairo,
+  render_cursor_gL (cairo_t      *cairo,
                     Color         col,
                     Rect          layout_rect,
                     double        layout_x,
@@ -1112,7 +1101,7 @@ protected:
     double height = UNITS2PIXELS (crect1.height);
     Color fg (col.premultiplied());
     int xpos = iround (x);
-    int ymin = iround (MAX (y, plane.ystart())), ymax = iround (MIN (y + height, plane.ybound()) - 1);
+    int ymin = iround (y), ymax = iround (y + height - 1);
     const double cw = 2, ch = 2;
     cairo_set_source_rgba (cairo, col.red1(), col.green1(), col.blue1(), col.alpha1());
     // upper triangle
@@ -1156,8 +1145,7 @@ protected:
     m_scoffset = MAX (0, m_scoffset); /* un-"indent" */
   }
   void
-  render_text_gL (Plane        &plane,
-                  cairo_t      *cairo,
+  render_text_gL (cairo_t      *cairo,
                   Rect          layout_rect,
                   int           dot_size,
                   Color         fg)
@@ -1169,23 +1157,12 @@ protected:
         if (area.height > 0) // some partially visible lines have been clipped
           {
             // display vellipsis
-            render_dot_gL (plane, area.x, area.y, area.width / 3, area.height, dot_size, fg);
-            render_dot_gL (plane, area.x + area.width / 3, area.y, area.width / 3, area.height, dot_size, fg);
-            render_dot_gL (plane, area.x + 2 * area.width / 3, area.y, area.width / 3, area.height, dot_size, fg);
+            render_dots_gL (cairo, area.x, area.y, area.width, area.height, dot_size, fg);
           }
       }
-    /* constrain rendering area */
-    Rect r = plane.rect();
-    r.intersect (layout_rect);
-    if (r.empty())
-      return;
-    /* render text to plane */
-    double lx = layout_rect.x - r.x;
-    double ly = r.y + r.height - (layout_rect.y + layout_rect.height);
+    /* render text */
     PangoRectangle lrect; /* logical (x,y) can be != 0, e.g. for RTL-layouts and fixed width set */
     pango_layout_get_extents (m_layout, NULL, &lrect);
-    lx += UNITS2PIXELS (lrect.x);
-    lx -= m_scoffset;
     cairo_save (cairo);
     cairo_set_source_rgba (cairo, fg.red1(), fg.green1(), fg.blue1(), fg.alpha1());
     // translate cairo surface so current_point=(0,0) becomes layout origin
@@ -1197,7 +1174,9 @@ protected:
     pango_cairo_show_layout (cairo, m_layout);
     cairo_restore (cairo);
     /* and cursor */
-    render_cursor_gL (plane, cairo, fg, r, lx, ly);
+    double lx = UNITS2PIXELS (lrect.x) - m_scoffset;
+    double ly = 0;
+    render_cursor_gL (cairo, fg, layout_rect, lx, ly);
   }
   Rect
   layout_area (uint *vdot_size)
@@ -1262,26 +1241,23 @@ protected:
     if (area.width < 1) // allowed: area.height < 1
       return;
     /* render text */
-    Plane &plane = display.create_plane ();
     cairo_t *cairo = display.create_cairo();
     default_pango_cairo_font_options (NULL, cairo);
     rapicorn_gtk_threads_enter();
     if (insensitive())
       {
         const double ax = area.x, ay = area.y;
-        Plane plane2 (Plane::init_from_size (plane));
         Color insensitive_glint, insensitive_ink = heritage()->insensitive_ink (state(), &insensitive_glint);
         /* render embossed text */
         area.x = ax, area.y = ay - 1;
-        render_text_gL (plane, cairo, area, vdot_size, insensitive_glint);
+        render_text_gL (cairo, area, vdot_size, insensitive_glint);
         area.x = ax - 1, area.y = ay;
-        render_text_gL (plane2, cairo, area, vdot_size, insensitive_ink);
-        plane.combine (plane2, COMBINE_OVER);
+        render_text_gL (cairo, area, vdot_size, insensitive_ink);
       }
     else
       {
         /* render normal text */
-        render_text_gL (plane, cairo, area, vdot_size, foreground());
+        render_text_gL (cairo, area, vdot_size, foreground());
       }
     rapicorn_gtk_threads_leave();
     cairo_destroy (cairo);
