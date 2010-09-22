@@ -858,4 +858,30 @@ Display::render_combined (Plane &plane)
     }
 }
 
+void
+Display::render_combined (cairo_t *cr)
+{
+  if (layer_stack.empty())
+    return;
+  cairo_save (cr);
+  for (Walker<Layer> layer = walker (layer_stack); layer.has_next(); layer++)
+    {
+      Layer &l = *layer;
+      Plane *plane = l.plane;
+      cairo_surface_t *isurface =
+        cairo_image_surface_create_for_data ((unsigned char*)
+                                             plane->poke_span (plane->xstart(),
+                                                               plane->ystart(), 1),
+                                             CAIRO_FORMAT_ARGB32,
+                                             plane->width(),
+                                             plane->height(),
+                                             plane->pixstride());
+      cairo_set_source_surface (cr, isurface, plane->xstart(), plane->ystart());
+      cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+      cairo_paint_with_alpha (cr, l.alpha);
+      cairo_surface_destroy (isurface);
+    }
+  cairo_restore (cr);
+}
+
 } // Rapicorn

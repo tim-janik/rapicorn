@@ -801,6 +801,7 @@ public:
   bool             empty                () const;
   void             pop_clip_rect        ();
   void             render_combined      (Plane &plane);
+  void             render_combined      (cairo_t *cairo);
 };
 
 /* --- implementations --- */
