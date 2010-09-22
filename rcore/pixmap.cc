@@ -173,6 +173,15 @@ Pixmap::Pixmap (uint _width,
   Pixbuf (_width, _height, alignment)
 {}
 
+uint32*
+Pixmap::data (int *stride)
+{
+  if (!stride)
+    return NULL;
+  *stride = m_rowstride * 4;
+  return row (0);
+}
+
 void
 Pixmap::comment (const String &_comment)
 {
@@ -225,18 +234,6 @@ Pixmap::copy (const Pixmap &source,
       uint32 *r1 = row (ty + j);
       const uint32 *r2 = source.row (sy + j);
       memcpy (r1 + tx, r2 + sx, sizeof (r1[0]) * swidth);
-    }
-}
-
-static void
-pixmap_fill (Pixmap *pixmap,
-             uint32  pixel)
-{
-  for (int y = 0; y < pixmap->height(); y++)
-    {
-      uint32 *row = pixmap->row (y);
-      for (int x = 0; x < pixmap->width(); x++)
-        row[x] = pixel;
     }
 }
 
@@ -518,13 +515,13 @@ pngcontext_read_image (PngContext &pcontext,
     }
   /* setup pixmap and rows */
   pcontext.rows = new png_bytep[height];
-  pcontext.pixmap = Pixbuf::try_alloc (width, height) ? new Pixmap (width, height) : NULL;
+  pcontext.pixmap = Pixbuf::try_alloc (width, height, 0) ? new Pixmap (width, height) : NULL;
   if (!pcontext.rows || !pcontext.pixmap)
     {
       pcontext.error = ENOMEM;
       return;
     }
-  pixmap_fill (pcontext.pixmap, 0);             /* transparent background for partial images */
+  // pixmap_fill (pcontext.pixmap, 0);          // pixmaps are preinitialized to transparent bg
   pixmap_border (pcontext.pixmap, 0x80ff0000);  /* show red error border for partial images */
   for (uint i = 0; i < height; i++)
     pcontext.rows[i] = (png_byte*) pcontext.pixmap->row (i);

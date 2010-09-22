@@ -52,6 +52,7 @@ public:
   String          comment   () const    { return m_comment; }
   void            comment   (const String &_comment);
   uint32*         row       (uint y)    { return const_cast<uint32*> (Pixbuf::row (y)); }
+  uint32*         data      (int *stride); // stride in bytes
   using           Pixbuf::row;
   bool            save_png  (const String &filename);   /* assigns errno */
   void            copy      (const Pixmap &source,
