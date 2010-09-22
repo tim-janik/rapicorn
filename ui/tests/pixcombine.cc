@@ -38,6 +38,7 @@ static void
 plane_gradient_test()
 {
   Plane plane1 (0, 0, 1024, 1024);
+#if 0
   Painter painter (plane1);
   painter.draw_gradient_rect (0, 0, 1024, 1024,
                               200, 300, Color (0x80406080),     // premul: 0x80203040
@@ -48,6 +49,7 @@ plane_gradient_test()
   TASSERT_CMPx (0xff202020, ==, *plane1.poke_span (1023, 700 - 1, 1));
   TASSERT_CMPx (0x80203040, <,  *plane1.poke_span (400, 500, 1));
   TASSERT_CMPx (0xff202020, >,  *plane1.poke_span (400, 500, 1));
+#endif
 }
 
 static void
@@ -57,10 +59,12 @@ pixel_combine (uint n)
   Plane plane1 (0, 0, 1024, 1024);
   Plane plane2 (0, 0, 1024, 1024);
   plane1.fill (0x80808080);
+#if 0
   Painter painter (plane2);
   painter.draw_shaded_rect (0, 0, 0x80101010, 1024, 1024, 0x80202020);
   for (uint i = 0; i <= n; i++)
     plane1.combine (plane2, COMBINE_NORMAL, 0xff);
+#endif
 }
 
 extern "C" int

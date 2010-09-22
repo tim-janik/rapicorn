@@ -27,9 +27,11 @@ shade_rect_test (uint n)
 {
   printf ("%s: testing draw_shaded_rect()...\n", __func__);
   Plane plane (0, 0, 1024, 1024);
+#if 0
   Painter painter (plane);
   for (uint i = 0; i <= n; i++)
     painter.draw_shaded_rect (0, 0, 0x80101010, 1024, 1024, 0x80202020);
+#endif
 }
 
 extern "C" int

@@ -23,16 +23,18 @@ static void
 drawable_draw (Display  &display,
                Drawable &drawable)
 {
-  Plane &plane = display.create_plane();
-  Painter painter (plane);
+  cairo_t *cr = display.create_cairo();
   Rect area = drawable.allocation();
-  Color fg = 0xff000000;
-  double lthickness = 2.25;
-  painter.draw_simple_line (area.x + 15, area.y + 15, area.x + 35, area.y + 35, lthickness, fg);
-  painter.draw_simple_line (area.x + 35, area.y + 35, area.x + 50, area.y + 20, lthickness, fg);
-  painter.draw_simple_line (area.x + 50, area.y + 20, area.x + 75, area.y + 90, lthickness, fg);
-  painter.draw_simple_line (area.x + 75, area.y + 90, area.x + 230, area.y + 93, lthickness, fg);
-  painter.draw_simple_line (area.x + 75, area.y + 120, area.x + 230, area.y + 110, lthickness * 0.5, fg);
+  const double lthickness = 2.25;
+  cairo_set_source_rgba (cr, 0, 0, 0, 1);
+  cairo_set_line_width (cr, lthickness);
+  cairo_move_to (cr, area.x + 15, area.y + 15), cairo_line_to (cr, area.x + 35, area.y + 35);
+  cairo_move_to (cr, area.x + 35, area.y + 35), cairo_line_to (cr, area.x + 50, area.y + 20);
+  cairo_move_to (cr, area.x + 50, area.y + 20), cairo_line_to (cr, area.x + 75, area.y + 90);
+  cairo_move_to (cr, area.x + 75, area.y + 90), cairo_line_to (cr, area.x + 230, area.y + 93);
+  cairo_stroke (cr);
+  cairo_set_line_width (cr, lthickness * 0.5);
+  cairo_move_to (cr, area.x + 75, area.y + 120), cairo_line_to (cr, area.x + 230, area.y + 110);
 }
 
 extern "C" int

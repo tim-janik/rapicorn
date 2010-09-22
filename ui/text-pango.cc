@@ -25,8 +25,6 @@
 
 #include <algorithm>
 
-#define USE_FT2 0 // we have cairo code in place now
-
 #if PANGO_SCALE != 1024
 #error code needs adaption to unknown PANGO_SCALE value
 #endif
@@ -43,15 +41,6 @@
 #define MONOSPACE_NAME  (String ("Monospace"))
 
 namespace Rapicorn {
-
-/* --- prototypes --- */
-static void _rapicorn_pango_renderer_render_layout     (Plane           &plane,
-                                                        Heritage        &heritage,
-                                                        Color            fg,
-                                                        PangoLayout     *layout,
-                                                        Rect             rect,
-                                                        gint64           layout_x,
-                                                        gint64           layout_y);
 
 /* --- Pango support code --- */
 static const char*
@@ -131,47 +120,6 @@ default_pango_cairo_font_options (PangoContext *pcontext,
   cairo_font_options_destroy (fopt);
 }
 
-static void
-default_font_config_func (FcPattern *pattern,
-                          gpointer   data)
-{
-  bool antialias = true, hinting = true, autohint = false;
-  int hint_style = 4; /* 0:unset, 1:none, 2:slight, 3:medium, 4:full */
-  int subpxorder = 1; /* 0:unset, 1:none, 2:RGB, 3:BGR, 4:VRGB, 5:VBGR */
-  // subpixel order != none needs FT_PIXEL_MODE_LCD or FT_PIXEL_MODE_LCD_V
-  FcValue v;
-
-  if (FcPatternGet (pattern, FC_ANTIALIAS, 0, &v) == FcResultNoMatch)
-    FcPatternAddBool (pattern, FC_ANTIALIAS, antialias);
-  if (FcPatternGet (pattern, FC_HINTING, 0, &v) == FcResultNoMatch)
-    FcPatternAddBool (pattern, FC_HINTING, hinting);
-  if (hint_style && FcPatternGet (pattern, FC_HINT_STYLE, 0, &v) == FcResultNoMatch)
-    {
-      switch (hint_style)
-        {
-        case 1: FcPatternAddInteger (pattern, FC_HINT_STYLE, FC_HINT_NONE);   break;
-        case 2: FcPatternAddInteger (pattern, FC_HINT_STYLE, FC_HINT_SLIGHT); break;
-        case 3: FcPatternAddInteger (pattern, FC_HINT_STYLE, FC_HINT_MEDIUM); break;
-        case 4: FcPatternAddInteger (pattern, FC_HINT_STYLE, FC_HINT_FULL);   break;
-        default:      break;
-        }
-    }
-  if (FcPatternGet (pattern, FC_AUTOHINT, 0, &v) == FcResultNoMatch)
-    FcPatternAddBool (pattern, FC_AUTOHINT, autohint);
-  if (subpxorder && FcPatternGet (pattern, FC_RGBA, 0, &v) == FcResultNoMatch)
-    {
-      switch (subpxorder)
-        {
-        case 1: FcPatternAddInteger (pattern, FC_RGBA, FC_RGBA_NONE); break;
-        case 2: FcPatternAddInteger (pattern, FC_RGBA, FC_RGBA_RGB);  break;
-        case 3: FcPatternAddInteger (pattern, FC_RGBA, FC_RGBA_BGR);  break;
-        case 4: FcPatternAddInteger (pattern, FC_RGBA, FC_RGBA_VRGB); break;
-        case 5: FcPatternAddInteger (pattern, FC_RGBA, FC_RGBA_VBGR); break;
-        default:      break;
-        }
-    }
-}
-
 static PangoAlignment
 pango_alignment_from_align_type (AlignType at)
 {
@@ -249,18 +197,10 @@ class LayoutCache {
     PangoContext *pcontext = context_cache[key];
     if (!pcontext)
       {
-#if USE_FT2
-        PangoFontMap *fontmap = pango_ft2_font_map_new();
-        pango_ft2_font_map_set_default_substitute (PANGO_FT2_FONT_MAP (fontmap), default_font_config_func, NULL, NULL);
-        pango_ft2_font_map_set_resolution (PANGO_FT2_FONT_MAP (fontmap), key.dpi.x, key.dpi.y);
-        pcontext = pango_ft2_font_map_create_context (PANGO_FT2_FONT_MAP (fontmap));
-        g_object_unref (fontmap);
-#else
         PangoFontMap *fontmap = pango_cairo_font_map_new ();
         pango_cairo_font_map_set_resolution (PANGO_CAIRO_FONT_MAP (fontmap), key.dpi.x);
         pcontext = pango_font_map_create_context (fontmap);
         default_pango_cairo_font_options (pcontext, NULL);
-#endif
         pango_context_set_base_dir (pcontext, key.direction);
         pango_context_set_language (pcontext, pango_language_from_string (key.language.c_str()));
         pango_context_set_font_description (pcontext, default_pango_font_description());
@@ -665,26 +605,22 @@ class XmlToPango : Rapicorn::MarkupParser {
           String col = xnode.get_attribute ("color", true);
           if (col.size() && token == '0')
             {
-#if ! USE_FT2
               PangoColor pcolor;
               if (pango_color_parse (&pcolor, col.c_str()))
                 pa = LazyColorAttr::create_preset_color (LazyColorAttr::background_klass(),
                                                          pcolor.red, pcolor.green, pcolor.blue,
                                                          col, COLOR_BACKGROUND);
               else
-#endif
                 pa = LazyColorAttr::create_lazy_color (LazyColorAttr::background_klass(), col, COLOR_BACKGROUND);
             }
           else if (col.size() && token == '1')
             {
-#if ! USE_FT2
               PangoColor pcolor;
               if (pango_color_parse (&pcolor, col.c_str()))
                 pa = LazyColorAttr::create_preset_color (LazyColorAttr::foreground_klass(),
                                                          pcolor.red, pcolor.green, pcolor.blue,
                                                          col, COLOR_FOREGROUND);
               else
-#endif
                 pa = LazyColorAttr::create_lazy_color (LazyColorAttr::foreground_klass(), col, COLOR_FOREGROUND);
             }
         }
@@ -1177,43 +1113,27 @@ protected:
     Color fg (col.premultiplied());
     int xpos = iround (x);
     int ymin = iround (MAX (y, plane.ystart())), ymax = iround (MIN (y + height, plane.ybound()) - 1);
-    if (cairo)
-      {
-        const double cw = 2, ch = 2;
-        cairo_set_source_rgba (cairo, col.red1(), col.green1(), col.blue1(), col.alpha1());
-        // upper triangle
-        cairo_move_to (cairo, xpos,          ymax - ch);
-        cairo_line_to (cairo, xpos - cw,     ymax);
-        cairo_line_to (cairo, xpos + 1 + cw, ymax);
-        cairo_line_to (cairo, xpos + 1,      ymax - ch);
-        cairo_close_path (cairo);
-        // lower triangle
-        cairo_move_to (cairo, xpos,          ymin + ch);
-        cairo_line_to (cairo, xpos - cw,     ymin);
-        cairo_line_to (cairo, xpos + 1 + cw, ymin);
-        cairo_line_to (cairo, xpos + 1,      ymin + ch);
-        cairo_close_path (cairo);
-        // show triangles
-        cairo_fill (cairo);
-        // draw bar
-        cairo_move_to (cairo, xpos + .5, ymin + ch);
-        cairo_line_to (cairo, xpos + .5, ymax - ch);
-        cairo_set_line_width (cairo, 1);
-        cairo_stroke (cairo);
-      }
-    else
-      {
-        Painter pp (plane);
-        const double cw = 3, cl = cw - 1, cr = cw;
-        pp.draw_trapezoid (ymax, xpos - cl, xpos + cr, ymax - 3, xpos + .5, xpos + .5, col);
-        pp.draw_vline (xpos, ymin + 2, ymax - 3, col);
-        pp.draw_trapezoid (ymin, xpos - cl, xpos + cr, ymin + 3, xpos + .5, xpos + .5, col);
-      }
-#if 0
-    pp.draw_hline (xpos - 1, xpos + 1, ymax, col);
-    pp.draw_vline (xpos, ymin + 1, ymax - 1, col);
-    pp.draw_hline (xpos - 1, xpos + 1, ymin, col);
-#endif
+    const double cw = 2, ch = 2;
+    cairo_set_source_rgba (cairo, col.red1(), col.green1(), col.blue1(), col.alpha1());
+    // upper triangle
+    cairo_move_to (cairo, xpos,          ymax - ch);
+    cairo_line_to (cairo, xpos - cw,     ymax);
+    cairo_line_to (cairo, xpos + 1 + cw, ymax);
+    cairo_line_to (cairo, xpos + 1,      ymax - ch);
+    cairo_close_path (cairo);
+    // lower triangle
+    cairo_move_to (cairo, xpos,          ymin + ch);
+    cairo_line_to (cairo, xpos - cw,     ymin);
+    cairo_line_to (cairo, xpos + 1 + cw, ymin);
+    cairo_line_to (cairo, xpos + 1,      ymin + ch);
+    cairo_close_path (cairo);
+    // show triangles
+    cairo_fill (cairo);
+    // draw bar
+    cairo_move_to (cairo, xpos + .5, ymin + ch);
+    cairo_line_to (cairo, xpos + .5, ymax - ch);
+    cairo_set_line_width (cairo, 1);
+    cairo_stroke (cairo);
   }
   void
   scroll_to_cursor ()
@@ -1278,7 +1198,6 @@ protected:
     cairo_restore (cairo);
     /* and cursor */
     render_cursor_gL (plane, cairo, fg, r, lx, ly);
-#endif
   }
   Rect
   layout_area (uint *vdot_size)
@@ -1346,9 +1265,6 @@ protected:
     Plane &plane = display.create_plane ();
     cairo_t *cairo = display.create_cairo();
     default_pango_cairo_font_options (NULL, cairo);
-#if ! USE_FT2
-    pango_cairo_update_layout (cairo, m_layout);
-#endif
     rapicorn_gtk_threads_enter();
     if (insensitive())
       {
@@ -1365,15 +1281,7 @@ protected:
     else
       {
         /* render normal text */
-        if (1)
-          render_text_gL (plane, cairo, area, vdot_size, foreground());
-        else
-          {
-            Heritage &hr = heritage()->selected();
-            Painter painter (plane);
-            painter.draw_filled_rect (area.x, area.y, area.width, area.height, hr.background());
-            render_text_gL (plane, cairo, area, vdot_size, hr.foreground());
-          }
+        render_text_gL (plane, cairo, area, vdot_size, foreground());
       }
     rapicorn_gtk_threads_leave();
     cairo_destroy (cairo);
@@ -1388,132 +1296,6 @@ protected:
 };
 
 static const ItemFactory<TextPangoImpl> text_pango_factory ("Rapicorn::Factory::TextPango");
-
-/* --- RapicornPangoRenderer --- */
-#if USE_FT2
-#include <pango/pango-renderer.h>
-struct RapicornPangoRenderer {
-  PangoRenderer    parent_instance;
-  Plane           *plane;
-  Heritage        *heritage;
-  Color            rfg, fg, bg;
-  gint64           x, y, width, height;
-};
-struct RapicornPangoRendererClass {
-  PangoRendererClass parent_class;
-};
-G_DEFINE_TYPE (RapicornPangoRenderer, _rapicorn_pango_renderer, PANGO_TYPE_RENDERER);
-
-static void
-_rapicorn_pango_renderer_init (RapicornPangoRenderer *self)
-{}
-
-static void
-_rapicorn_pango_renderer_render_layout (Plane           &plane,
-                                        Heritage        &heritage,
-                                        Color            fg,
-                                        PangoLayout     *layout,
-                                        Rect             rect,
-                                        gint64           layout_x,
-                                        gint64           layout_y)
-{
-  RapicornPangoRenderer *self = (RapicornPangoRenderer*) g_object_new (_rapicorn_pango_renderer_get_type(), NULL);
-  /* (+layout_x, -layout_y) corresponds to (rect.x, rect.y+rect.height) */
-  self->plane = &plane;
-  self->heritage = &heritage;
-  self->rfg = fg;
-  self->x = ifloor (rect.x);
-  self->y = ifloor (rect.y);
-  self->width = iceil (rect.width);
-  self->height = iceil (rect.height);
-  pango_renderer_draw_layout (PANGO_RENDERER (self), layout, ifloor (PIXELS2UNITS (layout_x)), ifloor (PIXELS2UNITS (layout_y)));
-  g_object_unref (self);
-}
-
-static void
-_rapicorn_pango_renderer_prepare_run (PangoRenderer  *renderer,
-                                      PangoLayoutRun *run)
-{
-  RapicornPangoRenderer *self = (RapicornPangoRenderer*) renderer;
-  self->bg = self->fg = self->rfg;
-  for (GSList *slist = run->item->analysis.extra_attrs; slist; slist = slist->next)
-    {
-      const PangoAttribute *attr = (const PangoAttribute*) slist->data;
-      if (attr->klass == LazyColorAttr::foreground_klass())
-        self->fg = LazyColorAttr::resolve_color (attr, *self->heritage);
-      else if (attr->klass == LazyColorAttr::background_klass())
-        self->bg = LazyColorAttr::resolve_color (attr, *self->heritage);
-    }
-  PANGO_RENDERER_CLASS (_rapicorn_pango_renderer_parent_class)->prepare_run (renderer, run);
-}
-
-static void
-_rapicorn_pango_renderer_draw_glyphs (PangoRenderer     *renderer,
-                                      PangoFont         *font,
-                                      PangoGlyphString  *glyphs,
-                                      int                pangox,
-                                      int                pangoy)
-{
-  RapicornPangoRenderer *self = (RapicornPangoRenderer*) renderer;
-  /* render text to alpha bitmap */
-  FT_Bitmap bitmap = { 0, };
-  bitmap.rows = self->height;
-  bitmap.width = self->width;
-  bitmap.pitch = (bitmap.width + 3) & ~3;
-  bitmap.buffer = new uint8[bitmap.rows * bitmap.pitch];
-  memset (bitmap.buffer, 0, bitmap.rows * bitmap.pitch);
-  bitmap.num_grays = 256;
-  bitmap.pixel_mode = FT_PIXEL_MODE_GRAY;
-  pango_ft2_render (&bitmap, font, glyphs, ifloor (UNITS2PIXELS (pangox)), ifloor (UNITS2PIXELS (pangoy)));
-  /* render bitmap to plane */
-  Plane &plane = *self->plane;
-  Color fg = self->fg;
-  fg = fg.premultiplied();
-  int xmin = MAX (self->x, plane.xstart()), xbound = MIN (self->x + self->width, plane.xbound());
-  int ymin = MAX (self->y, plane.ystart()), ybound = MIN (self->y + self->height, plane.ybound());
-  int xspan = xbound - xmin;
-  for (int iy = ymin; iy < ybound; iy++)
-    {
-      uint32 *pp = plane.poke_span (xmin, iy, xspan), *p = pp;
-      uint8  *ba = &bitmap.buffer[(bitmap.rows - 1 - iy + self->y) * bitmap.pitch + xmin - self->x];
-      while (p < pp + xspan)
-        {
-          uint8 alpha = *ba++;
-          *p = Color (*p).blend_premultiplied (fg, alpha).argb();
-          p++;
-        }
-    }
-  /* cleanup */
-  delete[] bitmap.buffer;
-}
-
-static void
-_rapicorn_pango_renderer_draw_trapezoid (PangoRenderer   *renderer,
-                                         PangoRenderPart  pangopart,
-                                         double           y1,
-                                         double           x11,
-                                         double           x21,
-                                         double           y2,
-                                         double           x12,
-                                         double           x22)
-{
-  RapicornPangoRenderer *self = (RapicornPangoRenderer*) renderer;
-  Painter painter (*self->plane);
-  /* translate from layout coords to rect coords */
-  double ry1 = self->y + self->height - y1, rx11 = self->x + x11, rx21 = self->x + x21;
-  double ry2 = self->y + self->height - y2, rx12 = self->x + x12, rx22 = self->x + x22;
-  painter.draw_trapezoid (ry1, rx11, rx21, ry2, rx12, rx22, pangopart == PANGO_RENDER_PART_BACKGROUND ? self->bg : self->fg);
-}
-
-static void
-_rapicorn_pango_renderer_class_init (RapicornPangoRendererClass *klass)
-{
-  PangoRendererClass *renderer_class = PANGO_RENDERER_CLASS (klass);
-  renderer_class->prepare_run = _rapicorn_pango_renderer_prepare_run;
-  renderer_class->draw_glyphs = _rapicorn_pango_renderer_draw_glyphs;
-  renderer_class->draw_trapezoid = _rapicorn_pango_renderer_draw_trapezoid; // needed for UNDERLINE
-}
-#endif // USE_FT2
 
 } // Rapicorn
 
