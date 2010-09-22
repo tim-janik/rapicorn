@@ -139,8 +139,8 @@
 	<Alignment hexpand="1" vexpand="1" hposition="0" hspan="1" vposition="1" vspan="1" width="0" height="0"
 	  left-padding="2" right-padding="3" bottom-padding="2" top-padding="2">
 	  <Frame frame-type="in" hscale="0" vscale="0">
-	    <RapicornScrollPort>
-	      <Ambience id="scroll-container" normal-lighting="upper-left"/>
+	    <RapicornScrollPort id="scroll-container">
+	      <!-- <Ambience id="scroll-container" normal-lighting="upper-left"/> -->
 	    </RapicornScrollPort>
 	  </Frame>
 	</Alignment>
