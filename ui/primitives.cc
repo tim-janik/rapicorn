@@ -178,7 +178,7 @@ String
 Color::string() const
 {
   char buffer[128];
-  sprintf (buffer, "{.r=%u,.g=%u,.b=%u,.a=%u}", red(), green(), blue(), alpha());
+  sprintf (buffer, "{.rgba=0x%08x}", argb());
   return String (buffer);
 }
 
