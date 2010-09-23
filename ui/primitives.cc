@@ -829,9 +829,9 @@ Display::create_plane (Color       c,
 }
 
 cairo_t*
-Display::create_cairo ()
+Display::create_cairo (Color bg)
 {
-  Plane &plane = create_plane();
+  Plane &plane = create_plane (bg);
   cairo_surface_t *isurface =
     cairo_image_surface_create_for_data ((unsigned char*)
                                          plane.poke_span (plane.xstart(), plane.ystart(), 1),
@@ -845,6 +845,13 @@ Display::create_cairo ()
   cairo_surface_destroy (isurface);
   return_val_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (cr), NULL);
   cairo_translate (cr, -plane.xstart(), -plane.ystart());
+  if (0)
+    {
+      cairo_save (cr);
+      cairo_set_source_rgba (cr, bg.red1(), bg.green1(), bg.blue1(), bg.alpha1());
+      cairo_paint (cr);
+      cairo_restore (cr);
+    }
   return cr;
 }
 

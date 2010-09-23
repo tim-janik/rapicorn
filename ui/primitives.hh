@@ -797,7 +797,7 @@ public:
   Plane&           create_plane         (Color       c = 0x00000000,
                                          CombineType ctype = COMBINE_NORMAL,
                                          double      alpha = 1.0); /* 0..1 */
-  cairo_t*         create_cairo         ();
+  cairo_t*         create_cairo         (Color       c = 0x00000000);
   bool             empty                () const;
   void             pop_clip_rect        ();
   void             render_combined      (Plane &plane);
