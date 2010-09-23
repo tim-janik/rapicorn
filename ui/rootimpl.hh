@@ -60,7 +60,7 @@ private:
   virtual void          do_invalidate                           ();
   virtual void          beep                                    ();
   /* rendering */
-  virtual void          render                                  (Plane                  &plane);
+  virtual void          render                                  (Display                &display);
   using                 Item::render;
   void                  collapse_expose_region                  ();
   virtual void          expose_root_region                      (const Region           &region);

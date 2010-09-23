@@ -49,7 +49,7 @@ public://FIXME: protected:
 public:
   Item*         get_focus               () const;
   virtual bool  tunable_requisitions    () = 0;
-  virtual void  render                  (Plane &plane) = 0;
+  cairo_surface_t* create_snapshot      (const Rect  &subarea);
   virtual void  add_grab                (Item  &child,
                                          bool   unconfined = false) = 0;
   void          add_grab                (Item  *child,

@@ -137,6 +137,25 @@ void
 Root::enable_auto_close ()
 {}
 
+cairo_surface_t*
+Root::create_snapshot (const Rect &subarea)
+{
+  const Allocation area = allocation();
+  Display display;
+  display.push_clip_rect (area.x, area.y, area.width, area.height);
+  display.push_clip_rect (subarea.x, subarea.y, subarea.width, subarea.height);
+  /* render display */
+  if (!display.empty())
+    render (display);
+  cairo_surface_t *isurface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, subarea.width, subarea.height);
+  /* comose area */
+  cairo_t *cairo = cairo_create (isurface);
+  cairo_translate (cairo, -subarea.x, -subarea.y);
+  display.render_combined (cairo);
+  cairo_destroy (cairo);
+  return isurface;
+}
+
 RootImpl::RootImpl() :
   m_loop (*ref_sink (EventLoop::create())),
   m_source (NULL),
@@ -770,9 +789,15 @@ RootImpl::draw_now ()
       for (uint i = 0; i < rects.size(); i++)
         {
           const IRect &ir = rects[i];
-          /* render area */
+          Display display;
+          display.push_clip_rect (ir.x, ir.y, ir.width, ir.height);
+          /* render display */
+          if (!display.empty())
+            render (display);
+          display.pop_clip_rect();
           Plane *plane = new Plane (ir.x, ir.y, ir.width, ir.height);
-          render (*plane);
+          /* comose area */
+          display.render_combined (*plane);
           /* avoid unnecessary plane transfers for slow remote
            * displays, for local displays it'd cause resizing lags.
            */
@@ -792,17 +817,15 @@ RootImpl::draw_now ()
 }
 
 void
-RootImpl::render (Plane &plane)
+RootImpl::render (Display &display)
 {
-  plane.fill (background());
-  Display display;
   const IRect ia = allocation();
   display.push_clip_rect (ia.x, ia.y, ia.width, ia.height);
-  display.push_clip_rect (plane.rect());
-  if (!display.empty())
-    render (display);
-  display.render_combined (plane);
-  display.pop_clip_rect();
+  // paint background
+  cairo_t *cr = display.create_cairo (background());
+  cairo_destroy (cr);
+  // paint children
+  SingleContainerImpl::render (display);
   display.pop_clip_rect();
 }
 
