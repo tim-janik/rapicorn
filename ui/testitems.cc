@@ -219,12 +219,10 @@ protected:
     Root *ritem = get_root();
     if (m_snapshot_file != "" && ritem)
       {
-        const IRect area = allocation();
-        Plane *plane = new Plane (area.x, area.y, area.width, area.height);
-        ritem->render (*plane);
-        bool saved = plane->save_png (m_snapshot_file, *plane, "TestBox snapshot");
-        String err = saved ? "ok" : string_from_errno (errno);
-        delete plane;
+        cairo_surface_t *isurface = ritem->create_snapshot (allocation());
+        cairo_status_t wstatus = cairo_surface_write_to_png (isurface, m_snapshot_file.c_str());
+        cairo_surface_destroy (isurface);
+        String err = CAIRO_STATUS_SUCCESS == wstatus ? "ok" : cairo_status_to_string (wstatus);
         printerr ("%s: wrote %s: %s\n", name().c_str(), m_snapshot_file.c_str(), err.c_str());
       }
     if (m_handler_id)
