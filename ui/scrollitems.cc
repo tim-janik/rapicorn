@@ -211,21 +211,24 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     Item &child = get_child();
     const IRect ica = child.allocation();
     Display scroll_display;
+    // constrain scroll_display to child allocation
     scroll_display.push_clip_rect (ica.x, ica.y, ica.width, ica.height);
+    // constrain scroll_display to visible area
     scroll_display.push_clip_rect (ifloor (xoffset), ifloor (yoffset), iceil (area.width), iceil (area.height));
+    // constrain scroll_display to expose area
     Rect pr = display.current_rect();
     scroll_display.push_clip_rect (ifloor (pr.x - area.x + xoffset), ifloor (pr.y - area.y + yoffset), iceil (pr.width), iceil (pr.height));
     if (!scroll_display.empty())
       {
+        // render child
         child.render (scroll_display);
-        Plane &plane = display.create_plane (background());
-        int64 real_x = plane.xstart();
-        int64 real_y = plane.ystart();
-        Plane::warp_plane_iknowwhatimdoing (plane,
-                                            iround (real_x - area.x + xoffset),
-                                            iround (real_y - area.y + yoffset));
-        scroll_display.render_combined (plane);
-        Plane::warp_plane_iknowwhatimdoing (plane, real_x, real_y);
+        // paint scroll area background
+        cairo_t *cr = display.create_cairo (background());
+        // shift by scroll offset
+        cairo_translate (cr, area.x -xoffset, area.y -yoffset);
+        // combine onto parent
+        scroll_display.render_combined (cr);
+        cairo_destroy (cr);
       }
     scroll_display.pop_clip_rect();
     scroll_display.pop_clip_rect();
