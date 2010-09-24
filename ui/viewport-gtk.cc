@@ -125,8 +125,7 @@ struct ViewportGtk : public virtual Viewport {
   virtual bool          visible                 (void);
   virtual bool          viewable                (void);
   virtual void          hide                    (void);
-  virtual void          blit_plane              (Plane          *plane,
-                                                 uint            draw_stamp);
+  virtual void          blit_display            (Rapicorn::Display &display);
   virtual void          copy_area               (double          src_x,
                                                  double          src_y,
                                                  double          width,
@@ -339,11 +338,10 @@ ViewportGtk::hide (void)
 }
 
 void
-ViewportGtk::blit_plane (Plane *plane,
-                         uint   draw_stamp)
+ViewportGtk::blit_display (Rapicorn::Display &display)
 {
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-  if (m_viewport)
+  if (m_viewport && !display.empty())
     {
       int priority;
       if (m_viewport->fast_local_blitting)
@@ -367,23 +365,11 @@ ViewportGtk::blit_plane (Plane *plane,
           cairo_t *xcr = cairo_create (xsurface);
           return_if_fail (xcr);
           return_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
-          cairo_surface_t *isurface =
-            cairo_image_surface_create_for_data ((unsigned char*)
-                                                 plane->poke_span (plane->xstart(),
-                                                                   plane->ystart(), 1),
-                                                 CAIRO_FORMAT_RGB24,
-                                                 plane->width(),
-                                                 plane->height(),
-                                                 plane->pixstride());
-          return_if_fail (isurface);
-          return_if_fail (CAIRO_STATUS_SUCCESS == cairo_surface_status (isurface));
           cairo_scale (xcr, 1, -1);
           cairo_translate (xcr, 0, -gheight);
-          cairo_set_source_surface (xcr, isurface, plane->xstart(), plane->ystart());
-          cairo_paint (xcr);
+          display.render_combined (xcr);
           assert (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
           gdk_flush();
-          cairo_surface_destroy (isurface);
           if (xcr)
             {
               cairo_destroy (xcr);
@@ -395,27 +381,7 @@ ViewportGtk::blit_plane (Plane *plane,
               xsurface = NULL;
             }
         }
-      if (0 && GTK_WIDGET_DRAWABLE (m_widget))
-        {
-          /* convert to pixbuf */
-          GdkPixbuf *pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE /* alpha */, 8 /* bits */, plane->width(), plane->height());
-          bool success = plane->rgb_convert (gdk_pixbuf_get_width (pixbuf), gdk_pixbuf_get_height (pixbuf),
-                                             gdk_pixbuf_get_rowstride (pixbuf), gdk_pixbuf_get_pixels (pixbuf));
-          RAPICORN_ASSERT (success);
-          int window_height;
-          gdk_window_get_size (m_widget->window, NULL, &window_height);
-          int dest_x = plane->xstart();
-          int dest_y = window_height - (plane->ystart() + gdk_pixbuf_get_height (pixbuf));
-          /* blit pixbuf to screen */
-          int pw = gdk_pixbuf_get_width (pixbuf), ph = gdk_pixbuf_get_height (pixbuf);
-          gdk_draw_pixbuf (m_widget->window, m_widget->style->black_gc,
-                           pixbuf, 0, 0, /* src (x,y) */
-                           dest_x, dest_y, pw, ph,
-                           GDK_RGB_DITHER_MAX, dest_x, dest_y);
-          gdk_pixbuf_unref (pixbuf);
-        }
     }
-  delete plane;
 }
 
 void

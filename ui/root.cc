@@ -794,20 +794,16 @@ RootImpl::draw_now ()
           /* render display */
           if (!display.empty())
             render (display);
-          display.pop_clip_rect();
-          Plane *plane = new Plane (ir.x, ir.y, ir.width, ir.height);
-          /* comose area */
-          display.render_combined (*plane);
           /* avoid unnecessary plane transfers for slow remote
            * displays, for local displays it'd cause resizing lags.
            */
           if (!state.local_blitting && has_pending_win_size())
             {
-              delete plane;
               break;
             }
           /* blit to screen */
-          m_viewport->blit_plane (plane, 0); // takes over plane
+          m_viewport->blit_display (display);
+          display.pop_clip_rect();
         }
       if (!has_pending_win_size())
         sig_displayed.emit();

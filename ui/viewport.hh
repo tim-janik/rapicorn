@@ -124,8 +124,7 @@ public:
   virtual void          hide                    (void) = 0;
   virtual uint          last_draw_stamp         () = 0;
   virtual void          enqueue_win_draws       (void) = 0;
-  virtual void          blit_plane              (Plane          *plane,
-                                                 uint            draw_stamp) = 0;
+  virtual void          blit_display            (Display        &plane) = 0;
   virtual void          copy_area               (double          src_x,
                                                  double          src_y,
                                                  double          width,

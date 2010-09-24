@@ -797,9 +797,18 @@ Display::pop_clip_rect ()
 bool
 Display::empty () const
 {
+  if (clip_stack.empty())
+    return true;
   const Rect &r = clip_stack.front();
-  int w = iceil (r.width), h = iceil (r.height);
-  return !(w > 0 && h > 0);
+  return !(r.width > 0 && r.height > 0);
+}
+
+Rect
+Display::extents () const
+{
+  if (clip_stack.empty())
+    return Rect (-INFINITY, -INFINITY, INFINITY, INFINITY);
+  return clip_stack.back();
 }
 
 Rect
