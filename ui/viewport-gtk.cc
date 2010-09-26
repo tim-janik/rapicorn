@@ -352,6 +352,12 @@ ViewportGtk::create_display_backing (Rapicorn::Display &display)
   cairo_destroy (cr);
 }
 
+#define CHECK_CAIRO_STATUS(status)      do {    \
+            cairo_status_t ___s = (status);     \
+            if (___s != CAIRO_STATUS_SUCCESS)   \
+              RAPICORN_LOG (DIAG, "%s: %s", #status, cairo_status_to_string (___s)); \
+          } while (0)
+
 void
 ViewportGtk::blit_display (Rapicorn::Display &display)
 {
@@ -373,6 +379,7 @@ ViewportGtk::blit_display (Rapicorn::Display &display)
                                                                  GDK_VISUAL_XVISUAL (gvisual),
                                                                  gwidth, gheight);
           return_if_fail (xsurface);
+          CHECK_CAIRO_STATUS (cairo_surface_status (xsurface));
           return_if_fail (cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
           cairo_xlib_surface_set_size (xsurface, gwidth, gheight);
           return_if_fail (cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
