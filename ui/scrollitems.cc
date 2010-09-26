@@ -227,7 +227,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
         // shift by scroll offset
         cairo_translate (cr, area.x -xoffset, area.y -yoffset);
         // combine onto parent
-        scroll_display.render_combined (cr);
+        scroll_display.render_backing (cr);
         cairo_destroy (cr);
       }
     scroll_display.pop_clip_rect();

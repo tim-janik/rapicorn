@@ -151,7 +151,7 @@ Root::create_snapshot (const Rect &subarea)
   /* comose area */
   cairo_t *cairo = cairo_create (isurface);
   cairo_translate (cairo, -subarea.x, -subarea.y);
-  display.render_combined (cairo);
+  display.render_backing (cairo);
   cairo_destroy (cairo);
   return isurface;
 }

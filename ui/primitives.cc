@@ -766,31 +766,34 @@ Affine::from_triangles (Point src_a, Point src_b, Point src_c,
   return true;
 }
 
-Display::Display()
+Display::Display() :
+  m_backing (NULL)
 {
-  Rect r (Point (-8.9884656743115785e+307, -8.9884656743115785e+307), 1.7976931348623157e+308, 1.7976931348623157e+308);
-  clip_stack.push_front (r);
+  // Rect r (Point (-8.9884656743115785e+307, -8.9884656743115785e+307), 1.7976931348623157e+308, 1.7976931348623157e+308);
+  // clip_stack.push_front (r);
 }
 
 Display::~Display()
 {
-  while (!layer_stack.empty())
-    {
-      Layer l = layer_stack.front();
-      layer_stack.pop_front();
-      delete l.plane;
-    }
+  cairo_t *old = m_backing;
+  m_backing = NULL;
+  if (old)
+    cairo_destroy (old);
 }
 
 void
 Display::push_clip_rect (const Rect &rect)
 {
-  clip_stack.push_front (Rect (rect).intersect (clip_stack.front()));
+  if (clip_stack.empty())
+    clip_stack.push_front (rect);
+  else
+    clip_stack.push_front (Rect (rect).intersect (clip_stack.front()));
 }
 
 void
 Display::pop_clip_rect ()
 {
+  return_if_fail (!clip_stack.empty());
   clip_stack.pop_front ();
 }
 
@@ -798,7 +801,7 @@ bool
 Display::empty () const
 {
   if (clip_stack.empty())
-    return true;
+    return false;
   const Rect &r = clip_stack.front();
   return !(r.width > 0 && r.height > 0);
 }
@@ -820,41 +823,47 @@ Display::current_rect ()
   return Rect (Point (x, y), w, h); // FIXME: should be IntRect
 }
 
-Plane&
-Display::create_plane (Color       c,
-                       CombineType ctype,
-                       double      alpha) /* 0..1 */
-{
-  const Rect &r = clip_stack.front();
-  int x = iround (r.x), y = iround (r.y), w = iceil (r.width), h = iceil (r.height);
-  if (w <= 0 || h <= 0)
-    w = h = 0;
-  Layer l;
-  l.plane = new Plane (x, y, w, h, c);
-  l.ctype = ctype;
-  l.alpha = CLAMP (alpha, 0, 1.0);
-  layer_stack.push_back (l);
-  return *l.plane;
-}
-
 cairo_t*
 Display::create_cairo (Color bg)
 {
-  Plane &plane = create_plane (bg);
+  return_val_if_fail (!clip_stack.empty(), NULL);
+  const Rect e = extents();
+  if (!m_backing)
+    {
+      cairo_surface_t *bsurface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+                                                              iceil (e.width), iceil (e.height));
+      cairo_surface_mark_dirty (bsurface); // surface will be poked into
+      return_val_if_fail (cairo_surface_status (bsurface) == CAIRO_STATUS_SUCCESS, NULL);
+      cairo_t *cr = cairo_create (bsurface);
+      cairo_surface_destroy (bsurface);
+      cairo_translate (cr, -e.x, -e.y);
+      set_backing (cr);
+      cairo_destroy (cr);
+    }
+  const Rect &r = clip_stack.front();
+  int x = iround (r.x), y = iround (r.y), w = iceil (r.width), h = iceil (r.height);
+  cairo_surface_t *bsurface = cairo_get_target (m_backing);
+  return_val_if_fail (cairo_surface_status (bsurface) == CAIRO_STATUS_SUCCESS, NULL);
+  uint8 *data = cairo_image_surface_get_data (bsurface);
+  cairo_format_t format = cairo_image_surface_get_format (bsurface);
+  int width = cairo_image_surface_get_width (bsurface);
+  int height = cairo_image_surface_get_height (bsurface);
+  int stride = cairo_image_surface_get_stride (bsurface); // bytes
+  return_val_if_fail (x >= e.x, NULL);
+  return_val_if_fail (y >= e.y, NULL);
+  return_val_if_fail (w <= width, NULL);
+  return_val_if_fail (h <= height, NULL);
+  return_val_if_fail (x + w <= e.x + width, NULL);
+  return_val_if_fail (y + h <= e.y + height, NULL);
+  int dy = y - e.y, dx = x - e.x;
   cairo_surface_t *isurface =
-    cairo_image_surface_create_for_data ((unsigned char*)
-                                         plane.poke_span (plane.xstart(), plane.ystart(), 1),
-                                         CAIRO_FORMAT_ARGB32,
-                                         plane.width(),
-                                         plane.height(),
-                                         plane.pixstride());
-  return_val_if_fail (isurface != NULL, NULL);
-  return_val_if_fail (CAIRO_STATUS_SUCCESS == cairo_surface_status (isurface), NULL);
-  cairo_t *cr = ::cairo_create (isurface);
+    cairo_image_surface_create_for_data (data + dx * 4 + dy * stride,
+                                         format, w, h, stride);
+  return_val_if_fail (cairo_surface_status (isurface) == CAIRO_STATUS_SUCCESS, NULL);
+  cairo_t *cr = cairo_create (isurface);
   cairo_surface_destroy (isurface);
-  return_val_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (cr), NULL);
-  cairo_translate (cr, -plane.xstart(), -plane.ystart());
-  if (0)
+  cairo_translate (cr, -x, -y);
+  if (bg)
     {
       cairo_save (cr);
       cairo_set_source_rgba (cr, bg.red1(), bg.green1(), bg.blue1(), bg.alpha1());
@@ -865,38 +874,29 @@ Display::create_cairo (Color bg)
 }
 
 void
-Display::render_combined (Plane &plane)
+Display::set_backing (cairo_t *cairo)
 {
-  for (Walker<Layer> layer = walker (layer_stack); layer.has_next(); layer++)
-    {
-      Layer &l = *layer;
-      plane.combine (*l.plane, l.ctype, iround (l.alpha * 0xff));
-    }
+  cairo_t *old = m_backing;
+  if (cairo)
+    cairo_reference (cairo);
+  m_backing = cairo;
+  if (old)
+    cairo_destroy (old);
 }
 
 void
-Display::render_combined (cairo_t *cr)
+Display::render_backing (cairo_t *cr)
 {
-  if (layer_stack.empty())
+  if (!m_backing || clip_stack.empty())
     return;
+  const Rect e = extents();
+  return_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (m_backing));
+  cairo_surface_t *bsurface = cairo_get_target (m_backing);
+  return_if_fail (CAIRO_STATUS_SUCCESS == cairo_surface_status (bsurface));
   cairo_save (cr);
-  for (Walker<Layer> layer = walker (layer_stack); layer.has_next(); layer++)
-    {
-      Layer &l = *layer;
-      Plane *plane = l.plane;
-      cairo_surface_t *isurface =
-        cairo_image_surface_create_for_data ((unsigned char*)
-                                             plane->poke_span (plane->xstart(),
-                                                               plane->ystart(), 1),
-                                             CAIRO_FORMAT_ARGB32,
-                                             plane->width(),
-                                             plane->height(),
-                                             plane->pixstride());
-      cairo_set_source_surface (cr, isurface, plane->xstart(), plane->ystart());
-      cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-      cairo_paint_with_alpha (cr, l.alpha);
-      cairo_surface_destroy (isurface);
-    }
+  cairo_set_source_surface (cr, bsurface, e.x, e.y);
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  cairo_paint_with_alpha (cr, 1);
   cairo_restore (cr);
 }
 

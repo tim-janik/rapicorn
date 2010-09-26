@@ -126,6 +126,7 @@ struct ViewportGtk : public virtual Viewport {
   virtual bool          viewable                (void);
   virtual void          hide                    (void);
   virtual void          blit_display            (Rapicorn::Display &display);
+  virtual void          create_display_backing  (Rapicorn::Display &display);
   virtual void          copy_area               (double          src_x,
                                                  double          src_y,
                                                  double          width,
@@ -338,6 +339,20 @@ ViewportGtk::hide (void)
 }
 
 void
+ViewportGtk::create_display_backing (Rapicorn::Display &display)
+{
+  if (display.empty())
+    return;
+  const Rect e = display.extents();
+  cairo_surface_t *bsurface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, e.width, e.height);
+  cairo_t *cr = cairo_create (bsurface);
+  cairo_translate (cr, -e.x, -e.y);
+  display.set_backing (cr);
+  cairo_surface_destroy (bsurface);
+  cairo_destroy (cr);
+}
+
+void
 ViewportGtk::blit_display (Rapicorn::Display &display)
 {
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
@@ -367,7 +382,7 @@ ViewportGtk::blit_display (Rapicorn::Display &display)
           return_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
           cairo_scale (xcr, 1, -1);
           cairo_translate (xcr, 0, -gheight);
-          display.render_combined (xcr);
+          display.render_backing (xcr);
           assert (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
           gdk_flush();
           if (xcr)
