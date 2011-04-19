@@ -176,6 +176,12 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo '#define RAPICORN_I18N_DOMAIN    "rapicorn"'					>> xgen-$(@F) \
 	&& echo "/* make sure to call bindtextdomain (RAPICORN_I18N_DOMAIN, i18ndir_path); */"	>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
+	&& echo "/* --- resource paths --- */"							>> xgen-$(@F) \
+	&& echo	'#define RAPICORN_DOCDIR		"${docdir}"'				>> xgen-$(@F) \
+	&& echo	'#define RAPICORN_SVGDIR		"${rapicornsvgdir}"'			>> xgen-$(@F) \
+	&& echo	'#define RAPICORN_DATADIR       	"${rapicorndatadir}"'			>> xgen-$(@F) \
+	&& echo	'#define RAPICORN_LOCALEDIR     	"${pkglocaledir}"'			>> xgen-$(@F) \
+	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- backend configuration --- */"						>> xgen-$(@F) \
 	&& echo "#define RAPICORN_WITH_GTK	(1)"						>> xgen-$(@F) \
 	&& echo "#define RAPICORN_WITH_PANGO	(1)"						>> xgen-$(@F) \
