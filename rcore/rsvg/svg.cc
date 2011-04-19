@@ -9,8 +9,6 @@
 namespace Rapicorn {
 namespace Svg {
 
-static vector<RsvgHandle*> library_handles;
-
 struct ElementImpl : public ReferenceCountable {
   RsvgHandle    *handle;
   int            x, y, width, height;
@@ -123,8 +121,63 @@ Element::containee (Allocation &_resized)
   return containee();
 }
 
+static vector<String>      library_search_dirs;
+
+/**
+ * Add a directory to search for SVG library fiels.
+ */
+void
+Library::add_search_dir (const String &absdir)
+{
+  return_if_fail (Path::isabs (absdir));
+  library_search_dirs.push_back (absdir);
+}
+
+static String
+find_library_file (const String &filename)
+{
+  if (Path::isabs (filename))
+    return filename;
+  for (size_t i = 0; i < library_search_dirs.size(); i++)
+    {
+      String fpath = Path::join (library_search_dirs[i], filename);
+      if (Path::check (fpath, "e"))
+        return fpath;
+    }
+  return Path::abspath (filename); // uses CWD
+}
+
+static vector<RsvgHandle*> library_handles;
+
+/**
+ * Add @filename to the list of SVG libraries used for looking up UI graphics.
+ */
+void
+Library::add_library (const String &filename)
+{
+  // loading *could* be deferred here
+  FILE *fp = fopen (find_library_file (filename).c_str(), "rb");
+  if (fp)
+    {
+      uint8 buffer[8192];
+      ssize_t len;
+      RsvgHandle *handle = rsvg_handle_new();
+      g_object_ref_sink (handle);
+      bool success = false;
+      while ((len = fread (buffer, 1, sizeof (buffer), fp)) > 0)
+        if (!(success = rsvg_handle_write (handle, buffer, len, NULL)))
+          break;
+      fclose (fp);
+      success = success && rsvg_handle_close (handle, NULL);
+      if (success)
+        library_handles.push_back (handle);
+      else
+        g_object_unref (handle);
+    }
+}
+
 Element
-lookup_element (const String &id)
+Library::lookup_element (const String &id)
 {
   for (size_t i = 0; i < library_handles.size(); i++)
     {
@@ -153,32 +206,12 @@ lookup_element (const String &id)
   return Element();
 }
 
-/**
- * Add @filename to the list of SVG libraries used for looking up UI graphics.
- */
-void
-add_library (const String &filename)
+static void
+svg_initialisation_hook (void)
 {
-  // loading *could* be deferred here
-  FILE *fp = fopen (Path::abspath (filename, "/opt/src/rapicorn/rcore/rsvg").c_str(), "rb");
-  if (fp)
-    {
-      uint8 buffer[8192];
-      ssize_t len;
-      RsvgHandle *handle = rsvg_handle_new();
-      g_object_ref_sink (handle);
-      bool success = false;
-      while ((len = fread (buffer, 1, sizeof (buffer), fp)) > 0)
-        if (!(success = rsvg_handle_write (handle, buffer, len, NULL)))
-          break;
-      fclose (fp);
-      success = success && rsvg_handle_close (handle, NULL);
-      if (success)
-        library_handles.push_back (handle);
-      else
-        g_object_unref (handle);
-    }
+  Library::add_search_dir (RAPICORN_SVGDIR);
 }
+static InitHook inithook (svg_initialisation_hook, -1);
 
 } // Svg
 } // Rapicorn

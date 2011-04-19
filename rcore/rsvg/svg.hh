@@ -40,9 +40,12 @@ public:
   //bool        render          (cairo_surface_t *, Allocation &);
 };
 
-void            add_library     (const String   &filename);
-Element         lookup_element  (const String   &id);
-
+class Library {
+public:
+  static void           add_search_dir  (const String   &absdir);
+  static void           add_library     (const String   &filename);
+  static Element        lookup_element  (const String   &id);
+};
 
 } // Svg
 } // Rapicorn
