@@ -325,7 +325,7 @@ _rsvg_register_types (GTypeModule * module)
 {
     rsvg_type = g_type_module_register_type (module,
                                              G_TYPE_OBJECT,
-                                             "RsvgHandle", &rsvg_type_info, (GTypeFlags) 0);
+                                             "Rapicorn_RsvgHandle_2141761a49a045c89ae79728052d1cf4", &rsvg_type_info, (GTypeFlags) 0);
     return rsvg_type;
 }
 
@@ -334,7 +334,7 @@ rsvg_handle_get_type (void)
 {
     if (!rsvg_type) {
         rsvg_type =
-            g_type_register_static (G_TYPE_OBJECT, "RsvgHandle", &rsvg_type_info, (GTypeFlags) 0);
+            g_type_register_static (G_TYPE_OBJECT, "Rapicorn_RsvgHandle_2141761a49a045c89ae79728052d1cf4", &rsvg_type_info, (GTypeFlags) 0);
     }
     return rsvg_type;
 }
