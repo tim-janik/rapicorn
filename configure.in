@@ -74,9 +74,7 @@ MC_ASSERT_PROG(PKG_CONFIG, pkg-config, [pkg-config can be found at http://pkgcon
 
 # check for base package requirements early on
 PKG_CHECK_MODULES(BASE_DEPENDENCIES,[
-	cairo    >= 1.2.4
 	glib-2.0 >= 2.12.4
-	pango    >= 1.14.8
 	gtk+-2.0 >= 2.8.20
 ])
 
@@ -131,6 +129,17 @@ AC_DEFUN([RAPICORN_GCC_REQUIREMENTS],
     if test "$depversion_gnuc_match" != "ok" ; then
 	AC_MSG_ERROR([detected GNUC version too old])
     fi
+])
+
+dnl # RAPICORN_RSVG_REQUIREMENTS() - checks everything needed for embedding librsvg
+AC_DEFUN([RAPICORN_RSVG_REQUIREMENTS],
+[
+    AC_CHECK_FUNCS(strtok_r)
+    PKG_CHECK_MODULES(LIBXML,		[ libxml-2.0		>= 2.4.7  ])
+    PKG_CHECK_MODULES(CAIRO,		[ cairo			>= 1.2.4  ])
+    PKG_CHECK_MODULES(GDKPIXBUF,	[ gdk-pixbuf-2.0	>= 2.22.0 ])
+    PKG_CHECK_MODULES(PANGO,		[ pango			>= 1.14.8 ])
+    PKG_CHECK_MODULES(PANGOCAIRO,	[ pangocairo		>= 1.10.0 ])
 ])
 
 dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rapicornconfig.h
@@ -476,6 +485,7 @@ AC_PATH_PROG(UPDATE_MIME_DATABASE, update-mime-database)
 # check requirement sets
 RAPICORN_I18N_REQUIREMENTS
 RAPICORN_GCC_REQUIREMENTS
+RAPICORN_RSVG_REQUIREMENTS
 RAPICORN_CORE_REQUIREMENTS
 RAPICORN_REQUIREMENTS
 PYROPE_REQUIREMENTS
@@ -500,6 +510,7 @@ plic/Makefile
 plic/tests/Makefile
 rope/Makefile
 rcore/Makefile
+rcore/rsvg/Makefile
 rcore/tests/Makefile
 ui/Makefile
 ui/tests/Makefile
