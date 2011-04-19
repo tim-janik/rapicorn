@@ -6,6 +6,7 @@
 #define __RAPICORN_SVG_HH__
 
 #include <rcore/rapicornutils.hh>
+#include <cairo.h>
 #include <math.h>
 
 namespace Rapicorn {
@@ -31,13 +32,13 @@ public:
   /*Con*/       Element         ();
   /*Des*/      ~Element         ();
   bool          null            () const { return !impl; }
-  bool          empty           () const { return null(); }
+  bool          none            () const { return null(); }
   Info          info            ();
   Allocation    allocation      ();
   Allocation    allocation      (Allocation &_containee);
   Allocation    containee       ();
   Allocation    containee       (Allocation &_resized);
-  //bool        render          (cairo_surface_t *, Allocation &);
+  bool          render          (cairo_surface_t *surface, const Allocation &area);
 };
 
 class Library {

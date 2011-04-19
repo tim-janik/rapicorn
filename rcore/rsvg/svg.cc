@@ -121,6 +121,18 @@ Element::containee (Allocation &_resized)
   return containee();
 }
 
+bool
+Element::render (cairo_surface_t  *surface,
+                 const Allocation &area)
+{
+  return_val_if_fail (surface != NULL, false);
+  if (!impl) return false;
+  cairo_t *cr = cairo_create (surface);
+  bool rendered = rsvg_handle_render_cairo_sub (impl->handle, cr, NULL);
+  cairo_destroy (cr);
+  return rendered;
+}
+
 static vector<String>      library_search_dirs;
 
 /**
@@ -184,8 +196,9 @@ Library::lookup_element (const String &id)
       RsvgHandle *handle = library_handles[i];
       RsvgDimensionData dd = { 0, 0, 0, 0 };
       RsvgPositionData dp = { 0, 0 };
-      if (rsvg_handle_get_dimensions_sub (handle, &dd, id.c_str()) && dd.width > 0 && dd.height > 0 &&
-          rsvg_handle_get_position_sub (handle, &dp, id.c_str()))
+      const char *cid = id.empty() ? NULL : id.c_str();
+      if (rsvg_handle_get_dimensions_sub (handle, &dd, cid) && dd.width > 0 && dd.height > 0 &&
+          rsvg_handle_get_position_sub (handle, &dp, cid))
         {
           ElementImpl *ei = new ElementImpl();
           ei->handle = handle;
@@ -209,6 +222,7 @@ Library::lookup_element (const String &id)
 static void
 svg_initialisation_hook (void)
 {
+  g_type_init(); // NOP on subsequent invocations
   Library::add_search_dir (RAPICORN_SVGDIR);
 }
 static InitHook inithook (svg_initialisation_hook, -1);
