@@ -128,12 +128,15 @@ parse_args (int    *argc_p,
 static void
 root_test_dump (Root &root)
 {
+  if (!test_dump)
+    return;
   TestStream *tstream = TestStream::create_test_stream();
   for (uint i = 0; i < test_dump_matched_nodes.size(); i++)
     tstream->filter_matched_nodes (test_dump_matched_nodes[i]);
   root.get_test_dump (*tstream);
   printout ("%s", tstream->string().c_str());
   delete tstream;
+  test_dump = false;
 }
 
 extern "C" int
