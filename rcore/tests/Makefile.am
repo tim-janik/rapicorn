@@ -51,6 +51,11 @@ xmltest_LDADD      = $(LDADDS)
 TEST_PROGS        += markup
 markup_SOURCES     = markup.cc
 markup_LDADD       = $(LDADDS)
+TEST_PROGS        += svgtool
+svgtool_SOURCES    = svgtool.cc
+svgtool_LDADD      = $(LDADDS) $(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.o \
+	$(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
+svgtool_CXXFLAGS   = $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) # FIXME
 TEST_PROGS        += pixmaps
 pixmaps_SOURCES    = pixmaps.cc
 pixmaps_LDADD      = $(LDADDS)
