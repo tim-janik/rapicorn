@@ -505,6 +505,7 @@ AC_SUBST(LDFLAGS)
 AC_CONFIG_FILES([
 Makefile
 po-helper.sh
+data/Makefile
 po/Makefile.in
 plic/Makefile
 plic/tests/Makefile
