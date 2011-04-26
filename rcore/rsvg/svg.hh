@@ -46,6 +46,7 @@ public:
   static void           add_search_dir  (const String   &absdir);
   static void           add_library     (const String   &filename);
   static Element        lookup_element  (const String   &id);
+  static void           dump_tree       (const String   &id);
 };
 
 } // Svg

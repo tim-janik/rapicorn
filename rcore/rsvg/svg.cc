@@ -5,13 +5,14 @@
 #include "svg.hh"
 #include "rsvg.h"
 #include "rsvg-cairo.h"
+#include "rsvg-private.h"
 
 namespace Rapicorn {
 namespace Svg {
 
 struct ElementImpl : public ReferenceCountable {
   RsvgHandle    *handle;
-  int            x, y, width, height;
+  int            x, y, width, height, rw, rh; // relative to bottom_left
   double         em, ex;
   String         id;
   explicit      ElementImpl     () : handle (NULL), x (0), y (0), width (0), height (0), em (0), ex (0) {}
@@ -26,7 +27,7 @@ Allocation::Allocation () :
 {}
 
 Allocation::Allocation (double _x, double _y, double w, double h) :
-  x (_x), y (_x), width (w), height (h)
+  x (_x), y (_y), width (w), height (h)
 {}
 
 Element&
@@ -127,8 +128,14 @@ Element::render (cairo_surface_t  *surface,
 {
   return_val_if_fail (surface != NULL, false);
   if (!impl) return false;
-  cairo_t *cr = cairo_create (surface);
-  bool rendered = rsvg_handle_render_cairo_sub (impl->handle, cr, NULL);
+  cairo_t *cr = cairo_create (surface); // anchors origin (0,0) at top_left - surface_height
+  const double dx = area.width / impl->width, dy = area.height / impl->height;
+  int cheight = cairo_image_surface_get_height (surface);
+  cairo_translate (cr, -impl->x * dx, cheight - dy * (impl->y + impl->height)); // shift sub into bottom_left
+  cairo_translate (cr, area.x, -area.y); // translate by requested offset
+  cairo_scale (cr, dx, dy);
+  const char *cid = impl->id.empty() ? NULL : impl->id.c_str();
+  bool rendered = rsvg_handle_render_cairo_sub (impl->handle, cr, cid);
   cairo_destroy (cr);
   return rendered;
 }
@@ -188,16 +195,47 @@ Library::add_library (const String &filename)
     }
 }
 
+static void
+dump_node (RsvgNode *self, int64 depth, int64 maxdepth)
+{
+  if (depth > maxdepth)
+    return;
+  for (int64 i = 0; i < depth; i++)
+    printerr (" ");
+  printerr ("<%s/>\n", self->type->str);
+  for (uint i = 0; i < self->children->len; i++)
+    {
+      RsvgNode *child = (RsvgNode*) g_ptr_array_index (self->children, i);
+      dump_node (child, depth + 1, maxdepth);
+    }
+}
+
+void
+Library::dump_tree (const String &id)
+{
+  for (size_t i = 0; i < library_handles.size(); i++)
+    if (library_handles[i])
+      {
+        RsvgHandlePrivate *p = library_handles[i]->priv;
+        RsvgNode *node = p->treebase;
+        printerr ("\n%s:\n", p->title ? p->title->str : "???");
+        dump_node (node, 0, INT64_MAX);
+      }
+}
+
 Element
 Library::lookup_element (const String &id)
 {
   for (size_t i = 0; i < library_handles.size(); i++)
     {
       RsvgHandle *handle = library_handles[i];
+      RsvgDimensionData rd = { 0, 0, 0, 0 };
       RsvgDimensionData dd = { 0, 0, 0, 0 };
       RsvgPositionData dp = { 0, 0 };
       const char *cid = id.empty() ? NULL : id.c_str();
-      if (rsvg_handle_get_dimensions_sub (handle, &dd, cid) && dd.width > 0 && dd.height > 0 &&
+      rsvg_handle_get_dimensions (handle, &rd);         // FIXME: cache results
+      if (rd.width > 0 && rd.height > 0 &&
+          rsvg_handle_get_dimensions_sub (handle, &dd, cid) && dd.width > 0 && dd.height > 0 &&
           rsvg_handle_get_position_sub (handle, &dp, cid))
         {
           ElementImpl *ei = new ElementImpl();
@@ -207,6 +245,8 @@ Library::lookup_element (const String &id)
           ei->y = dp.y;
           ei->width = dd.width;
           ei->height = dd.height;
+          ei->rw = rd.width;
+          ei->rh = rd.height;
           ei->em = dd.em;
           ei->ex = dd.ex;
           ei->id = id;
