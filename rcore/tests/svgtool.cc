@@ -87,26 +87,32 @@ using namespace Rapicorn;
 static void
 test_convert_svg2png()
 {
-  Svg::Library::add_library ("devel.svg");
-  Svg::Element e = Svg::Library::lookup_element ("");
+  Svg::Library::add_library ("sample1.svg");
+  Svg::Element e = Svg::Library::lookup_element ("#test-box");
   assert (!e.none());
   Svg::Allocation a = e.allocation();
   assert (a.width && a.height);
+  a.width *= 9;
+  a.height *= 7;
   const int frame = 25, width = a.width + 2 * frame, height = a.height + 2 * frame;
   uint8 *pixels = new uint8[int (width * height * 4)];
+  memset (pixels, 0, width * height * 4);
   assert (pixels != NULL);
   cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32, width, height, 4 * width);
   assert (surface != NULL);
   CHECK_CAIRO_STATUS (cairo_surface_status (surface));
   bool rendered = e.render (surface, Svg::Allocation (frame, frame, width - 2 * frame, height - 2 * frame));
   assert (rendered);
+  cairo_status_t cstatus = cairo_surface_write_to_png (surface, "tmp-testsvg.png");
+  assert (cstatus == CAIRO_STATUS_SUCCESS);
   bool clear_frame = Cairo::surface_check_col_alpha (surface, frame - 1, 0) &&
                      Cairo::surface_check_row_alpha (surface, frame - 1, 0) &&
                      Cairo::surface_check_col_alpha (surface, width - frame, 0) &&
                      Cairo::surface_check_row_alpha (surface, height - frame, 0);
-  assert (clear_frame); // checks an empty 1 pixel frame around rendered image
-  cairo_status_t cstatus = cairo_surface_write_to_png (surface, "tmp-testsvg.png");
-  assert (cstatus == CAIRO_STATUS_SUCCESS);
+  assert (clear_frame); // checks for an empty pixel frame around rendered image
+  bool cross_content = !Cairo::surface_check_col_alpha (surface, width / 2, 0) &&
+                       !Cairo::surface_check_row_alpha (surface, height / 2, 0);
+  assert (cross_content); // checks for centered cross-hair to detect rendered contents
   cairo_surface_destroy (surface);
   delete[] pixels;
 }
