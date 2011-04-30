@@ -1,5 +1,5 @@
 !<arch>
-svgtool.ref/    1304125147  1000  1000  100664  1243      `
+svgtool.ref/    1304127198  1000  1000  100664  1243      `
 TEST: svgtool
 
 ### ** +-------------+ ** ###
@@ -32,4 +32,30 @@ TEST: svgtool
  |                                         |
  |                                         |
   -----------------------------------------
+
+datalist.ref/   1304127198  1000  1000  100664  611       `
+TEST: datalist
+
+## Testing: DataList<String>...
+::StringKey::destroy: delete "RAPICORN";
+
+## Testing: DataList<int>...
+::MyKey::destroy: delete 4;
+::MyKey::destroy: delete 8;
+::MyKey::destroy: delete 9;
+
+## Testing: DataList-mixed...
+::StringKey::destroy: delete "RAPICORN";
+::MyKey::destroy: delete 4;
+::MyKey::destroy: delete 8;
+::StringKey::destroy: delete "RAPICORN";
+::MyKey::destroy: delete 9;
+
+## Testing: DataList-threaded...
+::StringKey::destroy: delete "RAPICORN";
+::MyKey::destroy: delete 4;
+::MyKey::destroy: delete 8;
+::StringKey::destroy: delete "RAPICORN";
+
+## Testing: trait_convertible_test...
 

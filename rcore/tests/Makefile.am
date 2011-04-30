@@ -41,9 +41,6 @@ TEST_PROGS        += sorting
 SLOWTESTS         += sorting
 sorting_SOURCES    = sorting.cc
 sorting_LDADD      = $(LDADDS)
-TEST_PROGS        += datalist
-datalist_SOURCES   = datalist.cc
-datalist_LDADD     = $(LDADDS)
 EXTRA_DIST        += data.cc
 TEST_PROGS        += xmltest
 xmltest_SOURCES    = xmltest.cc
@@ -76,6 +73,9 @@ svgtool_SOURCES    = svgtool.cc
 svgtool_LDADD      = $(LDADDS) $(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.o \
 	$(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
 svgtool_CXXFLAGS   = $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) # FIXME
+LOGTEST_PROGS     += datalist
+datalist_SOURCES   = datalist.cc
+datalist_LDADD     = $(LDADDS)
 
 
 # === test rules ===
