@@ -1,0 +1,35 @@
+!<arch>
+svgtool.ref/    1304125147  1000  1000  100664  1243      `
+TEST: svgtool
+
+### ** +-------------+ ** ###
+### ** +  ./svgtool  + ** ###
+### ** +-------------+ ** ###
+
+## Testing: SVG/svg2png...
+  ARGB:122x106:ca4c9d74e8ff5cf0
+  -----------------------------------------
+ |                                         |
+ |                                         |
+ |                                         |
+ |                                         |
+ |                                         |
+ |          `_''_''_''_''_''_''``          |
+ |         `+LYSJYSJYSJYSJYSJYSz~          |
+ |         `zSdddddddddddddddddo+          |
+ |         `zSddddddddddddddddd7+          |
+ |         `\4ddddddddddddddddde+          |
+ |         `rYdddddddddddddddddlr          |
+ |         `>4ddddddddddddddddd*+          |
+ |         `rYddddddddddddddddd]r          |
+ |         `\4ddddddddddddddddde+          |
+ |         `rZq53q53q53q53q53q5s+          |
+ |         `_==:~=:~=:~=:~=:~=:=_          |
+ |                                         |
+ |                                         |
+ |                                         |
+ |                                         |
+ |                                         |
+ |                                         |
+  -----------------------------------------
+
