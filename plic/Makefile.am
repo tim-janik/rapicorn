@@ -28,20 +28,22 @@ CONFIGBIN = "pyutilsdir" : "${pyutilsdir}",	"PLIC_VERSION" : "${VERSION}"
 
 # build plic executables
 ${PLICINT}: plic.py Parser.py
-	$(_@) sed <$< >xgen-$(@F)			\
+	$(AM_V_GEN)
+	$(SILENT) sed <$< >xgen-$(@F)			\
 	  -e '1,1s|#!/usr/bin/env python\([0-9]\+\(\.[0-9]\+\)\?\)\?|#!${PYTHON}|' \
 	  -e '1,24s|^ *#@PKGINSTALL_CONFIGVARS_IN24LINES@|  ${CONFIGINT}|'
-	$(_@) chmod +x xgen-$(@F)
-	$(_@) cp -p xgen-$(@F) $@
-	$(_@) rm -f xgen-$(@F) xgen-$(@F).errors
+	$(SILENT) chmod +x xgen-$(@F)
+	$(SILENT) cp -p xgen-$(@F) $@
+	$(SILENT) rm -f xgen-$(@F) xgen-$(@F).errors
 EXTRA_DIST += plic.py
 ${PLICV}: plic.py Parser.py
-	$(_@) sed <$< >xgen-$(@F)			\
+	$(AM_V_GEN)
+	$(SILENT) sed <$< >xgen-$(@F)			\
 	  -e '1,1s|#!/usr/bin/env python\([0-9]\+\(\.[0-9]\+\)\?\)\?|#!${PYTHON}|' \
 	  -e '1,24s|^ *#@PKGINSTALL_CONFIGVARS_IN24LINES@|  ${CONFIGBIN}|'
-	$(_@) chmod +x xgen-$(@F)
-	$(_@) cp -p xgen-$(@F) $@
-	$(_@) rm -f xgen-$(@F) xgen-$(@F).errors
+	$(SILENT) chmod +x xgen-$(@F)
+	$(SILENT) cp -p xgen-$(@F) $@
+	$(SILENT) rm -f xgen-$(@F) xgen-$(@F).errors
 
 # install plic support module yapps2runtime.py
 pyutilsdir     = $(libdir)/${PLICV}/pyutils
@@ -51,20 +53,20 @@ pyutils_PYTHON = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${pl
 # tests
 check-plic-intern:
 	@$(call TSTTITLE, test-cc-parser)
-	$(_@) ${PLICINT} --cc-type-package-parser | grep -q struct ; $(call TSTRESULT)
+	$(SILENT) ${PLICINT} --cc-type-package-parser | grep -q struct ; $(call TSTRESULT)
 	@$(call TSTTITLE, test-formats)
-	$(_@) ${PLICINT} --list-formats | grep -q PLIC ; $(call TSTRESULT)
+	$(SILENT) ${PLICINT} --list-formats | grep -q PLIC ; $(call TSTRESULT)
 check-local: check-plic-intern
 # post-install tests
 installcheck-local:
-	$(_@) ${PLICV} --cc-type-package-parser | grep -q struct
+	$(SILENT) ${PLICV} --cc-type-package-parser | grep -q struct
 
 # install/uninstall a "plic" link to "plic-PLIC_VERSION"
 install-exec-hook:
-	$(_@) cd $(DESTDIR)$(bindir)			\
+	$(SILENT) cd $(DESTDIR)$(bindir)			\
 	  && test -x ${BINPLIC}			\
 	  || (rm -f ${BINPLIC} && $(LN_S) ${PLICV} ${BINPLIC} )
 uninstall-hook:	# runs after ${PLICV} was uninstalled
-	$(_@) cd $(DESTDIR)$(bindir)			\
+	$(SILENT) cd $(DESTDIR)$(bindir)			\
 	  && test ! -L ${BINPLIC} -o -x ${BINPLIC}	\
 	  || rm -f ${BINPLIC}

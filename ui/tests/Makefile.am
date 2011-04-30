@@ -59,12 +59,12 @@ XML_FILES         += factory.xml
 SINFEX=./sinfextest --shell
 sinfex-expressions:
 	@$(call TSTTITLE)
-	$(_@) egrep -v '^[[:space:]]*(#|$$)' < $(srcdir)/expressions.txt > $(TSTTMP)
-	$(_@) $(XVFB_START) && \
+	$(SILENT) egrep -v '^[[:space:]]*(#|$$)' < $(srcdir)/expressions.txt > $(TSTTMP)
+	$(SILENT) $(XVFB_START) && \
 	  COLUMNS=9999 $(SINFEX) < $(TSTTMP) > $(TSTOUT) \
 	                 $(XLIBSTDERREXTFIX)
 	@$(call TSTCMP, $(srcdir)/expressions.ref)
-	$(_@) rm -f $(TSTTMP)
+	$(SILENT) rm -f $(TSTTMP)
 EXTRA_DIST += expressions.txt expressions.ref
 check-am: sinfex-expressions
 

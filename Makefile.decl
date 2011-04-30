@@ -14,9 +14,11 @@ GENERATED=$(strip $(GENERATED_EXTRA_DIST) $(GENERATED_CLEANFILES))
 EXTRA_DIST=$(GENERATED_EXTRA_DIST)
 
 # Verbosity macros
-_@=@
-STDERR_@ = $(_@:%=2>/dev/null)
-STDOUT_@ = $(_@:%=1>/dev/null)
+SILENT      = $(SILENT__v_$(V))
+SILENT__v_  = $(SILENT__v_$(AM_DEFAULT_VERBOSITY))
+SILENT__v_0 = @
+STDERR_@    = $(SILENT:%=2>/dev/null)
+STDOUT_@    = $(SILENT:%=1>/dev/null)
 
 # === distfile-list ===
 # recursive rule supported by all Makefiles to generate a list of all files
@@ -146,7 +148,7 @@ ALLTESTS = $(TESTS) $(SLOWTESTS) $(PERFTESTS) # used in noinst_PROGRAMS
 # === Test-rule macros ===
 FORCECHECKUPDATE = false
 # $(call TSTTITLE, [TESTNAME]) - print test title
-TSTTITLE= printf '  %-70s '$(or $(_@:%=''),'\n') "$(strip $(or $(1), $(@F))):"
+TSTTITLE= printf '%s%-70s '$(or $(SILENT:%=''),'\n') $(if $(SILENT),'  ', 'TEST: ') "$(strip $(or $(1), $(@F))):"
 # $(call TSTOUT, [postfix]) - test output filename
 TSTOUT = $(strip xtst$(strip $(1))-$(@F).out)
 # $(call TSTTMP, [postfix]) - temporary test filename
@@ -165,7 +167,7 @@ TSTCMP = $(strip	\
 # $(call TSTCMP_KEEPOUT, [TSTREFERENCE], [TSTOUT]) - TSTDIFF + forced updates
 TSTCMP_KEEPOUT = $(strip	\
 	${FORCECHECKUPDATE} && { \
-	  cp $(if $(_@),, -v) $(or $(2), $(call TSTOUT)) $(or $(1), $(call TSTREF)) ; \
+	  cp $(if $(SILENT),, -v) $(or $(2), $(call TSTOUT)) $(or $(1), $(call TSTREF)) ; \
 	  FAILOK="FAIL "" FORCED" ; \
 	} ; \
 	$(TSTDIFF) \

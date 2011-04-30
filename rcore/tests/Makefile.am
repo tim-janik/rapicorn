@@ -82,28 +82,28 @@ messages_LDADD     = $(LDADDS)
 # simple logging check
 check-logging-simple: messages
 	@$(call TSTTITLE, Simple logging function check)
-	$(_@) ( RAPICORN=diag:stable:debug:no-syslog:no-fatal-syslog \
+	$(SILENT) ( RAPICORN=diag:stable:debug:no-syslog:no-fatal-syslog \
 	        ./messages --test-logging 2>$(TSTOUT) ; true ) 2>/dev/null
-	$(_@) grep -q 'debug-.*logging test' $(TSTOUT) || $(call TSTRESULT)
-	$(_@) grep -q 'diagnostic.*errno' $(TSTOUT) || $(call TSTRESULT)
-	$(_@) grep -q 'WARNING:.*logging message' $(TSTOUT) || $(call TSTRESULT)
-	$(_@) grep -q 'ERROR:.*serious' $(TSTOUT) || $(call TSTRESULT)
-	$(_@) grep -q 'FATAL:.*abort' $(TSTOUT) || $(call TSTRESULT)
-	$(_@) grep -qi 'aborting..' $(TSTOUT) || $(call TSTRESULT)
-	$(_@) $(call TSTRESULT)
-	$(_@) rm -f $(TSTOUT)
+	$(SILENT) grep -q 'debug-.*logging test' $(TSTOUT) || $(call TSTRESULT)
+	$(SILENT) grep -q 'diagnostic.*errno' $(TSTOUT) || $(call TSTRESULT)
+	$(SILENT) grep -q 'WARNING:.*logging message' $(TSTOUT) || $(call TSTRESULT)
+	$(SILENT) grep -q 'ERROR:.*serious' $(TSTOUT) || $(call TSTRESULT)
+	$(SILENT) grep -q 'FATAL:.*abort' $(TSTOUT) || $(call TSTRESULT)
+	$(SILENT) grep -qi 'aborting..' $(TSTOUT) || $(call TSTRESULT)
+	$(SILENT) $(call TSTRESULT)
+	$(SILENT) rm -f $(TSTOUT)
 check: check-logging-simple
 # process handle
 check-process-handle: infotest
 	@$(call TSTTITLE, Simple process-handle check)
-	$(_@) test -n `./infotest --print-process-handle`; $(call TSTRESULT)
+	$(SILENT) test -n `./infotest --print-process-handle`; $(call TSTRESULT)
 	@$(call TSTTITLE, Unique process-handle test)
-	$(_@) test `./infotest --print-process-handle` != `./infotest --print-process-handle`; $(call TSTRESULT)
+	$(SILENT) test `./infotest --print-process-handle` != `./infotest --print-process-handle`; $(call TSTRESULT)
 check: check-process-handle
 # process handle
 check-locatable-id: infotest
 	@$(call TSTTITLE, Simple locatable-id check)
-	$(_@) test -n `./infotest --print-locatable-id`; $(call TSTRESULT)
+	$(SILENT) test -n `./infotest --print-locatable-id`; $(call TSTRESULT)
 	@$(call TSTTITLE, Unique locatable-id test)
-	$(_@) test `./infotest --print-locatable-id` != `./infotest --print-locatable-id`; $(call TSTRESULT)
+	$(SILENT) test `./infotest --print-locatable-id` != `./infotest --print-locatable-id`; $(call TSTRESULT)
 check: check-locatable-id

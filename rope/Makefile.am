@@ -68,10 +68,10 @@ CLEANFILES += xgen-py2cpy.py py2cpy.py
 EXTRA_DIST += testpystub.ref
 check-pystub:
 	@$(call TSTTITLE)
-	$(_@) ${PLICINT} -G $(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
+	$(SILENT) ${PLICINT} -G $(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testpystub.ref)
 	@$(call TSTTITLE,check-pystub-syntax)
-	$(_@) $(PYTHON) -c "import py_compile; py_compile.compile ('$(srcdir)/testpystub.ref', 'testpystub.pyc')" && \
+	$(SILENT) $(PYTHON) -c "import py_compile; py_compile.compile ('$(srcdir)/testpystub.ref', 'testpystub.pyc')" && \
 	  $(PYTHON) $(srcdir)/testpystub.ref ; $(call TSTRESULT)
 EXTRA_DIST += PyStub.py
 CLEANFILES += testpystub.pyc
@@ -79,52 +79,52 @@ check-local: check-pystub
 # test CxxPyStub
 check-cxxpystub:
 	@$(call TSTTITLE)
-	$(_@) ${PLICINT} -G $(srcdir)/CxxPyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
+	$(SILENT) ${PLICINT} -G $(srcdir)/CxxPyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
 	@echo "static PLIC_UNUSED PyMethodDef dummy[] = { PLIC_PYSTUB_METHOD_DEFS(), { 0 } };" \
 	  >> $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testcxxpystub.ref)
 	@$(call TSTTITLE,check-cxxpystub-syntax)
-	$(_@) cp $(srcdir)/testcxxpystub.ref testcxxpystub.cc
-	$(_@) $(CXXCOMPILE) testcxxpystub.cc -c ; $(call TSTRESULT)
-	$(_@) rm -f testcxxpystub.cc testcxxpystub.o
+	$(SILENT) cp $(srcdir)/testcxxpystub.ref testcxxpystub.cc
+	$(SILENT) $(CXXCOMPILE) testcxxpystub.cc -c ; $(call TSTRESULT)
+	$(SILENT) rm -f testcxxpystub.cc testcxxpystub.o
 EXTRA_DIST += CxxPyStub.py testcxxpystub.ref
 check-local: check-cxxpystub
 # test CxxCaller server and client
 check-cxxcaller:
-	@$(call TSTTITLE, '"check CxxCaller server generation"')
-	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g iface-prefix=I_ -g serverhh -g servercc \
+	@$(call TSTTITLE, check CxxCaller server generation)
+	$(SILENT) ${PLICINT} -G $(srcdir)/CxxCaller -g iface-prefix=I_ -g serverhh -g servercc \
 	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testcxxserver.ref)
-	@$(call TSTTITLE, '"check CxxCaller client generation"')
-	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g iface-prefix=I_ -g clienthh -g clientcc \
+	@$(call TSTTITLE, check CxxCaller client generation)
+	$(SILENT) ${PLICINT} -G $(srcdir)/CxxCaller -g iface-prefix=I_ -g clienthh -g clientcc \
 	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testcxxclient.ref)
-	@$(call TSTTITLE, '"check CxxCaller skeleton generation"')
+	@$(call TSTTITLE, check CxxCaller skeleton generation)
 	@echo -e "#include <rapicorn.hh>\n" > $(TSTOUT)
-	$(_@) ${PLICINT} -G $(srcdir)/CxxCaller -g iface-prefix=I_ -g serverhh -g server-skel \
+	$(SILENT) ${PLICINT} -G $(srcdir)/CxxCaller -g iface-prefix=I_ -g serverhh -g server-skel \
 	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testcxxskels.ref)
-	@$(call TSTTITLE, '"check CxxCaller server code"')
-	$(_@) cp $(srcdir)/testcxxserver.ref testcxxserver.cc
-	$(_@) $(CXXCOMPILE) testcxxserver.cc -c ; $(call TSTRESULT)
-	$(_@) rm -f testcxxserver.cc testcxxserver.o
-	@$(call TSTTITLE, '"check CxxCaller client code"')
-	$(_@) cp $(srcdir)/testcxxclient.ref testcxxclient.cc
-	$(_@) $(CXXCOMPILE) testcxxclient.cc -c ; $(call TSTRESULT)
-	$(_@) rm -f testcxxclient.cc testcxxclient.o
-	@$(call TSTTITLE, '"check CxxCaller skeleton code"')
-	$(_@) cp $(srcdir)/testcxxskels.ref testcxxskels.cc
-	$(_@) $(CXXCOMPILE) testcxxskels.cc -c ; $(call TSTRESULT)
-	$(_@) rm -f testcxxskels.cc testcxxskels.o
+	@$(call TSTTITLE, check CxxCaller server code)
+	$(SILENT) cp $(srcdir)/testcxxserver.ref testcxxserver.cc
+	$(SILENT) $(CXXCOMPILE) testcxxserver.cc -c ; $(call TSTRESULT)
+	$(SILENT) rm -f testcxxserver.cc testcxxserver.o
+	@$(call TSTTITLE, check CxxCaller client code)
+	$(SILENT) cp $(srcdir)/testcxxclient.ref testcxxclient.cc
+	$(SILENT) $(CXXCOMPILE) testcxxclient.cc -c ; $(call TSTRESULT)
+	$(SILENT) rm -f testcxxclient.cc testcxxclient.o
+	@$(call TSTTITLE, check CxxCaller skeleton code)
+	$(SILENT) cp $(srcdir)/testcxxskels.ref testcxxskels.cc
+	$(SILENT) $(CXXCOMPILE) testcxxskels.cc -c ; $(call TSTRESULT)
+	$(SILENT) rm -f testcxxskels.cc testcxxskels.o
 EXTRA_DIST += CxxCaller.py testcxxserver.ref testcxxclient.ref testcxxskels.ref
 check-local: check-cxxcaller
 # test rapicorn.idl with PLIC
 check-rapicorn-idl:
 	@$(call TSTTITLE)
-	$(_@) ${PLICINT} $(RAPICORNIDL) > /dev/null ; $(call TSTRESULT)
+	$(SILENT) ${PLICINT} $(RAPICORNIDL) > /dev/null ; $(call TSTRESULT)
 check-local: check-rapicorn-idl
 # test PyStub with rapicorn.idl
 check-pystub-for-rapicorn.idl:
 	@$(call TSTTITLE)
-	$(_@) ${PLICINT} -G $(srcdir)/PyStub $(RAPICORNIDL) | $(PYTHON) ; $(call TSTRESULT)
+	$(SILENT) ${PLICINT} -G $(srcdir)/PyStub $(RAPICORNIDL) | $(PYTHON) ; $(call TSTRESULT)
 check-local: check-pystub-for-rapicorn.idl
