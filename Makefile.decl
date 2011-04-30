@@ -79,6 +79,25 @@ check-TEST_PROGS:
 	&& echo $$MESSAGETEXT | sed 's/./=/g' || true
 check: check-TEST_PROGS
 
+# === LOGTEST_PROGS ===
+LOGTEST_PROGS =
+.PHONY: check-LOGTEST_PROGS
+check-LOGTEST_PROGS:
+	@$(XVFB_START) && \
+	  for tst in $(LOGTEST_PROGS) ; do \
+	    $(call TSTTITLE, $$tst) ; tstout="$$tst.log" ; \
+	    ./$$tst >"$$tstout" 2>&1 || exit $$? ; \
+	    ${FORCECHECKUPDATE} || { ar -xo $(srcdir)/logtests.dat "./$$tst.ref" ; \
+	      test -e "./$$tst.ref" || touch "./$$tst.ref" ; } ; \
+	    $(call TSTCMP, "./$$tst.ref", "$$tstout") || exit $$? ; \
+	    ${FORCECHECKUPDATE} && ar -r $(srcdir)/logtests.dat "./$$tst.ref" ; rm -f "./$$tst.ref" ; \
+	  done
+	@MESSAGETEXT="All $(words $(LOGTEST_PROGS)) logfile tests matched references"	\
+	&& [ 0 -lt $(words $(LOGTEST_PROGS)) ]				\
+	&& echo $$MESSAGETEXT | sed 's/./=/g' && echo $$MESSAGETEXT	\
+	&& echo $$MESSAGETEXT | sed 's/./=/g' || true
+check: check-LOGTEST_PROGS
+
 # === slowcheck ===
 # recursive rule supported by all Makefiles to run time consuming checks
 .PHONY: slowcheck slowcheck-recursive slowcheck-SLOWTESTS
