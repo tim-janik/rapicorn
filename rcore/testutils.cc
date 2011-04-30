@@ -33,20 +33,34 @@ test_output (int kind, const char *format, ...)
   switch (kind)
     {
     case 3: // test program title
-      bar = "### ** +--" + String (msg.size(), '-') + "--+ ** ###";
-      msg = "### ** +  " + msg + "  + ** ###";
-      sout = "\n" + bar + "\n" + msg + "\n" + bar + "\n";
+      if (verbose())
+        {
+          bar = "### ** +--" + String (msg.size(), '-') + "--+ ** ###";
+          msg = "### ** +  " + msg + "  + ** ###";
+          sout = "\n" + bar + "\n" + msg + "\n" + bar + "\n";
+        }
+      else
+        sout = "TEST: " + msg + "\n";
       break;
-    case 2: // test title
-      msg = "## Testing: " + msg + "...";
-      sout = "\n" + msg + "\n";
+    case 4: // test title
+      if (verbose())
+        {
+          msg = "## Testing: " + msg + "...";
+          sout = "\n" + msg + "\n";
+        }
+      else
+        sout = "  " + msg + ":" + String (70 - MIN (70, msg.size()), ' ');
+      break;
+    case 5: // test done
+      if (!verbose())
+        sout = "OK\n";
       break;
     case 1: // test message
       sout = msg;
       if (sout.size() && sout[sout.size()-1] != '\n')
         sout = sout + "\n";
       break;
-    default: // regular msg
+    default: // 0 - regular msg
       sout = msg;
       break;
     }
@@ -164,6 +178,15 @@ test_rand_double_range (double range_start,
 } // Rapicorn
 
 namespace Rapicorn {
+static bool verbose_init = false;
+
+void
+rapicorn_init_logtest (int *argc, char **argv)
+{
+  verbose_init = true;
+  rapicorn_init_test (argc, argv);
+}
+
 void
 rapicorn_init_test (int   *argc,
                     char **argv)
@@ -173,6 +196,7 @@ rapicorn_init_test (int   *argc,
   /* normal initialization */
   RapicornInitValue ivalues[] = {
     { "stand-alone", "true" },
+    { "test-verbose", verbose_init ? "true" : "false" },
     { "rapicorn-test-parse-args", "true" },
     { NULL }
   };
@@ -185,6 +209,6 @@ rapicorn_init_test (int   *argc,
   if (init_settings().test_perf)
     g_printerr ("PERF: %s\n", g_get_prgname());
   else
-    g_printerr ("TEST: %s\n", g_get_prgname());
+    TTITLE (argv[0]);
 }
 } // Rapicorn

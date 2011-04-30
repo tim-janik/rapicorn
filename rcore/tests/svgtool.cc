@@ -247,8 +247,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, argv);
-  TTITLE ("%s", argv[0]);
+  rapicorn_init_logtest (&argc, argv);
 
   TRUN ("SVG/svg2png", test_convert_svg2png);
 

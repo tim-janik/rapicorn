@@ -20,12 +20,12 @@
 #include <rcore/rcore.hh>
 
 // Test Macros
+#define TTITLE(...)             Rapicorn::Test::test_output (3, __VA_ARGS__)
+#define TSTART(...)             Rapicorn::Test::test_output (4, __VA_ARGS__)
+#define TDONE()                 Rapicorn::Test::test_output (5, "%s", "")
+#define TEXIT()                 ({ exit (0); 0; })
 #define TOUT(...)               Rapicorn::Test::test_output (0, __VA_ARGS__)
 #define TMSG(...)               Rapicorn::Test::test_output (1, __VA_ARGS__)
-#define TSTART(...)             Rapicorn::Test::test_output (2, __VA_ARGS__)
-#define TTITLE(...)             Rapicorn::Test::test_output (3, __VA_ARGS__)
-#define TDONE()                 Rapicorn::Test::test_output (0, "%s", "")
-#define TEXIT()                 ({ exit (0); 0; })
 #define TRUN(name, func)        ({ TSTART (name); func(); TDONE(); })
 #define TCMP(a,cmp,b)           TCMP_implf (a,cmp,b)
 #define TCMPHEX(a,cmp,b)        TCMP_implx (a,cmp,b)
@@ -60,7 +60,8 @@
 
 namespace Rapicorn {
 
-void    rapicorn_init_test (int *argc, char **argv);
+void    rapicorn_init_logtest (int *argc, char **argv);
+void    rapicorn_init_test    (int *argc, char **argv);
 
 namespace Test {
 
@@ -95,7 +96,6 @@ int32   rand_int_range          (int32          begin,
 double  test_rand_double        (void);
 double  test_rand_double_range  (double          range_start,
                                  double          range_end);
-
 
 } // Test
 } // Rapicorn

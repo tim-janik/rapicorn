@@ -135,7 +135,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, argv);
+  rapicorn_init_logtest (&argc, argv);
   data_list_test();
   trait_convertible_test();
   return 0;
