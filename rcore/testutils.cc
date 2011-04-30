@@ -15,8 +15,8 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "testutils.hh"
-#include "rapicorntests.h"
 
+#include <glib.h>
 #include <stdio.h>
 
 namespace Rapicorn {
@@ -95,19 +95,9 @@ run (void)
 {
   for (uint i = 0; i < testfuncs.size(); i++)
     {
-      if (verbose())
-        printout ("Test: run: %s\n", testnames[i].c_str());
-      else
-        {
-          String sc = string_printf ("%s:", testnames[i].c_str());
-          String sleft = string_printf ("%-68s", sc.c_str());
-          printout ("%70s ", sleft.c_str());
-        }
+      TSTART ("%s", testnames[i].c_str());
       testfuncs[i] (testdatas[i]);
-      if (verbose())
-        printout ("Test: result: OK\n");
-      else
-        printout ("OK\n");
+      TDONE();
     }
   return 0;
 }
@@ -205,7 +195,6 @@ rapicorn_init_test (int   *argc,
   g_log_set_always_fatal ((GLogLevelFlags) (flags | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
   Logging::override_config ("fatal-warnings");
   CPUInfo ci = cpu_info();
-  treport_cpu_name (ci.machine);
   if (init_settings().test_perf)
     g_printerr ("PERF: %s\n", g_get_prgname());
   else
