@@ -76,14 +76,17 @@ svgtool_CXXFLAGS   = $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) # FIXME
 LOGTEST_PROGS     += datalist
 datalist_SOURCES   = datalist.cc
 datalist_LDADD     = $(LDADDS)
+LOGTEST_PROGS     += messages
+messages_SOURCES   = messages.cc
+messages_LDADD     = $(LDADDS)
 
 
 # === test rules ===
 # simple logging check
-check-logging-simple: infotest
+check-logging-simple: messages
 	@$(call TSTTITLE, Simple logging function check)
 	$(_@) ( RAPICORN=diag:stable:debug:no-syslog:no-fatal-syslog \
-	        ./infotest --test-logging 2>$(TSTOUT) ; true ) 2>/dev/null
+	        ./messages --test-logging 2>$(TSTOUT) ; true ) 2>/dev/null
 	$(_@) grep -q 'debug-.*logging test' $(TSTOUT) || $(call TSTRESULT)
 	$(_@) grep -q 'diagnostic.*errno' $(TSTOUT) || $(call TSTRESULT)
 	$(_@) grep -q 'WARNING:.*logging message' $(TSTOUT) || $(call TSTRESULT)

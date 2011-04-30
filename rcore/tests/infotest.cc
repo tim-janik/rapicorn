@@ -150,38 +150,6 @@ test_files (char *argv0)
 }
 
 static void
-test_messaging ()
-{
-  TASSERT (Msg::NONE    == Msg::lookup_type ("none"));
-  TASSERT (Msg::ALWAYS  == Msg::lookup_type ("always"));
-  TASSERT (Msg::ERROR   == Msg::lookup_type ("error"));
-  TASSERT (Msg::WARNING == Msg::lookup_type ("warning"));
-  TASSERT (Msg::SCRIPT  == Msg::lookup_type ("script"));
-  TASSERT (Msg::INFO    == Msg::lookup_type ("info"));
-  TASSERT (Msg::DIAG    == Msg::lookup_type ("diag"));
-  TASSERT (Msg::DEBUG   == Msg::lookup_type ("debug"));
-  TASSERT (Msg::check (Msg::NONE) == false);
-  TASSERT (Msg::check (Msg::ALWAYS) == true);
-  Msg::enable (Msg::NONE);
-  Msg::disable (Msg::ALWAYS);
-  TASSERT (Msg::check (Msg::NONE) == false);
-  TASSERT (Msg::check (Msg::ALWAYS) == true);
-  TASSERT (Msg::check (Msg::INFO) == true);
-  Msg::disable (Msg::INFO);
-  TASSERT (Msg::check (Msg::INFO) == false);
-  Msg::enable (Msg::INFO);
-  TASSERT (Msg::check (Msg::INFO) == true);
-  Msg::display (Msg::WARNING,
-                Msg::Title ("Warning Title"),
-                Msg::Text1 ("Primary warning message."),
-                Msg::Text2 ("Secondary warning message."),
-                Msg::Text2 ("Continuation of secondary warning message."),
-                Msg::Text3 ("Message details: 1, 2, 3."),
-                Msg::Text3 ("And more message details: a, b, c."),
-                Msg::Check ("Show this message again."));
-}
-
-static void
 test_virtual_typeid()
 {
   struct TypeA : public virtual VirtualTypeid {};
@@ -333,17 +301,6 @@ main (int   argc,
 
   rapicorn_init_test (&argc, argv);
 
-  if (argc >= 2 && String ("--test-logging") == argv[1])
-    {
-      static Rapicorn::Logging testing_debug = Rapicorn::Logging ("testing");
-      RAPICORN_DEBUG (testing_debug, "logging test selected via: --test-logging");
-      pdiag ("diagnostics on the last errno assignment");
-      Logging::override_config (""); // cancel fatal-warnings, usually enforced for tests
-      warning ("the next logging message might abort the program");
-      error ("we're approaching serious conditions that may lead to abort()");
-      fatal ("at this point, program aborting is certain");
-    }
-
   Test::add ("Misc", test_misc);
   Test::add ("CpuInfo", test_cpu_info);
   Test::add ("Regex Tests", test_regex);
@@ -354,7 +311,6 @@ main (int   argc,
   Test::add ("VirtualTypeid", test_virtual_typeid);
   Test::add ("Id Allocator", test_id_allocator);
   Test::add ("Locatable IDs", test_locatable_ids);
-  Test::add ("Message Types", test_messaging);
 
   return Test::run();
 }
