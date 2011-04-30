@@ -2,11 +2,12 @@ evaltest
 factory
 items
 labelmarkup
-pixcombine
 primitives
 properties
 region
-shaderect
 stamp-xmlcopy
 testitems
 walker
+cmdtest
+server
+sinfextest
