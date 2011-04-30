@@ -43,7 +43,7 @@ static bool test_item_fatal_asserts = true;
 static void
 assertion_ok (const String &assertion)
 {
-  TMSG ("%s\n", assertion.c_str());
+  // TMSG ("%s\n", assertion.c_str());
 }
 
 static void
