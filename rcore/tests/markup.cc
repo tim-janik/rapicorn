@@ -14,7 +14,8 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include <rcore/rapicorntests.h>
+#include <rcore/testutils.hh>
+#include <string.h>
 
 #include "data.cc" // xml_data1
 
@@ -63,19 +64,14 @@ struct TestRapicornMarkupParser : MarkupParser {
 static void
 rapicorn_markup_parser_test()
 {
-  TSTART ("RapicornMarkupParser");
   TestRapicornMarkupParser *tmp = new TestRapicornMarkupParser ("-");
-  TOK();
   MarkupParser::Error error;
   const char *input_file = "test-input";
   tmp->parse (xml_data1, strlen (xml_data1), &error);
-  TOK();
   if (!error.code)
     tmp->end_parse (&error);
-  TOK();
   if (error.code)
     Rapicorn::error ("%s:%d:%d: %s (%d)", input_file, error.line_number, error.char_number, error.message.c_str(), error.code);
-  TOK();
   // g_printerr ("DEBUG_STRING: %s\n", tmp->debug_string.c_str());
   const char *dcode = tmp->debug_string.c_str();
   TASSERT (strstr (dcode, "----")); // comments
@@ -86,16 +82,14 @@ rapicorn_markup_parser_test()
   TASSERT (strstr (dcode, "<.<.>.>"));
   TASSERT (strstr (dcode, ".>.<."));
   delete tmp;
-  TOK();
-  TDONE();
 }
 
 extern "C" int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, &argv);
-  rapicorn_markup_parser_test();
+  rapicorn_init_test (&argc, argv);
+  TRUN ("RapicornMarkupParser", rapicorn_markup_parser_test);
   return 0;
 }
 
