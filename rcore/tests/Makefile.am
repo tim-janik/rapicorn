@@ -1,12 +1,12 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES	+= -I$(top_srcdir)
-DEFS		+= $(RAPICORN_CORE_CFLAGS) -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"' -DSRCDIR='"$(srcdir)"'
+INCLUDES	+= -I$(top_srcdir) $(RAPICORN_CORE_CFLAGS)
+DEFS		+= -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"' -DRAPICORN_CONVENIENCE -DSRCDIR='"$(srcdir)"'
 PLICINT		 = $(top_builddir)/plic/plic-intern
 
 # test programs
-noinst_PROGRAMS	 = $(TEST_PROGS) $(NOINSTPRGS)
+noinst_PROGRAMS	 = $(TEST_PROGS) $(LOGTEST_PROGS) $(NOINSTPRGS)
 LDADDS		 = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la
 NOINSTPRGS =
 
@@ -51,11 +51,6 @@ xmltest_LDADD      = $(LDADDS)
 TEST_PROGS        += markup
 markup_SOURCES     = markup.cc
 markup_LDADD       = $(LDADDS)
-TEST_PROGS        += svgtool
-svgtool_SOURCES    = svgtool.cc
-svgtool_LDADD      = $(LDADDS) $(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.o \
-	$(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
-svgtool_CXXFLAGS   = $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) # FIXME
 TEST_PROGS        += pixmaps
 pixmaps_SOURCES    = pixmaps.cc
 pixmaps_LDADD      = $(LDADDS)
@@ -74,6 +69,14 @@ EXTRA_DIST        += testtypes.idl testtypes.tpg
 %.tpg: $(srcdir)/%.idl
 	$(PLICINT) $< -G TypePackage -o $@
 CLEANFILES += *.tpg
+
+# logfile tests
+LOGTEST_PROGS     += svgtool
+svgtool_SOURCES    = svgtool.cc
+svgtool_LDADD      = $(LDADDS) $(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.o \
+	$(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
+svgtool_CXXFLAGS   = $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) # FIXME
+
 
 # === test rules ===
 # simple logging check
