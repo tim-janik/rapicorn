@@ -146,7 +146,7 @@ ALLTESTS = $(TESTS) $(SLOWTESTS) $(PERFTESTS) # used in noinst_PROGRAMS
 # === Test-rule macros ===
 FORCECHECKUPDATE = false
 # $(call TSTTITLE, [TESTNAME]) - print test title
-TSTTITLE= printf '%70s'$(or $(_@:%=''),'\n') "`printf '%-68s' \"$(strip $(or $(1), $(@F))):\"`"
+TSTTITLE= printf '  %-70s '$(or $(_@:%=''),'\n') "$(strip $(or $(1), $(@F))):"
 # $(call TSTOUT, [postfix]) - test output filename
 TSTOUT = $(strip xtst$(strip $(1))-$(@F).out)
 # $(call TSTTMP, [postfix]) - temporary test filename
