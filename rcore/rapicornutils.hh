@@ -195,7 +195,7 @@ inline void breakpoint ();
 /* === implementeation details === */
 class Logging {
   static bool   cdebug, cany, cdiag, cdevel, cverbose;
-  static bool   cwfatal, cstderr, csyslog, cnfsyslog;
+  static bool   cwfatal, cstderr, csyslog, cnfsyslog, ctestpid0;
   static String config, ovrconfig, logfile;
   const char   *detail;
   void          add    ();
@@ -210,8 +210,9 @@ public:
                         const Logging &detail, const char *format, va_list vargs);
   static void abort    () RAPICORN_NORETURN;
   static void setup    ();
-  static inline bool debug_enabled () { return RAPICORN_UNLIKELY (cdebug); }
-  static inline bool diag_enabled  () { return RAPICORN_UNLIKELY (cdiag); }
+  static inline bool testpid0_enabled () { return RAPICORN_UNLIKELY (ctestpid0); }
+  static inline bool debug_enabled    () { return RAPICORN_UNLIKELY (cdebug); }
+  static inline bool diag_enabled     () { return RAPICORN_UNLIKELY (cdiag); }
   struct Kind {
     enum { FATAL = 'f', PFATAL = FATAL + 128, ERROR = 'e', PERROR = ERROR + 128,
            WARNING = 'w', PWARNING = WARNING + 128, DIAG = 'd', PDIAG = DIAG + 128, };

@@ -359,6 +359,7 @@ bool   Logging::cwfatal = false;
 bool   Logging::cstderr = true;
 bool   Logging::csyslog = false;
 bool   Logging::cnfsyslog = false;
+bool   Logging::ctestpid0 = false;
 String Logging::logfile = "";
 String Logging::config = "debug";
 String Logging::ovrconfig = "";
@@ -404,6 +405,7 @@ Logging::setup ()
   const ssize_t wnsy = lstring_find_word (str, "no-syslog");
   const ssize_t whlp = lstring_find_word (str, "help");
   const ssize_t wnfs = lstring_find_word (str, "no-fatal-syslog");
+  const ssize_t wtp0 = lstring_find_word (str, "testpid0");
   // due to LSTRING_OFFSET, we can use bool(default)
   const ssize_t devel1 = MAX (bool (RAPICORN_DEVEL_VERSION), MAX (wall, wdev));
   const ssize_t devel0 = MAX (wstb, wndv);
@@ -416,6 +418,7 @@ Logging::setup ()
   cstderr = MAX (bool (1), wyse) > wnse;
   csyslog = wsys > wnsy;
   cnfsyslog = bool (wnfs);
+  ctestpid0 = bool (wtp0);
   if (whlp)
     {
       String keys = "  log-all:verbose:brief:debug:no-debug:devel:stable\n"
@@ -533,7 +536,7 @@ Logging::vmessage (const char *file, int line, const char *func, const char *dom
           if (ptr && *ptr && ptr[1])
             n = n.substr (ptr - n.c_str() + 1);
         }
-      String p = string_printf ("%s[%u]:", n.c_str(), Thread::Self::pid());
+      String p = string_printf ("%s[%u]:", n.c_str(), ctestpid0 ? 0 : Thread::Self::pid());
       String k = !key.empty() ? string_printf ("%s:", key.c_str()) : "";
       String sk = key.empty() ? "" : " " + k;
       String m = kind && strchr ("feau", kind) ? "\n" : ""; // newline before aborting

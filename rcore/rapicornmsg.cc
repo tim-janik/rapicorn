@@ -402,13 +402,15 @@ prgname (bool maystrip)
 static String
 log_prefix (const String &prg_name,
             uint          pid,
+            bool          with_testpid0,
             const String &log_domain,
             const String &label,
             const String &ident)
 {
   String str = prg_name;
-  if (pid)
-    str += string_printf ("[%u]", pid);
+  with_testpid0 = with_testpid0 && Logging::testpid0_enabled();
+  if (pid || with_testpid0)
+    str += string_printf ("[%u]", with_testpid0 ? 0 : pid);
   if (str.size() && *str.rbegin() != ':')
     str += ":";
   str += log_domain;
@@ -472,7 +474,7 @@ Msg::display_parts (const char         *domain,
       bool   is_debug = message_type == DEBUG, is_diag = message_type == DIAG;
       String label = type_label (message_type);
       String prefix = log_prefix (prgname (is_debug),                                   /* strip prgname path for debugging */
-                                  Thread::Self::pid(),                                  /* always print pid */
+                                  Thread::Self::pid(), true,                            /* print pid or testpid0 */
                                   is_debug ? "" : domain,                               /* print domain except when debugging */
                                   is_debug || is_diag ? "" : label,                     /* print translated message type execpt for debug/diagnosis */
                                   is_debug ? ident : "");                               /* print identifier if debugging */
@@ -490,7 +492,7 @@ Msg::display_parts (const char         *domain,
   /* log to syslog */
   if (msg_syslog_priority && (primary.size() || secondary.size()) && (actions & LOG_TO_STDLOG))
     {
-      String prefix = log_prefix ("", 0, domain, "", ident);
+      String prefix = log_prefix ("", 0, false, domain, "", ident);
       if (title.size() && false) // skip title in syslog
         syslog (msg_syslog_priority, "%s:0: %s\n", prefix.c_str(), title.c_str());
       if (primary.size())
@@ -504,7 +506,7 @@ Msg::display_parts (const char         *domain,
   if (msg_log_file && (actions & LOG_TO_STDLOG))
     {
       String prefix = log_prefix (prgname (false),                                      /* printf fully qualified program name */
-                                  Thread::Self::pid(),                                  /* always print pid */
+                                  Thread::Self::pid(), false,                           /* always print pid */
                                   domain,                                               /* always print log domain */
                                   "",                                                   /* skip translated message type */
                                   ident);                                               /* print machine readable message type */
