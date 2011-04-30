@@ -87,7 +87,8 @@ static void
 property_test()
 {
   PropertyHost ph;
-  printf ("created %d properties.\n", ph.list_properties().n_properties);
+  // printf ("created %d properties.\n", ph.list_properties().n_properties);
+  TASSERT (ph.list_properties().n_properties == 15);
 }
 
 extern "C" int
@@ -96,10 +97,7 @@ main (int   argc,
 {
   rapicorn_init_test (&argc, argv);
 
-  /* initialize rapicorn */
-  //rapicorn_init_with_gtk_thread (&argc, &argv, NULL);
-  
-  property_test();
+  TRUN ("Property Test", property_test);
   return 0;
 }
 
