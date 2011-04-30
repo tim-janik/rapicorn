@@ -17,6 +17,9 @@
 #include <rcore/testutils.hh>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <math.h>
+#include <algorithm>
 using namespace Rapicorn;
 
 #if RAPICORN_CHECK_VERSION (2147483647, 2147483647, 2147483647) || !RAPICORN_CHECK_VERSION (0, 0, 0)
@@ -431,6 +434,111 @@ test_ifloor()
   TASSERT (ifloor (-1125899906842624.7) == -1125899906842625LL);
 }
 
+static int
+compare_floats (float f1,
+                float f2)
+{
+  return f1 < f2 ? -1 : f1 > f2;
+}
+
+static int
+smaller_float (float f1,
+               float f2)
+{
+  return f1 < f2;
+}
+
+static void
+binary_lookup_tests()
+{
+  bool seen_inexact;
+  vector<float> fv;
+  vector<float>::iterator fit;
+  std::pair<vector<float>::iterator,bool> pit;
+  const uint count = 150000;
+  TSTART ("Corner case lookups");
+  fv.resize (count + (rand() % 10000));
+  if (fv.size() % 2)
+    TOK();
+  else
+    TOK();
+  for (uint i = 0; i < fv.size(); i++)
+    {
+      fv[i] = rand();
+      if (i % 100000 == 99999)
+        TOK();
+    }
+  TOK();
+  vector<float> sv = fv;
+  stable_sort (sv.begin(), sv.end(), smaller_float);
+  TOK();
+  /* failed lookups */
+  fit = binary_lookup (sv.begin(), sv.end(), compare_floats, -INFINITY);
+  TASSERT (fit == sv.end());
+  fit = binary_lookup_sibling (sv.begin(), sv.end(), compare_floats, -INFINITY);
+  TASSERT (fit != sv.end());
+  /* 0-size lookups */
+  vector<float> ev;
+  fit = binary_lookup (ev.begin(), ev.end(), compare_floats, 0);
+  TASSERT (fit == ev.end());
+  fit = binary_lookup_sibling (ev.begin(), ev.end(), compare_floats, 0);
+  TASSERT (fit == ev.end());
+  pit = binary_lookup_insertion_pos (ev.begin(), ev.end(), compare_floats, 0);
+  TASSERT (pit.first == ev.end() && pit.second == false);
+  TDONE();
+  TSTART ("Binary lookup");
+  for (uint i = 0; i < fv.size(); i++)
+    {
+      fit = binary_lookup (sv.begin(), sv.end(), compare_floats, fv[i]);
+      TCHECK (fit != sv.end());
+      TCHECK (fv[i] == *fit);           /* silent assertion */
+      if (i % 10000 == 9999)
+        TASSERT (fv[i] == *fit);        /* verbose assertion */
+    }
+  TDONE();
+  TSTART ("Sibling lookup");
+  for (uint i = 1; i < sv.size(); i++)
+    {
+      double target = (sv[i - 1] + sv[i]) / 2.0;
+      fit = binary_lookup_sibling (sv.begin(), sv.end(), compare_floats, target);
+      TCHECK (fit != sv.end());
+      TCHECK (sv[i] == *fit || sv[i - 1] == *fit);
+      if (i % 10000 == 9999)
+        TOK();
+    }
+  TDONE();
+  TSTART ("Insertion lookup1");
+  seen_inexact = false;
+  for (uint i = 0; i < fv.size(); i++)
+    {
+      pit = binary_lookup_insertion_pos (sv.begin(), sv.end(), compare_floats, fv[i]);
+      fit = pit.first;
+      seen_inexact |= pit.second == false;
+      TCHECK (fit != sv.end());
+      TCHECK (fv[i] == *fit);
+      if (i % 10000 == 9999)
+        TOK();
+    }
+  TASSERT (seen_inexact == false);
+  TDONE();
+  TSTART ("Insertion lookup2");
+  seen_inexact = false;
+  for (uint i = 1; i < sv.size(); i++)
+    {
+      double target = (sv[i - 1] + sv[i]) / 2.0;
+      pit = binary_lookup_insertion_pos (sv.begin(), sv.end(), compare_floats, target);
+      fit = pit.first;
+      seen_inexact |= pit.second == false;
+      TCHECK (fit != sv.end());
+      TCHECK (sv[i] == *fit || sv[i - 1] == *fit);
+      if (i % 10000 == 9999)
+        TOK();
+    }
+  TASSERT (seen_inexact == true);
+  TDONE();
+}
+
+
 int
 main (int   argc,
       char *argv[])
@@ -452,23 +560,25 @@ main (int   argc,
 
   rapicorn_init_test (&argc, argv);
 
-  Test::add ("Misc", test_misc);
-  Test::add ("CpuInfo", test_cpu_info);
-  Test::add ("Regex Tests", test_regex);
-  Test::add ("Path handling", test_paths);
-  Test::add ("File IO", test_file_io);
-  Test::add ("ZIntern", test_zintern);
-  Test::add ("FileChecks", test_files, argv[0]);
-  Test::add ("VirtualTypeid", test_virtual_typeid);
-  Test::add ("Id Allocator", test_id_allocator);
-  Test::add ("Locatable IDs", test_locatable_ids);
-  Test::add ("Math/dtoi32", test_dtoi32);
-  Test::add ("Math/dtoi64", test_dtoi64);
-  Test::add ("Math/iceil", test_iceil);
-  Test::add ("Math/ifloor", test_ifloor);
-  Test::add ("Math/iround", test_iround);
+  TRUN ("Misc", test_misc);
+  TRUN ("CpuInfo", test_cpu_info);
+  TRUN ("Regex Tests", test_regex);
+  TRUN ("Path handling", test_paths);
+  TRUN ("File IO", test_file_io);
+  TRUN ("ZIntern", test_zintern);
+  TRUN3 ("FileChecks", test_files, argv[0]);
+  TRUN ("VirtualTypeid", test_virtual_typeid);
+  TRUN ("Id Allocator", test_id_allocator);
+  TRUN ("Locatable IDs", test_locatable_ids);
+  TRUN ("Math/dtoi32", test_dtoi32);
+  TRUN ("Math/dtoi64", test_dtoi64);
+  TRUN ("Math/iceil", test_iceil);
+  TRUN ("Math/ifloor", test_ifloor);
+  TRUN ("Math/iround", test_iround);
 
-  return Test::run();
+  binary_lookup_tests();
+
+  return 0;
 }
 
 /* vim:set ts=8 sts=2 sw=2: */

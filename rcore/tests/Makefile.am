@@ -16,9 +16,9 @@ imgcheck_SOURCES   = imgcheck.cc
 imgcheck_LDADD     = $(LDADDS)
 
 # test programs
-TEST_PROGS        += infotest
-infotest_SOURCES   = infotest.cc
-infotest_LDADD     = $(LDADDS)
+TEST_PROGS        += multitest
+multitest_SOURCES  = multitest.cc
+multitest_LDADD    = $(LDADDS)
 math_LDADD         = $(LDADDS)
 TEST_PROGS        += strings
 SLOWTESTS         += strings
@@ -34,10 +34,6 @@ threads_LDADD      = $(LDADDS)
 TEST_PROGS        += signal
 signal_SOURCES     = signal.cc
 signal_LDADD       = $(LDADDS)
-TEST_PROGS        += sorting
-SLOWTESTS         += sorting
-sorting_SOURCES    = sorting.cc
-sorting_LDADD      = $(LDADDS)
 EXTRA_DIST        += data.cc
 TEST_PROGS        += xmltest
 xmltest_SOURCES    = xmltest.cc
@@ -94,16 +90,16 @@ check-logging-simple: messages
 	$(SILENT) rm -f $(TSTOUT)
 check: check-logging-simple
 # process handle
-check-process-handle: infotest
+check-process-handle: multitest
 	@$(call TSTTITLE, Simple process-handle check)
-	$(SILENT) test -n `./infotest --print-process-handle`; $(call TSTRESULT)
+	$(SILENT) test -n `./multitest --print-process-handle`; $(call TSTRESULT)
 	@$(call TSTTITLE, Unique process-handle test)
-	$(SILENT) test `./infotest --print-process-handle` != `./infotest --print-process-handle`; $(call TSTRESULT)
+	$(SILENT) test `./multitest --print-process-handle` != `./multitest --print-process-handle`; $(call TSTRESULT)
 check: check-process-handle
 # process handle
-check-locatable-id: infotest
+check-locatable-id: multitest
 	@$(call TSTTITLE, Simple locatable-id check)
-	$(SILENT) test -n `./infotest --print-locatable-id`; $(call TSTRESULT)
+	$(SILENT) test -n `./multitest --print-locatable-id`; $(call TSTRESULT)
 	@$(call TSTTITLE, Unique locatable-id test)
-	$(SILENT) test `./infotest --print-locatable-id` != `./infotest --print-locatable-id`; $(call TSTRESULT)
+	$(SILENT) test `./multitest --print-locatable-id` != `./multitest --print-locatable-id`; $(call TSTRESULT)
 check: check-locatable-id
