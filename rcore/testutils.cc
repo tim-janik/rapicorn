@@ -55,6 +55,14 @@ test_output (int kind, const char *format, ...)
       if (!verbose())
         sout = "OK\n";
       break;
+    case 2: // conditional test info
+      if (verbose())
+        {
+          sout = msg;
+          if (sout.size() && sout[sout.size()-1] != '\n')
+            sout = sout + "\n";
+        }
+      break;
     case 1: // test message
       sout = msg;
       if (sout.size() && sout[sout.size()-1] != '\n')
@@ -198,6 +206,6 @@ rapicorn_init_test (int   *argc,
   if (init_settings().test_perf)
     g_printerr ("PERF: %s\n", g_get_prgname());
   else
-    TTITLE (argv[0]);
+    TTITLE ("%s", argv[0]);
 }
 } // Rapicorn
