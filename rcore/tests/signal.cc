@@ -14,7 +14,7 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include <rcore/rapicorntests.h>
+#include <rcore/testutils.hh>
 
 namespace {
 using namespace Rapicorn;
@@ -77,22 +77,22 @@ struct EmitterMany {
   static String test_string_14_emitter_data (EmitterMany &em,int a1, double a2, int a3, double a4, int a5, double a6, int a7, double a8, int a9,
                                              double a10, int a11, double a12, int a13, double a14, ExtraType x)
   {
-    TPRINT ("  callback: %s (%s, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %s);\n",
-            __func__, em.emitter_check(), a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, x.message());
+    TINFO ("  callback: %s (%s, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %s);\n",
+           __func__, em.emitter_check(), a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, x.message());
     return __func__;
   }
   static String test_string_14_data (int a1, double a2, int a3, double a4, int a5, double a6, int a7, double a8, int a9,
                                      double a10, int a11, double a12, int a13, double a14, ExtraType x)
   {
-    TPRINT ("  callback: %s (%d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %s);\n",
-            __func__, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, x.message());
+    TINFO ("  callback: %s (%d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %s);\n",
+           __func__, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, x.message());
     return __func__;
   }
   static String test_string_14_refdata (int a1, double a2, int a3, double a4, int a5, double a6, int a7, double a8, int a9,
                                         double a10, int a11, double a12, int a13, double a14, ExtraType &xref)
   {
-    TPRINT ("  callback: %s (%d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %s);\n",
-            __func__, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, xref.message());
+    TINFO ("  callback: %s (%d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %d, %.1f, %s);\n",
+           __func__, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, xref.message());
     return __func__;
   }
   void testme ()
@@ -137,7 +137,7 @@ struct EmitterMany {
     results += sig_string_14.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14);
     results += sig_string_15.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
     results += sig_string_16.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
-    TPRINT ("32 signals emitted: %s\n", results.c_str());
+    TINFO ("32 signals emitted: %s\n", results.c_str());
     TDONE();
   }
   void ref()   {}
@@ -153,12 +153,12 @@ struct Emitter3 {
   void
   test_emissions()
   {
-    TPRINT ("Emitter3.emit()\n");
+    TINFO ("Emitter3.emit()\n");
     String s = sig_mixed.emit (7, "seven.seven", 7.7);
-    TPRINT ("Emitter3: result=%s\n", s.c_str());
-    TPRINT ("Emitter3.emit() (void)\n");
+    TINFO ("Emitter3: result=%s\n", s.c_str());
+    TINFO ("Emitter3.emit() (void)\n");
     sig_void_mixed.emit (3, "three.three", 3.3);
-    TPRINT ("Emitter3: done.\n");
+    TINFO ("Emitter3: done.\n");
   }
   void ref() {}
   void unref() {}
@@ -168,42 +168,42 @@ struct Connection3 {
   static String mixed_func (int i, String s, float f)
   {
     TASSERT (i == 7 && s == "seven.seven" && f == (float) 7.7);
-    TPRINT ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
+    TINFO ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
     return __func__;
   }
   static String mixed_efunc      (Emitter3 &obj, int i, String s, float f)
   {
     TASSERT (i == 7 && s == "seven.seven" && f == (float) 7.7);
-    TPRINT ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
+    TINFO ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
     return __func__;
   }
   static void   void_mixed_func (int i, String s, float f)
   {
     TASSERT (i == 3 && s == "three.three" && f == (float) 3.3);
-    TPRINT ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
+    TINFO ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
   }
   static void   void_mixed_efunc (Emitter3 &obj, int i, String s, float f)
   {
     TASSERT (i == 3 && s == "three.three" && f == (float) 3.3);
-    TPRINT ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
+    TINFO ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
   }
   String string_callback (int i, String s, float f)
   {
-    TPRINT ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
+    TINFO ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
     return __func__;
   }
   String string_emitter_callback (Emitter3 &emitter, int i, String s, float f)
   {
-    TPRINT ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
+    TINFO ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
     return __func__;
   }
   void void_callback (int i, String s, float f)
   {
-    TPRINT ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
+    TINFO ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
   }
   void void_emitter_callback (Emitter3 &emitter, int i, String s, float f)
   {
-    TPRINT ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
+    TINFO ("  callback: %s (%d, %s, %f);\n", __func__, i, s.c_str(), f);
   }
   void test_signal (Emitter3 &e3)
   {
@@ -231,7 +231,7 @@ void
 shared_ptr_callback (int i, String s, float f, shared_ptr<ExtraType> data)
 {
   emission_counter++;
-  TPRINT ("  callback: %s (%d, %s, %f, %s);\n", __func__, i, s.c_str(), f, data.message());
+  TINFO ("  callback: %s (%d, %s, %f, %s);\n", __func__, i, s.c_str(), f, data->message());
 }
 
 struct TemporaryObject : public virtual Deletable {
@@ -242,34 +242,34 @@ struct TemporaryObject : public virtual Deletable {
   String string_callback (int i, String s, float f)
   {
     emission_counter++;
-    TPRINT ("  callback: %s (%d, %s, %f); [%s]\n", __func__, i, s.c_str(), f, msg.c_str());
+    TINFO ("  callback: %s (%d, %s, %f); [%s]\n", __func__, i, s.c_str(), f, msg.c_str());
     TASSERT (msg2 == "Blub");
     return __func__;
   }
   String string_emitter_callback (Emitter3 &emitter, int i, String s, float f)
   {
     emission_counter++;
-    TPRINT ("  callback: %s (%d, %s, %f); [%s]\n", __func__, i, s.c_str(), f, msg.c_str());
+    TINFO ("  callback: %s (%d, %s, %f); [%s]\n", __func__, i, s.c_str(), f, msg.c_str());
     TASSERT (msg2 == "Blub");
     return __func__;
   }
   void void_callback (int i, String s, float f)
   {
     emission_counter++;
-    TPRINT ("  callback: %s (%d, %s, %f); [%s]\n", __func__, i, s.c_str(), f, msg2.c_str());
+    TINFO ("  callback: %s (%d, %s, %f); [%s]\n", __func__, i, s.c_str(), f, msg2.c_str());
     TASSERT (msg2 == "Blub");
   }
   void shared_ptr_method (int i, String s, float f, shared_ptr<ExtraType> data)
   {
     emission_counter++;
-    TPRINT ("  callback: %s (%d, %s, %f, %s); [%s]\n", __func__, i, s.c_str(), f,
-            data.message(), msg2.c_str());
+    TINFO ("  callback: %s (%d, %s, %f, %s); [%s]\n", __func__, i, s.c_str(), f,
+            data->message(), msg2.c_str());
     TASSERT (msg2 == "Blub");
   }
   void void_emitter_callback (Emitter3 &emitter, int i, String s, float f)
   {
     emission_counter++;
-    TPRINT ("  callback: %s (%d, %s, %f); [%s]\n", __func__, i, s.c_str(), f, msg2.c_str());
+    TINFO ("  callback: %s (%d, %s, %f); [%s]\n", __func__, i, s.c_str(), f, msg2.c_str());
     TASSERT (msg2 == "Blub");
   }
   void never_ever_call_me (int i, String s, float f)
@@ -411,7 +411,6 @@ static void
 test_slot_trampoline ()
 {
   int r;
-  TSTART ("Slot-Trampolines");
   TASSERT (tst_counter == 0);
   const Signals::Slot3<void, int, double, char> &s3 = slot ((void (*) (int, double, char)) increment_tst_counter);
   Signals::Trampoline3<void, int, double, char> *t3 = s3.get_trampoline();
@@ -428,7 +427,6 @@ test_slot_trampoline ()
   r = (*t9) (1, 1, 1, .1, .1, .1, 999, 999, NULL);
   TASSERT (tst_counter == 3);
   TASSERT (r == 47);
-  TDONE();
 }
 
 } // anon
@@ -437,16 +435,21 @@ int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, &argv);
-  test_slot_trampoline ();
+  rapicorn_init_test (&argc, argv);
+
+  TRUN ("Slot-Trampolines", test_slot_trampoline);
+
   Emitter3 e3;
   TemporaryObject::test_temporary_object (e3);
+
   Connection3 c3;
   Connection3 c3b;
   c3.test_signal (e3);
   c3b.test_signal (e3);
+
   EmitterMany many1, many2;
   many1.testme();
   many2.testme();
+
   return 0;
 }
