@@ -14,16 +14,17 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include <rcore/rapicorntests.h>
+#include <rcore/testutils.hh>
 #include <stdlib.h>
+#include <string.h>
 
 namespace {
 using namespace Rapicorn;
 
 /* --- atomicity tests --- */
-static volatile guint atomic_count = 0;
-static Mutex          atomic_mutex;
-static Cond           atomic_cond;
+static volatile uint atomic_count = 0;
+static Mutex         atomic_mutex;
+static Cond          atomic_cond;
 
 class Thread_AtomicUp : public Thread {
   void *data;
@@ -32,7 +33,7 @@ class Thread_AtomicUp : public Thread {
   {
     TASSERT (name() == "AtomicTest");
     volatile int *ip = (int*) data;
-    for (guint i = 0; i < 25; i++)
+    for (uint i = 0; i < 25; i++)
       Atomic::add (ip, +3);
     atomic_mutex.lock();
     atomic_count -= 1;
@@ -50,7 +51,7 @@ class Thread_AtomicDown : public Thread {
   {
     TASSERT (name() == "AtomicTest");
     volatile int *ip = (int*) data;
-    for (guint i = 0; i < 25; i++)
+    for (uint i = 0; i < 25; i++)
       Atomic::add (ip, -4);
     atomic_mutex.lock();
     atomic_count -= 1; // FIXME: make this atomic
@@ -82,7 +83,7 @@ test_atomic (void)
   atomic_mutex.lock();
   while (atomic_count > 0)
     {
-      TACK();
+      TOK();
       atomic_cond.wait (atomic_mutex);
     }
   atomic_mutex.unlock();
@@ -152,7 +153,7 @@ test_runonce (void)
   runonce_mutex.lock();
   while (Atomic::get (&runonce_threadcount) > 0)
     {
-      TACK();
+      TOK();
       runonce_cond.wait (runonce_mutex);
     }
   runonce_mutex.unlock();
@@ -169,7 +170,7 @@ class Thread_Plus1 : public Thread {
   virtual void
   run ()
   {
-    guint *tdata = (guint*) data;
+    uint *tdata = (uint*) data;
     Thread::Self::sleep (-1);
     *tdata += 1;
     while (!Thread::Self::aborted ())
@@ -187,7 +188,7 @@ static void
 test_threads (void)
 {
   static Mutex test_mutex;
-  gboolean locked;
+  bool locked;
   TSTART ("Threading");
   /* test C mutex */
   locked = test_mutex.trylock();
@@ -226,15 +227,15 @@ test_threads (void)
   rmutex.lock();
   mutex.unlock();
   rmutex.unlock();
-  guint thread_data1 = 0;
+  uint thread_data1 = 0;
   Thread *thread1 = new Thread_Plus1 ("plus1", &thread_data1);
   ref_sink (thread1);
   thread1->start();
-  guint thread_data2 = 0;
+  uint thread_data2 = 0;
   Thread *thread2 = new Thread_Plus1 ("plus2", &thread_data2);
   ref_sink (thread2);
   thread2->start();
-  guint thread_data3 = 0;
+  uint thread_data3 = 0;
   Thread *thread3 = new Thread_Plus1 ("plus3", &thread_data3);
   ref_sink (thread3);
   thread3->start();
@@ -530,7 +531,7 @@ public:
   explicit      IntSequence() : accu (123456789) {}
   inline int32  gen_int    () { accu = 1664525 * accu + 1013904223; return accu; }
 };
-#define CONTENTION_PRINTF       while (0) g_printerr
+#define CONTENTION_PRINTF       while (0) printerr
 struct RingBufferWriter : public virtual Rapicorn::Thread, IntSequence {
   IntRingBuffer *ring;
   uint           ring_buffer_test_length;
@@ -542,10 +543,10 @@ struct RingBufferWriter : public virtual Rapicorn::Thread, IntSequence {
   virtual void
   run ()
   {
-    TPRINT ("%s start.", Thread::Self::name().c_str());
+    TINFO ("%s start.", Thread::Self::name().c_str());
     for (uint l = 0; l < ring_buffer_test_length;)
       {
-        uint k, n = g_random_int() % MIN (ring_buffer_test_length - l + 1, 65536 * 2);
+        uint k, n = Test::rand_int() % MIN (ring_buffer_test_length - l + 1, 65536 * 2);
         int buffer[n], *b = buffer;
         for (uint i = 0; i < n; i++)
           b[i] = gen_int();
@@ -561,10 +562,10 @@ struct RingBufferWriter : public virtual Rapicorn::Thread, IntSequence {
             CONTENTION_PRINTF (k ? "*" : "/");
           }
         if (l / 499999 != (l + n) / 499999)
-          TICK();
+          TOK();
         l += n;
       }
-    TPRINT ("%s done.", Thread::Self::name().c_str());
+    TINFO ("%s done.", Thread::Self::name().c_str());
   }
 };
 struct RingBufferReader : public virtual Rapicorn::Thread, IntSequence {
@@ -578,7 +579,7 @@ struct RingBufferReader : public virtual Rapicorn::Thread, IntSequence {
   virtual void
   run ()
   {
-    TPRINT ("%s start.", Thread::Self::name().c_str());
+    TINFO ("%s start.", Thread::Self::name().c_str());
     for (uint l = 0; l < ring_buffer_test_length;)
       {
         uint k, n = ring->n_readable();
@@ -602,17 +603,17 @@ struct RingBufferReader : public virtual Rapicorn::Thread, IntSequence {
         for (uint i = 0; i < k; i++)
           TCHECK (b[i] == gen_int());
         if (l / 499999 != (l + k) / 499999)
-          TACK();
+          TOK();
         l += k;
       }
-    TPRINT ("%s done.", Thread::Self::name().c_str());
+    TINFO ("%s done.", Thread::Self::name().c_str());
   }
 };
 
 static void
 test_ring_buffer ()
 {
-  static const gchar *testtext = "Ring Buffer test Text (47\xff)";
+  static const char *testtext = "Ring Buffer test Text (47\xff)";
   uint n, ttl = strlen (testtext);
   TSTART ("RingBuffer");
   Atomic::RingBuffer<char> rb1 (ttl);
@@ -701,7 +702,7 @@ test_debug_channel ()
   dbg->printf ("0");
   usleep (190 * 1000);
   unref (dbg);
-  TICK();
+  TOK();
   TDONE();
 }
 
@@ -752,24 +753,23 @@ static MyDeletable late_deletable __attribute__ ((init_priority (65535)));
 static void
 test_deletable_destruction ()
 {
-  TSTART ("Deletable destruction");
   {
     MyDeletable test_deletable;
-    TICK();
+    TOK();
     MyDeletableHook dhook1;
     // g_printerr ("TestHook=%p\n", (Deletable::DeletionHook*) &dhook1);
     dhook1.deletable_add_hook (&test_deletable);
-    TICK();
+    TOK();
     dhook1.deletable_remove_hook (&test_deletable);
     dhook1.dismiss_deletable();
-    TICK();
+    TOK();
     MyDeletableHook dhook2;
     dhook2.deletable_add_hook (&test_deletable);
     test_deletable.force_deletion_hooks ();
-    TICK();
+    TOK();
     MyDeletableHook dhook3;
     dhook3.deletable_add_hook (&test_deletable);
-    TICK();
+    TOK();
     /* automatic deletion hook invocation */
     /* FIXME: deletable destructor is called first and doesn't auto-remove
      * - if deletion hooks were ring-linked, we could at least catch this case in ~DeletionHook
@@ -780,7 +780,6 @@ test_deletable_destruction ()
   deletable_destructor = false;
   delete deletable2;
   TASSERT (deletable_destructor == true);
-  TDONE();
   /* early_deletable and late_deletable are only tested at program end */
 }
 
@@ -799,7 +798,7 @@ test_before_thread_init()
 
 } // Anon
 
-static guint constructur_attribute_test = 0;
+static uint constructur_attribute_test = 0;
 
 static void RAPICORN_CONSTRUCTOR
 constructur_attribute_test_initializer (void)
@@ -812,11 +811,11 @@ main (int   argc,
       char *argv[])
 {
   if (constructur_attribute_test != 305638330)
-    g_error ("%s: static constructors have not been called before main", G_STRFUNC);
+    error ("main: static constructors have not been called before main");
 
   test_before_thread_init();
 
-  rapicorn_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, argv);
 
   test_threads();
   test_atomic();
@@ -825,7 +824,7 @@ main (int   argc,
   test_thread_atomic_cxx();
   test_scoped_locks();
   test_runonce();
-  test_deletable_destruction();
+  TRUN ("Deletable destruction", test_deletable_destruction);
   test_ring_buffer();
   test_debug_channel();
 

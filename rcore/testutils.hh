@@ -28,6 +28,7 @@
 #define TMSG(...)               Rapicorn::Test::test_output (1, __VA_ARGS__)
 #define TINFO(...)              Rapicorn::Test::test_output (2, __VA_ARGS__)
 #define TRUN(name, func)        ({ TSTART (name); func(); TDONE(); })
+#define TRUN3(name, func, d)    ({ TSTART (name); func (d); TDONE(); })
 #define TCMP(a,cmp,b)           TCMP_implf (a,cmp,b)
 #define TCMPHEX(a,cmp,b)        TCMP_implx (a,cmp,b)
 #define TCMPSIGNED(a,cmp,b)     TCMP_impls (a,cmp,b)
