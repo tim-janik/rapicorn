@@ -1336,7 +1336,7 @@ rapicorn_init_with_gtk_thread (int        *argcp,
                                const char *app_name)
 {
   /* non-GTK initialization */
-  rapicorn_init (argcp, argvp, app_name);
+  rapicorn_init (argcp, *argvp, app_name);
   g_type_init();
   /* setup GDK_THREADS_ENTER/GDK_THREADS_LEAVE */
   gdk_threads_init();
@@ -1355,7 +1355,7 @@ rapicorn_init_with_foreign_gtk (int        *argcp,
                                 bool        auto_quit_gtk)
 {
   /* non-GTK initialization */
-  rapicorn_init (argcp, argvp, app_name);
+  rapicorn_init (argcp, *argvp, app_name);
   g_type_init();
   /* setup GDK_THREADS_ENTER/GDK_THREADS_LEAVE */
   gdk_threads_init();

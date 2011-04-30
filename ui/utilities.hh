@@ -40,7 +40,7 @@ class RapicornTester;	// allow Rapicorn test implementations
 
 /* --- i18n macros --- */
 void          rapicorn_init             (int        *argcp,
-                                         char     ***argvp,
+                                         char      **argvp,
                                          const char *app_name);
 void          rapicorn_thread_enter     ();
 bool          rapicorn_thread_try_enter ();

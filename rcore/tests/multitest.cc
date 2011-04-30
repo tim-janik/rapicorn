@@ -561,14 +561,14 @@ main (int   argc,
 {
   if (argc >= 2 && String ("--print-process-handle") == argv[1])
     {
-      rapicorn_init_core (&argc, &argv, __FILE__);
+      rapicorn_init_core (&argc, argv, __FILE__);
       printout ("%s", process_handle().c_str());
       return 0;
     }
 
   if (argc >= 2 && String ("--print-locatable-id") == argv[1])
     {
-      rapicorn_init_core (&argc, &argv, __FILE__);
+      rapicorn_init_core (&argc, argv, __FILE__);
       SomeObject *obj = new SomeObject();
       printout ("0x%016llx\n", obj->locatable_id());
       return 0;

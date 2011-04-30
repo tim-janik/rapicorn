@@ -128,7 +128,7 @@ typedef RapicornInitValue    InitValue;
 typedef RapicornInitSettings InitSettings;
 InitSettings init_settings      ();
 void         rapicorn_init_core (int        *argcp,
-                                 char     ***argvp,
+                                 char      **argvp,
                                  const char *app_name,
                                  InitValue   ivalues[] = NULL);
 bool         init_value_bool    (InitValue  *value);

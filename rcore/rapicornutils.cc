@@ -102,7 +102,7 @@ static InitSettings global_init_settings = {
 static void
 rapicorn_parse_settings_and_args (InitValue *value,
                                   int       *argc_p,
-                                  char    ***argv_p)
+                                  char     **argv)
 {
   bool parse_test_args = false;
   /* apply settings */
@@ -125,7 +125,6 @@ rapicorn_parse_settings_and_args (InitValue *value,
       }
   /* parse args */
   uint argc = *argc_p;
-  char **argv = *argv_p;
   for (uint i = 1; i < argc; i++)
     {
       if (strcmp (argv[i], "--g-fatal-warnings") == 0)
@@ -211,7 +210,7 @@ process_cwd ()
  */
 void
 rapicorn_init_core (int        *argcp,
-                    char     ***argvp,
+                    char      **argvp,
                     const char *app_name,
                     InitValue   ivalues[])
 {
@@ -220,11 +219,11 @@ rapicorn_init_core (int        *argcp,
     g_thread_init (NULL);
 
   /* update program/application name upon repeated initilization */
-  if (argcp && *argcp && argvp && (*argvp)[0] && (*argvp)[0][0] != 0 && program_argv0.size() == 0)
-    program_argv0 = (*argvp)[0];
+  if (argcp && *argcp && argvp && argvp[0] && argvp[0][0] != 0 && program_argv0.size() == 0)
+    program_argv0 = argvp[0];
   if (program_cwd.empty())
     program_cwd = Path::cwd();
-  char *prg_name = argcp && *argcp ? g_path_get_basename ((*argvp)[0]) : NULL;
+  char *prg_name = argcp && *argcp ? g_path_get_basename (argvp[0]) : NULL;
   if (rapicorn_init_settings != NULL)
     {
       if (prg_name && !g_get_prgname ())

@@ -198,7 +198,7 @@ rapicorn_init_test (int   *argc,
     { "rapicorn-test-parse-args", "true" },
     { NULL }
   };
-  rapicorn_init_core (argc, &argv, NULL, ivalues); // FIXME: argv
+  rapicorn_init_core (argc, argv, NULL, ivalues); // FIXME: argv
   unsigned int flags = g_log_set_always_fatal ((GLogLevelFlags) G_LOG_FATAL_MASK);
   g_log_set_always_fatal ((GLogLevelFlags) (flags | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
   Logging::override_config ("fatal-warnings");

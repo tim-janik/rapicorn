@@ -47,7 +47,7 @@ main (int   argc,
 {
   const int clockid = CLOCK_REALTIME; // CLOCK_MONOTONIC
   RapicornInitValue ivalues[] = { { NULL } };
-  rapicorn_init_core (&argc, &argv, NULL, ivalues);
+  rapicorn_init_core (&argc, argv, NULL, ivalues);
   vector<String> cmdline_args;
   for (int i = 1; i < argc; i++)
     cmdline_args.push_back (argv[i]);
