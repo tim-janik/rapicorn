@@ -57,9 +57,9 @@ main (int   argc,
     {
       app.test_counter_set (0);
       struct timespec ts0, ts1;
-      const uint count = 7000;
+      const int count = 7000;
       clock_gettime (clockid, &ts0);
-      for (uint i = 0; i < count; i++)
+      for (int i = 0; i < count; i++)
         app.test_counter_inc_fetch ();
       clock_gettime (clockid, &ts1);
       assert (app.test_counter_get() == count);

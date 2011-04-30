@@ -259,7 +259,7 @@ test_array ()
     { "p","p","p","p","p","p","p","p" },
     { "r","n","b","q","k","b","n","r" }
   };
-  for (int64 i = 0; i < RAPICORN_ARRAY_SIZE (board); i++)
+  for (size_t i = 0; i < RAPICORN_ARRAY_SIZE (board); i++)
     a.push_tail (Array::FromCArray<String> (board[i]));
   if (Test::verbose())
     printout ("chess0:\n%s\n", a.to_string ("\n").c_str());

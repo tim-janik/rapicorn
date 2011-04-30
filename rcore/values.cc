@@ -476,7 +476,7 @@ Array::values ()
 String
 Array::nexti ()
 {
-  array->last = MAX (array->last, count());
+  array->last = MAX (int64 (array->last), count());
   String idx = string_from_int (array->last++);
   while (array->vmap.find (idx) != array->vmap.end())
     {
@@ -537,9 +537,9 @@ Array::pop_tail ()
 String
 Array::key (int64 index) const
 {
-  if (index >= 0 && index < array->strings.size())
+  if (index >= 0 && index < int64 (array->strings.size()))
     return array->strings[index];
-  else if (index < 0 && -index <= array->strings.size())
+  else if (index < 0 && -index <= int64 (array->strings.size()))
     return array->strings[array->strings.size() + index];
   String idx = string_from_int (ABS (index));
   return idx;
@@ -587,14 +587,14 @@ Array::operator[] (const String &key) const
 bool
 Array::remove (int64 index)
 {
-  if (index >= 0)                               // index name access
+  if (index >= 0)                                       // index name access
     {
       String idx = string_from_int (index);
       return remove (idx);
     }
-  else if (-index > array->strings.size())      // OOB access
+  else if (-index > int64 (array->strings.size()))      // OOB access
     return false;
-  else                                          // reverse order access
+  else                                                  // reverse order access
     return remove (array->strings[array->strings.size() + index]);
 }
 

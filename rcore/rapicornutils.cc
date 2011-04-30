@@ -2210,7 +2210,7 @@ ReferenceCountable::stackcheck (const void *data)
    * perfect, but should catch the most common cases for growing and shrinking stacks
    */
   if (stack_ptrdiff (&stackvariable, data) < stack_proximity_threshold)
-    error ("ReferenceCountable object allocated on stack instead of heap: %u > %u (%p - %p)",
+    error ("ReferenceCountable object allocated on stack instead of heap: %zu > %zu (%p - %p)",
            stack_proximity_threshold,
            stack_ptrdiff (&stackvariable, data),
            data, &stackvariable);

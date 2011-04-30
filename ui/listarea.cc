@@ -314,7 +314,7 @@ ItemListImpl::pixel_positioning (const int64       mcount,
                                  const ModelSizes &ms) const
 {
   return 0;
-  return mcount == ms.row_sizes.size();
+  return mcount == int64 (ms.row_sizes.size());
 }
 
 void
@@ -338,11 +338,11 @@ ItemListImpl::measure_rows (int64 maxpixels)
     }
   /* check if measuring is needed */
   const int64 mcount = m_model->count();
-  if (ms.total_height > 0 && mcount == ms.row_sizes.size())
+  if (ms.total_height > 0 && mcount == int64 (ms.row_sizes.size()))
     return;
 
   return; // FIXME
-  
+
   /* measure all rows */
   ms.clear();
   ms.row_sizes.resize (mcount);
@@ -553,6 +553,7 @@ ItemListImpl::resize_scroll () // m_model->count() >= 1
   Allocation area = allocation();
   int64 current_y, currentupper, currentlower, listupper, listheight;
   int64 current_FIXME = scroll_row_layout (lr_current, &current_y, &currentupper, &currentlower, &listupper, &listheight);
+  (void) current_FIXME;
   RowMap rmap;
 
   cache_row (lr_current); // FIXME

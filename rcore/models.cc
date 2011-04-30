@@ -171,7 +171,7 @@ public:
   explicit              Selection1Multiple (Model1 &model) : Selection1 (model) {}
 protected:
   virtual SelectionMode mode            (void) const    { return SELECTION_MULTIPLE; }
-  virtual bool          selected        (int64  nth)    { return nth < bits.size() && bits[nth]; }
+  virtual bool          selected        (int64  nth)    { return uint64 (nth) < bits.size() && bits[nth]; }
   virtual void
   clear (void)
   {
@@ -185,10 +185,10 @@ protected:
            int   dir)
   {
     const size_t bsize = bits.size();
-    if (nth < 0 || nth >= bsize)
+    if (nth < 0 || size_t (nth) >= bsize)
       return -1;
     if (dir > 0)
-      for (int64 i = nth + 1; i < bsize; i++)
+      for (int64 i = nth + 1; i < int64 (bsize); i++)
         if (bits[i])
           return i;
     if (dir < 0)
@@ -203,7 +203,7 @@ protected:
     const int64 mcount = m_model.count();
     if (nth < 0 || nth >= mcount)
       return;
-    if (nth >= bits.size())
+    if (uint64 (nth) >= bits.size())
       bits.resize (nth + 1);
     bits[nth] = !bits[nth];
     m_model.sig_selection_changed.emit (nth, 1);
@@ -212,7 +212,7 @@ protected:
   constrain (void)
   {
     const int64 mcount = m_model.count();
-    if (mcount < bits.size())
+    if (mcount < int64 (bits.size()))
       bits.resize (mcount);
   }
 };
@@ -477,7 +477,7 @@ class MemoryStore1 : public virtual Model1, public virtual Store1 {
   {
     if (first < 0)
       first += avector.size() + 1;
-    if (first > avector.size())
+    if (first > int64 (avector.size()))
       return;
     avector.insert (avector.begin() + first, count, NULL);
     for (uint64 row = first; row < first + count; row++)
