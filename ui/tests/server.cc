@@ -38,7 +38,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, argv);
 
   Test::add ("Server/Smart Handle", test_server_smart_handle);
 

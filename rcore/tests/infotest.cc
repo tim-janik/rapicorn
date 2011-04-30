@@ -17,6 +17,7 @@
 //#define TEST_VERBOSE
 #include <rcore/testutils.hh>
 #include <stdio.h>
+#include <string.h>
 using namespace Rapicorn;
 
 #if RAPICORN_CHECK_VERSION (2147483647, 2147483647, 2147483647) || !RAPICORN_CHECK_VERSION (0, 0, 0)
@@ -331,7 +332,7 @@ main (int   argc,
       return 0;
     }
 
-  rapicorn_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, argv);
 
   if (argc >= 2 && String ("--test-logging") == argv[1])
     {

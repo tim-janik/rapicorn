@@ -18,13 +18,51 @@
 #define __RAPICORN_TESTUTILS_HH__
 
 #include <rcore/rcore.hh>
-#include <rcore/rapicorntests.h>
+
+// Test Macros
+#define TOUT(...)               Rapicorn::Test::test_output (0, __VA_ARGS__)
+#define TMSG(...)               Rapicorn::Test::test_output (1, __VA_ARGS__)
+#define TSTART(...)             Rapicorn::Test::test_output (2, __VA_ARGS__)
+#define TTITLE(...)             Rapicorn::Test::test_output (3, __VA_ARGS__)
+#define TDONE()                 Rapicorn::Test::test_output (0, "%s", "")
+#define TEXIT()                 ({ exit (0); 0; })
+#define TRUN(name, func)        ({ TSTART (name); func(); TDONE(); })
+#define TCMP(a,cmp,b)           TCMP_implf (a,cmp,b)
+#define TCMPHEX(a,cmp,b)        TCMP_implx (a,cmp,b)
+#define TCMPSIGNED(a,cmp,b)     TCMP_impls (a,cmp,b)
+#define TCHECK(code)            TCHECK_impl (code)
+#define TASSERT(code)           TCHECK_impl (code)
+#define TOK()           do {} while (0) // printerr (".")
+#undef  NDEBUG          // force working assert()
+#include <assert.h>
+#define TCHECK_impl(code)       do { if (code) TOK(); else      \
+      Rapicorn::error ("%s:%u:%s(): assertion failed: %s\n",    \
+           __FILE__, __LINE__, __PRETTY_FUNCTION__, #code);     \
+  } while (0)
+#define TCMP_implf(a,cmp,b)     do { if (a cmp b) TOK(); else { \
+  double __tassert_va = a; double __tassert_vb = b;             \
+  Rapicorn::error ("%s:%u:%s(): assertion failed: %s %s %s: %.17g %s %.17g\n", \
+    __FILE__, __LINE__, __PRETTY_FUNCTION__, #a, #cmp, #b,              \
+                   __tassert_va, #cmp, __tassert_vb);                   \
+    } } while (0)
+#define TCMP_implx(a,cmp,b)     do { if (a cmp b) TOK(); else { \
+  uint64 __tassert_va = a; uint64 __tassert_vb = b;             \
+  Rapicorn::error ("%s:%u:%s(): assertion failed: %s %s %s: 0x%08Lx %s 0x%08Lx\n", \
+    __FILE__, __LINE__, __PRETTY_FUNCTION__, #a, #cmp, #b,              \
+                   __tassert_va, #cmp, __tassert_vb);                   \
+    } } while (0)
+#define TCMP_impls(a,cmp,b)     do { if (a cmp b) TOK(); else { \
+  int64 __tassert_va = a; int64 __tassert_vb = b;               \
+  Rapicorn::error ("%s:%u:%s(): assertion failed: %s %s %s: %lld %s %lld\n", \
+    __FILE__, __LINE__, __PRETTY_FUNCTION__, #a, #cmp, #b,              \
+                   __tassert_va, #cmp, __tassert_vb);                   \
+    } } while (0)
 
 namespace Rapicorn {
-namespace Test {
 
-#undef TASSERT
-#define TASSERT TCHECK
+void    rapicorn_init_test (int *argc, char **argv);
+
+namespace Test {
 
 /* test maintenance */
 int     run             (void);
@@ -34,6 +72,7 @@ bool    slow            (void);
 bool    thorough        (void);
 bool    perf            (void);
 
+void    test_output     (int kind, const char *format, ...) RAPICORN_PRINTF (2, 3);
 
 void    add_internal    (const String &testname,
                          void        (*test_func) (void*),

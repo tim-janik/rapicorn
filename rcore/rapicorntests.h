@@ -80,7 +80,9 @@ typedef void (*RapicornTAbort) (void*);
 
 #define return_if_fail          RAPICORN_RETURN_IF_FAIL
 #define return_val_if_fail      RAPICORN_RETURN_VAL_IF_FAIL
+#ifndef assert_not_reached
 #define assert_not_reached      RAPICORN_ASSERT_NOT_REACHED
+#endif
 #undef  assert
 #define assert                  RAPICORN_ASSERT
 

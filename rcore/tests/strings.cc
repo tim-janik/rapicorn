@@ -17,6 +17,8 @@
 #include <rcore/testutils.hh>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <glib.h>
 using namespace Rapicorn;
 
 namespace {
@@ -363,7 +365,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, argv);
 
   Test::add ("/Strings/UUID", uuid_tests);
   Test::add ("/Strings/random unichar", random_unichar_test);

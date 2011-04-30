@@ -14,8 +14,7 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-//#define TEST_VERBOSE
-#include <rcore/rapicorntests.h>
+#include <rcore/testutils.hh>
 #include <rapicorn.hh>
 #include <stdio.h>
 
@@ -38,7 +37,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, argv);
   shade_rect_test (argc > 1 ? Rapicorn::string_to_uint (argv[1]) : 1);
   return 0;
 }

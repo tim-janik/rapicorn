@@ -70,7 +70,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, argv);
 
   Test::add ("Commands/Scanning", test_command_scanning);
   Test::add ("Commands/Unquoting", test_command_unquoting);

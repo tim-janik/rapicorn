@@ -15,9 +15,45 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "testutils.hh"
+#include "rapicorntests.h"
+
+#include <stdio.h>
 
 namespace Rapicorn {
 namespace Test {
+
+void
+test_output (int kind, const char *format, ...)
+{
+  va_list args;
+  va_start (args, format);
+  String msg = string_vprintf (format, args);
+  va_end (args);
+  String sout, bar;
+  switch (kind)
+    {
+    case 3: // test program title
+      bar = "### ** +--" + String (msg.size(), '-') + "--+ ** ###";
+      msg = "### ** +  " + msg + "  + ** ###";
+      sout = "\n" + bar + "\n" + msg + "\n" + bar + "\n";
+      break;
+    case 2: // test title
+      msg = "## Testing: " + msg + "...";
+      sout = "\n" + msg + "\n";
+      break;
+    case 1: // test message
+      sout = msg;
+      if (sout.size() && sout[sout.size()-1] != '\n')
+        sout = sout + "\n";
+      break;
+    default: // regular msg
+      sout = msg;
+      break;
+    }
+  fflush (stdout);
+  fputs (sout.c_str(), stderr);
+  fflush (stderr);
+}
 
 static vector<void(*)(void*)> testfuncs;
 static vector<void*>          testdatas;
@@ -125,4 +161,30 @@ test_rand_double_range (double range_start,
 }
 
 } // Test
+} // Rapicorn
+
+namespace Rapicorn {
+void
+rapicorn_init_test (int   *argc,
+                    char **argv)
+{
+  /* check that NULL is defined to __null in C++ on 64bit */
+  RAPICORN_ASSERT (sizeof (NULL) == sizeof (void*));
+  /* normal initialization */
+  RapicornInitValue ivalues[] = {
+    { "stand-alone", "true" },
+    { "rapicorn-test-parse-args", "true" },
+    { NULL }
+  };
+  rapicorn_init_core (argc, &argv, NULL, ivalues); // FIXME: argv
+  unsigned int flags = g_log_set_always_fatal ((GLogLevelFlags) G_LOG_FATAL_MASK);
+  g_log_set_always_fatal ((GLogLevelFlags) (flags | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
+  Logging::override_config ("fatal-warnings");
+  CPUInfo ci = cpu_info();
+  treport_cpu_name (ci.machine);
+  if (init_settings().test_perf)
+    g_printerr ("PERF: %s\n", g_get_prgname());
+  else
+    g_printerr ("TEST: %s\n", g_get_prgname());
+}
 } // Rapicorn

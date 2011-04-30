@@ -18,7 +18,7 @@
  * otherwise) arising in any way out of the use of this software, even
  * if advised of the possibility of such damage.
  */
-#include <rcore/rapicorntests.h>
+#include <rcore/testutils.hh>
 #include <rapicorn.hh>
 #include <ui/testitems.hh>
 
@@ -46,7 +46,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, argv);
 
   /* initialize Rapicorn for X11 backend with application name */
   app.init_with_x11 (&argc, &argv, "FactoryTest");

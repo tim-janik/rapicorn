@@ -14,8 +14,7 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-//#define TEST_VERBOSE
-#include <rcore/rapicorntests.h>
+#include <rcore/testutils.hh>
 #include <rapicorn.hh>
 #include <stdio.h>
 #include <stdlib.h>     // lrand48
@@ -297,7 +296,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, argv);
 
   /* initialize rapicorn */
   rapicorn_init_with_gtk_thread (&argc, &argv, NULL); // FIXME: should work without Gtk+

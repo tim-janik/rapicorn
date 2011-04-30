@@ -15,6 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include <rcore/testutils.hh>
+#include <string.h>
 #include <errno.h>
 
 namespace {
@@ -140,7 +141,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, argv);
 
   Test::add ("Pixmap/compare", test_pixmap_compare);
   Test::add ("Pixmap/save & load", test_pixmap_save_load);

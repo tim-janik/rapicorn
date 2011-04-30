@@ -143,7 +143,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, argv);
 
   // first, load required type package
   Type::register_package_file (Rapicorn::Path::join (SRCDIR, "testtypes.tpg"));

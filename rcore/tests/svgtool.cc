@@ -15,7 +15,9 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include <rcore/testutils.hh>
+#include <string.h>
 #include <errno.h>
+#include <algorithm>
 
 #include "../rsvg/svg.hh"
 
@@ -96,8 +98,8 @@ test_convert_svg2png()
   a.height *= 7;
   const int frame = 25, width = a.width + 2 * frame, height = a.height + 2 * frame;
   uint8 *pixels = new uint8[int (width * height * 4)];
-  memset (pixels, 0, width * height * 4);
   assert (pixels != NULL);
+  memset (pixels, 0, width * height * 4);
   cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32, width, height, 4 * width);
   assert (surface != NULL);
   CHECK_CAIRO_STATUS (cairo_surface_status (surface));
@@ -123,9 +125,10 @@ int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, argv);
+  TTITLE ("%s", argv[0]);
 
-  Test::add ("SVG/svg2png", test_convert_svg2png);
+  TRUN ("SVG/svg2png", test_convert_svg2png);
 
-  return Test::run();
+  return TEXIT();
 }

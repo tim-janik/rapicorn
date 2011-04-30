@@ -15,8 +15,9 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include <rcore/testutils.hh>
-#include <errno.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 #define PRGNAME "imgcheck"
 

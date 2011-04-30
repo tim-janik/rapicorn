@@ -14,8 +14,7 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-//#define TEST_VERBOSE
-#include <rcore/rapicorntests.h>
+#include <rcore/testutils.hh>
 #include <rapicorn.hh>
 #include <ui/testitems.hh>
 
@@ -44,7 +43,7 @@ static bool test_item_fatal_asserts = true;
 static void
 assertion_ok (const String &assertion)
 {
-  TPRINT ("%s\n", assertion.c_str());
+  TMSG ("%s\n", assertion.c_str());
 }
 
 static void
@@ -206,7 +205,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, argv);
 
   for (int i = 0; i < argc; i++)
     if (String (argv[i]) == "--non-fatal")

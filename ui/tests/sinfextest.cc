@@ -14,7 +14,6 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-//#define TEST_VERBOSE
 #include <rcore/testutils.hh>
 #include <rapicorn.hh>
 #include <stdio.h>
@@ -230,7 +229,7 @@ main (int   argc,
   bool shell_mode = argc >= 2 && strcmp (argv[1], "--shell") == 0;
 
   if (!shell_mode)
-    rapicorn_init_test (&argc, &argv);
+    rapicorn_init_test (&argc, argv);
   else
     app.init_with_x11 (&argc, &argv, "sinfextest");
 

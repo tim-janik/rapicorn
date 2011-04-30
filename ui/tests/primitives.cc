@@ -14,8 +14,7 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-//#define TEST_VERBOSE
-#include <rcore/rapicorntests.h>
+#include <rcore/testutils.hh>
 #include <rapicorn.hh>
 #include <errno.h>
 
@@ -73,7 +72,7 @@ pipe_writer (PollFD &pfd)
   return true;
 }
 
-static uint pipe_reader_seen = 0;
+static int pipe_reader_seen = 0;
 
 static bool
 pipe_reader (PollFD &pfd)
@@ -92,7 +91,7 @@ pipe_reader (PollFD &pfd)
     }
   pipe_reader_seen++;
   if (pipe_reader_seen % 997 == 0)
-    TICK();
+    TOK();
   return true;
 }
 
@@ -143,7 +142,7 @@ basic_loop_test()
       RapicornTester::loops_dispatch (false);
     else
       RapicornTester::loops_dispatch (true);
-  TASSERT_CMP (pipe_reader_seen, ==, 4999);
+  TCMPSIGNED (pipe_reader_seen, ==, 4999);
   err = close (pipe_fds[1]);
   TASSERT (err == 0);
   while (RapicornTester::loops_pending())
@@ -265,11 +264,11 @@ more_loop_test2()
       else
         break;
       if (counter % 347 == 0)
-        TICK();
+        TOK();
     }
   TASSERT (check_source_counter == nsrc);
   loop->kill_sources();
-  TASSERT_CMP (check_source_destroyed_counter, ==, nsrc); /* checks execution of enough destroy() handlers */
+  TCMP (check_source_destroyed_counter, ==, nsrc); /* checks execution of enough destroy() handlers */
   TASSERT (check_source_counter == nsrc);
   for (uint i = 0; i < nsrc; i++)
     unref (check_sources[i]);
@@ -537,7 +536,7 @@ color_test()
                      c.string().c_str(), d.string().c_str(), hue, saturation, value);
           }
       if (r % 5 == 0)
-        TICK();
+        TOK();
     }
   TDONE();
 }
@@ -547,7 +546,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, &argv);
+  rapicorn_init_test (&argc, argv);
   /* initialize rapicorn */
   app.init_with_x11 (&argc, &argv, "PrimitivesTest");
 
