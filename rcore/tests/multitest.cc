@@ -19,6 +19,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include <poll.h>
 #include <algorithm>
 using namespace Rapicorn;
 
@@ -44,6 +45,21 @@ test_cpu_info (void)
   TASSERT (cps.size() != 0);
   if (Test::verbose())
     printout ("\n#####\n%s#####\n", cps.c_str());
+}
+
+static void
+test_poll_consts()
+{
+  TASSERT (RAPICORN_SYSVAL_POLLIN     == POLLIN);
+  TASSERT (RAPICORN_SYSVAL_POLLPRI    == POLLPRI);
+  TASSERT (RAPICORN_SYSVAL_POLLOUT    == POLLOUT);
+  TASSERT (RAPICORN_SYSVAL_POLLRDNORM == POLLRDNORM);
+  TASSERT (RAPICORN_SYSVAL_POLLRDBAND == POLLRDBAND);
+  TASSERT (RAPICORN_SYSVAL_POLLWRNORM == POLLWRNORM);
+  TASSERT (RAPICORN_SYSVAL_POLLWRBAND == POLLWRBAND);
+  TASSERT (RAPICORN_SYSVAL_POLLERR    == POLLERR);
+  TASSERT (RAPICORN_SYSVAL_POLLHUP    == POLLHUP);
+  TASSERT (RAPICORN_SYSVAL_POLLNVAL   == POLLNVAL);
 }
 
 static void
@@ -562,6 +578,7 @@ main (int   argc,
 
   TRUN ("Misc", test_misc);
   TRUN ("CpuInfo", test_cpu_info);
+  TRUN ("Poll constants", test_poll_consts);
   TRUN ("Regex Tests", test_regex);
   TRUN ("Path handling", test_paths);
   TRUN ("File IO", test_file_io);
