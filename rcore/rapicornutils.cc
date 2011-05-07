@@ -1554,9 +1554,17 @@ timestamp_now ()
   return stamp;
 }
 
-/* --- file/path functionality --- */
+/**
+ * @namespace Rapicorn::Path
+ * The Rapicorn::Path namespace covers function for file path manipulation and evaluation.
+ */
 namespace Path {
 
+/**
+ * @param path  a filename path
+ *
+ * Return the directory part of a file name.
+ */
 String
 dirname (const String &path)
 {
@@ -1566,6 +1574,11 @@ dirname (const String &path)
   return dname;
 }
 
+/**
+ * @param path  a filename path
+ *
+ * Strips all directory components from @a path and returns the resulting file name.
+ */
 String
 basename (const String &path)
 {
@@ -1575,6 +1588,13 @@ basename (const String &path)
   return bname;
 }
 
+/**
+ * @param path  a filename path
+ * @param incwd optional current working directory
+ *
+ * Complete @a path to become an absolute file path. If neccessary, @a incwd or
+ * the real current working directory is prepended.
+ */
 String
 abspath (const String &path,
          const String &incwd)
@@ -1589,12 +1609,22 @@ abspath (const String &path,
   return join (cwd(), path);
 }
 
+/**
+ * @param path  a filename path
+ *
+ * Return wether @a path is an absolute pathname.
+ */
 bool
 isabs (const String &path)
 {
   return g_path_is_absolute (path.c_str());
 }
 
+/**
+ * @param path  a filename path
+ *
+ * Return wether @a path is pointing to a directory component.
+ */
 bool
 isdirname (const String &path)
 {
@@ -1628,7 +1658,7 @@ join (const String &frag0, const String &frag1,
       const String &frag14, const String &frag15)
 {
   char *cpath = g_build_path (RAPICORN_DIR_SEPARATOR_S, frag0.c_str(),
-                              frag1.c_str(), frag2.c_str(), frag3.c_str(), frag4.c_str(), 
+                              frag1.c_str(), frag2.c_str(), frag3.c_str(), frag4.c_str(),
                               frag5.c_str(), frag6.c_str(), frag7.c_str(), frag8.c_str(),
                               frag9.c_str(), frag10.c_str(), frag11.c_str(), frag12.c_str(),
                               frag13.c_str(), frag14.c_str(), frag15.c_str(), NULL);
@@ -1721,19 +1751,17 @@ errno_check_file (const char *file_name,
  * Perform various checks on @a file and return whether all
  * checks passed. On failure, errno is set appropriately, and
  * FALSE is returned. Available features to be checked for are:
- * @itemize
- * @item e - @a file must exist
- * @item r - @a file must be readable
- * @item w - @a file must be writable
- * @item x - @a file must be executable
- * @item f - @a file must be a regular file
- * @item d - @a file must be a directory
- * @item l - @a file must be a symbolic link
- * @item c - @a file must be a character device
- * @item b - @a file must be a block device
- * @item p - @a file must be a named pipe
- * @item s - @a file must be a socket.
- * @done
+ * @li @c e - @a file must exist
+ * @li @c r - @a file must be readable
+ * @li @c w - @a file must be writable
+ * @li @c x - @a file must be executable
+ * @li @c f - @a file must be a regular file
+ * @li @c d - @a file must be a directory
+ * @li @c l - @a file must be a symbolic link
+ * @li @c c - @a file must be a character device
+ * @li @c b - @a file must be a block device
+ * @li @c p - @a file must be a named pipe
+ * @li @c s - @a file must be a socket.
  */
 bool
 check (const String &file,
@@ -1773,6 +1801,9 @@ equals (const String &file1,
           st1.st_rdev == st2.st_rdev);
 }
 
+/**
+ * Return the current working directoy.
+ */
 String
 cwd ()
 {
@@ -1873,7 +1904,13 @@ memfree (char *memread_mem)
 
 } // Path
 
-/* --- Deletable --- */
+/**
+ * @class Deletable
+ * Classes derived from @a Deletable need to have a virtual destructor.
+ * Handlers can be registered with class instances that are called during
+ * instance deletion. This is most useful for automated memory keeping of
+ * custom resources attached to the lifetime of a particular instance.
+ */
 Deletable::~Deletable ()
 {
   invoke_deletion_hooks();

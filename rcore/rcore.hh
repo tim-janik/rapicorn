@@ -36,5 +36,14 @@
 #include <rcore/values.hh>
 #include <rcore/models.hh>
 
+/**
+ * @namespace Rapicorn
+ * The Rapicorn namespace encompasses core utilities and toolkit
+ * functionality. The core utilities are available via including
+ * <rapicorn-core.hh> and the toolkit functionality can be included
+ * as <rapicorn.hh>.
+ */
+namespace Rapicorn {}
+
 #endif // __RAPICORN_CORE_HH__
 /* vim:set ts=8 sts=2 sw=2: */
