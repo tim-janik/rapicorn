@@ -1,0 +1,56 @@
+# Build and upload development documentation
+
+all: build-stamp
+
+top_srcdir  = ../..
+git_stamp   = $(top_srcdir)/.git/$(shell git symbolic-ref -q HEAD)
+SED_VERSION = $(shell sed -ne "/^[ \t]*VERSION[ \t]*=/ { s/^[^=]*=[ \t]*//; p; q }" < $(top_srcdir)/Makefile)
+SED_MKEVEN  = sed 's/1$$/0/;s/3$$/2/;s/5$$/4/;s/7$$/6/;s/9$$/8/'
+
+DOC_FILES  = rapicorn-core.hh rapicorn.hh
+DOC_DIRS   = rcore/ plic/ rope/ tools/ ui/
+DOCU_GLOBS = *.idl *.h *.H *.hh *.proc *.py
+DOXY_GLOBS = $(DOCU_GLOBS) *.c *.C *.cc
+SRCTREE    = srctree
+
+.PHONY: $(SRCTREE)
+$(SRCTREE):
+	rm -rf $(SRCTREE)/ && mkdir -p $(SRCTREE)/
+	@echo "### Copying Source..." \
+	&& CWD=`pwd` \
+	&& for dir in $(DOC_DIRS) ; do \
+	  (mkdir -p $$CWD/$(SRCTREE)/$$dir/ \
+	   && cd $(top_srcdir)/$$dir \
+	   && find . -maxdepth 1 -type f \( $(patsubst %,-name '%' -o, $(DOXY_GLOBS)) -false \) \
+	      -exec cp {} $$CWD/$(SRCTREE)/$$dir/{} \; ) || exit $? ; \
+	  done \
+	$(foreach FILE, $(DOC_FILES), \
+	  && cp $(top_srcdir)/$(FILE) $(SRCTREE)/$(dir $(FILE)))
+	@echo "### Identifying Documentation files..." \
+	&& cd $(SRCTREE)/ \
+	&& find . -type f \( $(patsubst %,-name '%' -o, $(DOCU_GLOBS)) -false \) \
+	   -exec sed  '1,+0s,^,/** @file {} */,' {} --in-place \;
+	@echo "### Pruning excludes..."
+	rm $(SRCTREE)/rcore/rapicornsignalvariants.hh
+
+build-stamp: $(git_stamp) doxygen.cfg
+	rm -rf html/ && mkdir -p html/
+	$(MAKE) $(SRCTREE)
+	@echo "### Doxygen..."
+	(cat doxygen.cfg \
+	&& echo "STRIP_FROM_PATH  = `pwd`/$(SRCTREE)" \
+	&& echo "INPUT		  = $(SRCTREE)/" \
+	&& echo "OUTPUT_DIRECTORY = html/" \
+	&& echo -n "PROJECT_NUMBER = $(SED_VERSION)" \
+	) | nice doxygen -
+	rm -rf $(SRCTREE)/
+	mv html/html/ html/$(SED_VERSION)/
+	ln -s $(SED_VERSION) html/latest
+	touch $@
+
+upload: all
+	rsync -aHP --del '--filter=P /*/' html/  dev.testbit.eu:/srv/dev/html/rapicorn/
+
+clean:
+	rm -f build-stamp
+	rm -rf $(SRCTREE)/ html/
