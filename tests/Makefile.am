@@ -13,7 +13,7 @@ EXTRA_DIST      += $(XML_FILES)
 LDADDS   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS)
 RAPIDRUN = $(top_builddir)/tools/rapidrun
 IMGCHECK = $(top_builddir)/rcore/tests/imgcheck
-XVFB_RAPIDRUN = $(XVFB_START) && rrun() { $(RAPIDRUN) "$$@" $(XLIBSTDERREXTFIX) ; } && rrun
+X11TEST_RAPIDRUN = $(X11TEST_SERVER) && rrun() { $(RAPIDRUN) "$$@" $(XLIBSTDERREXTFIX) ; } && rrun
 
 # === programs ===
 EXAMPLES        += fileview
@@ -30,7 +30,7 @@ EXTRA_DIST += alignment.png
 alignment-test: $(srcdir)/alignment.xml
 	@$(call TSTTITLE, alignment.xml PNG test)
 	$(SILENT) rm -f xtmp-alignment.png
-	$(SILENT) $(XVFB_RAPIDRUN) -x $(srcdir)/alignment.xml $(STDERR_@)
+	$(SILENT) $(X11TEST_RAPIDRUN) -x $(srcdir)/alignment.xml $(STDERR_@)
 	$(SILENT) $(IMGCHECK) $(srcdir)/alignment.png xtmp-alignment.png ; $(call TSTRESULT)
 	$(SILENT) rm -f xtmp-alignment.png
 check: alignment-test
@@ -38,14 +38,14 @@ check: alignment-test
 # arrowsize test
 arrowsize-test:
 	@$(call TSTTITLE, arrowsize-test.xml)
-	$(SILENT) $(XVFB_RAPIDRUN) -x $(srcdir)/arrowsize-test.xml ; $(call TSTRESULT)
+	$(SILENT) $(X11TEST_RAPIDRUN) -x $(srcdir)/arrowsize-test.xml ; $(call TSTRESULT)
 EXTRA_DIST += arrowsize-test.xml
 check: arrowsize-test
 
 # factory-test
 factory-test:
 	@$(call TSTTITLE, FactoryTest)
-	$(SILENT) $(XVFB_RAPIDRUN) -x --test-dump \
+	$(SILENT) $(X11TEST_RAPIDRUN) -x --test-dump \
 	  --test-matched-node=".*" $(srcdir)/factory-test.xml > $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/factory-test.ref)
 EXTRA_DIST += factory-test.xml factory-test.ref

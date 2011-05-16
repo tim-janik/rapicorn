@@ -11,7 +11,7 @@ EXTRA_DIST       = $(TEST_PYPROGS)
 XML_FILES        =
 EXTRA_DIST      += $(XML_FILES)
 RPYTHON          = PYTHONPATH="$$PYTHONPATH:$(pythondir)" $(PYTHON) # -c "import @RAPICORN_NAMESPACE_NAME@"
-XVFB_RPYTHON     = $(XVFB_START) && rrun() { $(RPYTHON) "$$@" $(XLIBSTDERREXTFIX) ; } && rrun
+X11TEST_RPYTHON  = $(X11TEST_SERVER) && rrun() { $(RPYTHON) "$$@" $(XLIBSTDERREXTFIX) ; } && rrun
 
 
 # === tests ===
@@ -30,7 +30,7 @@ python-call-info:
 # === TEST_PYPROGS ===
 .PHONY: check-TEST_PYPROGS
 check-TEST_PYPROGS:
-	@$(XVFB_START) && \
+	@$(X11TEST_SERVER) && \
 	  for tst in $(TEST_PYPROGS) ; do \
 	    [ -f ./"$$tst" ] && rt=./"$$tst" || rt="$(srcdir)/$$tst" ;   \
 	    $(RPYTHON) $$rt && echo "PASS: $$tst" || exit 1 ; 		 \

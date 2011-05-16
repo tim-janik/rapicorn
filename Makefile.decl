@@ -20,6 +20,47 @@ SILENT__v_0 = @
 STDERR_@    = $(SILENT:%=2>/dev/null)
 STDOUT_@    = $(SILENT:%=1>/dev/null)
 
+# == X11 for Unit Tests ==
+x11test_log   = $(abs_top_builddir)/.x11test.log
+DISPLAYHASH   = x11test-$(shell echo "$(PACKAGE) $(abs_top_builddir)" | md5sum | sed 's/\(.\{7\}\).*/\1/')
+X11TEST_FIND  = \
+  for F in $$(ps -eo pid,args | \
+    sed -n '{s/^\s*\([0-9]\+\)\s\+Xephyr :\([0-9]\+\) -displayID $(DISPLAYHASH)\b.*/\1:\2/; Tdone; p; :done }') nil ; do \
+    X11TEST_PID=$${F/:*/} ; X11TEST_DISPLAY=$${F/*:/} ; \
+    xset -display :$$X11TEST_DISPLAY q >/dev/null 2>&1 && break ; done
+x11test-find:
+	@$(X11TEST_FIND) || { echo "$(MAKECMDGOALS): no X11 test server, issue: make x11start" ; exit 1 ; } \
+	&& echo "x11test: pid=$$X11TEST_PID display=$$X11TEST_DISPLAY"
+x11test-start:
+	@$(X11TEST_FIND) || { \
+	  Xephyr -help 2>&1 | grep -q display || { echo "$(MAKECMDGOALS): failed to start Xephyr"; exit 1 ; } \
+	  && for idoffs in `seq 1001 1500` ; do X11TEST_DISPLAY=$$(($$idoffs + $$RANDOM % 500)) \
+	  && test ! -e /tmp/.X$$X11TEST_DISPLAY-lock && break ; done \
+	  || { echo "$(MAKECMDGOALS): out of available X11 Display IDs"; exit 1 ; }; \
+	  Xephyr :$$X11TEST_DISPLAY -displayID $(DISPLAYHASH) -screen 800x600x32 -nolisten tcp \
+	         -auth /dev/null -noreset -retro >$(x11test_log) 2>&1 & X11TEST_PID="$$!" ; } \
+	&& echo "x11test: pid=$$X11TEST_PID display=$$X11TEST_DISPLAY"
+x11test-stop:
+	@$(X11TEST_FIND) || { echo "$(MAKECMDGOALS): no x11test running" ; exit 0 ; } \
+	&& kill -SIGTERM $$X11TEST_PID \
+	&& test -z `ps -o pid=  $$X11TEST_PID` || { sleep 1 ; kill -SIGKILL $$X11TEST_PID 2>/dev/null ; } \
+	|| true
+export X11TEST_DISPLAY ?= $(shell $(X11TEST_FIND) && echo ":$$X11TEST_DISPLAY")
+# use: $(X11TEST_SERVER) && someprogram # sets $DISPLAY
+X11TEST_SERVER := \
+  if [ -z "$$X11TEST_DISPLAY" ] ; then \
+    Xvfb -help 2>&1 | grep -q display || { echo "$(MAKECMDGOALS): failed to start Xvfb" ; exit -2 ; } \
+    && for idoffs in `seq 1001 1500` ; do D=$$(($$idoffs + $$RANDOM % 500)) \
+    && test ! -e /tmp/.X$$D-lock && break ; done \
+    || { echo "$(MAKECMDGOALS): out of available X11 Display IDs" ; exit -2 ; } \
+    && { Xvfb :$$D -screen 0 800x600x24 -nolisten tcp -auth /dev/null -noreset -retro >>$(x11test_log) 2>&1 & } \
+    && trap "set +x; kill -15 $$!" 0 HUP INT QUIT TRAP ILL ABRT FPE SEGV PIPE ALRM TERM BUS SYS XCPU XFSZ USR1 \
+    && until xset -display :$$D q >/dev/null 2>&1 ; do sleep 0.1 ; done && DISPLAY=:$$D ; \
+  else DISPLAY="$$X11TEST_DISPLAY" ; \
+  fi && export DISPLAY
+XLIBSTDERREXTFIX = 2> >(egrep -v -e '^Xlib: *extension "RANDR" missing on display ":' >&2)
+CLEANFILES += $(if $(filter $(top_builddir), . ), $(x11test_log))
+
 # === distfile-list ===
 # recursive rule supported by all Makefiles to generate a list of all files
 # listed as DISTFILES. this asserts a writable file named $DISTFILE_LIST.
@@ -39,27 +80,6 @@ distfile-list:
 	    echo "$(subdir)/$$file" >> $(DISTFILE_LIST) ;	\
 	done ; true
 
-# === Xvfb wrapper for GUI tests ===
-XVFB = Xvfb -screen 0 800x600x16
-XIDS = 101 102 103 104 105 106 107 197 199 211 223 227 293 307 308 309 310 311 \
-   491 492 493 494 495 496 497 498 499 500 501 502 503 504 505 506 507 508 509 \
-   991 992 993 994 995 996 997 998 999 1000 1001 1002 1003 1004 1005 1006 1007 \
-  1008 1009 4703 4721 4723 4729 4733 4751 9973 9974 9975 9976 9977 9978 9979 \
-  9980 9981 9982 9983 9984 9985 9986 9987 9988 9989 9990 9991 9992 9993 9994 \
-  9995 9996 9997 9998 9999
-SKIP_GDKTARGET = \
-	test "$(gdktarget)" != "x11" \
-	&& echo "Gtk+Tests:INFO: Skipping GUI tests for non-X11 target."
-XVFB_START = \
-	if [ -z "$$X11_TEST_DISPLAY" ] ; then ${XVFB} -help 2>/dev/null 1>&2 \
-	&& XID=`for id in $(XIDS) ; do test -e /tmp/.X$$id-lock || { echo $$id; exit 0; }; done; exit 1` \
-	&& { ${XVFB} :$$XID -screen 0 800x600x16 -nolisten tcp -auth /dev/null >/dev/null 2>&1 & \
-		trap "set +x ; kill -15 $$! " 0 HUP INT QUIT TRAP USR1 PIPE TERM ; } \
-	|| { echo "Gtk+Tests:ERROR: Failed to start Xvfb environment for X11 target tests."; exit 1; } \
-	&& DISPLAY=:$$XID ; else DISPLAY="$$X11_TEST_DISPLAY" ; fi && export DISPLAY
-# call as: $(XVFB_START) && someprogram
-XLIBSTDERREXTFIX = 2> >(egrep -v -e '^Xlib: *extension "RANDR" missing on display ":' >&2)
-
 # === check: check-before / check-after ===
 .PHONY: check-before check-after
 check-am: check-before
@@ -71,7 +91,7 @@ TESTS=
 TEST_PROGS =
 .PHONY: check-TEST_PROGS
 check-TEST_PROGS:
-	@$(XVFB_START) && \
+	@$(X11TEST_SERVER) && \
 	  for tst in $(TEST_PROGS) ; do \
 	    ./$$tst && echo "PASS: $$tst" || exit 1 ;	\
 	  done
@@ -85,7 +105,7 @@ check: check-TEST_PROGS
 LOGTEST_PROGS =
 .PHONY: check-LOGTEST_PROGS
 check-LOGTEST_PROGS:
-	@$(XVFB_START) && \
+	@$(X11TEST_SERVER) && \
 	  for tst in $(LOGTEST_PROGS) ; do \
 	    $(call TSTTITLE, $$tst) ; tstout="$$tst.log" ; \
 	    ./$$tst >"$$tstout" 2>&1 || exit $$? ; \
@@ -111,7 +131,7 @@ slowcheck-recursive:
 	    exit 1 ;						\
 	done
 slowcheck-SLOWTESTS:
-	@$(XVFB_START) && \
+	@$(X11TEST_SERVER) && \
 	  for tst in $(SLOWTESTS) ; do \
 	    ./$$tst --test-slow && echo "PASS: $$tst" || exit 1 ;	\
 	  done
@@ -132,7 +152,7 @@ perf-recursive:
 	    exit 1 ;						\
 	done
 perf-PERFTESTS:
-	@$(XVFB_START) && \
+	@$(X11TEST_SERVER) && \
 	  for tst in $(PERFTESTS) ; do \
 	    ./$$tst --test-perf && echo "PASS: $$tst" || exit 1 ;	\
 	  done

@@ -54,7 +54,7 @@ SINFEX=./sinfextest --shell
 sinfex-expressions:
 	@$(call TSTTITLE)
 	$(SILENT) egrep -v '^[[:space:]]*(#|$$)' < $(srcdir)/expressions.txt > $(TSTTMP)
-	$(SILENT) $(XVFB_START) && \
+	$(SILENT) $(X11TEST_SERVER) && \
 	  COLUMNS=9999 $(SINFEX) < $(TSTTMP) > $(TSTOUT) \
 	                 $(XLIBSTDERREXTFIX)
 	@$(call TSTCMP, $(srcdir)/expressions.ref)
