@@ -82,6 +82,9 @@ typedef enum {
 } AlignType;
 typedef EnumType<AlignType> EnumTypeAlignType;
 
+/**
+ * AnchorType specifies an anchoring point for graphical elements.
+ */
 typedef enum {
   ANCHOR_NONE,
   ANCHOR_CENTER,
@@ -130,10 +133,10 @@ typedef enum {
 typedef EnumType<ColorType> EnumTypeColorType;
 
 typedef enum {
-  COLOR_INHERIT,
-  COLOR_NORMAL,
-  COLOR_SELECTED,
-  COLOR_BASE,
+  COLOR_INHERIT,        ///< Inherit color from parent component
+  COLOR_NORMAL,         ///< Normal color specification
+  COLOR_SELECTED,       ///< Color used for selected areas
+  COLOR_BASE,           ///< Color used for text or scroll fields
 } ColorSchemeType;
 typedef EnumType<ColorSchemeType> EnumTypeColorSchemeType;
 
@@ -143,7 +146,7 @@ typedef enum {
   DIR_UP,
   DIR_LEFT,
   DIR_DOWN,
-} DirType;
+} DirType;              ///< Enum type for direction indication
 typedef EnumType<DirType> EnumTypeDirType;
 
 typedef enum {
@@ -160,7 +163,7 @@ typedef enum {
   FOCUS_UP,
   FOCUS_LEFT,
   FOCUS_DOWN
-} FocusDirType;
+} FocusDirType;         ///< Enum type for focus movements
 typedef EnumType<FocusDirType> EnumTypeFocusDirType;
 
 typedef enum {
@@ -198,11 +201,11 @@ inline LightingType  operator|  (LightingType  s1, LightingType s2) { return Lig
 inline LightingType& operator|= (LightingType &s1, LightingType s2) { s1 = s1 | s2; return s1; }
 
 typedef enum {
-  SELECTION_NONE,
-  SELECTION_BROWSE,
-  SELECTION_SINGLE,
-  SELECTION_INTERVAL,
-  SELECTION_MULTIPLE,
+  SELECTION_NONE,       ///< No selection possible
+  SELECTION_BROWSE,     ///< Browse by always forcing a single selected item
+  SELECTION_SINGLE,     ///< Allow selection toggling of a single item
+  SELECTION_INTERVAL,   ///< Allow selection of multiple consecutive items
+  SELECTION_MULTIPLE,   ///< Allow arbitrary combinations of selected items
 } SelectionMode;
 typedef EnumType<SelectionMode> EnumTypeSelectionMode;
 
@@ -253,20 +256,20 @@ typedef EnumType<TextMode> EnumTypeTextMode;
 
 typedef enum {
   /* main window types */
-  WINDOW_TYPE_NORMAL  = 0,
-  WINDOW_TYPE_DESKTOP,          /* desktop background */
-  WINDOW_TYPE_DOCK,             /* dock or panel */
-  WINDOW_TYPE_TOOLBAR,          /* torn-off toolbar */
-  WINDOW_TYPE_MENU,             /* torn-off menu */
-  WINDOW_TYPE_UTILITY,          /* palette or toolbox */
-  WINDOW_TYPE_SPLASH,           /* startup/splash screen */
-  WINDOW_TYPE_DIALOG,           /* dialog window, usually transient */
-  WINDOW_TYPE_DROPDOWN_MENU,    /* menu, opened from menubar */
-  WINDOW_TYPE_POPUP_MENU,       /* menu, opened as context menu */
-  WINDOW_TYPE_TOOLTIP,          /* transient context info window */
-  WINDOW_TYPE_NOTIFICATION,     /* transient info window (e.g. info bubble) */
-  WINDOW_TYPE_COMBO,            /* combo box menu or list window */
-  WINDOW_TYPE_DND,              /* window being dragged in a DND operation */
+  WINDOW_TYPE_NORMAL  = 0,      ///< Normal window
+  WINDOW_TYPE_DESKTOP,          ///< Desktop background
+  WINDOW_TYPE_DOCK,             ///< Dock or panel
+  WINDOW_TYPE_TOOLBAR,          ///< Torn-off toolbar
+  WINDOW_TYPE_MENU,             ///< Torn-off menu
+  WINDOW_TYPE_UTILITY,          ///< Palette or toolbox
+  WINDOW_TYPE_SPLASH,           ///< Startup/splash screen
+  WINDOW_TYPE_DIALOG,           ///< Dialog window, usually transient
+  WINDOW_TYPE_DROPDOWN_MENU,    ///< Menu, opened from menubar
+  WINDOW_TYPE_POPUP_MENU,       ///< Menu, opened as context menu
+  WINDOW_TYPE_TOOLTIP,          ///< Transient context info window
+  WINDOW_TYPE_NOTIFICATION,     ///< Transient info window (e.g. info bubble)
+  WINDOW_TYPE_COMBO,            ///< Combo box menu or list window
+  WINDOW_TYPE_DND,              ///< Window for dragged during DND operations
 } WindowType;
 typedef EnumType<WindowType> EnumTypeWindowType;
 
