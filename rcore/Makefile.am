@@ -114,7 +114,7 @@ $(srcdir)/enumdefs.cc: gen-enums.cc
 gen-enums.cc: $(srcdir)/enumdefs.hh Makefile
 	cd . \
 	&& ( cd ${srcdir} && $(GLIB_MKENUMS) \
-	  --fprod "\n/* --- @filename@ --- */\n#include\t\"@filename@\"" \
+	  --fprod "\n/* --- $< --- */\n#include\t\"$<\"" \
 	  --vhead "/* @EnumName@\n */\n" \
 	  --vhead "static const @Type@Type<@EnumName@>::Value @EnumName@_value_array[] = {" \
 	  --vprod "  { @VALUENAME@, \"@VALUENAME@\", sizeof (\"@VALUENAME@\") - 1 }," \
@@ -122,7 +122,7 @@ gen-enums.cc: $(srcdir)/enumdefs.hh Makefile
 	  --vtail "template<> const uint @Type@Type<@EnumName@>::n_values = sizeof (@EnumName@_value_array) / sizeof (@EnumName@_value_array[0]);\n" \
 	  --vtail "template<> const @Type@Type@EnumName@::Value *const @Type@Type@EnumName@::values = @EnumName@_value_array;\n" \
 	  --vtail "template<> const char *@Type@Type@EnumName@::ename = \"@EnumName@\";" \
-	    $^ ) > xgen-enu \
+	    <(sed 's,//[/!].*,,' $<) ) > xgen-enu \
 	&& cp xgen-enu $@ \
 	&& rm -f xgen-enu
 CLEANFILES += xgen-enu gen-enums.cc
