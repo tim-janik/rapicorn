@@ -7,11 +7,15 @@ git_stamp   = $(top_srcdir)/.git/$(shell git symbolic-ref -q HEAD)
 SED_VERSION = $(shell sed -ne "/^[ \t]*VERSION[ \t]*=/ { s/^[^=]*=[ \t]*//; p; q }" < $(top_srcdir)/Makefile)
 SED_MKEVEN  = sed 's/1$$/0/;s/3$$/2/;s/5$$/4/;s/7$$/6/;s/9$$/8/'
 
-DOC_FILES  = rapicorn-core.hh rapicorn.hh
-DOC_DIRS   = rcore/ plic/ rope/ tools/ ui/
-DOCU_GLOBS = *.idl *.h *.H *.hh *.proc *.py
-DOXY_GLOBS = $(DOCU_GLOBS) *.c *.C *.cc
-SRCTREE    = srctree
+DOC_FILES   = rapicorn-core.hh rapicorn.hh
+DOC_DIRS    = rcore/ plic/ rope/ tools/ ui/
+DOCU_GLOBS  = *.py $(DOCU_HGLOBS)
+DOCU_HGLOBS = *.idl *.h *.H *.hh *.proc
+DOCU_CGLOBS = $(DOCU_GLOBS) *.c *.C *.cc
+SRCTREE     = srctree
+
+EXCLUDES = rope/cpy2rope.cc rope/cxx-client.[hc][hc] \
+	rcore/rapicornsignalvariants.hh ui/interface.[hc][hc]
 
 .PHONY: $(SRCTREE)
 $(SRCTREE):
@@ -21,7 +25,7 @@ $(SRCTREE):
 	&& for dir in $(DOC_DIRS) ; do \
 	  (mkdir -p $$CWD/$(SRCTREE)/$$dir/ \
 	   && cd $(top_srcdir)/$$dir \
-	   && find . -maxdepth 1 -type f \( $(patsubst %,-name '%' -o, $(DOXY_GLOBS)) -false \) \
+	   && find . -maxdepth 1 -type f \( $(patsubst %,-name '%' -o, $(DOCU_CGLOBS)) -false \) \
 	      -exec cp {} $$CWD/$(SRCTREE)/$$dir/{} \; ) || exit $? ; \
 	  done \
 	$(foreach FILE, $(DOC_FILES), \
@@ -30,8 +34,11 @@ $(SRCTREE):
 	&& cd $(SRCTREE)/ \
 	&& find . -type f \( $(patsubst %,-name '%' -o, $(DOCU_GLOBS)) -false \) \
 	   -exec sed  '1,+0s,^,/** @file {} */,' {} --in-place \;
-	@echo "### Pruning excludes..."
-	rm $(SRCTREE)/rcore/rapicornsignalvariants.hh
+	@echo "### Pruning excludes..." \
+	&& rm -f $(patsubst %, $(SRCTREE)/%, $(EXCLUDES))
+	@echo "### Forcing enum value docs..." \
+	&& find $(SRCTREE) -type f \( $(patsubst %,-name '%' -o, $(DOCU_HGLOBS)) -false \) -print0 \
+	| xargs -0 python enumdoc.py
 
 build-stamp: $(git_stamp) doxygen.cfg
 	rm -rf html/ && mkdir -p html/
