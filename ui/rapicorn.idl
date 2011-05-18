@@ -19,10 +19,18 @@ include "hardcoded.idl";
 
 namespace Rapicorn {
 
+/**
+ * A sequence of C++ std::strings.
+ */
 sequence StringList {
   string        strings;
 };
 
+/**
+ * @param width         requested width
+ * @param height        requested height
+ * Requisition information, providing requisition @a width and @a height.
+ */
 record Requisition {
   float width;
   float height;
@@ -30,17 +38,31 @@ record Requisition {
 
 interface It3m;
 
+/**
+ * A sequence of It3m objects.
+ */
 sequence ItemSeq {
   It3m  items;
 };
 
+/**
+ * It3m is a temporary helper interface to aid the transition to IDL interface definitions in Rapicorn.
+ */
 interface It3m {
   It3m          unique_component        (string path) = 0;
   ItemSeq       collect_components      (string path) = 0;
 };
 
+/**
+ * Item is temporarily implemented by Rapicorn itself.
+ */
 interface Item : It3m { /* temporarily manually implemented */ };
 
+/**
+ * A Window interface is the main user visible handle for screen objects in Rapicorn.
+ * Windows can be obtained from the Application singleton. They contain UI elements
+ * like buttons and text fields, and the neccessary logic for UI event processing.
+ */
 interface Window : Item {
   bool          viewable                () = 0;
   void          show                    () = 0;
@@ -62,6 +84,11 @@ sequence WindowList {
   Window windows;
 };
 
+/**
+ * For each Rapicorn program, there exists one global Application singleton.
+ * All general program operations are provided by the Application interface,
+ * such as the facility to create Window objects on the screen.
+ */
 interface Application {
   /* startup */
   void          init_with_x11   (string         application_name,

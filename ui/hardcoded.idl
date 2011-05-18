@@ -17,6 +17,9 @@
 
 namespace Rapicorn {
 
-interface BaseObject {}; // provided by rapicorn-core
+/**
+ * Helper class, part of the IDL interface but implemented by rapicorn-core.
+ */
+interface BaseObject {};
 
 } // Rapicorn
