@@ -34,3 +34,4 @@ psource/rapicorn-gui.psrc: $(rapicorn_gui_files)
 # clean up
 clean-local:
 	rm -rf psource/
+	[ -d dev/ ] && $(MAKE) clean -C dev/
