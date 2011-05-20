@@ -44,17 +44,17 @@ static struct {
 };
 
 static void
-window_close (Window           &window,
+wind0w_close (Wind0w           &wind0w,
               const StringList &args)
 {
-  window.close();
+  wind0w.close();
 }
 
 static struct {
-  void      (*cmd) (Window&, const StringList&);
+  void      (*cmd) (Wind0w&, const StringList&);
   const char *name;
-} window_cmds[] = {
-  { window_close,       "Window::close" },
+} wind0w_cmds[] = {
+  { wind0w_close,       "Wind0w::close" },
 };
 
 static void
@@ -85,11 +85,11 @@ command_lib_exec (Item               &item,
   Root *root = item.get_root();
   if (root)
     {
-      Window &window = root->window();
-      for (uint ui = 0; ui < ARRAY_SIZE (window_cmds); ui++)
-        if (window_cmds[ui].name == cmd_name)
+      Wind0w &wind0w = root->wind0w();
+      for (uint ui = 0; ui < ARRAY_SIZE (wind0w_cmds); ui++)
+        if (wind0w_cmds[ui].name == cmd_name)
           {
-            window_cmds[ui].cmd (window, args);
+            wind0w_cmds[ui].cmd (wind0w, args);
             return true;
           }
     }

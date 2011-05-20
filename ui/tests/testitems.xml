@@ -26,11 +26,11 @@
   </def:alignment-test>
 
   <!-- test-item test -->
-  <def:test-item-window inherit="Root">
+  <def:test-item-wind0w inherit="Root">
     <IdlTestItem />
-  </def:test-item-window>
+  </def:test-item-wind0w>
 
-  <!-- complex-window -->
+  <!-- complex-wind0w -->
   <def:complex-dialog inherit="Root">
     <Ambience normal-lighting="upper-left">
       <Alignment padding="5">
@@ -64,7 +64,7 @@
 	  </Frame>
 	  <HBox spacing="5" homogeneous="0" >
 	    <Button hexpand="1" on-click='Item::print ("ok")' > <Label markup-text="Ok"/> </Button>
-	    <Button hexpand="1" on-click="Window::close()" > <Label markup-text="Close"/> </Button>
+	    <Button hexpand="1" on-click="Wind0w::close()" > <Label markup-text="Close"/> </Button>
 	  </HBox>
 	</VBox>
       </Alignment>

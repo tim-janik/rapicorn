@@ -58,14 +58,14 @@ ApplicationImpl::init_with_x11 (const std::string &application_name,
   init_with_x11 (&dummy_argc, &dummy_argv, application_name.c_str());
 }
 
-Window*
-ApplicationImpl::create_window (const std::string    &window_identifier,
+Wind0w*
+ApplicationImpl::create_wind0w (const std::string    &wind0w_identifier,
                                 const StringList     &arguments,
                                 const StringList     &env_variables)
 {
-  return &Factory::create_window (window_identifier,
+  return &Factory::create_wind0w (wind0w_identifier,
                                   arguments,
-                                  env_variables).root().window();
+                                  env_variables).root().wind0w();
 }
 
 String
@@ -148,12 +148,12 @@ Application::close ()
 {
 }
 
-WindowList
-ApplicationImpl::list_windows ()
+Wind0wList
+ApplicationImpl::list_wind0ws ()
 {
-  WindowList wl;
-  for (uint i = 0; i < m_windows.size(); i++)
-    wl.push_back (m_windows[i]);
+  Wind0wList wl;
+  for (uint i = 0; i < m_wind0ws.size(); i++)
+    wl.push_back (m_wind0ws[i]);
   return wl;
 }
 
@@ -173,9 +173,9 @@ ApplicationImpl::collect_components (const String &path)
   ItemSeq result;
   if (cmatcher) // valid path
     {
-      for (uint i = 0; i < m_windows.size(); i++)
+      for (uint i = 0; i < m_wind0ws.size(); i++)
         {
-          vector<Item*> more = collect_items (*m_windows[i], *cmatcher);
+          vector<Item*> more = collect_items (*m_wind0ws[i], *cmatcher);
           result.insert (result.end(), more.begin(), more.end());
         }
       delete cmatcher;
@@ -184,27 +184,27 @@ ApplicationImpl::collect_components (const String &path)
 }
 
 void
-ApplicationImpl::add_window (Window &window)
+ApplicationImpl::add_wind0w (Wind0w &wind0w)
 {
-  ref_sink (window);
-  m_windows.push_back (&window);
+  ref_sink (wind0w);
+  m_wind0ws.push_back (&wind0w);
 }
 
 void
 ApplicationImpl::check_primaries()
 {
-  if (m_windows.size() == 0) // FIXME: check temporary window types
+  if (m_wind0ws.size() == 0) // FIXME: check temporary wind0w types
     sig_missing_primary.emit();
 }
 
 bool
-ApplicationImpl::remove_window (Window &window)
+ApplicationImpl::remove_wind0w (Wind0w &wind0w)
 {
-  vector<Window*>::iterator it = std::find (m_windows.begin(), m_windows.end(), &window);
-  if (it == m_windows.end())
+  vector<Wind0w*>::iterator it = std::find (m_wind0ws.begin(), m_wind0ws.end(), &wind0w);
+  if (it == m_wind0ws.end())
     return false;
-  m_windows.erase (it);
-  unref (window);
+  m_wind0ws.erase (it);
+  unref (wind0w);
   check_primaries(); // FIXME: should exec_update
   return true;
 }

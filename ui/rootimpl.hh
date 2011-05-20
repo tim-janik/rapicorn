@@ -25,7 +25,7 @@ namespace Rapicorn {
 
 class RootImpl : public virtual Root,
                  public virtual SingleContainerImpl,
-                 public virtual Window,
+                 public virtual Wind0w,
                  public virtual Viewp0rt::EventReceiver
 {
   EventLoop            &m_loop;
@@ -81,7 +81,7 @@ private:
   virtual bool          has_viewp0rt                            ();
   virtual void          destroy_viewp0rt                        ();
   void                  idle_show                               ();
-  virtual Window&       window                                  ();
+  virtual Wind0w&       wind0w                                  ();
   virtual bool          custom_command                          (const String       &command_name,
                                                                  const StringList   &command_args);
   virtual bool          prepare                                 (uint64                  current_time_usecs,
@@ -90,7 +90,7 @@ private:
   virtual bool          dispatch                                ();
   virtual void          enable_auto_close                       ();
   virtual EventLoop*    get_loop                                ();
-  /* Window */
+  /* Wind0w */
   virtual Root&         root                                    ();
   virtual void          show                                    ();
   virtual bool          closed                                  ();

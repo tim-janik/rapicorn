@@ -41,7 +41,7 @@ class_scope:StringList:
   /*Con*/  StringList () {}
   /*Con*/  StringList (const std::vector<String> &strv) : Sequence (strv) {}
 
-class_scope:Window_Interface:
+class_scope:Wind0w_Interface:
   virtual Root&      root          () = 0;
 class_scope:Application_Interface:
   static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);

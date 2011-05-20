@@ -70,3 +70,6 @@ uninstall-hook:	# runs after ${PLICV} was uninstalled
 	$(SILENT) cd $(DESTDIR)$(bindir)			\
 	  && test ! -L ${BINPLIC} -o -x ${BINPLIC}	\
 	  || rm -f ${BINPLIC}
+
+clean-local:
+	rm -f *.pyc

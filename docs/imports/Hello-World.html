@@ -55,23 +55,23 @@ Programs that display graphical user interfaces with Rapicorn generally need to 
 <code>App.auto_load ("i18n-domain", "ui-description.xml", argv[0]);</code>
     </li>
     <li>
-Windows defined in the user interface description files then need to be created and at some point shown to the user:
-      <pre>    Window window = App.create_window ("main-window");
-    window.show();
+Wind0ws defined in the user interface description files then need to be created and at some point shown to the user:
+      <pre>    Wind0w wind0w = App.create_wind0w ("main-wind0w");
+    wind0w.show();
 </pre>
     </li>
     <li>
-Most GUI programs will handle user input on demand after windows have initialy been displayed. For this, they enter an <a href="http://en.wikipedia.org/wiki/Event_loop">event loop</a> and remain until users initiate application exit. In Rapicorn this is done by: <code>App.execute_loops();</code>
+Most GUI programs will handle user input on demand after wind0ws have initialy been displayed. For this, they enter an <a href="http://en.wikipedia.org/wiki/Event_loop">event loop</a> and remain until users initiate application exit. In Rapicorn this is done by: <code>App.execute_loops();</code>
     </li>
     <li>
-Last but not least, GUI programs need a way to specify program actions to be executed when certain user interface elements like buttons are activated. In Rapicorn, such actions are hooked up as "command handlers" on a window: <code>window.commands += handle_commands;</code>. For this to work, a <code>handle_commands()</code> function needs to be supplied by the program, e.g.:
+Last but not least, GUI programs need a way to specify program actions to be executed when certain user interface elements like buttons are activated. In Rapicorn, such actions are hooked up as "command handlers" on a wind0w: <code>wind0w.commands += handle_commands;</code>. For this to work, a <code>handle_commands()</code> function needs to be supplied by the program, e.g.:
       <pre>    static bool
-    handle_commands (Window       &amp;window,
+    handle_commands (Wind0w       &amp;wind0w,
                      const String &amp;command,
                      const String &amp;args)
     {
       if (command == "close")
-        window.close();
+        wind0w.close();
       else
         printout ("%s(): unknown command: %s(%s)\n", __func__,
                   command.c_str(), args.c_str());
@@ -90,17 +90,17 @@ Putting it all together: <a href="http://testbit.eu/gitdata?p=rapicorn.git;a=blo
   </h6>
   <!--- paragraph break -->
   <p align="left">
-Apart from the program, a user interface definition file needs to be provided that defines <code>main-window</code>.
-All main windows need to derive from the <code>Root</code> widget, which provides basic functionality like on screen display (depending on the viewp0rt backend being used) and event handling:
+Apart from the program, a user interface definition file needs to be provided that defines <code>main-wind0w</code>.
+All main wind0ws need to derive from the <code>Root</code> widget, which provides basic functionality like on screen display (depending on the viewp0rt backend being used) and event handling:
   </p>
-  <pre>    &lt;def:main-window inherit="Root"/>
+  <pre>    &lt;def:main-wind0w inherit="Root"/>
 </pre>
   <p align="left">
-It is generally a good idea to put an <code>OuterShell</code> into each root widget, to get some basic layout functionality, window border spacing and lighting effects:
+It is generally a good idea to put an <code>OuterShell</code> into each root widget, to get some basic layout functionality, wind0w border spacing and lighting effects:
   </p>
-  <pre>    &lt;def:main-window inherit="Root">
+  <pre>    &lt;def:main-wind0w inherit="Root">
       &lt;OuterShell/>
-    &lt;/def:main-window>
+    &lt;/def:main-wind0w>
 </pre>
   <p align="left">
 A "Hello World" application of course needs to display the "Hello World" text, this can be accomplished by using a <code>Label</code> and setting its <code>markup-text</code> property:
@@ -112,7 +112,7 @@ A "Hello World" application of course needs to display the "Hello World" text, t
     &lt;/Label>
 </pre>
   <p align="left">
-Finally, a <code>Button</code> is needed which allows closing of the window:
+Finally, a <code>Button</code> is needed which allows closing of the wind0w:
   </p>
   <pre>    &lt;Button on-click="close">
       &lt;Label markup-text="Close"/>

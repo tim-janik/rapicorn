@@ -178,13 +178,13 @@ RootImpl::RootImpl() :
   RAPICORN_ASSERT (m_source == source);
   m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
   m_source->primary (false);
-  app.add_window (*this);
+  app.add_wind0w (*this);
 }
 
 void
 RootImpl::dispose ()
 {
-  app.remove_window (*this);
+  app.remove_wind0w (*this);
 }
 
 RootImpl::~RootImpl()
@@ -1185,8 +1185,8 @@ RootImpl::synthesize_delete ()
   return true;
 }
 
-Window&
-RootImpl::window ()
+Wind0w&
+RootImpl::wind0w ()
 {
   return *this;
 }

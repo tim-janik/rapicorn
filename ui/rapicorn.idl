@@ -59,11 +59,11 @@ interface It3m {
 interface Item : It3m { /* temporarily manually implemented */ };
 
 /**
- * A Window interface is the main user visible handle for screen objects in Rapicorn.
- * Windows can be obtained from the Application singleton. They contain UI elements
+ * A Wind0w interface is the main user visible handle for screen objects in Rapicorn.
+ * Wind0ws can be obtained from the Application singleton. They contain UI elements
  * like buttons and text fields, and the neccessary logic for UI event processing.
  */
-interface Window : Item {
+interface Wind0w : Item {
   bool          viewable                () = 0;
   void          show                    () = 0;
   bool          closed                  () = 0;
@@ -80,14 +80,14 @@ interface Window : Item {
   bool          synthesize_delete       () = 0;
 };
 
-sequence WindowList {
-  Window windows;
+sequence Wind0wList {
+  Wind0w wind0ws;
 };
 
 /**
  * For each Rapicorn program, there exists one global Application singleton.
  * All general program operations are provided by the Application interface,
- * such as the facility to create Window objects on the screen.
+ * such as the facility to create Wind0w objects on the screen.
  */
 interface Application {
   /* startup */
@@ -102,14 +102,14 @@ interface Application {
                                  string         i18n_domain = "") = 0;
   void          load_string     (string         xml_string,
                                  string         i18n_domain = "") = 0;
-  /* windows */
-  Window        create_window   (string         window_identifier,
+  /* wind0ws */
+  Wind0w        create_wind0w   (string         wind0w_identifier,
                                  StringList     arguments = 0,
                                  StringList     env_variables = 0) = 0;
   bool          has_primary     ();
   signal void   missing_primary ();
   void          close           ();
-  WindowList    list_windows            () = 0;
+  Wind0wList    list_wind0ws            () = 0;
   It3m          unique_component        (string path) = 0;
   ItemSeq       collect_components      (string path) = 0;
   /* testing */

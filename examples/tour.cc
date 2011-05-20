@@ -20,13 +20,13 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-custom_commands (Window           &window,
+custom_commands (Wind0w           &wind0w,
                  const String     &command,
                  const StringList &args)
 {
   if (command == "testdump")
     {
-      Root &root = window.root();
+      Root &root = wind0w.root();
       TestStream *tstream = TestStream::create_test_stream();
       // tstream->filter_matched_nodes ("Button");
       root.get_test_dump (*tstream);
@@ -34,8 +34,8 @@ custom_commands (Window           &window,
       delete tstream;
     }
   else
-    printout ("%s(): custom command: %s(%s) (window: %s)\n", __func__,
-              command.c_str(), string_join (",", args).c_str(), window.root().name().c_str());
+    printout ("%s(): custom command: %s(%s) (wind0w: %s)\n", __func__,
+              command.c_str(), string_join (",", args).c_str(), wind0w.root().name().c_str());
   return true;
 }
 
@@ -59,10 +59,10 @@ main (int   argc,
   app.auto_load ("RapicornTest", "tour.xml", argv[0]);
 
   /* create root item */
-  Window &window = *app.create_window ("tour-dialog");
-  window.sig_commands += custom_commands;
+  Wind0w &wind0w = *app.create_wind0w ("tour-dialog");
+  wind0w.sig_commands += custom_commands;
 
-  window.show();
+  wind0w.show();
 
   app.execute_loops();
 

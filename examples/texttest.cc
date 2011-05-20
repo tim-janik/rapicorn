@@ -29,11 +29,11 @@ main (int   argc,
   /* parse GUI description */
   app.auto_load ("RapicornTest", "texttest.xml", argv[0]);
 
-  /* create main window */
-  Window &window = *app.create_window ("main-shell");
+  /* create main wind0w */
+  Wind0w &wind0w = *app.create_wind0w ("main-shell");
 
   /* show and process */
-  window.show();
+  wind0w.show();
   app.execute_loops();
 
   return 0;

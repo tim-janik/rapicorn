@@ -179,18 +179,18 @@ main (int   argc,
     }
 
   /* create root item */
-  Window &window = *app.create_window (dialog);
+  Wind0w &wind0w = *app.create_wind0w (dialog);
 
   /* hook up test-dump handler */
   if (test_dump)
-    window.root().sig_displayed += root_test_dump;
+    wind0w.root().sig_displayed += root_test_dump;
 
   /* hook up auto-exit handler */
   if (auto_exit)
-    window.root().enable_auto_close();
+    wind0w.root().enable_auto_close();
 
-  /* show window and process events */
-  window.show();
+  /* show wind0w and process events */
+  wind0w.show();
   app.execute_loops();
 
   return 0;

@@ -45,16 +45,16 @@ main (int   argc,
   /* parse GUI description */
   app.auto_load ("RapicornTest", "scroller.xml", argv[0]);
 
-  /* create main window */
-  Window &window = *app.create_window ("main-shell");
-  Container &mshell = window.root().interface<Container>();
+  /* create main wind0w */
+  Wind0w &wind0w = *app.create_wind0w ("main-shell");
+  Container &mshell = wind0w.root().interface<Container>();
 
   /* create button rows */
   for (uint i = 0; i < 20; i++)
     add_button_row (mshell, i);
 
   /* show and process */
-  window.show();
+  wind0w.show();
   app.execute_loops();
 
   return 0;

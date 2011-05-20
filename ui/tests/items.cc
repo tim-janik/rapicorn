@@ -30,11 +30,11 @@ main (int   argc,
 
   TSTART ("RapicornItems");
   /* parse standard GUI descriptions and create example item */
-  Window &window = *app.create_window ("Root");
+  Wind0w &wind0w = *app.create_wind0w ("Root");
   TOK();
-  /* get thread safe window handle */
+  /* get thread safe wind0w handle */
   TOK();
-  Item &item = window.root();
+  Item &item = wind0w.root();
   TOK();
   Root &root = item.interface<Root&>();
   TASSERT (&root != NULL);

@@ -56,20 +56,20 @@ static void
 test_cxx_gui ()
 {
   TSTART ("C++GUI Test");
-  Window &window = *app.create_window ("Root");
+  Wind0w &wind0w = *app.create_wind0w ("Root");
   TOK();
   Item &titem = Factory::create_item ("TestItem");
   TOK();
-  window.root().add (titem);
+  wind0w.root().add (titem);
   TOK();
-  /* close window (and exit main loop) after first expose */
-  window.root().enable_auto_close();
+  /* close wind0w (and exit main loop) after first expose */
+  wind0w.root().enable_auto_close();
   TOK();
   /* verify and assert at least one TestItem rendering */
   uint old_seen_test = TestContainer::seen_test_items();
   TOK();
   /* show onscreen and handle events like expose */
-  window.show();
+  wind0w.show();
   app.execute_loops();
   TOK();
   /* assert TestItem rendering */
@@ -82,9 +82,9 @@ static void
 test_test_item ()
 {
   TSTART ("alignment-test");
-  Window &window = *app.create_window ("alignment-test");
+  Wind0w &wind0w = *app.create_wind0w ("alignment-test");
   TOK();
-  Root &root = window.root();
+  Root &root = wind0w.root();
   TestContainer *titem = root.interface<TestContainer*>();
   TASSERT (titem != NULL);
   titem->sig_assertion_ok += slot (assertion_ok);
@@ -93,11 +93,11 @@ test_test_item ()
   TOK();
   while (RapicornTester::loops_pending())
     RapicornTester::loops_dispatch (false);
-  /* close window (and exit main loop) after first expose */
+  /* close wind0w (and exit main loop) after first expose */
   root.enable_auto_close();
   /* verify and assert at least one TestItem rendering */
   uint old_seen_test = TestContainer::seen_test_items();
-  window.show();
+  wind0w.show();
   app.execute_loops();
   uint seen_test = TestContainer::seen_test_items();
   TASSERT (seen_test > old_seen_test);
@@ -109,9 +109,9 @@ static void
 idl_test_item_test ()
 {
   TSTART ("idl-test-item");
-  Window &window = *app.create_window ("test-item-window");
+  Wind0w &wind0w = *app.create_wind0w ("test-item-wind0w");
   TOK();
-  Root &root = window.root();
+  Root &root = wind0w.root();
   IdlTestItem *titemp = root.interface<IdlTestItem*>();
   TASSERT (titemp != NULL);
   IdlTestItem &titem = *titemp;
@@ -138,7 +138,7 @@ idl_test_item_test ()
   TASSERT (sv.size() == sl.size()); TASSERT (sv[2] == "THREE");
   titem.self_prop (NULL); TASSERT (titem.self_prop() == NULL);
   titem.self_prop (titemp); TASSERT (titem.self_prop() == titemp);
-  window.close();
+  wind0w.close();
   TDONE();
 }
 
@@ -159,13 +159,13 @@ complex_dialog_test ()
   TSTART ("complex-dialog-test");
   It3m *item = app.unique_component ("/#"); // invalid path
   TASSERT (item == NULL);
-  item = app.unique_component ("/#complex-dialog"); // non-existing window
+  item = app.unique_component ("/#complex-dialog"); // non-existing wind0w
   TASSERT (item == NULL);
-  Window &window = *app.create_window ("complex-dialog");
+  Wind0w &wind0w = *app.create_wind0w ("complex-dialog");
   TOK();
   if (run_dialogs)
     {
-      window.show();
+      wind0w.show();
       app.execute_loops();
     }
   TOK();

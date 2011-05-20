@@ -3,15 +3,15 @@
 ==== Rapicorn Hello World ====
 
 The simple Python program [[pyhello.py]] displays the famous
-greeting by popping up a Rapicorn Window.
+greeting by popping up a Rapicorn Wind0w.
 Tutorial contents are provided "as is" but WITHOUT ANY WARRANTY;
 for details see: http://rapicorn.org/LICENSE-AS-IS
 
 We recommend literally pasting the source code into a Pyhton editor
 for better readability.
 
-What's needed for every window to be displayed is a widget tree that
-defines the window contents. Rapicorn allows XML notation to define
+What's needed for every wind0w to be displayed is a widget tree that
+defines the wind0w contents. Rapicorn allows XML notation to define
 its widget trees. The widgets and assorted properties are designed to
 be easily used from within XML notation.
 For a start, we'll store the widget tree as a Python string:
@@ -19,11 +19,11 @@ For a start, we'll store the widget tree as a Python string:
 	"""
 	Rapicorn Hello World Example
 	"""
-	# Define hello-window Widget Tree
-	hello_window_widgets = """
-	<def:hello-window inherit="Root">
+	# Define hello-wind0w Widget Tree
+	hello_wind0w_widgets = """
+	<def:hello-wind0w inherit="Root">
 	  <Label markup-text="Hello World!" />
-	</def:hello-window>
+	</def:hello-wind0w>
 	"""
 
 Rapicorn is provided as a versioned Python module that's best imported
@@ -40,15 +40,15 @@ Once initialized, we need to load the widget tree definition for later use:
 	# Initialize Rapicorn application with unique name
 	app = Rapicorn.app_init ("Hello-World")
 	# Load widget tree into Rapicorn
-	app.load_string (hello_window_widgets)
+	app.load_string (hello_wind0w_widgets)
 
-We've got Rapicorn up and running at this point. To display our window,
-we need to create it and show it on screen. To draw the window contents
-and generally handle window events like resizing, we'll enter the main
-loop, that'll by default last as long as the window exists.
+We've got Rapicorn up and running at this point. To display our wind0w,
+we need to create it and show it on screen. To draw the wind0w contents
+and generally handle wind0w events like resizing, we'll enter the main
+loop, that'll by default last as long as the wind0w exists.
 
-	# Create and show hello-window
-	window = app.create_window ("hello-window")
-	window.show()
-	# Run main loop to process window events
+	# Create and show hello-wind0w
+	wind0w = app.create_wind0w ("hello-wind0w")
+	wind0w.show()
+	# Run main loop to process wind0w events
 	app.main_loop()

@@ -22,7 +22,7 @@
 namespace Rapicorn {
 
 class ApplicationImpl : public Application {
-  vector<Window*>     m_windows;
+  vector<Wind0w*>     m_wind0ws;
   void                check_primaries        ();
 public:
   virtual void        init_with_x11          (const std::string &application_name,
@@ -36,12 +36,12 @@ public:
                                               const std::string &i18n_domain = "");
   virtual void        load_string            (const std::string &xml_string,
                                               const std::string &i18n_domain = "");
-  virtual Window*     create_window          (const std::string &window_identifier,
+  virtual Wind0w*     create_wind0w          (const std::string &wind0w_identifier,
                                               const StringList &arguments = StringList(),
                                               const StringList &env_variables = StringList());
-  void                add_window             (Window &window);
-  bool                remove_window          (Window &window);
-  virtual WindowList  list_windows           ();
+  void                add_wind0w             (Wind0w &wind0w);
+  bool                remove_wind0w          (Wind0w &wind0w);
+  virtual Wind0wList  list_wind0ws           ();
   virtual It3m*       unique_component       (const String &path);
   virtual ItemSeq     collect_components     (const String &path);
   virtual void        test_counter_set       (int val);
