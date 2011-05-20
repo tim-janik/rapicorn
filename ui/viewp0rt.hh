@@ -14,22 +14,22 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#ifndef __RAPICORN_VIEWPORT_HH__
-#define __RAPICORN_VIEWPORT_HH__
+#ifndef __RAPICORN_VIEWP0RT_HH__
+#define __RAPICORN_VIEWP0RT_HH__
 
 #include <ui/events.hh>
 
 namespace Rapicorn {
 
-class Viewport : public virtual Deletable, protected NonCopyable {
+class Viewp0rt : public virtual Deletable, protected NonCopyable {
 protected:
-  explicit              Viewport                () {}
+  explicit              Viewp0rt                () {}
 public:
-  /* viewport info (constant during runtime) */
+  /* viewp0rt info (constant during runtime) */
   struct Info {
     WindowType  window_type;
   };
-  /* viewport state */
+  /* viewp0rt state */
   typedef enum {
     STATE_STICKY        = 0x0004,
     STATE_WITHDRAWN     = 0x0008,
@@ -47,7 +47,7 @@ public:
     WindowState window_state;
     double      width, height;
   };
-  /* viewport configuration */
+  /* viewp0rt configuration */
   typedef enum {
     HINT_DECORATED      = 0x0001,
     HINT_URGENT         = 0x0002,
@@ -105,11 +105,11 @@ public:
                                                  bool            force_resize_draw = false) = 0;
   virtual void          beep                    (void) = 0;
   /* creation */
-  static Viewport*      create_viewport         (const String   &backend_name,
-                                                 WindowType      viewport_type,
+  static Viewp0rt*      create_viewp0rt         (const String   &backend_name,
+                                                 WindowType      viewp0rt_type,
                                                  EventReceiver  &receiver);
   /* actions */
-  virtual void          present_viewport        () = 0;
+  virtual void          present_viewp0rt        () = 0;
   virtual void          trigger_hint_action     (WindowHint     hint) = 0;
   virtual void          start_user_move         (uint           button,
                                                  double         root_x,
@@ -134,21 +134,21 @@ public:
                                                  double          dest_y) = 0;
   /* --- backend API --- */
   class FactoryBase : protected NonCopyable {
-    friend class Viewport;
+    friend class Viewp0rt;
   protected:
     virtual          ~FactoryBase      ();
     const String      m_name;
     explicit          FactoryBase      (const String  &name) : m_name (name) {}
     static void       register_backend (FactoryBase   &factory);
-    virtual Viewport* create_viewport  (WindowType     viewport_type,
+    virtual Viewp0rt* create_viewp0rt  (WindowType     viewp0rt_type,
                                         EventReceiver &receiver) = 0;
   };
   template<class Backend>
   class Factory : public virtual FactoryBase {
   public:
     explicit          Factory          (const String  &name) : FactoryBase (name) { register_backend (*this); }
-    virtual Viewport* create_viewport  (WindowType     viewport_type,
-                                        EventReceiver &receiver)                  { return new Backend (m_name, viewport_type, receiver); }
+    virtual Viewp0rt* create_viewp0rt  (WindowType     viewp0rt_type,
+                                        EventReceiver &receiver)                  { return new Backend (m_name, viewp0rt_type, receiver); }
   };
 };
 
@@ -166,4 +166,4 @@ void rapicorn_gtk_threads_leave         ();
 
 } // Rapicorn
 
-#endif  /* __RAPICORN_VIEWPORT_HH__ */
+#endif  /* __RAPICORN_VIEWP0RT_HH__ */

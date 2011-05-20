@@ -19,27 +19,27 @@
 
 #include <ui/root.hh>
 #include <ui/containerimpl.hh>
-#include <ui/viewport.hh>
+#include <ui/viewp0rt.hh>
 
 namespace Rapicorn {
 
 class RootImpl : public virtual Root,
                  public virtual SingleContainerImpl,
                  public virtual Window,
-                 public virtual Viewport::EventReceiver
+                 public virtual Viewp0rt::EventReceiver
 {
   EventLoop            &m_loop;
   EventLoop::Source    *m_source;
   Mutex                 m_async_mutex;
   std::list<Event*>     m_async_event_queue;
   Region                m_expose_region;
-  Viewport             *m_viewport;
+  Viewp0rt             *m_viewp0rt;
   uint                  m_tunable_requisition_counter : 24;
   uint                  m_entered : 1;
   uint                  m_auto_close : 1;
   EventContext          m_last_event_context;
   vector<Item*>         m_last_entered_children;
-  Viewport::Config      m_config;
+  Viewp0rt::Config      m_config;
 public:
   explicit              RootImpl                                ();
 protected:
@@ -77,9 +77,9 @@ private:
   virtual Item*         get_grab                                (bool                   *unconfined = NULL);
   /* main loop */
   virtual bool          viewable                                ();
-  virtual void          create_viewport                         ();
-  virtual bool          has_viewport                            ();
-  virtual void          destroy_viewport                        ();
+  virtual void          create_viewp0rt                         ();
+  virtual bool          has_viewp0rt                            ();
+  virtual void          destroy_viewp0rt                        ();
   void                  idle_show                               ();
   virtual Window&       window                                  ();
   virtual bool          custom_command                          (const String       &command_name,
@@ -182,7 +182,7 @@ private:
       assert (rapicorn_thread_entered());
       assert (root.m_source == this);
       root.m_source = NULL;
-      root.destroy_viewport();
+      root.destroy_viewp0rt();
     }
   };
 };

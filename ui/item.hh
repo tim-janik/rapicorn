@@ -218,15 +218,15 @@ public:
   Signal<Item, void (Item *oldt)> sig_hierarchy_changed;
   /* event handling */
   bool                       process_event          (const Event &event);       /* item coordinates relative */
-  bool                       process_viewport_event (const Event &event);       /* viewport coordinates relative */
+  bool                       process_viewp0rt_event (const Event &event);       /* viewp0rt coordinates relative */
   /* coordinate handling */
 protected:
-  Affine                     affine_to_viewport     ();                         /* item => viewport affine */
-  Affine                     affine_from_viewport   ();                         /* viewport => item affine */
+  Affine                     affine_to_viewp0rt     ();                         /* item => viewp0rt affine */
+  Affine                     affine_from_viewp0rt   ();                         /* viewp0rt => item affine */
 public:
   virtual bool               point                  (Point        p);           /* item coordinates relative */
-  Point                      point_to_viewport      (Point        item_point);  /* item coordinates relative */
-  Point                      point_from_viewport    (Point        root_point);  /* viewport coordinates relative */
+  Point                      point_to_viewp0rt      (Point        item_point);  /* item coordinates relative */
+  Point                      point_from_viewp0rt    (Point        root_point);  /* viewp0rt coordinates relative */
   virtual bool               translate_from         (const Item   &src_item,
                                                      const uint    n_points,
                                                      Point        *points) const;
@@ -239,7 +239,7 @@ public:
   bool                       translate_to           (const uint    n_rects,
                                                      Rect         *rects,
                                                      const Item   &target_item) const;
-  bool                       viewport_point         (Point        p);           /* viewport coordinates relative */
+  bool                       viewp0rt_point         (Point        p);           /* viewp0rt coordinates relative */
   /* public size accessors */
   Requisition                requisition        ();                             // effective size requisition
   Requisition                size_request       () { return requisition(); }    // FIXME: remove

@@ -66,7 +66,7 @@ public:
   const CommandList&    list_commands   (); /* essentially chaining to Item:: */
   virtual void          point_children  (Point                   p, /* item coordinates relative */
                                          std::vector<Item*>     &stack);
-  void         viewport_point_children  (Point                   p, /* viewport coordinates relative */
+  void         viewp0rt_point_children  (Point                   p, /* viewp0rt coordinates relative */
                                          std::vector<Item*>     &stack);
   virtual void          render          (Display                &display);
   void                  debug_tree      (String indent = String());

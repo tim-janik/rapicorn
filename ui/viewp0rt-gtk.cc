@@ -14,7 +14,7 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include "viewport.hh"
+#include "viewp0rt.hh"
 #include <rcore/rapicornthread.hh>
 #include <ui/utilities.hh>
 
@@ -32,8 +32,8 @@ namespace { // Anon
 using namespace Rapicorn;
 
 /* --- prototypes --- */
-class ViewportGtk;
-static gboolean     rapicorn_viewport_ancestor_event (GtkWidget  *ancestor,
+class Viewp0rtGtk;
+static gboolean     rapicorn_viewp0rt_ancestor_event (GtkWidget  *ancestor,
                                                       GdkEvent   *event,
                                                       GtkWidget  *widget);
 static bool         gdk_window_has_ancestor          (GdkWindow  *window,
@@ -72,16 +72,16 @@ struct RapicronGdkSyncLock {
 };
 static RapicronGdkSyncLock GTK_GDK_THREAD_SYNC;
 
-/* --- RapicornViewport --- */
-#define RAPICORN_TYPE_VIEWPORT              (rapicorn_viewport_get_type ())
-#define RAPICORN_VIEWPORT(object)           (G_TYPE_CHECK_INSTANCE_CAST ((object), RAPICORN_TYPE_VIEWPORT, RapicornViewport))
-#define RAPICORN_VIEWPORT_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), RAPICORN_TYPE_VIEWPORT, RapicornViewportClass))
-#define RAPICORN_IS_VIEWPORT(object)        (G_TYPE_CHECK_INSTANCE_TYPE ((object), RAPICORN_TYPE_VIEWPORT))
-#define RAPICORN_IS_VIEWPORT_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), RAPICORN_TYPE_VIEWPORT))
-#define RAPICORN_VIEWPORT_GET_CLASS(object) (G_TYPE_INSTANCE_GET_CLASS ((object), RAPICORN_TYPE_VIEWPORT, RapicornViewportClass))
-struct RapicornViewportClass : public GtkContainerClass {};
-struct RapicornViewport : public GtkContainer {
-  ViewportGtk       *viewport;
+/* --- RapicornViewp0rt --- */
+#define RAPICORN_TYPE_VIEWP0RT              (rapicorn_viewp0rt_get_type ())
+#define RAPICORN_VIEWP0RT(object)           (G_TYPE_CHECK_INSTANCE_CAST ((object), RAPICORN_TYPE_VIEWP0RT, RapicornViewp0rt))
+#define RAPICORN_VIEWP0RT_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), RAPICORN_TYPE_VIEWP0RT, RapicornViewp0rtClass))
+#define RAPICORN_IS_VIEWP0RT(object)        (G_TYPE_CHECK_INSTANCE_TYPE ((object), RAPICORN_TYPE_VIEWP0RT))
+#define RAPICORN_IS_VIEWP0RT_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), RAPICORN_TYPE_VIEWP0RT))
+#define RAPICORN_VIEWP0RT_GET_CLASS(object) (G_TYPE_INSTANCE_GET_CLASS ((object), RAPICORN_TYPE_VIEWP0RT, RapicornViewp0rtClass))
+struct RapicornViewp0rtClass : public GtkContainerClass {};
+struct RapicornViewp0rt : public GtkContainer {
+  Viewp0rtGtk       *viewp0rt;
   GdkVisibilityState visibility_state;
   bool               fast_local_blitting;
   guint32            last_time;
@@ -90,15 +90,15 @@ struct RapicornViewport : public GtkContainer {
   GdkModifierType    last_modifier;
   double             last_x, last_y;
 };
-G_DEFINE_TYPE (RapicornViewport, rapicorn_viewport, GTK_TYPE_CONTAINER);
-static ViewportGtk *rapicorn_viewport__cxxinit_viewport;        // protected by global GDK lock
-static uint         rapicorn_viewport__alive_counter;           // protected by global GDK lock
-static bool         rapicorn_viewport__auto_quit_gtk = false;   // protected by global GDK lock
+G_DEFINE_TYPE (RapicornViewp0rt, rapicorn_viewp0rt, GTK_TYPE_CONTAINER);
+static Viewp0rtGtk *rapicorn_viewp0rt__cxxinit_viewp0rt;        // protected by global GDK lock
+static uint         rapicorn_viewp0rt__alive_counter;           // protected by global GDK lock
+static bool         rapicorn_viewp0rt__auto_quit_gtk = false;   // protected by global GDK lock
 
-/* --- ViewportGtk class --- */
-struct ViewportGtk : public virtual Viewport {
+/* --- Viewp0rtGtk class --- */
+struct Viewp0rtGtk : public virtual Viewp0rt {
   union {
-    RapicornViewport   *m_viewport;
+    RapicornViewp0rt   *m_viewp0rt;
     GtkWidget          *m_widget;
   };
   Info                  m_info;
@@ -109,10 +109,10 @@ struct ViewportGtk : public virtual Viewport {
   float                 m_request_width, m_request_height;
   WindowState           m_window_state;
   Color                 m_average_background;
-  explicit              ViewportGtk             (const String   &backend_name,
-                                                 WindowType      viewport_type,
+  explicit              Viewp0rtGtk             (const String   &backend_name,
+                                                 WindowType      viewp0rt_type,
                                                  EventReceiver  &receiver);
-  virtual void          present_viewport        ();
+  virtual void          present_viewp0rt        ();
   virtual void          trigger_hint_action     (WindowHint     hint);
   virtual void          start_user_move         (uint           button,
                                                  double         root_x,
@@ -142,21 +142,21 @@ struct ViewportGtk : public virtual Viewport {
   virtual void          beep                    (void);
   void                  enqueue_locked          (Event         *event);
 };
-static Viewport::Factory<ViewportGtk> viewport_gtk_factory ("GtkWindow"); // FIXME: should register only after gtk_init() has been called
+static Viewp0rt::Factory<Viewp0rtGtk> viewp0rt_gtk_factory ("GtkWindow"); // FIXME: should register only after gtk_init() has been called
 
-/* --- ViewportGtk methods --- */
-ViewportGtk::ViewportGtk (const String  &backend_name,
-                          WindowType     viewport_type,
+/* --- Viewp0rtGtk methods --- */
+Viewp0rtGtk::Viewp0rtGtk (const String  &backend_name,
+                          WindowType     viewp0rt_type,
                           EventReceiver &receiver) :
-  m_viewport (NULL),
+  m_viewp0rt (NULL),
   m_receiver (receiver), m_ignore_exposes (false),
   m_root_x (NAN), m_root_y (NAN),
   m_request_width (33), m_request_height (33),
   m_window_state (WindowState (0)), m_average_background (0xff808080)
 {
-  m_info.window_type = viewport_type;
+  m_info.window_type = viewp0rt_type;
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-  rapicorn_viewport__alive_counter++;
+  rapicorn_viewp0rt__alive_counter++;
   bool is_override_redirect = (m_info.window_type == WINDOW_TYPE_DESKTOP ||
                                m_info.window_type == WINDOW_TYPE_DROPDOWN_MENU ||
                                m_info.window_type == WINDOW_TYPE_POPUP_MENU ||
@@ -188,20 +188,20 @@ ViewportGtk::ViewportGtk (const String  &backend_name,
 #endif
     default: break;
     }
-  RAPICORN_ASSERT (rapicorn_viewport__cxxinit_viewport == NULL);
-  rapicorn_viewport__cxxinit_viewport = this;
-  m_viewport = RAPICORN_VIEWPORT (g_object_ref (g_object_new (RAPICORN_TYPE_VIEWPORT, "can-focus", TRUE, "parent", window, NULL)));
-  gtk_widget_grab_focus (GTK_WIDGET (m_viewport));
-  rapicorn_viewport__cxxinit_viewport = NULL;
-  RAPICORN_ASSERT (m_viewport->viewport == this);
-  g_object_set_data (G_OBJECT (m_viewport), "RapicornViewport-my-GtkWindow", window); // flag to indicate the window is owned by RapicornViewport
+  RAPICORN_ASSERT (rapicorn_viewp0rt__cxxinit_viewp0rt == NULL);
+  rapicorn_viewp0rt__cxxinit_viewp0rt = this;
+  m_viewp0rt = RAPICORN_VIEWP0RT (g_object_ref (g_object_new (RAPICORN_TYPE_VIEWP0RT, "can-focus", TRUE, "parent", window, NULL)));
+  gtk_widget_grab_focus (GTK_WIDGET (m_viewp0rt));
+  rapicorn_viewp0rt__cxxinit_viewp0rt = NULL;
+  RAPICORN_ASSERT (m_viewp0rt->viewp0rt == this);
+  g_object_set_data (G_OBJECT (m_viewp0rt), "RapicornViewp0rt-my-GtkWindow", window); // flag to indicate the window is owned by RapicornViewp0rt
 }
-// FIXME: add rapicorn_viewport__alive_counter--; to ~ViewportGtk and gtk_main_quit() via idle if 0
+// FIXME: add rapicorn_viewp0rt__alive_counter--; to ~Viewp0rtGtk and gtk_main_quit() via idle if 0
 
 static GtkWindow*
-rapicorn_viewport_get_toplevel_window (RapicornViewport *rviewport)
+rapicorn_viewp0rt_get_toplevel_window (RapicornViewp0rt *rviewp0rt)
 {
-  GtkWidget *widget = GTK_WIDGET (rviewport);
+  GtkWidget *widget = GTK_WIDGET (rviewp0rt);
   if (widget)
     while (widget->parent)
       widget = widget->parent;
@@ -209,37 +209,37 @@ rapicorn_viewport_get_toplevel_window (RapicornViewport *rviewport)
 }
 
 static GtkWindow*
-rapicorn_viewport_get_my_window (RapicornViewport *rviewport)
+rapicorn_viewp0rt_get_my_window (RapicornViewp0rt *rviewp0rt)
 {
-  GtkWindow *window = rapicorn_viewport_get_toplevel_window (rviewport);
-  if (window && window == g_object_get_data (G_OBJECT (rviewport), "RapicornViewport-my-GtkWindow"))
+  GtkWindow *window = rapicorn_viewp0rt_get_toplevel_window (rviewp0rt);
+  if (window && window == g_object_get_data (G_OBJECT (rviewp0rt), "RapicornViewp0rt-my-GtkWindow"))
     return window;
   return NULL;
 }
 
 void
-ViewportGtk::present_viewport ()
+Viewp0rtGtk::present_viewp0rt ()
 {
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-  GtkWindow *window = rapicorn_viewport_get_toplevel_window (m_viewport);
+  GtkWindow *window = rapicorn_viewp0rt_get_toplevel_window (m_viewp0rt);
   if (window && GTK_WIDGET_DRAWABLE (window))
     gtk_window_present (window);
 }
 
 void
-ViewportGtk::enqueue_locked (Event *event)
+Viewp0rtGtk::enqueue_locked (Event *event)
 {
   // ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   m_receiver.enqueue_async (event);
 }
 
 void
-ViewportGtk::start_user_move (uint           button,
+Viewp0rtGtk::start_user_move (uint           button,
                               double         root_x,
                               double         root_y)
 {
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-  GtkWindow *window = rapicorn_viewport_get_toplevel_window (m_viewport);
+  GtkWindow *window = rapicorn_viewp0rt_get_toplevel_window (m_viewp0rt);
   if (window && GTK_WIDGET_DRAWABLE (window))
     gtk_window_begin_move_drag (window, button, iround (root_x), iround (root_y), GDK_CURRENT_TIME);
 }
@@ -264,37 +264,37 @@ get_gdk_window_edge (AnchorType anchor)
 }
 
 void
-ViewportGtk::start_user_resize (uint           button,
+Viewp0rtGtk::start_user_resize (uint           button,
                                 double         root_x,
                                 double         root_y,
                                 AnchorType     edge)
 {
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-  GtkWindow *window = rapicorn_viewport_get_toplevel_window (m_viewport);
+  GtkWindow *window = rapicorn_viewp0rt_get_toplevel_window (m_viewp0rt);
   if (window && GTK_WIDGET_DRAWABLE (window))
     gtk_window_begin_resize_drag (window, get_gdk_window_edge (edge), button, iround (root_x), iround (root_y), GDK_CURRENT_TIME);
 }
 
 void
-ViewportGtk::show (void)
+Viewp0rtGtk::show (void)
 {
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-  if (m_viewport)
+  if (m_viewp0rt)
     {
       gtk_widget_show (m_widget);
-      GtkWindow *window = rapicorn_viewport_get_my_window (m_viewport);
+      GtkWindow *window = rapicorn_viewp0rt_get_my_window (m_viewp0rt);
       if (window)
         gtk_widget_show (GTK_WIDGET (window));
     }
 }
 
 bool
-ViewportGtk::visible (void)
+Viewp0rtGtk::visible (void)
 {
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-  if (m_viewport)
+  if (m_viewp0rt)
     {
-      GtkWindow *window = rapicorn_viewport_get_my_window (m_viewport);
+      GtkWindow *window = rapicorn_viewp0rt_get_my_window (m_viewp0rt);
       if (GTK_WIDGET_DRAWABLE (m_widget) &&
           (!window || GTK_WIDGET_DRAWABLE (window)))
         return TRUE;
@@ -303,10 +303,10 @@ ViewportGtk::visible (void)
 }
 
 bool
-ViewportGtk::viewable (void)
+Viewp0rtGtk::viewable (void)
 {
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-  if (m_viewport)
+  if (m_viewp0rt)
     {
       if (!m_widget->window)
         return FALSE;
@@ -323,12 +323,12 @@ ViewportGtk::viewable (void)
 }
 
 void
-ViewportGtk::hide (void)
+Viewp0rtGtk::hide (void)
 {
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-  if (m_viewport)
+  if (m_viewp0rt)
     {
-      GtkWindow *window = rapicorn_viewport_get_my_window (m_viewport);
+      GtkWindow *window = rapicorn_viewp0rt_get_my_window (m_viewp0rt);
       if (window)
         {
           gtk_widget_hide (GTK_WIDGET (window));
@@ -339,7 +339,7 @@ ViewportGtk::hide (void)
 }
 
 void
-ViewportGtk::create_display_backing (Rapicorn::Display &display)
+Viewp0rtGtk::create_display_backing (Rapicorn::Display &display)
 {
   if (display.empty())
     return;
@@ -359,13 +359,13 @@ ViewportGtk::create_display_backing (Rapicorn::Display &display)
           } while (0)
 
 void
-ViewportGtk::blit_display (Rapicorn::Display &display)
+Viewp0rtGtk::blit_display (Rapicorn::Display &display)
 {
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-  if (m_viewport && !display.empty())
+  if (m_viewp0rt && !display.empty())
     {
       int priority;
-      if (m_viewport->fast_local_blitting)
+      if (m_viewp0rt->fast_local_blitting)
         priority = -G_MAXINT / 2;       /* run with PRIORITY_NOW to blit immediately on local displays */
       else
         priority = GTK_PRIORITY_REDRAW; /* allow event processing to interrupt blitting on remote displays */
@@ -407,7 +407,7 @@ ViewportGtk::blit_display (Rapicorn::Display &display)
 }
 
 void
-ViewportGtk::copy_area (double          src_x,
+Viewp0rtGtk::copy_area (double          src_x,
                         double          src_y,
                         double          width,
                         double          height,
@@ -438,7 +438,7 @@ ViewportGtk::copy_area (double          src_x,
 }
 
 void
-ViewportGtk::enqueue_win_draws (void)
+Viewp0rtGtk::enqueue_win_draws (void)
 {
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   if (GTK_WIDGET_DRAWABLE (m_widget))
@@ -446,24 +446,24 @@ ViewportGtk::enqueue_win_draws (void)
 }
 
 uint
-ViewportGtk::last_draw_stamp ()
+Viewp0rtGtk::last_draw_stamp ()
 {
   return 0;
 }
 
-Viewport::Info
-ViewportGtk::get_info ()
+Viewp0rt::Info
+Viewp0rtGtk::get_info ()
 {
   return m_info;
 }
 
-Viewport::State
-ViewportGtk::get_state ()
+Viewp0rt::State
+Viewp0rtGtk::get_state ()
 {
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-  GtkWindow *window = rapicorn_viewport_get_toplevel_window (m_viewport);
+  GtkWindow *window = rapicorn_viewp0rt_get_toplevel_window (m_viewp0rt);
   State state;
-  state.local_blitting = m_viewport->fast_local_blitting;
+  state.local_blitting = m_viewp0rt->fast_local_blitting;
   state.is_active = window && gtk_window_is_active (window);
   state.has_toplevel_focus = window && gtk_window_has_toplevel_focus (window);
   state.window_state = m_window_state;
@@ -475,7 +475,7 @@ ViewportGtk::get_state ()
 
 static void
 configure_gtk_window (GtkWindow              *window,
-                      const Viewport::Config &config)
+                      const Viewp0rt::Config &config)
 {
   GtkWidget *widget = GTK_WIDGET (window);
   
@@ -527,42 +527,42 @@ configure_gtk_window (GtkWindow              *window,
   gtk_window_set_geometry_hints (window, NULL, &geometry, GdkWindowHints (geometry_mask));
   
   /* window_hint handling */
-  gtk_window_set_decorated (window, bool (config.window_hint & Viewport::HINT_DECORATED));
+  gtk_window_set_decorated (window, bool (config.window_hint & Viewp0rt::HINT_DECORATED));
 #if GTK_CHECK_VERSION (2, 8, 0)
-  gtk_window_set_urgency_hint (window, bool (config.window_hint & Viewport::HINT_URGENT));
+  gtk_window_set_urgency_hint (window, bool (config.window_hint & Viewp0rt::HINT_URGENT));
 #endif
 #if GTK_CHECK_VERSION (99999, 9999, 0) // FIXME: gtk_window_set_shaded()
-  gtk_window_set_shaded (window, bool (config.window_hint & Viewport::HINT_SHADED));
+  gtk_window_set_shaded (window, bool (config.window_hint & Viewp0rt::HINT_SHADED));
 #endif
-  gtk_window_set_keep_above (window, bool (config.window_hint & Viewport::HINT_ABOVE_ALL));
-  gtk_window_set_keep_below (window, bool (config.window_hint & Viewport::HINT_BELOW_ALL));
-  gtk_window_set_skip_taskbar_hint (window, bool (config.window_hint & Viewport::HINT_SKIP_TASKBAR));
-  gtk_window_set_skip_pager_hint (window, bool (config.window_hint & Viewport::HINT_SKIP_PAGER));
-  gtk_window_set_accept_focus (window, bool (config.window_hint & Viewport::HINT_ACCEPT_FOCUS));
-  gtk_window_set_focus_on_map (window, !bool (config.window_hint & Viewport::HINT_UNFOCUSED));
+  gtk_window_set_keep_above (window, bool (config.window_hint & Viewp0rt::HINT_ABOVE_ALL));
+  gtk_window_set_keep_below (window, bool (config.window_hint & Viewp0rt::HINT_BELOW_ALL));
+  gtk_window_set_skip_taskbar_hint (window, bool (config.window_hint & Viewp0rt::HINT_SKIP_TASKBAR));
+  gtk_window_set_skip_pager_hint (window, bool (config.window_hint & Viewp0rt::HINT_SKIP_PAGER));
+  gtk_window_set_accept_focus (window, bool (config.window_hint & Viewp0rt::HINT_ACCEPT_FOCUS));
+  gtk_window_set_focus_on_map (window, !bool (config.window_hint & Viewp0rt::HINT_UNFOCUSED));
 #if GTK_CHECK_VERSION (2, 10, 0)
-  gtk_window_set_deletable (window, bool (config.window_hint & Viewport::HINT_DELETABLE));
+  gtk_window_set_deletable (window, bool (config.window_hint & Viewp0rt::HINT_DELETABLE));
 #endif
 }
 
 static void
 adjust_gtk_window (GtkWindow            *window,
-                   Viewport::WindowHint  window_hint)
+                   Viewp0rt::WindowHint  window_hint)
 {
   /* actively alter window state */
-  if (window_hint & Viewport::HINT_STICKY)
+  if (window_hint & Viewp0rt::HINT_STICKY)
     gtk_window_stick (window);
   else
     gtk_window_unstick (window);
-  if (window_hint & Viewport::HINT_ICONIFY)
+  if (window_hint & Viewp0rt::HINT_ICONIFY)
     gtk_window_iconify (window);
   else
     gtk_window_deiconify (window);
-  if (window_hint & Viewport::HINT_FULLSCREEN)
+  if (window_hint & Viewp0rt::HINT_FULLSCREEN)
     gtk_window_fullscreen (window);
   else
     gtk_window_unfullscreen (window);
-  uint fully_maximized = Viewport::HINT_HMAXIMIZED | Viewport::HINT_VMAXIMIZED;
+  uint fully_maximized = Viewp0rt::HINT_HMAXIMIZED | Viewp0rt::HINT_VMAXIMIZED;
   if ((window_hint & fully_maximized) == fully_maximized)
     gtk_window_maximize (window);
   else if ((window_hint & fully_maximized) == 0)
@@ -570,20 +570,20 @@ adjust_gtk_window (GtkWindow            *window,
   else
     {
 #if GTK_CHECK_VERSION (99999, 9999, 0) // FIXME: gtk_window_hmaximize() gtk_window_vmaximize()
-      if (window_hint & Viewport::HINT_HMAXIMIZED)
+      if (window_hint & Viewp0rt::HINT_HMAXIMIZED)
         gtk_window_hmaximize (window);
-      if (window_hint & Viewport::HINT_VMAXIMIZED)
+      if (window_hint & Viewp0rt::HINT_VMAXIMIZED)
         gtk_window_vmaximize (window);
 #endif
     }
 }
 
 void
-ViewportGtk::set_config (const Config &config,
+Viewp0rtGtk::set_config (const Config &config,
                          bool          force_resize_draw)
 {
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-  GtkWindow *window = rapicorn_viewport_get_my_window (m_viewport);
+  GtkWindow *window = rapicorn_viewp0rt_get_my_window (m_viewp0rt);
   m_root_x = config.root_x;
   m_root_y = config.root_y;
   if (m_request_width != config.request_width ||
@@ -610,7 +610,7 @@ ViewportGtk::set_config (const Config &config,
 }
 
 void
-ViewportGtk::beep()
+Viewp0rtGtk::beep()
 {
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   if (GTK_WIDGET_DRAWABLE (m_widget))
@@ -624,34 +624,34 @@ ViewportGtk::beep()
 }
 
 void
-ViewportGtk::trigger_hint_action (WindowHint window_hint)
+Viewp0rtGtk::trigger_hint_action (WindowHint window_hint)
 {
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-  GtkWindow *window = rapicorn_viewport_get_my_window (m_viewport);
+  GtkWindow *window = rapicorn_viewp0rt_get_my_window (m_viewp0rt);
   if (window)
     adjust_gtk_window (window, window_hint);
 }
 
 /* --- Gdk/Gtk+/Rapicorn utilities --- */
-static Viewport::WindowState
+static Viewp0rt::WindowState
 get_rapicorn_window_state (GdkWindowState window_state)
 {
   uint wstate = 0;
   if (window_state & GDK_WINDOW_STATE_WITHDRAWN)
-    wstate |= Viewport::STATE_WITHDRAWN;
+    wstate |= Viewp0rt::STATE_WITHDRAWN;
   if (window_state & GDK_WINDOW_STATE_ICONIFIED)
-    wstate |= Viewport::STATE_ICONIFIED;
+    wstate |= Viewp0rt::STATE_ICONIFIED;
   if (window_state & GDK_WINDOW_STATE_MAXIMIZED)
-    wstate |= Viewport::STATE_HMAXIMIZED | Viewport::STATE_VMAXIMIZED;
+    wstate |= Viewp0rt::STATE_HMAXIMIZED | Viewp0rt::STATE_VMAXIMIZED;
   if (window_state & GDK_WINDOW_STATE_STICKY)
-    wstate |= Viewport::STATE_STICKY;
+    wstate |= Viewp0rt::STATE_STICKY;
   if (window_state & GDK_WINDOW_STATE_FULLSCREEN)
-    wstate |= Viewport::STATE_FULLSCREEN;
+    wstate |= Viewp0rt::STATE_FULLSCREEN;
   if (window_state & GDK_WINDOW_STATE_ABOVE)
-    wstate |= Viewport::STATE_ABOVE;
+    wstate |= Viewp0rt::STATE_ABOVE;
   if (window_state & GDK_WINDOW_STATE_BELOW)
-    wstate |= Viewport::STATE_BELOW;
-  return Viewport::WindowState (wstate);
+    wstate |= Viewp0rt::STATE_BELOW;
+  return Viewp0rt::WindowState (wstate);
 }
 
 static bool
@@ -718,13 +718,13 @@ gtk_widget_has_local_display (GtkWidget *widget)
   return false;
 }
 
-/* --- RapicornViewport methods --- */
+/* --- RapicornViewp0rt methods --- */
 static void
-rapicorn_viewport_init (RapicornViewport *self)
+rapicorn_viewp0rt_init (RapicornViewp0rt *self)
 {
   GtkWidget *widget = GTK_WIDGET (self);
-  self->viewport = rapicorn_viewport__cxxinit_viewport;
-  RAPICORN_ASSERT (self->viewport != NULL);
+  self->viewp0rt = rapicorn_viewp0rt__cxxinit_viewp0rt;
+  RAPICORN_ASSERT (self->viewp0rt != NULL);
   self->visibility_state = GDK_VISIBILITY_FULLY_OBSCURED;
   self->backing_store = BACKING_STORE_NOT_USEFUL;
   self->last_time = 0;
@@ -805,7 +805,7 @@ translate_along_ancestry (GdkWindow *window1, /* from-window */
 }
 
 static EventContext
-rapicorn_viewport_event_context (RapicornViewport *self,
+rapicorn_viewp0rt_event_context (RapicornViewp0rt *self,
                                  GdkEvent         *event = NULL,
                                  int              *window_height = NULL,
                                  GdkTimeCoord     *core_coords = NULL)
@@ -880,57 +880,57 @@ rapicorn_viewport_event_context (RapicornViewport *self,
 }
 
 static void
-rapicorn_viewport_change_visibility (RapicornViewport  *self,
+rapicorn_viewp0rt_change_visibility (RapicornViewp0rt  *self,
                                      GdkVisibilityState visibility)
 {
-  ViewportGtk *viewport = self->viewport;
+  Viewp0rtGtk *viewp0rt = self->viewp0rt;
   self->visibility_state = visibility;
   if (self->visibility_state == GDK_VISIBILITY_FULLY_OBSCURED)
     {
-      EventContext econtext = rapicorn_viewport_event_context (self);
-      viewport->enqueue_locked (create_event_cancellation (econtext));
+      EventContext econtext = rapicorn_viewp0rt_event_context (self);
+      viewp0rt->enqueue_locked (create_event_cancellation (econtext));
     }
 }
 
 static void
-rapicorn_viewport_size_request (GtkWidget      *widget,
+rapicorn_viewp0rt_size_request (GtkWidget      *widget,
                                 GtkRequisition *requisition)
 {
-  RapicornViewport *self = RAPICORN_VIEWPORT (widget);
-  ViewportGtk *viewport = self->viewport;
-  if (viewport)
+  RapicornViewp0rt *self = RAPICORN_VIEWP0RT (widget);
+  Viewp0rtGtk *viewp0rt = self->viewp0rt;
+  if (viewp0rt)
     {
-      requisition->width = iceil (viewport->m_request_width);
-      requisition->height = iceil (viewport->m_request_height);
+      requisition->width = iceil (viewp0rt->m_request_width);
+      requisition->height = iceil (viewp0rt->m_request_height);
     }
 }
 
 static void
-rapicorn_viewport_size_allocate (GtkWidget     *widget,
+rapicorn_viewp0rt_size_allocate (GtkWidget     *widget,
                                  GtkAllocation *allocation)
 {
   widget->allocation = *allocation;
-  RapicornViewport *self = RAPICORN_VIEWPORT (widget);
-  ViewportGtk *viewport = self->viewport;
+  RapicornViewp0rt *self = RAPICORN_VIEWP0RT (widget);
+  Viewp0rtGtk *viewp0rt = self->viewp0rt;
   if (GTK_WIDGET_REALIZED (widget))
     {
       gdk_window_move_resize (widget->window, allocation->x, allocation->y, allocation->width, allocation->height);
       gdk_flush(); /* resize now, so gravity settings take effect immediately */
     }
-  if (viewport)
+  if (viewp0rt)
     {
-      EventContext econtext = rapicorn_viewport_event_context (self); /* relies on proper GdkWindow size */
-      viewport->enqueue_locked (create_event_win_size (econtext, 0, allocation->width, allocation->height));
+      EventContext econtext = rapicorn_viewp0rt_event_context (self); /* relies on proper GdkWindow size */
+      viewp0rt->enqueue_locked (create_event_win_size (econtext, 0, allocation->width, allocation->height));
       gtk_widget_queue_draw (widget); /* make sure we *always* redraw when sending win_size */
     }
-  viewport->m_ignore_exposes = false;
+  viewp0rt->m_ignore_exposes = false;
 }
 
 static void
-rapicorn_viewport_realize (GtkWidget *widget)
+rapicorn_viewp0rt_realize (GtkWidget *widget)
 {
-  RapicornViewport *self = RAPICORN_VIEWPORT (widget);
-  ViewportGtk *viewport = self->viewport;
+  RapicornViewp0rt *self = RAPICORN_VIEWP0RT (widget);
+  Viewp0rtGtk *viewp0rt = self->viewp0rt;
   GTK_WIDGET_SET_FLAGS (widget, GTK_REALIZED);
   GdkWindowAttr attributes = { 0, };
   attributes.window_type = GDK_WINDOW_CHILD;
@@ -946,7 +946,7 @@ rapicorn_viewport_realize (GtkWidget *widget)
   widget->window = gdk_window_new (gtk_widget_get_parent_window (widget), &attributes, attributes_mask);
   gdk_window_set_user_data (widget->window, widget);
   widget->style = gtk_style_attach (widget->style, widget->window);
-  Color argb_color = viewport ? viewport->m_average_background : Color (0xff808080);
+  Color argb_color = viewp0rt ? viewp0rt->m_average_background : Color (0xff808080);
   GdkColor gdkcolor = { 0, };
   gdkcolor.red = argb_color.red() * 0x0101;
   gdkcolor.green = argb_color.green() * 0x0101;
@@ -962,7 +962,7 @@ rapicorn_viewport_realize (GtkWidget *widget)
   /* catch toplevel unmap events */
   GtkWidget *toplevel = gtk_widget_get_toplevel (widget);
   gtk_widget_add_events (toplevel, GDK_STRUCTURE_MASK | GDK_VISIBILITY_NOTIFY_MASK);
-  g_signal_connect (toplevel, "event", G_CALLBACK (rapicorn_viewport_ancestor_event), self);
+  g_signal_connect (toplevel, "event", G_CALLBACK (rapicorn_viewp0rt_ancestor_event), self);
   /* optimize GtkWindow for flicker-free child window moves if it is our immediate parent */
   if (widget->parent == toplevel && gdk_colormap_alloc_color (attributes.colormap, &gdkcolor, FALSE, TRUE))
     {
@@ -970,45 +970,45 @@ rapicorn_viewport_realize (GtkWidget *widget)
       gdk_window_set_background (toplevel->window, &gdkcolor);
       gdk_colormap_free_colors (attributes.colormap, &gdkcolor, 1);
     }
-  rapicorn_viewport_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);
+  rapicorn_viewp0rt_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);
   self->fast_local_blitting = gtk_widget_has_local_display (widget);
   if (!self->fast_local_blitting)
     self->backing_store = gdk_window_enable_backing (widget->window, BACKING_STORE_ALWAYS);
 }
 
 static void
-rapicorn_viewport_map (GtkWidget *widget)
+rapicorn_viewp0rt_map (GtkWidget *widget)
 {
-  RapicornViewport *self = RAPICORN_VIEWPORT (widget);
-  ViewportGtk *viewport = self->viewport;
-  bool block_auto_startup_notification = viewport && viewport->m_splash_screen;
+  RapicornViewp0rt *self = RAPICORN_VIEWP0RT (widget);
+  Viewp0rtGtk *viewp0rt = self->viewp0rt;
+  bool block_auto_startup_notification = viewp0rt && viewp0rt->m_splash_screen;
   if (block_auto_startup_notification)
     gtk_window_set_auto_startup_notification (false);
-  GTK_WIDGET_CLASS (rapicorn_viewport_parent_class)->map (widget); // chain
+  GTK_WIDGET_CLASS (rapicorn_viewp0rt_parent_class)->map (widget); // chain
   if (block_auto_startup_notification)
     gtk_window_set_auto_startup_notification (true);
-  rapicorn_viewport_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);
+  rapicorn_viewp0rt_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);
 }
 
 static void
-rapicorn_viewport_unmap (GtkWidget *widget)
+rapicorn_viewp0rt_unmap (GtkWidget *widget)
 {
-  RapicornViewport *self = RAPICORN_VIEWPORT (widget);
-  rapicorn_viewport_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);
-  GTK_WIDGET_CLASS (rapicorn_viewport_parent_class)->unmap (widget); // chain
+  RapicornViewp0rt *self = RAPICORN_VIEWP0RT (widget);
+  rapicorn_viewp0rt_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);
+  GTK_WIDGET_CLASS (rapicorn_viewp0rt_parent_class)->unmap (widget); // chain
 }
 
 static void
-rapicorn_viewport_unrealize (GtkWidget *widget)
+rapicorn_viewp0rt_unrealize (GtkWidget *widget)
 {
-  RapicornViewport *self = RAPICORN_VIEWPORT (widget);
-  ViewportGtk *viewport = self->viewport;
+  RapicornViewp0rt *self = RAPICORN_VIEWP0RT (widget);
+  Viewp0rtGtk *viewp0rt = self->viewp0rt;
   GtkWidget *toplevel = gtk_widget_get_toplevel (widget);
-  g_signal_handlers_disconnect_by_func (toplevel, (void*) rapicorn_viewport_ancestor_event, self);
-  if (viewport)
-    viewport->enqueue_locked (create_event_cancellation (rapicorn_viewport_event_context (self)));
-  GTK_WIDGET_CLASS (rapicorn_viewport_parent_class)->unrealize (widget); // chain
-  rapicorn_viewport_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);
+  g_signal_handlers_disconnect_by_func (toplevel, (void*) rapicorn_viewp0rt_ancestor_event, self);
+  if (viewp0rt)
+    viewp0rt->enqueue_locked (create_event_cancellation (rapicorn_viewp0rt_event_context (self)));
+  GTK_WIDGET_CLASS (rapicorn_viewp0rt_parent_class)->unrealize (widget); // chain
+  rapicorn_viewp0rt_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);
   self->fast_local_blitting = false;
 }
 
@@ -1086,28 +1086,28 @@ debug_dump_event (GtkWidget          *widget,
 }
 
 static gboolean
-rapicorn_viewport_event (GtkWidget *widget,
+rapicorn_viewp0rt_event (GtkWidget *widget,
                          GdkEvent  *event)
 {
   if (!widget->window)
     return FALSE; // protected against events when unrealized, e.g. FOCUS_CHANGE
-  RapicornViewport *self = RAPICORN_VIEWPORT (widget);
-  ViewportGtk *viewport = self->viewport;
+  RapicornViewp0rt *self = RAPICORN_VIEWP0RT (widget);
+  Viewp0rtGtk *viewp0rt = self->viewp0rt;
   bool handled = false;
   int window_height = 0;
-  EventContext econtext = rapicorn_viewport_event_context (self, event, &window_height);
+  EventContext econtext = rapicorn_viewp0rt_event_context (self, event, &window_height);
   if (Rapicorn::Logging::debug_enabled()) /* debug events */
     debug_dump_event (widget, ".", event, econtext);
-  if (!viewport)
+  if (!viewp0rt)
     return false;
   /* translate events */
   switch (event->type)
     {
     case GDK_ENTER_NOTIFY:
-      viewport->enqueue_locked (create_event_mouse (event->crossing.detail == GDK_NOTIFY_INFERIOR ? MOUSE_MOVE : MOUSE_ENTER, econtext));
+      viewp0rt->enqueue_locked (create_event_mouse (event->crossing.detail == GDK_NOTIFY_INFERIOR ? MOUSE_MOVE : MOUSE_ENTER, econtext));
       break;
     case GDK_MOTION_NOTIFY:
-      viewport->enqueue_locked (create_event_mouse (MOUSE_MOVE, econtext));
+      viewp0rt->enqueue_locked (create_event_mouse (MOUSE_MOVE, econtext));
       self->last_motion_time = self->last_time;
       /* retrieve and enqueue intermediate moves */
       if (true)
@@ -1119,10 +1119,10 @@ rapicorn_viewport_event (GtkWidget *widget,
           gdk_device_get_history  (device, widget->window, self->last_motion_time, GDK_CURRENT_TIME, &tcoords, &n);
           for (int i = 0; i < n; i++)
             {
-              econtext = rapicorn_viewport_event_context (self, event, NULL, tcoords[i]);
+              econtext = rapicorn_viewp0rt_event_context (self, event, NULL, tcoords[i]);
               self->last_motion_time = self->last_time;
               DEBUG ("MOTION-HISTORY: time=0x%08x x=%+7.2f y=%+7.2f", tcoords[i]->time, tcoords[i]->axes[0], tcoords[i]->axes[1]);
-              viewport->enqueue_locked (create_event_mouse (MOUSE_MOVE, econtext));
+              viewp0rt->enqueue_locked (create_event_mouse (MOUSE_MOVE, econtext));
             }
           gdk_device_free_history (tcoords, n);
         }
@@ -1134,10 +1134,10 @@ rapicorn_viewport_event (GtkWidget *widget,
         }
       break;
     case GDK_LEAVE_NOTIFY:
-      viewport->enqueue_locked (create_event_mouse (event->crossing.detail == GDK_NOTIFY_INFERIOR ? MOUSE_MOVE : MOUSE_LEAVE, econtext));
+      viewp0rt->enqueue_locked (create_event_mouse (event->crossing.detail == GDK_NOTIFY_INFERIOR ? MOUSE_MOVE : MOUSE_LEAVE, econtext));
       break;
     case GDK_FOCUS_CHANGE:
-      viewport->enqueue_locked (create_event_focus (event->focus_change.in ? FOCUS_IN : FOCUS_OUT, econtext));
+      viewp0rt->enqueue_locked (create_event_focus (event->focus_change.in ? FOCUS_IN : FOCUS_OUT, econtext));
       handled = TRUE; // prevent Gtk+ from queueing a shallow draw
       break;
     case GDK_KEY_PRESS:
@@ -1146,59 +1146,59 @@ rapicorn_viewport_event (GtkWidget *widget,
       key_name = g_strndup (event->key.string, event->key.length);
       /* KeyValue is modelled to match X keysyms */
       // FIXME: handled = root->dispatch_key_event (econtext, event->type == GDK_KEY_PRESS, KeyValue (event->key.keyval), key_name);
-      viewport->enqueue_locked (create_event_key (event->type == GDK_KEY_PRESS ? KEY_PRESS : KEY_RELEASE, econtext, KeyValue (event->key.keyval), key_name));
+      viewp0rt->enqueue_locked (create_event_key (event->type == GDK_KEY_PRESS ? KEY_PRESS : KEY_RELEASE, econtext, KeyValue (event->key.keyval), key_name));
       handled = TRUE;
       g_free (key_name);
       break;
     case GDK_BUTTON_PRESS:
-      viewport->enqueue_locked (create_event_button (BUTTON_PRESS, econtext, event->button.button));
+      viewp0rt->enqueue_locked (create_event_button (BUTTON_PRESS, econtext, event->button.button));
       handled = TRUE;
       // FIXME: handled = root->dispatch_button_event (econtext, true, event->button.button);
       break;
     case GDK_2BUTTON_PRESS:
-      viewport->enqueue_locked (create_event_button (BUTTON_PRESS, econtext, event->button.button));
+      viewp0rt->enqueue_locked (create_event_button (BUTTON_PRESS, econtext, event->button.button));
       handled = TRUE;
       break;
     case GDK_3BUTTON_PRESS:
-      viewport->enqueue_locked (create_event_button (BUTTON_PRESS, econtext, event->button.button));
+      viewp0rt->enqueue_locked (create_event_button (BUTTON_PRESS, econtext, event->button.button));
       handled = TRUE;
       break;
     case GDK_BUTTON_RELEASE:
-      viewport->enqueue_locked (create_event_button (BUTTON_RELEASE, econtext, event->button.button));
+      viewp0rt->enqueue_locked (create_event_button (BUTTON_RELEASE, econtext, event->button.button));
       handled = TRUE;
       break;
     case GDK_SCROLL:
       if (event->scroll.direction == GDK_SCROLL_UP)
-        viewport->enqueue_locked (create_event_scroll (SCROLL_UP, econtext));
+        viewp0rt->enqueue_locked (create_event_scroll (SCROLL_UP, econtext));
       else if (event->scroll.direction == GDK_SCROLL_LEFT)
-        viewport->enqueue_locked (create_event_scroll (SCROLL_LEFT, econtext));
+        viewp0rt->enqueue_locked (create_event_scroll (SCROLL_LEFT, econtext));
       else if (event->scroll.direction == GDK_SCROLL_RIGHT)
-        viewport->enqueue_locked (create_event_scroll (SCROLL_RIGHT, econtext));
+        viewp0rt->enqueue_locked (create_event_scroll (SCROLL_RIGHT, econtext));
       else if (event->scroll.direction == GDK_SCROLL_DOWN)
-        viewport->enqueue_locked (create_event_scroll (SCROLL_DOWN, econtext));
+        viewp0rt->enqueue_locked (create_event_scroll (SCROLL_DOWN, econtext));
       handled = TRUE;
       break;
 #if GTK_CHECK_VERSION (2, 8, 0)
     case GDK_GRAB_BROKEN:
-      viewport->enqueue_locked (create_event_cancellation (econtext));
+      viewp0rt->enqueue_locked (create_event_cancellation (econtext));
       break;
 #endif
     case GDK_DELETE:
-      viewport->enqueue_locked (create_event_win_delete (econtext));
+      viewp0rt->enqueue_locked (create_event_win_delete (econtext));
       handled = TRUE;
       break;
     case GDK_DESTROY:
     case GDK_UNMAP:
-      rapicorn_viewport_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);
+      rapicorn_viewp0rt_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);
       break;
     case GDK_VISIBILITY_NOTIFY:
-      rapicorn_viewport_change_visibility (self, event->visibility.state);
+      rapicorn_viewp0rt_change_visibility (self, event->visibility.state);
       break;
     case GDK_WINDOW_STATE:
-      viewport->m_window_state = get_rapicorn_window_state (event->window_state.new_window_state);
+      viewp0rt->m_window_state = get_rapicorn_window_state (event->window_state.new_window_state);
       if ((event->window_state.new_window_state & (GDK_WINDOW_STATE_WITHDRAWN | GDK_WINDOW_STATE_ICONIFIED)) &&
           widget->window && gdk_window_has_ancestor (widget->window, event->window_state.window))
-        viewport->enqueue_locked (create_event_cancellation (econtext));
+        viewp0rt->enqueue_locked (create_event_cancellation (econtext));
       break;
     case GDK_EXPOSE:
       {
@@ -1221,8 +1221,8 @@ rapicorn_viewport_event (GtkWidget *widget,
             gint realy = window_height - (area.y + area.height);
             rectangles.push_back (Rect (Point (area.x, realy), area.width, area.height));
           }
-        if (!viewport->m_ignore_exposes)
-          viewport->enqueue_locked (create_event_win_draw (econtext, 0, rectangles));
+        if (!viewp0rt->m_ignore_exposes)
+          viewp0rt->enqueue_locked (create_event_win_draw (econtext, 0, rectangles));
       }
       break;
     default:
@@ -1240,14 +1240,14 @@ rapicorn_viewport_event (GtkWidget *widget,
 }
 
 static gboolean
-rapicorn_viewport_ancestor_event (GtkWidget *ancestor,
+rapicorn_viewp0rt_ancestor_event (GtkWidget *ancestor,
                                   GdkEvent  *event,
                                   GtkWidget *widget)
 {
-  RapicornViewport *self = RAPICORN_VIEWPORT (widget);
-  ViewportGtk *viewport = self->viewport;
-  EventContext econtext = rapicorn_viewport_event_context (self, event);
-  if (!viewport)
+  RapicornViewp0rt *self = RAPICORN_VIEWP0RT (widget);
+  Viewp0rtGtk *viewp0rt = self->viewp0rt;
+  EventContext econtext = rapicorn_viewp0rt_event_context (self, event);
+  if (!viewp0rt)
     return false;
   if (Rapicorn::Logging::debug_enabled()) /* debug events */
     debug_dump_event (widget, "+", event, econtext);
@@ -1256,29 +1256,29 @@ rapicorn_viewport_ancestor_event (GtkWidget *ancestor,
     {
     case GDK_VISIBILITY_NOTIFY:
       if (event->visibility.state == GDK_VISIBILITY_FULLY_OBSCURED)
-        rapicorn_viewport_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);
+        rapicorn_viewp0rt_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);
       break;
     case GDK_WINDOW_STATE:
-      viewport->m_window_state = get_rapicorn_window_state (event->window_state.new_window_state);
+      viewp0rt->m_window_state = get_rapicorn_window_state (event->window_state.new_window_state);
       if ((event->window_state.new_window_state & (GDK_WINDOW_STATE_WITHDRAWN | GDK_WINDOW_STATE_ICONIFIED)) &&
           widget->window && gdk_window_has_ancestor (widget->window, event->window_state.window))
-        viewport->enqueue_locked (create_event_cancellation (econtext));
+        viewp0rt->enqueue_locked (create_event_cancellation (econtext));
       break;
 #if GTK_CHECK_VERSION (2, 8, 0)
     case GDK_GRAB_BROKEN:
-      viewport->enqueue_locked (create_event_cancellation (econtext));
+      viewp0rt->enqueue_locked (create_event_cancellation (econtext));
       break;
 #endif
     case GDK_DELETE:
-      if (ancestor == (GtkWidget*) rapicorn_viewport_get_my_window (self))
+      if (ancestor == (GtkWidget*) rapicorn_viewp0rt_get_my_window (self))
         {
-          viewport->enqueue_locked (create_event_win_delete (econtext));
+          viewp0rt->enqueue_locked (create_event_win_delete (econtext));
           handled = true;
         }
       break;
     case GDK_DESTROY:
     case GDK_UNMAP:
-      rapicorn_viewport_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);
+      rapicorn_viewp0rt_change_visibility (self, GDK_VISIBILITY_FULLY_OBSCURED);
       break;
     default: break;
     }
@@ -1286,28 +1286,28 @@ rapicorn_viewport_ancestor_event (GtkWidget *ancestor,
 }
 
 static void
-rapicorn_viewport_dispose (GObject *object)
+rapicorn_viewp0rt_dispose (GObject *object)
 {
-  RapicornViewport *self = RAPICORN_VIEWPORT (object);
-  self->viewport = NULL;
-  G_OBJECT_CLASS (rapicorn_viewport_parent_class)->dispose (object); // chain
+  RapicornViewp0rt *self = RAPICORN_VIEWP0RT (object);
+  self->viewp0rt = NULL;
+  G_OBJECT_CLASS (rapicorn_viewp0rt_parent_class)->dispose (object); // chain
 }
 
 static void
-rapicorn_viewport_class_init (RapicornViewportClass *klass)
+rapicorn_viewp0rt_class_init (RapicornViewp0rtClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 
-  gobject_class->dispose = rapicorn_viewport_dispose;
+  gobject_class->dispose = rapicorn_viewp0rt_dispose;
 
-  widget_class->size_request = rapicorn_viewport_size_request;
-  widget_class->size_allocate = rapicorn_viewport_size_allocate;
-  widget_class->realize = rapicorn_viewport_realize;
-  widget_class->map = rapicorn_viewport_map;
-  widget_class->unmap = rapicorn_viewport_unmap;
-  widget_class->unrealize = rapicorn_viewport_unrealize;
-  widget_class->event = rapicorn_viewport_event;
+  widget_class->size_request = rapicorn_viewp0rt_size_request;
+  widget_class->size_allocate = rapicorn_viewp0rt_size_allocate;
+  widget_class->realize = rapicorn_viewp0rt_realize;
+  widget_class->map = rapicorn_viewp0rt_map;
+  widget_class->unmap = rapicorn_viewp0rt_unmap;
+  widget_class->unrealize = rapicorn_viewp0rt_unrealize;
+  widget_class->event = rapicorn_viewp0rt_event;
 }
 
 /* --- RapicornGtkThread --- */
@@ -1360,7 +1360,7 @@ rapicorn_init_with_foreign_gtk (int        *argcp,
   /* setup GDK_THREADS_ENTER/GDK_THREADS_LEAVE */
   gdk_threads_init();
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-  rapicorn_viewport__auto_quit_gtk = auto_quit_gtk;
+  rapicorn_viewp0rt__auto_quit_gtk = auto_quit_gtk;
   /* GTK intilization */
   return gtk_init_check (argcp, argvp); // allow $DISPLAY initialisation to fail
 }

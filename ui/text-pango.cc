@@ -21,7 +21,7 @@
 #include "factory.hh"
 #include "painter.hh"
 #include "itemimpl.hh"
-#include "viewport.hh"  // for rapicorn_gtk_threads_enter / rapicorn_gtk_threads_leave
+#include "viewp0rt.hh"  // for rapicorn_gtk_threads_enter / rapicorn_gtk_threads_leave
 
 #include <algorithm>
 

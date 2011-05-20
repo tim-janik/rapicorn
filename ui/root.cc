@@ -159,7 +159,7 @@ Root::create_snapshot (const Rect &subarea)
 RootImpl::RootImpl() :
   m_loop (*ref_sink (EventLoop::create())),
   m_source (NULL),
-  m_viewport (NULL),
+  m_viewp0rt (NULL),
   m_tunable_requisition_counter (0),
   m_entered (false), m_auto_close (false)
 {
@@ -169,7 +169,7 @@ RootImpl::RootImpl() :
   unref (hr);
   set_flag (PARENT_SENSITIVE, true);
   set_flag (PARENT_VISIBLE, true);
-  /* adjust default Viewport config */
+  /* adjust default Viewp0rt config */
   m_config.min_width = 13;
   m_config.min_height = 7;
   /* create event loop (auto-starts) */
@@ -189,10 +189,10 @@ RootImpl::dispose ()
 
 RootImpl::~RootImpl()
 {
-  if (m_viewport)
+  if (m_viewp0rt)
     {
-      delete m_viewport;
-      m_viewport = NULL;
+      delete m_viewp0rt;
+      m_viewp0rt = NULL;
     }
   /* make sure all children are removed while this is still of type Root.
    * necessary because C++ alters the object type during constructors and destructors
@@ -253,9 +253,9 @@ RootImpl::resize_all (Allocation *new_area)
       have_allocation = true;
       change_flags_silently (INVALID_ALLOCATION, true);
     }
-  else if (!new_area && m_viewport)
+  else if (!new_area && m_viewp0rt)
     {
-      Viewport::State state = m_viewport->get_state();
+      Viewp0rt::State state = m_viewp0rt->get_state();
       if (state.width > 0 && state.height > 0)
         {
           area.width = state.width;
@@ -296,12 +296,12 @@ RootImpl::resize_all (Allocation *new_area)
     {
       m_config.request_width = req.width;
       m_config.request_height = req.height;
-      if (m_viewport)
+      if (m_viewp0rt)
         {
           /* set_config() will request a WIN_SIZE and WIN_DRAW now, so there's no point in handling further exposes */
-          m_viewport->enqueue_win_draws();
+          m_viewp0rt->enqueue_win_draws();
           m_expose_region.clear();
-          m_viewport->set_config (m_config, true);
+          m_viewp0rt->set_config (m_config, true);
         }
     }
 }
@@ -317,8 +317,8 @@ RootImpl::do_invalidate ()
 void
 RootImpl::beep()
 {
-  if (m_viewport)
-    m_viewport->beep();
+  if (m_viewp0rt)
+    m_viewp0rt->beep();
 }
 
 vector<Item*>
@@ -345,19 +345,19 @@ RootImpl::dispatch_mouse_movement (const Event &event)
   Item *grab_item = get_grab (&unconfined);
   if (grab_item)
     {
-      if (unconfined or grab_item->viewport_point (Point (event.x, event.y)))
+      if (unconfined or grab_item->viewp0rt_point (Point (event.x, event.y)))
         {
           pierced.push_back (ref (grab_item));        /* grab-item receives all mouse events */
           Container *container = grab_item->interface<Container*>();
           if (container)                              /* deliver to hovered grab-item children as well */
-            container->viewport_point_children (Point (event.x, event.y), pierced);
+            container->viewp0rt_point_children (Point (event.x, event.y), pierced);
         }
     }
   else if (drawable())
     {
       pierced.push_back (ref (this)); /* root receives all mouse events */
       if (m_entered)
-        viewport_point_children (Point (event.x, event.y), pierced);
+        viewp0rt_point_children (Point (event.x, event.y), pierced);
     }
   /* send leave events */
   vector<Item*> left_children = item_difference (m_last_entered_children, pierced);
@@ -396,7 +396,7 @@ RootImpl::dispatch_event_to_pierced_or_grab (const Event &event)
   else if (drawable())
     {
       pierced.push_back (ref (this)); /* root receives all events */
-      viewport_point_children (Point (event.x, event.y), pierced);
+      viewp0rt_point_children (Point (event.x, event.y), pierced);
     }
   /* send actual event */
   bool handled = false;
@@ -595,7 +595,7 @@ RootImpl::dispatch_key_event (const Event &event)
   bool handled = false;
   dispatch_mouse_movement (event);
   Item *item = get_focus();
-  if (item && item->process_viewport_event (event))
+  if (item && item->process_viewp0rt_event (event))
     return true;
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
   if (kevent && kevent->type == KEY_PRESS)
@@ -695,7 +695,7 @@ RootImpl::dispatch_win_delete_event (const Event &event)
   const EventWinDelete *devent = dynamic_cast<const EventWinDelete*> (&event);
   if (devent)
     {
-      destroy_viewport();
+      destroy_viewp0rt();
       dispose();
       handled = true;
     }
@@ -706,7 +706,7 @@ void
 RootImpl::expose_root_region (const Region &region)
 {
   /* this function is expected to *queue* exposes, and not render immediately */
-  if (m_viewport && !region.empty())
+  if (m_viewp0rt && !region.empty())
     {
       m_expose_region.add (region);
       collapse_expose_region();
@@ -718,7 +718,7 @@ RootImpl::copy_area (const Rect  &src,
                      const Point &dest)
 {
   /* need to copy pixel regions and expose regions */
-  if (m_viewport && src.width && src.height)
+  if (m_viewp0rt && src.width && src.height)
     {
       /* force delivery of any pending exposes */
       expose_now();
@@ -726,7 +726,7 @@ RootImpl::copy_area (const Rect  &src,
       Region exr = m_expose_region;
       exr.intersect (Region (src));
       /* pixel-copy area */
-      m_viewport->copy_area (src.x, src.y, // may queue new exposes
+      m_viewp0rt->copy_area (src.x, src.y, // may queue new exposes
                              src.width, src.height,
                              dest.x, dest.y);
       /* shift expose region */
@@ -740,10 +740,10 @@ RootImpl::copy_area (const Rect  &src,
 void
 RootImpl::expose_now ()
 {
-  if (m_viewport)
+  if (m_viewp0rt)
     {
       /* force delivery of any pending update events */
-      m_viewport->enqueue_win_draws();
+      m_viewp0rt->enqueue_win_draws();
       /* collect all WIN_DRAW events */
       m_async_mutex.lock();
       std::list<Event*> events;
@@ -776,7 +776,7 @@ RootImpl::expose_now ()
 void
 RootImpl::draw_now ()
 {
-  if (m_viewport)
+  if (m_viewp0rt)
     {
       /* force delivery of any pending exposes */
       expose_now();
@@ -785,7 +785,7 @@ RootImpl::draw_now ()
       std::vector<Rect> rects;
       m_expose_region.list_rects (rects);
       m_expose_region.clear();
-      Viewport::State state = m_viewport->get_state();
+      Viewp0rt::State state = m_viewp0rt->get_state();
       for (uint i = 0; i < rects.size(); i++)
         {
           const IRect &ir = rects[i];
@@ -802,7 +802,7 @@ RootImpl::draw_now ()
               break;
             }
           /* blit to screen */
-          m_viewport->blit_display (display);
+          m_viewp0rt->blit_display (display);
           display.pop_clip_rect();
         }
       if (!has_pending_win_size())
@@ -919,8 +919,8 @@ RootImpl::has_pending_win_size ()
 bool
 RootImpl::dispatch_event (const Event &event)
 {
-  if (!m_viewport)
-    return false;       // we can only handle events on viewports
+  if (!m_viewp0rt)
+    return false;       // we can only handle events on viewp0rts
   if (0)
     diag ("Root: event: %s", string_from_event_type (event.type));
   switch (event.type)
@@ -970,14 +970,14 @@ RootImpl::prepare (uint64 current_time_usecs,
                    int64 *timeout_usecs_p)
 {
   ScopedLock<Mutex> aelocker (m_async_mutex);
-  return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewport && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
+  return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewp0rt && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
 }
 
 bool
 RootImpl::check (uint64 current_time_usecs)
 {
   ScopedLock<Mutex> aelocker (m_async_mutex);
-  return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewport && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
+  return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewp0rt && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
 }
 
 void
@@ -1004,7 +1004,7 @@ RootImpl::dispatch ()
         dispatch_event (*event);
         delete event;
       }
-    else if (m_viewport && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+    else if (m_viewp0rt && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
       resize_all (NULL);
     else if (!m_expose_region.empty())
       {
@@ -1014,7 +1014,7 @@ RootImpl::dispatch ()
             EventLoop *loop = get_loop();
             if (loop)
               {
-                loop->exec_timer (0, slot (*this, &RootImpl::destroy_viewport), INT_MAX);
+                loop->exec_timer (0, slot (*this, &RootImpl::destroy_viewp0rt), INT_MAX);
                 m_auto_close = false;
               }
           }
@@ -1042,33 +1042,33 @@ RootImpl::enqueue_async (Event *event)
 bool
 RootImpl::viewable ()
 {
-  return visible() && m_viewport && m_viewport->visible();
+  return visible() && m_viewp0rt && m_viewp0rt->visible();
 }
 
 void
 RootImpl::idle_show()
 {
-  if (m_viewport)
+  if (m_viewp0rt)
     {
       /* request size, WIN_SIZE and WIN_DRAW */
-      if (!m_viewport->visible())
+      if (!m_viewp0rt->visible())
         resize_all (NULL);
       /* size requested, show up */
-      m_viewport->show();
+      m_viewp0rt->show();
     }
 }
 
 void
-RootImpl::create_viewport ()
+RootImpl::create_viewp0rt ()
 {
   if (m_source)
     {
-      if (!m_viewport)
+      if (!m_viewp0rt)
         {
-          m_viewport = Viewport::create_viewport ("auto", WINDOW_TYPE_NORMAL, *this);
+          m_viewp0rt = Viewp0rt::create_viewp0rt ("auto", WINDOW_TYPE_NORMAL, *this);
           resize_all (NULL);
         }
-      RAPICORN_ASSERT (m_viewport != NULL);
+      RAPICORN_ASSERT (m_viewp0rt != NULL);
       m_source->primary (true); // FIXME: depends on WM-managable
       VoidSlot sl = slot (*this, &RootImpl::idle_show);
       m_loop.exec_now (sl);
@@ -1076,20 +1076,20 @@ RootImpl::create_viewport ()
 }
 
 bool
-RootImpl::has_viewport ()
+RootImpl::has_viewp0rt ()
 {
-  return m_source && m_viewport && m_viewport->visible();
+  return m_source && m_viewp0rt && m_viewp0rt->visible();
 }
 
 void
-RootImpl::destroy_viewport ()
+RootImpl::destroy_viewp0rt ()
 {
-  if (!m_viewport)
+  if (!m_viewp0rt)
     return; // during destruction, ref_count == 0
   ref (this);
-  m_viewport->hide();
-  delete m_viewport;
-  m_viewport = NULL;
+  m_viewp0rt->hide();
+  delete m_viewp0rt;
+  m_viewp0rt = NULL;
   if (m_source)
     {
       m_loop.kill_sources(); // calls m_source methods
@@ -1113,31 +1113,31 @@ RootImpl::root ()
 void
 RootImpl::show ()
 {
-  create_viewport();
+  create_viewp0rt();
 }
 
 bool
 RootImpl::closed ()
 {
-  return !has_viewport();
+  return !has_viewp0rt();
 }
 
 void
 RootImpl::close ()
 {
-  destroy_viewport();
+  destroy_viewp0rt();
 }
 
 bool
 RootImpl::synthesize_enter (double xalign,
                             double yalign)
 {
-  if (!has_viewport())
+  if (!has_viewp0rt())
     return false;
   const Allocation &area = allocation();
   Point p (area.x + xalign * (max (1, area.width) - 1),
            area.y + yalign * (max (1, area.height) - 1));
-  p = point_to_viewport (p);
+  p = point_to_viewp0rt (p);
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
@@ -1148,7 +1148,7 @@ RootImpl::synthesize_enter (double xalign,
 bool
 RootImpl::synthesize_leave ()
 {
-  if (!has_viewport())
+  if (!has_viewp0rt())
     return false;
   EventContext ec;
   enqueue_async (create_event_mouse (MOUSE_LEAVE, ec));
@@ -1161,12 +1161,12 @@ RootImpl::synthesize_click (Item  &item,
                             double xalign,
                             double yalign)
 {
-  if (!has_viewport())
+  if (!has_viewp0rt())
     return false;
   const Allocation &area = item.allocation();
   Point p (area.x + xalign * (max (1, area.width) - 1),
            area.y + yalign * (max (1, area.height) - 1));
-  p = item.point_to_viewport (p);
+  p = item.point_to_viewp0rt (p);
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
@@ -1178,7 +1178,7 @@ RootImpl::synthesize_click (Item  &item,
 bool
 RootImpl::synthesize_delete ()
 {
-  if (!has_viewport())
+  if (!has_viewp0rt())
     return false;
   EventContext ec;
   enqueue_async (create_event_win_delete (ec));

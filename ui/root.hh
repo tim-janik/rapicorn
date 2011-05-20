@@ -62,10 +62,10 @@ public:
   typedef Signal<Root, bool (const String&, const StringVector&), CollectorWhile0<bool> >   CommandSignal;
   typedef Signal<Root, void ()> NotifySignal;
   NotifySignal          sig_displayed;
-  /* viewport ops */
-  virtual void  create_viewport         () = 0;
-  virtual bool  has_viewport            () = 0;
-  virtual void  destroy_viewport        () = 0;
+  /* viewp0rt ops */
+  virtual void  create_viewp0rt         () = 0;
+  virtual bool  has_viewp0rt            () = 0;
+  virtual void  destroy_viewp0rt        () = 0;
   /* main loop functions */
   virtual EventLoop* get_loop           () = 0;
   virtual void       enable_auto_close  ();
