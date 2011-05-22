@@ -19,7 +19,6 @@ imgcheck_LDADD     = $(LDADDS)
 TEST_PROGS        += multitest
 multitest_SOURCES  = multitest.cc
 multitest_LDADD    = $(LDADDS)
-math_LDADD         = $(LDADDS)
 TEST_PROGS        += strings
 SLOWTESTS         += strings
 strings_SOURCES    = strings.cc
