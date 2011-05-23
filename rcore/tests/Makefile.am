@@ -75,30 +75,29 @@ messages_LDADD     = $(LDADDS)
 
 # === test rules ===
 # simple logging check
-check-logging-simple: messages
-	@$(call TSTTITLE, Simple logging function check)
-	$(SILENT) ( RAPICORN=diag:stable:debug:no-syslog:no-fatal-syslog \
-	        ./messages --test-logging 2>$(TSTOUT) ; true ) 2>/dev/null
-	$(SILENT) grep -q 'debug-.*logging test' $(TSTOUT) || $(call TSTRESULT)
-	$(SILENT) grep -q 'diagnostic.*errno' $(TSTOUT) || $(call TSTRESULT)
-	$(SILENT) grep -q 'WARNING:.*logging message' $(TSTOUT) || $(call TSTRESULT)
-	$(SILENT) grep -q 'ERROR:.*serious' $(TSTOUT) || $(call TSTRESULT)
-	$(SILENT) grep -q 'FATAL:.*abort' $(TSTOUT) || $(call TSTRESULT)
-	$(SILENT) grep -qi 'aborting..' $(TSTOUT) || $(call TSTRESULT)
-	$(SILENT) $(call TSTRESULT)
-	$(SILENT) rm -f $(TSTOUT)
-check: check-logging-simple
+check-logging-output: messages
+	$(Q) ( RAPICORN=diag:stable:debug:no-syslog:no-fatal-syslog \
+	        ./messages --test-logging 2>$(TSTOUT) ; true ) $(QSTDERR) ; eval "$$TSTDIAGNOSE"
+	$(Q) grep -q 'debug-.*logging test' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) debugging'"
+	$(Q) grep -q 'diagnostic.*errno' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) errno diagnostics'"
+	$(Q) grep -q 'WARNING:.*logging message' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) warnings'"
+	$(Q) grep -q 'ERROR:.*serious' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) errors'"
+	$(Q) grep -q 'FATAL:.*abort' $(TSTOUT)			; eval "$$TSTDIAGNOSE" "'$(@F) fatals'"
+	$(Q) grep -qi 'aborting..' $(TSTOUT)			; eval "$$TSTDIAGNOSE" "'$(@F) aborting'"
+	$(Q) rm -f $(TSTOUT)
+check: check-logging-output
 # process handle
 check-process-handle: multitest
-	@$(call TSTTITLE, Simple process-handle check)
-	$(SILENT) test -n `./multitest --print-process-handle`; $(call TSTRESULT)
-	@$(call TSTTITLE, Unique process-handle test)
-	$(SILENT) test `./multitest --print-process-handle` != `./multitest --print-process-handle`; $(call TSTRESULT)
+	$(Q) test -n `./multitest --print-process-handle`; eval "$$TSTDIAGNOSE"
 check: check-process-handle
+check-unique-process: multitest
+	$(Q) test `./multitest --print-process-handle` != `./multitest --print-process-handle`; eval "$$TSTDIAGNOSE"
+check: check-unique-process
+
 # process handle
 check-locatable-id: multitest
-	@$(call TSTTITLE, Simple locatable-id check)
-	$(SILENT) test -n `./multitest --print-locatable-id`; $(call TSTRESULT)
-	@$(call TSTTITLE, Unique locatable-id test)
-	$(SILENT) test `./multitest --print-locatable-id` != `./multitest --print-locatable-id`; $(call TSTRESULT)
+	$(Q) test -n `./multitest --print-locatable-id`; eval "$$TSTDIAGNOSE"
 check: check-locatable-id
+check-unique-id: multitest
+	$(Q) test `./multitest --print-locatable-id` != `./multitest --print-locatable-id`; eval "$$TSTDIAGNOSE"
+check: check-unique-id
