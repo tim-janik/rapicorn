@@ -1,0 +1,73 @@
+/* Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html */
+#include <rcore/testutils.hh>
+#include <string.h>
+
+namespace {
+using namespace Rapicorn;
+
+static const char *arg = NULL;
+static uint        result;
+
+static RAPICORN_NEVER_INLINE void
+count_whitespace_switch ()
+{
+  const char *c = arg;
+  uint n = 0;
+  while (RAPICORN_ISLIKELY (*c))
+    {
+      switch (*c)
+        {
+        case ' ': case '\t': case '\n': case '\r': case '\v': case '\f':
+          n += 1;
+        }
+      c++;
+    }
+  result = n;
+}
+
+static RAPICORN_NEVER_INLINE void
+count_whitespace_strchr ()
+{
+  const char *c = arg;
+  uint n = 0;
+  while (RAPICORN_ISLIKELY (*c))
+    {
+      if (strchr (" \t\n\r\v\f", *c) != NULL) // memchr (" \t\n\r\v\f", *c, 6)
+        n += 1;
+      c++;
+    }
+  result = n;
+}
+
+static void
+perf_skip_whitespace (void)
+{
+  Thread::Self::yield(); // volountarily giveup time slice, so we last longer during the benchmark
+  Test::Timer timer;
+  arg = "Hello World,\nhere is text.\fAnd more \v and \t \t more.\n0\r1\n";
+  result = 0;
+  double switch_time = timer.benchmark (count_whitespace_switch);
+  //uint64 hn = timer.n_runs();
+  assert (result == 17);
+  result = 0;
+  double strchr_time = timer.benchmark (count_whitespace_strchr);
+  //uint64 sn = timer.n_runs();
+  assert (result == 17);
+  if (switch_time > strchr_time)
+    TWARN ("count_whitespace benchmark: unexpected contest: switch=%gs strchr=%gs\n", switch_time, strchr_time);
+}
+
+} // Anon
+
+int
+main (int   argc,
+      char *argv[])
+{
+  rapicorn_init_test (&argc, argv);
+
+  Test::add ("/Performance/Whitespace Skipping", perf_skip_whitespace);
+
+  return Test::run();
+}
+
+/* vim:set ts=8 sts=2 sw=2: */
