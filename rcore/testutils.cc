@@ -18,6 +18,8 @@
 
 #include <glib.h>
 #include <stdio.h>
+#include <string.h>
+#include <malloc.h>
 
 #define VERBOSE_TAG     100
 
@@ -124,6 +126,8 @@ ensure_newline (const String &s)
   return s;
 }
 
+static __thread char *test_warning = NULL;
+
 void
 test_output (int kind, const char *format, ...)
 {
@@ -158,9 +162,31 @@ test_output (int kind, const char *format, ...)
       sout = "\n## Testing: " + msg + "...\n";
       break;
     case 5:                     // test done
-      sout = "OK\n";
+      if (test_warning)
+        {
+          String w (test_warning);
+          free (test_warning);
+          test_warning = NULL;
+          sout = "WARN\n" + ensure_newline (w);
+        }
+      else
+        sout = "OK\n";
       break;
     case 5 + VERBOSE_TAG:       // test done
+      break;
+    case 6:                     // test warning
+      {
+        String w;
+        if (test_warning)
+          {
+            w = test_warning;
+            free (test_warning);
+          }
+        test_warning = strdup ((w + ensure_newline (msg)).c_str());
+      }
+      break;
+    case 6 + VERBOSE_TAG:       // test warning
+      sout = "WARNING: " + ensure_newline (msg);
       break;
     default:
     case 0 + VERBOSE_TAG:       // regular msg
