@@ -127,6 +127,7 @@ ensure_newline (const String &s)
 }
 
 static __thread char *test_warning = NULL;
+static __thread char *test_start = NULL;
 
 void
 test_output (int kind, const char *format, ...)
@@ -148,29 +149,42 @@ test_output (int kind, const char *format, ...)
       sout = ensure_newline (msg);
       break;
     case 3:                     // test program title
-      sout = "TEST: " + ensure_newline (msg);
+      sout = "RUN:  " + ensure_newline (msg);
       break;
     case 3 + VERBOSE_TAG:       // test program title
       bar = "### ** +--" + String (msg.size(), '-') + "--+ ** ###";
       msg = "### ** +  " + msg + "  + ** ###";
       sout = "\n" + bar + "\n" + msg + "\n" + bar + "\n";
       break;
-    case 4:                     // test title
-      sout = "  " + msg + ":" + String (70 - MIN (70, msg.size()), ' ');
+    case 4:                     // test start
+      sout = "  TEST   " + msg + ":" + String (63 - MIN (63, msg.size()), ' ');
+      if (!test_start)
+        {
+          test_start = strdup (sout.c_str());
+          sout = "";
+        }
       break;
-    case 4 + VERBOSE_TAG:       // test title
+    case 4 + VERBOSE_TAG:       // test start
       sout = "\n## Testing: " + msg + "...\n";
       break;
     case 5:                     // test done
+      if (test_start)
+        {
+          sout = test_start;
+          free (test_start);
+          test_start = NULL;
+        }
+      else
+        sout = "";
       if (test_warning)
         {
           String w (test_warning);
           free (test_warning);
           test_warning = NULL;
-          sout = "WARN\n" + ensure_newline (w);
+          sout += "WARN\n" + ensure_newline (w);
         }
       else
-        sout = "OK\n";
+        sout += "OK\n";
       break;
     case 5 + VERBOSE_TAG:       // test done
       break;
