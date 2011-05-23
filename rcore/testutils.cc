@@ -19,6 +19,8 @@
 #include <glib.h>
 #include <stdio.h>
 
+#define VERBOSE_TAG     100
+
 namespace Rapicorn {
 namespace Test {
 
@@ -114,6 +116,14 @@ Timer::max_elapsed () const
   return m;
 }
 
+static String
+ensure_newline (const String &s)
+{
+  if (s.size() && s[s.size()-1] != '\n')
+    return s + "\n";
+  return s;
+}
+
 void
 test_output (int kind, const char *format, ...)
 {
@@ -122,45 +132,39 @@ test_output (int kind, const char *format, ...)
   String msg = string_vprintf (format, args);
   va_end (args);
   String sout, bar;
-  switch (kind)
+  switch (verbose() ? VERBOSE_TAG + kind : kind)
     {
-    case 3: // test program title
-      if (verbose())
-        {
-          bar = "### ** +--" + String (msg.size(), '-') + "--+ ** ###";
-          msg = "### ** +  " + msg + "  + ** ###";
-          sout = "\n" + bar + "\n" + msg + "\n" + bar + "\n";
-        }
-      else
-        sout = "TEST: " + msg + "\n";
+    case 1:                     // test message
+    case 1 + VERBOSE_TAG:       // test message
+      sout = ensure_newline (msg);
       break;
-    case 4: // test title
-      if (verbose())
-        {
-          msg = "## Testing: " + msg + "...";
-          sout = "\n" + msg + "\n";
-        }
-      else
-        sout = "  " + msg + ":" + String (70 - MIN (70, msg.size()), ' ');
+    case 2:                     // conditional test info
       break;
-    case 5: // test done
-      if (!verbose())
-        sout = "OK\n";
+    case 2 + VERBOSE_TAG:       // conditional test info
+      sout = ensure_newline (msg);
       break;
-    case 2: // conditional test info
-      if (verbose())
-        {
-          sout = msg;
-          if (sout.size() && sout[sout.size()-1] != '\n')
-            sout = sout + "\n";
-        }
+    case 3:                     // test program title
+      sout = "TEST: " + ensure_newline (msg);
       break;
-    case 1: // test message
-      sout = msg;
-      if (sout.size() && sout[sout.size()-1] != '\n')
-        sout = sout + "\n";
+    case 3 + VERBOSE_TAG:       // test program title
+      bar = "### ** +--" + String (msg.size(), '-') + "--+ ** ###";
+      msg = "### ** +  " + msg + "  + ** ###";
+      sout = "\n" + bar + "\n" + msg + "\n" + bar + "\n";
       break;
-    default: // 0 - regular msg
+    case 4:                     // test title
+      sout = "  " + msg + ":" + String (70 - MIN (70, msg.size()), ' ');
+      break;
+    case 4 + VERBOSE_TAG:       // test title
+      sout = "\n## Testing: " + msg + "...\n";
+      break;
+    case 5:                     // test done
+      sout = "OK\n";
+      break;
+    case 5 + VERBOSE_TAG:       // test done
+      break;
+    default:
+    case 0 + VERBOSE_TAG:       // regular msg
+    case 0:                     // regular msg
       sout = msg;
       break;
     }
