@@ -166,6 +166,13 @@ ALLTESTS = $(TESTS) $(SLOWTESTS) $(PERFTESTS) # used in noinst_PROGRAMS
 
 # === Test-rule macros ===
 FORCECHECKUPDATE = false
+export MAKE_TARGET      = $@
+export MAKE_TARGET_FILE = $(@F)
+export MAKE_TARGET_DIR  = $(@D)
+export FAILOK           = FAIL  OK
+### eval $$TSTDIAGNOSE ['TESTNAME'] - show test title and result atomically
+export TSTDIAGNOSE = _e=$$?; tstdiagnose() { printf '  CHECK  %-64s%s\n' "$${1:-$$MAKE_TARGET_FILE}:" \
+				"$${FAILOK:$$(($$_e?0:6)):6}"; [ $$_e = 0 ] || exit $$_e; }; tstdiagnose
 # $(call TSTTITLE, [TESTNAME]) - print test title
 TSTTITLE= printf '%s%-70s '$(or $(Q:@=''),'\n') $(if $(Q),'  ', 'TEST: ') "$(strip $(or $(1), $(@F))):"
 # $(call TSTOUT, [postfix]) - test output filename
