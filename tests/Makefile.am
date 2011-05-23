@@ -29,23 +29,23 @@ XML_FILES  += alignment.xml
 EXTRA_DIST += alignment.png
 alignment-test: $(srcdir)/alignment.xml
 	@$(call TSTTITLE, alignment.xml PNG test)
-	$(SILENT) rm -f xtmp-alignment.png
-	$(SILENT) $(X11TEST_RAPIDRUN) -x $(srcdir)/alignment.xml $(STDERR_@)
-	$(SILENT) $(IMGCHECK) $(srcdir)/alignment.png xtmp-alignment.png ; $(call TSTRESULT)
-	$(SILENT) rm -f xtmp-alignment.png
+	$(Q) rm -f xtmp-alignment.png
+	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/alignment.xml $(QSTDERR)
+	$(Q) $(IMGCHECK) $(srcdir)/alignment.png xtmp-alignment.png ; $(call TSTRESULT)
+	$(Q) rm -f xtmp-alignment.png
 check: alignment-test
 
 # arrowsize test
 arrowsize-test:
 	@$(call TSTTITLE, arrowsize-test.xml)
-	$(SILENT) $(X11TEST_RAPIDRUN) -x $(srcdir)/arrowsize-test.xml ; $(call TSTRESULT)
+	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/arrowsize-test.xml ; $(call TSTRESULT)
 EXTRA_DIST += arrowsize-test.xml
 check: arrowsize-test
 
 # factory-test
 factory-test:
 	@$(call TSTTITLE, FactoryTest)
-	$(SILENT) $(X11TEST_RAPIDRUN) -x --test-dump \
+	$(Q) $(X11TEST_RAPIDRUN) -x --test-dump \
 	  --test-matched-node=".*" $(srcdir)/factory-test.xml > $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/factory-test.ref)
 EXTRA_DIST += factory-test.xml factory-test.ref
@@ -53,7 +53,7 @@ check: factory-test
 
 xmllint-check:
 	@$(call TSTTITLE, linting $(XML_FILES))
-	$(SILENT) cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES) ; $(call TSTRESULT)
+	$(Q) cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES) ; $(call TSTRESULT)
 check: xmllint-check
 
 .PHONY: xmllint-check

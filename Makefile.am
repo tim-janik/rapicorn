@@ -73,7 +73,7 @@ distcheck-hook: # check API version upon make distcheck
 	$(MAKE) $(AM_MAKEFLAGS) -C $(top_srcdir)/ api-check
 installcheck-local:
 	@$(call TSTTITLE, Create  rapicorn sample program)
-	$(SILENT) cd . \
+	$(Q) cd . \
 	&& echo '#include <rapicorn-core.hh>'				 > tmpx.cc \
 	&& echo '#include <rapicorn.hh>'				>> tmpx.cc \
 	&& echo 'using namespace Rapicorn;'				>> tmpx.cc \
@@ -82,15 +82,15 @@ installcheck-local:
 	&& echo 'app.execute_loops(); return 0; }'		>> tmpx.cc
 	@$(call TSTRESULT)
 	@$(call TSTTITLE, Compile rapicorn sample program)
-	$(SILENT) $(CXX) `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags rapicorn@RAPICORN_RELEASE@` tmpx.cc -c ; \
+	$(Q) $(CXX) `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags rapicorn@RAPICORN_RELEASE@` tmpx.cc -c ; \
 	  $(call TSTRESULT)
 	@$(call TSTTITLE, Link    rapicorn sample program)
-	$(SILENT) $(CXX) `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --libs rapicorn@RAPICORN_RELEASE@` tmpx.o -o tmpx ; \
+	$(Q) $(CXX) `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --libs rapicorn@RAPICORN_RELEASE@` tmpx.o -o tmpx ; \
 	  $(call TSTRESULT)
 	@$(call TSTTITLE, Execute rapicorn sample program)
-	$(SILENT) LD_LIBRARY_PATH="$(libdir):$$LD_LIBRARY_PATH" ./tmpx ; \
+	$(Q) LD_LIBRARY_PATH="$(libdir):$$LD_LIBRARY_PATH" ./tmpx ; \
 	  $(call TSTRESULT)
-	$(SILENT) rm -f tmpx.o tmpx.cc tmpx
+	$(Q) rm -f tmpx.o tmpx.cc tmpx
 
 # === source code check ===
 check-dynamic_cast:	# check for dynamic_cast of reference types which is broken in gcc <= 3.3.5

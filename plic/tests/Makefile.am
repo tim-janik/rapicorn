@@ -16,33 +16,33 @@ TESTPASS_AUXTESTS = --aux-test label=auxtest1 --aux-test auxtest2 --aux-test aux
 
 installcheck-local: $(srcdir)/testpass.idl
 	@$(call TSTTITLE, plic-@PLIC_VERSION@ --cc-type-package-parser)
-	$(SILENT) plic-@PLIC_VERSION@ --cc-type-package-parser | grep -q struct ; $(call TSTRESULT)
+	$(Q) plic-@PLIC_VERSION@ --cc-type-package-parser | grep -q struct ; $(call TSTRESULT)
 	@$(call TSTTITLE, plic-@PLIC_VERSION@ --list-formats)
-	$(SILENT) plic-@PLIC_VERSION@ --list-formats > /dev/null ; $(call TSTRESULT)
+	$(Q) plic-@PLIC_VERSION@ --list-formats > /dev/null ; $(call TSTRESULT)
 	@$(call TSTTITLE, plic-@PLIC_VERSION@ testpass.idl)
-	$(SILENT) plic-@PLIC_VERSION@ $(srcdir)/testpass.idl > /dev/null ; $(call TSTRESULT)
+	$(Q) plic-@PLIC_VERSION@ $(srcdir)/testpass.idl > /dev/null ; $(call TSTRESULT)
 
 
 check-pass:	testpass.idl
 	@$(call TSTTITLE, check testpass.idl)
-	$(SILENT) ${TESTPLIC} $(srcdir)/testpass.idl > /dev/null ; $(call TSTRESULT)
+	$(Q) ${TESTPLIC} $(srcdir)/testpass.idl > /dev/null ; $(call TSTRESULT)
 	@$(call TSTTITLE, check include-p1.idl)
-	$(SILENT) ${TESTPLIC} $(srcdir)/include-p1.idl > /dev/null ; $(call TSTRESULT)
+	$(Q) ${TESTPLIC} $(srcdir)/include-p1.idl > /dev/null ; $(call TSTRESULT)
 
 check-fail:	testfail.idl
 	@$(call TSTTITLE)
-	$(SILENT) ${TESTPLIC} --plic-fail-file-test $(srcdir)/testfail.idl > $(TSTOUT)
+	$(Q) ${TESTPLIC} --plic-fail-file-test $(srcdir)/testfail.idl > $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testfail.ref)
 
 check-TypePackage: ptptest
 	@$(call TSTTITLE)
-	$(SILENT) ${TESTPLIC} $(srcdir)/testpass.idl -G TypePackage
-	$(SILENT) ./ptptest plic.out $(TESTPASS_AUXTESTS) > /dev/null ; $(call TSTRESULT)
-	$(SILENT) rm -f plic.out
+	$(Q) ${TESTPLIC} $(srcdir)/testpass.idl -G TypePackage
+	$(Q) ./ptptest plic.out $(TESTPASS_AUXTESTS) > /dev/null ; $(call TSTRESULT)
+	$(Q) rm -f plic.out
 
 check-Rapicorn:
 	@$(call TSTTITLE)
-	$(SILENT) ${TESTPLIC} $(srcdir)/testpass.idl -G Rapicorn -o $(TSTOUT)
+	$(Q) ${TESTPLIC} $(srcdir)/testpass.idl -G Rapicorn -o $(TSTOUT)
 	@$(call TSTCMP, $(srcdir)/testrapicorn.ref)
 
 check:	check-pass check-fail check-TypePackage check-Rapicorn
