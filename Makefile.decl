@@ -92,12 +92,9 @@ TEST_PROGS =
 check-TEST_PROGS:
 	@$(X11TEST_SERVER) && \
 	  for tst in $(TEST_PROGS) ; do \
-	    ./$$tst && echo "PASS: $$tst" || exit 1 ;	\
+	    ./$$tst ; _e=$$?; \
+	    [ $$_e = 0 ] || { echo "FAILED($$_e): $$tst" ; exit $$_e; }; \
 	  done
-	@MESSAGETEXT="All $(words $(TEST_PROGS)) tests passed"	\
-	&& [ 0 -lt $(words $(TEST_PROGS)) ]				\
-	&& echo $$MESSAGETEXT | sed 's/./=/g' && echo $$MESSAGETEXT	\
-	&& echo $$MESSAGETEXT | sed 's/./=/g' || true
 check: check-TEST_PROGS
 
 # === LOGTEST_PROGS ===
@@ -106,17 +103,13 @@ LOGTEST_PROGS =
 check-LOGTEST_PROGS:
 	@$(X11TEST_SERVER) && \
 	  for tst in $(LOGTEST_PROGS) ; do \
-	    $(call TSTTITLE, $$tst) ; tstout="$$tst.log" ; \
-	    ./$$tst >"$$tstout" 2>&1 || exit $$? ; \
+	    tstout="$$tst.log" ; \
+	    ./$$tst >"$$tstout" 2>&1 ; eval "$$TSTDIAGNOSE_LOGTEST" "'$$tst'"; \
 	    ${FORCECHECKUPDATE} || { ar -xo $(srcdir)/logtests.dat "./$$tst.ref" ; \
 	      test -e "./$$tst.ref" || touch "./$$tst.ref" ; } ; \
-	    $(call TSTCMP, "./$$tst.ref", "$$tstout") || exit $$? ; \
+	    eval "$$TSTVERIFY" "'./$$tst.ref'" "'$$tstout'" "'$$tst'" ; \
 	    ${FORCECHECKUPDATE} && ar -r $(srcdir)/logtests.dat "./$$tst.ref" ; rm -f "./$$tst.ref" ; \
 	  done
-	@MESSAGETEXT="All $(words $(LOGTEST_PROGS)) logfile tests matched references"	\
-	&& [ 0 -lt $(words $(LOGTEST_PROGS)) ]				\
-	&& echo $$MESSAGETEXT | sed 's/./=/g' && echo $$MESSAGETEXT	\
-	&& echo $$MESSAGETEXT | sed 's/./=/g' || true
 check: check-LOGTEST_PROGS
 
 # === slowcheck ===
@@ -173,6 +166,15 @@ export FAILOK           = FAIL  OK
 ### eval $$TSTDIAGNOSE ['TESTNAME'] - show test title and result atomically
 export TSTDIAGNOSE = _e=$$?; tstdiagnose() { printf '  CHECK  %-64s%s\n' "$${1:-$$MAKE_TARGET_FILE}:" \
 				"$${FAILOK:$$(($$_e?0:6)):6}"; [ $$_e = 0 ] || exit $$_e; }; tstdiagnose
+export TSTDIAGNOSE_LOGTEST = _e=$$?; tstdiagnose() { printf '  LOGTST %-64s%s\n' "$${1:-$$MAKE_TARGET_FILE}:" \
+				"$${FAILOK:$$(($$_e?0:6)):6}"; [ $$_e = 0 ] || exit $$_e; }; tstdiagnose
+### eval $$TSTVERIFY ['TESTREF'] ['TESTLOG'] ['TESTNAME']
+export TSTVERIFY = tstverify() { \
+	${FORCECHECKUPDATE} && { cp $(if $(Q),,-v) $${2:-$(TSTOUT)} $${1:-$(TSTREF)} ; FAILOK="FAIL "" FORCED" ; } ; \
+	cmp --quiet $${1:-$(TSTREF)} $${2:-$(TSTOUT)} ; _e=$$? ; \
+	printf '  CMPLOG %-64s%s\n' "$${3:-$$MAKE_TARGET_FILE}:" "$${FAILOK:$$(($$_e?0:6)):6}" ; \
+	test $$_e = 0 || { diff -up $${1:-$(TSTREF)} $${2:-$(TSTOUT)} ; exit $$_e ; } ; rm -f $${2:-$(TSTOUT)} ; \
+} ; tstverify
 # $(call TSTTITLE, [TESTNAME]) - print test title
 TSTTITLE= printf '%s%-70s '$(or $(Q:@=''),'\n') $(if $(Q),'  ', 'TEST: ') "$(strip $(or $(1), $(@F))):"
 # $(call TSTOUT, [postfix]) - test output filename
