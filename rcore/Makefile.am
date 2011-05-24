@@ -80,9 +80,9 @@ types-ptpp.cc: $(PLICINT)
 	mv gen-$@ $@
 types.cc: types-ptpp.cc
 CLEANFILES += types-ptpp.cc
-check-ptpp-version:
-	@$(call TSTTITLE)
-	@$(call TSTDIFF, $(top_srcdir)/plic/PlicTypePackage.cc, types-ptpp.cc)
+check-ptpp-version: $(top_srcdir)/plic/PlicTypePackage.cc
+	$(Q) cp types-ptpp.cc $(TSTOUT)
+	$(Q) eval "$$TSTVERIFY" "'$(top_srcdir)/plic/PlicTypePackage.cc'"
 check: # check-ptpp-version # sanity check the --cc-type-package-parser rule
 
 # === types-zgen.c ===
