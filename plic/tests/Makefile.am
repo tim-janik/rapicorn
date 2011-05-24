@@ -14,35 +14,35 @@ DEBUG	    =
 TESTPASS_AUXTESTS = --aux-test label=auxtest1 --aux-test auxtest2 --aux-test auxtest3 \
 		    --aux-test default=10007 --aux-test hints=rw
 
-installcheck-local: $(srcdir)/testpass.idl
-	@$(call TSTTITLE, plic-@PLIC_VERSION@ --cc-type-package-parser)
-	$(Q) plic-@PLIC_VERSION@ --cc-type-package-parser | grep -q struct ; $(call TSTRESULT)
-	@$(call TSTTITLE, plic-@PLIC_VERSION@ --list-formats)
-	$(Q) plic-@PLIC_VERSION@ --list-formats > /dev/null ; $(call TSTRESULT)
-	@$(call TSTTITLE, plic-@PLIC_VERSION@ testpass.idl)
-	$(Q) plic-@PLIC_VERSION@ $(srcdir)/testpass.idl > /dev/null ; $(call TSTRESULT)
+### PLIC installcheck
+bin-plic-cc-type-package-parser:
+	$(Q) plic-@PLIC_VERSION@ --cc-type-package-parser | grep -q struct ; eval "$$TSTDIAGNOSE"
+bin-plic-list-formats:
+	$(Q) plic-@PLIC_VERSION@ --list-formats >/dev/null ; eval "$$TSTDIAGNOSE"
+bin-plic-testpass: $(srcdir)/testpass.idl
+	$(Q) plic-@PLIC_VERSION@ $(srcdir)/testpass.idl >/dev/null ; eval "$$TSTDIAGNOSE"
+installcheck-local: bin-plic-cc-type-package-parser bin-plic-list-formats bin-plic-testpass
 
+### PLIC check passing tests
+check-testpass: $(srcdir)/testpass.idl
+	$(Q) ${TESTPLIC} $(srcdir)/testpass.idl >/dev/null ; eval "$$TSTDIAGNOSE"
+check-include-p1: $(srcdir)/include-p1.idl
+	$(Q) ${TESTPLIC} $(srcdir)/include-p1.idl >/dev/null ; eval "$$TSTDIAGNOSE"
+check: check-testpass check-include-p1
 
-check-pass:	testpass.idl
-	@$(call TSTTITLE, check testpass.idl)
-	$(Q) ${TESTPLIC} $(srcdir)/testpass.idl > /dev/null ; $(call TSTRESULT)
-	@$(call TSTTITLE, check include-p1.idl)
-	$(Q) ${TESTPLIC} $(srcdir)/include-p1.idl > /dev/null ; $(call TSTRESULT)
+### PLIC check failing tests
+check-testfail: $(srcdir)/testfail.idl
+	$(Q) ${TESTPLIC} --plic-fail-file-test $(srcdir)/testfail.idl >$(TSTOUT)
+	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testfail.ref'" "'$(TSTOUT)'"
+check: check-testfail
 
-check-fail:	testfail.idl
-	@$(call TSTTITLE)
-	$(Q) ${TESTPLIC} --plic-fail-file-test $(srcdir)/testfail.idl > $(TSTOUT)
-	@$(call TSTCMP, $(srcdir)/testfail.ref)
-
-check-TypePackage: ptptest
-	@$(call TSTTITLE)
-	$(Q) ${TESTPLIC} $(srcdir)/testpass.idl -G TypePackage
-	$(Q) ./ptptest plic.out $(TESTPASS_AUXTESTS) > /dev/null ; $(call TSTRESULT)
+check-plic-format-TypePackage: ptptest $(srcdir)/testpass.idl
+	$(Q) ${TESTPLIC} $(srcdir)/testpass.idl -G TypePackage  ; eval "$$TSTDIAGNOSE" "'plic -G TypePackage'"
+	$(Q) ./ptptest plic.out $(TESTPASS_AUXTESTS) >/dev/null ; eval "$$TSTDIAGNOSE" "'ptptest aux-tests'"
 	$(Q) rm -f plic.out
+check: check-plic-format-TypePackage
 
-check-Rapicorn:
-	@$(call TSTTITLE)
-	$(Q) ${TESTPLIC} $(srcdir)/testpass.idl -G Rapicorn -o $(TSTOUT)
-	@$(call TSTCMP, $(srcdir)/testrapicorn.ref)
-
-check:	check-pass check-fail check-TypePackage check-Rapicorn
+check-plic-format-Rapicorn: $(srcdir)/testpass.idl
+	$(Q) ${TESTPLIC} $(srcdir)/testpass.idl -G Rapicorn -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testrapicorn.ref'" "'$(TSTOUT)'"
+check: check-plic-format-Rapicorn
