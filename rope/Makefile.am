@@ -65,66 +65,61 @@ CLEANFILES += xgen-py2cpy.py py2cpy.py
 
 # === TESTS ===
 # test PyStub
-EXTRA_DIST += testpystub.ref
-check-pystub:
-	@$(call TSTTITLE)
-	$(Q) ${PLICINT} -G $(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
-	@$(call TSTCMP, $(srcdir)/testpystub.ref)
-	@$(call TSTTITLE,check-pystub-syntax)
-	$(Q) $(PYTHON) -c "import py_compile; py_compile.compile ('$(srcdir)/testpystub.ref', 'testpystub.pyc')" && \
-	  $(PYTHON) $(srcdir)/testpystub.ref ; $(call TSTRESULT)
-EXTRA_DIST += PyStub.py
+EXTRA_DIST += testpystub.ref PyStub.py
 CLEANFILES += testpystub.pyc
-check-local: check-pystub
+check-PyStub-gen: $(srcdir)/testpystub.ref
+	$(Q) ${PLICINT} -G $(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testpystub.ref'"
+check-PyStub-syntax: $(srcdir)/testpystub.ref
+	$(Q) $(PYTHON) -c "import py_compile; py_compile.compile ('$(srcdir)/testpystub.ref', 'testpystub.pyc')" && \
+	  $(PYTHON) $(srcdir)/testpystub.ref ; eval "$$TSTDIAGNOSE"
+check-local: check-PyStub-gen check-PyStub-syntax
 # test CxxPyStub
-check-cxxpystub:
-	@$(call TSTTITLE)
-	$(Q) ${PLICINT} -G $(srcdir)/CxxPyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
-	@echo "static PLIC_UNUSED PyMethodDef dummy[] = { PLIC_PYSTUB_METHOD_DEFS(), { 0 } };" \
-	  >> $(TSTOUT)
-	@$(call TSTCMP, $(srcdir)/testcxxpystub.ref)
-	@$(call TSTTITLE,check-cxxpystub-syntax)
-	$(Q) cp $(srcdir)/testcxxpystub.ref testcxxpystub.cc
-	$(Q) $(CXXCOMPILE) testcxxpystub.cc -c ; $(call TSTRESULT)
-	$(Q) rm -f testcxxpystub.cc testcxxpystub.o
 EXTRA_DIST += CxxPyStub.py testcxxpystub.ref
-check-local: check-cxxpystub
+check-CxxPyStub-gen: $(srcdir)/testcxxpystub.ref
+	$(Q) ${PLICINT} -G $(srcdir)/CxxPyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) \
+	&& echo "static PLIC_UNUSED PyMethodDef dummy[] = { PLIC_PYSTUB_METHOD_DEFS(), { 0 } };" >>$(TSTOUT) \
+	; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testcxxpystub.ref'"
+check-CxxPyStub-syntax: $(srcdir)/testcxxpystub.ref
+	$(Q) cp $(srcdir)/testcxxpystub.ref testcxxpystub.cc
+	$(Q) $(CXXCOMPILE) testcxxpystub.cc -c ; eval "$$TSTDIAGNOSE"
+	$(Q) rm -f testcxxpystub.cc testcxxpystub.o
+check-local: check-CxxPyStub-gen check-CxxPyStub-syntax
 # test CxxCaller server and client
-check-cxxcaller:
-	@$(call TSTTITLE, check CxxCaller server generation)
+check-CxxCaller-server-gen: $(srcdir)/testcxxserver.ref
 	$(Q) ${PLICINT} -G $(srcdir)/CxxCaller -g iface-prefix=I_ -g serverhh -g servercc \
-	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
-	@$(call TSTCMP, $(srcdir)/testcxxserver.ref)
-	@$(call TSTTITLE, check CxxCaller client generation)
+	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testcxxserver.ref'"
+check-CxxCaller-client-gen: $(srcdir)/testcxxclient.ref
 	$(Q) ${PLICINT} -G $(srcdir)/CxxCaller -g iface-prefix=I_ -g clienthh -g clientcc \
-	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT)
-	@$(call TSTCMP, $(srcdir)/testcxxclient.ref)
-	@$(call TSTTITLE, check CxxCaller skeleton generation)
-	@echo -e "#include <rapicorn.hh>\n" > $(TSTOUT)
+	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testcxxclient.ref'"
+check-CxxCaller-skeleton-gen: $(srcdir)/testcxxskels.ref
+	$(Q) echo -e "#include <rapicorn.hh>\n" > $(TSTOUT)
 	$(Q) ${PLICINT} -G $(srcdir)/CxxCaller -g iface-prefix=I_ -g serverhh -g server-skel \
-	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT)
-	@$(call TSTCMP, $(srcdir)/testcxxskels.ref)
-	@$(call TSTTITLE, check CxxCaller server code)
+	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testcxxskels.ref'"
+check-CxxCaller-server-code: $(srcdir)/testcxxserver.ref
 	$(Q) cp $(srcdir)/testcxxserver.ref testcxxserver.cc
-	$(Q) $(CXXCOMPILE) testcxxserver.cc -c ; $(call TSTRESULT)
+	$(Q) $(CXXCOMPILE) testcxxserver.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxserver.cc testcxxserver.o
-	@$(call TSTTITLE, check CxxCaller client code)
+check-CxxCaller-client-code: $(srcdir)/testcxxclient.ref
 	$(Q) cp $(srcdir)/testcxxclient.ref testcxxclient.cc
-	$(Q) $(CXXCOMPILE) testcxxclient.cc -c ; $(call TSTRESULT)
+	$(Q) $(CXXCOMPILE) testcxxclient.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxclient.cc testcxxclient.o
-	@$(call TSTTITLE, check CxxCaller skeleton code)
+check-CxxCaller-skeleton-code: $(srcdir)/testcxxskels.ref
 	$(Q) cp $(srcdir)/testcxxskels.ref testcxxskels.cc
-	$(Q) $(CXXCOMPILE) testcxxskels.cc -c ; $(call TSTRESULT)
+	$(Q) $(CXXCOMPILE) testcxxskels.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxskels.cc testcxxskels.o
 EXTRA_DIST += CxxCaller.py testcxxserver.ref testcxxclient.ref testcxxskels.ref
-check-local: check-cxxcaller
+check-local: check-CxxCaller-server-gen check-CxxCaller-client-gen check-CxxCaller-skeleton-gen
+check-local: check-CxxCaller-server-code check-CxxCaller-client-code check-CxxCaller-skeleton-code
 # test rapicorn.idl with PLIC
 check-rapicorn-idl:
-	@$(call TSTTITLE)
-	$(Q) ${PLICINT} $(RAPICORNIDL) > /dev/null ; $(call TSTRESULT)
+	$(Q) ${PLICINT} $(RAPICORNIDL) > /dev/null ; eval "$$TSTDIAGNOSE"
 check-local: check-rapicorn-idl
 # test PyStub with rapicorn.idl
-check-pystub-for-rapicorn.idl:
-	@$(call TSTTITLE)
-	$(Q) ${PLICINT} -G $(srcdir)/PyStub $(RAPICORNIDL) | $(PYTHON) ; $(call TSTRESULT)
-check-local: check-pystub-for-rapicorn.idl
+check-PyStub-for-rapicorn.idl:
+	$(Q) ${PLICINT} -G $(srcdir)/PyStub $(RAPICORNIDL) | $(PYTHON) ; eval "$$TSTDIAGNOSE"
+check-local: check-PyStub-for-rapicorn.idl
