@@ -22,6 +22,98 @@
 namespace Rapicorn {
 namespace Test {
 
+static clockid_t bench_time_clockid = CLOCK_REALTIME;
+static double    bench_time_resolution = 0.000001;      // 1µs resolution assumed for gettimeofday
+
+Timer::Timer (double deadline_in_secs) :
+  m_deadline (deadline_in_secs), m_test_duration (0), m_n_runs (0)
+{
+#if defined (_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
+  static bool initialized = false;
+  if (once_enter (&initialized))
+    {
+      struct timespec tp = { 0, 0 };
+      // CLOCK_MONOTONIC_RAW cannot slew, but doesn't measure SI seconds accurately
+      // CLOCK_MONOTONIC may slew, but attempts to accurately measure SI seconds
+#ifdef CLOCK_MONOTONIC
+      if (bench_time_clockid == CLOCK_REALTIME && clock_getres (CLOCK_MONOTONIC, &tp) >= 0)
+        bench_time_resolution = tp.tv_sec + tp.tv_nsec / 1000000000.0, bench_time_clockid = CLOCK_MONOTONIC;
+#endif
+      // CLOCK_REALTIME may slew and jump
+      if (bench_time_clockid == CLOCK_REALTIME && clock_getres (bench_time_clockid, &tp) >= 0)
+        bench_time_resolution = tp.tv_sec + tp.tv_nsec / 1000000000.0, bench_time_clockid = CLOCK_REALTIME;
+      once_leave (&initialized, true);
+    }
+#endif // _POSIX_C_SOURCE
+}
+
+Timer::~Timer ()
+{}
+
+double
+Timer::bench_time ()
+{
+#if defined (_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
+  struct timespec tp = { 0, 0 };
+  if (ISLIKELY (clock_gettime (bench_time_clockid, &tp) >= 0))
+    {
+      double stamp = tp.tv_sec;
+      stamp += tp.tv_nsec / 1000000000.0;
+      return stamp;
+    }
+#endif // _POSIX_C_SOURCE
+  uint64 ustamp = timestamp_now();
+  return ustamp / 1000000.0;
+}
+
+int64
+Timer::loops_needed () const
+{
+  if (m_samples.size() < 7)
+    return m_n_runs + 1;        // force significant number of test runs
+  const double deadline = MAX (m_deadline == 0.0 ? 0.005 : m_deadline, bench_time_resolution * 10000.0);
+  if (m_test_duration > deadline * 0.5)
+    return 0;                   // time for testing exceeded
+  // we double the number of tests per run, to gain more accuracy: 0+1, 1+1, 3+1, 7+1, ...
+  return m_n_runs + 1;
+}
+
+void
+Timer::reset()
+{
+  m_samples.resize (0);
+  m_test_duration = 0;
+  m_n_runs = 0;
+}
+
+void
+Timer::submit (double elapsed,
+               int64  repetitions)
+{
+  m_test_duration += elapsed;
+  m_n_runs += repetitions;
+  if (elapsed >= bench_time_resolution * 100.0) // force error below 1%
+    m_samples.push_back (elapsed / repetitions);
+}
+
+double
+Timer::min_elapsed () const
+{
+  double m = DBL_MAX;
+  for (size_t i = 0; i < m_samples.size(); i++)
+    m = MIN (m, m_samples[i]);
+  return m;
+}
+
+double
+Timer::max_elapsed () const
+{
+  double m = 0;
+  for (size_t i = 0; i < m_samples.size(); i++)
+    m = MAX (m, m_samples[i]);
+  return m;
+}
+
 void
 test_output (int kind, const char *format, ...)
 {

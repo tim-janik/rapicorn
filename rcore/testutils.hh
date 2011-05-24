@@ -67,6 +67,52 @@ void    rapicorn_init_test    (int *argc, char **argv);
 
 namespace Test {
 
+/**
+ * Class for profiling benchmark tests.
+ * UseCase: Benchmarking function implementations, e.g. to compare sorting implementations.
+ */
+class Timer {
+  const double   m_deadline;
+  vector<double> m_samples;
+  double         m_test_duration;
+  int64          m_n_runs;
+  int64          loops_needed () const;
+  void           reset        ();
+  void           submit       (double elapsed, int64 repetitions);
+  static double  bench_time   ();
+public:
+  /// Create a Timer() instance, specifying an optional upper bound for test durations.
+  explicit       Timer        (double deadline_in_secs = 0);
+  virtual       ~Timer        ();
+  int64          n_runs       () const { return m_n_runs; }             ///< Number of benchmark runs executed
+  double         test_elapsed () const { return m_test_duration; }      ///< Seconds spent in benchmark()
+  double         min_elapsed  () const;         ///< Minimum time benchmarked for a @a callee() call.
+  double         max_elapsed  () const;         ///< Maximum time benchmarked for a @a callee() call.
+  template<typename Callee>
+  double         benchmark    (Callee callee);
+};
+
+/**
+ * @param callee        A callable function or object.
+ * Method to benchmark the execution time of @a callee.
+ * @returns Minimum runtime in seconds,
+ */
+template<typename Callee> double
+Timer::benchmark (Callee callee)
+{
+  reset();
+  for (int64 runs = loops_needed(); runs; runs = loops_needed())
+    {
+      int64 n = runs;
+      const double start = bench_time();
+      while (RAPICORN_LIKELY (n--))
+        callee();
+      const double stop = bench_time();
+      submit (stop - start, runs);
+    }
+  return min_elapsed();
+}
+
 /* test maintenance */
 int     run             (void);
 bool    verbose         (void);
