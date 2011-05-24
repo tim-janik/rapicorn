@@ -50,16 +50,17 @@ pyutilsdir     = $(libdir)/${PLICV}/pyutils
 plicbackends   = PrettyDump.py TypePackage.py Rapicorn.py GType.py
 pyutils_PYTHON = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${plicbackends} PlicTypePackage.cc
 
-# tests
-check-plic-intern:
-	@$(call TSTTITLE, test-cc-parser)
-	$(Q) ${PLICINT} --cc-type-package-parser | grep -q struct ; $(call TSTRESULT)
-	@$(call TSTTITLE, test-formats)
-	$(Q) ${PLICINT} --list-formats | grep -q PLIC ; $(call TSTRESULT)
-check-local: check-plic-intern
+### plic-intern tests
+check-plic-intern-cc-type-package-parser:
+	$(Q) ${PLICINT} --cc-type-package-parser | grep -q struct ; eval "$$TSTDIAGNOSE"
+check-local: check-plic-intern-cc-type-package-parser
+check-plic-intern-list-formats:
+	$(Q) ${PLICINT} --list-formats | grep -q PLIC ; eval "$$TSTDIAGNOSE"
+check-local: check-plic-intern-list-formats
 # post-install tests
-installcheck-local:
-	$(Q) ${PLICV} --cc-type-package-parser | grep -q struct
+bin-plic-cc-type-package-parser:
+	$(Q) ${PLICV} --cc-type-package-parser | grep -q struct ; eval "$$TSTDIAGNOSE"
+installcheck-local: bin-plic-cc-type-package-parser
 
 # install/uninstall a "plic" link to "plic-PLIC_VERSION"
 install-exec-hook:
