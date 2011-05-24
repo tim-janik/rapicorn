@@ -149,7 +149,7 @@ test_output (int kind, const char *format, ...)
       sout = ensure_newline (msg);
       break;
     case 3:                     // test program title
-      sout = "RUN:  " + ensure_newline (msg);
+      sout = "START:   " + ensure_newline (msg);
       break;
     case 3 + VERBOSE_TAG:       // test program title
       bar = "### ** +--" + String (msg.size(), '-') + "--+ ** ###";
