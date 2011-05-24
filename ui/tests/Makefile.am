@@ -51,13 +51,13 @@ factory_LDADD      = $(LDADDS)
 XML_FILES         += factory.xml
 
 SINFEX=./sinfextest --shell
-sinfex-expressions:
-	@$(call TSTTITLE)
-	$(Q) egrep -v '^[[:space:]]*(#|$$)' < $(srcdir)/expressions.txt > $(TSTTMP)
-	$(Q) $(X11TEST_SERVER) && \
+sinfex-expressions: $(srcdir)/expressions.ref
+	$(Q) egrep -v '^[[:space:]]*(#|$$)' < $(srcdir)/expressions.txt > $(TSTTMP) \
+	&& $(X11TEST_SERVER) && \
 	  COLUMNS=9999 $(SINFEX) < $(TSTTMP) > $(TSTOUT) \
-	                 $(XLIBSTDERREXTFIX)
-	@$(call TSTCMP, $(srcdir)/expressions.ref)
+	                 $(XLIBSTDERREXTFIX) \
+	; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/expressions.ref'" "'$(TSTOUT)'"
 	$(Q) rm -f $(TSTTMP)
 EXTRA_DIST += expressions.txt expressions.ref
 check-am: sinfex-expressions

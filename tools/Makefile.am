@@ -16,7 +16,6 @@ rapidrun_LDADD   = $(LDADDS)
 
 # check some options
 check-rapidrun-basics:
-	@$(call TSTTITLE, Simple rapidrun VSlider test)
-	$(Q) ./rapidrun --list $(top_srcdir)/ui/foundation.xml | grep -q VSlider; \
-	  $(call TSTRESULT)
+	$(Q) ./rapidrun --list $(top_srcdir)/ui/foundation.xml | grep -q VSlider \
+	; eval "$$TSTDIAGNOSE" "'Simple rapidrun VSlider test'"
 check-am: check-rapidrun-basics
