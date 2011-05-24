@@ -175,41 +175,10 @@ export TSTVERIFY = tstverify() { \
 	printf '  CMPLOG %-64s%s\n' "$${3:-$$MAKE_TARGET_FILE}:" "$${FAILOK:$$(($$_e?0:6)):6}" ; \
 	test $$_e = 0 || { diff -up $${1:-$(TSTREF)} $${2:-$(TSTOUT)} ; exit $$_e ; } ; rm -f $${2:-$(TSTOUT)} ; \
 } ; tstverify
-# $(call TSTTITLE, [TESTNAME]) - print test title
-TSTTITLE= printf '%s%-70s '$(or $(Q:@=''),'\n') $(if $(Q),'  ', 'TEST: ') "$(strip $(or $(1), $(@F))):"
 # $(call TSTOUT, [postfix]) - test output filename
 TSTOUT = $(strip xtst$(strip $(1))-$(@F).out)
 # $(call TSTTMP, [postfix]) - temporary test filename
 TSTTMP = $(strip xtst$(strip $(1))-$(@F).tmp)
-# $(call TSTREF) - test reference filename
-TSTREF = $(strip $(@F).ref)
-# $(call TSTRESULT, [exitcode]) - print test result (from shell exit code)
-TSTRESULT = { _e=$(or $(1), $$?);$(call TSTRESULT_MSG, $$_e);[ $$_e = 0 ]||exit $$_e ;}
-TSTRESULT_MSG = echo $${FAILOK:$$(($(or $(1), $$?)?0:6)):6}
-export FAILOK = FAIL  OK
-# $(call TSTCMP, [TSTREFERENCE], [TSTOUT]) - TSTCMP_KEEPOUT + TSTOUT cleanup
-TSTCMP = $(strip	\
-	$(TSTCMP_KEEPOUT) ; \
-	rm -f $(or $(2), $(call TSTOUT)) \
-)
-# $(call TSTCMP_KEEPOUT, [TSTREFERENCE], [TSTOUT]) - TSTDIFF + forced updates
-TSTCMP_KEEPOUT = $(strip	\
-	${FORCECHECKUPDATE} && { \
-	  cp $(if $(Q),, -v) $(or $(2), $(call TSTOUT)) $(or $(1), $(call TSTREF)) ; \
-	  FAILOK="FAIL "" FORCED" ; \
-	} ; \
-	$(TSTDIFF) \
-)
-# $(call TSTDIFF, [TSTREFERENCE], [TSTOUT]) - print test result diff, abort
-TSTDIFF = $(strip	\
-	cmp --quiet $(or $(1), $(call TSTREF)) $(or $(2), $(call TSTOUT)) ; \
-	_exitcode=$$? ; \
-	$(call TSTRESULT_MSG, $$_exitcode) ; \
-	test $$_exitcode = 0 || { \
-	  diff -up $(or $(1), $(call TSTREF)) $(or $(2), $(call TSTOUT)) ; \
-	  exit 1 ; \
-	} \
-)
 
 # === force-check-update ===
 force-check-update:
