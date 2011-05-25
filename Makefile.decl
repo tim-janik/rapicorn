@@ -168,13 +168,17 @@ force-check-update:
 # === report ===
 .PHONY: report
 report: all
-	@export REPORTFILE="$(REPORTFILE)"			\
-	&& [ -z "$$REPORTFILE" ]				\
-	&& export REPORTFILE="$(shell pwd)/report.out" ;	\
-	( true 							\
-	  && echo -n "#TREPSTART: " && date --iso-8601=seconds	\
-	  && $(MAKE) $(AM_MAKEFLAGS) check slowcheck		\
-	  && echo -n "#TREPDONE: "  && date --iso-8601=seconds	\
+	@export   REPORTFILE="$(REPORTFILE)" && [ -z "$$REPORTFILE" ]		\
+	&& export REPORTFILE="$(shell pwd)/report.out"				\
+	; (  echo -n    "#TSTREPORT: install: "	     && date --iso-8601=seconds	\
+	  && $(MAKE) $(AM_MAKEFLAGS) install 					\
+	  && echo -n    "#TSTREPORT: check: "	     && date --iso-8601=seconds	\
+	  && $(MAKE) $(AM_MAKEFLAGS) check 					\
+	  && echo -n    "#TSTREPORT: installcheck: " && date --iso-8601=seconds	\
+	  && $(MAKE) $(AM_MAKEFLAGS) installcheck				\
+	  && echo -n    "#TSTREPORT: slowcheck: "    && date --iso-8601=seconds	\
+	  && $(MAKE) $(AM_MAKEFLAGS) slowcheck					\
+	  && echo -n    "#TSTREPORT: done: "	     && date --iso-8601=seconds	\
 	) 2>&1 | tee "$$REPORTFILE"
 
 
