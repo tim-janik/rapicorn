@@ -88,13 +88,15 @@ TESTS=
 
 # === TEST_PROGS ===
 TEST_PROGS =
-.PHONY: check-TEST_PROGS
-check-TEST_PROGS:
-	@$(X11TEST_SERVER) && \
-	  for tst in $(TEST_PROGS) ; do \
-	    ./$$tst ; _e=$$?; \
-	    [ $$_e = 0 ] || { echo "FAILED($$_e): $$tst" ; exit $$_e; }; \
-	  done
+.PHONY: check-TEST_PROGS $(patsubst %, parallel_check--%, $(TEST_PROGS))
+check-TEST_PROGS:        $(patsubst %, parallel_check--%, $(TEST_PROGS))
+define parallel_check_TEMPLATE
+parallel_check--$(1): $(1)
+	@$$(X11TEST_SERVER) \
+	&& ./$(1) ; _e=$$$$?; \
+	  [ $$$$_e = 0 ] || { echo "FAILED($$$$_e): $(1)" ; exit $$$$_e; }
+endef
+$(foreach PRG,$(TEST_PROGS),$(eval $(call parallel_check_TEMPLATE,$(PRG))))
 check: check-TEST_PROGS
 
 # === LOGTEST_PROGS ===
