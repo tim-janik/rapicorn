@@ -88,31 +88,31 @@ TESTS=
 
 # === TEST_PROGS ===
 TEST_PROGS =
-.PHONY: check-TEST_PROGS $(patsubst %, parallel_check--%, $(TEST_PROGS))
-check-TEST_PROGS:        $(patsubst %, parallel_check--%, $(TEST_PROGS))
-define parallel_check_TEMPLATE
-parallel_check--$(1): $(1)
+define check_parallel_TEMPLATE
+.PHONY: check_parallel--$(1)
+check_parallel--$(1): $(1)
 	@$$(X11TEST_SERVER) \
 	&& ./$(1) ; _e=$$$$?; \
 	  [ $$$$_e = 0 ] || { echo "FAILED($$$$_e): $(1)" ; exit $$$$_e; }
+check: check_parallel--$(1)
 endef
-$(foreach PRG,$(TEST_PROGS),$(eval $(call parallel_check_TEMPLATE,$(PRG))))
-check: check-TEST_PROGS
+$(foreach PRG,$(TEST_PROGS),$(eval $(call check_parallel_TEMPLATE,$(PRG))))
 
 # === LOGTEST_PROGS ===
 LOGTEST_PROGS =
-.PHONY: check-LOGTEST_PROGS
-check-LOGTEST_PROGS:
-	@$(X11TEST_SERVER) && \
-	  for tst in $(LOGTEST_PROGS) ; do \
-	    tstout="$$tst.log" ; \
-	    ./$$tst >"$$tstout" 2>&1 ; eval "$$TSTDIAGNOSE_LOGTEST" "'$$tst'"; \
-	    ${FORCECHECKUPDATE} || { ar -xo $(srcdir)/logtests.dat "./$$tst.ref" ; \
-	      test -e "./$$tst.ref" || touch "./$$tst.ref" ; } ; \
-	    eval "$$TSTVERIFY" "'./$$tst.ref'" "'$$tstout'" "'$$tst'" ; \
-	    ${FORCECHECKUPDATE} && ar -r $(srcdir)/logtests.dat "./$$tst.ref" ; rm -f "./$$tst.ref" ; \
-	  done
-check: check-LOGTEST_PROGS
+define check_logtest_TEMPLATE
+.PHONY: check_logtest--$(1)
+check_logtest--$(1): $(1)
+	@$$(X11TEST_SERVER) \
+	&& tstout="$(1).log" \
+	&& ./$(1) >"$$$$tstout" 2>&1 ; eval "$$$$TSTDIAGNOSE_LOGTEST" "'$(1)'" \
+	; $${FORCECHECKUPDATE} || { ar -xo $$(srcdir)/logtests.dat "./$(1).ref" \
+	  ; test -e "./$(1).ref" || touch "./$(1).ref" ; } \
+	; eval "$$$$TSTVERIFY" "'./$(1).ref'" "'$$$$tstout'" "'$(1)'" \
+	; $${FORCECHECKUPDATE} && ar -r $$(srcdir)/logtests.dat "./$(1).ref" ; rm -f "./$(1).ref"
+check: check_logtest--$(1)
+endef
+$(foreach PRG,$(LOGTEST_PROGS),$(eval $(call check_logtest_TEMPLATE,$(PRG))))
 
 # === slowcheck ===
 # recursive rule supported by all Makefiles to run time consuming checks
