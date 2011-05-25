@@ -115,8 +115,6 @@ rapicorn_parse_settings_and_args (InitValue *value,
           global_init_settings.test_quick = init_value_bool (value);
         else if (strcmp (value->value_name, "test-slow") == 0)
           global_init_settings.test_slow = init_value_bool (value);
-        else if (strcmp (value->value_name, "test-perf") == 0)
-          global_init_settings.test_perf = init_value_bool (value);
         else if (strcmp (value->value_name, "test-verbose") == 0)
           global_init_settings.test_verbose = init_value_bool (value);
         else if (strcmp (value->value_name, "rapicorn-test-parse-args") == 0)
@@ -144,11 +142,6 @@ rapicorn_parse_settings_and_args (InitValue *value,
           global_init_settings.test_slow = true;
           argv[i] = NULL;
         }
-      else if (parse_test_args && strcmp ("--test-perf", argv[i]) == 0)
-        {
-          global_init_settings.test_perf = true;
-          argv[i] = NULL;
-        }
       else if (parse_test_args && strcmp ("--test-verbose", argv[i]) == 0)
         {
           global_init_settings.test_verbose = true;
@@ -164,7 +157,7 @@ rapicorn_parse_settings_and_args (InitValue *value,
         }
     }
   /* fallback handling for tests */
-  if (parse_test_args && !global_init_settings.test_quick && !global_init_settings.test_slow && !global_init_settings.test_perf)
+  if (parse_test_args && !global_init_settings.test_quick && !global_init_settings.test_slow)
     global_init_settings.test_quick = true;
   /* collapse args */
   uint e = 1;

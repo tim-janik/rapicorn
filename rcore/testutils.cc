@@ -270,12 +270,6 @@ thorough (void)
   return init_settings().test_slow;
 }
 
-bool
-perf (void)
-{
-  return init_settings().test_perf;
-}
-
 char
 rand_bit (void)
 {
@@ -339,9 +333,6 @@ rapicorn_init_test (int   *argc,
   g_log_set_always_fatal ((GLogLevelFlags) (flags | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
   Logging::override_config ("fatal-warnings");
   CPUInfo ci = cpu_info();
-  if (init_settings().test_perf)
-    g_printerr ("PERF: %s\n", g_get_prgname());
-  else
-    TTITLE ("%s", argv[0]);
+  TTITLE ("%s", argv[0]);
 }
 } // Rapicorn

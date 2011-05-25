@@ -27,7 +27,6 @@ TEST_PROGS        += performance
 performance_SOURCES= performance.cc
 performance_LDADD  = $(LDADDS)
 TEST_PROGS        += threads
-PERFTESTS         += threads
 threads_SOURCES    = threads.cc
 threads_LDADD      = $(LDADDS)
 TEST_PROGS        += signal

@@ -120,7 +120,6 @@ bool    verbose         (void);
 bool    quick           (void);
 bool    slow            (void);
 bool    thorough        (void);
-bool    perf            (void);
 
 void    test_output     (int kind, const char *format, ...) RAPICORN_PRINTF (2, 3);
 

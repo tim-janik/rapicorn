@@ -134,29 +134,8 @@ slowcheck: check_slowtest--$(1)
 endef
 $(foreach PRG,$(SLOWTEST_PROGS),$(eval $(call check_slowtest_TEMPLATE,$(PRG))))
 
-# === perf ===
-# recursive rule supported by all Makefiles to run performance tests
-.PHONY: perf perf-recursive perf-PERFTESTS
-perf: perf-recursive perf-PERFTESTS
-perf-recursive:
-	@for subdir in $(SUBDIRS) ; do				\
-	  test "$$subdir" = '.' ||				\
-	    $(MAKE) -C "$$subdir" $(AM_MAKEFLAGS) perf ||	\
-	    exit 1 ;						\
-	done
-perf-PERFTESTS:
-	@$(X11TEST_SERVER) && \
-	  for tst in $(PERFTESTS) ; do \
-	    ./$$tst --test-perf && echo "PASS: $$tst" || exit 1 ;	\
-	  done
-	@MESSAGETEXT="All $(words $(PERFTESTS)) perf tests passed"	\
-	&& [ 0 -lt $(words $(PERFTESTS)) ]				\
-	&& echo $$MESSAGETEXT | sed 's/./=/g' && echo $$MESSAGETEXT	\
-	&& echo $$MESSAGETEXT | sed 's/./=/g' || true
-PERFTESTS=
-
 # === ALLTESTS ===
-ALLTESTS = $(TESTS) $(TEST_PROGS) $(LOGTEST_PROGS) $(SLOWTEST_PROGS) $(PERFTESTS) # used in noinst_PROGRAMS
+ALLTESTS = $(TESTS) $(TEST_PROGS) $(LOGTEST_PROGS) $(SLOWTEST_PROGS) # used in noinst_PROGRAMS
 
 # === Test-rule macros ===
 FORCECHECKUPDATE = false
@@ -194,7 +173,7 @@ report: all
 	&& export REPORTFILE="$(shell pwd)/report.out" ;	\
 	( true 							\
 	  && echo -n "#TREPSTART: " && date --iso-8601=seconds	\
-	  && $(MAKE) $(AM_MAKEFLAGS) check slowcheck perf	\
+	  && $(MAKE) $(AM_MAKEFLAGS) check slowcheck		\
 	  && echo -n "#TREPDONE: "  && date --iso-8601=seconds	\
 	) 2>&1 | tee "$$REPORTFILE"
 
