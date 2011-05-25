@@ -91,7 +91,7 @@ TEST_PROGS =
 define check_parallel_TEMPLATE
 .PHONY: check_parallel--$(1)
 check_parallel--$(1): $(1)
-	@$$(X11TEST_SERVER) \
+	$$(Q) $$(X11TEST_SERVER) \
 	&& ./$(1) ; _e=$$$$?; \
 	  [ $$$$_e = 0 ] || { echo "FAILED($$$$_e): $(1)" ; exit $$$$_e; }
 check: check_parallel--$(1)
@@ -103,7 +103,7 @@ LOGTEST_PROGS =
 define check_logtest_TEMPLATE
 .PHONY: check_logtest--$(1)
 check_logtest--$(1): $(1)
-	@$$(X11TEST_SERVER) \
+	$$(Q) $$(X11TEST_SERVER) \
 	&& tstout="$(1).log" \
 	&& ./$(1) >"$$$$tstout" 2>&1 ; eval "$$$$TSTDIAGNOSE_LOGTEST" "'$(1)'" \
 	; $${FORCECHECKUPDATE} || { ar -xo $$(srcdir)/logtests.dat "./$(1).ref" \
@@ -114,26 +114,25 @@ check: check_logtest--$(1)
 endef
 $(foreach PRG,$(LOGTEST_PROGS),$(eval $(call check_logtest_TEMPLATE,$(PRG))))
 
-# === slowcheck ===
-# recursive rule supported by all Makefiles to run time consuming checks
-.PHONY: slowcheck slowcheck-recursive slowcheck-SLOWTESTS
-slowcheck: slowcheck-recursive slowcheck-SLOWTESTS
-slowcheck-recursive:
-	@for subdir in $(SUBDIRS) ; do				\
-	  test "$$subdir" = '.' ||				\
-	    $(MAKE) -C "$$subdir" $(AM_MAKEFLAGS) slowcheck ||	\
-	    exit 1 ;						\
+# === SLOWTEST_PROGS ===
+SLOWTEST_PROGS =
+slowcheck: slowcheck-recursive
+.PHONY: slowcheck-recursive slowcheck
+slowcheck-recursive:		# rule to run slowcheck recursively in subdirs
+	@for subdir in $(SUBDIRS) ; do                          \
+	  test "$$subdir" = '.' ||                              \
+	    $(MAKE) -C "$$subdir" $(AM_MAKEFLAGS) slowcheck ||  \
+	    exit $$? ;                                          \
 	done
-slowcheck-SLOWTESTS:
-	@$(X11TEST_SERVER) && \
-	  for tst in $(SLOWTESTS) ; do \
-	    ./$$tst --test-slow && echo "PASS: $$tst" || exit 1 ;	\
-	  done
-	@MESSAGETEXT="All $(words $(SLOWTESTS)) slow tests passed"	\
-	&& [ 0 -lt $(words $(SLOWTESTS)) ]				\
-	&& echo $$MESSAGETEXT | sed 's/./=/g' && echo $$MESSAGETEXT	\
-	&& echo $$MESSAGETEXT | sed 's/./=/g' || true
-SLOWTESTS=
+define check_slowtest_TEMPLATE
+.PHONY: check_slowtest--$(1)
+check_slowtest--$(1): $(1)
+	$$(Q) $$(X11TEST_SERVER) \
+	&& ./$(1) --test-slow ; _e=$$$$?; \
+	  [ $$$$_e = 0 ] || { echo "FAILED($$$$_e): $(1)" ; exit $$$$_e; }
+slowcheck: check_slowtest--$(1)
+endef
+$(foreach PRG,$(SLOWTEST_PROGS),$(eval $(call check_slowtest_TEMPLATE,$(PRG))))
 
 # === perf ===
 # recursive rule supported by all Makefiles to run performance tests
@@ -157,7 +156,7 @@ perf-PERFTESTS:
 PERFTESTS=
 
 # === ALLTESTS ===
-ALLTESTS = $(TESTS) $(SLOWTESTS) $(PERFTESTS) # used in noinst_PROGRAMS
+ALLTESTS = $(TESTS) $(TEST_PROGS) $(LOGTEST_PROGS) $(SLOWTEST_PROGS) $(PERFTESTS) # used in noinst_PROGRAMS
 
 # === Test-rule macros ===
 FORCECHECKUPDATE = false
