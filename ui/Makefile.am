@@ -69,6 +69,8 @@ librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 ) # set libtool version and export symbols for resolving
 librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(strip		\
 	$(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.o \
+	$(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.o \
+	$(LIBXML_LIBS) \
 	$(RAPICORN_GUI_LIBS) -lm \
 ) # -lfreetype -lfontconfig
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES)
