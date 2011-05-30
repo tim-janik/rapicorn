@@ -8,7 +8,7 @@ DEFS		 = -DRAPICORN_INTERNALS $(RAPICORN_GUI_CFLAGS) -DRAPICORN_LOG_DOMAIN=\"RAP
 
 # === Source Files ===
 rapicorn_public_headers = $(strip 	\
-	utilities.hh	events.hh	application.hh	cmdlib.hh	\
+	utilities.hh	events.hh	application.hh	cmdlib.hh	coffer.hh		\
 	primitives.hh	region.hh	loop.hh		viewp0rt.hh	heritage.hh		\
 	properties.hh	commands.hh	rope.hh		painter.hh	compath.hh		\
 	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
@@ -19,7 +19,7 @@ rapicorn_public_headers = $(strip 	\
 	ui.hh		keycodes.hh	$(rapicorn_impl_headers)	\
 )
 rapicorn_cc_sources = $(sort 		\
-	utilities.cc	events.cc	application.cc	cmdlib.cc	\
+	utilities.cc	events.cc	application.cc	cmdlib.cc	coffer.cc		\
 	primitives.cc	region.cc	loop.cc		viewp0rt.cc	heritage.cc		\
 	properties.cc	commands.cc	rope.cc		painter.cc	compath.cc		\
 	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\
