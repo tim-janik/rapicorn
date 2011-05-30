@@ -199,7 +199,7 @@ test_convert_svg2png()
 {
   Svg::Library::add_library ("sample1.svg");
   Svg::Element e = Svg::Library::lookup_element ("#test-box");
-  assert (!e.none());
+  assert (e);
   Svg::Allocation a = e.allocation();
   assert (a.width && a.height);
   a.width *= 9;

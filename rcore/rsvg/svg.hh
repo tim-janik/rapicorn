@@ -24,6 +24,8 @@ struct Allocation {
 
 class ElementImpl;
 class Element {
+  typedef bool (Element::*_unspecified_bool_type) () const; // non-numeric operator bool() result
+  static inline _unspecified_bool_type _unspecified_bool_true () { return &Element::is_null; }
 protected:
   ElementImpl  *impl;
 public:
@@ -31,14 +33,17 @@ public:
   /*Copy*/      Element         (const Element&);
   /*Con*/       Element         ();
   /*Des*/      ~Element         ();
-  bool          null            () const { return !impl; }
-  bool          none            () const { return null(); }
   Info          info            ();
   Allocation    allocation      ();
   Allocation    allocation      (Allocation &_containee);
   Allocation    containee       ();
   Allocation    containee       (Allocation &_resized);
   bool          render          (cairo_surface_t *surface, const Allocation &area);
+  // none type and boolean evaluation
+  static const
+  Element&      none            ();
+  bool          is_null         () const { return !impl; }
+  inline operator _unspecified_bool_type () const { return is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class Library {

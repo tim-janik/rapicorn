@@ -30,6 +30,13 @@ Allocation::Allocation (double _x, double _y, double w, double h) :
   x (_x), y (_y), width (w), height (h)
 {}
 
+const Element&
+Element::none ()
+{
+  static const Element _none;
+  return _none;
+}
+
 Element&
 Element::operator= (const Element &src)
 {
