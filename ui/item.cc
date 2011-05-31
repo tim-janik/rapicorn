@@ -972,12 +972,16 @@ Item::invalidate_parent ()
 void
 Item::invalidate()
 {
-  if (!test_all_flags (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT))
+  const bool widget_state_invalidation = !test_all_flags (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
+  if (widget_state_invalidation)
     {
       expose();
       change_flags_silently (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT, true); /* skip notification */
-      if (!finalizing())
-        sig_invalidate.emit();
+    }
+  if (!finalizing())
+    sig_invalidate.emit();
+  if (widget_state_invalidation)
+    {
       invalidate_parent(); /* need new size-request on parent */
       SizeGroup::invalidate_item (*this);
     }
