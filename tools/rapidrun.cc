@@ -15,6 +15,8 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include <rapicorn.hh>
+#include "../rcore/rsvg/svg.hh"       // FIXME
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -39,6 +41,7 @@ help_usage (bool usage_error)
   printout ("\n");
   printout ("Options:\n");
   printout ("  --parse-test                  Parse GuiFile.xml and exit.\n");
+  printout ("  -l <uilib>                    Load ''uilib'' upon startup.\n");
   printout ("  -x                            Enable auto-exit after first expose.\n");
   printout ("  --list                        List parsed definitions.\n");
   printout ("  --test-dump                   Dump test stream after first expose.\n");
@@ -71,6 +74,21 @@ parse_args (int    *argc_p,
       else if (strcmp (argv[i], "-x") == 0)
         {
           auto_exit = true;
+          argv[i] = NULL;
+        }
+      else if (strcmp (argv[i], "-l") == 0 ||
+               strncmp ("-l=", argv[i], 2) == 0)
+        {
+          const char *v = NULL, *equal = argv[i] + 2;
+          if (*equal == '=')
+            v = equal + 1;
+          else if (i + 1 < argc)
+            {
+              argv[i++] = NULL;
+              v = argv[i];
+            }
+          if (v)
+            Svg::Library::add_library (v);
           argv[i] = NULL;
         }
       else if (strcmp (argv[i], "--list") == 0)
