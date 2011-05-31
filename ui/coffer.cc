@@ -3,6 +3,13 @@
 #include "containerimpl.hh"
 #include "factory.hh"
 #include "../rcore/rsvg/svg.hh"
+#include <string.h>
+
+#define CHECK_CAIRO_STATUS(status)      do {    \
+  cairo_status_t ___s = (status);               \
+  if (___s != CAIRO_STATUS_SUCCESS)             \
+    RAPICORN_LOG (DIAG, "%s: %s", #status, cairo_status_to_string (___s)); \
+  } while (0)
 
 namespace Rapicorn {
 
@@ -14,6 +21,7 @@ protected:
   virtual void          size_request    (Requisition &requisition);
   virtual void          size_allocate   (Allocation area);
   virtual void          do_invalidate   ();
+  virtual void          render          (Display &display);
 public:
   explicit              CofferImpl      ();
   virtual              ~CofferImpl      ();
@@ -42,14 +50,33 @@ CofferImpl::~CofferImpl()
 {}
 
 void
+CofferImpl::do_invalidate()
+{
+  if (m_element.empty())
+    {
+      m_sel = m_sel.none();
+      return;
+    }
+  Svg::Element e = Svg::Library::lookup_element (m_element);
+  if (e.is_null())
+    return;
+  m_sel = e;
+}
+
+void
 CofferImpl::size_request (Requisition &requisition)
 {
   SingleContainerImpl::size_request (requisition);
-  int thickness = 2; // FIXME: use real border marks
-  if (!m_overlap_child)
+  if (m_sel)
     {
-      requisition.width += 2 * thickness;
-      requisition.height += 2 * thickness;
+      requisition.width = m_sel.allocation().width;
+      requisition.height = m_sel.allocation().height;
+      int thickness = 2; // FIXME: use real border marks
+      if (!m_overlap_child)
+        {
+          requisition.width += 2 * thickness;
+          requisition.height += 2 * thickness;
+        }
     }
 }
 
@@ -70,17 +97,36 @@ CofferImpl::size_allocate (Allocation area)
 }
 
 void
-CofferImpl::do_invalidate()
+CofferImpl::render (Display &display)
 {
-  if (m_element.empty())
+  Allocation area = allocation();
+  if (m_sel)
     {
-      m_sel = m_sel.none();
-      return;
+      Svg::Allocation a = m_sel.allocation();
+      uint8 *pixels = new uint8[int (a.width * a.height * 4)];
+      memset (pixels, 0, a.width * a.height * 4);
+      cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32, a.width, a.height, 4 * a.width);
+      CHECK_CAIRO_STATUS (cairo_surface_status (surface));
+      bool rendered = m_sel.render (surface, Svg::Allocation (0, 0, a.width, a.height));
+      if (rendered)
+        {
+          cairo_t *cr = display.create_cairo ();
+          cairo_set_source_surface (cr, surface, 0, 0); // (x,y) are set in the matrix below
+          cairo_matrix_t matrix;
+          cairo_matrix_init_identity (&matrix);
+          double sx = a.width / area.width;
+          double sy = a.height / area.height;
+          cairo_matrix_translate (&matrix, -area.x * sx, (area.y + area.height) * sy); // -x, y + height
+          cairo_matrix_scale (&matrix, sx, -sy);
+          cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
+          cairo_paint (cr);
+        }
+      else
+        warning ("Failed to render SVG element: %s", m_element.c_str());
+      cairo_surface_destroy (surface);
+      delete[] pixels;
     }
-  Svg::Element e = Svg::Library::lookup_element (m_element);
-  if (e.is_null())
-    return;
-  m_sel = e;
+  SingleContainerImpl::render (display);
 }
 
 static const ItemFactory<CofferImpl> coffer_factory ("Rapicorn::Factory::Coffer");
