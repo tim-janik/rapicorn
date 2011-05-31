@@ -59,6 +59,9 @@
     </Alignment>
   </def:DefaultButton>
 
+  <!-- Coffer -->
+  <def:Coffer inherit="Rapicorn::Factory::Coffer" />
+
   <!-- DotGrid -->
   <def:DotGrid inherit="Rapicorn::Factory::DotGrid"/>
 
