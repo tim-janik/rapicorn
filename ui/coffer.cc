@@ -102,25 +102,22 @@ CofferImpl::render (Display &display)
   Allocation area = allocation();
   if (m_sel)
     {
-      Svg::Allocation a = m_sel.allocation();
-      uint8 *pixels = new uint8[int (a.width * a.height * 4)];
-      memset (pixels, 0, a.width * a.height * 4);
-      cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32, a.width, a.height, 4 * a.width);
+      const int aw = area.width, ah = area.height;
+      uint8 *pixels = new uint8[int (aw * ah * 4)];
+      memset (pixels, 0, aw * ah * 4);
+      cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32, aw, ah, 4 * aw);
       CHECK_CAIRO_STATUS (cairo_surface_status (surface));
-      bool rendered = m_sel.render (surface, Svg::Allocation (0, 0, a.width, a.height));
+      bool rendered = m_sel.render (surface, Svg::Allocation (0, 0, aw, ah));
       if (rendered)
         {
           cairo_t *cr = display.create_cairo ();
           cairo_set_source_surface (cr, surface, 0, 0); // (x,y) are set in the matrix below
           cairo_matrix_t matrix;
           cairo_matrix_init_identity (&matrix);
-          double sx = a.width / area.width;
-          double sy = a.height / area.height;
-          cairo_matrix_translate (&matrix, -area.x * sx, (area.y + area.height) * sy); // -x, y + height
-          cairo_matrix_scale (&matrix, sx, -sy);
+          cairo_matrix_translate (&matrix, -area.x, (area.y + area.height)); // -x, y + height
+          cairo_matrix_scale (&matrix, 1, -1);
           cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
           cairo_paint (cr);
-          printerr ("%s: scale: %g %g\n", STRFUNC, 1.0 / sx, 1.0 / sy);
         }
       else
         critical ("Failed to render SVG element: %s", m_element.c_str());
