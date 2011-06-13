@@ -52,9 +52,9 @@ main (int   argc,
   app.init_with_x11 (&argc, &argv, "FactoryTest");
 
   /* find and load GUI definitions relative to argv[0] */
-  String factory_xml = Rapicorn::Path::join (SRCDIR, "factory.xml");
-  app.auto_load ("RapicornTest",        // namespace domain,
-                 factory_xml,           // GUI file name
+  String factory_xml = "factory.xml";
+  app.auto_load ("RapicornTest",                        // namespace domain,
+                 Path::vpath_find (factory_xml),        // GUI file name
                  argv[0]);
   Root *root;
   Item *item;

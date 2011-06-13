@@ -5,10 +5,10 @@
 #include "../rcore/rsvg/svg.hh"
 #include <string.h>
 
-#define CHECK_CAIRO_STATUS(status)      do {    \
-  cairo_status_t ___s = (status);               \
-  if (___s != CAIRO_STATUS_SUCCESS)             \
-    RAPICORN_LOG (DIAG, "%s: %s", #status, cairo_status_to_string (___s)); \
+#define CHECK_CAIRO_STATUS(status)      do { \
+  cairo_status_t ___s = (status);            \
+  if (___s != CAIRO_STATUS_SUCCESS)          \
+    DEBUG ("%s: %s", cairo_status_to_string (___s), #status);   \
   } while (0)
 
 namespace Rapicorn {
@@ -120,9 +120,10 @@ CofferImpl::render (Display &display)
           cairo_matrix_scale (&matrix, sx, -sy);
           cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
           cairo_paint (cr);
+          printerr ("%s: scale: %g %g\n", STRFUNC, 1.0 / sx, 1.0 / sy);
         }
       else
-        warning ("Failed to render SVG element: %s", m_element.c_str());
+        critical ("Failed to render SVG element: %s", m_element.c_str());
       cairo_surface_destroy (surface);
       delete[] pixels;
     }

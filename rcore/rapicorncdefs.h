@@ -88,12 +88,12 @@ RAPICORN_EXTERN_C_BEGIN();
 #endif
 
 /* --- convenient aliases --- */
-#ifdef  RAPICORN_INTERNALS
+#ifdef  RAPICORN_CONVENIENCE
 #define	ISLIKELY		RAPICORN_ISLIKELY
 #define	UNLIKELY		RAPICORN_UNLIKELY
 #define	LIKELY			RAPICORN_LIKELY
 #define	STRINGIFY               RAPICORN_CPP_STRINGIFY
-#endif /* RAPICORN_INTERNALS */
+#endif
 
 /* --- preprocessor pasting --- */
 #define RAPICORN_CPP_PASTE4i(a,b,c,d)             a ## b ## c ## d

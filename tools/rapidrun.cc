@@ -174,7 +174,7 @@ main (int   argc,
   vector<String> definitions;
   int err = Factory::parse_file ("RapicornTest", filename, "", &definitions);
   if (err)
-    error ("failed to load \"%s\": %s", filename.c_str(), string_from_errno (err).c_str());
+    fatal ("failed to load \"%s\": %s", filename.c_str(), string_from_errno (err).c_str());
 
   /* print definitions */
   String dialog;

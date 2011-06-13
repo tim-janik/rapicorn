@@ -21,9 +21,6 @@
 #include <memory>
 #include <string.h>
 
-static Rapicorn::Logging compath ("compath", Rapicorn::Logging::CURTLY);
-#define DEBUG(...)      RAPICORN_DEBUG (compath, __VA_ARGS__)
-
 namespace Rapicorn {
 using std::auto_ptr;
 
@@ -333,7 +330,7 @@ match_tags (const String     &typetag,
           (i == 0 || tag.data()[i - 1] == ':')) // namespace boundary?
         result = true;
     }
-  if (Rapicorn::Logging::debug_enabled())
+  if (Rapicorn::Logging::debugging())
     {
       String stags;
       for (StringList::const_iterator it = tags.begin(); it != tags.end(); it++)

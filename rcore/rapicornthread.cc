@@ -126,10 +126,10 @@ cpu_affinity (int cpu)
       CPU_ZERO (&cpuset);
       CPU_SET (cpu, &cpuset);
       if (pthread_setaffinity_np (thread, sizeof (cpu_set_t), &cpuset) != 0)
-        pdiag ("pthread_setaffinity_np");
+        PDEBUG ("pthread_setaffinity_np");
     }
   if (pthread_getaffinity_np (thread, sizeof (cpu_set_t), &cpuset) != 0)
-    pdiag ("pthread_getaffinity_np");
+    PDEBUG ("pthread_getaffinity_np");
   for (int j = 0; j < CPU_SETSIZE; j++)
     if (CPU_ISSET (j, &cpuset))
       return j;
@@ -142,7 +142,7 @@ Thread::Self::affinity (int cpu)
 {
   int real = cpu_affinity (cpu);
   if (cpu >= 0 && real >= 0)
-    diag ("Thread::Self: affinitiy: cpu#%u", 1 + real);
+    DEBUG ("Thread::Self: affinitiy: cpu#%u", 1 + real);
   return real;
 }
 
@@ -151,7 +151,7 @@ Thread::affinity (int cpu)
 {
   last_cpu = cpu_affinity (cpu);
   if (cpu >= 0 && last_cpu >= 0)
-    diag ("%s: affinitiy: cpu#%u", name().c_str(), 1 + last_cpu);
+    DEBUG ("%s: affinitiy: cpu#%u", name().c_str(), 1 + last_cpu);
   return last_cpu;
 }
 
@@ -529,14 +529,16 @@ OwnedMutex::~OwnedMutex()
   RAPICORN_ASSERT (m_count == 0);
 }
 
-static Mutex                      once_mutex;
-static Cond                       once_cond;
-static std::list<volatile void *> once_list;
+static Mutex                       once_mutex;
+static Cond                        once_cond;
+static std::list<volatile void *> *once_list = NULL;
 
 void
 once_list_enter()
 {
   once_mutex.lock();
+  if (!once_list)
+    once_list = new std::list<volatile void *>();
 }
 
 bool
@@ -545,15 +547,15 @@ once_list_bounce (volatile void *ptr)
   bool ptr_listed = false;
   if (ptr)
     {
-      if (find (once_list.begin(), once_list.end(), ptr) == once_list.end())
+      if (find (once_list->begin(), once_list->end(), ptr) == once_list->end())
         {
           ptr_listed = true;
-          once_list.push_front (ptr);
+          once_list->push_front (ptr);
         }
       else
         do
           once_cond.wait (once_mutex);
-        while (find (once_list.begin(), once_list.end(), ptr) != once_list.end());
+        while (find (once_list->begin(), once_list->end(), ptr) != once_list->end());
     }
   once_mutex.unlock();
   return ptr_listed;
@@ -563,10 +565,10 @@ bool
 once_list_leave (volatile void *ptr)
 {
   once_mutex.lock();
-  std::list<volatile void *>::iterator it = find (once_list.begin(), once_list.end(), ptr);
-  bool found_removed = it != once_list.end();
+  std::list<volatile void *>::iterator it = find (once_list->begin(), once_list->end(), ptr);
+  bool found_removed = it != once_list->end();
   if (found_removed)
-    once_list.erase (it);
+    once_list->erase (it);
   once_cond.broadcast();
   once_mutex.unlock();
   return found_removed;

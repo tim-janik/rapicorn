@@ -206,7 +206,7 @@ Heritage::adapt_heritage (Item           &item,
     }
   Root *root = item.get_root();
   if (!root)
-    error ("Heritage: create heritage without root item for: %s", item.name().c_str());
+    fatal ("Heritage: create heritage without root item for: %s", item.name().c_str());
   return create_heritage (*root, item, color_scheme);
 }
 

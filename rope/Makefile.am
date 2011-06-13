@@ -5,17 +5,18 @@ SUBDIRS = . # tests
 
 INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. \
 	    $(RAPICORN_ROPE_CFLAGS) $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
-DEFS      = -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RAPICORN-ROPE\" # "
+DEFS      = -DRAPICORN_CONVENIENCE -D__SOURCE_FILE__='"$(patsubst $(realpath $(abs_top_srcdir))/%,%, $(realpath $<))"'
 PLICINT   = $(top_builddir)/plic/plic-intern
 RAPICORNIDL  = $(srcdir)/../ui/rapicorn.idl
 RAPICORNINS  = $(srcdir)/../ui/insertions.cc
 HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
 
 # === CxxRapicorn ===
-noinst_PROGRAMS     = cxxrapicorn
-cxxrapicorn_SOURCES = cxx-rope.cc
-cxxrapicorn_LDADD   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
-EXTRA_DIST         += cxx-rope.hh cxx-client.hh
+noinst_PROGRAMS      = cxxrapicorn
+cxxrapicorn_SOURCES  = cxx-rope.cc
+cxxrapicorn_LDADD    = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
+cxxrapicorn_CXXFLAGS = -D__RAPICORN_BUILD__	# needed for direct <ui/utilities.hh> inclusion
+EXTRA_DIST          += cxx-rope.hh cxx-client.hh
 
 # === PyRapicorn ===
 pyrapicorn_cc_sources = py-rope.cc
@@ -102,7 +103,7 @@ check-CxxCaller-skeleton-gen: $(srcdir)/testcxxskels.ref
 	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testcxxskels.ref'"
 check-CxxCaller-server-code: $(srcdir)/testcxxserver.ref
 	$(Q) cp $(srcdir)/testcxxserver.ref testcxxserver.cc
-	$(Q) $(CXXCOMPILE) testcxxserver.cc -c ; eval "$$TSTDIAGNOSE"
+	$(Q) $(CXXCOMPILE) -D__RAPICORN_BUILD__  testcxxserver.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxserver.cc testcxxserver.o
 check-CxxCaller-client-code: $(srcdir)/testcxxclient.ref
 	$(Q) cp $(srcdir)/testcxxclient.ref testcxxclient.cc

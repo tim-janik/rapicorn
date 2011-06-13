@@ -1,5 +1,5 @@
 !<arch>
-svgtool.ref/    1304183051  1000  1000  100664  1229      `
+svgtool.ref/    1307574685  1000  1000  100664  1229      `
 
 ### ** +-------------+ ** ###
 ### ** +  ./svgtool  + ** ###
@@ -32,7 +32,7 @@ svgtool.ref/    1304183051  1000  1000  100664  1229      `
  |                                         |
   -----------------------------------------
 
-datalist.ref/   1304183051  1000  1000  100664  690       `
+datalist.ref/   1307574685  1000  1000  100664  690       `
 
 ### ** +--------------+ ** ###
 ### ** +  ./datalist  + ** ###
@@ -60,21 +60,21 @@ datalist.ref/   1304183051  1000  1000  100664  690       `
 ::StringKey::destroy: delete "RAPICORN";
 
 ## Testing: trait_convertible_test...
-messages.ref/   1304183051  1000  1000  100664  830       `
+messages.ref/   1307574685  1000  1000  100664  785       `
 
 ### ** +--------------+ ** ###
 ### ** +  ./messages  + ** ###
 ### ** +--------------+ ** ###
 
 ## Testing: Message Types...
-messages[0]:messages-Warning:0: Warning Title
-messages[0]:messages-Warning:1: Primary warning message.
-messages[0]:messages-Warning:2: Secondary warning message.
+messages[0]:Warning:0: Warning Title
+messages[0]:Warning:1: Primary warning message.
+messages[0]:Warning:2: Secondary warning message.
 Continuation of secondary warning message.
-messages[0]:messages-Warning:3: Message details: 1, 2, 3.
+messages[0]:Warning:3: Message details: 1, 2, 3.
 And more message details: a, b, c.
 ********************************************************************************
-** messages-Warning: Warning Title
+** Warning: Warning Title
 ** Primary warning message.
 **   Secondary warning message.
 **   Continuation of secondary warning message.
@@ -82,3 +82,4 @@ And more message details: a, b, c.
 ** > And more message details: a, b, c.
 ** [X] Show this message again.
 ********************************************************************************
+

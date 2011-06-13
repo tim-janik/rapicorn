@@ -778,7 +778,7 @@ main (int   argc,
       char *argv[])
 {
   if (constructur_attribute_test != 305638330)
-    error ("main: static constructors have not been called before main");
+    fatal ("static constructors have not been called before main");
 
   test_before_thread_init();
 

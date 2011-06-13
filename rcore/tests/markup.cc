@@ -57,7 +57,7 @@ struct TestRapicornMarkupParser : MarkupParser {
   }
   virtual void error        (const Error    &error)
   {
-    diag ("parsing error: %s", error.message.c_str());
+    critical ("parsing error: %s", error.message.c_str());
   }
 };
 
@@ -71,7 +71,7 @@ rapicorn_markup_parser_test()
   if (!error.code)
     tmp->end_parse (&error);
   if (error.code)
-    Rapicorn::error ("%s:%d:%d: %s (%d)", input_file, error.line_number, error.char_number, error.message.c_str(), error.code);
+    fatal ("%s:%d:%d: %s (%d)", input_file, error.line_number, error.char_number, error.message.c_str(), error.code);
   // g_printerr ("DEBUG_STRING: %s\n", tmp->debug_string.c_str());
   const char *dcode = tmp->debug_string.c_str();
   TASSERT (strstr (dcode, "----")); // comments

@@ -67,7 +67,7 @@ class SinfexExpressionStack {
         size *= alignment;
         start = (uint*) realloc (start, size);
         if (!start)
-          error ("SinfexExpressionStack: out of memory (trying to allocate %u bytes)", size);
+          fatal ("SinfexExpressionStack: out of memory (trying to allocate %u bytes)", size);
         mark.cp = current + (char*) start;
         start[0] = size;
       }

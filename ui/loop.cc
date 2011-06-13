@@ -75,7 +75,7 @@ void
 EventLoop::remove (uint   id)
 {
   if (!try_remove (id))
-    warning ("%s: failed to remove loop source: %u", RAPICORN_SIMPLE_FUNCTION, id);
+    critical ("%s: failed to remove loop source: %u", RAPICORN_SIMPLE_FUNCTION, id);
 }
 
 class EventLoopImpl;
@@ -183,7 +183,7 @@ public:
     source->m_main_loop = this;
     source->m_id = m_counter++;
     if (!source->m_id) // FIXME: need simple counter/id allocation scheme
-      error ("EventLoop::m_counter overflow, please report");
+      fatal ("EventLoop::m_counter overflow, please report");
     source->m_loop_state = UNCHECKED;
     source->m_priority = priority;
     SourceList &slist = m_sources[priority];
@@ -448,7 +448,7 @@ EventLoop::iterate_loops (bool may_block,
   assert (rapicorn_thread_entered());   // acquire global lock
   int err = rapicorn_eventfd.open();
   if (err < 0)
-    error ("EventLoop: failed to create wakeup pipe: %s", strerror (-err));
+    fatal ("EventLoop: failed to create wakeup pipe: %s", strerror (-err));
   vector<PollFD> pfds;
   pfds.reserve (7);
   int64 timeout_usecs = INT64_MAX;
@@ -486,7 +486,7 @@ EventLoop::iterate_loops (bool may_block,
     }
   while (presult < 0 && (errno == EAGAIN || errno == EINTR));
   if (presult < 0)
-    warning ("failure during main loop poll: %s", strerror (errno));
+    pcritical ("failure during main loop poll");
   else if (pfds[wakeup_idx].revents)
     {
       /* discard pending wakeups */
@@ -582,7 +582,7 @@ EventLoop::Source::add_poll (PollFD *const pfd)
   uint npfds = idx + 1;
   m_pfds = (typeof (m_pfds)) realloc (m_pfds, sizeof (m_pfds[0]) * (npfds + 1));
   if (!m_pfds)
-    error ("EventLoopSource: out of memory");
+    fatal ("EventLoopSource: out of memory");
   m_pfds[npfds].idx = UINT_MAX;
   m_pfds[npfds].pfd = NULL;
   m_pfds[idx].idx = UINT_MAX;
@@ -605,7 +605,7 @@ EventLoop::Source::remove_poll (PollFD *const pfd)
       m_pfds[npfds - 1].pfd = NULL;
     }
   else
-    warning ("EventLoopSource: unremovable PollFD: %p (fd=%d)", pfd, pfd->fd);
+    critical ("EventLoopSource: unremovable PollFD: %p (fd=%d)", pfd, pfd->fd);
 }
 
 void

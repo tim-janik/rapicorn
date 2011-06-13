@@ -23,21 +23,19 @@
 #include <map>
 #include <tr1/memory>   // shared_ptr
 
-#if !defined __RAPICORN_CORE_HH__ && !defined RAPICORN_INTERNALS
+#if !defined __RAPICORN_CORE_HH__ && !defined __RAPICORN_BUILD__
 #error Only <rapicorn-core.hh> can be included directly.
 #endif
 
 /* --- internally used headers and macros --- */
-#ifdef RAPICORN_INTERNALS
-/* provide assert() */
-#include <assert.h>
+#ifdef RAPICORN_CONVENIENCE
 /* macro shorthands */
 #define DIR_SEPARATOR                   RAPICORN_DIR_SEPARATOR
 #define DIR_SEPARATOR_S                 RAPICORN_DIR_SEPARATOR_S
 #define SEARCHPATH_SEPARATOR            RAPICORN_SEARCHPATH_SEPARATOR
 #define SEARCHPATH_SEPARATOR_S          RAPICORN_SEARCHPATH_SEPARATOR_S
 #define CODELOC()                       RAPICORN_CODELOC()
-#endif // RAPICORN_INTERNALS
+#endif // RAPICORN_CONVENIENCE
 
 namespace Rapicorn {
 
@@ -117,11 +115,11 @@ protected:
 };
 
 /* --- private class copies, class ClassDoctor --- */
-#ifdef  RAPICORN_INTERNALS
+#ifdef  __RAPICORN_BUILD__
 class ClassDoctor;
-#else   /* !RAPICORN_INTERNALS */
+#else
 class ClassDoctor {};
-#endif  /* RAPICORN_INTERNALS */
+#endif
 
 /* --- initialization --- */
 typedef RapicornInitValue    InitValue;
@@ -154,14 +152,6 @@ public:
 void        printerr   (const char   *format, ...) RAPICORN_PRINTF (1, 2);
 void        printerr   (const std::string &msg);
 void        printout   (const char   *format, ...) RAPICORN_PRINTF (1, 2);
-inline void fatal      (const char   *format, ...) RAPICORN_PRINTF (1, 2) RAPICORN_NORETURN;
-inline void pfatal     (const char   *format, ...) RAPICORN_PRINTF (1, 2) RAPICORN_NORETURN;
-inline void error      (const char   *format, ...) RAPICORN_PRINTF (1, 2);
-inline void perror     (const char   *format, ...) RAPICORN_PRINTF (1, 2);
-inline void warning    (const char   *format, ...) RAPICORN_PRINTF (1, 2);
-inline void pwarning   (const char   *format, ...) RAPICORN_PRINTF (1, 2);
-inline void diag       (const char   *format, ...) RAPICORN_PRINTF (1, 2);
-inline void pdiag      (const char   *format, ...) RAPICORN_PRINTF (1, 2);
 inline void breakpoint ();
 
 /* === internal convenience === */
@@ -170,60 +160,18 @@ inline void breakpoint ();
 #define PCHECK             RAPICORN_PCHECK             // (condition)
 #define ASSERT             RAPICORN_ASSERT             // (condition)
 #define PASSERT            RAPICORN_PASSERT            // (condition)
+#define DEBUG              RAPICORN_DEBUG
+#define PDEBUG             RAPICORN_PDEBUG
 #define return_if_fail     RAPICORN_RETURN_IF_FAIL     // (condition)
 #define return_val_if_fail RAPICORN_RETURN_VAL_IF_FAIL // (condition, value)
 #define assert_unreached   RAPICORN_ASSERT_UNREACHED   // ()
 #define assert_not_reached RAPICORN_ASSERT_UNREACHED   // ()
 #define BREAKPOINT         Rapicorn::breakpoint        // ()
+#ifndef assert
+#define assert            ASSERT
+#endif
 #endif // RAPICORN_CONVENIENCE
 
-/* === logging macros === */
-#define RAPICORN_LOG(detail, ...)      do { Rapicorn::Logging::dmessage (__FILE__, __LINE__, __func__, RAPICORN_LOG_DOMAIN, *(Rapicorn::Logging*) Rapicorn::Logging::Kind::detail, __VA_ARGS__); if ((Rapicorn::Logging::Kind::detail & 0x7f) == 'f') Rapicorn::Logging::abort(); } while (0)
-#define RAPICORN_PLOG(detail, ...)     do { Rapicorn::Logging::dmessage (__FILE__, __LINE__, __func__, RAPICORN_LOG_DOMAIN, *(Rapicorn::Logging*) (Rapicorn::Logging::Kind::detail + 128), __VA_ARGS__); if ((Rapicorn::Logging::Kind::detail & 0x7f) == 'f') Rapicorn::Logging::abort(); } while (0)
-#define RAPICORN_LOGD(dom,detail,...)  do { Rapicorn::Logging::dmessage (NULL, -1, NULL, dom, *(Rapicorn::Logging*) Rapicorn::Logging::Kind::detail, __VA_ARGS__); if ((Rapicorn::Logging::Kind::detail & 0x7f) == 'f') Rapicorn::Logging::abort(); } while (0)
-#define RAPICORN_PLOGD(dom,detail,...) do { Rapicorn::Logging::dmessage (NULL, -1, NULL, dom, *(Rapicorn::Logging*) (Rapicorn::Logging::Kind::detail + 128), __VA_ARGS__); if ((Rapicorn::Logging::Kind::detail & 0x7f) == 'f') Rapicorn::Logging::abort(); } while (0)
-#define RAPICORN_DEBUG(logging, ...)   do { if (Rapicorn::Logging::debug_enabled()) { Rapicorn::Logging::dmessage (__FILE__, __LINE__, __func__, RAPICORN_LOG_DOMAIN, logging, __VA_ARGS__); } } while (0)
-#define RAPICORN_CHECK(expr)           do { if (RAPICORN_LIKELY (expr)) break; RAPICORN_LOG (WARNING, "check failed: %s", #expr ); } while (0)
-#define RAPICORN_PCHECK(expr)          do { if (RAPICORN_LIKELY (expr)) break; RAPICORN_LOG (PWARNING, "check failed: %s", #expr ); } while (0)
-#define RAPICORN_ASSERT(expr)          do { if (RAPICORN_LIKELY (expr)) break; RAPICORN_LOG (FATAL, "assertion failed: %s", #expr ); } while (0)
-#define RAPICORN_PASSERT(expr)         do { if (RAPICORN_LIKELY (expr)) break; RAPICORN_LOG (PFATAL, "assertion failed: %s", #expr ); } while (0)
-#define RAPICORN_ASSERT_UNREACHED()    do { RAPICORN_LOG (FATAL, "unreachable assertion failed"); } while (0)
-#define RAPICORN_ASSERT_NOT_REACHED    RAPICORN_ASSERT_UNREACHED
-#define RAPICORN_RETURN_IF_FAIL(e)       do { if (RAPICORN_ISLIKELY (e)) break; RAPICORN_LOG (WARNING, "check failed: %s", #e); return; } while (0)
-#define RAPICORN_RETURN_VAL_IF_FAIL(e,v) do { if (RAPICORN_ISLIKELY (e)) break; RAPICORN_LOG (WARNING, "check failed: %s", #e); return v; } while (0)
-
-/* === implementeation details === */
-class Logging {
-  static bool   cdebug, cany, cdiag, cdevel, cverbose;
-  static bool   cwfatal, cstderr, csyslog, cnfsyslog, ctestpid0;
-  static String config, ovrconfig, logfile;
-  const char   *detail;
-  void          add    ();
-public:
-  static String override_config ();
-  static void   override_config (const String &cfg);
-  enum Flags { PERRNO = 1, CURTLY = 2 };
-  inline      Logging  (const char *static_detail, Flags flg = Flags (0)) : m_detail (static_detail), m_flags (flg) { add(); }
-  static void dmessage (const char *file, int line, const char *func, const char *domain,
-                        const Logging &detail, const char *format, ...) RAPICORN_PRINTF (6, 7);
-  static void vmessage (const char *file, int line, const char *func, const char *domain,
-                        const Logging &detail, const char *format, va_list vargs);
-  static void abort    () RAPICORN_NORETURN;
-  static void setup    ();
-  static inline bool testpid0_enabled () { return RAPICORN_UNLIKELY (ctestpid0); }
-  static inline bool debug_enabled    () { return RAPICORN_UNLIKELY (cdebug); }
-  static inline bool diag_enabled     () { return RAPICORN_UNLIKELY (cdiag); }
-  struct Kind {
-    enum { FATAL = 'f', PFATAL = FATAL + 128, ERROR = 'e', PERROR = ERROR + 128,
-           WARNING = 'w', PWARNING = WARNING + 128, DIAG = 'd', PDIAG = DIAG + 128, };
-  };
-  static vector<String> debug_keys();
-private:
-  const char *m_detail;
-  const Flags m_flags;
-};
-inline Logging::Flags operator| (Logging::Flags x, Logging::Flags y) { return Logging::Flags (x | uint64 (y)); }
-inline Logging::Flags operator& (Logging::Flags x, Logging::Flags y) { return Logging::Flags (x & uint64 (y)); }
 #if (defined __i386__ || defined __x86_64__) && defined __GNUC__ && __GNUC__ >= 2
 inline void breakpoint() { __asm__ __volatile__ ("int $03"); }
 #elif defined __alpha__ && !defined __osf__ && defined __GNUC__ && __GNUC__ >= 2
@@ -231,6 +179,48 @@ inline void breakpoint() { __asm__ __volatile__ ("bpt"); }
 #else   /* !__i386__ && !__alpha__ */
 inline void breakpoint() { __builtin_trap(); }
 #endif
+#ifdef  __SOURCE_FILE__
+#define RAPICORN__FILE__        __SOURCE_FILE__
+#elif   defined __BASE_FILE__
+#define RAPICORN__FILE__        __BASE_FILE__
+#else
+#define RAPICORN__FILE__        __FILE__
+#endif
+#define RAPICORN__FUNC__        Rapicorn::Logging::string_func (__func__, __PRETTY_FUNCTION__)
+
+/* === Logging and Assertions === */
+class Logging {
+  static bool m_debugging;      // cached for speedups
+public:
+  static void   configure       (const char *option);
+  static int    conftest        (const char *option, int vdefault = 0);
+  static bool   debugging       ()                      { return RAPICORN_UNLIKELY (m_debugging); }
+  static void   message         (const char *kind, const char *file, int line, const char *func,
+                                 const char *format, ...) RAPICORN_PRINTF (5, 6);
+  static void   messagev        (const char *kind, String file, const char *format, va_list vargs);
+  static String string_func     (const char *func, const char *pretty_func = NULL);
+  static void   abort           () RAPICORN_NORETURN;
+};
+
+inline void fatal (const char *format, ...)     RAPICORN_PRINTF (1, 2) RAPICORN_NORETURN;
+inline void pfatal (const char *format, ...)    RAPICORN_PRINTF (1, 2) RAPICORN_NORETURN;
+inline void critical (const char *format, ...)  RAPICORN_PRINTF (1, 2);
+inline void pcritical (const char *format, ...) RAPICORN_PRINTF (1, 2);
+inline void fatal (const char *format, ...)     { va_list a; va_start (a, format); Logging::messagev ("FATAL",     RAPICORN__FILE__, format, a); va_end (a); while (1); }
+inline void pfatal (const char *format, ...)    { va_list a; va_start (a, format); Logging::messagev ("PFATAL",    RAPICORN__FILE__, format, a); va_end (a); while (1); }
+inline void critical (const char *format, ...)  { va_list a; va_start (a, format); Logging::messagev ("CRITICAL",  RAPICORN__FILE__, format, a); va_end (a); }
+inline void pcritical (const char *format, ...) { va_list a; va_start (a, format); Logging::messagev ("PCRITICAL", RAPICORN__FILE__, format, a); va_end (a); }
+#define RAPICORN_ASSERT_NOT_REACHED             RAPICORN_ASSERT_UNREACHED
+#define RAPICORN_ASSERT_UNREACHED()             do { Rapicorn::Logging::message ("FATAL", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "encountered unreachable assertion"); Rapicorn::Logging::abort(); } while (0)
+#define RAPICORN_RETURN_IF_FAIL(expr)           do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assumption failed: %s", #expr); return; } while (0)
+#define RAPICORN_RETURN_VAL_IF_FAIL(expr,rv)    do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assumption failed: %s", #expr); return rv; } while (0)
+#define RAPICORN_ASSERT(expr)  do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("ABORT",   RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assertion failed: %s",   #expr); } while (0)
+#define RAPICORN_PASSERT(expr) do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("PABORT",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assertion failed (%s)",  #expr); } while (0)
+#define RAPICORN_CHECK(expr)   do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK",   RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assumption failed: %s",  #expr); } while (0)
+#define RAPICORN_PCHECK(expr)  do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("PCHECK",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assumption failed (%s)", #expr); } while (0)
+#define RAPICORN_DEBUG(...)    do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("DEBUG",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
+#define RAPICORN_PDEBUG(...)   do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("PDEBUG", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
+
 
 /* --- string functionality --- */
 String                          string_multiply          (const String &s,
@@ -313,7 +303,10 @@ bool    text_convert    (const String &to_charset,
                          const String &output_mark = "");
 
 /* --- timestamp handling --- */
-uint64  timestamp_now   ();
+uint64  timestamp_startup    ();        // µseconds
+uint64  timestamp_realtime   ();        // µseconds
+uint64  timestamp_benchmark  ();        // nseconds
+uint64  timestamp_resolution ();        // nseconds
 
 /* --- file/path functionality --- */
 namespace Path {
@@ -339,6 +332,8 @@ char*   memread         (const String &filename,
                          size_t       *lengthp);
 void    memfree         (char         *memread_mem);
 String  cwd             ();
+String       vpath_find        (const String &file, const String &mode = "e");
+String       searchpath_find  (const String &searchpath, const String &file, const String &mode = "e");
 StringVector searchpath_split (const String &searchpath);
 extern const String     dir_separator;         /* 1char */
 extern const String     searchpath_separator;  /* 1char */
@@ -761,22 +756,6 @@ public:
 
 /* --- implementation --- */
 void _rapicorn_init_threads (void);
-#define RAPICORN_MESSAGE_DEFUN(func,detail,preop,postop)                \
-  inline void func (const char *format, ...) { preop;                   \
-  va_list args; va_start (args, format);                                \
-  Rapicorn::Logging::vmessage (NULL, -1, NULL, RAPICORN_LOG_DOMAIN,     \
-                               *(const Rapicorn::Logging*) (detail),    \
-                               format, args);                           \
-  va_end (args); postop; }
-RAPICORN_MESSAGE_DEFUN (fatal, 'f',, Rapicorn::Logging::abort());
-RAPICORN_MESSAGE_DEFUN (pfatal, 'f' + 128,, Rapicorn::Logging::abort());
-RAPICORN_MESSAGE_DEFUN (error, 'e',,);
-RAPICORN_MESSAGE_DEFUN (perror, 'e' + 128,,);
-RAPICORN_MESSAGE_DEFUN (warning, 'w',,);
-RAPICORN_MESSAGE_DEFUN (pwarning, 'w' + 128,,);
-RAPICORN_MESSAGE_DEFUN (diag, 'd', if (!Rapicorn::Logging::diag_enabled()) return,);
-RAPICORN_MESSAGE_DEFUN (pdiag, 'd' + 128, if (!Rapicorn::Logging::diag_enabled()) return,);
-#undef RAPICORN_MESSAGE_DEFUN
 
 } // Rapicorn
 

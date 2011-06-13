@@ -152,7 +152,7 @@ eval_expect_tests ()
       const char *sline = eetests[i], *expr = eetests[i + 1], *expect = eetests[i + 2];
       String result = ev.parse_eval (expr);
       if (result != expect)
-        error ("%s:%s: Evaluator mismatch: %s != %s", __FILE__, sline, result.c_str(), expect);
+        fatal ("%s:%s: Evaluator mismatch: %s != %s", __FILE__, sline, result.c_str(), expect);
     }
   ev.pop_map (map);
 }

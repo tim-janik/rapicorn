@@ -31,7 +31,7 @@ fill_store (Store1       &s1,
   s1.clear();
   if (!d)
     {
-      warning ("failed to access directory: %s: %s", dirname.c_str(), strerror (errno));
+      critical ("failed to access directory: %s: %s", dirname.c_str(), strerror (errno));
       return;
     }
   struct dirent *e = readdir (d);

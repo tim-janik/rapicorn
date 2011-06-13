@@ -40,7 +40,7 @@ void
 Root::set_parent (Container *parent)
 {
   if (parent)
-    warning ("setting parent on toplevel Root item to: %p (%s)", parent, parent->typeid_pretty_name().c_str());
+    critical ("setting parent on toplevel Root item to: %p (%s)", parent, parent->typeid_pretty_name().c_str());
   return Container::set_parent (parent);
 }
 
@@ -641,7 +641,7 @@ RootImpl::dispatch_win_size_event (const Event &event)
       /* discard all expose requests, we'll get a new WIN_DRAW event */
       m_expose_region.clear();
       if (0)
-        diag ("win-size: %f %f", wevent->width, wevent->height);
+        DEBUG ("win-size: %f %f", wevent->width, wevent->height);
       handled = true;
     }
   return handled;
@@ -677,8 +677,8 @@ RootImpl::dispatch_win_draw_event (const Event &event)
         {
           m_expose_region.add (devent->rectangles[i]);
           if (0)
-            diag ("win-draw: %f %f (at: %f %f)", devent->rectangles[i].width, devent->rectangles[i].height,
-                  devent->rectangles[i].x, devent->rectangles[i].y);
+            DEBUG ("win-draw: %f %f (at: %f %f)", devent->rectangles[i].width, devent->rectangles[i].height,
+                   devent->rectangles[i].x, devent->rectangles[i].y);
           /* check for excess expose fragment scenarios */
           if (i % 11 == 0)              /* infrequent checks are good enough */
             collapse_expose_region();   /* collapse pathological expose regions */
@@ -922,7 +922,7 @@ RootImpl::dispatch_event (const Event &event)
   if (!m_viewp0rt)
     return false;       // we can only handle events on viewp0rts
   if (0)
-    diag ("Root: event: %s", string_from_event_type (event.type));
+    DEBUG ("Root: event: %s", string_from_event_type (event.type));
   switch (event.type)
     {
     case EVENT_LAST:

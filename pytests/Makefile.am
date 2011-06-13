@@ -1,8 +1,8 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES	+= -I$(top_srcdir)
-DEFS		+= -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"'
+INCLUDES += -I$(top_srcdir)
+DEFS	 += -DRAPICORN_CONVENIENCE -D__SOURCE_FILE__='"$(patsubst $(realpath $(abs_top_srcdir))/%,%, $(realpath $<))"'
 
 # variables
 noinst_PROGRAMS  = # auto-cleaned

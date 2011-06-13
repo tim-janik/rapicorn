@@ -20,12 +20,12 @@
 #include <rapicorn-core.hh>
 #include <typeinfo>
 
-#if !defined __RAPICORN_UI_HH__ && !defined RAPICORN_INTERNALS
+#if !defined __RAPICORN_UI_HH__ && !defined __RAPICORN_BUILD__
 #error Only <rapicorn.hh> can be included directly.
 #endif
 
 /* --- internally used macros --- */
-#ifdef RAPICORN_INTERNALS
+#ifdef __RAPICORN_BUILD__
 /* internal i18n */
 #define _(str)  rapicorn_gettext (str)
 #define N_(str) (str)
@@ -33,7 +33,7 @@
 #define MakeProperty                    RAPICORN_MakeProperty
 #define MakeNamedCommand                RAPICORN_MakeNamedCommand
 #define MakeSimpleCommand               RAPICORN_MakeSimpleCommand
-#endif // RAPICORN_INTERNALS
+#endif
 
 namespace Rapicorn {
 class RapicornTester;	// allow Rapicorn test implementations

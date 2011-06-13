@@ -141,7 +141,7 @@ rope_thread_inputfd ()
       rope_coupler.set_event_wakeup (*evd, &Plic::EventFd::wakeup);
       int err = evd->open();
       if (err < 0)
-        error ("failed to open EventFd: %s", string_from_errno (err).c_str());
+        fatal ("failed to open EventFd: %s", string_from_errno (err).c_str());
       once_leave (&initevd, evd);
     }
   Plic::EventFd *e = initevd;

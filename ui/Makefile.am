@@ -1,10 +1,11 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS		= . tests
+SUBDIRS    = . tests
 
-INCLUDES	+= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
-DEFS		 = -DRAPICORN_INTERNALS $(RAPICORN_GUI_CFLAGS) -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
+INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
+DEFS      = -DRAPICORN_CONVENIENCE -D__SOURCE_FILE__='"$(patsubst $(realpath $(abs_top_srcdir))/%,%, $(realpath $<))"' \
+	    $(RAPICORN_GUI_CFLAGS) -D__RAPICORN_BUILD__
 
 # === Source Files ===
 rapicorn_public_headers = $(strip 	\

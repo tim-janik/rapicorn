@@ -25,8 +25,11 @@
 
 #include <cstring>
 
-static Rapicorn::Logging gtk_events ("gtk-events", Rapicorn::Logging::CURTLY);
-#define DEBUG(...)       RAPICORN_DEBUG (gtk_events, __VA_ARGS__)
+#define CHECK_CAIRO_STATUS(status)      do {    \
+  cairo_status_t ___s = (status);               \
+  if (___s != CAIRO_STATUS_SUCCESS)             \
+    DEBUG ("%s: %s", cairo_status_to_string (___s), #status);   \
+  } while (0)
 
 namespace { // Anon
 using namespace Rapicorn;
@@ -351,12 +354,6 @@ Viewp0rtGtk::create_display_backing (Rapicorn::Display &display)
   cairo_surface_destroy (bsurface);
   cairo_destroy (cr);
 }
-
-#define CHECK_CAIRO_STATUS(status)      do {    \
-            cairo_status_t ___s = (status);     \
-            if (___s != CAIRO_STATUS_SUCCESS)   \
-              RAPICORN_LOG (DIAG, "%s: %s", #status, cairo_status_to_string (___s)); \
-          } while (0)
 
 void
 Viewp0rtGtk::blit_display (Rapicorn::Display &display)
@@ -1096,7 +1093,7 @@ rapicorn_viewp0rt_event (GtkWidget *widget,
   bool handled = false;
   int window_height = 0;
   EventContext econtext = rapicorn_viewp0rt_event_context (self, event, &window_height);
-  if (Rapicorn::Logging::debug_enabled()) /* debug events */
+  if (Rapicorn::Logging::debugging()) /* debug events */
     debug_dump_event (widget, ".", event, econtext);
   if (!viewp0rt)
     return false;
@@ -1249,7 +1246,7 @@ rapicorn_viewp0rt_ancestor_event (GtkWidget *ancestor,
   EventContext econtext = rapicorn_viewp0rt_event_context (self, event);
   if (!viewp0rt)
     return false;
-  if (Rapicorn::Logging::debug_enabled()) /* debug events */
+  if (Rapicorn::Logging::debugging()) /* debug events */
     debug_dump_event (widget, "+", event, econtext);
   bool handled = false;
   switch (event->type)

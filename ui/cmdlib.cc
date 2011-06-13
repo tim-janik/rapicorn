@@ -155,27 +155,27 @@ parse_arg (const String &input,
     }
   if (sq)
     {
-      diag ("unclosed single-quotes in command arg: %s", input.c_str());
+      DEBUG ("unclosed single-quotes in command arg: %s", input.c_str());
       return false;
     }
   if (dq)
     {
-      diag ("unclosed double-quotes in command arg: %s", input.c_str());
+      DEBUG ("unclosed double-quotes in command arg: %s", input.c_str());
       return false;
     }
   if (level)
     {
-      diag ("unmatched parenthesis in command arg: %s", input.c_str());
+      DEBUG ("unmatched parenthesis in command arg: %s", input.c_str());
       return false;
     }
   if (be)
     {
-      diag ("invalid command arg: %s", input.c_str());
+      DEBUG ("invalid command arg: %s", input.c_str());
       return false;
     }
   if (!done)
     {
-      diag ("unclosed command arg list: %s", input.c_str());
+      DEBUG ("unclosed command arg list: %s", input.c_str());
       return false;
     }
   *arg = input.substr (a0, *pos - a0);
@@ -210,7 +210,7 @@ command_scan (const String &input,
   /* check command name */
   if (cl <= c0)
     {
-      diag ("invalid command name: %s", input.c_str());
+      DEBUG ("invalid command name: %s", input.c_str());
       return false;
     }
   *cmd_name = input.substr (c0, cl - c0);
@@ -231,7 +231,7 @@ command_scan (const String &input,
         }
       if (i >= input.size() || input[i] != ')')
         {
-          diag ("missing closing parenthesis in command: %s", input.c_str());
+          DEBUG ("missing closing parenthesis in command: %s", input.c_str());
           return false;
         }
       i++; // skip ')'
@@ -241,7 +241,7 @@ command_scan (const String &input,
     i++;
   if (i < input.size() && input[i] != 0)
     {
-      diag ("encountered junk after command: %s", input.c_str());
+      DEBUG ("encountered junk after command: %s", input.c_str());
       return false;
     }
   return true;
@@ -278,15 +278,15 @@ command_string_unquote (const String &input)
           if (i >= input.size())
             return out;
           else
-            diag ("extraneous characters after string: %s", input.c_str());
+            DEBUG ("extraneous characters after string: %s", input.c_str());
         }
       else
-        diag ("unclosed string: %s", input.c_str());
+        DEBUG ("unclosed string: %s", input.c_str());
     }
   else if (i == input.size())
     ; // empty string arg: ""
   else
-    diag ("invalid string argument: %s", input.c_str());
+    DEBUG ("invalid string argument: %s", input.c_str());
   return "";
 }
 

@@ -40,7 +40,7 @@ rapicorn_init (int        *argcp,
   rapicorn_init_core (argcp, argv, app_name);
   /* verify constructur runs to catch link errors */
   if (_internalconstructortest.v != 0x123caca0)
-    error ("librapicorn: link error: C++ constructors have not been executed");
+    fatal ("librapicorn: link error: C++ constructors have not been executed");
   /* optimize */
   CPUInfo cpu = cpu_info();
   if (cpu.x86_mmx)

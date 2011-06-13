@@ -642,9 +642,9 @@ Container::render (Display &display)
       const IRect ia = cw->allocation();
       display.push_clip_rect (ia.x, ia.y, ia.width, ia.height);
       if (cw->test_flags (INVALID_REQUISITION))
-        warning ("rendering item with invalid %s: %s (%p)", "requisition", cw->name().c_str(), &*cw);
+        critical ("rendering item with invalid %s: %s (%p)", "requisition", cw->name().c_str(), &*cw);
       if (cw->test_flags (INVALID_ALLOCATION))
-        warning ("rendering item with invalid %s: %s (%p)", "allocation", cw->name().c_str(), &*cw);
+        critical ("rendering item with invalid %s: %s (%p)", "allocation", cw->name().c_str(), &*cw);
       if (!display.empty())
         cw->render (display);
       display.pop_clip_rect();

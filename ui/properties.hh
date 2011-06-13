@@ -413,7 +413,7 @@ PropertyEnum<Class,Type>::set_value (Deletable *obj, const String &svalue)
   if (0 && error_string.size() && !value && string_has_int (svalue))
     value = enum_class.constrain (string_to_int (svalue));
   else if (error_string.size())
-    warning ("%s: invalid enum value name '%s': %s", RAPICORN_SIMPLE_FUNCTION, enum_class.enum_name(), error_string.c_str());
+    critical ("%s: invalid enum value name '%s': %s", RAPICORN_SIMPLE_FUNCTION, enum_class.enum_name(), error_string.c_str());
   Type v = Type (value);
   Class *instance = dynamic_cast<Class*> (obj);
   (instance->*setter) (v);

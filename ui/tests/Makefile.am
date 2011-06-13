@@ -1,8 +1,8 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES	+= -I$(top_srcdir) $(RAPICORN_GUI_CFLAGS)
-DEFS		+= -DRAPICORN_CONVENIENCE -DRAPICORN_LOG_DOMAIN='"$(basename $(@F))"' '-DSRCDIR="$(srcdir)"'
+INCLUDES += -I$(top_srcdir) $(RAPICORN_GUI_CFLAGS)
+DEFS	 += -DRAPICORN_CONVENIENCE -D__SOURCE_FILE__='"$(patsubst $(realpath $(abs_top_srcdir))/%,%, $(realpath $<))"'
 
 # test programs
 noinst_PROGRAMS	 = $(TEST_PROGS)
@@ -63,7 +63,7 @@ EXTRA_DIST += expressions.txt expressions.ref
 check-am: sinfex-expressions
 
 xmllint-check:
-	cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES)
+	cd $(srcdir) && ! $(XMLLINT) --noout $(XML_FILES) 2>&1 | grep '.'
 .PHONY: xmllint-check
 stamp-autochecks: $(XML_FILES)
 	@$(MAKE) xmllint-check

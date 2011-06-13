@@ -100,7 +100,7 @@ SizeGroupImpl::remove_item (Item &item)
         break;
       }
   if (!found_one)
-    warning ("%s: attempt to remove unknown item (%s) from size group: %p", STRFUNC, item.name().c_str(), this);
+    critical ("%s: attempt to remove unknown item (%s) from size group: %p", STRFUNC, item.name().c_str(), this);
   /* remove size group from item's list */
   found_one = false;
   vector<SizeGroupImpl*> szv = item.get_data (&size_group_key);
@@ -112,7 +112,7 @@ SizeGroupImpl::remove_item (Item &item)
         break;
       }
   if (!found_one)
-    warning ("%s: attempt to remove unknown size group (%p) from item: %s", STRFUNC, this, item.name().c_str());
+    critical ("%s: attempt to remove unknown size group (%p) from item: %s", STRFUNC, this, item.name().c_str());
   if (szv.size() == 0)
     item.delete_data (&size_group_key);
   else

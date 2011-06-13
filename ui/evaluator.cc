@@ -64,7 +64,7 @@ public:
     const String fullname = entity == "" ? name : entity + "." + name;
     Value result = variable_map_list_lookup (m_vml, fullname, unknown);
     if (unknown)
-      warning ("Evaluator: failed to resolve variable reference: %s", fullname.c_str());
+      critical ("Evaluator: failed to resolve variable reference: %s", fullname.c_str());
     return result;
   }
   virtual Value
@@ -80,7 +80,7 @@ public:
         funcstring += args[i].string();
       }
     funcstring += ")";
-    warning ("%s: unknown function call: %s", "Rapicorn::Evaluator::Scope", funcstring.c_str());
+    critical ("%s: unknown function call: %s", "Rapicorn::Evaluator::Scope", funcstring.c_str());
     return Value (-1);
   }
 };
@@ -97,7 +97,7 @@ Evaluator::pop_map (const VariableMap  &vmap)
   if (env_maps.size() || &vmap == env_maps.back())
     env_maps.pop_back();
   else
-    warning ("%s: unable to pop map: %p != %p", STRFUNC, &vmap, env_maps.back());
+    critical ("%s: unable to pop map: %p != %p", STRFUNC, &vmap, env_maps.back());
 }
 
 String
@@ -150,7 +150,7 @@ Evaluator::populate_map (VariableMap        &vmap,
       if (Evaluator::split_argument (*it, key, value))
         vmap[key] = value;
       else
-        warning ("%s: invalid 'key=value' syntax: %s", STRFUNC, it->c_str());
+        critical ("%s: invalid 'key=value' syntax: %s", STRFUNC, it->c_str());
     }
 }
 
@@ -190,7 +190,7 @@ expand_eval_expressions (const char           *warning_entity,
             }
           if (!terminated)
             {
-              warning ("%s: unterminated expression in: %s", warning_entity, expression.c_str());
+              critical ("%s: unterminated expression in: %s", warning_entity, expression.c_str());
               return result;
             }
           if (d + 1 >= e)

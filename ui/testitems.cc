@@ -133,11 +133,11 @@ protected:
     if (delta > m_epsilon)
       {
         if (m_fatal_asserts)
-          error ("similarity exceeded: %s=%f real-value=%f delta=%f (epsilon=%g)",
+          fatal ("similarity exceeded: %s=%f real-value=%f delta=%f (epsilon=%g)",
                  assertion_name, value, rvalue, delta, m_epsilon);
         else
-          warning ("similarity exceeded: %s=%f real-value=%f delta=%f (epsilon=%g)",
-                   assertion_name, value, rvalue, delta, m_epsilon);
+          critical ("similarity exceeded: %s=%f real-value=%f delta=%f (epsilon=%g)",
+                    assertion_name, value, rvalue, delta, m_epsilon);
       }
     else
       {
@@ -174,9 +174,9 @@ protected:
     if (m_assert_value != m_value)
       {
         if (m_fatal_asserts)
-          error ("value has unexpected contents: %s (expected: %s)", m_value.c_str(), m_assert_value.c_str());
+          fatal ("value has unexpected contents: %s (expected: %s)", m_value.c_str(), m_assert_value.c_str());
         else
-          warning ("value has unexpected contents: %s (expected: %s)", m_value.c_str(), m_assert_value.c_str());
+          critical ("value has unexpected contents: %s (expected: %s)", m_value.c_str(), m_assert_value.c_str());
       }
     sig_assertions_passed.emit ();
     /* count containers for seen_test_containers() */

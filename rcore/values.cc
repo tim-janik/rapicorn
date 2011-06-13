@@ -18,7 +18,7 @@
 #include "rapicornmath.hh"
 #include <deque>
 
-#define VALUE_TYPE_MISMATCH(object, sname) RAPICORN_LOG (ERROR, "value type mismatch for %s setter: %s", object, sname)
+#define VALUE_TYPE_MISMATCH(object, sname) Rapicorn::fatal ("value type mismatch for %s setter: %s", object, sname)
 
 namespace Rapicorn {
 
@@ -483,7 +483,7 @@ Array::nexti ()
       idx = string_from_uint (array->last++);
       if (array->last == 0)
         {
-          RAPICORN_LOG (WARNING, "Array index out of bounds: %zu", array->last - 1);
+          critical ("Array index out of bounds: %zu", array->last - 1);
           idx = "Rapicorn::Array::OOB";
           break;
         }

@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 using namespace Rapicorn;
 
 static void
@@ -60,6 +61,51 @@ test_messaging ()
                 Msg::Check ("Show this message again."));
 }
 
+static void
+bogus_func ()
+{
+  RAPICORN_RETURN_IF_FAIL (0 == "test-return-if-fail");
+}
+
+static int
+value_func (int)
+{
+  RAPICORN_RETURN_VAL_IF_FAIL (0 == "test-return-val-if-fail", 0);
+  return 1;
+}
+
+static void
+test_logging (const char *logarg)
+{
+  errno = EINVAL;       // used by P* checks
+  if (String ("--test-assert") == logarg)
+    RAPICORN_ASSERT (0 == "test-assert");
+  if (String ("--test-passert") == logarg)
+    RAPICORN_PASSERT (0 == "test-passert");
+  if (String ("--test-unreached") == logarg)
+    RAPICORN_ASSERT_UNREACHED();
+  if (String ("--test-fatal") == logarg)
+    fatal ("execution has reached a fatal condition (\"test-fatal\")");
+  if (String ("--test-pfatal") == logarg)
+    pfatal ("execution has reached a fatal condition (\"test-pfatal\")");
+  if (String ("--test-logging") == logarg)
+    {
+      Logging::configure ("no-fatal-warnings"); // cancel fatal-warnings, usually enforced for tests
+      RAPICORN_DEBUG ("logging test selected, will trigger various warnings (debugging message)");
+      errno = EINVAL;
+      RAPICORN_PDEBUG ("a random error occoured (\"test-pdebug\")");
+      RAPICORN_CHECK (0 > 1);
+      errno = EINVAL;
+      RAPICORN_PCHECK (errno == 0);
+      critical ("execution has reached a critical condition (\"test-critical\")");
+      errno = EINVAL;
+      pcritical ("execution has reached a critical condition (\"test-pcritical\")");
+      bogus_func();
+      value_func (0);
+      exit (0);
+    }
+}
+
 int
 main (int   argc,
       char *argv[])
@@ -67,16 +113,8 @@ main (int   argc,
   force_pid0_for_testing();
   rapicorn_init_logtest (&argc, argv);
 
-  if (argc >= 2 && String ("--test-logging") == argv[1])
-    {
-      static Rapicorn::Logging testing_debug = Rapicorn::Logging ("testing");
-      RAPICORN_DEBUG (testing_debug, "logging test selected via: --test-logging");
-      pdiag ("diagnostics on the last errno assignment");
-      Logging::override_config (""); // cancel fatal-warnings, usually enforced for tests
-      warning ("the next logging message might abort the program");
-      error ("we're approaching serious conditions that may lead to abort()");
-      fatal ("at this point, program aborting is certain");
-    }
+  if (argc >= 2)
+    test_logging (argv[1]);
 
   Test::add ("Message Types", test_messaging);
 

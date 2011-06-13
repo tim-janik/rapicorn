@@ -124,7 +124,7 @@ public:
     double old_value = m_value;
     if (isnan (newval))
       {
-        warning ("Adjustment::value(): invalid value: %g", newval);
+        critical ("Adjustment::value(): invalid value: %g", newval);
         newval = 0;
       }
     m_value = CLAMP (newval, m_lower, m_upper - m_page);

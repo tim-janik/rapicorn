@@ -26,7 +26,7 @@ namespace Rapicorn { namespace Cairo {
 #define CHECK_CAIRO_STATUS(status)      do {    \
   cairo_status_t ___s = (status);               \
   if (___s != CAIRO_STATUS_SUCCESS)             \
-    RAPICORN_LOG (DIAG, "%s: %s", #status, cairo_status_to_string (___s)); \
+    DEBUG ("%s: %s", cairo_status_to_string (___s), #status);   \
   } while (0)
 
 bool

@@ -36,29 +36,27 @@
 #define TCHECK(code)            TCHECK_impl (code)
 #define TASSERT(code)           TCHECK_impl (code)
 #define TOK()           do {} while (0) // printerr (".")
-#undef  NDEBUG          // force working assert()
-#include <assert.h>
-#define TCHECK_impl(code)       do { if (code) TOK(); else      \
-      Rapicorn::error ("%s:%u:%s(): assertion failed: %s\n",    \
-           __FILE__, __LINE__, __PRETTY_FUNCTION__, #code);     \
+#define TCHECK_impl(code)       do { if (code) TOK(); else              \
+      Rapicorn::Logging::message ("ASSERT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
+                                  "assertion failed: %s", #code);       \
   } while (0)
 #define TCMP_implf(a,cmp,b)     do { if (a cmp b) TOK(); else { \
   double __tassert_va = a; double __tassert_vb = b;             \
-  Rapicorn::error ("%s:%u:%s(): assertion failed: %s %s %s: %.17g %s %.17g\n", \
-    __FILE__, __LINE__, __PRETTY_FUNCTION__, #a, #cmp, #b,              \
-                   __tassert_va, #cmp, __tassert_vb);                   \
+  Rapicorn::Logging::message ("ASSERT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
+                              "assertion failed: %s %s %s: %.17g %s %.17g", \
+                              #a, #cmp, #b, __tassert_va, #cmp, __tassert_vb); \
     } } while (0)
 #define TCMP_implx(a,cmp,b)     do { if (a cmp b) TOK(); else { \
   uint64 __tassert_va = a; uint64 __tassert_vb = b;             \
-  Rapicorn::error ("%s:%u:%s(): assertion failed: %s %s %s: 0x%08Lx %s 0x%08Lx\n", \
-    __FILE__, __LINE__, __PRETTY_FUNCTION__, #a, #cmp, #b,              \
-                   __tassert_va, #cmp, __tassert_vb);                   \
+  Rapicorn::Logging::message ("ASSERT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
+                              "assertion failed: %s %s %s: 0x%08Lx %s 0x%08Lx", \
+                              #a, #cmp, #b, __tassert_va, #cmp, __tassert_vb); \
     } } while (0)
 #define TCMP_impls(a,cmp,b)     do { if (a cmp b) TOK(); else { \
   int64 __tassert_va = a; int64 __tassert_vb = b;               \
-  Rapicorn::error ("%s:%u:%s(): assertion failed: %s %s %s: %lld %s %lld\n", \
-    __FILE__, __LINE__, __PRETTY_FUNCTION__, #a, #cmp, #b,              \
-                   __tassert_va, #cmp, __tassert_vb);                   \
+  Rapicorn::Logging::message ("ASSERT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
+    "assertion failed: %s %s %s: %lld %s %lld",                         \
+                              #a, #cmp, #b, __tassert_va, #cmp, __tassert_vb); \
     } } while (0)
 
 namespace Rapicorn {

@@ -408,7 +408,7 @@ log_prefix (const String &prg_name,
             const String &ident)
 {
   String str = prg_name;
-  with_testpid0 = with_testpid0 && Logging::testpid0_enabled();
+  with_testpid0 = with_testpid0 && Logging::conftest ("testpid0");
   if (pid || with_testpid0)
     str += string_printf ("[%u]", with_testpid0 ? 0 : pid);
   if (str.size() && *str.rbegin() != ':')
@@ -597,7 +597,7 @@ Msg::default_handler (const char         *domain,
       }
   g_printerr ("********************************************************************************\n");
   if (domain)
-    g_printerr ("** %s-%s: %s\n", domain, level_name.c_str(), title.c_str());
+    g_printerr ("** %s%s%s: %s\n", domain, domain && domain[0] ? "-" : "", level_name.c_str(), title.c_str());
   else
     g_printerr ("** %s: %s\n", level_name.c_str(), title.c_str());
   if (primary.size())

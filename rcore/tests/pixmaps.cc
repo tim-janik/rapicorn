@@ -73,11 +73,11 @@ test_pixmap_save_load (void)
   unlink (target);
   assert (Path::check (target, "e") == false);
   if (!pixmap->save_png (target))
-    error ("failed to save \"%s\": %s", target, string_from_errno (errno).c_str());
+    fatal ("failed to save \"%s\": %s", target, string_from_errno (errno).c_str());
   /* test load and compare */
   Pixmap *pixmap2 = Pixmap::load_png (target);
   if (!pixmap2 || errno)
-    error ("failed to load \"%s\": %s", target, string_from_errno (errno).c_str());
+    fatal ("failed to load \"%s\": %s", target, string_from_errno (errno).c_str());
   ref_sink (pixmap2);
   assert (pixmap->comment() == pixmap2->comment());
   assert (pixmap->compare (*pixmap2, 0, 0, -1, -1, 0, 0) == false);
@@ -108,16 +108,16 @@ test_pixstreams (void)
   /* decode pixstreams */
   Pixmap *pixmap1 = Pixmap::pixstream (alpha_rle);
   if (!pixmap1)
-    error ("%s(): failed to decode pixstream: %s", STRFUNC, string_from_errno (errno).c_str());
+    fatal ("%s(): failed to decode pixstream: %s", STRFUNC, string_from_errno (errno).c_str());
   Pixmap *pixmap2 = Pixmap::pixstream (alpha_raw);
   if (!pixmap2)
-    error ("%s(): failed to decode pixstream: %s", STRFUNC, string_from_errno (errno).c_str());
+    fatal ("%s(): failed to decode pixstream: %s", STRFUNC, string_from_errno (errno).c_str());
   Pixmap *pixmap3 = Pixmap::pixstream (rgb_rle);
   if (!pixmap3)
-    error ("%s(): failed to decode pixstream: %s", STRFUNC, string_from_errno (errno).c_str());
+    fatal ("%s(): failed to decode pixstream: %s", STRFUNC, string_from_errno (errno).c_str());
   Pixmap *pixmap4 = Pixmap::pixstream (rgb_raw);
   if (!pixmap4)
-    error ("%s(): failed to decode pixstream: %s", STRFUNC, string_from_errno (errno).c_str());
+    fatal ("%s(): failed to decode pixstream: %s", STRFUNC, string_from_errno (errno).c_str());
   /* concat pixstreams */
   Pixmap *pixall = new Pixmap (32, 128);
   pixall->copy (*pixmap1, 0, 0, -1, -1, 0,  0);
@@ -125,10 +125,10 @@ test_pixstreams (void)
   pixall->copy (*pixmap3, 0, 0, -1, -1, 0, 64);
   pixall->copy (*pixmap4, 0, 0, -1, -1, 0, 96);
   /* load reference */
-  String reference = Path::join (SRCDIR, "testpixs.png");
-  Pixmap *pixref = Pixmap::load_png (reference.c_str());
+  String reference = "testpixs.png";
+  Pixmap *pixref = Pixmap::load_png (Path::vpath_find (reference).c_str());
   if (!pixref || errno)
-    error ("failed to load \"%s\": %s", reference.c_str(), string_from_errno (errno).c_str());
+    fatal ("failed to load \"%s\": %s", reference.c_str(), string_from_errno (errno).c_str());
   ref_sink (pixmap2);
   /* check equality */
   bool cmp = pixall->compare (*pixref, 0, 0, -1, -1, 0, 0);

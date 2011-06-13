@@ -31,12 +31,12 @@ compare_image_files (const String &image1_file,
   /* load images */
   Pixmap *image1 = Pixmap::load_png (image1_file);
   if (!image1 || errno)
-    error ("failed to load \"%s\": %s", image1_file.c_str(), string_from_errno (errno).c_str());
+    fatal ("failed to load \"%s\": %s", image1_file.c_str(), string_from_errno (errno).c_str());
   ref_sink (image1);
 
   Pixmap *image2 = Pixmap::load_png (image2_file);
   if (!image2 || errno)
-    error ("failed to load \"%s\": %s", image2_file.c_str(), string_from_errno (errno).c_str());
+    fatal ("failed to load \"%s\": %s", image2_file.c_str(), string_from_errno (errno).c_str());
   ref_sink (image2);
 
   /* check sizes */
@@ -133,7 +133,7 @@ main (int   argc,
   double imgerror = compare_image_files (argv[1], argv[2]);
 
   if (fabs (imgerror) > similarity_threshold)
-    error ("excessive image difference for \"%s\" - \"%s\": %f > %f",
+    fatal ("excessive image difference for \"%s\" - \"%s\": %f > %f",
            argv[1], argv[2], fabs (imgerror), similarity_threshold);
 
   return 0;

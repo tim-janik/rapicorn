@@ -116,7 +116,7 @@ ApplicationImpl::auto_load (const String  &defs_domain,
   String fullname = auto_path (file_name, binary_path, true);
   int err = Factory::parse_file (i18n_domain, fullname, defs_domain);
   if (err)
-    error ("failed to load \"%s\": %s", fullname.c_str(), string_from_errno (err).c_str());
+    fatal ("failed to load \"%s\": %s", fullname.c_str(), string_from_errno (err).c_str());
 }
 
 void
@@ -125,7 +125,7 @@ ApplicationImpl::load_string (const std::string &xml_string,
 {
   int err = Factory::parse_string (xml_string, i18n_domain);
   if (err)
-    error ("failed to parse string: %s\n%s", string_from_errno (err).c_str(), xml_string.c_str());
+    fatal ("failed to parse string: %s\n%s", string_from_errno (err).c_str(), xml_string.c_str());
 }
 
 int

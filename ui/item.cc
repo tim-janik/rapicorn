@@ -471,7 +471,7 @@ Item::exec_command (const String &command_call_string)
   StringList args;
   if (!command_scan (command_call_string, &cmd_name, &args))
     {
-      warning ("Invalid command syntax: %s", command_call_string.c_str());
+      critical ("Invalid command syntax: %s", command_call_string.c_str());
       return false;
     }
   cmd_name = string_strip (cmd_name);
@@ -498,7 +498,7 @@ Item::exec_command (const String &command_call_string)
       item = item->parent();
     }
 
-  warning ("Command unimplemented: %s", command_call_string.c_str());
+  critical ("Command unimplemented: %s", command_call_string.c_str());
   return false;
 }
 

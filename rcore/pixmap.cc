@@ -95,9 +95,8 @@ Pixbuf::Pixbuf (uint _width,
   assert (_height <= MAXDIM);
   m_pixels = new uint32[m_rowstride * m_height];
   if (!m_pixels)
-    error ("%s(): failed to allocate %zu bytes for %ux%u pixels",
-           STRFUNC, sizeof (uint32[m_rowstride * m_height]),
-           _width, _height);
+    fatal ("failed to allocate %zu bytes for %ux%u pixels",
+           sizeof (uint32[m_rowstride * m_height]), _width, _height);
   memset (m_pixels, 0, sizeof (uint32[m_rowstride * m_height]));
 }
 

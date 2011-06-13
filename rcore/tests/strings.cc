@@ -269,7 +269,7 @@ string_conversions (void)
   };
   for (uint i = 0; i < ARRAY_SIZE (quotetests); i++)
     if (string_from_cquote (string_to_cquote (quotetests[i])) != quotetests[i])
-      error ("cquote inconsistency for \"%s\": %s -> %s", quotetests[i],
+      fatal ("cquote inconsistency for \"%s\": %s -> %s", quotetests[i],
              string_to_cquote (quotetests[i]).c_str(),
              string_from_cquote (string_to_cquote (quotetests[i])).c_str());
   assert (string_substitute_char ("foo", '3', '4') == "foo");

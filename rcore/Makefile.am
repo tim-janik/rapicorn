@@ -1,12 +1,13 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS		 = . rsvg tests
+SUBDIRS	     = . rsvg tests
 
-INCLUDES	+= -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_CORE_CFLAGS)
-DEFS		 = -DRAPICORN_INTERNALS -DRAPICORN_LOG_DOMAIN=\"RAPICORN\" # "
-GLIB_MKENUMS	 = glib-mkenums
-PLICINT		 = $(top_builddir)/plic/plic-intern
+INCLUDES    += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_CORE_CFLAGS)
+DEFS	     = -DRAPICORN_CONVENIENCE -D__SOURCE_FILE__='"$(patsubst $(realpath $(abs_top_srcdir))/%,%, $(realpath $<))"' \
+	       -D__RAPICORN_BUILD__
+GLIB_MKENUMS = glib-mkenums
+PLICINT	     = $(top_builddir)/plic/plic-intern
 
 rapicorn_public_headers = $(strip	\
         rapicorncpu.hh	rapicorndebugtools.hh	rapicornthread.hh	rapicornutils.hh  \
@@ -161,9 +162,6 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "          (@RAPICORN_REVISION_VERSION@ >= (revv))))))"				>> xgen-$(@F) \
 	&& echo '#define RAPICORN_DEVEL_VERSION  (1 & @RAPICORN_REVISION_VERSION@)' 		>> xgen-$(@F) \
 	&& echo '#define RAPICORN_STABLE_VERSION (!RAPICORN_DEVEL_VERSION)' 			>> xgen-$(@F) \
-	&& echo "#if defined (RAPICORN_INTERNALS) && !defined (RAPICORN_CONVENIENCE)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_CONVENIENCE	1"						>> xgen-$(@F) \
-	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- log & i18n domains --- */"						>> xgen-$(@F) \
 	&& echo "#ifndef RAPICORN_LOG_DOMAIN"							>> xgen-$(@F) \

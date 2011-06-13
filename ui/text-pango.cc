@@ -73,7 +73,7 @@ default_pango_direction()
   else if (strcmp (default_dir, ltr_dir) == 0)
     pdirection = PANGO_DIRECTION_LTR;
   else
-    warning ("invalid translation of \"%s\": %s", ltr_dir, default_dir);
+    critical ("invalid translation of \"%s\": %s", ltr_dir, default_dir);
   return pdirection;
 }
 
@@ -533,7 +533,7 @@ class XmlToPango : Rapicorn::MarkupParser {
              const XmlNode *enode)
   {
     if (m_error.size())
-      warning ("%s: skipping second error: %s (%p)", G_STRFUNC, estring.c_str(), enode);
+      critical ("%s: skipping second error: %s (%p)", G_STRFUNC, estring.c_str(), enode);
     else
       {
         m_error = estring;
@@ -924,7 +924,7 @@ protected:
       }
     rapicorn_gtk_threads_leave();
     if (err.size())
-      warning ("%s", err.c_str());
+      critical ("%s", err.c_str());
     invalidate();
   }
   virtual int

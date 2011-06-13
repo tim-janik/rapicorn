@@ -310,7 +310,7 @@ main (int   argc,
   rapicorn_init_test (&argc, argv);
 
   // first, load required type package
-  Type::register_package_file (Rapicorn::Path::join (SRCDIR, "testtypes.tpg"));
+  Type::register_package_file (Path::vpath_find ("testtypes.tpg"));
 
   Test::add ("/Type/type info", test_type_info);
   Test::add ("/Type/basics", test_type_api);

@@ -19,7 +19,7 @@
 
 #include <ui/events.hh>
 
-#ifndef RAPICORN_INTERNALS
+#ifndef __RAPICORN_BUILD__
 #error  This header file is for Rapicorn internal use only.
 #endif
 

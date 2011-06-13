@@ -183,13 +183,13 @@ Library::add_library (const String &filename)
 {
   // loading *could* be deferred here
   FILE *fp = fopen (find_library_file (filename).c_str(), "rb");
+  bool success = false;
   if (fp)
     {
       uint8 buffer[8192];
       ssize_t len;
       RsvgHandle *handle = rsvg_handle_new();
       g_object_ref_sink (handle);
-      bool success = false;
       while ((len = fread (buffer, 1, sizeof (buffer), fp)) > 0)
         if (!(success = rsvg_handle_write (handle, buffer, len, NULL)))
           break;
@@ -200,6 +200,7 @@ Library::add_library (const String &filename)
       else
         g_object_unref (handle);
     }
+  PDEBUG ("loading uilib");
 }
 
 static void

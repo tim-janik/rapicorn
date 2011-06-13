@@ -532,7 +532,7 @@ color_test()
                 c.green() != d.green() ||
                 c.blue()  != d.blue() ||
                 c.alpha() != d.alpha())
-              error ("color difference after hsv: %s != %s (hue=%f saturation=%f value=%f)\n",
+              fatal ("color difference after hsv: %s != %s (hue=%f saturation=%f value=%f)\n",
                      c.string().c_str(), d.string().c_str(), hue, saturation, value);
           }
       if (r % 5 == 0)

@@ -217,7 +217,7 @@ main (int   argc,
   app.init_with_x11 (&argc, &argv, "TestItemsTest");
 
   /* parse GUI description */
-  app.auto_load ("RapicornTest", Rapicorn::Path::join (SRCDIR, "testitems.xml"), argv[0]);
+  app.auto_load ("RapicornTest", Path::vpath_find ("testitems.xml"), argv[0]);
 
   /* create/run tests */
   test_cxx_gui();

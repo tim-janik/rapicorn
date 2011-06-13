@@ -21,6 +21,7 @@
 #include <sys/utsname.h>
 #include <fcntl.h>
 #include <sys/time.h>
+#include <sys/types.h>  // gettid
 #include <cxxabi.h>
 #include <signal.h>
 #include <glib.h>
@@ -227,7 +228,8 @@ rapicorn_init_core (int        *argcp,
       return;   /* simply ignore repeated initializations */
     }
 
-  Logging::setup();
+  const char *env_rapicorn = getenv ("RAPICORN");
+  Logging::configure (env_rapicorn ? env_rapicorn : "");
 
   /* normal initialization */
   rapicorn_init_settings = &global_init_settings;
@@ -239,7 +241,7 @@ rapicorn_init_core (int        *argcp,
 
   /* verify constructur runs to catch link errors */
   if (_internalconstructortest.v != 0x12affe17)
-    error ("librapicorncore: link error: C++ constructors have not been executed");
+    fatal ("librapicorncore: link error: C++ constructors have not been executed");
 
   rapicorn_parse_settings_and_args (ivalues, argcp, argvp);
 
@@ -312,312 +314,354 @@ RAPICORN_STATIC_ASSERT (LDBL_MIN     <= 1E-37);
 RAPICORN_STATIC_ASSERT (LDBL_MAX     >= 1E+37);
 RAPICORN_STATIC_ASSERT (LDBL_EPSILON <= 1E-9);
 
-/* === printing, errors, warnings, assertions, debugging === */
-#define LSTRING_OFFSET  16
-static inline bool
-inword (char c)
-{
-  return isalnum (c) || strchr ("+-_/*$!%()", c);
-}
+static clockid_t monotonic_clockid = CLOCK_REALTIME;
+static uint64    monotonic_start = 0;
+static uint64    monotonic_resolution = 1000;   // assume 1µs resolution for gettimeofday fallback
+static uint64    realtime_start = 0;
 
-static ssize_t
-lstring_find_word (const String &s,
-                   const String &w,
-                   char          postfix = 0)
+static void
+timestamp_init_ ()
 {
-  size_t start = 0, p;
-  ssize_t last = -1;
-  while (p = s.find (w, start),
-         p != s.npos)
+  static bool clockinit = 0;
+  if (once_enter (&clockinit))
     {
-      start = p + 1;
-      if (p > 0 && inword (s[p - 1]))
-        continue; // no preceding word boundary
-      if (!postfix && p + w.size() < s.size() && inword (s[p + w.size()]))
-        continue; // no subsequent word boundary
-      if (postfix && (p + w.size() >= s.size() || s[p + w.size()] != postfix))
-        continue; // missing required postfix
-      last = MAX (last, ssize_t (p)); // match
-    }
-  return last < 0 ? 0 : last + LSTRING_OFFSET;
-}
-
-bool   Logging::cdebug = true;
-bool   Logging::cany = true;
-bool   Logging::cdiag = true;
-bool   Logging::cdevel = true;
-bool   Logging::cverbose = false;
-bool   Logging::cwfatal = false;
-bool   Logging::cstderr = true;
-bool   Logging::csyslog = false;
-bool   Logging::cnfsyslog = false;
-bool   Logging::ctestpid0 = false;
-String Logging::logfile = "";
-String Logging::config = "debug";
-String Logging::ovrconfig = "";
-
-String
-Logging::override_config ()
-{
-  return ovrconfig;
-}
-
-void
-Logging::override_config (const String &cfg)
-{
-  String str = cfg;
-  std::transform (str.begin(), str.end(), str.begin(), ::tolower);
-  ovrconfig = str;
-  setup();
-}
-
-void
-Logging::setup ()
-{
-  const char *s = getenv ("RAPICORN");
-  String str = s ? s : "";
-  std::transform (str.begin(), str.end(), str.begin(), ::tolower);
-  config = str;
-  str = config + ":" + ovrconfig;
-  const ssize_t wall = lstring_find_word (str, "log-all");
-  const ssize_t wvrb = lstring_find_word (str, "verbose");
-  const ssize_t wfat = lstring_find_word (str, "fatal-warnings");
-  const ssize_t wnft = lstring_find_word (str, "no-fatal-warnings");
-  const ssize_t wbrf = lstring_find_word (str, "brief");
-  const ssize_t wdbg = lstring_find_word (str, "debug"); // debug any
-  const ssize_t wndg = lstring_find_word (str, "no-debug");
-  const ssize_t wdev = lstring_find_word (str, "devel");
-  const ssize_t wndv = lstring_find_word (str, "no-devel");
-  const ssize_t wstb = lstring_find_word (str, "stable");
-  const ssize_t wdag = lstring_find_word (str, "diag");
-  const ssize_t wdng = lstring_find_word (str, "no-diag");
-  const ssize_t wyse = lstring_find_word (str, "stderr");
-  const ssize_t wnse = lstring_find_word (str, "no-stderr");
-  const ssize_t wsys = lstring_find_word (str, "syslog");
-  const ssize_t wnsy = lstring_find_word (str, "no-syslog");
-  const ssize_t whlp = lstring_find_word (str, "help");
-  const ssize_t wnfs = lstring_find_word (str, "no-fatal-syslog");
-  const ssize_t wtp0 = lstring_find_word (str, "testpid0");
-  // due to LSTRING_OFFSET, we can use bool(default)
-  const ssize_t devel1 = MAX (bool (RAPICORN_DEVEL_VERSION), MAX (wall, wdev));
-  const ssize_t devel0 = MAX (wstb, wndv);
-  cdevel = devel1 > devel0;
-  cdiag = MAX (bool (cdevel), MAX (wall, wdag)) > wdng;
-  cverbose = MAX (bool (wall), wvrb) > wbrf;
-  cwfatal = wfat > wnft;
-  cany = MAX (bool (wall), wdbg) > wndg;
-  cdebug = cany || lstring_find_word (str, "debug", '-');
-  cstderr = MAX (bool (1), wyse) > wnse;
-  csyslog = wsys > wnsy;
-  cnfsyslog = bool (wnfs);
-  ctestpid0 = bool (wtp0);
-  if (whlp)
-    {
-      String keys = "  log-all:verbose:brief:debug:no-debug:devel:stable\n"
-                    "  help:diag:no-diag:stderr:no-stderr:syslog:no-syslog\n"
-                    "  fatal-warnings:no-fatal-warnings\n"
-                    "  debug-*:no-debug-*: (where * is a custom debug prefix)";
-      vector<String> dk = Logging::debug_keys();
-      for (uint i = 0; i < dk.size(); i++)
+      realtime_start = timestamp_realtime();
+      struct timespec tp = { 0, 0 };
+      if (clock_getres (CLOCK_REALTIME, &tp) >= 0)
+        monotonic_resolution = tp.tv_sec * 1000000000ULL + tp.tv_nsec;
+      uint64 mstart = realtime_start;
+#ifdef CLOCK_MONOTONIC
+      // CLOCK_MONOTONIC_RAW cannot slew, but doesn't measure SI seconds accurately
+      // CLOCK_MONOTONIC may slew, but attempts to accurately measure SI seconds
+      if (monotonic_clockid == CLOCK_REALTIME && clock_getres (CLOCK_MONOTONIC, &tp) >= 0)
         {
-          keys += i % 6 ? ":" : "\n  ";
-          keys += dk[i];
+          monotonic_clockid = CLOCK_MONOTONIC;
+          monotonic_resolution = tp.tv_sec * 1000000000ULL + tp.tv_nsec;
+          mstart = timestamp_benchmark(); // here, monotonic_start=0 still
         }
-      printerr ("Rapicorn::Logging: configuration help, available keys for $RAPICORN:\n%s\n",
-                keys.c_str());
+#endif
+      monotonic_start = mstart;
+      once_leave (&clockinit, true);
     }
-  if (logfile.empty())
+}
+namespace { static struct Timestamper { Timestamper() { timestamp_init_(); } } realtime_startup; } // Anon
+
+/** Provides the timestamp_realtime() value from program startup. */
+uint64
+timestamp_startup ()
+{
+  timestamp_init_();
+  return realtime_start;
+}
+
+/** Return the current time as uint64 in µseconds. */
+uint64
+timestamp_realtime ()
+{
+  struct timespec tp = { 0, 0 };
+  if (ISLIKELY (clock_gettime (CLOCK_REALTIME, &tp) >= 0))
+    return tp.tv_sec * 1000000ULL + tp.tv_nsec / 1000;
+  else
     {
-      const char *start = str.c_str(), *p = start, *last = NULL;
-      while ((p = strstr (p, "logfile=")) && *p)
-        {
-          if (p == start || strchr (":;,", p[-1]))
-            last = p;
-          p++;
-        }
-      if (last && last[8])
-        {
-          start = last + 8;
-          p = start;
-          while (*p && !strchr (":;,", *p))
-            p++;
-          logfile = String (start, p - start);
-        }
+      struct timeval now = { 0, 0 };
+      gettimeofday (&now, NULL);
+      return now.tv_sec * 1000000ULL + now.tv_usec;
     }
-  /* Logging configuration implemented in here:
-   * Message  Syslog Stable Devel Abort Option
-   * fatal:     [*]   [*]   [*]   [*]     -
-   * error:     [D]   [*]   [*]   [D]     -
-   * warning:   [ ]   [*]   [*]   [ ]     -
-   * diag:      [ ]   [ ]   [*]   [ ]   diag/devel/log-all
-   * debug:     [ ]   [ ]   [ ]   [ ]   log-all/debug/debug-*
-   */
 }
 
-void
-Logging::abort()
+/** Provides resolution of timestamp_benchmark() in nano-seconds. */
+uint64
+timestamp_resolution ()
 {
-  printerr ("aborting...\n");
-  ::abort();
+  timestamp_init_();
+  return monotonic_resolution;
 }
 
-void
-Logging::dmessage (const char *file, int line, const char *func, const char *domain,
-                   const Logging &detail, const char *format, ...)
+/** Returns benchmark timestamp in nano-seconds, clock starts around program startup. */
+uint64
+timestamp_benchmark ()
 {
-  va_list args;
-  va_start (args, format);
-  Logging::vmessage (file, line, func, domain, detail, format, args);
-  va_end (args);
-}
-
-void
-Logging::vmessage (const char *file, int line, const char *func, const char *domain,
-                   const Logging &detail, const char *format, va_list vargs)
-{
-  const int saved_errno = errno;
-  const size_t a = size_t (&detail);
-  const bool debugging = a >= 256;
-  bool curtly = false;
-  char kind = 0, perrno = 0;
-  int syl = LOG_DEBUG;
-  String key;
-  if (debugging)
+  struct timespec tp = { 0, 0 };
+  uint64 stamp;
+  if (ISLIKELY (clock_gettime (monotonic_clockid, &tp) >= 0))
     {
-      perrno = detail.m_flags & PERRNO;
-      curtly = detail.m_flags & CURTLY;
-      key = String ("debug-") + detail.m_detail;
-      String lookup = key;
-      std::transform (lookup.begin(), lookup.end(), lookup.begin(), ::tolower);
-      const ssize_t wyes = lstring_find_word (config, lookup);
-      const ssize_t w_no = lstring_find_word (config, "no-" + lookup);
-      if (MAX (bool (cany), wyes) <= w_no)
-        return;
+      stamp = tp.tv_sec * 1000000000ULL + tp.tv_nsec;
+      stamp -= monotonic_start;                 // reduce number of significant bits
     }
   else
     {
-      perrno = bool (a & 0x80);
-      kind = a & 0x7f;
-      switch (kind)
-        {
-        case 'f': syl = LOG_ERR;     key = "FATAL";    break; // LOG_CRIT uses system-level routing
-        case 'e': syl = LOG_ERR;     key = "ERROR";    break;
-        case 'w': syl = LOG_WARNING; key = "WARNING";  break;
-        case 'd': syl = LOG_NOTICE;  key = "";         break;
-        default: break;
-        }
+      stamp = timestamp_realtime() * 1000;
+      stamp -= MIN (stamp, monotonic_start);    // reduce number of significant bits
     }
-  String l = file ? string_printf ("%s:%u:", file, line) : "";
-  String d = domain && !file ? string_printf ("%s:", domain) : "";
-  String f = func ? string_printf ("%s():", func) : "";
-  String u = string_vprintf (format, vargs);
-  String e = perrno ? String (": ") + strerror (saved_errno) : "";
-  bool fatal_abort = kind == 'f' ||
-                     (kind == 'e' && cdevel) ||
-                     (kind == 'e' && cwfatal) ||
-                     (kind == 'w' && cwfatal);
-  const char *wfatal = kind == 'w' && cwfatal ? "(fatal warnings) " : "";
-  // stderr
-  if (cstderr || fatal_abort)
+  return stamp;
+}
+
+/* === Logging === */
+bool Logging::m_debugging = 0;
+
+static Mutex                 conftest_mutex;
+static const char           *conftest_logfile = NULL;
+static bool                  conftest_fatal_to_syslog = true;
+static bool                  conftest_critical_to_syslog = false;
+static bool                  conftest_abort_on_criticals = false;
+static std::map<String,bool> conftest_smap;
+static const char *conftest_aliases[] = {
+  "debug",      "verbose",
+  "v=1",        "verbose",
+  "v=0",        "no-verbose",
+};
+
+static int
+conftest_lookup_U (const char *option, int vdefault)
+{
+  std::map<String,bool>::const_iterator it;
+  it = conftest_smap.find (option);
+  if (it == conftest_smap.end())
     {
-      String n = process_name();
-      if (n.empty()) n = file ? file : "/";
-      if (!cverbose)
-        { // simplistic basename implementation
-          const char *ptr = strrchr (n.c_str(), RAPICORN_DIR_SEPARATOR);
-          if (ptr && *ptr && ptr[1])
-            n = n.substr (ptr - n.c_str() + 1);
-        }
-      String p = string_printf ("%s[%u]:", n.c_str(), ctestpid0 ? 0 : Thread::Self::pid());
-      String k = !key.empty() ? string_printf ("%s:", key.c_str()) : "";
-      String sk = key.empty() ? "" : " " + k;
-      String m = kind && strchr ("feau", kind) ? "\n" : ""; // newline before aborting
-      if (curtly)
-        m += k + " " + u + e;
-      else if (cverbose)
-        m += p + l + d + f + sk + " " + u + e;
-      else if (debugging)
-        m += l + d + sk + " " + u + e;
-      else if (file || func) // assertion or check failed
-        m += l + d + f + sk + " " + u + e;
-      else
-        m += p + sk + " " + u + e;
-      if (m[m.size() - 1] != '\n') m += "\n"; // newline termination
-      m += wfatal;
-      printerr ("%s", m.c_str());
+      String o (option);
+      for (uint i = 0; i < ARRAY_SIZE (conftest_aliases); i += 2)
+        if (o == conftest_aliases[i])
+          {
+            it = conftest_smap.find (conftest_aliases[i+1]);
+            break;
+          }
     }
-  // logfile
-  if (!logfile.empty())
+  return it != conftest_smap.end() ? it->second : vdefault;
+}
+
+void
+Logging::configure (const char *option)
+{
+  String s = ":" + String (option ? option : "") + ":";
+  std::transform (s.begin(), s.end(), s.begin(), ::tolower);
+  const char *l, *p;
+  for (l = s.c_str(), p = strchr (l, ':'); p; p = strchr (l, ':'))
+    {
+      String o = String (l, p - l);
+      l = p + 1;
+      for (uint i = 0; i < ARRAY_SIZE (conftest_aliases); i += 2)
+        if (o == conftest_aliases[i])
+          o = conftest_aliases[i+1];
+      bool v = true;
+      if (strncmp (o.c_str(), "no-", 3) == 0)
+        {
+          v = !v;
+          o = o.substr (3);
+        }
+      if (strncmp (o.c_str(), "logfile=", 8) == 0)
+        {
+          ScopedLock<Mutex> locker (conftest_mutex);
+          if (!conftest_logfile)
+            conftest_logfile = strdup (&o[8]);
+        }
+      else if (!o.empty() && !strchr (o.c_str(), '='))
+        {
+          ScopedLock<Mutex> locker (conftest_mutex);
+          conftest_smap[o] = v;
+        }
+    }
+  if (true)
+    {
+      ScopedLock<Mutex> locker (conftest_mutex);
+      // update cached configurations
+      m_debugging                 = conftest_lookup_U ("verbose", m_debugging);
+      conftest_fatal_to_syslog    = conftest_lookup_U ("fatal-syslog", conftest_fatal_to_syslog);
+      conftest_critical_to_syslog = conftest_lookup_U ("syslog", conftest_critical_to_syslog);
+      conftest_abort_on_criticals = conftest_lookup_U ("fatal-warnings", conftest_abort_on_criticals);
+    }
+}
+
+int
+Logging::conftest (const char *option,
+                   int         vdefault)
+{
+  ScopedLock<Mutex> locker (conftest_mutex);
+  return conftest_lookup_U (option, vdefault);
+}
+
+static String
+program_name ()
+{
+#ifdef  _GNU_SOURCE
+  return program_invocation_short_name;
+#else
+#error Missing program_invocation_short_name
+  return "";
+#endif
+}
+
+static int
+thread_pid()
+{
+  int tid = -1;
+#if     defined (__linux__) && defined (__NR_gettid)    /* present on linux >= 2.4.20 */
+  tid = syscall (__NR_gettid);
+#endif
+  if (tid < 0)
+    tid = getpid();
+  return tid;
+}
+
+static void
+ensure_openlog()
+{
+  static bool opened = false;
+  if (once_enter (&opened))
+    {
+      openlog (NULL, LOG_PID, LOG_USER); // force pid logging
+      once_leave (&opened, true);
+    }
+}
+
+static String
+file_stem (const char *fname)
+{
+  const char *file = strrchr (fname, DIR_SEPARATOR); // strip directories
+  if (file)
+    file += 1; // skip directory separator
+  else
+    file = fname;
+  const char *dot = strrchr (file, '.');
+  return !dot || dot == file ? file : String (file, dot - file);
+}
+
+static inline int
+logtest (const char **kindp, const char *mode, int advance, int flags)
+{
+  if (strcmp (*kindp, mode) == 0)
+    {
+      *kindp += advance;
+      return flags;
+    }
+  return 0;
+}
+
+void
+Logging::message (const char *kind, const char *file, int line, const char *func, const char *format, ...)
+{
+  int saved_errno = errno;
+  if (!kind)
+    kind = "DIAG";
+  enum { DO_STDERR = 1, DO_SYSLOG = 2, DO_ABORT = 4, DO_DEBUG = 8, DO_ERRNO = 16, DO_STAMP = 32 };
+  const int FATAL_SYSLOG = conftest_fatal_to_syslog ? DO_SYSLOG : 0;
+  const int MAY_SYSLOG = conftest_critical_to_syslog ? DO_SYSLOG : 0;
+  const int MAY_ABORT  = conftest_abort_on_criticals ? DO_ABORT  : 0;
+  int f = 0;
+  f |= logtest (&kind, "FATAL",     0, DO_STDERR | FATAL_SYSLOG | DO_ABORT);
+  f |= logtest (&kind, "PFATAL",    1, DO_STDERR | FATAL_SYSLOG | DO_ABORT | DO_ERRNO);
+  f |= logtest (&kind, "CRITICAL",  0, DO_STDERR | MAY_SYSLOG | MAY_ABORT);
+  f |= logtest (&kind, "PCRITICAL", 1, DO_STDERR | MAY_SYSLOG | MAY_ABORT | DO_ERRNO);
+  f |= logtest (&kind, "ABORT",     5, DO_STDERR | FATAL_SYSLOG | DO_ABORT);
+  f |= logtest (&kind, "PABORT",    6, DO_STDERR | FATAL_SYSLOG | DO_ABORT | DO_ERRNO);
+  f |= logtest (&kind, "CHECK",     5, DO_STDERR | MAY_SYSLOG | MAY_ABORT);
+  f |= logtest (&kind, "PCHECK",    6, DO_STDERR | MAY_SYSLOG | MAY_ABORT | DO_ERRNO);
+  f |= logtest (&kind, "DEBUG",     0, DO_DEBUG | DO_STAMP);
+  f |= logtest (&kind, "PDEBUG",    1, DO_DEBUG | DO_ERRNO | DO_STAMP);
+  f |= !conftest_logfile ? 0 :         DO_STAMP;
+  String ff = func ? func + String (":") : "";
+  String ll;
+  if (file)
+    ll = line <= 0 ? file : string_printf ("%s:%u", file, line);
+  ll += ":" + ff;
+  String what = kind && kind[0] ? String (" ") + kind + ":" : "";
+  String msg;
+  va_list vargs;
+  va_start (vargs, format);
+  msg = string_vprintf (format, vargs);
+  va_end (vargs);
+  String emsg = f & DO_ERRNO ? ": " + string_from_errno (saved_errno) + "\n" : "\n";
+  if (f & DO_STAMP)
+    ;
+  const uint64 start = timestamp_startup(), delta = max (timestamp_realtime(), start) - start;
+  if (f & DO_DEBUG)
+    {
+      static bool first_debug = false;
+      if (once_enter (&first_debug))
+        {
+          printerr ("[%llu.%06llu] %s[%u]: program started at: %llu.%06llu\n",
+                    delta / 1000000, delta % 1000000,
+                    program_name().c_str(), thread_pid(),
+                    start / 1000000, start % 1000000);
+          once_leave (&first_debug, true);
+        }
+      String where = file ? file_stem (file) + ":" : "";
+      printerr ("[%llu.%06llu] %s %s%s",
+                delta / 1000000, delta % 1000000,
+                where.c_str(), msg.c_str(), emsg.c_str());
+    }
+  if (f & DO_STDERR)
+    {
+      String end = emsg;
+      if (f & DO_ABORT)
+        end += "Aborting...\n";
+      printerr ("%s[%u]:%s%s %s%s", program_name().c_str(), thread_pid(), ll.c_str(), what.c_str(), msg.c_str(), end.c_str());
+    }
+  if (conftest_logfile)
     {
       static int logfd = 0;
+      String out;
       if (once_enter (&logfd))
         {
           int fd;
           do
-            fd = open (Path::abspath (logfile).c_str(), O_WRONLY | O_CREAT | O_APPEND | O_NOCTTY, 0666);
+            fd = open (Path::abspath (conftest_logfile).c_str(), O_WRONLY | O_CREAT | O_APPEND | O_NOCTTY, 0666);
           while (logfd < 0 && errno == EINTR);
           if (fd == 0) // invalid initialization value
             {
               fd = dup (fd);
               close (0);
             }
+          out = string_printf ("[%llu.%06llu] %s[%u]: program started at: %5llu.%06llu\n",
+                               delta / 1000000, delta % 1000000, program_name().c_str(), thread_pid(),
+                               start / 1000000, start % 1000000);
           once_leave (&logfd, fd);
         }
-      String n = process_name();
-      String p = string_printf ("%s[%u]:", n.c_str(), Thread::Self::pid());
-      if (logfd > 0)
-        {
-          String k = !key.empty() ? string_printf (" %s:", key.c_str()) : "";
-          String m = p + l + d + f + k + " " + u + e;
-          if (m[m.size() - 1] != '\n') m += "\n"; // newline termination
-          if (fatal_abort)
-            m += String (wfatal) + "aborting...\n";
-          int err;
-          do
-            err = write (logfd, m.data(), m.size());
-          while (err < 0 && (errno == EINTR || errno == EAGAIN));
-        }
+      out += string_printf ("[%llu.%06llu] %s[%u]:%s%s %s%s",
+                            delta / 1000000, delta % 1000000, program_name().c_str(), thread_pid(),
+                            ll.c_str(), what.c_str(), msg.c_str(), emsg.c_str());
+      if (f & DO_ABORT)
+        out += "aborting...\n";
+      int err;
+      do
+        err = write (logfd, out.data(), out.size());
+      while (err < 0 && (errno == EINTR || errno == EAGAIN));
     }
-  // syslog
-  if (csyslog || (fatal_abort && !cnfsyslog))
+  if (f & DO_SYSLOG)
     {
-      static bool opened = false;
-      if (once_enter (&opened))
-        {
-          openlog (NULL, LOG_PID, LOG_USER);
-          once_leave (&opened, true);
-        }
-      bool verbose = cverbose || fatal_abort;
-      String k = !key.empty() ? string_printf ("%s:", key.c_str()) : "";
-      String c;
-      if (verbose && file)
-        c = string_printf ("(%s:%u) ", file, line);
-      else if (verbose && func)
-        c = string_printf ("(%s) ", func);
-      else if (verbose && domain)
-        c = string_printf ("(%s) ", domain);
-      if (!key.empty() && !c.empty())
-        c = " " + c;
-      syslog (syl, "%s%s%s%s", k.c_str(), c.c_str(), u.c_str(), e.c_str());
+      ensure_openlog();
+      if (!ll.empty())
+        ll += " ";
+      String end = emsg;
+      if (!end.empty() && end[end.size()-1] == '\n')
+        end.resize (end.size()-1);
+      const int level = f & DO_ABORT ? LOG_ERR : LOG_WARNING;
+      syslog (level, "%s%s%s", ll.c_str(), msg.c_str(), end.c_str());
     }
-  // aborting
-  if (fatal_abort)
-    Logging::abort();
+  if (f & DO_ABORT)
+    {
+      ::abort();
+    }
 }
 
 void
-Logging::add ()
+Logging::abort()
 {
-  if (detail)
-    ; // register keys?
+  ::abort();
 }
 
-vector<String>
-Logging::debug_keys()
+void
+Logging::messagev (const char *kind, String file, const char *format, va_list vargs)
 {
-  return vector<String>(); // not currently registering
+  message (kind, file.c_str(), 0, NULL, "%s", string_vprintf (format, vargs).c_str());
 }
 
+String
+Logging::string_func (const char *func, const char *pretty_func)
+{
+  return func ? func : "???"; // FIXME: use pretty_func to include possible prefixes
+}
+
+/* --- utilities --- */
 void
 printerr (const char *format, ...)
 {
@@ -1536,17 +1580,6 @@ text_convert (const String &to_charset,
 
 }
 
-/* --- timestamp handling --- */
-uint64 // system clock in usecs
-timestamp_now ()
-{
-  struct timeval now = { 0, 0 };
-  gettimeofday (&now, NULL);
-  uint64 stamp = now.tv_sec; // promotes to 64bit
-  stamp = 1000000 * stamp + now.tv_usec;
-  return stamp;
-}
-
 /**
  * @namespace Rapicorn::Path
  * The Rapicorn::Path namespace covers function for file path manipulation and evaluation.
@@ -1824,6 +1857,25 @@ searchpath_split (const String &searchpath)
   return sv;
 }
 
+String
+searchpath_find (const String &searchpath, const String &file, const String &mode)
+{
+  if (isabs (file))
+    return check (file, mode) ? file : "";
+  StringVector sv = searchpath_split (searchpath);
+  for (size_t i = 0; i < sv.size(); i++)
+    if (check (join (sv[i], file), mode))
+      return join (sv[i], file);
+  return "";
+}
+
+String
+vpath_find (const String &file, const String &mode)
+{
+  const char *vpath = getenv ("VPATH");
+  return searchpath_find (vpath ? vpath : ".", file, mode);
+}
+
 const String dir_separator = RAPICORN_DIR_SEPARATOR_S;
 const String searchpath_separator = RAPICORN_SEARCHPATH_SEPARATOR_S;
 
@@ -1950,7 +2002,7 @@ Deletable::DeletionHook::deletable_remove_hook (Deletable *deletable)
 Deletable::DeletionHook::~DeletionHook ()
 {
   if (this->next || this->prev)
-    g_error ("%s: hook is being destroyed but not unlinked: %p", G_STRFUNC, this);
+    fatal ("hook is being destroyed but not unlinked: %p", this);
 }
 
 #define DELETABLE_MAP_HASH (19) /* use prime size for hashing, sums up to roughly 1k (use 83 for 4k) */
@@ -2240,7 +2292,7 @@ ReferenceCountable::stackcheck (const void *data)
    * perfect, but should catch the most common cases for growing and shrinking stacks
    */
   if (stack_ptrdiff (&stackvariable, data) < stack_proximity_threshold)
-    error ("ReferenceCountable object allocated on stack instead of heap: %zu > %zu (%p - %p)",
+    fatal ("ReferenceCountable object allocated on stack instead of heap: %zu > %zu (%p - %p)",
            stack_proximity_threshold,
            stack_ptrdiff (&stackvariable, data),
            data, &stackvariable);
@@ -2672,7 +2724,7 @@ BaseObject::plor_name (const String &_plor_name)
   if (plor_add (*this, _plor_name))
     set_data (&plor_name_key, _plor_name);
   else
-    warning ("invalid plor name for object (%p): %s", this, _plor_name.c_str());
+    critical ("invalid plor name for object (%p): %s", this, _plor_name.c_str());
 }
 
 void
@@ -2755,8 +2807,8 @@ zintern_decompress (unsigned int          decompressed_size,
       break;
     }
   if (err)
-    g_error ("failed to decompress (%p, %u): %s", cdata, cdata_size, err);
-  
+    fatal ("failed to decompress (%p, %u): %s", cdata, cdata_size, err);
+
   text[dlen] = 0;
   return text;          /* success */
 }

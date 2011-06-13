@@ -7,8 +7,8 @@
  * and to remove/configure code portions.
  */
 #include "regionimpl.h"
-#include <assert.h>
 #include <malloc.h>
+#include <assert.h>
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
