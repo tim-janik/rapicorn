@@ -1,14 +1,43 @@
-/* Rapicorn
- * Copyright (C) 2011 Tim Janik
- * Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
- */
+/* Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html */
 #include "svg.hh"
 #include "rsvg.h"
 #include "rsvg-cairo.h"
 #include "rsvg-private.h"
 
+#include "svg-tweak.h"
+
+/* A note on coordinate system increments:
+ * - Librsvg:  X to right, Y downwards.
+ * - Cairo:    X to right, Y downwards.
+ * - X11/GTK:  X to right, Y downwards.
+ * - Windows:  X to right, Y downwards.
+ * - Inkscape: X to right, Y upwards (UI coordinate system).
+ * - Cocoa:    X to right, Y upwards.
+ * - ACAD:     X to right, Y upwards.
+ */
+
+static double
+affine_x (const double x, const double y, const double affine[6])
+{
+  return affine[0] * x + affine[2] * y + affine[4];
+}
+
+static double
+affine_y (const double x, const double y, const double affine[6])
+{
+  return affine[1] * x + affine[3] * y + affine[5];
+}
+
 namespace Rapicorn {
 namespace Svg {
+
+struct Tweaker {
+  double m_cx, m_cy, m_lx, m_rx, m_by, m_ty;
+  explicit      Tweaker         (double cx, double cy, double lx, double rx, double by, double ty) :
+    m_cx (cx), m_cy (cy), m_lx (lx), m_rx (rx), m_by (by), m_ty (ty) {}
+  bool          point_tweak     (double *x, double *y);
+  static void   thread_set      (Tweaker *tweaker);
+};
 
 struct ElementImpl : public ReferenceCountable {
   RsvgHandle    *handle;
@@ -135,16 +164,31 @@ Element::render (cairo_surface_t  *surface,
 {
   return_val_if_fail (surface != NULL, false);
   if (!impl) return false;
-  cairo_t *cr = cairo_create (surface); // anchors origin (0,0) at top_left - surface_height
-  const double dx = area.width / impl->width, dy = area.height / impl->height;
-  int cheight = cairo_image_surface_get_height (surface);
-  cairo_translate (cr, -impl->x * dx, cheight - dy * (impl->y + impl->height)); // shift sub into bottom_left
-  cairo_translate (cr, area.x, -area.y); // translate by requested offset
-  cairo_scale (cr, dx, dy);
+  cairo_t *cr = cairo_create (surface);
+  cairo_translate (cr, -impl->x, -impl->y); // shift sub into top_left
+  cairo_translate (cr, area.x, area.y);    // translate by requested offset
   const char *cid = impl->id.empty() ? NULL : impl->id.c_str();
+  const double rx = (area.width - impl->width) / 2.0;
+  const double lx = (area.width - impl->width) - rx;
+  const double ty = (area.height - impl->height) / 2.0;
+  const double by = (area.height - impl->height) - ty;
+  Tweaker tw (impl->x + impl->width / 2.0, impl->y + impl->height / 2.0, lx, rx, ty, by);
+  tw.thread_set (&tw);
   bool rendered = rsvg_handle_render_cairo_sub (impl->handle, cr, cid);
+  tw.thread_set (NULL);
   cairo_destroy (cr);
   return rendered;
+}
+
+bool
+Tweaker::point_tweak (double *x, double *y)
+{
+  bool mod = 0;
+  if (*x >= m_cx)
+    *x += m_lx + m_rx, mod = 1;
+  if (*y > m_cy)
+    *y += m_ty + m_by, mod = 1;
+  return mod;
 }
 
 static vector<String>      library_search_dirs;
@@ -275,5 +319,37 @@ svg_initialisation_hook (void)
 }
 static InitHook inithook (svg_initialisation_hook, -1);
 
+static __thread Tweaker *thread_tweaker = NULL;
+
+void
+Tweaker::thread_set (Tweaker *tweaker)
+{
+  if (tweaker)
+    return_if_fail (thread_tweaker == NULL);
+  thread_tweaker = tweaker;
+}
+
 } // Svg
 } // Rapicorn
+
+extern "C" {
+
+int
+svg_tweak_point_tweak (double *px, double *py,
+                       const double affine[6],
+                       const double iaffine[6])
+{
+  if (!Rapicorn::Svg::thread_tweaker)
+    return false;
+  double x = affine_x (*px, *py, affine);
+  double y = affine_y (*px, *py, affine);
+  if (Rapicorn::Svg::thread_tweaker->point_tweak (&x, &y))
+    {
+      *px = affine_x (x, y, iaffine);
+      *py = affine_y (x, y, iaffine);
+      return true;
+    }
+  return false;
+}
+
+};
