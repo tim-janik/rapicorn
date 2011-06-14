@@ -1,38 +1,42 @@
 !<arch>
-svgtool.ref/    1307574685  1000  1000  100664  1229      `
+svgtool.ref/    1308009598  1000  1000  100664  1575      `
 
 ### ** +-------------+ ** ###
 ### ** +  ./svgtool  + ** ###
 ### ** +-------------+ ** ###
 
 ## Testing: SVG/svg2png...
-  ARGB:122x106:ca4c9d74e8ff5cf0
-  -----------------------------------------
- |                                         |
- |                                         |
- |                                         |
- |                                         |
- |                                         |
- |          `_''_''_''_''_''_''``          |
- |         `+LYSJYSJYSJYSJYSJYSz~          |
- |         `zSdddddddddddddddddo+          |
- |         `zSddddddddddddddddd7+          |
- |         `\4ddddddddddddddddde+          |
- |         `rYdddddddddddddddddlr          |
- |         `>4ddddddddddddddddd*+          |
- |         `rYddddddddddddddddd]r          |
- |         `\4ddddddddddddddddde+          |
- |         `rZq53q53q53q53q53q5s+          |
- |         `_==:~=:~=:~=:~=:~=:=_          |
- |                                         |
- |                                         |
- |                                         |
- |                                         |
- |                                         |
- |                                         |
-  -----------------------------------------
+  ARGB:94x78:b3b19bf3e3cf2e0a
+  -----------------------------------------------
+ |                                               |
+ |                                               |
+ |                                               |
+ |      ```````````````````````````````````      |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |     _ddddddddddddddddddddddddddddddddddd_     |
+ |      ```````````````````````````````````      |
+ |                                               |
+ |                                               |
+ |                                               |
+  -----------------------------------------------
 
-datalist.ref/   1307574685  1000  1000  100664  690       `
+datalist.ref/   1308009598  1000  1000  100664  690       `
 
 ### ** +--------------+ ** ###
 ### ** +  ./datalist  + ** ###
@@ -60,7 +64,7 @@ datalist.ref/   1307574685  1000  1000  100664  690       `
 ::StringKey::destroy: delete "RAPICORN";
 
 ## Testing: trait_convertible_test...
-messages.ref/   1307574685  1000  1000  100664  785       `
+messages.ref/   1308009598  1000  1000  100664  785       `
 
 ### ** +--------------+ ** ###
 ### ** +  ./messages  + ** ###

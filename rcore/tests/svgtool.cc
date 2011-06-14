@@ -204,7 +204,7 @@ test_convert_svg2png()
   assert (a.width && a.height);
   a.width *= 9;
   a.height *= 7;
-  const int frame = 25, width = a.width + 2 * frame, height = a.height + 2 * frame;
+  const int frame = 11, width = a.width + 2 * frame, height = a.height + 2 * frame;
   uint8 *pixels = new uint8[int (width * height * 4)];
   assert (pixels != NULL);
   memset (pixels, 0, width * height * 4);

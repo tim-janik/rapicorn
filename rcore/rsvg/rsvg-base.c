@@ -2055,6 +2055,34 @@ rsvg_push_discrete_layer (RsvgDrawingCtx * ctx)
     ctx->render->push_discrete_layer (ctx);
 }
 
+#include "svg-tweak.h"
+
+static void
+tweak_bpath (RsvgBpathDef *bpd,
+             const double  affine[6],
+             const double  iaffine[6])
+{
+    int i;
+    for (i = 0; i < bpd->n_bpath; i++)
+        {
+            switch (bpd->bpath[i].code)
+                {
+                case RSVG_MOVETO:
+                case RSVG_MOVETO_OPEN:
+                    svg_tweak_point_tweak (&bpd->bpath[i].x3, &bpd->bpath[i].y3, affine, iaffine);
+                    break;
+                case RSVG_LINETO:
+                    svg_tweak_point_tweak (&bpd->bpath[i].x3, &bpd->bpath[i].y3, affine, iaffine);
+                    break;
+                case RSVG_CURVETO:
+                    svg_tweak_point_tweak (&bpd->bpath[i].x3, &bpd->bpath[i].y3, affine, iaffine);
+                    break;
+                case RSVG_END:
+                    break;
+                }
+        }
+}
+
 void
 rsvg_render_path (RsvgDrawingCtx * ctx, const char *d)
 {
@@ -2063,6 +2091,10 @@ rsvg_render_path (RsvgDrawingCtx * ctx, const char *d)
 
     bpath_def = rsvg_parse_path (d);
     rsvg_bpath_def_art_finish (bpath_def);
+
+    double iaffine[6];
+    _rsvg_affine_invert (iaffine, ctx->state->affine);
+    tweak_bpath (bpath_def, ctx->state->affine, iaffine);
 
     ctx->render->render_path (ctx, bpath_def);
     rsvg_render_markers (bpath_def, ctx);
