@@ -26,8 +26,8 @@
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="11.313709"
-     inkscape:cx="31.121899"
-     inkscape:cy="23.550012"
+     inkscape:cx="51.149425"
+     inkscape:cy="23.550011"
      inkscape:current-layer="layer1"
      inkscape:document-units="px"
      showgrid="true"
@@ -35,7 +35,8 @@
      inkscape:window-height="746"
      inkscape:window-x="0"
      inkscape:window-y="0"
-     inkscape:window-maximized="1">
+     inkscape:window-maximized="1"
+     inkscape:snap-global="true">
     <inkscape:grid
        type="xygrid"
        id="grid2993"
@@ -257,6 +258,15 @@
        height="2"
        x="60"
        y="597" />
+    <rect
+       style="fill:none;stroke:#cc0060;stroke-width:1.33348155;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="StippleBox"
+       width="10.666518"
+       height="10.666518"
+       x="20.66674"
+       y="568.66675"
+       ry="5.3004174"
+       rx="5.3004398" />
   </g>
   <g
      inkscape:groupmode="layer"

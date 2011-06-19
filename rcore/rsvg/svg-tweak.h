@@ -5,8 +5,10 @@
 extern "C" {
 #endif /* __cplusplus */
 
-int             svg_tweak_point_tweak   (double *x, double *y, const double affine[6], const double iaffine[6]);
-
+int             svg_tweak_point_tweak   (double vx, double vy, double *px, double *py,
+                                         const double affine[6], const double iaffine[6]);
+int             svg_tweak_point_simple  (double *px, double *py, const double affine[6], const double iaffine[6]);
+extern int      svg_tweak_debugging;
 
 #ifdef __cplusplus
 };

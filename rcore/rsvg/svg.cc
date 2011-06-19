@@ -35,7 +35,7 @@ struct Tweaker {
   double m_cx, m_cy, m_lx, m_rx, m_by, m_ty;
   explicit      Tweaker         (double cx, double cy, double lx, double rx, double by, double ty) :
     m_cx (cx), m_cy (cy), m_lx (lx), m_rx (rx), m_by (by), m_ty (ty) {}
-  bool          point_tweak     (double *x, double *y);
+  bool          point_tweak     (double vx, double vy, double *px, double *py);
   static void   thread_set      (Tweaker *tweaker);
 };
 
@@ -173,6 +173,11 @@ Element::render (cairo_surface_t  *surface,
   const double ty = (area.height - impl->height) / 2.0;
   const double by = (area.height - impl->height) - ty;
   Tweaker tw (impl->x + impl->width / 2.0, impl->y + impl->height / 2.0, lx, rx, ty, by);
+  if (svg_tweak_debugging)
+    printerr ("TWEAK: mid = %g %g ; shiftx = %g %g ; shifty = %g %g ; (dim = %d,%d,%dx%d)\n",
+              impl->x + impl->width / 2.0, impl->y + impl->height / 2.0, lx, rx, ty, by,
+              impl->x,impl->y,impl->width,impl->height);
+  svg_tweak_debugging = Logging::debugging();
   tw.thread_set (&tw);
   bool rendered = rsvg_handle_render_cairo_sub (impl->handle, cr, cid);
   tw.thread_set (NULL);
@@ -181,13 +186,20 @@ Element::render (cairo_surface_t  *surface,
 }
 
 bool
-Tweaker::point_tweak (double *x, double *y)
+Tweaker::point_tweak (double vx, double vy, double *px, double *py)
 {
   bool mod = 0;
-  if (*x >= m_cx)
-    *x += m_lx + m_rx, mod = 1;
-  if (*y > m_cy)
-    *y += m_ty + m_by, mod = 1;
+  const double eps = 0.0001;
+  // FIXME: for filters to work, the document page must grow so that it contains the tweaked
+  // item without clipping. e.g. an item (5,6,7x8) requires a document size at least: 12x14
+  if (vx > m_cx + eps)
+    *px += m_lx + m_rx, mod = 1;
+  else if (vx >= m_cx - eps)
+    *px += m_lx, mod = 1;
+  if (vy > m_cy + eps)
+    *py += m_ty + m_by, mod = 1;
+  else if (vy >= m_cy - eps)
+    *py += m_ty, mod = 1;
   return mod;
 }
 
@@ -334,22 +346,31 @@ Tweaker::thread_set (Tweaker *tweaker)
 
 extern "C" {
 
+int svg_tweak_debugging = 0;
+
 int
-svg_tweak_point_tweak (double *px, double *py,
+svg_tweak_point_tweak (double  vx, double  vy,
+                       double *px, double *py,
                        const double affine[6],
                        const double iaffine[6])
 {
   if (!Rapicorn::Svg::thread_tweaker)
     return false;
-  double x = affine_x (*px, *py, affine);
-  double y = affine_y (*px, *py, affine);
-  if (Rapicorn::Svg::thread_tweaker->point_tweak (&x, &y))
+  const double sx = affine_x (vx, vy, affine), sy = affine_y (vx, vy, affine);
+  double x = affine_x (*px, *py, affine), y = affine_y (*px, *py, affine);
+  if (Rapicorn::Svg::thread_tweaker->point_tweak (sx, sy, &x, &y))
     {
       *px = affine_x (x, y, iaffine);
       *py = affine_y (x, y, iaffine);
       return true;
     }
   return false;
+}
+
+int
+svg_tweak_point_simple (double *px, double *py, const double affine[6], const double iaffine[6])
+{
+  return svg_tweak_point_tweak (*px, *py, px, py, affine, iaffine);
 }
 
 };
