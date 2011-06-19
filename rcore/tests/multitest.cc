@@ -35,6 +35,7 @@ test_misc (void)
   assert (lstr[0] >= '0' && lstr[0] <= '9');
   assert (lstr[1] >= '0' && lstr[1] <= '9');
 }
+REGISTER_TEST ("General/Stringify", test_misc);
 
 static void
 test_cpu_info (void)
@@ -46,6 +47,7 @@ test_cpu_info (void)
   if (Test::verbose())
     printout ("\n#####\n%s#####\n", cps.c_str());
 }
+REGISTER_TEST ("General/CpuInfo", test_cpu_info);
 
 static void
 test_poll_consts()
@@ -61,6 +63,7 @@ test_poll_consts()
   TASSERT (RAPICORN_SYSVAL_POLLHUP    == POLLHUP);
   TASSERT (RAPICORN_SYSVAL_POLLNVAL   == POLLNVAL);
 }
+REGISTER_TEST ("General/Poll constants", test_poll_consts);
 
 static void
 test_regex (void)
@@ -69,6 +72,7 @@ test_regex (void)
   TASSERT (Regex::match_simple ("Ok", "<TEXT>Close</TEXT>", Regex::COMPILE_NORMAL, Regex::MATCH_NORMAL) == false);
   TASSERT (Regex::match_simple ("\\bOk", "<TEXT>Ok</TEXT>", Regex::COMPILE_NORMAL, Regex::MATCH_NORMAL) == true);
 }
+REGISTER_TEST ("General/Regex Tests", test_regex);
 
 static void
 test_paths()
@@ -117,6 +121,7 @@ test_paths()
   TASSERT (Path::isdirname (".") == true);
   TASSERT (Path::isdirname ("..") == true);
 }
+REGISTER_TEST ("General/Path handling", test_paths);
 
 static void
 test_file_io()
@@ -141,6 +146,7 @@ test_file_io()
   assert (mem == NULL);
   assert (l == 0);
 }
+REGISTER_TEST ("General/File IO", test_file_io);
 
 static void
 test_zintern()
@@ -150,6 +156,7 @@ test_zintern()
   TASSERT (String ((char*) data) == "birnet-zintern test data");
   zintern_free (data);
 }
+REGISTER_TEST ("General/ZIntern", test_zintern);
 
 static void
 test_files (char *argv0)
@@ -179,6 +186,7 @@ test_virtual_typeid()
   TASSERT (strstr (a.typeid_pretty_name().c_str(), "TypeA") != NULL);
   TASSERT (strstr (b.typeid_pretty_name().c_str(), "TypeB") != NULL);
 }
+REGISTER_TEST ("General/VirtualTypeid", test_virtual_typeid);
 
 struct SomeObject : public BaseObject {};
 
@@ -238,6 +246,7 @@ test_id_allocator ()
   delete[] b;
   delete &ida;
 }
+REGISTER_TEST ("General/Id Allocator", test_id_allocator);
 
 static void
 test_locatable_ids ()
@@ -298,6 +307,7 @@ test_locatable_ids ()
   for (uint j = 0; j < big; j++)
     unref (buffer[j]);
 }
+REGISTER_TEST ("General/Locatable IDs", test_locatable_ids);
 
 static void
 test_dtoi32()
@@ -325,6 +335,7 @@ test_dtoi32()
   TASSERT (dtoi32 (-2147483647.3) == -2147483647);
   TASSERT (dtoi32 (-2147483647.7) == -2147483648LL);
 }
+REGISTER_TEST ("Math/dtoi32", test_dtoi32);
 
 static void
 test_dtoi64()
@@ -368,6 +379,7 @@ test_dtoi64()
   TASSERT (dtoi64 (-1125899906842624.3) == -1125899906842624LL);
   TASSERT (dtoi64 (-1125899906842624.7) == -1125899906842625LL);
 }
+REGISTER_TEST ("Math/dtoi64", test_dtoi64);
 
 static void
 test_iround()
@@ -395,6 +407,7 @@ test_iround()
   TASSERT (iround (-1125899906842624.3) == -1125899906842624LL);
   TASSERT (iround (-1125899906842624.7) == -1125899906842625LL);
 }
+REGISTER_TEST ("Math/iround", test_iround);
 
 static void
 test_iceil()
@@ -422,6 +435,7 @@ test_iceil()
   TASSERT (iceil (-1125899906842624.3) == -1125899906842624LL);
   TASSERT (iceil (-1125899906842624.7) == -1125899906842624LL);
 }
+REGISTER_TEST ("Math/iceil", test_iceil);
 
 static void
 test_ifloor()
@@ -449,6 +463,7 @@ test_ifloor()
   TASSERT (ifloor (-1125899906842624.3) == -1125899906842625LL);
   TASSERT (ifloor (-1125899906842624.7) == -1125899906842625LL);
 }
+REGISTER_TEST ("Math/ifloor", test_ifloor);
 
 static int
 compare_floats (float f1,
@@ -472,7 +487,6 @@ binary_lookup_tests()
   vector<float>::iterator fit;
   std::pair<vector<float>::iterator,bool> pit;
   const uint count = 150000;
-  TSTART ("Corner case lookups");
   fv.resize (count + (rand() % 10000));
   if (fv.size() % 2)
     TOK();
@@ -502,7 +516,7 @@ binary_lookup_tests()
   pit = binary_lookup_insertion_pos (ev.begin(), ev.end(), compare_floats, 0);
   TASSERT (pit.first == ev.end() && pit.second == false);
   TDONE();
-  TSTART ("Binary lookup");
+  TSTART ("General/Binary Binary lookup");
   for (uint i = 0; i < fv.size(); i++)
     {
       fit = binary_lookup (sv.begin(), sv.end(), compare_floats, fv[i]);
@@ -512,7 +526,7 @@ binary_lookup_tests()
         TASSERT (fv[i] == *fit);        /* verbose assertion */
     }
   TDONE();
-  TSTART ("Sibling lookup");
+  TSTART ("General/Binary Sibling lookup");
   for (uint i = 1; i < sv.size(); i++)
     {
       double target = (sv[i - 1] + sv[i]) / 2.0;
@@ -523,7 +537,7 @@ binary_lookup_tests()
         TOK();
     }
   TDONE();
-  TSTART ("Insertion lookup1");
+  TSTART ("General/Binary Insertion lookup1");
   seen_inexact = false;
   for (uint i = 0; i < fv.size(); i++)
     {
@@ -537,7 +551,7 @@ binary_lookup_tests()
     }
   TASSERT (seen_inexact == false);
   TDONE();
-  TSTART ("Insertion lookup2");
+  TSTART ("General/Binary Insertion lookup2");
   seen_inexact = false;
   for (uint i = 1; i < sv.size(); i++)
     {
@@ -551,14 +565,38 @@ binary_lookup_tests()
         TOK();
     }
   TASSERT (seen_inexact == true);
-  TDONE();
+}
+REGISTER_TEST ("General/Binary Lookups", binary_lookup_tests);
+
+static void // Test Mutextes before g_thread_init()
+test_before_thread_init()
+{
+  /* check C++ mutex init + destruct before g_thread_init() */
+  Mutex *mutex = new Mutex;
+  RecMutex *rmutex = new RecMutex;
+  Cond *cond = new Cond;
+  delete mutex;
+  delete rmutex;
+  delete cond;
 }
 
+static uint constructur_attribute_test = 0;
+
+static void RAPICORN_CONSTRUCTOR
+constructur_attribute_test_initializer (void)
+{
+  constructur_attribute_test = 0x1237ABBA;
+}
 
 int
 main (int   argc,
       char *argv[])
 {
+  if (constructur_attribute_test != 305638330)
+    fatal ("static constructors have not been called before main");
+
+  test_before_thread_init();
+
   if (argc >= 2 && String ("--print-process-handle") == argv[1])
     {
       rapicorn_init_core (&argc, argv, __FILE__);
@@ -576,26 +614,9 @@ main (int   argc,
 
   rapicorn_init_test (&argc, argv);
 
-  TRUN ("Misc", test_misc);
-  TRUN ("CpuInfo", test_cpu_info);
-  TRUN ("Poll constants", test_poll_consts);
-  TRUN ("Regex Tests", test_regex);
-  TRUN ("Path handling", test_paths);
-  TRUN ("File IO", test_file_io);
-  TRUN ("ZIntern", test_zintern);
   TRUN3 ("FileChecks", test_files, argv[0]);
-  TRUN ("VirtualTypeid", test_virtual_typeid);
-  TRUN ("Id Allocator", test_id_allocator);
-  TRUN ("Locatable IDs", test_locatable_ids);
-  TRUN ("Math/dtoi32", test_dtoi32);
-  TRUN ("Math/dtoi64", test_dtoi64);
-  TRUN ("Math/iceil", test_iceil);
-  TRUN ("Math/ifloor", test_ifloor);
-  TRUN ("Math/iround", test_iround);
 
-  binary_lookup_tests();
-
-  return 0;
+  return Test::run();
 }
 
 /* vim:set ts=8 sts=2 sw=2: */

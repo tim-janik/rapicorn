@@ -65,7 +65,6 @@ public:
 static void
 test_atomic (void)
 {
-  TSTART ("AtomicThreading");
   int count = 44;
   Thread *threads[count];
   volatile int atomic_counter = 0;
@@ -92,8 +91,8 @@ test_atomic (void)
   for (int i = 0; i < count; i++)
     unref (threads[i]);
   TASSERT (atomic_counter == result);
-  TDONE ();
 }
+REGISTER_TEST ("Threads/AtomicThreading", test_atomic);
 
 /* --- runonce tests --- */
 static volatile uint runonce_threadcount = 0;
@@ -135,7 +134,6 @@ public:
 static void
 test_runonce (void)
 {
-  TSTART ("RunOnceTest");
   int count = 44;
   Thread *threads[count];
   volatile int runonce_counter = 0;
@@ -161,8 +159,8 @@ test_runonce (void)
     unref (threads[i]);
   TASSERT (runonce_counter == 1);
   TASSERT (runonce_value == 42);
-  TDONE ();
 }
+REGISTER_TEST ("Threads/RunOnceTest", test_runonce);
 
 /* --- basic threading tests --- */
 class Thread_Plus1 : public Thread {
@@ -189,7 +187,6 @@ test_threads (void)
 {
   static Mutex test_mutex;
   bool locked;
-  TSTART ("Threading");
   /* test C mutex */
   locked = test_mutex.trylock();
   TASSERT (locked);
@@ -260,8 +257,8 @@ test_threads (void)
   unref (thread1);
   unref (thread2);
   unref (thread3);
-  TDONE ();
 }
+REGISTER_TEST ("Threads/Threading", test_threads);
 
 /* --- C++ threading tests --- */
 struct ThreadA : public virtual Rapicorn::Thread {
@@ -294,7 +291,6 @@ lockable (M &mutex)
 static void
 test_thread_cxx (void)
 {
-  TSTART ("C++Threading");
   TASSERT (NULL != &Thread::self());
   volatile int atomic_counter = 0;
   int result = 0;
@@ -320,7 +316,7 @@ test_thread_cxx (void)
   TASSERT (atomic_counter == result);
   TDONE ();
 
-  TSTART ("C++OwnedMutex");
+  TSTART ("Threads/C++OwnedMutex");
   static OwnedMutex static_omutex;
   TASSERT (static_omutex.mine() == false);
   static_omutex.lock();
@@ -356,34 +352,31 @@ test_thread_cxx (void)
   TASSERT (lockable (omutex) == true);
   omutex.unlock();
   TASSERT (omutex.owner() == NULL);
-  TDONE();
 }
+REGISTER_TEST ("Threads/C++Threading", test_thread_cxx);
 
 // simple spin lock test
 static void
 test_spin_lock_simple (void)
 {
-  TSTART ("C++SpinLock");
-  {
-    SpinLock sp;
-    bool l;
-    l = sp.trylock();
-    TASSERT (l);
-    l = sp.trylock();
-    TASSERT (!l);
-    sp.unlock();
-    l = sp.trylock();
-    TASSERT (l);
-    l = sp.trylock();
-    TASSERT (!l);
-    sp.unlock();
-    sp.lock();
-    l = sp.trylock();
-    TASSERT (!l);
-    sp.unlock();
-  }
-  TDONE();
+  SpinLock sp;
+  bool l;
+  l = sp.trylock();
+  TASSERT (l);
+  l = sp.trylock();
+  TASSERT (!l);
+  sp.unlock();
+  l = sp.trylock();
+  TASSERT (l);
+  l = sp.trylock();
+  TASSERT (!l);
+  sp.unlock();
+  sp.lock();
+  l = sp.trylock();
+  TASSERT (!l);
+  sp.unlock();
 }
+REGISTER_TEST ("Threads/C++SpinLock", test_spin_lock_simple);
 
 /* --- ScopedLock test --- */
 template<typename XMutex> static void
@@ -411,7 +404,6 @@ test_recursive_scoped_lock (XMutex &rec_mutex, uint depth)
 static void
 test_scoped_locks()
 {
-  TSTART ("Scoped Locks");
   Mutex mutex1;
   TASSERT (lockable (mutex1) == true);
   {
@@ -441,14 +433,13 @@ test_scoped_locks()
   test_recursive_scoped_lock (rmutex, 999);
   OwnedMutex omutex;
   test_recursive_scoped_lock (omutex, 999);
-  TDONE();
 }
+REGISTER_TEST ("Threads/Scoped Locks", test_scoped_locks);
 
 /* --- C++ atomicity tests --- */
 static void
 test_thread_atomic_cxx (void)
 {
-  TSTART ("C++AtomicThreading");
   /* integer functions */
   volatile int ai, r;
   Atomic::set (&ai, 17);
@@ -498,8 +489,8 @@ test_thread_atomic_cxx (void)
   TASSERT (r == true);
   p = Atomic::ptr_get (&ap);
   TASSERT (p == (void*) 4294967279U);
-  TDONE ();
 }
+REGISTER_TEST ("Threads/C++AtomicThreading", test_thread_atomic_cxx);
 
 /* --- thread_yield --- */
 static inline void
@@ -615,7 +606,6 @@ test_ring_buffer ()
 {
   static const char *testtext = "Ring Buffer test Text (47\xff)";
   uint n, ttl = strlen (testtext);
-  TSTART ("RingBuffer");
   Atomic::RingBuffer<char> rb1 (ttl);
   TASSERT (rb1.n_writable() == ttl);
   n = rb1.write (ttl, testtext);
@@ -634,7 +624,7 @@ test_ring_buffer ()
   for (uint step = 1; step < 8; step++)
     {
       uint ring_buffer_test_length = 17 * step + (rand() % 19);
-      TSTART ("AsyncRingBuffer-%d-%d", step, ring_buffer_test_length);
+      TSTART ("Threads/AsyncRingBuffer-%d-%d", step, ring_buffer_test_length);
       IntRingBuffer irb (step);
       RingBufferReader *rbr = new RingBufferReader (&irb, ring_buffer_test_length);
       ref_sink (rbr);
@@ -652,26 +642,23 @@ test_ring_buffer ()
     }
 
   /* check big ring buffer sizes */
-  if (true)
-    {
-      TSTART ("AsyncRingBuffer-big");
-      uint ring_buffer_test_length = 999999 * (init_settings().test_quick ? 1 : 20);
-      IntRingBuffer irb (16384 + (lrand48() % 8192));
-      RingBufferReader *rbr = new RingBufferReader (&irb, ring_buffer_test_length);
-      ref_sink (rbr);
-      RingBufferWriter *rbw = new RingBufferWriter (&irb, ring_buffer_test_length);
-      ref_sink (rbw);
-      TASSERT (rbr && rbw);
-      rbr->start();
-      rbw->start();
-      rbw->wait_for_exit();
-      rbr->wait_for_exit();
-      TASSERT (rbr && rbw);
-      unref (rbr);
-      unref (rbw);
-      TDONE();
-    }
+  TSTART ("Threads/AsyncRingBuffer-big");
+  uint ring_buffer_test_length = 999999 * (init_settings().test_quick ? 1 : 20);
+  IntRingBuffer irb (16384 + (lrand48() % 8192));
+  RingBufferReader *rbr = new RingBufferReader (&irb, ring_buffer_test_length);
+  ref_sink (rbr);
+  RingBufferWriter *rbw = new RingBufferWriter (&irb, ring_buffer_test_length);
+  ref_sink (rbw);
+  TASSERT (rbr && rbw);
+  rbr->start();
+  rbw->start();
+  rbw->wait_for_exit();
+  rbr->wait_for_exit();
+  TASSERT (rbr && rbw);
+  unref (rbr);
+  unref (rbw);
 }
+REGISTER_TEST ("Threads/RingBuffer", test_ring_buffer);
 
 /* --- late deletable destruction --- */
 static bool deletable_destructor = false;
@@ -749,52 +736,6 @@ test_deletable_destruction ()
   TASSERT (deletable_destructor == true);
   /* early_deletable and late_deletable are only tested at program end */
 }
-
-/* --- Mutextes before g_thread_init() --- */
-static void
-test_before_thread_init()
-{
-  /* check C++ mutex init + destruct before g_thread_init() */
-  Mutex *mutex = new Mutex;
-  RecMutex *rmutex = new RecMutex;
-  Cond *cond = new Cond;
-  delete mutex;
-  delete rmutex;
-  delete cond;
-}
+REGISTER_TEST ("Threads/Deletable destruction", test_deletable_destruction);
 
 } // Anon
-
-static uint constructur_attribute_test = 0;
-
-static void RAPICORN_CONSTRUCTOR
-constructur_attribute_test_initializer (void)
-{
-  constructur_attribute_test = 0x1237ABBA;
-}
-
-int
-main (int   argc,
-      char *argv[])
-{
-  if (constructur_attribute_test != 305638330)
-    fatal ("static constructors have not been called before main");
-
-  test_before_thread_init();
-
-  rapicorn_init_test (&argc, argv);
-
-  test_threads();
-  test_atomic();
-  test_thread_cxx();
-  test_spin_lock_simple();
-  test_thread_atomic_cxx();
-  test_scoped_locks();
-  test_runonce();
-  TRUN ("Deletable destruction", test_deletable_destruction);
-  test_ring_buffer();
-
-  return 0;
-}
-
-/* vim:set ts=8 sts=2 sw=2: */

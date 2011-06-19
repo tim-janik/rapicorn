@@ -58,18 +58,6 @@ perf_skip_whitespace (void)
   if (switch_time > strchr_time)
     TWARN ("count_whitespace benchmark: unexpected contest: switch=%gs strchr=%gs\n", switch_time, strchr_time);
 }
+REGISTER_TEST ("Performance/Whitespace Skipping", perf_skip_whitespace);
 
 } // Anon
-
-int
-main (int   argc,
-      char *argv[])
-{
-  rapicorn_init_test (&argc, argv);
-
-  Test::add ("/Performance/Whitespace Skipping", perf_skip_whitespace);
-
-  return Test::run();
-}
-
-/* vim:set ts=8 sts=2 sw=2: */

@@ -134,6 +134,10 @@ void    add             (const String &testname,
   add_internal (testname, (void(*)(void*)) test_func, (void*) data);
 }
 
+struct RegisterTest { RegisterTest (const String &testname, void (*test_func) (void)) { add (testname, test_func); } };
+#define REGISTER_TEST(name,func) static const Rapicorn::Test::RegisterTest \
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) (name,func)
+
 /* random numbers */
 char    rand_bit                (void);
 int32   rand_int                (void);

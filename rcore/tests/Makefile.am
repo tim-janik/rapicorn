@@ -17,18 +17,12 @@ imgcheck_LDADD     = $(LDADDS)
 
 # test programs
 TEST_PROGS        += multitest
-multitest_SOURCES  = multitest.cc
+multitest_SOURCES  = multitest.cc performance.cc threads.cc
 multitest_LDADD    = $(LDADDS)
 TEST_PROGS        += strings
 SLOWTEST_PROGS    += strings
 strings_SOURCES    = strings.cc
 strings_LDADD      = $(LDADDS)
-TEST_PROGS        += performance
-performance_SOURCES= performance.cc
-performance_LDADD  = $(LDADDS)
-TEST_PROGS        += threads
-threads_SOURCES    = threads.cc
-threads_LDADD      = $(LDADDS)
 TEST_PROGS        += signal
 signal_SOURCES     = signal.cc
 signal_LDADD       = $(LDADDS)
