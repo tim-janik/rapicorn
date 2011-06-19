@@ -41,6 +41,7 @@ test_pixmap_compare (void)
   unref (p1);
   unref (p2);
 }
+REGISTER_TEST ("Pixmaps/compare", test_pixmap_compare);
 
 static Pixmap*
 create_sample_pixmap (void)
@@ -86,6 +87,7 @@ test_pixmap_save_load (void)
   unref (pixmap2);
   unref (pixmap);
 }
+REGISTER_TEST ("Pixmaps/save & load", test_pixmap_save_load);
 
 static void
 test_pixmap_try_alloc (void)
@@ -99,6 +101,7 @@ test_pixmap_try_alloc (void)
       }
   assert (Pixbuf::try_alloc (65536, 65536) == false);
 }
+REGISTER_TEST ("Pixmaps/try-alloc", test_pixmap_try_alloc);
 
 #include "testpixs.c" // defines alpha_rle, alpha_raw, rgb_rle, rgb_raw
 
@@ -134,19 +137,6 @@ test_pixstreams (void)
   bool cmp = pixall->compare (*pixref, 0, 0, -1, -1, 0, 0);
   assert (cmp == false);
 }
+REGISTER_TEST ("Pixmaps/pixstreams", test_pixstreams);
 
 } // Anon
-
-int
-main (int   argc,
-      char *argv[])
-{
-  rapicorn_init_test (&argc, argv);
-
-  Test::add ("Pixmap/compare", test_pixmap_compare);
-  Test::add ("Pixmap/save & load", test_pixmap_save_load);
-  Test::add ("Pixmap/try-alloc", test_pixmap_try_alloc);
-  Test::add ("Pixmap/pixstreams", test_pixstreams);
-
-  return Test::run();
-}

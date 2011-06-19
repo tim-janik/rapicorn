@@ -97,7 +97,7 @@ struct EmitterMany {
   }
   void testme ()
   {
-    TSTART ("Signals, multi-arg");
+    TSTART ("Signals/Multi-arg");
     sig_void_0.emit ();
     sig_void_1.emit (1);
     sig_void_2.emit (1, 2);
@@ -207,7 +207,7 @@ struct Connection3 {
   }
   void test_signal (Emitter3 &e3)
   {
-    TSTART ("Signals, mixed emissions");
+    TSTART ("Signals/Mixed emissions");
     e3.sig_mixed += mixed_efunc;
     e3.sig_mixed += mixed_func;
     e3.sig_mixed += slot (*this, &Connection3::string_emitter_callback);
@@ -279,7 +279,7 @@ struct TemporaryObject : public virtual Deletable {
   static void
   test_temporary_object (Emitter3 &e3)
   {
-    TSTART ("Signals, temporary object");
+    TSTART ("Signals/Temporary object");
     uint ac = emission_counter;
     uint edata_deletions;
 
@@ -428,16 +428,12 @@ test_slot_trampoline ()
   TASSERT (tst_counter == 3);
   TASSERT (r == 47);
 }
+REGISTER_TEST ("Signals/Slots & Trampolines", test_slot_trampoline);
 
-} // anon
-
-int
-main (int   argc,
-      char *argv[])
+static void
+test_various()
 {
-  rapicorn_init_test (&argc, argv);
-
-  TRUN ("Slot-Trampolines", test_slot_trampoline);
+  TDONE();
 
   Emitter3 e3;
   TemporaryObject::test_temporary_object (e3);
@@ -451,5 +447,8 @@ main (int   argc,
   many1.testme();
   many2.testme();
 
-  return 0;
+  TSTART ("Signals/Boilerplate2");
 }
+REGISTER_TEST ("Signals/Boilerplate1", test_various);
+
+} // anon

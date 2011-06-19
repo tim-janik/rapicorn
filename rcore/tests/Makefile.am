@@ -17,34 +17,20 @@ imgcheck_LDADD     = $(LDADDS)
 
 # test programs
 TEST_PROGS        += multitest
-multitest_SOURCES  = multitest.cc performance.cc threads.cc
+multitest_SOURCES  = multitest.cc performance.cc modval.cc signal.cc markup.cc pixmaps.cc
 multitest_LDADD    = $(LDADDS)
+
+TEST_PROGS        += testrcore2
+testrcore2_SOURCES = xmltest.cc threads.cc
+testrcore2_LDADD   = $(LDADDS)
+EXTRA_DIST        += testpixs.c testpixs.png
+modval.cc:	     testtypes.tpg
+
 TEST_PROGS        += strings
 SLOWTEST_PROGS    += strings
 strings_SOURCES    = strings.cc
 strings_LDADD      = $(LDADDS)
-TEST_PROGS        += signal
-signal_SOURCES     = signal.cc
-signal_LDADD       = $(LDADDS)
 EXTRA_DIST        += data.cc
-TEST_PROGS        += xmltest
-xmltest_SOURCES    = xmltest.cc
-xmltest_LDADD      = $(LDADDS)
-TEST_PROGS        += markup
-markup_SOURCES     = markup.cc
-markup_LDADD       = $(LDADDS)
-TEST_PROGS        += pixmaps
-pixmaps_SOURCES    = pixmaps.cc
-pixmaps_LDADD      = $(LDADDS)
-EXTRA_DIST        += testpixs.c testpixs.png
-TEST_PROGS        += modval
-modval_SOURCES     = modval.cc
-modval_LDADD       = $(LDADDS)
-modval.cc:	     testtypes.tpg
-TEST_PROGS        += mod1tst
-mod1tst_SOURCES    = mod1tst.cc
-mod1tst_LDADD      = $(LDADDS)
-mod1tst.cc:          testtypes.tpg
 
 EXTRA_DIST        += testtypes.idl testtypes.tpg
 

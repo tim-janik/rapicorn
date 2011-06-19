@@ -83,14 +83,6 @@ rapicorn_markup_parser_test()
   TASSERT (strstr (dcode, ".>.<."));
   delete tmp;
 }
-
-extern "C" int
-main (int   argc,
-      char *argv[])
-{
-  rapicorn_init_test (&argc, argv);
-  TRUN ("RapicornMarkupParser", rapicorn_markup_parser_test);
-  return 0;
-}
+REGISTER_TEST ("Markup/RapicornMarkupParser", rapicorn_markup_parser_test);
 
 } // anon

@@ -97,6 +97,7 @@ xml_tree_test (void)
   if (xnode)
     unref (xnode);
 }
+REGISTER_TEST ("XML-Tests/Test XmlNode", xml_tree_test);
 
 static const String expected_xmlarray =
   "<Array>\n"
@@ -121,6 +122,7 @@ test_xml2array()
   //assert (int (a["001"]) == 1);
   //assert (a["string"].string() == "textSTRINGtext");
 }
+REGISTER_TEST ("XML-Tests/Test XML->Array", test_xml2array);
 
 static void
 test_array2xml()
@@ -145,6 +147,7 @@ test_array2xml()
   // printout ("XML:\n%s\n", result.c_str());
   unref (xnode);
 }
+REGISTER_TEST ("XML-Tests/Test Array->XML", test_array2xml);
 
 static const char *xml_array = ""
   "<row> <col>1</col> <col>2</col> <col>3</col> <col>4</col> <col>5</col> </row>\n"
@@ -160,19 +163,13 @@ test_xml_array()
   if (errstr.size())
     fatal ("%s", errstr.c_str());
 }
+REGISTER_TEST ("XML-Tests/Test XML Array", test_xml_array);
 
 } // anon
 
 extern "C" int
-main (int   argc,
-      char *argv[])
+main (int argc, char *argv[])
 {
   rapicorn_init_test (&argc, argv);
-
-  Test::add ("Test XmlNode", xml_tree_test);
-  Test::add ("Test Array->XML", test_array2xml);
-  Test::add ("Test XML->Array", test_xml2array);
-  Test::add ("Test XML Array", test_xml_array);
-
   return Test::run();
 }
