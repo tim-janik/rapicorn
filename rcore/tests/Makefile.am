@@ -16,10 +16,10 @@ imgcheck_SOURCES   = imgcheck.cc
 imgcheck_LDADD     = $(LDADDS)
 
 # test programs
-TEST_PROGS        += multitest
-multitest_SOURCES  = multitest.cc performance.cc modval.cc signal.cc markup.cc pixmaps.cc strings.cc
-multitest_LDADD    = $(LDADDS)
-SLOWTEST_PROGS	  += multitest
+TEST_PROGS       += testrcore1
+testrcore1_SOURCES = multitest.cc performance.cc modval.cc signal.cc markup.cc pixmaps.cc strings.cc
+testrcore1_LDADD   = $(LDADDS)
+SLOWTEST_PROGS	  += testrcore1
 EXTRA_DIST        += data.cc
 
 TEST_PROGS        += testrcore2
@@ -70,17 +70,17 @@ check-logging-output: messages
 	$(Q) rm -f $(TSTOUT)
 check: check-logging-output
 # process handle
-check-process-handle: multitest
-	$(Q) test -n `./multitest --print-process-handle`; eval "$$TSTDIAGNOSE"
+check-process-handle: testrcore1
+	$(Q) test -n `./testrcore1 --print-process-handle`; eval "$$TSTDIAGNOSE"
 check: check-process-handle
-check-unique-process: multitest
-	$(Q) test `./multitest --print-process-handle` != `./multitest --print-process-handle`; eval "$$TSTDIAGNOSE"
+check-unique-process: testrcore1
+	$(Q) test `./testrcore1 --print-process-handle` != `./testrcore1 --print-process-handle`; eval "$$TSTDIAGNOSE"
 check: check-unique-process
 
 # process handle
-check-locatable-id: multitest
-	$(Q) test -n `./multitest --print-locatable-id`; eval "$$TSTDIAGNOSE"
+check-locatable-id: testrcore1
+	$(Q) test -n `./testrcore1 --print-locatable-id`; eval "$$TSTDIAGNOSE"
 check: check-locatable-id
-check-unique-id: multitest
-	$(Q) test `./multitest --print-locatable-id` != `./multitest --print-locatable-id`; eval "$$TSTDIAGNOSE"
+check-unique-id: testrcore1
+	$(Q) test `./testrcore1 --print-locatable-id` != `./testrcore1 --print-locatable-id`; eval "$$TSTDIAGNOSE"
 check: check-unique-id
