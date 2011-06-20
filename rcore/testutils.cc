@@ -16,6 +16,7 @@
  */
 #include "testutils.hh"
 
+#include <algorithm>
 #include <glib.h>
 #include <stdio.h>
 #include <string.h>
@@ -191,6 +192,14 @@ static vector<void(*)(void*)> testfuncs;
 static vector<void*>          testdatas;
 static vector<String>         testnames;
 
+struct TestEntry {
+  void          (*func) (void*);
+  void           *data;
+  String          name;
+  char            kind;
+  TestEntry      *next;
+};
+
 void
 add_internal (const String &testname,
               void        (*test_func) (void*),
@@ -208,9 +217,46 @@ add (const String &testname,
   add (testname, (void(*)(void*)) test_func, (void*) 0);
 }
 
+static TestEntry *volatile test_entry_list = NULL;
+
+void
+RegisterTest::add_test (char kind, const String &testname, void (*test_func) (void*), void *data)
+{
+  TestEntry *te = new TestEntry;
+  te->func = test_func;
+  te->data = data;
+  te->name = testname;
+  te->kind = kind;
+  do
+    te->next = test_entry_list;
+  while (!Atomic::value_cas (&test_entry_list, te->next, te));
+}
+
+static int
+test_entry_cmp (const TestEntry *const &v1,
+                const TestEntry *const &v2)
+{
+  return strverscmp (v1->name.c_str(), v2->name.c_str()) < 0;
+}
+
+
 int
 run (void)
 {
+  vector<TestEntry*> entries;
+  for (TestEntry *node = test_entry_list; node; node = node->next)
+    entries.push_back (node);
+  stable_sort (entries.begin(), entries.end(), test_entry_cmp);
+  const char kind = slow() ? 's' : 't';
+  for (size_t i = 0; i < entries.size(); i++)
+    {
+      TestEntry *te = entries[i];
+      if (te->kind != kind)
+        continue;
+      TSTART ("%s", te->name.c_str());
+      te->func (te->data);
+      TDONE();
+    }
   for (uint i = 0; i < testfuncs.size(); i++)
     {
       TSTART ("%s", testnames[i].c_str());

@@ -134,9 +134,21 @@ void    add             (const String &testname,
   add_internal (testname, (void(*)(void*)) test_func, (void*) data);
 }
 
-struct RegisterTest { RegisterTest (const String &testname, void (*test_func) (void)) { add (testname, test_func); } };
-#define REGISTER_TEST(name,func) static const Rapicorn::Test::RegisterTest \
-  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) (name,func)
+class RegisterTest {
+  static void add_test (char kind, const String &testname, void (*test_func) (void*), void *data);
+public:
+  RegisterTest (const char k, const String &testname, void (*test_func) (void))
+  { add_test (k, testname, (void(*)(void*)) test_func, NULL); }
+  RegisterTest (const char k, const String &testname, void (*test_func) (ptrdiff_t), ptrdiff_t data)
+  { add_test (k, testname, (void(*)(void*)) test_func, (void*) data); }
+  template<typename D>
+  RegisterTest (const char k, const String &testname, void (*test_func) (D*), D *data)
+  { add_test (k, testname, (void(*)(void*)) test_func, (void*) data); }
+};
+#define REGISTER_TEST(name, ...)     static const Rapicorn::Test::RegisterTest \
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('t', name, __VA_ARGS__)
+#define REGISTER_SLOWTEST(name, ...) static const Rapicorn::Test::RegisterTest \
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('s', name, __VA_ARGS__)
 
 /* random numbers */
 char    rand_bit                (void);
