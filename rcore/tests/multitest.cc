@@ -159,8 +159,9 @@ test_zintern()
 REGISTER_TEST ("General/ZIntern", test_zintern);
 
 static void
-test_files (char *argv0)
+test_files (void)
 {
+  const char *argv0 = process_name().c_str();
   TASSERT (Path::equals ("/bin", "/../bin") == TRUE);
   TASSERT (Path::equals ("/bin", "/sbin") == FALSE);
   TASSERT (Path::check (argv0, "e") == TRUE);
@@ -174,6 +175,7 @@ test_files (char *argv0)
   TASSERT (Path::check (argv0, "p") == FALSE);
   TASSERT (Path::check (argv0, "s") == FALSE);
 }
+REGISTER_TEST ("General/FileChecks", test_files);
 
 static void
 test_virtual_typeid()
@@ -613,8 +615,6 @@ main (int   argc,
     }
 
   rapicorn_init_test (&argc, argv);
-
-  TRUN3 ("FileChecks", test_files, argv[0]);
 
   return Test::run();
 }

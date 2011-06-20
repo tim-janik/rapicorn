@@ -25,9 +25,8 @@ namespace {
 using namespace Rapicorn;
 
 static void
-random_utf8_and_unichar_test (void)
+random_utf8_and_unichar_test (ptrdiff_t count)
 {
-  const uint count = init_settings().test_quick ? 30000 : 1000000;
   for (uint i = 0; i < count; i++)
     {
       unichar nc, uc = rand() % (0x100 << (i % 24));
@@ -109,11 +108,12 @@ random_utf8_and_unichar_test (void)
         TCHECK (cbuffer + indx == gp);
     }
 }
+REGISTER_TEST ("/Strings/random UTF8", random_utf8_and_unichar_test, 30000);
+REGISTER_SLOWTEST ("/Strings/random UTF8 (slow)", random_utf8_and_unichar_test, 1000000);
 
 static void
-random_unichar_test (void)
+random_unichar_test (ptrdiff_t count)
 {
-  const uint count = init_settings().test_quick ? 30000 : 1000000;
   for (uint i = 0; i < count; i++)
     {
       unichar uc = rand() % (0x100 << (i % 24));
@@ -203,6 +203,8 @@ random_unichar_test (void)
       TCHECK (Unichar::get_break (uc) == (int) g_unichar_break_type (uc));
     }
 }
+REGISTER_TEST ("/Strings/random unichar", random_unichar_test, 30000);
+REGISTER_SLOWTEST ("/Strings/random unichar (slow)", random_unichar_test, 1000000);
 
 static void
 uuid_tests (void)
@@ -243,6 +245,7 @@ uuid_tests (void)
   TASSERT (string_cmp_uuid ("a425fd92-4f06-11db-aea9-000102e7e309", "6BA7B812-9DAD-11D1-80B4-00C04FD430C8") > 0);
   TASSERT (string_cmp_uuid ("a425fd92-4f06-11db-aea9-000102e7e309", "6ba7b812-9dad-11d1-80b4-00c04fd430c8") > 0);
 }
+REGISTER_TEST ("/Strings/UUID", uuid_tests);
 
 static void
 string_conversions (void)
@@ -275,6 +278,7 @@ string_conversions (void)
   assert (string_substitute_char ("foo", '3', '4') == "foo");
   assert (string_substitute_char ("foobar", 'o', '_') == "f__bar");
 }
+REGISTER_TEST ("/Strings/conversions", string_conversions);
 
 static void
 split_string_tests (void)
@@ -313,6 +317,7 @@ split_string_tests (void)
   assert (string_multiply ("x", 99990).size() == 99990);
   assert (string_multiply ("x", 9999999).size() == 9999999); // needs 10MB, should finish within 1 second
 }
+REGISTER_TEST ("/Strings/split strings", split_string_tests);
 
 static void
 test_string_charsets (void)
@@ -341,6 +346,7 @@ test_string_charsets (void)
   res = text_convert ("UTF-8", output, "ASCII", "non-ascii \xa4 char", "", "[?]");
   assert (res && output == "non-ascii [?] char");
 }
+REGISTER_TEST ("/Strings/charsets", test_string_charsets);
 
 static void
 test_string_stripping (void)
@@ -358,24 +364,8 @@ test_string_stripping (void)
   assert (string_lstrip (" \t\v\f\n\rX \t\v\f\n\r") == "X \t\v\f\n\r");
   assert (string_rstrip (" \t\v\f\n\rX \t\v\f\n\r") == " \t\v\f\n\rX");
 }
+REGISTER_TEST ("/Strings/stripping", test_string_stripping);
 
 } // Anon
-
-int
-main (int   argc,
-      char *argv[])
-{
-  rapicorn_init_test (&argc, argv);
-
-  Test::add ("/Strings/UUID", uuid_tests);
-  Test::add ("/Strings/random unichar", random_unichar_test);
-  Test::add ("/Strings/random UTF8", random_utf8_and_unichar_test);
-  Test::add ("/Strings/conversions", string_conversions);
-  Test::add ("/Strings/split strings", split_string_tests);
-  Test::add ("/Strings/charsets", test_string_charsets);
-  Test::add ("/Strings/stripping", test_string_stripping);
-
-  return Test::run();
-}
 
 /* vim:set ts=8 sts=2 sw=2: */

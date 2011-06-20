@@ -17,20 +17,16 @@ imgcheck_LDADD     = $(LDADDS)
 
 # test programs
 TEST_PROGS        += multitest
-multitest_SOURCES  = multitest.cc performance.cc modval.cc signal.cc markup.cc pixmaps.cc
+multitest_SOURCES  = multitest.cc performance.cc modval.cc signal.cc markup.cc pixmaps.cc strings.cc
 multitest_LDADD    = $(LDADDS)
+SLOWTEST_PROGS	  += multitest
+EXTRA_DIST        += data.cc
 
 TEST_PROGS        += testrcore2
 testrcore2_SOURCES = xmltest.cc threads.cc
 testrcore2_LDADD   = $(LDADDS)
 EXTRA_DIST        += testpixs.c testpixs.png
 modval.cc:	     testtypes.tpg
-
-TEST_PROGS        += strings
-SLOWTEST_PROGS    += strings
-strings_SOURCES    = strings.cc
-strings_LDADD      = $(LDADDS)
-EXTRA_DIST        += data.cc
 
 EXTRA_DIST        += testtypes.idl testtypes.tpg
 
