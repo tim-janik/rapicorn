@@ -511,7 +511,7 @@ color_test()
 {
   /* assert that set_hsv(get_hsv(v))==v for all v */
   TSTART ("HSV-convert");
-  const int step = init_settings().test_slow ? 1 : 10;
+  const int step = Test::slow() ? 1 : 10;
   for (uint r = 0; r < 256; r += step)
     {
       for (uint g = 0; g < 256; g += step)
