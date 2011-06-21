@@ -86,6 +86,26 @@ check-local: check-after
 check-local: ; @:
 TESTS=
 
+# === slowcheck ===
+slowcheck: slowcheck-recursive
+.PHONY: slowcheck-recursive slowcheck
+slowcheck-recursive:		# rule to run slowcheck recursively in subdirs
+	@for subdir in $(SUBDIRS) ; do                  	\
+	  test "$$subdir" = '.' ||                              \
+	    $(MAKE) -C "$$subdir" $(AM_MAKEFLAGS) slowcheck ||  \
+	    exit $$? ;                                          \
+	done
+define slowcheck_parallel_TEMPLATE
+.PHONY: slowcheck_parallel--$(1)
+slowcheck_parallel--$(1): $(1)
+	$$(Q) $$(X11TEST_SERVER) \
+	&& RAPICORN="$$$$RAPICORN:test-slow" ./$(1) ; _e=$$$$?; \
+	  [ $$$$_e = 0 ] || { echo "FAILED($$$$_e): $(1)" ; exit $$$$_e; }
+slowcheck: slowcheck_parallel--$(1)
+check: @NOTDVLBUILD@ slowcheck_parallel--$(1)
+endef
+$(foreach PRG,$(TEST_PROGS),$(eval $(call slowcheck_parallel_TEMPLATE,$(PRG))))
+
 # === TEST_PROGS ===
 TEST_PROGS =
 define check_parallel_TEMPLATE
@@ -105,37 +125,16 @@ define check_logtest_TEMPLATE
 check_logtest--$(1): $(1)
 	$$(Q) $$(X11TEST_SERVER) \
 	&& tstout="$(1).log" \
-	&& ./$(1) >"$$$$tstout" 2>&1 ; eval "$$$$TSTDIAGNOSE_LOGTEST" "'$(1)'" \
-	; $${FORCECHECKUPDATE} || { ar -xo $$(srcdir)/logtests.dat "./$(1).ref" \
-	  ; test -e "./$(1).ref" || touch "./$(1).ref" ; } \
-	; eval "$$$$TSTVERIFY" "'./$(1).ref'" "'$$$$tstout'" "'$(1)'" \
-	; $${FORCECHECKUPDATE} && ar -r $$(srcdir)/logtests.dat "./$(1).ref" ; rm -f "./$(1).ref"
+	&& RAPICORN="$$$$RAPICORN:test-log" ./$(1) >"$$$$tstout" 2>&1 \
+	; eval "$$$$TSTDIAGNOSE_LOGTEST" "'$(1)'" \
+	; eval "$$$$TSTVERIFY" "'$$(srcdir)/$(1).ref'" "'$$$$tstout'" "'$(1)'"
 check: check_logtest--$(1)
 endef
 $(foreach PRG,$(LOGTEST_PROGS),$(eval $(call check_logtest_TEMPLATE,$(PRG))))
-
-# === SLOWTEST_PROGS ===
-SLOWTEST_PROGS =
-slowcheck: slowcheck-recursive
-.PHONY: slowcheck-recursive slowcheck
-slowcheck-recursive:		# rule to run slowcheck recursively in subdirs
-	@for subdir in $(SUBDIRS) ; do                          \
-	  test "$$subdir" = '.' ||                              \
-	    $(MAKE) -C "$$subdir" $(AM_MAKEFLAGS) slowcheck ||  \
-	    exit $$? ;                                          \
-	done
-define check_slowtest_TEMPLATE
-.PHONY: check_slowtest--$(1)
-check_slowtest--$(1): $(1)
-	$$(Q) $$(X11TEST_SERVER) \
-	&& ./$(1) --test-slow ; _e=$$$$?; \
-	  [ $$$$_e = 0 ] || { echo "FAILED($$$$_e): $(1)" ; exit $$$$_e; }
-slowcheck: check_slowtest--$(1)
-endef
-$(foreach PRG,$(SLOWTEST_PROGS),$(eval $(call check_slowtest_TEMPLATE,$(PRG))))
+### Auto-Create refs: 	; $${FORCECHECKUPDATE} || { test -e "$$(srcdir)/$(1).ref" || touch "$$(srcdir)/$(1).ref" ; }
 
 # === ALLTESTS ===
-ALLTESTS = $(TESTS) $(TEST_PROGS) $(LOGTEST_PROGS) $(SLOWTEST_PROGS) # used in noinst_PROGRAMS
+ALLTESTS = $(TESTS) $(TEST_PROGS) $(LOGTEST_PROGS) # used in noinst_PROGRAMS
 
 # === Test-rule macros ===
 FORCECHECKUPDATE = false

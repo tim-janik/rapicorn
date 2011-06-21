@@ -1,0 +1,29 @@
+
+### ** +----------------+ ** ###
+### ** +  ./testrcore1  + ** ###
+### ** +----------------+ ** ###
+
+## Testing: DataList/BEGIN...
+
+## Testing: DataList/DataList<String>...
+::StringKey::destroy: delete "RAPICORN";
+
+## Testing: DataList/DataList<int>...
+::MyKey::destroy: delete 4;
+::MyKey::destroy: delete 8;
+::MyKey::destroy: delete 9;
+
+## Testing: DataList/Mixed...
+::StringKey::destroy: delete "RAPICORN";
+::MyKey::destroy: delete 4;
+::MyKey::destroy: delete 8;
+::StringKey::destroy: delete "RAPICORN";
+::MyKey::destroy: delete 9;
+
+## Testing: DataList/Threaded...
+::StringKey::destroy: delete "RAPICORN";
+::MyKey::destroy: delete 4;
+::MyKey::destroy: delete 8;
+::StringKey::destroy: delete "RAPICORN";
+
+## Testing: DataList/END...

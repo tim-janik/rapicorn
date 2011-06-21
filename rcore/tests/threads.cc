@@ -643,7 +643,7 @@ test_ring_buffer ()
 
   /* check big ring buffer sizes */
   TSTART ("Threads/AsyncRingBuffer-big");
-  uint ring_buffer_test_length = 999999 * (init_settings().test_quick ? 1 : 20);
+  uint ring_buffer_test_length = 999999 * (Test::slow() ? 20 : 1);
   IntRingBuffer irb (16384 + (lrand48() % 8192));
   RingBufferReader *rbr = new RingBufferReader (&irb, ring_buffer_test_length);
   ref_sink (rbr);
@@ -659,6 +659,7 @@ test_ring_buffer ()
   unref (rbw);
 }
 REGISTER_TEST ("Threads/RingBuffer", test_ring_buffer);
+REGISTER_SLOWTEST ("Threads/RingBuffer (slow)", test_ring_buffer);
 
 /* --- late deletable destruction --- */
 static bool deletable_destructor = false;

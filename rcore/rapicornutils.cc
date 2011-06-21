@@ -112,14 +112,14 @@ rapicorn_parse_settings_and_args (InitValue *value,
       {
         if (strcmp (value->value_name, "stand-alone") == 0)
           global_init_settings.stand_alone = init_value_bool (value);
-        else if (strcmp (value->value_name, "test-quick") == 0)
-          global_init_settings.test_quick = init_value_bool (value);
-        else if (strcmp (value->value_name, "test-slow") == 0)
-          global_init_settings.test_slow = init_value_bool (value);
-        else if (strcmp (value->value_name, "test-verbose") == 0)
-          global_init_settings.test_verbose = init_value_bool (value);
         else if (strcmp (value->value_name, "rapicorn-test-parse-args") == 0)
           parse_test_args = init_value_bool (value);
+        else if (strcmp (value->value_name, "test-verbose") == 0)
+          global_init_settings.test_codes |= 0x1;
+        else if (strcmp (value->value_name, "test-log") == 0)
+          global_init_settings.test_codes |= 0x2;
+        else if (strcmp (value->value_name, "test-slow") == 0)
+          global_init_settings.test_codes |= 0x4;
         value++;
       }
   /* parse args */
@@ -133,33 +133,30 @@ rapicorn_parse_settings_and_args (InitValue *value,
           g_log_set_always_fatal (GLogLevelFlags (fatal_mask));
           argv[i] = NULL;
         }
-      else if (parse_test_args && strcmp ("--test-quick", argv[i]) == 0)
+      else if (parse_test_args && strcmp ("--test-verbose", argv[i]) == 0)
         {
-          global_init_settings.test_quick = true;
+          global_init_settings.test_codes |= 0x1;
+          argv[i] = NULL;
+        }
+      else if (parse_test_args && strcmp ("--test-log", argv[i]) == 0)
+        {
+          global_init_settings.test_codes |= 0x2;
           argv[i] = NULL;
         }
       else if (parse_test_args && strcmp ("--test-slow", argv[i]) == 0)
         {
-          global_init_settings.test_slow = true;
-          argv[i] = NULL;
-        }
-      else if (parse_test_args && strcmp ("--test-verbose", argv[i]) == 0)
-        {
-          global_init_settings.test_verbose = true;
+          global_init_settings.test_codes |= 0x4;
           argv[i] = NULL;
         }
       else if (parse_test_args && strcmp ("--verbose", argv[i]) == 0)
         {
-          global_init_settings.test_verbose = true;
+          global_init_settings.test_codes |= 0x1;
           /* interpret --verbose for GLib compat but don't delete the argument
            * since regular non-test programs may need this. could be fixed by
            * having a separate test program argument parser.
            */
         }
     }
-  /* fallback handling for tests */
-  if (parse_test_args && !global_init_settings.test_quick && !global_init_settings.test_slow)
-    global_init_settings.test_quick = true;
   /* collapse args */
   uint e = 1;
   for (uint i = 1; i < argc; i++)

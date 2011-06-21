@@ -22,15 +22,7 @@
 using namespace Rapicorn;
 
 static void
-force_pid0_for_testing ()
-{
-  const char *s = getenv ("RAPICORN");
-  setenv ("RAPICORN", String (String (s ? s : "") + ":testpid0").c_str(), 1);
-  /* set switch 'testpid0' to enforce deterministic ouput */
-}
-
-static void
-test_messaging ()
+test_dialog_messages ()
 {
   TASSERT (Msg::NONE    == Msg::lookup_type ("none"));
   TASSERT (Msg::ALWAYS  == Msg::lookup_type ("always"));
@@ -60,6 +52,7 @@ test_messaging ()
                 Msg::Text3 ("And more message details: a, b, c."),
                 Msg::Check ("Show this message again."));
 }
+REGISTER_LOGTEST ("Message/Dialog Message Types", test_dialog_messages);
 
 static void
 bogus_func ()
@@ -110,13 +103,16 @@ int
 main (int   argc,
       char *argv[])
 {
-  force_pid0_for_testing();
-  rapicorn_init_logtest (&argc, argv);
+  rapicorn_init_test (&argc, argv);
+
+  if (argc >= 2 || Test::logging())
+    {
+      // set testing switch 'testpid0' to enforce deterministic ouput
+      Logging::configure ("testpid0");
+    }
 
   if (argc >= 2)
     test_logging (argv[1]);
-
-  Test::add ("Message Types", test_messaging);
 
   return Test::run();
 }

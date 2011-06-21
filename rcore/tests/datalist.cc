@@ -80,21 +80,23 @@ data_list_test_ints (DataListContainer &r)
 static void
 data_list_test ()
 {
-  TSTART ("DataList<String>");
+  TDONE();
+
+  TSTART ("DataList/DataList<String>");
   {
     DataListContainer r;
     data_list_test_strings (r);
   }
   TDONE();
-  
-  TSTART ("DataList<int>");
+
+  TSTART ("DataList/DataList<int>");
   {
     DataListContainer r;
     data_list_test_ints (r);
   }
   TDONE();
 
-  TSTART ("DataList-mixed");
+  TSTART ("DataList/Mixed");
   {
     DataListContainer r;
     data_list_test_strings (r);
@@ -103,7 +105,7 @@ data_list_test ()
   }
   TDONE();
 
-  TSTART ("DataList-threaded");
+  TSTART ("DataList/Threaded");
   {
     Thread &thread = Thread::self();
     data_list_test_strings (thread);
@@ -111,7 +113,10 @@ data_list_test ()
     data_list_test_strings (thread);
   }
   TDONE();
+
+  TSTART ("DataList/END");
 }
+REGISTER_LOGTEST ("DataList/BEGIN", data_list_test);
 
 class A {};
 class D : public A {};
@@ -119,24 +124,13 @@ class D : public A {};
 static void
 trait_convertible_test()
 {
-  TSTART ("trait_convertible_test");
   TASSERT ((TraitConvertible<int,int>::TRUTH == true));
   TASSERT ((TraitConvertible<void*,float>::TRUTH == false));
   TASSERT ((TraitConvertible<A,A>::TRUTH == true));
   TASSERT ((TraitConvertible<D,D>::TRUTH == true));
   TASSERT ((TraitConvertible<A,D>::TRUTH == true));
   TASSERT ((TraitConvertible<D,A>::TRUTH == false));
-  TDONE();
 }
+REGISTER_TEST ("trait_convertible_test", trait_convertible_test);
 
 } // anon
-
-int
-main (int   argc,
-      char *argv[])
-{
-  rapicorn_init_logtest (&argc, argv);
-  data_list_test();
-  trait_convertible_test();
-  return 0;
-}

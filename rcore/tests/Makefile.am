@@ -17,14 +17,15 @@ imgcheck_LDADD     = $(LDADDS)
 
 # test programs
 TEST_PROGS       += testrcore1
-testrcore1_SOURCES = multitest.cc performance.cc modval.cc signal.cc markup.cc pixmaps.cc strings.cc
+testrcore1_SOURCES = multitest.cc performance.cc modval.cc signal.cc markup.cc pixmaps.cc strings.cc datalist.cc
 testrcore1_LDADD   = $(LDADDS)
-SLOWTEST_PROGS	  += testrcore1
 EXTRA_DIST        += data.cc
 
 TEST_PROGS        += testrcore2
-testrcore2_SOURCES = xmltest.cc threads.cc
-testrcore2_LDADD   = $(LDADDS)
+testrcore2_SOURCES = xmltest.cc threads.cc svgtool.cc messages.cc
+testrcore2_LDADD   = $(LDADDS) $(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.o \
+		     $(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
+testrcore2_CXXFLAGS= $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) # FIXME
 EXTRA_DIST        += testpixs.c testpixs.png
 modval.cc:	     testtypes.tpg
 
@@ -34,26 +35,13 @@ EXTRA_DIST        += testtypes.idl testtypes.tpg
 	$(PLICINT) $< -G TypePackage -o $@
 CLEANFILES += *.tpg
 
-# logfile tests
-LOGTEST_PROGS     += svgtool
-svgtool_SOURCES    = svgtool.cc
-svgtool_LDADD      = $(LDADDS) $(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.o \
-	$(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
-svgtool_CXXFLAGS   = $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) # FIXME
-LOGTEST_PROGS     += datalist
-datalist_SOURCES   = datalist.cc
-datalist_LDADD     = $(LDADDS)
-LOGTEST_PROGS     += messages
-messages_SOURCES   = messages.cc
-messages_LDADD     = $(LDADDS)
-
 
 # === test rules ===
 # simple logging check
-check-logging-output: messages
+check-logging-output: testrcore2
 	$(Q) ( export RAPICORN=debug:no-syslog:no-fatal-syslog ; rm -f $(TSTOUT) ; \
 	       for arg in --test-assert --test-passert --test-unreached --test-fatal --test-pfatal --test-logging ; do \
-	         ./messages $$arg 2>>$(TSTOUT) ; done ; true ) $(QSTDERR) ; eval "$$TSTDIAGNOSE"
+	         ./testrcore2 $$arg 2>>$(TSTOUT) ; done ; true ) $(QSTDERR) ; eval "$$TSTDIAGNOSE"
 	$(Q) grep -q 'failed.*"test-assert"' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) test-assert'"
 	$(Q) grep -q 'failed.*"test-passert"' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) test-passert'"
 	$(Q) grep -q 'FATAL:.*unreach' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) test-unreached'"

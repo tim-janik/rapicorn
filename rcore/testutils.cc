@@ -124,6 +124,12 @@ test_output (int kind, const char *format, ...)
       sout = ensure_newline (msg);
       break;
     case 3:                     // test program title
+      if (logging() && slow())
+        msg += " (logging,slow)";
+      else if (logging())
+        msg += " (logging)";
+      else if (slow())
+        msg += " (slow)";
       sout = "START:   " + ensure_newline (msg);
       break;
     case 3 + VERBOSE_TAG:       // test program title
@@ -239,7 +245,6 @@ test_entry_cmp (const TestEntry *const &v1,
   return strverscmp (v1->name.c_str(), v2->name.c_str()) < 0;
 }
 
-
 int
 run (void)
 {
@@ -247,15 +252,16 @@ run (void)
   for (TestEntry *node = test_entry_list; node; node = node->next)
     entries.push_back (node);
   stable_sort (entries.begin(), entries.end(), test_entry_cmp);
-  const char kind = slow() ? 's' : 't';
+  const bool fs = slow(), fl = logging();
   for (size_t i = 0; i < entries.size(); i++)
     {
-      TestEntry *te = entries[i];
-      if (te->kind != kind)
-        continue;
-      TSTART ("%s", te->name.c_str());
-      te->func (te->data);
-      TDONE();
+      const TestEntry *te = entries[i];
+      if ((fl && te->kind == 'l') || (!fl && te->kind == (fs ? 's' : 't')))
+        {
+          TSTART ("%s", te->name.c_str());
+          te->func (te->data);
+          TDONE();
+        }
     }
   for (uint i = 0; i < testfuncs.size(); i++)
     {
@@ -266,28 +272,26 @@ run (void)
   return 0;
 }
 
+static bool flag_test_verbose = false;
+static bool flag_test_log = false;
+static bool flag_test_slow = false;
+
 bool
 verbose (void)
 {
-  return init_settings().test_verbose;
+  return flag_test_verbose;
 }
 
 bool
-quick (void)
+logging (void)
 {
-  return init_settings().test_quick;
+  return flag_test_log;
 }
 
 bool
 slow (void)
 {
-  return init_settings().test_slow;
-}
-
-bool
-thorough (void)
-{
-  return init_settings().test_slow;
+  return flag_test_slow;
 }
 
 char
@@ -326,14 +330,6 @@ test_rand_double_range (double range_start,
 } // Rapicorn
 
 namespace Rapicorn {
-static bool verbose_init = false;
-
-void
-rapicorn_init_logtest (int *argc, char **argv)
-{
-  verbose_init = true;
-  rapicorn_init_test (argc, argv);
-}
 
 void
 rapicorn_init_test (int   *argc,
@@ -344,7 +340,6 @@ rapicorn_init_test (int   *argc,
   /* normal initialization */
   RapicornInitValue ivalues[] = {
     { "stand-alone", "true" },
-    { "test-verbose", verbose_init ? "true" : "false" },
     { "rapicorn-test-parse-args", "true" },
     { NULL }
   };
@@ -353,6 +348,10 @@ rapicorn_init_test (int   *argc,
   g_log_set_always_fatal ((GLogLevelFlags) (flags | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
   Logging::configure ("fatal-criticals:fatal-warnings");
   CPUInfo ci = cpu_info();
+  Test::flag_test_log = (init_settings().test_codes & 0x2) || Logging::conftest ("test-log", Test::flag_test_log);
+  Test::flag_test_verbose = (init_settings().test_codes & 0x1) || Logging::conftest ("test-verbose", Test::flag_test_verbose |
+                                                                                     Test::flag_test_log);
+  Test::flag_test_slow = (init_settings().test_codes & 0x4) || Logging::conftest ("test-slow", Test::flag_test_slow);
   TTITLE ("%s", argv[0]);
 }
 } // Rapicorn

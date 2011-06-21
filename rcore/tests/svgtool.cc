@@ -227,6 +227,7 @@ test_convert_svg2png()
   cairo_surface_destroy (surface);
   delete[] pixels;
 }
+REGISTER_LOGTEST ("SVG/svg2png", test_convert_svg2png);
 
 #if 0
 static void
@@ -242,14 +243,3 @@ test_convert_png2ascii()
 #endif
 
 } // Anon
-
-int
-main (int   argc,
-      char *argv[])
-{
-  rapicorn_init_logtest (&argc, argv);
-
-  TRUN ("SVG/svg2png", test_convert_svg2png);
-
-  return TEXIT();
-}

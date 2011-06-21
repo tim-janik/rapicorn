@@ -166,10 +166,3 @@ test_xml_array()
 REGISTER_TEST ("XML-Tests/Test XML Array", test_xml_array);
 
 } // anon
-
-extern "C" int
-main (int argc, char *argv[])
-{
-  rapicorn_init_test (&argc, argv);
-  return Test::run();
-}

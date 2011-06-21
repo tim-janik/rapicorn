@@ -196,9 +196,7 @@ RAPICORN_STATIC_ASSERT (sizeof (RapicornUnichar) == 4);
 /* --- initialization --- */
 typedef struct {
   bool stand_alone;		/* "stand-alone": no rcfiles, boot scripts, etc. */
-  bool test_quick;		/* run quick tests */
-  bool test_slow;		/* run slow tests */
-  bool test_verbose;		/* provide extra test output */
+  uint test_codes;		/* internal test flags */
 } RapicornInitSettings;
 
 typedef struct {

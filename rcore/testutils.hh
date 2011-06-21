@@ -23,7 +23,6 @@
 #define TTITLE(...)             Rapicorn::Test::test_output (3, __VA_ARGS__)
 #define TSTART(...)             Rapicorn::Test::test_output (4, __VA_ARGS__)
 #define TDONE()                 Rapicorn::Test::test_output (5, "%s", "")
-#define TEXIT()                 ({ exit (0); 0; })
 #define TOUT(...)               Rapicorn::Test::test_output (0, __VA_ARGS__)
 #define TMSG(...)               Rapicorn::Test::test_output (1, __VA_ARGS__)
 #define TINFO(...)              Rapicorn::Test::test_output (2, __VA_ARGS__)
@@ -60,7 +59,6 @@
 
 namespace Rapicorn {
 
-void    rapicorn_init_logtest (int *argc, char **argv);
 void    rapicorn_init_test    (int *argc, char **argv);
 
 namespace Test {
@@ -114,9 +112,8 @@ Timer::benchmark (Callee callee)
 /* test maintenance */
 int     run             (void);
 bool    verbose         (void);
-bool    quick           (void);
+bool    logging         (void);
 bool    slow            (void);
-bool    thorough        (void);
 
 void    test_output     (int kind, const char *format, ...) RAPICORN_PRINTF (2, 3);
 
@@ -148,6 +145,8 @@ public:
   RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('t', name, __VA_ARGS__)
 #define REGISTER_SLOWTEST(name, ...) static const Rapicorn::Test::RegisterTest \
   RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('s', name, __VA_ARGS__)
+#define REGISTER_LOGTEST(name, ...) static const Rapicorn::Test::RegisterTest \
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('l', name, __VA_ARGS__)
 
 /* random numbers */
 char    rand_bit                (void);
