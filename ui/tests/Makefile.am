@@ -26,7 +26,6 @@ TEST_PROGS        += properties
 properties_SOURCES = properties.cc
 properties_LDADD   = $(LDADDS)
 TEST_PROGS        += primitives
-SLOWTEST_PROGS    += primitives
 primitives_SOURCES = primitives.cc
 primitives_LDADD   = $(LDADDS)
 TEST_PROGS        += region
