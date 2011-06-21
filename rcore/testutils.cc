@@ -352,6 +352,6 @@ rapicorn_init_test (int   *argc,
   Test::flag_test_verbose = (init_settings().test_codes & 0x1) || Logging::conftest ("test-verbose", Test::flag_test_verbose |
                                                                                      Test::flag_test_log);
   Test::flag_test_slow = (init_settings().test_codes & 0x4) || Logging::conftest ("test-slow", Test::flag_test_slow);
-  TTITLE ("%s", argv[0]);
+  TTITLE ("%s", Path::basename (argv[0]).c_str());
 }
 } // Rapicorn
