@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2008 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+/* Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html */
 #include <rcore/testutils.hh>
 #include <rapicorn.hh>
 using namespace Rapicorn;
@@ -47,6 +32,7 @@ test_command_scanning (void)
   assert (success && cmdjoin (name, args) == "cmd;(1,'))((',3); \"foo\\\"bar\"");
   // printerr ("\nergo (success=%d): %s\n", success, cmdjoin (name, args).c_str());
 }
+REGISTER_TEST ("Commands/Scanning", test_command_scanning);
 
 static void
 test_command_unquoting (void)
@@ -65,15 +51,4 @@ test_command_unquoting (void)
   ret = command_string_unquote ("''");
   assert (ret == "");
 }
-
-int
-main (int   argc,
-      char *argv[])
-{
-  rapicorn_init_test (&argc, argv);
-
-  Test::add ("Commands/Scanning", test_command_scanning);
-  Test::add ("Commands/Unquoting", test_command_unquoting);
-
-  return Test::run();
-}
+REGISTER_TEST ("Commands/Unquoting", test_command_unquoting);

@@ -5,7 +5,7 @@ INCLUDES += -I$(top_srcdir) $(RAPICORN_GUI_CFLAGS)
 DEFS	 += -DRAPICORN_CONVENIENCE -D__SOURCE_FILE__='"$(patsubst $(realpath $(abs_top_srcdir))/%,%, $(realpath $<))"'
 
 # test programs
-noinst_PROGRAMS	 = $(TEST_PROGS)
+noinst_PROGRAMS	 = $(TEST_PROGS) $(LOGTEST_PROGS)
 noinst_DATA	 =
 LDADDS		 = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
 XML_FILES	 =
@@ -13,27 +13,19 @@ EXTRA_DIST	+= $(XML_FILES)
 
 # programs
 TESTS_ENVIRONMENT  = RAPICORN_VPATH=$(VPATH) # also search srcdir for XML files
-TEST_PROGS        += walker
-walker_SOURCES     = walker.cc
-walker_LDADD       = $(LDADDS)
+
+# test programs
+LOGTEST_PROGS     += testui1
+TEST_PROGS        += testui1
+testui1_SOURCES    = walker.cc cmdtest.cc properties.cc region.cc server.cc
+testui1_LDADD      = $(LDADDS)
+
 TEST_PROGS        += labelmarkup
 labelmarkup_SOURCES= labelmarkup.cc
 labelmarkup_LDADD  = $(LDADDS)
-TEST_PROGS        += cmdtest
-cmdtest_SOURCES    = cmdtest.cc
-cmdtest_LDADD      = $(LDADDS)
-TEST_PROGS        += properties
-properties_SOURCES = properties.cc
-properties_LDADD   = $(LDADDS)
 TEST_PROGS        += primitives
 primitives_SOURCES = primitives.cc
 primitives_LDADD   = $(LDADDS)
-TEST_PROGS        += region
-region_SOURCES     = region.cc
-region_LDADD       = $(LDADDS)
-TEST_PROGS        += server
-server_SOURCES     = server.cc
-server_LDADD       = $(LDADDS)
 TEST_PROGS        += sinfextest
 sinfextest_SOURCES = sinfextest.cc
 sinfextest_LDADD   = $(LDADDS) $(READLINELIBS)
