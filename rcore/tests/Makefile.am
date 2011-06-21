@@ -16,11 +16,13 @@ imgcheck_SOURCES   = imgcheck.cc
 imgcheck_LDADD     = $(LDADDS)
 
 # test programs
-TEST_PROGS       += testrcore1
+LOGTEST_PROGS     += testrcore1
+TEST_PROGS        += testrcore1
 testrcore1_SOURCES = multitest.cc performance.cc modval.cc signal.cc markup.cc pixmaps.cc strings.cc datalist.cc
 testrcore1_LDADD   = $(LDADDS)
 EXTRA_DIST        += data.cc
 
+LOGTEST_PROGS     += testrcore2
 TEST_PROGS        += testrcore2
 testrcore2_SOURCES = xmltest.cc threads.cc svgtool.cc messages.cc
 testrcore2_LDADD   = $(LDADDS) $(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.o \
