@@ -1,170 +1,207 @@
-#!/usr/bin/env python
-# plic - Pluggable IDL Compiler                                -*-mode:python-*-
-# Copyright (C) 2008 Tim Janik
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""PLIC-TypePackage - Binary Type Map generator for PLIC
+# Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+"""PLIC-Package - Binary Type Package generator for PLIC
 
 More details at http://www.testbit.eu/plic
 """
-import Decls
+import Decls, struct
 
-def encode_int (int, asstring = False):
-  if int <= 9999:
-    s = "%u" % int
-    if len (s) <= 3 and asstring:
-      s = s + '='
-    return '.' * (4 - len (s)) + s
-  assert int < 268435456
-  chars = (128 + (int >> 21),
-           128 + ((int >> 14) & 0x7f),
-           128 + ((int >> 7) & 0x7f),
-           128 + (int & 0x7f))
-  return "%c%c%c%c" % chars
-def encode_string (string):
-  r = len (string) % 4
-  r = r and 4 - r or 0
-  return encode_int (len (string), True) + string + ' ' * r
-
-def strcquote (string):
-  result = ''
-  for c in string:
-    oc = ord (c)
-    ec = { 92 : r'\\',
-            7 : r'\a',
-            8 : r'\b',
-            9 : r'\t',
-           10 : r'\n',
-           11 : r'\v',
-           12 : r'\f',
-           13 : r'\r',
-           12 : r'\f'
-         }.get (oc, '')
-    if ec:
-      result += ec
-      continue
-    if oc <= 31 or oc >= 127:
-      result += '\\' + oct (oc)[-3:]
-    elif c == '"':
-      result += r'\"'
+class Encoder:
+  def __init__ (self, node_offset = 16, list_offset = 24, string_offset = 32):
+    self.node0 = node_offset
+    self.nodes = ''
+    self.nodem = []
+    self.list0 = list_offset
+    self.lists = ''
+    self.listm = []
+    self.string0 = string_offset
+    self.strings = ''
+    self.stringm = {}
+    print "offsets:", self.node0, self.list0, self.string0
+  def segment_offsets (self):
+    return (self.node0, self.list0, self.string0)
+  def segment_lengths (self):
+    return (len (self.nodes), len (self.lists), len (self.strings))
+  def segment_strings (self):
+    return (self.nodes, self.lists, self.strings)
+  def node_index (self, node):
+    assert isinstance (node, tuple) and len (node) == 4
+    for t in self.nodem:
+      if t[0] == node:
+        return t[1] # idx
+    s = self.encode_fields (node)
+    idx = self.node0 + len (self.nodes)
+    self.nodes += s
+    self.nodem += [ (node, idx) ]
+    return idx
+  def list_index (self, lst):
+    assert isinstance (lst, list)
+    for t in self.listm:
+      if t[0] == lst:
+        return t[1] # idx
+    s = self.encode_unsigned (len (lst))
+    for v in lst:
+      s += self.encode_value (v)
+    idx = self.list0 + len (self.lists)
+    self.lists += s
+    self.listm += [ (lst, idx) ]
+    return idx
+  def string_index (self, string):
+    assert isinstance (string, str)
+    idx = self.stringm.get (string, None)
+    if idx == None:
+      s = self.encode_string (string)
+      idx = self.string0 + len (self.strings)
+      self.strings += s
+      self.stringm[string] = idx
+    return idx
+  def encode_fields (self, fields):
+    assert isinstance (fields, tuple)
+    s = ''
+    for f in fields:
+      s += self.encode_value (f)
+    return s
+  def encode_value (self, v):
+    n = None
+    if isinstance (v, int):
+      n = v
+    elif isinstance (v, str):
+      n = self.string_index (v)
+    elif isinstance (v, list):
+      n = self.list_index (v)
+    elif isinstance (v, tuple):
+      n = self.node_index (v)
     else:
-      result += c
-  return '"' + result + '"'
+      raise TypeError ('unencodable value: ' + repr (v))
+    return self.encode_unsigned (n)
+  @staticmethod
+  def encode_string (string):
+    r = len (string) % 4
+    r = r and 4 - r or 0
+    return Encoder.encode_unsigned (len (string)) + string + ' ' * r
+  @staticmethod
+  def encode_unsigned (num):
+    assert num >= 0 and num <= 0xffffffff
+    return struct.pack ('<I', num)      # little endian uint
+  @staticmethod
+  def encode_double (num):
+    return struct.pack ('<d', num)      # little endian double
+
+def encode_type_package (nodes):
+  def pad (string, sz = 8, c = '\0'):
+    l = sz - len (string) % sz
+    return string + c * (l % sz)
+  def align (l, sz = 8):
+    return ((l + sz - 1) / sz) * sz
+  def header (sz, ooo, idx):
+    s = 'PlicPackageT\0\0\0\0'
+    s += Encoder.encode_unsigned (sz) + '\0\0\0\0' + '\0\0\0\0' + '\0\0\0\0'
+    s += Encoder.encode_unsigned (ooo[0])
+    s += Encoder.encode_unsigned (ooo[1])
+    s += Encoder.encode_unsigned (ooo[2]) + '\0\0\0\0'
+    s += Encoder.encode_unsigned (idx) + '\0\0\0\0' + '\0\0\0\0' + '\0\0\0\0'
+    return s
+  assert isinstance (nodes, list)
+  hl = len (pad (header (0xdeadbeef, (0xdeadbeef, 0xdeadbeef, 0xdeadbeef), 0xdeadbeef)))
+  tail = '\0\0\0\0'
+  # first encoding round, lengths unknown
+  e = Encoder()
+  first_idx = e.list_index (nodes)
+  # measure lengths
+  lengths = e.segment_lengths ()
+  # second encoding round, lengths known
+  e = Encoder (hl, hl + align (lengths[0]), hl + align (lengths[0]) + align (lengths[1]))
+  nodelist_idx = e.list_index (nodes)
+  # ensure stable encoding
+  assert nodelist_idx >= first_idx
+  assert lengths == e.segment_lengths()
+  # merge parts
+  l = hl + align (lengths[0]) + align (lengths[1]) + align (lengths[2])
+  strings = e.segment_strings()
+  s = pad (header (l, e.segment_offsets(), nodelist_idx))
+  s += pad (strings[0]) + pad (strings[1]) + pad (strings[2]) + tail
+  assert len (s) == l + len (tail)
+  return s
 
 class Generator:
   def aux_strings (self, auxdata):
-    result = encode_int (len (auxdata))
+    result = []
     for ad in auxdata.items():
       if isinstance (ad[1], str) and ad[1][0] in '"\'':
         import rfc822
         astr = rfc822.unquote (ad[1])
       else:
         astr = str (ad[1])
-      result += encode_string (ad[0] + '=' + astr)
+      result += [ str (ad[0] + '=' + astr) ]
     return result
   def type_key (self, type_info):
-    s = { Decls.VOID      : '\n__' + chr (Decls.VOID),
-          Decls.INT       : '\n__' + chr (Decls.INT),
-          Decls.FLOAT     : '\n__' + chr (Decls.FLOAT),
-          Decls.STRING    : '\n__' + chr (Decls.STRING),
-          Decls.ENUM      : '\n__' + chr (Decls.ENUM),
-          Decls.SEQUENCE  : '\n__' + chr (Decls.SEQUENCE),
-          Decls.RECORD    : '\n__' + chr (Decls.RECORD),
-          Decls.FUNC      : '\n__' + chr (Decls.FUNC),
-          Decls.INTERFACE : '\n__' + chr (Decls.INTERFACE),
-          Decls.ANY       : '\n__' + chr (Decls.ANY),
-          }[type_info.storage]
-    return s
+    if type_info == 'REFERENCE':
+      return 0 + Decls.TYPE_REFERENCE
+    else:
+      return 0 + type_info.storage
   reference_types = (Decls.ENUM, Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE)
   def generate_field (self, field_name, type_info):
     tp = type_info
+    fields = []
     if tp.storage in self.reference_types:
-      s = '\n_Ts'
+      fields += [ int (self.type_key ('REFERENCE')) ]
     else:
-      s = self.type_key (tp)
-    s += encode_string (field_name)
+      fields += [ int (self.type_key (tp)) ]
+    fields += [ str (field_name) ]
+    fields += [ self.aux_strings (type_info.auxdata) ]
     if tp.storage in self.reference_types:
-      s += encode_string (tp.full_name())
-    s += self.aux_strings (type_info.auxdata)
-    return s
+      fields += [ str (tp.full_name()) ]
+    else:
+      fields += [ int (0) ]
+    return tuple (fields)
   def generate_type (self, type_info):
     tp = type_info
-    s = self.type_key (type_info)
-    s += encode_string (type_info.name)
-    s += self.aux_strings (type_info.auxdata)
+    fields = []
+    fields += [ int (self.type_key (type_info)) ]
+    fields += [ str (type_info.full_name()) ]
+    fields += [ self.aux_strings (type_info.auxdata) ]
     if tp.storage == Decls.SEQUENCE:
-      s += self.generate_field (tp.elements[0], tp.elements[1])
+      fields += [ self.generate_field (tp.elements[0], tp.elements[1]) ]
     elif tp.storage == Decls.RECORD:
-      s += encode_int (len (tp.fields))
+      members = []
       for fl in tp.fields:
-        s += self.generate_field (fl[0], fl[1])
+        members += [ self.generate_field (fl[0], fl[1]) ]
+      fields += [ members ]
     elif tp.storage == Decls.ENUM:
-      s += encode_int (len (tp.options))
+      s = []
       for op in tp.options:
-        s += encode_string (op[0]) # ident
-        s += encode_string (op[1]) # label
-        s += encode_string (op[2]) # blurb
+        s += [ op[0], op[1], op[2] ] # ident, label, blurb
+      fields += [ s ]
     elif tp.storage == Decls.INTERFACE:
-      tp.prerequisites = []
-      s += encode_int (len (tp.prerequisites))
+      s = []
       for pr in tp.prerequisites:
-        s += encode_string (pr)
-    return s
-  def generate_namespace (self, namespace):
-    s = encode_string (namespace.name)
-    tsl = []
+        s += [ str (pr.full_name()) ]
+      fields += [ s ]
+    else:
+      fields += [ 0 ]
+    return tuple (fields)
+  def namespace_types (self, namespace):
     # sort namespace types for binary lookups
     types = namespace.types()[:]        # list copy
-    # FIXME: filter types for isimpl
     types.sort (lambda o1, o2: cmp (o1.name, o2.name))
-    # serialize types
-    for tp in types:
-      t = self.generate_type (tp)
-      tsl += [ t ]
-    # build type table
-    s += encode_int (len (tsl))         # number of types
-    offset = 4 + 4 * (1 + len (tsl))    # first namespace offset
-    for ts in tsl:
-      s += encode_int (offset)          # each type index
-      offset += len (ts)
-    s += encode_int (offset)            # tail offset
-    # add type data
-    for ts in tsl:
-      s += ts
-    return s
+    # FIXME: filter types for isimpl
+    return types
   def generate_pack (self, namespace_list):
-    s = 'PlicTypePkg_01\r\n'            # magic
-    s += encode_string ("unnamed")      # idl file name
     # sort namespaces for binary lookups
     namespace_list = namespace_list[:]  # list copy
     namespace_list.sort (lambda o1, o2: cmp (o1.name, o2.name))
-    # serialize namespaces
-    nsl = []
+    # collect namespaced types
+    types = []
     for ns in namespace_list:
-      t = self.generate_namespace (ns)
-      nsl += [ t ]
-    # build namespace table
-    s += encode_int (len (nsl))         # number of namespaces
-    offset = 4 + 4 * (1 + len (nsl))    # first namespace offset
-    for ns in nsl:
-      s += encode_int (offset)          # each namspace index
-      offset += len (ns)
-    s += encode_int (offset)            # tail offset
-    # add namespace data
-    for ns in nsl:
-      s += ns
-    return s
+      types += self.namespace_types (ns)
+    # sort namespaced types for binary lookups
+    types.sort (lambda o1, o2: cmp (o1.name, o2.name))
+    # serialize types
+    tsl = []
+    for tp in types:
+      t = self.generate_type (tp)
+      tsl += [ t ]
+    # encode package from serialized types
+    return encode_type_package (tsl)
 
 def error (msg):
   import sys

@@ -1,0 +1,448 @@
+// CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
+#include <string.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+#include <malloc.h>
+
+#define __PLIC_return_EFAULT(v)         do { errno = EFAULT; return (v); } while (0)
+
+namespace Plic {
+
+const char*
+type_kind_name (TypeKind type_kind)
+{
+  switch (type_kind)
+    {
+    case UNTYPED:         return "UNTYPED";
+    case VOID:            return "VOID";
+    case INT:             return "INT";
+    case FLOAT:           return "FLOAT";
+    case STRING:          return "STRING";
+    case ENUM:            return "ENUM";
+    case SEQUENCE:        return "SEQUENCE";
+    case RECORD:          return "RECORD";
+    case INSTANCE:        return "INSTANCE";
+    case FUNC:            return "FUNC";
+    case TYPE_REFERENCE:  return "TYPE_REFERENCE";
+    case ANY:             return "ANY";
+    default:              return NULL;
+    }
+}
+
+class InternalList;
+class InternalString;
+
+struct InternalPackage {
+  uint32_t      magic[4];       // "PlicPackageT\0\0\0\0"
+  uint32_t      length;         // package length (excludes tail)
+  uint32_t      pad0, pad1, pad2;
+  uint32_t      seg_types;      // type code segment offset
+  uint32_t      seg_lists;      // list segment offset
+  uint32_t      seg_strings;    // string segment offset
+  uint32_t      pad3;
+  uint32_t      types;          // list[type index] index; public types
+  uint32_t      pad4, pad5, pad6;
+  bool          check_tail      () { return 0x00000000 == *(uint32_t*) (((char*) this) + length); }
+  bool          check_magic     () { return (magic[0] == 0x63696c50 && magic[1] == 0x6b636150 &&
+                                             magic[2] == 0x54656761 && magic[3] == 0x00000000); }
+  bool          check_lengths   (size_t memlength)
+  {
+    return (memlength > sizeof (*this) && length + 4 <= memlength &&
+            seg_types >= sizeof (*this) && seg_lists >= seg_types && seg_strings >= seg_lists &&
+            length >= seg_strings);
+  }
+  InternalList*   internal_list   (uint32_t offset);
+  InternalType*   internal_type   (uint32_t offset);
+  InternalString* internal_string (uint32_t offset);
+  std::string     simple_string   (uint32_t offset);
+};
+
+struct InternalType {
+  uint32_t      tkind;          // type kind
+  uint32_t      name;           // string index
+  uint32_t      aux_strings;    // list[string index] index; assignment strings
+  uint32_t      custom;         // custom index
+  // enum:      list[string index] index; 3 strings per value
+  // interface: list[string index] index; prerequisite names
+  // record:    list[type index] index; InternalType per field
+  // sequence:  type index; InternalType for sequence field
+  // reference: string index; name of referenced type
+};
+
+struct InternalList {
+  uint32_t      length;         // in members
+  uint32_t      items[];        // flexible array member
+};
+
+struct InternalString {
+  uint32_t      length;         // in bytes
+  char          chars[];        // flexible array member
+};
+
+InternalType*
+InternalPackage::internal_type (uint32_t offset)
+{
+  if (offset & 0x3 || offset < seg_types || offset + sizeof (InternalType) > seg_lists)
+    __PLIC_return_EFAULT (NULL);
+  return (InternalType*) (((char*) this) + offset);
+}
+
+InternalList*
+InternalPackage::internal_list (uint32_t offset)
+{
+  if (offset & 0x3 || offset < seg_lists || offset + sizeof (InternalList) > seg_strings)
+    __PLIC_return_EFAULT (NULL);
+  InternalList *il = (InternalList*) (((char*) this) + offset);
+  if (offset + sizeof (*il) + il->length * 4 > seg_strings)
+    __PLIC_return_EFAULT (NULL);
+  return il;
+}
+
+InternalString*
+InternalPackage::internal_string (uint32_t offset)
+{
+  if (offset & 0x3 || offset < seg_strings || offset + sizeof (InternalString) > length)
+    __PLIC_return_EFAULT (NULL);
+  InternalString *is = (InternalString*) (((char*) this) + offset);
+  if (offset + sizeof (*is) + is->length > length)
+    __PLIC_return_EFAULT (NULL);
+  return is;
+}
+
+std::string
+InternalPackage::simple_string (uint32_t offset)
+{
+  InternalString *is = internal_string (offset);
+  return is ? std::string (is->chars, is->length) : "";
+}
+
+TypePackage::TypePackage (InternalPackage *tp) :
+  m_package (tp)
+{}
+
+TypePackage::~TypePackage ()
+{
+  if (m_package)
+    free (m_package);
+}
+
+size_t
+TypePackage::type_count () const
+{
+  InternalList *il = m_package->internal_list (m_package->types);
+  return il ? il->length : 0;
+}
+
+const TypeCode
+TypePackage::type (size_t index) const
+{
+  InternalList *il = m_package->internal_list (m_package->types);
+  if (il && index < il->length)
+    {
+      Plic::InternalType *it = m_package->internal_type (il->items[index]);
+      if (it)
+        return TypeCode (m_package, it);
+    }
+  __PLIC_return_EFAULT (TypeCode (NULL, NULL));
+}
+
+const TypeCode
+TypePackage::find_type (std::string name) const
+{
+  InternalList *il = m_package->internal_list (m_package->types);
+  const size_t clen = name.size();
+  const char* cname = name.data(); // not 0-terminated
+  if (il)
+    for (size_t i = 0; i < il->length; i++)
+      {
+        InternalType *it = m_package->internal_type (il->items[i]);
+        InternalString *is = it ? m_package->internal_string (it->name) : NULL;
+        if (is && clen == is->length && strncmp (cname, is->chars, clen) == 0)
+          return TypeCode (m_package, it);
+      }
+  return TypeCode (NULL, NULL);
+}
+
+static char* /* return malloc()-ed buffer containing a full read of FILE */
+file_memread (FILE   *stream,
+              size_t *lengthp)
+{
+  size_t sz = 256;
+  char *malloc_string = (char*) malloc (sz);
+  if (!malloc_string)
+    return NULL;
+  char *start = malloc_string;
+  errno = 0;
+  while (!feof (stream))
+    {
+      size_t bytes = fread (start, 1, sz - (start - malloc_string), stream);
+      if (bytes <= 0 && ferror (stream) && errno != EAGAIN)
+        {
+          start = malloc_string; // error/0-data
+          break;
+        }
+      start += bytes;
+      if (start == malloc_string + sz)
+        {
+          bytes = start - malloc_string;
+          sz *= 2;
+          char *newstring = (char*) realloc (malloc_string, sz);
+          if (!newstring)
+            {
+              start = malloc_string; // error/0-data
+              break;
+            }
+          malloc_string = newstring;
+          start = malloc_string + bytes;
+        }
+    }
+  int savederr = errno;
+  *lengthp = start - malloc_string;
+  if (!*lengthp)
+    {
+      free (malloc_string);
+      malloc_string = NULL;
+    }
+  errno = savederr;
+  return malloc_string;
+}
+
+TypePackage*
+TypePackage::load (std::string filename)
+{
+  FILE *file = fopen (filename.c_str(), "r");
+  if (!file)
+    return NULL; // errno set
+  size_t length = 0;
+  char *contents = file_memread (file, &length);
+  int savederr = errno;
+  fclose (file);
+  errno = savederr;
+  InternalPackage *ip = (InternalPackage*) contents;
+  if (!contents || length < sizeof (*ip) + 4)
+    {
+      if (contents)
+        free (contents);
+      errno = ENODATA;
+      return NULL;
+    }
+  if (!ip->check_magic() || !ip->check_lengths (length) || !ip->check_tail())
+    {
+      free (contents);
+      errno = ELIBBAD;
+      return NULL;
+    }
+  TypePackage *tp = new TypePackage (ip);
+  return tp;
+}
+
+TypeCode::TypeCode (InternalPackage *ip, InternalType *it) :
+  m_package (ip), m_type (it)
+{}
+
+TypeKind
+TypeCode::kind () const
+{
+  return TypeKind (m_type->tkind);
+}
+
+std::string
+TypeCode::name () const
+{
+  return m_package->simple_string (m_type->name);
+}
+
+size_t
+TypeCode::aux_count () const
+{
+  InternalList *il = m_package->internal_list (m_type->aux_strings);
+  return il ? il->length : 0;
+}
+
+std::string
+TypeCode::aux_data (size_t index) const // name=utf8data string
+{
+  InternalList *il = m_package->internal_list (m_type->aux_strings);
+  if (!il || index > il->length)
+    __PLIC_return_EFAULT ("");
+  return m_package->simple_string (il->items[index]);
+}
+
+std::string
+TypeCode::aux_value (std::string key) const // utf8data string
+{
+  const size_t clen = key.size();
+  const char* cname = key.data(); // not 0-terminated
+  InternalList *il = m_package->internal_list (m_type->aux_strings);
+  if (il)
+    for (size_t i = 0; i < il->length; i++)
+      {
+        InternalString *is = m_package->internal_string (il->items[i]);
+        if (is && clen < is->length && is->chars[clen] == '=' && strncmp (cname, is->chars, clen) == 0)
+          return std::string (is->chars + clen + 1, is->length - clen - 1);
+      }
+  return "";
+}
+
+size_t
+TypeCode::enum_count () const
+{
+  if (kind() != ENUM)
+    return 0;
+  InternalList *il = m_package->internal_list (m_type->custom);
+  return il ? il->length / 3 : 0;
+}
+
+TypeCode::StringVector
+TypeCode::enum_value (size_t index) const // (ident,label,blurb) choic
+{
+  StringVector sv;
+  if (kind() != ENUM)
+    return sv;
+  InternalList *il = m_package->internal_list (m_type->custom);
+  if (!il || index * 3 > il->length)
+    __PLIC_return_EFAULT (sv);
+  sv.push_back (m_package->simple_string (il->items[index * 3 + 0]));   // ident
+  sv.push_back (m_package->simple_string (il->items[index * 3 + 1]));   // label
+  sv.push_back (m_package->simple_string (il->items[index * 3 + 2]));   // blurb
+  return sv;
+}
+
+size_t
+TypeCode::prerequisite_count () const
+{
+  if (kind() != INSTANCE)
+    return 0;
+  InternalList *il = m_package->internal_list (m_type->custom);
+  return il ? il->length : 0;
+}
+
+std::string
+TypeCode::prerequisite (size_t index) const
+{
+  std::string s;
+  if (kind() != INSTANCE)
+    return s;
+  InternalList *il = m_package->internal_list (m_type->custom);
+  if (!il || index > il->length)
+    __PLIC_return_EFAULT (s);
+  return m_package->simple_string (il->items[index]);
+}
+
+size_t
+TypeCode::field_count () const
+{
+  TypeKind k = kind();
+  if (k == SEQUENCE)
+    return 1;
+  if (k != RECORD)
+    return 0;
+  InternalList *il = m_package->internal_list (m_type->custom);
+  return il ? il->length : 0;
+}
+
+const TypeCode
+TypeCode::field (size_t index) const // RECORD or SEQUENCE
+{
+  TypeKind k = kind();
+  uint32_t field_offset;
+  if (k == SEQUENCE && index == 0)
+    field_offset = m_type->custom;
+  else if (k == RECORD)
+    {
+      InternalList *il = m_package->internal_list (m_type->custom);
+      if (!il || index > il->length)
+        __PLIC_return_EFAULT (TypeCode (NULL, NULL));
+      field_offset = il->items[index];
+    }
+  else
+    return TypeCode (NULL, NULL);
+  InternalType *it = m_package->internal_type (field_offset);
+  return it ? TypeCode (m_package, it) : TypeCode (NULL, NULL);
+}
+
+std::string
+TypeCode::origin () const // type for TYPE_REFERENCE
+{
+  std::string s;
+  if (kind() != TYPE_REFERENCE)
+    return s;
+  return m_package->simple_string (m_type->custom);
+}
+
+bool
+TypeCode::operator== (const TypeCode &o) const
+{
+  return o.m_package == m_package && o.m_type == m_type;
+}
+
+std::string
+TypeCode::pretty (const std::string &indent) const
+{
+  std::string s = indent;
+  s += name();
+  s += std::string (" (") + type_kind_name (kind()) + ")";
+  switch (kind())
+    {
+      char buffer[1024];
+    case ENUM:
+      snprintf (buffer, sizeof (buffer), "%zu", enum_count());
+      s += std::string (": ") + buffer;
+      for (uint i = 0; i < enum_count(); i++)
+        {
+          StringVector sv = enum_value (i);
+          s += std::string ("\n") + indent + indent + sv[0] + ", " + sv[1] + ", " + sv[2];
+        }
+      break;
+    case INSTANCE:
+      snprintf (buffer, sizeof (buffer), "%zu", prerequisite_count());
+      s += std::string (": ") + buffer;
+      for (uint i = 0; i < prerequisite_count(); i++)
+        {
+          std::string sp = prerequisite (i);
+          s += std::string ("\n") + indent + indent + sp;
+        }
+      break;
+    case RECORD: case SEQUENCE:
+      snprintf (buffer, sizeof (buffer), "%zu", field_count());
+      s += std::string (": ") + buffer;
+      for (uint i = 0; i < field_count(); i++)
+        {
+          const TypeCode memb = field (i);
+          s += std::string ("\n") + memb.pretty (indent + indent);
+        }
+      break;
+    case TYPE_REFERENCE:
+      s += std::string (": ") + origin();
+      break;
+    default: ;
+    }
+  if (aux_count())
+    {
+      s += std::string (" [");
+      for (uint i = 0; i < aux_count(); i++)
+        {
+          std::string aux = aux_data (i);
+          s += std::string ("\n") + indent + indent + aux;
+          // verify aux_value
+          const char *eq = strchr (aux.c_str(), '=');
+          if (eq)
+            {
+              const size_t eqp = eq - aux.data();
+              const std::string key = aux.substr (0, eqp);
+              std::string val = aux_value (key);
+              if (val != aux.substr (eqp + 1))
+                {
+                  errno = ENXIO;
+                  perror (std::string ("aux_value for type: " + name() + ": " + key).c_str()), abort();
+                }
+            }
+        }
+      s += "]";
+    }
+  return s;
+}
+
+} // Plic

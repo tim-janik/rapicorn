@@ -1,5 +1,8 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "plicutils.hh"
+
+#include "plicutypes.cc" // includes TypeCode parser
+
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
@@ -15,7 +18,7 @@
 #include <map>
 #include <set>
 
-/* === Auxillary macros === */
+// == Auxillary macros ==
 #ifndef __GNUC__
 #define __PRETTY_FUNCTION__                     __func__
 #endif
@@ -32,6 +35,19 @@ namespace Plic {
 
 /* === Prototypes === */
 static String string_printf (const char *format, ...) PLIC_PRINTF (1, 2);
+
+// == TypeCode ==
+bool
+TypeCode::untyped () const
+{
+  return m_package == NULL && m_type == NULL;
+}
+
+bool
+TypeCode::operator!= (const TypeCode &o) const
+{
+  return !operator== (o);
+}
 
 // === Utilities ===
 static String
@@ -233,22 +249,10 @@ strescape (const String &str)
 String
 FieldBuffer::type_name (int field_type)
 {
-  switch (field_type)
-    {
-    case UNTYPED:         return "UNTYPED";
-    case VOID:            return "VOID";
-    case INT:             return "INT";
-    case FLOAT:           return "FLOAT";
-    case STRING:          return "STRING";
-    case ENUM:            return "ENUM";
-    case SEQUENCE:        return "SEQUENCE";
-    case RECORD:          return "RECORD";
-    case INSTANCE:        return "INSTANCE";
-    case FUNC:            return "FUNC";
-    case TYPE_REFERENCE:  return "TYPE_REFERENCE";
-    case ANY:             return "ANY";
-    default:              return string_printf ("<invalid:%d>", field_type);
-    }
+  const char *tkn = type_kind_name (TypeKind (field_type));
+  if (tkn)
+    return tkn;
+  return string_printf ("<invalid:%d>", field_type);
 }
 
 String

@@ -62,6 +62,49 @@ enum TypeKind {
   TYPE_REFERENCE = 'T', ///< Type reference for record fields.
   ANY            = 'Y', ///< Generic type to hold any other type.
 };
+const char* type_kind_name (TypeKind type_kind);
+
+// == TypeCode ==
+class TypePackage;
+class InternalPackage;
+class InternalType;
+class TypeCode /// Representation of type information for the Any class and to describe structured type compositions.
+{
+  typedef std::vector<std::string> StringVector;
+  friend class TypePackage;
+  InternalPackage      *m_package;
+  InternalType         *m_type;
+  explicit              TypeCode        (InternalPackage*, InternalType*);
+public:
+  TypeKind              kind            () const;               ///< Obtain the underlying primitive type kind.
+  std::string           name            () const;               ///< Obtain the type name.
+  size_t                aux_count       () const;               ///< Number of items of auxillary data.
+  std::string           aux_data        (size_t index) const;   ///< Accessor for auxillary data as key=utf8data string.
+  std::string           aux_value       (std::string key) const; ///< Accessor for auxillary data by key as utf8 string.
+  size_t                enum_count      () const;               ///< Number of enum values for an enum type.
+  StringVector          enum_value      (size_t index) const;   ///< Obtain an enum value as: (ident,label,blurb)
+  size_t                prerequisite_count () const;            ///< Number of interface prerequisites
+  std::string           prerequisite    (size_t index) const;   ///< Obtain prerequisite type names for an interface type.
+  size_t                field_count     () const;               ///< Number of fields in a record type.
+  const TypeCode        field           (size_t index) const;   ///< Obtain field type for a record or sequence type.
+  std::string           origin          () const;               ///< Obtain the type origin for a TYPE_REFERENCE (fields).
+  bool                  untyped         () const;               ///< Checks whether the TypeCode is undefined.
+  std::string           pretty          (const std::string &indent = "") const; ///< Pretty print into a string.
+  bool                  operator!=      (const TypeCode &o) const;
+  bool                  operator==      (const TypeCode&) const;
+};
+
+class TypePackage /// A TypePackage serves as a repository and loader for IDL type information.
+{
+  InternalPackage      *m_package;
+  explicit              TypePackage (InternalPackage*);
+public:
+  virtual              ~TypePackage ();
+  size_t                type_count  () const;                   ///< Number of type codes in this package.
+  const TypeCode        type        (size_t      index) const;  ///< Obtain a TypeCode by index.
+  const TypeCode        find_type   (std::string name) const;   ///< Search for a TypeCode by its name.
+  static TypePackage*   load        (std::string file_name);    ///< Load a new TypePackage.
+};
 
 // == Any Type ==
 class Any {};
