@@ -7,7 +7,7 @@ INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. \
 	    $(RAPICORN_ROPE_CFLAGS) $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
 DEFS      = -DRAPICORN_CONVENIENCE -D__SOURCE_FILE__='"$(patsubst $(realpath $(abs_top_srcdir))/%,%, $(realpath $<))"'
 PLICINT   = $(top_builddir)/plic/plic-intern
-RAPICORNIDL  = $(srcdir)/../ui/rapicorn.idl
+RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
 RAPICORNINS  = $(srcdir)/../ui/insertions.cc
 HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
 
@@ -44,13 +44,13 @@ CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
 
 # === cxx-client ===
 cxx-client.hh: $(RAPICORNIDL) $(HARDCODEDIDL) $(RAPICORNINS) $(srcdir)/CxxCaller.py
-	: # build cxx-client.hh from rapicorn.idl
+	: # build cxx-client.hh from interfaces.idl
 	: # ${PLICINT} -G $(srcdir)/CxxCaller -g clienthh $(HARDCODEDIDL) -o xgen-$(@F)
 	${PLICINT} -G $(srcdir)/CxxCaller -g clienthh $(RAPICORNIDL) -g shortalias \
 	  --insertions $(RAPICORNINS) -o xgen-$(@F)
 	mv xgen-$(@F) $@
 cxx-client.cc: $(RAPICORNIDL) $(HARDCODEDIDL) $(srcdir)/CxxCaller.py
-	: # build cxx-client.cc from rapicorn.idl
+	: # build cxx-client.cc from interfaces.idl
 	: # ${PLICINT} -G $(srcdir)/CxxCaller -g clientcc $(HARDCODEDIDL) --inclusions '"cxx-client.hh"' -o xgen-$(@F)
 	${PLICINT} -G $(srcdir)/CxxCaller -g clientcc $(RAPICORNIDL) --inclusions '"cxx-client.hh"' -o - > xgen-$(@F)
 	mv xgen-$(@F) $@
@@ -116,11 +116,11 @@ check-CxxCaller-skeleton-code: $(srcdir)/testcxxskels.ref
 EXTRA_DIST += CxxCaller.py testcxxserver.ref testcxxclient.ref testcxxskels.ref
 check-local: check-CxxCaller-server-gen check-CxxCaller-client-gen check-CxxCaller-skeleton-gen
 check-local: check-CxxCaller-server-code check-CxxCaller-client-code check-CxxCaller-skeleton-code
-# test rapicorn.idl with PLIC
+# test interfaces.idl with PLIC
 check-rapicorn-idl:
 	$(Q) ${PLICINT} $(RAPICORNIDL) > /dev/null ; eval "$$TSTDIAGNOSE"
 check-local: check-rapicorn-idl
-# test PyStub with rapicorn.idl
-check-PyStub-for-rapicorn.idl:
+# test PyStub with interfaces.idl
+check-PyStub-for-interfaces.idl:
 	$(Q) ${PLICINT} -G $(srcdir)/PyStub $(RAPICORNIDL) | $(PYTHON) ; eval "$$TSTDIAGNOSE"
-check-local: check-PyStub-for-rapicorn.idl
+check-local: check-PyStub-for-interfaces.idl

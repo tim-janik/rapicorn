@@ -28,7 +28,7 @@ rapicorn_cc_sources = $(sort 		\
 	buttons.cc	factory.cc	evaluator.cc	scrollitems.cc	layoutcontainers.cc	\
 	text-editor.cc	text-pango.cc	sinfex.cc	testitems.cc	\
 	sizegroup.cc	listarea.cc	\
-	interface.cc	viewp0rt-gtk.cc	regionimpl.c	blitfuncs.cc	blit-mmx.cc		\
+	interfaces.cc	viewp0rt-gtk.cc	regionimpl.c	blitfuncs.cc	blit-mmx.cc		\
 )
 rapicorn_impl_headers = $(strip 	\
 	arrangementimpl.hh		\
@@ -41,7 +41,7 @@ rapicorn_impl_headers = $(strip 	\
 	tableimpl.hh			\
 )
 rapicorn_generated_headers = $(strip	\
-	interface.hh			\
+	interfaces.hh			\
 )
 rapicorn_private_files = $(strip 	\
 	blitfuncs.hh			\
@@ -80,24 +80,24 @@ EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPEN
 # === Rapicorn IDL ===
 ROPE        = $(srcdir)/../rope
 PLICINT     = $(top_builddir)/plic/plic-intern
-EXTRA_DIST += rapicorn.idl insertions.cc hardcoded.idl
-interface.hh: $(ROPE)/CxxCaller.py $(srcdir)/rapicorn.idl $(srcdir)/insertions.cc
-	: # build interface.hh from rapicorn.idl
+EXTRA_DIST += interfaces.idl insertions.cc hardcoded.idl
+interfaces.hh: $(ROPE)/CxxCaller.py $(srcdir)/interfaces.idl $(srcdir)/insertions.cc
+	: # build interfaces.hh from interfaces.idl
 	${PLICINT} -G $(ROPE)/CxxCaller -g serverhh \
 	  -g iface-base=BaseObject -g filter-out=Item \
 	  -g shortalias -g cppguard=__RAPICORN_INTERFACE_HH_ \
-	  --insertions $(srcdir)/insertions.cc $(srcdir)/rapicorn.idl -o xgen-$(@F)
+	  --insertions $(srcdir)/insertions.cc $(srcdir)/interfaces.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
-$(rapicorn_cc_sources): interface.hh
-CLEANFILES += xgen-interface.hh interface.hh
-interface.cc: $(ROPE)/CxxCaller.py $(srcdir)/rapicorn.idl interface.hh
-	: # build interface.cc from rapicorn.idl
+$(rapicorn_cc_sources): interfaces.hh
+CLEANFILES += xgen-interfaces.hh interfaces.hh
+interfaces.cc: $(ROPE)/CxxCaller.py $(srcdir)/interfaces.idl interfaces.hh
+	: # build interfaces.cc from interfaces.idl
 	echo "#define PLIC_CALL_REMOTE // dummy" > xgen-$(@F)
 	${PLICINT} -G $(ROPE)/CxxCaller -g servercc \
 	  -g iface-base=BaseObject -g filter-out=Item \
-	  --inclusions '"item.hh"' $(srcdir)/rapicorn.idl -o - >> xgen-$(@F)
+	  --inclusions '"item.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
-CLEANFILES += interface.cc
+CLEANFILES += interfaces.cc
 # generate skeletons for non-virtual methods, skipping existing symbols
 skeletons.cc: $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS)
 	for obj in $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS) ; do case "$$obj" in \
@@ -106,7 +106,7 @@ skeletons.cc: $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS)
 	  sed 's/\b@RAPICORN_NAMESPACE_NAME@::/Rapicorn::/g' > xgen-syms-$(@F)
 	${PLICINT} -G $(ROPE)/CxxCaller -g server-skel \
 	  --skip-skels xgen-syms-$(@F) \
-	  $(srcdir)/rapicorn.idl -o xgen-$(@F)
+	  $(srcdir)/interfaces.idl -o xgen-$(@F)
 	rm -f xgen-syms-$(@F)
 	mv xgen-$(@F) $@
 $(LTLIBRARIES): skeletons.cc

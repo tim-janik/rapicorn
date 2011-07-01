@@ -14,7 +14,7 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include <ui/interface.hh> // includes <ui/item.hh> after It3m declaration
+#include <ui/interfaces.hh> // includes <ui/item.hh> after It3m declaration
 
 #ifndef __RAPICORN_ITEM_HH_
 #define __RAPICORN_ITEM_HH_
