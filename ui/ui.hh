@@ -41,7 +41,6 @@
 #include <ui/properties.hh>
 #include <ui/region.hh>
 #include <ui/rope.hh>
-#include <ui/root.hh>
 #include <ui/scrollitems.hh>
 #include <ui/sinfex.hh>
 #include <ui/sizegroup.hh>
@@ -50,5 +49,6 @@
 /* conditional: #include <ui/text-pango.hh> */
 #include <ui/utilities.hh>
 #include <ui/viewp0rt.hh>
+#include <ui/window.hh>
 
 #endif  // __RAPICORN_UI_HH__

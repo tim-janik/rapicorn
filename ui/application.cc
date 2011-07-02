@@ -15,7 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "application.hh"
-#include "root.hh"
+#include "window.hh"
 #include "factory.hh"
 #include "viewp0rt.hh"
 #include "image.hh"

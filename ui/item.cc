@@ -19,7 +19,7 @@
 #include "container.hh"
 #include "compath.hh"
 #include "adjustment.hh"
-#include "root.hh"
+#include "window.hh"
 #include "cmdlib.hh"
 #include "sizegroup.hh"
 

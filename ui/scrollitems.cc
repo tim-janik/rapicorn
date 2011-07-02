@@ -15,7 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "scrollitemsimpl.hh"
-#include "root.hh"
+#include "window.hh"
 
 namespace Rapicorn {
 

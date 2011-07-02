@@ -12,7 +12,7 @@ rapicorn_public_headers = $(strip 	\
 	utilities.hh	events.hh	application.hh	cmdlib.hh	coffer.hh		\
 	primitives.hh	region.hh	loop.hh		viewp0rt.hh	heritage.hh		\
 	properties.hh	commands.hh	rope.hh		painter.hh	compath.hh		\
-	item.hh		container.hh	root.hh		table.hh	arrangement.hh		\
+	item.hh		container.hh	window.hh	table.hh	arrangement.hh		\
 	adjustment.hh	image.hh	paintitems.hh	slider.hh	paintcontainers.hh	\
 	buttons.hh	factory.hh	evaluator.hh	scrollitems.hh	layoutcontainers.hh	\
 	text-editor.hh	text-pango.hh	sinfex.hh	testitems.hh	\
@@ -23,7 +23,7 @@ rapicorn_cc_sources = $(sort 		\
 	utilities.cc	events.cc	application.cc	cmdlib.cc	coffer.cc		\
 	primitives.cc	region.cc	loop.cc		viewp0rt.cc	heritage.cc		\
 	properties.cc	commands.cc	rope.cc		painter.cc	compath.cc		\
-	item.cc		container.cc	root.cc		table.cc	arrangement.cc		\
+	item.cc		container.cc	window.cc	table.cc	arrangement.cc		\
 	adjustment.cc	image.cc	paintitems.cc	slider.cc	paintcontainers.cc	\
 	buttons.cc	factory.cc	evaluator.cc	scrollitems.cc	layoutcontainers.cc	\
 	text-editor.cc	text-pango.cc	sinfex.cc	testitems.cc	\
@@ -35,7 +35,7 @@ rapicorn_impl_headers = $(strip 	\
 	containerimpl.hh		\
 	itemimpl.hh			\
 	listareaimpl.hh			\
-	rootimpl.hh			\
+	windowimpl.hh			\
 	scrollitemsimpl.hh		\
 	sinfeximpl.hh			\
 	tableimpl.hh			\

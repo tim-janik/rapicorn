@@ -17,7 +17,7 @@
 #include "testitems.hh"
 #include "containerimpl.hh"
 #include "painter.hh"
-#include "root.hh"
+#include "window.hh"
 #include <errno.h>
 
 namespace Rapicorn {

@@ -18,7 +18,7 @@
 #include "containerimpl.hh"
 #include "painter.hh"
 #include "factory.hh"
-#include "root.hh"
+#include "window.hh"
 
 namespace Rapicorn {
 

@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_CMDLIB_HH__
 #define __RAPICORN_CMDLIB_HH__
 
-#include <ui/root.hh>
+#include <ui/window.hh>
 
 namespace Rapicorn {
 

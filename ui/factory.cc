@@ -16,7 +16,7 @@
  */
 #include "factory.hh"
 #include "evaluator.hh"
-#include "root.hh"
+#include "window.hh"
 #include <errno.h>
 #include <stdio.h>
 #include <stack>
