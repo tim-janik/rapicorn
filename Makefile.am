@@ -89,15 +89,16 @@ installcheck-local:
 
 # === source code check ===
 check-dynamic_cast:	# check for dynamic_cast of reference types which is broken in gcc <= 3.3.5
-	find $(srcdir)	-type f \( -iname '*.[hc][hc]' -o -iname '*.[hc]' \)	\
+	$(Q) echo "  CHECK  Repel dynamic_cast of reference types..." \
+	&& find $(srcdir)	-type f \( -iname '*.[hc][hc]' -o -iname '*.[hc]' \)	\
 			-exec grep -Hn 'dynamic_cast[^<]*<[^>&]*&' {} \;	\
 	| grep '.' ; exit $$[!$$?] # fail on matches
 check-list_properties: # only public interfaces should export properties
-	cd $(srcdir) \
-	&& echo "## Checking for untyped list_properties() method implementations." \
+	$(Q) cd $(srcdir) \
+	&& echo "  CHECK  Repel untyped list_properties() method implementations..." \
 	&& ! grep '^[[:space:]]*list_properties[[:space:]]*([^)]*)[^;]*$$' -n ui/*.cc rcore/*.cc
-	cd $(srcdir) \
-	&& echo "## Checking for non-interface list_properties() method implementations." \
+	$(Q) cd $(srcdir) \
+	&& echo "  CHECK  Repel non-interface list_properties() method implementations..." \
 	&& ! grep 'Impl::list_properties[[:space:]]*([^)]*)[^;]*$$' -n ui/*.cc rcore/*.cc --exclude ui/item.cc
 check-am: check-dynamic_cast check-list_properties # run source code checks before all others
 
