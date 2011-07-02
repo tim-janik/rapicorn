@@ -7,7 +7,7 @@
 namespace Rapicorn {
 
 /* --- Container --- */
-struct ContainerImpl : public virtual ItemImpl {
+struct ContainerImpl : public virtual ItemImpl, public virtual ContainerIface {
   friend              class ItemImpl;
   friend              class WindowImpl;
   void                uncross_descendant(ItemImpl          &descendant);

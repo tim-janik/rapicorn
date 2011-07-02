@@ -38,12 +38,15 @@ interface Item {
   ItemSeq       collect_components      (string path) = 0;
 };
 
+interface Container : Item {
+};
+
 /**
  * A Wind0w interface is the main user visible handle for screen objects in Rapicorn.
  * Wind0ws can be obtained from the Application singleton. They contain UI elements
  * like buttons and text fields, and the neccessary logic for UI event processing.
  */
-interface Wind0w : Item {
+interface Wind0w : Container {
   bool          viewable                () = 0;
   void          show                    () = 0;
   bool          closed                  () = 0;
