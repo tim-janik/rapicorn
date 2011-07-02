@@ -21,7 +21,7 @@ namespace Rapicorn {
 
 
 static void
-item_print (Item               &item,
+item_print (ItemImpl           &item,
             const StringList   &args)
 {
   bool last_empty = false;
@@ -37,7 +37,7 @@ item_print (Item               &item,
 }
 
 static struct {
-  void      (*cmd) (Item&, const StringList&);
+  void      (*cmd) (ItemImpl&, const StringList&);
   const char *name;
 } item_cmds[] = {
   { item_print,         "Item::print" },
@@ -58,21 +58,21 @@ static struct {
 };
 
 static void
-application_close (Item               &item,
+application_close (ItemImpl           &item,
                    const StringList   &args)
 {
   printout ("app.close()\n");
 }
 
 static struct {
-  void      (*cmd) (Item&, const StringList&);
+  void      (*cmd) (ItemImpl&, const StringList&);
   const char *name;
 } application_cmds[] = {
   { application_close,  "Application::close" },
 };
 
 bool
-command_lib_exec (Item               &item,
+command_lib_exec (ItemImpl           &item,
                   const String       &cmd_name,
                   const StringList   &args)
 {

@@ -1,12 +1,13 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "windowimpl.hh"
 #include "application.hh"
+#include "factory.hh"
 
 namespace Rapicorn {
 
 struct ClassDoctor {
-  static void item_set_flag       (Item &item, uint32 flag) { item.set_flag (flag, true); }
-  static void item_unset_flag     (Item &item, uint32 flag) { item.unset_flag (flag); }
+  static void item_set_flag       (ItemImpl &item, uint32 flag) { item.set_flag (flag, true); }
+  static void item_unset_flag     (ItemImpl &item, uint32 flag) { item.unset_flag (flag); }
   static void set_window_heritage (Window &window, Heritage *heritage) { window.heritage (heritage); }
   static Heritage*
   window_heritage (Window &window, ColorSchemeType cst)
@@ -39,14 +40,14 @@ WindowImpl::custom_command (const String     &command_name,
   return handled;
 }
 
-static DataKey<Item*> focus_item_key;
+static DataKey<ItemImpl*> focus_item_key;
 
 void
-Window::uncross_focus (Item &fitem)
+Window::uncross_focus (ItemImpl &fitem)
 {
   assert (&fitem == get_data (&focus_item_key));
   cross_unlink (fitem, slot (*this, &Window::uncross_focus));
-  Item *item = &fitem;
+  ItemImpl *item = &fitem;
   while (item)
     {
       ClassDoctor::item_unset_flag (*item, FOCUS_CHAIN);
@@ -60,9 +61,9 @@ Window::uncross_focus (Item &fitem)
 }
 
 void
-Window::set_focus (Item *item)
+Window::set_focus (ItemImpl *item)
 {
-  Item *old_focus = get_data (&focus_item_key);
+  ItemImpl *old_focus = get_data (&focus_item_key);
   if (item == old_focus)
     return;
   if (old_focus)
@@ -83,25 +84,25 @@ Window::set_focus (Item *item)
     }
 }
 
-Item*
+ItemImpl*
 Window::get_focus () const
 {
   return get_data (&focus_item_key);
 }
 
-static Item*
+static ItemImpl*
 container_find_item (Container    &container,
                      const String &name)
 {
   for (Container::ChildWalker cw = container.local_children (); cw.has_next(); cw++)
     {
-      Item &item = *cw;
+      ItemImpl &item = *cw;
       if (name == item.name())
         return &item;
       Container *ct = dynamic_cast<Container*> (&item);
       if (ct)
         {
-          Item *it = container_find_item (*ct, name);
+          ItemImpl *it = container_find_item (*ct, name);
           if (it)
             return it;
         }
@@ -110,7 +111,7 @@ container_find_item (Container    &container,
 }
 
 
-Item*
+ItemImpl*
 Window::find_item (const String &item_name)
 {
   if (item_name == name())
@@ -202,7 +203,7 @@ WindowImpl::size_request (Requisition &requisition)
 {
   if (has_allocatable_child())
     {
-      Item &child = get_child();
+      ItemImpl &child = get_child();
       requisition = child.size_request();
     }
 }
@@ -213,7 +214,7 @@ WindowImpl::size_allocate (Allocation area)
   allocation (area);
   if (has_allocatable_child())
     {
-      Item &child = get_child();
+      ItemImpl &child = get_child();
       Requisition rq = child.size_request();
       child.set_allocation (area);
     }
@@ -306,14 +307,14 @@ WindowImpl::beep()
     m_viewp0rt->beep();
 }
 
-vector<Item*>
-WindowImpl::item_difference (const vector<Item*> &clist, /* preserves order of clist */
-                             const vector<Item*> &cminus)
+vector<ItemImpl*>
+WindowImpl::item_difference (const vector<ItemImpl*> &clist, /* preserves order of clist */
+                             const vector<ItemImpl*> &cminus)
 {
-  map<Item*,bool> mminus;
+  map<ItemImpl*,bool> mminus;
   for (uint i = 0; i < cminus.size(); i++)
     mminus[cminus[i]] = true;
-  vector<Item*> result;
+  vector<ItemImpl*> result;
   for (uint i = 0; i < clist.size(); i++)
     if (!mminus[clist[i]])
       result.push_back (clist[i]);
@@ -324,10 +325,10 @@ bool
 WindowImpl::dispatch_mouse_movement (const Event &event)
 {
   m_last_event_context = event;
-  vector<Item*> pierced;
+  vector<ItemImpl*> pierced;
   /* figure all entered children */
   bool unconfined;
-  Item *grab_item = get_grab (&unconfined);
+  ItemImpl *grab_item = get_grab (&unconfined);
   if (grab_item)
     {
       if (unconfined or grab_item->viewp0rt_point (Point (event.x, event.y)))
@@ -345,26 +346,26 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
         viewp0rt_point_children (Point (event.x, event.y), pierced);
     }
   /* send leave events */
-  vector<Item*> left_children = item_difference (m_last_entered_children, pierced);
+  vector<ItemImpl*> left_children = item_difference (m_last_entered_children, pierced);
   EventMouse *leave_event = create_event_mouse (MOUSE_LEAVE, EventContext (event));
-  for (vector<Item*>::reverse_iterator it = left_children.rbegin(); it != left_children.rend(); it++)
+  for (vector<ItemImpl*>::reverse_iterator it = left_children.rbegin(); it != left_children.rend(); it++)
     (*it)->process_event (*leave_event);
   delete leave_event;
   /* send enter events */
-  vector<Item*> entered_children = item_difference (pierced, m_last_entered_children);
+  vector<ItemImpl*> entered_children = item_difference (pierced, m_last_entered_children);
   EventMouse *enter_event = create_event_mouse (MOUSE_ENTER, EventContext (event));
-  for (vector<Item*>::reverse_iterator it = entered_children.rbegin(); it != entered_children.rend(); it++)
+  for (vector<ItemImpl*>::reverse_iterator it = entered_children.rbegin(); it != entered_children.rend(); it++)
     (*it)->process_event (*enter_event);
   delete enter_event;
   /* send actual move event */
   bool handled = false;
   EventMouse *move_event = create_event_mouse (MOUSE_MOVE, EventContext (event));
-  for (vector<Item*>::reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
+  for (vector<ItemImpl*>::reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
     if (!handled && (*it)->sensitive())
       handled = (*it)->process_event (*move_event);
   delete move_event;
   /* cleanup */
-  for (vector<Item*>::reverse_iterator it = m_last_entered_children.rbegin(); it != m_last_entered_children.rend(); it++)
+  for (vector<ItemImpl*>::reverse_iterator it = m_last_entered_children.rbegin(); it != m_last_entered_children.rend(); it++)
     (*it)->unref();
   m_last_entered_children = pierced;
   return handled;
@@ -373,9 +374,9 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
 bool
 WindowImpl::dispatch_event_to_pierced_or_grab (const Event &event)
 {
-  vector<Item*> pierced;
+  vector<ItemImpl*> pierced;
   /* figure all entered children */
-  Item *grab_item = get_grab();
+  ItemImpl *grab_item = get_grab();
   if (grab_item)
     pierced.push_back (ref (grab_item));
   else if (drawable())
@@ -385,7 +386,7 @@ WindowImpl::dispatch_event_to_pierced_or_grab (const Event &event)
     }
   /* send actual event */
   bool handled = false;
-  for (vector<Item*>::reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
+  for (vector<ItemImpl*>::reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
     {
       if (!handled && (*it)->sensitive())
         handled = (*it)->process_event (event);
@@ -400,10 +401,10 @@ WindowImpl::dispatch_button_press (const EventButton &bevent)
   uint press_count = bevent.type - BUTTON_PRESS + 1;
   assert (press_count >= 1 && press_count <= 3);
   /* figure all entered children */
-  const vector<Item*> &pierced = m_last_entered_children;
+  const vector<ItemImpl*> &pierced = m_last_entered_children;
   /* send actual event */
   bool handled = false;
-  for (vector<Item*>::const_reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
+  for (vector<ItemImpl*>::const_reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
     if (!handled && (*it)->sensitive())
       {
         ButtonState bs (*it, bevent.button);
@@ -444,12 +445,12 @@ WindowImpl::dispatch_button_release (const EventButton &bevent)
 }
 
 void
-WindowImpl::cancel_item_events (Item *item)
+WindowImpl::cancel_item_events (ItemImpl *item)
 {
   /* cancel enter events */
   for (int i = m_last_entered_children.size(); i > 0;)
     {
-      Item *current = m_last_entered_children[--i]; /* walk backwards */
+      ItemImpl *current = m_last_entered_children[--i]; /* walk backwards */
       if (item == current || !item)
         {
           EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, m_last_event_context);
@@ -508,7 +509,7 @@ WindowImpl::dispatch_leave_event (const EventMouse &mevent)
       /* send leave events */
       while (m_last_entered_children.size())
         {
-          Item *item = m_last_entered_children.back();
+          ItemImpl *item = m_last_entered_children.back();
           m_last_entered_children.pop_back();
           item->process_event (mevent);
           item->unref();
@@ -546,7 +547,7 @@ WindowImpl::dispatch_focus_event (const EventFocus &fevent)
 bool
 WindowImpl::move_focus_dir (FocusDirType focus_dir)
 {
-  Item *new_focus = NULL, *old_focus = get_focus();
+  ItemImpl *new_focus = NULL, *old_focus = get_focus();
   if (old_focus)
     ref (old_focus);
 
@@ -579,7 +580,7 @@ WindowImpl::dispatch_key_event (const Event &event)
 {
   bool handled = false;
   dispatch_mouse_movement (event);
-  Item *item = get_focus();
+  ItemImpl *item = get_focus();
   if (item && item->process_viewp0rt_event (event))
     return true;
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
@@ -594,7 +595,7 @@ WindowImpl::dispatch_key_event (const Event &event)
         }
       if (0)
         {
-          Item *grab_item = get_grab();
+          ItemImpl *grab_item = get_grab();
           grab_item = grab_item ? grab_item : this;
           handled = grab_item->process_event (*kevent);
         }
@@ -811,7 +812,7 @@ WindowImpl::render (Display &display)
 }
 
 void
-WindowImpl::remove_grab_item (Item &child)
+WindowImpl::remove_grab_item (ItemImpl &child)
 {
   bool stack_changed = false;
   for (int i = m_grab_stack.size() - 1; i >= 0; i--)
@@ -837,8 +838,8 @@ WindowImpl::grab_stack_changed()
 }
 
 void
-WindowImpl::add_grab (Item &child,
-                      bool  unconfined)
+WindowImpl::add_grab (ItemImpl &child,
+                      bool      unconfined)
 {
   if (!child.has_ancestor (*this))
     throw Exception ("child is not descendant of container \"", name(), "\": ", child.name());
@@ -851,7 +852,7 @@ WindowImpl::add_grab (Item &child,
 }
 
 void
-WindowImpl::remove_grab (Item &child)
+WindowImpl::remove_grab (ItemImpl &child)
 {
   for (int i = m_grab_stack.size() - 1; i >= 0; i--)
     if (m_grab_stack[i].item == &child)
@@ -863,7 +864,7 @@ WindowImpl::remove_grab (Item &child)
   throw Exception ("no such child in grab stack: ", child.name());
 }
 
-Item*
+ItemImpl*
 WindowImpl::get_grab (bool *unconfined)
 {
   for (int i = m_grab_stack.size() - 1; i >= 0; i--)
@@ -877,7 +878,7 @@ WindowImpl::get_grab (bool *unconfined)
 }
 
 void
-WindowImpl::dispose_item (Item &item)
+WindowImpl::dispose_item (ItemImpl &item)
 {
   remove_grab_item (item);
   cancel_item_events (item);
@@ -1141,7 +1142,7 @@ WindowImpl::synthesize_leave ()
 }
 
 bool
-WindowImpl::synthesize_click (Item  &item,
+WindowImpl::synthesize_click (ItemImpl &item,
                               int    button,
                               double xalign,
                               double yalign)

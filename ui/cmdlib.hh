@@ -21,7 +21,7 @@
 
 namespace Rapicorn {
 
-bool    command_lib_exec        (Item               &item,
+bool    command_lib_exec        (ItemImpl           &item,
                                  const String       &cmd_name,
                                  const StringList   &args);
 bool    command_scan            (const String       &input,

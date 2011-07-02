@@ -22,51 +22,51 @@
 namespace Rapicorn {
 
 /* --- Container --- */
-struct Container : public virtual Item {
-  friend              class Item;
+struct Container : public virtual ItemImpl {
+  friend              class ItemImpl;
   friend              class Window;
-  void                uncross_descendant(Item          &descendant);
-  void                item_cross_link   (Item           &owner,
-                                         Item           &link,
+  void                uncross_descendant(ItemImpl          &descendant);
+  void                item_cross_link   (ItemImpl           &owner,
+                                         ItemImpl           &link,
                                          const ItemSlot &uncross);
-  void                item_cross_unlink (Item           &owner,
-                                         Item           &link,
+  void                item_cross_unlink (ItemImpl           &owner,
+                                         ItemImpl           &link,
                                          const ItemSlot &uncross);
-  void                item_uncross_links(Item           &owner,
-                                         Item           &link);
+  void                item_uncross_links(ItemImpl           &owner,
+                                         ItemImpl           &link);
 protected:
   virtual            ~Container         ();
-  virtual void        add_child         (Item           &item) = 0;
-  virtual void        repack_child      (Item           &item,
+  virtual void        add_child         (ItemImpl           &item) = 0;
+  virtual void        repack_child      (ItemImpl           &item,
                                          const PackInfo &orig,
                                          const PackInfo &pnew);
-  virtual void        remove_child      (Item           &item) = 0;
-  virtual void        unparent_child    (Item           &item);
-  virtual void        dispose_item      (Item           &item);
-  virtual void        hierarchy_changed (Item           *old_toplevel);
+  virtual void        remove_child      (ItemImpl           &item) = 0;
+  virtual void        unparent_child    (ItemImpl           &item);
+  virtual void        dispose_item      (ItemImpl           &item);
+  virtual void        hierarchy_changed (ItemImpl           *old_toplevel);
   virtual bool        move_focus        (FocusDirType    fdir);
   void                expose_enclosure  (); /* expose without children */
-  virtual void        set_focus_child   (Item           *item);
+  virtual void        set_focus_child   (ItemImpl           *item);
   virtual void        dump_test_data    (TestStream     &tstream);
 public:
-  Item*               get_focus_child   () const;
-  typedef Walker<Item>  ChildWalker;
+  ItemImpl*               get_focus_child   () const;
+  typedef Walker<ItemImpl>  ChildWalker;
   void                  child_container (Container      *child_container);
   Container&            child_container ();
   virtual ChildWalker   local_children  () const = 0;
   virtual bool          has_children    () = 0;
-  void                  remove          (Item           &item);
-  void                  remove          (Item           *item)  { RAPICORN_CHECK (item != NULL); remove (*item); }
-  void                  add             (Item                   &item);
-  void                  add             (Item                   *item);
-  virtual Affine        child_affine    (const Item             &item); /* container => item affine */
+  void                  remove          (ItemImpl           &item);
+  void                  remove          (ItemImpl           *item)  { RAPICORN_CHECK (item != NULL); remove (*item); }
+  void                  add             (ItemImpl                   &item);
+  void                  add             (ItemImpl                   *item);
+  virtual Affine        child_affine    (const ItemImpl             &item); /* container => item affine */
   virtual
-  const PropertyList&   list_properties (); /* essentially chaining to Item:: */
-  const CommandList&    list_commands   (); /* essentially chaining to Item:: */
+  const PropertyList&   list_properties (); /* essentially chaining to ItemImpl:: */
+  const CommandList&    list_commands   (); /* essentially chaining to ItemImpl:: */
   virtual void          point_children  (Point                   p, /* item coordinates relative */
-                                         std::vector<Item*>     &stack);
+                                         std::vector<ItemImpl*>     &stack);
   void         viewp0rt_point_children  (Point                   p, /* viewp0rt coordinates relative */
-                                         std::vector<Item*>     &stack);
+                                         std::vector<ItemImpl*>     &stack);
   virtual void          render          (Display                &display);
   void                  debug_tree      (String indent = String());
 };

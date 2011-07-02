@@ -20,7 +20,6 @@
 #include <pango/pangocairo.h>
 #include "factory.hh"
 #include "painter.hh"
-#include "itemimpl.hh"
 #include "viewp0rt.hh"  // for rapicorn_gtk_threads_enter / rapicorn_gtk_threads_leave
 
 #include <algorithm>
@@ -1257,7 +1256,7 @@ protected:
   list_properties() // escape check-list_properties ';'
   {
     static Property *properties[] = {};
-    static const PropertyList property_list (properties, Item::list_properties(), Client::client_list_properties());
+    static const PropertyList property_list (properties, ItemImpl::list_properties(), Client::client_list_properties());
     return property_list;
   }
 };

@@ -124,17 +124,17 @@ colorset_base (StateType state,
 typedef Color (*ColorFunc) (StateType, ColorType);
 
 class Heritage::Internals {
-  Item     &m_item;
+  ItemImpl &m_item;
   ColorFunc ncf, scf;
 public:
   Heritage *selected;
-  Internals (Item     &item,
+  Internals (ItemImpl &item,
              ColorFunc normal_cf,
              ColorFunc selected_cf) :
     m_item (item), ncf (normal_cf), scf (selected_cf), selected (NULL)
   {}
   bool
-  match (Item &item,
+  match (ItemImpl &item,
          ColorFunc normal_cf,
          ColorFunc selected_cf)
   {
@@ -170,7 +170,7 @@ Heritage::~Heritage ()
 
 Heritage*
 Heritage::create_heritage (Window         &window,
-                           Item           &item,
+                           ItemImpl       &item,
                            ColorSchemeType color_scheme)
 {
   Window *iwindow = item.get_window();
@@ -188,7 +188,7 @@ Heritage::create_heritage (Window         &window,
 }
 
 Heritage*
-Heritage::adapt_heritage (Item           &item,
+Heritage::adapt_heritage (ItemImpl       &item,
                           ColorSchemeType color_scheme)
 {
   if (m_internals)

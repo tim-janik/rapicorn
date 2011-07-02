@@ -23,7 +23,7 @@ class WindowImpl : public virtual Window,
   uint                  m_entered : 1;
   uint                  m_auto_close : 1;
   EventContext          m_last_event_context;
-  vector<Item*>         m_last_entered_children;
+  vector<ItemImpl*>     m_last_entered_children;
   Viewp0rt::Config      m_config;
 public:
   explicit              WindowImpl                              ();
@@ -31,14 +31,14 @@ protected:
   virtual void          dispose                                 ();
 private:
   /*Des*/               ~WindowImpl                             ();
-  virtual void          dispose_item                            (Item                   &item);
+  virtual void          dispose_item                            (ItemImpl               &item);
   virtual bool          self_visible                            () const;
   /* misc */
-  vector<Item*>         item_difference                         (const vector<Item*>    &clist, /* preserves order of clist */
-                                                                 const vector<Item*>    &cminus);
+  vector<ItemImpl*>     item_difference                         (const vector<ItemImpl*>    &clist, /* preserves order of clist */
+                                                                 const vector<ItemImpl*>    &cminus);
   /* sizing */
   virtual void          size_request                            (Requisition            &requisition);
-  using                 Item::size_request;
+  using                 ItemImpl::size_request;
   virtual void          size_allocate                           (Allocation              area);
   virtual bool          tunable_requisitions                    ();
   void                  resize_all                              (Allocation             *new_area);
@@ -46,7 +46,7 @@ private:
   virtual void          beep                                    ();
   /* rendering */
   virtual void          render                                  (Display                &display);
-  using                 Item::render;
+  using                 ItemImpl::render;
   void                  collapse_expose_region                  ();
   virtual void          expose_window_region                    (const Region           &region);
   virtual void          copy_area                               (const Rect             &src,
@@ -54,12 +54,12 @@ private:
   void                  expose_now                              ();
   virtual void          draw_now                                ();
   /* grab handling */
-  virtual void          remove_grab_item                        (Item                   &child);
+  virtual void          remove_grab_item                        (ItemImpl               &child);
   void                  grab_stack_changed                      ();
-  virtual void          add_grab                                (Item                   &child,
+  virtual void          add_grab                                (ItemImpl               &child,
                                                                  bool                    unconfined);
-  virtual void          remove_grab                             (Item                   &child);
-  virtual Item*         get_grab                                (bool                   *unconfined = NULL);
+  virtual void          remove_grab                             (ItemImpl               &child);
+  virtual ItemImpl*     get_grab                                (bool                   *unconfined = NULL);
   /* main loop */
   virtual bool          viewable                                ();
   virtual void          create_viewp0rt                         ();
@@ -83,14 +83,14 @@ private:
   virtual bool          synthesize_enter                        (double xalign = 0.5,
                                                                  double yalign = 0.5);
   virtual bool          synthesize_leave                        ();
-  virtual bool          synthesize_click                        (Item  &item,
+  virtual bool          synthesize_click                        (ItemImpl  &item,
                                                                  int    button,
                                                                  double xalign = 0.5,
                                                                  double yalign = 0.5);
   virtual bool            synthesize_delete                     ();
   /* event handling */
   virtual void          enqueue_async                           (Event                  *event);
-  virtual void          cancel_item_events                      (Item                   *item);
+  virtual void          cancel_item_events                      (ItemImpl               *item);
   using                 Window::cancel_item_events;
   bool                  dispatch_mouse_movement                 (const Event            &event);
   bool                  dispatch_event_to_pierced_or_grab       (const Event            &event);
@@ -112,16 +112,16 @@ private:
   bool                  has_pending_win_size                    ();
   /* --- GrabEntry --- */
   struct GrabEntry {
-    Item *item;
+    ItemImpl *item;
     bool  unconfined;
-    explicit            GrabEntry (Item *i, bool uc) : item (i), unconfined (uc) {}
+    explicit            GrabEntry (ItemImpl *i, bool uc) : item (i), unconfined (uc) {}
   };
   vector<GrabEntry>     m_grab_stack;
   /* --- ButtonState --- */
   struct ButtonState {
-    Item               *item;
+    ItemImpl           *item;
     uint                button;
-    explicit            ButtonState     (Item *i, uint b) : item (i), button (b) {}
+    explicit            ButtonState     (ItemImpl *i, uint b) : item (i), button (b) {}
     explicit            ButtonState     () : item (NULL), button (0) {}
     bool                operator< (const ButtonState &bs2) const
     {

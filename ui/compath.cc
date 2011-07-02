@@ -342,14 +342,14 @@ match_tags (const String     &typetag,
 
 static bool
 match_predicate (ComponentMatcher &cm,
-                 Item             &item)
+                 ItemImpl         &item)
 {
   switch (cm.step())
     {
     case ComponentMatcher::ORIGIN:
       {
         ComponentMatcherSegment &cmseg = *dynamic_cast<ComponentMatcherSegment*> (&cm);
-        vector<Item*> result = collect_items (item, cmseg);
+        vector<ItemImpl*> result = collect_items (item, cmseg);
         return !result.empty();
       }
     case ComponentMatcher::EXPRESSION:
@@ -385,7 +385,7 @@ match_predicate (ComponentMatcher &cm,
 
 static bool
 match_item (ComponentMatcherSegment &cms,
-            Item                    &item)
+            ItemImpl                &item)
 {
   String idselector = cms.idselector();
   if (not (idselector.empty() || item.name().find (idselector) != String::npos))
@@ -405,11 +405,11 @@ match_item (ComponentMatcherSegment &cms,
   return true;
 }
 
-static vector<Item*>
+static vector<ItemImpl*>
 match_segment (ComponentMatcherSegment &cms,
-               Item                    &item)
+               ItemImpl                &item)
 {
-  vector<Item*> result;
+  vector<ItemImpl*> result;
   // either match self
   if (match_item (cms, item))
     {
@@ -421,7 +421,7 @@ match_segment (ComponentMatcherSegment &cms,
   if (container)
     for (Container::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
       {
-        vector<Item*> more = match_segment (cms, *cw);
+        vector<ItemImpl*> more = match_segment (cms, *cw);
         if (result.empty())
           result.swap (more);
         else
@@ -430,11 +430,11 @@ match_segment (ComponentMatcherSegment &cms,
   return result;
 }
 
-vector<Item*>
-collect_items (Item             &origin,
+vector<ItemImpl*>
+collect_items (ItemImpl         &origin,
                ComponentMatcher &cmatch)
 {
-  vector<Item*> candidates;
+  vector<ItemImpl*> candidates;
   return_val_if_fail (cmatch.step() == ComponentMatcher::ORIGIN, candidates);
 
   ComponentMatcherSegment *cmseg = dynamic_cast<ComponentMatcherSegment*> (&cmatch);
@@ -442,10 +442,10 @@ collect_items (Item             &origin,
   candidates.push_back (&origin);
   for (ComponentMatcherSegment *cms = cmseg; cms; cms = cms->next())
     {
-      vector<Item*> result;
+      vector<ItemImpl*> result;
       if (cms->step() == ComponentMatcher::BELOW)
         {
-          vector<Item*> children;
+          vector<ItemImpl*> children;
           for (uint j = 0; j < candidates.size(); j++)
             {
               Container *container = dynamic_cast<Container*> (candidates[j]);
@@ -458,7 +458,7 @@ collect_items (Item             &origin,
         }
       for (uint j = 0; j < candidates.size(); j++)
         {
-          vector<Item*> more = match_segment (*cms, *candidates[j]);
+          vector<ItemImpl*> more = match_segment (*cms, *candidates[j]);
           if (result.empty())
             result.swap (more);
           else

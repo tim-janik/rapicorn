@@ -13,7 +13,7 @@ class Window;
 filtered_class_hh:Item:
 #include <ui/item.hh>
 namespace Rapicorn {
-typedef Item Item_Interface;
+typedef ItemImpl Item_Interface;
 }
 
 IGNORE:
@@ -31,8 +31,8 @@ class_scope:Wind0w_Interface:
 class_scope:Application_Interface:
   static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
   int                execute_loops ();
-  static bool        plor_add      (Item &item, const String &plor_name);
-  static Item*       plor_remove   (const String &plor_name);
+  static bool        plor_add      (ItemImpl &item, const String &plor_name);
+  static ItemImpl*   plor_remove   (const String &plor_name);
   /* global mutex */
   struct ApplicationMutex {
     static void lock    () { rapicorn_thread_enter (); }

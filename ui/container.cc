@@ -23,17 +23,17 @@
 namespace Rapicorn {
 
 struct ClassDoctor {
-  static void item_set_parent (Item &item, Container *parent) { item.set_parent (parent); }
+  static void item_set_parent (ItemImpl &item, Container *parent) { item.set_parent (parent); }
 };
 
 /* --- CrossLinks --- */
 struct CrossLink : protected NonCopyable {
-  Item                             *owner, *link;
-  Signals::Trampoline1<void,Item&> *uncross;
-  CrossLink                        *next;
-  explicit      CrossLink (Item                             *o,
-                           Item                             *l,
-                           Signals::Trampoline1<void,Item&> &it) :
+  ItemImpl                             *owner, *link;
+  Signals::Trampoline1<void,ItemImpl&> *uncross;
+  CrossLink                            *next;
+  explicit      CrossLink (ItemImpl                         *o,
+                           ItemImpl                         *l,
+                           Signals::Trampoline1<void,ItemImpl&> &it) :
     owner (o), link (l),
     uncross (ref_sink (&it)), next (NULL)
   {}
@@ -73,8 +73,8 @@ static UncrossNode *uncross_callback_stack = NULL;
 static Mutex        uncross_callback_stack_mutex;
 
 void
-Container::item_cross_link (Item           &owner,
-                            Item           &link,
+Container::item_cross_link (ItemImpl       &owner,
+                            ItemImpl       &link,
                             const ItemSlot &uncross)
 {
   assert (&owner != &link);
@@ -93,8 +93,8 @@ Container::item_cross_link (Item           &owner,
 }
 
 void
-Container::item_cross_unlink (Item           &owner,
-                              Item           &link,
+Container::item_cross_unlink (ItemImpl       &owner,
+                              ItemImpl       &link,
                               const ItemSlot &uncross)
 {
   bool found_one = false;
@@ -137,8 +137,8 @@ Container::item_cross_unlink (Item           &owner,
 }
 
 void
-Container::item_uncross_links (Item &owner,
-                               Item &link)
+Container::item_uncross_links (ItemImpl &owner,
+                               ItemImpl &link)
 {
   ref (this);
   ref (owner);
@@ -159,8 +159,8 @@ Container::item_uncross_links (Item &owner,
 }
 
 static inline bool
-item_has_ancestor (const Item *item,
-                   const Item *ancestor)
+item_has_ancestor (const ItemImpl *item,
+                   const ItemImpl *ancestor)
 {
   /* this duplicates item->has_ancestor() to optimize speed and
    * to cover the case where item == ancestor.
@@ -175,10 +175,10 @@ item_has_ancestor (const Item *item,
 }
 
 void
-Container::uncross_descendant (Item &descendant)
+Container::uncross_descendant (ItemImpl &descendant)
 {
   assert (descendant.has_ancestor (*this)); // could be disabled for performance
-  Item *item = &descendant;
+  ItemImpl *item = &descendant;
   ref (this);
   ref (item);
   Container *cc = dynamic_cast<Container*> (item);
@@ -265,7 +265,7 @@ Container::list_properties()
 {
   static Property *properties[] = {
   };
-  static const PropertyList property_list (properties, Item::list_properties());
+  static const PropertyList property_list (properties, ItemImpl::list_properties());
   return property_list;
 }
 
@@ -274,7 +274,7 @@ Container::list_commands()
 {
   static Command *commands[] = {
   };
-  static const CommandList command_list (commands, Item::list_commands());
+  static const CommandList command_list (commands, ItemImpl::list_commands());
   return command_list;
 }
 
@@ -298,7 +298,7 @@ Container::child_container ()
 }
 
 void
-Container::add (Item &item)
+Container::add (ItemImpl &item)
 {
   if (item.parent())
     throw Exception ("not adding item with parent: ", item.name());
@@ -326,7 +326,7 @@ Container::add (Item &item)
 }
 
 void
-Container::add (Item *item)
+Container::add (ItemImpl *item)
 {
   if (!item)
     throw NullPointer();
@@ -334,7 +334,7 @@ Container::add (Item *item)
 }
 
 void
-Container::remove (Item &item)
+Container::remove (ItemImpl &item)
 {
   Container *container = item.parent();
   if (!container)
@@ -357,38 +357,38 @@ Container::remove (Item &item)
 }
 
 Affine
-Container::child_affine (const Item &item)
+Container::child_affine (const ItemImpl &item)
 {
   return Affine(); // Identity
 }
 
 void
-Container::hierarchy_changed (Item *old_toplevel)
+Container::hierarchy_changed (ItemImpl *old_toplevel)
 {
-  Item::hierarchy_changed (old_toplevel);
+  ItemImpl::hierarchy_changed (old_toplevel);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     cw->sig_hierarchy_changed.emit (old_toplevel);
 }
 
 void
-Container::dispose_item (Item &item)
+Container::dispose_item (ItemImpl &item)
 {
   if (&item == get_data (&child_container_key))
     child_container (NULL);
 }
 
 void
-Container::repack_child (Item           &item,
+Container::repack_child (ItemImpl       &item,
                          const PackInfo &orig,
                          const PackInfo &pnew)
 {
   item.invalidate_parent();
 }
 
-static DataKey<Item*> focus_child_key;
+static DataKey<ItemImpl*> focus_child_key;
 
 void
-Container::unparent_child (Item &item)
+Container::unparent_child (ItemImpl &item)
 {
   ref (this);
   if (&item == get_data (&focus_child_key))
@@ -404,7 +404,7 @@ Container::unparent_child (Item &item)
 }
 
 void
-Container::set_focus_child (Item *item)
+Container::set_focus_child (ItemImpl *item)
 {
   if (!item)
     delete_data (&focus_child_key);
@@ -415,7 +415,7 @@ Container::set_focus_child (Item *item)
     }
 }
 
-Item*
+ItemImpl*
 Container::get_focus_child () const
 {
   return get_data (&focus_child_key);
@@ -423,8 +423,8 @@ Container::get_focus_child () const
 
 struct LesserItemByHBand {
   bool
-  operator() (Item *const &i1,
-              Item *const &i2) const
+  operator() (ItemImpl *const &i1,
+              ItemImpl *const &i2) const
   {
     const Allocation &a1 = i1->allocation();
     const Allocation &a2 = i2->allocation();
@@ -471,8 +471,8 @@ struct LesserItemByDirection {
       }
   }
   bool
-  operator() (Item *const &i1,
-              Item *const &i2) const
+  operator() (ItemImpl *const &i1,
+              ItemImpl *const &i2) const
   {
     /* calculate item distances along dir, dist >= 0 lies ahead */
     const Allocation &a1 = i1->allocation();
@@ -509,12 +509,12 @@ Container::move_focus (FocusDirType fdir)
   /* focus self */
   if (!has_focus() && can_focus())
     return grab_focus();
-  Item *last_child = get_data (&focus_child_key);
+  ItemImpl *last_child = get_data (&focus_child_key);
   /* let last focus descendant handle movement */
   if (last_child && last_child->move_focus (fdir))
     return true;
   /* copy children */
-  vector<Item*> children;
+  vector<ItemImpl*> children;
   ChildWalker lw = local_children();
   while (lw.has_next())
     children.push_back (&*lw++);
@@ -525,7 +525,7 @@ Container::move_focus (FocusDirType fdir)
   Point refpoint;
   switch (fdir)
     {
-      Item *current;
+      ItemImpl *current;
     case FOCUS_NEXT:
       stable_sort (children.begin(), children.end(), LesserItemByHBand());
       break;
@@ -539,8 +539,8 @@ Container::move_focus (FocusDirType fdir)
       refpoint = current ? rect_center (current->allocation()) : lower_right;
       { /* filter items with negative distance (not ahead in focus direction) */
         LesserItemByDirection lesseribd = LesserItemByDirection (fdir, refpoint);
-        vector<Item*> children2;
-        for (vector<Item*>::const_iterator it = children.begin(); it != children.end(); it++)
+        vector<ItemImpl*> children2;
+        for (vector<ItemImpl*>::const_iterator it = children.begin(); it != children.end(); it++)
           if (lesseribd.directional_distance ((*it)->allocation()) >= 0)
             children2.push_back (*it);
         children.swap (children2);
@@ -553,8 +553,8 @@ Container::move_focus (FocusDirType fdir)
       refpoint = current ? rect_center (current->allocation()) : upper_left;
       { /* filter items with negative distance (not ahead in focus direction) */
         LesserItemByDirection lesseribd = LesserItemByDirection (fdir, refpoint);
-        vector<Item*> children2;
-        for (vector<Item*>::const_iterator it = children.begin(); it != children.end(); it++)
+        vector<ItemImpl*> children2;
+        for (vector<ItemImpl*>::const_iterator it = children.begin(); it != children.end(); it++)
           if (lesseribd.directional_distance ((*it)->allocation()) >= 0)
             children2.push_back (*it);
         children.swap (children2);
@@ -563,7 +563,7 @@ Container::move_focus (FocusDirType fdir)
       break;
     }
   /* skip children beyond last focus descendant */
-  Walker<Item*> cw = walker (children);
+  Walker<ItemImpl*> cw = walker (children);
   if (last_child && (fdir == FOCUS_NEXT || fdir == FOCUS_PREV))
     while (cw.has_next())
       if (last_child == *cw++)
@@ -571,7 +571,7 @@ Container::move_focus (FocusDirType fdir)
   /* let remaining descendants handle movement */
   while (cw.has_next())
     {
-      Item *child = *cw;
+      ItemImpl *child = *cw;
       if (child->move_focus (fdir))
         return true;
       cw++;
@@ -587,7 +587,7 @@ Container::expose_enclosure ()
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     if (cw->drawable())
       {
-        Item &child = *cw;
+        ItemImpl &child = *cw;
         Region cregion (child.allocation());
         cregion.affine (child_affine (child).invert());
         region.subtract (cregion);
@@ -597,11 +597,11 @@ Container::expose_enclosure ()
 
 void
 Container::point_children (Point               p, /* window coordinates relative */
-                           std::vector<Item*> &stack)
+                           std::vector<ItemImpl*> &stack)
 {
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      Item &child = *cw;
+      ItemImpl &child = *cw;
       Point cp = child_affine (child).point (p);
       if (child.point (cp))
         {
@@ -616,7 +616,7 @@ Container::point_children (Point               p, /* window coordinates relative
 
 void
 Container::viewp0rt_point_children (Point                   p, /* viewp0rt coordinates relative */
-                                    std::vector<Item*>     &stack)
+                                    std::vector<ItemImpl*> &stack)
 {
   point_children (point_from_viewp0rt (p), stack);
 }
@@ -647,7 +647,7 @@ Container::debug_tree (String indent)
           allocation().width, allocation().height, allocation().x, allocation().y);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
-      Item &child = *cw;
+      ItemImpl &child = *cw;
       Container *c = dynamic_cast<Container*> (&child);
       if (c)
         c->debug_tree (indent + "  ");
@@ -671,14 +671,14 @@ SingleContainerImpl::SingleContainerImpl () :
 Container::ChildWalker
 SingleContainerImpl::local_children () const
 {
-  Item **iter = const_cast<Item**> (&child_item), **iend = iter;
+  ItemImpl **iter = const_cast<ItemImpl**> (&child_item), **iend = iter;
   if (child_item)
     iend++;
-  return value_walker (PointerIterator<Item*> (iter), PointerIterator<Item*> (iend));
+  return value_walker (PointerIterator<ItemImpl*> (iter), PointerIterator<ItemImpl*> (iend));
 }
 
 void
-SingleContainerImpl::add_child (Item &item)
+SingleContainerImpl::add_child (ItemImpl &item)
 {
   if (child_item)
     throw Exception ("invalid attempt to add child \"", item.name(), "\" to single-child container \"", name(), "\" ",
@@ -689,7 +689,7 @@ SingleContainerImpl::add_child (Item &item)
 }
 
 void
-SingleContainerImpl::remove_child (Item &item)
+SingleContainerImpl::remove_child (ItemImpl &item)
 {
   assert (child_item == &item); /* ensured by remove() */
   child_item = NULL;
@@ -703,7 +703,7 @@ SingleContainerImpl::size_request (Requisition &requisition)
   bool chspread = false, cvspread = false;
   if (has_allocatable_child())
     {
-      Item &child = get_child();
+      ItemImpl &child = get_child();
       Requisition cr = child.size_request ();
       const PackInfo &pi = child.pack_info();
       requisition.width = pi.left_spacing + cr.width + pi.right_spacing;
@@ -716,7 +716,7 @@ SingleContainerImpl::size_request (Requisition &requisition)
 }
 
 Allocation
-SingleContainerImpl::layout_child (Item             &child,
+SingleContainerImpl::layout_child (ItemImpl         &child,
                                    const Allocation &carea)
 {
   Requisition rq = child.size_request();
@@ -749,7 +749,7 @@ SingleContainerImpl::size_allocate (Allocation area)
   allocation (area);
   if (has_allocatable_child())
     {
-      Item &child = get_child();
+      ItemImpl &child = get_child();
       Allocation child_area = layout_child (child, area);
       child.set_allocation (child_area);
     }
@@ -773,7 +773,7 @@ MultiContainerImpl::MultiContainerImpl ()
 {}
 
 void
-MultiContainerImpl::add_child (Item &item)
+MultiContainerImpl::add_child (ItemImpl &item)
 {
   item.ref_sink();
   ClassDoctor::item_set_parent (item, this);
@@ -781,9 +781,9 @@ MultiContainerImpl::add_child (Item &item)
 }
 
 void
-MultiContainerImpl::remove_child (Item &item)
+MultiContainerImpl::remove_child (ItemImpl &item)
 {
-  vector<Item*>::iterator it;
+  vector<ItemImpl*>::iterator it;
   for (it = items.begin(); it != items.end(); it++)
     if (*it == &item)
       {
@@ -796,7 +796,7 @@ MultiContainerImpl::remove_child (Item &item)
 }
 
 void
-MultiContainerImpl::raise_child (Item &item)
+MultiContainerImpl::raise_child (ItemImpl &item)
 {
   for (uint i = 0; i < items.size(); i++)
     if (items[i] == &item)
@@ -812,7 +812,7 @@ MultiContainerImpl::raise_child (Item &item)
 }
 
 void
-MultiContainerImpl::lower_child (Item &item)
+MultiContainerImpl::lower_child (ItemImpl &item)
 {
   for (uint i = 0; i < items.size(); i++)
     if (items[i] == &item)

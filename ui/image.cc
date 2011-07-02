@@ -15,7 +15,6 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "image.hh"
-#include "itemimpl.hh"
 #include "painter.hh"
 #include "factory.hh"
 #include <errno.h>
@@ -29,7 +28,7 @@ Image::list_properties()
     MakeProperty (Image, image_file, _("Image Filename"), _("Load an image from a file, only PNG images can be loaded."), "w"),
     MakeProperty (Image, stock_pixmap, _("Stock Image"), _("Load an image from stock, providing a stock name."), "w"),
   };
-  static const PropertyList property_list (properties, Item::list_properties());
+  static const PropertyList property_list (properties, ItemImpl::list_properties());
   return property_list;
 }
 

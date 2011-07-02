@@ -58,7 +58,7 @@ test_cxx_gui ()
   TSTART ("C++GUI Test");
   Wind0w &wind0w = *app.create_wind0w ("Window");
   TOK();
-  Item &titem = Factory::create_item ("TestItem");
+  ItemImpl &titem = Factory::create_item ("TestItem");
   TOK();
   wind0w.window().add (titem);
   TOK();
@@ -147,7 +147,7 @@ static bool run_dialogs = false;
 template<class C> C*
 interface (It3m *it3m)
 {
-  Item *item = dynamic_cast<Item*> (it3m);
+  ItemImpl *item = dynamic_cast<ItemImpl*> (it3m);
   if (item)
     return item->interface<C*>();
   return NULL;

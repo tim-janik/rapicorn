@@ -380,7 +380,7 @@ class FocusFrameImpl : public virtual FocusFrame, public virtual FrameImpl {
   FrameType m_focus_frame;
   Client   *m_client;
   virtual void
-  set_focus_child (Item *item)
+  set_focus_child (ItemImpl *item)
   {
     FrameImpl::set_focus_child (item);
     expose_enclosure();
@@ -394,7 +394,7 @@ class FocusFrameImpl : public virtual FocusFrame, public virtual FrameImpl {
       expose_enclosure();
   }
   virtual void
-  hierarchy_changed (Item *old_toplevel)
+  hierarchy_changed (ItemImpl *old_toplevel)
   {
     if (m_client)
       {

@@ -21,7 +21,7 @@
 
 namespace Rapicorn {
 
-class Image : public virtual Item {
+class Image : public virtual ItemImpl {
   virtual String        image_file      () const { RAPICORN_ASSERT_NOT_REACHED(); }
   virtual String        stock_pixmap    () const { RAPICORN_ASSERT_NOT_REACHED(); }
 protected:

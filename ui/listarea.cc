@@ -17,6 +17,7 @@
 #include "listareaimpl.hh"
 #include "sizegroup.hh"
 #include "paintcontainers.hh"
+#include "factory.hh"
 
 //#define IFDEBUG(...)      do { /*__VA_ARGS__*/ } while (0)
 #define IFDEBUG(...)      __VA_ARGS__
@@ -120,9 +121,9 @@ ItemListImpl::constructed ()
 }
 
 void
-ItemListImpl::hierarchy_changed (Item *old_toplevel)
+ItemListImpl::hierarchy_changed (ItemImpl *old_toplevel)
 {
-  Item::hierarchy_changed (old_toplevel);
+  ItemImpl::hierarchy_changed (old_toplevel);
   if (anchored())
     queue_visual_update();
 }
@@ -141,7 +142,7 @@ ItemListImpl::vadjustment () const
   if (!m_vadjustment)
     {
       m_vadjustment = Adjustment::create (0, 0, 1, 0.01, 0.2);
-      m_vadjustment->sig_value_changed += slot ((Item&) *this, &Item::queue_visual_update);
+      m_vadjustment->sig_value_changed += slot ((ItemImpl&) *this, &ItemImpl::queue_visual_update);
     }
   return *m_vadjustment;
 }
@@ -650,7 +651,7 @@ ItemListImpl::create_row (uint64 nthrow,
   ListRow *lr = new ListRow();
   for (uint i = 0; i < row.count(); i++)
     {
-      Item *item = ref_sink (&Factory::create_item ("Label"));
+      ItemImpl *item = ref_sink (&Factory::create_item ("Label"));
       lr->cols.push_back (item);
     }
   IFDEBUG (dbg_created++);

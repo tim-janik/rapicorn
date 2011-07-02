@@ -21,7 +21,7 @@
 
 namespace Rapicorn {
 
-class Arrow : public virtual Item {
+class Arrow : public virtual ItemImpl {
 protected:
   virtual
   const PropertyList&    list_properties();
@@ -32,7 +32,7 @@ public:
   virtual SizePolicyType size_policy    () const = 0;
 };
 
-class DotGrid : public virtual Item {
+class DotGrid : public virtual ItemImpl {
   FrameType             dot_type        () const { RAPICORN_ASSERT_NOT_REACHED(); }
 protected:
   virtual
@@ -57,7 +57,7 @@ public:
   virtual void          bottom_padding_dots (uint c)  = 0;
 };
 
-class Drawable : public virtual Item {
+class Drawable : public virtual ItemImpl {
 protected:
   explicit      Drawable();
   virtual void  draw    (Display        &display) = 0;

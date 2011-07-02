@@ -57,7 +57,7 @@ main (int   argc,
                  Path::vpath_find (factory_xml),        // GUI file name
                  argv[0]);
   Window *window;
-  Item *item;
+  ItemImpl *item;
   TestContainer *titem;
 
   TSTART ("Factory Calls");

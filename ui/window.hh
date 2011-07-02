@@ -9,16 +9,16 @@ namespace Rapicorn {
 
 /* --- Window --- */
 class Window : public virtual Container, public virtual EventLoop::Source {
-  friend class  Item;
-  void          uncross_focus           (Item        &fitem);
+  friend class  ItemImpl;
+  void          uncross_focus           (ItemImpl        &fitem);
 protected:
   virtual void  beep                    (void) = 0;
-  void          set_focus               (Item         *item);
+  void          set_focus               (ItemImpl         *item);
   virtual void  expose_window_region    (const Region &region) = 0;     // window item coords
   virtual void  copy_area               (const Rect   &src,
                                          const Point  &dest) = 0;
-  virtual void  cancel_item_events      (Item         *item) = 0;
-  void          cancel_item_events      (Item         &item)            { cancel_item_events (&item); }
+  virtual void  cancel_item_events      (ItemImpl         *item) = 0;
+  void          cancel_item_events      (ItemImpl         &item)            { cancel_item_events (&item); }
   virtual bool  dispatch_event          (const Event  &event) = 0;
   virtual void  set_parent              (Container    *parent);
   virtual bool  custom_command          (const String       &command_name,
@@ -32,17 +32,17 @@ public://FIXME: protected:
   virtual bool  dispatch                () = 0;
   virtual void  draw_now                () = 0;
 public:
-  Item*         get_focus               () const;
+  ItemImpl*     get_focus               () const;
   virtual bool  tunable_requisitions    () = 0;
   cairo_surface_t* create_snapshot      (const Rect  &subarea);
-  virtual void  add_grab                (Item  &child,
+  virtual void  add_grab                (ItemImpl  &child,
                                          bool   unconfined = false) = 0;
-  void          add_grab                (Item  *child,
+  void          add_grab                (ItemImpl  *child,
                                          bool   unconfined = false) { RAPICORN_CHECK (child != NULL); add_grab (*child, unconfined); }
-  virtual void  remove_grab             (Item  &child) = 0;
-  void          remove_grab             (Item  *child)              { RAPICORN_CHECK (child != NULL); remove_grab (*child); }
-  virtual Item* get_grab                (bool  *unconfined = NULL) = 0;
-  Item*         find_item               (const String &name);
+  virtual void  remove_grab             (ItemImpl  &child) = 0;
+  void          remove_grab             (ItemImpl  *child)              { RAPICORN_CHECK (child != NULL); remove_grab (*child); }
+  virtual ItemImpl* get_grab                (bool  *unconfined = NULL) = 0;
+  ItemImpl*         find_item               (const String &name);
   /* signals */
   typedef Signal<Window, bool (const String&, const StringVector&), CollectorWhile0<bool> >   CommandSignal;
   typedef Signal<Window, void ()> NotifySignal;

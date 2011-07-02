@@ -96,7 +96,7 @@ static void
 text_markup_test()
 {
   TSTART ("Label-Markup");
-  Item &label = Factory::create_item ("Label");
+  ItemImpl &label = Factory::create_item ("Label");
   TOK();
   TOK();
   String test_markup =

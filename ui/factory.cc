@@ -24,7 +24,7 @@
 
 namespace Rapicorn {
 struct ClassDoctor {
-  static void item_constructed (Item &item) { item.constructed(); }
+  static void item_constructed (ItemImpl &item) { item.constructed(); }
 };
 
 struct FactoryContext {}; // see primitives.hh
@@ -114,7 +114,7 @@ class FactorySingleton {
   /* ChildContainerSlot - return value slot for the current gadget's "child_container" */
   struct ChildContainerSlot {
     const ChildGadget *cgadget;
-    Item              *item;
+    ItemImpl          *item;
     explicit           ChildContainerSlot (const ChildGadget *gadget) :
       cgadget (gadget), item (NULL)
     {}
@@ -125,11 +125,11 @@ class FactorySingleton {
   FactoryDomain*                add_domain              (const String       &domain_name,
                                                          const String       &i18n_domain);
   /* gadgets */
-  Item*                         inherit_gadget          (const String       &ancestor_name,
+  ItemImpl*                     inherit_gadget          (const String       &ancestor_name,
                                                          const VariableMap  &call_arguments,
                                                          Evaluator          &env,
                                                          FactoryContext     *fc);
-  Item&                         call_gadget             (const BaseGadget   *bgadget,
+  ItemImpl&                     call_gadget             (const BaseGadget   *bgadget,
                                                          const VariableMap  &const_ancestor_arguments,
                                                          const VariableMap  &const_call_arguments,
                                                          Evaluator          &env,
@@ -137,12 +137,12 @@ class FactorySingleton {
                                                          Container          *parent,
                                                          FactoryContext     *fc);
   void                          call_gadget_children    (const BaseGadget   *bgadget,
-                                                         Item               &item,
+                                                         ItemImpl           &item,
                                                          Evaluator          &env,
                                                          ChildContainerSlot *ccslot);
   /* type registration */
   std::list<const ItemTypeFactory*> types;
-  Item&                         create_from_item_type   (const String          &ident,
+  ItemImpl&                     create_from_item_type   (const String          &ident,
                                                          FactoryContext        *fc);
 public:
   const ItemTypeFactory*        lookup_item_factory     (String                 namespaced_ident);
@@ -160,7 +160,7 @@ public:
                                                          const String          &i18n_domain,
                                                          const String          &domain,
                                                          const std::nothrow_t  &nt = dothrow);
-  Item&                         construct_gadget        (const String          &gadget_identifier,
+  ItemImpl&                     construct_gadget        (const String          &gadget_identifier,
                                                          const ArgumentList    &arguments,
                                                          const ArgumentList    &env_variables,
                                                          String                *gadget_definition = NULL);
@@ -509,7 +509,7 @@ FactorySingleton::lookup_gadget (const String &gadget_identifier)
   return NULL;
 }
 
-Item&
+ItemImpl&
 FactorySingleton::construct_gadget (const String          &gadget_identifier,
                                     const ArgumentList    &arguments,
                                     const ArgumentList    &env_variables,
@@ -523,7 +523,7 @@ FactorySingleton::construct_gadget (const String          &gadget_identifier,
   Evaluator::populate_map (evars, env_variables);
   Evaluator env;
   env.push_map (evars);
-  Item &item = call_gadget (dgadget, dgadget->ancestor_arguments, args, env, NULL, NULL, dgadget);
+  ItemImpl &item = call_gadget (dgadget, dgadget->ancestor_arguments, args, env, NULL, NULL, dgadget);
   env.pop_map (evars);
   if (gadget_definition)
     *gadget_definition = dgadget->definition();
@@ -559,7 +559,7 @@ FactorySingleton::check_item_factory_type (const String &gadget_identifier,
   return false;
 }
 
-Item*
+ItemImpl*
 FactorySingleton::inherit_gadget (const String      &ancestor_name,
                                   const VariableMap &call_arguments,
                                   Evaluator         &env,
@@ -568,21 +568,21 @@ FactorySingleton::inherit_gadget (const String      &ancestor_name,
   return_val_if_fail (fc != NULL, NULL);
   if (ancestor_name[0] == '\177')      /* item factory type */
     {
-      Item *item = &create_from_item_type (&ancestor_name[1], fc);
+      ItemImpl *item = &create_from_item_type (&ancestor_name[1], fc);
       assert (call_arguments.size() == 0); // see FactorySingleton::register_item_factory()
       return item;
     }
   else
     {
       GadgetDef *dgadget = lookup_gadget (ancestor_name);
-      Item *item = NULL;
+      ItemImpl *item = NULL;
       if (dgadget)
         item = &call_gadget (dgadget, dgadget->ancestor_arguments, call_arguments, env, NULL, NULL, fc);
       return item;
     }
 }
 
-Item&
+ItemImpl&
 FactorySingleton::call_gadget (const BaseGadget   *bgadget,
                                const VariableMap  &const_ancestor_arguments,
                                const VariableMap  &const_call_arguments,
@@ -591,7 +591,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
                                Container          *parent,
                                FactoryContext     *fc)
 {
-  return_val_if_fail (fc != NULL, *(Item*)NULL);
+  return_val_if_fail (fc != NULL, *(ItemImpl*)NULL);
   const GadgetDef *dgadget = dynamic_cast<const GadgetDef*> (bgadget);
   const GadgetDef *real_dgadget = dgadget;
   if (!real_dgadget)
@@ -623,7 +623,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
     }
   env.push_map (custom_args);
   /* construct gadget from ancestor */
-  Item *itemp;
+  ItemImpl *itemp;
   String reason;
   try {
     itemp = inherit_gadget (bgadget->ancestor, const_ancestor_arguments, env, fc);
@@ -636,7 +636,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
   if (!itemp)
     fatal ("%s: failed to inherit: %s", bgadget->definition().c_str(),
            reason.size() ? reason.c_str() : String ("unknown widget type: " + bgadget->ancestor).c_str());
-  Item &item = *itemp;
+  ItemImpl &item = *itemp;
   /* apply arguments */
   try {
     VariableMap unused_args;
@@ -703,7 +703,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
 
 void
 FactorySingleton::call_gadget_children (const BaseGadget   *bgadget,
-                                        Item               &item,
+                                        ItemImpl           &item,
                                         Evaluator          &env,
                                         ChildContainerSlot *ccslot)
 {
@@ -728,7 +728,7 @@ FactorySingleton::call_gadget_children (const BaseGadget   *bgadget,
       const FactoryContext *cfc = child_gadget;
       FactoryContext *fc = const_cast<FactoryContext*> (cfc);
       /* the real call arguments are stored as ancestor arguments of the child */
-      Item &child = call_gadget (child_gadget, VariableMap(),
+      ItemImpl &child = call_gadget (child_gadget, VariableMap(),
                                  child_gadget->ancestor_arguments, env, ccslot, container, fc);
       /* find child container */
       if (ccslot->cgadget == child_gadget)
@@ -765,7 +765,7 @@ FactorySingleton::lookup_item_factory (String namespaced_ident)
   return NULL;
 }
 
-Item&
+ItemImpl&
 FactorySingleton::create_from_item_type (const String   &ident,
                                          FactoryContext *fc)
 {
@@ -775,7 +775,7 @@ FactorySingleton::create_from_item_type (const String   &ident,
   else
     {
       fatal ("unknown item type: %s", ident.c_str());
-      return *(Item*) NULL;
+      return *(ItemImpl*) NULL;
     }
 }
 
@@ -827,13 +827,13 @@ Factory::parse_string (const String           &xml_string,
   return 0;
 }
 
-Item&
+ItemImpl&
 Factory::create_item (const String       &gadget_identifier,
                       const ArgumentList &arguments,
                       const ArgumentList &env_variables)
 {
   initialize_standard_gadgets_lazily();
-  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments, env_variables);
+  ItemImpl &item = FactorySingleton::singleton->construct_gadget (gadget_identifier, arguments, env_variables);
   return item; // floating
 }
 
@@ -844,9 +844,9 @@ Factory::create_container (const String       &gadget_identifier,
 {
   initialize_standard_gadgets_lazily();
   String gadget_definition;
-  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier,
-                                                              arguments, env_variables,
-                                                              &gadget_definition);
+  ItemImpl &item = FactorySingleton::singleton->construct_gadget (gadget_identifier,
+                                                                  arguments, env_variables,
+                                                                  &gadget_definition);
   Container *container = dynamic_cast<Container*> (&item);
   if (!container)
     fatal ("%s: constructed widget lacks container interface: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
@@ -860,7 +860,7 @@ Factory::create_wind0w (const String       &gadget_identifier,
 {
   initialize_standard_gadgets_lazily();
   String gadget_definition;
-  Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier,
+  ItemImpl &item = FactorySingleton::singleton->construct_gadget (gadget_identifier,
                                                               arguments, env_variables,
                                                               &gadget_definition);
   Window *window = dynamic_cast<Window*> (&item);

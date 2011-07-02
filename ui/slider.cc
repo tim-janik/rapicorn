@@ -109,7 +109,7 @@ protected:
     m_adjustment_source = adj_source;
   }
   virtual void
-  hierarchy_changed (Item *old_toplevel)
+  hierarchy_changed (ItemImpl *old_toplevel)
   {
     this->TableImpl::hierarchy_changed (old_toplevel);
     if (anchored() && m_adjustment_source != ADJUSTMENT_SOURCE_NONE)
@@ -194,7 +194,7 @@ public:
   {}
 protected:
   virtual void
-  hierarchy_changed (Item *old_toplevel)
+  hierarchy_changed (ItemImpl *old_toplevel)
   {
     SliderArea *slider_area = parent_interface<SliderArea*>();
     if (slider_area)
@@ -224,7 +224,7 @@ protected:
   {
     if (has_allocatable_child())
       {
-        Item &child = get_child();
+        ItemImpl &child = get_child();
         requisition = child.size_request ();
         /* we confine spreading to within the trough, so don't propagate hspread/vspread here */
       }
@@ -241,7 +241,7 @@ protected:
     Allocation area = allocation();
     if (!has_allocatable_child())
       return;
-    Item &child = get_child();
+    ItemImpl &child = get_child();
     Requisition rq = child.size_request();
     /* expand/scale child */
     if (area.width > rq.width && !child.hspread())
@@ -343,7 +343,7 @@ protected:
     bool chspread = false, cvspread = false;
     if (has_children())
       {
-        Item &child = get_child();
+        ItemImpl &child = get_child();
         if (child.allocatable())
           {
             requisition = child.size_request ();

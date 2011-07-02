@@ -175,7 +175,7 @@ ApplicationImpl::collect_components (const String &path)
     {
       for (uint i = 0; i < m_wind0ws.size(); i++)
         {
-          vector<Item*> more = collect_items (*m_wind0ws[i], *cmatcher);
+          vector<ItemImpl*> more = collect_items (*m_wind0ws[i], *cmatcher);
           result.insert (result.end(), more.begin(), more.end());
         }
       delete cmatcher;

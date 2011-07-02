@@ -22,7 +22,7 @@
 namespace Rapicorn {
 
 class Window;
-class Item;
+class ItemImpl;
 
 class Heritage : public virtual BaseObject {
   friend        class ClassDoctor;
@@ -34,10 +34,10 @@ class Heritage : public virtual BaseObject {
   /*Des*/      ~Heritage        ();
   static
   Heritage*     create_heritage (Window         &window,
-                                 Item           &item,
+                                 ItemImpl           &item,
                                  ColorSchemeType color_scheme);
 public:
-  Heritage*     adapt_heritage  (Item           &item,
+  Heritage*     adapt_heritage  (ItemImpl           &item,
                                  ColorSchemeType color_scheme);
   Window&       window          () const { return m_window; }
   /* colors */

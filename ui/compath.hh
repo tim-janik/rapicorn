@@ -62,8 +62,8 @@ private:
   ComponentMatcherSegment  *m_next;
 };
 
-vector<Item*>   collect_items    (Item             &origin,
-                                  ComponentMatcher &cmatch);
+vector<ItemImpl*> collect_items (ItemImpl         &origin,
+                                 ComponentMatcher &cmatch);
 
 } // Rapicorn
 

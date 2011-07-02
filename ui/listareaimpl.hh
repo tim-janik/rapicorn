@@ -27,7 +27,7 @@
 namespace Rapicorn {
 
 struct ListRow {
-  vector<Item*> cols;
+  vector<ItemImpl*> cols;
   Container    *rowbox;
   Allocation    area;
   uint          allocated : 1;
@@ -82,7 +82,7 @@ public:
   virtual void          browse                  (bool b)        { m_browse = b; invalidate(); }
   virtual void          model                   (const String &modelurl);
   virtual String        model                   () const;
-  virtual void          hierarchy_changed       (Item *old_toplevel);
+  virtual void          hierarchy_changed       (ItemImpl *old_toplevel);
   Adjustment&           hadjustment             () const;
   Adjustment&           vadjustment             () const;
   Adjustment*           get_adjustment          (AdjustmentSourceType adj_source,

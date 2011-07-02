@@ -44,7 +44,7 @@ int /*-errno*/ parse_string      (const String           &xml_string,
                                   const String           &i18n_domain,
                                   const String           &domain = "",
                                   vector<String>         *definitions = NULL);
-Item&           create_item      (const String           &item_identifier,
+ItemImpl&       create_item      (const String           &item_identifier,
                                   const ArgumentList     &arguments = ArgumentList(),
                                   const ArgumentList     &env_variables = ArgumentList());
 Container&      create_container (const String           &container_identifier,
@@ -67,7 +67,7 @@ protected:
 public:
   explicit      ItemTypeFactory         (const char             *namespaced_ident,
                                          bool _isevh, bool _iscontainer, bool);
-  virtual Item* create_item             (FactoryContext         *fc) const = 0;
+  virtual ItemImpl* create_item             (FactoryContext         *fc) const = 0;
   inline String type_name               () const { return qualified_type; }
   static void   initialize_factories    ();
   const bool iseventhandler, iscontainer;
@@ -80,10 +80,10 @@ public:
 /* --- item factory template --- */
 template<class Type>
 class ItemFactory : Factory::ItemTypeFactory {
-  virtual Item*
+  virtual ItemImpl*
   create_item (FactoryContext *fc) const
   {
-    Item *item = new Type();
+    ItemImpl *item = new Type();
     item->factory_context (fc);
     return item;
   }

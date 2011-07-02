@@ -15,7 +15,6 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "paintitems.hh"
-#include "itemimpl.hh"
 #include "factory.hh"
 #include "painter.hh"
 
@@ -30,7 +29,7 @@ Arrow::list_properties()
     MakeProperty (Arrow, arrow_dir,   _("Arrow Direction"), _("The direction the arrow points to"), "rw"),
     MakeProperty (Arrow, size_policy, _("Size Policy"),     _("Policy which determines coupling of width and height"), "rw"),
   };
-  static const PropertyList property_list (properties, Item::list_properties());
+  static const PropertyList property_list (properties, ItemImpl::list_properties());
   return property_list;
 }
 
@@ -112,7 +111,7 @@ DotGrid::list_properties()
     MakeProperty (DotGrid, left_padding_dots, _("Left Padding Dots"), _("Amount of padding in dots to add at the child's left side"), 0, 65535, 3, "rw"),
     MakeProperty (DotGrid, bottom_padding_dots, _("Bottom Padding Dots"), _("Amount of padding in dots to add at the child's bottom side"), 0, 65535, 3, "rw"),
   };
-  static const PropertyList property_list (properties, Item::list_properties());
+  static const PropertyList property_list (properties, ItemImpl::list_properties());
   return property_list;
 }
 

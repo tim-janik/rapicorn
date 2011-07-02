@@ -18,17 +18,16 @@
 #define __RAPICORN_CONTAINER_IMPL_HH__
 
 #include <ui/container.hh>
-#include <ui/itemimpl.hh>
 
 namespace Rapicorn {
 
 /* --- Single Child Container Impl --- */
 class SingleContainerImpl : public virtual ItemImpl, public virtual Container {
-  Item                  *child_item;
+  ItemImpl             *child_item;
 protected:
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area);
-  Item&                 get_child               () { RAPICORN_CHECK (child_item != NULL); return *child_item; }
+  ItemImpl&             get_child               () { RAPICORN_CHECK (child_item != NULL); return *child_item; }
   virtual void          pre_finalize            ();
   virtual              ~SingleContainerImpl     ();
   virtual ChildWalker   local_children          () const;
@@ -36,25 +35,25 @@ protected:
   bool                  has_visible_child       () { return child_item && child_item->visible(); }
   bool                  has_drawable_child      () { return child_item && child_item->drawable(); }
   bool                  has_allocatable_child   () { return child_item && child_item->allocatable(); }
-  virtual void          add_child               (Item   &item);
-  virtual void          remove_child            (Item   &item);
-  Allocation            layout_child            (Item             &child,
+  virtual void          add_child               (ItemImpl   &item);
+  virtual void          remove_child            (ItemImpl   &item);
+  Allocation            layout_child            (ItemImpl         &child,
                                                  const Allocation &carea);
   explicit              SingleContainerImpl     ();
 };
 
 /* --- Multi Child Container Impl --- */
 class MultiContainerImpl : public virtual ItemImpl, public virtual Container {
-  std::vector<Item*>    items;
+  std::vector<ItemImpl*>    items;
 protected:
   virtual void          pre_finalize            ();
   virtual              ~MultiContainerImpl      ();
   virtual ChildWalker   local_children          () const { return value_walker (items); }
   virtual bool          has_children            () { return items.size() > 0; }
-  virtual void          add_child               (Item   &item);
-  virtual void          remove_child            (Item   &item);
-  void                  raise_child             (Item   &item);
-  void                  lower_child             (Item   &item);
+  virtual void          add_child               (ItemImpl   &item);
+  virtual void          remove_child            (ItemImpl   &item);
+  void                  raise_child             (ItemImpl   &item);
+  void                  lower_child             (ItemImpl   &item);
   void                  remove_all_children     ();
   explicit              MultiContainerImpl      ();
 };

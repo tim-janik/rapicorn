@@ -1,32 +1,17 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "item.hh"
-#include "itemimpl.hh"
 #include "container.hh"
 #include "compath.hh"
 #include "adjustment.hh"
 #include "window.hh"
 #include "cmdlib.hh"
 #include "sizegroup.hh"
+#include "factory.hh"
 
 namespace Rapicorn {
 
 struct ClassDoctor {
-  static void update_item_heritage (Item &item) { item.heritage (item.heritage()); }
+  static void update_item_heritage (ItemImpl &item) { item.heritage (item.heritage()); }
 };
 
 EventHandler::EventHandler() :
@@ -39,34 +24,35 @@ EventHandler::handle_event (const Event &event)
   return false;
 }
 
-Item::Item () :
+ItemImpl::ItemImpl () :
   m_flags (VISIBLE | SENSITIVE | ALLOCATABLE),
   m_parent (NULL),
   m_heritage (NULL),
+  m_factory_context (NULL), // removing this breaks g++ pre-4.2.0 20060530
   sig_finalize (*this),
-  sig_changed (*this, &Item::do_changed),
-  sig_invalidate (*this, &Item::do_invalidate),
-  sig_hierarchy_changed (*this, &Item::hierarchy_changed)
+  sig_changed (*this, &ItemImpl::do_changed),
+  sig_invalidate (*this, &ItemImpl::do_invalidate),
+  sig_hierarchy_changed (*this, &ItemImpl::hierarchy_changed)
 {}
 
 void
-Item::constructed()
+ItemImpl::constructed()
 {}
 
 bool
-Item::viewable() const
+ItemImpl::viewable() const
 {
   return drawable() && (!m_parent || m_parent->viewable());
 }
 
 bool
-Item::self_visible () const
+ItemImpl::self_visible () const
 {
   return false;
 }
 
 bool
-Item::change_flags_silently (uint32 mask,
+ItemImpl::change_flags_silently (uint32 mask,
                              bool   on)
 {
   uint32 old_flags = m_flags;
@@ -79,7 +65,7 @@ Item::change_flags_silently (uint32 mask,
 }
 
 void
-Item::propagate_state (bool notify_changed)
+ItemImpl::propagate_state (bool notify_changed)
 {
   change_flags_silently (PARENT_SENSITIVE, !parent() || parent()->sensitive());
   const bool wasallocatable = allocatable();
@@ -96,7 +82,7 @@ Item::propagate_state (bool notify_changed)
 }
 
 void
-Item::set_flag (uint32 flag,
+ItemImpl::set_flag (uint32 flag,
                 bool   on)
 {
   assert ((flag & (flag - 1)) == 0); /* single bit check */
@@ -126,27 +112,27 @@ Item::set_flag (uint32 flag,
 }
 
 bool
-Item::grab_default () const
+ItemImpl::grab_default () const
 {
   return false;
 }
 
 void
-Item::sensitive (bool b)
+ItemImpl::sensitive (bool b)
 {
   set_flag (SENSITIVE, b);
 }
 
 void
-Item::prelight (bool b)
+ItemImpl::prelight (bool b)
 {
   set_flag (PRELIGHT, b);
 }
 
 bool
-Item::branch_prelight () const
+ItemImpl::branch_prelight () const
 {
-  const Item *item = this;
+  const ItemImpl *item = this;
   while (item)
     {
       if (item->prelight())
@@ -157,15 +143,15 @@ Item::branch_prelight () const
 }
 
 void
-Item::impressed (bool b)
+ItemImpl::impressed (bool b)
 {
   set_flag (IMPRESSED, b);
 }
 
 bool
-Item::branch_impressed () const
+ItemImpl::branch_impressed () const
 {
-  const Item *item = this;
+  const ItemImpl *item = this;
   while (item)
     {
       if (item->impressed())
@@ -176,7 +162,7 @@ Item::branch_impressed () const
 }
 
 StateType
-Item::state () const
+ItemImpl::state () const
 {
   StateType st = StateType (0);
   st |= insensitive() ? STATE_INSENSITIVE : StateType (0);
@@ -188,7 +174,7 @@ Item::state () const
 }
 
 bool
-Item::has_focus () const
+ItemImpl::has_focus () const
 {
   if (test_flags (FOCUS_CHAIN))
     {
@@ -200,13 +186,13 @@ Item::has_focus () const
 }
 
 bool
-Item::can_focus () const
+ItemImpl::can_focus () const
 {
   return false;
 }
 
 bool
-Item::grab_focus ()
+ItemImpl::grab_focus ()
 {
   if (has_focus())
     return true;
@@ -224,7 +210,7 @@ Item::grab_focus ()
 }
 
 bool
-Item::move_focus (FocusDirType fdir)
+ItemImpl::move_focus (FocusDirType fdir)
 {
   if (!has_focus() && can_focus())
     return grab_focus();
@@ -232,7 +218,7 @@ Item::move_focus (FocusDirType fdir)
 }
 
 void
-Item::notify_key_error ()
+ItemImpl::notify_key_error ()
 {
   Window *ritem = get_window();
   if (ritem)
@@ -240,7 +226,7 @@ Item::notify_key_error ()
 }
 
 void
-Item::cross_link (Item           &link,
+ItemImpl::cross_link (ItemImpl           &link,
                   const ItemSlot &uncross)
 {
   assert (this != &link);
@@ -250,7 +236,7 @@ Item::cross_link (Item           &link,
 }
 
 void
-Item::cross_unlink (Item           &link,
+ItemImpl::cross_unlink (ItemImpl           &link,
                     const ItemSlot &uncross)
 {
   assert (this != &link);
@@ -260,7 +246,7 @@ Item::cross_unlink (Item           &link,
 }
 
 void
-Item::uncross_links (Item &link)
+ItemImpl::uncross_links (ItemImpl &link)
 {
   assert (this != &link);
   Container *common_container = dynamic_cast<Container*> (common_ancestor (link));
@@ -269,14 +255,14 @@ Item::uncross_links (Item &link)
 }
 
 bool
-Item::match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const
+ItemImpl::match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const
 {
-  Item *self = const_cast<Item*> (this);
+  ItemImpl *self = const_cast<ItemImpl*> (this);
   if (wself && imatcher.match (self, name()))
     return true;
   if (wparent)
     {
-      Item *pitem = parent();
+      ItemImpl *pitem = parent();
       while (pitem)
         {
           if (imatcher.match (pitem, pitem->name()))
@@ -296,7 +282,7 @@ Item::match_interface (bool wself, bool wparent, bool children, InterfaceMatcher
 }
 
 It3m*
-Item::unique_component (const String &path)
+ItemImpl::unique_component (const String &path)
 {
   ItemSeq items = collect_components (path);
   if (items.size() == 1)
@@ -305,13 +291,13 @@ Item::unique_component (const String &path)
 }
 
 ItemSeq
-Item::collect_components (const String &path)
+ItemImpl::collect_components (const String &path)
 {
   ComponentMatcher *cmatcher = ComponentMatcher::parse_path (path);
   ItemSeq result;
   if (cmatcher) // valid path
     {
-      vector<Item*> more = collect_items (*this, *cmatcher);
+      vector<ItemImpl*> more = collect_items (*this, *cmatcher);
       result.insert (result.end(), more.begin(), more.end());
       delete cmatcher;
     }
@@ -319,7 +305,7 @@ Item::collect_components (const String &path)
 }
 
 uint
-Item::exec_slow_repeater (const BoolSlot &sl)
+ItemImpl::exec_slow_repeater (const BoolSlot &sl)
 {
   Window *ritem = get_window();
   if (ritem)
@@ -332,7 +318,7 @@ Item::exec_slow_repeater (const BoolSlot &sl)
 }
 
 uint
-Item::exec_fast_repeater (const BoolSlot &sl)
+ItemImpl::exec_fast_repeater (const BoolSlot &sl)
 {
   Window *ritem = get_window();
   if (ritem)
@@ -345,7 +331,7 @@ Item::exec_fast_repeater (const BoolSlot &sl)
 }
 
 uint
-Item::exec_key_repeater (const BoolSlot &sl)
+ItemImpl::exec_key_repeater (const BoolSlot &sl)
 {
   Window *ritem = get_window();
   if (ritem)
@@ -358,7 +344,7 @@ Item::exec_key_repeater (const BoolSlot &sl)
 }
 
 bool
-Item::remove_exec (uint exec_id)
+ItemImpl::remove_exec (uint exec_id)
 {
   Window *ritem = get_window();
   if (ritem)
@@ -373,7 +359,7 @@ Item::remove_exec (uint exec_id)
 static DataKey<uint> visual_update_key;
 
 void
-Item::queue_visual_update ()
+ItemImpl::queue_visual_update ()
 {
   uint timer_id = get_data (&visual_update_key);
   if (!timer_id)
@@ -384,7 +370,7 @@ Item::queue_visual_update ()
           EventLoop *loop = ritem->get_loop();
           if (loop)
             {
-              timer_id = loop->exec_timer (20, slot (*this, &Item::force_visual_update));
+              timer_id = loop->exec_timer (20, slot (*this, &ItemImpl::force_visual_update));
               set_data (&visual_update_key, timer_id);
             }
         }
@@ -392,7 +378,7 @@ Item::queue_visual_update ()
 }
 
 void
-Item::force_visual_update ()
+ItemImpl::force_visual_update ()
 {
   uint timer_id = get_data (&visual_update_key);
   if (timer_id)
@@ -404,16 +390,16 @@ Item::force_visual_update ()
 }
 
 void
-Item::visual_update ()
+ItemImpl::visual_update ()
 {}
 
 void
-Item::finalize()
+ItemImpl::finalize()
 {
   sig_finalize.emit();
 }
 
-Item::~Item()
+ItemImpl::~ItemImpl()
 {
   SizeGroup::delete_item (*this);
   if (parent())
@@ -432,7 +418,7 @@ Item::~Item()
 }
 
 OwnedMutex&
-Item::owned_mutex ()
+ItemImpl::owned_mutex ()
 {
   if (m_parent)
     return m_parent->owned_mutex();
@@ -441,7 +427,7 @@ Item::owned_mutex ()
 }
 
 Command*
-Item::lookup_command (const String &command_name)
+ItemImpl::lookup_command (const String &command_name)
 {
   typedef std::map<const String, Command*> CommandMap;
   static std::map<const CommandList*,CommandMap*> clist_map;
@@ -463,7 +449,7 @@ Item::lookup_command (const String &command_name)
 }
 
 bool
-Item::exec_command (const String &command_call_string)
+ItemImpl::exec_command (const String &command_call_string)
 {
   String cmd_name;
   StringList args;
@@ -476,7 +462,7 @@ Item::exec_command (const String &command_call_string)
   if (cmd_name == "")
     return true;
 
-  Item *item = this;
+  ItemImpl *item = this;
   while (item)
     {
       Command *cmd = item->lookup_command (cmd_name);
@@ -501,14 +487,14 @@ Item::exec_command (const String &command_call_string)
 }
 
 bool
-Item::custom_command (const String       &command_name,
+ItemImpl::custom_command (const String       &command_name,
                       const StringList   &command_args)
 {
   return false;
 }
 
 const CommandList&
-Item::list_commands ()
+ItemImpl::list_commands ()
 {
   static Command *commands[] = {
   };
@@ -517,7 +503,7 @@ Item::list_commands ()
 }
 
 Property*
-Item::lookup_property (const String &property_name)
+ItemImpl::lookup_property (const String &property_name)
 {
   typedef std::map<const String, Property*> PropertyMap;
   static std::map<const PropertyList*,PropertyMap*> plist_map;
@@ -541,7 +527,7 @@ Item::lookup_property (const String &property_name)
 }
 
 void
-Item::set_property (const String    &property_name,
+ItemImpl::set_property (const String    &property_name,
                     const String    &value,
                     const nothrow_t &nt)
 {
@@ -553,7 +539,7 @@ Item::set_property (const String    &property_name,
 }
 
 bool
-Item::try_set_property (const String    &property_name,
+ItemImpl::try_set_property (const String    &property_name,
                         const String    &value,
                         const nothrow_t &nt)
 {
@@ -568,7 +554,7 @@ Item::try_set_property (const String    &property_name,
 }
 
 String
-Item::get_property (const String   &property_name)
+ItemImpl::get_property (const String   &property_name)
 {
   Property *prop = lookup_property (property_name);
   if (!prop)
@@ -585,14 +571,14 @@ static class OvrKey : public DataKey<Requisition> {
 } override_requisition;
 
 double
-Item::width () const
+ItemImpl::width () const
 {
   Requisition ovr = get_data (&override_requisition);
   return ovr.width >= 0 ? ovr.width : -1;
 }
 
 void
-Item::width (double w)
+ItemImpl::width (double w)
 {
   Requisition ovr = get_data (&override_requisition);
   ovr.width = w >= 0 ? w : -1;
@@ -601,14 +587,14 @@ Item::width (double w)
 }
 
 double
-Item::height () const
+ItemImpl::height () const
 {
   Requisition ovr = get_data (&override_requisition);
   return ovr.height >= 0 ? ovr.height : -1;
 }
 
 void
-Item::height (double h)
+ItemImpl::height (double h)
 {
   Requisition ovr = get_data (&override_requisition);
   ovr.height = h >= 0 ? h : -1;
@@ -617,44 +603,44 @@ Item::height (double h)
 }
 
 const PropertyList&
-Item::list_properties ()
+ItemImpl::list_properties ()
 {
   static Property *properties[] = {
-    MakeProperty (Item, name,      _("Name"), _("Identification name of the item"), "rw"),
-    MakeProperty (Item, width,     _("Requested Width"), _("The width to request from its container for this item, -1=automatic"), -1, MAXINT, 5, "rw"),
-    MakeProperty (Item, height,    _("Requested Height"), _("The height to request from its container for this item, -1=automatic"), -1, MAXINT, 5, "rw"),
-    MakeProperty (Item, visible,   _("Visible"), _("Whether this item is visible"), "rw"),
-    MakeProperty (Item, sensitive, _("Sensitive"), _("Whether this item is sensitive (receives events)"), "rw"),
-    MakeProperty (Item, color_scheme, _("Color Scheme"), _("Color scheme to render this item"), "rw"),
+    MakeProperty (ItemImpl, name,      _("Name"), _("Identification name of the item"), "rw"),
+    MakeProperty (ItemImpl, width,     _("Requested Width"), _("The width to request from its container for this item, -1=automatic"), -1, MAXINT, 5, "rw"),
+    MakeProperty (ItemImpl, height,    _("Requested Height"), _("The height to request from its container for this item, -1=automatic"), -1, MAXINT, 5, "rw"),
+    MakeProperty (ItemImpl, visible,   _("Visible"), _("Whether this item is visible"), "rw"),
+    MakeProperty (ItemImpl, sensitive, _("Sensitive"), _("Whether this item is sensitive (receives events)"), "rw"),
+    MakeProperty (ItemImpl, color_scheme, _("Color Scheme"), _("Color scheme to render this item"), "rw"),
     /* packing */
-    MakeProperty (Item, hexpand,   _("Horizontal Expand"), _("Whether to expand this item horizontally"), "rw"),
-    MakeProperty (Item, vexpand,   _("Vertical Expand"), _("Whether to expand this item vertically"), "rw"),
-    MakeProperty (Item, hspread,   _("Horizontal Spread"), _("Whether to expand this item and all its parents horizontally"), "rw"),
-    MakeProperty (Item, vspread,   _("Vertical Spread"), _("Whether to expand this item and all its parents vertically"), "rw"),
-    MakeProperty (Item, hshrink,   _("Horizontal Shrink"), _("Whether the item may be shrunken horizontally"), "rw"),
-    MakeProperty (Item, vshrink,   _("Vertical Shrink"),   _("Whether the item may be shrunken vertically"), "rw"),
-    MakeProperty (Item, hposition, _("Horizontal Position"), _("Horizontal layout position for the item"), 0u, 99999u, 5u, "Prw"),
-    MakeProperty (Item, hspan,     _("Horizontal Span"),     _("Horizontal span for item layout"), 1u, 100000u, 5u, "Prw"),
-    MakeProperty (Item, vposition, _("Vertical Position"),   _("Vertical layout position for the item"), 0u, 99999u, 5u, "Prw"),
-    MakeProperty (Item, vspan,     _("Vertical Span"),       _("Vertical span for item layout"), 1u, 100000u, 5u, "Prw"),
-    MakeProperty (Item, left_spacing,   _("Left Spacing"),   _("Amount of spacing to add at the item's left side"), 0u, 65535u, 3u, "Prw"),
-    MakeProperty (Item, right_spacing,  _("Right Spacing"),  _("Amount of spacing to add at the item's right side"), 0u, 65535u, 3u, "Prw"),
-    MakeProperty (Item, bottom_spacing, _("Bottom Spacing"), _("Amount of spacing to add at the item's bottom side"), 0u, 65535u, 3u, "Prw"),
-    MakeProperty (Item, top_spacing,    _("Top Spacing"),    _("Amount of spacing to add at the item's top side"), 0u, 65535u, 3u, "Prw"),
-    MakeProperty (Item, halign, _("Horizontal Alignment"), _("Horizontal position within extra space when unexpanded, 0=left, 1=right"), 0, 1, 0.5, "Prw"),
-    MakeProperty (Item, hscale, _("Horizontal Scale"),     _("Fractional horizontal expansion within extra space, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "Prw"),
-    MakeProperty (Item, valign, _("Vertical Alignment"),   _("Vertical position within extra space when unexpanded, 0=bottom, 1=top"), 0, 1, 0.5, "Prw"),
-    MakeProperty (Item, vscale, _("Vertical Scale"),       _("Fractional vertical expansion within extra space, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "Prw"),
-    MakeProperty (Item, position, _("Position"),          _("Horizontal/vertical position of the item as point coordinate"), Point (-MAXDOUBLE, -MAXDOUBLE), Point (+MAXDOUBLE, +MAXDOUBLE), "Prw"),
-    MakeProperty (Item, hanchor,  _("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), 0, 1, 0.5, "Prw"),
-    MakeProperty (Item, vanchor,  _("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), 0, 1, 0.5, "Prw"),
+    MakeProperty (ItemImpl, hexpand,   _("Horizontal Expand"), _("Whether to expand this item horizontally"), "rw"),
+    MakeProperty (ItemImpl, vexpand,   _("Vertical Expand"), _("Whether to expand this item vertically"), "rw"),
+    MakeProperty (ItemImpl, hspread,   _("Horizontal Spread"), _("Whether to expand this item and all its parents horizontally"), "rw"),
+    MakeProperty (ItemImpl, vspread,   _("Vertical Spread"), _("Whether to expand this item and all its parents vertically"), "rw"),
+    MakeProperty (ItemImpl, hshrink,   _("Horizontal Shrink"), _("Whether the item may be shrunken horizontally"), "rw"),
+    MakeProperty (ItemImpl, vshrink,   _("Vertical Shrink"),   _("Whether the item may be shrunken vertically"), "rw"),
+    MakeProperty (ItemImpl, hposition, _("Horizontal Position"), _("Horizontal layout position for the item"), 0u, 99999u, 5u, "Prw"),
+    MakeProperty (ItemImpl, hspan,     _("Horizontal Span"),     _("Horizontal span for item layout"), 1u, 100000u, 5u, "Prw"),
+    MakeProperty (ItemImpl, vposition, _("Vertical Position"),   _("Vertical layout position for the item"), 0u, 99999u, 5u, "Prw"),
+    MakeProperty (ItemImpl, vspan,     _("Vertical Span"),       _("Vertical span for item layout"), 1u, 100000u, 5u, "Prw"),
+    MakeProperty (ItemImpl, left_spacing,   _("Left Spacing"),   _("Amount of spacing to add at the item's left side"), 0u, 65535u, 3u, "Prw"),
+    MakeProperty (ItemImpl, right_spacing,  _("Right Spacing"),  _("Amount of spacing to add at the item's right side"), 0u, 65535u, 3u, "Prw"),
+    MakeProperty (ItemImpl, bottom_spacing, _("Bottom Spacing"), _("Amount of spacing to add at the item's bottom side"), 0u, 65535u, 3u, "Prw"),
+    MakeProperty (ItemImpl, top_spacing,    _("Top Spacing"),    _("Amount of spacing to add at the item's top side"), 0u, 65535u, 3u, "Prw"),
+    MakeProperty (ItemImpl, halign, _("Horizontal Alignment"), _("Horizontal position within extra space when unexpanded, 0=left, 1=right"), 0, 1, 0.5, "Prw"),
+    MakeProperty (ItemImpl, hscale, _("Horizontal Scale"),     _("Fractional horizontal expansion within extra space, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "Prw"),
+    MakeProperty (ItemImpl, valign, _("Vertical Alignment"),   _("Vertical position within extra space when unexpanded, 0=bottom, 1=top"), 0, 1, 0.5, "Prw"),
+    MakeProperty (ItemImpl, vscale, _("Vertical Scale"),       _("Fractional vertical expansion within extra space, 0=unexpanded, 1=expanded"), 0, 1, 0.5, "Prw"),
+    MakeProperty (ItemImpl, position, _("Position"),          _("Horizontal/vertical position of the item as point coordinate"), Point (-MAXDOUBLE, -MAXDOUBLE), Point (+MAXDOUBLE, +MAXDOUBLE), "Prw"),
+    MakeProperty (ItemImpl, hanchor,  _("Horizontal Anchor"), _("Horizontal position of child anchor, 0=left, 1=right"), 0, 1, 0.5, "Prw"),
+    MakeProperty (ItemImpl, vanchor,  _("Vertical Anchor"),   _("Vertical position of child anchor, 0=bottom, 1=top"), 0, 1, 0.5, "Prw"),
   };
   static const PropertyList property_list (properties);
   return property_list;
 }
 
 void
-Item::propagate_heritage ()
+ItemImpl::propagate_heritage ()
 {
   Container *container = dynamic_cast<Container*> (this);
   if (container)
@@ -663,7 +649,7 @@ Item::propagate_heritage ()
 }
 
 void
-Item::heritage (Heritage *heritage)
+ItemImpl::heritage (Heritage *heritage)
 {
   Heritage *old_heritage = m_heritage;
   m_heritage = NULL;
@@ -682,8 +668,8 @@ Item::heritage (Heritage *heritage)
 }
 
 static bool
-translate_from_ancestor (Item         *ancestor,
-                         const Item   *child,
+translate_from_ancestor (ItemImpl         *ancestor,
+                         const ItemImpl   *child,
                          const uint    n_points,
                          Point        *points)
 {
@@ -698,14 +684,14 @@ translate_from_ancestor (Item         *ancestor,
 }
 
 bool
-Item::translate_from (const Item   &src_item,
+ItemImpl::translate_from (const ItemImpl   &src_item,
                       const uint    n_points,
                       Point        *points) const
 {
-  Item *ca = common_ancestor (src_item);
+  ItemImpl *ca = common_ancestor (src_item);
   if (!ca)
     return false;
-  Item *item = const_cast<Item*> (&src_item);
+  ItemImpl *item = const_cast<ItemImpl*> (&src_item);
   while (item != ca)
     {
       Container *pc = item->parent();
@@ -722,15 +708,15 @@ Item::translate_from (const Item   &src_item,
 }
 
 bool
-Item::translate_to (const uint    n_points,
+ItemImpl::translate_to (const uint    n_points,
                     Point        *points,
-                    const Item   &target_item) const
+                    const ItemImpl   &target_item) const
 {
   return target_item.translate_from (*this, n_points, points);
 }
 
 bool
-Item::translate_from (const Item   &src_item,
+ItemImpl::translate_from (const ItemImpl   &src_item,
                       const uint    n_rects,
                       Rect         *rects) const
 {
@@ -759,15 +745,15 @@ Item::translate_from (const Item   &src_item,
 }
 
 bool
-Item::translate_to (const uint    n_rects,
+ItemImpl::translate_to (const uint    n_rects,
                     Rect         *rects,
-                    const Item   &target_item) const
+                    const ItemImpl   &target_item) const
 {
   return target_item.translate_from (*this, n_rects, rects);
 }
 
 Point
-Item::point_from_viewp0rt (Point window_point) /* window coordinates relative */
+ItemImpl::point_from_viewp0rt (Point window_point) /* window coordinates relative */
 {
   Point p = window_point;
   Container *pc = parent();
@@ -781,7 +767,7 @@ Item::point_from_viewp0rt (Point window_point) /* window coordinates relative */
 }
 
 Point
-Item::point_to_viewp0rt (Point item_point) /* item coordinates relative */
+ItemImpl::point_to_viewp0rt (Point item_point) /* item coordinates relative */
 {
   Point p = item_point;
   Container *pc = parent();
@@ -795,7 +781,7 @@ Item::point_to_viewp0rt (Point item_point) /* item coordinates relative */
 }
 
 Affine
-Item::affine_from_viewp0rt () /* viewp0rt => item affine */
+ItemImpl::affine_from_viewp0rt () /* viewp0rt => item affine */
 {
   Affine iaffine;
   Container *pc = parent();
@@ -814,7 +800,7 @@ Item::affine_from_viewp0rt () /* viewp0rt => item affine */
 }
 
 Affine
-Item::affine_to_viewp0rt () /* item => viewp0rt affine */
+ItemImpl::affine_to_viewp0rt () /* item => viewp0rt affine */
 {
   Affine iaffine = affine_from_viewp0rt();
   if (!iaffine.is_identity())
@@ -823,7 +809,7 @@ Item::affine_to_viewp0rt () /* item => viewp0rt affine */
 }
 
 bool
-Item::process_event (const Event &event) /* item coordinates relative */
+ItemImpl::process_event (const Event &event) /* item coordinates relative */
 {
   bool handled = false;
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
@@ -833,7 +819,7 @@ Item::process_event (const Event &event) /* item coordinates relative */
 }
 
 bool
-Item::process_viewp0rt_event (const Event &event) /* viewp0rt coordinates relative */
+ItemImpl::process_viewp0rt_event (const Event &event) /* viewp0rt coordinates relative */
 {
   bool handled = false;
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
@@ -853,13 +839,13 @@ Item::process_viewp0rt_event (const Event &event) /* viewp0rt coordinates relati
 }
 
 bool
-Item::viewp0rt_point (Point p) /* window coordinates relative */
+ItemImpl::viewp0rt_point (Point p) /* window coordinates relative */
 {
   return point (point_from_viewp0rt (p));
 }
 
 bool
-Item::point (Point p) /* item coordinates relative */
+ItemImpl::point (Point p) /* item coordinates relative */
 {
   Allocation a = allocation();
   return (drawable() &&
@@ -868,13 +854,13 @@ Item::point (Point p) /* item coordinates relative */
 }
 
 void
-Item::hierarchy_changed (Item *old_toplevel)
+ItemImpl::hierarchy_changed (ItemImpl *old_toplevel)
 {
   anchored (old_toplevel == NULL);
 }
 
 void
-Item::set_parent (Container *pcontainer)
+ItemImpl::set_parent (Container *pcontainer)
 {
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
   if (controller)
@@ -910,9 +896,9 @@ Item::set_parent (Container *pcontainer)
 }
 
 bool
-Item::has_ancestor (const Item &ancestor) const
+ItemImpl::has_ancestor (const ItemImpl &ancestor) const
 {
-  const Item *item = this;
+  const ItemImpl *item = this;
   while (item)
     {
       if (item == &ancestor)
@@ -922,13 +908,13 @@ Item::has_ancestor (const Item &ancestor) const
   return false;
 }
 
-Item*
-Item::common_ancestor (const Item &other) const
+ItemImpl*
+ItemImpl::common_ancestor (const ItemImpl &other) const
 {
-  Item *item1 = const_cast<Item*> (this);
+  ItemImpl *item1 = const_cast<ItemImpl*> (this);
   do
     {
-      Item *item2 = const_cast<Item*> (&other);
+      ItemImpl *item2 = const_cast<ItemImpl*> (&other);
       do
         {
           if (item1 == item2)
@@ -943,32 +929,32 @@ Item::common_ancestor (const Item &other) const
 }
 
 Window*
-Item::get_window () const
+ItemImpl::get_window () const
 {
-  Item *parent = const_cast<Item*> (this);
+  ItemImpl *parent = const_cast<ItemImpl*> (this);
   while (parent->parent())
     parent = parent->parent();
   return dynamic_cast<Window*> (parent); // NULL if parent is not of type Window*
 }
 
 void
-Item::changed()
+ItemImpl::changed()
 {
   if (!finalizing())
     sig_changed.emit();
 }
 
 void
-Item::invalidate_parent ()
+ItemImpl::invalidate_parent ()
 {
   /* propagate (size) invalidation from children to parents */
-  Item *p = parent();
+  ItemImpl *p = parent();
   if (p)
     p->invalidate_size();
 }
 
 void
-Item::invalidate()
+ItemImpl::invalidate()
 {
   const bool widget_state_invalidation = !test_all_flags (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
   if (widget_state_invalidation)
@@ -986,7 +972,7 @@ Item::invalidate()
 }
 
 void
-Item::invalidate_size()
+ItemImpl::invalidate_size()
 {
   if (!test_all_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
@@ -999,13 +985,13 @@ Item::invalidate_size()
 }
 
 Requisition
-Item::inner_size_request()
+ItemImpl::inner_size_request()
 {
   Requisition ireq; // 0,0
-  if (test_flags (Item::INVALID_REQUISITION))
+  if (test_flags (ItemImpl::INVALID_REQUISITION))
     do
       {
-        change_flags_silently (Item::INVALID_REQUISITION, false); /* skip notification */
+        change_flags_silently (ItemImpl::INVALID_REQUISITION, false); /* skip notification */
         if (allocatable())
           {
             ireq = Requisition(); // 0,0
@@ -1020,26 +1006,20 @@ Item::inner_size_request()
           }
         cache_requisition (&ireq);
       }
-    while (test_flags (Item::INVALID_REQUISITION));
+    while (test_flags (ItemImpl::INVALID_REQUISITION));
   else if (allocatable())
     ireq = cache_requisition();
   return ireq;
 }
 
 Requisition
-Item::requisition ()
+ItemImpl::requisition ()
 {
   return SizeGroup::item_requisition (*this);
 }
 
 bool
-Item::tune_requisition (Requisition requisition)
-{
-  return false; /* ItemImpl implements this */
-}
-
-bool
-Item::tune_requisition (double new_width,
+ItemImpl::tune_requisition (double new_width,
                         double new_height)
 {
   Requisition req = size_request();
@@ -1051,7 +1031,7 @@ Item::tune_requisition (double new_width,
 }
 
 void
-Item::copy_area (const Rect  &rect,
+ItemImpl::copy_area (const Rect  &rect,
                  const Point &dest)
 {
   Window *ritem = get_window();
@@ -1074,19 +1054,19 @@ Item::copy_area (const Rect  &rect,
 }
 
 void
-Item::expose ()
+ItemImpl::expose ()
 {
   expose (allocation());
 }
 
 void
-Item::expose (const Rect &rect) /* item coordinates relative */
+ItemImpl::expose (const Rect &rect) /* item coordinates relative */
 {
   expose (Region (rect));
 }
 
 void
-Item::expose (const Region &region) /* item coordinates relative */
+ItemImpl::expose (const Region &region) /* item coordinates relative */
 {
   Region r (allocation());
   r.intersect (region);
@@ -1100,13 +1080,13 @@ Item::expose (const Region &region) /* item coordinates relative */
 }
 
 void
-Item::type_cast_error (const char *dest_type)
+ItemImpl::type_cast_error (const char *dest_type)
 {
   fatal ("failed to dynamic_cast<%s> item: %s", VirtualTypeid::cxx_demangle (dest_type).c_str(), name().c_str());
 }
 
 void
-Item::get_test_dump (TestStream &tstream)
+ItemImpl::get_test_dump (TestStream &tstream)
 {
   tstream.push_node (name());
   const PropertyList &plist = list_properties();
@@ -1126,15 +1106,15 @@ Item::get_test_dump (TestStream &tstream)
 }
 
 void
-Item::dump_test_data (TestStream &tstream)
+ItemImpl::dump_test_data (TestStream &tstream)
 {}
 
 void
-Item::dump_private_data (TestStream &tstream)
+ItemImpl::dump_private_data (TestStream &tstream)
 {}
 
 void
-Item::find_adjustments (AdjustmentSourceType adjsrc1,
+ItemImpl::find_adjustments (AdjustmentSourceType adjsrc1,
                         Adjustment         **adj1,
                         AdjustmentSourceType adjsrc2,
                         Adjustment         **adj2,
@@ -1143,7 +1123,7 @@ Item::find_adjustments (AdjustmentSourceType adjsrc1,
                         AdjustmentSourceType adjsrc4,
                         Adjustment         **adj4)
 {
-  for (Item *pitem = this->parent(); pitem; pitem = pitem->parent())
+  for (ItemImpl *pitem = this->parent(); pitem; pitem = pitem->parent())
     {
       AdjustmentSource *adjustment_source = pitem->interface<AdjustmentSource*>();
       if (!adjustment_source)
@@ -1165,7 +1145,7 @@ Item::find_adjustments (AdjustmentSourceType adjsrc1,
 }
 
 void
-Item::repack (const PackInfo &orig,
+ItemImpl::repack (const PackInfo &orig,
               const PackInfo &pnew)
 {
   if (parent())
@@ -1173,8 +1153,8 @@ Item::repack (const PackInfo &orig,
   invalidate();
 }
 
-Item::PackInfo&
-Item::pack_info (bool create)
+ItemImpl::PackInfo&
+ItemImpl::pack_info (bool create)
 {
   static const PackInfo pack_info_defaults = {
     0,   1,   0, 1,     /* hposition, hspan, vposition, vspan */
@@ -1197,7 +1177,7 @@ Item::pack_info (bool create)
 }
 
 void
-Item::hposition (double d)
+ItemImpl::hposition (double d)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.hposition = d;
@@ -1205,7 +1185,7 @@ Item::hposition (double d)
 }
 
 void
-Item::hspan (double d)
+ItemImpl::hspan (double d)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.hspan = MAX (1, d);
@@ -1213,7 +1193,7 @@ Item::hspan (double d)
 }
 
 void
-Item::vposition (double d)
+ItemImpl::vposition (double d)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.vposition = d;
@@ -1221,7 +1201,7 @@ Item::vposition (double d)
 }
 
 void
-Item::vspan (double d)
+ItemImpl::vspan (double d)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.vspan = MAX (1, d);
@@ -1229,7 +1209,7 @@ Item::vspan (double d)
 }
 
 void
-Item::left_spacing (uint s)
+ItemImpl::left_spacing (uint s)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.left_spacing = s;
@@ -1237,7 +1217,7 @@ Item::left_spacing (uint s)
 }
 
 void
-Item::right_spacing (uint s)
+ItemImpl::right_spacing (uint s)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.right_spacing = s;
@@ -1245,7 +1225,7 @@ Item::right_spacing (uint s)
 }
 
 void
-Item::bottom_spacing (uint s)
+ItemImpl::bottom_spacing (uint s)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.bottom_spacing = s;
@@ -1253,7 +1233,7 @@ Item::bottom_spacing (uint s)
 }
 
 void
-Item::top_spacing (uint s)
+ItemImpl::top_spacing (uint s)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.top_spacing = s;
@@ -1261,7 +1241,7 @@ Item::top_spacing (uint s)
 }
 
 void
-Item::halign (double f)
+ItemImpl::halign (double f)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.halign = CLAMP (f, 0, 1);
@@ -1269,7 +1249,7 @@ Item::halign (double f)
 }
 
 void
-Item::hscale (double f)
+ItemImpl::hscale (double f)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.hscale = f;
@@ -1277,7 +1257,7 @@ Item::hscale (double f)
 }
 
 void
-Item::valign (double f)
+ItemImpl::valign (double f)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.valign = CLAMP (f, 0, 1);
@@ -1285,7 +1265,7 @@ Item::valign (double f)
 }
 
 void
-Item::vscale (double f)
+ItemImpl::vscale (double f)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.vscale = f;
@@ -1293,7 +1273,7 @@ Item::vscale (double f)
 }
 
 void
-Item::position (Point point) // mirrors (hposition,vposition)
+ItemImpl::position (Point point) // mirrors (hposition,vposition)
 {
   PackInfo &pa = pack_info (true), op = pa;
   pa.hposition = point.x;
@@ -1384,7 +1364,7 @@ ItemImpl::cache_requisition (Requisition *requisition)
 bool
 ItemImpl::tune_requisition (Requisition requisition)
 {
-  Item *p = parent();
+  ItemImpl *p = parent();
   if (p && !test_flags (INVALID_REQUISITION))
     {
       Window *r = p->get_window();
@@ -1402,12 +1382,6 @@ ItemImpl::tune_requisition (Requisition requisition)
         }
     }
   return false;
-}
-
-const Allocation&
-ItemImpl::allocation()
-{
-  return m_allocation;
 }
 
 void

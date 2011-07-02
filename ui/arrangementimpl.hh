@@ -40,9 +40,9 @@ public:
 protected:
   virtual void                  size_request            (Requisition &requisition);
   virtual void                  size_allocate           (Allocation area);
-  Allocation                    local_child_allocation  (Item  &child,
-                                                         double width,
-                                                         double height);
+  Allocation                    local_child_allocation  (ItemImpl &child,
+                                                         double    width,
+                                                         double    height);
 };
 
 } // Rapicorn

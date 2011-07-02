@@ -25,13 +25,13 @@
 namespace Rapicorn {
 
 static uint
-left_attach (const Item::PackInfo &pi)
+left_attach (const ItemImpl::PackInfo &pi)
 {
   return iround (MAX (0, pi.hposition));
 }
 
 static uint
-right_attach (const Item::PackInfo &pi)
+right_attach (const ItemImpl::PackInfo &pi)
 {
   double r = pi.hposition + pi.hspan;
   double l = left_attach (pi);
@@ -39,13 +39,13 @@ right_attach (const Item::PackInfo &pi)
 }
 
 static uint
-bottom_attach (const Item::PackInfo &pi)
+bottom_attach (const ItemImpl::PackInfo &pi)
 {
   return iround (MAX (0, pi.vposition));
 }
 
 static uint
-top_attach (const Item::PackInfo &pi)
+top_attach (const ItemImpl::PackInfo &pi)
 {
   double t = pi.vposition + pi.vspan;
   double b = bottom_attach (pi);
@@ -178,7 +178,7 @@ TableImpl::~TableImpl()
 {}
 
 void
-TableImpl::repack_child (Item           &item,
+TableImpl::repack_child (ItemImpl       &item,
                          const PackInfo &orig,
                          const PackInfo &pnew)
 {

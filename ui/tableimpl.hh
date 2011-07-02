@@ -53,7 +53,7 @@ protected:
   virtual               ~TableImpl      ();
   virtual void          size_request    (Requisition &requisition);
   virtual void          size_allocate   (Allocation area);
-  virtual void          repack_child    (Item           &item,
+  virtual void          repack_child    (ItemImpl       &item,
                                          const PackInfo &orig,
                                          const PackInfo &pnew);
 public:

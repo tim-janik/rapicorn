@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include <ui/interfaces.hh> // includes <ui/item.hh> after It3m declaration
 
 #ifndef __RAPICORN_ITEM_HH_
@@ -29,7 +14,7 @@ namespace Rapicorn {
 
 /* --- Item structures and forward decls --- */
 typedef Rect Allocation;
-class Item;
+class ItemImpl;
 class SizeGroup;
 class Adjustment;
 class Container;
@@ -49,15 +34,18 @@ public:
   virtual void  reset           (ResetMode       mode = RESET_ALL) = 0;
 };
 
-/* --- Item --- */
-typedef Signals::Slot1<void, Item&> ItemSlot;
-class Item : public virtual It3m {
+/* --- ItemImpl --- */
+typedef Signals::Slot1<void, ItemImpl&> ItemSlot;
+class ItemImpl : public virtual It3m {
   friend                      class ClassDoctor;
   friend                      class Container;
   friend                      class SizeGroup;
   uint32                      m_flags;          /* interface-inlined for fast read-out */
   Container                  *m_parent;         /* interface-inlined for fast read-out */
   Heritage                   *m_heritage;
+  Requisition                 m_requisition;
+  Allocation                  m_allocation;
+  FactoryContext             *m_factory_context;
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        propagate_state    (bool notify_changed);
   Container**                 _parent_loc        () { return &m_parent; }
@@ -100,16 +88,16 @@ protected:
   bool                        test_all_flags    (uint32 mask) const { return (m_flags & mask) == mask; }
   virtual bool                self_visible      () const;
   /* size requisition and allocation */
-  virtual Requisition         cache_requisition (Requisition *requisition = NULL) = 0;
+  Requisition                 cache_requisition (Requisition *requisition = NULL);
   virtual void                size_request      (Requisition &requisition) = 0;
   virtual void                size_allocate     (Allocation   area) = 0;
   virtual void                invalidate_parent ();
-  virtual bool                tune_requisition  (Requisition  requisition);
+  bool                        tune_requisition  (Requisition  requisition);
   bool                        tune_requisition  (double       new_width,
                                                  double       new_height);
   /* signal methods */
-  virtual void                do_invalidate     () = 0;
-  virtual void                do_changed        () = 0;
+  virtual void                do_invalidate     ();
+  virtual void                do_changed        ();
   /* idlers & timers */
   uint                        exec_fast_repeater   (const BoolSlot &sl);
   uint                        exec_slow_repeater   (const BoolSlot &sl);
@@ -117,17 +105,17 @@ protected:
   bool                        remove_exec          (uint            exec_id);
   virtual void                visual_update        ();
   /* misc */
-  virtual                     ~Item             ();
+  virtual                     ~ItemImpl             ();
   virtual void                finalize          ();
   virtual void                set_parent        (Container *parent);
-  virtual void                hierarchy_changed (Item *old_toplevel);
+  virtual void                hierarchy_changed (ItemImpl *old_toplevel);
   virtual bool                move_focus        (FocusDirType fdir);
   virtual bool                custom_command    (const String       &command_name,
                                                  const StringList   &command_args);
   void                        anchored          (bool b) { set_flag (ANCHORED, b); }
   void                        notify_key_error  ();
 public:
-  explicit                    Item              ();
+  explicit                    ItemImpl              ();
   bool                        anchored          () const { return test_flags (ANCHORED); }
   bool                        visible           () const { return test_flags (VISIBLE) && !test_flags (HIDDEN_CHILD); }
   void                        visible           (bool b) { set_flag (VISIBLE, b); }
@@ -163,12 +151,12 @@ public:
   void                        vshrink           (bool b) { set_flag (VSHRINK, b); }
   bool                        debug             () const { return test_flags (DEBUG); }
   void                        debug             (bool f) { set_flag (DEBUG, f); }
-  virtual String              name              () const = 0;
-  virtual void                name              (const String &str) = 0;
-  virtual FactoryContext*     factory_context   () const = 0;
-  virtual void                factory_context   (FactoryContext *fc) = 0;
-  virtual ColorSchemeType     color_scheme      () const = 0;
-  virtual void                color_scheme      (ColorSchemeType cst) = 0;
+  String                      name              () const;
+  void                        name              (const String &str);
+  FactoryContext*             factory_context   () const;
+  void                        factory_context   (FactoryContext *fc);
+  ColorSchemeType             color_scheme      () const;
+  void                        color_scheme      (ColorSchemeType cst);
   /* override requisition */
   double                      width             () const;
   void                        width             (double w);
@@ -190,16 +178,16 @@ public:
   virtual const CommandList&  list_commands     ();
   /* parents */
   Container*                  parent            () const { return m_parent; }
-  bool                        has_ancestor      (const Item &ancestor) const;
-  Item*                       common_ancestor   (const Item &other) const;
-  Item*                       common_ancestor   (const Item *other) const { return common_ancestor (*other); }
+  bool                        has_ancestor      (const ItemImpl &ancestor) const;
+  ItemImpl*                   common_ancestor   (const ItemImpl &other) const;
+  ItemImpl*                   common_ancestor   (const ItemImpl *other) const { return common_ancestor (*other); }
   Window*                     get_window        () const;
   /* cross links */
-  void                        cross_link        (Item           &link,
+  void                        cross_link        (ItemImpl       &link,
                                                  const ItemSlot &uncross);
-  void                        cross_unlink      (Item           &link,
+  void                        cross_unlink      (ItemImpl       &link,
                                                  const ItemSlot &uncross);
-  void                        uncross_links     (Item           &link);
+  void                        uncross_links     (ItemImpl       &link);
   /* invalidation / changes */
   void                        invalidate        ();
   void                        invalidate_size   ();
@@ -211,10 +199,10 @@ public:
   void                        queue_visual_update  ();
   void                        force_visual_update  ();
   /* public signals */
-  SignalFinalize<Item>            sig_finalize;
-  Signal<Item, void ()>           sig_changed;
-  Signal<Item, void ()>           sig_invalidate;
-  Signal<Item, void (Item *oldt)> sig_hierarchy_changed;
+  SignalFinalize<ItemImpl>                sig_finalize;
+  Signal<ItemImpl, void ()>               sig_changed;
+  Signal<ItemImpl, void ()>               sig_invalidate;
+  Signal<ItemImpl, void (ItemImpl *oldt)> sig_hierarchy_changed;
   /* event handling */
   bool                       process_event          (const Event &event);       /* item coordinates relative */
   bool                       process_viewp0rt_event (const Event &event);       /* viewp0rt coordinates relative */
@@ -226,24 +214,24 @@ public:
   virtual bool               point                  (Point        p);           /* item coordinates relative */
   Point                      point_to_viewp0rt      (Point        item_point);  /* item coordinates relative */
   Point                      point_from_viewp0rt    (Point        window_point);/* viewp0rt coordinates relative */
-  virtual bool               translate_from         (const Item   &src_item,
+  virtual bool               translate_from         (const ItemImpl   &src_item,
                                                      const uint    n_points,
                                                      Point        *points) const;
   bool                       translate_to           (const uint    n_points,
                                                      Point        *points,
-                                                     const Item   &target_item) const;
-  bool                       translate_from         (const Item   &src_item,
+                                                     const ItemImpl   &target_item) const;
+  bool                       translate_from         (const ItemImpl   &src_item,
                                                      const uint    n_rects,
                                                      Rect         *rects) const;
   bool                       translate_to           (const uint    n_rects,
                                                      Rect         *rects,
-                                                     const Item   &target_item) const;
+                                                     const ItemImpl   &target_item) const;
   bool                       viewp0rt_point         (Point        p);           /* viewp0rt coordinates relative */
   /* public size accessors */
   Requisition                requisition        ();                             // effective size requisition
   Requisition                size_request       () { return requisition(); }    // FIXME: remove
-  virtual void               set_allocation     (const Allocation &area) = 0;   /* assign new allocation */
-  virtual const Allocation&  allocation         () = 0;                         /* current allocation */
+  void                       set_allocation     (const Allocation &area);       // assign new allocation
+  const Allocation&          allocation         () { return m_allocation; }     // current allocation
   /* display */
   virtual void               render             (Display        &display) = 0;
   /* heritage / appearance */
@@ -279,7 +267,7 @@ public: /* packing */
     uint left_spacing, right_spacing, bottom_spacing, top_spacing;
     double halign, hscale, valign, vscale;
   };
-  const PackInfo&    pack_info       () const   { return const_cast<Item*> (this)->pack_info (false); }
+  const PackInfo&    pack_info       () const   { return const_cast<ItemImpl*> (this)->pack_info (false); }
   double             hposition       () const   { return pack_info ().hposition; }
   void               hposition       (double d);
   double             hspan           () const   { return pack_info ().hspan; }
@@ -323,25 +311,28 @@ public:
   InterfaceMatch<C>::Result parent_interface (const String &ident = String(),
                                               const std::nothrow_t &nt = dothrow) const;
   virtual OwnedMutex&       owned_mutex        ();
+protected:
+  void                  allocation      (const Allocation &area);
+  virtual bool          do_event        (const Event &event);
 private:
   void                  type_cast_error (const char *dest_type) RAPICORN_NORETURN;
   bool                  match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
 };
-inline bool operator== (const Item &item1, const Item &item2) { return &item1 == &item2; }
-inline bool operator!= (const Item &item1, const Item &item2) { return &item1 != &item2; }
+inline bool operator== (const ItemImpl &item1, const ItemImpl &item2) { return &item1 == &item2; }
+inline bool operator!= (const ItemImpl &item1, const ItemImpl &item2) { return &item1 != &item2; }
 
-template<class C> typename Item::InterfaceMatch<C>::Result
-Item::interface (const String         &ident,
-                 const std::nothrow_t &nt) const
+template<class C> typename ItemImpl::InterfaceMatch<C>::Result
+ItemImpl::interface (const String         &ident,
+                     const std::nothrow_t &nt) const
 {
   InterfaceMatch<C> interface_match (ident);
   match_interface (1, 0, 1, interface_match);
   return interface_match.result (&nt == &dothrow);
 }
 
-template<class C> typename Item::InterfaceMatch<C>::Result
-Item::parent_interface (const String         &ident,
-                        const std::nothrow_t &nt) const
+template<class C> typename ItemImpl::InterfaceMatch<C>::Result
+ItemImpl::parent_interface (const String         &ident,
+                            const std::nothrow_t &nt) const
 {
   InterfaceMatch<C> interface_match (ident);
   match_interface (0, 1, 0, interface_match);

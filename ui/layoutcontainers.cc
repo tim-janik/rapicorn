@@ -49,7 +49,7 @@ public:
     bool chspread = false, cvspread = false;
     if (has_children())
       {
-        Item &child = get_child();
+        ItemImpl &child = get_child();
         if (child.allocatable())
           {
             Requisition cr = child.size_request ();
@@ -69,7 +69,7 @@ public:
     allocation (area);
     if (!has_allocatable_child())
       return;
-    Item &child = get_child();
+    ItemImpl &child = get_child();
     Requisition rq = child.size_request();
     /* pad allocation */
     area.x += left_padding();
@@ -122,7 +122,7 @@ HBox::list_properties()
 class HBoxImpl : public virtual HBox, public virtual TableImpl {
   virtual const PropertyList& list_properties() { return HBox::list_properties(); }
   virtual void
-  add_child (Item &item)
+  add_child (ItemImpl &item)
   {
     uint col = get_n_cols();
     while (col > 0 && !is_col_used (col - 1))
@@ -162,7 +162,7 @@ class VBoxImpl : public virtual VBox, public virtual TableImpl {
   /* pack properties */
   virtual const PropertyList& list_properties() { return VBox::list_properties(); }
   virtual void
-  add_child (Item &item)
+  add_child (ItemImpl &item)
   {
     uint row = 0;
     if (is_row_used (row))

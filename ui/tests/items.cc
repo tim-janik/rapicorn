@@ -34,7 +34,7 @@ main (int   argc,
   TOK();
   /* get thread safe wind0w handle */
   TOK();
-  Item &item = wind0w.window();
+  ItemImpl &item = wind0w.window();
   TOK();
   Window &window = item.interface<Window&>();
   TASSERT (&window != NULL);

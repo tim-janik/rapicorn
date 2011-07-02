@@ -16,6 +16,7 @@
  */
 #include "scrollitemsimpl.hh"
 #include "window.hh"
+#include "factory.hh"
 
 namespace Rapicorn {
 
@@ -92,7 +93,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
   Adjustment *m_hadjustment, *m_vadjustment;
   double m_last_xoffset, m_last_yoffset;
   virtual void
-  hierarchy_changed (Item *old_toplevel)
+  hierarchy_changed (ItemImpl *old_toplevel)
   {
     if (m_hadjustment)
       m_hadjustment->sig_value_changed -= slot (*this, &ScrollPortImpl::adjustment_changed);
@@ -117,7 +118,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     bool chspread = false, cvspread = false;
     if (has_children())
       {
-        Item &child = get_child();
+        ItemImpl &child = get_child();
         if (child.allocatable())
           {
             requisition = child.size_request ();
@@ -139,7 +140,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
         allocation (area);
         return;
       }
-    Item &child = get_child();
+    ItemImpl &child = get_child();
     Requisition rq = child.size_request();
     if (rq.width < area.width)
       {
@@ -208,7 +209,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
     double yoffset = m_vadjustment ? round (m_vadjustment->flipped_value()) : 0.0;
     const Allocation area = allocation();
-    Item &child = get_child();
+    ItemImpl &child = get_child();
     const IRect ica = child.allocation();
     Display scroll_display;
     // constrain scroll_display to child allocation
@@ -268,7 +269,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
       }
   }
   virtual Affine
-  child_affine (const Item &item)
+  child_affine (const ItemImpl &item)
   {
     const Allocation area = allocation();
     double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
@@ -276,21 +277,21 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     return AffineTranslate (-area.x + xoffset, -area.y + yoffset);
   }
   virtual void
-  set_focus_child (Item *item)
+  set_focus_child (ItemImpl *item)
   {
     SingleContainerImpl::set_focus_child (item);
-    Item *fchild = get_focus_child();
+    ItemImpl *fchild = get_focus_child();
     if (!fchild)
       return;
     Window *rt = get_window();
     if (!rt)
       return;
-    Item *const rfitem = rt->get_focus();
-    Item *fitem = rfitem;
+    ItemImpl *const rfitem = rt->get_focus();
+    ItemImpl *fitem = rfitem;
     if (!fitem)
       return;
     /* list focus items between focus_item and out immediate child */
-    std::list<Item*> fitems;
+    std::list<ItemImpl*> fitems;
     while (fitem)
       {
         fitems.push_back (fitem);
@@ -301,9 +302,9 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     /* find the first focus descendant that fits the scroll area */
     fitem = rfitem; /* fallback to innermost focus item */
     const Rect area = allocation();
-    for (Walker<Item*> w = walker (fitems); w.has_next(); w++)
+    for (Walker<ItemImpl*> w = walker (fitems); w.has_next(); w++)
       {
-        Item *item = *w;
+        ItemImpl *item = *w;
         Rect a = item->allocation();
         if (!translate_from (*item, 1, &a))
           {
