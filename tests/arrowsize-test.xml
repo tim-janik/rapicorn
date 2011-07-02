@@ -35,7 +35,7 @@
        The TestContainer then asserts that the arrow really is allocated with
        a width based on its height.
     -->
-  <def:test-dialog inherit="Root">
+  <def:test-dialog inherit="Window">
     <VBox>
       <Label markup-text="Square Arrow:"/>
       <HBox>

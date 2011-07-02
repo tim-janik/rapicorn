@@ -18,7 +18,7 @@
 <rapicorn-definitions xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
 
   <!-- main dialog -->
-  <def:main-shell inherit="Root" child-container="scroll-box" width="800" height="600" >
+  <def:main-shell inherit="Window" child-container="scroll-box" width="800" height="600" >
     <arg:test-value1 default="2"/>
     <arg:test-value2/>
     <Ambience normal-lighting="upper-left">

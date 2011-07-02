@@ -56,18 +56,18 @@ main (int   argc,
   app.auto_load ("RapicornTest",                        // namespace domain,
                  Path::vpath_find (factory_xml),        // GUI file name
                  argv[0]);
-  Root *root;
+  Window *window;
   Item *item;
   TestContainer *titem;
 
   TSTART ("Factory Calls");
   Wind0w &testwin = *app.create_wind0w ("test-TestItemL2");
-  root = &testwin.root();
+  window = &testwin.window();
   testwin.show();
   while (RapicornTester::loops_pending()) /* complete showing */
     RapicornTester::loops_dispatch (false);
   TOK();
-  item = root->find_item ("TestItemL2");
+  item = window->find_item ("TestItemL2");
   TASSERT (item != NULL);
   titem = dynamic_cast<TestContainer*> (item);
   TASSERT (titem != NULL);

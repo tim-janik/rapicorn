@@ -391,7 +391,7 @@ protected:
         if (!m_button and (bevent->button == 1 or bevent->button == 2))
           {
             m_button = bevent->button;
-            get_root()->add_grab (this, true);
+            get_window()->add_grab (this, true);
             handled = true;
             m_coffset = 0;
             double ep = vertical_skid() ? event.y : event.x;
@@ -444,7 +444,7 @@ protected:
         bevent = dynamic_cast<const EventButton*> (&event);
         if (m_button == bevent->button)
           {
-            get_root()->remove_grab (this);
+            get_window()->remove_grab (this);
             m_button = 0;
             m_coffset = 0;
             handled = true;

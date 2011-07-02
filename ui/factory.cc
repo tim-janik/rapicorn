@@ -863,18 +863,18 @@ Factory::create_wind0w (const String       &gadget_identifier,
   Item &item = FactorySingleton::singleton->construct_gadget (gadget_identifier,
                                                               arguments, env_variables,
                                                               &gadget_definition);
-  Root *root = dynamic_cast<Root*> (&item);
-  if (!root)
+  Window *window = dynamic_cast<Window*> (&item);
+  if (!window)
     fatal ("%s: constructed widget lacks wind0w interface: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
-  Wind0w &wind0w = root->wind0w();
+  Wind0w &wind0w = window->wind0w();
   /* win does ref_sink(); */
   return wind0w;
 }
 
 bool
-Factory::item_definition_is_root (const String &item_identifier)
+Factory::item_definition_is_window (const String &item_identifier)
 {
-  return FactorySingleton::singleton->check_item_factory_type (item_identifier, "::Root");
+  return FactorySingleton::singleton->check_item_factory_type (item_identifier, "::Window");
 }
 
 String

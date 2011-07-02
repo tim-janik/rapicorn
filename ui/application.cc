@@ -65,7 +65,7 @@ ApplicationImpl::create_wind0w (const std::string    &wind0w_identifier,
 {
   return &Factory::create_wind0w (wind0w_identifier,
                                   arguments,
-                                  env_variables).root().wind0w();
+                                  env_variables).window().wind0w();
 }
 
 String

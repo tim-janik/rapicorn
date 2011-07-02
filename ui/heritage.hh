@@ -21,25 +21,25 @@
 
 namespace Rapicorn {
 
-class Root;
+class Window;
 class Item;
 
 class Heritage : public virtual BaseObject {
   friend        class ClassDoctor;
   class Internals;
   Internals    *m_internals;
-  Root         &m_root;
-  explicit      Heritage        (Root      &root,
+  Window       &m_window;
+  explicit      Heritage        (Window    &window,
                                  Internals *internals);
   /*Des*/      ~Heritage        ();
   static
-  Heritage*     create_heritage (Root           &root,
+  Heritage*     create_heritage (Window         &window,
                                  Item           &item,
                                  ColorSchemeType color_scheme);
 public:
   Heritage*     adapt_heritage  (Item           &item,
                                  ColorSchemeType color_scheme);
-  Root&         root            () const { return m_root; }
+  Window&       window          () const { return m_window; }
   /* colors */
   Color         get_color       (StateType state,
                                  ColorType ct) const;

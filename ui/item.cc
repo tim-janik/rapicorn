@@ -192,7 +192,7 @@ Item::has_focus () const
 {
   if (test_flags (FOCUS_CHAIN))
     {
-      Root *ritem = get_root();
+      Window *ritem = get_window();
       if (ritem && ritem->get_focus() == this)
         return true;
     }
@@ -213,11 +213,11 @@ Item::grab_focus ()
   if (!can_focus() || !sensitive() || !viewable())
     return false;
   /* unset old focus */
-  Root *ritem = get_root();
+  Window *ritem = get_window();
   if (ritem)
     ritem->set_focus (NULL);
   /* set new focus */
-  ritem = get_root();
+  ritem = get_window();
   if (ritem && ritem->get_focus() == NULL)
     ritem->set_focus (this);
   return ritem->get_focus() == this;
@@ -234,7 +234,7 @@ Item::move_focus (FocusDirType fdir)
 void
 Item::notify_key_error ()
 {
-  Root *ritem = get_root();
+  Window *ritem = get_window();
   if (ritem)
     ritem->beep();
 }
@@ -321,7 +321,7 @@ Item::collect_components (const String &path)
 uint
 Item::exec_slow_repeater (const BoolSlot &sl)
 {
-  Root *ritem = get_root();
+  Window *ritem = get_window();
   if (ritem)
     {
       EventLoop *loop = ritem->get_loop();
@@ -334,7 +334,7 @@ Item::exec_slow_repeater (const BoolSlot &sl)
 uint
 Item::exec_fast_repeater (const BoolSlot &sl)
 {
-  Root *ritem = get_root();
+  Window *ritem = get_window();
   if (ritem)
     {
       EventLoop *loop = ritem->get_loop();
@@ -347,7 +347,7 @@ Item::exec_fast_repeater (const BoolSlot &sl)
 uint
 Item::exec_key_repeater (const BoolSlot &sl)
 {
-  Root *ritem = get_root();
+  Window *ritem = get_window();
   if (ritem)
     {
       EventLoop *loop = ritem->get_loop();
@@ -360,7 +360,7 @@ Item::exec_key_repeater (const BoolSlot &sl)
 bool
 Item::remove_exec (uint exec_id)
 {
-  Root *ritem = get_root();
+  Window *ritem = get_window();
   if (ritem)
     {
       EventLoop *loop = ritem->get_loop();
@@ -378,7 +378,7 @@ Item::queue_visual_update ()
   uint timer_id = get_data (&visual_update_key);
   if (!timer_id)
     {
-      Root *ritem = get_root();
+      Window *ritem = get_window();
       if (ritem)
         {
           EventLoop *loop = ritem->get_loop();
@@ -767,9 +767,9 @@ Item::translate_to (const uint    n_rects,
 }
 
 Point
-Item::point_from_viewp0rt (Point root_point) /* root coordinates relative */
+Item::point_from_viewp0rt (Point window_point) /* window coordinates relative */
 {
-  Point p = root_point;
+  Point p = window_point;
   Container *pc = parent();
   if (pc)
     {
@@ -853,7 +853,7 @@ Item::process_viewp0rt_event (const Event &event) /* viewp0rt coordinates relati
 }
 
 bool
-Item::viewp0rt_point (Point p) /* root coordinates relative */
+Item::viewp0rt_point (Point p) /* window coordinates relative */
 {
   return point (point_from_viewp0rt (p));
 }
@@ -883,7 +883,7 @@ Item::set_parent (Container *pcontainer)
   if (pc)
     {
       ref (pc);
-      Root *rtoplevel = get_root();
+      Window *rtoplevel = get_window();
       pc->unparent_child (*this);
       invalidate();
       if (heritage())
@@ -942,13 +942,13 @@ Item::common_ancestor (const Item &other) const
   return NULL;
 }
 
-Root*
-Item::get_root () const
+Window*
+Item::get_window () const
 {
   Item *parent = const_cast<Item*> (this);
   while (parent->parent())
     parent = parent->parent();
-  return dynamic_cast<Root*> (parent); // NULL if parent is not of type Root*
+  return dynamic_cast<Window*> (parent); // NULL if parent is not of type Window*
 }
 
 void
@@ -1054,7 +1054,7 @@ void
 Item::copy_area (const Rect  &rect,
                  const Point &dest)
 {
-  Root *ritem = get_root();
+  Window *ritem = get_window();
   if (ritem)
     {
       Allocation a = allocation();
@@ -1090,12 +1090,12 @@ Item::expose (const Region &region) /* item coordinates relative */
 {
   Region r (allocation());
   r.intersect (region);
-  Root *rt = get_root();
+  Window *rt = get_window();
   if (!r.empty() && rt && !test_flags (INVALID_CONTENT))
     {
       const Affine &affine = affine_to_viewp0rt();
       r.affine (affine);
-      rt->expose_root_region (r);
+      rt->expose_window_region (r);
     }
 }
 
@@ -1387,7 +1387,7 @@ ItemImpl::tune_requisition (Requisition requisition)
   Item *p = parent();
   if (p && !test_flags (INVALID_REQUISITION))
     {
-      Root *r = p->get_root();
+      Window *r = p->get_window();
       if (r && r->tunable_requisitions())
         {
           Requisition ovr (width(), height());
@@ -1440,7 +1440,7 @@ ItemImpl::set_allocation (const Allocation &area)
     {
       /* expose unclipped */
       Region r (oa);
-      Root *rt = get_root();
+      Window *rt = get_window();
       if (!r.empty() && rt)
         {
           const Affine &affine = affine_to_viewp0rt();

@@ -169,12 +169,12 @@ Heritage::~Heritage ()
 }
 
 Heritage*
-Heritage::create_heritage (Root           &root,
+Heritage::create_heritage (Window         &window,
                            Item           &item,
                            ColorSchemeType color_scheme)
 {
-  Root *iroot = item.get_root();
-  assert (iroot == &root);
+  Window *iwindow = item.get_window();
+  assert (iwindow == &window);
   ColorFunc cnorm = colorset_normal, csel = colorset_selected;
   switch (color_scheme)
     {
@@ -183,7 +183,7 @@ Heritage::create_heritage (Root           &root,
     case COLOR_NORMAL: case COLOR_INHERIT: ;
     }
   Internals *internals = new Internals (item, cnorm, csel);
-  Heritage *self = new Heritage (root, internals);
+  Heritage *self = new Heritage (window, internals);
   return self;
 }
 
@@ -204,15 +204,15 @@ Heritage::adapt_heritage (Item           &item,
       if (m_internals->match (item, cnorm, csel))
         return this;
     }
-  Root *root = item.get_root();
-  if (!root)
-    fatal ("Heritage: create heritage without root item for: %s", item.name().c_str());
-  return create_heritage (*root, item, color_scheme);
+  Window *window = item.get_window();
+  if (!window)
+    fatal ("Heritage: create heritage without window item for: %s", item.name().c_str());
+  return create_heritage (*window, item, color_scheme);
 }
 
-Heritage::Heritage (Root      &root,
+Heritage::Heritage (Window    &window,
                     Internals *internals) :
-  m_internals (internals), m_root (root)
+  m_internals (internals), m_window (window)
 {}
 
 Heritage&
@@ -222,7 +222,7 @@ Heritage::selected ()
     {
       if (!m_internals->selected)
         {
-          m_internals->selected = new Heritage (m_root, m_internals);
+          m_internals->selected = new Heritage (m_window, m_internals);
           ref_sink (m_internals->selected);
         }
       return *m_internals->selected;

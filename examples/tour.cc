@@ -26,16 +26,16 @@ custom_commands (Wind0w           &wind0w,
 {
   if (command == "testdump")
     {
-      Root &root = wind0w.root();
+      Window &window = wind0w.window();
       TestStream *tstream = TestStream::create_test_stream();
       // tstream->filter_matched_nodes ("Button");
-      root.get_test_dump (*tstream);
+      window.get_test_dump (*tstream);
       printout ("%s", tstream->string().c_str());
       delete tstream;
     }
   else
     printout ("%s(): custom command: %s(%s) (wind0w: %s)\n", __func__,
-              command.c_str(), string_join (",", args).c_str(), wind0w.root().name().c_str());
+              command.c_str(), string_join (",", args).c_str(), wind0w.window().name().c_str());
   return true;
 }
 
@@ -58,7 +58,7 @@ main (int   argc,
   /* load GUI definition file, relative to argv[0] */
   app.auto_load ("RapicornTest", "tour.xml", argv[0]);
 
-  /* create root item */
+  /* create window item */
   Wind0w &wind0w = *app.create_wind0w ("tour-dialog");
   wind0w.sig_commands += custom_commands;
 

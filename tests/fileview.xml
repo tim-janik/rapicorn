@@ -43,7 +43,7 @@
   </def:item-list>
 
   <!-- main dialog -->
-  <def:main-dialog inherit="Root">
+  <def:main-dialog inherit="Window">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="5" >

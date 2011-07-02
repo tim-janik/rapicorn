@@ -22,7 +22,7 @@
 <rapicorn-definitions xmlns:arg="http://rapicorn.org/xmlns" xmlns:def="http://rapicorn.org/xmlns" xmlns:prop="http://rapicorn.org/xmlns">
 
   <!-- main wind0w -->
-  <def:main-wind0w inherit="Root">
+  <def:main-wind0w inherit="Window">
     <OuterShell>
       <Label>
 	<prop:markup-text>

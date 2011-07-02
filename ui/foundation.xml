@@ -78,8 +78,8 @@
   <!-- Label -->
   <def:Label inherit="Rapicorn::Factory::TextPango" />
 
-  <!-- Root -->
-  <def:Root inherit="Rapicorn::Factory::Root"/>
+  <!-- Window -->
+  <def:Window inherit="Rapicorn::Factory::Window"/>
 
   <!-- slider -->
   <def:Rapicorn-slider-trough inherit="Rapicorn::Factory::SliderTrough"/>

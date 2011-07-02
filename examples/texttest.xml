@@ -124,7 +124,7 @@
   </def:wrap-text-test>
 
   <!-- test dialog -->
-  <def:main-shell inherit="Root">
+  <def:main-shell inherit="Window">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox sensitive="1" spacing="5" hexpand="1">

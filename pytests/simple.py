@@ -10,7 +10,7 @@ import Rapicorn1008 as Rapicorn # Rapicorn modules are versioned
 
 # Define main wind0w Widget Tree
 simple_wind0w_widgets = """
-  <def:simple-wind0w inherit="Root">
+  <def:simple-wind0w inherit="Window">
     <Button on-click="CLICK">
       <Label markup-text="Hello Simple World!" />
     </Button>

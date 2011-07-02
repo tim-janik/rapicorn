@@ -82,10 +82,10 @@ command_lib_exec (Item               &item,
         item_cmds[ui].cmd (item, args);
         return true;
       }
-  Root *root = item.get_root();
-  if (root)
+  Window *window = item.get_window();
+  if (window)
     {
-      Wind0w &wind0w = root->wind0w();
+      Wind0w &wind0w = window->wind0w();
       for (uint ui = 0; ui < ARRAY_SIZE (wind0w_cmds); ui++)
         if (wind0w_cmds[ui].name == cmd_name)
           {

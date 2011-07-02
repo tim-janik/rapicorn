@@ -8,10 +8,10 @@
 
 namespace Rapicorn {
 
-class RootImpl : public virtual Root,
-                 public virtual SingleContainerImpl,
-                 public virtual Wind0w,
-                 public virtual Viewp0rt::EventReceiver
+class WindowImpl : public virtual Window,
+                   public virtual SingleContainerImpl,
+                   public virtual Wind0w,
+                   public virtual Viewp0rt::EventReceiver
 {
   EventLoop            &m_loop;
   EventLoop::Source    *m_source;
@@ -26,11 +26,11 @@ class RootImpl : public virtual Root,
   vector<Item*>         m_last_entered_children;
   Viewp0rt::Config      m_config;
 public:
-  explicit              RootImpl                                ();
+  explicit              WindowImpl                              ();
 protected:
   virtual void          dispose                                 ();
 private:
-  /*Des*/               ~RootImpl                               ();
+  /*Des*/               ~WindowImpl                             ();
   virtual void          dispose_item                            (Item                   &item);
   virtual bool          self_visible                            () const;
   /* misc */
@@ -48,7 +48,7 @@ private:
   virtual void          render                                  (Display                &display);
   using                 Item::render;
   void                  collapse_expose_region                  ();
-  virtual void          expose_root_region                      (const Region           &region);
+  virtual void          expose_window_region                    (const Region           &region);
   virtual void          copy_area                               (const Rect             &src,
                                                                  const Point            &dest);
   void                  expose_now                              ();
@@ -76,7 +76,7 @@ private:
   virtual void          enable_auto_close                       ();
   virtual EventLoop*    get_loop                                ();
   /* Wind0w */
-  virtual Root&         root                                    ();
+  virtual Window&       window                                  ();
   virtual void          show                                    ();
   virtual bool          closed                                  ();
   virtual void          close                                   ();
@@ -91,7 +91,7 @@ private:
   /* event handling */
   virtual void          enqueue_async                           (Event                  *event);
   virtual void          cancel_item_events                      (Item                   *item);
-  using                 Root::cancel_item_events;
+  using                 Window::cancel_item_events;
   bool                  dispatch_mouse_movement                 (const Event            &event);
   bool                  dispatch_event_to_pierced_or_grab       (const Event            &event);
   bool                  dispatch_button_press                   (const EventButton      &bevent);
@@ -132,42 +132,42 @@ private:
   };
   map<ButtonState,uint> m_button_state_map;
   /* --- EventLoop Source --- */
-  class RootSource : public EventLoop::Source {
-    RootImpl &root;
+  class WindowSource : public EventLoop::Source {
+    WindowImpl &window;
   public:
     explicit
-    RootSource  (RootImpl &_root) :
-      root (_root)
+    WindowSource  (WindowImpl &_window) :
+      window (_window)
     {
       bool entered = rapicorn_thread_entered();
       if (!entered)
         rapicorn_thread_enter();
-      assert (root.m_source == NULL);
-      root.m_source = this;
+      assert (window.m_source == NULL);
+      window.m_source = this;
       if (!entered)
         rapicorn_thread_leave();
     }
     virtual
-    ~RootSource ()
+    ~WindowSource ()
     {
       bool entered = rapicorn_thread_entered();
       if (!entered)
         rapicorn_thread_enter();
-      assert (root.m_source != this);
+      assert (window.m_source != this);
       if (!entered)
         rapicorn_thread_leave();
     }
     virtual bool prepare    (uint64 current_time_usecs,
-                             int64 *timeout_usecs_p)         { assert (rapicorn_thread_entered()); return root.prepare (current_time_usecs, timeout_usecs_p); }
-    virtual bool check      (uint64 current_time_usecs)      { assert (rapicorn_thread_entered()); return root.check (current_time_usecs); }
-    virtual bool dispatch   ()                               { assert (rapicorn_thread_entered()); return root.dispatch(); }
+                             int64 *timeout_usecs_p)         { assert (rapicorn_thread_entered()); return window.prepare (current_time_usecs, timeout_usecs_p); }
+    virtual bool check      (uint64 current_time_usecs)      { assert (rapicorn_thread_entered()); return window.check (current_time_usecs); }
+    virtual bool dispatch   ()                               { assert (rapicorn_thread_entered()); return window.dispatch(); }
     virtual void
     destroy ()
     {
       assert (rapicorn_thread_entered());
-      assert (root.m_source == this);
-      root.m_source = NULL;
-      root.destroy_viewp0rt();
+      assert (window.m_source == this);
+      window.m_source = NULL;
+      window.destroy_viewp0rt();
     }
   };
 };

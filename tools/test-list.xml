@@ -39,7 +39,7 @@
   </def:item-list>
 
   <!-- test dialog -->
-  <def:test-dialog inherit="Root" width="400" >
+  <def:test-dialog inherit="Window" width="400" >
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="5" homogeneous="0" >

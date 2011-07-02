@@ -56,14 +56,14 @@ static void
 test_cxx_gui ()
 {
   TSTART ("C++GUI Test");
-  Wind0w &wind0w = *app.create_wind0w ("Root");
+  Wind0w &wind0w = *app.create_wind0w ("Window");
   TOK();
   Item &titem = Factory::create_item ("TestItem");
   TOK();
-  wind0w.root().add (titem);
+  wind0w.window().add (titem);
   TOK();
   /* close wind0w (and exit main loop) after first expose */
-  wind0w.root().enable_auto_close();
+  wind0w.window().enable_auto_close();
   TOK();
   /* verify and assert at least one TestItem rendering */
   uint old_seen_test = TestContainer::seen_test_items();
@@ -84,8 +84,8 @@ test_test_item ()
   TSTART ("alignment-test");
   Wind0w &wind0w = *app.create_wind0w ("alignment-test");
   TOK();
-  Root &root = wind0w.root();
-  TestContainer *titem = root.interface<TestContainer*>();
+  Window &window = wind0w.window();
+  TestContainer *titem = window.interface<TestContainer*>();
   TASSERT (titem != NULL);
   titem->sig_assertion_ok += slot (assertion_ok);
   titem->sig_assertions_passed += slot (assertions_passed);
@@ -94,7 +94,7 @@ test_test_item ()
   while (RapicornTester::loops_pending())
     RapicornTester::loops_dispatch (false);
   /* close wind0w (and exit main loop) after first expose */
-  root.enable_auto_close();
+  window.enable_auto_close();
   /* verify and assert at least one TestItem rendering */
   uint old_seen_test = TestContainer::seen_test_items();
   wind0w.show();
@@ -111,8 +111,8 @@ idl_test_item_test ()
   TSTART ("idl-test-item");
   Wind0w &wind0w = *app.create_wind0w ("test-item-wind0w");
   TOK();
-  Root &root = wind0w.root();
-  IdlTestItem *titemp = root.interface<IdlTestItem*>();
+  Window &window = wind0w.window();
+  IdlTestItem *titemp = window.interface<IdlTestItem*>();
   TASSERT (titemp != NULL);
   IdlTestItem &titem = *titemp;
   titem.bool_prop (0); TASSERT (titem.bool_prop() == 0);

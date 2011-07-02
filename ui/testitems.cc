@@ -161,7 +161,7 @@ protected:
         cairo_destroy (cairo);
       }
 
-    Allocation rarea = get_root()->allocation();
+    Allocation rarea = get_window()->allocation();
     double width = allocation().width, height = allocation().height;
     double x1 = allocation().x, x2 = rarea.width - x1 - width;
     double y1 = allocation().y, y2 = rarea.height - y1 - height;
@@ -216,10 +216,10 @@ protected:
   void
   make_snapshot ()
   {
-    Root *ritem = get_root();
-    if (m_snapshot_file != "" && ritem)
+    Window *witem = get_window();
+    if (m_snapshot_file != "" && witem)
       {
-        cairo_surface_t *isurface = ritem->create_snapshot (allocation());
+        cairo_surface_t *isurface = witem->create_snapshot (allocation());
         cairo_status_t wstatus = cairo_surface_write_to_png (isurface, m_snapshot_file.c_str());
         cairo_surface_destroy (isurface);
         String err = CAIRO_STATUS_SUCCESS == wstatus ? "ok" : cairo_status_to_string (wstatus);
@@ -240,10 +240,10 @@ public:
     SingleContainerImpl::render (display);
     if (!m_handler_id)
       {
-        Root *ritem = get_root();
-        if (ritem)
+        Window *witem = get_window();
+        if (witem)
           {
-            EventLoop *loop = ritem->get_loop();
+            EventLoop *loop = witem->get_loop();
             if (loop)
               m_handler_id = loop->exec_now (slot (*this, &TestBoxImpl::make_snapshot));
           }

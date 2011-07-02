@@ -7,7 +7,7 @@
 includes:
 #include <ui/utilities.hh>
 namespace Rapicorn {
-class Root;
+class Window;
 }
 
 filtered_class_hh:Item:
@@ -27,7 +27,7 @@ class_scope:StringList:
   /*Con*/  StringList (const std::vector<String> &strv) : Sequence (strv) {}
 
 class_scope:Wind0w_Interface:
-  virtual Root&      root          () = 0;
+  virtual Window&    window        () = 0;
 class_scope:Application_Interface:
   static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
   int                execute_loops ();

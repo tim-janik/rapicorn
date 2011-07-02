@@ -56,7 +56,7 @@ Wind0w&         create_wind0w    (const String           &wind0w_identifier,
 
 String     factory_context_name    (FactoryContext *fc);
 StringList factory_context_tags    (FactoryContext *fc);
-bool       item_definition_is_root (const String   &item_identifier);
+bool       item_definition_is_window (const String   &item_identifier);
 
 /* --- item type registration --- */
 struct ItemTypeFactory : protected Deletable, protected NonCopyable {

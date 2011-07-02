@@ -535,7 +535,7 @@ Container::move_focus (FocusDirType fdir)
       break;
     case FOCUS_UP:
     case FOCUS_LEFT:
-      current = get_root()->get_focus();
+      current = get_window()->get_focus();
       refpoint = current ? rect_center (current->allocation()) : lower_right;
       { /* filter items with negative distance (not ahead in focus direction) */
         LesserItemByDirection lesseribd = LesserItemByDirection (fdir, refpoint);
@@ -549,7 +549,7 @@ Container::move_focus (FocusDirType fdir)
       break;
     case FOCUS_RIGHT:
     case FOCUS_DOWN:
-      current = get_root()->get_focus();
+      current = get_window()->get_focus();
       refpoint = current ? rect_center (current->allocation()) : upper_left;
       { /* filter items with negative distance (not ahead in focus direction) */
         LesserItemByDirection lesseribd = LesserItemByDirection (fdir, refpoint);
@@ -596,7 +596,7 @@ Container::expose_enclosure ()
 }
 
 void
-Container::point_children (Point               p, /* root coordinates relative */
+Container::point_children (Point               p, /* window coordinates relative */
                            std::vector<Item*> &stack)
 {
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)

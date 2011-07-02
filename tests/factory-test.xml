@@ -21,7 +21,7 @@
  !-->
 <rapicorn-definitions xmlns:def="http://rapicorn.org/xmlns:def">
 
-  <def:main-test inherit="Root">
+  <def:main-test inherit="Window">
     <arg:defaultvalue17 default="`10 + 7`"/>
     <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
       <VBox spacing="5">

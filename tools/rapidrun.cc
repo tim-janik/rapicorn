@@ -144,14 +144,14 @@ parse_args (int    *argc_p,
 }
 
 static void
-root_test_dump (Root &root)
+window_test_dump (Window &window)
 {
   if (!test_dump)
     return;
   TestStream *tstream = TestStream::create_test_stream();
   for (uint i = 0; i < test_dump_matched_nodes.size(); i++)
     tstream->filter_matched_nodes (test_dump_matched_nodes[i]);
-  root.get_test_dump (*tstream);
+  window.get_test_dump (*tstream);
   printout ("%s", tstream->string().c_str());
   delete tstream;
   test_dump = false;
@@ -180,10 +180,10 @@ main (int   argc,
   String dialog;
   for (uint i = 0; i < definitions.size(); i++)
     {
-      bool isroot = Factory::item_definition_is_root (definitions[i]);
+      bool iswindow = Factory::item_definition_is_window (definitions[i]);
       if (list_definitions)
-        printout ("%s%s\n", definitions[i].c_str(), isroot ? " (root)" : "");
-      if (dialog == "" && isroot)
+        printout ("%s%s\n", definitions[i].c_str(), iswindow ? " (window)" : "");
+      if (dialog == "" && iswindow)
         dialog = definitions[i];
     }
   if (list_definitions)
@@ -196,16 +196,16 @@ main (int   argc,
       return 1;
     }
 
-  /* create root item */
+  /* create window item */
   Wind0w &wind0w = *app.create_wind0w (dialog);
 
   /* hook up test-dump handler */
   if (test_dump)
-    wind0w.root().sig_displayed += root_test_dump;
+    wind0w.window().sig_displayed += window_test_dump;
 
   /* hook up auto-exit handler */
   if (auto_exit)
-    wind0w.root().enable_auto_close();
+    wind0w.window().enable_auto_close();
 
   /* show wind0w and process events */
   wind0w.show();

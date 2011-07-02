@@ -33,7 +33,7 @@ class Item;
 class SizeGroup;
 class Adjustment;
 class Container;
-class Root;
+class Window;
 
 /* --- event handler --- */
 class EventHandler : public virtual BaseObject {
@@ -193,7 +193,7 @@ public:
   bool                        has_ancestor      (const Item &ancestor) const;
   Item*                       common_ancestor   (const Item &other) const;
   Item*                       common_ancestor   (const Item *other) const { return common_ancestor (*other); }
-  Root*                       get_root          () const;
+  Window*                     get_window        () const;
   /* cross links */
   void                        cross_link        (Item           &link,
                                                  const ItemSlot &uncross);
@@ -225,7 +225,7 @@ protected:
 public:
   virtual bool               point                  (Point        p);           /* item coordinates relative */
   Point                      point_to_viewp0rt      (Point        item_point);  /* item coordinates relative */
-  Point                      point_from_viewp0rt    (Point        root_point);  /* viewp0rt coordinates relative */
+  Point                      point_from_viewp0rt    (Point        window_point);/* viewp0rt coordinates relative */
   virtual bool               translate_from         (const Item   &src_item,
                                                      const uint    n_points,
                                                      Point        *points) const;

@@ -48,12 +48,12 @@ main (int   argc,
   /* load GUI definition file, relative to argv[0] */
   app.auto_load ("RapicornTest", "graphics.xml", argv[0]);
 
-  /* create root item */
+  /* create window item */
   Wind0w &wind0w = *app.create_wind0w ("graphics-dialog");
 
   /* hook up drawable test */
-  Root &root = wind0w.root();
-  Drawable &drawable = root.interface<Drawable&>();
+  Window &window = wind0w.window();
+  Drawable &drawable = window.interface<Drawable&>();
   drawable.sig_draw += slot (&drawable_draw, drawable);
 
   wind0w.show();

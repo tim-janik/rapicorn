@@ -21,7 +21,7 @@
  !-->
 <rapicorn-definitions xmlns:def="http://rapicorn.org/xmlns:def">
 
-  <def:test-dialog inherit="Root">
+  <def:test-dialog inherit="Window">
     <VBox>
 
       <Label markup-text="Horizontal Alignment, Horizontal Scale,"/>

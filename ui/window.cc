@@ -5,33 +5,33 @@
 namespace Rapicorn {
 
 struct ClassDoctor {
-  static void item_set_flag     (Item &item, uint32 flag) { item.set_flag (flag, true); }
-  static void item_unset_flag   (Item &item, uint32 flag) { item.unset_flag (flag); }
-  static void set_root_heritage (Root &root, Heritage *heritage) { root.heritage (heritage); }
+  static void item_set_flag       (Item &item, uint32 flag) { item.set_flag (flag, true); }
+  static void item_unset_flag     (Item &item, uint32 flag) { item.unset_flag (flag); }
+  static void set_window_heritage (Window &window, Heritage *heritage) { window.heritage (heritage); }
   static Heritage*
-  root_heritage (Root &root, ColorSchemeType cst)
+  window_heritage (Window &window, ColorSchemeType cst)
   {
-    return Heritage::create_heritage (root, root, cst);
+    return Heritage::create_heritage (window, window, cst);
   }
 };
 
-Root::Root() :
+Window::Window() :
   sig_displayed (*this)
 {
-  change_flags_silently (ANCHORED, true);       /* root is always anchored */
+  change_flags_silently (ANCHORED, true);       /* window is always anchored */
 }
 
 void
-Root::set_parent (Container *parent)
+Window::set_parent (Container *parent)
 {
   if (parent)
-    critical ("setting parent on toplevel Root item to: %p (%s)", parent, parent->typeid_pretty_name().c_str());
+    critical ("setting parent on toplevel Window item to: %p (%s)", parent, parent->typeid_pretty_name().c_str());
   return Container::set_parent (parent);
 }
 
 bool
-RootImpl::custom_command (const String     &command_name,
-                          const StringList &command_args)
+WindowImpl::custom_command (const String     &command_name,
+                            const StringList &command_args)
 {
   bool handled = false;
   if (!handled)
@@ -42,10 +42,10 @@ RootImpl::custom_command (const String     &command_name,
 static DataKey<Item*> focus_item_key;
 
 void
-Root::uncross_focus (Item &fitem)
+Window::uncross_focus (Item &fitem)
 {
   assert (&fitem == get_data (&focus_item_key));
-  cross_unlink (fitem, slot (*this, &Root::uncross_focus));
+  cross_unlink (fitem, slot (*this, &Window::uncross_focus));
   Item *item = &fitem;
   while (item)
     {
@@ -60,7 +60,7 @@ Root::uncross_focus (Item &fitem)
 }
 
 void
-Root::set_focus (Item *item)
+Window::set_focus (Item *item)
 {
   Item *old_focus = get_data (&focus_item_key);
   if (item == old_focus)
@@ -72,7 +72,7 @@ Root::set_focus (Item *item)
   /* set new focus */
   assert (item->has_ancestor (*this));
   set_data (&focus_item_key, item);
-  cross_link (*item, slot (*this, &Root::uncross_focus));
+  cross_link (*item, slot (*this, &Window::uncross_focus));
   while (item)
     {
       ClassDoctor::item_set_flag (*item, FOCUS_CHAIN);
@@ -84,7 +84,7 @@ Root::set_focus (Item *item)
 }
 
 Item*
-Root::get_focus () const
+Window::get_focus () const
 {
   return get_data (&focus_item_key);
 }
@@ -111,7 +111,7 @@ container_find_item (Container    &container,
 
 
 Item*
-Root::find_item (const String &item_name)
+Window::find_item (const String &item_name)
 {
   if (item_name == name())
     return this;
@@ -119,11 +119,11 @@ Root::find_item (const String &item_name)
 }
 
 void
-Root::enable_auto_close ()
+Window::enable_auto_close ()
 {}
 
 cairo_surface_t*
-Root::create_snapshot (const Rect &subarea)
+Window::create_snapshot (const Rect &subarea)
 {
   const Allocation area = allocation();
   Display display;
@@ -141,16 +141,16 @@ Root::create_snapshot (const Rect &subarea)
   return isurface;
 }
 
-RootImpl::RootImpl() :
+WindowImpl::WindowImpl() :
   m_loop (*ref_sink (EventLoop::create())),
   m_source (NULL),
   m_viewp0rt (NULL),
   m_tunable_requisition_counter (0),
   m_entered (false), m_auto_close (false)
 {
-  Heritage *hr = ClassDoctor::root_heritage (*this, color_scheme());
+  Heritage *hr = ClassDoctor::window_heritage (*this, color_scheme());
   ref_sink (hr);
-  ClassDoctor::set_root_heritage (*this, hr);
+  ClassDoctor::set_window_heritage (*this, hr);
   unref (hr);
   set_flag (PARENT_SENSITIVE, true);
   set_flag (PARENT_VISIBLE, true);
@@ -159,7 +159,7 @@ RootImpl::RootImpl() :
   m_config.min_height = 7;
   /* create event loop (auto-starts) */
   RAPICORN_ASSERT (m_source == NULL);
-  EventLoop::Source *source = new RootSource (*this);
+  EventLoop::Source *source = new WindowSource (*this);
   RAPICORN_ASSERT (m_source == source);
   m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
   m_source->primary (false);
@@ -167,19 +167,19 @@ RootImpl::RootImpl() :
 }
 
 void
-RootImpl::dispose ()
+WindowImpl::dispose ()
 {
   app.remove_wind0w (*this);
 }
 
-RootImpl::~RootImpl()
+WindowImpl::~WindowImpl()
 {
   if (m_viewp0rt)
     {
       delete m_viewp0rt;
       m_viewp0rt = NULL;
     }
-  /* make sure all children are removed while this is still of type Root.
+  /* make sure all children are removed while this is still of type Window.
    * necessary because C++ alters the object type during constructors and destructors
    */
   if (has_children())
@@ -192,13 +192,13 @@ RootImpl::~RootImpl()
 }
 
 bool
-RootImpl::self_visible () const
+WindowImpl::self_visible () const
 {
   return true;
 }
 
 void
-RootImpl::size_request (Requisition &requisition)
+WindowImpl::size_request (Requisition &requisition)
 {
   if (has_allocatable_child())
     {
@@ -208,7 +208,7 @@ RootImpl::size_request (Requisition &requisition)
 }
 
 void
-RootImpl::size_allocate (Allocation area)
+WindowImpl::size_allocate (Allocation area)
 {
   allocation (area);
   if (has_allocatable_child())
@@ -220,13 +220,13 @@ RootImpl::size_allocate (Allocation area)
 }
 
 bool
-RootImpl::tunable_requisitions ()
+WindowImpl::tunable_requisitions ()
 {
   return m_tunable_requisition_counter > 0;
 }
 
 void
-RootImpl::resize_all (Allocation *new_area)
+WindowImpl::resize_all (Allocation *new_area)
 {
   assert (m_tunable_requisition_counter == 0);
   bool have_allocation = false;
@@ -292,7 +292,7 @@ RootImpl::resize_all (Allocation *new_area)
 }
 
 void
-RootImpl::do_invalidate ()
+WindowImpl::do_invalidate ()
 {
   SingleContainerImpl::do_invalidate();
   // we just need to make sure to be woken up, since flags are set appropriately already
@@ -300,15 +300,15 @@ RootImpl::do_invalidate ()
 }
 
 void
-RootImpl::beep()
+WindowImpl::beep()
 {
   if (m_viewp0rt)
     m_viewp0rt->beep();
 }
 
 vector<Item*>
-RootImpl::item_difference (const vector<Item*> &clist, /* preserves order of clist */
-                           const vector<Item*> &cminus)
+WindowImpl::item_difference (const vector<Item*> &clist, /* preserves order of clist */
+                             const vector<Item*> &cminus)
 {
   map<Item*,bool> mminus;
   for (uint i = 0; i < cminus.size(); i++)
@@ -321,7 +321,7 @@ RootImpl::item_difference (const vector<Item*> &clist, /* preserves order of cli
 }
 
 bool
-RootImpl::dispatch_mouse_movement (const Event &event)
+WindowImpl::dispatch_mouse_movement (const Event &event)
 {
   m_last_event_context = event;
   vector<Item*> pierced;
@@ -340,7 +340,7 @@ RootImpl::dispatch_mouse_movement (const Event &event)
     }
   else if (drawable())
     {
-      pierced.push_back (ref (this)); /* root receives all mouse events */
+      pierced.push_back (ref (this)); /* window receives all mouse events */
       if (m_entered)
         viewp0rt_point_children (Point (event.x, event.y), pierced);
     }
@@ -371,7 +371,7 @@ RootImpl::dispatch_mouse_movement (const Event &event)
 }
 
 bool
-RootImpl::dispatch_event_to_pierced_or_grab (const Event &event)
+WindowImpl::dispatch_event_to_pierced_or_grab (const Event &event)
 {
   vector<Item*> pierced;
   /* figure all entered children */
@@ -380,7 +380,7 @@ RootImpl::dispatch_event_to_pierced_or_grab (const Event &event)
     pierced.push_back (ref (grab_item));
   else if (drawable())
     {
-      pierced.push_back (ref (this)); /* root receives all events */
+      pierced.push_back (ref (this)); /* window receives all events */
       viewp0rt_point_children (Point (event.x, event.y), pierced);
     }
   /* send actual event */
@@ -395,7 +395,7 @@ RootImpl::dispatch_event_to_pierced_or_grab (const Event &event)
 }
 
 bool
-RootImpl::dispatch_button_press (const EventButton &bevent)
+WindowImpl::dispatch_button_press (const EventButton &bevent)
 {
   uint press_count = bevent.type - BUTTON_PRESS + 1;
   assert (press_count >= 1 && press_count <= 3);
@@ -417,7 +417,7 @@ RootImpl::dispatch_button_press (const EventButton &bevent)
 }
 
 bool
-RootImpl::dispatch_button_release (const EventButton &bevent)
+WindowImpl::dispatch_button_release (const EventButton &bevent)
 {
   bool handled = false;
  restart:
@@ -444,7 +444,7 @@ RootImpl::dispatch_button_release (const EventButton &bevent)
 }
 
 void
-RootImpl::cancel_item_events (Item *item)
+WindowImpl::cancel_item_events (Item *item)
 {
   /* cancel enter events */
   for (int i = m_last_entered_children.size(); i > 0;)
@@ -475,14 +475,14 @@ RootImpl::cancel_item_events (Item *item)
 }
 
 bool
-RootImpl::dispatch_cancel_event (const Event &event)
+WindowImpl::dispatch_cancel_event (const Event &event)
 {
   cancel_item_events (NULL);
   return false;
 }
 
 bool
-RootImpl::dispatch_enter_event (const EventMouse &mevent)
+WindowImpl::dispatch_enter_event (const EventMouse &mevent)
 {
   m_entered = true;
   dispatch_mouse_movement (mevent);
@@ -490,14 +490,14 @@ RootImpl::dispatch_enter_event (const EventMouse &mevent)
 }
 
 bool
-RootImpl::dispatch_move_event (const EventMouse &mevent)
+WindowImpl::dispatch_move_event (const EventMouse &mevent)
 {
   dispatch_mouse_movement (mevent);
   return false;
 }
 
 bool
-RootImpl::dispatch_leave_event (const EventMouse &mevent)
+WindowImpl::dispatch_leave_event (const EventMouse &mevent)
 {
   dispatch_mouse_movement (mevent);
   m_entered = false;
@@ -518,7 +518,7 @@ RootImpl::dispatch_leave_event (const EventMouse &mevent)
 }
 
 bool
-RootImpl::dispatch_button_event (const Event &event)
+WindowImpl::dispatch_button_event (const Event &event)
 {
   bool handled = false;
   const EventButton *bevent = dynamic_cast<const EventButton*> (&event);
@@ -535,7 +535,7 @@ RootImpl::dispatch_button_event (const Event &event)
 }
 
 bool
-RootImpl::dispatch_focus_event (const EventFocus &fevent)
+WindowImpl::dispatch_focus_event (const EventFocus &fevent)
 {
   bool handled = false;
   // dispatch_event_to_pierced_or_grab (*fevent);
@@ -544,7 +544,7 @@ RootImpl::dispatch_focus_event (const EventFocus &fevent)
 }
 
 bool
-RootImpl::move_focus_dir (FocusDirType focus_dir)
+WindowImpl::move_focus_dir (FocusDirType focus_dir)
 {
   Item *new_focus = NULL, *old_focus = get_focus();
   if (old_focus)
@@ -560,7 +560,7 @@ RootImpl::move_focus_dir (FocusDirType focus_dir)
     }
   if (focus_dir && !move_focus (focus_dir))
     {
-      if (new_focus && new_focus->get_root() != this)
+      if (new_focus && new_focus->get_window() != this)
         new_focus = NULL;
       if (new_focus)
         new_focus->grab_focus();
@@ -575,7 +575,7 @@ RootImpl::move_focus_dir (FocusDirType focus_dir)
 }
 
 bool
-RootImpl::dispatch_key_event (const Event &event)
+WindowImpl::dispatch_key_event (const Event &event)
 {
   bool handled = false;
   dispatch_mouse_movement (event);
@@ -603,7 +603,7 @@ RootImpl::dispatch_key_event (const Event &event)
 }
 
 bool
-RootImpl::dispatch_scroll_event (const EventScroll &sevent)
+WindowImpl::dispatch_scroll_event (const EventScroll &sevent)
 {
   bool handled = false;
   if (sevent.type == SCROLL_UP || sevent.type == SCROLL_RIGHT ||
@@ -615,7 +615,7 @@ RootImpl::dispatch_scroll_event (const EventScroll &sevent)
   return handled;
 }
 bool
-RootImpl::dispatch_win_size_event (const Event &event)
+WindowImpl::dispatch_win_size_event (const Event &event)
 {
   bool handled = false;
   const EventWinSize *wevent = dynamic_cast<const EventWinSize*> (&event);
@@ -633,7 +633,7 @@ RootImpl::dispatch_win_size_event (const Event &event)
 }
 
 void
-RootImpl::collapse_expose_region ()
+WindowImpl::collapse_expose_region ()
 {
   /* check for excess expose fragment scenarios */
   uint n_erects = m_expose_region.count_rects();
@@ -652,7 +652,7 @@ RootImpl::collapse_expose_region ()
 }
 
 bool
-RootImpl::dispatch_win_draw_event (const Event &event)
+WindowImpl::dispatch_win_draw_event (const Event &event)
 {
   bool handled = false;
   const EventWinDraw *devent = dynamic_cast<const EventWinDraw*> (&event);
@@ -674,7 +674,7 @@ RootImpl::dispatch_win_draw_event (const Event &event)
 }
 
 bool
-RootImpl::dispatch_win_delete_event (const Event &event)
+WindowImpl::dispatch_win_delete_event (const Event &event)
 {
   bool handled = false;
   const EventWinDelete *devent = dynamic_cast<const EventWinDelete*> (&event);
@@ -688,7 +688,7 @@ RootImpl::dispatch_win_delete_event (const Event &event)
 }
 
 void
-RootImpl::expose_root_region (const Region &region)
+WindowImpl::expose_window_region (const Region &region)
 {
   /* this function is expected to *queue* exposes, and not render immediately */
   if (m_viewp0rt && !region.empty())
@@ -699,8 +699,8 @@ RootImpl::expose_root_region (const Region &region)
 }
 
 void
-RootImpl::copy_area (const Rect  &src,
-                     const Point &dest)
+WindowImpl::copy_area (const Rect  &src,
+                       const Point &dest)
 {
   /* need to copy pixel regions and expose regions */
   if (m_viewp0rt && src.width && src.height)
@@ -717,13 +717,13 @@ RootImpl::copy_area (const Rect  &src,
       /* shift expose region */
       exr.affine (AffineTranslate (Point (dest.x - src.x, dest.y - src.y)));
       /* expose copied area */
-      expose_root_region (exr);
+      expose_window_region (exr);
       // FIXME: synthesize 0-dist pointer movement from idle handler
     }
 }
 
 void
-RootImpl::expose_now ()
+WindowImpl::expose_now ()
 {
   if (m_viewp0rt)
     {
@@ -759,7 +759,7 @@ RootImpl::expose_now ()
 }
 
 void
-RootImpl::draw_now ()
+WindowImpl::draw_now ()
 {
   if (m_viewp0rt)
     {
@@ -798,7 +798,7 @@ RootImpl::draw_now ()
 }
 
 void
-RootImpl::render (Display &display)
+WindowImpl::render (Display &display)
 {
   const IRect ia = allocation();
   display.push_clip_rect (ia.x, ia.y, ia.width, ia.height);
@@ -811,7 +811,7 @@ RootImpl::render (Display &display)
 }
 
 void
-RootImpl::remove_grab_item (Item &child)
+WindowImpl::remove_grab_item (Item &child)
 {
   bool stack_changed = false;
   for (int i = m_grab_stack.size() - 1; i >= 0; i--)
@@ -825,7 +825,7 @@ RootImpl::remove_grab_item (Item &child)
 }
 
 void
-RootImpl::grab_stack_changed()
+WindowImpl::grab_stack_changed()
 {
   // FIXME: use idle handler for event synthesis
   EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, m_last_event_context);
@@ -837,8 +837,8 @@ RootImpl::grab_stack_changed()
 }
 
 void
-RootImpl::add_grab (Item &child,
-                    bool  unconfined)
+WindowImpl::add_grab (Item &child,
+                      bool  unconfined)
 {
   if (!child.has_ancestor (*this))
     throw Exception ("child is not descendant of container \"", name(), "\": ", child.name());
@@ -851,7 +851,7 @@ RootImpl::add_grab (Item &child,
 }
 
 void
-RootImpl::remove_grab (Item &child)
+WindowImpl::remove_grab (Item &child)
 {
   for (int i = m_grab_stack.size() - 1; i >= 0; i--)
     if (m_grab_stack[i].item == &child)
@@ -864,7 +864,7 @@ RootImpl::remove_grab (Item &child)
 }
 
 Item*
-RootImpl::get_grab (bool *unconfined)
+WindowImpl::get_grab (bool *unconfined)
 {
   for (int i = m_grab_stack.size() - 1; i >= 0; i--)
     if (m_grab_stack[i].item->visible())
@@ -877,7 +877,7 @@ RootImpl::get_grab (bool *unconfined)
 }
 
 void
-RootImpl::dispose_item (Item &item)
+WindowImpl::dispose_item (Item &item)
 {
   remove_grab_item (item);
   cancel_item_events (item);
@@ -885,7 +885,7 @@ RootImpl::dispose_item (Item &item)
 }
 
 bool
-RootImpl::has_pending_win_size ()
+WindowImpl::has_pending_win_size ()
 {
   bool found_one = false;
   m_async_mutex.lock();
@@ -902,12 +902,12 @@ RootImpl::has_pending_win_size ()
 }
 
 bool
-RootImpl::dispatch_event (const Event &event)
+WindowImpl::dispatch_event (const Event &event)
 {
   if (!m_viewp0rt)
     return false;       // we can only handle events on viewp0rts
   if (0)
-    DEBUG ("Root: event: %s", string_from_event_type (event.type));
+    DEBUG ("Window: event: %s", string_from_event_type (event.type));
   switch (event.type)
     {
     case EVENT_LAST:
@@ -951,28 +951,28 @@ RootImpl::dispatch_event (const Event &event)
 }
 
 bool
-RootImpl::prepare (uint64 current_time_usecs,
-                   int64 *timeout_usecs_p)
+WindowImpl::prepare (uint64 current_time_usecs,
+                     int64 *timeout_usecs_p)
 {
   ScopedLock<Mutex> aelocker (m_async_mutex);
   return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewp0rt && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
 }
 
 bool
-RootImpl::check (uint64 current_time_usecs)
+WindowImpl::check (uint64 current_time_usecs)
 {
   ScopedLock<Mutex> aelocker (m_async_mutex);
   return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewp0rt && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
 }
 
 void
-RootImpl::enable_auto_close ()
+WindowImpl::enable_auto_close ()
 {
   m_auto_close = true;
 }
 
 bool
-RootImpl::dispatch ()
+WindowImpl::dispatch ()
 {
   ref (this);
   {
@@ -999,7 +999,7 @@ RootImpl::dispatch ()
             EventLoop *loop = get_loop();
             if (loop)
               {
-                loop->exec_timer (0, slot (*this, &RootImpl::destroy_viewp0rt), INT_MAX);
+                loop->exec_timer (0, slot (*this, &WindowImpl::destroy_viewp0rt), INT_MAX);
                 m_auto_close = false;
               }
           }
@@ -1010,14 +1010,14 @@ RootImpl::dispatch ()
 }
 
 EventLoop*
-RootImpl::get_loop ()
+WindowImpl::get_loop ()
 {
   ScopedLock<Mutex> aelocker (m_async_mutex);
   return &m_loop;
 }
 
 void
-RootImpl::enqueue_async (Event *event)
+WindowImpl::enqueue_async (Event *event)
 {
   ScopedLock<Mutex> aelocker (m_async_mutex);
   m_async_event_queue.push_back (event);
@@ -1025,13 +1025,13 @@ RootImpl::enqueue_async (Event *event)
 }
 
 bool
-RootImpl::viewable ()
+WindowImpl::viewable ()
 {
   return visible() && m_viewp0rt && m_viewp0rt->visible();
 }
 
 void
-RootImpl::idle_show()
+WindowImpl::idle_show()
 {
   if (m_viewp0rt)
     {
@@ -1044,7 +1044,7 @@ RootImpl::idle_show()
 }
 
 void
-RootImpl::create_viewp0rt ()
+WindowImpl::create_viewp0rt ()
 {
   if (m_source)
     {
@@ -1055,19 +1055,19 @@ RootImpl::create_viewp0rt ()
         }
       RAPICORN_ASSERT (m_viewp0rt != NULL);
       m_source->primary (true); // FIXME: depends on WM-managable
-      VoidSlot sl = slot (*this, &RootImpl::idle_show);
+      VoidSlot sl = slot (*this, &WindowImpl::idle_show);
       m_loop.exec_now (sl);
     }
 }
 
 bool
-RootImpl::has_viewp0rt ()
+WindowImpl::has_viewp0rt ()
 {
   return m_source && m_viewp0rt && m_viewp0rt->visible();
 }
 
 void
-RootImpl::destroy_viewp0rt ()
+WindowImpl::destroy_viewp0rt ()
 {
   if (!m_viewp0rt)
     return; // during destruction, ref_count == 0
@@ -1079,7 +1079,7 @@ RootImpl::destroy_viewp0rt ()
     {
       m_loop.kill_sources(); // calls m_source methods
       RAPICORN_ASSERT (m_source == NULL);
-      EventLoop::Source *source = new RootSource (*this);
+      EventLoop::Source *source = new WindowSource (*this);
       RAPICORN_ASSERT (m_source == source);
       m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
       m_source->primary (false);
@@ -1089,33 +1089,33 @@ RootImpl::destroy_viewp0rt ()
   unref (this);
 }
 
-Root&
-RootImpl::root ()
+Window&
+WindowImpl::window ()
 {
   return *this;
 }
 
 void
-RootImpl::show ()
+WindowImpl::show ()
 {
   create_viewp0rt();
 }
 
 bool
-RootImpl::closed ()
+WindowImpl::closed ()
 {
   return !has_viewp0rt();
 }
 
 void
-RootImpl::close ()
+WindowImpl::close ()
 {
   destroy_viewp0rt();
 }
 
 bool
-RootImpl::synthesize_enter (double xalign,
-                            double yalign)
+WindowImpl::synthesize_enter (double xalign,
+                              double yalign)
 {
   if (!has_viewp0rt())
     return false;
@@ -1131,7 +1131,7 @@ RootImpl::synthesize_enter (double xalign,
 }
 
 bool
-RootImpl::synthesize_leave ()
+WindowImpl::synthesize_leave ()
 {
   if (!has_viewp0rt())
     return false;
@@ -1141,10 +1141,10 @@ RootImpl::synthesize_leave ()
 }
 
 bool
-RootImpl::synthesize_click (Item  &item,
-                            int    button,
-                            double xalign,
-                            double yalign)
+WindowImpl::synthesize_click (Item  &item,
+                              int    button,
+                              double xalign,
+                              double yalign)
 {
   if (!has_viewp0rt())
     return false;
@@ -1161,7 +1161,7 @@ RootImpl::synthesize_click (Item  &item,
 }
 
 bool
-RootImpl::synthesize_delete ()
+WindowImpl::synthesize_delete ()
 {
   if (!has_viewp0rt())
     return false;
@@ -1171,11 +1171,11 @@ RootImpl::synthesize_delete ()
 }
 
 Wind0w&
-RootImpl::wind0w ()
+WindowImpl::wind0w ()
 {
   return *this;
 }
 
-static const ItemFactory<RootImpl> root_factory ("Rapicorn::Factory::Root");
+static const ItemFactory<WindowImpl> window_factory ("Rapicorn::Factory::Window");
 
 } // Rapicorn

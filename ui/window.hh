@@ -7,14 +7,14 @@
 
 namespace Rapicorn {
 
-/* --- Root --- */
-class Root : public virtual Container, public virtual EventLoop::Source {
+/* --- Window --- */
+class Window : public virtual Container, public virtual EventLoop::Source {
   friend class  Item;
   void          uncross_focus           (Item        &fitem);
 protected:
   virtual void  beep                    (void) = 0;
   void          set_focus               (Item         *item);
-  virtual void  expose_root_region      (const Region &region) = 0;     // root item coords
+  virtual void  expose_window_region    (const Region &region) = 0;     // window item coords
   virtual void  copy_area               (const Rect   &src,
                                          const Point  &dest) = 0;
   virtual void  cancel_item_events      (Item         *item) = 0;
@@ -26,7 +26,7 @@ protected:
   /* loop source (FIXME) */
   virtual bool  prepare                 (uint64 current_time_usecs,
                                          int64 *timeout_usecs_p) = 0;
-  explicit      Root                    ();
+  explicit      Window                  ();
 public://FIXME: protected:
   virtual bool  check                   (uint64 current_time_usecs) = 0;
   virtual bool  dispatch                () = 0;
@@ -44,8 +44,8 @@ public:
   virtual Item* get_grab                (bool  *unconfined = NULL) = 0;
   Item*         find_item               (const String &name);
   /* signals */
-  typedef Signal<Root, bool (const String&, const StringVector&), CollectorWhile0<bool> >   CommandSignal;
-  typedef Signal<Root, void ()> NotifySignal;
+  typedef Signal<Window, bool (const String&, const StringVector&), CollectorWhile0<bool> >   CommandSignal;
+  typedef Signal<Window, void ()> NotifySignal;
   NotifySignal          sig_displayed;
   /* viewp0rt ops */
   virtual void  create_viewp0rt         () = 0;

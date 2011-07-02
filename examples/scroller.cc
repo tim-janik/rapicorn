@@ -47,7 +47,7 @@ main (int   argc,
 
   /* create main wind0w */
   Wind0w &wind0w = *app.create_wind0w ("main-shell");
-  Container &mshell = wind0w.root().interface<Container>();
+  Container &mshell = wind0w.window().interface<Container>();
 
   /* create button rows */
   for (uint i = 0; i < 20; i++)
