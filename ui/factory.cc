@@ -853,7 +853,7 @@ Factory::create_container (const String       &gadget_identifier,
   return *container; // floating
 }
 
-Wind0w&
+Wind0wIface&
 Factory::create_wind0w (const String       &gadget_identifier,
                         const ArgumentList &arguments,
                         const ArgumentList &env_variables)
@@ -866,7 +866,7 @@ Factory::create_wind0w (const String       &gadget_identifier,
   Window *window = dynamic_cast<Window*> (&item);
   if (!window)
     fatal ("%s: constructed widget lacks wind0w interface: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
-  Wind0w &wind0w = window->wind0w();
+  Wind0wIface &wind0w = window->wind0w();
   /* win does ref_sink(); */
   return wind0w;
 }

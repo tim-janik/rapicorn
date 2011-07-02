@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2007 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "application.hh"
 #include "window.hh"
 #include "factory.hh"
@@ -27,11 +12,11 @@ namespace Rapicorn {
 
 ApplicationImpl &app = *new ApplicationImpl();
 
-Application::ApplicationMutex Application::mutex;
+ApplicationIface::ApplicationMutex ApplicationIface::mutex;
 
 void
-Application::pixstream (const String  &pix_name,
-                        const uint8   *static_const_pixstream)
+ApplicationIface::pixstream (const String  &pix_name,
+                             const uint8   *static_const_pixstream)
 {
   Pixmap::add_stock (pix_name, static_const_pixstream);
 }
@@ -58,7 +43,7 @@ ApplicationImpl::init_with_x11 (const std::string &application_name,
   init_with_x11 (&dummy_argc, &dummy_argv, application_name.c_str());
 }
 
-Wind0w*
+Wind0wIface*
 ApplicationImpl::create_wind0w (const std::string    &wind0w_identifier,
                                 const StringList     &arguments,
                                 const StringList     &env_variables)
@@ -129,7 +114,7 @@ ApplicationImpl::load_string (const std::string &xml_string,
 }
 
 int
-Application::execute_loops ()
+ApplicationIface::execute_loops ()
 {
   assert (rapicorn_thread_entered());           // guards exit_code
   while (!EventLoop::loops_exitable())
@@ -138,13 +123,13 @@ Application::execute_loops ()
 }
 
 bool
-Application::has_primary ()
+ApplicationIface::has_primary ()
 {
   return !EventLoop::loops_exitable();
 }
 
 void
-Application::close ()
+ApplicationIface::close ()
 {
 }
 
@@ -157,7 +142,7 @@ ApplicationImpl::list_wind0ws ()
   return wl;
 }
 
-It3m*
+ItemIface*
 ApplicationImpl::unique_component (const String &path)
 {
   ItemSeq items = collect_components (path);
@@ -175,8 +160,12 @@ ApplicationImpl::collect_components (const String &path)
     {
       for (uint i = 0; i < m_wind0ws.size(); i++)
         {
-          vector<ItemImpl*> more = collect_items (*m_wind0ws[i], *cmatcher);
-          result.insert (result.end(), more.begin(), more.end());
+          ItemImpl *witem = dynamic_cast<ItemImpl*> (m_wind0ws[i]);
+          if (witem)
+            {
+              vector<ItemImpl*> more = collect_items (*witem, *cmatcher);
+              result.insert (result.end(), more.begin(), more.end());
+            }
         }
       delete cmatcher;
     }
@@ -184,7 +173,7 @@ ApplicationImpl::collect_components (const String &path)
 }
 
 void
-ApplicationImpl::add_wind0w (Wind0w &wind0w)
+ApplicationImpl::add_wind0w (Wind0wIface &wind0w)
 {
   ref_sink (wind0w);
   m_wind0ws.push_back (&wind0w);
@@ -198,9 +187,9 @@ ApplicationImpl::check_primaries()
 }
 
 bool
-ApplicationImpl::remove_wind0w (Wind0w &wind0w)
+ApplicationImpl::remove_wind0w (Wind0wIface &wind0w)
 {
-  vector<Wind0w*>::iterator it = std::find (m_wind0ws.begin(), m_wind0ws.end(), &wind0w);
+  vector<Wind0wIface*>::iterator it = std::find (m_wind0ws.begin(), m_wind0ws.end(), &wind0w);
   if (it == m_wind0ws.end())
     return false;
   m_wind0ws.erase (it);

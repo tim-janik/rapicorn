@@ -10,7 +10,7 @@ namespace Rapicorn {
 
 class WindowImpl : public virtual Window,
                    public virtual SingleContainerImpl,
-                   public virtual Wind0w,
+                   public virtual Wind0wIface,
                    public virtual Viewp0rt::EventReceiver
 {
   EventLoop            &m_loop;
@@ -66,7 +66,7 @@ private:
   virtual bool          has_viewp0rt                            ();
   virtual void          destroy_viewp0rt                        ();
   void                  idle_show                               ();
-  virtual Wind0w&       wind0w                                  ();
+  virtual Wind0wIface&  wind0w                                  ();
   virtual bool          custom_command                          (const String       &command_name,
                                                                  const StringList   &command_args);
   virtual bool          prepare                                 (uint64                  current_time_usecs,
@@ -75,7 +75,7 @@ private:
   virtual bool          dispatch                                ();
   virtual void          enable_auto_close                       ();
   virtual EventLoop*    get_loop                                ();
-  /* Wind0w */
+  /* Wind0wIface */
   virtual Window&       window                                  ();
   virtual void          show                                    ();
   virtual bool          closed                                  ();
@@ -83,11 +83,11 @@ private:
   virtual bool          synthesize_enter                        (double xalign = 0.5,
                                                                  double yalign = 0.5);
   virtual bool          synthesize_leave                        ();
-  virtual bool          synthesize_click                        (ItemImpl  &item,
-                                                                 int    button,
-                                                                 double xalign = 0.5,
-                                                                 double yalign = 0.5);
-  virtual bool            synthesize_delete                     ();
+  virtual bool          synthesize_click                        (ItemIface &item,
+                                                                 int        button,
+                                                                 double     xalign = 0.5,
+                                                                 double     yalign = 0.5);
+  virtual bool          synthesize_delete                       ();
   /* event handling */
   virtual void          enqueue_async                           (Event                  *event);
   virtual void          cancel_item_events                      (ItemImpl               *item);

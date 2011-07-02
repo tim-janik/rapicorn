@@ -49,7 +49,7 @@ main (int   argc,
   app.auto_load ("RapicornTest", "graphics.xml", argv[0]);
 
   /* create window item */
-  Wind0w &wind0w = *app.create_wind0w ("graphics-dialog");
+  Wind0wIface &wind0w = *app.create_wind0w ("graphics-dialog");
 
   /* hook up drawable test */
   Window &window = wind0w.window();

@@ -24,7 +24,7 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-handle_commands (Wind0w           &wind0w,
+handle_commands (Wind0wIface      &wind0w,
                  const String     &command,
                  const StringList &args)
 {
@@ -48,7 +48,7 @@ main (int   argc,
                  argv[0]);
 
   /* create main wind0w */
-  Wind0w &wind0w = *app.create_wind0w ("main-wind0w");
+  Wind0wIface &wind0w = *app.create_wind0w ("main-wind0w");
 
   /* connect custom callback to handle UI commands */
   wind0w.sig_commands += handle_commands;

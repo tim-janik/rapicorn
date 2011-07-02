@@ -56,7 +56,7 @@ static void
 test_cxx_gui ()
 {
   TSTART ("C++GUI Test");
-  Wind0w &wind0w = *app.create_wind0w ("Window");
+  Wind0wIface &wind0w = *app.create_wind0w ("Window");
   TOK();
   ItemImpl &titem = Factory::create_item ("TestItem");
   TOK();
@@ -82,7 +82,7 @@ static void
 test_test_item ()
 {
   TSTART ("alignment-test");
-  Wind0w &wind0w = *app.create_wind0w ("alignment-test");
+  Wind0wIface &wind0w = *app.create_wind0w ("alignment-test");
   TOK();
   Window &window = wind0w.window();
   TestContainer *titem = window.interface<TestContainer*>();
@@ -109,12 +109,12 @@ static void
 idl_test_item_test ()
 {
   TSTART ("idl-test-item");
-  Wind0w &wind0w = *app.create_wind0w ("test-item-wind0w");
+  Wind0wIface &wind0w = *app.create_wind0w ("test-item-wind0w");
   TOK();
   Window &window = wind0w.window();
-  IdlTestItem *titemp = window.interface<IdlTestItem*>();
+  IdlTestItemIface *titemp = window.interface<IdlTestItemIface*>();
   TASSERT (titemp != NULL);
-  IdlTestItem &titem = *titemp;
+  IdlTestItemIface &titem = *titemp;
   titem.bool_prop (0); TASSERT (titem.bool_prop() == 0);
   titem.bool_prop (1); TASSERT (titem.bool_prop() == 1);
   titem.bool_prop (0); TASSERT (titem.bool_prop() == 0);
@@ -145,9 +145,9 @@ idl_test_item_test ()
 static bool run_dialogs = false;
 
 template<class C> C*
-interface (It3m *it3m)
+interface (ItemIface *itemi)
 {
-  ItemImpl *item = dynamic_cast<ItemImpl*> (it3m);
+  ItemImpl *item = dynamic_cast<ItemImpl*> (itemi);
   if (item)
     return item->interface<C*>();
   return NULL;
@@ -157,11 +157,11 @@ static void
 complex_dialog_test ()
 {
   TSTART ("complex-dialog-test");
-  It3m *item = app.unique_component ("/#"); // invalid path
+  ItemIface *item = app.unique_component ("/#"); // invalid path
   TASSERT (item == NULL);
   item = app.unique_component ("/#complex-dialog"); // non-existing wind0w
   TASSERT (item == NULL);
-  Wind0w &wind0w = *app.create_wind0w ("complex-dialog");
+  Wind0wIface &wind0w = *app.create_wind0w ("complex-dialog");
   TOK();
   if (run_dialogs)
     {

@@ -50,7 +50,7 @@ ItemImpl&       create_item      (const String           &item_identifier,
 Container&      create_container (const String           &container_identifier,
                                   const ArgumentList     &arguments = ArgumentList(),
                                   const ArgumentList     &env_variables = ArgumentList());
-Wind0w&         create_wind0w    (const String           &wind0w_identifier,
+Wind0wIface&    create_wind0w    (const String           &wind0w_identifier,
                                   const ArgumentList     &arguments = ArgumentList(),
                                   const ArgumentList     &env_variables = ArgumentList());
 

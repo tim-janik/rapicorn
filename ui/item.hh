@@ -1,5 +1,5 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include <ui/interfaces.hh> // includes <ui/item.hh> after It3m declaration
+#include <ui/interfaces.hh> // includes <ui/item.hh> after ItemIface declaration
 
 #ifndef __RAPICORN_ITEM_HH_
 #define __RAPICORN_ITEM_HH_
@@ -36,7 +36,7 @@ public:
 
 /* --- ItemImpl --- */
 typedef Signals::Slot1<void, ItemImpl&> ItemSlot;
-class ItemImpl : public virtual It3m {
+class ItemImpl : public virtual ItemIface {
   friend                      class ClassDoctor;
   friend                      class Container;
   friend                      class SizeGroup;
@@ -302,7 +302,7 @@ private:
   void               repack          (const PackInfo &orig, const PackInfo &pnew);
   PackInfo&          pack_info       (bool create);
 public:
-  virtual It3m*      unique_component   (const String &path);
+  virtual ItemIface* unique_component   (const String &path);
   virtual ItemSeq    collect_components (const String &path);
   template<class C> typename
   InterfaceMatch<C>::Result interface        (const String &ident = String(),

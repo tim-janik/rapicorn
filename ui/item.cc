@@ -281,7 +281,7 @@ ItemImpl::match_interface (bool wself, bool wparent, bool children, InterfaceMat
   return false;
 }
 
-It3m*
+ItemIface*
 ItemImpl::unique_component (const String &path)
 {
   ItemSeq items = collect_components (path);

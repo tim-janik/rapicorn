@@ -3,18 +3,16 @@
 #include <rapicorn.hh>
 using namespace Rapicorn;
 
-static Application * volatile smart_app_p = NULL;
-
 static void
 test_server_smart_handle (void)
 {
-  Application *ab = &app;
+  ApplicationIface *ab = &app;
   Plic::FieldBuffer8 fb (4);
   fb.add_object (uint64 ((BaseObject*) ab));
   Plic::Coupler &c = *rope_thread_coupler();
   c.reader.reset (fb);
   Application_SmartHandle sh (c, c.reader);
-  Application &shab = *sh;
+  ApplicationIface &shab = *sh;
   assert (ab == &shab);
   assert (ab == sh.operator->());
 }

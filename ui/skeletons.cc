@@ -5,7 +5,7 @@
 namespace Rapicorn {
 
 bool
-Rapicorn::Application_Interface::has_primary ()
+Rapicorn::ApplicationIface::has_primary ()
 {
   return 0;
 }

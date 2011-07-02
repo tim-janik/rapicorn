@@ -745,7 +745,9 @@ class Generator:
     s += self.insertion_text ('class_scope:' + self.C (type_info))
     s += '};\n'
     # aliasing
-    if self.gen_shortalias and self.gen4class in (C4CLIENT, C4INTERFACE):
+    if self.gen_shortalias and self.gen4class in (C4INTERFACE,):
+      s += '// typedef %s %s;\n' % (self.C (type_info), self.type2cpp (type_info))
+    elif self.gen_shortalias and self.gen4class in (C4CLIENT,):
       s += 'typedef %s %s;\n' % (self.C (type_info), self.type2cpp (type_info))
     return s
   def generate_interface_impl (self, type_info):

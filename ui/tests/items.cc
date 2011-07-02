@@ -30,7 +30,7 @@ main (int   argc,
 
   TSTART ("RapicornItems");
   /* parse standard GUI descriptions and create example item */
-  Wind0w &wind0w = *app.create_wind0w ("Window");
+  Wind0wIface &wind0w = *app.create_wind0w ("Window");
   TOK();
   /* get thread safe wind0w handle */
   TOK();

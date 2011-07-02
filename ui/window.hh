@@ -55,7 +55,7 @@ public:
   virtual EventLoop* get_loop           () = 0;
   virtual void       enable_auto_close  ();
   /* MT-safe */
-  virtual Wind0w&    wind0w          () = 0;
+  virtual Wind0wIface& wind0w          () = 0;
 };
 
 } // Rapicorn

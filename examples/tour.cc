@@ -20,7 +20,7 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-custom_commands (Wind0w           &wind0w,
+custom_commands (Wind0wIface      &wind0w,
                  const String     &command,
                  const StringList &args)
 {
@@ -50,16 +50,16 @@ main (int   argc,
   /* initialization acquired global Rapicorn mutex */
 
   /* register builtin images */
-  Application::pixstream ("testimage-alpha-rle", alpha_rle);
-  Application::pixstream ("testimage-alpha-raw", alpha_raw);
-  Application::pixstream ("testimage-rgb-rle", rgb_rle);
-  Application::pixstream ("testimage-rgb-raw", rgb_raw);
+  ApplicationIface::pixstream ("testimage-alpha-rle", alpha_rle);
+  ApplicationIface::pixstream ("testimage-alpha-raw", alpha_raw);
+  ApplicationIface::pixstream ("testimage-rgb-rle", rgb_rle);
+  ApplicationIface::pixstream ("testimage-rgb-raw", rgb_raw);
 
   /* load GUI definition file, relative to argv[0] */
   app.auto_load ("RapicornTest", "tour.xml", argv[0]);
 
   /* create window item */
-  Wind0w &wind0w = *app.create_wind0w ("tour-dialog");
+  Wind0wIface &wind0w = *app.create_wind0w ("tour-dialog");
   wind0w.sig_commands += custom_commands;
 
   wind0w.show();

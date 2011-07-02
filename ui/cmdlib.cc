@@ -44,14 +44,14 @@ static struct {
 };
 
 static void
-wind0w_close (Wind0w           &wind0w,
+wind0w_close (Wind0wIface      &wind0w,
               const StringList &args)
 {
   wind0w.close();
 }
 
 static struct {
-  void      (*cmd) (Wind0w&, const StringList&);
+  void      (*cmd) (Wind0wIface&, const StringList&);
   const char *name;
 } wind0w_cmds[] = {
   { wind0w_close,       "Wind0w::close" },
@@ -85,7 +85,7 @@ command_lib_exec (ItemImpl           &item,
   Window *window = item.get_window();
   if (window)
     {
-      Wind0w &wind0w = window->wind0w();
+      Wind0wIface &wind0w = window->wind0w();
       for (uint ui = 0; ui < ARRAY_SIZE (wind0w_cmds); ui++)
         if (wind0w_cmds[ui].name == cmd_name)
           {

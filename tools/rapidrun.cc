@@ -197,7 +197,7 @@ main (int   argc,
     }
 
   /* create window item */
-  Wind0w &wind0w = *app.create_wind0w (dialog);
+  Wind0wIface &wind0w = *app.create_wind0w (dialog);
 
   /* hook up test-dump handler */
   if (test_dump)

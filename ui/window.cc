@@ -1142,12 +1142,13 @@ WindowImpl::synthesize_leave ()
 }
 
 bool
-WindowImpl::synthesize_click (ItemImpl &item,
-                              int    button,
-                              double xalign,
-                              double yalign)
+WindowImpl::synthesize_click (ItemIface &itemi,
+                              int        button,
+                              double     xalign,
+                              double     yalign)
 {
-  if (!has_viewp0rt())
+  ItemImpl &item = *dynamic_cast<ItemImpl*> (&itemi);
+  if (!has_viewp0rt() || !&item)
     return false;
   const Allocation &area = item.allocation();
   Point p (area.x + xalign * (max (1, area.width) - 1),
@@ -1171,7 +1172,7 @@ WindowImpl::synthesize_delete ()
   return true;
 }
 
-Wind0w&
+Wind0wIface&
 WindowImpl::wind0w ()
 {
   return *this;

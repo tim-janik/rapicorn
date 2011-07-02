@@ -10,12 +10,6 @@ namespace Rapicorn {
 class Window;
 }
 
-filtered_class_hh:Item:
-#include <ui/item.hh>
-namespace Rapicorn {
-typedef ItemImpl Item_Interface;
-}
-
 IGNORE:
 struct DUMMY { // dummy class for auto indentation
 
@@ -26,13 +20,13 @@ class_scope:StringList:
   /*Con*/  StringList () {}
   /*Con*/  StringList (const std::vector<String> &strv) : Sequence (strv) {}
 
-class_scope:Wind0w_Interface:
+class_scope:Wind0wIface:
   virtual Window&    window        () = 0;
-class_scope:Application_Interface:
+class_scope:ApplicationIface:
   static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
   int                execute_loops ();
-  static bool        plor_add      (ItemImpl &item, const String &plor_name);
-  static ItemImpl*   plor_remove   (const String &plor_name);
+  static bool        plor_add      (ItemIface    &item, const String &plor_name);
+  static ItemIface*  plor_remove   (const String &plor_name);
   /* global mutex */
   struct ApplicationMutex {
     static void lock    () { rapicorn_thread_enter (); }

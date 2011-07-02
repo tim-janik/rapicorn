@@ -1,19 +1,4 @@
-/* Rapicorn Rope - Remote Object Programming Extension          -*-mode:c++;-*-
- * Copyright (C) 2010 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -*-mode:c++;-*-
 
 include "hardcoded.idl";
 
@@ -36,27 +21,22 @@ record Requisition {
   float height;
 };
 
-interface It3m;
+interface Item;
 
 /**
- * A sequence of It3m objects.
+ * A sequence of Item objects.
  */
 sequence ItemSeq {
-  It3m  items;
+  Item  items;
 };
 
 /**
- * It3m is a temporary helper interface to aid the transition to IDL interface definitions in Rapicorn.
+ * Item is a temporary helper interface to aid the transition to IDL interface definitions in Rapicorn.
  */
-interface It3m {
-  It3m          unique_component        (string path) = 0;
+interface Item {
+  Item          unique_component        (string path) = 0;
   ItemSeq       collect_components      (string path) = 0;
 };
-
-/**
- * Item is temporarily implemented by Rapicorn itself.
- */
-interface Item : It3m { /* temporarily manually implemented */ };
 
 /**
  * A Wind0w interface is the main user visible handle for screen objects in Rapicorn.
@@ -110,7 +90,7 @@ interface Application {
   signal void   missing_primary ();
   void          close           ();
   Wind0wList    list_wind0ws            () = 0;
-  It3m          unique_component        (string path) = 0;
+  Item          unique_component        (string path) = 0;
   ItemSeq       collect_components      (string path) = 0;
   /* testing */
   void          test_counter_set        (int val) = 0;

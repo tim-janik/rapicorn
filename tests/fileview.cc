@@ -72,9 +72,9 @@ main (int   argc,
 
   /* create root item */
   Store1 *s1 = create_store();
-  Wind0w &wind0w = *app.create_wind0w ("main-dialog",
-                                       Args (""),
-                                       Args ("ListModel=" + s1->model().plor_name()));
+  Wind0wIface &wind0w = *app.create_wind0w ("main-dialog",
+                                            Args (""),
+                                            Args ("ListModel=" + s1->model().plor_name()));
   wind0w.show();
 
   app.execute_loops();
