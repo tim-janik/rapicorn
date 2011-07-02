@@ -747,9 +747,8 @@ public: /* generic data API */
 /* --- BaseObject --- */
 class BaseObject : public virtual Locatable, public virtual DataListContainer, protected NonCopyable {
 protected:
-  class                       InterfaceMatcher;
-  template<class C>     class InterfaceCast;
-  template<class C>     class InterfaceMatch;
+  class                    InterfaceMatcher;
+  template<class C>  class InterfaceMatch;
   static BaseObject* plor_get  (const String &plor_url);
   void               plor_name (const String &plor_name);
 public:
@@ -771,32 +770,27 @@ protected:
 };
 
 template<class C>
-struct BaseObject::InterfaceCast : BaseObject::InterfaceMatcher {
-  explicit      InterfaceCast   (const String &ident) : InterfaceMatcher (ident), m_instance (NULL) {}
+struct BaseObject::InterfaceMatch : BaseObject::InterfaceMatcher {
+  typedef C&    Result;
+  explicit      InterfaceMatch  (const String &ident) : InterfaceMatcher (ident), m_instance (NULL) {}
+  C&            result          (bool may_throw) const;
   virtual bool  match           (BaseObject *obj, const String &ident);
 protected:
   C            *m_instance;
-};
-
-template<class C>
-struct BaseObject::InterfaceMatch : InterfaceCast<C> {
-  typedef C&    Result;
-  explicit      InterfaceMatch  (const String &ident) : InterfaceCast<C> (ident) {}
-  C&            result          (bool may_throw);
 };
 template<class C>
 struct BaseObject::InterfaceMatch<C&> : InterfaceMatch<C> {
   explicit      InterfaceMatch  (const String &ident) : InterfaceMatch<C> (ident) {}
 };
 template<class C>
-struct BaseObject::InterfaceMatch<C*> : InterfaceCast<C> {
+struct BaseObject::InterfaceMatch<C*> : InterfaceMatch<C> {
   typedef C*    Result;
-  explicit      InterfaceMatch  (const String &ident) : InterfaceCast<C> (ident) {}
-  C*            result          (bool may_throw);
+  explicit      InterfaceMatch  (const String &ident) : InterfaceMatch<C> (ident) {}
+  C*            result          (bool may_throw) const { return InterfaceMatch<C>::m_instance; }
 };
 
 template<class C> bool
-BaseObject::InterfaceCast<C>::match (BaseObject *obj, const String &ident)
+BaseObject::InterfaceMatch<C>::match (BaseObject *obj, const String &ident)
 {
   if (!m_instance)
     {
@@ -811,17 +805,11 @@ BaseObject::InterfaceCast<C>::match (BaseObject *obj, const String &ident)
 }
 
 template<class C> C&
-BaseObject::InterfaceMatch<C>::result (bool may_throw)
+BaseObject::InterfaceMatch<C>::result (bool may_throw) const
 {
   if (!this->m_instance && may_throw)
     throw NullInterface();
   return *this->m_instance;
-}
-
-template<class C> C*
-BaseObject::InterfaceMatch<C*>::result (bool may_throw)
-{
-  return InterfaceCast<C>::m_instance;
 }
 
 } // Rapicorn
