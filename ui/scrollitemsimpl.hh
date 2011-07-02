@@ -22,7 +22,7 @@
 
 namespace Rapicorn {
 
-class ScrollAreaImpl : public virtual ScrollArea, public virtual SingleContainerImpl {
+class ScrollAreaImpl : public virtual SingleContainerImpl, public virtual ScrollArea {
   mutable Adjustment   *m_hadjustment, *m_vadjustment;
   Adjustment&           hadjustment() const;
   Adjustment&           vadjustment() const;

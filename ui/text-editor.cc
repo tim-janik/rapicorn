@@ -82,7 +82,7 @@ Editor::list_properties()
   return property_list;
 }
 
-class EditorImpl : public virtual EventHandler, public virtual SingleContainerImpl, public virtual Editor {
+class EditorImpl : public virtual SingleContainerImpl, public virtual Editor, public virtual EventHandler {
   uint     m_request_chars, m_request_digits;
   int      m_cursor;
   TextMode m_text_mode;

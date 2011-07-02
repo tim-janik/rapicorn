@@ -13,7 +13,7 @@
 
 namespace Rapicorn {
 
-class CofferImpl : public virtual Coffer, public virtual SingleContainerImpl {
+class CofferImpl : public virtual SingleContainerImpl, public virtual Coffer {
   String        m_element;
   Svg::Element  m_sel;
   bool          m_overlap_child;

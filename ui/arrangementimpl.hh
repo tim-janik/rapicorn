@@ -22,7 +22,7 @@
 
 namespace Rapicorn {
 
-class ArrangementImpl : public virtual Arrangement, public virtual MultiContainerImpl {
+class ArrangementImpl : public virtual MultiContainerImpl, public virtual Arrangement {
   Point         m_origin;
   float         m_origin_hanchor;
   float         m_origin_vanchor;

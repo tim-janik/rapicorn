@@ -40,7 +40,7 @@ ButtonArea::list_properties()
   return property_list;
 }
 
-class ButtonAreaImpl : public virtual ButtonArea, public virtual EventHandler, public virtual SingleContainerImpl {
+class ButtonAreaImpl : public virtual SingleContainerImpl, public virtual ButtonArea, public virtual EventHandler {
   uint m_button, m_repeater;
   ClickType m_click_type;
   FocusFrame *m_focus_frame;

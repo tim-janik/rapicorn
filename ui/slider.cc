@@ -84,7 +84,7 @@ SliderArea::list_properties()
   return property_list;
 }
 
-class SliderAreaImpl : public virtual SliderArea, public virtual TableImpl {
+class SliderAreaImpl : public virtual TableImpl, public virtual SliderArea {
   Adjustment          *m_adjustment;
   AdjustmentSourceType m_adjustment_source;
   bool                 m_flip;
@@ -180,7 +180,7 @@ static const ItemFactory<SliderAreaImpl> slider_area_factory ("Rapicorn::Factory
 
 class SliderSkidImpl;
 
-class SliderTroughImpl : public virtual EventHandler, public virtual SingleContainerImpl {
+class SliderTroughImpl : public virtual SingleContainerImpl, public virtual EventHandler {
   bool
   flipped()
   {
@@ -304,7 +304,7 @@ protected:
 };
 static const ItemFactory<SliderTroughImpl> slider_trough_factory ("Rapicorn::Factory::SliderTrough");
 
-class SliderSkidImpl : public virtual EventHandler, public virtual SingleContainerImpl {
+class SliderSkidImpl : public virtual SingleContainerImpl, public virtual EventHandler {
   uint        m_button;
   double      m_coffset;
   bool        m_vertical_skid;

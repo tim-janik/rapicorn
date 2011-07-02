@@ -23,7 +23,7 @@
 
 namespace Rapicorn {
 
-class TableImpl : public virtual Table, public virtual MultiContainerImpl {
+class TableImpl : public virtual MultiContainerImpl, public virtual Table {
   struct RowCol {
     uint   requisition;
     uint   allocation;

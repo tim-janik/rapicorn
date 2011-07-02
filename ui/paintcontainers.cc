@@ -376,7 +376,7 @@ FocusFrame::list_properties()
   return property_list;
 }
 
-class FocusFrameImpl : public virtual FocusFrame, public virtual FrameImpl {
+class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrame {
   FrameType m_focus_frame;
   Client   *m_client;
   virtual void

@@ -119,7 +119,7 @@ HBox::list_properties()
   return property_list;
 }
 
-class HBoxImpl : public virtual HBox, public virtual TableImpl {
+class HBoxImpl : public virtual TableImpl, public virtual HBox {
   virtual const PropertyList& list_properties() { return HBox::list_properties(); }
   virtual void
   add_child (ItemImpl &item)
@@ -158,7 +158,7 @@ VBox::list_properties()
   return property_list;
 }
 
-class VBoxImpl : public virtual VBox, public virtual TableImpl {
+class VBoxImpl : public virtual TableImpl, public virtual VBox {
   /* pack properties */
   virtual const PropertyList& list_properties() { return VBox::list_properties(); }
   virtual void

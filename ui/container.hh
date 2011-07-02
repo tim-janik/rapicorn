@@ -57,7 +57,7 @@ public:
 };
 
 /* --- Single Child Container Impl --- */
-class SingleContainerImpl : public virtual ItemImpl, public virtual ContainerImpl {
+class SingleContainerImpl : public virtual ContainerImpl {
   ItemImpl             *child_item;
 protected:
   virtual void          size_request            (Requisition &requisition);
@@ -78,7 +78,7 @@ protected:
 };
 
 /* --- Multi Child Container Impl --- */
-class MultiContainerImpl : public virtual ItemImpl, public virtual ContainerImpl {
+class MultiContainerImpl : public virtual ContainerImpl {
   std::vector<ItemImpl*>    items;
 protected:
   virtual void          pre_finalize            ();
