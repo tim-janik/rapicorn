@@ -15,7 +15,7 @@ DOCU_CGLOBS = $(DOCU_GLOBS) *.c *.C *.cc
 SRCTREE     = srctree
 
 EXCLUDES = rope/cpy2rope.cc rope/cxx-client.[hc][hc] \
-	rcore/rapicornsignalvariants.hh ui/interfaces.[hc][hc]
+	rcore/rapicornsignalvariants.hh ui/interfaces.cc
 
 .PHONY: $(SRCTREE)
 $(SRCTREE):
