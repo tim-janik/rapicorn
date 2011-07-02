@@ -85,6 +85,7 @@ check-am: check-before
 check-local: check-after
 check-local: ; @:
 TESTS=
+TSTV1=test-verbose
 
 # === slowcheck ===
 slowcheck: slowcheck-recursive
@@ -99,7 +100,7 @@ define slowcheck_parallel_TEMPLATE
 .PHONY: slowcheck_parallel--$(1)
 slowcheck_parallel--$(1): $(1)
 	$$(Q) $$(X11TEST_SERVER) \
-	&& RAPICORN="$$$$RAPICORN:test-slow" ./$(1) ; _e=$$$$?; \
+	&& RAPICORN="$$$$RAPICORN:$$(TSTV$$(V)):test-slow" ./$(1) ; _e=$$$$?; \
 	  [ $$$$_e = 0 ] || { echo "FAILED($$$$_e): $(1)" ; exit $$$$_e; }
 slowcheck: slowcheck_parallel--$(1)
 check: @NOTDVLBUILD@ slowcheck_parallel--$(1)
@@ -112,7 +113,7 @@ define check_parallel_TEMPLATE
 .PHONY: check_parallel--$(1)
 check_parallel--$(1): $(1)
 	$$(Q) $$(X11TEST_SERVER) \
-	&& ./$(1) ; _e=$$$$?; \
+	&& RAPICORN="$$$$RAPICORN:$$(TSTV$$(V))" ./$(1) ; _e=$$$$?; \
 	  [ $$$$_e = 0 ] || { echo "FAILED($$$$_e): $(1)" ; exit $$$$_e; }
 check: check_parallel--$(1)
 endef
@@ -125,7 +126,7 @@ define check_logtest_TEMPLATE
 check_logtest--$(1): $(1)
 	$$(Q) $$(X11TEST_SERVER) \
 	&& tstout="$(1).log" \
-	&& RAPICORN="$$$$RAPICORN:test-log" ./$(1) >"$$$$tstout" 2>&1 \
+	&& RAPICORN="$$$$RAPICORN:$$(TSTV$$(V)):test-log" ./$(1) >"$$$$tstout" 2>&1 \
 	; eval "$$$$TSTDIAGNOSE_LOGTEST" "'$(1)'" \
 	; eval "$$$$TSTVERIFY" "'$$(srcdir)/$(1).ref'" "'$$$$tstout'" "'$(1)'"
 check: check_logtest--$(1)
