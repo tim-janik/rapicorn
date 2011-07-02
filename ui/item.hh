@@ -18,7 +18,7 @@ class ItemImpl;
 class SizeGroup;
 class Adjustment;
 class Container;
-class Window;
+class WindowImpl;
 
 /* --- event handler --- */
 class EventHandler : public virtual BaseObject {
@@ -181,7 +181,7 @@ public:
   bool                        has_ancestor      (const ItemImpl &ancestor) const;
   ItemImpl*                   common_ancestor   (const ItemImpl &other) const;
   ItemImpl*                   common_ancestor   (const ItemImpl *other) const { return common_ancestor (*other); }
-  Window*                     get_window        () const;
+  WindowImpl*                 get_window        () const;
   /* cross links */
   void                        cross_link        (ItemImpl       &link,
                                                  const ItemSlot &uncross);

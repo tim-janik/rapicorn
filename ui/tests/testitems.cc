@@ -60,10 +60,10 @@ test_cxx_gui ()
   TOK();
   ItemImpl &titem = Factory::create_item ("TestItem");
   TOK();
-  wind0w.window().add (titem);
+  wind0w.impl().add (titem);
   TOK();
   /* close wind0w (and exit main loop) after first expose */
-  wind0w.window().enable_auto_close();
+  wind0w.impl().enable_auto_close();
   TOK();
   /* verify and assert at least one TestItem rendering */
   uint old_seen_test = TestContainer::seen_test_items();
@@ -84,7 +84,7 @@ test_test_item ()
   TSTART ("alignment-test");
   Wind0wIface &wind0w = *app.create_wind0w ("alignment-test");
   TOK();
-  Window &window = wind0w.window();
+  WindowImpl &window = wind0w.impl();
   TestContainer *titem = window.interface<TestContainer*>();
   TASSERT (titem != NULL);
   titem->sig_assertion_ok += slot (assertion_ok);
@@ -111,7 +111,7 @@ idl_test_item_test ()
   TSTART ("idl-test-item");
   Wind0wIface &wind0w = *app.create_wind0w ("test-item-wind0w");
   TOK();
-  Window &window = wind0w.window();
+  WindowImpl &window = wind0w.impl();
   IdlTestItemIface *titemp = window.interface<IdlTestItemIface*>();
   TASSERT (titemp != NULL);
   IdlTestItemIface &titem = *titemp;

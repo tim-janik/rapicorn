@@ -863,7 +863,7 @@ Factory::create_wind0w (const String       &gadget_identifier,
   ItemImpl &item = FactorySingleton::singleton->construct_gadget (gadget_identifier,
                                                               arguments, env_variables,
                                                               &gadget_definition);
-  Window *window = dynamic_cast<Window*> (&item);
+  WindowImpl *window = dynamic_cast<WindowImpl*> (&item);
   if (!window)
     fatal ("%s: constructed widget lacks wind0w interface: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
   Wind0wIface &wind0w = window->wind0w();

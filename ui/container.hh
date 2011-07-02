@@ -24,7 +24,7 @@ namespace Rapicorn {
 /* --- Container --- */
 struct Container : public virtual ItemImpl {
   friend              class ItemImpl;
-  friend              class Window;
+  friend              class WindowImpl;
   void                uncross_descendant(ItemImpl          &descendant);
   void                item_cross_link   (ItemImpl           &owner,
                                          ItemImpl           &link,

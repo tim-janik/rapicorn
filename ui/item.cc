@@ -24,6 +24,24 @@ EventHandler::handle_event (const Event &event)
   return false;
 }
 
+ItemImpl&
+ItemIface::impl ()
+{
+  ItemImpl *iimpl = dynamic_cast<ItemImpl*> (this);
+  if (!iimpl)
+    throw std::bad_cast();
+  return *iimpl;
+}
+
+const ItemImpl&
+ItemIface::impl () const
+{
+  const ItemImpl *iimpl = dynamic_cast<const ItemImpl*> (this);
+  if (!iimpl)
+    throw std::bad_cast();
+  return *iimpl;
+}
+
 ItemImpl::ItemImpl () :
   m_flags (VISIBLE | SENSITIVE | ALLOCATABLE),
   m_parent (NULL),
@@ -178,7 +196,7 @@ ItemImpl::has_focus () const
 {
   if (test_flags (FOCUS_CHAIN))
     {
-      Window *ritem = get_window();
+      WindowImpl *ritem = get_window();
       if (ritem && ritem->get_focus() == this)
         return true;
     }
@@ -199,7 +217,7 @@ ItemImpl::grab_focus ()
   if (!can_focus() || !sensitive() || !viewable())
     return false;
   /* unset old focus */
-  Window *ritem = get_window();
+  WindowImpl *ritem = get_window();
   if (ritem)
     ritem->set_focus (NULL);
   /* set new focus */
@@ -220,7 +238,7 @@ ItemImpl::move_focus (FocusDirType fdir)
 void
 ItemImpl::notify_key_error ()
 {
-  Window *ritem = get_window();
+  WindowImpl *ritem = get_window();
   if (ritem)
     ritem->beep();
 }
@@ -307,7 +325,7 @@ ItemImpl::collect_components (const String &path)
 uint
 ItemImpl::exec_slow_repeater (const BoolSlot &sl)
 {
-  Window *ritem = get_window();
+  WindowImpl *ritem = get_window();
   if (ritem)
     {
       EventLoop *loop = ritem->get_loop();
@@ -320,7 +338,7 @@ ItemImpl::exec_slow_repeater (const BoolSlot &sl)
 uint
 ItemImpl::exec_fast_repeater (const BoolSlot &sl)
 {
-  Window *ritem = get_window();
+  WindowImpl *ritem = get_window();
   if (ritem)
     {
       EventLoop *loop = ritem->get_loop();
@@ -333,7 +351,7 @@ ItemImpl::exec_fast_repeater (const BoolSlot &sl)
 uint
 ItemImpl::exec_key_repeater (const BoolSlot &sl)
 {
-  Window *ritem = get_window();
+  WindowImpl *ritem = get_window();
   if (ritem)
     {
       EventLoop *loop = ritem->get_loop();
@@ -346,7 +364,7 @@ ItemImpl::exec_key_repeater (const BoolSlot &sl)
 bool
 ItemImpl::remove_exec (uint exec_id)
 {
-  Window *ritem = get_window();
+  WindowImpl *ritem = get_window();
   if (ritem)
     {
       EventLoop *loop = ritem->get_loop();
@@ -364,7 +382,7 @@ ItemImpl::queue_visual_update ()
   uint timer_id = get_data (&visual_update_key);
   if (!timer_id)
     {
-      Window *ritem = get_window();
+      WindowImpl *ritem = get_window();
       if (ritem)
         {
           EventLoop *loop = ritem->get_loop();
@@ -869,7 +887,7 @@ ItemImpl::set_parent (Container *pcontainer)
   if (pc)
     {
       ref (pc);
-      Window *rtoplevel = get_window();
+      WindowImpl *rtoplevel = get_window();
       pc->unparent_child (*this);
       invalidate();
       if (heritage())
@@ -928,13 +946,13 @@ ItemImpl::common_ancestor (const ItemImpl &other) const
   return NULL;
 }
 
-Window*
+WindowImpl*
 ItemImpl::get_window () const
 {
   ItemImpl *parent = const_cast<ItemImpl*> (this);
   while (parent->parent())
     parent = parent->parent();
-  return dynamic_cast<Window*> (parent); // NULL if parent is not of type Window*
+  return dynamic_cast<WindowImpl*> (parent); // NULL if parent is not of type WindowImpl*
 }
 
 void
@@ -1034,7 +1052,7 @@ void
 ItemImpl::copy_area (const Rect  &rect,
                  const Point &dest)
 {
-  Window *ritem = get_window();
+  WindowImpl *ritem = get_window();
   if (ritem)
     {
       Allocation a = allocation();
@@ -1070,7 +1088,7 @@ ItemImpl::expose (const Region &region) /* item coordinates relative */
 {
   Region r (allocation());
   r.intersect (region);
-  Window *rt = get_window();
+  WindowImpl *rt = get_window();
   if (!r.empty() && rt && !test_flags (INVALID_CONTENT))
     {
       const Affine &affine = affine_to_viewp0rt();
@@ -1367,7 +1385,7 @@ ItemImpl::tune_requisition (Requisition requisition)
   ItemImpl *p = parent();
   if (p && !test_flags (INVALID_REQUISITION))
     {
-      Window *r = p->get_window();
+      WindowImpl *r = p->get_window();
       if (r && r->tunable_requisitions())
         {
           Requisition ovr (width(), height());
@@ -1414,7 +1432,7 @@ ItemImpl::set_allocation (const Allocation &area)
     {
       /* expose unclipped */
       Region r (oa);
-      Window *rt = get_window();
+      WindowImpl *rt = get_window();
       if (!r.empty() && rt)
         {
           const Affine &affine = affine_to_viewp0rt();

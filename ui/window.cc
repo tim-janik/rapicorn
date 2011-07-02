@@ -1,5 +1,5 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include "windowimpl.hh"
+#include "window.hh"
 #include "application.hh"
 #include "factory.hh"
 
@@ -8,22 +8,34 @@ namespace Rapicorn {
 struct ClassDoctor {
   static void item_set_flag       (ItemImpl &item, uint32 flag) { item.set_flag (flag, true); }
   static void item_unset_flag     (ItemImpl &item, uint32 flag) { item.unset_flag (flag); }
-  static void set_window_heritage (Window &window, Heritage *heritage) { window.heritage (heritage); }
+  static void set_window_heritage (WindowImpl &window, Heritage *heritage) { window.heritage (heritage); }
   static Heritage*
-  window_heritage (Window &window, ColorSchemeType cst)
+  window_heritage (WindowImpl &window, ColorSchemeType cst)
   {
     return Heritage::create_heritage (window, window, cst);
   }
 };
 
-Window::Window() :
-  sig_displayed (*this)
+WindowImpl&
+Wind0wIface::impl ()
 {
-  change_flags_silently (ANCHORED, true);       /* window is always anchored */
+  WindowImpl *wimpl = dynamic_cast<WindowImpl*> (this);
+  if (!wimpl)
+    throw std::bad_cast();
+  return *wimpl;
+}
+
+const WindowImpl&
+Wind0wIface::impl () const
+{
+  const WindowImpl *wimpl = dynamic_cast<const WindowImpl*> (this);
+  if (!wimpl)
+    throw std::bad_cast();
+  return *wimpl;
 }
 
 void
-Window::set_parent (Container *parent)
+WindowImpl::set_parent (Container *parent)
 {
   if (parent)
     critical ("setting parent on toplevel Window item to: %p (%s)", parent, parent->typeid_pretty_name().c_str());
@@ -43,10 +55,10 @@ WindowImpl::custom_command (const String     &command_name,
 static DataKey<ItemImpl*> focus_item_key;
 
 void
-Window::uncross_focus (ItemImpl &fitem)
+WindowImpl::uncross_focus (ItemImpl &fitem)
 {
   assert (&fitem == get_data (&focus_item_key));
-  cross_unlink (fitem, slot (*this, &Window::uncross_focus));
+  cross_unlink (fitem, slot (*this, &WindowImpl::uncross_focus));
   ItemImpl *item = &fitem;
   while (item)
     {
@@ -61,7 +73,7 @@ Window::uncross_focus (ItemImpl &fitem)
 }
 
 void
-Window::set_focus (ItemImpl *item)
+WindowImpl::set_focus (ItemImpl *item)
 {
   ItemImpl *old_focus = get_data (&focus_item_key);
   if (item == old_focus)
@@ -73,7 +85,7 @@ Window::set_focus (ItemImpl *item)
   /* set new focus */
   assert (item->has_ancestor (*this));
   set_data (&focus_item_key, item);
-  cross_link (*item, slot (*this, &Window::uncross_focus));
+  cross_link (*item, slot (*this, &WindowImpl::uncross_focus));
   while (item)
     {
       ClassDoctor::item_set_flag (*item, FOCUS_CHAIN);
@@ -85,7 +97,7 @@ Window::set_focus (ItemImpl *item)
 }
 
 ItemImpl*
-Window::get_focus () const
+WindowImpl::get_focus () const
 {
   return get_data (&focus_item_key);
 }
@@ -110,21 +122,16 @@ container_find_item (Container    &container,
   return NULL;
 }
 
-
 ItemImpl*
-Window::find_item (const String &item_name)
+WindowImpl::find_item (const String &item_name)
 {
   if (item_name == name())
     return this;
   return container_find_item (*this, item_name);
 }
 
-void
-Window::enable_auto_close ()
-{}
-
 cairo_surface_t*
-Window::create_snapshot (const Rect &subarea)
+WindowImpl::create_snapshot (const Rect &subarea)
 {
   const Allocation area = allocation();
   Display display;
@@ -147,7 +154,8 @@ WindowImpl::WindowImpl() :
   m_source (NULL),
   m_viewp0rt (NULL),
   m_tunable_requisition_counter (0),
-  m_entered (false), m_auto_close (false)
+  m_entered (false), m_auto_close (false),
+  sig_displayed (*this)
 {
   Heritage *hr = ClassDoctor::window_heritage (*this, color_scheme());
   ref_sink (hr);
@@ -165,6 +173,7 @@ WindowImpl::WindowImpl() :
   m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
   m_source->primary (false);
   app.add_wind0w (*this);
+  change_flags_silently (ANCHORED, true);       /* window is always anchored */
 }
 
 void
@@ -180,7 +189,7 @@ WindowImpl::~WindowImpl()
       delete m_viewp0rt;
       m_viewp0rt = NULL;
     }
-  /* make sure all children are removed while this is still of type Window.
+  /* make sure all children are removed while this is still of type WindowImpl.
    * necessary because C++ alters the object type during constructors and destructors
    */
   if (has_children())
@@ -838,6 +847,14 @@ WindowImpl::grab_stack_changed()
 }
 
 void
+WindowImpl::add_grab (ItemImpl *child,
+                      bool      unconfined)
+{
+  RAPICORN_CHECK (child != NULL);
+  add_grab (*child, unconfined);
+}
+
+void
 WindowImpl::add_grab (ItemImpl &child,
                       bool      unconfined)
 {
@@ -849,6 +866,13 @@ WindowImpl::add_grab (ItemImpl &child,
    */
   m_grab_stack.push_back (GrabEntry (&child, unconfined));
   // grab_stack_changed(); // FIXME: re-enable this, once grab_stack_changed() synthesizes from idler
+}
+
+void
+WindowImpl::remove_grab (ItemImpl *child)
+{
+  RAPICORN_CHECK (child != NULL);
+  remove_grab (*child);
 }
 
 void
@@ -1088,12 +1112,6 @@ WindowImpl::destroy_viewp0rt ()
   // reset item state where needed
   cancel_item_events (NULL);
   unref (this);
-}
-
-Window&
-WindowImpl::window ()
-{
-  return *this;
 }
 
 void

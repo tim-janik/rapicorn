@@ -82,7 +82,7 @@ command_lib_exec (ItemImpl           &item,
         item_cmds[ui].cmd (item, args);
         return true;
       }
-  Window *window = item.get_window();
+  WindowImpl *window = item.get_window();
   if (window)
     {
       Wind0wIface &wind0w = window->wind0w();

@@ -242,7 +242,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     double yoffset = m_vadjustment ? round (m_vadjustment->flipped_value()) : 0.0;
     double xdelta = xoffset - m_last_xoffset;
     double ydelta = yoffset - m_last_yoffset;
-    Window *witem = get_window();
+    WindowImpl *witem = get_window();
     if (!drawable() || !witem)
       {
         m_last_xoffset = xoffset;
@@ -283,7 +283,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
     ItemImpl *fchild = get_focus_child();
     if (!fchild)
       return;
-    Window *rt = get_window();
+    WindowImpl *rt = get_window();
     if (!rt)
       return;
     ItemImpl *const rfitem = rt->get_focus();

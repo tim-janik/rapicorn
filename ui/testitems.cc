@@ -217,7 +217,7 @@ protected:
   void
   make_snapshot ()
   {
-    Window *witem = get_window();
+    WindowImpl *witem = get_window();
     if (m_snapshot_file != "" && witem)
       {
         cairo_surface_t *isurface = witem->create_snapshot (allocation());
@@ -241,7 +241,7 @@ public:
     SingleContainerImpl::render (display);
     if (!m_handler_id)
       {
-        Window *witem = get_window();
+        WindowImpl *witem = get_window();
         if (witem)
           {
             EventLoop *loop = witem->get_loop();

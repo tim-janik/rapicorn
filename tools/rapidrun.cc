@@ -144,7 +144,7 @@ parse_args (int    *argc_p,
 }
 
 static void
-window_test_dump (Window &window)
+window_test_dump (WindowImpl &window)
 {
   if (!test_dump)
     return;
@@ -201,11 +201,11 @@ main (int   argc,
 
   /* hook up test-dump handler */
   if (test_dump)
-    wind0w.window().sig_displayed += window_test_dump;
+    wind0w.impl().sig_displayed += window_test_dump;
 
   /* hook up auto-exit handler */
   if (auto_exit)
-    wind0w.window().enable_auto_close();
+    wind0w.impl().enable_auto_close();
 
   /* show wind0w and process events */
   wind0w.show();

@@ -26,7 +26,7 @@ custom_commands (Wind0wIface      &wind0w,
 {
   if (command == "testdump")
     {
-      Window &window = wind0w.window();
+      WindowImpl &window = wind0w.impl();
       TestStream *tstream = TestStream::create_test_stream();
       // tstream->filter_matched_nodes ("Button");
       window.get_test_dump (*tstream);
@@ -35,7 +35,7 @@ custom_commands (Wind0wIface      &wind0w,
     }
   else
     printout ("%s(): custom command: %s(%s) (wind0w: %s)\n", __func__,
-              command.c_str(), string_join (",", args).c_str(), wind0w.window().name().c_str());
+              command.c_str(), string_join (",", args).c_str(), wind0w.impl().name().c_str());
   return true;
 }
 

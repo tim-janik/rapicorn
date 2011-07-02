@@ -169,11 +169,11 @@ Heritage::~Heritage ()
 }
 
 Heritage*
-Heritage::create_heritage (Window         &window,
+Heritage::create_heritage (WindowImpl     &window,
                            ItemImpl       &item,
                            ColorSchemeType color_scheme)
 {
-  Window *iwindow = item.get_window();
+  WindowImpl *iwindow = item.get_window();
   assert (iwindow == &window);
   ColorFunc cnorm = colorset_normal, csel = colorset_selected;
   switch (color_scheme)
@@ -204,14 +204,14 @@ Heritage::adapt_heritage (ItemImpl       &item,
       if (m_internals->match (item, cnorm, csel))
         return this;
     }
-  Window *window = item.get_window();
+  WindowImpl *window = item.get_window();
   if (!window)
     fatal ("Heritage: create heritage without window item for: %s", item.name().c_str());
   return create_heritage (*window, item, color_scheme);
 }
 
-Heritage::Heritage (Window    &window,
-                    Internals *internals) :
+Heritage::Heritage (WindowImpl &window,
+                    Internals  *internals) :
   m_internals (internals), m_window (window)
 {}
 

@@ -7,7 +7,8 @@
 includes:
 #include <ui/utilities.hh>
 namespace Rapicorn {
-class Window;
+class ItemImpl;
+class WindowImpl;
 }
 
 IGNORE:
@@ -20,8 +21,14 @@ class_scope:StringList:
   /*Con*/  StringList () {}
   /*Con*/  StringList (const std::vector<String> &strv) : Sequence (strv) {}
 
+class_scope:ItemIface:
+  ItemImpl&       impl ();
+  const ItemImpl& impl () const;
+
 class_scope:Wind0wIface:
-  virtual Window&    window        () = 0;
+  WindowImpl&       impl ();
+  const WindowImpl& impl () const;
+
 class_scope:ApplicationIface:
   static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
   int                execute_loops ();

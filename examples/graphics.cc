@@ -52,7 +52,7 @@ main (int   argc,
   Wind0wIface &wind0w = *app.create_wind0w ("graphics-dialog");
 
   /* hook up drawable test */
-  Window &window = wind0w.window();
+  WindowImpl &window = wind0w.impl();
   Drawable &drawable = window.interface<Drawable&>();
   drawable.sig_draw += slot (&drawable_draw, drawable);
 

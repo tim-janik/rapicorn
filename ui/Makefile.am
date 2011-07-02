@@ -34,7 +34,6 @@ rapicorn_impl_headers = $(strip 	\
 	arrangementimpl.hh		\
 	containerimpl.hh		\
 	listareaimpl.hh			\
-	windowimpl.hh			\
 	scrollitemsimpl.hh		\
 	sinfeximpl.hh			\
 	tableimpl.hh			\
