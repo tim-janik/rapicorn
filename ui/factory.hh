@@ -47,7 +47,7 @@ int /*-errno*/ parse_string      (const String           &xml_string,
 ItemImpl&       create_item      (const String           &item_identifier,
                                   const ArgumentList     &arguments = ArgumentList(),
                                   const ArgumentList     &env_variables = ArgumentList());
-Container&      create_container (const String           &container_identifier,
+ContainerImpl&  create_container (const String           &container_identifier,
                                   const ArgumentList     &arguments = ArgumentList(),
                                   const ArgumentList     &env_variables = ArgumentList());
 Wind0wIface&    create_wind0w    (const String           &wind0w_identifier,
@@ -91,7 +91,7 @@ public:
   explicit ItemFactory (const char *namespaced_ident) :
     ItemTypeFactory (namespaced_ident,
                      TraitConvertible<EventHandler,Type>::TRUTH,
-                     TraitConvertible<Container,Type>::TRUTH,
+                     TraitConvertible<ContainerImpl,Type>::TRUTH,
                      TraitConvertible<int,Type>::TRUTH)
   {
     sanity_check_identifier (namespaced_ident);

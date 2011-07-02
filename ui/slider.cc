@@ -69,7 +69,7 @@ SliderArea::list_commands ()
     MakeNamedCommand (SliderArea, "page-increment", _("Large slider increment"), move, +2),
     MakeNamedCommand (SliderArea, "page-decrement", _("Large slider decrement"), move, -2),
   };
-  static const CommandList command_list (commands, Container::list_commands());
+  static const CommandList command_list (commands, ContainerImpl::list_commands());
   return command_list;
 }
 
@@ -80,7 +80,7 @@ SliderArea::list_properties()
     MakeProperty (SliderArea, flipped,           _("Flipped"),           _("Invert (flip) display of the adjustment value"), "rw"),
     MakeProperty (SliderArea, adjustment_source, _("Adjustment Source"), _("Type of source to retrive an adjustment from"), "rw"),
   };
-  static const PropertyList property_list (properties, Container::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::list_properties());
   return property_list;
 }
 

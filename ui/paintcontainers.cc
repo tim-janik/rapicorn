@@ -15,7 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "paintcontainers.hh"
-#include "containerimpl.hh"
+#include "container.hh"
 #include "painter.hh"
 #include "factory.hh"
 
@@ -68,7 +68,7 @@ Ambience::list_properties()
     MakeProperty (Ambience, lighting, _("Lighting"), _("The kind of lighting painted for all modes"), "wo"),
     MakeProperty (Ambience, shade, _("Shade"), _("The kind of shade painted for all modes"), "wo"),
   };
-  static const PropertyList property_list (properties, Container::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::list_properties());
   return property_list;
 }
 
@@ -223,7 +223,7 @@ Frame::list_properties()
     MakeProperty (Frame, overlap_child,   _("Overlap Child"),  _("Draw frame in the same position as child"), "rw"),
     MakeProperty (Frame, tight_focus,     _("Tight Focus"),    _("Prevent extra padding around focus frames"), "rw"),
   };
-  static const PropertyList property_list (properties, Container::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::list_properties());
   return property_list;
 }
 
@@ -421,7 +421,7 @@ protected:
     bool in_focus = has_focus();
     in_focus |= get_focus_child() != NULL;
     in_focus |= m_client && m_client->has_focus();
-    Container *m_cclient = dynamic_cast<Container*> (m_client);
+    ContainerImpl *m_cclient = dynamic_cast<ContainerImpl*> (m_client);
     in_focus |= m_cclient && m_cclient->get_focus_child() != NULL;
     if (in_focus)
       return focus_frame();

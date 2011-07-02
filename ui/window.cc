@@ -35,11 +35,11 @@ Wind0wIface::impl () const
 }
 
 void
-WindowImpl::set_parent (Container *parent)
+WindowImpl::set_parent (ContainerImpl *parent)
 {
   if (parent)
     critical ("setting parent on toplevel Window item to: %p (%s)", parent, parent->typeid_pretty_name().c_str());
-  return Container::set_parent (parent);
+  return ContainerImpl::set_parent (parent);
 }
 
 bool
@@ -63,7 +63,7 @@ WindowImpl::uncross_focus (ItemImpl &fitem)
   while (item)
     {
       ClassDoctor::item_unset_flag (*item, FOCUS_CHAIN);
-      Container *fc = item->parent();
+      ContainerImpl *fc = item->parent();
       if (fc)
         fc->set_focus_child (NULL);
       item = fc;
@@ -89,7 +89,7 @@ WindowImpl::set_focus (ItemImpl *item)
   while (item)
     {
       ClassDoctor::item_set_flag (*item, FOCUS_CHAIN);
-      Container *fc = item->parent();
+      ContainerImpl *fc = item->parent();
       if (fc)
         fc->set_focus_child (item);
       item = fc;
@@ -103,15 +103,15 @@ WindowImpl::get_focus () const
 }
 
 static ItemImpl*
-container_find_item (Container    &container,
-                     const String &name)
+container_find_item (ContainerImpl &container,
+                     const String  &name)
 {
-  for (Container::ChildWalker cw = container.local_children (); cw.has_next(); cw++)
+  for (ContainerImpl::ChildWalker cw = container.local_children (); cw.has_next(); cw++)
     {
       ItemImpl &item = *cw;
       if (name == item.name())
         return &item;
-      Container *ct = dynamic_cast<Container*> (&item);
+      ContainerImpl *ct = dynamic_cast<ContainerImpl*> (&item);
       if (ct)
         {
           ItemImpl *it = container_find_item (*ct, name);
@@ -343,7 +343,7 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
       if (unconfined or grab_item->viewp0rt_point (Point (event.x, event.y)))
         {
           pierced.push_back (ref (grab_item));        /* grab-item receives all mouse events */
-          Container *container = grab_item->interface<Container*>();
+          ContainerImpl *container = grab_item->interface<ContainerImpl*>();
           if (container)                              /* deliver to hovered grab-item children as well */
             container->viewp0rt_point_children (Point (event.x, event.y), pierced);
         }

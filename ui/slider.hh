@@ -22,7 +22,7 @@
 
 namespace Rapicorn {
 
-class SliderArea : public virtual Container {
+class SliderArea : public virtual ContainerImpl {
   bool                  move              (int);
 protected:
   virtual const CommandList&    list_commands   ();

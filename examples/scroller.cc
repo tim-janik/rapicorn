@@ -20,10 +20,10 @@ namespace {
 using namespace Rapicorn;
 
 static void
-add_button_row (Container &area,
-                uint       row)
+add_button_row (ContainerImpl &area,
+                uint           row)
 {
-  Container &brow = Factory::create_container ("button-row", Args ("id=row#" + string_from_uint (row)));
+  ContainerImpl &brow = Factory::create_container ("button-row", Args ("id=row#" + string_from_uint (row)));
   area.add (brow);
   for (uint i = 0; i < 20; i++)
     {
@@ -47,7 +47,7 @@ main (int   argc,
 
   /* create main wind0w */
   Wind0wIface &wind0w = *app.create_wind0w ("main-shell");
-  Container &mshell = wind0w.impl().interface<Container>();
+  ContainerImpl &mshell = wind0w.impl().interface<ContainerImpl>();
 
   /* create button rows */
   for (uint i = 0; i < 20; i++)

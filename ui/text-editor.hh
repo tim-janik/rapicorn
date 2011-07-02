@@ -45,7 +45,7 @@ struct AttrState {
   explicit AttrState();
 };
 
-class Editor : public virtual Container {
+class Editor : public virtual ContainerImpl {
 protected:
   virtual const PropertyList& list_properties();
 public:

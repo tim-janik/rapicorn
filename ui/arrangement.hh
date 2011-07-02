@@ -21,7 +21,7 @@
 
 namespace Rapicorn {
 
-class Arrangement : public virtual Container {
+class Arrangement : public virtual ContainerImpl {
 protected:
   virtual const PropertyList& list_properties ();
 public:

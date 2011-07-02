@@ -21,7 +21,7 @@
 
 namespace Rapicorn {
 
-class Alignment : public virtual Container {
+class Alignment : public virtual ContainerImpl {
   virtual uint  padding         () const  = 0;
 protected:
   virtual const PropertyList&   list_properties ();
@@ -37,7 +37,7 @@ public:
   virtual void  padding         (uint c)  = 0;
 };
 
-class HBox : public virtual Container {
+class HBox : public virtual ContainerImpl {
 protected:
   virtual const PropertyList&   list_properties ();
 public:
@@ -47,7 +47,7 @@ public:
   virtual void  spacing         (uint cspacing) = 0;
 };
 
-class VBox : public virtual Container {
+class VBox : public virtual ContainerImpl {
 protected:
   virtual const PropertyList&   list_properties ();
 public:

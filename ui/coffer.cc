@@ -1,6 +1,6 @@
 /* Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html */
 #include "coffer.hh"
-#include "containerimpl.hh"
+#include "container.hh"
 #include "factory.hh"
 #include "../rcore/rsvg/svg.hh"
 #include <string.h>
@@ -38,7 +38,7 @@ Coffer::list_properties()
     MakeProperty (Coffer, element,        _("Element"),         _("The SVG element ID to be rendered."), "rw"),
     MakeProperty (Coffer, overlap_child,  _("Overlap Child"),   _("Draw child on top of container area."), "rw"),
   };
-  static const PropertyList property_list (properties, Container::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::list_properties());
   return property_list;
 }
 

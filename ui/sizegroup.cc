@@ -19,7 +19,7 @@
 namespace Rapicorn {
 
 struct ClassDoctor {
-  static void item_set_parent (ItemImpl &item, Container *parent) { item.set_parent (parent); }
+  static void item_set_parent (ItemImpl &item, ContainerImpl *parent) { item.set_parent (parent); }
 };
 
 class SizeGroupImpl : public SizeGroup {

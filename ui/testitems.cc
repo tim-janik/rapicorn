@@ -15,7 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "testitems.hh"
-#include "containerimpl.hh"
+#include "container.hh"
 #include "painter.hh"
 #include "window.hh"
 #include "factory.hh"
@@ -49,7 +49,7 @@ TestContainer::list_properties()
     MakeProperty (TestContainer, accu,          "Accumulator",   "Store string value and keep history",        "rw"),
     MakeProperty (TestContainer, accu_history,  "Accu-History",  "Concatenated accumulator history",           "rw"),
   };
-  static const PropertyList property_list (properties, Container::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::list_properties());
   return property_list;
 }
 
@@ -196,7 +196,7 @@ TestBox::list_properties()
   static Property *properties[] = {
     MakeProperty (TestBox, snapshot_file, _("Snapshot File Name"), _("PNG image file name to write snapshot to"), "rw"),
   };
-  static const PropertyList property_list (properties, Container::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::list_properties());
   return property_list;
 }
 

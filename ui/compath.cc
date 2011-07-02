@@ -417,9 +417,9 @@ match_segment (ComponentMatcherSegment &cms,
       return result;
     }
   // or match children recursively
-  Container *container = dynamic_cast<Container*> (&item);
+  ContainerImpl *container = dynamic_cast<ContainerImpl*> (&item);
   if (container)
-    for (Container::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
+    for (ContainerImpl::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
       {
         vector<ItemImpl*> more = match_segment (cms, *cw);
         if (result.empty())
@@ -448,10 +448,10 @@ collect_items (ItemImpl         &origin,
           vector<ItemImpl*> children;
           for (uint j = 0; j < candidates.size(); j++)
             {
-              Container *container = dynamic_cast<Container*> (candidates[j]);
+              ContainerImpl *container = dynamic_cast<ContainerImpl*> (candidates[j]);
               if (!container)
                 continue;
-              for (Container::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
+              for (ContainerImpl::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
                 children.push_back (&*cw);
             }
           candidates.swap (children);

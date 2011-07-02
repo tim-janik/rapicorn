@@ -18,7 +18,7 @@
 #define __RAPICORN_SCROLL_ITEMS_IMPL_HH__
 
 #include <ui/scrollitems.hh>
-#include <ui/containerimpl.hh>
+#include <ui/container.hh>
 
 namespace Rapicorn {
 

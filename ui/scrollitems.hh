@@ -23,7 +23,7 @@
 namespace Rapicorn {
 
 /* --- ScrollArea --- */
-class ScrollArea : public virtual Container, public virtual AdjustmentSource {
+class ScrollArea : public virtual ContainerImpl, public virtual AdjustmentSource {
 protected:
   explicit              ScrollArea();
 public:

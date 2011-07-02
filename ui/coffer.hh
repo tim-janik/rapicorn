@@ -6,7 +6,7 @@
 
 namespace Rapicorn {
 
-class Coffer : public virtual Container {
+class Coffer : public virtual ContainerImpl {
 protected:
   virtual const PropertyList& list_properties ();
 public:

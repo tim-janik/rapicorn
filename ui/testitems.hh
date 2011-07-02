@@ -18,7 +18,7 @@
 
 namespace Rapicorn {
 
-class TestContainer : public virtual Container {
+class TestContainer : public virtual ContainerImpl {
 protected:
   explicit      TestContainer     ();
 public:
@@ -54,7 +54,7 @@ public:
   Signal<TestContainer, void ()>                         sig_assertions_passed;
 };
 
-class TestBox : public virtual Container {
+class TestBox : public virtual ContainerImpl {
 public:
   virtual String      snapshot_file   () const = 0;
   virtual void        snapshot_file   (const String &val) = 0;

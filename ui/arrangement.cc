@@ -27,7 +27,7 @@ Arrangement::list_properties()
     MakeProperty (Arrangement, origin_hanchor, _("Horizontal Anchor"), _("Horizontal position of the origin within arrangement, 0=left, 1=right"), 0, 1, 0.1, "rw"),
     MakeProperty (Arrangement, origin_vanchor, _("Vertical Anchor"),   _("Vertical position of the origin within arrangement, 0=bottom, 1=top"), 0, 1, 0.1, "rw"),
   };
-  static const PropertyList property_list (properties, Container::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::list_properties());
   return property_list;
 }
 

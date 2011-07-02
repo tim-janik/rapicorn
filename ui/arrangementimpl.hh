@@ -18,7 +18,7 @@
 #define __RAPICORN_ARRANGEMENT_IMPL_HH__
 
 #include <ui/arrangement.hh>
-#include <ui/containerimpl.hh>
+#include <ui/container.hh>
 
 namespace Rapicorn {
 

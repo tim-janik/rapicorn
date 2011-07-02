@@ -21,7 +21,7 @@
 
 namespace Rapicorn {
 
-class Ambience : public virtual Container {
+class Ambience : public virtual ContainerImpl {
 protected:
   virtual const PropertyList&   list_properties         ();
 public:
@@ -59,7 +59,7 @@ private:
   LightingType                  shade                   () const { RAPICORN_ASSERT_NOT_REACHED(); }
 };
 
-class Frame : public virtual Container {
+class Frame : public virtual ContainerImpl {
   FrameType                     frame_type      () const        { RAPICORN_ASSERT_NOT_REACHED(); }
 protected:
   virtual const PropertyList&   list_properties ();

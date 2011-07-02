@@ -18,7 +18,7 @@
 #define __RAPICORN_LIST_AREA_IMPL_HH__
 
 #include <ui/listarea.hh>
-#include <ui/containerimpl.hh>
+#include <ui/container.hh>
 #include <ui/adjustment.hh>
 #include <ui/layoutcontainers.hh>
 #include <ui/table.hh>
@@ -28,9 +28,9 @@ namespace Rapicorn {
 
 struct ListRow {
   vector<ItemImpl*> cols;
-  Container    *rowbox;
-  Allocation    area;
-  uint          allocated : 1;
+  ContainerImpl *rowbox;
+  Allocation     area;
+  uint           allocated : 1;
   ListRow() : rowbox (NULL), allocated (0) {}
 };
 

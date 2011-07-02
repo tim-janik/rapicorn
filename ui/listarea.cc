@@ -31,7 +31,7 @@ ItemList::list_properties()
     MakeProperty (ItemList, browse, _("Browse Mode"), _("Browse selection mode"), "rw"),
     MakeProperty (ItemList, model,  _("Model URL"), _("Resource locator for 1D list model"), "rw:M1"),
   };
-  static const PropertyList property_list (properties, Container::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::list_properties());
   return property_list;
 }
 
@@ -655,7 +655,7 @@ ItemListImpl::create_row (uint64 nthrow,
       lr->cols.push_back (item);
     }
   IFDEBUG (dbg_created++);
-  lr->rowbox = &ref_sink (&Factory::create_item ("ListRow"))->interface<Container>();
+  lr->rowbox = &ref_sink (&Factory::create_item ("ListRow"))->interface<ContainerImpl>();
   lr->rowbox->interface<HBox>().spacing (5); // FIXME
 
   while (m_size_groups.size() < lr->cols.size())

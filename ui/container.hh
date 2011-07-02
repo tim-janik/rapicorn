@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #ifndef __RAPICORN_CONTAINER_HH__
 #define __RAPICORN_CONTAINER_HH__
 
@@ -22,7 +7,7 @@
 namespace Rapicorn {
 
 /* --- Container --- */
-struct Container : public virtual ItemImpl {
+struct ContainerImpl : public virtual ItemImpl {
   friend              class ItemImpl;
   friend              class WindowImpl;
   void                uncross_descendant(ItemImpl          &descendant);
@@ -35,7 +20,7 @@ struct Container : public virtual ItemImpl {
   void                item_uncross_links(ItemImpl           &owner,
                                          ItemImpl           &link);
 protected:
-  virtual            ~Container         ();
+  virtual            ~ContainerImpl     ();
   virtual void        add_child         (ItemImpl           &item) = 0;
   virtual void        repack_child      (ItemImpl           &item,
                                          const PackInfo &orig,
@@ -51,8 +36,8 @@ protected:
 public:
   ItemImpl*               get_focus_child   () const;
   typedef Walker<ItemImpl>  ChildWalker;
-  void                  child_container (Container      *child_container);
-  Container&            child_container ();
+  void                  child_container (ContainerImpl  *child_container);
+  ContainerImpl&        child_container ();
   virtual ChildWalker   local_children  () const = 0;
   virtual bool          has_children    () = 0;
   void                  remove          (ItemImpl           &item);
@@ -69,6 +54,43 @@ public:
                                          std::vector<ItemImpl*>     &stack);
   virtual void          render          (Display                &display);
   void                  debug_tree      (String indent = String());
+};
+
+/* --- Single Child Container Impl --- */
+class SingleContainerImpl : public virtual ItemImpl, public virtual ContainerImpl {
+  ItemImpl             *child_item;
+protected:
+  virtual void          size_request            (Requisition &requisition);
+  virtual void          size_allocate           (Allocation area);
+  ItemImpl&             get_child               () { RAPICORN_CHECK (child_item != NULL); return *child_item; }
+  virtual void          pre_finalize            ();
+  virtual              ~SingleContainerImpl     ();
+  virtual ChildWalker   local_children          () const;
+  virtual bool          has_children            () { return child_item != NULL; }
+  bool                  has_visible_child       () { return child_item && child_item->visible(); }
+  bool                  has_drawable_child      () { return child_item && child_item->drawable(); }
+  bool                  has_allocatable_child   () { return child_item && child_item->allocatable(); }
+  virtual void          add_child               (ItemImpl   &item);
+  virtual void          remove_child            (ItemImpl   &item);
+  Allocation            layout_child            (ItemImpl         &child,
+                                                 const Allocation &carea);
+  explicit              SingleContainerImpl     ();
+};
+
+/* --- Multi Child Container Impl --- */
+class MultiContainerImpl : public virtual ItemImpl, public virtual ContainerImpl {
+  std::vector<ItemImpl*>    items;
+protected:
+  virtual void          pre_finalize            ();
+  virtual              ~MultiContainerImpl      ();
+  virtual ChildWalker   local_children          () const { return value_walker (items); }
+  virtual bool          has_children            () { return items.size() > 0; }
+  virtual void          add_child               (ItemImpl   &item);
+  virtual void          remove_child            (ItemImpl   &item);
+  void                  raise_child             (ItemImpl   &item);
+  void                  lower_child             (ItemImpl   &item);
+  void                  remove_all_children     ();
+  explicit              MultiContainerImpl      ();
 };
 
 } // Rapicorn

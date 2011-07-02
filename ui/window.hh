@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_WINDOW_HH__
 #define __RAPICORN_WINDOW_HH__
 
-#include <ui/containerimpl.hh>
+#include <ui/container.hh>
 #include <ui/loop.hh>
 #include <ui/viewp0rt.hh>
 
@@ -27,7 +27,7 @@ class WindowImpl : public virtual SingleContainerImpl, public virtual Wind0wIfac
   void          uncross_focus           (ItemImpl        &fitem);
 protected:
   void          set_focus               (ItemImpl         *item);
-  virtual void  set_parent              (Container    *parent);
+  virtual void  set_parent              (ContainerImpl    *parent);
   virtual void  dispose                 ();
 public:
   explicit              WindowImpl              ();

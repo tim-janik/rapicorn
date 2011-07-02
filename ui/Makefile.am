@@ -32,7 +32,6 @@ rapicorn_cc_sources = $(sort 		\
 )
 rapicorn_impl_headers = $(strip 	\
 	arrangementimpl.hh		\
-	containerimpl.hh		\
 	listareaimpl.hh			\
 	scrollitemsimpl.hh		\
 	sinfeximpl.hh			\

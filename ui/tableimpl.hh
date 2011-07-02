@@ -18,7 +18,7 @@
 #define __RAPICORN_TABLE_IMPL_HH__
 
 #include <ui/table.hh>
-#include <ui/containerimpl.hh>
+#include <ui/container.hh>
 #include <string.h>
 
 namespace Rapicorn {

@@ -17,7 +17,7 @@ typedef Rect Allocation;
 class ItemImpl;
 class SizeGroup;
 class Adjustment;
-class Container;
+class ContainerImpl;
 class WindowImpl;
 
 /* --- event handler --- */
@@ -38,17 +38,17 @@ public:
 typedef Signals::Slot1<void, ItemImpl&> ItemSlot;
 class ItemImpl : public virtual ItemIface {
   friend                      class ClassDoctor;
-  friend                      class Container;
+  friend                      class ContainerImpl;
   friend                      class SizeGroup;
   uint32                      m_flags;          /* interface-inlined for fast read-out */
-  Container                  *m_parent;         /* interface-inlined for fast read-out */
+  ContainerImpl              *m_parent;         /* interface-inlined for fast read-out */
   Heritage                   *m_heritage;
   Requisition                 m_requisition;
   Allocation                  m_allocation;
   FactoryContext             *m_factory_context;
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        propagate_state    (bool notify_changed);
-  Container**                 _parent_loc        () { return &m_parent; }
+  ContainerImpl**             _parent_loc        () { return &m_parent; }
   void                        propagate_heritage ();
   void                        heritage           (Heritage  *heritage);
 protected:
@@ -107,7 +107,7 @@ protected:
   /* misc */
   virtual                     ~ItemImpl             ();
   virtual void                finalize          ();
-  virtual void                set_parent        (Container *parent);
+  virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (ItemImpl *old_toplevel);
   virtual bool                move_focus        (FocusDirType fdir);
   virtual bool                custom_command    (const String       &command_name,
@@ -177,7 +177,7 @@ public:
   Command*                    lookup_command    (const String    &command_name);
   virtual const CommandList&  list_commands     ();
   /* parents */
-  Container*                  parent            () const { return m_parent; }
+  ContainerImpl*              parent            () const { return m_parent; }
   bool                        has_ancestor      (const ItemImpl &ancestor) const;
   ItemImpl*                   common_ancestor   (const ItemImpl &other) const;
   ItemImpl*                   common_ancestor   (const ItemImpl *other) const { return common_ancestor (*other); }

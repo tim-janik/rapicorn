@@ -28,7 +28,7 @@ struct Activatable : virtual BaseObject { // FIXME: remove this? /* ActivateMode
   virtual void                  activate       ();
 };
 
-class ButtonArea : public virtual Container, public virtual FocusFrame::Client {
+class ButtonArea : public virtual ContainerImpl, public virtual FocusFrame::Client {
   typedef Signal<ButtonArea, bool (), CollectorUntil0<bool> > SignalCheckActivate;
   typedef Signal<ButtonArea, void ()>                         SignalActivate;
 protected:

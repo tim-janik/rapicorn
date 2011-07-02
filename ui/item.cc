@@ -91,9 +91,9 @@ ItemImpl::propagate_state (bool notify_changed)
                          (parent() && parent()->test_all_flags (VISIBLE | PARENT_VISIBLE)));
   if (wasallocatable != allocatable())
     invalidate();
-  Container *container = dynamic_cast<Container*> (this);
+  ContainerImpl *container = dynamic_cast<ContainerImpl*> (this);
   if (container)
-    for (Container::ChildWalker it = container->local_children(); it.has_next(); it++)
+    for (ContainerImpl::ChildWalker it = container->local_children(); it.has_next(); it++)
       it->propagate_state (notify_changed);
   if (notify_changed && !finalizing())
     sig_changed.emit(); /* notify changed() without invalidate() */
@@ -248,7 +248,7 @@ ItemImpl::cross_link (ItemImpl           &link,
                   const ItemSlot &uncross)
 {
   assert (this != &link);
-  Container *common_container = dynamic_cast<Container*> (common_ancestor (link));
+  ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
   assert (common_container != NULL);
   common_container->item_cross_link (*this, link, uncross);
 }
@@ -258,7 +258,7 @@ ItemImpl::cross_unlink (ItemImpl           &link,
                     const ItemSlot &uncross)
 {
   assert (this != &link);
-  Container *common_container = dynamic_cast<Container*> (common_ancestor (link));
+  ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
   assert (common_container != NULL);
   common_container->item_cross_unlink (*this, link, uncross);
 }
@@ -267,7 +267,7 @@ void
 ItemImpl::uncross_links (ItemImpl &link)
 {
   assert (this != &link);
-  Container *common_container = dynamic_cast<Container*> (common_ancestor (link));
+  ContainerImpl *common_container = dynamic_cast<ContainerImpl*> (common_ancestor (link));
   assert (common_container != NULL);
   common_container->item_uncross_links (*this, link);
 }
@@ -290,9 +290,9 @@ ItemImpl::match_interface (bool wself, bool wparent, bool children, InterfaceMat
     }
   if (children)
     {
-      Container *container = dynamic_cast<Container*> (self);
+      ContainerImpl *container = dynamic_cast<ContainerImpl*> (self);
       if (container)
-        for (Container::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
+        for (ContainerImpl::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
           if (cw->match_interface (1, 0, 1, imatcher))
             return true;
     }
@@ -660,9 +660,9 @@ ItemImpl::list_properties ()
 void
 ItemImpl::propagate_heritage ()
 {
-  Container *container = dynamic_cast<Container*> (this);
+  ContainerImpl *container = dynamic_cast<ContainerImpl*> (this);
   if (container)
-    for (Container::ChildWalker it = container->local_children(); it.has_next(); it++)
+    for (ContainerImpl::ChildWalker it = container->local_children(); it.has_next(); it++)
       it->heritage (m_heritage);
 }
 
@@ -693,7 +693,7 @@ translate_from_ancestor (ItemImpl         *ancestor,
 {
   if (child == ancestor)
     return true;
-  Container *pc = child->parent();
+  ContainerImpl *pc = child->parent();
   translate_from_ancestor (ancestor, pc, n_points, points);
   Affine caffine = pc->child_affine (*child);
   for (uint i = 0; i < n_points; i++)
@@ -712,7 +712,7 @@ ItemImpl::translate_from (const ItemImpl   &src_item,
   ItemImpl *item = const_cast<ItemImpl*> (&src_item);
   while (item != ca)
     {
-      Container *pc = item->parent();
+      ContainerImpl *pc = item->parent();
       Affine affine = pc->child_affine (*item);
       affine.invert();
       for (uint i = 0; i < n_points; i++)
@@ -774,7 +774,7 @@ Point
 ItemImpl::point_from_viewp0rt (Point window_point) /* window coordinates relative */
 {
   Point p = window_point;
-  Container *pc = parent();
+  ContainerImpl *pc = parent();
   if (pc)
     {
       const Affine &caffine = pc->child_affine (*this);
@@ -788,7 +788,7 @@ Point
 ItemImpl::point_to_viewp0rt (Point item_point) /* item coordinates relative */
 {
   Point p = item_point;
-  Container *pc = parent();
+  ContainerImpl *pc = parent();
   if (pc)
     {
       const Affine &caffine = pc->child_affine (*this);
@@ -802,7 +802,7 @@ Affine
 ItemImpl::affine_from_viewp0rt () /* viewp0rt => item affine */
 {
   Affine iaffine;
-  Container *pc = parent();
+  ContainerImpl *pc = parent();
   if (pc)
     {
       const Affine &paffine = pc->affine_from_viewp0rt();
@@ -878,12 +878,12 @@ ItemImpl::hierarchy_changed (ItemImpl *old_toplevel)
 }
 
 void
-ItemImpl::set_parent (Container *pcontainer)
+ItemImpl::set_parent (ContainerImpl *pcontainer)
 {
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
   if (controller)
     controller->reset();
-  Container *pc = parent();
+  ContainerImpl *pc = parent();
   if (pc)
     {
       ref (pc);
@@ -901,7 +901,7 @@ ItemImpl::set_parent (Container *pcontainer)
   if (pcontainer)
     {
       /* ensure parent items are always containers (see parent()) */
-      if (!dynamic_cast<Container*> (pcontainer))
+      if (!dynamic_cast<ContainerImpl*> (pcontainer))
         throw Exception ("not setting non-Container item as parent: ", pcontainer->name());
       m_parent = pcontainer;
       if (m_parent->heritage())

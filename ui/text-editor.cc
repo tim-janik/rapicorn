@@ -16,7 +16,7 @@
  */
 #include "text-editor.hh"
 #include "factory.hh"
-#include "containerimpl.hh"
+#include "container.hh"
 
 namespace Rapicorn {
 namespace Text {
@@ -78,7 +78,7 @@ Editor::list_properties()
     MakeProperty (Editor, request_chars,  _("Request Chars"),  _("Number of characters to request space for."), 0, INT_MAX, 2, "rw"),
     MakeProperty (Editor, request_digits, _("Request Digits"), _("Number of digits to request space for."), 0, INT_MAX, 2, "rw"),
   };
-  static const PropertyList property_list (properties, Container::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::list_properties());
   return property_list;
 }
 

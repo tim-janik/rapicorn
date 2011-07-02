@@ -15,7 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "buttons.hh"
-#include "containerimpl.hh"
+#include "container.hh"
 #include "painter.hh"
 #include "factory.hh"
 #include "window.hh"
@@ -36,7 +36,7 @@ ButtonArea::list_properties()
     MakeProperty (ButtonArea, on_click3,  _("On CLick3"),  _("Command on button3 click"), "rw"),
     MakeProperty (ButtonArea, click_type, _("CLick Type"), _("Click event generation type"), "rw"),
   };
-  static const PropertyList property_list (properties, Container::list_properties());
+  static const PropertyList property_list (properties, ContainerImpl::list_properties());
   return property_list;
 }
 

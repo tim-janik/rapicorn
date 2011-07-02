@@ -134,7 +134,7 @@ class FactorySingleton {
                                                          const VariableMap  &const_call_arguments,
                                                          Evaluator          &env,
                                                          ChildContainerSlot *ccslot,
-                                                         Container          *parent,
+                                                         ContainerImpl      *parent,
                                                          FactoryContext     *fc);
   void                          call_gadget_children    (const BaseGadget   *bgadget,
                                                          ItemImpl           &item,
@@ -588,7 +588,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
                                const VariableMap  &const_call_arguments,
                                Evaluator          &env,
                                ChildContainerSlot *ccslot,
-                               Container          *parent,
+                               ContainerImpl      *parent,
                                FactoryContext     *fc)
 {
   return_val_if_fail (fc != NULL, *(ItemImpl*)NULL);
@@ -661,8 +661,8 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
     /* setup child container */
     if (!ccslot) /* outer call */
       {
-        Container *container = dynamic_cast<Container*> (outer_ccslot.item);
-        Container *item_container = dynamic_cast<Container*> (&item);
+        ContainerImpl *container = dynamic_cast<ContainerImpl*> (outer_ccslot.item);
+        ContainerImpl *item_container = dynamic_cast<ContainerImpl*> (&item);
         if (item_container && !outer_ccslot.cgadget)
           item_container->child_container (item_container);
         else if (item_container && container)
@@ -711,7 +711,7 @@ FactorySingleton::call_gadget_children (const BaseGadget   *bgadget,
   if (!bgadget->children.size())
     return;
   /* retrieve container */
-  Container *container = item.interface<Container*>();
+  ContainerImpl *container = item.interface<ContainerImpl*>();
 #if 0
   diag ("children of %s:", gadget->ident.c_str());
   uint nth = 0;
@@ -837,7 +837,7 @@ Factory::create_item (const String       &gadget_identifier,
   return item; // floating
 }
 
-Container&
+ContainerImpl&
 Factory::create_container (const String       &gadget_identifier,
                            const ArgumentList &arguments,
                            const ArgumentList &env_variables)
@@ -847,7 +847,7 @@ Factory::create_container (const String       &gadget_identifier,
   ItemImpl &item = FactorySingleton::singleton->construct_gadget (gadget_identifier,
                                                                   arguments, env_variables,
                                                                   &gadget_definition);
-  Container *container = dynamic_cast<Container*> (&item);
+  ContainerImpl *container = dynamic_cast<ContainerImpl*> (&item);
   if (!container)
     fatal ("%s: constructed widget lacks container interface: %s", gadget_definition.c_str(), item.typeid_pretty_name().c_str());
   return *container; // floating
