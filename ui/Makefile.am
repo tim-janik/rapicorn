@@ -8,27 +8,29 @@ DEFS      = -DRAPICORN_CONVENIENCE -D__SOURCE_FILE__='"$(patsubst $(realpath $(a
 	    $(RAPICORN_GUI_CFLAGS) -D__RAPICORN_BUILD__
 
 # === Source Files ===
-rapicorn_public_headers = $(strip 	\
-	utilities.hh	events.hh	application.hh	cmdlib.hh	coffer.hh		\
-	primitives.hh	region.hh	loop.hh		viewp0rt.hh	heritage.hh		\
-	properties.hh	commands.hh	rope.hh		painter.hh	compath.hh		\
-	item.hh		container.hh	window.hh	table.hh	arrangement.hh		\
-	adjustment.hh	image.hh	paintitems.hh	slider.hh	paintcontainers.hh	\
-	buttons.hh	factory.hh	evaluator.hh	scrollitems.hh	layoutcontainers.hh	\
-	text-editor.hh	text-pango.hh	sinfex.hh	testitems.hh	\
-	sizegroup.hh	listarea.hh	\
-	ui.hh		keycodes.hh	$(rapicorn_impl_headers)	\
+rapicorn_public_headers = $(strip	\
+	adjustment.hh	application.hh	arrangement.hh	buttons.hh	\
+	cmdlib.hh	coffer.hh	commands.hh	compath.hh	container.hh	\
+	evaluator.hh	events.hh	factory.hh	heritage.hh	\
+	image.hh	item.hh	keycodes.hh	layoutcontainers.hh	listarea.hh	loop.hh	\
+	paintcontainers.hh	painter.hh	paintitems.hh	primitives.hh	properties.hh	\
+	region.hh	rope.hh	scrollitems.hh	sinfex.hh	sizegroup.hh	slider.hh	\
+	table.hh	testitems.hh	text-editor.hh	text-pango.hh	\
+	ui.hh	utilities.hh	viewp0rt.hh	window.hh	\
+	$(rapicorn_impl_headers)	\
 )
-rapicorn_cc_sources = $(sort 		\
-	utilities.cc	events.cc	application.cc	cmdlib.cc	coffer.cc		\
-	primitives.cc	region.cc	loop.cc		viewp0rt.cc	heritage.cc		\
-	properties.cc	commands.cc	rope.cc		painter.cc	compath.cc		\
-	item.cc		container.cc	window.cc	table.cc	arrangement.cc		\
-	adjustment.cc	image.cc	paintitems.cc	slider.cc	paintcontainers.cc	\
-	buttons.cc	factory.cc	evaluator.cc	scrollitems.cc	layoutcontainers.cc	\
-	text-editor.cc	text-pango.cc	sinfex.cc	testitems.cc	\
-	sizegroup.cc	listarea.cc	\
-	interfaces.cc	viewp0rt-gtk.cc	regionimpl.c	blitfuncs.cc	blit-mmx.cc		\
+rapicorn_cc_sources = $(strip	\
+	adjustment.cc	application.cc	arrangement.cc	\
+	blit-mmx.cc	blitfuncs.cc	buttons.cc	\
+	cmdlib.cc	coffer.cc	commands.cc	compath.cc	container.cc	\
+	evaluator.cc	events.cc	factory.cc	heritage.cc	\
+	image.cc	interfaces.cc	item.cc		\
+	layoutcontainers.cc	listarea.cc	loop.cc		\
+	paintcontainers.cc	painter.cc	paintitems.cc	primitives.cc	properties.cc	\
+	region.cc	regionimpl.c	rope.cc	\
+	scrollitems.cc	sinfex.cc	sizegroup.cc	slider.cc	\
+	table.cc	testitems.cc	text-editor.cc	text-pango.cc	\
+	utilities.cc	viewp0rt-gtk.cc	viewp0rt.cc	window.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
 	arrangementimpl.hh		\
