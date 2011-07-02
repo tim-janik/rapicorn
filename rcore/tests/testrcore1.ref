@@ -3,27 +3,28 @@
 ### ** +  testrcore1  + ** ###
 ### ** +--------------+ ** ###
 
-## Testing: DataList/BEGIN...
-
-## Testing: DataList/DataList<String>...
+# Test:  DataList/BEGIN ...
+  TEST   DataList/BEGIN:                                                 OK
+# Test:  DataList/DataList<String> ...
 ::StringKey::destroy: delete "RAPICORN";
-
-## Testing: DataList/DataList<int>...
+  TEST   DataList/DataList<String>:                                      OK
+# Test:  DataList/DataList<int> ...
 ::MyKey::destroy: delete 4;
 ::MyKey::destroy: delete 8;
 ::MyKey::destroy: delete 9;
-
-## Testing: DataList/Mixed...
+  TEST   DataList/DataList<int>:                                         OK
+# Test:  DataList/Mixed ...
 ::StringKey::destroy: delete "RAPICORN";
 ::MyKey::destroy: delete 4;
 ::MyKey::destroy: delete 8;
 ::StringKey::destroy: delete "RAPICORN";
 ::MyKey::destroy: delete 9;
-
-## Testing: DataList/Threaded...
+  TEST   DataList/Mixed:                                                 OK
+# Test:  DataList/Threaded ...
 ::StringKey::destroy: delete "RAPICORN";
 ::MyKey::destroy: delete 4;
 ::MyKey::destroy: delete 8;
 ::StringKey::destroy: delete "RAPICORN";
-
-## Testing: DataList/END...
+  TEST   DataList/Threaded:                                              OK
+# Test:  DataList/END ...
+  TEST   DataList/END:                                                   OK

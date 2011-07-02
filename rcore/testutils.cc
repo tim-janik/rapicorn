@@ -135,20 +135,19 @@ test_output (int kind, const char *format, ...)
     case 3 + VERBOSE_TAG:       // test program title
       bar = "### ** +--" + String (msg.size(), '-') + "--+ ** ###";
       msg = "### ** +  " + msg + "  + ** ###";
-      sout = "\n" + bar + "\n" + msg + "\n" + bar + "\n";
+      sout = "\n" + bar + "\n" + msg + "\n" + bar + "\n\n";
       break;
-    case 4:                     // test start
+    case 4: case 4 + VERBOSE_TAG:       // test start
       sout = "  TEST   " + msg + ":" + String (63 - MIN (63, msg.size()), ' ');
       if (!test_start)
         {
           test_start = strdup (sout.c_str());
           sout = "";
         }
+      if (verbose())
+        sout = "# Test:  " + msg + " ...\n";
       break;
-    case 4 + VERBOSE_TAG:       // test start
-      sout = "\n## Testing: " + msg + "...\n";
-      break;
-    case 5:                     // test done
+    case 5: case 5 + VERBOSE_TAG:       // test done
       if (test_start)
         {
           sout = test_start;
@@ -166,8 +165,6 @@ test_output (int kind, const char *format, ...)
         }
       else
         sout += "OK\n";
-      break;
-    case 5 + VERBOSE_TAG:       // test done
       break;
     case 6:                     // test warning
       {
