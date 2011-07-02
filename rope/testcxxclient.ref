@@ -131,7 +131,7 @@ enum ExtensiveEnum {
   V36 = 42, // "foo""4"
 };
 
-class FirstInterface_SmartHandle : public virtual Plic::SmartHandle {
+class FirstInterface_SmartHandle : public Plic::SmartHandle {
 protected:
 public:
   inline FirstInterface_SmartHandle () {}
@@ -266,7 +266,7 @@ typedef std::string s;
 } // Auxdata
 
 namespace InterfaceTests {
-class UIWidgetArea_SmartHandle : public virtual Plic::SmartHandle {
+class UIWidgetArea_SmartHandle : public Plic::SmartHandle {
 protected:
 public:
   inline UIWidgetArea_SmartHandle () {}
@@ -296,7 +296,7 @@ public:
 };
 
 
-class Parent_SmartHandle : public virtual Plic::SmartHandle {
+class Parent_SmartHandle : public Plic::SmartHandle {
 protected:
 public:
   inline Parent_SmartHandle () {}
@@ -347,7 +347,7 @@ struct QuickSequence : public std::vector<double> {
   bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
 
-class QuickIface_SmartHandle : public virtual Plic::SmartHandle {
+class QuickIface_SmartHandle : public Plic::SmartHandle {
 protected:
 public:
   inline QuickIface_SmartHandle () {}
@@ -357,7 +357,7 @@ public:
 };
 
 
-class MethodTestInterface_SmartHandle : public virtual Plic::SmartHandle {
+class MethodTestInterface_SmartHandle : public Plic::SmartHandle {
 protected:
 public:
   inline MethodTestInterface_SmartHandle () {}
@@ -385,7 +385,7 @@ public:
 };
 
 
-class SignalTestInterface_SmartHandle : public virtual Plic::SmartHandle {
+class SignalTestInterface_SmartHandle : public Plic::SmartHandle {
 protected:
 public:
   inline SignalTestInterface_SmartHandle () {}
@@ -394,7 +394,7 @@ public:
 };
 
 
-class PropertyTester_SmartHandle : public virtual Plic::SmartHandle {
+class PropertyTester_SmartHandle : public Plic::SmartHandle {
 protected:
 public:
   inline PropertyTester_SmartHandle () {}
@@ -431,7 +431,7 @@ enum ClickType {
   CLICK_KEY_REPEAT = 5,
 };
 
-class ButtonArea_SmartHandle : public virtual Plic::SmartHandle {
+class ButtonArea_SmartHandle : public Plic::SmartHandle {
 protected:
 public:
   inline ButtonArea_SmartHandle () {}
@@ -451,7 +451,7 @@ public:
 class PureMethods_SmartHandle;
 
 
-class PureMethods_SmartHandle : public virtual Plic::SmartHandle {
+class PureMethods_SmartHandle : public Plic::SmartHandle {
 protected:
 public:
   inline PureMethods_SmartHandle () {}

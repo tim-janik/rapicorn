@@ -695,7 +695,7 @@ class Generator:
     else:
       l = ['public ' + self.C (pr) for pr in l] # types -> names
       if not l:
-        l = ['public virtual Plic::SmartHandle']
+        l = ['public Plic::SmartHandle']
     s += 'class %s' % self.C (type_info)
     if l:
       s += ' : %s' % ', '.join (l)

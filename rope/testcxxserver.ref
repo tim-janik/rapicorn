@@ -141,7 +141,7 @@ public:
   virtual void            void_func ();
 };
 
-class FirstInterface_SmartHandle : public virtual Plic::SmartHandle {
+class FirstInterface_SmartHandle : public Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
@@ -315,7 +315,7 @@ public:
   virtual void            on_click2in   (const std::string &command);
 };
 
-class UIWidgetArea_SmartHandle : public virtual Plic::SmartHandle {
+class UIWidgetArea_SmartHandle : public Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
@@ -352,7 +352,7 @@ protected:
 public:
 };
 
-class Parent_SmartHandle : public virtual Plic::SmartHandle {
+class Parent_SmartHandle : public Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
@@ -460,7 +460,7 @@ public:
   virtual void            simple_function (int i = 9);
 };
 
-class QuickIface_SmartHandle : public virtual Plic::SmartHandle {
+class QuickIface_SmartHandle : public Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
@@ -503,7 +503,7 @@ public:
                                                           I_QuickIface_Interface &iface0 = *(I_QuickIface_Interface*) NULL);
 };
 
-class MethodTestInterface_SmartHandle : public virtual Plic::SmartHandle {
+class MethodTestInterface_SmartHandle : public Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
@@ -576,7 +576,7 @@ public:
   Signal_self_args sig_self_args;
 };
 
-class SignalTestInterface_SmartHandle : public virtual Plic::SmartHandle {
+class SignalTestInterface_SmartHandle : public Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
@@ -617,7 +617,7 @@ public:
   virtual void            self_prop (I_PropertyTester_Interface*) = 0;
 };
 
-class PropertyTester_SmartHandle : public virtual Plic::SmartHandle {
+class PropertyTester_SmartHandle : public Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
@@ -680,7 +680,7 @@ public:
   Signal_activate sig_activate;
 };
 
-class ButtonArea_SmartHandle : public virtual Plic::SmartHandle {
+class ButtonArea_SmartHandle : public Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
@@ -716,7 +716,7 @@ public:
   virtual int             pure_method (double f) = 0;
 };
 
-class PureMethods_SmartHandle : public virtual Plic::SmartHandle {
+class PureMethods_SmartHandle : public Plic::SmartHandle {
 protected:
   inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
   inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
