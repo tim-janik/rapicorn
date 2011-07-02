@@ -621,17 +621,6 @@ Container::viewp0rt_point_children (Point                   p, /* viewp0rt coord
   point_children (point_from_viewp0rt (p), stack);
 }
 
-bool
-Container::match_interface (InterfaceMatch &imatch) const
-{
-  if (imatch.done() || imatch.match (const_cast<Container*> (this), name()))
-    return true;
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    if (cw->match_interface (imatch))
-      break;
-  return imatch.done();
-}
-
 void
 Container::render (Display &display)
 {

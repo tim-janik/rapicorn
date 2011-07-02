@@ -747,15 +747,82 @@ public: /* generic data API */
 /* --- BaseObject --- */
 class BaseObject : public virtual Locatable, public virtual DataListContainer, protected NonCopyable {
 protected:
+  class                       InterfaceMatcher;
+  template<class C>     class InterfaceCast;
+  template<class C>     class InterfaceMatch;
   static BaseObject* plor_get  (const String &plor_url);
   void               plor_name (const String &plor_name);
 public:
   String             plor_name () const;
   virtual void       dispose   ();
 };
+class NullInterface : std::exception {};
 
 /* --- implementation --- */
 void _rapicorn_init_threads (void);
+
+struct BaseObject::InterfaceMatcher : protected NonCopyable {
+  explicit      InterfaceMatcher (const String &ident) : m_ident (ident), m_match_found (false) {}
+  bool          done             () const { return m_match_found; }
+  virtual  bool match            (BaseObject *object, const String &ident = String()) = 0;
+protected:
+  const String &m_ident;
+  bool          m_match_found;
+};
+
+template<class C>
+struct BaseObject::InterfaceCast : BaseObject::InterfaceMatcher {
+  explicit      InterfaceCast   (const String &ident) : InterfaceMatcher (ident), m_instance (NULL) {}
+  virtual bool  match           (BaseObject *obj, const String &ident);
+protected:
+  C            *m_instance;
+};
+
+template<class C>
+struct BaseObject::InterfaceMatch : InterfaceCast<C> {
+  typedef C&    Result;
+  explicit      InterfaceMatch  (const String &ident) : InterfaceCast<C> (ident) {}
+  C&            result          (bool may_throw);
+};
+template<class C>
+struct BaseObject::InterfaceMatch<C&> : InterfaceMatch<C> {
+  explicit      InterfaceMatch  (const String &ident) : InterfaceMatch<C> (ident) {}
+};
+template<class C>
+struct BaseObject::InterfaceMatch<C*> : InterfaceCast<C> {
+  typedef C*    Result;
+  explicit      InterfaceMatch  (const String &ident) : InterfaceCast<C> (ident) {}
+  C*            result          (bool may_throw);
+};
+
+template<class C> bool
+BaseObject::InterfaceCast<C>::match (BaseObject *obj, const String &ident)
+{
+  if (!m_instance)
+    {
+      const String &id = m_ident;
+      if (id.empty() || id == ident)
+        {
+          m_instance = dynamic_cast<C*> (obj);
+          m_match_found = m_instance != NULL;
+        }
+    }
+  return m_match_found;
+}
+
+template<class C> C&
+BaseObject::InterfaceMatch<C>::result (bool may_throw)
+{
+  if (!this->m_instance && may_throw)
+    throw NullInterface();
+  return *this->m_instance;
+}
+
+template<class C> C*
+BaseObject::InterfaceMatch<C*>::result (bool may_throw)
+{
+  return InterfaceCast<C>::m_instance;
+}
 
 } // Rapicorn
 

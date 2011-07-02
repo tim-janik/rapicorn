@@ -134,14 +134,4 @@ Exception::~Exception() throw()
     free (reason);
 }
 
-Convertible::Convertible()
-{}
-
-bool
-Convertible::match_interface (InterfaceMatch &imatch) const
-{
-  Convertible *self = const_cast<Convertible*> (this);
-  return imatch.done() || imatch.match (self);
-}
-
 } // Rapicorn

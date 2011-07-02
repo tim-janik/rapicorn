@@ -21,7 +21,7 @@
 
 namespace Rapicorn {
 
-class Adjustment : public virtual Convertible {
+class Adjustment : public virtual BaseObject {
   typedef Signal<Adjustment, void ()>	SignalValueChanged;
   typedef Signal<Adjustment, void ()>	SignalRangeChanged;
 protected:
@@ -69,7 +69,7 @@ public:
                                          double  page_size = 0);
 };
 
-class AdjustmentSource : public virtual Convertible {
+class AdjustmentSource : public virtual BaseObject {
 public:
   virtual Adjustment*   get_adjustment  (AdjustmentSourceType   adj_source,
                                          const String          &name = "") = 0;

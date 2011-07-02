@@ -269,31 +269,29 @@ Item::uncross_links (Item &link)
 }
 
 bool
-Item::match_interface (InterfaceMatch &imatch) const
+Item::match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const
 {
-  return imatch.done() || imatch.match (const_cast<Item*> (this), name());
-}
-
-bool
-Item::match_parent_interface (InterfaceMatch &imatch) const
-{
-  Item *pitem = parent();
-  if (pitem && imatch.match (pitem, pitem->name()))
+  Item *self = const_cast<Item*> (this);
+  if (wself && imatcher.match (self, name()))
     return true;
-  if (pitem)
-    return pitem->match_parent_interface (imatch);
-  else
-    return false;
-}
-
-bool
-Item::match_toplevel_interface (InterfaceMatch &imatch) const
-{
-  Item *pitem = parent();
-  if (pitem && pitem->match_toplevel_interface (imatch))
-    return true;
-  if (imatch.match (const_cast<Item*> (this), name()))
-    return true;
+  if (wparent)
+    {
+      Item *pitem = parent();
+      while (pitem)
+        {
+          if (imatcher.match (pitem, pitem->name()))
+            return true;
+          pitem = pitem->parent();
+        }
+    }
+  if (children)
+    {
+      Container *container = dynamic_cast<Container*> (self);
+      if (container)
+        for (Container::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
+          if (cw->match_interface (1, 0, 1, imatcher))
+            return true;
+    }
   return false;
 }
 

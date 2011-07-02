@@ -51,7 +51,7 @@ public:
 
 /* --- Item --- */
 typedef Signals::Slot1<void, Item&> ItemSlot;
-class Item : public virtual It3m, public virtual Convertible {
+class Item : public virtual It3m {
   friend                      class ClassDoctor;
   friend                      class Container;
   friend                      class SizeGroup;
@@ -108,7 +108,6 @@ protected:
   bool                        tune_requisition  (double       new_width,
                                                  double       new_height);
   /* signal methods */
-  virtual bool                match_interface   (InterfaceMatch &imatch) const;
   virtual void                do_invalidate     () = 0;
   virtual void                do_changed        () = 0;
   /* idlers & timers */
@@ -317,36 +316,37 @@ private:
 public:
   virtual It3m*      unique_component   (const String &path);
   virtual ItemSeq    collect_components (const String &path);
-  template<typename Type>
-  typename
-  InterfaceType<Type>::Result parent_interface  (const String &ident = String(), const std::nothrow_t &nt = dothrow) const
-  {
-    InterfaceType<Type> interface_type (ident);
-    match_parent_interface (interface_type);
-    return interface_type.result (&nt == &dothrow);
-  }
-  template<typename Type>
-  typename
-  InterfaceType<Type>::Result parent_interface  (const std::nothrow_t &nt) const { return parent_interface<Type> (String(), nt); }
-  template<typename Type>
-  typename
-  InterfaceType<Type>::Result toplevel_interface  (const String &ident = String(), const std::nothrow_t &nt = dothrow) const
-  {
-    InterfaceType<Type> interface_type (ident);
-    match_toplevel_interface (interface_type);
-    return interface_type.result (&nt == &dothrow);
-  }
-  template<typename Type>
-  typename
-  InterfaceType<Type>::Result toplevel_interface  (const std::nothrow_t &nt) const { return toplevel_interface<Type> (String(), nt); }
-  virtual OwnedMutex&         owned_mutex       ();
+  template<class C> typename
+  InterfaceMatch<C>::Result interface        (const String &ident = String(),
+                                              const std::nothrow_t &nt = dothrow) const;
+  template<class C> typename
+  InterfaceMatch<C>::Result parent_interface (const String &ident = String(),
+                                              const std::nothrow_t &nt = dothrow) const;
+  virtual OwnedMutex&       owned_mutex        ();
 private:
-  bool                 match_parent_interface   (InterfaceMatch &imatch) const;
-  bool                 match_toplevel_interface (InterfaceMatch &imatch) const;
-  void                 type_cast_error          (const char *dest_type) RAPICORN_NORETURN;
+  void                  type_cast_error (const char *dest_type) RAPICORN_NORETURN;
+  bool                  match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
 };
 inline bool operator== (const Item &item1, const Item &item2) { return &item1 == &item2; }
 inline bool operator!= (const Item &item1, const Item &item2) { return &item1 != &item2; }
+
+template<class C> typename Item::InterfaceMatch<C>::Result
+Item::interface (const String         &ident,
+                 const std::nothrow_t &nt) const
+{
+  InterfaceMatch<C> interface_match (ident);
+  match_interface (1, 0, 1, interface_match);
+  return interface_match.result (&nt == &dothrow);
+}
+
+template<class C> typename Item::InterfaceMatch<C>::Result
+Item::parent_interface (const String         &ident,
+                        const std::nothrow_t &nt) const
+{
+  InterfaceMatch<C> interface_match (ident);
+  match_interface (0, 1, 0, interface_match);
+  return interface_match.result (&nt == &dothrow);
+}
 
 } // Rapicorn
 

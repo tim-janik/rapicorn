@@ -22,7 +22,7 @@
 
 namespace Rapicorn {
 
-struct Activatable : virtual Convertible { // FIXME: remove this? /* ActivateModel */
+struct Activatable : virtual BaseObject { // FIXME: remove this? /* ActivateModel */
   SignalVoid<Activatable>       sig_changed;
   virtual bool                  check_activate ();
   virtual void                  activate       ();

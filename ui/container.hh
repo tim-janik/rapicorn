@@ -36,7 +36,6 @@ struct Container : public virtual Item {
                                          Item           &link);
 protected:
   virtual            ~Container         ();
-  virtual bool        match_interface   (InterfaceMatch &imatch) const;
   virtual void        add_child         (Item           &item) = 0;
   virtual void        repack_child      (Item           &item,
                                          const PackInfo &orig,
