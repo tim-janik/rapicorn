@@ -373,15 +373,6 @@ public:
   {
     return create (klass, red, green, blue, cname, ctype);
   }
-  static Color
-  resolve_color (const PangoAttribute *attr,
-                 Heritage             &heritage)
-  {
-    assert (attr->klass == foreground_klass() || attr->klass == background_klass());
-    const LazyColorAttr *self = (const LazyColorAttr*) attr;
-    Color c = heritage.resolve_color (self->cname, STATE_NORMAL, self->ctype);
-    return c;
-  }
   static String
   get_name (const PangoAttribute *attr)
   {
