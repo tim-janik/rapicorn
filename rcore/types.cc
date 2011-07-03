@@ -16,6 +16,7 @@
  */
 #include "types.hh"
 #include "rapicornthread.hh"
+#include "main.hh"
 #include <cstring>
 #include <errno.h>
 #include <stdlib.h>
@@ -275,13 +276,14 @@ Type::register_package_file (const String &filename)
 
 #include "types-zgen.c" // provides types-std.idl as .tpg in RAPICORNSTD_RODATA_*
 
-void
-_rapicorn_init_types (void)
+static void
+init_types (void)
 {
   static bool initialized = false;
   assert (!initialized);
   initialized = true;
   Type::register_package (RAPICORNSTD_RODATA_SIZE, (const char*) RAPICORNSTD_RODATA_DATA);
 }
+static InitHook _init_types ("core/30 Init Types", init_types);
 
 } // Rapicorn

@@ -3,6 +3,7 @@
 #include "rsvg.h"
 #include "rsvg-cairo.h"
 #include "rsvg-private.h"
+#include "../main.hh"
 
 #include "svg-tweak.h"
 
@@ -324,12 +325,12 @@ Library::lookup_element (const String &id)
 }
 
 static void
-svg_initialisation_hook (void)
+init_svg_lib()
 {
   g_type_init(); // NOP on subsequent invocations
   Library::add_search_dir (RAPICORN_SVGDIR);
 }
-static InitHook inithook (svg_initialisation_hook, -1);
+static InitHook _init_svg_lib ("core/35 Init SVG Lib", init_svg_lib);
 
 static __thread Tweaker *thread_tweaker = NULL;
 

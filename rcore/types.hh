@@ -69,8 +69,6 @@ private:
   Type&                 operator=       (const Type&); // must not be used
 };
 
-void _rapicorn_init_types (void);
-
 } // Rapicorn
 
 #endif /* __RAPICORN_TYPES_HH__ */

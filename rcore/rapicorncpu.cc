@@ -16,6 +16,7 @@
  */
 #include <glib.h>
 #include "rapicorncpu.hh"
+#include "main.hh"
 #include <setjmp.h>
 #include <signal.h>
 #include <string.h>
@@ -228,8 +229,8 @@ cpu_info (void)
   return cached_cpu_info;
 }
 
-void
-_rapicorn_init_cpuinfo (void)
+static void
+init_cpuinfo (void)
 {
   static char vendor_buffer[13];
   CPUInfo lci;
@@ -247,6 +248,7 @@ _rapicorn_init_cpuinfo (void)
     }
   cached_cpu_info = lci;
 }
+static InitHook _init_cpuinfo ("core/10 Init CPU Info", init_cpuinfo);
 
 String
 cpu_info_string (const CPUInfo &cpu_info)

@@ -27,9 +27,6 @@ typedef RapicornCPUInfo CPUInfo;
 CPUInfo cpu_info	(void);
 String  cpu_info_string	(const CPUInfo &cpu_info);
 
-/* --- implementation --- */
-void	_rapicorn_init_cpuinfo	(void);
-
 } // Rapicorn
 
 #endif /* __RAPICORN_CPU_HH__ */

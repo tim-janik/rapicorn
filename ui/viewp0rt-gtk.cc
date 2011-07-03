@@ -1328,38 +1328,40 @@ namespace Rapicorn {
 static Thread *gtkthread = NULL;
 
 void
-rapicorn_init_with_gtk_thread (int        *argcp,
-                               char     ***argvp,
-                               const char *app_name)
+rapicorn_init_with_gtk_thread (const String       &app_ident,
+                               int                *argcp,
+                               char              **argv,
+                               const StringVector &args)
 {
   /* non-GTK initialization */
-  rapicorn_init (argcp, *argvp, app_name);
+  rapicorn_init (app_ident, argcp, argv, args);
   g_type_init();
   /* setup GDK_THREADS_ENTER/GDK_THREADS_LEAVE */
   gdk_threads_init();
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
   /* GTK intilization */
-  gtk_init (argcp, argvp);
+  gtk_init (argcp, &argv);
   gtkthread = new RapicornGtkThread ();
   ref_sink (gtkthread);
   gtkthread->start();
 }
 
 bool
-rapicorn_init_with_foreign_gtk (int        *argcp,
-                                char     ***argvp,
-                                const char *app_name,
-                                bool        auto_quit_gtk)
+rapicorn_init_with_foreign_gtk (const String       &app_ident,
+                                int                *argcp,
+                                char              **argv,
+                                const StringVector &args)
 {
   /* non-GTK initialization */
-  rapicorn_init (argcp, *argvp, app_name);
+  rapicorn_init (app_ident, argcp, argv, args);
   g_type_init();
   /* setup GDK_THREADS_ENTER/GDK_THREADS_LEAVE */
   gdk_threads_init();
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
+  const bool auto_quit_gtk = string_to_bool (string_vector_find (args, "auto-quit-gtk=", " yes"));
   rapicorn_viewp0rt__auto_quit_gtk = auto_quit_gtk;
   /* GTK intilization */
-  return gtk_init_check (argcp, argvp); // allow $DISPLAY initialisation to fail
+  return gtk_init_check (argcp, &argv); // allow $DISPLAY initialisation to fail
 }
 
 void

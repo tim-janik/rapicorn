@@ -18,6 +18,7 @@
 using namespace Rapicorn;
 #include "cxx-client.hh"        // generated client API
 #include <ui/rope.hh>
+#include <rcore/testutils.hh>
 #include <stdexcept>
 
 namespace { // Anonymous
@@ -45,9 +46,8 @@ int
 main (int   argc,
       char *argv[])
 {
+  rapicorn_init_test (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
   const int clockid = CLOCK_REALTIME; // CLOCK_MONOTONIC
-  RapicornInitValue ivalues[] = { { NULL } };
-  rapicorn_init_core (&argc, argv, NULL, ivalues);
   vector<String> cmdline_args;
   for (int i = 1; i < argc; i++)
     cmdline_args.push_back (argv[i]);

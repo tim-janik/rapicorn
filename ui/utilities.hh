@@ -39,9 +39,10 @@ namespace Rapicorn {
 class RapicornTester;	// allow Rapicorn test implementations
 
 /* --- i18n macros --- */
-void          rapicorn_init             (int        *argcp,
-                                         char      **argvp,
-                                         const char *app_name);
+void          rapicorn_init             (const String       &app_ident,
+                                         int                *argc,
+                                         char              **argv,
+                                         const StringVector &args = StringVector());
 void          rapicorn_thread_enter     ();
 bool          rapicorn_thread_try_enter ();
 bool          rapicorn_thread_entered   ();

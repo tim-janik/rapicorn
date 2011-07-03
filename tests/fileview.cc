@@ -64,7 +64,7 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn for X11 */
-  app.init_with_x11 (&argc, &argv, "FileView");
+  app.init_with_x11 ("FileView", &argc, argv);
   /* initialization acquired global Rapicorn mutex */
 
   /* load GUI definition file, relative to argv[0] */

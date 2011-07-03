@@ -94,6 +94,12 @@ public:
 #define RAPICORN_STRINGIFY_ARG(arg)             #arg
 #define RAPICORN_CODELOC_STRING()               std::string (std::string (__FILE__) + ":" + RAPICORN_STRINGIFY (__LINE__) + ":" + __FUNCTION__ + "()")
 #define RAPICORN_CODELOC()                      (RAPICORN_CODELOC_STRING().c_str())
+#define RAPICORN_STRING_VECTOR_FROM_ARRAY(ConstCharArray)               ({ \
+  Rapicorn::StringVector __a;                                           \
+  const uint64_t __l = RAPICORN_ARRAY_SIZE (ConstCharArray);            \
+  for (uint64_t __ai = 0; __ai < __l; __ai++)                           \
+    __a.push_back (ConstCharArray[__ai]);                               \
+  __a; })
 
 /* --- typeid base type --- */
 class VirtualTypeid {
@@ -121,38 +127,12 @@ class ClassDoctor;
 class ClassDoctor {};
 #endif
 
-/* --- initialization --- */
-typedef RapicornInitValue    InitValue;
-typedef RapicornInitSettings InitSettings;
-InitSettings init_settings      ();
-void         rapicorn_init_core (int        *argcp,
-                                 char      **argvp,
-                                 const char *app_name,
-                                 InitValue   ivalues[] = NULL);
-bool         init_value_bool    (InitValue  *value);
-double       init_value_double  (InitValue  *value);
-int64        init_value_int     (InitValue  *value);
-String       process_handle     ();
-String       process_name       ();
-String       process_cwd        ();
-
-/* --- initialization hooks --- */
-class InitHook : protected NonCopyable {
-  typedef void (*InitHookFunc) (void);
-  InitHook    *next;
-  int          priority;
-  InitHookFunc hook;
-  static void  invoke_hooks (void);
-public:
-  explicit InitHook (InitHookFunc _func,
-                     int          _priority = 0);
-};
-
 /* === printing, errors, warnings, debugging === */
 void        printerr   (const char   *format, ...) RAPICORN_PRINTF (1, 2);
 void        printerr   (const std::string &msg);
 void        printout   (const char   *format, ...) RAPICORN_PRINTF (1, 2);
 inline void breakpoint ();
+String      process_handle ();
 
 /* === internal convenience === */
 #ifdef  RAPICORN_CONVENIENCE
@@ -287,6 +267,9 @@ String  string_strip                                     (const String &input);
 String  string_substitute_char                           (const String &input,
                                                           const char    match,
                                                           const char    subst);
+String  string_vector_find (const StringVector &svector,
+                            const String       &key,
+                            const String       &fallback);
 
 /* --- string options --- */
 bool    string_option_check     (const String   &option_string,
@@ -756,9 +739,6 @@ public:
   virtual void       dispose   ();
 };
 class NullInterface : std::exception {};
-
-/* --- implementation --- */
-void _rapicorn_init_threads (void);
 
 struct BaseObject::InterfaceMatcher : protected NonCopyable {
   explicit      InterfaceMatcher (const String &ident) : m_ident (ident), m_match_found (false) {}

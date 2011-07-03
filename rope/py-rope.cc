@@ -68,11 +68,11 @@ rope_init_dispatcher (PyObject *self,
   if (PyErr_Occurred())
     return NULL;
   /* initialize core */
-  RapicornInitValue ivalues[] = { { NULL } };
+  String application_name (ns, nl); // first argument
+  char *argv[2] = { NULL, NULL };
+  argv[0] = (char*) application_name.c_str();
   int argc = 1;
-  char *argv[1], **ap = argv;
-  argv[0] = (char*) String (ns, nl).c_str(); // application_name
-  rapicorn_init_core (&argc, ap, NULL, ivalues);
+  rapicorn_init_core (application_name, &argc, argv);
   int cpu = Thread::Self::affinity (1);
   uint64 app_id = rope_thread_start (String (ns, nl), strv, cpu);
   if (app_id == 0)

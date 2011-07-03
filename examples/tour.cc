@@ -46,7 +46,7 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn and its gtk backend */
-  app.init_with_x11 (&argc, &argv, "TourTest");
+  app.init_with_x11 (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
   /* initialization acquired global Rapicorn mutex */
 
   /* register builtin images */

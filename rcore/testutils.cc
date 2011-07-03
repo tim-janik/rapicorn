@@ -15,6 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "testutils.hh"
+#include "main.hh"
 
 #include <algorithm>
 #include <glib.h>
@@ -329,26 +330,27 @@ test_rand_double_range (double range_start,
 namespace Rapicorn {
 
 void
-rapicorn_init_test (int   *argc,
-                    char **argv)
+rapicorn_init_test (const String       &app_ident,
+                    int                *argcp,
+                    char              **argv,
+                    const StringVector &args)
 {
-  /* check that NULL is defined to __null in C++ on 64bit */
+  // check that NULL is defined to __null in C++ on 64bit
   RAPICORN_ASSERT (sizeof (NULL) == sizeof (void*));
-  /* normal initialization */
-  RapicornInitValue ivalues[] = {
-    { "stand-alone", "true" },
-    { "rapicorn-test-parse-args", "true" },
-    { NULL }
-  };
-  rapicorn_init_core (argc, argv, NULL, ivalues); // FIXME: argv
-  unsigned int flags = g_log_set_always_fatal ((GLogLevelFlags) G_LOG_FATAL_MASK);
-  g_log_set_always_fatal ((GLogLevelFlags) (flags | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
+  // Rapicorn initialization
+  const char *ivalues[] = { "autonomous=1", "parse-testargs=1" };
+  StringVector targs = RAPICORN_STRING_VECTOR_FROM_ARRAY (ivalues);
+  std::copy (args.begin(), args.end(), std::back_inserter (targs));
+  rapicorn_init_core (app_ident, argcp, argv, targs);
   Logging::configure ("fatal-criticals:fatal-warnings");
+  const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
+  g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
   CPUInfo ci = cpu_info();
-  Test::flag_test_log = (init_settings().test_codes & 0x2) || Logging::conftest ("test-log", Test::flag_test_log);
-  Test::flag_test_verbose = (init_settings().test_codes & 0x1) || Logging::conftest ("test-verbose", Test::flag_test_verbose |
-                                                                                     Test::flag_test_log);
-  Test::flag_test_slow = (init_settings().test_codes & 0x4) || Logging::conftest ("test-slow", Test::flag_test_slow);
+  Test::flag_test_log = (InitSettings::test_codes() & 0x2) || Logging::conftest ("test-log", Test::flag_test_log);
+  Test::flag_test_verbose = (InitSettings::test_codes() & 0x1) || Logging::conftest ("test-verbose", Test::flag_test_verbose |
+                                                                                   Test::flag_test_log);
+  Test::flag_test_slow = (InitSettings::test_codes() & 0x4) || Logging::conftest ("test-slow", Test::flag_test_slow);
   TTITLE ("%s", Path::basename (argv[0]).c_str());
 }
+
 } // Rapicorn

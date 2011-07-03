@@ -103,7 +103,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, argv);
+  rapicorn_init_test (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
 
   if (argc >= 2 || Test::logging())
     {
@@ -116,5 +116,3 @@ main (int   argc,
 
   return Test::run();
 }
-
-/* vim:set ts=8 sts=2 sw=2: */

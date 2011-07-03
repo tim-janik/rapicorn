@@ -14,6 +14,13 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
+#include "rapicornutils.hh"
+#include "main.hh"
+#include "rapicornutf8.hh"
+#include "rapicornthread.hh"
+#include "rapicornmsg.hh"
+#include "rapicorncpu.hh"
+#include "types.hh"
 #include <errno.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -30,12 +37,6 @@
 #include <cstring>
 #include <iconv.h>
 #include <syslog.h>
-#include "rapicornutils.hh"
-#include "rapicornutf8.hh"
-#include "rapicornthread.hh"
-#include "rapicornmsg.hh"
-#include "rapicorncpu.hh"
-#include "types.hh"
 
 #ifndef _
 #define _(s)    s
@@ -47,244 +48,7 @@
 
 namespace Rapicorn {
 
-static void             process_handle_and_seed_init ();
-
-
 static Msg::CustomType debug_browser ("browser", Msg::DEBUG);
-
-static const InitSettings *rapicorn_init_settings = NULL;
-
-InitSettings
-init_settings ()
-{
-  return *rapicorn_init_settings;
-}
-
-/* --- InitHooks --- */
-static void    (*run_init_hooks) () = NULL;
-static InitHook *init_hooks = NULL;
-
-InitHook::InitHook (InitHookFunc _func,
-                    int          _priority) :
-  next (NULL), priority (_priority), hook (_func)
-{
-  RAPICORN_ASSERT (rapicorn_init_settings == NULL);
-  /* the above assertion guarantees single-threadedness */
-  next = init_hooks;
-  init_hooks = this;
-  run_init_hooks = invoke_hooks;
-}
-
-void
-InitHook::invoke_hooks (void)
-{
-  std::vector<InitHook*> hv;
-  struct Sub {
-    static int
-    init_hook_cmp (const InitHook *const &v1,
-                   const InitHook *const &v2)
-    {
-      return v1->priority < v2->priority ? -1 : v1->priority > v2->priority;
-    }
-  };
-  for (InitHook *ihook = init_hooks; ihook; ihook = ihook->next)
-    hv.push_back (ihook);
-  stable_sort (hv.begin(), hv.end(), Sub::init_hook_cmp);
-  for (std::vector<InitHook*>::iterator it = hv.begin(); it != hv.end(); it++)
-    (*it)->hook();
-}
-
-/* --- initialization --- */
-static InitSettings global_init_settings = {
-  false,        /* stand_alone */
-  false,        /* perf_test */
-};
-
-static void
-rapicorn_parse_settings_and_args (InitValue *value,
-                                  int       *argc_p,
-                                  char     **argv)
-{
-  bool parse_test_args = false;
-  /* apply settings */
-  if (value)
-    while (value->value_name)
-      {
-        if (strcmp (value->value_name, "stand-alone") == 0)
-          global_init_settings.stand_alone = init_value_bool (value);
-        else if (strcmp (value->value_name, "rapicorn-test-parse-args") == 0)
-          parse_test_args = init_value_bool (value);
-        else if (strcmp (value->value_name, "test-verbose") == 0)
-          global_init_settings.test_codes |= 0x1;
-        else if (strcmp (value->value_name, "test-log") == 0)
-          global_init_settings.test_codes |= 0x2;
-        else if (strcmp (value->value_name, "test-slow") == 0)
-          global_init_settings.test_codes |= 0x4;
-        value++;
-      }
-  /* parse args */
-  uint argc = *argc_p;
-  for (uint i = 1; i < argc; i++)
-    {
-      if (strcmp (argv[i], "--g-fatal-warnings") == 0)
-        {
-          uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
-          fatal_mask |= G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL;
-          g_log_set_always_fatal (GLogLevelFlags (fatal_mask));
-          argv[i] = NULL;
-        }
-      else if (parse_test_args && strcmp ("--test-verbose", argv[i]) == 0)
-        {
-          global_init_settings.test_codes |= 0x1;
-          argv[i] = NULL;
-        }
-      else if (parse_test_args && strcmp ("--test-log", argv[i]) == 0)
-        {
-          global_init_settings.test_codes |= 0x2;
-          argv[i] = NULL;
-        }
-      else if (parse_test_args && strcmp ("--test-slow", argv[i]) == 0)
-        {
-          global_init_settings.test_codes |= 0x4;
-          argv[i] = NULL;
-        }
-      else if (parse_test_args && strcmp ("--verbose", argv[i]) == 0)
-        {
-          global_init_settings.test_codes |= 0x1;
-          /* interpret --verbose for GLib compat but don't delete the argument
-           * since regular non-test programs may need this. could be fixed by
-           * having a separate test program argument parser.
-           */
-        }
-    }
-  /* collapse args */
-  uint e = 1;
-  for (uint i = 1; i < argc; i++)
-    if (argv[i])
-      {
-        argv[e++] = argv[i];
-        if (i >= e)
-          argv[i] = NULL;
-      }
-  *argc_p = e;
-}
-
-static struct _InternalConstructorTest_lrcc0 { int v; _InternalConstructorTest_lrcc0() : v (0x12affe17) {} } _internalconstructortest;
-
-static String program_argv0 = "";
-static String program_cwd = "";
-
-String
-process_name ()
-{
-  return program_argv0;
-}
-
-String
-process_cwd ()
-{
-  return program_cwd;
-}
-
-/**
- * @param argcp         location of the 'argc' argument to main()
- * @param argvp         location of the 'argv' argument to main()
- * @param app_name      Application name as needed g_set_application_name()
- * @param ivalues       program specific initialization values
- *
- * Initialize rapicorn's rcore components like random number
- * generators, CPU detection or the thread system.
- * Pre-parses the arguments passed in to main() for rapicorn
- * specific arguments.
- * Also initializes the GLib program name, application name and thread system
- * if those are still uninitialized.
- */
-void
-rapicorn_init_core (int        *argcp,
-                    char      **argvp,
-                    const char *app_name,
-                    InitValue   ivalues[])
-{
-  /* mandatory initial initialization */
-  if (!g_threads_got_initialized)
-    g_thread_init (NULL);
-
-  /* update program/application name upon repeated initilization */
-  if (argcp && *argcp && argvp && argvp[0] && argvp[0][0] != 0 && program_argv0.size() == 0)
-    program_argv0 = argvp[0];
-  if (program_cwd.empty())
-    program_cwd = Path::cwd();
-  char *prg_name = argcp && *argcp ? g_path_get_basename (argvp[0]) : NULL;
-  if (rapicorn_init_settings != NULL)
-    {
-      if (prg_name && !g_get_prgname ())
-        g_set_prgname (prg_name);
-      g_free (prg_name);
-      if (app_name && !g_get_application_name())
-        g_set_application_name (app_name);
-      return;   /* simply ignore repeated initializations */
-    }
-
-  const char *env_rapicorn = getenv ("RAPICORN");
-  Logging::configure (env_rapicorn ? env_rapicorn : "");
-
-  /* normal initialization */
-  rapicorn_init_settings = &global_init_settings;
-  if (prg_name)
-    g_set_prgname (prg_name);
-  g_free (prg_name);
-  if (app_name && (!g_get_application_name() || g_get_application_name() == g_get_prgname()))
-    g_set_application_name (app_name);
-
-  /* verify constructur runs to catch link errors */
-  if (_internalconstructortest.v != 0x12affe17)
-    fatal ("librapicorncore: link error: C++ constructors have not been executed");
-
-  rapicorn_parse_settings_and_args (ivalues, argcp, argvp);
-
-  /* initialize random numbers */
-  process_handle_and_seed_init();
-
-  /* initialize sub systems */
-  _rapicorn_init_cpuinfo();
-  _rapicorn_init_threads();
-  _rapicorn_init_types();
-  if (run_init_hooks)
-    run_init_hooks();
-}
-
-bool
-init_value_bool (InitValue *value)
-{
-  if (value->value_string)
-    switch (value->value_string[0])
-      {
-      case 0:   // FIXME: use string_to_bool()
-      case '0': case 'f': case 'F':
-      case 'n': case 'N':               /* false assigments */
-        return FALSE;
-      default:
-        return TRUE;
-      }
-  else
-    return ABS (value->value_num) >= 0.5;
-}
-
-double
-init_value_double (InitValue *value)
-{
-  if (value->value_string && value->value_string[0])
-    return g_ascii_strtod (value->value_string, NULL);
-  return value->value_num;
-}
-
-int64
-init_value_int (InitValue *value)
-{
-  if (value->value_string && value->value_string[0])
-    return strtoll (value->value_string, NULL, 0);
-  return int64 (value->value_num + 0.5);
-}
 
 /* --- limits.h & float.h checks --- */
 /* assert several assumptions the code makes */
@@ -782,6 +546,7 @@ process_handle_and_seed_init ()
   seed48 (u.us);
   srand (lrand48());
 }
+static InitHook _process_handle_and_seed_init ("core/01 Init Process Handle and Seeds", process_handle_and_seed_init);
 
 String
 process_handle ()
@@ -948,26 +713,29 @@ string_to_bool (const String &string)
 {
   static const char *spaces = " \t\n\r";
   const char *p = string.c_str();
-  /* skip spaces */
+  // special case empty string
+  if (!p[0])
+    return false;
+  // skip spaces
   while (*p && strchr (spaces, *p))
     p++;
-  /* ignore signs */
+  // ignore signs
   if (p[0] == '-' || p[0] == '+')
     {
       p++;
-      /* skip spaces */
+      // skip spaces
       while (*p && strchr (spaces, *p))
         p++;
     }
-  /* handle numbers */
+  // handle numbers
   if (p[0] >= '0' && p[0] <= '9')
     return 0 != string_to_uint (p);
-  /* handle special words */
+  // handle special words
   if (strncasecmp (p, "ON", 2) == 0)
     return 1;
   if (strncasecmp (p, "OFF", 3) == 0)
     return 0;
-  /* handle non-numbers */
+  // handle non-numbers
   return !(p[0] == 0 ||
            p[0] == 'f' || p[0] == 'F' ||
            p[0] == 'n' || p[0] == 'N');
@@ -1305,6 +1073,17 @@ string_substitute_char (const String &input,
   return output;
 }
 
+String
+string_vector_find (const StringVector &svector,
+                    const String       &key,
+                    const String       &fallback)
+{
+  for (StringVector::const_iterator it = svector.begin(); it != svector.end(); it++)
+    if (it->size() >= key.size() && strncmp (it->data(), key.data(), key.size()) == 0)
+      return it->substr (key.size());
+  return fallback;
+}
+
 /* --- string options --- */
 static const char*
 string_option_find_value (const String   &option_string,
@@ -1626,7 +1405,7 @@ abspath (const String &path,
     return path;
   if (!incwd.empty())
     return join (incwd, path);
-  String pcwd = process_cwd();
+  String pcwd = program_cwd();
   if (!pcwd.empty())
     return join (pcwd, path);
   return join (cwd(), path);

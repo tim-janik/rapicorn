@@ -22,17 +22,18 @@ ApplicationIface::pixstream (const String  &pix_name,
 }
 
 void
-ApplicationImpl::init_with_x11 (int           *argcp,
-                                char        ***argvp,
-                                const char    *app_name)
+ApplicationImpl::init_with_x11 (const String       &app_ident,
+                                int                *argcp,
+                                char              **argv,
+                                const StringVector &args)
 {
-  rapicorn_init_with_gtk_thread (argcp, argvp, app_name);
+  rapicorn_init_with_gtk_thread (app_ident, argcp, argv, args);
   assert (rapicorn_thread_entered() == false);
   rapicorn_thread_enter();
 }
 
 void
-ApplicationImpl::init_with_x11 (const std::string &application_name,
+ApplicationImpl::init_with_x11 (const std::string &application_identifier,
                                 const StringList  &cmdline_args)
 {
   int dummy_argc = cmdline_args.size();
@@ -40,7 +41,7 @@ ApplicationImpl::init_with_x11 (const std::string &application_name,
   for (int i = 0; i < dummy_argc; i++)
     dummy_argv[i] = const_cast<char*> (cmdline_args[i].c_str());
   dummy_argv[dummy_argc] = NULL;
-  init_with_x11 (&dummy_argc, &dummy_argv, application_name.c_str());
+  init_with_x11 (application_identifier, &dummy_argc, dummy_argv);
 }
 
 Wind0wIface*

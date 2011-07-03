@@ -19,6 +19,9 @@
 #if	(RAPICORN_HAVE_MUTEXATTR_SETTYPE > 0)
 #define	_XOPEN_SOURCE   600	/* for full pthread facilities */
 #endif	/* defining _XOPEN_SOURCE on random systems can have bad effects */
+#include "rapicornutils.hh"
+#include "rapicornthread.hh"
+#include "main.hh"
 #include <glib.h>
 #include <sys/time.h>
 #include <sched.h>
@@ -31,8 +34,6 @@
 #include <sys/resource.h>
 #include <sys/time.h>
 #include <sys/times.h>
-#include "rapicornutils.hh"
-#include "rapicornthread.hh"
 
 #define FLOATING_FLAG                           (1 << 31)
 #define THREAD_REF_COUNT(thread)                (thread->ref_field & ~FLOATING_FLAG)
@@ -1284,8 +1285,8 @@ get_pth_thread_table (void)
 #define	get_pth_thread_table()	NULL
 #endif	/* !RAPICORN_HAVE_MUTEXATTR_SETTYPE */
 
-void
-_rapicorn_init_threads (void)
+static void
+init_threads (void)
 {
   RapicornThreadTable *table = get_pth_thread_table ();
   if (!table)
@@ -1296,5 +1297,6 @@ _rapicorn_init_threads (void)
   RAPICORN_ASSERT (init_self != NULL);
   Thread::self().affinity (-1);
 }
+static InitHook _init_threads ("threading/00 Init Threads", init_threads);
 
 } // Rapicorn

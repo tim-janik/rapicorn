@@ -74,7 +74,7 @@ sequence Wind0wList {
  */
 interface Application {
   /* startup */
-  void          init_with_x11   (string         application_name,
+  void          init_with_x11   (string         application_identifier,
                                  StringList     cmdline_args) = 0;
   string        auto_path       (string         file_name,
                                  string         binary_path,

@@ -162,7 +162,7 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn and its X11 (Gtk+) backend */
-  app.init_with_x11 (&argc, &argv, "Rapidrun"); // acquires Rapicorn mutex
+  app.init_with_x11 ("Rapidrun", &argc, argv); // acquires Rapicorn mutex
   parse_args (&argc, &argv);
   if (argc != 2)
     help_usage (true);

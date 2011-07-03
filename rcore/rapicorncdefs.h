@@ -193,18 +193,6 @@ RAPICORN_STATIC_ASSERT (sizeof (RapicornUnichar) == 4);
 #define	RAPICORN_IS_DIR_SEPARATOR(c)    	  ((c) == RAPICORN_DIR_SEPARATOR)
 #define RAPICORN_IS_SEARCHPATH_SEPARATOR(c) ((c) == RAPICORN_SEARCHPATH_SEPARATOR)
 
-/* --- initialization --- */
-typedef struct {
-  bool stand_alone;		/* "stand-alone": no rcfiles, boot scripts, etc. */
-  uint test_codes;		/* internal test flags */
-} RapicornInitSettings;
-
-typedef struct {
-  const char *value_name;     	/* value list ends with value_name == NULL */
-  const char *value_string;
-  long double value_num;     	/* valid if value_string == NULL */
-} RapicornInitValue;
-
 /* --- CPU info --- */
 typedef struct {
   /* architecture name */

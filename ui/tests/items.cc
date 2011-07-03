@@ -24,9 +24,9 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, argv);
+  rapicorn_init_test (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
   /* initialize rapicorn */
-  app.init_with_x11 (&argc, &argv, "ItemTest");
+  app.init_with_x11 (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
 
   TSTART ("RapicornItems");
   /* parse standard GUI descriptions and create example item */

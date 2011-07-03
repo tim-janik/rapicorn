@@ -42,7 +42,7 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn and its gtk backend */
-  app.init_with_x11 (&argc, &argv, "Graphics");
+  app.init_with_x11 (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
   /* initialization acquired global Rapicorn mutex */
 
   /* load GUI definition file, relative to argv[0] */

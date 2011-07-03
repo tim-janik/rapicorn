@@ -205,7 +205,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (&argc, argv);
+  rapicorn_init_test (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
 
   for (int i = 0; i < argc; i++)
     if (String (argv[i]) == "--non-fatal")
@@ -214,7 +214,7 @@ main (int   argc,
       run_dialogs = true;
 
   /* initialize rapicorn */
-  app.init_with_x11 (&argc, &argv, "TestItemsTest");
+  app.init_with_x11 (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
 
   /* parse GUI description */
   app.auto_load ("RapicornTest", Path::vpath_find ("testitems.xml"), argv[0]);

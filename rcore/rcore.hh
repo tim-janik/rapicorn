@@ -21,6 +21,7 @@
 #include <rcore/enumdefs.hh>
 #include <rcore/rapicorncpu.hh>
 #include <rcore/rapicorndebugtools.hh>
+#include <rcore/main.hh>
 #include <rcore/markup.hh>
 #include <rcore/pixmap.hh>
 #include <rcore/plicutils.hh>

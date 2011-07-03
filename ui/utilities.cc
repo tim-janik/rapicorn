@@ -28,16 +28,17 @@ static const char *rapicorn_i18n_domain = NULL;
 static struct _InternalConstructorTest_lrc0 { int v; _InternalConstructorTest_lrc0() : v (0x123caca0) {} } _internalconstructortest;
 
 void
-rapicorn_init (int        *argcp,
-               char      **argv,
-               const char *app_name)
+rapicorn_init (const String       &app_ident,
+               int                *argc,
+               char              **argv,
+               const StringVector &args)
 {
   /* initialize i18n functions */
   rapicorn_i18n_domain = RAPICORN_I18N_DOMAIN;
   // bindtextdomain (rapicorn_i18n_domain, dirname);
   bind_textdomain_codeset (rapicorn_i18n_domain, "UTF-8");
   /* initialize sub components */
-  rapicorn_init_core (argcp, argv, app_name);
+  rapicorn_init_core (app_ident, argc, argv, args);
   /* verify constructur runs to catch link errors */
   if (_internalconstructortest.v != 0x123caca0)
     fatal ("librapicorn: link error: C++ constructors have not been executed");

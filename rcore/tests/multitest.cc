@@ -161,7 +161,7 @@ REGISTER_TEST ("General/ZIntern", test_zintern);
 static void
 test_files (void)
 {
-  const char *argv0 = process_name().c_str();
+  const char *argv0 = program_file().c_str();
   TASSERT (Path::equals ("/bin", "/../bin") == TRUE);
   TASSERT (Path::equals ("/bin", "/sbin") == FALSE);
   TASSERT (Path::check (argv0, "e") == TRUE);
@@ -599,22 +599,23 @@ main (int   argc,
 
   test_before_thread_init();
 
+  String app_ident = String ("Rapicorn/") + RAPICORN__FILE__;
   if (argc >= 2 && String ("--print-process-handle") == argv[1])
     {
-      rapicorn_init_core (&argc, argv, __FILE__);
+      rapicorn_init_core (app_ident, &argc, argv);
       printout ("%s", process_handle().c_str());
       return 0;
     }
 
   if (argc >= 2 && String ("--print-locatable-id") == argv[1])
     {
-      rapicorn_init_core (&argc, argv, __FILE__);
+      rapicorn_init_core (app_ident, &argc, argv);
       SomeObject *obj = new SomeObject();
       printout ("0x%016llx\n", obj->locatable_id());
       return 0;
     }
 
-  rapicorn_init_test (&argc, argv);
+  rapicorn_init_test (app_ident, &argc, argv);
 
   return Test::run();
 }
