@@ -248,7 +248,7 @@ init_cpuinfo (void)
     }
   cached_cpu_info = lci;
 }
-static InitHook _init_cpuinfo ("core/10 Init CPU Info", init_cpuinfo);
+static InitHook _init_cpuinfo ("core/02 Init CPU Info", init_cpuinfo);
 
 String
 cpu_info_string (const CPUInfo &cpu_info)

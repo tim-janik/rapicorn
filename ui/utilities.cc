@@ -18,12 +18,9 @@
 #include "blitfuncs.hh"
 #include <cstring>
 #include <errno.h>
-#include <libintl.h>
 #include <malloc.h>
 
 namespace Rapicorn {
-
-static const char *rapicorn_i18n_domain = NULL;
 
 static struct _InternalConstructorTest_lrc0 { int v; _InternalConstructorTest_lrc0() : v (0x123caca0) {} } _internalconstructortest;
 
@@ -33,10 +30,6 @@ rapicorn_init (const String       &app_ident,
                char              **argv,
                const StringVector &args)
 {
-  /* initialize i18n functions */
-  rapicorn_i18n_domain = RAPICORN_I18N_DOMAIN;
-  // bindtextdomain (rapicorn_i18n_domain, dirname);
-  bind_textdomain_codeset (rapicorn_i18n_domain, "UTF-8");
   /* initialize sub components */
   rapicorn_init_core (app_ident, argc, argv, args);
   /* verify constructur runs to catch link errors */
@@ -83,13 +76,6 @@ rapicorn_thread_leave ()
   assert (rapicorn_thread_entered());
   Atomic::add (&thread_counter, -1);
   thread_mutex.unlock();
-}
-
-const char*
-rapicorn_gettext (const char *text)
-{
-  assert (rapicorn_i18n_domain != NULL);
-  return dgettext (rapicorn_i18n_domain, text);
 }
 
 /* --- exceptions --- */

@@ -1,15 +1,37 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "strings.hh"
 #include "rapicornutf8.hh"
+#include "main.hh"
 
 #include <cstring>
 #include <stdio.h>
 #include <stdlib.h>
+#include <libintl.h>
 #include <iconv.h>
 #include <errno.h>
 #include <glib.h>
 
 namespace Rapicorn {
+
+// === i18n ===
+static const char *rapicorn_i18n_domain = NULL;
+
+const char*
+rapicorn_gettext (const char *text)
+{
+  assert (rapicorn_i18n_domain != NULL);
+  return dgettext (rapicorn_i18n_domain, text);
+}
+
+static void
+init_gettext()
+{
+  // initialize i18n functions
+  rapicorn_i18n_domain = RAPICORN_I18N_DOMAIN;
+  // bindtextdomain (rapicorn_i18n_domain, package_dirname);
+  bind_textdomain_codeset (rapicorn_i18n_domain, "UTF-8");
+}
+static InitHook _init_gettext ("core/10 Init i18n Translation Domain", init_gettext);
 
 // === String ===
 String

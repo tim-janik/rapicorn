@@ -7,6 +7,13 @@
 
 namespace Rapicorn {
 
+// === i18n ===
+const char*                     rapicorn_gettext        (const char *text);
+#ifdef __RAPICORN_BUILD__
+#define _(str)  rapicorn_gettext (str)
+#define N_(str) (str)
+#endif
+
 // === String ===
 String                          string_multiply          (const String &s,
                                                           uint64       count);

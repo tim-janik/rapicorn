@@ -27,8 +27,6 @@
 #include <stack>
 #include <cstring>
 
-#define _(x) x  // FIXME
-
 namespace Rapicorn {
 
 /* --- string utils --- */

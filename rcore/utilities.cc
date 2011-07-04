@@ -23,17 +23,11 @@
 #include <cstring>
 #include <syslog.h>
 
-#ifndef _
-#define _(s)    s
-#endif
-
 #if !__GNUC_PREREQ (3, 4) || (__GNUC__ == 3 && __GNUC_MINOR__ == 4 && __GNUC_PATCHLEVEL__ < 6)
 #error This GNU C++ compiler version is known to be broken - please consult ui/README
 #endif
 
 namespace Rapicorn {
-
-static Msg::CustomType debug_browser ("browser", Msg::DEBUG);
 
 /* --- limits.h & float.h checks --- */
 /* assert several assumptions the code makes */
@@ -1446,7 +1440,7 @@ url_test_show (const char *url)
                                    NULL, /* child_pid */
                                    &error);
         g_free (string);
-        Msg::display (debug_browser, "show \"%s\": %s: %s", url, args[0], error ? error->message : fallback_error);
+        DEBUG ("show \"%s\": %s: %s", url, args[0], error ? error->message : fallback_error);
         g_clear_error (&error);
         if (success)
           return true;

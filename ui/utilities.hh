@@ -26,9 +26,6 @@
 
 /* --- internally used macros --- */
 #ifdef __RAPICORN_BUILD__
-/* internal i18n */
-#define _(str)  rapicorn_gettext (str)
-#define N_(str) (str)
 /* convenience macros */
 #define MakeProperty                    RAPICORN_MakeProperty
 #define MakeNamedCommand                RAPICORN_MakeNamedCommand
@@ -38,7 +35,7 @@
 namespace Rapicorn {
 class RapicornTester;	// allow Rapicorn test implementations
 
-/* --- i18n macros --- */
+/* --- init stuff --- */
 void          rapicorn_init             (const String       &app_ident,
                                          int                *argc,
                                          char              **argv,
@@ -47,7 +44,6 @@ void          rapicorn_thread_enter     ();
 bool          rapicorn_thread_try_enter ();
 bool          rapicorn_thread_entered   ();
 void          rapicorn_thread_leave     ();
-const char*   rapicorn_gettext          (const char *text);
 
 /* --- standard utlities --- */
 //template<typename T> inline const T& min   (const T &a, const T &b) { return ::std::min<T> (a, b); }

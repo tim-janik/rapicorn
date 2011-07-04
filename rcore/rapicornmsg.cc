@@ -14,8 +14,8 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include <glib.h>
 #include "rapicornmsg.hh"
+#include "main.hh"
 #include "rapicornthread.hh"
 #include "strings.hh"
 #include <syslog.h>
@@ -23,9 +23,7 @@
 #include <errno.h>
 #include <cstring>
 
-#ifndef _ // FIXME
-#define _(x)    (x)
-#endif
+#include <glib.h>
 
 namespace Rapicorn {
 
@@ -107,39 +105,53 @@ Msg::init_standard_types()
   if (initialized)
     return;
   initialized++;
+  /* Here's a nasty design issue that needs fixing:
+   * - Message type registration happens at global_ctor time.
+   * - Mesage type registration needs gettext to work.
+   * - gettext is not setup before rapicorn_init_core.
+   * Possible solution: dmand create message types (esp. standards)
+   */
+#define       _UNTRANSLATED(x)  x
   Type mtype;
   /* NONE (always disabled) */
   mtype = register_type ("none", NONE, NULL);
   RAPICORN_ASSERT (mtype == NONE);
   set_msg_type_L (mtype, NONE, false);
   /* ALWAYS (always enabled) */
-  mtype = register_type ("always", ALWAYS, _("Always"));
+  mtype = register_type ("always", ALWAYS, _UNTRANSLATED("Always"));
   RAPICORN_ASSERT (mtype == ALWAYS);
   set_msg_type_L (mtype, LOG_TO_STDERR | LOG_TO_STDLOG | LOG_TO_HANDLER, true);
   /* ERROR (enabled) */
-  mtype = register_type ("error", ALWAYS, _("Error"));
+  mtype = register_type ("error", ALWAYS, _UNTRANSLATED("Error"));
   RAPICORN_ASSERT (mtype == ERROR);
   set_msg_type_L (mtype, LOG_TO_STDERR | LOG_TO_STDLOG | LOG_TO_HANDLER, true);
   /* WARNING (enabled) */
-  mtype = register_type ("warning", ALWAYS, _("Warning"));
+  mtype = register_type ("warning", ALWAYS, _UNTRANSLATED("Warning"));
   RAPICORN_ASSERT (mtype == WARNING);
   set_msg_type_L (mtype, LOG_TO_STDERR | LOG_TO_STDLOG | LOG_TO_HANDLER, true);
   /* SCRIPT (enabled) */
-  mtype = register_type ("script", ALWAYS, _("Script"));
+  mtype = register_type ("script", ALWAYS, _UNTRANSLATED("Script"));
   RAPICORN_ASSERT (mtype == SCRIPT);
   set_msg_type_L (mtype, LOG_TO_STDERR | LOG_TO_STDLOG | LOG_TO_HANDLER, true);
   /* INFO (enabled) */
-  mtype = register_type ("info", ALWAYS, _("Information"));
+  mtype = register_type ("info", ALWAYS, _UNTRANSLATED("Information"));
   RAPICORN_ASSERT (mtype == INFO);
   set_msg_type_L (mtype, LOG_TO_STDERR | LOG_TO_STDLOG | LOG_TO_HANDLER, true);
   /* DIAG (enabled) */
-  mtype = register_type ("diag", ALWAYS, _("Diagnostic"));
+  mtype = register_type ("diag", ALWAYS, _UNTRANSLATED("Diagnostic"));
   RAPICORN_ASSERT (mtype == DIAG);
   set_msg_type_L (mtype, LOG_TO_STDERR | LOG_TO_STDLOG, true);
   /* DEBUG (disabled) */
   mtype = register_type ("debug", NONE, "Debug");
   set_msg_type_L (mtype, LOG_TO_STDERR, false);
 }
+
+static void
+init_msg_standard_types()
+{
+  Msg::register_type ("none", Msg::NONE, "");
+}
+static InitHook _init_msg_standard_types ("core/40 Init Dialog Message Types", init_msg_standard_types);
 
 /**
  * @param ident         message identifier
@@ -208,13 +220,6 @@ Msg::register_type (const char *ident,
   g_free (old_mbits);
   return mtype;
 }
-
-static struct AutoConstruct {
-  AutoConstruct()
-  {
-    Msg::register_type ("none", Msg::NONE, "");
-  }
-} auto_construct;
 
 /**
  * @param ident message identifier, e.g. "error", "warning", "info", etc...
