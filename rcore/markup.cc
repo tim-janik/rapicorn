@@ -18,6 +18,7 @@
  */
 #include "markup.hh"
 #include "rapicornutf8.hh"
+#include "strings.hh"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>

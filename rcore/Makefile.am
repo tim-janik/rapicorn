@@ -16,7 +16,7 @@ rapicorn_public_headers = $(strip	\
         pixmap.hh	regex.hh		plicutils.hh \
 	values.hh 	types.hh 		main.hh		models.hh \
 	$(rapicorn_impl_headers) \
-	rapicorncdefs.h	rapicorntests.h		rcore.hh		\
+	rapicorncdefs.h	rapicorntests.h		rcore.hh	strings.hh	\
 )
 rapicorn_cc_sources = $(sort		\
         rapicorncpu.cc  rapicorndebugtools.cc	rapicornthread.cc	utilities.cc  \
@@ -24,7 +24,7 @@ rapicorn_cc_sources = $(sort		\
         rapicornxml.cc  markup.cc		enumdefs.cc		testutils.cc \
         pixmap.cc	regex.cc		plicutils.cc \
 	values.cc 	types.cc 		main.cc		models.cc    \
-        rapicornthreadimpl.cc		\
+        rapicornthreadimpl.cc					strings.cc \
 )
 rapicorn_impl_headers = $(strip 	\
 )

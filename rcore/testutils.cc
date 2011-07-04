@@ -16,6 +16,7 @@
  */
 #include "testutils.hh"
 #include "main.hh"
+#include "strings.hh"
 
 #include <algorithm>
 #include <glib.h>

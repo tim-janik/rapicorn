@@ -17,6 +17,7 @@
 #include "types.hh"
 #include "rapicornthread.hh"
 #include "main.hh"
+#include "strings.hh"
 #include <cstring>
 #include <errno.h>
 #include <stdlib.h>

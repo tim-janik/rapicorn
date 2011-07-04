@@ -1,5 +1,6 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "main.hh"
+#include "strings.hh"
 #include <string.h>
 #include <algorithm>
 

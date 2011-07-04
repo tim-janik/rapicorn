@@ -16,6 +16,7 @@
  */
 #include "values.hh"
 #include "rapicornmath.hh"
+#include "strings.hh"
 #include <deque>
 
 #define VALUE_TYPE_MISMATCH(object, sname) Rapicorn::fatal ("value type mismatch for %s setter: %s", object, sname)

@@ -16,6 +16,7 @@
  */
 #include "pixmap.hh"
 #include "rapicornthread.hh"
+#include "strings.hh"
 #include <errno.h>
 #include <math.h>
 #include <cstring>
