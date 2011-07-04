@@ -10,7 +10,7 @@ GLIB_MKENUMS = glib-mkenums
 PLICINT	     = $(top_builddir)/plic/plic-intern
 
 rapicorn_public_headers = $(strip	\
-        rapicorncpu.hh	rapicorndebugtools.hh	rapicornthread.hh	rapicornutils.hh  \
+        rapicorncpu.hh	rapicorndebugtools.hh	rapicornthread.hh	utilities.hh  \
         rapicornmsg.hh	rapicornsignal.hh	rapicornmath.hh		rapicornutf8.hh   \
         rapicornxml.hh	markup.hh		enumdefs.hh		testutils.hh \
         pixmap.hh	regex.hh		plicutils.hh \
@@ -19,7 +19,7 @@ rapicorn_public_headers = $(strip	\
 	rapicorncdefs.h	rapicorntests.h		rcore.hh		\
 )
 rapicorn_cc_sources = $(sort		\
-        rapicorncpu.cc  rapicorndebugtools.cc	rapicornthread.cc	rapicornutils.cc  \
+        rapicorncpu.cc  rapicorndebugtools.cc	rapicornthread.cc	utilities.cc  \
         rapicornmsg.cc  rapicornsignal.cc	rapicornmath.cc		rapicornutf8.cc   \
         rapicornxml.cc  markup.cc		enumdefs.cc		testutils.cc \
         pixmap.cc	regex.cc		plicutils.cc \

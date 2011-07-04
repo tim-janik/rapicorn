@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_MAIN_HH__
 #define __RAPICORN_MAIN_HH__
 
-#include <rcore/rapicornutils.hh>
+#include <rcore/utilities.hh>
 
 #if !defined __RAPICORN_CORE_HH__ && !defined __RAPICORN_BUILD__
 #error Only <rapicorn-core.hh> can be included directly.

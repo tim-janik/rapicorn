@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_CPU_HH__
 #define __RAPICORN_CPU_HH__
 
-#include <rcore/rapicornutils.hh>
+#include <rcore/utilities.hh>
 
 namespace Rapicorn {
 

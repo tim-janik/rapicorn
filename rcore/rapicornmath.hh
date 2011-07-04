@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_MATH_HH__
 #define __RAPICORN_MATH_HH__
 
-#include <rcore/rapicornutils.hh>
+#include <rcore/utilities.hh>
 #include <math.h>
 
 namespace Rapicorn {

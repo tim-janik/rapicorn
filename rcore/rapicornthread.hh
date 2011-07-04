@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_THREAD_XX_HH__
 #define __RAPICORN_THREAD_XX_HH__
 
-#include <rcore/rapicornutils.hh>
+#include <rcore/utilities.hh>
 
 namespace Rapicorn {
 

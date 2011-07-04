@@ -4,7 +4,7 @@
 #ifndef __RAPICORN_DEBUG_TOOLS_HH__
 #define __RAPICORN_DEBUG_TOOLS_HH__
 
-#include <rcore/rapicornutils.hh>
+#include <rcore/utilities.hh>
 
 namespace Rapicorn {
 

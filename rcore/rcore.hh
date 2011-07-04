@@ -30,7 +30,7 @@
 #include <rcore/rapicornsignal.hh>
 #include <rcore/rapicornthread.hh>
 #include <rcore/rapicornutf8.hh>
-#include <rcore/rapicornutils.hh>
+#include <rcore/utilities.hh>
 #include <rcore/rapicornxml.hh>
 #include <rcore/regex.hh>
 #include <rcore/types.hh>

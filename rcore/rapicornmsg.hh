@@ -17,7 +17,7 @@
 #ifndef __RAPICORN_MSG_HH__
 #define __RAPICORN_MSG_HH__
 
-#include <rcore/rapicornutils.hh>
+#include <rcore/utilities.hh>
 #include <stdarg.h>
 
 namespace Rapicorn {

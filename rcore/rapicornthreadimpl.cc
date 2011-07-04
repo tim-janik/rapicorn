@@ -19,7 +19,7 @@
 #if	(RAPICORN_HAVE_MUTEXATTR_SETTYPE > 0)
 #define	_XOPEN_SOURCE   600	/* for full pthread facilities */
 #endif	/* defining _XOPEN_SOURCE on random systems can have bad effects */
-#include "rapicornutils.hh"
+#include "utilities.hh"
 #include "rapicornthread.hh"
 #include "main.hh"
 #include <glib.h>

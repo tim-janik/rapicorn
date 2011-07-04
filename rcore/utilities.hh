@@ -1,21 +1,6 @@
-/* Rapicorn
- * Copyright (C) 2005-2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
-#ifndef __RAPICORN_UTILS_XX_HH__
-#define __RAPICORN_UTILS_XX_HH__
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+#ifndef __RAPICORN_CORE_UTILITIES_HH__
+#define __RAPICORN_CORE_UTILITIES_HH__
 
 #include <rcore/rapicorncdefs.h>
 #include <string>
@@ -360,7 +345,7 @@ public:
 };
 
 /* --- C++ demangling --- */
-char*   cxx_demangle	        (const char  *mangled_identifier); /* in rapicornutilsxx.cc */
+char*   cxx_demangle	        (const char  *mangled_identifier);
 
 /* --- zintern support --- */
 uint8*  zintern_decompress      (unsigned int          decompressed_size,
@@ -794,5 +779,4 @@ BaseObject::InterfaceMatch<C>::result (bool may_throw) const
 
 } // Rapicorn
 
-#endif /* __RAPICORN_UTILS_XX_HH__ */
-/* vim:set ts=8 sts=2 sw=2: */
+#endif /* __RAPICORN_CORE_UTILITIES_HH__ */
