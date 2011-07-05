@@ -8,7 +8,7 @@
 namespace Rapicorn {
 
 // === i18n ===
-const char*                     rapicorn_gettext        (const char *text);
+const char*                     rapicorn_gettext        (const char *text) RAPICORN_FORMAT (1);
 #ifdef __RAPICORN_BUILD__
 #define _(str)  rapicorn_gettext (str)
 #define N_(str) (str)
