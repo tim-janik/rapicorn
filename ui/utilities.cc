@@ -21,21 +21,6 @@
 
 namespace Rapicorn {
 
-static struct _InternalConstructorTest_lrc0 { int v; _InternalConstructorTest_lrc0() : v (0x123caca0) {} } _internalconstructortest;
-
-void
-rapicorn_init (const String       &app_ident,
-               int                *argc,
-               char              **argv,
-               const StringVector &args)
-{
-  /* initialize sub components */
-  rapicorn_init_core (app_ident, argc, argv, args);
-  /* verify constructur runs to catch link errors */
-  if (_internalconstructortest.v != 0x123caca0)
-    fatal ("librapicorn: link error: C++ constructors have not been executed");
-}
-
 static Mutex         thread_mutex;
 static volatile uint thread_counter = 0;
 

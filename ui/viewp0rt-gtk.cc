@@ -1334,7 +1334,7 @@ rapicorn_init_with_gtk_thread (const String       &app_ident,
                                const StringVector &args)
 {
   /* non-GTK initialization */
-  rapicorn_init (app_ident, argcp, argv, args);
+  rapicorn_init_core (app_ident, argcp, argv, args);
   g_type_init();
   /* setup GDK_THREADS_ENTER/GDK_THREADS_LEAVE */
   gdk_threads_init();
@@ -1353,7 +1353,7 @@ rapicorn_init_with_foreign_gtk (const String       &app_ident,
                                 const StringVector &args)
 {
   /* non-GTK initialization */
-  rapicorn_init (app_ident, argcp, argv, args);
+  rapicorn_init_core (app_ident, argcp, argv, args);
   g_type_init();
   /* setup GDK_THREADS_ENTER/GDK_THREADS_LEAVE */
   gdk_threads_init();

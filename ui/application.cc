@@ -21,12 +21,17 @@ ApplicationIface::pixstream (const String  &pix_name,
   Pixmap::add_stock (pix_name, static_const_pixstream);
 }
 
+static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x123caca0) {} } __staticctortest;
+
 void
 ApplicationImpl::init_with_x11 (const String       &app_ident,
                                 int                *argcp,
                                 char              **argv,
                                 const StringVector &args)
 {
+  // ensure static constructors work
+  if (__staticctortest.v != 0x123caca0)
+    fatal ("librapicornui: link error: C++ constructors have not been executed");
   rapicorn_init_with_gtk_thread (app_ident, argcp, argv, args);
   assert (rapicorn_thread_entered() == false);
   rapicorn_thread_enter();

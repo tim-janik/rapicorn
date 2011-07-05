@@ -36,10 +36,6 @@ namespace Rapicorn {
 class RapicornTester;	// allow Rapicorn test implementations
 
 /* --- init stuff --- */
-void          rapicorn_init             (const String       &app_ident,
-                                         int                *argc,
-                                         char              **argv,
-                                         const StringVector &args = StringVector());
 void          rapicorn_thread_enter     ();
 bool          rapicorn_thread_try_enter ();
 bool          rapicorn_thread_entered   ();
