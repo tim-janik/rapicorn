@@ -19,6 +19,18 @@
 namespace Rapicorn {
 namespace Blit {
 
+static void
+init_render_table()
+{
+  CPUInfo cpu = cpu_info();
+  if (cpu.x86_mmx)
+    {
+      Blit::render_optimize_mmx();
+      DEBUG ("Using MMX functions for blitting");
+    }
+}
+static InitHook _init_render_table ("ui/10 Optimize Render Table for SIMD Blitting", init_render_table);
+
 static inline uint32
 quick_rand32 ()
 {
