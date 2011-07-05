@@ -279,6 +279,9 @@ logtest (const char **kindp, const char *mode, int advance, int flags)
 void
 Logging::message (const char *kind, const char *file, int line, const char *func, const char *format, ...)
 {
+  /* The logging system must work before Rapicorn is initialized, and possibly even during
+   * global_ctor phase. So any initialization needed here needs to be handled on demand.
+   */
   int saved_errno = errno;
   if (!kind)
     kind = "DIAG";
