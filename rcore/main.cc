@@ -243,17 +243,36 @@ program_cwd ()
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x12affe17) {} } __staticctortest;
 
 /**
+ * @param app_ident     Application identifier, needed to associate persistent resources
  * @param argcp         location of the 'argc' argument to main()
- * @param argvp         location of the 'argv' argument to main()
- * @param app_name      Application name as needed g_set_application_name()
- * @param ivalues       program specific initialization values
+ * @param argv          location of the 'argv' arguments to main()
+ * @param args          program specific initialization values
  *
- * Initialize rapicorn's rcore components like random number
- * generators, CPU detection or the thread system.
- * Pre-parses the arguments passed in to main() for rapicorn
- * specific arguments.
- * Also initializes the GLib program name, application name and thread system
- * if those are still uninitialized.
+ * Initialize the Rapicorn toolkit, including threading, CPU detection, loading resource libraries, etc.
+ * The arguments passed in @a argcp and @a argv are parsed and any Rapicorn specific arguments
+ * are stripped.
+ * Supported command line arguments are:
+ * - @c --test-verbose - execute test cases verbosely.
+ * - @c --test-log - execute logtest test cases.
+ * - @c --test-slow - execute slow test cases.
+ * - @c --verbose - behaves like @c --test-verbose, this option is recognized but not stripped.
+ * .
+ * Additional initialization arguments can be passed in @a args, currently supported are:
+ * - @c autonomous - For test programs to request a self-contained runtime environment.
+ * - @c cpu-affinity - CPU# to bind rapicorn thread to.
+ * - @c parse-testargs - Used by rapicorn_init_test() internally.
+ * - @c test-verbose - acts like --test-verbose.
+ * - @c test-log - acts like --test-log.
+ * - @c test-slow - acts like --test-slow.
+ * .
+ * Additionally, the @c $RAPICORN environment variable affects toolkit behaviour. It supports
+ * multiple colon (':') separated options (options can be prfixed with 'no-' to disable):
+ * - @c debug - Enables verbose debugging output (default=off).
+ * - @c fatal-syslog - Fatal program conditions that lead to aborting are recorded via syslog (default=on).
+ * - @c syslog - Critical and warning conditions are recorded via syslog (default=off).
+ * - @c fatal-warnings - Critical and warning conditions are treated as fatal conditions (default=off).
+ * - @c logfile=FILENAME - Record all messages and conditions into FILENAME.
+ * .
  */
 void
 rapicorn_init_core (const String       &app_ident,
