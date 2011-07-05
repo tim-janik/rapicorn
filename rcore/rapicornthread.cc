@@ -137,6 +137,12 @@ cpu_affinity (int cpu)
   return -1;
 }
 
+/**
+ * @param cpu   CPU# to operate on, use -1 to leave unspecified.
+ *
+ * Set and get the current CPU affinity. This function may be called before Rapicorn is initialized.
+ * @returns CPU affinity of the current thread.
+ */
 int
 Thread::Self::affinity (int cpu)
 {
