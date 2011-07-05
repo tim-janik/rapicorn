@@ -231,7 +231,7 @@ main (int   argc,
   if (!shell_mode)
     rapicorn_init_test (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
   else
-    app.init_with_x11 (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+    init_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
 
   if (shell_mode)
     {

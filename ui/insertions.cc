@@ -48,4 +48,10 @@ protected:
 IGNORE: // close last _scope
 }; // close dummy class scope
 
-// global_scope:
+global_scope:
+namespace Rapicorn {
+Application_SmartHandle init_app (const String       &app_ident,
+                                  int                *argcp,
+                                  char              **argv,
+                                  const StringVector &args = StringVector());
+} // Rapicorn

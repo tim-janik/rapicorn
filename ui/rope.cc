@@ -53,14 +53,15 @@ public:
 };
 
 struct Initializer {
-  String         application_name;
-  vector<String> cmdline_args;
-  int            cpu;
-  Mutex          mutex;
-  Cond           cond;
-  uint64         app_id;
-  Plic::Coupler *coupler;
-  Initializer() : cpu (-1), app_id (0), coupler (NULL) {}
+  String              application_identifier;
+  Mutex               mutex;
+  Cond                cond;
+  uint64              app_id;
+  Plic::Coupler      *coupler;
+  const StringVector *args;     // init-only
+  int                *argcp;    // init-only
+  char              **argv;     // init-only
+  Initializer() : app_id (0), coupler (NULL), args (NULL), argcp (NULL), argv (NULL) {}
 };
 
 class RopeThread : public Thread {
@@ -84,17 +85,16 @@ private:
   virtual void
   run ()
   {
-    affinity (m_init->cpu);
+    affinity (string_to_int (string_vector_find (*m_init->args, "cpu-affinity=", "-1")));
     // rapicorn_init_core() already called
-    Rapicorn::StringList slist;
-    slist = m_init->cmdline_args;
-    app.init_with_x11 (m_init->application_name, slist);
+    init_app (m_init->application_identifier, m_init->argcp, m_init->argv, *m_init->args);
+    m_init->argcp = NULL, m_init->argv = NULL, m_init->args = NULL; // becomes invalidated once app_id is set
     m_loop = ref_sink (EventLoop::create());
     EventLoop::Source *esource = new DispatchSource (*m_init->coupler, *m_loop);
     (*m_loop).add_source (esource, EventLoop::PRIORITY_NORMAL);
     esource->primary (false);
     m_init->mutex.lock();
-    m_init->app_id = Application_SmartHandle (&app)._rpc_id();
+    m_init->app_id = Application_SmartHandle (ApplicationImpl::the())._rpc_id();
     m_init->cond.signal();
     m_init->mutex.unlock();
     m_init = NULL;
@@ -159,9 +159,10 @@ rope_thread_flush_input ()
 }
 
 uint64
-rope_thread_start (const String              &application_name,
-                   const std::vector<String> &cmdline_args,
-                   int                        cpu)
+rope_thread_start (const String       &app_ident,
+                   int                *argcp,
+                   char              **argv,
+                   const StringVector &args)
 {
   return_val_if_fail (rope_thread == NULL, 0);
   static volatile size_t initialized = 0;
@@ -169,9 +170,10 @@ rope_thread_start (const String              &application_name,
     {
       /* start parallel thread */
       Initializer init;
-      init.application_name = application_name;
-      init.cmdline_args = cmdline_args;
-      init.cpu = cpu;
+      init.application_identifier = app_ident;
+      init.argcp = argcp;
+      init.argv = argv;
+      init.args = &args;
       init.coupler = &rope_coupler;
       rope_thread = new RopeThread ("RapicornUI", &init);
       ref_sink (rope_thread);

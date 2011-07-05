@@ -10,8 +10,6 @@
 
 namespace Rapicorn {
 
-ApplicationImpl &app = *new ApplicationImpl();
-
 ApplicationIface::ApplicationMutex ApplicationIface::mutex;
 
 void
@@ -22,31 +20,34 @@ ApplicationIface::pixstream (const String  &pix_name,
 }
 
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x123caca0) {} } __staticctortest;
+static ApplicationImpl *the_app = NULL;
 
-void
-ApplicationImpl::init_with_x11 (const String       &app_ident,
-                                int                *argcp,
-                                char              **argv,
-                                const StringVector &args)
+ApplicationImpl&
+ApplicationImpl::the ()
 {
-  // ensure static constructors work
+  if (!the_app)
+    fatal ("librapicornui: library uninitialized, call Rapicorn::init_app() first");
+  return *the_app;
+}
+
+Application_SmartHandle
+init_app (const String       &app_ident,
+          int                *argcp,
+          char              **argv,
+          const StringVector &args)
+{
+  // assert global_ctors work
   if (__staticctortest.v != 0x123caca0)
     fatal ("librapicornui: link error: C++ constructors have not been executed");
+  // ensure single initialization
+  if (the_app)
+    fatal ("librapicornui: multiple calls to Rapicorn::init_app()");
+  // initialize...
   rapicorn_init_with_gtk_thread (app_ident, argcp, argv, args);
   assert (rapicorn_thread_entered() == false);
   rapicorn_thread_enter();
-}
-
-void
-ApplicationImpl::init_with_x11 (const std::string &application_identifier,
-                                const StringList  &cmdline_args)
-{
-  int dummy_argc = cmdline_args.size();
-  char **dummy_argv = (char**) alloca ((sizeof (char*) + 1) * dummy_argc);
-  for (int i = 0; i < dummy_argc; i++)
-    dummy_argv[i] = const_cast<char*> (cmdline_args[i].c_str());
-  dummy_argv[dummy_argc] = NULL;
-  init_with_x11 (application_identifier, &dummy_argc, dummy_argv);
+  the_app = new ApplicationImpl();
+  return ApplicationImpl::the();
 }
 
 Wind0wIface*

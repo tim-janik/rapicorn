@@ -42,7 +42,8 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn and its gtk backend */
-  app.init_with_x11 (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  Application_SmartHandle smApp = init_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
   /* initialization acquired global Rapicorn mutex */
 
   /* load GUI definition file, relative to argv[0] */

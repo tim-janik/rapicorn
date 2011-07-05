@@ -55,6 +55,7 @@ assertions_passed ()
 static void
 test_cxx_gui ()
 {
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
   TSTART ("C++GUI Test");
   Wind0wIface &wind0w = *app.create_wind0w ("Window");
   TOK();
@@ -81,6 +82,7 @@ test_cxx_gui ()
 static void
 test_test_item ()
 {
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
   TSTART ("alignment-test");
   Wind0wIface &wind0w = *app.create_wind0w ("alignment-test");
   TOK();
@@ -108,6 +110,7 @@ test_test_item ()
 static void
 idl_test_item_test ()
 {
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
   TSTART ("idl-test-item");
   Wind0wIface &wind0w = *app.create_wind0w ("test-item-wind0w");
   TOK();
@@ -156,6 +159,7 @@ interface (ItemIface *itemi)
 static void
 complex_dialog_test ()
 {
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
   TSTART ("complex-dialog-test");
   ItemIface *item = app.unique_component ("/#"); // invalid path
   TASSERT (item == NULL);
@@ -214,7 +218,8 @@ main (int   argc,
       run_dialogs = true;
 
   /* initialize rapicorn */
-  app.init_with_x11 (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  Application_SmartHandle smApp = init_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
 
   /* parse GUI description */
   app.auto_load ("RapicornTest", Path::vpath_find ("testitems.xml"), argv[0]);

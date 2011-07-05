@@ -161,8 +161,10 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  /* initialize Rapicorn and its X11 (Gtk+) backend */
-  app.init_with_x11 ("Rapidrun", &argc, argv); // acquires Rapicorn mutex
+  /* initialize Rapicorn and its backend (X11) */
+  Application_SmartHandle smApp = Rapicorn::init_app ("Rapidrun", &argc, argv); // acquires Rapicorn mutex
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+
   parse_args (&argc, &argv);
   if (argc != 2)
     help_usage (true);

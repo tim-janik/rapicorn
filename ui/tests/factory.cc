@@ -49,7 +49,8 @@ main (int   argc,
   rapicorn_init_test (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
 
   /* initialize Rapicorn for X11 backend with application name */
-  app.init_with_x11 (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  Application_SmartHandle smApp = init_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
 
   /* find and load GUI definitions relative to argv[0] */
   String factory_xml = "factory.xml";

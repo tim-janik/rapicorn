@@ -172,14 +172,14 @@ WindowImpl::WindowImpl() :
   RAPICORN_ASSERT (m_source == source);
   m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
   m_source->primary (false);
-  app.add_wind0w (*this);
+  ApplicationImpl::the().add_wind0w (*this);
   change_flags_silently (ANCHORED, true);       /* window is always anchored */
 }
 
 void
 WindowImpl::dispose ()
 {
-  app.remove_wind0w (*this);
+  ApplicationImpl::the().remove_wind0w (*this);
 }
 
 WindowImpl::~WindowImpl()

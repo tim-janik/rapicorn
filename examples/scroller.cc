@@ -40,7 +40,8 @@ main (int   argc,
       char *argv[])
 {
   /* initialize rapicorn */
-  app.init_with_x11 (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  Application_SmartHandle smApp = init_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
 
   /* parse GUI description */
   app.auto_load ("RapicornTest", "scroller.xml", argv[0]);

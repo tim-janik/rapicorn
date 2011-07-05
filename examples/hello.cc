@@ -40,7 +40,8 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn for X11 backend with application name */
-  app.init_with_x11 ("HelloWorld", &argc, argv);
+  Application_SmartHandle smApp = init_app ("HelloWorld", &argc, argv);
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
 
   /* find and load GUI definitions relative to argv[0] */
   app.auto_load ("RapicornTest",        // namespace domain

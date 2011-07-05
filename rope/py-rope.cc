@@ -73,8 +73,9 @@ rope_init_dispatcher (PyObject *self,
   argv[0] = (char*) application_name.c_str();
   int argc = 1;
   rapicorn_init_core (application_name, &argc, argv);
-  int cpu = Thread::Self::affinity (1);
-  uint64 app_id = rope_thread_start (String (ns, nl), strv, cpu);
+  StringVector iargs;
+  iargs.push_back (string_printf ("cpu-affinity=%d", Thread::Self::affinity()));
+  uint64 app_id = rope_thread_start (application_name, &argc, argv, iargs);
   if (app_id == 0)
     ; // FIXME: throw exception
   return PyLong_FromUnsignedLongLong (app_id);
@@ -209,7 +210,7 @@ MODULE_INIT_FUNCTION (void) // conventional dlmodule initializer
     char *dummyargs[] = { NULL, NULL };
     dummyargs[0] = argv0[0] ? argv0 : (char*) "Python>>>";
     // char **dummyargv = dummyargs;
-    // FIXME: // App.init_with_x11 (&dummyargc, &dummyargv, dummyargs[0]);
+    // FIXME: init_ap (dummyargs[0], &dummyargc, dummyargv);
   }
   free (argv0);
 }

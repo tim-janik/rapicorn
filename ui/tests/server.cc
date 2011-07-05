@@ -6,6 +6,7 @@ using namespace Rapicorn;
 static void
 test_server_smart_handle (void)
 {
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
   ApplicationIface *ab = &app;
   Plic::FieldBuffer8 fb (4);
   fb.add_object (uint64 ((BaseObject*) ab));

@@ -10,8 +10,6 @@ class ApplicationImpl : public ApplicationIface {
   vector<Wind0wIface*>     m_wind0ws;
   void                check_primaries        ();
 public:
-  virtual void        init_with_x11          (const std::string &application_identifier,
-                                              const StringList  &cmdline_args);
   virtual String      auto_path              (const String  &file_name,
                                               const String  &binary_path,
                                               bool           search_vpath = true);
@@ -33,13 +31,10 @@ public:
   virtual void        test_counter_add       (int val);
   virtual int         test_counter_get       ();
   virtual int         test_counter_inc_fetch ();
-  static void         init_with_x11          (const String       &app_ident,
-                                              int                *argcp,
-                                              char              **argv,
-                                              const StringVector &args = StringVector());
+  static ApplicationImpl& the                ();
 };
 
-extern ApplicationImpl &app;
+
 
 } // Rapicorn
 

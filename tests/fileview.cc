@@ -64,8 +64,8 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn for X11 */
-  app.init_with_x11 ("FileView", &argc, argv);
-  /* initialization acquired global Rapicorn mutex */
+  Application_SmartHandle smApp = init_app ("FileView", &argc, argv); // acquires Rapicorn mutex
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
 
   /* load GUI definition file, relative to argv[0] */
   app.auto_load ("RapicornTest", "fileview.xml", argv[0]);

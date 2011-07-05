@@ -24,11 +24,13 @@ using namespace Rapicorn;
 namespace { // Anonymous
 
 static Application
-cxxrope_init_dispatcher (const String         &appname,
-                         const vector<String> &cmdline_args)
+cxxrope_init_dispatcher (const String  &app_ident,
+                         int           *argcp,
+                         char         **argv,
+                         StringVector   args)
 {
-  int cpu = Thread::Self::affinity (1);
-  uint64 app_id = rope_thread_start (appname, cmdline_args, cpu);
+  args.push_back (string_printf ("cpu-affinity=%d", Thread::Self::affinity()));
+  uint64 app_id = rope_thread_start (app_ident, argcp, argv, args);
   if (app_id == 0)
     throw std::runtime_error ("failed to initialize rapicorn thread");
   // printout ("APPURL: 0x%016llx\n", app_id);
@@ -48,10 +50,7 @@ main (int   argc,
 {
   rapicorn_init_test (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
   const int clockid = CLOCK_REALTIME; // CLOCK_MONOTONIC
-  vector<String> cmdline_args;
-  for (int i = 1; i < argc; i++)
-    cmdline_args.push_back (argv[i]);
-  Application app = cxxrope_init_dispatcher (argv[0], cmdline_args);
+  Application app = cxxrope_init_dispatcher (argv[0], &argc, argv, StringVector());
   double calls = 0, slowest = 0, fastest = 9e+9;
   for (uint j = 0; j < 29; j++)
     {
