@@ -256,7 +256,7 @@ program_cwd ()
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x12affe16) { v++; } } __staticctortest;
 
 /**
- * @param app_ident     Application identifier, needed to associate persistent resources
+ * @param app_ident     Application identifier, used to associate persistent resources
  * @param argcp         location of the 'argc' argument to main()
  * @param argv          location of the 'argv' arguments to main()
  * @param args          program specific initialization values
