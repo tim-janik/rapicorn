@@ -48,7 +48,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  init_core_test (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  init_core_test (argv[0], &argc, argv);
   const int clockid = CLOCK_REALTIME; // CLOCK_MONOTONIC
   Application app = cxxrope_init_dispatcher (argv[0], &argc, argv, StringVector());
   double calls = 0, slowest = 0, fastest = 9e+9;
