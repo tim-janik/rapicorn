@@ -83,8 +83,6 @@ def Iwrap (name):
   else:
     ns, base = '', name
   return ns + I_prefix_postfix[0] + base + I_prefix_postfix[1]
-def R (name):
-  return Iwrap (name) + '*'
 def H (name):
   return name + '_SmartHandle'
 
@@ -580,7 +578,7 @@ class Generator:
     s += '  }\n'
     cpp_rtype = self.rtype2cpp (stype.rtype)
     if stype.rtype.storage == Decls.INTERFACE:
-      cpp_rtype = R (cpp_rtype)
+      cpp_rtype = Iwrap (cpp_rtype) + '*'
     s += '  static %s\n' % cpp_rtype
     s += '  handler ('
     s += self.format_call_args (stype, 'arg_', 11, C4INTERFACE) + (',\n           ' if stype.args else '')
