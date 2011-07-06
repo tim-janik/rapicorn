@@ -114,6 +114,7 @@ RAPICORN_EXTERN_C_BEGIN();
 #define RAPICORN_PRINTF(format_idx, arg_idx)    __attribute__ ((__format__ (__printf__, format_idx, arg_idx)))
 #define RAPICORN_SCANF(format_idx, arg_idx)     __attribute__ ((__format__ (__scanf__, format_idx, arg_idx)))
 #define RAPICORN_FORMAT(arg_idx)                __attribute__ ((__format_arg__ (arg_idx)))
+#define RAPICORN_SENTINEL                       __attribute__ ((__sentinel__))
 #define RAPICORN_NORETURN                       __attribute__ ((__noreturn__))
 #define RAPICORN_CONST                          __attribute__ ((__const__))
 #define RAPICORN_UNUSED                         __attribute__ ((__unused__))
@@ -129,6 +130,7 @@ RAPICORN_EXTERN_C_BEGIN();
 #define RAPICORN_PRINTF(format_idx, arg_idx)
 #define RAPICORN_SCANF(format_idx, arg_idx)
 #define RAPICORN_FORMAT(arg_idx)
+#define RAPICORN_SENTINEL
 #define RAPICORN_NORETURN
 #define RAPICORN_CONST
 #define RAPICORN_UNUSED
