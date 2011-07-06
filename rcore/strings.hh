@@ -85,6 +85,7 @@ void    memset4		   (uint32              *mem,
 String  string_vector_find (const StringVector  &svector,
                             const String        &key,
                             const String        &fallback);
+StringVector cstrings_to_vector (const char*, ...) RAPICORN_SENTINEL;
 
 // === String Options ===
 bool    string_option_check     (const String   &option_string,

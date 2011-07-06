@@ -555,6 +555,26 @@ string_vector_find (const StringVector &svector,
   return fallback;
 }
 
+StringVector
+cstrings_to_vector (const char *s, ...)
+{
+  StringVector sv;
+  if (s)
+    {
+      sv.push_back (s);
+      va_list args;
+      va_start (args, s);
+      s = va_arg (args, const char*);
+      while (s)
+        {
+          sv.push_back (s);
+          s = va_arg (args, const char*);
+        }
+      va_end (args);
+    }
+  return sv;
+}
+
 // === String Options ===
 static const char*
 string_option_find_value (const String   &option_string,
