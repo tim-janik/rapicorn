@@ -487,7 +487,7 @@ static uint32 process_hash = 0;
 static uint64 locatable_process_hash64 = 0;
 
 static void
-process_handle_and_seed_init ()
+process_handle_and_seed_init (const StringVector &args)
 {
   /* function should be called only once */
   assert (process_info.pid == 0);

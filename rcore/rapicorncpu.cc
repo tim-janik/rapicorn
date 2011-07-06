@@ -230,7 +230,7 @@ cpu_info (void)
 }
 
 static void
-init_cpuinfo (void)
+init_cpuinfo (const StringVector &args)
 {
   static char vendor_buffer[13];
   CPUInfo lci;

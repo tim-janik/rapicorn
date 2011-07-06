@@ -9,7 +9,6 @@
 namespace Rapicorn {
 
 // === initialization hooks ===
-static void    (*run_init_hooks) (void) = NULL;
 static InitHook *init_hooks = NULL;
 
 InitHook::InitHook (const String &fname, InitHookFunc func) :
@@ -17,7 +16,6 @@ InitHook::InitHook (const String &fname, InitHookFunc func) :
 {
   next = init_hooks;
   init_hooks = this;
-  run_init_hooks = invoke_hooks;
 }
 
 static int
@@ -46,20 +44,35 @@ init_hook_cmp (const InitHook *const &v1, const InitHook *const &v2)
   return strverscmp (v1->name().c_str(), v2->name().c_str()) < 0;
 }
 
+static StringVector *init_hook_main_args = NULL;
+
+StringVector
+InitHook::main_args () const
+{
+  return *init_hook_main_args;
+}
+
 void
-InitHook::invoke_hooks (void)
+InitHook::invoke_hooks (const String &kind, int *argcp, char **argv, const StringVector &args)
 {
   std::vector<InitHook*> hv;
   for (InitHook *ihook = init_hooks; ihook; ihook = ihook->next)
     hv.push_back (ihook);
   stable_sort (hv.begin(), hv.end(), init_hook_cmp);
-  init_hooks = NULL;
+  StringVector main_args;
+  for (uint i = 1; i < uint (*argcp); i++)
+    main_args.push_back (argv[i]);
+  init_hook_main_args = &main_args;
   for (std::vector<InitHook*>::iterator it = hv.begin(); it != hv.end(); it++)
     {
       String name = (*it)->name();
-      RAPICORN_DEBUG ("InitHook: %s", name.c_str());
-      (*it)->hook();
+      if (name.size() > kind.size() && strncmp (name.data(), kind.data(), kind.size()) == 0)
+        {
+          RAPICORN_DEBUG ("InitHook: %s", name.c_str());
+          (*it)->hook (args);
+        }
     }
+  init_hook_main_args = NULL;
 }
 
 // === arg parsers ===
@@ -240,7 +253,7 @@ program_cwd ()
   return program_cwd0;
 }
 
-static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x12affe17) {} } __staticctortest;
+static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x12affe16) { v++; } } __staticctortest;
 
 /**
  * @param app_ident     Application identifier, needed to associate persistent resources
@@ -260,7 +273,7 @@ static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x12affe17) {} }
  * Additional initialization arguments can be passed in @a args, currently supported are:
  * - @c autonomous - For test programs to request a self-contained runtime environment.
  * - @c cpu-affinity - CPU# to bind rapicorn thread to.
- * - @c parse-testargs - Used by rapicorn_init_test() internally.
+ * - @c parse-testargs - Used by init_core_test() internally.
  * - @c test-verbose - acts like --test-verbose.
  * - @c test-log - acts like --test-log.
  * - @c test-slow - acts like --test-slow.
@@ -275,23 +288,26 @@ static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x12affe17) {} }
  * .
  */
 void
-rapicorn_init_core (const String       &app_ident,
-                    int                *argcp,
-                    char              **argv,
-                    const StringVector &args)
+init_core (const String       &app_ident,
+           int                *argcp,
+           char              **argv,
+           const StringVector &args)
 {
-  static bool rapicorn_initialized = false;
   return_if_fail (app_ident.empty() == false);
-  if (rapicorn_initialized) return; // FIXME
-  return_if_fail (rapicorn_initialized == false);
-  rapicorn_initialized = true;
+  // assert global_ctors work
+  if (__staticctortest.v != 0x12affe17)
+    fatal ("librapicorncore: link error: C++ constructors have not been executed");
+
+  // guard against double initialization
+  if (program_app_ident.empty() == false)
+    fatal ("librapicorncore: multiple calls to Rapicorn::init_app()");
+  program_app_ident = app_ident;
 
   // mandatory threading initialization
   if (!g_threads_got_initialized)
     g_thread_init (NULL);
 
   // setup program and application name
-  program_app_ident = app_ident;
   if (program_argv0.empty() && argcp && *argcp && argv && argv[0] && argv[0][0] != 0)
     program_argv0 = argv[0];
   if (program_cwd0.empty())
@@ -306,16 +322,16 @@ rapicorn_init_core (const String       &app_ident,
   Logging::configure (env_rapicorn ? env_rapicorn : "");
   RAPICORN_DEBUG ("startup; RAPICORN=%s", env_rapicorn ? env_rapicorn : "");
 
-  // ensure static constructors work
-  if (__staticctortest.v != 0x12affe17)
-    fatal ("librapicorncore: link error: C++ constructors have not been executed");
-
   // setup init settings
   parse_settings_and_args (vinit_settings, args, argcp, argv);
 
   // initialize sub systems
-  if (run_init_hooks)
-    run_init_hooks();
+  struct InitHookCaller : public InitHook {
+    static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)
+    { invoke_hooks (kind, argcp, argv, args); }
+  };
+  InitHookCaller::invoke ("core/", argcp, argv, args);
+  InitHookCaller::invoke ("threading/", argcp, argv, args);
 }
 
 } // Rapicorn

@@ -331,10 +331,10 @@ test_rand_double_range (double range_start,
 namespace Rapicorn {
 
 void
-rapicorn_init_test (const String       &app_ident,
-                    int                *argcp,
-                    char              **argv,
-                    const StringVector &args)
+init_core_test (const String       &app_ident,
+                int                *argcp,
+                char              **argv,
+                const StringVector &args)
 {
   // check that NULL is defined to __null in C++ on 64bit
   RAPICORN_ASSERT (sizeof (NULL) == sizeof (void*));
@@ -342,7 +342,7 @@ rapicorn_init_test (const String       &app_ident,
   const char *ivalues[] = { "autonomous=1", "parse-testargs=1" };
   StringVector targs = RAPICORN_STRING_VECTOR_FROM_ARRAY (ivalues);
   std::copy (args.begin(), args.end(), std::back_inserter (targs));
-  rapicorn_init_core (app_ident, argcp, argv, targs);
+  init_core (app_ident, argcp, argv, targs);
   Logging::configure ("fatal-criticals:fatal-warnings");
   const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
   g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));

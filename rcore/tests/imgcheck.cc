@@ -121,7 +121,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (String ("Rapicorn/") + PRGNAME, &argc, argv);
+  init_core_test (String ("Rapicorn/") + PRGNAME, &argc, argv);
 
   parse_args (&argc, &argv);
   if (argc < 3)

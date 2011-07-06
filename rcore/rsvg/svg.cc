@@ -325,7 +325,7 @@ Library::lookup_element (const String &id)
 }
 
 static void
-init_svg_lib()
+init_svg_lib (const StringVector &args)
 {
   g_type_init(); // NOP on subsequent invocations
   Library::add_search_dir (RAPICORN_SVGDIR);

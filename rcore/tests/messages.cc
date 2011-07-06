@@ -103,7 +103,7 @@ int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  init_core_test (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
 
   if (argc >= 2 || Test::logging())
     {

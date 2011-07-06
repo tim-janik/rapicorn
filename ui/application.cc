@@ -42,11 +42,21 @@ init_app (const String       &app_ident,
   // ensure single initialization
   if (the_app)
     fatal ("librapicornui: multiple calls to Rapicorn::init_app()");
-  // initialize...
-  rapicorn_init_with_gtk_thread (app_ident, argcp, argv, args);
+  // initialize core
+  if (program_ident().empty())
+    init_core (app_ident, argcp, argv, args);
+  else if (app_ident != program_ident())
+    fatal ("librapicornui: application identifier changed during ui initialization");
+  // initialize sub systems
+  struct InitHookCaller : public InitHook {
+    static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)
+    { invoke_hooks (kind, argcp, argv, args); }
+  };
+  InitHookCaller::invoke ("ui/", argcp, argv, args);
+  the_app = new ApplicationImpl();
+  InitHookCaller::invoke ("ui-thread/", argcp, argv, args);
   assert (rapicorn_thread_entered() == false);
   rapicorn_thread_enter();
-  the_app = new ApplicationImpl();
   return ApplicationImpl::the();
 }
 

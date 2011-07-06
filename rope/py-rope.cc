@@ -72,7 +72,7 @@ rope_init_dispatcher (PyObject *self,
   char *argv[2] = { NULL, NULL };
   argv[0] = (char*) application_name.c_str();
   int argc = 1;
-  rapicorn_init_core (application_name, &argc, argv);
+  init_core (application_name, &argc, argv);
   StringVector iargs;
   iargs.push_back (string_printf ("cpu-affinity=%d", Thread::Self::affinity()));
   uint64 app_id = rope_thread_start (application_name, &argc, argv, iargs);

@@ -108,7 +108,7 @@ Msg::init_standard_types()
   /* Here's a nasty design issue that needs fixing:
    * - Message type registration happens at global_ctor time.
    * - Mesage type registration needs gettext to work.
-   * - gettext is not setup before rapicorn_init_core.
+   * - gettext is not setup before init_core.
    * Possible solution: dmand create message types (esp. standards)
    */
 #define       _UNTRANSLATED(x)  x
@@ -147,7 +147,7 @@ Msg::init_standard_types()
 }
 
 static void
-init_msg_standard_types()
+init_msg_standard_types (const StringVector &args)
 {
   Msg::register_type ("none", Msg::NONE, "");
 }
@@ -169,8 +169,8 @@ static InitHook _init_msg_standard_types ("core/40 Init Dialog Message Types", i
  * @a default_ouput, this corresponds to the first two message types which
  * are unconfigrable and always have their output disabled or enabled respectively.
  * As an exception to the rest of the message API, this function may be
- * called before rapicorn_init_core(). However note, that MT-safety is only ensured
- * for calls occouring after rapicorn_init_core().
+ * called before init_core(). However note, that MT-safety is only ensured
+ * for calls occouring after init_core().
  * This function is MT-safe and may be called from any thread.
  */
 Msg::Type

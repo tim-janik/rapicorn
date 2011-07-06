@@ -20,7 +20,7 @@ namespace Rapicorn {
 namespace Blit {
 
 static void
-init_render_table()
+init_render_table (const StringVector &args)
 {
   CPUInfo cpu = cpu_info();
   if (cpu.x86_mmx)

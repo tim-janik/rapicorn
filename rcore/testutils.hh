@@ -59,7 +59,7 @@
 
 namespace Rapicorn {
 
-void rapicorn_init_test (const String &app_ident, int *argcp, char **argv, const StringVector &args = StringVector());
+void init_core_test (const String &app_ident, int *argcp, char **argv, const StringVector &args = StringVector());
 
 namespace Test {
 

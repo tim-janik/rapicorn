@@ -209,16 +209,14 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
-
   for (int i = 0; i < argc; i++)
     if (String (argv[i]) == "--non-fatal")
       test_item_fatal_asserts = false;
     else if (String (argv[i]) == "--run")
       run_dialogs = true;
 
-  /* initialize rapicorn */
-  Application_SmartHandle smApp = init_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  // initialize rapicorn
+  Application_SmartHandle smApp = init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
 
   /* parse GUI description */

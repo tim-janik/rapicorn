@@ -1286,7 +1286,7 @@ get_pth_thread_table (void)
 #endif	/* !RAPICORN_HAVE_MUTEXATTR_SETTYPE */
 
 static void
-init_threads (void)
+init_threads (const StringVector &args)
 {
   RapicornThreadTable *table = get_pth_thread_table ();
   if (!table)

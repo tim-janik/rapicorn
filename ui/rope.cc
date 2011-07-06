@@ -86,7 +86,7 @@ private:
   run ()
   {
     affinity (string_to_int (string_vector_find (*m_init->args, "cpu-affinity=", "-1")));
-    // rapicorn_init_core() already called
+    // init_core() already called
     init_app (m_init->application_identifier, m_init->argcp, m_init->argv, *m_init->args);
     m_init->argcp = NULL, m_init->argv = NULL, m_init->args = NULL; // becomes invalidated once app_id is set
     m_loop = ref_sink (EventLoop::create());

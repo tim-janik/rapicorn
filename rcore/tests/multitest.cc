@@ -602,20 +602,20 @@ main (int   argc,
   String app_ident = String ("Rapicorn/") + RAPICORN__FILE__;
   if (argc >= 2 && String ("--print-process-handle") == argv[1])
     {
-      rapicorn_init_core (app_ident, &argc, argv);
+      init_core (app_ident, &argc, argv);
       printout ("%s", process_handle().c_str());
       return 0;
     }
 
   if (argc >= 2 && String ("--print-locatable-id") == argv[1])
     {
-      rapicorn_init_core (app_ident, &argc, argv);
+      init_core (app_ident, &argc, argv);
       SomeObject *obj = new SomeObject();
       printout ("0x%016llx\n", obj->locatable_id());
       return 0;
     }
 
-  rapicorn_init_test (app_ident, &argc, argv);
+  init_core_test (app_ident, &argc, argv);
 
   return Test::run();
 }

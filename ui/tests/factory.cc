@@ -46,10 +46,8 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
-
-  /* initialize Rapicorn for X11 backend with application name */
-  Application_SmartHandle smApp = init_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  // initialize Rapicorn for X11 backend
+  Application_SmartHandle smApp = init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
 
   /* find and load GUI definitions relative to argv[0] */

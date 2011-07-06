@@ -150,10 +150,9 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  rapicorn_init_test (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
-  rapicorn_markup_parser_test();
   /* initialize rapicorn */
-  Application_SmartHandle app = init_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv); // FIXME: should work offscreen
+  Application_SmartHandle app = init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv); // FIXME: should work offscreen
+  rapicorn_markup_parser_test();
   text_markup_test();
   return 0;
 }

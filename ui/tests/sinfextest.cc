@@ -229,9 +229,9 @@ main (int   argc,
   bool shell_mode = argc >= 2 && strcmp (argv[1], "--shell") == 0;
 
   if (!shell_mode)
-    rapicorn_init_test (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+    init_core_test (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
   else
-    init_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+    init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
 
   if (shell_mode)
     {

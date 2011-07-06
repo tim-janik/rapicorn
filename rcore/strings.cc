@@ -24,7 +24,7 @@ rapicorn_gettext (const char *text)
 }
 
 static void
-init_gettext()
+init_gettext (const StringVector &args)
 {
   // initialize i18n functions
   rapicorn_i18n_domain = RAPICORN_I18N_DOMAIN;
@@ -525,6 +525,17 @@ string_substitute_char (const String &input,
   return output;
 }
 
+void
+memset4 (guint32        *mem,
+         guint32         filler,
+         guint           length)
+{
+  RAPICORN_STATIC_ASSERT (sizeof (*mem) == 4);
+  RAPICORN_STATIC_ASSERT (sizeof (filler) == 4);
+  RAPICORN_STATIC_ASSERT (sizeof (wchar_t) == 4);
+  wmemset ((wchar_t*) mem, filler, length);
+}
+
 /**
  * Search for @a key in @a svector and return reminder of the matching string.
  * If multiple matches are possible, the last one is returned.
@@ -542,17 +553,6 @@ string_vector_find (const StringVector &svector,
         return s.substr (key.size());
     }
   return fallback;
-}
-
-void
-memset4 (guint32        *mem,
-         guint32         filler,
-         guint           length)
-{
-  RAPICORN_STATIC_ASSERT (sizeof (*mem) == 4);
-  RAPICORN_STATIC_ASSERT (sizeof (filler) == 4);
-  RAPICORN_STATIC_ASSERT (sizeof (wchar_t) == 4);
-  wmemset ((wchar_t*) mem, filler, length);
 }
 
 // === String Options ===

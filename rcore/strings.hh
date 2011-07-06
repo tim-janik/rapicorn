@@ -79,12 +79,12 @@ String  string_strip                                     (const String &input);
 String  string_substitute_char                           (const String &input,
                                                           const char    match,
                                                           const char    subst);
-String  string_vector_find (const StringVector  &svector,
-                            const String        &key,
-                            const String        &fallback);
 void    memset4		   (uint32              *mem,
                             uint32               filler,
                             uint                 length);
+String  string_vector_find (const StringVector  &svector,
+                            const String        &key,
+                            const String        &fallback);
 
 // === String Options ===
 bool    string_option_check     (const String   &option_string,

@@ -278,7 +278,7 @@ Type::register_package_file (const String &filename)
 #include "types-zgen.c" // provides types-std.idl as .tpg in RAPICORNSTD_RODATA_*
 
 static void
-init_types (void)
+init_types (const StringVector &args)
 {
   static bool initialized = false;
   assert (!initialized);

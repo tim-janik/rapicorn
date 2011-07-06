@@ -347,8 +347,8 @@ tabort_handler (bool   set_values,
 #ifdef  __cplusplus
 namespace Rapicorn {
 static inline void
-rapicorn_init_test (int    *argc,
-		  char ***argv)
+init_core_test (int    *argc,
+                char ***argv)
 {
   /* check that NULL is defined to __null in C++ on 64bit */
   RAPICORN_ASSERT (sizeof (NULL) == sizeof (void*));
