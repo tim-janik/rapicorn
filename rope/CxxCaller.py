@@ -86,9 +86,9 @@ def Iwrap (name):
 def H (name):
   return name + '_SmartHandle'
 
-class C4CLIENT: pass
-class C4SERVER: pass
-class C4INTERFACE: pass
+class C4CLIENT: pass    # generate _SmartHandle classes
+class C4SERVER: pass    # add server extensions to _SmartHandle classes
+class C4INTERFACE: pass # generate _Interface classes
 
 class Generator:
   def __init__ (self):
@@ -140,24 +140,21 @@ class Generator:
     if typename == 'string': return 'std::string'
     fullnsname = '::'.join (self.type_relative_namespaces (type_node) + [ type_node.name ])
     return fullnsname
-  def Cp (self, type_node, interface_postfix = '', tag = None):
-    str = self.C (type_node, tag)
+  def Cp (self, type_node, interface_postfix = '', mode = None):
+    str = self.C (type_node, mode)
     if type_node.storage == Decls.INTERFACE:
       return str + interface_postfix
     else:
       return str
-  def C (self, type_node, tag = None):
+  def C (self, type_node, mode = None):
     tname = self.type2cpp (type_node)
     if type_node.storage != Decls.INTERFACE:
       return tname
-    if tag == C4INTERFACE:
+    mode = mode or self.gen4class
+    if mode == C4INTERFACE:
       return Iwrap (tname)
-    elif tag in (C4CLIENT, C4SERVER):
+    else: # mode in (C4CLIENT, C4SERVER):
       return H (tname)
-    if self.gen4class in (C4CLIENT, C4SERVER):
-      return H (tname)
-    else:
-      return Iwrap (tname)
   def tabwidth (self, n):
     self.ntab = n
   def format_to_tab (self, string, indent = ''):
@@ -166,21 +163,21 @@ class Generator:
     else:
       f = '%%-%ds' % self.ntab  # '%-20s'
       return indent + f % string
-  def format_vartype (self, type, tag = None):
+  def format_vartype (self, type, mode = None):
     s = ''
-    s += self.C (type, tag) + ' '
+    s += self.C (type, mode) + ' '
     if self.gen4class == C4INTERFACE and type.storage == Decls.INTERFACE:
       s += '*'
     return s
   def format_var (self, ident, type):
     return self.format_vartype (type) + ident
-  def format_arg (self, ident, type, defaultinit = None, tag = None):
+  def format_arg (self, ident, type, defaultinit = None, mode = None):
     s = ''
     constref = type.storage in (Decls.STRING, Decls.SEQUENCE, Decls.RECORD)
     if constref:
       s += 'const '                             # <const >int foo = 3
     n = self.type2cpp (type)                    # const <int> foo = 3
-    s += self.C (type, tag)                     # Object<_Interface> &self
+    s += self.C (type, mode)                     # Object<_Interface> &self
     s += ' ' if ident else ''                   # const int< >foo = 3
     if type.storage == Decls.INTERFACE:
       s += '&'                                  # Object_Interface <&>self
@@ -197,10 +194,10 @@ class Generator:
       else:
         s += ' = %s' % defaultinit
     return s
-  def format_call_args (self, ftype, prefix, argindent = 2, tag = None):
+  def format_call_args (self, ftype, prefix, argindent = 2, mode = None):
     l = []
     for a in ftype.args:
-      l += [ self.format_arg (prefix + a[0], a[1], tag = tag) ]
+      l += [ self.format_arg (prefix + a[0], a[1], mode = mode) ]
     return (',\n' + argindent * ' ').join (l)
   def use_arg (self, ident, type, interfacechar = '*'):
     s = ''
