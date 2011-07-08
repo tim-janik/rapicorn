@@ -102,8 +102,8 @@ class Generator:
       return self.Iwrap (tname)
     else: # mode in (G4CLIENT, C4OLDHANDLE):
       return self.H (tname)
-  def R (self, type_node, mode = None):                 # construct Return type
-    tname = self.C (type_node, mode)
+  def R (self, type_node):                              # construct Return type
+    tname = self.C (type_node)
     if self.gen_mode == G4SERVER:
       tname += '*' if type_node.storage == Decls.INTERFACE else ''
     return tname
