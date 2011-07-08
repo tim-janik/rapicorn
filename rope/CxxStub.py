@@ -71,7 +71,7 @@ def Iwrap (name):
 def H (name):
   return name + '_SmartHandle'
 
-class C4CLIENT: pass    # generate _SmartHandle classes
+class G4CLIENT: pass    # generate _SmartHandle classes
 class C4SERVER: pass    # add server extensions to _SmartHandle classes
 class C4INTERFACE: pass # generate _Interface classes
 
@@ -138,7 +138,7 @@ class Generator:
     mode = mode or self.gen4class
     if mode == C4INTERFACE:
       return Iwrap (tname)
-    else: # mode in (C4CLIENT, C4SERVER):
+    else: # mode in (G4CLIENT, C4SERVER):
       return H (tname)
   def tabwidth (self, n):
     self.ntab = n
@@ -342,7 +342,7 @@ class Generator:
       elif type.storage == Decls.INTERFACE:
         op_ptr = '.operator->()' if self.gen4class == C4INTERFACE else ''
         s += '  %s = %s (%s, %s)%s;\n' \
-            % (ident, self.C (type, C4SERVER), cpl, fbr, op_ptr)
+            % (ident, self.C (type, G4CLIENT), cpl, fbr, op_ptr)
       else:
         s += '  %s = %s.pop_%s();\n' % (ident, fbr, self.accessor_name (type.storage))
     return s
@@ -690,7 +690,7 @@ class Generator:
       s += '  explicit ' + self.format_to_tab ('') + '%s ();\n' % self.C (type_info)
       s += '  virtual ' + self.format_to_tab ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info)
     s += 'public:\n'
-    if self.gen4class in (C4CLIENT, C4SERVER):
+    if self.gen4class in (G4CLIENT, C4SERVER):
       s += '  inline %s () {}\n' % H (type_info.name)
       s += '  inline %s (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) ' % H (type_info.name)
       s += '{ _pop_rpc (cpl, fbr); }\n'
@@ -719,7 +719,7 @@ class Generator:
       s += '  inline %s& operator*  () const { return *dynamic_cast<%s*> (_iface()); }\n' % ifn2
       s += '  inline %s* operator-> () const { return dynamic_cast<%s*> (_iface()); }\n' % ifn2
       s += '  inline operator  %s&  () const { return operator*(); }\n' % ifacename
-    if self.gen4class in (C4CLIENT, C4SERVER):
+    if self.gen4class in (G4CLIENT, C4SERVER):
       s += '  inline operator _unspecified_bool_type () const ' # return non-NULL pointer to member on true
       s += '{ return _is_null() ? NULL : _unspecified_bool_true(); }\n' # avoids auto-bool conversions on: float (*this)
     s += self.insertion_text ('class_scope:' + self.C (type_info))
@@ -727,7 +727,7 @@ class Generator:
     # aliasing
     if self.gen_shortalias and self.gen4class in (C4INTERFACE,):
       s += '// typedef %s %s;\n' % (self.C (type_info), self.type2cpp (type_info))
-    elif self.gen_shortalias and self.gen4class in (C4CLIENT,):
+    elif self.gen_shortalias and self.gen4class in (G4CLIENT,):
       s += 'typedef %s %s;\n' % (self.C (type_info), self.type2cpp (type_info))
     return s
   def generate_interface_impl (self, type_info):
@@ -850,7 +850,7 @@ class Generator:
       s += gencc_boilerplate + '\n'
     self.tabwidth (16)
     s += self.open_namespace (None)
-    self.gen4class = C4CLIENT
+    self.gen4class = G4CLIENT
     # collect impl types
     types = []
     for tp in implementation_types:
@@ -867,9 +867,9 @@ class Generator:
             s += 'class %s;\n' % self.C (tp)    # C4INTERFACE
             self.gen4class = C4SERVER
             s += 'class %s;\n' % self.C (tp)    # C4SERVER
-            self.gen4class = C4CLIENT
+            self.gen4class = G4CLIENT
           elif self.gen_clienthh:
-            s += 'class %s;\n' % self.C (tp)    # C4CLIENT
+            s += 'class %s;\n' % self.C (tp)    # G4CLIENT
           s += '\n'
         elif tp.typedef_origin:
           s += self.open_namespace (tp)
@@ -897,7 +897,7 @@ class Generator:
             self.gen4class = C4SERVER
             s += self.open_namespace (tp)
             s += self.generate_interface_class (tp) + '\n' # Class smart handle
-            self.gen4class = C4CLIENT
+            self.gen4class = G4CLIENT
       s += self.open_namespace (None)
     # generate client/server impls
     if self.gen_clientcc or self.gen_servercc:
@@ -920,7 +920,7 @@ class Generator:
             else:
               s += self.open_namespace (tp)
               s += self.generate_interface_impl (tp) + '\n'
-            self.gen4class = C4CLIENT
+            self.gen4class = G4CLIENT
           if self.gen_clientcc and tp.fields:
             s += self.open_namespace (tp)
             for fl in tp.fields:
@@ -949,7 +949,7 @@ class Generator:
           s += '\n'
       s += self.generate_server_method_registry (reglines) + '\n'
       s += self.open_namespace (None)
-      self.gen4class = C4CLIENT
+      self.gen4class = G4CLIENT
     # generate interface method skeletons
     if self.gen_server_skel:
       s += '\n// --- Interface Skeletons ---\n'
@@ -959,7 +959,7 @@ class Generator:
           continue
         elif tp.storage == Decls.INTERFACE and not tp.name in self.skip_classes:
           s += self.generate_interface_skel (tp)
-      self.gen4class = C4CLIENT
+      self.gen4class = G4CLIENT
     s += self.open_namespace (None) # close all namespaces
     s += '\n'
     s += self.insertion_text ('global_scope')
