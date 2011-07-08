@@ -61,13 +61,6 @@ def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
 
 I_prefix_postfix = ('', '_Interface')
-def Iwrap (name):
-  cc = name.rfind ('::')
-  if cc >= 0:
-    ns, base = name[:cc+2], name[cc+2:]
-  else:
-    ns, base = '', name
-  return ns + I_prefix_postfix[0] + base + I_prefix_postfix[1]
 
 class G4CLIENT: pass    # generate _SmartHandle classes
 class C4SERVER: pass    # add server extensions to _SmartHandle classes
@@ -85,21 +78,28 @@ class Generator:
     self._iface_base = 'Plic::SimpleServer'
     self.gen4class = None
     self.gen_shortalias = False
-  def H (self, name):                   # G4CLIENT: construct class name
-    return name + '_SmartHandle'
+  def Iwrap (self, name):
+    cc = name.rfind ('::')
+    if cc >= 0:
+      ns, base = name[:cc+2], name[cc+2:]
+    else:
+      ns, base = '', name
+    return ns + I_prefix_postfix[0] + base + I_prefix_postfix[1]
   def type2cpp (self, type_node):
     typename = type_node.name
     if typename == 'float': return 'double'
     if typename == 'string': return 'std::string'
     fullnsname = '::'.join (self.type_relative_namespaces (type_node) + [ type_node.name ])
     return fullnsname
+  def H (self, name):                   # G4CLIENT: construct class name
+    return name + '_SmartHandle'
   def C (self, type_node, mode = None): # construct class name
     tname = self.type2cpp (type_node)
     if type_node.storage != Decls.INTERFACE:
       return tname
     mode = mode or self.gen4class
     if mode == C4INTERFACE:
-      return Iwrap (tname)
+      return self.Iwrap (tname)
     else: # mode in (G4CLIENT, C4SERVER):
       return self.H (tname)
   def R (self, type_node, mode = None): # construct return type
@@ -107,6 +107,31 @@ class Generator:
     if self.gen4class == C4INTERFACE:
       tname += '*' if type_node.storage == Decls.INTERFACE else ''
     return tname
+  def A (self, ident, type_node, defaultinit = None):   # construct call argument
+    constref = type_node.storage in (Decls.STRING, Decls.SEQUENCE, Decls.RECORD)
+    needsref = constref or type_node.storage == Decls.INTERFACE
+    s = self.C (type_node)                      # const {Obj} &foo = 3
+    s += ' ' if ident else ''                   # const Obj{ }&foo = 3
+    if constref:
+      s = 'const ' + s                          # {const }Obj &foo = 3
+    if needsref:
+      s += '&'                                  # const Obj {&}foo = 3
+    s += ident                                  # const Obj &{foo} = 3
+    if defaultinit != None:
+      if type_node.storage == Decls.ENUM:
+        s += ' = %s (%s)' % (self.C (type_node), defaultinit)  # { = 3}
+      elif type_node.storage in (Decls.SEQUENCE, Decls.RECORD):
+        s += ' = %s()' % self.C (type_node)                    # { = 3}
+      elif type_node.storage == Decls.INTERFACE:
+        s += ' = *(%s*) NULL' % self.C (type_node)             # { = 3}
+      else:
+        s += ' = %s' % defaultinit                             # { = 3}
+    return s
+  def Args (self, ftype, prefix, argindent = 2):        # construct list of call arguments
+    l = []
+    for a in ftype.args:
+      l += [ self.A (prefix + a[0], a[1]) ]
+    return (',\n' + argindent * ' ').join (l)
   def close_inner_namespace (self):
     return '} // %s\n' % self.namespaces.pop().name
   def open_inner_namespace (self, namespace):
@@ -153,31 +178,6 @@ class Generator:
     return s
   def format_var (self, ident, type):
     return self.format_vartype (type) + ident
-  def format_arg (self, ident, type, defaultinit = None):
-    s = ''
-    constref = type.storage in (Decls.STRING, Decls.SEQUENCE, Decls.RECORD)
-    if constref:
-      s += 'const '                             # {const }Obj &foo = 3
-    s += self.C (type)                          # const {Obj} &foo = 3
-    s += ' ' if ident else ''                   # const Obj{ }&foo = 3
-    if type.storage == Decls.INTERFACE or constref:
-      s += '&'                                  # const Obj {&}foo = 3
-    s += ident                                  # const Obj &{foo} = 3
-    if defaultinit != None:
-      if type.storage == Decls.ENUM:
-        s += ' = %s (%s)' % (self.C (type), defaultinit)
-      elif type.storage in (Decls.SEQUENCE, Decls.RECORD):
-        s += ' = %s()' % self.C (type)
-      elif type.storage == Decls.INTERFACE:
-        s += ' = *(%s*) NULL' % self.C (type)
-      else:
-        s += ' = %s' % defaultinit
-    return s
-  def format_call_args (self, ftype, prefix, argindent = 2):
-    l = []
-    for a in ftype.args:
-      l += [ self.format_arg (prefix + a[0], a[1]) ]
-    return (',\n' + argindent * ' ').join (l)
   def use_arg (self, ident, type, interfacechar = '*'):
     s = ''
     if type.storage == Decls.INTERFACE:
@@ -255,7 +255,7 @@ class Generator:
     s += '  typedef Rapicorn::Signals::Signal<%s, %s (' % (self.C (ctype), cpp_rtype)
     l = []
     for a in functype.args:
-      l += [ self.format_arg (a[0], a[1]) ]
+      l += [ self.A (a[0], a[1]) ]
     s += ', '.join (l)
     s += ')'
     if functype.rtype.collector != 'void':
@@ -402,7 +402,7 @@ class Generator:
     # prototype
     s += self.C (mtype.rtype) + '\n'
     q = '%s::%s (' % (self.C (class_info), mtype.name)
-    s += q + self.format_call_args (mtype, 'arg_', len (q)) + ')\n{\n'
+    s += q + self.Args (mtype, 'arg_', len (q)) + ')\n{\n'
     # vars, procedure
     s += '  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + %u), *fr = NULL;\n' % len (mtype.args)
     s += '  fb.add_type_hash (%s); // msgid\n' % self.method_digest (mtype)
@@ -556,7 +556,7 @@ class Generator:
     cpp_rtype = self.R (stype.rtype)
     s += '  static %s\n' % cpp_rtype
     s += '  handler ('
-    s += self.format_call_args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
+    s += self.Args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
     s += 'SharedPtr sp)\n  {\n'
     s += '    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + %u);\n' % len (stype.args)
     s += '    fb.add_int64 (Plic::msgid_event);\n' # self.method_digest (stype)
@@ -644,7 +644,7 @@ class Generator:
     argindent = len (s)
     l = []
     for a in functype.args:
-      l += [ self.format_arg ('' if comment else a[0], a[1], None if comment else a[2]) ]
+      l += [ self.A ('' if comment else a[0], a[1], None if comment else a[2]) ]
     if comment:
       s += ', '.join (l)
     else:
@@ -688,7 +688,7 @@ class Generator:
       s += '  inline %s (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) ' % self.H (type_info.name)
       s += '{ _pop_rpc (cpl, fbr); }\n'
     if self.gen4class == C4SERVER:
-      ifacename = Iwrap (type_info.name)
+      ifacename = self.Iwrap (type_info.name)
       s += '  inline %s (%s *iface) { _iface (iface); }\n' % (self.C (type_info), ifacename)
       s += '  inline %s (%s &iface) { _iface (&iface); }\n' % (self.C (type_info), ifacename)
     # properties
@@ -753,7 +753,7 @@ class Generator:
     s += '\n' + sret + fs
     l = []
     for a in functype.args:
-      l += [ self.format_arg (a[0], a[1]) ]
+      l += [ self.A (a[0], a[1]) ]
     s += (',\n' + argindent * ' ').join (l)
     s += ')\n{\n'
     if functype.rtype.storage == Decls.VOID:
