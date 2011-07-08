@@ -1184,7 +1184,7 @@ I_PureMethods_Interface::~I_PureMethods_Interface () {}
 
 namespace MandatoryNamespace {
 static FieldBuffer*
-_dispatch__FirstInterface_void_func (Coupler &cpl)
+_$caller__FirstInterface__void_func (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1206,7 +1206,7 @@ namespace OtherNamespace {
 
 namespace InterfaceTests {
 static FieldBuffer*
-_dispatch_getter__UIWidgetArea_dummy (Coupler &cpl)
+_$getter__UIWidgetArea__dummy (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1220,7 +1220,7 @@ _dispatch_getter__UIWidgetArea_dummy (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch_setter__UIWidgetArea_dummy (Coupler &cpl)
+_$setter__UIWidgetArea__dummy (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1233,7 +1233,7 @@ _dispatch_setter__UIWidgetArea_dummy (Coupler &cpl)
   return NULL;
 }
 static FieldBuffer*
-_dispatch_getter__UIWidgetArea_on_click (Coupler &cpl)
+_$getter__UIWidgetArea__on_click (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1247,7 +1247,7 @@ _dispatch_getter__UIWidgetArea_on_click (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch_setter__UIWidgetArea_on_click (Coupler &cpl)
+_$setter__UIWidgetArea__on_click (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1260,7 +1260,7 @@ _dispatch_setter__UIWidgetArea_on_click (Coupler &cpl)
   return NULL;
 }
 static FieldBuffer*
-_dispatch__UIWidgetArea_simple_method (Coupler &cpl)
+_$caller__UIWidgetArea__simple_method (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1274,7 +1274,7 @@ _dispatch__UIWidgetArea_simple_method (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch__UIWidgetArea_single_arg (Coupler &cpl)
+_$caller__UIWidgetArea__single_arg (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1289,7 +1289,7 @@ _dispatch__UIWidgetArea_single_arg (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch__UIWidgetArea_single_arg2 (Coupler &cpl)
+_$caller__UIWidgetArea__single_arg2 (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1304,7 +1304,7 @@ _dispatch__UIWidgetArea_single_arg2 (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch__UIWidgetArea_two_args (Coupler &cpl)
+_$caller__UIWidgetArea__two_args (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1320,7 +1320,7 @@ _dispatch__UIWidgetArea_two_args (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch__UIWidgetArea_two_args2 (Coupler &cpl)
+_$caller__UIWidgetArea__two_args2 (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1336,7 +1336,7 @@ _dispatch__UIWidgetArea_two_args2 (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch__UIWidgetArea_multi_args (Coupler &cpl)
+_$caller__UIWidgetArea__multi_args (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1355,7 +1355,7 @@ _dispatch__UIWidgetArea_multi_args (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch__UIWidgetArea_self_method (Coupler &cpl)
+_$caller__UIWidgetArea__self_method (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1371,7 +1371,7 @@ _dispatch__UIWidgetArea_self_method (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch__UIWidgetArea_void_method (Coupler &cpl)
+_$caller__UIWidgetArea__void_method (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1383,7 +1383,7 @@ _dispatch__UIWidgetArea_void_method (Coupler &cpl)
   return NULL;
 }
 static FieldBuffer*
-_dispatch__UIWidgetArea_on_click2out (Coupler &cpl)
+_$caller__UIWidgetArea__on_click2out (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1397,7 +1397,7 @@ _dispatch__UIWidgetArea_on_click2out (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch__UIWidgetArea_on_click2in (Coupler &cpl)
+_$caller__UIWidgetArea__on_click2in (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1409,10 +1409,10 @@ _dispatch__UIWidgetArea_on_click2in (Coupler &cpl)
   self->on_click2in (arg_command);
   return NULL;
 }
-struct _CLOSURE_UIWidgetArea_void_signal {
-  typedef Plic::shared_ptr<_CLOSURE_UIWidgetArea_void_signal> SharedPtr;
-  _CLOSURE_UIWidgetArea_void_signal (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_UIWidgetArea_void_signal()
+struct _$Closure__UIWidgetArea__void_signal {
+  typedef Plic::shared_ptr<_$Closure__UIWidgetArea__void_signal> SharedPtr;
+  _$Closure__UIWidgetArea__void_signal (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__UIWidgetArea__void_signal()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -1430,7 +1430,7 @@ struct _CLOSURE_UIWidgetArea_void_signal {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__UIWidgetArea_void_signal (Coupler &cpl)
+_$discon__UIWidgetArea__void_signal (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1442,16 +1442,16 @@ _dispatch__UIWidgetArea_void_signal (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_void_signal.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_UIWidgetArea_void_signal::SharedPtr sp (new _CLOSURE_UIWidgetArea_void_signal (cpl, handler_id));
+    _$Closure__UIWidgetArea__void_signal::SharedPtr sp (new _$Closure__UIWidgetArea__void_signal (cpl, handler_id));
     cid = self->sig_void_signal.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_UIWidgetArea_sample_signal {
-  typedef Plic::shared_ptr<_CLOSURE_UIWidgetArea_sample_signal> SharedPtr;
-  _CLOSURE_UIWidgetArea_sample_signal (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_UIWidgetArea_sample_signal()
+struct _$Closure__UIWidgetArea__sample_signal {
+  typedef Plic::shared_ptr<_$Closure__UIWidgetArea__sample_signal> SharedPtr;
+  _$Closure__UIWidgetArea__sample_signal (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__UIWidgetArea__sample_signal()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -1474,7 +1474,7 @@ struct _CLOSURE_UIWidgetArea_sample_signal {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__UIWidgetArea_sample_signal (Coupler &cpl)
+_$discon__UIWidgetArea__sample_signal (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1486,7 +1486,7 @@ _dispatch__UIWidgetArea_sample_signal (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_sample_signal.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_UIWidgetArea_sample_signal::SharedPtr sp (new _CLOSURE_UIWidgetArea_sample_signal (cpl, handler_id));
+    _$Closure__UIWidgetArea__sample_signal::SharedPtr sp (new _$Closure__UIWidgetArea__sample_signal (cpl, handler_id));
     cid = self->sig_sample_signal.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
@@ -1498,7 +1498,7 @@ _dispatch__UIWidgetArea_sample_signal (Coupler &cpl)
 
 
 static FieldBuffer*
-_dispatch__QuickIface_simple_function (Coupler &cpl)
+_$caller__QuickIface__simple_function (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1512,7 +1512,7 @@ _dispatch__QuickIface_simple_function (Coupler &cpl)
 }
 
 static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_void (Coupler &cpl)
+_$caller__MethodTestInterface__method_with_void (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1524,7 +1524,7 @@ _dispatch__MethodTestInterface_method_with_void (Coupler &cpl)
   return NULL;
 }
 static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_bools (Coupler &cpl)
+_$caller__MethodTestInterface__method_with_bools (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1540,7 +1540,7 @@ _dispatch__MethodTestInterface_method_with_bools (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_ints (Coupler &cpl)
+_$caller__MethodTestInterface__method_with_ints (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1556,7 +1556,7 @@ _dispatch__MethodTestInterface_method_with_ints (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_floats (Coupler &cpl)
+_$caller__MethodTestInterface__method_with_floats (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1572,7 +1572,7 @@ _dispatch__MethodTestInterface_method_with_floats (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_string (Coupler &cpl)
+_$caller__MethodTestInterface__method_with_string (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1588,7 +1588,7 @@ _dispatch__MethodTestInterface_method_with_string (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_enum (Coupler &cpl)
+_$caller__MethodTestInterface__method_with_enum (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1604,7 +1604,7 @@ _dispatch__MethodTestInterface_method_with_enum (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_record (Coupler &cpl)
+_$caller__MethodTestInterface__method_with_record (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1622,7 +1622,7 @@ _dispatch__MethodTestInterface_method_with_record (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_sequence (Coupler &cpl)
+_$caller__MethodTestInterface__method_with_sequence (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1640,7 +1640,7 @@ _dispatch__MethodTestInterface_method_with_sequence (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_interface (Coupler &cpl)
+_$caller__MethodTestInterface__method_with_interface (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1656,7 +1656,7 @@ _dispatch__MethodTestInterface_method_with_interface (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch__MethodTestInterface_method_with_quickiface (Coupler &cpl)
+_$caller__MethodTestInterface__method_with_quickiface (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1672,10 +1672,10 @@ _dispatch__MethodTestInterface_method_with_quickiface (Coupler &cpl)
   return &rb;
 }
 
-struct _CLOSURE_SignalTestInterface_void_result {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_void_result> SharedPtr;
-  _CLOSURE_SignalTestInterface_void_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_void_result()
+struct _$Closure__SignalTestInterface__void_result {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__void_result> SharedPtr;
+  _$Closure__SignalTestInterface__void_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__void_result()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -1693,7 +1693,7 @@ struct _CLOSURE_SignalTestInterface_void_result {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_void_result (Coupler &cpl)
+_$discon__SignalTestInterface__void_result (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1705,16 +1705,16 @@ _dispatch__SignalTestInterface_void_result (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_void_result.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_void_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_void_result (cpl, handler_id));
+    _$Closure__SignalTestInterface__void_result::SharedPtr sp (new _$Closure__SignalTestInterface__void_result (cpl, handler_id));
     cid = self->sig_void_result.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_bool_result {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_bool_result> SharedPtr;
-  _CLOSURE_SignalTestInterface_bool_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_bool_result()
+struct _$Closure__SignalTestInterface__bool_result {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__bool_result> SharedPtr;
+  _$Closure__SignalTestInterface__bool_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__bool_result()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -1733,7 +1733,7 @@ struct _CLOSURE_SignalTestInterface_bool_result {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_bool_result (Coupler &cpl)
+_$discon__SignalTestInterface__bool_result (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1745,16 +1745,16 @@ _dispatch__SignalTestInterface_bool_result (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_bool_result.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_bool_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_bool_result (cpl, handler_id));
+    _$Closure__SignalTestInterface__bool_result::SharedPtr sp (new _$Closure__SignalTestInterface__bool_result (cpl, handler_id));
     cid = self->sig_bool_result.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_int_result {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_int_result> SharedPtr;
-  _CLOSURE_SignalTestInterface_int_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_int_result()
+struct _$Closure__SignalTestInterface__int_result {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__int_result> SharedPtr;
+  _$Closure__SignalTestInterface__int_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__int_result()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -1773,7 +1773,7 @@ struct _CLOSURE_SignalTestInterface_int_result {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_int_result (Coupler &cpl)
+_$discon__SignalTestInterface__int_result (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1785,16 +1785,16 @@ _dispatch__SignalTestInterface_int_result (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_int_result.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_int_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_int_result (cpl, handler_id));
+    _$Closure__SignalTestInterface__int_result::SharedPtr sp (new _$Closure__SignalTestInterface__int_result (cpl, handler_id));
     cid = self->sig_int_result.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_float_result {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_float_result> SharedPtr;
-  _CLOSURE_SignalTestInterface_float_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_float_result()
+struct _$Closure__SignalTestInterface__float_result {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__float_result> SharedPtr;
+  _$Closure__SignalTestInterface__float_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__float_result()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -1813,7 +1813,7 @@ struct _CLOSURE_SignalTestInterface_float_result {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_float_result (Coupler &cpl)
+_$discon__SignalTestInterface__float_result (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1825,16 +1825,16 @@ _dispatch__SignalTestInterface_float_result (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_float_result.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_float_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_float_result (cpl, handler_id));
+    _$Closure__SignalTestInterface__float_result::SharedPtr sp (new _$Closure__SignalTestInterface__float_result (cpl, handler_id));
     cid = self->sig_float_result.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_string_result {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_string_result> SharedPtr;
-  _CLOSURE_SignalTestInterface_string_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_string_result()
+struct _$Closure__SignalTestInterface__string_result {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__string_result> SharedPtr;
+  _$Closure__SignalTestInterface__string_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__string_result()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -1853,7 +1853,7 @@ struct _CLOSURE_SignalTestInterface_string_result {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_string_result (Coupler &cpl)
+_$discon__SignalTestInterface__string_result (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1865,16 +1865,16 @@ _dispatch__SignalTestInterface_string_result (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_string_result.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_string_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_string_result (cpl, handler_id));
+    _$Closure__SignalTestInterface__string_result::SharedPtr sp (new _$Closure__SignalTestInterface__string_result (cpl, handler_id));
     cid = self->sig_string_result.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_enum_result {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_enum_result> SharedPtr;
-  _CLOSURE_SignalTestInterface_enum_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_enum_result()
+struct _$Closure__SignalTestInterface__enum_result {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__enum_result> SharedPtr;
+  _$Closure__SignalTestInterface__enum_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__enum_result()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -1893,7 +1893,7 @@ struct _CLOSURE_SignalTestInterface_enum_result {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_enum_result (Coupler &cpl)
+_$discon__SignalTestInterface__enum_result (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1905,16 +1905,16 @@ _dispatch__SignalTestInterface_enum_result (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_enum_result.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_enum_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_enum_result (cpl, handler_id));
+    _$Closure__SignalTestInterface__enum_result::SharedPtr sp (new _$Closure__SignalTestInterface__enum_result (cpl, handler_id));
     cid = self->sig_enum_result.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_record_result {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_record_result> SharedPtr;
-  _CLOSURE_SignalTestInterface_record_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_record_result()
+struct _$Closure__SignalTestInterface__record_result {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__record_result> SharedPtr;
+  _$Closure__SignalTestInterface__record_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__record_result()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -1933,7 +1933,7 @@ struct _CLOSURE_SignalTestInterface_record_result {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_record_result (Coupler &cpl)
+_$discon__SignalTestInterface__record_result (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1945,16 +1945,16 @@ _dispatch__SignalTestInterface_record_result (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_record_result.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_record_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_record_result (cpl, handler_id));
+    _$Closure__SignalTestInterface__record_result::SharedPtr sp (new _$Closure__SignalTestInterface__record_result (cpl, handler_id));
     cid = self->sig_record_result.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_sequence_result {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_sequence_result> SharedPtr;
-  _CLOSURE_SignalTestInterface_sequence_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_sequence_result()
+struct _$Closure__SignalTestInterface__sequence_result {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__sequence_result> SharedPtr;
+  _$Closure__SignalTestInterface__sequence_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__sequence_result()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -1973,7 +1973,7 @@ struct _CLOSURE_SignalTestInterface_sequence_result {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_sequence_result (Coupler &cpl)
+_$discon__SignalTestInterface__sequence_result (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -1985,16 +1985,16 @@ _dispatch__SignalTestInterface_sequence_result (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_sequence_result.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_sequence_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_sequence_result (cpl, handler_id));
+    _$Closure__SignalTestInterface__sequence_result::SharedPtr sp (new _$Closure__SignalTestInterface__sequence_result (cpl, handler_id));
     cid = self->sig_sequence_result.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_interface_result {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_interface_result> SharedPtr;
-  _CLOSURE_SignalTestInterface_interface_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_interface_result()
+struct _$Closure__SignalTestInterface__interface_result {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__interface_result> SharedPtr;
+  _$Closure__SignalTestInterface__interface_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__interface_result()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -2013,7 +2013,7 @@ struct _CLOSURE_SignalTestInterface_interface_result {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_interface_result (Coupler &cpl)
+_$discon__SignalTestInterface__interface_result (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2025,16 +2025,16 @@ _dispatch__SignalTestInterface_interface_result (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_interface_result.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_interface_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_interface_result (cpl, handler_id));
+    _$Closure__SignalTestInterface__interface_result::SharedPtr sp (new _$Closure__SignalTestInterface__interface_result (cpl, handler_id));
     cid = self->sig_interface_result.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_self_result {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_self_result> SharedPtr;
-  _CLOSURE_SignalTestInterface_self_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_self_result()
+struct _$Closure__SignalTestInterface__self_result {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__self_result> SharedPtr;
+  _$Closure__SignalTestInterface__self_result (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__self_result()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -2053,7 +2053,7 @@ struct _CLOSURE_SignalTestInterface_self_result {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_self_result (Coupler &cpl)
+_$discon__SignalTestInterface__self_result (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2065,16 +2065,16 @@ _dispatch__SignalTestInterface_self_result (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_self_result.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_self_result::SharedPtr sp (new _CLOSURE_SignalTestInterface_self_result (cpl, handler_id));
+    _$Closure__SignalTestInterface__self_result::SharedPtr sp (new _$Closure__SignalTestInterface__self_result (cpl, handler_id));
     cid = self->sig_self_result.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_void_arg {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_void_arg> SharedPtr;
-  _CLOSURE_SignalTestInterface_void_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_void_arg()
+struct _$Closure__SignalTestInterface__void_arg {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__void_arg> SharedPtr;
+  _$Closure__SignalTestInterface__void_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__void_arg()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -2092,7 +2092,7 @@ struct _CLOSURE_SignalTestInterface_void_arg {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_void_arg (Coupler &cpl)
+_$discon__SignalTestInterface__void_arg (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2104,16 +2104,16 @@ _dispatch__SignalTestInterface_void_arg (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_void_arg.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_void_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_void_arg (cpl, handler_id));
+    _$Closure__SignalTestInterface__void_arg::SharedPtr sp (new _$Closure__SignalTestInterface__void_arg (cpl, handler_id));
     cid = self->sig_void_arg.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_bool_arg {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_bool_arg> SharedPtr;
-  _CLOSURE_SignalTestInterface_bool_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_bool_arg()
+struct _$Closure__SignalTestInterface__bool_arg {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__bool_arg> SharedPtr;
+  _$Closure__SignalTestInterface__bool_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__bool_arg()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -2133,7 +2133,7 @@ struct _CLOSURE_SignalTestInterface_bool_arg {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_bool_arg (Coupler &cpl)
+_$discon__SignalTestInterface__bool_arg (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2145,16 +2145,16 @@ _dispatch__SignalTestInterface_bool_arg (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_bool_arg.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_bool_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_bool_arg (cpl, handler_id));
+    _$Closure__SignalTestInterface__bool_arg::SharedPtr sp (new _$Closure__SignalTestInterface__bool_arg (cpl, handler_id));
     cid = self->sig_bool_arg.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_int_arg {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_int_arg> SharedPtr;
-  _CLOSURE_SignalTestInterface_int_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_int_arg()
+struct _$Closure__SignalTestInterface__int_arg {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__int_arg> SharedPtr;
+  _$Closure__SignalTestInterface__int_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__int_arg()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -2174,7 +2174,7 @@ struct _CLOSURE_SignalTestInterface_int_arg {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_int_arg (Coupler &cpl)
+_$discon__SignalTestInterface__int_arg (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2186,16 +2186,16 @@ _dispatch__SignalTestInterface_int_arg (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_int_arg.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_int_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_int_arg (cpl, handler_id));
+    _$Closure__SignalTestInterface__int_arg::SharedPtr sp (new _$Closure__SignalTestInterface__int_arg (cpl, handler_id));
     cid = self->sig_int_arg.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_float_arg {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_float_arg> SharedPtr;
-  _CLOSURE_SignalTestInterface_float_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_float_arg()
+struct _$Closure__SignalTestInterface__float_arg {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__float_arg> SharedPtr;
+  _$Closure__SignalTestInterface__float_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__float_arg()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -2215,7 +2215,7 @@ struct _CLOSURE_SignalTestInterface_float_arg {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_float_arg (Coupler &cpl)
+_$discon__SignalTestInterface__float_arg (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2227,16 +2227,16 @@ _dispatch__SignalTestInterface_float_arg (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_float_arg.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_float_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_float_arg (cpl, handler_id));
+    _$Closure__SignalTestInterface__float_arg::SharedPtr sp (new _$Closure__SignalTestInterface__float_arg (cpl, handler_id));
     cid = self->sig_float_arg.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_string_arg {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_string_arg> SharedPtr;
-  _CLOSURE_SignalTestInterface_string_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_string_arg()
+struct _$Closure__SignalTestInterface__string_arg {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__string_arg> SharedPtr;
+  _$Closure__SignalTestInterface__string_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__string_arg()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -2256,7 +2256,7 @@ struct _CLOSURE_SignalTestInterface_string_arg {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_string_arg (Coupler &cpl)
+_$discon__SignalTestInterface__string_arg (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2268,16 +2268,16 @@ _dispatch__SignalTestInterface_string_arg (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_string_arg.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_string_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_string_arg (cpl, handler_id));
+    _$Closure__SignalTestInterface__string_arg::SharedPtr sp (new _$Closure__SignalTestInterface__string_arg (cpl, handler_id));
     cid = self->sig_string_arg.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_enum_arg {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_enum_arg> SharedPtr;
-  _CLOSURE_SignalTestInterface_enum_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_enum_arg()
+struct _$Closure__SignalTestInterface__enum_arg {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__enum_arg> SharedPtr;
+  _$Closure__SignalTestInterface__enum_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__enum_arg()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -2297,7 +2297,7 @@ struct _CLOSURE_SignalTestInterface_enum_arg {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_enum_arg (Coupler &cpl)
+_$discon__SignalTestInterface__enum_arg (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2309,16 +2309,16 @@ _dispatch__SignalTestInterface_enum_arg (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_enum_arg.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_enum_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_enum_arg (cpl, handler_id));
+    _$Closure__SignalTestInterface__enum_arg::SharedPtr sp (new _$Closure__SignalTestInterface__enum_arg (cpl, handler_id));
     cid = self->sig_enum_arg.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_record_arg {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_record_arg> SharedPtr;
-  _CLOSURE_SignalTestInterface_record_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_record_arg()
+struct _$Closure__SignalTestInterface__record_arg {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__record_arg> SharedPtr;
+  _$Closure__SignalTestInterface__record_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__record_arg()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -2338,7 +2338,7 @@ struct _CLOSURE_SignalTestInterface_record_arg {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_record_arg (Coupler &cpl)
+_$discon__SignalTestInterface__record_arg (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2350,16 +2350,16 @@ _dispatch__SignalTestInterface_record_arg (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_record_arg.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_record_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_record_arg (cpl, handler_id));
+    _$Closure__SignalTestInterface__record_arg::SharedPtr sp (new _$Closure__SignalTestInterface__record_arg (cpl, handler_id));
     cid = self->sig_record_arg.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_sequence_arg {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_sequence_arg> SharedPtr;
-  _CLOSURE_SignalTestInterface_sequence_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_sequence_arg()
+struct _$Closure__SignalTestInterface__sequence_arg {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__sequence_arg> SharedPtr;
+  _$Closure__SignalTestInterface__sequence_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__sequence_arg()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -2379,7 +2379,7 @@ struct _CLOSURE_SignalTestInterface_sequence_arg {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_sequence_arg (Coupler &cpl)
+_$discon__SignalTestInterface__sequence_arg (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2391,16 +2391,16 @@ _dispatch__SignalTestInterface_sequence_arg (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_sequence_arg.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_sequence_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_sequence_arg (cpl, handler_id));
+    _$Closure__SignalTestInterface__sequence_arg::SharedPtr sp (new _$Closure__SignalTestInterface__sequence_arg (cpl, handler_id));
     cid = self->sig_sequence_arg.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_interface_arg {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_interface_arg> SharedPtr;
-  _CLOSURE_SignalTestInterface_interface_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_interface_arg()
+struct _$Closure__SignalTestInterface__interface_arg {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__interface_arg> SharedPtr;
+  _$Closure__SignalTestInterface__interface_arg (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__interface_arg()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -2420,7 +2420,7 @@ struct _CLOSURE_SignalTestInterface_interface_arg {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_interface_arg (Coupler &cpl)
+_$discon__SignalTestInterface__interface_arg (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2432,16 +2432,16 @@ _dispatch__SignalTestInterface_interface_arg (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_interface_arg.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_interface_arg::SharedPtr sp (new _CLOSURE_SignalTestInterface_interface_arg (cpl, handler_id));
+    _$Closure__SignalTestInterface__interface_arg::SharedPtr sp (new _$Closure__SignalTestInterface__interface_arg (cpl, handler_id));
     cid = self->sig_interface_arg.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_SignalTestInterface_self_args {
-  typedef Plic::shared_ptr<_CLOSURE_SignalTestInterface_self_args> SharedPtr;
-  _CLOSURE_SignalTestInterface_self_args (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_SignalTestInterface_self_args()
+struct _$Closure__SignalTestInterface__self_args {
+  typedef Plic::shared_ptr<_$Closure__SignalTestInterface__self_args> SharedPtr;
+  _$Closure__SignalTestInterface__self_args (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__SignalTestInterface__self_args()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -2461,7 +2461,7 @@ struct _CLOSURE_SignalTestInterface_self_args {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__SignalTestInterface_self_args (Coupler &cpl)
+_$discon__SignalTestInterface__self_args (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2473,7 +2473,7 @@ _dispatch__SignalTestInterface_self_args (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_self_args.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_SignalTestInterface_self_args::SharedPtr sp (new _CLOSURE_SignalTestInterface_self_args (cpl, handler_id));
+    _$Closure__SignalTestInterface__self_args::SharedPtr sp (new _$Closure__SignalTestInterface__self_args (cpl, handler_id));
     cid = self->sig_self_args.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
@@ -2481,7 +2481,7 @@ _dispatch__SignalTestInterface_self_args (Coupler &cpl)
 }
 
 static FieldBuffer*
-_dispatch_getter__PropertyTester_bool_prop (Coupler &cpl)
+_$getter__PropertyTester__bool_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2495,7 +2495,7 @@ _dispatch_getter__PropertyTester_bool_prop (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch_setter__PropertyTester_bool_prop (Coupler &cpl)
+_$setter__PropertyTester__bool_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2508,7 +2508,7 @@ _dispatch_setter__PropertyTester_bool_prop (Coupler &cpl)
   return NULL;
 }
 static FieldBuffer*
-_dispatch_getter__PropertyTester_int_prop (Coupler &cpl)
+_$getter__PropertyTester__int_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2522,7 +2522,7 @@ _dispatch_getter__PropertyTester_int_prop (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch_setter__PropertyTester_int_prop (Coupler &cpl)
+_$setter__PropertyTester__int_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2535,7 +2535,7 @@ _dispatch_setter__PropertyTester_int_prop (Coupler &cpl)
   return NULL;
 }
 static FieldBuffer*
-_dispatch_getter__PropertyTester_float_prop (Coupler &cpl)
+_$getter__PropertyTester__float_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2549,7 +2549,7 @@ _dispatch_getter__PropertyTester_float_prop (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch_setter__PropertyTester_float_prop (Coupler &cpl)
+_$setter__PropertyTester__float_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2562,7 +2562,7 @@ _dispatch_setter__PropertyTester_float_prop (Coupler &cpl)
   return NULL;
 }
 static FieldBuffer*
-_dispatch_getter__PropertyTester_string_prop (Coupler &cpl)
+_$getter__PropertyTester__string_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2576,7 +2576,7 @@ _dispatch_getter__PropertyTester_string_prop (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch_setter__PropertyTester_string_prop (Coupler &cpl)
+_$setter__PropertyTester__string_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2589,7 +2589,7 @@ _dispatch_setter__PropertyTester_string_prop (Coupler &cpl)
   return NULL;
 }
 static FieldBuffer*
-_dispatch_getter__PropertyTester_enum_prop (Coupler &cpl)
+_$getter__PropertyTester__enum_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2603,7 +2603,7 @@ _dispatch_getter__PropertyTester_enum_prop (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch_setter__PropertyTester_enum_prop (Coupler &cpl)
+_$setter__PropertyTester__enum_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2616,7 +2616,7 @@ _dispatch_setter__PropertyTester_enum_prop (Coupler &cpl)
   return NULL;
 }
 static FieldBuffer*
-_dispatch_getter__PropertyTester_record_prop (Coupler &cpl)
+_$getter__PropertyTester__record_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2630,7 +2630,7 @@ _dispatch_getter__PropertyTester_record_prop (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch_setter__PropertyTester_record_prop (Coupler &cpl)
+_$setter__PropertyTester__record_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2644,7 +2644,7 @@ _dispatch_setter__PropertyTester_record_prop (Coupler &cpl)
   return NULL;
 }
 static FieldBuffer*
-_dispatch_getter__PropertyTester_sequence_prop (Coupler &cpl)
+_$getter__PropertyTester__sequence_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2658,7 +2658,7 @@ _dispatch_getter__PropertyTester_sequence_prop (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch_setter__PropertyTester_sequence_prop (Coupler &cpl)
+_$setter__PropertyTester__sequence_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2672,7 +2672,7 @@ _dispatch_setter__PropertyTester_sequence_prop (Coupler &cpl)
   return NULL;
 }
 static FieldBuffer*
-_dispatch_getter__PropertyTester_interface_prop (Coupler &cpl)
+_$getter__PropertyTester__interface_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2686,7 +2686,7 @@ _dispatch_getter__PropertyTester_interface_prop (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch_setter__PropertyTester_interface_prop (Coupler &cpl)
+_$setter__PropertyTester__interface_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2699,7 +2699,7 @@ _dispatch_setter__PropertyTester_interface_prop (Coupler &cpl)
   return NULL;
 }
 static FieldBuffer*
-_dispatch_getter__PropertyTester_self_prop (Coupler &cpl)
+_$getter__PropertyTester__self_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2713,7 +2713,7 @@ _dispatch_getter__PropertyTester_self_prop (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch_setter__PropertyTester_self_prop (Coupler &cpl)
+_$setter__PropertyTester__self_prop (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2730,7 +2730,7 @@ _dispatch_setter__PropertyTester_self_prop (Coupler &cpl)
 
 namespace RapicornPlicTest {
 static FieldBuffer*
-_dispatch_getter__ButtonArea_on_click (Coupler &cpl)
+_$getter__ButtonArea__on_click (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2744,7 +2744,7 @@ _dispatch_getter__ButtonArea_on_click (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch_setter__ButtonArea_on_click (Coupler &cpl)
+_$setter__ButtonArea__on_click (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2757,7 +2757,7 @@ _dispatch_setter__ButtonArea_on_click (Coupler &cpl)
   return NULL;
 }
 static FieldBuffer*
-_dispatch_getter__ButtonArea_on_click2 (Coupler &cpl)
+_$getter__ButtonArea__on_click2 (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2771,7 +2771,7 @@ _dispatch_getter__ButtonArea_on_click2 (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch_setter__ButtonArea_on_click2 (Coupler &cpl)
+_$setter__ButtonArea__on_click2 (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2784,7 +2784,7 @@ _dispatch_setter__ButtonArea_on_click2 (Coupler &cpl)
   return NULL;
 }
 static FieldBuffer*
-_dispatch_getter__ButtonArea_on_click3 (Coupler &cpl)
+_$getter__ButtonArea__on_click3 (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2798,7 +2798,7 @@ _dispatch_getter__ButtonArea_on_click3 (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch_setter__ButtonArea_on_click3 (Coupler &cpl)
+_$setter__ButtonArea__on_click3 (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2811,7 +2811,7 @@ _dispatch_setter__ButtonArea_on_click3 (Coupler &cpl)
   return NULL;
 }
 static FieldBuffer*
-_dispatch_getter__ButtonArea_click_type (Coupler &cpl)
+_$getter__ButtonArea__click_type (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2825,7 +2825,7 @@ _dispatch_getter__ButtonArea_click_type (Coupler &cpl)
   return &rb;
 }
 static FieldBuffer*
-_dispatch_setter__ButtonArea_click_type (Coupler &cpl)
+_$setter__ButtonArea__click_type (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2837,10 +2837,10 @@ _dispatch_setter__ButtonArea_click_type (Coupler &cpl)
   self->click_type (arg_click_type);
   return NULL;
 }
-struct _CLOSURE_ButtonArea_check_activate {
-  typedef Plic::shared_ptr<_CLOSURE_ButtonArea_check_activate> SharedPtr;
-  _CLOSURE_ButtonArea_check_activate (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_ButtonArea_check_activate()
+struct _$Closure__ButtonArea__check_activate {
+  typedef Plic::shared_ptr<_$Closure__ButtonArea__check_activate> SharedPtr;
+  _$Closure__ButtonArea__check_activate (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__ButtonArea__check_activate()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -2859,7 +2859,7 @@ struct _CLOSURE_ButtonArea_check_activate {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__ButtonArea_check_activate (Coupler &cpl)
+_$discon__ButtonArea__check_activate (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2871,16 +2871,16 @@ _dispatch__ButtonArea_check_activate (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_check_activate.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_ButtonArea_check_activate::SharedPtr sp (new _CLOSURE_ButtonArea_check_activate (cpl, handler_id));
+    _$Closure__ButtonArea__check_activate::SharedPtr sp (new _$Closure__ButtonArea__check_activate (cpl, handler_id));
     cid = self->sig_check_activate.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
   return &rb;
 }
-struct _CLOSURE_ButtonArea_activate {
-  typedef Plic::shared_ptr<_CLOSURE_ButtonArea_activate> SharedPtr;
-  _CLOSURE_ButtonArea_activate (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
-  ~_CLOSURE_ButtonArea_activate()
+struct _$Closure__ButtonArea__activate {
+  typedef Plic::shared_ptr<_$Closure__ButtonArea__activate> SharedPtr;
+  _$Closure__ButtonArea__activate (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}
+  ~_$Closure__ButtonArea__activate()
   {
     FieldBuffer &fb = *FieldBuffer::_new (1 + 1);
     fb.add_int64 (Plic::msgid_discon);
@@ -2898,7 +2898,7 @@ struct _CLOSURE_ButtonArea_activate {
   private: Plic::Coupler &m_coupler; uint64 m_handler;
 };
 static FieldBuffer*
-_dispatch__ButtonArea_activate (Coupler &cpl)
+_$discon__ButtonArea__activate (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2910,7 +2910,7 @@ _dispatch__ButtonArea_activate (Coupler &cpl)
   uint64 con_id = fbr.pop_int64();
   if (con_id) self->sig_activate.disconnect (con_id);
   if (handler_id) {
-    _CLOSURE_ButtonArea_activate::SharedPtr sp (new _CLOSURE_ButtonArea_activate (cpl, handler_id));
+    _$Closure__ButtonArea__activate::SharedPtr sp (new _$Closure__ButtonArea__activate (cpl, handler_id));
     cid = self->sig_activate.connect (slot (sp->handler, sp)); }
   FieldBuffer &rb = *FieldBuffer::new_result();
   rb.add_int64 (cid);
@@ -2918,7 +2918,7 @@ _dispatch__ButtonArea_activate (Coupler &cpl)
 }
 
 static FieldBuffer*
-_dispatch__PureMethods_pure_method (Coupler &cpl)
+_$caller__PureMethods__pure_method (Coupler &cpl)
 {
   FieldBufferReader &fbr = cpl.reader;
   fbr.skip_hash(); // TypeHash
@@ -2934,83 +2934,83 @@ _dispatch__PureMethods_pure_method (Coupler &cpl)
 }
 
 static const Plic::DispatcherEntry _dispatcher_entries[] = {
-  { { 0x200000001dfd7256ULL, 0xdec25cd632ee83caULL, 0x06b4549d6fedf832ULL, 0x9a1e54caedf1db9bULL }, MandatoryNamespace::_dispatch__FirstInterface_void_func, },
-  { { 0x300000000f640b0bULL, 0xf898d6c052acbc0eULL, 0x3a37468e43084f56ULL, 0x95a4007bdf2e01f2ULL }, InterfaceTests::_dispatch_getter__UIWidgetArea_dummy, },
-  { { 0x20000000c31cebd0ULL, 0xe29449d8d5a3f3d7ULL, 0xcf867abd6680ac57ULL, 0x381384b98fd02eb0ULL }, InterfaceTests::_dispatch_setter__UIWidgetArea_dummy, },
-  { { 0x30000000770dc86aULL, 0x7df1dcbc4a6c4e83ULL, 0x2840e8030d9c3204ULL, 0x50000718b02d0721ULL }, InterfaceTests::_dispatch_getter__UIWidgetArea_on_click, },
-  { { 0x20000000b37c8bffULL, 0x5f7d07992ee34f4eULL, 0x7cc7f29e4f917d38ULL, 0xd4714e6aa95f1e68ULL }, InterfaceTests::_dispatch_setter__UIWidgetArea_on_click, },
-  { { 0x30000000fd8072dfULL, 0x591f7cce6e74034aULL, 0x419df82c635c78d1ULL, 0x1e2fc6cf88d761faULL }, InterfaceTests::_dispatch__UIWidgetArea_simple_method, },
-  { { 0x3000000075ce4c8bULL, 0x1a40a9c8bd145a39ULL, 0x37b83f96f1d3168bULL, 0x3f57c461185c3752ULL }, InterfaceTests::_dispatch__UIWidgetArea_single_arg, },
-  { { 0x30000000179c202fULL, 0xa554850da029f547ULL, 0xe2591a43b7c79a61ULL, 0xe19a6853f11b1b99ULL }, InterfaceTests::_dispatch__UIWidgetArea_single_arg2, },
-  { { 0x300000006a210506ULL, 0xa76bb7cd90d84838ULL, 0x8000823cfb905b8cULL, 0x39826abcf9caba00ULL }, InterfaceTests::_dispatch__UIWidgetArea_two_args, },
-  { { 0x30000000ac125ff1ULL, 0xac6be3d45e25ada6ULL, 0x040efc8ab508b1d3ULL, 0x15e48df9e26c0caaULL }, InterfaceTests::_dispatch__UIWidgetArea_two_args2, },
-  { { 0x300000000361838dULL, 0xc298afde820561a5ULL, 0x8fe8c83788c4bb38ULL, 0xb3179ae3d510e7b2ULL }, InterfaceTests::_dispatch__UIWidgetArea_multi_args, },
-  { { 0x30000000b9d64621ULL, 0x3a96692d3e1ef7dbULL, 0xdced671b586f7aa7ULL, 0x1d3870f7ed0285e5ULL }, InterfaceTests::_dispatch__UIWidgetArea_self_method, },
-  { { 0x200000000ff38422ULL, 0x440e8e84942acf8eULL, 0x0c4945e5794d8356ULL, 0x2e2e61471f31bfbfULL }, InterfaceTests::_dispatch__UIWidgetArea_void_method, },
-  { { 0x300000004b649644ULL, 0x8a9b2140ad7fc83dULL, 0x10b67ed382387b14ULL, 0xe7b6cc0714a17f30ULL }, InterfaceTests::_dispatch__UIWidgetArea_on_click2out, },
-  { { 0x20000000f671167cULL, 0xdfc42ce42beb58f7ULL, 0x15afc969aae521d6ULL, 0xadbec8ab9522f6f8ULL }, InterfaceTests::_dispatch__UIWidgetArea_on_click2in, },
-  { { 0x50000000257c7180ULL, 0xfac77ebb19c6ab72ULL, 0xb34dd194f62b665dULL, 0x0c329a03aebf472bULL }, InterfaceTests::_dispatch__UIWidgetArea_void_signal, },
-  { { 0x50000000a31a6e24ULL, 0xfe2020b5b9671356ULL, 0x11e8a29ccb87db27ULL, 0xcbe662a2887ef78fULL }, InterfaceTests::_dispatch__UIWidgetArea_sample_signal, },
-  { { 0x20000000be855008ULL, 0x6bf2269ff6939544ULL, 0x6a0846e9f5a62da8ULL, 0x59c8e2a4e4629e80ULL }, InterfaceTests::_dispatch__QuickIface_simple_function, },
-  { { 0x20000000a426153aULL, 0x0a2f5758267a2651ULL, 0xd9bff16cf6755833ULL, 0x8959ddaf9e5b8a44ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_void, },
-  { { 0x300000003917295eULL, 0x76cb59d18d695319ULL, 0x0fe6acdaa38d48dfULL, 0xa26ca0854c18e565ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_bools, },
-  { { 0x3000000015f688dcULL, 0x4db9c06f4357aa4eULL, 0x902ee7647790de7cULL, 0x18aa217be2c83cbaULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_ints, },
-  { { 0x30000000bfc2d47bULL, 0x70b13d1cdf2c9488ULL, 0x77c2ea3ad44c2625ULL, 0xd6093e05e70ea643ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_floats, },
-  { { 0x300000002732b2feULL, 0x6dfd49db44b97641ULL, 0x010dcacac6eb8ed7ULL, 0xa79383e035fc64e1ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_string, },
-  { { 0x300000003f676d86ULL, 0x903cbdda7f9bf8e6ULL, 0xb56b87771cbd4b69ULL, 0x5723ee9d219ddda5ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_enum, },
-  { { 0x3000000004a0b014ULL, 0x7eef09335a6cd6afULL, 0xd80237b6e1df12f6ULL, 0x70618be70ed6e858ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_record, },
-  { { 0x30000000e92eb1f1ULL, 0xbc6d5e758278964aULL, 0xe88f958f88ca346cULL, 0xf29e446630c57f23ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_sequence, },
-  { { 0x3000000001640ae0ULL, 0xf5403244c684c076ULL, 0x208c721dda088467ULL, 0x425f3425b0dcfad4ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_interface, },
-  { { 0x3000000082dc142eULL, 0x7d16cadebfca9b39ULL, 0x168d05eb3cf56adbULL, 0x31e28c41cf8bb4f9ULL }, InterfaceTests::_dispatch__MethodTestInterface_method_with_quickiface, },
-  { { 0x50000000d7b0d37dULL, 0x9a68ffaf1056fc04ULL, 0xb24f3d15ee791645ULL, 0x979c5c3dbb482dbdULL }, InterfaceTests::_dispatch__SignalTestInterface_void_result, },
-  { { 0x5000000088395bfcULL, 0xb616815b8edaee44ULL, 0x37cc8b54b7500777ULL, 0xfe7258a75f8cb6b8ULL }, InterfaceTests::_dispatch__SignalTestInterface_bool_result, },
-  { { 0x500000007d3c1951ULL, 0xf389540a04382db9ULL, 0xc26a2ee92fb29b95ULL, 0x1197b72e8fa6cfb2ULL }, InterfaceTests::_dispatch__SignalTestInterface_int_result, },
-  { { 0x5000000021a8c164ULL, 0xecca5d4028d51f60ULL, 0x5e48820b0f116b7aULL, 0x1dcb611973ca7901ULL }, InterfaceTests::_dispatch__SignalTestInterface_float_result, },
-  { { 0x5000000036e51367ULL, 0x21d4eda0c22f5ae7ULL, 0xb4663cb8cc9c5b6cULL, 0xaed8617878324d33ULL }, InterfaceTests::_dispatch__SignalTestInterface_string_result, },
-  { { 0x500000006e50988aULL, 0x8edca7e533dbb84aULL, 0xc4d53e76a28e2cb2ULL, 0xe873a3116ee5f47bULL }, InterfaceTests::_dispatch__SignalTestInterface_enum_result, },
-  { { 0x5000000055dcef7fULL, 0x8478d3457cd87d65ULL, 0x9749c1b1c287f9a7ULL, 0xb21d98dd311f88a0ULL }, InterfaceTests::_dispatch__SignalTestInterface_record_result, },
-  { { 0x500000007ede93d1ULL, 0xc6d90e002209318dULL, 0xac81039a018518edULL, 0xb4d95ba887b99c60ULL }, InterfaceTests::_dispatch__SignalTestInterface_sequence_result, },
-  { { 0x50000000c6e0f2dbULL, 0xf7660a7b33a76e14ULL, 0xcbdade8c0d53d333ULL, 0x235f30d69ba62708ULL }, InterfaceTests::_dispatch__SignalTestInterface_interface_result, },
-  { { 0x500000000f7a484aULL, 0x8668cf9bda70ae96ULL, 0x6404938807ad413fULL, 0x48f1a8d3ba35d215ULL }, InterfaceTests::_dispatch__SignalTestInterface_self_result, },
-  { { 0x50000000390ef9ebULL, 0x5fe021fa95e46c90ULL, 0xbb481496867f8fbbULL, 0xd0d4f522490eed0fULL }, InterfaceTests::_dispatch__SignalTestInterface_void_arg, },
-  { { 0x500000008ae3eb10ULL, 0x0cd818645da43e38ULL, 0x28c3e51ddb121821ULL, 0x2c1f84e70ce9d966ULL }, InterfaceTests::_dispatch__SignalTestInterface_bool_arg, },
-  { { 0x50000000c91ca108ULL, 0xcf9f85d25bb75bc8ULL, 0xa19af414c58a3ac6ULL, 0x688d4f1445624c0cULL }, InterfaceTests::_dispatch__SignalTestInterface_int_arg, },
-  { { 0x5000000075078428ULL, 0x45d29e0377897dd2ULL, 0xb04599be75058416ULL, 0xa4be1bdf79af6b27ULL }, InterfaceTests::_dispatch__SignalTestInterface_float_arg, },
-  { { 0x50000000cd2031d7ULL, 0xb127c8f2134a7e92ULL, 0x994f8b257e7550c1ULL, 0x86752a8f56f3202eULL }, InterfaceTests::_dispatch__SignalTestInterface_string_arg, },
-  { { 0x500000007c8c24a8ULL, 0x6a34b5ca6ff1a9b1ULL, 0xa8421ac9442d7da7ULL, 0x397d7a2d9c23b69eULL }, InterfaceTests::_dispatch__SignalTestInterface_enum_arg, },
-  { { 0x500000001ca9536aULL, 0x3a697b01329fe581ULL, 0xf253e5509e7ec080ULL, 0x99bab63bc8358923ULL }, InterfaceTests::_dispatch__SignalTestInterface_record_arg, },
-  { { 0x500000003a8b02acULL, 0x350183fe2aaeadfeULL, 0x632ab314011b5d27ULL, 0xd1eb9724fd6133d9ULL }, InterfaceTests::_dispatch__SignalTestInterface_sequence_arg, },
-  { { 0x50000000e570b3a9ULL, 0x414baa2ef0267861ULL, 0x7bb2d4e5515d1d91ULL, 0xfa502a9c448db3c8ULL }, InterfaceTests::_dispatch__SignalTestInterface_interface_arg, },
-  { { 0x50000000c376b929ULL, 0xe5199bbf5bd2533aULL, 0x52977526a9c4e2c9ULL, 0x4b15ebcfa292e18fULL }, InterfaceTests::_dispatch__SignalTestInterface_self_args, },
-  { { 0x30000000b0144864ULL, 0xc643901d97f360ddULL, 0x57a9071058ac07aaULL, 0xfc6b7a41bf635ad1ULL }, InterfaceTests::_dispatch_getter__PropertyTester_bool_prop, },
-  { { 0x20000000a18d314bULL, 0x26151171e3bb39dcULL, 0x1a443db8b1c01c6cULL, 0xfcb6e633dd2e9613ULL }, InterfaceTests::_dispatch_setter__PropertyTester_bool_prop, },
-  { { 0x30000000181e8779ULL, 0x0f77dae854e0b84fULL, 0x637dec96e0c074cbULL, 0x6ea8e58f8853d3c7ULL }, InterfaceTests::_dispatch_getter__PropertyTester_int_prop, },
-  { { 0x20000000eb780228ULL, 0xeee26b84cc028ea1ULL, 0x5208210fdb93be48ULL, 0xbc262f6d750d0de7ULL }, InterfaceTests::_dispatch_setter__PropertyTester_int_prop, },
-  { { 0x3000000063885e5eULL, 0x73736be8a1ddb81cULL, 0x0837119897127c62ULL, 0x254bfc525be1d520ULL }, InterfaceTests::_dispatch_getter__PropertyTester_float_prop, },
-  { { 0x200000000f38d4d9ULL, 0xe580a2e95eb8a99eULL, 0x2b253a5868c02d21ULL, 0xa41bb895557ed355ULL }, InterfaceTests::_dispatch_setter__PropertyTester_float_prop, },
-  { { 0x30000000d158fbc9ULL, 0x05c7627c89588141ULL, 0x13e53815a987f9a7ULL, 0x87fca26102aca1b0ULL }, InterfaceTests::_dispatch_getter__PropertyTester_string_prop, },
-  { { 0x20000000a6029496ULL, 0x5af74c144238b1b1ULL, 0x656a73acc800a8bbULL, 0x88efc321d6f74b0cULL }, InterfaceTests::_dispatch_setter__PropertyTester_string_prop, },
-  { { 0x3000000069369270ULL, 0xb5f6ccbefcd8a46dULL, 0xaee75a418197773dULL, 0xf32203a882a1817eULL }, InterfaceTests::_dispatch_getter__PropertyTester_enum_prop, },
-  { { 0x2000000005e65481ULL, 0xd9f07e1cdf167a17ULL, 0xceed8910f029e869ULL, 0xd4d0e67731680533ULL }, InterfaceTests::_dispatch_setter__PropertyTester_enum_prop, },
-  { { 0x30000000ecbe5f0fULL, 0x49863133875c84dbULL, 0x6ab95eefcc9ecc34ULL, 0xc2138d9daee43a04ULL }, InterfaceTests::_dispatch_getter__PropertyTester_record_prop, },
-  { { 0x200000008acccdfcULL, 0x0c89ae0a721e3ff1ULL, 0x478c936633c08d26ULL, 0x6fb14f7161390c2cULL }, InterfaceTests::_dispatch_setter__PropertyTester_record_prop, },
-  { { 0x30000000b8af2543ULL, 0xb58f78e8919bee21ULL, 0x2d5000b118cd647fULL, 0x95fcfef75f8e8174ULL }, InterfaceTests::_dispatch_getter__PropertyTester_sequence_prop, },
-  { { 0x2000000016bc9f59ULL, 0x029c4a74204a0fe2ULL, 0x850c99c1f01af8b1ULL, 0xb190eb2442c7255aULL }, InterfaceTests::_dispatch_setter__PropertyTester_sequence_prop, },
-  { { 0x30000000294a1e88ULL, 0xb69eb6f2b1545a61ULL, 0x05811c63352b9dceULL, 0x6d0cf06dbf6200e9ULL }, InterfaceTests::_dispatch_getter__PropertyTester_interface_prop, },
-  { { 0x200000006871f741ULL, 0x25fe233d750ca71dULL, 0x5a0570311b480850ULL, 0x12b776dab1102b61ULL }, InterfaceTests::_dispatch_setter__PropertyTester_interface_prop, },
-  { { 0x30000000493b60d9ULL, 0xa9d1286fc302f3dbULL, 0xdfab7e8d1c2e0c08ULL, 0x91a4c03a3a37c6a1ULL }, InterfaceTests::_dispatch_getter__PropertyTester_self_prop, },
-  { { 0x2000000054baf216ULL, 0x8d311910e92e61b2ULL, 0x6abbb85e2edb7f36ULL, 0xbc35ff08d9903c42ULL }, InterfaceTests::_dispatch_setter__PropertyTester_self_prop, },
-  { { 0x30000000491d784bULL, 0xb29d170c81c582faULL, 0xf38eb9a29bb01ea0ULL, 0xae5244cb9938a581ULL }, RapicornPlicTest::_dispatch_getter__ButtonArea_on_click, },
-  { { 0x20000000af8c1a29ULL, 0x560ed695ce4df779ULL, 0x54767d09a29524ebULL, 0xa184187eacb770cfULL }, RapicornPlicTest::_dispatch_setter__ButtonArea_on_click, },
-  { { 0x300000000d3108d8ULL, 0x4f5ba9ee776a43d2ULL, 0xa831d7cea44cc5faULL, 0xcc2d97f07926cef0ULL }, RapicornPlicTest::_dispatch_getter__ButtonArea_on_click2, },
-  { { 0x2000000068d757d8ULL, 0x6dde3c79e1c855a5ULL, 0x7383e3212d1dde0bULL, 0x16fee72f3c653aa2ULL }, RapicornPlicTest::_dispatch_setter__ButtonArea_on_click2, },
-  { { 0x30000000f0c2da03ULL, 0x29fb66fef42c8334ULL, 0xabd9ab6b8df662eeULL, 0x3a7eb8700de84064ULL }, RapicornPlicTest::_dispatch_getter__ButtonArea_on_click3, },
-  { { 0x2000000094c7d2abULL, 0xea107cd9f9ec9512ULL, 0x262c4644988b3a63ULL, 0x76720081bc8f5f79ULL }, RapicornPlicTest::_dispatch_setter__ButtonArea_on_click3, },
-  { { 0x300000001c03071bULL, 0xf4a8efb57ac62e96ULL, 0x4f3d3a414afe1025ULL, 0x43a202534ab618a7ULL }, RapicornPlicTest::_dispatch_getter__ButtonArea_click_type, },
-  { { 0x20000000a83e3165ULL, 0xa181aec34685c438ULL, 0x0b56a49d59dbd00cULL, 0x3d758ee49bb0a338ULL }, RapicornPlicTest::_dispatch_setter__ButtonArea_click_type, },
-  { { 0x500000002002b254ULL, 0x237b6d00631699f2ULL, 0xaa4a2bf137175f39ULL, 0x16724232857b7195ULL }, RapicornPlicTest::_dispatch__ButtonArea_check_activate, },
-  { { 0x500000001eea842bULL, 0xdb7ee9164c9f8a60ULL, 0x1d0b0a314944036aULL, 0xfc73ff4aec88f8ffULL }, RapicornPlicTest::_dispatch__ButtonArea_activate, },
-  { { 0x30000000e96382b8ULL, 0x8c16fe069c1d6b1eULL, 0x002e82b90c7db308ULL, 0x9c8a9e5a95b6ea99ULL }, RapicornPlicTest::_dispatch__PureMethods_pure_method, },
+  { { 0x200000001dfd7256ULL, 0xdec25cd632ee83caULL, 0x06b4549d6fedf832ULL, 0x9a1e54caedf1db9bULL }, MandatoryNamespace::_$caller__FirstInterface__void_func, },
+  { { 0x300000000f640b0bULL, 0xf898d6c052acbc0eULL, 0x3a37468e43084f56ULL, 0x95a4007bdf2e01f2ULL }, InterfaceTests::_$getter__UIWidgetArea__dummy, },
+  { { 0x20000000c31cebd0ULL, 0xe29449d8d5a3f3d7ULL, 0xcf867abd6680ac57ULL, 0x381384b98fd02eb0ULL }, InterfaceTests::_$setter__UIWidgetArea__dummy, },
+  { { 0x30000000770dc86aULL, 0x7df1dcbc4a6c4e83ULL, 0x2840e8030d9c3204ULL, 0x50000718b02d0721ULL }, InterfaceTests::_$getter__UIWidgetArea__on_click, },
+  { { 0x20000000b37c8bffULL, 0x5f7d07992ee34f4eULL, 0x7cc7f29e4f917d38ULL, 0xd4714e6aa95f1e68ULL }, InterfaceTests::_$setter__UIWidgetArea__on_click, },
+  { { 0x30000000fd8072dfULL, 0x591f7cce6e74034aULL, 0x419df82c635c78d1ULL, 0x1e2fc6cf88d761faULL }, InterfaceTests::_$caller__UIWidgetArea__simple_method, },
+  { { 0x3000000075ce4c8bULL, 0x1a40a9c8bd145a39ULL, 0x37b83f96f1d3168bULL, 0x3f57c461185c3752ULL }, InterfaceTests::_$caller__UIWidgetArea__single_arg, },
+  { { 0x30000000179c202fULL, 0xa554850da029f547ULL, 0xe2591a43b7c79a61ULL, 0xe19a6853f11b1b99ULL }, InterfaceTests::_$caller__UIWidgetArea__single_arg2, },
+  { { 0x300000006a210506ULL, 0xa76bb7cd90d84838ULL, 0x8000823cfb905b8cULL, 0x39826abcf9caba00ULL }, InterfaceTests::_$caller__UIWidgetArea__two_args, },
+  { { 0x30000000ac125ff1ULL, 0xac6be3d45e25ada6ULL, 0x040efc8ab508b1d3ULL, 0x15e48df9e26c0caaULL }, InterfaceTests::_$caller__UIWidgetArea__two_args2, },
+  { { 0x300000000361838dULL, 0xc298afde820561a5ULL, 0x8fe8c83788c4bb38ULL, 0xb3179ae3d510e7b2ULL }, InterfaceTests::_$caller__UIWidgetArea__multi_args, },
+  { { 0x30000000b9d64621ULL, 0x3a96692d3e1ef7dbULL, 0xdced671b586f7aa7ULL, 0x1d3870f7ed0285e5ULL }, InterfaceTests::_$caller__UIWidgetArea__self_method, },
+  { { 0x200000000ff38422ULL, 0x440e8e84942acf8eULL, 0x0c4945e5794d8356ULL, 0x2e2e61471f31bfbfULL }, InterfaceTests::_$caller__UIWidgetArea__void_method, },
+  { { 0x300000004b649644ULL, 0x8a9b2140ad7fc83dULL, 0x10b67ed382387b14ULL, 0xe7b6cc0714a17f30ULL }, InterfaceTests::_$caller__UIWidgetArea__on_click2out, },
+  { { 0x20000000f671167cULL, 0xdfc42ce42beb58f7ULL, 0x15afc969aae521d6ULL, 0xadbec8ab9522f6f8ULL }, InterfaceTests::_$caller__UIWidgetArea__on_click2in, },
+  { { 0x50000000257c7180ULL, 0xfac77ebb19c6ab72ULL, 0xb34dd194f62b665dULL, 0x0c329a03aebf472bULL }, InterfaceTests::_$discon__UIWidgetArea__void_signal, },
+  { { 0x50000000a31a6e24ULL, 0xfe2020b5b9671356ULL, 0x11e8a29ccb87db27ULL, 0xcbe662a2887ef78fULL }, InterfaceTests::_$discon__UIWidgetArea__sample_signal, },
+  { { 0x20000000be855008ULL, 0x6bf2269ff6939544ULL, 0x6a0846e9f5a62da8ULL, 0x59c8e2a4e4629e80ULL }, InterfaceTests::_$caller__QuickIface__simple_function, },
+  { { 0x20000000a426153aULL, 0x0a2f5758267a2651ULL, 0xd9bff16cf6755833ULL, 0x8959ddaf9e5b8a44ULL }, InterfaceTests::_$caller__MethodTestInterface__method_with_void, },
+  { { 0x300000003917295eULL, 0x76cb59d18d695319ULL, 0x0fe6acdaa38d48dfULL, 0xa26ca0854c18e565ULL }, InterfaceTests::_$caller__MethodTestInterface__method_with_bools, },
+  { { 0x3000000015f688dcULL, 0x4db9c06f4357aa4eULL, 0x902ee7647790de7cULL, 0x18aa217be2c83cbaULL }, InterfaceTests::_$caller__MethodTestInterface__method_with_ints, },
+  { { 0x30000000bfc2d47bULL, 0x70b13d1cdf2c9488ULL, 0x77c2ea3ad44c2625ULL, 0xd6093e05e70ea643ULL }, InterfaceTests::_$caller__MethodTestInterface__method_with_floats, },
+  { { 0x300000002732b2feULL, 0x6dfd49db44b97641ULL, 0x010dcacac6eb8ed7ULL, 0xa79383e035fc64e1ULL }, InterfaceTests::_$caller__MethodTestInterface__method_with_string, },
+  { { 0x300000003f676d86ULL, 0x903cbdda7f9bf8e6ULL, 0xb56b87771cbd4b69ULL, 0x5723ee9d219ddda5ULL }, InterfaceTests::_$caller__MethodTestInterface__method_with_enum, },
+  { { 0x3000000004a0b014ULL, 0x7eef09335a6cd6afULL, 0xd80237b6e1df12f6ULL, 0x70618be70ed6e858ULL }, InterfaceTests::_$caller__MethodTestInterface__method_with_record, },
+  { { 0x30000000e92eb1f1ULL, 0xbc6d5e758278964aULL, 0xe88f958f88ca346cULL, 0xf29e446630c57f23ULL }, InterfaceTests::_$caller__MethodTestInterface__method_with_sequence, },
+  { { 0x3000000001640ae0ULL, 0xf5403244c684c076ULL, 0x208c721dda088467ULL, 0x425f3425b0dcfad4ULL }, InterfaceTests::_$caller__MethodTestInterface__method_with_interface, },
+  { { 0x3000000082dc142eULL, 0x7d16cadebfca9b39ULL, 0x168d05eb3cf56adbULL, 0x31e28c41cf8bb4f9ULL }, InterfaceTests::_$caller__MethodTestInterface__method_with_quickiface, },
+  { { 0x50000000d7b0d37dULL, 0x9a68ffaf1056fc04ULL, 0xb24f3d15ee791645ULL, 0x979c5c3dbb482dbdULL }, InterfaceTests::_$discon__SignalTestInterface__void_result, },
+  { { 0x5000000088395bfcULL, 0xb616815b8edaee44ULL, 0x37cc8b54b7500777ULL, 0xfe7258a75f8cb6b8ULL }, InterfaceTests::_$discon__SignalTestInterface__bool_result, },
+  { { 0x500000007d3c1951ULL, 0xf389540a04382db9ULL, 0xc26a2ee92fb29b95ULL, 0x1197b72e8fa6cfb2ULL }, InterfaceTests::_$discon__SignalTestInterface__int_result, },
+  { { 0x5000000021a8c164ULL, 0xecca5d4028d51f60ULL, 0x5e48820b0f116b7aULL, 0x1dcb611973ca7901ULL }, InterfaceTests::_$discon__SignalTestInterface__float_result, },
+  { { 0x5000000036e51367ULL, 0x21d4eda0c22f5ae7ULL, 0xb4663cb8cc9c5b6cULL, 0xaed8617878324d33ULL }, InterfaceTests::_$discon__SignalTestInterface__string_result, },
+  { { 0x500000006e50988aULL, 0x8edca7e533dbb84aULL, 0xc4d53e76a28e2cb2ULL, 0xe873a3116ee5f47bULL }, InterfaceTests::_$discon__SignalTestInterface__enum_result, },
+  { { 0x5000000055dcef7fULL, 0x8478d3457cd87d65ULL, 0x9749c1b1c287f9a7ULL, 0xb21d98dd311f88a0ULL }, InterfaceTests::_$discon__SignalTestInterface__record_result, },
+  { { 0x500000007ede93d1ULL, 0xc6d90e002209318dULL, 0xac81039a018518edULL, 0xb4d95ba887b99c60ULL }, InterfaceTests::_$discon__SignalTestInterface__sequence_result, },
+  { { 0x50000000c6e0f2dbULL, 0xf7660a7b33a76e14ULL, 0xcbdade8c0d53d333ULL, 0x235f30d69ba62708ULL }, InterfaceTests::_$discon__SignalTestInterface__interface_result, },
+  { { 0x500000000f7a484aULL, 0x8668cf9bda70ae96ULL, 0x6404938807ad413fULL, 0x48f1a8d3ba35d215ULL }, InterfaceTests::_$discon__SignalTestInterface__self_result, },
+  { { 0x50000000390ef9ebULL, 0x5fe021fa95e46c90ULL, 0xbb481496867f8fbbULL, 0xd0d4f522490eed0fULL }, InterfaceTests::_$discon__SignalTestInterface__void_arg, },
+  { { 0x500000008ae3eb10ULL, 0x0cd818645da43e38ULL, 0x28c3e51ddb121821ULL, 0x2c1f84e70ce9d966ULL }, InterfaceTests::_$discon__SignalTestInterface__bool_arg, },
+  { { 0x50000000c91ca108ULL, 0xcf9f85d25bb75bc8ULL, 0xa19af414c58a3ac6ULL, 0x688d4f1445624c0cULL }, InterfaceTests::_$discon__SignalTestInterface__int_arg, },
+  { { 0x5000000075078428ULL, 0x45d29e0377897dd2ULL, 0xb04599be75058416ULL, 0xa4be1bdf79af6b27ULL }, InterfaceTests::_$discon__SignalTestInterface__float_arg, },
+  { { 0x50000000cd2031d7ULL, 0xb127c8f2134a7e92ULL, 0x994f8b257e7550c1ULL, 0x86752a8f56f3202eULL }, InterfaceTests::_$discon__SignalTestInterface__string_arg, },
+  { { 0x500000007c8c24a8ULL, 0x6a34b5ca6ff1a9b1ULL, 0xa8421ac9442d7da7ULL, 0x397d7a2d9c23b69eULL }, InterfaceTests::_$discon__SignalTestInterface__enum_arg, },
+  { { 0x500000001ca9536aULL, 0x3a697b01329fe581ULL, 0xf253e5509e7ec080ULL, 0x99bab63bc8358923ULL }, InterfaceTests::_$discon__SignalTestInterface__record_arg, },
+  { { 0x500000003a8b02acULL, 0x350183fe2aaeadfeULL, 0x632ab314011b5d27ULL, 0xd1eb9724fd6133d9ULL }, InterfaceTests::_$discon__SignalTestInterface__sequence_arg, },
+  { { 0x50000000e570b3a9ULL, 0x414baa2ef0267861ULL, 0x7bb2d4e5515d1d91ULL, 0xfa502a9c448db3c8ULL }, InterfaceTests::_$discon__SignalTestInterface__interface_arg, },
+  { { 0x50000000c376b929ULL, 0xe5199bbf5bd2533aULL, 0x52977526a9c4e2c9ULL, 0x4b15ebcfa292e18fULL }, InterfaceTests::_$discon__SignalTestInterface__self_args, },
+  { { 0x30000000b0144864ULL, 0xc643901d97f360ddULL, 0x57a9071058ac07aaULL, 0xfc6b7a41bf635ad1ULL }, InterfaceTests::_$getter__PropertyTester__bool_prop, },
+  { { 0x20000000a18d314bULL, 0x26151171e3bb39dcULL, 0x1a443db8b1c01c6cULL, 0xfcb6e633dd2e9613ULL }, InterfaceTests::_$setter__PropertyTester__bool_prop, },
+  { { 0x30000000181e8779ULL, 0x0f77dae854e0b84fULL, 0x637dec96e0c074cbULL, 0x6ea8e58f8853d3c7ULL }, InterfaceTests::_$getter__PropertyTester__int_prop, },
+  { { 0x20000000eb780228ULL, 0xeee26b84cc028ea1ULL, 0x5208210fdb93be48ULL, 0xbc262f6d750d0de7ULL }, InterfaceTests::_$setter__PropertyTester__int_prop, },
+  { { 0x3000000063885e5eULL, 0x73736be8a1ddb81cULL, 0x0837119897127c62ULL, 0x254bfc525be1d520ULL }, InterfaceTests::_$getter__PropertyTester__float_prop, },
+  { { 0x200000000f38d4d9ULL, 0xe580a2e95eb8a99eULL, 0x2b253a5868c02d21ULL, 0xa41bb895557ed355ULL }, InterfaceTests::_$setter__PropertyTester__float_prop, },
+  { { 0x30000000d158fbc9ULL, 0x05c7627c89588141ULL, 0x13e53815a987f9a7ULL, 0x87fca26102aca1b0ULL }, InterfaceTests::_$getter__PropertyTester__string_prop, },
+  { { 0x20000000a6029496ULL, 0x5af74c144238b1b1ULL, 0x656a73acc800a8bbULL, 0x88efc321d6f74b0cULL }, InterfaceTests::_$setter__PropertyTester__string_prop, },
+  { { 0x3000000069369270ULL, 0xb5f6ccbefcd8a46dULL, 0xaee75a418197773dULL, 0xf32203a882a1817eULL }, InterfaceTests::_$getter__PropertyTester__enum_prop, },
+  { { 0x2000000005e65481ULL, 0xd9f07e1cdf167a17ULL, 0xceed8910f029e869ULL, 0xd4d0e67731680533ULL }, InterfaceTests::_$setter__PropertyTester__enum_prop, },
+  { { 0x30000000ecbe5f0fULL, 0x49863133875c84dbULL, 0x6ab95eefcc9ecc34ULL, 0xc2138d9daee43a04ULL }, InterfaceTests::_$getter__PropertyTester__record_prop, },
+  { { 0x200000008acccdfcULL, 0x0c89ae0a721e3ff1ULL, 0x478c936633c08d26ULL, 0x6fb14f7161390c2cULL }, InterfaceTests::_$setter__PropertyTester__record_prop, },
+  { { 0x30000000b8af2543ULL, 0xb58f78e8919bee21ULL, 0x2d5000b118cd647fULL, 0x95fcfef75f8e8174ULL }, InterfaceTests::_$getter__PropertyTester__sequence_prop, },
+  { { 0x2000000016bc9f59ULL, 0x029c4a74204a0fe2ULL, 0x850c99c1f01af8b1ULL, 0xb190eb2442c7255aULL }, InterfaceTests::_$setter__PropertyTester__sequence_prop, },
+  { { 0x30000000294a1e88ULL, 0xb69eb6f2b1545a61ULL, 0x05811c63352b9dceULL, 0x6d0cf06dbf6200e9ULL }, InterfaceTests::_$getter__PropertyTester__interface_prop, },
+  { { 0x200000006871f741ULL, 0x25fe233d750ca71dULL, 0x5a0570311b480850ULL, 0x12b776dab1102b61ULL }, InterfaceTests::_$setter__PropertyTester__interface_prop, },
+  { { 0x30000000493b60d9ULL, 0xa9d1286fc302f3dbULL, 0xdfab7e8d1c2e0c08ULL, 0x91a4c03a3a37c6a1ULL }, InterfaceTests::_$getter__PropertyTester__self_prop, },
+  { { 0x2000000054baf216ULL, 0x8d311910e92e61b2ULL, 0x6abbb85e2edb7f36ULL, 0xbc35ff08d9903c42ULL }, InterfaceTests::_$setter__PropertyTester__self_prop, },
+  { { 0x30000000491d784bULL, 0xb29d170c81c582faULL, 0xf38eb9a29bb01ea0ULL, 0xae5244cb9938a581ULL }, RapicornPlicTest::_$getter__ButtonArea__on_click, },
+  { { 0x20000000af8c1a29ULL, 0x560ed695ce4df779ULL, 0x54767d09a29524ebULL, 0xa184187eacb770cfULL }, RapicornPlicTest::_$setter__ButtonArea__on_click, },
+  { { 0x300000000d3108d8ULL, 0x4f5ba9ee776a43d2ULL, 0xa831d7cea44cc5faULL, 0xcc2d97f07926cef0ULL }, RapicornPlicTest::_$getter__ButtonArea__on_click2, },
+  { { 0x2000000068d757d8ULL, 0x6dde3c79e1c855a5ULL, 0x7383e3212d1dde0bULL, 0x16fee72f3c653aa2ULL }, RapicornPlicTest::_$setter__ButtonArea__on_click2, },
+  { { 0x30000000f0c2da03ULL, 0x29fb66fef42c8334ULL, 0xabd9ab6b8df662eeULL, 0x3a7eb8700de84064ULL }, RapicornPlicTest::_$getter__ButtonArea__on_click3, },
+  { { 0x2000000094c7d2abULL, 0xea107cd9f9ec9512ULL, 0x262c4644988b3a63ULL, 0x76720081bc8f5f79ULL }, RapicornPlicTest::_$setter__ButtonArea__on_click3, },
+  { { 0x300000001c03071bULL, 0xf4a8efb57ac62e96ULL, 0x4f3d3a414afe1025ULL, 0x43a202534ab618a7ULL }, RapicornPlicTest::_$getter__ButtonArea__click_type, },
+  { { 0x20000000a83e3165ULL, 0xa181aec34685c438ULL, 0x0b56a49d59dbd00cULL, 0x3d758ee49bb0a338ULL }, RapicornPlicTest::_$setter__ButtonArea__click_type, },
+  { { 0x500000002002b254ULL, 0x237b6d00631699f2ULL, 0xaa4a2bf137175f39ULL, 0x16724232857b7195ULL }, RapicornPlicTest::_$discon__ButtonArea__check_activate, },
+  { { 0x500000001eea842bULL, 0xdb7ee9164c9f8a60ULL, 0x1d0b0a314944036aULL, 0xfc73ff4aec88f8ffULL }, RapicornPlicTest::_$discon__ButtonArea__activate, },
+  { { 0x30000000e96382b8ULL, 0x8c16fe069c1d6b1eULL, 0x002e82b90c7db308ULL, 0x9c8a9e5a95b6ea99ULL }, RapicornPlicTest::_$caller__PureMethods__pure_method, },
 };
 static Plic::DispatcherRegistry _dispatcher_registry (_dispatcher_entries);
 

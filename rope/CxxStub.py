@@ -420,7 +420,7 @@ class Generator:
     assert self.gen_mode == G4SERVER
     s = ''
     cplfbr = ('cpl', 'fbr')
-    dispatcher_name = '_dispatch_setter__%s_%s' % (class_info.name, fident)
+    dispatcher_name = '_$setter__%s__%s' % (class_info.name, fident)
     setter_hash = self.setter_digest (class_info, fident, ftype)
     reglines += [ (setter_hash, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static FieldBuffer*\n'
@@ -450,7 +450,7 @@ class Generator:
     assert self.gen_mode == G4SERVER
     s = ''
     cplfbr = ('cpl', 'fbr')
-    dispatcher_name = '_dispatch_getter__%s_%s' % (class_info.name, fident)
+    dispatcher_name = '_$getter__%s__%s' % (class_info.name, fident)
     getter_hash = self.getter_digest (class_info, fident, ftype)
     reglines += [ (getter_hash, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static FieldBuffer*\n'
@@ -482,7 +482,7 @@ class Generator:
     assert self.gen_mode == G4SERVER
     s = ''
     cplfbr = ('cpl', 'fbr')
-    dispatcher_name = '_dispatch__%s_%s' % (class_info.name, mtype.name)
+    dispatcher_name = '_$caller__%s__%s' % (class_info.name, mtype.name)
     reglines += [ (self.method_digest (mtype), self.namespaced_identifier (dispatcher_name)) ]
     s += 'static FieldBuffer*\n'
     s += dispatcher_name + ' (Coupler &cpl)\n'
@@ -529,9 +529,9 @@ class Generator:
     assert self.gen_mode == G4SERVER
     s = ''
     therr = 'THROW_ERROR()'
-    dispatcher_name = '_dispatch__%s_%s' % (class_info.name, stype.name)
+    dispatcher_name = '_$discon__%s__%s' % (class_info.name, stype.name)
     reglines += [ (self.method_digest (stype), self.namespaced_identifier (dispatcher_name)) ]
-    closure_class = '_CLOSURE_%s_%s' % (class_info.name, stype.name)
+    closure_class = '_$Closure__%s__%s' % (class_info.name, stype.name)
     cplfb = ('sp->m_coupler', 'fb')
     s += 'struct %s {\n' % closure_class
     s += '  typedef Plic::shared_ptr<%s> SharedPtr;\n' % closure_class
