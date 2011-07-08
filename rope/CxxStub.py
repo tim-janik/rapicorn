@@ -107,7 +107,7 @@ class Generator:
     if self.gen4class == C4INTERFACE:
       tname += '*' if type_node.storage == Decls.INTERFACE else ''
     return tname
-  def A (self, ident, type_node, defaultinit = None):   # construct call argument
+  def A (self, ident, type_node, defaultinit = None):   # construct call Argument
     constref = type_node.storage in (Decls.STRING, Decls.SEQUENCE, Decls.RECORD)
     needsref = constref or type_node.storage == Decls.INTERFACE
     s = self.C (type_node)                      # const {Obj} &foo = 3
@@ -132,6 +132,12 @@ class Generator:
     for a in ftype.args:
       l += [ self.A (prefix + a[0], a[1]) ]
     return (',\n' + argindent * ' ').join (l)
+  def V (self, ident, type_node):                       # construct Variable
+    s = ''
+    s += self.C (type_node) + ' '
+    if self.gen4class == C4INTERFACE and type_node.storage == Decls.INTERFACE:
+      s += '*'
+    return s + ident
   def close_inner_namespace (self):
     return '} // %s\n' % self.namespaces.pop().name
   def open_inner_namespace (self, namespace):
@@ -170,14 +176,6 @@ class Generator:
     else:
       f = '%%-%ds' % self.ntab  # '%-20s'
       return indent + f % string
-  def format_vartype (self, type, mode = None):
-    s = ''
-    s += self.C (type, mode) + ' '
-    if self.gen4class == C4INTERFACE and type.storage == Decls.INTERFACE:
-      s += '*'
-    return s
-  def format_var (self, ident, type):
-    return self.format_vartype (type) + ident
   def use_arg (self, ident, type, interfacechar = '*'):
     s = ''
     if type.storage == Decls.INTERFACE:
@@ -223,10 +221,10 @@ class Generator:
       cplfrr = (cplfb[0], 'frr')
       # FIXME: check return error and return type
       if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  ' + self.format_var (rarg[0], rarg[1]) + ';\n'
+        s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
         s += self.generate_proto_pop_args (cplfrr, class_info, '', [rarg], '', therr)
       else:
-        vtype = self.format_vartype (rarg[1]) # 'int*' + ...
+        vtype = self.V ('', rarg[1]) # 'int*' + ...
         s += self.generate_proto_pop_args (cplfrr, class_info, vtype, [rarg], '', therr) # ... + 'x = 5;'
       s += '  delete fr;\n'
       s += '  return retval;\n'
@@ -420,16 +418,17 @@ class Generator:
       cplfrr = (cplfb[0], 'frr')
       # FIXME: check return error and return type
       if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  ' + self.format_var (rarg[0], rarg[1]) + ';\n'
+        s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
         s += self.generate_proto_pop_args (cplfrr, class_info, '', [rarg], '', therr)
       else:
-        vtype = self.format_vartype (rarg[1]) # 'int*' + ...
+        vtype = self.V ('', rarg[1]) # 'int*' + ...
         s += self.generate_proto_pop_args (cplfrr, class_info, vtype, [rarg], '', therr) # ... + 'x = 5;'
       s += '  delete fr;\n'
       s += '  return retval;\n'
     s += '}\n'
     return s
   def generate_server_property_set_dispatcher (self, class_info, fident, ftype, reglines):
+    assert self.gen4class == C4INTERFACE
     s = ''
     cplfbr = ('cpl', 'fbr')
     dispatcher_name = '_dispatch_setter__%s_%s' % (class_info.name, fident)
@@ -442,15 +441,15 @@ class Generator:
     s += '  fbr.skip_hash(); // TypeHash\n'
     s += '  if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     # fetch self
-    s += '  %s *self;\n' % self.C (class_info, C4INTERFACE)
+    s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
     # fetch property
     if ftype.storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += '  ' + self.format_var ('arg_' + fident, ftype) + ';\n'
+      s += '  ' + self.V ('arg_' + fident, ftype) + ';\n'
       s += self.generate_proto_pop_args (cplfbr, class_info, 'arg_', [(fident, ftype)])
     else:
-      tstr = self.format_vartype (ftype, C4INTERFACE) + 'arg_'
+      tstr = self.V ('', ftype) + 'arg_'
       s += self.generate_proto_pop_args (cplfbr, class_info, tstr, [(fident, ftype)])
     ref = '&' if ftype.storage == Decls.INTERFACE else ''
     # call out
@@ -459,6 +458,7 @@ class Generator:
     s += '}\n'
     return s
   def generate_server_property_get_dispatcher (self, class_info, fident, ftype, reglines):
+    assert self.gen4class == C4INTERFACE
     s = ''
     cplfbr = ('cpl', 'fbr')
     dispatcher_name = '_dispatch_getter__%s_%s' % (class_info.name, fident)
@@ -471,12 +471,12 @@ class Generator:
     s += '  fbr.skip_hash(); // TypeHash\n'
     s += '  if (fbr.remaining() != 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     # fetch self
-    s += '  %s *self;\n' % self.C (class_info, C4INTERFACE)
+    s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
     # return var
     s += '  '
-    s += self.format_vartype (ftype, C4INTERFACE) + 'rval = '
+    s += self.V ('', ftype) + 'rval = '
     # call out
     s += 'self->' + fident + ' ();\n'
     # store return value
@@ -490,6 +490,7 @@ class Generator:
     s += '}\n'
     return s
   def generate_server_method_dispatcher (self, class_info, mtype, reglines):
+    assert self.gen4class == C4INTERFACE
     s = ''
     cplfbr = ('cpl', 'fbr')
     dispatcher_name = '_dispatch__%s_%s' % (class_info.name, mtype.name)
@@ -501,22 +502,22 @@ class Generator:
     s += '  fbr.skip_hash(); // TypeHash\n'
     s += '  if (fbr.remaining() != 1 + %u) return FieldBuffer::new_error ("invalid number of arguments", __func__);\n' % len (mtype.args)
     # fetch self
-    s += '  %s *self;\n' % self.C (class_info, C4INTERFACE)
+    s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
     # fetch args
     for a in mtype.args:
       if a[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  ' + self.format_var ('arg_' + a[0], a[1]) + ';\n'
+        s += '  ' + self.V ('arg_' + a[0], a[1]) + ';\n'
         s += self.generate_proto_pop_args (cplfbr, class_info, 'arg_', [(a[0], a[1])])
       else:
-        tstr = self.format_vartype (a[1], C4INTERFACE) + 'arg_'
+        tstr = self.V ('', a[1]) + 'arg_'
         s += self.generate_proto_pop_args (cplfbr, class_info, tstr, [(a[0], a[1])])
     # return var
     s += '  '
     hasret = mtype.rtype.storage != Decls.VOID
     if hasret:
-      s += self.format_vartype (mtype.rtype, C4INTERFACE) + 'rval = '
+      s += self.V ('', mtype.rtype) + 'rval = '
     # call out
     s += 'self->' + mtype.name + ' ('
     s += ', '.join (self.use_arg ('arg_' + a[0], a[1]) for a in mtype.args)
@@ -578,7 +579,7 @@ class Generator:
     s += '  FieldBufferReader &fbr = cpl.reader;\n'
     s += '  fbr.skip_hash(); // TypeHash\n'
     s += '  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
-    s += '  %s *self;\n' % self.C (class_info, C4INTERFACE)
+    s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
     s += '  uint64 cid = 0, handler_id = %s.pop_int64();\n' % cplfbr[1]
