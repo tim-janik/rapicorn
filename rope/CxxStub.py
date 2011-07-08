@@ -91,9 +91,9 @@ class Generator:
     if typename == 'string': return 'std::string'
     fullnsname = '::'.join (self.type_relative_namespaces (type_node) + [ type_node.name ])
     return fullnsname
-  def H (self, name):                   # G4CLIENT: construct class name
+  def H (self, name):                                   # construct client class Handle
     return name + '_SmartHandle'
-  def C (self, type_node, mode = None): # construct class name
+  def C (self, type_node, mode = None):                 # construct Class name
     tname = self.type2cpp (type_node)
     if type_node.storage != Decls.INTERFACE:
       return tname
@@ -102,11 +102,17 @@ class Generator:
       return self.Iwrap (tname)
     else: # mode in (G4CLIENT, C4SERVER):
       return self.H (tname)
-  def R (self, type_node, mode = None): # construct return type
+  def R (self, type_node, mode = None):                 # construct Return type
     tname = self.C (type_node, mode)
     if self.gen4class == C4INTERFACE:
       tname += '*' if type_node.storage == Decls.INTERFACE else ''
     return tname
+  def V (self, ident, type_node):                       # construct Variable
+    s = ''
+    s += self.C (type_node) + ' '
+    if self.gen4class == C4INTERFACE and type_node.storage == Decls.INTERFACE:
+      s += '*'
+    return s + ident
   def A (self, ident, type_node, defaultinit = None):   # construct call Argument
     constref = type_node.storage in (Decls.STRING, Decls.SEQUENCE, Decls.RECORD)
     needsref = constref or type_node.storage == Decls.INTERFACE
@@ -127,16 +133,13 @@ class Generator:
       else:
         s += ' = %s' % defaultinit                             # { = 3}
     return s
-  def Args (self, ftype, prefix, argindent = 2):        # construct list of call arguments
+  def Args (self, ftype, prefix, argindent = 2):        # construct list of call Arguments
     l = []
     for a in ftype.args:
       l += [ self.A (prefix + a[0], a[1]) ]
     return (',\n' + argindent * ' ').join (l)
-  def V (self, ident, type_node):                       # construct Variable
-    s = ''
-    s += self.C (type_node) + ' '
-    if self.gen4class == C4INTERFACE and type_node.storage == Decls.INTERFACE:
-      s += '*'
+  def U (self, ident, type_node):                       # construct function call argument Use
+    s = '*' if type_node.storage == Decls.INTERFACE else ''
     return s + ident
   def close_inner_namespace (self):
     return '} // %s\n' % self.namespaces.pop().name
@@ -176,12 +179,6 @@ class Generator:
     else:
       f = '%%-%ds' % self.ntab  # '%-20s'
       return indent + f % string
-  def use_arg (self, ident, type, interfacechar = '*'):
-    s = ''
-    if type.storage == Decls.INTERFACE:
-      s += interfacechar
-    s += ident
-    return s
   def generate_field (self, fident, ftype_name):
     return '  ' + self.format_to_tab (ftype_name) + fident + ';\n'
   def generate_proplist (self, ctype): # FIXME: properties
@@ -453,7 +450,7 @@ class Generator:
       s += self.generate_proto_pop_args (cplfbr, class_info, tstr, [(fident, ftype)])
     ref = '&' if ftype.storage == Decls.INTERFACE else ''
     # call out
-    s += '  self->' + fident + ' (' + ref + self.use_arg ('arg_' + fident, ftype) + ');\n'
+    s += '  self->' + fident + ' (' + ref + self.U ('arg_' + fident, ftype) + ');\n'
     s += '  return NULL;\n'
     s += '}\n'
     return s
@@ -520,7 +517,7 @@ class Generator:
       s += self.V ('', mtype.rtype) + 'rval = '
     # call out
     s += 'self->' + mtype.name + ' ('
-    s += ', '.join (self.use_arg ('arg_' + a[0], a[1]) for a in mtype.args)
+    s += ', '.join (self.U ('arg_' + a[0], a[1]) for a in mtype.args)
     s += ');\n'
     # store return value
     if hasret:
