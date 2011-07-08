@@ -62,9 +62,9 @@ def reindent (prefix, lines):
 
 I_prefix_postfix = ('', '_Interface')
 
-class G4CLIENT: pass    # generate _SmartHandle classes
-class C4SERVER: pass    # add server extensions to _SmartHandle classes
-class C4INTERFACE: pass # generate _Interface classes
+class G4CLIENT: pass    # generate client side classes (smart handles)
+class C4OLDHANDLE: pass # generate deprecated smart handle variants w/o methods
+class G4SERVER: pass    # generate server side classes (interfaces)
 
 class Generator:
   def __init__ (self):
@@ -76,7 +76,7 @@ class Generator:
     self.skip_symbols = set()
     self.skip_classes = []
     self._iface_base = 'Plic::SimpleServer'
-    self.gen4class = None
+    self.gen_mode = None
     self.gen_shortalias = False
   def Iwrap (self, name):
     cc = name.rfind ('::')
@@ -97,20 +97,20 @@ class Generator:
     tname = self.type2cpp (type_node)
     if type_node.storage != Decls.INTERFACE:
       return tname
-    mode = mode or self.gen4class
-    if mode == C4INTERFACE:
+    mode = mode or self.gen_mode
+    if mode == G4SERVER:
       return self.Iwrap (tname)
-    else: # mode in (G4CLIENT, C4SERVER):
+    else: # mode in (G4CLIENT, C4OLDHANDLE):
       return self.H (tname)
   def R (self, type_node, mode = None):                 # construct Return type
     tname = self.C (type_node, mode)
-    if self.gen4class == C4INTERFACE:
+    if self.gen_mode == G4SERVER:
       tname += '*' if type_node.storage == Decls.INTERFACE else ''
     return tname
   def V (self, ident, type_node):                       # construct Variable
     s = ''
     s += self.C (type_node) + ' '
-    if self.gen4class == C4INTERFACE and type_node.storage == Decls.INTERFACE:
+    if self.gen_mode == G4SERVER and type_node.storage == Decls.INTERFACE:
       s += '*'
     return s + ident
   def A (self, ident, type_node, defaultinit = None):   # construct call Argument
@@ -177,7 +177,7 @@ class Generator:
     return '::'.join ([d.name for d in self.namespaces] + [ident])
   def generate_property (self, fident, ftype):
     s, v, v0, ptr = '', '', '', ''
-    if self.gen4class == C4INTERFACE:
+    if self.gen_mode == G4SERVER:
       v, v0, ptr = 'virtual ', ' = 0', '*'
     tname = self.C (ftype)
     if ftype.storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
@@ -321,7 +321,7 @@ class Generator:
       elif type.storage == Decls.ENUM:
         s += '  %s = %s (%s.pop_evalue());\n' % (ident, self.C (type), fbr)
       elif type.storage == Decls.INTERFACE:
-        op_ptr = '.operator->()' if self.gen4class == C4INTERFACE else ''
+        op_ptr = '.operator->()' if self.gen_mode == G4SERVER else ''
         s += '  %s = %s (%s, %s)%s;\n' \
             % (ident, self.C (type, G4CLIENT), cpl, fbr, op_ptr)
       else:
@@ -417,7 +417,7 @@ class Generator:
     s += '}\n'
     return s
   def generate_server_property_set_dispatcher (self, class_info, fident, ftype, reglines):
-    assert self.gen4class == C4INTERFACE
+    assert self.gen_mode == G4SERVER
     s = ''
     cplfbr = ('cpl', 'fbr')
     dispatcher_name = '_dispatch_setter__%s_%s' % (class_info.name, fident)
@@ -447,7 +447,7 @@ class Generator:
     s += '}\n'
     return s
   def generate_server_property_get_dispatcher (self, class_info, fident, ftype, reglines):
-    assert self.gen4class == C4INTERFACE
+    assert self.gen_mode == G4SERVER
     s = ''
     cplfbr = ('cpl', 'fbr')
     dispatcher_name = '_dispatch_getter__%s_%s' % (class_info.name, fident)
@@ -479,7 +479,7 @@ class Generator:
     s += '}\n'
     return s
   def generate_server_method_dispatcher (self, class_info, mtype, reglines):
-    assert self.gen4class == C4INTERFACE
+    assert self.gen_mode == G4SERVER
     s = ''
     cplfbr = ('cpl', 'fbr')
     dispatcher_name = '_dispatch__%s_%s' % (class_info.name, mtype.name)
@@ -526,7 +526,7 @@ class Generator:
     s += '}\n'
     return s
   def generate_server_signal_dispatcher (self, class_info, stype, reglines):
-    assert self.gen4class == C4INTERFACE
+    assert self.gen_mode == G4SERVER
     s = ''
     therr = 'THROW_ERROR()'
     dispatcher_name = '_dispatch__%s_%s' % (class_info.name, stype.name)
@@ -623,9 +623,9 @@ class Generator:
         reduced = [ p ] + reduced
     return reduced
   def generate_method_decl (self, functype, pad):
-    s, comment = '', self.gen4class == C4SERVER
+    s, comment = '', self.gen_mode == C4OLDHANDLE
     s += '  // ' if comment else '  '
-    if self.gen4class == C4INTERFACE:
+    if self.gen_mode == G4SERVER:
       s += 'virtual '
     s += self.F (self.R (functype.rtype))
     s += functype.name
@@ -640,7 +640,7 @@ class Generator:
     else:
       s += (',\n' + argindent * ' ').join (l)
     s += ')'
-    if self.gen4class == C4INTERFACE and functype.pure and not comment:
+    if self.gen_mode == G4SERVER and functype.pure and not comment:
       s += ' = 0'
     s += ';\n'
     return s
@@ -651,7 +651,7 @@ class Generator:
     for pr in type_info.prerequisites:
       l += [ pr ]
     l = self.inherit_reduce (l)
-    if self.gen4class == C4INTERFACE:
+    if self.gen_mode == G4SERVER:
       l = ['public virtual ' + self.C (pr) for pr in l] # types -> names
       if not l:
         l = ['public virtual ' + self._iface_base]
@@ -665,19 +665,19 @@ class Generator:
     s += ' {\n'
     # constructors
     s += 'protected:\n'
-    if self.gen4class == C4SERVER:
+    if self.gen_mode == C4OLDHANDLE:
       s += '  inline %s* _iface() const { return (%s*) _void_iface(); }\n' \
           % (self._iface_base, self._iface_base)
       s += '  inline void _iface (%s *_iface) { _void_iface (_iface); }\n' % self._iface_base
-    if self.gen4class == C4INTERFACE:
+    if self.gen_mode == G4SERVER:
       s += '  explicit ' + self.F ('') + '%s ();\n' % self.C (type_info)
       s += '  virtual ' + self.F ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info)
     s += 'public:\n'
-    if self.gen4class in (G4CLIENT, C4SERVER):
+    if self.gen_mode in (G4CLIENT, C4OLDHANDLE):
       s += '  inline %s () {}\n' % self.H (type_info.name)
       s += '  inline %s (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) ' % self.H (type_info.name)
       s += '{ _pop_rpc (cpl, fbr); }\n'
-    if self.gen4class == C4SERVER:
+    if self.gen_mode == C4OLDHANDLE:
       ifacename = self.Iwrap (type_info.name)
       s += '  inline %s (%s *iface) { _iface (iface); }\n' % (self.C (type_info), ifacename)
       s += '  inline %s (%s &iface) { _iface (&iface); }\n' % (self.C (type_info), ifacename)
@@ -685,7 +685,7 @@ class Generator:
     for fl in type_info.fields:
       s += self.generate_property (fl[0], fl[1])
     # signals
-    if self.gen4class == C4INTERFACE:
+    if self.gen_mode == G4SERVER:
       for sg in type_info.signals:
         s += self.generate_sigdef (sg, type_info)
       for sg in type_info.signals:
@@ -697,20 +697,20 @@ class Generator:
     for m in type_info.methods:
       s += self.generate_method_decl (m, ml)
     # specials (operators)
-    if self.gen4class == C4SERVER:
+    if self.gen_mode == C4OLDHANDLE:
       ifn2 = (ifacename, ifacename)
       s += '  inline %s& operator*  () const { return *dynamic_cast<%s*> (_iface()); }\n' % ifn2
       s += '  inline %s* operator-> () const { return dynamic_cast<%s*> (_iface()); }\n' % ifn2
       s += '  inline operator  %s&  () const { return operator*(); }\n' % ifacename
-    if self.gen4class in (G4CLIENT, C4SERVER):
+    if self.gen_mode in (G4CLIENT, C4OLDHANDLE):
       s += '  inline operator _unspecified_bool_type () const ' # return non-NULL pointer to member on true
       s += '{ return _is_null() ? NULL : _unspecified_bool_true(); }\n' # avoids auto-bool conversions on: float (*this)
     s += self.insertion_text ('class_scope:' + self.C (type_info))
     s += '};\n'
     # aliasing
-    if self.gen_shortalias and self.gen4class in (C4INTERFACE,):
+    if self.gen_shortalias and self.gen_mode in (G4SERVER,):
       s += '// typedef %s %s;\n' % (self.C (type_info), self.type2cpp (type_info))
-    elif self.gen_shortalias and self.gen4class in (G4CLIENT,):
+    elif self.gen_shortalias and self.gen_mode in (G4CLIENT,):
       s += 'typedef %s %s;\n' % (self.C (type_info), self.type2cpp (type_info))
     return s
   def generate_interface_impl (self, type_info):
@@ -726,7 +726,7 @@ class Generator:
     s += '%s::~%s () {}\n' % (tname, tname)
     return s
   def generate_virtual_method_skel (self, functype, type_info):
-    assert self.gen4class == C4INTERFACE
+    assert self.gen_mode == G4SERVER
     s = ''
     if functype.pure:
       return s
@@ -834,7 +834,7 @@ class Generator:
       s += gencc_boilerplate + '\n'
     self.tab_stop (16)
     s += self.open_namespace (None)
-    self.gen4class = G4CLIENT
+    self.gen_mode = G4CLIENT
     # collect impl types
     types = []
     for tp in implementation_types:
@@ -847,11 +847,11 @@ class Generator:
         if tp.is_forward:
           s += self.open_namespace (tp) + '\n'
           if self.gen_serverhh:
-            self.gen4class = C4INTERFACE
-            s += 'class %s;\n' % self.C (tp)    # C4INTERFACE
-            self.gen4class = C4SERVER
-            s += 'class %s;\n' % self.C (tp)    # C4SERVER
-            self.gen4class = G4CLIENT
+            self.gen_mode = G4SERVER
+            s += 'class %s;\n' % self.C (tp)    # G4SERVER
+            self.gen_mode = C4OLDHANDLE
+            s += 'class %s;\n' % self.C (tp)    # C4OLDHANDLE
+            self.gen_mode = G4CLIENT
           elif self.gen_clienthh:
             s += 'class %s;\n' % self.C (tp)    # G4CLIENT
           s += '\n'
@@ -870,7 +870,7 @@ class Generator:
             s += self.open_namespace (tp)
             s += self.generate_interface_class (tp) + '\n' # Class smart handle
           if self.gen_serverhh:
-            self.gen4class = C4INTERFACE
+            self.gen_mode = G4SERVER
             if tp.name in self.skip_classes:
               s += self.open_namespace (None) # close all namespaces
               s += '\n'
@@ -878,10 +878,10 @@ class Generator:
             else:
               s += self.open_namespace (tp)
               s += self.generate_interface_class (tp) + '\n' # Class_Interface server base
-            self.gen4class = C4SERVER
+            self.gen_mode = C4OLDHANDLE
             s += self.open_namespace (tp)
             s += self.generate_interface_class (tp) + '\n' # Class smart handle
-            self.gen4class = G4CLIENT
+            self.gen_mode = G4CLIENT
       s += self.open_namespace (None)
     # generate client/server impls
     if self.gen_clientcc or self.gen_servercc:
@@ -897,14 +897,14 @@ class Generator:
           s += self.generate_sequence_impl (tp) + '\n'
         elif tp.storage == Decls.INTERFACE:
           if self.gen_servercc:
-            self.gen4class = C4INTERFACE
+            self.gen_mode = G4SERVER
             if tp.name in self.skip_classes:
               s += self.open_namespace (None) # close all namespaces
               s += self.insertion_text ('filtered_class_cc:' + tp.name)
             else:
               s += self.open_namespace (tp)
               s += self.generate_interface_impl (tp) + '\n'
-            self.gen4class = G4CLIENT
+            self.gen_mode = G4CLIENT
           if self.gen_clientcc and tp.fields:
             s += self.open_namespace (tp)
             for fl in tp.fields:
@@ -916,7 +916,7 @@ class Generator:
     # generate unmarshalling server calls
     if self.gen_servercc:
       s += '\n// --- Method Dispatchers & Registry ---\n'
-      self.gen4class = C4INTERFACE
+      self.gen_mode = G4SERVER
       reglines = []
       for tp in types:
         if tp.typedef_origin or tp.is_forward:
@@ -933,17 +933,17 @@ class Generator:
           s += '\n'
       s += self.generate_server_method_registry (reglines) + '\n'
       s += self.open_namespace (None)
-      self.gen4class = G4CLIENT
+      self.gen_mode = G4CLIENT
     # generate interface method skeletons
     if self.gen_server_skel:
       s += '\n// --- Interface Skeletons ---\n'
-      self.gen4class = C4INTERFACE
+      self.gen_mode = G4SERVER
       for tp in types:
         if tp.typedef_origin or tp.is_forward:
           continue
         elif tp.storage == Decls.INTERFACE and not tp.name in self.skip_classes:
           s += self.generate_interface_skel (tp)
-      self.gen4class = G4CLIENT
+      self.gen_mode = G4CLIENT
     s += self.open_namespace (None) # close all namespaces
     s += '\n'
     s += self.insertion_text ('global_scope')
