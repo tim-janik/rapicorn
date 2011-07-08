@@ -68,8 +68,6 @@ def Iwrap (name):
   else:
     ns, base = '', name
   return ns + I_prefix_postfix[0] + base + I_prefix_postfix[1]
-def H (name):
-  return name + '_SmartHandle'
 
 class G4CLIENT: pass    # generate _SmartHandle classes
 class C4SERVER: pass    # add server extensions to _SmartHandle classes
@@ -87,6 +85,28 @@ class Generator:
     self._iface_base = 'Plic::SimpleServer'
     self.gen4class = None
     self.gen_shortalias = False
+  def H (self, name):                   # G4CLIENT: construct class name
+    return name + '_SmartHandle'
+  def type2cpp (self, type_node):
+    typename = type_node.name
+    if typename == 'float': return 'double'
+    if typename == 'string': return 'std::string'
+    fullnsname = '::'.join (self.type_relative_namespaces (type_node) + [ type_node.name ])
+    return fullnsname
+  def C (self, type_node, mode = None): # construct class name
+    tname = self.type2cpp (type_node)
+    if type_node.storage != Decls.INTERFACE:
+      return tname
+    mode = mode or self.gen4class
+    if mode == C4INTERFACE:
+      return Iwrap (tname)
+    else: # mode in (G4CLIENT, C4SERVER):
+      return self.H (tname)
+  def R (self, type_node, mode = None): # construct return type
+    tname = self.C (type_node, mode)
+    if self.gen4class == C4INTERFACE:
+      tname += '*' if type_node.storage == Decls.INTERFACE else ''
+    return tname
   def close_inner_namespace (self):
     return '} // %s\n' % self.namespaces.pop().name
   def open_inner_namespace (self, namespace):
@@ -117,29 +137,6 @@ class Generator:
     return namespace_names
   def namespaced_identifier (self, ident):
     return '::'.join ([d.name for d in self.namespaces] + [ident])
-  def rtype2cpp (self, type_node):
-    return self.type2cpp (type_node)
-  def type2cpp (self, type_node):
-    typename = type_node.name
-    if typename == 'float': return 'double'
-    if typename == 'string': return 'std::string'
-    fullnsname = '::'.join (self.type_relative_namespaces (type_node) + [ type_node.name ])
-    return fullnsname
-  def Cp (self, type_node, interface_postfix = '', mode = None):
-    str = self.C (type_node, mode)
-    if type_node.storage == Decls.INTERFACE:
-      return str + interface_postfix
-    else:
-      return str
-  def C (self, type_node, mode = None):
-    tname = self.type2cpp (type_node)
-    if type_node.storage != Decls.INTERFACE:
-      return tname
-    mode = mode or self.gen4class
-    if mode == C4INTERFACE:
-      return Iwrap (tname)
-    else: # mode in (G4CLIENT, C4SERVER):
-      return H (tname)
   def tabwidth (self, n):
     self.ntab = n
   def format_to_tab (self, string, indent = ''):
@@ -257,7 +254,7 @@ class Generator:
   def generate_sigdef (self, functype, ctype):
     s = ''
     signame = self.generate_signal_name (functype, ctype)
-    cpp_rtype = self.Cp (functype.rtype, '*')
+    cpp_rtype = self.R (functype.rtype)
     s += '  typedef Rapicorn::Signals::Signal<%s, %s (' % (self.C (ctype), cpp_rtype)
     l = []
     for a in functype.args:
@@ -490,7 +487,7 @@ class Generator:
     s += '  FieldBuffer &rb = *FieldBuffer::new_result();\n'
     rval = 'rval'
     if ftype.storage == Decls.INTERFACE:
-      rval = '%s (rval)' % H (ftype.name) # FooBase -> Foo smart handle
+      rval = '%s (rval)' % self.H (ftype.name) # FooBase -> Foo smart handle
     s += self.generate_proto_add_args (cplrb, class_info, '', [(rval, ftype)], '')
     s += '  return &rb;\n'
     s += '}\n'
@@ -533,7 +530,7 @@ class Generator:
       s += '  FieldBuffer &rb = *FieldBuffer::new_result();\n'
       rval = 'rval'
       if mtype.rtype.storage == Decls.INTERFACE:
-        rval = '%s (rval)' % H (mtype.rtype.name) # FooBase -> Foo smart handle
+        rval = '%s (rval)' % self.H (mtype.rtype.name) # FooBase -> Foo smart handle
       s += self.generate_proto_add_args (cplrb, class_info, '', [(rval, mtype.rtype)], '')
       s += '  return &rb;\n'
     else:
@@ -558,9 +555,7 @@ class Generator:
     s += '    fb.add_int64 (m_handler);\n'
     s += '    m_coupler.push_event (&fb); // deletes fb\n'
     s += '  }\n'
-    cpp_rtype = self.rtype2cpp (stype.rtype)
-    if stype.rtype.storage == Decls.INTERFACE:
-      cpp_rtype = Iwrap (cpp_rtype) + '*'
+    cpp_rtype = self.R (stype.rtype)
     s += '  static %s\n' % cpp_rtype
     s += '  handler ('
     s += self.format_call_args (stype, 'arg_', 11, C4INTERFACE) + (',\n           ' if stype.args else '')
@@ -644,7 +639,7 @@ class Generator:
     s += '  // ' if comment else '  '
     if self.gen4class == C4INTERFACE:
       s += 'virtual '
-    s += self.format_to_tab (self.Cp (functype.rtype, '*' if self.gen4class == C4INTERFACE else ''))
+    s += self.format_to_tab (self.R (functype.rtype))
     s += functype.name
     s += ' ' * max (0, pad - len (functype.name))
     s += ' ('
@@ -691,8 +686,8 @@ class Generator:
       s += '  virtual ' + self.format_to_tab ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info)
     s += 'public:\n'
     if self.gen4class in (G4CLIENT, C4SERVER):
-      s += '  inline %s () {}\n' % H (type_info.name)
-      s += '  inline %s (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) ' % H (type_info.name)
+      s += '  inline %s () {}\n' % self.H (type_info.name)
+      s += '  inline %s (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) ' % self.H (type_info.name)
       s += '{ _pop_rpc (cpl, fbr); }\n'
     if self.gen4class == C4SERVER:
       ifacename = Iwrap (type_info.name)
@@ -743,6 +738,7 @@ class Generator:
     s += '%s::~%s () {}\n' % (tname, tname)
     return s
   def generate_virtual_method_skel (self, functype, type_info):
+    assert self.gen4class == C4INTERFACE
     s = ''
     if functype.pure:
       return s
@@ -752,7 +748,7 @@ class Generator:
     if absname in self.skip_symbols:
       return ''
     s += self.open_namespace (type_info)
-    sret = self.Cp (functype.rtype, '*')
+    sret = self.R (functype.rtype)
     sret += '\n'
     fs += ' ('
     argindent = len (fs)
@@ -765,9 +761,9 @@ class Generator:
     if functype.rtype.storage == Decls.VOID:
       pass
     elif functype.rtype.storage == Decls.ENUM:
-      s += '  return %s (0);\n' % self.rtype2cpp (functype.rtype)
+      s += '  return %s (0);\n' % self.R (functype.rtype)
     elif functype.rtype.storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += '  return %s();\n' % self.rtype2cpp (functype.rtype)
+      s += '  return %s();\n' % self.R (functype.rtype)
     elif functype.rtype.storage == Decls.INTERFACE:
       s += '  return (%s*) NULL;\n' % self.C (functype.rtype)
     else:
