@@ -141,6 +141,10 @@ class Generator:
   def U (self, ident, type_node):                       # construct function call argument Use
     s = '*' if type_node.storage == Decls.INTERFACE else ''
     return s + ident
+  def F (self, string):                                 # Format string to tab stop
+    return string + ' ' * max (1, self.ntab - len (string))
+  def tab_stop (self, n):
+    self.ntab = n
   def close_inner_namespace (self):
     return '} // %s\n' % self.namespaces.pop().name
   def open_inner_namespace (self, namespace):
@@ -171,32 +175,20 @@ class Generator:
     return namespace_names
   def namespaced_identifier (self, ident):
     return '::'.join ([d.name for d in self.namespaces] + [ident])
-  def tabwidth (self, n):
-    self.ntab = n
-  def format_to_tab (self, string, indent = ''):
-    if len (string) >= self.ntab:
-      return indent + string + ' '
-    else:
-      f = '%%-%ds' % self.ntab  # '%-20s'
-      return indent + f % string
-  def generate_field (self, fident, ftype_name):
-    return '  ' + self.format_to_tab (ftype_name) + fident + ';\n'
-  def generate_proplist (self, ctype): # FIXME: properties
-    return '  ' + self.format_to_tab ('virtual const PropertyList&') + 'list_properties ();\n'
   def generate_property (self, fident, ftype):
     s, v, v0, ptr = '', '', '', ''
     if self.gen4class == C4INTERFACE:
       v, v0, ptr = 'virtual ', ' = 0', '*'
     tname = self.C (ftype)
     if ftype.storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
-      s += '  ' + v + self.format_to_tab (tname)  + fident + ' () const%s;\n' % v0
-      s += '  ' + v + self.format_to_tab ('void') + fident + ' (' + tname + ')%s;\n' % v0
+      s += '  ' + v + self.F (tname)  + fident + ' () const%s;\n' % v0
+      s += '  ' + v + self.F ('void') + fident + ' (' + tname + ')%s;\n' % v0
     elif ftype.storage in (Decls.STRING, Decls.RECORD, Decls.SEQUENCE):
-      s += '  ' + v + self.format_to_tab (tname)  + fident + ' () const%s;\n' % v0
-      s += '  ' + v + self.format_to_tab ('void') + fident + ' (const ' + tname + '&)%s;\n' % v0
+      s += '  ' + v + self.F (tname)  + fident + ' () const%s;\n' % v0
+      s += '  ' + v + self.F ('void') + fident + ' (const ' + tname + '&)%s;\n' % v0
     elif ftype.storage == Decls.INTERFACE:
-      s += '  ' + v + self.format_to_tab (tname + ptr)  + fident + ' () const%s;\n' % v0
-      s += '  ' + v + self.format_to_tab ('void') + fident + ' (' + tname + ptr + ')%s;\n' % v0
+      s += '  ' + v + self.F (tname + ptr)  + fident + ' () const%s;\n' % v0
+      s += '  ' + v + self.F ('void') + fident + ' (' + tname + ptr + ')%s;\n' % v0
     return s
   def generate_client_property_stub (self, class_info, fident, ftype):
     s = ''
@@ -278,7 +270,7 @@ class Generator:
     if type_info.storage == Decls.RECORD:
       fieldlist = type_info.fields
       for fl in fieldlist:
-        s += self.generate_field (fl[0], self.C (fl[1]))
+        s += '  ' + self.F (self.C (fl[1])) + fl[0] + ';\n'
     elif type_info.storage == Decls.SEQUENCE:
       s += '  typedef std::vector<' + self.C (fl[1]) + '> Sequence;\n'
       s += '  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;\n'
@@ -635,7 +627,7 @@ class Generator:
     s += '  // ' if comment else '  '
     if self.gen4class == C4INTERFACE:
       s += 'virtual '
-    s += self.format_to_tab (self.R (functype.rtype))
+    s += self.F (self.R (functype.rtype))
     s += functype.name
     s += ' ' * max (0, pad - len (functype.name))
     s += ' ('
@@ -678,8 +670,8 @@ class Generator:
           % (self._iface_base, self._iface_base)
       s += '  inline void _iface (%s *_iface) { _void_iface (_iface); }\n' % self._iface_base
     if self.gen4class == C4INTERFACE:
-      s += '  explicit ' + self.format_to_tab ('') + '%s ();\n' % self.C (type_info)
-      s += '  virtual ' + self.format_to_tab ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info)
+      s += '  explicit ' + self.F ('') + '%s ();\n' % self.C (type_info)
+      s += '  virtual ' + self.F ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info)
     s += 'public:\n'
     if self.gen4class in (G4CLIENT, C4SERVER):
       s += '  inline %s () {}\n' % self.H (type_info.name)
@@ -840,7 +832,7 @@ class Generator:
       s += serverhh_boilerplate
     if self.gen_clientcc or self.gen_servercc:
       s += gencc_boilerplate + '\n'
-    self.tabwidth (16)
+    self.tab_stop (16)
     s += self.open_namespace (None)
     self.gen4class = G4CLIENT
     # collect impl types
