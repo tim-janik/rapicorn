@@ -153,33 +153,30 @@ class Generator:
     return s
   def format_var (self, ident, type):
     return self.format_vartype (type) + ident
-  def format_arg (self, ident, type, defaultinit = None, mode = None):
+  def format_arg (self, ident, type, defaultinit = None):
     s = ''
     constref = type.storage in (Decls.STRING, Decls.SEQUENCE, Decls.RECORD)
     if constref:
-      s += 'const '                             # <const >int foo = 3
-    n = self.type2cpp (type)                    # const <int> foo = 3
-    s += self.C (type, mode)                     # Object<_Interface> &self
-    s += ' ' if ident else ''                   # const int< >foo = 3
-    if type.storage == Decls.INTERFACE:
-      s += '&'                                  # Object_Interface <&>self
-    if constref:
-      s += '&'                                  # const String <&>foo = "bar"
-    s += ident                                  # const int <foo> = 3
+      s += 'const '                             # {const }Obj &foo = 3
+    s += self.C (type)                          # const {Obj} &foo = 3
+    s += ' ' if ident else ''                   # const Obj{ }&foo = 3
+    if type.storage == Decls.INTERFACE or constref:
+      s += '&'                                  # const Obj {&}foo = 3
+    s += ident                                  # const Obj &{foo} = 3
     if defaultinit != None:
       if type.storage == Decls.ENUM:
-        s += ' = %s (%s)' % (self.type2cpp (type), defaultinit)
+        s += ' = %s (%s)' % (self.C (type), defaultinit)
       elif type.storage in (Decls.SEQUENCE, Decls.RECORD):
-        s += ' = %s()' % self.type2cpp (type)
+        s += ' = %s()' % self.C (type)
       elif type.storage == Decls.INTERFACE:
         s += ' = *(%s*) NULL' % self.C (type)
       else:
         s += ' = %s' % defaultinit
     return s
-  def format_call_args (self, ftype, prefix, argindent = 2, mode = None):
+  def format_call_args (self, ftype, prefix, argindent = 2):
     l = []
     for a in ftype.args:
-      l += [ self.format_arg (prefix + a[0], a[1], mode = mode) ]
+      l += [ self.format_arg (prefix + a[0], a[1]) ]
     return (',\n' + argindent * ' ').join (l)
   def use_arg (self, ident, type, interfacechar = '*'):
     s = ''
@@ -270,11 +267,11 @@ class Generator:
     if type.storage == Decls.STRING:
       return '""'
     if type.storage == Decls.ENUM:
-      return self.type2cpp (type) + ' (0)'
+      return self.C (type) + ' (0)'
     if type.storage == Decls.RECORD:
-      return self.type2cpp (type) + '()'
+      return self.C (type) + '()'
     if type.storage == Decls.SEQUENCE:
-      return self.type2cpp (type) + '()'
+      return self.C (type) + '()'
     return '0'
   def generate_recseq_decl (self, type_info):
     s = ''
@@ -335,7 +332,7 @@ class Generator:
       if type.storage in (Decls.RECORD, Decls.SEQUENCE):
         s += '  if (!%s.proto_pop (%s, %s)) %s;\n' % (ident, cpl, fbr, onerr)
       elif type.storage == Decls.ENUM:
-        s += '  %s = %s (%s.pop_evalue());\n' % (ident, self.type2cpp (type), fbr)
+        s += '  %s = %s (%s.pop_evalue());\n' % (ident, self.C (type), fbr)
       elif type.storage == Decls.INTERFACE:
         op_ptr = '.operator->()' if self.gen4class == C4INTERFACE else ''
         s += '  %s = %s (%s, %s)%s;\n' \
@@ -387,7 +384,7 @@ class Generator:
                                                          [('(*this)', type_info.elements[1])],
                                                          '[k]')) + '\n'
     elif el[1].storage == Decls.ENUM:
-      s += '    this->push_back (%s (fbr.pop_evalue()));\n' % self.type2cpp (el[1])
+      s += '    this->push_back (%s (fbr.pop_evalue()));\n' % self.C (el[1])
 
     elif el[1].storage == Decls.INTERFACE:
       s += '    this->push_back (%s (cpl, fbr));\n' % self.C (el[1])
@@ -539,6 +536,7 @@ class Generator:
     s += '}\n'
     return s
   def generate_server_signal_dispatcher (self, class_info, stype, reglines):
+    assert self.gen4class == C4INTERFACE
     s = ''
     therr = 'THROW_ERROR()'
     dispatcher_name = '_dispatch__%s_%s' % (class_info.name, stype.name)
@@ -558,7 +556,7 @@ class Generator:
     cpp_rtype = self.R (stype.rtype)
     s += '  static %s\n' % cpp_rtype
     s += '  handler ('
-    s += self.format_call_args (stype, 'arg_', 11, C4INTERFACE) + (',\n           ' if stype.args else '')
+    s += self.format_call_args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
     s += 'SharedPtr sp)\n  {\n'
     s += '    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + %u);\n' % len (stype.args)
     s += '    fb.add_int64 (Plic::msgid_event);\n' # self.method_digest (stype)
@@ -869,7 +867,7 @@ class Generator:
           s += '\n'
         elif tp.typedef_origin:
           s += self.open_namespace (tp)
-          s += 'typedef %s %s;\n' % (self.type2cpp (tp.typedef_origin), tp.name)
+          s += 'typedef %s %s;\n' % (self.C (tp.typedef_origin), tp.name)
         elif tp.storage in (Decls.RECORD, Decls.SEQUENCE):
           s += self.open_namespace (tp)
           s += self.generate_recseq_decl (tp) + '\n'
