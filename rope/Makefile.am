@@ -43,16 +43,16 @@ $(srcdir)/py-rope.cc: cpy2rope.cc
 CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
 
 # === cxx-client ===
-cxx-client.hh: $(RAPICORNIDL) $(HARDCODEDIDL) $(RAPICORNINS) $(srcdir)/CxxCaller.py
+cxx-client.hh: $(RAPICORNIDL) $(HARDCODEDIDL) $(RAPICORNINS) $(srcdir)/CxxStub.py
 	: # build cxx-client.hh from interfaces.idl
-	: # ${PLICINT} -G $(srcdir)/CxxCaller -g clienthh $(HARDCODEDIDL) -o xgen-$(@F)
-	${PLICINT} -G $(srcdir)/CxxCaller -g clienthh $(RAPICORNIDL) -g shortalias \
+	: # ${PLICINT} -G $(srcdir)/CxxStub -g clienthh $(HARDCODEDIDL) -o xgen-$(@F)
+	${PLICINT} -G $(srcdir)/CxxStub -g clienthh $(RAPICORNIDL) -g shortalias \
 	  --insertions $(RAPICORNINS) -o xgen-$(@F)
 	mv xgen-$(@F) $@
-cxx-client.cc: $(RAPICORNIDL) $(HARDCODEDIDL) $(srcdir)/CxxCaller.py
+cxx-client.cc: $(RAPICORNIDL) $(HARDCODEDIDL) $(srcdir)/CxxStub.py
 	: # build cxx-client.cc from interfaces.idl
-	: # ${PLICINT} -G $(srcdir)/CxxCaller -g clientcc $(HARDCODEDIDL) --inclusions '"cxx-client.hh"' -o xgen-$(@F)
-	${PLICINT} -G $(srcdir)/CxxCaller -g clientcc $(RAPICORNIDL) --inclusions '"cxx-client.hh"' -o - > xgen-$(@F)
+	: # ${PLICINT} -G $(srcdir)/CxxStub -g clientcc $(HARDCODEDIDL) --inclusions '"cxx-client.hh"' -o xgen-$(@F)
+	${PLICINT} -G $(srcdir)/CxxStub -g clientcc $(RAPICORNIDL) --inclusions '"cxx-client.hh"' -o - > xgen-$(@F)
 	mv xgen-$(@F) $@
 $(srcdir)/cxx-rope.cc: cxx-client.hh cxx-client.cc
 CLEANFILES += xgen-cxx-client.hh xgen-cxx-client.cc cxx-client.hh cxx-client.cc
@@ -87,35 +87,35 @@ check-CxxPyStub-syntax: $(srcdir)/testcxxpystub.ref
 	$(Q) $(CXXCOMPILE) testcxxpystub.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxpystub.cc testcxxpystub.o
 check-local: check-CxxPyStub-gen check-CxxPyStub-syntax
-# test CxxCaller server and client
-check-CxxCaller-server-gen: $(srcdir)/testcxxserver.ref
-	$(Q) ${PLICINT} -G $(srcdir)/CxxCaller -g iface-prefix=I_ -g serverhh -g servercc \
+# test CxxStub server and client
+check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
+	$(Q) ${PLICINT} -G $(srcdir)/CxxStub -g iface-prefix=I_ -g serverhh -g servercc \
 	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testcxxserver.ref'"
-check-CxxCaller-client-gen: $(srcdir)/testcxxclient.ref
-	$(Q) ${PLICINT} -G $(srcdir)/CxxCaller -g iface-prefix=I_ -g clienthh -g clientcc \
+check-CxxStub-client-gen: $(srcdir)/testcxxclient.ref
+	$(Q) ${PLICINT} -G $(srcdir)/CxxStub -g iface-prefix=I_ -g clienthh -g clientcc \
 	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testcxxclient.ref'"
-check-CxxCaller-skeleton-gen: $(srcdir)/testcxxskels.ref
+check-CxxStub-skeleton-gen: $(srcdir)/testcxxskels.ref
 	$(Q) echo -e "#include <rapicorn.hh>\n" > $(TSTOUT)
-	$(Q) ${PLICINT} -G $(srcdir)/CxxCaller -g iface-prefix=I_ -g serverhh -g server-skel \
+	$(Q) ${PLICINT} -G $(srcdir)/CxxStub -g iface-prefix=I_ -g serverhh -g server-skel \
 	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testcxxskels.ref'"
-check-CxxCaller-server-code: $(srcdir)/testcxxserver.ref
+check-CxxStub-server-code: $(srcdir)/testcxxserver.ref
 	$(Q) cp $(srcdir)/testcxxserver.ref testcxxserver.cc
 	$(Q) $(CXXCOMPILE) -D__RAPICORN_BUILD__  testcxxserver.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxserver.cc testcxxserver.o
-check-CxxCaller-client-code: $(srcdir)/testcxxclient.ref
+check-CxxStub-client-code: $(srcdir)/testcxxclient.ref
 	$(Q) cp $(srcdir)/testcxxclient.ref testcxxclient.cc
 	$(Q) $(CXXCOMPILE) testcxxclient.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxclient.cc testcxxclient.o
-check-CxxCaller-skeleton-code: $(srcdir)/testcxxskels.ref
+check-CxxStub-skeleton-code: $(srcdir)/testcxxskels.ref
 	$(Q) cp $(srcdir)/testcxxskels.ref testcxxskels.cc
 	$(Q) $(CXXCOMPILE) testcxxskels.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxskels.cc testcxxskels.o
-EXTRA_DIST += CxxCaller.py testcxxserver.ref testcxxclient.ref testcxxskels.ref
-check-local: check-CxxCaller-server-gen check-CxxCaller-client-gen check-CxxCaller-skeleton-gen
-check-local: check-CxxCaller-server-code check-CxxCaller-client-code check-CxxCaller-skeleton-code
+EXTRA_DIST += CxxStub.py testcxxserver.ref testcxxclient.ref testcxxskels.ref
+check-local: check-CxxStub-server-gen check-CxxStub-client-gen check-CxxStub-skeleton-gen
+check-local: check-CxxStub-server-code check-CxxStub-client-code check-CxxStub-skeleton-code
 # test interfaces.idl with PLIC
 check-rapicorn-idl:
 	$(Q) ${PLICINT} $(RAPICORNIDL) > /dev/null ; eval "$$TSTDIAGNOSE"
