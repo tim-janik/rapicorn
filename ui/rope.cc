@@ -94,7 +94,7 @@ private:
     (*m_loop).add_source (esource, EventLoop::PRIORITY_NORMAL);
     esource->primary (false);
     m_init->mutex.lock();
-    m_init->app_id = Application_SmartHandle (ApplicationImpl::the())._rpc_id();
+    m_init->app_id = connection_object2id (ApplicationImpl::the());
     m_init->cond.signal();
     m_init->mutex.unlock();
     m_init = NULL;

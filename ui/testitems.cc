@@ -24,7 +24,7 @@
 
 namespace Rapicorn {
 
-Application_SmartHandle
+ApplicationIface&
 init_test_app (const String       &app_ident,
                int                *argcp,
                char              **argv,

@@ -19,12 +19,12 @@ rapicorn_public_headers = $(strip	\
 	ui.hh	utilities.hh	viewp0rt.hh	window.hh	\
 	$(rapicorn_impl_headers)	\
 )
-rapicorn_cc_sources = $(strip	\
+rapicorn_cc_sources = $(strip	interfaces.cc   clientapi.cc \
 	adjustment.cc	application.cc	arrangement.cc	\
 	blit-mmx.cc	blitfuncs.cc	buttons.cc	\
 	cmdlib.cc	coffer.cc	commands.cc	compath.cc	container.cc	\
 	evaluator.cc	events.cc	factory.cc	heritage.cc	\
-	image.cc	interfaces.cc	item.cc		\
+	image.cc	item.cc		\
 	layoutcontainers.cc	listarea.cc	loop.cc		\
 	paintcontainers.cc	painter.cc	paintitems.cc	primitives.cc	properties.cc	\
 	region.cc	regionimpl.c	rope.cc	\
@@ -41,6 +41,7 @@ rapicorn_impl_headers = $(strip 	\
 )
 rapicorn_generated_headers = $(strip	\
 	interfaces.hh			\
+	clientapi.cc			\
 )
 rapicorn_private_files = $(strip 	\
 	blitfuncs.hh			\
@@ -80,23 +81,31 @@ EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPEN
 ROPE        = $(srcdir)/../rope
 PLICINT     = $(top_builddir)/plic/plic-intern
 EXTRA_DIST += interfaces.idl insertions.cc hardcoded.idl
+# build interfaces.{hh|cc} and clientapi.{hh|cc} from interfaces.idl
+$(rapicorn_cc_sources): interfaces.hh clientapi.hh
 interfaces.hh: $(ROPE)/CxxStub.py $(srcdir)/interfaces.idl $(srcdir)/insertions.cc
-	: # build interfaces.hh from interfaces.idl
-	${PLICINT} -G $(ROPE)/CxxStub -g serverhh \
-	  -g iface-base=BaseObject -g iface-postfix=Iface \
+	${PLICINT} -G $(ROPE)/CxxStub -g serverhh -g iface-base=BaseObject -g iface-postfix=Iface \
 	  -g shortalias -g cppguard=__RAPICORN_INTERFACE_HH_ \
 	  --insertions $(srcdir)/insertions.cc $(srcdir)/interfaces.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
-$(rapicorn_cc_sources): interfaces.hh
-CLEANFILES += xgen-interfaces.hh interfaces.hh
 interfaces.cc: $(ROPE)/CxxStub.py $(srcdir)/interfaces.idl interfaces.hh
-	: # build interfaces.cc from interfaces.idl
 	echo "#define PLIC_CALL_REMOTE // dummy" > xgen-$(@F)
-	${PLICINT} -G $(ROPE)/CxxStub -g servercc \
-	  -g iface-base=BaseObject -g iface-postfix=Iface \
+	${PLICINT} -G $(ROPE)/CxxStub -g servercc -g iface-base=BaseObject -g iface-postfix=Iface \
 	  --inclusions '"item.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
-CLEANFILES += interfaces.cc
+CLEANFILES += interfaces.cc interfaces.hh
+EXTRA_DIST += clientinsert.cc
+clientapi.hh: $(ROPE)/CxxStub.py $(srcdir)/interfaces.idl $(srcdir)/clientinsert.cc
+	${PLICINT} -G $(ROPE)/CxxStub -g clienthh -g iface-base=BaseObject -g iface-postfix=Iface \
+	  -g shortalias -g cppguard=__RAPICORN_CLIENTAPI_HH_ \
+	  --insertions $(srcdir)/clientinsert.cc $(srcdir)/interfaces.idl -o xgen-$(@F)
+	mv xgen-$(@F) $@
+clientapi.cc: $(ROPE)/CxxStub.py $(srcdir)/interfaces.idl clientapi.hh
+	echo "#define PLIC_CALL_REMOTE // dummy" > xgen-$(@F)
+	${PLICINT} -G $(ROPE)/CxxStub -g clientcc -g iface-base=BaseObject -g iface-postfix=Iface \
+	  --inclusions '"clientapi.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
+	mv xgen-$(@F) $@
+CLEANFILES += clientapi.cc clientapi.hh
 # generate skeletons for non-virtual methods, skipping existing symbols
 skeletons.cc: $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS)
 	for obj in $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS) ; do case "$$obj" in \

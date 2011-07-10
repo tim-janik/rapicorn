@@ -50,9 +50,18 @@ static struct _DummyCoupler : public Coupler {
   }
 } _plic_coupler_static;
 #endif
-
 } // Anonymous
 #endif // __PLIC_GENERIC_CC_BOILERPLATE__
+"""
+
+servercc_boilerplate = r""" """
+
+clientcc_boilerplate = r"""
+template<class O>
+O       connection_id2handle (uint64 id) { return *(O*) &connection_id2handle<Plic::SmartHandle> (id); } // FIXME
+template<>
+Plic::SmartHandle connection_id2handle<Plic::SmartHandle> (uint64 id) { return *(Plic::SmartHandle*) NULL; } // FIXME
+uint64  connection_handle2id (const Plic::SmartHandle &h) { return 0; } // FIXME
 """
 
 FieldBuffer = 'Plic::FieldBuffer'
@@ -96,14 +105,16 @@ class Generator:
   def C4server (self, type_node):
     tname = self.type2cpp (type_node)
     if type_node.storage in (Decls.SEQUENCE, Decls.RECORD):
-      return tname
+      return tname + "Impl"     # FIXME
     elif type_node.storage == Decls.INTERFACE:
       return self.Iwrap (tname)
     else:
       return tname
   def C4client (self, type_node):
     tname = self.type2cpp (type_node)
-    if type_node.storage == Decls.INTERFACE:
+    if type_node.storage in (Decls.SEQUENCE, Decls.RECORD):
+      return tname + "_Handle"  # FIXME
+    elif type_node.storage == Decls.INTERFACE:
       return self.H (tname)
     return tname
   def C (self, type_node, mode = None):                 # construct Class name
@@ -271,10 +282,10 @@ class Generator:
       return self.C (type) + '()'
     return '0'
   def generate_recseq_decl (self, type_info):
-    s = ''
+    s = '\n'
     if type_info.storage == Decls.SEQUENCE:
       fl = type_info.elements
-      s += 'struct ' + self.C (type_info) + ' : public std::vector<' + self.C (fl[1]) + '> {\n'
+      s += 'struct ' + self.C (type_info) + ' : public std::vector<' + self.R (fl[1]) + '> {\n'
     else:
       s += 'struct %s {\n' % self.C (type_info)
     if type_info.storage == Decls.RECORD:
@@ -282,19 +293,20 @@ class Generator:
       for fl in fieldlist:
         s += '  ' + self.F (self.C (fl[1])) + fl[0] + ';\n'
     elif type_info.storage == Decls.SEQUENCE:
-      s += '  typedef std::vector<' + self.C (fl[1]) + '> Sequence;\n'
+      s += '  typedef std::vector<' + self.R (fl[1]) + '> Sequence;\n'
       s += '  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;\n'
       s += '  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);\n'
     if type_info.storage == Decls.RECORD:
       s += '  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;\n'
       s += '  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);\n'
-      s += '  inline %s () {' % type_info.name
+      s += '  inline %s () {' % self.C (type_info)
       for fl in fieldlist:
         if fl[1].storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
           s += " %s = %s;" % (fl[0], self.mkzero (fl[1]))
       s += ' }\n'
-    s += self.insertion_text ('class_scope:' + type_info.name)
-    s += '};'
+      s += self.insertion_text ('class_scope:' + type_info.name)
+    s += '};\n'
+    s += self.generate_shortalias (type_info)   # typedef alias
     return s
   def accessor_name (self, decls_type):
     # map Decls storage to FieldBuffer accessors
@@ -313,9 +325,10 @@ class Generator:
       ident = aprefix + ident + apostfix
       if type.storage in (Decls.RECORD, Decls.SEQUENCE):
         s += '  if (!%s.proto_add (%s, %s)) %s;\n' % (ident, cpl, fb, onerr) # FIXME cpl var
-      elif type.storage == Decls.INTERFACE:
-        s += '  %s.add_object (%s._rpc_id());\n' % (fb, ident)
-        # if not self.gen_clientcc: s += '  %s.add_object (%s (%s)._rpc_id());\n' % (fb, type.name, ident)
+      elif type.storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
+        s += '  %s.add_object (connection_object2id (%s));\n' % (fb, ident)
+      elif type.storage == Decls.INTERFACE: # G4CLIENT
+        s += '  %s.add_object (connection_handle2id (%s));\n' % (fb, ident)
       else:
         s += '  %s.add_%s (%s);\n' % (fb, self.accessor_name (type.storage), ident)
     return s
@@ -324,28 +337,28 @@ class Generator:
     s = ''
     cpl, fbr = cplfbr
     for arg_it in arg_info_list:
-      ident, type = arg_it
+      ident, type_node = arg_it
       ident = aprefix + ident + apostfix
-      if type.storage in (Decls.RECORD, Decls.SEQUENCE):
+      if type_node.storage in (Decls.RECORD, Decls.SEQUENCE):
         s += '  if (!%s.proto_pop (%s, %s)) %s;\n' % (ident, cpl, fbr, onerr)
-      elif type.storage == Decls.ENUM:
-        s += '  %s = %s (%s.pop_evalue());\n' % (ident, self.C (type), fbr)
-      elif type.storage == Decls.INTERFACE:
-        op_ptr = '.operator->()' if self.gen_mode == G4SERVER else ''
-        s += '  %s = %s (%s, %s)%s;\n' \
-            % (ident, self.C (type, G4CLIENT), cpl, fbr, op_ptr)
+      elif type_node.storage == Decls.ENUM:
+        s += '  %s = %s (%s.pop_evalue());\n' % (ident, self.C (type_node), fbr)
+      elif type_node.storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
+        s += '  %s = connection_id2object<%s> (%s.pop_object());\n' % (ident, self.C (type_node), fbr)
+      elif type_node.storage == Decls.INTERFACE: # G4CLIENT
+        s += '  %s = connection_id2handle<%s> (%s.pop_object());\n' % (ident, self.C (type_node), fbr)
       else:
-        s += '  %s = %s.pop_%s();\n' % (ident, fbr, self.accessor_name (type.storage))
+        s += '  %s = %s.pop_%s();\n' % (ident, fbr, self.accessor_name (type_node.storage))
     return s
   def generate_record_impl (self, type_info):
     s = ''
     cplfb = ('cpl', 'fb')
-    s += 'bool\n%s::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const\n{\n' % type_info.name
+    s += 'bool\n%s::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const\n{\n' % self.C (type_info)
     s += '  ' + FieldBuffer + ' &fb = dst.add_rec (%u);\n' % len (type_info.fields)
     s += self.generate_proto_add_args (cplfb, type_info, 'this->', type_info.fields, '')
     s += '  return true;\n'
     s += '}\n'
-    s += 'bool\n%s::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)\n{\n' % type_info.name
+    s += 'bool\n%s::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)\n{\n' % self.C (type_info)
     s += '  ' + FieldBuffer + 'Reader fbr (src.pop_rec());\n'
     s += '  if (fbr.remaining() != %u) return false;\n' % len (type_info.fields)
     cplfbr = ('cpl', 'fbr')
@@ -358,7 +371,7 @@ class Generator:
     cplfb = ('cpl', 'fb')
     cplfbr = ('cpl', 'fbr')
     el = type_info.elements
-    s += 'bool\n%s::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const\n{\n' % type_info.name
+    s += 'bool\n%s::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const\n{\n' % self.C (type_info)
     s += '  const size_t len = this->size();\n'
     s += '  ' + FieldBuffer + ' &fb = dst.add_seq (len);\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
@@ -368,7 +381,7 @@ class Generator:
     s += '  }\n'
     s += '  return true;\n'
     s += '}\n'
-    s += 'bool\n%s::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)\n{\n' % type_info.name
+    s += 'bool\n%s::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)\n{\n' % self.C (type_info)
     s += '  ' + FieldBuffer + 'Reader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
     if el[1].storage in (Decls.RECORD, Decls.SEQUENCE):
@@ -382,9 +395,10 @@ class Generator:
                                                          '[k]')) + '\n'
     elif el[1].storage == Decls.ENUM:
       s += '    this->push_back (%s (fbr.pop_evalue()));\n' % self.C (el[1])
-
-    elif el[1].storage == Decls.INTERFACE:
-      s += '    this->push_back (%s (cpl, fbr));\n' % self.C (el[1])
+    elif el[1].storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
+      s += '    this->push_back (connection_id2object<%s> (fbr.pop_object()));\n' % self.C (el[1])
+    elif el[1].storage == Decls.INTERFACE: # G4CLIENT
+      s += '    this->push_back (connection_id2handle<%s> (fbr.pop_object()));\n' % self.C (el[1])
     else:
       s += '    this->push_back (fbr.pop_%s());\n' % self.accessor_name (el[1].storage)
     s += '  }\n'
@@ -482,8 +496,6 @@ class Generator:
     cplrb = (cplfbr[0], 'rb')
     s += '  FieldBuffer &rb = *FieldBuffer::new_result();\n'
     rval = 'rval'
-    if ftype.storage == Decls.INTERFACE:
-      rval = '%s (rval)' % self.H (ftype.name) # FooBase -> Foo smart handle
     s += self.generate_proto_add_args (cplrb, class_info, '', [(rval, ftype)], '')
     s += '  return &rb;\n'
     s += '}\n'
@@ -526,8 +538,6 @@ class Generator:
       cplrb = (cplfbr[0], 'rb')
       s += '  FieldBuffer &rb = *FieldBuffer::new_result();\n'
       rval = 'rval'
-      if mtype.rtype.storage == Decls.INTERFACE:
-        rval = '%s (rval)' % self.H (mtype.rtype.name) # FooBase -> Foo smart handle
       s += self.generate_proto_add_args (cplrb, class_info, '', [(rval, mtype.rtype)], '')
       s += '  return &rb;\n'
     else:
@@ -655,7 +665,7 @@ class Generator:
     s += ';\n'
     return s
   def generate_interface_class (self, type_info):
-    s = ''
+    s = '\n'
     l = []
     # declare and inherit
     for pr in type_info.prerequisites:
@@ -717,11 +727,14 @@ class Generator:
       s += '{ return _is_null() ? NULL : _unspecified_bool_true(); }\n' # avoids auto-bool conversions on: float (*this)
     s += self.insertion_text ('class_scope:' + self.C (type_info))
     s += '};\n'
-    # aliasing
-    if self.gen_shortalias and self.gen_mode in (G4SERVER,):
-      s += '// typedef %s %s;\n' % (self.C (type_info), self.type2cpp (type_info))
-    elif self.gen_shortalias and self.gen_mode in (G4CLIENT,):
-      s += 'typedef %s %s;\n' % (self.C (type_info), self.type2cpp (type_info))
+    s += self.generate_shortalias (type_info)   # typedef alias
+    return s
+  def generate_shortalias (self, type_info):
+    if not self.gen_shortalias: return ''
+    s = ''
+    if type_info.storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
+      s += '// '
+    s += 'typedef %s %s;\n' % (self.C (type_info), self.type2cpp (type_info))
     return s
   def generate_interface_impl (self, type_info):
     s = ''
@@ -774,7 +787,7 @@ class Generator:
       s += self.generate_virtual_method_skel (m, type_info)
     return s
   def generate_enum_decl (self, type_info):
-    s = ''
+    s = '\n'
     l = []
     s += 'enum %s {\n' % type_info.name
     for opt in type_info.options:
@@ -783,7 +796,7 @@ class Generator:
       if blurb:
         s += ' // %s' % re.sub ('\n', ' ', blurb)
       s += '\n'
-    s += '};'
+    s += '};\n'
     return s
   def insertion_text (self, key):
     text = self.insertions.get (key, '')
@@ -822,6 +835,7 @@ class Generator:
     w = re.findall (r'([a-zA-Z_][a-zA-Z_0-9$:]*)', txt)
     self.skip_symbols.update (set (w))
   def generate_impl_types (self, implementation_types):
+    self.gen_mode = G4SERVER if self.gen_serverhh or self.gen_servercc else G4CLIENT
     s = '/* --- Generated by PLIC-CxxStub --- */\n'
     # CPP guard
     if self.cppguard:
@@ -840,11 +854,12 @@ class Generator:
       s += clienthh_boilerplate
     if self.gen_serverhh:
       s += serverhh_boilerplate
-    if self.gen_clientcc or self.gen_servercc:
-      s += gencc_boilerplate + '\n'
+    if self.gen_clientcc:
+      s += gencc_boilerplate + '\n' + clientcc_boilerplate + '\n'
+    if self.gen_servercc:
+      s += gencc_boilerplate + '\n' + servercc_boilerplate + '\n'
     self.tab_stop (16)
     s += self.open_namespace (None)
-    self.gen_mode = G4CLIENT
     # collect impl types
     types = []
     for tp in implementation_types:
@@ -852,49 +867,47 @@ class Generator:
         types += [ tp ]
     # generate client/server decls
     if self.gen_clienthh or self.gen_serverhh:
+      self.gen_mode = G4SERVER if self.gen_serverhh else G4CLIENT
       s += '\n// --- Interfaces (class declarations) ---\n'
       for tp in types:
         if tp.is_forward:
           s += self.open_namespace (tp) + '\n'
           if self.gen_serverhh:
-            self.gen_mode = G4SERVER
             s += 'class %s;\n' % self.C (tp)    # G4SERVER
             self.gen_mode = C4OLDHANDLE
             s += 'class %s;\n' % self.C (tp)    # C4OLDHANDLE
-            self.gen_mode = G4CLIENT
+            self.gen_mode = G4SERVER
           elif self.gen_clienthh:
             s += 'class %s;\n' % self.C (tp)    # G4CLIENT
-          s += '\n'
         elif tp.typedef_origin:
-          s += self.open_namespace (tp)
+          s += self.open_namespace (tp) + '\n'
           s += 'typedef %s %s;\n' % (self.C (tp.typedef_origin), tp.name)
         elif tp.storage in (Decls.RECORD, Decls.SEQUENCE):
-          s += self.open_namespace (tp)
-          s += self.generate_recseq_decl (tp) + '\n'
+          if self.gen_serverhh:
+            s += self.open_namespace (tp)
+            s += self.generate_recseq_decl (tp)
+          if self.gen_clienthh:
+            s += self.open_namespace (tp)
+            s += self.generate_recseq_decl (tp)
         elif tp.storage == Decls.ENUM:
           s += self.open_namespace (tp)
-          s += self.generate_enum_decl (tp) + '\n'
+          s += self.generate_enum_decl (tp)
         elif tp.storage == Decls.INTERFACE:
-          s += '\n'
           if self.gen_clienthh and not self.gen_serverhh:
             s += self.open_namespace (tp)
-            s += self.generate_interface_class (tp) + '\n' # Class smart handle
+            s += self.generate_interface_class (tp)     # Class smart handle
           if self.gen_serverhh:
-            self.gen_mode = G4SERVER
             if tp.name in self.skip_classes:
               s += self.open_namespace (None) # close all namespaces
               s += '\n'
               s += self.insertion_text ('filtered_class_hh:' + tp.name)
             else:
               s += self.open_namespace (tp)
-              s += self.generate_interface_class (tp) + '\n' # Class_Interface server base
-            self.gen_mode = C4OLDHANDLE
-            s += self.open_namespace (tp)
-            s += self.generate_interface_class (tp) + '\n' # Class smart handle
-            self.gen_mode = G4CLIENT
+              s += self.generate_interface_class (tp)   # Class_Interface server base
       s += self.open_namespace (None)
     # generate client/server impls
     if self.gen_clientcc or self.gen_servercc:
+      self.gen_mode = G4SERVER if self.gen_servercc else G4CLIENT
       s += '\n// --- Implementations ---\n'
       for tp in types:
         if tp.typedef_origin or tp.is_forward:
@@ -907,14 +920,12 @@ class Generator:
           s += self.generate_sequence_impl (tp) + '\n'
         elif tp.storage == Decls.INTERFACE:
           if self.gen_servercc:
-            self.gen_mode = G4SERVER
             if tp.name in self.skip_classes:
               s += self.open_namespace (None) # close all namespaces
               s += self.insertion_text ('filtered_class_cc:' + tp.name)
             else:
               s += self.open_namespace (tp)
               s += self.generate_interface_impl (tp) + '\n'
-            self.gen_mode = G4CLIENT
           if self.gen_clientcc and tp.fields:
             s += self.open_namespace (tp)
             for fl in tp.fields:
@@ -925,8 +936,8 @@ class Generator:
               s += self.generate_client_method_stub (tp, m)
     # generate unmarshalling server calls
     if self.gen_servercc:
-      s += '\n// --- Method Dispatchers & Registry ---\n'
       self.gen_mode = G4SERVER
+      s += '\n// --- Method Dispatchers & Registry ---\n'
       reglines = []
       for tp in types:
         if tp.typedef_origin or tp.is_forward:
@@ -943,17 +954,15 @@ class Generator:
           s += '\n'
       s += self.generate_server_method_registry (reglines) + '\n'
       s += self.open_namespace (None)
-      self.gen_mode = G4CLIENT
     # generate interface method skeletons
     if self.gen_server_skel:
-      s += '\n// --- Interface Skeletons ---\n'
       self.gen_mode = G4SERVER
+      s += '\n// --- Interface Skeletons ---\n'
       for tp in types:
         if tp.typedef_origin or tp.is_forward:
           continue
         elif tp.storage == Decls.INTERFACE and not tp.name in self.skip_classes:
           s += self.generate_interface_skel (tp)
-      self.gen_mode = G4CLIENT
     s += self.open_namespace (None) # close all namespaces
     s += '\n'
     s += self.insertion_text ('global_scope')

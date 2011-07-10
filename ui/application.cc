@@ -30,7 +30,7 @@ ApplicationImpl::the ()
   return *the_app;
 }
 
-Application_SmartHandle
+ApplicationIface&
 init_app (const String       &app_ident,
           int                *argcp,
           char              **argv,

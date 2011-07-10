@@ -15,11 +15,11 @@ IGNORE:
 struct DUMMY { // dummy class for auto indentation
 
 class_scope:Requisition:
-  inline Requisition (double w, double h) : width (w), height (h) {}
+  inline RequisitionImpl (double w, double h) : width (w), height (h) {}
 
 class_scope:StringList:
-  /*Con*/  StringList () {}
-  /*Con*/  StringList (const std::vector<String> &strv) : Sequence (strv) {}
+  /*Con*/  StringListImpl () {}
+  /*Con*/  StringListImpl (const std::vector<String> &strv) : Sequence (strv) {}
 
 class_scope:ItemIface:
   ItemImpl&       impl ();
@@ -50,12 +50,12 @@ IGNORE: // close last _scope
 
 global_scope:
 namespace Rapicorn {
-Application_SmartHandle init_app      (const String       &app_ident,
-                                       int                *argcp,
-                                       char              **argv,
-                                       const StringVector &args = StringVector());
-Application_SmartHandle init_test_app (const String       &app_ident,
-                                       int                *argcp,
-                                       char              **argv,
-                                       const StringVector &args = StringVector());
+ApplicationIface& init_app      (const String       &app_ident,
+                                 int                *argcp,
+                                 char              **argv,
+                                 const StringVector &args = StringVector());
+ApplicationIface& init_test_app (const String       &app_ident,
+                                 int                *argcp,
+                                 char              **argv,
+                                 const StringVector &args = StringVector());
 } // Rapicorn
