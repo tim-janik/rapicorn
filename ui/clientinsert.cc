@@ -1,13 +1,11 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 
-// PLIC insertion file
-// Here we provide insertion snippets to be included in struct
-// definitions when generating interfaces.hh from interfaces.idl
+// PLIC insertion file for Client stubs
 
 includes:
 #include <ui/utilities.hh>
 namespace Rapicorn {
-class ItemImpl;
+class ItemImpl; // FIXME
 class WindowImpl;
 }
 
@@ -15,19 +13,11 @@ IGNORE:
 struct DUMMY { // dummy class for auto indentation
 
 class_scope:Requisition:
-  inline RequisitionImpl (double w, double h) : width (w), height (h) {}
+  inline Requisition_Handle (double w, double h) : width (w), height (h) {}
 
 class_scope:StringList:
-  /*Con*/  StringListImpl () {}
-  /*Con*/  StringListImpl (const std::vector<String> &strv) : Sequence (strv) {}
-
-class_scope:ItemIface:
-  ItemImpl&       impl ();
-  const ItemImpl& impl () const;
-
-class_scope:Wind0wIface:
-  WindowImpl&       impl ();
-  const WindowImpl& impl () const;
+  /*Con*/  StringList_Handle () {}
+  /*Con*/  StringList_Handle (const std::vector<String> &strv) : Sequence (strv) {}
 
 class_scope:ApplicationIface:
   static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
@@ -50,12 +40,14 @@ IGNORE: // close last _scope
 
 global_scope:
 namespace Rapicorn {
-ApplicationIface& init_app      (const String       &app_ident,
-                                 int                *argcp,
-                                 char              **argv,
-                                 const StringVector &args = StringVector());
-ApplicationIface& init_test_app (const String       &app_ident,
-                                 int                *argcp,
-                                 char              **argv,
-                                 const StringVector &args = StringVector());
+/*
+  Application_SmartHandle init_app      (const String       &app_ident,
+                                       int                *argcp,
+                                       char              **argv,
+                                       const StringVector &args = StringVector());
+Application_SmartHandle init_test_app (const String       &app_ident,
+                                       int                *argcp,
+                                       char              **argv,
+                                       const StringVector &args = StringVector());
+*/
 } // Rapicorn

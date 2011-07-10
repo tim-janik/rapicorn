@@ -1,5 +1,5 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include <ui/interfaces.hh> // includes <ui/item.hh> after ItemIface declaration
+#include <ui/serverapi.hh> // includes <ui/item.hh> after ItemIface declaration
 
 #ifndef __RAPICORN_ITEM_HH_
 #define __RAPICORN_ITEM_HH_

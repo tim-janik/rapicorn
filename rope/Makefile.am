@@ -8,7 +8,7 @@ INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. \
 DEFS      = -DRAPICORN_CONVENIENCE -D__SOURCE_FILE__='"$(patsubst $(realpath $(abs_top_srcdir))/%,%, $(realpath $<))"'
 PLICINT   = $(top_builddir)/plic/plic-intern
 RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
-RAPICORNINS  = $(srcdir)/../ui/insertions.cc
+RAPICORNINS  = $(srcdir)/../ui/serverinsert.cc
 HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
 
 # === CxxRapicorn ===
