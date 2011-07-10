@@ -93,15 +93,25 @@ class Generator:
     return fullnsname
   def H (self, name):                                   # construct client class Handle
     return name + '_SmartHandle'
-  def C (self, type_node, mode = None):                 # construct Class name
+  def C4server (self, type_node):
     tname = self.type2cpp (type_node)
-    if type_node.storage != Decls.INTERFACE:
+    if type_node.storage in (Decls.SEQUENCE, Decls.RECORD):
       return tname
+    elif type_node.storage == Decls.INTERFACE:
+      return self.Iwrap (tname)
+    else:
+      return tname
+  def C4client (self, type_node):
+    tname = self.type2cpp (type_node)
+    if type_node.storage == Decls.INTERFACE:
+      return self.H (tname)
+    return tname
+  def C (self, type_node, mode = None):                 # construct Class name
     mode = mode or self.gen_mode
     if mode == G4SERVER:
-      return self.Iwrap (tname)
-    else: # mode in (G4CLIENT, C4OLDHANDLE):
-      return self.H (tname)
+      return self.C4server (type_node)
+    else: # G4CLIENT or C4OLDHANDLE
+      return self.C4client (type_node)
   def R (self, type_node):                              # construct Return type
     tname = self.C (type_node)
     if self.gen_mode == G4SERVER:
@@ -264,9 +274,9 @@ class Generator:
     s = ''
     if type_info.storage == Decls.SEQUENCE:
       fl = type_info.elements
-      s += 'struct ' + type_info.name + ' : public std::vector<' + self.C (fl[1]) + '> {\n'
+      s += 'struct ' + self.C (type_info) + ' : public std::vector<' + self.C (fl[1]) + '> {\n'
     else:
-      s += 'struct %s {\n' % type_info.name
+      s += 'struct %s {\n' % self.C (type_info)
     if type_info.storage == Decls.RECORD:
       fieldlist = type_info.fields
       for fl in fieldlist:
