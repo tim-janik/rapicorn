@@ -33,7 +33,7 @@ test_walker()
   // for (ValueWalker<int> wp (cells_const); wp.has_next(); wp++) printf ("%d", *wp);
   printf (" ");
   /* const int* */
-  std::vector<const int*> &const_cells = *(std::vector<const int*>*) &cells;
+  std::vector<const int*> &const_cells = *reinterpret_cast<std::vector<const int*>*> (&cells);
   for (Walker<const int*> wp = walker (const_cells); wp.has_next(); wp++) printf ("%d", **wp);
   // for (Walker<const int*> wp (const_cells); wp.has_next(); wp++) printf ("%d", **wp);
   printf (" ");
@@ -42,7 +42,8 @@ test_walker()
   // for (ValueWalker<const int> wp (const_cells); wp.has_next(); wp++) printf ("%d", *wp);
   printf (" ");
   /* const int*const */
-  const std::vector<const int*> &const_cells_const = *(const std::vector<const int*>*) &cells;
+  const std::vector<const int*> &const_cells_const = *const_cast<const std::vector<const int*>*>
+                                                     (reinterpret_cast<std::vector<const int*>*> (&cells));
   for (Walker<const int*const> wp = walker (const_cells_const); wp.has_next(); wp++) printf ("%d", **wp);
   // for (Walker<const int*const> wp (const_cells_const); wp.has_next(); wp++) printf ("%d", **wp);
   printf (" ");
