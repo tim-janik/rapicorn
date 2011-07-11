@@ -294,9 +294,7 @@ class Generator:
         s += '  ' + self.F (self.C (fl[1])) + fl[0] + ';\n'
     elif type_info.storage == Decls.SEQUENCE:
       s += '  typedef std::vector<' + self.R (fl[1]) + '> Sequence;\n'
-      s += '  void proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);\n'
     if type_info.storage == Decls.RECORD:
-      s += '  void proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);\n'
       s += '  inline %s () {' % self.C (type_info)
       for fl in fieldlist:
         if fl[1].storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
@@ -306,6 +304,7 @@ class Generator:
     s += '};\n'
     if type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += 'void operator<< (Plic::FieldBuffer&, const %s&);\n' % self.C (type_info)
+      s += 'void operator>> (Plic::FieldBufferReader&, %s&);\n' % self.C (type_info)
     s += self.generate_shortalias (type_info)   # typedef alias
     return s
   def accessor_name (self, decls_type):
@@ -340,7 +339,7 @@ class Generator:
       ident, type_node = arg_it
       ident = aprefix + ident + apostfix
       if type_node.storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  %s.proto_pop (%s, %s);\n' % (ident, cpl, fbr)
+        s += '  %s >> %s;\n' % (fbr, ident)
       elif type_node.storage == Decls.ENUM:
         s += '  %s = %s (%s.pop_evalue());\n' % (ident, self.C (type_node), fbr)
       elif type_node.storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
@@ -357,11 +356,11 @@ class Generator:
     s += '  ' + FieldBuffer + ' &fb = dst.add_rec (%u);\n' % len (type_info.fields)
     s += self.generate_proto_add_args (cplfb, type_info, 'self.', type_info.fields, '')
     s += '}\n'
-    s += 'void\n%s::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)\n{\n' % self.C (type_info)
+    s += 'void\noperator>> (Plic::FieldBufferReader &src, %s &self)\n{\n' % self.C (type_info)
     s += '  ' + FieldBuffer + 'Reader fbr (src.pop_rec());\n'
     s += '  if (fbr.remaining() < %u) return;\n' % len (type_info.fields)
     cplfbr = ('cpl', 'fbr')
-    s += self.generate_proto_pop_args (cplfbr, type_info, 'this->', type_info.fields)
+    s += self.generate_proto_pop_args (cplfbr, type_info, 'self.', type_info.fields)
     s += '}\n'
     return s
   def generate_sequence_impl (self, type_info):
@@ -378,26 +377,26 @@ class Generator:
                                                        '[k]')) + '\n'
     s += '  }\n'
     s += '}\n'
-    s += 'void\n%s::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)\n{\n' % self.C (type_info)
+    s += 'void\noperator>> (Plic::FieldBufferReader &src, %s &self)\n{\n' % self.C (type_info)
     s += '  ' + FieldBuffer + 'Reader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
     if el[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += '  this->resize (len);\n'
+      s += '  self.resize (len);\n'
     else:
-      s += '  this->reserve (len);\n'
+      s += '  self.reserve (len);\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
     if el[1].storage in (Decls.RECORD, Decls.SEQUENCE):
       s += reindent ('  ', self.generate_proto_pop_args (cplfbr, type_info, '',
-                                                         [('(*this)', type_info.elements[1])],
+                                                         [('self', type_info.elements[1])],
                                                          '[k]')) + '\n'
     elif el[1].storage == Decls.ENUM:
-      s += '    this->push_back (%s (fbr.pop_evalue()));\n' % self.C (el[1])
+      s += '    self.push_back (%s (fbr.pop_evalue()));\n' % self.C (el[1])
     elif el[1].storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
-      s += '    this->push_back (connection_id2object<%s> (fbr.pop_object()));\n' % self.C (el[1])
+      s += '    self.push_back (connection_id2object<%s> (fbr.pop_object()));\n' % self.C (el[1])
     elif el[1].storage == Decls.INTERFACE: # G4CLIENT
-      s += '    this->push_back (connection_id2handle<%s> (fbr.pop_object()));\n' % self.C (el[1])
+      s += '    self.push_back (connection_id2handle<%s> (fbr.pop_object()));\n' % self.C (el[1])
     else:
-      s += '    this->push_back (fbr.pop_%s());\n' % self.accessor_name (el[1].storage)
+      s += '    self.push_back (fbr.pop_%s());\n' % self.accessor_name (el[1].storage)
     s += '  }\n'
     s += '}\n'
     return s
