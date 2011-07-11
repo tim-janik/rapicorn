@@ -82,6 +82,7 @@ class Generator:
     self._iface_base = 'Plic::SimpleServer'
     self.gen_mode = None
     self.gen_shortalias = False
+    self.object_impl = None # ('impl', ('', 'Impl'))
   def Iwrap (self, name):
     cc = name.rfind ('::')
     if cc >= 0:
@@ -715,6 +716,12 @@ class Generator:
     if self.gen_mode in (G4CLIENT, C4OLDHANDLE):
       s += '  inline operator _unspecified_bool_type () const ' # return non-NULL pointer to member on true
       s += '{ return _is_null() ? NULL : _unspecified_bool_true(); }\n' # avoids auto-bool conversions on: float (*this)
+    if self.gen_mode == G4SERVER and self.object_impl:
+      impl_method, ppwrap = self.object_impl
+      implname = ppwrap[0] + type_info.name + ppwrap[1]
+      s += '  inline %s&       impl () ' % implname
+      s += '{ %s *_impl = dynamic_cast<%s*> (this); if (!_impl) throw std::bad_cast(); return *_impl; }\n' % (implname, implname)
+      s += '  inline const %s& impl () const { return impl (const_cast<%s*> (this)); }\n' % (implname, self.C (type_info))
     s += self.insertion_text ('class_scope:' + self.C (type_info))
     s += '};\n'
     s += self.generate_shortalias (type_info)   # typedef alias
