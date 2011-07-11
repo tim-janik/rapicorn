@@ -295,10 +295,10 @@ class Generator:
     elif type_info.storage == Decls.SEQUENCE:
       s += '  typedef std::vector<' + self.R (fl[1]) + '> Sequence;\n'
       s += '  void proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;\n'
-      s += '  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);\n'
+      s += '  void proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);\n'
     if type_info.storage == Decls.RECORD:
       s += '  void proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;\n'
-      s += '  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);\n'
+      s += '  void proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);\n'
       s += '  inline %s () {' % self.C (type_info)
       for fl in fieldlist:
         if fl[1].storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
@@ -340,7 +340,7 @@ class Generator:
       ident, type_node = arg_it
       ident = aprefix + ident + apostfix
       if type_node.storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  if (!%s.proto_pop (%s, %s)) %s;\n' % (ident, cpl, fbr, onerr)
+        s += '  %s.proto_pop (%s, %s);\n' % (ident, cpl, fbr)
       elif type_node.storage == Decls.ENUM:
         s += '  %s = %s (%s.pop_evalue());\n' % (ident, self.C (type_node), fbr)
       elif type_node.storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
@@ -357,12 +357,11 @@ class Generator:
     s += '  ' + FieldBuffer + ' &fb = dst.add_rec (%u);\n' % len (type_info.fields)
     s += self.generate_proto_add_args (cplfb, type_info, 'this->', type_info.fields, '')
     s += '}\n'
-    s += 'bool\n%s::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)\n{\n' % self.C (type_info)
+    s += 'void\n%s::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)\n{\n' % self.C (type_info)
     s += '  ' + FieldBuffer + 'Reader fbr (src.pop_rec());\n'
-    s += '  if (fbr.remaining() != %u) return false;\n' % len (type_info.fields)
+    s += '  if (fbr.remaining() < %u) return;\n' % len (type_info.fields)
     cplfbr = ('cpl', 'fbr')
     s += self.generate_proto_pop_args (cplfbr, type_info, 'this->', type_info.fields)
-    s += '  return true;\n'
     s += '}\n'
     return s
   def generate_sequence_impl (self, type_info):
@@ -379,7 +378,7 @@ class Generator:
                                                        '[k]')) + '\n'
     s += '  }\n'
     s += '}\n'
-    s += 'bool\n%s::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)\n{\n' % self.C (type_info)
+    s += 'void\n%s::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)\n{\n' % self.C (type_info)
     s += '  ' + FieldBuffer + 'Reader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
     if el[1].storage in (Decls.RECORD, Decls.SEQUENCE):
@@ -400,7 +399,6 @@ class Generator:
     else:
       s += '    this->push_back (fbr.pop_%s());\n' % self.accessor_name (el[1].storage)
     s += '  }\n'
-    s += '  return true;\n'
     s += '}\n'
     return s
   def generate_client_method_stub (self, class_info, mtype):
