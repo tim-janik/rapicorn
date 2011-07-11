@@ -31,14 +31,11 @@ gencc_boilerplate = r"""
 namespace { // Anonymous
 using Plic::uint64;
 typedef Plic::Coupler Coupler;
-typedef Plic::FieldBuffer FieldBuffer;
-typedef Plic::FieldBuffer8 FieldBuffer8;
-typedef Plic::FieldBufferReader FieldBufferReader;
 
 #ifndef PLIC_COUPLER
 #define PLIC_COUPLER()  _plic_coupler_static
 static struct _DummyCoupler : public Coupler {
-  virtual FieldBuffer* call_remote (FieldBuffer *fbcall)
+  virtual Plic::FieldBuffer* call_remote (Plic::FieldBuffer *fbcall)
   {
     bool hasresult = Plic::msgid_has_result (fbcall->first_id());
     if (push_call (fbcall)) // deletes fbcall
@@ -63,8 +60,6 @@ template<>
 Plic::SmartHandle connection_id2handle<Plic::SmartHandle> (uint64 id) { return *(Plic::SmartHandle*) NULL; } // FIXME
 uint64  connection_handle2id (const Plic::SmartHandle &h) { return 0; } // FIXME
 """
-
-FieldBuffer = 'Plic::FieldBuffer'
 
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
@@ -220,13 +215,13 @@ class Generator:
     s += tname + '\n'
     q = '%s::%s (' % (self.C (class_info), fident)
     s += q + ') const\n{\n'
-    s += '  FieldBuffer &fb = *FieldBuffer::_new (4 + 1), *fr = NULL;\n'
+    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1), *fr = NULL;\n'
     s += '  fb.add_type_hash (%s); // msgid\n' % self.getter_digest (class_info, fident, ftype)
     s += self.generate_proto_add_args (cplfb, class_info, '', [('(*this)', class_info)], '')
     s += '  fr = %s.call_remote (&fb); // deletes fb\n' % cplfb[0]
     if 1: # hasret
       rarg = ('retval', ftype)
-      s += '  FieldBufferReader frr (*fr);\n'
+      s += '  Plic::FieldReader frr (*fr);\n'
       s += '  frr.skip(); // msgid\n' # FIXME: check fr return type
       cplfrr = (cplfb[0], 'frr')
       # FIXME: check return error and return type
@@ -245,7 +240,7 @@ class Generator:
       s += q + 'const ' + tname + ' &value)\n{\n'
     else:
       s += q + tname + ' value)\n{\n'
-    s += '  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + 1), *fr = NULL;\n'
+    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 1), *fr = NULL;\n'
     s += '  fb.add_type_hash (%s); // msgid\n' % self.setter_digest (class_info, fident, ftype)
     s += self.generate_proto_add_args (cplfb, class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('value', ftype)]
@@ -304,7 +299,7 @@ class Generator:
     s += '};\n'
     if type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += 'void operator<< (Plic::FieldBuffer&, const %s&);\n' % self.C (type_info)
-      s += 'void operator>> (Plic::FieldBufferReader&, %s&);\n' % self.C (type_info)
+      s += 'void operator>> (Plic::FieldReader&, %s&);\n' % self.C (type_info)
     s += self.generate_shortalias (type_info)   # typedef alias
     return s
   def accessor_name (self, decls_type):
@@ -353,11 +348,11 @@ class Generator:
     s = ''
     cplfb = ('cpl', 'fb')
     s += 'void\noperator<< (Plic::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
-    s += '  ' + FieldBuffer + ' &fb = dst.add_rec (%u);\n' % len (type_info.fields)
+    s += '  Plic::FieldBuffer &fb = dst.add_rec (%u);\n' % len (type_info.fields)
     s += self.generate_proto_add_args (cplfb, type_info, 'self.', type_info.fields, '')
     s += '}\n'
-    s += 'void\noperator>> (Plic::FieldBufferReader &src, %s &self)\n{\n' % self.C (type_info)
-    s += '  ' + FieldBuffer + 'Reader fbr (src.pop_rec());\n'
+    s += 'void\noperator>> (Plic::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
+    s += '  Plic::FieldReader fbr (src.pop_rec());\n'
     s += '  if (fbr.remaining() < %u) return;\n' % len (type_info.fields)
     cplfbr = ('cpl', 'fbr')
     s += self.generate_proto_pop_args (cplfbr, type_info, 'self.', type_info.fields)
@@ -370,15 +365,15 @@ class Generator:
     el = type_info.elements
     s += 'void\noperator<< (Plic::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
     s += '  const size_t len = self.size();\n'
-    s += '  ' + FieldBuffer + ' &fb = dst.add_seq (len);\n'
+    s += '  Plic::FieldBuffer &fb = dst.add_seq (len);\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
     s += reindent ('  ', self.generate_proto_add_args (cplfb, type_info, '',
                                                        [('self', type_info.elements[1])],
                                                        '[k]')) + '\n'
     s += '  }\n'
     s += '}\n'
-    s += 'void\noperator>> (Plic::FieldBufferReader &src, %s &self)\n{\n' % self.C (type_info)
-    s += '  ' + FieldBuffer + 'Reader fbr (src.pop_seq());\n'
+    s += 'void\noperator>> (Plic::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
+    s += '  Plic::FieldReader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
     if el[1].storage in (Decls.RECORD, Decls.SEQUENCE):
       s += '  self.resize (len);\n'
@@ -410,7 +405,7 @@ class Generator:
     q = '%s::%s (' % (self.C (class_info), mtype.name)
     s += q + self.Args (mtype, 'arg_', len (q)) + ')\n{\n'
     # vars, procedure
-    s += '  FieldBuffer &fb = *FieldBuffer::_new (4 + 1 + %u), *fr = NULL;\n' % len (mtype.args)
+    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + %u), *fr = NULL;\n' % len (mtype.args)
     s += '  fb.add_type_hash (%s); // msgid\n' % self.method_digest (mtype)
     # marshal args
     s += self.generate_proto_add_args (cplfb, class_info, '', [('(*this)', class_info)], '')
@@ -421,7 +416,7 @@ class Generator:
     # unmarshal return
     if hasret:
       rarg = ('retval', mtype.rtype)
-      s += '  FieldBufferReader frr (*fr);\n'
+      s += '  Plic::FieldReader frr (*fr);\n'
       s += '  frr.skip(); // msgid\n' # FIXME: check fr return type
       cplfrr = (cplfb[0], 'frr')
       # FIXME: check return error and return type
@@ -442,12 +437,12 @@ class Generator:
     dispatcher_name = '_$setter__%s__%s' % (class_info.name, fident)
     setter_hash = self.setter_digest (class_info, fident, ftype)
     reglines += [ (setter_hash, self.namespaced_identifier (dispatcher_name)) ]
-    s += 'static FieldBuffer*\n'
+    s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Coupler &cpl)\n'
     s += '{\n'
-    s += '  FieldBufferReader &fbr = cpl.reader;\n'
+    s += '  Plic::FieldReader &fbr = cpl.reader;\n'
     s += '  fbr.skip_hash(); // TypeHash\n'
-    s += '  if (fbr.remaining() != 1 + 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
+    s += '  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
@@ -472,12 +467,12 @@ class Generator:
     dispatcher_name = '_$getter__%s__%s' % (class_info.name, fident)
     getter_hash = self.getter_digest (class_info, fident, ftype)
     reglines += [ (getter_hash, self.namespaced_identifier (dispatcher_name)) ]
-    s += 'static FieldBuffer*\n'
+    s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Coupler &cpl)\n'
     s += '{\n'
-    s += '  FieldBufferReader &fbr = cpl.reader;\n'
+    s += '  Plic::FieldReader &fbr = cpl.reader;\n'
     s += '  fbr.skip_hash(); // TypeHash\n'
-    s += '  if (fbr.remaining() != 1) return FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
+    s += '  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
@@ -489,7 +484,7 @@ class Generator:
     s += 'self->' + fident + ' ();\n'
     # store return value
     cplrb = (cplfbr[0], 'rb')
-    s += '  FieldBuffer &rb = *FieldBuffer::new_result();\n'
+    s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
     rval = 'rval'
     s += self.generate_proto_add_args (cplrb, class_info, '', [(rval, ftype)], '')
     s += '  return &rb;\n'
@@ -501,12 +496,12 @@ class Generator:
     cplfbr = ('cpl', 'fbr')
     dispatcher_name = '_$caller__%s__%s' % (class_info.name, mtype.name)
     reglines += [ (self.method_digest (mtype), self.namespaced_identifier (dispatcher_name)) ]
-    s += 'static FieldBuffer*\n'
+    s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Coupler &cpl)\n'
     s += '{\n'
-    s += '  FieldBufferReader &fbr = cpl.reader;\n'
+    s += '  Plic::FieldReader &fbr = cpl.reader;\n'
     s += '  fbr.skip_hash(); // TypeHash\n'
-    s += '  if (fbr.remaining() != 1 + %u) return FieldBuffer::new_error ("invalid number of arguments", __func__);\n' % len (mtype.args)
+    s += '  if (fbr.remaining() != 1 + %u) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n' % len (mtype.args)
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
@@ -531,7 +526,7 @@ class Generator:
     # store return value
     if hasret:
       cplrb = (cplfbr[0], 'rb')
-      s += '  FieldBuffer &rb = *FieldBuffer::new_result();\n'
+      s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
       rval = 'rval'
       s += self.generate_proto_add_args (cplrb, class_info, '', [(rval, mtype.rtype)], '')
       s += '  return &rb;\n'
@@ -553,7 +548,7 @@ class Generator:
     s += '  %s (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}\n' % closure_class
     s += '  ~%s()\n' % closure_class
     s += '  {\n'
-    s += '    FieldBuffer &fb = *FieldBuffer::_new (1 + 1);\n'
+    s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1);\n'
     s += '    fb.add_int64 (Plic::msgid_discon);\n' # self.method_digest (stype)
     s += '    fb.add_int64 (m_handler);\n'
     s += '    m_coupler.push_event (&fb); // deletes fb\n'
@@ -563,7 +558,7 @@ class Generator:
     s += '  handler ('
     s += self.Args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
     s += 'SharedPtr sp)\n  {\n'
-    s += '    FieldBuffer &fb = *FieldBuffer::_new (1 + 1 + %u);\n' % len (stype.args)
+    s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + %u);\n' % len (stype.args)
     s += '    fb.add_int64 (Plic::msgid_event);\n' # self.method_digest (stype)
     s += '    fb.add_int64 (sp->m_handler);\n'
     ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
@@ -577,12 +572,12 @@ class Generator:
     s += '  private: Plic::Coupler &m_coupler; uint64 m_handler;\n'
     s += '};\n'
     cplfbr = ('cpl', 'fbr')
-    s += 'static FieldBuffer*\n'
+    s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Coupler &cpl)\n'
     s += '{\n'
-    s += '  FieldBufferReader &fbr = cpl.reader;\n'
+    s += '  Plic::FieldReader &fbr = cpl.reader;\n'
     s += '  fbr.skip_hash(); // TypeHash\n'
-    s += '  if (fbr.remaining() != 1 + 2) return FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
+    s += '  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
@@ -592,7 +587,7 @@ class Generator:
     s += '  if (handler_id) {\n'
     s += '    %s::SharedPtr sp (new %s (cpl, handler_id));\n' % (closure_class, closure_class)
     s += '    cid = self->sig_%s.connect (slot (sp->handler, sp)); }\n' % stype.name
-    s += '  FieldBuffer &rb = *FieldBuffer::new_result();\n'
+    s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
     s += '  rb.add_int64 (cid);\n'
     s += '  return &rb;\n'
     s += '}\n'
@@ -690,7 +685,7 @@ class Generator:
     s += 'public:\n'
     if self.gen_mode in (G4CLIENT, C4OLDHANDLE):
       s += '  inline %s () {}\n' % self.H (type_info.name)
-      s += '  inline %s (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) ' % self.H (type_info.name)
+      s += '  inline %s (Plic::Coupler &cpl, Plic::FieldReader &fbr) ' % self.H (type_info.name)
       s += '{ _pop_rpc (cpl, fbr); }\n'
     if self.gen_mode == C4OLDHANDLE:
       ifacename = self.Iwrap (type_info.name)

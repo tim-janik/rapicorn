@@ -284,6 +284,7 @@ public:
   inline const FieldBuffer& pop_seq () { FieldUnion &u = fb_popu(); return *(FieldBuffer*) &u; }
   inline const FieldBuffer* get     () { return m_fb; }
 };
+typedef FieldBufferReader FieldReader;
 
 /* === Channel === */
 class Channel {
