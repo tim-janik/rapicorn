@@ -294,10 +294,10 @@ class Generator:
         s += '  ' + self.F (self.C (fl[1])) + fl[0] + ';\n'
     elif type_info.storage == Decls.SEQUENCE:
       s += '  typedef std::vector<' + self.R (fl[1]) + '> Sequence;\n'
-      s += '  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;\n'
+      s += '  void proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;\n'
       s += '  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);\n'
     if type_info.storage == Decls.RECORD:
-      s += '  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;\n'
+      s += '  void proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;\n'
       s += '  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);\n'
       s += '  inline %s () {' % self.C (type_info)
       for fl in fieldlist:
@@ -324,7 +324,7 @@ class Generator:
       ident, type = arg_it
       ident = aprefix + ident + apostfix
       if type.storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  if (!%s.proto_add (%s, %s)) %s;\n' % (ident, cpl, fb, onerr) # FIXME cpl var
+        s += '  %s.proto_add (%s, %s);\n' % (ident, cpl, fb) # FIXME cpl var
       elif type.storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
         s += '  %s.add_object (connection_object2id (%s));\n' % (fb, ident)
       elif type.storage == Decls.INTERFACE: # G4CLIENT
@@ -353,10 +353,9 @@ class Generator:
   def generate_record_impl (self, type_info):
     s = ''
     cplfb = ('cpl', 'fb')
-    s += 'bool\n%s::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const\n{\n' % self.C (type_info)
+    s += 'void\n%s::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const\n{\n' % self.C (type_info)
     s += '  ' + FieldBuffer + ' &fb = dst.add_rec (%u);\n' % len (type_info.fields)
     s += self.generate_proto_add_args (cplfb, type_info, 'this->', type_info.fields, '')
-    s += '  return true;\n'
     s += '}\n'
     s += 'bool\n%s::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)\n{\n' % self.C (type_info)
     s += '  ' + FieldBuffer + 'Reader fbr (src.pop_rec());\n'
@@ -371,7 +370,7 @@ class Generator:
     cplfb = ('cpl', 'fb')
     cplfbr = ('cpl', 'fbr')
     el = type_info.elements
-    s += 'bool\n%s::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const\n{\n' % self.C (type_info)
+    s += 'void\n%s::proto_add (Plic::Coupler &cpl, Plic::FieldBuffer &dst) const\n{\n' % self.C (type_info)
     s += '  const size_t len = this->size();\n'
     s += '  ' + FieldBuffer + ' &fb = dst.add_seq (len);\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
@@ -379,7 +378,6 @@ class Generator:
                                                        [('(*this)', type_info.elements[1])],
                                                        '[k]')) + '\n'
     s += '  }\n'
-    s += '  return true;\n'
     s += '}\n'
     s += 'bool\n%s::proto_pop (Plic::Coupler &cpl, Plic::FieldBufferReader &src)\n{\n' % self.C (type_info)
     s += '  ' + FieldBuffer + 'Reader fbr (src.pop_seq());\n'
