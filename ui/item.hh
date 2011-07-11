@@ -12,12 +12,6 @@
 
 namespace Rapicorn {
 
-// FIXME: IDL fixups
-template<class O>
-O*      connection_id2object (uint64);
-uint64  connection_object2id (BaseObject*);
-uint64  connection_object2id (const BaseObject&);
-
 /* --- Item structures and forward decls --- */
 typedef Rect Allocation;
 class ItemImpl;

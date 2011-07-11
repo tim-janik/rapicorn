@@ -151,7 +151,7 @@ main (int   argc,
       char *argv[])
 {
   /* initialize rapicorn */
-  Application_SmartHandle app = init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv); // FIXME: should work offscreen
+  init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv); // FIXME: should work offscreen
   rapicorn_markup_parser_test();
   text_markup_test();
   return 0;

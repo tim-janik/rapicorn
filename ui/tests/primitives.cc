@@ -547,7 +547,7 @@ main (int   argc,
       char *argv[])
 {
   // initialize rapicorn
-  Application_SmartHandle smApp = init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
 
   basic_loop_test();
   more_loop_test2();

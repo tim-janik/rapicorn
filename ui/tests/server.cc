@@ -12,9 +12,9 @@ test_server_smart_handle (void)
   fb.add_object (uint64 ((BaseObject*) ab));
   Plic::Coupler &c = *rope_thread_coupler();
   c.reader.reset (fb);
-  Application_SmartHandle sh (c, c.reader);
-  ApplicationIface &shab = *sh;
-  assert (ab == &shab);
-  assert (ab == sh.operator->());
+  ApplicationImpl *am = dynamic_cast<ApplicationImpl*> (ab);
+  assert (am == &app);
+  ApplicationIface *ai = am;
+  assert (ai == ab);
 }
 REGISTER_TEST ("Server/Smart Handle", test_server_smart_handle);

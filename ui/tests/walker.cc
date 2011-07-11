@@ -79,7 +79,7 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  Application_SmartHandle smApp = init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
   return Test::run();
 }
 

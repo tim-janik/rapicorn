@@ -25,7 +25,7 @@ main (int   argc,
       char *argv[])
 {
   // initialize rapicorn
-  Application_SmartHandle smApp = init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
 
   TSTART ("RapicornItems");
