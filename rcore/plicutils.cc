@@ -494,7 +494,7 @@ DispatcherRegistry::dispatch_call (const FieldBuffer &fbcall,
   DispatchFunc dispatcher_func = DispatcherRegistry::find_dispatcher (thash);
   if (PLIC_UNLIKELY (!dispatcher_func))
     return FieldBuffer::new_error ("unknown method hash: " + thash.to_string(), "PLIC");
-  FieldBuffer *fr = dispatcher_func (coupler);
+  FieldBuffer *fr = dispatcher_func (coupler.reader);
   if (!fr)
     {
       if (needsresult)

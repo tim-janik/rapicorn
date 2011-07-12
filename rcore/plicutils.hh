@@ -87,7 +87,7 @@ class Coupler;
 union FieldUnion;
 class FieldBuffer;
 class FieldReader;
-typedef FieldBuffer* (*DispatchFunc) (Coupler&);
+typedef FieldBuffer* (*DispatchFunc) (FieldReader&);
 
 /* === EventFd === */
 class EventFd {

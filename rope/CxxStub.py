@@ -439,9 +439,8 @@ class Generator:
     setter_hash = self.setter_digest (class_info, fident, ftype)
     reglines += [ (setter_hash, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Plic::FieldBuffer*\n'
-    s += dispatcher_name + ' (Coupler &cpl)\n'
+    s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  Plic::FieldReader &fbr = cpl.reader;\n'
     s += '  fbr.skip_hash(); // TypeHash\n'
     s += '  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     # fetch self
@@ -469,9 +468,8 @@ class Generator:
     getter_hash = self.getter_digest (class_info, fident, ftype)
     reglines += [ (getter_hash, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Plic::FieldBuffer*\n'
-    s += dispatcher_name + ' (Coupler &cpl)\n'
+    s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  Plic::FieldReader &fbr = cpl.reader;\n'
     s += '  fbr.skip_hash(); // TypeHash\n'
     s += '  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     # fetch self
@@ -498,9 +496,8 @@ class Generator:
     dispatcher_name = '_$caller__%s__%s' % (class_info.name, mtype.name)
     reglines += [ (self.method_digest (mtype), self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Plic::FieldBuffer*\n'
-    s += dispatcher_name + ' (Coupler &cpl)\n'
+    s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  Plic::FieldReader &fbr = cpl.reader;\n'
     s += '  fbr.skip_hash(); // TypeHash\n'
     s += '  if (fbr.remaining() != 1 + %u) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n' % len (mtype.args)
     # fetch self
@@ -575,9 +572,8 @@ class Generator:
     s += '};\n'
     cplfbr = ('cpl', 'fbr')
     s += 'static Plic::FieldBuffer*\n'
-    s += dispatcher_name + ' (Coupler &cpl)\n'
+    s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  Plic::FieldReader &fbr = cpl.reader;\n'
     s += '  fbr.skip_hash(); // TypeHash\n'
     s += '  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     s += '  %s *self;\n' % self.C (class_info)
@@ -587,7 +583,7 @@ class Generator:
     s += '  uint64 con_id = %s.pop_int64();\n' % cplfbr[1]
     s += '  if (con_id) self->sig_%s.disconnect (con_id);\n' % stype.name
     s += '  if (handler_id) {\n'
-    s += '    %s::SharedPtr sp (new %s (cpl, handler_id));\n' % (closure_class, closure_class)
+    s += '    %s::SharedPtr sp (new %s (PLIC_COUPLER(), handler_id));\n' % (closure_class, closure_class)
     s += '    cid = self->sig_%s.connect (slot (sp->handler, sp)); }\n' % stype.name
     s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
     s += '  rb.add_int64 (cid);\n'
@@ -687,8 +683,8 @@ class Generator:
     s += 'public:\n'
     if self.gen_mode in (G4CLIENT, C4OLDHANDLE):
       s += '  inline %s () {}\n' % self.H (type_info.name)
-      s += '  inline %s (Plic::Coupler &cpl, Plic::FieldReader &fbr) ' % self.H (type_info.name)
-      s += '{ _pop_rpc (cpl, fbr); }\n'
+      s += '  inline %s (Plic::FieldReader &fbr) ' % self.H (type_info.name)
+      s += '{ /* _pop_rpc (fbr); */ }\n'
     if self.gen_mode == C4OLDHANDLE:
       ifacename = self.Iwrap (type_info.name)
       s += '  inline %s (%s *iface) { _iface (iface); }\n' % (self.C (type_info), ifacename)
