@@ -117,7 +117,7 @@ rope_event_dispatch (PyObject *self, PyObject *args)
   FieldBuffer *fr = NULL, *fb = cpl.pop_event();
   if (!fb)
     return None_INCREF();
-  Plic::FieldBufferReader &fbr = cpl.reader;
+  Plic::FieldReader &fbr = cpl.reader;
   fbr.reset (*fb);
   uint64 msgid = fbr.pop_int64();
   switch (msgid >> PLIC_MSGID_SHIFT)
@@ -148,7 +148,7 @@ rope_event_dispatch (PyObject *self, PyObject *args)
   delete fb;
   if (fr)
     {
-      Plic::FieldBufferReader frr (*fr);
+      Plic::FieldReader frr (*fr);
       uint64 frid = frr.pop_int64();
       if (Plic::is_msgid_error (frid))
         {

@@ -86,7 +86,7 @@ class SimpleServer;
 class Coupler;
 union FieldUnion;
 class FieldBuffer;
-class FieldBufferReader;
+class FieldReader;
 typedef FieldBuffer* (*DispatchFunc) (Coupler&);
 
 /* === EventFd === */
@@ -146,7 +146,7 @@ protected:
   typedef uint64 RpcId;
   explicit                  SmartHandle ();
   void                      _reset      ();
-  void                      _pop_rpc    (Coupler&, FieldBufferReader&);
+  void                      _pop_rpc    (Coupler&, FieldReader&);
   void*                     _cast_iface () const;
   inline void*              _void_iface () const;
   void                      _void_iface (void *rpc_id_ptr);
@@ -207,7 +207,7 @@ union FieldUnion {
 };
 
 class FieldBuffer { // buffer for marshalling procedure calls
-  friend class FieldBufferReader;
+  friend class FieldReader;
   void               check_internal ();
 protected:
   FieldUnion        *buffermem;
@@ -250,7 +250,7 @@ public:
   inline   FieldBuffer8 (uint ntypes = 8) : FieldBuffer (ntypes, bmem, sizeof (bmem)) {}
 };
 
-class FieldBufferReader { // read field buffer contents
+class FieldReader { // read field buffer contents
   const FieldBuffer *m_fb;
   uint               m_nth;
   inline FieldUnion& fb_getu () { return m_fb->uat (m_nth); }
@@ -258,8 +258,8 @@ class FieldBufferReader { // read field buffer contents
   inline void        check() { if (PLIC_UNLIKELY (m_nth > n_types())) check_internal(); }
   void               check_internal ();
 public:
-  FieldBufferReader (const FieldBuffer &fb) : m_fb (&fb), m_nth (0) {}
-  inline void reset (const FieldBuffer &fb) { m_fb = &fb; m_nth = 0; }
+  explicit                 FieldReader (const FieldBuffer &fb) : m_fb (&fb), m_nth (0) {}
+  inline void               reset      (const FieldBuffer &fb) { m_fb = &fb; m_nth = 0; }
   inline void               reset      () { m_fb = NULL; m_nth = 0; }
   inline uint               remaining  () { return n_types() - m_nth; }
   inline void               skip       () { m_nth++; check(); }
@@ -284,7 +284,6 @@ public:
   inline const FieldBuffer& pop_seq () { FieldUnion &u = fb_popu(); return *(FieldBuffer*) &u; }
   inline const FieldBuffer* get     () { return m_fb; }
 };
-typedef FieldBufferReader FieldReader;
 
 /* === Channel === */
 class Channel {
@@ -327,14 +326,14 @@ public:
   bool                 has_event         (void) { return eventc.has_msg(); }
   FieldBuffer*         pop_event         (void) { return eventc.pop_msg(); }
   // API for DispatchFunc
-  FieldBufferReader    reader;
+  FieldReader          reader;
   void                 push_result       (FieldBuffer *rret) { resultc.push_msg (rret); }
   void                 push_event        (FieldBuffer *fbev) { eventc.push_msg (fbev); }
   uint                 dispatcher_add    (std::auto_ptr<EventDispatcher> evd); // takes object
   EventDispatcher*     dispatcher_lookup (uint         dfunc_id);
   bool                 dispatcher_delete (uint         dfunc_id);
   // SmartHandle API
-  inline uint64        pop_rpc_handle    (FieldBufferReader &fbr) { return fbr.pop_object(); }
+  inline uint64        pop_rpc_handle    (FieldReader &fbr) { return fbr.pop_object(); }
   // server loop integration
   template<class C>
   void             set_dispatcher_wakeup (C &c, void (C::*m) ()) { callc.set_wakeup (c, m); }

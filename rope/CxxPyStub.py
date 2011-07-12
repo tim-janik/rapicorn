@@ -43,7 +43,7 @@ base_code = """
 
 using Plic::uint64;
 using Plic::FieldBuffer;
-using Plic::FieldBufferReader;
+using Plic::FieldReader;
 
 static PyObject*
 PyErr_Format_from_PLIC_error (const FieldBuffer *fr)
@@ -52,7 +52,7 @@ PyErr_Format_from_PLIC_error (const FieldBuffer *fr)
     return PyErr_Format (PyExc_RuntimeError, "PLIC: missing return value");
   if (Plic::msgid_has_error (fr->first_id()))
     {
-      FieldBufferReader frr (*fr);
+      FieldReader frr (*fr);
       std::string msg, domain;
       if (Plic::is_msgid_error (frr.pop_int64()))
         msg = frr.pop_string(), domain = frr.pop_string();
@@ -215,7 +215,7 @@ class Generator:
     s = ''
     # record proto add
     s += 'static RAPICORN_UNUSED bool\n'
-    s += 'plic_py%s_proto_add (PyObject *pyrec, %s &dst)\n' % (type_info.name, FieldBuffer)
+    s += 'plic_py%s_proto_add (PyObject *pyrec, Plic::FieldReader &dst)\n' % type_info.name
     s += '{\n'
     s += '  %s &fb = dst.add_rec (%u);\n' % (FieldBuffer, len (type_info.fields))
     s += '  bool success = false;\n'
@@ -231,10 +231,10 @@ class Generator:
     s += '}\n'
     # record proto pop
     s += 'static RAPICORN_UNUSED PyObject*\n'
-    s += 'plic_py%s_proto_pop (%sReader &src)\n' % (type_info.name, FieldBuffer)
+    s += 'plic_py%s_proto_pop (Plic::FieldReader &src)\n' % type_info.name
     s += '{\n'
     s += '  PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;\n'
-    s += '  ' + FieldBuffer + 'Reader fbr (src.pop_rec());\n'
+    s += '  Plic::FieldReader fbr (src.pop_rec());\n'
     s += '  if (fbr.remaining() != %u) ERRORpy ("PLIC: marshalling error: invalid record length");\n' % len (type_info.fields)
     s += '  pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);\n'
     s += '  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);\n'
@@ -271,10 +271,10 @@ class Generator:
     s += '}\n'
     # sequence proto pop
     s += 'static RAPICORN_UNUSED PyObject*\n'
-    s += 'plic_py%s_proto_pop (%sReader &src)\n' % (type_info.name, FieldBuffer)
+    s += 'plic_py%s_proto_pop (Plic::FieldReader &src)\n' % type_info.name
     s += '{\n'
     s += '  PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;\n'
-    s += '  ' + FieldBuffer + 'Reader fbr (src.pop_seq());\n'
+    s += '  Plic::FieldReader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
     s += '  listR = PyList_New (len); if (!listR) GOTO_ERROR();\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
@@ -303,7 +303,7 @@ class Generator:
     s += '  dispatch_event (Plic::Coupler &cpl)\n'
     s += '  {\n'
     if mtype.args:
-      s += '    FieldBufferReader &fbr = cpl.reader;\n'
+      s += '    FieldReader &fbr = cpl.reader;\n'
     s += '    // uint64 msgid = frr.pop_int64();\n'
     s += '    // assert (Plic::is_msgid_event (msgid));\n'
     s += '    // uint handler_id = uint (frr.pop_int64());\n'
@@ -344,7 +344,7 @@ class Generator:
     s += '  fm = NULL; fr = cpl.call_remote (&fb); // deletes fb\n'
     s += '  ERRORifnotret (fr);\n'
     s += '  if (fr) {\n'
-    s += '    FieldBufferReader frr (*fr);\n'
+    s += '    FieldReader frr (*fr);\n'
     s += '    frr.skip(); // msgid for return\n' # FIXME: check errors
     s += '    if (frr.remaining() == 1) {\n'
     s += '      pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();\n'
@@ -388,7 +388,7 @@ class Generator:
     else:
       s += '  ERRORifnotret (fr);\n'
       s += '  if (fr) {\n'
-      s += '    ' + FieldBuffer + 'Reader frr (*fr);\n'
+      s += '    Plic::FieldReader frr (*fr);\n'
       s += '    frr.skip(); // msgid for return\n' # FIXME: check errors
       s += '    if (frr.remaining() == 1) {\n'
       s += reindent ('      ', self.generate_proto_pop_py ('frr', mtype.rtype, 'pyfoR')) + '\n'

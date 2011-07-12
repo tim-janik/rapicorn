@@ -191,8 +191,8 @@ SmartHandle::_reset ()
 }
 
 void
-SmartHandle::_pop_rpc (Coupler           &c,
-                       FieldBufferReader &fbr)
+SmartHandle::_pop_rpc (Coupler     &c,
+                       FieldReader &fbr)
 {
   _reset();
   m_rpc_id = c.pop_rpc_handle (fbr);
@@ -559,11 +559,11 @@ FieldBuffer::check_internal ()
 }
 
 void
-FieldBufferReader::check_internal ()
+FieldReader::check_internal ()
 {
   if (m_nth >= n_types())
     {
-      String msg = string_printf ("FieldBufferReader(this=%p): capacity=%u index=%u",
+      String msg = string_printf ("FieldReader(this=%p): capacity=%u index=%u",
                                   this, n_types(), m_nth);
       throw std::out_of_range (msg);
     }

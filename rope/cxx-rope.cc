@@ -37,7 +37,7 @@ cxxrope_init_dispatcher (const String  &app_ident,
   /* minor hack to create the initial smart handler for an Application */
   Plic::FieldBuffer8 fb (4);
   fb.add_object (uint64 (app_id));
-  Plic::FieldBufferReader fbr (fb);
+  Plic::FieldReader fbr (fb);
   Application app (*rope_thread_coupler(), fbr);
   return app;
 }
