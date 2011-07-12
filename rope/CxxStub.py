@@ -544,7 +544,9 @@ class Generator:
     reglines += [ (self.method_digest (stype), self.namespaced_identifier (dispatcher_name)) ]
     closure_class = '_$Closure__%s__%s' % (class_info.name, stype.name)
     cplfb = ('sp->m_coupler', 'fb')
-    s += 'struct %s {\n' % closure_class
+    s += 'class %s {\n' % closure_class
+    s += '  Plic::Coupler &m_coupler; uint64 m_handler;\n'
+    s += 'public:\n'
     s += '  typedef Plic::shared_ptr<%s> SharedPtr;\n' % closure_class
     s += '  %s (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}\n' % closure_class
     s += '  ~%s()\n' % closure_class
@@ -570,7 +572,6 @@ class Generator:
     if stype.rtype.storage != Decls.VOID:
       s += '    return %s;\n' % self.mkzero (stype.rtype)
     s += '  }\n'
-    s += '  private: Plic::Coupler &m_coupler; uint64 m_handler;\n'
     s += '};\n'
     cplfbr = ('cpl', 'fbr')
     s += 'static Plic::FieldBuffer*\n'
