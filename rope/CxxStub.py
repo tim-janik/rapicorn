@@ -25,7 +25,6 @@ gencc_boilerplate = r"""
 #ifndef __PLIC_GENERIC_CC_BOILERPLATE__
 #define __PLIC_GENERIC_CC_BOILERPLATE__
 
-#define THROW_ERROR()   throw std::runtime_error ("PLIC: Marshalling failed")
 #define PLIC_CHECK(cond,errmsg) do { if (cond) break; throw std::runtime_error (std::string ("PLIC-ERROR: ") + errmsg); } while (0)
 
 namespace { // Anonymous
@@ -198,7 +197,6 @@ class Generator:
     return s
   def generate_client_property_stub (self, class_info, fident, ftype):
     s = ''
-    therr = 'THROW_ERROR()'
     tname = self.C (ftype)
     # getter prototype
     s += tname + '\n'
@@ -215,10 +213,10 @@ class Generator:
       # FIXME: check return error and return type
       if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
         s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
-        s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '', therr)
+        s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
       else:
         vtype = self.V ('', rarg[1]) # 'int*' + ...
-        s += self.generate_proto_pop_args ('frr', class_info, vtype, [rarg], '', therr) # ... + 'x = 5;'
+        s += self.generate_proto_pop_args ('frr', class_info, vtype, [rarg], '') # ... + 'x = 5;'
       s += '  delete fr;\n'
       s += '  return retval;\n'
     s += '}\n'
@@ -232,7 +230,7 @@ class Generator:
     s += '  fb.add_msgid (%s); // msgid\n' % self.setter_digest (class_info, fident, ftype)
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('value', ftype)]
-    s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '', therr)
+    s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     s += '  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
     s += '  if (fr) delete fr;\n' # FIXME: check return error
     s += '}\n'
@@ -298,8 +296,7 @@ class Generator:
              Decls.STRING:    'string',
              Decls.FUNC:      'func',
              Decls.INTERFACE: 'object' }.get (decls_type, None)
-  def generate_proto_add_args (self, fb, type_info, aprefix, arg_info_list, apostfix,
-                               onerr = 'return false'):
+  def generate_proto_add_args (self, fb, type_info, aprefix, arg_info_list, apostfix):
     s = ''
     for arg_it in arg_info_list:
       ident, type = arg_it
@@ -313,8 +310,7 @@ class Generator:
       else:
         s += '  %s.add_%s (%s);\n' % (fb, self.accessor_name (type.storage), ident)
     return s
-  def generate_proto_pop_args (self, fbr, type_info, aprefix, arg_info_list, apostfix = '',
-                               onerr = 'return false'):
+  def generate_proto_pop_args (self, fbr, type_info, aprefix, arg_info_list, apostfix = ''):
     s = ''
     for arg_it in arg_info_list:
       ident, type_node = arg_it
@@ -379,7 +375,6 @@ class Generator:
     return s
   def generate_client_method_stub (self, class_info, mtype):
     s = ''
-    therr = 'THROW_ERROR()'
     hasret = mtype.rtype.storage != Decls.VOID
     # prototype
     s += self.C (mtype.rtype) + '\n'
@@ -391,7 +386,7 @@ class Generator:
     # marshal args
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
-    s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '', therr)
+    s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     # call out
     s += '  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
     # unmarshal return
@@ -402,10 +397,10 @@ class Generator:
       # FIXME: check return error and return type
       if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
         s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
-        s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '', therr)
+        s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
       else:
         vtype = self.V ('', rarg[1]) # 'int*' + ...
-        s += self.generate_proto_pop_args ('frr', class_info, vtype, [rarg], '', therr) # ... + 'x = 5;'
+        s += self.generate_proto_pop_args ('frr', class_info, vtype, [rarg], '') # ... + 'x = 5;'
       s += '  delete fr;\n'
       s += '  return retval;\n'
     s += '}\n'
@@ -510,7 +505,6 @@ class Generator:
   def generate_server_signal_dispatcher (self, class_info, stype, reglines):
     assert self.gen_mode == G4SERVER
     s = ''
-    therr = 'THROW_ERROR()'
     dispatcher_name = '_$sigcon__%s__%s' % (class_info.name, stype.name)
     reglines += [ (self.method_digest (stype), self.namespaced_identifier (dispatcher_name)) ]
     closure_class = '_$Closure__%s__%s' % (class_info.name, stype.name)
@@ -535,7 +529,7 @@ class Generator:
     s += '    fb.add_msgid (Plic::MSG_EVENT, 0); // FIXME: 0\n' # self.method_digest (stype)
     s += '    fb.add_int64 (sp->m_handler);\n'
     ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
-    args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '', therr)
+    args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     if args2fb:
       s += reindent ('  ', args2fb) + '\n'
     s += '    sp->m_connection.send_message (&fb); // deletes fb\n'
