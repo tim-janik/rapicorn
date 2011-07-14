@@ -86,8 +86,8 @@ inline bool msgid_is_error      (MessageId mid) { return (mid & 0xf0000000000000
 class SmartHandle {
   uint64 m_rpc_id;
 protected:
-  typedef bool (SmartHandle::*_unspecified_bool_type) () const; // non-numeric operator bool() result
-  static inline _unspecified_bool_type _unspecified_bool_true () { return &Plic::SmartHandle::_is_null; }
+  typedef bool (SmartHandle::*_UnspecifiedBool) () const; // non-numeric operator bool() result
+  static inline _UnspecifiedBool _unspecified_bool_true () { return &Plic::SmartHandle::_is_null; }
   typedef uint64 RpcId;
   explicit                  SmartHandle ();
   void                      _reset      ();

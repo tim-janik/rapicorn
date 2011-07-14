@@ -146,8 +146,8 @@ class Generator:
   def U (self, ident, type_node):                       # construct function call argument Use
     s = '*' if type_node.storage == Decls.INTERFACE else ''
     return s + ident
-  def F (self, string):                                 # Format string to tab stop
-    return string + ' ' * max (1, self.ntab - len (string))
+  def F (self, string, delta = 0):                      # Format string to tab stop
+    return string + ' ' * max (1, self.ntab + delta - len (string))
   def tab_stop (self, n):
     self.ntab = n
   def close_inner_namespace (self):
@@ -180,20 +180,21 @@ class Generator:
     return namespace_names
   def namespaced_identifier (self, ident):
     return '::'.join ([d.name for d in self.namespaces] + [ident])
-  def generate_property (self, fident, ftype):
+  def generate_property (self, fident, ftype, pad = 0):
     s, v, v0, ptr = '', '', '', ''
     if self.gen_mode == G4SERVER:
       v, v0, ptr = 'virtual ', ' = 0', '*'
     tname = self.C (ftype)
+    pid = fident + ' ' * max (0, pad - len (fident))
     if ftype.storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
-      s += '  ' + v + self.F (tname)  + fident + ' () const%s;\n' % v0
-      s += '  ' + v + self.F ('void') + fident + ' (' + tname + ')%s;\n' % v0
+      s += '  ' + v + self.F (tname)  + pid + ' () const%s;\n' % v0
+      s += '  ' + v + self.F ('void') + pid + ' (' + tname + ')%s;\n' % v0
     elif ftype.storage in (Decls.STRING, Decls.RECORD, Decls.SEQUENCE):
-      s += '  ' + v + self.F (tname)  + fident + ' () const%s;\n' % v0
-      s += '  ' + v + self.F ('void') + fident + ' (const ' + tname + '&)%s;\n' % v0
+      s += '  ' + v + self.F (tname)  + pid + ' () const%s;\n' % v0
+      s += '  ' + v + self.F ('void') + pid + ' (const ' + tname + '&)%s;\n' % v0
     elif ftype.storage == Decls.INTERFACE:
-      s += '  ' + v + self.F (tname + ptr)  + fident + ' () const%s;\n' % v0
-      s += '  ' + v + self.F ('void') + fident + ' (' + tname + ptr + ')%s;\n' % v0
+      s += '  ' + v + self.F (tname + ptr)  + pid + ' () const%s;\n' % v0
+      s += '  ' + v + self.F ('void') + pid + ' (' + tname + ptr + ')%s;\n' % v0
     return s
   def generate_client_property_stub (self, class_info, fident, ftype):
     s = ''
@@ -277,7 +278,7 @@ class Generator:
     elif type_info.storage == Decls.SEQUENCE:
       s += '  typedef std::vector<' + self.R (fl[1]) + '> Sequence;\n'
     if type_info.storage == Decls.RECORD:
-      s += '  inline %s () {' % self.C (type_info)
+      s += '  ' + self.F ('inline') + '%s () {' % self.C (type_info)
       for fl in fieldlist:
         if fl[1].storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
           s += " %s = %s;" % (fl[0], self.mkzero (fl[1]))
@@ -643,24 +644,27 @@ class Generator:
     # constructors
     s += 'protected:\n'
     if self.gen_mode == C4OLDHANDLE:
-      s += '  inline %s* _iface() const { return (%s*) _void_iface(); }\n' \
-          % (self._iface_base, self._iface_base)
+      s += '  ' + self.F ('inline %s*' % self._iface_base)
+      s += '_iface() const { return (%s*) _void_iface(); }\n' % self._iface_base
       s += '  inline void _iface (%s *_iface) { _void_iface (_iface); }\n' % self._iface_base
     if self.gen_mode == G4SERVER:
       s += '  explicit ' + self.F ('') + '%s ();\n' % self.C (type_info)
       s += '  virtual ' + self.F ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info)
     s += 'public:\n'
     if self.gen_mode in (G4CLIENT, C4OLDHANDLE):
-      s += '  inline %s () {}\n' % self.H (type_info.name)
-      s += '  inline %s (Plic::FieldReader &fbr) ' % self.H (type_info.name)
+      s += '  ' + self.F ('inline') + '%s () {}\n' % self.H (type_info.name)
+      s += '  ' + self.F ('inline') + '%s (Plic::FieldReader &fbr) ' % self.H (type_info.name)
       s += '{ /* _pop_rpc (fbr); */ }\n'
     if self.gen_mode == C4OLDHANDLE:
       ifacename = self.Iwrap (type_info.name)
       s += '  inline %s (%s *iface) { _iface (iface); }\n' % (self.C (type_info), ifacename)
       s += '  inline %s (%s &iface) { _iface (&iface); }\n' % (self.C (type_info), ifacename)
     # properties
+    il = 0
+    if type_info.fields:
+      il = max (len (fl[0]) for fl in type_info.fields)
     for fl in type_info.fields:
-      s += self.generate_property (fl[0], fl[1])
+      s += self.generate_property (fl[0], fl[1], il)
     # signals
     if self.gen_mode == G4SERVER:
       for sg in type_info.signals:
@@ -668,11 +672,12 @@ class Generator:
       for sg in type_info.signals:
         s += '  ' + self.generate_signal_name (sg, type_info) + ' sig_%s;\n' % sg.name
     # methods
-    ml = 0
+    il = 0
     if type_info.methods:
-      ml = max (len (m.name) for m in type_info.methods)
+      il = max (len (m.name) for m in type_info.methods)
+      il = max (il, len (self.C (type_info)))
     for m in type_info.methods:
-      s += self.generate_method_decl (m, ml)
+      s += self.generate_method_decl (m, il)
     # specials (operators)
     if self.gen_mode == C4OLDHANDLE:
       ifn2 = (ifacename, ifacename)
@@ -680,7 +685,8 @@ class Generator:
       s += '  inline %s* operator-> () const { return dynamic_cast<%s*> (_iface()); }\n' % ifn2
       s += '  inline operator  %s&  () const { return operator*(); }\n' % ifacename
     if self.gen_mode in (G4CLIENT, C4OLDHANDLE):
-      s += '  inline operator _unspecified_bool_type () const ' # return non-NULL pointer to member on true
+      s += '  ' + self.F ('inline', -9)
+      s += 'operator _UnspecifiedBool () const ' # return non-NULL pointer to member on true
       s += '{ return _is_null() ? NULL : _unspecified_bool_true(); }\n' # avoids auto-bool conversions on: float (*this)
     if self.gen_mode == G4SERVER and self.object_impl:
       impl_method, ppwrap = self.object_impl
@@ -821,7 +827,7 @@ class Generator:
       s += gencc_boilerplate + '\n' + clientcc_boilerplate + '\n'
     if self.gen_servercc:
       s += gencc_boilerplate + '\n' + servercc_boilerplate + '\n'
-    self.tab_stop (16)
+    self.tab_stop (24)
     s += self.open_namespace (None)
     # collect impl types
     types = []
