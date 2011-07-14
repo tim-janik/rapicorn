@@ -30,23 +30,11 @@ gencc_boilerplate = r"""
 
 namespace { // Anonymous
 using Plic::uint64;
-typedef Plic::Coupler Coupler;
 
-#ifndef PLIC_COUPLER
-#define PLIC_COUPLER()  _plic_coupler_static
-static struct _DummyCoupler : public Coupler {
-  virtual Plic::FieldBuffer* call_remote (Plic::FieldBuffer *fbcall)
-  {
-    bool hasresult = Plic::msgid_has_result (fbcall->first_id());
-    if (push_call (fbcall)) // deletes fbcall
-      ; // threaded dispatcher needs CPU
-    // wakeup dispatcher
-    while (check_dispatch())
-      dispatch();
-    return !hasresult ? NULL : pop_result();
-  }
-} _plic_coupler_static;
+#ifndef PLIC_CONNECTION
+#define PLIC_CONNECTION()       (*(Plic::Connection*)NULL)
 #endif
+
 } // Anonymous
 #endif // __PLIC_GENERIC_CC_BOILERPLATE__
 """
@@ -209,7 +197,6 @@ class Generator:
     return s
   def generate_client_property_stub (self, class_info, fident, ftype):
     s = ''
-    cplfb = ('PLIC_COUPLER()', 'fb') # FIXME: optimize PLIC_COUPLER() accessor?
     therr = 'THROW_ERROR()'
     tname = self.C (ftype)
     # getter prototype
@@ -218,20 +205,19 @@ class Generator:
     s += q + ') const\n{\n'
     s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1), *fr = NULL;\n'
     s += '  fb.add_type_hash (%s); // msgid\n' % self.getter_digest (class_info, fident, ftype)
-    s += self.generate_proto_add_args (cplfb, class_info, '', [('(*this)', class_info)], '')
-    s += '  fr = %s.call_remote (&fb); // deletes fb\n' % cplfb[0]
+    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
+    s += '  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
     if 1: # hasret
       rarg = ('retval', ftype)
       s += '  Plic::FieldReader frr (*fr);\n'
       s += '  frr.skip(); // msgid\n' # FIXME: check fr return type
-      cplfrr = (cplfb[0], 'frr')
       # FIXME: check return error and return type
       if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
         s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
-        s += self.generate_proto_pop_args (cplfrr, class_info, '', [rarg], '', therr)
+        s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '', therr)
       else:
         vtype = self.V ('', rarg[1]) # 'int*' + ...
-        s += self.generate_proto_pop_args (cplfrr, class_info, vtype, [rarg], '', therr) # ... + 'x = 5;'
+        s += self.generate_proto_pop_args ('frr', class_info, vtype, [rarg], '', therr) # ... + 'x = 5;'
       s += '  delete fr;\n'
       s += '  return retval;\n'
     s += '}\n'
@@ -243,10 +229,10 @@ class Generator:
       s += q + tname + ' value)\n{\n'
     s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 1), *fr = NULL;\n'
     s += '  fb.add_type_hash (%s); // msgid\n' % self.setter_digest (class_info, fident, ftype)
-    s += self.generate_proto_add_args (cplfb, class_info, '', [('(*this)', class_info)], '')
+    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('value', ftype)]
-    s += self.generate_proto_add_args (cplfb, class_info, '', ident_type_args, '', therr)
-    s += '  fr = %s.call_remote (&fb); // deletes fb\n' % cplfb[0]
+    s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '', therr)
+    s += '  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
     s += '  if (fr) delete fr;\n' # FIXME: check return error
     s += '}\n'
     return s
@@ -311,10 +297,9 @@ class Generator:
              Decls.STRING:    'string',
              Decls.FUNC:      'func',
              Decls.INTERFACE: 'object' }.get (decls_type, None)
-  def generate_proto_add_args (self, cplfb, type_info, aprefix, arg_info_list, apostfix,
+  def generate_proto_add_args (self, fb, type_info, aprefix, arg_info_list, apostfix,
                                onerr = 'return false'):
     s = ''
-    cpl, fb = cplfb
     for arg_it in arg_info_list:
       ident, type = arg_it
       ident = aprefix + ident + apostfix
@@ -327,10 +312,9 @@ class Generator:
       else:
         s += '  %s.add_%s (%s);\n' % (fb, self.accessor_name (type.storage), ident)
     return s
-  def generate_proto_pop_args (self, cplfbr, type_info, aprefix, arg_info_list, apostfix = '',
+  def generate_proto_pop_args (self, fbr, type_info, aprefix, arg_info_list, apostfix = '',
                                onerr = 'return false'):
     s = ''
-    cpl, fbr = cplfbr
     for arg_it in arg_info_list:
       ident, type_node = arg_it
       ident = aprefix + ident + apostfix
@@ -347,28 +331,24 @@ class Generator:
     return s
   def generate_record_impl (self, type_info):
     s = ''
-    cplfb = ('cpl', 'fb')
     s += 'void\noperator<< (Plic::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
     s += '  Plic::FieldBuffer &fb = dst.add_rec (%u);\n' % len (type_info.fields)
-    s += self.generate_proto_add_args (cplfb, type_info, 'self.', type_info.fields, '')
+    s += self.generate_proto_add_args ('fb', type_info, 'self.', type_info.fields, '')
     s += '}\n'
     s += 'void\noperator>> (Plic::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
     s += '  Plic::FieldReader fbr (src.pop_rec());\n'
     s += '  if (fbr.remaining() < %u) return;\n' % len (type_info.fields)
-    cplfbr = ('cpl', 'fbr')
-    s += self.generate_proto_pop_args (cplfbr, type_info, 'self.', type_info.fields)
+    s += self.generate_proto_pop_args ('fbr', type_info, 'self.', type_info.fields)
     s += '}\n'
     return s
   def generate_sequence_impl (self, type_info):
     s = ''
-    cplfb = ('cpl', 'fb')
-    cplfbr = ('cpl', 'fbr')
     el = type_info.elements
     s += 'void\noperator<< (Plic::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
     s += '  const size_t len = self.size();\n'
     s += '  Plic::FieldBuffer &fb = dst.add_seq (len);\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
-    s += reindent ('  ', self.generate_proto_add_args (cplfb, type_info, '',
+    s += reindent ('  ', self.generate_proto_add_args ('fb', type_info, '',
                                                        [('self', type_info.elements[1])],
                                                        '[k]')) + '\n'
     s += '  }\n'
@@ -382,7 +362,7 @@ class Generator:
       s += '  self.reserve (len);\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
     if el[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += reindent ('  ', self.generate_proto_pop_args (cplfbr, type_info, '',
+      s += reindent ('  ', self.generate_proto_pop_args ('fbr', type_info, '',
                                                          [('self', type_info.elements[1])],
                                                          '[k]')) + '\n'
     elif el[1].storage == Decls.ENUM:
@@ -398,7 +378,6 @@ class Generator:
     return s
   def generate_client_method_stub (self, class_info, mtype):
     s = ''
-    cplfb = ('PLIC_COUPLER()', 'fb') # FIXME: optimize PLIC_COUPLER() accessor?
     therr = 'THROW_ERROR()'
     hasret = mtype.rtype.storage != Decls.VOID
     # prototype
@@ -409,24 +388,23 @@ class Generator:
     s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + %u), *fr = NULL;\n' % len (mtype.args)
     s += '  fb.add_type_hash (%s); // msgid\n' % self.method_digest (mtype)
     # marshal args
-    s += self.generate_proto_add_args (cplfb, class_info, '', [('(*this)', class_info)], '')
+    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
-    s += self.generate_proto_add_args (cplfb, class_info, '', ident_type_args, '', therr)
+    s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '', therr)
     # call out
-    s += '  fr = %s.call_remote (&fb); // deletes fb\n' % cplfb[0]
+    s += '  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
     # unmarshal return
     if hasret:
       rarg = ('retval', mtype.rtype)
       s += '  Plic::FieldReader frr (*fr);\n'
       s += '  frr.skip(); // msgid\n' # FIXME: check fr return type
-      cplfrr = (cplfb[0], 'frr')
       # FIXME: check return error and return type
       if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
         s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
-        s += self.generate_proto_pop_args (cplfrr, class_info, '', [rarg], '', therr)
+        s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '', therr)
       else:
         vtype = self.V ('', rarg[1]) # 'int*' + ...
-        s += self.generate_proto_pop_args (cplfrr, class_info, vtype, [rarg], '', therr) # ... + 'x = 5;'
+        s += self.generate_proto_pop_args ('frr', class_info, vtype, [rarg], '', therr) # ... + 'x = 5;'
       s += '  delete fr;\n'
       s += '  return retval;\n'
     s += '}\n'
@@ -434,7 +412,6 @@ class Generator:
   def generate_server_property_set_dispatcher (self, class_info, fident, ftype, reglines):
     assert self.gen_mode == G4SERVER
     s = ''
-    cplfbr = ('cpl', 'fbr')
     dispatcher_name = '_$setter__%s__%s' % (class_info.name, fident)
     setter_hash = self.setter_digest (class_info, fident, ftype)
     reglines += [ (setter_hash, self.namespaced_identifier (dispatcher_name)) ]
@@ -445,15 +422,15 @@ class Generator:
     s += '  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
-    s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
+    s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
     # fetch property
     if ftype.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += '  ' + self.V ('arg_' + fident, ftype) + ';\n'
-      s += self.generate_proto_pop_args (cplfbr, class_info, 'arg_', [(fident, ftype)])
+      s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(fident, ftype)])
     else:
       tstr = self.V ('', ftype) + 'arg_'
-      s += self.generate_proto_pop_args (cplfbr, class_info, tstr, [(fident, ftype)])
+      s += self.generate_proto_pop_args ('fbr', class_info, tstr, [(fident, ftype)])
     ref = '&' if ftype.storage == Decls.INTERFACE else ''
     # call out
     s += '  self->' + fident + ' (' + ref + self.U ('arg_' + fident, ftype) + ');\n'
@@ -463,7 +440,6 @@ class Generator:
   def generate_server_property_get_dispatcher (self, class_info, fident, ftype, reglines):
     assert self.gen_mode == G4SERVER
     s = ''
-    cplfbr = ('cpl', 'fbr')
     dispatcher_name = '_$getter__%s__%s' % (class_info.name, fident)
     getter_hash = self.getter_digest (class_info, fident, ftype)
     reglines += [ (getter_hash, self.namespaced_identifier (dispatcher_name)) ]
@@ -474,7 +450,7 @@ class Generator:
     s += '  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
-    s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
+    s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
     # return var
     s += '  '
@@ -482,17 +458,15 @@ class Generator:
     # call out
     s += 'self->' + fident + ' ();\n'
     # store return value
-    cplrb = (cplfbr[0], 'rb')
     s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
     rval = 'rval'
-    s += self.generate_proto_add_args (cplrb, class_info, '', [(rval, ftype)], '')
+    s += self.generate_proto_add_args ('rb', class_info, '', [(rval, ftype)], '')
     s += '  return &rb;\n'
     s += '}\n'
     return s
   def generate_server_method_dispatcher (self, class_info, mtype, reglines):
     assert self.gen_mode == G4SERVER
     s = ''
-    cplfbr = ('cpl', 'fbr')
     dispatcher_name = '_$caller__%s__%s' % (class_info.name, mtype.name)
     reglines += [ (self.method_digest (mtype), self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Plic::FieldBuffer*\n'
@@ -502,16 +476,16 @@ class Generator:
     s += '  if (fbr.remaining() != 1 + %u) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n' % len (mtype.args)
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
-    s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
+    s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
     # fetch args
     for a in mtype.args:
       if a[1].storage in (Decls.RECORD, Decls.SEQUENCE):
         s += '  ' + self.V ('arg_' + a[0], a[1]) + ';\n'
-        s += self.generate_proto_pop_args (cplfbr, class_info, 'arg_', [(a[0], a[1])])
+        s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(a[0], a[1])])
       else:
         tstr = self.V ('', a[1]) + 'arg_'
-        s += self.generate_proto_pop_args (cplfbr, class_info, tstr, [(a[0], a[1])])
+        s += self.generate_proto_pop_args ('fbr', class_info, tstr, [(a[0], a[1])])
     # return var
     s += '  '
     hasret = mtype.rtype.storage != Decls.VOID
@@ -523,10 +497,9 @@ class Generator:
     s += ');\n'
     # store return value
     if hasret:
-      cplrb = (cplfbr[0], 'rb')
       s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
       rval = 'rval'
-      s += self.generate_proto_add_args (cplrb, class_info, '', [(rval, mtype.rtype)], '')
+      s += self.generate_proto_add_args ('rb', class_info, '', [(rval, mtype.rtype)], '')
       s += '  return &rb;\n'
     else:
       s += '  return NULL;\n'
@@ -540,18 +513,17 @@ class Generator:
     dispatcher_name = '_$discon__%s__%s' % (class_info.name, stype.name)
     reglines += [ (self.method_digest (stype), self.namespaced_identifier (dispatcher_name)) ]
     closure_class = '_$Closure__%s__%s' % (class_info.name, stype.name)
-    cplfb = ('sp->m_coupler', 'fb')
     s += 'class %s {\n' % closure_class
-    s += '  Plic::Coupler &m_coupler; uint64 m_handler;\n'
+    s += '  Plic::Connection &m_connection; uint64 m_handler;\n'
     s += 'public:\n'
     s += '  typedef Plic::shared_ptr<%s> SharedPtr;\n' % closure_class
-    s += '  %s (Plic::Coupler &cpl, uint64 h) : m_coupler (cpl), m_handler (h) {}\n' % closure_class
+    s += '  %s (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}\n' % closure_class
     s += '  ~%s()\n' % closure_class
     s += '  {\n'
     s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1);\n'
     s += '    fb.add_int64 (Plic::msgid_discon);\n' # self.method_digest (stype)
     s += '    fb.add_int64 (m_handler);\n'
-    s += '    m_coupler.push_event (&fb); // deletes fb\n'
+    s += '    m_connection.send_message (&fb); // deletes fb\n'
     s += '  }\n'
     cpp_rtype = self.R (stype.rtype)
     s += '  static %s\n' % cpp_rtype
@@ -562,28 +534,27 @@ class Generator:
     s += '    fb.add_int64 (Plic::msgid_event);\n' # self.method_digest (stype)
     s += '    fb.add_int64 (sp->m_handler);\n'
     ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
-    args2fb = self.generate_proto_add_args (cplfb, class_info, '', ident_type_args, '', therr)
+    args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '', therr)
     if args2fb:
       s += reindent ('  ', args2fb) + '\n'
-    s += '    sp->m_coupler.push_event (&fb); // deletes fb\n'
+    s += '    sp->m_connection.send_message (&fb); // deletes fb\n'
     if stype.rtype.storage != Decls.VOID:
       s += '    return %s;\n' % self.mkzero (stype.rtype)
     s += '  }\n'
     s += '};\n'
-    cplfbr = ('cpl', 'fbr')
     s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
     s += '  fbr.skip_hash(); // TypeHash\n'
     s += '  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     s += '  %s *self;\n' % self.C (class_info)
-    s += self.generate_proto_pop_args (cplfbr, class_info, '', [('self', class_info)])
+    s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
-    s += '  uint64 cid = 0, handler_id = %s.pop_int64();\n' % cplfbr[1]
-    s += '  uint64 con_id = %s.pop_int64();\n' % cplfbr[1]
+    s += '  uint64 cid = 0, handler_id = fbr.pop_int64();\n'
+    s += '  uint64 con_id = fbr.pop_int64();\n'
     s += '  if (con_id) self->sig_%s.disconnect (con_id);\n' % stype.name
     s += '  if (handler_id) {\n'
-    s += '    %s::SharedPtr sp (new %s (PLIC_COUPLER(), handler_id));\n' % (closure_class, closure_class)
+    s += '    %s::SharedPtr sp (new %s (PLIC_CONNECTION(), handler_id));\n' % (closure_class, closure_class)
     s += '    cid = self->sig_%s.connect (slot (sp->handler, sp)); }\n' % stype.name
     s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
     s += '  rb.add_int64 (cid);\n'

@@ -84,6 +84,7 @@ inline bool msgid_has_error  (const uint64 id) { return id & msgid_error; }
 /* === Forward Declarations === */
 class SimpleServer;
 class Coupler;
+class Connection;
 union FieldUnion;
 class FieldBuffer;
 class FieldReader;
@@ -300,6 +301,21 @@ public:
   void          set_wakeup      (void (*f) ()) { wakeup0.set (f); }
   template<class C>
   void          set_wakeup      (C &c, void (C::*m) ()) { wakeup0.set (c, m); }
+};
+
+// === Connection ===
+class Connection {      ///< Connection context for IPC.
+public:
+  virtual void         send_message (FieldBuffer*) = 0; ///< Send message to remote, transfers memory.
+  virtual FieldBuffer* call_remote  (FieldBuffer*) = 0; ///< Carry out a remote call, transfers memory.
+public: // registry for remote method invocation
+  struct MethodEntry   { uint64 hashhi, hashlow; DispatchFunc dispatcher; };   ///< Structure to register methods for IPC.
+  class MethodRegistry {
+    static void                 register_method (const MethodEntry &mentry);
+  public:
+    template<class T, size_t S> MethodRegistry  (T (&static_const_entries)[S]) ///< Register static const MethodEntry structs.
+    { for (size_t i = 0; i < S; i++) register_method (static_const_entries[i]); }
+  };
 };
 
 /* === Coupler === */
