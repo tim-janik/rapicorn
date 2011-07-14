@@ -29,9 +29,6 @@
 #include <stdexcept>
 #include <map>
 #include <set>
-#if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 10
-#  include <sys/eventfd.h>
-#endif
 
 /* === Auxillary macros === */
 #ifndef __GNUC__
@@ -262,9 +259,43 @@ FieldBuffer::_new (uint _ntypes)
 }
 
 // === Connection ===
+struct Hash128 {
+  uint64 hashes[2];
+  inline      Hash128 (uint64 h, uint64 l) { hashes[0] = h; hashes[1] = l; }
+  inline bool operator< (const Hash128 &other) const
+  {
+    if (PLIC_UNLIKELY (hashes[0] == other.hashes[0]))
+      return hashes[1] < other.hashes[1];
+    else
+      return hashes[0] < other.hashes[0];
+  }
+};
+typedef std::map<Hash128, DispatchFunc> DispatcherMap;
+static DispatcherMap                   dispatcher_map;
+static pthread_mutex_t                 dispatcher_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 void
 Connection::MethodRegistry::register_method (const MethodEntry &mentry)
 {
+  pthread_mutex_lock (&dispatcher_mutex);
+  DispatcherMap::size_type size_before = dispatcher_map.size();
+  Hash128 hash128 (mentry.hashhi, mentry.hashlow);
+  dispatcher_map[hash128] = mentry.dispatcher;
+  DispatcherMap::size_type size_after = dispatcher_map.size();
+  pthread_mutex_unlock (&dispatcher_mutex);
+  // simple hash collision check (sanity check, see below)
+  if (PLIC_UNLIKELY (size_before == size_after))
+    {
+      errno = EKEYREJECTED;
+      perror (string_printf ("%s:%u: Plic::Connection::MethodRegistry::register_method: "
+                             "duplicate hash registration (%016llx%016llx)",
+                             __FILE__, __LINE__, mentry.hashhi, mentry.hashlow).c_str());
+      abort();
+    }
+  /* Two 64 bit ints are used for IPC message IDs. The upper four bits encode the
+   * message type. The remaining 124 bits encode the method invocation identifier.
+   * The 124 bit hash keeps collision probability below 10^-19 for up to 2 billion inputs.
+   */
 }
 
 } // Plic

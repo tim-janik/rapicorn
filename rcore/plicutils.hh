@@ -213,11 +213,10 @@ public:
   virtual FieldBuffer* call_remote  (FieldBuffer*) = 0; ///< Carry out a remote call, transfers memory.
 public: // registry for remote method invocation
   struct MethodEntry   { uint64 hashhi, hashlow; DispatchFunc dispatcher; };   ///< Structure to register methods for IPC.
-  class MethodRegistry {
-    static void                 register_method (const MethodEntry &mentry);
-  public:
+  struct MethodRegistry {
     template<class T, size_t S> MethodRegistry  (T (&static_const_entries)[S]) ///< Register static const MethodEntry structs.
     { for (size_t i = 0; i < S; i++) register_method (static_const_entries[i]); }
+  private: static void register_method (const MethodEntry &mentry);
   };
 };
 
