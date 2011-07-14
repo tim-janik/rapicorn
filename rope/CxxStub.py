@@ -204,7 +204,7 @@ class Generator:
     q = '%s::%s (' % (self.C (class_info), fident)
     s += q + ') const\n{\n'
     s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1), *fr = NULL;\n'
-    s += '  fb.add_type_hash (%s); // msgid\n' % self.getter_digest (class_info, fident, ftype)
+    s += '  fb.add_msgid (%s); // msgid\n' % self.getter_digest (class_info, fident, ftype)
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     s += '  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
     if 1: # hasret
@@ -228,7 +228,7 @@ class Generator:
     else:
       s += q + tname + ' value)\n{\n'
     s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 1), *fr = NULL;\n'
-    s += '  fb.add_type_hash (%s); // msgid\n' % self.setter_digest (class_info, fident, ftype)
+    s += '  fb.add_msgid (%s); // msgid\n' % self.setter_digest (class_info, fident, ftype)
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('value', ftype)]
     s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '', therr)
@@ -386,7 +386,7 @@ class Generator:
     s += q + self.Args (mtype, 'arg_', len (q)) + ')\n{\n'
     # vars, procedure
     s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + %u), *fr = NULL;\n' % len (mtype.args)
-    s += '  fb.add_type_hash (%s); // msgid\n' % self.method_digest (mtype)
+    s += '  fb.add_msgid (%s); // msgid\n' % self.method_digest (mtype)
     # marshal args
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
@@ -418,7 +418,7 @@ class Generator:
     s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  fbr.skip_hash(); // TypeHash\n'
+    s += '  fbr.skip_msgid();\n'
     s += '  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
@@ -446,7 +446,7 @@ class Generator:
     s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  fbr.skip_hash(); // TypeHash\n'
+    s += '  fbr.skip_msgid();\n'
     s += '  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
@@ -472,7 +472,7 @@ class Generator:
     s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  fbr.skip_hash(); // TypeHash\n'
+    s += '  fbr.skip_msgid();\n'
     s += '  if (fbr.remaining() != 1 + %u) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n' % len (mtype.args)
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
@@ -521,7 +521,7 @@ class Generator:
     s += '  ~%s()\n' % closure_class
     s += '  {\n'
     s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1);\n'
-    s += '    fb.add_int64 (Plic::msgid_discon);\n' # self.method_digest (stype)
+    s += '    fb.add_msgid (Plic::MSG_DISCON, 0); // FIXME: 0\n' # self.method_digest (stype)
     s += '    fb.add_int64 (m_handler);\n'
     s += '    m_connection.send_message (&fb); // deletes fb\n'
     s += '  }\n'
@@ -531,7 +531,7 @@ class Generator:
     s += self.Args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
     s += 'SharedPtr sp)\n  {\n'
     s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + %u);\n' % len (stype.args)
-    s += '    fb.add_int64 (Plic::msgid_event);\n' # self.method_digest (stype)
+    s += '    fb.add_msgid (Plic::MSG_EVENT, 0); // FIXME: 0\n' # self.method_digest (stype)
     s += '    fb.add_int64 (sp->m_handler);\n'
     ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
     args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '', therr)
@@ -545,7 +545,7 @@ class Generator:
     s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  fbr.skip_hash(); // TypeHash\n'
+    s += '  fbr.skip_msgid();\n'
     s += '  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
@@ -562,26 +562,24 @@ class Generator:
     s += '}\n'
     return s
   def digest2cbytes (self, digest):
-    return ('0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL, ' +
-            '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL') % \
-            digest
-  def method_digest (self, mtype):
-    return self.digest2cbytes (mtype.type_hash())
+    return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
+  def method_digest (self, method_info):
+    return self.digest2cbytes (method_info.type_hash())
   def setter_digest (self, class_info, fident, ftype):
     setter_hash = class_info.property_hash ((fident, ftype), True)
     return self.digest2cbytes (setter_hash)
   def getter_digest (self, class_info, fident, ftype):
-    setter_hash = class_info.property_hash ((fident, ftype), False)
-    return self.digest2cbytes (setter_hash)
+    getter_hash = class_info.property_hash ((fident, ftype), False)
+    return self.digest2cbytes (getter_hash)
   def generate_server_method_registry (self, reglines):
     s = ''
-    s += 'static const Plic::DispatcherEntry _dispatcher_entries[] = {\n'
+    s += 'static const Plic::Connection::MethodEntry _plic_stub_entries[] = {\n'
     for dispatcher in reglines:
       cdigest, dispatcher_name = dispatcher
-      s += '  { { ' + cdigest + ' }, '
+      s += '  { ' + cdigest + ', '
       s += dispatcher_name + ', },\n'
     s += '};\n'
-    s += 'static Plic::DispatcherRegistry _dispatcher_registry (_dispatcher_entries);\n'
+    s += 'static Plic::Connection::MethodRegistry _plic_stub_registry (_plic_stub_entries);\n'
     return s
   def inherit_reduce (self, type_list):
     def hasancestor (child, parent):

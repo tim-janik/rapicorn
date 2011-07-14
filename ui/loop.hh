@@ -21,8 +21,7 @@
 
 namespace Rapicorn {
 
-struct PollFD // mirror struct pollfd for poll(3posix)
-{
+struct PollFD { ///< Mirrors struct pollfd for poll(3posix)
   int           fd;
   uint16        events;
   uint16        revents;
@@ -42,7 +41,18 @@ struct PollFD // mirror struct pollfd for poll(3posix)
   };
 };
 
-/* --- EventLoop --- */
+class EventFd { ///< Wakeup facility for IPC.
+  int      fds[2];
+public:
+  explicit EventFd   ();
+  int      open      (); ///< @Returns -errno.
+  void     wakeup    (); ///< Wakeup polling end.
+  int      inputfd   (); ///< @Returns fd for POLLIN.
+  void     flush     (); ///< Clear pending wakeups.
+  /*Des*/ ~EventFd   ();
+};
+
+// === EventLoop
 class EventLoop : public virtual BaseObject {
   friend class RapicornTester;
   class TimedSource;

@@ -127,29 +127,29 @@ class TypeInfo (BaseDecl):
     digest = self.string_digest()
     digest = re.sub ('[^a-zA-Z0-9]', '_', digest)
     return digest
-  def sha224digest (self):
-    digest = self.string_digest()
-    sha224 = hashlib.sha224()
-    sha224.update (digest)
-    return sha224.digest()
+  def hash128digest (self, highnibble, prefix):
+    sha256 = hashlib.sha256()
+    sha256.update ('fc4676dd-248d-4958-a7fa-e170a4d8a68c | ' + prefix + ' | ' + self.string_digest())
+    hash120 = sha256.digest()[7:17] + sha256.digest()[26:31]
+    hash8 = (highnibble & 0xf0) + (ord (sha256.digest()[3]) & 0x0f)
+    return chr (hash8) + hash120
   def type_hash (self):
     if self.issignal:
-      l = '\x50\x00\x00\x00' # sigcon
+      highnibble, tag = 0x50, "sigcon"
     elif self.rtype.storage == VOID:
-      l = '\x20\x00\x00\x00' # oneway
+      highnibble, tag = 0x20, "oneway"
     else:
-      l = '\x30\x00\x00\x00' # twoway
-    bytes = l + self.sha224digest()
+      highnibble, tag = 0x30, "twoway"
+    bytes = self.hash128digest (highnibble, tag)
     t = tuple ([ord (c) for c in bytes])
     return t
   def property_hash (self, field, setter):
-    digest = self.string_digest()
-    digest += ' set: ' if setter else ' get: '
-    digest += field[1].full_name() + ' ' + field[0]
-    sha224 = hashlib.sha224()
-    sha224.update (digest)
-    l = '\x20\x00\x00\x00' if setter else '\x30\x00\x00\x00'
-    bytes = l + sha224.digest()
+    if setter:
+      highnibble, tag = 0x20, "setter" # oneway
+    else:
+      highnibble, tag = 0x30, "getter" # twoway
+    tag += ' ' + field[0] + field[1].full_name()
+    bytes = self.hash128digest (highnibble, tag)
     t = tuple ([ord (c) for c in bytes])
     return t
   def clone (self, newname, isimpl):

@@ -10,8 +10,8 @@ test_server_smart_handle (void)
   ApplicationIface *ab = &app;
   Plic::FieldBuffer8 fb (4);
   fb.add_object (uint64 ((BaseObject*) ab));
-  Plic::Coupler &c = *rope_thread_coupler();
-  c.reader.reset (fb);
+  // FIXME: Plic::Coupler &c = *rope_thread_coupler();
+  // c.reader.reset (fb);
   ApplicationImpl *am = dynamic_cast<ApplicationImpl*> (ab);
   assert (am == &app);
   ApplicationIface *ai = am;

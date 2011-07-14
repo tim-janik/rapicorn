@@ -47,7 +47,6 @@ using std::tr1::weak_ptr;
 #define PLIC_UNLIKELY(expr)     expr
 #endif
 #define PLIC_LIKELY             PLIC_ISLIKELY
-#define PLIC_MSGID_SHIFT        60
 
 /* === Standard Types === */
 typedef std::string String;
@@ -60,83 +59,28 @@ typedef uint32_t               uint;
 typedef signed long long int   int64; // int64_t is a long on AMD64 which breaks printf
 typedef unsigned long long int uint64; // int64_t is a long on AMD64 which breaks printf
 
-/* === Constants === */
-static const uint64 msgid_ok     = 0x0000000000000000ULL;
-static const uint64 msgid_result = 0x1000000000000000ULL; // result bit
-static const uint64 msgid_oneway = 0x2000000000000000ULL;
-static const uint64 msgid_twoway = 0x3000000000000000ULL; // result bit
-static const uint64 msgid_discon = 0x4000000000000000ULL;
-static const uint64 msgid_sigcon = 0x5000000000000000ULL; // result bit
-static const uint64 msgid_event  = 0x6000000000000000ULL;
-//     const uint64 msgid_signal = 0x7000000000000000ULL; // result bit
-static const uint64 msgid_error  = 0x8000000000000000ULL; // error bit
-inline bool msgid_has_result (const uint64 id) { return id & msgid_result; }
-inline bool is_msgid_ok      (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_ok     >> PLIC_MSGID_SHIFT; }
-inline bool is_msgid_result  (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_result >> PLIC_MSGID_SHIFT; }
-inline bool is_msgid_oneway  (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_oneway >> PLIC_MSGID_SHIFT; }
-inline bool is_msgid_twoway  (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_twoway >> PLIC_MSGID_SHIFT; }
-inline bool is_msgid_discon  (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_discon >> PLIC_MSGID_SHIFT; }
-inline bool is_msgid_sigcon  (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_sigcon >> PLIC_MSGID_SHIFT; }
-inline bool is_msgid_event   (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_event  >> PLIC_MSGID_SHIFT; }
-inline bool is_msgid_error   (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_error  >> PLIC_MSGID_SHIFT; }
-inline bool msgid_has_error  (const uint64 id) { return id & msgid_error; }
-
 /* === Forward Declarations === */
 class SimpleServer;
-class Coupler;
 class Connection;
 union FieldUnion;
 class FieldBuffer;
 class FieldReader;
 typedef FieldBuffer* (*DispatchFunc) (FieldReader&);
 
-/* === EventFd === */
-class EventFd {
-  int fds[2];
-public:
-  explicit EventFd   ();
-  int      open      (); // -errno
-  void     wakeup    (); // wakeup polling end
-  int      inputfd   (); // fd for POLLIN
-  void     flush     (); // clear pending wakeups
-  /*Des*/ ~EventFd   ();
+// === Message IDs ===
+enum MessageId {
+  MSG_ERROR       = 0x0000000000000000ULL,      ///< Error and status Messages.
+  MSG_ONEWAY      = 0x2000000000000000ULL,      ///< One-way method call (void return).
+  MSG_TWOWAY      = 0x3000000000000000ULL,      ///< Two-way method call, returns result message.
+  MSG_DISCON      = 0x4000000000000000ULL,      ///< Signal handler disconnection notification.
+  MSG_SIGCON      = 0x5000000000000000ULL,      ///< Signal connection/disconnection request, returns result message.
+  MSG_EVENT       = 0x6000000000000000ULL,      ///< One-way signal event message.
+  // MSG_SIGNAL   = 0x7000000000000000ULL,      ///< Two-way signal message, returns result message.
+  MSG_RESULT_MASK = 0x8000000000000000ULL,      ///< Flag to indicate result messages.
 };
-
-/* === Callback Wrapper === */
-template<class R>
-struct Callback0 {
-  bool                   callable   () { return p.get() != NULL; }
-  R                      operator() () { return (*p) (); }
-  template<class F> void set (F f) { if (f) p.reset (new CallFun<F> (f)); else p.reset(); }
-  template<class C> void set (C &c, R (C::*m) ()) { p.reset (new CallMem<C> (c, m));}
-private:
-  struct CallBase {
-    virtual  ~CallBase   () {}
-    virtual R operator() () = 0;
-  };
-  template<class C> struct CallMem : CallBase {
-    explicit  CallMem    (C &o, R (C::*p) ()) : c (o), m (p) {}
-    virtual R operator() () { return (c.*m) (); }
-  private: C &c; R (C::*m) ();
-  };
-  template<class F> struct CallFun : CallBase {
-    explicit  CallFun    (F p) : f (p) {}
-    virtual R operator() () { return f (); }
-  private: F f;
-  };
-  std::auto_ptr<CallBase> p;
-};
-
-/* === TypeHash === */
-struct TypeHash {
-  static const uint hash_size = 4;
-  uint64            qwords[hash_size];
-  inline bool       operator< (const TypeHash &rhs) const;
-  inline            TypeHash (const uint64 qw[hash_size]);
-  inline            TypeHash (uint64 qwa, uint64 qwb, uint64 qwc, uint64 qwd);
-  inline uint64     id (uint n) const { return n < hash_size ? qwords[n] : 0; }
-  String            to_string() const;
-};
+inline bool msgid_needs_result  (MessageId mid) { return (mid & 0x9000000000000000ULL) == 0x1000000000000000ULL; }
+inline bool msgid_is_result     (MessageId mid) { return (mid & 0x9000000000000000ULL) == 0x9000000000000000ULL; }
+inline bool msgid_is_error      (MessageId mid) { return (mid & 0xf000000000000000ULL) == 0; }
 
 /* === SmartHandle === */
 class SmartHandle {
@@ -147,7 +91,6 @@ protected:
   typedef uint64 RpcId;
   explicit                  SmartHandle ();
   void                      _reset      ();
-  void                      _pop_rpc    (Coupler&, FieldReader&);
   void*                     _cast_iface () const;
   inline void*              _void_iface () const;
   void                      _void_iface (void *rpc_id_ptr);
@@ -166,27 +109,6 @@ public:
   virtual             ~SimpleServer ();
   virtual uint64       _rpc_id      () const;
   static SimpleServer* _rpc_id2obj  (uint64 rpc_id);
-};
-
-/* === EventDispatcher === */
-struct EventDispatcher {
-  virtual             ~EventDispatcher  ();
-  virtual FieldBuffer* dispatch_event   (Coupler&) = 0;
-};
-
-/* === DispatchRegistry === */
-struct DispatcherEntry {
-  uint64            hash_qwords[TypeHash::hash_size];
-  DispatchFunc      dispatcher;
-};
-class DispatcherRegistry {
-public:
-  template<class T, size_t S>
-  inline                DispatcherRegistry  (T (&)[S]);
-  static void           register_dispatcher (const DispatcherEntry &dentry);
-  static DispatchFunc   find_dispatcher     (const TypeHash        &type_hash);
-  static FieldBuffer*   dispatch_call       (const FieldBuffer     &fbcall,
-                                             Coupler               &coupler);
 };
 
 /* === FieldBuffer === */
@@ -232,16 +154,14 @@ public:
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
   inline void add_func   (const String &s) { FieldUnion &u = addu (FUNC); new (&u) String (s); }
   inline void add_object (uint64 objid) { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
+  inline void add_msgid  (uint64 h, uint64 l);
   inline FieldBuffer& add_rec (uint nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); }
   inline FieldBuffer& add_seq (uint nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); }
-  inline TypeHash first_type_hash () const;
-  inline void     add_type_hash (uint64 a, uint64 b, uint64 c, uint64 d);
   inline void         reset();
   String              first_id_str() const;
   static FieldBuffer* _new (uint _ntypes); // Heap allocated FieldBuffer
   static FieldBuffer* new_error (const String &msg, const String &domain = "");
   static FieldBuffer* new_result();
-  static FieldBuffer* new_ok();
 };
 
 class FieldBuffer8 : public FieldBuffer { // Stack contained buffer for up to 8 fields
@@ -264,7 +184,7 @@ public:
   inline void               reset      () { m_fb = NULL; m_nth = 0; }
   inline uint               remaining  () { return n_types() - m_nth; }
   inline void               skip       () { m_nth++; check(); }
-  inline void               skip_hash  () { m_nth += 4; check(); }
+  inline void               skip_msgid () { m_nth += 2; check(); }
   inline uint               n_types    () { return m_fb->n_types(); }
   inline FieldType          get_type   () { return m_fb->type_at (m_nth); }
   inline int64              get_int64  () { FieldUnion &u = fb_getu(); return u.vint64; }
@@ -286,23 +206,6 @@ public:
   inline const FieldBuffer* get     () { return m_fb; }
 };
 
-/* === Channel === */
-class Channel {
-  class Priv; Priv &priv;
-  Callback0<void>   wakeup0;
-  FieldBuffer*      fetch_msg   (bool advance, bool block = false);
-public:
-  explicit      Channel         ();
-  bool          push_msg        (FieldBuffer *fbmsg);           // takes fbmsg ownership
-  bool          has_msg         () { return fetch_msg (false); }
-  FieldBuffer*  pop_msg         () { return fetch_msg (true); } // passes fbmsg ownership
-  void          wait_msg        () { fetch_msg (false, true); }
-  virtual      ~Channel         ();
-  void          set_wakeup      (void (*f) ()) { wakeup0.set (f); }
-  template<class C>
-  void          set_wakeup      (C &c, void (C::*m) ()) { wakeup0.set (c, m); }
-};
-
 // === Connection ===
 class Connection {      ///< Connection context for IPC.
 public:
@@ -318,77 +221,7 @@ public: // registry for remote method invocation
   };
 };
 
-/* === Coupler === */
-class Coupler {
-  class Priv; Priv    &priv;
-  Coupler&             operator=         (const Coupler&); // not assignable
-  /*Copy*/             Coupler           (const Coupler&); // not copyable
-  Channel              callc, resultc, eventc;
-public:
-  explicit             Coupler           ();
-  virtual             ~Coupler           ();
-  // client API
-  template<class C>
-  void                 set_caller_wakeup (C &c, void (C::*m) ()) { resultc.set_wakeup (c, m); }
-  void                 set_caller_wakeup (void (*f) ()) { resultc.set_wakeup (f); }
-  FieldBuffer*         pop_result        (void) { resultc.wait_msg(); return resultc.pop_msg(); }
-  bool                 push_call         (FieldBuffer *fbcall) { return callc.push_msg (fbcall); }
-  virtual FieldBuffer* call_remote       (FieldBuffer *fbcall) = 0;
-  // async msg queue
-  template<class C>
-  void                 set_event_wakeup  (C &c, void (C::*m) ()) { eventc.set_wakeup (c, m); }
-  void                 set_event_wakeup  (void (*f) ()) { eventc.set_wakeup (f); }
-  void                 wait_event        (void) { eventc.wait_msg(); }
-  bool                 has_event         (void) { return eventc.has_msg(); }
-  FieldBuffer*         pop_event         (void) { return eventc.pop_msg(); }
-  // API for DispatchFunc
-  FieldReader          reader;
-  void                 push_result       (FieldBuffer *rret) { resultc.push_msg (rret); }
-  void                 push_event        (FieldBuffer *fbev) { eventc.push_msg (fbev); }
-  uint                 dispatcher_add    (std::auto_ptr<EventDispatcher> evd); // takes object
-  EventDispatcher*     dispatcher_lookup (uint         dfunc_id);
-  bool                 dispatcher_delete (uint         dfunc_id);
-  // SmartHandle API
-  inline uint64        pop_rpc_handle    (FieldReader &fbr) { return fbr.pop_object(); }
-  // server loop integration
-  template<class C>
-  void             set_dispatcher_wakeup (C &c, void (C::*m) ()) { callc.set_wakeup (c, m); }
-  void             set_dispatcher_wakeup (void (*f) ()) { callc.set_wakeup (f); }
-  bool             check_dispatch        () { return callc.has_msg(); }
-  void             dispatch              ();
-};
-
 /* === inline implementations === */
-inline
-TypeHash::TypeHash (const uint64 qw[hash_size])
-{
-  wmemcpy ((wchar_t*) qwords, (wchar_t*) qw, sizeof (qwords) / sizeof (wchar_t));
-}
-
-inline
-TypeHash::TypeHash (uint64 qwa, uint64 qwb, uint64 qwc, uint64 qwd)
-{
-  qwords[0] = qwa;
-  qwords[1] = qwb;
-  qwords[2] = qwc;
-  qwords[3] = qwd;
-}
-
-inline bool
-TypeHash::operator< (const TypeHash &rhs) const
-{
-  if (qwords[0] < rhs.qwords[0])
-    return 1;
-  else if (rhs.qwords[0] < qwords[0])
-    return 0;
-  for (uint i = 1; i < hash_size; i++)
-    if (qwords[i] < rhs.qwords[i])
-      return 1;
-    else if (rhs.qwords[i] < qwords[i])
-      return 0;
-  return 0; // equal
-}
-
 inline void*
 SmartHandle::_void_iface () const
 {
@@ -397,30 +230,12 @@ SmartHandle::_void_iface () const
   return (void*) m_rpc_id;
 }
 
-template<class T, size_t S> inline
-DispatcherRegistry::DispatcherRegistry (T (&ha)[S])
-{
-  for (uint i = 0; i < S; i++)
-    register_dispatcher (ha[i]);
-}
-
-inline TypeHash
-FieldBuffer::first_type_hash () const
-{
-  return buffermem &&
-    type_at (0) == INT && type_at (1) == INT && type_at (2) == INT && type_at (3) == INT ?
-    TypeHash (uat (0).vint64, uat (1).vint64, uat (2).vint64, uat (3).vint64) :
-    TypeHash (0, 0, 0, 0);
-}
-
 inline void
-FieldBuffer::add_type_hash (uint64 a, uint64 b, uint64 c, uint64 d)
+FieldBuffer::add_msgid (uint64 h, uint64 l)
 {
-  FieldUnion &ua = addu (INT), &ub = addu (INT), &uc = addu (INT), &ud = addu (INT);
-  ua.vint64 = a;
-  ub.vint64 = b;
-  uc.vint64 = c;
-  ud.vint64 = d;
+  FieldUnion &uh = addu (INT), &ul = addu (INT);
+  uh.vint64 = h;
+  ul.vint64 = l;
 }
 
 inline void
