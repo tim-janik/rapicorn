@@ -516,7 +516,7 @@ class Generator:
     s += '  ~%s()\n' % closure_class
     s += '  {\n'
     s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1);\n'
-    s += '    fb.add_msgid (Plic::MSG_DISCON, 0); // FIXME: 0\n' # self.method_digest (stype)
+    s += '    fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0\n' # self.method_digest (stype)
     s += '    fb.add_int64 (m_handler);\n'
     s += '    m_connection.send_message (&fb); // deletes fb\n'
     s += '  }\n'
@@ -526,7 +526,7 @@ class Generator:
     s += self.Args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
     s += 'SharedPtr sp)\n  {\n'
     s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + %u);\n' % len (stype.args)
-    s += '    fb.add_msgid (Plic::MSG_EVENT, 0); // FIXME: 0\n' # self.method_digest (stype)
+    s += '    fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0\n' # self.method_digest (stype)
     s += '    fb.add_int64 (sp->m_handler);\n'
     ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
     args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')

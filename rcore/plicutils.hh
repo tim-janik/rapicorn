@@ -69,18 +69,23 @@ typedef FieldBuffer* (*DispatchFunc) (FieldReader&);
 
 // === Message IDs ===
 enum MessageId {
-  MSG_ERROR       = 0x0000000000000000ULL,      ///< Error and status Messages.
-  MSG_ONEWAY      = 0x2000000000000000ULL,      ///< One-way method call (void return).
-  MSG_TWOWAY      = 0x3000000000000000ULL,      ///< Two-way method call, returns result message.
-  MSG_DISCON      = 0x4000000000000000ULL,      ///< Signal handler disconnection notification.
-  MSG_SIGCON      = 0x5000000000000000ULL,      ///< Signal connection/disconnection request, returns result message.
-  MSG_EVENT       = 0x6000000000000000ULL,      ///< One-way signal event message.
-  // MSG_SIGNAL   = 0x7000000000000000ULL,      ///< Two-way signal message, returns result message.
-  MSG_RESULT_MASK = 0x8000000000000000ULL,      ///< Flag to indicate result messages.
+  MSGID_INFO        = 0x0000000000000000ULL,      ///< Info and status Messages ID.
+  MSGID_ONEWAY      = 0x2000000000000000ULL,      ///< One-way method call ID (void return).
+  MSGID_TWOWAY      = 0x3000000000000000ULL,      ///< Two-way method call ID, returns result message.
+  MSGID_DISCON      = 0x4000000000000000ULL,      ///< Signal handler disconnection ID.
+  MSGID_SIGCON      = 0x5000000000000000ULL,      ///< Signal connection/disconnection request ID, returns result message.
+  MSGID_EVENT       = 0x6000000000000000ULL,      ///< One-way signal event message ID.
+  // MSGID_SIGNAL   = 0x7000000000000000ULL,      ///< Two-way signal message ID, returns result message.
 };
-inline bool msgid_needs_result  (MessageId mid) { return (mid & 0x9000000000000000ULL) == 0x1000000000000000ULL; }
+inline bool msgid_has_result    (MessageId mid) { return (mid & 0x9000000000000000ULL) == 0x1000000000000000ULL; }
 inline bool msgid_is_result     (MessageId mid) { return (mid & 0x9000000000000000ULL) == 0x9000000000000000ULL; }
-inline bool msgid_is_error      (MessageId mid) { return (mid & 0xf000000000000000ULL) == 0; }
+inline bool msgid_is_error      (MessageId mid) { return (mid & 0xf000000000000000ULL) == 0x8000000000000000ULL; }
+inline bool msgid_is_info       (MessageId mid) { return (mid & 0xf000000000000000ULL) == 0x0000000000000000ULL; }
+inline bool msgid_is_oneway     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_ONEWAY; }
+inline bool msgid_is_twoway     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_TWOWAY; }
+inline bool msgid_is_discon     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_DISCON; }
+inline bool msgid_is_sigcon     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_SIGCON; }
+inline bool msgid_is_event      (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_EVENT; }
 
 /* === SmartHandle === */
 class SmartHandle {
