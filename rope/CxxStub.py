@@ -510,7 +510,7 @@ class Generator:
     assert self.gen_mode == G4SERVER
     s = ''
     therr = 'THROW_ERROR()'
-    dispatcher_name = '_$discon__%s__%s' % (class_info.name, stype.name)
+    dispatcher_name = '_$sigcon__%s__%s' % (class_info.name, stype.name)
     reglines += [ (self.method_digest (stype), self.namespaced_identifier (dispatcher_name)) ]
     closure_class = '_$Closure__%s__%s' % (class_info.name, stype.name)
     s += 'class %s {\n' % closure_class
