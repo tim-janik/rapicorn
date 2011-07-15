@@ -244,8 +244,8 @@ test_entry_cmp (const TestEntry *const &v1,
   return strverscmp (v1->name.c_str(), v2->name.c_str()) < 0;
 }
 
-int
-run (void)
+static void
+run_tests (void)
 {
   vector<TestEntry*> entries;
   for (TestEntry *node = test_entry_list; node; node = node->next)
@@ -268,6 +268,22 @@ run (void)
       testfuncs[i] (testdatas[i]);
       TDONE();
     }
+}
+
+RegisterTest::TestRunFunc
+RegisterTest::test_runner (RegisterTest::TestRunFunc func)
+{
+  static TestRunFunc runner = run_tests;
+  TestRunFunc old = runner;
+  runner = func ? func : run_tests;
+  return old;
+}
+
+int
+run (void)
+{
+  RegisterTest::TestRunFunc runner = RegisterTest::test_runner (NULL);
+  runner();
   return 0;
 }
 

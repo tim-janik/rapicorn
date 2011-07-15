@@ -69,7 +69,6 @@ typedef FieldBuffer* (*DispatchFunc) (FieldReader&);
 
 // === Message IDs ===
 enum MessageId {
-  MSGID_INFO        = 0x0000000000000000ULL,      ///< Info and status Messages ID.
   MSGID_ONEWAY      = 0x2000000000000000ULL,      ///< One-way method call ID (void return).
   MSGID_TWOWAY      = 0x3000000000000000ULL,      ///< Two-way method call ID, returns result message.
   MSGID_DISCON      = 0x4000000000000000ULL,      ///< Signal handler disconnection ID.
@@ -80,7 +79,6 @@ enum MessageId {
 inline bool msgid_has_result    (MessageId mid) { return (mid & 0x9000000000000000ULL) == 0x1000000000000000ULL; }
 inline bool msgid_is_result     (MessageId mid) { return (mid & 0x9000000000000000ULL) == 0x9000000000000000ULL; }
 inline bool msgid_is_error      (MessageId mid) { return (mid & 0xf000000000000000ULL) == 0x8000000000000000ULL; }
-inline bool msgid_is_info       (MessageId mid) { return (mid & 0xf000000000000000ULL) == 0x0000000000000000ULL; }
 inline bool msgid_is_oneway     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_ONEWAY; }
 inline bool msgid_is_twoway     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_TWOWAY; }
 inline bool msgid_is_discon     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_DISCON; }
@@ -216,6 +214,8 @@ class Connection {      ///< Connection context for IPC.
 public:
   virtual void         send_message (FieldBuffer*) = 0; ///< Send message to remote, transfers memory.
   virtual FieldBuffer* call_remote  (FieldBuffer*) = 0; ///< Carry out a remote call, transfers memory.
+protected:
+  static DispatchFunc  find_method  (uint64 hashhi, uint64 hashlow);
 public: // registry for remote method invocation
   struct MethodEntry   { uint64 hashhi, hashlow; DispatchFunc dispatcher; };   ///< Structure to register methods for IPC.
   struct MethodRegistry {

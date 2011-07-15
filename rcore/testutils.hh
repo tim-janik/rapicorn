@@ -140,6 +140,8 @@ public:
   template<typename D>
   RegisterTest (const char k, const String &testname, void (*test_func) (D*), D *data)
   { add_test (k, testname, (void(*)(void*)) test_func, (void*) data); }
+  typedef void (*TestRunFunc) (void);
+  static TestRunFunc test_runner        (TestRunFunc func);
 };
 #define REGISTER_TEST(name, ...)     static const Rapicorn::Test::RegisterTest \
   RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('t', name, __VA_ARGS__)

@@ -35,4 +35,10 @@
 #include <ui/viewp0rt.hh>
 #include <ui/window.hh>
 
+namespace Rapicorn {
+
+uint64  uithread_bootup (int *argcp, char **argv, const StringVector &args);
+
+} // Rapicorn
+
 #endif  // __RAPICORN_UITHREAD_HH__

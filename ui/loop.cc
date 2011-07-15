@@ -709,6 +709,13 @@ void
 EventLoop::Source::destroy ()
 {}
 
+void
+EventLoop::Source::loop_remove ()
+{
+  if (m_main_loop)
+    m_main_loop->try_remove (source_id());
+}
+
 EventLoop::Source::~Source ()
 {
   RAPICORN_ASSERT (m_main_loop == NULL);

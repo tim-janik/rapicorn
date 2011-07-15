@@ -34,8 +34,6 @@ public:
   static ApplicationImpl& the                ();
 };
 
-
-
 } // Rapicorn
 
 #endif  /* __RAPICORN_APPLICATION_HH__ */

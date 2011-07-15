@@ -5,6 +5,7 @@
 #include "viewp0rt.hh"
 #include "image.hh"
 #include "compath.hh"
+#include "uithread.hh"
 #include <algorithm>
 #include <stdlib.h>
 
@@ -30,6 +31,14 @@ ApplicationImpl::the ()
   return *the_app;
 }
 
+static void
+init_the_application (const StringVector &args)
+{
+  return_if_fail (the_app == NULL);
+  the_app = new ApplicationImpl();
+}
+static InitHook _init_the_application ("ui-thread/00 Initialize Application Singleton", init_the_application);
+
 ApplicationIface&
 init_app (const String       &app_ident,
           int                *argcp,
@@ -47,17 +56,10 @@ init_app (const String       &app_ident,
     init_core (app_ident, argcp, argv, args);
   else if (app_ident != program_ident())
     fatal ("librapicornui: application identifier changed during ui initialization");
-  // initialize sub systems
-  struct InitHookCaller : public InitHook {
-    static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)
-    { invoke_hooks (kind, argcp, argv, args); }
-  };
-  InitHookCaller::invoke ("ui/", argcp, argv, args);
-  the_app = new ApplicationImpl();
-  InitHookCaller::invoke ("ui-thread/", argcp, argv, args);
-  assert (rapicorn_thread_entered() == false);
-  rapicorn_thread_enter();
-  return ApplicationImpl::the();
+  // boot up UI thread
+  uint64 appid = uithread_bootup (argcp, argv, args);
+  assert (appid != NULL);
+  return ApplicationImpl::the(); // FIXME
 }
 
 Wind0wIface*

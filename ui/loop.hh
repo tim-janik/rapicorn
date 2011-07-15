@@ -134,6 +134,8 @@ class EventLoop::Source : public virtual ReferenceCountable, protected NonCopyab
   uint         n_pfds      ();
 protected:
   explicit     Source      ();
+  uint         source_id   () { return m_main_loop ? m_id : 0; }
+  void         loop_remove ();
 public:
   virtual     ~Source      ();
   virtual bool prepare     (uint64 current_time_usecs,

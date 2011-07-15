@@ -276,6 +276,16 @@ typedef std::map<Hash128, DispatchFunc> DispatcherMap;
 static DispatcherMap                   dispatcher_map;
 static pthread_mutex_t                 dispatcher_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+DispatchFunc
+Connection::find_method (uint64 hashhi, uint64 hashlow)
+{
+  Hash128 hash128 (hashhi, hashlow);
+  pthread_mutex_lock (&dispatcher_mutex);
+  DispatchFunc dispatcher_func = dispatcher_map[hash128];
+  pthread_mutex_unlock (&dispatcher_mutex);
+  return dispatcher_func;
+}
+
 void
 Connection::MethodRegistry::register_method (const MethodEntry &mentry)
 {
