@@ -41,10 +41,6 @@ using Plic::uint64;
 servercc_boilerplate = r""" """
 
 clientcc_boilerplate = r"""
-template<class O>
-O       connection_id2handle (uint64 id) { return *(O*) &connection_id2handle<Plic::SmartHandle> (id); } // FIXME
-template<>
-Plic::SmartHandle connection_id2handle<Plic::SmartHandle> (uint64 id) { return *(Plic::SmartHandle*) NULL; } // FIXME
 uint64  connection_handle2id (const Plic::SmartHandle &h) { return 0; } // FIXME
 """
 
@@ -276,7 +272,7 @@ class Generator:
     elif type_info.storage == Decls.SEQUENCE:
       s += '  typedef std::vector<' + self.R (fl[1]) + '> Sequence;\n'
     if type_info.storage == Decls.RECORD:
-      s += '  ' + self.F ('inline') + '%s () {' % self.C (type_info)
+      s += '  ' + self.F ('inline') + '%s () {' % self.C (type_info) # ctor
       for fl in fieldlist:
         if fl[1].storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
           s += " %s = %s;" % (fl[0], self.mkzero (fl[1]))
@@ -322,7 +318,7 @@ class Generator:
       elif type_node.storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
         s += '  %s = connection_id2object<%s> (%s.pop_object());\n' % (ident, self.C (type_node), fbr)
       elif type_node.storage == Decls.INTERFACE: # G4CLIENT
-        s += '  %s = connection_id2handle<%s> (%s.pop_object());\n' % (ident, self.C (type_node), fbr)
+        s += '  %s = %s (%s);\n' % (ident, self.C (type_node), fbr) # id2handle
       else:
         s += '  %s = %s.pop_%s();\n' % (ident, fbr, self.accessor_name (type_node.storage))
     return s
@@ -367,7 +363,7 @@ class Generator:
     elif el[1].storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
       s += '    self.push_back (connection_id2object<%s> (fbr.pop_object()));\n' % self.C (el[1])
     elif el[1].storage == Decls.INTERFACE: # G4CLIENT
-      s += '    self.push_back (connection_id2handle<%s> (fbr.pop_object()));\n' % self.C (el[1])
+      s += '    self.push_back (%s (fbr));\n' % self.C (el[1]) # id2handle
     else:
       s += '    self.push_back (fbr.pop_%s());\n' % self.accessor_name (el[1].storage)
     s += '  }\n'
@@ -512,8 +508,8 @@ class Generator:
     s += '  Plic::Connection &m_connection; uint64 m_handler;\n'
     s += 'public:\n'
     s += '  typedef Plic::shared_ptr<%s> SharedPtr;\n' % closure_class
-    s += '  %s (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}\n' % closure_class
-    s += '  ~%s()\n' % closure_class
+    s += '  %s (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}\n' % closure_class # ctor
+    s += '  ~%s()\n' % closure_class # dtor
     s += '  {\n'
     s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1);\n'
     s += '    fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0\n' # self.method_digest (stype)
@@ -619,21 +615,25 @@ class Generator:
   def generate_interface_class (self, type_info):
     s = '\n'
     l = []
-    # declare and inherit
+    # declare
+    s += 'class %s' % self.C (type_info)
+    # inherit
     for pr in type_info.prerequisites:
       l += [ pr ]
     l = self.inherit_reduce (l)
-    if self.gen_mode == G4SERVER:
-      l = ['public virtual ' + self.C (pr) for pr in l] # types -> names
-      if not l:
-        l = ['public virtual ' + self._iface_base]
-    else:
-      l = ['public ' + self.C (pr) for pr in l] # types -> names
-      if not l:
-        l = ['public Plic::SmartHandle']
-    s += 'class %s' % self.C (type_info)
-    if l:
-      s += ' : %s' % ', '.join (l)
+    l = [self.C (pr) for pr in l] # types -> names
+    plic_smarthandle = 'Plic::SmartHandle'
+    if   self.gen_mode == G4SERVER and l:
+      heritage = 'public virtual'
+    elif self.gen_mode == G4SERVER and not l:
+      l = [self._iface_base]
+      heritage = 'public virtual'
+    elif self.gen_mode == G4CLIENT and l:
+      heritage = 'public'
+    elif self.gen_mode == G4CLIENT and not l:
+      l = [plic_smarthandle]
+      heritage = 'public virtual'
+    s += ' : ' + heritage + ' %s' % (', ' + heritage + ' ').join (l)
     s += ' {\n'
     # constructors
     s += 'protected:\n'
@@ -642,17 +642,22 @@ class Generator:
       s += '_iface() const { return (%s*) _void_iface(); }\n' % self._iface_base
       s += '  inline void _iface (%s *_iface) { _void_iface (_iface); }\n' % self._iface_base
     if self.gen_mode == G4SERVER:
-      s += '  explicit ' + self.F ('') + '%s ();\n' % self.C (type_info)
-      s += '  virtual ' + self.F ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info)
+      s += '  explicit ' + self.F ('') + '%s ();\n' % self.C (type_info) # ctor
+      s += '  virtual ' + self.F ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info) # dtor
     s += 'public:\n'
     if self.gen_mode in (G4CLIENT, C4OLDHANDLE):
-      s += '  ' + self.F ('inline') + '%s () {}\n' % self.H (type_info.name)
-      s += '  ' + self.F ('inline') + '%s (Plic::FieldReader &fbr) ' % self.H (type_info.name)
-      s += '{ /* _pop_rpc (fbr); */ }\n'
+      classH = self.H (type_info.name) # smart handle class name
+      # s += '  ' + self.F ('inline') + '%s () {}\n' % self.H (type_info.name)
+      cl = l if l == [plic_smarthandle] else [plic_smarthandle] + l
+      aliasfix = '__attribute__ ((noinline))' # work around bogus strict-aliasing warning in g++-4.4.5
+      s += '  ' + self.F ('explicit') + '%s (Plic::FieldReader &fbr) %s' % (classH, aliasfix) # ctor
+      s += ' : ' + ' (fbr), '.join (cl) + ' (fbr) {}\n'
+      #s += '  ' + self.F ('inline') + '%s (const %s &src)' % (classH, classH) # copy ctor
+      #s += ' : ' + ' (src), '.join (cl) + ' (src) {}\n'
     if self.gen_mode == C4OLDHANDLE:
       ifacename = self.Iwrap (type_info.name)
-      s += '  inline %s (%s *iface) { _iface (iface); }\n' % (self.C (type_info), ifacename)
-      s += '  inline %s (%s &iface) { _iface (&iface); }\n' % (self.C (type_info), ifacename)
+      s += '  inline %s (%s *iface) { _iface (iface); }\n' % (self.C (type_info), ifacename) # ctor
+      s += '  inline %s (%s &iface) { _iface (&iface); }\n' % (self.C (type_info), ifacename) # ctor
     # properties
     il = 0
     if type_info.fields:
@@ -702,14 +707,14 @@ class Generator:
   def generate_interface_impl (self, type_info):
     s = ''
     tname = self.C (type_info)
-    s += '%s::%s ()' % (tname, tname)
+    s += '%s::%s ()' % (tname, tname) # ctor
     l = [] # constructor agument list
     for sg in type_info.signals:
       l += ['sig_%s (*this)' % sg.name]
     if l:
       s += ' :\n  ' + ', '.join (l)
     s += '\n{}\n'
-    s += '%s::~%s () {}\n' % (tname, tname)
+    s += '%s::~%s () {}\n' % (tname, tname) # dtor
     return s
   def generate_virtual_method_skel (self, functype, type_info):
     assert self.gen_mode == G4SERVER

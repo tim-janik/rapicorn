@@ -50,12 +50,5 @@ IGNORE: // close last _scope
 
 global_scope:
 namespace Rapicorn {
-ApplicationIface& init_app      (const String       &app_ident,
-                                 int                *argcp,
-                                 char              **argv,
-                                 const StringVector &args = StringVector());
-ApplicationIface& init_test_app (const String       &app_ident,
-                                 int                *argcp,
-                                 char              **argv,
-                                 const StringVector &args = StringVector());
+void init_test_app (const String&, int*, char**, const StringVector& = StringVector());
 } // Rapicorn

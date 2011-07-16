@@ -20,8 +20,15 @@ ApplicationIface::pixstream (const String  &pix_name,
   Pixmap::add_stock (pix_name, static_const_pixstream);
 }
 
-static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x123caca0) {} } __staticctortest;
 static ApplicationImpl *the_app = NULL;
+static void
+create_application (const StringVector &args)
+{
+  if (the_app)
+    fatal ("librapicornui: multiple calls to Rapicorn::init_app()");
+  the_app = new ApplicationImpl();
+}
+static InitHook _create_application ("ui-thread/00 Creating Application Singleton", create_application);
 
 ApplicationImpl&
 ApplicationImpl::the ()
@@ -29,37 +36,6 @@ ApplicationImpl::the ()
   if (!the_app)
     fatal ("librapicornui: library uninitialized, call Rapicorn::init_app() first");
   return *the_app;
-}
-
-static void
-init_the_application (const StringVector &args)
-{
-  return_if_fail (the_app == NULL);
-  the_app = new ApplicationImpl();
-}
-static InitHook _init_the_application ("ui-thread/00 Initialize Application Singleton", init_the_application);
-
-ApplicationIface&
-init_app (const String       &app_ident,
-          int                *argcp,
-          char              **argv,
-          const StringVector &args)
-{
-  // assert global_ctors work
-  if (__staticctortest.v != 0x123caca0)
-    fatal ("librapicornui: link error: C++ constructors have not been executed");
-  // ensure single initialization
-  if (the_app)
-    fatal ("librapicornui: multiple calls to Rapicorn::init_app()");
-  // initialize core
-  if (program_ident().empty())
-    init_core (app_ident, argcp, argv, args);
-  else if (app_ident != program_ident())
-    fatal ("librapicornui: application identifier changed during ui initialization");
-  // boot up UI thread
-  uint64 appid = uithread_bootup (argcp, argv, args);
-  assert (appid != NULL);
-  return ApplicationImpl::the(); // FIXME
 }
 
 Wind0wIface*

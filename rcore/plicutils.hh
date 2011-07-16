@@ -92,7 +92,7 @@ protected:
   typedef bool (SmartHandle::*_UnspecifiedBool) () const; // non-numeric operator bool() result
   static inline _UnspecifiedBool _unspecified_bool_true () { return &Plic::SmartHandle::_is_null; }
   typedef uint64 RpcId;
-  explicit                  SmartHandle ();
+  explicit                  SmartHandle (FieldReader&);
   void                      _reset      ();
   void*                     _cast_iface () const;
   inline void*              _void_iface () const;
@@ -102,7 +102,7 @@ public:
   bool                      _is_null    () const;
   virtual                  ~SmartHandle ();
   static SmartHandle*       _rpc_id2obj (uint64 rpc_id);
-  static const SmartHandle &None;
+  static const SmartHandle &none;
 };
 
 /* === SimpleServer === */

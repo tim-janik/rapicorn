@@ -63,13 +63,20 @@ string_printf (const char *format, ...)
 
 /* === SmartHandle === */
 struct SmartHandle0 : public SmartHandle {
-  explicit SmartHandle0 () : SmartHandle () {}
+  explicit SmartHandle0 () : SmartHandle (*(FieldReader*) NULL) {}
 };
-const SmartHandle &SmartHandle::None = SmartHandle0();
+const SmartHandle &SmartHandle::none = SmartHandle0();
 
-SmartHandle::SmartHandle () :
+SmartHandle::SmartHandle (FieldReader &field_reader) :
   m_rpc_id (0)
-{}
+{
+  if (PLIC_UNLIKELY (NULL == &SmartHandle::none))
+    return;
+  assert (NULL != &field_reader);
+  uint64 field_reader_rpc_id = field_reader.get_int64();
+  assert (0 != field_reader_rpc_id);
+  m_rpc_id = field_reader_rpc_id;
+}
 
 void
 SmartHandle::_reset ()
@@ -114,7 +121,7 @@ SmartHandle*
 SmartHandle::_rpc_id2obj (uint64 rpc_id)
 {
   if (rpc_id == 0)
-    return const_cast<SmartHandle*> (&None);
+    return const_cast<SmartHandle*> (&none);
   return NULL; // FIXME
 }
 
