@@ -16,7 +16,7 @@ rapicorn_public_headers = $(strip	\
 	paintcontainers.hh	painter.hh	paintitems.hh	primitives.hh	properties.hh	\
 	region.hh	rope.hh	scrollitems.hh	sinfex.hh	sizegroup.hh	slider.hh	\
 	table.hh	testitems.hh	text-editor.hh	text-pango.hh	\
-	ui.hh	utilities.hh	viewp0rt.hh	window.hh	\
+	uithread.hh	utilities.hh	viewp0rt.hh	window.hh	\
 	$(rapicorn_impl_headers)	\
 )
 rapicorn_cc_sources = $(strip	serverapi.cc   clientapi.cc \
@@ -30,7 +30,7 @@ rapicorn_cc_sources = $(strip	serverapi.cc   clientapi.cc \
 	region.cc	regionimpl.c	rope.cc	\
 	scrollitems.cc	sinfex.cc	sizegroup.cc	slider.cc	\
 	table.cc	testitems.cc	text-editor.cc	text-pango.cc	\
-	utilities.cc	viewp0rt-gtk.cc	viewp0rt.cc	window.cc	\
+	uithread.cc	utilities.cc	viewp0rt-gtk.cc	viewp0rt.cc	window.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
 	arrangementimpl.hh		\

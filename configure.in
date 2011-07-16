@@ -8,7 +8,7 @@ builtin(include, ld-symbolic.m4)dnl # include special macros
 
 # initialize autoconf for Rapicorn
 AC_INIT
-AC_CONFIG_SRCDIR([ui/ui.hh])
+AC_CONFIG_SRCDIR([ui/item.hh])
 AM_CONFIG_HEADER(configure.h)
 AC_PREREQ(2.57)
 
