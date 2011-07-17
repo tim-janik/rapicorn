@@ -39,6 +39,19 @@ namespace Rapicorn {
 
 uint64  uithread_bootup (int *argcp, char **argv, const StringVector &args);
 
+/// Register a standard test function for execution in the ui-thread.
+#define REGISTER_UITHREAD_TEST(name, ...)     static const Rapicorn::Test::RegisterTest \
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('T', name, __VA_ARGS__)
+
+/// Register a slow test function for execution in the ui-thread during slow unit testing.
+#define REGISTER_UITHREAD_SLOWTEST(name, ...) static const Rapicorn::Test::RegisterTest \
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('S', name, __VA_ARGS__)
+
+/// Register a logging test function with the ui-thread for output recording and verification.
+#define REGISTER_UITHREAD_LOGTEST(name, ...) static const Rapicorn::Test::RegisterTest \
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('L', name, __VA_ARGS__)
+
+
 } // Rapicorn
 
 #endif  // __RAPICORN_UITHREAD_HH__
