@@ -199,21 +199,39 @@ public:
 
 struct Initializer {
   int *argcp; char **argv; const StringVector *args;
-  Mutex mutex; Cond cond; uint64 app_id; Plic::Connection *connection;
+  Mutex mutex; Cond cond; uint64 app_id;
 };
 
 class UIThread : public Thread {
-  Initializer   *m_init;
-  EventLoop     *m_loop;
+  static UIThread  *the_uithread;
+  Initializer      *m_init;
+  EventLoop        *m_loop;
+  ConnectionSource *m_connection;
 public:
   UIThread (Initializer *init) :
-    Thread ("Rapicorn::UIThread"), m_init (init), m_loop (NULL)
-  {}
+    Thread ("Rapicorn::UIThread"), m_init (init), m_loop (NULL), m_connection (NULL)
+  {
+    assert (the_uithread == NULL);
+    the_uithread = ref_sink (this);
+  }
+  Plic::Connection* connection() { return m_connection; }
+  static UIThread*  uithread()   { return the_uithread; }
 private:
   ~UIThread ()
   {
-    if (m_loop)
-      unref (m_loop);
+    assert (the_uithread == this);
+    the_uithread = NULL;
+    ConnectionSource *con = m_connection;
+    EventLoop *loop = m_loop;
+    m_connection = NULL;
+    m_loop = NULL;
+    if (con)
+      {
+        con->loop_remove();
+        unref (con);
+      }
+    if (loop)
+      unref (loop);
   }
   void
   initialize ()
@@ -226,7 +244,7 @@ private:
     affinity (string_to_int (string_vector_find (*m_init->args, "cpu-affinity=", "-1")));
     // initialize ui_thread loop before components
     m_loop = ref_sink (EventLoop::create());
-    m_init->connection = ref (new ConnectionSource (*m_loop)); // ref_sink by m_loop
+    m_connection = ref_sink (new ConnectionSource (*m_loop));
     // initialize sub systems
     struct InitHookCaller : public InitHook {
       static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)
@@ -256,33 +274,30 @@ private:
     rapicorn_thread_leave();
   }
 };
-
-static UIThread         *the_uithread = NULL;
-static Plic::Connection *the_uithread_connection = NULL;
+UIThread *UIThread::the_uithread = NULL;
 
 static void
 uithread_uncancelled()
 {
-  if (the_uithread)
+  if (UIThread::uithread())
     fatal ("UI-Thread still running during exit()");
 }
 
 uint64
 uithread_bootup (int *argcp, char **argv, const StringVector &args)
 {
-  return_val_if_fail (the_uithread == NULL, 0);
+  return_val_if_fail (UIThread::uithread() == NULL, 0);
   atexit (uithread_uncancelled);
   wrap_test_runner();
   Initializer idata;
-  idata.argcp = argcp; idata.argv = argv; idata.args = &args; idata.app_id = 0; idata.connection = NULL;
-  the_uithread = new UIThread (&idata);
-  ref_sink (the_uithread);
+  idata.argcp = argcp; idata.argv = argv; idata.args = &args; idata.app_id = 0;
+  UIThread *uithread = new UIThread (&idata);
+  assert (uithread == UIThread::uithread());
   idata.mutex.lock();
-  the_uithread->start();
+  uithread->start();
   while (idata.app_id == 0)
     idata.cond.wait (idata.mutex);
   uint64 app_id = idata.app_id;
-  the_uithread_connection = idata.connection;
   idata.mutex.unlock();
   return app_id;
 }
@@ -304,7 +319,7 @@ static Mutex                    syscall_mutex;
 static void
 trigger_test_runs (void (*runner) (void))
 {
-  return_if_fail (the_uithread_connection != NULL);
+  return_if_fail (UIThread::uithread() != NULL);
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2);
   fb.add_msgid (Plic::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL); // ui_thread_syscall_twoway
   SyscallData sysdata;
@@ -312,7 +327,7 @@ trigger_test_runs (void (*runner) (void))
   syscall_mutex.lock();
   syscall_data.push_back (new SyscallData (sysdata));
   syscall_mutex.unlock();
-  FieldBuffer *fr = the_uithread_connection->call_remote (&fb); // deletes fb
+  FieldBuffer *fr = UIThread::uithread()->connection()->call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip(); // FIXME: check fr msgid
   delete fr;
