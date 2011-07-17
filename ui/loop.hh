@@ -136,7 +136,6 @@ class EventLoop::Source : public virtual ReferenceCountable, protected NonCopyab
 protected:
   explicit     Source      ();
   uint         source_id   () { return m_main_loop ? m_id : 0; }
-  void         loop_remove ();
 public:
   virtual     ~Source      ();
   virtual bool prepare     (uint64 current_time_usecs,
@@ -151,6 +150,7 @@ public:
   bool         recursion   () const;
   void         add_poll    (PollFD * const pfd);
   void         remove_poll (PollFD * const pfd);
+  void         loop_remove ();
 };
 
 /* --- EventLoop::TimedSource --- */
