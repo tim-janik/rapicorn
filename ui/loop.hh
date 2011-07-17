@@ -48,6 +48,7 @@ public:
   int      open      (); ///< @Returns -errno.
   void     wakeup    (); ///< Wakeup polling end.
   int      inputfd   (); ///< @Returns fd for POLLIN.
+  bool     pollin    ();
   void     flush     (); ///< Clear pending wakeups.
   /*Des*/ ~EventFd   ();
 };
