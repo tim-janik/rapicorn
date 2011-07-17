@@ -157,7 +157,7 @@ public:
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
   inline void add_func   (const String &s) { FieldUnion &u = addu (FUNC); new (&u) String (s); }
   inline void add_object (uint64 objid) { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
-  inline void add_msgid  (uint64 h, uint64 l);
+  inline void add_msgid  (uint64 h, uint64 l) { add_int64 (h); add_int64 (l); }
   inline FieldBuffer& add_rec (uint nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); }
   inline FieldBuffer& add_seq (uint nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); }
   inline void         reset();
@@ -232,14 +232,6 @@ SmartHandle::_void_iface () const
   if (PLIC_UNLIKELY (m_rpc_id & 3))
     return _cast_iface();
   return (void*) m_rpc_id;
-}
-
-inline void
-FieldBuffer::add_msgid (uint64 h, uint64 l)
-{
-  FieldUnion &uh = addu (INT), &ul = addu (INT);
-  uh.vint64 = h;
-  ul.vint64 = l;
 }
 
 inline void

@@ -235,7 +235,7 @@ FieldBuffer::new_error (const String &msg,
 FieldBuffer*
 FieldBuffer::new_result()
 {
-  FieldBuffer *fr = FieldBuffer::_new (2);
+  FieldBuffer *fr = FieldBuffer::_new (2 + 1);
   const uint64 MSGID_RESULT_MASK = 0x9000000000000000ULL;
   fr->add_msgid (MSGID_RESULT_MASK, 0); // FIXME: needs original message
   return fr;
