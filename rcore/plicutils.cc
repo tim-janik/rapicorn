@@ -224,7 +224,7 @@ FieldBuffer*
 FieldBuffer::new_error (const String &msg,
                         const String &domain)
 {
-  FieldBuffer *fr = FieldBuffer::_new (3);
+  FieldBuffer *fr = FieldBuffer::_new (2 + 2);
   const uint64 MSGID_ERROR = 0x8000000000000000ULL;
   fr->add_msgid (MSGID_ERROR, 0);
   fr->add_string (msg);
