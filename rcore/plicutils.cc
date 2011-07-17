@@ -73,7 +73,7 @@ SmartHandle::SmartHandle (FieldReader &field_reader) :
   if (PLIC_UNLIKELY (NULL == &SmartHandle::none))
     return;
   assert (NULL != &field_reader);
-  uint64 field_reader_rpc_id = field_reader.get_int64();
+  uint64 field_reader_rpc_id = field_reader.pop_int64();
   assert (0 != field_reader_rpc_id);
   m_rpc_id = field_reader_rpc_id;
 }
