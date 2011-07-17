@@ -2,21 +2,22 @@
 
 #include "uithread.hh"
 #include <semaphore.h>
+#include <deque>
 #include <stdlib.h>
 
+namespace { // Anon
 static void wrap_test_runner  (void);
-static void trigger_test_runs (void);
-static void execute_test_runs (void);
-
+} // Anon
 
 namespace Rapicorn {
 
 class Channel { // Channel for cross-thread FieldBuffer IO
   pthread_spinlock_t        msg_spinlock;
-  sem_t                     msg_sem;
   std::vector<FieldBuffer*> msg_vector;
   std::vector<FieldBuffer*> msg_queue;
   size_t                    msg_index, msg_last_size;
+  virtual void  data_notify () = 0;
+  virtual void  data_wait   () = 0;
   FieldBuffer*
   fetch_msg (bool advance, const bool blocking)
   {
@@ -42,7 +43,7 @@ class Channel { // Channel for cross-thread FieldBuffer IO
           }
         // no messages available
         if (blocking)
-          sem_wait (&msg_sem);
+          data_wait();
       }
     while (blocking);
     return NULL;
@@ -52,11 +53,9 @@ public:
     msg_index (0), msg_last_size (0)
   {
     pthread_spin_init (&msg_spinlock, 0 /* pshared */);
-    sem_init (&msg_sem, 0 /* unshared */, 0 /* init */);
   }
   ~Channel ()
   {
-    sem_destroy (&msg_sem);
     pthread_spin_destroy (&msg_spinlock);
   }
   void
@@ -66,7 +65,7 @@ public:
     msg_vector.push_back (fb);
     msg_last_size = msg_vector.size();
     pthread_spin_unlock (&msg_spinlock);
-    sem_post (&msg_sem);
+    data_notify();
   }
   bool          has_msg          () { return fetch_msg (false, false) != NULL; }
   FieldBuffer*  pop_msg          () { return fetch_msg (true, false); } // passes fbmsg ownership
@@ -74,6 +73,25 @@ public:
   FieldBuffer*  pop_msg_blocking () { return fetch_msg (true, true); } // passes fbmsg ownership
 };
 
+class ChannelS : public Channel { // Channel with semaphore for syncronization
+  sem_t         msg_sem;
+  virtual void  data_notify ()  { sem_post (&msg_sem); }
+  virtual void  data_wait   ()  { sem_wait (&msg_sem); }
+public:
+  explicit      ChannelS    ()  { sem_init (&msg_sem, 0 /* unshared */, 0 /* init */); }
+  /*dtor*/     ~ChannelS    ()  { sem_destroy (&msg_sem); }
+};
+
+class ChannelE : public Channel, public EventFd { // Channel with EventFd for syncronization
+  virtual void  data_notify ()  { wakeup(); }
+  virtual void  data_wait   ()  { if (pollin()) flush(); }
+public:
+  ChannelE ()
+  {
+    if (open() < 0)
+      pfatal ("failed to open pipe for thread communication");
+  }
+};
 
 struct ConnectionSource : public virtual EventLoop::Source, public virtual Plic::Connection {
   ConnectionSource (EventLoop &loop) :
@@ -81,12 +99,18 @@ struct ConnectionSource : public virtual EventLoop::Source, public virtual Plic:
   {
     primary (false);
     loop.add_source (this, EventLoop::PRIORITY_NORMAL);
+    pollfd.fd = calls.inputfd();
+    pollfd.events = PollFD::IN;
+    pollfd.revents = 0;
+    add_poll (&pollfd);
   }
 private:
   const char   *WHERE;
-  Channel       calls, events;
+  PollFD        pollfd;
+  ChannelE      calls;
+  ChannelS      events;
   std::vector<FieldBuffer*> queue;
-  /*dtor*/     ~ConnectionSource ()       { loop_remove(); }
+  /*dtor*/     ~ConnectionSource ()       { remove_poll (&pollfd); loop_remove(); }
   virtual bool  prepare  (uint64, int64*) { return check_dispatch(); }
   virtual bool  check    (uint64)         { return check_dispatch(); }
   virtual bool  dispatch ()               { dispatch1(); return true; }
@@ -111,8 +135,8 @@ private:
   dispatch_call (const FieldBuffer *fb)
   {
     FieldReader fbr (*fb);
-    const Plic::MessageId msgid = Plic::MessageId (fbr.get_int64());
-    const uint64 hashlow = fbr.get_int64();
+    const Plic::MessageId msgid = Plic::MessageId (fbr.pop_int64());
+    const uint64 hashlow = fbr.pop_int64();
     Plic::DispatchFunc method = find_method (msgid, hashlow);
     if (method)
       {
@@ -134,6 +158,7 @@ private:
     else
       return FieldBuffer::new_error (string_printf ("unknown method hash: (%016lx%016llx)", msgid, hashlow), WHERE);
   }
+public:
   virtual void
   send_message (FieldBuffer *fb) ///< Called from ui-thread by serverapi
   {
@@ -158,7 +183,7 @@ private:
             FieldReader fbr (*event);
             fbr.skip_msgid();
             String msg = fbr.pop_string(), domain = fbr.pop_string();
-            fatal ("%s: %s: %s", WHERE, domain.c_str(), msg.c_str());
+            fatal ("%s: %s", domain.c_str(), msg.c_str());
             delete fb;
           }
         else if (Plic::msgid_is_event (msgid))
@@ -174,7 +199,7 @@ private:
 
 struct Initializer {
   int *argcp; char **argv; const StringVector *args;
-  Mutex mutex; Cond cond; uint64 app_id;
+  Mutex mutex; Cond cond; uint64 app_id; Plic::Connection *connection;
 };
 
 class UIThread : public Thread {
@@ -197,9 +222,11 @@ private:
     return_if_fail (m_loop == NULL);
     assert (rapicorn_thread_entered() == false);
     rapicorn_thread_enter();
-    m_loop = ref_sink (EventLoop::create());
     // init_core() already called
     affinity (string_to_int (string_vector_find (*m_init->args, "cpu-affinity=", "-1")));
+    // initialize ui_thread loop before components
+    m_loop = ref_sink (EventLoop::create());
+    m_init->connection = ref (new ConnectionSource (*m_loop)); // ref_sink by m_loop
     // initialize sub systems
     struct InitHookCaller : public InitHook {
       static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)
@@ -224,15 +251,14 @@ private:
   {
     initialize(); // does rapicorn_thread_enter()
     return_if_fail (m_init == NULL);
-    EventLoop::Source *esource = new ConnectionSource (*m_loop); // ref-counted
     while (true) // !EventLoop::loops_exitable()
       EventLoop::iterate_loops (true, true);      // prepare/check/dispatch and may_block
-    esource = NULL;
     rapicorn_thread_leave();
   }
 };
 
-static UIThread *the_uithread = NULL;
+static UIThread         *the_uithread = NULL;
+static Plic::Connection *the_uithread_connection = NULL;
 
 static void
 uithread_uncancelled()
@@ -248,7 +274,7 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args)
   atexit (uithread_uncancelled);
   wrap_test_runner();
   Initializer idata;
-  idata.argcp = argcp; idata.argv = argv; idata.args = &args; idata.app_id = 0;
+  idata.argcp = argcp; idata.argv = argv; idata.args = &args; idata.app_id = 0; idata.connection = NULL;
   the_uithread = new UIThread (&idata);
   ref_sink (the_uithread);
   idata.mutex.lock();
@@ -256,6 +282,7 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args)
   while (idata.app_id == 0)
     idata.cond.wait (idata.mutex);
   uint64 app_id = idata.app_id;
+  the_uithread_connection = idata.connection;
   idata.mutex.unlock();
   return app_id;
 }
@@ -263,24 +290,63 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args)
 } // Rapicorn
 
 #include <rcore/testutils.hh>
-using namespace Rapicorn::Test;
+
+namespace { // Anon
+using namespace Rapicorn;
+
+struct SyscallData {
+  void (*test_runner) (void);
+  SyscallData() : test_runner (NULL) {}
+};
+static std::deque<SyscallData*> syscall_data;
+static Mutex                    syscall_mutex;
 
 static void
-trigger_test_runs (void)
+trigger_test_runs (void (*runner) (void))
 {
-  // FIXME
+  return_if_fail (the_uithread_connection != NULL);
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2);
+  fb.add_msgid (Plic::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL); // ui_thread_syscall_twoway
+  SyscallData sysdata;
+  sysdata.test_runner = runner;
+  syscall_mutex.lock();
+  syscall_data.push_back (new SyscallData (sysdata));
+  syscall_mutex.unlock();
+  FieldBuffer *fr = the_uithread_connection->call_remote (&fb); // deletes fb
+  Plic::FieldReader frr (*fr);
+  frr.skip(); // FIXME: check fr msgid
+  delete fr;
 }
 
-static RegisterTest::TestRunFunc real_runner = NULL;
-
-static void
-execute_test_runs (void)
+static Plic::FieldBuffer*
+ui_thread_syscall_twoway (Plic::FieldReader &fbr)
 {
-  real_runner();
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
+  syscall_mutex.lock();
+  while (syscall_data.size())
+    {
+      SyscallData *calldata = syscall_data.front();
+      syscall_data.pop_front();
+      syscall_mutex.unlock();
+      if (calldata->test_runner)
+        calldata->test_runner();
+      delete calldata;
+      syscall_mutex.lock();
+    }
+  syscall_mutex.unlock();
+  rb.add_int64 (0);
+  return &rb;
 }
+
+static const Plic::Connection::MethodEntry ui_thread_call_entries[] = {
+  { Plic::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL, ui_thread_syscall_twoway, },
+};
+static Plic::Connection::MethodRegistry ui_thread_call_registry (ui_thread_call_entries);
 
 static void
 wrap_test_runner (void)
 {
-  real_runner = RegisterTest::test_runner (trigger_test_runs);
+  Test::RegisterTest::test_set_trigger (trigger_test_runs);
 }
+
+} // Anon
