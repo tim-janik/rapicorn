@@ -1,19 +1,4 @@
-/* Tests
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// This work is provided "as is"; see: http://rapicorn.org/LICENSE-AS-IS
 #include <rcore/testutils.hh>
 #include <rapicorn.hh>
 #include <string.h>
@@ -63,9 +48,8 @@ struct TestRapicornMarkupParser : MarkupParser {
 };
 
 static void
-rapicorn_markup_parser_test()
+test_markup_parser()
 {
-  TSTART ("RapicornMarkupParser");
   TestRapicornMarkupParser *tmp = new TestRapicornMarkupParser ("-");
   TOK();
   MarkupParser::Error error;
@@ -89,13 +73,12 @@ rapicorn_markup_parser_test()
   TASSERT (strstr (dcode, ".>.<."));
   delete tmp;
   TOK();
-  TDONE();
 }
+REGISTER_UITHREAD_TEST ("labelmarkup/Test Markup Parser", test_markup_parser);
 
 static void
-text_markup_test()
+test_text_markup()
 {
-  TSTART ("Label-Markup");
   ItemImpl &label = Factory::create_item ("Label");
   TOK();
   TOK();
@@ -143,18 +126,15 @@ text_markup_test()
   TASSERT (strstr (markup_result, "family='SpEciALfoNT723'"));
   TASSERT (strstr (markup_result, "smaller<"));
   TASSERT (strstr (markup_result, "larger<"));
-  TDONE();
 }
+REGISTER_UITHREAD_TEST ("labelmarkup/Test Text Markup", test_text_markup);
+
+} // anon
 
 extern "C" int
 main (int   argc,
       char *argv[])
 {
-  /* initialize rapicorn */
-  init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv); // FIXME: should work offscreen
-  rapicorn_markup_parser_test();
-  text_markup_test();
-  return 0;
+  init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  return Test::run();
 }
-
-} // anon

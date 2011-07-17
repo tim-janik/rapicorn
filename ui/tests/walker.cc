@@ -73,7 +73,7 @@ test_walker()
   /* done */
   printf ("\n");
 }
-REGISTER_LOGTEST ("General/Walker Iterator Types", test_walker);
+REGISTER_UITHREAD_LOGTEST ("General/Walker Iterator Types", test_walker);
 
 extern "C" int
 main (int   argc,

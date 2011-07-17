@@ -1,30 +1,11 @@
-/* Rapicorn Test
- * Copyright (C) 2007 Tim Janik
- *
- * This work is provided "as is"; redistribution and modification
- * in whole or in part, in any medium, physical or electronic is
- * permitted without restriction.
- *
- * This work is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * In no event shall the authors or contributors be liable for any
- * direct, indirect, incidental, special, exemplary, or consequential
- * damages (including, but not limited to, procurement of substitute
- * goods or services; loss of use, data, or profits; or business
- * interruption) however caused and on any theory of liability, whether
- * in contract, strict liability, or tort (including negligence or
- * otherwise) arising in any way out of the use of this software, even
- * if advised of the possibility of such damage.
- */
+// This work is provided "as is"; see: http://rapicorn.org/LICENSE-AS-IS
 #include <rcore/testutils.hh>
 #include <rapicorn.hh>
 #include <ui/testitems.hh>
 
+namespace { // Anon
+using namespace Rapicorn;
 
-/* --- RapicornTester --- */
-namespace Rapicorn {
 struct RapicornTester {
   static bool
   loops_pending()
@@ -37,28 +18,21 @@ struct RapicornTester {
     EventLoop::iterate_loops (may_block, true);
   }
 };
-} // Rapicorn
 
-namespace {
-using namespace Rapicorn;
-
-extern "C" int
-main (int   argc,
-      char *argv[])
+static void
+test_factory ()
 {
-  // initialize Rapicorn for X11 backend
-  init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  TOK();
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
 
   /* find and load GUI definitions relative to argv[0] */
   String factory_xml = "factory.xml";
   app.auto_load ("RapicornTest",                        // namespace domain,
                  Path::vpath_find (factory_xml),        // GUI file name
-                 argv[0]);
+                 program_file());
+  TOK();
   ItemImpl *item;
   TestContainer *titem;
-
-  TSTART ("Factory Calls");
   Wind0wIface &testwin = *app.create_wind0w ("test-TestItemL2");
   testwin.show();
   while (RapicornTester::loops_pending()) /* complete showing */
@@ -88,9 +62,16 @@ main (int   argc,
   TASSERT (item->name() == factory_default);
   TOK();
   testwin.close();
-  TDONE();
-
-  return 0;
+  TOK();
 }
+REGISTER_UITHREAD_TEST ("Factory/Test Item Factory", test_factory);
 
 } // anon
+
+extern "C" int
+main (int   argc,
+      char *argv[])
+{
+  init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
+  return Test::run();
+}

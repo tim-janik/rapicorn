@@ -32,7 +32,7 @@ test_command_scanning (void)
   assert (success && cmdjoin (name, args) == "cmd;(1,'))((',3); \"foo\\\"bar\"");
   // printerr ("\nergo (success=%d): %s\n", success, cmdjoin (name, args).c_str());
 }
-REGISTER_TEST ("Commands/Scanning", test_command_scanning);
+REGISTER_UITHREAD_TEST ("Commands/Scanning", test_command_scanning);
 
 static void
 test_command_unquoting (void)
@@ -51,4 +51,4 @@ test_command_unquoting (void)
   ret = command_string_unquote ("''");
   assert (ret == "");
 }
-REGISTER_TEST ("Commands/Unquoting", test_command_unquoting);
+REGISTER_UITHREAD_TEST ("Commands/Unquoting", test_command_unquoting);

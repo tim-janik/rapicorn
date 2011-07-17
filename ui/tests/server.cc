@@ -17,4 +17,4 @@ test_server_smart_handle (void)
   ApplicationIface *ai = am;
   assert (ai == ab);
 }
-REGISTER_TEST ("Server/Smart Handle", test_server_smart_handle);
+REGISTER_UITHREAD_TEST ("Server/Smart Handle", test_server_smart_handle);
