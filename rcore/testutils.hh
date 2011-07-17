@@ -114,6 +114,8 @@ int     run             (void);
 bool    verbose         (void);
 bool    logging         (void);
 bool    slow            (void);
+bool    ui_test         (void);
+void    ui_test_handler (void (*) (void)); // (un-)set at ui-thread start/end, fix races
 
 void    test_output     (int kind, const char *format, ...) RAPICORN_PRINTF (2, 3);
 
@@ -140,8 +142,8 @@ public:
   template<typename D>
   RegisterTest (const char k, const String &testname, void (*test_func) (D*), D *data)
   { add_test (k, testname, (void(*)(void*)) test_func, (void*) data); }
-  typedef void (*TestRunFunc) (void);
-  static TestRunFunc test_runner        (TestRunFunc func);
+  typedef void (*TestTrigger)  (void (*runner) (void));
+  static void test_set_trigger (TestTrigger func);
 };
 #define REGISTER_TEST(name, ...)     static const Rapicorn::Test::RegisterTest \
   RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('t', name, __VA_ARGS__)
