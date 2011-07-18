@@ -136,7 +136,7 @@ timestamp_benchmark ()
   return stamp;
 }
 
-/* === Logging === */
+// === Logging ===
 bool Logging::m_debugging = 0;
 
 static Mutex                 conftest_mutex;
