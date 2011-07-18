@@ -127,7 +127,7 @@ EventFd::inputfd () // fd for POLLIN
 bool
 EventFd::pollin ()
 {
-  struct pollfd pfds[1] = { inputfd(), PollFD::IN, 0 };
+  struct pollfd pfds[1] = { { inputfd(), PollFD::IN, 0 }, };
   int presult;
   do
     presult = poll (&pfds[0], 1, -1);
