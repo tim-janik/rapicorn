@@ -277,17 +277,27 @@ private:
 UIThread *UIThread::the_uithread = NULL;
 
 static void
-uithread_uncancelled()
+uithread_uncancelled_atexit()
 {
   if (UIThread::uithread())
-    fatal ("UI-Thread still running during exit()");
+    {
+      /* If the ui-thread is still running, that *definitely* is an error at
+       * exit() time, because it may just now be using resources that are being
+       * destroying by atexit in parallel.
+       * Due to this, the process may or may not crash before this function is
+       * executed, so we try our luck to still inform about this situation and
+       * bring the process down in a controlled fashion.
+       */
+      fatal ("UI-Thread still running during exit()");
+      _exit (255);
+    }
 }
 
 uint64
 uithread_bootup (int *argcp, char **argv, const StringVector &args)
 {
   return_val_if_fail (UIThread::uithread() == NULL, 0);
-  atexit (uithread_uncancelled);
+  atexit (uithread_uncancelled_atexit);
   wrap_test_runner();
   Initializer idata;
   idata.argcp = argcp; idata.argv = argv; idata.args = &args; idata.app_id = 0;
