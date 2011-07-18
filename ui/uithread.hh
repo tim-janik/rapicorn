@@ -37,7 +37,8 @@
 
 namespace Rapicorn {
 
-uint64  uithread_bootup (int *argcp, char **argv, const StringVector &args);
+uint64  uithread_bootup   (int *argcp, char **argv, const StringVector &args);
+int     shutdown_app      (int exit_status = 0); // also in clientapi.hh
 
 /// Register a standard test function for execution in the ui-thread.
 #define REGISTER_UITHREAD_TEST(name, ...)     static const Rapicorn::Test::RegisterTest \
@@ -50,7 +51,6 @@ uint64  uithread_bootup (int *argcp, char **argv, const StringVector &args);
 /// Register a logging test function with the ui-thread for output recording and verification.
 #define REGISTER_UITHREAD_LOGTEST(name, ...) static const Rapicorn::Test::RegisterTest \
   RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('L', name, __VA_ARGS__)
-
 
 } // Rapicorn
 

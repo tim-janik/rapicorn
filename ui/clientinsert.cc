@@ -40,10 +40,24 @@ IGNORE: // close last _scope
 
 global_scope:
 namespace Rapicorn {
-Application_SmartHandle  init_app      (const String       &app_ident,
-                                        int                *argcp,
-                                        char              **argv,
-                                        const StringVector &args = StringVector());
+
+Application_SmartHandle init_app        (const String       &app_ident,
+                                         int                *argcp,
+                                         char              **argv,
+                                         const StringVector &args = StringVector());
+
+/**
+ * This function causes proper termination of Rapicorn's concurrently running
+ * ui-thread. This needs to be called before exit(3posix), to avoid parallel
+ * execution of the ui-thread while atexit(3posix) handlers or global destructors
+ * are releasing process resources.
+ * @param pass_through  The status to return. Useful at the end of main()
+ *                      as: return shutdown_app (exit_status);
+ */
+int             shutdown_app    (int pass_through = 0);
+
+void            exit            (int status);
+
 #if 0
 Application_SmartHandle  init_test_app (const String       &app_ident,
                                         int                *argcp,

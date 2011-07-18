@@ -104,6 +104,7 @@ struct ConnectionSource : public virtual EventLoop::Source, public virtual Plic:
     pollfd.revents = 0;
     add_poll (&pollfd);
   }
+  void          wakeup   ()               { calls.wakeup(); } // allow external wakeups
 private:
   const char   *WHERE;
   PollFD        pollfd;
@@ -113,7 +114,7 @@ private:
   /*dtor*/     ~ConnectionSource ()       { remove_poll (&pollfd); loop_remove(); }
   virtual bool  prepare  (uint64, int64*) { return check_dispatch(); }
   virtual bool  check    (uint64)         { return check_dispatch(); }
-  virtual bool  dispatch ()               { dispatch1(); return true; }
+  virtual bool  dispatch ()               { calls.flush(); dispatch1(); return true; }
   bool
   check_dispatch()
   {
@@ -215,12 +216,16 @@ public:
     the_uithread = ref_sink (this);
   }
   Plic::Connection* connection() { return m_connection; }
-  static UIThread*  uithread()   { return the_uithread; }
+  static UIThread*  uithread()   { return Atomic::ptr_get (&the_uithread); }
 private:
   ~UIThread ()
   {
-    assert (the_uithread == this);
-    the_uithread = NULL;
+    assert (the_uithread != this);
+    shutdown();
+  }
+  void
+  shutdown()
+  {
     ConnectionSource *con = m_connection;
     EventLoop *loop = m_loop;
     m_connection = NULL;
@@ -232,6 +237,12 @@ private:
       }
     if (loop)
       unref (loop);
+  }
+  static void
+  trigger_wakeup (void*)
+  {
+    if (the_uithread && the_uithread->m_connection)
+      the_uithread->m_connection->wakeup();
   }
   void
   initialize ()
@@ -245,6 +256,8 @@ private:
     // initialize ui_thread loop before components
     m_loop = ref_sink (EventLoop::create());
     m_connection = ref_sink (new ConnectionSource (*m_loop));
+    // allow external wakeups, needs m_connection
+    Self::set_wakeup (trigger_wakeup, NULL, NULL);
     // initialize sub systems
     struct InitHookCaller : public InitHook {
       static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)
@@ -269,9 +282,10 @@ private:
   {
     initialize(); // does rapicorn_thread_enter()
     return_if_fail (m_init == NULL);
-    while (true) // !EventLoop::loops_exitable()
+    while (!Thread::Self::aborted()) // !EventLoop::loops_exitable()
       EventLoop::iterate_loops (true, true);      // prepare/check/dispatch and may_block
     rapicorn_thread_leave();
+    shutdown();
   }
 };
 UIThread *UIThread::the_uithread = NULL;
@@ -279,7 +293,7 @@ UIThread *UIThread::the_uithread = NULL;
 static void
 uithread_uncancelled_atexit()
 {
-  if (UIThread::uithread())
+  if (UIThread::uithread() && UIThread::uithread()->running())
     {
       /* If the ui-thread is still running, that *definitely* is an error at
        * exit() time, because it may just now be using resources that are being
@@ -312,6 +326,15 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args)
   return app_id;
 }
 
+int // from clientapi.hh
+shutdown_app (int exit_status)
+{
+  if (UIThread::uithread() && UIThread::uithread()->running())
+    UIThread::uithread()->abort();
+  assert (UIThread::uithread()->running() == false);
+  return exit_status;
+}
+
 } // Rapicorn
 
 #include <rcore/testutils.hh>
@@ -319,47 +342,31 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args)
 namespace { // Anon
 using namespace Rapicorn;
 
-struct SyscallData {
-  void (*test_runner) (void);
-  SyscallData() : test_runner (NULL) {}
+// === UI-Thread Syscalls ===
+struct Callable {
+  virtual int64 operator() () = 0;
+  virtual      ~Callable   () {}
 };
-static std::deque<SyscallData*> syscall_data;
-static Mutex                    syscall_mutex;
-
-static void
-trigger_test_runs (void (*runner) (void))
-{
-  return_if_fail (UIThread::uithread() != NULL);
-  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2);
-  fb.add_msgid (Plic::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL); // ui_thread_syscall_twoway
-  SyscallData sysdata;
-  sysdata.test_runner = runner;
-  syscall_mutex.lock();
-  syscall_data.push_back (new SyscallData (sysdata));
-  syscall_mutex.unlock();
-  FieldBuffer *fr = UIThread::uithread()->connection()->call_remote (&fb); // deletes fb
-  Plic::FieldReader frr (*fr);
-  frr.skip(); // FIXME: check fr msgid
-  delete fr;
-}
+static std::deque<Callable*> syscall_queue;
+static Mutex                 syscall_mutex;
 
 static Plic::FieldBuffer*
 ui_thread_syscall_twoway (Plic::FieldReader &fbr)
 {
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
+  int64 result = -1;
   syscall_mutex.lock();
-  while (syscall_data.size())
+  while (syscall_queue.size())
     {
-      SyscallData *calldata = syscall_data.front();
-      syscall_data.pop_front();
+      Callable &callable = *syscall_queue.front();
+      syscall_queue.pop_front();
       syscall_mutex.unlock();
-      if (calldata->test_runner)
-        calldata->test_runner();
-      delete calldata;
+      result = callable ();
+      delete &callable;
       syscall_mutex.lock();
     }
   syscall_mutex.unlock();
-  rb.add_int64 (0);
+  rb.add_int64 (result);
   return &rb;
 }
 
@@ -367,6 +374,43 @@ static const Plic::Connection::MethodEntry ui_thread_call_entries[] = {
   { Plic::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL, ui_thread_syscall_twoway, },
 };
 static Plic::Connection::MethodRegistry ui_thread_call_registry (ui_thread_call_entries);
+
+static int64
+ui_thread_syscall (Callable *callable)
+{
+  Plic::FieldBuffer *fb = Plic::FieldBuffer::_new (2);
+  fb->add_msgid (Plic::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL); // ui_thread_syscall_twoway
+  syscall_mutex.lock();
+  syscall_queue.push_back (callable);
+  syscall_mutex.unlock();
+  FieldBuffer *fr = UIThread::uithread()->connection()->call_remote (fb); // deletes fb
+  Plic::FieldReader frr (*fr);
+  const Plic::MessageId msgid = Plic::MessageId (frr.pop_int64());
+  frr.skip(); // FIXME: check full msgid
+  int64 result = 0;
+  if (Plic::msgid_is_result (msgid))
+    result = frr.pop_int64();
+  delete fr;
+  return result;
+}
+
+// === UI-Thread Test Runs ===
+class SyscallTestRunner : public Callable {
+  void (*test_runner) (void);
+public:
+  SyscallTestRunner (void (*func) (void)) : test_runner (func) {}
+  int64 operator()  ()                    { test_runner(); return 0; }
+};
+
+static void
+trigger_test_runs (void (*runner) (void))
+{
+  return_if_fail (UIThread::uithread() != NULL);
+  // run tests from ui-thread
+  ui_thread_syscall (new SyscallTestRunner (runner));
+  // ensure ui-thread shutdown
+  shutdown_app();
+}
 
 static void
 wrap_test_runner (void)

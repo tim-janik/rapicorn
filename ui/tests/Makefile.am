@@ -23,23 +23,23 @@ testui1_LDADD      = $(LDADDS)
 TEST_PROGS        += labelmarkup
 labelmarkup_SOURCES= labelmarkup.cc
 labelmarkup_LDADD  = $(LDADDS)
-TEST_PROGS        += primitives
-primitives_SOURCES = primitives.cc
-primitives_LDADD   = $(LDADDS)
 TEST_PROGS        += sinfextest
 sinfextest_SOURCES = sinfextest.cc
 sinfextest_LDADD   = $(LDADDS) $(READLINELIBS)
 TEST_PROGS        += items
 items_SOURCES      = items.cc
 items_LDADD        = $(LDADDS)
-TEST_PROGS        += testitems
-testitems_SOURCES  = testitems.cc
-testitems_LDADD    = $(LDADDS)
-XML_FILES         += testitems.xml
 TEST_PROGS        += factory
 factory_SOURCES    = factory.cc
 factory_LDADD      = $(LDADDS)
 XML_FILES         += factory.xml
+TEST_PROGS        += testitems
+testitems_SOURCES  = testitems.cc
+testitems_LDADD    = $(LDADDS)
+XML_FILES         += testitems.xml
+TEST_PROGS        += primitives
+primitives_SOURCES = primitives.cc
+primitives_LDADD   = $(LDADDS)
 
 SINFEX=./sinfextest --shell
 sinfex-expressions: $(srcdir)/expressions.ref
@@ -51,7 +51,7 @@ sinfex-expressions: $(srcdir)/expressions.ref
 	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/expressions.ref'" "'$(TSTOUT)'"
 	$(Q) rm -f $(TSTTMP)
 EXTRA_DIST += expressions.txt expressions.ref
-check-am: sinfex-expressions
+check: sinfex-expressions
 
 xmllint-check:
 	cd $(srcdir) && ! $(XMLLINT) --noout $(XML_FILES) 2>&1 | grep '.'
