@@ -33,6 +33,17 @@ namespace {
 using namespace Rapicorn;
 
 static void
+test_basics ()
+{
+  Sinfex *sinfex = Sinfex::parse_string ("21");
+  ref_sink (sinfex);
+  assert (sinfex != NULL);
+  assert (sinfex->eval (*(Sinfex::Scope*) NULL).real() == 21);
+  unref (sinfex);
+}
+REGISTER_UITHREAD_TEST ("Sinfex/Basics", test_basics);
+
+static void
 eval_expect_tests ()
 {
   const char *eetests[] = {
@@ -156,17 +167,9 @@ eval_expect_tests ()
     }
   ev.pop_map (map);
 }
+REGISTER_UITHREAD_TEST ("Sinfex/Expressions", eval_expect_tests);
 
-static void
-test_basics ()
-{
-  Sinfex *sinfex = Sinfex::parse_string ("21");
-  ref_sink (sinfex);
-  assert (sinfex != NULL);
-  assert (sinfex->eval (*(Sinfex::Scope*) NULL).real() == 21);
-  unref (sinfex);
-}
-
+// === Shell Mode ===
 static RAPICORN_UNUSED char*
 freadline (const char *prompt,
            FILE       *stream)
@@ -222,65 +225,52 @@ struct EvalScope : public Sinfex::Scope {
   }
 };
 
-extern "C" int
-main (int   argc,
-      char *argv[])
+} // Anon
+
+namespace ServerTests {
+
+void
+sinfex_shell (void)
 {
-  bool shell_mode = argc >= 2 && strcmp (argv[1], "--shell") == 0;
-
-  if (!shell_mode)
-    init_core_test (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
-  else
-    init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
-
-  if (shell_mode)
+  bool interactive_prompt = isatty (fileno (stdin));
+  char *malloc_string;
+#ifdef HAVE_READLINE_AND_HISTORY
+  rl_instream = stdin;
+  rl_readline_name = "Rapicorn"; // for inputrc conditionals
+  rl_bind_key ('\t', rl_insert);
+  using_history ();
+  stifle_history (999);
+#endif
+  do
     {
-      bool interactive_prompt = isatty (fileno (stdin));
-      char *malloc_string;
 #ifdef HAVE_READLINE_AND_HISTORY
-      rl_instream = stdin;
-      rl_readline_name = "Rapicorn"; // for inputrc conditionals
-      rl_bind_key ('\t', rl_insert);
-      using_history ();
-      stifle_history (999);
-#endif
-      do
-        {
-#ifdef HAVE_READLINE_AND_HISTORY
-          malloc_string = readline (interactive_prompt ? "sinfex> " : "");
-          if (malloc_string && malloc_string[0] != 0 && !strchr (" \t\v", malloc_string[0]))
-            add_history (malloc_string);
+      malloc_string = readline (interactive_prompt ? "sinfex> " : "");
+      if (malloc_string && malloc_string[0] != 0 && !strchr (" \t\v", malloc_string[0]))
+        add_history (malloc_string);
 #else
-          malloc_string = freadline (interactive_prompt ? "sinfex> " : "", stdin);
+      malloc_string = freadline (interactive_prompt ? "sinfex> " : "", stdin);
 #endif
-          if (malloc_string)
+      if (malloc_string)
+        {
+          Sinfex *sinfex = Sinfex::parse_string (malloc_string);
+          ref_sink (sinfex);
+          free (malloc_string);
+          EvalScope scope;
+          Sinfex::Value v = sinfex->eval (scope);
+          String s = v.string();
+          if (v.isreal())
             {
-              Sinfex *sinfex = Sinfex::parse_string (malloc_string);
-              ref_sink (sinfex);
-              free (malloc_string);
-              EvalScope scope;
-              Sinfex::Value v = sinfex->eval (scope);
-              String s = v.string();
-              if (v.isreal())
-                {
-                  char buffer[128];
-                  snprintf (buffer, 128, "%.15g", v.real());
-                  s = buffer;
-                }
-              printf ("= %s\n", s.c_str());
-              unref (sinfex);
+              char buffer[128];
+              snprintf (buffer, 128, "%.15g", v.real());
+              s = buffer;
             }
+          printf ("= %s\n", s.c_str());
+          unref (sinfex);
         }
-      while (malloc_string);
-      if (interactive_prompt)
-        fprintf (stderr, "\n"); // newline after last prompt
-      return 0;
     }
-
-  Test::add ("Sinfex/Basics", test_basics);
-  Test::add ("Sinfex/Expressions", eval_expect_tests);
-
-  return Test::run();
+  while (malloc_string);
+  if (interactive_prompt)
+    fprintf (stderr, "\n"); // newline after last prompt
 }
 
-} // Anon
+} // ServerTests

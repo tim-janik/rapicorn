@@ -21,6 +21,11 @@ main (int   argc,
       ServerTests::server_test_item_fatal_asserts = false;
     else if (String (argv[i]) == "--run")
       ServerTests::server_test_run_dialogs = true;
+    else if (String (argv[i]) == "--shell")
+      {
+        uithread_test_trigger (ServerTests::sinfex_shell);
+        return 0;
+      }
 
   return Test::run();
 }

@@ -18,20 +18,16 @@ TESTS_ENVIRONMENT  = RAPICORN_VPATH=$(VPATH) # also search srcdir for XML files
 LOGTEST_PROGS       += servertests
 TEST_PROGS          += servertests
 servertests_SOURCES  = servertests.cc walker.cc cmdtest.cc properties.cc region.cc server.cc labelmarkup.cc factory.cc \
-		       items.cc primitives.cc testitems.cc
-servertests_LDADD    = $(LDADDS)
+		       items.cc primitives.cc testitems.cc sinfextest.cc
+servertests_LDADD    = $(LDADDS) $(READLINELIBS)
 XML_FILES    	    += factory.xml testitems.xml
 
-#TEST_PROGS        += sinfextest
-sinfextest_SOURCES = sinfextest.cc
-sinfextest_LDADD   = $(LDADDS) $(READLINELIBS)
-
-SINFEX=./sinfextest --shell
-check: #sinfex-expressions
+SINFEX_SHELL=./servertests --shell
+check: sinfex-expressions
 sinfex-expressions: $(srcdir)/expressions.ref
 	$(Q) egrep -v '^[[:space:]]*(#|$$)' < $(srcdir)/expressions.txt > $(TSTTMP) \
 	&& $(X11TEST_SERVER) && \
-	  COLUMNS=9999 $(SINFEX) < $(TSTTMP) > $(TSTOUT) \
+	  COLUMNS=9999 $(SINFEX_SHELL) < $(TSTTMP) > $(TSTOUT) \
 	                 $(XLIBSTDERREXTFIX) \
 	; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/expressions.ref'" "'$(TSTOUT)'"

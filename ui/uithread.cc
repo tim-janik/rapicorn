@@ -403,19 +403,29 @@ public:
 };
 
 static void
-trigger_test_runs (void (*runner) (void))
-{
-  return_if_fail (UIThread::uithread() != NULL);
-  // run tests from ui-thread
-  ui_thread_syscall (new SyscallTestRunner (runner));
-  // ensure ui-thread shutdown
-  shutdown_app();
-}
-
-static void
 wrap_test_runner (void)
 {
-  Test::RegisterTest::test_set_trigger (trigger_test_runs);
+  Test::RegisterTest::test_set_trigger (uithread_test_trigger);
 }
 
 } // Anon
+
+// === UI-Thread Test Trigger ===
+namespace Rapicorn {
+class SyscallTestTrigger : public Callable {
+  void (*test_func) (void);
+public:
+  SyscallTestTrigger (void (*tfunc) (void)) : test_func (tfunc) {}
+  int64 operator()  ()                      { test_func(); return 0; }
+};
+void
+uithread_test_trigger (void (*test_func) ())
+{
+  return_if_fail (test_func != NULL);
+  return_if_fail (UIThread::uithread() != NULL);
+  // run tests from ui-thread
+  ui_thread_syscall (new SyscallTestTrigger (test_func));
+  // ensure ui-thread shutdown
+  shutdown_app();
+}
+} // Rapicorn

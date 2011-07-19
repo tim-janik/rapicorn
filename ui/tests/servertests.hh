@@ -9,6 +9,7 @@ namespace ServerTests {
 
 extern bool server_test_item_fatal_asserts;
 extern bool server_test_run_dialogs;
+extern void sinfex_shell (void);
 
 } // ServerTestsServerTests
 
