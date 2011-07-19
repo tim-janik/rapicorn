@@ -146,13 +146,13 @@ export FAILOK           = FAIL  OK
 ### eval $$TSTDIAGNOSE ['TESTNAME'] - show test title and result atomically
 export TSTDIAGNOSE = _e=$$?; tstdiagnose() { printf '  CHECK  %-64s%s\n' "$${1:-$$MAKE_TARGET_FILE}:" \
 				"$${FAILOK:$$(($$_e?0:6)):6}"; [ $$_e = 0 ] || exit $$_e; }; tstdiagnose
-export TSTDIAGNOSE_LOGTEST = _e=$$?; tstdiagnose() { printf '  LOGTST %-64s%s\n' "$${1:-$$MAKE_TARGET_FILE}:" \
+export TSTDIAGNOSE_LOGTEST = _e=$$?; tstdiagnose() { printf 'LOGTEST: %-64s%s\n' "$${1:-$$MAKE_TARGET_FILE}:" \
 				"$${FAILOK:$$(($$_e?0:6)):6}"; [ $$_e = 0 ] || exit $$_e; }; tstdiagnose
 ### eval $$TSTVERIFY ['TESTREF'] ['TESTLOG'] ['TESTNAME']
 export TSTVERIFY = tstverify() { \
 	${FORCECHECKUPDATE} && { cp $(if $(Q),,-v) $${2:-$(TSTOUT)} $${1:-$(TSTREF)} ; FAILOK="FAIL "" FORCED" ; } ; \
 	cmp --quiet $${1:-$(TSTREF)} $${2:-$(TSTOUT)} ; _e=$$? ; \
-	printf '  CMPLOG %-64s%s\n' "$${3:-$$MAKE_TARGET_FILE}:" "$${FAILOK:$$(($$_e?0:6)):6}" ; \
+	printf 'LOGDIFF: %-64s%s\n' "$${3:-$$MAKE_TARGET_FILE}:" "$${FAILOK:$$(($$_e?0:6)):6}" ; \
 	test $$_e = 0 || { diff -up $${1:-$(TSTREF)} $${2:-$(TSTOUT)} ; exit $$_e ; } ; rm -f $${2:-$(TSTOUT)} ; \
 } ; tstverify
 # $(call TSTOUT, [postfix]) - test output filename
