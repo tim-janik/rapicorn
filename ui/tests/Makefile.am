@@ -17,7 +17,8 @@ TESTS_ENVIRONMENT  = RAPICORN_VPATH=$(VPATH) # also search srcdir for XML files
 # test programs
 LOGTEST_PROGS       += servertests
 TEST_PROGS          += servertests
-servertests_SOURCES  = servertests.cc walker.cc cmdtest.cc properties.cc region.cc server.cc labelmarkup.cc factory.cc items.cc
+servertests_SOURCES  = servertests.cc walker.cc cmdtest.cc properties.cc region.cc server.cc labelmarkup.cc factory.cc \
+		       items.cc primitives.cc
 servertests_LDADD    = $(LDADDS)
 XML_FILES    	    += factory.xml
 
@@ -28,9 +29,6 @@ sinfextest_LDADD   = $(LDADDS) $(READLINELIBS)
 testitems_SOURCES  = testitems.cc
 testitems_LDADD    = $(LDADDS)
 XML_FILES         += testitems.xml
-#TEST_PROGS        += primitives
-primitives_SOURCES = primitives.cc
-primitives_LDADD   = $(LDADDS)
 
 SINFEX=./sinfextest --shell
 check: #sinfex-expressions

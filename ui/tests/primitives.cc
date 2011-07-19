@@ -1,26 +1,12 @@
-/* Tests
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include <rcore/testutils.hh>
 #include <rapicorn.hh>
 #include <errno.h>
 
-/* --- RapicornTester --- */
-namespace Rapicorn {
-struct RapicornTester {
+namespace { // Anon
+using namespace Rapicorn;
+
+struct LoopTester {
   static bool
   loops_pending()
   {
@@ -32,21 +18,8 @@ struct RapicornTester {
     EventLoop::iterate_loops (may_block, true);
   }
 };
-} // Rapicorn
 
-/* --- tests --- */
-namespace { // Anon
-using namespace Rapicorn;
-
-inline uint32
-quick_rand32 (void)
-{
-  static uint32 accu = 2147483563;
-  accu = 1664525 * accu + 1013904223;
-  return accu;
-}
-
-/* --- basic loop tests --- */
+// === test_loop_basics ===
 static bool test_callback_touched = false;
 static void
 test_callback()
@@ -96,10 +69,9 @@ pipe_reader (PollFD &pfd)
 }
 
 static void
-basic_loop_test()
+test_loop_basics()
 {
-  const uint max_runs = 9999;
-  TSTART ("loop");
+  const uint max_runs = 1999;
   /* basal loop tests */
   EventLoop *loop = EventLoop::create();
   TASSERT (loop);
@@ -109,8 +81,8 @@ basic_loop_test()
   uint tcid = loop->exec_now (slot (test_callback));
   TASSERT (tcid > 0);
   TASSERT (test_callback_touched == false);
-  while (RapicornTester::loops_pending())
-    RapicornTester::loops_dispatch (false);
+  while (LoopTester::loops_pending())
+    LoopTester::loops_dispatch (false);
   TASSERT (test_callback_touched == true);
   bool tremove = loop->try_remove (tcid);
   TASSERT (tremove == false);
@@ -118,46 +90,54 @@ basic_loop_test()
   /* keep-alive test */
   tcid = loop->exec_now (slot (keep_alive_callback));
   for (uint counter = 0; counter < max_runs; counter++)
-    if (RapicornTester::loops_pending())
-      RapicornTester::loops_dispatch (false);
+    if (LoopTester::loops_pending())
+      LoopTester::loops_dispatch (false);
     else
       break;
   tremove = loop->try_remove (tcid);
   TASSERT (tremove == true);
-  while (RapicornTester::loops_pending())
-    RapicornTester::loops_dispatch (false);
+  while (LoopTester::loops_pending())
+    LoopTester::loops_dispatch (false);
   tremove = loop->try_remove (tcid);
   TASSERT (tremove == false);
   /* loop + pipe */
   int pipe_fds[2];
   int err = pipe (pipe_fds);
   TASSERT (err == 0);
-  while (RapicornTester::loops_pending())
-    RapicornTester::loops_dispatch (false);
+  while (LoopTester::loops_pending())
+    LoopTester::loops_dispatch (false);
   loop->exec_io_handler (slot (pipe_reader), pipe_fds[0], "r");
   loop->exec_io_handler (slot (pipe_writer), pipe_fds[1], "w");
   TASSERT (pipe_reader_seen == 0);
   while (pipe_reader_seen < 4999)
-    if (RapicornTester::loops_pending())
-      RapicornTester::loops_dispatch (false);
+    if (LoopTester::loops_pending())
+      LoopTester::loops_dispatch (false);
     else
-      RapicornTester::loops_dispatch (true);
+      LoopTester::loops_dispatch (true);
   TCMPSIGNED (pipe_reader_seen, ==, 4999);
   err = close (pipe_fds[1]);
   TASSERT (err == 0);
-  while (RapicornTester::loops_pending())
-    RapicornTester::loops_dispatch (false);
+  while (LoopTester::loops_pending())
+    LoopTester::loops_dispatch (false);
   err = close (pipe_fds[0]);
   TASSERT (err == -1); /* should have been auto-closed by PollFDSource */
   unref (loop);
-  while (RapicornTester::loops_pending())
-    RapicornTester::loops_dispatch (false);
-  TDONE ();
+  while (LoopTester::loops_pending())
+    LoopTester::loops_dispatch (false);
 }
+REGISTER_UITHREAD_TEST ("Primitives/Test Loop Basics", test_loop_basics);
 
-/* --- loop state tests --- */
+// === test_event_loop_sources ===
 static uint         check_source_counter = 0;
 static uint         check_source_destroyed_counter = 0;
+
+inline uint32
+quick_rand32 (void)
+{
+  static uint32 accu = 2147483563;
+  accu = 1664525 * accu + 1013904223;
+  return accu;
+}
 
 class CheckSource : public virtual EventLoop::Source {
   enum {
@@ -237,15 +217,14 @@ public:
 static CheckSource *check_sources[997] = { NULL, };
 
 static void
-more_loop_test2()
+test_event_loop_sources()
 {
   const uint max_runs = 999;
-  TSTART ("loop-states");
   EventLoop *loop = EventLoop::create();
   TASSERT (loop);
   ref_sink (loop);
-  while (RapicornTester::loops_pending())
-    RapicornTester::loops_dispatch (false);
+  while (LoopTester::loops_pending())
+    LoopTester::loops_dispatch (false);
   /* source state checks */
   TASSERT (check_source_counter == 0);
   const uint nsrc = quick_rand32() % (1 + ARRAY_SIZE (check_sources));
@@ -259,8 +238,8 @@ more_loop_test2()
   TASSERT (check_source_destroyed_counter == 0);
   for (uint counter = 0; counter < max_runs; counter++)
     {
-      if (RapicornTester::loops_pending())
-        RapicornTester::loops_dispatch (false);
+      if (LoopTester::loops_pending())
+        LoopTester::loops_dispatch (false);
       else
         break;
       if (counter % 347 == 0)
@@ -274,84 +253,12 @@ more_loop_test2()
     unref (check_sources[i]);
   TASSERT (check_source_counter == 0);
   unref (loop);
-  TDONE ();
 }
-
-/* --- async loop tests --- */
-static bool quit_source_destroyed = false;
-class QuitSource : public virtual EventLoop::Source {
-  uint       m_counter;
-  EventLoop *m_loop;
-public:
-  QuitSource (uint      countdown,
-              EventLoop *loop) :
-    m_counter (countdown),
-    m_loop (loop)
-  {}
-  virtual bool
-  prepare (uint64 current_time_usecs,
-           int64 *timeout_usecs_p)
-  {
-    return m_counter > 0;
-  }
-  virtual bool
-  check (uint64 current_time_usecs)
-  {
-    return m_counter > 0;
-  }
-  virtual bool
-  dispatch ()
-  {
-    if (m_counter)
-      {
-        m_counter--;
-        if (!m_counter && m_loop)
-          m_loop->kill_sources();
-      }
-    else
-      assert_not_reached();
-    return true;
-  }
-  virtual void
-  destroy ()
-  {}
-  virtual void
-  finalize ()
-  {}
-  virtual
-  ~QuitSource ()
-  {
-    quit_source_destroyed = true;
-  }
-};
+REGISTER_UITHREAD_TEST ("Primitives/Test Event Loop Sources", test_event_loop_sources);
 
 static void
-async_loop_test()
+test_affine()
 {
-#if 0
-  const uint max_runs = 9999;
-  TSTART ("async-loop");
-  EventLoop *loop = EventLoop::create();
-  TASSERT (loop);
-  ref_sink (loop);
-  bool started = loop->start();
-  TASSERT (started);
-  EventLoop::Source *source = new QuitSource (max_runs, loop);
-  TASSERT (quit_source_destroyed == false);
-  loop->add_source (source);
-  while (!quit_source_destroyed)
-    Thread::Self::sleep (25 * 1000);
-  TASSERT (quit_source_destroyed == true);
-  unref (loop);
-  TDONE ();
-#endif
-}
-
-/* --- affine --- */
-static void
-affine_test()
-{
-  TSTART ("affine");
   AffineIdentity id;
   Affine a;
   TASSERT (a == id);
@@ -360,14 +267,13 @@ affine_test()
   AffineTranslate at (1, 1);
   TASSERT (at.point (3, 5) == Point (4, 6));
   TASSERT (at.ipoint (4, 6) == Point (3, 5));
-  TDONE();
 }
+REGISTER_UITHREAD_TEST ("Primitives/Test Affine", test_affine);
 
-/* --- double<->int --- */
 static void
-double_int_test()
+test_double_int()
 {
-  TSTART ("dtoi32");
+  TINFO ("Testing dtoi32...");
   TASSERT (_dtoi32_generic (0.0) == 0);
   TASSERT (_dtoi32_generic (+0.3) == +0);
   TASSERT (_dtoi32_generic (-0.3) == -0);
@@ -390,8 +296,7 @@ double_int_test()
   TASSERT (dtoi32 (-2147483646.7) == -2147483647);
   TASSERT (dtoi32 (-2147483647.3) == -2147483647);
   TASSERT (dtoi32 (-2147483647.7) == -2147483648LL);
-  TDONE();
-  TSTART ("dtoi64");
+  TINFO ("Testing dtoi64...");
   TASSERT (_dtoi64_generic (0.0) == 0);
   TASSERT (_dtoi64_generic (+0.3) == +0);
   TASSERT (_dtoi64_generic (-0.3) == -0);
@@ -430,8 +335,7 @@ double_int_test()
   TASSERT (dtoi64 (+1125899906842624.7) == +1125899906842625LL);
   TASSERT (dtoi64 (-1125899906842624.3) == -1125899906842624LL);
   TASSERT (dtoi64 (-1125899906842624.7) == -1125899906842625LL);
-  TDONE();
-  TSTART ("iround");
+  TINFO ("Testing iround...");
   TASSERT (round (0.0) == 0.0);
   TASSERT (round (+0.3) == +0.0);
   TASSERT (round (-0.3) == -0.0);
@@ -454,8 +358,7 @@ double_int_test()
   TASSERT (iround (+1125899906842624.7) == +1125899906842625LL);
   TASSERT (iround (-1125899906842624.3) == -1125899906842624LL);
   TASSERT (iround (-1125899906842624.7) == -1125899906842625LL);
-  TDONE();
-  TSTART ("iceil");
+  TINFO ("Testing iceil...");
   TASSERT (ceil (0.0) == 0.0);
   TASSERT (ceil (+0.3) == +1.0);
   TASSERT (ceil (-0.3) == -0.0);
@@ -478,8 +381,7 @@ double_int_test()
   TASSERT (iceil (+1125899906842624.7) == +1125899906842625LL);
   TASSERT (iceil (-1125899906842624.3) == -1125899906842624LL);
   TASSERT (iceil (-1125899906842624.7) == -1125899906842624LL);
-  TDONE();
-  TSTART ("ifloor");
+  TINFO ("Testing ifloor...");
   TASSERT (floor (0.0) == 0.0);
   TASSERT (floor (+0.3) == +0.0);
   TASSERT (floor (-0.3) == -1.0);
@@ -502,15 +404,14 @@ double_int_test()
   TASSERT (ifloor (+1125899906842624.7) == +1125899906842624LL);
   TASSERT (ifloor (-1125899906842624.3) == -1125899906842625LL);
   TASSERT (ifloor (-1125899906842624.7) == -1125899906842625LL);
-  TDONE();
 }
+REGISTER_UITHREAD_TEST ("Primitives/Test Double <=> Int Conversion", test_double_int);
 
 /* --- hsv --- */
 static void
-color_test()
+test_hsv_rgb()
 {
   /* assert that set_hsv(get_hsv(v))==v for all v */
-  TSTART ("HSV-convert");
   const int step = Test::slow() ? 1 : 10;
   for (uint r = 0; r < 256; r += step)
     {
@@ -538,24 +439,8 @@ color_test()
       if (r % 5 == 0)
         TOK();
     }
-  TDONE();
 }
-
-/* --- main --- */
-extern "C" int
-main (int   argc,
-      char *argv[])
-{
-  // initialize rapicorn
-  init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
-
-  basic_loop_test();
-  more_loop_test2();
-  async_loop_test();
-  affine_test();
-  double_int_test();
-  color_test();
-  return 0;
-}
+REGISTER_UITHREAD_TEST ("Primitives/Test Hsv <=> Rgb Conversion", test_hsv_rgb);
+REGISTER_UITHREAD_SLOWTEST ("Primitives/Test Hsv <=> Rgb Conversion", test_hsv_rgb);
 
 } // anon
