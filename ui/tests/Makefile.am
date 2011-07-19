@@ -40,7 +40,7 @@ sinfex-expressions: $(srcdir)/expressions.ref
 	  COLUMNS=9999 $(SINFEX) < $(TSTTMP) > $(TSTOUT) \
 	                 $(XLIBSTDERREXTFIX) \
 	; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/expressions.ref'" "'$(TSTOUT)'"
+	$(Q) eval "$$TSTDIFF" "'$(srcdir)/expressions.ref'" "'$(TSTOUT)'"
 	$(Q) rm -f $(TSTTMP)
 EXTRA_DIST += expressions.txt expressions.ref
 

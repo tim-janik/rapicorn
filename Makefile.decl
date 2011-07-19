@@ -128,7 +128,7 @@ check_logtest--$(1): $(1)
 	&& tstout="$(1).log" \
 	&& RAPICORN="$$$$RAPICORN:$$(TSTV$$(V)):test-log" ./$(1) >"$$$$tstout" 2>&1 \
 	; eval "$$$$TSTDIAGNOSE_LOGTEST" "'$(1)'" \
-	; eval "$$$$TSTVERIFY" "'$$(srcdir)/$(1).ref'" "'$$$$tstout'" "'$(1)'"
+	; eval "$$$$TSTDIFF" "'$$(srcdir)/$(1).ref'" "'$$$$tstout'" "'$(1)'"
 check: check_logtest--$(1)
 endef
 $(foreach PRG,$(LOGTEST_PROGS),$(eval $(call check_logtest_TEMPLATE,$(PRG))))
@@ -148,11 +148,11 @@ export TSTDIAGNOSE = _e=$$?; tstdiagnose() { printf '  CHECK  %-64s%s\n' "$${1:-
 				"$${FAILOK:$$(($$_e?0:6)):6}"; [ $$_e = 0 ] || exit $$_e; }; tstdiagnose
 export TSTDIAGNOSE_LOGTEST = _e=$$?; tstdiagnose() { printf 'LOGTEST: %-64s%s\n' "$${1:-$$MAKE_TARGET_FILE}:" \
 				"$${FAILOK:$$(($$_e?0:6)):6}"; [ $$_e = 0 ] || exit $$_e; }; tstdiagnose
-### eval $$TSTVERIFY ['TESTREF'] ['TESTLOG'] ['TESTNAME']
-export TSTVERIFY = tstverify() { \
+### eval $$TSTDIFF ['TESTREF'] ['TESTLOG'] ['TESTNAME']
+export TSTDIFF = tstverify() { \
 	${FORCECHECKUPDATE} && { cp $(if $(Q),,-v) $${2:-$(TSTOUT)} $${1:-$(TSTREF)} ; FAILOK="FAIL "" FORCED" ; } ; \
 	cmp --quiet $${1:-$(TSTREF)} $${2:-$(TSTOUT)} ; _e=$$? ; \
-	printf 'LOGDIFF: %-64s%s\n' "$${3:-$$MAKE_TARGET_FILE}:" "$${FAILOK:$$(($$_e?0:6)):6}" ; \
+	printf '  DIFF   %-64s%s\n' "$${3:-$$MAKE_TARGET_FILE}:" "$${FAILOK:$$(($$_e?0:6)):6}" ; \
 	test $$_e = 0 || { diff -up $${1:-$(TSTREF)} $${2:-$(TSTOUT)} ; exit $$_e ; } ; rm -f $${2:-$(TSTOUT)} ; \
 } ; tstverify
 # $(call TSTOUT, [postfix]) - test output filename

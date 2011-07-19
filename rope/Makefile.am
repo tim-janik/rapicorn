@@ -70,7 +70,7 @@ EXTRA_DIST += testpystub.ref PyStub.py
 CLEANFILES += testpystub.pyc
 check-PyStub-gen: $(srcdir)/testpystub.ref
 	$(Q) ${PLICINT} -G $(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testpystub.ref'"
+	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testpystub.ref'"
 check-PyStub-syntax: $(srcdir)/testpystub.ref
 	$(Q) $(PYTHON) -c "import py_compile; py_compile.compile ('$(srcdir)/testpystub.ref', 'testpystub.pyc')" && \
 	  $(PYTHON) $(srcdir)/testpystub.ref ; eval "$$TSTDIAGNOSE"
@@ -81,7 +81,7 @@ check-CxxPyStub-gen: $(srcdir)/testcxxpystub.ref
 	$(Q) ${PLICINT} -G $(srcdir)/CxxPyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) \
 	&& echo "static PLIC_UNUSED PyMethodDef dummy[] = { PLIC_PYSTUB_METHOD_DEFS(), { 0 } };" >>$(TSTOUT) \
 	; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testcxxpystub.ref'"
+	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxpystub.ref'"
 check-CxxPyStub-syntax: $(srcdir)/testcxxpystub.ref
 	$(Q) cp $(srcdir)/testcxxpystub.ref testcxxpystub.cc
 	$(Q) $(CXXCOMPILE) testcxxpystub.cc -c ; eval "$$TSTDIAGNOSE"
@@ -91,16 +91,16 @@ check-local: check-CxxPyStub-gen check-CxxPyStub-syntax
 check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
 	$(Q) ${PLICINT} -G $(srcdir)/CxxStub -g iface-prefix=I_ -g serverhh -g servercc \
 	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testcxxserver.ref'"
+	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxserver.ref'"
 check-CxxStub-client-gen: $(srcdir)/testcxxclient.ref
 	$(Q) ${PLICINT} -G $(srcdir)/CxxStub -g iface-prefix=I_ -g clienthh -g clientcc \
 	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testcxxclient.ref'"
+	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxclient.ref'"
 check-CxxStub-skeleton-gen: $(srcdir)/testcxxskels.ref
 	$(Q) echo -e "#include <rapicorn.hh>\n" > $(TSTOUT)
 	$(Q) ${PLICINT} -G $(srcdir)/CxxStub -g iface-prefix=I_ -g serverhh -g server-skel \
 	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testcxxskels.ref'"
+	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxskels.ref'"
 check-CxxStub-server-code: $(srcdir)/testcxxserver.ref
 	$(Q) cp $(srcdir)/testcxxserver.ref testcxxserver.cc
 	$(Q) $(CXXCOMPILE) -D__RAPICORN_BUILD__  testcxxserver.cc -c ; eval "$$TSTDIAGNOSE"

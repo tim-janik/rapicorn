@@ -32,8 +32,8 @@ check: check-testpass check-include-p1
 
 ### PLIC check failing tests
 check-testfail: $(srcdir)/testfail.idl
-	$(Q) ${TESTPLIC} --plic-fail-file-test $(srcdir)/testfail.idl >$(TSTOUT)
-	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testfail.ref'" "'$(TSTOUT)'"
+	$(Q) ${TESTPLIC} --plic-fail-file-test $(srcdir)/testfail.idl >$(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testfail.ref'" "'$(TSTOUT)'"
 check: check-testfail
 
 check-plic-format-TypePackage: ptptest $(srcdir)/testpass.idl
@@ -44,5 +44,5 @@ check: check-plic-format-TypePackage
 
 check-plic-format-Rapicorn: $(srcdir)/testpass.idl
 	$(Q) ${TESTPLIC} $(srcdir)/testpass.idl -G Rapicorn -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testrapicorn.ref'" "'$(TSTOUT)'"
+	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testrapicorn.ref'" "'$(TSTOUT)'"
 check: check-plic-format-Rapicorn
