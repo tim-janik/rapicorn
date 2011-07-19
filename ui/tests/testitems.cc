@@ -14,49 +14,16 @@
  * A copy of the GNU Lesser General Public License should ship along
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
-#include <rcore/testutils.hh>
-#include <rapicorn.hh>
+#include "servertests.hh"
 #include <ui/testitems.hh>
 
-/* --- RapicornTester --- */
-namespace Rapicorn {
-struct RapicornTester {
-  static bool
-  loops_pending()
-  {
-    return EventLoop::iterate_loops (false, false);
-  }
-  static void
-  loops_dispatch (bool may_block)
-  {
-    EventLoop::iterate_loops (may_block, true);
-  }
-};
-} // Rapicorn
-
-/* --- tests --- */
 namespace {
 using namespace Rapicorn;
 
-static bool test_item_fatal_asserts = true;
-
 static void
-assertion_ok (const String &assertion)
-{
-  // TMSG ("%s\n", assertion.c_str());
-}
-
-static void
-assertions_passed ()
-{
-  TOK();
-}
-
-static void
-test_cxx_gui ()
+test_cxx_server_gui ()
 {
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
-  TSTART ("C++GUI Test");
   Wind0wIface &wind0w = *app.create_wind0w ("Window");
   TOK();
   ItemImpl &titem = Factory::create_item ("TestItem");
@@ -76,14 +43,25 @@ test_cxx_gui ()
   /* assert TestItem rendering */
   uint seen_test = TestContainer::seen_test_items();
   TASSERT (seen_test > old_seen_test); // may fail due to missing exposes (locked screens) needs PNG etc. backends
-  TDONE();
+}
+REGISTER_UITHREAD_TEST ("TestItem/Test C++ Server Side GUI", test_cxx_server_gui);
+
+static void
+assertion_ok (const String &assertion)
+{
+  TINFO ("assertion_ok: %s", assertion.c_str());
+}
+
+static void
+assertions_passed ()
+{
+  TOK();
 }
 
 static void
 test_test_item ()
 {
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
-  TSTART ("alignment-test");
   Wind0wIface &wind0w = *app.create_wind0w ("alignment-test");
   TOK();
   WindowImpl &window = wind0w.impl();
@@ -91,10 +69,10 @@ test_test_item ()
   TASSERT (titem != NULL);
   titem->sig_assertion_ok += slot (assertion_ok);
   titem->sig_assertions_passed += slot (assertions_passed);
-  titem->fatal_asserts (test_item_fatal_asserts);
+  titem->fatal_asserts (ServerTests::server_test_item_fatal_asserts);
   TOK();
-  while (RapicornTester::loops_pending())
-    RapicornTester::loops_dispatch (false);
+  while (EventLoop::iterate_loops (false, false)) // loops_pending?
+    EventLoop::iterate_loops (false, true);       // loops_dispatch
   /* close wind0w (and exit main loop) after first expose */
   window.enable_auto_close();
   /* verify and assert at least one TestItem rendering */
@@ -104,14 +82,27 @@ test_test_item ()
   uint seen_test = TestContainer::seen_test_items();
   TASSERT (seen_test > old_seen_test);
   /* test item rendering also executed various assertions */
-  TDONE();
+}
+REGISTER_UITHREAD_TEST ("TestItem/Test GUI assertions (alignment-test)", test_test_item);
+
+static void
+ensure_ui_file()
+{
+  static bool initialized = false;
+  if (once_enter (&initialized))
+    {
+      // first, load required ui files
+      ApplicationImpl &app = ApplicationImpl::the();
+      app.auto_load ("RapicornTest", Path::vpath_find ("testitems.xml"), program_file());
+      once_leave (&initialized, true);
+    }
 }
 
 static void
-idl_test_item_test ()
+test_idl_test_item ()
 {
+  ensure_ui_file();
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
-  TSTART ("idl-test-item");
   Wind0wIface &wind0w = *app.create_wind0w ("test-item-wind0w");
   TOK();
   WindowImpl &window = wind0w.impl();
@@ -142,10 +133,8 @@ idl_test_item_test ()
   titem.self_prop (NULL); TASSERT (titem.self_prop() == NULL);
   titem.self_prop (titemp); TASSERT (titem.self_prop() == titemp);
   wind0w.close();
-  TDONE();
 }
-
-static bool run_dialogs = false;
+REGISTER_UITHREAD_TEST ("TestItem/Test TestItem (test-item-wind0w)", test_idl_test_item);
 
 template<class C> C*
 interface (ItemIface *itemi)
@@ -157,17 +146,17 @@ interface (ItemIface *itemi)
 }
 
 static void
-complex_dialog_test ()
+test_complex_dialog ()
 {
+  ensure_ui_file();
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
-  TSTART ("complex-dialog-test");
   ItemIface *item = app.unique_component ("/#"); // invalid path
   TASSERT (item == NULL);
   item = app.unique_component ("/#complex-dialog"); // non-existing wind0w
   TASSERT (item == NULL);
   Wind0wIface &wind0w = *app.create_wind0w ("complex-dialog");
   TOK();
-  if (run_dialogs)
+  if (ServerTests::server_test_run_dialogs)
     {
       wind0w.show();
       app.execute_loops();
@@ -202,33 +191,7 @@ complex_dialog_test ()
   TASSERT (dynamic_cast<Text::Editor::Client*> (item) == NULL);
   item = app.unique_component ("/#"); // invalid path
   TASSERT (item == NULL);
-  TDONE();
 }
-
-extern "C" int
-main (int   argc,
-      char *argv[])
-{
-  for (int i = 0; i < argc; i++)
-    if (String (argv[i]) == "--non-fatal")
-      test_item_fatal_asserts = false;
-    else if (String (argv[i]) == "--run")
-      run_dialogs = true;
-
-  // initialize rapicorn
-  init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
-
-  /* parse GUI description */
-  app.auto_load ("RapicornTest", Path::vpath_find ("testitems.xml"), argv[0]);
-
-  /* create/run tests */
-  test_cxx_gui();
-  test_test_item();
-  idl_test_item_test();
-  complex_dialog_test();
-
-  return 0;
-}
+REGISTER_UITHREAD_TEST ("TestItem/Test Comples Dialog (complex-dialog)", test_complex_dialog);
 
 } // Anon
