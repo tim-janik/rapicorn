@@ -67,11 +67,3 @@ test_factory ()
 REGISTER_UITHREAD_TEST ("Factory/Test Item Factory", test_factory);
 
 } // anon
-
-extern "C" int
-main (int   argc,
-      char *argv[])
-{
-  init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
-  return Test::run();
-}

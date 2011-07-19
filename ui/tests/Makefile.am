@@ -15,24 +15,15 @@ EXTRA_DIST	+= $(XML_FILES)
 TESTS_ENVIRONMENT  = RAPICORN_VPATH=$(VPATH) # also search srcdir for XML files
 
 # test programs
-LOGTEST_PROGS     += testui1
-TEST_PROGS        += testui1
-testui1_SOURCES    = walker.cc cmdtest.cc properties.cc region.cc server.cc
-testui1_LDADD      = $(LDADDS)
+LOGTEST_PROGS       += servertests
+TEST_PROGS          += servertests
+servertests_SOURCES  = servertests.cc walker.cc cmdtest.cc properties.cc region.cc server.cc labelmarkup.cc factory.cc items.cc
+servertests_LDADD    = $(LDADDS)
+XML_FILES    	    += factory.xml
 
-TEST_PROGS        += labelmarkup
-labelmarkup_SOURCES= labelmarkup.cc
-labelmarkup_LDADD  = $(LDADDS)
 TEST_PROGS        += sinfextest
 sinfextest_SOURCES = sinfextest.cc
 sinfextest_LDADD   = $(LDADDS) $(READLINELIBS)
-TEST_PROGS        += items
-items_SOURCES      = items.cc
-items_LDADD        = $(LDADDS)
-TEST_PROGS        += factory
-factory_SOURCES    = factory.cc
-factory_LDADD      = $(LDADDS)
-XML_FILES         += factory.xml
 TEST_PROGS        += testitems
 testitems_SOURCES  = testitems.cc
 testitems_LDADD    = $(LDADDS)

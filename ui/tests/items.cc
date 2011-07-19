@@ -24,11 +24,3 @@ test_window()
 REGISTER_UITHREAD_TEST ("Items/Test Window creation", test_window);
 
 } // Anon
-
-extern "C" int
-main (int   argc,
-      char *argv[])
-{
-  init_test_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
-  return Test::run();
-}
