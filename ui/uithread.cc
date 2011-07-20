@@ -109,7 +109,7 @@ private:
   const char   *WHERE;
   PollFD        pollfd;
   ChannelE      calls;
-  ChannelS      events;
+  ChannelS      results;
   std::vector<FieldBuffer*> queue;
   /*dtor*/     ~ConnectionSource ()       { remove_poll (&pollfd); loop_remove(); }
   virtual bool  prepare  (uint64, int64*) { return check_dispatch(); }
@@ -129,7 +129,7 @@ private:
         FieldBuffer *fr = dispatch_call (fb);
         delete fb;
         if (fr)
-          send_message (fr);
+          send_result (fr);
       }
   }
   FieldBuffer*
@@ -161,10 +161,10 @@ private:
   }
 public:
   virtual void
-  send_message (FieldBuffer *fb) ///< Called from ui-thread by serverapi
+  send_result (FieldBuffer *fb) ///< Called from ui-thread by serverapi
   {
     return_if_fail (fb != NULL);
-    events.push_msg (fb);
+    results.push_msg (fb);
   }
   virtual FieldBuffer*
   call_remote (FieldBuffer *fb) ///< Called by clientapi from various threads
@@ -175,7 +175,7 @@ public:
     // wait for result
     while (true)
       {
-        FieldBuffer *event = events.pop_msg_blocking();
+        FieldBuffer *event = results.pop_msg_blocking();
         Plic::MessageId msgid = Plic::MessageId (event->first_id());
         if (Plic::msgid_is_result (msgid))
           return event;

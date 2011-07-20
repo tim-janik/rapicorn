@@ -514,7 +514,7 @@ class Generator:
     s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1);\n'
     s += '    fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0\n' # self.method_digest (stype)
     s += '    fb.add_int64 (m_handler);\n'
-    s += '    m_connection.send_message (&fb); // deletes fb\n'
+    s += '    m_connection.send_result (&fb); // deletes fb\n'
     s += '  }\n'
     cpp_rtype = self.R (stype.rtype)
     s += '  static %s\n' % cpp_rtype
@@ -528,7 +528,7 @@ class Generator:
     args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     if args2fb:
       s += reindent ('  ', args2fb) + '\n'
-    s += '    sp->m_connection.send_message (&fb); // deletes fb\n'
+    s += '    sp->m_connection.send_result (&fb); // deletes fb\n'
     if stype.rtype.storage != Decls.VOID:
       s += '    return %s;\n' % self.mkzero (stype.rtype)
     s += '  }\n'

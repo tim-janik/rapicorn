@@ -212,7 +212,7 @@ public:
 // === Connection ===
 class Connection {      ///< Connection context for IPC.
 public:
-  virtual void         send_message (FieldBuffer*) = 0; ///< Send message to remote, transfers memory.
+  virtual void         send_result  (FieldBuffer*) = 0; ///< Send message to remote, transfers memory.
   virtual FieldBuffer* call_remote  (FieldBuffer*) = 0; ///< Carry out a remote call, transfers memory.
 protected:
   static DispatchFunc  find_method  (uint64 hashhi, uint64 hashlow);
