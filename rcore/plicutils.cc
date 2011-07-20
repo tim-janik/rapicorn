@@ -317,4 +317,23 @@ Connection::MethodRegistry::register_method (const MethodEntry &mentry)
    */
 }
 
+bool
+Connection::has_event ()
+{
+  return fetch_event (0) != NULL;
+}
+
+FieldBuffer*
+Connection::pop_event (bool blocking)
+{
+  FieldBuffer *fb = fetch_event (1);
+  if (blocking)
+    while (!fb)
+      {
+        fetch_event (-1);
+        fb = fetch_event (1);
+      }
+  return fb;
+}
+
 } // Plic

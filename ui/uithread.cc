@@ -18,8 +18,9 @@ class Channel { // Channel for cross-thread FieldBuffer IO
   size_t                    msg_index, msg_last_size;
   virtual void  data_notify () = 0;
   virtual void  data_wait   () = 0;
+public:
   FieldBuffer*
-  fetch_msg (bool advance, const bool blocking)
+  fetch_msg (const int blockpop)
   {
     do
       {
@@ -37,18 +38,17 @@ class Channel { // Channel for cross-thread FieldBuffer IO
         if (msg_index < msg_queue.size())       // have buffered messages
           {
             const size_t index = msg_index;
-            if (advance)
+            if (blockpop > 0) // advance
               msg_index++;
             return msg_queue[index];
           }
         // no messages available
-        if (blocking)
+        if (blockpop < 0)
           data_wait();
       }
-    while (blocking);
+    while (blockpop < 0);
     return NULL;
   }
-public:
   Channel () :
     msg_index (0), msg_last_size (0)
   {
@@ -67,10 +67,10 @@ public:
     pthread_spin_unlock (&msg_spinlock);
     data_notify();
   }
-  bool          has_msg          () { return fetch_msg (false, false) != NULL; }
-  FieldBuffer*  pop_msg          () { return fetch_msg (true, false); } // passes fbmsg ownership
-  void          wait_msg         () { fetch_msg (false, true); }
-  FieldBuffer*  pop_msg_blocking () { return fetch_msg (true, true); } // passes fbmsg ownership
+  bool          has_msg          () { return fetch_msg (0) != NULL; }
+  FieldBuffer*  pop_msg          () { wait_msg(); return fetch_msg (1); } // passes fbmsg ownership
+  void          wait_msg         () { while (!fetch_msg (-1)); }
+  FieldBuffer*  pop_msg_ndelay   () { return fetch_msg (1); } // passes fbmsg ownership
 };
 
 class ChannelS : public Channel { // Channel with semaphore for syncronization
@@ -108,7 +108,7 @@ struct ConnectionSource : public virtual EventLoop::Source, public virtual Plic:
 private:
   const char   *WHERE;
   PollFD        pollfd;
-  ChannelE      calls;
+  ChannelE      events, calls;
   ChannelS      results;
   std::vector<FieldBuffer*> queue;
   /*dtor*/     ~ConnectionSource ()       { remove_poll (&pollfd); loop_remove(); }
@@ -123,7 +123,7 @@ private:
   void
   dispatch1()
   {
-    FieldBuffer *fb = calls.pop_msg();
+    FieldBuffer *fb = calls.pop_msg_ndelay();
     if (fb)
       {
         FieldBuffer *fr = dispatch_call (fb);
@@ -159,13 +159,11 @@ private:
     else
       return FieldBuffer::new_error (string_printf ("unknown method hash: (%016lx%016llx)", msgid, hashlow), WHERE);
   }
-public:
-  virtual void
-  send_result (FieldBuffer *fb) ///< Called from ui-thread by serverapi
-  {
-    return_if_fail (fb != NULL);
-    results.push_msg (fb);
-  }
+protected:
+  virtual FieldBuffer*  fetch_event     (int blockpop)    { return events.fetch_msg (blockpop); }
+  virtual int           event_inputfd   ()                { return events.inputfd(); }
+  virtual void          send_event      (FieldBuffer *fb) { return_if_fail (fb != NULL); events.push_msg (fb); }
+  virtual void          send_result     (FieldBuffer *fb) { return_if_fail (fb != NULL); results.push_msg (fb); }
   virtual FieldBuffer*
   call_remote (FieldBuffer *fb) ///< Called by clientapi from various threads
   {
@@ -175,7 +173,7 @@ public:
     // wait for result
     while (true)
       {
-        FieldBuffer *event = results.pop_msg_blocking();
+        FieldBuffer *event = results.pop_msg();
         Plic::MessageId msgid = Plic::MessageId (event->first_id());
         if (Plic::msgid_is_result (msgid))
           return event;
@@ -324,6 +322,14 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args)
   uint64 app_id = idata.app_id;
   idata.mutex.unlock();
   return app_id;
+}
+
+Plic::Connection*
+uithread_connection (void)
+{
+  if (UIThread::uithread() && UIThread::uithread()->running())
+    return UIThread::uithread()->connection();
+  return NULL;
 }
 
 int // from clientapi.hh

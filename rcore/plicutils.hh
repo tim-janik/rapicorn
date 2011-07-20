@@ -210,19 +210,27 @@ public:
 };
 
 // === Connection ===
-class Connection {      ///< Connection context for IPC.
-public:
-  virtual void         send_result  (FieldBuffer*) = 0; ///< Send message to remote, transfers memory.
-  virtual FieldBuffer* call_remote  (FieldBuffer*) = 0; ///< Carry out a remote call, transfers memory.
+class Connection                                         /// Connection context for IPC. @nosubgrouping
+{
+public: /// @name API for syncronous remote calls
+  virtual FieldBuffer* call_remote   (FieldBuffer*) = 0; ///< Carry out a syncronous remote call, transfers memory, called by client.
+  virtual void         send_result   (FieldBuffer*) = 0; ///< Return result from remote call, transfers memory, called by server.
+public: /// @name API for asyncronous event delivery
+  virtual void   send_event    (FieldBuffer*) = 0;       ///< Send event to remote asyncronously, transfers memory, called by server.
+  virtual int    event_inputfd () = 0;                   ///< Returns fd for POLLIN, to wake up on incomming events.
+  bool           has_event     ();                       ///< Returns true if events for fetch_event() are pending.
+  FieldBuffer*   pop_event     (bool blocking = false);  ///< Pop an event from event queue, possibly blocking, transfers memory, called by client.
 protected:
-  static DispatchFunc  find_method  (uint64 hashhi, uint64 hashlow);
-public: // registry for remote method invocation
-  struct MethodEntry   { uint64 hashhi, hashlow; DispatchFunc dispatcher; };   ///< Structure to register methods for IPC.
+  virtual FieldBuffer* fetch_event (int blockpop) = 0;   ///< Block for (-1), peek (0) or pop (+1) an event from queue.
+public: /// @name Registry for IPC method lookups
+  struct MethodEntry    { uint64 hashhi, hashlow; DispatchFunc dispatcher; };  ///< Structure to register methods for IPC.
   struct MethodRegistry {
-    template<class T, size_t S> MethodRegistry  (T (&static_const_entries)[S]) ///< Register static const MethodEntry structs.
+    template<class T, size_t S> MethodRegistry  (T (&static_const_entries)[S]) /// Register static const MethodEntry structs.
     { for (size_t i = 0; i < S; i++) register_method (static_const_entries[i]); }
   private: static void register_method (const MethodEntry &mentry);
   };
+protected:
+  static DispatchFunc  find_method  (uint64 hashhi, uint64 hashlow);          ///< Lookup method in registry.
 };
 
 /* === inline implementations === */
