@@ -643,9 +643,9 @@ class Generator:
     s += 'public:\n'
     if self.gen_mode in (G4CLIENT, C4OLDHANDLE):
       classH = self.H (type_info.name) # smart handle class name
-      # s += '  ' + self.F ('inline') + '%s () {}\n' % self.H (type_info.name)
       cl = l if l == [plic_smarthandle] else [plic_smarthandle] + l
       aliasfix = '__attribute__ ((noinline))' # work around bogus strict-aliasing warning in g++-4.4.5
+      s += '  ' + self.F ('inline')   + '%s () {}\n' % classH
       s += '  ' + self.F ('explicit') + '%s (Plic::FieldReader &fbr) %s' % (classH, aliasfix) # ctor
       s += ' : ' + ' (fbr), '.join (cl) + ' (fbr) {}\n'
       #s += '  ' + self.F ('inline') + '%s (const %s &src)' % (classH, classH) # copy ctor
