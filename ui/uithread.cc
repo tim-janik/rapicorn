@@ -3,6 +3,7 @@
 #include "uithread.hh"
 #include <semaphore.h>
 #include <deque>
+#include <set>
 #include <stdlib.h>
 
 namespace { // Anon
@@ -103,15 +104,23 @@ struct ConnectionSource : public virtual EventLoop::Source, public virtual Plic:
     pollfd.events = PollFD::IN;
     pollfd.revents = 0;
     add_poll (&pollfd);
+    pthread_spin_init (&ehandler_spin, 0 /* pshared */);
   }
   void          wakeup   ()               { calls.wakeup(); } // allow external wakeups
 private:
-  const char   *WHERE;
-  PollFD        pollfd;
-  ChannelE      events, calls;
-  ChannelS      results;
-  std::vector<FieldBuffer*> queue;
-  /*dtor*/     ~ConnectionSource ()       { remove_poll (&pollfd); loop_remove(); }
+  const char                   *WHERE;
+  PollFD                        pollfd;
+  ChannelE                      events, calls;
+  ChannelS                      results;
+  std::vector<FieldBuffer*>     queue;
+  std::set<uint64>              ehandler_set;
+  pthread_spinlock_t            ehandler_spin;
+  ~ConnectionSource ()
+  {
+    remove_poll (&pollfd);
+    loop_remove();
+    pthread_spin_destroy (&ehandler_spin);
+  }
   virtual bool  prepare  (uint64, int64*) { return check_dispatch(); }
   virtual bool  check    (uint64)         { return check_dispatch(); }
   virtual bool  dispatch ()               { calls.flush(); dispatch1(); return true; }
@@ -145,7 +154,7 @@ private:
         const bool needsresult = Plic::msgid_has_result (msgid);
         if (!fr && needsresult)
           fr = FieldBuffer::new_error (string_printf ("missing return from 0x%016lx", msgid), WHERE);
-        const Plic::MessageId retid = Plic::MessageId (fr->first_id());
+        const Plic::MessageId retid = Plic::MessageId (fr ? fr->first_id() : 0);
         if (fr && Plic::msgid_is_error (retid))
           ; // ok
         else if (fr && (!needsresult || !Plic::msgid_is_result (retid)))
@@ -169,30 +178,49 @@ protected:
   {
     return_val_if_fail (fb != NULL, NULL);
     // enqueue method call message
+    const Plic::MessageId msgid = Plic::MessageId (fb->first_id());
     calls.push_msg (fb);
     // wait for result
-    while (true)
+    if (Plic::msgid_has_result (msgid))
       {
-        FieldBuffer *event = results.pop_msg();
-        Plic::MessageId msgid = Plic::MessageId (event->first_id());
-        if (Plic::msgid_is_result (msgid))
-          return event;
-        else if (Plic::msgid_is_error (msgid))
+        FieldBuffer *fr = results.pop_msg();
+        Plic::MessageId retid = Plic::MessageId (fr->first_id());
+        if (!Plic::msgid_is_result (retid) &&   // FIXME: check type
+            !Plic::msgid_is_error (retid))
           {
-            FieldReader fbr (*event);
-            fbr.skip_msgid();
-            String msg = fbr.pop_string(), domain = fbr.pop_string();
-            fatal ("%s: %s", domain.c_str(), msg.c_str());
-            delete fb;
+            delete fr;
+            fr = Plic::FieldBuffer::new_error (string_printf ("invalid result message id: 0x%160lx", retid), WHERE);
           }
-        else if (Plic::msgid_is_event (msgid))
-          queue.push_back (event);
-        else
-          {
-            critical ("%s: unhandled message id: 0x%160lx", WHERE, msgid);
-            delete fb;
-          }
+        return fr;
       }
+    return NULL;
+  }
+  virtual uint64
+  register_event_handler (EventHandler *evh)
+  {
+    pthread_spin_lock (&ehandler_spin);
+    const std::pair<std::set<uint64>::iterator,bool> ipair = ehandler_set.insert (ptrdiff_t (evh));
+    pthread_spin_unlock (&ehandler_spin);
+    return ipair.second ? ptrdiff_t (evh) : 0; // unique insertion
+  }
+  virtual EventHandler*
+  find_event_handler (uint64 handler_id)
+  {
+    pthread_spin_lock (&ehandler_spin);
+    std::set<uint64>::iterator iter = ehandler_set.find (handler_id);
+    pthread_spin_unlock (&ehandler_spin);
+    if (iter == ehandler_set.end())
+      return NULL; // unknown handler_id
+    EventHandler *evh = (EventHandler*) ptrdiff_t (handler_id);
+    return evh;
+  }
+  virtual bool
+  delete_event_handler (uint64 handler_id)
+  {
+    pthread_spin_lock (&ehandler_spin);
+    size_t nerased = ehandler_set.erase (handler_id);
+    pthread_spin_unlock (&ehandler_spin);
+    return nerased > 0; // deletion successful?
   }
 };
 
@@ -321,6 +349,8 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args)
     idata.cond.wait (idata.mutex);
   uint64 app_id = idata.app_id;
   idata.mutex.unlock();
+  assert (UIThread::uithread() && UIThread::uithread()->running());
+  serverglue_setup (uithread_connection());
   return app_id;
 }
 

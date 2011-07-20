@@ -43,6 +43,16 @@ init_app (const String       &app_ident,
   return Application_SmartHandle (fbr);
 }
 
+uint64
+server_init_app (const String       &app_ident,
+                 int                *argcp,
+                 char              **argv,
+                 const StringVector &args)
+{
+  Application_SmartHandle app = init_app (app_ident, argcp, argv, args);
+  return app._rpc_id();
+}
+
 /**
  * This function calls shutdown_app() first, to properly terminate Rapicorn's
  * concurrently running ui-thread, and then terminates the program via

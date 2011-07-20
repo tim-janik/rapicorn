@@ -41,10 +41,11 @@ IGNORE: // close last _scope
 global_scope:
 namespace Rapicorn {
 
-Application_SmartHandle init_app        (const String       &app_ident,
-                                         int                *argcp,
-                                         char              **argv,
-                                         const StringVector &args = StringVector());
+Application_SmartHandle init_app                (const String       &app_ident,
+                                                 int                *argcp,
+                                                 char              **argv,
+                                                 const StringVector &args = StringVector());
+Plic::Connection*       uithread_connection     (void);
 
 /**
  * This function causes proper termination of Rapicorn's concurrently running

@@ -19,7 +19,7 @@ rapicorn_public_headers = $(strip	\
 	uithread.hh	utilities.hh	viewp0rt.hh	window.hh	\
 	$(rapicorn_impl_headers)	\
 )
-rapicorn_cc_sources = $(strip	serverapi.cc   clientglue.cc \
+rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	adjustment.cc	application.cc	arrangement.cc	\
 	blit-mmx.cc	blitfuncs.cc	buttons.cc	\
 	cmdlib.cc	coffer.cc	commands.cc	compath.cc	container.cc	\
@@ -40,13 +40,15 @@ rapicorn_impl_headers = $(strip 	\
 	tableimpl.hh			\
 )
 rapicorn_generated_headers = $(strip	\
+	clientapi.hh			\
 	serverapi.hh			\
-	clientapi.cc			\
 )
 rapicorn_private_files = $(strip 	\
 	blitfuncs.hh			\
 	regionimpl.h			\
 	key2utf8.cc			\
+	clientapi.cc			\
+	serverapi.cc			\
 )
 
 # === CPU flags ===
@@ -88,6 +90,7 @@ serverapi.hh: $(ROPE)/CxxStub.py $(srcdir)/interfaces.idl $(srcdir)/serverinsert
 	  -g shortalias -g cppguard=__RAPICORN_INTERFACE_HH_ \
 	  --insertions $(srcdir)/serverinsert.cc $(srcdir)/interfaces.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
+serverglue.cc: serverapi.cc
 serverapi.cc: $(ROPE)/CxxStub.py $(srcdir)/interfaces.idl serverapi.hh
 	echo "#define PLIC_CALL_REMOTE // dummy" > xgen-$(@F)
 	${PLICINT} -G $(ROPE)/CxxStub -g servercc -g iface-base=BaseObject -g iface-postfix=Iface \
