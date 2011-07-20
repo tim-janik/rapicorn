@@ -20,8 +20,6 @@ More details at http://www.rapicorn.org
 """
 import Decls, GenUtils, re
 
-FieldBuffer = 'Plic::FieldBuffer'
-
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
 
@@ -37,7 +35,7 @@ base_code = """
 #define ERRORifpy()     if (PyErr_Occurred()) goto error
 #define ERRORpy(msg)    do { PyErr_Format (PyExc_RuntimeError, msg); goto error; } while (0)
 #define ERRORifnotret(fr) do { if (PLIC_UNLIKELY (!fr) || \\
-                                   PLIC_UNLIKELY (!Plic::is_msgid_result (fr->first_id()))) { \\
+                                   PLIC_UNLIKELY (!Plic::msgid_is_result (Plic::MessageId (fr->first_id())))) { \\
                                  PyErr_Format_from_PLIC_error (fr); \\
                                  goto error; } } while (0)
 
@@ -50,14 +48,12 @@ PyErr_Format_from_PLIC_error (const FieldBuffer *fr)
 {
   if (!fr)
     return PyErr_Format (PyExc_RuntimeError, "PLIC: missing return value");
-  if (Plic::msgid_has_error (fr->first_id()))
+  FieldReader frr (*fr);
+  const uint64 msgid = frr.pop_int64();
+  frr.pop_int64(); // hashl
+  if (Plic::msgid_is_error (Plic::MessageId (msgid)))
     {
-      FieldReader frr (*fr);
-      std::string msg, domain;
-      if (Plic::is_msgid_error (frr.pop_int64()))
-        msg = frr.pop_string(), domain = frr.pop_string();
-      else
-        msg = "unknown message: 0x" + fr->first_id_str();
+      std::string msg = frr.pop_string(), domain = frr.pop_string();
       if (domain.size()) domain += ": ";
       msg = domain + msg;
       return PyErr_Format (PyExc_RuntimeError, "%s", msg.c_str());
@@ -146,11 +142,8 @@ plic_PyObject_4uint64 (const char *type_name, uint64 rpc_id)
   return result;
 }
 
-#ifndef PLIC_COUPLER
-#define PLIC_COUPLER()  _plic_coupler_static
-static struct _UnimplementedCoupler : public Plic::Coupler {
-  virtual FieldBuffer* call_remote (FieldBuffer *fbcall) { return NULL; }
-} _plic_coupler_static;
+#ifndef PLIC_CONNECTION
+#define PLIC_CONNECTION()       (*(Plic::Connection*)NULL)
 #endif
 """
 
@@ -215,9 +208,9 @@ class Generator:
     s = ''
     # record proto add
     s += 'static RAPICORN_UNUSED bool\n'
-    s += 'plic_py%s_proto_add (PyObject *pyrec, Plic::FieldReader &dst)\n' % type_info.name
+    s += 'plic_py%s_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)\n' % type_info.name
     s += '{\n'
-    s += '  %s &fb = dst.add_rec (%u);\n' % (FieldBuffer, len (type_info.fields))
+    s += '  Plic::FieldBuffer &fb = dst.add_rec (%u);\n' % len (type_info.fields)
     s += '  bool success = false;\n'
     s += '  PyObject *dictR = NULL, *item = NULL;\n'
     s += '  dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);\n'
@@ -255,11 +248,11 @@ class Generator:
     el = type_info.elements
     # sequence proto add
     s += 'static RAPICORN_UNUSED bool\n'
-    s += 'plic_py%s_proto_add (PyObject *pyinput, %s &dst)\n' % (type_info.name, FieldBuffer)
+    s += 'plic_py%s_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)\n' % type_info.name
     s += '{\n'
     s += '  PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;\n'
     s += '  const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;\n'
-    s += '  %s &fb = dst.add_seq (len);\n' % FieldBuffer
+    s += '  Plic::FieldBuffer &fb = dst.add_seq (len);\n'
     s += '  bool success = false;\n'
     s += '  for (ssize_t k = 0; k < len; k++) {\n'
     s += '    PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);\n'
@@ -300,10 +293,10 @@ class Generator:
     s += '  ~%s() { Py_DECREF (m_callable); }\n' % evd_class
     s += '  %s (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}\n' % evd_class
     s += '  virtual FieldBuffer*\n'
-    s += '  dispatch_event (Plic::Coupler &cpl)\n'
+    s += '  dispatch_event (Plic::FieldBuffer &fb)\n'
     s += '  {\n'
     if mtype.args:
-      s += '    FieldReader &fbr = cpl.reader;\n'
+      s += '    FieldReader fbr (fb);\n'
     s += '    // uint64 msgid = frr.pop_int64();\n'
     s += '    // assert (Plic::is_msgid_event (msgid));\n'
     s += '    // uint handler_id = uint (frr.pop_int64());\n'
@@ -325,10 +318,9 @@ class Generator:
     s += 'static PyObject*\n'
     s += '_plic_marshal__%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
     s += '{\n'
-    s += '  Plic::Coupler &cpl = PLIC_COUPLER();\n'
     s += '  PyObject *item, *pyfoR = NULL;\n'
     s += '  FieldBuffer *fm = FieldBuffer::_new (4 + 1 + 2), &fb = *fm, *fr = NULL;\n' # msgid self ConId ClosureId
-    s += '  fb.add_type_hash (%s); // msgid\n' % self.method_digest (mtype)
+    s += '  fb.add_msgid (%s);\n' % self.method_digest (mtype)
     s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 0);  // self\n'
     s += self.generate_proto_add_py ('fb', class_info, 'item')
@@ -337,15 +329,15 @@ class Generator:
     s += '  else {\n'
     s += '    if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");\n'
     s += '    std::auto_ptr<Plic::EventDispatcher> ap (new %s (item));\n' % evd_class
-    s += '    uint64 handler_id = cpl.dispatcher_add (ap);\n'
+    s += '    uint64 handler_id = PLIC_CONNECTION().dispatcher_register (ap);\n'
     s += '    fb.add_int64 (handler_id); }\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect\n'
     s += '  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();\n'
-    s += '  fm = NULL; fr = cpl.call_remote (&fb); // deletes fb\n'
+    s += '  fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
     s += '  ERRORifnotret (fr);\n'
     s += '  if (fr) {\n'
     s += '    FieldReader frr (*fr);\n'
-    s += '    frr.skip(); // msgid for return\n' # FIXME: check errors
+    s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
     s += '    if (frr.remaining() == 1) {\n'
     s += '      pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();\n'
     s += '    }\n'
@@ -357,9 +349,8 @@ class Generator:
     s += '}\n'
     return s
   def method_digest (self, mtype):
-    d = mtype.type_hash()
-    return ('0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL, ' +
-            '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL') % d
+    digest = mtype.type_hash()
+    return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
   def generate_rpc_call_wrapper (self, class_info, mtype, mdefs):
     s = ''
     mdefs += [ '{ "_PLIC_%s", _plic_rpc_%s, METH_VARARGS, "pyRapicorn rpc call" }' %
@@ -370,7 +361,7 @@ class Generator:
     s += '{\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
     s += '  FieldBuffer *fm = FieldBuffer::_new (4 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # msgid self
-    s += '  fb.add_type_hash (%s); // msgid\n' % self.method_digest (mtype)
+    s += '  fb.add_msgid (%s);\n' % self.method_digest (mtype)
     s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("PLIC: wrong number of arguments");\n' % len (mtype.args) # msgid self
     arg_counter = 0
     s += '  item = PyTuple_GET_ITEM (pyargs, %d);  // self\n' % arg_counter
@@ -381,7 +372,7 @@ class Generator:
       s += self.generate_proto_add_py ('fb', ma[1], 'item')
       arg_counter += 1
     # call out
-    s += '  fm = NULL; fr = PLIC_COUPLER().call_remote (&fb); // deletes fb\n'
+    s += '  fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
     if mtype.rtype.storage == Decls.VOID:
       s += '  if (fr) { delete fr; fr = NULL; }\n'
       s += '  return None_INCREF();\n'
@@ -389,7 +380,7 @@ class Generator:
       s += '  ERRORifnotret (fr);\n'
       s += '  if (fr) {\n'
       s += '    Plic::FieldReader frr (*fr);\n'
-      s += '    frr.skip(); // msgid for return\n' # FIXME: check errors
+      s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
       s += '    if (frr.remaining() == 1) {\n'
       s += reindent ('      ', self.generate_proto_pop_py ('frr', mtype.rtype, 'pyfoR')) + '\n'
       s += '    }\n'
