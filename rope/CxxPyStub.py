@@ -286,20 +286,19 @@ class Generator:
     s = ''
     mdefs += [ '{ "_PLIC_%s", _plic_marshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
                (mtype.ident_digest(), mtype.ident_digest()) ]
-    evd_class = '_EventDispatcher_%s' % mtype.ident_digest()
-    s += 'class %s : public Plic::EventDispatcher {\n' % evd_class
+    evd_class = '_EventHandler_%s' % mtype.ident_digest()
+    s += 'class %s : public Plic::Connection::EventHandler {\n' % evd_class
     s += '  PyObject *m_callable;\n'
     s += 'public:\n'
     s += '  ~%s() { Py_DECREF (m_callable); }\n' % evd_class
     s += '  %s (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}\n' % evd_class
     s += '  virtual FieldBuffer*\n'
-    s += '  dispatch_event (Plic::FieldBuffer &fb)\n'
+    s += '  handle_event (Plic::FieldBuffer &fb)\n'
     s += '  {\n'
     if mtype.args:
       s += '    FieldReader fbr (fb);\n'
-    s += '    // uint64 msgid = frr.pop_int64();\n'
-    s += '    // assert (Plic::is_msgid_event (msgid));\n'
-    s += '    // uint handler_id = uint (frr.pop_int64());\n'
+      s += '    fbr.skip_msgid(); // FIXME: check msgid\n'
+      s += '    fbr.pop_int64();  // FIXME: check handler_id\n'
     s += '    const uint length = %u;\n' % len (mtype.args)
     s += '    PyObject *result, *tuple = PyTuple_New (length)%s;\n' % (', *item' if mtype.args else '')
     arg_counter = 0
@@ -319,7 +318,7 @@ class Generator:
     s += '_plic_marshal__%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
     s += '{\n'
     s += '  PyObject *item, *pyfoR = NULL;\n'
-    s += '  FieldBuffer *fm = FieldBuffer::_new (4 + 1 + 2), &fb = *fm, *fr = NULL;\n' # msgid self ConId ClosureId
+    s += '  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;\n' # msgid self ConId ClosureId
     s += '  fb.add_msgid (%s);\n' % self.method_digest (mtype)
     s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 0);  // self\n'
@@ -328,8 +327,8 @@ class Generator:
     s += '  if (item == Py_None) fb.add_int64 (0);\n'
     s += '  else {\n'
     s += '    if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");\n'
-    s += '    std::auto_ptr<Plic::EventDispatcher> ap (new %s (item));\n' % evd_class
-    s += '    uint64 handler_id = PLIC_CONNECTION().dispatcher_register (ap);\n'
+    s += '    Plic::Connection::EventHandler *evh = new %s (item);\n' % evd_class
+    s += '    uint64 handler_id = PLIC_CONNECTION().register_event_handler (evh);\n'
     s += '    fb.add_int64 (handler_id); }\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect\n'
     s += '  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();\n'
@@ -360,9 +359,9 @@ class Generator:
     s += '_plic_rpc_%s (PyObject *pyself, PyObject *pyargs)\n' % mtype.ident_digest()
     s += '{\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
-    s += '  FieldBuffer *fm = FieldBuffer::_new (4 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # msgid self
+    s += '  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # msgid self args
     s += '  fb.add_msgid (%s);\n' % self.method_digest (mtype)
-    s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("PLIC: wrong number of arguments");\n' % len (mtype.args) # msgid self
+    s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("PLIC: wrong number of arguments");\n' % len (mtype.args) # self args
     arg_counter = 0
     s += '  item = PyTuple_GET_ITEM (pyargs, %d);  // self\n' % arg_counter
     s += self.generate_proto_add_py ('fb', class_info, 'item')
