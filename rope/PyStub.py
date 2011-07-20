@@ -151,7 +151,7 @@ class Generator:
     s += '    else: raise RuntimeError ("invalid or missing record initializers")\n'
     s += '    return self\n'
     s += '  @staticmethod\n'
-    s += '  def to_proto (self, _plic_rec):\n'
+    s += '  def to_proto (self, _plic_rec):\n' # FIXME: broken, staticmethod with self?
     for a in type_info.fields:
       s += '    _plic_field = _plic_rp.fields.add()\n'
       s += reindent ('  ', self.generate_to_proto ('_plic_field', a[1], 'self.' + a[0])) + '\n'
