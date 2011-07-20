@@ -198,8 +198,8 @@ class Generator:
     s += tname + '\n'
     q = '%s::%s (' % (self.C (class_info), fident)
     s += q + ') const\n{\n'
-    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1), *fr = NULL;\n'
-    s += '  fb.add_msgid (%s); // msgid\n' % self.getter_digest (class_info, fident, ftype)
+    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;\n' # msgid self
+    s += '  fb.add_msgid (%s);\n' % self.getter_digest (class_info, fident, ftype)
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     s += '  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
     if 1: # hasret
@@ -222,7 +222,7 @@ class Generator:
       s += q + 'const ' + tname + ' &value)\n{\n'
     else:
       s += q + tname + ' value)\n{\n'
-    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + 1), *fr = NULL;\n'
+    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;\n' # msgid self value
     s += '  fb.add_msgid (%s); // msgid\n' % self.setter_digest (class_info, fident, ftype)
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
     ident_type_args = [('value', ftype)]
@@ -377,7 +377,7 @@ class Generator:
     q = '%s::%s (' % (self.C (class_info), mtype.name)
     s += q + self.Args (mtype, 'arg_', len (q)) + ')\n{\n'
     # vars, procedure
-    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (4 + 1 + %u), *fr = NULL;\n' % len (mtype.args)
+    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # msgid self args
     s += '  fb.add_msgid (%s); // msgid\n' % self.method_digest (mtype)
     # marshal args
     s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
@@ -410,7 +410,6 @@ class Generator:
     s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  fbr.skip_msgid();\n'
     s += '  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
@@ -438,7 +437,6 @@ class Generator:
     s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  fbr.skip_msgid();\n'
     s += '  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
@@ -464,7 +462,6 @@ class Generator:
     s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  fbr.skip_msgid();\n'
     s += '  if (fbr.remaining() != 1 + %u) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n' % len (mtype.args)
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
@@ -511,7 +508,7 @@ class Generator:
     s += '  %s (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}\n' % closure_class # ctor
     s += '  ~%s()\n' % closure_class # dtor
     s += '  {\n'
-    s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1);\n'
+    s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);\n' # msgid handler
     s += '    fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0\n' # self.method_digest (stype)
     s += '    fb.add_int64 (m_handler);\n'
     s += '    m_connection.send_event (&fb); // deletes fb\n'
@@ -521,7 +518,7 @@ class Generator:
     s += '  handler ('
     s += self.Args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
     s += 'SharedPtr sp)\n  {\n'
-    s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (1 + 1 + %u);\n' % len (stype.args)
+    s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + %u);\n' % len (stype.args) # msgid handler args
     s += '    fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0\n' # self.method_digest (stype)
     s += '    fb.add_int64 (sp->m_handler);\n'
     ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
@@ -536,7 +533,6 @@ class Generator:
     s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  fbr.skip_msgid();\n'
     s += '  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
