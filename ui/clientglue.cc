@@ -67,6 +67,11 @@ exit (int status)
 
 } // Rapicorn
 
+namespace { // Anon
+static Plic::Connection *_clientglue_connection = NULL;
+};
+#define PLIC_CONNECTION()       (*_clientglue_connection)
+
 #include "clientapi.cc"
 
 #include <rcore/testutils.hh>
@@ -77,8 +82,10 @@ init_test_app (const String       &app_ident,
                char              **argv,
                const StringVector &args)
 {
+  return_if_fail (_clientglue_connection == NULL);
   init_core_test (app_ident, argcp, argv, args);
   init_app (app_ident, argcp, argv, args);
+  _clientglue_connection = uithread_connection();
 }
 
 } // Rapicorn
