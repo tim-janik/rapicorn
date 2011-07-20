@@ -135,22 +135,23 @@ union FieldUnion {
 class FieldBuffer { // buffer for marshalling procedure calls
   friend class FieldReader;
   void               check_internal ();
+  inline FieldUnion& upeek (uint n) const { return buffermem[offset() + n]; }
 protected:
   FieldUnion        *buffermem;
-  inline uint        offset () const { const uint offs = 1 + (n_types() + 7) / 8; return offs; }
+  inline void        check ()      { if (PLIC_UNLIKELY (size() > capacity())) check_internal(); }
+  inline uint        offset () const { const uint offs = 1 + (capacity() + 7) / 8; return offs; }
   inline FieldType   type_at (uint n) const { return FieldType (buffermem[1 + n/8].bytes[n%8]); }
-  inline void        set_type (FieldType ft) { buffermem[1 + nth()/8].bytes[nth()%8] = ft; }
-  inline uint        n_types () const { return buffermem[0].capacity; }
-  inline uint        nth () const     { return buffermem[0].index; }
-  inline FieldUnion& getu () const    { return buffermem[offset() + nth()]; }
+  inline void        set_type (FieldType ft)    { buffermem[1 + size()/8].bytes[size()%8] = ft; }
+  inline uint        capacity () const          { return buffermem[0].capacity; }
+  inline uint        size () const              { return buffermem[0].index; }
+  inline FieldUnion& getu () const              { return buffermem[offset() + size()]; }
   inline FieldUnion& addu (FieldType ft) { set_type (ft); FieldUnion &u = getu(); buffermem[0].index++; check(); return u; }
-  inline void        check() { if (PLIC_UNLIKELY (nth() > n_types())) check_internal(); }
-  inline FieldUnion& uat (uint n) const { return n < n_types() ? buffermem[offset() + n] : *(FieldUnion*) NULL; }
+  inline FieldUnion& uat (uint n) const { return n < size() ? upeek (n) : *(FieldUnion*) NULL; }
   explicit           FieldBuffer (uint _ntypes);
   explicit           FieldBuffer (uint, FieldUnion*, uint);
 public:
   virtual     ~FieldBuffer();
-  inline uint64 first_id () const { return buffermem && type_at (0) == INT ? uat (0).vint64 : 0; }
+  inline uint64 first_id () const { return buffermem && size() && type_at (0) == INT ? upeek (0).vint64 : 0; }
   inline void add_int64  (int64  vint64)  { FieldUnion &u = addu (INT); u.vint64 = vint64; }
   inline void add_evalue (int64  vint64)  { FieldUnion &u = addu (ENUM); u.vint64 = vint64; }
   inline void add_double (double vdouble) { FieldUnion &u = addu (FLOAT); u.vdouble = vdouble; }
@@ -177,36 +178,35 @@ public:
 class FieldReader { // read field buffer contents
   const FieldBuffer *m_fb;
   uint               m_nth;
-  inline FieldUnion& fb_getu () { return m_fb->uat (m_nth); }
-  inline FieldUnion& fb_popu () { FieldUnion &u = m_fb->uat (m_nth++); check(); return u; }
-  inline void        check() { if (PLIC_UNLIKELY (m_nth > n_types())) check_internal(); }
-  void               check_internal ();
+  void               check_request (int type);
+  inline void        request (int t) { if (PLIC_UNLIKELY (m_nth >= n_types() || get_type() != t)) check_request (t); }
+  inline FieldUnion& fb_getu (int t) { request (t); return m_fb->upeek (m_nth); }
+  inline FieldUnion& fb_popu (int t) { request (t); FieldUnion &u = m_fb->upeek (m_nth++); return u; }
 public:
   explicit                 FieldReader (const FieldBuffer &fb) : m_fb (&fb), m_nth (0) {}
   inline void               reset      (const FieldBuffer &fb) { m_fb = &fb; m_nth = 0; }
   inline void               reset      () { m_fb = NULL; m_nth = 0; }
   inline uint               remaining  () { return n_types() - m_nth; }
-  inline void               skip       () { m_nth++; check(); }
-  inline void               skip_msgid () { m_nth += 2; check(); }
-  inline uint               n_types    () { return m_fb->n_types(); }
+  inline void               skip       () { if (PLIC_UNLIKELY (m_nth >= n_types())) check_request (0); m_nth++; }
+  inline void               skip_msgid () { skip(); skip(); }
+  inline uint               n_types    () { return m_fb->size(); }
   inline FieldType          get_type   () { return m_fb->type_at (m_nth); }
-  inline int64              get_int64  () { FieldUnion &u = fb_getu(); return u.vint64; }
-  inline int64              get_evalue () { FieldUnion &u = fb_getu(); return u.vint64; }
-  inline double             get_double () { FieldUnion &u = fb_getu(); return u.vdouble; }
-  inline const String&      get_string () { FieldUnion &u = fb_getu(); return *(String*) &u; }
-  inline const String&      get_func   () { FieldUnion &u = fb_getu(); return *(String*) &u; }
-  inline uint64             get_object () { FieldUnion &u = fb_getu(); return u.vint64; }
-  inline const FieldBuffer& get_rec () { FieldUnion &u = fb_getu(); return *(FieldBuffer*) &u; }
-  inline const FieldBuffer& get_seq () { FieldUnion &u = fb_getu(); return *(FieldBuffer*) &u; }
-  inline int64              pop_int64  () { FieldUnion &u = fb_popu(); return u.vint64; }
-  inline int64              pop_evalue () { FieldUnion &u = fb_popu(); return u.vint64; }
-  inline double             pop_double () { FieldUnion &u = fb_popu(); return u.vdouble; }
-  inline const String&      pop_string () { FieldUnion &u = fb_popu(); return *(String*) &u; }
-  inline const String&      pop_func   () { FieldUnion &u = fb_popu(); return *(String*) &u; }
-  inline uint64             pop_object () { FieldUnion &u = fb_popu(); return u.vint64; }
-  inline const FieldBuffer& pop_rec () { FieldUnion &u = fb_popu(); return *(FieldBuffer*) &u; }
-  inline const FieldBuffer& pop_seq () { FieldUnion &u = fb_popu(); return *(FieldBuffer*) &u; }
-  inline const FieldBuffer* get     () { return m_fb; }
+  inline int64              get_int64  () { FieldUnion &u = fb_getu (INT); return u.vint64; }
+  inline int64              get_evalue () { FieldUnion &u = fb_getu (ENUM); return u.vint64; }
+  inline double             get_double () { FieldUnion &u = fb_getu (FLOAT); return u.vdouble; }
+  inline const String&      get_string () { FieldUnion &u = fb_getu (STRING); return *(String*) &u; }
+  inline const String&      get_func   () { FieldUnion &u = fb_getu (FUNC); return *(String*) &u; }
+  inline uint64             get_object () { FieldUnion &u = fb_getu (INSTANCE); return u.vint64; }
+  inline const FieldBuffer& get_rec    () { FieldUnion &u = fb_getu (RECORD); return *(FieldBuffer*) &u; }
+  inline const FieldBuffer& get_seq    () { FieldUnion &u = fb_getu (SEQUENCE); return *(FieldBuffer*) &u; }
+  inline int64              pop_int64  () { FieldUnion &u = fb_popu (INT); return u.vint64; }
+  inline int64              pop_evalue () { FieldUnion &u = fb_popu (ENUM); return u.vint64; }
+  inline double             pop_double () { FieldUnion &u = fb_popu (FLOAT); return u.vdouble; }
+  inline const String&      pop_string () { FieldUnion &u = fb_popu (STRING); return *(String*) &u; }
+  inline const String&      pop_func   () { FieldUnion &u = fb_popu (FUNC); return *(String*) &u; }
+  inline uint64             pop_object () { FieldUnion &u = fb_popu (INSTANCE); return u.vint64; }
+  inline const FieldBuffer& pop_rec    () { FieldUnion &u = fb_popu (RECORD); return *(FieldBuffer*) &u; }
+  inline const FieldBuffer& pop_seq    () { FieldUnion &u = fb_popu (SEQUENCE); return *(FieldBuffer*) &u; }
 };
 
 // === Connection ===
@@ -222,6 +222,14 @@ public: /// @name API for asyncronous event delivery
   FieldBuffer*   pop_event     (bool blocking = false);  ///< Pop an event from event queue, possibly blocking, transfers memory, called by client.
 protected:
   virtual FieldBuffer* fetch_event (int blockpop) = 0;   ///< Block for (-1), peek (0) or pop (+1) an event from queue.
+public: /// @name API for event handler bookkeeping
+  struct EventHandler {
+    virtual             ~EventHandler () {}
+    virtual FieldBuffer* handle_event (Plic::FieldBuffer &event_fb) = 0; ///< Process an event and possibly return an error.
+  };
+  virtual uint64        register_event_handler (EventHandler *evh) = 0; ///< Register an event handler, transfers memory.
+  virtual EventHandler* find_event_handler     (uint64 handler_id) = 0; ///< Find event handler by id.
+  virtual bool          delete_event_handler   (uint64 handler_id) = 0; ///< Delete a registered event handler, returns success.
 public: /// @name Registry for IPC method lookups
   struct MethodEntry    { uint64 hashhi, hashlow; DispatchFunc dispatcher; };  ///< Structure to register methods for IPC.
   struct MethodRegistry {
@@ -247,10 +255,10 @@ FieldBuffer::reset()
 {
   if (!buffermem)
     return;
-  while (nth() > 0)
+  while (size() > 0)
     {
-      buffermem[0].index--; // nth()--
-      switch (type_at (nth()))
+      buffermem[0].index--; // causes size()--
+      switch (type_at (size()))
         {
         case STRING:
         case FUNC:    { FieldUnion &u = getu(); ((String*) &u)->~String(); }; break;

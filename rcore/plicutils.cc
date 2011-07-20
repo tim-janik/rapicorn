@@ -194,22 +194,28 @@ FieldBuffer::~FieldBuffer()
 void
 FieldBuffer::check_internal ()
 {
-  if (nth() >= n_types())
+  if (size() > capacity())
     {
-      String msg = string_printf ("FieldBuffer(this=%p): capacity=%u index=%u",
-                                  this, n_types(), nth());
+      String msg = string_printf ("FieldBuffer(this=%p): capacity=%u size=%u",
+                                  this, capacity(), size());
       throw std::out_of_range (msg);
     }
 }
 
 void
-FieldReader::check_internal ()
+FieldReader::check_request (int type)
 {
   if (m_nth >= n_types())
     {
-      String msg = string_printf ("FieldReader(this=%p): capacity=%u index=%u",
+      String msg = string_printf ("FieldReader(this=%p): size=%u requested-index=%u",
                                   this, n_types(), m_nth);
       throw std::out_of_range (msg);
+    }
+  if (get_type() != type)
+    {
+      String msg = string_printf ("FieldReader(this=%p): size=%u index=%u type=%d requested-type=%d",
+                                  this, n_types(), m_nth, get_type(), type);
+      throw std::invalid_argument (msg);
     }
 }
 
