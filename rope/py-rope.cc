@@ -25,8 +25,10 @@
 // --- Anonymous namespacing
 namespace {
 
+static Plic::Connection    *pyrope_connection = NULL;
+#define PLIC_CONNECTION() (*pyrope_connection)
+
 // --- cpy2rope stubs (generated) ---
-#define PLIC_COUPLER() (*rope_thread_coupler())
 #include "cpy2rope.cc"
 
 // --- PyC functions ---
@@ -44,17 +46,20 @@ rope_printout (PyObject *self,
 }
 
 static PyObject*
-rope_init_dispatcher (PyObject *self,
-                      PyObject *args)
+rope_init_dispatcher (PyObject *self, PyObject *args)
 {
+  return_val_if_fail (pyrope_connection == NULL, NULL);
+  // parse args: application_name, cmdline_args
   const char *ns = NULL;
   unsigned int nl = 0;
   PyObject *list;
   if (!PyArg_ParseTuple (args, "s#O", &ns, &nl, &list))
     return NULL;
+  String application_name (ns, nl); // first argument
   const ssize_t len = PyList_Size (list);
   if (len < 0)
     return NULL;
+  // convert args to string vector
   std::vector<String> strv;
   for (ssize_t k = 0; k < len; k++)
     {
@@ -67,17 +72,21 @@ rope_init_dispatcher (PyObject *self,
     }
   if (PyErr_Occurred())
     return NULL;
-  /* initialize core */
-  String application_name (ns, nl); // first argument
-  char *argv[2] = { NULL, NULL };
+  // reconstruct argv array
+  char *argv[1 + len + 1];
   argv[0] = (char*) application_name.c_str();
-  int argc = 1;
-  init_core (application_name, &argc, argv);
+  for (ssize_t k = 0; k < len; k++)
+    argv[1 + k] = (char*) strv[k].c_str();
+  argv[1 + len] = NULL;
+  int argc = 1 + len;
+  // construct internal arguments
   StringVector iargs;
-  iargs.push_back (string_printf ("cpu-affinity=%d", Thread::Self::affinity()));
-  uint64 app_id = rope_thread_start (application_name, &argc, argv, iargs);
+  iargs.push_back (string_printf ("cpu-affinity=%d", !Thread::Self::affinity()));
+  // initialize core
+  uint64 app_id = server_init_app (application_name, &argc, argv, iargs);
   if (app_id == 0)
     ; // FIXME: throw exception
+  pyrope_connection = uithread_connection();
   return PyLong_FromUnsignedLongLong (app_id);
 }
 
@@ -100,8 +109,7 @@ rope_event_check (PyObject *self, PyObject *args)
 {
   if (self || PyTuple_Size (args) != 0)
     { PyErr_Format (PyExc_TypeError, "no arguments expected"); return NULL; }
-  Plic::Coupler &cpl = PLIC_COUPLER();
-  bool hasevent = cpl.has_event();
+  bool hasevent = PLIC_CONNECTION().has_event();
   PyObject *pybool = hasevent ? Py_True : Py_False;
   Py_INCREF (pybool);
   return pybool;
@@ -113,44 +121,39 @@ rope_event_dispatch (PyObject *self, PyObject *args)
   if (self || PyTuple_Size (args) != 0)
     { PyErr_Format (PyExc_TypeError, "no arguments expected"); return NULL; }
   rope_thread_flush_input();
-  Plic::Coupler &cpl = PLIC_COUPLER();
-  FieldBuffer *fr = NULL, *fb = cpl.pop_event();
+  FieldBuffer *fr = NULL, *fb = PLIC_CONNECTION().pop_event();
   if (!fb)
     return None_INCREF();
-  Plic::FieldReader &fbr = cpl.reader;
-  fbr.reset (*fb);
-  uint64 msgid = fbr.pop_int64();
-  switch (msgid >> PLIC_MSGID_SHIFT)
+  Plic::FieldReader fbr (*fb);
+  const Plic::MessageId msgid = Plic::MessageId (fbr.pop_int64());
+  fbr.pop_int64(); // msgid low
+  if (Plic::msgid_is_event (msgid))
     {
-    case Plic::msgid_event >> PLIC_MSGID_SHIFT:
-      {
-        uint64 handler_id = fbr.pop_int64();
-        Plic::EventDispatcher *evd = cpl.dispatcher_lookup (uint (handler_id));
-        if (evd)
-          fr = evd->dispatch_event (cpl); // continues to use cpl.reader
-        else
-          fr = FieldBuffer::new_error (string_printf ("invalid signal handler id in %s: %u", "event", uint (handler_id)), "PLIC");
-      }
-      break;
-    case Plic::msgid_discon >> PLIC_MSGID_SHIFT:
-      {
-        uint64 handler_id = fbr.pop_int64();
-        bool deleted = cpl.dispatcher_delete (uint (handler_id));
-        if (!deleted)
-          fr = FieldBuffer::new_error (string_printf ("invalid signal handler id in %s: %u", "disconnect", uint (handler_id)), "PLIC");
-      }
-      break;
-    default:
-      fr = FieldBuffer::new_error (string_printf ("unhandled message id: 0x%x", uint (msgid >> PLIC_MSGID_SHIFT)), "PLIC");
-      break;
+      const uint64 handler_id = fbr.pop_int64();
+      Plic::Connection::EventHandler *evh = PLIC_CONNECTION().find_event_handler (handler_id);
+      if (evh)
+        fr = evh->handle_event (*fb);
+      else
+        fr = FieldBuffer::new_error (string_printf ("invalid signal handler id in %s: %u", "event", uint (handler_id)), "PLIC");
     }
-  cpl.reader.reset();
+  else if (Plic::msgid_is_discon (msgid))
+    {
+      const uint64 handler_id = fbr.pop_int64();
+      const bool deleted = PLIC_CONNECTION().delete_event_handler (handler_id);
+      if (!deleted)
+        fr = FieldBuffer::new_error (string_printf ("invalid signal handler id in %s: %u", "disconnect", uint (handler_id)), "PLIC");
+    }
+  else
+    {
+      fr = FieldBuffer::new_error (string_printf ("unhandled message id: 0x%016zx", size_t (msgid)), "PLIC");
+    }
   delete fb;
   if (fr)
     {
       Plic::FieldReader frr (*fr);
-      uint64 frid = frr.pop_int64();
-      if (Plic::is_msgid_error (frid))
+      const Plic::MessageId frid = Plic::MessageId (frr.pop_int64());
+      frr.pop_int64();
+      if (Plic::msgid_is_error (frid))
         {
           String msg = frr.pop_string(), domain = frr.pop_string();
           if (domain.size())
@@ -188,30 +191,6 @@ MODULE_INIT_FUNCTION (void) // conventional dlmodule initializer
   // register module
   PyObject *m = Py_InitModule3 (MODULE_NAME_STRING, rope_vtable, (char*) rapicorn_doc);
   if (!m)
-    return;
-
-  // retrieve argv[0]
-  char *argv0;
-  {
-    PyObject *sysmod = PyImport_ImportModule ("sys");
-    PyObject *astr   = sysmod ? PyObject_GetAttrString (sysmod, "argv") : NULL;
-    PyObject *arg0   = astr ? PySequence_GetItem (astr, 0) : NULL;
-    argv0            = arg0 ? strdup (PyString_AsString (arg0)) : NULL;
-    Py_XDECREF (arg0);
-    Py_XDECREF (astr);
-    Py_XDECREF (sysmod);
-    if (!argv0)
-      return; // exception set
-  }
-
-  // initialize Rapicorn with dummy argv, hardcode X11 temporarily
-  {
-    // int dummyargc = 1;
-    char *dummyargs[] = { NULL, NULL };
-    dummyargs[0] = argv0[0] ? argv0 : (char*) "Python>>>";
-    // char **dummyargv = dummyargs;
-    // FIXME: init_ap (dummyargs[0], &dummyargc, dummyargv);
-  }
-  free (argv0);
+    return; // exception
 }
 // using global namespace for Python module initialization
