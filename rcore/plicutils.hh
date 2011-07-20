@@ -98,11 +98,10 @@ protected:
   inline void*              _void_iface () const;
   void                      _void_iface (void *rpc_id_ptr);
 public:
+  explicit                  SmartHandle ();
   uint64                    _rpc_id     () const;
   bool                      _is_null    () const;
   virtual                  ~SmartHandle ();
-  static SmartHandle*       _rpc_id2obj (uint64 rpc_id);
-  static const SmartHandle &none;
 };
 
 /* === SimpleServer === */
@@ -111,7 +110,6 @@ public:
   explicit             SimpleServer ();
   virtual             ~SimpleServer ();
   virtual uint64       _rpc_id      () const;
-  static SimpleServer* _rpc_id2obj  (uint64 rpc_id);
 };
 
 /* === FieldBuffer === */

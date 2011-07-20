@@ -62,21 +62,18 @@ string_printf (const char *format, ...)
 }
 
 /* === SmartHandle === */
-struct SmartHandle0 : public SmartHandle {
-  explicit SmartHandle0 () : SmartHandle (*(FieldReader*) NULL) {}
-};
-const SmartHandle &SmartHandle::none = SmartHandle0();
-
 SmartHandle::SmartHandle (FieldReader &field_reader) :
   m_rpc_id (0)
 {
-  if (PLIC_UNLIKELY (NULL == &SmartHandle::none))
-    return;
   assert (NULL != &field_reader);
   uint64 field_reader_rpc_id = field_reader.pop_int64();
   assert (0 != field_reader_rpc_id);
   m_rpc_id = field_reader_rpc_id;
 }
+
+SmartHandle::SmartHandle() :
+  m_rpc_id (0)
+{}
 
 void
 SmartHandle::_reset ()
@@ -117,14 +114,6 @@ SmartHandle::_is_null () const
 SmartHandle::~SmartHandle()
 {}
 
-SmartHandle*
-SmartHandle::_rpc_id2obj (uint64 rpc_id)
-{
-  if (rpc_id == 0)
-    return const_cast<SmartHandle*> (&none);
-  return NULL; // FIXME
-}
-
 /* === SimpleServer === */
 static pthread_mutex_t         simple_server_mutex = PTHREAD_MUTEX_INITIALIZER;
 static std::set<SimpleServer*> simple_server_set;
@@ -147,16 +136,6 @@ uint64
 SimpleServer::_rpc_id () const
 {
   return uint64 (this);
-}
-
-SimpleServer*
-SimpleServer::_rpc_id2obj (uint64 rpc_id)
-{
-  pthread_mutex_lock (&simple_server_mutex);
-  std::set<SimpleServer*>::const_iterator it = simple_server_set.find ((SimpleServer*) rpc_id);
-  SimpleServer *self = it == simple_server_set.end() ? NULL : *it;
-  pthread_mutex_unlock (&simple_server_mutex);
-  return self;
 }
 
 /* === FieldBuffer === */
