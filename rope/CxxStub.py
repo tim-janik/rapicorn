@@ -30,18 +30,25 @@ gencc_boilerplate = r"""
 namespace { // Anonymous
 using Plic::uint64;
 
-#ifndef PLIC_CONNECTION
-#define PLIC_CONNECTION()       (*(Plic::Connection*)NULL)
-#endif
 
 } // Anonymous
 #endif // __PLIC_GENERIC_CC_BOILERPLATE__
 """
 
-servercc_boilerplate = r""" """
+servercc_boilerplate = r"""
+#ifndef PLIC_CONNECTION
+#define PLIC_CONNECTION()       (*(Plic::Connection*)NULL)
+template<class O> O* connection_id2object (uint64 oid) { return dynamic_cast<O*> (reinterpret_cast<Plic::SimpleServer*> (oid)); }
+inline uint64        connection_object2id (const Plic::SimpleServer *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
+inline uint64        connection_object2id (const Plic::SimpleServer &obj) { return connection_object2id (&obj); }
+#endif // !PLIC_CONNECTION
+"""
 
 clientcc_boilerplate = r"""
-uint64  connection_handle2id (const Plic::SmartHandle &h) { return 0; } // FIXME
+#ifndef PLIC_CONNECTION
+#define PLIC_CONNECTION()       (*(Plic::Connection*)NULL)
+#endif // !PLIC_CONNECTION
+uint64  connection_handle2id (const Plic::SmartHandle &h) { return h._rpc_id(); }
 """
 
 def reindent (prefix, lines):
@@ -104,14 +111,17 @@ class Generator:
       return self.C4client (type_node)
   def R (self, type_node):                              # construct Return type
     tname = self.C (type_node)
-    if self.gen_mode == G4SERVER:
-      tname += '*' if type_node.storage == Decls.INTERFACE else ''
+    if self.gen_mode == G4SERVER and type_node.storage == Decls.INTERFACE:
+      tname += '*'
     return tname
-  def V (self, ident, type_node):                       # construct Variable
+  def V (self, ident, type_node, f_delta = -999999):    # construct Variable
     s = ''
-    s += self.C (type_node) + ' '
+    s += self.C (type_node)
+    s = self.F (s, f_delta)
     if self.gen_mode == G4SERVER and type_node.storage == Decls.INTERFACE:
       s += '*'
+    else:
+      s += ' '
     return s + ident
   def A (self, ident, type_node, defaultinit = None):   # construct call Argument
     constref = type_node.storage in (Decls.STRING, Decls.SEQUENCE, Decls.RECORD)
@@ -268,7 +278,7 @@ class Generator:
     if type_info.storage == Decls.RECORD:
       fieldlist = type_info.fields
       for fl in fieldlist:
-        s += '  ' + self.F (self.C (fl[1])) + fl[0] + ';\n'
+        s += '  ' + self.F (self.R (fl[1])) + fl[0] + ';\n'
     elif type_info.storage == Decls.SEQUENCE:
       s += '  typedef std::vector<' + self.R (fl[1]) + '> Sequence;\n'
     if type_info.storage == Decls.RECORD:
