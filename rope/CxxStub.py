@@ -186,62 +186,6 @@ class Generator:
     return namespace_names
   def namespaced_identifier (self, ident):
     return '::'.join ([d.name for d in self.namespaces] + [ident])
-  def generate_property (self, fident, ftype, pad = 0):
-    s, v, v0, ptr = '', '', '', ''
-    if self.gen_mode == G4SERVER:
-      v, v0, ptr = 'virtual ', ' = 0', '*'
-    tname = self.C (ftype)
-    pid = fident + ' ' * max (0, pad - len (fident))
-    if ftype.storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
-      s += '  ' + v + self.F (tname)  + pid + ' () const%s;\n' % v0
-      s += '  ' + v + self.F ('void') + pid + ' (' + tname + ')%s;\n' % v0
-    elif ftype.storage in (Decls.STRING, Decls.RECORD, Decls.SEQUENCE):
-      s += '  ' + v + self.F (tname)  + pid + ' () const%s;\n' % v0
-      s += '  ' + v + self.F ('void') + pid + ' (const ' + tname + '&)%s;\n' % v0
-    elif ftype.storage == Decls.INTERFACE:
-      s += '  ' + v + self.F (tname + ptr)  + pid + ' () const%s;\n' % v0
-      s += '  ' + v + self.F ('void') + pid + ' (' + tname + ptr + ')%s;\n' % v0
-    return s
-  def generate_client_property_stub (self, class_info, fident, ftype):
-    s = ''
-    tname = self.C (ftype)
-    # getter prototype
-    s += tname + '\n'
-    q = '%s::%s (' % (self.C (class_info), fident)
-    s += q + ') const\n{\n'
-    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;\n' # msgid self
-    s += '  fb.add_msgid (%s);\n' % self.getter_digest (class_info, fident, ftype)
-    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
-    s += '  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
-    if 1: # hasret
-      rarg = ('retval', ftype)
-      s += '  Plic::FieldReader frr (*fr);\n'
-      s += '  frr.skip_msgid(); // FIXME: check msgid\n'
-      # FIXME: check return error and return type
-      if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
-        s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
-      else:
-        vtype = self.V ('', rarg[1]) # 'int*' + ...
-        s += self.generate_proto_pop_args ('frr', class_info, vtype, [rarg], '') # ... + 'x = 5;'
-      s += '  delete fr;\n'
-      s += '  return retval;\n'
-    s += '}\n'
-    # setter prototype
-    s += 'void\n'
-    if ftype.storage in (Decls.STRING, Decls.RECORD, Decls.SEQUENCE):
-      s += q + 'const ' + tname + ' &value)\n{\n'
-    else:
-      s += q + tname + ' value)\n{\n'
-    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;\n' # msgid self value
-    s += '  fb.add_msgid (%s); // msgid\n' % self.setter_digest (class_info, fident, ftype)
-    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
-    ident_type_args = [('value', ftype)]
-    s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
-    s += '  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
-    s += '  if (fr) delete fr;\n' # FIXME: check return error
-    s += '}\n'
-    return s
   def mkzero (self, type):
     if type.storage == Decls.STRING:
       return '""'
@@ -363,228 +307,6 @@ class Generator:
     s += '  }\n'
     s += '}\n'
     return s
-  def generate_client_class_methods (self, class_info):
-    s, classH = '\n', self.H (class_info.name) # smart handle class name
-    classH2 = (classH, classH)
-    l, heritage, cl = self.interface_class_inheritance (class_info)
-    s += '%s::%s ()\n' % classH2 # ctor
-    s += '{}\n'
-    s += '%s::%s (Plic::FieldReader &fbr) :\n' % classH2 # ctor
-    s += '  ' + ' (fbr), '.join (cl) + ' (fbr)\n'
-    s += '{}\n'
-    return s
-  def generate_client_method_stub (self, class_info, mtype):
-    s = ''
-    hasret = mtype.rtype.storage != Decls.VOID
-    # prototype
-    s += self.C (mtype.rtype) + '\n'
-    q = '%s::%s (' % (self.C (class_info), mtype.name)
-    s += q + self.Args (mtype, 'arg_', len (q)) + ')\n{\n'
-    # vars, procedure
-    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # msgid self args
-    s += '  fb.add_msgid (%s); // msgid\n' % self.method_digest (mtype)
-    # marshal args
-    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
-    ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
-    s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
-    # call out
-    s += '  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
-    # unmarshal return
-    if hasret:
-      rarg = ('retval', mtype.rtype)
-      s += '  Plic::FieldReader frr (*fr);\n'
-      s += '  frr.skip_msgid(); // FIXME: check msgid\n'
-      # FIXME: check return error and return type
-      if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
-        s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
-      else:
-        vtype = self.V ('', rarg[1]) # 'int*' + ...
-        s += self.generate_proto_pop_args ('frr', class_info, vtype, [rarg], '') # ... + 'x = 5;'
-      s += '  delete fr;\n'
-      s += '  return retval;\n'
-    s += '}\n'
-    return s
-  def generate_server_property_set_dispatcher (self, class_info, fident, ftype, reglines):
-    assert self.gen_mode == G4SERVER
-    s = ''
-    dispatcher_name = '_$setter__%s__%s' % (class_info.name, fident)
-    setter_hash = self.setter_digest (class_info, fident, ftype)
-    reglines += [ (setter_hash, self.namespaced_identifier (dispatcher_name)) ]
-    s += 'static Plic::FieldBuffer*\n'
-    s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
-    s += '{\n'
-    s += '  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
-    # fetch self
-    s += '  %s *self;\n' % self.C (class_info)
-    s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
-    # fetch property
-    if ftype.storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += '  ' + self.V ('arg_' + fident, ftype) + ';\n'
-      s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(fident, ftype)])
-    else:
-      tstr = self.V ('', ftype) + 'arg_'
-      s += self.generate_proto_pop_args ('fbr', class_info, tstr, [(fident, ftype)])
-    ref = '&' if ftype.storage == Decls.INTERFACE else ''
-    # call out
-    s += '  self->' + fident + ' (' + ref + self.U ('arg_' + fident, ftype) + ');\n'
-    s += '  return NULL;\n'
-    s += '}\n'
-    return s
-  def generate_server_property_get_dispatcher (self, class_info, fident, ftype, reglines):
-    assert self.gen_mode == G4SERVER
-    s = ''
-    dispatcher_name = '_$getter__%s__%s' % (class_info.name, fident)
-    getter_hash = self.getter_digest (class_info, fident, ftype)
-    reglines += [ (getter_hash, self.namespaced_identifier (dispatcher_name)) ]
-    s += 'static Plic::FieldBuffer*\n'
-    s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
-    s += '{\n'
-    s += '  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
-    # fetch self
-    s += '  %s *self;\n' % self.C (class_info)
-    s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
-    # return var
-    s += '  '
-    s += self.V ('', ftype) + 'rval = '
-    # call out
-    s += 'self->' + fident + ' ();\n'
-    # store return value
-    s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
-    rval = 'rval'
-    s += self.generate_proto_add_args ('rb', class_info, '', [(rval, ftype)], '')
-    s += '  return &rb;\n'
-    s += '}\n'
-    return s
-  def generate_server_method_dispatcher (self, class_info, mtype, reglines):
-    assert self.gen_mode == G4SERVER
-    s = ''
-    dispatcher_name = '_$caller__%s__%s' % (class_info.name, mtype.name)
-    reglines += [ (self.method_digest (mtype), self.namespaced_identifier (dispatcher_name)) ]
-    s += 'static Plic::FieldBuffer*\n'
-    s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
-    s += '{\n'
-    s += '  if (fbr.remaining() != 1 + %u) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n' % len (mtype.args)
-    # fetch self
-    s += '  %s *self;\n' % self.C (class_info)
-    s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
-    # fetch args
-    for a in mtype.args:
-      if a[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  ' + self.V ('arg_' + a[0], a[1]) + ';\n'
-        s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(a[0], a[1])])
-      else:
-        tstr = self.V ('', a[1]) + 'arg_'
-        s += self.generate_proto_pop_args ('fbr', class_info, tstr, [(a[0], a[1])])
-    # return var
-    s += '  '
-    hasret = mtype.rtype.storage != Decls.VOID
-    if hasret:
-      s += self.V ('', mtype.rtype) + 'rval = '
-    # call out
-    s += 'self->' + mtype.name + ' ('
-    s += ', '.join (self.U ('arg_' + a[0], a[1]) for a in mtype.args)
-    s += ');\n'
-    # store return value
-    if hasret:
-      s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
-      rval = 'rval'
-      s += self.generate_proto_add_args ('rb', class_info, '', [(rval, mtype.rtype)], '')
-      s += '  return &rb;\n'
-    else:
-      s += '  return NULL;\n'
-    # done
-    s += '}\n'
-    return s
-  def generate_signal_typename (self, functype, ctype):
-    return 'Signal_%s' % functype.name
-  def generate_signal_proxy_typedef (self, functype, ctype):
-    s = ''
-    signame = self.generate_signal_typename (functype, ctype)
-    cpp_rtype = self.R (functype.rtype)
-    s += '  typedef Rapicorn::Signals::SignalProxy<%s, %s (' % (self.C (ctype), cpp_rtype)
-    l = []
-    for a in functype.args:
-      l += [ self.A (a[0], a[1]) ]
-    s += ', '.join (l)
-    s += ')'
-    s += '> ' + signame + ';\n'
-    return s
-  def generate_signal_proxy_var (self, functype, ctype):
-    signame = self.generate_signal_typename (functype, ctype)
-    s = '  ' + self.F (signame) + functype.name + ';\n'
-    return s
-  def generate_signal_typedef (self, functype, ctype):
-    s = ''
-    signame = self.generate_signal_typename (functype, ctype)
-    cpp_rtype = self.R (functype.rtype)
-    s += '  typedef Rapicorn::Signals::Signal<%s, %s (' % (self.C (ctype), cpp_rtype)
-    l = []
-    for a in functype.args:
-      l += [ self.A (a[0], a[1]) ]
-    s += ', '.join (l)
-    s += ')'
-    if functype.rtype.collector != 'void':
-      s += ', Rapicorn::Signals::Collector' + functype.rtype.collector.capitalize()
-      s += '<' + cpp_rtype + '> '
-    s += '> ' + signame + ';\n'
-    return s
-  def generate_server_signal_dispatcher (self, class_info, stype, reglines):
-    assert self.gen_mode == G4SERVER
-    s = ''
-    dispatcher_name = '_$sigcon__%s__%s' % (class_info.name, stype.name)
-    reglines += [ (self.method_digest (stype), self.namespaced_identifier (dispatcher_name)) ]
-    closure_class = '_$Closure__%s__%s' % (class_info.name, stype.name)
-    s += 'class %s {\n' % closure_class
-    s += '  Plic::Connection &m_connection; uint64 m_handler;\n'
-    s += 'public:\n'
-    s += '  typedef Plic::shared_ptr<%s> SharedPtr;\n' % closure_class
-    s += '  %s (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}\n' % closure_class # ctor
-    s += '  ~%s()\n' % closure_class # dtor
-    s += '  {\n'
-    s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);\n' # msgid handler
-    s += '    fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0\n' # self.method_digest (stype)
-    s += '    fb.add_int64 (m_handler);\n'
-    s += '    m_connection.send_event (&fb); // deletes fb\n'
-    s += '  }\n'
-    cpp_rtype = self.R (stype.rtype)
-    s += '  static %s\n' % cpp_rtype
-    s += '  handler ('
-    s += self.Args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
-    s += 'SharedPtr sp)\n  {\n'
-    s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + %u);\n' % len (stype.args) # msgid handler args
-    s += '    fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0\n' # self.method_digest (stype)
-    s += '    fb.add_int64 (sp->m_handler);\n'
-    ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
-    args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
-    if args2fb:
-      s += reindent ('  ', args2fb) + '\n'
-    s += '    sp->m_connection.send_event (&fb); // deletes fb\n'
-    if stype.rtype.storage != Decls.VOID:
-      s += '    return %s;\n' % self.mkzero (stype.rtype)
-    s += '  }\n'
-    s += '};\n'
-    s += 'static Plic::FieldBuffer*\n'
-    s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
-    s += '{\n'
-    s += '  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
-    s += '  %s *self;\n' % self.C (class_info)
-    s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
-    s += '  uint64 cid = 0, handler_id = fbr.pop_int64();\n'
-    s += '  uint64 con_id = fbr.pop_int64();\n'
-    s += '  if (con_id) self->sig_%s.disconnect (con_id);\n' % stype.name
-    s += '  if (handler_id) {\n'
-    s += '    %s::SharedPtr sp (new %s (PLIC_CONNECTION(), handler_id));\n' % (closure_class, closure_class)
-    s += '    cid = self->sig_%s.connect (slot (sp->handler, sp)); }\n' % stype.name
-    s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
-    s += '  rb.add_int64 (cid);\n'
-    s += '  return &rb;\n'
-    s += '}\n'
-    return s
   def digest2cbytes (self, digest):
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
   def method_digest (self, method_info):
@@ -595,16 +317,6 @@ class Generator:
   def getter_digest (self, class_info, fident, ftype):
     getter_hash = class_info.property_hash ((fident, ftype), False)
     return self.digest2cbytes (getter_hash)
-  def generate_server_method_registry (self, reglines):
-    s = ''
-    s += 'static const Plic::Connection::MethodEntry _plic_stub_entries[] = {\n'
-    for dispatcher in reglines:
-      cdigest, dispatcher_name = dispatcher
-      s += '  { ' + cdigest + ', '
-      s += dispatcher_name + ', },\n'
-    s += '};\n'
-    s += 'static Plic::Connection::MethodRegistry _plic_stub_registry (_plic_stub_entries);\n'
-    return s
   def inherit_reduce (self, type_list):
     def hasancestor (child, parent):
       if child == parent:
@@ -623,24 +335,6 @@ class Generator:
       if not skip:
         reduced = [ p ] + reduced
     return reduced
-  def generate_method_decl (self, functype, pad):
-    s = '  '
-    if self.gen_mode == G4SERVER:
-      s += 'virtual '
-    s += self.F (self.R (functype.rtype))
-    s += functype.name
-    s += ' ' * max (0, pad - len (functype.name))
-    s += ' ('
-    argindent = len (s)
-    l = []
-    for a in functype.args:
-      l += [ self.A (a[0], a[1], a[2]) ]
-    s += (',\n' + argindent * ' ').join (l)
-    s += ')'
-    if self.gen_mode == G4SERVER and functype.pure:
-      s += ' = 0'
-    s += ';\n'
-    return s
   def interface_class_inheritance (self, type_info):
     plic_smarthandle = 'Plic::SmartHandle'
     l = []
@@ -731,7 +425,35 @@ class Generator:
       s += '// '
     s += 'typedef %s %s;\n' % (self.C (type_info), self.type2cpp (type_info))
     return s
-  def generate_interface_impl (self, type_info):
+  def generate_method_decl (self, functype, pad):
+    s = '  '
+    if self.gen_mode == G4SERVER:
+      s += 'virtual '
+    s += self.F (self.R (functype.rtype))
+    s += functype.name
+    s += ' ' * max (0, pad - len (functype.name))
+    s += ' ('
+    argindent = len (s)
+    l = []
+    for a in functype.args:
+      l += [ self.A (a[0], a[1], a[2]) ]
+    s += (',\n' + argindent * ' ').join (l)
+    s += ')'
+    if self.gen_mode == G4SERVER and functype.pure:
+      s += ' = 0'
+    s += ';\n'
+    return s
+  def generate_client_class_methods (self, class_info):
+    s, classH = '\n', self.H (class_info.name) # smart handle class name
+    classH2 = (classH, classH)
+    l, heritage, cl = self.interface_class_inheritance (class_info)
+    s += '%s::%s ()\n' % classH2 # ctor
+    s += '{}\n'
+    s += '%s::%s (Plic::FieldReader &fbr) :\n' % classH2 # ctor
+    s += '  ' + ' (fbr), '.join (cl) + ' (fbr)\n'
+    s += '{}\n'
+    return s
+  def generate_server_class_methods (self, type_info):
     assert self.gen_mode == G4SERVER
     s = '\n'
     tname = self.C (type_info)
@@ -743,6 +465,287 @@ class Generator:
       s += ' :\n  ' + ', '.join (l)
     s += '\n{}\n'
     s += '%s::~%s () {}\n' % (tname, tname) # dtor
+    return s
+  def generate_client_method_stub (self, class_info, mtype):
+    s = ''
+    hasret = mtype.rtype.storage != Decls.VOID
+    # prototype
+    s += self.C (mtype.rtype) + '\n'
+    q = '%s::%s (' % (self.C (class_info), mtype.name)
+    s += q + self.Args (mtype, 'arg_', len (q)) + ')\n{\n'
+    # vars, procedure
+    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # msgid self args
+    s += '  fb.add_msgid (%s); // msgid\n' % self.method_digest (mtype)
+    # marshal args
+    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
+    ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
+    s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
+    # call out
+    s += '  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
+    # unmarshal return
+    if hasret:
+      rarg = ('retval', mtype.rtype)
+      s += '  Plic::FieldReader frr (*fr);\n'
+      s += '  frr.skip_msgid(); // FIXME: check msgid\n'
+      # FIXME: check return error and return type
+      if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
+        s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
+        s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
+      else:
+        vtype = self.V ('', rarg[1]) # 'int*' + ...
+        s += self.generate_proto_pop_args ('frr', class_info, vtype, [rarg], '') # ... + 'x = 5;'
+      s += '  delete fr;\n'
+      s += '  return retval;\n'
+    s += '}\n'
+    return s
+  def generate_server_method_stub (self, class_info, mtype, reglines):
+    assert self.gen_mode == G4SERVER
+    s = ''
+    dispatcher_name = '_$caller__%s__%s' % (class_info.name, mtype.name)
+    reglines += [ (self.method_digest (mtype), self.namespaced_identifier (dispatcher_name)) ]
+    s += 'static Plic::FieldBuffer*\n'
+    s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
+    s += '{\n'
+    s += '  if (fbr.remaining() != 1 + %u) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n' % len (mtype.args)
+    # fetch self
+    s += '  %s *self;\n' % self.C (class_info)
+    s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
+    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
+    # fetch args
+    for a in mtype.args:
+      if a[1].storage in (Decls.RECORD, Decls.SEQUENCE):
+        s += '  ' + self.V ('arg_' + a[0], a[1]) + ';\n'
+        s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(a[0], a[1])])
+      else:
+        tstr = self.V ('', a[1]) + 'arg_'
+        s += self.generate_proto_pop_args ('fbr', class_info, tstr, [(a[0], a[1])])
+    # return var
+    s += '  '
+    hasret = mtype.rtype.storage != Decls.VOID
+    if hasret:
+      s += self.V ('', mtype.rtype) + 'rval = '
+    # call out
+    s += 'self->' + mtype.name + ' ('
+    s += ', '.join (self.U ('arg_' + a[0], a[1]) for a in mtype.args)
+    s += ');\n'
+    # store return value
+    if hasret:
+      s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
+      rval = 'rval'
+      s += self.generate_proto_add_args ('rb', class_info, '', [(rval, mtype.rtype)], '')
+      s += '  return &rb;\n'
+    else:
+      s += '  return NULL;\n'
+    # done
+    s += '}\n'
+    return s
+  def generate_property (self, fident, ftype, pad = 0):
+    s, v, v0, ptr = '', '', '', ''
+    if self.gen_mode == G4SERVER:
+      v, v0, ptr = 'virtual ', ' = 0', '*'
+    tname = self.C (ftype)
+    pid = fident + ' ' * max (0, pad - len (fident))
+    if ftype.storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
+      s += '  ' + v + self.F (tname)  + pid + ' () const%s;\n' % v0
+      s += '  ' + v + self.F ('void') + pid + ' (' + tname + ')%s;\n' % v0
+    elif ftype.storage in (Decls.STRING, Decls.RECORD, Decls.SEQUENCE):
+      s += '  ' + v + self.F (tname)  + pid + ' () const%s;\n' % v0
+      s += '  ' + v + self.F ('void') + pid + ' (const ' + tname + '&)%s;\n' % v0
+    elif ftype.storage == Decls.INTERFACE:
+      s += '  ' + v + self.F (tname + ptr)  + pid + ' () const%s;\n' % v0
+      s += '  ' + v + self.F ('void') + pid + ' (' + tname + ptr + ')%s;\n' % v0
+    return s
+  def generate_client_property_stub (self, class_info, fident, ftype):
+    s = ''
+    tname = self.C (ftype)
+    # getter prototype
+    s += tname + '\n'
+    q = '%s::%s (' % (self.C (class_info), fident)
+    s += q + ') const\n{\n'
+    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;\n' # msgid self
+    s += '  fb.add_msgid (%s);\n' % self.getter_digest (class_info, fident, ftype)
+    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
+    s += '  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
+    if 1: # hasret
+      rarg = ('retval', ftype)
+      s += '  Plic::FieldReader frr (*fr);\n'
+      s += '  frr.skip_msgid(); // FIXME: check msgid\n'
+      # FIXME: check return error and return type
+      if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
+        s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
+        s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
+      else:
+        vtype = self.V ('', rarg[1]) # 'int*' + ...
+        s += self.generate_proto_pop_args ('frr', class_info, vtype, [rarg], '') # ... + 'x = 5;'
+      s += '  delete fr;\n'
+      s += '  return retval;\n'
+    s += '}\n'
+    # setter prototype
+    s += 'void\n'
+    if ftype.storage in (Decls.STRING, Decls.RECORD, Decls.SEQUENCE):
+      s += q + 'const ' + tname + ' &value)\n{\n'
+    else:
+      s += q + tname + ' value)\n{\n'
+    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;\n' # msgid self value
+    s += '  fb.add_msgid (%s); // msgid\n' % self.setter_digest (class_info, fident, ftype)
+    s += self.generate_proto_add_args ('fb', class_info, '', [('(*this)', class_info)], '')
+    ident_type_args = [('value', ftype)]
+    s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
+    s += '  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
+    s += '  if (fr) delete fr;\n' # FIXME: check return error
+    s += '}\n'
+    return s
+  def generate_server_property_setter (self, class_info, fident, ftype, reglines):
+    assert self.gen_mode == G4SERVER
+    s = ''
+    dispatcher_name = '_$setter__%s__%s' % (class_info.name, fident)
+    setter_hash = self.setter_digest (class_info, fident, ftype)
+    reglines += [ (setter_hash, self.namespaced_identifier (dispatcher_name)) ]
+    s += 'static Plic::FieldBuffer*\n'
+    s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
+    s += '{\n'
+    s += '  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
+    # fetch self
+    s += '  %s *self;\n' % self.C (class_info)
+    s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
+    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
+    # fetch property
+    if ftype.storage in (Decls.RECORD, Decls.SEQUENCE):
+      s += '  ' + self.V ('arg_' + fident, ftype) + ';\n'
+      s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(fident, ftype)])
+    else:
+      tstr = self.V ('', ftype) + 'arg_'
+      s += self.generate_proto_pop_args ('fbr', class_info, tstr, [(fident, ftype)])
+    ref = '&' if ftype.storage == Decls.INTERFACE else ''
+    # call out
+    s += '  self->' + fident + ' (' + ref + self.U ('arg_' + fident, ftype) + ');\n'
+    s += '  return NULL;\n'
+    s += '}\n'
+    return s
+  def generate_server_property_getter (self, class_info, fident, ftype, reglines):
+    assert self.gen_mode == G4SERVER
+    s = ''
+    dispatcher_name = '_$getter__%s__%s' % (class_info.name, fident)
+    getter_hash = self.getter_digest (class_info, fident, ftype)
+    reglines += [ (getter_hash, self.namespaced_identifier (dispatcher_name)) ]
+    s += 'static Plic::FieldBuffer*\n'
+    s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
+    s += '{\n'
+    s += '  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
+    # fetch self
+    s += '  %s *self;\n' % self.C (class_info)
+    s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
+    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
+    # return var
+    s += '  '
+    s += self.V ('', ftype) + 'rval = '
+    # call out
+    s += 'self->' + fident + ' ();\n'
+    # store return value
+    s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
+    rval = 'rval'
+    s += self.generate_proto_add_args ('rb', class_info, '', [(rval, ftype)], '')
+    s += '  return &rb;\n'
+    s += '}\n'
+    return s
+  def generate_signal_typename (self, functype, ctype):
+    return 'Signal_%s' % functype.name
+  def generate_signal_proxy_typedef (self, functype, ctype):
+    assert self.gen_mode == G4CLIENT
+    s = ''
+    signame = self.generate_signal_typename (functype, ctype)
+    cpp_rtype = self.R (functype.rtype)
+    s += '  typedef Rapicorn::Signals::SignalProxy<%s, %s (' % (self.C (ctype), cpp_rtype)
+    l = []
+    for a in functype.args:
+      l += [ self.A (a[0], a[1]) ]
+    s += ', '.join (l)
+    s += ')'
+    s += '> ' + signame + ';\n'
+    return s
+  def generate_signal_proxy_var (self, functype, ctype):
+    assert self.gen_mode == G4CLIENT
+    signame = self.generate_signal_typename (functype, ctype)
+    s = '  ' + self.F (signame) + functype.name + ';\n'
+    return s
+  def generate_signal_typedef (self, functype, ctype):
+    assert self.gen_mode == G4SERVER
+    s = ''
+    signame = self.generate_signal_typename (functype, ctype)
+    cpp_rtype = self.R (functype.rtype)
+    s += '  typedef Rapicorn::Signals::Signal<%s, %s (' % (self.C (ctype), cpp_rtype)
+    l = []
+    for a in functype.args:
+      l += [ self.A (a[0], a[1]) ]
+    s += ', '.join (l)
+    s += ')'
+    if functype.rtype.collector != 'void':
+      s += ', Rapicorn::Signals::Collector' + functype.rtype.collector.capitalize()
+      s += '<' + cpp_rtype + '> '
+    s += '> ' + signame + ';\n'
+    return s
+  def generate_server_signal_dispatcher (self, class_info, stype, reglines):
+    assert self.gen_mode == G4SERVER
+    s = ''
+    dispatcher_name = '_$sigcon__%s__%s' % (class_info.name, stype.name)
+    reglines += [ (self.method_digest (stype), self.namespaced_identifier (dispatcher_name)) ]
+    closure_class = '_$Closure__%s__%s' % (class_info.name, stype.name)
+    s += 'class %s {\n' % closure_class
+    s += '  Plic::Connection &m_connection; uint64 m_handler;\n'
+    s += 'public:\n'
+    s += '  typedef Plic::shared_ptr<%s> SharedPtr;\n' % closure_class
+    s += '  %s (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}\n' % closure_class # ctor
+    s += '  ~%s()\n' % closure_class # dtor
+    s += '  {\n'
+    s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);\n' # msgid handler
+    s += '    fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0\n' # self.method_digest (stype)
+    s += '    fb.add_int64 (m_handler);\n'
+    s += '    m_connection.send_event (&fb); // deletes fb\n'
+    s += '  }\n'
+    cpp_rtype = self.R (stype.rtype)
+    s += '  static %s\n' % cpp_rtype
+    s += '  handler ('
+    s += self.Args (stype, 'arg_', 11) + (',\n           ' if stype.args else '')
+    s += 'SharedPtr sp)\n  {\n'
+    s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + %u);\n' % len (stype.args) # msgid handler args
+    s += '    fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0\n' # self.method_digest (stype)
+    s += '    fb.add_int64 (sp->m_handler);\n'
+    ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
+    args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
+    if args2fb:
+      s += reindent ('  ', args2fb) + '\n'
+    s += '    sp->m_connection.send_event (&fb); // deletes fb\n'
+    if stype.rtype.storage != Decls.VOID:
+      s += '    return %s;\n' % self.mkzero (stype.rtype)
+    s += '  }\n'
+    s += '};\n'
+    s += 'static Plic::FieldBuffer*\n'
+    s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
+    s += '{\n'
+    s += '  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
+    s += '  %s *self;\n' % self.C (class_info)
+    s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
+    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
+    s += '  uint64 cid = 0, handler_id = fbr.pop_int64();\n'
+    s += '  uint64 con_id = fbr.pop_int64();\n'
+    s += '  if (con_id) self->sig_%s.disconnect (con_id);\n' % stype.name
+    s += '  if (handler_id) {\n'
+    s += '    %s::SharedPtr sp (new %s (PLIC_CONNECTION(), handler_id));\n' % (closure_class, closure_class)
+    s += '    cid = self->sig_%s.connect (slot (sp->handler, sp)); }\n' % stype.name
+    s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
+    s += '  rb.add_int64 (cid);\n'
+    s += '  return &rb;\n'
+    s += '}\n'
+    return s
+  def generate_server_method_registry (self, reglines):
+    s = ''
+    s += 'static const Plic::Connection::MethodEntry _plic_stub_entries[] = {\n'
+    for dispatcher in reglines:
+      cdigest, dispatcher_name = dispatcher
+      s += '  { ' + cdigest + ', '
+      s += dispatcher_name + ', },\n'
+    s += '};\n'
+    s += 'static Plic::Connection::MethodRegistry _plic_stub_registry (_plic_stub_entries);\n'
     return s
   def generate_virtual_method_skel (self, functype, type_info):
     assert self.gen_mode == G4SERVER
@@ -919,7 +922,7 @@ class Generator:
               s += self.insertion_text ('filtered_class_cc:' + tp.name)
             else:
               s += self.open_namespace (tp)
-              s += self.generate_interface_impl (tp)
+              s += self.generate_server_class_methods (tp)
           if self.gen_clientcc and tp.fields:
             s += self.open_namespace (tp)
             for fl in tp.fields:
@@ -942,10 +945,10 @@ class Generator:
         s += self.open_namespace (tp)
         if tp.storage == Decls.INTERFACE and not tp.name in self.skip_classes:
           for fl in tp.fields:
-            s += self.generate_server_property_get_dispatcher (tp, fl[0], fl[1], reglines)
-            s += self.generate_server_property_set_dispatcher (tp, fl[0], fl[1], reglines)
+            s += self.generate_server_property_getter (tp, fl[0], fl[1], reglines)
+            s += self.generate_server_property_setter (tp, fl[0], fl[1], reglines)
           for m in tp.methods:
-            s += self.generate_server_method_dispatcher (tp, m, reglines)
+            s += self.generate_server_method_stub (tp, m, reglines)
           for sg in tp.signals:
             s += self.generate_server_signal_dispatcher (tp, sg, reglines)
           s += '\n'
