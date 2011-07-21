@@ -3,7 +3,8 @@
 
 namespace Rapicorn {
 
-uint64 uithread_bootup (int *argcp, char **argv, const StringVector &args);
+uint64          uithread_bootup         (int *argcp, char **argv, const StringVector &args);
+static void     clientglue_setup        (Plic::Connection *connection);
 
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x120caca0) { v += 0x300000; } } __staticctortest;
 
@@ -36,6 +37,8 @@ init_app (const String       &app_ident,
   // boot up UI thread
   uint64 appid = uithread_bootup (argcp, argv, args);
   assert (appid != 0);
+  // initialize clientglue bits
+  clientglue_setup (uithread_connection());
   // construct smart handle
   Plic::FieldBuffer8 fb (1);
   fb.add_int64 (appid);
@@ -82,10 +85,15 @@ init_test_app (const String       &app_ident,
                char              **argv,
                const StringVector &args)
 {
-  return_if_fail (_clientglue_connection == NULL);
   init_core_test (app_ident, argcp, argv, args);
   init_app (app_ident, argcp, argv, args);
-  _clientglue_connection = uithread_connection();
+}
+
+static void
+clientglue_setup (Plic::Connection *connection)
+{
+  return_if_fail (_clientglue_connection == NULL);
+  _clientglue_connection = connection;
 }
 
 } // Rapicorn
