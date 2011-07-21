@@ -16,7 +16,6 @@ noinst_PROGRAMS      = cxxrapicorn
 cxxrapicorn_SOURCES  = cxx-rope.cc
 cxxrapicorn_LDADD    = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
 cxxrapicorn_CXXFLAGS = -D__RAPICORN_BUILD__	# needed for direct <ui/utilities.hh> inclusion
-EXTRA_DIST          += cxx-rope.hh cxx-client.hh
 
 # === PyRapicorn ===
 pyrapicorn_cc_sources = py-rope.cc
@@ -41,21 +40,6 @@ cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/CxxPyStub.py
 	mv xgen-$(@F) $@
 $(srcdir)/py-rope.cc: cpy2rope.cc
 CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
-
-# === cxx-client ===
-cxx-client.hh: $(RAPICORNIDL) $(HARDCODEDIDL) $(RAPICORNINS) $(srcdir)/CxxStub.py
-	: # build cxx-client.hh from interfaces.idl
-	: # ${PLICINT} -G $(srcdir)/CxxStub -g clienthh $(HARDCODEDIDL) -o xgen-$(@F)
-	${PLICINT} -G $(srcdir)/CxxStub -g clienthh $(RAPICORNIDL) -g shortalias \
-	  --insertions $(RAPICORNINS) -o xgen-$(@F)
-	mv xgen-$(@F) $@
-cxx-client.cc: $(RAPICORNIDL) $(HARDCODEDIDL) $(srcdir)/CxxStub.py
-	: # build cxx-client.cc from interfaces.idl
-	: # ${PLICINT} -G $(srcdir)/CxxStub -g clientcc $(HARDCODEDIDL) --inclusions '"cxx-client.hh"' -o xgen-$(@F)
-	${PLICINT} -G $(srcdir)/CxxStub -g clientcc $(RAPICORNIDL) --inclusions '"cxx-client.hh"' -o - > xgen-$(@F)
-	mv xgen-$(@F) $@
-$(srcdir)/cxx-rope.cc: cxx-client.hh cxx-client.cc
-CLEANFILES += xgen-cxx-client.hh xgen-cxx-client.cc cxx-client.hh cxx-client.cc
 
 # === py2cpy.py ===
 py2cpy.py: $(RAPICORNIDL) $(srcdir)/PyStub.py
