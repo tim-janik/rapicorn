@@ -152,4 +152,5 @@ struct SignalProxy<Emitter, R0 (A1, A2, A3)> : SignalProxyBase {
   SignalProxy& operator-= (R0 (*callback) (Emitter&, A1, A2, A3)) { disconnect (slot (callback)); return *this; }
   template<class Collector, class Ancestor>
   SignalProxy (Signal<Emitter, R0 (A1, A2, A3), Collector, Ancestor> &sig) : SignalProxyBase (sig) {}
+  SignalProxy (const SignalProxy &other) : SignalProxyBase (other) {}
 };

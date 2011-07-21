@@ -83,12 +83,14 @@ public:
 };
 
 // === SignalProxyBase ===
-class SignalProxyBase : protected NonCopyable {
+class SignalProxyBase {
   SignalBase   *m_signal;
 protected:
   ConId         connect_link          (TrampolineLink *link, bool with_emitter = false);
   uint          disconnect_equal_link (const TrampolineLink &link, bool with_emitter = false);
   uint          disconnect_link_id    (ConId                 id);
+  SignalProxyBase&    operator=       (const SignalProxyBase &other);
+  explicit      SignalProxyBase       (const SignalProxyBase &other);
   explicit      SignalProxyBase       (SignalBase &signal);
   virtual      ~SignalProxyBase       () {}
 public:

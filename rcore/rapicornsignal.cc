@@ -131,10 +131,25 @@ SignalBase::EmbeddedLink::delete_this ()
 }
 
 // === SignalProxyBase ===
+SignalProxyBase&
+SignalProxyBase::operator= (const SignalProxyBase &other)
+{
+  if (m_signal != other.m_signal)
+    {
+      divorce();
+      m_signal = other.m_signal;
+    }
+  return *this;
+}
+
+SignalProxyBase::SignalProxyBase (const SignalProxyBase &other) :
+  m_signal (other.m_signal)
+{}
+
 SignalProxyBase::SignalProxyBase (SignalBase &signal) :
   m_signal (&signal)
 {
-  return_if_fail (NULL != &signal);
+  // FIXME: return_if_fail (NULL != &signal);
 }
 
 ConId
