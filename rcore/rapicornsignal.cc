@@ -64,12 +64,15 @@ SignalBase::connect_link (TrampolineLink *link,
                           bool            with_emitter)
 {
   return_val_if_fail (link->m_linking_owner == false && link->prev == NULL && link->next == NULL, NULL);
+  const bool connected_before = start.next != &start;
   link->owner_ref();
   link->prev = start.prev;
   link->next = &start;
   start.prev->next = link;
   start.prev = link;
   link->with_emitter (with_emitter);
+  if (!connected_before)
+    connections_changed (true);
   return link->con_id();
 }
 
@@ -82,6 +85,8 @@ SignalBase::disconnect_equal_link (const TrampolineLink &link,
       {
         return_val_if_fail (walk->m_linking_owner == true, 0);
         walk->unlink(); // unrefs
+        if (start.next == &start) // no handlers
+          connections_changed (false);
         return 1;
       }
   return 0;
@@ -95,6 +100,8 @@ SignalBase::disconnect_link_id (ConId con_id)
       {
         return_val_if_fail (walk->m_linking_owner == true, 0);
         walk->unlink(); // unrefs
+        if (start.next == &start) // no handlers
+          connections_changed (false);
         return 1;
       }
   return 0;
@@ -102,6 +109,7 @@ SignalBase::disconnect_link_id (ConId con_id)
 
 SignalBase::~SignalBase()
 {
+  const bool connected_before = start.next != &start;
   while (start.next != &start)
     {
       return_if_fail (start.next->m_linking_owner == true);
@@ -109,6 +117,8 @@ SignalBase::~SignalBase()
     }
   RAPICORN_ASSERT (start.next == &start);
   RAPICORN_ASSERT (start.prev == &start);
+  if (connected_before)
+    connections_changed (false);
   start.prev = start.next = NULL;
   start.check_last_ref();
   start.unref();

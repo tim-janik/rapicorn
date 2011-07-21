@@ -66,22 +66,19 @@ class SignalBase : protected NonCopyable {
     explicit               EmbeddedLink          () : TrampolineLink (0xbadbad) {}
     void                   check_last_ref        () const { RAPICORN_ASSERT (ref_count() == 1); }
   };
+  EmbeddedLink             start;
 protected:
   template<class Emission> struct Iterator;
-  EmbeddedLink             start;
+  inline TrampolineLink*   start_link            () { return &start; }
   ConId                    connect_link          (TrampolineLink       *link,
                                                   bool                  with_emitter = false);
   uint                     disconnect_equal_link (const TrampolineLink &link,
                                                   bool                  with_emitter = false);
   uint                     disconnect_link_id    (ConId                 id);
+  virtual void             connections_changed   (bool                  hasconnections) {}
 public:
-  /*Des*/                 ~SignalBase();
-  explicit                 SignalBase ()
-  {
-    start.next = &start;
-    start.prev = &start;
-    start.ref_sink();
-  }
+  virtual                 ~SignalBase            ();
+  inline                   SignalBase            () { start.next = start.prev = &start; start.ref_sink(); }
 };
 
 /* --- Signal Iterator --- */
@@ -382,7 +379,11 @@ struct Signature<R0 (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14
   typedef R0 result_type;
 };
 
-template<class Emitter, typename SignalSignature, class Collector = CollectorDefault<typename Signature<SignalSignature>::result_type> > struct Signal;
+template< class Emitter,
+          typename SignalSignature,
+          class Collector = CollectorDefault<typename Signature<SignalSignature>::result_type>,
+          class SignalAncestor = SignalBase
+          > struct Signal;
 
 /* --- Casting --- */
 template<class TrampolineP> TrampolineP

@@ -82,8 +82,8 @@ struct Emission3 <Emitter, void, A1, A2, A3> : public EmissionBase {
 };
 
 /* --- SignalEmittable3 --- */
-template<class Emitter, typename R0, typename A1, typename A2, typename A3, class Collector>
-struct SignalEmittable3 : SignalBase {
+template<class Emitter, typename R0, typename A1, typename A2, typename A3, class Collector, class Ancestor>
+struct SignalEmittable3 : public Ancestor {
   typedef Emission3 <Emitter, R0, A1, A2, A3> Emission;
   typedef typename Collector::result_type     Result;
   struct Iterator : public SignalBase::Iterator<Emission> {
@@ -95,7 +95,7 @@ struct SignalEmittable3 : SignalBase {
   {
     ScopeReference<Emitter, Collector> lref (*m_emitter);
     Emission emission (m_emitter, a1, a2, a3);
-    Iterator it (emission, &start), last (emission, &start);
+    Iterator it (emission, Ancestor::start_link()), last (emission, Ancestor::start_link());
     ++it; /* walk from start to first */
     Collector collector;
     return collector (it, last); // Result may be void
@@ -106,13 +106,14 @@ private:
 
 /* --- Signal3 --- */
 /* Signal* */
-template<class Emitter, typename R0, typename A1, typename A2, typename A3, class Collector = CollectorDefault<R0> >
-struct Signal3 : SignalEmittable3<Emitter, R0, A1, A2, A3, Collector>
+template<class Emitter, typename R0, typename A1, typename A2, typename A3,
+         class Collector = CollectorDefault<R0>, class Ancestor  = SignalBase>
+struct Signal3 : SignalEmittable3<Emitter, R0, A1, A2, A3, Collector, Ancestor>
 {
-  typedef Emission3 <Emitter, R0, A1, A2, A3> Emission;
-  typedef Slot3<R0, A1, A2, A3>               Slot;
-  typedef Slot4<R0, Emitter&, A1, A2, A3>     SlotE;
-  typedef SignalEmittable3<Emitter, R0, A1, A2, A3, Collector> SignalEmittable;
+  typedef Emission3 <Emitter, R0, A1, A2, A3>                             Emission;
+  typedef Slot3 <R0, A1, A2, A3>                                          Slot;
+  typedef Slot4 <R0, Emitter&, A1, A2, A3>                                SlotE;
+  typedef SignalEmittable3 <Emitter, R0, A1, A2, A3, Collector, Ancestor> SignalEmittable;
   explicit Signal3 (Emitter &emitter) :
     SignalEmittable (&emitter)
   { RAPICORN_ASSERT (&emitter != NULL); }
@@ -138,10 +139,10 @@ struct Signal3 : SignalEmittable3<Emitter, R0, A1, A2, A3, Collector>
 };
 
 /* --- Signal<> --- */
-template<class Emitter, typename R0, typename A1, typename A2, typename A3, class Collector>
-struct Signal<Emitter, R0 (A1, A2, A3), Collector> : Signal3<Emitter, R0, A1, A2, A3, Collector>
+template<class Emitter, typename R0, typename A1, typename A2, typename A3, class Collector, class Ancestor>
+struct Signal<Emitter, R0 (A1, A2, A3), Collector, Ancestor> : Signal3<Emitter, R0, A1, A2, A3, Collector, Ancestor>
 {
-  typedef Signal3<Emitter, R0, A1, A2, A3, Collector> Signal3Base;
+  typedef Signal3<Emitter, R0, A1, A2, A3, Collector, Ancestor> Signal3Base;
   explicit Signal (Emitter &emitter) :
     Signal3Base (emitter)
     {}
@@ -149,4 +150,3 @@ struct Signal<Emitter, R0 (A1, A2, A3), Collector> : Signal3<Emitter, R0, A1, A2
     Signal3Base (emitter, method)
     {}
 };
-

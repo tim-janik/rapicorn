@@ -451,4 +451,58 @@ test_various()
 }
 REGISTER_TEST ("Signals/Boilerplate1", test_various);
 
+struct TestConnectionCounter {
+  void  ref()   { /* dummy for signal emission */ }
+  void  unref() { /* dummy for signal emission */ }
+  int   connection_count;
+  struct Counter : Signals::SignalBase {
+    TestConnectionCounter *tcc;
+    void         set_tcc (TestConnectionCounter &cc) { tcc = &cc; }
+    virtual void connections_changed (bool hasconnections) { tcc->connection_count += hasconnections ? +1 : -1; }
+  };
+  typedef Signal<TestConnectionCounter, char (float, int), CollectorDefault<float>, Counter> TestSignal;
+  TestSignal  test_signal;
+  char        dummy_handler1 (float, int) { return '1'; }
+  static char dummy_handler2 (float, int) { return '2'; }
+  inline      TestConnectionCounter() : connection_count (0), test_signal (*this) {}
+  static void
+  test_connection_counter ()
+  {
+    TestConnectionCounter tcc;
+    tcc.test_signal.set_tcc (tcc);
+    TASSERT (tcc.connection_count == 0);
+
+    tcc.test_signal += slot (tcc, &TestConnectionCounter::dummy_handler1);
+    TASSERT (tcc.connection_count == 1);
+
+    char result = tcc.test_signal.emit (0.1, 1234567);
+    TASSERT (result == '1');
+
+    tcc.test_signal += dummy_handler2;
+    TASSERT (tcc.connection_count == 1);
+
+    result = tcc.test_signal.emit (0.2, 1234567);
+    TASSERT (result == '2');
+
+    tcc.test_signal -= slot (tcc, &TestConnectionCounter::dummy_handler1);
+    TASSERT (tcc.connection_count == 1);
+
+    result = tcc.test_signal.emit (0.1, 1234567);
+    TASSERT (result == '1');
+
+    tcc.test_signal -= dummy_handler2;
+    TASSERT (tcc.connection_count == 0);
+
+    result = tcc.test_signal.emit (0, 0);
+    TASSERT (result == 0);
+
+    uint id = tcc.test_signal.connect (slot (tcc, &TestConnectionCounter::dummy_handler1));
+    TASSERT (tcc.connection_count == 1);
+    bool success = tcc.test_signal.disconnect (id);
+    TASSERT (success == true);
+    TASSERT (tcc.connection_count == 0);
+  }
+};
+REGISTER_TEST ("Signals/Connection Counter", TestConnectionCounter::test_connection_counter);
+
 } // anon
