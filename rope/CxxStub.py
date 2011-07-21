@@ -390,12 +390,12 @@ class Generator:
     # signals
     if self.gen_mode == G4SERVER:
       for sg in type_info.signals:
-        s += self.generate_signal_typedef (sg, type_info)
+        s += '  ' + self.generate_signal_typedef (sg, type_info)
       for sg in type_info.signals:
         s += '  ' + self.generate_signal_typename (sg, type_info) + ' sig_%s;\n' % sg.name
     else: # G4CLIENT
       for sg in type_info.signals:
-        pass # s += self.generate_signal_proxy_var (sg, type_info)
+        s += self.generate_signal_proxy_var (sg, type_info)
     # methods
     il = 0
     if type_info.methods:
@@ -447,11 +447,19 @@ class Generator:
     s, classH = '\n', self.H (class_info.name) # smart handle class name
     classH2 = (classH, classH)
     l, heritage, cl = self.interface_class_inheritance (class_info)
-    s += '%s::%s ()\n' % classH2 # ctor
-    s += '{}\n'
+    sca = [] # signal constructor arguments
+    for sg in class_info.signals:
+      signame = self.generate_signal_typename (sg, class_info)
+      s += self.generate_signal_typedef (sg, class_info, classH + '_')
+      sca += [ '%s (*(%s_%s*) NULL)' % (sg.name, classH, signame) ]
+    sci = ',\n  '.join (sca) # signal constructor init string
+    s += '%s::%s ()' % classH2 # ctor
+    s += ' :\n  ' + sci if sci else ''
+    s += '\n{}\n'
     s += '%s::%s (Plic::FieldReader &fbr) :\n' % classH2 # ctor
-    s += '  ' + ' (fbr), '.join (cl) + ' (fbr)\n'
-    s += '{}\n'
+    s += '  ' + (' (fbr), '.join (cl) + ' (fbr)')
+    s += ',\n  ' + sci if sci else ''
+    s += '\n{}\n'
     return s
   def generate_server_class_methods (self, type_info):
     assert self.gen_mode == G4SERVER
@@ -648,12 +656,14 @@ class Generator:
     s += '  return &rb;\n'
     s += '}\n'
     return s
+  def generate_signal_proxy_typename (self, functype, ctype):
+    return 'Signal_%s' % functype.name # 'Proxy_%s'
   def generate_signal_typename (self, functype, ctype):
     return 'Signal_%s' % functype.name
   def generate_signal_proxy_typedef (self, functype, ctype):
     assert self.gen_mode == G4CLIENT
     s = ''
-    signame = self.generate_signal_typename (functype, ctype)
+    proxyname = self.generate_signal_proxy_typename (functype, ctype)
     cpp_rtype = self.R (functype.rtype)
     s += '  typedef Rapicorn::Signals::SignalProxy<%s, %s (' % (self.C (ctype), cpp_rtype)
     l = []
@@ -661,19 +671,18 @@ class Generator:
       l += [ self.A (a[0], a[1]) ]
     s += ', '.join (l)
     s += ')'
-    s += '> ' + signame + ';\n'
+    s += '> ' + proxyname + ';\n'
     return s
   def generate_signal_proxy_var (self, functype, ctype):
     assert self.gen_mode == G4CLIENT
-    signame = self.generate_signal_typename (functype, ctype)
-    s = '  ' + self.F (signame) + functype.name + ';\n'
+    proxyname = self.generate_signal_proxy_typename (functype, ctype)
+    s = '  ' + self.F (proxyname) + functype.name + ';\n'
     return s
-  def generate_signal_typedef (self, functype, ctype):
-    assert self.gen_mode == G4SERVER
+  def generate_signal_typedef (self, functype, ctype, prefix = ''):
     s = ''
     signame = self.generate_signal_typename (functype, ctype)
     cpp_rtype = self.R (functype.rtype)
-    s += '  typedef Rapicorn::Signals::Signal<%s, %s (' % (self.C (ctype), cpp_rtype)
+    s += 'typedef Rapicorn::Signals::Signal<%s, %s (' % (self.C (ctype), cpp_rtype)
     l = []
     for a in functype.args:
       l += [ self.A (a[0], a[1]) ]
@@ -682,7 +691,7 @@ class Generator:
     if functype.rtype.collector != 'void':
       s += ', Rapicorn::Signals::Collector' + functype.rtype.collector.capitalize()
       s += '<' + cpp_rtype + '> '
-    s += '> ' + signame + ';\n'
+    s += '> ' + prefix + signame + ';\n'
     return s
   def generate_server_signal_dispatcher (self, class_info, stype, reglines):
     assert self.gen_mode == G4SERVER

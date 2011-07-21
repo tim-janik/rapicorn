@@ -301,6 +301,8 @@ public:
   void                    dummy    (double);
   std::string             on_click () const;
   void                    on_click (const std::string&);
+  Signal_void_signal      void_signal;
+  Signal_sample_signal    sample_signal;
   double                  simple_method            ();
   double                  single_arg               (int n);
   double                  single_arg2              (int n = 5);
@@ -432,6 +434,26 @@ protected:
 public:
   explicit                SignalTestInterface_SmartHandle ();
   explicit                SignalTestInterface_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline));
+  Signal_void_result      void_result;
+  Signal_bool_result      bool_result;
+  Signal_int_result       int_result;
+  Signal_float_result     float_result;
+  Signal_string_result    string_result;
+  Signal_enum_result      enum_result;
+  Signal_record_result    record_result;
+  Signal_sequence_result  sequence_result;
+  Signal_interface_result interface_result;
+  Signal_self_result      self_result;
+  Signal_void_arg         void_arg;
+  Signal_bool_arg         bool_arg;
+  Signal_int_arg          int_arg;
+  Signal_float_arg        float_arg;
+  Signal_string_arg       string_arg;
+  Signal_enum_arg         enum_arg;
+  Signal_record_arg       record_arg;
+  Signal_sequence_arg     sequence_arg;
+  Signal_interface_arg    interface_arg;
+  Signal_self_args        self_args;
   inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
@@ -487,6 +509,8 @@ public:
   void                    on_click3  (const std::string&);
   ClickType               click_type () const;
   void                    click_type (ClickType);
+  Signal_check_activate   check_activate;
+  Signal_activate         activate;
   inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
@@ -868,10 +892,16 @@ UIWidgetArea_SmartHandle::on_click (const std::string &value)
   if (fr) delete fr;
 }
 
-UIWidgetArea_SmartHandle::UIWidgetArea_SmartHandle ()
+typedef Rapicorn::Signals::Signal<UIWidgetArea_SmartHandle, void ()> UIWidgetArea_SmartHandle_Signal_void_signal;
+typedef Rapicorn::Signals::Signal<UIWidgetArea_SmartHandle, double (UIWidgetArea_SmartHandle &ba1, int someint)> UIWidgetArea_SmartHandle_Signal_sample_signal;
+UIWidgetArea_SmartHandle::UIWidgetArea_SmartHandle () :
+  void_signal (*(UIWidgetArea_SmartHandle_Signal_void_signal*) NULL),
+  sample_signal (*(UIWidgetArea_SmartHandle_Signal_sample_signal*) NULL)
 {}
 UIWidgetArea_SmartHandle::UIWidgetArea_SmartHandle (Plic::FieldReader &fbr) :
-  Plic::SmartHandle (fbr)
+  Plic::SmartHandle (fbr),
+  void_signal (*(UIWidgetArea_SmartHandle_Signal_void_signal*) NULL),
+  sample_signal (*(UIWidgetArea_SmartHandle_Signal_sample_signal*) NULL)
 {}
 double
 UIWidgetArea_SmartHandle::simple_method ()
@@ -1248,10 +1278,70 @@ MethodTestInterface_SmartHandle::method_with_quickiface (QuickIface_SmartHandle 
   return retval;
 }
 
-SignalTestInterface_SmartHandle::SignalTestInterface_SmartHandle ()
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void ()> SignalTestInterface_SmartHandle_Signal_void_result;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, bool ()> SignalTestInterface_SmartHandle_Signal_bool_result;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, int ()> SignalTestInterface_SmartHandle_Signal_int_result;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, double ()> SignalTestInterface_SmartHandle_Signal_float_result;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, std::string ()> SignalTestInterface_SmartHandle_Signal_string_result;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickEnum ()> SignalTestInterface_SmartHandle_Signal_enum_result;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickRecord_Handle ()> SignalTestInterface_SmartHandle_Signal_record_result;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickSequence_Handle ()> SignalTestInterface_SmartHandle_Signal_sequence_result;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, GrandChild_SmartHandle ()> SignalTestInterface_SmartHandle_Signal_interface_result;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, SignalTestInterface_SmartHandle ()> SignalTestInterface_SmartHandle_Signal_self_result;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void ()> SignalTestInterface_SmartHandle_Signal_void_arg;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (bool b)> SignalTestInterface_SmartHandle_Signal_bool_arg;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (int i)> SignalTestInterface_SmartHandle_Signal_int_arg;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (double f)> SignalTestInterface_SmartHandle_Signal_float_arg;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const std::string &s)> SignalTestInterface_SmartHandle_Signal_string_arg;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (QuickEnum e)> SignalTestInterface_SmartHandle_Signal_enum_arg;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const QuickRecord_Handle &r)> SignalTestInterface_SmartHandle_Signal_record_arg;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const QuickSequence_Handle &s)> SignalTestInterface_SmartHandle_Signal_sequence_arg;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (GrandChild_SmartHandle &i)> SignalTestInterface_SmartHandle_Signal_interface_arg;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (SignalTestInterface_SmartHandle &self_)> SignalTestInterface_SmartHandle_Signal_self_args;
+SignalTestInterface_SmartHandle::SignalTestInterface_SmartHandle () :
+  void_result (*(SignalTestInterface_SmartHandle_Signal_void_result*) NULL),
+  bool_result (*(SignalTestInterface_SmartHandle_Signal_bool_result*) NULL),
+  int_result (*(SignalTestInterface_SmartHandle_Signal_int_result*) NULL),
+  float_result (*(SignalTestInterface_SmartHandle_Signal_float_result*) NULL),
+  string_result (*(SignalTestInterface_SmartHandle_Signal_string_result*) NULL),
+  enum_result (*(SignalTestInterface_SmartHandle_Signal_enum_result*) NULL),
+  record_result (*(SignalTestInterface_SmartHandle_Signal_record_result*) NULL),
+  sequence_result (*(SignalTestInterface_SmartHandle_Signal_sequence_result*) NULL),
+  interface_result (*(SignalTestInterface_SmartHandle_Signal_interface_result*) NULL),
+  self_result (*(SignalTestInterface_SmartHandle_Signal_self_result*) NULL),
+  void_arg (*(SignalTestInterface_SmartHandle_Signal_void_arg*) NULL),
+  bool_arg (*(SignalTestInterface_SmartHandle_Signal_bool_arg*) NULL),
+  int_arg (*(SignalTestInterface_SmartHandle_Signal_int_arg*) NULL),
+  float_arg (*(SignalTestInterface_SmartHandle_Signal_float_arg*) NULL),
+  string_arg (*(SignalTestInterface_SmartHandle_Signal_string_arg*) NULL),
+  enum_arg (*(SignalTestInterface_SmartHandle_Signal_enum_arg*) NULL),
+  record_arg (*(SignalTestInterface_SmartHandle_Signal_record_arg*) NULL),
+  sequence_arg (*(SignalTestInterface_SmartHandle_Signal_sequence_arg*) NULL),
+  interface_arg (*(SignalTestInterface_SmartHandle_Signal_interface_arg*) NULL),
+  self_args (*(SignalTestInterface_SmartHandle_Signal_self_args*) NULL)
 {}
 SignalTestInterface_SmartHandle::SignalTestInterface_SmartHandle (Plic::FieldReader &fbr) :
-  Plic::SmartHandle (fbr)
+  Plic::SmartHandle (fbr),
+  void_result (*(SignalTestInterface_SmartHandle_Signal_void_result*) NULL),
+  bool_result (*(SignalTestInterface_SmartHandle_Signal_bool_result*) NULL),
+  int_result (*(SignalTestInterface_SmartHandle_Signal_int_result*) NULL),
+  float_result (*(SignalTestInterface_SmartHandle_Signal_float_result*) NULL),
+  string_result (*(SignalTestInterface_SmartHandle_Signal_string_result*) NULL),
+  enum_result (*(SignalTestInterface_SmartHandle_Signal_enum_result*) NULL),
+  record_result (*(SignalTestInterface_SmartHandle_Signal_record_result*) NULL),
+  sequence_result (*(SignalTestInterface_SmartHandle_Signal_sequence_result*) NULL),
+  interface_result (*(SignalTestInterface_SmartHandle_Signal_interface_result*) NULL),
+  self_result (*(SignalTestInterface_SmartHandle_Signal_self_result*) NULL),
+  void_arg (*(SignalTestInterface_SmartHandle_Signal_void_arg*) NULL),
+  bool_arg (*(SignalTestInterface_SmartHandle_Signal_bool_arg*) NULL),
+  int_arg (*(SignalTestInterface_SmartHandle_Signal_int_arg*) NULL),
+  float_arg (*(SignalTestInterface_SmartHandle_Signal_float_arg*) NULL),
+  string_arg (*(SignalTestInterface_SmartHandle_Signal_string_arg*) NULL),
+  enum_arg (*(SignalTestInterface_SmartHandle_Signal_enum_arg*) NULL),
+  record_arg (*(SignalTestInterface_SmartHandle_Signal_record_arg*) NULL),
+  sequence_arg (*(SignalTestInterface_SmartHandle_Signal_sequence_arg*) NULL),
+  interface_arg (*(SignalTestInterface_SmartHandle_Signal_interface_arg*) NULL),
+  self_args (*(SignalTestInterface_SmartHandle_Signal_self_args*) NULL)
 {}
 bool
 PropertyTester_SmartHandle::bool_prop () const
@@ -1564,10 +1654,16 @@ ButtonArea_SmartHandle::click_type (ClickType value)
   if (fr) delete fr;
 }
 
-ButtonArea_SmartHandle::ButtonArea_SmartHandle ()
+typedef Rapicorn::Signals::Signal<ButtonArea_SmartHandle, bool (), Rapicorn::Signals::CollectorUntil0<bool> > ButtonArea_SmartHandle_Signal_check_activate;
+typedef Rapicorn::Signals::Signal<ButtonArea_SmartHandle, void ()> ButtonArea_SmartHandle_Signal_activate;
+ButtonArea_SmartHandle::ButtonArea_SmartHandle () :
+  check_activate (*(ButtonArea_SmartHandle_Signal_check_activate*) NULL),
+  activate (*(ButtonArea_SmartHandle_Signal_activate*) NULL)
 {}
 ButtonArea_SmartHandle::ButtonArea_SmartHandle (Plic::FieldReader &fbr) :
-  Plic::SmartHandle (fbr)
+  Plic::SmartHandle (fbr),
+  check_activate (*(ButtonArea_SmartHandle_Signal_check_activate*) NULL),
+  activate (*(ButtonArea_SmartHandle_Signal_activate*) NULL)
 {}
 
 PureMethods_SmartHandle::PureMethods_SmartHandle ()
