@@ -483,7 +483,6 @@ public:
 };
 
 class I_PureMethods_Interface;
-class PureMethods_SmartHandle;
 
 class I_PureMethods_Interface : public virtual Plic::SimpleServer {
 protected:

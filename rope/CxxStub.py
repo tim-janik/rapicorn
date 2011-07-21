@@ -57,7 +57,6 @@ def reindent (prefix, lines):
 I_prefix_postfix = ('', '_Interface')
 
 class G4CLIENT: pass    # generate client side classes (smart handles)
-class C4OLDHANDLE: pass # generate deprecated smart handle variants w/o methods
 class G4SERVER: pass    # generate server side classes (interfaces)
 
 class Generator:
@@ -107,7 +106,7 @@ class Generator:
     mode = mode or self.gen_mode
     if mode == G4SERVER:
       return self.C4server (type_node)
-    else: # G4CLIENT or C4OLDHANDLE
+    else: # G4CLIENT
       return self.C4client (type_node)
   def R (self, type_node):                              # construct Return type
     tname = self.C (type_node)
@@ -597,8 +596,7 @@ class Generator:
         reduced = [ p ] + reduced
     return reduced
   def generate_method_decl (self, functype, pad):
-    s, comment = '', self.gen_mode == C4OLDHANDLE
-    s += '  // ' if comment else '  '
+    s = '  '
     if self.gen_mode == G4SERVER:
       s += 'virtual '
     s += self.F (self.R (functype.rtype))
@@ -608,13 +606,10 @@ class Generator:
     argindent = len (s)
     l = []
     for a in functype.args:
-      l += [ self.A ('' if comment else a[0], a[1], None if comment else a[2]) ]
-    if comment:
-      s += ', '.join (l)
-    else:
-      s += (',\n' + argindent * ' ').join (l)
+      l += [ self.A (a[0], a[1], a[2]) ]
+    s += (',\n' + argindent * ' ').join (l)
     s += ')'
-    if self.gen_mode == G4SERVER and functype.pure and not comment:
+    if self.gen_mode == G4SERVER and functype.pure:
       s += ' = 0'
     s += ';\n'
     return s
@@ -643,15 +638,11 @@ class Generator:
     s += ' {\n'
     # constructors
     s += 'protected:\n'
-    if self.gen_mode == C4OLDHANDLE:
-      s += '  ' + self.F ('inline %s*' % self._iface_base)
-      s += '_iface() const { return (%s*) _void_iface(); }\n' % self._iface_base
-      s += '  inline void _iface (%s *_iface) { _void_iface (_iface); }\n' % self._iface_base
     if self.gen_mode == G4SERVER:
       s += '  explicit ' + self.F ('') + '%s ();\n' % self.C (type_info) # ctor
       s += '  virtual ' + self.F ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info) # dtor
     s += 'public:\n'
-    if self.gen_mode in (G4CLIENT, C4OLDHANDLE):
+    if self.gen_mode == G4CLIENT:
       classH = self.H (type_info.name) # smart handle class name
       cl = l if l == [plic_smarthandle] else [plic_smarthandle] + l
       aliasfix = '__attribute__ ((noinline))' # work around bogus strict-aliasing warning in g++-4.4.5
@@ -660,10 +651,6 @@ class Generator:
       s += ' : ' + ' (fbr), '.join (cl) + ' (fbr) {}\n'
       #s += '  ' + self.F ('inline') + '%s (const %s &src)' % (classH, classH) # copy ctor
       #s += ' : ' + ' (src), '.join (cl) + ' (src) {}\n'
-    if self.gen_mode == C4OLDHANDLE:
-      ifacename = self.Iwrap (type_info.name)
-      s += '  inline %s (%s *iface) { _iface (iface); }\n' % (self.C (type_info), ifacename) # ctor
-      s += '  inline %s (%s &iface) { _iface (&iface); }\n' % (self.C (type_info), ifacename) # ctor
     # properties
     il = 0
     if type_info.fields:
@@ -684,12 +671,7 @@ class Generator:
     for m in type_info.methods:
       s += self.generate_method_decl (m, il)
     # specials (operators)
-    if self.gen_mode == C4OLDHANDLE:
-      ifn2 = (ifacename, ifacename)
-      s += '  inline %s& operator*  () const { return *dynamic_cast<%s*> (_iface()); }\n' % ifn2
-      s += '  inline %s* operator-> () const { return dynamic_cast<%s*> (_iface()); }\n' % ifn2
-      s += '  inline operator  %s&  () const { return operator*(); }\n' % ifacename
-    if self.gen_mode in (G4CLIENT, C4OLDHANDLE):
+    if self.gen_mode == G4CLIENT:
       s += '  ' + self.F ('inline', -9)
       s += 'operator _UnspecifiedBool () const ' # return non-NULL pointer to member on true
       s += '{ return _is_null() ? NULL : _unspecified_bool_true(); }\n' # avoids auto-bool conversions on: float (*this)
@@ -848,8 +830,6 @@ class Generator:
           s += self.open_namespace (tp) + '\n'
           if self.gen_serverhh:
             s += 'class %s;\n' % self.C (tp)    # G4SERVER
-            self.gen_mode = C4OLDHANDLE
-            s += 'class %s;\n' % self.C (tp)    # C4OLDHANDLE
             self.gen_mode = G4SERVER
           elif self.gen_clienthh:
             s += 'class %s;\n' % self.C (tp)    # G4CLIENT
