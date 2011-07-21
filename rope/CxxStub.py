@@ -215,7 +215,7 @@ class Generator:
     if 1: # hasret
       rarg = ('retval', ftype)
       s += '  Plic::FieldReader frr (*fr);\n'
-      s += '  frr.skip(); // FIXME: check fr msgid\n' # FIXME
+      s += '  frr.skip_msgid(); // FIXME: check msgid\n'
       # FIXME: check return error and return type
       if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
         s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
@@ -399,7 +399,7 @@ class Generator:
     if hasret:
       rarg = ('retval', mtype.rtype)
       s += '  Plic::FieldReader frr (*fr);\n'
-      s += '  frr.skip(); // FIXME: check fr msgid\n' # FIXME
+      s += '  frr.skip_msgid(); // FIXME: check msgid\n'
       # FIXME: check return error and return type
       if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
         s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
