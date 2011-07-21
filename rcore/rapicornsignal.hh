@@ -422,17 +422,19 @@ typedef Slot0<bool, void> BoolSlot;
 
 /* --- predefined signals --- */
 template<class Emitter>
-struct SignalFinalize : Signal0 <Emitter, void, ScopeReferenceFinalizationMark> {
-  typedef Signal0<Emitter, void, ScopeReferenceFinalizationMark> Signal0Base;
-  explicit SignalFinalize (Emitter &emitter)                             : Signal0Base (emitter) {}
-  explicit SignalFinalize (Emitter &emitter, void (Emitter::*method) ()) : Signal0Base (emitter, method) {}
+class SignalFinalize : public Signal0 <Emitter, void, ScopeReferenceFinalizationMark> {
+  typedef Signal0 <Emitter, void, ScopeReferenceFinalizationMark> SignalVariant;
+public:
+  explicit SignalFinalize (Emitter &emitter)                             : SignalVariant (emitter) {}
+  explicit SignalFinalize (Emitter &emitter, void (Emitter::*method) ()) : SignalVariant (emitter, method) {}
 };
 
 template<class Emitter>
-struct SignalVoid : Signal0 <Emitter, void> {
-  typedef Signal0<Emitter, void> Signal0Base;
-  explicit SignalVoid (Emitter &emitter)                                 : Signal0Base (emitter) {}
-  explicit SignalVoid (Emitter &emitter, void (Emitter::*method) (void)) : Signal0Base (emitter, method) {}
+class SignalVoid : public Signal0 <Emitter, void> {
+  typedef Signal0 <Emitter, void> SignalVariant;
+public:
+  explicit SignalVoid (Emitter &emitter)                                 : SignalVariant (emitter) {}
+  explicit SignalVoid (Emitter &emitter, void (Emitter::*method) (void)) : SignalVariant (emitter, method) {}
 };
 
 } // Signals

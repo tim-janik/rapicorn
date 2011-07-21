@@ -1,19 +1,4 @@
-/* RapicornSignal
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 
 /* this file is used to generate rapicornsignalvariants.hh by mksignals.sh.
  * therein, certain phrases like "typename A1, typename A2, typename A3" are
@@ -21,7 +6,7 @@
  * involving the signal argument count match those from mksignals.sh.
  */
 
-/* --- Emission --- */
+// === Emission ===
 template<class Emitter, typename R0, typename A1, typename A2, typename A3>
 struct Emission3 : public EmissionBase {
   typedef Trampoline3<R0, A1, A2, A3>           Trampoline;
@@ -81,7 +66,7 @@ struct Emission3 <Emitter, void, A1, A2, A3> : public EmissionBase {
   }
 };
 
-/* --- SignalEmittable3 --- */
+// === SignalEmittable3 ===
 template<class Emitter, typename R0, typename A1, typename A2, typename A3, class Collector, class Ancestor>
 struct SignalEmittable3 : public Ancestor {
   typedef Emission3 <Emitter, R0, A1, A2, A3> Emission;
@@ -104,8 +89,7 @@ private:
   Emitter *m_emitter;
 };
 
-/* --- Signal3 --- */
-/* Signal* */
+// === Signal3 ===
 template<class Emitter, typename R0, typename A1, typename A2, typename A3,
          class Collector = CollectorDefault<R0>, class Ancestor  = SignalBase>
 struct Signal3 : SignalEmittable3<Emitter, R0, A1, A2, A3, Collector, Ancestor>
@@ -138,17 +122,14 @@ struct Signal3 : SignalEmittable3<Emitter, R0, A1, A2, A3, Collector, Ancestor>
   Signal3&    operator-= (R0 (*callback) (Emitter&, A1, A2, A3))  { disconnect (slot (callback)); return *this; }
 };
 
-/* --- Signal<> --- */
+// === Signal<> ===
 template<class Emitter, typename R0, typename A1, typename A2, typename A3, class Collector, class Ancestor>
-struct Signal<Emitter, R0 (A1, A2, A3), Collector, Ancestor> : Signal3<Emitter, R0, A1, A2, A3, Collector, Ancestor>
+class Signal<Emitter, R0 (A1, A2, A3), Collector, Ancestor> : public Signal3<Emitter, R0, A1, A2, A3, Collector, Ancestor>
 {
-  typedef Signal3<Emitter, R0, A1, A2, A3, Collector, Ancestor> Signal3Base;
-  explicit Signal (Emitter &emitter) :
-    Signal3Base (emitter)
-    {}
-  explicit Signal (Emitter &emitter, R0 (Emitter::*method) (A1, A2, A3)) :
-    Signal3Base (emitter, method)
-    {}
+  typedef Signal3<Emitter, R0, A1, A2, A3, Collector, Ancestor> SignalVariant;
+public:
+  explicit Signal (Emitter &emitter) : SignalVariant (emitter) {}
+  explicit Signal (Emitter &emitter, R0 (Emitter::*method) (A1, A2, A3)) : SignalVariant (emitter, method) {}
 };
 
 // === SignalProxy ===
