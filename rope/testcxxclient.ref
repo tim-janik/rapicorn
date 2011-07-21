@@ -2,6 +2,8 @@
 
 // --- ClientHH Boilerplate ---
 #include <rcore/plicutils.hh>
+#include <rapicorn-core.hh> // for rcore/rapicornsignal.hh
+using Rapicorn::Signals::slot;
 
 // --- ClientCC/ServerCC Boilerplate ---
 #include <string>
@@ -132,8 +134,8 @@ enum ExtensiveEnum {
 class FirstInterface_SmartHandle : public virtual Plic::SmartHandle {
 protected:
 public:
-  inline                  FirstInterface_SmartHandle () {}
-  explicit                FirstInterface_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline)) : Plic::SmartHandle (fbr) {}
+  explicit                FirstInterface_SmartHandle ();
+  explicit                FirstInterface_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline));
   void                    void_func                  ();
   inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
@@ -290,9 +292,11 @@ namespace InterfaceTests {
 
 class UIWidgetArea_SmartHandle : public virtual Plic::SmartHandle {
 protected:
+  typedef Rapicorn::Signals::SignalProxy<UIWidgetArea_SmartHandle, void ()> Signal_void_signal;
+  typedef Rapicorn::Signals::SignalProxy<UIWidgetArea_SmartHandle, double (UIWidgetArea_SmartHandle &ba1, int someint)> Signal_sample_signal;
 public:
-  inline                  UIWidgetArea_SmartHandle () {}
-  explicit                UIWidgetArea_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline)) : Plic::SmartHandle (fbr) {}
+  explicit                UIWidgetArea_SmartHandle ();
+  explicit                UIWidgetArea_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline));
   double                  dummy    () const;
   void                    dummy    (double);
   std::string             on_click () const;
@@ -320,32 +324,32 @@ public:
 class Parent_SmartHandle : public virtual Plic::SmartHandle {
 protected:
 public:
-  inline                  Parent_SmartHandle () {}
-  explicit                Parent_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline)) : Plic::SmartHandle (fbr) {}
+  explicit                Parent_SmartHandle ();
+  explicit                Parent_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline));
   inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class Child_SmartHandle : public Parent_SmartHandle {
 protected:
 public:
-  inline                  Child_SmartHandle () {}
-  explicit                Child_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline)) : Plic::SmartHandle (fbr), Parent_SmartHandle (fbr) {}
+  explicit                Child_SmartHandle ();
+  explicit                Child_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline));
   inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class Descendant_SmartHandle : public Child_SmartHandle {
 protected:
 public:
-  inline                  Descendant_SmartHandle () {}
-  explicit                Descendant_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline)) : Plic::SmartHandle (fbr), Child_SmartHandle (fbr) {}
+  explicit                Descendant_SmartHandle ();
+  explicit                Descendant_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline));
   inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class GrandChild_SmartHandle : public Descendant_SmartHandle {
 protected:
 public:
-  inline                  GrandChild_SmartHandle () {}
-  explicit                GrandChild_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline)) : Plic::SmartHandle (fbr), Descendant_SmartHandle (fbr) {}
+  explicit                GrandChild_SmartHandle ();
+  explicit                GrandChild_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline));
   inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
@@ -370,8 +374,8 @@ void operator>> (Plic::FieldReader&, QuickSequence_Handle&);
 class QuickIface_SmartHandle : public virtual Plic::SmartHandle {
 protected:
 public:
-  inline                  QuickIface_SmartHandle () {}
-  explicit                QuickIface_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline)) : Plic::SmartHandle (fbr) {}
+  explicit                QuickIface_SmartHandle ();
+  explicit                QuickIface_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline));
   void                    simple_function        (int i = 9);
   inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
@@ -379,8 +383,8 @@ public:
 class MethodTestInterface_SmartHandle : public virtual Plic::SmartHandle {
 protected:
 public:
-  inline                  MethodTestInterface_SmartHandle () {}
-  explicit                MethodTestInterface_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline)) : Plic::SmartHandle (fbr) {}
+  explicit                MethodTestInterface_SmartHandle ();
+  explicit                MethodTestInterface_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline));
   void                    method_with_void                ();
   bool                    method_with_bools               (bool input,
                                                            bool optval = 0);
@@ -405,17 +409,37 @@ public:
 
 class SignalTestInterface_SmartHandle : public virtual Plic::SmartHandle {
 protected:
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void ()> Signal_void_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, bool ()> Signal_bool_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, int ()> Signal_int_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, double ()> Signal_float_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, std::string ()> Signal_string_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, QuickEnum ()> Signal_enum_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, QuickRecord_Handle ()> Signal_record_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, QuickSequence_Handle ()> Signal_sequence_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, GrandChild_SmartHandle ()> Signal_interface_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, SignalTestInterface_SmartHandle ()> Signal_self_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void ()> Signal_void_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (bool b)> Signal_bool_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (int i)> Signal_int_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (double f)> Signal_float_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (const std::string &s)> Signal_string_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (QuickEnum e)> Signal_enum_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (const QuickRecord_Handle &r)> Signal_record_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (const QuickSequence_Handle &s)> Signal_sequence_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (GrandChild_SmartHandle &i)> Signal_interface_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (SignalTestInterface_SmartHandle &self_)> Signal_self_args;
 public:
-  inline                  SignalTestInterface_SmartHandle () {}
-  explicit                SignalTestInterface_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline)) : Plic::SmartHandle (fbr) {}
+  explicit                SignalTestInterface_SmartHandle ();
+  explicit                SignalTestInterface_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline));
   inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class PropertyTester_SmartHandle : public virtual Plic::SmartHandle {
 protected:
 public:
-  inline                  PropertyTester_SmartHandle () {}
-  explicit                PropertyTester_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline)) : Plic::SmartHandle (fbr) {}
+  explicit                PropertyTester_SmartHandle ();
+  explicit                PropertyTester_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline));
   bool                    bool_prop      () const;
   void                    bool_prop      (bool);
   int                     int_prop       () const;
@@ -450,9 +474,11 @@ enum ClickType {
 
 class ButtonArea_SmartHandle : public virtual Plic::SmartHandle {
 protected:
+  typedef Rapicorn::Signals::SignalProxy<ButtonArea_SmartHandle, bool ()> Signal_check_activate;
+  typedef Rapicorn::Signals::SignalProxy<ButtonArea_SmartHandle, void ()> Signal_activate;
 public:
-  inline                  ButtonArea_SmartHandle () {}
-  explicit                ButtonArea_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline)) : Plic::SmartHandle (fbr) {}
+  explicit                ButtonArea_SmartHandle ();
+  explicit                ButtonArea_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline));
   std::string             on_click   () const;
   void                    on_click   (const std::string&);
   std::string             on_click2  () const;
@@ -469,8 +495,8 @@ class PureMethods_SmartHandle;
 class PureMethods_SmartHandle : public virtual Plic::SmartHandle {
 protected:
 public:
-  inline                  PureMethods_SmartHandle () {}
-  explicit                PureMethods_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline)) : Plic::SmartHandle (fbr) {}
+  explicit                PureMethods_SmartHandle ();
+  explicit                PureMethods_SmartHandle (Plic::FieldReader &fbr) __attribute__ ((noinline));
   int                     pure_method             (double f);
   inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
@@ -479,6 +505,12 @@ public:
 // --- Implementations ---
 
 namespace MandatoryNamespace {
+
+FirstInterface_SmartHandle::FirstInterface_SmartHandle ()
+{}
+FirstInterface_SmartHandle::FirstInterface_SmartHandle (Plic::FieldReader &fbr) :
+  Plic::SmartHandle (fbr)
+{}
 void
 FirstInterface_SmartHandle::void_func ()
 {
@@ -526,7 +558,6 @@ operator>> (Plic::FieldReader &src, XFooRecord_Handle &self)
   self.iface2 = FirstInterface_SmartHandle (fbr);
   self.iface3 = FirstInterface_SmartHandle (fbr);
 }
-
 void
 operator<< (Plic::FieldBuffer &dst, const XFooSequence_Handle &self)
 {
@@ -546,7 +577,6 @@ operator>> (Plic::FieldReader &src, XFooSequence_Handle &self)
     self.push_back (fbr.pop_int64());
   }
 }
-
 void
 operator<< (Plic::FieldBuffer &dst, const IntSequence_Handle &self)
 {
@@ -566,7 +596,6 @@ operator>> (Plic::FieldReader &src, IntSequence_Handle &self)
     self.push_back (fbr.pop_int64());
   }
 }
-
 void
 operator<< (Plic::FieldBuffer &dst, const FloatSequence_Handle &self)
 {
@@ -586,7 +615,6 @@ operator>> (Plic::FieldReader &src, FloatSequence_Handle &self)
     self.push_back (fbr.pop_double());
   }
 }
-
 void
 operator<< (Plic::FieldBuffer &dst, const StringSequence_Handle &self)
 {
@@ -606,7 +634,6 @@ operator>> (Plic::FieldReader &src, StringSequence_Handle &self)
     self.push_back (fbr.pop_string());
   }
 }
-
 void
 operator<< (Plic::FieldBuffer &dst, const ExtensiveEnumSequence_Handle &self)
 {
@@ -626,7 +653,6 @@ operator>> (Plic::FieldReader &src, ExtensiveEnumSequence_Handle &self)
     self.push_back (ExtensiveEnum (fbr.pop_evalue()));
   }
 }
-
 void
 operator<< (Plic::FieldBuffer &dst, const RecordSequence_Handle &self)
 {
@@ -646,7 +672,6 @@ operator>> (Plic::FieldReader &src, RecordSequence_Handle &self)
     fbr >> self[k];
   }
 }
-
 void
 operator<< (Plic::FieldBuffer &dst, const SequenceSequence_Handle &self)
 {
@@ -666,7 +691,6 @@ operator>> (Plic::FieldReader &src, SequenceSequence_Handle &self)
     fbr >> self[k];
   }
 }
-
 void
 operator<< (Plic::FieldBuffer &dst, const InterfaceSequence_Handle &self)
 {
@@ -686,7 +710,6 @@ operator>> (Plic::FieldReader &src, InterfaceSequence_Handle &self)
     self.push_back (FirstInterface_SmartHandle (fbr));
   }
 }
-
 void
 operator<< (Plic::FieldBuffer &dst, const NestedTypesRec_Handle &self)
 {
@@ -702,7 +725,6 @@ operator>> (Plic::FieldReader &src, NestedTypesRec_Handle &self)
   fbr >> self.rec;
   fbr >> self.seq;
 }
-
 void
 operator<< (Plic::FieldBuffer &dst, const NestedTypesSeq_Handle &self)
 {
@@ -722,7 +744,6 @@ operator>> (Plic::FieldReader &src, NestedTypesSeq_Handle &self)
     fbr >> self[k];
   }
 }
-
 void
 operator<< (Plic::FieldBuffer &dst, const NewRecord_Handle &self)
 {
@@ -743,7 +764,6 @@ operator>> (Plic::FieldReader &src, NewRecord_Handle &self)
   fbr >> self.ntr;
 }
 
-
 namespace Inner {
 void
 operator<< (Plic::FieldBuffer &dst, const InnerRecord_Handle &self)
@@ -762,7 +782,6 @@ operator>> (Plic::FieldReader &src, InnerRecord_Handle &self)
   self.y = fbr.pop_int64();
   fbr >> self.rec;
 }
-
 } // Inner
 void
 operator<< (Plic::FieldBuffer &dst, const Refer2Inner_Handle &self)
@@ -777,7 +796,6 @@ operator>> (Plic::FieldReader &src, Refer2Inner_Handle &self)
   if (fbr.remaining() < 1) return;
   fbr >> self.r;
 }
-
 } // MandatoryNamespace
 
 namespace OtherNamespace {
@@ -800,7 +818,6 @@ operator>> (Plic::FieldReader &src, SomeRecord_Handle &self)
   fbr >> self.r3;
   fbr >> self.r4;
 }
-
 } // OtherNamespace
 
 namespace InterfaceTests {
@@ -850,6 +867,12 @@ UIWidgetArea_SmartHandle::on_click (const std::string &value)
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
+
+UIWidgetArea_SmartHandle::UIWidgetArea_SmartHandle ()
+{}
+UIWidgetArea_SmartHandle::UIWidgetArea_SmartHandle (Plic::FieldReader &fbr) :
+  Plic::SmartHandle (fbr)
+{}
 double
 UIWidgetArea_SmartHandle::simple_method ()
 {
@@ -991,6 +1014,30 @@ UIWidgetArea_SmartHandle::on_click2in (const std::string &arg_command)
   fb.add_string (arg_command);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
 }
+
+Parent_SmartHandle::Parent_SmartHandle ()
+{}
+Parent_SmartHandle::Parent_SmartHandle (Plic::FieldReader &fbr) :
+  Plic::SmartHandle (fbr)
+{}
+
+Child_SmartHandle::Child_SmartHandle ()
+{}
+Child_SmartHandle::Child_SmartHandle (Plic::FieldReader &fbr) :
+  Plic::SmartHandle (fbr), Parent_SmartHandle (fbr)
+{}
+
+Descendant_SmartHandle::Descendant_SmartHandle ()
+{}
+Descendant_SmartHandle::Descendant_SmartHandle (Plic::FieldReader &fbr) :
+  Plic::SmartHandle (fbr), Child_SmartHandle (fbr)
+{}
+
+GrandChild_SmartHandle::GrandChild_SmartHandle ()
+{}
+GrandChild_SmartHandle::GrandChild_SmartHandle (Plic::FieldReader &fbr) :
+  Plic::SmartHandle (fbr), Descendant_SmartHandle (fbr)
+{}
 void
 operator<< (Plic::FieldBuffer &dst, const QuickRecord_Handle &self)
 {
@@ -1006,7 +1053,6 @@ operator>> (Plic::FieldReader &src, QuickRecord_Handle &self)
   self.int1 = fbr.pop_int64();
   self.int2 = fbr.pop_int64();
 }
-
 void
 operator<< (Plic::FieldBuffer &dst, const QuickSequence_Handle &self)
 {
@@ -1027,6 +1073,11 @@ operator>> (Plic::FieldReader &src, QuickSequence_Handle &self)
   }
 }
 
+QuickIface_SmartHandle::QuickIface_SmartHandle ()
+{}
+QuickIface_SmartHandle::QuickIface_SmartHandle (Plic::FieldReader &fbr) :
+  Plic::SmartHandle (fbr)
+{}
 void
 QuickIface_SmartHandle::simple_function (int arg_i)
 {
@@ -1036,6 +1087,12 @@ QuickIface_SmartHandle::simple_function (int arg_i)
   fb.add_int64 (arg_i);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
 }
+
+MethodTestInterface_SmartHandle::MethodTestInterface_SmartHandle ()
+{}
+MethodTestInterface_SmartHandle::MethodTestInterface_SmartHandle (Plic::FieldReader &fbr) :
+  Plic::SmartHandle (fbr)
+{}
 void
 MethodTestInterface_SmartHandle::method_with_void ()
 {
@@ -1190,6 +1247,12 @@ MethodTestInterface_SmartHandle::method_with_quickiface (QuickIface_SmartHandle 
   delete fr;
   return retval;
 }
+
+SignalTestInterface_SmartHandle::SignalTestInterface_SmartHandle ()
+{}
+SignalTestInterface_SmartHandle::SignalTestInterface_SmartHandle (Plic::FieldReader &fbr) :
+  Plic::SmartHandle (fbr)
+{}
 bool
 PropertyTester_SmartHandle::bool_prop () const
 {
@@ -1399,6 +1462,12 @@ PropertyTester_SmartHandle::self_prop (PropertyTester_SmartHandle value)
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
+
+PropertyTester_SmartHandle::PropertyTester_SmartHandle ()
+{}
+PropertyTester_SmartHandle::PropertyTester_SmartHandle (Plic::FieldReader &fbr) :
+  Plic::SmartHandle (fbr)
+{}
 } // InterfaceTests
 
 namespace RapicornPlicTest {
@@ -1494,6 +1563,18 @@ ButtonArea_SmartHandle::click_type (ClickType value)
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
+
+ButtonArea_SmartHandle::ButtonArea_SmartHandle ()
+{}
+ButtonArea_SmartHandle::ButtonArea_SmartHandle (Plic::FieldReader &fbr) :
+  Plic::SmartHandle (fbr)
+{}
+
+PureMethods_SmartHandle::PureMethods_SmartHandle ()
+{}
+PureMethods_SmartHandle::PureMethods_SmartHandle (Plic::FieldReader &fbr) :
+  Plic::SmartHandle (fbr)
+{}
 int
 PureMethods_SmartHandle::pure_method (double arg_f)
 {

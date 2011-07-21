@@ -8,6 +8,8 @@ import Decls, GenUtils, re
 clienthh_boilerplate = r"""
 // --- ClientHH Boilerplate ---
 #include <rcore/plicutils.hh>
+#include <rapicorn-core.hh> // for rcore/rapicornsignal.hh
+using Rapicorn::Signals::slot;
 """
 
 serverhh_boilerplate = r"""
@@ -240,23 +242,6 @@ class Generator:
     s += '  if (fr) delete fr;\n' # FIXME: check return error
     s += '}\n'
     return s
-  def generate_signal_name (self, functype, ctype):
-    return 'Signal_%s' % functype.name
-  def generate_sigdef (self, functype, ctype):
-    s = ''
-    signame = self.generate_signal_name (functype, ctype)
-    cpp_rtype = self.R (functype.rtype)
-    s += '  typedef Rapicorn::Signals::Signal<%s, %s (' % (self.C (ctype), cpp_rtype)
-    l = []
-    for a in functype.args:
-      l += [ self.A (a[0], a[1]) ]
-    s += ', '.join (l)
-    s += ')'
-    if functype.rtype.collector != 'void':
-      s += ', Rapicorn::Signals::Collector' + functype.rtype.collector.capitalize()
-      s += '<' + cpp_rtype + '> '
-    s += '> ' + signame + ';\n'
-    return s
   def mkzero (self, type):
     if type.storage == Decls.STRING:
       return '""'
@@ -377,6 +362,16 @@ class Generator:
       s += '    self.push_back (fbr.pop_%s());\n' % self.accessor_name (el[1].storage)
     s += '  }\n'
     s += '}\n'
+    return s
+  def generate_client_class_methods (self, class_info):
+    s, classH = '\n', self.H (class_info.name) # smart handle class name
+    classH2 = (classH, classH)
+    l, heritage, cl = self.interface_class_inheritance (class_info)
+    s += '%s::%s ()\n' % classH2 # ctor
+    s += '{}\n'
+    s += '%s::%s (Plic::FieldReader &fbr) :\n' % classH2 # ctor
+    s += '  ' + ' (fbr), '.join (cl) + ' (fbr)\n'
+    s += '{}\n'
     return s
   def generate_client_method_stub (self, class_info, mtype):
     s = ''
@@ -504,6 +499,39 @@ class Generator:
     # done
     s += '}\n'
     return s
+  def generate_signal_typename (self, functype, ctype):
+    return 'Signal_%s' % functype.name
+  def generate_signal_proxy_typedef (self, functype, ctype):
+    s = ''
+    signame = self.generate_signal_typename (functype, ctype)
+    cpp_rtype = self.R (functype.rtype)
+    s += '  typedef Rapicorn::Signals::SignalProxy<%s, %s (' % (self.C (ctype), cpp_rtype)
+    l = []
+    for a in functype.args:
+      l += [ self.A (a[0], a[1]) ]
+    s += ', '.join (l)
+    s += ')'
+    s += '> ' + signame + ';\n'
+    return s
+  def generate_signal_proxy_var (self, functype, ctype):
+    signame = self.generate_signal_typename (functype, ctype)
+    s = '  ' + self.F (signame) + functype.name + ';\n'
+    return s
+  def generate_signal_typedef (self, functype, ctype):
+    s = ''
+    signame = self.generate_signal_typename (functype, ctype)
+    cpp_rtype = self.R (functype.rtype)
+    s += '  typedef Rapicorn::Signals::Signal<%s, %s (' % (self.C (ctype), cpp_rtype)
+    l = []
+    for a in functype.args:
+      l += [ self.A (a[0], a[1]) ]
+    s += ', '.join (l)
+    s += ')'
+    if functype.rtype.collector != 'void':
+      s += ', Rapicorn::Signals::Collector' + functype.rtype.collector.capitalize()
+      s += '<' + cpp_rtype + '> '
+    s += '> ' + signame + ';\n'
+    return s
   def generate_server_signal_dispatcher (self, class_info, stype, reglines):
     assert self.gen_mode == G4SERVER
     s = ''
@@ -613,17 +641,13 @@ class Generator:
       s += ' = 0'
     s += ';\n'
     return s
-  def generate_interface_class (self, type_info):
-    s = '\n'
+  def interface_class_inheritance (self, type_info):
+    plic_smarthandle = 'Plic::SmartHandle'
     l = []
-    # declare
-    s += 'class %s' % self.C (type_info)
-    # inherit
     for pr in type_info.prerequisites:
       l += [ pr ]
     l = self.inherit_reduce (l)
     l = [self.C (pr) for pr in l] # types -> names
-    plic_smarthandle = 'Plic::SmartHandle'
     if   self.gen_mode == G4SERVER and l:
       heritage = 'public virtual'
     elif self.gen_mode == G4SERVER and not l:
@@ -634,6 +658,17 @@ class Generator:
     elif self.gen_mode == G4CLIENT and not l:
       l = [plic_smarthandle]
       heritage = 'public virtual'
+    if self.gen_mode == G4CLIENT:
+      cl = l if l == [plic_smarthandle] else [plic_smarthandle] + l
+    else:
+      cl = []
+    return (l, heritage, cl) # prerequisite list, heritage type, constructor arg list)
+  def generate_interface_class (self, type_info):
+    s = '\n'
+    # declare
+    s += 'class %s' % self.C (type_info)
+    # inherit
+    l, heritage, cl = self.interface_class_inheritance (type_info)
     s += ' : ' + heritage + ' %s' % (', ' + heritage + ' ').join (l)
     s += ' {\n'
     # constructors
@@ -641,14 +676,15 @@ class Generator:
     if self.gen_mode == G4SERVER:
       s += '  explicit ' + self.F ('') + '%s ();\n' % self.C (type_info) # ctor
       s += '  virtual ' + self.F ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info) # dtor
+    else: # G4CLIENT
+      for sg in type_info.signals:
+        s += self.generate_signal_proxy_typedef (sg, type_info)
     s += 'public:\n'
     if self.gen_mode == G4CLIENT:
       classH = self.H (type_info.name) # smart handle class name
-      cl = l if l == [plic_smarthandle] else [plic_smarthandle] + l
       aliasfix = '__attribute__ ((noinline))' # work around bogus strict-aliasing warning in g++-4.4.5
-      s += '  ' + self.F ('inline')   + '%s () {}\n' % classH
-      s += '  ' + self.F ('explicit') + '%s (Plic::FieldReader &fbr) %s' % (classH, aliasfix) # ctor
-      s += ' : ' + ' (fbr), '.join (cl) + ' (fbr) {}\n'
+      s += '  ' + self.F ('explicit') + '%s ();\n' % classH # ctor
+      s += '  ' + self.F ('explicit') + '%s (Plic::FieldReader &fbr) %s;\n' % (classH, aliasfix) # ctor
       #s += '  ' + self.F ('inline') + '%s (const %s &src)' % (classH, classH) # copy ctor
       #s += ' : ' + ' (src), '.join (cl) + ' (src) {}\n'
     # properties
@@ -660,9 +696,12 @@ class Generator:
     # signals
     if self.gen_mode == G4SERVER:
       for sg in type_info.signals:
-        s += self.generate_sigdef (sg, type_info)
+        s += self.generate_signal_typedef (sg, type_info)
       for sg in type_info.signals:
-        s += '  ' + self.generate_signal_name (sg, type_info) + ' sig_%s;\n' % sg.name
+        s += '  ' + self.generate_signal_typename (sg, type_info) + ' sig_%s;\n' % sg.name
+    else: # G4CLIENT
+      for sg in type_info.signals:
+        pass # s += self.generate_signal_proxy_var (sg, type_info)
     # methods
     il = 0
     if type_info.methods:
@@ -693,7 +732,8 @@ class Generator:
     s += 'typedef %s %s;\n' % (self.C (type_info), self.type2cpp (type_info))
     return s
   def generate_interface_impl (self, type_info):
-    s = ''
+    assert self.gen_mode == G4SERVER
+    s = '\n'
     tname = self.C (type_info)
     s += '%s::%s ()' % (tname, tname) # ctor
     l = [] # constructor agument list
@@ -868,10 +908,10 @@ class Generator:
           continue
         if tp.storage == Decls.RECORD:
           s += self.open_namespace (tp)
-          s += self.generate_record_impl (tp) + '\n'
+          s += self.generate_record_impl (tp)
         elif tp.storage == Decls.SEQUENCE:
           s += self.open_namespace (tp)
-          s += self.generate_sequence_impl (tp) + '\n'
+          s += self.generate_sequence_impl (tp)
         elif tp.storage == Decls.INTERFACE:
           if self.gen_servercc:
             if tp.name in self.skip_classes:
@@ -879,11 +919,14 @@ class Generator:
               s += self.insertion_text ('filtered_class_cc:' + tp.name)
             else:
               s += self.open_namespace (tp)
-              s += self.generate_interface_impl (tp) + '\n'
+              s += self.generate_interface_impl (tp)
           if self.gen_clientcc and tp.fields:
             s += self.open_namespace (tp)
             for fl in tp.fields:
               s += self.generate_client_property_stub (tp, fl[0], fl[1])
+          if self.gen_clientcc:
+            s += self.open_namespace (tp)
+            s += self.generate_client_class_methods (tp)
           if self.gen_clientcc and tp.methods:
             s += self.open_namespace (tp)
             for m in tp.methods:
