@@ -150,3 +150,25 @@ struct Signal<Emitter, R0 (A1, A2, A3), Collector, Ancestor> : Signal3<Emitter, 
     Signal3Base (emitter, method)
     {}
 };
+
+// === SignalProxy ===
+template<class Emitter, typename R0, typename A1, typename A2, typename A3>
+struct SignalProxy<Emitter, R0 (A1, A2, A3)> : SignalProxyBase {
+  typedef Slot3 <R0, A1, A2, A3>           Slot;
+  typedef Slot4 <R0, Emitter&, A1, A2, A3> SlotE;
+  inline ConId connect    (const Slot  &s) { return connect_link (s.get_trampoline_link()); }
+  inline ConId connect    (const SlotE &s) { return connect_link (s.get_trampoline_link(), true); }
+  inline uint  disconnect (const Slot  &s) { return disconnect_equal_link (*s.get_trampoline_link()); }
+  inline uint  disconnect (const SlotE &s) { return disconnect_equal_link (*s.get_trampoline_link(), true); }
+  inline uint  disconnect (ConId    conid) { return this->disconnect_link_id (conid); }
+  SignalProxy& operator+= (const Slot  &s) { connect (s); return *this; }
+  SignalProxy& operator+= (const SlotE &s) { connect (s); return *this; }
+  SignalProxy& operator+= (R0 (*callback) (A1, A2, A3))           { connect (slot (callback)); return *this; }
+  SignalProxy& operator+= (R0 (*callback) (Emitter&, A1, A2, A3)) { connect (slot (callback)); return *this; }
+  SignalProxy& operator-= (const Slot  &s)                        { disconnect (s); return *this; }
+  SignalProxy& operator-= (const SlotE &s)                        { disconnect (s); return *this; }
+  SignalProxy& operator-= (R0 (*callback) (A1, A2, A3))           { disconnect (slot (callback)); return *this; }
+  SignalProxy& operator-= (R0 (*callback) (Emitter&, A1, A2, A3)) { disconnect (slot (callback)); return *this; }
+  template<class Collector, class Ancestor>
+  SignalProxy (Signal<Emitter, R0 (A1, A2, A3), Collector, Ancestor> &sig) : SignalProxyBase (sig) {}
+};

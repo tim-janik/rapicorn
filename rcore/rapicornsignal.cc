@@ -130,5 +130,36 @@ SignalBase::EmbeddedLink::delete_this ()
   /* not deleting, because this structure is always embedded as SignalBase::start */
 }
 
+// === SignalProxyBase ===
+SignalProxyBase::SignalProxyBase (SignalBase &signal) :
+  m_signal (&signal)
+{
+  return_if_fail (NULL != &signal);
+}
+
+ConId
+SignalProxyBase::connect_link (TrampolineLink *link, bool with_emitter)
+{
+  return m_signal ? m_signal->connect_link (link, with_emitter) : 0;
+}
+
+uint
+SignalProxyBase::disconnect_equal_link (const TrampolineLink &link, bool with_emitter)
+{
+  return m_signal ? m_signal->disconnect_equal_link (link, with_emitter) : 0;
+}
+
+uint
+SignalProxyBase::disconnect_link_id (ConId id)
+{
+  return m_signal ? m_signal->disconnect_link_id (id) : 0;
+}
+
+void
+SignalProxyBase::divorce ()
+{
+  m_signal = NULL;
+}
+
 } // Signals
 } // Rapicorn

@@ -455,52 +455,86 @@ struct TestConnectionCounter {
   void  ref()   { /* dummy for signal emission */ }
   void  unref() { /* dummy for signal emission */ }
   int   connection_count;
-  struct Counter : Signals::SignalBase {
+  struct Counter : Signals::SignalBase  // class to monitor connections to test_signal
+  {
     TestConnectionCounter *tcc;
     void         set_tcc (TestConnectionCounter &cc) { tcc = &cc; }
     virtual void connections_changed (bool hasconnections) { tcc->connection_count += hasconnections ? +1 : -1; }
   };
+  // signal declaration
   typedef Signal<TestConnectionCounter, int64 (float, char), CollectorDefault<float>, Counter> TestSignal;
   TestSignal   test_signal;
+  // signal connection proxy
+  typedef SignalProxy<TestConnectionCounter, int64 (float, char)> TestSignalProxy;
+  TestSignalProxy proxy1, proxy2;
+  /*ctro*/        TestConnectionCounter() :
+    connection_count (0), test_signal (*this), proxy1 (test_signal), proxy2 (test_signal)
+  {}
+  // signal handlers
   int64        dummy_handler1 (float f, char c) { return int (f) + c; }
   static int64 dummy_handler2 (float f, char c) { return int (f) * c; }
-  inline       TestConnectionCounter() : connection_count (0), test_signal (*this) {}
+  void
+  test_signal_connections()
+  {
+    TASSERT (connection_count == 0);
+
+    test_signal += slot (*this, &TestConnectionCounter::dummy_handler1);
+    TASSERT (connection_count == 1);
+
+    int64 result = test_signal.emit (2.1, 'a');
+    TASSERT (result == 2 + 'a');
+
+    test_signal += dummy_handler2;
+    TASSERT (connection_count == 1);
+
+    result = test_signal.emit (3.7, 'b');
+    TASSERT (result == 3 * 'b');
+
+    test_signal -= slot (*this, &TestConnectionCounter::dummy_handler1);
+    TASSERT (connection_count == 1);
+
+    result = test_signal.emit (1, '@');
+    TASSERT (result == '@');
+
+    test_signal -= dummy_handler2;
+    TASSERT (connection_count == 0);
+
+    result = test_signal.emit (0, 0);
+    TASSERT (result == 0);
+  }
+  void
+  test_proxy_connections()
+  {
+    TASSERT (connection_count == 0);
+    uint id = proxy1.connect (slot (*this, &TestConnectionCounter::dummy_handler1));
+    TASSERT (connection_count == 1);
+    test_signal += dummy_handler2;
+    TASSERT (connection_count == 1);
+
+    int64 result = test_signal.emit (5.5, 'p');
+    TASSERT (result == 5 * 'p'); // collector returns dummy_handler2's result
+
+    bool success = proxy2.disconnect (id);
+    TASSERT (success == true);
+    TASSERT (connection_count == 1);
+    proxy1 -= dummy_handler2;
+    TASSERT (connection_count == 0);
+    proxy1 += dummy_handler2;
+    TASSERT (connection_count == 1);
+
+    proxy1.divorce();
+    proxy1 -= dummy_handler2;   // ignored
+    TASSERT (connection_count == 1);
+    proxy2 -= dummy_handler2;
+    TASSERT (connection_count == 0);
+  }
   static void
   test_connection_counter ()
   {
     TestConnectionCounter tcc;
     tcc.test_signal.set_tcc (tcc);
-    TASSERT (tcc.connection_count == 0);
-
-    tcc.test_signal += slot (tcc, &TestConnectionCounter::dummy_handler1);
-    TASSERT (tcc.connection_count == 1);
-
-    int64 result = tcc.test_signal.emit (2.1, 'a');
-    TASSERT (result == 2 + 'a');
-
-    tcc.test_signal += dummy_handler2;
-    TASSERT (tcc.connection_count == 1);
-
-    result = tcc.test_signal.emit (3.7, 'b');
-    TASSERT (result == 3 * 'b');
-
-    tcc.test_signal -= slot (tcc, &TestConnectionCounter::dummy_handler1);
-    TASSERT (tcc.connection_count == 1);
-
-    result = tcc.test_signal.emit (1, '@');
-    TASSERT (result == '@');
-
-    tcc.test_signal -= dummy_handler2;
-    TASSERT (tcc.connection_count == 0);
-
-    result = tcc.test_signal.emit (0, 0);
-    TASSERT (result == 0);
-
-    uint id = tcc.test_signal.connect (slot (tcc, &TestConnectionCounter::dummy_handler1));
-    TASSERT (tcc.connection_count == 1);
-    bool success = tcc.test_signal.disconnect (id);
-    TASSERT (success == true);
-    TASSERT (tcc.connection_count == 0);
+    tcc.test_signal_connections();
+    tcc.test_proxy_connections();
   }
 };
 REGISTER_TEST ("Signals/Connection Counter", TestConnectionCounter::test_connection_counter);

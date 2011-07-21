@@ -59,6 +59,7 @@ public:
 
 /* --- SignalBase --- */
 class SignalBase : protected NonCopyable {
+  friend             class SignalProxyBase;
   class EmbeddedLink : public TrampolineLink {
     virtual bool           operator==            (const TrampolineLink &other) const;
     virtual void           delete_this           (); // NOP for embedded link
@@ -79,6 +80,19 @@ protected:
 public:
   virtual                 ~SignalBase            ();
   inline                   SignalBase            () { start.next = start.prev = &start; start.ref_sink(); }
+};
+
+// === SignalProxyBase ===
+class SignalProxyBase : protected NonCopyable {
+  SignalBase   *m_signal;
+protected:
+  ConId         connect_link          (TrampolineLink *link, bool with_emitter = false);
+  uint          disconnect_equal_link (const TrampolineLink &link, bool with_emitter = false);
+  uint          disconnect_link_id    (ConId                 id);
+  explicit      SignalProxyBase       (SignalBase &signal);
+  virtual      ~SignalProxyBase       () {}
+public:
+  void          divorce               ();
 };
 
 /* --- Signal Iterator --- */
@@ -379,11 +393,15 @@ struct Signature<R0 (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14
   typedef R0 result_type;
 };
 
-template< class Emitter,
+template <class Emitter,
           typename SignalSignature,
           class Collector = CollectorDefault<typename Signature<SignalSignature>::result_type>,
           class SignalAncestor = SignalBase
           > struct Signal;
+
+template <class Emitter,
+          typename SignalSignature
+          > struct SignalProxy;
 
 /* --- Casting --- */
 template<class TrampolineP> TrampolineP
@@ -427,6 +445,7 @@ using Signals::CollectorLast;
 using Signals::CollectorSum;
 using Signals::VoidSlot;
 using Signals::BoolSlot;
+using Signals::SignalProxy;
 using Signals::SignalFinalize;
 using Signals::SignalVoid;
 using Signals::Signal;
