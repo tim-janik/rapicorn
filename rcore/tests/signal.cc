@@ -460,11 +460,11 @@ struct TestConnectionCounter {
     void         set_tcc (TestConnectionCounter &cc) { tcc = &cc; }
     virtual void connections_changed (bool hasconnections) { tcc->connection_count += hasconnections ? +1 : -1; }
   };
-  typedef Signal<TestConnectionCounter, char (float, int), CollectorDefault<float>, Counter> TestSignal;
-  TestSignal  test_signal;
-  char        dummy_handler1 (float, int) { return '1'; }
-  static char dummy_handler2 (float, int) { return '2'; }
-  inline      TestConnectionCounter() : connection_count (0), test_signal (*this) {}
+  typedef Signal<TestConnectionCounter, int64 (float, char), CollectorDefault<float>, Counter> TestSignal;
+  TestSignal   test_signal;
+  int64        dummy_handler1 (float f, char c) { return int (f) + c; }
+  static int64 dummy_handler2 (float f, char c) { return int (f) * c; }
+  inline       TestConnectionCounter() : connection_count (0), test_signal (*this) {}
   static void
   test_connection_counter ()
   {
@@ -475,20 +475,20 @@ struct TestConnectionCounter {
     tcc.test_signal += slot (tcc, &TestConnectionCounter::dummy_handler1);
     TASSERT (tcc.connection_count == 1);
 
-    char result = tcc.test_signal.emit (0.1, 1234567);
-    TASSERT (result == '1');
+    int64 result = tcc.test_signal.emit (2.1, 'a');
+    TASSERT (result == 2 + 'a');
 
     tcc.test_signal += dummy_handler2;
     TASSERT (tcc.connection_count == 1);
 
-    result = tcc.test_signal.emit (0.2, 1234567);
-    TASSERT (result == '2');
+    result = tcc.test_signal.emit (3.7, 'b');
+    TASSERT (result == 3 * 'b');
 
     tcc.test_signal -= slot (tcc, &TestConnectionCounter::dummy_handler1);
     TASSERT (tcc.connection_count == 1);
 
-    result = tcc.test_signal.emit (0.1, 1234567);
-    TASSERT (result == '1');
+    result = tcc.test_signal.emit (1, '@');
+    TASSERT (result == '@');
 
     tcc.test_signal -= dummy_handler2;
     TASSERT (tcc.connection_count == 0);
