@@ -34,25 +34,25 @@
 #define TCHECK(code)            TCHECK_impl (code)
 #define TASSERT(code)           TCHECK_impl (code)
 #define TOK()           do {} while (0) // printerr (".")
-#define TCHECK_impl(code)       do { if (code) TOK(); else              \
-      Rapicorn::Logging::message ("ASSERT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
+#define TCHECK_impl(code)       do { if (code) TOK(); else      \
+      Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
                                   "assertion failed: %s", #code);       \
   } while (0)
 #define TCMP_implf(a,cmp,b)     do { if (a cmp b) TOK(); else { \
   double __tassert_va = a; double __tassert_vb = b;             \
-  Rapicorn::Logging::message ("ASSERT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
+  Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
                               "assertion failed: %s %s %s: %.17g %s %.17g", \
                               #a, #cmp, #b, __tassert_va, #cmp, __tassert_vb); \
     } } while (0)
 #define TCMP_implx(a,cmp,b)     do { if (a cmp b) TOK(); else { \
   uint64 __tassert_va = a; uint64 __tassert_vb = b;             \
-  Rapicorn::Logging::message ("ASSERT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
+  Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
                               "assertion failed: %s %s %s: 0x%08Lx %s 0x%08Lx", \
                               #a, #cmp, #b, __tassert_va, #cmp, __tassert_vb); \
     } } while (0)
 #define TCMP_impls(a,cmp,b)     do { if (a cmp b) TOK(); else { \
   int64 __tassert_va = a; int64 __tassert_vb = b;               \
-  Rapicorn::Logging::message ("ASSERT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
+  Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
     "assertion failed: %s %s %s: %lld %s %lld",                         \
                               #a, #cmp, #b, __tassert_va, #cmp, __tassert_vb); \
     } } while (0)
