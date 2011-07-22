@@ -539,4 +539,29 @@ struct TestConnectionCounter {
 };
 REGISTER_TEST ("Signals/Connection Counter", TestConnectionCounter::test_connection_counter);
 
+struct TestCollectorVector {
+  void  ref()   { /* dummy for signal emission */ }
+  void  unref() { /* dummy for signal emission */ }
+  Signal<TestCollectorVector, int (void), CollectorVector<int> > signal_int_farm;
+  TestCollectorVector() : signal_int_farm (*this) {}
+  static int handler1   (void)  { return 1; }
+  static int handler42  (void)  { return 42; }
+  static int handler777 (void)  { return 777; }
+  void
+  run_test ()
+  {
+    signal_int_farm += handler777;
+    signal_int_farm += handler42;
+    signal_int_farm += handler1;
+    signal_int_farm += handler42;
+    signal_int_farm += handler777;
+    vector<int> results = signal_int_farm.emit();
+    const int reference_array[] = { 777, 42, 1, 42, 777, };
+    const vector<int> reference = vector_from_array (reference_array);
+    TASSERT (results == reference);
+  }
+  static void run () { TestCollectorVector self; self.run_test(); }
+};
+REGISTER_TEST ("Signals/Test Vector Collector", TestCollectorVector::run);
+
 } // anon

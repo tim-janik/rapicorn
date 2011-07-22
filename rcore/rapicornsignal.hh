@@ -165,6 +165,21 @@ public:
 
 /* --- Collector --- */
 template<typename Result>
+struct CollectorVector : protected NonCopyable {
+  typedef std::vector<Result> result_type;
+  template<typename InputIterator>
+  result_type operator() (InputIterator begin, InputIterator end)
+  {
+    result_type result = result_type();
+    while (begin != end)
+      {
+        result.push_back (*begin);
+        ++begin;
+      }
+    return result;
+  }
+};
+template<typename Result>
 struct CollectorLast : protected NonCopyable {
   typedef Result result_type;
   template<typename InputIterator>
@@ -445,6 +460,7 @@ public:
 using Signals::CollectorDefault;
 using Signals::CollectorWhile0;
 using Signals::CollectorUntil0;
+using Signals::CollectorVector;
 using Signals::CollectorLast;
 using Signals::CollectorSum;
 using Signals::VoidSlot;
