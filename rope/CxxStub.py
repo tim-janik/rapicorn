@@ -49,8 +49,10 @@ inline uint64        connection_object2id (const Plic::SimpleServer &obj) { retu
 clientcc_boilerplate = r"""
 #ifndef PLIC_CONNECTION
 #define PLIC_CONNECTION()       (*(Plic::Connection*)NULL)
+uint64               connection_handle2id  (const Plic::SmartHandle &h) { return h._rpc_id(); }
+static inline void   connection_context4id (Plic::uint64 ipcid, Plic::NonCopyable *ctx) {}
+template<class C> C* connection_id2context (uint64 oid) { return (C*) NULL; }
 #endif // !PLIC_CONNECTION
-uint64  connection_handle2id (const Plic::SmartHandle &h) { return h._rpc_id(); }
 """
 
 def reindent (prefix, lines):
@@ -256,7 +258,7 @@ class Generator:
       elif type_node.storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
         s += '  %s = connection_id2object<%s> (%s.pop_object());\n' % (ident, self.C (type_node), fbr)
       elif type_node.storage == Decls.INTERFACE: # G4CLIENT
-        s += '  %s = %s (%s);\n' % (ident, self.C (type_node), fbr) # id2handle
+        s += '  %s = %s::_new (%s);\n' % (ident, self.C (type_node), fbr) # id2handle
       else:
         s += '  %s = %s.pop_%s();\n' % (ident, fbr, self.accessor_name (type_node.storage))
     return s
@@ -301,7 +303,7 @@ class Generator:
     elif el[1].storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
       s += '    self.push_back (connection_id2object<%s> (fbr.pop_object()));\n' % self.C (el[1])
     elif el[1].storage == Decls.INTERFACE: # G4CLIENT
-      s += '    self.push_back (%s (fbr));\n' % self.C (el[1]) # id2handle
+      s += '    self.push_back (%s::_new (fbr));\n' % self.C (el[1]) # id2handle
     else:
       s += '    self.push_back (fbr.pop_%s());\n' % self.accessor_name (el[1].storage)
     s += '  }\n'
@@ -377,8 +379,8 @@ class Generator:
     if self.gen_mode == G4CLIENT:
       classH = self.H (type_info.name) # smart handle class name
       aliasfix = '__attribute__ ((noinline))' # work around bogus strict-aliasing warning in g++-4.4.5
+      s += '  ' + self.F ('static %s' % classH) + '_new (Plic::FieldReader &fbr) %s;\n' % aliasfix # ctor
       s += '  ' + self.F ('explicit') + '%s ();\n' % classH # ctor
-      s += '  ' + self.F ('explicit') + '%s (Plic::FieldReader &fbr) %s;\n' % (classH, aliasfix) # ctor
       #s += '  ' + self.F ('inline') + '%s (const %s &src)' % (classH, classH) # copy ctor
       #s += ' : ' + ' (src), '.join (cl) + ' (src) {}\n'
     # properties
@@ -443,23 +445,64 @@ class Generator:
       s += ' = 0'
     s += ';\n'
     return s
+  def generate_client_class_context (self, class_info):
+    s, classH, classC = '\n', self.H (class_info.name), class_info.name + '_Context$' # class names
+    s += 'struct %s : public Plic::NonCopyable {\n' % classC    # context class
+    s += '  struct SmartHandle$ : public %s {\n' % classH       # derive smart handle for copy-ctor initialization
+    s += '    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}\n'
+    s += '  } handle$;\n'
+    for sg in class_info.signals:
+      signame = self.generate_signal_typename (sg, class_info)
+      sigE = '%s_EventHandler$' % signame
+      # s += '  %s %s;\n' % (signame, sg.name)                                  # signal member
+      s += '  struct %s : Plic::Connection::EventHandler {\n' % sigE            # signal EventHandler
+      relay = 'Rapicorn::Signals::SignalConnectionRelay<%s> ' % sigE
+      s += '    ' + self.generate_signal_typedef (sg, class_info, '', relay) # signal typedefs
+      s += '    virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);\n'
+      s += '    %s signal;\n' % signame
+      s += '    %s (%s &handle) : signal (handle) {}\n' % (sigE, classH)
+      s += '    void  connections_changed (bool hasconnections);\n'
+      s += '  } %s;\n' % sg.name
+    s += '  %s (uint64 ipcid) :\n' % classC                     # ctor
+    s += '    handle$ (ipcid)'
+    for sg in class_info.signals:
+      s += ',\n    %s (handle$)' % sg.name
+    s += '\n  {\n'
+    for sg in class_info.signals:
+      signame = self.generate_signal_typename (sg, class_info)
+      sigE = '%s_EventHandler$' % signame
+      s += '    handle$.%s = %s.signal;\n' % (sg.name, sg.name)
+      s += '    %s.signal.listener (%s, &%s::connections_changed);\n' % (sg.name, sg.name, sigE)
+    s += '  }\n'
+    s += '};\n'
+    for sg in class_info.signals:
+      signame = self.generate_signal_typename (sg, class_info)
+      sigE = '%s_EventHandler$' % signame
+      s += 'void\n'
+      s += '%s::%s::connections_changed (bool hasconnections)\n' % (classC, sigE)
+      s += '{}\n'
+      s += 'Plic::FieldBuffer*\n'
+      s += '%s::%s::handle_event (Plic::FieldBuffer &fb)\n' % (classC, sigE)
+      s += '{\n'
+      s += '  return NULL; // FIXME\n'
+      s += '}\n'
+    return s;
   def generate_client_class_methods (self, class_info):
-    s, classH = '\n', self.H (class_info.name) # smart handle class name
+    s, classH, classC = '', self.H (class_info.name), class_info.name + '_Context$' # class names
     classH2 = (classH, classH)
     l, heritage, cl = self.interface_class_inheritance (class_info)
     sca = [] # signal constructor arguments
     for sg in class_info.signals:
-      signame = self.generate_signal_typename (sg, class_info)
       s += self.generate_signal_typedef (sg, class_info, classH + '_')
+      signame = self.generate_signal_typename (sg, class_info)
       sca += [ '%s (*(%s_%s*) NULL)' % (sg.name, classH, signame) ]
     sci = ',\n  '.join (sca) # signal constructor init string
     s += '%s::%s ()' % classH2 # ctor
     s += ' :\n  ' + sci if sci else ''
     s += '\n{}\n'
-    s += '%s::%s (Plic::FieldReader &fbr) :\n' % classH2 # ctor
-    s += '  ' + (' (fbr), '.join (cl) + ' (fbr)')
-    s += ',\n  ' + sci if sci else ''
-    s += '\n{}\n'
+    s += '%s\n%s::_new (Plic::FieldReader &fbr)\n{\n' % classH2 # should be ctor, but requires ctor delegatioon (C++0x)
+    s += '  return connection_id2context<%s> (fbr.pop_int64())->handle$;\n' % classC
+    s += '}\n'
     return s
   def generate_server_class_methods (self, type_info):
     assert self.gen_mode == G4SERVER
@@ -678,7 +721,7 @@ class Generator:
     proxyname = self.generate_signal_proxy_typename (functype, ctype)
     s = '  ' + self.F (proxyname) + functype.name + ';\n'
     return s
-  def generate_signal_typedef (self, functype, ctype, prefix = ''):
+  def generate_signal_typedef (self, functype, ctype, prefix = '', ancestor = ''):
     s = ''
     signame = self.generate_signal_typename (functype, ctype)
     cpp_rtype = self.R (functype.rtype)
@@ -688,9 +731,14 @@ class Generator:
       l += [ self.A (a[0], a[1]) ]
     s += ', '.join (l)
     s += ')'
-    if functype.rtype.collector != 'void':
-      s += ', Rapicorn::Signals::Collector' + functype.rtype.collector.capitalize()
-      s += '<' + cpp_rtype + '> '
+    if functype.rtype.collector != 'void' or ancestor:
+      colname = functype.rtype.collector if functype.rtype.collector != 'void' else 'Default'
+      s += ', Rapicorn::Signals::Collector' + colname.capitalize()
+      s += '<' + cpp_rtype + '>'
+      if ancestor:
+        s += ', ' + ancestor
+      else:
+        s += ' '
     s += '> ' + prefix + signame + ';\n'
     return s
   def generate_server_signal_dispatcher (self, class_info, stype, reglines):
@@ -938,6 +986,7 @@ class Generator:
               s += self.generate_client_property_stub (tp, fl[0], fl[1])
           if self.gen_clientcc:
             s += self.open_namespace (tp)
+            s += self.generate_client_class_context (tp)
             s += self.generate_client_class_methods (tp)
           if self.gen_clientcc and tp.methods:
             s += self.open_namespace (tp)
