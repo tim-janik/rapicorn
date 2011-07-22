@@ -65,6 +65,14 @@ clamp (const T &value, const T &minimum, const T &maximum)
     return maximum;
   return value;
 }
+template <class T, size_t S> inline std::vector<T>
+vector_from_array (const T (&array_entries)[S]) /// Construct a std::vector<T> from a C array of type T[].
+{
+  std::vector<T> result;
+  for (size_t i = 0; i < S; i++)
+    result.push_back (array_entries[i]);
+  return result;
+}
 
 /* --- template utilities --- */
 template<class X, class Y> class TraitConvertible {
