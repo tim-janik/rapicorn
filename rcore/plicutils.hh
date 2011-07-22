@@ -85,6 +85,15 @@ inline bool msgid_is_discon     (MessageId mid) { return (mid & 0x70000000000000
 inline bool msgid_is_sigcon     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_SIGCON; }
 inline bool msgid_is_event      (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_EVENT; }
 
+// === NonCopyable ===
+class NonCopyable {
+  NonCopyable& operator=   (const NonCopyable&);
+  /*copy*/     NonCopyable (const NonCopyable&);
+protected:
+  /*ctor*/     NonCopyable () {}
+  /*dtor*/    ~NonCopyable () {}
+};
+
 /* === SmartHandle === */
 class SmartHandle {
   uint64 m_rpc_id;
@@ -92,7 +101,7 @@ protected:
   typedef bool (SmartHandle::*_UnspecifiedBool) () const; // non-numeric operator bool() result
   static inline _UnspecifiedBool _unspecified_bool_true () { return &Plic::SmartHandle::_is_null; }
   typedef uint64 RpcId;
-  explicit                  SmartHandle (FieldReader&);
+  explicit                  SmartHandle (uint64 ipcid);
   void                      _reset      ();
   void*                     _cast_iface () const;
   inline void*              _void_iface () const;

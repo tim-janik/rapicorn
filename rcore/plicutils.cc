@@ -62,13 +62,10 @@ string_printf (const char *format, ...)
 }
 
 /* === SmartHandle === */
-SmartHandle::SmartHandle (FieldReader &field_reader) :
-  m_rpc_id (0)
+SmartHandle::SmartHandle (uint64 ipcid) :
+  m_rpc_id (ipcid)
 {
-  assert (NULL != &field_reader);
-  uint64 field_reader_rpc_id = field_reader.pop_int64();
-  assert (0 != field_reader_rpc_id);
-  m_rpc_id = field_reader_rpc_id;
+  assert (0 != ipcid);
 }
 
 SmartHandle::SmartHandle() :
