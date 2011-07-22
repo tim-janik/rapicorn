@@ -43,7 +43,7 @@ init_app (const String       &app_ident,
   Plic::FieldBuffer8 fb (1);
   fb.add_int64 (appid);
   Plic::FieldReader fbr (fb);
-  return Application_SmartHandle (fbr);
+  return Application_SmartHandle::_new (fbr);
 }
 
 uint64
@@ -70,11 +70,53 @@ exit (int status)
 
 } // Rapicorn
 
+// === clientapi.cc helpers ===
 namespace { // Anon
 static Plic::Connection *_clientglue_connection = NULL;
+class ClientConnection {
+  // this should one day be linked with the server side connection and implement Plic::Connection itself
+  typedef std::map <Plic::uint64, Plic::NonCopyable*> ContextMap;
+  ContextMap context_map;
+public:
+  Plic::NonCopyable*
+  find_context (Plic::uint64 ipcid)
+  {
+    ContextMap::iterator it = context_map.find (ipcid);
+    return LIKELY (it != context_map.end()) ? it->second : NULL;
+  }
+  void
+  add_context (Plic::uint64 ipcid, Plic::NonCopyable *ctx)
+  {
+    context_map[ipcid] = ctx;
+  }
 };
-#define PLIC_CONNECTION()       (*_clientglue_connection)
+static __thread ClientConnection *ccon = NULL;
+static inline void
+connection_context4id (Plic::uint64 ipcid, Plic::NonCopyable *ctx)
+{
+  if (!ccon)
+    {
+      assert (_clientglue_connection != NULL);
+      ccon = new ClientConnection();
+    }
+  ccon->add_context (ipcid, ctx);
+}
+template<class Context> static inline Context*
+connection_id2context (Plic::uint64 ipcid)
+{
+  Plic::NonCopyable *ctx = LIKELY (ccon) ? ccon->find_context (ipcid) : NULL;
+  if (UNLIKELY (!ctx))
+    ctx = new Context (ipcid);
+  return static_cast<Context*> (ctx);
+}
+static inline Plic::uint64
+connection_handle2id (const Plic::SmartHandle &h)
+{
+  return h._rpc_id();
+}
 
+#define PLIC_CONNECTION()       (*_clientglue_connection)
+} // Anon
 #include "clientapi.cc"
 
 #include <rcore/testutils.hh>
