@@ -455,14 +455,10 @@ struct TestConnectionCounter {
   void  ref()   { /* dummy for signal emission */ }
   void  unref() { /* dummy for signal emission */ }
   int   connection_count;
-  struct Counter : Signals::SignalBase  // class to monitor connections to test_signal
-  {
-    TestConnectionCounter *tcc;
-    void         set_tcc (TestConnectionCounter &cc) { tcc = &cc; }
-    virtual void connections_changed (bool hasconnections) { tcc->connection_count += hasconnections ? +1 : -1; }
-  };
+  void  connections_changed (bool hasconnections) { connection_count += hasconnections ? +1 : -1; }
   // signal declaration
-  typedef Signal<TestConnectionCounter, int64 (float, char), CollectorDefault<float>, Counter> TestSignal;
+  typedef Signal<TestConnectionCounter, int64 (float, char), CollectorDefault<float>,
+                 SignalConnectionRelay<TestConnectionCounter> > TestSignal;
   TestSignal   test_signal;
   // signal connection proxy
   typedef SignalProxy<TestConnectionCounter, int64 (float, char)> TestSignalProxy;
@@ -532,7 +528,7 @@ struct TestConnectionCounter {
   test_connection_counter ()
   {
     TestConnectionCounter tcc;
-    tcc.test_signal.set_tcc (tcc);
+    tcc.test_signal.listener (tcc, &TestConnectionCounter::connections_changed);
     tcc.test_signal_connections();
     tcc.test_proxy_connections();
   }

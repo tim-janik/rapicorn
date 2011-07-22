@@ -64,7 +64,7 @@ SignalBase::connect_link (TrampolineLink *link,
                           bool            with_emitter)
 {
   return_val_if_fail (link->m_linking_owner == false && link->prev == NULL && link->next == NULL, NULL);
-  const bool connected_before = start.next != &start;
+  const bool connected_before = has_connections();
   link->owner_ref();
   link->prev = start.prev;
   link->next = &start;
@@ -85,7 +85,7 @@ SignalBase::disconnect_equal_link (const TrampolineLink &link,
       {
         return_val_if_fail (walk->m_linking_owner == true, 0);
         walk->unlink(); // unrefs
-        if (start.next == &start) // no handlers
+        if (!has_connections())
           connections_changed (false);
         return 1;
       }
@@ -100,7 +100,7 @@ SignalBase::disconnect_link_id (ConId con_id)
       {
         return_val_if_fail (walk->m_linking_owner == true, 0);
         walk->unlink(); // unrefs
-        if (start.next == &start) // no handlers
+        if (!has_connections())
           connections_changed (false);
         return 1;
       }
@@ -109,7 +109,7 @@ SignalBase::disconnect_link_id (ConId con_id)
 
 SignalBase::~SignalBase()
 {
-  const bool connected_before = start.next != &start;
+  const bool connected_before = has_connections();
   while (start.next != &start)
     {
       return_if_fail (start.next->m_linking_owner == true);

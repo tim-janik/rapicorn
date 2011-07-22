@@ -23,7 +23,8 @@ namespace Rapicorn {
 namespace Signals {
 
 /* --- EmissionBase --- */
-struct EmissionBase : protected NonCopyable {
+struct EmissionBase : protected NonCopyable /// Class to keep emission state during signal emission iteration.
+{
   bool restart_emission;
   bool stop_emission;
   EmissionBase() :
@@ -34,6 +35,7 @@ struct EmissionBase : protected NonCopyable {
 
 /* --- TrampolineLink --- */
 typedef ptrdiff_t ConId;
+/// TrampolineLink is the base class for all signal handler connection objects.
 class TrampolineLink : public ReferenceCountable, protected NonCopyable {
   friend    class SignalBase;
   TrampolineLink *next, *prev;
@@ -58,9 +60,11 @@ public:
 };
 
 /* --- SignalBase --- */
-class SignalBase : protected NonCopyable {
+class SignalBase : protected NonCopyable /// Signal base class that all Signal classes inherit from.
+{
   friend             class SignalProxyBase;
-  class EmbeddedLink : public TrampolineLink {
+  class EmbeddedLink : public TrampolineLink /// Internal helper structure for TrampolineLink administration.
+  {
     virtual bool           operator==            (const TrampolineLink &other) const;
     virtual void           delete_this           (); // NOP for embedded link
   public:
@@ -80,10 +84,13 @@ protected:
 public:
   virtual                 ~SignalBase            ();
   inline                   SignalBase            () { start.next = start.prev = &start; start.ref_sink(); }
+  /// Returns whether any signal handlers are currently connected.
+  inline bool              has_connections       () { return start.next != &start; }
 };
 
 // === SignalProxyBase ===
-class SignalProxyBase {
+class SignalProxyBase /// Base class for all SignalProxy classes.
+{
   SignalBase   *m_signal;
 protected:
   ConId         connect_link          (TrampolineLink *link, bool with_emitter = false);
@@ -94,12 +101,14 @@ protected:
   explicit      SignalProxyBase       (SignalBase &signal);
   virtual      ~SignalProxyBase       () {}
 public:
+  /// Stop proxying any signal connections or disconnections.
   void          divorce               ();
 };
 
 /* --- Signal Iterator --- */
 template<class Emission>
-class SignalBase::Iterator : protected NonCopyable {
+class SignalBase::Iterator : protected NonCopyable /// Signal iterators walk the handler list during emissions.
+{
   Iterator& operator= (const Iterator&);
 public:
   Emission &emission;
@@ -163,9 +172,10 @@ public:
   }
 };
 
-/* --- Collector --- */
+// === Collectors ===
 template<typename Result>
-struct CollectorVector : protected NonCopyable {
+struct CollectorVector : protected NonCopyable /// Collect signal handler return values in a std::vector.
+{
   typedef std::vector<Result> result_type;
   template<typename InputIterator>
   result_type operator() (InputIterator begin, InputIterator end)
@@ -180,7 +190,8 @@ struct CollectorVector : protected NonCopyable {
   }
 };
 template<typename Result>
-struct CollectorLast : protected NonCopyable {
+struct CollectorLast : protected NonCopyable /// Return the last handler result as signal emission result.
+{
   typedef Result result_type;
   template<typename InputIterator>
   Result operator() (InputIterator begin, InputIterator end)
@@ -195,9 +206,11 @@ struct CollectorLast : protected NonCopyable {
   }
 };
 template<typename Result>
-struct CollectorDefault : CollectorLast<Result> {};
+struct CollectorDefault : CollectorLast<Result> /// The default collector type used by all underspecified signals.
+{};
 template<>
-struct CollectorDefault<void> : protected NonCopyable {
+struct CollectorDefault<void> : protected NonCopyable /// Specialisation used for Signals with void return.
+{
   typedef void result_type;
   template<typename InputIterator>
   void operator() (InputIterator begin, InputIterator end)
@@ -210,7 +223,8 @@ struct CollectorDefault<void> : protected NonCopyable {
   }
 };
 template<typename Result>
-struct CollectorSum : protected NonCopyable {
+struct CollectorSum : protected NonCopyable /// Return the cumulative sum of all signal handlers as emission result.
+{
   typedef Result result_type;
   template<typename InputIterator>
   Result operator() (InputIterator begin, InputIterator end)
@@ -225,7 +239,8 @@ struct CollectorSum : protected NonCopyable {
   }
 };
 template<typename Result>
-struct CollectorWhile0 : protected NonCopyable {
+struct CollectorWhile0 : protected NonCopyable /// Keep signal emission going while all handlers return 0 (false).
+{
   typedef Result result_type;
   template<typename InputIterator>
   Result operator() (InputIterator begin, InputIterator end)
@@ -242,7 +257,8 @@ struct CollectorWhile0 : protected NonCopyable {
   }
 };
 template<typename Result>
-struct CollectorUntil0 : protected NonCopyable {
+struct CollectorUntil0 : protected NonCopyable /// Keep signal emissions going while all handlers return !0 (true).
+{
   typedef Result result_type;
   template<typename InputIterator>
   Result operator() (InputIterator begin, InputIterator end)
@@ -259,16 +275,18 @@ struct CollectorUntil0 : protected NonCopyable {
   }
 };
 
-/* --- ScopeReference --- */
+// === ScopeReference ===
 template<class Instance, typename Mark>
-class ScopeReference : protected NonCopyable {
+class ScopeReference : protected NonCopyable /// This class is used to force ref/unref on the Emitter around Signal.emit().
+{
   Instance &m_instance;
 public:
   ScopeReference  (Instance &instance) : m_instance (instance) { m_instance.ref(); }
   ~ScopeReference ()                                           { m_instance.unref(); }
 };
-struct ScopeReferenceFinalizationMark : CollectorDefault<void> {};
-template<class Instance>
+struct ScopeReferenceFinalizationMark : CollectorDefault<void> /// Internal class used by SignalFinalize.
+{};
+template<class Instance>                /// Internal class used by SignalFinalize.
 class ScopeReference<Instance, ScopeReferenceFinalizationMark> : protected NonCopyable {
   Instance &m_instance;
 public:
@@ -276,8 +294,22 @@ public:
   ~ScopeReference ()                                           { RAPICORN_ASSERT (m_instance.finalizing() == true); }
 };
 
+// === SignalConnectionRelay ===
+template <class Listener>
+class SignalConnectionRelay : public Signals::SignalBase /// Signal class providing notification on connection changes.
+{
+  Listener        *m_listener;
+  void (Listener::*m_notify) (bool hasconnections);
+  virtual void     connections_changed (bool hasconnections) { if (m_listener) (m_listener->*m_notify) (hasconnections); }
+public:
+  /// Setup @a object with @a method for notification upon signal connection changes.
+  /// The method is called as: object->*method (bool hasconnections).
+  void             listener (Listener &object, void (Listener::*method) (bool)) { m_listener = &object; m_notify = method; }
+};
+
 /* --- SlotBase --- */
-class SlotBase : protected NonCopyable {
+class SlotBase : protected NonCopyable /// Base class for all signal slot objects.
+{
 protected:
   TrampolineLink *m_link;
   void
@@ -309,8 +341,9 @@ public:
   { return m_link; }
 };
 
-/* --- Signature --- */
-template<typename>                      struct Signature;
+// === Signatures ===
+/// The signature templates provide function call type information, used by the Signal classes.
+template<typename>                      struct Signature {};
 template<typename R0>                   struct Signature<R0 ()>   { typedef R0 result_type; };
 template<typename R0, typename A1>      struct Signature<R0 (A1)> { typedef A1 argument1_type;  typedef R0 result_type; };
 template<typename R0, typename A1, typename A2>
@@ -439,7 +472,8 @@ typedef Slot0<bool, void> BoolSlot;
 
 /* --- predefined signals --- */
 template<class Emitter>
-class SignalFinalize : public Signal0 <Emitter, void, ScopeReferenceFinalizationMark> {
+class SignalFinalize : public Signal0 <Emitter, void, ScopeReferenceFinalizationMark> /// Internal Signal type used during finalization.
+{
   typedef Signal0 <Emitter, void, ScopeReferenceFinalizationMark> SignalVariant;
 public:
   explicit SignalFinalize (Emitter &emitter)                             : SignalVariant (emitter) {}
@@ -447,7 +481,8 @@ public:
 };
 
 template<class Emitter>
-class SignalVoid : public Signal0 <Emitter, void> {
+class SignalVoid : public Signal0 <Emitter, void> /// Convenience Signal type for void (void) notifications.
+{
   typedef Signal0 <Emitter, void> SignalVariant;
 public:
   explicit SignalVoid (Emitter &emitter)                                 : SignalVariant (emitter) {}
@@ -457,6 +492,7 @@ public:
 } // Signals
 
 /* --- Rapicorn::Signal imports --- */
+using Signals::SignalConnectionRelay;
 using Signals::CollectorDefault;
 using Signals::CollectorWhile0;
 using Signals::CollectorUntil0;
