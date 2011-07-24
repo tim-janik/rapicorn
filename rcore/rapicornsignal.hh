@@ -281,8 +281,8 @@ class ScopeReference : protected NonCopyable /// This class is used to force ref
 {
   Instance &m_instance;
 public:
-  ScopeReference  (Instance &instance) : m_instance (instance) { m_instance.ref(); }
-  ~ScopeReference ()                                           { m_instance.unref(); }
+  ScopeReference  (Instance &instance) : m_instance (instance) { ref (m_instance); }
+  ~ScopeReference ()                                           { unref (m_instance); }
 };
 struct ScopeReferenceFinalizationMark : CollectorDefault<void> /// Internal class used by SignalFinalize.
 {};

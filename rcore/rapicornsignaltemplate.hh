@@ -85,6 +85,7 @@ struct SignalEmittable3 : public Ancestor {
     Collector collector;
     return collector (it, last); // Result may be void
   }
+  inline Emitter* emitter () const { return m_emitter; }
 private:
   Emitter *m_emitter;
 };
