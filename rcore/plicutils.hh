@@ -170,6 +170,7 @@ public:
   inline FieldBuffer& add_seq (uint nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); }
   inline void         reset();
   String              first_id_str() const;
+  String              to_string() const;
   static FieldBuffer* _new (uint _ntypes); // Heap allocated FieldBuffer
   static FieldBuffer* new_error (const String &msg, const String &domain = "");
   static FieldBuffer* new_result();

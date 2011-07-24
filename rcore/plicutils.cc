@@ -202,6 +202,49 @@ FieldBuffer::first_id_str() const
   return string_printf ("%016llx", fid);
 }
 
+static String
+strescape (const String &str)
+{
+  String buffer;
+  for (String::const_iterator it = str.begin(); it != str.end(); it++)
+    {
+      uint8 d = *it;
+      if (d < 32 || d > 126 || d == '?')
+        buffer += string_printf ("\\%03o", d);
+      else if (d == '\\')
+        buffer += "\\\\";
+      else if (d == '"')
+        buffer += "\\\"";
+      else
+        buffer += d;
+    }
+  return buffer;
+}
+
+String
+FieldBuffer::to_string() const
+{
+  String s = string_printf ("Plic::FieldBuffer(%p)={", this);
+  s += string_printf ("size=%u, capacity=%u", size(), capacity());
+  FieldReader fbr (*this);
+  for (size_t i = 0; i < size(); i++)
+    switch (fbr.get_type())
+      {
+      case VOID:        s += ", VOID"; fbr.skip();                                              break;
+      case INT:         s += string_printf (", INT: 0x%llx", fbr.pop_int64());                  break;
+      case FLOAT:       s += string_printf (", FLOAT: %.17g", fbr.pop_double());                break;
+      case STRING:      s += string_printf (", STRING: %s", strescape (fbr.pop_string()).c_str()); break;
+      case ENUM:        s += string_printf (", ENUM: 0x%llx", fbr.pop_int64());                 break;
+      case RECORD:      s += string_printf (", RECORD: %p", &fbr.pop_rec());                    break;
+      case SEQUENCE:    s += string_printf (", SEQUENCE: %p", &fbr.pop_seq());                  break;
+      case FUNC:        s += string_printf (", FUNC: %s", fbr.pop_func().c_str());              break;
+      case INSTANCE:    s += string_printf (", INSTANCE: %p", (void*) fbr.pop_object());        break;
+      default:          s += string_printf (", %u: <unknown>", fbr.get_type()); fbr.skip();     break;
+      }
+  s += '}';
+  return s;
+}
+
 FieldBuffer*
 FieldBuffer::new_error (const String &msg,
                         const String &domain)
