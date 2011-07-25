@@ -21,15 +21,15 @@ class_scope:StringList:
   /*Con*/  StringListImpl () {}
   /*Con*/  StringListImpl (const std::vector<String> &strv) : Sequence (strv) {}
 
-class_scope:ItemIface:
+class_scope:Item:
   ItemImpl&       impl ();
   const ItemImpl& impl () const;
 
-class_scope:Wind0wIface:
+class_scope:Wind0w:
   WindowImpl&       impl ();
   const WindowImpl& impl () const;
 
-class_scope:ApplicationIface:
+class_scope:Application:
   static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
   int                execute_loops ();
   static bool        plor_add      (ItemIface    &item, const String &plor_name);
@@ -49,6 +49,3 @@ IGNORE: // close last _scope
 }; // close dummy class scope
 
 global_scope:
-namespace Rapicorn {
-void init_test_app (const String&, int*, char**, const StringVector& = StringVector());
-} // Rapicorn
