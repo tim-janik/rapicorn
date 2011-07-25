@@ -18,20 +18,23 @@
  * otherwise) arising in any way out of the use of this software, even
  * if advised of the possibility of such damage.
  */
-#include <rapicorn.hh>
+#include <ui/clientapi.hh>
 
 namespace {
 using namespace Rapicorn;
 
 static bool
-handle_commands (Wind0wIface      &wind0w,
+handle_commands (Wind0w           &wind0w,
                  const String     &command,
                  const StringList &args)
 {
+  printout ("%s(): command: %s(%s)\n", __func__, command.c_str(), string_join (",", args).c_str());
   if (command == "close")
-    wind0w.close();
-  else
-    printout ("%s(): custom command: %s(%s)\n", __func__, command.c_str(), string_join (",", args).c_str());
+    {
+      wind0w.close();
+      Application app = Application::the();
+      Application::loop_quit();
+    }
   return true;
 }
 
@@ -40,8 +43,7 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn for X11 backend with application name */
-  Application_SmartHandle smApp = init_app ("HelloWorld", &argc, argv);
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  Application app = init_app ("HelloWorld", &argc, argv);
 
   /* find and load GUI definitions relative to argv[0] */
   app.auto_load ("RapicornTest",        // namespace domain
@@ -49,18 +51,16 @@ main (int   argc,
                  argv[0]);
 
   /* create main wind0w */
-  Wind0wIface &wind0w = *app.create_wind0w ("main-wind0w");
+  Wind0w wind0w = app.create_wind0w ("main-wind0w");
 
   /* connect custom callback to handle UI commands */
-  wind0w.sig_commands += handle_commands;
+  wind0w.commands += handle_commands;
 
   /* display wind0w on screen */
   wind0w.show();
 
   /* run event loops while wind0ws are on screen */
-  app.execute_loops();
-
-  return 0;
+  return app.loop_and_exit();
 }
 
 } // anon
