@@ -19,6 +19,7 @@ class Channel { // Channel for cross-thread FieldBuffer IO
   size_t                    msg_index, msg_last_size;
   virtual void  data_notify () = 0;
   virtual void  data_wait   () = 0;
+  virtual void  flush_waits () = 0;
 public:
   FieldBuffer*
   fetch_msg (const int blockpop)
@@ -31,6 +32,7 @@ public:
             if (msg_index)
               msg_queue.resize (0);             // get rid of stale pointers
             msg_index = 0;
+            flush_waits();
             pthread_spin_lock (&msg_spinlock);
             msg_vector.swap (msg_queue);        // actual cross-thread fetching
             pthread_spin_unlock (&msg_spinlock);
@@ -78,6 +80,7 @@ class ChannelS : public Channel { // Channel with semaphore for syncronization
   sem_t         msg_sem;
   virtual void  data_notify ()  { sem_post (&msg_sem); }
   virtual void  data_wait   ()  { sem_wait (&msg_sem); }
+  virtual void  flush_waits ()  { /*sem_trywait (&msg_sem);*/ }
 public:
   explicit      ChannelS    ()  { sem_init (&msg_sem, 0 /* unshared */, 0 /* init */); }
   /*dtor*/     ~ChannelS    ()  { sem_destroy (&msg_sem); }
@@ -85,7 +88,8 @@ public:
 
 class ChannelE : public Channel, public EventFd { // Channel with EventFd for syncronization
   virtual void  data_notify ()  { wakeup(); }
-  virtual void  data_wait   ()  { if (pollin()) flush(); }
+  virtual void  data_wait   ()  { pollin(); }
+  virtual void  flush_waits ()  { flush(); }
 public:
   ChannelE ()
   {
@@ -123,7 +127,7 @@ private:
   }
   virtual bool  prepare  (uint64, int64*) { return check_dispatch(); }
   virtual bool  check    (uint64)         { return check_dispatch(); }
-  virtual bool  dispatch ()               { calls.flush(); dispatch1(); return true; }
+  virtual bool  dispatch ()               { dispatch1(); return true; }
   bool
   check_dispatch()
   {
