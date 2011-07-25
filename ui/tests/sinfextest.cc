@@ -15,7 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include <rcore/testutils.hh>
-#include <rapicorn.hh>
+#include <ui/uithread.hh>
 #include <stdio.h>
 #include <stdlib.h>
 using namespace Rapicorn;
@@ -225,11 +225,7 @@ struct EvalScope : public Sinfex::Scope {
   }
 };
 
-} // Anon
-
-namespace ServerTests {
-
-void
+static void
 sinfex_shell (void)
 {
   bool interactive_prompt = isatty (fileno (stdin));
@@ -271,6 +267,16 @@ sinfex_shell (void)
   while (malloc_string);
   if (interactive_prompt)
     fprintf (stderr, "\n"); // newline after last prompt
+}
+
+} // Anon
+
+namespace ServerTests {
+
+void
+sinfex_shell_wrapper (void)
+{
+  uithread_test_trigger (sinfex_shell);
 }
 
 } // ServerTests

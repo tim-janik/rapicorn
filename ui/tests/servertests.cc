@@ -1,5 +1,6 @@
 /* Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html */
 #include "servertests.hh"
+#include <rapicorn.hh>
 
 using namespace Rapicorn;
 
@@ -23,7 +24,7 @@ main (int   argc,
       ServerTests::server_test_run_dialogs = true;
     else if (String (argv[i]) == "--shell")
       {
-        uithread_test_trigger (ServerTests::sinfex_shell);
+        ServerTests::sinfex_shell_wrapper();
         return 0;
       }
 

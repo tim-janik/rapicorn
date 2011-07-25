@@ -1,6 +1,6 @@
 // This work is provided "as is"; see: http://rapicorn.org/LICENSE-AS-IS
 #include <rcore/testutils.hh>
-#include <rapicorn.hh>
+#include <ui/uithread.hh>
 
 namespace { // Anon
 using namespace Rapicorn;

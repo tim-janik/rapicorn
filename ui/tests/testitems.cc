@@ -15,6 +15,7 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "servertests.hh"
+#include <ui/uithread.hh>
 #include <ui/testitems.hh>
 
 namespace {
