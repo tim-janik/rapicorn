@@ -20,7 +20,7 @@
 #include <rapicorn-core.hh>
 #include <typeinfo>
 
-#if !defined __RAPICORN_UITHREAD_HH__ && !defined __RAPICORN_BUILD__
+#if !defined __RAPICORN_CLIENTAPI_HH_ && !defined __RAPICORN_UITHREAD_HH__ && !defined __RAPICORN_BUILD__
 #error Only <rapicorn.hh> can be included directly.
 #endif
 
