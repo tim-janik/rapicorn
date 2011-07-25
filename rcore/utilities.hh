@@ -134,6 +134,7 @@ String      process_handle ();
 #define assert_unreached   RAPICORN_ASSERT_UNREACHED   // ()
 #define assert_not_reached RAPICORN_ASSERT_UNREACHED   // ()
 #define BREAKPOINT         Rapicorn::breakpoint        // ()
+#define FIXME              RAPICORN_FIXME
 #ifndef assert
 #define assert            ASSERT
 #endif
@@ -187,6 +188,7 @@ static inline void pcritical (const char *format, ...) { va_list a; va_start (a,
 #define RAPICORN_PCHECK(expr)  do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("PCHECK",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assumption failed (%s)", #expr); } while (0)
 #define RAPICORN_DEBUG(...)    do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("DEBUG",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
 #define RAPICORN_PDEBUG(...)   do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("PDEBUG", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
+#define RAPICORN_FIXME(...)    do { Rapicorn::Logging::message ("DEBUG",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
 
 /* --- timestamp handling --- */
 uint64  timestamp_startup    ();        // µseconds
