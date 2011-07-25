@@ -83,7 +83,8 @@ rope_init_dispatcher (PyObject *self, PyObject *args)
   StringVector iargs;
   iargs.push_back (string_printf ("cpu-affinity=%d", !Thread::Self::affinity()));
   // initialize core
-  uint64 app_id = server_init_app (application_name, &argc, argv, iargs);
+  Application app = init_app (application_name, &argc, argv, iargs);
+  uint64 app_id = app._rpc_id();
   if (app_id == 0)
     ; // FIXME: throw exception
   pyrope_connection = uithread_connection();
@@ -94,7 +95,7 @@ static PyObject*
 rope_event_fd (PyObject *self, PyObject *args)
 {
   PyObject *tuple = PyTuple_New (2);
-  PyTuple_SET_ITEM (tuple, 0, PyLong_FromLongLong (rope_thread_inputfd()));
+  PyTuple_SET_ITEM (tuple, 0, PyLong_FromLongLong (uithread_connection()->event_inputfd()));
   PyTuple_SET_ITEM (tuple, 1, PyString_FromString ("i")); // POLLIN
   if (PyErr_Occurred())
     {
@@ -120,7 +121,6 @@ rope_event_dispatch (PyObject *self, PyObject *args)
 {
   if (self || PyTuple_Size (args) != 0)
     { PyErr_Format (PyExc_TypeError, "no arguments expected"); return NULL; }
-  rope_thread_flush_input();
   FieldBuffer *fr = NULL, *fb = PLIC_CONNECTION().pop_event();
   if (!fb)
     return None_INCREF();
@@ -134,14 +134,14 @@ rope_event_dispatch (PyObject *self, PyObject *args)
       if (evh)
         fr = evh->handle_event (*fb);
       else
-        fr = FieldBuffer::new_error (string_printf ("invalid signal handler id in %s: %u", "event", uint (handler_id)), "PLIC");
+        fr = FieldBuffer::new_error (string_printf ("invalid signal handler id in %s: %llu", "event", handler_id), "PLIC");
     }
   else if (Plic::msgid_is_discon (msgid))
     {
       const uint64 handler_id = fbr.pop_int64();
       const bool deleted = PLIC_CONNECTION().delete_event_handler (handler_id);
       if (!deleted)
-        fr = FieldBuffer::new_error (string_printf ("invalid signal handler id in %s: %u", "disconnect", uint (handler_id)), "PLIC");
+        fr = FieldBuffer::new_error (string_printf ("invalid signal handler id in %s: %llu", "disconnect", handler_id), "PLIC");
     }
   else
     {
