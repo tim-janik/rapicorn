@@ -236,7 +236,8 @@ public: /// @name API for asyncronous event delivery
 protected:
   virtual FieldBuffer* fetch_event (int blockpop) = 0;   ///< Block for (-1), peek (0) or pop (+1) an event from queue.
 public: /// @name API for event handler bookkeeping
-  struct EventHandler {
+  struct EventHandler                                    /// Interface class used for client side signal emissions.
+  {
     virtual             ~EventHandler () {}
     virtual FieldBuffer* handle_event (Plic::FieldBuffer &event_fb) = 0; ///< Process an event and possibly return an error.
   };
@@ -244,9 +245,10 @@ public: /// @name API for event handler bookkeeping
   virtual EventHandler* find_event_handler     (uint64 handler_id) = 0; ///< Find event handler by id.
   virtual bool          delete_event_handler   (uint64 handler_id) = 0; ///< Delete a registered event handler, returns success.
 public: /// @name Registry for IPC method lookups
-  struct MethodEntry    { uint64 hashhi, hashlow; DispatchFunc dispatcher; };  ///< Structure to register methods for IPC.
-  struct MethodRegistry {
-    template<class T, size_t S> MethodRegistry  (T (&static_const_entries)[S]) /// Register static const MethodEntry structs.
+  struct MethodEntry    { uint64 hashhi, hashlow; DispatchFunc dispatcher; };
+  struct MethodRegistry                                  /// Registry structure for IPC method stubs.
+  {
+    template<class T, size_t S> MethodRegistry  (T (&static_const_entries)[S])
     { for (size_t i = 0; i < S; i++) register_method (static_const_entries[i]); }
   private: static void register_method (const MethodEntry &mentry);
   };
