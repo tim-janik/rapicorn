@@ -21,7 +21,8 @@
 
 namespace Rapicorn {
 
-struct PollFD { ///< Mirrors struct pollfd for poll(3posix)
+struct PollFD   /// Mirrors struct pollfd for poll(3posix)
+{
   int           fd;
   uint16        events;
   uint16        revents;
@@ -41,14 +42,15 @@ struct PollFD { ///< Mirrors struct pollfd for poll(3posix)
   };
 };
 
-class EventFd { ///< Wakeup facility for IPC.
+class EventFd   /// Wakeup facility for IPC.
+{
   int      fds[2];
 public:
   explicit EventFd   ();
-  int      open      (); ///< @Returns -errno.
+  int      open      (); ///< Opens the eventfd and returns -errno.
   void     wakeup    (); ///< Wakeup polling end.
-  int      inputfd   (); ///< @Returns fd for POLLIN.
-  bool     pollin    ();
+  int      inputfd   (); ///< Returns the file descriptor for POLLIN.
+  bool     pollin    (); ///< Checks whether events are pending.
   void     flush     (); ///< Clear pending wakeups.
   /*Des*/ ~EventFd   ();
 };

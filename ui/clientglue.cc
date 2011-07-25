@@ -219,7 +219,7 @@ Application_SmartHandle::loop_quit (int exit_code)
 /**
  * Run the main event loop (via loop_pending() and loop_iteration())
  * until loop_quit() is called.
- * @Returns The @a exit_code from loop_quit().
+ * @returns The @a exit_code from loop_quit().
  */
 int
 Application_SmartHandle::loop_run ()
