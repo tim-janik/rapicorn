@@ -344,6 +344,7 @@ public:
 // === Signatures ===
 /// The signature templates provide function call type information, used by the Signal classes.
 template<typename>                      struct Signature {};
+/// @cond
 template<typename R0>                   struct Signature<R0 ()>   { typedef R0 result_type; };
 template<typename R0, typename A1>      struct Signature<R0 (A1)> { typedef A1 argument1_type;  typedef R0 result_type; };
 template<typename R0, typename A1, typename A2>
@@ -442,6 +443,7 @@ struct Signature<R0 (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14
   typedef A13 argument13_type;  typedef A14 argument14_type;    typedef A15 argument15_type;    typedef A16 argument16_type;
   typedef R0 result_type;
 };
+/// @endcond
 
 template <class Emitter,
           typename SignalSignature,
