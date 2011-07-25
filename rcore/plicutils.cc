@@ -16,9 +16,9 @@
  */
 #include "plicutils.hh"
 #include <assert.h>
-#include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <sched.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -47,18 +47,40 @@ namespace Plic {
 /* === Prototypes === */
 static String string_printf (const char *format, ...) PLIC_PRINTF (1, 2);
 
-/* === Utilities === */
-static String // FIXME: support error format
+// === Utilities ===
+static String
 string_printf (const char *format, ...)
 {
   String str;
   va_list args;
   va_start (args, format);
-  char buffer[512 + 1];
+  char buffer[1024 + 1];
   vsnprintf (buffer, 512, format, args);
+  buffer[1024] = 0; // force termination
   va_end (args);
-  buffer[512] = 0; // force termination
   return buffer;
+}
+
+void
+error_vprintf (const char *format, va_list args)
+{
+  char buffer[1024 + 1];
+  vsnprintf (buffer, 512, format, args);
+  buffer[1024] = 0; // force termination
+  const int l = strlen (buffer);
+  const bool need_newline = l < 1 || buffer[l - 1] != '\n';
+  fprintf (stderr, "PLIC::Connection: error: %s%s", buffer, need_newline ? "\n" : "");
+  fflush (stderr);
+  abort();
+}
+
+void
+error_printf (const char *format, ...)
+{
+  va_list args;
+  va_start (args, format);
+  error_vprintf (format, args);
+  va_end (args);
 }
 
 /* === SmartHandle === */

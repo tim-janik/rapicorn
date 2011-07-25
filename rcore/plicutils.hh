@@ -21,6 +21,7 @@
 #include <vector>
 #include <memory>               // auto_ptr
 #include <stdint.h>             // uint32_t
+#include <stdarg.h>
 #include <tr1/memory>           // shared_ptr
 
 namespace Plic {
@@ -66,6 +67,10 @@ union FieldUnion;
 class FieldBuffer;
 class FieldReader;
 typedef FieldBuffer* (*DispatchFunc) (FieldReader&);
+
+// === Utilities ===
+void    error_printf    (const char *format, ...) PLIC_PRINTF (1, 2);
+void    error_vprintf   (const char *format, va_list args);
 
 // === Message IDs ===
 enum MessageId {
