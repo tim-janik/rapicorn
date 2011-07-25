@@ -32,6 +32,15 @@ gencc_boilerplate = r"""
 namespace { // Anonymous
 using Plic::uint64;
 
+static __attribute__ ((__format__ (__printf__, 1, 2), unused))
+Plic::FieldBuffer* plic$_error (const char *format, ...)
+{
+  va_list args;
+  va_start (args, format);
+  Plic::error_vprintf (format, args);
+  va_end (args);
+  return NULL;
+}
 
 } // Anonymous
 #endif // __PLIC_GENERIC_CC_BOILERPLATE__
@@ -152,7 +161,7 @@ class Generator:
       l += [ self.A (prefix + a[0], a[1]) ]
     return (',\n' + argindent * ' ').join (l)
   def U (self, ident, type_node):                       # construct function call argument Use
-    s = '*' if type_node.storage == Decls.INTERFACE else ''
+    s = '*' if type_node.storage == Decls.INTERFACE and self.gen_mode == G4SERVER else ''
     return s + ident
   def F (self, string, delta = 0):                      # Format string to tab stop
     return string + ' ' * max (1, self.ntab + delta - len (string))
@@ -416,7 +425,7 @@ class Generator:
       s += '  inline %s&       impl () ' % implname
       s += '{ %s *_impl = dynamic_cast<%s*> (this); if (!_impl) throw std::bad_cast(); return *_impl; }\n' % (implname, implname)
       s += '  inline const %s& impl () const { return impl (const_cast<%s*> (this)); }\n' % (implname, self.C (type_info))
-    s += self.insertion_text ('class_scope:' + self.C (type_info))
+    s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
     s += self.generate_shortalias (type_info)   # typedef alias
     return s
@@ -447,6 +456,9 @@ class Generator:
     return s
   def generate_client_class_context (self, class_info):
     s, classH, classC = '\n', self.H (class_info.name), class_info.name + '_Context$' # class names
+    s += 'static inline void ref   (%s&) {} // dummy stub for Signal<>.emit\n' % classH
+    s += 'static inline void unref (%s&) {} // dummy stub for Signal<>.emit\n' % classH
+    s += '// === %s ===\n' % class_info.name
     s += 'struct %s : public Plic::NonCopyable {\n' % classC    # context class
     s += '  struct SmartHandle$ : public %s {\n' % classH       # derive smart handle for copy-ctor initialization
     s += '    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}\n'
@@ -459,8 +471,11 @@ class Generator:
       relay = 'Rapicorn::Signals::SignalConnectionRelay<%s> ' % sigE
       s += '    ' + self.generate_signal_typedef (sg, class_info, '', relay) # signal typedefs
       s += '    virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);\n'
+      s += '    uint64 m_handler_id, m_connection_id;\n'
       s += '    %s signal;\n' % signame
-      s += '    %s (%s &handle) : signal (handle) {}\n' % (sigE, classH)
+      s += '    %s (%s &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}\n' % (sigE, classH)
+      s += '    ~%s ()\n' % sigE
+      s += '    { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }\n'
       s += '    void  connections_changed (bool hasconnections);\n'
       s += '  } %s;\n' % sg.name
     s += '  %s (uint64 ipcid) :\n' % classC                     # ctor
@@ -480,11 +495,57 @@ class Generator:
       sigE = '%s_EventHandler$' % signame
       s += 'void\n'
       s += '%s::%s::connections_changed (bool hasconnections)\n' % (classC, sigE)
-      s += '{}\n'
+      s += '{\n'
+      s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);\n' # msgid self ConId ClosureId
+      s += '  fb.add_msgid (%s);\n' % self.method_digest (sg)
+      s += self.generate_proto_add_args ('fb', class_info, '', [('*signal.emitter()', class_info)], '')
+      s += '  if (hasconnections) {\n'
+      s += '    if (!m_handler_id)              // signal connected\n'
+      s += '      m_handler_id = PLIC_CONNECTION().register_event_handler (this);\n' # FIXME: badly broken, memory alloc!
+      s += '    fb.add_int64 (m_handler_id);    // handler connection request\n'
+      s += '    fb.add_int64 (0);               // no disconnection\n'
+      s += '  } else {                          // signal disconnected\n'
+      s += '    if (m_handler_id)\n'
+      s += '      ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;\n'
+      s += '    fb.add_int64 (0);               // no handler connection\n'
+      s += '    fb.add_int64 (m_connection_id); // disconnection request\n'
+      s += '    m_connection_id = 0;\n'
+      s += '  }\n'
+      s += '  Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
+      s += '  if (fr) { // FIXME: assert that fr is a non-NULL FieldBuffer with result message\n'
+      s += '    Plic::FieldReader frr (*fr);\n'
+      s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
+      s += '    if (frr.remaining() && m_handler_id)\n'
+      s += '      m_connection_id = frr.pop_int64();\n'
+      s += '  }\n'
+      s += '}\n'
       s += 'Plic::FieldBuffer*\n'
       s += '%s::%s::handle_event (Plic::FieldBuffer &fb)\n' % (classC, sigE)
       s += '{\n'
-      s += '  return NULL; // FIXME\n'
+      s += '  Plic::FieldReader fbr (fb);\n'
+      s += '  fbr.skip_msgid(); // FIXME: check msgid\n'
+      s += '  fbr.skip();       // skip m_handler_id\n'
+      s += '  if (fbr.remaining() != %u) return plic$_error ("invalid number of arguments");\n' % len (sg.args)
+      for a in sg.args:                                 # fetch args
+        if a[1].storage in (Decls.RECORD, Decls.SEQUENCE):
+          s += '  ' + self.V ('arg_' + a[0], a[1]) + ';\n'
+          s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(a[0], a[1])])
+        else:
+          tstr = self.V ('', a[1]) + 'arg_'
+          s += self.generate_proto_pop_args ('fbr', class_info, tstr, [(a[0], a[1])])
+      s += '  '                                         # return var
+      hasret = sg.rtype.storage != Decls.VOID
+      if hasret:
+        s += self.V ('', sg.rtype) + 'rval = '
+      s += 'signal.emit ('                              # call out
+      s += ', '.join (self.U ('arg_' + a[0], a[1]) for a in sg.args)
+      s += ');\n'
+      if hasret:                                        # store return value
+        s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
+        s += self.generate_proto_add_args ('rb', class_info, '', [('rval', sg.rtype)], '')
+        s += '  return &rb;\n'
+      else:
+        s += '  return NULL;\n'
       s += '}\n'
     return s;
   def generate_client_class_methods (self, class_info):
@@ -501,7 +562,7 @@ class Generator:
     s += ' :\n  ' + sci if sci else ''
     s += '\n{}\n'
     s += '%s\n%s::_new (Plic::FieldReader &fbr)\n{\n' % classH2 # should be ctor, but requires ctor delegatioon (C++0x)
-    s += '  return connection_id2context<%s> (fbr.pop_int64())->handle$;\n' % classC
+    s += '  return connection_id2context<%s> (fbr.pop_object())->handle$;\n' % classC
     s += '}\n'
     return s
   def generate_server_class_methods (self, type_info):
@@ -557,7 +618,7 @@ class Generator:
     s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1 + %u) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n' % len (mtype.args)
+    s += '  if (fbr.remaining() != 1 + %u) return plic$_error ("invalid number of arguments");\n' % len (mtype.args)
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
@@ -655,7 +716,7 @@ class Generator:
     s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
+    s += '  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
@@ -682,7 +743,7 @@ class Generator:
     s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
+    s += '  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
@@ -733,8 +794,7 @@ class Generator:
     s += ')'
     if functype.rtype.collector != 'void' or ancestor:
       colname = functype.rtype.collector if functype.rtype.collector != 'void' else 'Default'
-      s += ', Rapicorn::Signals::Collector' + colname.capitalize()
-      s += '<' + cpp_rtype + '>'
+      s += ', Rapicorn::Signals::Collector' + colname.capitalize() + '<' + cpp_rtype + '>'
       if ancestor:
         s += ', ' + ancestor
       else:
@@ -779,7 +839,7 @@ class Generator:
     s += 'static Plic::FieldBuffer*\n'
     s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
     s += '{\n'
-    s += '  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);\n'
+    s += '  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");\n'
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
