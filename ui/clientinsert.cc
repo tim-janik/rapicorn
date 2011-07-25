@@ -19,21 +19,17 @@ class_scope:StringList:
   /*Con*/  StringList_Handle () {}
   /*Con*/  StringList_Handle (const std::vector<String> &strv) : Sequence (strv) {}
 
-class_scope:ApplicationIface:
-  static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
-  int                execute_loops ();
-  static bool        plor_add      (ItemIface    &item, const String &plor_name);
-  static ItemIface*  plor_remove   (const String &plor_name);
-  /* global mutex */
-  struct ApplicationMutex {
-    static void lock    () { rapicorn_thread_enter (); }
-    static bool trylock () { return rapicorn_thread_try_enter (); }
-    static void unlock  () { rapicorn_thread_leave (); }
-  };
-  static ApplicationMutex mutex;  // singleton
-  /* singleton defs */
+class_scope:Application:
+  static int                      loop_run        ();
+  static void                     loop_quit       (int  quit_code = 0);
+  static bool                     loop_pending    (bool blocking = false);
+  static void                     loop_iteration  (void);
+  static int                      loop_and_exit   () RAPICORN_NORETURN;
+  static int                      shutdown        (int pass_through = 0);
+  static Application_SmartHandle  the             ();
 protected:
-  int                m_tc; // FIXME: uninitialized
+  // FIXME: static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
+  int           m_tc;           // FIXME: uninitialized
 
 IGNORE: // close last _scope
 }; // close dummy class scope
@@ -45,24 +41,11 @@ Application_SmartHandle init_app                (const String       &app_ident,
                                                  int                *argcp,
                                                  char              **argv,
                                                  const StringVector &args = StringVector());
+Application_SmartHandle init_test_app           (const String       &app_ident,
+                                                 int                *argcp,
+                                                 char              **argv,
+                                                 const StringVector &args = StringVector());
 Plic::Connection*       uithread_connection     (void);
+void                    exit                    (int status) RAPICORN_NORETURN;
 
-/**
- * This function causes proper termination of Rapicorn's concurrently running
- * ui-thread. This needs to be called before exit(3posix), to avoid parallel
- * execution of the ui-thread while atexit(3posix) handlers or global destructors
- * are releasing process resources.
- * @param pass_through  The status to return. Useful at the end of main()
- *                      as: return shutdown_app (exit_status);
- */
-int             shutdown_app    (int pass_through = 0);
-
-void            exit            (int status);
-
-#if 0
-Application_SmartHandle  init_test_app (const String       &app_ident,
-                                        int                *argcp,
-                                        char              **argv,
-                                        const StringVector &args = StringVector());
-#endif
 } // Rapicorn
