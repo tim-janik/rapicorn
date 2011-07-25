@@ -369,13 +369,14 @@ class Generator:
       cl = []
     return (l, heritage, cl) # prerequisite list, heritage type, constructor arg list)
   def generate_interface_class (self, type_info):
-    s = '\n'
+    s, classC = '\n', self.C (type_info) # class names
     # declare
-    s += 'class %s' % self.C (type_info)
+    s += 'class %s' % classC
     # inherit
     l, heritage, cl = self.interface_class_inheritance (type_info)
-    s += ' : ' + heritage + ' %s' % (', ' + heritage + ' ').join (l)
-    s += ' {\n'
+    s += ' : ' + heritage + ' %s' % (', ' + heritage + ' ').join (l) + '\n'
+    s += '  /// See also the corresponding IDL class %s.\n' % type_info.name # doxygen
+    s += '{\n'
     # constructors
     s += 'protected:\n'
     if self.gen_mode == G4SERVER:
@@ -430,8 +431,10 @@ class Generator:
     s += self.generate_shortalias (type_info)   # typedef alias
     return s
   def generate_shortalias (self, type_info):
+    classC = self.C (type_info) # class names
     if not self.gen_shortalias: return ''
-    s = ''
+    s  = '/** @interface %s\n' % type_info.name # doxygen
+    s += ' * See also the corresponding C++ class %s. */\n' % classC
     if type_info.storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
       s += '// '
     s += 'typedef %s %s;\n' % (self.C (type_info), self.type2cpp (type_info))
