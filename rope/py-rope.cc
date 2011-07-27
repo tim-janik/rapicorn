@@ -45,6 +45,12 @@ rope_printout (PyObject *self,
   return None_INCREF();
 }
 
+static void
+shutdown_rapicorn_atexit (void)
+{
+  Application_SmartHandle::shutdown();
+}
+
 static PyObject*
 rope_init_dispatcher (PyObject *self, PyObject *args)
 {
@@ -88,6 +94,7 @@ rope_init_dispatcher (PyObject *self, PyObject *args)
   if (app_id == 0)
     ; // FIXME: throw exception
   pyrope_connection = uithread_connection();
+  atexit (shutdown_rapicorn_atexit);
   return PyLong_FromUnsignedLongLong (app_id);
 }
 
