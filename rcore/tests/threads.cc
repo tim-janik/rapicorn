@@ -412,7 +412,7 @@ test_scoped_locks()
   }
   TASSERT (lockable (mutex1) == true);
   {
-    ScopedLock<Mutex> locker0 (mutex1, false);
+    ScopedLock<Mutex> locker0 (mutex1, BALANCED);
     TASSERT (lockable (mutex1) == true);
     locker0.lock();
     TASSERT (lockable (mutex1) == false);
@@ -421,7 +421,7 @@ test_scoped_locks()
   }
   TASSERT (lockable (mutex1) == true);
   {
-    ScopedLock<Mutex> locker2 (mutex1, true);
+    ScopedLock<Mutex> locker2 (mutex1, AUTOLOCK);
     TASSERT (lockable (mutex1) == false);
     locker2.unlock();
     TASSERT (lockable (mutex1) == true);
@@ -433,6 +433,32 @@ test_scoped_locks()
   test_recursive_scoped_lock (rmutex, 999);
   OwnedMutex omutex;
   test_recursive_scoped_lock (omutex, 999);
+  // test ScopedLock balancing unlock + lock
+  mutex1.lock();
+  {
+    TASSERT (lockable (mutex1) == false);
+    ScopedLock<Mutex> locker (mutex1, BALANCED);
+    locker.unlock();
+    TASSERT (lockable (mutex1) == true);
+  } // ~ScopedLock (BALANCED) now does locker.lock()
+  TASSERT (lockable (mutex1) == false);
+  {
+    ScopedLock<Mutex> locker (mutex1, BALANCED);
+  } // ~ScopedLock (BALANCED) now does nothing
+  TASSERT (lockable (mutex1) == false);
+  mutex1.unlock();
+  // test ScopedLock balancing lock + unlock
+  {
+    TASSERT (lockable (mutex1) == true);
+    ScopedLock<Mutex> locker (mutex1, BALANCED);
+    locker.lock();
+    TASSERT (lockable (mutex1) == false);
+  } // ~ScopedLock (BALANCED) now does locker.unlock()
+  TASSERT (lockable (mutex1) == true);
+  {
+    ScopedLock<Mutex> locker (mutex1, BALANCED);
+  } // ~ScopedLock (BALANCED) now does nothing
+  TASSERT (lockable (mutex1) == true);
 }
 REGISTER_TEST ("Threads/Scoped Locks", test_scoped_locks);
 
