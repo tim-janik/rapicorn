@@ -103,7 +103,7 @@ struct ConnectionSource : public virtual EventLoop::Source, public virtual Plic:
     WHERE ("Rapicorn::UIThread::Connection")
   {
     primary (false);
-    loop.add_source (this, EventLoop::PRIORITY_NORMAL);
+    loop.add (this, EventLoop::PRIORITY_NORMAL);
     pollfd.fd = calls.inputfd();
     pollfd.events = PollFD::IN;
     pollfd.revents = 0;
@@ -236,58 +236,53 @@ struct Initializer {
 class UIThread : public Thread {
   static UIThread  *the_uithread;
   Initializer      *m_init;
-  EventLoop        *m_loop;
   ConnectionSource *m_connection;
+  MainLoop         &m_main_loop;
 public:
   UIThread (Initializer *init) :
-    Thread ("Rapicorn::UIThread"), m_init (init), m_loop (NULL), m_connection (NULL)
+    Thread ("Rapicorn::UIThread"), m_init (init), m_connection (NULL),
+    m_main_loop (*ref_sink (MainLoop::_new()))
   {
     assert (the_uithread == NULL);
     the_uithread = ref_sink (this);
   }
-  Plic::Connection* connection() { return m_connection; }
-  static UIThread*  uithread()   { return Atomic::ptr_get (&the_uithread); }
+  Plic::Connection* connection()  { return m_connection; }
+  static UIThread*  uithread()    { return Atomic::ptr_get (&the_uithread); }
+  MainLoop*         main_loop()   { return &m_main_loop; }
 private:
   ~UIThread ()
   {
     assert (the_uithread != this);
     shutdown();
+    unref (m_main_loop);
   }
   void
   shutdown()
   {
     ConnectionSource *con = m_connection;
-    EventLoop *loop = m_loop;
     m_connection = NULL;
-    m_loop = NULL;
     if (con)
       {
         con->loop_remove();
         unref (con);
       }
-    if (loop)
-      unref (loop);
+    m_main_loop.kill_loops();
   }
   static void
   trigger_wakeup (void*)
   {
-    if (the_uithread && the_uithread->m_connection)
-      the_uithread->m_connection->wakeup();
+    if (the_uithread)
+      the_uithread->m_main_loop.wakeup();
   }
   void
   initialize ()
   {
     return_if_fail (m_init != NULL);
-    return_if_fail (m_loop == NULL);
-    assert (rapicorn_thread_entered() == false);
-    rapicorn_thread_enter();
+    assert (rapicorn_thread_entered() == true);
     // init_core() already called
     affinity (string_to_int (string_vector_find (*m_init->args, "cpu-affinity=", "-1")));
     // initialize ui_thread loop before components
-    m_loop = ref_sink (EventLoop::create());
-    m_connection = ref_sink (new ConnectionSource (*m_loop));
-    // allow external wakeups, needs m_connection
-    Self::set_wakeup (trigger_wakeup, NULL, NULL);
+    m_connection = ref_sink (new ConnectionSource (m_main_loop));
     // initialize sub systems
     struct InitHookCaller : public InitHook {
       static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)
@@ -310,30 +305,40 @@ private:
   virtual void
   run ()
   {
-    initialize(); // does rapicorn_thread_enter()
+    rapicorn_thread_enter();
+    Self::set_wakeup (trigger_wakeup, NULL, NULL); // allow external wakeups
+    initialize();
     return_if_fail (m_init == NULL);
-    while (!Thread::Self::aborted()) // !EventLoop::loops_exitable()
-      EventLoop::iterate_loops (true, true);      // prepare/check/dispatch and may_block
-    rapicorn_thread_leave();
+    while (!Thread::Self::aborted())               // !EventLoop::loops_exitable()
+      m_main_loop.iterate (true);                  // iterate blocking
     shutdown();
+    Self::set_wakeup (NULL, NULL, NULL);           // main loop canot be woken up further
+    rapicorn_thread_leave();
   }
 };
 UIThread *UIThread::the_uithread = NULL;
+
+MainLoop*
+uithread_main_loop ()
+{
+  return UIThread::uithread() ? UIThread::uithread()->main_loop() : NULL;
+}
 
 static void
 uithread_uncancelled_atexit()
 {
   if (UIThread::uithread() && UIThread::uithread()->running())
     {
-      /* If the ui-thread is still running, that *definitely* is an error at
-       * exit() time, because it may just now be using resources that are being
-       * destroying by atexit in parallel.
-       * Due to this, the process may or may not crash before this function is
-       * executed, so we try our luck to still inform about this situation and
-       * bring the process down in a controlled fashion.
+      /* For proper shutdown, the ui-thread needs to stop running before global
+       * dtors or any atexit() handlers are being executed. C9x and C++03 leave
+       * this unsolved, so we provide explicit API for the user, like
+       * Rapicorn::exit() and Application::shutdown(). In case these are omitted,
+       * we're not 100% safe, some earlier atexit() handler could have shot some
+       * of our required resources already, however we do our best to start a
+       * graceful shutdown at this point.
        */
-      fatal ("UI-Thread still running during exit()");
-      _exit (255);
+      FIXME ("UI-Thread still running during exit(), call Application::shutdown()");
+      shutdown_app();
     }
 }
 

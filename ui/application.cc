@@ -108,19 +108,10 @@ ApplicationImpl::load_string (const std::string &xml_string,
     fatal ("failed to parse string: %s\n%s", string_from_errno (err).c_str(), xml_string.c_str());
 }
 
-int
-ApplicationIface::execute_loops ()
-{
-  assert (rapicorn_thread_entered());           // guards exit_code
-  while (!EventLoop::loops_exitable())
-    EventLoop::iterate_loops (true, true);      // prepare/check/dispatch and may_block
-  return 0;
-}
-
 bool
 ApplicationIface::has_primary ()
 {
-  return !EventLoop::loops_exitable();
+  return !uithread_main_loop()->exitable();
 }
 
 void

@@ -2,6 +2,7 @@
 #include "window.hh"
 #include "application.hh"
 #include "factory.hh"
+#include "uithread.hh"
 
 namespace Rapicorn {
 
@@ -150,7 +151,7 @@ WindowImpl::create_snapshot (const Rect &subarea)
 }
 
 WindowImpl::WindowImpl() :
-  m_loop (*ref_sink (EventLoop::create())),
+  m_loop (*ref_sink (uithread_main_loop()->new_slave())),
   m_source (NULL),
   m_viewp0rt (NULL),
   m_tunable_requisition_counter (0),
@@ -170,7 +171,7 @@ WindowImpl::WindowImpl() :
   RAPICORN_ASSERT (m_source == NULL);
   EventLoop::Source *source = new WindowSource (*this);
   RAPICORN_ASSERT (m_source == source);
-  m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
+  m_loop.add (m_source, EventLoop::PRIORITY_NORMAL);
   m_source->primary (false);
   ApplicationImpl::the().add_wind0w (*this);
   change_flags_silently (ANCHORED, true);       /* window is always anchored */
@@ -1106,7 +1107,7 @@ WindowImpl::destroy_viewp0rt ()
       RAPICORN_ASSERT (m_source == NULL);
       EventLoop::Source *source = new WindowSource (*this);
       RAPICORN_ASSERT (m_source == source);
-      m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
+      m_loop.add (m_source, EventLoop::PRIORITY_NORMAL);
       m_source->primary (false);
     }
   // reset item state where needed

@@ -91,17 +91,20 @@ private:
     // init_core() already called
     // FIXME: init_app (m_init->application_identifier, m_init->argcp, m_init->argv, *m_init->args);
     m_init->argcp = NULL, m_init->argv = NULL, m_init->args = NULL; // becomes invalidated once app_id is set
-    m_loop = ref_sink (EventLoop::create());
+    // FIXME: m_loop = ref_sink (EventLoop::create());
     EventLoop::Source *esource = NULL; // FIXME: new DispatchSource (*m_init->coupler, *m_loop);
-    (*m_loop).add_source (esource, EventLoop::PRIORITY_NORMAL);
+    // FIXME: (*m_loop).add_source (esource, EventLoop::PRIORITY_NORMAL);
     esource->primary (false);
     m_init->mutex.lock();
     m_init->app_id = connection_object2id (ApplicationImpl::the());
     m_init->cond.signal();
     m_init->mutex.unlock();
     m_init = NULL;
+    fatal ("obsolete rope code...");
+#if 0
     while (true) // !EventLoop::loops_exitable()
       EventLoop::iterate_loops (true, true);      // prepare/check/dispatch and may_block
+#endif
   }
 };
 

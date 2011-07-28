@@ -31,7 +31,6 @@ class_scope:Wind0w:
 
 class_scope:Application:
   static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
-  int                execute_loops ();
   static bool        plor_add      (ItemIface    &item, const String &plor_name);
   static ItemIface*  plor_remove   (const String &plor_name);
   /* global mutex */

@@ -33,7 +33,6 @@
 #endif
 
 namespace Rapicorn {
-class RapicornTester;	// allow Rapicorn test implementations
 
 /* --- init stuff --- */
 void          rapicorn_thread_enter     ();
