@@ -22,6 +22,68 @@ namespace {
 using namespace Rapicorn;
 
 static void
+run_main_loop_recursive (bool blocking_while_primary = true)
+{
+  MainLoop *main_loop = uithread_main_loop();
+  return_if_fail (main_loop != NULL);
+  ref (main_loop);
+  if (!blocking_while_primary)
+    while (main_loop->pending (false))
+      main_loop->dispatch();
+  else
+    while (!main_loop->exitable())
+      if (main_loop->pending (true))
+        main_loop->dispatch();
+  unref (main_loop);
+}
+
+static void
+test_factory ()
+{
+  TOK();
+  ApplicationImpl &app = ApplicationImpl::the();
+
+  /* find and load GUI definitions relative to argv[0] */
+  String factory_xml = "factory.xml";
+  app.auto_load ("RapicornTest",                        // namespace domain,
+                 Path::vpath_find (factory_xml),        // GUI file name
+                 program_file());
+  TOK();
+  ItemImpl *item;
+  TestContainer *titem;
+  Wind0wIface &testwin = *app.create_wind0w ("test-TestItemL2");
+  testwin.show();
+  run_main_loop_recursive (false);
+  TOK();
+  WindowImpl *window = &testwin.impl();
+  item = window->find_item ("TestItemL2");
+  TASSERT (item != NULL);
+  titem = dynamic_cast<TestContainer*> (item);
+  TASSERT (titem != NULL);
+  if (0)
+    {
+      printout ("\n");
+      printout ("TestContainer::accu:%s\n", titem->accu().c_str());
+      printout ("TestContainer::accu_history: %s\n", titem->accu_history().c_str());
+    }
+  TASSERT (titem->accu_history() == "L0L1L2Instance");
+  TOK();
+  // test Item::name()
+  TASSERT (item->name().empty() == false); // has factory default
+  String factory_default = item->name();
+  item->name ("FooBar_4356786453567");
+  TASSERT (item->name() == "FooBar_4356786453567");
+  item->name ("");
+  TASSERT (item->name() != "FooBar_4356786453567");
+  TASSERT (item->name().empty() == false); // back to factory default
+  TASSERT (item->name() == factory_default);
+  TOK();
+  testwin.close();
+  TOK();
+}
+REGISTER_UITHREAD_TEST ("Factory/Test Item Factory", test_factory);
+
+static void
 test_cxx_server_gui ()
 {
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
@@ -39,7 +101,7 @@ test_cxx_server_gui ()
   TOK();
   /* show onscreen and handle events like expose */
   wind0w.show();
-  app.execute_loops();
+  run_main_loop_recursive();
   TOK();
   /* assert TestItem rendering */
   uint seen_test = TestContainer::seen_test_items();
@@ -72,14 +134,13 @@ test_test_item ()
   titem->sig_assertions_passed += slot (assertions_passed);
   titem->fatal_asserts (ServerTests::server_test_item_fatal_asserts);
   TOK();
-  while (EventLoop::iterate_loops (false, false)) // loops_pending?
-    EventLoop::iterate_loops (false, true);       // loops_dispatch
+  run_main_loop_recursive (false);
   /* close wind0w (and exit main loop) after first expose */
   window.enable_auto_close();
   /* verify and assert at least one TestItem rendering */
   uint old_seen_test = TestContainer::seen_test_items();
   wind0w.show();
-  app.execute_loops();
+  run_main_loop_recursive();
   uint seen_test = TestContainer::seen_test_items();
   TASSERT (seen_test > old_seen_test);
   /* test item rendering also executed various assertions */
@@ -160,7 +221,7 @@ test_complex_dialog ()
   if (ServerTests::server_test_run_dialogs)
     {
       wind0w.show();
-      app.execute_loops();
+      run_main_loop_recursive();
     }
   TOK();
   item = app.unique_component ("/#complex-dialog");

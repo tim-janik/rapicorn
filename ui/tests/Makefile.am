@@ -17,7 +17,7 @@ TESTS_ENVIRONMENT  = RAPICORN_VPATH=$(VPATH) # also search srcdir for XML files
 # test programs
 LOGTEST_PROGS       += servertests
 TEST_PROGS          += servertests
-servertests_SOURCES  = servertests.cc walker.cc cmdtest.cc properties.cc region.cc server.cc labelmarkup.cc factory.cc \
+servertests_SOURCES  = servertests.cc walker.cc cmdtest.cc properties.cc region.cc server.cc labelmarkup.cc \
 		       items.cc primitives.cc testitems.cc sinfextest.cc
 servertests_LDADD    = $(LDADDS) $(READLINELIBS)
 XML_FILES    	    += factory.xml testitems.xml
