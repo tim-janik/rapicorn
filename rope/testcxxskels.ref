@@ -110,7 +110,9 @@ enum ExtensiveEnum {
   V36 = 42, // "foo""4"
 };
 
-class I_FirstInterface_Interface : public virtual Plic::SimpleServer {
+class I_FirstInterface_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class FirstInterface.
+{
 protected:
   explicit                         I_FirstInterface_Interface ();
   virtual /*Des*/                 ~I_FirstInterface_Interface () = 0;
@@ -268,7 +270,9 @@ typedef std::string s;
 
 namespace InterfaceTests {
 
-class I_UIWidgetArea_Interface : public virtual Plic::SimpleServer {
+class I_UIWidgetArea_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class UIWidgetArea.
+{
 protected:
   explicit                         I_UIWidgetArea_Interface ();
   virtual /*Des*/                 ~I_UIWidgetArea_Interface () = 0;
@@ -300,28 +304,36 @@ public:
   virtual void                    on_click2in              (const std::string &command);
 };
 
-class I_Parent_Interface : public virtual Plic::SimpleServer {
+class I_Parent_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class Parent.
+{
 protected:
   explicit                         I_Parent_Interface ();
   virtual /*Des*/                 ~I_Parent_Interface () = 0;
 public:
 };
 
-class I_Child_Interface : public virtual I_Parent_Interface {
+class I_Child_Interface : public virtual I_Parent_Interface
+  /// See also the corresponding IDL class Child.
+{
 protected:
   explicit                         I_Child_Interface ();
   virtual /*Des*/                 ~I_Child_Interface () = 0;
 public:
 };
 
-class I_Descendant_Interface : public virtual I_Child_Interface {
+class I_Descendant_Interface : public virtual I_Child_Interface
+  /// See also the corresponding IDL class Descendant.
+{
 protected:
   explicit                         I_Descendant_Interface ();
   virtual /*Des*/                 ~I_Descendant_Interface () = 0;
 public:
 };
 
-class I_GrandChild_Interface : public virtual I_Descendant_Interface {
+class I_GrandChild_Interface : public virtual I_Descendant_Interface
+  /// See also the corresponding IDL class GrandChild.
+{
 protected:
   explicit                         I_GrandChild_Interface ();
   virtual /*Des*/                 ~I_GrandChild_Interface () = 0;
@@ -346,7 +358,9 @@ struct QuickSequenceImpl : public std::vector<double> {
 void operator<< (Plic::FieldBuffer&, const QuickSequenceImpl&);
 void operator>> (Plic::FieldReader&, QuickSequenceImpl&);
 
-class I_QuickIface_Interface : public virtual Plic::SimpleServer {
+class I_QuickIface_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class QuickIface.
+{
 protected:
   explicit                         I_QuickIface_Interface ();
   virtual /*Des*/                 ~I_QuickIface_Interface () = 0;
@@ -354,7 +368,9 @@ public:
   virtual void                    simple_function        (int i = 9);
 };
 
-class I_MethodTestInterface_Interface : public virtual Plic::SimpleServer {
+class I_MethodTestInterface_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class MethodTestInterface.
+{
 protected:
   explicit                         I_MethodTestInterface_Interface ();
   virtual /*Des*/                 ~I_MethodTestInterface_Interface () = 0;
@@ -380,7 +396,9 @@ public:
                                                                    I_QuickIface_Interface &iface0 = *(I_QuickIface_Interface*) NULL);
 };
 
-class I_SignalTestInterface_Interface : public virtual Plic::SimpleServer {
+class I_SignalTestInterface_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class SignalTestInterface.
+{
 protected:
   explicit                         I_SignalTestInterface_Interface ();
   virtual /*Des*/                 ~I_SignalTestInterface_Interface () = 0;
@@ -427,7 +445,9 @@ public:
   Signal_self_args sig_self_args;
 };
 
-class I_PropertyTester_Interface : public virtual Plic::SimpleServer {
+class I_PropertyTester_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class PropertyTester.
+{
 protected:
   explicit                         I_PropertyTester_Interface ();
   virtual /*Des*/                 ~I_PropertyTester_Interface () = 0;
@@ -463,7 +483,9 @@ enum ClickType {
   CLICK_KEY_REPEAT = 5,
 };
 
-class I_ButtonArea_Interface : public virtual Plic::SimpleServer {
+class I_ButtonArea_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class ButtonArea.
+{
 protected:
   explicit                         I_ButtonArea_Interface ();
   virtual /*Des*/                 ~I_ButtonArea_Interface () = 0;
@@ -484,7 +506,9 @@ public:
 
 class I_PureMethods_Interface;
 
-class I_PureMethods_Interface : public virtual Plic::SimpleServer {
+class I_PureMethods_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class PureMethods.
+{
 protected:
   explicit                         I_PureMethods_Interface ();
   virtual /*Des*/                 ~I_PureMethods_Interface () = 0;

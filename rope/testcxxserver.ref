@@ -17,6 +17,15 @@ using Rapicorn::Signals::slot;
 namespace { // Anonymous
 using Plic::uint64;
 
+static __attribute__ ((__format__ (__printf__, 1, 2), unused))
+Plic::FieldBuffer* plic$_error (const char *format, ...)
+{
+  va_list args;
+  va_start (args, format);
+  Plic::error_vprintf (format, args);
+  va_end (args);
+  return NULL;
+}
 
 } // Anonymous
 #endif // __PLIC_GENERIC_CC_BOILERPLATE__
@@ -133,7 +142,9 @@ enum ExtensiveEnum {
   V36 = 42, // "foo""4"
 };
 
-class I_FirstInterface_Interface : public virtual Plic::SimpleServer {
+class I_FirstInterface_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class FirstInterface.
+{
 protected:
   explicit                         I_FirstInterface_Interface ();
   virtual /*Des*/                 ~I_FirstInterface_Interface () = 0;
@@ -291,7 +302,9 @@ typedef std::string s;
 
 namespace InterfaceTests {
 
-class I_UIWidgetArea_Interface : public virtual Plic::SimpleServer {
+class I_UIWidgetArea_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class UIWidgetArea.
+{
 protected:
   explicit                         I_UIWidgetArea_Interface ();
   virtual /*Des*/                 ~I_UIWidgetArea_Interface () = 0;
@@ -323,28 +336,36 @@ public:
   virtual void                    on_click2in              (const std::string &command);
 };
 
-class I_Parent_Interface : public virtual Plic::SimpleServer {
+class I_Parent_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class Parent.
+{
 protected:
   explicit                         I_Parent_Interface ();
   virtual /*Des*/                 ~I_Parent_Interface () = 0;
 public:
 };
 
-class I_Child_Interface : public virtual I_Parent_Interface {
+class I_Child_Interface : public virtual I_Parent_Interface
+  /// See also the corresponding IDL class Child.
+{
 protected:
   explicit                         I_Child_Interface ();
   virtual /*Des*/                 ~I_Child_Interface () = 0;
 public:
 };
 
-class I_Descendant_Interface : public virtual I_Child_Interface {
+class I_Descendant_Interface : public virtual I_Child_Interface
+  /// See also the corresponding IDL class Descendant.
+{
 protected:
   explicit                         I_Descendant_Interface ();
   virtual /*Des*/                 ~I_Descendant_Interface () = 0;
 public:
 };
 
-class I_GrandChild_Interface : public virtual I_Descendant_Interface {
+class I_GrandChild_Interface : public virtual I_Descendant_Interface
+  /// See also the corresponding IDL class GrandChild.
+{
 protected:
   explicit                         I_GrandChild_Interface ();
   virtual /*Des*/                 ~I_GrandChild_Interface () = 0;
@@ -369,7 +390,9 @@ struct QuickSequenceImpl : public std::vector<double> {
 void operator<< (Plic::FieldBuffer&, const QuickSequenceImpl&);
 void operator>> (Plic::FieldReader&, QuickSequenceImpl&);
 
-class I_QuickIface_Interface : public virtual Plic::SimpleServer {
+class I_QuickIface_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class QuickIface.
+{
 protected:
   explicit                         I_QuickIface_Interface ();
   virtual /*Des*/                 ~I_QuickIface_Interface () = 0;
@@ -377,7 +400,9 @@ public:
   virtual void                    simple_function        (int i = 9);
 };
 
-class I_MethodTestInterface_Interface : public virtual Plic::SimpleServer {
+class I_MethodTestInterface_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class MethodTestInterface.
+{
 protected:
   explicit                         I_MethodTestInterface_Interface ();
   virtual /*Des*/                 ~I_MethodTestInterface_Interface () = 0;
@@ -403,7 +428,9 @@ public:
                                                                    I_QuickIface_Interface &iface0 = *(I_QuickIface_Interface*) NULL);
 };
 
-class I_SignalTestInterface_Interface : public virtual Plic::SimpleServer {
+class I_SignalTestInterface_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class SignalTestInterface.
+{
 protected:
   explicit                         I_SignalTestInterface_Interface ();
   virtual /*Des*/                 ~I_SignalTestInterface_Interface () = 0;
@@ -450,7 +477,9 @@ public:
   Signal_self_args sig_self_args;
 };
 
-class I_PropertyTester_Interface : public virtual Plic::SimpleServer {
+class I_PropertyTester_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class PropertyTester.
+{
 protected:
   explicit                         I_PropertyTester_Interface ();
   virtual /*Des*/                 ~I_PropertyTester_Interface () = 0;
@@ -486,7 +515,9 @@ enum ClickType {
   CLICK_KEY_REPEAT = 5,
 };
 
-class I_ButtonArea_Interface : public virtual Plic::SimpleServer {
+class I_ButtonArea_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class ButtonArea.
+{
 protected:
   explicit                         I_ButtonArea_Interface ();
   virtual /*Des*/                 ~I_ButtonArea_Interface () = 0;
@@ -507,7 +538,9 @@ public:
 
 class I_PureMethods_Interface;
 
-class I_PureMethods_Interface : public virtual Plic::SimpleServer {
+class I_PureMethods_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class PureMethods.
+{
 protected:
   explicit                         I_PureMethods_Interface ();
   virtual /*Des*/                 ~I_PureMethods_Interface () = 0;
@@ -917,7 +950,7 @@ namespace MandatoryNamespace {
 static Plic::FieldBuffer*
 _$caller__FirstInterface__void_func (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 0) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 0) return plic$_error ("invalid number of arguments");
   I_FirstInterface_Interface *self;
   self = connection_id2object<I_FirstInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -937,7 +970,7 @@ namespace InterfaceTests {
 static Plic::FieldBuffer*
 _$getter__UIWidgetArea__dummy (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -949,7 +982,7 @@ _$getter__UIWidgetArea__dummy (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$setter__UIWidgetArea__dummy (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -960,7 +993,7 @@ _$setter__UIWidgetArea__dummy (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$getter__UIWidgetArea__on_click (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -972,7 +1005,7 @@ _$getter__UIWidgetArea__on_click (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$setter__UIWidgetArea__on_click (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -983,7 +1016,7 @@ _$setter__UIWidgetArea__on_click (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__UIWidgetArea__simple_method (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 0) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 0) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -995,7 +1028,7 @@ _$caller__UIWidgetArea__simple_method (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__UIWidgetArea__single_arg (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1008,7 +1041,7 @@ _$caller__UIWidgetArea__single_arg (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__UIWidgetArea__single_arg2 (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1021,7 +1054,7 @@ _$caller__UIWidgetArea__single_arg2 (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__UIWidgetArea__two_args (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1035,7 +1068,7 @@ _$caller__UIWidgetArea__two_args (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__UIWidgetArea__two_args2 (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1049,7 +1082,7 @@ _$caller__UIWidgetArea__two_args2 (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__UIWidgetArea__multi_args (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 5) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 5) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1066,7 +1099,7 @@ _$caller__UIWidgetArea__multi_args (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__UIWidgetArea__self_method (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1080,7 +1113,7 @@ _$caller__UIWidgetArea__self_method (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__UIWidgetArea__void_method (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 0) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 0) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1090,7 +1123,7 @@ _$caller__UIWidgetArea__void_method (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__UIWidgetArea__on_click2out (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 0) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 0) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1102,7 +1135,7 @@ _$caller__UIWidgetArea__on_click2out (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__UIWidgetArea__on_click2in (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1134,7 +1167,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__UIWidgetArea__void_signal (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1177,7 +1210,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__UIWidgetArea__sample_signal (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
   self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1199,7 +1232,7 @@ _$sigcon__UIWidgetArea__sample_signal (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__QuickIface__simple_function (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_QuickIface_Interface *self;
   self = connection_id2object<I_QuickIface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1211,7 +1244,7 @@ _$caller__QuickIface__simple_function (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__MethodTestInterface__method_with_void (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 0) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 0) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1221,7 +1254,7 @@ _$caller__MethodTestInterface__method_with_void (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__MethodTestInterface__method_with_bools (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1235,7 +1268,7 @@ _$caller__MethodTestInterface__method_with_bools (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__MethodTestInterface__method_with_ints (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1249,7 +1282,7 @@ _$caller__MethodTestInterface__method_with_ints (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__MethodTestInterface__method_with_floats (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1263,7 +1296,7 @@ _$caller__MethodTestInterface__method_with_floats (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__MethodTestInterface__method_with_string (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1277,7 +1310,7 @@ _$caller__MethodTestInterface__method_with_string (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__MethodTestInterface__method_with_enum (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1291,7 +1324,7 @@ _$caller__MethodTestInterface__method_with_enum (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__MethodTestInterface__method_with_record (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1307,7 +1340,7 @@ _$caller__MethodTestInterface__method_with_record (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__MethodTestInterface__method_with_sequence (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1323,7 +1356,7 @@ _$caller__MethodTestInterface__method_with_sequence (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__MethodTestInterface__method_with_interface (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1337,7 +1370,7 @@ _$caller__MethodTestInterface__method_with_interface (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__MethodTestInterface__method_with_quickiface (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
   self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1373,7 +1406,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__void_result (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1412,7 +1445,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__bool_result (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1451,7 +1484,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__int_result (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1490,7 +1523,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__float_result (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1529,7 +1562,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__string_result (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1568,7 +1601,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__enum_result (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1607,7 +1640,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__record_result (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1646,7 +1679,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__sequence_result (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1685,7 +1718,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__interface_result (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1724,7 +1757,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__self_result (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1762,7 +1795,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__void_arg (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1802,7 +1835,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__bool_arg (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1842,7 +1875,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__int_arg (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1882,7 +1915,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__float_arg (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1922,7 +1955,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__string_arg (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -1962,7 +1995,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__enum_arg (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2002,7 +2035,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__record_arg (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2042,7 +2075,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__sequence_arg (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2082,7 +2115,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__interface_arg (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2122,7 +2155,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__SignalTestInterface__self_args (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
   self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2140,7 +2173,7 @@ _$sigcon__SignalTestInterface__self_args (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$getter__PropertyTester__bool_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2152,7 +2185,7 @@ _$getter__PropertyTester__bool_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$setter__PropertyTester__bool_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2163,7 +2196,7 @@ _$setter__PropertyTester__bool_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$getter__PropertyTester__int_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2175,7 +2208,7 @@ _$getter__PropertyTester__int_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$setter__PropertyTester__int_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2186,7 +2219,7 @@ _$setter__PropertyTester__int_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$getter__PropertyTester__float_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2198,7 +2231,7 @@ _$getter__PropertyTester__float_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$setter__PropertyTester__float_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2209,7 +2242,7 @@ _$setter__PropertyTester__float_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$getter__PropertyTester__string_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2221,7 +2254,7 @@ _$getter__PropertyTester__string_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$setter__PropertyTester__string_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2232,7 +2265,7 @@ _$setter__PropertyTester__string_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$getter__PropertyTester__enum_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2244,7 +2277,7 @@ _$getter__PropertyTester__enum_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$setter__PropertyTester__enum_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2255,7 +2288,7 @@ _$setter__PropertyTester__enum_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$getter__PropertyTester__record_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2267,7 +2300,7 @@ _$getter__PropertyTester__record_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$setter__PropertyTester__record_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2279,7 +2312,7 @@ _$setter__PropertyTester__record_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$getter__PropertyTester__sequence_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2291,7 +2324,7 @@ _$getter__PropertyTester__sequence_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$setter__PropertyTester__sequence_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2303,7 +2336,7 @@ _$setter__PropertyTester__sequence_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$getter__PropertyTester__interface_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2315,7 +2348,7 @@ _$getter__PropertyTester__interface_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$setter__PropertyTester__interface_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2326,7 +2359,7 @@ _$setter__PropertyTester__interface_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$getter__PropertyTester__self_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2338,7 +2371,7 @@ _$getter__PropertyTester__self_prop (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$setter__PropertyTester__self_prop (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
   self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2353,7 +2386,7 @@ namespace RapicornPlicTest {
 static Plic::FieldBuffer*
 _$getter__ButtonArea__on_click (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2365,7 +2398,7 @@ _$getter__ButtonArea__on_click (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$setter__ButtonArea__on_click (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2376,7 +2409,7 @@ _$setter__ButtonArea__on_click (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$getter__ButtonArea__on_click2 (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2388,7 +2421,7 @@ _$getter__ButtonArea__on_click2 (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$setter__ButtonArea__on_click2 (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2399,7 +2432,7 @@ _$setter__ButtonArea__on_click2 (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$getter__ButtonArea__on_click3 (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2411,7 +2444,7 @@ _$getter__ButtonArea__on_click3 (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$setter__ButtonArea__on_click3 (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2422,7 +2455,7 @@ _$setter__ButtonArea__on_click3 (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$getter__ButtonArea__click_type (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2434,7 +2467,7 @@ _$getter__ButtonArea__click_type (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$setter__ButtonArea__click_type (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2467,7 +2500,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__ButtonArea__check_activate (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2505,7 +2538,7 @@ public:
 static Plic::FieldBuffer*
 _$sigcon__ButtonArea__activate (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 2) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
   self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
@@ -2523,7 +2556,7 @@ _$sigcon__ButtonArea__activate (Plic::FieldReader &fbr)
 static Plic::FieldBuffer*
 _$caller__PureMethods__pure_method (Plic::FieldReader &fbr)
 {
-  if (fbr.remaining() != 1 + 1) return Plic::FieldBuffer::new_error ("invalid number of arguments", __func__);
+  if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PureMethods_Interface *self;
   self = connection_id2object<I_PureMethods_Interface> (fbr.pop_object());
   PLIC_CHECK (self, "self must be non-NULL");
