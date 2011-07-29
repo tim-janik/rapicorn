@@ -57,6 +57,8 @@ protected:
   typedef std::map<int, SourceList> SourceListMap;
   MainLoop     &m_main_loop;
   SourceListMap m_sources;
+  int64         m_dispatch_priority;
+  SourceList    m_poll_sources;
   explicit      EventLoop        (MainLoop&);
   virtual      ~EventLoop        ();
   Source*       find_first_L     ();
@@ -64,9 +66,11 @@ protected:
   bool          has_primary_L    (void);
   void          remove_source_Lm (Source *source);
   void          kill_sources_Lm  (void);
-  bool          prepare_sources_Lm  (int*, vector<PollFD>&, int64*);
-  bool          check_sources_Lm    (int*, const vector<PollFD>&);
-  void          dispatch_sources_Lm (int);
+  void          unpoll_sources_U    ();
+  bool          sense_sources_L     (bool*);
+  bool          prepare_sources_Lm  (vector<PollFD>&, int64*);
+  bool          check_sources_Lm    (const vector<PollFD>&);
+  void          dispatch_source_Lm  ();
   static uint64 get_current_time_usecs();
   typedef Signals::Slot1<void,PollFD&> VPfdSlot;
   typedef Signals::Slot1<bool,PollFD&> BPfdSlot;
@@ -83,8 +87,8 @@ public:
   // source handling
   uint add      (Source *loop_source,
                  int priority = PRIORITY_IDLE); ///< Adds a new source to the loop with custom priority.
-  bool try_remove      (uint            id);    ///< Tries to remove a source, returns if successfull.
   void remove          (uint            id);    ///< Removes a source from loop, the source must be present.
+  bool try_remove      (uint            id);    ///< Tries to remove a source, returns if successfull.
   void kill_sources    (void);                  ///< Remove all sources from this loop, prevents all further execution.
   bool has_primary     (void);                  ///< Indicates whether loop contains primary sources.
   uint exec_now        (const VoidSlot &sl);    ///< Execute a callback with priority "now" (highest).
@@ -121,25 +125,30 @@ class MainLoop : public EventLoop /// An EventLoop implementation that offers pu
 {
   friend                class EventLoop;
   friend                class SlaveLoop;
+  Mutex                 m_mutex;
   vector<EventLoop*>    m_loops;
   EventFd               m_eventfd;
-  uint                  m_generation;
-  Mutex                 m_mutex;
+  uint                  m_rr_index;
+  bool                  m_auto_finish, m_running;
+  int                   m_quit_code;
   void                  wakeup_poll         ();                 ///< Wakeup main loop from polling.
   void                  add_loop_L          (EventLoop &loop);  ///< Adds a slave loop to this main loop.
   void                  remove_loop_L       (EventLoop &loop);  ///< Removes a slave loop from this main loop.
-  bool                  iterate_loops       (bool b, bool d);
+  bool                  iterate_loops_Lm    (bool b, bool d, bool*);
   explicit              MainLoop            ();
 public:
-  virtual      ~MainLoop        ();
-  void          kill_loops      (); ///< Kill all sources in this loop and all slave loops.
-  bool          exitable        (); ///< Indicates wether this loop can be auto-exited, i.e. no primary sources are present.
-  void          iterate         (bool block = true); ///< Perform pending() & dispatch() in onse step.
-  bool          pending         (bool block = true); ///< Checks whether the main or any slave loop need dispatching, blocks if permitted.
-  void          dispatch        (); ///< Dispatches all pending events in the main or any slave loop.
-  EventLoop*    new_slave       (); ///< Creates a new slave loop that is run as part of this main loop.
-  static MainLoop*  _new        (); ///< Creates a new main loop object, users can run an exit this loop directly.
-  inline Mutex& mutex           () { return m_mutex; } ///< mutex associated with this main loop.
+  virtual   ~MainLoop        ();
+  int        run             (); ///< Run loop iterations until a call to quit() or finishable becomes true.
+  void       quit            (int quit_code = 0); ///< Cause run() to return with @a quit_code.
+  bool       finishable      (); ///< Indicates wether this loop has no primary sources left to process.
+  bool       auto_finish     (); ///< Returns whether run() will automatically quit if finishable() becomes true.
+  void       auto_finish     (bool autof); ///< Set whether run() will automatically quit if finishable() becomes true.
+  bool       iterate         (bool block); ///< Perform one loop iteration and return whether more iterations are needed.
+  void       iterate_pending (); ///< Call iterate() until no immediate dispatching is needed.
+  void       kill_loops      (); ///< Kill all sources in this loop and all slave loops.
+  EventLoop* new_slave       (); ///< Creates a new slave loop that is run as part of this main loop.
+  static MainLoop* _new      (); ///< Creates a new main loop object, users can run or iterate this loop directly.
+  inline Mutex& mutex        () { return m_mutex; } ///< Provide access to the mutex associated with this main loop.
 };
 
 // === EventLoop::Source ===
@@ -165,18 +174,18 @@ protected:
 public:
   virtual     ~Source      ();
   virtual bool prepare     (uint64 current_time_usecs,
-                            int64 *timeout_usecs_p) = 0;
-  virtual bool check       (uint64 current_time_usecs) = 0;
-  virtual bool dispatch    () = 0;
+                            int64 *timeout_usecs_p) = 0;    ///< Prepare the source for dispatching (true return) or polling (false).
+  virtual bool check       (uint64 current_time_usecs) = 0; ///< Check the source and its PollFD descriptors for dispatching (true return).
+  virtual bool dispatch    () = 0;                          ///< Dispatch source, returns if it should be kept alive.
   virtual void destroy     ();
-  bool         may_recurse () const;
-  void         may_recurse (bool           may_recurse);
-  bool         primary     () const;
-  void         primary     (bool           is_primary);
-  bool         recursion   () const;
-  void         add_poll    (PollFD * const pfd);
-  void         remove_poll (PollFD * const pfd);
-  void         loop_remove ();
+  bool         recursion   () const;                        ///< Indicates wether the source is currently in recursion.
+  bool         may_recurse () const;                        ///< Indicates if this source may recurse.
+  void         may_recurse (bool           may_recurse);    ///< Dispatch this source if its running recursively.
+  bool         primary     () const;                        ///< Indicate whether this source is primary.
+  void         primary     (bool           is_primary);     ///< Set whether this source prevents its loop from exiting.
+  void         add_poll    (PollFD * const pfd);            ///< Add a PollFD descriptors for poll(2) and check().
+  void         remove_poll (PollFD * const pfd);            ///< Remove a previously added PollFD.
+  void         loop_remove ();                              ///< Remove this source from its event loop if any.
 };
 
 // === EventLoop::TimedSource ===

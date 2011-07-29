@@ -42,7 +42,7 @@ uint64            server_init_app       (const String       &app_ident, // FIXME
                                          char              **argv,
                                          const StringVector &args = StringVector());
 uint64            uithread_bootup       (int *argcp, char **argv, const StringVector &args);
-int               shutdown_app          (int exit_status = 0); // FIXME: also in clientglue.cc
+void              shutdown_app          (void); // FIXME: also in clientglue.cc
 void              uithread_test_trigger (void (*) ());
 Plic::Connection* uithread_connection   (void);
 void              serverglue_setup      (Plic::Connection*);

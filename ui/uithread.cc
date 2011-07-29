@@ -309,10 +309,10 @@ private:
     Self::set_wakeup (trigger_wakeup, NULL, NULL); // allow external wakeups
     initialize();
     return_if_fail (m_init == NULL);
-    while (!Thread::Self::aborted())               // !EventLoop::loops_exitable()
-      m_main_loop.iterate (true);                  // iterate blocking
+    while (!Thread::Self::aborted())            // m_main_loop.finishable()
+      m_main_loop.iterate (true);               // iterate blocking
     shutdown();
-    Self::set_wakeup (NULL, NULL, NULL);           // main loop canot be woken up further
+    Self::set_wakeup (NULL, NULL, NULL);        // main loop canot be woken up further
     rapicorn_thread_leave();
   }
 };
@@ -371,13 +371,12 @@ uithread_connection (void)
   return NULL;
 }
 
-int // from clientapi.hh
-shutdown_app (int exit_status)
+void // from clientapi.hh
+shutdown_app (void)
 {
   if (UIThread::uithread() && UIThread::uithread()->running())
     UIThread::uithread()->abort();
   assert (UIThread::uithread()->running() == false);
-  return exit_status;
 }
 
 } // Rapicorn

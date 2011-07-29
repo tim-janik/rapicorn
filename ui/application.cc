@@ -111,7 +111,7 @@ ApplicationImpl::load_string (const std::string &xml_string,
 bool
 ApplicationIface::has_primary ()
 {
-  return !uithread_main_loop()->exitable();
+  return !uithread_main_loop()->finishable();
 }
 
 void

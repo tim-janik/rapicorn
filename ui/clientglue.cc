@@ -4,7 +4,7 @@
 
 namespace Rapicorn {
 
-int             shutdown_app            (int exit_status = 0); // also in uithread.hh // FIXME
+void            shutdown_app            (void); // also in uithread.hh // FIXME
 uint64          uithread_bootup         (int *argcp, char **argv, const StringVector &args);
 static void     clientglue_setup        (Plic::Connection *connection);
 
@@ -67,7 +67,8 @@ server_init_app (const String       &app_ident,
 void
 exit (int status)
 {
-  ::exit (shutdown_app (status));
+  shutdown_app();
+  ::exit (status);
 }
 
 static void
@@ -292,7 +293,8 @@ Application_SmartHandle::loop_and_exit ()
 int
 Application_SmartHandle::shutdown (int pass_through)
 {
-  return shutdown_app (pass_through);
+  shutdown_app();
+  return pass_through;
 }
 
 } // Rapicorn

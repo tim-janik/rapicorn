@@ -28,12 +28,10 @@ run_main_loop_recursive (bool blocking_while_primary = true)
   return_if_fail (main_loop != NULL);
   ref (main_loop);
   if (!blocking_while_primary)
-    while (main_loop->pending (false))
-      main_loop->dispatch();
+    main_loop->iterate_pending();
   else
-    while (!main_loop->exitable())
-      if (main_loop->pending (true))
-        main_loop->dispatch();
+    while (!main_loop->finishable())
+      main_loop->iterate (true);
   unref (main_loop);
 }
 

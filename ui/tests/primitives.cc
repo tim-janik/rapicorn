@@ -74,8 +74,7 @@ test_loop_basics()
   uint tcid = loop->exec_now (slot (test_callback));
   TASSERT (tcid > 0);
   TASSERT (test_callback_touched == false);
-  while (loop->pending (false))
-    loop->dispatch();
+  loop->iterate_pending();
   TASSERT (test_callback_touched == true);
   bool tremove = loop->try_remove (tcid);
   TASSERT (tremove == false);
@@ -83,38 +82,31 @@ test_loop_basics()
   /* keep-alive test */
   tcid = loop->exec_now (slot (keep_alive_callback));
   for (uint counter = 0; counter < max_runs; counter++)
-    if (loop->pending (false))
-      loop->dispatch();
-    else
+    if (!loop->iterate (false))
       break;
   tremove = loop->try_remove (tcid);
   TASSERT (tremove == true);
-  while (loop->pending (false))
-    loop->dispatch();
+  loop->iterate_pending();
   tremove = loop->try_remove (tcid);
   TASSERT (tremove == false);
   /* loop + pipe */
   int pipe_fds[2];
   int err = pipe (pipe_fds);
   TASSERT (err == 0);
-  while (loop->pending (false))
-    loop->dispatch();
+  loop->iterate_pending();
   loop->exec_io_handler (slot (pipe_reader), pipe_fds[0], "r");
   loop->exec_io_handler (slot (pipe_writer), pipe_fds[1], "w");
   TASSERT (pipe_reader_seen == 0);
   while (pipe_reader_seen < 4999)
-    if (loop->pending (true))
-      loop->dispatch();
+    loop->iterate (true);
   TCMPSIGNED (pipe_reader_seen, ==, 4999);
   err = close (pipe_fds[1]);    // pipe becomes unusable
   TASSERT (err == 0);
-  while (loop->pending (false))
-    loop->dispatch();           // PollFDSource prepare/check must auto-close fds here
+  loop->iterate_pending();      // PollFDSource prepare/check must auto-close fds here
   err = close (pipe_fds[0]);
   TASSERT (err == -1);          // fd should have already been auto-closed by PollFDSource
   unref (loop);
-  while (loop->pending (false))
-    loop->dispatch();
+  loop->iterate_pending();
 }
 REGISTER_UITHREAD_TEST ("Loops/Test Basics", test_loop_basics);
 
@@ -214,8 +206,7 @@ test_event_loop_sources()
   MainLoop *loop = MainLoop::_new();
   TASSERT (loop);
   ref_sink (loop);
-  while (loop->pending (false))
-    loop->dispatch();
+  loop->iterate_pending();
   /* source state checks */
   TASSERT (check_source_counter == 0);
   const uint nsrc = quick_rand32() % (1 + ARRAY_SIZE (check_sources));
@@ -229,9 +220,7 @@ test_event_loop_sources()
   TASSERT (check_source_destroyed_counter == 0);
   for (uint counter = 0; counter < max_runs; counter++)
     {
-      if (loop->pending (false))
-        loop->dispatch();
-      else
+      if (!loop->iterate (false))
         break;
       if (counter % 347 == 0)
         TOK();
@@ -257,8 +246,7 @@ test_loop_round_robin (void)
   TASSERT (loop);
   ref_sink (loop);
   for (uint i = 0; i < 77; i++)
-    if (loop->pending (false))
-      loop->dispatch();
+    loop->iterate (false);
   /* We're roughly checking round-robin execution behaviour, by checking if
    * two concurrently running handlers are both executed. If one starves,
    * we'll catch that.
@@ -273,8 +261,7 @@ test_loop_round_robin (void)
    */
   const uint rungroup_for_two = 2 * rungroup + 2;
   for (uint i = 0; i < rungroup_for_two; i++)
-    if (loop->pending())
-      loop->dispatch();
+    loop->iterate (false);
   TASSERT (round_robin_1 >= rungroup && round_robin_2 >= rungroup);
   loop->kill_sources();
   // we should be able to repeat the check
@@ -283,8 +270,7 @@ test_loop_round_robin (void)
   round_robin_1 = round_robin_2 = 0;
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
   for (uint i = 0; i < rungroup_for_two; i++)
-    if (loop->pending())
-      loop->dispatch();
+    loop->iterate (false);
   TASSERT (round_robin_1 >= rungroup && round_robin_2 >= rungroup);
   loop->kill_sources();
   // cross-check, intentionally cause starvation of one handler
@@ -293,25 +279,29 @@ test_loop_round_robin (void)
   round_robin_1 = round_robin_2 = 0;
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
   for (uint i = 0; i < rungroup_for_two; i++)
-    if (loop->pending())
-      loop->dispatch();
+    loop->iterate (false);
   TASSERT (round_robin_1 < rungroup && round_robin_2 >= rungroup);
   loop->kill_sources();
   // check round-robin for loops
+  EventLoop *dummy1 = loop->new_slave();
   EventLoop *slave = loop->new_slave();
+  EventLoop *dummy2 = loop->new_slave();
   ref_sink (slave);
+  ref_sink (dummy1);
+  ref_sink (dummy2);
   round_robin_1 = round_robin_2 = 0;
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
   loop->exec_background (slot (round_robin_increment, &round_robin_1));
   slave->exec_normal (slot (round_robin_increment, &round_robin_2));
   for (uint i = 0; i < rungroup_for_two; i++)
-    if (loop->pending())
-      loop->dispatch();
+    loop->iterate (false);
   TASSERT (round_robin_1 >= rungroup && round_robin_2 >= rungroup);
   loop->kill_sources();
   slave->kill_sources();
   unref (loop);
   unref (slave);
+  unref (dummy1);
+  unref (dummy2);
 }
 REGISTER_UITHREAD_TEST ("Loops/Test Round Robin Looping", test_loop_round_robin);
 
@@ -333,13 +323,11 @@ test_loop_priorities (void)
   breadcrumb_loop = MainLoop::_new();
   ref_sink (breadcrumb_loop);
   for (uint i = 0; i < 7; i++)
-    if (breadcrumb_loop->pending (false))
-      breadcrumb_loop->dispatch();
+    breadcrumb_loop->iterate (false);
   breadcrumb_loop->exec_normal (slot (handler_a));
   breadcrumb_loop->exec_normal (slot (handler_b));
   breadcrumb_loop->exec_normal (slot (handler_c));
-  while (breadcrumb_loop->pending (false))
-    breadcrumb_loop->dispatch();
+  breadcrumb_loop->iterate_pending();
   TASSERT (loop_breadcrumbs == "abDc");
   breadcrumb_loop->kill_sources();
   unref (breadcrumb_loop);
