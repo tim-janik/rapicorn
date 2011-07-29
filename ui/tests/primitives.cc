@@ -28,7 +28,10 @@ pipe_writer (PollFD &pfd)
   do
     err = write (pfd.fd, buffer, sizeof (buffer));
   while (err < 0 && (errno == EINTR || errno == EAGAIN));
-  RAPICORN_ASSERT (err == sizeof (buffer));
+  /* we assert error-free IO operation, because loop source prepare/poll/check
+   * must make sure the file descriptor really is valid and writable
+   */
+  TASSERT (err == sizeof (buffer));
   return true;
 }
 
@@ -45,8 +48,11 @@ pipe_reader (PollFD &pfd)
       do
         err = read (pfd.fd, &data, 1);
       while (err < 0 && (errno == EINTR || errno == EAGAIN));
-      RAPICORN_ASSERT (err == 1);
-      RAPICORN_ASSERT (counter == data);
+      /* we assert error-free IO operation, because loop source prepare/poll/check
+       * must make sure the file descriptor really is valid and readable
+       */
+      TASSERT (err == 1);
+      TASSERT (counter == data);
       counter++;
     }
   pipe_reader_seen++;
@@ -100,17 +106,17 @@ test_loop_basics()
     if (loop->pending (true))
       loop->dispatch();
   TCMPSIGNED (pipe_reader_seen, ==, 4999);
-  err = close (pipe_fds[1]);
+  err = close (pipe_fds[1]);    // pipe becomes unusable
   TASSERT (err == 0);
   while (loop->pending (false))
-    loop->dispatch();
+    loop->dispatch();           // PollFDSource prepare/check must auto-close fds here
   err = close (pipe_fds[0]);
-  TASSERT (err == -1); /* should have been auto-closed by PollFDSource */
+  TASSERT (err == -1);          // fd should have already been auto-closed by PollFDSource
   unref (loop);
   while (loop->pending (false))
     loop->dispatch();
 }
-REGISTER_UITHREAD_TEST ("Primitives/Test Loop Basics", test_loop_basics);
+REGISTER_UITHREAD_TEST ("Loops/Test Basics", test_loop_basics);
 
 // === test_event_loop_sources ===
 static uint         check_source_counter = 0;
@@ -239,7 +245,7 @@ test_event_loop_sources()
   TASSERT (check_source_counter == 0);
   unref (loop);
 }
-REGISTER_UITHREAD_TEST ("Primitives/Test Event Loop Sources", test_event_loop_sources);
+REGISTER_UITHREAD_TEST ("Loops/Test Event Sources", test_event_loop_sources);
 
 static bool round_robin_increment (uint *loc) { (*loc)++; return true; }
 static uint round_robin_1 = 0, round_robin_2 = 0;
@@ -291,9 +297,55 @@ test_loop_round_robin (void)
       loop->dispatch();
   TASSERT (round_robin_1 < rungroup && round_robin_2 >= rungroup);
   loop->kill_sources();
+  // check round-robin for loops
+  EventLoop *slave = loop->new_slave();
+  ref_sink (slave);
+  round_robin_1 = round_robin_2 = 0;
+  TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
+  loop->exec_background (slot (round_robin_increment, &round_robin_1));
+  slave->exec_normal (slot (round_robin_increment, &round_robin_2));
+  for (uint i = 0; i < rungroup_for_two; i++)
+    if (loop->pending())
+      loop->dispatch();
+  TASSERT (round_robin_1 >= rungroup && round_robin_2 >= rungroup);
+  loop->kill_sources();
+  slave->kill_sources();
   unref (loop);
+  unref (slave);
 }
-REGISTER_UITHREAD_TEST ("Primitives/Test Round Robin Looping", test_loop_round_robin);
+REGISTER_UITHREAD_TEST ("Loops/Test Round Robin Looping", test_loop_round_robin);
+
+static String loop_breadcrumbs = "";
+static MainLoop *breadcrumb_loop = NULL;
+static void handler_d();
+static void handler_a() { loop_breadcrumbs += "a"; TASSERT (loop_breadcrumbs == "a"); }
+static void handler_b()
+{
+  loop_breadcrumbs += "b"; TASSERT (loop_breadcrumbs == "ab");
+  breadcrumb_loop->exec_now (slot (handler_d));
+}
+static void handler_c() { loop_breadcrumbs += "c"; TASSERT (loop_breadcrumbs == "abDc"); }
+static void handler_d() { loop_breadcrumbs += "D"; TASSERT (loop_breadcrumbs == "abD"); }
+static void
+test_loop_priorities (void)
+{
+  TASSERT (!breadcrumb_loop);
+  breadcrumb_loop = MainLoop::_new();
+  ref_sink (breadcrumb_loop);
+  for (uint i = 0; i < 7; i++)
+    if (breadcrumb_loop->pending (false))
+      breadcrumb_loop->dispatch();
+  breadcrumb_loop->exec_normal (slot (handler_a));
+  breadcrumb_loop->exec_normal (slot (handler_b));
+  breadcrumb_loop->exec_normal (slot (handler_c));
+  while (breadcrumb_loop->pending (false))
+    breadcrumb_loop->dispatch();
+  TASSERT (loop_breadcrumbs == "abDc");
+  breadcrumb_loop->kill_sources();
+  unref (breadcrumb_loop);
+  breadcrumb_loop = NULL;
+}
+REGISTER_UITHREAD_TEST ("Loops/Test Loop Priorities", test_loop_priorities);
 
 static void
 test_affine()
