@@ -13,6 +13,8 @@ DOCU_GLOBS  = *.py $(DOCU_HGLOBS)
 DOCU_HGLOBS = *.idl *.h *.H *.hh *.proc
 DOCU_CGLOBS = $(DOCU_GLOBS) *.c *.C *.cc
 SRCTREE     = srctree
+DOXYGENV    = doxygen-1.7.4
+DOXYGEN     = $(if $(shell which $(DOXYGENV)), $(DOXYGENV), doxygen)
 
 EXCLUDES = rope/cpy2rope.cc rope/cxx-client.[hc][hc] \
 	rcore/rapicornsignalvariants.hh
@@ -49,7 +51,7 @@ build-stamp: $(git_stamp) doxygen.cfg
 	&& echo "INPUT		  = $(SRCTREE)/" \
 	&& echo "OUTPUT_DIRECTORY = html.tmp/" \
 	&& echo -n "PROJECT_NUMBER = $(SED_VERSION)" \
-	) | nice doxygen -
+	) | nice $(DOXYGEN) -
 	rm -rf $(SRCTREE)/
 	mv html.tmp/html/ html.tmp/$(SED_VERSION)/
 	ln -s $(SED_VERSION) html.tmp/latest
