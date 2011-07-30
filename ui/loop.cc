@@ -312,9 +312,13 @@ EventLoop::wakeup ()
 }
 
 // === MainLoop ===
+static bool dummy_sense() { return false; }
+static void dummy_nop()   {}
+static const MainLoop::LockHooks dummy_hooks = { dummy_sense, dummy_nop, dummy_nop };
+
 MainLoop::MainLoop() :
   EventLoop (*this), // sets *this as MainLoop on self
-  m_rr_index (0), m_auto_finish (true), m_running (false), m_quit_code (0)
+  m_rr_index (0), m_auto_finish (true), m_running (false), m_quit_code (0), m_lock_hooks (dummy_hooks)
 {
   ScopedLock<Mutex> locker (m_main_loop.mutex());
   add_loop_L (*this);
@@ -326,6 +330,19 @@ MainLoop::~MainLoop()
   ScopedLock<Mutex> locker (m_mutex);
   remove_loop_L (*this);
   return_if_fail (m_loops.empty() == true);
+}
+
+void
+MainLoop::set_lock_hooks (const LockHooks &hooks)
+{
+  ScopedLock<Mutex> locker (m_mutex);
+  if (hooks.sense)
+    {
+      return_if_fail (hooks.lock != NULL && hooks.unlock != NULL);
+      m_lock_hooks = hooks;
+    }
+  else
+    m_lock_hooks = dummy_hooks;
 }
 
 void
@@ -671,16 +688,17 @@ MainLoop::iterate_loops_Lm (bool may_block, bool may_dispatch, bool *seen_primar
     timeout_msecs = 1;
   if (!may_block || any_dispatchable)
     timeout_msecs = 0;
+  LockHooks hooks = m_lock_hooks;
   int presult;
   locker.unlock();
-  const bool thread_entered = rapicorn_thread_entered();
-  if (thread_entered)
-    rapicorn_thread_leave();
+  const bool needs_locking = hooks.sense();
+  if (needs_locking)
+    hooks.unlock();
   do
     presult = poll ((struct pollfd*) &pfds[0], pfds.size(), MIN (timeout_msecs, INT_MAX));
   while (presult < 0 && errno == EAGAIN); // EINTR may indicate a signal
-  if (thread_entered)
-    rapicorn_thread_enter();
+  if (needs_locking)
+    hooks.lock();
   locker.lock();
   if (presult < 0)
     pcritical ("MainLoop: poll() failed");

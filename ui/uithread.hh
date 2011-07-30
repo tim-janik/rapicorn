@@ -37,12 +37,8 @@
 
 namespace Rapicorn {
 
-uint64            server_init_app       (const String       &app_ident, // FIXME: in clientglue.cc
-                                         int                *argcp,
-                                         char              **argv,
-                                         const StringVector &args = StringVector());
 uint64            uithread_bootup       (int *argcp, char **argv, const StringVector &args);
-void              shutdown_app          (void); // FIXME: also in clientglue.cc
+void              uithread_shutdown     (void); // FIXME: also in clientglue.cc
 void              uithread_test_trigger (void (*) ());
 Plic::Connection* uithread_connection   (void);
 void              serverglue_setup      (Plic::Connection*);

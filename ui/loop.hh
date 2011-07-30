@@ -146,8 +146,13 @@ public:
   void       iterate_pending (); ///< Call iterate() until no immediate dispatching is needed.
   void       kill_loops      (); ///< Kill all sources in this loop and all slave loops.
   EventLoop* new_slave       (); ///< Creates a new slave loop that is run as part of this main loop.
-  static MainLoop* _new      (); ///< Creates a new main loop object, users can run or iterate this loop directly.
-  inline Mutex& mutex        () { return m_mutex; } ///< Provide access to the mutex associated with this main loop.
+  static MainLoop*  _new     (); ///< Creates a new main loop object, users can run or iterate this loop directly.
+  inline Mutex&     mutex    () { return m_mutex; } ///< Provide access to the mutex associated with this main loop.
+  ///@cond
+  struct LockHooks { bool (*sense) (); void (*lock) (); void (*unlock) (); };
+  void              set_lock_hooks      (const LockHooks &hooks);
+private: LockHooks  m_lock_hooks;
+  ///@endcond
 };
 
 // === EventLoop::Source ===

@@ -238,35 +238,29 @@ class UIThread : public Thread {
   Initializer      *m_init;
   ConnectionSource *m_connection;
   MainLoop         &m_main_loop;
+  RecMutex          m_lifetime;
 public:
   UIThread (Initializer *init) :
     Thread ("Rapicorn::UIThread"), m_init (init), m_connection (NULL),
     m_main_loop (*ref_sink (MainLoop::_new()))
   {
     assert (the_uithread == NULL);
-    the_uithread = ref_sink (this);
+    the_uithread = ref_sink (this); // keep around undestructed as singleton
   }
   Plic::Connection* connection()  { return m_connection; }
   static UIThread*  uithread()    { return Atomic::ptr_get (&the_uithread); }
   MainLoop*         main_loop()   { return &m_main_loop; }
+  void
+  stop()
+  {
+    m_main_loop.quit();
+    m_lifetime.lock(); // syncronize with thread shutdown
+    m_lifetime.unlock();
+  }
 private:
   ~UIThread ()
   {
-    assert (the_uithread != this);
-    shutdown();
-    unref (m_main_loop);
-  }
-  void
-  shutdown()
-  {
-    ConnectionSource *con = m_connection;
-    m_connection = NULL;
-    if (con)
-      {
-        con->loop_remove();
-        unref (con);
-      }
-    m_main_loop.kill_loops();
+    fatal ("UIThread singleton in dtor");
   }
   static void
   trigger_wakeup (void*)
@@ -278,11 +272,15 @@ private:
   initialize ()
   {
     return_if_fail (m_init != NULL);
+    // stay inside rapicorn_thread_enter/rapicorn_thread_leave while not polling
     assert (rapicorn_thread_entered() == true);
+    MainLoop::LockHooks lock_hooks = { rapicorn_thread_entered, rapicorn_thread_enter, rapicorn_thread_leave };
+    m_main_loop.set_lock_hooks (lock_hooks);
     // init_core() already called
     affinity (string_to_int (string_vector_find (*m_init->args, "cpu-affinity=", "-1")));
     // initialize ui_thread loop before components
     m_connection = ref_sink (new ConnectionSource (m_main_loop));
+    m_main_loop.auto_finish (false);    // we require explicit stop()
     // initialize sub systems
     struct InitHookCaller : public InitHook {
       static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)
@@ -305,15 +303,16 @@ private:
   virtual void
   run ()
   {
+    m_lifetime.lock();
     rapicorn_thread_enter();
-    Self::set_wakeup (trigger_wakeup, NULL, NULL); // allow external wakeups
+    Self::set_wakeup (trigger_wakeup, NULL, NULL); // allow external wakeups (unused)
     initialize();
     return_if_fail (m_init == NULL);
-    while (!Thread::Self::aborted())            // m_main_loop.finishable()
-      m_main_loop.iterate (true);               // iterate blocking
-    shutdown();
+    m_main_loop.run();
     Self::set_wakeup (NULL, NULL, NULL);        // main loop canot be woken up further
+    m_main_loop.kill_loops();
     rapicorn_thread_leave();
+    m_lifetime.unlock(); // can be used for external lifetime syncronization
   }
 };
 UIThread *UIThread::the_uithread = NULL;
@@ -338,7 +337,7 @@ uithread_uncancelled_atexit()
        * graceful shutdown at this point.
        */
       FIXME ("UI-Thread still running during exit(), call Application::shutdown()");
-      shutdown_app();
+      uithread_shutdown();
     }
 }
 
@@ -371,12 +370,11 @@ uithread_connection (void)
   return NULL;
 }
 
-void // from clientapi.hh
-shutdown_app (void)
+void
+uithread_shutdown (void)
 {
   if (UIThread::uithread() && UIThread::uithread()->running())
-    UIThread::uithread()->abort();
-  assert (UIThread::uithread()->running() == false);
+    UIThread::uithread()->stop(); // stops ui thread main loop
 }
 
 } // Rapicorn
@@ -470,6 +468,6 @@ uithread_test_trigger (void (*test_func) ())
   // run tests from ui-thread
   ui_thread_syscall (new SyscallTestTrigger (test_func));
   // ensure ui-thread shutdown
-  shutdown_app();
+  uithread_shutdown();
 }
 } // Rapicorn

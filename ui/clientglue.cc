@@ -4,8 +4,8 @@
 
 namespace Rapicorn {
 
-void            shutdown_app            (void); // also in uithread.hh // FIXME
 uint64          uithread_bootup         (int *argcp, char **argv, const StringVector &args);
+void            uithread_shutdown       (void); // FIXME: also in uithread.hh
 static void     clientglue_setup        (Plic::Connection *connection);
 
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x120caca0) { v += 0x300000; } } __staticctortest;
@@ -48,16 +48,6 @@ init_app (const String       &app_ident,
   return Application_SmartHandle::_new (fbr);
 }
 
-uint64
-server_init_app (const String       &app_ident,
-                 int                *argcp,
-                 char              **argv,
-                 const StringVector &args)
-{
-  Application_SmartHandle app = init_app (app_ident, argcp, argv, args);
-  return app._rpc_id();
-}
-
 /**
  * This function calls Application::shutdown() first, to properly terminate Rapicorn's
  * concurrently running ui-thread, and then terminates the program via
@@ -67,7 +57,7 @@ server_init_app (const String       &app_ident,
 void
 exit (int status)
 {
-  shutdown_app();
+  uithread_shutdown();
   ::exit (status);
 }
 
@@ -293,7 +283,7 @@ Application_SmartHandle::loop_and_exit ()
 int
 Application_SmartHandle::shutdown (int pass_through)
 {
-  shutdown_app();
+  uithread_shutdown();
   return pass_through;
 }
 
