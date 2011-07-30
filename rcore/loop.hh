@@ -163,7 +163,7 @@ class EventLoop::Source : public virtual ReferenceCountable, protected NonCopyab
 {
   friend        class EventLoop;
 protected:
-  EventLoop    *m_main_loop;
+  EventLoop   *m_loop;
   struct {
     PollFD    *pfd;
     uint       idx;
@@ -177,7 +177,7 @@ protected:
   uint         m_primary : 1;
   uint         n_pfds      ();
   explicit     Source      ();
-  uint         source_id   () { return m_main_loop ? m_id : 0; }
+  uint         source_id   () { return m_loop ? m_id : 0; }
 public:
   virtual     ~Source      ();
   virtual bool prepare     (uint64 current_time_usecs,

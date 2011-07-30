@@ -227,8 +227,8 @@ EventLoop::add (Source *source,
                 int     priority)
 {
   ScopedLock<Mutex> locker (m_main_loop.mutex());
-  return_val_if_fail (source->m_main_loop == NULL, 0);
-  source->m_main_loop = this;
+  return_val_if_fail (source->m_loop == NULL, 0);
+  source->m_loop = this;
   ref_sink (source);
   source->m_id = alloc_id();
   source->m_loop_state = WAITING;
@@ -243,8 +243,8 @@ void
 EventLoop::remove_source_Lm (Source *source)
 {
   ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED);
-  return_if_fail (source->m_main_loop == this);
-  source->m_main_loop = NULL;
+  return_if_fail (source->m_loop == this);
+  source->m_loop = NULL;
   source->m_loop_state = WAITING;
   m_sources.erase (find (m_sources.begin(), m_sources.end(), source));
   release_id (source->m_id);
@@ -523,7 +523,7 @@ EventLoop::prepare_sources_Lm (vector<PollFD> &pfds,
     {
       Source &source = **lit;
       *seen_primary |= source.m_primary;
-      if (source.m_main_loop != this ||                         // consider undestroyed
+      if (source.m_loop != this ||                              // consider undestroyed
           (source.m_dispatching && !source.m_may_recurse))      // avoid unallowed recursion
         continue;
       if (source.m_priority < m_dispatch_priority &&
@@ -549,13 +549,13 @@ EventLoop::prepare_sources_Lm (vector<PollFD> &pfds,
   for (SourceList::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
     {
       Source &source = **lit;
-      if (source.m_main_loop != this) // test undestroyed
+      if (source.m_loop != this) // test undestroyed
         continue;
       int64 timeout = -1;
       locker.unlock();
       const bool need_dispatch = source.prepare (current_time_usecs, &timeout);
       locker.lock();
-      if (source.m_main_loop != this)
+      if (source.m_loop != this)
         continue; // ignore newly destroyed sources
       if (need_dispatch)
         {
@@ -590,7 +590,7 @@ EventLoop::check_sources_Lm (const vector<PollFD> &pfds)
   for (SourceList::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
     {
       Source &source = **lit;
-      if (source.m_main_loop != this && // test undestroyed
+      if (source.m_loop != this && // test undestroyed
           source.m_loop_state != PREPARED)
         continue; // only check prepared sources
       uint npfds = source.n_pfds();
@@ -606,7 +606,7 @@ EventLoop::check_sources_Lm (const vector<PollFD> &pfds)
       locker.unlock();
       bool need_dispatch = source.check (current_time_usecs);
       locker.lock();
-      if (source.m_main_loop != this)
+      if (source.m_loop != this)
         continue; // ignore newly destroyed sources
       if (need_dispatch)
         {
@@ -627,7 +627,7 @@ EventLoop::dispatch_source_Lm ()
   for (SourceList::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
     {
       Source &source = **lit;
-      if (source.m_main_loop == this &&               // test undestroyed
+      if (source.m_loop == this &&                    // test undestroyed
           source.m_priority == m_dispatch_priority && // only dispatch at dispatch priority
           source.m_loop_state == NEEDS_DISPATCH)
         {
@@ -650,7 +650,7 @@ EventLoop::dispatch_source_Lm ()
       locker.lock();
       dispatch_source->m_dispatching = dispatch_source->m_was_dispatching;
       dispatch_source->m_was_dispatching = old_was_dispatching;
-      if (dispatch_source->m_main_loop == this && !keep_alive)
+      if (dispatch_source->m_loop == this && !keep_alive)
         remove_source_Lm (dispatch_source);
     }
   return dispatch_source;       // unref() carried out by caller
@@ -766,7 +766,7 @@ MainLoop::_new ()
 
 // === EventLoop::Source ===
 EventLoop::Source::Source () :
-  m_main_loop (NULL),
+  m_loop (NULL),
   m_pfds (NULL),
   m_id (0),
   m_priority (INT_MAX),
@@ -857,13 +857,13 @@ EventLoop::Source::destroy ()
 void
 EventLoop::Source::loop_remove ()
 {
-  if (m_main_loop)
-    m_main_loop->try_remove (source_id());
+  if (m_loop)
+    m_loop->try_remove (source_id());
 }
 
 EventLoop::Source::~Source ()
 {
-  RAPICORN_ASSERT (m_main_loop == NULL);
+  RAPICORN_ASSERT (m_loop == NULL);
   if (m_pfds)
     free (m_pfds);
 }
