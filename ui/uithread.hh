@@ -17,7 +17,6 @@
 #include <ui/item.hh>
 #include <ui/layoutcontainers.hh>
 #include <ui/listarea.hh>
-#include <ui/loop.hh>
 #include <ui/paintcontainers.hh>
 #include <ui/paintitems.hh>
 #include <ui/painter.hh>

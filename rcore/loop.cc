@@ -1,12 +1,13 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "loop.hh"
-#include "commands.hh"
+#include "strings.hh"
 #include <sys/poll.h>
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/time.h>
 #include <algorithm>
+#include <list>
 #include <cstring>
 #if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 10
 #  include <sys/eventfd.h>              // defines EFD_SEMAPHORE

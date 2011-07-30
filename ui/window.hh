@@ -3,7 +3,6 @@
 #define __RAPICORN_WINDOW_HH__
 
 #include <ui/container.hh>
-#include <ui/loop.hh>
 #include <ui/viewp0rt.hh>
 
 namespace Rapicorn {

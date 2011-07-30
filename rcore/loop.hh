@@ -2,7 +2,10 @@
 #ifndef __RAPICORN_LOOP_HH__
 #define __RAPICORN_LOOP_HH__
 
-#include <ui/primitives.hh>
+#include <rcore/utilities.hh>
+#include <rcore/rapicornthread.hh>
+#include <rcore/rapicornsignal.hh>
+
 
 namespace Rapicorn {
 
