@@ -263,7 +263,7 @@ EventLoop::remove_source_Lm (Source *source)
   source->m_main_loop = NULL;
   source->m_loop_state = WAITING;
   SourceList &slist = m_sources[source->m_priority];
-  slist.remove (source);
+  slist.erase (find (slist.begin(), slist.end(), source));
   if (slist.empty())
     m_sources.erase (m_sources.find (source->m_priority));
   release_id (source->m_id);
@@ -411,19 +411,13 @@ MainLoop::run ()
   ScopedLock<Mutex> locker (m_mutex);
   m_quit_code = 0;
   m_running = true;
-  bool seen_primary = false; // hint towards not being finishable
+  bool seen_primary = false;    // hint towards not being finishable
   iterate_loops_Lm (false, false, &seen_primary);   // check sources
   while (m_running)
     {
-      if (m_auto_finish && !seen_primary)
-        {
-          // really determine if we're finishable, seen_primary is merely a hint
-          locker.unlock();
-          bool finished = finishable(); // unlocked
-          locker.lock();
-          if (finished)
-            break;
-        }
+      if (m_auto_finish && !seen_primary &&
+          finishable_L())       // really determine if we're finishable, seen_primary is merely a hint
+        break;
       iterate_loops_Lm (true, true, &seen_primary); // poll & dispatch
     }
   return m_quit_code;
@@ -455,15 +449,21 @@ MainLoop::auto_finish (bool autofinish)
 }
 
 bool
-MainLoop::finishable()
+MainLoop::finishable_L()
 {
-  ScopedLock<Mutex> locker (m_mutex);
   // loop list shouldn't be modified by querying finishable state
   bool found_primary = false;
   for (size_t i = 0; !found_primary && i < m_loops.size(); i++)
     if (m_loops[i]->has_primary_L())
       found_primary = true;
   return !found_primary; // finishable if no primary sources remain
+}
+
+bool
+MainLoop::finishable()
+{
+  ScopedLock<Mutex> locker (m_mutex);
+  return finishable_L();
 }
 
 /**
@@ -505,29 +505,9 @@ EventLoop::unpoll_sources_U() // must be unlocked!
 static const int64 supraint_priobase = 2147483648LL; // INT32_MAX + 1, above all possible int32 values
 
 bool
-EventLoop::sense_sources_L (bool *seen_primary)
-{
-  m_dispatch_priority = supraint_priobase; // dispatch priority, cover full int32 range initially
-  // find sources that need dispatching
-  for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
-    {
-      SourceList &slist = (*it).second;
-      for (SourceList::iterator lit = slist.begin(); lit != slist.end(); lit++)
-        {
-          Source &source = **lit;
-          *seen_primary |= source.m_primary;
-          if (source.m_main_loop == this &&             // test undestroyed
-              source.m_loop_state == NEEDS_DISPATCH &&  // find NEEDS_DISPATCH sources
-              (!source.m_dispatching || source.m_may_recurse))
-            m_dispatch_priority = MIN (m_dispatch_priority, source.m_priority);
-        }
-    }
-  return m_dispatch_priority < supraint_priobase;
-}
-
-bool
 EventLoop::prepare_sources_Lm (vector<PollFD> &pfds,
-                               int64          *timeout_usecs)
+                               int64          *timeout_usecs,
+                               bool           *seen_primary)
 {
   ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED);
   // enforce clean slate
@@ -537,21 +517,39 @@ EventLoop::prepare_sources_Lm (vector<PollFD> &pfds,
       unpoll_sources_U(); // unlocked
       locker.lock();
     }
-  // collect sources that need preparing
+  // determine dispatch priority & collect sources for preparing
+  m_dispatch_priority = supraint_priobase; // dispatch priority, cover full int32 range initially
+  vector<Source*> poll_candidates;
+  poll_candidates.reserve (7);
   for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
     {
       SourceList &slist = (*it).second;
       for (SourceList::iterator lit = slist.begin(); lit != slist.end(); lit++)
         {
           Source &source = **lit;
-          if (source.m_main_loop == this &&               // test undestroyed
-              (!source.m_dispatching || source.m_may_recurse) &&
-              (source.m_priority < m_dispatch_priority || // only prepare preempting sources
-               (source.m_priority == m_dispatch_priority &&
-                source.m_loop_state == NEEDS_DISPATCH)))  // re-poll sources that need dispatching
-            m_poll_sources.push_back (ref (&source));
+          *seen_primary |= source.m_primary;
+          if (source.m_main_loop != this ||                     // consider undestroyed
+              (source.m_dispatching && !source.m_may_recurse))  // avoid unallowed recursion
+            continue;
+          if (source.m_priority < m_dispatch_priority &&
+              source.m_loop_state == NEEDS_DISPATCH)            // dispatch priority needs adjusting
+            m_dispatch_priority = source.m_priority;            // upgrade dispatch priority
+          if (source.m_priority < m_dispatch_priority ||        // prepare preempting sources
+              (source.m_priority == m_dispatch_priority &&
+               source.m_loop_state == NEEDS_DISPATCH))          // re-poll sources that need dispatching
+            poll_candidates.push_back (&source);        // collect only, adding ref() next
         }
     }
+  // ensure ref counts on all prepare sources
+  uint j = 0;
+  for (uint i = 0; i < poll_candidates.size(); i++)
+    if (poll_candidates[i]->m_priority < m_dispatch_priority || // throw away lower priority sources
+        (poll_candidates[i]->m_priority == m_dispatch_priority &&
+         poll_candidates[i]->m_loop_state == NEEDS_DISPATCH))   // re-poll sources that need dispatching
+      poll_candidates[j++] = ref (poll_candidates[i]);
+  poll_candidates.resize (j);
+  m_poll_sources.swap (poll_candidates);                // ref()ed sources <= dispatch priority
+  assert (poll_candidates.empty());
   // prepare sources, up to NEEDS_DISPATCH priority
   uint64 current_time_usecs = EventLoop::get_current_time_usecs();
   for (SourceList::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
@@ -624,55 +622,44 @@ EventLoop::check_sources_Lm (const vector<PollFD> &pfds)
       else
         source.m_loop_state = WAITING;
     }
-  // clean up
-  if (!m_poll_sources.empty())
-    {
-      locker.unlock();
-      unpoll_sources_U(); // unlocked
-      locker.lock();
-    }
   return m_dispatch_priority < supraint_priobase;
 }
 
-void
+EventLoop::Source*
 EventLoop::dispatch_source_Lm ()
 {
-  ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED);
   // find a source to dispatch at m_dispatch_priority
   Source *dispatch_source = NULL;
-  for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end() && !dispatch_source; it++)
+  for (SourceList::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
     {
-      SourceList &slist = (*it).second;
-      for (SourceList::iterator lit = slist.begin(); lit != slist.end() && !dispatch_source; lit++)
+      Source &source = **lit;
+      if (source.m_main_loop == this &&               // test undestroyed
+          source.m_priority == m_dispatch_priority && // only dispatch at dispatch priority
+          source.m_loop_state == NEEDS_DISPATCH)
         {
-          Source &source = **lit;
-          if (source.m_main_loop == this &&               // test undestroyed
-              source.m_priority == m_dispatch_priority && // only dispatch at dispatch priority
-              source.m_loop_state == NEEDS_DISPATCH)
-            dispatch_source = ref (&source);
+          dispatch_source = &source;
+          break;
         }
     }
   m_dispatch_priority = supraint_priobase;
   // dispatch single source
   if (dispatch_source)
     {
-      Source &source = *dispatch_source;
-      source.m_loop_state = WAITING;
-      const bool old_was_dispatching = source.m_was_dispatching;
-      source.m_was_dispatching = source.m_dispatching;
-      source.m_dispatching = true;
+      ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED);
+      dispatch_source->m_loop_state = WAITING;
+      const bool old_was_dispatching = dispatch_source->m_was_dispatching;
+      dispatch_source->m_was_dispatching = dispatch_source->m_dispatching;
+      dispatch_source->m_dispatching = true;
+      ref (dispatch_source);    // ref() to keep alive even if everything else is destroyed
       locker.unlock();
-      const bool keep_alive = source.dispatch ();
+      const bool keep_alive = dispatch_source->dispatch ();
       locker.lock();
-      source.m_dispatching = source.m_was_dispatching;
-      source.m_was_dispatching = old_was_dispatching;
-      if (source.m_main_loop == this && !keep_alive)
-        remove_source_Lm (&source);
-      // clean up
-      locker.unlock();
-      unref (dispatch_source); // unlocked
-      locker.lock();
+      dispatch_source->m_dispatching = dispatch_source->m_was_dispatching;
+      dispatch_source->m_was_dispatching = old_was_dispatching;
+      if (dispatch_source->m_main_loop == this && !keep_alive)
+        remove_source_Lm (dispatch_source);
     }
+  return dispatch_source;       // unref() carried out by caller
 }
 
 bool
@@ -695,8 +682,7 @@ MainLoop::iterate_loops_Lm (bool may_block, bool may_dispatch, bool *seen_primar
   // prepare
   for (uint i = 0; i < nloops; i++)
     {
-      loops[i]->sense_sources_L (seen_primary); // sense m_dispatch_priority
-      dispatchable[i] = loops[i]->prepare_sources_Lm (pfds, &timeout_usecs);
+      dispatchable[i] = loops[i]->prepare_sources_Lm (pfds, &timeout_usecs, seen_primary);
       any_dispatchable |= dispatchable[i];
     }
   // allow poll wakeups
@@ -716,7 +702,7 @@ MainLoop::iterate_loops_Lm (bool may_block, bool may_dispatch, bool *seen_primar
     rapicorn_thread_leave();
   do
     presult = poll ((struct pollfd*) &pfds[0], pfds.size(), MIN (timeout_msecs, INT_MAX));
-  while (presult < 0 && (errno == EAGAIN || errno == EINTR));
+  while (presult < 0 && errno == EAGAIN); // EINTR may indicate a signal
   if (thread_entered)
     rapicorn_thread_enter();
   locker.lock();
@@ -731,16 +717,19 @@ MainLoop::iterate_loops_Lm (bool may_block, bool may_dispatch, bool *seen_primar
       any_dispatchable |= dispatchable[i];
     }
   // dispatch
+  Source *unref_source = NULL;
   if (may_dispatch && any_dispatchable)
     {
       uint index, i = nloops;
       do        // find next dispatchable loop in round-robin fashion
         index = m_rr_index++ % nloops;
       while (!dispatchable[index] && i--);
-      loops[index]->dispatch_source_Lm();
+      unref_source = loops[index]->dispatch_source_Lm(); // passes on dispatch_source reference
     }
   // cleanup
   locker.unlock();
+  if (unref_source)
+    unref (unref_source); // unlocked
   for (uint i = 0; i < nloops; i++)
     {
       loops[i]->unpoll_sources_U(); // unlocked

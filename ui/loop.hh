@@ -53,7 +53,7 @@ class EventLoop : public virtual BaseObject /// Loop object, polling for events 
 public:
   class Source;
 protected:
-  typedef std::list<Source*>        SourceList;
+  typedef std::vector<Source*>      SourceList;
   typedef std::map<int, SourceList> SourceListMap;
   MainLoop     &m_main_loop;
   SourceListMap m_sources;
@@ -67,10 +67,9 @@ protected:
   void          remove_source_Lm (Source *source);
   void          kill_sources_Lm  (void);
   void          unpoll_sources_U    ();
-  bool          sense_sources_L     (bool*);
-  bool          prepare_sources_Lm  (vector<PollFD>&, int64*);
+  bool          prepare_sources_Lm  (vector<PollFD>&, int64*, bool*);
   bool          check_sources_Lm    (const vector<PollFD>&);
-  void          dispatch_source_Lm  ();
+  Source*       dispatch_source_Lm  ();
   static uint64 get_current_time_usecs();
   typedef Signals::Slot1<void,PollFD&> VPfdSlot;
   typedef Signals::Slot1<bool,PollFD&> BPfdSlot;
@@ -131,6 +130,7 @@ class MainLoop : public EventLoop /// An EventLoop implementation that offers pu
   uint                  m_rr_index;
   bool                  m_auto_finish, m_running;
   int                   m_quit_code;
+  bool                  finishable_L        ();
   void                  wakeup_poll         ();                 ///< Wakeup main loop from polling.
   void                  add_loop_L          (EventLoop &loop);  ///< Adds a slave loop to this main loop.
   void                  remove_loop_L       (EventLoop &loop);  ///< Removes a slave loop from this main loop.
