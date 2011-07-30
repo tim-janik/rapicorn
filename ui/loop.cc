@@ -193,40 +193,24 @@ EventLoop::get_current_time_usecs ()
 inline EventLoop::Source*
 EventLoop::find_first_L()
 {
-  SourceListMap::iterator it = m_sources.begin();
-  if (it != m_sources.end())
-    {
-      SourceList &slist = (*it).second;
-      SourceList::iterator lit = slist.begin();
-      if (lit != slist.end())
-        return *lit;
-    }
-  return NULL;
+  return m_sources.empty() ? NULL : m_sources[0];
 }
 
 inline EventLoop::Source*
 EventLoop::find_source_L (uint id)
 {
-  for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
-    {
-      SourceList &slist = (*it).second;
-      for (SourceList::iterator lit = slist.begin(); lit != slist.end(); lit++)
-        if (id == (*lit)->m_id)
-          return *lit;
-    }
+  for (SourceList::iterator lit = m_sources.begin(); lit != m_sources.end(); lit++)
+    if (id == (*lit)->m_id)
+      return *lit;
   return NULL;
 }
 
 bool
 EventLoop::has_primary_L()
 {
-  for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
-    {
-      SourceList &slist = (*it).second;
-      for (SourceList::iterator lit = slist.begin(); lit != slist.end(); lit++)
-        if ((*lit)->primary())
-          return true;
-    }
+  for (SourceList::iterator lit = m_sources.begin(); lit != m_sources.end(); lit++)
+    if ((*lit)->primary())
+      return true;
   return false;
 }
 
@@ -248,8 +232,7 @@ EventLoop::add (Source *source,
   source->m_id = alloc_id();
   source->m_loop_state = WAITING;
   source->m_priority = priority;
-  SourceList &slist = m_sources[priority];
-  slist.push_back (source);
+  m_sources.push_back (source);
   locker.unlock();
   wakeup();
   return source->m_id;
@@ -262,10 +245,7 @@ EventLoop::remove_source_Lm (Source *source)
   return_if_fail (source->m_main_loop == this);
   source->m_main_loop = NULL;
   source->m_loop_state = WAITING;
-  SourceList &slist = m_sources[source->m_priority];
-  slist.erase (find (slist.begin(), slist.end(), source));
-  if (slist.empty())
-    m_sources.erase (m_sources.find (source->m_priority));
+  m_sources.erase (find (m_sources.begin(), m_sources.end(), source));
   release_id (source->m_id);
   source->m_id = 0;
   locker.unlock();
@@ -521,24 +501,20 @@ EventLoop::prepare_sources_Lm (vector<PollFD> &pfds,
   m_dispatch_priority = supraint_priobase; // dispatch priority, cover full int32 range initially
   vector<Source*> poll_candidates;
   poll_candidates.reserve (7);
-  for (SourceListMap::iterator it = m_sources.begin(); it != m_sources.end(); it++)
+  for (SourceList::iterator lit = m_sources.begin(); lit != m_sources.end(); lit++)
     {
-      SourceList &slist = (*it).second;
-      for (SourceList::iterator lit = slist.begin(); lit != slist.end(); lit++)
-        {
-          Source &source = **lit;
-          *seen_primary |= source.m_primary;
-          if (source.m_main_loop != this ||                     // consider undestroyed
-              (source.m_dispatching && !source.m_may_recurse))  // avoid unallowed recursion
-            continue;
-          if (source.m_priority < m_dispatch_priority &&
-              source.m_loop_state == NEEDS_DISPATCH)            // dispatch priority needs adjusting
-            m_dispatch_priority = source.m_priority;            // upgrade dispatch priority
-          if (source.m_priority < m_dispatch_priority ||        // prepare preempting sources
-              (source.m_priority == m_dispatch_priority &&
-               source.m_loop_state == NEEDS_DISPATCH))          // re-poll sources that need dispatching
-            poll_candidates.push_back (&source);        // collect only, adding ref() next
-        }
+      Source &source = **lit;
+      *seen_primary |= source.m_primary;
+      if (source.m_main_loop != this ||                         // consider undestroyed
+          (source.m_dispatching && !source.m_may_recurse))      // avoid unallowed recursion
+        continue;
+      if (source.m_priority < m_dispatch_priority &&
+          source.m_loop_state == NEEDS_DISPATCH)                // dispatch priority needs adjusting
+        m_dispatch_priority = source.m_priority;                // upgrade dispatch priority
+      if (source.m_priority < m_dispatch_priority ||            // prepare preempting sources
+          (source.m_priority == m_dispatch_priority &&
+           source.m_loop_state == NEEDS_DISPATCH))              // re-poll sources that need dispatching
+        poll_candidates.push_back (&source);            // collect only, adding ref() next
     }
   // ensure ref counts on all prepare sources
   uint j = 0;

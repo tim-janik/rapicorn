@@ -53,10 +53,9 @@ class EventLoop : public virtual BaseObject /// Loop object, polling for events 
 public:
   class Source;
 protected:
-  typedef std::vector<Source*>      SourceList;
-  typedef std::map<int, SourceList> SourceListMap;
+  typedef std::vector<Source*>    SourceList;
   MainLoop     &m_main_loop;
-  SourceListMap m_sources;
+  SourceList    m_sources;
   int64         m_dispatch_priority;
   SourceList    m_poll_sources;
   explicit      EventLoop        (MainLoop&);
