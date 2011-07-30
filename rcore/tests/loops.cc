@@ -104,8 +104,8 @@ test_loop_basics()
   loop->iterate_pending();      // PollFDSource prepare/check must auto-close fds here
   err = close (pipe_fds[0]);
   TASSERT (err == -1);          // fd should have already been auto-closed by PollFDSource
-  unref (loop);
   loop->iterate_pending();
+  unref (loop);
 }
 REGISTER_TEST ("Loops/Test Basics", test_loop_basics);
 
