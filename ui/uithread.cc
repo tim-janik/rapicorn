@@ -257,6 +257,16 @@ public:
     m_lifetime.lock(); // syncronize with thread shutdown
     m_lifetime.unlock();
   }
+  bool
+  unstopped()
+  {
+    if (m_lifetime.trylock())
+      {
+        m_lifetime.unlock();
+        return false;
+      }
+    return true;
+  }
 private:
   ~UIThread ()
   {
@@ -326,7 +336,7 @@ uithread_main_loop ()
 static void
 uithread_uncancelled_atexit()
 {
-  if (UIThread::uithread() && UIThread::uithread()->running())
+  if (UIThread::uithread() && UIThread::uithread()->unstopped())
     {
       /* For proper shutdown, the ui-thread needs to stop running before global
        * dtors or any atexit() handlers are being executed. C9x and C++03 leave
@@ -357,7 +367,7 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args)
     idata.cond.wait (idata.mutex);
   uint64 app_id = idata.app_id;
   idata.mutex.unlock();
-  assert (UIThread::uithread() && UIThread::uithread()->running());
+  assert (UIThread::uithread() && UIThread::uithread()->unstopped());
   serverglue_setup (uithread_connection());
   return app_id;
 }
@@ -365,7 +375,7 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args)
 Plic::Connection*
 uithread_connection (void)
 {
-  if (UIThread::uithread() && UIThread::uithread()->running())
+  if (UIThread::uithread() && UIThread::uithread()->unstopped())
     return UIThread::uithread()->connection();
   return NULL;
 }
@@ -373,7 +383,7 @@ uithread_connection (void)
 void
 uithread_shutdown (void)
 {
-  if (UIThread::uithread() && UIThread::uithread()->running())
+  if (UIThread::uithread() && UIThread::uithread()->unstopped())
     UIThread::uithread()->stop(); // stops ui thread main loop
 }
 
