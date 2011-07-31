@@ -1,19 +1,4 @@
-/* Plic Binding utilities
- * Copyright (C) 2010 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "plicutils.hh"
 #include <assert.h>
 #include <string.h>
@@ -39,7 +24,7 @@
 #define PLIC_STATIC_ASSERT_NAMED(expr,asname)   typedef struct { char asname[(expr) ? 1 : -1]; } PLIC_CPP_PASTE2 (Plic_StaticAssertion_LINE, __LINE__)
 #define PLIC_STATIC_ASSERT(expr)                PLIC_STATIC_ASSERT_NAMED (expr, compile_time_assertion_failed)
 #define ALIGN4(sz,unit)                         (sizeof (unit) * ((sz + sizeof (unit) - 1) / sizeof (unit)))
-#define PLIC_THROW_IF_FAIL(expr)                do { if (expr) break; PLIC_THROW ("failed to assert (" + #expr + ")"); } while (0)
+#define PLIC_THROW_IF_FAIL(expr)                do { if (PLIC_LIKELY (expr)) break; PLIC_THROW ("failed to assert (" + #expr + ")"); } while (0)
 #define PLIC_THROW(msg)                         throw std::runtime_error (std::string() + __PRETTY_FUNCTION__ + ": " + msg)
 
 namespace Plic {
@@ -327,22 +312,30 @@ struct Hash128 {
   }
 };
 typedef std::map<Hash128, DispatchFunc> DispatcherMap;
-static DispatcherMap                   dispatcher_map;
-static pthread_mutex_t                 dispatcher_mutex = PTHREAD_MUTEX_INITIALIZER;
+static DispatcherMap                    dispatcher_map;
+static pthread_mutex_t                  dispatcher_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool                             dispatcher_map_locked = false;
 
 DispatchFunc
 Connection::find_method (uint64 hashhi, uint64 hashlow)
 {
   Hash128 hash128 (hashhi, hashlow);
+#if 1 // avoid costly mutex locking
+  if (PLIC_UNLIKELY (dispatcher_map_locked == false))
+    dispatcher_map_locked = true;
+  return dispatcher_map[hash128];
+#else
   pthread_mutex_lock (&dispatcher_mutex);
   DispatchFunc dispatcher_func = dispatcher_map[hash128];
   pthread_mutex_unlock (&dispatcher_mutex);
   return dispatcher_func;
+#endif
 }
 
 void
 Connection::MethodRegistry::register_method (const MethodEntry &mentry)
 {
+  PLIC_THROW_IF_FAIL (dispatcher_map_locked == false);
   pthread_mutex_lock (&dispatcher_mutex);
   DispatcherMap::size_type size_before = dispatcher_map.size();
   Hash128 hash128 (mentry.hashhi, mentry.hashlow);
