@@ -665,6 +665,7 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   for (size_t i = 0; i < nloops; i++)
     loops[i] = ref (m_loops[i]);
   // prepare
+  state.seen_primary = false;
   state.current_time_usecs = timestamp_realtime();
   for (uint i = 0; i < nloops; i++)
     {
