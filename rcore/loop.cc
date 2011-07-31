@@ -402,9 +402,9 @@ MainLoop::run ()
   m_running = true;
   State state;
   iterate_loops_Lm (state, false, false);       // check sources
-  while (m_running)
+  while (ISLIKELY (m_running))
     {
-      if (m_auto_finish && !state.seen_primary &&
+      if (UNLIKELY (m_auto_finish && !state.seen_primary) &&
           finishable_L())       // really determine if we're finishable, seen_primary is merely a hint
         break;
       iterate_loops_Lm (state, true, true);     // poll & dispatch
@@ -498,13 +498,13 @@ EventLoop::prepare_sources_Lm (State          &state,
                                int64          *timeout_usecs,
                                vector<PollFD> &pfds)
 {
-  ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED);
+  Mutex &main_mutex = m_main_loop.mutex();
   // enforce clean slate
   if (!m_poll_sources.empty())
     {
-      locker.unlock();
+      main_mutex.unlock();
       unpoll_sources_U(); // unlocked
-      locker.lock();
+      main_mutex.lock();
     }
   // determine dispatch priority & collect sources for preparing
   m_dispatch_priority = supraint_priobase; // dispatch priority, cover full int32 range initially
@@ -543,9 +543,9 @@ EventLoop::prepare_sources_Lm (State          &state,
       if (source.m_loop != this) // test undestroyed
         continue;
       int64 timeout = -1;
-      locker.unlock();
+      main_mutex.unlock();
       const bool need_dispatch = source.prepare (state, &timeout);
-      locker.lock();
+      main_mutex.lock();
       if (source.m_loop != this)
         continue; // ignore newly destroyed sources
       if (need_dispatch)
@@ -576,7 +576,7 @@ bool
 EventLoop::check_sources_Lm (State                &state,
                              const vector<PollFD> &pfds)
 {
-  ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED);
+  Mutex &main_mutex = m_main_loop.mutex();
   // check polled sources
   for (SourceList::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
     {
@@ -594,9 +594,9 @@ EventLoop::check_sources_Lm (State                &state,
           else
             source.m_pfds[i].idx = UINT_MAX;
         }
-      locker.unlock();
+      main_mutex.unlock();
       bool need_dispatch = source.check (state);
-      locker.lock();
+      main_mutex.lock();
       if (source.m_loop != this)
         continue; // ignore newly destroyed sources
       if (need_dispatch)
@@ -613,6 +613,7 @@ EventLoop::check_sources_Lm (State                &state,
 EventLoop::Source*
 EventLoop::dispatch_source_Lm (State &state)
 {
+  Mutex &main_mutex = m_main_loop.mutex();
   // find a source to dispatch at m_dispatch_priority
   Source *dispatch_source = NULL;
   for (SourceList::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
@@ -630,15 +631,14 @@ EventLoop::dispatch_source_Lm (State &state)
   // dispatch single source
   if (dispatch_source)
     {
-      ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED);
       dispatch_source->m_loop_state = WAITING;
       const bool old_was_dispatching = dispatch_source->m_was_dispatching;
       dispatch_source->m_was_dispatching = dispatch_source->m_dispatching;
       dispatch_source->m_dispatching = true;
       ref (dispatch_source);    // ref() to keep alive even if everything else is destroyed
-      locker.unlock();
+      main_mutex.unlock();
       const bool keep_alive = dispatch_source->dispatch (state);
-      locker.lock();
+      main_mutex.lock();
       dispatch_source->m_dispatching = dispatch_source->m_was_dispatching;
       dispatch_source->m_was_dispatching = old_was_dispatching;
       if (dispatch_source->m_loop == this && !keep_alive)
@@ -650,7 +650,7 @@ EventLoop::dispatch_source_Lm (State &state)
 bool
 MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
 {
-  ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED);
+  Mutex &main_mutex = m_main_loop.mutex();
   int err = m_eventfd.open();
   if (err < 0)
     fatal ("MainLoop: failed to create wakeup pipe: %s", strerror (-err));
@@ -683,7 +683,7 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
     timeout_msecs = 0;
   LockHooks hooks = m_lock_hooks;
   int presult;
-  locker.unlock();
+  main_mutex.unlock();
   const bool needs_locking = hooks.sense();
   if (needs_locking)
     hooks.unlock();
@@ -692,7 +692,7 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   while (presult < 0 && errno == EAGAIN); // EINTR may indicate a signal
   if (needs_locking)
     hooks.lock();
-  locker.lock();
+  main_mutex.lock();
   if (presult < 0)
     pcritical ("MainLoop: poll() failed");
   else if (pfds[wakeup_idx].revents)
@@ -715,7 +715,7 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
       unref_source = loops[index]->dispatch_source_Lm (state); // passes on dispatch_source reference
     }
   // cleanup
-  locker.unlock();
+  main_mutex.unlock();
   if (unref_source)
     unref (unref_source); // unlocked
   for (uint i = 0; i < nloops; i++)
@@ -723,7 +723,7 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
       loops[i]->unpoll_sources_U(); // unlocked
       unref (loops[i]); // unlocked
     }
-  locker.lock();
+  main_mutex.lock();
   return any_dispatchable; // need to dispatch or recheck
 }
 
