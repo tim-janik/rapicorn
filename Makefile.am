@@ -78,7 +78,7 @@ installcheck-local:
 	&& echo 'using namespace Rapicorn;'				>> tmpx.cc \
 	&& echo 'extern "C" int main (int argc, char *argv[]) {'	>> tmpx.cc \
 	&& echo 'Application app = init_app (".AMtest", &argc, argv);'	>> tmpx.cc \
-	&& echo 'exit (0); return app.loop_and_exit(); }'		>> tmpx.cc \
+	&& echo 'return 0; /* FIXME: app.run_and_exit();*/ }'		>> tmpx.cc \
 	; eval "$$TSTDIAGNOSE" "'Create  rapicorn sample program'"
 	$(Q) $(CXX) `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags rapicorn@RAPICORN_RELEASE@` \
 		tmpx.cc -c ; eval "$$TSTDIAGNOSE" "'Compile rapicorn sample program'"

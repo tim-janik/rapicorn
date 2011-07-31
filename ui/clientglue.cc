@@ -9,6 +9,7 @@ void            uithread_shutdown       (void); // FIXME: also in uithread.hh
 static void     clientglue_setup        (Plic::Connection *connection);
 
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x120caca0) { v += 0x300000; } } __staticctortest;
+static Application_SmartHandle app_cached;
 
 /**
  * Initialize Rapicorn core via init_core(), and then starts a seperately
@@ -28,6 +29,7 @@ init_app (const String       &app_ident,
           char              **argv,
           const StringVector &args)
 {
+  return_val_if_fail (Application_SmartHandle::the()._is_null() == true, app_cached);
   // assert global_ctors work
   if (__staticctortest.v != 0x123caca0)
     fatal ("librapicornui: link error: C++ constructors have not been executed");
@@ -45,7 +47,14 @@ init_app (const String       &app_ident,
   Plic::FieldBuffer8 fb (1);
   fb.add_object (appid);
   Plic::FieldReader fbr (fb);
-  return Application_SmartHandle::_new (fbr);
+  app_cached = Application_SmartHandle::_new (fbr);
+  return app_cached;
+}
+
+Application_SmartHandle
+Application_SmartHandle::the ()
+{
+  return app_cached;
 }
 
 /**
@@ -61,50 +70,102 @@ exit (int status)
   ::exit (status);
 }
 
-static void
-loop_dispatch (Plic::Connection &connection)
+class AppSource : public EventLoop::Source {
+  Plic::Connection &m_connection;
+  PollFD            m_pfd;
+public:
+  AppSource (Plic::Connection &connection) :
+    m_connection (connection)
+  {
+    m_pfd.fd = connection.event_inputfd();
+    m_pfd.events = PollFD::IN;
+    m_pfd.revents = 0;
+    add_poll (&m_pfd);
+    primary (true);
+  }
+  virtual bool
+  prepare (uint64 current_time_usecs,
+           int64 *timeout_usecs_p)
+  {
+    return m_connection.has_event();
+  }
+  virtual bool
+  check (uint64 current_time_usecs)
+  {
+    return m_connection.has_event();
+  }
+  virtual bool
+  dispatch ()
+  {
+    Plic::FieldBuffer *fb = m_connection.pop_event();
+    if (fb)
+      dispatch_connection (fb);
+    return true;
+  }
+private:
+  void
+  dispatch_connection (Plic::FieldBuffer *fb)
+  {
+    Plic::FieldReader fbr (*fb);
+    const Plic::MessageId msgid = Plic::MessageId (fbr.pop_int64());
+    fbr.pop_int64(); // msgid low
+    Plic::FieldBuffer *fr = NULL;
+    if (Plic::msgid_is_event (msgid))
+      {
+        const uint64 handler_id = fbr.pop_int64();
+        Plic::Connection::EventHandler *evh = m_connection.find_event_handler (handler_id);
+        if (evh)
+          fr = evh->handle_event (*fb);
+        else
+          fr = Plic::FieldBuffer::new_error (string_printf ("invalid signal handler id in %s: %llu", "event", handler_id), "PLIC");
+      }
+    else if (Plic::msgid_is_discon (msgid))
+      {
+        const uint64 handler_id = fbr.pop_int64();
+        const bool deleted = true; // FIXME: currently broken : connection.delete_event_handler (handler_id);
+        if (!deleted)
+          fr = Plic::FieldBuffer::new_error (string_printf ("invalid signal handler id in %s: %llu", "disconnect", handler_id), "PLIC");
+      }
+    else
+      fr = Plic::FieldBuffer::new_error (string_printf ("unhandled message id: 0x%016zx", size_t (msgid)), "PLIC");
+    delete fb;
+    if (fr)
+      {
+        Plic::FieldReader frr (*fr);
+        const Plic::MessageId retid = Plic::MessageId (frr.pop_int64());
+        frr.skip(); // msgid low
+        if (Plic::msgid_is_error (retid))
+          {
+            String msg = frr.pop_string(), domain = frr.pop_string();
+            if (domain.size())
+              domain += ": ";
+            msg = domain + msg;
+            Plic::error_printf ("%s", msg.c_str());
+          }
+        delete fr;
+      }
+  }
+};
+
+MainLoop*
+Application_SmartHandle::main_loop()
 {
-  Plic::FieldBuffer *fb = connection.pop_event();
-  if (!fb)
-    return;
-  Plic::FieldReader fbr (*fb);
-  const Plic::MessageId msgid = Plic::MessageId (fbr.pop_int64());
-  fbr.pop_int64(); // msgid low
-  Plic::FieldBuffer *fr = NULL;
-  if (Plic::msgid_is_event (msgid))
+  return_val_if_fail (the()._is_null() == false, NULL);
+  static MainLoop *app_loop = NULL;
+  static EventLoop *slave = NULL;
+  static AppSource *source = NULL;
+  if (once_enter (&app_loop))
     {
-      const uint64 handler_id = fbr.pop_int64();
-      Plic::Connection::EventHandler *evh = connection.find_event_handler (handler_id);
-      if (evh)
-        fr = evh->handle_event (*fb);
-      else
-        fr = Plic::FieldBuffer::new_error (string_printf ("invalid signal handler id in %s: %llu", "event", handler_id), "PLIC");
+      MainLoop *mloop = MainLoop::_new();
+      ref_sink (mloop);
+      slave = mloop->new_slave();
+      ref_sink (slave);
+      source = new AppSource (*uithread_connection());
+      ref_sink (source);
+      slave->add (source);
+      once_leave (&app_loop, mloop);
     }
-  else if (Plic::msgid_is_discon (msgid))
-    {
-      const uint64 handler_id = fbr.pop_int64();
-      const bool deleted = true; // FIXME: currently broken : connection.delete_event_handler (handler_id);
-      if (!deleted)
-        fr = Plic::FieldBuffer::new_error (string_printf ("invalid signal handler id in %s: %llu", "disconnect", handler_id), "PLIC");
-    }
-  else
-    fr = Plic::FieldBuffer::new_error (string_printf ("unhandled message id: 0x%016zx", size_t (msgid)), "PLIC");
-  delete fb;
-  if (fr)
-    {
-      Plic::FieldReader frr (*fr);
-      const Plic::MessageId retid = Plic::MessageId (frr.pop_int64());
-      frr.skip(); // msgid low
-      if (Plic::msgid_is_error (retid))
-        {
-          String msg = frr.pop_string(), domain = frr.pop_string();
-          if (domain.size())
-            domain += ": ";
-          msg = domain + msg;
-          Plic::error_printf ("%s", msg.c_str());
-        }
-      delete fr;
-    }
+  return app_loop;
 }
 
 } // Rapicorn
@@ -159,11 +220,7 @@ connection_handle2id (const Plic::SmartHandle &h)
 #include "clientapi.cc"
 
 #include <rcore/testutils.hh>
-#include <poll.h>       // for main_loop
-#include <errno.h>      // for main_loop
 namespace Rapicorn {
-
-static Application_SmartHandle app_cached;
 
 /**
  * Initialize Rapicorn like init_app(), and boots up the test suite framework.
@@ -176,14 +233,7 @@ init_test_app (const String       &app_ident,
                const StringVector &args)
 {
   init_core_test (app_ident, argcp, argv, args);
-  app_cached = init_app (app_ident, argcp, argv, args);
-  return app_cached;
-}
-
-Application_SmartHandle
-Application_SmartHandle::the ()
-{
-  return app_cached;
+  return init_app (app_ident, argcp, argv, args);
 }
 
 static void
@@ -193,72 +243,24 @@ clientglue_setup (Plic::Connection *connection)
   _clientglue_connection = connection;
 }
 
-static int *app_quit_code = NULL;
-
 /**
- * This function causes a currently a spinning loop_run() call
- * to return the associated @a exit_code.
+ * Cause the application's main loop to quit, and run() to return @a quit_code.
  */
 void
-Application_SmartHandle::loop_quit (int exit_code)
+Application_SmartHandle::quit (int quit_code)
 {
-  static int static_quit_code;
-  static_quit_code = exit_code;
-  app_quit_code = &static_quit_code;
+  main_loop()->quit (quit_code);
 }
 
 /**
- * Run the main event loop (via loop_pending() and loop_iteration())
- * until loop_quit() is called.
- * @returns The @a exit_code from loop_quit().
+ * Run the main event loop until all primary sources ceased to exist
+ * (see MainLoop::finishable()) or until the loop is quit.
+ * @returns the @a quit_code passed in to loop_quit() or 0.
  */
 int
-Application_SmartHandle::loop_run ()
+Application_SmartHandle::run ()
 {
-  app_quit_code = NULL;
-  while (!app_quit_code)
-    {
-      if (loop_pending (true))
-        loop_iteration();
-    }
-  int code = app_quit_code ? *app_quit_code : 0;
-  app_quit_code = NULL;
-  return code;
-}
-
-/**
- * Check whether events are pending that require running the main loop
- * via loop_iteration(). When no events are pending, this function
- * blocks until events are pending if @a blocking was passed as true.
- */
-bool
-Application_SmartHandle::loop_pending (bool blocking)
-{
-  Plic::Connection &connection = *uithread_connection();
-  if (connection.has_event() || app_quit_code)
-    return true;
-  const int inputfd = connection.event_inputfd();
-  struct pollfd pfds[1] = { { inputfd, POLLIN, 0 }, };
-  do
-    {
-      int presult;
-      do
-        presult = poll (&pfds[0], 1, blocking ? -1 : 0);
-      while (presult < 0 && (errno == EAGAIN || errno == EINTR));
-    }
-  while (!pfds[0].revents == 0 && !connection.has_event() && !app_quit_code);
-  return true;
-}
-
-/**
- * Run one main loop iteration. More events may be pending and need
- * further iterations, this is indicated by loop_pending(). Nothing is
- * done if no events are pending.
- */
-void
-Application_SmartHandle::loop_iteration (void)
-{
-  loop_dispatch (*uithread_connection());
+  return main_loop()->run();
 }
 
 /**
@@ -267,9 +269,11 @@ Application_SmartHandle::loop_iteration (void)
  * passed on to exit() and thus tp the parent process.
  */
 int
-Application_SmartHandle::loop_and_exit ()
+Application_SmartHandle::run_and_exit ()
 {
-  ::exit (shutdown (loop_run()));
+  int status = run();
+  shutdown();
+  ::exit (status);
 }
 
 /**
@@ -280,11 +284,10 @@ Application_SmartHandle::loop_and_exit ()
  * @param pass_through  The status to return. Useful at the end of main()
  *                      as: return Application::shutdown (exit_status);
  */
-int
-Application_SmartHandle::shutdown (int pass_through)
+void
+Application_SmartHandle::shutdown()
 {
   uithread_shutdown();
-  return pass_through;
 }
 
 } // Rapicorn

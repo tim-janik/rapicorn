@@ -1,23 +1,4 @@
-/* Rapicorn Example
- * Copyright (C) 2007 Tim Janik
- *
- * This work is provided "as is"; redistribution and modification
- * in whole or in part, in any medium, physical or electronic is
- * permitted without restriction.
- *
- * This work is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * In no event shall the authors or contributors be liable for any
- * direct, indirect, incidental, special, exemplary, or consequential
- * damages (including, but not limited to, procurement of substitute
- * goods or services; loss of use, data, or profits; or business
- * interruption) however caused and on any theory of liability, whether
- * in contract, strict liability, or tort (including negligence or
- * otherwise) arising in any way out of the use of this software, even
- * if advised of the possibility of such damage.
- */
+// This work is provided "as is"; see: http://rapicorn.org/LICENSE-AS-IS
 #include <ui/clientapi.hh>
 
 namespace {
@@ -33,7 +14,7 @@ handle_commands (Wind0w           &wind0w,
     {
       wind0w.close();
       Application app = Application::the();
-      Application::loop_quit();
+      Application::quit();
     }
   return true;
 }
@@ -60,7 +41,7 @@ main (int   argc,
   wind0w.show();
 
   /* run event loops while wind0ws are on screen */
-  return app.loop_and_exit();
+  return app.run_and_exit();
 }
 
 } // anon

@@ -20,14 +20,13 @@ class_scope:StringList:
   /*Con*/  StringList_Handle (const std::vector<String> &strv) : Sequence (strv) {}
 
 class_scope:Application:
-  static int                      loop_run        ();
-  static void                     loop_quit       (int  quit_code = 0);
-  static bool                     loop_pending    (bool blocking = false);
-  static void                     loop_iteration  (void);
-  static int                      loop_and_exit   () RAPICORN_NORETURN;
-  static int                      shutdown        (int pass_through = 0);
-  static Application_SmartHandle  the             ();
+  static int                      run           ();
+  static void                     quit          (int quit_code = 0);
+  static void                     shutdown      ();
+  static int                      run_and_exit  () RAPICORN_NORETURN;
+  static Application_SmartHandle  the              ();
 protected:
+  static MainLoop*                main_loop     ();
   // FIXME: static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
   int           m_tc;           // FIXME: uninitialized
 
