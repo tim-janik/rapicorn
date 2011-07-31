@@ -141,7 +141,7 @@ public:
     check_source_counter++;
   }
   virtual bool
-  prepare (uint64 current_time_usecs,
+  prepare (const EventLoop::State &state,
            int64 *timeout_usecs_p)
   {
     RAPICORN_ASSERT (m_state == INITIALIZED ||
@@ -154,7 +154,7 @@ public:
     return quick_rand32() & 0x00400200a;
   }
   virtual bool
-  check (uint64 current_time_usecs)
+  check (const EventLoop::State &state)
   {
     RAPICORN_ASSERT (m_state == INITIALIZED ||
                    m_state == PREPARED);
@@ -162,7 +162,7 @@ public:
     return quick_rand32() & 0xc0ffee;
   }
   virtual bool
-  dispatch ()
+  dispatch (const EventLoop::State &state)
   {
     RAPICORN_ASSERT (m_state == PREPARED ||
                    m_state == CHECKED);

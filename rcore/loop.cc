@@ -182,15 +182,6 @@ EventLoop::~EventLoop ()
   // we cannot *use* m_main_loop anymore, because we might be called from within MainLoop::MainLoop(), see ~SlaveLoop()
 }
 
-uint64
-EventLoop::get_current_time_usecs ()
-{
-  struct timeval tv;
-  gettimeofday (&tv, NULL);
-  uint64 usecs = tv.tv_sec; // promote to 64 bit
-  return usecs * 1000000 + tv.tv_usec;
-}
-
 inline EventLoop::Source*
 EventLoop::find_first_L()
 {
@@ -409,14 +400,14 @@ MainLoop::run ()
   ScopedLock<Mutex> locker (m_mutex);
   m_quit_code = 0;
   m_running = true;
-  bool seen_primary = false;    // hint towards not being finishable
-  iterate_loops_Lm (false, false, &seen_primary);   // check sources
+  State state;
+  iterate_loops_Lm (state, false, false);       // check sources
   while (m_running)
     {
-      if (m_auto_finish && !seen_primary &&
+      if (m_auto_finish && !state.seen_primary &&
           finishable_L())       // really determine if we're finishable, seen_primary is merely a hint
         break;
-      iterate_loops_Lm (true, true, &seen_primary); // poll & dispatch
+      iterate_loops_Lm (state, true, true);     // poll & dispatch
     }
   return m_quit_code;
 }
@@ -478,16 +469,16 @@ bool
 MainLoop::iterate (bool may_block)
 {
   ScopedLock<Mutex> locker (m_mutex);
-  bool seen_primary = false;
-  return iterate_loops_Lm (may_block, true, &seen_primary);
+  State state;
+  return iterate_loops_Lm (state, may_block, true);
 }
 
 void
 MainLoop::iterate_pending()
 {
   ScopedLock<Mutex> locker (m_mutex);
-  bool seen_primary = false;
-  while (iterate_loops_Lm (false, true, &seen_primary));
+  State state;
+  while (iterate_loops_Lm (state, false, true));
 }
 
 void
@@ -503,9 +494,9 @@ EventLoop::unpoll_sources_U() // must be unlocked!
 static const int64 supraint_priobase = 2147483648LL; // INT32_MAX + 1, above all possible int32 values
 
 bool
-EventLoop::prepare_sources_Lm (vector<PollFD> &pfds,
+EventLoop::prepare_sources_Lm (State          &state,
                                int64          *timeout_usecs,
-                               bool           *seen_primary)
+                               vector<PollFD> &pfds)
 {
   ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED);
   // enforce clean slate
@@ -522,7 +513,8 @@ EventLoop::prepare_sources_Lm (vector<PollFD> &pfds,
   for (SourceList::iterator lit = m_sources.begin(); lit != m_sources.end(); lit++)
     {
       Source &source = **lit;
-      *seen_primary |= source.m_primary;
+      if (UNLIKELY (!state.seen_primary && source.m_primary))
+        state.seen_primary = true;
       if (source.m_loop != this ||                              // consider undestroyed
           (source.m_dispatching && !source.m_may_recurse))      // avoid unallowed recursion
         continue;
@@ -545,7 +537,6 @@ EventLoop::prepare_sources_Lm (vector<PollFD> &pfds,
   m_poll_sources.swap (poll_candidates);                // ref()ed sources <= dispatch priority
   assert (poll_candidates.empty());
   // prepare sources, up to NEEDS_DISPATCH priority
-  uint64 current_time_usecs = EventLoop::get_current_time_usecs();
   for (SourceList::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
     {
       Source &source = **lit;
@@ -553,7 +544,7 @@ EventLoop::prepare_sources_Lm (vector<PollFD> &pfds,
         continue;
       int64 timeout = -1;
       locker.unlock();
-      const bool need_dispatch = source.prepare (current_time_usecs, &timeout);
+      const bool need_dispatch = source.prepare (state, &timeout);
       locker.lock();
       if (source.m_loop != this)
         continue; // ignore newly destroyed sources
@@ -582,11 +573,11 @@ EventLoop::prepare_sources_Lm (vector<PollFD> &pfds,
 }
 
 bool
-EventLoop::check_sources_Lm (const vector<PollFD> &pfds)
+EventLoop::check_sources_Lm (State                &state,
+                             const vector<PollFD> &pfds)
 {
   ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED);
   // check polled sources
-  uint64 current_time_usecs = EventLoop::get_current_time_usecs();
   for (SourceList::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
     {
       Source &source = **lit;
@@ -604,7 +595,7 @@ EventLoop::check_sources_Lm (const vector<PollFD> &pfds)
             source.m_pfds[i].idx = UINT_MAX;
         }
       locker.unlock();
-      bool need_dispatch = source.check (current_time_usecs);
+      bool need_dispatch = source.check (state);
       locker.lock();
       if (source.m_loop != this)
         continue; // ignore newly destroyed sources
@@ -620,7 +611,7 @@ EventLoop::check_sources_Lm (const vector<PollFD> &pfds)
 }
 
 EventLoop::Source*
-EventLoop::dispatch_source_Lm ()
+EventLoop::dispatch_source_Lm (State &state)
 {
   // find a source to dispatch at m_dispatch_priority
   Source *dispatch_source = NULL;
@@ -646,7 +637,7 @@ EventLoop::dispatch_source_Lm ()
       dispatch_source->m_dispatching = true;
       ref (dispatch_source);    // ref() to keep alive even if everything else is destroyed
       locker.unlock();
-      const bool keep_alive = dispatch_source->dispatch ();
+      const bool keep_alive = dispatch_source->dispatch (state);
       locker.lock();
       dispatch_source->m_dispatching = dispatch_source->m_was_dispatching;
       dispatch_source->m_was_dispatching = old_was_dispatching;
@@ -657,7 +648,7 @@ EventLoop::dispatch_source_Lm ()
 }
 
 bool
-MainLoop::iterate_loops_Lm (bool may_block, bool may_dispatch, bool *seen_primary)
+MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
 {
   ScopedLock<Mutex> locker (m_main_loop.mutex(), BALANCED);
   int err = m_eventfd.open();
@@ -674,9 +665,10 @@ MainLoop::iterate_loops_Lm (bool may_block, bool may_dispatch, bool *seen_primar
   for (size_t i = 0; i < nloops; i++)
     loops[i] = ref (m_loops[i]);
   // prepare
+  state.current_time_usecs = timestamp_realtime();
   for (uint i = 0; i < nloops; i++)
     {
-      dispatchable[i] = loops[i]->prepare_sources_Lm (pfds, &timeout_usecs, seen_primary);
+      dispatchable[i] = loops[i]->prepare_sources_Lm (state, &timeout_usecs, pfds);
       any_dispatchable |= dispatchable[i];
     }
   // allow poll wakeups
@@ -706,9 +698,10 @@ MainLoop::iterate_loops_Lm (bool may_block, bool may_dispatch, bool *seen_primar
   else if (pfds[wakeup_idx].revents)
     m_eventfd.flush(); // restart queueing wakeups, possibly triggered by dispatching
   // check
+  state.current_time_usecs = timestamp_realtime();
   for (uint i = 0; i < nloops; i++)
     {
-      dispatchable[i] |= loops[i]->check_sources_Lm (pfds);
+      dispatchable[i] |= loops[i]->check_sources_Lm (state, pfds);
       any_dispatchable |= dispatchable[i];
     }
   // dispatch
@@ -719,7 +712,7 @@ MainLoop::iterate_loops_Lm (bool may_block, bool may_dispatch, bool *seen_primar
       do        // find next dispatchable loop in round-robin fashion
         index = m_rr_index++ % nloops;
       while (!dispatchable[index] && i--);
-      unref_source = loops[index]->dispatch_source_Lm(); // passes on dispatch_source reference
+      unref_source = loops[index]->dispatch_source_Lm (state); // passes on dispatch_source reference
     }
   // cleanup
   locker.unlock();
@@ -763,6 +756,12 @@ MainLoop::_new ()
 {
   return new MainLoop();
 }
+
+// === EventLoop::State ===
+EventLoop::State::State() :
+  current_time_usecs (0),
+  seen_primary (false)
+{}
 
 // === EventLoop::Source ===
 EventLoop::Source::Source () :
@@ -872,7 +871,7 @@ EventLoop::Source::~Source ()
 EventLoop::TimedSource::TimedSource (Signals::Trampoline0<void> &vt,
                                      uint initial_interval_msecs,
                                      uint repeat_interval_msecs) :
-  m_expiration_usecs (EventLoop::get_current_time_usecs() + 1000ULL * initial_interval_msecs),
+  m_expiration_usecs (timestamp_realtime() + 1000ULL * initial_interval_msecs),
   m_interval_msecs (repeat_interval_msecs), m_first_interval (true),
   m_oneshot (true), m_vtrampoline (ref_sink (&vt))
 {}
@@ -880,35 +879,35 @@ EventLoop::TimedSource::TimedSource (Signals::Trampoline0<void> &vt,
 EventLoop::TimedSource::TimedSource (Signals::Trampoline0<bool> &bt,
                                      uint initial_interval_msecs,
                                      uint repeat_interval_msecs) :
-  m_expiration_usecs (EventLoop::get_current_time_usecs() + 1000ULL * initial_interval_msecs),
+  m_expiration_usecs (timestamp_realtime() + 1000ULL * initial_interval_msecs),
   m_interval_msecs (repeat_interval_msecs), m_first_interval (true),
   m_oneshot (false), m_btrampoline (ref_sink (&bt))
 {}
 
 bool
-EventLoop::TimedSource::prepare (uint64 current_time_usecs,
+EventLoop::TimedSource::prepare (const State &state,
                                  int64 *timeout_usecs_p)
 {
-  if (current_time_usecs >= m_expiration_usecs)
+  if (state.current_time_usecs >= m_expiration_usecs)
     return true;                                            /* timeout expired */
   if (!m_first_interval)
     {
       uint64 interval = m_interval_msecs * 1000ULL;
-      if (current_time_usecs + interval < m_expiration_usecs)
-        m_expiration_usecs = current_time_usecs + interval; /* clock warped back in time */
+      if (state.current_time_usecs + interval < m_expiration_usecs)
+        m_expiration_usecs = state.current_time_usecs + interval; /* clock warped back in time */
     }
-  *timeout_usecs_p = MIN (INT_MAX, m_expiration_usecs - current_time_usecs);
+  *timeout_usecs_p = MIN (INT_MAX, m_expiration_usecs - state.current_time_usecs);
   return 0 == *timeout_usecs_p;
 }
 
 bool
-EventLoop::TimedSource::check (uint64 current_time_usecs)
+EventLoop::TimedSource::check (const State &state)
 {
-  return current_time_usecs >= m_expiration_usecs;
+  return state.current_time_usecs >= m_expiration_usecs;
 }
 
 bool
-EventLoop::TimedSource::dispatch()
+EventLoop::TimedSource::dispatch (const State &state)
 {
   bool repeat = false;
   m_first_interval = false;
@@ -917,7 +916,7 @@ EventLoop::TimedSource::dispatch()
   else if (!m_oneshot && m_btrampoline->callable())
     repeat = (*m_btrampoline) ();
   if (repeat)
-    m_expiration_usecs = EventLoop::get_current_time_usecs() + 1000ULL * m_interval_msecs;
+    m_expiration_usecs = timestamp_realtime() + 1000ULL * m_interval_msecs;
   return repeat;
 }
 
@@ -980,7 +979,7 @@ EventLoop::PollFDSource::construct (const String &mode)
 }
 
 bool
-EventLoop::PollFDSource::prepare (uint64 current_time_usecs,
+EventLoop::PollFDSource::prepare (const State &state,
                                   int64 *timeout_usecs_p)
 {
   m_pfd.revents = 0;
@@ -988,13 +987,13 @@ EventLoop::PollFDSource::prepare (uint64 current_time_usecs,
 }
 
 bool
-EventLoop::PollFDSource::check (uint64 current_time_usecs)
+EventLoop::PollFDSource::check (const State &state)
 {
   return m_pfd.fd < 0 || m_pfd.revents != 0;
 }
 
 bool
-EventLoop::PollFDSource::dispatch()
+EventLoop::PollFDSource::dispatch (const State &state)
 {
   bool keep_alive = false;
   if (m_pfd.fd >= 0 && (m_pfd.revents & PollFD::NVAL))

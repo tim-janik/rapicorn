@@ -84,18 +84,18 @@ public:
     primary (true);
   }
   virtual bool
-  prepare (uint64 current_time_usecs,
-           int64 *timeout_usecs_p)
+  prepare (const EventLoop::State &state,
+           int64                  *timeout_usecs_p)
   {
     return m_connection.has_event();
   }
   virtual bool
-  check (uint64 current_time_usecs)
+  check (const EventLoop::State &state)
   {
     return m_connection.has_event();
   }
   virtual bool
-  dispatch ()
+  dispatch (const EventLoop::State &state)
   {
     Plic::FieldBuffer *fb = m_connection.pop_event();
     if (fb)

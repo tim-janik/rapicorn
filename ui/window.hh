@@ -80,10 +80,10 @@ private:
   virtual bool          viewable                                ();
   void                  idle_show                               ();
   /* main loop */
-  virtual bool          prepare                                 (uint64                  current_time_usecs,
+  virtual bool          prepare                                 (const EventLoop::State &state,
                                                                  int64                  *timeout_usecs_p);
-  virtual bool          check                                   (uint64                  current_time_usecs);
-  virtual bool          dispatch                                ();
+  virtual bool          check                                   (const EventLoop::State &state);
+  virtual bool          dispatch                                (const EventLoop::State &state);
   virtual bool          custom_command                          (const String       &command_name,
                                                                  const StringList   &command_args);
   /* Wind0wIface */
@@ -167,10 +167,10 @@ private:
       if (!entered)
         rapicorn_thread_leave();
     }
-    virtual bool prepare    (uint64 current_time_usecs,
-                             int64 *timeout_usecs_p)         { RAPICORN_ASSERT (rapicorn_thread_entered()); return window.prepare (current_time_usecs, timeout_usecs_p); }
-    virtual bool check      (uint64 current_time_usecs)      { RAPICORN_ASSERT (rapicorn_thread_entered()); return window.check (current_time_usecs); }
-    virtual bool dispatch   ()                               { RAPICORN_ASSERT (rapicorn_thread_entered()); return window.dispatch(); }
+    virtual bool prepare    (const EventLoop::State &state,
+                             int64        *timeout_usecs_p)  { RAPICORN_ASSERT (rapicorn_thread_entered()); return window.prepare (state, timeout_usecs_p); }
+    virtual bool check      (const EventLoop::State &state)  { RAPICORN_ASSERT (rapicorn_thread_entered()); return window.check (state); }
+    virtual bool dispatch   (const EventLoop::State &state)  { RAPICORN_ASSERT (rapicorn_thread_entered()); return window.dispatch (state); }
     virtual void
     destroy ()
     {

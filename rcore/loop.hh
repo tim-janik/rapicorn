@@ -55,6 +55,7 @@ class EventLoop : public virtual BaseObject /// Loop object, polling for events 
   friend           class MainLoop;
 public:
   class Source;
+  class State;
 protected:
   typedef std::vector<Source*>    SourceList;
   MainLoop     &m_main_loop;
@@ -69,10 +70,9 @@ protected:
   void          remove_source_Lm (Source *source);
   void          kill_sources_Lm  (void);
   void          unpoll_sources_U    ();
-  bool          prepare_sources_Lm  (vector<PollFD>&, int64*, bool*);
-  bool          check_sources_Lm    (const vector<PollFD>&);
-  Source*       dispatch_source_Lm  ();
-  static uint64 get_current_time_usecs();
+  bool          prepare_sources_Lm  (State&, int64*, vector<PollFD>&);
+  bool          check_sources_Lm    (State&, const vector<PollFD>&);
+  Source*       dispatch_source_Lm  (State&);
   typedef Signals::Slot1<void,PollFD&> VPfdSlot;
   typedef Signals::Slot1<bool,PollFD&> BPfdSlot;
 public:
@@ -136,7 +136,7 @@ class MainLoop : public EventLoop /// An EventLoop implementation that offers pu
   void                  wakeup_poll         ();                 ///< Wakeup main loop from polling.
   void                  add_loop_L          (EventLoop &loop);  ///< Adds a slave loop to this main loop.
   void                  remove_loop_L       (EventLoop &loop);  ///< Removes a slave loop from this main loop.
-  bool                  iterate_loops_Lm    (bool b, bool d, bool*);
+  bool                  iterate_loops_Lm    (State&, bool b, bool d);
   explicit              MainLoop            ();
 public:
   virtual   ~MainLoop        ();
@@ -156,6 +156,13 @@ public:
   void              set_lock_hooks      (const LockHooks &hooks);
 private: LockHooks  m_lock_hooks;
   ///@endcond
+};
+
+// === EventLoop::State ===
+struct EventLoop::State {
+  uint64 current_time_usecs;
+  bool   seen_primary;
+  State();
 };
 
 // === EventLoop::Source ===
@@ -180,10 +187,10 @@ protected:
   uint         source_id   () { return m_loop ? m_id : 0; }
 public:
   virtual     ~Source      ();
-  virtual bool prepare     (uint64 current_time_usecs,
+  virtual bool prepare     (const State &state,
                             int64 *timeout_usecs_p) = 0;    ///< Prepare the source for dispatching (true return) or polling (false).
-  virtual bool check       (uint64 current_time_usecs) = 0; ///< Check the source and its PollFD descriptors for dispatching (true return).
-  virtual bool dispatch    () = 0;                          ///< Dispatch source, returns if it should be kept alive.
+  virtual bool check       (const State &state) = 0;        ///< Check the source and its PollFD descriptors for dispatching (true return).
+  virtual bool dispatch    (const State &state) = 0;        ///< Dispatch source, returns if it should be kept alive.
   virtual void destroy     ();
   bool         recursion   () const;                        ///< Indicates wether the source is currently in recursion.
   bool         may_recurse () const;                        ///< Indicates if this source may recurse.
@@ -208,10 +215,10 @@ class EventLoop::TimedSource : public virtual EventLoop::Source /// EventLoop so
   };
 protected:
   virtual     ~TimedSource  ();
-  virtual bool prepare      (uint64 current_time_usecs,
+  virtual bool prepare      (const State &state,
                              int64 *timeout_usecs_p);
-  virtual bool check        (uint64 current_time_usecs);
-  virtual bool dispatch     ();
+  virtual bool check        (const State &state);
+  virtual bool dispatch     (const State &state);
 public:
   explicit     TimedSource (Signals::Trampoline0<bool> &bt,
                             uint initial_interval_msecs = 0,
@@ -227,10 +234,10 @@ class EventLoop::PollFDSource : public virtual EventLoop::Source /// EventLoop s
 protected:
   void          construct       (const String &mode);
   virtual      ~PollFDSource    ();
-  virtual bool  prepare         (uint64 current_time_usecs,
+  virtual bool  prepare         (const State &state,
                                  int64 *timeout_usecs_p);
-  virtual bool  check           (uint64 current_time_usecs);
-  virtual bool  dispatch        ();
+  virtual bool  check           (const State &state);
+  virtual bool  dispatch        (const State &state);
   virtual void  destroy         ();
   PollFD        m_pfd;
   /* w - poll writable

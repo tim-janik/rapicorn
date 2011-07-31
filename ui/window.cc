@@ -977,15 +977,15 @@ WindowImpl::dispatch_event (const Event &event)
 }
 
 bool
-WindowImpl::prepare (uint64 current_time_usecs,
-                     int64 *timeout_usecs_p)
+WindowImpl::prepare (const EventLoop::State &state,
+                     int64                  *timeout_usecs_p)
 {
   ScopedLock<Mutex> aelocker (m_async_mutex);
   return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewp0rt && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
 }
 
 bool
-WindowImpl::check (uint64 current_time_usecs)
+WindowImpl::check (const EventLoop::State &state)
 {
   ScopedLock<Mutex> aelocker (m_async_mutex);
   return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewp0rt && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
@@ -998,7 +998,7 @@ WindowImpl::enable_auto_close ()
 }
 
 bool
-WindowImpl::dispatch ()
+WindowImpl::dispatch (const EventLoop::State &state)
 {
   ref (this);
   {

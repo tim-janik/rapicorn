@@ -125,9 +125,9 @@ private:
     loop_remove();
     pthread_spin_destroy (&ehandler_spin);
   }
-  virtual bool  prepare  (uint64, int64*) { return check_dispatch(); }
-  virtual bool  check    (uint64)         { return check_dispatch(); }
-  virtual bool  dispatch ()               { dispatch1(); return true; }
+  virtual bool  prepare  (const EventLoop::State&, int64*) { return check_dispatch(); }
+  virtual bool  check    (const EventLoop::State&)         { return check_dispatch(); }
+  virtual bool  dispatch (const EventLoop::State&)         { dispatch1(); return true; }
   bool
   check_dispatch()
   {
