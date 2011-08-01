@@ -73,26 +73,39 @@ exit (int status)
 class AppSource : public EventLoop::Source {
   Plic::Connection &m_connection;
   PollFD            m_pfd;
+  bool              last_seen_primary, need_check_primary;
+  void
+  check_primaries()
+  {
+    // seen_primary is merely a hint, need to check local and remote states
+    if (Application_SmartHandle::the().finishable() &&  // remote
+        main_loop()->finishable() && m_loop)            // local
+      main_loop()->quit();
+  }
 public:
   AppSource (Plic::Connection &connection) :
-    m_connection (connection)
+    m_connection (connection), last_seen_primary (false), need_check_primary (false)
   {
     m_pfd.fd = connection.event_inputfd();
     m_pfd.events = PollFD::IN;
     m_pfd.revents = 0;
     add_poll (&m_pfd);
-    primary (true);
+    primary (false);
+    Application_SmartHandle::the().missing_primary += slot (*this, &AppSource::queue_check_primaries);
   }
   virtual bool
   prepare (const EventLoop::State &state,
            int64                  *timeout_usecs_p)
   {
-    return m_connection.has_event();
+    return need_check_primary || m_connection.has_event();
   }
   virtual bool
   check (const EventLoop::State &state)
   {
-    return m_connection.has_event();
+    if (UNLIKELY (last_seen_primary && !state.seen_primary && !need_check_primary))
+      need_check_primary = true;
+    last_seen_primary = state.seen_primary;
+    return need_check_primary || m_connection.has_event();
   }
   virtual bool
   dispatch (const EventLoop::State &state)
@@ -100,9 +113,20 @@ public:
     Plic::FieldBuffer *fb = m_connection.pop_event();
     if (fb)
       dispatch_connection (fb);
+    if (need_check_primary)
+      {
+        need_check_primary = false;
+        queue_check_primaries();
+      }
     return true;
   }
 private:
+  void
+  queue_check_primaries()
+  {
+    if (m_loop)
+      m_loop->exec_background (slot (*this, &AppSource::check_primaries));
+  }
   void
   dispatch_connection (Plic::FieldBuffer *fb)
   {

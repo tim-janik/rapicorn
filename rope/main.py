@@ -115,7 +115,7 @@ class Loop:
       self.primary_sig = app.sig_missing_primary_connect (self.lost_primary)
     while self.iterate (False, True):
       pass # handle all pending events
-    self.cached_primary = app.has_primary()
+    self.cached_primary = not app.finishable()
     if not self.cached_primary:
       return self.quit_status
     while self.cached_primary and self.quit_status == None:

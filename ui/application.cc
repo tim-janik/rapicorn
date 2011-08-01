@@ -109,9 +109,9 @@ ApplicationImpl::load_string (const std::string &xml_string,
 }
 
 bool
-ApplicationIface::has_primary ()
+ApplicationIface::finishable ()
 {
-  return !uithread_main_loop()->finishable();
+  return uithread_main_loop()->finishable();
 }
 
 void
@@ -166,10 +166,9 @@ ApplicationImpl::add_wind0w (Wind0wIface &wind0w)
 }
 
 void
-ApplicationImpl::check_primaries()
+ApplicationImpl::lost_primaries()
 {
-  if (m_wind0ws.size() == 0) // FIXME: check temporary wind0w types
-    sig_missing_primary.emit();
+  sig_missing_primary.emit();
 }
 
 bool
@@ -180,7 +179,6 @@ ApplicationImpl::remove_wind0w (Wind0wIface &wind0w)
     return false;
   m_wind0ws.erase (it);
   unref (wind0w);
-  check_primaries(); // FIXME: should exec_update
   return true;
 }
 

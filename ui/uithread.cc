@@ -100,7 +100,8 @@ public:
 
 struct ConnectionSource : public virtual EventLoop::Source, public virtual Plic::Connection {
   ConnectionSource (EventLoop &loop) :
-    WHERE ("Rapicorn::UIThread::Connection")
+    WHERE ("Rapicorn::UIThread::Connection"),
+    last_seen_primary (false), need_check_primary (false)
   {
     primary (false);
     loop.add (this, EventLoop::PRIORITY_NORMAL);
@@ -116,6 +117,7 @@ private:
   PollFD                        pollfd;
   ChannelE                      events, calls;
   ChannelS                      results;
+  bool                          last_seen_primary, need_check_primary;
   std::vector<FieldBuffer*>     queue;
   std::set<uint64>              ehandler_set;
   pthread_spinlock_t            ehandler_spin;
@@ -125,9 +127,37 @@ private:
     loop_remove();
     pthread_spin_destroy (&ehandler_spin);
   }
-  virtual bool  prepare  (const EventLoop::State&, int64*) { return check_dispatch(); }
-  virtual bool  check    (const EventLoop::State&)         { return check_dispatch(); }
-  virtual bool  dispatch (const EventLoop::State&)         { dispatch1(); return true; }
+  virtual bool
+  prepare (const EventLoop::State &state, int64*)
+  {
+    return need_check_primary || check_dispatch();
+  }
+  virtual bool
+  check (const EventLoop::State &state)
+  {
+    if (UNLIKELY (last_seen_primary && !state.seen_primary && !need_check_primary))
+      need_check_primary = true;
+    last_seen_primary = state.seen_primary;
+    return need_check_primary || check_dispatch();
+  }
+  virtual bool
+  dispatch (const EventLoop::State &state)
+  {
+    dispatch1();
+    if (need_check_primary)
+      {
+        need_check_primary = false;
+        m_loop->exec_background (check_primaries);
+      }
+    return true;
+  }
+  static void
+  check_primaries()
+  {
+    // seen_primary is merely a hint, this handler checks the real loop state
+    if (uithread_main_loop()->finishable())
+      ApplicationImpl::the().lost_primaries();
+  }
   bool
   check_dispatch()
   {
@@ -290,7 +320,6 @@ private:
     affinity (string_to_int (string_vector_find (*m_init->args, "cpu-affinity=", "-1")));
     // initialize ui_thread loop before components
     m_connection = ref_sink (new ConnectionSource (m_main_loop));
-    m_main_loop.auto_finish (false);    // we require explicit stop()
     // initialize sub systems
     struct InitHookCaller : public InitHook {
       static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)

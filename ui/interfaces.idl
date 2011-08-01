@@ -87,7 +87,7 @@ interface Application {
   Wind0w        create_wind0w   (string         wind0w_identifier,
                                  StringList     arguments = 0,
                                  StringList     env_variables = 0) = 0;
-  bool          has_primary     ();
+  bool          finishable      ();
   signal void   missing_primary ();
   void          close           ();
   Wind0wList    list_wind0ws            () = 0;
