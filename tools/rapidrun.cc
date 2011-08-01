@@ -1,19 +1,4 @@
-/* Rapicorn - Experimental UI Toolkit
- * Copyright (C) 2007 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include <rapicorn.hh>
 #include "../rcore/rsvg/svg.hh"       // FIXME
 
@@ -31,7 +16,7 @@ help_usage (bool usage_error)
     {
       printerr ("%s\n", usage);
       printerr ("Try 'rapidrun --help' for more information.\n");
-      exit (1);
+      Rapicorn::exit (1);
     }
   printout ("%s\n", usage);
   /*         12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
@@ -119,7 +104,7 @@ parse_args (int    *argc_p,
       else if (strcmp (argv[i], "--help") == 0 || strcmp (argv[i], "-h") == 0)
         {
           help_usage (false);
-          exit (0);
+          Rapicorn::exit (0);
         }
       else if (strcmp (argv[i], "--version") == 0 || strcmp (argv[i], "-v") == 0)
         {
@@ -128,7 +113,7 @@ parse_args (int    *argc_p,
           printout ("This is free software and comes with ABSOLUTELY NO WARRANTY; see\n");
           printout ("the source for copying conditions. Sources, examples and contact\n");
           printout ("information are available at http://rapicorn.org/.\n");
-          exit (0);
+          Rapicorn::exit (0);
         }
     }
 
@@ -144,17 +129,20 @@ parse_args (int    *argc_p,
 }
 
 static void
-window_test_dump (WindowImpl &window)
+window_displayed (Wind0w &window)
 {
-  if (!test_dump)
-    return;
-  TestStream *tstream = TestStream::create_test_stream();
-  for (uint i = 0; i < test_dump_matched_nodes.size(); i++)
-    tstream->filter_matched_nodes (test_dump_matched_nodes[i]);
-  window.get_test_dump (*tstream);
-  printout ("%s", tstream->string().c_str());
-  delete tstream;
-  test_dump = false;
+  if (test_dump)
+    {
+#if 0 // FIXME
+      for (uint i = 0; i < test_dump_matched_nodes.size(); i++)
+        tstream->filter_matched_nodes (test_dump_matched_nodes[i]);
+#endif
+      String s = window.test_dump();
+      printout ("%s", s.c_str());
+      test_dump = false;
+    }
+  if (auto_exit)
+    window.close();
 }
 
 extern "C" int
@@ -162,8 +150,7 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn and its backend (X11) */
-  Application_SmartHandle smApp = Rapicorn::init_app ("Rapidrun", &argc, argv); // acquires Rapicorn mutex
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  Application app = Rapicorn::init_app ("Rapidrun", &argc, argv); // acquires Rapicorn mutex
 
   parse_args (&argc, &argv);
   if (argc != 2)
@@ -173,23 +160,20 @@ main (int   argc,
   String filename = app.auto_path (argv[1], ".");
 
   /* load GUI definitions, fancy version of app.auto_load() */
-  vector<String> definitions;
-  int err = Factory::parse_file ("RapicornTest", filename, "", &definitions);
-  if (err)
-    fatal ("failed to load \"%s\": %s", filename.c_str(), string_from_errno (err).c_str());
+  StringList definitions = app.auto_load ("RapicornTest", filename, "");
 
   /* print definitions */
   String dialog;
   for (uint i = 0; i < definitions.size(); i++)
     {
-      bool iswindow = Factory::item_definition_is_window (definitions[i]);
+      bool iswindow = false; // FIXME: Factory::item_definition_is_window (definitions[i]);
       if (list_definitions)
         printout ("%s%s\n", definitions[i].c_str(), iswindow ? " (window)" : "");
       if (dialog == "" && iswindow)
         dialog = definitions[i];
     }
   if (list_definitions)
-    return 0;
+    Rapicorn::exit (0);
 
   /* bail out without any dialogs */
   if (dialog == "")
@@ -199,21 +183,16 @@ main (int   argc,
     }
 
   /* create window item */
-  Wind0wIface &wind0w = *app.create_wind0w (dialog);
+  Wind0w wind0w = app.create_wind0w (dialog);
 
   /* hook up test-dump handler */
   if (test_dump)
-    wind0w.impl().sig_displayed += window_test_dump;
-
-  /* hook up auto-exit handler */
-  if (auto_exit)
-    wind0w.impl().enable_auto_close();
+    wind0w.displayed += window_displayed;
 
   /* show wind0w and process events */
   wind0w.show();
-  app.execute_loops();
 
-  return 0;
+  return app.run_and_exit();
 }
 
 } // anon
