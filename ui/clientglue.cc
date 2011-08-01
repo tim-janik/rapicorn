@@ -120,13 +120,13 @@ public:
       }
     return true;
   }
-private:
   void
   queue_check_primaries()
   {
     if (m_loop)
       m_loop->exec_background (slot (*this, &AppSource::check_primaries));
   }
+private:
   void
   dispatch_connection (Plic::FieldBuffer *fb)
   {
@@ -187,6 +187,7 @@ Application_SmartHandle::main_loop()
       source = new AppSource (*uithread_connection());
       ref_sink (source);
       slave->add (source);
+      source->queue_check_primaries();
       once_leave (&app_loop, mloop);
     }
   return app_loop;
