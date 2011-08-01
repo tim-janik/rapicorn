@@ -226,7 +226,7 @@ class Generator:
         if fl[1].storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
           s += " %s = %s;" % (fl[0], self.mkzero (fl[1]))
       s += ' }\n'
-      s += self.insertion_text ('class_scope:' + type_info.name)
+    s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
     if type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += 'void operator<< (Plic::FieldBuffer&, const %s&);\n' % self.C (type_info)
@@ -925,7 +925,7 @@ class Generator:
     text = rstrip.sub ('', text)
     if text:
       ind = '  ' if key.startswith ('class_scope:') else '' # inner class indent
-      return ind + '// ' + key + ':\n' + text + '\n\n'
+      return ind + '// ' + key + ':\n' + text + '\n'
     else:
       return ''
   def insertion_file (self, filename):
