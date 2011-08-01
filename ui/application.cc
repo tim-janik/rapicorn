@@ -87,16 +87,18 @@ ApplicationImpl::auto_path (const String  &file_name,
   return Path::join (bpath, file_name);
 }
 
-void
+StringList
 ApplicationImpl::auto_load (const String  &defs_domain,
                             const String  &file_name,
                             const String  &binary_path,
                             const String  &i18n_domain)
 {
   String fullname = auto_path (file_name, binary_path, true);
-  int err = Factory::parse_file (i18n_domain, fullname, defs_domain);
+  vector<String> definitions;
+  int err = Factory::parse_file (i18n_domain, fullname, defs_domain, &definitions);
   if (err)
     fatal ("failed to load \"%s\": %s", fullname.c_str(), string_from_errno (err).c_str());
+  return definitions;
 }
 
 void

@@ -36,6 +36,7 @@ sequence ItemSeq {
 interface Item {
   Item          unique_component        (string path) = 0;
   ItemSeq       collect_components      (string path) = 0;
+  string        test_dump               () = 0;
 };
 
 interface Container : Item {
@@ -53,6 +54,7 @@ interface Wind0w : Container {
   void          close                   () = 0;
   signal bool   commands                (string     cmdname,
                                          StringList args);
+  signal void   displayed               ();
   bool          synthesize_click        (Item       item,
                                          int        button,
                                          float      xalign = 0.5,
@@ -77,7 +79,7 @@ interface Application {
   string        auto_path       (string         file_name,
                                  string         binary_path,
                                  bool           search_vpath = true) = 0;
-  void          auto_load       (string         defs_domain,
+  StringList    auto_load       (string         defs_domain,
                                  string         file_name,
                                  string         binary_path,
                                  string         i18n_domain = "") = 0;

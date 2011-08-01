@@ -646,7 +646,7 @@ void
 ContainerImpl::dump_test_data (TestStream &tstream)
 {
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    cw->get_test_dump (tstream);
+    cw->make_test_dump (tstream);
 }
 
 SingleContainerImpl::SingleContainerImpl () :
