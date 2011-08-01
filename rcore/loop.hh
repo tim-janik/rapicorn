@@ -240,14 +240,6 @@ protected:
   virtual bool  dispatch        (const State &state);
   virtual void  destroy         ();
   PollFD        m_pfd;
-  /* w - poll writable
-   * r - poll readable
-   * p - poll urgent redable
-   * b - blocking
-   * E - ignore erros (or auto destroy)
-   * H - ignore hangup (or auto destroy)
-   * C - prevent auto close on destroy
-   */
   uint          m_ignore_errors : 1;    // 'E'
   uint          m_ignore_hangup : 1;    // 'H'
   uint          m_never_close : 1;      // 'C'

@@ -907,7 +907,19 @@ EventLoop::TimedSource::~TimedSource ()
     unref (m_btrampoline);
 }
 
-/* --- EventLoop::PollFDSource --- */
+// == EventLoop::PollFDSource ==
+/*! @class EventLoop::PollFDSource
+ * A PollFDSource can be used to execute a callback function from the main loop,
+ * depending on certain file descriptor states.
+ * The modes supported for polling the file descriptor are as follows:
+ * @li @c "w" - poll writable
+ * @li @c "r" - poll readable
+ * @li @c "p" - poll urgent redable
+ * @li @c "b" - blocking
+ * @li @c "E" - ignore erros (or auto destroy)
+ * @li @c "H" - ignore hangup (or auto destroy)
+ * @li @c "C" - prevent auto close on destroy
+ */
 EventLoop::PollFDSource::PollFDSource (Signals::Trampoline1<bool,PollFD&> &bt,
                                        int                                 fd,
                                        const String                       &mode) :
