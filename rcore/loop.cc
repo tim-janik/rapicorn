@@ -310,10 +310,14 @@ static const MainLoop::LockHooks dummy_hooks = { dummy_sense, dummy_nop, dummy_n
 
 MainLoop::MainLoop() :
   EventLoop (*this), // sets *this as MainLoop on self
-  m_rr_index (0), m_running (false), m_quit_code (0), m_lock_hooks (dummy_hooks)
+  m_rr_index (0), m_running (true), m_quit_code (0), m_lock_hooks (dummy_hooks)
 {
   ScopedLock<Mutex> locker (m_main_loop.mutex());
   add_loop_L (*this);
+  int err = m_eventfd.open();
+  if (err < 0)
+    fatal ("MainLoop: failed to create wakeup pipe: %s", strerror (-err));
+  // m_running and m_eventfd need to be setup here, so calling quit() before run() works
 }
 
 MainLoop::~MainLoop()
@@ -398,8 +402,6 @@ int
 MainLoop::run ()
 {
   ScopedLock<Mutex> locker (m_mutex);
-  m_quit_code = 0;
-  m_running = true;
   State state;
   while (ISLIKELY (m_running))
     iterate_loops_Lm (state, true, true);
@@ -629,9 +631,6 @@ bool
 MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
 {
   Mutex &main_mutex = m_main_loop.mutex();
-  int err = m_eventfd.open();
-  if (err < 0)
-    fatal ("MainLoop: failed to create wakeup pipe: %s", strerror (-err));
   int64 timeout_usecs = INT64_MAX;
   bool any_dispatchable = false;
   vector<PollFD> pfds;
