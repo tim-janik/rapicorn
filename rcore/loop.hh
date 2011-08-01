@@ -119,6 +119,7 @@ public:
                         int             fd,
                         const String   &mode,
                         int             priority = PRIORITY_NORMAL); ///< Add exec_io_handler() callback, returning true repeats callback.
+  MainLoop* main_loop  () const { return &m_main_loop; } ///< Get the main loop for this loop.
 };
 
 // === MainLoop ===
@@ -130,7 +131,7 @@ class MainLoop : public EventLoop /// An EventLoop implementation that offers pu
   vector<EventLoop*>    m_loops;
   EventFd               m_eventfd;
   uint                  m_rr_index;
-  bool                  m_auto_finish, m_running;
+  bool                  m_running;
   int                   m_quit_code;
   bool                  finishable_L        ();
   void                  wakeup_poll         ();                 ///< Wakeup main loop from polling.
@@ -143,8 +144,6 @@ public:
   int        run             (); ///< Run loop iterations until a call to quit() or finishable becomes true.
   void       quit            (int quit_code = 0); ///< Cause run() to return with @a quit_code.
   bool       finishable      (); ///< Indicates wether this loop has no primary sources left to process.
-  bool       auto_finish     (); ///< Returns whether run() will automatically quit if finishable() becomes true.
-  void       auto_finish     (bool autof); ///< Set whether run() will automatically quit if finishable() becomes true.
   bool       iterate         (bool block); ///< Perform one loop iteration and return whether more iterations are needed.
   void       iterate_pending (); ///< Call iterate() until no immediate dispatching is needed.
   void       kill_loops      (); ///< Kill all sources in this loop and all slave loops.
@@ -161,7 +160,7 @@ private: LockHooks  m_lock_hooks;
 // === EventLoop::State ===
 struct EventLoop::State {
   uint64 current_time_usecs;
-  bool   seen_primary;
+  bool   seen_primary; ///< Useful hint for primary presence during check()
   State();
 };
 
@@ -200,6 +199,7 @@ public:
   void         add_poll    (PollFD * const pfd);            ///< Add a PollFD descriptors for poll(2) and check().
   void         remove_poll (PollFD * const pfd);            ///< Remove a previously added PollFD.
   void         loop_remove ();                              ///< Remove this source from its event loop if any.
+  MainLoop*    main_loop   () const { return m_loop ? m_loop->main_loop() : NULL; } ///< Get the main loop for this source.
 };
 
 // === EventLoop::TimedSource ===

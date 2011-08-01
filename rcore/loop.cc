@@ -310,7 +310,7 @@ static const MainLoop::LockHooks dummy_hooks = { dummy_sense, dummy_nop, dummy_n
 
 MainLoop::MainLoop() :
   EventLoop (*this), // sets *this as MainLoop on self
-  m_rr_index (0), m_auto_finish (true), m_running (false), m_quit_code (0), m_lock_hooks (dummy_hooks)
+  m_rr_index (0), m_running (false), m_quit_code (0), m_lock_hooks (dummy_hooks)
 {
   ScopedLock<Mutex> locker (m_main_loop.mutex());
   add_loop_L (*this);
@@ -401,14 +401,8 @@ MainLoop::run ()
   m_quit_code = 0;
   m_running = true;
   State state;
-  iterate_loops_Lm (state, false, false);       // check sources
   while (ISLIKELY (m_running))
-    {
-      if (UNLIKELY (m_auto_finish && !state.seen_primary) &&
-          finishable_L())       // really determine if we're finishable, seen_primary is merely a hint
-        break;
-      iterate_loops_Lm (state, true, true);     // poll & dispatch
-    }
+    iterate_loops_Lm (state, true, true);
   return m_quit_code;
 }
 
@@ -419,22 +413,6 @@ MainLoop::quit (int quit_code)
   m_quit_code = quit_code;
   m_running = false;
   wakeup();
-}
-
-bool
-MainLoop::auto_finish ()
-{
-  ScopedLock<Mutex> locker (m_mutex);
-  return m_auto_finish;
-}
-
-void
-MainLoop::auto_finish (bool autofinish)
-{
-  ScopedLock<Mutex> locker (m_mutex);
-  m_auto_finish = autofinish;
-  if (m_auto_finish)
-    wakeup();
 }
 
 bool
