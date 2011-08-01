@@ -11,11 +11,7 @@ handle_commands (Wind0w           &wind0w,
 {
   printout ("%s(): command: %s(%s)\n", __func__, command.c_str(), string_join (",", args).c_str());
   if (command == "close")
-    {
-      wind0w.close();
-      Application app = Application::the();
-      Application::quit();
-    }
+    wind0w.close();
   return true;
 }
 
