@@ -418,7 +418,7 @@ class Generator:
       s += self.generate_method_decl (m, il)
     # specials (operators)
     if self.gen_mode == G4CLIENT:
-      s += '  ' + self.F ('inline', -9)
+      s += '//' + self.F ('inline', -9)
       s += 'operator _UnspecifiedBool () const ' # return non-NULL pointer to member on true
       s += '{ return _is_null() ? NULL : _unspecified_bool_true(); }\n' # avoids auto-bool conversions on: float (*this)
     if self.gen_mode == G4SERVER and self.object_impl:
@@ -434,7 +434,7 @@ class Generator:
       s += 'Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, %s*);\n' % self.C (type_info)
       s += 'Plic::FieldReader& operator>> (Plic::FieldReader&, %s*&);\n' % self.C (type_info)
     else: # G4CLIENT
-      s += 'Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, %s&);\n' % self.C (type_info)
+      s += 'Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const %s&);\n' % self.C (type_info)
       s += 'Plic::FieldReader& operator>> (Plic::FieldReader&, %s&);\n' % self.C (type_info)
     s += self.generate_shortalias (type_info)   # typedef alias
     return s
@@ -608,7 +608,7 @@ class Generator:
     s += ' :\n  ' + sci if sci else ''
     s += '\n{}\n'
     s += 'inline Plic::FieldBuffer&\n'
-    s += 'operator<< (Plic::FieldBuffer &fb, %s &handle)\n{\n' % classH
+    s += 'operator<< (Plic::FieldBuffer &fb, const %s &handle)\n{\n' % classH
     s += '  fb.add_object (connection_handle2id (handle));\n'
     s += '  return fb;\n'
     s += '}\n'

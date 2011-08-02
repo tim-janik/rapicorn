@@ -178,9 +178,9 @@ public:
   const Plic::TypeHashList&     _types ();
   explicit                      FirstInterface_SmartHandle ();
   void                          void_func                  ();
-  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, FirstInterface_SmartHandle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const FirstInterface_SmartHandle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, FirstInterface_SmartHandle&);
 
 struct XFooRecord_Handle {
@@ -369,9 +369,9 @@ public:
   void                          void_method              ();
   std::string                   on_click2out             ();
   void                          on_click2in              (const std::string &command);
-  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, UIWidgetArea_SmartHandle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const UIWidgetArea_SmartHandle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, UIWidgetArea_SmartHandle&);
 
 class Parent_SmartHandle : public virtual Plic::SmartHandle
@@ -385,9 +385,9 @@ public:
   static Parent_SmartHandle     _cast  (C &c) { return _cast (c, c._types()); }
   const Plic::TypeHashList&     _types ();
   explicit                      Parent_SmartHandle ();
-  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, Parent_SmartHandle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const Parent_SmartHandle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, Parent_SmartHandle&);
 
 class Child_SmartHandle : public Parent_SmartHandle
@@ -401,9 +401,9 @@ public:
   static Child_SmartHandle      _cast  (C &c) { return _cast (c, c._types()); }
   const Plic::TypeHashList&     _types ();
   explicit                      Child_SmartHandle ();
-  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, Child_SmartHandle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const Child_SmartHandle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, Child_SmartHandle&);
 
 class Descendant_SmartHandle : public Child_SmartHandle
@@ -417,9 +417,9 @@ public:
   static Descendant_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
   const Plic::TypeHashList&     _types ();
   explicit                      Descendant_SmartHandle ();
-  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, Descendant_SmartHandle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const Descendant_SmartHandle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, Descendant_SmartHandle&);
 
 class GrandChild_SmartHandle : public Descendant_SmartHandle
@@ -433,9 +433,9 @@ public:
   static GrandChild_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
   const Plic::TypeHashList&     _types ();
   explicit                      GrandChild_SmartHandle ();
-  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, GrandChild_SmartHandle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const GrandChild_SmartHandle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, GrandChild_SmartHandle&);
 
 enum QuickEnum {
@@ -470,9 +470,9 @@ public:
   const Plic::TypeHashList&     _types ();
   explicit                      QuickIface_SmartHandle ();
   void                          simple_function        (int i = 9);
-  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, QuickIface_SmartHandle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const QuickIface_SmartHandle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, QuickIface_SmartHandle&);
 
 class MethodTestInterface_SmartHandle : public virtual Plic::SmartHandle
@@ -505,9 +505,9 @@ public:
                                                                  GrandChild_SmartHandle &optval = *(GrandChild_SmartHandle*) NULL);
   QuickIface_SmartHandle        method_with_quickiface          (QuickIface_SmartHandle &input,
                                                                  QuickIface_SmartHandle &iface0 = *(QuickIface_SmartHandle*) NULL);
-  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, MethodTestInterface_SmartHandle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const MethodTestInterface_SmartHandle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, MethodTestInterface_SmartHandle&);
 
 class SignalTestInterface_SmartHandle : public virtual Plic::SmartHandle
@@ -561,9 +561,9 @@ public:
   Signal_sequence_arg           sequence_arg;
   Signal_interface_arg          interface_arg;
   Signal_self_args              self_args;
-  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, SignalTestInterface_SmartHandle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const SignalTestInterface_SmartHandle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, SignalTestInterface_SmartHandle&);
 
 class PropertyTester_SmartHandle : public virtual Plic::SmartHandle
@@ -595,9 +595,9 @@ public:
   void                          interface_prop (GrandChild_SmartHandle);
   PropertyTester_SmartHandle    self_prop      () const;
   void                          self_prop      (PropertyTester_SmartHandle);
-  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, PropertyTester_SmartHandle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const PropertyTester_SmartHandle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, PropertyTester_SmartHandle&);
 } // InterfaceTests
 
@@ -636,9 +636,9 @@ public:
   void                          click_type (ClickType);
   Signal_check_activate         check_activate;
   Signal_activate               activate;
-  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, ButtonArea_SmartHandle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const ButtonArea_SmartHandle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, ButtonArea_SmartHandle&);
 
 class PureMethods_SmartHandle;
@@ -655,9 +655,9 @@ public:
   const Plic::TypeHashList&     _types ();
   explicit                      PureMethods_SmartHandle ();
   int                           pure_method             (double f);
-  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, PureMethods_SmartHandle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const PureMethods_SmartHandle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, PureMethods_SmartHandle&);
 } // RapicornPlicTest
 
@@ -709,7 +709,7 @@ FirstInterface_Context$::list_types ()
 FirstInterface_SmartHandle::FirstInterface_SmartHandle ()
 {}
 inline Plic::FieldBuffer&
-operator<< (Plic::FieldBuffer &fb, FirstInterface_SmartHandle &handle)
+operator<< (Plic::FieldBuffer &fb, const FirstInterface_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
@@ -1283,7 +1283,7 @@ UIWidgetArea_SmartHandle::UIWidgetArea_SmartHandle () :
   sample_signal (*(UIWidgetArea_SmartHandle_Signal_sample_signal*) NULL)
 {}
 inline Plic::FieldBuffer&
-operator<< (Plic::FieldBuffer &fb, UIWidgetArea_SmartHandle &handle)
+operator<< (Plic::FieldBuffer &fb, const UIWidgetArea_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
@@ -1508,7 +1508,7 @@ Parent_Context$::list_types ()
 Parent_SmartHandle::Parent_SmartHandle ()
 {}
 inline Plic::FieldBuffer&
-operator<< (Plic::FieldBuffer &fb, Parent_SmartHandle &handle)
+operator<< (Plic::FieldBuffer &fb, const Parent_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
@@ -1584,7 +1584,7 @@ Child_Context$::list_types ()
 Child_SmartHandle::Child_SmartHandle ()
 {}
 inline Plic::FieldBuffer&
-operator<< (Plic::FieldBuffer &fb, Child_SmartHandle &handle)
+operator<< (Plic::FieldBuffer &fb, const Child_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
@@ -1660,7 +1660,7 @@ Descendant_Context$::list_types ()
 Descendant_SmartHandle::Descendant_SmartHandle ()
 {}
 inline Plic::FieldBuffer&
-operator<< (Plic::FieldBuffer &fb, Descendant_SmartHandle &handle)
+operator<< (Plic::FieldBuffer &fb, const Descendant_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
@@ -1736,7 +1736,7 @@ GrandChild_Context$::list_types ()
 GrandChild_SmartHandle::GrandChild_SmartHandle ()
 {}
 inline Plic::FieldBuffer&
-operator<< (Plic::FieldBuffer &fb, GrandChild_SmartHandle &handle)
+operator<< (Plic::FieldBuffer &fb, const GrandChild_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
@@ -1850,7 +1850,7 @@ QuickIface_Context$::list_types ()
 QuickIface_SmartHandle::QuickIface_SmartHandle ()
 {}
 inline Plic::FieldBuffer&
-operator<< (Plic::FieldBuffer &fb, QuickIface_SmartHandle &handle)
+operator<< (Plic::FieldBuffer &fb, const QuickIface_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
@@ -1935,7 +1935,7 @@ MethodTestInterface_Context$::list_types ()
 MethodTestInterface_SmartHandle::MethodTestInterface_SmartHandle ()
 {}
 inline Plic::FieldBuffer&
-operator<< (Plic::FieldBuffer &fb, MethodTestInterface_SmartHandle &handle)
+operator<< (Plic::FieldBuffer &fb, const MethodTestInterface_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
@@ -3248,7 +3248,7 @@ SignalTestInterface_SmartHandle::SignalTestInterface_SmartHandle () :
   self_args (*(SignalTestInterface_SmartHandle_Signal_self_args*) NULL)
 {}
 inline Plic::FieldBuffer&
-operator<< (Plic::FieldBuffer &fb, SignalTestInterface_SmartHandle &handle)
+operator<< (Plic::FieldBuffer &fb, const SignalTestInterface_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
@@ -3540,7 +3540,7 @@ PropertyTester_Context$::list_types ()
 PropertyTester_SmartHandle::PropertyTester_SmartHandle ()
 {}
 inline Plic::FieldBuffer&
-operator<< (Plic::FieldBuffer &fb, PropertyTester_SmartHandle &handle)
+operator<< (Plic::FieldBuffer &fb, const PropertyTester_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
@@ -3821,7 +3821,7 @@ ButtonArea_SmartHandle::ButtonArea_SmartHandle () :
   activate (*(ButtonArea_SmartHandle_Signal_activate*) NULL)
 {}
 inline Plic::FieldBuffer&
-operator<< (Plic::FieldBuffer &fb, ButtonArea_SmartHandle &handle)
+operator<< (Plic::FieldBuffer &fb, const ButtonArea_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
@@ -3897,7 +3897,7 @@ PureMethods_Context$::list_types ()
 PureMethods_SmartHandle::PureMethods_SmartHandle ()
 {}
 inline Plic::FieldBuffer&
-operator<< (Plic::FieldBuffer &fb, PureMethods_SmartHandle &handle)
+operator<< (Plic::FieldBuffer &fb, const PureMethods_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
