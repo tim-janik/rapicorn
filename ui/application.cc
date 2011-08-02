@@ -20,6 +20,12 @@ ApplicationIface::pixstream (const String  &pix_name,
   Pixmap::add_stock (pix_name, static_const_pixstream);
 }
 
+bool
+ApplicationIface::factory_window (const std::string &factory_definition)
+{
+  return Factory::item_definition_is_window (factory_definition);
+}
+
 static ApplicationImpl *the_app = NULL;
 static void
 create_application (const StringVector &args)

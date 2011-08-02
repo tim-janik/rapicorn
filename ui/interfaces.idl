@@ -83,6 +83,7 @@ interface Application {
                                  string         file_name,
                                  string         binary_path,
                                  string         i18n_domain = "") = 0;
+  bool          factory_window  (string         factory_definition);
   void          load_string     (string         xml_string,
                                  string         i18n_domain = "") = 0;
   /* wind0ws */
