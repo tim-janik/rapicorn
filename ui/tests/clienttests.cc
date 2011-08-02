@@ -15,7 +15,7 @@ create_plain_window ()
 }
 
 static void
-test_item_casting()
+test_item_usage()
 {
   Wind0w wind0w = create_plain_window();
   Item item = wind0w;
@@ -27,8 +27,16 @@ test_item_casting()
   TASSERT (Item::_cast (app)._is_null() == true);
   TASSERT (Container::_cast (app)._is_null() == true);
   TASSERT (Wind0w::_cast (app)._is_null() == true);
+  const char *testname = "3e3b0d44-ded6-4fc5-a134-c16569c23d96";
+  String name = item.name();
+  TASSERT (name != testname);
+  item.name (testname);
+  name = item.name();
+  TASSERT (name == testname);
+  wind0w.name ("Test-Name");
+  TASSERT ("Test-Name" == item.name());
 }
-REGISTER_TEST ("Client/Item Casting", test_item_casting);
+REGISTER_TEST ("Client/Basic Item Usage", test_item_usage);
 
 } // Anon
 

@@ -37,6 +37,7 @@ interface Item {
   Item          unique_component        (string path) = 0;
   ItemSeq       collect_components      (string path) = 0;
   string        test_dump               () = 0;
+  string        name = String (_("Name"), _("Identification name of the item"), "rw");
 };
 
 interface Container : Item {

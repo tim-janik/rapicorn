@@ -151,8 +151,8 @@ public:
   void                        vshrink           (bool b) { set_flag (VSHRINK, b); }
   bool                        debug             () const { return test_flags (DEBUG); }
   void                        debug             (bool f) { set_flag (DEBUG, f); }
-  String                      name              () const;
-  void                        name              (const String &str);
+  virtual String              name              () const;
+  virtual void                name              (const String &str);
   FactoryContext*             factory_context   () const;
   void                        factory_context   (FactoryContext *fc);
   ColorSchemeType             color_scheme      () const;
