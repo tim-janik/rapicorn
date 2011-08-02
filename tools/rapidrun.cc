@@ -166,7 +166,7 @@ main (int   argc,
   String dialog;
   for (uint i = 0; i < definitions.size(); i++)
     {
-      bool iswindow = false; // FIXME: Factory::item_definition_is_window (definitions[i]);
+      bool iswindow = app.factory_window (definitions[i]);
       if (list_definitions)
         printout ("%s%s\n", definitions[i].c_str(), iswindow ? " (window)" : "");
       if (dialog == "" && iswindow)
