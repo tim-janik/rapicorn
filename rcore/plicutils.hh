@@ -142,6 +142,8 @@ union FieldUnion {
   struct { uint capacity, index; };     // FieldBuffer.buffermem[0]
 };
 
+struct EnumValue { int64 v; EnumValue (int64 e) : v (e) {} };
+
 class FieldBuffer { // buffer for marshalling procedure calls
   friend class FieldReader;
   void               check_internal ();
@@ -177,6 +179,16 @@ public:
   static FieldBuffer* _new (uint _ntypes); // Heap allocated FieldBuffer
   static FieldBuffer* new_error (const String &msg, const String &domain = "");
   static FieldBuffer* new_result (uint n = 1);
+  inline FieldBuffer& operator<< (size_t v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
+  inline FieldBuffer& operator<< (uint64 v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
+  inline FieldBuffer& operator<< (int64  v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
+  inline FieldBuffer& operator<< (uint   v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
+  inline FieldBuffer& operator<< (int    v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
+  inline FieldBuffer& operator<< (bool   v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
+  inline FieldBuffer& operator<< (double v)          { FieldUnion &u = addu (FLOAT); u.vdouble = v; return *this; }
+  inline FieldBuffer& operator<< (EnumValue e)       { FieldUnion &u = addu (ENUM); u.vint64 = e.v; return *this; }
+  inline FieldBuffer& operator<< (const String &s)   { FieldUnion &u = addu (STRING); new (&u) String (s); return *this; }
+  inline FieldBuffer& operator<< (const TypeHash &h) { *this << h.typehi; *this << h.typelo; return *this; }
 };
 
 class FieldBuffer8 : public FieldBuffer { // Stack contained buffer for up to 8 fields
@@ -218,6 +230,17 @@ public:
   inline uint64             pop_object () { FieldUnion &u = fb_popu (INSTANCE); return u.vint64; }
   inline const FieldBuffer& pop_rec    () { FieldUnion &u = fb_popu (RECORD); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& pop_seq    () { FieldUnion &u = fb_popu (SEQUENCE); return *(FieldBuffer*) &u; }
+  inline FieldReader& operator>> (size_t &v)          { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
+  inline FieldReader& operator>> (uint64 &v)          { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
+  inline FieldReader& operator>> (int64 &v)           { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
+  inline FieldReader& operator>> (uint &v)            { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
+  inline FieldReader& operator>> (int &v)             { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
+  inline FieldReader& operator>> (bool &v)            { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
+  inline FieldReader& operator>> (double &v)          { FieldUnion &u = fb_popu (FLOAT); v = u.vdouble; return *this; }
+  inline FieldReader& operator>> (EnumValue &e)       { FieldUnion &u = fb_popu (ENUM); e.v = u.vint64; return *this; }
+  inline FieldReader& operator>> (String &s)          { FieldUnion &u = fb_popu (STRING); s = *(String*) &u; return *this; }
+  inline FieldReader& operator>> (TypeHash &h)        { *this >> h.typehi; *this >> h.typelo; return *this; }
+  inline FieldReader& operator>> (std::vector<bool>::reference v) { bool b; *this >> b; v = b; return *this; }
 };
 
 // === Connection ===

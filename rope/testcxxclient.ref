@@ -45,36 +45,50 @@ namespace MandatoryNamespace {
 
 enum Empty {
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Empty &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Empty &e) { e = Empty (frr.pop_evalue()); return frr; }
 
 enum Enum1 {
   E1_A = 1,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum1 &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum1 &e) { e = Enum1 (frr.pop_evalue()); return frr; }
 
 enum Enum1c {
   E1C_A = 1,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum1c &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum1c &e) { e = Enum1c (frr.pop_evalue()); return frr; }
 
 enum Enum2 {
   E2_A = 1,
   E2_B = 2,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum2 &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum2 &e) { e = Enum2 (frr.pop_evalue()); return frr; }
 
 enum Enum2c {
   E2C_A = 1,
   E2C_B = 2,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum2c &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum2c &e) { e = Enum2c (frr.pop_evalue()); return frr; }
 
 enum Enum3 {
   E3_A = 1,
   E3_B = 2,
   E3_C = 3,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum3 &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum3 &e) { e = Enum3 (frr.pop_evalue()); return frr; }
 
 enum Enum3c {
   E3C_A = 1,
   E3C_B = 2,
   E3C_C = 3,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum3c &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum3c &e) { e = Enum3c (frr.pop_evalue()); return frr; }
 
 enum Enum4a {
   E4A_A = 1,
@@ -82,6 +96,8 @@ enum Enum4a {
   E4A_C = 3,
   E4A_D = 4,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum4a &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum4a &e) { e = Enum4a (frr.pop_evalue()); return frr; }
 
 enum Enum4b {
   E4B_A = 1,
@@ -89,6 +105,8 @@ enum Enum4b {
   E4B_C = 3,
   E4B_D = 4,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum4b &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum4b &e) { e = Enum4b (frr.pop_evalue()); return frr; }
 
 enum Enum4c {
   E4C_A = 1,
@@ -96,6 +114,8 @@ enum Enum4c {
   E4C_C = 3,
   E4C_D = 4,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum4c &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum4c &e) { e = Enum4c (frr.pop_evalue()); return frr; }
 
 enum Enum4d {
   E4D_A = 1,
@@ -103,6 +123,8 @@ enum Enum4d {
   E4D_C = 3,
   E4D_D = 4,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum4d &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum4d &e) { e = Enum4d (frr.pop_evalue()); return frr; }
 
 enum ExtensiveEnum {
   V1a = 1,
@@ -141,6 +163,8 @@ enum ExtensiveEnum {
   V35 = 42,
   V36 = 42, // "foo""4"
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  ExtensiveEnum &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, ExtensiveEnum &e) { e = ExtensiveEnum (frr.pop_evalue()); return frr; }
 
 class FirstInterface_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class FirstInterface.
@@ -151,12 +175,13 @@ protected:
 public:
   template<class C>
   static FirstInterface_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  static FirstInterface_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
   const Plic::TypeHashList&     _types ();
   explicit                      FirstInterface_SmartHandle ();
   void                          void_func                  ();
   inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, FirstInterface_SmartHandle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, FirstInterface_SmartHandle&);
 
 struct XFooRecord_Handle {
   bool                          single_bool;
@@ -175,70 +200,70 @@ struct XFooRecord_Handle {
   FirstInterface_SmartHandle    iface3;
   inline                        XFooRecord_Handle () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
-void operator<< (Plic::FieldBuffer&, const XFooRecord_Handle&);
-void operator>> (Plic::FieldReader&, XFooRecord_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const XFooRecord_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, XFooRecord_Handle&);
 
 struct XFooSequence_Handle : public std::vector<bool> {
   typedef std::vector<bool> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const XFooSequence_Handle&);
-void operator>> (Plic::FieldReader&, XFooSequence_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const XFooSequence_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, XFooSequence_Handle&);
 
 struct IntSequence_Handle : public std::vector<int> {
   typedef std::vector<int> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const IntSequence_Handle&);
-void operator>> (Plic::FieldReader&, IntSequence_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const IntSequence_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, IntSequence_Handle&);
 
 struct FloatSequence_Handle : public std::vector<double> {
   typedef std::vector<double> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const FloatSequence_Handle&);
-void operator>> (Plic::FieldReader&, FloatSequence_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const FloatSequence_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, FloatSequence_Handle&);
 
 struct StringSequence_Handle : public std::vector<std::string> {
   typedef std::vector<std::string> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const StringSequence_Handle&);
-void operator>> (Plic::FieldReader&, StringSequence_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const StringSequence_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, StringSequence_Handle&);
 
 struct ExtensiveEnumSequence_Handle : public std::vector<ExtensiveEnum> {
   typedef std::vector<ExtensiveEnum> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const ExtensiveEnumSequence_Handle&);
-void operator>> (Plic::FieldReader&, ExtensiveEnumSequence_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const ExtensiveEnumSequence_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, ExtensiveEnumSequence_Handle&);
 
 struct RecordSequence_Handle : public std::vector<XFooRecord_Handle> {
   typedef std::vector<XFooRecord_Handle> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const RecordSequence_Handle&);
-void operator>> (Plic::FieldReader&, RecordSequence_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const RecordSequence_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, RecordSequence_Handle&);
 
 struct SequenceSequence_Handle : public std::vector<IntSequence_Handle> {
   typedef std::vector<IntSequence_Handle> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const SequenceSequence_Handle&);
-void operator>> (Plic::FieldReader&, SequenceSequence_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const SequenceSequence_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, SequenceSequence_Handle&);
 
 struct InterfaceSequence_Handle : public std::vector<FirstInterface_SmartHandle> {
   typedef std::vector<FirstInterface_SmartHandle> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const InterfaceSequence_Handle&);
-void operator>> (Plic::FieldReader&, InterfaceSequence_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const InterfaceSequence_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, InterfaceSequence_Handle&);
 
 struct NestedTypesRec_Handle {
   XFooRecord_Handle             rec;
   XFooSequence_Handle           seq;
   inline                        NestedTypesRec_Handle () { }
 };
-void operator<< (Plic::FieldBuffer&, const NestedTypesRec_Handle&);
-void operator>> (Plic::FieldReader&, NestedTypesRec_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const NestedTypesRec_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, NestedTypesRec_Handle&);
 
 struct NestedTypesSeq_Handle : public std::vector<NestedTypesRec_Handle> {
   typedef std::vector<NestedTypesRec_Handle> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const NestedTypesSeq_Handle&);
-void operator>> (Plic::FieldReader&, NestedTypesSeq_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const NestedTypesSeq_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, NestedTypesSeq_Handle&);
 
 typedef int AliasInt;
 
@@ -261,8 +286,8 @@ struct NewRecord_Handle {
   NestedTypesRec_Handle         ntr;
   inline                        NewRecord_Handle () { i = 0; enum1 = Enum1 (0); }
 };
-void operator<< (Plic::FieldBuffer&, const NewRecord_Handle&);
-void operator>> (Plic::FieldReader&, NewRecord_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const NewRecord_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, NewRecord_Handle&);
 
 namespace Inner {
 
@@ -272,16 +297,16 @@ struct InnerRecord_Handle {
   NewRecord_Handle              rec;
   inline                        InnerRecord_Handle () { x = 0; y = 0; }
 };
-void operator<< (Plic::FieldBuffer&, const InnerRecord_Handle&);
-void operator>> (Plic::FieldReader&, InnerRecord_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const InnerRecord_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, InnerRecord_Handle&);
 } // Inner
 
 struct Refer2Inner_Handle {
   Inner::InnerRecord_Handle     r;
   inline                        Refer2Inner_Handle () { }
 };
-void operator<< (Plic::FieldBuffer&, const Refer2Inner_Handle&);
-void operator>> (Plic::FieldReader&, Refer2Inner_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const Refer2Inner_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, Refer2Inner_Handle&);
 } // MandatoryNamespace
 
 namespace OtherNamespace {
@@ -293,8 +318,8 @@ struct SomeRecord_Handle {
   MandatoryNamespace::Inner::InnerRecord_Handle r4;
   inline                        SomeRecord_Handle () { }
 };
-void operator<< (Plic::FieldBuffer&, const SomeRecord_Handle&);
-void operator>> (Plic::FieldReader&, SomeRecord_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const SomeRecord_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, SomeRecord_Handle&);
 } // OtherNamespace
 
 namespace Auxdata {
@@ -319,7 +344,6 @@ protected:
 public:
   template<class C>
   static UIWidgetArea_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  static UIWidgetArea_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
   const Plic::TypeHashList&     _types ();
   explicit                      UIWidgetArea_SmartHandle ();
   double                        dummy    () const;
@@ -347,6 +371,8 @@ public:
   void                          on_click2in              (const std::string &command);
   inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, UIWidgetArea_SmartHandle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, UIWidgetArea_SmartHandle&);
 
 class Parent_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class Parent.
@@ -357,11 +383,12 @@ protected:
 public:
   template<class C>
   static Parent_SmartHandle     _cast  (C &c) { return _cast (c, c._types()); }
-  static Parent_SmartHandle     _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
   const Plic::TypeHashList&     _types ();
   explicit                      Parent_SmartHandle ();
   inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, Parent_SmartHandle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, Parent_SmartHandle&);
 
 class Child_SmartHandle : public Parent_SmartHandle
   /// See also the corresponding IDL class Child.
@@ -372,11 +399,12 @@ protected:
 public:
   template<class C>
   static Child_SmartHandle      _cast  (C &c) { return _cast (c, c._types()); }
-  static Child_SmartHandle      _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
   const Plic::TypeHashList&     _types ();
   explicit                      Child_SmartHandle ();
   inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, Child_SmartHandle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, Child_SmartHandle&);
 
 class Descendant_SmartHandle : public Child_SmartHandle
   /// See also the corresponding IDL class Descendant.
@@ -387,11 +415,12 @@ protected:
 public:
   template<class C>
   static Descendant_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  static Descendant_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
   const Plic::TypeHashList&     _types ();
   explicit                      Descendant_SmartHandle ();
   inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, Descendant_SmartHandle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, Descendant_SmartHandle&);
 
 class GrandChild_SmartHandle : public Descendant_SmartHandle
   /// See also the corresponding IDL class GrandChild.
@@ -402,29 +431,32 @@ protected:
 public:
   template<class C>
   static GrandChild_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  static GrandChild_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
   const Plic::TypeHashList&     _types ();
   explicit                      GrandChild_SmartHandle ();
   inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, GrandChild_SmartHandle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, GrandChild_SmartHandle&);
 
 enum QuickEnum {
   ZERO = 0,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  QuickEnum &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); return frr; }
 
 struct QuickRecord_Handle {
   int                           int1;
   int                           int2;
   inline                        QuickRecord_Handle () { int1 = 0; int2 = 0; }
 };
-void operator<< (Plic::FieldBuffer&, const QuickRecord_Handle&);
-void operator>> (Plic::FieldReader&, QuickRecord_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const QuickRecord_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, QuickRecord_Handle&);
 
 struct QuickSequence_Handle : public std::vector<double> {
   typedef std::vector<double> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const QuickSequence_Handle&);
-void operator>> (Plic::FieldReader&, QuickSequence_Handle&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const QuickSequence_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, QuickSequence_Handle&);
 
 class QuickIface_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class QuickIface.
@@ -435,12 +467,13 @@ protected:
 public:
   template<class C>
   static QuickIface_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  static QuickIface_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
   const Plic::TypeHashList&     _types ();
   explicit                      QuickIface_SmartHandle ();
   void                          simple_function        (int i = 9);
   inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, QuickIface_SmartHandle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, QuickIface_SmartHandle&);
 
 class MethodTestInterface_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class MethodTestInterface.
@@ -451,7 +484,6 @@ protected:
 public:
   template<class C>
   static MethodTestInterface_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  static MethodTestInterface_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
   const Plic::TypeHashList&     _types ();
   explicit                      MethodTestInterface_SmartHandle ();
   void                          method_with_void                ();
@@ -475,6 +507,8 @@ public:
                                                                  QuickIface_SmartHandle &iface0 = *(QuickIface_SmartHandle*) NULL);
   inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, MethodTestInterface_SmartHandle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, MethodTestInterface_SmartHandle&);
 
 class SignalTestInterface_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class SignalTestInterface.
@@ -505,7 +539,6 @@ protected:
 public:
   template<class C>
   static SignalTestInterface_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  static SignalTestInterface_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
   const Plic::TypeHashList&     _types ();
   explicit                      SignalTestInterface_SmartHandle ();
   Signal_void_result            void_result;
@@ -530,6 +563,8 @@ public:
   Signal_self_args              self_args;
   inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, SignalTestInterface_SmartHandle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, SignalTestInterface_SmartHandle&);
 
 class PropertyTester_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class PropertyTester.
@@ -540,7 +575,6 @@ protected:
 public:
   template<class C>
   static PropertyTester_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  static PropertyTester_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
   const Plic::TypeHashList&     _types ();
   explicit                      PropertyTester_SmartHandle ();
   bool                          bool_prop      () const;
@@ -563,6 +597,8 @@ public:
   void                          self_prop      (PropertyTester_SmartHandle);
   inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, PropertyTester_SmartHandle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, PropertyTester_SmartHandle&);
 } // InterfaceTests
 
 namespace RapicornPlicTest {
@@ -574,6 +610,8 @@ enum ClickType {
   CLICK_FAST_REPEAT = 4,
   CLICK_KEY_REPEAT = 5,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  ClickType &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, ClickType &e) { e = ClickType (frr.pop_evalue()); return frr; }
 
 class ButtonArea_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class ButtonArea.
@@ -586,7 +624,6 @@ protected:
 public:
   template<class C>
   static ButtonArea_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  static ButtonArea_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
   const Plic::TypeHashList&     _types ();
   explicit                      ButtonArea_SmartHandle ();
   std::string                   on_click   () const;
@@ -601,6 +638,8 @@ public:
   Signal_activate               activate;
   inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, ButtonArea_SmartHandle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, ButtonArea_SmartHandle&);
 
 class PureMethods_SmartHandle;
 
@@ -613,12 +652,13 @@ protected:
 public:
   template<class C>
   static PureMethods_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  static PureMethods_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
   const Plic::TypeHashList&     _types ();
   explicit                      PureMethods_SmartHandle ();
   int                           pure_method             (double f);
   inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, PureMethods_SmartHandle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, PureMethods_SmartHandle&);
 } // RapicornPlicTest
 
 // --- Implementations ---
@@ -646,17 +686,19 @@ FirstInterface_Context$::list_types ()
   if (!m_cached_types) {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3e0c8f5da9110ad8ULL, 0xea565508333a9035ULL);
-    fb.add_object (connection_handle2id (handle$));
+    fb << handle$;
     Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
     PLIC_CHECK (fr != NULL, "missing result from 2-way call");
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
-    size_t len = frr.pop_int64();
+    size_t len;
+    frr >> len;
     PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
     Plic::TypeHashList *thv = new Plic::TypeHashList();
+    Plic::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
-      uint64 hashhi = frr.pop_int64();
-      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+      frr >> thash;
+      thv->push_back (thash);
     }
     delete fr;
     if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
@@ -666,10 +708,17 @@ FirstInterface_Context$::list_types ()
 }
 FirstInterface_SmartHandle::FirstInterface_SmartHandle ()
 {}
-FirstInterface_SmartHandle
-FirstInterface_SmartHandle::_new (Plic::FieldReader &fbr)
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, FirstInterface_SmartHandle &handle)
 {
-  return connection_id2context<FirstInterface_Context$> (fbr.pop_object())->handle$;
+  fb.add_object (connection_handle2id (handle));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, FirstInterface_SmartHandle &handle)
+{
+  handle = connection_id2context<FirstInterface_Context$> (fbr.pop_object())->handle$;
+  return fbr;
 }
 const Plic::TypeHash&
 FirstInterface_SmartHandle::_type()
@@ -696,144 +745,156 @@ FirstInterface_SmartHandle::void_func ()
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
   fb.add_msgid (0x209463c55becedadULL, 0x39ddfcb9aadc3c74ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const XFooRecord_Handle &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (14);
-  fb.add_int64 (self.single_bool);
-  fb.add_int64 (self.single_num);
-  fb.add_double (self.single_float);
-  fb.add_string (self.single_string);
-  fb.add_int64 (self.sibling1);
-  fb.add_int64 (self.sibling2);
-  fb.add_int64 (self.multi1);
-  fb.add_int64 (self.multi2);
-  fb.add_int64 (self.multi3);
-  fb.add_int64 (self.multi4);
-  fb.add_evalue (self.enum_field);
-  fb.add_object (connection_handle2id (self.iface1));
-  fb.add_object (connection_handle2id (self.iface2));
-  fb.add_object (connection_handle2id (self.iface3));
+  fb << self.single_bool;
+  fb << self.single_num;
+  fb << self.single_float;
+  fb << self.single_string;
+  fb << self.sibling1;
+  fb << self.sibling2;
+  fb << self.multi1;
+  fb << self.multi2;
+  fb << self.multi3;
+  fb << self.multi4;
+  fb << self.enum_field;
+  fb << self.iface1;
+  fb << self.iface2;
+  fb << self.iface3;
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, XFooRecord_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() < 14) return;
-  self.single_bool = fbr.pop_int64();
-  self.single_num = fbr.pop_int64();
-  self.single_float = fbr.pop_double();
-  self.single_string = fbr.pop_string();
-  self.sibling1 = fbr.pop_int64();
-  self.sibling2 = fbr.pop_int64();
-  self.multi1 = fbr.pop_int64();
-  self.multi2 = fbr.pop_int64();
-  self.multi3 = fbr.pop_int64();
-  self.multi4 = fbr.pop_int64();
-  self.enum_field = ExtensiveEnum (fbr.pop_evalue());
-  self.iface1 = FirstInterface_SmartHandle::_new (fbr);
-  self.iface2 = FirstInterface_SmartHandle::_new (fbr);
-  self.iface3 = FirstInterface_SmartHandle::_new (fbr);
+  if (fbr.remaining() < 14) return src;
+  fbr >> self.single_bool;
+  fbr >> self.single_num;
+  fbr >> self.single_float;
+  fbr >> self.single_string;
+  fbr >> self.sibling1;
+  fbr >> self.sibling2;
+  fbr >> self.multi1;
+  fbr >> self.multi2;
+  fbr >> self.multi3;
+  fbr >> self.multi4;
+  fbr >> self.enum_field;
+  fbr >> self.iface1;
+  fbr >> self.iface2;
+  fbr >> self.iface3;
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const XFooSequence_Handle &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb.add_int64 (self[k]);
+    fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, XFooSequence_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
-  self.reserve (len);
+  self.resize (len);
   for (size_t k = 0; k < len; k++) {
-    self.push_back (fbr.pop_int64());
+    fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const IntSequence_Handle &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb.add_int64 (self[k]);
+    fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, IntSequence_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
-  self.reserve (len);
+  self.resize (len);
   for (size_t k = 0; k < len; k++) {
-    self.push_back (fbr.pop_int64());
+    fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const FloatSequence_Handle &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb.add_double (self[k]);
+    fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, FloatSequence_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
-  self.reserve (len);
+  self.resize (len);
   for (size_t k = 0; k < len; k++) {
-    self.push_back (fbr.pop_double());
+    fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const StringSequence_Handle &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb.add_string (self[k]);
+    fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, StringSequence_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
-  self.reserve (len);
+  self.resize (len);
   for (size_t k = 0; k < len; k++) {
-    self.push_back (fbr.pop_string());
+    fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const ExtensiveEnumSequence_Handle &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb.add_evalue (self[k]);
+    fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, ExtensiveEnumSequence_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
-  self.reserve (len);
+  self.resize (len);
   for (size_t k = 0; k < len; k++) {
-    self.push_back (ExtensiveEnum (fbr.pop_evalue()));
+    fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const RecordSequence_Handle &self)
 {
   const size_t len = self.size();
@@ -841,8 +902,9 @@ operator<< (Plic::FieldBuffer &dst, const RecordSequence_Handle &self)
   for (size_t k = 0; k < len; k++) {
     fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, RecordSequence_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
@@ -851,8 +913,9 @@ operator>> (Plic::FieldReader &src, RecordSequence_Handle &self)
   for (size_t k = 0; k < len; k++) {
     fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const SequenceSequence_Handle &self)
 {
   const size_t len = self.size();
@@ -860,8 +923,9 @@ operator<< (Plic::FieldBuffer &dst, const SequenceSequence_Handle &self)
   for (size_t k = 0; k < len; k++) {
     fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, SequenceSequence_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
@@ -870,42 +934,47 @@ operator>> (Plic::FieldReader &src, SequenceSequence_Handle &self)
   for (size_t k = 0; k < len; k++) {
     fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const InterfaceSequence_Handle &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb.add_object (connection_handle2id (self[k]));
+    fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, InterfaceSequence_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   self.reserve (len);
   for (size_t k = 0; k < len; k++) {
-    self.push_back (FirstInterface_SmartHandle::_new (fbr));
+    fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const NestedTypesRec_Handle &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (2);
   fb << self.rec;
   fb << self.seq;
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, NestedTypesRec_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() < 2) return;
+  if (fbr.remaining() < 2) return src;
   fbr >> self.rec;
   fbr >> self.seq;
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const NestedTypesSeq_Handle &self)
 {
   const size_t len = self.size();
@@ -913,8 +982,9 @@ operator<< (Plic::FieldBuffer &dst, const NestedTypesSeq_Handle &self)
   for (size_t k = 0; k < len; k++) {
     fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, NestedTypesSeq_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
@@ -923,63 +993,70 @@ operator>> (Plic::FieldReader &src, NestedTypesSeq_Handle &self)
   for (size_t k = 0; k < len; k++) {
     fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const NewRecord_Handle &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (4);
-  fb.add_int64 (self.i);
-  fb.add_evalue (self.enum1);
+  fb << self.i;
+  fb << self.enum1;
   fb << self.xfs;
   fb << self.ntr;
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, NewRecord_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() < 4) return;
-  self.i = fbr.pop_int64();
-  self.enum1 = Enum1 (fbr.pop_evalue());
+  if (fbr.remaining() < 4) return src;
+  fbr >> self.i;
+  fbr >> self.enum1;
   fbr >> self.xfs;
   fbr >> self.ntr;
+  return src;
 }
 
 namespace Inner {
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const InnerRecord_Handle &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (3);
-  fb.add_int64 (self.x);
-  fb.add_int64 (self.y);
+  fb << self.x;
+  fb << self.y;
   fb << self.rec;
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, InnerRecord_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() < 3) return;
-  self.x = fbr.pop_int64();
-  self.y = fbr.pop_int64();
+  if (fbr.remaining() < 3) return src;
+  fbr >> self.x;
+  fbr >> self.y;
   fbr >> self.rec;
+  return src;
 }
 } // Inner
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const Refer2Inner_Handle &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (1);
   fb << self.r;
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, Refer2Inner_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() < 1) return;
+  if (fbr.remaining() < 1) return src;
   fbr >> self.r;
+  return src;
 }
 } // MandatoryNamespace
 
 namespace OtherNamespace {
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const SomeRecord_Handle &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (4);
@@ -987,16 +1064,18 @@ operator<< (Plic::FieldBuffer &dst, const SomeRecord_Handle &self)
   fb << self.r2;
   fb << self.r3;
   fb << self.r4;
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, SomeRecord_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() < 4) return;
+  if (fbr.remaining() < 4) return src;
   fbr >> self.r1;
   fbr >> self.r2;
   fbr >> self.r3;
   fbr >> self.r4;
+  return src;
 }
 } // OtherNamespace
 
@@ -1006,11 +1085,12 @@ UIWidgetArea_SmartHandle::dummy () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x39146750080bd117ULL, 0x9edc3ab3b5e82e8dULL);
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  double  retval = frr.pop_double();
+  double  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -1019,8 +1099,8 @@ UIWidgetArea_SmartHandle::dummy (double value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2a284d0b5305ac3aULL, 0xd98a1d86235ad649ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_double (value);
+  fb << (*this);
+  fb << value;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
@@ -1029,11 +1109,12 @@ UIWidgetArea_SmartHandle::on_click () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x37b8129e6139dfaeULL, 0xece65fb7aeda0163ULL);
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  std::string  retval = frr.pop_string();
+  std::string  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -1042,8 +1123,8 @@ UIWidgetArea_SmartHandle::on_click (const std::string &value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2d15d46bb30e2a40ULL, 0xc421a429912efd6dULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_string (value);
+  fb << (*this);
+  fb << value;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
@@ -1095,17 +1176,19 @@ UIWidgetArea_Context$::list_types ()
   if (!m_cached_types) {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3b205dd851cb8a1dULL, 0x5bcddc39beffee0dULL);
-    fb.add_object (connection_handle2id (handle$));
+    fb << handle$;
     Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
     PLIC_CHECK (fr != NULL, "missing result from 2-way call");
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
-    size_t len = frr.pop_int64();
+    size_t len;
+    frr >> len;
     PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
     Plic::TypeHashList *thv = new Plic::TypeHashList();
+    Plic::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
-      uint64 hashhi = frr.pop_int64();
-      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+      frr >> thash;
+      thv->push_back (thash);
     }
     delete fr;
     if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
@@ -1118,17 +1201,17 @@ UIWidgetArea_Context$::Signal_void_signal_EventHandler$::connections_changed (bo
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x52ef738c2571d0f2ULL, 0x05b653adf0a80acfULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -1136,7 +1219,7 @@ UIWidgetArea_Context$::Signal_void_signal_EventHandler$::connections_changed (bo
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -1155,17 +1238,17 @@ UIWidgetArea_Context$::Signal_sample_signal_EventHandler$::connections_changed (
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x511bbb2e2b129d5bULL, 0xe7152819ec289550ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -1173,7 +1256,7 @@ UIWidgetArea_Context$::Signal_sample_signal_EventHandler$::connections_changed (
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -1184,11 +1267,13 @@ UIWidgetArea_Context$::Signal_sample_signal_EventHandler$::handle_event (Plic::F
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.skip();       // skip m_handler_id
   if (fbr.remaining() != 2) return plic$_error ("invalid number of arguments");
-  UIWidgetArea_SmartHandle  arg_ba1 = UIWidgetArea_SmartHandle::_new (fbr);
-  int  arg_someint = fbr.pop_int64();
+  UIWidgetArea_SmartHandle  arg_ba1;
+  fbr >> arg_ba1;
+  int  arg_someint;
+  fbr >> arg_someint;
   double  rval = signal.emit (arg_ba1, arg_someint);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_double (rval);
+  rb << rval;
   return &rb;
 }
 typedef Rapicorn::Signals::Signal<UIWidgetArea_SmartHandle, void ()> UIWidgetArea_SmartHandle_Signal_void_signal;
@@ -1197,10 +1282,17 @@ UIWidgetArea_SmartHandle::UIWidgetArea_SmartHandle () :
   void_signal (*(UIWidgetArea_SmartHandle_Signal_void_signal*) NULL),
   sample_signal (*(UIWidgetArea_SmartHandle_Signal_sample_signal*) NULL)
 {}
-UIWidgetArea_SmartHandle
-UIWidgetArea_SmartHandle::_new (Plic::FieldReader &fbr)
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, UIWidgetArea_SmartHandle &handle)
 {
-  return connection_id2context<UIWidgetArea_Context$> (fbr.pop_object())->handle$;
+  fb.add_object (connection_handle2id (handle));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, UIWidgetArea_SmartHandle &handle)
+{
+  handle = connection_id2context<UIWidgetArea_Context$> (fbr.pop_object())->handle$;
+  return fbr;
 }
 const Plic::TypeHash&
 UIWidgetArea_SmartHandle::_type()
@@ -1227,11 +1319,12 @@ UIWidgetArea_SmartHandle::simple_method ()
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
   fb.add_msgid (0x39a122b559d15903ULL, 0x0a95fe35b7a1de33ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  double  retval = frr.pop_double();
+  double  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -1240,12 +1333,13 @@ UIWidgetArea_SmartHandle::single_arg (int arg_n)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x3910395d202c93c2ULL, 0x9206a89acaaf2086ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_int64 (arg_n);
+  fb << (*this);
+  fb << arg_n;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  double  retval = frr.pop_double();
+  double  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -1254,12 +1348,13 @@ UIWidgetArea_SmartHandle::single_arg2 (int arg_n)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x3b5ae84b86dfa59cULL, 0x5d2ef3880b1fa360ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_int64 (arg_n);
+  fb << (*this);
+  fb << arg_n;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  double  retval = frr.pop_double();
+  double  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -1269,13 +1364,14 @@ UIWidgetArea_SmartHandle::two_args (int arg_n,
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x359c33f1677a63ebULL, 0x3a05748016992575ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_int64 (arg_n);
-  fb.add_double (arg_r);
+  fb << (*this);
+  fb << arg_n;
+  fb << arg_r;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  double  retval = frr.pop_double();
+  double  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -1285,13 +1381,14 @@ UIWidgetArea_SmartHandle::two_args2 (int arg_n,
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x3291a584ff9121b3ULL, 0xbd14f4bbc47fb2ccULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_int64 (arg_n);
-  fb.add_double (arg_r);
+  fb << (*this);
+  fb << arg_n;
+  fb << arg_r;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  double  retval = frr.pop_double();
+  double  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -1304,16 +1401,17 @@ UIWidgetArea_SmartHandle::multi_args (int arg_n,
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 5), *fr = NULL;
   fb.add_msgid (0x3501ef84b7c1d9ffULL, 0x564566ab8a5e1b8bULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_int64 (arg_n);
-  fb.add_double (arg_r);
-  fb.add_int64 (arg_i);
-  fb.add_string (arg_s);
-  fb.add_double (arg_y);
+  fb << (*this);
+  fb << arg_n;
+  fb << arg_r;
+  fb << arg_i;
+  fb << arg_s;
+  fb << arg_y;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  double  retval = frr.pop_double();
+  double  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -1323,13 +1421,14 @@ UIWidgetArea_SmartHandle::self_method (UIWidgetArea_SmartHandle &arg_ba1,
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x316521a2bcc037d0ULL, 0x43987053dab0c3c0ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_object (connection_handle2id (arg_ba1));
-  fb.add_object (connection_handle2id (arg_ba2));
+  fb << (*this);
+  fb << arg_ba1;
+  fb << arg_ba2;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  double  retval = frr.pop_double();
+  double  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -1338,7 +1437,7 @@ UIWidgetArea_SmartHandle::void_method ()
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
   fb.add_msgid (0x2e02c52c84773703ULL, 0x00027e452edb615cULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
 }
 std::string
@@ -1346,11 +1445,12 @@ UIWidgetArea_SmartHandle::on_click2out ()
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
   fb.add_msgid (0x3e4f2ff4e1424783ULL, 0x439ed3d602e3946eULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  std::string  retval = frr.pop_string();
+  std::string  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -1359,8 +1459,8 @@ UIWidgetArea_SmartHandle::on_click2in (const std::string &arg_command)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2294f15cd15e9458ULL, 0x5e0ac9b493bb4f17ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_string (arg_command);
+  fb << (*this);
+  fb << arg_command;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
 }
 
@@ -1385,17 +1485,19 @@ Parent_Context$::list_types ()
   if (!m_cached_types) {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x358122a8447018eaULL, 0xf27025a07a51a48aULL);
-    fb.add_object (connection_handle2id (handle$));
+    fb << handle$;
     Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
     PLIC_CHECK (fr != NULL, "missing result from 2-way call");
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
-    size_t len = frr.pop_int64();
+    size_t len;
+    frr >> len;
     PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
     Plic::TypeHashList *thv = new Plic::TypeHashList();
+    Plic::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
-      uint64 hashhi = frr.pop_int64();
-      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+      frr >> thash;
+      thv->push_back (thash);
     }
     delete fr;
     if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
@@ -1405,10 +1507,17 @@ Parent_Context$::list_types ()
 }
 Parent_SmartHandle::Parent_SmartHandle ()
 {}
-Parent_SmartHandle
-Parent_SmartHandle::_new (Plic::FieldReader &fbr)
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, Parent_SmartHandle &handle)
 {
-  return connection_id2context<Parent_Context$> (fbr.pop_object())->handle$;
+  fb.add_object (connection_handle2id (handle));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, Parent_SmartHandle &handle)
+{
+  handle = connection_id2context<Parent_Context$> (fbr.pop_object())->handle$;
+  return fbr;
 }
 const Plic::TypeHash&
 Parent_SmartHandle::_type()
@@ -1452,17 +1561,19 @@ Child_Context$::list_types ()
   if (!m_cached_types) {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3d9ee6a844c60394ULL, 0xd2cee7633ad091d5ULL);
-    fb.add_object (connection_handle2id (handle$));
+    fb << handle$;
     Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
     PLIC_CHECK (fr != NULL, "missing result from 2-way call");
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
-    size_t len = frr.pop_int64();
+    size_t len;
+    frr >> len;
     PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
     Plic::TypeHashList *thv = new Plic::TypeHashList();
+    Plic::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
-      uint64 hashhi = frr.pop_int64();
-      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+      frr >> thash;
+      thv->push_back (thash);
     }
     delete fr;
     if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
@@ -1472,10 +1583,17 @@ Child_Context$::list_types ()
 }
 Child_SmartHandle::Child_SmartHandle ()
 {}
-Child_SmartHandle
-Child_SmartHandle::_new (Plic::FieldReader &fbr)
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, Child_SmartHandle &handle)
 {
-  return connection_id2context<Child_Context$> (fbr.pop_object())->handle$;
+  fb.add_object (connection_handle2id (handle));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, Child_SmartHandle &handle)
+{
+  handle = connection_id2context<Child_Context$> (fbr.pop_object())->handle$;
+  return fbr;
 }
 const Plic::TypeHash&
 Child_SmartHandle::_type()
@@ -1519,17 +1637,19 @@ Descendant_Context$::list_types ()
   if (!m_cached_types) {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3a8b819b364228b8ULL, 0x9dce3529210a7700ULL);
-    fb.add_object (connection_handle2id (handle$));
+    fb << handle$;
     Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
     PLIC_CHECK (fr != NULL, "missing result from 2-way call");
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
-    size_t len = frr.pop_int64();
+    size_t len;
+    frr >> len;
     PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
     Plic::TypeHashList *thv = new Plic::TypeHashList();
+    Plic::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
-      uint64 hashhi = frr.pop_int64();
-      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+      frr >> thash;
+      thv->push_back (thash);
     }
     delete fr;
     if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
@@ -1539,10 +1659,17 @@ Descendant_Context$::list_types ()
 }
 Descendant_SmartHandle::Descendant_SmartHandle ()
 {}
-Descendant_SmartHandle
-Descendant_SmartHandle::_new (Plic::FieldReader &fbr)
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, Descendant_SmartHandle &handle)
 {
-  return connection_id2context<Descendant_Context$> (fbr.pop_object())->handle$;
+  fb.add_object (connection_handle2id (handle));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, Descendant_SmartHandle &handle)
+{
+  handle = connection_id2context<Descendant_Context$> (fbr.pop_object())->handle$;
+  return fbr;
 }
 const Plic::TypeHash&
 Descendant_SmartHandle::_type()
@@ -1586,17 +1713,19 @@ GrandChild_Context$::list_types ()
   if (!m_cached_types) {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3aa9daa434261f37ULL, 0xa848862e429bf919ULL);
-    fb.add_object (connection_handle2id (handle$));
+    fb << handle$;
     Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
     PLIC_CHECK (fr != NULL, "missing result from 2-way call");
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
-    size_t len = frr.pop_int64();
+    size_t len;
+    frr >> len;
     PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
     Plic::TypeHashList *thv = new Plic::TypeHashList();
+    Plic::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
-      uint64 hashhi = frr.pop_int64();
-      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+      frr >> thash;
+      thv->push_back (thash);
     }
     delete fr;
     if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
@@ -1606,10 +1735,17 @@ GrandChild_Context$::list_types ()
 }
 GrandChild_SmartHandle::GrandChild_SmartHandle ()
 {}
-GrandChild_SmartHandle
-GrandChild_SmartHandle::_new (Plic::FieldReader &fbr)
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, GrandChild_SmartHandle &handle)
 {
-  return connection_id2context<GrandChild_Context$> (fbr.pop_object())->handle$;
+  fb.add_object (connection_handle2id (handle));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, GrandChild_SmartHandle &handle)
+{
+  handle = connection_id2context<GrandChild_Context$> (fbr.pop_object())->handle$;
+  return fbr;
 }
 const Plic::TypeHash&
 GrandChild_SmartHandle::_type()
@@ -1631,39 +1767,43 @@ GrandChild_SmartHandle::_types()
 {
   return connection_id2context<GrandChild_Context$> (connection_handle2id (*this))->list_types();
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const QuickRecord_Handle &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (2);
-  fb.add_int64 (self.int1);
-  fb.add_int64 (self.int2);
+  fb << self.int1;
+  fb << self.int2;
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, QuickRecord_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() < 2) return;
-  self.int1 = fbr.pop_int64();
-  self.int2 = fbr.pop_int64();
+  if (fbr.remaining() < 2) return src;
+  fbr >> self.int1;
+  fbr >> self.int2;
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const QuickSequence_Handle &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb.add_double (self[k]);
+    fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, QuickSequence_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
-  self.reserve (len);
+  self.resize (len);
   for (size_t k = 0; k < len; k++) {
-    self.push_back (fbr.pop_double());
+    fbr >> self[k];
   }
+  return src;
 }
 
 static inline void ref   (QuickIface_SmartHandle&) {} // dummy stub for Signal<>.emit
@@ -1687,17 +1827,19 @@ QuickIface_Context$::list_types ()
   if (!m_cached_types) {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3ceafdc3043b707dULL, 0xf30106bb4338c235ULL);
-    fb.add_object (connection_handle2id (handle$));
+    fb << handle$;
     Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
     PLIC_CHECK (fr != NULL, "missing result from 2-way call");
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
-    size_t len = frr.pop_int64();
+    size_t len;
+    frr >> len;
     PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
     Plic::TypeHashList *thv = new Plic::TypeHashList();
+    Plic::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
-      uint64 hashhi = frr.pop_int64();
-      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+      frr >> thash;
+      thv->push_back (thash);
     }
     delete fr;
     if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
@@ -1707,10 +1849,17 @@ QuickIface_Context$::list_types ()
 }
 QuickIface_SmartHandle::QuickIface_SmartHandle ()
 {}
-QuickIface_SmartHandle
-QuickIface_SmartHandle::_new (Plic::FieldReader &fbr)
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, QuickIface_SmartHandle &handle)
 {
-  return connection_id2context<QuickIface_Context$> (fbr.pop_object())->handle$;
+  fb.add_object (connection_handle2id (handle));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, QuickIface_SmartHandle &handle)
+{
+  handle = connection_id2context<QuickIface_Context$> (fbr.pop_object())->handle$;
+  return fbr;
 }
 const Plic::TypeHash&
 QuickIface_SmartHandle::_type()
@@ -1737,8 +1886,8 @@ QuickIface_SmartHandle::simple_function (int arg_i)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2446078b004b9aabULL, 0x37d6c73a34ac7070ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_int64 (arg_i);
+  fb << (*this);
+  fb << arg_i;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
 }
 
@@ -1763,17 +1912,19 @@ MethodTestInterface_Context$::list_types ()
   if (!m_cached_types) {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x363e0b9e750bbbe2ULL, 0x8b5953ab5fb23a59ULL);
-    fb.add_object (connection_handle2id (handle$));
+    fb << handle$;
     Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
     PLIC_CHECK (fr != NULL, "missing result from 2-way call");
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
-    size_t len = frr.pop_int64();
+    size_t len;
+    frr >> len;
     PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
     Plic::TypeHashList *thv = new Plic::TypeHashList();
+    Plic::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
-      uint64 hashhi = frr.pop_int64();
-      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+      frr >> thash;
+      thv->push_back (thash);
     }
     delete fr;
     if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
@@ -1783,10 +1934,17 @@ MethodTestInterface_Context$::list_types ()
 }
 MethodTestInterface_SmartHandle::MethodTestInterface_SmartHandle ()
 {}
-MethodTestInterface_SmartHandle
-MethodTestInterface_SmartHandle::_new (Plic::FieldReader &fbr)
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, MethodTestInterface_SmartHandle &handle)
 {
-  return connection_id2context<MethodTestInterface_Context$> (fbr.pop_object())->handle$;
+  fb.add_object (connection_handle2id (handle));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, MethodTestInterface_SmartHandle &handle)
+{
+  handle = connection_id2context<MethodTestInterface_Context$> (fbr.pop_object())->handle$;
+  return fbr;
 }
 const Plic::TypeHash&
 MethodTestInterface_SmartHandle::_type()
@@ -1813,7 +1971,7 @@ MethodTestInterface_SmartHandle::method_with_void ()
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0), *fr = NULL;
   fb.add_msgid (0x281392e54343bee9ULL, 0x0dbeb788728dbff4ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
 }
 bool
@@ -1822,13 +1980,14 @@ MethodTestInterface_SmartHandle::method_with_bools (bool arg_input,
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x3b68546991e25342ULL, 0xa71399caec9ccfc7ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_int64 (arg_input);
-  fb.add_int64 (arg_optval);
+  fb << (*this);
+  fb << arg_input;
+  fb << arg_optval;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  bool  retval = frr.pop_int64();
+  bool  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -1838,13 +1997,14 @@ MethodTestInterface_SmartHandle::method_with_ints (int arg_input,
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x39555e79a31047bfULL, 0x0f06b4f122a81e1dULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_int64 (arg_input);
-  fb.add_int64 (arg_optval);
+  fb << (*this);
+  fb << arg_input;
+  fb << arg_optval;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  int  retval = frr.pop_int64();
+  int  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -1854,13 +2014,14 @@ MethodTestInterface_SmartHandle::method_with_floats (double arg_input,
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x391dd7c671dada38ULL, 0x32ca18bc1bd39689ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_double (arg_input);
-  fb.add_double (arg_optval);
+  fb << (*this);
+  fb << arg_input;
+  fb << arg_optval;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  double  retval = frr.pop_double();
+  double  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -1870,13 +2031,14 @@ MethodTestInterface_SmartHandle::method_with_string (const std::string &arg_inpu
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x3ad5eafe588b965aULL, 0x38c04145925d2963ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_string (arg_input);
-  fb.add_string (arg_optval);
+  fb << (*this);
+  fb << arg_input;
+  fb << arg_optval;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  std::string  retval = frr.pop_string();
+  std::string  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -1886,13 +2048,14 @@ MethodTestInterface_SmartHandle::method_with_enum (QuickEnum arg_input,
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x387f08a5c150e6a7ULL, 0x83c133fcd2be3200ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_evalue (arg_input);
-  fb.add_evalue (arg_optval);
+  fb << (*this);
+  fb << arg_input;
+  fb << arg_optval;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  QuickEnum  retval = QuickEnum (frr.pop_evalue());
+  QuickEnum  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -1902,7 +2065,7 @@ MethodTestInterface_SmartHandle::method_with_record (const QuickRecord_Handle &a
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x3b59b493f287edf0ULL, 0x4771d353c78389d1ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fb << arg_input;
   fb << arg_optval;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -1919,7 +2082,7 @@ MethodTestInterface_SmartHandle::method_with_sequence (const QuickSequence_Handl
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x34c9e8a686a7f261ULL, 0x9af099b173ac979cULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fb << arg_input;
   fb << arg_optval;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -1936,13 +2099,14 @@ MethodTestInterface_SmartHandle::method_with_interface (GrandChild_SmartHandle &
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x34619983babcee5bULL, 0x9875f78f28f381b7ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_object (connection_handle2id (arg_input));
-  fb.add_object (connection_handle2id (arg_optval));
+  fb << (*this);
+  fb << arg_input;
+  fb << arg_optval;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  GrandChild_SmartHandle  retval = GrandChild_SmartHandle::_new (frr);
+  GrandChild_SmartHandle  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -1952,13 +2116,14 @@ MethodTestInterface_SmartHandle::method_with_quickiface (QuickIface_SmartHandle 
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
   fb.add_msgid (0x3a2ab33a8358edcbULL, 0x7c028db9464052a0ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_object (connection_handle2id (arg_input));
-  fb.add_object (connection_handle2id (arg_iface0));
+  fb << (*this);
+  fb << arg_input;
+  fb << arg_iface0;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  QuickIface_SmartHandle  retval = QuickIface_SmartHandle::_new (frr);
+  QuickIface_SmartHandle  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -2244,17 +2409,19 @@ SignalTestInterface_Context$::list_types ()
   if (!m_cached_types) {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3b2248e8e9d4ff05ULL, 0xda71e710449d85dfULL);
-    fb.add_object (connection_handle2id (handle$));
+    fb << handle$;
     Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
     PLIC_CHECK (fr != NULL, "missing result from 2-way call");
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
-    size_t len = frr.pop_int64();
+    size_t len;
+    frr >> len;
     PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
     Plic::TypeHashList *thv = new Plic::TypeHashList();
+    Plic::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
-      uint64 hashhi = frr.pop_int64();
-      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+      frr >> thash;
+      thv->push_back (thash);
     }
     delete fr;
     if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
@@ -2267,17 +2434,17 @@ SignalTestInterface_Context$::Signal_void_result_EventHandler$::connections_chan
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x535d5e95471873b6ULL, 0x7a9f5692ce00e007ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2285,7 +2452,7 @@ SignalTestInterface_Context$::Signal_void_result_EventHandler$::connections_chan
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2304,17 +2471,17 @@ SignalTestInterface_Context$::Signal_bool_result_EventHandler$::connections_chan
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x51ffffa2f8db1b1bULL, 0x3e01434baf49eceeULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2322,7 +2489,7 @@ SignalTestInterface_Context$::Signal_bool_result_EventHandler$::connections_chan
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2335,7 +2502,7 @@ SignalTestInterface_Context$::Signal_bool_result_EventHandler$::handle_event (Pl
   if (fbr.remaining() != 0) return plic$_error ("invalid number of arguments");
   bool  rval = signal.emit ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (rval);
+  rb << rval;
   return &rb;
 }
 void
@@ -2343,17 +2510,17 @@ SignalTestInterface_Context$::Signal_int_result_EventHandler$::connections_chang
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x51ac083cdc878affULL, 0x72ad7414773447a2ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2361,7 +2528,7 @@ SignalTestInterface_Context$::Signal_int_result_EventHandler$::connections_chang
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2374,7 +2541,7 @@ SignalTestInterface_Context$::Signal_int_result_EventHandler$::handle_event (Pli
   if (fbr.remaining() != 0) return plic$_error ("invalid number of arguments");
   int  rval = signal.emit ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (rval);
+  rb << rval;
   return &rb;
 }
 void
@@ -2382,17 +2549,17 @@ SignalTestInterface_Context$::Signal_float_result_EventHandler$::connections_cha
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x5cc54429499b42b6ULL, 0x35e1fb7707130bcaULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2400,7 +2567,7 @@ SignalTestInterface_Context$::Signal_float_result_EventHandler$::connections_cha
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2413,7 +2580,7 @@ SignalTestInterface_Context$::Signal_float_result_EventHandler$::handle_event (P
   if (fbr.remaining() != 0) return plic$_error ("invalid number of arguments");
   double  rval = signal.emit ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_double (rval);
+  rb << rval;
   return &rb;
 }
 void
@@ -2421,17 +2588,17 @@ SignalTestInterface_Context$::Signal_string_result_EventHandler$::connections_ch
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x5790f575b6cac788ULL, 0x27db8e3c014993a7ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2439,7 +2606,7 @@ SignalTestInterface_Context$::Signal_string_result_EventHandler$::connections_ch
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2452,7 +2619,7 @@ SignalTestInterface_Context$::Signal_string_result_EventHandler$::handle_event (
   if (fbr.remaining() != 0) return plic$_error ("invalid number of arguments");
   std::string  rval = signal.emit ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_string (rval);
+  rb << rval;
   return &rb;
 }
 void
@@ -2460,17 +2627,17 @@ SignalTestInterface_Context$::Signal_enum_result_EventHandler$::connections_chan
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x56fc6f3f4946e7b2ULL, 0x0fe0cc5f83d2ab84ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2478,7 +2645,7 @@ SignalTestInterface_Context$::Signal_enum_result_EventHandler$::connections_chan
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2491,7 +2658,7 @@ SignalTestInterface_Context$::Signal_enum_result_EventHandler$::handle_event (Pl
   if (fbr.remaining() != 0) return plic$_error ("invalid number of arguments");
   QuickEnum  rval = signal.emit ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_evalue (rval);
+  rb << rval;
   return &rb;
 }
 void
@@ -2499,17 +2666,17 @@ SignalTestInterface_Context$::Signal_record_result_EventHandler$::connections_ch
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x50b723665ed298a5ULL, 0x32aa063680a4e3c0ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2517,7 +2684,7 @@ SignalTestInterface_Context$::Signal_record_result_EventHandler$::connections_ch
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2538,17 +2705,17 @@ SignalTestInterface_Context$::Signal_sequence_result_EventHandler$::connections_
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x5ef00325dfcf4552ULL, 0x991130ecddd21730ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2556,7 +2723,7 @@ SignalTestInterface_Context$::Signal_sequence_result_EventHandler$::connections_
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2577,17 +2744,17 @@ SignalTestInterface_Context$::Signal_interface_result_EventHandler$::connections
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x58e8587c542d85ceULL, 0xe2b572e902c69f7cULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2595,7 +2762,7 @@ SignalTestInterface_Context$::Signal_interface_result_EventHandler$::connections
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2608,7 +2775,7 @@ SignalTestInterface_Context$::Signal_interface_result_EventHandler$::handle_even
   if (fbr.remaining() != 0) return plic$_error ("invalid number of arguments");
   GrandChild_SmartHandle  rval = signal.emit ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_object (connection_handle2id (rval));
+  rb << rval;
   return &rb;
 }
 void
@@ -2616,17 +2783,17 @@ SignalTestInterface_Context$::Signal_self_result_EventHandler$::connections_chan
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x59bb2da621bab28fULL, 0x32bc82e7eb9bc512ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2634,7 +2801,7 @@ SignalTestInterface_Context$::Signal_self_result_EventHandler$::connections_chan
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2647,7 +2814,7 @@ SignalTestInterface_Context$::Signal_self_result_EventHandler$::handle_event (Pl
   if (fbr.remaining() != 0) return plic$_error ("invalid number of arguments");
   SignalTestInterface_SmartHandle  rval = signal.emit ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_object (connection_handle2id (rval));
+  rb << rval;
   return &rb;
 }
 void
@@ -2655,17 +2822,17 @@ SignalTestInterface_Context$::Signal_void_arg_EventHandler$::connections_changed
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x583dc36c7785c7f3ULL, 0xb330cefa4e8247a9ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2673,7 +2840,7 @@ SignalTestInterface_Context$::Signal_void_arg_EventHandler$::connections_changed
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2692,17 +2859,17 @@ SignalTestInterface_Context$::Signal_bool_arg_EventHandler$::connections_changed
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x5f7ba898d12986bfULL, 0x8a1143a5f6dc85b8ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2710,7 +2877,7 @@ SignalTestInterface_Context$::Signal_bool_arg_EventHandler$::connections_changed
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2721,7 +2888,8 @@ SignalTestInterface_Context$::Signal_bool_arg_EventHandler$::handle_event (Plic:
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.skip();       // skip m_handler_id
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
-  bool  arg_b = fbr.pop_int64();
+  bool  arg_b;
+  fbr >> arg_b;
   signal.emit (arg_b);
   return NULL;
 }
@@ -2730,17 +2898,17 @@ SignalTestInterface_Context$::Signal_int_arg_EventHandler$::connections_changed 
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x5f91dc79c2bee013ULL, 0x809b90b2fad4ea0aULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2748,7 +2916,7 @@ SignalTestInterface_Context$::Signal_int_arg_EventHandler$::connections_changed 
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2759,7 +2927,8 @@ SignalTestInterface_Context$::Signal_int_arg_EventHandler$::handle_event (Plic::
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.skip();       // skip m_handler_id
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
-  int  arg_i = fbr.pop_int64();
+  int  arg_i;
+  fbr >> arg_i;
   signal.emit (arg_i);
   return NULL;
 }
@@ -2768,17 +2937,17 @@ SignalTestInterface_Context$::Signal_float_arg_EventHandler$::connections_change
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x5d5c43cd47b258caULL, 0xb0d5fde097d6d12cULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2786,7 +2955,7 @@ SignalTestInterface_Context$::Signal_float_arg_EventHandler$::connections_change
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2797,7 +2966,8 @@ SignalTestInterface_Context$::Signal_float_arg_EventHandler$::handle_event (Plic
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.skip();       // skip m_handler_id
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
-  double  arg_f = fbr.pop_double();
+  double  arg_f;
+  fbr >> arg_f;
   signal.emit (arg_f);
   return NULL;
 }
@@ -2806,17 +2976,17 @@ SignalTestInterface_Context$::Signal_string_arg_EventHandler$::connections_chang
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x53de7a105b57bf62ULL, 0x9d8ffe4942a0934fULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2824,7 +2994,7 @@ SignalTestInterface_Context$::Signal_string_arg_EventHandler$::connections_chang
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2835,7 +3005,8 @@ SignalTestInterface_Context$::Signal_string_arg_EventHandler$::handle_event (Pli
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.skip();       // skip m_handler_id
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
-  std::string  arg_s = fbr.pop_string();
+  std::string  arg_s;
+  fbr >> arg_s;
   signal.emit (arg_s);
   return NULL;
 }
@@ -2844,17 +3015,17 @@ SignalTestInterface_Context$::Signal_enum_arg_EventHandler$::connections_changed
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x586138796f133c4dULL, 0x1c7573f2d30ac907ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2862,7 +3033,7 @@ SignalTestInterface_Context$::Signal_enum_arg_EventHandler$::connections_changed
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2873,7 +3044,8 @@ SignalTestInterface_Context$::Signal_enum_arg_EventHandler$::handle_event (Plic:
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.skip();       // skip m_handler_id
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
-  QuickEnum  arg_e = QuickEnum (fbr.pop_evalue());
+  QuickEnum  arg_e;
+  fbr >> arg_e;
   signal.emit (arg_e);
   return NULL;
 }
@@ -2882,17 +3054,17 @@ SignalTestInterface_Context$::Signal_record_arg_EventHandler$::connections_chang
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x59cb77461ddeac82ULL, 0xfeaa98721bd8ecd3ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2900,7 +3072,7 @@ SignalTestInterface_Context$::Signal_record_arg_EventHandler$::connections_chang
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2921,17 +3093,17 @@ SignalTestInterface_Context$::Signal_sequence_arg_EventHandler$::connections_cha
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x547b4dd41606b568ULL, 0x1d763791a33d2bc9ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2939,7 +3111,7 @@ SignalTestInterface_Context$::Signal_sequence_arg_EventHandler$::connections_cha
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2960,17 +3132,17 @@ SignalTestInterface_Context$::Signal_interface_arg_EventHandler$::connections_ch
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x57a5dbfbeb5a4ef9ULL, 0xb5df0c3b3bba4b22ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -2978,7 +3150,7 @@ SignalTestInterface_Context$::Signal_interface_arg_EventHandler$::connections_ch
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -2989,7 +3161,8 @@ SignalTestInterface_Context$::Signal_interface_arg_EventHandler$::handle_event (
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.skip();       // skip m_handler_id
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
-  GrandChild_SmartHandle  arg_i = GrandChild_SmartHandle::_new (fbr);
+  GrandChild_SmartHandle  arg_i;
+  fbr >> arg_i;
   signal.emit (arg_i);
   return NULL;
 }
@@ -2998,17 +3171,17 @@ SignalTestInterface_Context$::Signal_self_args_EventHandler$::connections_change
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x5c515ee37b78a970ULL, 0xe89c2af2f29359a0ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -3016,7 +3189,7 @@ SignalTestInterface_Context$::Signal_self_args_EventHandler$::connections_change
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -3027,7 +3200,8 @@ SignalTestInterface_Context$::Signal_self_args_EventHandler$::handle_event (Plic
   fbr.skip_msgid(); // FIXME: check msgid
   fbr.skip();       // skip m_handler_id
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
-  SignalTestInterface_SmartHandle  arg_self_ = SignalTestInterface_SmartHandle::_new (fbr);
+  SignalTestInterface_SmartHandle  arg_self_;
+  fbr >> arg_self_;
   signal.emit (arg_self_);
   return NULL;
 }
@@ -3073,10 +3247,17 @@ SignalTestInterface_SmartHandle::SignalTestInterface_SmartHandle () :
   interface_arg (*(SignalTestInterface_SmartHandle_Signal_interface_arg*) NULL),
   self_args (*(SignalTestInterface_SmartHandle_Signal_self_args*) NULL)
 {}
-SignalTestInterface_SmartHandle
-SignalTestInterface_SmartHandle::_new (Plic::FieldReader &fbr)
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, SignalTestInterface_SmartHandle &handle)
 {
-  return connection_id2context<SignalTestInterface_Context$> (fbr.pop_object())->handle$;
+  fb.add_object (connection_handle2id (handle));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, SignalTestInterface_SmartHandle &handle)
+{
+  handle = connection_id2context<SignalTestInterface_Context$> (fbr.pop_object())->handle$;
+  return fbr;
 }
 const Plic::TypeHash&
 SignalTestInterface_SmartHandle::_type()
@@ -3103,11 +3284,12 @@ PropertyTester_SmartHandle::bool_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x396c5b1aaf49cec6ULL, 0xb6218ab5ac6b82c3ULL);
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  bool  retval = frr.pop_int64();
+  bool  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -3116,8 +3298,8 @@ PropertyTester_SmartHandle::bool_prop (bool value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2bd3c8fc8f71f8b4ULL, 0x2dde5c2c8fcf750cULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_int64 (value);
+  fb << (*this);
+  fb << value;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
@@ -3126,11 +3308,12 @@ PropertyTester_SmartHandle::int_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x369c402f00bbf1e2ULL, 0x515a4131e4516216ULL);
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  int  retval = frr.pop_int64();
+  int  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -3139,8 +3322,8 @@ PropertyTester_SmartHandle::int_prop (int value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2a015ad6b813701dULL, 0x62fa674331e78289ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_int64 (value);
+  fb << (*this);
+  fb << value;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
@@ -3149,11 +3332,12 @@ PropertyTester_SmartHandle::float_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3b2c96526265c4baULL, 0xc1f4b15d96504a08ULL);
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  double  retval = frr.pop_double();
+  double  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -3162,8 +3346,8 @@ PropertyTester_SmartHandle::float_prop (double value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x25ae78062c0435cdULL, 0x1d21f473f7647360ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_double (value);
+  fb << (*this);
+  fb << value;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
@@ -3172,11 +3356,12 @@ PropertyTester_SmartHandle::string_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x385771786e6432dbULL, 0xcb19bfb3aa9a26feULL);
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  std::string  retval = frr.pop_string();
+  std::string  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -3185,8 +3370,8 @@ PropertyTester_SmartHandle::string_prop (const std::string &value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x206d200c92ba7e41ULL, 0x857975e0304c85f3ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_string (value);
+  fb << (*this);
+  fb << value;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
@@ -3195,11 +3380,12 @@ PropertyTester_SmartHandle::enum_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3d09e074f5d2f8edULL, 0x38e8a275e29c3fc2ULL);
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  QuickEnum  retval = QuickEnum (frr.pop_evalue());
+  QuickEnum  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -3208,8 +3394,8 @@ PropertyTester_SmartHandle::enum_prop (QuickEnum value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2b77a2f3a3c4d5b4ULL, 0x4d5b96d1adf5f7ccULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_evalue (value);
+  fb << (*this);
+  fb << value;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
@@ -3218,7 +3404,7 @@ PropertyTester_SmartHandle::record_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x31443949c61d0fecULL, 0xeb221638d6ffd3cfULL);
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
@@ -3232,7 +3418,7 @@ PropertyTester_SmartHandle::record_prop (const QuickRecord_Handle &value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2a5f5c212625f446ULL, 0x30d24123307269ceULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fb << value;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
@@ -3242,7 +3428,7 @@ PropertyTester_SmartHandle::sequence_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3f323c929c803ea8ULL, 0x6ebf49e977bfb699ULL);
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
@@ -3256,7 +3442,7 @@ PropertyTester_SmartHandle::sequence_prop (const QuickSequence_Handle &value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x232174952090a941ULL, 0xae8b7a3e13fdfde7ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fb << value;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
@@ -3266,11 +3452,12 @@ PropertyTester_SmartHandle::interface_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x33a8b72ea92bb600ULL, 0x3837c1118556aaedULL);
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  GrandChild_SmartHandle  retval = GrandChild_SmartHandle::_new (frr);
+  GrandChild_SmartHandle  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -3279,8 +3466,8 @@ PropertyTester_SmartHandle::interface_prop (GrandChild_SmartHandle value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x29163b10631cf4b4ULL, 0xf014d69b1a1153e9ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_object (connection_handle2id (value));
+  fb << (*this);
+  fb << value;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
@@ -3289,11 +3476,12 @@ PropertyTester_SmartHandle::self_prop () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3e6b07e114fab96bULL, 0x45a97f76ee1a7bcfULL);
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  PropertyTester_SmartHandle  retval = PropertyTester_SmartHandle::_new (frr);
+  PropertyTester_SmartHandle  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -3302,8 +3490,8 @@ PropertyTester_SmartHandle::self_prop (PropertyTester_SmartHandle value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2c1aea6b5567c7beULL, 0x8f21acd05f5030deULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_object (connection_handle2id (value));
+  fb << (*this);
+  fb << value;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
@@ -3329,17 +3517,19 @@ PropertyTester_Context$::list_types ()
   if (!m_cached_types) {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x33ed5186814fd96fULL, 0x2db9aae41d7f688cULL);
-    fb.add_object (connection_handle2id (handle$));
+    fb << handle$;
     Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
     PLIC_CHECK (fr != NULL, "missing result from 2-way call");
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
-    size_t len = frr.pop_int64();
+    size_t len;
+    frr >> len;
     PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
     Plic::TypeHashList *thv = new Plic::TypeHashList();
+    Plic::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
-      uint64 hashhi = frr.pop_int64();
-      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+      frr >> thash;
+      thv->push_back (thash);
     }
     delete fr;
     if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
@@ -3349,10 +3539,17 @@ PropertyTester_Context$::list_types ()
 }
 PropertyTester_SmartHandle::PropertyTester_SmartHandle ()
 {}
-PropertyTester_SmartHandle
-PropertyTester_SmartHandle::_new (Plic::FieldReader &fbr)
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, PropertyTester_SmartHandle &handle)
 {
-  return connection_id2context<PropertyTester_Context$> (fbr.pop_object())->handle$;
+  fb.add_object (connection_handle2id (handle));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, PropertyTester_SmartHandle &handle)
+{
+  handle = connection_id2context<PropertyTester_Context$> (fbr.pop_object())->handle$;
+  return fbr;
 }
 const Plic::TypeHash&
 PropertyTester_SmartHandle::_type()
@@ -3382,11 +3579,12 @@ ButtonArea_SmartHandle::on_click () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3e3aae70657f83b7ULL, 0x728ed182ccdc4020ULL);
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  std::string  retval = frr.pop_string();
+  std::string  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -3395,8 +3593,8 @@ ButtonArea_SmartHandle::on_click (const std::string &value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2d526a22ceb83792ULL, 0x62169ce8c45be6e0ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_string (value);
+  fb << (*this);
+  fb << value;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
@@ -3405,11 +3603,12 @@ ButtonArea_SmartHandle::on_click2 () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3c128313732bc9a9ULL, 0xad69a127aa1ce9b0ULL);
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  std::string  retval = frr.pop_string();
+  std::string  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -3418,8 +3617,8 @@ ButtonArea_SmartHandle::on_click2 (const std::string &value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x23c57c80df9b0efbULL, 0xb8e860a363947d7dULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_string (value);
+  fb << (*this);
+  fb << value;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
@@ -3428,11 +3627,12 @@ ButtonArea_SmartHandle::on_click3 () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x380ad1778851e535ULL, 0x5b045ec25d2deb0eULL);
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  std::string  retval = frr.pop_string();
+  std::string  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -3441,8 +3641,8 @@ ButtonArea_SmartHandle::on_click3 (const std::string &value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x27d09d1b9508a02bULL, 0x1e072d4d979e4921ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_string (value);
+  fb << (*this);
+  fb << value;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
@@ -3451,11 +3651,12 @@ ButtonArea_SmartHandle::click_type () const
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
   fb.add_msgid (0x3d39bef0c031e35dULL, 0x7ea1af466f8574b1ULL);
-  fb.add_object (connection_handle2id ((*this)));
+  fb << (*this);
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  ClickType  retval = ClickType (frr.pop_evalue());
+  ClickType  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }
@@ -3464,8 +3665,8 @@ ButtonArea_SmartHandle::click_type (ClickType value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x27b69c1801d07bbeULL, 0x929dbc4b4f2ea981ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_evalue (value);
+  fb << (*this);
+  fb << value;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
@@ -3517,17 +3718,19 @@ ButtonArea_Context$::list_types ()
   if (!m_cached_types) {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3416c0fa53fb9e4bULL, 0xca6572c6a964739bULL);
-    fb.add_object (connection_handle2id (handle$));
+    fb << handle$;
     Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
     PLIC_CHECK (fr != NULL, "missing result from 2-way call");
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
-    size_t len = frr.pop_int64();
+    size_t len;
+    frr >> len;
     PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
     Plic::TypeHashList *thv = new Plic::TypeHashList();
+    Plic::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
-      uint64 hashhi = frr.pop_int64();
-      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+      frr >> thash;
+      thv->push_back (thash);
     }
     delete fr;
     if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
@@ -3540,17 +3743,17 @@ ButtonArea_Context$::Signal_check_activate_EventHandler$::connections_changed (b
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x5aa49f58f83f54b7ULL, 0xff357b59e593e480ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -3558,7 +3761,7 @@ ButtonArea_Context$::Signal_check_activate_EventHandler$::connections_changed (b
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -3571,7 +3774,7 @@ ButtonArea_Context$::Signal_check_activate_EventHandler$::handle_event (Plic::Fi
   if (fbr.remaining() != 0) return plic$_error ("invalid number of arguments");
   bool  rval = signal.emit ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (rval);
+  rb << rval;
   return &rb;
 }
 void
@@ -3579,17 +3782,17 @@ ButtonArea_Context$::Signal_activate_EventHandler$::connections_changed (bool ha
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x567351a83995c46eULL, 0xcd153a5a755401f6ULL);
-  fb.add_object (connection_handle2id (*signal.emitter()));
+  fb << *signal.emitter();
   if (hasconnections) {
     if (!m_handler_id)              // signal connected
       m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-    fb.add_int64 (m_handler_id);    // handler connection request
-    fb.add_int64 (0);               // no disconnection
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
   } else {                          // signal disconnected
     if (m_handler_id)
       ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-    fb.add_int64 (0);               // no handler connection
-    fb.add_int64 (m_connection_id); // disconnection request
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
     m_connection_id = 0;
   }
   Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -3597,7 +3800,7 @@ ButtonArea_Context$::Signal_activate_EventHandler$::connections_changed (bool ha
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
-      m_connection_id = frr.pop_int64();
+      frr >> m_connection_id;
     delete fr;
   }
 }
@@ -3617,10 +3820,17 @@ ButtonArea_SmartHandle::ButtonArea_SmartHandle () :
   check_activate (*(ButtonArea_SmartHandle_Signal_check_activate*) NULL),
   activate (*(ButtonArea_SmartHandle_Signal_activate*) NULL)
 {}
-ButtonArea_SmartHandle
-ButtonArea_SmartHandle::_new (Plic::FieldReader &fbr)
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, ButtonArea_SmartHandle &handle)
 {
-  return connection_id2context<ButtonArea_Context$> (fbr.pop_object())->handle$;
+  fb.add_object (connection_handle2id (handle));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, ButtonArea_SmartHandle &handle)
+{
+  handle = connection_id2context<ButtonArea_Context$> (fbr.pop_object())->handle$;
+  return fbr;
 }
 const Plic::TypeHash&
 ButtonArea_SmartHandle::_type()
@@ -3664,17 +3874,19 @@ PureMethods_Context$::list_types ()
   if (!m_cached_types) {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (0x3f8c1b3ea1e0fd3cULL, 0x53f8ae50709fadc0ULL);
-    fb.add_object (connection_handle2id (handle$));
+    fb << handle$;
     Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
     PLIC_CHECK (fr != NULL, "missing result from 2-way call");
     Plic::FieldReader frr (*fr);
     frr.skip_msgid(); // FIXME: msgid for return?
-    size_t len = frr.pop_int64();
+    size_t len;
+    frr >> len;
     PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
     Plic::TypeHashList *thv = new Plic::TypeHashList();
+    Plic::TypeHash thash;
     for (size_t i = 0; i < len; i++) {
-      uint64 hashhi = frr.pop_int64();
-      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+      frr >> thash;
+      thv->push_back (thash);
     }
     delete fr;
     if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
@@ -3684,10 +3896,17 @@ PureMethods_Context$::list_types ()
 }
 PureMethods_SmartHandle::PureMethods_SmartHandle ()
 {}
-PureMethods_SmartHandle
-PureMethods_SmartHandle::_new (Plic::FieldReader &fbr)
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, PureMethods_SmartHandle &handle)
 {
-  return connection_id2context<PureMethods_Context$> (fbr.pop_object())->handle$;
+  fb.add_object (connection_handle2id (handle));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, PureMethods_SmartHandle &handle)
+{
+  handle = connection_id2context<PureMethods_Context$> (fbr.pop_object())->handle$;
+  return fbr;
 }
 const Plic::TypeHash&
 PureMethods_SmartHandle::_type()
@@ -3714,12 +3933,13 @@ PureMethods_SmartHandle::pure_method (double arg_f)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x3c452a34192441bfULL, 0xcb1002037bf028e2ULL); // msgid
-  fb.add_object (connection_handle2id ((*this)));
-  fb.add_double (arg_f);
+  fb << (*this);
+  fb << arg_f;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   Plic::FieldReader frr (*fr);
   frr.skip_msgid(); // FIXME: check msgid
-  int  retval = frr.pop_int64();
+  int  retval;
+  frr >> retval;
   delete fr;
   return retval;
 }

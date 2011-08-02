@@ -229,64 +229,45 @@ class Generator:
     s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
     if type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += 'void operator<< (Plic::FieldBuffer&, const %s&);\n' % self.C (type_info)
-      s += 'void operator>> (Plic::FieldReader&, %s&);\n' % self.C (type_info)
+      s += 'Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const %s&);\n' % self.C (type_info)
+      s += 'Plic::FieldReader& operator>> (Plic::FieldReader&, %s&);\n' % self.C (type_info)
     s += self.generate_shortalias (type_info)   # typedef alias
     return s
-  def accessor_name (self, decls_type):
-    # map Decls storage to FieldBuffer accessors
-    return { Decls.INT:       'int64',
-             Decls.ENUM:      'evalue',
-             Decls.FLOAT:     'double',
-             Decls.STRING:    'string',
-             Decls.FUNC:      'func',
-             Decls.INTERFACE: 'object' }.get (decls_type, None)
   def generate_proto_add_args (self, fb, type_info, aprefix, arg_info_list, apostfix):
     s = ''
     for arg_it in arg_info_list:
-      ident, type = arg_it
+      ident, type_node = arg_it
       ident = aprefix + ident + apostfix
-      if type.storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  %s << %s;\n' % (fb, ident)
-      elif type.storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
-        s += '  %s.add_object (connection_object2id (%s));\n' % (fb, ident)
-      elif type.storage == Decls.INTERFACE: # G4CLIENT
-        s += '  %s.add_object (connection_handle2id (%s));\n' % (fb, ident)
-      else:
-        s += '  %s.add_%s (%s);\n' % (fb, self.accessor_name (type.storage), ident)
+      s += '  %s << %s;\n' % (fb, ident)
     return s
   def generate_proto_pop_args (self, fbr, type_info, aprefix, arg_info_list, apostfix = ''):
     s = ''
     for arg_it in arg_info_list:
       ident, type_node = arg_it
       ident = aprefix + ident + apostfix
-      if type_node.storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  %s >> %s;\n' % (fbr, ident)
-      elif type_node.storage == Decls.ENUM:
-        s += '  %s = %s (%s.pop_evalue());\n' % (ident, self.C (type_node), fbr)
-      elif type_node.storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
-        s += '  %s = connection_id2object<%s> (%s.pop_object());\n' % (ident, self.C (type_node), fbr)
-      elif type_node.storage == Decls.INTERFACE: # G4CLIENT
-        s += '  %s = %s::_new (%s);\n' % (ident, self.C (type_node), fbr) # id2handle
-      else:
-        s += '  %s = %s.pop_%s();\n' % (ident, fbr, self.accessor_name (type_node.storage))
+      s += '  %s >> %s;\n' % (fbr, ident)
     return s
   def generate_record_impl (self, type_info):
     s = ''
-    s += 'void\noperator<< (Plic::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
+    s += 'inline Plic::FieldBuffer&\n'
+    s += 'operator<< (Plic::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
     s += '  Plic::FieldBuffer &fb = dst.add_rec (%u);\n' % len (type_info.fields)
     s += self.generate_proto_add_args ('fb', type_info, 'self.', type_info.fields, '')
+    s += '  return dst;\n'
     s += '}\n'
-    s += 'void\noperator>> (Plic::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
+    s += 'inline Plic::FieldReader&\n'
+    s += 'operator>> (Plic::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
     s += '  Plic::FieldReader fbr (src.pop_rec());\n'
-    s += '  if (fbr.remaining() < %u) return;\n' % len (type_info.fields)
+    s += '  if (fbr.remaining() < %u) return src;\n' % len (type_info.fields)
     s += self.generate_proto_pop_args ('fbr', type_info, 'self.', type_info.fields)
+    s += '  return src;\n'
     s += '}\n'
     return s
   def generate_sequence_impl (self, type_info):
     s = ''
     el = type_info.elements
-    s += 'void\noperator<< (Plic::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
+    s += 'inline Plic::FieldBuffer&\n'
+    s += 'operator<< (Plic::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
     s += '  const size_t len = self.size();\n'
     s += '  Plic::FieldBuffer &fb = dst.add_seq (len);\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
@@ -294,28 +275,20 @@ class Generator:
                                                        [('self', type_info.elements[1])],
                                                        '[k]')) + '\n'
     s += '  }\n'
+    s += '  return dst;\n'
     s += '}\n'
-    s += 'void\noperator>> (Plic::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
+    s += 'inline Plic::FieldReader&\n'
+    s += 'operator>> (Plic::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
     s += '  Plic::FieldReader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
-    if el[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += '  self.resize (len);\n'
-    else:
+    if el[1].storage in (Decls.INTERFACE):
       s += '  self.reserve (len);\n'
-    s += '  for (size_t k = 0; k < len; k++) {\n'
-    if el[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += reindent ('  ', self.generate_proto_pop_args ('fbr', type_info, '',
-                                                         [('self', type_info.elements[1])],
-                                                         '[k]')) + '\n'
-    elif el[1].storage == Decls.ENUM:
-      s += '    self.push_back (%s (fbr.pop_evalue()));\n' % self.C (el[1])
-    elif el[1].storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
-      s += '    self.push_back (connection_id2object<%s> (fbr.pop_object()));\n' % self.C (el[1])
-    elif el[1].storage == Decls.INTERFACE: # G4CLIENT
-      s += '    self.push_back (%s::_new (fbr));\n' % self.C (el[1]) # id2handle
     else:
-      s += '    self.push_back (fbr.pop_%s());\n' % self.accessor_name (el[1].storage)
+      s += '  self.resize (len);\n'
+    s += '  for (size_t k = 0; k < len; k++) {\n'
+    s += '    fbr >> self[k];\n'
     s += '  }\n'
+    s += '  return src;\n'
     s += '}\n'
     return s
   def digest2cbytes (self, digest):
@@ -417,7 +390,6 @@ class Generator:
       aliasfix = '__attribute__ ((noinline))' # work around bogus strict-aliasing warning in g++-4.4.5
       s += '  template<class C>\n'
       s += '  ' + self.F ('static %s' % classH) + '_cast  (C &c) { return _cast (c, c._types()); }\n' # ctor
-      s += '  ' + self.F ('static %s' % classH) + '_new   (Plic::FieldReader &fbr) %s;\n' % aliasfix # ctor
       s += '  ' + self.F ('const Plic::TypeHashList&') + '_types ();\n'
       s += '  ' + self.F ('explicit') + '%s ();\n' % classH # ctor
       #s += '  ' + self.F ('inline') + '%s (const %s &src)' % (classH, classH) # copy ctor
@@ -457,6 +429,13 @@ class Generator:
       s += '  inline const %s& impl () const { return impl (const_cast<%s*> (this)); }\n' % (implname, self.C (type_info))
     s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
+    if self.gen_mode == G4SERVER:
+      s += 'Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, %s&);\n' % self.C (type_info)
+      s += 'Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, %s*);\n' % self.C (type_info)
+      s += 'Plic::FieldReader& operator>> (Plic::FieldReader&, %s*&);\n' % self.C (type_info)
+    else: # G4CLIENT
+      s += 'Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, %s&);\n' % self.C (type_info)
+      s += 'Plic::FieldReader& operator>> (Plic::FieldReader&, %s&);\n' % self.C (type_info)
     s += self.generate_shortalias (type_info)   # typedef alias
     return s
   def generate_shortalias (self, type_info):
@@ -525,12 +504,14 @@ class Generator:
     s += '    PLIC_CHECK (fr != NULL, "missing result from 2-way call");\n'
     s += '    Plic::FieldReader frr (*fr);\n'
     s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
-    s += '    size_t len = frr.pop_int64();\n'
+    s += '    size_t len;\n'
+    s += '    frr >> len;\n'
     s += '    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");\n'
     s += '    Plic::TypeHashList *thv = new Plic::TypeHashList();\n'
+    s += '    Plic::TypeHash thash;\n'
     s += '    for (size_t i = 0; i < len; i++) {\n'
-    s += '      uint64 hashhi = frr.pop_int64();\n'
-    s += '      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));\n'
+    s += '      frr >> thash;\n'
+    s += '      thv->push_back (thash);\n'
     s += '    }\n'
     s += '    delete fr;\n'
     s += '    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))\n'
@@ -570,13 +551,13 @@ class Generator:
     s += '  if (hasconnections) {\n'
     s += '    if (!m_handler_id)              // signal connected\n'
     s += '      m_handler_id = PLIC_CONNECTION().register_event_handler (this);\n' # FIXME: badly broken, memory alloc!
-    s += '    fb.add_int64 (m_handler_id);    // handler connection request\n'
-    s += '    fb.add_int64 (0);               // no disconnection\n'
+    s += '    fb << m_handler_id;    // handler connection request\n'
+    s += '    fb << 0;               // no disconnection\n'
     s += '  } else {                          // signal disconnected\n'
     s += '    if (m_handler_id)\n'
     s += '      ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;\n'
-    s += '    fb.add_int64 (0);               // no handler connection\n'
-    s += '    fb.add_int64 (m_connection_id); // disconnection request\n'
+    s += '    fb << 0;               // no handler connection\n'
+    s += '    fb << m_connection_id; // disconnection request\n'
     s += '    m_connection_id = 0;\n'
     s += '  }\n'
     s += '  Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
@@ -584,7 +565,7 @@ class Generator:
     s += '    Plic::FieldReader frr (*fr);\n'
     s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
     s += '    if (frr.remaining() && m_handler_id)\n'
-    s += '      m_connection_id = frr.pop_int64();\n'
+    s += '      frr >> m_connection_id;\n'
     s += '    delete fr;\n'
     s += '  }\n'
     s += '}\n'
@@ -596,12 +577,8 @@ class Generator:
     s += '  fbr.skip();       // skip m_handler_id\n'
     s += '  if (fbr.remaining() != %u) return plic$_error ("invalid number of arguments");\n' % len (sg.args)
     for a in sg.args:                                 # fetch args
-      if a[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  ' + self.V ('arg_' + a[0], a[1]) + ';\n'
-        s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(a[0], a[1])])
-      else:
-        tstr = self.V ('', a[1]) + 'arg_'
-        s += self.generate_proto_pop_args ('fbr', class_info, tstr, [(a[0], a[1])])
+      s += '  ' + self.V ('arg_' + a[0], a[1]) + ';\n'
+      s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(a[0], a[1])])
     s += '  '                                         # return var
     hasret = sg.rtype.storage != Decls.VOID
     if hasret:
@@ -630,8 +607,15 @@ class Generator:
     s += '%s::%s ()' % classH2 # ctor
     s += ' :\n  ' + sci if sci else ''
     s += '\n{}\n'
-    s += '%s\n%s::_new (Plic::FieldReader &fbr)\n{\n' % classH2 # should be ctor, but requires ctor delegatioon (C++0x)
-    s += '  return connection_id2context<%s> (fbr.pop_object())->handle$;\n' % classC
+    s += 'inline Plic::FieldBuffer&\n'
+    s += 'operator<< (Plic::FieldBuffer &fb, %s &handle)\n{\n' % classH
+    s += '  fb.add_object (connection_handle2id (handle));\n'
+    s += '  return fb;\n'
+    s += '}\n'
+    s += 'inline Plic::FieldReader&\n'
+    s += 'operator>> (Plic::FieldReader &fbr, %s &handle)\n{\n' % classH
+    s += '  handle = connection_id2context<%s> (fbr.pop_object())->handle$;\n' % classC
+    s += '  return fbr;\n'
     s += '}\n'
     s += 'const Plic::TypeHash&\n'
     s += '%s::_type()\n{\n' % classH
@@ -652,17 +636,32 @@ class Generator:
     return s
   def generate_server_class_methods (self, class_info):
     assert self.gen_mode == G4SERVER
-    s, tname = '\n', self.C (class_info)
-    s += '%s::%s ()' % (tname, tname) # ctor
+    s, classC = '\n', self.C (class_info) # class names
+    s += '%s::%s ()' % (classC, classC) # ctor
     l = [] # constructor agument list
     for sg in class_info.signals:
       l += ['sig_%s (*this)' % sg.name]
     if l:
       s += ' :\n  ' + ', '.join (l)
     s += '\n{}\n'
-    s += '%s::~%s () {}\n' % (tname, tname) # dtor
+    s += '%s::~%s () {}\n' % (classC, classC) # dtor
+    s += 'inline Plic::FieldBuffer&\n'
+    s += 'operator<< (Plic::FieldBuffer &fb, %s &obj)\n{\n' % classC
+    s += '  fb.add_object (connection_object2id (&obj));\n'
+    s += '  return fb;\n'
+    s += '}\n'
+    s += 'inline Plic::FieldBuffer&\n'
+    s += 'operator<< (Plic::FieldBuffer &fb, %s *obj)\n{\n' % classC
+    s += '  fb.add_object (connection_object2id (obj));\n'
+    s += '  return fb;\n'
+    s += '}\n'
+    s += 'inline Plic::FieldReader&\n'
+    s += 'operator>> (Plic::FieldReader &fbr, %s* &obj)\n{\n' % classC
+    s += '  obj = connection_id2object<%s> (fbr.pop_object());\n' % classC
+    s += '  return fbr;\n'
+    s += '}\n'
     s += 'void\n'
-    s += '%s::_list_types (Plic::TypeHashList &thl) const\n{\n' % tname
+    s += '%s::_list_types (Plic::TypeHashList &thl) const\n{\n' % classC
     ancestors = self.class_ancestry (class_info)
     ancestors.reverse()
     for an in ancestors:
@@ -691,12 +690,8 @@ class Generator:
       s += '  Plic::FieldReader frr (*fr);\n'
       s += '  frr.skip_msgid(); // FIXME: check msgid\n'
       # FIXME: check return error and return type
-      if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
-        s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
-      else:
-        vtype = self.V ('', rarg[1]) # 'int*' + ...
-        s += self.generate_proto_pop_args ('frr', class_info, vtype, [rarg], '') # ... + 'x = 5;'
+      s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
+      s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
       s += '  delete fr;\n'
       s += '  return retval;\n'
     s += '}\n'
@@ -716,12 +711,8 @@ class Generator:
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
     # fetch args
     for a in mtype.args:
-      if a[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  ' + self.V ('arg_' + a[0], a[1]) + ';\n'
-        s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(a[0], a[1])])
-      else:
-        tstr = self.V ('', a[1]) + 'arg_'
-        s += self.generate_proto_pop_args ('fbr', class_info, tstr, [(a[0], a[1])])
+      s += '  ' + self.V ('arg_' + a[0], a[1]) + ';\n'
+      s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(a[0], a[1])])
     # return var
     s += '  '
     hasret = mtype.rtype.storage != Decls.VOID
@@ -774,12 +765,8 @@ class Generator:
       s += '  Plic::FieldReader frr (*fr);\n'
       s += '  frr.skip_msgid(); // FIXME: check msgid\n'
       # FIXME: check return error and return type
-      if rarg[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-        s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
-        s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
-      else:
-        vtype = self.V ('', rarg[1]) # 'int*' + ...
-        s += self.generate_proto_pop_args ('frr', class_info, vtype, [rarg], '') # ... + 'x = 5;'
+      s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
+      s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
       s += '  delete fr;\n'
       s += '  return retval;\n'
     s += '}\n'
@@ -813,12 +800,8 @@ class Generator:
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
     # fetch property
-    if ftype.storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += '  ' + self.V ('arg_' + fident, ftype) + ';\n'
-      s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(fident, ftype)])
-    else:
-      tstr = self.V ('', ftype) + 'arg_'
-      s += self.generate_proto_pop_args ('fbr', class_info, tstr, [(fident, ftype)])
+    s += '  ' + self.V ('arg_' + fident, ftype) + ';\n'
+    s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(fident, ftype)])
     ref = '&' if ftype.storage == Decls.INTERFACE else ''
     # call out
     s += '  self->' + fident + ' (' + ref + self.U ('arg_' + fident, ftype) + ');\n'
@@ -866,9 +849,9 @@ class Generator:
     s += '  Plic::TypeHashList thl;\n'
     s += '  self->_list_types (thl);\n'
     s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());\n' # store return value
-    s += '  rb.add_int64 (thl.size());\n'
+    s += '  rb << Plic::int64 (thl.size());\n'
     s += '  for (size_t i = 0; i < thl.size(); i++)\n'
-    s += '    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);\n'
+    s += '    rb << thl[i];\n'
     s += '  return &rb;\n'
     s += '}\n'
     return s
@@ -928,7 +911,7 @@ class Generator:
     s += '  {\n'
     s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);\n' # msgid handler
     s += '    fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0\n' # self.method_digest (stype)
-    s += '    fb.add_int64 (m_handler);\n'
+    s += '    fb << m_handler;\n'
     s += '    m_connection.send_event (&fb); // deletes fb\n'
     s += '  }\n'
     cpp_rtype = self.R (stype.rtype)
@@ -938,7 +921,7 @@ class Generator:
     s += 'SharedPtr sp)\n  {\n'
     s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + %u);\n' % len (stype.args) # msgid handler args
     s += '    fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0\n' # self.method_digest (stype)
-    s += '    fb.add_int64 (sp->m_handler);\n'
+    s += '    fb << sp->m_handler;\n'
     ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
     args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     if args2fb:
@@ -955,14 +938,15 @@ class Generator:
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
-    s += '  uint64 cid = 0, handler_id = fbr.pop_int64();\n'
-    s += '  uint64 con_id = fbr.pop_int64();\n'
+    s += '  uint64 handler_id, con_id, cid = 0;\n'
+    s += '  fbr >> handler_id;\n'
+    s += '  fbr >> con_id;\n'
     s += '  if (con_id) self->sig_%s.disconnect (con_id);\n' % stype.name
     s += '  if (handler_id) {\n'
     s += '    %s::SharedPtr sp (new %s (PLIC_CONNECTION(), handler_id));\n' % (closure_class, closure_class)
     s += '    cid = self->sig_%s.connect (slot (sp->handler, sp)); }\n' % stype.name
     s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
-    s += '  rb.add_int64 (cid);\n'
+    s += '  rb << cid;\n'
     s += '  return &rb;\n'
     s += '}\n'
     return s
@@ -1022,6 +1006,10 @@ class Generator:
         s += ' // %s' % re.sub ('\n', ' ', blurb)
       s += '\n'
     s += '};\n'
+    s += 'inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  %s &e) ' % type_info.name
+    s += '{ fb << Plic::EnumValue (e); return fb; }\n'
+    s += 'inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, %s &e) ' % type_info.name
+    s += '{ e = %s (frr.pop_evalue()); return frr; }\n' % type_info.name
     return s
   def insertion_text (self, key):
     text = self.insertions.get (key, '')

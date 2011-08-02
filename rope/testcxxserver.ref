@@ -45,36 +45,50 @@ namespace MandatoryNamespace {
 
 enum Empty {
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Empty &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Empty &e) { e = Empty (frr.pop_evalue()); return frr; }
 
 enum Enum1 {
   E1_A = 1,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum1 &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum1 &e) { e = Enum1 (frr.pop_evalue()); return frr; }
 
 enum Enum1c {
   E1C_A = 1,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum1c &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum1c &e) { e = Enum1c (frr.pop_evalue()); return frr; }
 
 enum Enum2 {
   E2_A = 1,
   E2_B = 2,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum2 &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum2 &e) { e = Enum2 (frr.pop_evalue()); return frr; }
 
 enum Enum2c {
   E2C_A = 1,
   E2C_B = 2,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum2c &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum2c &e) { e = Enum2c (frr.pop_evalue()); return frr; }
 
 enum Enum3 {
   E3_A = 1,
   E3_B = 2,
   E3_C = 3,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum3 &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum3 &e) { e = Enum3 (frr.pop_evalue()); return frr; }
 
 enum Enum3c {
   E3C_A = 1,
   E3C_B = 2,
   E3C_C = 3,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum3c &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum3c &e) { e = Enum3c (frr.pop_evalue()); return frr; }
 
 enum Enum4a {
   E4A_A = 1,
@@ -82,6 +96,8 @@ enum Enum4a {
   E4A_C = 3,
   E4A_D = 4,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum4a &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum4a &e) { e = Enum4a (frr.pop_evalue()); return frr; }
 
 enum Enum4b {
   E4B_A = 1,
@@ -89,6 +105,8 @@ enum Enum4b {
   E4B_C = 3,
   E4B_D = 4,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum4b &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum4b &e) { e = Enum4b (frr.pop_evalue()); return frr; }
 
 enum Enum4c {
   E4C_A = 1,
@@ -96,6 +114,8 @@ enum Enum4c {
   E4C_C = 3,
   E4C_D = 4,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum4c &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum4c &e) { e = Enum4c (frr.pop_evalue()); return frr; }
 
 enum Enum4d {
   E4D_A = 1,
@@ -103,6 +123,8 @@ enum Enum4d {
   E4D_C = 3,
   E4D_D = 4,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum4d &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum4d &e) { e = Enum4d (frr.pop_evalue()); return frr; }
 
 enum ExtensiveEnum {
   V1a = 1,
@@ -141,6 +163,8 @@ enum ExtensiveEnum {
   V35 = 42,
   V36 = 42, // "foo""4"
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  ExtensiveEnum &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, ExtensiveEnum &e) { e = ExtensiveEnum (frr.pop_evalue()); return frr; }
 
 class I_FirstInterface_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class FirstInterface.
@@ -152,6 +176,9 @@ public:
   virtual void                          _list_types (Plic::TypeHashList&) const;
   virtual void                          void_func                  ();
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_FirstInterface_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_FirstInterface_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_FirstInterface_Interface*&);
 
 struct XFooRecordImpl {
   bool                          single_bool;
@@ -170,70 +197,70 @@ struct XFooRecordImpl {
   I_FirstInterface_Interface*   iface3;
   inline                        XFooRecordImpl () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
-void operator<< (Plic::FieldBuffer&, const XFooRecordImpl&);
-void operator>> (Plic::FieldReader&, XFooRecordImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const XFooRecordImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, XFooRecordImpl&);
 
 struct XFooSequenceImpl : public std::vector<bool> {
   typedef std::vector<bool> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const XFooSequenceImpl&);
-void operator>> (Plic::FieldReader&, XFooSequenceImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const XFooSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, XFooSequenceImpl&);
 
 struct IntSequenceImpl : public std::vector<int> {
   typedef std::vector<int> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const IntSequenceImpl&);
-void operator>> (Plic::FieldReader&, IntSequenceImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const IntSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, IntSequenceImpl&);
 
 struct FloatSequenceImpl : public std::vector<double> {
   typedef std::vector<double> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const FloatSequenceImpl&);
-void operator>> (Plic::FieldReader&, FloatSequenceImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const FloatSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, FloatSequenceImpl&);
 
 struct StringSequenceImpl : public std::vector<std::string> {
   typedef std::vector<std::string> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const StringSequenceImpl&);
-void operator>> (Plic::FieldReader&, StringSequenceImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const StringSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, StringSequenceImpl&);
 
 struct ExtensiveEnumSequenceImpl : public std::vector<ExtensiveEnum> {
   typedef std::vector<ExtensiveEnum> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const ExtensiveEnumSequenceImpl&);
-void operator>> (Plic::FieldReader&, ExtensiveEnumSequenceImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const ExtensiveEnumSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, ExtensiveEnumSequenceImpl&);
 
 struct RecordSequenceImpl : public std::vector<XFooRecordImpl> {
   typedef std::vector<XFooRecordImpl> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const RecordSequenceImpl&);
-void operator>> (Plic::FieldReader&, RecordSequenceImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const RecordSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, RecordSequenceImpl&);
 
 struct SequenceSequenceImpl : public std::vector<IntSequenceImpl> {
   typedef std::vector<IntSequenceImpl> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const SequenceSequenceImpl&);
-void operator>> (Plic::FieldReader&, SequenceSequenceImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const SequenceSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, SequenceSequenceImpl&);
 
 struct InterfaceSequenceImpl : public std::vector<I_FirstInterface_Interface*> {
   typedef std::vector<I_FirstInterface_Interface*> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const InterfaceSequenceImpl&);
-void operator>> (Plic::FieldReader&, InterfaceSequenceImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const InterfaceSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, InterfaceSequenceImpl&);
 
 struct NestedTypesRecImpl {
   XFooRecordImpl                rec;
   XFooSequenceImpl              seq;
   inline                        NestedTypesRecImpl () { }
 };
-void operator<< (Plic::FieldBuffer&, const NestedTypesRecImpl&);
-void operator>> (Plic::FieldReader&, NestedTypesRecImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const NestedTypesRecImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, NestedTypesRecImpl&);
 
 struct NestedTypesSeqImpl : public std::vector<NestedTypesRecImpl> {
   typedef std::vector<NestedTypesRecImpl> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const NestedTypesSeqImpl&);
-void operator>> (Plic::FieldReader&, NestedTypesSeqImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const NestedTypesSeqImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, NestedTypesSeqImpl&);
 
 typedef int AliasInt;
 
@@ -256,8 +283,8 @@ struct NewRecordImpl {
   NestedTypesRecImpl            ntr;
   inline                        NewRecordImpl () { i = 0; enum1 = Enum1 (0); }
 };
-void operator<< (Plic::FieldBuffer&, const NewRecordImpl&);
-void operator>> (Plic::FieldReader&, NewRecordImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const NewRecordImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, NewRecordImpl&);
 
 namespace Inner {
 
@@ -267,16 +294,16 @@ struct InnerRecordImpl {
   NewRecordImpl                 rec;
   inline                        InnerRecordImpl () { x = 0; y = 0; }
 };
-void operator<< (Plic::FieldBuffer&, const InnerRecordImpl&);
-void operator>> (Plic::FieldReader&, InnerRecordImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const InnerRecordImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, InnerRecordImpl&);
 } // Inner
 
 struct Refer2InnerImpl {
   Inner::InnerRecordImpl        r;
   inline                        Refer2InnerImpl () { }
 };
-void operator<< (Plic::FieldBuffer&, const Refer2InnerImpl&);
-void operator>> (Plic::FieldReader&, Refer2InnerImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const Refer2InnerImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, Refer2InnerImpl&);
 } // MandatoryNamespace
 
 namespace OtherNamespace {
@@ -288,8 +315,8 @@ struct SomeRecordImpl {
   MandatoryNamespace::Inner::InnerRecordImpl r4;
   inline                        SomeRecordImpl () { }
 };
-void operator<< (Plic::FieldBuffer&, const SomeRecordImpl&);
-void operator>> (Plic::FieldReader&, SomeRecordImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const SomeRecordImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, SomeRecordImpl&);
 } // OtherNamespace
 
 namespace Auxdata {
@@ -337,6 +364,9 @@ public:
   virtual std::string                   on_click2out             ();
   virtual void                          on_click2in              (const std::string &command);
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_UIWidgetArea_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_UIWidgetArea_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_UIWidgetArea_Interface*&);
 
 class I_Parent_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class Parent.
@@ -347,6 +377,9 @@ protected:
 public:
   virtual void                          _list_types (Plic::TypeHashList&) const;
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Parent_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Parent_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_Parent_Interface*&);
 
 class I_Child_Interface : public virtual I_Parent_Interface
   /// See also the corresponding IDL class Child.
@@ -357,6 +390,9 @@ protected:
 public:
   virtual void                          _list_types (Plic::TypeHashList&) const;
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Child_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Child_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_Child_Interface*&);
 
 class I_Descendant_Interface : public virtual I_Child_Interface
   /// See also the corresponding IDL class Descendant.
@@ -367,6 +403,9 @@ protected:
 public:
   virtual void                          _list_types (Plic::TypeHashList&) const;
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Descendant_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Descendant_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_Descendant_Interface*&);
 
 class I_GrandChild_Interface : public virtual I_Descendant_Interface
   /// See also the corresponding IDL class GrandChild.
@@ -377,24 +416,29 @@ protected:
 public:
   virtual void                          _list_types (Plic::TypeHashList&) const;
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_GrandChild_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_GrandChild_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_GrandChild_Interface*&);
 
 enum QuickEnum {
   ZERO = 0,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  QuickEnum &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); return frr; }
 
 struct QuickRecordImpl {
   int                           int1;
   int                           int2;
   inline                        QuickRecordImpl () { int1 = 0; int2 = 0; }
 };
-void operator<< (Plic::FieldBuffer&, const QuickRecordImpl&);
-void operator>> (Plic::FieldReader&, QuickRecordImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const QuickRecordImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, QuickRecordImpl&);
 
 struct QuickSequenceImpl : public std::vector<double> {
   typedef std::vector<double> Sequence;
 };
-void operator<< (Plic::FieldBuffer&, const QuickSequenceImpl&);
-void operator>> (Plic::FieldReader&, QuickSequenceImpl&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const QuickSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, QuickSequenceImpl&);
 
 class I_QuickIface_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class QuickIface.
@@ -406,6 +450,9 @@ public:
   virtual void                          _list_types (Plic::TypeHashList&) const;
   virtual void                          simple_function        (int i = 9);
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_QuickIface_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_QuickIface_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_QuickIface_Interface*&);
 
 class I_MethodTestInterface_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class MethodTestInterface.
@@ -435,6 +482,9 @@ public:
   virtual I_QuickIface_Interface*       method_with_quickiface          (I_QuickIface_Interface &input,
                                                                          I_QuickIface_Interface &iface0 = *(I_QuickIface_Interface*) NULL);
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_MethodTestInterface_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_MethodTestInterface_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_MethodTestInterface_Interface*&);
 
 class I_SignalTestInterface_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class SignalTestInterface.
@@ -485,6 +535,9 @@ public:
   Signal_interface_arg sig_interface_arg;
   Signal_self_args sig_self_args;
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_SignalTestInterface_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_SignalTestInterface_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_SignalTestInterface_Interface*&);
 
 class I_PropertyTester_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class PropertyTester.
@@ -513,6 +566,9 @@ public:
   virtual I_PropertyTester_Interface*   self_prop      () const = 0;
   virtual void                          self_prop      (I_PropertyTester_Interface*) = 0;
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_PropertyTester_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_PropertyTester_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_PropertyTester_Interface*&);
 } // InterfaceTests
 
 namespace RapicornPlicTest {
@@ -524,6 +580,8 @@ enum ClickType {
   CLICK_FAST_REPEAT = 4,
   CLICK_KEY_REPEAT = 5,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  ClickType &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, ClickType &e) { e = ClickType (frr.pop_evalue()); return frr; }
 
 class I_ButtonArea_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class ButtonArea.
@@ -546,6 +604,9 @@ public:
   Signal_check_activate sig_check_activate;
   Signal_activate sig_activate;
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_ButtonArea_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_ButtonArea_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_ButtonArea_Interface*&);
 
 class I_PureMethods_Interface;
 
@@ -559,6 +620,9 @@ public:
   virtual void                          _list_types (Plic::TypeHashList&) const;
   virtual int                           pure_method             (double f) = 0;
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_PureMethods_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_PureMethods_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_PureMethods_Interface*&);
 } // RapicornPlicTest
 
 // --- Implementations ---
@@ -568,146 +632,176 @@ namespace MandatoryNamespace {
 I_FirstInterface_Interface::I_FirstInterface_Interface ()
 {}
 I_FirstInterface_Interface::~I_FirstInterface_Interface () {}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_FirstInterface_Interface &obj)
+{
+  fb.add_object (connection_object2id (&obj));
+  return fb;
+}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_FirstInterface_Interface *obj)
+{
+  fb.add_object (connection_object2id (obj));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, I_FirstInterface_Interface* &obj)
+{
+  obj = connection_id2object<I_FirstInterface_Interface> (fbr.pop_object());
+  return fbr;
+}
 void
 I_FirstInterface_Interface::_list_types (Plic::TypeHashList &thl) const
 {
   thl.push_back (Plic::TypeHash (0x04be3719c81a379bULL, 0x1079454a90442f2cULL)); // FirstInterface
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const XFooRecordImpl &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (14);
-  fb.add_int64 (self.single_bool);
-  fb.add_int64 (self.single_num);
-  fb.add_double (self.single_float);
-  fb.add_string (self.single_string);
-  fb.add_int64 (self.sibling1);
-  fb.add_int64 (self.sibling2);
-  fb.add_int64 (self.multi1);
-  fb.add_int64 (self.multi2);
-  fb.add_int64 (self.multi3);
-  fb.add_int64 (self.multi4);
-  fb.add_evalue (self.enum_field);
-  fb.add_object (connection_object2id (self.iface1));
-  fb.add_object (connection_object2id (self.iface2));
-  fb.add_object (connection_object2id (self.iface3));
+  fb << self.single_bool;
+  fb << self.single_num;
+  fb << self.single_float;
+  fb << self.single_string;
+  fb << self.sibling1;
+  fb << self.sibling2;
+  fb << self.multi1;
+  fb << self.multi2;
+  fb << self.multi3;
+  fb << self.multi4;
+  fb << self.enum_field;
+  fb << self.iface1;
+  fb << self.iface2;
+  fb << self.iface3;
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, XFooRecordImpl &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() < 14) return;
-  self.single_bool = fbr.pop_int64();
-  self.single_num = fbr.pop_int64();
-  self.single_float = fbr.pop_double();
-  self.single_string = fbr.pop_string();
-  self.sibling1 = fbr.pop_int64();
-  self.sibling2 = fbr.pop_int64();
-  self.multi1 = fbr.pop_int64();
-  self.multi2 = fbr.pop_int64();
-  self.multi3 = fbr.pop_int64();
-  self.multi4 = fbr.pop_int64();
-  self.enum_field = ExtensiveEnum (fbr.pop_evalue());
-  self.iface1 = connection_id2object<I_FirstInterface_Interface> (fbr.pop_object());
-  self.iface2 = connection_id2object<I_FirstInterface_Interface> (fbr.pop_object());
-  self.iface3 = connection_id2object<I_FirstInterface_Interface> (fbr.pop_object());
+  if (fbr.remaining() < 14) return src;
+  fbr >> self.single_bool;
+  fbr >> self.single_num;
+  fbr >> self.single_float;
+  fbr >> self.single_string;
+  fbr >> self.sibling1;
+  fbr >> self.sibling2;
+  fbr >> self.multi1;
+  fbr >> self.multi2;
+  fbr >> self.multi3;
+  fbr >> self.multi4;
+  fbr >> self.enum_field;
+  fbr >> self.iface1;
+  fbr >> self.iface2;
+  fbr >> self.iface3;
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const XFooSequenceImpl &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb.add_int64 (self[k]);
+    fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, XFooSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
-  self.reserve (len);
+  self.resize (len);
   for (size_t k = 0; k < len; k++) {
-    self.push_back (fbr.pop_int64());
+    fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const IntSequenceImpl &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb.add_int64 (self[k]);
+    fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, IntSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
-  self.reserve (len);
+  self.resize (len);
   for (size_t k = 0; k < len; k++) {
-    self.push_back (fbr.pop_int64());
+    fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const FloatSequenceImpl &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb.add_double (self[k]);
+    fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, FloatSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
-  self.reserve (len);
+  self.resize (len);
   for (size_t k = 0; k < len; k++) {
-    self.push_back (fbr.pop_double());
+    fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const StringSequenceImpl &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb.add_string (self[k]);
+    fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, StringSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
-  self.reserve (len);
+  self.resize (len);
   for (size_t k = 0; k < len; k++) {
-    self.push_back (fbr.pop_string());
+    fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const ExtensiveEnumSequenceImpl &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb.add_evalue (self[k]);
+    fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, ExtensiveEnumSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
-  self.reserve (len);
+  self.resize (len);
   for (size_t k = 0; k < len; k++) {
-    self.push_back (ExtensiveEnum (fbr.pop_evalue()));
+    fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const RecordSequenceImpl &self)
 {
   const size_t len = self.size();
@@ -715,8 +809,9 @@ operator<< (Plic::FieldBuffer &dst, const RecordSequenceImpl &self)
   for (size_t k = 0; k < len; k++) {
     fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, RecordSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
@@ -725,8 +820,9 @@ operator>> (Plic::FieldReader &src, RecordSequenceImpl &self)
   for (size_t k = 0; k < len; k++) {
     fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const SequenceSequenceImpl &self)
 {
   const size_t len = self.size();
@@ -734,8 +830,9 @@ operator<< (Plic::FieldBuffer &dst, const SequenceSequenceImpl &self)
   for (size_t k = 0; k < len; k++) {
     fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, SequenceSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
@@ -744,42 +841,47 @@ operator>> (Plic::FieldReader &src, SequenceSequenceImpl &self)
   for (size_t k = 0; k < len; k++) {
     fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const InterfaceSequenceImpl &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb.add_object (connection_object2id (self[k]));
+    fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, InterfaceSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   self.reserve (len);
   for (size_t k = 0; k < len; k++) {
-    self.push_back (connection_id2object<I_FirstInterface_Interface> (fbr.pop_object()));
+    fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const NestedTypesRecImpl &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (2);
   fb << self.rec;
   fb << self.seq;
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, NestedTypesRecImpl &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() < 2) return;
+  if (fbr.remaining() < 2) return src;
   fbr >> self.rec;
   fbr >> self.seq;
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const NestedTypesSeqImpl &self)
 {
   const size_t len = self.size();
@@ -787,8 +889,9 @@ operator<< (Plic::FieldBuffer &dst, const NestedTypesSeqImpl &self)
   for (size_t k = 0; k < len; k++) {
     fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, NestedTypesSeqImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
@@ -797,63 +900,70 @@ operator>> (Plic::FieldReader &src, NestedTypesSeqImpl &self)
   for (size_t k = 0; k < len; k++) {
     fbr >> self[k];
   }
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const NewRecordImpl &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (4);
-  fb.add_int64 (self.i);
-  fb.add_evalue (self.enum1);
+  fb << self.i;
+  fb << self.enum1;
   fb << self.xfs;
   fb << self.ntr;
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, NewRecordImpl &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() < 4) return;
-  self.i = fbr.pop_int64();
-  self.enum1 = Enum1 (fbr.pop_evalue());
+  if (fbr.remaining() < 4) return src;
+  fbr >> self.i;
+  fbr >> self.enum1;
   fbr >> self.xfs;
   fbr >> self.ntr;
+  return src;
 }
 
 namespace Inner {
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const InnerRecordImpl &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (3);
-  fb.add_int64 (self.x);
-  fb.add_int64 (self.y);
+  fb << self.x;
+  fb << self.y;
   fb << self.rec;
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, InnerRecordImpl &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() < 3) return;
-  self.x = fbr.pop_int64();
-  self.y = fbr.pop_int64();
+  if (fbr.remaining() < 3) return src;
+  fbr >> self.x;
+  fbr >> self.y;
   fbr >> self.rec;
+  return src;
 }
 } // Inner
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const Refer2InnerImpl &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (1);
   fb << self.r;
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, Refer2InnerImpl &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() < 1) return;
+  if (fbr.remaining() < 1) return src;
   fbr >> self.r;
+  return src;
 }
 } // MandatoryNamespace
 
 namespace OtherNamespace {
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const SomeRecordImpl &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (4);
@@ -861,16 +971,18 @@ operator<< (Plic::FieldBuffer &dst, const SomeRecordImpl &self)
   fb << self.r2;
   fb << self.r3;
   fb << self.r4;
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, SomeRecordImpl &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() < 4) return;
+  if (fbr.remaining() < 4) return src;
   fbr >> self.r1;
   fbr >> self.r2;
   fbr >> self.r3;
   fbr >> self.r4;
+  return src;
 }
 } // OtherNamespace
 
@@ -880,6 +992,24 @@ I_UIWidgetArea_Interface::I_UIWidgetArea_Interface () :
   sig_void_signal (*this), sig_sample_signal (*this)
 {}
 I_UIWidgetArea_Interface::~I_UIWidgetArea_Interface () {}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_UIWidgetArea_Interface &obj)
+{
+  fb.add_object (connection_object2id (&obj));
+  return fb;
+}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_UIWidgetArea_Interface *obj)
+{
+  fb.add_object (connection_object2id (obj));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, I_UIWidgetArea_Interface* &obj)
+{
+  obj = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  return fbr;
+}
 void
 I_UIWidgetArea_Interface::_list_types (Plic::TypeHashList &thl) const
 {
@@ -889,6 +1019,24 @@ I_UIWidgetArea_Interface::_list_types (Plic::TypeHashList &thl) const
 I_Parent_Interface::I_Parent_Interface ()
 {}
 I_Parent_Interface::~I_Parent_Interface () {}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_Parent_Interface &obj)
+{
+  fb.add_object (connection_object2id (&obj));
+  return fb;
+}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_Parent_Interface *obj)
+{
+  fb.add_object (connection_object2id (obj));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, I_Parent_Interface* &obj)
+{
+  obj = connection_id2object<I_Parent_Interface> (fbr.pop_object());
+  return fbr;
+}
 void
 I_Parent_Interface::_list_types (Plic::TypeHashList &thl) const
 {
@@ -898,6 +1046,24 @@ I_Parent_Interface::_list_types (Plic::TypeHashList &thl) const
 I_Child_Interface::I_Child_Interface ()
 {}
 I_Child_Interface::~I_Child_Interface () {}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_Child_Interface &obj)
+{
+  fb.add_object (connection_object2id (&obj));
+  return fb;
+}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_Child_Interface *obj)
+{
+  fb.add_object (connection_object2id (obj));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, I_Child_Interface* &obj)
+{
+  obj = connection_id2object<I_Child_Interface> (fbr.pop_object());
+  return fbr;
+}
 void
 I_Child_Interface::_list_types (Plic::TypeHashList &thl) const
 {
@@ -908,6 +1074,24 @@ I_Child_Interface::_list_types (Plic::TypeHashList &thl) const
 I_Descendant_Interface::I_Descendant_Interface ()
 {}
 I_Descendant_Interface::~I_Descendant_Interface () {}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_Descendant_Interface &obj)
+{
+  fb.add_object (connection_object2id (&obj));
+  return fb;
+}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_Descendant_Interface *obj)
+{
+  fb.add_object (connection_object2id (obj));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, I_Descendant_Interface* &obj)
+{
+  obj = connection_id2object<I_Descendant_Interface> (fbr.pop_object());
+  return fbr;
+}
 void
 I_Descendant_Interface::_list_types (Plic::TypeHashList &thl) const
 {
@@ -919,6 +1103,24 @@ I_Descendant_Interface::_list_types (Plic::TypeHashList &thl) const
 I_GrandChild_Interface::I_GrandChild_Interface ()
 {}
 I_GrandChild_Interface::~I_GrandChild_Interface () {}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_GrandChild_Interface &obj)
+{
+  fb.add_object (connection_object2id (&obj));
+  return fb;
+}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_GrandChild_Interface *obj)
+{
+  fb.add_object (connection_object2id (obj));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, I_GrandChild_Interface* &obj)
+{
+  obj = connection_id2object<I_GrandChild_Interface> (fbr.pop_object());
+  return fbr;
+}
 void
 I_GrandChild_Interface::_list_types (Plic::TypeHashList &thl) const
 {
@@ -927,44 +1129,66 @@ I_GrandChild_Interface::_list_types (Plic::TypeHashList &thl) const
   thl.push_back (Plic::TypeHash (0x0d7cb4311e1f74a9ULL, 0xe1ad9d71f1c712e5ULL)); // Parent
   thl.push_back (Plic::TypeHash (0x001a87e60ed9bd66ULL, 0xfff1a96d7bab9cd9ULL)); // GrandChild
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const QuickRecordImpl &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (2);
-  fb.add_int64 (self.int1);
-  fb.add_int64 (self.int2);
+  fb << self.int1;
+  fb << self.int2;
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, QuickRecordImpl &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() < 2) return;
-  self.int1 = fbr.pop_int64();
-  self.int2 = fbr.pop_int64();
+  if (fbr.remaining() < 2) return src;
+  fbr >> self.int1;
+  fbr >> self.int2;
+  return src;
 }
-void
+inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const QuickSequenceImpl &self)
 {
   const size_t len = self.size();
   Plic::FieldBuffer &fb = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb.add_double (self[k]);
+    fb << self[k];
   }
+  return dst;
 }
-void
+inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, QuickSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
-  self.reserve (len);
+  self.resize (len);
   for (size_t k = 0; k < len; k++) {
-    self.push_back (fbr.pop_double());
+    fbr >> self[k];
   }
+  return src;
 }
 
 I_QuickIface_Interface::I_QuickIface_Interface ()
 {}
 I_QuickIface_Interface::~I_QuickIface_Interface () {}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_QuickIface_Interface &obj)
+{
+  fb.add_object (connection_object2id (&obj));
+  return fb;
+}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_QuickIface_Interface *obj)
+{
+  fb.add_object (connection_object2id (obj));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, I_QuickIface_Interface* &obj)
+{
+  obj = connection_id2object<I_QuickIface_Interface> (fbr.pop_object());
+  return fbr;
+}
 void
 I_QuickIface_Interface::_list_types (Plic::TypeHashList &thl) const
 {
@@ -974,6 +1198,24 @@ I_QuickIface_Interface::_list_types (Plic::TypeHashList &thl) const
 I_MethodTestInterface_Interface::I_MethodTestInterface_Interface ()
 {}
 I_MethodTestInterface_Interface::~I_MethodTestInterface_Interface () {}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_MethodTestInterface_Interface &obj)
+{
+  fb.add_object (connection_object2id (&obj));
+  return fb;
+}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_MethodTestInterface_Interface *obj)
+{
+  fb.add_object (connection_object2id (obj));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, I_MethodTestInterface_Interface* &obj)
+{
+  obj = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
+  return fbr;
+}
 void
 I_MethodTestInterface_Interface::_list_types (Plic::TypeHashList &thl) const
 {
@@ -984,6 +1226,24 @@ I_SignalTestInterface_Interface::I_SignalTestInterface_Interface () :
   sig_void_result (*this), sig_bool_result (*this), sig_int_result (*this), sig_float_result (*this), sig_string_result (*this), sig_enum_result (*this), sig_record_result (*this), sig_sequence_result (*this), sig_interface_result (*this), sig_self_result (*this), sig_void_arg (*this), sig_bool_arg (*this), sig_int_arg (*this), sig_float_arg (*this), sig_string_arg (*this), sig_enum_arg (*this), sig_record_arg (*this), sig_sequence_arg (*this), sig_interface_arg (*this), sig_self_args (*this)
 {}
 I_SignalTestInterface_Interface::~I_SignalTestInterface_Interface () {}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_SignalTestInterface_Interface &obj)
+{
+  fb.add_object (connection_object2id (&obj));
+  return fb;
+}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_SignalTestInterface_Interface *obj)
+{
+  fb.add_object (connection_object2id (obj));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, I_SignalTestInterface_Interface* &obj)
+{
+  obj = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  return fbr;
+}
 void
 I_SignalTestInterface_Interface::_list_types (Plic::TypeHashList &thl) const
 {
@@ -993,6 +1253,24 @@ I_SignalTestInterface_Interface::_list_types (Plic::TypeHashList &thl) const
 I_PropertyTester_Interface::I_PropertyTester_Interface ()
 {}
 I_PropertyTester_Interface::~I_PropertyTester_Interface () {}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_PropertyTester_Interface &obj)
+{
+  fb.add_object (connection_object2id (&obj));
+  return fb;
+}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_PropertyTester_Interface *obj)
+{
+  fb.add_object (connection_object2id (obj));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, I_PropertyTester_Interface* &obj)
+{
+  obj = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  return fbr;
+}
 void
 I_PropertyTester_Interface::_list_types (Plic::TypeHashList &thl) const
 {
@@ -1006,6 +1284,24 @@ I_ButtonArea_Interface::I_ButtonArea_Interface () :
   sig_check_activate (*this), sig_activate (*this)
 {}
 I_ButtonArea_Interface::~I_ButtonArea_Interface () {}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_ButtonArea_Interface &obj)
+{
+  fb.add_object (connection_object2id (&obj));
+  return fb;
+}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_ButtonArea_Interface *obj)
+{
+  fb.add_object (connection_object2id (obj));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, I_ButtonArea_Interface* &obj)
+{
+  obj = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
+  return fbr;
+}
 void
 I_ButtonArea_Interface::_list_types (Plic::TypeHashList &thl) const
 {
@@ -1015,6 +1311,24 @@ I_ButtonArea_Interface::_list_types (Plic::TypeHashList &thl) const
 I_PureMethods_Interface::I_PureMethods_Interface ()
 {}
 I_PureMethods_Interface::~I_PureMethods_Interface () {}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_PureMethods_Interface &obj)
+{
+  fb.add_object (connection_object2id (&obj));
+  return fb;
+}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_PureMethods_Interface *obj)
+{
+  fb.add_object (connection_object2id (obj));
+  return fb;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, I_PureMethods_Interface* &obj)
+{
+  obj = connection_id2object<I_PureMethods_Interface> (fbr.pop_object());
+  return fbr;
+}
 void
 I_PureMethods_Interface::_list_types (Plic::TypeHashList &thl) const
 {
@@ -1030,14 +1344,14 @@ _$lsttyp__FirstInterface__ (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_FirstInterface_Interface *self;
-  self = connection_id2object<I_FirstInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb.add_int64 (thl.size());
+  rb << Plic::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
-    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+    rb << thl[i];
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1045,7 +1359,7 @@ _$caller__FirstInterface__void_func (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 0) return plic$_error ("invalid number of arguments");
   I_FirstInterface_Interface *self;
-  self = connection_id2object<I_FirstInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   self->void_func ();
   return NULL;
@@ -1065,14 +1379,14 @@ _$lsttyp__UIWidgetArea__ (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb.add_int64 (thl.size());
+  rb << Plic::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
-    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+    rb << thl[i];
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1080,11 +1394,11 @@ _$getter__UIWidgetArea__dummy (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   double  rval = self->dummy ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_double (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1092,9 +1406,10 @@ _$setter__UIWidgetArea__dummy (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  double  arg_dummy = fbr.pop_double();
+  double  arg_dummy;
+  fbr >> arg_dummy;
   self->dummy (arg_dummy);
   return NULL;
 }
@@ -1103,11 +1418,11 @@ _$getter__UIWidgetArea__on_click (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   std::string  rval = self->on_click ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_string (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1115,9 +1430,10 @@ _$setter__UIWidgetArea__on_click (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  std::string  arg_on_click = fbr.pop_string();
+  std::string  arg_on_click;
+  fbr >> arg_on_click;
   self->on_click (arg_on_click);
   return NULL;
 }
@@ -1126,11 +1442,11 @@ _$caller__UIWidgetArea__simple_method (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 0) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   double  rval = self->simple_method ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_double (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1138,12 +1454,13 @@ _$caller__UIWidgetArea__single_arg (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  int  arg_n = fbr.pop_int64();
+  int  arg_n;
+  fbr >> arg_n;
   double  rval = self->single_arg (arg_n);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_double (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1151,12 +1468,13 @@ _$caller__UIWidgetArea__single_arg2 (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  int  arg_n = fbr.pop_int64();
+  int  arg_n;
+  fbr >> arg_n;
   double  rval = self->single_arg2 (arg_n);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_double (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1164,13 +1482,15 @@ _$caller__UIWidgetArea__two_args (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  int  arg_n = fbr.pop_int64();
-  double  arg_r = fbr.pop_double();
+  int  arg_n;
+  fbr >> arg_n;
+  double  arg_r;
+  fbr >> arg_r;
   double  rval = self->two_args (arg_n, arg_r);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_double (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1178,13 +1498,15 @@ _$caller__UIWidgetArea__two_args2 (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  int  arg_n = fbr.pop_int64();
-  double  arg_r = fbr.pop_double();
+  int  arg_n;
+  fbr >> arg_n;
+  double  arg_r;
+  fbr >> arg_r;
   double  rval = self->two_args2 (arg_n, arg_r);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_double (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1192,16 +1514,21 @@ _$caller__UIWidgetArea__multi_args (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 5) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  int  arg_n = fbr.pop_int64();
-  double  arg_r = fbr.pop_double();
-  int  arg_i = fbr.pop_int64();
-  std::string  arg_s = fbr.pop_string();
-  double  arg_y = fbr.pop_double();
+  int  arg_n;
+  fbr >> arg_n;
+  double  arg_r;
+  fbr >> arg_r;
+  int  arg_i;
+  fbr >> arg_i;
+  std::string  arg_s;
+  fbr >> arg_s;
+  double  arg_y;
+  fbr >> arg_y;
   double  rval = self->multi_args (arg_n, arg_r, arg_i, arg_s, arg_y);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_double (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1209,13 +1536,15 @@ _$caller__UIWidgetArea__self_method (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  I_UIWidgetArea_Interface *arg_ba1 = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
-  I_UIWidgetArea_Interface *arg_ba2 = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  I_UIWidgetArea_Interface *arg_ba1;
+  fbr >> arg_ba1;
+  I_UIWidgetArea_Interface *arg_ba2;
+  fbr >> arg_ba2;
   double  rval = self->self_method (*arg_ba1, *arg_ba2);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_double (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1223,7 +1552,7 @@ _$caller__UIWidgetArea__void_method (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 0) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   self->void_method ();
   return NULL;
@@ -1233,11 +1562,11 @@ _$caller__UIWidgetArea__on_click2out (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 0) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   std::string  rval = self->on_click2out ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_string (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1245,9 +1574,10 @@ _$caller__UIWidgetArea__on_click2in (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  std::string  arg_command = fbr.pop_string();
+  std::string  arg_command;
+  fbr >> arg_command;
   self->on_click2in (arg_command);
   return NULL;
 }
@@ -1260,7 +1590,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static void
@@ -1268,7 +1598,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
+    fb << sp->m_handler;
     sp->m_connection.send_event (&fb); // deletes fb
   }
 };
@@ -1277,16 +1607,17 @@ _$sigcon__UIWidgetArea__void_signal (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_void_signal.disconnect (con_id);
   if (handler_id) {
     _$Closure__UIWidgetArea__void_signal::SharedPtr sp (new _$Closure__UIWidgetArea__void_signal (PLIC_CONNECTION(), handler_id));
     cid = self->sig_void_signal.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__UIWidgetArea__sample_signal {
@@ -1298,7 +1629,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static double
@@ -1308,9 +1639,9 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
-    fb.add_object (connection_object2id (arg_ba1));
-    fb.add_int64 (arg_someint);
+    fb << sp->m_handler;
+    fb << arg_ba1;
+    fb << arg_someint;
     sp->m_connection.send_event (&fb); // deletes fb
     return 0;
   }
@@ -1320,16 +1651,17 @@ _$sigcon__UIWidgetArea__sample_signal (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_UIWidgetArea_Interface *self;
-  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_sample_signal.disconnect (con_id);
   if (handler_id) {
     _$Closure__UIWidgetArea__sample_signal::SharedPtr sp (new _$Closure__UIWidgetArea__sample_signal (PLIC_CONNECTION(), handler_id));
     cid = self->sig_sample_signal.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 
@@ -1338,14 +1670,14 @@ _$lsttyp__Parent__ (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_Parent_Interface *self;
-  self = connection_id2object<I_Parent_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb.add_int64 (thl.size());
+  rb << Plic::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
-    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+    rb << thl[i];
   return &rb;
 }
 
@@ -1354,14 +1686,14 @@ _$lsttyp__Child__ (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_Child_Interface *self;
-  self = connection_id2object<I_Child_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb.add_int64 (thl.size());
+  rb << Plic::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
-    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+    rb << thl[i];
   return &rb;
 }
 
@@ -1370,14 +1702,14 @@ _$lsttyp__Descendant__ (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_Descendant_Interface *self;
-  self = connection_id2object<I_Descendant_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb.add_int64 (thl.size());
+  rb << Plic::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
-    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+    rb << thl[i];
   return &rb;
 }
 
@@ -1386,14 +1718,14 @@ _$lsttyp__GrandChild__ (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_GrandChild_Interface *self;
-  self = connection_id2object<I_GrandChild_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb.add_int64 (thl.size());
+  rb << Plic::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
-    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+    rb << thl[i];
   return &rb;
 }
 
@@ -1402,14 +1734,14 @@ _$lsttyp__QuickIface__ (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_QuickIface_Interface *self;
-  self = connection_id2object<I_QuickIface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb.add_int64 (thl.size());
+  rb << Plic::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
-    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+    rb << thl[i];
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1417,9 +1749,10 @@ _$caller__QuickIface__simple_function (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_QuickIface_Interface *self;
-  self = connection_id2object<I_QuickIface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  int  arg_i = fbr.pop_int64();
+  int  arg_i;
+  fbr >> arg_i;
   self->simple_function (arg_i);
   return NULL;
 }
@@ -1429,14 +1762,14 @@ _$lsttyp__MethodTestInterface__ (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
-  self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb.add_int64 (thl.size());
+  rb << Plic::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
-    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+    rb << thl[i];
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1444,7 +1777,7 @@ _$caller__MethodTestInterface__method_with_void (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 0) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
-  self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   self->method_with_void ();
   return NULL;
@@ -1454,13 +1787,15 @@ _$caller__MethodTestInterface__method_with_bools (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
-  self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  bool  arg_input = fbr.pop_int64();
-  bool  arg_optval = fbr.pop_int64();
+  bool  arg_input;
+  fbr >> arg_input;
+  bool  arg_optval;
+  fbr >> arg_optval;
   bool  rval = self->method_with_bools (arg_input, arg_optval);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1468,13 +1803,15 @@ _$caller__MethodTestInterface__method_with_ints (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
-  self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  int  arg_input = fbr.pop_int64();
-  int  arg_optval = fbr.pop_int64();
+  int  arg_input;
+  fbr >> arg_input;
+  int  arg_optval;
+  fbr >> arg_optval;
   int  rval = self->method_with_ints (arg_input, arg_optval);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1482,13 +1819,15 @@ _$caller__MethodTestInterface__method_with_floats (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
-  self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  double  arg_input = fbr.pop_double();
-  double  arg_optval = fbr.pop_double();
+  double  arg_input;
+  fbr >> arg_input;
+  double  arg_optval;
+  fbr >> arg_optval;
   double  rval = self->method_with_floats (arg_input, arg_optval);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_double (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1496,13 +1835,15 @@ _$caller__MethodTestInterface__method_with_string (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
-  self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  std::string  arg_input = fbr.pop_string();
-  std::string  arg_optval = fbr.pop_string();
+  std::string  arg_input;
+  fbr >> arg_input;
+  std::string  arg_optval;
+  fbr >> arg_optval;
   std::string  rval = self->method_with_string (arg_input, arg_optval);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_string (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1510,13 +1851,15 @@ _$caller__MethodTestInterface__method_with_enum (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
-  self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  QuickEnum  arg_input = QuickEnum (fbr.pop_evalue());
-  QuickEnum  arg_optval = QuickEnum (fbr.pop_evalue());
+  QuickEnum  arg_input;
+  fbr >> arg_input;
+  QuickEnum  arg_optval;
+  fbr >> arg_optval;
   QuickEnum  rval = self->method_with_enum (arg_input, arg_optval);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_evalue (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1524,7 +1867,7 @@ _$caller__MethodTestInterface__method_with_record (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
-  self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   QuickRecordImpl  arg_input;
   fbr >> arg_input;
@@ -1540,7 +1883,7 @@ _$caller__MethodTestInterface__method_with_sequence (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
-  self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   QuickSequenceImpl  arg_input;
   fbr >> arg_input;
@@ -1556,13 +1899,15 @@ _$caller__MethodTestInterface__method_with_interface (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
-  self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  I_GrandChild_Interface *arg_input = connection_id2object<I_GrandChild_Interface> (fbr.pop_object());
-  I_GrandChild_Interface *arg_optval = connection_id2object<I_GrandChild_Interface> (fbr.pop_object());
+  I_GrandChild_Interface *arg_input;
+  fbr >> arg_input;
+  I_GrandChild_Interface *arg_optval;
+  fbr >> arg_optval;
   I_GrandChild_Interface *rval = self->method_with_interface (*arg_input, *arg_optval);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_object (connection_object2id (rval));
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -1570,13 +1915,15 @@ _$caller__MethodTestInterface__method_with_quickiface (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_MethodTestInterface_Interface *self;
-  self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  I_QuickIface_Interface *arg_input = connection_id2object<I_QuickIface_Interface> (fbr.pop_object());
-  I_QuickIface_Interface *arg_iface0 = connection_id2object<I_QuickIface_Interface> (fbr.pop_object());
+  I_QuickIface_Interface *arg_input;
+  fbr >> arg_input;
+  I_QuickIface_Interface *arg_iface0;
+  fbr >> arg_iface0;
   I_QuickIface_Interface *rval = self->method_with_quickiface (*arg_input, *arg_iface0);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_object (connection_object2id (rval));
+  rb << rval;
   return &rb;
 }
 
@@ -1585,14 +1932,14 @@ _$lsttyp__SignalTestInterface__ (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb.add_int64 (thl.size());
+  rb << Plic::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
-    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+    rb << thl[i];
   return &rb;
 }
 class _$Closure__SignalTestInterface__void_result {
@@ -1604,7 +1951,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static void
@@ -1612,7 +1959,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
+    fb << sp->m_handler;
     sp->m_connection.send_event (&fb); // deletes fb
   }
 };
@@ -1621,16 +1968,17 @@ _$sigcon__SignalTestInterface__void_result (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_void_result.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__void_result::SharedPtr sp (new _$Closure__SignalTestInterface__void_result (PLIC_CONNECTION(), handler_id));
     cid = self->sig_void_result.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__bool_result {
@@ -1642,7 +1990,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static bool
@@ -1650,7 +1998,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
+    fb << sp->m_handler;
     sp->m_connection.send_event (&fb); // deletes fb
     return 0;
   }
@@ -1660,16 +2008,17 @@ _$sigcon__SignalTestInterface__bool_result (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_bool_result.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__bool_result::SharedPtr sp (new _$Closure__SignalTestInterface__bool_result (PLIC_CONNECTION(), handler_id));
     cid = self->sig_bool_result.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__int_result {
@@ -1681,7 +2030,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static int
@@ -1689,7 +2038,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
+    fb << sp->m_handler;
     sp->m_connection.send_event (&fb); // deletes fb
     return 0;
   }
@@ -1699,16 +2048,17 @@ _$sigcon__SignalTestInterface__int_result (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_int_result.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__int_result::SharedPtr sp (new _$Closure__SignalTestInterface__int_result (PLIC_CONNECTION(), handler_id));
     cid = self->sig_int_result.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__float_result {
@@ -1720,7 +2070,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static double
@@ -1728,7 +2078,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
+    fb << sp->m_handler;
     sp->m_connection.send_event (&fb); // deletes fb
     return 0;
   }
@@ -1738,16 +2088,17 @@ _$sigcon__SignalTestInterface__float_result (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_float_result.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__float_result::SharedPtr sp (new _$Closure__SignalTestInterface__float_result (PLIC_CONNECTION(), handler_id));
     cid = self->sig_float_result.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__string_result {
@@ -1759,7 +2110,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static std::string
@@ -1767,7 +2118,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
+    fb << sp->m_handler;
     sp->m_connection.send_event (&fb); // deletes fb
     return "";
   }
@@ -1777,16 +2128,17 @@ _$sigcon__SignalTestInterface__string_result (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_string_result.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__string_result::SharedPtr sp (new _$Closure__SignalTestInterface__string_result (PLIC_CONNECTION(), handler_id));
     cid = self->sig_string_result.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__enum_result {
@@ -1798,7 +2150,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static QuickEnum
@@ -1806,7 +2158,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
+    fb << sp->m_handler;
     sp->m_connection.send_event (&fb); // deletes fb
     return QuickEnum (0);
   }
@@ -1816,16 +2168,17 @@ _$sigcon__SignalTestInterface__enum_result (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_enum_result.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__enum_result::SharedPtr sp (new _$Closure__SignalTestInterface__enum_result (PLIC_CONNECTION(), handler_id));
     cid = self->sig_enum_result.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__record_result {
@@ -1837,7 +2190,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static QuickRecordImpl
@@ -1845,7 +2198,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
+    fb << sp->m_handler;
     sp->m_connection.send_event (&fb); // deletes fb
     return QuickRecordImpl();
   }
@@ -1855,16 +2208,17 @@ _$sigcon__SignalTestInterface__record_result (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_record_result.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__record_result::SharedPtr sp (new _$Closure__SignalTestInterface__record_result (PLIC_CONNECTION(), handler_id));
     cid = self->sig_record_result.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__sequence_result {
@@ -1876,7 +2230,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static QuickSequenceImpl
@@ -1884,7 +2238,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
+    fb << sp->m_handler;
     sp->m_connection.send_event (&fb); // deletes fb
     return QuickSequenceImpl();
   }
@@ -1894,16 +2248,17 @@ _$sigcon__SignalTestInterface__sequence_result (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_sequence_result.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__sequence_result::SharedPtr sp (new _$Closure__SignalTestInterface__sequence_result (PLIC_CONNECTION(), handler_id));
     cid = self->sig_sequence_result.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__interface_result {
@@ -1915,7 +2270,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static I_GrandChild_Interface*
@@ -1923,7 +2278,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
+    fb << sp->m_handler;
     sp->m_connection.send_event (&fb); // deletes fb
     return 0;
   }
@@ -1933,16 +2288,17 @@ _$sigcon__SignalTestInterface__interface_result (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_interface_result.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__interface_result::SharedPtr sp (new _$Closure__SignalTestInterface__interface_result (PLIC_CONNECTION(), handler_id));
     cid = self->sig_interface_result.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__self_result {
@@ -1954,7 +2310,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static I_SignalTestInterface_Interface*
@@ -1962,7 +2318,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
+    fb << sp->m_handler;
     sp->m_connection.send_event (&fb); // deletes fb
     return 0;
   }
@@ -1972,16 +2328,17 @@ _$sigcon__SignalTestInterface__self_result (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_self_result.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__self_result::SharedPtr sp (new _$Closure__SignalTestInterface__self_result (PLIC_CONNECTION(), handler_id));
     cid = self->sig_self_result.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__void_arg {
@@ -1993,7 +2350,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static void
@@ -2001,7 +2358,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
+    fb << sp->m_handler;
     sp->m_connection.send_event (&fb); // deletes fb
   }
 };
@@ -2010,16 +2367,17 @@ _$sigcon__SignalTestInterface__void_arg (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_void_arg.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__void_arg::SharedPtr sp (new _$Closure__SignalTestInterface__void_arg (PLIC_CONNECTION(), handler_id));
     cid = self->sig_void_arg.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__bool_arg {
@@ -2031,7 +2389,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static void
@@ -2040,8 +2398,8 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
-    fb.add_int64 (arg_b);
+    fb << sp->m_handler;
+    fb << arg_b;
     sp->m_connection.send_event (&fb); // deletes fb
   }
 };
@@ -2050,16 +2408,17 @@ _$sigcon__SignalTestInterface__bool_arg (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_bool_arg.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__bool_arg::SharedPtr sp (new _$Closure__SignalTestInterface__bool_arg (PLIC_CONNECTION(), handler_id));
     cid = self->sig_bool_arg.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__int_arg {
@@ -2071,7 +2430,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static void
@@ -2080,8 +2439,8 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
-    fb.add_int64 (arg_i);
+    fb << sp->m_handler;
+    fb << arg_i;
     sp->m_connection.send_event (&fb); // deletes fb
   }
 };
@@ -2090,16 +2449,17 @@ _$sigcon__SignalTestInterface__int_arg (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_int_arg.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__int_arg::SharedPtr sp (new _$Closure__SignalTestInterface__int_arg (PLIC_CONNECTION(), handler_id));
     cid = self->sig_int_arg.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__float_arg {
@@ -2111,7 +2471,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static void
@@ -2120,8 +2480,8 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
-    fb.add_double (arg_f);
+    fb << sp->m_handler;
+    fb << arg_f;
     sp->m_connection.send_event (&fb); // deletes fb
   }
 };
@@ -2130,16 +2490,17 @@ _$sigcon__SignalTestInterface__float_arg (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_float_arg.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__float_arg::SharedPtr sp (new _$Closure__SignalTestInterface__float_arg (PLIC_CONNECTION(), handler_id));
     cid = self->sig_float_arg.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__string_arg {
@@ -2151,7 +2512,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static void
@@ -2160,8 +2521,8 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
-    fb.add_string (arg_s);
+    fb << sp->m_handler;
+    fb << arg_s;
     sp->m_connection.send_event (&fb); // deletes fb
   }
 };
@@ -2170,16 +2531,17 @@ _$sigcon__SignalTestInterface__string_arg (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_string_arg.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__string_arg::SharedPtr sp (new _$Closure__SignalTestInterface__string_arg (PLIC_CONNECTION(), handler_id));
     cid = self->sig_string_arg.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__enum_arg {
@@ -2191,7 +2553,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static void
@@ -2200,8 +2562,8 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
-    fb.add_evalue (arg_e);
+    fb << sp->m_handler;
+    fb << arg_e;
     sp->m_connection.send_event (&fb); // deletes fb
   }
 };
@@ -2210,16 +2572,17 @@ _$sigcon__SignalTestInterface__enum_arg (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_enum_arg.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__enum_arg::SharedPtr sp (new _$Closure__SignalTestInterface__enum_arg (PLIC_CONNECTION(), handler_id));
     cid = self->sig_enum_arg.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__record_arg {
@@ -2231,7 +2594,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static void
@@ -2240,7 +2603,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
+    fb << sp->m_handler;
     fb << arg_r;
     sp->m_connection.send_event (&fb); // deletes fb
   }
@@ -2250,16 +2613,17 @@ _$sigcon__SignalTestInterface__record_arg (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_record_arg.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__record_arg::SharedPtr sp (new _$Closure__SignalTestInterface__record_arg (PLIC_CONNECTION(), handler_id));
     cid = self->sig_record_arg.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__sequence_arg {
@@ -2271,7 +2635,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static void
@@ -2280,7 +2644,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
+    fb << sp->m_handler;
     fb << arg_s;
     sp->m_connection.send_event (&fb); // deletes fb
   }
@@ -2290,16 +2654,17 @@ _$sigcon__SignalTestInterface__sequence_arg (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_sequence_arg.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__sequence_arg::SharedPtr sp (new _$Closure__SignalTestInterface__sequence_arg (PLIC_CONNECTION(), handler_id));
     cid = self->sig_sequence_arg.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__interface_arg {
@@ -2311,7 +2676,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static void
@@ -2320,8 +2685,8 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
-    fb.add_object (connection_object2id (arg_i));
+    fb << sp->m_handler;
+    fb << arg_i;
     sp->m_connection.send_event (&fb); // deletes fb
   }
 };
@@ -2330,16 +2695,17 @@ _$sigcon__SignalTestInterface__interface_arg (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_interface_arg.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__interface_arg::SharedPtr sp (new _$Closure__SignalTestInterface__interface_arg (PLIC_CONNECTION(), handler_id));
     cid = self->sig_interface_arg.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__SignalTestInterface__self_args {
@@ -2351,7 +2717,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static void
@@ -2360,8 +2726,8 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
-    fb.add_object (connection_object2id (arg_self_));
+    fb << sp->m_handler;
+    fb << arg_self_;
     sp->m_connection.send_event (&fb); // deletes fb
   }
 };
@@ -2370,16 +2736,17 @@ _$sigcon__SignalTestInterface__self_args (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_SignalTestInterface_Interface *self;
-  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_self_args.disconnect (con_id);
   if (handler_id) {
     _$Closure__SignalTestInterface__self_args::SharedPtr sp (new _$Closure__SignalTestInterface__self_args (PLIC_CONNECTION(), handler_id));
     cid = self->sig_self_args.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 
@@ -2388,14 +2755,14 @@ _$lsttyp__PropertyTester__ (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb.add_int64 (thl.size());
+  rb << Plic::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
-    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+    rb << thl[i];
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -2403,11 +2770,11 @@ _$getter__PropertyTester__bool_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   bool  rval = self->bool_prop ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -2415,9 +2782,10 @@ _$setter__PropertyTester__bool_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  bool  arg_bool_prop = fbr.pop_int64();
+  bool  arg_bool_prop;
+  fbr >> arg_bool_prop;
   self->bool_prop (arg_bool_prop);
   return NULL;
 }
@@ -2426,11 +2794,11 @@ _$getter__PropertyTester__int_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   int  rval = self->int_prop ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -2438,9 +2806,10 @@ _$setter__PropertyTester__int_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  int  arg_int_prop = fbr.pop_int64();
+  int  arg_int_prop;
+  fbr >> arg_int_prop;
   self->int_prop (arg_int_prop);
   return NULL;
 }
@@ -2449,11 +2818,11 @@ _$getter__PropertyTester__float_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   double  rval = self->float_prop ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_double (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -2461,9 +2830,10 @@ _$setter__PropertyTester__float_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  double  arg_float_prop = fbr.pop_double();
+  double  arg_float_prop;
+  fbr >> arg_float_prop;
   self->float_prop (arg_float_prop);
   return NULL;
 }
@@ -2472,11 +2842,11 @@ _$getter__PropertyTester__string_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   std::string  rval = self->string_prop ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_string (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -2484,9 +2854,10 @@ _$setter__PropertyTester__string_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  std::string  arg_string_prop = fbr.pop_string();
+  std::string  arg_string_prop;
+  fbr >> arg_string_prop;
   self->string_prop (arg_string_prop);
   return NULL;
 }
@@ -2495,11 +2866,11 @@ _$getter__PropertyTester__enum_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   QuickEnum  rval = self->enum_prop ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_evalue (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -2507,9 +2878,10 @@ _$setter__PropertyTester__enum_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  QuickEnum  arg_enum_prop = QuickEnum (fbr.pop_evalue());
+  QuickEnum  arg_enum_prop;
+  fbr >> arg_enum_prop;
   self->enum_prop (arg_enum_prop);
   return NULL;
 }
@@ -2518,7 +2890,7 @@ _$getter__PropertyTester__record_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   QuickRecordImpl  rval = self->record_prop ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
@@ -2530,7 +2902,7 @@ _$setter__PropertyTester__record_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   QuickRecordImpl  arg_record_prop;
   fbr >> arg_record_prop;
@@ -2542,7 +2914,7 @@ _$getter__PropertyTester__sequence_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   QuickSequenceImpl  rval = self->sequence_prop ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
@@ -2554,7 +2926,7 @@ _$setter__PropertyTester__sequence_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   QuickSequenceImpl  arg_sequence_prop;
   fbr >> arg_sequence_prop;
@@ -2566,11 +2938,11 @@ _$getter__PropertyTester__interface_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   I_GrandChild_Interface *rval = self->interface_prop ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_object (connection_object2id (rval));
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -2578,9 +2950,10 @@ _$setter__PropertyTester__interface_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  I_GrandChild_Interface *arg_interface_prop = connection_id2object<I_GrandChild_Interface> (fbr.pop_object());
+  I_GrandChild_Interface *arg_interface_prop;
+  fbr >> arg_interface_prop;
   self->interface_prop (&*arg_interface_prop);
   return NULL;
 }
@@ -2589,11 +2962,11 @@ _$getter__PropertyTester__self_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   I_PropertyTester_Interface *rval = self->self_prop ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_object (connection_object2id (rval));
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -2601,9 +2974,10 @@ _$setter__PropertyTester__self_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PropertyTester_Interface *self;
-  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  I_PropertyTester_Interface *arg_self_prop = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  I_PropertyTester_Interface *arg_self_prop;
+  fbr >> arg_self_prop;
   self->self_prop (&*arg_self_prop);
   return NULL;
 }
@@ -2616,14 +2990,14 @@ _$lsttyp__ButtonArea__ (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
-  self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb.add_int64 (thl.size());
+  rb << Plic::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
-    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+    rb << thl[i];
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -2631,11 +3005,11 @@ _$getter__ButtonArea__on_click (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
-  self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   std::string  rval = self->on_click ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_string (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -2643,9 +3017,10 @@ _$setter__ButtonArea__on_click (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
-  self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  std::string  arg_on_click = fbr.pop_string();
+  std::string  arg_on_click;
+  fbr >> arg_on_click;
   self->on_click (arg_on_click);
   return NULL;
 }
@@ -2654,11 +3029,11 @@ _$getter__ButtonArea__on_click2 (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
-  self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   std::string  rval = self->on_click2 ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_string (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -2666,9 +3041,10 @@ _$setter__ButtonArea__on_click2 (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
-  self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  std::string  arg_on_click2 = fbr.pop_string();
+  std::string  arg_on_click2;
+  fbr >> arg_on_click2;
   self->on_click2 (arg_on_click2);
   return NULL;
 }
@@ -2677,11 +3053,11 @@ _$getter__ButtonArea__on_click3 (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
-  self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   std::string  rval = self->on_click3 ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_string (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -2689,9 +3065,10 @@ _$setter__ButtonArea__on_click3 (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
-  self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  std::string  arg_on_click3 = fbr.pop_string();
+  std::string  arg_on_click3;
+  fbr >> arg_on_click3;
   self->on_click3 (arg_on_click3);
   return NULL;
 }
@@ -2700,11 +3077,11 @@ _$getter__ButtonArea__click_type (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
-  self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   ClickType  rval = self->click_type ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_evalue (rval);
+  rb << rval;
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -2712,9 +3089,10 @@ _$setter__ButtonArea__click_type (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
-  self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  ClickType  arg_click_type = ClickType (fbr.pop_evalue());
+  ClickType  arg_click_type;
+  fbr >> arg_click_type;
   self->click_type (arg_click_type);
   return NULL;
 }
@@ -2727,7 +3105,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static bool
@@ -2735,7 +3113,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
+    fb << sp->m_handler;
     sp->m_connection.send_event (&fb); // deletes fb
     return 0;
   }
@@ -2745,16 +3123,17 @@ _$sigcon__ButtonArea__check_activate (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
-  self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_check_activate.disconnect (con_id);
   if (handler_id) {
     _$Closure__ButtonArea__check_activate::SharedPtr sp (new _$Closure__ButtonArea__check_activate (PLIC_CONNECTION(), handler_id));
     cid = self->sig_check_activate.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 class _$Closure__ButtonArea__activate {
@@ -2766,7 +3145,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
     fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
-    fb.add_int64 (m_handler);
+    fb << m_handler;
     m_connection.send_event (&fb); // deletes fb
   }
   static void
@@ -2774,7 +3153,7 @@ public:
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 0);
     fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
-    fb.add_int64 (sp->m_handler);
+    fb << sp->m_handler;
     sp->m_connection.send_event (&fb); // deletes fb
   }
 };
@@ -2783,16 +3162,17 @@ _$sigcon__ButtonArea__activate (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
   I_ButtonArea_Interface *self;
-  self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 cid = 0, handler_id = fbr.pop_int64();
-  uint64 con_id = fbr.pop_int64();
+  uint64 handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
   if (con_id) self->sig_activate.disconnect (con_id);
   if (handler_id) {
     _$Closure__ButtonArea__activate::SharedPtr sp (new _$Closure__ButtonArea__activate (PLIC_CONNECTION(), handler_id));
     cid = self->sig_activate.connect (slot (sp->handler, sp)); }
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (cid);
+  rb << cid;
   return &rb;
 }
 
@@ -2801,14 +3181,14 @@ _$lsttyp__PureMethods__ (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
   I_PureMethods_Interface *self;
-  self = connection_id2object<I_PureMethods_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb.add_int64 (thl.size());
+  rb << Plic::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
-    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+    rb << thl[i];
   return &rb;
 }
 static Plic::FieldBuffer*
@@ -2816,12 +3196,13 @@ _$caller__PureMethods__pure_method (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
   I_PureMethods_Interface *self;
-  self = connection_id2object<I_PureMethods_Interface> (fbr.pop_object());
+  fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  double  arg_f = fbr.pop_double();
+  double  arg_f;
+  fbr >> arg_f;
   int  rval = self->pure_method (arg_f);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
-  rb.add_int64 (rval);
+  rb << rval;
   return &rb;
 }
 
