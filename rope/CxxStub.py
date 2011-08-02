@@ -332,6 +332,20 @@ class Generator:
   def getter_digest (self, class_info, fident, ftype):
     getter_hash = class_info.property_hash ((fident, ftype), False)
     return self.digest2cbytes (getter_hash)
+  def class_ancestry (self, type_info):
+    def deep_ancestors (type_info):
+      l = [ type_info ]
+      for a in type_info.prerequisites:
+        l += deep_ancestors (a)
+      return l
+    def make_list_uniq (lst):
+      r, q = [], set()
+      for e in lst:
+        if not e in q:
+          q.add (e)
+          r += [ e ]
+      return r
+    return make_list_uniq (deep_ancestors (type_info))
   def inherit_reduce (self, type_list):
     def hasancestor (child, parent):
       if child == parent:
@@ -481,31 +495,22 @@ class Generator:
     s += '  struct SmartHandle$ : public %s {\n' % classH       # derive smart handle for copy-ctor initialization
     s += '    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}\n'
     s += '  } handle$;\n'
-    for sg in class_info.signals:
-      signame = self.generate_signal_typename (sg, class_info)
-      sigE = '%s_EventHandler$' % signame
-      # s += '  %s %s;\n' % (signame, sg.name)                                  # signal member
-      s += '  struct %s : Plic::Connection::EventHandler {\n' % sigE            # signal EventHandler
-      relay = 'Rapicorn::Signals::SignalConnectionRelay<%s> ' % sigE
-      s += '    ' + self.generate_signal_typedef (sg, class_info, '', relay) # signal typedefs
-      s += '    virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);\n'
-      s += '    uint64 m_handler_id, m_connection_id;\n'
-      s += '    %s signal;\n' % signame
-      s += '    %s (%s &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}\n' % (sigE, classH)
-      s += '    ~%s ()\n' % sigE
-      s += '    { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }\n'
-      s += '    void  connections_changed (bool hasconnections);\n'
-      s += '  } %s;\n' % sg.name
+    ancestors = self.class_ancestry (class_info)
+    for ancestor in ancestors:
+      for sg in ancestor.signals:
+        s += self.generate_client_class_context_event_handler_def (class_info, ancestor, sg)
     s += '  %s (uint64 ipcid) :\n' % classC                     # ctor
     s += '    handle$ (ipcid)'
-    for sg in class_info.signals:
-      s += ',\n    %s (handle$)' % sg.name
+    for ancestor in ancestors:
+      for sg in ancestor.signals:
+        s += ',\n    %s (handle$)' % sg.name
     s += ',\n    m_cached_types (NULL)\n  {\n'
-    for sg in class_info.signals:
-      signame = self.generate_signal_typename (sg, class_info)
-      sigE = '%s_EventHandler$' % signame
-      s += '    handle$.%s = %s.signal;\n' % (sg.name, sg.name)
-      s += '    %s.signal.listener (%s, &%s::connections_changed);\n' % (sg.name, sg.name, sigE)
+    for ancestor in ancestors:
+      for sg in ancestor.signals:
+        signame = self.generate_signal_typename (sg, class_info)
+        sigE = '%s_EventHandler$' % signame
+        s += '    handle$.%s = %s.signal;\n' % (sg.name, sg.name)
+        s += '    %s.signal.listener (%s, &%s::connections_changed);\n' % (sg.name, sg.name, sigE)
     s += '  }\n'
     s += '  Plic::TypeHashList *m_cached_types;\n'
     s += '  const Plic::TypeHashList& list_types ();\n'
@@ -533,64 +538,84 @@ class Generator:
     s += '  }\n'
     s += '  return *m_cached_types;\n'
     s += '}\n'
-    for sg in class_info.signals:
-      signame = self.generate_signal_typename (sg, class_info)
-      sigE = '%s_EventHandler$' % signame
-      s += 'void\n'
-      s += '%s::%s::connections_changed (bool hasconnections)\n' % (classC, sigE)
-      s += '{\n'
-      s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);\n' # msgid self ConId ClosureId
-      s += '  fb.add_msgid (%s);\n' % self.method_digest (sg)
-      s += self.generate_proto_add_args ('fb', class_info, '', [('*signal.emitter()', class_info)], '')
-      s += '  if (hasconnections) {\n'
-      s += '    if (!m_handler_id)              // signal connected\n'
-      s += '      m_handler_id = PLIC_CONNECTION().register_event_handler (this);\n' # FIXME: badly broken, memory alloc!
-      s += '    fb.add_int64 (m_handler_id);    // handler connection request\n'
-      s += '    fb.add_int64 (0);               // no disconnection\n'
-      s += '  } else {                          // signal disconnected\n'
-      s += '    if (m_handler_id)\n'
-      s += '      ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;\n'
-      s += '    fb.add_int64 (0);               // no handler connection\n'
-      s += '    fb.add_int64 (m_connection_id); // disconnection request\n'
-      s += '    m_connection_id = 0;\n'
-      s += '  }\n'
-      s += '  Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
-      s += '  if (fr) { // FIXME: assert that fr is a non-NULL FieldBuffer with result message\n'
-      s += '    Plic::FieldReader frr (*fr);\n'
-      s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
-      s += '    if (frr.remaining() && m_handler_id)\n'
-      s += '      m_connection_id = frr.pop_int64();\n'
-      s += '    delete fr;\n'
-      s += '  }\n'
-      s += '}\n'
-      s += 'Plic::FieldBuffer*\n'
-      s += '%s::%s::handle_event (Plic::FieldBuffer &fb)\n' % (classC, sigE)
-      s += '{\n'
-      s += '  Plic::FieldReader fbr (fb);\n'
-      s += '  fbr.skip_msgid(); // FIXME: check msgid\n'
-      s += '  fbr.skip();       // skip m_handler_id\n'
-      s += '  if (fbr.remaining() != %u) return plic$_error ("invalid number of arguments");\n' % len (sg.args)
-      for a in sg.args:                                 # fetch args
-        if a[1].storage in (Decls.RECORD, Decls.SEQUENCE):
-          s += '  ' + self.V ('arg_' + a[0], a[1]) + ';\n'
-          s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(a[0], a[1])])
-        else:
-          tstr = self.V ('', a[1]) + 'arg_'
-          s += self.generate_proto_pop_args ('fbr', class_info, tstr, [(a[0], a[1])])
-      s += '  '                                         # return var
-      hasret = sg.rtype.storage != Decls.VOID
-      if hasret:
-        s += self.V ('', sg.rtype) + 'rval = '
-      s += 'signal.emit ('                              # call out
-      s += ', '.join (self.U ('arg_' + a[0], a[1]) for a in sg.args)
-      s += ');\n'
-      if hasret:                                        # store return value
-        s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
-        s += self.generate_proto_add_args ('rb', class_info, '', [('rval', sg.rtype)], '')
-        s += '  return &rb;\n'
+    for ancestor in ancestors:
+      for sg in ancestor.signals:
+        s += self.generate_client_class_context_event_handler_methods (class_info, ancestor, sg)
+    return s
+  def generate_client_class_context_event_handler_def (self, derived_info, class_info, sg):
+    s, classH, signame = '', self.H (class_info.name), self.generate_signal_typename (sg, class_info)
+    sigE = '%s_EventHandler$' % signame
+    # s += '  %s %s;\n' % (signame, sg.name)                                  # signal member
+    s += '  struct %s : Plic::Connection::EventHandler {\n' % sigE            # signal EventHandler
+    relay = 'Rapicorn::Signals::SignalConnectionRelay<%s> ' % sigE
+    s += '    ' + self.generate_signal_typedef (sg, class_info, '', relay) # signal typedefs
+    s += '    virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);\n'
+    s += '    uint64 m_handler_id, m_connection_id;\n'
+    s += '    %s signal;\n' % signame
+    s += '    %s (%s &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}\n' % (sigE, classH)
+    s += '    ~%s ()\n' % sigE
+    s += '    { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }\n'
+    s += '    void  connections_changed (bool hasconnections);\n'
+    s += '  } %s;\n' % sg.name
+    return s
+  def generate_client_class_context_event_handler_methods (self, derived_info, class_info, sg):
+    s, classC, signame = '', derived_info.name + '_Context$', self.generate_signal_typename (sg, class_info)
+    sigE = '%s_EventHandler$' % signame
+    s += 'void\n'
+    s += '%s::%s::connections_changed (bool hasconnections)\n' % (classC, sigE)
+    s += '{\n'
+    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);\n' # msgid self ConId ClosureId
+    s += '  fb.add_msgid (%s);\n' % self.method_digest (sg)
+    s += self.generate_proto_add_args ('fb', class_info, '', [('*signal.emitter()', class_info)], '')
+    s += '  if (hasconnections) {\n'
+    s += '    if (!m_handler_id)              // signal connected\n'
+    s += '      m_handler_id = PLIC_CONNECTION().register_event_handler (this);\n' # FIXME: badly broken, memory alloc!
+    s += '    fb.add_int64 (m_handler_id);    // handler connection request\n'
+    s += '    fb.add_int64 (0);               // no disconnection\n'
+    s += '  } else {                          // signal disconnected\n'
+    s += '    if (m_handler_id)\n'
+    s += '      ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;\n'
+    s += '    fb.add_int64 (0);               // no handler connection\n'
+    s += '    fb.add_int64 (m_connection_id); // disconnection request\n'
+    s += '    m_connection_id = 0;\n'
+    s += '  }\n'
+    s += '  Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
+    s += '  if (fr) { // FIXME: assert that fr is a non-NULL FieldBuffer with result message\n'
+    s += '    Plic::FieldReader frr (*fr);\n'
+    s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
+    s += '    if (frr.remaining() && m_handler_id)\n'
+    s += '      m_connection_id = frr.pop_int64();\n'
+    s += '    delete fr;\n'
+    s += '  }\n'
+    s += '}\n'
+    s += 'Plic::FieldBuffer*\n'
+    s += '%s::%s::handle_event (Plic::FieldBuffer &fb)\n' % (classC, sigE)
+    s += '{\n'
+    s += '  Plic::FieldReader fbr (fb);\n'
+    s += '  fbr.skip_msgid(); // FIXME: check msgid\n'
+    s += '  fbr.skip();       // skip m_handler_id\n'
+    s += '  if (fbr.remaining() != %u) return plic$_error ("invalid number of arguments");\n' % len (sg.args)
+    for a in sg.args:                                 # fetch args
+      if a[1].storage in (Decls.RECORD, Decls.SEQUENCE):
+        s += '  ' + self.V ('arg_' + a[0], a[1]) + ';\n'
+        s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(a[0], a[1])])
       else:
-        s += '  return NULL;\n'
-      s += '}\n'
+        tstr = self.V ('', a[1]) + 'arg_'
+        s += self.generate_proto_pop_args ('fbr', class_info, tstr, [(a[0], a[1])])
+    s += '  '                                         # return var
+    hasret = sg.rtype.storage != Decls.VOID
+    if hasret:
+      s += self.V ('', sg.rtype) + 'rval = '
+    s += 'signal.emit ('                              # call out
+    s += ', '.join (self.U ('arg_' + a[0], a[1]) for a in sg.args)
+    s += ');\n'
+    if hasret:                                        # store return value
+      s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
+      s += self.generate_proto_add_args ('rb', class_info, '', [('rval', sg.rtype)], '')
+      s += '  return &rb;\n'
+    else:
+      s += '  return NULL;\n'
+    s += '}\n'
     return s;
   def generate_client_class_methods (self, class_info):
     s, classH, classC = '', self.H (class_info.name), class_info.name + '_Context$' # class names
@@ -638,19 +663,7 @@ class Generator:
     s += '%s::~%s () {}\n' % (tname, tname) # dtor
     s += 'void\n'
     s += '%s::_list_types (Plic::TypeHashList &thl) const\n{\n' % tname
-    def deep_ancestors (type_info):
-      l = [ type_info ]
-      for a in type_info.prerequisites:
-        l += deep_ancestors (a)
-      return l
-    def make_list_uniq (lst):
-      r, q = [], set()
-      for e in lst:
-        if not e in q:
-          q.add (e)
-          r += [ e ]
-      return r
-    ancestors = make_list_uniq (deep_ancestors (class_info))
+    ancestors = self.class_ancestry (class_info)
     ancestors.reverse()
     for an in ancestors:
       s += '  thl.push_back (Plic::TypeHash (%s)); // %s\n' % (self.class_digest (an), an.name)
