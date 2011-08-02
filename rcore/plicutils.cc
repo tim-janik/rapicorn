@@ -196,8 +196,9 @@ FieldReader::check_request (int type)
     }
   if (get_type() != type)
     {
-      String msg = string_printf ("FieldReader(this=%p): size=%u index=%u type=%d requested-type=%d",
-                                  this, n_types(), m_nth, get_type(), type);
+      String msg = string_printf ("FieldReader(this=%p): size=%u index=%u type=%s requested-type=%s",
+                                  this, n_types(), m_nth,
+                                  FieldBuffer::type_name (get_type()).c_str(), FieldBuffer::type_name (type).c_str());
       throw std::invalid_argument (msg);
     }
 }
@@ -229,25 +230,47 @@ strescape (const String &str)
 }
 
 String
+FieldBuffer::type_name (int field_type)
+{
+  switch (field_type)
+    {
+    case VOID:        return "VOID";
+    case INT:         return "INT";
+    case FLOAT:       return "FLOAT";
+    case STRING:      return "STRING";
+    case ENUM:        return "ENUM";
+    case RECORD:      return "RECORD";
+    case SEQUENCE:    return "SEQUENCE";
+    case FUNC:        return "FUNC";
+    case INSTANCE:    return "INSTANCE";
+    default:          return string_printf ("<invalid:%d>", field_type);
+    }
+}
+
+String
 FieldBuffer::to_string() const
 {
   String s = string_printf ("Plic::FieldBuffer(%p)={", this);
   s += string_printf ("size=%u, capacity=%u", size(), capacity());
   FieldReader fbr (*this);
   for (size_t i = 0; i < size(); i++)
-    switch (fbr.get_type())
-      {
-      case VOID:        s += ", VOID"; fbr.skip();                                              break;
-      case INT:         s += string_printf (", INT: 0x%llx", fbr.pop_int64());                  break;
-      case FLOAT:       s += string_printf (", FLOAT: %.17g", fbr.pop_double());                break;
-      case STRING:      s += string_printf (", STRING: %s", strescape (fbr.pop_string()).c_str()); break;
-      case ENUM:        s += string_printf (", ENUM: 0x%llx", fbr.pop_int64());                 break;
-      case RECORD:      s += string_printf (", RECORD: %p", &fbr.pop_rec());                    break;
-      case SEQUENCE:    s += string_printf (", SEQUENCE: %p", &fbr.pop_seq());                  break;
-      case FUNC:        s += string_printf (", FUNC: %s", fbr.pop_func().c_str());              break;
-      case INSTANCE:    s += string_printf (", INSTANCE: %p", (void*) fbr.pop_object());        break;
-      default:          s += string_printf (", %u: <unknown>", fbr.get_type()); fbr.skip();     break;
-      }
+    {
+      const String tname = type_name (fbr.get_type());
+      const char *tn = tname.c_str();
+      switch (fbr.get_type())
+        {
+        case VOID:     s += string_printf (", %s", tn); fbr.skip();                               break;
+        case INT:      s += string_printf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
+        case FLOAT:    s += string_printf (", %s: %.17g", tn, fbr.pop_double());                  break;
+        case STRING:   s += string_printf (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
+        case ENUM:     s += string_printf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
+        case RECORD:   s += string_printf (", %s: %p", tn, &fbr.pop_rec());                       break;
+        case SEQUENCE: s += string_printf (", %s: %p", tn, &fbr.pop_seq());                       break;
+        case FUNC:     s += string_printf (", %s: %s", tn, fbr.pop_func().c_str());               break;
+        case INSTANCE: s += string_printf (", %s: %p", tn, (void*) fbr.pop_object());             break;
+        default:       s += string_printf (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
+        }
+    }
   s += '}';
   return s;
 }
