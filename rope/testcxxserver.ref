@@ -146,28 +146,29 @@ class I_FirstInterface_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class FirstInterface.
 {
 protected:
-  explicit                         I_FirstInterface_Interface ();
-  virtual /*Des*/                 ~I_FirstInterface_Interface () = 0;
+  explicit                               I_FirstInterface_Interface ();
+  virtual /*Des*/                       ~I_FirstInterface_Interface () = 0;
 public:
-  virtual void                    void_func                  ();
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual void                          void_func                  ();
 };
 
 struct XFooRecordImpl {
-  bool                    single_bool;
-  int                     single_num;
-  double                  single_float;
-  std::string             single_string;
-  int                     sibling1;
-  int                     sibling2;
-  int                     multi1;
-  int                     multi2;
-  int                     multi3;
-  int                     multi4;
-  ExtensiveEnum           enum_field;
-  I_FirstInterface_Interface* iface1;
-  I_FirstInterface_Interface* iface2;
-  I_FirstInterface_Interface* iface3;
-  inline                  XFooRecordImpl () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
+  bool                          single_bool;
+  int                           single_num;
+  double                        single_float;
+  std::string                   single_string;
+  int                           sibling1;
+  int                           sibling2;
+  int                           multi1;
+  int                           multi2;
+  int                           multi3;
+  int                           multi4;
+  ExtensiveEnum                 enum_field;
+  I_FirstInterface_Interface*   iface1;
+  I_FirstInterface_Interface*   iface2;
+  I_FirstInterface_Interface*   iface3;
+  inline                        XFooRecordImpl () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
 void operator<< (Plic::FieldBuffer&, const XFooRecordImpl&);
 void operator>> (Plic::FieldReader&, XFooRecordImpl&);
@@ -221,9 +222,9 @@ void operator<< (Plic::FieldBuffer&, const InterfaceSequenceImpl&);
 void operator>> (Plic::FieldReader&, InterfaceSequenceImpl&);
 
 struct NestedTypesRecImpl {
-  XFooRecordImpl          rec;
-  XFooSequenceImpl        seq;
-  inline                  NestedTypesRecImpl () { }
+  XFooRecordImpl                rec;
+  XFooSequenceImpl              seq;
+  inline                        NestedTypesRecImpl () { }
 };
 void operator<< (Plic::FieldBuffer&, const NestedTypesRecImpl&);
 void operator>> (Plic::FieldReader&, NestedTypesRecImpl&);
@@ -249,11 +250,11 @@ typedef XFooSequenceImpl AliasSequence;
 typedef ExtensiveEnum AliasEnum;
 
 struct NewRecordImpl {
-  int                     i;
-  Enum1                   enum1;
-  XFooSequenceImpl        xfs;
-  NestedTypesRecImpl      ntr;
-  inline                  NewRecordImpl () { i = 0; enum1 = Enum1 (0); }
+  int                           i;
+  Enum1                         enum1;
+  XFooSequenceImpl              xfs;
+  NestedTypesRecImpl            ntr;
+  inline                        NewRecordImpl () { i = 0; enum1 = Enum1 (0); }
 };
 void operator<< (Plic::FieldBuffer&, const NewRecordImpl&);
 void operator>> (Plic::FieldReader&, NewRecordImpl&);
@@ -261,18 +262,18 @@ void operator>> (Plic::FieldReader&, NewRecordImpl&);
 namespace Inner {
 
 struct InnerRecordImpl {
-  int                     x;
-  int                     y;
-  NewRecordImpl           rec;
-  inline                  InnerRecordImpl () { x = 0; y = 0; }
+  int                           x;
+  int                           y;
+  NewRecordImpl                 rec;
+  inline                        InnerRecordImpl () { x = 0; y = 0; }
 };
 void operator<< (Plic::FieldBuffer&, const InnerRecordImpl&);
 void operator>> (Plic::FieldReader&, InnerRecordImpl&);
 } // Inner
 
 struct Refer2InnerImpl {
-  Inner::InnerRecordImpl  r;
-  inline                  Refer2InnerImpl () { }
+  Inner::InnerRecordImpl        r;
+  inline                        Refer2InnerImpl () { }
 };
 void operator<< (Plic::FieldBuffer&, const Refer2InnerImpl&);
 void operator>> (Plic::FieldReader&, Refer2InnerImpl&);
@@ -285,7 +286,7 @@ struct SomeRecordImpl {
   MandatoryNamespace::NewRecordImpl r2;
   MandatoryNamespace::Inner::InnerRecordImpl r3;
   MandatoryNamespace::Inner::InnerRecordImpl r4;
-  inline                  SomeRecordImpl () { }
+  inline                        SomeRecordImpl () { }
 };
 void operator<< (Plic::FieldBuffer&, const SomeRecordImpl&);
 void operator>> (Plic::FieldReader&, SomeRecordImpl&);
@@ -306,70 +307,75 @@ class I_UIWidgetArea_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class UIWidgetArea.
 {
 protected:
-  explicit                         I_UIWidgetArea_Interface ();
-  virtual /*Des*/                 ~I_UIWidgetArea_Interface () = 0;
+  explicit                               I_UIWidgetArea_Interface ();
+  virtual /*Des*/                       ~I_UIWidgetArea_Interface () = 0;
 public:
-  virtual double                  dummy    () const = 0;
-  virtual void                    dummy    (double) = 0;
-  virtual std::string             on_click () const = 0;
-  virtual void                    on_click (const std::string&) = 0;
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual double                        dummy    () const = 0;
+  virtual void                          dummy    (double) = 0;
+  virtual std::string                   on_click () const = 0;
+  virtual void                          on_click (const std::string&) = 0;
   typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Interface, void ()> Signal_void_signal;
   typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Interface, double (I_UIWidgetArea_Interface &ba1, int someint)> Signal_sample_signal;
   Signal_void_signal sig_void_signal;
   Signal_sample_signal sig_sample_signal;
-  virtual double                  simple_method            ();
-  virtual double                  single_arg               (int n);
-  virtual double                  single_arg2              (int n = 5);
-  virtual double                  two_args                 (int n,
-                                                            double r);
-  virtual double                  two_args2                (int n = 6,
-                                                            double r = 7.7);
-  virtual double                  multi_args               (int n,
-                                                            double r,
-                                                            int i,
-                                                            const std::string &s = "String ding",
-                                                            double y = 5);
-  virtual double                  self_method              (I_UIWidgetArea_Interface &ba1,
-                                                            I_UIWidgetArea_Interface &ba2);
-  virtual void                    void_method              ();
-  virtual std::string             on_click2out             ();
-  virtual void                    on_click2in              (const std::string &command);
+  virtual double                        simple_method            ();
+  virtual double                        single_arg               (int n);
+  virtual double                        single_arg2              (int n = 5);
+  virtual double                        two_args                 (int n,
+                                                                  double r);
+  virtual double                        two_args2                (int n = 6,
+                                                                  double r = 7.7);
+  virtual double                        multi_args               (int n,
+                                                                  double r,
+                                                                  int i,
+                                                                  const std::string &s = "String ding",
+                                                                  double y = 5);
+  virtual double                        self_method              (I_UIWidgetArea_Interface &ba1,
+                                                                  I_UIWidgetArea_Interface &ba2);
+  virtual void                          void_method              ();
+  virtual std::string                   on_click2out             ();
+  virtual void                          on_click2in              (const std::string &command);
 };
 
 class I_Parent_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class Parent.
 {
 protected:
-  explicit                         I_Parent_Interface ();
-  virtual /*Des*/                 ~I_Parent_Interface () = 0;
+  explicit                               I_Parent_Interface ();
+  virtual /*Des*/                       ~I_Parent_Interface () = 0;
 public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
 };
 
 class I_Child_Interface : public virtual I_Parent_Interface
   /// See also the corresponding IDL class Child.
 {
 protected:
-  explicit                         I_Child_Interface ();
-  virtual /*Des*/                 ~I_Child_Interface () = 0;
+  explicit                               I_Child_Interface ();
+  virtual /*Des*/                       ~I_Child_Interface () = 0;
 public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
 };
 
 class I_Descendant_Interface : public virtual I_Child_Interface
   /// See also the corresponding IDL class Descendant.
 {
 protected:
-  explicit                         I_Descendant_Interface ();
-  virtual /*Des*/                 ~I_Descendant_Interface () = 0;
+  explicit                               I_Descendant_Interface ();
+  virtual /*Des*/                       ~I_Descendant_Interface () = 0;
 public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
 };
 
 class I_GrandChild_Interface : public virtual I_Descendant_Interface
   /// See also the corresponding IDL class GrandChild.
 {
 protected:
-  explicit                         I_GrandChild_Interface ();
-  virtual /*Des*/                 ~I_GrandChild_Interface () = 0;
+  explicit                               I_GrandChild_Interface ();
+  virtual /*Des*/                       ~I_GrandChild_Interface () = 0;
 public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
 };
 
 enum QuickEnum {
@@ -377,9 +383,9 @@ enum QuickEnum {
 };
 
 struct QuickRecordImpl {
-  int                     int1;
-  int                     int2;
-  inline                  QuickRecordImpl () { int1 = 0; int2 = 0; }
+  int                           int1;
+  int                           int2;
+  inline                        QuickRecordImpl () { int1 = 0; int2 = 0; }
 };
 void operator<< (Plic::FieldBuffer&, const QuickRecordImpl&);
 void operator>> (Plic::FieldReader&, QuickRecordImpl&);
@@ -394,47 +400,50 @@ class I_QuickIface_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class QuickIface.
 {
 protected:
-  explicit                         I_QuickIface_Interface ();
-  virtual /*Des*/                 ~I_QuickIface_Interface () = 0;
+  explicit                               I_QuickIface_Interface ();
+  virtual /*Des*/                       ~I_QuickIface_Interface () = 0;
 public:
-  virtual void                    simple_function        (int i = 9);
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual void                          simple_function        (int i = 9);
 };
 
 class I_MethodTestInterface_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class MethodTestInterface.
 {
 protected:
-  explicit                         I_MethodTestInterface_Interface ();
-  virtual /*Des*/                 ~I_MethodTestInterface_Interface () = 0;
+  explicit                               I_MethodTestInterface_Interface ();
+  virtual /*Des*/                       ~I_MethodTestInterface_Interface () = 0;
 public:
-  virtual void                    method_with_void                ();
-  virtual bool                    method_with_bools               (bool input,
-                                                                   bool optval = 0);
-  virtual int                     method_with_ints                (int input,
-                                                                   int optval = -2);
-  virtual double                  method_with_floats              (double input,
-                                                                   double optval = 309.9);
-  virtual std::string             method_with_string              (const std::string &input,
-                                                                   const std::string &optval = "default");
-  virtual QuickEnum               method_with_enum                (QuickEnum input,
-                                                                   QuickEnum optval = QuickEnum (0));
-  virtual QuickRecordImpl         method_with_record              (const QuickRecordImpl &input,
-                                                                   const QuickRecordImpl &optval = QuickRecordImpl());
-  virtual QuickSequenceImpl       method_with_sequence            (const QuickSequenceImpl &input,
-                                                                   const QuickSequenceImpl &optval = QuickSequenceImpl());
-  virtual I_GrandChild_Interface* method_with_interface           (I_GrandChild_Interface &input,
-                                                                   I_GrandChild_Interface &optval = *(I_GrandChild_Interface*) NULL);
-  virtual I_QuickIface_Interface* method_with_quickiface          (I_QuickIface_Interface &input,
-                                                                   I_QuickIface_Interface &iface0 = *(I_QuickIface_Interface*) NULL);
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual void                          method_with_void                ();
+  virtual bool                          method_with_bools               (bool input,
+                                                                         bool optval = 0);
+  virtual int                           method_with_ints                (int input,
+                                                                         int optval = -2);
+  virtual double                        method_with_floats              (double input,
+                                                                         double optval = 309.9);
+  virtual std::string                   method_with_string              (const std::string &input,
+                                                                         const std::string &optval = "default");
+  virtual QuickEnum                     method_with_enum                (QuickEnum input,
+                                                                         QuickEnum optval = QuickEnum (0));
+  virtual QuickRecordImpl               method_with_record              (const QuickRecordImpl &input,
+                                                                         const QuickRecordImpl &optval = QuickRecordImpl());
+  virtual QuickSequenceImpl             method_with_sequence            (const QuickSequenceImpl &input,
+                                                                         const QuickSequenceImpl &optval = QuickSequenceImpl());
+  virtual I_GrandChild_Interface*       method_with_interface           (I_GrandChild_Interface &input,
+                                                                         I_GrandChild_Interface &optval = *(I_GrandChild_Interface*) NULL);
+  virtual I_QuickIface_Interface*       method_with_quickiface          (I_QuickIface_Interface &input,
+                                                                         I_QuickIface_Interface &iface0 = *(I_QuickIface_Interface*) NULL);
 };
 
 class I_SignalTestInterface_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class SignalTestInterface.
 {
 protected:
-  explicit                         I_SignalTestInterface_Interface ();
-  virtual /*Des*/                 ~I_SignalTestInterface_Interface () = 0;
+  explicit                               I_SignalTestInterface_Interface ();
+  virtual /*Des*/                       ~I_SignalTestInterface_Interface () = 0;
 public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void ()> Signal_void_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, bool ()> Signal_bool_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, int ()> Signal_int_result;
@@ -481,27 +490,28 @@ class I_PropertyTester_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class PropertyTester.
 {
 protected:
-  explicit                         I_PropertyTester_Interface ();
-  virtual /*Des*/                 ~I_PropertyTester_Interface () = 0;
+  explicit                               I_PropertyTester_Interface ();
+  virtual /*Des*/                       ~I_PropertyTester_Interface () = 0;
 public:
-  virtual bool                    bool_prop      () const = 0;
-  virtual void                    bool_prop      (bool) = 0;
-  virtual int                     int_prop       () const = 0;
-  virtual void                    int_prop       (int) = 0;
-  virtual double                  float_prop     () const = 0;
-  virtual void                    float_prop     (double) = 0;
-  virtual std::string             string_prop    () const = 0;
-  virtual void                    string_prop    (const std::string&) = 0;
-  virtual QuickEnum               enum_prop      () const = 0;
-  virtual void                    enum_prop      (QuickEnum) = 0;
-  virtual QuickRecordImpl         record_prop    () const = 0;
-  virtual void                    record_prop    (const QuickRecordImpl&) = 0;
-  virtual QuickSequenceImpl       sequence_prop  () const = 0;
-  virtual void                    sequence_prop  (const QuickSequenceImpl&) = 0;
-  virtual I_GrandChild_Interface* interface_prop () const = 0;
-  virtual void                    interface_prop (I_GrandChild_Interface*) = 0;
-  virtual I_PropertyTester_Interface* self_prop      () const = 0;
-  virtual void                    self_prop      (I_PropertyTester_Interface*) = 0;
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual bool                          bool_prop      () const = 0;
+  virtual void                          bool_prop      (bool) = 0;
+  virtual int                           int_prop       () const = 0;
+  virtual void                          int_prop       (int) = 0;
+  virtual double                        float_prop     () const = 0;
+  virtual void                          float_prop     (double) = 0;
+  virtual std::string                   string_prop    () const = 0;
+  virtual void                          string_prop    (const std::string&) = 0;
+  virtual QuickEnum                     enum_prop      () const = 0;
+  virtual void                          enum_prop      (QuickEnum) = 0;
+  virtual QuickRecordImpl               record_prop    () const = 0;
+  virtual void                          record_prop    (const QuickRecordImpl&) = 0;
+  virtual QuickSequenceImpl             sequence_prop  () const = 0;
+  virtual void                          sequence_prop  (const QuickSequenceImpl&) = 0;
+  virtual I_GrandChild_Interface*       interface_prop () const = 0;
+  virtual void                          interface_prop (I_GrandChild_Interface*) = 0;
+  virtual I_PropertyTester_Interface*   self_prop      () const = 0;
+  virtual void                          self_prop      (I_PropertyTester_Interface*) = 0;
 };
 } // InterfaceTests
 
@@ -519,17 +529,18 @@ class I_ButtonArea_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class ButtonArea.
 {
 protected:
-  explicit                         I_ButtonArea_Interface ();
-  virtual /*Des*/                 ~I_ButtonArea_Interface () = 0;
+  explicit                               I_ButtonArea_Interface ();
+  virtual /*Des*/                       ~I_ButtonArea_Interface () = 0;
 public:
-  virtual std::string             on_click   () const = 0;
-  virtual void                    on_click   (const std::string&) = 0;
-  virtual std::string             on_click2  () const = 0;
-  virtual void                    on_click2  (const std::string&) = 0;
-  virtual std::string             on_click3  () const = 0;
-  virtual void                    on_click3  (const std::string&) = 0;
-  virtual ClickType               click_type () const = 0;
-  virtual void                    click_type (ClickType) = 0;
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual std::string                   on_click   () const = 0;
+  virtual void                          on_click   (const std::string&) = 0;
+  virtual std::string                   on_click2  () const = 0;
+  virtual void                          on_click2  (const std::string&) = 0;
+  virtual std::string                   on_click3  () const = 0;
+  virtual void                          on_click3  (const std::string&) = 0;
+  virtual ClickType                     click_type () const = 0;
+  virtual void                          click_type (ClickType) = 0;
   typedef Rapicorn::Signals::Signal<I_ButtonArea_Interface, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
   typedef Rapicorn::Signals::Signal<I_ButtonArea_Interface, void ()> Signal_activate;
   Signal_check_activate sig_check_activate;
@@ -542,10 +553,11 @@ class I_PureMethods_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class PureMethods.
 {
 protected:
-  explicit                         I_PureMethods_Interface ();
-  virtual /*Des*/                 ~I_PureMethods_Interface () = 0;
+  explicit                               I_PureMethods_Interface ();
+  virtual /*Des*/                       ~I_PureMethods_Interface () = 0;
 public:
-  virtual int                     pure_method             (double f) = 0;
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual int                           pure_method             (double f) = 0;
 };
 } // RapicornPlicTest
 
@@ -556,6 +568,11 @@ namespace MandatoryNamespace {
 I_FirstInterface_Interface::I_FirstInterface_Interface ()
 {}
 I_FirstInterface_Interface::~I_FirstInterface_Interface () {}
+void
+I_FirstInterface_Interface::_list_types (Plic::TypeHashList &thl) const
+{
+  thl.push_back (Plic::TypeHash (0x04be3719c81a379bULL, 0x1079454a90442f2cULL)); // FirstInterface
+}
 void
 operator<< (Plic::FieldBuffer &dst, const XFooRecordImpl &self)
 {
@@ -863,22 +880,53 @@ I_UIWidgetArea_Interface::I_UIWidgetArea_Interface () :
   sig_void_signal (*this), sig_sample_signal (*this)
 {}
 I_UIWidgetArea_Interface::~I_UIWidgetArea_Interface () {}
+void
+I_UIWidgetArea_Interface::_list_types (Plic::TypeHashList &thl) const
+{
+  thl.push_back (Plic::TypeHash (0x0c1b9195fa9a5a6cULL, 0xc1f636e721317b86ULL)); // UIWidgetArea
+}
 
 I_Parent_Interface::I_Parent_Interface ()
 {}
 I_Parent_Interface::~I_Parent_Interface () {}
+void
+I_Parent_Interface::_list_types (Plic::TypeHashList &thl) const
+{
+  thl.push_back (Plic::TypeHash (0x0d7cb4311e1f74a9ULL, 0xe1ad9d71f1c712e5ULL)); // Parent
+}
 
 I_Child_Interface::I_Child_Interface ()
 {}
 I_Child_Interface::~I_Child_Interface () {}
+void
+I_Child_Interface::_list_types (Plic::TypeHashList &thl) const
+{
+  thl.push_back (Plic::TypeHash (0x0d7cb4311e1f74a9ULL, 0xe1ad9d71f1c712e5ULL)); // Parent
+  thl.push_back (Plic::TypeHash (0x0a44a1b5cf26cfc0ULL, 0xcd6e05d08ba2667eULL)); // Child
+}
 
 I_Descendant_Interface::I_Descendant_Interface ()
 {}
 I_Descendant_Interface::~I_Descendant_Interface () {}
+void
+I_Descendant_Interface::_list_types (Plic::TypeHashList &thl) const
+{
+  thl.push_back (Plic::TypeHash (0x0a44a1b5cf26cfc0ULL, 0xcd6e05d08ba2667eULL)); // Child
+  thl.push_back (Plic::TypeHash (0x0d7cb4311e1f74a9ULL, 0xe1ad9d71f1c712e5ULL)); // Parent
+  thl.push_back (Plic::TypeHash (0x0980fc7a8521c350ULL, 0x641568ba1f461de2ULL)); // Descendant
+}
 
 I_GrandChild_Interface::I_GrandChild_Interface ()
 {}
 I_GrandChild_Interface::~I_GrandChild_Interface () {}
+void
+I_GrandChild_Interface::_list_types (Plic::TypeHashList &thl) const
+{
+  thl.push_back (Plic::TypeHash (0x0980fc7a8521c350ULL, 0x641568ba1f461de2ULL)); // Descendant
+  thl.push_back (Plic::TypeHash (0x0a44a1b5cf26cfc0ULL, 0xcd6e05d08ba2667eULL)); // Child
+  thl.push_back (Plic::TypeHash (0x0d7cb4311e1f74a9ULL, 0xe1ad9d71f1c712e5ULL)); // Parent
+  thl.push_back (Plic::TypeHash (0x001a87e60ed9bd66ULL, 0xfff1a96d7bab9cd9ULL)); // GrandChild
+}
 void
 operator<< (Plic::FieldBuffer &dst, const QuickRecordImpl &self)
 {
@@ -917,19 +965,39 @@ operator>> (Plic::FieldReader &src, QuickSequenceImpl &self)
 I_QuickIface_Interface::I_QuickIface_Interface ()
 {}
 I_QuickIface_Interface::~I_QuickIface_Interface () {}
+void
+I_QuickIface_Interface::_list_types (Plic::TypeHashList &thl) const
+{
+  thl.push_back (Plic::TypeHash (0x0ce40c896cfa0177ULL, 0x5ab6faf97ff6fed2ULL)); // QuickIface
+}
 
 I_MethodTestInterface_Interface::I_MethodTestInterface_Interface ()
 {}
 I_MethodTestInterface_Interface::~I_MethodTestInterface_Interface () {}
+void
+I_MethodTestInterface_Interface::_list_types (Plic::TypeHashList &thl) const
+{
+  thl.push_back (Plic::TypeHash (0x03befccd5d5ee8d5ULL, 0x7f1f65a869ad267fULL)); // MethodTestInterface
+}
 
 I_SignalTestInterface_Interface::I_SignalTestInterface_Interface () :
   sig_void_result (*this), sig_bool_result (*this), sig_int_result (*this), sig_float_result (*this), sig_string_result (*this), sig_enum_result (*this), sig_record_result (*this), sig_sequence_result (*this), sig_interface_result (*this), sig_self_result (*this), sig_void_arg (*this), sig_bool_arg (*this), sig_int_arg (*this), sig_float_arg (*this), sig_string_arg (*this), sig_enum_arg (*this), sig_record_arg (*this), sig_sequence_arg (*this), sig_interface_arg (*this), sig_self_args (*this)
 {}
 I_SignalTestInterface_Interface::~I_SignalTestInterface_Interface () {}
+void
+I_SignalTestInterface_Interface::_list_types (Plic::TypeHashList &thl) const
+{
+  thl.push_back (Plic::TypeHash (0x0acc338edd01a172ULL, 0x27c5f8854a5f9458ULL)); // SignalTestInterface
+}
 
 I_PropertyTester_Interface::I_PropertyTester_Interface ()
 {}
 I_PropertyTester_Interface::~I_PropertyTester_Interface () {}
+void
+I_PropertyTester_Interface::_list_types (Plic::TypeHashList &thl) const
+{
+  thl.push_back (Plic::TypeHash (0x0de89d5c207bc662ULL, 0x846800e315917b46ULL)); // PropertyTester
+}
 } // InterfaceTests
 
 namespace RapicornPlicTest {
@@ -938,15 +1006,40 @@ I_ButtonArea_Interface::I_ButtonArea_Interface () :
   sig_check_activate (*this), sig_activate (*this)
 {}
 I_ButtonArea_Interface::~I_ButtonArea_Interface () {}
+void
+I_ButtonArea_Interface::_list_types (Plic::TypeHashList &thl) const
+{
+  thl.push_back (Plic::TypeHash (0x0dcb7c084481f495ULL, 0x58f43abd0dd694eaULL)); // ButtonArea
+}
 
 I_PureMethods_Interface::I_PureMethods_Interface ()
 {}
 I_PureMethods_Interface::~I_PureMethods_Interface () {}
+void
+I_PureMethods_Interface::_list_types (Plic::TypeHashList &thl) const
+{
+  thl.push_back (Plic::TypeHash (0x0364646bccfb6bbcULL, 0x37b842dacad68d00ULL)); // PureMethods
+}
 
 // --- Method Dispatchers & Registry ---
 } // RapicornPlicTest
 
 namespace MandatoryNamespace {
+static Plic::FieldBuffer*
+_$lsttyp__FirstInterface__ (Plic::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  I_FirstInterface_Interface *self;
+  self = connection_id2object<I_FirstInterface_Interface> (fbr.pop_object());
+  PLIC_CHECK (self, "self must be non-NULL");
+  Plic::TypeHashList thl;
+  self->_list_types (thl);
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
+  rb.add_int64 (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+  return &rb;
+}
 static Plic::FieldBuffer*
 _$caller__FirstInterface__void_func (Plic::FieldReader &fbr)
 {
@@ -967,6 +1060,21 @@ namespace OtherNamespace {
 } // OtherNamespace
 
 namespace InterfaceTests {
+static Plic::FieldBuffer*
+_$lsttyp__UIWidgetArea__ (Plic::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  I_UIWidgetArea_Interface *self;
+  self = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
+  PLIC_CHECK (self, "self must be non-NULL");
+  Plic::TypeHashList thl;
+  self->_list_types (thl);
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
+  rb.add_int64 (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+  return &rb;
+}
 static Plic::FieldBuffer*
 _$getter__UIWidgetArea__dummy (Plic::FieldReader &fbr)
 {
@@ -1225,10 +1333,85 @@ _$sigcon__UIWidgetArea__sample_signal (Plic::FieldReader &fbr)
   return &rb;
 }
 
+static Plic::FieldBuffer*
+_$lsttyp__Parent__ (Plic::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  I_Parent_Interface *self;
+  self = connection_id2object<I_Parent_Interface> (fbr.pop_object());
+  PLIC_CHECK (self, "self must be non-NULL");
+  Plic::TypeHashList thl;
+  self->_list_types (thl);
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
+  rb.add_int64 (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+  return &rb;
+}
 
+static Plic::FieldBuffer*
+_$lsttyp__Child__ (Plic::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  I_Child_Interface *self;
+  self = connection_id2object<I_Child_Interface> (fbr.pop_object());
+  PLIC_CHECK (self, "self must be non-NULL");
+  Plic::TypeHashList thl;
+  self->_list_types (thl);
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
+  rb.add_int64 (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+  return &rb;
+}
 
+static Plic::FieldBuffer*
+_$lsttyp__Descendant__ (Plic::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  I_Descendant_Interface *self;
+  self = connection_id2object<I_Descendant_Interface> (fbr.pop_object());
+  PLIC_CHECK (self, "self must be non-NULL");
+  Plic::TypeHashList thl;
+  self->_list_types (thl);
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
+  rb.add_int64 (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+  return &rb;
+}
 
+static Plic::FieldBuffer*
+_$lsttyp__GrandChild__ (Plic::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  I_GrandChild_Interface *self;
+  self = connection_id2object<I_GrandChild_Interface> (fbr.pop_object());
+  PLIC_CHECK (self, "self must be non-NULL");
+  Plic::TypeHashList thl;
+  self->_list_types (thl);
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
+  rb.add_int64 (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+  return &rb;
+}
 
+static Plic::FieldBuffer*
+_$lsttyp__QuickIface__ (Plic::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  I_QuickIface_Interface *self;
+  self = connection_id2object<I_QuickIface_Interface> (fbr.pop_object());
+  PLIC_CHECK (self, "self must be non-NULL");
+  Plic::TypeHashList thl;
+  self->_list_types (thl);
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
+  rb.add_int64 (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+  return &rb;
+}
 static Plic::FieldBuffer*
 _$caller__QuickIface__simple_function (Plic::FieldReader &fbr)
 {
@@ -1241,6 +1424,21 @@ _$caller__QuickIface__simple_function (Plic::FieldReader &fbr)
   return NULL;
 }
 
+static Plic::FieldBuffer*
+_$lsttyp__MethodTestInterface__ (Plic::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  I_MethodTestInterface_Interface *self;
+  self = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
+  PLIC_CHECK (self, "self must be non-NULL");
+  Plic::TypeHashList thl;
+  self->_list_types (thl);
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
+  rb.add_int64 (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+  return &rb;
+}
 static Plic::FieldBuffer*
 _$caller__MethodTestInterface__method_with_void (Plic::FieldReader &fbr)
 {
@@ -1382,6 +1580,21 @@ _$caller__MethodTestInterface__method_with_quickiface (Plic::FieldReader &fbr)
   return &rb;
 }
 
+static Plic::FieldBuffer*
+_$lsttyp__SignalTestInterface__ (Plic::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  I_SignalTestInterface_Interface *self;
+  self = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
+  PLIC_CHECK (self, "self must be non-NULL");
+  Plic::TypeHashList thl;
+  self->_list_types (thl);
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
+  rb.add_int64 (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+  return &rb;
+}
 class _$Closure__SignalTestInterface__void_result {
   Plic::Connection &m_connection; uint64 m_handler;
 public:
@@ -2171,6 +2384,21 @@ _$sigcon__SignalTestInterface__self_args (Plic::FieldReader &fbr)
 }
 
 static Plic::FieldBuffer*
+_$lsttyp__PropertyTester__ (Plic::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  I_PropertyTester_Interface *self;
+  self = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
+  PLIC_CHECK (self, "self must be non-NULL");
+  Plic::TypeHashList thl;
+  self->_list_types (thl);
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
+  rb.add_int64 (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+  return &rb;
+}
+static Plic::FieldBuffer*
 _$getter__PropertyTester__bool_prop (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
@@ -2384,6 +2612,21 @@ _$setter__PropertyTester__self_prop (Plic::FieldReader &fbr)
 
 namespace RapicornPlicTest {
 static Plic::FieldBuffer*
+_$lsttyp__ButtonArea__ (Plic::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  I_ButtonArea_Interface *self;
+  self = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
+  PLIC_CHECK (self, "self must be non-NULL");
+  Plic::TypeHashList thl;
+  self->_list_types (thl);
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
+  rb.add_int64 (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+  return &rb;
+}
+static Plic::FieldBuffer*
 _$getter__ButtonArea__on_click (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
@@ -2554,6 +2797,21 @@ _$sigcon__ButtonArea__activate (Plic::FieldReader &fbr)
 }
 
 static Plic::FieldBuffer*
+_$lsttyp__PureMethods__ (Plic::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  I_PureMethods_Interface *self;
+  self = connection_id2object<I_PureMethods_Interface> (fbr.pop_object());
+  PLIC_CHECK (self, "self must be non-NULL");
+  Plic::TypeHashList thl;
+  self->_list_types (thl);
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
+  rb.add_int64 (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);
+  return &rb;
+}
+static Plic::FieldBuffer*
 _$caller__PureMethods__pure_method (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1 + 1) return plic$_error ("invalid number of arguments");
@@ -2568,7 +2826,9 @@ _$caller__PureMethods__pure_method (Plic::FieldReader &fbr)
 }
 
 static const Plic::Connection::MethodEntry _plic_stub_entries[] = {
+  { 0x3e0c8f5da9110ad8ULL, 0xea565508333a9035ULL, MandatoryNamespace::_$lsttyp__FirstInterface__, },
   { 0x209463c55becedadULL, 0x39ddfcb9aadc3c74ULL, MandatoryNamespace::_$caller__FirstInterface__void_func, },
+  { 0x3b205dd851cb8a1dULL, 0x5bcddc39beffee0dULL, InterfaceTests::_$lsttyp__UIWidgetArea__, },
   { 0x39146750080bd117ULL, 0x9edc3ab3b5e82e8dULL, InterfaceTests::_$getter__UIWidgetArea__dummy, },
   { 0x2a284d0b5305ac3aULL, 0xd98a1d86235ad649ULL, InterfaceTests::_$setter__UIWidgetArea__dummy, },
   { 0x37b8129e6139dfaeULL, 0xece65fb7aeda0163ULL, InterfaceTests::_$getter__UIWidgetArea__on_click, },
@@ -2585,7 +2845,13 @@ static const Plic::Connection::MethodEntry _plic_stub_entries[] = {
   { 0x2294f15cd15e9458ULL, 0x5e0ac9b493bb4f17ULL, InterfaceTests::_$caller__UIWidgetArea__on_click2in, },
   { 0x52ef738c2571d0f2ULL, 0x05b653adf0a80acfULL, InterfaceTests::_$sigcon__UIWidgetArea__void_signal, },
   { 0x511bbb2e2b129d5bULL, 0xe7152819ec289550ULL, InterfaceTests::_$sigcon__UIWidgetArea__sample_signal, },
+  { 0x358122a8447018eaULL, 0xf27025a07a51a48aULL, InterfaceTests::_$lsttyp__Parent__, },
+  { 0x3d9ee6a844c60394ULL, 0xd2cee7633ad091d5ULL, InterfaceTests::_$lsttyp__Child__, },
+  { 0x3a8b819b364228b8ULL, 0x9dce3529210a7700ULL, InterfaceTests::_$lsttyp__Descendant__, },
+  { 0x3aa9daa434261f37ULL, 0xa848862e429bf919ULL, InterfaceTests::_$lsttyp__GrandChild__, },
+  { 0x3ceafdc3043b707dULL, 0xf30106bb4338c235ULL, InterfaceTests::_$lsttyp__QuickIface__, },
   { 0x2446078b004b9aabULL, 0x37d6c73a34ac7070ULL, InterfaceTests::_$caller__QuickIface__simple_function, },
+  { 0x363e0b9e750bbbe2ULL, 0x8b5953ab5fb23a59ULL, InterfaceTests::_$lsttyp__MethodTestInterface__, },
   { 0x281392e54343bee9ULL, 0x0dbeb788728dbff4ULL, InterfaceTests::_$caller__MethodTestInterface__method_with_void, },
   { 0x3b68546991e25342ULL, 0xa71399caec9ccfc7ULL, InterfaceTests::_$caller__MethodTestInterface__method_with_bools, },
   { 0x39555e79a31047bfULL, 0x0f06b4f122a81e1dULL, InterfaceTests::_$caller__MethodTestInterface__method_with_ints, },
@@ -2596,6 +2862,7 @@ static const Plic::Connection::MethodEntry _plic_stub_entries[] = {
   { 0x34c9e8a686a7f261ULL, 0x9af099b173ac979cULL, InterfaceTests::_$caller__MethodTestInterface__method_with_sequence, },
   { 0x34619983babcee5bULL, 0x9875f78f28f381b7ULL, InterfaceTests::_$caller__MethodTestInterface__method_with_interface, },
   { 0x3a2ab33a8358edcbULL, 0x7c028db9464052a0ULL, InterfaceTests::_$caller__MethodTestInterface__method_with_quickiface, },
+  { 0x3b2248e8e9d4ff05ULL, 0xda71e710449d85dfULL, InterfaceTests::_$lsttyp__SignalTestInterface__, },
   { 0x535d5e95471873b6ULL, 0x7a9f5692ce00e007ULL, InterfaceTests::_$sigcon__SignalTestInterface__void_result, },
   { 0x51ffffa2f8db1b1bULL, 0x3e01434baf49eceeULL, InterfaceTests::_$sigcon__SignalTestInterface__bool_result, },
   { 0x51ac083cdc878affULL, 0x72ad7414773447a2ULL, InterfaceTests::_$sigcon__SignalTestInterface__int_result, },
@@ -2616,6 +2883,7 @@ static const Plic::Connection::MethodEntry _plic_stub_entries[] = {
   { 0x547b4dd41606b568ULL, 0x1d763791a33d2bc9ULL, InterfaceTests::_$sigcon__SignalTestInterface__sequence_arg, },
   { 0x57a5dbfbeb5a4ef9ULL, 0xb5df0c3b3bba4b22ULL, InterfaceTests::_$sigcon__SignalTestInterface__interface_arg, },
   { 0x5c515ee37b78a970ULL, 0xe89c2af2f29359a0ULL, InterfaceTests::_$sigcon__SignalTestInterface__self_args, },
+  { 0x33ed5186814fd96fULL, 0x2db9aae41d7f688cULL, InterfaceTests::_$lsttyp__PropertyTester__, },
   { 0x396c5b1aaf49cec6ULL, 0xb6218ab5ac6b82c3ULL, InterfaceTests::_$getter__PropertyTester__bool_prop, },
   { 0x2bd3c8fc8f71f8b4ULL, 0x2dde5c2c8fcf750cULL, InterfaceTests::_$setter__PropertyTester__bool_prop, },
   { 0x369c402f00bbf1e2ULL, 0x515a4131e4516216ULL, InterfaceTests::_$getter__PropertyTester__int_prop, },
@@ -2634,6 +2902,7 @@ static const Plic::Connection::MethodEntry _plic_stub_entries[] = {
   { 0x29163b10631cf4b4ULL, 0xf014d69b1a1153e9ULL, InterfaceTests::_$setter__PropertyTester__interface_prop, },
   { 0x3e6b07e114fab96bULL, 0x45a97f76ee1a7bcfULL, InterfaceTests::_$getter__PropertyTester__self_prop, },
   { 0x2c1aea6b5567c7beULL, 0x8f21acd05f5030deULL, InterfaceTests::_$setter__PropertyTester__self_prop, },
+  { 0x3416c0fa53fb9e4bULL, 0xca6572c6a964739bULL, RapicornPlicTest::_$lsttyp__ButtonArea__, },
   { 0x3e3aae70657f83b7ULL, 0x728ed182ccdc4020ULL, RapicornPlicTest::_$getter__ButtonArea__on_click, },
   { 0x2d526a22ceb83792ULL, 0x62169ce8c45be6e0ULL, RapicornPlicTest::_$setter__ButtonArea__on_click, },
   { 0x3c128313732bc9a9ULL, 0xad69a127aa1ce9b0ULL, RapicornPlicTest::_$getter__ButtonArea__on_click2, },
@@ -2644,6 +2913,7 @@ static const Plic::Connection::MethodEntry _plic_stub_entries[] = {
   { 0x27b69c1801d07bbeULL, 0x929dbc4b4f2ea981ULL, RapicornPlicTest::_$setter__ButtonArea__click_type, },
   { 0x5aa49f58f83f54b7ULL, 0xff357b59e593e480ULL, RapicornPlicTest::_$sigcon__ButtonArea__check_activate, },
   { 0x567351a83995c46eULL, 0xcd153a5a755401f6ULL, RapicornPlicTest::_$sigcon__ButtonArea__activate, },
+  { 0x3f8c1b3ea1e0fd3cULL, 0x53f8ae50709fadc0ULL, RapicornPlicTest::_$lsttyp__PureMethods__, },
   { 0x3c452a34192441bfULL, 0xcb1002037bf028e2ULL, RapicornPlicTest::_$caller__PureMethods__pure_method, },
 };
 static Plic::Connection::MethodRegistry _plic_stub_registry (_plic_stub_entries);

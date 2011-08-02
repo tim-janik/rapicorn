@@ -322,6 +322,10 @@ class Generator:
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
   def method_digest (self, method_info):
     return self.digest2cbytes (method_info.type_hash())
+  def class_digest (self, class_info):
+    return self.digest2cbytes (class_info.type_hash())
+  def list_types_digest (self, class_info):
+    return self.digest2cbytes (class_info.twoway_hash ('Plic:list_types()'))
   def setter_digest (self, class_info, fident, ftype):
     setter_hash = class_info.property_hash ((fident, ftype), True)
     return self.digest2cbytes (setter_hash)
@@ -346,12 +350,15 @@ class Generator:
       if not skip:
         reduced = [ p ] + reduced
     return reduced
-  def interface_class_inheritance (self, type_info):
-    plic_smarthandle = 'Plic::SmartHandle'
+  def interface_class_ancestors (self, type_info):
     l = []
     for pr in type_info.prerequisites:
       l += [ pr ]
     l = self.inherit_reduce (l)
+    return l
+  def interface_class_inheritance (self, type_info):
+    plic_smarthandle = 'Plic::SmartHandle'
+    l = self.interface_class_ancestors (type_info)
     l = [self.C (pr) for pr in l] # types -> names
     if   self.gen_mode == G4SERVER and l:
       heritage = 'public virtual'
@@ -377,6 +384,9 @@ class Generator:
     s += ' : ' + heritage + ' %s' % (', ' + heritage + ' ').join (l) + '\n'
     s += '  /// See also the corresponding IDL class %s.\n' % type_info.name # doxygen
     s += '{\n'
+    if self.gen_mode == G4CLIENT:
+      s += '  ' + self.F ('static %s' % classC) + '_cast (Plic::SmartHandle&, const Plic::TypeHashList&);\n'
+      s += '  ' + self.F ('static const Plic::TypeHash&') + '_type ();\n'
     # constructors
     s += 'protected:\n'
     if self.gen_mode == G4SERVER:
@@ -386,10 +396,15 @@ class Generator:
       for sg in type_info.signals:
         s += self.generate_signal_proxy_typedef (sg, type_info)
     s += 'public:\n'
-    if self.gen_mode == G4CLIENT:
+    if self.gen_mode == G4SERVER:
+      s += '  virtual ' + self.F ('void') + '_list_types (Plic::TypeHashList&) const;\n'
+    else: # G4CLIENT
       classH = self.H (type_info.name) # smart handle class name
       aliasfix = '__attribute__ ((noinline))' # work around bogus strict-aliasing warning in g++-4.4.5
-      s += '  ' + self.F ('static %s' % classH) + '_new (Plic::FieldReader &fbr) %s;\n' % aliasfix # ctor
+      s += '  template<class C>\n'
+      s += '  ' + self.F ('static %s' % classH) + '_cast  (C &c) { return _cast (c, c._types()); }\n' # ctor
+      s += '  ' + self.F ('static %s' % classH) + '_new   (Plic::FieldReader &fbr) %s;\n' % aliasfix # ctor
+      s += '  ' + self.F ('const Plic::TypeHashList&') + '_types ();\n'
       s += '  ' + self.F ('explicit') + '%s ();\n' % classH # ctor
       #s += '  ' + self.F ('inline') + '%s (const %s &src)' % (classH, classH) # copy ctor
       #s += ' : ' + ' (src), '.join (cl) + ' (src) {}\n'
@@ -485,14 +500,39 @@ class Generator:
     s += '    handle$ (ipcid)'
     for sg in class_info.signals:
       s += ',\n    %s (handle$)' % sg.name
-    s += '\n  {\n'
+    s += ',\n    m_cached_types (NULL)\n  {\n'
     for sg in class_info.signals:
       signame = self.generate_signal_typename (sg, class_info)
       sigE = '%s_EventHandler$' % signame
       s += '    handle$.%s = %s.signal;\n' % (sg.name, sg.name)
       s += '    %s.signal.listener (%s, &%s::connections_changed);\n' % (sg.name, sg.name, sigE)
     s += '  }\n'
+    s += '  Plic::TypeHashList *m_cached_types;\n'
+    s += '  const Plic::TypeHashList& list_types ();\n'
     s += '};\n'
+    s += 'const Plic::TypeHashList&\n'
+    s += '%s::list_types ()\n{\n' % classC
+    s += '  if (!m_cached_types) {\n'
+    s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);\n' # msgid self
+    s += '    fb.add_msgid (%s);\n' % self.list_types_digest (class_info)
+    s += '  ' + self.generate_proto_add_args ('fb', class_info, '', [('handle$', class_info)], '')
+    s += '    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
+    s += '    PLIC_CHECK (fr != NULL, "missing result from 2-way call");\n'
+    s += '    Plic::FieldReader frr (*fr);\n'
+    s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
+    s += '    size_t len = frr.pop_int64();\n'
+    s += '    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");\n'
+    s += '    Plic::TypeHashList *thv = new Plic::TypeHashList();\n'
+    s += '    for (size_t i = 0; i < len; i++) {\n'
+    s += '      uint64 hashhi = frr.pop_int64();\n'
+    s += '      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));\n'
+    s += '    }\n'
+    s += '    delete fr;\n'
+    s += '    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))\n'
+    s += '      delete thv;\n'
+    s += '  }\n'
+    s += '  return *m_cached_types;\n'
+    s += '}\n'
     for sg in class_info.signals:
       signame = self.generate_signal_typename (sg, class_info)
       sigE = '%s_EventHandler$' % signame
@@ -520,6 +560,7 @@ class Generator:
       s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
       s += '    if (frr.remaining() && m_handler_id)\n'
       s += '      m_connection_id = frr.pop_int64();\n'
+      s += '    delete fr;\n'
       s += '  }\n'
       s += '}\n'
       s += 'Plic::FieldBuffer*\n'
@@ -567,19 +608,53 @@ class Generator:
     s += '%s\n%s::_new (Plic::FieldReader &fbr)\n{\n' % classH2 # should be ctor, but requires ctor delegatioon (C++0x)
     s += '  return connection_id2context<%s> (fbr.pop_object())->handle$;\n' % classC
     s += '}\n'
+    s += 'const Plic::TypeHash&\n'
+    s += '%s::_type()\n{\n' % classH
+    s += '  static const Plic::TypeHash type_hash = Plic::TypeHash (%s);\n' % self.class_digest (class_info)
+    s += '  return type_hash;\n'
+    s += '}\n'
+    s += '%s\n%s::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)\n{\n' % classH2 # similar to ctor
+    s += '  size_t i; const Plic::TypeHash &mine = _type();\n'
+    s += '  for (i = 0; i < types.size(); i++)\n'
+    s += '    if (mine == types[i])\n'
+    s += '      return connection_id2context<%s> (connection_handle2id (other))->handle$;\n' % classC
+    s += '  return %s();\n' % classH
+    s += '}\n'
+    s += 'const Plic::TypeHashList&\n'
+    s += '%s::_types()\n{\n' % classH
+    s += '  return connection_id2context<%s> (connection_handle2id (*this))->list_types();\n' % classC
+    s += '}\n'
     return s
-  def generate_server_class_methods (self, type_info):
+  def generate_server_class_methods (self, class_info):
     assert self.gen_mode == G4SERVER
-    s = '\n'
-    tname = self.C (type_info)
+    s, tname = '\n', self.C (class_info)
     s += '%s::%s ()' % (tname, tname) # ctor
     l = [] # constructor agument list
-    for sg in type_info.signals:
+    for sg in class_info.signals:
       l += ['sig_%s (*this)' % sg.name]
     if l:
       s += ' :\n  ' + ', '.join (l)
     s += '\n{}\n'
     s += '%s::~%s () {}\n' % (tname, tname) # dtor
+    s += 'void\n'
+    s += '%s::_list_types (Plic::TypeHashList &thl) const\n{\n' % tname
+    def deep_ancestors (type_info):
+      l = [ type_info ]
+      for a in type_info.prerequisites:
+        l += deep_ancestors (a)
+      return l
+    def make_list_uniq (lst):
+      r, q = [], set()
+      for e in lst:
+        if not e in q:
+          q.add (e)
+          r += [ e ]
+      return r
+    ancestors = make_list_uniq (deep_ancestors (class_info))
+    ancestors.reverse()
+    for an in ancestors:
+      s += '  thl.push_back (Plic::TypeHash (%s)); // %s\n' % (self.class_digest (an), an.name)
+    s += '}\n'
     return s
   def generate_client_method_stub (self, class_info, mtype):
     s = ''
@@ -763,6 +838,27 @@ class Generator:
     s += '  return &rb;\n'
     s += '}\n'
     return s
+  def generate_server_list_types (self, class_info, reglines):
+    assert self.gen_mode == G4SERVER
+    s = ''
+    dispatcher_name = '_$lsttyp__%s__' % class_info.name
+    reglines += [ (self.list_types_digest (class_info), self.namespaced_identifier (dispatcher_name)) ]
+    s += 'static Plic::FieldBuffer*\n'
+    s += dispatcher_name + ' (Plic::FieldReader &fbr)\n'
+    s += '{\n'
+    s += '  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");\n'
+    s += '  %s *self;\n' % self.C (class_info)  # fetch self
+    s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
+    s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
+    s += '  Plic::TypeHashList thl;\n'
+    s += '  self->_list_types (thl);\n'
+    s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());\n' # store return value
+    s += '  rb.add_int64 (thl.size());\n'
+    s += '  for (size_t i = 0; i < thl.size(); i++)\n'
+    s += '    rb.add_int64 (thl[i].typehi), rb.add_int64 (thl[i].typelo);\n'
+    s += '  return &rb;\n'
+    s += '}\n'
+    return s
   def generate_signal_proxy_typename (self, functype, ctype):
     return 'Signal_%s' % functype.name # 'Proxy_%s'
   def generate_signal_typename (self, functype, ctype):
@@ -872,17 +968,14 @@ class Generator:
     s = ''
     if functype.pure:
       return s
-    fs = self.C (type_info) + '::' + functype.name
-    tnsl = type_info.list_namespaces() # type namespace list
-    absname = '::'.join ([n.name for n in tnsl] + [ fs ])
+    absname = self.C (type_info) + '::' + functype.name
     if absname in self.skip_symbols:
       return ''
-    s += self.open_namespace (type_info)
     sret = self.R (functype.rtype)
     sret += '\n'
-    fs += ' ('
-    argindent = len (fs)
-    s += '\n' + sret + fs
+    absname += ' ('
+    argindent = len (absname)
+    s += '\n' + sret + absname
     l = []
     for a in functype.args:
       l += [ self.A (a[0], a[1]) ]
@@ -951,7 +1044,7 @@ class Generator:
     txt = f.read()
     f.close()
     import re
-    w = re.findall (r'([a-zA-Z_][a-zA-Z_0-9$:]*)', txt)
+    w = re.findall (r'(\b[a-zA-Z_][a-zA-Z_0-9$:]*)(?:\()', txt)
     self.skip_symbols.update (set (w))
   def generate_impl_types (self, implementation_types):
     self.gen_mode = G4SERVER if self.gen_serverhh or self.gen_servercc else G4CLIENT
@@ -977,7 +1070,7 @@ class Generator:
       s += gencc_boilerplate + '\n' + clientcc_boilerplate + '\n'
     if self.gen_servercc:
       s += gencc_boilerplate + '\n' + servercc_boilerplate + '\n'
-    self.tab_stop (24)
+    self.tab_stop (30)
     s += self.open_namespace (None)
     # collect impl types
     types = []
@@ -1065,6 +1158,7 @@ class Generator:
           continue
         s += self.open_namespace (tp)
         if tp.storage == Decls.INTERFACE and not tp.name in self.skip_classes:
+          s += self.generate_server_list_types (tp, reglines)
           for fl in tp.fields:
             s += self.generate_server_property_getter (tp, fl[0], fl[1], reglines)
             s += self.generate_server_property_setter (tp, fl[0], fl[1], reglines)
@@ -1077,6 +1171,7 @@ class Generator:
       s += self.open_namespace (None)
     # generate interface method skeletons
     if self.gen_server_skel:
+      s += self.open_namespace (None)
       self.gen_mode = G4SERVER
       s += '\n// --- Interface Skeletons ---\n'
       for tp in types:

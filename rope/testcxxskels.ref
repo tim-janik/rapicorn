@@ -114,28 +114,29 @@ class I_FirstInterface_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class FirstInterface.
 {
 protected:
-  explicit                         I_FirstInterface_Interface ();
-  virtual /*Des*/                 ~I_FirstInterface_Interface () = 0;
+  explicit                               I_FirstInterface_Interface ();
+  virtual /*Des*/                       ~I_FirstInterface_Interface () = 0;
 public:
-  virtual void                    void_func                  ();
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual void                          void_func                  ();
 };
 
 struct XFooRecordImpl {
-  bool                    single_bool;
-  int                     single_num;
-  double                  single_float;
-  std::string             single_string;
-  int                     sibling1;
-  int                     sibling2;
-  int                     multi1;
-  int                     multi2;
-  int                     multi3;
-  int                     multi4;
-  ExtensiveEnum           enum_field;
-  I_FirstInterface_Interface* iface1;
-  I_FirstInterface_Interface* iface2;
-  I_FirstInterface_Interface* iface3;
-  inline                  XFooRecordImpl () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
+  bool                          single_bool;
+  int                           single_num;
+  double                        single_float;
+  std::string                   single_string;
+  int                           sibling1;
+  int                           sibling2;
+  int                           multi1;
+  int                           multi2;
+  int                           multi3;
+  int                           multi4;
+  ExtensiveEnum                 enum_field;
+  I_FirstInterface_Interface*   iface1;
+  I_FirstInterface_Interface*   iface2;
+  I_FirstInterface_Interface*   iface3;
+  inline                        XFooRecordImpl () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
 void operator<< (Plic::FieldBuffer&, const XFooRecordImpl&);
 void operator>> (Plic::FieldReader&, XFooRecordImpl&);
@@ -189,9 +190,9 @@ void operator<< (Plic::FieldBuffer&, const InterfaceSequenceImpl&);
 void operator>> (Plic::FieldReader&, InterfaceSequenceImpl&);
 
 struct NestedTypesRecImpl {
-  XFooRecordImpl          rec;
-  XFooSequenceImpl        seq;
-  inline                  NestedTypesRecImpl () { }
+  XFooRecordImpl                rec;
+  XFooSequenceImpl              seq;
+  inline                        NestedTypesRecImpl () { }
 };
 void operator<< (Plic::FieldBuffer&, const NestedTypesRecImpl&);
 void operator>> (Plic::FieldReader&, NestedTypesRecImpl&);
@@ -217,11 +218,11 @@ typedef XFooSequenceImpl AliasSequence;
 typedef ExtensiveEnum AliasEnum;
 
 struct NewRecordImpl {
-  int                     i;
-  Enum1                   enum1;
-  XFooSequenceImpl        xfs;
-  NestedTypesRecImpl      ntr;
-  inline                  NewRecordImpl () { i = 0; enum1 = Enum1 (0); }
+  int                           i;
+  Enum1                         enum1;
+  XFooSequenceImpl              xfs;
+  NestedTypesRecImpl            ntr;
+  inline                        NewRecordImpl () { i = 0; enum1 = Enum1 (0); }
 };
 void operator<< (Plic::FieldBuffer&, const NewRecordImpl&);
 void operator>> (Plic::FieldReader&, NewRecordImpl&);
@@ -229,18 +230,18 @@ void operator>> (Plic::FieldReader&, NewRecordImpl&);
 namespace Inner {
 
 struct InnerRecordImpl {
-  int                     x;
-  int                     y;
-  NewRecordImpl           rec;
-  inline                  InnerRecordImpl () { x = 0; y = 0; }
+  int                           x;
+  int                           y;
+  NewRecordImpl                 rec;
+  inline                        InnerRecordImpl () { x = 0; y = 0; }
 };
 void operator<< (Plic::FieldBuffer&, const InnerRecordImpl&);
 void operator>> (Plic::FieldReader&, InnerRecordImpl&);
 } // Inner
 
 struct Refer2InnerImpl {
-  Inner::InnerRecordImpl  r;
-  inline                  Refer2InnerImpl () { }
+  Inner::InnerRecordImpl        r;
+  inline                        Refer2InnerImpl () { }
 };
 void operator<< (Plic::FieldBuffer&, const Refer2InnerImpl&);
 void operator>> (Plic::FieldReader&, Refer2InnerImpl&);
@@ -253,7 +254,7 @@ struct SomeRecordImpl {
   MandatoryNamespace::NewRecordImpl r2;
   MandatoryNamespace::Inner::InnerRecordImpl r3;
   MandatoryNamespace::Inner::InnerRecordImpl r4;
-  inline                  SomeRecordImpl () { }
+  inline                        SomeRecordImpl () { }
 };
 void operator<< (Plic::FieldBuffer&, const SomeRecordImpl&);
 void operator>> (Plic::FieldReader&, SomeRecordImpl&);
@@ -274,70 +275,75 @@ class I_UIWidgetArea_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class UIWidgetArea.
 {
 protected:
-  explicit                         I_UIWidgetArea_Interface ();
-  virtual /*Des*/                 ~I_UIWidgetArea_Interface () = 0;
+  explicit                               I_UIWidgetArea_Interface ();
+  virtual /*Des*/                       ~I_UIWidgetArea_Interface () = 0;
 public:
-  virtual double                  dummy    () const = 0;
-  virtual void                    dummy    (double) = 0;
-  virtual std::string             on_click () const = 0;
-  virtual void                    on_click (const std::string&) = 0;
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual double                        dummy    () const = 0;
+  virtual void                          dummy    (double) = 0;
+  virtual std::string                   on_click () const = 0;
+  virtual void                          on_click (const std::string&) = 0;
   typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Interface, void ()> Signal_void_signal;
   typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Interface, double (I_UIWidgetArea_Interface &ba1, int someint)> Signal_sample_signal;
   Signal_void_signal sig_void_signal;
   Signal_sample_signal sig_sample_signal;
-  virtual double                  simple_method            ();
-  virtual double                  single_arg               (int n);
-  virtual double                  single_arg2              (int n = 5);
-  virtual double                  two_args                 (int n,
-                                                            double r);
-  virtual double                  two_args2                (int n = 6,
-                                                            double r = 7.7);
-  virtual double                  multi_args               (int n,
-                                                            double r,
-                                                            int i,
-                                                            const std::string &s = "String ding",
-                                                            double y = 5);
-  virtual double                  self_method              (I_UIWidgetArea_Interface &ba1,
-                                                            I_UIWidgetArea_Interface &ba2);
-  virtual void                    void_method              ();
-  virtual std::string             on_click2out             ();
-  virtual void                    on_click2in              (const std::string &command);
+  virtual double                        simple_method            ();
+  virtual double                        single_arg               (int n);
+  virtual double                        single_arg2              (int n = 5);
+  virtual double                        two_args                 (int n,
+                                                                  double r);
+  virtual double                        two_args2                (int n = 6,
+                                                                  double r = 7.7);
+  virtual double                        multi_args               (int n,
+                                                                  double r,
+                                                                  int i,
+                                                                  const std::string &s = "String ding",
+                                                                  double y = 5);
+  virtual double                        self_method              (I_UIWidgetArea_Interface &ba1,
+                                                                  I_UIWidgetArea_Interface &ba2);
+  virtual void                          void_method              ();
+  virtual std::string                   on_click2out             ();
+  virtual void                          on_click2in              (const std::string &command);
 };
 
 class I_Parent_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class Parent.
 {
 protected:
-  explicit                         I_Parent_Interface ();
-  virtual /*Des*/                 ~I_Parent_Interface () = 0;
+  explicit                               I_Parent_Interface ();
+  virtual /*Des*/                       ~I_Parent_Interface () = 0;
 public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
 };
 
 class I_Child_Interface : public virtual I_Parent_Interface
   /// See also the corresponding IDL class Child.
 {
 protected:
-  explicit                         I_Child_Interface ();
-  virtual /*Des*/                 ~I_Child_Interface () = 0;
+  explicit                               I_Child_Interface ();
+  virtual /*Des*/                       ~I_Child_Interface () = 0;
 public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
 };
 
 class I_Descendant_Interface : public virtual I_Child_Interface
   /// See also the corresponding IDL class Descendant.
 {
 protected:
-  explicit                         I_Descendant_Interface ();
-  virtual /*Des*/                 ~I_Descendant_Interface () = 0;
+  explicit                               I_Descendant_Interface ();
+  virtual /*Des*/                       ~I_Descendant_Interface () = 0;
 public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
 };
 
 class I_GrandChild_Interface : public virtual I_Descendant_Interface
   /// See also the corresponding IDL class GrandChild.
 {
 protected:
-  explicit                         I_GrandChild_Interface ();
-  virtual /*Des*/                 ~I_GrandChild_Interface () = 0;
+  explicit                               I_GrandChild_Interface ();
+  virtual /*Des*/                       ~I_GrandChild_Interface () = 0;
 public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
 };
 
 enum QuickEnum {
@@ -345,9 +351,9 @@ enum QuickEnum {
 };
 
 struct QuickRecordImpl {
-  int                     int1;
-  int                     int2;
-  inline                  QuickRecordImpl () { int1 = 0; int2 = 0; }
+  int                           int1;
+  int                           int2;
+  inline                        QuickRecordImpl () { int1 = 0; int2 = 0; }
 };
 void operator<< (Plic::FieldBuffer&, const QuickRecordImpl&);
 void operator>> (Plic::FieldReader&, QuickRecordImpl&);
@@ -362,47 +368,50 @@ class I_QuickIface_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class QuickIface.
 {
 protected:
-  explicit                         I_QuickIface_Interface ();
-  virtual /*Des*/                 ~I_QuickIface_Interface () = 0;
+  explicit                               I_QuickIface_Interface ();
+  virtual /*Des*/                       ~I_QuickIface_Interface () = 0;
 public:
-  virtual void                    simple_function        (int i = 9);
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual void                          simple_function        (int i = 9);
 };
 
 class I_MethodTestInterface_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class MethodTestInterface.
 {
 protected:
-  explicit                         I_MethodTestInterface_Interface ();
-  virtual /*Des*/                 ~I_MethodTestInterface_Interface () = 0;
+  explicit                               I_MethodTestInterface_Interface ();
+  virtual /*Des*/                       ~I_MethodTestInterface_Interface () = 0;
 public:
-  virtual void                    method_with_void                ();
-  virtual bool                    method_with_bools               (bool input,
-                                                                   bool optval = 0);
-  virtual int                     method_with_ints                (int input,
-                                                                   int optval = -2);
-  virtual double                  method_with_floats              (double input,
-                                                                   double optval = 309.9);
-  virtual std::string             method_with_string              (const std::string &input,
-                                                                   const std::string &optval = "default");
-  virtual QuickEnum               method_with_enum                (QuickEnum input,
-                                                                   QuickEnum optval = QuickEnum (0));
-  virtual QuickRecordImpl         method_with_record              (const QuickRecordImpl &input,
-                                                                   const QuickRecordImpl &optval = QuickRecordImpl());
-  virtual QuickSequenceImpl       method_with_sequence            (const QuickSequenceImpl &input,
-                                                                   const QuickSequenceImpl &optval = QuickSequenceImpl());
-  virtual I_GrandChild_Interface* method_with_interface           (I_GrandChild_Interface &input,
-                                                                   I_GrandChild_Interface &optval = *(I_GrandChild_Interface*) NULL);
-  virtual I_QuickIface_Interface* method_with_quickiface          (I_QuickIface_Interface &input,
-                                                                   I_QuickIface_Interface &iface0 = *(I_QuickIface_Interface*) NULL);
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual void                          method_with_void                ();
+  virtual bool                          method_with_bools               (bool input,
+                                                                         bool optval = 0);
+  virtual int                           method_with_ints                (int input,
+                                                                         int optval = -2);
+  virtual double                        method_with_floats              (double input,
+                                                                         double optval = 309.9);
+  virtual std::string                   method_with_string              (const std::string &input,
+                                                                         const std::string &optval = "default");
+  virtual QuickEnum                     method_with_enum                (QuickEnum input,
+                                                                         QuickEnum optval = QuickEnum (0));
+  virtual QuickRecordImpl               method_with_record              (const QuickRecordImpl &input,
+                                                                         const QuickRecordImpl &optval = QuickRecordImpl());
+  virtual QuickSequenceImpl             method_with_sequence            (const QuickSequenceImpl &input,
+                                                                         const QuickSequenceImpl &optval = QuickSequenceImpl());
+  virtual I_GrandChild_Interface*       method_with_interface           (I_GrandChild_Interface &input,
+                                                                         I_GrandChild_Interface &optval = *(I_GrandChild_Interface*) NULL);
+  virtual I_QuickIface_Interface*       method_with_quickiface          (I_QuickIface_Interface &input,
+                                                                         I_QuickIface_Interface &iface0 = *(I_QuickIface_Interface*) NULL);
 };
 
 class I_SignalTestInterface_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class SignalTestInterface.
 {
 protected:
-  explicit                         I_SignalTestInterface_Interface ();
-  virtual /*Des*/                 ~I_SignalTestInterface_Interface () = 0;
+  explicit                               I_SignalTestInterface_Interface ();
+  virtual /*Des*/                       ~I_SignalTestInterface_Interface () = 0;
 public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void ()> Signal_void_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, bool ()> Signal_bool_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, int ()> Signal_int_result;
@@ -449,27 +458,28 @@ class I_PropertyTester_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class PropertyTester.
 {
 protected:
-  explicit                         I_PropertyTester_Interface ();
-  virtual /*Des*/                 ~I_PropertyTester_Interface () = 0;
+  explicit                               I_PropertyTester_Interface ();
+  virtual /*Des*/                       ~I_PropertyTester_Interface () = 0;
 public:
-  virtual bool                    bool_prop      () const = 0;
-  virtual void                    bool_prop      (bool) = 0;
-  virtual int                     int_prop       () const = 0;
-  virtual void                    int_prop       (int) = 0;
-  virtual double                  float_prop     () const = 0;
-  virtual void                    float_prop     (double) = 0;
-  virtual std::string             string_prop    () const = 0;
-  virtual void                    string_prop    (const std::string&) = 0;
-  virtual QuickEnum               enum_prop      () const = 0;
-  virtual void                    enum_prop      (QuickEnum) = 0;
-  virtual QuickRecordImpl         record_prop    () const = 0;
-  virtual void                    record_prop    (const QuickRecordImpl&) = 0;
-  virtual QuickSequenceImpl       sequence_prop  () const = 0;
-  virtual void                    sequence_prop  (const QuickSequenceImpl&) = 0;
-  virtual I_GrandChild_Interface* interface_prop () const = 0;
-  virtual void                    interface_prop (I_GrandChild_Interface*) = 0;
-  virtual I_PropertyTester_Interface* self_prop      () const = 0;
-  virtual void                    self_prop      (I_PropertyTester_Interface*) = 0;
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual bool                          bool_prop      () const = 0;
+  virtual void                          bool_prop      (bool) = 0;
+  virtual int                           int_prop       () const = 0;
+  virtual void                          int_prop       (int) = 0;
+  virtual double                        float_prop     () const = 0;
+  virtual void                          float_prop     (double) = 0;
+  virtual std::string                   string_prop    () const = 0;
+  virtual void                          string_prop    (const std::string&) = 0;
+  virtual QuickEnum                     enum_prop      () const = 0;
+  virtual void                          enum_prop      (QuickEnum) = 0;
+  virtual QuickRecordImpl               record_prop    () const = 0;
+  virtual void                          record_prop    (const QuickRecordImpl&) = 0;
+  virtual QuickSequenceImpl             sequence_prop  () const = 0;
+  virtual void                          sequence_prop  (const QuickSequenceImpl&) = 0;
+  virtual I_GrandChild_Interface*       interface_prop () const = 0;
+  virtual void                          interface_prop (I_GrandChild_Interface*) = 0;
+  virtual I_PropertyTester_Interface*   self_prop      () const = 0;
+  virtual void                          self_prop      (I_PropertyTester_Interface*) = 0;
 };
 } // InterfaceTests
 
@@ -487,17 +497,18 @@ class I_ButtonArea_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class ButtonArea.
 {
 protected:
-  explicit                         I_ButtonArea_Interface ();
-  virtual /*Des*/                 ~I_ButtonArea_Interface () = 0;
+  explicit                               I_ButtonArea_Interface ();
+  virtual /*Des*/                       ~I_ButtonArea_Interface () = 0;
 public:
-  virtual std::string             on_click   () const = 0;
-  virtual void                    on_click   (const std::string&) = 0;
-  virtual std::string             on_click2  () const = 0;
-  virtual void                    on_click2  (const std::string&) = 0;
-  virtual std::string             on_click3  () const = 0;
-  virtual void                    on_click3  (const std::string&) = 0;
-  virtual ClickType               click_type () const = 0;
-  virtual void                    click_type (ClickType) = 0;
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual std::string                   on_click   () const = 0;
+  virtual void                          on_click   (const std::string&) = 0;
+  virtual std::string                   on_click2  () const = 0;
+  virtual void                          on_click2  (const std::string&) = 0;
+  virtual std::string                   on_click3  () const = 0;
+  virtual void                          on_click3  (const std::string&) = 0;
+  virtual ClickType                     click_type () const = 0;
+  virtual void                          click_type (ClickType) = 0;
   typedef Rapicorn::Signals::Signal<I_ButtonArea_Interface, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
   typedef Rapicorn::Signals::Signal<I_ButtonArea_Interface, void ()> Signal_activate;
   Signal_check_activate sig_check_activate;
@@ -510,24 +521,20 @@ class I_PureMethods_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class PureMethods.
 {
 protected:
-  explicit                         I_PureMethods_Interface ();
-  virtual /*Des*/                 ~I_PureMethods_Interface () = 0;
+  explicit                               I_PureMethods_Interface ();
+  virtual /*Des*/                       ~I_PureMethods_Interface () = 0;
 public:
-  virtual int                     pure_method             (double f) = 0;
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual int                           pure_method             (double f) = 0;
 };
 } // RapicornPlicTest
 
 // --- Interface Skeletons ---
 
-namespace MandatoryNamespace {
-
 void
 MandatoryNamespace::I_FirstInterface_Interface::void_func ()
 {
 }
-} // MandatoryNamespace
-
-namespace InterfaceTests {
 
 double
 InterfaceTests::I_UIWidgetArea_Interface::simple_method ()
@@ -536,135 +543,134 @@ InterfaceTests::I_UIWidgetArea_Interface::simple_method ()
 }
 
 double
-I_UIWidgetArea_Interface::single_arg (int n)
+InterfaceTests::I_UIWidgetArea_Interface::single_arg (int n)
 {
   return 0;
 }
 
 double
-I_UIWidgetArea_Interface::single_arg2 (int n)
+InterfaceTests::I_UIWidgetArea_Interface::single_arg2 (int n)
 {
   return 0;
 }
 
 double
-I_UIWidgetArea_Interface::two_args (int n,
-                                    double r)
+InterfaceTests::I_UIWidgetArea_Interface::two_args (int n,
+                                                    double r)
 {
   return 0;
 }
 
 double
-I_UIWidgetArea_Interface::two_args2 (int n,
-                                     double r)
+InterfaceTests::I_UIWidgetArea_Interface::two_args2 (int n,
+                                                     double r)
 {
   return 0;
 }
 
 double
-I_UIWidgetArea_Interface::multi_args (int n,
-                                      double r,
-                                      int i,
-                                      const std::string &s,
-                                      double y)
+InterfaceTests::I_UIWidgetArea_Interface::multi_args (int n,
+                                                      double r,
+                                                      int i,
+                                                      const std::string &s,
+                                                      double y)
 {
   return 0;
 }
 
 double
-I_UIWidgetArea_Interface::self_method (I_UIWidgetArea_Interface &ba1,
-                                       I_UIWidgetArea_Interface &ba2)
+InterfaceTests::I_UIWidgetArea_Interface::self_method (InterfaceTests::I_UIWidgetArea_Interface &ba1,
+                                                       InterfaceTests::I_UIWidgetArea_Interface &ba2)
 {
   return 0;
 }
 
 void
-I_UIWidgetArea_Interface::void_method ()
+InterfaceTests::I_UIWidgetArea_Interface::void_method ()
 {
 }
 
 std::string
-I_UIWidgetArea_Interface::on_click2out ()
+InterfaceTests::I_UIWidgetArea_Interface::on_click2out ()
 {
   return 0;
 }
 
 void
-I_UIWidgetArea_Interface::on_click2in (const std::string &command)
+InterfaceTests::I_UIWidgetArea_Interface::on_click2in (const std::string &command)
 {
 }
 
 void
-I_QuickIface_Interface::simple_function (int i)
+InterfaceTests::I_QuickIface_Interface::simple_function (int i)
 {
 }
 
 void
-I_MethodTestInterface_Interface::method_with_void ()
+InterfaceTests::I_MethodTestInterface_Interface::method_with_void ()
 {
 }
 
 bool
-I_MethodTestInterface_Interface::method_with_bools (bool input,
-                                                    bool optval)
+InterfaceTests::I_MethodTestInterface_Interface::method_with_bools (bool input,
+                                                                    bool optval)
 {
   return 0;
 }
 
 int
-I_MethodTestInterface_Interface::method_with_ints (int input,
-                                                   int optval)
+InterfaceTests::I_MethodTestInterface_Interface::method_with_ints (int input,
+                                                                   int optval)
 {
   return 0;
 }
 
 double
-I_MethodTestInterface_Interface::method_with_floats (double input,
-                                                     double optval)
+InterfaceTests::I_MethodTestInterface_Interface::method_with_floats (double input,
+                                                                     double optval)
 {
   return 0;
 }
 
 std::string
-I_MethodTestInterface_Interface::method_with_string (const std::string &input,
-                                                     const std::string &optval)
+InterfaceTests::I_MethodTestInterface_Interface::method_with_string (const std::string &input,
+                                                                     const std::string &optval)
 {
   return 0;
 }
 
-QuickEnum
-I_MethodTestInterface_Interface::method_with_enum (QuickEnum input,
-                                                   QuickEnum optval)
+InterfaceTests::QuickEnum
+InterfaceTests::I_MethodTestInterface_Interface::method_with_enum (InterfaceTests::QuickEnum input,
+                                                                   InterfaceTests::QuickEnum optval)
 {
-  return QuickEnum (0);
+  return InterfaceTests::QuickEnum (0);
 }
 
-QuickRecordImpl
-I_MethodTestInterface_Interface::method_with_record (const QuickRecordImpl &input,
-                                                     const QuickRecordImpl &optval)
+InterfaceTests::QuickRecordImpl
+InterfaceTests::I_MethodTestInterface_Interface::method_with_record (const InterfaceTests::QuickRecordImpl &input,
+                                                                     const InterfaceTests::QuickRecordImpl &optval)
 {
-  return QuickRecordImpl();
+  return InterfaceTests::QuickRecordImpl();
 }
 
-QuickSequenceImpl
-I_MethodTestInterface_Interface::method_with_sequence (const QuickSequenceImpl &input,
-                                                       const QuickSequenceImpl &optval)
+InterfaceTests::QuickSequenceImpl
+InterfaceTests::I_MethodTestInterface_Interface::method_with_sequence (const InterfaceTests::QuickSequenceImpl &input,
+                                                                       const InterfaceTests::QuickSequenceImpl &optval)
 {
-  return QuickSequenceImpl();
+  return InterfaceTests::QuickSequenceImpl();
 }
 
-I_GrandChild_Interface*
-I_MethodTestInterface_Interface::method_with_interface (I_GrandChild_Interface &input,
-                                                        I_GrandChild_Interface &optval)
+InterfaceTests::I_GrandChild_Interface*
+InterfaceTests::I_MethodTestInterface_Interface::method_with_interface (InterfaceTests::I_GrandChild_Interface &input,
+                                                                        InterfaceTests::I_GrandChild_Interface &optval)
 {
-  return (I_GrandChild_Interface*) NULL;
+  return (InterfaceTests::I_GrandChild_Interface*) NULL;
 }
 
-I_QuickIface_Interface*
-I_MethodTestInterface_Interface::method_with_quickiface (I_QuickIface_Interface &input,
-                                                         I_QuickIface_Interface &iface0)
+InterfaceTests::I_QuickIface_Interface*
+InterfaceTests::I_MethodTestInterface_Interface::method_with_quickiface (InterfaceTests::I_QuickIface_Interface &input,
+                                                                         InterfaceTests::I_QuickIface_Interface &iface0)
 {
-  return (I_QuickIface_Interface*) NULL;
+  return (InterfaceTests::I_QuickIface_Interface*) NULL;
 }
-} // InterfaceTests
 

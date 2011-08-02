@@ -21,6 +21,9 @@ servertests_SOURCES  = servertests.cc walker.cc cmdtest.cc properties.cc region.
 		       items.cc primitives.cc testitems.cc sinfextest.cc
 servertests_LDADD    = $(LDADDS) $(READLINELIBS)
 XML_FILES    	    += factory.xml testitems.xml
+TEST_PROGS	    += clienttests
+clienttests_SOURCES  = clienttests.cc
+clienttests_LDADD    = $(LDADDS)
 
 SINFEX_SHELL=./servertests --shell
 check: sinfex-expressions

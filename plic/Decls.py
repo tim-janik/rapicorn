@@ -136,15 +136,23 @@ class TypeInfo (BaseDecl):
     hash8 = (highnibble & 0xf0) + (ord (sha256.digest()[3]) & 0x0f)
     return chr (hash8) + hash120
   def type_hash (self):
-    if self.issignal:
-      highnibble, tag = 0x50, "sigcon"
-    elif self.rtype.storage == VOID:
-      highnibble, tag = 0x20, "oneway"
+    if self.storage == FUNC:
+      if self.issignal:
+        highnibble, tag = 0x50, "sigcon"
+      elif self.rtype.storage == VOID:
+        highnibble, tag = 0x20, "oneway"
+      else:
+        highnibble, tag = 0x30, "twoway"
     else:
-      highnibble, tag = 0x30, "twoway"
+      highnibble, tag = 0x00, "type"
     bytes = self.hash128digest (highnibble, tag)
     t = tuple ([ord (c) for c in bytes])
     return t
+  def twoway_hash (self, special = ''):
+    highnibble, tag = 0x30, "twoway"
+    tag = '%s/%s' % (tag, special) if special else tag
+    bytes = self.hash128digest (highnibble, tag)
+    return tuple ([ord (c) for c in bytes])
   def property_hash (self, field, setter):
     if setter:
       highnibble, tag = 0x20, "setter" # oneway

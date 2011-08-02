@@ -145,30 +145,35 @@ enum ExtensiveEnum {
 class FirstInterface_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class FirstInterface.
 {
+  static FirstInterface_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static const Plic::TypeHash&  _type ();
 protected:
 public:
-  static FirstInterface_SmartHandle _new (Plic::FieldReader &fbr) __attribute__ ((noinline));
-  explicit                FirstInterface_SmartHandle ();
-  void                    void_func                  ();
-  inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+  template<class C>
+  static FirstInterface_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
+  static FirstInterface_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
+  const Plic::TypeHashList&     _types ();
+  explicit                      FirstInterface_SmartHandle ();
+  void                          void_func                  ();
+  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 struct XFooRecord_Handle {
-  bool                    single_bool;
-  int                     single_num;
-  double                  single_float;
-  std::string             single_string;
-  int                     sibling1;
-  int                     sibling2;
-  int                     multi1;
-  int                     multi2;
-  int                     multi3;
-  int                     multi4;
-  ExtensiveEnum           enum_field;
-  FirstInterface_SmartHandle iface1;
-  FirstInterface_SmartHandle iface2;
-  FirstInterface_SmartHandle iface3;
-  inline                  XFooRecord_Handle () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
+  bool                          single_bool;
+  int                           single_num;
+  double                        single_float;
+  std::string                   single_string;
+  int                           sibling1;
+  int                           sibling2;
+  int                           multi1;
+  int                           multi2;
+  int                           multi3;
+  int                           multi4;
+  ExtensiveEnum                 enum_field;
+  FirstInterface_SmartHandle    iface1;
+  FirstInterface_SmartHandle    iface2;
+  FirstInterface_SmartHandle    iface3;
+  inline                        XFooRecord_Handle () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
 void operator<< (Plic::FieldBuffer&, const XFooRecord_Handle&);
 void operator>> (Plic::FieldReader&, XFooRecord_Handle&);
@@ -222,9 +227,9 @@ void operator<< (Plic::FieldBuffer&, const InterfaceSequence_Handle&);
 void operator>> (Plic::FieldReader&, InterfaceSequence_Handle&);
 
 struct NestedTypesRec_Handle {
-  XFooRecord_Handle       rec;
-  XFooSequence_Handle     seq;
-  inline                  NestedTypesRec_Handle () { }
+  XFooRecord_Handle             rec;
+  XFooSequence_Handle           seq;
+  inline                        NestedTypesRec_Handle () { }
 };
 void operator<< (Plic::FieldBuffer&, const NestedTypesRec_Handle&);
 void operator>> (Plic::FieldReader&, NestedTypesRec_Handle&);
@@ -250,11 +255,11 @@ typedef XFooSequence_Handle AliasSequence;
 typedef ExtensiveEnum AliasEnum;
 
 struct NewRecord_Handle {
-  int                     i;
-  Enum1                   enum1;
-  XFooSequence_Handle     xfs;
-  NestedTypesRec_Handle   ntr;
-  inline                  NewRecord_Handle () { i = 0; enum1 = Enum1 (0); }
+  int                           i;
+  Enum1                         enum1;
+  XFooSequence_Handle           xfs;
+  NestedTypesRec_Handle         ntr;
+  inline                        NewRecord_Handle () { i = 0; enum1 = Enum1 (0); }
 };
 void operator<< (Plic::FieldBuffer&, const NewRecord_Handle&);
 void operator>> (Plic::FieldReader&, NewRecord_Handle&);
@@ -262,18 +267,18 @@ void operator>> (Plic::FieldReader&, NewRecord_Handle&);
 namespace Inner {
 
 struct InnerRecord_Handle {
-  int                     x;
-  int                     y;
-  NewRecord_Handle        rec;
-  inline                  InnerRecord_Handle () { x = 0; y = 0; }
+  int                           x;
+  int                           y;
+  NewRecord_Handle              rec;
+  inline                        InnerRecord_Handle () { x = 0; y = 0; }
 };
 void operator<< (Plic::FieldBuffer&, const InnerRecord_Handle&);
 void operator>> (Plic::FieldReader&, InnerRecord_Handle&);
 } // Inner
 
 struct Refer2Inner_Handle {
-  Inner::InnerRecord_Handle r;
-  inline                  Refer2Inner_Handle () { }
+  Inner::InnerRecord_Handle     r;
+  inline                        Refer2Inner_Handle () { }
 };
 void operator<< (Plic::FieldBuffer&, const Refer2Inner_Handle&);
 void operator>> (Plic::FieldReader&, Refer2Inner_Handle&);
@@ -286,7 +291,7 @@ struct SomeRecord_Handle {
   MandatoryNamespace::NewRecord_Handle r2;
   MandatoryNamespace::Inner::InnerRecord_Handle r3;
   MandatoryNamespace::Inner::InnerRecord_Handle r4;
-  inline                  SomeRecord_Handle () { }
+  inline                        SomeRecord_Handle () { }
 };
 void operator<< (Plic::FieldBuffer&, const SomeRecord_Handle&);
 void operator>> (Plic::FieldReader&, SomeRecord_Handle&);
@@ -306,76 +311,101 @@ namespace InterfaceTests {
 class UIWidgetArea_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class UIWidgetArea.
 {
+  static UIWidgetArea_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static const Plic::TypeHash&  _type ();
 protected:
   typedef Rapicorn::Signals::SignalProxy<UIWidgetArea_SmartHandle, void ()> Signal_void_signal;
   typedef Rapicorn::Signals::SignalProxy<UIWidgetArea_SmartHandle, double (UIWidgetArea_SmartHandle &ba1, int someint)> Signal_sample_signal;
 public:
-  static UIWidgetArea_SmartHandle _new (Plic::FieldReader &fbr) __attribute__ ((noinline));
-  explicit                UIWidgetArea_SmartHandle ();
-  double                  dummy    () const;
-  void                    dummy    (double);
-  std::string             on_click () const;
-  void                    on_click (const std::string&);
-  Signal_void_signal      void_signal;
-  Signal_sample_signal    sample_signal;
-  double                  simple_method            ();
-  double                  single_arg               (int n);
-  double                  single_arg2              (int n = 5);
-  double                  two_args                 (int n,
-                                                    double r);
-  double                  two_args2                (int n = 6,
-                                                    double r = 7.7);
-  double                  multi_args               (int n,
-                                                    double r,
-                                                    int i,
-                                                    const std::string &s = "String ding",
-                                                    double y = 5);
-  double                  self_method              (UIWidgetArea_SmartHandle &ba1,
-                                                    UIWidgetArea_SmartHandle &ba2);
-  void                    void_method              ();
-  std::string             on_click2out             ();
-  void                    on_click2in              (const std::string &command);
-  inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+  template<class C>
+  static UIWidgetArea_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
+  static UIWidgetArea_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
+  const Plic::TypeHashList&     _types ();
+  explicit                      UIWidgetArea_SmartHandle ();
+  double                        dummy    () const;
+  void                          dummy    (double);
+  std::string                   on_click () const;
+  void                          on_click (const std::string&);
+  Signal_void_signal            void_signal;
+  Signal_sample_signal          sample_signal;
+  double                        simple_method            ();
+  double                        single_arg               (int n);
+  double                        single_arg2              (int n = 5);
+  double                        two_args                 (int n,
+                                                          double r);
+  double                        two_args2                (int n = 6,
+                                                          double r = 7.7);
+  double                        multi_args               (int n,
+                                                          double r,
+                                                          int i,
+                                                          const std::string &s = "String ding",
+                                                          double y = 5);
+  double                        self_method              (UIWidgetArea_SmartHandle &ba1,
+                                                          UIWidgetArea_SmartHandle &ba2);
+  void                          void_method              ();
+  std::string                   on_click2out             ();
+  void                          on_click2in              (const std::string &command);
+  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class Parent_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class Parent.
 {
+  static Parent_SmartHandle     _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static const Plic::TypeHash&  _type ();
 protected:
 public:
-  static Parent_SmartHandle _new (Plic::FieldReader &fbr) __attribute__ ((noinline));
-  explicit                Parent_SmartHandle ();
-  inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+  template<class C>
+  static Parent_SmartHandle     _cast  (C &c) { return _cast (c, c._types()); }
+  static Parent_SmartHandle     _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
+  const Plic::TypeHashList&     _types ();
+  explicit                      Parent_SmartHandle ();
+  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class Child_SmartHandle : public Parent_SmartHandle
   /// See also the corresponding IDL class Child.
 {
+  static Child_SmartHandle      _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static const Plic::TypeHash&  _type ();
 protected:
 public:
-  static Child_SmartHandle _new (Plic::FieldReader &fbr) __attribute__ ((noinline));
-  explicit                Child_SmartHandle ();
-  inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+  template<class C>
+  static Child_SmartHandle      _cast  (C &c) { return _cast (c, c._types()); }
+  static Child_SmartHandle      _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
+  const Plic::TypeHashList&     _types ();
+  explicit                      Child_SmartHandle ();
+  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class Descendant_SmartHandle : public Child_SmartHandle
   /// See also the corresponding IDL class Descendant.
 {
+  static Descendant_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static const Plic::TypeHash&  _type ();
 protected:
 public:
-  static Descendant_SmartHandle _new (Plic::FieldReader &fbr) __attribute__ ((noinline));
-  explicit                Descendant_SmartHandle ();
-  inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+  template<class C>
+  static Descendant_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
+  static Descendant_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
+  const Plic::TypeHashList&     _types ();
+  explicit                      Descendant_SmartHandle ();
+  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class GrandChild_SmartHandle : public Descendant_SmartHandle
   /// See also the corresponding IDL class GrandChild.
 {
+  static GrandChild_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static const Plic::TypeHash&  _type ();
 protected:
 public:
-  static GrandChild_SmartHandle _new (Plic::FieldReader &fbr) __attribute__ ((noinline));
-  explicit                GrandChild_SmartHandle ();
-  inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+  template<class C>
+  static GrandChild_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
+  static GrandChild_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
+  const Plic::TypeHashList&     _types ();
+  explicit                      GrandChild_SmartHandle ();
+  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 enum QuickEnum {
@@ -383,9 +413,9 @@ enum QuickEnum {
 };
 
 struct QuickRecord_Handle {
-  int                     int1;
-  int                     int2;
-  inline                  QuickRecord_Handle () { int1 = 0; int2 = 0; }
+  int                           int1;
+  int                           int2;
+  inline                        QuickRecord_Handle () { int1 = 0; int2 = 0; }
 };
 void operator<< (Plic::FieldBuffer&, const QuickRecord_Handle&);
 void operator>> (Plic::FieldReader&, QuickRecord_Handle&);
@@ -399,46 +429,58 @@ void operator>> (Plic::FieldReader&, QuickSequence_Handle&);
 class QuickIface_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class QuickIface.
 {
+  static QuickIface_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static const Plic::TypeHash&  _type ();
 protected:
 public:
-  static QuickIface_SmartHandle _new (Plic::FieldReader &fbr) __attribute__ ((noinline));
-  explicit                QuickIface_SmartHandle ();
-  void                    simple_function        (int i = 9);
-  inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+  template<class C>
+  static QuickIface_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
+  static QuickIface_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
+  const Plic::TypeHashList&     _types ();
+  explicit                      QuickIface_SmartHandle ();
+  void                          simple_function        (int i = 9);
+  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class MethodTestInterface_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class MethodTestInterface.
 {
+  static MethodTestInterface_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static const Plic::TypeHash&  _type ();
 protected:
 public:
-  static MethodTestInterface_SmartHandle _new (Plic::FieldReader &fbr) __attribute__ ((noinline));
-  explicit                MethodTestInterface_SmartHandle ();
-  void                    method_with_void                ();
-  bool                    method_with_bools               (bool input,
-                                                           bool optval = 0);
-  int                     method_with_ints                (int input,
-                                                           int optval = -2);
-  double                  method_with_floats              (double input,
-                                                           double optval = 309.9);
-  std::string             method_with_string              (const std::string &input,
-                                                           const std::string &optval = "default");
-  QuickEnum               method_with_enum                (QuickEnum input,
-                                                           QuickEnum optval = QuickEnum (0));
-  QuickRecord_Handle      method_with_record              (const QuickRecord_Handle &input,
-                                                           const QuickRecord_Handle &optval = QuickRecord_Handle());
-  QuickSequence_Handle    method_with_sequence            (const QuickSequence_Handle &input,
-                                                           const QuickSequence_Handle &optval = QuickSequence_Handle());
-  GrandChild_SmartHandle  method_with_interface           (GrandChild_SmartHandle &input,
-                                                           GrandChild_SmartHandle &optval = *(GrandChild_SmartHandle*) NULL);
-  QuickIface_SmartHandle  method_with_quickiface          (QuickIface_SmartHandle &input,
-                                                           QuickIface_SmartHandle &iface0 = *(QuickIface_SmartHandle*) NULL);
-  inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+  template<class C>
+  static MethodTestInterface_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
+  static MethodTestInterface_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
+  const Plic::TypeHashList&     _types ();
+  explicit                      MethodTestInterface_SmartHandle ();
+  void                          method_with_void                ();
+  bool                          method_with_bools               (bool input,
+                                                                 bool optval = 0);
+  int                           method_with_ints                (int input,
+                                                                 int optval = -2);
+  double                        method_with_floats              (double input,
+                                                                 double optval = 309.9);
+  std::string                   method_with_string              (const std::string &input,
+                                                                 const std::string &optval = "default");
+  QuickEnum                     method_with_enum                (QuickEnum input,
+                                                                 QuickEnum optval = QuickEnum (0));
+  QuickRecord_Handle            method_with_record              (const QuickRecord_Handle &input,
+                                                                 const QuickRecord_Handle &optval = QuickRecord_Handle());
+  QuickSequence_Handle          method_with_sequence            (const QuickSequence_Handle &input,
+                                                                 const QuickSequence_Handle &optval = QuickSequence_Handle());
+  GrandChild_SmartHandle        method_with_interface           (GrandChild_SmartHandle &input,
+                                                                 GrandChild_SmartHandle &optval = *(GrandChild_SmartHandle*) NULL);
+  QuickIface_SmartHandle        method_with_quickiface          (QuickIface_SmartHandle &input,
+                                                                 QuickIface_SmartHandle &iface0 = *(QuickIface_SmartHandle*) NULL);
+  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class SignalTestInterface_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class SignalTestInterface.
 {
+  static SignalTestInterface_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static const Plic::TypeHash&  _type ();
 protected:
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void ()> Signal_void_result;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, bool ()> Signal_bool_result;
@@ -461,57 +503,65 @@ protected:
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (GrandChild_SmartHandle &i)> Signal_interface_arg;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (SignalTestInterface_SmartHandle &self_)> Signal_self_args;
 public:
-  static SignalTestInterface_SmartHandle _new (Plic::FieldReader &fbr) __attribute__ ((noinline));
-  explicit                SignalTestInterface_SmartHandle ();
-  Signal_void_result      void_result;
-  Signal_bool_result      bool_result;
-  Signal_int_result       int_result;
-  Signal_float_result     float_result;
-  Signal_string_result    string_result;
-  Signal_enum_result      enum_result;
-  Signal_record_result    record_result;
-  Signal_sequence_result  sequence_result;
-  Signal_interface_result interface_result;
-  Signal_self_result      self_result;
-  Signal_void_arg         void_arg;
-  Signal_bool_arg         bool_arg;
-  Signal_int_arg          int_arg;
-  Signal_float_arg        float_arg;
-  Signal_string_arg       string_arg;
-  Signal_enum_arg         enum_arg;
-  Signal_record_arg       record_arg;
-  Signal_sequence_arg     sequence_arg;
-  Signal_interface_arg    interface_arg;
-  Signal_self_args        self_args;
-  inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+  template<class C>
+  static SignalTestInterface_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
+  static SignalTestInterface_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
+  const Plic::TypeHashList&     _types ();
+  explicit                      SignalTestInterface_SmartHandle ();
+  Signal_void_result            void_result;
+  Signal_bool_result            bool_result;
+  Signal_int_result             int_result;
+  Signal_float_result           float_result;
+  Signal_string_result          string_result;
+  Signal_enum_result            enum_result;
+  Signal_record_result          record_result;
+  Signal_sequence_result        sequence_result;
+  Signal_interface_result       interface_result;
+  Signal_self_result            self_result;
+  Signal_void_arg               void_arg;
+  Signal_bool_arg               bool_arg;
+  Signal_int_arg                int_arg;
+  Signal_float_arg              float_arg;
+  Signal_string_arg             string_arg;
+  Signal_enum_arg               enum_arg;
+  Signal_record_arg             record_arg;
+  Signal_sequence_arg           sequence_arg;
+  Signal_interface_arg          interface_arg;
+  Signal_self_args              self_args;
+  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class PropertyTester_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class PropertyTester.
 {
+  static PropertyTester_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static const Plic::TypeHash&  _type ();
 protected:
 public:
-  static PropertyTester_SmartHandle _new (Plic::FieldReader &fbr) __attribute__ ((noinline));
-  explicit                PropertyTester_SmartHandle ();
-  bool                    bool_prop      () const;
-  void                    bool_prop      (bool);
-  int                     int_prop       () const;
-  void                    int_prop       (int);
-  double                  float_prop     () const;
-  void                    float_prop     (double);
-  std::string             string_prop    () const;
-  void                    string_prop    (const std::string&);
-  QuickEnum               enum_prop      () const;
-  void                    enum_prop      (QuickEnum);
-  QuickRecord_Handle      record_prop    () const;
-  void                    record_prop    (const QuickRecord_Handle&);
-  QuickSequence_Handle    sequence_prop  () const;
-  void                    sequence_prop  (const QuickSequence_Handle&);
-  GrandChild_SmartHandle  interface_prop () const;
-  void                    interface_prop (GrandChild_SmartHandle);
-  PropertyTester_SmartHandle self_prop      () const;
-  void                    self_prop      (PropertyTester_SmartHandle);
-  inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+  template<class C>
+  static PropertyTester_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
+  static PropertyTester_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
+  const Plic::TypeHashList&     _types ();
+  explicit                      PropertyTester_SmartHandle ();
+  bool                          bool_prop      () const;
+  void                          bool_prop      (bool);
+  int                           int_prop       () const;
+  void                          int_prop       (int);
+  double                        float_prop     () const;
+  void                          float_prop     (double);
+  std::string                   string_prop    () const;
+  void                          string_prop    (const std::string&);
+  QuickEnum                     enum_prop      () const;
+  void                          enum_prop      (QuickEnum);
+  QuickRecord_Handle            record_prop    () const;
+  void                          record_prop    (const QuickRecord_Handle&);
+  QuickSequence_Handle          sequence_prop  () const;
+  void                          sequence_prop  (const QuickSequence_Handle&);
+  GrandChild_SmartHandle        interface_prop () const;
+  void                          interface_prop (GrandChild_SmartHandle);
+  PropertyTester_SmartHandle    self_prop      () const;
+  void                          self_prop      (PropertyTester_SmartHandle);
+  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 } // InterfaceTests
 
@@ -528,23 +578,28 @@ enum ClickType {
 class ButtonArea_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class ButtonArea.
 {
+  static ButtonArea_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static const Plic::TypeHash&  _type ();
 protected:
   typedef Rapicorn::Signals::SignalProxy<ButtonArea_SmartHandle, bool ()> Signal_check_activate;
   typedef Rapicorn::Signals::SignalProxy<ButtonArea_SmartHandle, void ()> Signal_activate;
 public:
-  static ButtonArea_SmartHandle _new (Plic::FieldReader &fbr) __attribute__ ((noinline));
-  explicit                ButtonArea_SmartHandle ();
-  std::string             on_click   () const;
-  void                    on_click   (const std::string&);
-  std::string             on_click2  () const;
-  void                    on_click2  (const std::string&);
-  std::string             on_click3  () const;
-  void                    on_click3  (const std::string&);
-  ClickType               click_type () const;
-  void                    click_type (ClickType);
-  Signal_check_activate   check_activate;
-  Signal_activate         activate;
-  inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+  template<class C>
+  static ButtonArea_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
+  static ButtonArea_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
+  const Plic::TypeHashList&     _types ();
+  explicit                      ButtonArea_SmartHandle ();
+  std::string                   on_click   () const;
+  void                          on_click   (const std::string&);
+  std::string                   on_click2  () const;
+  void                          on_click2  (const std::string&);
+  std::string                   on_click3  () const;
+  void                          on_click3  (const std::string&);
+  ClickType                     click_type () const;
+  void                          click_type (ClickType);
+  Signal_check_activate         check_activate;
+  Signal_activate               activate;
+  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 
 class PureMethods_SmartHandle;
@@ -552,12 +607,17 @@ class PureMethods_SmartHandle;
 class PureMethods_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class PureMethods.
 {
+  static PureMethods_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static const Plic::TypeHash&  _type ();
 protected:
 public:
-  static PureMethods_SmartHandle _new (Plic::FieldReader &fbr) __attribute__ ((noinline));
-  explicit                PureMethods_SmartHandle ();
-  int                     pure_method             (double f);
-  inline         operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+  template<class C>
+  static PureMethods_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
+  static PureMethods_SmartHandle _new   (Plic::FieldReader &fbr) __attribute__ ((noinline));
+  const Plic::TypeHashList&     _types ();
+  explicit                      PureMethods_SmartHandle ();
+  int                           pure_method             (double f);
+  inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 } // RapicornPlicTest
 
@@ -573,16 +633,63 @@ struct FirstInterface_Context$ : public Plic::NonCopyable {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   FirstInterface_Context$ (uint64 ipcid) :
-    handle$ (ipcid)
+    handle$ (ipcid),
+    m_cached_types (NULL)
   {
   }
+  Plic::TypeHashList *m_cached_types;
+  const Plic::TypeHashList& list_types ();
 };
+const Plic::TypeHashList&
+FirstInterface_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x3e0c8f5da9110ad8ULL, 0xea565508333a9035ULL);
+    fb.add_object (connection_handle2id (handle$));
+    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len = frr.pop_int64();
+    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    Plic::TypeHashList *thv = new Plic::TypeHashList();
+    for (size_t i = 0; i < len; i++) {
+      uint64 hashhi = frr.pop_int64();
+      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+    }
+    delete fr;
+    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
 FirstInterface_SmartHandle::FirstInterface_SmartHandle ()
 {}
 FirstInterface_SmartHandle
 FirstInterface_SmartHandle::_new (Plic::FieldReader &fbr)
 {
   return connection_id2context<FirstInterface_Context$> (fbr.pop_object())->handle$;
+}
+const Plic::TypeHash&
+FirstInterface_SmartHandle::_type()
+{
+  static const Plic::TypeHash type_hash = Plic::TypeHash (0x04be3719c81a379bULL, 0x1079454a90442f2cULL);
+  return type_hash;
+}
+FirstInterface_SmartHandle
+FirstInterface_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+{
+  size_t i; const Plic::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<FirstInterface_Context$> (connection_handle2id (other))->handle$;
+  return FirstInterface_SmartHandle();
+}
+const Plic::TypeHashList&
+FirstInterface_SmartHandle::_types()
+{
+  return connection_id2context<FirstInterface_Context$> (connection_handle2id (*this))->list_types();
 }
 void
 FirstInterface_SmartHandle::void_func ()
@@ -971,14 +1078,41 @@ struct UIWidgetArea_Context$ : public Plic::NonCopyable {
   UIWidgetArea_Context$ (uint64 ipcid) :
     handle$ (ipcid),
     void_signal (handle$),
-    sample_signal (handle$)
+    sample_signal (handle$),
+    m_cached_types (NULL)
   {
     handle$.void_signal = void_signal.signal;
     void_signal.signal.listener (void_signal, &Signal_void_signal_EventHandler$::connections_changed);
     handle$.sample_signal = sample_signal.signal;
     sample_signal.signal.listener (sample_signal, &Signal_sample_signal_EventHandler$::connections_changed);
   }
+  Plic::TypeHashList *m_cached_types;
+  const Plic::TypeHashList& list_types ();
 };
+const Plic::TypeHashList&
+UIWidgetArea_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x3b205dd851cb8a1dULL, 0x5bcddc39beffee0dULL);
+    fb.add_object (connection_handle2id (handle$));
+    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len = frr.pop_int64();
+    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    Plic::TypeHashList *thv = new Plic::TypeHashList();
+    for (size_t i = 0; i < len; i++) {
+      uint64 hashhi = frr.pop_int64();
+      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+    }
+    delete fr;
+    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
 void
 UIWidgetArea_Context$::Signal_void_signal_EventHandler$::connections_changed (bool hasconnections)
 {
@@ -1003,6 +1137,7 @@ UIWidgetArea_Context$::Signal_void_signal_EventHandler$::connections_changed (bo
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -1039,6 +1174,7 @@ UIWidgetArea_Context$::Signal_sample_signal_EventHandler$::connections_changed (
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -1065,6 +1201,26 @@ UIWidgetArea_SmartHandle
 UIWidgetArea_SmartHandle::_new (Plic::FieldReader &fbr)
 {
   return connection_id2context<UIWidgetArea_Context$> (fbr.pop_object())->handle$;
+}
+const Plic::TypeHash&
+UIWidgetArea_SmartHandle::_type()
+{
+  static const Plic::TypeHash type_hash = Plic::TypeHash (0x0c1b9195fa9a5a6cULL, 0xc1f636e721317b86ULL);
+  return type_hash;
+}
+UIWidgetArea_SmartHandle
+UIWidgetArea_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+{
+  size_t i; const Plic::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<UIWidgetArea_Context$> (connection_handle2id (other))->handle$;
+  return UIWidgetArea_SmartHandle();
+}
+const Plic::TypeHashList&
+UIWidgetArea_SmartHandle::_types()
+{
+  return connection_id2context<UIWidgetArea_Context$> (connection_handle2id (*this))->list_types();
 }
 double
 UIWidgetArea_SmartHandle::simple_method ()
@@ -1216,16 +1372,63 @@ struct Parent_Context$ : public Plic::NonCopyable {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   Parent_Context$ (uint64 ipcid) :
-    handle$ (ipcid)
+    handle$ (ipcid),
+    m_cached_types (NULL)
   {
   }
+  Plic::TypeHashList *m_cached_types;
+  const Plic::TypeHashList& list_types ();
 };
+const Plic::TypeHashList&
+Parent_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x358122a8447018eaULL, 0xf27025a07a51a48aULL);
+    fb.add_object (connection_handle2id (handle$));
+    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len = frr.pop_int64();
+    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    Plic::TypeHashList *thv = new Plic::TypeHashList();
+    for (size_t i = 0; i < len; i++) {
+      uint64 hashhi = frr.pop_int64();
+      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+    }
+    delete fr;
+    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
 Parent_SmartHandle::Parent_SmartHandle ()
 {}
 Parent_SmartHandle
 Parent_SmartHandle::_new (Plic::FieldReader &fbr)
 {
   return connection_id2context<Parent_Context$> (fbr.pop_object())->handle$;
+}
+const Plic::TypeHash&
+Parent_SmartHandle::_type()
+{
+  static const Plic::TypeHash type_hash = Plic::TypeHash (0x0d7cb4311e1f74a9ULL, 0xe1ad9d71f1c712e5ULL);
+  return type_hash;
+}
+Parent_SmartHandle
+Parent_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+{
+  size_t i; const Plic::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<Parent_Context$> (connection_handle2id (other))->handle$;
+  return Parent_SmartHandle();
+}
+const Plic::TypeHashList&
+Parent_SmartHandle::_types()
+{
+  return connection_id2context<Parent_Context$> (connection_handle2id (*this))->list_types();
 }
 
 static inline void ref   (Child_SmartHandle&) {} // dummy stub for Signal<>.emit
@@ -1236,16 +1439,63 @@ struct Child_Context$ : public Plic::NonCopyable {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   Child_Context$ (uint64 ipcid) :
-    handle$ (ipcid)
+    handle$ (ipcid),
+    m_cached_types (NULL)
   {
   }
+  Plic::TypeHashList *m_cached_types;
+  const Plic::TypeHashList& list_types ();
 };
+const Plic::TypeHashList&
+Child_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x3d9ee6a844c60394ULL, 0xd2cee7633ad091d5ULL);
+    fb.add_object (connection_handle2id (handle$));
+    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len = frr.pop_int64();
+    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    Plic::TypeHashList *thv = new Plic::TypeHashList();
+    for (size_t i = 0; i < len; i++) {
+      uint64 hashhi = frr.pop_int64();
+      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+    }
+    delete fr;
+    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
 Child_SmartHandle::Child_SmartHandle ()
 {}
 Child_SmartHandle
 Child_SmartHandle::_new (Plic::FieldReader &fbr)
 {
   return connection_id2context<Child_Context$> (fbr.pop_object())->handle$;
+}
+const Plic::TypeHash&
+Child_SmartHandle::_type()
+{
+  static const Plic::TypeHash type_hash = Plic::TypeHash (0x0a44a1b5cf26cfc0ULL, 0xcd6e05d08ba2667eULL);
+  return type_hash;
+}
+Child_SmartHandle
+Child_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+{
+  size_t i; const Plic::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<Child_Context$> (connection_handle2id (other))->handle$;
+  return Child_SmartHandle();
+}
+const Plic::TypeHashList&
+Child_SmartHandle::_types()
+{
+  return connection_id2context<Child_Context$> (connection_handle2id (*this))->list_types();
 }
 
 static inline void ref   (Descendant_SmartHandle&) {} // dummy stub for Signal<>.emit
@@ -1256,16 +1506,63 @@ struct Descendant_Context$ : public Plic::NonCopyable {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   Descendant_Context$ (uint64 ipcid) :
-    handle$ (ipcid)
+    handle$ (ipcid),
+    m_cached_types (NULL)
   {
   }
+  Plic::TypeHashList *m_cached_types;
+  const Plic::TypeHashList& list_types ();
 };
+const Plic::TypeHashList&
+Descendant_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x3a8b819b364228b8ULL, 0x9dce3529210a7700ULL);
+    fb.add_object (connection_handle2id (handle$));
+    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len = frr.pop_int64();
+    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    Plic::TypeHashList *thv = new Plic::TypeHashList();
+    for (size_t i = 0; i < len; i++) {
+      uint64 hashhi = frr.pop_int64();
+      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+    }
+    delete fr;
+    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
 Descendant_SmartHandle::Descendant_SmartHandle ()
 {}
 Descendant_SmartHandle
 Descendant_SmartHandle::_new (Plic::FieldReader &fbr)
 {
   return connection_id2context<Descendant_Context$> (fbr.pop_object())->handle$;
+}
+const Plic::TypeHash&
+Descendant_SmartHandle::_type()
+{
+  static const Plic::TypeHash type_hash = Plic::TypeHash (0x0980fc7a8521c350ULL, 0x641568ba1f461de2ULL);
+  return type_hash;
+}
+Descendant_SmartHandle
+Descendant_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+{
+  size_t i; const Plic::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<Descendant_Context$> (connection_handle2id (other))->handle$;
+  return Descendant_SmartHandle();
+}
+const Plic::TypeHashList&
+Descendant_SmartHandle::_types()
+{
+  return connection_id2context<Descendant_Context$> (connection_handle2id (*this))->list_types();
 }
 
 static inline void ref   (GrandChild_SmartHandle&) {} // dummy stub for Signal<>.emit
@@ -1276,16 +1573,63 @@ struct GrandChild_Context$ : public Plic::NonCopyable {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   GrandChild_Context$ (uint64 ipcid) :
-    handle$ (ipcid)
+    handle$ (ipcid),
+    m_cached_types (NULL)
   {
   }
+  Plic::TypeHashList *m_cached_types;
+  const Plic::TypeHashList& list_types ();
 };
+const Plic::TypeHashList&
+GrandChild_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x3aa9daa434261f37ULL, 0xa848862e429bf919ULL);
+    fb.add_object (connection_handle2id (handle$));
+    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len = frr.pop_int64();
+    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    Plic::TypeHashList *thv = new Plic::TypeHashList();
+    for (size_t i = 0; i < len; i++) {
+      uint64 hashhi = frr.pop_int64();
+      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+    }
+    delete fr;
+    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
 GrandChild_SmartHandle::GrandChild_SmartHandle ()
 {}
 GrandChild_SmartHandle
 GrandChild_SmartHandle::_new (Plic::FieldReader &fbr)
 {
   return connection_id2context<GrandChild_Context$> (fbr.pop_object())->handle$;
+}
+const Plic::TypeHash&
+GrandChild_SmartHandle::_type()
+{
+  static const Plic::TypeHash type_hash = Plic::TypeHash (0x001a87e60ed9bd66ULL, 0xfff1a96d7bab9cd9ULL);
+  return type_hash;
+}
+GrandChild_SmartHandle
+GrandChild_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+{
+  size_t i; const Plic::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<GrandChild_Context$> (connection_handle2id (other))->handle$;
+  return GrandChild_SmartHandle();
+}
+const Plic::TypeHashList&
+GrandChild_SmartHandle::_types()
+{
+  return connection_id2context<GrandChild_Context$> (connection_handle2id (*this))->list_types();
 }
 void
 operator<< (Plic::FieldBuffer &dst, const QuickRecord_Handle &self)
@@ -1330,16 +1674,63 @@ struct QuickIface_Context$ : public Plic::NonCopyable {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   QuickIface_Context$ (uint64 ipcid) :
-    handle$ (ipcid)
+    handle$ (ipcid),
+    m_cached_types (NULL)
   {
   }
+  Plic::TypeHashList *m_cached_types;
+  const Plic::TypeHashList& list_types ();
 };
+const Plic::TypeHashList&
+QuickIface_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x3ceafdc3043b707dULL, 0xf30106bb4338c235ULL);
+    fb.add_object (connection_handle2id (handle$));
+    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len = frr.pop_int64();
+    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    Plic::TypeHashList *thv = new Plic::TypeHashList();
+    for (size_t i = 0; i < len; i++) {
+      uint64 hashhi = frr.pop_int64();
+      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+    }
+    delete fr;
+    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
 QuickIface_SmartHandle::QuickIface_SmartHandle ()
 {}
 QuickIface_SmartHandle
 QuickIface_SmartHandle::_new (Plic::FieldReader &fbr)
 {
   return connection_id2context<QuickIface_Context$> (fbr.pop_object())->handle$;
+}
+const Plic::TypeHash&
+QuickIface_SmartHandle::_type()
+{
+  static const Plic::TypeHash type_hash = Plic::TypeHash (0x0ce40c896cfa0177ULL, 0x5ab6faf97ff6fed2ULL);
+  return type_hash;
+}
+QuickIface_SmartHandle
+QuickIface_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+{
+  size_t i; const Plic::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<QuickIface_Context$> (connection_handle2id (other))->handle$;
+  return QuickIface_SmartHandle();
+}
+const Plic::TypeHashList&
+QuickIface_SmartHandle::_types()
+{
+  return connection_id2context<QuickIface_Context$> (connection_handle2id (*this))->list_types();
 }
 void
 QuickIface_SmartHandle::simple_function (int arg_i)
@@ -1359,16 +1750,63 @@ struct MethodTestInterface_Context$ : public Plic::NonCopyable {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   MethodTestInterface_Context$ (uint64 ipcid) :
-    handle$ (ipcid)
+    handle$ (ipcid),
+    m_cached_types (NULL)
   {
   }
+  Plic::TypeHashList *m_cached_types;
+  const Plic::TypeHashList& list_types ();
 };
+const Plic::TypeHashList&
+MethodTestInterface_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x363e0b9e750bbbe2ULL, 0x8b5953ab5fb23a59ULL);
+    fb.add_object (connection_handle2id (handle$));
+    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len = frr.pop_int64();
+    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    Plic::TypeHashList *thv = new Plic::TypeHashList();
+    for (size_t i = 0; i < len; i++) {
+      uint64 hashhi = frr.pop_int64();
+      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+    }
+    delete fr;
+    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
 MethodTestInterface_SmartHandle::MethodTestInterface_SmartHandle ()
 {}
 MethodTestInterface_SmartHandle
 MethodTestInterface_SmartHandle::_new (Plic::FieldReader &fbr)
 {
   return connection_id2context<MethodTestInterface_Context$> (fbr.pop_object())->handle$;
+}
+const Plic::TypeHash&
+MethodTestInterface_SmartHandle::_type()
+{
+  static const Plic::TypeHash type_hash = Plic::TypeHash (0x03befccd5d5ee8d5ULL, 0x7f1f65a869ad267fULL);
+  return type_hash;
+}
+MethodTestInterface_SmartHandle
+MethodTestInterface_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+{
+  size_t i; const Plic::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<MethodTestInterface_Context$> (connection_handle2id (other))->handle$;
+  return MethodTestInterface_SmartHandle();
+}
+const Plic::TypeHashList&
+MethodTestInterface_SmartHandle::_types()
+{
+  return connection_id2context<MethodTestInterface_Context$> (connection_handle2id (*this))->list_types();
 }
 void
 MethodTestInterface_SmartHandle::method_with_void ()
@@ -1753,7 +2191,8 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     record_arg (handle$),
     sequence_arg (handle$),
     interface_arg (handle$),
-    self_args (handle$)
+    self_args (handle$),
+    m_cached_types (NULL)
   {
     handle$.void_result = void_result.signal;
     void_result.signal.listener (void_result, &Signal_void_result_EventHandler$::connections_changed);
@@ -1796,7 +2235,33 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     handle$.self_args = self_args.signal;
     self_args.signal.listener (self_args, &Signal_self_args_EventHandler$::connections_changed);
   }
+  Plic::TypeHashList *m_cached_types;
+  const Plic::TypeHashList& list_types ();
 };
+const Plic::TypeHashList&
+SignalTestInterface_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x3b2248e8e9d4ff05ULL, 0xda71e710449d85dfULL);
+    fb.add_object (connection_handle2id (handle$));
+    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len = frr.pop_int64();
+    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    Plic::TypeHashList *thv = new Plic::TypeHashList();
+    for (size_t i = 0; i < len; i++) {
+      uint64 hashhi = frr.pop_int64();
+      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+    }
+    delete fr;
+    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
 void
 SignalTestInterface_Context$::Signal_void_result_EventHandler$::connections_changed (bool hasconnections)
 {
@@ -1821,6 +2286,7 @@ SignalTestInterface_Context$::Signal_void_result_EventHandler$::connections_chan
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -1857,6 +2323,7 @@ SignalTestInterface_Context$::Signal_bool_result_EventHandler$::connections_chan
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -1895,6 +2362,7 @@ SignalTestInterface_Context$::Signal_int_result_EventHandler$::connections_chang
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -1933,6 +2401,7 @@ SignalTestInterface_Context$::Signal_float_result_EventHandler$::connections_cha
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -1971,6 +2440,7 @@ SignalTestInterface_Context$::Signal_string_result_EventHandler$::connections_ch
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -2009,6 +2479,7 @@ SignalTestInterface_Context$::Signal_enum_result_EventHandler$::connections_chan
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -2047,6 +2518,7 @@ SignalTestInterface_Context$::Signal_record_result_EventHandler$::connections_ch
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -2085,6 +2557,7 @@ SignalTestInterface_Context$::Signal_sequence_result_EventHandler$::connections_
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -2123,6 +2596,7 @@ SignalTestInterface_Context$::Signal_interface_result_EventHandler$::connections
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -2161,6 +2635,7 @@ SignalTestInterface_Context$::Signal_self_result_EventHandler$::connections_chan
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -2199,6 +2674,7 @@ SignalTestInterface_Context$::Signal_void_arg_EventHandler$::connections_changed
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -2235,6 +2711,7 @@ SignalTestInterface_Context$::Signal_bool_arg_EventHandler$::connections_changed
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -2272,6 +2749,7 @@ SignalTestInterface_Context$::Signal_int_arg_EventHandler$::connections_changed 
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -2309,6 +2787,7 @@ SignalTestInterface_Context$::Signal_float_arg_EventHandler$::connections_change
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -2346,6 +2825,7 @@ SignalTestInterface_Context$::Signal_string_arg_EventHandler$::connections_chang
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -2383,6 +2863,7 @@ SignalTestInterface_Context$::Signal_enum_arg_EventHandler$::connections_changed
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -2420,6 +2901,7 @@ SignalTestInterface_Context$::Signal_record_arg_EventHandler$::connections_chang
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -2458,6 +2940,7 @@ SignalTestInterface_Context$::Signal_sequence_arg_EventHandler$::connections_cha
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -2496,6 +2979,7 @@ SignalTestInterface_Context$::Signal_interface_arg_EventHandler$::connections_ch
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -2533,6 +3017,7 @@ SignalTestInterface_Context$::Signal_self_args_EventHandler$::connections_change
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -2592,6 +3077,26 @@ SignalTestInterface_SmartHandle
 SignalTestInterface_SmartHandle::_new (Plic::FieldReader &fbr)
 {
   return connection_id2context<SignalTestInterface_Context$> (fbr.pop_object())->handle$;
+}
+const Plic::TypeHash&
+SignalTestInterface_SmartHandle::_type()
+{
+  static const Plic::TypeHash type_hash = Plic::TypeHash (0x0acc338edd01a172ULL, 0x27c5f8854a5f9458ULL);
+  return type_hash;
+}
+SignalTestInterface_SmartHandle
+SignalTestInterface_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+{
+  size_t i; const Plic::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (other))->handle$;
+  return SignalTestInterface_SmartHandle();
+}
+const Plic::TypeHashList&
+SignalTestInterface_SmartHandle::_types()
+{
+  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->list_types();
 }
 bool
 PropertyTester_SmartHandle::bool_prop () const
@@ -2811,16 +3316,63 @@ struct PropertyTester_Context$ : public Plic::NonCopyable {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   PropertyTester_Context$ (uint64 ipcid) :
-    handle$ (ipcid)
+    handle$ (ipcid),
+    m_cached_types (NULL)
   {
   }
+  Plic::TypeHashList *m_cached_types;
+  const Plic::TypeHashList& list_types ();
 };
+const Plic::TypeHashList&
+PropertyTester_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x33ed5186814fd96fULL, 0x2db9aae41d7f688cULL);
+    fb.add_object (connection_handle2id (handle$));
+    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len = frr.pop_int64();
+    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    Plic::TypeHashList *thv = new Plic::TypeHashList();
+    for (size_t i = 0; i < len; i++) {
+      uint64 hashhi = frr.pop_int64();
+      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+    }
+    delete fr;
+    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
 PropertyTester_SmartHandle::PropertyTester_SmartHandle ()
 {}
 PropertyTester_SmartHandle
 PropertyTester_SmartHandle::_new (Plic::FieldReader &fbr)
 {
   return connection_id2context<PropertyTester_Context$> (fbr.pop_object())->handle$;
+}
+const Plic::TypeHash&
+PropertyTester_SmartHandle::_type()
+{
+  static const Plic::TypeHash type_hash = Plic::TypeHash (0x0de89d5c207bc662ULL, 0x846800e315917b46ULL);
+  return type_hash;
+}
+PropertyTester_SmartHandle
+PropertyTester_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+{
+  size_t i; const Plic::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<PropertyTester_Context$> (connection_handle2id (other))->handle$;
+  return PropertyTester_SmartHandle();
+}
+const Plic::TypeHashList&
+PropertyTester_SmartHandle::_types()
+{
+  return connection_id2context<PropertyTester_Context$> (connection_handle2id (*this))->list_types();
 }
 } // InterfaceTests
 
@@ -2948,14 +3500,41 @@ struct ButtonArea_Context$ : public Plic::NonCopyable {
   ButtonArea_Context$ (uint64 ipcid) :
     handle$ (ipcid),
     check_activate (handle$),
-    activate (handle$)
+    activate (handle$),
+    m_cached_types (NULL)
   {
     handle$.check_activate = check_activate.signal;
     check_activate.signal.listener (check_activate, &Signal_check_activate_EventHandler$::connections_changed);
     handle$.activate = activate.signal;
     activate.signal.listener (activate, &Signal_activate_EventHandler$::connections_changed);
   }
+  Plic::TypeHashList *m_cached_types;
+  const Plic::TypeHashList& list_types ();
 };
+const Plic::TypeHashList&
+ButtonArea_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x3416c0fa53fb9e4bULL, 0xca6572c6a964739bULL);
+    fb.add_object (connection_handle2id (handle$));
+    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len = frr.pop_int64();
+    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    Plic::TypeHashList *thv = new Plic::TypeHashList();
+    for (size_t i = 0; i < len; i++) {
+      uint64 hashhi = frr.pop_int64();
+      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+    }
+    delete fr;
+    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
 void
 ButtonArea_Context$::Signal_check_activate_EventHandler$::connections_changed (bool hasconnections)
 {
@@ -2980,6 +3559,7 @@ ButtonArea_Context$::Signal_check_activate_EventHandler$::connections_changed (b
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -3018,6 +3598,7 @@ ButtonArea_Context$::Signal_activate_EventHandler$::connections_changed (bool ha
     frr.skip_msgid(); // FIXME: msgid for return?
     if (frr.remaining() && m_handler_id)
       m_connection_id = frr.pop_int64();
+    delete fr;
   }
 }
 Plic::FieldBuffer*
@@ -3041,6 +3622,26 @@ ButtonArea_SmartHandle::_new (Plic::FieldReader &fbr)
 {
   return connection_id2context<ButtonArea_Context$> (fbr.pop_object())->handle$;
 }
+const Plic::TypeHash&
+ButtonArea_SmartHandle::_type()
+{
+  static const Plic::TypeHash type_hash = Plic::TypeHash (0x0dcb7c084481f495ULL, 0x58f43abd0dd694eaULL);
+  return type_hash;
+}
+ButtonArea_SmartHandle
+ButtonArea_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+{
+  size_t i; const Plic::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<ButtonArea_Context$> (connection_handle2id (other))->handle$;
+  return ButtonArea_SmartHandle();
+}
+const Plic::TypeHashList&
+ButtonArea_SmartHandle::_types()
+{
+  return connection_id2context<ButtonArea_Context$> (connection_handle2id (*this))->list_types();
+}
 
 static inline void ref   (PureMethods_SmartHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (PureMethods_SmartHandle&) {} // dummy stub for Signal<>.emit
@@ -3050,16 +3651,63 @@ struct PureMethods_Context$ : public Plic::NonCopyable {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   PureMethods_Context$ (uint64 ipcid) :
-    handle$ (ipcid)
+    handle$ (ipcid),
+    m_cached_types (NULL)
   {
   }
+  Plic::TypeHashList *m_cached_types;
+  const Plic::TypeHashList& list_types ();
 };
+const Plic::TypeHashList&
+PureMethods_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x3f8c1b3ea1e0fd3cULL, 0x53f8ae50709fadc0ULL);
+    fb.add_object (connection_handle2id (handle$));
+    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len = frr.pop_int64();
+    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    Plic::TypeHashList *thv = new Plic::TypeHashList();
+    for (size_t i = 0; i < len; i++) {
+      uint64 hashhi = frr.pop_int64();
+      thv->push_back (Plic::TypeHash (hashhi, frr.pop_int64()));
+    }
+    delete fr;
+    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
 PureMethods_SmartHandle::PureMethods_SmartHandle ()
 {}
 PureMethods_SmartHandle
 PureMethods_SmartHandle::_new (Plic::FieldReader &fbr)
 {
   return connection_id2context<PureMethods_Context$> (fbr.pop_object())->handle$;
+}
+const Plic::TypeHash&
+PureMethods_SmartHandle::_type()
+{
+  static const Plic::TypeHash type_hash = Plic::TypeHash (0x0364646bccfb6bbcULL, 0x37b842dacad68d00ULL);
+  return type_hash;
+}
+PureMethods_SmartHandle
+PureMethods_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+{
+  size_t i; const Plic::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<PureMethods_Context$> (connection_handle2id (other))->handle$;
+  return PureMethods_SmartHandle();
+}
+const Plic::TypeHashList&
+PureMethods_SmartHandle::_types()
+{
+  return connection_id2context<PureMethods_Context$> (connection_handle2id (*this))->list_types();
 }
 int
 PureMethods_SmartHandle::pure_method (double arg_f)
