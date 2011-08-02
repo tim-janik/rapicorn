@@ -265,9 +265,9 @@ FieldBuffer::new_error (const String &msg,
 }
 
 FieldBuffer*
-FieldBuffer::new_result()
+FieldBuffer::new_result (uint n)
 {
-  FieldBuffer *fr = FieldBuffer::_new (2 + 1);
+  FieldBuffer *fr = FieldBuffer::_new (2 + n);
   const uint64 MSGID_RESULT_MASK = 0x9000000000000000ULL;
   fr->add_msgid (MSGID_RESULT_MASK, 0); // FIXME: needs original message
   return fr;
@@ -300,33 +300,27 @@ FieldBuffer::_new (uint _ntypes)
 }
 
 // === Connection ===
-struct Hash128 {
-  uint64 hashes[2];
-  inline      Hash128 (uint64 h, uint64 l) { hashes[0] = h; hashes[1] = l; }
-  inline bool operator< (const Hash128 &other) const
-  {
-    if (PLIC_UNLIKELY (hashes[0] == other.hashes[0]))
-      return hashes[1] < other.hashes[1];
-    else
-      return hashes[0] < other.hashes[0];
-  }
-};
-typedef std::map<Hash128, DispatchFunc> DispatcherMap;
-static DispatcherMap                    dispatcher_map;
-static pthread_mutex_t                  dispatcher_mutex = PTHREAD_MUTEX_INITIALIZER;
-static bool                             dispatcher_map_locked = false;
+static inline bool
+operator< (const TypeHash &a, const TypeHash &b)
+{
+  return PLIC_UNLIKELY (a.typehi == b.typehi) ? a.typelo < b.typelo : a.typehi < b.typehi;
+}
+typedef std::map<TypeHash, DispatchFunc> DispatcherMap;
+static DispatcherMap                     dispatcher_map;
+static pthread_mutex_t                   dispatcher_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool                              dispatcher_map_locked = false;
 
 DispatchFunc
-Connection::find_method (uint64 hashhi, uint64 hashlow)
+Connection::find_method (uint64 hashhi, uint64 hashlo)
 {
-  Hash128 hash128 (hashhi, hashlow);
+  TypeHash typehash (hashhi, hashlo);
 #if 1 // avoid costly mutex locking
   if (PLIC_UNLIKELY (dispatcher_map_locked == false))
     dispatcher_map_locked = true;
-  return dispatcher_map[hash128];
+  return dispatcher_map[typehash];
 #else
   pthread_mutex_lock (&dispatcher_mutex);
-  DispatchFunc dispatcher_func = dispatcher_map[hash128];
+  DispatchFunc dispatcher_func = dispatcher_map[typehash];
   pthread_mutex_unlock (&dispatcher_mutex);
   return dispatcher_func;
 #endif
@@ -338,8 +332,8 @@ Connection::MethodRegistry::register_method (const MethodEntry &mentry)
   PLIC_THROW_IF_FAIL (dispatcher_map_locked == false);
   pthread_mutex_lock (&dispatcher_mutex);
   DispatcherMap::size_type size_before = dispatcher_map.size();
-  Hash128 hash128 (mentry.hashhi, mentry.hashlow);
-  dispatcher_map[hash128] = mentry.dispatcher;
+  TypeHash typehash (mentry.hashhi, mentry.hashlo);
+  dispatcher_map[typehash] = mentry.dispatcher;
   DispatcherMap::size_type size_after = dispatcher_map.size();
   pthread_mutex_unlock (&dispatcher_mutex);
   // simple hash collision check (sanity check, see below)
@@ -348,7 +342,7 @@ Connection::MethodRegistry::register_method (const MethodEntry &mentry)
       errno = EKEYREJECTED;
       perror (string_printf ("%s:%u: Plic::Connection::MethodRegistry::register_method: "
                              "duplicate hash registration (%016llx%016llx)",
-                             __FILE__, __LINE__, mentry.hashhi, mentry.hashlow).c_str());
+                             __FILE__, __LINE__, mentry.hashhi, mentry.hashlo).c_str());
       abort();
     }
   /* Two 64 bit ints are used for IPC message IDs. The upper four bits encode the

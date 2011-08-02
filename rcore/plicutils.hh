@@ -35,7 +35,7 @@ using std::tr1::weak_ptr;
 #endif
 #define PLIC_LIKELY             PLIC_ISLIKELY
 
-/* === Standard Types === */
+// == Standard Types ==
 typedef std::string String;
 using std::vector;
 typedef int8_t                 int8;
@@ -46,7 +46,7 @@ typedef uint32_t               uint;
 typedef signed long long int   int64; // int64_t is a long on AMD64 which breaks printf
 typedef unsigned long long int uint64; // int64_t is a long on AMD64 which breaks printf
 
-/* === Forward Declarations === */
+// == Type Declarations ==
 class SimpleServer;
 class Connection;
 union FieldUnion;
@@ -54,12 +54,24 @@ class FieldBuffer;
 class FieldReader;
 typedef FieldBuffer* (*DispatchFunc) (FieldReader&);
 
+// == Type Hash ==
+struct TypeHash {
+  uint64 typehi, typelo;
+  explicit    TypeHash   (uint64 hi, uint64 lo) : typehi (hi), typelo (lo) {}
+  explicit    TypeHash   () : typehi (0), typelo (0) {}
+  inline bool operator== (const TypeHash &z) const { return typehi == z.typehi && typelo == z.typelo; }
+};
+typedef std::vector<TypeHash> TypeHashList;
+
 // === Utilities ===
+template<class V> inline
+bool    atomic_ptr_cas  (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
 void    error_printf    (const char *format, ...) PLIC_PRINTF (1, 2);
 void    error_vprintf   (const char *format, va_list args);
 
 // === Message IDs ===
 enum MessageId {
+  MSGID_NONE        = 0,
   MSGID_ONEWAY      = 0x2000000000000000ULL,      ///< One-way method call ID (void return).
   MSGID_TWOWAY      = 0x3000000000000000ULL,      ///< Two-way method call ID, returns result message.
   MSGID_DISCON      = 0x4000000000000000ULL,      ///< Signal handler disconnection ID.
@@ -164,7 +176,7 @@ public:
   String              to_string() const;
   static FieldBuffer* _new (uint _ntypes); // Heap allocated FieldBuffer
   static FieldBuffer* new_error (const String &msg, const String &domain = "");
-  static FieldBuffer* new_result();
+  static FieldBuffer* new_result (uint n = 1);
 };
 
 class FieldBuffer8 : public FieldBuffer { // Stack contained buffer for up to 8 fields
@@ -231,7 +243,7 @@ public: /// @name API for event handler bookkeeping
   virtual EventHandler* find_event_handler     (uint64 handler_id) = 0; ///< Find event handler by id.
   virtual bool          delete_event_handler   (uint64 handler_id) = 0; ///< Delete a registered event handler, returns success.
 public: /// @name Registry for IPC method lookups
-  struct MethodEntry    { uint64 hashhi, hashlow; DispatchFunc dispatcher; };
+  struct MethodEntry    { uint64 hashhi, hashlo; DispatchFunc dispatcher; };
   struct MethodRegistry                                  /// Registry structure for IPC method stubs.
   {
     template<class T, size_t S> MethodRegistry  (T (&static_const_entries)[S])
