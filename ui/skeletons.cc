@@ -2,12 +2,3 @@
 
 // --- Interface Skeletons ---
 
-namespace Rapicorn {
-
-bool
-Rapicorn::ApplicationIface::finishable ()
-{
-  return 0;
-}
-} // Rapicorn
-
