@@ -70,6 +70,7 @@ protected:
   void          remove_source_Lm (Source *source);
   void          kill_sources_Lm  (void);
   void          unpoll_sources_U    ();
+  void          collect_sources_Lm  (State&);
   bool          prepare_sources_Lm  (State&, int64*, vector<PollFD>&);
   bool          check_sources_Lm    (State&, const vector<PollFD>&);
   Source*       dispatch_source_Lm  (State&);
@@ -160,7 +161,7 @@ private: LockHooks  m_lock_hooks;
 // === EventLoop::State ===
 struct EventLoop::State {
   uint64 current_time_usecs;
-  bool   seen_primary; ///< Useful hint for primary presence during check()
+  bool   seen_primary; ///< Useful as hint for primary source presence, MainLoop::finishable() checks exhaustively
   State();
 };
 

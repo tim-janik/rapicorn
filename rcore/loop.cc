@@ -473,15 +473,13 @@ EventLoop::unpoll_sources_U() // must be unlocked!
 
 static const int64 supraint_priobase = 2147483648LL; // INT32_MAX + 1, above all possible int32 values
 
-bool
-EventLoop::prepare_sources_Lm (State          &state,
-                               int64          *timeout_usecs,
-                               vector<PollFD> &pfds)
+void
+EventLoop::collect_sources_Lm (State &state)
 {
-  Mutex &main_mutex = m_main_loop.mutex();
   // enforce clean slate
-  if (!m_poll_sources.empty())
+  if (UNLIKELY (!m_poll_sources.empty()))
     {
+      Mutex &main_mutex = m_main_loop.mutex();
       main_mutex.unlock();
       unpoll_sources_U(); // unlocked
       main_mutex.lock();
@@ -516,6 +514,14 @@ EventLoop::prepare_sources_Lm (State          &state,
   poll_candidates.resize (j);
   m_poll_sources.swap (poll_candidates);                // ref()ed sources <= dispatch priority
   assert (poll_candidates.empty());
+}
+
+bool
+EventLoop::prepare_sources_Lm (State          &state,
+                               int64          *timeout_usecs,
+                               vector<PollFD> &pfds)
+{
+  Mutex &main_mutex = m_main_loop.mutex();
   // prepare sources, up to NEEDS_DISPATCH priority
   for (SourceList::iterator lit = m_poll_sources.begin(); lit != m_poll_sources.end(); lit++)
     {
@@ -641,8 +647,11 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   bool dispatchable[nloops];
   for (size_t i = 0; i < nloops; i++)
     loops[i] = ref (m_loops[i]);
-  // prepare
+  // collect
   state.seen_primary = false;
+  for (uint i = 0; i < nloops; i++)
+    loops[i]->collect_sources_Lm (state);
+  // prepare
   state.current_time_usecs = timestamp_realtime();
   for (uint i = 0; i < nloops; i++)
     {
