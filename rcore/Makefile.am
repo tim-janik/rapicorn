@@ -56,6 +56,10 @@ librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 ) # set libtool version and export symbols for resolving
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
 
+# == Optimization Targets ==
+OPTIMIZE_SOURCE_FILES = loop.cc
+CXXFLAGS += $(patsubst %, -O3 -minline-all-stringops -finline-functions, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
+
 # keep this .o rule in sync with the corresponding .la rule from Makefile.in
 librapicorncore@RAPICORN_RELEASE@.o: $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
 	$(CXXLINK) -rpath $(libdir) $(librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS) $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS) # $(librapicorncore@RAPICORN_RELEASE@_la_LIBADD) $(LIBS)
