@@ -632,19 +632,19 @@ namespace MandatoryNamespace {
 I_FirstInterface_Interface::I_FirstInterface_Interface ()
 {}
 I_FirstInterface_Interface::~I_FirstInterface_Interface () {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_FirstInterface_Interface &obj)
 {
   fb.add_object (connection_object2id (&obj));
   return fb;
 }
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_FirstInterface_Interface *obj)
 {
   fb.add_object (connection_object2id (obj));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, I_FirstInterface_Interface* &obj)
 {
   obj = connection_id2object<I_FirstInterface_Interface> (fbr.pop_object());
@@ -992,19 +992,19 @@ I_UIWidgetArea_Interface::I_UIWidgetArea_Interface () :
   sig_void_signal (*this), sig_sample_signal (*this)
 {}
 I_UIWidgetArea_Interface::~I_UIWidgetArea_Interface () {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_UIWidgetArea_Interface &obj)
 {
   fb.add_object (connection_object2id (&obj));
   return fb;
 }
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_UIWidgetArea_Interface *obj)
 {
   fb.add_object (connection_object2id (obj));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, I_UIWidgetArea_Interface* &obj)
 {
   obj = connection_id2object<I_UIWidgetArea_Interface> (fbr.pop_object());
@@ -1019,19 +1019,19 @@ I_UIWidgetArea_Interface::_list_types (Plic::TypeHashList &thl) const
 I_Parent_Interface::I_Parent_Interface ()
 {}
 I_Parent_Interface::~I_Parent_Interface () {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_Parent_Interface &obj)
 {
   fb.add_object (connection_object2id (&obj));
   return fb;
 }
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_Parent_Interface *obj)
 {
   fb.add_object (connection_object2id (obj));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, I_Parent_Interface* &obj)
 {
   obj = connection_id2object<I_Parent_Interface> (fbr.pop_object());
@@ -1046,19 +1046,19 @@ I_Parent_Interface::_list_types (Plic::TypeHashList &thl) const
 I_Child_Interface::I_Child_Interface ()
 {}
 I_Child_Interface::~I_Child_Interface () {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_Child_Interface &obj)
 {
   fb.add_object (connection_object2id (&obj));
   return fb;
 }
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_Child_Interface *obj)
 {
   fb.add_object (connection_object2id (obj));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, I_Child_Interface* &obj)
 {
   obj = connection_id2object<I_Child_Interface> (fbr.pop_object());
@@ -1074,19 +1074,19 @@ I_Child_Interface::_list_types (Plic::TypeHashList &thl) const
 I_Descendant_Interface::I_Descendant_Interface ()
 {}
 I_Descendant_Interface::~I_Descendant_Interface () {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_Descendant_Interface &obj)
 {
   fb.add_object (connection_object2id (&obj));
   return fb;
 }
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_Descendant_Interface *obj)
 {
   fb.add_object (connection_object2id (obj));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, I_Descendant_Interface* &obj)
 {
   obj = connection_id2object<I_Descendant_Interface> (fbr.pop_object());
@@ -1103,19 +1103,19 @@ I_Descendant_Interface::_list_types (Plic::TypeHashList &thl) const
 I_GrandChild_Interface::I_GrandChild_Interface ()
 {}
 I_GrandChild_Interface::~I_GrandChild_Interface () {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_GrandChild_Interface &obj)
 {
   fb.add_object (connection_object2id (&obj));
   return fb;
 }
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_GrandChild_Interface *obj)
 {
   fb.add_object (connection_object2id (obj));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, I_GrandChild_Interface* &obj)
 {
   obj = connection_id2object<I_GrandChild_Interface> (fbr.pop_object());
@@ -1171,19 +1171,19 @@ operator>> (Plic::FieldReader &src, QuickSequenceImpl &self)
 I_QuickIface_Interface::I_QuickIface_Interface ()
 {}
 I_QuickIface_Interface::~I_QuickIface_Interface () {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_QuickIface_Interface &obj)
 {
   fb.add_object (connection_object2id (&obj));
   return fb;
 }
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_QuickIface_Interface *obj)
 {
   fb.add_object (connection_object2id (obj));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, I_QuickIface_Interface* &obj)
 {
   obj = connection_id2object<I_QuickIface_Interface> (fbr.pop_object());
@@ -1198,19 +1198,19 @@ I_QuickIface_Interface::_list_types (Plic::TypeHashList &thl) const
 I_MethodTestInterface_Interface::I_MethodTestInterface_Interface ()
 {}
 I_MethodTestInterface_Interface::~I_MethodTestInterface_Interface () {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_MethodTestInterface_Interface &obj)
 {
   fb.add_object (connection_object2id (&obj));
   return fb;
 }
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_MethodTestInterface_Interface *obj)
 {
   fb.add_object (connection_object2id (obj));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, I_MethodTestInterface_Interface* &obj)
 {
   obj = connection_id2object<I_MethodTestInterface_Interface> (fbr.pop_object());
@@ -1226,19 +1226,19 @@ I_SignalTestInterface_Interface::I_SignalTestInterface_Interface () :
   sig_void_result (*this), sig_bool_result (*this), sig_int_result (*this), sig_float_result (*this), sig_string_result (*this), sig_enum_result (*this), sig_record_result (*this), sig_sequence_result (*this), sig_interface_result (*this), sig_self_result (*this), sig_void_arg (*this), sig_bool_arg (*this), sig_int_arg (*this), sig_float_arg (*this), sig_string_arg (*this), sig_enum_arg (*this), sig_record_arg (*this), sig_sequence_arg (*this), sig_interface_arg (*this), sig_self_args (*this)
 {}
 I_SignalTestInterface_Interface::~I_SignalTestInterface_Interface () {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_SignalTestInterface_Interface &obj)
 {
   fb.add_object (connection_object2id (&obj));
   return fb;
 }
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_SignalTestInterface_Interface *obj)
 {
   fb.add_object (connection_object2id (obj));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, I_SignalTestInterface_Interface* &obj)
 {
   obj = connection_id2object<I_SignalTestInterface_Interface> (fbr.pop_object());
@@ -1253,19 +1253,19 @@ I_SignalTestInterface_Interface::_list_types (Plic::TypeHashList &thl) const
 I_PropertyTester_Interface::I_PropertyTester_Interface ()
 {}
 I_PropertyTester_Interface::~I_PropertyTester_Interface () {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_PropertyTester_Interface &obj)
 {
   fb.add_object (connection_object2id (&obj));
   return fb;
 }
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_PropertyTester_Interface *obj)
 {
   fb.add_object (connection_object2id (obj));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, I_PropertyTester_Interface* &obj)
 {
   obj = connection_id2object<I_PropertyTester_Interface> (fbr.pop_object());
@@ -1284,19 +1284,19 @@ I_ButtonArea_Interface::I_ButtonArea_Interface () :
   sig_check_activate (*this), sig_activate (*this)
 {}
 I_ButtonArea_Interface::~I_ButtonArea_Interface () {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_ButtonArea_Interface &obj)
 {
   fb.add_object (connection_object2id (&obj));
   return fb;
 }
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_ButtonArea_Interface *obj)
 {
   fb.add_object (connection_object2id (obj));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, I_ButtonArea_Interface* &obj)
 {
   obj = connection_id2object<I_ButtonArea_Interface> (fbr.pop_object());
@@ -1311,19 +1311,19 @@ I_ButtonArea_Interface::_list_types (Plic::TypeHashList &thl) const
 I_PureMethods_Interface::I_PureMethods_Interface ()
 {}
 I_PureMethods_Interface::~I_PureMethods_Interface () {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_PureMethods_Interface &obj)
 {
   fb.add_object (connection_object2id (&obj));
   return fb;
 }
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, I_PureMethods_Interface *obj)
 {
   fb.add_object (connection_object2id (obj));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, I_PureMethods_Interface* &obj)
 {
   obj = connection_id2object<I_PureMethods_Interface> (fbr.pop_object());

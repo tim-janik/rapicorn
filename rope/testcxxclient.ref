@@ -665,9 +665,9 @@ Plic::FieldReader& operator>> (Plic::FieldReader&, PureMethods_SmartHandle&);
 
 namespace MandatoryNamespace {
 
+// === FirstInterface ===
 static inline void ref   (FirstInterface_SmartHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (FirstInterface_SmartHandle&) {} // dummy stub for Signal<>.emit
-// === FirstInterface ===
 struct FirstInterface_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public FirstInterface_SmartHandle {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
@@ -708,13 +708,13 @@ FirstInterface_Context$::list_types ()
 }
 FirstInterface_SmartHandle::FirstInterface_SmartHandle ()
 {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, const FirstInterface_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, FirstInterface_SmartHandle &handle)
 {
   handle = connection_id2context<FirstInterface_Context$> (fbr.pop_object())->handle$;
@@ -1080,58 +1080,10 @@ operator>> (Plic::FieldReader &src, SomeRecord_Handle &self)
 } // OtherNamespace
 
 namespace InterfaceTests {
-double
-UIWidgetArea_SmartHandle::dummy () const
-{
-  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x39146750080bd117ULL, 0x9edc3ab3b5e82e8dULL);
-  fb << (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  Plic::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
-  double  retval;
-  frr >> retval;
-  delete fr;
-  return retval;
-}
-void
-UIWidgetArea_SmartHandle::dummy (double value)
-{
-  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2a284d0b5305ac3aULL, 0xd98a1d86235ad649ULL); // msgid
-  fb << (*this);
-  fb << value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  if (fr) delete fr;
-}
-std::string
-UIWidgetArea_SmartHandle::on_click () const
-{
-  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x37b8129e6139dfaeULL, 0xece65fb7aeda0163ULL);
-  fb << (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  Plic::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
-  std::string  retval;
-  frr >> retval;
-  delete fr;
-  return retval;
-}
-void
-UIWidgetArea_SmartHandle::on_click (const std::string &value)
-{
-  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2d15d46bb30e2a40ULL, 0xc421a429912efd6dULL); // msgid
-  fb << (*this);
-  fb << value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  if (fr) delete fr;
-}
 
+// === UIWidgetArea ===
 static inline void ref   (UIWidgetArea_SmartHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (UIWidgetArea_SmartHandle&) {} // dummy stub for Signal<>.emit
-// === UIWidgetArea ===
 struct UIWidgetArea_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public UIWidgetArea_SmartHandle {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
@@ -1282,13 +1234,13 @@ UIWidgetArea_SmartHandle::UIWidgetArea_SmartHandle () :
   void_signal (*(UIWidgetArea_SmartHandle_Signal_void_signal*) NULL),
   sample_signal (*(UIWidgetArea_SmartHandle_Signal_sample_signal*) NULL)
 {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, const UIWidgetArea_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, UIWidgetArea_SmartHandle &handle)
 {
   handle = connection_id2context<UIWidgetArea_Context$> (fbr.pop_object())->handle$;
@@ -1313,6 +1265,54 @@ const Plic::TypeHashList&
 UIWidgetArea_SmartHandle::_types()
 {
   return connection_id2context<UIWidgetArea_Context$> (connection_handle2id (*this))->list_types();
+}
+double
+UIWidgetArea_SmartHandle::dummy () const
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
+  fb.add_msgid (0x39146750080bd117ULL, 0x9edc3ab3b5e82e8dULL);
+  fb << (*this);
+  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  Plic::FieldReader frr (*fr);
+  frr.skip_msgid(); // FIXME: check msgid
+  double  retval;
+  frr >> retval;
+  delete fr;
+  return retval;
+}
+void
+UIWidgetArea_SmartHandle::dummy (double value)
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
+  fb.add_msgid (0x2a284d0b5305ac3aULL, 0xd98a1d86235ad649ULL); // msgid
+  fb << (*this);
+  fb << value;
+  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+std::string
+UIWidgetArea_SmartHandle::on_click () const
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
+  fb.add_msgid (0x37b8129e6139dfaeULL, 0xece65fb7aeda0163ULL);
+  fb << (*this);
+  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  Plic::FieldReader frr (*fr);
+  frr.skip_msgid(); // FIXME: check msgid
+  std::string  retval;
+  frr >> retval;
+  delete fr;
+  return retval;
+}
+void
+UIWidgetArea_SmartHandle::on_click (const std::string &value)
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
+  fb.add_msgid (0x2d15d46bb30e2a40ULL, 0xc421a429912efd6dULL); // msgid
+  fb << (*this);
+  fb << value;
+  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
 }
 double
 UIWidgetArea_SmartHandle::simple_method ()
@@ -1464,9 +1464,9 @@ UIWidgetArea_SmartHandle::on_click2in (const std::string &arg_command)
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
 }
 
+// === Parent ===
 static inline void ref   (Parent_SmartHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (Parent_SmartHandle&) {} // dummy stub for Signal<>.emit
-// === Parent ===
 struct Parent_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public Parent_SmartHandle {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
@@ -1507,13 +1507,13 @@ Parent_Context$::list_types ()
 }
 Parent_SmartHandle::Parent_SmartHandle ()
 {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, const Parent_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, Parent_SmartHandle &handle)
 {
   handle = connection_id2context<Parent_Context$> (fbr.pop_object())->handle$;
@@ -1540,9 +1540,9 @@ Parent_SmartHandle::_types()
   return connection_id2context<Parent_Context$> (connection_handle2id (*this))->list_types();
 }
 
+// === Child ===
 static inline void ref   (Child_SmartHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (Child_SmartHandle&) {} // dummy stub for Signal<>.emit
-// === Child ===
 struct Child_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public Child_SmartHandle {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
@@ -1583,13 +1583,13 @@ Child_Context$::list_types ()
 }
 Child_SmartHandle::Child_SmartHandle ()
 {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, const Child_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, Child_SmartHandle &handle)
 {
   handle = connection_id2context<Child_Context$> (fbr.pop_object())->handle$;
@@ -1616,9 +1616,9 @@ Child_SmartHandle::_types()
   return connection_id2context<Child_Context$> (connection_handle2id (*this))->list_types();
 }
 
+// === Descendant ===
 static inline void ref   (Descendant_SmartHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (Descendant_SmartHandle&) {} // dummy stub for Signal<>.emit
-// === Descendant ===
 struct Descendant_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public Descendant_SmartHandle {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
@@ -1659,13 +1659,13 @@ Descendant_Context$::list_types ()
 }
 Descendant_SmartHandle::Descendant_SmartHandle ()
 {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, const Descendant_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, Descendant_SmartHandle &handle)
 {
   handle = connection_id2context<Descendant_Context$> (fbr.pop_object())->handle$;
@@ -1692,9 +1692,9 @@ Descendant_SmartHandle::_types()
   return connection_id2context<Descendant_Context$> (connection_handle2id (*this))->list_types();
 }
 
+// === GrandChild ===
 static inline void ref   (GrandChild_SmartHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (GrandChild_SmartHandle&) {} // dummy stub for Signal<>.emit
-// === GrandChild ===
 struct GrandChild_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public GrandChild_SmartHandle {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
@@ -1735,13 +1735,13 @@ GrandChild_Context$::list_types ()
 }
 GrandChild_SmartHandle::GrandChild_SmartHandle ()
 {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, const GrandChild_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, GrandChild_SmartHandle &handle)
 {
   handle = connection_id2context<GrandChild_Context$> (fbr.pop_object())->handle$;
@@ -1806,9 +1806,9 @@ operator>> (Plic::FieldReader &src, QuickSequence_Handle &self)
   return src;
 }
 
+// === QuickIface ===
 static inline void ref   (QuickIface_SmartHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (QuickIface_SmartHandle&) {} // dummy stub for Signal<>.emit
-// === QuickIface ===
 struct QuickIface_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public QuickIface_SmartHandle {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
@@ -1849,13 +1849,13 @@ QuickIface_Context$::list_types ()
 }
 QuickIface_SmartHandle::QuickIface_SmartHandle ()
 {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, const QuickIface_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, QuickIface_SmartHandle &handle)
 {
   handle = connection_id2context<QuickIface_Context$> (fbr.pop_object())->handle$;
@@ -1891,9 +1891,9 @@ QuickIface_SmartHandle::simple_function (int arg_i)
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
 }
 
+// === MethodTestInterface ===
 static inline void ref   (MethodTestInterface_SmartHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (MethodTestInterface_SmartHandle&) {} // dummy stub for Signal<>.emit
-// === MethodTestInterface ===
 struct MethodTestInterface_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public MethodTestInterface_SmartHandle {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
@@ -1934,13 +1934,13 @@ MethodTestInterface_Context$::list_types ()
 }
 MethodTestInterface_SmartHandle::MethodTestInterface_SmartHandle ()
 {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, const MethodTestInterface_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, MethodTestInterface_SmartHandle &handle)
 {
   handle = connection_id2context<MethodTestInterface_Context$> (fbr.pop_object())->handle$;
@@ -2128,9 +2128,9 @@ MethodTestInterface_SmartHandle::method_with_quickiface (QuickIface_SmartHandle 
   return retval;
 }
 
+// === SignalTestInterface ===
 static inline void ref   (SignalTestInterface_SmartHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (SignalTestInterface_SmartHandle&) {} // dummy stub for Signal<>.emit
-// === SignalTestInterface ===
 struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public SignalTestInterface_SmartHandle {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
@@ -3247,13 +3247,13 @@ SignalTestInterface_SmartHandle::SignalTestInterface_SmartHandle () :
   interface_arg (*(SignalTestInterface_SmartHandle_Signal_interface_arg*) NULL),
   self_args (*(SignalTestInterface_SmartHandle_Signal_self_args*) NULL)
 {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, const SignalTestInterface_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, SignalTestInterface_SmartHandle &handle)
 {
   handle = connection_id2context<SignalTestInterface_Context$> (fbr.pop_object())->handle$;
@@ -3278,6 +3278,82 @@ const Plic::TypeHashList&
 SignalTestInterface_SmartHandle::_types()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->list_types();
+}
+
+// === PropertyTester ===
+static inline void ref   (PropertyTester_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (PropertyTester_SmartHandle&) {} // dummy stub for Signal<>.emit
+struct PropertyTester_Context$ : public Plic::NonCopyable {
+  struct SmartHandle$ : public PropertyTester_SmartHandle {
+    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
+  } handle$;
+  PropertyTester_Context$ (uint64 ipcid) :
+    handle$ (ipcid),
+    m_cached_types (NULL)
+  {
+  }
+  Plic::TypeHashList *m_cached_types;
+  const Plic::TypeHashList& list_types ();
+};
+const Plic::TypeHashList&
+PropertyTester_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x33ed5186814fd96fULL, 0x2db9aae41d7f688cULL);
+    fb << handle$;
+    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len;
+    frr >> len;
+    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    Plic::TypeHashList *thv = new Plic::TypeHashList();
+    Plic::TypeHash thash;
+    for (size_t i = 0; i < len; i++) {
+      frr >> thash;
+      thv->push_back (thash);
+    }
+    delete fr;
+    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
+PropertyTester_SmartHandle::PropertyTester_SmartHandle ()
+{}
+Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, const PropertyTester_SmartHandle &handle)
+{
+  fb.add_object (connection_handle2id (handle));
+  return fb;
+}
+Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, PropertyTester_SmartHandle &handle)
+{
+  handle = connection_id2context<PropertyTester_Context$> (fbr.pop_object())->handle$;
+  return fbr;
+}
+const Plic::TypeHash&
+PropertyTester_SmartHandle::_type()
+{
+  static const Plic::TypeHash type_hash = Plic::TypeHash (0x0de89d5c207bc662ULL, 0x846800e315917b46ULL);
+  return type_hash;
+}
+PropertyTester_SmartHandle
+PropertyTester_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+{
+  size_t i; const Plic::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<PropertyTester_Context$> (connection_handle2id (other))->handle$;
+  return PropertyTester_SmartHandle();
+}
+const Plic::TypeHashList&
+PropertyTester_SmartHandle::_types()
+{
+  return connection_id2context<PropertyTester_Context$> (connection_handle2id (*this))->list_types();
 }
 bool
 PropertyTester_SmartHandle::bool_prop () const
@@ -3495,185 +3571,13 @@ PropertyTester_SmartHandle::self_prop (PropertyTester_SmartHandle value)
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
   if (fr) delete fr;
 }
-
-static inline void ref   (PropertyTester_SmartHandle&) {} // dummy stub for Signal<>.emit
-static inline void unref (PropertyTester_SmartHandle&) {} // dummy stub for Signal<>.emit
-// === PropertyTester ===
-struct PropertyTester_Context$ : public Plic::NonCopyable {
-  struct SmartHandle$ : public PropertyTester_SmartHandle {
-    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
-  } handle$;
-  PropertyTester_Context$ (uint64 ipcid) :
-    handle$ (ipcid),
-    m_cached_types (NULL)
-  {
-  }
-  Plic::TypeHashList *m_cached_types;
-  const Plic::TypeHashList& list_types ();
-};
-const Plic::TypeHashList&
-PropertyTester_Context$::list_types ()
-{
-  if (!m_cached_types) {
-    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
-    fb.add_msgid (0x33ed5186814fd96fULL, 0x2db9aae41d7f688cULL);
-    fb << handle$;
-    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
-    Plic::FieldReader frr (*fr);
-    frr.skip_msgid(); // FIXME: msgid for return?
-    size_t len;
-    frr >> len;
-    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
-    Plic::TypeHashList *thv = new Plic::TypeHashList();
-    Plic::TypeHash thash;
-    for (size_t i = 0; i < len; i++) {
-      frr >> thash;
-      thv->push_back (thash);
-    }
-    delete fr;
-    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
-      delete thv;
-  }
-  return *m_cached_types;
-}
-PropertyTester_SmartHandle::PropertyTester_SmartHandle ()
-{}
-inline Plic::FieldBuffer&
-operator<< (Plic::FieldBuffer &fb, const PropertyTester_SmartHandle &handle)
-{
-  fb.add_object (connection_handle2id (handle));
-  return fb;
-}
-inline Plic::FieldReader&
-operator>> (Plic::FieldReader &fbr, PropertyTester_SmartHandle &handle)
-{
-  handle = connection_id2context<PropertyTester_Context$> (fbr.pop_object())->handle$;
-  return fbr;
-}
-const Plic::TypeHash&
-PropertyTester_SmartHandle::_type()
-{
-  static const Plic::TypeHash type_hash = Plic::TypeHash (0x0de89d5c207bc662ULL, 0x846800e315917b46ULL);
-  return type_hash;
-}
-PropertyTester_SmartHandle
-PropertyTester_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
-{
-  size_t i; const Plic::TypeHash &mine = _type();
-  for (i = 0; i < types.size(); i++)
-    if (mine == types[i])
-      return connection_id2context<PropertyTester_Context$> (connection_handle2id (other))->handle$;
-  return PropertyTester_SmartHandle();
-}
-const Plic::TypeHashList&
-PropertyTester_SmartHandle::_types()
-{
-  return connection_id2context<PropertyTester_Context$> (connection_handle2id (*this))->list_types();
-}
 } // InterfaceTests
 
 namespace RapicornPlicTest {
-std::string
-ButtonArea_SmartHandle::on_click () const
-{
-  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x3e3aae70657f83b7ULL, 0x728ed182ccdc4020ULL);
-  fb << (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  Plic::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
-  std::string  retval;
-  frr >> retval;
-  delete fr;
-  return retval;
-}
-void
-ButtonArea_SmartHandle::on_click (const std::string &value)
-{
-  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x2d526a22ceb83792ULL, 0x62169ce8c45be6e0ULL); // msgid
-  fb << (*this);
-  fb << value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  if (fr) delete fr;
-}
-std::string
-ButtonArea_SmartHandle::on_click2 () const
-{
-  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x3c128313732bc9a9ULL, 0xad69a127aa1ce9b0ULL);
-  fb << (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  Plic::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
-  std::string  retval;
-  frr >> retval;
-  delete fr;
-  return retval;
-}
-void
-ButtonArea_SmartHandle::on_click2 (const std::string &value)
-{
-  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x23c57c80df9b0efbULL, 0xb8e860a363947d7dULL); // msgid
-  fb << (*this);
-  fb << value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  if (fr) delete fr;
-}
-std::string
-ButtonArea_SmartHandle::on_click3 () const
-{
-  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x380ad1778851e535ULL, 0x5b045ec25d2deb0eULL);
-  fb << (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  Plic::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
-  std::string  retval;
-  frr >> retval;
-  delete fr;
-  return retval;
-}
-void
-ButtonArea_SmartHandle::on_click3 (const std::string &value)
-{
-  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x27d09d1b9508a02bULL, 0x1e072d4d979e4921ULL); // msgid
-  fb << (*this);
-  fb << value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  if (fr) delete fr;
-}
-ClickType
-ButtonArea_SmartHandle::click_type () const
-{
-  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
-  fb.add_msgid (0x3d39bef0c031e35dULL, 0x7ea1af466f8574b1ULL);
-  fb << (*this);
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  Plic::FieldReader frr (*fr);
-  frr.skip_msgid(); // FIXME: check msgid
-  ClickType  retval;
-  frr >> retval;
-  delete fr;
-  return retval;
-}
-void
-ButtonArea_SmartHandle::click_type (ClickType value)
-{
-  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
-  fb.add_msgid (0x27b69c1801d07bbeULL, 0x929dbc4b4f2ea981ULL); // msgid
-  fb << (*this);
-  fb << value;
-  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
-  if (fr) delete fr;
-}
 
+// === ButtonArea ===
 static inline void ref   (ButtonArea_SmartHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (ButtonArea_SmartHandle&) {} // dummy stub for Signal<>.emit
-// === ButtonArea ===
 struct ButtonArea_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public ButtonArea_SmartHandle {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
@@ -3820,13 +3724,13 @@ ButtonArea_SmartHandle::ButtonArea_SmartHandle () :
   check_activate (*(ButtonArea_SmartHandle_Signal_check_activate*) NULL),
   activate (*(ButtonArea_SmartHandle_Signal_activate*) NULL)
 {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, const ButtonArea_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, ButtonArea_SmartHandle &handle)
 {
   handle = connection_id2context<ButtonArea_Context$> (fbr.pop_object())->handle$;
@@ -3852,10 +3756,106 @@ ButtonArea_SmartHandle::_types()
 {
   return connection_id2context<ButtonArea_Context$> (connection_handle2id (*this))->list_types();
 }
+std::string
+ButtonArea_SmartHandle::on_click () const
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
+  fb.add_msgid (0x3e3aae70657f83b7ULL, 0x728ed182ccdc4020ULL);
+  fb << (*this);
+  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  Plic::FieldReader frr (*fr);
+  frr.skip_msgid(); // FIXME: check msgid
+  std::string  retval;
+  frr >> retval;
+  delete fr;
+  return retval;
+}
+void
+ButtonArea_SmartHandle::on_click (const std::string &value)
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
+  fb.add_msgid (0x2d526a22ceb83792ULL, 0x62169ce8c45be6e0ULL); // msgid
+  fb << (*this);
+  fb << value;
+  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+std::string
+ButtonArea_SmartHandle::on_click2 () const
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
+  fb.add_msgid (0x3c128313732bc9a9ULL, 0xad69a127aa1ce9b0ULL);
+  fb << (*this);
+  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  Plic::FieldReader frr (*fr);
+  frr.skip_msgid(); // FIXME: check msgid
+  std::string  retval;
+  frr >> retval;
+  delete fr;
+  return retval;
+}
+void
+ButtonArea_SmartHandle::on_click2 (const std::string &value)
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
+  fb.add_msgid (0x23c57c80df9b0efbULL, 0xb8e860a363947d7dULL); // msgid
+  fb << (*this);
+  fb << value;
+  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+std::string
+ButtonArea_SmartHandle::on_click3 () const
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
+  fb.add_msgid (0x380ad1778851e535ULL, 0x5b045ec25d2deb0eULL);
+  fb << (*this);
+  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  Plic::FieldReader frr (*fr);
+  frr.skip_msgid(); // FIXME: check msgid
+  std::string  retval;
+  frr >> retval;
+  delete fr;
+  return retval;
+}
+void
+ButtonArea_SmartHandle::on_click3 (const std::string &value)
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
+  fb.add_msgid (0x27d09d1b9508a02bULL, 0x1e072d4d979e4921ULL); // msgid
+  fb << (*this);
+  fb << value;
+  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+ClickType
+ButtonArea_SmartHandle::click_type () const
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
+  fb.add_msgid (0x3d39bef0c031e35dULL, 0x7ea1af466f8574b1ULL);
+  fb << (*this);
+  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  Plic::FieldReader frr (*fr);
+  frr.skip_msgid(); // FIXME: check msgid
+  ClickType  retval;
+  frr >> retval;
+  delete fr;
+  return retval;
+}
+void
+ButtonArea_SmartHandle::click_type (ClickType value)
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
+  fb.add_msgid (0x27b69c1801d07bbeULL, 0x929dbc4b4f2ea981ULL); // msgid
+  fb << (*this);
+  fb << value;
+  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
 
+// === PureMethods ===
 static inline void ref   (PureMethods_SmartHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (PureMethods_SmartHandle&) {} // dummy stub for Signal<>.emit
-// === PureMethods ===
 struct PureMethods_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public PureMethods_SmartHandle {
     SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
@@ -3896,13 +3896,13 @@ PureMethods_Context$::list_types ()
 }
 PureMethods_SmartHandle::PureMethods_SmartHandle ()
 {}
-inline Plic::FieldBuffer&
+Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &fb, const PureMethods_SmartHandle &handle)
 {
   fb.add_object (connection_handle2id (handle));
   return fb;
 }
-inline Plic::FieldReader&
+Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, PureMethods_SmartHandle &handle)
 {
   handle = connection_id2context<PureMethods_Context$> (fbr.pop_object())->handle$;

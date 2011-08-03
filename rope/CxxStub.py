@@ -467,9 +467,9 @@ class Generator:
     return s
   def generate_client_class_context (self, class_info):
     s, classH, classC = '\n', self.H (class_info.name), class_info.name + '_Context$' # class names
+    s += '// === %s ===\n' % class_info.name
     s += 'static inline void ref   (%s&) {} // dummy stub for Signal<>.emit\n' % classH
     s += 'static inline void unref (%s&) {} // dummy stub for Signal<>.emit\n' % classH
-    s += '// === %s ===\n' % class_info.name
     s += 'struct %s : public Plic::NonCopyable {\n' % classC    # context class
     s += '  struct SmartHandle$ : public %s {\n' % classH       # derive smart handle for copy-ctor initialization
     s += '    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}\n'
@@ -607,12 +607,12 @@ class Generator:
     s += '%s::%s ()' % classH2 # ctor
     s += ' :\n  ' + sci if sci else ''
     s += '\n{}\n'
-    s += 'inline Plic::FieldBuffer&\n'
+    s += 'Plic::FieldBuffer&\n'
     s += 'operator<< (Plic::FieldBuffer &fb, const %s &handle)\n{\n' % classH
     s += '  fb.add_object (connection_handle2id (handle));\n'
     s += '  return fb;\n'
     s += '}\n'
-    s += 'inline Plic::FieldReader&\n'
+    s += 'Plic::FieldReader&\n'
     s += 'operator>> (Plic::FieldReader &fbr, %s &handle)\n{\n' % classH
     s += '  handle = connection_id2context<%s> (fbr.pop_object())->handle$;\n' % classC
     s += '  return fbr;\n'
@@ -645,17 +645,17 @@ class Generator:
       s += ' :\n  ' + ', '.join (l)
     s += '\n{}\n'
     s += '%s::~%s () {}\n' % (classC, classC) # dtor
-    s += 'inline Plic::FieldBuffer&\n'
+    s += 'Plic::FieldBuffer&\n'
     s += 'operator<< (Plic::FieldBuffer &fb, %s &obj)\n{\n' % classC
     s += '  fb.add_object (connection_object2id (&obj));\n'
     s += '  return fb;\n'
     s += '}\n'
-    s += 'inline Plic::FieldBuffer&\n'
+    s += 'Plic::FieldBuffer&\n'
     s += 'operator<< (Plic::FieldBuffer &fb, %s *obj)\n{\n' % classC
     s += '  fb.add_object (connection_object2id (obj));\n'
     s += '  return fb;\n'
     s += '}\n'
-    s += 'inline Plic::FieldReader&\n'
+    s += 'Plic::FieldReader&\n'
     s += 'operator>> (Plic::FieldReader &fbr, %s* &obj)\n{\n' % classC
     s += '  obj = connection_id2object<%s> (fbr.pop_object());\n' % classC
     s += '  return fbr;\n'
@@ -1137,16 +1137,12 @@ class Generator:
             else:
               s += self.open_namespace (tp)
               s += self.generate_server_class_methods (tp)
-          if self.gen_clientcc and tp.fields:
-            s += self.open_namespace (tp)
-            for fl in tp.fields:
-              s += self.generate_client_property_stub (tp, fl[0], fl[1])
           if self.gen_clientcc:
             s += self.open_namespace (tp)
             s += self.generate_client_class_context (tp)
             s += self.generate_client_class_methods (tp)
-          if self.gen_clientcc and tp.methods:
-            s += self.open_namespace (tp)
+            for fl in tp.fields:
+              s += self.generate_client_property_stub (tp, fl[0], fl[1])
             for m in tp.methods:
               s += self.generate_client_method_stub (tp, m)
     # generate unmarshalling server calls
