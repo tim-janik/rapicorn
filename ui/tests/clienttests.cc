@@ -35,6 +35,10 @@ test_item_usage()
   TASSERT (name == testname);
   wind0w.name ("Test-Name");
   TASSERT ("Test-Name" == item.name());
+  TASSERT (c.component<Wind0w> ("/Window")._is_null() == false);
+  TASSERT (wind0w.component<Container> ("/Window")._is_null() == false);
+  TASSERT (item.component<ButtonArea> ("/Window")._is_null() == true);
+  TASSERT (item.component<Item> ("/Window")._is_null() == false);
 }
 REGISTER_TEST ("Client/Basic Item Usage", test_item_usage);
 
