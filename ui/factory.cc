@@ -962,29 +962,6 @@ Factory::ItemTypeFactory::sanity_check_identifier (const char *namespaced_ident)
     fatal ("item type lacks \"Rapicorn::Factory::\" qualification: %s", namespaced_ident);
 }
 
-Args::Args (CS &s0, CS &s1, CS &s2, CS &s3,
-            CS &s4, CS &s5, CS &s6, CS &s7,
-            CS &s8, CS &s9, CS &sA, CS &sB,
-            CS &sC, CS &sD, CS &sE, CS &sF)
-{
-  if (s0 != "") push_back (s0);
-  if (s1 != "") push_back (s1);
-  if (s2 != "") push_back (s2);
-  if (s3 != "") push_back (s3);
-  if (s4 != "") push_back (s4);
-  if (s5 != "") push_back (s5);
-  if (s6 != "") push_back (s6);
-  if (s7 != "") push_back (s7);
-  if (s8 != "") push_back (s8);
-  if (s9 != "") push_back (s9);
-  if (sA != "") push_back (sA);
-  if (sB != "") push_back (sB);
-  if (sC != "") push_back (sC);
-  if (sD != "") push_back (sD);
-  if (sE != "") push_back (sE);
-  if (sF != "") push_back (sF);
-}
-
 } // Rapicorn
 
 namespace { // Anon
