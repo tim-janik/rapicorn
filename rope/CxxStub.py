@@ -445,7 +445,8 @@ class Generator:
     s += ' * See also the corresponding C++ class %s. */\n' % classC
     if type_info.storage == Decls.INTERFACE and self.gen_mode == G4SERVER:
       s += '// '
-    s += 'typedef %s %s;\n' % (self.C (type_info), self.type2cpp (type_info))
+    s += 'typedef %s %s;' % (self.C (type_info), self.type2cpp (type_info))
+    s += ' ///< Convenience alias for the IDL type %s.\n' % type_info.name
     return s
   def generate_method_decl (self, functype, pad):
     s = '  '
