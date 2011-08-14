@@ -64,6 +64,11 @@ template<class C> C* connection_id2context (uint64 oid) { return (C*) NULL; }
 #endif // !PLIC_CONNECTION
 """
 
+identifiers = {
+  'downcast' :          'downcast',
+  'cast_types' :        'cast_types',
+};
+
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
 
@@ -389,8 +394,9 @@ class Generator:
       classH = self.H (type_info.name) # smart handle class name
       aliasfix = '__attribute__ ((noinline))' # work around bogus strict-aliasing warning in g++-4.4.5
       s += '  template<class C>\n'
-      s += '  ' + self.F ('static %s' % classH) + '_cast  (C &c) { return _cast (c, c._types()); }\n' # ctor
-      s += '  ' + self.F ('const Plic::TypeHashList&') + '_types ();\n'
+      s += '  ' + self.F ('static %s' % classH) + identifiers['downcast'] + ' (C c) ' # ctor
+      s += '{ return _cast (c, c.%s()); }\n' % identifiers['cast_types']
+      s += '  ' + self.F ('const Plic::TypeHashList&') + identifiers['cast_types'] + ' ();\n'
       s += '  ' + self.F ('explicit') + '%s ();\n' % classH # ctor
       #s += '  ' + self.F ('inline') + '%s (const %s &src)' % (classH, classH) # copy ctor
       #s += ' : ' + ' (src), '.join (cl) + ' (src) {}\n'
@@ -631,7 +637,7 @@ class Generator:
     s += '  return %s();\n' % classH
     s += '}\n'
     s += 'const Plic::TypeHashList&\n'
-    s += '%s::_types()\n{\n' % classH
+    s += '%s::%s()\n{\n' % (classH, identifiers['cast_types'])
     s += '  return connection_id2context<%s> (connection_handle2id (*this))->list_types();\n' % classC
     s += '}\n'
     return s

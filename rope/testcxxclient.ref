@@ -174,8 +174,8 @@ class FirstInterface_SmartHandle : public virtual Plic::SmartHandle
 protected:
 public:
   template<class C>
-  static FirstInterface_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  const Plic::TypeHashList&     _types ();
+  static FirstInterface_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  const Plic::TypeHashList&     cast_types ();
   explicit                      FirstInterface_SmartHandle ();
   void                          void_func                  ();
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
@@ -343,8 +343,8 @@ protected:
   typedef Rapicorn::Signals::SignalProxy<UIWidgetArea_SmartHandle, double (UIWidgetArea_SmartHandle &ba1, int someint)> Signal_sample_signal;
 public:
   template<class C>
-  static UIWidgetArea_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  const Plic::TypeHashList&     _types ();
+  static UIWidgetArea_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  const Plic::TypeHashList&     cast_types ();
   explicit                      UIWidgetArea_SmartHandle ();
   double                        dummy    () const;
   void                          dummy    (double);
@@ -382,8 +382,8 @@ class Parent_SmartHandle : public virtual Plic::SmartHandle
 protected:
 public:
   template<class C>
-  static Parent_SmartHandle     _cast  (C &c) { return _cast (c, c._types()); }
-  const Plic::TypeHashList&     _types ();
+  static Parent_SmartHandle     downcast (C c) { return _cast (c, c.cast_types()); }
+  const Plic::TypeHashList&     cast_types ();
   explicit                      Parent_SmartHandle ();
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
@@ -398,8 +398,8 @@ class Child_SmartHandle : public Parent_SmartHandle
 protected:
 public:
   template<class C>
-  static Child_SmartHandle      _cast  (C &c) { return _cast (c, c._types()); }
-  const Plic::TypeHashList&     _types ();
+  static Child_SmartHandle      downcast (C c) { return _cast (c, c.cast_types()); }
+  const Plic::TypeHashList&     cast_types ();
   explicit                      Child_SmartHandle ();
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
@@ -414,8 +414,8 @@ class Descendant_SmartHandle : public Child_SmartHandle
 protected:
 public:
   template<class C>
-  static Descendant_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  const Plic::TypeHashList&     _types ();
+  static Descendant_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  const Plic::TypeHashList&     cast_types ();
   explicit                      Descendant_SmartHandle ();
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
@@ -430,8 +430,8 @@ class GrandChild_SmartHandle : public Descendant_SmartHandle
 protected:
 public:
   template<class C>
-  static GrandChild_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  const Plic::TypeHashList&     _types ();
+  static GrandChild_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  const Plic::TypeHashList&     cast_types ();
   explicit                      GrandChild_SmartHandle ();
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
@@ -466,8 +466,8 @@ class QuickIface_SmartHandle : public virtual Plic::SmartHandle
 protected:
 public:
   template<class C>
-  static QuickIface_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  const Plic::TypeHashList&     _types ();
+  static QuickIface_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  const Plic::TypeHashList&     cast_types ();
   explicit                      QuickIface_SmartHandle ();
   void                          simple_function        (int i = 9);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
@@ -483,8 +483,8 @@ class MethodTestInterface_SmartHandle : public virtual Plic::SmartHandle
 protected:
 public:
   template<class C>
-  static MethodTestInterface_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  const Plic::TypeHashList&     _types ();
+  static MethodTestInterface_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  const Plic::TypeHashList&     cast_types ();
   explicit                      MethodTestInterface_SmartHandle ();
   void                          method_with_void                ();
   bool                          method_with_bools               (bool input,
@@ -538,8 +538,8 @@ protected:
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (SignalTestInterface_SmartHandle &self_)> Signal_self_args;
 public:
   template<class C>
-  static SignalTestInterface_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  const Plic::TypeHashList&     _types ();
+  static SignalTestInterface_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  const Plic::TypeHashList&     cast_types ();
   explicit                      SignalTestInterface_SmartHandle ();
   Signal_void_result            void_result;
   Signal_bool_result            bool_result;
@@ -574,8 +574,8 @@ class PropertyTester_SmartHandle : public virtual Plic::SmartHandle
 protected:
 public:
   template<class C>
-  static PropertyTester_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  const Plic::TypeHashList&     _types ();
+  static PropertyTester_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  const Plic::TypeHashList&     cast_types ();
   explicit                      PropertyTester_SmartHandle ();
   bool                          bool_prop      () const;
   void                          bool_prop      (bool);
@@ -623,8 +623,8 @@ protected:
   typedef Rapicorn::Signals::SignalProxy<ButtonArea_SmartHandle, void ()> Signal_activate;
 public:
   template<class C>
-  static ButtonArea_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  const Plic::TypeHashList&     _types ();
+  static ButtonArea_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  const Plic::TypeHashList&     cast_types ();
   explicit                      ButtonArea_SmartHandle ();
   std::string                   on_click   () const;
   void                          on_click   (const std::string&);
@@ -651,8 +651,8 @@ class PureMethods_SmartHandle : public virtual Plic::SmartHandle
 protected:
 public:
   template<class C>
-  static PureMethods_SmartHandle _cast  (C &c) { return _cast (c, c._types()); }
-  const Plic::TypeHashList&     _types ();
+  static PureMethods_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  const Plic::TypeHashList&     cast_types ();
   explicit                      PureMethods_SmartHandle ();
   int                           pure_method             (double f);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
@@ -736,7 +736,7 @@ FirstInterface_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHas
   return FirstInterface_SmartHandle();
 }
 const Plic::TypeHashList&
-FirstInterface_SmartHandle::_types()
+FirstInterface_SmartHandle::cast_types()
 {
   return connection_id2context<FirstInterface_Context$> (connection_handle2id (*this))->list_types();
 }
@@ -1262,7 +1262,7 @@ UIWidgetArea_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashL
   return UIWidgetArea_SmartHandle();
 }
 const Plic::TypeHashList&
-UIWidgetArea_SmartHandle::_types()
+UIWidgetArea_SmartHandle::cast_types()
 {
   return connection_id2context<UIWidgetArea_Context$> (connection_handle2id (*this))->list_types();
 }
@@ -1535,7 +1535,7 @@ Parent_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &t
   return Parent_SmartHandle();
 }
 const Plic::TypeHashList&
-Parent_SmartHandle::_types()
+Parent_SmartHandle::cast_types()
 {
   return connection_id2context<Parent_Context$> (connection_handle2id (*this))->list_types();
 }
@@ -1611,7 +1611,7 @@ Child_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &ty
   return Child_SmartHandle();
 }
 const Plic::TypeHashList&
-Child_SmartHandle::_types()
+Child_SmartHandle::cast_types()
 {
   return connection_id2context<Child_Context$> (connection_handle2id (*this))->list_types();
 }
@@ -1687,7 +1687,7 @@ Descendant_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashLis
   return Descendant_SmartHandle();
 }
 const Plic::TypeHashList&
-Descendant_SmartHandle::_types()
+Descendant_SmartHandle::cast_types()
 {
   return connection_id2context<Descendant_Context$> (connection_handle2id (*this))->list_types();
 }
@@ -1763,7 +1763,7 @@ GrandChild_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashLis
   return GrandChild_SmartHandle();
 }
 const Plic::TypeHashList&
-GrandChild_SmartHandle::_types()
+GrandChild_SmartHandle::cast_types()
 {
   return connection_id2context<GrandChild_Context$> (connection_handle2id (*this))->list_types();
 }
@@ -1877,7 +1877,7 @@ QuickIface_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashLis
   return QuickIface_SmartHandle();
 }
 const Plic::TypeHashList&
-QuickIface_SmartHandle::_types()
+QuickIface_SmartHandle::cast_types()
 {
   return connection_id2context<QuickIface_Context$> (connection_handle2id (*this))->list_types();
 }
@@ -1962,7 +1962,7 @@ MethodTestInterface_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::Ty
   return MethodTestInterface_SmartHandle();
 }
 const Plic::TypeHashList&
-MethodTestInterface_SmartHandle::_types()
+MethodTestInterface_SmartHandle::cast_types()
 {
   return connection_id2context<MethodTestInterface_Context$> (connection_handle2id (*this))->list_types();
 }
@@ -3275,7 +3275,7 @@ SignalTestInterface_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::Ty
   return SignalTestInterface_SmartHandle();
 }
 const Plic::TypeHashList&
-SignalTestInterface_SmartHandle::_types()
+SignalTestInterface_SmartHandle::cast_types()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->list_types();
 }
@@ -3351,7 +3351,7 @@ PropertyTester_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHas
   return PropertyTester_SmartHandle();
 }
 const Plic::TypeHashList&
-PropertyTester_SmartHandle::_types()
+PropertyTester_SmartHandle::cast_types()
 {
   return connection_id2context<PropertyTester_Context$> (connection_handle2id (*this))->list_types();
 }
@@ -3752,7 +3752,7 @@ ButtonArea_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashLis
   return ButtonArea_SmartHandle();
 }
 const Plic::TypeHashList&
-ButtonArea_SmartHandle::_types()
+ButtonArea_SmartHandle::cast_types()
 {
   return connection_id2context<ButtonArea_Context$> (connection_handle2id (*this))->list_types();
 }
@@ -3924,7 +3924,7 @@ PureMethods_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashLi
   return PureMethods_SmartHandle();
 }
 const Plic::TypeHashList&
-PureMethods_SmartHandle::_types()
+PureMethods_SmartHandle::cast_types()
 {
   return connection_id2context<PureMethods_Context$> (connection_handle2id (*this))->list_types();
 }
