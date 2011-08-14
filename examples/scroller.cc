@@ -20,18 +20,18 @@ namespace {
 using namespace Rapicorn;
 
 static void
-add_button_row (ContainerImpl &area,
-                uint           row)
+add_button_row (Container area,
+                uint      row)
 {
-  ContainerImpl &brow = Factory::create_container ("button-row", Args ("id=row#" + string_from_uint (row)));
-  area.add (brow);
-  for (uint i = 0; i < 20; i++)
+  Item child = area.create_child ("button-row", Strings ("id=row#" + string_from_uint (row)));
+  Container brow = Container::_cast (child);
+  for (uint i = 0; i < 50; i++)
     {
-      Args args ("test-button-text=\"(" + string_from_uint (row) + "," + string_from_uint (i) + ")\"");
-      ItemImpl &tb = Factory::create_item ("test-button", args);
-      ButtonArea *b = tb.interface<ButtonArea*>();
-      b->on_click (string_printf ("button_%d_%d", row, i));
-      brow.add (tb);
+      Strings args = Strings ("test-button-text=\"(" + string_from_uint (row) + "," + string_from_uint (i) + ")\"");
+      child = brow.create_child ("test-button", args);
+      Item bchild = child.unique_component ("/Button");
+      ButtonArea b = ButtonArea::_cast (bchild);
+      b.on_click (string_printf ("Item::print('Button-Click: (%d,%d)')", row, i));
     }
 }
 
@@ -39,26 +39,25 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  /* initialize rapicorn */
-  Application_SmartHandle smApp = init_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  // initialize Rapicorn
+  Application app = init_app (String ("Rapicorn/Examples/") + RAPICORN__FILE__, &argc, argv);
 
-  /* parse GUI description */
-  app.auto_load ("RapicornTest", "scroller.xml", argv[0]);
+  // find and load GUI definitions relative to argv[0]
+  app.auto_load ("RapicornExamples", "scroller.xml", argv[0]);
 
-  /* create main wind0w */
-  Wind0wIface &wind0w = *app.create_wind0w ("main-shell");
-  ContainerImpl &mshell = wind0w.impl().interface<ContainerImpl>();
+  // create main wind0w
+  Wind0w wind0w = app.create_wind0w ("main-shell");
 
-  /* create button rows */
-  for (uint i = 0; i < 20; i++)
+  // create button rows
+  Container mshell = wind0w;
+  for (uint i = 0; i < 50; i++)
     add_button_row (mshell, i);
 
-  /* show and process */
+  // show main window
   wind0w.show();
-  app.execute_loops();
 
-  return 0;
+  // run event loops while wind0ws are on screen
+  return app.run_and_exit();
 }
 
 } // anon
