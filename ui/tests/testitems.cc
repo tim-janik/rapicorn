@@ -247,7 +247,7 @@ test_complex_dialog ()
   TASSERT (dynamic_cast<Text::Editor::Client*> (item) != NULL);
   item = app.unique_component ("/#complex-dialog/Button [ /Label [ @markup-text=~'\\bOk\\b' ] ]");
   TASSERT (item != NULL);
-  TASSERT (dynamic_cast<ButtonArea*> (item) != NULL);
+  TASSERT (dynamic_cast<ButtonAreaImpl*> (item) != NULL);
   TASSERT (dynamic_cast<Text::Editor::Client*> (item) == NULL);
   item = app.unique_component ("/#"); // invalid path
   TASSERT (item == NULL);

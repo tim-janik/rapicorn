@@ -50,6 +50,17 @@ interface Container : Item {
 };
 
 /**
+ * The ButtonArea interface implements button click handling. Certain actions can be
+ * associated with button1, button2 and button3 clicks to be caried out when the
+ * respective mouse button is clicked.
+ */
+interface ButtonArea : Container {
+  string	on_click	= String (_("On CLick"), _("Action to carry out on button1 clicks."), "rw");
+  string	on_click2	= String (_("On CLick"), _("Action to carry out on button2 clicks."), "rw");
+  string	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
+};
+
+/**
  * A Wind0w interface is the main user visible handle for screen objects in Rapicorn.
  * Wind0ws can be obtained from the Application singleton. They contain UI elements
  * like buttons and text fields, and the neccessary logic for UI event processing.
