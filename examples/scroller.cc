@@ -24,14 +24,13 @@ add_button_row (Container area,
                 uint      row)
 {
   Item child = area.create_child ("button-row", Strings ("id=row#" + string_from_uint (row)));
-  Container brow = Container::_cast (child);
+  Container brow = Container::downcast (child);
   for (uint i = 0; i < 50; i++)
     {
       Strings args = Strings ("test-button-text=\"(" + string_from_uint (row) + "," + string_from_uint (i) + ")\"");
       child = brow.create_child ("test-button", args);
-      Item bchild = child.unique_component ("/Button");
-      ButtonArea b = ButtonArea::_cast (bchild);
-      b.on_click (string_printf ("Item::print('Button-Click: (%d,%d)')", row, i));
+      ButtonArea button = child.component<ButtonArea> ("/Button");
+      button.on_click (string_printf ("Item::print('Button-Click: (%d,%d)')", row, i));
     }
 }
 
