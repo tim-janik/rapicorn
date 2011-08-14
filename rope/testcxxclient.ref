@@ -717,7 +717,8 @@ operator<< (Plic::FieldBuffer &fb, const FirstInterface_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, FirstInterface_SmartHandle &handle)
 {
-  handle = connection_id2context<FirstInterface_Context$> (fbr.pop_object())->handle$;
+  const uint64 ipcid = fbr.pop_object();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<FirstInterface_Context$> (ipcid)->handle$ : FirstInterface_SmartHandle();
   return fbr;
 }
 const Plic::TypeHash&
@@ -738,7 +739,10 @@ FirstInterface_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHas
 const Plic::TypeHashList&
 FirstInterface_SmartHandle::cast_types()
 {
-  return connection_id2context<FirstInterface_Context$> (connection_handle2id (*this))->list_types();
+  static Plic::TypeHashList notypes;
+  const uint64 ipcid = connection_handle2id (*this);
+  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<FirstInterface_Context$> (ipcid)->list_types();
 }
 void
 FirstInterface_SmartHandle::void_func ()
@@ -1243,7 +1247,8 @@ operator<< (Plic::FieldBuffer &fb, const UIWidgetArea_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, UIWidgetArea_SmartHandle &handle)
 {
-  handle = connection_id2context<UIWidgetArea_Context$> (fbr.pop_object())->handle$;
+  const uint64 ipcid = fbr.pop_object();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<UIWidgetArea_Context$> (ipcid)->handle$ : UIWidgetArea_SmartHandle();
   return fbr;
 }
 const Plic::TypeHash&
@@ -1264,7 +1269,10 @@ UIWidgetArea_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashL
 const Plic::TypeHashList&
 UIWidgetArea_SmartHandle::cast_types()
 {
-  return connection_id2context<UIWidgetArea_Context$> (connection_handle2id (*this))->list_types();
+  static Plic::TypeHashList notypes;
+  const uint64 ipcid = connection_handle2id (*this);
+  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<UIWidgetArea_Context$> (ipcid)->list_types();
 }
 double
 UIWidgetArea_SmartHandle::dummy () const
@@ -1516,7 +1524,8 @@ operator<< (Plic::FieldBuffer &fb, const Parent_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, Parent_SmartHandle &handle)
 {
-  handle = connection_id2context<Parent_Context$> (fbr.pop_object())->handle$;
+  const uint64 ipcid = fbr.pop_object();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<Parent_Context$> (ipcid)->handle$ : Parent_SmartHandle();
   return fbr;
 }
 const Plic::TypeHash&
@@ -1537,7 +1546,10 @@ Parent_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &t
 const Plic::TypeHashList&
 Parent_SmartHandle::cast_types()
 {
-  return connection_id2context<Parent_Context$> (connection_handle2id (*this))->list_types();
+  static Plic::TypeHashList notypes;
+  const uint64 ipcid = connection_handle2id (*this);
+  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<Parent_Context$> (ipcid)->list_types();
 }
 
 // === Child ===
@@ -1592,7 +1604,8 @@ operator<< (Plic::FieldBuffer &fb, const Child_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, Child_SmartHandle &handle)
 {
-  handle = connection_id2context<Child_Context$> (fbr.pop_object())->handle$;
+  const uint64 ipcid = fbr.pop_object();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<Child_Context$> (ipcid)->handle$ : Child_SmartHandle();
   return fbr;
 }
 const Plic::TypeHash&
@@ -1613,7 +1626,10 @@ Child_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &ty
 const Plic::TypeHashList&
 Child_SmartHandle::cast_types()
 {
-  return connection_id2context<Child_Context$> (connection_handle2id (*this))->list_types();
+  static Plic::TypeHashList notypes;
+  const uint64 ipcid = connection_handle2id (*this);
+  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<Child_Context$> (ipcid)->list_types();
 }
 
 // === Descendant ===
@@ -1668,7 +1684,8 @@ operator<< (Plic::FieldBuffer &fb, const Descendant_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, Descendant_SmartHandle &handle)
 {
-  handle = connection_id2context<Descendant_Context$> (fbr.pop_object())->handle$;
+  const uint64 ipcid = fbr.pop_object();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<Descendant_Context$> (ipcid)->handle$ : Descendant_SmartHandle();
   return fbr;
 }
 const Plic::TypeHash&
@@ -1689,7 +1706,10 @@ Descendant_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashLis
 const Plic::TypeHashList&
 Descendant_SmartHandle::cast_types()
 {
-  return connection_id2context<Descendant_Context$> (connection_handle2id (*this))->list_types();
+  static Plic::TypeHashList notypes;
+  const uint64 ipcid = connection_handle2id (*this);
+  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<Descendant_Context$> (ipcid)->list_types();
 }
 
 // === GrandChild ===
@@ -1744,7 +1764,8 @@ operator<< (Plic::FieldBuffer &fb, const GrandChild_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, GrandChild_SmartHandle &handle)
 {
-  handle = connection_id2context<GrandChild_Context$> (fbr.pop_object())->handle$;
+  const uint64 ipcid = fbr.pop_object();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<GrandChild_Context$> (ipcid)->handle$ : GrandChild_SmartHandle();
   return fbr;
 }
 const Plic::TypeHash&
@@ -1765,7 +1786,10 @@ GrandChild_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashLis
 const Plic::TypeHashList&
 GrandChild_SmartHandle::cast_types()
 {
-  return connection_id2context<GrandChild_Context$> (connection_handle2id (*this))->list_types();
+  static Plic::TypeHashList notypes;
+  const uint64 ipcid = connection_handle2id (*this);
+  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<GrandChild_Context$> (ipcid)->list_types();
 }
 inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const QuickRecord_Handle &self)
@@ -1858,7 +1882,8 @@ operator<< (Plic::FieldBuffer &fb, const QuickIface_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, QuickIface_SmartHandle &handle)
 {
-  handle = connection_id2context<QuickIface_Context$> (fbr.pop_object())->handle$;
+  const uint64 ipcid = fbr.pop_object();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<QuickIface_Context$> (ipcid)->handle$ : QuickIface_SmartHandle();
   return fbr;
 }
 const Plic::TypeHash&
@@ -1879,7 +1904,10 @@ QuickIface_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashLis
 const Plic::TypeHashList&
 QuickIface_SmartHandle::cast_types()
 {
-  return connection_id2context<QuickIface_Context$> (connection_handle2id (*this))->list_types();
+  static Plic::TypeHashList notypes;
+  const uint64 ipcid = connection_handle2id (*this);
+  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<QuickIface_Context$> (ipcid)->list_types();
 }
 void
 QuickIface_SmartHandle::simple_function (int arg_i)
@@ -1943,7 +1971,8 @@ operator<< (Plic::FieldBuffer &fb, const MethodTestInterface_SmartHandle &handle
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, MethodTestInterface_SmartHandle &handle)
 {
-  handle = connection_id2context<MethodTestInterface_Context$> (fbr.pop_object())->handle$;
+  const uint64 ipcid = fbr.pop_object();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<MethodTestInterface_Context$> (ipcid)->handle$ : MethodTestInterface_SmartHandle();
   return fbr;
 }
 const Plic::TypeHash&
@@ -1964,7 +1993,10 @@ MethodTestInterface_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::Ty
 const Plic::TypeHashList&
 MethodTestInterface_SmartHandle::cast_types()
 {
-  return connection_id2context<MethodTestInterface_Context$> (connection_handle2id (*this))->list_types();
+  static Plic::TypeHashList notypes;
+  const uint64 ipcid = connection_handle2id (*this);
+  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<MethodTestInterface_Context$> (ipcid)->list_types();
 }
 void
 MethodTestInterface_SmartHandle::method_with_void ()
@@ -3256,7 +3288,8 @@ operator<< (Plic::FieldBuffer &fb, const SignalTestInterface_SmartHandle &handle
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, SignalTestInterface_SmartHandle &handle)
 {
-  handle = connection_id2context<SignalTestInterface_Context$> (fbr.pop_object())->handle$;
+  const uint64 ipcid = fbr.pop_object();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<SignalTestInterface_Context$> (ipcid)->handle$ : SignalTestInterface_SmartHandle();
   return fbr;
 }
 const Plic::TypeHash&
@@ -3277,7 +3310,10 @@ SignalTestInterface_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::Ty
 const Plic::TypeHashList&
 SignalTestInterface_SmartHandle::cast_types()
 {
-  return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->list_types();
+  static Plic::TypeHashList notypes;
+  const uint64 ipcid = connection_handle2id (*this);
+  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<SignalTestInterface_Context$> (ipcid)->list_types();
 }
 
 // === PropertyTester ===
@@ -3332,7 +3368,8 @@ operator<< (Plic::FieldBuffer &fb, const PropertyTester_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, PropertyTester_SmartHandle &handle)
 {
-  handle = connection_id2context<PropertyTester_Context$> (fbr.pop_object())->handle$;
+  const uint64 ipcid = fbr.pop_object();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<PropertyTester_Context$> (ipcid)->handle$ : PropertyTester_SmartHandle();
   return fbr;
 }
 const Plic::TypeHash&
@@ -3353,7 +3390,10 @@ PropertyTester_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHas
 const Plic::TypeHashList&
 PropertyTester_SmartHandle::cast_types()
 {
-  return connection_id2context<PropertyTester_Context$> (connection_handle2id (*this))->list_types();
+  static Plic::TypeHashList notypes;
+  const uint64 ipcid = connection_handle2id (*this);
+  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<PropertyTester_Context$> (ipcid)->list_types();
 }
 bool
 PropertyTester_SmartHandle::bool_prop () const
@@ -3733,7 +3773,8 @@ operator<< (Plic::FieldBuffer &fb, const ButtonArea_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, ButtonArea_SmartHandle &handle)
 {
-  handle = connection_id2context<ButtonArea_Context$> (fbr.pop_object())->handle$;
+  const uint64 ipcid = fbr.pop_object();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<ButtonArea_Context$> (ipcid)->handle$ : ButtonArea_SmartHandle();
   return fbr;
 }
 const Plic::TypeHash&
@@ -3754,7 +3795,10 @@ ButtonArea_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashLis
 const Plic::TypeHashList&
 ButtonArea_SmartHandle::cast_types()
 {
-  return connection_id2context<ButtonArea_Context$> (connection_handle2id (*this))->list_types();
+  static Plic::TypeHashList notypes;
+  const uint64 ipcid = connection_handle2id (*this);
+  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<ButtonArea_Context$> (ipcid)->list_types();
 }
 std::string
 ButtonArea_SmartHandle::on_click () const
@@ -3905,7 +3949,8 @@ operator<< (Plic::FieldBuffer &fb, const PureMethods_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, PureMethods_SmartHandle &handle)
 {
-  handle = connection_id2context<PureMethods_Context$> (fbr.pop_object())->handle$;
+  const uint64 ipcid = fbr.pop_object();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<PureMethods_Context$> (ipcid)->handle$ : PureMethods_SmartHandle();
   return fbr;
 }
 const Plic::TypeHash&
@@ -3926,7 +3971,10 @@ PureMethods_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashLi
 const Plic::TypeHashList&
 PureMethods_SmartHandle::cast_types()
 {
-  return connection_id2context<PureMethods_Context$> (connection_handle2id (*this))->list_types();
+  static Plic::TypeHashList notypes;
+  const uint64 ipcid = connection_handle2id (*this);
+  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<PureMethods_Context$> (ipcid)->list_types();
 }
 int
 PureMethods_SmartHandle::pure_method (double arg_f)

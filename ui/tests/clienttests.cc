@@ -39,6 +39,7 @@ test_item_usage()
   TASSERT (wind0w.component<Container> ("/Window")._is_null() == false);
   TASSERT (item.component<ButtonArea> ("/Window")._is_null() == true);
   TASSERT (item.component<Item> ("/Window")._is_null() == false);
+  TASSERT (item.component<Item> ("/FrobodoNotHere")._is_null() == true);
 }
 REGISTER_TEST ("Client/Basic Item Usage", test_item_usage);
 

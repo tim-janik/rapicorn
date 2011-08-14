@@ -621,7 +621,8 @@ class Generator:
     s += '}\n'
     s += 'Plic::FieldReader&\n'
     s += 'operator>> (Plic::FieldReader &fbr, %s &handle)\n{\n' % classH
-    s += '  handle = connection_id2context<%s> (fbr.pop_object())->handle$;\n' % classC
+    s += '  const uint64 ipcid = fbr.pop_object();\n'
+    s += '  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<%s> (ipcid)->handle$ : %s();\n' % (classC, classH)
     s += '  return fbr;\n'
     s += '}\n'
     s += 'const Plic::TypeHash&\n'
@@ -638,7 +639,10 @@ class Generator:
     s += '}\n'
     s += 'const Plic::TypeHashList&\n'
     s += '%s::%s()\n{\n' % (classH, identifiers['cast_types'])
-    s += '  return connection_id2context<%s> (connection_handle2id (*this))->list_types();\n' % classC
+    s += '  static Plic::TypeHashList notypes;\n'
+    s += '  const uint64 ipcid = connection_handle2id (*this);\n'
+    s += '  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle\n'
+    s += '  return connection_id2context<%s> (ipcid)->list_types();\n' % classC
     s += '}\n'
     return s
   def generate_server_class_methods (self, class_info):
