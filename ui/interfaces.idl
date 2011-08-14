@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -*-mode:c++;-*-
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -*-mode:idl;-*-
 
 include "hardcoded.idl";
 
@@ -31,16 +31,22 @@ sequence ItemSeq {
 };
 
 /**
- * Item is a temporary helper interface to aid the transition to IDL interface definitions in Rapicorn.
+ * Item is the base type for all UI elements.
  */
 interface Item {
   Item          unique_component        (string path) = 0;
   ItemSeq       collect_components      (string path) = 0;
-  string        test_dump               () = 0;
+  string	test_dump               () = 0;
   string        name = String (_("Name"), _("Identification name of the item"), "rw");
 };
 
+/**
+ * Container is a special type of Item that can contain other items.
+ */
 interface Container : Item {
+  /// Create a child item from the @a item_identifier template and add it to the container.
+  Item          create_child            (string item_identifier,
+					 StringList args = 0) = 0;
 };
 
 /**

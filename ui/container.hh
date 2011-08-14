@@ -54,6 +54,9 @@ public:
                                          std::vector<ItemImpl*>     &stack);
   virtual void          render          (Display                &display);
   void                  debug_tree      (String indent = String());
+  // ContainerIface
+  virtual ItemIface*    create_child    (const std::string      &item_identifier,
+                                         const StringListImpl   &args);
 };
 
 /* --- Single Child Container Impl --- */

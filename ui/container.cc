@@ -2,6 +2,7 @@
 #include "container.hh"
 #include "container.hh"
 #include "window.hh"
+#include "factory.hh"
 #include <algorithm>
 #include <stdio.h>
 
@@ -647,6 +648,22 @@ ContainerImpl::dump_test_data (TestStream &tstream)
 {
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     cw->make_test_dump (tstream);
+}
+
+ItemIface*
+ContainerImpl::create_child (const std::string    &item_identifier,
+                             const StringListImpl &args)
+{
+  ItemImpl &item = Factory::create_item (item_identifier, args);
+  ref_sink (item);
+  try {
+    add (item);
+  } catch (...) {
+    unref (item);
+    return NULL;
+  }
+  unref (item);
+  return &item;
 }
 
 SingleContainerImpl::SingleContainerImpl () :
