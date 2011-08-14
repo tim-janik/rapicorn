@@ -7,14 +7,14 @@
 
 namespace Rapicorn {
 
-// === i18n ===
+// == i18n ==
 const char*                     rapicorn_gettext        (const char *text) RAPICORN_FORMAT (1);
 #ifdef __RAPICORN_BUILD__
 #define _(str)  rapicorn_gettext (str)
 #define N_(str) (str)
 #endif
 
-// === String ===
+// == String ==
 String                          string_multiply          (const String &s,
                                                           uint64       count);
 String  			string_tolower           (const String &str);
@@ -87,13 +87,32 @@ String  string_vector_find (const StringVector  &svector,
                             const String        &fallback);
 StringVector cstrings_to_vector (const char*, ...) RAPICORN_SENTINEL;
 
-// === String Options ===
+// == String Options ==
 bool    string_option_check     (const String   &option_string,
                                  const String   &option);
 String  string_option_get       (const String   &option_string,
                                  const String   &option);
 
-// === Charset Conversions ===
+// == Strings ==
+class Strings : public std::vector<std::string> ///< Convenience Constructor for StringList or std::vector<std::string>
+{
+  typedef const std::string CS;
+public:
+  explicit Strings (CS &s1);
+  explicit Strings (CS &s1, CS &s2);
+  explicit Strings (CS &s1, CS &s2, CS &s3);
+  explicit Strings (CS &s1, CS &s2, CS &s3, CS &s4);
+  explicit Strings (CS &s1, CS &s2, CS &s3, CS &s4, CS &s5);
+  explicit Strings (CS &s1, CS &s2, CS &s3, CS &s4, CS &s5, CS &s6);
+  explicit Strings (CS &s1, CS &s2, CS &s3, CS &s4, CS &s5, CS &s6, CS &s7);
+  explicit Strings (CS &s1, CS &s2, CS &s3, CS &s4, CS &s5, CS &s6, CS &s7, CS &s8);
+  explicit Strings (CS &s1, CS &s2, CS &s3, CS &s4, CS &s5, CS &s6, CS &s7, CS &s8, CS &s9);
+  explicit Strings (CS &s1, CS &s2, CS &s3, CS &s4, CS &s5, CS &s6, CS &s7, CS &s8, CS &s9, CS &sA);
+  explicit Strings (CS &s1, CS &s2, CS &s3, CS &s4, CS &s5, CS &s6, CS &s7, CS &s8, CS &s9, CS &sA, CS &sB);
+  explicit Strings (CS &s1, CS &s2, CS &s3, CS &s4, CS &s5, CS &s6, CS &s7, CS &s8, CS &s9, CS &sA, CS &sB, CS &sC);
+};
+
+// == Charset Conversions ==
 bool    text_convert    (const String &to_charset,
                          String       &output_string,
                          const String &from_charset,
@@ -101,7 +120,7 @@ bool    text_convert    (const String &to_charset,
                          const String &fallback_charset = "ISO-8859-15",
                          const String &output_mark = "");
 
-// === StringVector ===
+// == StringVector ==
 #define RAPICORN_STRING_VECTOR_FROM_ARRAY(ConstCharArray)               ({ \
   Rapicorn::StringVector __a;                                           \
   const uint64_t __l = RAPICORN_ARRAY_SIZE (ConstCharArray);            \
