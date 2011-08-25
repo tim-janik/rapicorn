@@ -23,6 +23,7 @@ class WindowImpl : public virtual SingleContainerImpl, public virtual Wind0wIfac
   EventContext          m_last_event_context;
   vector<ItemImpl*>     m_last_entered_children;
   Viewp0rt::Config      m_config;
+  uint                  m_notify_displayed_id;
   void          uncross_focus           (ItemImpl        &fitem);
 protected:
   void          set_focus               (ItemImpl         *item);
@@ -47,6 +48,7 @@ public:
   typedef Signal<WindowImpl, bool (const String&, const StringVector&), CollectorWhile0<bool> >   CommandSignal;
   typedef Signal<WindowImpl, void ()> NotifySignal;
 private:
+  void                  notify_displayed                        (void);
   virtual void          remove_grab_item                        (ItemImpl               &child);
   void                  grab_stack_changed                      ();
   /*Des*/               ~WindowImpl                             ();

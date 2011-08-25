@@ -155,7 +155,8 @@ WindowImpl::WindowImpl() :
   m_source (NULL),
   m_viewp0rt (NULL),
   m_tunable_requisition_counter (0),
-  m_entered (false), m_auto_close (false)
+  m_entered (false), m_auto_close (false),
+  m_notify_displayed_id (0)
 {
   Heritage *hr = ClassDoctor::window_heritage (*this, color_scheme());
   ref_sink (hr);
@@ -184,6 +185,11 @@ WindowImpl::dispose ()
 
 WindowImpl::~WindowImpl()
 {
+  if (m_notify_displayed_id)
+    {
+      m_loop.try_remove (m_notify_displayed_id);
+      m_notify_displayed_id = 0;
+    }
   if (m_viewp0rt)
     {
       delete m_viewp0rt;
@@ -769,6 +775,13 @@ WindowImpl::expose_now ()
 }
 
 void
+WindowImpl::notify_displayed()
+{
+  // emit updates at exec_update() priority, so other high priority handlers run first (exec_now)
+  sig_displayed.emit();
+}
+
+void
 WindowImpl::draw_now ()
 {
   if (m_viewp0rt)
@@ -800,8 +813,8 @@ WindowImpl::draw_now ()
           m_viewp0rt->blit_display (display);
           display.pop_clip_rect();
         }
-      if (!has_pending_win_size())
-        sig_displayed.emit();
+      if (!has_pending_win_size() && !m_notify_displayed_id)
+        m_notify_displayed_id = m_loop.exec_update (slot (*this, &WindowImpl::notify_displayed));
     }
   else
     m_expose_region.clear(); // nuke stale exposes
