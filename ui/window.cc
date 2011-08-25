@@ -155,8 +155,7 @@ WindowImpl::WindowImpl() :
   m_source (NULL),
   m_viewp0rt (NULL),
   m_tunable_requisition_counter (0),
-  m_entered (false), m_auto_close (false),
-  sig_displayed (*this)
+  m_entered (false), m_auto_close (false)
 {
   Heritage *hr = ClassDoctor::window_heritage (*this, color_scheme());
   ref_sink (hr);

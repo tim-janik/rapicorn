@@ -46,7 +46,6 @@ public:
   // signals
   typedef Signal<WindowImpl, bool (const String&, const StringVector&), CollectorWhile0<bool> >   CommandSignal;
   typedef Signal<WindowImpl, void ()> NotifySignal;
-  NotifySignal          sig_displayed;
 private:
   virtual void          remove_grab_item                        (ItemImpl               &child);
   void                  grab_stack_changed                      ();
