@@ -182,12 +182,9 @@ main (int   argc,
       return 1;
     }
 
-  /* create window item */
+  // create window, hook up post-display handler
   Wind0w wind0w = app.create_wind0w (dialog);
-
-  /* hook up test-dump handler */
-  if (test_dump)
-    wind0w.displayed += window_displayed;
+  wind0w.displayed += window_displayed;
 
   /* show wind0w and process events */
   wind0w.show();
