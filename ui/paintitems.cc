@@ -18,6 +18,12 @@
 #include "factory.hh"
 #include "painter.hh"
 
+#define CHECK_CAIRO_STATUS(status)      do {    \
+  cairo_status_t ___s = (status);               \
+  if (___s != CAIRO_STATUS_SUCCESS)             \
+    DEBUG ("%s: %s", cairo_status_to_string (___s), #status);   \
+  } while (0)
+
 namespace Rapicorn {
 
 static DataKey<SizePolicyType> size_policy_key;
@@ -213,33 +219,88 @@ public:
 };
 static const ItemFactory<DotGridImpl> dot_grid_factory ("Rapicorn::Factory::DotGrid");
 
-/* --- DrawableImpl --- */
-Drawable::Drawable() :
-  sig_draw (*this, &Drawable::draw)
+// == DrawableImpl ==
+DrawableImpl::DrawableImpl()
 {}
 
-class DrawableImpl : public virtual ItemImpl, public virtual Drawable {
-public:
-  virtual void
-  size_request (Requisition &requisition)
-  {
-    requisition.width = 320;
-    requisition.height = 200;
-  }
-  virtual void
-  size_allocate (Allocation area)
-  {
-    allocation (area);
-  }
-  virtual void
-  render (Display &display)
-  {
-    sig_draw.emit (display);
-  }
-  virtual void
-  draw (Display &display)
-  {}
-};
+void
+DrawableImpl::size_request (Requisition &requisition)
+{
+  requisition.width = 320;
+  requisition.height = 200;
+}
+
+void
+DrawableImpl::size_allocate (Allocation area)
+{
+  allocation (area);
+  m_pic = PixelRectImpl();
+  sig_redraw.emit (area.x, area.y, area.width, area.height);
+}
+
+void
+DrawableImpl::draw_rect (const PixelRectImpl &pixrect)
+{
+  const Allocation &area = allocation();
+  if (pixrect.x >= area.x && pixrect.y >= area.y &&
+      pixrect.x + pixrect.width <= area.x + area.width &&
+      pixrect.y + pixrect.height <= area.y + area.height &&
+      pixrect.rowstride >= pixrect.width &&
+      size_t (pixrect.offset) + pixrect.rowstride * pixrect.height <= pixrect.argb_pixels.size())
+    m_pic = pixrect;
+  else if (m_pic.width > 0)
+    m_pic = PixelRectImpl();
+  expose();
+}
+
+void
+DrawableImpl::render (Display &display)
+{
+  const uint size = 10;
+  Allocation area = allocation();
+  cairo_t *cr = display.create_cairo();
+  // checkerboard pattern
+  if (true)
+    {
+      cairo_save (cr);
+      cairo_surface_t *ps = cairo_surface_create_similar (cairo_get_target (cr), CAIRO_CONTENT_COLOR, 2 * size, 2 * size);
+      cairo_t *pc = cairo_create (ps);
+      cairo_set_source_rgb (pc, 1.0, 1.0, 1.0);
+      cairo_rectangle (pc,    0,    0, size, size);
+      cairo_rectangle (pc, size, size, size, size);
+      cairo_fill (pc);
+      cairo_set_source_rgb (pc, 0.9, 0.9, 0.9);
+      cairo_rectangle (pc,    0, size, size, size);
+      cairo_rectangle (pc, size,    0, size, size);
+      cairo_fill (pc);
+      cairo_destroy (pc);
+      cairo_pattern_t *pat = cairo_pattern_create_for_surface (ps);
+      cairo_surface_destroy (ps);
+      cairo_pattern_set_extend (pat, CAIRO_EXTEND_REPEAT);
+      // render pattern
+      Rect area = allocation();
+      cairo_rectangle (cr, area.x, area.y, area.width, area.height);
+      cairo_clip (cr);
+      cairo_translate (cr, area.x, area.y + area.height);
+      cairo_set_source (cr, pat);
+      cairo_paint (cr);
+      cairo_pattern_destroy (pat);
+      cairo_restore (cr);
+    }
+  // handle user draw
+  if (m_pic.width > 0)
+    {
+      cairo_surface_t *surface = cairo_image_surface_create_for_data ((uint8*) m_pic.argb_pixels.data(), CAIRO_FORMAT_ARGB32,
+                                                                      m_pic.width, m_pic.height, m_pic.rowstride * 4);
+      CHECK_CAIRO_STATUS (cairo_surface_status (surface));
+      cairo_set_source_surface (cr, surface, m_pic.x, m_pic.y);
+      cairo_paint (cr);
+      cairo_surface_destroy (surface);
+    }
+  // clenaup
+  cairo_destroy (cr);
+}
+
 static const ItemFactory<DrawableImpl> drawable_factory ("Rapicorn::Factory::Drawable");
 
 } // Rapicorn

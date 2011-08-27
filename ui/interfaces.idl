@@ -8,7 +8,7 @@ namespace Rapicorn {
  * A sequence of C++ std::strings.
  */
 sequence StringList {
-  string        strings;
+  string strings;
 };
 
 /**
@@ -50,7 +50,7 @@ interface Container : Item {
 };
 
 /**
- * The ButtonArea interface implements button click handling. Certain actions can be
+ * The ButtonArea interface provides button click handling. Certain actions can be
  * associated with button1, button2 and button3 clicks to be caried out when the
  * respective mouse button is clicked.
  */
@@ -58,6 +58,28 @@ interface ButtonArea : Container {
   string	on_click	= String (_("On CLick"), _("Action to carry out on button1 clicks."), "rw");
   string	on_click2	= String (_("On CLick"), _("Action to carry out on button2 clicks."), "rw");
   string	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
+};
+
+sequence Pixels {
+  int pixel;
+};
+record PixelRect {
+   int	   x;
+   int     y;
+   int     width;
+   int     height;
+   int     rowstride;
+   int     offset;
+   string  comment;
+   Pixels  argb_pixels;
+};
+
+/**
+ * The Drawable interface allows display of custom images, created by client-side rendering.
+ */
+interface Drawable : Item {
+  signal void	redraw		(int x, int y, int w, int h);	///< Requests a redraw at @a width and @a height.
+  void		draw_rect	(PixelRect pixrect) = 0;	///< Draws pixels on the drawable display.
 };
 
 /**
