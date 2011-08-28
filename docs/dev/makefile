@@ -9,7 +9,7 @@ SED_MKEVEN  = sed 's/1$$/0/;s/3$$/2/;s/5$$/4/;s/7$$/6/;s/9$$/8/'
 
 DOC_FILES   = rapicorn-core.hh rapicorn.hh
 DOC_DIRS    = rcore/ plic/ rope/ tools/ ui/
-DOCU_GLOBS  = *.py $(DOCU_HGLOBS)
+DOCU_GLOBS  = *.dox *.py $(DOCU_HGLOBS)
 DOCU_HGLOBS = *.idl *.h *.H *.hh *.proc
 DOCU_CGLOBS = $(DOCU_GLOBS) *.c *.C *.cc
 SRCTREE     = srctree
