@@ -8,7 +8,7 @@ INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. \
 DEFS      = -DRAPICORN_CONVENIENCE -D__SOURCE_FILE__='"$(patsubst $(realpath $(abs_top_srcdir))/%,%, $(realpath $<))"'
 PLICINT   = $(top_builddir)/plic/plic-intern
 RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
-RAPICORNINS  = $(srcdir)/../ui/insertions.cc
+RAPICORNINS  = $(srcdir)/../ui/serverinsert.cc
 HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
 
 # === CxxRapicorn ===
@@ -16,7 +16,6 @@ noinst_PROGRAMS      = cxxrapicorn
 cxxrapicorn_SOURCES  = cxx-rope.cc
 cxxrapicorn_LDADD    = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
 cxxrapicorn_CXXFLAGS = -D__RAPICORN_BUILD__	# needed for direct <ui/utilities.hh> inclusion
-EXTRA_DIST          += cxx-rope.hh cxx-client.hh
 
 # === PyRapicorn ===
 pyrapicorn_cc_sources = py-rope.cc
@@ -42,21 +41,6 @@ cpy2rope.cc: $(RAPICORNIDL) $(srcdir)/CxxPyStub.py
 $(srcdir)/py-rope.cc: cpy2rope.cc
 CLEANFILES += xgen-cpy2rope.cc cpy2rope.cc
 
-# === cxx-client ===
-cxx-client.hh: $(RAPICORNIDL) $(HARDCODEDIDL) $(RAPICORNINS) $(srcdir)/CxxStub.py
-	: # build cxx-client.hh from interfaces.idl
-	: # ${PLICINT} -G $(srcdir)/CxxStub -g clienthh $(HARDCODEDIDL) -o xgen-$(@F)
-	${PLICINT} -G $(srcdir)/CxxStub -g clienthh $(RAPICORNIDL) -g shortalias \
-	  --insertions $(RAPICORNINS) -o xgen-$(@F)
-	mv xgen-$(@F) $@
-cxx-client.cc: $(RAPICORNIDL) $(HARDCODEDIDL) $(srcdir)/CxxStub.py
-	: # build cxx-client.cc from interfaces.idl
-	: # ${PLICINT} -G $(srcdir)/CxxStub -g clientcc $(HARDCODEDIDL) --inclusions '"cxx-client.hh"' -o xgen-$(@F)
-	${PLICINT} -G $(srcdir)/CxxStub -g clientcc $(RAPICORNIDL) --inclusions '"cxx-client.hh"' -o - > xgen-$(@F)
-	mv xgen-$(@F) $@
-$(srcdir)/cxx-rope.cc: cxx-client.hh cxx-client.cc
-CLEANFILES += xgen-cxx-client.hh xgen-cxx-client.cc cxx-client.hh cxx-client.cc
-
 # === py2cpy.py ===
 py2cpy.py: $(RAPICORNIDL) $(srcdir)/PyStub.py
 	${PLICINT} -G $(srcdir)/PyStub $(RAPICORNIDL) -o xgen-$(@F)
@@ -70,7 +54,7 @@ EXTRA_DIST += testpystub.ref PyStub.py
 CLEANFILES += testpystub.pyc
 check-PyStub-gen: $(srcdir)/testpystub.ref
 	$(Q) ${PLICINT} -G $(srcdir)/PyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testpystub.ref'"
+	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testpystub.ref'"
 check-PyStub-syntax: $(srcdir)/testpystub.ref
 	$(Q) $(PYTHON) -c "import py_compile; py_compile.compile ('$(srcdir)/testpystub.ref', 'testpystub.pyc')" && \
 	  $(PYTHON) $(srcdir)/testpystub.ref ; eval "$$TSTDIAGNOSE"
@@ -81,7 +65,7 @@ check-CxxPyStub-gen: $(srcdir)/testcxxpystub.ref
 	$(Q) ${PLICINT} -G $(srcdir)/CxxPyStub $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) \
 	&& echo "static PLIC_UNUSED PyMethodDef dummy[] = { PLIC_PYSTUB_METHOD_DEFS(), { 0 } };" >>$(TSTOUT) \
 	; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testcxxpystub.ref'"
+	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxpystub.ref'"
 check-CxxPyStub-syntax: $(srcdir)/testcxxpystub.ref
 	$(Q) cp $(srcdir)/testcxxpystub.ref testcxxpystub.cc
 	$(Q) $(CXXCOMPILE) testcxxpystub.cc -c ; eval "$$TSTDIAGNOSE"
@@ -91,16 +75,16 @@ check-local: check-CxxPyStub-gen check-CxxPyStub-syntax
 check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
 	$(Q) ${PLICINT} -G $(srcdir)/CxxStub -g iface-prefix=I_ -g serverhh -g servercc \
 	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testcxxserver.ref'"
+	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxserver.ref'"
 check-CxxStub-client-gen: $(srcdir)/testcxxclient.ref
 	$(Q) ${PLICINT} -G $(srcdir)/CxxStub -g iface-prefix=I_ -g clienthh -g clientcc \
 	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testcxxclient.ref'"
+	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxclient.ref'"
 check-CxxStub-skeleton-gen: $(srcdir)/testcxxskels.ref
 	$(Q) echo -e "#include <rapicorn.hh>\n" > $(TSTOUT)
 	$(Q) ${PLICINT} -G $(srcdir)/CxxStub -g iface-prefix=I_ -g serverhh -g server-skel \
 	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/testcxxskels.ref'"
+	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxskels.ref'"
 check-CxxStub-server-code: $(srcdir)/testcxxserver.ref
 	$(Q) cp $(srcdir)/testcxxserver.ref testcxxserver.cc
 	$(Q) $(CXXCOMPILE) -D__RAPICORN_BUILD__  testcxxserver.cc -c ; eval "$$TSTDIAGNOSE"

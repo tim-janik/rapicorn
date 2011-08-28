@@ -1,19 +1,5 @@
-/* Plic Binding utilities
- * Copyright (C) 2010 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Plic Binding utilities
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #ifndef __PLIC_UTILITIES_HH__
 #define __PLIC_UTILITIES_HH__
 
@@ -21,6 +7,7 @@
 #include <vector>
 #include <memory>               // auto_ptr
 #include <stdint.h>             // uint32_t
+#include <stdarg.h>
 #include <tr1/memory>           // shared_ptr
 
 namespace Plic {
@@ -47,9 +34,8 @@ using std::tr1::weak_ptr;
 #define PLIC_UNLIKELY(expr)     expr
 #endif
 #define PLIC_LIKELY             PLIC_ISLIKELY
-#define PLIC_MSGID_SHIFT        60
 
-/* === Standard Types === */
+// == Standard Types ==
 typedef std::string String;
 using std::vector;
 typedef int8_t                 int8;
@@ -60,102 +46,74 @@ typedef uint32_t               uint;
 typedef signed long long int   int64; // int64_t is a long on AMD64 which breaks printf
 typedef unsigned long long int uint64; // int64_t is a long on AMD64 which breaks printf
 
-/* === Constants === */
-static const uint64 msgid_ok     = 0x0000000000000000ULL;
-static const uint64 msgid_result = 0x1000000000000000ULL; // result bit
-static const uint64 msgid_oneway = 0x2000000000000000ULL;
-static const uint64 msgid_twoway = 0x3000000000000000ULL; // result bit
-static const uint64 msgid_discon = 0x4000000000000000ULL;
-static const uint64 msgid_sigcon = 0x5000000000000000ULL; // result bit
-static const uint64 msgid_event  = 0x6000000000000000ULL;
-//     const uint64 msgid_signal = 0x7000000000000000ULL; // result bit
-static const uint64 msgid_error  = 0x8000000000000000ULL; // error bit
-inline bool msgid_has_result (const uint64 id) { return id & msgid_result; }
-inline bool is_msgid_ok      (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_ok     >> PLIC_MSGID_SHIFT; }
-inline bool is_msgid_result  (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_result >> PLIC_MSGID_SHIFT; }
-inline bool is_msgid_oneway  (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_oneway >> PLIC_MSGID_SHIFT; }
-inline bool is_msgid_twoway  (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_twoway >> PLIC_MSGID_SHIFT; }
-inline bool is_msgid_discon  (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_discon >> PLIC_MSGID_SHIFT; }
-inline bool is_msgid_sigcon  (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_sigcon >> PLIC_MSGID_SHIFT; }
-inline bool is_msgid_event   (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_event  >> PLIC_MSGID_SHIFT; }
-inline bool is_msgid_error   (const uint64 id) { return id >> PLIC_MSGID_SHIFT == msgid_error  >> PLIC_MSGID_SHIFT; }
-inline bool msgid_has_error  (const uint64 id) { return id & msgid_error; }
-
-/* === Forward Declarations === */
+// == Type Declarations ==
 class SimpleServer;
-class Coupler;
+class Connection;
 union FieldUnion;
 class FieldBuffer;
-class FieldBufferReader;
-typedef FieldBuffer* (*DispatchFunc) (Coupler&);
+class FieldReader;
+typedef FieldBuffer* (*DispatchFunc) (FieldReader&);
 
-/* === EventFd === */
-class EventFd {
-  int fds[2];
-public:
-  explicit EventFd   ();
-  int      open      (); // -errno
-  void     wakeup    (); // wakeup polling end
-  int      inputfd   (); // fd for POLLIN
-  void     flush     (); // clear pending wakeups
-  /*Des*/ ~EventFd   ();
-};
-
-/* === Callback Wrapper === */
-template<class R>
-struct Callback0 {
-  bool                   callable   () { return p.get() != NULL; }
-  R                      operator() () { return (*p) (); }
-  template<class F> void set (F f) { if (f) p.reset (new CallFun<F> (f)); else p.reset(); }
-  template<class C> void set (C &c, R (C::*m) ()) { p.reset (new CallMem<C> (c, m));}
-private:
-  struct CallBase {
-    virtual  ~CallBase   () {}
-    virtual R operator() () = 0;
-  };
-  template<class C> struct CallMem : CallBase {
-    explicit  CallMem    (C &o, R (C::*p) ()) : c (o), m (p) {}
-    virtual R operator() () { return (c.*m) (); }
-  private: C &c; R (C::*m) ();
-  };
-  template<class F> struct CallFun : CallBase {
-    explicit  CallFun    (F p) : f (p) {}
-    virtual R operator() () { return f (); }
-  private: F f;
-  };
-  std::auto_ptr<CallBase> p;
-};
-
-/* === TypeHash === */
+// == Type Hash ==
 struct TypeHash {
-  static const uint hash_size = 4;
-  uint64            qwords[hash_size];
-  inline bool       operator< (const TypeHash &rhs) const;
-  inline            TypeHash (const uint64 qw[hash_size]);
-  inline            TypeHash (uint64 qwa, uint64 qwb, uint64 qwc, uint64 qwd);
-  inline uint64     id (uint n) const { return n < hash_size ? qwords[n] : 0; }
-  String            to_string() const;
+  uint64 typehi, typelo;
+  explicit    TypeHash   (uint64 hi, uint64 lo) : typehi (hi), typelo (lo) {}
+  explicit    TypeHash   () : typehi (0), typelo (0) {}
+  inline bool operator== (const TypeHash &z) const { return typehi == z.typehi && typelo == z.typelo; }
+};
+typedef std::vector<TypeHash> TypeHashList;
+
+// === Utilities ===
+template<class V> inline
+bool    atomic_ptr_cas  (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
+void    error_printf    (const char *format, ...) PLIC_PRINTF (1, 2);
+void    error_vprintf   (const char *format, va_list args);
+
+// === Message IDs ===
+enum MessageId {
+  MSGID_NONE        = 0,
+  MSGID_ONEWAY      = 0x2000000000000000ULL,      ///< One-way method call ID (void return).
+  MSGID_TWOWAY      = 0x3000000000000000ULL,      ///< Two-way method call ID, returns result message.
+  MSGID_DISCON      = 0x4000000000000000ULL,      ///< Signal handler disconnection ID.
+  MSGID_SIGCON      = 0x5000000000000000ULL,      ///< Signal connection/disconnection request ID, returns result message.
+  MSGID_EVENT       = 0x6000000000000000ULL,      ///< One-way signal event message ID.
+  // MSGID_SIGNAL   = 0x7000000000000000ULL,      ///< Two-way signal message ID, returns result message.
+};
+inline bool msgid_has_result    (MessageId mid) { return (mid & 0x9000000000000000ULL) == 0x1000000000000000ULL; }
+inline bool msgid_is_result     (MessageId mid) { return (mid & 0x9000000000000000ULL) == 0x9000000000000000ULL; }
+inline bool msgid_is_error      (MessageId mid) { return (mid & 0xf000000000000000ULL) == 0x8000000000000000ULL; }
+inline bool msgid_is_oneway     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_ONEWAY; }
+inline bool msgid_is_twoway     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_TWOWAY; }
+inline bool msgid_is_discon     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_DISCON; }
+inline bool msgid_is_sigcon     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_SIGCON; }
+inline bool msgid_is_event      (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_EVENT; }
+
+// === NonCopyable ===
+class NonCopyable {
+  NonCopyable& operator=   (const NonCopyable&);
+  /*copy*/     NonCopyable (const NonCopyable&);
+protected:
+  /*ctor*/     NonCopyable () {}
+  /*dtor*/    ~NonCopyable () {}
 };
 
 /* === SmartHandle === */
 class SmartHandle {
   uint64 m_rpc_id;
 protected:
-  typedef bool (SmartHandle::*_unspecified_bool_type) () const; // non-numeric operator bool() result
-  static inline _unspecified_bool_type _unspecified_bool_true () { return &Plic::SmartHandle::_is_null; }
+  typedef bool (SmartHandle::*_UnspecifiedBool) () const; // non-numeric operator bool() result
+  static inline _UnspecifiedBool _unspecified_bool_true () { return &Plic::SmartHandle::_is_null; }
   typedef uint64 RpcId;
-  explicit                  SmartHandle ();
+  explicit                  SmartHandle (uint64 ipcid);
   void                      _reset      ();
-  void                      _pop_rpc    (Coupler&, FieldBufferReader&);
   void*                     _cast_iface () const;
   inline void*              _void_iface () const;
   void                      _void_iface (void *rpc_id_ptr);
 public:
+  explicit                  SmartHandle ();
   uint64                    _rpc_id     () const;
   bool                      _is_null    () const;
   virtual                  ~SmartHandle ();
-  static SmartHandle*       _rpc_id2obj (uint64 rpc_id);
-  static const SmartHandle &None;
 };
 
 /* === SimpleServer === */
@@ -164,28 +122,6 @@ public:
   explicit             SimpleServer ();
   virtual             ~SimpleServer ();
   virtual uint64       _rpc_id      () const;
-  static SimpleServer* _rpc_id2obj  (uint64 rpc_id);
-};
-
-/* === EventDispatcher === */
-struct EventDispatcher {
-  virtual             ~EventDispatcher  ();
-  virtual FieldBuffer* dispatch_event   (Coupler&) = 0;
-};
-
-/* === DispatchRegistry === */
-struct DispatcherEntry {
-  uint64            hash_qwords[TypeHash::hash_size];
-  DispatchFunc      dispatcher;
-};
-class DispatcherRegistry {
-public:
-  template<class T, size_t S>
-  inline                DispatcherRegistry  (T (&)[S]);
-  static void           register_dispatcher (const DispatcherEntry &dentry);
-  static DispatchFunc   find_dispatcher     (const TypeHash        &type_hash);
-  static FieldBuffer*   dispatch_call       (const FieldBuffer     &fbcall,
-                                             Coupler               &coupler);
 };
 
 /* === FieldBuffer === */
@@ -206,41 +142,54 @@ union FieldUnion {
   struct { uint capacity, index; };     // FieldBuffer.buffermem[0]
 };
 
+struct EnumValue { int64 v; EnumValue (int64 e) : v (e) {} };
+
 class FieldBuffer { // buffer for marshalling procedure calls
-  friend class FieldBufferReader;
+  friend class FieldReader;
   void               check_internal ();
+  inline FieldUnion& upeek (uint n) const { return buffermem[offset() + n]; }
 protected:
   FieldUnion        *buffermem;
-  inline uint        offset () const { const uint offs = 1 + (n_types() + 7) / 8; return offs; }
+  inline void        check ()      { if (PLIC_UNLIKELY (size() > capacity())) check_internal(); }
+  inline uint        offset () const { const uint offs = 1 + (capacity() + 7) / 8; return offs; }
   inline FieldType   type_at (uint n) const { return FieldType (buffermem[1 + n/8].bytes[n%8]); }
-  inline void        set_type (FieldType ft) { buffermem[1 + nth()/8].bytes[nth()%8] = ft; }
-  inline uint        n_types () const { return buffermem[0].capacity; }
-  inline uint        nth () const     { return buffermem[0].index; }
-  inline FieldUnion& getu () const    { return buffermem[offset() + nth()]; }
+  inline void        set_type (FieldType ft)    { buffermem[1 + size()/8].bytes[size()%8] = ft; }
+  inline uint        capacity () const          { return buffermem[0].capacity; }
+  inline uint        size () const              { return buffermem[0].index; }
+  inline FieldUnion& getu () const              { return buffermem[offset() + size()]; }
   inline FieldUnion& addu (FieldType ft) { set_type (ft); FieldUnion &u = getu(); buffermem[0].index++; check(); return u; }
-  inline void        check() { if (PLIC_UNLIKELY (nth() > n_types())) check_internal(); }
-  inline FieldUnion& uat (uint n) const { return n < n_types() ? buffermem[offset() + n] : *(FieldUnion*) NULL; }
+  inline FieldUnion& uat (uint n) const { return n < size() ? upeek (n) : *(FieldUnion*) NULL; }
   explicit           FieldBuffer (uint _ntypes);
   explicit           FieldBuffer (uint, FieldUnion*, uint);
 public:
   virtual     ~FieldBuffer();
-  inline uint64 first_id () const { return buffermem && type_at (0) == INT ? uat (0).vint64 : 0; }
+  inline uint64 first_id () const { return buffermem && size() && type_at (0) == INT ? upeek (0).vint64 : 0; }
   inline void add_int64  (int64  vint64)  { FieldUnion &u = addu (INT); u.vint64 = vint64; }
   inline void add_evalue (int64  vint64)  { FieldUnion &u = addu (ENUM); u.vint64 = vint64; }
   inline void add_double (double vdouble) { FieldUnion &u = addu (FLOAT); u.vdouble = vdouble; }
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
   inline void add_func   (const String &s) { FieldUnion &u = addu (FUNC); new (&u) String (s); }
   inline void add_object (uint64 objid) { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
+  inline void add_msgid  (uint64 h, uint64 l) { add_int64 (h); add_int64 (l); }
   inline FieldBuffer& add_rec (uint nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); }
   inline FieldBuffer& add_seq (uint nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); }
-  inline TypeHash first_type_hash () const;
-  inline void     add_type_hash (uint64 a, uint64 b, uint64 c, uint64 d);
   inline void         reset();
   String              first_id_str() const;
+  String              to_string() const;
+  static String       type_name (int field_type);
   static FieldBuffer* _new (uint _ntypes); // Heap allocated FieldBuffer
   static FieldBuffer* new_error (const String &msg, const String &domain = "");
-  static FieldBuffer* new_result();
-  static FieldBuffer* new_ok();
+  static FieldBuffer* new_result (uint n = 1);
+  inline FieldBuffer& operator<< (size_t v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
+  inline FieldBuffer& operator<< (uint64 v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
+  inline FieldBuffer& operator<< (int64  v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
+  inline FieldBuffer& operator<< (uint   v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
+  inline FieldBuffer& operator<< (int    v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
+  inline FieldBuffer& operator<< (bool   v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
+  inline FieldBuffer& operator<< (double v)          { FieldUnion &u = addu (FLOAT); u.vdouble = v; return *this; }
+  inline FieldBuffer& operator<< (EnumValue e)       { FieldUnion &u = addu (ENUM); u.vint64 = e.v; return *this; }
+  inline FieldBuffer& operator<< (const String &s)   { FieldUnion &u = addu (STRING); new (&u) String (s); return *this; }
+  inline FieldBuffer& operator<< (const TypeHash &h) { *this << h.typehi; *this << h.typelo; return *this; }
 };
 
 class FieldBuffer8 : public FieldBuffer { // Stack contained buffer for up to 8 fields
@@ -250,129 +199,86 @@ public:
   inline   FieldBuffer8 (uint ntypes = 8) : FieldBuffer (ntypes, bmem, sizeof (bmem)) {}
 };
 
-class FieldBufferReader { // read field buffer contents
+class FieldReader { // read field buffer contents
   const FieldBuffer *m_fb;
   uint               m_nth;
-  inline FieldUnion& fb_getu () { return m_fb->uat (m_nth); }
-  inline FieldUnion& fb_popu () { FieldUnion &u = m_fb->uat (m_nth++); check(); return u; }
-  inline void        check() { if (PLIC_UNLIKELY (m_nth > n_types())) check_internal(); }
-  void               check_internal ();
+  void               check_request (int type);
+  inline void        request (int t) { if (PLIC_UNLIKELY (m_nth >= n_types() || get_type() != t)) check_request (t); }
+  inline FieldUnion& fb_getu (int t) { request (t); return m_fb->upeek (m_nth); }
+  inline FieldUnion& fb_popu (int t) { request (t); FieldUnion &u = m_fb->upeek (m_nth++); return u; }
 public:
-  FieldBufferReader (const FieldBuffer &fb) : m_fb (&fb), m_nth (0) {}
-  inline void reset (const FieldBuffer &fb) { m_fb = &fb; m_nth = 0; }
+  explicit                 FieldReader (const FieldBuffer &fb) : m_fb (&fb), m_nth (0) {}
+  inline void               reset      (const FieldBuffer &fb) { m_fb = &fb; m_nth = 0; }
   inline void               reset      () { m_fb = NULL; m_nth = 0; }
   inline uint               remaining  () { return n_types() - m_nth; }
-  inline void               skip       () { m_nth++; check(); }
-  inline void               skip_hash  () { m_nth += 4; check(); }
-  inline uint               n_types    () { return m_fb->n_types(); }
+  inline void               skip       () { if (PLIC_UNLIKELY (m_nth >= n_types())) check_request (0); m_nth++; }
+  inline void               skip_msgid () { skip(); skip(); }
+  inline uint               n_types    () { return m_fb->size(); }
   inline FieldType          get_type   () { return m_fb->type_at (m_nth); }
-  inline int64              get_int64  () { FieldUnion &u = fb_getu(); return u.vint64; }
-  inline int64              get_evalue () { FieldUnion &u = fb_getu(); return u.vint64; }
-  inline double             get_double () { FieldUnion &u = fb_getu(); return u.vdouble; }
-  inline const String&      get_string () { FieldUnion &u = fb_getu(); return *(String*) &u; }
-  inline const String&      get_func   () { FieldUnion &u = fb_getu(); return *(String*) &u; }
-  inline uint64             get_object () { FieldUnion &u = fb_getu(); return u.vint64; }
-  inline const FieldBuffer& get_rec () { FieldUnion &u = fb_getu(); return *(FieldBuffer*) &u; }
-  inline const FieldBuffer& get_seq () { FieldUnion &u = fb_getu(); return *(FieldBuffer*) &u; }
-  inline int64              pop_int64  () { FieldUnion &u = fb_popu(); return u.vint64; }
-  inline int64              pop_evalue () { FieldUnion &u = fb_popu(); return u.vint64; }
-  inline double             pop_double () { FieldUnion &u = fb_popu(); return u.vdouble; }
-  inline const String&      pop_string () { FieldUnion &u = fb_popu(); return *(String*) &u; }
-  inline const String&      pop_func   () { FieldUnion &u = fb_popu(); return *(String*) &u; }
-  inline uint64             pop_object () { FieldUnion &u = fb_popu(); return u.vint64; }
-  inline const FieldBuffer& pop_rec () { FieldUnion &u = fb_popu(); return *(FieldBuffer*) &u; }
-  inline const FieldBuffer& pop_seq () { FieldUnion &u = fb_popu(); return *(FieldBuffer*) &u; }
-  inline const FieldBuffer* get     () { return m_fb; }
+  inline int64              get_int64  () { FieldUnion &u = fb_getu (INT); return u.vint64; }
+  inline int64              get_evalue () { FieldUnion &u = fb_getu (ENUM); return u.vint64; }
+  inline double             get_double () { FieldUnion &u = fb_getu (FLOAT); return u.vdouble; }
+  inline const String&      get_string () { FieldUnion &u = fb_getu (STRING); return *(String*) &u; }
+  inline const String&      get_func   () { FieldUnion &u = fb_getu (FUNC); return *(String*) &u; }
+  inline uint64             get_object () { FieldUnion &u = fb_getu (INSTANCE); return u.vint64; }
+  inline const FieldBuffer& get_rec    () { FieldUnion &u = fb_getu (RECORD); return *(FieldBuffer*) &u; }
+  inline const FieldBuffer& get_seq    () { FieldUnion &u = fb_getu (SEQUENCE); return *(FieldBuffer*) &u; }
+  inline int64              pop_int64  () { FieldUnion &u = fb_popu (INT); return u.vint64; }
+  inline int64              pop_evalue () { FieldUnion &u = fb_popu (ENUM); return u.vint64; }
+  inline double             pop_double () { FieldUnion &u = fb_popu (FLOAT); return u.vdouble; }
+  inline const String&      pop_string () { FieldUnion &u = fb_popu (STRING); return *(String*) &u; }
+  inline const String&      pop_func   () { FieldUnion &u = fb_popu (FUNC); return *(String*) &u; }
+  inline uint64             pop_object () { FieldUnion &u = fb_popu (INSTANCE); return u.vint64; }
+  inline const FieldBuffer& pop_rec    () { FieldUnion &u = fb_popu (RECORD); return *(FieldBuffer*) &u; }
+  inline const FieldBuffer& pop_seq    () { FieldUnion &u = fb_popu (SEQUENCE); return *(FieldBuffer*) &u; }
+  inline FieldReader& operator>> (size_t &v)          { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
+  inline FieldReader& operator>> (uint64 &v)          { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
+  inline FieldReader& operator>> (int64 &v)           { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
+  inline FieldReader& operator>> (uint &v)            { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
+  inline FieldReader& operator>> (int &v)             { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
+  inline FieldReader& operator>> (bool &v)            { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
+  inline FieldReader& operator>> (double &v)          { FieldUnion &u = fb_popu (FLOAT); v = u.vdouble; return *this; }
+  inline FieldReader& operator>> (EnumValue &e)       { FieldUnion &u = fb_popu (ENUM); e.v = u.vint64; return *this; }
+  inline FieldReader& operator>> (String &s)          { FieldUnion &u = fb_popu (STRING); s = *(String*) &u; return *this; }
+  inline FieldReader& operator>> (TypeHash &h)        { *this >> h.typehi; *this >> h.typelo; return *this; }
+  inline FieldReader& operator>> (std::vector<bool>::reference v) { bool b; *this >> b; v = b; return *this; }
 };
 
-/* === Channel === */
-class Channel {
-  class Priv; Priv &priv;
-  Callback0<void>   wakeup0;
-  FieldBuffer*      fetch_msg   (bool advance, bool block = false);
-public:
-  explicit      Channel         ();
-  bool          push_msg        (FieldBuffer *fbmsg);           // takes fbmsg ownership
-  bool          has_msg         () { return fetch_msg (false); }
-  FieldBuffer*  pop_msg         () { return fetch_msg (true); } // passes fbmsg ownership
-  void          wait_msg        () { fetch_msg (false, true); }
-  virtual      ~Channel         ();
-  void          set_wakeup      (void (*f) ()) { wakeup0.set (f); }
-  template<class C>
-  void          set_wakeup      (C &c, void (C::*m) ()) { wakeup0.set (c, m); }
-};
-
-/* === Coupler === */
-class Coupler {
-  class Priv; Priv    &priv;
-  Coupler&             operator=         (const Coupler&); // not assignable
-  /*Copy*/             Coupler           (const Coupler&); // not copyable
-  Channel              callc, resultc, eventc;
-public:
-  explicit             Coupler           ();
-  virtual             ~Coupler           ();
-  // client API
-  template<class C>
-  void                 set_caller_wakeup (C &c, void (C::*m) ()) { resultc.set_wakeup (c, m); }
-  void                 set_caller_wakeup (void (*f) ()) { resultc.set_wakeup (f); }
-  FieldBuffer*         pop_result        (void) { resultc.wait_msg(); return resultc.pop_msg(); }
-  bool                 push_call         (FieldBuffer *fbcall) { return callc.push_msg (fbcall); }
-  virtual FieldBuffer* call_remote       (FieldBuffer *fbcall) = 0;
-  // async msg queue
-  template<class C>
-  void                 set_event_wakeup  (C &c, void (C::*m) ()) { eventc.set_wakeup (c, m); }
-  void                 set_event_wakeup  (void (*f) ()) { eventc.set_wakeup (f); }
-  void                 wait_event        (void) { eventc.wait_msg(); }
-  bool                 has_event         (void) { return eventc.has_msg(); }
-  FieldBuffer*         pop_event         (void) { return eventc.pop_msg(); }
-  // API for DispatchFunc
-  FieldBufferReader    reader;
-  void                 push_result       (FieldBuffer *rret) { resultc.push_msg (rret); }
-  void                 push_event        (FieldBuffer *fbev) { eventc.push_msg (fbev); }
-  uint                 dispatcher_add    (std::auto_ptr<EventDispatcher> evd); // takes object
-  EventDispatcher*     dispatcher_lookup (uint         dfunc_id);
-  bool                 dispatcher_delete (uint         dfunc_id);
-  // SmartHandle API
-  inline uint64        pop_rpc_handle    (FieldBufferReader &fbr) { return fbr.pop_object(); }
-  // server loop integration
-  template<class C>
-  void             set_dispatcher_wakeup (C &c, void (C::*m) ()) { callc.set_wakeup (c, m); }
-  void             set_dispatcher_wakeup (void (*f) ()) { callc.set_wakeup (f); }
-  bool             check_dispatch        () { return callc.has_msg(); }
-  void             dispatch              ();
+// === Connection ===
+class Connection                                         /// Connection context for IPC. @nosubgrouping
+{
+public: /// @name API for syncronous remote calls
+  virtual FieldBuffer* call_remote   (FieldBuffer*) = 0; ///< Carry out a syncronous remote call, transfers memory, called by client.
+  virtual void         send_result   (FieldBuffer*) = 0; ///< Return result from remote call, transfers memory, called by server.
+public: /// @name API for asyncronous event delivery
+  virtual void   send_event    (FieldBuffer*) = 0;       ///< Send event to remote asyncronously, transfers memory, called by server.
+  virtual int    event_inputfd () = 0;                   ///< Returns fd for POLLIN, to wake up on incomming events.
+  bool           has_event     ();                       ///< Returns true if events for fetch_event() are pending.
+  FieldBuffer*   pop_event     (bool blocking = false);  ///< Pop an event from event queue, possibly blocking, transfers memory, called by client.
+protected:
+  virtual FieldBuffer* fetch_event (int blockpop) = 0;   ///< Block for (-1), peek (0) or pop (+1) an event from queue.
+public: /// @name API for event handler bookkeeping
+  struct EventHandler                                    /// Interface class used for client side signal emissions.
+  {
+    virtual             ~EventHandler () {}
+    virtual FieldBuffer* handle_event (Plic::FieldBuffer &event_fb) = 0; ///< Process an event and possibly return an error.
+  };
+  virtual uint64        register_event_handler (EventHandler *evh) = 0; ///< Register an event handler, transfers memory.
+  virtual EventHandler* find_event_handler     (uint64 handler_id) = 0; ///< Find event handler by id.
+  virtual bool          delete_event_handler   (uint64 handler_id) = 0; ///< Delete a registered event handler, returns success.
+public: /// @name Registry for IPC method lookups
+  struct MethodEntry    { uint64 hashhi, hashlo; DispatchFunc dispatcher; };
+  struct MethodRegistry                                  /// Registry structure for IPC method stubs.
+  {
+    template<class T, size_t S> MethodRegistry  (T (&static_const_entries)[S])
+    { for (size_t i = 0; i < S; i++) register_method (static_const_entries[i]); }
+  private: static void register_method (const MethodEntry &mentry);
+  };
+protected:
+  static DispatchFunc  find_method  (uint64 hashhi, uint64 hashlow);          ///< Lookup method in registry.
 };
 
 /* === inline implementations === */
-inline
-TypeHash::TypeHash (const uint64 qw[hash_size])
-{
-  wmemcpy ((wchar_t*) qwords, (wchar_t*) qw, sizeof (qwords) / sizeof (wchar_t));
-}
-
-inline
-TypeHash::TypeHash (uint64 qwa, uint64 qwb, uint64 qwc, uint64 qwd)
-{
-  qwords[0] = qwa;
-  qwords[1] = qwb;
-  qwords[2] = qwc;
-  qwords[3] = qwd;
-}
-
-inline bool
-TypeHash::operator< (const TypeHash &rhs) const
-{
-  if (qwords[0] < rhs.qwords[0])
-    return 1;
-  else if (rhs.qwords[0] < qwords[0])
-    return 0;
-  for (uint i = 1; i < hash_size; i++)
-    if (qwords[i] < rhs.qwords[i])
-      return 1;
-    else if (rhs.qwords[i] < qwords[i])
-      return 0;
-  return 0; // equal
-}
-
 inline void*
 SmartHandle::_void_iface () const
 {
@@ -381,41 +287,15 @@ SmartHandle::_void_iface () const
   return (void*) m_rpc_id;
 }
 
-template<class T, size_t S> inline
-DispatcherRegistry::DispatcherRegistry (T (&ha)[S])
-{
-  for (uint i = 0; i < S; i++)
-    register_dispatcher (ha[i]);
-}
-
-inline TypeHash
-FieldBuffer::first_type_hash () const
-{
-  return buffermem &&
-    type_at (0) == INT && type_at (1) == INT && type_at (2) == INT && type_at (3) == INT ?
-    TypeHash (uat (0).vint64, uat (1).vint64, uat (2).vint64, uat (3).vint64) :
-    TypeHash (0, 0, 0, 0);
-}
-
-inline void
-FieldBuffer::add_type_hash (uint64 a, uint64 b, uint64 c, uint64 d)
-{
-  FieldUnion &ua = addu (INT), &ub = addu (INT), &uc = addu (INT), &ud = addu (INT);
-  ua.vint64 = a;
-  ub.vint64 = b;
-  uc.vint64 = c;
-  ud.vint64 = d;
-}
-
 inline void
 FieldBuffer::reset()
 {
   if (!buffermem)
     return;
-  while (nth() > 0)
+  while (size() > 0)
     {
-      buffermem[0].index--; // nth()--
-      switch (type_at (nth()))
+      buffermem[0].index--; // causes size()--
+      switch (type_at (size()))
         {
         case STRING:
         case FUNC:    { FieldUnion &u = getu(); ((String*) &u)->~String(); }; break;

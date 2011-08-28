@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -*-mode:c++;-*-
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -*-mode:idl;-*-
 
 include "hardcoded.idl";
 
@@ -8,7 +8,7 @@ namespace Rapicorn {
  * A sequence of C++ std::strings.
  */
 sequence StringList {
-  string        strings;
+  string strings;
 };
 
 /**
@@ -31,14 +31,55 @@ sequence ItemSeq {
 };
 
 /**
- * Item is a temporary helper interface to aid the transition to IDL interface definitions in Rapicorn.
+ * Item is the base type for all UI elements.
  */
 interface Item {
   Item          unique_component        (string path) = 0;
   ItemSeq       collect_components      (string path) = 0;
+  string	test_dump               () = 0;
+  string        name = String (_("Name"), _("Identification name of the item"), "rw");
 };
 
+/**
+ * Container is a special type of Item that can contain other items.
+ */
 interface Container : Item {
+  /// Create a child item from the @a item_identifier template and add it to the container.
+  Item          create_child            (string item_identifier,
+					 StringList args = 0) = 0;
+};
+
+/**
+ * The ButtonArea interface provides button click handling. Certain actions can be
+ * associated with button1, button2 and button3 clicks to be caried out when the
+ * respective mouse button is clicked.
+ */
+interface ButtonArea : Container {
+  string	on_click	= String (_("On CLick"), _("Action to carry out on button1 clicks."), "rw");
+  string	on_click2	= String (_("On CLick"), _("Action to carry out on button2 clicks."), "rw");
+  string	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
+};
+
+sequence Pixels {
+  int pixel;
+};
+record PixelRect {
+   int	   x;
+   int     y;
+   int     width;
+   int     height;
+   int     rowstride;
+   int     offset;
+   string  comment;
+   Pixels  argb_pixels;
+};
+
+/**
+ * The Drawable interface allows display of custom images, created by client-side rendering.
+ */
+interface Drawable : Item {
+  signal void	redraw		(int x, int y, int w, int h);	///< Requests a redraw at @a width and @a height.
+  void		draw_rect	(PixelRect pixrect) = 0;	///< Draws pixels on the drawable display.
 };
 
 /**
@@ -53,6 +94,7 @@ interface Wind0w : Container {
   void          close                   () = 0;
   signal bool   commands                (string     cmdname,
                                          StringList args);
+  signal void   displayed               ();
   bool          synthesize_click        (Item       item,
                                          int        button,
                                          float      xalign = 0.5,
@@ -77,17 +119,18 @@ interface Application {
   string        auto_path       (string         file_name,
                                  string         binary_path,
                                  bool           search_vpath = true) = 0;
-  void          auto_load       (string         defs_domain,
+  StringList    auto_load       (string         defs_domain,
                                  string         file_name,
                                  string         binary_path,
                                  string         i18n_domain = "") = 0;
+  bool          factory_window  (string         factory_definition);
   void          load_string     (string         xml_string,
                                  string         i18n_domain = "") = 0;
   /* wind0ws */
   Wind0w        create_wind0w   (string         wind0w_identifier,
                                  StringList     arguments = 0,
                                  StringList     env_variables = 0) = 0;
-  bool          has_primary     ();
+  bool          finishable      ();
   signal void   missing_primary ();
   void          close           ();
   Wind0wList    list_wind0ws            () = 0;

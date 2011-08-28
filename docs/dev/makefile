@@ -13,9 +13,11 @@ DOCU_GLOBS  = *.py $(DOCU_HGLOBS)
 DOCU_HGLOBS = *.idl *.h *.H *.hh *.proc
 DOCU_CGLOBS = $(DOCU_GLOBS) *.c *.C *.cc
 SRCTREE     = srctree
+DOXYGENV    = doxygen-1.7.4
+DOXYGEN     = $(if $(shell which $(DOXYGENV)), $(DOXYGENV), doxygen)
 
 EXCLUDES = rope/cpy2rope.cc rope/cxx-client.[hc][hc] \
-	rcore/rapicornsignalvariants.hh ui/interfaces.cc
+	rcore/rapicornsignalvariants.hh
 
 .PHONY: $(SRCTREE)
 $(SRCTREE):
@@ -41,18 +43,20 @@ $(SRCTREE):
 	| xargs -0 python enumdoc.py
 
 build-stamp: $(git_stamp) doxygen.cfg
-	rm -rf html/ && mkdir -p html/
+	rm -rf html.tmp/ && mkdir -p html.tmp/
 	$(MAKE) $(SRCTREE)
 	@echo "### Doxygen..."
 	(cat doxygen.cfg \
 	&& echo "STRIP_FROM_PATH  = `pwd`/$(SRCTREE)" \
 	&& echo "INPUT		  = $(SRCTREE)/" \
-	&& echo "OUTPUT_DIRECTORY = html/" \
+	&& echo "OUTPUT_DIRECTORY = html.tmp/" \
 	&& echo -n "PROJECT_NUMBER = $(SED_VERSION)" \
-	) | nice doxygen -
+	) | nice $(DOXYGEN) -
 	rm -rf $(SRCTREE)/
-	mv html/html/ html/$(SED_VERSION)/
-	ln -s $(SED_VERSION) html/latest
+	mv html.tmp/html/ html.tmp/$(SED_VERSION)/
+	ln -s $(SED_VERSION) html.tmp/latest
+	rsync -aH --del html.tmp/ html/
+	rm -rf html.tmp/
 	touch $@
 
 upload: all
@@ -60,4 +64,6 @@ upload: all
 
 clean:
 	rm -f build-stamp
-	rm -rf $(SRCTREE)/ html/
+	rm -rf $(SRCTREE)/ html.tmp/
+maintainer-clean: clean
+	rm -rf html/

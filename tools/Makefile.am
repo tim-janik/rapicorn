@@ -17,5 +17,5 @@ rapidrun_LDADD   = $(LDADDS)
 # check some options
 check-rapidrun-basics:
 	$(Q) ./rapidrun --list $(top_srcdir)/ui/foundation.xml | grep -q VSlider \
-	; eval "$$TSTDIAGNOSE" "'Simple rapidrun VSlider test'"
+	; eval "$$TSTDIAGNOSE" "'Check factory definition for VSlider'"
 check-am: check-rapidrun-basics

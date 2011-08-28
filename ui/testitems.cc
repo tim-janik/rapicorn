@@ -19,20 +19,9 @@
 #include "painter.hh"
 #include "window.hh"
 #include "factory.hh"
-#include <rcore/testutils.hh>
 #include <errno.h>
 
 namespace Rapicorn {
-
-Application_SmartHandle
-init_test_app (const String       &app_ident,
-               int                *argcp,
-               char              **argv,
-               const StringVector &args)
-{
-  init_core_test (app_ident, argcp, argv, args);
-  return init_app (app_ident, argcp, argv, args);
-}
 
 TestContainer::TestContainer() :
   sig_assertion_ok (*this),

@@ -64,12 +64,15 @@ SignalBase::connect_link (TrampolineLink *link,
                           bool            with_emitter)
 {
   return_val_if_fail (link->m_linking_owner == false && link->prev == NULL && link->next == NULL, NULL);
+  const bool connected_before = has_connections();
   link->owner_ref();
   link->prev = start.prev;
   link->next = &start;
   start.prev->next = link;
   start.prev = link;
   link->with_emitter (with_emitter);
+  if (!connected_before)
+    connections_changed (true);
   return link->con_id();
 }
 
@@ -82,6 +85,8 @@ SignalBase::disconnect_equal_link (const TrampolineLink &link,
       {
         return_val_if_fail (walk->m_linking_owner == true, 0);
         walk->unlink(); // unrefs
+        if (!has_connections())
+          connections_changed (false);
         return 1;
       }
   return 0;
@@ -95,6 +100,8 @@ SignalBase::disconnect_link_id (ConId con_id)
       {
         return_val_if_fail (walk->m_linking_owner == true, 0);
         walk->unlink(); // unrefs
+        if (!has_connections())
+          connections_changed (false);
         return 1;
       }
   return 0;
@@ -102,6 +109,7 @@ SignalBase::disconnect_link_id (ConId con_id)
 
 SignalBase::~SignalBase()
 {
+  const bool connected_before = has_connections();
   while (start.next != &start)
     {
       return_if_fail (start.next->m_linking_owner == true);
@@ -109,6 +117,8 @@ SignalBase::~SignalBase()
     }
   RAPICORN_ASSERT (start.next == &start);
   RAPICORN_ASSERT (start.prev == &start);
+  if (connected_before)
+    connections_changed (false);
   start.prev = start.next = NULL;
   start.check_last_ref();
   start.unref();
@@ -118,6 +128,52 @@ void
 SignalBase::EmbeddedLink::delete_this ()
 {
   /* not deleting, because this structure is always embedded as SignalBase::start */
+}
+
+// === SignalProxyBase ===
+SignalProxyBase&
+SignalProxyBase::operator= (const SignalProxyBase &other)
+{
+  if (m_signal != other.m_signal)
+    {
+      divorce();
+      m_signal = other.m_signal;
+    }
+  return *this;
+}
+
+SignalProxyBase::SignalProxyBase (const SignalProxyBase &other) :
+  m_signal (other.m_signal)
+{}
+
+SignalProxyBase::SignalProxyBase (SignalBase &signal) :
+  m_signal (&signal)
+{
+  // FIXME: return_if_fail (NULL != &signal);
+}
+
+ConId
+SignalProxyBase::connect_link (TrampolineLink *link, bool with_emitter)
+{
+  return m_signal ? m_signal->connect_link (link, with_emitter) : 0;
+}
+
+uint
+SignalProxyBase::disconnect_equal_link (const TrampolineLink &link, bool with_emitter)
+{
+  return m_signal ? m_signal->disconnect_equal_link (link, with_emitter) : 0;
+}
+
+uint
+SignalProxyBase::disconnect_link_id (ConId id)
+{
+  return m_signal ? m_signal->disconnect_link_id (id) : 0;
+}
+
+void
+SignalProxyBase::divorce ()
+{
+  m_signal = NULL;
 }
 
 } // Signals

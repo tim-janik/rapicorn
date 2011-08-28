@@ -530,15 +530,17 @@ common_thread_set_wakeup (RapicornThreadWakeup wakeup_func,
                           GDestroyNotify     destroy)
 {
   RapicornThread *self = ThreadTable.thread_self ();
-  
-  g_return_if_fail (wakeup_func != NULL);
-  g_return_if_fail (self->wakeup_func == NULL);
-  
+
   global_thread_mutex.lock();
+  void                *old_data = self->wakeup_data;
+  GDestroyNotify       old_destroy = self->wakeup_destroy;
   self->wakeup_func = wakeup_func;
   self->wakeup_data = wakeup_data;
   self->wakeup_destroy = destroy;
   global_thread_mutex.unlock();
+
+  if (old_destroy && wakeup_data != old_data)
+    old_destroy (old_data);
 }
 
 /**

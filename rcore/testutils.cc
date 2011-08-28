@@ -237,43 +237,10 @@ RegisterTest::add_test (char kind, const String &testname, void (*test_func) (vo
   while (!Atomic::value_cas (&test_entry_list, te->next, te));
 }
 
-static int
-test_entry_cmp (const TestEntry *const &v1,
-                const TestEntry *const &v2)
-{
-  return strverscmp (v1->name.c_str(), v2->name.c_str()) < 0;
-}
-
-int
-run (void)
-{
-  vector<TestEntry*> entries;
-  for (TestEntry *node = test_entry_list; node; node = node->next)
-    entries.push_back (node);
-  stable_sort (entries.begin(), entries.end(), test_entry_cmp);
-  const bool fs = slow(), fl = logging();
-  for (size_t i = 0; i < entries.size(); i++)
-    {
-      const TestEntry *te = entries[i];
-      if ((fl && te->kind == 'l') || (!fl && te->kind == (fs ? 's' : 't')))
-        {
-          TSTART ("%s", te->name.c_str());
-          te->func (te->data);
-          TDONE();
-        }
-    }
-  for (uint i = 0; i < testfuncs.size(); i++)
-    {
-      TSTART ("%s", testnames[i].c_str());
-      testfuncs[i] (testdatas[i]);
-      TDONE();
-    }
-  return 0;
-}
-
 static bool flag_test_verbose = false;
 static bool flag_test_log = false;
 static bool flag_test_slow = false;
+static bool flag_test_ui = false;
 
 bool
 verbose (void)
@@ -291,6 +258,67 @@ bool
 slow (void)
 {
   return flag_test_slow;
+}
+
+bool
+ui_test (void)
+{
+  return flag_test_ui;
+}
+
+static RegisterTest::TestTrigger test_trigger = NULL;
+
+static int
+test_entry_cmp (const TestEntry *const &v1,
+                const TestEntry *const &v2)
+{
+  return strverscmp (v1->name.c_str(), v2->name.c_str()) < 0;
+}
+
+static void
+run_tests (void)
+{
+  vector<TestEntry*> entries;
+  for (TestEntry *node = test_entry_list; node; node = node->next)
+    entries.push_back (node);
+  stable_sort (entries.begin(), entries.end(), test_entry_cmp);
+  char ftype = logging() ? 'l' : (slow() ? 's' : 't');
+  if (ui_test())
+    ftype = toupper (ftype);
+  for (size_t i = 0; i < entries.size(); i++)
+    {
+      const TestEntry *te = entries[i];
+      if (te->kind == ftype)
+        {
+          TSTART ("%s", te->name.c_str());
+          te->func (te->data);
+          TDONE();
+        }
+    }
+  for (uint i = 0; i < testfuncs.size(); i++)
+    {
+      TSTART ("%s", testnames[i].c_str());
+      testfuncs[i] (testdatas[i]);
+      TDONE();
+    }
+}
+
+void
+RegisterTest::test_set_trigger (TestTrigger func)
+{
+  test_trigger = func;
+}
+
+int
+run (void)
+{
+  flag_test_ui = false;
+  run_tests();
+  flag_test_ui = true;
+  if (test_trigger)
+    test_trigger (run_tests);
+  flag_test_ui = false;
+  return 0;
 }
 
 char

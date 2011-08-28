@@ -8,12 +8,11 @@ namespace Rapicorn {
 
 class ApplicationImpl : public ApplicationIface {
   vector<Wind0wIface*>     m_wind0ws;
-  void                check_primaries        ();
 public:
   virtual String      auto_path              (const String  &file_name,
                                               const String  &binary_path,
                                               bool           search_vpath = true);
-  virtual void        auto_load              (const std::string &defs_domain,
+  virtual StringList  auto_load              (const std::string &defs_domain,
                                               const std::string &file_name,
                                               const std::string &binary_path,
                                               const std::string &i18n_domain = "");
@@ -31,10 +30,9 @@ public:
   virtual void        test_counter_add       (int val);
   virtual int         test_counter_get       ();
   virtual int         test_counter_inc_fetch ();
+  void                lost_primaries         ();
   static ApplicationImpl& the                ();
 };
-
-
 
 } // Rapicorn
 

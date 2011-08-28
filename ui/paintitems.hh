@@ -57,12 +57,15 @@ public:
   virtual void          bottom_padding_dots (uint c)  = 0;
 };
 
-class Drawable : public virtual ItemImpl {
+class DrawableImpl : public virtual ItemImpl, public virtual DrawableIface {
+  PixelRectImpl m_pic;
 protected:
-  explicit      Drawable();
-  virtual void  draw    (Display        &display) = 0;
+  virtual void  draw_rect       (const PixelRectImpl &pixrect);
+  virtual void  size_request    (Requisition &requisition);
+  virtual void  size_allocate   (Allocation area);
+  virtual void  render          (Display &display);
 public:
-  Signal<Drawable, void (Display &display)> sig_draw;
+  explicit      DrawableImpl    ();
 };
 
 } // Rapicorn

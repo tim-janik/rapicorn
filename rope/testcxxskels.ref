@@ -10,56 +10,90 @@ using Rapicorn::Signals::slot;
 // --- Interfaces (class declarations) ---
 
 namespace MandatoryNamespace {
+
 enum Empty {
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Empty &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Empty &e) { e = Empty (frr.pop_evalue()); return frr; }
+
 enum Enum1 {
   E1_A = 1,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum1 &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum1 &e) { e = Enum1 (frr.pop_evalue()); return frr; }
+
 enum Enum1c {
   E1C_A = 1,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum1c &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum1c &e) { e = Enum1c (frr.pop_evalue()); return frr; }
+
 enum Enum2 {
   E2_A = 1,
   E2_B = 2,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum2 &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum2 &e) { e = Enum2 (frr.pop_evalue()); return frr; }
+
 enum Enum2c {
   E2C_A = 1,
   E2C_B = 2,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum2c &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum2c &e) { e = Enum2c (frr.pop_evalue()); return frr; }
+
 enum Enum3 {
   E3_A = 1,
   E3_B = 2,
   E3_C = 3,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum3 &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum3 &e) { e = Enum3 (frr.pop_evalue()); return frr; }
+
 enum Enum3c {
   E3C_A = 1,
   E3C_B = 2,
   E3C_C = 3,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum3c &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum3c &e) { e = Enum3c (frr.pop_evalue()); return frr; }
+
 enum Enum4a {
   E4A_A = 1,
   E4A_B = 2,
   E4A_C = 3,
   E4A_D = 4,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum4a &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum4a &e) { e = Enum4a (frr.pop_evalue()); return frr; }
+
 enum Enum4b {
   E4B_A = 1,
   E4B_B = 2,
   E4B_C = 3,
   E4B_D = 4,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum4b &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum4b &e) { e = Enum4b (frr.pop_evalue()); return frr; }
+
 enum Enum4c {
   E4C_A = 1,
   E4C_B = 2,
   E4C_C = 3,
   E4C_D = 4,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum4c &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum4c &e) { e = Enum4c (frr.pop_evalue()); return frr; }
+
 enum Enum4d {
   E4D_A = 1,
   E4D_B = 2,
   E4D_C = 3,
   E4D_D = 4,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum4d &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum4d &e) { e = Enum4d (frr.pop_evalue()); return frr; }
+
 enum ExtensiveEnum {
   V1a = 1,
   V1b = 1,
@@ -97,416 +131,345 @@ enum ExtensiveEnum {
   V35 = 42,
   V36 = 42, // "foo""4"
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  ExtensiveEnum &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, ExtensiveEnum &e) { e = ExtensiveEnum (frr.pop_evalue()); return frr; }
 
-class I_FirstInterface_Interface : public virtual Plic::SimpleServer {
+class I_FirstInterface_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class FirstInterface.
+{
 protected:
-  explicit                 I_FirstInterface_Interface ();
-  virtual /*Des*/         ~I_FirstInterface_Interface () = 0;
+  explicit                               I_FirstInterface_Interface ();
+  virtual /*Des*/                       ~I_FirstInterface_Interface () = 0;
 public:
-  virtual void            void_func ();
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual void                          void_func                  ();
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_FirstInterface_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_FirstInterface_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_FirstInterface_Interface*&);
 
-class FirstInterface_SmartHandle : public Plic::SmartHandle {
-protected:
-  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
-public:
-  inline FirstInterface_SmartHandle () {}
-  inline FirstInterface_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline FirstInterface_SmartHandle (I_FirstInterface_Interface *iface) { _iface (iface); }
-  inline FirstInterface_SmartHandle (I_FirstInterface_Interface &iface) { _iface (&iface); }
-  // void            void_func ();
-  inline I_FirstInterface_Interface& operator*  () const { return *dynamic_cast<I_FirstInterface_Interface*> (_iface()); }
-  inline I_FirstInterface_Interface* operator-> () const { return dynamic_cast<I_FirstInterface_Interface*> (_iface()); }
-  inline operator  I_FirstInterface_Interface&  () const { return operator*(); }
-  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+struct XFooRecordImpl {
+  bool                          single_bool;
+  int                           single_num;
+  double                        single_float;
+  std::string                   single_string;
+  int                           sibling1;
+  int                           sibling2;
+  int                           multi1;
+  int                           multi2;
+  int                           multi3;
+  int                           multi4;
+  ExtensiveEnum                 enum_field;
+  I_FirstInterface_Interface*   iface1;
+  I_FirstInterface_Interface*   iface2;
+  I_FirstInterface_Interface*   iface3;
+  inline                        XFooRecordImpl () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const XFooRecordImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, XFooRecordImpl&);
 
-struct XFooRecord {
-  bool            single_bool;
-  int             single_num;
-  double          single_float;
-  std::string     single_string;
-  int             sibling1;
-  int             sibling2;
-  int             multi1;
-  int             multi2;
-  int             multi3;
-  int             multi4;
-  ExtensiveEnum   enum_field;
-  FirstInterface_SmartHandle iface1;
-  FirstInterface_SmartHandle iface2;
-  FirstInterface_SmartHandle iface3;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
-  inline XFooRecord () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
-};
-struct XFooSequence : public std::vector<bool> {
+struct XFooSequenceImpl : public std::vector<bool> {
   typedef std::vector<bool> Sequence;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
-struct IntSequence : public std::vector<int> {
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const XFooSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, XFooSequenceImpl&);
+
+struct IntSequenceImpl : public std::vector<int> {
   typedef std::vector<int> Sequence;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
-struct FloatSequence : public std::vector<double> {
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const IntSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, IntSequenceImpl&);
+
+struct FloatSequenceImpl : public std::vector<double> {
   typedef std::vector<double> Sequence;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
-struct StringSequence : public std::vector<std::string> {
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const FloatSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, FloatSequenceImpl&);
+
+struct StringSequenceImpl : public std::vector<std::string> {
   typedef std::vector<std::string> Sequence;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
-struct ExtensiveEnumSequence : public std::vector<ExtensiveEnum> {
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const StringSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, StringSequenceImpl&);
+
+struct ExtensiveEnumSequenceImpl : public std::vector<ExtensiveEnum> {
   typedef std::vector<ExtensiveEnum> Sequence;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
-struct RecordSequence : public std::vector<XFooRecord> {
-  typedef std::vector<XFooRecord> Sequence;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const ExtensiveEnumSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, ExtensiveEnumSequenceImpl&);
+
+struct RecordSequenceImpl : public std::vector<XFooRecordImpl> {
+  typedef std::vector<XFooRecordImpl> Sequence;
 };
-struct SequenceSequence : public std::vector<IntSequence> {
-  typedef std::vector<IntSequence> Sequence;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const RecordSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, RecordSequenceImpl&);
+
+struct SequenceSequenceImpl : public std::vector<IntSequenceImpl> {
+  typedef std::vector<IntSequenceImpl> Sequence;
 };
-struct InterfaceSequence : public std::vector<FirstInterface_SmartHandle> {
-  typedef std::vector<FirstInterface_SmartHandle> Sequence;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const SequenceSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, SequenceSequenceImpl&);
+
+struct InterfaceSequenceImpl : public std::vector<I_FirstInterface_Interface*> {
+  typedef std::vector<I_FirstInterface_Interface*> Sequence;
 };
-struct NestedTypesRec {
-  XFooRecord      rec;
-  XFooSequence    seq;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
-  inline NestedTypesRec () { }
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const InterfaceSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, InterfaceSequenceImpl&);
+
+struct NestedTypesRecImpl {
+  XFooRecordImpl                rec;
+  XFooSequenceImpl              seq;
+  inline                        NestedTypesRecImpl () { }
 };
-struct NestedTypesSeq : public std::vector<NestedTypesRec> {
-  typedef std::vector<NestedTypesRec> Sequence;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const NestedTypesRecImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, NestedTypesRecImpl&);
+
+struct NestedTypesSeqImpl : public std::vector<NestedTypesRecImpl> {
+  typedef std::vector<NestedTypesRecImpl> Sequence;
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const NestedTypesSeqImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, NestedTypesSeqImpl&);
+
 typedef int AliasInt;
+
 typedef double AliasFloat;
+
 typedef bool AliasBool;
+
 typedef std::string AliasString;
-typedef XFooRecord AliasRecord;
-typedef XFooSequence AliasSequence;
+
+typedef XFooRecordImpl AliasRecord;
+
+typedef XFooSequenceImpl AliasSequence;
+
 typedef ExtensiveEnum AliasEnum;
-struct NewRecord {
-  int             i;
-  Enum1           enum1;
-  XFooSequence    xfs;
-  NestedTypesRec  ntr;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
-  inline NewRecord () { i = 0; enum1 = Enum1 (0); }
+
+struct NewRecordImpl {
+  int                           i;
+  Enum1                         enum1;
+  XFooSequenceImpl              xfs;
+  NestedTypesRecImpl            ntr;
+  inline                        NewRecordImpl () { i = 0; enum1 = Enum1 (0); }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const NewRecordImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, NewRecordImpl&);
 
 namespace Inner {
-struct InnerRecord {
-  int             x;
-  int             y;
-  NewRecord       rec;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
-  inline InnerRecord () { x = 0; y = 0; }
+
+struct InnerRecordImpl {
+  int                           x;
+  int                           y;
+  NewRecordImpl                 rec;
+  inline                        InnerRecordImpl () { x = 0; y = 0; }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const InnerRecordImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, InnerRecordImpl&);
 } // Inner
-struct Refer2Inner {
-  Inner::InnerRecord r;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
-  inline Refer2Inner () { }
+
+struct Refer2InnerImpl {
+  Inner::InnerRecordImpl        r;
+  inline                        Refer2InnerImpl () { }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const Refer2InnerImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, Refer2InnerImpl&);
 } // MandatoryNamespace
 
 namespace OtherNamespace {
-struct SomeRecord {
-  MandatoryNamespace::NewRecord r1;
-  MandatoryNamespace::NewRecord r2;
-  MandatoryNamespace::Inner::InnerRecord r3;
-  MandatoryNamespace::Inner::InnerRecord r4;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
-  inline SomeRecord () { }
+
+struct SomeRecordImpl {
+  MandatoryNamespace::NewRecordImpl r1;
+  MandatoryNamespace::NewRecordImpl r2;
+  MandatoryNamespace::Inner::InnerRecordImpl r3;
+  MandatoryNamespace::Inner::InnerRecordImpl r4;
+  inline                        SomeRecordImpl () { }
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const SomeRecordImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, SomeRecordImpl&);
 } // OtherNamespace
 
 namespace Auxdata {
-typedef int bar;
-typedef double x;
-typedef std::string s;
 
+typedef int bar;
+
+typedef double x;
+
+typedef std::string s;
 } // Auxdata
 
 namespace InterfaceTests {
-class I_UIWidgetArea_Interface : public virtual Plic::SimpleServer {
+
+class I_UIWidgetArea_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class UIWidgetArea.
+{
 protected:
-  explicit                 I_UIWidgetArea_Interface ();
-  virtual /*Des*/         ~I_UIWidgetArea_Interface () = 0;
+  explicit                               I_UIWidgetArea_Interface ();
+  virtual /*Des*/                       ~I_UIWidgetArea_Interface () = 0;
 public:
-  virtual double          dummy () const = 0;
-  virtual void            dummy (double) = 0;
-  virtual std::string     on_click () const = 0;
-  virtual void            on_click (const std::string&) = 0;
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual double                        dummy    () const = 0;
+  virtual void                          dummy    (double) = 0;
+  virtual std::string                   on_click () const = 0;
+  virtual void                          on_click (const std::string&) = 0;
   typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Interface, void ()> Signal_void_signal;
   typedef Rapicorn::Signals::Signal<I_UIWidgetArea_Interface, double (I_UIWidgetArea_Interface &ba1, int someint)> Signal_sample_signal;
   Signal_void_signal sig_void_signal;
   Signal_sample_signal sig_sample_signal;
-  virtual double          simple_method ();
-  virtual double          single_arg    (int n);
-  virtual double          single_arg2   (int n = 5);
-  virtual double          two_args      (int n,
-                                         double r);
-  virtual double          two_args2     (int n = 6,
-                                         double r = 7.7);
-  virtual double          multi_args    (int n,
-                                         double r,
-                                         int i,
-                                         const std::string &s = "String ding",
-                                         double y = 5);
-  virtual double          self_method   (I_UIWidgetArea_Interface &ba1,
-                                         I_UIWidgetArea_Interface &ba2);
-  virtual void            void_method   ();
-  virtual std::string     on_click2out  ();
-  virtual void            on_click2in   (const std::string &command);
+  virtual double                        simple_method            ();
+  virtual double                        single_arg               (int n);
+  virtual double                        single_arg2              (int n = 5);
+  virtual double                        two_args                 (int n,
+                                                                  double r);
+  virtual double                        two_args2                (int n = 6,
+                                                                  double r = 7.7);
+  virtual double                        multi_args               (int n,
+                                                                  double r,
+                                                                  int i,
+                                                                  const std::string &s = "String ding",
+                                                                  double y = 5);
+  virtual double                        self_method              (I_UIWidgetArea_Interface &ba1,
+                                                                  I_UIWidgetArea_Interface &ba2);
+  virtual void                          void_method              ();
+  virtual std::string                   on_click2out             ();
+  virtual void                          on_click2in              (const std::string &command);
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_UIWidgetArea_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_UIWidgetArea_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_UIWidgetArea_Interface*&);
 
-class UIWidgetArea_SmartHandle : public Plic::SmartHandle {
+class I_Parent_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class Parent.
+{
 protected:
-  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
+  explicit                               I_Parent_Interface ();
+  virtual /*Des*/                       ~I_Parent_Interface () = 0;
 public:
-  inline UIWidgetArea_SmartHandle () {}
-  inline UIWidgetArea_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline UIWidgetArea_SmartHandle (I_UIWidgetArea_Interface *iface) { _iface (iface); }
-  inline UIWidgetArea_SmartHandle (I_UIWidgetArea_Interface &iface) { _iface (&iface); }
-  double          dummy () const;
-  void            dummy (double);
-  std::string     on_click () const;
-  void            on_click (const std::string&);
-  // double          simple_method ();
-  // double          single_arg    (int);
-  // double          single_arg2   (int);
-  // double          two_args      (int, double);
-  // double          two_args2     (int, double);
-  // double          multi_args    (int, double, int, const std::string&, double);
-  // double          self_method   (UIWidgetArea_SmartHandle&, UIWidgetArea_SmartHandle&);
-  // void            void_method   ();
-  // std::string     on_click2out  ();
-  // void            on_click2in   (const std::string&);
-  inline I_UIWidgetArea_Interface& operator*  () const { return *dynamic_cast<I_UIWidgetArea_Interface*> (_iface()); }
-  inline I_UIWidgetArea_Interface* operator-> () const { return dynamic_cast<I_UIWidgetArea_Interface*> (_iface()); }
-  inline operator  I_UIWidgetArea_Interface&  () const { return operator*(); }
-  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+  virtual void                          _list_types (Plic::TypeHashList&) const;
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Parent_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Parent_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_Parent_Interface*&);
 
-
-class I_Parent_Interface : public virtual Plic::SimpleServer {
+class I_Child_Interface : public virtual I_Parent_Interface
+  /// See also the corresponding IDL class Child.
+{
 protected:
-  explicit                 I_Parent_Interface ();
-  virtual /*Des*/         ~I_Parent_Interface () = 0;
+  explicit                               I_Child_Interface ();
+  virtual /*Des*/                       ~I_Child_Interface () = 0;
 public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Child_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Child_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_Child_Interface*&);
 
-class Parent_SmartHandle : public Plic::SmartHandle {
+class I_Descendant_Interface : public virtual I_Child_Interface
+  /// See also the corresponding IDL class Descendant.
+{
 protected:
-  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
+  explicit                               I_Descendant_Interface ();
+  virtual /*Des*/                       ~I_Descendant_Interface () = 0;
 public:
-  inline Parent_SmartHandle () {}
-  inline Parent_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline Parent_SmartHandle (I_Parent_Interface *iface) { _iface (iface); }
-  inline Parent_SmartHandle (I_Parent_Interface &iface) { _iface (&iface); }
-  inline I_Parent_Interface& operator*  () const { return *dynamic_cast<I_Parent_Interface*> (_iface()); }
-  inline I_Parent_Interface* operator-> () const { return dynamic_cast<I_Parent_Interface*> (_iface()); }
-  inline operator  I_Parent_Interface&  () const { return operator*(); }
-  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+  virtual void                          _list_types (Plic::TypeHashList&) const;
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Descendant_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Descendant_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_Descendant_Interface*&);
 
-
-class I_Child_Interface : public virtual I_Parent_Interface {
+class I_GrandChild_Interface : public virtual I_Descendant_Interface
+  /// See also the corresponding IDL class GrandChild.
+{
 protected:
-  explicit                 I_Child_Interface ();
-  virtual /*Des*/         ~I_Child_Interface () = 0;
+  explicit                               I_GrandChild_Interface ();
+  virtual /*Des*/                       ~I_GrandChild_Interface () = 0;
 public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
 };
-
-class Child_SmartHandle : public Parent_SmartHandle {
-protected:
-  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
-public:
-  inline Child_SmartHandle () {}
-  inline Child_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline Child_SmartHandle (I_Child_Interface *iface) { _iface (iface); }
-  inline Child_SmartHandle (I_Child_Interface &iface) { _iface (&iface); }
-  inline I_Child_Interface& operator*  () const { return *dynamic_cast<I_Child_Interface*> (_iface()); }
-  inline I_Child_Interface* operator-> () const { return dynamic_cast<I_Child_Interface*> (_iface()); }
-  inline operator  I_Child_Interface&  () const { return operator*(); }
-  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
-};
-
-
-class I_Descendant_Interface : public virtual I_Child_Interface {
-protected:
-  explicit                 I_Descendant_Interface ();
-  virtual /*Des*/         ~I_Descendant_Interface () = 0;
-public:
-};
-
-class Descendant_SmartHandle : public Child_SmartHandle {
-protected:
-  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
-public:
-  inline Descendant_SmartHandle () {}
-  inline Descendant_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline Descendant_SmartHandle (I_Descendant_Interface *iface) { _iface (iface); }
-  inline Descendant_SmartHandle (I_Descendant_Interface &iface) { _iface (&iface); }
-  inline I_Descendant_Interface& operator*  () const { return *dynamic_cast<I_Descendant_Interface*> (_iface()); }
-  inline I_Descendant_Interface* operator-> () const { return dynamic_cast<I_Descendant_Interface*> (_iface()); }
-  inline operator  I_Descendant_Interface&  () const { return operator*(); }
-  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
-};
-
-
-class I_GrandChild_Interface : public virtual I_Descendant_Interface {
-protected:
-  explicit                 I_GrandChild_Interface ();
-  virtual /*Des*/         ~I_GrandChild_Interface () = 0;
-public:
-};
-
-class GrandChild_SmartHandle : public Descendant_SmartHandle {
-protected:
-  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
-public:
-  inline GrandChild_SmartHandle () {}
-  inline GrandChild_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline GrandChild_SmartHandle (I_GrandChild_Interface *iface) { _iface (iface); }
-  inline GrandChild_SmartHandle (I_GrandChild_Interface &iface) { _iface (&iface); }
-  inline I_GrandChild_Interface& operator*  () const { return *dynamic_cast<I_GrandChild_Interface*> (_iface()); }
-  inline I_GrandChild_Interface* operator-> () const { return dynamic_cast<I_GrandChild_Interface*> (_iface()); }
-  inline operator  I_GrandChild_Interface&  () const { return operator*(); }
-  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
-};
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_GrandChild_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_GrandChild_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_GrandChild_Interface*&);
 
 enum QuickEnum {
   ZERO = 0,
 };
-struct QuickRecord {
-  int             int1;
-  int             int2;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
-  inline QuickRecord () { int1 = 0; int2 = 0; }
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  QuickEnum &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); return frr; }
+
+struct QuickRecordImpl {
+  int                           int1;
+  int                           int2;
+  inline                        QuickRecordImpl () { int1 = 0; int2 = 0; }
 };
-struct QuickSequence : public std::vector<double> {
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const QuickRecordImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, QuickRecordImpl&);
+
+struct QuickSequenceImpl : public std::vector<double> {
   typedef std::vector<double> Sequence;
-  bool proto_add  (Plic::Coupler&, Plic::FieldBuffer&) const;
-  bool proto_pop  (Plic::Coupler&, Plic::FieldBufferReader&);
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const QuickSequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, QuickSequenceImpl&);
 
-class I_QuickIface_Interface : public virtual Plic::SimpleServer {
+class I_QuickIface_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class QuickIface.
+{
 protected:
-  explicit                 I_QuickIface_Interface ();
-  virtual /*Des*/         ~I_QuickIface_Interface () = 0;
+  explicit                               I_QuickIface_Interface ();
+  virtual /*Des*/                       ~I_QuickIface_Interface () = 0;
 public:
-  virtual void            simple_function (int i = 9);
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual void                          simple_function        (int i = 9);
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_QuickIface_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_QuickIface_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_QuickIface_Interface*&);
 
-class QuickIface_SmartHandle : public Plic::SmartHandle {
+class I_MethodTestInterface_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class MethodTestInterface.
+{
 protected:
-  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
+  explicit                               I_MethodTestInterface_Interface ();
+  virtual /*Des*/                       ~I_MethodTestInterface_Interface () = 0;
 public:
-  inline QuickIface_SmartHandle () {}
-  inline QuickIface_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline QuickIface_SmartHandle (I_QuickIface_Interface *iface) { _iface (iface); }
-  inline QuickIface_SmartHandle (I_QuickIface_Interface &iface) { _iface (&iface); }
-  // void            simple_function (int);
-  inline I_QuickIface_Interface& operator*  () const { return *dynamic_cast<I_QuickIface_Interface*> (_iface()); }
-  inline I_QuickIface_Interface* operator-> () const { return dynamic_cast<I_QuickIface_Interface*> (_iface()); }
-  inline operator  I_QuickIface_Interface&  () const { return operator*(); }
-  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual void                          method_with_void                ();
+  virtual bool                          method_with_bools               (bool input,
+                                                                         bool optval = 0);
+  virtual int                           method_with_ints                (int input,
+                                                                         int optval = -2);
+  virtual double                        method_with_floats              (double input,
+                                                                         double optval = 309.9);
+  virtual std::string                   method_with_string              (const std::string &input,
+                                                                         const std::string &optval = "default");
+  virtual QuickEnum                     method_with_enum                (QuickEnum input,
+                                                                         QuickEnum optval = QuickEnum (0));
+  virtual QuickRecordImpl               method_with_record              (const QuickRecordImpl &input,
+                                                                         const QuickRecordImpl &optval = QuickRecordImpl());
+  virtual QuickSequenceImpl             method_with_sequence            (const QuickSequenceImpl &input,
+                                                                         const QuickSequenceImpl &optval = QuickSequenceImpl());
+  virtual I_GrandChild_Interface*       method_with_interface           (I_GrandChild_Interface &input,
+                                                                         I_GrandChild_Interface &optval = *(I_GrandChild_Interface*) NULL);
+  virtual I_QuickIface_Interface*       method_with_quickiface          (I_QuickIface_Interface &input,
+                                                                         I_QuickIface_Interface &iface0 = *(I_QuickIface_Interface*) NULL);
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_MethodTestInterface_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_MethodTestInterface_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_MethodTestInterface_Interface*&);
 
-
-class I_MethodTestInterface_Interface : public virtual Plic::SimpleServer {
+class I_SignalTestInterface_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class SignalTestInterface.
+{
 protected:
-  explicit                 I_MethodTestInterface_Interface ();
-  virtual /*Des*/         ~I_MethodTestInterface_Interface () = 0;
+  explicit                               I_SignalTestInterface_Interface ();
+  virtual /*Des*/                       ~I_SignalTestInterface_Interface () = 0;
 public:
-  virtual void            method_with_void       ();
-  virtual bool            method_with_bools      (bool input,
-                                                  bool optval = 0);
-  virtual int             method_with_ints       (int input,
-                                                  int optval = -2);
-  virtual double          method_with_floats     (double input,
-                                                  double optval = 309.9);
-  virtual std::string     method_with_string     (const std::string &input,
-                                                  const std::string &optval = "default");
-  virtual QuickEnum       method_with_enum       (QuickEnum input,
-                                                  QuickEnum optval = QuickEnum (0));
-  virtual QuickRecord     method_with_record     (const QuickRecord &input,
-                                                  const QuickRecord &optval = QuickRecord());
-  virtual QuickSequence   method_with_sequence   (const QuickSequence &input,
-                                                  const QuickSequence &optval = QuickSequence());
-  virtual I_GrandChild_Interface* method_with_interface  (I_GrandChild_Interface &input,
-                                                          I_GrandChild_Interface &optval = *(I_GrandChild_Interface*) NULL);
-  virtual I_QuickIface_Interface* method_with_quickiface (I_QuickIface_Interface &input,
-                                                          I_QuickIface_Interface &iface0 = *(I_QuickIface_Interface*) NULL);
-};
-
-class MethodTestInterface_SmartHandle : public Plic::SmartHandle {
-protected:
-  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
-public:
-  inline MethodTestInterface_SmartHandle () {}
-  inline MethodTestInterface_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline MethodTestInterface_SmartHandle (I_MethodTestInterface_Interface *iface) { _iface (iface); }
-  inline MethodTestInterface_SmartHandle (I_MethodTestInterface_Interface &iface) { _iface (&iface); }
-  // void            method_with_void       ();
-  // bool            method_with_bools      (bool, bool);
-  // int             method_with_ints       (int, int);
-  // double          method_with_floats     (double, double);
-  // std::string     method_with_string     (const std::string&, const std::string&);
-  // QuickEnum       method_with_enum       (QuickEnum, QuickEnum);
-  // QuickRecord     method_with_record     (const QuickRecord&, const QuickRecord&);
-  // QuickSequence   method_with_sequence   (const QuickSequence&, const QuickSequence&);
-  // GrandChild_SmartHandle method_with_interface  (GrandChild_SmartHandle&, GrandChild_SmartHandle&);
-  // QuickIface_SmartHandle method_with_quickiface (QuickIface_SmartHandle&, QuickIface_SmartHandle&);
-  inline I_MethodTestInterface_Interface& operator*  () const { return *dynamic_cast<I_MethodTestInterface_Interface*> (_iface()); }
-  inline I_MethodTestInterface_Interface* operator-> () const { return dynamic_cast<I_MethodTestInterface_Interface*> (_iface()); }
-  inline operator  I_MethodTestInterface_Interface&  () const { return operator*(); }
-  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
-};
-
-
-class I_SignalTestInterface_Interface : public virtual Plic::SimpleServer {
-protected:
-  explicit                 I_SignalTestInterface_Interface ();
-  virtual /*Des*/         ~I_SignalTestInterface_Interface () = 0;
-public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void ()> Signal_void_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, bool ()> Signal_bool_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, int ()> Signal_int_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, double ()> Signal_float_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, std::string ()> Signal_string_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, QuickEnum ()> Signal_enum_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, QuickRecord ()> Signal_record_result;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, QuickSequence ()> Signal_sequence_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, QuickRecordImpl ()> Signal_record_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, QuickSequenceImpl ()> Signal_sequence_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, I_GrandChild_Interface* ()> Signal_interface_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, I_SignalTestInterface_Interface* ()> Signal_self_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void ()> Signal_void_arg;
@@ -515,8 +478,8 @@ public:
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (double f)> Signal_float_arg;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const std::string &s)> Signal_string_arg;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (QuickEnum e)> Signal_enum_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const QuickRecord &r)> Signal_record_arg;
-  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const QuickSequence &s)> Signal_sequence_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const QuickRecordImpl &r)> Signal_record_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const QuickSequenceImpl &s)> Signal_sequence_arg;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (I_GrandChild_Interface &i)> Signal_interface_arg;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (I_SignalTestInterface_Interface &self_)> Signal_self_args;
   Signal_void_result sig_void_result;
@@ -540,84 +503,44 @@ public:
   Signal_interface_arg sig_interface_arg;
   Signal_self_args sig_self_args;
 };
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_SignalTestInterface_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_SignalTestInterface_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_SignalTestInterface_Interface*&);
 
-class SignalTestInterface_SmartHandle : public Plic::SmartHandle {
+class I_PropertyTester_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class PropertyTester.
+{
 protected:
-  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
+  explicit                               I_PropertyTester_Interface ();
+  virtual /*Des*/                       ~I_PropertyTester_Interface () = 0;
 public:
-  inline SignalTestInterface_SmartHandle () {}
-  inline SignalTestInterface_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline SignalTestInterface_SmartHandle (I_SignalTestInterface_Interface *iface) { _iface (iface); }
-  inline SignalTestInterface_SmartHandle (I_SignalTestInterface_Interface &iface) { _iface (&iface); }
-  inline I_SignalTestInterface_Interface& operator*  () const { return *dynamic_cast<I_SignalTestInterface_Interface*> (_iface()); }
-  inline I_SignalTestInterface_Interface* operator-> () const { return dynamic_cast<I_SignalTestInterface_Interface*> (_iface()); }
-  inline operator  I_SignalTestInterface_Interface&  () const { return operator*(); }
-  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual bool                          bool_prop      () const = 0;
+  virtual void                          bool_prop      (bool) = 0;
+  virtual int                           int_prop       () const = 0;
+  virtual void                          int_prop       (int) = 0;
+  virtual double                        float_prop     () const = 0;
+  virtual void                          float_prop     (double) = 0;
+  virtual std::string                   string_prop    () const = 0;
+  virtual void                          string_prop    (const std::string&) = 0;
+  virtual QuickEnum                     enum_prop      () const = 0;
+  virtual void                          enum_prop      (QuickEnum) = 0;
+  virtual QuickRecordImpl               record_prop    () const = 0;
+  virtual void                          record_prop    (const QuickRecordImpl&) = 0;
+  virtual QuickSequenceImpl             sequence_prop  () const = 0;
+  virtual void                          sequence_prop  (const QuickSequenceImpl&) = 0;
+  virtual I_GrandChild_Interface*       interface_prop () const = 0;
+  virtual void                          interface_prop (I_GrandChild_Interface*) = 0;
+  virtual I_PropertyTester_Interface*   self_prop      () const = 0;
+  virtual void                          self_prop      (I_PropertyTester_Interface*) = 0;
 };
-
-
-class I_PropertyTester_Interface : public virtual Plic::SimpleServer {
-protected:
-  explicit                 I_PropertyTester_Interface ();
-  virtual /*Des*/         ~I_PropertyTester_Interface () = 0;
-public:
-  virtual bool            bool_prop () const = 0;
-  virtual void            bool_prop (bool) = 0;
-  virtual int             int_prop () const = 0;
-  virtual void            int_prop (int) = 0;
-  virtual double          float_prop () const = 0;
-  virtual void            float_prop (double) = 0;
-  virtual std::string     string_prop () const = 0;
-  virtual void            string_prop (const std::string&) = 0;
-  virtual QuickEnum       enum_prop () const = 0;
-  virtual void            enum_prop (QuickEnum) = 0;
-  virtual QuickRecord     record_prop () const = 0;
-  virtual void            record_prop (const QuickRecord&) = 0;
-  virtual QuickSequence   sequence_prop () const = 0;
-  virtual void            sequence_prop (const QuickSequence&) = 0;
-  virtual I_GrandChild_Interface* interface_prop () const = 0;
-  virtual void            interface_prop (I_GrandChild_Interface*) = 0;
-  virtual I_PropertyTester_Interface* self_prop () const = 0;
-  virtual void            self_prop (I_PropertyTester_Interface*) = 0;
-};
-
-class PropertyTester_SmartHandle : public Plic::SmartHandle {
-protected:
-  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
-public:
-  inline PropertyTester_SmartHandle () {}
-  inline PropertyTester_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline PropertyTester_SmartHandle (I_PropertyTester_Interface *iface) { _iface (iface); }
-  inline PropertyTester_SmartHandle (I_PropertyTester_Interface &iface) { _iface (&iface); }
-  bool            bool_prop () const;
-  void            bool_prop (bool);
-  int             int_prop () const;
-  void            int_prop (int);
-  double          float_prop () const;
-  void            float_prop (double);
-  std::string     string_prop () const;
-  void            string_prop (const std::string&);
-  QuickEnum       enum_prop () const;
-  void            enum_prop (QuickEnum);
-  QuickRecord     record_prop () const;
-  void            record_prop (const QuickRecord&);
-  QuickSequence   sequence_prop () const;
-  void            sequence_prop (const QuickSequence&);
-  GrandChild_SmartHandle interface_prop () const;
-  void            interface_prop (GrandChild_SmartHandle);
-  PropertyTester_SmartHandle self_prop () const;
-  void            self_prop (PropertyTester_SmartHandle);
-  inline I_PropertyTester_Interface& operator*  () const { return *dynamic_cast<I_PropertyTester_Interface*> (_iface()); }
-  inline I_PropertyTester_Interface* operator-> () const { return dynamic_cast<I_PropertyTester_Interface*> (_iface()); }
-  inline operator  I_PropertyTester_Interface&  () const { return operator*(); }
-  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
-};
-
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_PropertyTester_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_PropertyTester_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_PropertyTester_Interface*&);
 } // InterfaceTests
 
 namespace RapicornPlicTest {
+
 enum ClickType {
   CLICK_ON_PRESS = 1,
   CLICK_ON_RELEASE = 2,
@@ -625,91 +548,57 @@ enum ClickType {
   CLICK_FAST_REPEAT = 4,
   CLICK_KEY_REPEAT = 5,
 };
+inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  ClickType &e) { fb << Plic::EnumValue (e); return fb; }
+inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, ClickType &e) { e = ClickType (frr.pop_evalue()); return frr; }
 
-class I_ButtonArea_Interface : public virtual Plic::SimpleServer {
+class I_ButtonArea_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class ButtonArea.
+{
 protected:
-  explicit                 I_ButtonArea_Interface ();
-  virtual /*Des*/         ~I_ButtonArea_Interface () = 0;
+  explicit                               I_ButtonArea_Interface ();
+  virtual /*Des*/                       ~I_ButtonArea_Interface () = 0;
 public:
-  virtual std::string     on_click () const = 0;
-  virtual void            on_click (const std::string&) = 0;
-  virtual std::string     on_click2 () const = 0;
-  virtual void            on_click2 (const std::string&) = 0;
-  virtual std::string     on_click3 () const = 0;
-  virtual void            on_click3 (const std::string&) = 0;
-  virtual ClickType       click_type () const = 0;
-  virtual void            click_type (ClickType) = 0;
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual std::string                   on_click   () const = 0;
+  virtual void                          on_click   (const std::string&) = 0;
+  virtual std::string                   on_click2  () const = 0;
+  virtual void                          on_click2  (const std::string&) = 0;
+  virtual std::string                   on_click3  () const = 0;
+  virtual void                          on_click3  (const std::string&) = 0;
+  virtual ClickType                     click_type () const = 0;
+  virtual void                          click_type (ClickType) = 0;
   typedef Rapicorn::Signals::Signal<I_ButtonArea_Interface, bool (), Rapicorn::Signals::CollectorUntil0<bool> > Signal_check_activate;
   typedef Rapicorn::Signals::Signal<I_ButtonArea_Interface, void ()> Signal_activate;
   Signal_check_activate sig_check_activate;
   Signal_activate sig_activate;
 };
-
-class ButtonArea_SmartHandle : public Plic::SmartHandle {
-protected:
-  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
-public:
-  inline ButtonArea_SmartHandle () {}
-  inline ButtonArea_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline ButtonArea_SmartHandle (I_ButtonArea_Interface *iface) { _iface (iface); }
-  inline ButtonArea_SmartHandle (I_ButtonArea_Interface &iface) { _iface (&iface); }
-  std::string     on_click () const;
-  void            on_click (const std::string&);
-  std::string     on_click2 () const;
-  void            on_click2 (const std::string&);
-  std::string     on_click3 () const;
-  void            on_click3 (const std::string&);
-  ClickType       click_type () const;
-  void            click_type (ClickType);
-  inline I_ButtonArea_Interface& operator*  () const { return *dynamic_cast<I_ButtonArea_Interface*> (_iface()); }
-  inline I_ButtonArea_Interface* operator-> () const { return dynamic_cast<I_ButtonArea_Interface*> (_iface()); }
-  inline operator  I_ButtonArea_Interface&  () const { return operator*(); }
-  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
-};
-
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_ButtonArea_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_ButtonArea_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_ButtonArea_Interface*&);
 
 class I_PureMethods_Interface;
-class PureMethods_SmartHandle;
 
-
-class I_PureMethods_Interface : public virtual Plic::SimpleServer {
+class I_PureMethods_Interface : public virtual Plic::SimpleServer
+  /// See also the corresponding IDL class PureMethods.
+{
 protected:
-  explicit                 I_PureMethods_Interface ();
-  virtual /*Des*/         ~I_PureMethods_Interface () = 0;
+  explicit                               I_PureMethods_Interface ();
+  virtual /*Des*/                       ~I_PureMethods_Interface () = 0;
 public:
-  virtual int             pure_method (double f) = 0;
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  virtual int                           pure_method             (double f) = 0;
 };
-
-class PureMethods_SmartHandle : public Plic::SmartHandle {
-protected:
-  inline Plic::SimpleServer* _iface() const { return (Plic::SimpleServer*) _void_iface(); }
-  inline void _iface (Plic::SimpleServer *_iface) { _void_iface (_iface); }
-public:
-  inline PureMethods_SmartHandle () {}
-  inline PureMethods_SmartHandle (Plic::Coupler &cpl, Plic::FieldBufferReader &fbr) { _pop_rpc (cpl, fbr); }
-  inline PureMethods_SmartHandle (I_PureMethods_Interface *iface) { _iface (iface); }
-  inline PureMethods_SmartHandle (I_PureMethods_Interface &iface) { _iface (&iface); }
-  // int             pure_method (double);
-  inline I_PureMethods_Interface& operator*  () const { return *dynamic_cast<I_PureMethods_Interface*> (_iface()); }
-  inline I_PureMethods_Interface* operator-> () const { return dynamic_cast<I_PureMethods_Interface*> (_iface()); }
-  inline operator  I_PureMethods_Interface&  () const { return operator*(); }
-  inline operator _unspecified_bool_type () const { return _is_null() ? NULL : _unspecified_bool_true(); }
-};
-
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_PureMethods_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_PureMethods_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_PureMethods_Interface*&);
 } // RapicornPlicTest
 
 // --- Interface Skeletons ---
-
-namespace MandatoryNamespace {
 
 void
 MandatoryNamespace::I_FirstInterface_Interface::void_func ()
 {
 }
-} // MandatoryNamespace
-
-namespace InterfaceTests {
 
 double
 InterfaceTests::I_UIWidgetArea_Interface::simple_method ()
@@ -718,135 +607,134 @@ InterfaceTests::I_UIWidgetArea_Interface::simple_method ()
 }
 
 double
-I_UIWidgetArea_Interface::single_arg (int n)
+InterfaceTests::I_UIWidgetArea_Interface::single_arg (int n)
 {
   return 0;
 }
 
 double
-I_UIWidgetArea_Interface::single_arg2 (int n)
+InterfaceTests::I_UIWidgetArea_Interface::single_arg2 (int n)
 {
   return 0;
 }
 
 double
-I_UIWidgetArea_Interface::two_args (int n,
-                                    double r)
+InterfaceTests::I_UIWidgetArea_Interface::two_args (int n,
+                                                    double r)
 {
   return 0;
 }
 
 double
-I_UIWidgetArea_Interface::two_args2 (int n,
-                                     double r)
+InterfaceTests::I_UIWidgetArea_Interface::two_args2 (int n,
+                                                     double r)
 {
   return 0;
 }
 
 double
-I_UIWidgetArea_Interface::multi_args (int n,
-                                      double r,
-                                      int i,
-                                      const std::string &s,
-                                      double y)
+InterfaceTests::I_UIWidgetArea_Interface::multi_args (int n,
+                                                      double r,
+                                                      int i,
+                                                      const std::string &s,
+                                                      double y)
 {
   return 0;
 }
 
 double
-I_UIWidgetArea_Interface::self_method (I_UIWidgetArea_Interface &ba1,
-                                       I_UIWidgetArea_Interface &ba2)
+InterfaceTests::I_UIWidgetArea_Interface::self_method (InterfaceTests::I_UIWidgetArea_Interface &ba1,
+                                                       InterfaceTests::I_UIWidgetArea_Interface &ba2)
 {
   return 0;
 }
 
 void
-I_UIWidgetArea_Interface::void_method ()
+InterfaceTests::I_UIWidgetArea_Interface::void_method ()
 {
 }
 
 std::string
-I_UIWidgetArea_Interface::on_click2out ()
+InterfaceTests::I_UIWidgetArea_Interface::on_click2out ()
 {
   return 0;
 }
 
 void
-I_UIWidgetArea_Interface::on_click2in (const std::string &command)
+InterfaceTests::I_UIWidgetArea_Interface::on_click2in (const std::string &command)
 {
 }
 
 void
-I_QuickIface_Interface::simple_function (int i)
+InterfaceTests::I_QuickIface_Interface::simple_function (int i)
 {
 }
 
 void
-I_MethodTestInterface_Interface::method_with_void ()
+InterfaceTests::I_MethodTestInterface_Interface::method_with_void ()
 {
 }
 
 bool
-I_MethodTestInterface_Interface::method_with_bools (bool input,
-                                                    bool optval)
+InterfaceTests::I_MethodTestInterface_Interface::method_with_bools (bool input,
+                                                                    bool optval)
 {
   return 0;
 }
 
 int
-I_MethodTestInterface_Interface::method_with_ints (int input,
-                                                   int optval)
+InterfaceTests::I_MethodTestInterface_Interface::method_with_ints (int input,
+                                                                   int optval)
 {
   return 0;
 }
 
 double
-I_MethodTestInterface_Interface::method_with_floats (double input,
-                                                     double optval)
+InterfaceTests::I_MethodTestInterface_Interface::method_with_floats (double input,
+                                                                     double optval)
 {
   return 0;
 }
 
 std::string
-I_MethodTestInterface_Interface::method_with_string (const std::string &input,
-                                                     const std::string &optval)
+InterfaceTests::I_MethodTestInterface_Interface::method_with_string (const std::string &input,
+                                                                     const std::string &optval)
 {
   return 0;
 }
 
-QuickEnum
-I_MethodTestInterface_Interface::method_with_enum (QuickEnum input,
-                                                   QuickEnum optval)
+InterfaceTests::QuickEnum
+InterfaceTests::I_MethodTestInterface_Interface::method_with_enum (InterfaceTests::QuickEnum input,
+                                                                   InterfaceTests::QuickEnum optval)
 {
-  return QuickEnum (0);
+  return InterfaceTests::QuickEnum (0);
 }
 
-QuickRecord
-I_MethodTestInterface_Interface::method_with_record (const QuickRecord &input,
-                                                     const QuickRecord &optval)
+InterfaceTests::QuickRecordImpl
+InterfaceTests::I_MethodTestInterface_Interface::method_with_record (const InterfaceTests::QuickRecordImpl &input,
+                                                                     const InterfaceTests::QuickRecordImpl &optval)
 {
-  return QuickRecord();
+  return InterfaceTests::QuickRecordImpl();
 }
 
-QuickSequence
-I_MethodTestInterface_Interface::method_with_sequence (const QuickSequence &input,
-                                                       const QuickSequence &optval)
+InterfaceTests::QuickSequenceImpl
+InterfaceTests::I_MethodTestInterface_Interface::method_with_sequence (const InterfaceTests::QuickSequenceImpl &input,
+                                                                       const InterfaceTests::QuickSequenceImpl &optval)
 {
-  return QuickSequence();
+  return InterfaceTests::QuickSequenceImpl();
 }
 
-I_GrandChild_Interface*
-I_MethodTestInterface_Interface::method_with_interface (I_GrandChild_Interface &input,
-                                                        I_GrandChild_Interface &optval)
+InterfaceTests::I_GrandChild_Interface*
+InterfaceTests::I_MethodTestInterface_Interface::method_with_interface (InterfaceTests::I_GrandChild_Interface &input,
+                                                                        InterfaceTests::I_GrandChild_Interface &optval)
 {
-  return (I_GrandChild_Interface*) NULL;
+  return (InterfaceTests::I_GrandChild_Interface*) NULL;
 }
 
-I_QuickIface_Interface*
-I_MethodTestInterface_Interface::method_with_quickiface (I_QuickIface_Interface &input,
-                                                         I_QuickIface_Interface &iface0)
+InterfaceTests::I_QuickIface_Interface*
+InterfaceTests::I_MethodTestInterface_Interface::method_with_quickiface (InterfaceTests::I_QuickIface_Interface &input,
+                                                                         InterfaceTests::I_QuickIface_Interface &iface0)
 {
-  return (I_QuickIface_Interface*) NULL;
+  return (InterfaceTests::I_QuickIface_Interface*) NULL;
 }
-} // InterfaceTests
 

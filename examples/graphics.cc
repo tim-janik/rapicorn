@@ -1,67 +1,72 @@
-/* Rapicorn Examples
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include <rapicorn.hh>
+#include <cairo.h>
+
+#define CHECK_CAIRO_STATUS(status)      do {    \
+  cairo_status_t ___s = (status);               \
+  if (___s != CAIRO_STATUS_SUCCESS)             \
+    Rapicorn::printerr ("%s: %s\n", cairo_status_to_string (___s), #status); \
+  } while (0)
 
 namespace {
 using namespace Rapicorn;
 
 static void
-drawable_draw (Display  &display,
-               Drawable &drawable)
+drawable_redraw (Drawable &drawable, int x, int y, int w, int h)
 {
-  cairo_t *cr = display.create_cairo();
-  Rect area = drawable.allocation();
+  // boilerplate
+  PixelRect pic;
+  pic.x = x, pic.y = y, pic.width = w, pic.height = h, pic.rowstride = pic.width;
+  pic.argb_pixels.resize (pic.rowstride * pic.height);
+  cairo_surface_t *surface = cairo_image_surface_create_for_data ((uint8*) pic.argb_pixels.data(), CAIRO_FORMAT_ARGB32,
+                                                                  pic.width, pic.height, pic.rowstride * 4);
+  CHECK_CAIRO_STATUS (cairo_surface_status (surface));
+  cairo_t *cr = cairo_create (surface);
+  cairo_surface_destroy (surface);
+  // outline drawing rectangle
+  cairo_set_line_width (cr, 1);
+  cairo_set_source_rgba (cr, 0, 0, 1, 1);
+  cairo_rectangle (cr, 0, 0, pic.width, pic.height);
+  cairo_stroke (cr);
+  // custom drawing
   const double lthickness = 2.25;
   cairo_set_source_rgba (cr, 0, 0, 0, 1);
   cairo_set_line_width (cr, lthickness);
-  cairo_move_to (cr, area.x + 15, area.y + 15), cairo_line_to (cr, area.x + 35, area.y + 35);
-  cairo_move_to (cr, area.x + 35, area.y + 35), cairo_line_to (cr, area.x + 50, area.y + 20);
-  cairo_move_to (cr, area.x + 50, area.y + 20), cairo_line_to (cr, area.x + 75, area.y + 90);
-  cairo_move_to (cr, area.x + 75, area.y + 90), cairo_line_to (cr, area.x + 230, area.y + 93);
+  cairo_move_to (cr, 15, 15), cairo_line_to (cr, 35, 35);
+  cairo_move_to (cr, 35, 35), cairo_line_to (cr, 50, 20);
+  cairo_move_to (cr, 50, 20), cairo_line_to (cr, 75, 90);
+  cairo_move_to (cr, 75, 90), cairo_line_to (cr, 230, 93);
   cairo_stroke (cr);
   cairo_set_line_width (cr, lthickness * 0.5);
-  cairo_move_to (cr, area.x + 75, area.y + 120), cairo_line_to (cr, area.x + 230, area.y + 110);
+  cairo_move_to (cr, 75, 120), cairo_line_to (cr, 230, 110);
+  // render remotely
+  cairo_destroy (cr);
+  drawable.draw_rect (pic);
 }
 
 extern "C" int
 main (int   argc,
       char *argv[])
 {
-  /* initialize Rapicorn and its gtk backend */
-  Application_SmartHandle smApp = init_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
-  /* initialization acquired global Rapicorn mutex */
+  // initialize Rapicorn
+  Application app = init_app (String ("Rapicorn/Examples/") + RAPICORN__FILE__, &argc, argv);
 
-  /* load GUI definition file, relative to argv[0] */
-  app.auto_load ("RapicornTest", "graphics.xml", argv[0]);
+  // find and load GUI definitions relative to argv[0]
+  app.auto_load ("RapicornExamples", "graphics.xml", argv[0]);
 
-  /* create window item */
-  Wind0wIface &wind0w = *app.create_wind0w ("graphics-dialog");
+  // create main wind0w
+  Wind0w wind0w = app.create_wind0w ("graphics-dialog");
 
-  /* hook up drawable test */
-  WindowImpl &window = wind0w.impl();
-  Drawable &drawable = window.interface<Drawable&>();
-  drawable.sig_draw += slot (&drawable_draw, drawable);
+  // hook up drawable test
+  Drawable drawable = wind0w.component<Drawable> ("/Drawable#drawable1");
+  RAPICORN_ASSERT (drawable._is_null() == false);
+  drawable.redraw += slot (&drawable_redraw);
 
+  // show main window
   wind0w.show();
 
-  app.execute_loops();
-
-  return 0;
+  // run event loops while wind0ws are on screen
+  return app.run_and_exit();
 }
 
 } // anon

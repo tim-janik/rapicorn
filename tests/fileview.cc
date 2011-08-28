@@ -1,19 +1,4 @@
-/* Rapicorn Tests
- * Copyright (C) 2008 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include <rapicorn.hh>
 #include <sys/types.h>
 #include <dirent.h>
@@ -63,23 +48,19 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  /* initialize Rapicorn for X11 */
-  Application_SmartHandle smApp = init_app ("FileView", &argc, argv); // acquires Rapicorn mutex
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  // initialize Rapicorn
+  Application app = init_app ("RapicornFileView", &argc, argv);
 
-  /* load GUI definition file, relative to argv[0] */
-  app.auto_load ("RapicornTest", "fileview.xml", argv[0]);
+  // find and load GUI definitions relative to argv[0]
+  app.auto_load ("RapicornFileView", "fileview.xml", argv[0]);
 
-  /* create root item */
-  Store1 *s1 = create_store();
-  Wind0wIface &wind0w = *app.create_wind0w ("main-dialog",
-                                            Args (""),
-                                            Args ("ListModel=" + s1->model().plor_name()));
+  // create main wind0w
+  // FIXME: Store1 *s1 = create_store();
+  Wind0w wind0w = app.create_wind0w ("main-dialog"); // FIXME: Args (""), Args ("ListModel=" + s1->model().plor_name()));
   wind0w.show();
 
-  app.execute_loops();
-
-  return 0;
+  // run event loops while wind0ws are on screen
+  return app.run_and_exit();
 }
 
 } // anon

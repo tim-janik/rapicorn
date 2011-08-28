@@ -1327,7 +1327,7 @@ namespace Rapicorn {
 static Thread *gtkthread = NULL;
 
 static void     init_with_gtk_thread  (const StringVector &args);
-static InitHook _init_with_gtk_thread ("ui/50 Init Backend: Gtk+ (threaded)", init_with_gtk_thread);
+static InitHook _init_with_gtk_thread ("ui-core/50 Init Backend: Gtk+ (threaded)", init_with_gtk_thread);
 static void
 init_with_gtk_thread (const StringVector &args)
 {

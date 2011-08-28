@@ -65,6 +65,14 @@ clamp (const T &value, const T &minimum, const T &maximum)
     return maximum;
   return value;
 }
+template <class T, size_t S> inline std::vector<T>
+vector_from_array (const T (&array_entries)[S]) /// Construct a std::vector<T> from a C array of type T[].
+{
+  std::vector<T> result;
+  for (size_t i = 0; i < S; i++)
+    result.push_back (array_entries[i]);
+  return result;
+}
 
 /* --- template utilities --- */
 template<class X, class Y> class TraitConvertible {
@@ -126,6 +134,7 @@ String      process_handle ();
 #define assert_unreached   RAPICORN_ASSERT_UNREACHED   // ()
 #define assert_not_reached RAPICORN_ASSERT_UNREACHED   // ()
 #define BREAKPOINT         Rapicorn::breakpoint        // ()
+#define FIXME              RAPICORN_FIXME
 #ifndef assert
 #define assert            ASSERT
 #endif
@@ -161,14 +170,14 @@ public:
   static void   abort           () RAPICORN_NORETURN;
 };
 
-inline void fatal (const char *format, ...)     RAPICORN_PRINTF (1, 2) RAPICORN_NORETURN;
-inline void pfatal (const char *format, ...)    RAPICORN_PRINTF (1, 2) RAPICORN_NORETURN;
-inline void critical (const char *format, ...)  RAPICORN_PRINTF (1, 2);
-inline void pcritical (const char *format, ...) RAPICORN_PRINTF (1, 2);
-inline void fatal (const char *format, ...)     { va_list a; va_start (a, format); Logging::messagev ("FATAL",     RAPICORN__FILE__, format, a); va_end (a); while (1); }
-inline void pfatal (const char *format, ...)    { va_list a; va_start (a, format); Logging::messagev ("PFATAL",    RAPICORN__FILE__, format, a); va_end (a); while (1); }
-inline void critical (const char *format, ...)  { va_list a; va_start (a, format); Logging::messagev ("CRITICAL",  RAPICORN__FILE__, format, a); va_end (a); }
-inline void pcritical (const char *format, ...) { va_list a; va_start (a, format); Logging::messagev ("PCRITICAL", RAPICORN__FILE__, format, a); va_end (a); }
+static inline void fatal (const char *format, ...)     RAPICORN_PRINTF (1, 2) RAPICORN_NORETURN;
+static inline void pfatal (const char *format, ...)    RAPICORN_PRINTF (1, 2) RAPICORN_NORETURN;
+static inline void critical (const char *format, ...)  RAPICORN_PRINTF (1, 2);
+static inline void pcritical (const char *format, ...) RAPICORN_PRINTF (1, 2);
+static inline void fatal (const char *format, ...)     { va_list a; va_start (a, format); Logging::messagev ("FATAL",     RAPICORN__FILE__, format, a); va_end (a); while (1); }
+static inline void pfatal (const char *format, ...)    { va_list a; va_start (a, format); Logging::messagev ("PFATAL",    RAPICORN__FILE__, format, a); va_end (a); while (1); }
+static inline void critical (const char *format, ...)  { va_list a; va_start (a, format); Logging::messagev ("CRITICAL",  RAPICORN__FILE__, format, a); va_end (a); }
+static inline void pcritical (const char *format, ...) { va_list a; va_start (a, format); Logging::messagev ("PCRITICAL", RAPICORN__FILE__, format, a); va_end (a); }
 #define RAPICORN_ASSERT_NOT_REACHED             RAPICORN_ASSERT_UNREACHED
 #define RAPICORN_ASSERT_UNREACHED()             do { Rapicorn::Logging::message ("FATAL", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "encountered unreachable assertion"); Rapicorn::Logging::abort(); } while (0)
 #define RAPICORN_RETURN_IF_FAIL(expr)           do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assumption failed: %s", #expr); return; } while (0)
@@ -179,6 +188,7 @@ inline void pcritical (const char *format, ...) { va_list a; va_start (a, format
 #define RAPICORN_PCHECK(expr)  do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("PCHECK",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assumption failed (%s)", #expr); } while (0)
 #define RAPICORN_DEBUG(...)    do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("DEBUG",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
 #define RAPICORN_PDEBUG(...)   do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("PDEBUG", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
+#define RAPICORN_FIXME(...)    do { Rapicorn::Logging::message ("DEBUG",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
 
 /* --- timestamp handling --- */
 uint64  timestamp_startup    ();        // µseconds

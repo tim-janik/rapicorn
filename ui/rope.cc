@@ -15,11 +15,11 @@
  * with this library; if not, see http://www.gnu.org/copyleft/.
  */
 #include "rope.hh" // must be included first to configure std headers
-#include "loop.hh"
 #include "application.hh"
 
 namespace Rapicorn {
 
+#if 0 // FIXME
 class DispatchSource : public virtual EventLoop::Source {
   Plic::Coupler &coupler;
 protected:
@@ -51,17 +51,18 @@ public:
     coupler.set_dispatcher_wakeup (NULL);
   }
 };
+#endif
 
 struct Initializer {
   String              application_identifier;
   Mutex               mutex;
   Cond                cond;
   uint64              app_id;
-  Plic::Coupler      *coupler;
+  // Plic::Coupler      *coupler;
   const StringVector *args;     // init-only
   int                *argcp;    // init-only
   char              **argv;     // init-only
-  Initializer() : app_id (0), coupler (NULL), args (NULL), argcp (NULL), argv (NULL) {}
+  Initializer() : app_id (0), /*coupler (NULL),*/ args (NULL), argcp (NULL), argv (NULL) {}
 };
 
 class RopeThread : public Thread {
@@ -87,25 +88,29 @@ private:
   {
     affinity (string_to_int (string_vector_find (*m_init->args, "cpu-affinity=", "-1")));
     // init_core() already called
-    init_app (m_init->application_identifier, m_init->argcp, m_init->argv, *m_init->args);
+    // FIXME: init_app (m_init->application_identifier, m_init->argcp, m_init->argv, *m_init->args);
     m_init->argcp = NULL, m_init->argv = NULL, m_init->args = NULL; // becomes invalidated once app_id is set
-    m_loop = ref_sink (EventLoop::create());
-    EventLoop::Source *esource = new DispatchSource (*m_init->coupler, *m_loop);
-    (*m_loop).add_source (esource, EventLoop::PRIORITY_NORMAL);
+    // FIXME: m_loop = ref_sink (EventLoop::create());
+    EventLoop::Source *esource = NULL; // FIXME: new DispatchSource (*m_init->coupler, *m_loop);
+    // FIXME: (*m_loop).add_source (esource, EventLoop::PRIORITY_NORMAL);
     esource->primary (false);
     m_init->mutex.lock();
-    m_init->app_id = Application_SmartHandle (ApplicationImpl::the())._rpc_id();
+    m_init->app_id = connection_object2id (ApplicationImpl::the());
     m_init->cond.signal();
     m_init->mutex.unlock();
     m_init = NULL;
+    fatal ("obsolete rope code...");
+#if 0
     while (true) // !EventLoop::loops_exitable()
       EventLoop::iterate_loops (true, true);      // prepare/check/dispatch and may_block
+#endif
   }
 };
 
 static RopeThread    *rope_thread = NULL;
 static uint64         app_id = 0;
 
+#if 0 // FIXME
 class RopeCoupler : public Plic::Coupler {
   virtual FieldBuffer*
   call_remote (FieldBuffer *fbcall)
@@ -129,22 +134,23 @@ rope_thread_coupler ()
 {
   return &rope_coupler;
 }
+#endif
 
-static Plic::EventFd * volatile initevd = NULL;
+static EventFd * volatile initevd = NULL;
 
 int
 rope_thread_inputfd ()
 {
   if (once_enter (&initevd))
     {
-      Plic::EventFd *evd = new Plic::EventFd();
-      rope_coupler.set_event_wakeup (*evd, &Plic::EventFd::wakeup);
+      EventFd *evd = new EventFd();
+      // FIXME rope_coupler.set_event_wakeup (*evd, &EventFd::wakeup);
       int err = evd->open();
       if (err < 0)
         fatal ("failed to open EventFd: %s", string_from_errno (err).c_str());
       once_leave (&initevd, evd);
     }
-  Plic::EventFd *e = initevd;
+  EventFd *e = initevd;
   return e->inputfd(); // fd for POLLIN
 }
 
@@ -153,7 +159,7 @@ rope_thread_flush_input ()
 {
   if (initevd)
     {
-      Plic::EventFd *evd = initevd;
+      EventFd *evd = initevd;
       evd->flush();
     }
 }
@@ -174,7 +180,7 @@ rope_thread_start (const String       &app_ident,
       init.argcp = argcp;
       init.argv = argv;
       init.args = &args;
-      init.coupler = &rope_coupler;
+      // FIXME init.coupler = &rope_coupler;
       rope_thread = new RopeThread ("RapicornUI", &init);
       ref_sink (rope_thread);
       rope_thread->start();

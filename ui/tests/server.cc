@@ -1,6 +1,6 @@
 /* Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html */
 #include <rcore/testutils.hh>
-#include <rapicorn.hh>
+#include <ui/uithread.hh>
 using namespace Rapicorn;
 
 static void
@@ -10,11 +10,11 @@ test_server_smart_handle (void)
   ApplicationIface *ab = &app;
   Plic::FieldBuffer8 fb (4);
   fb.add_object (uint64 ((BaseObject*) ab));
-  Plic::Coupler &c = *rope_thread_coupler();
-  c.reader.reset (fb);
-  Application_SmartHandle sh (c, c.reader);
-  ApplicationIface &shab = *sh;
-  assert (ab == &shab);
-  assert (ab == sh.operator->());
+  // FIXME: Plic::Coupler &c = *rope_thread_coupler();
+  // c.reader.reset (fb);
+  ApplicationImpl *am = dynamic_cast<ApplicationImpl*> (ab);
+  assert (am == &app);
+  ApplicationIface *ai = am;
+  assert (ai == ab);
 }
-REGISTER_TEST ("Server/Smart Handle", test_server_smart_handle);
+REGISTER_UITHREAD_TEST ("Server/Smart Handle", test_server_smart_handle);

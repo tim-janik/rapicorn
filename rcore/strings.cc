@@ -660,6 +660,37 @@ string_option_check (const String   &option_string,
     }
 }
 
+// == Strings ==
+Strings::Strings (CS &s1)
+{ push_back (s1); }
+Strings::Strings (CS &s1, CS &s2)
+{ push_back (s1); push_back (s2); }
+Strings::Strings (CS &s1, CS &s2, CS &s3)
+{ push_back (s1); push_back (s2); push_back (s3); }
+Strings::Strings (CS &s1, CS &s2, CS &s3, CS &s4)
+{ push_back (s1); push_back (s2); push_back (s3); push_back (s4); }
+Strings::Strings (CS &s1, CS &s2, CS &s3, CS &s4, CS &s5)
+{ push_back (s1); push_back (s2); push_back (s3); push_back (s4); push_back (s5); }
+Strings::Strings (CS &s1, CS &s2, CS &s3, CS &s4, CS &s5, CS &s6)
+{ push_back (s1); push_back (s2); push_back (s3); push_back (s4); push_back (s5); push_back (s6); }
+Strings::Strings (CS &s1, CS &s2, CS &s3, CS &s4, CS &s5, CS &s6, CS &s7)
+{ push_back (s1); push_back (s2); push_back (s3); push_back (s4); push_back (s5); push_back (s6); push_back (s7); }
+Strings::Strings (CS &s1, CS &s2, CS &s3, CS &s4, CS &s5, CS &s6, CS &s7, CS &s8)
+{ push_back (s1); push_back (s2); push_back (s3); push_back (s4); push_back (s5); push_back (s6);
+  push_back (s7); push_back (s8); }
+Strings::Strings (CS &s1, CS &s2, CS &s3, CS &s4, CS &s5, CS &s6, CS &s7, CS &s8, CS &s9)
+{ push_back (s1); push_back (s2); push_back (s3); push_back (s4); push_back (s5); push_back (s6);
+  push_back (s7); push_back (s8); push_back (s9); }
+Strings::Strings (CS &s1, CS &s2, CS &s3, CS &s4, CS &s5, CS &s6, CS &s7, CS &s8, CS &s9, CS &sA)
+{ push_back (s1); push_back (s2); push_back (s3); push_back (s4); push_back (s5); push_back (s6);
+  push_back (s7); push_back (s8); push_back (s9); push_back (sA); }
+Strings::Strings (CS &s1, CS &s2, CS &s3, CS &s4, CS &s5, CS &s6, CS &s7, CS &s8, CS &s9, CS &sA, CS &sB)
+{ push_back (s1); push_back (s2); push_back (s3); push_back (s4); push_back (s5); push_back (s6);
+  push_back (s7); push_back (s8); push_back (s9); push_back (sA); push_back (sB); }
+Strings::Strings (CS &s1, CS &s2, CS &s3, CS &s4, CS &s5, CS &s6, CS &s7, CS &s8, CS &s9, CS &sA, CS &sB, CS &sC)
+{ push_back (s1); push_back (s2); push_back (s3); push_back (s4); push_back (s5); push_back (s6);
+  push_back (s7); push_back (s8); push_back (s9); push_back (sA); push_back (sB); push_back (sC); }
+
 // === Charset Conversions ===
 static bool
 unalias_encoding (String &name)

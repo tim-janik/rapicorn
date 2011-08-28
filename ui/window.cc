@@ -2,6 +2,7 @@
 #include "window.hh"
 #include "application.hh"
 #include "factory.hh"
+#include "uithread.hh"
 
 namespace Rapicorn {
 
@@ -150,12 +151,12 @@ WindowImpl::create_snapshot (const Rect &subarea)
 }
 
 WindowImpl::WindowImpl() :
-  m_loop (*ref_sink (EventLoop::create())),
+  m_loop (*ref_sink (uithread_main_loop()->new_slave())),
   m_source (NULL),
   m_viewp0rt (NULL),
   m_tunable_requisition_counter (0),
   m_entered (false), m_auto_close (false),
-  sig_displayed (*this)
+  m_notify_displayed_id (0)
 {
   Heritage *hr = ClassDoctor::window_heritage (*this, color_scheme());
   ref_sink (hr);
@@ -170,7 +171,7 @@ WindowImpl::WindowImpl() :
   RAPICORN_ASSERT (m_source == NULL);
   EventLoop::Source *source = new WindowSource (*this);
   RAPICORN_ASSERT (m_source == source);
-  m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
+  m_loop.add (m_source, EventLoop::PRIORITY_NORMAL);
   m_source->primary (false);
   ApplicationImpl::the().add_wind0w (*this);
   change_flags_silently (ANCHORED, true);       /* window is always anchored */
@@ -184,6 +185,11 @@ WindowImpl::dispose ()
 
 WindowImpl::~WindowImpl()
 {
+  if (m_notify_displayed_id)
+    {
+      m_loop.try_remove (m_notify_displayed_id);
+      m_notify_displayed_id = 0;
+    }
   if (m_viewp0rt)
     {
       delete m_viewp0rt;
@@ -769,6 +775,13 @@ WindowImpl::expose_now ()
 }
 
 void
+WindowImpl::notify_displayed()
+{
+  // emit updates at exec_update() priority, so other high priority handlers run first (exec_now)
+  sig_displayed.emit();
+}
+
+void
 WindowImpl::draw_now ()
 {
   if (m_viewp0rt)
@@ -800,8 +813,8 @@ WindowImpl::draw_now ()
           m_viewp0rt->blit_display (display);
           display.pop_clip_rect();
         }
-      if (!has_pending_win_size())
-        sig_displayed.emit();
+      if (!has_pending_win_size() && !m_notify_displayed_id)
+        m_notify_displayed_id = m_loop.exec_update (slot (*this, &WindowImpl::notify_displayed));
     }
   else
     m_expose_region.clear(); // nuke stale exposes
@@ -976,15 +989,15 @@ WindowImpl::dispatch_event (const Event &event)
 }
 
 bool
-WindowImpl::prepare (uint64 current_time_usecs,
-                     int64 *timeout_usecs_p)
+WindowImpl::prepare (const EventLoop::State &state,
+                     int64                  *timeout_usecs_p)
 {
   ScopedLock<Mutex> aelocker (m_async_mutex);
   return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewp0rt && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
 }
 
 bool
-WindowImpl::check (uint64 current_time_usecs)
+WindowImpl::check (const EventLoop::State &state)
 {
   ScopedLock<Mutex> aelocker (m_async_mutex);
   return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_viewp0rt && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
@@ -997,7 +1010,7 @@ WindowImpl::enable_auto_close ()
 }
 
 bool
-WindowImpl::dispatch ()
+WindowImpl::dispatch (const EventLoop::State &state)
 {
   ref (this);
   {
@@ -1106,7 +1119,7 @@ WindowImpl::destroy_viewp0rt ()
       RAPICORN_ASSERT (m_source == NULL);
       EventLoop::Source *source = new WindowSource (*this);
       RAPICORN_ASSERT (m_source == source);
-      m_loop.add_source (m_source, EventLoop::PRIORITY_NORMAL);
+      m_loop.add (m_source, EventLoop::PRIORITY_NORMAL);
       m_source->primary (false);
     }
   // reset item state where needed

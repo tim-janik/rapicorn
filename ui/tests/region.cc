@@ -1,6 +1,6 @@
 /* Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html */
 #include <rcore/testutils.hh>
-#include <rapicorn.hh>
+#include <ui/uithread.hh>
 #include <stdio.h>
 #include <stdlib.h>     // lrand48
 
@@ -22,7 +22,7 @@ test_rect (void)
   TASSERT (r3.equals (r2, 0.5) == true);
   TASSERT (r2.equals (r1, 0.00000000000001));           // using epsilon due to precision artefacts
 }
-REGISTER_TEST ("Region/rectangles", test_rect);
+REGISTER_UITHREAD_TEST ("Region/rectangles", test_rect);
 
 static void
 test_region_basics (void)
@@ -45,7 +45,7 @@ test_region_basics (void)
   TASSERT (z.empty());
   TASSERT (r.equal (z));
 }
-REGISTER_TEST ("Region/region basics", test_region_basics);
+REGISTER_UITHREAD_TEST ("Region/region basics", test_region_basics);
 
 static void
 test_region_rect1 (void)
@@ -83,7 +83,7 @@ test_region_rect1 (void)
   TASSERT (e.contains (Rect (Point (0, 0), Point (1, 1))) == false);
   TASSERT (e.contains (Region()) == true);
 }
-REGISTER_TEST ("Region/region rec1t", test_region_rect1);
+REGISTER_UITHREAD_TEST ("Region/region rec1t", test_region_rect1);
 
 static void
 test_region2 (void)
@@ -109,7 +109,7 @@ test_region2 (void)
   TASSERT ((a < b) == false);
   TASSERT ((b < a) == false);
 }
-REGISTER_TEST ("Region/region2", test_region2);
+REGISTER_UITHREAD_TEST ("Region/region2", test_region2);
 
 static void
 test_region2_ops (void)
@@ -147,7 +147,7 @@ test_region2_ops (void)
   b.exor (a);
   TASSERT (b == sb);
 }
-REGISTER_TEST ("Region/region2 ops", test_region2_ops);
+REGISTER_UITHREAD_TEST ("Region/region2 ops", test_region2_ops);
 
 static Region
 create_rand_region (void)
@@ -199,7 +199,7 @@ test_region_fract (void)
   if (0)
     printf ("\nREGION:\n%s\nEMPTY:\n%s\n", create_rand_region().string().c_str(), Region().string().c_str());
 }
-REGISTER_TEST ("Region/fractional regions", test_region_fract);
+REGISTER_UITHREAD_TEST ("Region/fractional regions", test_region_fract);
 
 static void
 test_region_cmp ()
@@ -266,6 +266,6 @@ test_region_cmp ()
       TASSERT (c.empty());
     }
 }
-REGISTER_TEST ("Region/random-cmp", test_region_cmp);
+REGISTER_UITHREAD_TEST ("Region/random-cmp", test_region_cmp);
 
 } // Anon

@@ -5,6 +5,7 @@
 #include "viewp0rt.hh"
 #include "image.hh"
 #include "compath.hh"
+#include "uithread.hh"
 #include <algorithm>
 #include <stdlib.h>
 
@@ -19,8 +20,21 @@ ApplicationIface::pixstream (const String  &pix_name,
   Pixmap::add_stock (pix_name, static_const_pixstream);
 }
 
-static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x123caca0) {} } __staticctortest;
+bool
+ApplicationIface::factory_window (const std::string &factory_definition)
+{
+  return Factory::item_definition_is_window (factory_definition);
+}
+
 static ApplicationImpl *the_app = NULL;
+static void
+create_application (const StringVector &args)
+{
+  if (the_app)
+    fatal ("librapicornui: multiple calls to Rapicorn::init_app()");
+  the_app = new ApplicationImpl();
+}
+static InitHook _create_application ("ui-thread/00 Creating Application Singleton", create_application);
 
 ApplicationImpl&
 ApplicationImpl::the ()
@@ -28,36 +42,6 @@ ApplicationImpl::the ()
   if (!the_app)
     fatal ("librapicornui: library uninitialized, call Rapicorn::init_app() first");
   return *the_app;
-}
-
-Application_SmartHandle
-init_app (const String       &app_ident,
-          int                *argcp,
-          char              **argv,
-          const StringVector &args)
-{
-  // assert global_ctors work
-  if (__staticctortest.v != 0x123caca0)
-    fatal ("librapicornui: link error: C++ constructors have not been executed");
-  // ensure single initialization
-  if (the_app)
-    fatal ("librapicornui: multiple calls to Rapicorn::init_app()");
-  // initialize core
-  if (program_ident().empty())
-    init_core (app_ident, argcp, argv, args);
-  else if (app_ident != program_ident())
-    fatal ("librapicornui: application identifier changed during ui initialization");
-  // initialize sub systems
-  struct InitHookCaller : public InitHook {
-    static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)
-    { invoke_hooks (kind, argcp, argv, args); }
-  };
-  InitHookCaller::invoke ("ui/", argcp, argv, args);
-  the_app = new ApplicationImpl();
-  InitHookCaller::invoke ("ui-thread/", argcp, argv, args);
-  assert (rapicorn_thread_entered() == false);
-  rapicorn_thread_enter();
-  return ApplicationImpl::the();
 }
 
 Wind0wIface*
@@ -109,16 +93,18 @@ ApplicationImpl::auto_path (const String  &file_name,
   return Path::join (bpath, file_name);
 }
 
-void
+StringList
 ApplicationImpl::auto_load (const String  &defs_domain,
                             const String  &file_name,
                             const String  &binary_path,
                             const String  &i18n_domain)
 {
   String fullname = auto_path (file_name, binary_path, true);
-  int err = Factory::parse_file (i18n_domain, fullname, defs_domain);
+  vector<String> definitions;
+  int err = Factory::parse_file (i18n_domain, fullname, defs_domain, &definitions);
   if (err)
     fatal ("failed to load \"%s\": %s", fullname.c_str(), string_from_errno (err).c_str());
+  return definitions;
 }
 
 void
@@ -130,19 +116,10 @@ ApplicationImpl::load_string (const std::string &xml_string,
     fatal ("failed to parse string: %s\n%s", string_from_errno (err).c_str(), xml_string.c_str());
 }
 
-int
-ApplicationIface::execute_loops ()
-{
-  assert (rapicorn_thread_entered());           // guards exit_code
-  while (!EventLoop::loops_exitable())
-    EventLoop::iterate_loops (true, true);      // prepare/check/dispatch and may_block
-  return 0;
-}
-
 bool
-ApplicationIface::has_primary ()
+ApplicationIface::finishable ()
 {
-  return !EventLoop::loops_exitable();
+  return uithread_main_loop()->finishable();
 }
 
 void
@@ -197,10 +174,9 @@ ApplicationImpl::add_wind0w (Wind0wIface &wind0w)
 }
 
 void
-ApplicationImpl::check_primaries()
+ApplicationImpl::lost_primaries()
 {
-  if (m_wind0ws.size() == 0) // FIXME: check temporary wind0w types
-    sig_missing_primary.emit();
+  sig_missing_primary.emit();
 }
 
 bool
@@ -211,7 +187,6 @@ ApplicationImpl::remove_wind0w (Wind0wIface &wind0w)
     return false;
   m_wind0ws.erase (it);
   unref (wind0w);
-  check_primaries(); // FIXME: should exec_update
   return true;
 }
 

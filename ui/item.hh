@@ -1,5 +1,5 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include <ui/interfaces.hh> // includes <ui/item.hh> after ItemIface declaration
+#include <ui/serverapi.hh> // includes <ui/item.hh> after ItemIface declaration
 
 #ifndef __RAPICORN_ITEM_HH_
 #define __RAPICORN_ITEM_HH_
@@ -151,8 +151,8 @@ public:
   void                        vshrink           (bool b) { set_flag (VSHRINK, b); }
   bool                        debug             () const { return test_flags (DEBUG); }
   void                        debug             (bool f) { set_flag (DEBUG, f); }
-  String                      name              () const;
-  void                        name              (const String &str);
+  virtual String              name              () const;
+  virtual void                name              (const String &str);
   FactoryContext*             factory_context   () const;
   void                        factory_context   (FactoryContext *fc);
   ColorSchemeType             color_scheme      () const;
@@ -247,8 +247,9 @@ public:
   Color                 light_glint             () { return heritage()->light_glint (state()); }
   Color                 focus_color             () { return heritage()->focus_color (state()); }
   /* debugging/testing */
-  void                  get_test_dump           (TestStream   &tstream);
+  virtual String        test_dump               ();
 protected:
+  void                  make_test_dump          (TestStream   &tstream);
   virtual void          dump_test_data          (TestStream   &tstream);
   virtual void          dump_private_data       (TestStream   &tstream);
   /* convenience */

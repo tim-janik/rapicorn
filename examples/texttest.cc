@@ -1,19 +1,4 @@
-/* Rapicorn Examples
- * Copyright (C) 2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// This work is provided "as is"; see: http://rapicorn.org/LICENSE-AS-IS
 #include <rapicorn.hh>
 
 namespace {
@@ -23,21 +8,18 @@ extern "C" int
 main (int   argc,
       char *argv[])
 {
-  /* initialize rapicorn */
-  Application_SmartHandle smApp = init_app (String ("Rapicorn/") + RAPICORN__FILE__, &argc, argv);
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  // initialize Rapicorn
+  Application app = init_app (String ("Rapicorn/Examples/") + RAPICORN__FILE__, &argc, argv);
 
-  /* parse GUI description */
-  app.auto_load ("RapicornTest", "texttest.xml", argv[0]);
+  // find and load GUI definitions relative to argv[0]
+  app.auto_load ("RapicornExamples", "texttest.xml", argv[0]);
 
-  /* create main wind0w */
-  Wind0wIface &wind0w = *app.create_wind0w ("main-shell");
-
-  /* show and process */
+  // create and show main wind0w
+  Wind0w wind0w = app.create_wind0w ("main-shell");
   wind0w.show();
-  app.execute_loops();
 
-  return 0;
+  // run event loops while wind0ws are on screen
+  return app.run_and_exit();
 }
 
 } // anon

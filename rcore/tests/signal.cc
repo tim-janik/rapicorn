@@ -451,4 +451,113 @@ test_various()
 }
 REGISTER_TEST ("Signals/Boilerplate1", test_various);
 
+struct TestConnectionCounter {
+  void  ref()   { /* dummy for signal emission */ }
+  void  unref() { /* dummy for signal emission */ }
+  int   connection_count;
+  void  connections_changed (bool hasconnections) { connection_count += hasconnections ? +1 : -1; }
+  // signal declaration
+  typedef Signal<TestConnectionCounter, int64 (float, char), CollectorDefault<float>,
+                 SignalConnectionRelay<TestConnectionCounter> > TestSignal;
+  TestSignal   test_signal;
+  // signal connection proxy
+  typedef SignalProxy<TestConnectionCounter, int64 (float, char)> TestSignalProxy;
+  TestSignalProxy proxy1, proxy2;
+  /*ctro*/        TestConnectionCounter() :
+    connection_count (0), test_signal (*this), proxy1 (test_signal), proxy2 (test_signal)
+  {}
+  // signal handlers
+  int64        dummy_handler1 (float f, char c) { return int (f) + c; }
+  static int64 dummy_handler2 (float f, char c) { return int (f) * c; }
+  void
+  test_signal_connections()
+  {
+    TASSERT (connection_count == 0);
+
+    test_signal += slot (*this, &TestConnectionCounter::dummy_handler1);
+    TASSERT (connection_count == 1);
+
+    int64 result = test_signal.emit (2.1, 'a');
+    TASSERT (result == 2 + 'a');
+
+    test_signal += dummy_handler2;
+    TASSERT (connection_count == 1);
+
+    result = test_signal.emit (3.7, 'b');
+    TASSERT (result == 3 * 'b');
+
+    test_signal -= slot (*this, &TestConnectionCounter::dummy_handler1);
+    TASSERT (connection_count == 1);
+
+    result = test_signal.emit (1, '@');
+    TASSERT (result == '@');
+
+    test_signal -= dummy_handler2;
+    TASSERT (connection_count == 0);
+
+    result = test_signal.emit (0, 0);
+    TASSERT (result == 0);
+  }
+  void
+  test_proxy_connections()
+  {
+    TASSERT (connection_count == 0);
+    uint id = proxy1.connect (slot (*this, &TestConnectionCounter::dummy_handler1));
+    TASSERT (connection_count == 1);
+    test_signal += dummy_handler2;
+    TASSERT (connection_count == 1);
+
+    int64 result = test_signal.emit (5.5, 'p');
+    TASSERT (result == 5 * 'p'); // collector returns dummy_handler2's result
+
+    bool success = proxy2.disconnect (id);
+    TASSERT (success == true);
+    TASSERT (connection_count == 1);
+    proxy1 -= dummy_handler2;
+    TASSERT (connection_count == 0);
+    proxy1 += dummy_handler2;
+    TASSERT (connection_count == 1);
+
+    proxy1.divorce();
+    proxy1 -= dummy_handler2;   // ignored
+    TASSERT (connection_count == 1);
+    proxy2 -= dummy_handler2;
+    TASSERT (connection_count == 0);
+  }
+  static void
+  test_connection_counter ()
+  {
+    TestConnectionCounter tcc;
+    tcc.test_signal.listener (tcc, &TestConnectionCounter::connections_changed);
+    tcc.test_signal_connections();
+    tcc.test_proxy_connections();
+  }
+};
+REGISTER_TEST ("Signals/Connection Counter", TestConnectionCounter::test_connection_counter);
+
+struct TestCollectorVector {
+  void  ref()   { /* dummy for signal emission */ }
+  void  unref() { /* dummy for signal emission */ }
+  Signal<TestCollectorVector, int (void), CollectorVector<int> > signal_int_farm;
+  TestCollectorVector() : signal_int_farm (*this) {}
+  static int handler1   (void)  { return 1; }
+  static int handler42  (void)  { return 42; }
+  static int handler777 (void)  { return 777; }
+  void
+  run_test ()
+  {
+    signal_int_farm += handler777;
+    signal_int_farm += handler42;
+    signal_int_farm += handler1;
+    signal_int_farm += handler42;
+    signal_int_farm += handler777;
+    vector<int> results = signal_int_farm.emit();
+    const int reference_array[] = { 777, 42, 1, 42, 777, };
+    const vector<int> reference = vector_from_array (reference_array);
+    TASSERT (results == reference);
+  }
+  static void run () { TestCollectorVector self; self.run_test(); }
+};
+REGISTER_TEST ("Signals/Test Vector Collector", TestCollectorVector::run);
+
 } // anon

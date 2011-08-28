@@ -29,7 +29,7 @@ init_render_table (const StringVector &args)
       DEBUG ("Using MMX functions for blitting");
     }
 }
-static InitHook _init_render_table ("ui/10 Optimize Render Table for SIMD Blitting", init_render_table);
+static InitHook _init_render_table ("ui-core/10 Optimize Render Table for SIMD Blitting", init_render_table);
 
 static inline uint32
 quick_rand32 ()

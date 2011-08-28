@@ -176,6 +176,8 @@ protected:
   static void threadxx_delete (void         *cxxthread);
 };
 
+enum LockState { BALANCED = 0, AUTOLOCK = 1 };
+
 /**
  * The ScopedLock class can lock a mutex on construction, and will automatically
  * unlock on destruction when the scope is left.
@@ -187,14 +189,14 @@ protected:
 template<class MUTEX>
 class ScopedLock : protected NonCopyable {
   MUTEX         &m_mutex;
-  volatile uint  m_count;
+  volatile int   m_count;
 public:
-  inline     ~ScopedLock () { while (m_count) unlock(); }
+  inline     ~ScopedLock () { while (m_count < 0) lock(); while (m_count > 0) unlock(); }
   inline void lock       () { m_mutex.lock(); m_count++; }
-  inline void unlock     () { RAPICORN_ASSERT (m_count > 0); m_count--; m_mutex.unlock(); }
-  inline      ScopedLock (MUTEX &mutex, bool initlocked = true) :
+  inline void unlock     () { m_count--; m_mutex.unlock(); }
+  inline      ScopedLock (MUTEX &mutex, LockState lockstate = AUTOLOCK) :
     m_mutex (mutex), m_count (0)
-  { if (initlocked) lock(); }
+  { if (lockstate == AUTOLOCK) lock(); }
 };
 
 namespace Atomic {

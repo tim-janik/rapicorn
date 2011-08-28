@@ -1,19 +1,4 @@
-/* RapicornSignal
- * Copyright (C) 2005 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 
 /* this file is used to generate rapicornsignalvariants.hh by mksignals.sh.
  * therein, certain phrases like "typename A1, typename A2, typename A3" are
@@ -21,7 +6,7 @@
  * involving the signal argument count match those from mksignals.sh.
  */
 
-/* --- Emission --- */
+// === Emission ===
 template<class Emitter, typename R0, typename A1, typename A2, typename A3>
 struct Emission3 : public EmissionBase {
   typedef Trampoline3<R0, A1, A2, A3>           Trampoline;
@@ -81,9 +66,9 @@ struct Emission3 <Emitter, void, A1, A2, A3> : public EmissionBase {
   }
 };
 
-/* --- SignalEmittable3 --- */
-template<class Emitter, typename R0, typename A1, typename A2, typename A3, class Collector>
-struct SignalEmittable3 : SignalBase {
+// === SignalEmittable3 ===
+template<class Emitter, typename R0, typename A1, typename A2, typename A3, class Collector, class Ancestor>
+struct SignalEmittable3 : public Ancestor {
   typedef Emission3 <Emitter, R0, A1, A2, A3> Emission;
   typedef typename Collector::result_type     Result;
   struct Iterator : public SignalBase::Iterator<Emission> {
@@ -95,24 +80,25 @@ struct SignalEmittable3 : SignalBase {
   {
     ScopeReference<Emitter, Collector> lref (*m_emitter);
     Emission emission (m_emitter, a1, a2, a3);
-    Iterator it (emission, &start), last (emission, &start);
+    Iterator it (emission, Ancestor::start_link()), last (emission, Ancestor::start_link());
     ++it; /* walk from start to first */
     Collector collector;
     return collector (it, last); // Result may be void
   }
+  inline Emitter* emitter () const { return m_emitter; }
 private:
   Emitter *m_emitter;
 };
 
-/* --- Signal3 --- */
-/* Signal* */
-template<class Emitter, typename R0, typename A1, typename A2, typename A3, class Collector = CollectorDefault<R0> >
-struct Signal3 : SignalEmittable3<Emitter, R0, A1, A2, A3, Collector>
+// === Signal3 ===
+template<class Emitter, typename R0, typename A1, typename A2, typename A3,
+         class Collector = CollectorDefault<R0>, class Ancestor  = SignalBase>
+struct Signal3 : SignalEmittable3<Emitter, R0, A1, A2, A3, Collector, Ancestor>
 {
-  typedef Emission3 <Emitter, R0, A1, A2, A3> Emission;
-  typedef Slot3<R0, A1, A2, A3>               Slot;
-  typedef Slot4<R0, Emitter&, A1, A2, A3>     SlotE;
-  typedef SignalEmittable3<Emitter, R0, A1, A2, A3, Collector> SignalEmittable;
+  typedef Emission3 <Emitter, R0, A1, A2, A3>                             Emission;
+  typedef Slot3 <R0, A1, A2, A3>                                          Slot;
+  typedef Slot4 <R0, Emitter&, A1, A2, A3>                                SlotE;
+  typedef SignalEmittable3 <Emitter, R0, A1, A2, A3, Collector, Ancestor> SignalEmittable;
   explicit Signal3 (Emitter &emitter) :
     SignalEmittable (&emitter)
   { RAPICORN_ASSERT (&emitter != NULL); }
@@ -137,16 +123,35 @@ struct Signal3 : SignalEmittable3<Emitter, R0, A1, A2, A3, Collector>
   Signal3&    operator-= (R0 (*callback) (Emitter&, A1, A2, A3))  { disconnect (slot (callback)); return *this; }
 };
 
-/* --- Signal<> --- */
-template<class Emitter, typename R0, typename A1, typename A2, typename A3, class Collector>
-struct Signal<Emitter, R0 (A1, A2, A3), Collector> : Signal3<Emitter, R0, A1, A2, A3, Collector>
+// === Signal<> ===
+template<class Emitter, typename R0, typename A1, typename A2, typename A3, class Collector, class Ancestor>
+class Signal<Emitter, R0 (A1, A2, A3), Collector, Ancestor> : public Signal3<Emitter, R0, A1, A2, A3, Collector, Ancestor>
 {
-  typedef Signal3<Emitter, R0, A1, A2, A3, Collector> Signal3Base;
-  explicit Signal (Emitter &emitter) :
-    Signal3Base (emitter)
-    {}
-  explicit Signal (Emitter &emitter, R0 (Emitter::*method) (A1, A2, A3)) :
-    Signal3Base (emitter, method)
-    {}
+  typedef Signal3<Emitter, R0, A1, A2, A3, Collector, Ancestor> SignalVariant;
+public:
+  explicit Signal (Emitter &emitter) : SignalVariant (emitter) {}
+  explicit Signal (Emitter &emitter, R0 (Emitter::*method) (A1, A2, A3)) : SignalVariant (emitter, method) {}
 };
 
+// === SignalProxy ===
+template<class Emitter, typename R0, typename A1, typename A2, typename A3>
+struct SignalProxy<Emitter, R0 (A1, A2, A3)> : SignalProxyBase {
+  typedef Slot3 <R0, A1, A2, A3>           Slot;
+  typedef Slot4 <R0, Emitter&, A1, A2, A3> SlotE;
+  inline ConId connect    (const Slot  &s) { return connect_link (s.get_trampoline_link()); }
+  inline ConId connect    (const SlotE &s) { return connect_link (s.get_trampoline_link(), true); }
+  inline uint  disconnect (const Slot  &s) { return disconnect_equal_link (*s.get_trampoline_link()); }
+  inline uint  disconnect (const SlotE &s) { return disconnect_equal_link (*s.get_trampoline_link(), true); }
+  inline uint  disconnect (ConId    conid) { return this->disconnect_link_id (conid); }
+  SignalProxy& operator+= (const Slot  &s) { connect (s); return *this; }
+  SignalProxy& operator+= (const SlotE &s) { connect (s); return *this; }
+  SignalProxy& operator+= (R0 (*callback) (A1, A2, A3))           { connect (slot (callback)); return *this; }
+  SignalProxy& operator+= (R0 (*callback) (Emitter&, A1, A2, A3)) { connect (slot (callback)); return *this; }
+  SignalProxy& operator-= (const Slot  &s)                        { disconnect (s); return *this; }
+  SignalProxy& operator-= (const SlotE &s)                        { disconnect (s); return *this; }
+  SignalProxy& operator-= (R0 (*callback) (A1, A2, A3))           { disconnect (slot (callback)); return *this; }
+  SignalProxy& operator-= (R0 (*callback) (Emitter&, A1, A2, A3)) { disconnect (slot (callback)); return *this; }
+  template<class Collector, class Ancestor>
+  SignalProxy (Signal<Emitter, R0 (A1, A2, A3), Collector, Ancestor> &sig) : SignalProxyBase (sig) {}
+  SignalProxy (const SignalProxy &other) : SignalProxyBase (other) {}
+};

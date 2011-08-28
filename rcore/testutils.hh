@@ -34,25 +34,25 @@
 #define TCHECK(code)            TCHECK_impl (code)
 #define TASSERT(code)           TCHECK_impl (code)
 #define TOK()           do {} while (0) // printerr (".")
-#define TCHECK_impl(code)       do { if (code) TOK(); else              \
-      Rapicorn::Logging::message ("ASSERT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
+#define TCHECK_impl(code)       do { if (code) TOK(); else      \
+      Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
                                   "assertion failed: %s", #code);       \
   } while (0)
 #define TCMP_implf(a,cmp,b)     do { if (a cmp b) TOK(); else { \
   double __tassert_va = a; double __tassert_vb = b;             \
-  Rapicorn::Logging::message ("ASSERT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
+  Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
                               "assertion failed: %s %s %s: %.17g %s %.17g", \
                               #a, #cmp, #b, __tassert_va, #cmp, __tassert_vb); \
     } } while (0)
 #define TCMP_implx(a,cmp,b)     do { if (a cmp b) TOK(); else { \
   uint64 __tassert_va = a; uint64 __tassert_vb = b;             \
-  Rapicorn::Logging::message ("ASSERT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
+  Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
                               "assertion failed: %s %s %s: 0x%08Lx %s 0x%08Lx", \
                               #a, #cmp, #b, __tassert_va, #cmp, __tassert_vb); \
     } } while (0)
 #define TCMP_impls(a,cmp,b)     do { if (a cmp b) TOK(); else { \
   int64 __tassert_va = a; int64 __tassert_vb = b;               \
-  Rapicorn::Logging::message ("ASSERT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
+  Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
     "assertion failed: %s %s %s: %lld %s %lld",                         \
                               #a, #cmp, #b, __tassert_va, #cmp, __tassert_vb); \
     } } while (0)
@@ -109,11 +109,12 @@ Timer::benchmark (Callee callee)
   return min_elapsed();
 }
 
-/* test maintenance */
-int     run             (void);
-bool    verbose         (void);
-bool    logging         (void);
-bool    slow            (void);
+// === test maintenance ===
+int     run             (void);         ///< Run all registered tests.
+bool    verbose         (void);         ///< Indicates whether tests should run verbosely.
+bool    logging         (void);         ///< Indicates whether only logging tests should be run.
+bool    slow            (void);         ///< Indicates whether only slow tests should be run.
+bool    ui_test         (void);         ///< Indicates execution of ui-thread tests.
 
 void    test_output     (int kind, const char *format, ...) RAPICORN_PRINTF (2, 3);
 
@@ -140,22 +141,28 @@ public:
   template<typename D>
   RegisterTest (const char k, const String &testname, void (*test_func) (D*), D *data)
   { add_test (k, testname, (void(*)(void*)) test_func, (void*) data); }
+  typedef void (*TestTrigger)  (void (*runner) (void));
+  static void test_set_trigger (TestTrigger func);
 };
+
+/// Register a standard test function for execution as unit test.
 #define REGISTER_TEST(name, ...)     static const Rapicorn::Test::RegisterTest \
   RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('t', name, __VA_ARGS__)
+
+/// Register a slow test function for execution as during slow unit testing.
 #define REGISTER_SLOWTEST(name, ...) static const Rapicorn::Test::RegisterTest \
   RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('s', name, __VA_ARGS__)
+
+/// Register a logging test function for output recording and verification.
 #define REGISTER_LOGTEST(name, ...) static const Rapicorn::Test::RegisterTest \
   RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('l', name, __VA_ARGS__)
 
-/* random numbers */
-char    rand_bit                (void);
-int32   rand_int                (void);
-int32   rand_int_range          (int32          begin,
-                                 int32          end);
-double  test_rand_double        (void);
-double  test_rand_double_range  (double          range_start,
-                                 double          range_end);
+// == Deterministic random numbers for tests ===
+char    rand_bit                (void);                                 ///< Return a random bit.
+int32   rand_int                (void);                                 ///< Return random int.
+int32   rand_int_range          (int32 begin, int32 end);               ///< Return random int within range.
+double  test_rand_double        (void);                                 ///< Return random double.
+double  test_rand_double_range  (double range_start, double range_end); ///< Return random double within range.
 
 } // Test
 } // Rapicorn

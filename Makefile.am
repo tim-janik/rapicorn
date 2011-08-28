@@ -77,9 +77,8 @@ installcheck-local:
 	&& echo '#include <rapicorn.hh>'				>> tmpx.cc \
 	&& echo 'using namespace Rapicorn;'				>> tmpx.cc \
 	&& echo 'extern "C" int main (int argc, char *argv[]) {'	>> tmpx.cc \
-	&& echo 'init_app (".AMtest", &argc, argv);'			>> tmpx.cc \
-	&& echo 'ApplicationImpl::the().execute_loops(); /*FIXME*/'	>> tmpx.cc \
-	&& echo 'return 0; }'						>> tmpx.cc \
+	&& echo 'Application app = init_app (".AMtest", &argc, argv);'	>> tmpx.cc \
+	&& echo 'return app.run_and_exit(); }'				>> tmpx.cc \
 	; eval "$$TSTDIAGNOSE" "'Create  rapicorn sample program'"
 	$(Q) $(CXX) `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags rapicorn@RAPICORN_RELEASE@` \
 		tmpx.cc -c ; eval "$$TSTDIAGNOSE" "'Compile rapicorn sample program'"
@@ -101,7 +100,7 @@ check-list_properties: # only public interfaces should export properties
 	$(Q) cd $(srcdir) \
 	&& echo "  CHECK  Repel non-interface list_properties() method implementations..." \
 	&& ! grep 'Impl::list_properties[[:space:]]*([^)]*)[^;]*$$' -n ui/*.cc rcore/*.cc \
-	     --exclude ui/item.cc --exclude ui/container.cc
+	     --exclude ui/item.cc --exclude ui/container.cc --exclude ui/buttons.cc
 check-am: check-dynamic_cast check-list_properties # run source code checks before all others
 
 # === automake fixes ===

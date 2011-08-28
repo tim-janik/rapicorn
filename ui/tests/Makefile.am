@@ -15,43 +15,27 @@ EXTRA_DIST	+= $(XML_FILES)
 TESTS_ENVIRONMENT  = RAPICORN_VPATH=$(VPATH) # also search srcdir for XML files
 
 # test programs
-LOGTEST_PROGS     += testui1
-TEST_PROGS        += testui1
-testui1_SOURCES    = walker.cc cmdtest.cc properties.cc region.cc server.cc
-testui1_LDADD      = $(LDADDS)
+LOGTEST_PROGS       += servertests
+TEST_PROGS          += servertests
+servertests_SOURCES  = servertests.cc walker.cc cmdtest.cc properties.cc region.cc server.cc labelmarkup.cc \
+		       items.cc primitives.cc testitems.cc sinfextest.cc
+servertests_LDADD    = $(LDADDS) $(READLINELIBS)
+XML_FILES    	    += factory.xml testitems.xml
+TEST_PROGS	    += clienttests
+clienttests_SOURCES  = clienttests.cc
+clienttests_LDADD    = $(LDADDS)
 
-TEST_PROGS        += labelmarkup
-labelmarkup_SOURCES= labelmarkup.cc
-labelmarkup_LDADD  = $(LDADDS)
-TEST_PROGS        += primitives
-primitives_SOURCES = primitives.cc
-primitives_LDADD   = $(LDADDS)
-TEST_PROGS        += sinfextest
-sinfextest_SOURCES = sinfextest.cc
-sinfextest_LDADD   = $(LDADDS) $(READLINELIBS)
-TEST_PROGS        += items
-items_SOURCES      = items.cc
-items_LDADD        = $(LDADDS)
-TEST_PROGS        += testitems
-testitems_SOURCES  = testitems.cc
-testitems_LDADD    = $(LDADDS)
-XML_FILES         += testitems.xml
-TEST_PROGS        += factory
-factory_SOURCES    = factory.cc
-factory_LDADD      = $(LDADDS)
-XML_FILES         += factory.xml
-
-SINFEX=./sinfextest --shell
+SINFEX_SHELL=./servertests --shell
+check: sinfex-expressions
 sinfex-expressions: $(srcdir)/expressions.ref
 	$(Q) egrep -v '^[[:space:]]*(#|$$)' < $(srcdir)/expressions.txt > $(TSTTMP) \
 	&& $(X11TEST_SERVER) && \
-	  COLUMNS=9999 $(SINFEX) < $(TSTTMP) > $(TSTOUT) \
+	  COLUMNS=9999 $(SINFEX_SHELL) < $(TSTTMP) > $(TSTOUT) \
 	                 $(XLIBSTDERREXTFIX) \
 	; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTVERIFY" "'$(srcdir)/expressions.ref'" "'$(TSTOUT)'"
+	$(Q) eval "$$TSTDIFF" "'$(srcdir)/expressions.ref'" "'$(TSTOUT)'"
 	$(Q) rm -f $(TSTTMP)
 EXTRA_DIST += expressions.txt expressions.ref
-check-am: sinfex-expressions
 
 xmllint-check:
 	cd $(srcdir) && ! $(XMLLINT) --noout $(XML_FILES) 2>&1 | grep '.'

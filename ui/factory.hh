@@ -22,15 +22,6 @@
 
 namespace Rapicorn {
 
-class Args : public std::vector<String> {
-  typedef const String CS;
-public:
-  Args (CS &s0 = "", CS &s1 = "", CS &s2 = "", CS &s3 = "",
-        CS &s4 = "", CS &s5 = "", CS &s6 = "", CS &s7 = "",
-        CS &s8 = "", CS &s9 = "", CS &sA = "", CS &sB = "",
-        CS &sC = "", CS &sD = "", CS &sE = "", CS &sF = "");
-};
-
 namespace Factory {
 
 /* --- Factory API --- */

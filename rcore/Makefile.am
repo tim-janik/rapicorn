@@ -14,16 +14,16 @@ rapicorn_public_headers = $(strip	\
         rapicornmsg.hh	rapicornsignal.hh	rapicornmath.hh		rapicornutf8.hh   \
         rapicornxml.hh	markup.hh		enumdefs.hh		testutils.hh \
         pixmap.hh	regex.hh		plicutils.hh \
-	values.hh 	types.hh 		main.hh		models.hh \
+	values.hh 	types.hh 		loop.hh		main.hh	models.hh \
 	$(rapicorn_impl_headers) \
-	rapicorncdefs.h	rapicorntests.h		rcore.hh	strings.hh	\
+	rapicorncdefs.h	rcore.hh	strings.hh	\
 )
 rapicorn_cc_sources = $(sort		\
         rapicorncpu.cc  rapicorndebugtools.cc	rapicornthread.cc	utilities.cc  \
         rapicornmsg.cc  rapicornsignal.cc	rapicornmath.cc		rapicornutf8.cc   \
         rapicornxml.cc  markup.cc		enumdefs.cc		testutils.cc \
         pixmap.cc	regex.cc		plicutils.cc \
-	values.cc 	types.cc 		main.cc		models.cc    \
+	values.cc 	types.cc 		loop.cc		main.cc	models.cc    \
         rapicornthreadimpl.cc					strings.cc \
 )
 rapicorn_impl_headers = $(strip 	\
@@ -56,6 +56,10 @@ librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 ) # set libtool version and export symbols for resolving
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
 
+# == Optimization Targets ==
+OPTIMIZE_SOURCE_FILES = loop.cc
+CXXFLAGS += $(patsubst %, -O3 -minline-all-stringops -finline-functions, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
+
 # keep this .o rule in sync with the corresponding .la rule from Makefile.in
 librapicorncore@RAPICORN_RELEASE@.o: $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
 	$(CXXLINK) -rpath $(libdir) $(librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS) $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS) # $(librapicorncore@RAPICORN_RELEASE@_la_LIBADD) $(LIBS)
@@ -83,7 +87,7 @@ types.cc: types-ptpp.cc
 CLEANFILES += types-ptpp.cc
 check-ptpp-version: $(top_srcdir)/plic/PlicTypePackage.cc
 	$(Q) cp types-ptpp.cc $(TSTOUT)
-	$(Q) eval "$$TSTVERIFY" "'$(top_srcdir)/plic/PlicTypePackage.cc'"
+	$(Q) eval "$$TSTDIFF" "'$(top_srcdir)/plic/PlicTypePackage.cc'"
 check: # check-ptpp-version # sanity check the --cc-type-package-parser rule
 
 # === types-zgen.c ===

@@ -1,6 +1,6 @@
 /* Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html */
 #include <rcore/testutils.hh>
-#include <rapicorn.hh>
+#include <ui/uithread.hh>
 #include <stdio.h>
 
 #define MakeProperty    RAPICORN_MakeProperty
@@ -75,6 +75,6 @@ property_test()
   // printf ("created %d properties.\n", ph.list_properties().n_properties);
   TASSERT (ph.list_properties().n_properties == 15);
 }
-REGISTER_TEST ("Objects/Property Test", property_test);
+REGISTER_UITHREAD_TEST ("Objects/Property Test", property_test);
 
 } // anon

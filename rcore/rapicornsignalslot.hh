@@ -98,9 +98,10 @@ public:
 /* --- Slots (Trampoline wrappers) --- */
 template<typename R0, typename A1, typename A2, typename A3, class Emitter = void>
 struct Slot3 : SlotBase {
-  Slot3 (Trampoline3<R0, A1, A2, A3> *trampoline) : SlotBase (trampoline) {}
+  explicit Slot3 (Trampoline3<R0, A1, A2, A3> *trampoline) : SlotBase (trampoline) {}
   Trampoline3<R0, A1, A2, A3>* get_trampoline() const
   { return trampoline_cast< Trampoline3<R0, A1, A2, A3>* > (get_trampoline_link()); }
+  Slot3 (R0 (*callback) (A1, A2, A3)) : SlotBase (new FunctionTrampoline3<R0, A1, A2, A3> (callback)) {}
 };
 /* slot constructors */
 template<typename R0, typename A1, typename A2, typename A3> Slot3<R0, A1, A2, A3>

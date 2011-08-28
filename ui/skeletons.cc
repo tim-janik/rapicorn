@@ -2,12 +2,3 @@
 
 // --- Interface Skeletons ---
 
-namespace Rapicorn {
-
-bool
-Rapicorn::ApplicationIface::has_primary ()
-{
-  return 0;
-}
-} // Rapicorn
-

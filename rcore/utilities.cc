@@ -136,7 +136,7 @@ timestamp_benchmark ()
   return stamp;
 }
 
-/* === Logging === */
+// === Logging ===
 bool Logging::m_debugging = 0;
 
 static Mutex                 conftest_mutex;
@@ -298,6 +298,7 @@ Logging::message (const char *kind, const char *file, int line, const char *func
   f |= logtest (&kind, "PABORT",    6, DO_STDERR | FATAL_SYSLOG | DO_ABORT | DO_ERRNO);
   f |= logtest (&kind, "CHECK",     5, DO_STDERR | MAY_SYSLOG | MAY_ABORT);
   f |= logtest (&kind, "PCHECK",    6, DO_STDERR | MAY_SYSLOG | MAY_ABORT | DO_ERRNO);
+  f |= logtest (&kind, "FIXIT",     0, DO_DEBUG | DO_STAMP);
   f |= logtest (&kind, "DEBUG",     0, DO_DEBUG | DO_STAMP);
   f |= logtest (&kind, "PDEBUG",    1, DO_DEBUG | DO_ERRNO | DO_STAMP);
   f |= !conftest_logfile ? 0 :         DO_STAMP;

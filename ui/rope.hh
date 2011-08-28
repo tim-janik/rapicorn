@@ -22,14 +22,14 @@
 
 namespace Rapicorn {
 
-typedef Plic::FieldBuffer       FieldBuffer;
-typedef Plic::FieldBufferReader FieldBufferReader;
+typedef Plic::FieldBuffer FieldBuffer;
+typedef Plic::FieldReader FieldReader;
 
 uint64          rope_thread_start       (const String       &app_ident,
                                          int                *argcp,
                                          char              **argv,
                                          const StringVector &args = StringVector());
-Plic::Coupler*  rope_thread_coupler     ();
+// Plic::Coupler*  rope_thread_coupler     ();
 int             rope_thread_inputfd     ();
 void            rope_thread_flush_input ();
 

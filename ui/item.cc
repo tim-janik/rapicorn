@@ -1103,8 +1103,18 @@ ItemImpl::type_cast_error (const char *dest_type)
   fatal ("failed to dynamic_cast<%s> item: %s", VirtualTypeid::cxx_demangle (dest_type).c_str(), name().c_str());
 }
 
+String
+ItemImpl::test_dump ()
+{
+  TestStream *tstream = TestStream::create_test_stream();
+  make_test_dump (*tstream);
+  String s = tstream->string();
+  delete tstream;
+  return s;
+}
+
 void
-ItemImpl::get_test_dump (TestStream &tstream)
+ItemImpl::make_test_dump (TestStream &tstream)
 {
   tstream.push_node (name());
   const PropertyList &plist = list_properties();

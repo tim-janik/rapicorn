@@ -2,7 +2,7 @@
 
 // PLIC insertion file
 // Here we provide insertion snippets to be included in struct
-// definitions when generating interfaces.hh from interfaces.idl
+// definitions when generating serverapi.hh from interfaces.idl
 
 includes:
 #include <ui/utilities.hh>
@@ -15,23 +15,22 @@ IGNORE:
 struct DUMMY { // dummy class for auto indentation
 
 class_scope:Requisition:
-  inline Requisition (double w, double h) : width (w), height (h) {}
+  inline RequisitionImpl (double w, double h) : width (w), height (h) {}
 
 class_scope:StringList:
-  /*Con*/  StringList () {}
-  /*Con*/  StringList (const std::vector<String> &strv) : Sequence (strv) {}
+  /*Con*/  StringListImpl () {}
+  /*Con*/  StringListImpl (const std::vector<String> &strv) : Sequence (strv) {}
 
-class_scope:ItemIface:
+class_scope:Item:
   ItemImpl&       impl ();
   const ItemImpl& impl () const;
 
-class_scope:Wind0wIface:
+class_scope:Wind0w:
   WindowImpl&       impl ();
   const WindowImpl& impl () const;
 
-class_scope:ApplicationIface:
+class_scope:Application:
   static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
-  int                execute_loops ();
   static bool        plor_add      (ItemIface    &item, const String &plor_name);
   static ItemIface*  plor_remove   (const String &plor_name);
   /* global mutex */
@@ -49,13 +48,3 @@ IGNORE: // close last _scope
 }; // close dummy class scope
 
 global_scope:
-namespace Rapicorn {
-Application_SmartHandle init_app      (const String       &app_ident,
-                                       int                *argcp,
-                                       char              **argv,
-                                       const StringVector &args = StringVector());
-Application_SmartHandle init_test_app (const String       &app_ident,
-                                       int                *argcp,
-                                       char              **argv,
-                                       const StringVector &args = StringVector());
-} // Rapicorn

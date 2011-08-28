@@ -1,56 +1,26 @@
-/* Rapicorn C++ Remote Object Programming Extension
- * Copyright (C) 2010 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
-#include "cxx-rope.hh"
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+#include <rapicorn-core.hh>
 using namespace Rapicorn;
-#include "cxx-client.hh"        // generated client API
-#include <ui/rope.hh>
+#include <ui/clientapi.hh>      // generated client API
 #include <rcore/testutils.hh>
 #include <stdexcept>
-
-namespace { // Anonymous
-
-static Application
-cxxrope_init_dispatcher (const String  &app_ident,
-                         int           *argcp,
-                         char         **argv,
-                         StringVector   args)
-{
-  args.push_back (string_printf ("cpu-affinity=%d", Thread::Self::affinity()));
-  uint64 app_id = rope_thread_start (app_ident, argcp, argv, args);
-  if (app_id == 0)
-    throw std::runtime_error ("failed to initialize rapicorn thread");
-  // printout ("APPURL: 0x%016llx\n", app_id);
-  /* minor hack to create the initial smart handler for an Application */
-  Plic::FieldBuffer8 fb (4);
-  fb.add_object (uint64 (app_id));
-  Plic::FieldBufferReader fbr (fb);
-  Application app (*rope_thread_coupler(), fbr);
-  return app;
-}
-
-} // Anon
 
 int
 main (int   argc,
       char *argv[])
 {
-  init_core_test (argv[0], &argc, argv);
+  // find out which CPU we run on
+  int mycpu = Thread::Self::affinity();
+  mycpu = MAX (0, mycpu);
+  // fixate the CPU we're running on
+  Thread::Self::affinity (mycpu);
+  // request CPU for server thread
+  StringVector iargs;
+  iargs.push_back (string_printf ("cpu-affinity=%d", mycpu));
+  // init test application
+  init_core_test (argv[0], &argc, argv, iargs);
+  Application app = init_app (argv[0], &argc, argv, iargs);
   const int clockid = CLOCK_REALTIME; // CLOCK_MONOTONIC
-  Application app = cxxrope_init_dispatcher (argv[0], &argc, argv, StringVector());
   double calls = 0, slowest = 0, fastest = 9e+9;
   for (uint j = 0; j < 29; j++)
     {
@@ -75,7 +45,3 @@ main (int   argc,
             calls, fastest, slowest, err * 100);
   return 0;
 }
-
-// generated client implementation
-#define PLIC_COUPLER() (*rope_thread_coupler())
-#include "cxx-client.cc"
