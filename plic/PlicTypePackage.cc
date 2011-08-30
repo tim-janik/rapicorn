@@ -176,7 +176,7 @@ TypeInfo::parse_type_info (uint        length,
   // parse \n__? storage type
   return_if (dp + 4 > boundary, ERRPREMATURE);
   const bool storageok = dp[0] == '\n' && dp[1] == '_' &&
-                         ((dp[2] == '_' && strchr ("idsac", dp[3]) != 0) ||
+                         ((dp[2] == '_' && strchr ("idsacA", dp[3]) != 0) ||
                           (strchr ("ET", dp[2]) && dp[3] == 's') ||
                           (strchr ("QR", dp[2]) && dp[3] == 'a'));
   return_if (!storageok, "invalid type format");

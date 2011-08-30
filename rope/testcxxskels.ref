@@ -163,6 +163,9 @@ struct XFooRecordImpl {
   I_FirstInterface_Interface*   iface1;
   I_FirstInterface_Interface*   iface2;
   I_FirstInterface_Interface*   iface3;
+  Plic::Any                     any1;
+  Plic::Any                     any2;
+  Plic::Any                     any3;
   inline                        XFooRecordImpl () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const XFooRecordImpl&);
@@ -216,6 +219,12 @@ struct InterfaceSequenceImpl : public std::vector<I_FirstInterface_Interface*> {
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const InterfaceSequenceImpl&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, InterfaceSequenceImpl&);
 
+struct AnySequenceImpl : public std::vector<Plic::Any> {
+  typedef std::vector<Plic::Any> Sequence;
+};
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const AnySequenceImpl&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, AnySequenceImpl&);
+
 struct NestedTypesRecImpl {
   XFooRecordImpl                rec;
   XFooSequenceImpl              seq;
@@ -229,6 +238,8 @@ struct NestedTypesSeqImpl : public std::vector<NestedTypesRecImpl> {
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const NestedTypesSeqImpl&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, NestedTypesSeqImpl&);
+
+typedef Plic::Any AliasAny;
 
 typedef int AliasInt;
 
@@ -447,6 +458,8 @@ public:
                                                                          const QuickSequenceImpl &optval = QuickSequenceImpl());
   virtual I_GrandChild_Interface*       method_with_interface           (I_GrandChild_Interface &input,
                                                                          I_GrandChild_Interface &optval = *(I_GrandChild_Interface*) NULL);
+  virtual Plic::Any                     method_with_anys                (const Plic::Any &input,
+                                                                         const Plic::Any &optval);
   virtual I_QuickIface_Interface*       method_with_quickiface          (I_QuickIface_Interface &input,
                                                                          I_QuickIface_Interface &iface0 = *(I_QuickIface_Interface*) NULL);
 };
@@ -471,6 +484,7 @@ public:
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, QuickRecordImpl ()> Signal_record_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, QuickSequenceImpl ()> Signal_sequence_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, I_GrandChild_Interface* ()> Signal_interface_result;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, Plic::Any ()> Signal_any_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, I_SignalTestInterface_Interface* ()> Signal_self_result;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void ()> Signal_void_arg;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (bool b)> Signal_bool_arg;
@@ -481,6 +495,7 @@ public:
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const QuickRecordImpl &r)> Signal_record_arg;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const QuickSequenceImpl &s)> Signal_sequence_arg;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (I_GrandChild_Interface &i)> Signal_interface_arg;
+  typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (const Plic::Any &a)> Signal_any_arg;
   typedef Rapicorn::Signals::Signal<I_SignalTestInterface_Interface, void (I_SignalTestInterface_Interface &self_)> Signal_self_args;
   Signal_void_result sig_void_result;
   Signal_bool_result sig_bool_result;
@@ -491,6 +506,7 @@ public:
   Signal_record_result sig_record_result;
   Signal_sequence_result sig_sequence_result;
   Signal_interface_result sig_interface_result;
+  Signal_any_result sig_any_result;
   Signal_self_result sig_self_result;
   Signal_void_arg sig_void_arg;
   Signal_bool_arg sig_bool_arg;
@@ -501,6 +517,7 @@ public:
   Signal_record_arg sig_record_arg;
   Signal_sequence_arg sig_sequence_arg;
   Signal_interface_arg sig_interface_arg;
+  Signal_any_arg sig_any_arg;
   Signal_self_args sig_self_args;
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_SignalTestInterface_Interface&);
@@ -533,6 +550,8 @@ public:
   virtual void                          interface_prop (I_GrandChild_Interface*) = 0;
   virtual I_PropertyTester_Interface*   self_prop      () const = 0;
   virtual void                          self_prop      (I_PropertyTester_Interface*) = 0;
+  virtual Plic::Any                     any_prop       () const = 0;
+  virtual void                          any_prop       (const Plic::Any&) = 0;
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_PropertyTester_Interface&);
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_PropertyTester_Interface*);
@@ -657,7 +676,7 @@ InterfaceTests::I_UIWidgetArea_Interface::void_method ()
 std::string
 InterfaceTests::I_UIWidgetArea_Interface::on_click2out ()
 {
-  return 0;
+  return "";
 }
 
 void
@@ -700,7 +719,7 @@ std::string
 InterfaceTests::I_MethodTestInterface_Interface::method_with_string (const std::string &input,
                                                                      const std::string &optval)
 {
-  return 0;
+  return "";
 }
 
 InterfaceTests::QuickEnum
@@ -728,13 +747,20 @@ InterfaceTests::I_GrandChild_Interface*
 InterfaceTests::I_MethodTestInterface_Interface::method_with_interface (InterfaceTests::I_GrandChild_Interface &input,
                                                                         InterfaceTests::I_GrandChild_Interface &optval)
 {
-  return (InterfaceTests::I_GrandChild_Interface*) NULL;
+  return 0;
+}
+
+Plic::Any
+InterfaceTests::I_MethodTestInterface_Interface::method_with_anys (const Plic::Any &input,
+                                                                   const Plic::Any &optval)
+{
+  return Plic::Any();
 }
 
 InterfaceTests::I_QuickIface_Interface*
 InterfaceTests::I_MethodTestInterface_Interface::method_with_quickiface (InterfaceTests::I_QuickIface_Interface &input,
                                                                          InterfaceTests::I_QuickIface_Interface &iface0)
 {
-  return (InterfaceTests::I_QuickIface_Interface*) NULL;
+  return 0;
 }
 

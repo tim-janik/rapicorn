@@ -46,6 +46,9 @@ typedef uint32_t               uint;
 typedef signed long long int   int64; // int64_t is a long on AMD64 which breaks printf
 typedef unsigned long long int uint64; // int64_t is a long on AMD64 which breaks printf
 
+// == Any Type ==
+struct Any {};
+
 // == Type Declarations ==
 class SimpleServer;
 class Connection;
@@ -126,9 +129,8 @@ public:
 
 /* === FieldBuffer === */
 typedef enum {
-  VOID = 0,
-  INT, FLOAT, STRING, ENUM,
-  RECORD, SEQUENCE, FUNC, INSTANCE
+  VOID = 0, INT, FLOAT, STRING, ENUM,
+  RECORD, SEQUENCE, FUNC, INSTANCE, ANY
 } FieldType;
 
 class _FakeFieldBuffer { FieldUnion *u; virtual ~_FakeFieldBuffer() {}; };
@@ -136,6 +138,7 @@ class _FakeFieldBuffer { FieldUnion *u; virtual ~_FakeFieldBuffer() {}; };
 union FieldUnion {
   int64        vint64;
   double       vdouble;
+  uint64       amem[(sizeof (Any) + 7) / 8];              // Any
   uint64       smem[(sizeof (String) + 7) / 8];           // String
   uint64       bmem[(sizeof (_FakeFieldBuffer) + 7) / 8]; // FieldBuffer
   uint8        bytes[8];                // FieldBuffer types
@@ -169,7 +172,8 @@ public:
   inline void add_double (double vdouble) { FieldUnion &u = addu (FLOAT); u.vdouble = vdouble; }
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
   inline void add_func   (const String &s) { FieldUnion &u = addu (FUNC); new (&u) String (s); }
-  inline void add_object (uint64 objid) { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
+  inline void add_object (uint64 objid)    { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
+  inline void add_any    (const Any &vany) { FieldUnion &u = addu (ANY); new (&u) Any (vany); }
   inline void add_msgid  (uint64 h, uint64 l) { add_int64 (h); add_int64 (l); }
   inline FieldBuffer& add_rec (uint nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); }
   inline FieldBuffer& add_seq (uint nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); }
@@ -189,6 +193,7 @@ public:
   inline FieldBuffer& operator<< (double v)          { FieldUnion &u = addu (FLOAT); u.vdouble = v; return *this; }
   inline FieldBuffer& operator<< (EnumValue e)       { FieldUnion &u = addu (ENUM); u.vint64 = e.v; return *this; }
   inline FieldBuffer& operator<< (const String &s)   { FieldUnion &u = addu (STRING); new (&u) String (s); return *this; }
+  inline FieldBuffer& operator<< (Any    v)          { FieldUnion &u = addu (ANY); new (&u) Any (v); return *this; }
   inline FieldBuffer& operator<< (const TypeHash &h) { *this << h.typehi; *this << h.typelo; return *this; }
 };
 
@@ -221,6 +226,7 @@ public:
   inline const String&      get_string () { FieldUnion &u = fb_getu (STRING); return *(String*) &u; }
   inline const String&      get_func   () { FieldUnion &u = fb_getu (FUNC); return *(String*) &u; }
   inline uint64             get_object () { FieldUnion &u = fb_getu (INSTANCE); return u.vint64; }
+  inline const Any&         get_any    () { FieldUnion &u = fb_getu (ANY); return *(Any*) &u; }
   inline const FieldBuffer& get_rec    () { FieldUnion &u = fb_getu (RECORD); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& get_seq    () { FieldUnion &u = fb_getu (SEQUENCE); return *(FieldBuffer*) &u; }
   inline int64              pop_int64  () { FieldUnion &u = fb_popu (INT); return u.vint64; }
@@ -229,6 +235,7 @@ public:
   inline const String&      pop_string () { FieldUnion &u = fb_popu (STRING); return *(String*) &u; }
   inline const String&      pop_func   () { FieldUnion &u = fb_popu (FUNC); return *(String*) &u; }
   inline uint64             pop_object () { FieldUnion &u = fb_popu (INSTANCE); return u.vint64; }
+  inline const Any&         pop_any    () { FieldUnion &u = fb_popu (ANY); return *(Any*) &u; }
   inline const FieldBuffer& pop_rec    () { FieldUnion &u = fb_popu (RECORD); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& pop_seq    () { FieldUnion &u = fb_popu (SEQUENCE); return *(FieldBuffer*) &u; }
   inline FieldReader& operator>> (size_t &v)          { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
@@ -240,6 +247,7 @@ public:
   inline FieldReader& operator>> (double &v)          { FieldUnion &u = fb_popu (FLOAT); v = u.vdouble; return *this; }
   inline FieldReader& operator>> (EnumValue &e)       { FieldUnion &u = fb_popu (ENUM); e.v = u.vint64; return *this; }
   inline FieldReader& operator>> (String &s)          { FieldUnion &u = fb_popu (STRING); s = *(String*) &u; return *this; }
+  inline FieldReader& operator>> (Any &v)             { FieldUnion &u = fb_popu (ANY); v = *(Any*) &u; return *this; }
   inline FieldReader& operator>> (TypeHash &h)        { *this >> h.typehi; *this >> h.typelo; return *this; }
   inline FieldReader& operator>> (std::vector<bool>::reference v) { bool b; *this >> b; v = b; return *this; }
 };

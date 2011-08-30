@@ -99,6 +99,7 @@ class Generator:
     return ns + I_prefix_postfix[0] + base + I_prefix_postfix[1]
   def type2cpp (self, type_node):
     typename = type_node.name
+    if typename == 'any': return 'Plic::Any'
     if typename == 'float': return 'double'
     if typename == 'string': return 'std::string'
     fullnsname = '::'.join (self.type_relative_namespaces (type_node) + [ type_node.name ])
@@ -141,7 +142,7 @@ class Generator:
       s += ' '
     return s + ident
   def A (self, ident, type_node, defaultinit = None):   # construct call Argument
-    constref = type_node.storage in (Decls.STRING, Decls.SEQUENCE, Decls.RECORD)
+    constref = type_node.storage in (Decls.STRING, Decls.SEQUENCE, Decls.RECORD, Decls.ANY)
     needsref = constref or type_node.storage == Decls.INTERFACE
     s = self.C (type_node)                      # const {Obj} &foo = 3
     s += ' ' if ident else ''                   # const Obj{ }&foo = 3
@@ -207,9 +208,7 @@ class Generator:
       return '""'
     if type.storage == Decls.ENUM:
       return self.C (type) + ' (0)'
-    if type.storage == Decls.RECORD:
-      return self.C (type) + '()'
-    if type.storage == Decls.SEQUENCE:
+    if type.storage in (Decls.RECORD, Decls.SEQUENCE, Decls.ANY):
       return self.C (type) + '()'
     return '0'
   def generate_recseq_decl (self, type_info):
@@ -753,7 +752,7 @@ class Generator:
     if ftype.storage in (Decls.INT, Decls.FLOAT, Decls.ENUM):
       s += '  ' + v + self.F (tname)  + pid + ' () const%s;\n' % v0
       s += '  ' + v + self.F ('void') + pid + ' (' + tname + ')%s;\n' % v0
-    elif ftype.storage in (Decls.STRING, Decls.RECORD, Decls.SEQUENCE):
+    elif ftype.storage in (Decls.STRING, Decls.RECORD, Decls.SEQUENCE, Decls.ANY):
       s += '  ' + v + self.F (tname)  + pid + ' () const%s;\n' % v0
       s += '  ' + v + self.F ('void') + pid + ' (const ' + tname + '&)%s;\n' % v0
     elif ftype.storage == Decls.INTERFACE:
@@ -783,7 +782,7 @@ class Generator:
     s += '}\n'
     # setter prototype
     s += 'void\n'
-    if ftype.storage in (Decls.STRING, Decls.RECORD, Decls.SEQUENCE):
+    if ftype.storage in (Decls.STRING, Decls.RECORD, Decls.SEQUENCE, Decls.ANY):
       s += q + 'const ' + tname + ' &value)\n{\n'
     else:
       s += q + tname + ' value)\n{\n'
@@ -991,14 +990,8 @@ class Generator:
     s += ')\n{\n'
     if functype.rtype.storage == Decls.VOID:
       pass
-    elif functype.rtype.storage == Decls.ENUM:
-      s += '  return %s (0);\n' % self.R (functype.rtype)
-    elif functype.rtype.storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += '  return %s();\n' % self.R (functype.rtype)
-    elif functype.rtype.storage == Decls.INTERFACE:
-      s += '  return (%s*) NULL;\n' % self.C (functype.rtype)
     else:
-      s += '  return 0;\n'
+      s += '  return %s;\n' % self.mkzero (functype.rtype)
     s += '}\n'
     return s
   def generate_interface_skel (self, type_info):

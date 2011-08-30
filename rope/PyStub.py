@@ -121,6 +121,7 @@ class Generator:
              Decls.SEQUENCE  : '()',
              Decls.STRING    : "''",
              Decls.INTERFACE : "None",
+             Decls.ANY       : '()',
            }[type.storage]
   def default_value (self, type, vdefault):
     if type.storage in (Decls.FLOAT, Decls.INT, Decls.ENUM, Decls.STRING):
@@ -180,6 +181,8 @@ class Generator:
       s += '  %s.to_proto (%s.vrec, %s)\n' % (type_info.name, argname, valname)
     elif type_info.storage == Decls.SEQUENCE:
       s += '  %s.to_proto (%s.vseq, %s)\n' % (type_info.name, argname, valname)
+    elif type_info.storage == Decls.ANY:
+      s += '  # FIXME: support PLIC::Any with %s.to_proto (%s.vany, %s)\n' % (type_info.name, argname, valname)
     else: # FUNC
       raise RuntimeError ("Unexpected storage type: " + type_info.storage)
     return s

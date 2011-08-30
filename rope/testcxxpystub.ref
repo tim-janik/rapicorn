@@ -82,6 +82,18 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
   return r;
 }
 
+static inline Plic::Any
+__plic_pyany_to_any (PyObject *pyany)
+{
+  return Plic::Any(); // FIXME: pyany to Any
+}
+
+static inline PyObject*
+__plic_pyany_from_any (const Plic::Any &any)
+{
+  return None_INCREF(); // FIXME: Any to pyany
+}
+
 static PyObject *_plic_object_factory_callable = NULL;
 
 static PyObject*
@@ -229,7 +241,7 @@ enum ClickType {
 static RAPICORN_UNUSED bool
 plic_pyXFooRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
 {
-  Plic::FieldBuffer &fb = dst.add_rec (14);
+  Plic::FieldBuffer &fb = dst.add_rec (17);
   bool success = false;
   PyObject *dictR = NULL, *item = NULL;
   dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
@@ -261,6 +273,12 @@ plic_pyXFooRecord_proto_add (PyObject *pyrec, Plic::FieldBuffer &dst)
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
   item = PyDict_GetItemString (dictR, "iface3"); ERRORif (!item);
   fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
+  item = PyDict_GetItemString (dictR, "any1"); ERRORif (!item);
+  fb.add_any (__plic_pyany_to_any (item)); ERRORifpy();
+  item = PyDict_GetItemString (dictR, "any2"); ERRORif (!item);
+  fb.add_any (__plic_pyany_to_any (item)); ERRORifpy();
+  item = PyDict_GetItemString (dictR, "any3"); ERRORif (!item);
+  fb.add_any (__plic_pyany_to_any (item)); ERRORifpy();
   success = true;
  error:
   Py_XDECREF (dictR);
@@ -271,7 +289,7 @@ plic_pyXFooRecord_proto_pop (Plic::FieldReader &src)
 {
   PyObject *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
   Plic::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() != 14) ERRORpy ("PLIC: marshalling error: invalid record length");
+  if (fbr.remaining() != 17) ERRORpy ("PLIC: marshalling error: invalid record length");
   pyinstR = PyInstance_NewRaw ((PyObject*) &PyBaseObject_Type, NULL); ERRORif (!pyinstR);
   dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
   pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
@@ -302,6 +320,12 @@ plic_pyXFooRecord_proto_pop (Plic::FieldReader &src)
   if (PyDict_Take_Item (dictR, "iface2", &pyfoR) < 0) goto error;
   pyfoR = plic_PyObject_4uint64 ("FirstInterface", fbr.pop_object()); ERRORifpy();
   if (PyDict_Take_Item (dictR, "iface3", &pyfoR) < 0) goto error;
+  pyfoR = __plic_pyany_from_any (fbr.pop_any()); ERRORifpy();
+  if (PyDict_Take_Item (dictR, "any1", &pyfoR) < 0) goto error;
+  pyfoR = __plic_pyany_from_any (fbr.pop_any()); ERRORifpy();
+  if (PyDict_Take_Item (dictR, "any2", &pyfoR) < 0) goto error;
+  pyfoR = __plic_pyany_from_any (fbr.pop_any()); ERRORifpy();
+  if (PyDict_Take_Item (dictR, "any3", &pyfoR) < 0) goto error;
   pyret = pyinstR;
  error:
   Py_XDECREF (pyfoR);
@@ -573,6 +597,40 @@ plic_pyInterfaceSequence_proto_pop (Plic::FieldReader &src)
   listR = PyList_New (len); if (!listR) GOTO_ERROR();
   for (size_t k = 0; k < len; k++) {
     pyfoR = plic_PyObject_4uint64 ("FirstInterface", fbr.pop_object()); ERRORifpy();
+    PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
+  }
+  pyret = listR;
+ error:
+  Py_XDECREF (pyfoR);
+  if (pyret != listR)
+    Py_XDECREF (listR);
+  return pyret;
+}
+
+static RAPICORN_UNUSED bool
+plic_pyAnySequence_proto_add (PyObject *pyinput, Plic::FieldBuffer &dst)
+{
+  PyObject *pyseq = PySequence_Fast (pyinput, "expected a sequence"); if (!pyseq) return false;
+  const ssize_t len = PySequence_Fast_GET_SIZE (pyseq); if (len < 0) return false;
+  Plic::FieldBuffer &fb = dst.add_seq (len);
+  bool success = false;
+  for (ssize_t k = 0; k < len; k++) {
+    PyObject *item = PySequence_Fast_GET_ITEM (pyseq, k);
+    fb.add_any (__plic_pyany_to_any (item)); ERRORifpy();
+  }
+  success = true;
+ error:
+  return success;
+}
+static RAPICORN_UNUSED PyObject*
+plic_pyAnySequence_proto_pop (Plic::FieldReader &src)
+{
+  PyObject *listR = NULL, *pyfoR = NULL, *pyret = NULL;
+  Plic::FieldReader fbr (src.pop_seq());
+  const size_t len = fbr.remaining();
+  listR = PyList_New (len); if (!listR) GOTO_ERROR();
+  for (size_t k = 0; k < len; k++) {
+    pyfoR = __plic_pyany_from_any (fbr.pop_any()); ERRORifpy();
     PyList_SET_ITEM (listR, k, pyfoR), pyfoR = NULL;
   }
   pyret = listR;
@@ -1544,6 +1602,35 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_interface_InterfaceTe
   return NULL;
 }
 static PyObject*
+_plic_rpc_InterfaceTests__MethodTestInterface__method_with_anys_any_any_any (PyObject *pyself, PyObject *pyargs)
+{
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
+  fb.add_msgid (0x37b8d8ed63487319ULL, 0xb18dc7a6d35529d5ULL);
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("PLIC: wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);  // self
+  fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
+  item = PyTuple_GET_ITEM (pyargs, 1); // input
+  fb.add_any (__plic_pyany_to_any (item)); ERRORifpy();
+  item = PyTuple_GET_ITEM (pyargs, 2); // optval
+  fb.add_any (__plic_pyany_to_any (item)); ERRORifpy();
+  fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  ERRORifnotret (fr);
+  if (fr) {
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    if (frr.remaining() == 1) {
+        pyfoR = __plic_pyany_from_any (frr.pop_any()); ERRORifpy();
+    }
+    delete fr; fr = NULL;
+  }
+  return pyfoR;
+ error:
+  if (fr) delete fr;
+  if (fm) delete fm;
+  return NULL;
+}
+static PyObject*
 _plic_rpc_InterfaceTests__MethodTestInterface__method_with_quickiface_InterfaceTests__QuickIface_InterfaceTests__QuickIface_InterfaceTests__QuickIface (PyObject *pyself, PyObject *pyargs)
 {
   PyObject *item, *pyfoR = NULL;
@@ -2004,6 +2091,56 @@ _plic_marshal__InterfaceTests__SignalTestInterface__interface_result_InterfaceTe
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
     Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild (item);
+    uint64 handler_id = PLIC_CONNECTION().register_event_handler (evh);
+    fb.add_int64 (handler_id); }
+  item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
+  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
+  fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  ERRORifnotret (fr);
+  if (fr) {
+    FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    if (frr.remaining() == 1) {
+      pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
+    }
+  }
+ error:
+  if (fm) delete fm;
+  if (fr) delete fr;
+  return pyfoR;
+}
+class _EventHandler_InterfaceTests__SignalTestInterface__any_result_any : public Plic::Connection::EventHandler {
+  PyObject *m_callable;
+public:
+  ~_EventHandler_InterfaceTests__SignalTestInterface__any_result_any() { Py_DECREF (m_callable); }
+  _EventHandler_InterfaceTests__SignalTestInterface__any_result_any (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
+  virtual FieldBuffer*
+  handle_event (Plic::FieldBuffer &fb)
+  {
+    const uint length = 0;
+    PyObject *result, *tuple = PyTuple_New (length);
+    if (PyErr_Occurred()) goto error;
+    result = PyObject_Call (m_callable, tuple, NULL);
+    Py_XDECREF (result);
+   error:
+    Py_XDECREF (tuple);
+    return NULL;
+  }
+};
+static PyObject*
+_plic_marshal__InterfaceTests__SignalTestInterface__any_result_any (PyObject *pyself, PyObject *pyargs)
+{
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
+  fb.add_msgid (0x52aa86cb9557c7b5ULL, 0xb5b86bcd272326c5ULL);
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);  // self
+  fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
+  item = PyTuple_GET_ITEM (pyargs, 1);  // Closure
+  if (item == Py_None) fb.add_int64 (0);
+  else {
+    if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
+    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__any_result_any (item);
     uint64 handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2562,6 +2699,61 @@ _plic_marshal__InterfaceTests__SignalTestInterface__interface_arg_void_Interface
   if (fr) delete fr;
   return pyfoR;
 }
+class _EventHandler_InterfaceTests__SignalTestInterface__any_arg_void_any : public Plic::Connection::EventHandler {
+  PyObject *m_callable;
+public:
+  ~_EventHandler_InterfaceTests__SignalTestInterface__any_arg_void_any() { Py_DECREF (m_callable); }
+  _EventHandler_InterfaceTests__SignalTestInterface__any_arg_void_any (PyObject *callable) : m_callable ((Py_INCREF (callable), callable)) {}
+  virtual FieldBuffer*
+  handle_event (Plic::FieldBuffer &fb)
+  {
+    FieldReader fbr (fb);
+    fbr.skip_msgid(); // FIXME: check msgid
+    fbr.pop_int64();  // FIXME: check handler_id
+    const uint length = 1;
+    PyObject *result, *tuple = PyTuple_New (length), *item;
+    item = __plic_pyany_from_any (fbr.pop_any()); ERRORifpy();
+    PyTuple_SET_ITEM (tuple, 0, item);
+    if (PyErr_Occurred()) goto error;
+    result = PyObject_Call (m_callable, tuple, NULL);
+    Py_XDECREF (result);
+   error:
+    Py_XDECREF (tuple);
+    return NULL;
+  }
+};
+static PyObject*
+_plic_marshal__InterfaceTests__SignalTestInterface__any_arg_void_any (PyObject *pyself, PyObject *pyargs)
+{
+  PyObject *item, *pyfoR = NULL;
+  FieldBuffer *fm = FieldBuffer::_new (2 + 1 + 2), &fb = *fm, *fr = NULL;
+  fb.add_msgid (0x51d96c2cd8c40104ULL, 0x04aedd456681cb81ULL);
+  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");
+  item = PyTuple_GET_ITEM (pyargs, 0);  // self
+  fb.add_object (PyAttr_As_uint64 (item, "__plic__object__")); ERRORifpy();
+  item = PyTuple_GET_ITEM (pyargs, 1);  // Closure
+  if (item == Py_None) fb.add_int64 (0);
+  else {
+    if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
+    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__any_arg_void_any (item);
+    uint64 handler_id = PLIC_CONNECTION().register_event_handler (evh);
+    fb.add_int64 (handler_id); }
+  item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
+  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
+  fm = NULL; fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  ERRORifnotret (fr);
+  if (fr) {
+    FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    if (frr.remaining() == 1) {
+      pyfoR = PyLong_FromLongLong (frr.pop_int64()); ERRORifpy ();
+    }
+  }
+ error:
+  if (fm) delete fm;
+  if (fr) delete fr;
+  return pyfoR;
+}
 class _EventHandler_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface : public Plic::Connection::EventHandler {
   PyObject *m_callable;
 public:
@@ -2769,6 +2961,7 @@ _plic_rpc_RapicornPlicTest__PureMethods__pure_method_int_float (PyObject *pyself
   { "_PLIC_InterfaceTests__MethodTestInterface__method_with_record_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord", _plic_rpc_InterfaceTests__MethodTestInterface__method_with_record_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord_InterfaceTests__QuickRecord, METH_VARARGS, "pyRapicorn rpc call" },\
   { "_PLIC_InterfaceTests__MethodTestInterface__method_with_sequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence", _plic_rpc_InterfaceTests__MethodTestInterface__method_with_sequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence_InterfaceTests__QuickSequence, METH_VARARGS, "pyRapicorn rpc call" },\
   { "_PLIC_InterfaceTests__MethodTestInterface__method_with_interface_InterfaceTests__GrandChild_InterfaceTests__GrandChild_InterfaceTests__GrandChild", _plic_rpc_InterfaceTests__MethodTestInterface__method_with_interface_InterfaceTests__GrandChild_InterfaceTests__GrandChild_InterfaceTests__GrandChild, METH_VARARGS, "pyRapicorn rpc call" },\
+  { "_PLIC_InterfaceTests__MethodTestInterface__method_with_anys_any_any_any", _plic_rpc_InterfaceTests__MethodTestInterface__method_with_anys_any_any_any, METH_VARARGS, "pyRapicorn rpc call" },\
   { "_PLIC_InterfaceTests__MethodTestInterface__method_with_quickiface_InterfaceTests__QuickIface_InterfaceTests__QuickIface_InterfaceTests__QuickIface", _plic_rpc_InterfaceTests__MethodTestInterface__method_with_quickiface_InterfaceTests__QuickIface_InterfaceTests__QuickIface_InterfaceTests__QuickIface, METH_VARARGS, "pyRapicorn rpc call" },\
   { "_PLIC_InterfaceTests__SignalTestInterface__void_result_void", _plic_marshal__InterfaceTests__SignalTestInterface__void_result_void, METH_VARARGS, "pyRapicorn signal call" },\
   { "_PLIC_InterfaceTests__SignalTestInterface__bool_result_bool", _plic_marshal__InterfaceTests__SignalTestInterface__bool_result_bool, METH_VARARGS, "pyRapicorn signal call" },\
@@ -2779,6 +2972,7 @@ _plic_rpc_RapicornPlicTest__PureMethods__pure_method_int_float (PyObject *pyself
   { "_PLIC_InterfaceTests__SignalTestInterface__record_result_InterfaceTests__QuickRecord", _plic_marshal__InterfaceTests__SignalTestInterface__record_result_InterfaceTests__QuickRecord, METH_VARARGS, "pyRapicorn signal call" },\
   { "_PLIC_InterfaceTests__SignalTestInterface__sequence_result_InterfaceTests__QuickSequence", _plic_marshal__InterfaceTests__SignalTestInterface__sequence_result_InterfaceTests__QuickSequence, METH_VARARGS, "pyRapicorn signal call" },\
   { "_PLIC_InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild", _plic_marshal__InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild, METH_VARARGS, "pyRapicorn signal call" },\
+  { "_PLIC_InterfaceTests__SignalTestInterface__any_result_any", _plic_marshal__InterfaceTests__SignalTestInterface__any_result_any, METH_VARARGS, "pyRapicorn signal call" },\
   { "_PLIC_InterfaceTests__SignalTestInterface__self_result_InterfaceTests__SignalTestInterface", _plic_marshal__InterfaceTests__SignalTestInterface__self_result_InterfaceTests__SignalTestInterface, METH_VARARGS, "pyRapicorn signal call" },\
   { "_PLIC_InterfaceTests__SignalTestInterface__void_arg_void", _plic_marshal__InterfaceTests__SignalTestInterface__void_arg_void, METH_VARARGS, "pyRapicorn signal call" },\
   { "_PLIC_InterfaceTests__SignalTestInterface__bool_arg_void_bool", _plic_marshal__InterfaceTests__SignalTestInterface__bool_arg_void_bool, METH_VARARGS, "pyRapicorn signal call" },\
@@ -2789,6 +2983,7 @@ _plic_rpc_RapicornPlicTest__PureMethods__pure_method_int_float (PyObject *pyself
   { "_PLIC_InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTests__QuickRecord", _plic_marshal__InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTests__QuickRecord, METH_VARARGS, "pyRapicorn signal call" },\
   { "_PLIC_InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceTests__QuickSequence", _plic_marshal__InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceTests__QuickSequence, METH_VARARGS, "pyRapicorn signal call" },\
   { "_PLIC_InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild", _plic_marshal__InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild, METH_VARARGS, "pyRapicorn signal call" },\
+  { "_PLIC_InterfaceTests__SignalTestInterface__any_arg_void_any", _plic_marshal__InterfaceTests__SignalTestInterface__any_arg_void_any, METH_VARARGS, "pyRapicorn signal call" },\
   { "_PLIC_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface", _plic_marshal__InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface, METH_VARARGS, "pyRapicorn signal call" },\
   { "_PLIC_RapicornPlicTest__ButtonArea__check_activate_bool", _plic_marshal__RapicornPlicTest__ButtonArea__check_activate_bool, METH_VARARGS, "pyRapicorn signal call" },\
   { "_PLIC_RapicornPlicTest__ButtonArea__activate_void", _plic_marshal__RapicornPlicTest__ButtonArea__activate_void, METH_VARARGS, "pyRapicorn signal call" },\

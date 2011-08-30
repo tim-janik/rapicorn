@@ -198,6 +198,9 @@ struct XFooRecord_Handle {
   FirstInterface_SmartHandle    iface1;
   FirstInterface_SmartHandle    iface2;
   FirstInterface_SmartHandle    iface3;
+  Plic::Any                     any1;
+  Plic::Any                     any2;
+  Plic::Any                     any3;
   inline                        XFooRecord_Handle () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const XFooRecord_Handle&);
@@ -251,6 +254,12 @@ struct InterfaceSequence_Handle : public std::vector<FirstInterface_SmartHandle>
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const InterfaceSequence_Handle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, InterfaceSequence_Handle&);
 
+struct AnySequence_Handle : public std::vector<Plic::Any> {
+  typedef std::vector<Plic::Any> Sequence;
+};
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const AnySequence_Handle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, AnySequence_Handle&);
+
 struct NestedTypesRec_Handle {
   XFooRecord_Handle             rec;
   XFooSequence_Handle           seq;
@@ -264,6 +273,8 @@ struct NestedTypesSeq_Handle : public std::vector<NestedTypesRec_Handle> {
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const NestedTypesSeq_Handle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, NestedTypesSeq_Handle&);
+
+typedef Plic::Any AliasAny;
 
 typedef int AliasInt;
 
@@ -503,6 +514,8 @@ public:
                                                                  const QuickSequence_Handle &optval = QuickSequence_Handle());
   GrandChild_SmartHandle        method_with_interface           (GrandChild_SmartHandle &input,
                                                                  GrandChild_SmartHandle &optval = *(GrandChild_SmartHandle*) NULL);
+  Plic::Any                     method_with_anys                (const Plic::Any &input,
+                                                                 const Plic::Any &optval);
   QuickIface_SmartHandle        method_with_quickiface          (QuickIface_SmartHandle &input,
                                                                  QuickIface_SmartHandle &iface0 = *(QuickIface_SmartHandle*) NULL);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
@@ -525,6 +538,7 @@ protected:
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, QuickRecord_Handle ()> Signal_record_result;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, QuickSequence_Handle ()> Signal_sequence_result;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, GrandChild_SmartHandle ()> Signal_interface_result;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, Plic::Any ()> Signal_any_result;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, SignalTestInterface_SmartHandle ()> Signal_self_result;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void ()> Signal_void_arg;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (bool b)> Signal_bool_arg;
@@ -535,6 +549,7 @@ protected:
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (const QuickRecord_Handle &r)> Signal_record_arg;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (const QuickSequence_Handle &s)> Signal_sequence_arg;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (GrandChild_SmartHandle &i)> Signal_interface_arg;
+  typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (const Plic::Any &a)> Signal_any_arg;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (SignalTestInterface_SmartHandle &self_)> Signal_self_args;
 public:
   template<class C>
@@ -550,6 +565,7 @@ public:
   Signal_record_result          record_result;
   Signal_sequence_result        sequence_result;
   Signal_interface_result       interface_result;
+  Signal_any_result             any_result;
   Signal_self_result            self_result;
   Signal_void_arg               void_arg;
   Signal_bool_arg               bool_arg;
@@ -560,6 +576,7 @@ public:
   Signal_record_arg             record_arg;
   Signal_sequence_arg           sequence_arg;
   Signal_interface_arg          interface_arg;
+  Signal_any_arg                any_arg;
   Signal_self_args              self_args;
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
@@ -595,6 +612,8 @@ public:
   void                          interface_prop (GrandChild_SmartHandle);
   PropertyTester_SmartHandle    self_prop      () const;
   void                          self_prop      (PropertyTester_SmartHandle);
+  Plic::Any                     any_prop       () const;
+  void                          any_prop       (const Plic::Any&);
 //inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const PropertyTester_SmartHandle&);
@@ -755,7 +774,7 @@ FirstInterface_SmartHandle::void_func ()
 inline Plic::FieldBuffer&
 operator<< (Plic::FieldBuffer &dst, const XFooRecord_Handle &self)
 {
-  Plic::FieldBuffer &fb = dst.add_rec (14);
+  Plic::FieldBuffer &fb = dst.add_rec (17);
   fb << self.single_bool;
   fb << self.single_num;
   fb << self.single_float;
@@ -770,13 +789,16 @@ operator<< (Plic::FieldBuffer &dst, const XFooRecord_Handle &self)
   fb << self.iface1;
   fb << self.iface2;
   fb << self.iface3;
+  fb << self.any1;
+  fb << self.any2;
+  fb << self.any3;
   return dst;
 }
 inline Plic::FieldReader&
 operator>> (Plic::FieldReader &src, XFooRecord_Handle &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
-  if (fbr.remaining() < 14) return src;
+  if (fbr.remaining() < 17) return src;
   fbr >> self.single_bool;
   fbr >> self.single_num;
   fbr >> self.single_float;
@@ -791,6 +813,9 @@ operator>> (Plic::FieldReader &src, XFooRecord_Handle &self)
   fbr >> self.iface1;
   fbr >> self.iface2;
   fbr >> self.iface3;
+  fbr >> self.any1;
+  fbr >> self.any2;
+  fbr >> self.any3;
   return src;
 }
 inline Plic::FieldBuffer&
@@ -956,6 +981,27 @@ operator>> (Plic::FieldReader &src, InterfaceSequence_Handle &self)
   Plic::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
   self.reserve (len);
+  for (size_t k = 0; k < len; k++) {
+    fbr >> self[k];
+  }
+  return src;
+}
+inline Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &dst, const AnySequence_Handle &self)
+{
+  const size_t len = self.size();
+  Plic::FieldBuffer &fb = dst.add_seq (len);
+  for (size_t k = 0; k < len; k++) {
+    fb << self[k];
+  }
+  return dst;
+}
+inline Plic::FieldReader&
+operator>> (Plic::FieldReader &src, AnySequence_Handle &self)
+{
+  Plic::FieldReader fbr (src.pop_seq());
+  const size_t len = fbr.remaining();
+  self.resize (len);
   for (size_t k = 0; k < len; k++) {
     fbr >> self[k];
   }
@@ -2142,6 +2188,23 @@ MethodTestInterface_SmartHandle::method_with_interface (GrandChild_SmartHandle &
   delete fr;
   return retval;
 }
+Plic::Any
+MethodTestInterface_SmartHandle::method_with_anys (const Plic::Any &arg_input,
+                                                   const Plic::Any &arg_optval)
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2), *fr = NULL;
+  fb.add_msgid (0x37b8d8ed63487319ULL, 0xb18dc7a6d35529d5ULL); // msgid
+  fb << (*this);
+  fb << arg_input;
+  fb << arg_optval;
+  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  Plic::FieldReader frr (*fr);
+  frr.skip_msgid(); // FIXME: check msgid
+  Plic::Any  retval;
+  frr >> retval;
+  delete fr;
+  return retval;
+}
 QuickIface_SmartHandle
 MethodTestInterface_SmartHandle::method_with_quickiface (QuickIface_SmartHandle &arg_input,
                                                          QuickIface_SmartHandle &arg_iface0)
@@ -2257,6 +2320,16 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } interface_result;
+  struct Signal_any_result_EventHandler$ : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, Plic::Any (), Rapicorn::Signals::CollectorDefault<Plic::Any>, Rapicorn::Signals::SignalConnectionRelay<Signal_any_result_EventHandler$> > Signal_any_result;
+    virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
+    uint64 m_handler_id, m_connection_id;
+    Signal_any_result signal;
+    Signal_any_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~Signal_any_result_EventHandler$ ()
+    { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
+    void  connections_changed (bool hasconnections);
+  } any_result;
   struct Signal_self_result_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, SignalTestInterface_SmartHandle (), Rapicorn::Signals::CollectorDefault<SignalTestInterface_SmartHandle>, Rapicorn::Signals::SignalConnectionRelay<Signal_self_result_EventHandler$> > Signal_self_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
@@ -2357,6 +2430,16 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } interface_arg;
+  struct Signal_any_arg_EventHandler$ : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const Plic::Any &a), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_any_arg_EventHandler$> > Signal_any_arg;
+    virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
+    uint64 m_handler_id, m_connection_id;
+    Signal_any_arg signal;
+    Signal_any_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~Signal_any_arg_EventHandler$ ()
+    { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
+    void  connections_changed (bool hasconnections);
+  } any_arg;
   struct Signal_self_args_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (SignalTestInterface_SmartHandle &self_), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_self_args_EventHandler$> > Signal_self_args;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
@@ -2378,6 +2461,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     record_result (handle$),
     sequence_result (handle$),
     interface_result (handle$),
+    any_result (handle$),
     self_result (handle$),
     void_arg (handle$),
     bool_arg (handle$),
@@ -2388,6 +2472,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     record_arg (handle$),
     sequence_arg (handle$),
     interface_arg (handle$),
+    any_arg (handle$),
     self_args (handle$),
     m_cached_types (NULL)
   {
@@ -2409,6 +2494,8 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     sequence_result.signal.listener (sequence_result, &Signal_sequence_result_EventHandler$::connections_changed);
     handle$.interface_result = interface_result.signal;
     interface_result.signal.listener (interface_result, &Signal_interface_result_EventHandler$::connections_changed);
+    handle$.any_result = any_result.signal;
+    any_result.signal.listener (any_result, &Signal_any_result_EventHandler$::connections_changed);
     handle$.self_result = self_result.signal;
     self_result.signal.listener (self_result, &Signal_self_result_EventHandler$::connections_changed);
     handle$.void_arg = void_arg.signal;
@@ -2429,6 +2516,8 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     sequence_arg.signal.listener (sequence_arg, &Signal_sequence_arg_EventHandler$::connections_changed);
     handle$.interface_arg = interface_arg.signal;
     interface_arg.signal.listener (interface_arg, &Signal_interface_arg_EventHandler$::connections_changed);
+    handle$.any_arg = any_arg.signal;
+    any_arg.signal.listener (any_arg, &Signal_any_arg_EventHandler$::connections_changed);
     handle$.self_args = self_args.signal;
     self_args.signal.listener (self_args, &Signal_self_args_EventHandler$::connections_changed);
   }
@@ -2806,6 +2895,45 @@ SignalTestInterface_Context$::Signal_interface_result_EventHandler$::handle_even
   fbr.skip();       // skip m_handler_id
   if (fbr.remaining() != 0) return plic$_error ("invalid number of arguments");
   GrandChild_SmartHandle  rval = signal.emit ();
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
+  rb << rval;
+  return &rb;
+}
+void
+SignalTestInterface_Context$::Signal_any_result_EventHandler$::connections_changed (bool hasconnections)
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
+  fb.add_msgid (0x52aa86cb9557c7b5ULL, 0xb5b86bcd272326c5ULL);
+  fb << *signal.emitter();
+  if (hasconnections) {
+    if (!m_handler_id)              // signal connected
+      m_handler_id = PLIC_CONNECTION().register_event_handler (this);
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
+  } else {                          // signal disconnected
+    if (m_handler_id)
+      ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
+    m_connection_id = 0;
+  }
+  Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  if (fr) { // FIXME: assert that fr is a non-NULL FieldBuffer with result message
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    if (frr.remaining() && m_handler_id)
+      frr >> m_connection_id;
+    delete fr;
+  }
+}
+Plic::FieldBuffer*
+SignalTestInterface_Context$::Signal_any_result_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+{
+  Plic::FieldReader fbr (fb);
+  fbr.skip_msgid(); // FIXME: check msgid
+  fbr.skip();       // skip m_handler_id
+  if (fbr.remaining() != 0) return plic$_error ("invalid number of arguments");
+  Plic::Any  rval = signal.emit ();
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
   rb << rval;
   return &rb;
@@ -3199,6 +3327,45 @@ SignalTestInterface_Context$::Signal_interface_arg_EventHandler$::handle_event (
   return NULL;
 }
 void
+SignalTestInterface_Context$::Signal_any_arg_EventHandler$::connections_changed (bool hasconnections)
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
+  fb.add_msgid (0x51d96c2cd8c40104ULL, 0x04aedd456681cb81ULL);
+  fb << *signal.emitter();
+  if (hasconnections) {
+    if (!m_handler_id)              // signal connected
+      m_handler_id = PLIC_CONNECTION().register_event_handler (this);
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
+  } else {                          // signal disconnected
+    if (m_handler_id)
+      ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
+    m_connection_id = 0;
+  }
+  Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  if (fr) { // FIXME: assert that fr is a non-NULL FieldBuffer with result message
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    if (frr.remaining() && m_handler_id)
+      frr >> m_connection_id;
+    delete fr;
+  }
+}
+Plic::FieldBuffer*
+SignalTestInterface_Context$::Signal_any_arg_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+{
+  Plic::FieldReader fbr (fb);
+  fbr.skip_msgid(); // FIXME: check msgid
+  fbr.skip();       // skip m_handler_id
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  Plic::Any  arg_a;
+  fbr >> arg_a;
+  signal.emit (arg_a);
+  return NULL;
+}
+void
 SignalTestInterface_Context$::Signal_self_args_EventHandler$::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
@@ -3246,6 +3413,7 @@ typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickEnum ()>
 typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickRecord_Handle ()> SignalTestInterface_SmartHandle_Signal_record_result;
 typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickSequence_Handle ()> SignalTestInterface_SmartHandle_Signal_sequence_result;
 typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, GrandChild_SmartHandle ()> SignalTestInterface_SmartHandle_Signal_interface_result;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, Plic::Any ()> SignalTestInterface_SmartHandle_Signal_any_result;
 typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, SignalTestInterface_SmartHandle ()> SignalTestInterface_SmartHandle_Signal_self_result;
 typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void ()> SignalTestInterface_SmartHandle_Signal_void_arg;
 typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (bool b)> SignalTestInterface_SmartHandle_Signal_bool_arg;
@@ -3256,6 +3424,7 @@ typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (QuickEn
 typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const QuickRecord_Handle &r)> SignalTestInterface_SmartHandle_Signal_record_arg;
 typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const QuickSequence_Handle &s)> SignalTestInterface_SmartHandle_Signal_sequence_arg;
 typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (GrandChild_SmartHandle &i)> SignalTestInterface_SmartHandle_Signal_interface_arg;
+typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const Plic::Any &a)> SignalTestInterface_SmartHandle_Signal_any_arg;
 typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (SignalTestInterface_SmartHandle &self_)> SignalTestInterface_SmartHandle_Signal_self_args;
 SignalTestInterface_SmartHandle::SignalTestInterface_SmartHandle () :
   void_result (*(SignalTestInterface_SmartHandle_Signal_void_result*) NULL),
@@ -3267,6 +3436,7 @@ SignalTestInterface_SmartHandle::SignalTestInterface_SmartHandle () :
   record_result (*(SignalTestInterface_SmartHandle_Signal_record_result*) NULL),
   sequence_result (*(SignalTestInterface_SmartHandle_Signal_sequence_result*) NULL),
   interface_result (*(SignalTestInterface_SmartHandle_Signal_interface_result*) NULL),
+  any_result (*(SignalTestInterface_SmartHandle_Signal_any_result*) NULL),
   self_result (*(SignalTestInterface_SmartHandle_Signal_self_result*) NULL),
   void_arg (*(SignalTestInterface_SmartHandle_Signal_void_arg*) NULL),
   bool_arg (*(SignalTestInterface_SmartHandle_Signal_bool_arg*) NULL),
@@ -3277,6 +3447,7 @@ SignalTestInterface_SmartHandle::SignalTestInterface_SmartHandle () :
   record_arg (*(SignalTestInterface_SmartHandle_Signal_record_arg*) NULL),
   sequence_arg (*(SignalTestInterface_SmartHandle_Signal_sequence_arg*) NULL),
   interface_arg (*(SignalTestInterface_SmartHandle_Signal_interface_arg*) NULL),
+  any_arg (*(SignalTestInterface_SmartHandle_Signal_any_arg*) NULL),
   self_args (*(SignalTestInterface_SmartHandle_Signal_self_args*) NULL)
 {}
 Plic::FieldBuffer&
@@ -3606,6 +3777,30 @@ PropertyTester_SmartHandle::self_prop (PropertyTester_SmartHandle value)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
   fb.add_msgid (0x2c1aea6b5567c7beULL, 0x8f21acd05f5030deULL); // msgid
+  fb << (*this);
+  fb << value;
+  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  if (fr) delete fr;
+}
+Plic::Any
+PropertyTester_SmartHandle::any_prop () const
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1), *fr = NULL;
+  fb.add_msgid (0x331c2730c160062aULL, 0xaabfaeca6649ae46ULL);
+  fb << (*this);
+  fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  Plic::FieldReader frr (*fr);
+  frr.skip_msgid(); // FIXME: check msgid
+  Plic::Any  retval;
+  frr >> retval;
+  delete fr;
+  return retval;
+}
+void
+PropertyTester_SmartHandle::any_prop (const Plic::Any &value)
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 1), *fr = NULL;
+  fb.add_msgid (0x28a440900d170de2ULL, 0x69e43a111fa9fb39ULL); // msgid
   fb << (*this);
   fb << value;
   fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb

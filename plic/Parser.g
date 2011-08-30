@@ -27,7 +27,7 @@ reservedwords = ('class', 'signal', 'void', 'self')
 collectors = ('void', 'sum', 'last', 'until0', 'while0')
 keywords = ('TRUE', 'True', 'true', 'FALSE', 'False', 'false',
             'namespace', 'enum', 'enumeration', 'Const', 'typedef', 'interface',
-            'record', 'sequence', 'bool', 'int', 'float', 'string')
+            'record', 'sequence', 'bool', 'int', 'float', 'string', 'any')
 reservedkeywords = set (keywords + reservedwords)
 
 class YYGlobals (object):
@@ -217,6 +217,7 @@ class YYGlobals (object):
         'int'     : Decls.TypeInfo ('int',    Decls.INT, false),
         'float'   : Decls.TypeInfo ('float',  Decls.FLOAT, false),
         'string'  : Decls.TypeInfo ('string', Decls.STRING, false),
+        'any'     : Decls.TypeInfo ('any',    Decls.ANY, false),
       }.get (typename, None);
     if not type_info and void and typename == 'void':   # builtin void
       type_info = Decls.TypeInfo ('void', Decls.VOID, false)

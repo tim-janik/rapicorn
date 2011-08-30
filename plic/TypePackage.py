@@ -83,6 +83,7 @@ class Generator:
           Decls.RECORD    : '\n_Ra',
           Decls.FUNC      : '\n__F',
           Decls.INTERFACE : '\n__c',
+          Decls.ANY       : '\n__A',
           }[type_info.storage]
     return s
   reference_types = (Decls.ENUM, Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE)

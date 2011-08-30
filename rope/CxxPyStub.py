@@ -106,6 +106,18 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
   return r;
 }
 
+static inline Plic::Any
+__plic_pyany_to_any (PyObject *pyany)
+{
+  return Plic::Any(); // FIXME: pyany to Any
+}
+
+static inline PyObject*
+__plic_pyany_from_any (const Plic::Any &any)
+{
+  return None_INCREF(); // FIXME: Any to pyany
+}
+
 static PyObject *_plic_object_factory_callable = NULL;
 
 static PyObject*
@@ -184,6 +196,8 @@ class Generator:
       s += '  if (!plic_py%s_proto_add (%s, %s)) goto error;\n' % (type.name, var, fb)
     elif type.storage == Decls.INTERFACE:
       s += '  %s.add_object (PyAttr_As_uint64 (%s, "__plic__object__")); ERRORifpy();\n' % (fb, var)
+    elif type.storage == Decls.ANY:
+      s += '  %s.add_any (__plic_pyany_to_any (%s)); ERRORifpy();\n' % (fb, var)
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
@@ -201,6 +215,8 @@ class Generator:
       s += '  %s = plic_py%s_proto_pop (%s); ERRORif (!%s);\n' % (var, type.name, fbr, var)
     elif type.storage == Decls.INTERFACE:
       s += '  %s = plic_PyObject_4uint64 ("%s", %s.pop_object()); ERRORifpy();\n' % (var, type.name, fbr)
+    elif type.storage == Decls.ANY:
+      s += '  %s = __plic_pyany_from_any (%s.pop_any()); ERRORifpy();\n' % (var, fbr)
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
