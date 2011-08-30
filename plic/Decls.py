@@ -18,7 +18,7 @@ import os, sys, re, shutil, hashlib;
 true, false, length = (True, False, len)
 
 # --- types ---
-VOID, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE, ANY = tuple ('vidserqfca')
+VOID, INT, FLOAT, STRING, ENUM, SEQUENCE, RECORD, INTERFACE, FUNC, TYPE_REFERENCE, ANY = [ord (x) for x in 'vidsEQRCFTY']
 def storage_name (storage):
   name = {
     VOID      : 'VOID',

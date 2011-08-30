@@ -46,8 +46,25 @@ typedef uint32_t               uint;
 typedef signed long long int   int64; // int64_t is a long on AMD64 which breaks printf
 typedef unsigned long long int uint64; // int64_t is a long on AMD64 which breaks printf
 
+// == TypeKind ==
+/// Classification enum for the underlying kind of a TypeCode.
+enum TypeKind {
+  UNTYPED        = 0,   ///< Type indicator for unused Any instances.
+  VOID           = 'v', ///< 'void' type.
+  INT            = 'i', ///< Numeric type.
+  FLOAT          = 'd', ///< Floating point type of IEEE-754 Double precision.
+  STRING         = 's', ///< String type for character sequence in UTF-8 encoding.
+  ENUM           = 'E', ///< Enumeration type to represent choices.
+  SEQUENCE       = 'Q', ///< Type to form sequences of other types.
+  RECORD         = 'R', ///< Record type containing named field.
+  INSTANCE       = 'C', ///< Interface instance type.
+  FUNC           = 'F', ///< Type of methods or signals.
+  TYPE_REFERENCE = 'T', ///< Type reference for record fields.
+  ANY            = 'Y', ///< Generic type to hold any other type.
+};
+
 // == Any Type ==
-struct Any {};
+class Any {};
 
 // == Type Declarations ==
 class SimpleServer;
@@ -128,11 +145,6 @@ public:
 };
 
 /* === FieldBuffer === */
-typedef enum {
-  VOID = 0, INT, FLOAT, STRING, ENUM,
-  RECORD, SEQUENCE, FUNC, INSTANCE, ANY
-} FieldType;
-
 class _FakeFieldBuffer { FieldUnion *u; virtual ~_FakeFieldBuffer() {}; };
 
 union FieldUnion {
@@ -155,12 +167,12 @@ protected:
   FieldUnion        *buffermem;
   inline void        check ()      { if (PLIC_UNLIKELY (size() > capacity())) check_internal(); }
   inline uint        offset () const { const uint offs = 1 + (capacity() + 7) / 8; return offs; }
-  inline FieldType   type_at (uint n) const { return FieldType (buffermem[1 + n/8].bytes[n%8]); }
-  inline void        set_type (FieldType ft)    { buffermem[1 + size()/8].bytes[size()%8] = ft; }
-  inline uint        capacity () const          { return buffermem[0].capacity; }
-  inline uint        size () const              { return buffermem[0].index; }
-  inline FieldUnion& getu () const              { return buffermem[offset() + size()]; }
-  inline FieldUnion& addu (FieldType ft) { set_type (ft); FieldUnion &u = getu(); buffermem[0].index++; check(); return u; }
+  inline TypeKind    type_at  (uint n) const { return TypeKind (buffermem[1 + n/8].bytes[n%8]); }
+  inline void        set_type (TypeKind ft)  { buffermem[1 + size()/8].bytes[size()%8] = ft; }
+  inline uint        capacity () const       { return buffermem[0].capacity; }
+  inline uint        size () const           { return buffermem[0].index; }
+  inline FieldUnion& getu () const           { return buffermem[offset() + size()]; }
+  inline FieldUnion& addu (TypeKind ft) { set_type (ft); FieldUnion &u = getu(); buffermem[0].index++; check(); return u; }
   inline FieldUnion& uat (uint n) const { return n < size() ? upeek (n) : *(FieldUnion*) NULL; }
   explicit           FieldBuffer (uint _ntypes);
   explicit           FieldBuffer (uint, FieldUnion*, uint);
@@ -171,7 +183,6 @@ public:
   inline void add_evalue (int64  vint64)  { FieldUnion &u = addu (ENUM); u.vint64 = vint64; }
   inline void add_double (double vdouble) { FieldUnion &u = addu (FLOAT); u.vdouble = vdouble; }
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
-  inline void add_func   (const String &s) { FieldUnion &u = addu (FUNC); new (&u) String (s); }
   inline void add_object (uint64 objid)    { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
   inline void add_any    (const Any &vany) { FieldUnion &u = addu (ANY); new (&u) Any (vany); }
   inline void add_msgid  (uint64 h, uint64 l) { add_int64 (h); add_int64 (l); }
@@ -219,12 +230,11 @@ public:
   inline void               skip       () { if (PLIC_UNLIKELY (m_nth >= n_types())) check_request (0); m_nth++; }
   inline void               skip_msgid () { skip(); skip(); }
   inline uint               n_types    () { return m_fb->size(); }
-  inline FieldType          get_type   () { return m_fb->type_at (m_nth); }
+  inline TypeKind           get_type   () { return m_fb->type_at (m_nth); }
   inline int64              get_int64  () { FieldUnion &u = fb_getu (INT); return u.vint64; }
   inline int64              get_evalue () { FieldUnion &u = fb_getu (ENUM); return u.vint64; }
   inline double             get_double () { FieldUnion &u = fb_getu (FLOAT); return u.vdouble; }
   inline const String&      get_string () { FieldUnion &u = fb_getu (STRING); return *(String*) &u; }
-  inline const String&      get_func   () { FieldUnion &u = fb_getu (FUNC); return *(String*) &u; }
   inline uint64             get_object () { FieldUnion &u = fb_getu (INSTANCE); return u.vint64; }
   inline const Any&         get_any    () { FieldUnion &u = fb_getu (ANY); return *(Any*) &u; }
   inline const FieldBuffer& get_rec    () { FieldUnion &u = fb_getu (RECORD); return *(FieldBuffer*) &u; }
@@ -233,7 +243,6 @@ public:
   inline int64              pop_evalue () { FieldUnion &u = fb_popu (ENUM); return u.vint64; }
   inline double             pop_double () { FieldUnion &u = fb_popu (FLOAT); return u.vdouble; }
   inline const String&      pop_string () { FieldUnion &u = fb_popu (STRING); return *(String*) &u; }
-  inline const String&      pop_func   () { FieldUnion &u = fb_popu (FUNC); return *(String*) &u; }
   inline uint64             pop_object () { FieldUnion &u = fb_popu (INSTANCE); return u.vint64; }
   inline const Any&         pop_any    () { FieldUnion &u = fb_popu (ANY); return *(Any*) &u; }
   inline const FieldBuffer& pop_rec    () { FieldUnion &u = fb_popu (RECORD); return *(FieldBuffer*) &u; }
@@ -305,10 +314,9 @@ FieldBuffer::reset()
       buffermem[0].index--; // causes size()--
       switch (type_at (size()))
         {
-        case STRING:
-        case FUNC:    { FieldUnion &u = getu(); ((String*) &u)->~String(); }; break;
+        case STRING:    { FieldUnion &u = getu(); ((String*) &u)->~String(); }; break;
         case SEQUENCE:
-        case RECORD:  { FieldUnion &u = getu(); ((FieldBuffer*) &u)->~FieldBuffer(); }; break;
+        case RECORD:    { FieldUnion &u = getu(); ((FieldBuffer*) &u)->~FieldBuffer(); }; break;
         default: ;
         }
     }

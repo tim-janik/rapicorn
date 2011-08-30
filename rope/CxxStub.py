@@ -285,7 +285,7 @@ class Generator:
     s += 'operator>> (Plic::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
     s += '  Plic::FieldReader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
-    if el[1].storage in (Decls.INTERFACE):
+    if el[1].storage == Decls.INTERFACE:
       s += '  self.reserve (len);\n'
     else:
       s += '  self.resize (len);\n'

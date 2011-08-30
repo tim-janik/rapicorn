@@ -27,6 +27,7 @@
 #define PLIC_THROW_IF_FAIL(expr)                do { if (PLIC_LIKELY (expr)) break; PLIC_THROW ("failed to assert (" + #expr + ")"); } while (0)
 #define PLIC_THROW(msg)                         throw std::runtime_error (std::string() + __PRETTY_FUNCTION__ + ": " + msg)
 
+/// @namespace Plic The Plic namespace provides all PLIC functionality exported to C++.
 namespace Plic {
 
 /* === Prototypes === */
@@ -234,16 +235,19 @@ FieldBuffer::type_name (int field_type)
 {
   switch (field_type)
     {
-    case VOID:        return "VOID";
-    case INT:         return "INT";
-    case FLOAT:       return "FLOAT";
-    case STRING:      return "STRING";
-    case ENUM:        return "ENUM";
-    case RECORD:      return "RECORD";
-    case SEQUENCE:    return "SEQUENCE";
-    case FUNC:        return "FUNC";
-    case INSTANCE:    return "INSTANCE";
-    default:          return string_printf ("<invalid:%d>", field_type);
+    case UNTYPED:         return "UNTYPED";
+    case VOID:            return "VOID";
+    case INT:             return "INT";
+    case FLOAT:           return "FLOAT";
+    case STRING:          return "STRING";
+    case ENUM:            return "ENUM";
+    case SEQUENCE:        return "SEQUENCE";
+    case RECORD:          return "RECORD";
+    case INSTANCE:        return "INSTANCE";
+    case FUNC:            return "FUNC";
+    case TYPE_REFERENCE:  return "TYPE_REFERENCE";
+    case ANY:             return "ANY";
+    default:              return string_printf ("<invalid:%d>", field_type);
     }
 }
 
@@ -259,16 +263,19 @@ FieldBuffer::to_string() const
       const char *tn = tname.c_str();
       switch (fbr.get_type())
         {
-        case VOID:     s += string_printf (", %s", tn); fbr.skip();                               break;
-        case INT:      s += string_printf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
-        case FLOAT:    s += string_printf (", %s: %.17g", tn, fbr.pop_double());                  break;
-        case STRING:   s += string_printf (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
-        case ENUM:     s += string_printf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
-        case RECORD:   s += string_printf (", %s: %p", tn, &fbr.pop_rec());                       break;
-        case SEQUENCE: s += string_printf (", %s: %p", tn, &fbr.pop_seq());                       break;
-        case FUNC:     s += string_printf (", %s: %s", tn, fbr.pop_func().c_str());               break;
-        case INSTANCE: s += string_printf (", %s: %p", tn, (void*) fbr.pop_object());             break;
-        default:       s += string_printf (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
+        case UNTYPED:
+        case FUNC:
+        case TYPE_REFERENCE:
+        case VOID:      s += string_printf (", %s", tn); fbr.skip();                               break;
+        case INT:       s += string_printf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
+        case FLOAT:     s += string_printf (", %s: %.17g", tn, fbr.pop_double());                  break;
+        case STRING:    s += string_printf (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
+        case ENUM:      s += string_printf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
+        case SEQUENCE:  s += string_printf (", %s: %p", tn, &fbr.pop_seq());                       break;
+        case RECORD:    s += string_printf (", %s: %p", tn, &fbr.pop_rec());                       break;
+        case INSTANCE:  s += string_printf (", %s: %p", tn, (void*) fbr.pop_object());             break;
+        case ANY:       s += string_printf (", %s: %p", tn, &fbr.pop_any());                       break;
+        default:        s += string_printf (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
         }
     }
   s += '}';

@@ -43,12 +43,13 @@ n_columns_from_type (const Type &type)
     case INT:
     case FLOAT:
     case STRING:
-    case ARRAY:
-    case OBJECT:
-    case CHOICE:
-    case TYPE_REFERENCE:
+    case ENUM:
     case SEQUENCE:
+    case INSTANCE:
     case FUNC:
+    case TYPE_REFERENCE:
+      // case ANY:
+    case ARRAY:
       return 1;
     case RECORD:
       return 1; // FIXME: type.n_fields();

@@ -125,11 +125,11 @@ test_type_api ()
     assert (t.aux_string ("default") == "");
     assert (t.hints() == ":");
   }
-  { // Choice
+  { // Enum
     Type t = Type::lookup ("RapicornTest::Enum1");
     assert (t.istype());
-    assert (t.storage() == CHOICE);
-    assert (t.storage_name () == String ("CHOICE"));
+    assert (t.storage() == ENUM);
+    assert (t.storage_name () == String ("ENUM"));
     assert (t.name() == t.ident());
     assert (t.ident() == "Enum1");
     assert (t.label() == "Enum1");

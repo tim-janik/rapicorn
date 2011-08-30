@@ -50,7 +50,9 @@ storage_name (BaseValue::Storage storage)
 }
 
 static const uint32 value_storage_types[] = {
-  BaseValue::INT, BaseValue::FLOAT, BaseValue::STRING, BaseValue::ARRAY, BaseValue::OBJECT,
+  BaseValue::INT, BaseValue::FLOAT, BaseValue::STRING, ENUM,
+  TYPE_REFERENCE, // FIXME: putting type refernces into BaseValue is broken
+  BaseValue::OBJECT, BaseValue::ARRAY,
 };
 
 BaseValue::BaseValue (Storage value_type) :

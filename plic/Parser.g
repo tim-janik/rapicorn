@@ -148,10 +148,10 @@ class YYGlobals (object):
     elif atype.storage in (Decls.RECORD, Decls.SEQUENCE, Decls.FUNC, Decls.INTERFACE):
       if adef != 0:
         raise AttributeError ('expecting null initializer for structured argument: %s = %s' % (aident, adef))
-    elif atype.storage in (Decls.STRING):
+    elif atype.storage == Decls.STRING:
       if not TS (adef):
         raise AttributeError ('expecting string initializer: %s = %s' % (aident, adef))
-    elif atype.storage in (Decls.ENUM):
+    elif atype.storage == Decls.ENUM:
       if not atype.has_option (number = adef):
         raise AttributeError ('encountered invalid enum initializer: %s = %s' % (aident, adef))
     else:

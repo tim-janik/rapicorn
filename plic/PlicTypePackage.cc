@@ -175,12 +175,10 @@ TypeInfo::parse_type_info (uint        length,
   const byte *dp = data, *boundary = dp + length;
   // parse \n__? storage type
   return_if (dp + 4 > boundary, ERRPREMATURE);
-  const bool storageok = dp[0] == '\n' && dp[1] == '_' &&
-                         ((dp[2] == '_' && strchr ("idsacA", dp[3]) != 0) ||
-                          (strchr ("ET", dp[2]) && dp[3] == 's') ||
-                          (strchr ("QR", dp[2]) && dp[3] == 'a'));
+  const bool storageok = dp[0] == '\n' && dp[1] == '_' && dp[2] == '_' &&
+                         strchr ("idsEQRCTYa", dp[3]) != 0; // FIXME: 'a' is just for Rapicorn::Array
   return_if (!storageok, "invalid type format");
-  storage = dp[3] + (dp[2] == '_' ? 0 : dp[2]) * 256;
+  storage = dp[3];
   dp += 4;
   // store and validate (skip) type name
   const byte *typenamep = dp;
@@ -195,19 +193,19 @@ TypeInfo::parse_type_info (uint        length,
   err = parse_strings (auxcount, &dp, boundary, &auxdata);
   return_if (err != "", err);
   // parse type specific counter
-  if (storage == 'R' * 256 + 'a' || // record
-      storage == 'E' * 256 + 's' || // enum
-      storage == 'c')               // class
+  if (storage == 'R' || // record
+      storage == 'E' || // enum
+      storage == 'C')   // class
     {
       err = parse_int (&dp, boundary, &nnnn);
       return_if (err != "", err);
     }
   // store type data pointer
-  if (storage == 'T' * 256 + 's' || // type reference
-      storage == 'E' * 256 + 's' || // enum
-      storage == 'R' * 256 + 'a' || // record
-      storage == 'Q' * 256 + 'a' || // sequence
-      storage == 'c')               // class
+  if (storage == 'T' || // type reference
+      storage == 'E' || // enum
+      storage == 'R' || // record
+      storage == 'Q' || // sequence
+      storage == 'C')   // class
     {
       tdata = dp;
       tlength = boundary - dp;

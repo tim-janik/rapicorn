@@ -30,7 +30,7 @@ typedef BaseObject Object;
 struct BaseValue {
   typedef enum {
     INT = Rapicorn::INT, FLOAT = Rapicorn::FLOAT, STRING = Rapicorn::STRING,
-    ARRAY = Rapicorn::ARRAY, OBJECT = Rapicorn::OBJECT,
+    ARRAY = Rapicorn::ARRAY, OBJECT = Rapicorn::INSTANCE,
   } Storage;
 private:
   union { int64 i64; long double ldf; void *p; } u;

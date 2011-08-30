@@ -7,6 +7,7 @@
 #include <vector>
 #include <map>
 #include <tr1/memory>   // shared_ptr
+#include <rcore/plicutils.hh>
 
 #if !defined __RAPICORN_CORE_HH__ && !defined __RAPICORN_BUILD__
 #error Only <rapicorn-core.hh> can be included directly.
