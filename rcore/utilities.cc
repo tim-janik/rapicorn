@@ -564,10 +564,7 @@ VirtualTypeid::cxx_demangle (const char *mangled_identifier)
   return result;
 }
 
-/**
- * @namespace Rapicorn::Path
- * The Rapicorn::Path namespace covers function for file path manipulation and evaluation.
- */
+/// @namespace Rapicorn::Path The Rapicorn::Path namespace provides functions for file path manipulation and testing.
 namespace Path {
 
 /**
