@@ -23,7 +23,7 @@ Parser.py: Parser.g
 EXTRA_DIST += Parser.g Parser.py
 MAINTAINERCLEANFILES += Parser.py
 
-CONFIGINT = "pyutilsdir" : "${abs_srcdir}",	"PLIC_VERSION" : "${VERSION}"
+CONFIGINT = "pyutilsdir" : "${abs_srcdir}",	"PLIC_VERSION" : "${VERSION}", "INTERN" : 1
 CONFIGBIN = "pyutilsdir" : "${pyutilsdir}",	"PLIC_VERSION" : "${VERSION}"
 
 # build plic executables
@@ -45,10 +45,22 @@ ${PLICV}: plic.py Parser.py
 	$(Q) cp -p xgen-$(@F) $@
 	$(Q) rm -f xgen-$(@F) xgen-$(@F).errors
 
+# == Plic builtins ==
+EXTRA_DIST = builtins.typ
+builtins.cc: $(srcdir)/builtins.idl ${PLICINT} plic.py
+	$(AM_V_GEN)
+	$(Q) ${PLICINT} --system-typedefs $< -G TypeMap -o $(@F).typ
+	$(Q) ${PLICINT} --cc-intern-file $(@F).typ > xtmp-$(@F)
+	$(Q) cp -p xtmp-$(@F) $@
+	$(Q) rm -f $(@F).typ xtmp-$(@F)
+$(srcdir)/../rcore/plicutypes.cc: builtins.cc
+CLEANFILES += builtins.cc
+noinst_DATA = builtins.cc
+
 # install plic support module yapps2runtime.py
 pyutilsdir     = $(libdir)/${PLICV}/pyutils
-plicbackends   = PrettyDump.py TypePackage.py Rapicorn.py GType.py
-pyutils_PYTHON = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${plicbackends} PlicTypePackage.cc
+plicbackends   = PrettyDump.py TypeMap.py Rapicorn.py GType.py
+pyutils_PYTHON = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${plicbackends}
 
 ### plic-intern tests
 check-plic-intern-cc-type-package-parser:

@@ -292,7 +292,7 @@ def ASi (string_candidate): # assert i18n string
   if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
 def AIn (identifier):   # assert new identifier
   if (yy.namespace_lookup (identifier, astype = True, asconst = True) or
-      (not yy.config.get ('system-typedefs', 0) and identifier in reservedkeywords)):
+      (identifier in reservedkeywords)):
     raise TypeError ('redefining existing identifier: %s' % identifier)
 def AIi (identifier):   # assert interface identifier
   ti = yy.namespace_lookup (identifier, astype = True)

@@ -1,5 +1,5 @@
 # Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-"""PLIC-Package - Binary Type Package generator for PLIC
+"""PlicTypeMap - Binary Type Map generator for PLIC
 
 More details at http://www.testbit.eu/plic
 """
@@ -16,7 +16,9 @@ class Encoder:
     self.string0 = string_offset
     self.strings = ''
     self.stringm = {}
-    print "offsets:", self.node0, self.list0, self.string0
+    if 0: # debug segment offsets
+      import sys
+      print >>sys.stderr, "PlicTypeMap:Encoder: segment offsets:", self.node0, self.list0, self.string0
   def segment_offsets (self):
     return (self.node0, self.list0, self.string0)
   def segment_lengths (self):
@@ -86,14 +88,14 @@ class Encoder:
   def encode_double (num):
     return struct.pack ('<d', num)      # little endian double
 
-def encode_type_package (nodes):
+def encode_type_map (nodes):
   def pad (string, sz = 8, c = '\0'):
     l = sz - len (string) % sz
     return string + c * (l % sz)
   def align (l, sz = 8):
     return ((l + sz - 1) / sz) * sz
   def header (sz, ooo, idx):
-    s = 'PlicPackageT\0\0\0\0'
+    s = 'PlicTypeMap\0\0\0\0\0'
     s += Encoder.encode_unsigned (sz) + '\0\0\0\0' + '\0\0\0\0' + '\0\0\0\0'
     s += Encoder.encode_unsigned (ooo[0])
     s += Encoder.encode_unsigned (ooo[1])
@@ -185,7 +187,7 @@ class Generator:
     types.sort (lambda o1, o2: cmp (o1.name, o2.name))
     # FIXME: filter types for isimpl
     return types
-  def generate_pack (self, namespace_list):
+  def generate_pack (self, namespace_list, strip_system_typedefs):
     # sort namespaces for binary lookups
     namespace_list = namespace_list[:]  # list copy
     namespace_list.sort (lambda o1, o2: cmp (o1.name, o2.name))
@@ -200,8 +202,16 @@ class Generator:
     for tp in types:
       t = self.generate_type (tp)
       tsl += [ t ]
-    # encode package from serialized types
-    return encode_type_package (tsl)
+    # strip builtin typedefs
+    if strip_system_typedefs:
+      import re
+      otsl,tsl = tsl,[]
+      for tp in otsl:
+        tid,fqn,aux,memb = tp
+        fqn = re.sub (r'^Plic::__system_typedefs__::__builtin__', '', fqn)
+        tsl += [ (tid, fqn, aux, memb) ]
+    # encode type map from serialized types
+    return encode_type_map (tsl)
 
 def error (msg):
   import sys
@@ -213,7 +223,7 @@ def generate (namespace_list, **args):
   config = { 'output' : 'plic.out' }
   config.update (args)
   gg = Generator()
-  packdata = gg.generate_pack (namespace_list)
+  packdata = gg.generate_pack (namespace_list, config['system-typedefs'])
   outputname = config['output']
   # print strcquote (packdata)
   # write data into a temporary file in the same dir as outputname

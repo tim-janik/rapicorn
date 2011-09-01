@@ -5,6 +5,7 @@ TESTPLIC = PYTHONPATH="$$PYTHONPATH:$(srcdir)/.." ../plic-@PLIC_VERSION@ $(DEBUG
 
 noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
+ptptest_LDFLAGS = -pthread -lpthread
 
 EXTRA_DIST += testpass.idl testfail.idl include-f1.idl include-f2.idl include-p1.idl include-p2.idl
 EXTRA_DIST += testfail.ref testrapicorn.ref
@@ -36,11 +37,15 @@ check-testfail: $(srcdir)/testfail.idl
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testfail.ref'" "'$(TSTOUT)'"
 check: check-testfail
 
-check-plic-format-TypePackage: ptptest $(srcdir)/testpass.idl
-	$(Q) ${TESTPLIC} $(srcdir)/testpass.idl -G TypePackage  ; eval "$$TSTDIAGNOSE" "'plic -G TypePackage'"
+check-plic-standard-types: ptptest
+	$(Q) ./ptptest --tests
+check: check-plic-standard-types
+
+check-plic-format-TypeMap: ptptest $(srcdir)/testpass.idl
+	$(Q) ${TESTPLIC} $(srcdir)/testpass.idl -G TypeMap  ; eval "$$TSTDIAGNOSE" "'plic -G TypeMap'"
 	$(Q) ./ptptest plic.out $(TESTPASS_AUXTESTS) >/dev/null ; eval "$$TSTDIAGNOSE" "'ptptest aux-tests'"
 	$(Q) rm -f plic.out
-check: check-plic-format-TypePackage
+check: check-plic-format-TypeMap
 
 check-plic-format-Rapicorn: $(srcdir)/testpass.idl
 	$(Q) ${TESTPLIC} $(srcdir)/testpass.idl -G Rapicorn -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"

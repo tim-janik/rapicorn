@@ -3,7 +3,6 @@
 
 #include "plicutypes.cc" // includes TypeCode parser
 
-#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -33,21 +32,12 @@
 /// @namespace Plic The Plic namespace provides all PLIC functionality exported to C++.
 namespace Plic {
 
+// == FieldUnion ==
+PLIC_STATIC_ASSERT (sizeof (FieldUnion::smem) <= sizeof (FieldUnion::bytes));
+PLIC_STATIC_ASSERT (sizeof (FieldUnion::bmem) <= 2 * sizeof (FieldUnion::bytes)); // FIXME
+
 /* === Prototypes === */
 static String string_printf (const char *format, ...) PLIC_PRINTF (1, 2);
-
-// == TypeCode ==
-bool
-TypeCode::untyped () const
-{
-  return m_package == NULL && m_type == NULL;
-}
-
-bool
-TypeCode::operator!= (const TypeCode &o) const
-{
-  return !operator== (o);
-}
 
 // === Utilities ===
 static String
@@ -83,6 +73,24 @@ error_printf (const char *format, ...)
   va_start (args, format);
   error_vprintf (format, args);
   va_end (args);
+}
+
+// == Any ==
+void
+Any::set_type_simple (TypeKind newkind)
+{
+  switch (kind())
+    {
+    case STRING:        ((String*) &u)->~String();      break;
+    case ANY:           delete u.vany;                  break;
+    default: ;
+    }
+  // kind = UNTYPED
+}
+
+Any::~Any ()
+{
+  set_type_simple (UNTYPED);
 }
 
 /* === SmartHandle === */

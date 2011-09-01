@@ -571,32 +571,6 @@ binary_lookup_tests()
 }
 REGISTER_TEST ("General/Binary Lookups", binary_lookup_tests);
 
-static void
-list_types (std::string package_file)
-{
-  using namespace Plic;
-  using Plic::uint;
-  TypePackage *tp = TypePackage::load (package_file);
-  if (!tp)
-    perror ("loading type package"), abort();
-  errno = 0;
-  printf ("TYPES: %zu\n", tp->type_count());
-  for (uint i = 0; i < tp->type_count(); i++)
-    {
-      const TypeCode tcode = tp->type (i);
-      printf ("%s\n", tcode.pretty ("  ").c_str());
-      // verify type search
-      const TypeCode other = tp->find_type (tcode.name());
-      if (other != tcode)
-        {
-          errno = ENXIO;
-          perror (std::string ("searching type: " + tcode.name()).c_str()), abort();
-        }
-    }
-  if (errno)
-    perror ("checking type package"), abort();
-}
-
 static void // Test Mutextes before g_thread_init()
 test_before_thread_init()
 {
@@ -639,12 +613,6 @@ main (int   argc,
       init_core (app_ident, &argc, argv);
       SomeObject *obj = new SomeObject();
       printout ("0x%016llx\n", obj->locatable_id());
-      return 0;
-    }
-
-  if (argc >= 3 && String ("--list-types") == argv[1])
-    {
-      list_types (argv[2]);
       return 0;
     }
 

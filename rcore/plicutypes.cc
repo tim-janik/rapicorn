@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include <errno.h>
 #include <malloc.h>
+#include <assert.h>
 
+#define MAX(a, b)                       (((a) >= (b)) ? (a) : (b))
 #define __PLIC_return_EFAULT(v)         do { errno = EFAULT; return (v); } while (0)
 
 namespace Plic {
@@ -31,35 +33,16 @@ type_kind_name (TypeKind type_kind)
     }
 }
 
-class InternalList;
-class InternalString;
-
-struct InternalPackage {
-  uint32_t      magic[4];       // "PlicPackageT\0\0\0\0"
-  uint32_t      length;         // package length (excludes tail)
-  uint32_t      pad0, pad1, pad2;
-  uint32_t      seg_types;      // type code segment offset
-  uint32_t      seg_lists;      // list segment offset
-  uint32_t      seg_strings;    // string segment offset
-  uint32_t      pad3;
-  uint32_t      types;          // list[type index] index; public types
-  uint32_t      pad4, pad5, pad6;
-  bool          check_tail      () { return 0x00000000 == *(uint32_t*) (((char*) this) + length); }
-  bool          check_magic     () { return (magic[0] == 0x63696c50 && magic[1] == 0x6b636150 &&
-                                             magic[2] == 0x54656761 && magic[3] == 0x00000000); }
-  bool          check_lengths   (size_t memlength)
-  {
-    return (memlength > sizeof (*this) && length + 4 <= memlength &&
-            seg_types >= sizeof (*this) && seg_lists >= seg_types && seg_strings >= seg_lists &&
-            length >= seg_strings);
-  }
-  InternalList*   internal_list   (uint32_t offset);
-  InternalType*   internal_type   (uint32_t offset);
-  InternalString* internal_string (uint32_t offset);
-  std::string     simple_string   (uint32_t offset);
+// == PlicTypeMap classes ==
+struct InternalList {
+  uint32_t      length;         // in members
+  uint32_t      items[];        // flexible array member
 };
-
-struct InternalType {
+struct InternalString {
+  uint32_t      length;         // in bytes
+  char          chars[];        // flexible array member
+};
+struct TypeCode::InternalType {
   uint32_t      tkind;          // type kind
   uint32_t      name;           // string index
   uint32_t      aux_strings;    // list[string index] index; assignment strings
@@ -70,210 +53,314 @@ struct InternalType {
   // sequence:  type index; InternalType for sequence field
   // reference: string index; name of referenced type
 };
-
-struct InternalList {
-  uint32_t      length;         // in members
-  uint32_t      items[];        // flexible array member
+typedef TypeCode::InternalType InternalType;
+struct InternalMap {
+  uint32_t      magic[4];       // "PlicTypeMap\0\0\0\0\0"
+  uint32_t      length;         // typemap length (excludes tail)
+  uint32_t      pad0, pad1, pad2;
+  uint32_t      seg_types;      // type code segment offset
+  uint32_t      seg_lists;      // list segment offset
+  uint32_t      seg_strings;    // string segment offset
+  uint32_t      pad3;
+  uint32_t      types;          // list[type index] index; public types
+  uint32_t      pad4, pad5, pad6;
+  bool          check_tail      () { return 0x00000000 == *(uint32_t*) (((char*) this) + length); }
+  bool          check_magic     () { return (magic[0] == 0x63696c50 && magic[1] == 0x65707954 &&
+                                             magic[2] == 0x0070614d && magic[3] == 0x00000000); }
+  bool          check_lengths   (size_t memlength)
+  {
+    return (memlength > sizeof (*this) && length + 4 <= memlength &&
+            seg_types >= sizeof (*this) && seg_lists >= seg_types && seg_strings >= seg_lists &&
+            length >= seg_strings);
+  }
+  InternalList*   internal_list   (uint32_t offset) const;
+  InternalType*   internal_type   (uint32_t offset) const;
+  InternalString* internal_string (uint32_t offset) const;
 };
-
-struct InternalString {
-  uint32_t      length;         // in bytes
-  char          chars[];        // flexible array member
+static const char zero_type_or_map[MAX (sizeof (InternalMap), sizeof (InternalType))] = { 0, };
+struct TypeCode::MapHandle {
+  const InternalMap *const imap;
+private:
+  volatile uint    m_ref_count;
+  const size_t     m_length;
+  const bool       m_needs_free;
+  int              m_status;
+public:
+  int             status          ()                { return m_status; }
+  InternalList*   internal_list   (uint32_t offset) { return imap->internal_list (offset); }
+  InternalType*   internal_type   (uint32_t offset) { return imap->internal_type (offset); }
+  InternalString* internal_string (uint32_t offset) { return imap->internal_string (offset); }
+  std::string
+  simple_string (uint32_t offset)
+  {
+    InternalString *is = internal_string (offset);
+    return PLIC_LIKELY (is) ? std::string (is->chars, is->length) : "";
+  }
+  MapHandle*
+  ref()
+  {
+    __sync_fetch_and_add (&m_ref_count, +1);
+    return this;
+  }
+  void
+  unref()
+  {
+    uint o = __sync_fetch_and_add (&m_ref_count, -1);
+    if (o -1 == 0)
+      delete this;
+  }
+  ~MapHandle()
+  {
+    if (m_needs_free)
+      free (const_cast<InternalMap*> (imap));
+    memset (this, 0, sizeof (*this));
+  }
+  static TypeMap
+  create_type_map (void *addr, size_t length, bool needs_free)
+  {
+    MapHandle *handle = new MapHandle (addr, length, needs_free);
+    assert (handle->m_ref_count == 0);
+    TypeMap type_map (handle);
+    assert (handle->m_ref_count == 1);
+    return type_map;
+  }
+  static TypeMap
+  create_error_type_map (int _status)
+  {
+    MapHandle *handle = new MapHandle (const_cast<char*> (zero_type_or_map), 0, false);
+    assert (handle->m_ref_count == 0);
+    handle->m_status = _status;
+    TypeMap type_map (handle);
+    assert (handle->m_ref_count == 1);
+    return type_map;
+  }
+private:
+  MapHandle (void *addr, size_t length, bool needs_free) :
+    imap ((InternalMap*) addr), m_ref_count (0), m_length (length),
+    m_needs_free (needs_free), m_status (0)
+  {}
+  explicit MapHandle (const MapHandle&);
+  void     operator= (const MapHandle&);
 };
 
 InternalType*
-InternalPackage::internal_type (uint32_t offset)
+InternalMap::internal_type (uint32_t offset) const
 {
-  if (offset & 0x3 || offset < seg_types || offset + sizeof (InternalType) > seg_lists)
+  if (PLIC_UNLIKELY (offset & 0x3 || offset < seg_types || offset + sizeof (InternalType) > seg_lists))
     __PLIC_return_EFAULT (NULL);
   return (InternalType*) (((char*) this) + offset);
 }
 
 InternalList*
-InternalPackage::internal_list (uint32_t offset)
+InternalMap::internal_list (uint32_t offset) const
 {
-  if (offset & 0x3 || offset < seg_lists || offset + sizeof (InternalList) > seg_strings)
+  if (PLIC_UNLIKELY (offset & 0x3 || offset < seg_lists || offset + sizeof (InternalList) > seg_strings))
     __PLIC_return_EFAULT (NULL);
   InternalList *il = (InternalList*) (((char*) this) + offset);
-  if (offset + sizeof (*il) + il->length * 4 > seg_strings)
+  if (PLIC_UNLIKELY (offset + sizeof (*il) + il->length * 4 > seg_strings))
     __PLIC_return_EFAULT (NULL);
   return il;
 }
 
 InternalString*
-InternalPackage::internal_string (uint32_t offset)
+InternalMap::internal_string (uint32_t offset) const
 {
-  if (offset & 0x3 || offset < seg_strings || offset + sizeof (InternalString) > length)
+  if (PLIC_UNLIKELY (offset & 0x3 || offset < seg_strings || offset + sizeof (InternalString) > length))
     __PLIC_return_EFAULT (NULL);
   InternalString *is = (InternalString*) (((char*) this) + offset);
-  if (offset + sizeof (*is) + is->length > length)
+  if (PLIC_UNLIKELY (offset + sizeof (*is) + is->length > length))
     __PLIC_return_EFAULT (NULL);
   return is;
 }
 
-std::string
-InternalPackage::simple_string (uint32_t offset)
-{
-  InternalString *is = internal_string (offset);
-  return is ? std::string (is->chars, is->length) : "";
-}
-
-TypePackage::TypePackage (InternalPackage *tp) :
-  m_package (tp)
+TypeMap::TypeMap (TypeCode::MapHandle *handle) :
+  m_handle (handle->ref())
 {}
 
-TypePackage::~TypePackage ()
+TypeMap::TypeMap (const TypeMap &src) :
+  m_handle (src.m_handle->ref())
+{}
+
+TypeMap&
+TypeMap::operator= (const TypeMap &src)
 {
-  if (m_package)
-    free (m_package);
+  TypeCode::MapHandle *old = m_handle;
+  m_handle = src.m_handle->ref();
+  old->unref();
+  return *this;
+}
+
+TypeMap::~TypeMap ()
+{
+  m_handle->unref();
+  m_handle = NULL;
+}
+
+int
+TypeMap::error_status ()
+{
+  return m_handle->status();
 }
 
 size_t
-TypePackage::type_count () const
+TypeMap::type_count () const
 {
-  InternalList *il = m_package->internal_list (m_package->types);
+  InternalList *il = m_handle->internal_list (m_handle->imap->types);
   return il ? il->length : 0;
 }
 
 const TypeCode
-TypePackage::type (size_t index) const
+TypeMap::type (size_t index) const
 {
-  InternalList *il = m_package->internal_list (m_package->types);
+  InternalList *il = m_handle->internal_list (m_handle->imap->types);
   if (il && index < il->length)
     {
-      Plic::InternalType *it = m_package->internal_type (il->items[index]);
+      Plic::InternalType *it = m_handle->internal_type (il->items[index]);
       if (it)
-        return TypeCode (m_package, it);
+        return TypeCode (m_handle, it);
     }
-  __PLIC_return_EFAULT (TypeCode (NULL, NULL));
+  __PLIC_return_EFAULT (TypeCode::notype (m_handle));
 }
 
-const TypeCode
-TypePackage::find_type (std::string name) const
+struct TypeRegistry {
+  typedef std::vector<TypeMap> TypeMapVector;
+  explicit  TypeRegistry() : builtins (load_builtins()) { pthread_spin_init (&typemap_spinlock, 0 /* pshared */); }
+  /*dtro*/ ~TypeRegistry()   { pthread_spin_destroy (&typemap_spinlock); }
+  size_t    size()           { lock(); size_t sz = typemaps.size(); unlock(); return sz; }
+  TypeMap   nth (size_t n)   { lock(); TypeMap tp = n < typemaps.size() ? typemaps[n] : builtins; unlock(); return tp; }
+  void      add (TypeMap tp) { lock(); typemaps.push_back (tp); unlock(); }
+  TypeMap   standard()       { return builtins; }
+private:
+  void      lock()           { pthread_spin_lock (&typemap_spinlock); }
+  void      unlock()         { pthread_spin_unlock (&typemap_spinlock); }
+  static TypeMap     load_builtins ();
+  pthread_spinlock_t typemap_spinlock;
+  TypeMapVector      typemaps;
+  TypeMap            builtins;
+};
+static TypeRegistry *type_registry = NULL;
+
+static inline void
+type_registry_initialize()
 {
-  InternalList *il = m_package->internal_list (m_package->types);
+  if (PLIC_UNLIKELY (!type_registry))
+    {
+      TypeRegistry *tr = new TypeRegistry();
+      __sync_synchronize();
+      if (!__sync_bool_compare_and_swap (&type_registry, NULL, tr))
+        delete tr;
+    }
+}
+
+TypeCode
+TypeMap::lookup (std::string name)
+{
+  type_registry_initialize();
+  size_t sz = type_registry->size();
+  for (size_t i = 0; i < sz; i++)
+    {
+      TypeMap tp = type_registry->nth (i);
+      if (PLIC_UNLIKELY (tp.error_status()))
+        break;
+      TypeCode tc = tp.lookup_local (name);
+      if (PLIC_UNLIKELY (!tc.untyped()))
+        return tc;
+    }
+  return type_registry->standard().lookup_local (name);
+}
+
+TypeCode
+TypeMap::lookup_local (std::string name) const
+{
+  InternalList *il = m_handle->internal_list (m_handle->imap->types);
   const size_t clen = name.size();
   const char* cname = name.data(); // not 0-terminated
-  if (il)
-    for (size_t i = 0; i < il->length; i++)
+  if (PLIC_LIKELY (il))
+    for (size_t i = 0; PLIC_LIKELY (i < il->length); i++)
       {
-        InternalType *it = m_package->internal_type (il->items[i]);
-        InternalString *is = it ? m_package->internal_string (it->name) : NULL;
-        if (is && clen == is->length && strncmp (cname, is->chars, clen) == 0)
-          return TypeCode (m_package, it);
+        InternalType *it = m_handle->internal_type (il->items[i]);
+        InternalString *is = PLIC_LIKELY (it) ? m_handle->internal_string (it->name) : NULL;
+        if (PLIC_UNLIKELY (is && clen == is->length && strncmp (cname, is->chars, clen) == 0))
+          return TypeCode (m_handle, it);
       }
-  return TypeCode (NULL, NULL);
+  return TypeCode::notype (m_handle);
 }
 
-static char* /* return malloc()-ed buffer containing a full read of FILE */
-file_memread (FILE   *stream,
-              size_t *lengthp)
-{
-  size_t sz = 256;
-  char *malloc_string = (char*) malloc (sz);
-  if (!malloc_string)
-    return NULL;
-  char *start = malloc_string;
-  errno = 0;
-  while (!feof (stream))
-    {
-      size_t bytes = fread (start, 1, sz - (start - malloc_string), stream);
-      if (bytes <= 0 && ferror (stream) && errno != EAGAIN)
-        {
-          start = malloc_string; // error/0-data
-          break;
-        }
-      start += bytes;
-      if (start == malloc_string + sz)
-        {
-          bytes = start - malloc_string;
-          sz *= 2;
-          char *newstring = (char*) realloc (malloc_string, sz);
-          if (!newstring)
-            {
-              start = malloc_string; // error/0-data
-              break;
-            }
-          malloc_string = newstring;
-          start = malloc_string + bytes;
-        }
-    }
-  int savederr = errno;
-  *lengthp = start - malloc_string;
-  if (!*lengthp)
-    {
-      free (malloc_string);
-      malloc_string = NULL;
-    }
-  errno = savederr;
-  return malloc_string;
-}
-
-TypePackage*
-TypePackage::load (std::string filename)
-{
-  FILE *file = fopen (filename.c_str(), "r");
-  if (!file)
-    return NULL; // errno set
-  size_t length = 0;
-  char *contents = file_memread (file, &length);
-  int savederr = errno;
-  fclose (file);
-  errno = savederr;
-  InternalPackage *ip = (InternalPackage*) contents;
-  if (!contents || length < sizeof (*ip) + 4)
-    {
-      if (contents)
-        free (contents);
-      errno = ENODATA;
-      return NULL;
-    }
-  if (!ip->check_magic() || !ip->check_lengths (length) || !ip->check_tail())
-    {
-      free (contents);
-      errno = ELIBBAD;
-      return NULL;
-    }
-  TypePackage *tp = new TypePackage (ip);
-  return tp;
-}
-
-TypeCode::TypeCode (InternalPackage *ip, InternalType *it) :
-  m_package (ip), m_type (it)
+TypeCode::TypeCode (MapHandle *handle, InternalType *itype) :
+  m_handle (handle->ref()), m_type (itype)
 {}
+
+TypeCode::TypeCode (const TypeCode &clone) :
+  m_handle (clone.m_handle->ref()), m_type (clone.m_type)
+{}
+
+TypeCode&
+TypeCode::operator= (const TypeCode &clone)
+{
+  m_handle->unref();
+  m_handle = clone.m_handle->ref();
+  return *this;
+}
+
+TypeCode::~TypeCode ()
+{
+  m_type = NULL;
+  m_handle->unref();
+  m_handle = NULL;
+}
+
+TypeCode
+TypeCode::notype (MapHandle *handle)
+{
+  return TypeCode (handle, (InternalType*) zero_type_or_map);
+}
+
+bool
+TypeCode::untyped () const
+{
+  return m_handle == NULL && m_type == NULL;
+}
+
+bool
+TypeCode::operator!= (const TypeCode &o) const
+{
+  return !operator== (o);
+}
 
 TypeKind
 TypeCode::kind () const
 {
-  return TypeKind (m_type->tkind);
+  return PLIC_LIKELY (m_type) ? TypeKind (m_type->tkind) : UNTYPED;
 }
 
 std::string
 TypeCode::kind_name () const
 {
-  return type_kind_name (TypeKind (m_type->tkind));
+  return type_kind_name (kind());
 }
 
 std::string
 TypeCode::name () const
 {
-  return m_package->simple_string (m_type->name);
+  return PLIC_LIKELY (m_handle) ? m_handle->simple_string (m_type->name) : "<broken>";
 }
 
 size_t
 TypeCode::aux_count () const
 {
-  InternalList *il = m_package->internal_list (m_type->aux_strings);
+  if (PLIC_UNLIKELY (!m_handle) || PLIC_UNLIKELY (!m_type))
+    return 0;
+  InternalList *il = m_handle->internal_list (m_type->aux_strings);
   return il ? il->length : 0;
 }
 
 std::string
 TypeCode::aux_data (size_t index) const // name=utf8data string
 {
-  InternalList *il = m_package->internal_list (m_type->aux_strings);
+  InternalList *il = m_handle->internal_list (m_type->aux_strings);
   if (!il || index > il->length)
     __PLIC_return_EFAULT ("");
-  return m_package->simple_string (il->items[index]);
+  return m_handle->simple_string (il->items[index]);
 }
 
 std::string
@@ -281,11 +368,11 @@ TypeCode::aux_value (std::string key) const // utf8data string
 {
   const size_t clen = key.size();
   const char* cname = key.data(); // not 0-terminated
-  InternalList *il = m_package->internal_list (m_type->aux_strings);
+  InternalList *il = m_handle->internal_list (m_type->aux_strings);
   if (il)
     for (size_t i = 0; i < il->length; i++)
       {
-        InternalString *is = m_package->internal_string (il->items[i]);
+        InternalString *is = m_handle->internal_string (il->items[i]);
         if (is && clen < is->length && is->chars[clen] == '=' && strncmp (cname, is->chars, clen) == 0)
           return std::string (is->chars + clen + 1, is->length - clen - 1);
       }
@@ -297,22 +384,22 @@ TypeCode::enum_count () const
 {
   if (kind() != ENUM)
     return 0;
-  InternalList *il = m_package->internal_list (m_type->custom);
+  InternalList *il = m_handle->internal_list (m_type->custom);
   return il ? il->length / 3 : 0;
 }
 
-TypeCode::StringVector
+std::vector<String>
 TypeCode::enum_value (size_t index) const // (ident,label,blurb) choic
 {
-  StringVector sv;
+  std::vector<String> sv;
   if (kind() != ENUM)
     return sv;
-  InternalList *il = m_package->internal_list (m_type->custom);
+  InternalList *il = m_handle->internal_list (m_type->custom);
   if (!il || index * 3 > il->length)
     __PLIC_return_EFAULT (sv);
-  sv.push_back (m_package->simple_string (il->items[index * 3 + 0]));   // ident
-  sv.push_back (m_package->simple_string (il->items[index * 3 + 1]));   // label
-  sv.push_back (m_package->simple_string (il->items[index * 3 + 2]));   // blurb
+  sv.push_back (m_handle->simple_string (il->items[index * 3 + 0]));   // ident
+  sv.push_back (m_handle->simple_string (il->items[index * 3 + 1]));   // label
+  sv.push_back (m_handle->simple_string (il->items[index * 3 + 2]));   // blurb
   return sv;
 }
 
@@ -321,7 +408,7 @@ TypeCode::prerequisite_count () const
 {
   if (kind() != INSTANCE)
     return 0;
-  InternalList *il = m_package->internal_list (m_type->custom);
+  InternalList *il = m_handle->internal_list (m_type->custom);
   return il ? il->length : 0;
 }
 
@@ -331,10 +418,10 @@ TypeCode::prerequisite (size_t index) const
   std::string s;
   if (kind() != INSTANCE)
     return s;
-  InternalList *il = m_package->internal_list (m_type->custom);
+  InternalList *il = m_handle->internal_list (m_type->custom);
   if (!il || index > il->length)
     __PLIC_return_EFAULT (s);
-  return m_package->simple_string (il->items[index]);
+  return m_handle->simple_string (il->items[index]);
 }
 
 size_t
@@ -345,7 +432,7 @@ TypeCode::field_count () const
     return 1;
   if (k != RECORD)
     return 0;
-  InternalList *il = m_package->internal_list (m_type->custom);
+  InternalList *il = m_handle->internal_list (m_type->custom);
   return il ? il->length : 0;
 }
 
@@ -358,15 +445,15 @@ TypeCode::field (size_t index) const // RECORD or SEQUENCE
     field_offset = m_type->custom;
   else if (k == RECORD)
     {
-      InternalList *il = m_package->internal_list (m_type->custom);
+      InternalList *il = m_handle->internal_list (m_type->custom);
       if (!il || index > il->length)
-        __PLIC_return_EFAULT (TypeCode (NULL, NULL));
+        __PLIC_return_EFAULT (TypeCode::notype (m_handle));
       field_offset = il->items[index];
     }
   else
-    return TypeCode (NULL, NULL);
-  InternalType *it = m_package->internal_type (field_offset);
-  return it ? TypeCode (m_package, it) : TypeCode (NULL, NULL);
+    return TypeCode::notype (m_handle);
+  InternalType *it = m_handle->internal_type (field_offset);
+  return it ? TypeCode (m_handle, it) : TypeCode::notype (m_handle);
 }
 
 std::string
@@ -375,13 +462,13 @@ TypeCode::origin () const // type for TYPE_REFERENCE
   std::string s;
   if (kind() != TYPE_REFERENCE)
     return s;
-  return m_package->simple_string (m_type->custom);
+  return m_handle->simple_string (m_type->custom);
 }
 
 bool
 TypeCode::operator== (const TypeCode &o) const
 {
-  return o.m_package == m_package && o.m_type == m_type;
+  return o.m_handle == m_handle && o.m_type == m_type;
 }
 
 std::string
@@ -398,7 +485,7 @@ TypeCode::pretty (const std::string &indent) const
       s += std::string (": ") + buffer;
       for (uint i = 0; i < enum_count(); i++)
         {
-          StringVector sv = enum_value (i);
+          std::vector<String> sv = enum_value (i);
           s += std::string ("\n") + indent + indent + sv[0] + ", " + sv[1] + ", " + sv[2];
         }
       break;
@@ -449,6 +536,131 @@ TypeCode::pretty (const std::string &indent) const
       s += "]";
     }
   return s;
+}
+
+static char* /* return malloc()-ed buffer containing a full read of FILE */
+file_memread (FILE   *stream,
+              size_t *lengthp)
+{
+  size_t sz = 256;
+  char *malloc_string = (char*) malloc (sz);
+  if (!malloc_string)
+    return NULL;
+  char *start = malloc_string;
+  errno = 0;
+  while (!feof (stream))
+    {
+      size_t bytes = fread (start, 1, sz - (start - malloc_string), stream);
+      if (bytes <= 0 && ferror (stream) && errno != EAGAIN)
+        {
+          start = malloc_string; // error/0-data
+          break;
+        }
+      start += bytes;
+      if (start == malloc_string + sz)
+        {
+          bytes = start - malloc_string;
+          sz *= 2;
+          char *newstring = (char*) realloc (malloc_string, sz);
+          if (!newstring)
+            {
+              start = malloc_string; // error/0-data
+              break;
+            }
+          malloc_string = newstring;
+          start = malloc_string + bytes;
+        }
+    }
+  int savederr = errno;
+  *lengthp = start - malloc_string;
+  if (!*lengthp)
+    {
+      free (malloc_string);
+      malloc_string = NULL;
+    }
+  errno = savederr;
+  return malloc_string;
+}
+
+TypeMap
+TypeMap::load (std::string filename)
+{
+  TypeMap tp = TypeMap::load_local (filename);
+  if (!tp.error_status())
+    {
+      type_registry_initialize();
+      type_registry->add (tp);
+      errno = 0;
+    }
+  return tp;
+}
+
+TypeMap
+TypeRegistry::load_builtins ()
+{
+  assert (type_registry == NULL);
+  TypeMap tp = TypeMap::load_local ("///..builtins..");
+  assert (tp.error_status() == 0);
+  return tp;
+}
+
+TypeMap
+TypeMap::load_local (std::string filename)
+{
+  if (!type_registry && filename == "///..builtins..")
+    return builtins();
+  FILE *file = fopen (filename.c_str(), "r");
+  if (!file)
+    {
+      errno = errno ? errno : ENOMEM;
+      return TypeCode::MapHandle::create_error_type_map (errno);
+    }
+  size_t length = 0;
+  char *contents = file_memread (file, &length);
+  int savederr = errno;
+  fclose (file);
+  errno = savederr;
+  InternalMap *imap = (InternalMap*) contents;
+  if (!contents || length < sizeof (*imap) + 4)
+    {
+      if (contents)
+        free (contents);
+      errno = ENODATA;
+      return TypeCode::MapHandle::create_error_type_map (errno);
+    }
+  if (!imap->check_magic() || !imap->check_lengths (length) || !imap->check_tail())
+    {
+      free (contents);
+      errno = ELIBBAD;
+      return TypeCode::MapHandle::create_error_type_map (errno);
+    }
+  TypeMap type_map = TypeCode::MapHandle::create_type_map (imap, length, true);
+  errno = 0;
+  return type_map;
+}
+
+#include "../plic/builtins.cc" // defines intern_builtins_cc_typ
+
+TypeMap
+TypeMap::builtins ()
+{
+  InternalMap *imap = (InternalMap*) intern_builtins_cc_typ;
+  const size_t length = sizeof (intern_builtins_cc_typ);
+  if (!imap || sizeof (intern_builtins_cc_typ) < sizeof (*imap) + 4)
+    {
+      errno = ENODATA;
+      perror ("ERROR: accessing builtin PLIC types");
+      abort();
+    }
+  if (!imap->check_magic() || !imap->check_lengths (length) || !imap->check_tail())
+    {
+      errno = ELIBBAD;
+      perror ("ERROR: accessing builtin PLIC types");
+      abort();
+    }
+  TypeMap type_map = TypeCode::MapHandle::create_type_map (imap, length, true);
+  errno = 0;
+  return type_map;
 }
 
 } // Plic

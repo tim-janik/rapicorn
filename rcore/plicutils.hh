@@ -65,17 +65,8 @@ enum TypeKind {
 const char* type_kind_name (TypeKind type_kind);
 
 // == TypeCode ==
-class TypePackage;
-class InternalPackage;
-class InternalType;
-class TypeCode /// Representation of type information for the Any class and to describe structured type compositions.
+struct TypeCode /// Representation of type information for the Any class and to describe structured type compositions.
 {
-  typedef std::vector<std::string> StringVector;
-  friend class TypePackage;
-  InternalPackage      *m_package;
-  InternalType         *m_type;
-  explicit              TypeCode        (InternalPackage*, InternalType*);
-public:
   TypeKind              kind            () const;               ///< Obtain the underlying primitive type kind.
   std::string           kind_name       () const;               ///< Obtain the name of kind().
   std::string           name            () const;               ///< Obtain the type name.
@@ -83,7 +74,7 @@ public:
   std::string           aux_data        (size_t index) const;   ///< Accessor for auxillary data as key=utf8data string.
   std::string           aux_value       (std::string key) const; ///< Accessor for auxillary data by key as utf8 string.
   size_t                enum_count      () const;               ///< Number of enum values for an enum type.
-  StringVector          enum_value      (size_t index) const;   ///< Obtain an enum value as: (ident,label,blurb)
+  std::vector<String>   enum_value      (size_t index) const;   ///< Obtain an enum value as: (ident,label,blurb)
   size_t                prerequisite_count () const;            ///< Number of interface prerequisites
   std::string           prerequisite    (size_t index) const;   ///< Obtain prerequisite type names for an interface type.
   size_t                field_count     () const;               ///< Number of fields in a record type.
@@ -93,22 +84,87 @@ public:
   std::string           pretty          (const std::string &indent = "") const; ///< Pretty print into a string.
   bool                  operator!=      (const TypeCode &o) const;
   bool                  operator==      (const TypeCode&) const;
+  /*copy*/              TypeCode        (const TypeCode&);
+  TypeCode&             operator=       (const TypeCode&);
+  /*dtor*/             ~TypeCode        ();
+  class InternalType;  class MapHandle;
+private: // implementation bits
+  explicit              TypeCode        (MapHandle*, InternalType*);
+  static TypeCode       notype          (MapHandle*);
+  friend class TypeMap;
+  MapHandle    *m_handle;
+  InternalType *m_type;
 };
 
-class TypePackage /// A TypePackage serves as a repository and loader for IDL type information.
+class TypeMap /// A TypeMap serves as a repository and loader for IDL type information.
 {
-  InternalPackage      *m_package;
-  explicit              TypePackage (InternalPackage*);
+  TypeCode::MapHandle  *m_handle;     friend class TypeCode::MapHandle;
+  explicit              TypeMap      (TypeCode::MapHandle*);
+  static TypeMap        builtins     ();
 public:
-  virtual              ~TypePackage ();
-  size_t                type_count  () const;                   ///< Number of type codes in this package.
-  const TypeCode        type        (size_t      index) const;  ///< Obtain a TypeCode by index.
-  const TypeCode        find_type   (std::string name) const;   ///< Search for a TypeCode by its name.
-  static TypePackage*   load        (std::string file_name);    ///< Load a new TypePackage.
+  /*copy*/              TypeMap      (const TypeMap&);
+  TypeMap&              operator=    (const TypeMap&);
+  /*dtor*/             ~TypeMap      ();
+  size_t                type_count   () const;                  ///< Number of TypeCode classes in this TypeMap.
+  const TypeCode        type         (size_t      index) const; ///< Obtain a TypeCode by index.
+  int                   error_status ();                        ///< Obtain errno status from load().
+  static TypeMap        load         (std::string file_name);   ///< Load a new TypeMap and register for global lookups.
+  static TypeCode       lookup       (std::string name);        ///< Globally lookup a TypeCode by name.
+  static TypeMap        load_local   (std::string file_name);   ///< Load a new TypeMap for local lookups only.
+  TypeCode              lookup_local (std::string name) const;  ///< Lookup TypeCode within this TypeMap.
 };
 
 // == Any Type ==
-class Any {};
+class Any {
+  TypeCode type_code;
+  union { int64 vint64; double vdouble; Any *vany; uint64 smem[(sizeof (String) + 7) / 8]; uint8 bytes[8]; } u;
+  void set_type        (const TypeCode &tc);
+  void set_type_simple (TypeKind kind);
+public:
+  /*dtor*/ ~Any    ();
+  explicit  Any    ();
+  /*ctor*/  Any    (const Any &other);
+  Any& operator=   (const Any &other); ///< Carries out a deep copy of @a other into this Any.
+  TypeKind kind    () const                 { return type_code.kind(); } ///< Obtain the underlying primitive type kind.
+  bool operator>>= (bool          &v) const { int64 d; const bool r = operator>>= (d); v = d; return r; }
+  bool operator>>= (char          &v) const { int64 d; const bool r = operator>>= (d); v = d; return r; }
+  bool operator>>= (unsigned char &v) const { int64 d; const bool r = operator>>= (d); v = d; return r; }
+  bool operator>>= (int           &v) const { int64 d; const bool r = operator>>= (d); v = d; return r; }
+  bool operator>>= (unsigned int  &v) const { int64 d; const bool r = operator>>= (d); v = d; return r; }
+  bool operator>>= (long          &v) const { int64 d; const bool r = operator>>= (d); v = d; return r; }
+  bool operator>>= (unsigned long &v) const { int64 d; const bool r = operator>>= (d); v = d; return r; }
+  bool operator>>= (uint64        &v) const { int64 d; const bool r = operator>>= (d); v = d; return r; }
+  bool operator>>= (int64         &v) const { return kind() == INT ? (v = u.vint64, true) : false; }
+  bool operator>>= (float         &v) const { double d; const bool r = operator>>= (d); v = d; return r; }
+  bool operator>>= (double        &v) const { return kind() == FLOAT ? (v = u.vdouble, true) : false; }
+  bool operator>>= (const char   *&v) const { String s; const bool r = operator>>= (s); v = s.c_str(); return r; }
+  bool operator>>= (std::string   &v) const { return kind() == STRING ? (v = *(String*) &u, true) : false; }
+  bool operator>>= (const Any    *&v) const { return kind() == ANY ? (v = u.vany, true) : false; }
+  const Any& as_any ()                const { return kind() == ANY ? *u.vany : *this; } ///< Obtain contents as Any.
+  // >>= enum
+  // >>= sequence
+  // >>= record
+  // >>= instance
+  void operator<<= (bool           v)       { operator<<= (int64 (v)); }
+  void operator<<= (char           v)       { operator<<= (int64 (v)); }
+  void operator<<= (unsigned char  v)       { operator<<= (int64 (v)); }
+  void operator<<= (int            v)       { operator<<= (int64 (v)); }
+  void operator<<= (unsigned int   v)       { operator<<= (int64 (v)); }
+  void operator<<= (long           v)       { operator<<= (int64 (v)); }
+  void operator<<= (unsigned long  v)       { operator<<= (int64 (v)); }
+  void operator<<= (uint64         v)       { operator<<= (int64 (v)); }
+  void operator<<= (int64          v)       { set_type_simple (INT); u.vint64 = v; }
+  void operator<<= (float          v)       { operator<<= (double (v)); }
+  void operator<<= (double         v)       { set_type_simple (FLOAT); u.vdouble = v; }
+  void operator<<= (const char    *v)       { operator<<= (std::string (v)); }
+  void operator<<= (char          *v)       { operator<<= (std::string (v)); }
+  void operator<<= (const String  &v)       { set_type_simple (STRING); new (&u) String (v); }
+  void operator<<= (const Any     &v)       { set_type_simple (ANY); u.vany = new Any (v); }
+  // <<= enum
+  // <<= sequence
+  // <<= record
+  // <<= instance
+};
 
 // == Type Declarations ==
 class SimpleServer;
@@ -194,7 +250,7 @@ class _FakeFieldBuffer { FieldUnion *u; virtual ~_FakeFieldBuffer() {}; };
 union FieldUnion {
   int64        vint64;
   double       vdouble;
-  uint64       amem[(sizeof (Any) + 7) / 8];              // Any
+  Any         *vany;
   uint64       smem[(sizeof (String) + 7) / 8];           // String
   uint64       bmem[(sizeof (_FakeFieldBuffer) + 7) / 8]; // FieldBuffer
   uint8        bytes[8];                // FieldBuffer types
@@ -228,7 +284,7 @@ public:
   inline void add_double (double vdouble) { FieldUnion &u = addu (FLOAT); u.vdouble = vdouble; }
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
   inline void add_object (uint64 objid)    { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
-  inline void add_any    (const Any &vany) { FieldUnion &u = addu (ANY); new (&u) Any (vany); }
+  inline void add_any    (const Any &vany) { FieldUnion &u = addu (ANY); u.vany = new Any (vany); }
   inline void add_msgid  (uint64 h, uint64 l) { add_int64 (h); add_int64 (l); }
   inline FieldBuffer& add_rec (uint nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); }
   inline FieldBuffer& add_seq (uint nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); }
@@ -248,7 +304,7 @@ public:
   inline FieldBuffer& operator<< (double v)          { FieldUnion &u = addu (FLOAT); u.vdouble = v; return *this; }
   inline FieldBuffer& operator<< (EnumValue e)       { FieldUnion &u = addu (ENUM); u.vint64 = e.v; return *this; }
   inline FieldBuffer& operator<< (const String &s)   { FieldUnion &u = addu (STRING); new (&u) String (s); return *this; }
-  inline FieldBuffer& operator<< (Any    v)          { FieldUnion &u = addu (ANY); new (&u) Any (v); return *this; }
+  inline FieldBuffer& operator<< (Any    v)          { FieldUnion &u = addu (ANY); u.vany = new Any (v); return *this; }
   inline FieldBuffer& operator<< (const TypeHash &h) { *this << h.typehi; *this << h.typelo; return *this; }
 };
 
@@ -280,7 +336,7 @@ public:
   inline double             get_double () { FieldUnion &u = fb_getu (FLOAT); return u.vdouble; }
   inline const String&      get_string () { FieldUnion &u = fb_getu (STRING); return *(String*) &u; }
   inline uint64             get_object () { FieldUnion &u = fb_getu (INSTANCE); return u.vint64; }
-  inline const Any&         get_any    () { FieldUnion &u = fb_getu (ANY); return *(Any*) &u; }
+  inline const Any&         get_any    () { FieldUnion &u = fb_getu (ANY); return *u.vany; }
   inline const FieldBuffer& get_rec    () { FieldUnion &u = fb_getu (RECORD); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& get_seq    () { FieldUnion &u = fb_getu (SEQUENCE); return *(FieldBuffer*) &u; }
   inline int64              pop_int64  () { FieldUnion &u = fb_popu (INT); return u.vint64; }
@@ -288,7 +344,7 @@ public:
   inline double             pop_double () { FieldUnion &u = fb_popu (FLOAT); return u.vdouble; }
   inline const String&      pop_string () { FieldUnion &u = fb_popu (STRING); return *(String*) &u; }
   inline uint64             pop_object () { FieldUnion &u = fb_popu (INSTANCE); return u.vint64; }
-  inline const Any&         pop_any    () { FieldUnion &u = fb_popu (ANY); return *(Any*) &u; }
+  inline const Any&         pop_any    () { FieldUnion &u = fb_popu (ANY); return *u.vany; }
   inline const FieldBuffer& pop_rec    () { FieldUnion &u = fb_popu (RECORD); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& pop_seq    () { FieldUnion &u = fb_popu (SEQUENCE); return *(FieldBuffer*) &u; }
   inline FieldReader& operator>> (size_t &v)          { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
@@ -300,7 +356,7 @@ public:
   inline FieldReader& operator>> (double &v)          { FieldUnion &u = fb_popu (FLOAT); v = u.vdouble; return *this; }
   inline FieldReader& operator>> (EnumValue &e)       { FieldUnion &u = fb_popu (ENUM); e.v = u.vint64; return *this; }
   inline FieldReader& operator>> (String &s)          { FieldUnion &u = fb_popu (STRING); s = *(String*) &u; return *this; }
-  inline FieldReader& operator>> (Any &v)             { FieldUnion &u = fb_popu (ANY); v = *(Any*) &u; return *this; }
+  inline FieldReader& operator>> (Any &v)             { FieldUnion &u = fb_popu (ANY); v = *u.vany; return *this; }
   inline FieldReader& operator>> (TypeHash &h)        { *this >> h.typehi; *this >> h.typelo; return *this; }
   inline FieldReader& operator>> (std::vector<bool>::reference v) { bool b; *this >> b; v = b; return *this; }
 };
@@ -359,6 +415,7 @@ FieldBuffer::reset()
       switch (type_at (size()))
         {
         case STRING:    { FieldUnion &u = getu(); ((String*) &u)->~String(); }; break;
+        case ANY:       { FieldUnion &u = getu(); delete u.vany; }; break;
         case SEQUENCE:
         case RECORD:    { FieldUnion &u = getu(); ((FieldBuffer*) &u)->~FieldBuffer(); }; break;
         default: ;

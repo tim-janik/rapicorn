@@ -15,8 +15,12 @@
  * with this program; if not, see http://www.gnu.org/copyleft/.
  */
 
-/* PLIC TypePackage Parser */
-#include "../PlicTypePackage.cc"
+// include PLIC TypeMap Parser
+#include "../../rcore/plicutils.hh"
+#include "../../rcore/plicutils.cc"
+
+#define error(...) do { fputs ("ERROR: ", stderr); fprintf (stderr, __VA_ARGS__); fputs ("\n", stderr); abort(); } while (0)
+
 using namespace Plic;
 using Plic::uint8;
 using Plic::uint;
@@ -71,6 +75,83 @@ parse_bool_option (char       **argv,
 }
 
 /* --- test program --- */
+
+static void
+aux_check (std::string    type_map_file,
+           vector<String> auxtests)
+{
+  // read type map
+  TypeMap tp = TypeMap::load (type_map_file);
+  if (tp.error_status())
+    error ("%s: open failed: %s", type_map_file.c_str(), strerror (tp.error_status()));
+  // print types and match auxtests
+  for (size_t i = 0; i < tp.type_count(); i++)
+    {
+      const TypeCode tc = tp.type (i);
+      printf ("%s %s;\n", tc.kind_name().c_str(), tc.name().c_str());
+      for (size_t k = 0; k < tc.aux_count(); k++)
+        {
+          String aux = tc.aux_data (k);
+          uint c = ' ';
+          for (size_t q = 0; q < auxtests.size(); q++)
+            if (strstr (aux.c_str(), auxtests[q].c_str()))
+              {
+                auxtests.erase (auxtests.begin() + q);
+                c = '*';
+                break;
+              }
+          printf ("  %c %s\n", c, aux.c_str());
+        }
+    }
+  // fail for unmatched auxtests
+  if (auxtests.size())
+    {
+      fprintf (stderr, "ERROR: unmatched aux-tests:\n");
+      for (uint q = 0; q < auxtests.size(); q++)
+        fprintf (stderr, "  %s\n", auxtests[q].c_str());
+      abort();
+    }
+}
+
+static void
+list_types (std::string type_map_file)
+{
+  TypeMap tmap = TypeMap::load_local (type_map_file);
+  if (tmap.error_status())
+    error ("%s: open failed: %s", type_map_file.c_str(), strerror (tmap.error_status()));
+  errno = 0;
+  printf ("TYPES: %zu\n", tmap.type_count());
+  for (uint i = 0; i < tmap.type_count(); i++)
+    {
+      const TypeCode tcode = tmap.type (i);
+      printf ("%s\n", tcode.pretty ("  ").c_str());
+      // verify type search
+      const TypeCode other = tmap.lookup_local (tcode.name());
+      if (other != tcode)
+        {
+          errno = ENXIO;
+          perror (std::string ("searching type: " + tcode.name()).c_str()), abort();
+        }
+    }
+  if (errno)
+    perror ("checking type package"), abort();
+}
+
+static void
+standard_tests ()
+{
+  TypeCode tcint = TypeMap::lookup ("int");
+  assert (tcint.kind() == INT);
+  TypeCode tcfloat = TypeMap::lookup ("float");
+  assert (tcfloat.kind() == FLOAT);
+  TypeCode tcstring = TypeMap::lookup ("string");
+  assert (tcstring.kind() == STRING);
+  TypeCode tcany = TypeMap::lookup ("any");
+  assert (tcany.kind() == ANY);
+  printf ("  TEST   Plic standard types                                             OK\n");
+  exit (0);
+}
+
 int
 main (int   argc,
       char *argv[])
@@ -80,15 +161,18 @@ main (int   argc,
   for (uint i = 1; i < uint (argc); i++)
     {
       const char *str = NULL;
-      if (strcmp (argv[i], "--") == 0)
+      if (strcmp (argv[i], "--tests") == 0)
+        standard_tests();
+      else if (strcmp (argv[i], "--") == 0)
         {
           argv[i] = NULL;
           break;
         }
       else if (parse_bool_option (argv, i, "--help"))
         {
-          printf ("Usage: %s [options] TypePackage.out\n", argv[0]);
+          printf ("Usage: %s [options] TypeMap.typ\n", argv[0]);
           printf ("Options:\n");
+          printf ("  --tests       Check standard types\n");
           printf ("  --help        Print usage summary\n");
           printf ("  --aux-test=x  Find 'x' in auxillary type data\n");
           exit (0);
@@ -108,59 +192,13 @@ main (int   argc,
   argc = e;
   /* validate mandatory arg */
   if (argc < 2)
-    error ("Usage: %s TypePackage.out\n", argv[0]);
+    error ("Usage: %s TypeMap.typ\n", argv[0]);
 
-  /* parse input file */
-  int fd = open (argv[1], 0);
-  if (fd < 0)
-    error ("%s: open failed: %s", argv[1], strerror (errno));
-  uint8 buffer[1024 * 1024];
-  int l = read (fd, buffer, sizeof (buffer));
-  if (l < 0)
-    error ("%s: IO error: %s", argv[1], strerror (errno));
-  close (fd);
-  TypeRegistry tr;
-  String err = tr.register_type_package (l, buffer);
-  error_if (err != "", err);
-
-  // check for intermediate \0 in type package data
-  error_if (memchr (buffer, 0, l) != NULL, "embedded \\000 in type package");
-
-  /* print types and match auxtests */
-  vector<TypeNamespace> namespaces = tr.list_namespaces();
-  for (uint i = 0; i < namespaces.size(); i++)
-    {
-      vector<TypeInfo> types = namespaces[i].list_types ();
-      for (uint j = 0; j < types.size(); j++)
-        {
-          printf ("%c %s::%s;\n",
-                  types[j].storage,
-                  namespaces[i].fullname().c_str(),
-                  types[j].name().c_str());
-          uint ad = types[j].n_aux_strings();
-          for (uint k = 0; k < ad; k++)
-            {
-              uint l = 0;
-              const char *s = types[j].aux_string (k, &l);
-              String astring = String (s, l);
-              uint c = ' ';
-              for (uint q = 0; q < auxtests.size(); q++)
-                if (strstr (astring.c_str(), auxtests[q].c_str()))
-                  {
-                    auxtests.erase (auxtests.begin() + q);
-                    c = '*';
-                    break;
-                  }
-              printf ("  %c %s\n", c, astring.c_str());
-            }
-        }
-    }
-
-  /* fail for unmatched auxtests */
   if (auxtests.size())
-    fprintf (stderr, "ERROR: unmatched aux-tests:\n");
-  for (uint q = 0; q < auxtests.size(); q++)
-    fprintf (stderr, "  %s\n", auxtests[q].c_str());
-  return auxtests.size() != 0;
+    aux_check (argv[1], auxtests);
+  else
+    list_types (argv[1]);
+
+  return 0;
 }
-// g++ -Wall -Os ptptest.cc && ./a.out plic.out
+// g++ -Wall -Os ptptest.cc && ./a.out typemap.typ
