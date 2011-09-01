@@ -77,6 +77,7 @@ class TypeCode /// Representation of type information for the Any class and to d
   explicit              TypeCode        (InternalPackage*, InternalType*);
 public:
   TypeKind              kind            () const;               ///< Obtain the underlying primitive type kind.
+  std::string           kind_name       () const;               ///< Obtain the name of kind().
   std::string           name            () const;               ///< Obtain the type name.
   size_t                aux_count       () const;               ///< Number of items of auxillary data.
   std::string           aux_data        (size_t index) const;   ///< Accessor for auxillary data as key=utf8data string.

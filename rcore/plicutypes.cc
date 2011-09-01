@@ -249,6 +249,12 @@ TypeCode::kind () const
 }
 
 std::string
+TypeCode::kind_name () const
+{
+  return type_kind_name (TypeKind (m_type->tkind));
+}
+
+std::string
 TypeCode::name () const
 {
   return m_package->simple_string (m_type->name);
