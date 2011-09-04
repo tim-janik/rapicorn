@@ -337,7 +337,7 @@ TypeCode::notype (MapHandle *handle)
 bool
 TypeCode::untyped () const
 {
-  return m_handle == NULL || m_type == NULL;
+  return m_handle == NULL || m_type == NULL || kind() == UNTYPED;
 }
 
 bool
