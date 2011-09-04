@@ -286,6 +286,13 @@ TypeMap::lookup_local (std::string name) const
   return TypeCode::notype (m_handle);
 }
 
+TypeCode
+TypeMap::notype ()
+{
+  type_registry_initialize();
+  return TypeCode (type_registry->standard().m_handle, (InternalType*) zero_type_or_map);
+}
+
 TypeCode::TypeCode (MapHandle *handle, InternalType *itype) :
   m_handle (handle->ref()), m_type (itype)
 {}
@@ -299,6 +306,7 @@ TypeCode::operator= (const TypeCode &clone)
 {
   m_handle->unref();
   m_handle = clone.m_handle->ref();
+  m_type = clone.m_type;
   return *this;
 }
 
@@ -307,6 +315,17 @@ TypeCode::~TypeCode ()
   m_type = NULL;
   m_handle->unref();
   m_handle = NULL;
+}
+
+void
+TypeCode::swap (TypeCode &other)
+{
+  MapHandle *b_handle = other.m_handle;
+  InternalType *b_type = other.m_type;
+  other.m_handle = m_handle;
+  other.m_type = m_type;
+  m_handle = b_handle;
+  m_type = b_type;
 }
 
 TypeCode
@@ -318,7 +337,7 @@ TypeCode::notype (MapHandle *handle)
 bool
 TypeCode::untyped () const
 {
-  return m_handle == NULL && m_type == NULL;
+  return m_handle == NULL || m_type == NULL;
 }
 
 bool

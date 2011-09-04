@@ -142,14 +142,53 @@ standard_tests ()
 {
   TypeCode tcint = TypeMap::lookup ("int");
   assert (tcint.kind() == INT);
+  assert (tcint.name() == "int");
   TypeCode tcfloat = TypeMap::lookup ("float");
   assert (tcfloat.kind() == FLOAT);
+  assert (tcfloat.name() == "float");
   TypeCode tcstring = TypeMap::lookup ("string");
   assert (tcstring.kind() == STRING);
+  assert (tcstring.name() == "string");
   TypeCode tcany = TypeMap::lookup ("any");
   assert (tcany.kind() == ANY);
+  assert (tcany.name() == "any");
   printf ("  TEST   Plic standard types                                             OK\n");
-  exit (0);
+}
+
+static void
+test_any()
+{
+  String s;
+  const double dbl = 7.76576e-306;
+  Any a, a2;
+  a2 <<= "SecondAny";
+  const size_t cases = 13;
+  for (size_t j = 0; j <= cases; j++)
+    for (size_t k = 0; k <= cases; k++)
+      {
+        size_t cs[2] = { j, k };
+        for (size_t cc = 0; cc < 2; cc++)
+          switch (cs[cc])
+            {
+              typedef unsigned char uchar;
+              bool b; char c; uchar uc; int i; uint ui; long l; ulong ul; int64 i6; uint64 u6; double d; const Any *p;
+            case 0:  a <<= bool (0);            a >>= b;   assert (b == 0); break;
+            case 1:  a <<= bool (false);        a >>= b;   assert (b == false); break;
+            case 2:  a <<= bool (true);         a >>= b;   assert (b == true); break;
+            case 3:  a <<= char (-117);         a >>= c;   assert (c == -117); break;
+            case 4:  a <<= uchar (250);         a >>= uc;  assert (uc == 250); break;
+            case 5:  a <<= int (-134217728);    a >>= i;   assert (i == -134217728); break;
+            case 6:  a <<= uint (4294967295U);  a >>= ui;  assert (ui == 4294967295U); break;
+            case 7:  a <<= long (-2147483648);  a >>= l;   assert (l == -2147483648); break;
+            case 8:  a <<= ulong (4294967295U); a >>= ul;  assert (ul == 4294967295U); break;
+            case 9:  a <<= int64 (-0xc0ffeec0ffeeLL); a >>= i6; assert (i6 == -0xc0ffeec0ffeeLL); break;
+            case 10: a <<= int64 (0xffffffffffffffffULL); a >>= u6; assert (u6 == 0xffffffffffffffffULL); break;
+            case 11: a <<= "Test4test";         a >>= s;   assert (s == "Test4test"); break;
+            case 12: a <<= dbl;                 a >>= d;   assert (d = dbl); break;
+            case 13: a <<= a2;        a >>= p; *p >>= s;   assert (s == "SecondAny"); break;
+            }
+      }
+  printf ("  TEST   Plic Any uses                                                   OK\n");
 }
 
 int
@@ -162,7 +201,11 @@ main (int   argc,
     {
       const char *str = NULL;
       if (strcmp (argv[i], "--tests") == 0)
-        standard_tests();
+        {
+          standard_tests();
+          test_any();
+          return 0;
+        }
       else if (strcmp (argv[i], "--") == 0)
         {
           argv[i] = NULL;
@@ -172,7 +215,7 @@ main (int   argc,
         {
           printf ("Usage: %s [options] TypeMap.typ\n", argv[0]);
           printf ("Options:\n");
-          printf ("  --tests       Check standard types\n");
+          printf ("  --tests       Carry out various tests\n");
           printf ("  --help        Print usage summary\n");
           printf ("  --aux-test=x  Find 'x' in auxillary type data\n");
           exit (0);

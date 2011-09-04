@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <limits.h>
 #include <semaphore.h>
 #include <pthread.h>
 #include <stdexcept>
@@ -76,21 +77,212 @@ error_printf (const char *format, ...)
 }
 
 // == Any ==
+Any::Any() :
+  type_code (TypeMap::notype())
+{
+  memset (&u, 0, sizeof (u));
+}
+
+Any::Any (const Any &clone) :
+  type_code (TypeMap::notype())
+{
+  this->operator= (clone);
+}
+
+Any&
+Any::operator= (const Any &clone)
+{
+  if (this == &clone)
+    return *this;
+  reset();
+  type_code = clone.type_code;
+  switch (kind())
+    {
+    case STRING:        new (&u) String (*(String*) &clone.u);          break;
+    case SEQUENCE:      new (&u) AnyVector (*(AnyVector*) &clone.u);    break;
+    case RECORD:        new (&u) AnyVector (*(AnyVector*) &clone.u);    break;
+    case ANY:           u.vany = new Any (*clone.u.vany);               break;
+    default:            u = clone.u;                                    break;
+    }
+  return *this;
+}
+
 void
-Any::set_type_simple (TypeKind newkind)
+Any::reset()
 {
   switch (kind())
     {
-    case STRING:        ((String*) &u)->~String();      break;
-    case ANY:           delete u.vany;                  break;
+    case STRING:        ((String*) &u)->~String();              break;
+    case SEQUENCE:      ((AnyVector*) &u)->~AnyVector();        break;
+    case RECORD:        ((AnyVector*) &u)->~AnyVector();        break;
+    case ANY:           delete u.vany;                          break;
     default: ;
     }
-  // kind = UNTYPED
+  type_code = TypeMap::notype();
+  memset (&u, 0, sizeof (u));
+}
+
+void
+Any::rekind (TypeKind _kind)
+{
+  reset();
+  const char *type = NULL;
+  switch (_kind)
+    {
+    case UNTYPED:     type = NULL;                                      break;
+      // case BOOL:   type = "bool";                                    break;
+    case INT:         type = "int";                                     break;
+      // case UINT:   type = "uint";                                    break;
+    case FLOAT:       type = "float";                                   break;
+    case STRING:      type = "string";          new (&u) String();      break;
+    case ENUM:        type = "int";                                     break;
+    case SEQUENCE:    type = "Plic::AnySeq";    new (&u) AnyVector();   break;
+    case RECORD:      type = "Plic::AnyRec";    new (&u) AnyVector();   break; // FIXME: mising details
+    case INSTANCE:    type = "Plic::Instance";                          break; // FIXME: missing details
+    case ANY:         type = "any";             u.vany = new Any();     break;
+    default:
+      error_printf ("Plic::Any:rekind: invalid type kind: %s", type_kind_name (_kind));
+    }
+  type_code = TypeMap::lookup (type);
+  if (type_code.untyped() && type != NULL)
+    error_printf ("Plic::Any:rekind: invalid type name: %s", type);
+  if (kind() != _kind)
+    error_printf ("Plic::Any:rekind: mismatch: %s -> %s (%u)", type_kind_name (_kind), type_kind_name (kind()), kind());
 }
 
 Any::~Any ()
 {
-  set_type_simple (UNTYPED);
+  reset();
+}
+
+void
+Any::retype (const TypeCode &tc)
+{
+  if (type_code.untyped())
+    reset();
+  else
+    {
+      rekind (tc.kind());
+      type_code = tc;
+    }
+}
+
+void
+Any::swap (Any &other)
+{
+  const size_t usize = sizeof (this->u);
+  char *buffer[usize];
+  memcpy (buffer, &other.u, usize);
+  memcpy (&other.u, &this->u, usize);
+  memcpy (&this->u, buffer, usize);
+  type_code.swap (other.type_code);
+}
+
+bool
+Any::as_int (int64 &v, char b) const
+{
+  if (kind() != INT)
+    return false;
+  bool s = 0;
+  switch (b)
+    {
+    case 1:     s =  u.vint64 >=         0 &&  u.vint64 <= 1;        break;
+    case 7:     s =  u.vint64 >=      -128 &&  u.vint64 <= 127;      break;
+    case 8:     s =  u.vint64 >=         0 &&  u.vint64 <= 256;      break;
+    case 47:    s = sizeof (long) == sizeof (int64); // chain
+    case 31:    s |= u.vint64 >=   INT_MIN &&  u.vint64 <= INT_MAX;  break;
+    case 48:    s = sizeof (long) == sizeof (int64); // chain
+    case 32:    s |= u.vint64 >=         0 &&  u.vint64 <= UINT_MAX; break;
+    case 63:    s = 1; break;
+    case 64:    s = 1; break;
+    default:    s = 0; break;
+    }
+  if (s)
+    v = u.vint64;
+  return s;
+}
+
+bool
+Any::operator>>= (int64 &v) const
+{
+  const bool r = as_int (v, 63);
+  return r;
+}
+
+bool
+Any::operator>>= (double &v) const
+{
+  if (kind() != FLOAT)
+    return false;
+  v = u.vdouble;
+  return true;
+}
+
+bool
+Any::operator>>= (std::string &v) const
+{
+  if (kind() != STRING)
+    return false;
+  v = *(String*) &u;
+  return true;
+}
+
+bool
+Any::operator>>= (const Any *&v) const
+{
+  if (kind() != ANY)
+    return false;
+  v = u.vany;
+  return true;
+}
+
+void
+Any::operator<<= (uint64 v)
+{
+  // ensure (UINT);
+  operator<<= (int64 (v));
+}
+
+void
+Any::operator<<= (int64 v)
+{
+  // if (kind() == BOOL && v >= 0 && v <= 1) { u.vint64 = v; return; }
+  ensure (INT);
+  u.vint64 = v;
+}
+
+void
+Any::operator<<= (double v)
+{
+  ensure (FLOAT);
+  u.vdouble = v;
+}
+
+void
+Any::operator<<= (const String &v)
+{
+  ensure (STRING);
+  ((String*) &u)->assign (v);
+}
+
+void
+Any::operator<<= (const Any &v)
+{
+  ensure (ANY);
+  if (u.vany != &v)
+    {
+      Any *old = u.vany;
+      u.vany = new Any (v);
+      if (old)
+        delete old;
+    }
+}
+
+void
+Any::resize (size_t n)
+{
+  ensure (SEQUENCE);
+  ((AnyVector*) &u)->resize (n);
 }
 
 /* === SmartHandle === */

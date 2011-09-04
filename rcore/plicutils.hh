@@ -87,6 +87,7 @@ struct TypeCode /// Representation of type information for the Any class and to 
   /*copy*/              TypeCode        (const TypeCode&);
   TypeCode&             operator=       (const TypeCode&);
   /*dtor*/             ~TypeCode        ();
+  void                  swap            (TypeCode &other); ///< Swap the contents of @a this and @a other in constant time.
   class InternalType;  class MapHandle;
 private: // implementation bits
   explicit              TypeCode        (MapHandle*, InternalType*);
@@ -112,58 +113,68 @@ public:
   static TypeCode       lookup       (std::string name);        ///< Globally lookup a TypeCode by name.
   static TypeMap        load_local   (std::string file_name);   ///< Load a new TypeMap for local lookups only.
   TypeCode              lookup_local (std::string name) const;  ///< Lookup TypeCode within this TypeMap.
+  static TypeCode       notype       ();
 };
 
 // == Any Type ==
-class Any {
+class Any /// Generic value type that can hold values of all other types.
+{
   TypeCode type_code;
-  union { int64 vint64; double vdouble; Any *vany; uint64 smem[(sizeof (String) + 7) / 8]; uint8 bytes[8]; } u;
-  void set_type        (const TypeCode &tc);
-  void set_type_simple (TypeKind kind);
+  typedef std::vector<Any> AnyVector;
+  union { int64 vint64; uint64 vuint64; double vdouble; Any *vany; uint64 qmem[(sizeof (AnyVector) + 7) / 8];
+          uint64 smem[(sizeof (String) + 7) / 8]; uint8 bytes[8]; } u;
+  void    ensure  (TypeKind _kind) { if (PLIC_LIKELY (kind() == _kind)) return; rekind (_kind); }
+  void    rekind  (TypeKind _kind);
+  void    reset   ();
+  bool    as_int (int64 &v, char b) const;
 public:
   /*dtor*/ ~Any    ();
   explicit  Any    ();
-  /*ctor*/  Any    (const Any &other);
-  Any& operator=   (const Any &other); ///< Carries out a deep copy of @a other into this Any.
-  TypeKind kind    () const                 { return type_code.kind(); } ///< Obtain the underlying primitive type kind.
-  bool operator>>= (bool          &v) const { int64 d; const bool r = operator>>= (d); v = d; return r; }
-  bool operator>>= (char          &v) const { int64 d; const bool r = operator>>= (d); v = d; return r; }
-  bool operator>>= (unsigned char &v) const { int64 d; const bool r = operator>>= (d); v = d; return r; }
-  bool operator>>= (int           &v) const { int64 d; const bool r = operator>>= (d); v = d; return r; }
-  bool operator>>= (unsigned int  &v) const { int64 d; const bool r = operator>>= (d); v = d; return r; }
-  bool operator>>= (long          &v) const { int64 d; const bool r = operator>>= (d); v = d; return r; }
-  bool operator>>= (unsigned long &v) const { int64 d; const bool r = operator>>= (d); v = d; return r; }
-  bool operator>>= (uint64        &v) const { int64 d; const bool r = operator>>= (d); v = d; return r; }
-  bool operator>>= (int64         &v) const { return kind() == INT ? (v = u.vint64, true) : false; }
+  /*copy*/  Any    (const Any &clone);                   ///< Carry out a deep copy of @a clone into a new Any.
+  Any& operator=   (const Any &clone);                   ///< Carry out a deep copy of @a clone into this Any.
+  TypeCode  tyoe   () const { return type_code; }        ///< Obtain the full TypeCode for the contents of this Any.
+  TypeKind  kind   () const { return type_code.kind(); } ///< Obtain the underlying primitive type kind.
+  void      retype (const TypeCode &tc);                 ///< Force Any to assume type @a tc.
+  void      swap   (Any            &other);              ///< Swap the contents of @a this and @a other in constant time.
+  bool operator>>= (bool          &v) const { int64 d; const bool r = as_int (d, 1); v = d; return r; }
+  bool operator>>= (char          &v) const { int64 d; const bool r = as_int (d, 7); v = d; return r; }
+  bool operator>>= (unsigned char &v) const { int64 d; const bool r = as_int (d, 8); v = d; return r; }
+  bool operator>>= (int           &v) const { int64 d; const bool r = as_int (d, 31); v = d; return r; }
+  bool operator>>= (unsigned int  &v) const { int64 d; const bool r = as_int (d, 32); v = d; return r; }
+  bool operator>>= (long          &v) const { int64 d; const bool r = as_int (d, 47); v = d; return r; }
+  bool operator>>= (unsigned long &v) const { int64 d; const bool r = as_int (d, 48); v = d; return r; }
+  bool operator>>= (int64         &v) const; ///< Extract a 64bit integer if possible.
+  bool operator>>= (uint64        &v) const { int64 d; const bool r = as_int (d, 64); v = d; return r; }
   bool operator>>= (float         &v) const { double d; const bool r = operator>>= (d); v = d; return r; }
-  bool operator>>= (double        &v) const { return kind() == FLOAT ? (v = u.vdouble, true) : false; }
+  bool operator>>= (double        &v) const; ///< Extract a floating point number as double if possible.
   bool operator>>= (const char   *&v) const { String s; const bool r = operator>>= (s); v = s.c_str(); return r; }
-  bool operator>>= (std::string   &v) const { return kind() == STRING ? (v = *(String*) &u, true) : false; }
-  bool operator>>= (const Any    *&v) const { return kind() == ANY ? (v = u.vany, true) : false; }
-  const Any& as_any ()                const { return kind() == ANY ? *u.vany : *this; } ///< Obtain contents as Any.
+  bool operator>>= (std::string   &v) const; ///< Extract a std::string if possible.
+  bool operator>>= (const Any    *&v) const; ///< Extract an Any if possible.
+  const Any& as_any () const { return kind() == ANY ? *u.vany : *this; } ///< Obtain contents as Any.
   // >>= enum
   // >>= sequence
   // >>= record
   // >>= instance
-  void operator<<= (bool           v)       { operator<<= (int64 (v)); }
-  void operator<<= (char           v)       { operator<<= (int64 (v)); }
-  void operator<<= (unsigned char  v)       { operator<<= (int64 (v)); }
-  void operator<<= (int            v)       { operator<<= (int64 (v)); }
-  void operator<<= (unsigned int   v)       { operator<<= (int64 (v)); }
-  void operator<<= (long           v)       { operator<<= (int64 (v)); }
-  void operator<<= (unsigned long  v)       { operator<<= (int64 (v)); }
-  void operator<<= (uint64         v)       { operator<<= (int64 (v)); }
-  void operator<<= (int64          v)       { set_type_simple (INT); u.vint64 = v; }
-  void operator<<= (float          v)       { operator<<= (double (v)); }
-  void operator<<= (double         v)       { set_type_simple (FLOAT); u.vdouble = v; }
-  void operator<<= (const char    *v)       { operator<<= (std::string (v)); }
-  void operator<<= (char          *v)       { operator<<= (std::string (v)); }
-  void operator<<= (const String  &v)       { set_type_simple (STRING); new (&u) String (v); }
-  void operator<<= (const Any     &v)       { set_type_simple (ANY); u.vany = new Any (v); }
+  void operator<<= (bool           v) { operator<<= (int64 (v)); }
+  void operator<<= (char           v) { operator<<= (int64 (v)); }
+  void operator<<= (unsigned char  v) { operator<<= (int64 (v)); }
+  void operator<<= (int            v) { operator<<= (int64 (v)); }
+  void operator<<= (unsigned int   v) { operator<<= (int64 (v)); }
+  void operator<<= (long           v) { operator<<= (int64 (v)); }
+  void operator<<= (unsigned long  v) { operator<<= (int64 (v)); }
+  void operator<<= (uint64         v);
+  void operator<<= (int64          v); ///< Store a 64bit integer.
+  void operator<<= (float          v) { operator<<= (double (v)); }
+  void operator<<= (double         v); ///< Store a double floating point number.
+  void operator<<= (const char    *v) { operator<<= (std::string (v)); }
+  void operator<<= (char          *v) { operator<<= (std::string (v)); }
+  void operator<<= (const String  &v); ///< Store a std::string.
+  void operator<<= (const Any     &v); ///< Store an Any,
   // <<= enum
   // <<= sequence
   // <<= record
   // <<= instance
+  void resize (size_t n); ///< Resize Any to contain a sequence of length @a n.
 };
 
 // == Type Declarations ==
