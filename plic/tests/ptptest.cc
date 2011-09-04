@@ -152,6 +152,8 @@ standard_tests ()
   TypeCode tcany = TypeMap::lookup ("any");
   assert (tcany.kind() == ANY);
   assert (tcany.name() == "any");
+  TypeCode tcnot = TypeMap::lookup (".@-nosuchtype?");
+  assert (tcnot.untyped() == true);
   printf ("  TEST   Plic standard types                                             OK\n");
 }
 
