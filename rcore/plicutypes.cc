@@ -466,7 +466,7 @@ TypeCode::field_count () const
   return il ? il->length : 0;
 }
 
-const TypeCode
+TypeCode
 TypeCode::field (size_t index) const // RECORD or SEQUENCE
 {
   TypeKind k = kind();

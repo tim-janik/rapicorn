@@ -79,7 +79,7 @@ struct TypeCode /// Representation of type information for the Any class and to 
   size_t                prerequisite_count () const;            ///< Number of interface prerequisites
   std::string           prerequisite    (size_t index) const;   ///< Obtain prerequisite type names for an interface type.
   size_t                field_count     () const;               ///< Number of fields in a record type.
-  const TypeCode        field           (size_t index) const;   ///< Obtain field type for a record or sequence type.
+  TypeCode              field           (size_t index) const;   ///< Obtain field type for a record or sequence type.
   std::string           origin          () const;               ///< Obtain the type origin for a TYPE_REFERENCE (fields).
   bool                  untyped         () const;               ///< Checks whether the TypeCode is undefined.
   std::string           pretty          (const std::string &indent = "") const; ///< Pretty print into a string.
