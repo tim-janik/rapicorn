@@ -398,6 +398,17 @@ TypeCode::aux_value (std::string key) const // utf8data string
   return "";
 }
 
+std::string
+TypeCode::hints () const
+{
+  std::string str = aux_value ("hints");
+  if (str.size() == 0 || str[0] != ':')
+    str = ":" + str;
+  if (str[str.size() - 1] != ':')
+    str = str + ":";
+  return str;
+}
+
 size_t
 TypeCode::enum_count () const
 {

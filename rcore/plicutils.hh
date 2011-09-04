@@ -73,6 +73,7 @@ struct TypeCode /// Representation of type information for the Any class and to 
   size_t                aux_count       () const;               ///< Number of items of auxillary data.
   std::string           aux_data        (size_t index) const;   ///< Accessor for auxillary data as key=utf8data string.
   std::string           aux_value       (std::string key) const; ///< Accessor for auxillary data by key as utf8 string.
+  std::string           hints           () const;               ///< Obtain "hints" aux_value(), enclosed in two ':'.
   size_t                enum_count      () const;               ///< Number of enum values for an enum type.
   std::vector<String>   enum_value      (size_t index) const;   ///< Obtain an enum value as: (ident,label,blurb)
   size_t                prerequisite_count () const;            ///< Number of interface prerequisites
