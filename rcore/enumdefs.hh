@@ -231,21 +231,6 @@ inline StateType& operator&= (StateType &s1, StateType s2) { s1 = s1 & s2; retur
 inline StateType  operator|  (StateType  s1, StateType s2) { return StateType (s1 | (uint64) s2); }
 inline StateType& operator|= (StateType &s1, StateType s2) { s1 = s1 | s2; return s1; }
 
-typedef enum /*<enum>*/
-{
-  INT            = Plic::INT,
-  FLOAT          = Plic::FLOAT,
-  STRING         = Plic::STRING,
-  ENUM           = Plic::ENUM,
-  SEQUENCE       = Plic::SEQUENCE,
-  RECORD         = Plic::RECORD,
-  INSTANCE       = Plic::INSTANCE,
-  FUNC           = Plic::FUNC,
-  TYPE_REFERENCE = Plic::TYPE_REFERENCE,
-  ARRAY          = 'a', /* FIXME */
-} StorageType;
-typedef EnumType<StorageType> EnumTypeStorageType;
-
 typedef enum {
   TEXT_MODE_WRAPPED = 1,
   TEXT_MODE_ELLIPSIZED,

@@ -123,8 +123,8 @@ bool    text_convert    (const String &to_charset,
 // == StringVector ==
 #define RAPICORN_STRING_VECTOR_FROM_ARRAY(ConstCharArray)               ({ \
   Rapicorn::StringVector __a;                                           \
-  const uint64_t __l = RAPICORN_ARRAY_SIZE (ConstCharArray);            \
-  for (uint64_t __ai = 0; __ai < __l; __ai++)                           \
+  const Rapicorn::uint64 __l = RAPICORN_ARRAY_SIZE (ConstCharArray);    \
+  for (Rapicorn::uint64 __ai = 0; __ai < __l; __ai++)                   \
     __a.push_back (ConstCharArray[__ai]);                               \
   __a; })
 

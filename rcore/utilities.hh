@@ -24,6 +24,7 @@
 #endif // RAPICORN_CONVENIENCE
 
 namespace Rapicorn {
+using namespace Plic;
 
 /* --- short integer types --- */
 typedef RapicornUInt8   uint8;

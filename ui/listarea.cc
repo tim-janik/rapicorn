@@ -106,15 +106,16 @@ ItemListImpl::constructed ()
                                                     Plic::TypeMap::lookup ("string"), SELECTION_INTERVAL);
       for (uint i = 0; i < 20; i++)
         {
-          Array row;
+          AnySeq row;
+          row.resize (5);
           String s;
           if (i && (i % 10) == 0)
             s = string_printf ("* %u SMALL ROW (watch scroll direction)", i);
           else
             s = string_printf ("|<br/>| <br/>| %u<br/>|<br/>|", i);
-          row[0] = s;
+          row[0] <<= s;
           for (uint j = 1; j < 4; j++)
-            row[j] = string_printf ("%u-%u", i + 1, j + 1);
+            row[j] <<= string_printf ("%u-%u", i + 1, j + 1);
           store.insert (-1, row);
         }
       model (store.plor_name());
@@ -649,9 +650,9 @@ ListRow*
 ItemListImpl::create_row (uint64 nthrow,
                           bool   with_size_groups)
 {
-  Array row = m_model->get (nthrow);
+  AnySeq row = m_model->get (nthrow);
   ListRow *lr = new ListRow();
-  for (uint i = 0; i < row.count(); i++)
+  for (uint i = 0; i < row.size(); i++)
     {
       ItemImpl *item = ref_sink (&Factory::create_item ("Label"));
       lr->cols.push_back (item);
@@ -676,9 +677,9 @@ void
 ItemListImpl::fill_row (ListRow *lr,
                         uint64   nthrow)
 {
-  Array row = m_model->get (nthrow);
+  AnySeq row = m_model->get (nthrow);
   for (uint i = 0; i < lr->cols.size(); i++)
-    lr->cols[i]->set_property ("markup_text", i < row.count() ? row[i].string() : "");
+    lr->cols[i]->set_property ("markup_text", i < row.size() ? row[i].as_string() : "");
   Ambience *ambience = lr->rowbox->interface<Ambience*>();
   if (ambience)
     ambience->background (nthrow & 1 ? "background-odd" : "background-even");

@@ -20,75 +20,9 @@
 namespace {
 using namespace Rapicorn;
 
-template<typename CharArray> static String
-string_from_chars (CharArray &ca)
-{
-  return String (ca, sizeof (ca));
-}
-
-static void
-test_value_int ()
-{
-  AnyValue v1 (INT);
-  assert (v1.asint() == false);
-  v1 = true;
-  assert (v1.asint() == true);
-  AnyValue v2 (v1);
-  assert ((bool) v2 == true);
-  v1.set ((int64) false);
-  assert ((bool) v1 == false);
-  v2 = v1;
-  assert (v2.asint() == false);
-
-  v1 = 0;
-  assert (v1.asint() == 0);
-  v1 = 1;
-  assert (v1.asint() == 1);
-  v1.set ("-2");
-  assert (v1.asint() == -2.0);
-  v1.set (9223372036854775807LL);
-  assert (v1.asint() == 9223372036854775807LL);
-  v1 = false;
-  assert (v1.asint() == 0.0);
-}
-REGISTER_TEST ("Modval/Value/int", test_value_int);
-
-static void
-test_value_float ()
-{
-  AnyValue v1 (FLOAT);
-  assert (v1.asfloat() == 0.0);
-  v1 = 1.;
-  assert (v1.asfloat() == 1.0);
-  v1.set ("-1");
-  assert (v1.asfloat() == -1.0);
-  v1.set ((long double) 16.5e+6);
-  assert (v1.asfloat() > 16000000.0);
-  assert (v1.asfloat() < 17000000.0);
-  v1 = 7;
-  assert (v1.asfloat() == 7.0);
-  v1 = false;
-  assert (v1.asfloat() == 0.0);
-}
-REGISTER_TEST ("Modval/Value/float", test_value_float);
-
-static void
-test_value_string ()
-{
-  AnyValue v1 (STRING);
-  assert (v1.string() == "");
-  v1.set ("foo");
-  assert (v1.string() == "foo");
-  v1.set ((int64) 1);
-  assert (v1.string() == "1");
-  v1 = 0;
-  assert (v1.string() == "0");
-  v1 = "x";
-  assert (v1.string() == "x");
-}
-REGISTER_TEST ("Modval/Value/string", test_value_string);
-
 struct TestObject : public virtual BaseObject {};
+
+#if 0
 
 static void
 test_array_auto_value ()
@@ -302,7 +236,6 @@ test_store1_row_ops ()
 }
 REGISTER_TEST ("Modval/Store-row-ops", test_store1_row_ops);
 
-#if 0
 static void
 test_store1_row_test ()
 {
