@@ -72,7 +72,7 @@ check-local: check-plic-intern-list-formats
 # post-install tests
 bin-plic-cc-type-package-parser:
 	$(Q) ${PLICV} --cc-type-package-parser | grep -q struct ; eval "$$TSTDIAGNOSE"
-installcheck-local: bin-plic-cc-type-package-parser
+installcheck-local: #bin-plic-cc-type-package-parser
 
 # install/uninstall a "plic" link to "plic-PLIC_VERSION"
 install-exec-hook:

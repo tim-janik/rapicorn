@@ -143,18 +143,124 @@ standard_tests ()
   TypeCode tcint = TypeMap::lookup ("int");
   assert (tcint.kind() == INT);
   assert (tcint.name() == "int");
+  assert (tcint.kind_name() == "INT");
   TypeCode tcfloat = TypeMap::lookup ("float");
+  assert (tcfloat.kind_name() == "FLOAT");
   assert (tcfloat.kind() == FLOAT);
   assert (tcfloat.name() == "float");
   TypeCode tcstring = TypeMap::lookup ("string");
   assert (tcstring.kind() == STRING);
   assert (tcstring.name() == "string");
+  assert (tcstring.kind_name () == "STRING");
   TypeCode tcany = TypeMap::lookup ("any");
   assert (tcany.kind() == ANY);
   assert (tcany.name() == "any");
+  assert (tcany.kind_name () == "ANY");
   TypeCode tcnot = TypeMap::lookup (".@-nosuchtype?");
   assert (tcnot.untyped() == true);
   printf ("  TEST   Plic standard types                                             OK\n");
+}
+
+static void
+type_code_tests ()
+{
+  const String filename = "typecodetests.typ";
+  TypeMap tp = TypeMap::load_local (filename);
+  if (tp.error_status())
+    error ("%s: open failed: %s", filename.c_str(), strerror (tp.error_status()));
+  {
+    // simple int lookup
+    TypeCode t1 = tp.lookup_local ("PlicTests::IntWithFooAsLabel");
+    assert (t1.kind() == INT);
+    assert (t1.name() == "PlicTests::IntWithFooAsLabel");
+    assert (t1.aux_value ("label") == "Foo");
+    assert (t1.hints() == ":");
+    // simple float lookup
+    TypeCode t2 = tp.lookup_local ("PlicTests::FloatWithBlurbBlurb");
+    assert (t2.kind() == FLOAT);
+    assert (t2.name() == "PlicTests::FloatWithBlurbBlurb");
+    assert (t2.aux_value ("blurb") == "Float Blurb");
+    // check that type memory used above is still valid
+    assert (t1.name() + "-postfix" == String ("PlicTests::IntWithFooAsLabel-postfix"));
+    assert (t2.name() == String ("PlicTests::FloatWithBlurbBlurb"));
+  }
+  { // INT
+    TypeCode t = tp.lookup_local ("PlicTests::ExtendIntWithAux");
+    assert (t.kind() == INT);
+    assert (t.name() == "PlicTests::ExtendIntWithAux");
+    assert (t.aux_value ("label") == "Extended int");
+    assert (t.aux_value ("blurb") == "This int demonstrates extensive auxillary data use");
+    assert (t.aux_value ("default") == "33");
+    assert (t.aux_value ("step") == "-5");
+    assert (t.hints().find (":extra-option:") != String().npos);
+  }
+  { // FLOAT
+    TypeCode t = tp.lookup_local ("PlicTests::FloatWithBlurbBlurb");
+    assert (t.kind() == FLOAT);
+    assert (t.name() == "PlicTests::FloatWithBlurbBlurb");
+    assert (t.aux_value ("label") == "Float Label");
+    assert (t.aux_value ("blurb") == "Float Blurb");
+    assert (t.aux_value ("default") == "97.97");
+    assert (t.hints() == ":");
+  }
+  { // STRING
+    TypeCode t = tp.lookup_local ("PlicTests::ExtendedString");
+    assert (t.kind() == STRING);
+    assert (t.name() == "PlicTests::ExtendedString");
+    assert (t.aux_value ("label") == "Extended String");
+    assert (t.aux_value ("blurb") == "Demonstrate full string specification");
+    assert (t.aux_value ("default") == "Default-String-Value");
+    assert (t.hints().find (":ro:") != String().npos);
+  }
+  { // ENUM
+    TypeCode t = tp.lookup_local ("PlicTests::Enum1");
+    assert (t.kind() == ENUM);
+    assert (t.kind_name () == "ENUM");
+    assert (t.name() == "PlicTests::Enum1");
+    assert (t.aux_value ("blurb") == "");
+    assert (t.aux_value ("default") == "");
+    assert (t.hints() == ":");
+    assert (t.enum_count() == 2);
+    assert (t.enum_value (0)[0] == "ENUM_VALUE0");
+    assert (t.enum_value (1)[0] == "ENUM_VALUE1");
+  }
+  { // SEQUENCE
+    TypeCode t = tp.lookup_local ("PlicTests::SimpleSequence");
+    assert (t.kind() == SEQUENCE);
+    assert (t.kind_name () == "SEQUENCE");
+    assert (t.name() == "PlicTests::SimpleSequence");
+    assert (t.aux_value ("blurb") == "");
+    assert (t.aux_value ("default") == "");
+    assert (t.hints() == ":");
+    assert (t.field_count() == 1);
+    TypeCode f = t.field (0);
+    assert (f.kind() == INT);
+    assert (f.name() == "sample_integer");
+  }
+  { // RECORD
+    TypeCode t = tp.lookup_local ("PlicTests::SimpleRecord");
+    assert (t.kind() == RECORD);
+    assert (t.kind_name () == "RECORD");
+    assert (t.name() == "PlicTests::SimpleRecord");
+    assert (t.aux_value ("blurb") == "");
+    assert (t.aux_value ("default") == "");
+    assert (t.hints() == ":");
+    assert (t.field_count() == 4);
+    TypeCode f = t.field (0);
+    assert (f.kind() == INT);
+    assert (f.name() == "intfield");
+    f = t.field (1);
+    assert (f.kind() == FLOAT);
+    assert (f.name() == "floatfield");
+    f = t.field (2);
+    assert (f.kind() == STRING);
+    assert (f.name() == "stringfield");
+    f = t.field (3);
+    assert (f.kind() == ANY);
+    assert (f.name() == "anyfield");
+  }
+  // done
+  printf ("  TEST   Plic type code IDL tests                                        OK\n");
 }
 
 static void
@@ -205,6 +311,7 @@ main (int   argc,
       if (strcmp (argv[i], "--tests") == 0)
         {
           standard_tests();
+          type_code_tests();
           test_any();
           return 0;
         }

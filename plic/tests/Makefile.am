@@ -2,10 +2,12 @@
 include $(top_srcdir)/Makefile.decl
 
 TESTPLIC = PYTHONPATH="$$PYTHONPATH:$(srcdir)/.." ../plic-@PLIC_VERSION@ $(DEBUG:%=--plic-debug)
+PLICINT = ../plic-intern
 
 noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
 ptptest_LDFLAGS = -pthread -lpthread
+ptptest.cc: typecodetests.typ
 
 EXTRA_DIST += testpass.idl testfail.idl include-f1.idl include-f2.idl include-p1.idl include-p2.idl
 EXTRA_DIST += testfail.ref testrapicorn.ref
@@ -15,14 +17,22 @@ DEBUG	    =
 TESTPASS_AUXTESTS = --aux-test label=auxtest1 --aux-test auxtest2 --aux-test auxtest3 \
 		    --aux-test default=10007 --aux-test hints=rw
 
+### Plic build rule for binary type maps
+%.typ: %.idl
+	$(AM_V_GEN)
+	$(Q) ${PLICINT} $< -G TypeMap -o xtmp-$(@F)
+	$(Q) rm -f $@ && mv xtmp-$(@F) $@
+
 ### PLIC installcheck
 bin-plic-cc-type-package-parser:
 	$(Q) plic-@PLIC_VERSION@ --cc-type-package-parser | grep -q struct ; eval "$$TSTDIAGNOSE"
+installcheck-local: #bin-plic-cc-type-package-parser
 bin-plic-list-formats:
 	$(Q) plic-@PLIC_VERSION@ --list-formats >/dev/null ; eval "$$TSTDIAGNOSE"
+installcheck-local: bin-plic-list-formats
 bin-plic-testpass: $(srcdir)/testpass.idl
 	$(Q) plic-@PLIC_VERSION@ $(srcdir)/testpass.idl >/dev/null ; eval "$$TSTDIAGNOSE"
-installcheck-local: bin-plic-cc-type-package-parser bin-plic-list-formats bin-plic-testpass
+installcheck-local: bin-plic-testpass
 
 ### PLIC check passing tests
 check-testpass: $(srcdir)/testpass.idl
