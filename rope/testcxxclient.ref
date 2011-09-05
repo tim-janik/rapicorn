@@ -15,7 +15,7 @@ using Rapicorn::Signals::slot;
 #define PLIC_CHECK(cond,errmsg) do { if (cond) break; throw std::runtime_error (std::string ("PLIC-ERROR: ") + errmsg); } while (0)
 
 namespace { // Anonymous
-using Plic::uint64;
+using Plic::uint64_t;
 
 static __attribute__ ((__format__ (__printf__, 1, 2), unused))
 Plic::FieldBuffer* plic$_error (const char *format, ...)
@@ -33,9 +33,9 @@ Plic::FieldBuffer* plic$_error (const char *format, ...)
 
 #ifndef PLIC_CONNECTION
 #define PLIC_CONNECTION()       (*(Plic::Connection*)NULL)
-uint64               connection_handle2id  (const Plic::SmartHandle &h) { return h._rpc_id(); }
-static inline void   connection_context4id (Plic::uint64 ipcid, Plic::NonCopyable *ctx) {}
-template<class C> C* connection_id2context (uint64 oid) { return (C*) NULL; }
+Plic::uint64_t       connection_handle2id  (const Plic::SmartHandle &h) { return h._rpc_id(); }
+static inline void   connection_context4id (Plic::uint64_t ipcid, Plic::NonCopyable *ctx) {}
+template<class C> C* connection_id2context (Plic::uint64_t oid) { return (C*) NULL; }
 #endif // !PLIC_CONNECTION
 
 
@@ -689,9 +689,9 @@ static inline void ref   (FirstInterface_SmartHandle&) {} // dummy stub for Sign
 static inline void unref (FirstInterface_SmartHandle&) {} // dummy stub for Signal<>.emit
 struct FirstInterface_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public FirstInterface_SmartHandle {
-    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
+    SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  FirstInterface_Context$ (uint64 ipcid) :
+  FirstInterface_Context$ (Plic::uint64_t ipcid) :
     handle$ (ipcid),
     m_cached_types (NULL)
   {
@@ -736,7 +736,7 @@ operator<< (Plic::FieldBuffer &fb, const FirstInterface_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, FirstInterface_SmartHandle &handle)
 {
-  const uint64 ipcid = fbr.pop_object();
+  const Plic::uint64_t ipcid = fbr.pop_object();
   handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<FirstInterface_Context$> (ipcid)->handle$ : FirstInterface_SmartHandle();
   return fbr;
 }
@@ -759,7 +759,7 @@ const Plic::TypeHashList&
 FirstInterface_SmartHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
-  const uint64 ipcid = connection_handle2id (*this);
+  const Plic::uint64_t ipcid = connection_handle2id (*this);
   if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<FirstInterface_Context$> (ipcid)->list_types();
 }
@@ -1136,12 +1136,12 @@ static inline void ref   (UIWidgetArea_SmartHandle&) {} // dummy stub for Signal
 static inline void unref (UIWidgetArea_SmartHandle&) {} // dummy stub for Signal<>.emit
 struct UIWidgetArea_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public UIWidgetArea_SmartHandle {
-    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
+    SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   struct Signal_void_signal_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<UIWidgetArea_SmartHandle, void (), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_void_signal_EventHandler$> > Signal_void_signal;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_void_signal signal;
     Signal_void_signal_EventHandler$ (UIWidgetArea_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_void_signal_EventHandler$ ()
@@ -1151,14 +1151,14 @@ struct UIWidgetArea_Context$ : public Plic::NonCopyable {
   struct Signal_sample_signal_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<UIWidgetArea_SmartHandle, double (UIWidgetArea_SmartHandle &ba1, int someint), Rapicorn::Signals::CollectorDefault<double>, Rapicorn::Signals::SignalConnectionRelay<Signal_sample_signal_EventHandler$> > Signal_sample_signal;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_sample_signal signal;
     Signal_sample_signal_EventHandler$ (UIWidgetArea_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_sample_signal_EventHandler$ ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } sample_signal;
-  UIWidgetArea_Context$ (uint64 ipcid) :
+  UIWidgetArea_Context$ (Plic::uint64_t ipcid) :
     handle$ (ipcid),
     void_signal (handle$),
     sample_signal (handle$),
@@ -1293,7 +1293,7 @@ operator<< (Plic::FieldBuffer &fb, const UIWidgetArea_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, UIWidgetArea_SmartHandle &handle)
 {
-  const uint64 ipcid = fbr.pop_object();
+  const Plic::uint64_t ipcid = fbr.pop_object();
   handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<UIWidgetArea_Context$> (ipcid)->handle$ : UIWidgetArea_SmartHandle();
   return fbr;
 }
@@ -1316,7 +1316,7 @@ const Plic::TypeHashList&
 UIWidgetArea_SmartHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
-  const uint64 ipcid = connection_handle2id (*this);
+  const Plic::uint64_t ipcid = connection_handle2id (*this);
   if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<UIWidgetArea_Context$> (ipcid)->list_types();
 }
@@ -1523,9 +1523,9 @@ static inline void ref   (Parent_SmartHandle&) {} // dummy stub for Signal<>.emi
 static inline void unref (Parent_SmartHandle&) {} // dummy stub for Signal<>.emit
 struct Parent_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public Parent_SmartHandle {
-    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
+    SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  Parent_Context$ (uint64 ipcid) :
+  Parent_Context$ (Plic::uint64_t ipcid) :
     handle$ (ipcid),
     m_cached_types (NULL)
   {
@@ -1570,7 +1570,7 @@ operator<< (Plic::FieldBuffer &fb, const Parent_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, Parent_SmartHandle &handle)
 {
-  const uint64 ipcid = fbr.pop_object();
+  const Plic::uint64_t ipcid = fbr.pop_object();
   handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<Parent_Context$> (ipcid)->handle$ : Parent_SmartHandle();
   return fbr;
 }
@@ -1593,7 +1593,7 @@ const Plic::TypeHashList&
 Parent_SmartHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
-  const uint64 ipcid = connection_handle2id (*this);
+  const Plic::uint64_t ipcid = connection_handle2id (*this);
   if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<Parent_Context$> (ipcid)->list_types();
 }
@@ -1603,9 +1603,9 @@ static inline void ref   (Child_SmartHandle&) {} // dummy stub for Signal<>.emit
 static inline void unref (Child_SmartHandle&) {} // dummy stub for Signal<>.emit
 struct Child_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public Child_SmartHandle {
-    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
+    SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  Child_Context$ (uint64 ipcid) :
+  Child_Context$ (Plic::uint64_t ipcid) :
     handle$ (ipcid),
     m_cached_types (NULL)
   {
@@ -1650,7 +1650,7 @@ operator<< (Plic::FieldBuffer &fb, const Child_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, Child_SmartHandle &handle)
 {
-  const uint64 ipcid = fbr.pop_object();
+  const Plic::uint64_t ipcid = fbr.pop_object();
   handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<Child_Context$> (ipcid)->handle$ : Child_SmartHandle();
   return fbr;
 }
@@ -1673,7 +1673,7 @@ const Plic::TypeHashList&
 Child_SmartHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
-  const uint64 ipcid = connection_handle2id (*this);
+  const Plic::uint64_t ipcid = connection_handle2id (*this);
   if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<Child_Context$> (ipcid)->list_types();
 }
@@ -1683,9 +1683,9 @@ static inline void ref   (Descendant_SmartHandle&) {} // dummy stub for Signal<>
 static inline void unref (Descendant_SmartHandle&) {} // dummy stub for Signal<>.emit
 struct Descendant_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public Descendant_SmartHandle {
-    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
+    SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  Descendant_Context$ (uint64 ipcid) :
+  Descendant_Context$ (Plic::uint64_t ipcid) :
     handle$ (ipcid),
     m_cached_types (NULL)
   {
@@ -1730,7 +1730,7 @@ operator<< (Plic::FieldBuffer &fb, const Descendant_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, Descendant_SmartHandle &handle)
 {
-  const uint64 ipcid = fbr.pop_object();
+  const Plic::uint64_t ipcid = fbr.pop_object();
   handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<Descendant_Context$> (ipcid)->handle$ : Descendant_SmartHandle();
   return fbr;
 }
@@ -1753,7 +1753,7 @@ const Plic::TypeHashList&
 Descendant_SmartHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
-  const uint64 ipcid = connection_handle2id (*this);
+  const Plic::uint64_t ipcid = connection_handle2id (*this);
   if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<Descendant_Context$> (ipcid)->list_types();
 }
@@ -1763,9 +1763,9 @@ static inline void ref   (GrandChild_SmartHandle&) {} // dummy stub for Signal<>
 static inline void unref (GrandChild_SmartHandle&) {} // dummy stub for Signal<>.emit
 struct GrandChild_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public GrandChild_SmartHandle {
-    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
+    SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  GrandChild_Context$ (uint64 ipcid) :
+  GrandChild_Context$ (Plic::uint64_t ipcid) :
     handle$ (ipcid),
     m_cached_types (NULL)
   {
@@ -1810,7 +1810,7 @@ operator<< (Plic::FieldBuffer &fb, const GrandChild_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, GrandChild_SmartHandle &handle)
 {
-  const uint64 ipcid = fbr.pop_object();
+  const Plic::uint64_t ipcid = fbr.pop_object();
   handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<GrandChild_Context$> (ipcid)->handle$ : GrandChild_SmartHandle();
   return fbr;
 }
@@ -1833,7 +1833,7 @@ const Plic::TypeHashList&
 GrandChild_SmartHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
-  const uint64 ipcid = connection_handle2id (*this);
+  const Plic::uint64_t ipcid = connection_handle2id (*this);
   if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<GrandChild_Context$> (ipcid)->list_types();
 }
@@ -1881,9 +1881,9 @@ static inline void ref   (QuickIface_SmartHandle&) {} // dummy stub for Signal<>
 static inline void unref (QuickIface_SmartHandle&) {} // dummy stub for Signal<>.emit
 struct QuickIface_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public QuickIface_SmartHandle {
-    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
+    SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  QuickIface_Context$ (uint64 ipcid) :
+  QuickIface_Context$ (Plic::uint64_t ipcid) :
     handle$ (ipcid),
     m_cached_types (NULL)
   {
@@ -1928,7 +1928,7 @@ operator<< (Plic::FieldBuffer &fb, const QuickIface_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, QuickIface_SmartHandle &handle)
 {
-  const uint64 ipcid = fbr.pop_object();
+  const Plic::uint64_t ipcid = fbr.pop_object();
   handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<QuickIface_Context$> (ipcid)->handle$ : QuickIface_SmartHandle();
   return fbr;
 }
@@ -1951,7 +1951,7 @@ const Plic::TypeHashList&
 QuickIface_SmartHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
-  const uint64 ipcid = connection_handle2id (*this);
+  const Plic::uint64_t ipcid = connection_handle2id (*this);
   if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<QuickIface_Context$> (ipcid)->list_types();
 }
@@ -1970,9 +1970,9 @@ static inline void ref   (MethodTestInterface_SmartHandle&) {} // dummy stub for
 static inline void unref (MethodTestInterface_SmartHandle&) {} // dummy stub for Signal<>.emit
 struct MethodTestInterface_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public MethodTestInterface_SmartHandle {
-    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
+    SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  MethodTestInterface_Context$ (uint64 ipcid) :
+  MethodTestInterface_Context$ (Plic::uint64_t ipcid) :
     handle$ (ipcid),
     m_cached_types (NULL)
   {
@@ -2017,7 +2017,7 @@ operator<< (Plic::FieldBuffer &fb, const MethodTestInterface_SmartHandle &handle
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, MethodTestInterface_SmartHandle &handle)
 {
-  const uint64 ipcid = fbr.pop_object();
+  const Plic::uint64_t ipcid = fbr.pop_object();
   handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<MethodTestInterface_Context$> (ipcid)->handle$ : MethodTestInterface_SmartHandle();
   return fbr;
 }
@@ -2040,7 +2040,7 @@ const Plic::TypeHashList&
 MethodTestInterface_SmartHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
-  const uint64 ipcid = connection_handle2id (*this);
+  const Plic::uint64_t ipcid = connection_handle2id (*this);
   if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<MethodTestInterface_Context$> (ipcid)->list_types();
 }
@@ -2228,12 +2228,12 @@ static inline void ref   (SignalTestInterface_SmartHandle&) {} // dummy stub for
 static inline void unref (SignalTestInterface_SmartHandle&) {} // dummy stub for Signal<>.emit
 struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public SignalTestInterface_SmartHandle {
-    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
+    SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   struct Signal_void_result_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_void_result_EventHandler$> > Signal_void_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_void_result signal;
     Signal_void_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_void_result_EventHandler$ ()
@@ -2243,7 +2243,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_bool_result_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, bool (), Rapicorn::Signals::CollectorDefault<bool>, Rapicorn::Signals::SignalConnectionRelay<Signal_bool_result_EventHandler$> > Signal_bool_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_bool_result signal;
     Signal_bool_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_bool_result_EventHandler$ ()
@@ -2253,7 +2253,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_int_result_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, int (), Rapicorn::Signals::CollectorDefault<int>, Rapicorn::Signals::SignalConnectionRelay<Signal_int_result_EventHandler$> > Signal_int_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_int_result signal;
     Signal_int_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_int_result_EventHandler$ ()
@@ -2263,7 +2263,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_float_result_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, double (), Rapicorn::Signals::CollectorDefault<double>, Rapicorn::Signals::SignalConnectionRelay<Signal_float_result_EventHandler$> > Signal_float_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_float_result signal;
     Signal_float_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_float_result_EventHandler$ ()
@@ -2273,7 +2273,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_string_result_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, std::string (), Rapicorn::Signals::CollectorDefault<std::string>, Rapicorn::Signals::SignalConnectionRelay<Signal_string_result_EventHandler$> > Signal_string_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_string_result signal;
     Signal_string_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_string_result_EventHandler$ ()
@@ -2283,7 +2283,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_enum_result_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickEnum (), Rapicorn::Signals::CollectorDefault<QuickEnum>, Rapicorn::Signals::SignalConnectionRelay<Signal_enum_result_EventHandler$> > Signal_enum_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_enum_result signal;
     Signal_enum_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_enum_result_EventHandler$ ()
@@ -2293,7 +2293,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_record_result_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickRecord_Handle (), Rapicorn::Signals::CollectorDefault<QuickRecord_Handle>, Rapicorn::Signals::SignalConnectionRelay<Signal_record_result_EventHandler$> > Signal_record_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_record_result signal;
     Signal_record_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_record_result_EventHandler$ ()
@@ -2303,7 +2303,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_sequence_result_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickSequence_Handle (), Rapicorn::Signals::CollectorDefault<QuickSequence_Handle>, Rapicorn::Signals::SignalConnectionRelay<Signal_sequence_result_EventHandler$> > Signal_sequence_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_sequence_result signal;
     Signal_sequence_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_sequence_result_EventHandler$ ()
@@ -2313,7 +2313,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_interface_result_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, GrandChild_SmartHandle (), Rapicorn::Signals::CollectorDefault<GrandChild_SmartHandle>, Rapicorn::Signals::SignalConnectionRelay<Signal_interface_result_EventHandler$> > Signal_interface_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_interface_result signal;
     Signal_interface_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_interface_result_EventHandler$ ()
@@ -2323,7 +2323,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_any_result_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, Plic::Any (), Rapicorn::Signals::CollectorDefault<Plic::Any>, Rapicorn::Signals::SignalConnectionRelay<Signal_any_result_EventHandler$> > Signal_any_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_any_result signal;
     Signal_any_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_any_result_EventHandler$ ()
@@ -2333,7 +2333,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_self_result_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, SignalTestInterface_SmartHandle (), Rapicorn::Signals::CollectorDefault<SignalTestInterface_SmartHandle>, Rapicorn::Signals::SignalConnectionRelay<Signal_self_result_EventHandler$> > Signal_self_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_self_result signal;
     Signal_self_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_self_result_EventHandler$ ()
@@ -2343,7 +2343,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_void_arg_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_void_arg_EventHandler$> > Signal_void_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_void_arg signal;
     Signal_void_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_void_arg_EventHandler$ ()
@@ -2353,7 +2353,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_bool_arg_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (bool b), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_bool_arg_EventHandler$> > Signal_bool_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_bool_arg signal;
     Signal_bool_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_bool_arg_EventHandler$ ()
@@ -2363,7 +2363,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_int_arg_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (int i), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_int_arg_EventHandler$> > Signal_int_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_int_arg signal;
     Signal_int_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_int_arg_EventHandler$ ()
@@ -2373,7 +2373,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_float_arg_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (double f), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_float_arg_EventHandler$> > Signal_float_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_float_arg signal;
     Signal_float_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_float_arg_EventHandler$ ()
@@ -2383,7 +2383,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_string_arg_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const std::string &s), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_string_arg_EventHandler$> > Signal_string_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_string_arg signal;
     Signal_string_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_string_arg_EventHandler$ ()
@@ -2393,7 +2393,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_enum_arg_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (QuickEnum e), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_enum_arg_EventHandler$> > Signal_enum_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_enum_arg signal;
     Signal_enum_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_enum_arg_EventHandler$ ()
@@ -2403,7 +2403,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_record_arg_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const QuickRecord_Handle &r), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_record_arg_EventHandler$> > Signal_record_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_record_arg signal;
     Signal_record_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_record_arg_EventHandler$ ()
@@ -2413,7 +2413,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_sequence_arg_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const QuickSequence_Handle &s), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_sequence_arg_EventHandler$> > Signal_sequence_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_sequence_arg signal;
     Signal_sequence_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_sequence_arg_EventHandler$ ()
@@ -2423,7 +2423,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_interface_arg_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (GrandChild_SmartHandle &i), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_interface_arg_EventHandler$> > Signal_interface_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_interface_arg signal;
     Signal_interface_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_interface_arg_EventHandler$ ()
@@ -2433,7 +2433,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_any_arg_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const Plic::Any &a), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_any_arg_EventHandler$> > Signal_any_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_any_arg signal;
     Signal_any_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_any_arg_EventHandler$ ()
@@ -2443,14 +2443,14 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct Signal_self_args_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (SignalTestInterface_SmartHandle &self_), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_self_args_EventHandler$> > Signal_self_args;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_self_args signal;
     Signal_self_args_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_self_args_EventHandler$ ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } self_args;
-  SignalTestInterface_Context$ (uint64 ipcid) :
+  SignalTestInterface_Context$ (Plic::uint64_t ipcid) :
     handle$ (ipcid),
     void_result (handle$),
     bool_result (handle$),
@@ -3459,7 +3459,7 @@ operator<< (Plic::FieldBuffer &fb, const SignalTestInterface_SmartHandle &handle
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, SignalTestInterface_SmartHandle &handle)
 {
-  const uint64 ipcid = fbr.pop_object();
+  const Plic::uint64_t ipcid = fbr.pop_object();
   handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<SignalTestInterface_Context$> (ipcid)->handle$ : SignalTestInterface_SmartHandle();
   return fbr;
 }
@@ -3482,7 +3482,7 @@ const Plic::TypeHashList&
 SignalTestInterface_SmartHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
-  const uint64 ipcid = connection_handle2id (*this);
+  const Plic::uint64_t ipcid = connection_handle2id (*this);
   if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<SignalTestInterface_Context$> (ipcid)->list_types();
 }
@@ -3492,9 +3492,9 @@ static inline void ref   (PropertyTester_SmartHandle&) {} // dummy stub for Sign
 static inline void unref (PropertyTester_SmartHandle&) {} // dummy stub for Signal<>.emit
 struct PropertyTester_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public PropertyTester_SmartHandle {
-    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
+    SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  PropertyTester_Context$ (uint64 ipcid) :
+  PropertyTester_Context$ (Plic::uint64_t ipcid) :
     handle$ (ipcid),
     m_cached_types (NULL)
   {
@@ -3539,7 +3539,7 @@ operator<< (Plic::FieldBuffer &fb, const PropertyTester_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, PropertyTester_SmartHandle &handle)
 {
-  const uint64 ipcid = fbr.pop_object();
+  const Plic::uint64_t ipcid = fbr.pop_object();
   handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<PropertyTester_Context$> (ipcid)->handle$ : PropertyTester_SmartHandle();
   return fbr;
 }
@@ -3562,7 +3562,7 @@ const Plic::TypeHashList&
 PropertyTester_SmartHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
-  const uint64 ipcid = connection_handle2id (*this);
+  const Plic::uint64_t ipcid = connection_handle2id (*this);
   if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<PropertyTester_Context$> (ipcid)->list_types();
 }
@@ -3815,12 +3815,12 @@ static inline void ref   (ButtonArea_SmartHandle&) {} // dummy stub for Signal<>
 static inline void unref (ButtonArea_SmartHandle&) {} // dummy stub for Signal<>.emit
 struct ButtonArea_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public ButtonArea_SmartHandle {
-    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
+    SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
   struct Signal_check_activate_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<ButtonArea_SmartHandle, bool (), Rapicorn::Signals::CollectorUntil0<bool>, Rapicorn::Signals::SignalConnectionRelay<Signal_check_activate_EventHandler$> > Signal_check_activate;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_check_activate signal;
     Signal_check_activate_EventHandler$ (ButtonArea_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_check_activate_EventHandler$ ()
@@ -3830,14 +3830,14 @@ struct ButtonArea_Context$ : public Plic::NonCopyable {
   struct Signal_activate_EventHandler$ : Plic::Connection::EventHandler {
     typedef Rapicorn::Signals::Signal<ButtonArea_SmartHandle, void (), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_activate_EventHandler$> > Signal_activate;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
-    uint64 m_handler_id, m_connection_id;
+    Plic::uint64_t m_handler_id, m_connection_id;
     Signal_activate signal;
     Signal_activate_EventHandler$ (ButtonArea_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
     ~Signal_activate_EventHandler$ ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } activate;
-  ButtonArea_Context$ (uint64 ipcid) :
+  ButtonArea_Context$ (Plic::uint64_t ipcid) :
     handle$ (ipcid),
     check_activate (handle$),
     activate (handle$),
@@ -3968,7 +3968,7 @@ operator<< (Plic::FieldBuffer &fb, const ButtonArea_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, ButtonArea_SmartHandle &handle)
 {
-  const uint64 ipcid = fbr.pop_object();
+  const Plic::uint64_t ipcid = fbr.pop_object();
   handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<ButtonArea_Context$> (ipcid)->handle$ : ButtonArea_SmartHandle();
   return fbr;
 }
@@ -3991,7 +3991,7 @@ const Plic::TypeHashList&
 ButtonArea_SmartHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
-  const uint64 ipcid = connection_handle2id (*this);
+  const Plic::uint64_t ipcid = connection_handle2id (*this);
   if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<ButtonArea_Context$> (ipcid)->list_types();
 }
@@ -4097,9 +4097,9 @@ static inline void ref   (PureMethods_SmartHandle&) {} // dummy stub for Signal<
 static inline void unref (PureMethods_SmartHandle&) {} // dummy stub for Signal<>.emit
 struct PureMethods_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public PureMethods_SmartHandle {
-    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}
+    SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  PureMethods_Context$ (uint64 ipcid) :
+  PureMethods_Context$ (Plic::uint64_t ipcid) :
     handle$ (ipcid),
     m_cached_types (NULL)
   {
@@ -4144,7 +4144,7 @@ operator<< (Plic::FieldBuffer &fb, const PureMethods_SmartHandle &handle)
 Plic::FieldReader&
 operator>> (Plic::FieldReader &fbr, PureMethods_SmartHandle &handle)
 {
-  const uint64 ipcid = fbr.pop_object();
+  const Plic::uint64_t ipcid = fbr.pop_object();
   handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<PureMethods_Context$> (ipcid)->handle$ : PureMethods_SmartHandle();
   return fbr;
 }
@@ -4167,7 +4167,7 @@ const Plic::TypeHashList&
 PureMethods_SmartHandle::cast_types()
 {
   static Plic::TypeHashList notypes;
-  const uint64 ipcid = connection_handle2id (*this);
+  const Plic::uint64_t ipcid = connection_handle2id (*this);
   if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
   return connection_id2context<PureMethods_Context$> (ipcid)->list_types();
 }

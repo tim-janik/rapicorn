@@ -30,7 +30,7 @@ gencc_boilerplate = r"""
 #define PLIC_CHECK(cond,errmsg) do { if (cond) break; throw std::runtime_error (std::string ("PLIC-ERROR: ") + errmsg); } while (0)
 
 namespace { // Anonymous
-using Plic::uint64;
+using Plic::uint64_t;
 
 static __attribute__ ((__format__ (__printf__, 1, 2), unused))
 Plic::FieldBuffer* plic$_error (const char *format, ...)
@@ -49,18 +49,18 @@ Plic::FieldBuffer* plic$_error (const char *format, ...)
 servercc_boilerplate = r"""
 #ifndef PLIC_CONNECTION
 #define PLIC_CONNECTION()       (*(Plic::Connection*)NULL)
-template<class O> O* connection_id2object (uint64 oid) { return dynamic_cast<O*> (reinterpret_cast<Plic::SimpleServer*> (oid)); }
-inline uint64        connection_object2id (const Plic::SimpleServer *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
-inline uint64        connection_object2id (const Plic::SimpleServer &obj) { return connection_object2id (&obj); }
+template<class O> O*  connection_id2object (Plic::uint64_t oid) { return dynamic_cast<O*> (reinterpret_cast<Plic::SimpleServer*> (oid)); }
+inline Plic::uint64_t connection_object2id (const Plic::SimpleServer *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
+inline Plic::uint64_t connection_object2id (const Plic::SimpleServer &obj) { return connection_object2id (&obj); }
 #endif // !PLIC_CONNECTION
 """
 
 clientcc_boilerplate = r"""
 #ifndef PLIC_CONNECTION
 #define PLIC_CONNECTION()       (*(Plic::Connection*)NULL)
-uint64               connection_handle2id  (const Plic::SmartHandle &h) { return h._rpc_id(); }
-static inline void   connection_context4id (Plic::uint64 ipcid, Plic::NonCopyable *ctx) {}
-template<class C> C* connection_id2context (uint64 oid) { return (C*) NULL; }
+Plic::uint64_t       connection_handle2id  (const Plic::SmartHandle &h) { return h._rpc_id(); }
+static inline void   connection_context4id (Plic::uint64_t ipcid, Plic::NonCopyable *ctx) {}
+template<class C> C* connection_id2context (Plic::uint64_t oid) { return (C*) NULL; }
 #endif // !PLIC_CONNECTION
 """
 
@@ -478,13 +478,13 @@ class Generator:
     s += 'static inline void unref (%s&) {} // dummy stub for Signal<>.emit\n' % classH
     s += 'struct %s : public Plic::NonCopyable {\n' % classC    # context class
     s += '  struct SmartHandle$ : public %s {\n' % classH       # derive smart handle for copy-ctor initialization
-    s += '    SmartHandle$ (uint64 ipcid) : Plic::SmartHandle (ipcid) {}\n'
+    s += '    SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}\n'
     s += '  } handle$;\n'
     ancestors = self.class_ancestry (class_info)
     for ancestor in ancestors:
       for sg in ancestor.signals:
         s += self.generate_client_class_context_event_handler_def (class_info, ancestor, sg)
-    s += '  %s (uint64 ipcid) :\n' % classC                     # ctor
+    s += '  %s (Plic::uint64_t ipcid) :\n' % classC             # ctor
     s += '    handle$ (ipcid)'
     for ancestor in ancestors:
       for sg in ancestor.signals:
@@ -537,7 +537,7 @@ class Generator:
     relay = 'Rapicorn::Signals::SignalConnectionRelay<%s> ' % sigE
     s += '    ' + self.generate_signal_typedef (sg, class_info, '', relay) # signal typedefs
     s += '    virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);\n'
-    s += '    uint64 m_handler_id, m_connection_id;\n'
+    s += '    Plic::uint64_t m_handler_id, m_connection_id;\n'
     s += '    %s signal;\n' % signame
     s += '    %s (%s &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}\n' % (sigE, classH)
     s += '    ~%s ()\n' % sigE
@@ -620,7 +620,7 @@ class Generator:
     s += '}\n'
     s += 'Plic::FieldReader&\n'
     s += 'operator>> (Plic::FieldReader &fbr, %s &handle)\n{\n' % classH
-    s += '  const uint64 ipcid = fbr.pop_object();\n'
+    s += '  const Plic::uint64_t ipcid = fbr.pop_object();\n'
     s += '  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<%s> (ipcid)->handle$ : %s();\n' % (classC, classH)
     s += '  return fbr;\n'
     s += '}\n'
@@ -639,7 +639,7 @@ class Generator:
     s += 'const Plic::TypeHashList&\n'
     s += '%s::%s()\n{\n' % (classH, identifiers['cast_types'])
     s += '  static Plic::TypeHashList notypes;\n'
-    s += '  const uint64 ipcid = connection_handle2id (*this);\n'
+    s += '  const Plic::uint64_t ipcid = connection_handle2id (*this);\n'
     s += '  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle\n'
     s += '  return connection_id2context<%s> (ipcid)->list_types();\n' % classC
     s += '}\n'
@@ -859,7 +859,7 @@ class Generator:
     s += '  Plic::TypeHashList thl;\n'
     s += '  self->_list_types (thl);\n'
     s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());\n' # store return value
-    s += '  rb << Plic::int64 (thl.size());\n'
+    s += '  rb << Plic::int64_t (thl.size());\n'
     s += '  for (size_t i = 0; i < thl.size(); i++)\n'
     s += '    rb << thl[i];\n'
     s += '  return &rb;\n'
@@ -913,10 +913,10 @@ class Generator:
     reglines += [ (self.method_digest (stype), self.namespaced_identifier (dispatcher_name)) ]
     closure_class = '_$Closure__%s__%s' % (class_info.name, stype.name)
     s += 'class %s {\n' % closure_class
-    s += '  Plic::Connection &m_connection; uint64 m_handler;\n'
+    s += '  Plic::Connection &m_connection; Plic::uint64_t m_handler;\n'
     s += 'public:\n'
     s += '  typedef Plic::shared_ptr<%s> SharedPtr;\n' % closure_class
-    s += '  %s (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}\n' % closure_class # ctor
+    s += '  %s (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}\n' % closure_class # ctor
     s += '  ~%s()\n' % closure_class # dtor
     s += '  {\n'
     s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);\n' # msgid handler
@@ -948,7 +948,7 @@ class Generator:
     s += '  %s *self;\n' % self.C (class_info)
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
-    s += '  uint64 handler_id, con_id, cid = 0;\n'
+    s += '  Plic::uint64_t handler_id, con_id, cid = 0;\n'
     s += '  fbr >> handler_id;\n'
     s += '  fbr >> con_id;\n'
     s += '  if (con_id) self->sig_%s.disconnect (con_id);\n' % stype.name

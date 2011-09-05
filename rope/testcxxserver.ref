@@ -15,7 +15,7 @@ using Rapicorn::Signals::slot;
 #define PLIC_CHECK(cond,errmsg) do { if (cond) break; throw std::runtime_error (std::string ("PLIC-ERROR: ") + errmsg); } while (0)
 
 namespace { // Anonymous
-using Plic::uint64;
+using Plic::uint64_t;
 
 static __attribute__ ((__format__ (__printf__, 1, 2), unused))
 Plic::FieldBuffer* plic$_error (const char *format, ...)
@@ -33,9 +33,9 @@ Plic::FieldBuffer* plic$_error (const char *format, ...)
 
 #ifndef PLIC_CONNECTION
 #define PLIC_CONNECTION()       (*(Plic::Connection*)NULL)
-template<class O> O* connection_id2object (uint64 oid) { return dynamic_cast<O*> (reinterpret_cast<Plic::SimpleServer*> (oid)); }
-inline uint64        connection_object2id (const Plic::SimpleServer *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
-inline uint64        connection_object2id (const Plic::SimpleServer &obj) { return connection_object2id (&obj); }
+template<class O> O*  connection_id2object (Plic::uint64_t oid) { return dynamic_cast<O*> (reinterpret_cast<Plic::SimpleServer*> (oid)); }
+inline Plic::uint64_t connection_object2id (const Plic::SimpleServer *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
+inline Plic::uint64_t connection_object2id (const Plic::SimpleServer &obj) { return connection_object2id (&obj); }
 #endif // !PLIC_CONNECTION
 
 
@@ -1395,7 +1395,7 @@ _$lsttyp__FirstInterface__ (Plic::FieldReader &fbr)
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb << Plic::int64 (thl.size());
+  rb << Plic::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb << thl[i];
   return &rb;
@@ -1430,7 +1430,7 @@ _$lsttyp__UIWidgetArea__ (Plic::FieldReader &fbr)
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb << Plic::int64 (thl.size());
+  rb << Plic::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb << thl[i];
   return &rb;
@@ -1628,10 +1628,10 @@ _$caller__UIWidgetArea__on_click2in (Plic::FieldReader &fbr)
   return NULL;
 }
 class _$Closure__UIWidgetArea__void_signal {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__UIWidgetArea__void_signal> SharedPtr;
-  _$Closure__UIWidgetArea__void_signal (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__UIWidgetArea__void_signal (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__UIWidgetArea__void_signal()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -1655,7 +1655,7 @@ _$sigcon__UIWidgetArea__void_signal (Plic::FieldReader &fbr)
   I_UIWidgetArea_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_void_signal.disconnect (con_id);
@@ -1667,10 +1667,10 @@ _$sigcon__UIWidgetArea__void_signal (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__UIWidgetArea__sample_signal {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__UIWidgetArea__sample_signal> SharedPtr;
-  _$Closure__UIWidgetArea__sample_signal (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__UIWidgetArea__sample_signal (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__UIWidgetArea__sample_signal()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -1699,7 +1699,7 @@ _$sigcon__UIWidgetArea__sample_signal (Plic::FieldReader &fbr)
   I_UIWidgetArea_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_sample_signal.disconnect (con_id);
@@ -1721,7 +1721,7 @@ _$lsttyp__Parent__ (Plic::FieldReader &fbr)
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb << Plic::int64 (thl.size());
+  rb << Plic::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb << thl[i];
   return &rb;
@@ -1737,7 +1737,7 @@ _$lsttyp__Child__ (Plic::FieldReader &fbr)
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb << Plic::int64 (thl.size());
+  rb << Plic::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb << thl[i];
   return &rb;
@@ -1753,7 +1753,7 @@ _$lsttyp__Descendant__ (Plic::FieldReader &fbr)
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb << Plic::int64 (thl.size());
+  rb << Plic::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb << thl[i];
   return &rb;
@@ -1769,7 +1769,7 @@ _$lsttyp__GrandChild__ (Plic::FieldReader &fbr)
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb << Plic::int64 (thl.size());
+  rb << Plic::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb << thl[i];
   return &rb;
@@ -1785,7 +1785,7 @@ _$lsttyp__QuickIface__ (Plic::FieldReader &fbr)
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb << Plic::int64 (thl.size());
+  rb << Plic::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb << thl[i];
   return &rb;
@@ -1813,7 +1813,7 @@ _$lsttyp__MethodTestInterface__ (Plic::FieldReader &fbr)
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb << Plic::int64 (thl.size());
+  rb << Plic::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb << thl[i];
   return &rb;
@@ -1999,16 +1999,16 @@ _$lsttyp__SignalTestInterface__ (Plic::FieldReader &fbr)
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb << Plic::int64 (thl.size());
+  rb << Plic::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb << thl[i];
   return &rb;
 }
 class _$Closure__SignalTestInterface__void_result {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__void_result> SharedPtr;
-  _$Closure__SignalTestInterface__void_result (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__void_result (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__void_result()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2032,7 +2032,7 @@ _$sigcon__SignalTestInterface__void_result (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_void_result.disconnect (con_id);
@@ -2044,10 +2044,10 @@ _$sigcon__SignalTestInterface__void_result (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__bool_result {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__bool_result> SharedPtr;
-  _$Closure__SignalTestInterface__bool_result (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__bool_result (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__bool_result()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2072,7 +2072,7 @@ _$sigcon__SignalTestInterface__bool_result (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_bool_result.disconnect (con_id);
@@ -2084,10 +2084,10 @@ _$sigcon__SignalTestInterface__bool_result (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__int_result {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__int_result> SharedPtr;
-  _$Closure__SignalTestInterface__int_result (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__int_result (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__int_result()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2112,7 +2112,7 @@ _$sigcon__SignalTestInterface__int_result (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_int_result.disconnect (con_id);
@@ -2124,10 +2124,10 @@ _$sigcon__SignalTestInterface__int_result (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__float_result {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__float_result> SharedPtr;
-  _$Closure__SignalTestInterface__float_result (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__float_result (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__float_result()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2152,7 +2152,7 @@ _$sigcon__SignalTestInterface__float_result (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_float_result.disconnect (con_id);
@@ -2164,10 +2164,10 @@ _$sigcon__SignalTestInterface__float_result (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__string_result {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__string_result> SharedPtr;
-  _$Closure__SignalTestInterface__string_result (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__string_result (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__string_result()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2192,7 +2192,7 @@ _$sigcon__SignalTestInterface__string_result (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_string_result.disconnect (con_id);
@@ -2204,10 +2204,10 @@ _$sigcon__SignalTestInterface__string_result (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__enum_result {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__enum_result> SharedPtr;
-  _$Closure__SignalTestInterface__enum_result (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__enum_result (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__enum_result()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2232,7 +2232,7 @@ _$sigcon__SignalTestInterface__enum_result (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_enum_result.disconnect (con_id);
@@ -2244,10 +2244,10 @@ _$sigcon__SignalTestInterface__enum_result (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__record_result {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__record_result> SharedPtr;
-  _$Closure__SignalTestInterface__record_result (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__record_result (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__record_result()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2272,7 +2272,7 @@ _$sigcon__SignalTestInterface__record_result (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_record_result.disconnect (con_id);
@@ -2284,10 +2284,10 @@ _$sigcon__SignalTestInterface__record_result (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__sequence_result {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__sequence_result> SharedPtr;
-  _$Closure__SignalTestInterface__sequence_result (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__sequence_result (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__sequence_result()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2312,7 +2312,7 @@ _$sigcon__SignalTestInterface__sequence_result (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_sequence_result.disconnect (con_id);
@@ -2324,10 +2324,10 @@ _$sigcon__SignalTestInterface__sequence_result (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__interface_result {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__interface_result> SharedPtr;
-  _$Closure__SignalTestInterface__interface_result (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__interface_result (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__interface_result()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2352,7 +2352,7 @@ _$sigcon__SignalTestInterface__interface_result (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_interface_result.disconnect (con_id);
@@ -2364,10 +2364,10 @@ _$sigcon__SignalTestInterface__interface_result (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__any_result {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__any_result> SharedPtr;
-  _$Closure__SignalTestInterface__any_result (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__any_result (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__any_result()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2392,7 +2392,7 @@ _$sigcon__SignalTestInterface__any_result (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_any_result.disconnect (con_id);
@@ -2404,10 +2404,10 @@ _$sigcon__SignalTestInterface__any_result (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__self_result {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__self_result> SharedPtr;
-  _$Closure__SignalTestInterface__self_result (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__self_result (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__self_result()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2432,7 +2432,7 @@ _$sigcon__SignalTestInterface__self_result (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_self_result.disconnect (con_id);
@@ -2444,10 +2444,10 @@ _$sigcon__SignalTestInterface__self_result (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__void_arg {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__void_arg> SharedPtr;
-  _$Closure__SignalTestInterface__void_arg (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__void_arg (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__void_arg()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2471,7 +2471,7 @@ _$sigcon__SignalTestInterface__void_arg (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_void_arg.disconnect (con_id);
@@ -2483,10 +2483,10 @@ _$sigcon__SignalTestInterface__void_arg (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__bool_arg {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__bool_arg> SharedPtr;
-  _$Closure__SignalTestInterface__bool_arg (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__bool_arg (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__bool_arg()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2512,7 +2512,7 @@ _$sigcon__SignalTestInterface__bool_arg (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_bool_arg.disconnect (con_id);
@@ -2524,10 +2524,10 @@ _$sigcon__SignalTestInterface__bool_arg (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__int_arg {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__int_arg> SharedPtr;
-  _$Closure__SignalTestInterface__int_arg (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__int_arg (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__int_arg()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2553,7 +2553,7 @@ _$sigcon__SignalTestInterface__int_arg (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_int_arg.disconnect (con_id);
@@ -2565,10 +2565,10 @@ _$sigcon__SignalTestInterface__int_arg (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__float_arg {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__float_arg> SharedPtr;
-  _$Closure__SignalTestInterface__float_arg (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__float_arg (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__float_arg()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2594,7 +2594,7 @@ _$sigcon__SignalTestInterface__float_arg (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_float_arg.disconnect (con_id);
@@ -2606,10 +2606,10 @@ _$sigcon__SignalTestInterface__float_arg (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__string_arg {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__string_arg> SharedPtr;
-  _$Closure__SignalTestInterface__string_arg (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__string_arg (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__string_arg()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2635,7 +2635,7 @@ _$sigcon__SignalTestInterface__string_arg (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_string_arg.disconnect (con_id);
@@ -2647,10 +2647,10 @@ _$sigcon__SignalTestInterface__string_arg (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__enum_arg {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__enum_arg> SharedPtr;
-  _$Closure__SignalTestInterface__enum_arg (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__enum_arg (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__enum_arg()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2676,7 +2676,7 @@ _$sigcon__SignalTestInterface__enum_arg (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_enum_arg.disconnect (con_id);
@@ -2688,10 +2688,10 @@ _$sigcon__SignalTestInterface__enum_arg (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__record_arg {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__record_arg> SharedPtr;
-  _$Closure__SignalTestInterface__record_arg (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__record_arg (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__record_arg()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2717,7 +2717,7 @@ _$sigcon__SignalTestInterface__record_arg (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_record_arg.disconnect (con_id);
@@ -2729,10 +2729,10 @@ _$sigcon__SignalTestInterface__record_arg (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__sequence_arg {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__sequence_arg> SharedPtr;
-  _$Closure__SignalTestInterface__sequence_arg (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__sequence_arg (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__sequence_arg()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2758,7 +2758,7 @@ _$sigcon__SignalTestInterface__sequence_arg (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_sequence_arg.disconnect (con_id);
@@ -2770,10 +2770,10 @@ _$sigcon__SignalTestInterface__sequence_arg (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__interface_arg {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__interface_arg> SharedPtr;
-  _$Closure__SignalTestInterface__interface_arg (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__interface_arg (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__interface_arg()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2799,7 +2799,7 @@ _$sigcon__SignalTestInterface__interface_arg (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_interface_arg.disconnect (con_id);
@@ -2811,10 +2811,10 @@ _$sigcon__SignalTestInterface__interface_arg (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__any_arg {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__any_arg> SharedPtr;
-  _$Closure__SignalTestInterface__any_arg (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__any_arg (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__any_arg()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2840,7 +2840,7 @@ _$sigcon__SignalTestInterface__any_arg (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_any_arg.disconnect (con_id);
@@ -2852,10 +2852,10 @@ _$sigcon__SignalTestInterface__any_arg (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__SignalTestInterface__self_args {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__SignalTestInterface__self_args> SharedPtr;
-  _$Closure__SignalTestInterface__self_args (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__SignalTestInterface__self_args (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__SignalTestInterface__self_args()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -2881,7 +2881,7 @@ _$sigcon__SignalTestInterface__self_args (Plic::FieldReader &fbr)
   I_SignalTestInterface_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_self_args.disconnect (con_id);
@@ -2903,7 +2903,7 @@ _$lsttyp__PropertyTester__ (Plic::FieldReader &fbr)
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb << Plic::int64 (thl.size());
+  rb << Plic::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb << thl[i];
   return &rb;
@@ -3162,7 +3162,7 @@ _$lsttyp__ButtonArea__ (Plic::FieldReader &fbr)
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb << Plic::int64 (thl.size());
+  rb << Plic::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb << thl[i];
   return &rb;
@@ -3264,10 +3264,10 @@ _$setter__ButtonArea__click_type (Plic::FieldReader &fbr)
   return NULL;
 }
 class _$Closure__ButtonArea__check_activate {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__ButtonArea__check_activate> SharedPtr;
-  _$Closure__ButtonArea__check_activate (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__ButtonArea__check_activate (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__ButtonArea__check_activate()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -3292,7 +3292,7 @@ _$sigcon__ButtonArea__check_activate (Plic::FieldReader &fbr)
   I_ButtonArea_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_check_activate.disconnect (con_id);
@@ -3304,10 +3304,10 @@ _$sigcon__ButtonArea__check_activate (Plic::FieldReader &fbr)
   return &rb;
 }
 class _$Closure__ButtonArea__activate {
-  Plic::Connection &m_connection; uint64 m_handler;
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
 public:
   typedef Plic::shared_ptr<_$Closure__ButtonArea__activate> SharedPtr;
-  _$Closure__ButtonArea__activate (Plic::Connection &conn, uint64 h) : m_connection (conn), m_handler (h) {}
+  _$Closure__ButtonArea__activate (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
   ~_$Closure__ButtonArea__activate()
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
@@ -3331,7 +3331,7 @@ _$sigcon__ButtonArea__activate (Plic::FieldReader &fbr)
   I_ButtonArea_Interface *self;
   fbr >> self;
   PLIC_CHECK (self, "self must be non-NULL");
-  uint64 handler_id, con_id, cid = 0;
+  Plic::uint64_t handler_id, con_id, cid = 0;
   fbr >> handler_id;
   fbr >> con_id;
   if (con_id) self->sig_activate.disconnect (con_id);
@@ -3353,7 +3353,7 @@ _$lsttyp__PureMethods__ (Plic::FieldReader &fbr)
   Plic::TypeHashList thl;
   self->_list_types (thl);
   Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
-  rb << Plic::int64 (thl.size());
+  rb << Plic::int64_t (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
     rb << thl[i];
   return &rb;
