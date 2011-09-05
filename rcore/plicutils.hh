@@ -36,15 +36,9 @@ using std::tr1::weak_ptr;
 #define PLIC_LIKELY             PLIC_ISLIKELY
 
 // == Standard Types ==
-typedef std::string String;
 using std::vector;
-typedef int8_t                 int8;
-typedef uint8_t                uint8;
-typedef int16_t                int16;
-typedef uint16_t               uint16;
-typedef uint32_t               uint;
-typedef signed long long int   int64; // int64_t is a long on AMD64 which breaks printf
-typedef unsigned long long int uint64; // int64_t is a long on AMD64 which breaks printf
+typedef signed long long int   int64_t;  // libc's int64_t is a long on AMD64 which breaks printf
+typedef unsigned long long int uint64_t; // libc's int64_t is a long on AMD64 which breaks printf
 
 // == TypeKind ==
 /// Classification enum for the underlying kind of a TypeCode.
@@ -67,6 +61,7 @@ const char* type_kind_name (TypeKind type_kind);
 // == TypeCode ==
 struct TypeCode /// Representation of type information for the Any class and to describe structured type compositions.
 {
+  typedef std::string String;
   TypeKind              kind            () const;               ///< Obtain the underlying primitive type kind.
   std::string           kind_name       () const;               ///< Obtain the name of kind().
   std::string           name            () const;               ///< Obtain the type name.
@@ -120,14 +115,15 @@ public:
 // == Any Type ==
 class Any /// Generic value type that can hold values of all other types.
 {
+  typedef std::string String;
   TypeCode type_code;
   typedef std::vector<Any> AnyVector;
-  union { int64 vint64; uint64 vuint64; double vdouble; Any *vany; uint64 qmem[(sizeof (AnyVector) + 7) / 8];
-          uint64 smem[(sizeof (String) + 7) / 8]; uint8 bytes[8]; } u;
+  union { int64_t vint64; uint64_t vuint64; double vdouble; Any *vany; uint64_t qmem[(sizeof (AnyVector) + 7) / 8];
+    uint64_t smem[(sizeof (String) + 7) / 8]; uint8_t bytes[8]; } u;
   void    ensure  (TypeKind _kind) { if (PLIC_LIKELY (kind() == _kind)) return; rekind (_kind); }
   void    rekind  (TypeKind _kind);
   void    reset   ();
-  bool    as_int (int64 &v, char b) const;
+  bool    to_int  (int64_t &v, char b) const;
 public:
   /*dtor*/ ~Any    ();
   explicit  Any    ();
@@ -137,34 +133,37 @@ public:
   TypeKind  kind   () const { return type_code.kind(); } ///< Obtain the underlying primitive type kind.
   void      retype (const TypeCode &tc);                 ///< Force Any to assume type @a tc.
   void      swap   (Any            &other);              ///< Swap the contents of @a this and @a other in constant time.
-  bool operator>>= (bool          &v) const { int64 d; const bool r = as_int (d, 1); v = d; return r; }
-  bool operator>>= (char          &v) const { int64 d; const bool r = as_int (d, 7); v = d; return r; }
-  bool operator>>= (unsigned char &v) const { int64 d; const bool r = as_int (d, 8); v = d; return r; }
-  bool operator>>= (int           &v) const { int64 d; const bool r = as_int (d, 31); v = d; return r; }
-  bool operator>>= (unsigned int  &v) const { int64 d; const bool r = as_int (d, 32); v = d; return r; }
-  bool operator>>= (long          &v) const { int64 d; const bool r = as_int (d, 47); v = d; return r; }
-  bool operator>>= (unsigned long &v) const { int64 d; const bool r = as_int (d, 48); v = d; return r; }
-  bool operator>>= (int64         &v) const; ///< Extract a 64bit integer if possible.
-  bool operator>>= (uint64        &v) const { int64 d; const bool r = as_int (d, 64); v = d; return r; }
+  bool operator>>= (bool          &v) const { int64_t d; const bool r = to_int (d, 1); v = d; return r; }
+  bool operator>>= (char          &v) const { int64_t d; const bool r = to_int (d, 7); v = d; return r; }
+  bool operator>>= (unsigned char &v) const { int64_t d; const bool r = to_int (d, 8); v = d; return r; }
+  bool operator>>= (int           &v) const { int64_t d; const bool r = to_int (d, 31); v = d; return r; }
+  bool operator>>= (unsigned int  &v) const { int64_t d; const bool r = to_int (d, 32); v = d; return r; }
+  bool operator>>= (long          &v) const { int64_t d; const bool r = to_int (d, 47); v = d; return r; }
+  bool operator>>= (unsigned long &v) const { int64_t d; const bool r = to_int (d, 48); v = d; return r; }
+  bool operator>>= (int64_t       &v) const; ///< Extract a 64bit integer if possible.
+  bool operator>>= (uint64_t      &v) const { int64_t d; const bool r = to_int (d, 64); v = d; return r; }
   bool operator>>= (float         &v) const { double d; const bool r = operator>>= (d); v = d; return r; }
   bool operator>>= (double        &v) const; ///< Extract a floating point number as double if possible.
   bool operator>>= (const char   *&v) const { String s; const bool r = operator>>= (s); v = s.c_str(); return r; }
   bool operator>>= (std::string   &v) const; ///< Extract a std::string if possible.
   bool operator>>= (const Any    *&v) const; ///< Extract an Any if possible.
-  const Any& as_any () const { return kind() == ANY ? *u.vany : *this; } ///< Obtain contents as Any.
+  const Any& as_any   () const { return kind() == ANY ? *u.vany : *this; } ///< Obtain contents as Any.
+  double     as_float () const; ///< Obtain INT or FLOAT contents as double float.
+  int64_t    as_int   () const; ///< Obtain INT or FLOAT contents as integer (yields 1 for non-empty strings).
+  String     as_string() const; ///< Obtain INT, FLOAT or STRING contents as string.
   // >>= enum
   // >>= sequence
   // >>= record
   // >>= instance
-  void operator<<= (bool           v) { operator<<= (int64 (v)); }
-  void operator<<= (char           v) { operator<<= (int64 (v)); }
-  void operator<<= (unsigned char  v) { operator<<= (int64 (v)); }
-  void operator<<= (int            v) { operator<<= (int64 (v)); }
-  void operator<<= (unsigned int   v) { operator<<= (int64 (v)); }
-  void operator<<= (long           v) { operator<<= (int64 (v)); }
-  void operator<<= (unsigned long  v) { operator<<= (int64 (v)); }
-  void operator<<= (uint64         v);
-  void operator<<= (int64          v); ///< Store a 64bit integer.
+  void operator<<= (bool           v) { operator<<= (int64_t (v)); }
+  void operator<<= (char           v) { operator<<= (int64_t (v)); }
+  void operator<<= (unsigned char  v) { operator<<= (int64_t (v)); }
+  void operator<<= (int            v) { operator<<= (int64_t (v)); }
+  void operator<<= (unsigned int   v) { operator<<= (int64_t (v)); }
+  void operator<<= (long           v) { operator<<= (int64_t (v)); }
+  void operator<<= (unsigned long  v) { operator<<= (int64_t (v)); }
+  void operator<<= (uint64_t       v);
+  void operator<<= (int64_t        v); ///< Store a 64bit integer.
   void operator<<= (float          v) { operator<<= (double (v)); }
   void operator<<= (double         v); ///< Store a double floating point number.
   void operator<<= (const char    *v) { operator<<= (std::string (v)); }
@@ -188,8 +187,8 @@ typedef FieldBuffer* (*DispatchFunc) (FieldReader&);
 
 // == Type Hash ==
 struct TypeHash {
-  uint64 typehi, typelo;
-  explicit    TypeHash   (uint64 hi, uint64 lo) : typehi (hi), typelo (lo) {}
+  uint64_t typehi, typelo;
+  explicit    TypeHash   (uint64_t hi, uint64_t lo) : typehi (hi), typelo (lo) {}
   explicit    TypeHash   () : typehi (0), typelo (0) {}
   inline bool operator== (const TypeHash &z) const { return typehi == z.typehi && typelo == z.typelo; }
 };
@@ -231,19 +230,19 @@ protected:
 
 /* === SmartHandle === */
 class SmartHandle {
-  uint64 m_rpc_id;
+  uint64_t m_rpc_id;
 protected:
   typedef bool (SmartHandle::*_UnspecifiedBool) () const; // non-numeric operator bool() result
   static inline _UnspecifiedBool _unspecified_bool_true () { return &Plic::SmartHandle::_is_null; }
-  typedef uint64 RpcId;
-  explicit                  SmartHandle (uint64 ipcid);
+  typedef uint64_t RpcId;
+  explicit                  SmartHandle (uint64_t ipcid);
   void                      _reset      ();
   void*                     _cast_iface () const;
   inline void*              _void_iface () const;
   void                      _void_iface (void *rpc_id_ptr);
 public:
   explicit                  SmartHandle ();
-  uint64                    _rpc_id     () const;
+  uint64_t                  _rpc_id     () const;
   bool                      _is_null    () const;
   virtual                  ~SmartHandle ();
 };
@@ -253,64 +252,65 @@ class SimpleServer {
 public:
   explicit             SimpleServer ();
   virtual             ~SimpleServer ();
-  virtual uint64       _rpc_id      () const;
+  virtual uint64_t     _rpc_id      () const;
 };
 
 /* === FieldBuffer === */
 class _FakeFieldBuffer { FieldUnion *u; virtual ~_FakeFieldBuffer() {}; };
 
 union FieldUnion {
-  int64        vint64;
+  int64_t      vint64;
   double       vdouble;
   Any         *vany;
-  uint64       smem[(sizeof (String) + 7) / 8];           // String
-  uint64       bmem[(sizeof (_FakeFieldBuffer) + 7) / 8]; // FieldBuffer
-  uint8        bytes[8];                // FieldBuffer types
-  struct { uint capacity, index; };     // FieldBuffer.buffermem[0]
+  uint64_t     smem[(sizeof (std::string) + 7) / 8];      // String
+  uint64_t     bmem[(sizeof (_FakeFieldBuffer) + 7) / 8]; // FieldBuffer
+  uint8_t      bytes[8];                // FieldBuffer types
+  struct { uint32_t capacity, index; }; // FieldBuffer.buffermem[0]
 };
 
-struct EnumValue { int64 v; EnumValue (int64 e) : v (e) {} };
+struct EnumValue { int64_t v; EnumValue (int64_t e) : v (e) {} };
 
 class FieldBuffer { // buffer for marshalling procedure calls
+  typedef std::string String;
   friend class FieldReader;
   void               check_internal ();
-  inline FieldUnion& upeek (uint n) const { return buffermem[offset() + n]; }
+  inline FieldUnion& upeek (uint32_t n) const { return buffermem[offset() + n]; }
 protected:
   FieldUnion        *buffermem;
   inline void        check ()      { if (PLIC_UNLIKELY (size() > capacity())) check_internal(); }
-  inline uint        offset () const { const uint offs = 1 + (capacity() + 7) / 8; return offs; }
-  inline TypeKind    type_at  (uint n) const { return TypeKind (buffermem[1 + n/8].bytes[n%8]); }
+  inline uint32_t    offset () const { const uint32_t offs = 1 + (capacity() + 7) / 8; return offs; }
+  inline TypeKind    type_at  (uint32_t n) const { return TypeKind (buffermem[1 + n/8].bytes[n%8]); }
   inline void        set_type (TypeKind ft)  { buffermem[1 + size()/8].bytes[size()%8] = ft; }
-  inline uint        capacity () const       { return buffermem[0].capacity; }
-  inline uint        size () const           { return buffermem[0].index; }
+  inline uint32_t    capacity () const       { return buffermem[0].capacity; }
+  inline uint32_t    size () const           { return buffermem[0].index; }
   inline FieldUnion& getu () const           { return buffermem[offset() + size()]; }
   inline FieldUnion& addu (TypeKind ft) { set_type (ft); FieldUnion &u = getu(); buffermem[0].index++; check(); return u; }
-  inline FieldUnion& uat (uint n) const { return n < size() ? upeek (n) : *(FieldUnion*) NULL; }
-  explicit           FieldBuffer (uint _ntypes);
-  explicit           FieldBuffer (uint, FieldUnion*, uint);
+  inline FieldUnion& uat (uint32_t n) const { return n < size() ? upeek (n) : *(FieldUnion*) NULL; }
+  explicit           FieldBuffer (uint32_t _ntypes);
+  explicit           FieldBuffer (uint32_t, FieldUnion*, uint32_t);
 public:
   virtual     ~FieldBuffer();
-  inline uint64 first_id () const { return buffermem && size() && type_at (0) == INT ? upeek (0).vint64 : 0; }
-  inline void add_int64  (int64  vint64)  { FieldUnion &u = addu (INT); u.vint64 = vint64; }
-  inline void add_evalue (int64  vint64)  { FieldUnion &u = addu (ENUM); u.vint64 = vint64; }
-  inline void add_double (double vdouble) { FieldUnion &u = addu (FLOAT); u.vdouble = vdouble; }
+  inline uint64_t first_id () const { return buffermem && size() && type_at (0) == INT ? upeek (0).vint64 : 0; }
+  inline void add_int64  (int64_t vint64)  { FieldUnion &u = addu (INT); u.vint64 = vint64; }
+  inline void add_evalue (int64_t vint64)  { FieldUnion &u = addu (ENUM); u.vint64 = vint64; }
+  inline void add_double (double vdouble)  { FieldUnion &u = addu (FLOAT); u.vdouble = vdouble; }
   inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
-  inline void add_object (uint64 objid)    { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
+  inline void add_object (uint64_t objid)  { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
   inline void add_any    (const Any &vany) { FieldUnion &u = addu (ANY); u.vany = new Any (vany); }
-  inline void add_msgid  (uint64 h, uint64 l) { add_int64 (h); add_int64 (l); }
-  inline FieldBuffer& add_rec (uint nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); }
-  inline FieldBuffer& add_seq (uint nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); }
+  inline void add_msgid  (uint64_t h, uint64_t l) { add_int64 (h); add_int64 (l); }
+  inline FieldBuffer& add_rec (uint32_t nt) { FieldUnion &u = addu (RECORD); return *new (&u) FieldBuffer (nt); }
+  inline FieldBuffer& add_seq (uint32_t nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) FieldBuffer (nt); }
   inline void         reset();
   String              first_id_str() const;
   String              to_string() const;
   static String       type_name (int field_type);
-  static FieldBuffer* _new (uint _ntypes); // Heap allocated FieldBuffer
+  static FieldBuffer* _new (uint32_t _ntypes); // Heap allocated FieldBuffer
   static FieldBuffer* new_error (const String &msg, const String &domain = "");
-  static FieldBuffer* new_result (uint n = 1);
+  static FieldBuffer* new_result (uint32_t n = 1);
   inline FieldBuffer& operator<< (size_t v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
-  inline FieldBuffer& operator<< (uint64 v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
-  inline FieldBuffer& operator<< (int64  v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
-  inline FieldBuffer& operator<< (uint   v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
+  inline FieldBuffer& operator<< (uint64_t v)        { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
+  inline FieldBuffer& operator<< (int64_t  v)        { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
+  inline FieldBuffer& operator<< (uint32_t v)        { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
   inline FieldBuffer& operator<< (int    v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
   inline FieldBuffer& operator<< (bool   v)          { FieldUnion &u = addu (INT); u.vint64 = v; return *this; }
   inline FieldBuffer& operator<< (double v)          { FieldUnion &u = addu (FLOAT); u.vdouble = v; return *this; }
@@ -324,12 +324,13 @@ class FieldBuffer8 : public FieldBuffer { // Stack contained buffer for up to 8 
   FieldUnion bmem[1 + 1 + 8];
 public:
   virtual ~FieldBuffer8 () { reset(); buffermem = NULL; }
-  inline   FieldBuffer8 (uint ntypes = 8) : FieldBuffer (ntypes, bmem, sizeof (bmem)) {}
+  inline   FieldBuffer8 (uint32_t ntypes = 8) : FieldBuffer (ntypes, bmem, sizeof (bmem)) {}
 };
 
 class FieldReader { // read field buffer contents
+  typedef std::string String;
   const FieldBuffer *m_fb;
-  uint               m_nth;
+  uint32_t           m_nth;
   void               check_request (int type);
   inline void        request (int t) { if (PLIC_UNLIKELY (m_nth >= n_types() || get_type() != t)) check_request (t); }
   inline FieldUnion& fb_getu (int t) { request (t); return m_fb->upeek (m_nth); }
@@ -338,31 +339,31 @@ public:
   explicit                 FieldReader (const FieldBuffer &fb) : m_fb (&fb), m_nth (0) {}
   inline void               reset      (const FieldBuffer &fb) { m_fb = &fb; m_nth = 0; }
   inline void               reset      () { m_fb = NULL; m_nth = 0; }
-  inline uint               remaining  () { return n_types() - m_nth; }
+  inline uint32_t           remaining  () { return n_types() - m_nth; }
   inline void               skip       () { if (PLIC_UNLIKELY (m_nth >= n_types())) check_request (0); m_nth++; }
   inline void               skip_msgid () { skip(); skip(); }
-  inline uint               n_types    () { return m_fb->size(); }
+  inline uint32_t           n_types    () { return m_fb->size(); }
   inline TypeKind           get_type   () { return m_fb->type_at (m_nth); }
-  inline int64              get_int64  () { FieldUnion &u = fb_getu (INT); return u.vint64; }
-  inline int64              get_evalue () { FieldUnion &u = fb_getu (ENUM); return u.vint64; }
+  inline int64_t            get_int64  () { FieldUnion &u = fb_getu (INT); return u.vint64; }
+  inline int64_t            get_evalue () { FieldUnion &u = fb_getu (ENUM); return u.vint64; }
   inline double             get_double () { FieldUnion &u = fb_getu (FLOAT); return u.vdouble; }
   inline const String&      get_string () { FieldUnion &u = fb_getu (STRING); return *(String*) &u; }
-  inline uint64             get_object () { FieldUnion &u = fb_getu (INSTANCE); return u.vint64; }
+  inline uint64_t           get_object () { FieldUnion &u = fb_getu (INSTANCE); return u.vint64; }
   inline const Any&         get_any    () { FieldUnion &u = fb_getu (ANY); return *u.vany; }
   inline const FieldBuffer& get_rec    () { FieldUnion &u = fb_getu (RECORD); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& get_seq    () { FieldUnion &u = fb_getu (SEQUENCE); return *(FieldBuffer*) &u; }
-  inline int64              pop_int64  () { FieldUnion &u = fb_popu (INT); return u.vint64; }
-  inline int64              pop_evalue () { FieldUnion &u = fb_popu (ENUM); return u.vint64; }
+  inline int64_t            pop_int64  () { FieldUnion &u = fb_popu (INT); return u.vint64; }
+  inline int64_t            pop_evalue () { FieldUnion &u = fb_popu (ENUM); return u.vint64; }
   inline double             pop_double () { FieldUnion &u = fb_popu (FLOAT); return u.vdouble; }
   inline const String&      pop_string () { FieldUnion &u = fb_popu (STRING); return *(String*) &u; }
-  inline uint64             pop_object () { FieldUnion &u = fb_popu (INSTANCE); return u.vint64; }
+  inline uint64_t           pop_object () { FieldUnion &u = fb_popu (INSTANCE); return u.vint64; }
   inline const Any&         pop_any    () { FieldUnion &u = fb_popu (ANY); return *u.vany; }
   inline const FieldBuffer& pop_rec    () { FieldUnion &u = fb_popu (RECORD); return *(FieldBuffer*) &u; }
   inline const FieldBuffer& pop_seq    () { FieldUnion &u = fb_popu (SEQUENCE); return *(FieldBuffer*) &u; }
   inline FieldReader& operator>> (size_t &v)          { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
-  inline FieldReader& operator>> (uint64 &v)          { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
-  inline FieldReader& operator>> (int64 &v)           { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
-  inline FieldReader& operator>> (uint &v)            { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
+  inline FieldReader& operator>> (uint64_t &v)        { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
+  inline FieldReader& operator>> (int64_t &v)         { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
+  inline FieldReader& operator>> (uint32_t &v)        { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
   inline FieldReader& operator>> (int &v)             { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
   inline FieldReader& operator>> (bool &v)            { FieldUnion &u = fb_popu (INT); v = u.vint64; return *this; }
   inline FieldReader& operator>> (double &v)          { FieldUnion &u = fb_popu (FLOAT); v = u.vdouble; return *this; }
@@ -392,11 +393,11 @@ public: /// @name API for event handler bookkeeping
     virtual             ~EventHandler () {}
     virtual FieldBuffer* handle_event (Plic::FieldBuffer &event_fb) = 0; ///< Process an event and possibly return an error.
   };
-  virtual uint64        register_event_handler (EventHandler *evh) = 0; ///< Register an event handler, transfers memory.
-  virtual EventHandler* find_event_handler     (uint64 handler_id) = 0; ///< Find event handler by id.
-  virtual bool          delete_event_handler   (uint64 handler_id) = 0; ///< Delete a registered event handler, returns success.
+  virtual uint64_t      register_event_handler (EventHandler *evh) = 0; ///< Register an event handler, transfers memory.
+  virtual EventHandler* find_event_handler     (uint64_t handler_id) = 0; ///< Find event handler by id.
+  virtual bool          delete_event_handler   (uint64_t handler_id) = 0; ///< Delete a registered event handler, returns success.
 public: /// @name Registry for IPC method lookups
-  struct MethodEntry    { uint64 hashhi, hashlo; DispatchFunc dispatcher; };
+  struct MethodEntry    { uint64_t hashhi, hashlo; DispatchFunc dispatcher; };
   struct MethodRegistry                                  /// Registry structure for IPC method stubs.
   {
     template<class T, size_t S> MethodRegistry  (T (&static_const_entries)[S])
@@ -404,7 +405,7 @@ public: /// @name Registry for IPC method lookups
   private: static void register_method (const MethodEntry &mentry);
   };
 protected:
-  static DispatchFunc  find_method  (uint64 hashhi, uint64 hashlow);          ///< Lookup method in registry.
+  static DispatchFunc  find_method  (uint64_t hashhi, uint64_t hashlow);      ///< Lookup method in registry.
 };
 
 /* === inline implementations === */

@@ -81,10 +81,10 @@ static const char zero_type_or_map[MAX (sizeof (InternalMap), sizeof (InternalTy
 struct TypeCode::MapHandle {
   const InternalMap *const imap;
 private:
-  volatile uint    m_ref_count;
-  const size_t     m_length;
-  const bool       m_needs_free;
-  int              m_status;
+  volatile uint32_t m_ref_count;
+  const size_t      m_length;
+  const bool        m_needs_free;
+  int               m_status;
 public:
   int             status          ()                { return m_status; }
   InternalList*   internal_list   (uint32_t offset) { return imap->internal_list (offset); }
@@ -105,7 +105,7 @@ public:
   void
   unref()
   {
-    uint o = __sync_fetch_and_add (&m_ref_count, -1);
+    uint32_t o = __sync_fetch_and_add (&m_ref_count, -1);
     if (o -1 == 0)
       delete this;
   }
@@ -418,7 +418,7 @@ TypeCode::enum_count () const
   return il ? il->length / 3 : 0;
 }
 
-std::vector<String>
+std::vector<std::string>
 TypeCode::enum_value (size_t index) const // (ident,label,blurb) choic
 {
   std::vector<String> sv;
@@ -513,7 +513,7 @@ TypeCode::pretty (const std::string &indent) const
     case ENUM:
       snprintf (buffer, sizeof (buffer), "%zu", enum_count());
       s += std::string (": ") + buffer;
-      for (uint i = 0; i < enum_count(); i++)
+      for (uint32_t i = 0; i < enum_count(); i++)
         {
           std::vector<String> sv = enum_value (i);
           s += std::string ("\n") + indent + indent + sv[0] + ", " + sv[1] + ", " + sv[2];
@@ -522,7 +522,7 @@ TypeCode::pretty (const std::string &indent) const
     case INSTANCE:
       snprintf (buffer, sizeof (buffer), "%zu", prerequisite_count());
       s += std::string (": ") + buffer;
-      for (uint i = 0; i < prerequisite_count(); i++)
+      for (uint32_t i = 0; i < prerequisite_count(); i++)
         {
           std::string sp = prerequisite (i);
           s += std::string ("\n") + indent + indent + sp;
@@ -531,7 +531,7 @@ TypeCode::pretty (const std::string &indent) const
     case RECORD: case SEQUENCE:
       snprintf (buffer, sizeof (buffer), "%zu", field_count());
       s += std::string (": ") + buffer;
-      for (uint i = 0; i < field_count(); i++)
+      for (uint32_t i = 0; i < field_count(); i++)
         {
           const TypeCode memb = field (i);
           s += std::string ("\n") + memb.pretty (indent + indent);
@@ -545,7 +545,7 @@ TypeCode::pretty (const std::string &indent) const
   if (aux_count())
     {
       s += std::string (" [");
-      for (uint i = 0; i < aux_count(); i++)
+      for (uint32_t i = 0; i < aux_count(); i++)
         {
           std::string aux = aux_data (i);
           s += std::string ("\n") + indent + indent + aux;

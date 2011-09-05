@@ -38,13 +38,13 @@ PLIC_STATIC_ASSERT (sizeof (FieldUnion::smem) <= sizeof (FieldUnion::bytes));
 PLIC_STATIC_ASSERT (sizeof (FieldUnion::bmem) <= 2 * sizeof (FieldUnion::bytes)); // FIXME
 
 /* === Prototypes === */
-static String string_printf (const char *format, ...) PLIC_PRINTF (1, 2);
+static std::string string_printf (const char *format, ...) PLIC_PRINTF (1, 2);
 
 // === Utilities ===
-static String
+static std::string
 string_printf (const char *format, ...)
 {
-  String str;
+  std::string str;
   va_list args;
   va_start (args, format);
   char buffer[1024 + 1];
@@ -179,7 +179,7 @@ Any::swap (Any &other)
 }
 
 bool
-Any::as_int (int64 &v, char b) const
+Any::to_int (int64_t &v, char b) const
 {
   if (kind() != INT)
     return false;
@@ -189,9 +189,9 @@ Any::as_int (int64 &v, char b) const
     case 1:     s =  u.vint64 >=         0 &&  u.vint64 <= 1;        break;
     case 7:     s =  u.vint64 >=      -128 &&  u.vint64 <= 127;      break;
     case 8:     s =  u.vint64 >=         0 &&  u.vint64 <= 256;      break;
-    case 47:    s = sizeof (long) == sizeof (int64); // chain
+    case 47:    s = sizeof (long) == sizeof (int64_t); // chain
     case 31:    s |= u.vint64 >=   INT_MIN &&  u.vint64 <= INT_MAX;  break;
-    case 48:    s = sizeof (long) == sizeof (int64); // chain
+    case 48:    s = sizeof (long) == sizeof (int64_t); // chain
     case 32:    s |= u.vint64 >=         0 &&  u.vint64 <= UINT_MAX; break;
     case 63:    s = 1; break;
     case 64:    s = 1; break;
@@ -202,10 +202,49 @@ Any::as_int (int64 &v, char b) const
   return s;
 }
 
-bool
-Any::operator>>= (int64 &v) const
+int64_t
+Any::as_int () const
 {
-  const bool r = as_int (v, 63);
+  switch (kind())
+    {
+    case INT:           return u.vint64;
+    case FLOAT:         return u.vdouble;
+    case ENUM:          return u.vint64;
+    case STRING:        return !((String*) &u)->empty();
+    default:            return 0;
+    }
+}
+
+double
+Any::as_float () const
+{
+  switch (kind())
+    {
+    case INT:           return u.vint64;
+    case FLOAT:         return u.vdouble;
+    case ENUM:          return u.vint64;
+    case STRING:        return !((String*) &u)->empty();
+    default:            return 0;
+    }
+}
+
+std::string
+Any::as_string() const
+{
+  switch (kind())
+    {
+    case ENUM:
+    case INT:           return string_printf ("%lli", u.vint64);
+    case FLOAT:         return string_printf ("%.17g", u.vdouble);
+    case STRING:        return *(String*) &u;
+    default:            return "";
+    }
+}
+
+bool
+Any::operator>>= (int64_t &v) const
+{
+  const bool r = to_int (v, 63);
   return r;
 }
 
@@ -237,14 +276,14 @@ Any::operator>>= (const Any *&v) const
 }
 
 void
-Any::operator<<= (uint64 v)
+Any::operator<<= (uint64_t v)
 {
   // ensure (UINT);
-  operator<<= (int64 (v));
+  operator<<= (int64_t (v));
 }
 
 void
-Any::operator<<= (int64 v)
+Any::operator<<= (int64_t v)
 {
   // if (kind() == BOOL && v >= 0 && v <= 1) { u.vint64 = v; return; }
   ensure (INT);
@@ -286,7 +325,7 @@ Any::resize (size_t n)
 }
 
 /* === SmartHandle === */
-SmartHandle::SmartHandle (uint64 ipcid) :
+SmartHandle::SmartHandle (uint64_t ipcid) :
   m_rpc_id (ipcid)
 {
   assert (0 != ipcid);
@@ -314,13 +353,13 @@ SmartHandle::_cast_iface () const
 void
 SmartHandle::_void_iface (void *rpc_id_ptr)
 {
-  uint64 rpcid = uint64 (rpc_id_ptr);
+  uint64_t rpcid = uint64_t (rpc_id_ptr);
   if (rpcid & 3)
     PLIC_THROW ("invalid rpc-id assignment from unaligned class pointer");
   m_rpc_id = rpcid;
 }
 
-uint64
+uint64_t
 SmartHandle::_rpc_id () const
 {
   return m_rpc_id;
@@ -353,10 +392,10 @@ SimpleServer::~SimpleServer ()
   pthread_mutex_unlock (&simple_server_mutex);
 }
 
-uint64
+uint64_t
 SimpleServer::_rpc_id () const
 {
-  return uint64 (this);
+  return uint64_t (this);
 }
 
 /* === FieldBuffer === */
@@ -372,12 +411,12 @@ FieldBuffer::FieldBuffer (uint _ntypes) :
   buffermem[0].index = 0;
 }
 
-FieldBuffer::FieldBuffer (uint        _ntypes,
+FieldBuffer::FieldBuffer (uint32_t    _ntypes,
                           FieldUnion *_bmem,
-                          uint        _bmemlen) :
+                          uint32_t    _bmemlen) :
   buffermem (_bmem)
 {
-  const uint _offs = 1 + (_ntypes + 7) / 8;
+  const uint32_t _offs = 1 + (_ntypes + 7) / 8;
   assert (_bmem && _bmemlen >= sizeof (FieldUnion[_offs + _ntypes]));
   wmemset ((wchar_t*) buffermem, 0, sizeof (FieldUnion[_offs]) / sizeof (wchar_t));
   buffermem[0].capacity = _ntypes;
@@ -420,20 +459,20 @@ FieldReader::check_request (int type)
     }
 }
 
-String
+std::string
 FieldBuffer::first_id_str() const
 {
-  uint64 fid = first_id();
+  uint64_t fid = first_id();
   return string_printf ("%016llx", fid);
 }
 
-static String
-strescape (const String &str)
+static std::string
+strescape (const std::string &str)
 {
-  String buffer;
-  for (String::const_iterator it = str.begin(); it != str.end(); it++)
+  std::string buffer;
+  for (std::string::const_iterator it = str.begin(); it != str.end(); it++)
     {
-      uint8 d = *it;
+      uint8_t d = *it;
       if (d < 32 || d > 126 || d == '?')
         buffer += string_printf ("\\%03o", d);
       else if (d == '\\')
@@ -446,7 +485,7 @@ strescape (const String &str)
   return buffer;
 }
 
-String
+std::string
 FieldBuffer::type_name (int field_type)
 {
   const char *tkn = type_kind_name (TypeKind (field_type));
@@ -455,7 +494,7 @@ FieldBuffer::type_name (int field_type)
   return string_printf ("<invalid:%d>", field_type);
 }
 
-String
+std::string
 FieldBuffer::to_string() const
 {
   String s = string_printf ("Plic::FieldBuffer(%p)={", this);
@@ -491,7 +530,7 @@ FieldBuffer::new_error (const String &msg,
                         const String &domain)
 {
   FieldBuffer *fr = FieldBuffer::_new (2 + 2);
-  const uint64 MSGID_ERROR = 0x8000000000000000ULL;
+  const uint64_t MSGID_ERROR = 0x8000000000000000ULL;
   fr->add_msgid (MSGID_ERROR, 0);
   fr->add_string (msg);
   fr->add_string (domain);
@@ -499,36 +538,36 @@ FieldBuffer::new_error (const String &msg,
 }
 
 FieldBuffer*
-FieldBuffer::new_result (uint n)
+FieldBuffer::new_result (uint32_t n)
 {
   FieldBuffer *fr = FieldBuffer::_new (2 + n);
-  const uint64 MSGID_RESULT_MASK = 0x9000000000000000ULL;
+  const uint64_t MSGID_RESULT_MASK = 0x9000000000000000ULL;
   fr->add_msgid (MSGID_RESULT_MASK, 0); // FIXME: needs original message
   return fr;
 }
 
 class OneChunkFieldBuffer : public FieldBuffer {
   virtual ~OneChunkFieldBuffer () { reset(); buffermem = NULL; }
-  explicit OneChunkFieldBuffer (uint        _ntypes,
+  explicit OneChunkFieldBuffer (uint32_t    _ntypes,
                                 FieldUnion *_bmem,
-                                uint        _bmemlen) :
+                                uint32_t    _bmemlen) :
     FieldBuffer (_ntypes, _bmem, _bmemlen)
   {}
 public:
   static OneChunkFieldBuffer*
-  _new (uint _ntypes)
+  _new (uint32_t _ntypes)
   {
-    const uint _offs = 1 + (_ntypes + 7) / 8;
+    const uint32_t _offs = 1 + (_ntypes + 7) / 8;
     size_t bmemlen = sizeof (FieldUnion[_offs + _ntypes]);
-    size_t objlen = ALIGN4 (sizeof (OneChunkFieldBuffer), int64);
-    uint8 *omem = new uint8[objlen + bmemlen];
+    size_t objlen = ALIGN4 (sizeof (OneChunkFieldBuffer), int64_t);
+    uint8_t *omem = new uint8_t[objlen + bmemlen];
     FieldUnion *bmem = (FieldUnion*) (omem + objlen);
     return new (omem) OneChunkFieldBuffer (_ntypes, bmem, bmemlen);
   }
 };
 
 FieldBuffer*
-FieldBuffer::_new (uint _ntypes)
+FieldBuffer::_new (uint32_t _ntypes)
 {
   return OneChunkFieldBuffer::_new (_ntypes);
 }
@@ -545,7 +584,7 @@ static pthread_mutex_t                   dispatcher_mutex = PTHREAD_MUTEX_INITIA
 static bool                              dispatcher_map_locked = false;
 
 DispatchFunc
-Connection::find_method (uint64 hashhi, uint64 hashlo)
+Connection::find_method (uint64_t hashhi, uint64_t hashlo)
 {
   TypeHash typehash (hashhi, hashlo);
 #if 1 // avoid costly mutex locking
