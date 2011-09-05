@@ -6,10 +6,8 @@
 #include "rapicornthread.hh"
 #include "rapicornmsg.hh"
 #include "rapicorncpu.hh"
-#include "types.hh"
 #include <errno.h>
 #include <stdio.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <fcntl.h>

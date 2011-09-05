@@ -39,7 +39,7 @@ static Store1*
 create_store ()
 {
   Store1 *s1 = Store1::create_memory_store ("models/files",
-                                            Type::lookup ("string"), SELECTION_BROWSE);
+                                            Plic::TypeMap::lookup ("string"), SELECTION_BROWSE);
   fill_store (*s1, ".");
   return s1;
 }

@@ -36,25 +36,26 @@ ItemList::list_properties()
 }
 
 static uint
-n_columns_from_type (const Type &type)
+n_columns_from_type (const Plic::TypeCode &type)
 {
-  switch (type.storage())
+  switch (type.kind())
     {
-    case INT:
-    case FLOAT:
-    case STRING:
-    case ENUM:
-    case SEQUENCE:
-    case INSTANCE:
-    case FUNC:
-    case TYPE_REFERENCE:
-      // case ANY:
-    case ARRAY:
+    case Plic::INT:
+    case Plic::FLOAT:
+    case Plic::STRING:
+    case Plic::ENUM:
+    case Plic::SEQUENCE:
+    case Plic::INSTANCE:
+    case Plic::FUNC:
+    case Plic::TYPE_REFERENCE:
+    case Plic::ANY:
+      // case ARRAY:
       return 1;
-    case RECORD:
+    case Plic::RECORD:
       return 1; // FIXME: type.n_fields();
+    default:
+      return 0;
     }
-  return 0;
 }
 
 ItemListImpl::ItemListImpl() :
@@ -102,7 +103,7 @@ ItemListImpl::constructed ()
   if (!m_model)
     {
       Store1 &store = *Store1::create_memory_store ("models/ItemListImpl/test",
-                                                    Type::lookup ("string"), SELECTION_INTERVAL);
+                                                    Plic::TypeMap::lookup ("string"), SELECTION_INTERVAL);
       for (uint i = 0; i < 20; i++)
         {
           Array row;

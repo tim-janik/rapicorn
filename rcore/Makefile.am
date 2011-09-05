@@ -14,7 +14,7 @@ rapicorn_public_headers = $(strip	\
         rapicornmsg.hh	rapicornsignal.hh	rapicornmath.hh		rapicornutf8.hh   \
         rapicornxml.hh	markup.hh		enumdefs.hh		testutils.hh \
         pixmap.hh	regex.hh		plicutils.hh \
-	values.hh 	types.hh 		loop.hh		main.hh	models.hh \
+	values.hh 				loop.hh		main.hh	models.hh \
 	$(rapicorn_impl_headers) \
 	rapicorncdefs.h	rcore.hh	strings.hh	\
 )
@@ -23,7 +23,7 @@ rapicorn_cc_sources = $(sort		\
         rapicornmsg.cc  rapicornsignal.cc	rapicornmath.cc		rapicornutf8.cc   \
         rapicornxml.cc  markup.cc		enumdefs.cc		testutils.cc \
         pixmap.cc	regex.cc		plicutils.cc \
-	values.cc 	types.cc 		loop.cc		main.cc	models.cc    \
+	values.cc 				loop.cc		main.cc	models.cc    \
         rapicornthreadimpl.cc					strings.cc \
 )
 rapicorn_impl_headers = $(strip 	\
@@ -78,41 +78,6 @@ progs_ldadd            = librapicorncore@RAPICORN_RELEASE@.la $(RAPICORN_CORE_LI
 noinst_PROGRAMS       += rapicorn-zintern
 rapicorn_zintern_SOURCES = rapicorn-zintern.cc
 rapicorn_zintern_LDADD   = $(RAPICORN_CORE_LIBS) -lm # $(progs_ldadd)
-
-# === types-ptpp.cc ===
-types-ptpp.cc: $(PLICINT)
-	:; $(PLICINT) --cc-type-package-parser > gen-$@
-	mv gen-$@ $@
-types.cc: types-ptpp.cc
-CLEANFILES += types-ptpp.cc
-check-ptpp-version: $(top_srcdir)/plic/PlicTypePackage.cc
-	$(Q) cp types-ptpp.cc $(TSTOUT)
-	$(Q) eval "$$TSTDIFF" "'$(top_srcdir)/plic/PlicTypePackage.cc'"
-check: # check-ptpp-version # sanity check the --cc-type-package-parser rule
-
-# === types-zgen.c ===
-EXTRA_DIST += types-std.idl
-types-zgen.c:  ./rapicorn-zintern $(srcdir)/types-std.idl
-	: # compile IDL definitions into binary data
-	$(PLICINT) $(srcdir)/types-std.idl -G TypePackage -o ./types-std.tpg
-	: # convert to .rodata and fixup standard types
-	./rapicorn-zintern -b RAPICORNSTD_RODATA -n ./types-std.tpg | \
-	  sed -e 's/12=Rapicorn_STD/12=Rapicorn*STD/'	\
-	      -e 's/__i\.\.3=iNt/__i..3=int/'			\
-	      -e 's/__d\.\.5=floAt/__d..5=float/'			\
-	      -e 's/__s\.\.6=strIng/__s..6=string/'		\
-	      -e 's/__d\.\.5=Array/__a..5=Array/'		> xgen-$(@F)
-	: # validate standard type adaptions
-	test `grep  -F	-e '12=Rapicorn*STD'	\
-			-e '__i..3=int'		\
-			-e '__d..5=float'	\
-			-e '__s..6=string'	\
-			-e '__a..5=Array'   xgen-$(@F) | wc -l` = 5
-	rm -f ./types-std.tpg
-	mv xgen-$(@F) $@
-$(srcdir)/types.cc: types-zgen.c
-CLEANFILES += xgen-types-zgen.c types-zgen.c
-
 
 # === enum introspection ===
 $(srcdir)/enumdefs.cc: gen-enums.cc

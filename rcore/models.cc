@@ -20,8 +20,30 @@ namespace Rapicorn {
 
 /* --- 0-Dim Models --- */
 
-Model0::Model0 (Type t) :
-  m_type (t), m_value (t.storage()),
+static StorageType
+storage_from_type_kind (Plic::TypeKind kind)
+{
+  switch (kind)
+    {
+    case Plic::UNTYPED:         return StorageType (0);
+    case Plic::VOID:            return StorageType (0);
+    case Plic::INT:             return INT;
+    case Plic::FLOAT:           return FLOAT;
+    case Plic::STRING:          return STRING;
+    case Plic::ENUM:            return ENUM;
+    case Plic::SEQUENCE:        return SEQUENCE;
+    case Plic::RECORD:          return RECORD;
+    case Plic::INSTANCE:        return INSTANCE;
+    case Plic::FUNC:            return FUNC;
+    case Plic::TYPE_REFERENCE:  return TYPE_REFERENCE;
+    case Plic::ANY:             return StorageType (0);
+      // case Plic::ARRAY:           return ARRAY;
+    default:                    return StorageType (0);
+    }
+}
+
+Model0::Model0 (Plic::TypeCode t) :
+  m_type (t), m_value (storage_from_type_kind (t.kind())),
   sig_changed (*this, &Model0::changed)
 {}
 
@@ -328,8 +350,8 @@ Model1::~Model1 (void)
   delete &m_selection;
 }
 
-Model1::Model1 (Type          row_type,
-                SelectionMode selectionmode) :
+Model1::Model1 (Plic::TypeCode row_type,
+                SelectionMode  selectionmode) :
   m_type (row_type), m_selection (Selection1::create_selection (*this, selectionmode)),
   sig_changed  (*this, &Model1::handle_changed),
   sig_inserted (*this, &Model1::handle_inserted),
@@ -506,16 +528,16 @@ class MemoryStore1 : public virtual Model1, public virtual Store1 {
       }
   }
 public:
-  explicit MemoryStore1 (Type          row_type,
-                         SelectionMode selectionmode) :
+  explicit MemoryStore1 (Plic::TypeCode row_type,
+                         SelectionMode  selectionmode) :
     Model1 (row_type, selectionmode)
   {}
 };
 
 Store1*
-Store1::create_memory_store (const String &plor_name,
-                             Type          row_type,
-                             SelectionMode selectionmode)
+Store1::create_memory_store (const String  &plor_name,
+                             Plic::TypeCode row_type,
+                             SelectionMode  selectionmode)
 {
   Store1 *store = new MemoryStore1 (row_type, selectionmode);
   store->plor_name (plor_name);

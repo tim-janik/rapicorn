@@ -20,18 +20,6 @@
 namespace {
 using namespace Rapicorn;
 
-static void
-ensure_package_file()
-{
-  static bool initialized = false;
-  if (once_enter (&initialized))
-    {
-      // first, load required type package
-      Type::register_package_file (Path::vpath_find ("testtypes.tpg"));
-      once_leave (&initialized, true);
-    }
-}
-
 template<typename CharArray> static String
 string_from_chars (CharArray &ca)
 {
@@ -39,123 +27,8 @@ string_from_chars (CharArray &ca)
 }
 
 static void
-test_type_info ()
-{
-  ensure_package_file();
-  String ts;
-  // fail type extraction
-  Type t0 = Type::try_lookup (":invalid:::type^^^Definition");
-  assert (t0.istype() == false);
-  // ensure standard types
-  Type s1 = Type::try_lookup ("string");
-  assert (s1.storage() == STRING);
-  Type s2 = Type::try_lookup ("int");
-  assert (s2.storage() == INT);
-  Type s3 = Type::try_lookup ("float");
-  assert (s3.storage() == FLOAT);
-  // type extraction by reference
-  Type t1 = Type::lookup ("RapicornTest::IntWithFooAsLabel");
-  assert (t1.istype());
-  assert (t1.name() == "IntWithFooAsLabel");
-  assert (t1.storage() == INT);
-  assert (t1.aux_string ("label") == "Foo");
-  assert (t1.hints() == ":");
-  // type extraction by pointer (need to check it didn't fail)
-  Type t2 = Type::lookup ("RapicornTest::FloatWithBlurbBlurb");
-  assert (t2.istype());
-  assert (t2.name() == "FloatWithBlurbBlurb");
-  assert (t2.storage() == FLOAT);
-  assert (t2.aux_string ("blurb") == "Float Blurb");
-  // check that type memory used above is still valid
-  assert (t1.name() + "-postfix" == String ("IntWithFooAsLabel-postfix"));
-  assert (t2.name() == String ("FloatWithBlurbBlurb"));
-}
-REGISTER_TEST ("Modval/Type/type info", test_type_info);
-
-static void
-test_type_api ()
-{
-  ensure_package_file();
-  { // Int
-    Type t = Type::lookup ("RapicornTest::ExtendIntWithAux");
-    assert (t.istype());
-    assert (t.storage() == INT);
-    assert (t.storage_name() == String ("INT"));
-    assert (t.name() == t.ident());
-    assert (t.ident() == "ExtendIntWithAux");
-    assert (t.label() == "Extended int");
-    assert (t.blurb() == "This int demonstrates extensive auxillary data use");
-    assert (t.aux_int ("default") == 33);
-    assert (t.aux_float ("step") == -5);
-    assert (t.hints().find (":extra-option:") != String().npos);
-  }
-  { // Float
-    Type t = Type::lookup ("RapicornTest::FloatWithBlurbBlurb");
-    assert (t.istype());
-    assert (t.storage() == FLOAT);
-    assert (t.storage_name() == String ("FLOAT"));
-    assert (t.name() == t.ident());
-    assert (t.ident() == "FloatWithBlurbBlurb");
-    assert (t.label() == "Float Label");
-    assert (t.blurb() == "Float Blurb");
-    assert (t.aux_float ("default") == 97.97);
-    assert (t.hints() == ":");
-  }
-  { // String
-    Type t = Type::lookup ("RapicornTest::ExtendedString");
-    assert (t.istype());
-    assert (t.storage() == STRING);
-    assert (t.storage_name () == String ("STRING"));
-    assert (t.name() == t.ident());
-    assert (t.ident() == "ExtendedString");
-    assert (t.label() == "Extended String");
-    assert (t.blurb() == "Demonstrate full string specification");
-    assert (t.aux_string ("default") == "Default-String-Value");
-    assert (t.hints().find (":ro:") != String().npos);
-  }
-  { // Array
-    Type t = Type::lookup ("Array");
-    assert (t.istype());
-    assert (t.storage() == ARRAY);
-    assert (t.storage_name () == String ("ARRAY"));
-    assert (t.name() == t.ident());
-    assert (t.ident() == "Array");
-    assert (t.label() == "Array");
-    assert (t.blurb() == "");
-    assert (t.aux_string ("default") == "");
-    assert (t.hints() == ":");
-  }
-  { // Enum
-    Type t = Type::lookup ("RapicornTest::Enum1");
-    assert (t.istype());
-    assert (t.storage() == ENUM);
-    assert (t.storage_name () == String ("ENUM"));
-    assert (t.name() == t.ident());
-    assert (t.ident() == "Enum1");
-    assert (t.label() == "Enum1");
-    assert (t.blurb() == "");
-    assert (t.aux_string ("default") == "");
-    assert (t.hints() == ":");
-  }
-  { // Sequence
-    Type t = Type::lookup ("RapicornTest::SimpleSequence");
-    assert (t.istype());
-    assert (t.storage() == SEQUENCE);
-    assert (t.storage_name () == String ("SEQUENCE"));
-    assert (t.name() == t.ident());
-    assert (t.ident() == "SimpleSequence");
-    assert (t.label() == "SimpleSequence");
-    assert (t.blurb() == "");
-    assert (t.aux_string ("default") == "");
-    assert (t.hints() == ":");
-  }
-}
-REGISTER_TEST ("Modval/Type/basics", test_type_api);
-
-static void
 test_value_int ()
 {
-  ensure_package_file();
   AnyValue v1 (INT);
   assert (v1.asint() == false);
   v1 = true;
@@ -183,7 +56,6 @@ REGISTER_TEST ("Modval/Value/int", test_value_int);
 static void
 test_value_float ()
 {
-  ensure_package_file();
   AnyValue v1 (FLOAT);
   assert (v1.asfloat() == 0.0);
   v1 = 1.;
@@ -203,7 +75,6 @@ REGISTER_TEST ("Modval/Value/float", test_value_float);
 static void
 test_value_string ()
 {
-  ensure_package_file();
   AnyValue v1 (STRING);
   assert (v1.string() == "");
   v1.set ("foo");
@@ -222,7 +93,6 @@ struct TestObject : public virtual BaseObject {};
 static void
 test_array_auto_value ()
 {
-  ensure_package_file();
   Array a1, a2;
   TestObject *to = new TestObject();
   ref_sink (to);
@@ -240,7 +110,6 @@ REGISTER_TEST ("Modval/Array/AutoValue", test_array_auto_value);
 static void
 test_array ()
 {
-  ensure_package_file();
   Array a;
   // [0] == head
   a.push_head (AnyValue (INT, 0));
@@ -301,14 +170,13 @@ static void
 variable_changed (Variable *self)
 {
   if (Test::verbose())
-    printout ("Variable::changed: %s\n", self->type().ident().c_str());
+    printout ("Variable::changed: %s\n", self->type().name().c_str());
 }
 
 static void
 test_variable ()
 {
-  ensure_package_file();
-  Type somestring ("RapicornTest::SimpleString");
+  Plic::TypeCode somestring = Plic::TypeMap::lookup ("string");
   Variable &v1 = *new Variable (somestring);
   ref_sink (v1);
   v1.sig_changed += slot (variable_changed, &v1);
@@ -331,9 +199,8 @@ REGISTER_TEST ("Modval/Variable/notification", test_variable);
 static void
 test_store1_string_row ()
 {
-  ensure_package_file();
-  Type t1 = Type::lookup ("RapicornTest::SimpleString");
-  assert (t1.istype());
+  Plic::TypeCode t1 = Plic::TypeMap::lookup ("string");
+  assert (t1.kind() == Plic::STRING);
   Store1 *s1 = Store1::create_memory_store ("models/mod1tst/string-row", t1, SELECTION_NONE);
   assert (s1 != NULL);
   /* assert model/store identity (for memory stores) */
@@ -352,10 +219,8 @@ REGISTER_TEST ("Modval/Store-string-row", test_store1_string_row);
 static void
 test_store1_array ()
 {
-  ensure_package_file();
   /* create storage model with row type */
-  Type t1 = Type::lookup ("RapicornTest::SimpleRecord");
-  assert (t1.istype());
+  Plic::TypeCode t1 = Plic::TypeMap::lookup ("string"); // FIXME: use "record" ?
   Store1 *s1 = Store1::create_memory_store ("models/mod1tst/array", t1, SELECTION_NONE);
   assert (s1 != NULL);
   assert (s1->count() == 0);
@@ -373,7 +238,7 @@ static Store1&
 create_dummy_store1 ()
 {
   Store1 &store = *Store1::create_memory_store ("models/mod1tst/dummy",
-                                                Type::lookup ("RapicornTest::SimpleString"),
+                                                Plic::TypeMap::lookup ("string"),
                                                 SELECTION_NONE);
   for (uint i = 0; i < 4; i++)
     {
@@ -404,8 +269,6 @@ stringify_model (Model1 &model)
 static void
 test_store1_row_ops ()
 {
-  ensure_package_file();
-
   Store1 &store = create_dummy_store1();
   Model1 &model = store.model();
   Array row;
@@ -439,10 +302,10 @@ test_store1_row_ops ()
 }
 REGISTER_TEST ("Modval/Store-row-ops", test_store1_row_ops);
 
+#if 0
 static void
 test_store1_row_test ()
 {
-  ensure_package_file();
   /* creating a model 1D test:
    * 1: create array type with fixed field count
    * 2: create list store from type
@@ -453,5 +316,6 @@ test_store1_row_test ()
    */
 }
 REGISTER_TEST ("Modval/Store-row-test", test_store1_row_test);
+#endif
 
 } // Anon
