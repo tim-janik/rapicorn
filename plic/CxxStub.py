@@ -7,14 +7,14 @@ import Decls, GenUtils, re
 
 clienthh_boilerplate = r"""
 // --- ClientHH Boilerplate ---
-#include <rcore/plicutils.hh>
+#include <plic/runtime.hh>
 #include <rapicorn-core.hh> // for rcore/rapicornsignal.hh
 using Rapicorn::Signals::slot;
 """
 
 serverhh_boilerplate = r"""
 // --- ServerHH Boilerplate ---
-#include <rcore/plicutils.hh>
+#include <plic/runtime.hh>
 #include <rcore/rapicornsignal.hh>
 using Rapicorn::Signals::slot;
 """
