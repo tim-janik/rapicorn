@@ -21,11 +21,14 @@
 
 #define error(...) do { fputs ("ERROR: ", stderr); fprintf (stderr, __VA_ARGS__); fputs ("\n", stderr); abort(); } while (0)
 
+namespace { // Anon
+
 using namespace Plic;
-using Plic::uint8;
-using Plic::uint;
-using Plic::vector;
-using Plic::String;
+using Plic::int64_t;
+using Plic::uint64_t;
+typedef uint32_t uint;
+typedef std::string String;
+using std::vector;
 
 #ifndef MAX
 #define MIN(a,b)        ((a) <= (b) ? (a) : (b))
@@ -263,41 +266,95 @@ type_code_tests ()
   printf ("  TEST   Plic type code IDL tests                                        OK\n");
 }
 
+static const double test_double_value = 7.76576e-306;
+
+static void
+any_test_set (Any &a, int what)
+{
+  switch (what)
+    {
+      typedef unsigned char uchar;
+    case 0:  a <<= bool (0);            break;
+    case 1:  a <<= bool (true);         break;
+    case 2:  a <<= char (-117);         break;
+    case 3:  a <<= uchar (250);         break;
+    case 4:  a <<= int (-134217728);    break;
+    case 5:  a <<= uint (4294967295U);  break;
+    case 6:  a <<= long (-2147483648);  break;
+    case 7:  a <<= ulong (4294967295U); break;
+    case 8:  a <<= int64_t (-0xc0ffeec0ffeeLL);         break;
+    case 9:  a <<= uint64_t (0xffffffffffffffffULL);    break;
+    case 10: a <<= "Test4test";         break;
+    case 11: a <<= test_double_value;   break;
+    case 12: { Any a2; a2 <<= "SecondAny"; a <<= a2; }  break;
+    }
+}
+
+static bool
+any_test_get (const Any &a, int what)
+{
+  std::string s;
+  switch (what)
+    {
+      typedef unsigned char uchar;
+      bool b; char c; uchar uc; int i; uint ui; long l; ulong ul; int64_t i6; uint64_t u6; double d; const Any *p;
+    case 0:  if (!(a >>= b))  return false;     assert (b == 0); break;
+    case 1:  if (!(a >>= b))  return false;     assert (b == true); break;
+    case 2:  if (!(a >>= c))  return false;     assert (c == -117); break;
+    case 3:  if (!(a >>= uc)) return false;     assert (uc == 250); break;
+    case 4:  if (!(a >>= i))  return false;     assert (i == -134217728); break;
+    case 5:  if (!(a >>= ui)) return false;     assert (ui == 4294967295U); break;
+    case 6:  if (!(a >>= l))  return false;     assert (l == -2147483648); break;
+    case 7:  if (!(a >>= ul)) return false;     assert (ul == 4294967295U); break;
+    case 8:  if (!(a >>= i6)) return false;     assert (i6 == -0xc0ffeec0ffeeLL); break;
+    case 9:  if (!(a >>= u6)) return false;     assert (u6 == 0xffffffffffffffffULL); break;
+    case 10: if (!(a >>= s))  return false;     assert (s == "Test4test"); break;
+    case 11: if (!(a >>= d))  return false;     assert (d = test_double_value); break;
+    case 12: if (!(a >>= p) ||
+                 !(*p >>= s)) return false;     assert (s == "SecondAny"); break;
+    }
+  return true;
+}
+
 static void
 test_any()
 {
   String s;
-  const double dbl = 7.76576e-306;
-  Any a, a2;
-  a2 <<= "SecondAny";
   const size_t cases = 13;
+  Any a;
   for (size_t j = 0; j <= cases; j++)
     for (size_t k = 0; k <= cases; k++)
       {
         size_t cs[2] = { j, k };
         for (size_t cc = 0; cc < 2; cc++)
-          switch (cs[cc])
-            {
-              typedef unsigned char uchar;
-              bool b; char c; uchar uc; int i; uint ui; long l; ulong ul; int64 i6; uint64 u6; double d; const Any *p;
-            case 0:  a <<= bool (0);            a >>= b;   assert (b == 0); break;
-            case 1:  a <<= bool (false);        a >>= b;   assert (b == false); break;
-            case 2:  a <<= bool (true);         a >>= b;   assert (b == true); break;
-            case 3:  a <<= char (-117);         a >>= c;   assert (c == -117); break;
-            case 4:  a <<= uchar (250);         a >>= uc;  assert (uc == 250); break;
-            case 5:  a <<= int (-134217728);    a >>= i;   assert (i == -134217728); break;
-            case 6:  a <<= uint (4294967295U);  a >>= ui;  assert (ui == 4294967295U); break;
-            case 7:  a <<= long (-2147483648);  a >>= l;   assert (l == -2147483648); break;
-            case 8:  a <<= ulong (4294967295U); a >>= ul;  assert (ul == 4294967295U); break;
-            case 9:  a <<= int64 (-0xc0ffeec0ffeeLL); a >>= i6; assert (i6 == -0xc0ffeec0ffeeLL); break;
-            case 10: a <<= int64 (0xffffffffffffffffULL); a >>= u6; assert (u6 == 0xffffffffffffffffULL); break;
-            case 11: a <<= "Test4test";         a >>= s;   assert (s == "Test4test"); break;
-            case 12: a <<= dbl;                 a >>= d;   assert (d = dbl); break;
-            case 13: a <<= a2;        a >>= p; *p >>= s;   assert (s == "SecondAny"); break;
-            }
+          {
+            any_test_set (a, cs[cc]);
+            const bool any_getter_successfull = any_test_get (a, cs[cc]);
+            assert (any_getter_successfull == true);
+            Any a2 (a);
+            const bool any_copy_successfull = any_test_get (a2, cs[cc]);
+            assert (any_copy_successfull == true);
+            Any a3;
+            a3 = a2;
+            const bool any_assignment_successfull = any_test_get (a2, cs[cc]);
+            assert (any_assignment_successfull == true);
+          }
       }
-  printf ("  TEST   Plic Any uses                                                   OK\n");
+  printf ("  TEST   Plic Any storage                                                OK\n");
+  a <<= 1.;             assert (a.kind() == FLOAT && a.as_float() == +1.0);
+  a <<= -1.;            assert (a.kind() == FLOAT && a.as_float() == -1.0);
+  a <<= 16.5e+6;        assert (a.as_float() > 16000000.0 && a.as_float() < 17000000.0);
+  a <<= 1;              assert (a.kind() == INT && a.as_int() == 1 && a.as_float() == 1 && a.as_string() == "1");
+  a <<= -1;             assert (a.kind() == INT && a.as_int() == -1 && a.as_float() == -1 && a.as_string() == "-1");
+  a <<= 0;              assert (a.kind() == INT && a.as_int() == 0 && a.as_float() == 0 && a.as_string() == "0");
+  a <<= 32767199;       assert (a.kind() == INT && a.as_int() == 32767199);
+  a <<= "";             assert (a.kind() == STRING && a.as_string() == "" && a.as_int() == 0);
+  a <<= "f";            assert (a.kind() == STRING && a.as_string() == "f" && a.as_int() == 1);
+  a <<= "123456789";    assert (a.kind() == STRING && a.as_string() == "123456789" && a.as_int() == 1);
+  printf ("  TEST   Plic Any conversions                                            OK\n");
 }
+
+} // Anon
 
 int
 main (int   argc,
@@ -305,7 +362,7 @@ main (int   argc,
 {
   vector<String> auxtests;
   /* parse args */
-  for (uint i = 1; i < uint (argc); i++)
+  for (uint32_t i = 1; i < uint32_t (argc); i++)
     {
       const char *str = NULL;
       if (strcmp (argv[i], "--tests") == 0)
@@ -333,8 +390,8 @@ main (int   argc,
         auxtests.push_back (str);
     }
   /* collapse parsed args */
-  uint e = 1;
-  for (uint i = 1; i < uint (argc); i++)
+  uint32_t e = 1;
+  for (uint32_t i = 1; i < uint32_t (argc); i++)
     if (argv[i])
       {
         argv[e++] = argv[i];
