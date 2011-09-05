@@ -113,9 +113,9 @@ ItemListImpl::constructed ()
             s = string_printf ("* %u SMALL ROW (watch scroll direction)", i);
           else
             s = string_printf ("|<br/>| <br/>| %u<br/>|<br/>|", i);
-          row[0] <<= s;
+          row.append_back() <<= s;
           for (uint j = 1; j < 4; j++)
-            row[j] <<= string_printf ("%u-%u", i + 1, j + 1);
+            row.append_back() <<= string_printf ("%u-%u", i + 1, j + 1);
           store.insert (-1, row);
         }
       model (store.plor_name());

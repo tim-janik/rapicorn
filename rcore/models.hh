@@ -21,7 +21,6 @@
 #include <rcore/enumdefs.hh>
 
 namespace Rapicorn {
-typedef std::vector<Any> AnySeq;
 
 class Store1;
 class Selection1;

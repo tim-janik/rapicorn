@@ -23,13 +23,11 @@ fill_store (Store1       &s1,
   while (e)
     {
       AnySeq row;
-      row.resize (5);
-      uint n = 0;
-      row[n++] <<= e->d_ino;
-      row[n++] <<= " | ";
-      row[n++] <<= e->d_type;
-      row[n++] <<= " | ";
-      row[n++] <<= e->d_name;
+      row.append_back() <<= e->d_ino;
+      row.append_back() <<= " | ";
+      row.append_back() <<= e->d_type;
+      row.append_back() <<= " | ";
+      row.append_back() <<= e->d_name;
       s1.insert (-1, row);
       e = readdir (d);
     }

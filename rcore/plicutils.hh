@@ -177,6 +177,14 @@ public:
   void resize (size_t n); ///< Resize Any to contain a sequence of length @a n.
 };
 
+// == AnySeq ==
+struct AnySeq : public std::vector<Any> {
+  typedef std::vector<Any> Sequence;
+  /*ctor*/      AnySeq () {}
+  /*ctor*/      AnySeq (const std::vector<Any> &v) : Sequence (v) {}
+  reference     append_back()   { resize (size() + 1); return back(); }
+};
+
 // == Type Declarations ==
 class SimpleServer;
 class Connection;
