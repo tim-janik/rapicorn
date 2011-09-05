@@ -71,35 +71,6 @@ check-CxxPyStub-syntax: $(srcdir)/testcxxpystub.ref
 	$(Q) $(CXXCOMPILE) testcxxpystub.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxpystub.cc testcxxpystub.o
 check-local: check-CxxPyStub-gen check-CxxPyStub-syntax
-# test CxxStub server and client
-check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
-	$(Q) ${PLICINT} -G $(srcdir)/CxxStub -g iface-prefix=I_ -g serverhh -g servercc \
-	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxserver.ref'"
-check-CxxStub-client-gen: $(srcdir)/testcxxclient.ref
-	$(Q) ${PLICINT} -G $(srcdir)/CxxStub -g iface-prefix=I_ -g clienthh -g clientcc \
-	  $(srcdir)/../plic/tests/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxclient.ref'"
-check-CxxStub-skeleton-gen: $(srcdir)/testcxxskels.ref
-	$(Q) echo -e "#include <rapicorn.hh>\n" > $(TSTOUT)
-	$(Q) ${PLICINT} -G $(srcdir)/CxxStub -g iface-prefix=I_ -g serverhh -g server-skel \
-	  $(srcdir)/../plic/tests/testpass.idl -o - >> $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxskels.ref'"
-check-CxxStub-server-code: $(srcdir)/testcxxserver.ref
-	$(Q) cp $(srcdir)/testcxxserver.ref testcxxserver.cc
-	$(Q) $(CXXCOMPILE) -D__RAPICORN_BUILD__  testcxxserver.cc -c ; eval "$$TSTDIAGNOSE"
-	$(Q) rm -f testcxxserver.cc testcxxserver.o
-check-CxxStub-client-code: $(srcdir)/testcxxclient.ref
-	$(Q) cp $(srcdir)/testcxxclient.ref testcxxclient.cc
-	$(Q) $(CXXCOMPILE) testcxxclient.cc -c ; eval "$$TSTDIAGNOSE"
-	$(Q) rm -f testcxxclient.cc testcxxclient.o
-check-CxxStub-skeleton-code: $(srcdir)/testcxxskels.ref
-	$(Q) cp $(srcdir)/testcxxskels.ref testcxxskels.cc
-	$(Q) $(CXXCOMPILE) testcxxskels.cc -c ; eval "$$TSTDIAGNOSE"
-	$(Q) rm -f testcxxskels.cc testcxxskels.o
-EXTRA_DIST += CxxStub.py testcxxserver.ref testcxxclient.ref testcxxskels.ref
-check-local: check-CxxStub-server-gen check-CxxStub-client-gen check-CxxStub-skeleton-gen
-check-local: check-CxxStub-server-code check-CxxStub-client-code check-CxxStub-skeleton-code
 # test interfaces.idl with PLIC
 check-rapicorn-idl:
 	$(Q) ${PLICINT} $(RAPICORNIDL) > /dev/null ; eval "$$TSTDIAGNOSE"

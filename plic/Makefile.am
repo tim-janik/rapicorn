@@ -59,7 +59,7 @@ noinst_DATA = builtins.cc
 
 # install plic support module yapps2runtime.py
 pyutilsdir     = $(libdir)/${PLICV}/pyutils
-plicbackends   = PrettyDump.py TypeMap.py Rapicorn.py GType.py
+plicbackends   = PrettyDump.py TypeMap.py Rapicorn.py GType.py CxxStub.py
 pyutils_PYTHON = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${plicbackends}
 
 ### plic-intern tests
