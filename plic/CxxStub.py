@@ -493,7 +493,7 @@ class Generator:
     for ancestor in ancestors:
       for sg in ancestor.signals:
         signame = self.generate_signal_typename (sg, class_info)
-        sigE = '%s_EventHandler$' % signame
+        sigE = self.generate_event_handler_typename (sg, class_info)
         s += '    handle$.%s = %s.signal;\n' % (sg.name, sg.name)
         s += '    %s.signal.listener (%s, &%s::connections_changed);\n' % (sg.name, sg.name, sigE)
     s += '  }\n'
@@ -531,7 +531,7 @@ class Generator:
     return s
   def generate_client_class_context_event_handler_def (self, derived_info, class_info, sg):
     s, classH, signame = '', self.H (class_info.name), self.generate_signal_typename (sg, class_info)
-    sigE = '%s_EventHandler$' % signame
+    sigE = self.generate_event_handler_typename (sg, class_info)
     # s += '  %s %s;\n' % (signame, sg.name)                                  # signal member
     s += '  struct %s : Plic::Connection::EventHandler {\n' % sigE            # signal EventHandler
     relay = 'Rapicorn::Signals::SignalConnectionRelay<%s> ' % sigE
@@ -547,7 +547,7 @@ class Generator:
     return s
   def generate_client_class_context_event_handler_methods (self, derived_info, class_info, sg):
     s, classC, signame = '', derived_info.name + '_Context$', self.generate_signal_typename (sg, class_info)
-    sigE = '%s_EventHandler$' % signame
+    sigE = self.generate_event_handler_typename (sg, class_info)
     s += 'void\n'
     s += '%s::%s::connections_changed (bool hasconnections)\n' % (classC, sigE)
     s += '{\n'
@@ -869,6 +869,8 @@ class Generator:
     return 'Signal_%s' % functype.name # 'Proxy_%s'
   def generate_signal_typename (self, functype, ctype):
     return 'Signal_%s' % functype.name
+  def generate_event_handler_typename (self, functype, ctype):
+    return '__EventHandler__%s' % functype.name
   def generate_signal_proxy_typedef (self, functype, ctype):
     assert self.gen_mode == G4CLIENT
     s = ''

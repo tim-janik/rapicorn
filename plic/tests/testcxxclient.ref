@@ -1138,23 +1138,23 @@ struct UIWidgetArea_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public UIWidgetArea_SmartHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  struct Signal_void_signal_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<UIWidgetArea_SmartHandle, void (), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_void_signal_EventHandler$> > Signal_void_signal;
+  struct __EventHandler__void_signal : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<UIWidgetArea_SmartHandle, void (), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__void_signal> > Signal_void_signal;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_void_signal signal;
-    Signal_void_signal_EventHandler$ (UIWidgetArea_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_void_signal_EventHandler$ ()
+    __EventHandler__void_signal (UIWidgetArea_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__void_signal ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } void_signal;
-  struct Signal_sample_signal_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<UIWidgetArea_SmartHandle, double (UIWidgetArea_SmartHandle &ba1, int someint), Rapicorn::Signals::CollectorDefault<double>, Rapicorn::Signals::SignalConnectionRelay<Signal_sample_signal_EventHandler$> > Signal_sample_signal;
+  struct __EventHandler__sample_signal : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<UIWidgetArea_SmartHandle, double (UIWidgetArea_SmartHandle &ba1, int someint), Rapicorn::Signals::CollectorDefault<double>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__sample_signal> > Signal_sample_signal;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_sample_signal signal;
-    Signal_sample_signal_EventHandler$ (UIWidgetArea_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_sample_signal_EventHandler$ ()
+    __EventHandler__sample_signal (UIWidgetArea_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__sample_signal ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } sample_signal;
@@ -1165,9 +1165,9 @@ struct UIWidgetArea_Context$ : public Plic::NonCopyable {
     m_cached_types (NULL)
   {
     handle$.void_signal = void_signal.signal;
-    void_signal.signal.listener (void_signal, &Signal_void_signal_EventHandler$::connections_changed);
+    void_signal.signal.listener (void_signal, &__EventHandler__void_signal::connections_changed);
     handle$.sample_signal = sample_signal.signal;
-    sample_signal.signal.listener (sample_signal, &Signal_sample_signal_EventHandler$::connections_changed);
+    sample_signal.signal.listener (sample_signal, &__EventHandler__sample_signal::connections_changed);
   }
   Plic::TypeHashList *m_cached_types;
   const Plic::TypeHashList& list_types ();
@@ -1199,7 +1199,7 @@ UIWidgetArea_Context$::list_types ()
   return *m_cached_types;
 }
 void
-UIWidgetArea_Context$::Signal_void_signal_EventHandler$::connections_changed (bool hasconnections)
+UIWidgetArea_Context$::__EventHandler__void_signal::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x52ef738c2571d0f2ULL, 0x05b653adf0a80acfULL);
@@ -1226,7 +1226,7 @@ UIWidgetArea_Context$::Signal_void_signal_EventHandler$::connections_changed (bo
   }
 }
 Plic::FieldBuffer*
-UIWidgetArea_Context$::Signal_void_signal_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+UIWidgetArea_Context$::__EventHandler__void_signal::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -1236,7 +1236,7 @@ UIWidgetArea_Context$::Signal_void_signal_EventHandler$::handle_event (Plic::Fie
   return NULL;
 }
 void
-UIWidgetArea_Context$::Signal_sample_signal_EventHandler$::connections_changed (bool hasconnections)
+UIWidgetArea_Context$::__EventHandler__sample_signal::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x511bbb2e2b129d5bULL, 0xe7152819ec289550ULL);
@@ -1263,7 +1263,7 @@ UIWidgetArea_Context$::Signal_sample_signal_EventHandler$::connections_changed (
   }
 }
 Plic::FieldBuffer*
-UIWidgetArea_Context$::Signal_sample_signal_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+UIWidgetArea_Context$::__EventHandler__sample_signal::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -2230,223 +2230,223 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public SignalTestInterface_SmartHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  struct Signal_void_result_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_void_result_EventHandler$> > Signal_void_result;
+  struct __EventHandler__void_result : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__void_result> > Signal_void_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_void_result signal;
-    Signal_void_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_void_result_EventHandler$ ()
+    __EventHandler__void_result (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__void_result ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } void_result;
-  struct Signal_bool_result_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, bool (), Rapicorn::Signals::CollectorDefault<bool>, Rapicorn::Signals::SignalConnectionRelay<Signal_bool_result_EventHandler$> > Signal_bool_result;
+  struct __EventHandler__bool_result : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, bool (), Rapicorn::Signals::CollectorDefault<bool>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__bool_result> > Signal_bool_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_bool_result signal;
-    Signal_bool_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_bool_result_EventHandler$ ()
+    __EventHandler__bool_result (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__bool_result ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } bool_result;
-  struct Signal_int_result_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, int (), Rapicorn::Signals::CollectorDefault<int>, Rapicorn::Signals::SignalConnectionRelay<Signal_int_result_EventHandler$> > Signal_int_result;
+  struct __EventHandler__int_result : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, int (), Rapicorn::Signals::CollectorDefault<int>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__int_result> > Signal_int_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_int_result signal;
-    Signal_int_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_int_result_EventHandler$ ()
+    __EventHandler__int_result (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__int_result ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } int_result;
-  struct Signal_float_result_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, double (), Rapicorn::Signals::CollectorDefault<double>, Rapicorn::Signals::SignalConnectionRelay<Signal_float_result_EventHandler$> > Signal_float_result;
+  struct __EventHandler__float_result : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, double (), Rapicorn::Signals::CollectorDefault<double>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__float_result> > Signal_float_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_float_result signal;
-    Signal_float_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_float_result_EventHandler$ ()
+    __EventHandler__float_result (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__float_result ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } float_result;
-  struct Signal_string_result_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, std::string (), Rapicorn::Signals::CollectorDefault<std::string>, Rapicorn::Signals::SignalConnectionRelay<Signal_string_result_EventHandler$> > Signal_string_result;
+  struct __EventHandler__string_result : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, std::string (), Rapicorn::Signals::CollectorDefault<std::string>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__string_result> > Signal_string_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_string_result signal;
-    Signal_string_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_string_result_EventHandler$ ()
+    __EventHandler__string_result (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__string_result ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } string_result;
-  struct Signal_enum_result_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickEnum (), Rapicorn::Signals::CollectorDefault<QuickEnum>, Rapicorn::Signals::SignalConnectionRelay<Signal_enum_result_EventHandler$> > Signal_enum_result;
+  struct __EventHandler__enum_result : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickEnum (), Rapicorn::Signals::CollectorDefault<QuickEnum>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__enum_result> > Signal_enum_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_enum_result signal;
-    Signal_enum_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_enum_result_EventHandler$ ()
+    __EventHandler__enum_result (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__enum_result ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } enum_result;
-  struct Signal_record_result_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickRecord_Handle (), Rapicorn::Signals::CollectorDefault<QuickRecord_Handle>, Rapicorn::Signals::SignalConnectionRelay<Signal_record_result_EventHandler$> > Signal_record_result;
+  struct __EventHandler__record_result : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickRecord_Handle (), Rapicorn::Signals::CollectorDefault<QuickRecord_Handle>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__record_result> > Signal_record_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_record_result signal;
-    Signal_record_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_record_result_EventHandler$ ()
+    __EventHandler__record_result (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__record_result ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } record_result;
-  struct Signal_sequence_result_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickSequence_Handle (), Rapicorn::Signals::CollectorDefault<QuickSequence_Handle>, Rapicorn::Signals::SignalConnectionRelay<Signal_sequence_result_EventHandler$> > Signal_sequence_result;
+  struct __EventHandler__sequence_result : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickSequence_Handle (), Rapicorn::Signals::CollectorDefault<QuickSequence_Handle>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__sequence_result> > Signal_sequence_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_sequence_result signal;
-    Signal_sequence_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_sequence_result_EventHandler$ ()
+    __EventHandler__sequence_result (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__sequence_result ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } sequence_result;
-  struct Signal_interface_result_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, GrandChild_SmartHandle (), Rapicorn::Signals::CollectorDefault<GrandChild_SmartHandle>, Rapicorn::Signals::SignalConnectionRelay<Signal_interface_result_EventHandler$> > Signal_interface_result;
+  struct __EventHandler__interface_result : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, GrandChild_SmartHandle (), Rapicorn::Signals::CollectorDefault<GrandChild_SmartHandle>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__interface_result> > Signal_interface_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_interface_result signal;
-    Signal_interface_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_interface_result_EventHandler$ ()
+    __EventHandler__interface_result (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__interface_result ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } interface_result;
-  struct Signal_any_result_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, Plic::Any (), Rapicorn::Signals::CollectorDefault<Plic::Any>, Rapicorn::Signals::SignalConnectionRelay<Signal_any_result_EventHandler$> > Signal_any_result;
+  struct __EventHandler__any_result : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, Plic::Any (), Rapicorn::Signals::CollectorDefault<Plic::Any>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__any_result> > Signal_any_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_any_result signal;
-    Signal_any_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_any_result_EventHandler$ ()
+    __EventHandler__any_result (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__any_result ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } any_result;
-  struct Signal_self_result_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, SignalTestInterface_SmartHandle (), Rapicorn::Signals::CollectorDefault<SignalTestInterface_SmartHandle>, Rapicorn::Signals::SignalConnectionRelay<Signal_self_result_EventHandler$> > Signal_self_result;
+  struct __EventHandler__self_result : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, SignalTestInterface_SmartHandle (), Rapicorn::Signals::CollectorDefault<SignalTestInterface_SmartHandle>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__self_result> > Signal_self_result;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_self_result signal;
-    Signal_self_result_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_self_result_EventHandler$ ()
+    __EventHandler__self_result (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__self_result ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } self_result;
-  struct Signal_void_arg_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_void_arg_EventHandler$> > Signal_void_arg;
+  struct __EventHandler__void_arg : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__void_arg> > Signal_void_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_void_arg signal;
-    Signal_void_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_void_arg_EventHandler$ ()
+    __EventHandler__void_arg (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__void_arg ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } void_arg;
-  struct Signal_bool_arg_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (bool b), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_bool_arg_EventHandler$> > Signal_bool_arg;
+  struct __EventHandler__bool_arg : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (bool b), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__bool_arg> > Signal_bool_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_bool_arg signal;
-    Signal_bool_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_bool_arg_EventHandler$ ()
+    __EventHandler__bool_arg (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__bool_arg ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } bool_arg;
-  struct Signal_int_arg_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (int i), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_int_arg_EventHandler$> > Signal_int_arg;
+  struct __EventHandler__int_arg : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (int i), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__int_arg> > Signal_int_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_int_arg signal;
-    Signal_int_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_int_arg_EventHandler$ ()
+    __EventHandler__int_arg (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__int_arg ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } int_arg;
-  struct Signal_float_arg_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (double f), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_float_arg_EventHandler$> > Signal_float_arg;
+  struct __EventHandler__float_arg : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (double f), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__float_arg> > Signal_float_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_float_arg signal;
-    Signal_float_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_float_arg_EventHandler$ ()
+    __EventHandler__float_arg (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__float_arg ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } float_arg;
-  struct Signal_string_arg_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const std::string &s), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_string_arg_EventHandler$> > Signal_string_arg;
+  struct __EventHandler__string_arg : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const std::string &s), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__string_arg> > Signal_string_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_string_arg signal;
-    Signal_string_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_string_arg_EventHandler$ ()
+    __EventHandler__string_arg (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__string_arg ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } string_arg;
-  struct Signal_enum_arg_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (QuickEnum e), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_enum_arg_EventHandler$> > Signal_enum_arg;
+  struct __EventHandler__enum_arg : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (QuickEnum e), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__enum_arg> > Signal_enum_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_enum_arg signal;
-    Signal_enum_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_enum_arg_EventHandler$ ()
+    __EventHandler__enum_arg (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__enum_arg ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } enum_arg;
-  struct Signal_record_arg_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const QuickRecord_Handle &r), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_record_arg_EventHandler$> > Signal_record_arg;
+  struct __EventHandler__record_arg : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const QuickRecord_Handle &r), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__record_arg> > Signal_record_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_record_arg signal;
-    Signal_record_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_record_arg_EventHandler$ ()
+    __EventHandler__record_arg (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__record_arg ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } record_arg;
-  struct Signal_sequence_arg_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const QuickSequence_Handle &s), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_sequence_arg_EventHandler$> > Signal_sequence_arg;
+  struct __EventHandler__sequence_arg : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const QuickSequence_Handle &s), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__sequence_arg> > Signal_sequence_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_sequence_arg signal;
-    Signal_sequence_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_sequence_arg_EventHandler$ ()
+    __EventHandler__sequence_arg (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__sequence_arg ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } sequence_arg;
-  struct Signal_interface_arg_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (GrandChild_SmartHandle &i), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_interface_arg_EventHandler$> > Signal_interface_arg;
+  struct __EventHandler__interface_arg : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (GrandChild_SmartHandle &i), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__interface_arg> > Signal_interface_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_interface_arg signal;
-    Signal_interface_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_interface_arg_EventHandler$ ()
+    __EventHandler__interface_arg (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__interface_arg ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } interface_arg;
-  struct Signal_any_arg_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const Plic::Any &a), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_any_arg_EventHandler$> > Signal_any_arg;
+  struct __EventHandler__any_arg : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const Plic::Any &a), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__any_arg> > Signal_any_arg;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_any_arg signal;
-    Signal_any_arg_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_any_arg_EventHandler$ ()
+    __EventHandler__any_arg (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__any_arg ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } any_arg;
-  struct Signal_self_args_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (SignalTestInterface_SmartHandle &self_), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_self_args_EventHandler$> > Signal_self_args;
+  struct __EventHandler__self_args : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (SignalTestInterface_SmartHandle &self_), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__self_args> > Signal_self_args;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_self_args signal;
-    Signal_self_args_EventHandler$ (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_self_args_EventHandler$ ()
+    __EventHandler__self_args (SignalTestInterface_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__self_args ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } self_args;
@@ -2477,49 +2477,49 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     m_cached_types (NULL)
   {
     handle$.void_result = void_result.signal;
-    void_result.signal.listener (void_result, &Signal_void_result_EventHandler$::connections_changed);
+    void_result.signal.listener (void_result, &__EventHandler__void_result::connections_changed);
     handle$.bool_result = bool_result.signal;
-    bool_result.signal.listener (bool_result, &Signal_bool_result_EventHandler$::connections_changed);
+    bool_result.signal.listener (bool_result, &__EventHandler__bool_result::connections_changed);
     handle$.int_result = int_result.signal;
-    int_result.signal.listener (int_result, &Signal_int_result_EventHandler$::connections_changed);
+    int_result.signal.listener (int_result, &__EventHandler__int_result::connections_changed);
     handle$.float_result = float_result.signal;
-    float_result.signal.listener (float_result, &Signal_float_result_EventHandler$::connections_changed);
+    float_result.signal.listener (float_result, &__EventHandler__float_result::connections_changed);
     handle$.string_result = string_result.signal;
-    string_result.signal.listener (string_result, &Signal_string_result_EventHandler$::connections_changed);
+    string_result.signal.listener (string_result, &__EventHandler__string_result::connections_changed);
     handle$.enum_result = enum_result.signal;
-    enum_result.signal.listener (enum_result, &Signal_enum_result_EventHandler$::connections_changed);
+    enum_result.signal.listener (enum_result, &__EventHandler__enum_result::connections_changed);
     handle$.record_result = record_result.signal;
-    record_result.signal.listener (record_result, &Signal_record_result_EventHandler$::connections_changed);
+    record_result.signal.listener (record_result, &__EventHandler__record_result::connections_changed);
     handle$.sequence_result = sequence_result.signal;
-    sequence_result.signal.listener (sequence_result, &Signal_sequence_result_EventHandler$::connections_changed);
+    sequence_result.signal.listener (sequence_result, &__EventHandler__sequence_result::connections_changed);
     handle$.interface_result = interface_result.signal;
-    interface_result.signal.listener (interface_result, &Signal_interface_result_EventHandler$::connections_changed);
+    interface_result.signal.listener (interface_result, &__EventHandler__interface_result::connections_changed);
     handle$.any_result = any_result.signal;
-    any_result.signal.listener (any_result, &Signal_any_result_EventHandler$::connections_changed);
+    any_result.signal.listener (any_result, &__EventHandler__any_result::connections_changed);
     handle$.self_result = self_result.signal;
-    self_result.signal.listener (self_result, &Signal_self_result_EventHandler$::connections_changed);
+    self_result.signal.listener (self_result, &__EventHandler__self_result::connections_changed);
     handle$.void_arg = void_arg.signal;
-    void_arg.signal.listener (void_arg, &Signal_void_arg_EventHandler$::connections_changed);
+    void_arg.signal.listener (void_arg, &__EventHandler__void_arg::connections_changed);
     handle$.bool_arg = bool_arg.signal;
-    bool_arg.signal.listener (bool_arg, &Signal_bool_arg_EventHandler$::connections_changed);
+    bool_arg.signal.listener (bool_arg, &__EventHandler__bool_arg::connections_changed);
     handle$.int_arg = int_arg.signal;
-    int_arg.signal.listener (int_arg, &Signal_int_arg_EventHandler$::connections_changed);
+    int_arg.signal.listener (int_arg, &__EventHandler__int_arg::connections_changed);
     handle$.float_arg = float_arg.signal;
-    float_arg.signal.listener (float_arg, &Signal_float_arg_EventHandler$::connections_changed);
+    float_arg.signal.listener (float_arg, &__EventHandler__float_arg::connections_changed);
     handle$.string_arg = string_arg.signal;
-    string_arg.signal.listener (string_arg, &Signal_string_arg_EventHandler$::connections_changed);
+    string_arg.signal.listener (string_arg, &__EventHandler__string_arg::connections_changed);
     handle$.enum_arg = enum_arg.signal;
-    enum_arg.signal.listener (enum_arg, &Signal_enum_arg_EventHandler$::connections_changed);
+    enum_arg.signal.listener (enum_arg, &__EventHandler__enum_arg::connections_changed);
     handle$.record_arg = record_arg.signal;
-    record_arg.signal.listener (record_arg, &Signal_record_arg_EventHandler$::connections_changed);
+    record_arg.signal.listener (record_arg, &__EventHandler__record_arg::connections_changed);
     handle$.sequence_arg = sequence_arg.signal;
-    sequence_arg.signal.listener (sequence_arg, &Signal_sequence_arg_EventHandler$::connections_changed);
+    sequence_arg.signal.listener (sequence_arg, &__EventHandler__sequence_arg::connections_changed);
     handle$.interface_arg = interface_arg.signal;
-    interface_arg.signal.listener (interface_arg, &Signal_interface_arg_EventHandler$::connections_changed);
+    interface_arg.signal.listener (interface_arg, &__EventHandler__interface_arg::connections_changed);
     handle$.any_arg = any_arg.signal;
-    any_arg.signal.listener (any_arg, &Signal_any_arg_EventHandler$::connections_changed);
+    any_arg.signal.listener (any_arg, &__EventHandler__any_arg::connections_changed);
     handle$.self_args = self_args.signal;
-    self_args.signal.listener (self_args, &Signal_self_args_EventHandler$::connections_changed);
+    self_args.signal.listener (self_args, &__EventHandler__self_args::connections_changed);
   }
   Plic::TypeHashList *m_cached_types;
   const Plic::TypeHashList& list_types ();
@@ -2551,7 +2551,7 @@ SignalTestInterface_Context$::list_types ()
   return *m_cached_types;
 }
 void
-SignalTestInterface_Context$::Signal_void_result_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__void_result::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x535d5e95471873b6ULL, 0x7a9f5692ce00e007ULL);
@@ -2578,7 +2578,7 @@ SignalTestInterface_Context$::Signal_void_result_EventHandler$::connections_chan
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_void_result_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__void_result::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -2588,7 +2588,7 @@ SignalTestInterface_Context$::Signal_void_result_EventHandler$::handle_event (Pl
   return NULL;
 }
 void
-SignalTestInterface_Context$::Signal_bool_result_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__bool_result::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x51ffffa2f8db1b1bULL, 0x3e01434baf49eceeULL);
@@ -2615,7 +2615,7 @@ SignalTestInterface_Context$::Signal_bool_result_EventHandler$::connections_chan
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_bool_result_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__bool_result::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -2627,7 +2627,7 @@ SignalTestInterface_Context$::Signal_bool_result_EventHandler$::handle_event (Pl
   return &rb;
 }
 void
-SignalTestInterface_Context$::Signal_int_result_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__int_result::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x51ac083cdc878affULL, 0x72ad7414773447a2ULL);
@@ -2654,7 +2654,7 @@ SignalTestInterface_Context$::Signal_int_result_EventHandler$::connections_chang
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_int_result_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__int_result::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -2666,7 +2666,7 @@ SignalTestInterface_Context$::Signal_int_result_EventHandler$::handle_event (Pli
   return &rb;
 }
 void
-SignalTestInterface_Context$::Signal_float_result_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__float_result::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x5cc54429499b42b6ULL, 0x35e1fb7707130bcaULL);
@@ -2693,7 +2693,7 @@ SignalTestInterface_Context$::Signal_float_result_EventHandler$::connections_cha
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_float_result_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__float_result::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -2705,7 +2705,7 @@ SignalTestInterface_Context$::Signal_float_result_EventHandler$::handle_event (P
   return &rb;
 }
 void
-SignalTestInterface_Context$::Signal_string_result_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__string_result::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x5790f575b6cac788ULL, 0x27db8e3c014993a7ULL);
@@ -2732,7 +2732,7 @@ SignalTestInterface_Context$::Signal_string_result_EventHandler$::connections_ch
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_string_result_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__string_result::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -2744,7 +2744,7 @@ SignalTestInterface_Context$::Signal_string_result_EventHandler$::handle_event (
   return &rb;
 }
 void
-SignalTestInterface_Context$::Signal_enum_result_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__enum_result::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x56fc6f3f4946e7b2ULL, 0x0fe0cc5f83d2ab84ULL);
@@ -2771,7 +2771,7 @@ SignalTestInterface_Context$::Signal_enum_result_EventHandler$::connections_chan
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_enum_result_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__enum_result::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -2783,7 +2783,7 @@ SignalTestInterface_Context$::Signal_enum_result_EventHandler$::handle_event (Pl
   return &rb;
 }
 void
-SignalTestInterface_Context$::Signal_record_result_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__record_result::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x50b723665ed298a5ULL, 0x32aa063680a4e3c0ULL);
@@ -2810,7 +2810,7 @@ SignalTestInterface_Context$::Signal_record_result_EventHandler$::connections_ch
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_record_result_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__record_result::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -2822,7 +2822,7 @@ SignalTestInterface_Context$::Signal_record_result_EventHandler$::handle_event (
   return &rb;
 }
 void
-SignalTestInterface_Context$::Signal_sequence_result_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__sequence_result::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x5ef00325dfcf4552ULL, 0x991130ecddd21730ULL);
@@ -2849,7 +2849,7 @@ SignalTestInterface_Context$::Signal_sequence_result_EventHandler$::connections_
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_sequence_result_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__sequence_result::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -2861,7 +2861,7 @@ SignalTestInterface_Context$::Signal_sequence_result_EventHandler$::handle_event
   return &rb;
 }
 void
-SignalTestInterface_Context$::Signal_interface_result_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__interface_result::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x58e8587c542d85ceULL, 0xe2b572e902c69f7cULL);
@@ -2888,7 +2888,7 @@ SignalTestInterface_Context$::Signal_interface_result_EventHandler$::connections
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_interface_result_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__interface_result::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -2900,7 +2900,7 @@ SignalTestInterface_Context$::Signal_interface_result_EventHandler$::handle_even
   return &rb;
 }
 void
-SignalTestInterface_Context$::Signal_any_result_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__any_result::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x52aa86cb9557c7b5ULL, 0xb5b86bcd272326c5ULL);
@@ -2927,7 +2927,7 @@ SignalTestInterface_Context$::Signal_any_result_EventHandler$::connections_chang
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_any_result_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__any_result::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -2939,7 +2939,7 @@ SignalTestInterface_Context$::Signal_any_result_EventHandler$::handle_event (Pli
   return &rb;
 }
 void
-SignalTestInterface_Context$::Signal_self_result_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__self_result::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x59bb2da621bab28fULL, 0x32bc82e7eb9bc512ULL);
@@ -2966,7 +2966,7 @@ SignalTestInterface_Context$::Signal_self_result_EventHandler$::connections_chan
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_self_result_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__self_result::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -2978,7 +2978,7 @@ SignalTestInterface_Context$::Signal_self_result_EventHandler$::handle_event (Pl
   return &rb;
 }
 void
-SignalTestInterface_Context$::Signal_void_arg_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__void_arg::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x583dc36c7785c7f3ULL, 0xb330cefa4e8247a9ULL);
@@ -3005,7 +3005,7 @@ SignalTestInterface_Context$::Signal_void_arg_EventHandler$::connections_changed
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_void_arg_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__void_arg::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -3015,7 +3015,7 @@ SignalTestInterface_Context$::Signal_void_arg_EventHandler$::handle_event (Plic:
   return NULL;
 }
 void
-SignalTestInterface_Context$::Signal_bool_arg_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__bool_arg::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x5f7ba898d12986bfULL, 0x8a1143a5f6dc85b8ULL);
@@ -3042,7 +3042,7 @@ SignalTestInterface_Context$::Signal_bool_arg_EventHandler$::connections_changed
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_bool_arg_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__bool_arg::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -3054,7 +3054,7 @@ SignalTestInterface_Context$::Signal_bool_arg_EventHandler$::handle_event (Plic:
   return NULL;
 }
 void
-SignalTestInterface_Context$::Signal_int_arg_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__int_arg::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x5f91dc79c2bee013ULL, 0x809b90b2fad4ea0aULL);
@@ -3081,7 +3081,7 @@ SignalTestInterface_Context$::Signal_int_arg_EventHandler$::connections_changed 
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_int_arg_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__int_arg::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -3093,7 +3093,7 @@ SignalTestInterface_Context$::Signal_int_arg_EventHandler$::handle_event (Plic::
   return NULL;
 }
 void
-SignalTestInterface_Context$::Signal_float_arg_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__float_arg::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x5d5c43cd47b258caULL, 0xb0d5fde097d6d12cULL);
@@ -3120,7 +3120,7 @@ SignalTestInterface_Context$::Signal_float_arg_EventHandler$::connections_change
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_float_arg_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__float_arg::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -3132,7 +3132,7 @@ SignalTestInterface_Context$::Signal_float_arg_EventHandler$::handle_event (Plic
   return NULL;
 }
 void
-SignalTestInterface_Context$::Signal_string_arg_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__string_arg::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x53de7a105b57bf62ULL, 0x9d8ffe4942a0934fULL);
@@ -3159,7 +3159,7 @@ SignalTestInterface_Context$::Signal_string_arg_EventHandler$::connections_chang
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_string_arg_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__string_arg::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -3171,7 +3171,7 @@ SignalTestInterface_Context$::Signal_string_arg_EventHandler$::handle_event (Pli
   return NULL;
 }
 void
-SignalTestInterface_Context$::Signal_enum_arg_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__enum_arg::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x586138796f133c4dULL, 0x1c7573f2d30ac907ULL);
@@ -3198,7 +3198,7 @@ SignalTestInterface_Context$::Signal_enum_arg_EventHandler$::connections_changed
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_enum_arg_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__enum_arg::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -3210,7 +3210,7 @@ SignalTestInterface_Context$::Signal_enum_arg_EventHandler$::handle_event (Plic:
   return NULL;
 }
 void
-SignalTestInterface_Context$::Signal_record_arg_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__record_arg::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x59cb77461ddeac82ULL, 0xfeaa98721bd8ecd3ULL);
@@ -3237,7 +3237,7 @@ SignalTestInterface_Context$::Signal_record_arg_EventHandler$::connections_chang
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_record_arg_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__record_arg::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -3249,7 +3249,7 @@ SignalTestInterface_Context$::Signal_record_arg_EventHandler$::handle_event (Pli
   return NULL;
 }
 void
-SignalTestInterface_Context$::Signal_sequence_arg_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__sequence_arg::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x547b4dd41606b568ULL, 0x1d763791a33d2bc9ULL);
@@ -3276,7 +3276,7 @@ SignalTestInterface_Context$::Signal_sequence_arg_EventHandler$::connections_cha
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_sequence_arg_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__sequence_arg::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -3288,7 +3288,7 @@ SignalTestInterface_Context$::Signal_sequence_arg_EventHandler$::handle_event (P
   return NULL;
 }
 void
-SignalTestInterface_Context$::Signal_interface_arg_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__interface_arg::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x57a5dbfbeb5a4ef9ULL, 0xb5df0c3b3bba4b22ULL);
@@ -3315,7 +3315,7 @@ SignalTestInterface_Context$::Signal_interface_arg_EventHandler$::connections_ch
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_interface_arg_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__interface_arg::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -3327,7 +3327,7 @@ SignalTestInterface_Context$::Signal_interface_arg_EventHandler$::handle_event (
   return NULL;
 }
 void
-SignalTestInterface_Context$::Signal_any_arg_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__any_arg::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x51d96c2cd8c40104ULL, 0x04aedd456681cb81ULL);
@@ -3354,7 +3354,7 @@ SignalTestInterface_Context$::Signal_any_arg_EventHandler$::connections_changed 
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_any_arg_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__any_arg::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -3366,7 +3366,7 @@ SignalTestInterface_Context$::Signal_any_arg_EventHandler$::handle_event (Plic::
   return NULL;
 }
 void
-SignalTestInterface_Context$::Signal_self_args_EventHandler$::connections_changed (bool hasconnections)
+SignalTestInterface_Context$::__EventHandler__self_args::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x5c515ee37b78a970ULL, 0xe89c2af2f29359a0ULL);
@@ -3393,7 +3393,7 @@ SignalTestInterface_Context$::Signal_self_args_EventHandler$::connections_change
   }
 }
 Plic::FieldBuffer*
-SignalTestInterface_Context$::Signal_self_args_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+SignalTestInterface_Context$::__EventHandler__self_args::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -3817,23 +3817,23 @@ struct ButtonArea_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public ButtonArea_SmartHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  struct Signal_check_activate_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<ButtonArea_SmartHandle, bool (), Rapicorn::Signals::CollectorUntil0<bool>, Rapicorn::Signals::SignalConnectionRelay<Signal_check_activate_EventHandler$> > Signal_check_activate;
+  struct __EventHandler__check_activate : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<ButtonArea_SmartHandle, bool (), Rapicorn::Signals::CollectorUntil0<bool>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__check_activate> > Signal_check_activate;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_check_activate signal;
-    Signal_check_activate_EventHandler$ (ButtonArea_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_check_activate_EventHandler$ ()
+    __EventHandler__check_activate (ButtonArea_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__check_activate ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } check_activate;
-  struct Signal_activate_EventHandler$ : Plic::Connection::EventHandler {
-    typedef Rapicorn::Signals::Signal<ButtonArea_SmartHandle, void (), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<Signal_activate_EventHandler$> > Signal_activate;
+  struct __EventHandler__activate : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::Signal<ButtonArea_SmartHandle, void (), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__activate> > Signal_activate;
     virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);
     Plic::uint64_t m_handler_id, m_connection_id;
     Signal_activate signal;
-    Signal_activate_EventHandler$ (ButtonArea_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
-    ~Signal_activate_EventHandler$ ()
+    __EventHandler__activate (ButtonArea_SmartHandle &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}
+    ~__EventHandler__activate ()
     { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
     void  connections_changed (bool hasconnections);
   } activate;
@@ -3844,9 +3844,9 @@ struct ButtonArea_Context$ : public Plic::NonCopyable {
     m_cached_types (NULL)
   {
     handle$.check_activate = check_activate.signal;
-    check_activate.signal.listener (check_activate, &Signal_check_activate_EventHandler$::connections_changed);
+    check_activate.signal.listener (check_activate, &__EventHandler__check_activate::connections_changed);
     handle$.activate = activate.signal;
-    activate.signal.listener (activate, &Signal_activate_EventHandler$::connections_changed);
+    activate.signal.listener (activate, &__EventHandler__activate::connections_changed);
   }
   Plic::TypeHashList *m_cached_types;
   const Plic::TypeHashList& list_types ();
@@ -3878,7 +3878,7 @@ ButtonArea_Context$::list_types ()
   return *m_cached_types;
 }
 void
-ButtonArea_Context$::Signal_check_activate_EventHandler$::connections_changed (bool hasconnections)
+ButtonArea_Context$::__EventHandler__check_activate::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x5aa49f58f83f54b7ULL, 0xff357b59e593e480ULL);
@@ -3905,7 +3905,7 @@ ButtonArea_Context$::Signal_check_activate_EventHandler$::connections_changed (b
   }
 }
 Plic::FieldBuffer*
-ButtonArea_Context$::Signal_check_activate_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+ButtonArea_Context$::__EventHandler__check_activate::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
@@ -3917,7 +3917,7 @@ ButtonArea_Context$::Signal_check_activate_EventHandler$::handle_event (Plic::Fi
   return &rb;
 }
 void
-ButtonArea_Context$::Signal_activate_EventHandler$::connections_changed (bool hasconnections)
+ButtonArea_Context$::__EventHandler__activate::connections_changed (bool hasconnections)
 {
   Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
   fb.add_msgid (0x567351a83995c46eULL, 0xcd153a5a755401f6ULL);
@@ -3944,7 +3944,7 @@ ButtonArea_Context$::Signal_activate_EventHandler$::connections_changed (bool ha
   }
 }
 Plic::FieldBuffer*
-ButtonArea_Context$::Signal_activate_EventHandler$::handle_event (Plic::FieldBuffer &fb)
+ButtonArea_Context$::__EventHandler__activate::handle_event (Plic::FieldBuffer &fb)
 {
   Plic::FieldReader fbr (fb);
   fbr.skip_msgid(); // FIXME: check msgid
