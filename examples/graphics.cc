@@ -60,7 +60,7 @@ main (int   argc,
   // hook up drawable test
   Drawable drawable = wind0w.component<Drawable> ("/Drawable#drawable1");
   RAPICORN_ASSERT (drawable._is_null() == false);
-  drawable.redraw += slot (&drawable_redraw);
+  drawable.sig_redraw() += slot (&drawable_redraw);
 
   // show main window
   wind0w.show();

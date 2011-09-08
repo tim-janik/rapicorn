@@ -385,7 +385,7 @@ class Generator:
       s += '  virtual ' + self.F ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info) # dtor
     else: # G4CLIENT
       for sg in type_info.signals:
-        s += self.generate_signal_proxy_typedef (sg, type_info)
+        s += '  ' + self.generate_signal_proxy_typedef (sg, type_info)
     s += 'public:\n'
     if self.gen_mode == G4SERVER:
       s += '  virtual ' + self.F ('void') + '_list_types (Plic::TypeHashList&) const;\n'
@@ -413,7 +413,7 @@ class Generator:
         s += '  ' + self.generate_signal_typename (sg, type_info) + ' sig_%s;\n' % sg.name
     else: # G4CLIENT
       for sg in type_info.signals:
-        s += self.generate_signal_proxy_var (sg, type_info)
+        s += self.generate_signal_accessor_def (sg, type_info)
     # methods
     il = 0
     if type_info.methods:
@@ -489,14 +489,7 @@ class Generator:
     for ancestor in ancestors:
       for sg in ancestor.signals:
         s += ',\n    %s (handle$)' % sg.name
-    s += ',\n    m_cached_types (NULL)\n  {\n'
-    for ancestor in ancestors:
-      for sg in ancestor.signals:
-        signame = self.generate_signal_typename (sg, class_info)
-        sigE = self.generate_event_handler_typename (sg, class_info)
-        s += '    handle$.%s = %s.signal;\n' % (sg.name, sg.name)
-        s += '    %s.signal.listener (%s, &%s::connections_changed);\n' % (sg.name, sg.name, sigE)
-    s += '  }\n'
+    s += ',\n    m_cached_types (NULL)\n  {}\n'
     s += '  Plic::TypeHashList *m_cached_types;\n'
     s += '  const Plic::TypeHashList& list_types ();\n'
     s += '};\n'
@@ -535,14 +528,18 @@ class Generator:
     # s += '  %s %s;\n' % (signame, sg.name)                                  # signal member
     s += '  struct %s : Plic::Connection::EventHandler {\n' % sigE            # signal EventHandler
     relay = 'Rapicorn::Signals::SignalConnectionRelay<%s> ' % sigE
-    s += '    ' + self.generate_signal_typedef (sg, class_info, '', relay) # signal typedefs
-    s += '    virtual Plic::FieldBuffer* handle_event (Plic::FieldBuffer &fb);\n'
+    s += '    ' + self.generate_signal_proxy_typedef (sg, class_info, 'Proxy')
+    s += '    ' + self.generate_signal_typedef (sg, class_info, 'Relay', relay) # signal typedefs
     s += '    Plic::uint64_t m_handler_id, m_connection_id;\n'
-    s += '    %s signal;\n' % signame
-    s += '    %s (%s &handle) : m_handler_id (0), m_connection_id (0), signal (handle) {}\n' % (sigE, classH)
+    s += '    Relay%s rsignal;\n' % signame     # relay signal
+    s += '    Proxy%s psignal;\n' % signame     # proxy signal
+    s += '    %s (%s &handle) :\n' % (sigE, classH)
+    s += '      m_handler_id (0), m_connection_id (0), rsignal (handle), psignal (rsignal)\n'
+    s += '    { rsignal.listener (*this, &%s::connections_changed); }\n' % sigE
     s += '    ~%s ()\n' % sigE
     s += '    { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }\n'
-    s += '    void  connections_changed (bool hasconnections);\n'
+    s += '    void                       connections_changed (bool hasconnections);\n'
+    s += '    virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);\n'
     s += '  } %s;\n' % sg.name
     return s
   def generate_client_class_context_event_handler_methods (self, derived_info, class_info, sg):
@@ -553,7 +550,7 @@ class Generator:
     s += '{\n'
     s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);\n' # msgid self ConId ClosureId
     s += '  fb.add_msgid (%s);\n' % self.method_digest (sg)
-    s += self.generate_proto_add_args ('fb', class_info, '', [('*signal.emitter()', class_info)], '')
+    s += self.generate_proto_add_args ('fb', class_info, '', [('*rsignal.emitter()', class_info)], '')
     s += '  if (hasconnections) {\n'
     s += '    if (!m_handler_id)              // signal connected\n'
     s += '      m_handler_id = PLIC_CONNECTION().register_event_handler (this);\n' # FIXME: badly broken, memory alloc!
@@ -589,7 +586,7 @@ class Generator:
     hasret = sg.rtype.storage != Decls.VOID
     if hasret:
       s += self.V ('', sg.rtype) + 'rval = '
-    s += 'signal.emit ('                              # call out
+    s += 'rsignal.emit ('                             # call out
     s += ', '.join (self.U ('arg_' + a[0], a[1]) for a in sg.args)
     s += ');\n'
     if hasret:                                        # store return value
@@ -604,14 +601,7 @@ class Generator:
     s, classH, classC = '', self.H (class_info.name), class_info.name + '_Context$' # class names
     classH2 = (classH, classH)
     l, heritage, cl = self.interface_class_inheritance (class_info)
-    sca = [] # signal constructor arguments
-    for sg in class_info.signals:
-      s += self.generate_signal_typedef (sg, class_info, classH + '_')
-      signame = self.generate_signal_typename (sg, class_info)
-      sca += [ '%s (*(%s_%s*) NULL)' % (sg.name, classH, signame) ]
-    sci = ',\n  '.join (sca) # signal constructor init string
     s += '%s::%s ()' % classH2 # ctor
-    s += ' :\n  ' + sci if sci else ''
     s += '\n{}\n'
     s += 'Plic::FieldBuffer&\n'
     s += 'operator<< (Plic::FieldBuffer &fb, const %s &handle)\n{\n' % classH
@@ -643,6 +633,12 @@ class Generator:
     s += '  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle\n'
     s += '  return connection_id2context<%s> (ipcid)->list_types();\n' % classC
     s += '}\n'
+    for sg in class_info.signals:
+      signame = self.generate_signal_typename (sg, class_info)
+      s += '%s::%s&\n' % (classH, signame)
+      s += '%s::sig_%s ()\n{\n' % (classH, sg.name)
+      s += '  return connection_id2context<%s> (connection_handle2id (*this))->%s.psignal;\n' % (classC, sg.name)
+      s += '}\n'
     return s
   def generate_server_class_methods (self, class_info):
     assert self.gen_mode == G4SERVER
@@ -871,27 +867,25 @@ class Generator:
     return 'Signal_%s' % functype.name
   def generate_event_handler_typename (self, functype, ctype):
     return '__EventHandler__%s' % functype.name
-  def generate_signal_proxy_typedef (self, functype, ctype):
+  def generate_signal_proxy_typedef (self, functype, ctype, prefix = ''):
     assert self.gen_mode == G4CLIENT
-    s = ''
     proxyname = self.generate_signal_proxy_typename (functype, ctype)
     cpp_rtype = self.R (functype.rtype)
-    s += '  typedef Rapicorn::Signals::SignalProxy<%s, %s (' % (self.C (ctype), cpp_rtype)
+    s = 'typedef Rapicorn::Signals::SignalProxy<%s, %s (' % (self.C (ctype), cpp_rtype)
     l = []
     for a in functype.args:
       l += [ self.A (a[0], a[1]) ]
     s += ', '.join (l)
     s += ')'
-    s += '> ' + proxyname + ';\n'
+    s += '> ' + prefix + proxyname + ';\n'
     return s
-  def generate_signal_proxy_var (self, functype, ctype):
+  def generate_signal_accessor_def (self, functype, ctype):
     assert self.gen_mode == G4CLIENT
-    proxyname = self.generate_signal_proxy_typename (functype, ctype)
-    s = '  ' + self.F (proxyname) + functype.name + ';\n'
+    s, signame = '', self.generate_signal_typename (functype, ctype)
+    s = '  ' + self.F (signame + '&') + 'sig_' + functype.name + '();\n'
     return s
   def generate_signal_typedef (self, functype, ctype, prefix = '', ancestor = ''):
-    s = ''
-    signame = self.generate_signal_typename (functype, ctype)
+    s, signame = '', self.generate_signal_typename (functype, ctype)
     cpp_rtype = self.R (functype.rtype)
     s += 'typedef Rapicorn::Signals::Signal<%s, %s (' % (self.C (ctype), cpp_rtype)
     l = []

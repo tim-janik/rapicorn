@@ -91,7 +91,7 @@ public:
     m_pfd.revents = 0;
     add_poll (&m_pfd);
     primary (false);
-    Application_SmartHandle::the().missing_primary += slot (*this, &AppSource::queue_check_primaries);
+    Application_SmartHandle::the().sig_missing_primary() += slot (*this, &AppSource::queue_check_primaries);
   }
   virtual bool
   prepare (const EventLoop::State &state,
