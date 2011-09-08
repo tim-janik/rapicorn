@@ -1,8 +1,7 @@
 # PLIC - Pluggable IDL Compiler
 include $(top_srcdir)/Makefile.decl
 
-TESTPLIC = PYTHONPATH="$$PYTHONPATH:$(srcdir)/.." ../plic-@PLIC_VERSION@ $(DEBUG:%=--plic-debug)
-PLICINT = ../plic-intern
+PLICINT = ../plic-intern $(DEBUG:%=--plic-debug)
 
 noinst_PROGRAMS = ptptest
 ptptest_SOURCES = ptptest.cc
@@ -36,14 +35,14 @@ installcheck-local: bin-plic-testpass
 
 # == IDL Parsing Tests ==
 check-testpass: $(srcdir)/testpass.idl
-	$(Q) ${TESTPLIC} $(srcdir)/testpass.idl >/dev/null ; eval "$$TSTDIAGNOSE"
+	$(Q) ${PLICINT} $(srcdir)/testpass.idl >/dev/null ; eval "$$TSTDIAGNOSE"
 check-include-p1: $(srcdir)/include-p1.idl
-	$(Q) ${TESTPLIC} $(srcdir)/include-p1.idl >/dev/null ; eval "$$TSTDIAGNOSE"
+	$(Q) ${PLICINT} $(srcdir)/include-p1.idl >/dev/null ; eval "$$TSTDIAGNOSE"
 check: check-testpass check-include-p1
 
 # == IDL Error Tests ==
 check-testfail: $(srcdir)/testfail.idl
-	$(Q) ${TESTPLIC} --plic-fail-file-test $(srcdir)/testfail.idl >$(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) ${PLICINT} --plic-fail-file-test $(srcdir)/testfail.idl >$(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testfail.ref'" "'$(TSTOUT)'"
 check: check-testfail
 
@@ -54,14 +53,14 @@ check: check-plic-standard-types
 
 # == Test TypeMap ==
 check-plic-format-TypeMap: ptptest $(srcdir)/testpass.idl
-	$(Q) ${TESTPLIC} $(srcdir)/testpass.idl -G TypeMap  ; eval "$$TSTDIAGNOSE" "'plic -G TypeMap'"
+	$(Q) ${PLICINT} $(srcdir)/testpass.idl -G TypeMap  ; eval "$$TSTDIAGNOSE" "'plic -G TypeMap'"
 	$(Q) ./ptptest plic.out $(TESTPASS_AUXTESTS) >/dev/null ; eval "$$TSTDIAGNOSE" "'ptptest aux-tests'"
 	$(Q) rm -f plic.out
 check: check-plic-format-TypeMap
 
 # == Test Rapicorn ==
 check-plic-format-Rapicorn: $(srcdir)/testpass.idl
-	$(Q) ${TESTPLIC} $(srcdir)/testpass.idl -G Rapicorn -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) ${PLICINT} $(srcdir)/testpass.idl -G Rapicorn -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testrapicorn.ref'" "'$(TSTOUT)'"
 check: check-plic-format-Rapicorn
 
