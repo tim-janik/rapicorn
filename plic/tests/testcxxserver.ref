@@ -556,6 +556,34 @@ Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_SignalTestInterface_Interfa
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_SignalTestInterface_Interface*);
 Plic::FieldReader& operator>> (Plic::FieldReader&, I_SignalTestInterface_Interface*&);
 
+class I_ChildInheritingSignals_Interface : public virtual I_SignalTestInterface_Interface
+  /// See also the corresponding IDL class ChildInheritingSignals.
+{
+protected:
+  explicit                               I_ChildInheritingSignals_Interface ();
+  virtual /*Des*/                       ~I_ChildInheritingSignals_Interface () = 0;
+public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  typedef Rapicorn::Signals::Signal<I_ChildInheritingSignals_Interface, void (I_ChildInheritingSignals_Interface &c, I_SignalTestInterface_Interface &p, const Plic::Any &a, int i, const QuickRecordImpl &r, const QuickSequenceImpl &s)> Signal_child_signal;
+  Signal_child_signal sig_child_signal;
+};
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_ChildInheritingSignals_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_ChildInheritingSignals_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_ChildInheritingSignals_Interface*&);
+
+class I_AnotherChild_Interface : public virtual I_SignalTestInterface_Interface
+  /// See also the corresponding IDL class AnotherChild.
+{
+protected:
+  explicit                               I_AnotherChild_Interface ();
+  virtual /*Des*/                       ~I_AnotherChild_Interface () = 0;
+public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+};
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_AnotherChild_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_AnotherChild_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_AnotherChild_Interface*&);
+
 class I_PropertyTester_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class PropertyTester.
 {
@@ -1294,6 +1322,63 @@ void
 I_SignalTestInterface_Interface::_list_types (Plic::TypeHashList &thl) const
 {
   thl.push_back (Plic::TypeHash (0x0acc338edd01a172ULL, 0x27c5f8854a5f9458ULL)); // SignalTestInterface
+}
+
+I_ChildInheritingSignals_Interface::I_ChildInheritingSignals_Interface () :
+  sig_child_signal (*this)
+{}
+I_ChildInheritingSignals_Interface::~I_ChildInheritingSignals_Interface () {}
+Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_ChildInheritingSignals_Interface &obj)
+{
+  fb.add_object (connection_object2id (&obj));
+  return fb;
+}
+Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_ChildInheritingSignals_Interface *obj)
+{
+  fb.add_object (connection_object2id (obj));
+  return fb;
+}
+Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, I_ChildInheritingSignals_Interface* &obj)
+{
+  obj = connection_id2object<I_ChildInheritingSignals_Interface> (fbr.pop_object());
+  return fbr;
+}
+void
+I_ChildInheritingSignals_Interface::_list_types (Plic::TypeHashList &thl) const
+{
+  thl.push_back (Plic::TypeHash (0x0acc338edd01a172ULL, 0x27c5f8854a5f9458ULL)); // SignalTestInterface
+  thl.push_back (Plic::TypeHash (0x0d6e67873f4098cbULL, 0xe7f2eb93eb46037cULL)); // ChildInheritingSignals
+}
+
+I_AnotherChild_Interface::I_AnotherChild_Interface ()
+{}
+I_AnotherChild_Interface::~I_AnotherChild_Interface () {}
+Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_AnotherChild_Interface &obj)
+{
+  fb.add_object (connection_object2id (&obj));
+  return fb;
+}
+Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, I_AnotherChild_Interface *obj)
+{
+  fb.add_object (connection_object2id (obj));
+  return fb;
+}
+Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, I_AnotherChild_Interface* &obj)
+{
+  obj = connection_id2object<I_AnotherChild_Interface> (fbr.pop_object());
+  return fbr;
+}
+void
+I_AnotherChild_Interface::_list_types (Plic::TypeHashList &thl) const
+{
+  thl.push_back (Plic::TypeHash (0x0acc338edd01a172ULL, 0x27c5f8854a5f9458ULL)); // SignalTestInterface
+  thl.push_back (Plic::TypeHash (0x0e2870deaacf05f9ULL, 0x2851002b6bd14b7aULL)); // AnotherChild
 }
 
 I_PropertyTester_Interface::I_PropertyTester_Interface ()
@@ -2894,6 +2979,89 @@ _$sigcon__SignalTestInterface__self_args (Plic::FieldReader &fbr)
 }
 
 static Plic::FieldBuffer*
+_$lsttyp__ChildInheritingSignals__ (Plic::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  I_ChildInheritingSignals_Interface *self;
+  fbr >> self;
+  PLIC_CHECK (self, "self must be non-NULL");
+  Plic::TypeHashList thl;
+  self->_list_types (thl);
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
+  rb << Plic::int64_t (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    rb << thl[i];
+  return &rb;
+}
+class _$Closure__ChildInheritingSignals__child_signal {
+  Plic::Connection &m_connection; Plic::uint64_t m_handler;
+public:
+  typedef Plic::shared_ptr<_$Closure__ChildInheritingSignals__child_signal> SharedPtr;
+  _$Closure__ChildInheritingSignals__child_signal (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}
+  ~_$Closure__ChildInheritingSignals__child_signal()
+  {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0
+    fb << m_handler;
+    m_connection.send_event (&fb); // deletes fb
+  }
+  static void
+  handler (I_ChildInheritingSignals_Interface &arg_c,
+           I_SignalTestInterface_Interface &arg_p,
+           const Plic::Any &arg_a,
+           int arg_i,
+           const QuickRecordImpl &arg_r,
+           const QuickSequenceImpl &arg_s,
+           SharedPtr sp)
+  {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 6);
+    fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0
+    fb << sp->m_handler;
+    fb << arg_c;
+    fb << arg_p;
+    fb << arg_a;
+    fb << arg_i;
+    fb << arg_r;
+    fb << arg_s;
+    sp->m_connection.send_event (&fb); // deletes fb
+  }
+};
+static Plic::FieldBuffer*
+_$sigcon__ChildInheritingSignals__child_signal (Plic::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1 + 2) return plic$_error ("invalid number of arguments");
+  I_ChildInheritingSignals_Interface *self;
+  fbr >> self;
+  PLIC_CHECK (self, "self must be non-NULL");
+  Plic::uint64_t handler_id, con_id, cid = 0;
+  fbr >> handler_id;
+  fbr >> con_id;
+  if (con_id) self->sig_child_signal.disconnect (con_id);
+  if (handler_id) {
+    _$Closure__ChildInheritingSignals__child_signal::SharedPtr sp (new _$Closure__ChildInheritingSignals__child_signal (PLIC_CONNECTION(), handler_id));
+    cid = self->sig_child_signal.connect (slot (sp->handler, sp)); }
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();
+  rb << cid;
+  return &rb;
+}
+
+static Plic::FieldBuffer*
+_$lsttyp__AnotherChild__ (Plic::FieldReader &fbr)
+{
+  if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
+  I_AnotherChild_Interface *self;
+  fbr >> self;
+  PLIC_CHECK (self, "self must be non-NULL");
+  Plic::TypeHashList thl;
+  self->_list_types (thl);
+  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());
+  rb << Plic::int64_t (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    rb << thl[i];
+  return &rb;
+}
+
+static Plic::FieldBuffer*
 _$lsttyp__PropertyTester__ (Plic::FieldReader &fbr)
 {
   if (fbr.remaining() != 1) return plic$_error ("invalid number of arguments");
@@ -3434,6 +3602,9 @@ static const Plic::Connection::MethodEntry _plic_stub_entries[] = {
   { 0x57a5dbfbeb5a4ef9ULL, 0xb5df0c3b3bba4b22ULL, InterfaceTests::_$sigcon__SignalTestInterface__interface_arg, },
   { 0x51d96c2cd8c40104ULL, 0x04aedd456681cb81ULL, InterfaceTests::_$sigcon__SignalTestInterface__any_arg, },
   { 0x5c515ee37b78a970ULL, 0xe89c2af2f29359a0ULL, InterfaceTests::_$sigcon__SignalTestInterface__self_args, },
+  { 0x3d6b68fa4d6a3c76ULL, 0xc9f1e8332c98049bULL, InterfaceTests::_$lsttyp__ChildInheritingSignals__, },
+  { 0x56e02e4bf72a0363ULL, 0x4af5fd2e14057dc2ULL, InterfaceTests::_$sigcon__ChildInheritingSignals__child_signal, },
+  { 0x300b6f8565bd0732ULL, 0x164c7a93dffad03bULL, InterfaceTests::_$lsttyp__AnotherChild__, },
   { 0x33ed5186814fd96fULL, 0x2db9aae41d7f688cULL, InterfaceTests::_$lsttyp__PropertyTester__, },
   { 0x396c5b1aaf49cec6ULL, 0xb6218ab5ac6b82c3ULL, InterfaceTests::_$getter__PropertyTester__bool_prop, },
   { 0x2bd3c8fc8f71f8b4ULL, 0x2dde5c2c8fcf750cULL, InterfaceTests::_$setter__PropertyTester__bool_prop, },

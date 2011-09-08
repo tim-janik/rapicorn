@@ -480,15 +480,12 @@ class Generator:
     s += '  struct SmartHandle$ : public %s {\n' % classH       # derive smart handle for copy-ctor initialization
     s += '    SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}\n'
     s += '  } handle$;\n'
-    ancestors = self.class_ancestry (class_info)
-    for ancestor in ancestors:
-      for sg in ancestor.signals:
-        s += self.generate_client_class_context_event_handler_def (class_info, ancestor, sg)
+    for sg in class_info.signals:
+      s += self.generate_client_class_context_event_handler_def (class_info, class_info, sg)
     s += '  %s (Plic::uint64_t ipcid) :\n' % classC             # ctor
     s += '    handle$ (ipcid)'
-    for ancestor in ancestors:
-      for sg in ancestor.signals:
-        s += ',\n    %s (handle$)' % sg.name
+    for sg in class_info.signals:
+      s += ',\n    %s (handle$)' % sg.name
     s += ',\n    m_cached_types (NULL)\n  {}\n'
     s += '  Plic::TypeHashList *m_cached_types;\n'
     s += '  const Plic::TypeHashList& list_types ();\n'
@@ -518,9 +515,8 @@ class Generator:
     s += '  }\n'
     s += '  return *m_cached_types;\n'
     s += '}\n'
-    for ancestor in ancestors:
-      for sg in ancestor.signals:
-        s += self.generate_client_class_context_event_handler_methods (class_info, ancestor, sg)
+    for sg in class_info.signals:
+      s += self.generate_client_class_context_event_handler_methods (class_info, class_info, sg)
     return s
   def generate_client_class_context_event_handler_def (self, derived_info, class_info, sg):
     s, classH, signame = '', self.H (class_info.name), self.generate_signal_typename (sg, class_info)

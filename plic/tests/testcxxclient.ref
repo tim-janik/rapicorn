@@ -583,6 +583,40 @@ public:
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const SignalTestInterface_SmartHandle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, SignalTestInterface_SmartHandle&);
 
+class ChildInheritingSignals_SmartHandle : public SignalTestInterface_SmartHandle
+  /// See also the corresponding IDL class ChildInheritingSignals.
+{
+  static ChildInheritingSignals_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static const Plic::TypeHash&  _type ();
+protected:
+  typedef Rapicorn::Signals::SignalProxy<ChildInheritingSignals_SmartHandle, void (ChildInheritingSignals_SmartHandle &c, SignalTestInterface_SmartHandle &p, const Plic::Any &a, int i, const QuickRecord_Handle &r, const QuickSequence_Handle &s)> Signal_child_signal;
+public:
+  template<class C>
+  static ChildInheritingSignals_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  const Plic::TypeHashList&     cast_types ();
+  explicit                      ChildInheritingSignals_SmartHandle ();
+  Signal_child_signal&          sig_child_signal();
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const ChildInheritingSignals_SmartHandle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, ChildInheritingSignals_SmartHandle&);
+
+class AnotherChild_SmartHandle : public SignalTestInterface_SmartHandle
+  /// See also the corresponding IDL class AnotherChild.
+{
+  static AnotherChild_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
+  static const Plic::TypeHash&  _type ();
+protected:
+public:
+  template<class C>
+  static AnotherChild_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
+  const Plic::TypeHashList&     cast_types ();
+  explicit                      AnotherChild_SmartHandle ();
+//inline               operator _UnspecifiedBool () const { return _is_null() ? NULL : _unspecified_bool_true(); }
+};
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const AnotherChild_SmartHandle&);
+Plic::FieldReader& operator>> (Plic::FieldReader&, AnotherChild_SmartHandle&);
+
 class PropertyTester_SmartHandle : public virtual Plic::SmartHandle
   /// See also the corresponding IDL class PropertyTester.
 {
@@ -3596,6 +3630,233 @@ SignalTestInterface_SmartHandle::Signal_self_args&
 SignalTestInterface_SmartHandle::sig_self_args ()
 {
   return connection_id2context<SignalTestInterface_Context$> (connection_handle2id (*this))->self_args.psignal;
+}
+
+// === ChildInheritingSignals ===
+static inline void ref   (ChildInheritingSignals_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (ChildInheritingSignals_SmartHandle&) {} // dummy stub for Signal<>.emit
+struct ChildInheritingSignals_Context$ : public Plic::NonCopyable {
+  struct SmartHandle$ : public ChildInheritingSignals_SmartHandle {
+    SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
+  } handle$;
+  struct __EventHandler__child_signal : Plic::Connection::EventHandler {
+    typedef Rapicorn::Signals::SignalProxy<ChildInheritingSignals_SmartHandle, void (ChildInheritingSignals_SmartHandle &c, SignalTestInterface_SmartHandle &p, const Plic::Any &a, int i, const QuickRecord_Handle &r, const QuickSequence_Handle &s)> ProxySignal_child_signal;
+    typedef Rapicorn::Signals::Signal<ChildInheritingSignals_SmartHandle, void (ChildInheritingSignals_SmartHandle &c, SignalTestInterface_SmartHandle &p, const Plic::Any &a, int i, const QuickRecord_Handle &r, const QuickSequence_Handle &s), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__child_signal> > RelaySignal_child_signal;
+    Plic::uint64_t m_handler_id, m_connection_id;
+    RelaySignal_child_signal rsignal;
+    ProxySignal_child_signal psignal;
+    __EventHandler__child_signal (ChildInheritingSignals_SmartHandle &handle) :
+      m_handler_id (0), m_connection_id (0), rsignal (handle), psignal (rsignal)
+    { rsignal.listener (*this, &__EventHandler__child_signal::connections_changed); }
+    ~__EventHandler__child_signal ()
+    { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }
+    void                       connections_changed (bool hasconnections);
+    virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
+  } child_signal;
+  ChildInheritingSignals_Context$ (Plic::uint64_t ipcid) :
+    handle$ (ipcid),
+    child_signal (handle$),
+    m_cached_types (NULL)
+  {}
+  Plic::TypeHashList *m_cached_types;
+  const Plic::TypeHashList& list_types ();
+};
+const Plic::TypeHashList&
+ChildInheritingSignals_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x3d6b68fa4d6a3c76ULL, 0xc9f1e8332c98049bULL);
+    fb << handle$;
+    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len;
+    frr >> len;
+    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    Plic::TypeHashList *thv = new Plic::TypeHashList();
+    Plic::TypeHash thash;
+    for (size_t i = 0; i < len; i++) {
+      frr >> thash;
+      thv->push_back (thash);
+    }
+    delete fr;
+    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
+void
+ChildInheritingSignals_Context$::__EventHandler__child_signal::connections_changed (bool hasconnections)
+{
+  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
+  fb.add_msgid (0x56e02e4bf72a0363ULL, 0x4af5fd2e14057dc2ULL);
+  fb << *rsignal.emitter();
+  if (hasconnections) {
+    if (!m_handler_id)              // signal connected
+      m_handler_id = PLIC_CONNECTION().register_event_handler (this);
+    fb << m_handler_id;    // handler connection request
+    fb << 0;               // no disconnection
+  } else {                          // signal disconnected
+    if (m_handler_id)
+      ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
+    fb << 0;               // no handler connection
+    fb << m_connection_id; // disconnection request
+    m_connection_id = 0;
+  }
+  Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+  if (fr) { // FIXME: assert that fr is a non-NULL FieldBuffer with result message
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    if (frr.remaining() && m_handler_id)
+      frr >> m_connection_id;
+    delete fr;
+  }
+}
+Plic::FieldBuffer*
+ChildInheritingSignals_Context$::__EventHandler__child_signal::handle_event (Plic::FieldBuffer &fb)
+{
+  Plic::FieldReader fbr (fb);
+  fbr.skip_msgid(); // FIXME: check msgid
+  fbr.skip();       // skip m_handler_id
+  if (fbr.remaining() != 6) return plic$_error ("invalid number of arguments");
+  ChildInheritingSignals_SmartHandle  arg_c;
+  fbr >> arg_c;
+  SignalTestInterface_SmartHandle  arg_p;
+  fbr >> arg_p;
+  Plic::Any  arg_a;
+  fbr >> arg_a;
+  int  arg_i;
+  fbr >> arg_i;
+  QuickRecord_Handle  arg_r;
+  fbr >> arg_r;
+  QuickSequence_Handle  arg_s;
+  fbr >> arg_s;
+  rsignal.emit (arg_c, arg_p, arg_a, arg_i, arg_r, arg_s);
+  return NULL;
+}
+ChildInheritingSignals_SmartHandle::ChildInheritingSignals_SmartHandle ()
+{}
+Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, const ChildInheritingSignals_SmartHandle &handle)
+{
+  fb.add_object (connection_handle2id (handle));
+  return fb;
+}
+Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, ChildInheritingSignals_SmartHandle &handle)
+{
+  const Plic::uint64_t ipcid = fbr.pop_object();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<ChildInheritingSignals_Context$> (ipcid)->handle$ : ChildInheritingSignals_SmartHandle();
+  return fbr;
+}
+const Plic::TypeHash&
+ChildInheritingSignals_SmartHandle::_type()
+{
+  static const Plic::TypeHash type_hash = Plic::TypeHash (0x0d6e67873f4098cbULL, 0xe7f2eb93eb46037cULL);
+  return type_hash;
+}
+ChildInheritingSignals_SmartHandle
+ChildInheritingSignals_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+{
+  size_t i; const Plic::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<ChildInheritingSignals_Context$> (connection_handle2id (other))->handle$;
+  return ChildInheritingSignals_SmartHandle();
+}
+const Plic::TypeHashList&
+ChildInheritingSignals_SmartHandle::cast_types()
+{
+  static Plic::TypeHashList notypes;
+  const Plic::uint64_t ipcid = connection_handle2id (*this);
+  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<ChildInheritingSignals_Context$> (ipcid)->list_types();
+}
+ChildInheritingSignals_SmartHandle::Signal_child_signal&
+ChildInheritingSignals_SmartHandle::sig_child_signal ()
+{
+  return connection_id2context<ChildInheritingSignals_Context$> (connection_handle2id (*this))->child_signal.psignal;
+}
+
+// === AnotherChild ===
+static inline void ref   (AnotherChild_SmartHandle&) {} // dummy stub for Signal<>.emit
+static inline void unref (AnotherChild_SmartHandle&) {} // dummy stub for Signal<>.emit
+struct AnotherChild_Context$ : public Plic::NonCopyable {
+  struct SmartHandle$ : public AnotherChild_SmartHandle {
+    SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
+  } handle$;
+  AnotherChild_Context$ (Plic::uint64_t ipcid) :
+    handle$ (ipcid),
+    m_cached_types (NULL)
+  {}
+  Plic::TypeHashList *m_cached_types;
+  const Plic::TypeHashList& list_types ();
+};
+const Plic::TypeHashList&
+AnotherChild_Context$::list_types ()
+{
+  if (!m_cached_types) {
+    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);
+    fb.add_msgid (0x300b6f8565bd0732ULL, 0x164c7a93dffad03bULL);
+    fb << handle$;
+    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+    PLIC_CHECK (fr != NULL, "missing result from 2-way call");
+    Plic::FieldReader frr (*fr);
+    frr.skip_msgid(); // FIXME: msgid for return?
+    size_t len;
+    frr >> len;
+    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");
+    Plic::TypeHashList *thv = new Plic::TypeHashList();
+    Plic::TypeHash thash;
+    for (size_t i = 0; i < len; i++) {
+      frr >> thash;
+      thv->push_back (thash);
+    }
+    delete fr;
+    if (!Plic::atomic_ptr_cas (&m_cached_types, (Plic::TypeHashList*) NULL, thv))
+      delete thv;
+  }
+  return *m_cached_types;
+}
+AnotherChild_SmartHandle::AnotherChild_SmartHandle ()
+{}
+Plic::FieldBuffer&
+operator<< (Plic::FieldBuffer &fb, const AnotherChild_SmartHandle &handle)
+{
+  fb.add_object (connection_handle2id (handle));
+  return fb;
+}
+Plic::FieldReader&
+operator>> (Plic::FieldReader &fbr, AnotherChild_SmartHandle &handle)
+{
+  const Plic::uint64_t ipcid = fbr.pop_object();
+  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<AnotherChild_Context$> (ipcid)->handle$ : AnotherChild_SmartHandle();
+  return fbr;
+}
+const Plic::TypeHash&
+AnotherChild_SmartHandle::_type()
+{
+  static const Plic::TypeHash type_hash = Plic::TypeHash (0x0e2870deaacf05f9ULL, 0x2851002b6bd14b7aULL);
+  return type_hash;
+}
+AnotherChild_SmartHandle
+AnotherChild_SmartHandle::_cast (Plic::SmartHandle &other, const Plic::TypeHashList &types)
+{
+  size_t i; const Plic::TypeHash &mine = _type();
+  for (i = 0; i < types.size(); i++)
+    if (mine == types[i])
+      return connection_id2context<AnotherChild_Context$> (connection_handle2id (other))->handle$;
+  return AnotherChild_SmartHandle();
+}
+const Plic::TypeHashList&
+AnotherChild_SmartHandle::cast_types()
+{
+  static Plic::TypeHashList notypes;
+  const Plic::uint64_t ipcid = connection_handle2id (*this);
+  if (PLIC_UNLIKELY (!ipcid)) return notypes; // null handle
+  return connection_id2context<AnotherChild_Context$> (ipcid)->list_types();
 }
 
 // === PropertyTester ===

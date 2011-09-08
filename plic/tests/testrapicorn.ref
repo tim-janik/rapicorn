@@ -168,6 +168,16 @@ class SignalTestInterface {
   Signal_any_arg              sig_any_arg;
   Signal_self_args            sig_self_args;
 };
+class ChildInheritingSignals :
+  SignalTestInterface
+{
+  typedef Signal<ChildInheritingSignals, void (ChildInheritingSignals c, SignalTestInterface p, any a, int i, QuickRecord r, QuickSequence s)> Signal_child_signal;
+  Signal_child_signal         sig_child_signal;
+};
+class AnotherChild :
+  SignalTestInterface
+{
+};
 class PropertyTester {
   virtual const PropertyList& list_properties ();
   virtual bool        bool_prop () const = 0;

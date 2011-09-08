@@ -524,6 +524,34 @@ Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_SignalTestInterface_Interfa
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_SignalTestInterface_Interface*);
 Plic::FieldReader& operator>> (Plic::FieldReader&, I_SignalTestInterface_Interface*&);
 
+class I_ChildInheritingSignals_Interface : public virtual I_SignalTestInterface_Interface
+  /// See also the corresponding IDL class ChildInheritingSignals.
+{
+protected:
+  explicit                               I_ChildInheritingSignals_Interface ();
+  virtual /*Des*/                       ~I_ChildInheritingSignals_Interface () = 0;
+public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+  typedef Rapicorn::Signals::Signal<I_ChildInheritingSignals_Interface, void (I_ChildInheritingSignals_Interface &c, I_SignalTestInterface_Interface &p, const Plic::Any &a, int i, const QuickRecordImpl &r, const QuickSequenceImpl &s)> Signal_child_signal;
+  Signal_child_signal sig_child_signal;
+};
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_ChildInheritingSignals_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_ChildInheritingSignals_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_ChildInheritingSignals_Interface*&);
+
+class I_AnotherChild_Interface : public virtual I_SignalTestInterface_Interface
+  /// See also the corresponding IDL class AnotherChild.
+{
+protected:
+  explicit                               I_AnotherChild_Interface ();
+  virtual /*Des*/                       ~I_AnotherChild_Interface () = 0;
+public:
+  virtual void                          _list_types (Plic::TypeHashList&) const;
+};
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_AnotherChild_Interface&);
+Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_AnotherChild_Interface*);
+Plic::FieldReader& operator>> (Plic::FieldReader&, I_AnotherChild_Interface*&);
+
 class I_PropertyTester_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class PropertyTester.
 {
