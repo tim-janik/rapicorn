@@ -209,63 +209,63 @@ Plic::FieldReader& operator>> (Plic::FieldReader&, XFooRecord_Handle&);
 
 struct XFooSequence_Handle : public std::vector<bool> {
   typedef std::vector<bool> Sequence;
-  reference append_back() { resize (size() + 1); return back(); }
+  reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const XFooSequence_Handle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, XFooSequence_Handle&);
 
 struct IntSequence_Handle : public std::vector<int> {
   typedef std::vector<int> Sequence;
-  reference append_back() { resize (size() + 1); return back(); }
+  reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const IntSequence_Handle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, IntSequence_Handle&);
 
 struct FloatSequence_Handle : public std::vector<double> {
   typedef std::vector<double> Sequence;
-  reference append_back() { resize (size() + 1); return back(); }
+  reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const FloatSequence_Handle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, FloatSequence_Handle&);
 
 struct StringSequence_Handle : public std::vector<std::string> {
   typedef std::vector<std::string> Sequence;
-  reference append_back() { resize (size() + 1); return back(); }
+  reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const StringSequence_Handle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, StringSequence_Handle&);
 
 struct ExtensiveEnumSequence_Handle : public std::vector<ExtensiveEnum> {
   typedef std::vector<ExtensiveEnum> Sequence;
-  reference append_back() { resize (size() + 1); return back(); }
+  reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const ExtensiveEnumSequence_Handle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, ExtensiveEnumSequence_Handle&);
 
 struct RecordSequence_Handle : public std::vector<XFooRecord_Handle> {
   typedef std::vector<XFooRecord_Handle> Sequence;
-  reference append_back() { resize (size() + 1); return back(); }
+  reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const RecordSequence_Handle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, RecordSequence_Handle&);
 
 struct SequenceSequence_Handle : public std::vector<IntSequence_Handle> {
   typedef std::vector<IntSequence_Handle> Sequence;
-  reference append_back() { resize (size() + 1); return back(); }
+  reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const SequenceSequence_Handle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, SequenceSequence_Handle&);
 
 struct InterfaceSequence_Handle : public std::vector<FirstInterface_SmartHandle> {
   typedef std::vector<FirstInterface_SmartHandle> Sequence;
-  reference append_back() { resize (size() + 1); return back(); }
+  reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const InterfaceSequence_Handle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, InterfaceSequence_Handle&);
 
 struct AnySequence_Handle : public std::vector<Plic::Any> {
   typedef std::vector<Plic::Any> Sequence;
-  reference append_back() { resize (size() + 1); return back(); }
+  reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const AnySequence_Handle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, AnySequence_Handle&);
@@ -280,7 +280,7 @@ Plic::FieldReader& operator>> (Plic::FieldReader&, NestedTypesRec_Handle&);
 
 struct NestedTypesSeq_Handle : public std::vector<NestedTypesRec_Handle> {
   typedef std::vector<NestedTypesRec_Handle> Sequence;
-  reference append_back() { resize (size() + 1); return back(); }
+  reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const NestedTypesSeq_Handle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, NestedTypesSeq_Handle&);
@@ -476,7 +476,7 @@ Plic::FieldReader& operator>> (Plic::FieldReader&, QuickRecord_Handle&);
 
 struct QuickSequence_Handle : public std::vector<double> {
   typedef std::vector<double> Sequence;
-  reference append_back() { resize (size() + 1); return back(); }
+  reference append_back(); ///< Append data at the end, returns write reference to data.
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const QuickSequence_Handle&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, QuickSequence_Handle&);
@@ -884,6 +884,12 @@ operator>> (Plic::FieldReader &src, XFooSequence_Handle &self)
   }
   return src;
 }
+XFooSequence_Handle::reference
+XFooSequence_Handle::append_back()
+{
+  resize (size() + 1);
+  return back();
+}
 inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const IntSequence_Handle &self)
 {
@@ -904,6 +910,12 @@ operator>> (Plic::FieldReader &src, IntSequence_Handle &self)
     fbr >> self[k];
   }
   return src;
+}
+IntSequence_Handle::reference
+IntSequence_Handle::append_back()
+{
+  resize (size() + 1);
+  return back();
 }
 inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const FloatSequence_Handle &self)
@@ -926,6 +938,12 @@ operator>> (Plic::FieldReader &src, FloatSequence_Handle &self)
   }
   return src;
 }
+FloatSequence_Handle::reference
+FloatSequence_Handle::append_back()
+{
+  resize (size() + 1);
+  return back();
+}
 inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const StringSequence_Handle &self)
 {
@@ -946,6 +964,12 @@ operator>> (Plic::FieldReader &src, StringSequence_Handle &self)
     fbr >> self[k];
   }
   return src;
+}
+StringSequence_Handle::reference
+StringSequence_Handle::append_back()
+{
+  resize (size() + 1);
+  return back();
 }
 inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const ExtensiveEnumSequence_Handle &self)
@@ -968,6 +992,12 @@ operator>> (Plic::FieldReader &src, ExtensiveEnumSequence_Handle &self)
   }
   return src;
 }
+ExtensiveEnumSequence_Handle::reference
+ExtensiveEnumSequence_Handle::append_back()
+{
+  resize (size() + 1);
+  return back();
+}
 inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const RecordSequence_Handle &self)
 {
@@ -988,6 +1018,12 @@ operator>> (Plic::FieldReader &src, RecordSequence_Handle &self)
     fbr >> self[k];
   }
   return src;
+}
+RecordSequence_Handle::reference
+RecordSequence_Handle::append_back()
+{
+  resize (size() + 1);
+  return back();
 }
 inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const SequenceSequence_Handle &self)
@@ -1010,6 +1046,12 @@ operator>> (Plic::FieldReader &src, SequenceSequence_Handle &self)
   }
   return src;
 }
+SequenceSequence_Handle::reference
+SequenceSequence_Handle::append_back()
+{
+  resize (size() + 1);
+  return back();
+}
 inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const InterfaceSequence_Handle &self)
 {
@@ -1031,6 +1073,12 @@ operator>> (Plic::FieldReader &src, InterfaceSequence_Handle &self)
   }
   return src;
 }
+InterfaceSequence_Handle::reference
+InterfaceSequence_Handle::append_back()
+{
+  resize (size() + 1);
+  return back();
+}
 inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const AnySequence_Handle &self)
 {
@@ -1051,6 +1099,12 @@ operator>> (Plic::FieldReader &src, AnySequence_Handle &self)
     fbr >> self[k];
   }
   return src;
+}
+AnySequence_Handle::reference
+AnySequence_Handle::append_back()
+{
+  resize (size() + 1);
+  return back();
 }
 inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const NestedTypesRec_Handle &self)
@@ -1089,6 +1143,12 @@ operator>> (Plic::FieldReader &src, NestedTypesSeq_Handle &self)
     fbr >> self[k];
   }
   return src;
+}
+NestedTypesSeq_Handle::reference
+NestedTypesSeq_Handle::append_back()
+{
+  resize (size() + 1);
+  return back();
 }
 inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const NewRecord_Handle &self)
@@ -1924,6 +1984,12 @@ operator>> (Plic::FieldReader &src, QuickSequence_Handle &self)
     fbr >> self[k];
   }
   return src;
+}
+QuickSequence_Handle::reference
+QuickSequence_Handle::append_back()
+{
+  resize (size() + 1);
+  return back();
 }
 
 // === QuickIface ===

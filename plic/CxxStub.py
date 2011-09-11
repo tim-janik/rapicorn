@@ -225,7 +225,7 @@ class Generator:
         s += '  ' + self.F (self.R (fl[1])) + fl[0] + ';\n'
     elif type_info.storage == Decls.SEQUENCE:
       s += '  typedef std::vector<' + self.R (fl[1]) + '> Sequence;\n'
-      s += '  reference append_back() { resize (size() + 1); return back(); }\n'
+      s += '  reference append_back(); ///< Append data at the end, returns write reference to data.\n'
     if type_info.storage == Decls.RECORD:
       s += '  ' + self.F ('inline') + '%s () {' % self.C (type_info) # ctor
       for fl in fieldlist:
@@ -295,6 +295,11 @@ class Generator:
     s += '    fbr >> self[k];\n'
     s += '  }\n'
     s += '  return src;\n'
+    s += '}\n'
+    s += '%s::reference\n' % self.C (type_info)
+    s += '%s::append_back()\n{\n' % self.C (type_info)
+    s += '  resize (size() + 1);\n'
+    s += '  return back();\n'
     s += '}\n'
     return s
   def digest2cbytes (self, digest):
