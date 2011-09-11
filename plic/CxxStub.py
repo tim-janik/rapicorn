@@ -225,6 +225,7 @@ class Generator:
         s += '  ' + self.F (self.R (fl[1])) + fl[0] + ';\n'
     elif type_info.storage == Decls.SEQUENCE:
       s += '  typedef std::vector<' + self.R (fl[1]) + '> Sequence;\n'
+      s += '  reference append_back() { resize (size() + 1); return back(); }\n'
     if type_info.storage == Decls.RECORD:
       s += '  ' + self.F ('inline') + '%s () {' % self.C (type_info) # ctor
       for fl in fieldlist:
