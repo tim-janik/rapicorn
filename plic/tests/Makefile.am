@@ -66,17 +66,16 @@ check: check-plic-format-Rapicorn
 
 # == Test CxxStub Generation for Clinet & Server ==
 check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
-	$(Q) ${PLICINT} -G CxxStub -g iface-prefix=I_ -g serverhh -g servercc \
+	$(Q) ${PLICINT} -G CxxStub -g iface-prefix=I_ -g serverhh -g servercc -g RapicornSignal \
 	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxserver.ref'"
 check-CxxStub-client-gen: $(srcdir)/testcxxclient.ref
-	$(Q) ${PLICINT} -G CxxStub -g iface-prefix=I_ -g clienthh -g clientcc \
+	$(Q) ${PLICINT} -G CxxStub -g iface-prefix=I_ -g clienthh -g clientcc -g RapicornSignal \
 	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxclient.ref'"
 check-CxxStub-skeleton-gen: $(srcdir)/testcxxskels.ref
-	$(Q) echo -e "#include <rapicorn.hh>\n" > $(TSTOUT)
-	$(Q) ${PLICINT} -G CxxStub -g iface-prefix=I_ -g serverhh -g server-skel \
-	  $(srcdir)/testpass.idl -o - >> $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) ${PLICINT} -G CxxStub -g iface-prefix=I_ -g serverhh -g server-skel -g RapicornSignal \
+	  $(srcdir)/testpass.idl -o - > $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxskels.ref'"
 check-local: check-CxxStub-server-gen check-CxxStub-client-gen check-CxxStub-skeleton-gen
 EXTRA_DIST += testcxxserver.ref testcxxclient.ref testcxxskels.ref

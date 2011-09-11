@@ -2,7 +2,8 @@
 
 // --- ServerHH Boilerplate ---
 #include <plic/runtime.hh>
-#include <rcore/rapicornsignal.hh>
+
+#include <rapicorn-core.hh> // for rcore/rapicornsignal.hh
 using Rapicorn::Signals::slot;
 
 // --- ClientCC/ServerCC Boilerplate ---
@@ -205,54 +206,63 @@ Plic::FieldReader& operator>> (Plic::FieldReader&, XFooRecordImpl&);
 
 struct XFooSequenceImpl : public std::vector<bool> {
   typedef std::vector<bool> Sequence;
+  reference append_back() { resize (size() + 1); return back(); }
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const XFooSequenceImpl&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, XFooSequenceImpl&);
 
 struct IntSequenceImpl : public std::vector<int> {
   typedef std::vector<int> Sequence;
+  reference append_back() { resize (size() + 1); return back(); }
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const IntSequenceImpl&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, IntSequenceImpl&);
 
 struct FloatSequenceImpl : public std::vector<double> {
   typedef std::vector<double> Sequence;
+  reference append_back() { resize (size() + 1); return back(); }
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const FloatSequenceImpl&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, FloatSequenceImpl&);
 
 struct StringSequenceImpl : public std::vector<std::string> {
   typedef std::vector<std::string> Sequence;
+  reference append_back() { resize (size() + 1); return back(); }
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const StringSequenceImpl&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, StringSequenceImpl&);
 
 struct ExtensiveEnumSequenceImpl : public std::vector<ExtensiveEnum> {
   typedef std::vector<ExtensiveEnum> Sequence;
+  reference append_back() { resize (size() + 1); return back(); }
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const ExtensiveEnumSequenceImpl&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, ExtensiveEnumSequenceImpl&);
 
 struct RecordSequenceImpl : public std::vector<XFooRecordImpl> {
   typedef std::vector<XFooRecordImpl> Sequence;
+  reference append_back() { resize (size() + 1); return back(); }
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const RecordSequenceImpl&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, RecordSequenceImpl&);
 
 struct SequenceSequenceImpl : public std::vector<IntSequenceImpl> {
   typedef std::vector<IntSequenceImpl> Sequence;
+  reference append_back() { resize (size() + 1); return back(); }
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const SequenceSequenceImpl&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, SequenceSequenceImpl&);
 
 struct InterfaceSequenceImpl : public std::vector<I_FirstInterface_Interface*> {
   typedef std::vector<I_FirstInterface_Interface*> Sequence;
+  reference append_back() { resize (size() + 1); return back(); }
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const InterfaceSequenceImpl&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, InterfaceSequenceImpl&);
 
 struct AnySequenceImpl : public std::vector<Plic::Any> {
   typedef std::vector<Plic::Any> Sequence;
+  reference append_back() { resize (size() + 1); return back(); }
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const AnySequenceImpl&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, AnySequenceImpl&);
@@ -267,6 +277,7 @@ Plic::FieldReader& operator>> (Plic::FieldReader&, NestedTypesRecImpl&);
 
 struct NestedTypesSeqImpl : public std::vector<NestedTypesRecImpl> {
   typedef std::vector<NestedTypesRecImpl> Sequence;
+  reference append_back() { resize (size() + 1); return back(); }
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const NestedTypesSeqImpl&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, NestedTypesSeqImpl&);
@@ -447,6 +458,7 @@ Plic::FieldReader& operator>> (Plic::FieldReader&, QuickRecordImpl&);
 
 struct QuickSequenceImpl : public std::vector<double> {
   typedef std::vector<double> Sequence;
+  reference append_back() { resize (size() + 1); return back(); }
 };
 Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const QuickSequenceImpl&);
 Plic::FieldReader& operator>> (Plic::FieldReader&, QuickSequenceImpl&);
@@ -702,7 +714,7 @@ I_FirstInterface_Interface::_list_types (Plic::TypeHashList &thl) const
 {
   thl.push_back (Plic::TypeHash (0x04be3719c81a379bULL, 0x1079454a90442f2cULL)); // FirstInterface
 }
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const XFooRecordImpl &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (17);
@@ -725,7 +737,7 @@ operator<< (Plic::FieldBuffer &dst, const XFooRecordImpl &self)
   fb << self.any3;
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, XFooRecordImpl &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
@@ -749,7 +761,7 @@ operator>> (Plic::FieldReader &src, XFooRecordImpl &self)
   fbr >> self.any3;
   return src;
 }
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const XFooSequenceImpl &self)
 {
   const size_t len = self.size();
@@ -759,7 +771,7 @@ operator<< (Plic::FieldBuffer &dst, const XFooSequenceImpl &self)
   }
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, XFooSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
@@ -770,7 +782,7 @@ operator>> (Plic::FieldReader &src, XFooSequenceImpl &self)
   }
   return src;
 }
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const IntSequenceImpl &self)
 {
   const size_t len = self.size();
@@ -780,7 +792,7 @@ operator<< (Plic::FieldBuffer &dst, const IntSequenceImpl &self)
   }
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, IntSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
@@ -791,7 +803,7 @@ operator>> (Plic::FieldReader &src, IntSequenceImpl &self)
   }
   return src;
 }
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const FloatSequenceImpl &self)
 {
   const size_t len = self.size();
@@ -801,7 +813,7 @@ operator<< (Plic::FieldBuffer &dst, const FloatSequenceImpl &self)
   }
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, FloatSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
@@ -812,7 +824,7 @@ operator>> (Plic::FieldReader &src, FloatSequenceImpl &self)
   }
   return src;
 }
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const StringSequenceImpl &self)
 {
   const size_t len = self.size();
@@ -822,7 +834,7 @@ operator<< (Plic::FieldBuffer &dst, const StringSequenceImpl &self)
   }
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, StringSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
@@ -833,7 +845,7 @@ operator>> (Plic::FieldReader &src, StringSequenceImpl &self)
   }
   return src;
 }
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const ExtensiveEnumSequenceImpl &self)
 {
   const size_t len = self.size();
@@ -843,7 +855,7 @@ operator<< (Plic::FieldBuffer &dst, const ExtensiveEnumSequenceImpl &self)
   }
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, ExtensiveEnumSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
@@ -854,7 +866,7 @@ operator>> (Plic::FieldReader &src, ExtensiveEnumSequenceImpl &self)
   }
   return src;
 }
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const RecordSequenceImpl &self)
 {
   const size_t len = self.size();
@@ -864,7 +876,7 @@ operator<< (Plic::FieldBuffer &dst, const RecordSequenceImpl &self)
   }
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, RecordSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
@@ -875,7 +887,7 @@ operator>> (Plic::FieldReader &src, RecordSequenceImpl &self)
   }
   return src;
 }
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const SequenceSequenceImpl &self)
 {
   const size_t len = self.size();
@@ -885,7 +897,7 @@ operator<< (Plic::FieldBuffer &dst, const SequenceSequenceImpl &self)
   }
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, SequenceSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
@@ -896,7 +908,7 @@ operator>> (Plic::FieldReader &src, SequenceSequenceImpl &self)
   }
   return src;
 }
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const InterfaceSequenceImpl &self)
 {
   const size_t len = self.size();
@@ -906,7 +918,7 @@ operator<< (Plic::FieldBuffer &dst, const InterfaceSequenceImpl &self)
   }
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, InterfaceSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
@@ -917,7 +929,7 @@ operator>> (Plic::FieldReader &src, InterfaceSequenceImpl &self)
   }
   return src;
 }
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const AnySequenceImpl &self)
 {
   const size_t len = self.size();
@@ -927,7 +939,7 @@ operator<< (Plic::FieldBuffer &dst, const AnySequenceImpl &self)
   }
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, AnySequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
@@ -938,7 +950,7 @@ operator>> (Plic::FieldReader &src, AnySequenceImpl &self)
   }
   return src;
 }
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const NestedTypesRecImpl &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (2);
@@ -946,7 +958,7 @@ operator<< (Plic::FieldBuffer &dst, const NestedTypesRecImpl &self)
   fb << self.seq;
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, NestedTypesRecImpl &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
@@ -955,7 +967,7 @@ operator>> (Plic::FieldReader &src, NestedTypesRecImpl &self)
   fbr >> self.seq;
   return src;
 }
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const NestedTypesSeqImpl &self)
 {
   const size_t len = self.size();
@@ -965,7 +977,7 @@ operator<< (Plic::FieldBuffer &dst, const NestedTypesSeqImpl &self)
   }
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, NestedTypesSeqImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
@@ -976,7 +988,7 @@ operator>> (Plic::FieldReader &src, NestedTypesSeqImpl &self)
   }
   return src;
 }
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const NewRecordImpl &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (4);
@@ -986,7 +998,7 @@ operator<< (Plic::FieldBuffer &dst, const NewRecordImpl &self)
   fb << self.ntr;
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, NewRecordImpl &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
@@ -999,7 +1011,7 @@ operator>> (Plic::FieldReader &src, NewRecordImpl &self)
 }
 
 namespace Inner {
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const InnerRecordImpl &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (3);
@@ -1008,7 +1020,7 @@ operator<< (Plic::FieldBuffer &dst, const InnerRecordImpl &self)
   fb << self.rec;
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, InnerRecordImpl &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
@@ -1019,14 +1031,14 @@ operator>> (Plic::FieldReader &src, InnerRecordImpl &self)
   return src;
 }
 } // Inner
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const Refer2InnerImpl &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (1);
   fb << self.r;
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, Refer2InnerImpl &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
@@ -1037,7 +1049,7 @@ operator>> (Plic::FieldReader &src, Refer2InnerImpl &self)
 } // MandatoryNamespace
 
 namespace OtherNamespace {
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const SomeRecordImpl &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (4);
@@ -1047,7 +1059,7 @@ operator<< (Plic::FieldBuffer &dst, const SomeRecordImpl &self)
   fb << self.r4;
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, SomeRecordImpl &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
@@ -1203,7 +1215,7 @@ I_GrandChild_Interface::_list_types (Plic::TypeHashList &thl) const
   thl.push_back (Plic::TypeHash (0x0d7cb4311e1f74a9ULL, 0xe1ad9d71f1c712e5ULL)); // Parent
   thl.push_back (Plic::TypeHash (0x001a87e60ed9bd66ULL, 0xfff1a96d7bab9cd9ULL)); // GrandChild
 }
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const QuickRecordImpl &self)
 {
   Plic::FieldBuffer &fb = dst.add_rec (2);
@@ -1211,7 +1223,7 @@ operator<< (Plic::FieldBuffer &dst, const QuickRecordImpl &self)
   fb << self.int2;
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, QuickRecordImpl &self)
 {
   Plic::FieldReader fbr (src.pop_rec());
@@ -1220,7 +1232,7 @@ operator>> (Plic::FieldReader &src, QuickRecordImpl &self)
   fbr >> self.int2;
   return src;
 }
-inline Plic::FieldBuffer&
+inline Plic::FieldBuffer& __attribute__ ((used))
 operator<< (Plic::FieldBuffer &dst, const QuickSequenceImpl &self)
 {
   const size_t len = self.size();
@@ -1230,7 +1242,7 @@ operator<< (Plic::FieldBuffer &dst, const QuickSequenceImpl &self)
   }
   return dst;
 }
-inline Plic::FieldReader&
+inline Plic::FieldReader& __attribute__ ((used))
 operator>> (Plic::FieldReader &src, QuickSequenceImpl &self)
 {
   Plic::FieldReader fbr (src.pop_seq());
