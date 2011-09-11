@@ -143,7 +143,10 @@ def parse_files_and_args():
         config['backend'] = val
       else:
         ap = os.path.abspath (val)
-        if os.access (ap + ".py", os.R_OK):
+        if (ap.endswith (".py") and
+            os.access (ap, os.R_OK)):
+          config['backend'] = ap
+        elif os.access (ap + ".py", os.R_OK):
           config['backend'] = ap + ".py"
         elif os.access (ap + ".pyc", os.R_OK):
           config['backend'] = ap + ".pyc"
