@@ -8,14 +8,15 @@ import Decls, GenUtils, re
 clienthh_boilerplate = r"""
 // --- ClientHH Boilerplate ---
 #include <plic/runtime.hh>
-#include <rapicorn-core.hh> // for rcore/rapicornsignal.hh
-using Rapicorn::Signals::slot;
 """
 
 serverhh_boilerplate = r"""
 // --- ServerHH Boilerplate ---
 #include <plic/runtime.hh>
-#include <rcore/rapicornsignal.hh>
+"""
+
+rapicornsignal_boilerplate = r"""
+#include <rapicorn-core.hh> // for rcore/rapicornsignal.hh
 using Rapicorn::Signals::slot;
 """
 
@@ -1061,8 +1062,12 @@ class Generator:
     s += self.insertion_text ('includes')
     if self.gen_clienthh:
       s += clienthh_boilerplate
+      if self.gen_rapicornsignals:
+        s += rapicornsignal_boilerplate
     if self.gen_serverhh:
       s += serverhh_boilerplate
+      if self.gen_rapicornsignals:
+        s += rapicornsignal_boilerplate
     if self.gen_clientcc:
       s += gencc_boilerplate + '\n' + clientcc_boilerplate + '\n'
     if self.gen_servercc:
@@ -1198,6 +1203,7 @@ def generate (namespace_list, **args):
   gg.gen_clienthh = all or 'clienthh' in config['backend-options']
   gg.gen_clientcc = all or 'clientcc' in config['backend-options']
   gg.gen_shortalias = all or 'shortalias' in config['backend-options']
+  gg.gen_rapicornsignals = all or 'RapicornSignal' in config['backend-options']
   gg.gen_inclusions = config['inclusions']
   for opt in config['backend-options']:
     if opt.startswith ('cppguard='):
