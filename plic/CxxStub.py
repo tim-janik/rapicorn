@@ -254,13 +254,13 @@ class Generator:
     return s
   def generate_record_impl (self, type_info):
     s = ''
-    s += 'inline Plic::FieldBuffer&\n'
+    s += 'inline Plic::FieldBuffer& __attribute__ ((used))\n'
     s += 'operator<< (Plic::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
     s += '  Plic::FieldBuffer &fb = dst.add_rec (%u);\n' % len (type_info.fields)
     s += self.generate_proto_add_args ('fb', type_info, 'self.', type_info.fields, '')
     s += '  return dst;\n'
     s += '}\n'
-    s += 'inline Plic::FieldReader&\n'
+    s += 'inline Plic::FieldReader& __attribute__ ((used))\n'
     s += 'operator>> (Plic::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
     s += '  Plic::FieldReader fbr (src.pop_rec());\n'
     s += '  if (fbr.remaining() < %u) return src;\n' % len (type_info.fields)
@@ -271,7 +271,7 @@ class Generator:
   def generate_sequence_impl (self, type_info):
     s = ''
     el = type_info.elements
-    s += 'inline Plic::FieldBuffer&\n'
+    s += 'inline Plic::FieldBuffer& __attribute__ ((used))\n'
     s += 'operator<< (Plic::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
     s += '  const size_t len = self.size();\n'
     s += '  Plic::FieldBuffer &fb = dst.add_seq (len);\n'
@@ -282,7 +282,7 @@ class Generator:
     s += '  }\n'
     s += '  return dst;\n'
     s += '}\n'
-    s += 'inline Plic::FieldReader&\n'
+    s += 'inline Plic::FieldReader& __attribute__ ((used))\n'
     s += 'operator>> (Plic::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
     s += '  Plic::FieldReader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
