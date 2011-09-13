@@ -18,7 +18,7 @@ import os, sys, re, shutil, hashlib;
 true, false, length = (True, False, len)
 
 # --- types ---
-VOID, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE = tuple ('vidserqfc')
+VOID, INT, FLOAT, STRING, ENUM, SEQUENCE, RECORD, INTERFACE, FUNC, TYPE_REFERENCE, ANY = [ord (x) for x in 'vidsEQRCFTY']
 def storage_name (storage):
   name = {
     VOID      : 'VOID',
@@ -30,6 +30,7 @@ def storage_name (storage):
     SEQUENCE  : 'SEQUENCE',
     FUNC      : 'FUNC',
     INTERFACE : 'INTERFACE',
+    ANY       : 'ANY',
   }.get (storage, None)
   if not name:
     raise RuntimeError ("Invalid storage type: " + storage)
@@ -90,7 +91,7 @@ class TypeInfo (BaseDecl):
   collector = 'void'
   def __init__ (self, name, storage, isimpl):
     super (TypeInfo, self).__init__()
-    assert storage in (VOID, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE)
+    assert storage in (VOID, INT, FLOAT, STRING, ENUM, RECORD, SEQUENCE, FUNC, INTERFACE, ANY)
     self.name = name
     self.storage = storage
     self.isimpl = isimpl

@@ -10,6 +10,3 @@ Python & Rapicorn:
 - cxx-client:	Generated C++ -> rope API
 - PyStub.py:	Plic module to generate py2cpy.py
 - CxxPyStub.py:	Plic module to generate cpy2rope
-- CxxCaller.py:	Plic module to generate cxx-client
-- protocol:	RPC Message definition
-- protocol-pb2:	Generated C++ RPC Message

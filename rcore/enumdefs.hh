@@ -231,22 +231,6 @@ inline StateType& operator&= (StateType &s1, StateType s2) { s1 = s1 & s2; retur
 inline StateType  operator|  (StateType  s1, StateType s2) { return StateType (s1 | (uint64) s2); }
 inline StateType& operator|= (StateType &s1, StateType s2) { s1 = s1 | s2; return s1; }
 
-typedef enum /*<enum>*/
-{
-  INT            = 'i',
-  FLOAT          = 'd',
-  STRING         = 's',
-  ARRAY          = 'a',
-  FUNC           = 'F',
-  OBJECT         = 'c',
-  INTERFACE      = OBJECT,
-  CHOICE         = ('E' * 256) + STRING,
-  TYPE_REFERENCE = ('T' * 256) + STRING,
-  SEQUENCE       = ('Q' * 256) + ARRAY,
-  RECORD         = ('R' * 256) + ARRAY,
-} StorageType;
-typedef EnumType<StorageType> EnumTypeStorageType;
-
 typedef enum {
   TEXT_MODE_WRAPPED = 1,
   TEXT_MODE_ELLIPSIZED,

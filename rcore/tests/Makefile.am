@@ -29,13 +29,8 @@ testrcore2_LDADD   = $(LDADDS) $(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN
 		     $(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
 testrcore2_CXXFLAGS= $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) # FIXME
 EXTRA_DIST        += testpixs.c testpixs.png
-modval.cc:	     testtypes.tpg
 
-EXTRA_DIST        += testtypes.idl testtypes.tpg
-
-%.tpg: $(srcdir)/%.idl
-	$(PLICINT) $< -G TypePackage -o $@
-CLEANFILES += *.tpg
+EXTRA_DIST        += testtypes.idl
 
 
 # === test rules ===

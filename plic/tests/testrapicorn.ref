@@ -17,6 +17,9 @@ struct XFooRecord {
   FirstInterface  iface1;
   FirstInterface  iface2;
   FirstInterface  iface3;
+  any             any1;
+  any             any2;
+  any             any3;
 };
 struct NestedTypesRec {
   XFooRecord      rec;
@@ -37,6 +40,9 @@ struct AliasRecord {
   FirstInterface  iface1;
   FirstInterface  iface2;
   FirstInterface  iface3;
+  any             any1;
+  any             any2;
+  any             any3;
 };
 struct NewRecord {
   int             i;
@@ -113,6 +119,7 @@ class MethodTestInterface {
   QuickRecord         method_with_record (QuickRecord input, QuickRecord optval);
   QuickSequence       method_with_sequence (QuickSequence input, QuickSequence optval);
   GrandChild          method_with_interface (GrandChild input, GrandChild optval);
+  any                 method_with_anys (any input, any optval);
   QuickIface          method_with_quickiface (QuickIface input, QuickIface iface0);
 };
 class SignalTestInterface {
@@ -125,6 +132,7 @@ class SignalTestInterface {
   typedef Signal<SignalTestInterface, QuickRecord ()> Signal_record_result;
   typedef Signal<SignalTestInterface, QuickSequence ()> Signal_sequence_result;
   typedef Signal<SignalTestInterface, GrandChild ()> Signal_interface_result;
+  typedef Signal<SignalTestInterface, any ()> Signal_any_result;
   typedef Signal<SignalTestInterface, SignalTestInterface ()> Signal_self_result;
   typedef Signal<SignalTestInterface, void ()> Signal_void_arg;
   typedef Signal<SignalTestInterface, void (bool b)> Signal_bool_arg;
@@ -135,6 +143,7 @@ class SignalTestInterface {
   typedef Signal<SignalTestInterface, void (QuickRecord r)> Signal_record_arg;
   typedef Signal<SignalTestInterface, void (QuickSequence s)> Signal_sequence_arg;
   typedef Signal<SignalTestInterface, void (GrandChild i)> Signal_interface_arg;
+  typedef Signal<SignalTestInterface, void (any a)> Signal_any_arg;
   typedef Signal<SignalTestInterface, void (SignalTestInterface self_)> Signal_self_args;
   Signal_void_result          sig_void_result;
   Signal_bool_result          sig_bool_result;
@@ -145,6 +154,7 @@ class SignalTestInterface {
   Signal_record_result        sig_record_result;
   Signal_sequence_result      sig_sequence_result;
   Signal_interface_result     sig_interface_result;
+  Signal_any_result           sig_any_result;
   Signal_self_result          sig_self_result;
   Signal_void_arg             sig_void_arg;
   Signal_bool_arg             sig_bool_arg;
@@ -155,6 +165,7 @@ class SignalTestInterface {
   Signal_record_arg           sig_record_arg;
   Signal_sequence_arg         sig_sequence_arg;
   Signal_interface_arg        sig_interface_arg;
+  Signal_any_arg              sig_any_arg;
   Signal_self_args            sig_self_args;
 };
 class PropertyTester {
@@ -177,6 +188,8 @@ class PropertyTester {
   virtual void        interface_prop (const GrandChild&) = 0;
   virtual PropertyTester self_prop () const = 0;
   virtual void        self_prop (const PropertyTester&) = 0;
+  virtual any         any_prop () const = 0;
+  virtual void        any_prop (const any&) = 0;
 };
 class ButtonArea {
   typedef Signal<ButtonArea, bool (), CollectorUntil0<bool> > Signal_check_activate;

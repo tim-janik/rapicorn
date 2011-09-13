@@ -1,6 +1,7 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
-#include "plicutils.hh"
-#include <assert.h>
+// CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
+#include "runtime.hh"
+#include "runtypes.cc" // includes TypeCode parser
+
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -9,13 +10,14 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <limits.h>
 #include <semaphore.h>
 #include <pthread.h>
 #include <stdexcept>
 #include <map>
 #include <set>
 
-/* === Auxillary macros === */
+// == Auxillary macros ==
 #ifndef __GNUC__
 #define __PRETTY_FUNCTION__                     __func__
 #endif
@@ -27,16 +29,21 @@
 #define PLIC_THROW_IF_FAIL(expr)                do { if (PLIC_LIKELY (expr)) break; PLIC_THROW ("failed to assert (" + #expr + ")"); } while (0)
 #define PLIC_THROW(msg)                         throw std::runtime_error (std::string() + __PRETTY_FUNCTION__ + ": " + msg)
 
+/// @namespace Plic The Plic namespace provides all PLIC functionality exported to C++.
 namespace Plic {
 
+// == FieldUnion ==
+PLIC_STATIC_ASSERT (sizeof (FieldUnion::smem) <= sizeof (FieldUnion::bytes));
+PLIC_STATIC_ASSERT (sizeof (FieldUnion::bmem) <= 2 * sizeof (FieldUnion::bytes)); // FIXME
+
 /* === Prototypes === */
-static String string_printf (const char *format, ...) PLIC_PRINTF (1, 2);
+static std::string string_printf (const char *format, ...) PLIC_PRINTF (1, 2);
 
 // === Utilities ===
-static String
+static std::string
 string_printf (const char *format, ...)
 {
-  String str;
+  std::string str;
   va_list args;
   va_start (args, format);
   char buffer[1024 + 1];
@@ -68,8 +75,256 @@ error_printf (const char *format, ...)
   va_end (args);
 }
 
+// == Any ==
+Any::Any() :
+  type_code (TypeMap::notype())
+{
+  memset (&u, 0, sizeof (u));
+}
+
+Any::Any (const Any &clone) :
+  type_code (TypeMap::notype())
+{
+  this->operator= (clone);
+}
+
+Any&
+Any::operator= (const Any &clone)
+{
+  if (this == &clone)
+    return *this;
+  reset();
+  type_code = clone.type_code;
+  switch (kind())
+    {
+    case STRING:        new (&u) String (*(String*) &clone.u);          break;
+    case SEQUENCE:      new (&u) AnyVector (*(AnyVector*) &clone.u);    break;
+    case RECORD:        new (&u) AnyVector (*(AnyVector*) &clone.u);    break;
+    case ANY:           u.vany = new Any (*clone.u.vany);               break;
+    default:            u = clone.u;                                    break;
+    }
+  return *this;
+}
+
+void
+Any::reset()
+{
+  switch (kind())
+    {
+    case STRING:        ((String*) &u)->~String();              break;
+    case SEQUENCE:      ((AnyVector*) &u)->~AnyVector();        break;
+    case RECORD:        ((AnyVector*) &u)->~AnyVector();        break;
+    case ANY:           delete u.vany;                          break;
+    default: ;
+    }
+  type_code = TypeMap::notype();
+  memset (&u, 0, sizeof (u));
+}
+
+void
+Any::rekind (TypeKind _kind)
+{
+  reset();
+  const char *type = NULL;
+  switch (_kind)
+    {
+    case UNTYPED:     type = NULL;                                      break;
+      // case BOOL:   type = "bool";                                    break;
+    case INT:         type = "int";                                     break;
+      // case UINT:   type = "uint";                                    break;
+    case FLOAT:       type = "float";                                   break;
+    case STRING:      type = "string";          new (&u) String();      break;
+    case ENUM:        type = "int";                                     break;
+    case SEQUENCE:    type = "Plic::AnySeq";    new (&u) AnyVector();   break;
+    case RECORD:      type = "Plic::AnyRec";    new (&u) AnyVector();   break; // FIXME: mising details
+    case INSTANCE:    type = "Plic::Instance";                          break; // FIXME: missing details
+    case ANY:         type = "any";             u.vany = new Any();     break;
+    default:
+      error_printf ("Plic::Any:rekind: invalid type kind: %s", type_kind_name (_kind));
+    }
+  type_code = TypeMap::lookup (type);
+  if (type_code.untyped() && type != NULL)
+    error_printf ("Plic::Any:rekind: invalid type name: %s", type);
+  if (kind() != _kind)
+    error_printf ("Plic::Any:rekind: mismatch: %s -> %s (%u)", type_kind_name (_kind), type_kind_name (kind()), kind());
+}
+
+Any::~Any ()
+{
+  reset();
+}
+
+void
+Any::retype (const TypeCode &tc)
+{
+  if (type_code.untyped())
+    reset();
+  else
+    {
+      rekind (tc.kind());
+      type_code = tc;
+    }
+}
+
+void
+Any::swap (Any &other)
+{
+  const size_t usize = sizeof (this->u);
+  char *buffer[usize];
+  memcpy (buffer, &other.u, usize);
+  memcpy (&other.u, &this->u, usize);
+  memcpy (&this->u, buffer, usize);
+  type_code.swap (other.type_code);
+}
+
+bool
+Any::to_int (int64_t &v, char b) const
+{
+  if (kind() != INT)
+    return false;
+  bool s = 0;
+  switch (b)
+    {
+    case 1:     s =  u.vint64 >=         0 &&  u.vint64 <= 1;        break;
+    case 7:     s =  u.vint64 >=      -128 &&  u.vint64 <= 127;      break;
+    case 8:     s =  u.vint64 >=         0 &&  u.vint64 <= 256;      break;
+    case 47:    s = sizeof (long) == sizeof (int64_t); // chain
+    case 31:    s |= u.vint64 >=   INT_MIN &&  u.vint64 <= INT_MAX;  break;
+    case 48:    s = sizeof (long) == sizeof (int64_t); // chain
+    case 32:    s |= u.vint64 >=         0 &&  u.vint64 <= UINT_MAX; break;
+    case 63:    s = 1; break;
+    case 64:    s = 1; break;
+    default:    s = 0; break;
+    }
+  if (s)
+    v = u.vint64;
+  return s;
+}
+
+int64_t
+Any::as_int () const
+{
+  switch (kind())
+    {
+    case INT:           return u.vint64;
+    case FLOAT:         return u.vdouble;
+    case ENUM:          return u.vint64;
+    case STRING:        return !((String*) &u)->empty();
+    default:            return 0;
+    }
+}
+
+double
+Any::as_float () const
+{
+  switch (kind())
+    {
+    case INT:           return u.vint64;
+    case FLOAT:         return u.vdouble;
+    case ENUM:          return u.vint64;
+    case STRING:        return !((String*) &u)->empty();
+    default:            return 0;
+    }
+}
+
+std::string
+Any::as_string() const
+{
+  switch (kind())
+    {
+    case ENUM:
+    case INT:           return string_printf ("%lli", u.vint64);
+    case FLOAT:         return string_printf ("%.17g", u.vdouble);
+    case STRING:        return *(String*) &u;
+    default:            return "";
+    }
+}
+
+bool
+Any::operator>>= (int64_t &v) const
+{
+  const bool r = to_int (v, 63);
+  return r;
+}
+
+bool
+Any::operator>>= (double &v) const
+{
+  if (kind() != FLOAT)
+    return false;
+  v = u.vdouble;
+  return true;
+}
+
+bool
+Any::operator>>= (std::string &v) const
+{
+  if (kind() != STRING)
+    return false;
+  v = *(String*) &u;
+  return true;
+}
+
+bool
+Any::operator>>= (const Any *&v) const
+{
+  if (kind() != ANY)
+    return false;
+  v = u.vany;
+  return true;
+}
+
+void
+Any::operator<<= (uint64_t v)
+{
+  // ensure (UINT);
+  operator<<= (int64_t (v));
+}
+
+void
+Any::operator<<= (int64_t v)
+{
+  // if (kind() == BOOL && v >= 0 && v <= 1) { u.vint64 = v; return; }
+  ensure (INT);
+  u.vint64 = v;
+}
+
+void
+Any::operator<<= (double v)
+{
+  ensure (FLOAT);
+  u.vdouble = v;
+}
+
+void
+Any::operator<<= (const String &v)
+{
+  ensure (STRING);
+  ((String*) &u)->assign (v);
+}
+
+void
+Any::operator<<= (const Any &v)
+{
+  ensure (ANY);
+  if (u.vany != &v)
+    {
+      Any *old = u.vany;
+      u.vany = new Any (v);
+      if (old)
+        delete old;
+    }
+}
+
+void
+Any::resize (size_t n)
+{
+  ensure (SEQUENCE);
+  ((AnyVector*) &u)->resize (n);
+}
+
 /* === SmartHandle === */
-SmartHandle::SmartHandle (uint64 ipcid) :
+SmartHandle::SmartHandle (uint64_t ipcid) :
   m_rpc_id (ipcid)
 {
   assert (0 != ipcid);
@@ -97,13 +352,13 @@ SmartHandle::_cast_iface () const
 void
 SmartHandle::_void_iface (void *rpc_id_ptr)
 {
-  uint64 rpcid = uint64 (rpc_id_ptr);
+  uint64_t rpcid = uint64_t (rpc_id_ptr);
   if (rpcid & 3)
     PLIC_THROW ("invalid rpc-id assignment from unaligned class pointer");
   m_rpc_id = rpcid;
 }
 
-uint64
+uint64_t
 SmartHandle::_rpc_id () const
 {
   return m_rpc_id;
@@ -136,10 +391,10 @@ SimpleServer::~SimpleServer ()
   pthread_mutex_unlock (&simple_server_mutex);
 }
 
-uint64
+uint64_t
 SimpleServer::_rpc_id () const
 {
-  return uint64 (this);
+  return uint64_t (this);
 }
 
 /* === FieldBuffer === */
@@ -155,12 +410,12 @@ FieldBuffer::FieldBuffer (uint _ntypes) :
   buffermem[0].index = 0;
 }
 
-FieldBuffer::FieldBuffer (uint        _ntypes,
+FieldBuffer::FieldBuffer (uint32_t    _ntypes,
                           FieldUnion *_bmem,
-                          uint        _bmemlen) :
+                          uint32_t    _bmemlen) :
   buffermem (_bmem)
 {
-  const uint _offs = 1 + (_ntypes + 7) / 8;
+  const uint32_t _offs = 1 + (_ntypes + 7) / 8;
   assert (_bmem && _bmemlen >= sizeof (FieldUnion[_offs + _ntypes]));
   wmemset ((wchar_t*) buffermem, 0, sizeof (FieldUnion[_offs]) / sizeof (wchar_t));
   buffermem[0].capacity = _ntypes;
@@ -203,20 +458,20 @@ FieldReader::check_request (int type)
     }
 }
 
-String
+std::string
 FieldBuffer::first_id_str() const
 {
-  uint64 fid = first_id();
+  uint64_t fid = first_id();
   return string_printf ("%016llx", fid);
 }
 
-static String
-strescape (const String &str)
+static std::string
+strescape (const std::string &str)
 {
-  String buffer;
-  for (String::const_iterator it = str.begin(); it != str.end(); it++)
+  std::string buffer;
+  for (std::string::const_iterator it = str.begin(); it != str.end(); it++)
     {
-      uint8 d = *it;
+      uint8_t d = *it;
       if (d < 32 || d > 126 || d == '?')
         buffer += string_printf ("\\%03o", d);
       else if (d == '\\')
@@ -229,25 +484,16 @@ strescape (const String &str)
   return buffer;
 }
 
-String
+std::string
 FieldBuffer::type_name (int field_type)
 {
-  switch (field_type)
-    {
-    case VOID:        return "VOID";
-    case INT:         return "INT";
-    case FLOAT:       return "FLOAT";
-    case STRING:      return "STRING";
-    case ENUM:        return "ENUM";
-    case RECORD:      return "RECORD";
-    case SEQUENCE:    return "SEQUENCE";
-    case FUNC:        return "FUNC";
-    case INSTANCE:    return "INSTANCE";
-    default:          return string_printf ("<invalid:%d>", field_type);
-    }
+  const char *tkn = type_kind_name (TypeKind (field_type));
+  if (tkn)
+    return tkn;
+  return string_printf ("<invalid:%d>", field_type);
 }
 
-String
+std::string
 FieldBuffer::to_string() const
 {
   String s = string_printf ("Plic::FieldBuffer(%p)={", this);
@@ -259,16 +505,19 @@ FieldBuffer::to_string() const
       const char *tn = tname.c_str();
       switch (fbr.get_type())
         {
-        case VOID:     s += string_printf (", %s", tn); fbr.skip();                               break;
-        case INT:      s += string_printf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
-        case FLOAT:    s += string_printf (", %s: %.17g", tn, fbr.pop_double());                  break;
-        case STRING:   s += string_printf (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
-        case ENUM:     s += string_printf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
-        case RECORD:   s += string_printf (", %s: %p", tn, &fbr.pop_rec());                       break;
-        case SEQUENCE: s += string_printf (", %s: %p", tn, &fbr.pop_seq());                       break;
-        case FUNC:     s += string_printf (", %s: %s", tn, fbr.pop_func().c_str());               break;
-        case INSTANCE: s += string_printf (", %s: %p", tn, (void*) fbr.pop_object());             break;
-        default:       s += string_printf (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
+        case UNTYPED:
+        case FUNC:
+        case TYPE_REFERENCE:
+        case VOID:      s += string_printf (", %s", tn); fbr.skip();                               break;
+        case INT:       s += string_printf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
+        case FLOAT:     s += string_printf (", %s: %.17g", tn, fbr.pop_double());                  break;
+        case STRING:    s += string_printf (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
+        case ENUM:      s += string_printf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
+        case SEQUENCE:  s += string_printf (", %s: %p", tn, &fbr.pop_seq());                       break;
+        case RECORD:    s += string_printf (", %s: %p", tn, &fbr.pop_rec());                       break;
+        case INSTANCE:  s += string_printf (", %s: %p", tn, (void*) fbr.pop_object());             break;
+        case ANY:       s += string_printf (", %s: %p", tn, &fbr.pop_any());                       break;
+        default:        s += string_printf (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
         }
     }
   s += '}';
@@ -280,7 +529,7 @@ FieldBuffer::new_error (const String &msg,
                         const String &domain)
 {
   FieldBuffer *fr = FieldBuffer::_new (2 + 2);
-  const uint64 MSGID_ERROR = 0x8000000000000000ULL;
+  const uint64_t MSGID_ERROR = 0x8000000000000000ULL;
   fr->add_msgid (MSGID_ERROR, 0);
   fr->add_string (msg);
   fr->add_string (domain);
@@ -288,36 +537,36 @@ FieldBuffer::new_error (const String &msg,
 }
 
 FieldBuffer*
-FieldBuffer::new_result (uint n)
+FieldBuffer::new_result (uint32_t n)
 {
   FieldBuffer *fr = FieldBuffer::_new (2 + n);
-  const uint64 MSGID_RESULT_MASK = 0x9000000000000000ULL;
+  const uint64_t MSGID_RESULT_MASK = 0x9000000000000000ULL;
   fr->add_msgid (MSGID_RESULT_MASK, 0); // FIXME: needs original message
   return fr;
 }
 
 class OneChunkFieldBuffer : public FieldBuffer {
   virtual ~OneChunkFieldBuffer () { reset(); buffermem = NULL; }
-  explicit OneChunkFieldBuffer (uint        _ntypes,
+  explicit OneChunkFieldBuffer (uint32_t    _ntypes,
                                 FieldUnion *_bmem,
-                                uint        _bmemlen) :
+                                uint32_t    _bmemlen) :
     FieldBuffer (_ntypes, _bmem, _bmemlen)
   {}
 public:
   static OneChunkFieldBuffer*
-  _new (uint _ntypes)
+  _new (uint32_t _ntypes)
   {
-    const uint _offs = 1 + (_ntypes + 7) / 8;
+    const uint32_t _offs = 1 + (_ntypes + 7) / 8;
     size_t bmemlen = sizeof (FieldUnion[_offs + _ntypes]);
-    size_t objlen = ALIGN4 (sizeof (OneChunkFieldBuffer), int64);
-    uint8 *omem = new uint8[objlen + bmemlen];
+    size_t objlen = ALIGN4 (sizeof (OneChunkFieldBuffer), int64_t);
+    uint8_t *omem = new uint8_t[objlen + bmemlen];
     FieldUnion *bmem = (FieldUnion*) (omem + objlen);
     return new (omem) OneChunkFieldBuffer (_ntypes, bmem, bmemlen);
   }
 };
 
 FieldBuffer*
-FieldBuffer::_new (uint _ntypes)
+FieldBuffer::_new (uint32_t _ntypes)
 {
   return OneChunkFieldBuffer::_new (_ntypes);
 }
@@ -334,7 +583,7 @@ static pthread_mutex_t                   dispatcher_mutex = PTHREAD_MUTEX_INITIA
 static bool                              dispatcher_map_locked = false;
 
 DispatchFunc
-Connection::find_method (uint64 hashhi, uint64 hashlo)
+Connection::find_method (uint64_t hashhi, uint64_t hashlo)
 {
   TypeHash typehash (hashhi, hashlo);
 #if 1 // avoid costly mutex locking

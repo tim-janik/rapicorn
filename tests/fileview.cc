@@ -22,13 +22,12 @@ fill_store (Store1       &s1,
   struct dirent *e = readdir (d);
   while (e)
     {
-      Array row;
-      uint n = 0;
-      row[n++] = e->d_ino;
-      row[n++] = " | ";
-      row[n++] = e->d_type;
-      row[n++] = " | ";
-      row[n++] = e->d_name;
+      AnySeq row;
+      row.append_back() <<= e->d_ino;
+      row.append_back() <<= " | ";
+      row.append_back() <<= e->d_type;
+      row.append_back() <<= " | ";
+      row.append_back() <<= e->d_name;
       s1.insert (-1, row);
       e = readdir (d);
     }
@@ -39,7 +38,7 @@ static Store1*
 create_store ()
 {
   Store1 *s1 = Store1::create_memory_store ("models/files",
-                                            Type::lookup ("string"), SELECTION_BROWSE);
+                                            Plic::TypeMap::lookup ("string"), SELECTION_BROWSE);
   fill_store (*s1, ".");
   return s1;
 }

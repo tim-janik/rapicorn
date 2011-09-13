@@ -150,6 +150,9 @@ record XFooRecord {
   FirstInterface iface1;
   FirstInterface iface2;
   FirstInterface iface3;
+  any    any1;
+  any    any2;
+  any    any3;
 };
 
 // sequence tests
@@ -177,6 +180,9 @@ sequence SequenceSequence {
 sequence InterfaceSequence {
   FirstInterface iface1;
 };
+sequence AnySequence {
+  any any_value;
+};
 
 // test nested types
 record NestedTypesRec {
@@ -188,6 +194,7 @@ sequence NestedTypesSeq {
 };
 
 // typedef tests
+typedef any AliasAny;
 typedef int  AliasInt;
 typedef float AliasFloat;
 typedef bool AliasBool;
@@ -299,6 +306,7 @@ interface MethodTestInterface {
   QuickRecord    method_with_record     (QuickRecord    input, QuickRecord   optval = 0);
   QuickSequence  method_with_sequence   (QuickSequence  input, QuickSequence optval = 0);
   GrandChild     method_with_interface  (GrandChild     input, GrandChild    optval = 0);
+  any            method_with_anys       (any            input, any           optval);
   QuickIface     method_with_quickiface (QuickIface     input, QuickIface    iface0 = 0);
 };
 
@@ -312,6 +320,7 @@ interface SignalTestInterface {
   signal QuickRecord         record_result    ();
   signal QuickSequence       sequence_result  ();
   signal GrandChild          interface_result ();
+  signal any                 any_result       ();
   signal SignalTestInterface self_result      ();
   signal void                void_arg         ();
   signal void                bool_arg         (bool b);
@@ -322,6 +331,7 @@ interface SignalTestInterface {
   signal void                record_arg       (QuickRecord r);
   signal void                sequence_arg     (QuickSequence s);
   signal void                interface_arg    (GrandChild i);
+  signal void                any_arg          (any a);
   signal void                self_args        (SignalTestInterface self_);
 };
 
@@ -336,6 +346,7 @@ interface PropertyTester {
   QuickSequence  sequence_prop;
   GrandChild     interface_prop;
   PropertyTester self_prop;
+  any            any_prop;
 };
 
 }

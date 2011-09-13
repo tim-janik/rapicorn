@@ -30,13 +30,13 @@ class FirstInterface (_BaseClass_):
 
 class XFooRecord (_BaseRecord_):
   def __init__ (self, **entries):
-    defaults = { 'single_bool' : 0,  'single_num' : 0,  'single_float' : 0,  'single_string' : '',  'sibling1' : 0,  'sibling2' : 0,  'multi1' : 0,  'multi2' : 0,  'multi3' : 0,  'multi4' : 0,  'enum_field' : 0,  'iface1' : None,  'iface2' : None,  'iface3' : None, }
+    defaults = { 'single_bool' : 0,  'single_num' : 0,  'single_float' : 0,  'single_string' : '',  'sibling1' : 0,  'sibling2' : 0,  'multi1' : 0,  'multi2' : 0,  'multi3' : 0,  'multi4' : 0,  'enum_field' : 0,  'iface1' : None,  'iface2' : None,  'iface3' : None,  'any1' : (),  'any2' : (),  'any3' : (), }
     self.__dict__.update (defaults)
     _BaseRecord_.__init__ (self, **entries)
   @staticmethod
   def create (args):
     self = XFooRecord()
-    if hasattr (args, "__iter__") and len (args) == 14:
+    if hasattr (args, "__iter__") and len (args) == 17:
       self.single_bool = args[0]
       #  self.single_bool.vint64 = args[0]
       self.single_num = args[1]
@@ -65,6 +65,12 @@ class XFooRecord (_BaseRecord_):
       #  self.iface2.vstring (Instance2StringCast (args[12]))
       self.iface3 = args[13]
       #  self.iface3.vstring (Instance2StringCast (args[13]))
+      self.any1 = args[14]
+      #  # FIXME: support PLIC::Any with any.to_proto (self.any1.vany, args[14])
+      self.any2 = args[15]
+      #  # FIXME: support PLIC::Any with any.to_proto (self.any2.vany, args[15])
+      self.any3 = args[16]
+      #  # FIXME: support PLIC::Any with any.to_proto (self.any3.vany, args[16])
     elif isinstance (args, dict):
       self.single_bool = args["single_bool"]
       self.single_num = args["single_num"]
@@ -80,6 +86,9 @@ class XFooRecord (_BaseRecord_):
       self.iface1 = args["iface1"]
       self.iface2 = args["iface2"]
       self.iface3 = args["iface3"]
+      self.any1 = args["any1"]
+      self.any2 = args["any2"]
+      self.any3 = args["any3"]
     else: raise RuntimeError ("invalid or missing record initializers")
     return self
   @staticmethod
@@ -112,6 +121,12 @@ class XFooRecord (_BaseRecord_):
     _plic_field.vstring (Instance2StringCast (self.iface2))
     _plic_field = _plic_rp.fields.add()
     _plic_field.vstring (Instance2StringCast (self.iface3))
+    _plic_field = _plic_rp.fields.add()
+    # FIXME: support PLIC::Any with any.to_proto (_plic_field.vany, self.any1)
+    _plic_field = _plic_rp.fields.add()
+    # FIXME: support PLIC::Any with any.to_proto (_plic_field.vany, self.any2)
+    _plic_field = _plic_rp.fields.add()
+    # FIXME: support PLIC::Any with any.to_proto (_plic_field.vany, self.any3)
 
 class NestedTypesRec (_BaseRecord_):
   def __init__ (self, **entries):
@@ -140,13 +155,13 @@ class NestedTypesRec (_BaseRecord_):
 
 class AliasRecord (_BaseRecord_):
   def __init__ (self, **entries):
-    defaults = { 'single_bool' : 0,  'single_num' : 0,  'single_float' : 0,  'single_string' : '',  'sibling1' : 0,  'sibling2' : 0,  'multi1' : 0,  'multi2' : 0,  'multi3' : 0,  'multi4' : 0,  'enum_field' : 0,  'iface1' : None,  'iface2' : None,  'iface3' : None, }
+    defaults = { 'single_bool' : 0,  'single_num' : 0,  'single_float' : 0,  'single_string' : '',  'sibling1' : 0,  'sibling2' : 0,  'multi1' : 0,  'multi2' : 0,  'multi3' : 0,  'multi4' : 0,  'enum_field' : 0,  'iface1' : None,  'iface2' : None,  'iface3' : None,  'any1' : (),  'any2' : (),  'any3' : (), }
     self.__dict__.update (defaults)
     _BaseRecord_.__init__ (self, **entries)
   @staticmethod
   def create (args):
     self = AliasRecord()
-    if hasattr (args, "__iter__") and len (args) == 14:
+    if hasattr (args, "__iter__") and len (args) == 17:
       self.single_bool = args[0]
       #  self.single_bool.vint64 = args[0]
       self.single_num = args[1]
@@ -175,6 +190,12 @@ class AliasRecord (_BaseRecord_):
       #  self.iface2.vstring (Instance2StringCast (args[12]))
       self.iface3 = args[13]
       #  self.iface3.vstring (Instance2StringCast (args[13]))
+      self.any1 = args[14]
+      #  # FIXME: support PLIC::Any with any.to_proto (self.any1.vany, args[14])
+      self.any2 = args[15]
+      #  # FIXME: support PLIC::Any with any.to_proto (self.any2.vany, args[15])
+      self.any3 = args[16]
+      #  # FIXME: support PLIC::Any with any.to_proto (self.any3.vany, args[16])
     elif isinstance (args, dict):
       self.single_bool = args["single_bool"]
       self.single_num = args["single_num"]
@@ -190,6 +211,9 @@ class AliasRecord (_BaseRecord_):
       self.iface1 = args["iface1"]
       self.iface2 = args["iface2"]
       self.iface3 = args["iface3"]
+      self.any1 = args["any1"]
+      self.any2 = args["any2"]
+      self.any3 = args["any3"]
     else: raise RuntimeError ("invalid or missing record initializers")
     return self
   @staticmethod
@@ -222,6 +246,12 @@ class AliasRecord (_BaseRecord_):
     _plic_field.vstring (Instance2StringCast (self.iface2))
     _plic_field = _plic_rp.fields.add()
     _plic_field.vstring (Instance2StringCast (self.iface3))
+    _plic_field = _plic_rp.fields.add()
+    # FIXME: support PLIC::Any with any.to_proto (_plic_field.vany, self.any1)
+    _plic_field = _plic_rp.fields.add()
+    # FIXME: support PLIC::Any with any.to_proto (_plic_field.vany, self.any2)
+    _plic_field = _plic_rp.fields.add()
+    # FIXME: support PLIC::Any with any.to_proto (_plic_field.vany, self.any3)
 
 class NewRecord (_BaseRecord_):
   def __init__ (self, **entries):
@@ -467,6 +497,9 @@ class MethodTestInterface (_BaseClass_):
   def method_with_interface (self, input, optval = None): # GrandChild
     ___ret = _CPY._PLIC_InterfaceTests__MethodTestInterface__method_with_interface_InterfaceTests__GrandChild_InterfaceTests__GrandChild_InterfaceTests__GrandChild (self, input, optval)
     return ___ret
+  def method_with_anys (self, input, optval): # any
+    ___ret = _CPY._PLIC_InterfaceTests__MethodTestInterface__method_with_anys_any_any_any (self, input, optval)
+    return ___ret
   def method_with_quickiface (self, input, iface0 = None): # QuickIface
     ___ret = _CPY._PLIC_InterfaceTests__MethodTestInterface__method_with_quickiface_InterfaceTests__QuickIface_InterfaceTests__QuickIface_InterfaceTests__QuickIface (self, input, iface0)
     return ___ret
@@ -483,6 +516,7 @@ class SignalTestInterface (_BaseClass_):
     self.sig_record_result = __Signal__ ('record_result')
     self.sig_sequence_result = __Signal__ ('sequence_result')
     self.sig_interface_result = __Signal__ ('interface_result')
+    self.sig_any_result = __Signal__ ('any_result')
     self.sig_self_result = __Signal__ ('self_result')
     self.sig_void_arg = __Signal__ ('void_arg')
     self.sig_bool_arg = __Signal__ ('bool_arg')
@@ -493,6 +527,7 @@ class SignalTestInterface (_BaseClass_):
     self.sig_record_arg = __Signal__ ('record_arg')
     self.sig_sequence_arg = __Signal__ ('sequence_arg')
     self.sig_interface_arg = __Signal__ ('interface_arg')
+    self.sig_any_arg = __Signal__ ('any_arg')
     self.sig_self_args = __Signal__ ('self_args')
   def __sig_void_result__ (self): pass # default handler
   def sig_void_result_connect (self, func):
@@ -539,6 +574,11 @@ class SignalTestInterface (_BaseClass_):
     return _CPY._PLIC_InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild (self, func, 0)
   def sig_interface_result_disconnect (self, connection_id):
     return _CPY._PLIC_InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild (self, None, connection_id)
+  def __sig_any_result__ (self): pass # default handler
+  def sig_any_result_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface__any_result_any (self, func, 0)
+  def sig_any_result_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface__any_result_any (self, None, connection_id)
   def __sig_self_result__ (self): pass # default handler
   def sig_self_result_connect (self, func):
     return _CPY._PLIC_InterfaceTests__SignalTestInterface__self_result_InterfaceTests__SignalTestInterface (self, func, 0)
@@ -589,6 +629,11 @@ class SignalTestInterface (_BaseClass_):
     return _CPY._PLIC_InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild (self, func, 0)
   def sig_interface_arg_disconnect (self, connection_id):
     return _CPY._PLIC_InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild (self, None, connection_id)
+  def __sig_any_arg__ (self): pass # default handler
+  def sig_any_arg_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface__any_arg_void_any (self, func, 0)
+  def sig_any_arg_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__SignalTestInterface__any_arg_void_any (self, None, connection_id)
   def __sig_self_args__ (self): pass # default handler
   def sig_self_args_connect (self, func):
     return _CPY._PLIC_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface (self, func, 0)

@@ -6,10 +6,8 @@
 #include "rapicornthread.hh"
 #include "rapicornmsg.hh"
 #include "rapicorncpu.hh"
-#include "types.hh"
 #include <errno.h>
 #include <stdio.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <fcntl.h>
@@ -564,10 +562,7 @@ VirtualTypeid::cxx_demangle (const char *mangled_identifier)
   return result;
 }
 
-/**
- * @namespace Rapicorn::Path
- * The Rapicorn::Path namespace covers function for file path manipulation and evaluation.
- */
+/// @namespace Rapicorn::Path The Rapicorn::Path namespace provides functions for file path manipulation and testing.
 namespace Path {
 
 /**

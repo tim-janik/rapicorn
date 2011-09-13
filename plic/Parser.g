@@ -27,7 +27,7 @@ reservedwords = ('class', 'signal', 'void', 'self')
 collectors = ('void', 'sum', 'last', 'until0', 'while0')
 keywords = ('TRUE', 'True', 'true', 'FALSE', 'False', 'false',
             'namespace', 'enum', 'enumeration', 'Const', 'typedef', 'interface',
-            'record', 'sequence', 'bool', 'int', 'float', 'string')
+            'record', 'sequence', 'bool', 'int', 'float', 'string', 'any')
 reservedkeywords = set (keywords + reservedwords)
 
 class YYGlobals (object):
@@ -148,10 +148,10 @@ class YYGlobals (object):
     elif atype.storage in (Decls.RECORD, Decls.SEQUENCE, Decls.FUNC, Decls.INTERFACE):
       if adef != 0:
         raise AttributeError ('expecting null initializer for structured argument: %s = %s' % (aident, adef))
-    elif atype.storage in (Decls.STRING):
+    elif atype.storage == Decls.STRING:
       if not TS (adef):
         raise AttributeError ('expecting string initializer: %s = %s' % (aident, adef))
-    elif atype.storage in (Decls.ENUM):
+    elif atype.storage == Decls.ENUM:
       if not atype.has_option (number = adef):
         raise AttributeError ('encountered invalid enum initializer: %s = %s' % (aident, adef))
     else:
@@ -217,6 +217,7 @@ class YYGlobals (object):
         'int'     : Decls.TypeInfo ('int',    Decls.INT, false),
         'float'   : Decls.TypeInfo ('float',  Decls.FLOAT, false),
         'string'  : Decls.TypeInfo ('string', Decls.STRING, false),
+        'any'     : Decls.TypeInfo ('any',    Decls.ANY, false),
       }.get (typename, None);
     if not type_info and void and typename == 'void':   # builtin void
       type_info = Decls.TypeInfo ('void', Decls.VOID, false)
@@ -291,7 +292,7 @@ def ASi (string_candidate): # assert i18n string
   if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
 def AIn (identifier):   # assert new identifier
   if (yy.namespace_lookup (identifier, astype = True, asconst = True) or
-      (not yy.config.get ('system-typedefs', 0) and identifier in reservedkeywords)):
+      (identifier in reservedkeywords)):
     raise TypeError ('redefining existing identifier: %s' % identifier)
 def AIi (identifier):   # assert interface identifier
   ti = yy.namespace_lookup (identifier, astype = True)

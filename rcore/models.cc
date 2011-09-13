@@ -18,29 +18,7 @@
 
 namespace Rapicorn {
 
-/* --- 0-Dim Models --- */
-
-Model0::Model0 (Type t) :
-  m_type (t), m_value (t.storage()),
-  sig_changed (*this, &Model0::changed)
-{}
-
-Model0::~Model0 ()
-{}
-
-void
-Model0::Model0Value::changed()
-{
-  ssize_t vvoffset = (ssize_t) ((char*) &((Model0*) 0x10000)->m_value) - 0x10000;
-  Model0 *var = (Model0*) ((char*) this - vvoffset);
-  var->sig_changed.emit();
-}
-
-void
-Model0::changed()
-{}
-
-/* --- 1-Dim Selections --- */
+// == 1-Dim Selections ==
 class Selection1 : public virtual VirtualTypeid {
   friend class          Model1;
   static Selection1&    create_selection        (Model1       &model1,
@@ -328,8 +306,8 @@ Model1::~Model1 (void)
   delete &m_selection;
 }
 
-Model1::Model1 (Type          row_type,
-                SelectionMode selectionmode) :
+Model1::Model1 (Plic::TypeCode row_type,
+                SelectionMode  selectionmode) :
   m_type (row_type), m_selection (Selection1::create_selection (*this, selectionmode)),
   sig_changed  (*this, &Model1::handle_changed),
   sig_inserted (*this, &Model1::handle_inserted),
@@ -425,7 +403,7 @@ Store1::~Store1()
 {}
 
 class MemoryStore1 : public virtual Model1, public virtual Store1 {
-  vector<Array*> avector;
+  vector<AnySeq*> avector;
   virtual Store1*
   pget_store (void)
   {
@@ -441,12 +419,12 @@ class MemoryStore1 : public virtual Model1, public virtual Store1 {
   {
     return avector.size();
   }
-  virtual Array
+  virtual AnySeq
   pget_row (uint64 row)
   {
     if (row < avector.size())
       return *avector[row];
-    return Array();
+    return AnySeq();
   }
   virtual Model1&
   pget_model (void)
@@ -454,16 +432,16 @@ class MemoryStore1 : public virtual Model1, public virtual Store1 {
     return *this;
   }
   virtual void
-  pchange_rows (uint64       first,
-                uint64       count,
-                const Array *arrays)
+  pchange_rows (uint64        first,
+                uint64        count,
+                const AnySeq *arrays)
   {
     uint64 cnotify = 0;
     for (uint64 row = first; row < first + count; row++)
       if (row < avector.size())
         {
-          Array *old = avector[row];
-          avector[row] = new Array (arrays[row - first]);
+          AnySeq *old = avector[row];
+          avector[row] = new AnySeq (arrays[row - first]);
           if (old)
             delete old;
           cnotify++;
@@ -471,9 +449,9 @@ class MemoryStore1 : public virtual Model1, public virtual Store1 {
     changed (first, cnotify);
   }
   virtual void
-  pinsert_rows (int64        first,
-                uint64       count,
-                const Array *arrays)
+  pinsert_rows (int64         first,
+                uint64        count,
+                const AnySeq *arrays)
   {
     if (first < 0)
       first += avector.size() + 1;
@@ -481,7 +459,7 @@ class MemoryStore1 : public virtual Model1, public virtual Store1 {
       return;
     avector.insert (avector.begin() + first, count, NULL);
     for (uint64 row = first; row < first + count; row++)
-      avector[row] = new Array (arrays[row - first]);
+      avector[row] = new AnySeq (arrays[row - first]);
     inserted (first, count);
   }
   virtual void
@@ -506,16 +484,16 @@ class MemoryStore1 : public virtual Model1, public virtual Store1 {
       }
   }
 public:
-  explicit MemoryStore1 (Type          row_type,
-                         SelectionMode selectionmode) :
+  explicit MemoryStore1 (Plic::TypeCode row_type,
+                         SelectionMode  selectionmode) :
     Model1 (row_type, selectionmode)
   {}
 };
 
 Store1*
-Store1::create_memory_store (const String &plor_name,
-                             Type          row_type,
-                             SelectionMode selectionmode)
+Store1::create_memory_store (const String  &plor_name,
+                             Plic::TypeCode row_type,
+                             SelectionMode  selectionmode)
 {
   Store1 *store = new MemoryStore1 (row_type, selectionmode);
   store->plor_name (plor_name);

@@ -200,24 +200,24 @@ namespace { // Anon
 static Plic::Connection *_clientglue_connection = NULL;
 class ClientConnection {
   // this should one day be linked with the server side connection and implement Plic::Connection itself
-  typedef std::map <Plic::uint64, Plic::NonCopyable*> ContextMap;
+  typedef std::map <Plic::uint64_t, Plic::NonCopyable*> ContextMap;
   ContextMap context_map;
 public:
   Plic::NonCopyable*
-  find_context (Plic::uint64 ipcid)
+  find_context (Plic::uint64_t ipcid)
   {
     ContextMap::iterator it = context_map.find (ipcid);
     return LIKELY (it != context_map.end()) ? it->second : NULL;
   }
   void
-  add_context (Plic::uint64 ipcid, Plic::NonCopyable *ctx)
+  add_context (Plic::uint64_t ipcid, Plic::NonCopyable *ctx)
   {
     context_map[ipcid] = ctx;
   }
 };
 static __thread ClientConnection *ccon = NULL;
 static inline void
-connection_context4id (Plic::uint64 ipcid, Plic::NonCopyable *ctx)
+connection_context4id (Plic::uint64_t ipcid, Plic::NonCopyable *ctx)
 {
   if (!ccon)
     {
@@ -227,14 +227,14 @@ connection_context4id (Plic::uint64 ipcid, Plic::NonCopyable *ctx)
   ccon->add_context (ipcid, ctx);
 }
 template<class Context> static inline Context*
-connection_id2context (Plic::uint64 ipcid)
+connection_id2context (Plic::uint64_t ipcid)
 {
   Plic::NonCopyable *ctx = LIKELY (ccon) ? ccon->find_context (ipcid) : NULL;
   if (UNLIKELY (!ctx))
     ctx = new Context (ipcid);
   return static_cast<Context*> (ctx);
 }
-static inline Plic::uint64
+static inline Plic::uint64_t
 connection_handle2id (const Plic::SmartHandle &h)
 {
   return h._rpc_id();

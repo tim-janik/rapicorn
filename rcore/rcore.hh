@@ -25,7 +25,6 @@
 #include <rcore/main.hh>
 #include <rcore/markup.hh>
 #include <rcore/pixmap.hh>
-#include <rcore/plicutils.hh>
 #include <rcore/rapicornmath.hh>
 #include <rcore/rapicornmsg.hh>
 #include <rcore/rapicornsignal.hh>
@@ -35,8 +34,6 @@
 #include <rcore/rapicornxml.hh>
 #include <rcore/regex.hh>
 #include <rcore/strings.hh>
-#include <rcore/types.hh>
-#include <rcore/values.hh>
 #include <rcore/models.hh>
 
 /**

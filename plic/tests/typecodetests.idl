@@ -1,5 +1,5 @@
 
-namespace RapicornTest {
+namespace PlicTests {
 
   typedef string SimpleString;
 
@@ -15,12 +15,15 @@ namespace RapicornTest {
 
   typedef EnumType Enum1;
 
-  record SimpleRecord {
+  sequence SimpleSequence {
     int sample_integer;
   };
 
-  sequence SimpleSequence {
-    int sample_integer;
+  record SimpleRecord {
+    int    intfield;
+    float  floatfield;
+    string stringfield;
+    any    anyfield;
   };
 
 }

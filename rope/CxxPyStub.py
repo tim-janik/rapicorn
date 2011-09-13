@@ -39,7 +39,8 @@ base_code = """
                                  PyErr_Format_from_PLIC_error (fr); \\
                                  goto error; } } while (0)
 
-using Plic::uint64;
+// using Plic::uint64_t;
+using ::uint64_t;
 using Plic::FieldBuffer;
 using Plic::FieldReader;
 
@@ -49,7 +50,7 @@ PyErr_Format_from_PLIC_error (const FieldBuffer *fr)
   if (!fr)
     return PyErr_Format (PyExc_RuntimeError, "PLIC: missing return value");
   FieldReader frr (*fr);
-  const uint64 msgid = frr.pop_int64();
+  const uint64_t msgid = frr.pop_int64();
   frr.pop_int64(); // hashl
   if (Plic::msgid_is_error (Plic::MessageId (msgid)))
     {
@@ -79,7 +80,7 @@ PyString_As_std_string (PyObject *pystr)
   return std::string (s, len);
 }
 
-static inline Plic::uint64
+static inline Plic::uint64_t
 PyAttr_As_uint64 (PyObject *pyobj, const char *attr_name)
 {
   PyObject *o = PyObject_GetAttrString (pyobj, attr_name);
@@ -106,6 +107,18 @@ PyDict_Take_Item (PyObject *pydict, const char *key, PyObject **pyitemp)
   return r;
 }
 
+static inline Plic::Any
+__plic_pyany_to_any (PyObject *pyany)
+{
+  return Plic::Any(); // FIXME: pyany to Any
+}
+
+static inline PyObject*
+__plic_pyany_from_any (const Plic::Any &any)
+{
+  return None_INCREF(); // FIXME: Any to pyany
+}
+
 static PyObject *_plic_object_factory_callable = NULL;
 
 static PyObject*
@@ -124,7 +137,7 @@ _plic___register_object_factory_callable (PyObject *pyself, PyObject *pyargs)
 }
 
 static inline PyObject*
-plic_PyObject_4uint64 (const char *type_name, uint64 rpc_id)
+plic_PyObject_4uint64 (const char *type_name, uint64_t rpc_id)
 {
   if (!_plic_object_factory_callable)
     return PyErr_Format (PyExc_RuntimeError, "object_factory_callable not registered");
@@ -184,6 +197,8 @@ class Generator:
       s += '  if (!plic_py%s_proto_add (%s, %s)) goto error;\n' % (type.name, var, fb)
     elif type.storage == Decls.INTERFACE:
       s += '  %s.add_object (PyAttr_As_uint64 (%s, "__plic__object__")); ERRORifpy();\n' % (fb, var)
+    elif type.storage == Decls.ANY:
+      s += '  %s.add_any (__plic_pyany_to_any (%s)); ERRORifpy();\n' % (fb, var)
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
@@ -201,6 +216,8 @@ class Generator:
       s += '  %s = plic_py%s_proto_pop (%s); ERRORif (!%s);\n' % (var, type.name, fbr, var)
     elif type.storage == Decls.INTERFACE:
       s += '  %s = plic_PyObject_4uint64 ("%s", %s.pop_object()); ERRORifpy();\n' % (var, type.name, fbr)
+    elif type.storage == Decls.ANY:
+      s += '  %s = __plic_pyany_from_any (%s.pop_any()); ERRORifpy();\n' % (var, fbr)
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
@@ -328,7 +345,7 @@ class Generator:
     s += '  else {\n'
     s += '    if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");\n'
     s += '    Plic::Connection::EventHandler *evh = new %s (item);\n' % evd_class
-    s += '    uint64 handler_id = PLIC_CONNECTION().register_event_handler (evh);\n'
+    s += '    uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);\n'
     s += '    fb.add_int64 (handler_id); }\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect\n'
     s += '  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();\n'

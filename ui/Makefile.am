@@ -14,7 +14,7 @@ rapicorn_public_headers = $(strip	\
 	evaluator.hh	events.hh	factory.hh	heritage.hh	\
 	image.hh	item.hh	keycodes.hh	layoutcontainers.hh	listarea.hh	\
 	paintcontainers.hh	painter.hh	paintitems.hh	primitives.hh	properties.hh	\
-	region.hh	rope.hh	scrollitems.hh	sinfex.hh	sizegroup.hh	slider.hh	\
+	region.hh		scrollitems.hh	sinfex.hh	sizegroup.hh	slider.hh	\
 	table.hh	testitems.hh	text-editor.hh	text-pango.hh	\
 	uithread.hh	utilities.hh	viewp0rt.hh	window.hh	\
 	$(rapicorn_impl_headers)	\
@@ -27,7 +27,7 @@ rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	image.cc	item.cc		\
 	layoutcontainers.cc	listarea.cc	\
 	paintcontainers.cc	painter.cc	paintitems.cc	primitives.cc	properties.cc	\
-	region.cc	regionimpl.c	rope.cc	\
+	region.cc	regionimpl.c	\
 	scrollitems.cc	sinfex.cc	sizegroup.cc	slider.cc	\
 	table.cc	testitems.cc	text-editor.cc	text-pango.cc	\
 	uithread.cc	utilities.cc	viewp0rt-gtk.cc	viewp0rt.cc	window.cc	\
@@ -82,42 +82,43 @@ EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPEN
 # === Rapicorn IDL ===
 ROPE        = $(srcdir)/../rope
 PLICINT     = $(top_builddir)/plic/plic-intern
+CXXSTUB_PY  = $(top_srcdir)/plic/CxxStub.py
 EXTRA_DIST += interfaces.idl serverinsert.cc hardcoded.idl
 # build interfaces.{hh|cc} and clientapi.{hh|cc} from interfaces.idl
 $(rapicorn_cc_sources): serverapi.hh clientapi.hh
-serverapi.hh: $(ROPE)/CxxStub.py $(srcdir)/interfaces.idl $(srcdir)/serverinsert.cc
-	${PLICINT} -G $(ROPE)/CxxStub -g serverhh -g iface-base=BaseObject -g iface-postfix=Iface \
+serverapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/serverinsert.cc
+	${PLICINT} -G CxxStub -g serverhh -g iface-base=BaseObject -g iface-postfix=Iface \
 	  -g shortalias -g cppguard=__RAPICORN_INTERFACE_HH_ \
 	  --insertions $(srcdir)/serverinsert.cc $(srcdir)/interfaces.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 serverglue.cc: serverapi.cc
-serverapi.cc: $(ROPE)/CxxStub.py $(srcdir)/interfaces.idl serverapi.hh
+serverapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl serverapi.hh
 	echo "#define PLIC_CALL_REMOTE // dummy" > xgen-$(@F)
-	${PLICINT} -G $(ROPE)/CxxStub -g servercc -g iface-base=BaseObject -g iface-postfix=Iface \
+	${PLICINT} -G CxxStub -g servercc -g iface-base=BaseObject -g iface-postfix=Iface \
 	  --inclusions '"item.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += serverapi.cc serverapi.hh
 EXTRA_DIST += clientinsert.cc
-clientapi.hh: $(ROPE)/CxxStub.py $(srcdir)/interfaces.idl $(srcdir)/clientinsert.cc
-	${PLICINT} -G $(ROPE)/CxxStub -g clienthh -g iface-base=BaseObject -g iface-postfix=Iface \
+clientapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/clientinsert.cc
+	${PLICINT} -G CxxStub -g clienthh -g iface-base=BaseObject -g iface-postfix=Iface \
 	  -g shortalias -g cppguard=__RAPICORN_CLIENTAPI_HH_ \
 	  --insertions $(srcdir)/clientinsert.cc $(srcdir)/interfaces.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 clientglue.cc: clientapi.cc
-clientapi.cc: $(ROPE)/CxxStub.py $(srcdir)/interfaces.idl clientapi.hh
+clientapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl clientapi.hh
 	echo "#define PLIC_CALL_REMOTE // dummy" > xgen-$(@F)
-	${PLICINT} -G $(ROPE)/CxxStub -g clientcc -g iface-base=BaseObject -g iface-postfix=Iface \
+	${PLICINT} -G CxxStub -g clientcc -g iface-base=BaseObject -g iface-postfix=Iface \
 	  --inclusions '"clientapi.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += clientapi.cc clientapi.hh
 CXXFLAGS += $(patsubst %, -O3 -minline-all-stringops -finline-functions, $(findstring $(<F), serverglue.cc clientglue.cc))
 # generate skeletons for non-virtual methods, skipping existing symbols
-skeletons.cc: $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS)
+skeletons.cc: $(CXXSTUB_PY) $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS)
 	for obj in $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS) ; do case "$$obj" in \
 	  *.lo) . "./$$obj" ; o="$$pic_object" ;; *.o|*) o="$$obj" ;; esac ; \
 	  nm -C "$$o" ; done | grep -v '^[[:space:]]*U[[:space:]]' | \
 	  sed 's/\b@RAPICORN_NAMESPACE_NAME@::/Rapicorn::/g' > xgen-syms-$(@F)
-	${PLICINT} -G $(ROPE)/CxxStub -g server-skel -g iface-postfix=Iface \
+	${PLICINT} -G CxxStub -g server-skel -g iface-postfix=Iface \
 	  --skip-skels xgen-syms-$(@F) \
 	  $(srcdir)/interfaces.idl -o xgen-$(@F)
 	rm -f xgen-syms-$(@F)

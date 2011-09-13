@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <poll.h>
+#include <errno.h>
 #include <algorithm>
 using namespace Rapicorn;
 

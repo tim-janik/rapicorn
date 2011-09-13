@@ -36,24 +36,26 @@ ItemList::list_properties()
 }
 
 static uint
-n_columns_from_type (const Type &type)
+n_columns_from_type (const Plic::TypeCode &type)
 {
-  switch (type.storage())
+  switch (type.kind())
     {
-    case INT:
-    case FLOAT:
-    case STRING:
-    case ARRAY:
-    case OBJECT:
-    case CHOICE:
-    case TYPE_REFERENCE:
-    case SEQUENCE:
-    case FUNC:
+    case Plic::INT:
+    case Plic::FLOAT:
+    case Plic::STRING:
+    case Plic::ENUM:
+    case Plic::SEQUENCE:
+    case Plic::INSTANCE:
+    case Plic::FUNC:
+    case Plic::TYPE_REFERENCE:
+    case Plic::ANY:
+      // case ARRAY:
       return 1;
-    case RECORD:
+    case Plic::RECORD:
       return 1; // FIXME: type.n_fields();
+    default:
+      return 0;
     }
-  return 0;
 }
 
 ItemListImpl::ItemListImpl() :
@@ -101,18 +103,19 @@ ItemListImpl::constructed ()
   if (!m_model)
     {
       Store1 &store = *Store1::create_memory_store ("models/ItemListImpl/test",
-                                                    Type::lookup ("string"), SELECTION_INTERVAL);
+                                                    Plic::TypeMap::lookup ("string"), SELECTION_INTERVAL);
       for (uint i = 0; i < 20; i++)
         {
-          Array row;
+          AnySeq row;
+          row.resize (5);
           String s;
           if (i && (i % 10) == 0)
             s = string_printf ("* %u SMALL ROW (watch scroll direction)", i);
           else
             s = string_printf ("|<br/>| <br/>| %u<br/>|<br/>|", i);
-          row[0] = s;
+          row.append_back() <<= s;
           for (uint j = 1; j < 4; j++)
-            row[j] = string_printf ("%u-%u", i + 1, j + 1);
+            row.append_back() <<= string_printf ("%u-%u", i + 1, j + 1);
           store.insert (-1, row);
         }
       model (store.plor_name());
@@ -647,9 +650,9 @@ ListRow*
 ItemListImpl::create_row (uint64 nthrow,
                           bool   with_size_groups)
 {
-  Array row = m_model->get (nthrow);
+  AnySeq row = m_model->get (nthrow);
   ListRow *lr = new ListRow();
-  for (uint i = 0; i < row.count(); i++)
+  for (uint i = 0; i < row.size(); i++)
     {
       ItemImpl *item = ref_sink (&Factory::create_item ("Label"));
       lr->cols.push_back (item);
@@ -674,9 +677,9 @@ void
 ItemListImpl::fill_row (ListRow *lr,
                         uint64   nthrow)
 {
-  Array row = m_model->get (nthrow);
+  AnySeq row = m_model->get (nthrow);
   for (uint i = 0; i < lr->cols.size(); i++)
-    lr->cols[i]->set_property ("markup_text", i < row.count() ? row[i].string() : "");
+    lr->cols[i]->set_property ("markup_text", i < row.size() ? row[i].as_string() : "");
   Ambience *ambience = lr->rowbox->interface<Ambience*>();
   if (ambience)
     ambience->background (nthrow & 1 ? "background-odd" : "background-even");
