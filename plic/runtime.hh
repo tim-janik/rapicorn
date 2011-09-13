@@ -16,7 +16,7 @@ using std::tr1::enable_shared_from_this;
 using std::tr1::shared_ptr;
 using std::tr1::weak_ptr;
 
-/* === Auxillary macros === */
+// == Auxillary macros ==
 #define PLIC_CPP_STRINGIFYi(s)  #s // indirection required to expand __LINE__ etc
 #define PLIC_CPP_STRINGIFY(s)   PLIC_CPP_STRINGIFYi (s)
 #if     __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
@@ -26,7 +26,7 @@ using std::tr1::weak_ptr;
 #define PLIC_BOOLi(expr)        __extension__ ({ bool _plic__bool; if (expr) _plic__bool = 1; else _plic__bool = 0; _plic__bool; })
 #define PLIC_ISLIKELY(expr)     __builtin_expect (PLIC_BOOLi (expr), 1)
 #define PLIC_UNLIKELY(expr)     __builtin_expect (PLIC_BOOLi (expr), 0)
-#else   /* !__GNUC__ */
+#else   // !__GNUC__
 #define PLIC_UNUSED
 #define PLIC_DEPRECATED
 #define PLIC_PRINTF(fix, arx)
@@ -196,13 +196,13 @@ struct TypeHash {
 };
 typedef std::vector<TypeHash> TypeHashList;
 
-// === Utilities ===
+// == Utilities ==
 template<class V> inline
 bool    atomic_ptr_cas  (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
 void    error_printf    (const char *format, ...) PLIC_PRINTF (1, 2);
 void    error_vprintf   (const char *format, va_list args);
 
-// === Message IDs ===
+// == Message IDs ==
 enum MessageId {
   MSGID_NONE        = 0,
   MSGID_ONEWAY      = 0x2000000000000000ULL,      ///< One-way method call ID (void return).
@@ -221,7 +221,7 @@ inline bool msgid_is_discon     (MessageId mid) { return (mid & 0x70000000000000
 inline bool msgid_is_sigcon     (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_SIGCON; }
 inline bool msgid_is_event      (MessageId mid) { return (mid & 0x7000000000000000ULL) == MSGID_EVENT; }
 
-// === NonCopyable ===
+// == NonCopyable ==
 class NonCopyable {
   NonCopyable& operator=   (const NonCopyable&);
   /*copy*/     NonCopyable (const NonCopyable&);
@@ -230,7 +230,7 @@ protected:
   /*dtor*/    ~NonCopyable () {}
 };
 
-/* === SmartHandle === */
+// == SmartHandle ==
 class SmartHandle {
   uint64_t m_rpc_id;
 protected:
@@ -249,7 +249,7 @@ public:
   virtual                  ~SmartHandle ();
 };
 
-/* === SimpleServer === */
+// == SimpleServer ==
 class SimpleServer {
 public:
   explicit             SimpleServer ();
@@ -257,7 +257,7 @@ public:
   virtual uint64_t     _rpc_id      () const;
 };
 
-/* === FieldBuffer === */
+// == FieldBuffer ==
 class _FakeFieldBuffer { FieldUnion *u; virtual ~_FakeFieldBuffer() {}; };
 
 union FieldUnion {
@@ -376,21 +376,21 @@ public:
   inline FieldReader& operator>> (std::vector<bool>::reference v) { bool b; *this >> b; v = b; return *this; }
 };
 
-// === Connection ===
+// == Connection ==
 class Connection                                         /// Connection context for IPC. @nosubgrouping
 {
 public: /// @name API for syncronous remote calls
-  virtual FieldBuffer* call_remote   (FieldBuffer*) = 0; ///< Carry out a syncronous remote call, transfers memory, called by client.
-  virtual void         send_result   (FieldBuffer*) = 0; ///< Return result from remote call, transfers memory, called by server.
+  virtual FieldBuffer* call_remote (FieldBuffer*) = 0; ///< Carry out a syncronous remote call, transfers memory, called by client.
+  virtual void         send_result (FieldBuffer*) = 0; ///< Return result from remote call, transfers memory, called by server.
 public: /// @name API for asyncronous event delivery
-  virtual void   send_event    (FieldBuffer*) = 0;       ///< Send event to remote asyncronously, transfers memory, called by server.
-  virtual int    event_inputfd () = 0;                   ///< Returns fd for POLLIN, to wake up on incomming events.
-  bool           has_event     ();                       ///< Returns true if events for fetch_event() are pending.
-  FieldBuffer*   pop_event     (bool blocking = false);  ///< Pop an event from event queue, possibly blocking, transfers memory, called by client.
+  virtual void send_event    (FieldBuffer*) = 0;       ///< Send event to remote asyncronously, transfers memory, called by server.
+  virtual int  event_inputfd () = 0;                   ///< Returns fd for POLLIN, to wake up on incomming events.
+  bool         has_event     ();                       ///< Returns true if events for fetch_event() are pending.
+  FieldBuffer* pop_event     (bool blocking = false);  ///< Pop an event from event queue, possibly blocking, transfers memory, called by client.
 protected:
-  virtual FieldBuffer* fetch_event (int blockpop) = 0;   ///< Block for (-1), peek (0) or pop (+1) an event from queue.
+  virtual FieldBuffer* fetch_event (int blockpop) = 0; ///< Block for (-1), peek (0) or pop (+1) an event from queue.
 public: /// @name API for event handler bookkeeping
-  struct EventHandler                                    /// Interface class used for client side signal emissions.
+  struct EventHandler                                  /// Interface class used for client side signal emissions.
   {
     virtual             ~EventHandler () {}
     virtual FieldBuffer* handle_event (Plic::FieldBuffer &event_fb) = 0; ///< Process an event and possibly return an error.
@@ -410,7 +410,7 @@ protected:
   static DispatchFunc  find_method  (uint64_t hashhi, uint64_t hashlow);      ///< Lookup method in registry.
 };
 
-/* === inline implementations === */
+// == inline implementations ==
 inline void*
 SmartHandle::_void_iface () const
 {
@@ -440,4 +440,4 @@ FieldBuffer::reset()
 
 } // Plic
 
-#endif /* __PLIC_RUNTIME_HH__ */
+#endif // __PLIC_RUNTIME_HH__
