@@ -208,7 +208,7 @@ ItemListImpl::model_removed (int first, int last)
 void
 ItemListImpl::toggle_selected (int row)
 {
-  if (m_selection.size() < size_t (row))
+  if (m_selection.size() <= size_t (row))
     m_selection.resize (row + 1);
   m_selection[row] = !m_selection[row];
   selection_changed (row, row);
