@@ -1,2 +1,3 @@
-clienttests
-servertests
+/clienttests
+/servertests
+/stamp-autochecks
