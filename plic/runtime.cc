@@ -647,10 +647,6 @@ Connection::MethodRegistry::register_method (const MethodEntry &mentry)
                              __FILE__, __LINE__, mentry.hashhi, mentry.hashlo).c_str());
       abort();
     }
-  /* Two 64 bit ints are used for IPC message IDs. The upper four bits encode the
-   * message type. The remaining 124 bits encode the method invocation identifier.
-   * The 124 bit hash keeps collision probability below 10^-19 for up to 2 billion inputs.
-   */
 }
 
 bool

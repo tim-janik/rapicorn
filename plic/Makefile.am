@@ -15,6 +15,9 @@ CXXSTUB_PY 	    = $(srcdir)/CxxStub.py
 CLEANFILES         += ${PLICINT} ${PLICV}
 YAPPS 		    = ${PYTHON} ${top_srcdir}/yapps2_deb/yapps2.py
 
+# extra docs
+EXTRA_DIST         += about-plic.dox
+
 # == Build Parser ==
 Parser.py: Parser.g
 	${YAPPS} Parser.g xgen-$(@F) 2>&1 | tee xgen-$(@F).errors
