@@ -42,7 +42,7 @@ main (int   argc,
 
   // create window, handle commands
   Wind0w window = app.create_wind0w ("tour-dialog");
-  window.commands += custom_commands;
+  window.sig_commands() += custom_commands;
 
   // display window and enter main event loop
   window.show();

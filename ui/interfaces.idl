@@ -1,14 +1,57 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -*-mode:idl;-*-
+// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -*-mode:c++;-*-
 
 include "hardcoded.idl";
 
 namespace Rapicorn {
 
 /**
+ * A sequence of \a any objects, useful when the sequence element types need to be determined at runtime.
+ */
+sequence AnySeq {
+  any vany;
+};
+
+/**
+ * A sequence of AnySeq sequence objects, useful when multiple AnySeq instances are needed.
+ */
+sequence AnySeqSeq {
+  AnySeq seq;
+};
+
+/**
  * A sequence of C++ std::strings.
  */
 sequence StringList {
   string strings;
+};
+
+/**
+ * The ListModel interface serves as a row-oriented data provider for list views.
+ * For most model implementations, in-order read outs should be of complexity O(1),
+ * while random order read outs may be of O(log n) or even O(n).
+ */
+interface ListModel {
+  int         size     () = 0;		      ///< Obtain the number of rows provided by this model.
+  int         columns  () = 0;		      ///< Obtain the number of columns provided by this model.
+  AnySeq      row      (int n) = 0;	      ///< Read-out row @a n. In-order read outs are generally fastest.
+  signal void inserted (int first, int last); ///< Notify about insertion of last-first+1 rows.
+  signal void changed  (int first, int last); ///< Notify about changes in last-first+1 rows.
+  signal void removed  (int first, int last); ///< Notify about removal of last-first+1 rows.
+};
+
+/**
+ * A ListModelRelay is an adapter that provides a push-API for ListModel classes.
+ * This allows use of a ListModel in for example a list view, while the data to
+ * be displayed is provided sparsely on demand through explicit API calls.
+ */
+interface ListModelRelay {
+  void        resize     (int size) = 0;		///< Resize the ListModel to the given number of rows.
+  void        inserted   (int first, int last = 0) = 0; ///< Issue model notification for row insertion.
+  void        changed    (int first, int last = 0) = 0; ///< Issue model notification for row changes.
+  void        removed    (int first, int last = 0) = 0; ///< Issue model notification for row removal.
+  void        fill       (int first, AnySeqSeq ss) = 0; ///< Provide row data as requested by refill().
+  signal void refill     (int first, int last);         ///< Refill requests row data for last-first+1 rows.
+  ListModel   model      () = 0; ///< Obtain the ListModel, bundled with this relay, to which all data is relayed.
 };
 
 /**
@@ -64,14 +107,14 @@ sequence Pixels {
   int pixel;
 };
 record PixelRect {
-   int	   x;
-   int     y;
-   int     width;
-   int     height;
-   int     rowstride;
-   int     offset;
-   string  comment;
-   Pixels  argb_pixels;
+  int	   x;
+  int     y;
+  int     width;
+  int     height;
+  int     rowstride;
+  int     offset;
+  string  comment;
+  Pixels  argb_pixels;
 };
 
 /**
@@ -136,6 +179,9 @@ interface Application {
   Wind0wList    list_wind0ws            () = 0;
   Item          unique_component        (string path) = 0;
   ItemSeq       collect_components      (string path) = 0;
+  // helpers
+  ListModelRelay create_list_model_relay (int n_columns,
+                                          string name = "") = 0; ///< Create a ListModel & ListModelRelay bundle.
   /* testing */
   void          test_counter_set        (int val) = 0;
   void          test_counter_add        (int val) = 0;

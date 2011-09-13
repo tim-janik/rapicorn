@@ -8,6 +8,7 @@
 namespace {
 using namespace Rapicorn;
 
+#if 0 // FIXME: need remote model support
 static void
 fill_store (Store1       &s1,
             const String &dirname)
@@ -42,6 +43,7 @@ create_store ()
   fill_store (*s1, ".");
   return s1;
 }
+#endif
 
 extern "C" int
 main (int   argc,

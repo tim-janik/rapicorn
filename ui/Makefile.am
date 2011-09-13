@@ -12,7 +12,8 @@ rapicorn_public_headers = $(strip	\
 	adjustment.hh	application.hh	arrangement.hh	buttons.hh	\
 	cmdlib.hh	coffer.hh	commands.hh	compath.hh	container.hh	\
 	evaluator.hh	events.hh	factory.hh	heritage.hh	\
-	image.hh	item.hh	keycodes.hh	layoutcontainers.hh	listarea.hh	\
+	image.hh	item.hh	keycodes.hh	\
+	layoutcontainers.hh	listarea.hh	models.hh	\
 	paintcontainers.hh	painter.hh	paintitems.hh	primitives.hh	properties.hh	\
 	region.hh		scrollitems.hh	sinfex.hh	sizegroup.hh	slider.hh	\
 	table.hh	testitems.hh	text-editor.hh	text-pango.hh	\
@@ -25,7 +26,7 @@ rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	cmdlib.cc	coffer.cc	commands.cc	compath.cc	container.cc	\
 	evaluator.cc	events.cc	factory.cc	heritage.cc	\
 	image.cc	item.cc		\
-	layoutcontainers.cc	listarea.cc	\
+	layoutcontainers.cc	listarea.cc	models.cc	\
 	paintcontainers.cc	painter.cc	paintitems.cc	primitives.cc	properties.cc	\
 	region.cc	regionimpl.c	\
 	scrollitems.cc	sinfex.cc	sizegroup.cc	slider.cc	\
@@ -88,27 +89,27 @@ EXTRA_DIST += interfaces.idl serverinsert.cc hardcoded.idl
 $(rapicorn_cc_sources): serverapi.hh clientapi.hh
 serverapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/serverinsert.cc
 	${PLICINT} -G CxxStub -g serverhh -g iface-base=BaseObject -g iface-postfix=Iface \
-	  -g shortalias -g cppguard=__RAPICORN_INTERFACE_HH_ \
+	  -g RapicornSignal -g shortalias -g cppguard=__RAPICORN_INTERFACE_HH_ \
 	  --insertions $(srcdir)/serverinsert.cc $(srcdir)/interfaces.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 serverglue.cc: serverapi.cc
 serverapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl serverapi.hh
 	echo "#define PLIC_CALL_REMOTE // dummy" > xgen-$(@F)
 	${PLICINT} -G CxxStub -g servercc -g iface-base=BaseObject -g iface-postfix=Iface \
-	  --inclusions '"item.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
+	  -g RapicornSignal --inclusions '"item.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += serverapi.cc serverapi.hh
 EXTRA_DIST += clientinsert.cc
 clientapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/clientinsert.cc
 	${PLICINT} -G CxxStub -g clienthh -g iface-base=BaseObject -g iface-postfix=Iface \
-	  -g shortalias -g cppguard=__RAPICORN_CLIENTAPI_HH_ \
+	  -g RapicornSignal -g shortalias -g cppguard=__RAPICORN_CLIENTAPI_HH_ \
 	  --insertions $(srcdir)/clientinsert.cc $(srcdir)/interfaces.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 clientglue.cc: clientapi.cc
 clientapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl clientapi.hh
 	echo "#define PLIC_CALL_REMOTE // dummy" > xgen-$(@F)
 	${PLICINT} -G CxxStub -g clientcc -g iface-base=BaseObject -g iface-postfix=Iface \
-	  --inclusions '"clientapi.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
+	  -g RapicornSignal --inclusions '"clientapi.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += clientapi.cc clientapi.hh
 CXXFLAGS += $(patsubst %, -O3 -minline-all-stringops -finline-functions, $(findstring $(<F), serverglue.cc clientglue.cc))
@@ -119,7 +120,7 @@ skeletons.cc: $(CXXSTUB_PY) $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS)
 	  nm -C "$$o" ; done | grep -v '^[[:space:]]*U[[:space:]]' | \
 	  sed 's/\b@RAPICORN_NAMESPACE_NAME@::/Rapicorn::/g' > xgen-syms-$(@F)
 	${PLICINT} -G CxxStub -g server-skel -g iface-postfix=Iface \
-	  --skip-skels xgen-syms-$(@F) \
+	  -g RapicornSignal --skip-skels xgen-syms-$(@F) \
 	  $(srcdir)/interfaces.idl -o xgen-$(@F)
 	rm -f xgen-syms-$(@F)
 	mv xgen-$(@F) $@

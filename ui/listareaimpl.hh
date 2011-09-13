@@ -22,6 +22,7 @@
 #include <ui/adjustment.hh>
 #include <ui/layoutcontainers.hh>
 #include <ui/table.hh>
+#include <ui/models.hh>
 #include <deque>
 
 namespace Rapicorn {
@@ -50,7 +51,8 @@ class ItemListImpl : public virtual MultiContainerImpl,
 {
   typedef map<int64,ListRow*>  RowMap;
   typedef std::deque<int>      SizeQueue;
-  Model1                *m_model;
+  ListModelIface        *m_model;
+  vector<bool>           m_selection;
   mutable Adjustment    *m_hadjustment, *m_vadjustment;
   bool                   m_browse;
   uint                   m_n_cols;
@@ -61,19 +63,18 @@ class ItemListImpl : public virtual MultiContainerImpl,
   bool                   m_block_invalidate;
   uint64                 m_current_row;
   ModelSizes             m_model_sizes;
-  void                  model_changed           (uint64 first,
-                                                 uint64 count);
-  void                  model_inserted          (uint64 first,
-                                                 uint64 count);
-  void                  model_deleted           (uint64 first,
-                                                 uint64 count);
-  void                  selection_changed       (uint64 first,
-                                                 uint64 count);
+  void                  model_inserted          (int first, int last);
+  void                  model_changed           (int first, int last);
+  void                  model_removed           (int first, int last);
+  void                  selection_changed       (int first, int last);
   virtual void          invalidate_parent ();
 protected:
   virtual bool          handle_event            (const Event    &event);
   virtual void          reset                   (ResetMode       mode);
   virtual bool          can_focus               () const { return true; }
+  SelectionMode         selection_mode          () { return SELECTION_MULTIPLE; }
+  bool                  selected                (int row) { return size_t (row) < m_selection.size() && m_selection[row]; }
+  void                  toggle_selected         (int row);
 public:
   explicit              ItemListImpl            ();
   virtual              ~ItemListImpl            ();

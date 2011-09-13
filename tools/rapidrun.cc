@@ -184,7 +184,7 @@ main (int   argc,
 
   // create window, hook up post-display handler
   Wind0w wind0w = app.create_wind0w (dialog);
-  wind0w.displayed += window_displayed;
+  wind0w.sig_displayed() += window_displayed;
 
   /* show wind0w and process events */
   wind0w.show();

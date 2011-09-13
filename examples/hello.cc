@@ -31,7 +31,7 @@ main (int   argc,
   Wind0w wind0w = app.create_wind0w ("main-wind0w");
 
   /* connect custom callback to handle UI commands */
-  wind0w.commands += handle_commands;
+  wind0w.sig_commands() += handle_commands;
 
   /* display wind0w on screen */
   wind0w.show();

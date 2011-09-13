@@ -149,6 +149,36 @@ Any::rekind (TypeKind _kind)
     error_printf ("Plic::Any:rekind: mismatch: %s -> %s (%u)", type_kind_name (_kind), type_kind_name (kind()), kind());
 }
 
+bool
+Any::operator== (const Any &clone) const
+{
+  if (type_code != clone.type_code)
+    return false;
+  switch (kind())
+    {
+    case UNTYPED:     break;
+      // case BOOL:   // chain
+    case ENUM:
+      // case UINT:   // chain
+    case INT:         if (u.vint64 != clone.u.vint64) return false;                     break;
+    case FLOAT:       if (u.vdouble != clone.u.vdouble) return false;                   break;
+    case STRING:      if (*(String*) &u != *(String*) &clone.u) return false;           break;
+    case SEQUENCE:    if (*(AnyVector*) &u != *(AnyVector*) &clone.u) return false;     break;
+    case RECORD:      if (*(AnyVector*) &u != *(AnyVector*) &clone.u) return false;     break;
+    case INSTANCE:    if (memcmp (&u, &clone.u, sizeof (u)) != 0) return false;         break; // FIXME
+    case ANY:         if (*u.vany != *clone.u.vany) return false;                       break;
+    default:
+      error_printf ("Plic::Any:operator==: invalid type kind: %s", type_kind_name (kind()));
+    }
+  return true;
+}
+
+bool
+Any::operator!= (const Any &clone) const
+{
+  return !operator== (clone);
+}
+
 Any::~Any ()
 {
   reset();

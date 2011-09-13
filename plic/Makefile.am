@@ -11,6 +11,7 @@ cxxruntime_HEADERS  = runtime.hh runtime.cc runtypes.cc
 PLICLINK	    = plic			## user visible excutable name
 PLICV	            = plic-@PLIC_VERSION@	## installed executable name
 PLICINT	            = ./plic-intern		## internal version used during build time
+CXXSTUB_PY 	    = $(srcdir)/CxxStub.py
 CLEANFILES         += ${PLICINT} ${PLICV}
 YAPPS 		    = ${PYTHON} ${top_srcdir}/yapps2_deb/yapps2.py
 
@@ -44,9 +45,10 @@ ${PLICV}: plic.py Parser.py
 	$(Q) cp -p xgen-$(@F) $@
 	$(Q) rm -f xgen-$(@F) xgen-$(@F).errors
 EXTRA_DIST += plic.py
+EXTRA_DIST += plic.idl
 
 # == Plic Builtins ==
-EXTRA_DIST = builtins.typ
+EXTRA_DIST += builtins.typ
 builtins.cc: $(srcdir)/builtins.idl ${PLICINT} plic.py
 	$(AM_V_GEN)
 	$(Q) ${PLICINT} --system-typedefs $< -G TypeMap -o $(@F).typ

@@ -1,7 +1,9 @@
-librapicorn.[0-9].[0-9].la
-gen-zintern.c
-clientapi.cc
-clientapi.hh
-serverapi.cc
-serverapi.hh
-stamp-autochecks
+/librapicorn[0-9][0-9][0-9][0-9].la
+/clientapi.cc
+/clientapi.hh
+/gen-zintern.c
+/serverapi.cc
+/serverapi.hh
+/sinfex.lgen
+/sinfex.ygen
+/stamp-autochecks

@@ -26,6 +26,8 @@ public:
   virtual Wind0wList  list_wind0ws           ();
   virtual ItemIface*  unique_component       (const String &path);
   virtual ItemSeq     collect_components     (const String &path);
+  virtual ListModelRelayIface* create_list_model_relay (int                n_columns,
+                                                        const std::string &name = "");
   virtual void        test_counter_set       (int val);
   virtual void        test_counter_add       (int val);
   virtual int         test_counter_get       ();

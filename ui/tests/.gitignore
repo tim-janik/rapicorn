@@ -1,13 +1,3 @@
-evaltest
-factory
-items
-labelmarkup
-primitives
-properties
-region
-stamp-xmlcopy
-testitems
-walker
-cmdtest
-server
-sinfextest
+/clienttests
+/servertests
+/stamp-autochecks

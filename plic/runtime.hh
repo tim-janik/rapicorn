@@ -129,6 +129,8 @@ public:
   explicit  Any    ();
   /*copy*/  Any    (const Any &clone);                   ///< Carry out a deep copy of @a clone into a new Any.
   Any& operator=   (const Any &clone);                   ///< Carry out a deep copy of @a clone into this Any.
+  bool operator==  (const Any &clone) const;             ///< Check if Any is exactly equal to @a clone.
+  bool operator!=  (const Any &clone) const;             ///< Check if Any is not equal to @a clone, see operator==().
   TypeCode  tyoe   () const { return type_code; }        ///< Obtain the full TypeCode for the contents of this Any.
   TypeKind  kind   () const { return type_code.kind(); } ///< Obtain the underlying primitive type kind.
   void      retype (const TypeCode &tc);                 ///< Force Any to assume type @a tc.
@@ -175,14 +177,6 @@ public:
   // <<= record
   // <<= instance
   void resize (size_t n); ///< Resize Any to contain a sequence of length @a n.
-};
-
-// == AnySeq ==
-struct AnySeq : public std::vector<Any> {
-  typedef std::vector<Any> Sequence;
-  /*ctor*/      AnySeq () {}
-  /*ctor*/      AnySeq (const std::vector<Any> &v) : Sequence (v) {}
-  reference     append_back()   { resize (size() + 1); return back(); }
 };
 
 // == Type Declarations ==

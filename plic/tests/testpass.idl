@@ -335,6 +335,13 @@ interface SignalTestInterface {
   signal void                self_args        (SignalTestInterface self_);
 };
 
+interface ChildInheritingSignals : SignalTestInterface {
+  signal void child_signal (ChildInheritingSignals c, SignalTestInterface p, any a, int i, QuickRecord r, QuickSequence s);
+};
+
+interface AnotherChild : SignalTestInterface {
+};
+
 interface PropertyTester {
   // void        void_prop;
   bool           bool_prop;

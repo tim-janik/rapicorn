@@ -640,6 +640,20 @@ class SignalTestInterface (_BaseClass_):
   def sig_self_args_disconnect (self, connection_id):
     return _CPY._PLIC_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface (self, None, connection_id)
 
+class ChildInheritingSignals (SignalTestInterface):
+  def __init__ (self, _plic_id):
+    super (ChildInheritingSignals, self).__init__ (_plic_id)
+    self.sig_child_signal = __Signal__ ('child_signal')
+  def __sig_child_signal__ (self): pass # default handler
+  def sig_child_signal_connect (self, func):
+    return _CPY._PLIC_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence (self, func, 0)
+  def sig_child_signal_disconnect (self, connection_id):
+    return _CPY._PLIC_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence (self, None, connection_id)
+
+class AnotherChild (SignalTestInterface):
+  def __init__ (self, _plic_id):
+    super (AnotherChild, self).__init__ (_plic_id)
+
 class PropertyTester (_BaseClass_):
   def __init__ (self, _plic_id):
     super (PropertyTester, self).__init__ (_plic_id)
