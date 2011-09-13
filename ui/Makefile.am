@@ -13,7 +13,7 @@ rapicorn_public_headers = $(strip	\
 	cmdlib.hh	coffer.hh	commands.hh	compath.hh	container.hh	\
 	evaluator.hh	events.hh	factory.hh	heritage.hh	\
 	image.hh	item.hh	keycodes.hh	\
-	layoutcontainers.hh	listarea.hh	\
+	layoutcontainers.hh	listarea.hh	models.hh	\
 	paintcontainers.hh	painter.hh	paintitems.hh	primitives.hh	properties.hh	\
 	region.hh		scrollitems.hh	sinfex.hh	sizegroup.hh	slider.hh	\
 	table.hh	testitems.hh	text-editor.hh	text-pango.hh	\
@@ -26,7 +26,7 @@ rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	cmdlib.cc	coffer.cc	commands.cc	compath.cc	container.cc	\
 	evaluator.cc	events.cc	factory.cc	heritage.cc	\
 	image.cc	item.cc		\
-	layoutcontainers.cc	listarea.cc	\
+	layoutcontainers.cc	listarea.cc	models.cc	\
 	paintcontainers.cc	painter.cc	paintitems.cc	primitives.cc	properties.cc	\
 	region.cc	regionimpl.c	\
 	scrollitems.cc	sinfex.cc	sizegroup.cc	slider.cc	\
