@@ -34,7 +34,6 @@
 #include <rcore/rapicornxml.hh>
 #include <rcore/regex.hh>
 #include <rcore/strings.hh>
-#include <rcore/models.hh>
 
 /**
  * @namespace Rapicorn
