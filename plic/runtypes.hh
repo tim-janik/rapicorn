@@ -1,8 +1,4 @@
-// plic/runtime.hh - Plic C++ Runtime API
 // CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
-#ifndef __PLIC_RUNTIME_HH__
-#define __PLIC_RUNTIME_HH__
-
 #include <string>
 #include <vector>
 #include <memory>               // auto_ptr
@@ -466,4 +462,11 @@ FieldBuffer::reset()
 
 } // Plic
 
-#endif // __PLIC_RUNTIME_HH__
+/// @weakgroup PlicManifoldTypes Plic manifold generated types
+/// @{
+namespace Plic {
+
+template<class Signature> struct FieldTools;
+
+} // Plic
+/// @}

@@ -51,17 +51,22 @@ EXTRA_DIST += plic.py
 EXTRA_DIST += plic.idl
 
 # == Build runtime.hh runtime.cc ==
-runtime.hh: runtypes.hh
+runtime.hh: runtypes.hh runproto.hh xmanifold.py Makefile.am
 	$(AM_V_GEN)
-	$(Q) cat $^ > xtmp-$(@F)
+	$(Q) echo "// plic/runtime.hh - Plic C++ Runtime API" 		>  xtmp-$(@F)
+	$(Q) echo "#ifndef __PLIC_RUNTIME_HH__" 			>> xtmp-$(@F)
+	$(Q) echo "#define __PLIC_RUNTIME_HH__" 			>> xtmp-$(@F)
+	$(Q) cat $< 							>> xtmp-$(@F)
+	$(Q) $(srcdir)/xmanifold.py runproto.hh 18 			>> xtmp-$(@F)
+	$(Q) echo "#endif // __PLIC_RUNTIME_HH__" 			>> xtmp-$(@F)
 	$(Q) cp xtmp-$(@F) $@
 	$(Q) rm -f xtmp-$(@F)
-runtime.cc: runtypes.cc loadmap.cc
+runtime.cc: runtypes.cc loadmap.cc Makefile.am
 	$(AM_V_GEN)
-	$(Q) cat $^ > xtmp-$(@F)
+	$(Q) cat $< $(srcdir)/loadmap.cc > xtmp-$(@F)
 	$(Q) cp xtmp-$(@F) $@
 	$(Q) rm -f xtmp-$(@F)
-EXTRA_DIST += runtypes.hh runtypes.cc loadmap.cc
+EXTRA_DIST += runtypes.hh runproto.hh runtypes.cc loadmap.cc
 CLEANFILES += runtime.hh runtime.cc
 
 # == Plic Builtins ==
