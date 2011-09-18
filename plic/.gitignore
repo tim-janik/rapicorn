@@ -1,6 +1,7 @@
-.deps
-plic-[0-9][0-9][0-9][0-9]
-plic-intern
-builtins.cc
-Parser.py
-*.pyc
+/plic-[0-9][0-9][0-9][0-9]
+/plic-intern
+/Parser.py
+/builtins.cc
+/runtime.cc
+/runtime.hh
+/*.pyc
