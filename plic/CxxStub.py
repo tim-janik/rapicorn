@@ -63,6 +63,8 @@ Plic::uint64_t       connection_handle2id  (const Plic::SmartHandle &h) { return
 static inline void   connection_context4id (Plic::uint64_t ipcid, Plic::NonCopyable *ctx) {}
 template<class C> C* connection_id2context (Plic::uint64_t oid) { return (C*) NULL; }
 #endif // !PLIC_CONNECTION
+
+#include <plic/cxxstubaux.hh>
 """
 
 identifiers = {
@@ -496,7 +498,7 @@ class Generator:
     s += '  %s (Plic::uint64_t ipcid) :\n' % classC             # ctor
     s += '    handle$ (ipcid)'
     for sg in class_info.signals:
-      s += ',\n    %s (handle$)' % sg.name
+      s += ',\n    %s (handle$, %s)' % (sg.name, self.method_digest (sg))
     s += ',\n    m_cached_types (NULL)\n  {}\n'
     s += '  Plic::TypeHashList *m_cached_types;\n'
     s += '  const Plic::TypeHashList& list_types ();\n'
@@ -526,84 +528,13 @@ class Generator:
     s += '  }\n'
     s += '  return *m_cached_types;\n'
     s += '}\n'
-    for sg in class_info.signals:
-      s += self.generate_client_class_context_event_handler_methods (class_info, class_info, sg)
     return s
   def generate_client_class_context_event_handler_def (self, derived_info, class_info, sg):
     s, classH, signame = '', self.H (class_info.name), self.generate_signal_typename (sg, class_info)
-    sigE = self.generate_event_handler_typename (sg, class_info)
-    # s += '  %s %s;\n' % (signame, sg.name)                                  # signal member
-    s += '  struct %s : Plic::ClientConnection::EventHandler {\n' % sigE            # signal EventHandler
-    relay = 'Rapicorn::Signals::SignalConnectionRelay<%s> ' % sigE
-    s += '    ' + self.generate_signal_proxy_typedef (sg, class_info, 'Proxy')
-    s += '    ' + self.generate_signal_typedef (sg, class_info, 'Relay', relay) # signal typedefs
-    s += '    Plic::uint64_t m_handler_id, m_connection_id;\n'
-    s += '    Relay%s rsignal;\n' % signame     # relay signal
-    s += '    Proxy%s psignal;\n' % signame     # proxy signal
-    s += '    %s (%s &handle) :\n' % (sigE, classH)
-    s += '      m_handler_id (0), m_connection_id (0), rsignal (handle), psignal (rsignal)\n'
-    s += '    { rsignal.listener (*this, &%s::connections_changed); }\n' % sigE
-    s += '    ~%s ()\n' % sigE
-    s += '    { if (m_handler_id) PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0; }\n'
-    s += '    void                       connections_changed (bool hasconnections);\n'
-    s += '    virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);\n'
-    s += '  } %s;\n' % sg.name
+    sh, signature = 'SignalHandler__%s' % sg.name, self.generate_signal_signature (sg, class_info)
+    s += '  typedef Plic::CxxStub::SignalHandler<%s, %s> %s;\n' % (classH, signature, sh)
+    s += '  %s %s;\n' % (sh, sg.name)
     return s
-  def generate_client_class_context_event_handler_methods (self, derived_info, class_info, sg):
-    s, classC, signame = '', derived_info.name + '_Context$', self.generate_signal_typename (sg, class_info)
-    sigE = self.generate_event_handler_typename (sg, class_info)
-    s += 'void\n'
-    s += '%s::%s::connections_changed (bool hasconnections)\n' % (classC, sigE)
-    s += '{\n'
-    s += '  Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);\n' # msgid self ConId ClosureId
-    s += '  fb.add_msgid (%s);\n' % self.method_digest (sg)
-    s += self.generate_proto_add_args ('fb', class_info, '', [('*rsignal.emitter()', class_info)], '')
-    s += '  if (hasconnections) {\n'
-    s += '    if (!m_handler_id)              // signal connected\n'
-    s += '      m_handler_id = PLIC_CONNECTION().register_event_handler (this);\n' # FIXME: badly broken, memory alloc!
-    s += '    fb << m_handler_id;    // handler connection request\n'
-    s += '    fb << 0;               // no disconnection\n'
-    s += '  } else {                          // signal disconnected\n'
-    s += '    if (m_handler_id)\n'
-    s += '      ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;\n'
-    s += '    fb << 0;               // no handler connection\n'
-    s += '    fb << m_connection_id; // disconnection request\n'
-    s += '    m_connection_id = 0;\n'
-    s += '  }\n'
-    s += '  Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb\n'
-    s += '  if (fr) { // FIXME: assert that fr is a non-NULL FieldBuffer with result message\n'
-    s += '    Plic::FieldReader frr (*fr);\n'
-    s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
-    s += '    if (frr.remaining() && m_handler_id)\n'
-    s += '      frr >> m_connection_id;\n'
-    s += '    delete fr;\n'
-    s += '  }\n'
-    s += '}\n'
-    s += 'Plic::FieldBuffer*\n'
-    s += '%s::%s::handle_event (Plic::FieldBuffer &fb)\n' % (classC, sigE)
-    s += '{\n'
-    s += '  Plic::FieldReader fbr (fb);\n'
-    s += '  fbr.skip_msgid(); // FIXME: check msgid\n'
-    s += '  fbr.skip();       // skip m_handler_id\n'
-    s += '  if (fbr.remaining() != %u) return plic$_error ("invalid number of arguments");\n' % len (sg.args)
-    for a in sg.args:                                 # fetch args
-      s += '  ' + self.V ('arg_' + a[0], a[1]) + ';\n'
-      s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(a[0], a[1])])
-    s += '  '                                         # return var
-    hasret = sg.rtype.storage != Decls.VOID
-    if hasret:
-      s += self.V ('', sg.rtype) + 'rval = '
-    s += 'rsignal.emit ('                             # call out
-    s += ', '.join (self.U ('arg_' + a[0], a[1]) for a in sg.args)
-    s += ');\n'
-    if hasret:                                        # store return value
-      s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
-      s += self.generate_proto_add_args ('rb', class_info, '', [('rval', sg.rtype)], '')
-      s += '  return &rb;\n'
-    else:
-      s += '  return NULL;\n'
-    s += '}\n'
-    return s;
   def generate_client_class_methods (self, class_info):
     s, classH, classC = '', self.H (class_info.name), class_info.name + '_Context$' # class names
     classH2 = (classH, classH)
@@ -872,8 +803,14 @@ class Generator:
     return 'Signal_%s' % functype.name # 'Proxy_%s'
   def generate_signal_typename (self, functype, ctype):
     return 'Signal_%s' % functype.name
-  def generate_event_handler_typename (self, functype, ctype):
-    return '__EventHandler__%s' % functype.name
+  def generate_signal_signature (self, functype, ctype):
+    s = '%s (' % self.R (functype.rtype)
+    l = []
+    for a in functype.args:
+      l += [ self.A (a[0], a[1]) ]
+    s += ', '.join (l)
+    s += ')'
+    return s
   def generate_signal_proxy_typedef (self, functype, ctype, prefix = ''):
     assert self.gen_mode == G4CLIENT
     proxyname = self.generate_signal_proxy_typename (functype, ctype)

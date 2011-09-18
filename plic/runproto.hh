@@ -1,10 +1,14 @@
 // CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
 namespace Plic {
 
-template<class A1, class A2>
-struct FieldTools<void (A1, A2)> {
-  template<class Signal> static inline void
-  emit (Plic::FieldBuffer &fb, Signal &sig)
+template<class R, class A1, class A2>
+class FieldTools<R (A1, A2)> {
+  template<class Y> struct Type           { typedef Y T; };
+  template<class Y> struct Type<Y&>       { typedef Y T; };
+  template<class Y> struct Type<const Y&> { typedef Y T; };
+public:
+  template<class Signal> static inline R
+  emit (Plic::FieldBuffer &fb, Signal &sig) /// Unpack FieldBuffer as signal arguments and issue emit().
   {
     const size_t NARGS = 2;
     Plic::FieldReader fbr (fb);
@@ -12,15 +16,9 @@ struct FieldTools<void (A1, A2)> {
     fbr.skip();       // skip m_handler_id
     if (PLIC_UNLIKELY (fbr.remaining() != NARGS))
       Plic::error_printf ("invalid number of signal arguments");
-    A1 a1; A2 a2;
+    typename Type<A1>::T a1; typename Type<A2>::T a2;
     fbr >> a1; fbr >> a2;
-    sig.emit (a1, a2);
-  }
-  A1 m_a1; A2 m_a2;
-  FieldTools (A1 a1, A2 a2)
-    : m_a1 (a1), m_a2 (a2)
-  {
-    FieldTools (m_a1, m_a2);
+    return sig.emit (a1, a2);
   }
 };
 

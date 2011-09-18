@@ -466,7 +466,9 @@ FieldBuffer::reset()
 /// @{
 namespace Plic {
 
+/// Tools to pack/unpack and use FieldBuffer contents.
 template<class Signature> struct FieldTools;
 
 } // Plic
 /// @}
+
