@@ -33,7 +33,7 @@ Plic::FieldBuffer* plic$_error (const char *format, ...)
 
 
 #ifndef PLIC_CONNECTION
-#define PLIC_CONNECTION()       (*(Plic::Connection*)NULL)
+#define PLIC_CONNECTION()       (*(Plic::ClientConnection*)NULL)
 Plic::uint64_t       connection_handle2id  (const Plic::SmartHandle &h) { return h._rpc_id(); }
 static inline void   connection_context4id (Plic::uint64_t ipcid, Plic::NonCopyable *ctx) {}
 template<class C> C* connection_id2context (Plic::uint64_t oid) { return (C*) NULL; }
@@ -1243,7 +1243,7 @@ struct UIWidgetArea_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public UIWidgetArea_SmartHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  struct __EventHandler__void_signal : Plic::Connection::EventHandler {
+  struct __EventHandler__void_signal : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<UIWidgetArea_SmartHandle, void ()> ProxySignal_void_signal;
     typedef Rapicorn::Signals::Signal<UIWidgetArea_SmartHandle, void (), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__void_signal> > RelaySignal_void_signal;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -1257,7 +1257,7 @@ struct UIWidgetArea_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } void_signal;
-  struct __EventHandler__sample_signal : Plic::Connection::EventHandler {
+  struct __EventHandler__sample_signal : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<UIWidgetArea_SmartHandle, double (UIWidgetArea_SmartHandle &ba1, int someint)> ProxySignal_sample_signal;
     typedef Rapicorn::Signals::Signal<UIWidgetArea_SmartHandle, double (UIWidgetArea_SmartHandle &ba1, int someint), Rapicorn::Signals::CollectorDefault<double>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__sample_signal> > RelaySignal_sample_signal;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2344,7 +2344,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public SignalTestInterface_SmartHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  struct __EventHandler__void_result : Plic::Connection::EventHandler {
+  struct __EventHandler__void_result : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void ()> ProxySignal_void_result;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__void_result> > RelaySignal_void_result;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2358,7 +2358,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } void_result;
-  struct __EventHandler__bool_result : Plic::Connection::EventHandler {
+  struct __EventHandler__bool_result : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, bool ()> ProxySignal_bool_result;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, bool (), Rapicorn::Signals::CollectorDefault<bool>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__bool_result> > RelaySignal_bool_result;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2372,7 +2372,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } bool_result;
-  struct __EventHandler__int_result : Plic::Connection::EventHandler {
+  struct __EventHandler__int_result : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, int ()> ProxySignal_int_result;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, int (), Rapicorn::Signals::CollectorDefault<int>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__int_result> > RelaySignal_int_result;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2386,7 +2386,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } int_result;
-  struct __EventHandler__float_result : Plic::Connection::EventHandler {
+  struct __EventHandler__float_result : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, double ()> ProxySignal_float_result;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, double (), Rapicorn::Signals::CollectorDefault<double>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__float_result> > RelaySignal_float_result;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2400,7 +2400,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } float_result;
-  struct __EventHandler__string_result : Plic::Connection::EventHandler {
+  struct __EventHandler__string_result : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, std::string ()> ProxySignal_string_result;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, std::string (), Rapicorn::Signals::CollectorDefault<std::string>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__string_result> > RelaySignal_string_result;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2414,7 +2414,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } string_result;
-  struct __EventHandler__enum_result : Plic::Connection::EventHandler {
+  struct __EventHandler__enum_result : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, QuickEnum ()> ProxySignal_enum_result;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickEnum (), Rapicorn::Signals::CollectorDefault<QuickEnum>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__enum_result> > RelaySignal_enum_result;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2428,7 +2428,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } enum_result;
-  struct __EventHandler__record_result : Plic::Connection::EventHandler {
+  struct __EventHandler__record_result : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, QuickRecord_Handle ()> ProxySignal_record_result;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickRecord_Handle (), Rapicorn::Signals::CollectorDefault<QuickRecord_Handle>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__record_result> > RelaySignal_record_result;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2442,7 +2442,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } record_result;
-  struct __EventHandler__sequence_result : Plic::Connection::EventHandler {
+  struct __EventHandler__sequence_result : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, QuickSequence_Handle ()> ProxySignal_sequence_result;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, QuickSequence_Handle (), Rapicorn::Signals::CollectorDefault<QuickSequence_Handle>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__sequence_result> > RelaySignal_sequence_result;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2456,7 +2456,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } sequence_result;
-  struct __EventHandler__interface_result : Plic::Connection::EventHandler {
+  struct __EventHandler__interface_result : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, GrandChild_SmartHandle ()> ProxySignal_interface_result;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, GrandChild_SmartHandle (), Rapicorn::Signals::CollectorDefault<GrandChild_SmartHandle>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__interface_result> > RelaySignal_interface_result;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2470,7 +2470,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } interface_result;
-  struct __EventHandler__any_result : Plic::Connection::EventHandler {
+  struct __EventHandler__any_result : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, Plic::Any ()> ProxySignal_any_result;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, Plic::Any (), Rapicorn::Signals::CollectorDefault<Plic::Any>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__any_result> > RelaySignal_any_result;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2484,7 +2484,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } any_result;
-  struct __EventHandler__self_result : Plic::Connection::EventHandler {
+  struct __EventHandler__self_result : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, SignalTestInterface_SmartHandle ()> ProxySignal_self_result;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, SignalTestInterface_SmartHandle (), Rapicorn::Signals::CollectorDefault<SignalTestInterface_SmartHandle>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__self_result> > RelaySignal_self_result;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2498,7 +2498,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } self_result;
-  struct __EventHandler__void_arg : Plic::Connection::EventHandler {
+  struct __EventHandler__void_arg : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void ()> ProxySignal_void_arg;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__void_arg> > RelaySignal_void_arg;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2512,7 +2512,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } void_arg;
-  struct __EventHandler__bool_arg : Plic::Connection::EventHandler {
+  struct __EventHandler__bool_arg : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (bool b)> ProxySignal_bool_arg;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (bool b), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__bool_arg> > RelaySignal_bool_arg;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2526,7 +2526,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } bool_arg;
-  struct __EventHandler__int_arg : Plic::Connection::EventHandler {
+  struct __EventHandler__int_arg : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (int i)> ProxySignal_int_arg;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (int i), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__int_arg> > RelaySignal_int_arg;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2540,7 +2540,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } int_arg;
-  struct __EventHandler__float_arg : Plic::Connection::EventHandler {
+  struct __EventHandler__float_arg : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (double f)> ProxySignal_float_arg;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (double f), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__float_arg> > RelaySignal_float_arg;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2554,7 +2554,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } float_arg;
-  struct __EventHandler__string_arg : Plic::Connection::EventHandler {
+  struct __EventHandler__string_arg : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (const std::string &s)> ProxySignal_string_arg;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const std::string &s), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__string_arg> > RelaySignal_string_arg;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2568,7 +2568,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } string_arg;
-  struct __EventHandler__enum_arg : Plic::Connection::EventHandler {
+  struct __EventHandler__enum_arg : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (QuickEnum e)> ProxySignal_enum_arg;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (QuickEnum e), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__enum_arg> > RelaySignal_enum_arg;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2582,7 +2582,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } enum_arg;
-  struct __EventHandler__record_arg : Plic::Connection::EventHandler {
+  struct __EventHandler__record_arg : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (const QuickRecord_Handle &r)> ProxySignal_record_arg;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const QuickRecord_Handle &r), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__record_arg> > RelaySignal_record_arg;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2596,7 +2596,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } record_arg;
-  struct __EventHandler__sequence_arg : Plic::Connection::EventHandler {
+  struct __EventHandler__sequence_arg : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (const QuickSequence_Handle &s)> ProxySignal_sequence_arg;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const QuickSequence_Handle &s), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__sequence_arg> > RelaySignal_sequence_arg;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2610,7 +2610,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } sequence_arg;
-  struct __EventHandler__interface_arg : Plic::Connection::EventHandler {
+  struct __EventHandler__interface_arg : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (GrandChild_SmartHandle &i)> ProxySignal_interface_arg;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (GrandChild_SmartHandle &i), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__interface_arg> > RelaySignal_interface_arg;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2624,7 +2624,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } interface_arg;
-  struct __EventHandler__any_arg : Plic::Connection::EventHandler {
+  struct __EventHandler__any_arg : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (const Plic::Any &a)> ProxySignal_any_arg;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (const Plic::Any &a), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__any_arg> > RelaySignal_any_arg;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -2638,7 +2638,7 @@ struct SignalTestInterface_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } any_arg;
-  struct __EventHandler__self_args : Plic::Connection::EventHandler {
+  struct __EventHandler__self_args : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void (SignalTestInterface_SmartHandle &self_)> ProxySignal_self_args;
     typedef Rapicorn::Signals::Signal<SignalTestInterface_SmartHandle, void (SignalTestInterface_SmartHandle &self_), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__self_args> > RelaySignal_self_args;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -3717,7 +3717,7 @@ struct ChildInheritingSignals_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public ChildInheritingSignals_SmartHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  struct __EventHandler__child_signal : Plic::Connection::EventHandler {
+  struct __EventHandler__child_signal : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<ChildInheritingSignals_SmartHandle, void (ChildInheritingSignals_SmartHandle &c, SignalTestInterface_SmartHandle &p, const Plic::Any &a, int i, const QuickRecord_Handle &r, const QuickSequence_Handle &s)> ProxySignal_child_signal;
     typedef Rapicorn::Signals::Signal<ChildInheritingSignals_SmartHandle, void (ChildInheritingSignals_SmartHandle &c, SignalTestInterface_SmartHandle &p, const Plic::Any &a, int i, const QuickRecord_Handle &r, const QuickSequence_Handle &s), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__child_signal> > RelaySignal_child_signal;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -4266,7 +4266,7 @@ struct ButtonArea_Context$ : public Plic::NonCopyable {
   struct SmartHandle$ : public ButtonArea_SmartHandle {
     SmartHandle$ (Plic::uint64_t ipcid) : Plic::SmartHandle (ipcid) {}
   } handle$;
-  struct __EventHandler__check_activate : Plic::Connection::EventHandler {
+  struct __EventHandler__check_activate : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<ButtonArea_SmartHandle, bool ()> ProxySignal_check_activate;
     typedef Rapicorn::Signals::Signal<ButtonArea_SmartHandle, bool (), Rapicorn::Signals::CollectorUntil0<bool>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__check_activate> > RelaySignal_check_activate;
     Plic::uint64_t m_handler_id, m_connection_id;
@@ -4280,7 +4280,7 @@ struct ButtonArea_Context$ : public Plic::NonCopyable {
     void                       connections_changed (bool hasconnections);
     virtual Plic::FieldBuffer* handle_event        (Plic::FieldBuffer &fb);
   } check_activate;
-  struct __EventHandler__activate : Plic::Connection::EventHandler {
+  struct __EventHandler__activate : Plic::ClientConnection::EventHandler {
     typedef Rapicorn::Signals::SignalProxy<ButtonArea_SmartHandle, void ()> ProxySignal_activate;
     typedef Rapicorn::Signals::Signal<ButtonArea_SmartHandle, void (), Rapicorn::Signals::CollectorDefault<void>, Rapicorn::Signals::SignalConnectionRelay<__EventHandler__activate> > RelaySignal_activate;
     Plic::uint64_t m_handler_id, m_connection_id;

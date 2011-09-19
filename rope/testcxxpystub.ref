@@ -132,7 +132,7 @@ plic_PyObject_4uint64 (const char *type_name, uint64_t rpc_id)
 }
 
 #ifndef PLIC_CONNECTION
-#define PLIC_CONNECTION()       (*(Plic::Connection*)NULL)
+#define PLIC_CONNECTION()       (*(Plic::ClientConnection*)NULL)
 #endif
 
 enum Empty {
@@ -1227,7 +1227,7 @@ _plic_rpc_InterfaceTests__UIWidgetArea__on_click2in_void_string (PyObject *pysel
   if (fm) delete fm;
   return NULL;
 }
-class _EventHandler_InterfaceTests__UIWidgetArea__void_signal_void : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__UIWidgetArea__void_signal_void : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__UIWidgetArea__void_signal_void() { Py_DECREF (m_callable); }
@@ -1258,7 +1258,7 @@ _plic_marshal__InterfaceTests__UIWidgetArea__void_signal_void (PyObject *pyself,
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__UIWidgetArea__void_signal_void (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__UIWidgetArea__void_signal_void (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -1277,7 +1277,7 @@ _plic_marshal__InterfaceTests__UIWidgetArea__void_signal_void (PyObject *pyself,
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__UIWidgetArea__sample_signal_float_InterfaceTests__UIWidgetArea_int : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__UIWidgetArea__sample_signal_float_InterfaceTests__UIWidgetArea_int : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__UIWidgetArea__sample_signal_float_InterfaceTests__UIWidgetArea_int() { Py_DECREF (m_callable); }
@@ -1315,7 +1315,7 @@ _plic_marshal__InterfaceTests__UIWidgetArea__sample_signal_float_InterfaceTests_
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__UIWidgetArea__sample_signal_float_InterfaceTests__UIWidgetArea_int (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__UIWidgetArea__sample_signal_float_InterfaceTests__UIWidgetArea_int (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -1660,7 +1660,7 @@ _plic_rpc_InterfaceTests__MethodTestInterface__method_with_quickiface_InterfaceT
   if (fm) delete fm;
   return NULL;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__void_result_void : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__void_result_void : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__void_result_void() { Py_DECREF (m_callable); }
@@ -1691,7 +1691,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__void_result_void (PyObject *
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__void_result_void (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__void_result_void (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -1710,7 +1710,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__void_result_void (PyObject *
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__bool_result_bool : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__bool_result_bool : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__bool_result_bool() { Py_DECREF (m_callable); }
@@ -1741,7 +1741,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__bool_result_bool (PyObject *
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__bool_result_bool (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__bool_result_bool (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -1760,7 +1760,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__bool_result_bool (PyObject *
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__int_result_int : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__int_result_int : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__int_result_int() { Py_DECREF (m_callable); }
@@ -1791,7 +1791,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__int_result_int (PyObject *py
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__int_result_int (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__int_result_int (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -1810,7 +1810,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__int_result_int (PyObject *py
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__float_result_float : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__float_result_float : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__float_result_float() { Py_DECREF (m_callable); }
@@ -1841,7 +1841,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__float_result_float (PyObject
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__float_result_float (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__float_result_float (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -1860,7 +1860,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__float_result_float (PyObject
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__string_result_string : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__string_result_string : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__string_result_string() { Py_DECREF (m_callable); }
@@ -1891,7 +1891,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__string_result_string (PyObje
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__string_result_string (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__string_result_string (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -1910,7 +1910,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__string_result_string (PyObje
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__QuickEnum : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__QuickEnum : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__QuickEnum() { Py_DECREF (m_callable); }
@@ -1941,7 +1941,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__QuickEnum (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__QuickEnum (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -1960,7 +1960,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__enum_result_InterfaceTests__
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__record_result_InterfaceTests__QuickRecord : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__record_result_InterfaceTests__QuickRecord : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__record_result_InterfaceTests__QuickRecord() { Py_DECREF (m_callable); }
@@ -1991,7 +1991,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__record_result_InterfaceTests
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__record_result_InterfaceTests__QuickRecord (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__record_result_InterfaceTests__QuickRecord (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2010,7 +2010,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__record_result_InterfaceTests
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__sequence_result_InterfaceTests__QuickSequence : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__sequence_result_InterfaceTests__QuickSequence : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__sequence_result_InterfaceTests__QuickSequence() { Py_DECREF (m_callable); }
@@ -2041,7 +2041,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__sequence_result_InterfaceTes
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__sequence_result_InterfaceTests__QuickSequence (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__sequence_result_InterfaceTests__QuickSequence (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2060,7 +2060,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__sequence_result_InterfaceTes
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild() { Py_DECREF (m_callable); }
@@ -2091,7 +2091,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__interface_result_InterfaceTe
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__interface_result_InterfaceTests__GrandChild (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2110,7 +2110,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__interface_result_InterfaceTe
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__any_result_any : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__any_result_any : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__any_result_any() { Py_DECREF (m_callable); }
@@ -2141,7 +2141,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__any_result_any (PyObject *py
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__any_result_any (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__any_result_any (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2160,7 +2160,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__any_result_any (PyObject *py
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__self_result_InterfaceTests__SignalTestInterface : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__self_result_InterfaceTests__SignalTestInterface : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__self_result_InterfaceTests__SignalTestInterface() { Py_DECREF (m_callable); }
@@ -2191,7 +2191,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__self_result_InterfaceTests__
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__self_result_InterfaceTests__SignalTestInterface (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__self_result_InterfaceTests__SignalTestInterface (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2210,7 +2210,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__self_result_InterfaceTests__
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__void_arg_void : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__void_arg_void : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__void_arg_void() { Py_DECREF (m_callable); }
@@ -2241,7 +2241,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__void_arg_void (PyObject *pys
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__void_arg_void (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__void_arg_void (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2260,7 +2260,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__void_arg_void (PyObject *pys
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__bool_arg_void_bool : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__bool_arg_void_bool : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__bool_arg_void_bool() { Py_DECREF (m_callable); }
@@ -2296,7 +2296,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__bool_arg_void_bool (PyObject
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__bool_arg_void_bool (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__bool_arg_void_bool (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2315,7 +2315,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__bool_arg_void_bool (PyObject
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__int_arg_void_int : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__int_arg_void_int : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__int_arg_void_int() { Py_DECREF (m_callable); }
@@ -2351,7 +2351,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__int_arg_void_int (PyObject *
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__int_arg_void_int (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__int_arg_void_int (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2370,7 +2370,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__int_arg_void_int (PyObject *
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__float_arg_void_float : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__float_arg_void_float : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__float_arg_void_float() { Py_DECREF (m_callable); }
@@ -2406,7 +2406,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__float_arg_void_float (PyObje
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__float_arg_void_float (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__float_arg_void_float (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2425,7 +2425,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__float_arg_void_float (PyObje
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__string_arg_void_string : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__string_arg_void_string : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__string_arg_void_string() { Py_DECREF (m_callable); }
@@ -2461,7 +2461,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__string_arg_void_string (PyOb
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__string_arg_void_string (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__string_arg_void_string (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2480,7 +2480,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__string_arg_void_string (PyOb
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests__QuickEnum : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests__QuickEnum : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests__QuickEnum() { Py_DECREF (m_callable); }
@@ -2516,7 +2516,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests__QuickEnum (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests__QuickEnum (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2535,7 +2535,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__enum_arg_void_InterfaceTests
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTests__QuickRecord : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTests__QuickRecord : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTests__QuickRecord() { Py_DECREF (m_callable); }
@@ -2571,7 +2571,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTes
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTests__QuickRecord (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTests__QuickRecord (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2590,7 +2590,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__record_arg_void_InterfaceTes
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceTests__QuickSequence : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceTests__QuickSequence : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceTests__QuickSequence() { Py_DECREF (m_callable); }
@@ -2626,7 +2626,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceT
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceTests__QuickSequence (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceTests__QuickSequence (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2645,7 +2645,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__sequence_arg_void_InterfaceT
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild() { Py_DECREF (m_callable); }
@@ -2681,7 +2681,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__interface_arg_void_Interface
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__interface_arg_void_InterfaceTests__GrandChild (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2700,7 +2700,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__interface_arg_void_Interface
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__any_arg_void_any : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__any_arg_void_any : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__any_arg_void_any() { Py_DECREF (m_callable); }
@@ -2736,7 +2736,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__any_arg_void_any (PyObject *
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__any_arg_void_any (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__any_arg_void_any (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2755,7 +2755,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__any_arg_void_any (PyObject *
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface() { Py_DECREF (m_callable); }
@@ -2791,7 +2791,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__self_args_void_InterfaceTest
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__SignalTestInterface__self_args_void_InterfaceTests__SignalTestInterface (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2810,7 +2810,7 @@ _plic_marshal__InterfaceTests__SignalTestInterface__self_args_void_InterfaceTest
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence : public Plic::Connection::EventHandler {
+class _EventHandler_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence() { Py_DECREF (m_callable); }
@@ -2856,7 +2856,7 @@ _plic_marshal__InterfaceTests__ChildInheritingSignals__child_signal_void_Interfa
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_InterfaceTests__ChildInheritingSignals__child_signal_void_InterfaceTests__ChildInheritingSignals_InterfaceTests__SignalTestInterface_any_int_InterfaceTests__QuickRecord_InterfaceTests__QuickSequence (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2875,7 +2875,7 @@ _plic_marshal__InterfaceTests__ChildInheritingSignals__child_signal_void_Interfa
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_RapicornPlicTest__ButtonArea__check_activate_bool : public Plic::Connection::EventHandler {
+class _EventHandler_RapicornPlicTest__ButtonArea__check_activate_bool : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_RapicornPlicTest__ButtonArea__check_activate_bool() { Py_DECREF (m_callable); }
@@ -2906,7 +2906,7 @@ _plic_marshal__RapicornPlicTest__ButtonArea__check_activate_bool (PyObject *pyse
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_RapicornPlicTest__ButtonArea__check_activate_bool (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_RapicornPlicTest__ButtonArea__check_activate_bool (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect
@@ -2925,7 +2925,7 @@ _plic_marshal__RapicornPlicTest__ButtonArea__check_activate_bool (PyObject *pyse
   if (fr) delete fr;
   return pyfoR;
 }
-class _EventHandler_RapicornPlicTest__ButtonArea__activate_void : public Plic::Connection::EventHandler {
+class _EventHandler_RapicornPlicTest__ButtonArea__activate_void : public Plic::ClientConnection::EventHandler {
   PyObject *m_callable;
 public:
   ~_EventHandler_RapicornPlicTest__ButtonArea__activate_void() { Py_DECREF (m_callable); }
@@ -2956,7 +2956,7 @@ _plic_marshal__RapicornPlicTest__ButtonArea__activate_void (PyObject *pyself, Py
   if (item == Py_None) fb.add_int64 (0);
   else {
     if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");
-    Plic::Connection::EventHandler *evh = new _EventHandler_RapicornPlicTest__ButtonArea__activate_void (item);
+    Plic::ClientConnection::EventHandler *evh = new _EventHandler_RapicornPlicTest__ButtonArea__activate_void (item);
     uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);
     fb.add_int64 (handler_id); }
   item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect

@@ -1,12 +1,12 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "clientapi.hh"
+#include "internal.hh"
 #include <stdlib.h>
 
 namespace Rapicorn {
 
-uint64          uithread_bootup         (int *argcp, char **argv, const StringVector &args);
-void            uithread_shutdown       (void); // FIXME: also in uithread.hh
-static void     clientglue_setup        (Plic::Connection *connection);
+uint64            uithread_bootup       (int *argcp, char **argv, const StringVector &args);
+static void       clientglue_setup      (Plic::ClientConnection connection);
 
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x120caca0) { v += 0x300000; } } __staticctortest;
 static Application_SmartHandle app_cached;
@@ -71,7 +71,7 @@ exit (int status)
 }
 
 class AppSource : public EventLoop::Source {
-  Plic::Connection &m_connection;
+  Plic::ClientConnection m_connection;
   PollFD            m_pfd;
   bool              last_seen_primary, need_check_primary;
   void
@@ -83,10 +83,10 @@ class AppSource : public EventLoop::Source {
       main_loop()->quit();
   }
 public:
-  AppSource (Plic::Connection &connection) :
+  AppSource (Plic::ClientConnection connection) :
     m_connection (connection), last_seen_primary (false), need_check_primary (false)
   {
-    m_pfd.fd = connection.event_inputfd();
+    m_pfd.fd = m_connection.notify_fd();
     m_pfd.events = PollFD::IN;
     m_pfd.revents = 0;
     add_poll (&m_pfd);
@@ -97,7 +97,7 @@ public:
   prepare (const EventLoop::State &state,
            int64                  *timeout_usecs_p)
   {
-    return need_check_primary || m_connection.has_event();
+    return need_check_primary || m_connection.pending();
   }
   virtual bool
   check (const EventLoop::State &state)
@@ -105,14 +105,12 @@ public:
     if (UNLIKELY (last_seen_primary && !state.seen_primary && !need_check_primary))
       need_check_primary = true;
     last_seen_primary = state.seen_primary;
-    return need_check_primary || m_connection.has_event();
+    return need_check_primary || m_connection.pending();
   }
   virtual bool
   dispatch (const EventLoop::State &state)
   {
-    Plic::FieldBuffer *fb = m_connection.pop_event();
-    if (fb)
-      dispatch_connection (fb);
+    m_connection.dispatch();
     if (need_check_primary)
       {
         need_check_primary = false;
@@ -126,80 +124,15 @@ public:
     if (m_loop)
       m_loop->exec_background (slot (*this, &AppSource::check_primaries));
   }
-private:
-  void
-  dispatch_connection (Plic::FieldBuffer *fb)
-  {
-    Plic::FieldReader fbr (*fb);
-    const Plic::MessageId msgid = Plic::MessageId (fbr.pop_int64());
-    fbr.pop_int64(); // msgid low
-    Plic::FieldBuffer *fr = NULL;
-    if (Plic::msgid_is_event (msgid))
-      {
-        const uint64 handler_id = fbr.pop_int64();
-        Plic::Connection::EventHandler *evh = m_connection.find_event_handler (handler_id);
-        if (evh)
-          fr = evh->handle_event (*fb);
-        else
-          fr = Plic::FieldBuffer::new_error (string_printf ("invalid signal handler id in %s: %llu", "event", handler_id), "PLIC");
-      }
-    else if (Plic::msgid_is_discon (msgid))
-      {
-        const uint64 handler_id = fbr.pop_int64();
-        const bool deleted = true; // FIXME: currently broken : connection.delete_event_handler (handler_id);
-        if (!deleted)
-          fr = Plic::FieldBuffer::new_error (string_printf ("invalid signal handler id in %s: %llu", "disconnect", handler_id), "PLIC");
-      }
-    else
-      fr = Plic::FieldBuffer::new_error (string_printf ("unhandled message id: 0x%016zx", size_t (msgid)), "PLIC");
-    delete fb;
-    if (fr)
-      {
-        Plic::FieldReader frr (*fr);
-        const Plic::MessageId retid = Plic::MessageId (frr.pop_int64());
-        frr.skip(); // msgid low
-        if (Plic::msgid_is_error (retid))
-          {
-            String msg = frr.pop_string(), domain = frr.pop_string();
-            if (domain.size())
-              domain += ": ";
-            msg = domain + msg;
-            Plic::error_printf ("%s", msg.c_str());
-          }
-        delete fr;
-      }
-  }
 };
-
-MainLoop*
-Application_SmartHandle::main_loop()
-{
-  return_val_if_fail (the()._is_null() == false, NULL);
-  static MainLoop *app_loop = NULL;
-  static EventLoop *slave = NULL;
-  static AppSource *source = NULL;
-  if (once_enter (&app_loop))
-    {
-      MainLoop *mloop = MainLoop::_new();
-      ref_sink (mloop);
-      slave = mloop->new_slave();
-      ref_sink (slave);
-      source = new AppSource (*uithread_connection());
-      ref_sink (source);
-      slave->add (source);
-      source->queue_check_primaries();
-      once_leave (&app_loop, mloop);
-    }
-  return app_loop;
-}
 
 } // Rapicorn
 
 // === clientapi.cc helpers ===
 namespace { // Anon
-static Plic::Connection *_clientglue_connection = NULL;
-class ClientConnection {
-  // this should one day be linked with the server side connection and implement Plic::Connection itself
+static Plic::ClientConnection _clientglue_connection;
+class ConnectionContext {
+  // this should one day be linked with the server side connection and implement Plic::ClientConnection itself
   typedef std::map <Plic::uint64_t, Plic::NonCopyable*> ContextMap;
   ContextMap context_map;
 public:
@@ -215,21 +148,18 @@ public:
     context_map[ipcid] = ctx;
   }
 };
-static __thread ClientConnection *ccon = NULL;
+static __thread ConnectionContext *ccontext = NULL;
 static inline void
 connection_context4id (Plic::uint64_t ipcid, Plic::NonCopyable *ctx)
 {
-  if (!ccon)
-    {
-      assert (_clientglue_connection != NULL);
-      ccon = new ClientConnection();
-    }
-  ccon->add_context (ipcid, ctx);
+  if (!ccontext)
+    ccontext = new ConnectionContext();
+  ccontext->add_context (ipcid, ctx);
 }
 template<class Context> static inline Context*
 connection_id2context (Plic::uint64_t ipcid)
 {
-  Plic::NonCopyable *ctx = LIKELY (ccon) ? ccon->find_context (ipcid) : NULL;
+  Plic::NonCopyable *ctx = LIKELY (ccontext) ? ccontext->find_context (ipcid) : NULL;
   if (UNLIKELY (!ctx))
     ctx = new Context (ipcid);
   return static_cast<Context*> (ctx);
@@ -240,12 +170,41 @@ connection_handle2id (const Plic::SmartHandle &h)
   return h._rpc_id();
 }
 
-#define PLIC_CONNECTION()       (*_clientglue_connection)
+#define PLIC_CONNECTION()       (_clientglue_connection)
 } // Anon
 #include "clientapi.cc"
 
 #include <rcore/testutils.hh>
 namespace Rapicorn {
+
+ClientConnection
+Application_SmartHandle::ipc_connection()
+{
+  return PLIC_CONNECTION();
+}
+
+MainLoop*
+Application_SmartHandle::main_loop()
+{
+  return_val_if_fail (the()._is_null() == false, NULL);
+  return_val_if_fail (_clientglue_connection.is_null() == false, NULL);
+  static MainLoop *app_loop = NULL;
+  static EventLoop *slave = NULL;
+  static AppSource *source = NULL;
+  if (once_enter (&app_loop))
+    {
+      MainLoop *mloop = MainLoop::_new();
+      ref_sink (mloop);
+      slave = mloop->new_slave();
+      ref_sink (slave);
+      source = new AppSource (_clientglue_connection);
+      ref_sink (source);
+      slave->add (source);
+      source->queue_check_primaries();
+      once_leave (&app_loop, mloop);
+    }
+  return app_loop;
+}
 
 /**
  * Initialize Rapicorn like init_app(), and boots up the test suite framework.
@@ -262,9 +221,9 @@ init_test_app (const String       &app_ident,
 }
 
 static void
-clientglue_setup (Plic::Connection *connection)
+clientglue_setup (Plic::ClientConnection connection)
 {
-  return_if_fail (_clientglue_connection == NULL);
+  return_if_fail (_clientglue_connection.is_null() == true);
   _clientglue_connection = connection;
 }
 

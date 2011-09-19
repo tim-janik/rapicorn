@@ -1,10 +1,12 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 
 #include "uithread.hh"
+#include "internal.hh"
 #include <semaphore.h>
+#include <stdlib.h>
+#include <sys/eventfd.h>
 #include <deque>
 #include <set>
-#include <stdlib.h>
 
 namespace { // Anon
 static void wrap_test_runner  (void);
@@ -98,39 +100,40 @@ public:
   }
 };
 
-struct ConnectionSource : public virtual EventLoop::Source, public virtual Plic::Connection {
-  ConnectionSource (EventLoop &loop) :
-    WHERE ("Rapicorn::UIThread::Connection"),
-    last_seen_primary (false), need_check_primary (false)
+class ServerConnectionSource : public virtual EventLoop::Source {
+  const char            *WHERE;
+  ServerConnection       m_connection;
+  PollFD                 pollfd;
+  bool                   last_seen_primary, need_check_primary;
+public:
+  ServerConnectionSource (EventLoop        &loop,
+                          ServerConnection  scon) :
+    WHERE ("Rapicorn::UIThread::ServerConnection"),
+    m_connection (scon), last_seen_primary (false), need_check_primary (false)
   {
     primary (false);
     loop.add (this, EventLoop::PRIORITY_NORMAL);
-    pollfd.fd = calls.inputfd();
+    pollfd.fd = m_connection.notify_fd();
     pollfd.events = PollFD::IN;
     pollfd.revents = 0;
     add_poll (&pollfd);
-    pthread_spin_init (&ehandler_spin, 0 /* pshared */);
   }
-  void          wakeup   ()               { calls.wakeup(); } // allow external wakeups
+  void
+  wakeup () // allow external wakeups
+  {
+    // evil kludge, we're assuming ServerConnection.notify_fd() is an eventfd
+    eventfd_write (pollfd.fd, 1);
+  }
 private:
-  const char                   *WHERE;
-  PollFD                        pollfd;
-  ChannelE                      events, calls;
-  ChannelS                      results;
-  bool                          last_seen_primary, need_check_primary;
-  std::vector<FieldBuffer*>     queue;
-  std::set<uint64>              ehandler_set;
-  pthread_spinlock_t            ehandler_spin;
-  ~ConnectionSource ()
+  ~ServerConnectionSource ()
   {
     remove_poll (&pollfd);
     loop_remove();
-    pthread_spin_destroy (&ehandler_spin);
   }
   virtual bool
   prepare (const EventLoop::State &state, int64*)
   {
-    return need_check_primary || check_dispatch();
+    return need_check_primary || m_connection.pending();
   }
   virtual bool
   check (const EventLoop::State &state)
@@ -138,12 +141,12 @@ private:
     if (UNLIKELY (last_seen_primary && !state.seen_primary && !need_check_primary))
       need_check_primary = true;
     last_seen_primary = state.seen_primary;
-    return need_check_primary || check_dispatch();
+    return need_check_primary || m_connection.pending();
   }
   virtual bool
   dispatch (const EventLoop::State &state)
   {
-    dispatch1();
+    m_connection.dispatch();
     if (need_check_primary)
       {
         need_check_primary = false;
@@ -158,126 +161,28 @@ private:
     if (uithread_main_loop()->finishable())
       ApplicationImpl::the().lost_primaries();
   }
-  bool
-  check_dispatch()
-  {
-    return calls.has_msg();
-  }
-  void
-  dispatch1()
-  {
-    FieldBuffer *fb = calls.pop_msg_ndelay();
-    if (fb)
-      {
-        FieldBuffer *fr = dispatch_call (fb);
-        delete fb;
-        if (fr)
-          send_result (fr);
-      }
-  }
-  FieldBuffer*
-  dispatch_call (const FieldBuffer *fb)
-  {
-    FieldReader fbr (*fb);
-    const Plic::MessageId msgid = Plic::MessageId (fbr.pop_int64());
-    const uint64 hashlow = fbr.pop_int64();
-    Plic::DispatchFunc method = find_method (msgid, hashlow);
-    if (method)
-      {
-        FieldBuffer *fr = method (fbr);
-        const bool needsresult = Plic::msgid_has_result (msgid);
-        if (!fr && needsresult)
-          fr = FieldBuffer::new_error (string_printf ("missing return from 0x%016lx", msgid), WHERE);
-        const Plic::MessageId retid = Plic::MessageId (fr ? fr->first_id() : 0);
-        if (fr && Plic::msgid_is_error (retid))
-          ; // ok
-        else if (fr && (!needsresult || !Plic::msgid_is_result (retid)))
-          {
-            critical ("%s: bogus result from method (%016lx%016llx): id=%016lx", WHERE, msgid, hashlow, retid);
-            delete fr;
-            fr = NULL;
-          }
-        return fr;
-      }
-    else
-      return FieldBuffer::new_error (string_printf ("unknown method hash: (%016lx%016llx)", msgid, hashlow), WHERE);
-  }
-protected:
-  virtual FieldBuffer*  fetch_event     (int blockpop)    { return events.fetch_msg (blockpop); }
-  virtual int           event_inputfd   ()                { return events.inputfd(); }
-  virtual void          send_event      (FieldBuffer *fb) { return_if_fail (fb != NULL); events.push_msg (fb); }
-  virtual void          send_result     (FieldBuffer *fb) { return_if_fail (fb != NULL); results.push_msg (fb); }
-  virtual FieldBuffer*
-  call_remote (FieldBuffer *fb) ///< Called by clientapi from various threads
-  {
-    return_val_if_fail (fb != NULL, NULL);
-    // enqueue method call message
-    const Plic::MessageId msgid = Plic::MessageId (fb->first_id());
-    calls.push_msg (fb);
-    // wait for result
-    if (Plic::msgid_has_result (msgid))
-      {
-        FieldBuffer *fr = results.pop_msg();
-        Plic::MessageId retid = Plic::MessageId (fr->first_id());
-        if (!Plic::msgid_is_result (retid) &&   // FIXME: check type
-            !Plic::msgid_is_error (retid))
-          {
-            delete fr;
-            fr = Plic::FieldBuffer::new_error (string_printf ("invalid result message id: 0x%160lx", retid), WHERE);
-          }
-        return fr;
-      }
-    return NULL;
-  }
-  virtual uint64
-  register_event_handler (EventHandler *evh)
-  {
-    pthread_spin_lock (&ehandler_spin);
-    const std::pair<std::set<uint64>::iterator,bool> ipair = ehandler_set.insert (ptrdiff_t (evh));
-    pthread_spin_unlock (&ehandler_spin);
-    return ipair.second ? ptrdiff_t (evh) : 0; // unique insertion
-  }
-  virtual EventHandler*
-  find_event_handler (uint64 handler_id)
-  {
-    pthread_spin_lock (&ehandler_spin);
-    std::set<uint64>::iterator iter = ehandler_set.find (handler_id);
-    pthread_spin_unlock (&ehandler_spin);
-    if (iter == ehandler_set.end())
-      return NULL; // unknown handler_id
-    EventHandler *evh = (EventHandler*) ptrdiff_t (handler_id);
-    return evh;
-  }
-  virtual bool
-  delete_event_handler (uint64 handler_id)
-  {
-    pthread_spin_lock (&ehandler_spin);
-    size_t nerased = ehandler_set.erase (handler_id);
-    pthread_spin_unlock (&ehandler_spin);
-    return nerased > 0; // deletion successful?
-  }
 };
 
 struct Initializer {
   int *argcp; char **argv; const StringVector *args;
+  Plic::ServerConnection server_connection;
   Mutex mutex; Cond cond; uint64 app_id;
 };
 
 class UIThread : public Thread {
   static UIThread  *the_uithread;
-  Initializer      *m_init;
-  ConnectionSource *m_connection;
+  Initializer      *m_idata;
+  ServerConnectionSource *m_server_connection;
   MainLoop         &m_main_loop;
   RecMutex          m_lifetime;
 public:
-  UIThread (Initializer *init) :
-    Thread ("Rapicorn::UIThread"), m_init (init), m_connection (NULL),
+  UIThread (Initializer *idata) :
+    Thread ("Rapicorn::UIThread"), m_idata (idata), m_server_connection (NULL),
     m_main_loop (*ref_sink (MainLoop::_new()))
   {
     assert (the_uithread == NULL);
     the_uithread = ref_sink (this); // keep around undestructed as singleton
   }
-  Plic::Connection* connection()  { return m_connection; }
   static UIThread*  uithread()    { return Atomic::ptr_get (&the_uithread); }
   MainLoop*         main_loop()   { return &m_main_loop; }
   void
@@ -311,33 +216,35 @@ private:
   void
   initialize ()
   {
-    return_if_fail (m_init != NULL);
+    return_if_fail (m_idata != NULL);
     // stay inside rapicorn_thread_enter/rapicorn_thread_leave while not polling
     assert (rapicorn_thread_entered() == true);
     MainLoop::LockHooks lock_hooks = { rapicorn_thread_entered, rapicorn_thread_enter, rapicorn_thread_leave };
     m_main_loop.set_lock_hooks (lock_hooks);
-    // init_core() already called
-    affinity (string_to_int (string_vector_find (*m_init->args, "cpu-affinity=", "-1")));
+    // idata_core() already called
+    affinity (string_to_int (string_vector_find (*m_idata->args, "cpu-affinity=", "-1")));
     // initialize ui_thread loop before components
-    m_connection = ref_sink (new ConnectionSource (m_main_loop));
+    m_server_connection = ref_sink (new ServerConnectionSource (m_main_loop, m_idata->server_connection));
     // initialize sub systems
     struct InitHookCaller : public InitHook {
       static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)
       { invoke_hooks (kind, argcp, argv, args); }
     };
     // UI library core parts
-    InitHookCaller::invoke ("ui-core/", m_init->argcp, m_init->argv, *m_init->args);
+    InitHookCaller::invoke ("ui-core/", m_idata->argcp, m_idata->argv, *m_idata->args);
     // Application Singleton
-    InitHookCaller::invoke ("ui-thread/", m_init->argcp, m_init->argv, *m_init->args);
+    InitHookCaller::invoke ("ui-thread/", m_idata->argcp, m_idata->argv, *m_idata->args);
     return_if_fail (NULL != &ApplicationImpl::the());
     // Initializations after Application Singleton
-    InitHookCaller::invoke ("ui-app/", m_init->argcp, m_init->argv, *m_init->args);
+    InitHookCaller::invoke ("ui-app/", m_idata->argcp, m_idata->argv, *m_idata->args);
+    // initialize uithread connection handling
+    uithread_serverglue (m_idata->server_connection);
     // Complete initialization by signalling caller
-    m_init->mutex.lock();
-    m_init->app_id = connection_object2id (ApplicationImpl::the());
-    m_init->cond.signal();
-    m_init->mutex.unlock();
-    m_init = NULL;
+    m_idata->mutex.lock();
+    m_idata->app_id = connection_object2id (ApplicationImpl::the());
+    m_idata->cond.signal();
+    m_idata->mutex.unlock();
+    m_idata = NULL;
   }
   virtual void
   run ()
@@ -346,7 +253,7 @@ private:
     rapicorn_thread_enter();
     Self::set_wakeup (trigger_wakeup, NULL, NULL); // allow external wakeups (unused)
     initialize();
-    return_if_fail (m_init == NULL);
+    return_if_fail (m_idata == NULL);
     m_main_loop.run();
     Self::set_wakeup (NULL, NULL, NULL);        // main loop canot be woken up further
     m_main_loop.kill_loops();
@@ -380,16 +287,29 @@ uithread_uncancelled_atexit()
     }
 }
 
+static ClientConnection client_connection_handle;
+
+ClientConnection
+uithread_connection (void)
+{
+  return UIThread::uithread() && UIThread::uithread()->unstopped() ? client_connection_handle : ClientConnection();
+}
+
 uint64
 uithread_bootup (int *argcp, char **argv, const StringVector &args)
 {
   return_val_if_fail (UIThread::uithread() == NULL, 0);
+  // catch exit() while UIThread is still running
   atexit (uithread_uncancelled_atexit);
-  wrap_test_runner();
+  // setup client/server connection pair
   Initializer idata;
+  idata.server_connection = ServerConnection::create_threaded();
+  client_connection_handle = ClientConnection (idata.server_connection);
+  // initialize and create UIThread
   idata.argcp = argcp; idata.argv = argv; idata.args = &args; idata.app_id = 0;
   UIThread *uithread = new UIThread (&idata);
   assert (uithread == UIThread::uithread());
+  // start and syncronize with thread
   idata.mutex.lock();
   uithread->start();
   while (idata.app_id == 0)
@@ -397,16 +317,9 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args)
   uint64 app_id = idata.app_id;
   idata.mutex.unlock();
   assert (UIThread::uithread() && UIThread::uithread()->unstopped());
-  serverglue_setup (uithread_connection());
+  // install handler for UIThread test cases
+  wrap_test_runner();
   return app_id;
-}
-
-Plic::Connection*
-uithread_connection (void)
-{
-  if (UIThread::uithread() && UIThread::uithread()->unstopped())
-    return UIThread::uithread()->connection();
-  return NULL;
 }
 
 void
@@ -451,10 +364,10 @@ ui_thread_syscall_twoway (Plic::FieldReader &fbr)
   return &rb;
 }
 
-static const Plic::Connection::MethodEntry ui_thread_call_entries[] = {
+static const ServerConnection::MethodEntry ui_thread_call_entries[] = {
   { Plic::MSGID_TWOWAY | 0x0c0ffee01, 0x52617069636f726eULL, ui_thread_syscall_twoway, },
 };
-static Plic::Connection::MethodRegistry ui_thread_call_registry (ui_thread_call_entries);
+static ServerConnection::MethodRegistry ui_thread_call_registry (ui_thread_call_entries);
 
 static int64
 ui_thread_syscall (Callable *callable)
@@ -464,7 +377,7 @@ ui_thread_syscall (Callable *callable)
   syscall_mutex.lock();
   syscall_queue.push_back (callable);
   syscall_mutex.unlock();
-  FieldBuffer *fr = UIThread::uithread()->connection()->call_remote (fb); // deletes fb
+  FieldBuffer *fr = uithread_connection().call_remote (fb); // deletes fb
   Plic::FieldReader frr (*fr);
   const Plic::MessageId msgid = Plic::MessageId (frr.pop_int64());
   frr.skip(); // FIXME: check full msgid

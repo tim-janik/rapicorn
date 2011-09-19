@@ -18,7 +18,7 @@ rapicorn_public_headers = $(strip	\
 	region.hh		scrollitems.hh	sinfex.hh	sizegroup.hh	slider.hh	\
 	table.hh	testitems.hh	text-editor.hh	text-pango.hh	\
 	uithread.hh	utilities.hh	viewp0rt.hh	window.hh	\
-	$(rapicorn_impl_headers)	\
+	$(rapicorn_impl_headers)	internal.hh	\
 )
 rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	adjustment.cc	application.cc	arrangement.cc	\

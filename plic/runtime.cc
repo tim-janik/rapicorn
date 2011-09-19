@@ -13,7 +13,10 @@
 #include <limits.h>
 #include <semaphore.h>
 #include <pthread.h>
+#include <poll.h>
+#include <sys/eventfd.h>        // defines EFD_SEMAPHORE
 #include <stdexcept>
+#include <deque>
 #include <map>
 #include <set>
 
@@ -41,27 +44,32 @@ static std::string string_printf (const char *format, ...) PLIC_PRINTF (1, 2);
 
 // === Utilities ===
 static std::string
+string_vprintf (const char *format, va_list args, bool force_newline = false)
+{
+  char buffer[3 * 1024 + 1];
+  vsnprintf (buffer, sizeof (buffer) - 1, format, args);
+  buffer[sizeof (buffer) - 1] = 0; // force termination
+  std::string s (buffer);
+  if (force_newline && (s.empty() || s[s.size() - 1] != '\n'))
+    s += "\n";
+  return s;
+}
+
+static std::string
 string_printf (const char *format, ...)
 {
-  std::string str;
   va_list args;
   va_start (args, format);
-  char buffer[1024 + 1];
-  vsnprintf (buffer, 512, format, args);
-  buffer[1024] = 0; // force termination
+  std::string s = string_vprintf (format, args);
   va_end (args);
-  return buffer;
+  return s;
 }
 
 void
 error_vprintf (const char *format, va_list args)
 {
-  char buffer[1024 + 1];
-  vsnprintf (buffer, 512, format, args);
-  buffer[1024] = 0; // force termination
-  const int l = strlen (buffer);
-  const bool need_newline = l < 1 || buffer[l - 1] != '\n';
-  fprintf (stderr, "PLIC::Connection: error: %s%s", buffer, need_newline ? "\n" : "");
+  std::string s = string_vprintf (format, args, true);
+  fprintf (stderr, "Plic: error: %s", s.c_str());
   fflush (stderr);
   abort();
 }
@@ -73,6 +81,17 @@ error_printf (const char *format, ...)
   va_start (args, format);
   error_vprintf (format, args);
   va_end (args);
+}
+
+void
+warning_printf (const char *format, ...)
+{
+  va_list args;
+  va_start (args, format);
+  std::string s = string_vprintf (format, args, true);
+  va_end (args);
+  fprintf (stderr, "Plic: warning: %s", s.c_str());
+  fflush (stderr);
 }
 
 // == Any ==
@@ -589,7 +608,7 @@ public:
     const uint32_t _offs = 1 + (_ntypes + 7) / 8;
     size_t bmemlen = sizeof (FieldUnion[_offs + _ntypes]);
     size_t objlen = ALIGN4 (sizeof (OneChunkFieldBuffer), int64_t);
-    uint8_t *omem = new uint8_t[objlen + bmemlen];
+    uint8_t *omem = (uint8_t*) operator new (objlen + bmemlen);
     FieldUnion *bmem = (FieldUnion*) (omem + objlen);
     return new (omem) OneChunkFieldBuffer (_ntypes, bmem, bmemlen);
   }
@@ -601,7 +620,434 @@ FieldBuffer::_new (uint32_t _ntypes)
   return OneChunkFieldBuffer::_new (_ntypes);
 }
 
-// === Connection ===
+// == EventFd ==
+class EventFd {
+  void     operator= (const EventFd&); // no assignments
+  explicit EventFd   (const EventFd&); // no copying
+  int      efd;
+public:
+  int inputfd() const { return efd; }
+  ~EventFd()
+  {
+    close (efd);
+    efd = -1;
+  }
+  EventFd() :
+    efd (-1)
+  {
+    do
+      efd = eventfd (0 /*initval*/, 0 /*flags*/);
+    while (efd < 0 && (errno == EAGAIN || errno == EINTR));
+    if (efd >= 0)
+      {
+        int err;
+        long nflags = fcntl (efd, F_GETFL, 0);
+        nflags |= O_NONBLOCK;
+        do
+          err = fcntl (efd, F_SETFL, nflags);
+        while (err < 0 && (errno == EINTR || errno == EAGAIN));
+      }
+    if (efd < 0)
+      error_printf ("failed to open eventfd: %s", strerror (errno));
+  }
+  void
+  wakeup()
+  {
+    int err;
+    do
+      err = eventfd_write (efd, 1);
+    while (err < 0 && errno == EINTR);
+    // EAGAIN occours if too many wakeups are pending
+  }
+  bool
+  pollin ()
+  {
+    struct pollfd pfd = { efd, POLLIN, 0 };
+    int presult;
+    do
+      presult = poll (&pfd, 1, -1);
+    while (presult < 0 && (errno == EAGAIN || errno == EINTR));
+    return pfd.revents != 0;
+  }
+  void
+  flush () // clear pending wakeups
+  {
+    eventfd_t bytes8;
+    int err;
+    do
+      err = eventfd_read (efd, &bytes8);
+    while (err < 0 && errno == EINTR);
+    // EAGAIN occours if no wakeups are pending
+  }
+};
+
+// == TransportChannel ==
+class TransportChannel : public EventFd { // Channel for cross-thread FieldBuffer IO
+  std::vector<FieldBuffer*> msg_queue;
+  size_t                    msg_index, msg_last_size;
+  pthread_spinlock_t        msg_spinlock;
+  std::vector<FieldBuffer*> msg_vector;
+  enum Op { PEEK, POP, POP_BLOCKED };
+  FieldBuffer*
+  get_msg (const Op op)
+  {
+    do
+      {
+        // fetch new messages
+        if (msg_index >= msg_queue.size())      // no buffered messages left
+          {
+            if (msg_index)
+              msg_queue.resize (0);             // get rid of stale pointers
+            msg_index = 0;
+            flush();
+            pthread_spin_lock (&msg_spinlock);
+            msg_vector.swap (msg_queue);        // actual cross-thread fetching
+            pthread_spin_unlock (&msg_spinlock);
+          }
+        // hand out message
+        if (msg_index < msg_queue.size())       // have buffered messages
+          {
+            const size_t index = msg_index;
+            if (op != PEEK) // advance
+              msg_index++;
+            return msg_queue[index];
+          }
+        // no messages available
+        if (op == POP_BLOCKED)
+          pollin();
+      }
+    while (op == POP_BLOCKED);
+    return NULL;
+  }
+public:
+  void
+  send_msg (FieldBuffer *fb, // takes fb ownership
+            bool         _wakeup)
+  {
+    pthread_spin_lock (&msg_spinlock);
+    msg_vector.push_back (fb);
+    msg_last_size = msg_vector.size();
+    pthread_spin_unlock (&msg_spinlock);
+    if (_wakeup)
+      wakeup();
+  }
+  FieldBuffer*  fetch_msg()     { return get_msg (POP); }
+  bool          has_msg()       { return get_msg (PEEK); }
+  FieldBuffer*  pop_msg()       { return get_msg (POP_BLOCKED); }
+  ~TransportChannel ()
+  {
+    pthread_spin_destroy (&msg_spinlock);
+  }
+  TransportChannel () :
+    msg_index (0), msg_last_size (0)
+  {
+    pthread_spin_init (&msg_spinlock, 0 /* pshared */);
+  }
+};
+
+// == ConnectionTransport ==
+class ConnectionTransport /// Transport layer for messages sent between ClientConnection and ServerConnection.
+{
+  TransportChannel         server_queue; // messages sent to server
+  TransportChannel         client_queue; // messages sent to client
+  std::deque<FieldBuffer*> client_events; // messages pending for client
+  sem_t                    result_sem;
+  int                      ref_count;
+  void     operator=               (const ConnectionTransport&); // no assignments
+  explicit ConnectionTransport     (const ConnectionTransport&); // no copying
+public:
+  ConnectionTransport () :
+    ref_count (1)
+  {
+    pthread_spin_init (&ehandler_spin, 0 /* pshared */);
+    sem_init (&result_sem, 0 /* unshared */, 0 /* init */);
+  }
+  ConnectionTransport*
+  ref()
+  {
+    int last_ref = __sync_fetch_and_add (&ref_count, 1);
+    assert (last_ref > 0);
+    return this;
+  }
+  void
+  unref()
+  {
+    int last_ref = __sync_fetch_and_add (&ref_count, -1);
+    assert (last_ref > 0);
+    if (last_ref == 1)
+      delete this;
+  }
+  virtual
+  ~ConnectionTransport ()
+  {
+    assert (ref_count == 0);
+    sem_destroy (&result_sem);
+    pthread_spin_destroy (&ehandler_spin);
+  }
+  void  block_for_result        () { sem_wait (&result_sem); }
+  void  notify_for_result       () { sem_post (&result_sem); }
+public: // server
+  void          server_send_event (FieldBuffer *fb) { return client_queue.send_msg (fb, true); } // FIXME: check type
+  int           server_notify_fd  ()    { return server_queue.inputfd(); }
+  bool          server_pending    ()    { return server_queue.has_msg(); }
+  void          server_dispatch   ();
+public: // client
+  int          client_notify_fd   ()    { return client_queue.inputfd(); }
+  bool         client_pending     ()    { return !client_events.empty() || client_queue.has_msg(); }
+  void         client_dispatch    ();
+  FieldBuffer* client_call_remote (FieldBuffer *fb);
+  // client event handler
+  typedef std::set<uint64_t> UIntSet;
+  pthread_spinlock_t        ehandler_spin;
+  UIntSet                   ehandler_set;
+  uint64_t
+  client_register_event_handler (ClientConnection::EventHandler *evh)
+  {
+    pthread_spin_lock (&ehandler_spin);
+    const std::pair<UIntSet::iterator,bool> ipair = ehandler_set.insert (ptrdiff_t (evh));
+    pthread_spin_unlock (&ehandler_spin);
+    return ipair.second ? ptrdiff_t (evh) : 0; // unique insertion
+  }
+  ClientConnection::EventHandler*
+  client_find_event_handler (uint64_t handler_id)
+  {
+    pthread_spin_lock (&ehandler_spin);
+    UIntSet::iterator iter = ehandler_set.find (handler_id);
+    pthread_spin_unlock (&ehandler_spin);
+    if (iter == ehandler_set.end())
+      return NULL; // unknown handler_id
+    ClientConnection::EventHandler *evh = (ClientConnection::EventHandler*) ptrdiff_t (handler_id);
+    return evh;
+  }
+  bool
+  client_delete_event_handler (uint64_t handler_id)
+  {
+    pthread_spin_lock (&ehandler_spin);
+    size_t nerased = ehandler_set.erase (handler_id);
+    pthread_spin_unlock (&ehandler_spin);
+    return nerased > 0; // deletion successful?
+  }
+};
+
+FieldBuffer*
+ConnectionTransport::client_call_remote (FieldBuffer *fb)
+{
+  PLIC_THROW_IF_FAIL (fb != NULL);
+  // enqueue method call message
+  const Plic::MessageId msgid = Plic::MessageId (fb->first_id());
+  server_queue.send_msg (fb, true);
+  // wait for result
+  const bool needsresult = Plic::msgid_has_result (msgid);
+  if (needsresult)
+    block_for_result ();
+  while (needsresult)
+    {
+      FieldBuffer *fr = client_queue.pop_msg();
+      Plic::MessageId retid = Plic::MessageId (fr->first_id());
+      if (Plic::msgid_is_error (retid))
+        {
+          FieldReader fbr (*fr);
+          fbr.skip_msgid();
+          std::string msg = fbr.pop_string();
+          std::string dom = fbr.pop_string();
+          warning_printf ("%s: %s", dom.c_str(), msg.c_str());
+          delete fr;
+        }
+      else if (Plic::msgid_is_result (retid))
+        return fr;
+      else
+        client_events.push_back (fr);
+    }
+  return NULL;
+}
+
+void
+ConnectionTransport::server_dispatch ()
+{
+  FieldBuffer *fb = server_queue.fetch_msg();
+  if (!fb)
+    return;
+  FieldReader fbr (*fb);
+  const MessageId msgid = MessageId (fbr.pop_int64());
+  const uint64_t  hashlow = fbr.pop_int64();
+  const bool needsresult = msgid_has_result (msgid);
+  struct Wrapper : ServerConnection { using ServerConnection::find_method; };
+  const DispatchFunc method = Wrapper::find_method (msgid, hashlow);
+  FieldBuffer *fr = NULL;
+  if (method)
+    {
+      fr = method (fbr);
+      const MessageId retid = MessageId (fr ? fr->first_id() : 0);
+      if (fr && (!needsresult || !msgid_is_result (retid)))
+        {
+          warning_printf ("bogus result from method (%016lx%016llx): id=%016lx", msgid, hashlow, retid);
+          delete fr;
+          fr = NULL;
+        }
+    }
+  else
+    warning_printf ("unknown message (%016lx%016llx)", msgid, hashlow);
+  delete fb;
+  if (needsresult)
+    {
+      client_queue.send_msg (fr ? fr : FieldBuffer::new_result(), false);
+      notify_for_result();
+    }
+}
+
+void
+ConnectionTransport::client_dispatch ()
+{
+  FieldBuffer *fb;
+  if (!client_events.empty())
+    {
+      fb = client_events.front();
+      client_events.pop_front();
+    }
+  else
+    fb = client_queue.fetch_msg();
+  if (!fb)
+    return;
+  FieldReader fbr (*fb);
+  const MessageId msgid = MessageId (fbr.pop_int64());
+  const uint64_t  hashlow = fbr.pop_int64();
+  if (msgid_is_event (msgid))
+    {
+      const uint64_t handler_id = fbr.pop_int64();
+      ClientConnection::EventHandler *evh = client_find_event_handler (handler_id);
+      if (evh)
+        {
+          FieldBuffer *fr = evh->handle_event (*fb);
+          if (fr)
+            {
+              FieldReader frr (*fr);
+              const MessageId retid = MessageId (frr.pop_int64());
+              frr.skip(); // msgid low
+              if (msgid_is_error (retid))
+                {
+                  std::string msg = frr.pop_string(), domain = frr.pop_string();
+                  if (domain.size())
+                    domain += ": ";
+                  msg = domain + msg;
+                  warning_printf ("%s", msg.c_str());
+                }
+              delete fr;
+            }
+        }
+      else
+        warning_printf ("invalid signal handler id in %s: %llu", "event", handler_id);
+    }
+  else if (msgid_is_discon (msgid))
+    {
+      const uint64_t handler_id = fbr.pop_int64();
+      const bool deleted = true; // FIXME: currently broken : connection.delete_event_handler (handler_id);
+      if (!deleted)
+        warning_printf ("invalid signal handler id in %s: %llu", "disconnect", handler_id);
+    }
+  else
+    warning_printf ("unknown message (%016lx%016llx)", msgid, hashlow);
+  delete fb;
+}
+
+// == ClientConnection ==
+ClientConnection::ClientConnection (ServerConnection &server_connection) :
+  m_transport (server_connection.m_transport->ref())
+{}
+
+ClientConnection::ClientConnection() :
+  m_transport (NULL)
+{}
+
+ClientConnection::ClientConnection (const ClientConnection &clone) :
+  m_transport (clone.m_transport ? clone.m_transport->ref() : NULL)
+{}
+
+void
+ClientConnection::operator= (const ClientConnection &clone)
+{
+  ConnectionTransport *old = m_transport;
+  m_transport = clone.m_transport ? clone.m_transport->ref() : NULL;
+  if (old)
+    old->unref();
+}
+
+ClientConnection::~ClientConnection ()
+{
+  if (m_transport)
+    m_transport->unref();
+  m_transport = NULL;
+}
+
+bool
+ClientConnection::is_null () const              { return m_transport == NULL; }
+int
+ClientConnection::notify_fd ()                  { return m_transport->client_notify_fd(); }
+bool
+ClientConnection::pending ()                    { return m_transport->client_pending(); }
+void
+ClientConnection::dispatch ()                   { return m_transport->client_dispatch(); }
+FieldBuffer*
+ClientConnection::call_remote (FieldBuffer *fb) { return m_transport->client_call_remote (fb); }
+uint64_t
+ClientConnection::register_event_handler (EventHandler *evh) { return m_transport->client_register_event_handler (evh); }
+ClientConnection::EventHandler*
+ClientConnection::find_event_handler (uint64_t h_id)     { return m_transport->client_find_event_handler (h_id); }
+bool
+ClientConnection::delete_event_handler (uint64_t h_id)   { return m_transport->client_delete_event_handler (h_id); }
+
+ClientConnection::EventHandler::~EventHandler()
+{}
+
+// == ServerConnection ==
+ServerConnection::ServerConnection (ConnectionTransport &transport) :
+  m_transport (transport.ref())
+{}
+
+ServerConnection::ServerConnection () :
+  m_transport (NULL)
+{}
+
+ServerConnection::ServerConnection (const ServerConnection &clone) :
+  m_transport (clone.m_transport ? clone.m_transport->ref() : NULL)
+{}
+
+void
+ServerConnection::operator= (const ServerConnection &clone)
+{
+  ConnectionTransport *old = m_transport;
+  m_transport = clone.m_transport ? clone.m_transport->ref() : NULL;
+  if (old)
+    old->unref();
+}
+
+ServerConnection::~ServerConnection ()
+{
+  if (m_transport)
+    m_transport->unref();
+  m_transport = NULL;
+}
+
+bool
+ServerConnection::is_null () const              { return m_transport == NULL; }
+void
+ServerConnection::send_event (FieldBuffer *fb) { return m_transport->server_send_event (fb); }
+int
+ServerConnection::notify_fd () { return m_transport->server_notify_fd(); }
+bool
+ServerConnection::pending () { return m_transport->server_pending(); }
+void
+ServerConnection::dispatch () { return m_transport->server_dispatch(); }
+
+ServerConnection
+ServerConnection::create_threaded ()
+{
+  ConnectionTransport *t = new ConnectionTransport(); // ref_count=1
+  ServerConnection scon (*t);
+  t->unref();
+  return scon;
+}
+
+// == MethodRegistry ==
 static inline bool
 operator< (const TypeHash &a, const TypeHash &b)
 {
@@ -613,7 +1059,7 @@ static pthread_mutex_t                   dispatcher_mutex = PTHREAD_MUTEX_INITIA
 static bool                              dispatcher_map_locked = false;
 
 DispatchFunc
-Connection::find_method (uint64_t hashhi, uint64_t hashlo)
+ServerConnection::find_method (uint64_t hashhi, uint64_t hashlo)
 {
   TypeHash typehash (hashhi, hashlo);
 #if 1 // avoid costly mutex locking
@@ -629,7 +1075,7 @@ Connection::find_method (uint64_t hashhi, uint64_t hashlo)
 }
 
 void
-Connection::MethodRegistry::register_method (const MethodEntry &mentry)
+ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
 {
   PLIC_THROW_IF_FAIL (dispatcher_map_locked == false);
   pthread_mutex_lock (&dispatcher_mutex);
@@ -642,30 +1088,11 @@ Connection::MethodRegistry::register_method (const MethodEntry &mentry)
   if (PLIC_UNLIKELY (size_before == size_after))
     {
       errno = EKEYREJECTED;
-      perror (string_printf ("%s:%u: Plic::Connection::MethodRegistry::register_method: "
+      perror (string_printf ("%s:%u: Plic::ServerConnection::MethodRegistry::register_method: "
                              "duplicate hash registration (%016llx%016llx)",
                              __FILE__, __LINE__, mentry.hashhi, mentry.hashlo).c_str());
       abort();
     }
-}
-
-bool
-Connection::has_event ()
-{
-  return fetch_event (0) != NULL;
-}
-
-FieldBuffer*
-Connection::pop_event (bool blocking)
-{
-  FieldBuffer *fb = fetch_event (1);
-  if (blocking)
-    while (!fb)
-      {
-        fetch_event (-1);
-        fb = fetch_event (1);
-      }
-  return fb;
 }
 
 } // Plic

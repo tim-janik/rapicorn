@@ -156,7 +156,7 @@ plic_PyObject_4uint64 (const char *type_name, uint64_t rpc_id)
 }
 
 #ifndef PLIC_CONNECTION
-#define PLIC_CONNECTION()       (*(Plic::Connection*)NULL)
+#define PLIC_CONNECTION()       (*(Plic::ClientConnection*)NULL)
 #endif
 """
 
@@ -304,7 +304,7 @@ class Generator:
     mdefs += [ '{ "_PLIC_%s", _plic_marshal__%s, METH_VARARGS, "pyRapicorn signal call" }' %
                (mtype.ident_digest(), mtype.ident_digest()) ]
     evd_class = '_EventHandler_%s' % mtype.ident_digest()
-    s += 'class %s : public Plic::Connection::EventHandler {\n' % evd_class
+    s += 'class %s : public Plic::ClientConnection::EventHandler {\n' % evd_class
     s += '  PyObject *m_callable;\n'
     s += 'public:\n'
     s += '  ~%s() { Py_DECREF (m_callable); }\n' % evd_class
@@ -344,7 +344,7 @@ class Generator:
     s += '  if (item == Py_None) fb.add_int64 (0);\n'
     s += '  else {\n'
     s += '    if (!PyCallable_Check (item)) ERRORpy ("arg2 must be callable");\n'
-    s += '    Plic::Connection::EventHandler *evh = new %s (item);\n' % evd_class
+    s += '    Plic::ClientConnection::EventHandler *evh = new %s (item);\n' % evd_class
     s += '    uint64_t handler_id = PLIC_CONNECTION().register_event_handler (evh);\n'
     s += '    fb.add_int64 (handler_id); }\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 2);  // ConId for disconnect\n'

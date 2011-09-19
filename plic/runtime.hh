@@ -181,7 +181,6 @@ public:
 
 // == Type Declarations ==
 class SimpleServer;
-class Connection;
 union FieldUnion;
 class FieldBuffer;
 class FieldReader;
@@ -201,6 +200,7 @@ template<class V> inline
 bool    atomic_ptr_cas  (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
 void    error_printf    (const char *format, ...) PLIC_PRINTF (1, 2);
 void    error_vprintf   (const char *format, va_list args);
+void    warning_printf  (const char *format, ...) PLIC_PRINTF (1, 2);
 
 // == Message IDs ==
 enum MessageId {
@@ -376,38 +376,62 @@ public:
   inline FieldReader& operator>> (std::vector<bool>::reference v) { bool b; *this >> b; v = b; return *this; }
 };
 
-// == Connection ==
-class Connection                                         /// Connection context for IPC. @nosubgrouping
-{
-public: /// @name API for syncronous remote calls
-  virtual FieldBuffer* call_remote (FieldBuffer*) = 0; ///< Carry out a syncronous remote call, transfers memory, called by client.
-  virtual void         send_result (FieldBuffer*) = 0; ///< Return result from remote call, transfers memory, called by server.
-public: /// @name API for asyncronous event delivery
-  virtual void send_event    (FieldBuffer*) = 0;       ///< Send event to remote asyncronously, transfers memory, called by server.
-  virtual int  event_inputfd () = 0;                   ///< Returns fd for POLLIN, to wake up on incomming events.
-  bool         has_event     ();                       ///< Returns true if events for fetch_event() are pending.
-  FieldBuffer* pop_event     (bool blocking = false);  ///< Pop an event from event queue, possibly blocking, transfers memory, called by client.
-protected:
-  virtual FieldBuffer* fetch_event (int blockpop) = 0; ///< Block for (-1), peek (0) or pop (+1) an event from queue.
-public: /// @name API for event handler bookkeeping
-  struct EventHandler                                  /// Interface class used for client side signal emissions.
-  {
-    virtual             ~EventHandler () {}
-    virtual FieldBuffer* handle_event (Plic::FieldBuffer &event_fb) = 0; ///< Process an event and possibly return an error.
-  };
-  virtual uint64_t      register_event_handler (EventHandler *evh) = 0; ///< Register an event handler, transfers memory.
-  virtual EventHandler* find_event_handler     (uint64_t handler_id) = 0; ///< Find event handler by id.
-  virtual bool          delete_event_handler   (uint64_t handler_id) = 0; ///< Delete a registered event handler, returns success.
+// == Connections ==
+class ConnectionTransport;
+/// Connection context for IPC servers. @nosubgrouping
+class ServerConnection {
+public: /// @name API for remote calls
+  void send_event (FieldBuffer*); ///< Send event to remote asyncronously, transfers memory.
+  int  notify_fd  (); ///< Returns fd for POLLIN, to wake up on incomming events.
+  bool pending    (); ///< Indicate whether any incoming calls are pending that need to be dispatched.
+  void dispatch   (); ///< Dispatch a single call if any is pending.
+  bool is_null    () const;
 public: /// @name Registry for IPC method lookups
-  struct MethodEntry    { uint64_t hashhi, hashlo; DispatchFunc dispatcher; };
-  struct MethodRegistry                                  /// Registry structure for IPC method stubs.
+  struct MethodEntry       { uint64_t hashhi, hashlo; DispatchFunc dispatcher; };
+  struct MethodRegistry    /// Registry structure for IPC method stubs.
   {
     template<class T, size_t S> MethodRegistry  (T (&static_const_entries)[S])
     { for (size_t i = 0; i < S; i++) register_method (static_const_entries[i]); }
-  private: static void register_method (const MethodEntry &mentry);
+  private: static void register_method  (const MethodEntry &mentry);
   };
 protected:
-  static DispatchFunc  find_method  (uint64_t hashhi, uint64_t hashlow);      ///< Lookup method in registry.
+  static DispatchFunc  find_method      (uint64_t hi, uint64_t lo); ///< Lookup method in registry.
+public: /// @name Construction
+  static ServerConnection create_threaded  ();
+  virtual                ~ServerConnection ();
+  /*ctor*/                ServerConnection ();
+  /*copy*/                ServerConnection (const ServerConnection&);
+  void                    operator=        (const ServerConnection&);
+protected:                ServerConnection (ConnectionTransport&);
+private: /// @name Internals
+  ConnectionTransport *m_transport;
+  friend class ClientConnection;
+};
+/// Connection context for IPC clients. @nosubgrouping
+class ClientConnection {
+public: /// @name API for remote calls
+  FieldBuffer*  call_remote (FieldBuffer*); ///< Carry out a syncronous remote call, transfers memory.
+  int           notify_fd   ();             ///< Returns fd for POLLIN, to wake up on incomming events.
+  bool          pending     ();             ///< Indicate whether any incoming events are pending that need to be dispatched.
+  void          dispatch    ();             ///< Dispatch a single event if any is pending.
+  bool          is_null     () const;
+public: /// @name API for event handler bookkeeping
+  struct EventHandler                        /// Interface class used for client side signal emissions.
+  {
+    virtual             ~EventHandler ();
+    virtual FieldBuffer* handle_event (Plic::FieldBuffer &event_fb) = 0; ///< Process an event and possibly return an error.
+  };
+  uint64_t      register_event_handler (EventHandler   *evh); ///< Register an event handler, transfers memory.
+  EventHandler* find_event_handler     (uint64_t handler_id); ///< Find event handler by id.
+  bool          delete_event_handler   (uint64_t handler_id); ///< Delete a registered event handler, returns success.
+public: /// @name Construction
+  virtual      ~ClientConnection ();
+  /*ctor*/      ClientConnection ();
+  /*ctor*/      ClientConnection (ServerConnection&);
+  /*copy*/      ClientConnection (const ClientConnection&);
+  void          operator=        (const ClientConnection&);
+private: /// @name Internals
+  ConnectionTransport *m_transport;
 };
 
 // == inline implementations ==

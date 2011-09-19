@@ -24,11 +24,12 @@ class_scope:Item:
   template<class Target> Target component (const std::string &path) { return Target::downcast (unique_component (path)); }
 
 class_scope:Application:
-  static int                      run           ();
-  static void                     quit          (int quit_code = 0);
-  static void                     shutdown      ();
-  static int                      run_and_exit  () RAPICORN_NORETURN;
-  static Application_SmartHandle  the              ();
+  static int                      run            ();
+  static void                     quit           (int quit_code = 0);
+  static void                     shutdown       ();
+  static int                      run_and_exit   () RAPICORN_NORETURN;
+  static Application_SmartHandle  the            ();
+  static ClientConnection         ipc_connection ();
 protected:
   static MainLoop*                main_loop     ();
   // FIXME: static void        pixstream     (const String &pix_name, const uint8 *static_const_pixstream);
@@ -48,7 +49,6 @@ Application_SmartHandle init_test_app           (const String       &app_ident,
                                                  int                *argcp,
                                                  char              **argv,
                                                  const StringVector &args = StringVector());
-Plic::Connection*       uithread_connection     (void);
 void                    exit                    (int status) RAPICORN_NORETURN;
 
 } // Rapicorn

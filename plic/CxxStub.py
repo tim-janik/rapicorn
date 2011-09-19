@@ -49,7 +49,7 @@ Plic::FieldBuffer* plic$_error (const char *format, ...)
 
 servercc_boilerplate = r"""
 #ifndef PLIC_CONNECTION
-#define PLIC_CONNECTION()       (*(Plic::Connection*)NULL)
+#define PLIC_CONNECTION()       (*(Plic::ServerConnection*)NULL)
 template<class O> O*  connection_id2object (Plic::uint64_t oid) { return dynamic_cast<O*> (reinterpret_cast<Plic::SimpleServer*> (oid)); }
 inline Plic::uint64_t connection_object2id (const Plic::SimpleServer *obj) { return reinterpret_cast<ptrdiff_t> (obj); }
 inline Plic::uint64_t connection_object2id (const Plic::SimpleServer &obj) { return connection_object2id (&obj); }
@@ -58,7 +58,7 @@ inline Plic::uint64_t connection_object2id (const Plic::SimpleServer &obj) { ret
 
 clientcc_boilerplate = r"""
 #ifndef PLIC_CONNECTION
-#define PLIC_CONNECTION()       (*(Plic::Connection*)NULL)
+#define PLIC_CONNECTION()       (*(Plic::ClientConnection*)NULL)
 Plic::uint64_t       connection_handle2id  (const Plic::SmartHandle &h) { return h._rpc_id(); }
 static inline void   connection_context4id (Plic::uint64_t ipcid, Plic::NonCopyable *ctx) {}
 template<class C> C* connection_id2context (Plic::uint64_t oid) { return (C*) NULL; }
@@ -533,7 +533,7 @@ class Generator:
     s, classH, signame = '', self.H (class_info.name), self.generate_signal_typename (sg, class_info)
     sigE = self.generate_event_handler_typename (sg, class_info)
     # s += '  %s %s;\n' % (signame, sg.name)                                  # signal member
-    s += '  struct %s : Plic::Connection::EventHandler {\n' % sigE            # signal EventHandler
+    s += '  struct %s : Plic::ClientConnection::EventHandler {\n' % sigE            # signal EventHandler
     relay = 'Rapicorn::Signals::SignalConnectionRelay<%s> ' % sigE
     s += '    ' + self.generate_signal_proxy_typedef (sg, class_info, 'Proxy')
     s += '    ' + self.generate_signal_typedef (sg, class_info, 'Relay', relay) # signal typedefs
@@ -916,10 +916,10 @@ class Generator:
     reglines += [ (self.method_digest (stype), self.namespaced_identifier (dispatcher_name)) ]
     closure_class = '_$Closure__%s__%s' % (class_info.name, stype.name)
     s += 'class %s {\n' % closure_class
-    s += '  Plic::Connection &m_connection; Plic::uint64_t m_handler;\n'
+    s += '  Plic::ServerConnection &m_connection; Plic::uint64_t m_handler;\n'
     s += 'public:\n'
     s += '  typedef Plic::shared_ptr<%s> SharedPtr;\n' % closure_class
-    s += '  %s (Plic::Connection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}\n' % closure_class # ctor
+    s += '  %s (Plic::ServerConnection &conn, Plic::uint64_t h) : m_connection (conn), m_handler (h) {}\n' % closure_class # ctor
     s += '  ~%s()\n' % closure_class # dtor
     s += '  {\n'
     s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);\n' # msgid handler
@@ -965,13 +965,13 @@ class Generator:
     return s
   def generate_server_method_registry (self, reglines):
     s = ''
-    s += 'static const Plic::Connection::MethodEntry _plic_stub_entries[] = {\n'
+    s += 'static const Plic::ServerConnection::MethodEntry _plic_stub_entries[] = {\n'
     for dispatcher in reglines:
       cdigest, dispatcher_name = dispatcher
       s += '  { ' + cdigest + ', '
       s += dispatcher_name + ', },\n'
     s += '};\n'
-    s += 'static Plic::Connection::MethodRegistry _plic_stub_registry (_plic_stub_entries);\n'
+    s += 'static Plic::ServerConnection::MethodRegistry _plic_stub_registry (_plic_stub_entries);\n'
     return s
   def generate_virtual_method_skel (self, functype, type_info):
     assert self.gen_mode == G4SERVER

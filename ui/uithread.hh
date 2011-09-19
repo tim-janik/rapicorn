@@ -36,12 +36,9 @@
 
 namespace Rapicorn {
 
-uint64            uithread_bootup       (int *argcp, char **argv, const StringVector &args);
-void              uithread_shutdown     (void); // FIXME: also in clientglue.cc
-void              uithread_test_trigger (void (*) ());
-Plic::Connection* uithread_connection   (void);
-void              serverglue_setup      (Plic::Connection*);
-MainLoop*         uithread_main_loop    ();
+uint64               uithread_bootup       (int *argcp, char **argv, const StringVector &args);
+void                 uithread_test_trigger (void (*) ());
+MainLoop*            uithread_main_loop    ();
 
 /// Register a standard test function for execution in the ui-thread.
 #define REGISTER_UITHREAD_TEST(name, ...)     static const Rapicorn::Test::RegisterTest \

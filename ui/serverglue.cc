@@ -1,21 +1,22 @@
 // Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
 #include "serverapi.hh"
+#include "uithread.hh"
+#include "internal.hh"
 
 namespace { // Anon
-static Plic::Connection *_serverglue_connection = NULL;
+static Plic::ServerConnection _serverglue_connection;
 };
 
 namespace Rapicorn {
 
 void
-serverglue_setup (Plic::Connection *connection)
+uithread_serverglue (Plic::ServerConnection connection)
 {
-  assert (_serverglue_connection == NULL);
-  _serverglue_connection = connection;
+ _serverglue_connection = connection;
 }
 
 } // Rapicorn
 
-#define PLIC_CONNECTION()       (*_serverglue_connection)
+#define PLIC_CONNECTION()       (_serverglue_connection)
 
 #include "serverapi.cc"

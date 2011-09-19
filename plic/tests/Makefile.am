@@ -39,31 +39,31 @@ check-testpass: $(srcdir)/testpass.idl
 	$(Q) ${PLICINT} $(srcdir)/testpass.idl >/dev/null ; eval "$$TSTDIAGNOSE"
 check-include-p1: $(srcdir)/include-p1.idl
 	$(Q) ${PLICINT} $(srcdir)/include-p1.idl >/dev/null ; eval "$$TSTDIAGNOSE"
-check: check-testpass check-include-p1
+check-local: check-testpass check-include-p1
 
 # == IDL Error Tests ==
 check-testfail: $(srcdir)/testfail.idl
 	$(Q) ${PLICINT} --plic-fail-file-test $(srcdir)/testfail.idl >$(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testfail.ref'" "'$(TSTOUT)'"
-check: check-testfail
+check-local: check-testfail
 
 # == Plic Unit Tests ==
 check-plic-standard-types: ptptest
 	$(Q) ./ptptest --tests
-check: check-plic-standard-types
+check-local: check-plic-standard-types
 
 # == Test TypeMap ==
 check-plic-format-TypeMap: ptptest $(srcdir)/testpass.idl
 	$(Q) ${PLICINT} $(srcdir)/testpass.idl -G TypeMap  ; eval "$$TSTDIAGNOSE" "'plic -G TypeMap'"
 	$(Q) ./ptptest plic.out $(TESTPASS_AUXTESTS) >/dev/null ; eval "$$TSTDIAGNOSE" "'ptptest aux-tests'"
 	$(Q) rm -f plic.out
-check: check-plic-format-TypeMap
+check-local: check-plic-format-TypeMap
 
 # == Test Rapicorn ==
 check-plic-format-Rapicorn: $(srcdir)/testpass.idl
 	$(Q) ${PLICINT} $(srcdir)/testpass.idl -G Rapicorn -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testrapicorn.ref'" "'$(TSTOUT)'"
-check: check-plic-format-Rapicorn
+check-local: check-plic-format-Rapicorn
 
 # == Test CxxStub Generation for Clinet & Server ==
 check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
@@ -78,7 +78,7 @@ check-CxxStub-skeleton-gen: $(srcdir)/testcxxskels.ref
 	$(Q) ${PLICINT} -G CxxStub -g iface-prefix=I_ -g serverhh -g server-skel -g RapicornSignal \
 	  $(srcdir)/testpass.idl -o - > $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxskels.ref'"
-check-local: check-CxxStub-server-gen check-CxxStub-client-gen check-CxxStub-skeleton-gen
+check: check-CxxStub-server-gen check-CxxStub-client-gen check-CxxStub-skeleton-gen
 EXTRA_DIST += testcxxserver.ref testcxxclient.ref testcxxskels.ref
 
 # == Test CxxStub Code Compilation ==
@@ -94,4 +94,4 @@ check-CxxStub-skeleton-code: $(srcdir)/testcxxskels.ref
 	$(Q) cp $(srcdir)/testcxxskels.ref testcxxskels.cc
 	$(Q) $(CXXCOMPILE) testcxxskels.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxskels.cc testcxxskels.o
-check-local: check-CxxStub-server-code check-CxxStub-client-code check-CxxStub-skeleton-code
+check: check-CxxStub-server-code check-CxxStub-client-code check-CxxStub-skeleton-code
