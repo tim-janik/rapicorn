@@ -22,6 +22,7 @@ using std::tr1::weak_ptr;
 #if     __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
 #define PLIC_UNUSED             __attribute__ ((__unused__))
 #define PLIC_DEPRECATED         __attribute__ ((__deprecated__))
+#define PLIC_NORETURN           __attribute__ ((__noreturn__))
 #define PLIC_PRINTF(fix, arx)   __attribute__ ((__format__ (__printf__, fix, arx)))
 #define PLIC_BOOLi(expr)        __extension__ ({ bool _plic__bool; if (expr) _plic__bool = 1; else _plic__bool = 0; _plic__bool; })
 #define PLIC_ISLIKELY(expr)     __builtin_expect (PLIC_BOOLi (expr), 1)
@@ -29,6 +30,7 @@ using std::tr1::weak_ptr;
 #else   // !__GNUC__
 #define PLIC_UNUSED
 #define PLIC_DEPRECATED
+#define PLIC_NORETURN
 #define PLIC_PRINTF(fix, arx)
 #define PLIC_ISLIKELY(expr)     expr
 #define PLIC_UNLIKELY(expr)     expr
@@ -198,8 +200,8 @@ typedef std::vector<TypeHash> TypeHashList;
 // == Utilities ==
 template<class V> inline
 bool    atomic_ptr_cas  (V* volatile *ptr_adr, V *o, V *n) { return __sync_bool_compare_and_swap (ptr_adr, o, n); }
-void    error_printf    (const char *format, ...) PLIC_PRINTF (1, 2);
-void    error_vprintf   (const char *format, va_list args);
+void    error_printf    (const char *format, ...) PLIC_PRINTF (1, 2) PLIC_NORETURN;
+void    error_vprintf   (const char *format, va_list args) PLIC_NORETURN;
 void    warning_printf  (const char *format, ...) PLIC_PRINTF (1, 2);
 
 // == Message IDs ==
