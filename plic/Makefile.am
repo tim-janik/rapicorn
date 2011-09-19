@@ -7,7 +7,7 @@ SUBDIRS = . tests
 bin_SCRIPTS         = ${PLICV}
 noinst_SCRIPTS      = ${PLICINT}
 cxxruntimedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/plic
-cxxruntime_HEADERS  = runtime.hh runtime.cc runtypes.cc
+cxxruntime_HEADERS  = runtime.hh runtime.cc
 PLICLINK	    = plic			## user visible excutable name
 PLICV	            = plic-@PLIC_VERSION@	## installed executable name
 PLICINT	            = ./plic-intern		## internal version used during build time
@@ -49,6 +49,20 @@ ${PLICV}: plic.py Parser.py
 	$(Q) rm -f xgen-$(@F) xgen-$(@F).errors
 EXTRA_DIST += plic.py
 EXTRA_DIST += plic.idl
+
+# == Build runtime.hh runtime.cc ==
+runtime.hh: runtypes.hh
+	$(AM_V_GEN)
+	$(Q) cat $^ > xtmp-$(@F)
+	$(Q) cp xtmp-$(@F) $@
+	$(Q) rm -f xtmp-$(@F)
+runtime.cc: runtypes.cc loadmap.cc
+	$(AM_V_GEN)
+	$(Q) cat $^ > xtmp-$(@F)
+	$(Q) cp xtmp-$(@F) $@
+	$(Q) rm -f xtmp-$(@F)
+EXTRA_DIST += runtypes.hh runtypes.cc loadmap.cc
+CLEANFILES += runtime.hh runtime.cc
 
 # == Plic Builtins ==
 EXTRA_DIST += builtins.typ

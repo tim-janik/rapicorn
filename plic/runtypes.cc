@@ -1,696 +1,1098 @@
 // CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
-#include <string.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <malloc.h>
+#include "runtime.hh"
+
 #include <assert.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <sched.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <limits.h>
+#include <semaphore.h>
+#include <pthread.h>
+#include <poll.h>
+#include <sys/eventfd.h>        // defines EFD_SEMAPHORE
+#include <stdexcept>
+#include <deque>
+#include <map>
+#include <set>
 
-#define MAX(a, b)                       (((a) >= (b)) ? (a) : (b))
-#define __PLIC_return_EFAULT(v)         do { errno = EFAULT; return (v); } while (0)
+// == Auxillary macros ==
+#ifndef __GNUC__
+#define __PRETTY_FUNCTION__                     __func__
+#endif
+#define PLIC_CPP_PASTE2i(a,b)                   a ## b // indirection required to expand __LINE__ etc
+#define PLIC_CPP_PASTE2(a,b)                    PLIC_CPP_PASTE2i (a,b)
+#define PLIC_STATIC_ASSERT_NAMED(expr,asname)   typedef struct { char asname[(expr) ? 1 : -1]; } PLIC_CPP_PASTE2 (Plic_StaticAssertion_LINE, __LINE__)
+#define PLIC_STATIC_ASSERT(expr)                PLIC_STATIC_ASSERT_NAMED (expr, compile_time_assertion_failed)
+#define ALIGN4(sz,unit)                         (sizeof (unit) * ((sz + sizeof (unit) - 1) / sizeof (unit)))
+#define PLIC_THROW_IF_FAIL(expr)                do { if (PLIC_LIKELY (expr)) break; PLIC_THROW ("failed to assert (" + #expr + ")"); } while (0)
+#define PLIC_THROW(msg)                         throw std::runtime_error (std::string() + __PRETTY_FUNCTION__ + ": " + msg)
 
+/// @namespace Plic The Plic namespace provides all PLIC functionality exported to C++.
 namespace Plic {
 
-const char*
-type_kind_name (TypeKind type_kind)
+// == FieldUnion ==
+PLIC_STATIC_ASSERT (sizeof (FieldUnion::smem) <= sizeof (FieldUnion::bytes));
+PLIC_STATIC_ASSERT (sizeof (FieldUnion::bmem) <= 2 * sizeof (FieldUnion::bytes)); // FIXME
+
+/* === Prototypes === */
+static std::string string_printf (const char *format, ...) PLIC_PRINTF (1, 2);
+
+// === Utilities ===
+static std::string
+string_vprintf (const char *format, va_list args, bool force_newline = false)
 {
-  switch (type_kind)
+  char buffer[3 * 1024 + 1];
+  vsnprintf (buffer, sizeof (buffer) - 1, format, args);
+  buffer[sizeof (buffer) - 1] = 0; // force termination
+  std::string s (buffer);
+  if (force_newline && (s.empty() || s[s.size() - 1] != '\n'))
+    s += "\n";
+  return s;
+}
+
+static std::string
+string_printf (const char *format, ...)
+{
+  va_list args;
+  va_start (args, format);
+  std::string s = string_vprintf (format, args);
+  va_end (args);
+  return s;
+}
+
+void
+error_vprintf (const char *format, va_list args)
+{
+  std::string s = string_vprintf (format, args, true);
+  fprintf (stderr, "Plic: error: %s", s.c_str());
+  fflush (stderr);
+  abort();
+}
+
+void
+error_printf (const char *format, ...)
+{
+  va_list args;
+  va_start (args, format);
+  error_vprintf (format, args);
+  va_end (args);
+}
+
+void
+warning_printf (const char *format, ...)
+{
+  va_list args;
+  va_start (args, format);
+  std::string s = string_vprintf (format, args, true);
+  va_end (args);
+  fprintf (stderr, "Plic: warning: %s", s.c_str());
+  fflush (stderr);
+}
+
+// == Any ==
+Any::Any() :
+  type_code (TypeMap::notype())
+{
+  memset (&u, 0, sizeof (u));
+}
+
+Any::Any (const Any &clone) :
+  type_code (TypeMap::notype())
+{
+  this->operator= (clone);
+}
+
+Any&
+Any::operator= (const Any &clone)
+{
+  if (this == &clone)
+    return *this;
+  reset();
+  type_code = clone.type_code;
+  switch (kind())
     {
-    case UNTYPED:         return "UNTYPED";
-    case VOID:            return "VOID";
-    case INT:             return "INT";
-    case FLOAT:           return "FLOAT";
-    case STRING:          return "STRING";
-    case ENUM:            return "ENUM";
-    case SEQUENCE:        return "SEQUENCE";
-    case RECORD:          return "RECORD";
-    case INSTANCE:        return "INSTANCE";
-    case FUNC:            return "FUNC";
-    case TYPE_REFERENCE:  return "TYPE_REFERENCE";
-    case ANY:             return "ANY";
-    default:              return NULL;
+    case STRING:        new (&u) String (*(String*) &clone.u);          break;
+    case SEQUENCE:      new (&u) AnyVector (*(AnyVector*) &clone.u);    break;
+    case RECORD:        new (&u) AnyVector (*(AnyVector*) &clone.u);    break;
+    case ANY:           u.vany = new Any (*clone.u.vany);               break;
+    default:            u = clone.u;                                    break;
+    }
+  return *this;
+}
+
+void
+Any::reset()
+{
+  switch (kind())
+    {
+    case STRING:        ((String*) &u)->~String();              break;
+    case SEQUENCE:      ((AnyVector*) &u)->~AnyVector();        break;
+    case RECORD:        ((AnyVector*) &u)->~AnyVector();        break;
+    case ANY:           delete u.vany;                          break;
+    default: ;
+    }
+  type_code = TypeMap::notype();
+  memset (&u, 0, sizeof (u));
+}
+
+void
+Any::rekind (TypeKind _kind)
+{
+  reset();
+  const char *type = NULL;
+  switch (_kind)
+    {
+    case UNTYPED:     type = NULL;                                      break;
+      // case BOOL:   type = "bool";                                    break;
+    case INT:         type = "int";                                     break;
+      // case UINT:   type = "uint";                                    break;
+    case FLOAT:       type = "float";                                   break;
+    case STRING:      type = "string";          new (&u) String();      break;
+    case ENUM:        type = "int";                                     break;
+    case SEQUENCE:    type = "Plic::AnySeq";    new (&u) AnyVector();   break;
+    case RECORD:      type = "Plic::AnyRec";    new (&u) AnyVector();   break; // FIXME: mising details
+    case INSTANCE:    type = "Plic::Instance";                          break; // FIXME: missing details
+    case ANY:         type = "any";             u.vany = new Any();     break;
+    default:
+      error_printf ("Plic::Any:rekind: invalid type kind: %s", type_kind_name (_kind));
+    }
+  type_code = TypeMap::lookup (type);
+  if (type_code.untyped() && type != NULL)
+    error_printf ("Plic::Any:rekind: invalid type name: %s", type);
+  if (kind() != _kind)
+    error_printf ("Plic::Any:rekind: mismatch: %s -> %s (%u)", type_kind_name (_kind), type_kind_name (kind()), kind());
+}
+
+bool
+Any::operator== (const Any &clone) const
+{
+  if (type_code != clone.type_code)
+    return false;
+  switch (kind())
+    {
+    case UNTYPED:     break;
+      // case BOOL:   // chain
+    case ENUM:
+      // case UINT:   // chain
+    case INT:         if (u.vint64 != clone.u.vint64) return false;                     break;
+    case FLOAT:       if (u.vdouble != clone.u.vdouble) return false;                   break;
+    case STRING:      if (*(String*) &u != *(String*) &clone.u) return false;           break;
+    case SEQUENCE:    if (*(AnyVector*) &u != *(AnyVector*) &clone.u) return false;     break;
+    case RECORD:      if (*(AnyVector*) &u != *(AnyVector*) &clone.u) return false;     break;
+    case INSTANCE:    if (memcmp (&u, &clone.u, sizeof (u)) != 0) return false;         break; // FIXME
+    case ANY:         if (*u.vany != *clone.u.vany) return false;                       break;
+    default:
+      error_printf ("Plic::Any:operator==: invalid type kind: %s", type_kind_name (kind()));
+    }
+  return true;
+}
+
+bool
+Any::operator!= (const Any &clone) const
+{
+  return !operator== (clone);
+}
+
+Any::~Any ()
+{
+  reset();
+}
+
+void
+Any::retype (const TypeCode &tc)
+{
+  if (type_code.untyped())
+    reset();
+  else
+    {
+      rekind (tc.kind());
+      type_code = tc;
     }
 }
 
-// == PlicTypeMap classes ==
-struct InternalList {
-  uint32_t      length;         // in members
-  uint32_t      items[];        // flexible array member
-};
-struct InternalString {
-  uint32_t      length;         // in bytes
-  char          chars[];        // flexible array member
-};
-struct TypeCode::InternalType {
-  uint32_t      tkind;          // type kind
-  uint32_t      name;           // string index
-  uint32_t      aux_strings;    // list[string index] index; assignment strings
-  uint32_t      custom;         // custom index
-  // enum:      list[string index] index; 3 strings per value
-  // interface: list[string index] index; prerequisite names
-  // record:    list[type index] index; InternalType per field
-  // sequence:  type index; InternalType for sequence field
-  // reference: string index; name of referenced type
-};
-typedef TypeCode::InternalType InternalType;
-struct InternalMap {
-  uint32_t      magic[4];       // "PlicTypeMap\0\0\0\0\0"
-  uint32_t      length;         // typemap length (excludes tail)
-  uint32_t      pad0, pad1, pad2;
-  uint32_t      seg_types;      // type code segment offset
-  uint32_t      seg_lists;      // list segment offset
-  uint32_t      seg_strings;    // string segment offset
-  uint32_t      pad3;
-  uint32_t      types;          // list[type index] index; public types
-  uint32_t      pad4, pad5, pad6;
-  bool          check_tail      () { return 0x00000000 == *(uint32_t*) (((char*) this) + length); }
-  bool          check_magic     () { return (magic[0] == 0x63696c50 && magic[1] == 0x65707954 &&
-                                             magic[2] == 0x0070614d && magic[3] == 0x00000000); }
-  bool          check_lengths   (size_t memlength)
-  {
-    return (memlength > sizeof (*this) && length + 4 <= memlength &&
-            seg_types >= sizeof (*this) && seg_lists >= seg_types && seg_strings >= seg_lists &&
-            length >= seg_strings);
-  }
-  InternalList*   internal_list   (uint32_t offset) const;
-  InternalType*   internal_type   (uint32_t offset) const;
-  InternalString* internal_string (uint32_t offset) const;
-};
-static const char zero_type_or_map[MAX (sizeof (InternalMap), sizeof (InternalType))] = { 0, };
-struct TypeCode::MapHandle {
-  const InternalMap *const imap;
-private:
-  volatile uint32_t m_ref_count;
-  const size_t      m_length;
-  const bool        m_needs_free;
-  int               m_status;
+void
+Any::swap (Any &other)
+{
+  const size_t usize = sizeof (this->u);
+  char *buffer[usize];
+  memcpy (buffer, &other.u, usize);
+  memcpy (&other.u, &this->u, usize);
+  memcpy (&this->u, buffer, usize);
+  type_code.swap (other.type_code);
+}
+
+bool
+Any::to_int (int64_t &v, char b) const
+{
+  if (kind() != INT)
+    return false;
+  bool s = 0;
+  switch (b)
+    {
+    case 1:     s =  u.vint64 >=         0 &&  u.vint64 <= 1;        break;
+    case 7:     s =  u.vint64 >=      -128 &&  u.vint64 <= 127;      break;
+    case 8:     s =  u.vint64 >=         0 &&  u.vint64 <= 256;      break;
+    case 47:    s = sizeof (long) == sizeof (int64_t); // chain
+    case 31:    s |= u.vint64 >=   INT_MIN &&  u.vint64 <= INT_MAX;  break;
+    case 48:    s = sizeof (long) == sizeof (int64_t); // chain
+    case 32:    s |= u.vint64 >=         0 &&  u.vint64 <= UINT_MAX; break;
+    case 63:    s = 1; break;
+    case 64:    s = 1; break;
+    default:    s = 0; break;
+    }
+  if (s)
+    v = u.vint64;
+  return s;
+}
+
+int64_t
+Any::as_int () const
+{
+  switch (kind())
+    {
+    case INT:           return u.vint64;
+    case FLOAT:         return u.vdouble;
+    case ENUM:          return u.vint64;
+    case STRING:        return !((String*) &u)->empty();
+    default:            return 0;
+    }
+}
+
+double
+Any::as_float () const
+{
+  switch (kind())
+    {
+    case INT:           return u.vint64;
+    case FLOAT:         return u.vdouble;
+    case ENUM:          return u.vint64;
+    case STRING:        return !((String*) &u)->empty();
+    default:            return 0;
+    }
+}
+
+std::string
+Any::as_string() const
+{
+  switch (kind())
+    {
+    case ENUM:
+    case INT:           return string_printf ("%lli", u.vint64);
+    case FLOAT:         return string_printf ("%.17g", u.vdouble);
+    case STRING:        return *(String*) &u;
+    default:            return "";
+    }
+}
+
+bool
+Any::operator>>= (int64_t &v) const
+{
+  const bool r = to_int (v, 63);
+  return r;
+}
+
+bool
+Any::operator>>= (double &v) const
+{
+  if (kind() != FLOAT)
+    return false;
+  v = u.vdouble;
+  return true;
+}
+
+bool
+Any::operator>>= (std::string &v) const
+{
+  if (kind() != STRING)
+    return false;
+  v = *(String*) &u;
+  return true;
+}
+
+bool
+Any::operator>>= (const Any *&v) const
+{
+  if (kind() != ANY)
+    return false;
+  v = u.vany;
+  return true;
+}
+
+void
+Any::operator<<= (uint64_t v)
+{
+  // ensure (UINT);
+  operator<<= (int64_t (v));
+}
+
+void
+Any::operator<<= (int64_t v)
+{
+  // if (kind() == BOOL && v >= 0 && v <= 1) { u.vint64 = v; return; }
+  ensure (INT);
+  u.vint64 = v;
+}
+
+void
+Any::operator<<= (double v)
+{
+  ensure (FLOAT);
+  u.vdouble = v;
+}
+
+void
+Any::operator<<= (const String &v)
+{
+  ensure (STRING);
+  ((String*) &u)->assign (v);
+}
+
+void
+Any::operator<<= (const Any &v)
+{
+  ensure (ANY);
+  if (u.vany != &v)
+    {
+      Any *old = u.vany;
+      u.vany = new Any (v);
+      if (old)
+        delete old;
+    }
+}
+
+void
+Any::resize (size_t n)
+{
+  ensure (SEQUENCE);
+  ((AnyVector*) &u)->resize (n);
+}
+
+/* === SmartHandle === */
+SmartHandle::SmartHandle (uint64_t ipcid) :
+  m_rpc_id (ipcid)
+{
+  assert (0 != ipcid);
+}
+
+SmartHandle::SmartHandle() :
+  m_rpc_id (0)
+{}
+
+void
+SmartHandle::_reset ()
+{
+  m_rpc_id = 0;
+}
+
+void*
+SmartHandle::_cast_iface () const
+{
+  // unoptimized version of _void_iface()
+  if (m_rpc_id & 3)
+    PLIC_THROW ("invalid cast from rpc-id to class pointer");
+  return (void*) m_rpc_id;
+}
+
+void
+SmartHandle::_void_iface (void *rpc_id_ptr)
+{
+  uint64_t rpcid = uint64_t (rpc_id_ptr);
+  if (rpcid & 3)
+    PLIC_THROW ("invalid rpc-id assignment from unaligned class pointer");
+  m_rpc_id = rpcid;
+}
+
+uint64_t
+SmartHandle::_rpc_id () const
+{
+  return m_rpc_id;
+}
+
+bool
+SmartHandle::_is_null () const
+{
+  return m_rpc_id == 0;
+}
+
+SmartHandle::~SmartHandle()
+{}
+
+/* === SimpleServer === */
+static pthread_mutex_t         simple_server_mutex = PTHREAD_MUTEX_INITIALIZER;
+static std::set<SimpleServer*> simple_server_set;
+
+SimpleServer::SimpleServer ()
+{
+  pthread_mutex_lock (&simple_server_mutex);
+  simple_server_set.insert (this);
+  pthread_mutex_unlock (&simple_server_mutex);
+}
+
+SimpleServer::~SimpleServer ()
+{
+  pthread_mutex_lock (&simple_server_mutex);
+  simple_server_set.erase (this);
+  pthread_mutex_unlock (&simple_server_mutex);
+}
+
+uint64_t
+SimpleServer::_rpc_id () const
+{
+  return uint64_t (this);
+}
+
+/* === FieldBuffer === */
+FieldBuffer::FieldBuffer (uint _ntypes) :
+  buffermem (NULL)
+{
+  PLIC_STATIC_ASSERT (sizeof (FieldBuffer) <= sizeof (FieldUnion));
+  // buffermem layout: [{n_types,nth}] [{type nibble} * n_types]... [field]...
+  const uint _offs = 1 + (_ntypes + 7) / 8;
+  buffermem = new FieldUnion[_offs + _ntypes];
+  wmemset ((wchar_t*) buffermem, 0, sizeof (FieldUnion[_offs]) / sizeof (wchar_t));
+  buffermem[0].capacity = _ntypes;
+  buffermem[0].index = 0;
+}
+
+FieldBuffer::FieldBuffer (uint32_t    _ntypes,
+                          FieldUnion *_bmem,
+                          uint32_t    _bmemlen) :
+  buffermem (_bmem)
+{
+  const uint32_t _offs = 1 + (_ntypes + 7) / 8;
+  assert (_bmem && _bmemlen >= sizeof (FieldUnion[_offs + _ntypes]));
+  wmemset ((wchar_t*) buffermem, 0, sizeof (FieldUnion[_offs]) / sizeof (wchar_t));
+  buffermem[0].capacity = _ntypes;
+  buffermem[0].index = 0;
+}
+
+FieldBuffer::~FieldBuffer()
+{
+  reset();
+  if (buffermem)
+    delete [] buffermem;
+}
+
+void
+FieldBuffer::check_internal ()
+{
+  if (size() > capacity())
+    {
+      String msg = string_printf ("FieldBuffer(this=%p): capacity=%u size=%u",
+                                  this, capacity(), size());
+      throw std::out_of_range (msg);
+    }
+}
+
+void
+FieldReader::check_request (int type)
+{
+  if (m_nth >= n_types())
+    {
+      String msg = string_printf ("FieldReader(this=%p): size=%u requested-index=%u",
+                                  this, n_types(), m_nth);
+      throw std::out_of_range (msg);
+    }
+  if (get_type() != type)
+    {
+      String msg = string_printf ("FieldReader(this=%p): size=%u index=%u type=%s requested-type=%s",
+                                  this, n_types(), m_nth,
+                                  FieldBuffer::type_name (get_type()).c_str(), FieldBuffer::type_name (type).c_str());
+      throw std::invalid_argument (msg);
+    }
+}
+
+std::string
+FieldBuffer::first_id_str() const
+{
+  uint64_t fid = first_id();
+  return string_printf ("%016llx", fid);
+}
+
+static std::string
+strescape (const std::string &str)
+{
+  std::string buffer;
+  for (std::string::const_iterator it = str.begin(); it != str.end(); it++)
+    {
+      uint8_t d = *it;
+      if (d < 32 || d > 126 || d == '?')
+        buffer += string_printf ("\\%03o", d);
+      else if (d == '\\')
+        buffer += "\\\\";
+      else if (d == '"')
+        buffer += "\\\"";
+      else
+        buffer += d;
+    }
+  return buffer;
+}
+
+std::string
+FieldBuffer::type_name (int field_type)
+{
+  const char *tkn = type_kind_name (TypeKind (field_type));
+  if (tkn)
+    return tkn;
+  return string_printf ("<invalid:%d>", field_type);
+}
+
+std::string
+FieldBuffer::to_string() const
+{
+  String s = string_printf ("Plic::FieldBuffer(%p)={", this);
+  s += string_printf ("size=%u, capacity=%u", size(), capacity());
+  FieldReader fbr (*this);
+  for (size_t i = 0; i < size(); i++)
+    {
+      const String tname = type_name (fbr.get_type());
+      const char *tn = tname.c_str();
+      switch (fbr.get_type())
+        {
+        case UNTYPED:
+        case FUNC:
+        case TYPE_REFERENCE:
+        case VOID:      s += string_printf (", %s", tn); fbr.skip();                               break;
+        case INT:       s += string_printf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
+        case FLOAT:     s += string_printf (", %s: %.17g", tn, fbr.pop_double());                  break;
+        case STRING:    s += string_printf (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
+        case ENUM:      s += string_printf (", %s: 0x%llx", tn, fbr.pop_int64());                  break;
+        case SEQUENCE:  s += string_printf (", %s: %p", tn, &fbr.pop_seq());                       break;
+        case RECORD:    s += string_printf (", %s: %p", tn, &fbr.pop_rec());                       break;
+        case INSTANCE:  s += string_printf (", %s: %p", tn, (void*) fbr.pop_object());             break;
+        case ANY:       s += string_printf (", %s: %p", tn, &fbr.pop_any());                       break;
+        default:        s += string_printf (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
+        }
+    }
+  s += '}';
+  return s;
+}
+
+FieldBuffer*
+FieldBuffer::new_error (const String &msg,
+                        const String &domain)
+{
+  FieldBuffer *fr = FieldBuffer::_new (2 + 2);
+  const uint64_t MSGID_ERROR = 0x8000000000000000ULL;
+  fr->add_msgid (MSGID_ERROR, 0);
+  fr->add_string (msg);
+  fr->add_string (domain);
+  return fr;
+}
+
+FieldBuffer*
+FieldBuffer::new_result (uint32_t n)
+{
+  FieldBuffer *fr = FieldBuffer::_new (2 + n);
+  const uint64_t MSGID_RESULT_MASK = 0x9000000000000000ULL;
+  fr->add_msgid (MSGID_RESULT_MASK, 0); // FIXME: needs original message
+  return fr;
+}
+
+class OneChunkFieldBuffer : public FieldBuffer {
+  virtual ~OneChunkFieldBuffer () { reset(); buffermem = NULL; }
+  explicit OneChunkFieldBuffer (uint32_t    _ntypes,
+                                FieldUnion *_bmem,
+                                uint32_t    _bmemlen) :
+    FieldBuffer (_ntypes, _bmem, _bmemlen)
+  {}
 public:
-  int             status          ()                { return m_status; }
-  InternalList*   internal_list   (uint32_t offset) { return imap->internal_list (offset); }
-  InternalType*   internal_type   (uint32_t offset) { return imap->internal_type (offset); }
-  InternalString* internal_string (uint32_t offset) { return imap->internal_string (offset); }
-  std::string
-  simple_string (uint32_t offset)
+  static OneChunkFieldBuffer*
+  _new (uint32_t _ntypes)
   {
-    InternalString *is = internal_string (offset);
-    return PLIC_LIKELY (is) ? std::string (is->chars, is->length) : "";
+    const uint32_t _offs = 1 + (_ntypes + 7) / 8;
+    size_t bmemlen = sizeof (FieldUnion[_offs + _ntypes]);
+    size_t objlen = ALIGN4 (sizeof (OneChunkFieldBuffer), int64_t);
+    uint8_t *omem = (uint8_t*) operator new (objlen + bmemlen);
+    FieldUnion *bmem = (FieldUnion*) (omem + objlen);
+    return new (omem) OneChunkFieldBuffer (_ntypes, bmem, bmemlen);
   }
-  MapHandle*
+};
+
+FieldBuffer*
+FieldBuffer::_new (uint32_t _ntypes)
+{
+  return OneChunkFieldBuffer::_new (_ntypes);
+}
+
+// == EventFd ==
+class EventFd {
+  void     operator= (const EventFd&); // no assignments
+  explicit EventFd   (const EventFd&); // no copying
+  int      efd;
+public:
+  int inputfd() const { return efd; }
+  ~EventFd()
+  {
+    close (efd);
+    efd = -1;
+  }
+  EventFd() :
+    efd (-1)
+  {
+    do
+      efd = eventfd (0 /*initval*/, 0 /*flags*/);
+    while (efd < 0 && (errno == EAGAIN || errno == EINTR));
+    if (efd >= 0)
+      {
+        int err;
+        long nflags = fcntl (efd, F_GETFL, 0);
+        nflags |= O_NONBLOCK;
+        do
+          err = fcntl (efd, F_SETFL, nflags);
+        while (err < 0 && (errno == EINTR || errno == EAGAIN));
+      }
+    if (efd < 0)
+      error_printf ("failed to open eventfd: %s", strerror (errno));
+  }
+  void
+  wakeup()
+  {
+    int err;
+    do
+      err = eventfd_write (efd, 1);
+    while (err < 0 && errno == EINTR);
+    // EAGAIN occours if too many wakeups are pending
+  }
+  bool
+  pollin ()
+  {
+    struct pollfd pfd = { efd, POLLIN, 0 };
+    int presult;
+    do
+      presult = poll (&pfd, 1, -1);
+    while (presult < 0 && (errno == EAGAIN || errno == EINTR));
+    return pfd.revents != 0;
+  }
+  void
+  flush () // clear pending wakeups
+  {
+    eventfd_t bytes8;
+    int err;
+    do
+      err = eventfd_read (efd, &bytes8);
+    while (err < 0 && errno == EINTR);
+    // EAGAIN occours if no wakeups are pending
+  }
+};
+
+// == TransportChannel ==
+class TransportChannel : public EventFd { // Channel for cross-thread FieldBuffer IO
+  std::vector<FieldBuffer*> msg_queue;
+  size_t                    msg_index, msg_last_size;
+  pthread_spinlock_t        msg_spinlock;
+  std::vector<FieldBuffer*> msg_vector;
+  enum Op { PEEK, POP, POP_BLOCKED };
+  FieldBuffer*
+  get_msg (const Op op)
+  {
+    do
+      {
+        // fetch new messages
+        if (msg_index >= msg_queue.size())      // no buffered messages left
+          {
+            if (msg_index)
+              msg_queue.resize (0);             // get rid of stale pointers
+            msg_index = 0;
+            flush();
+            pthread_spin_lock (&msg_spinlock);
+            msg_vector.swap (msg_queue);        // actual cross-thread fetching
+            pthread_spin_unlock (&msg_spinlock);
+          }
+        // hand out message
+        if (msg_index < msg_queue.size())       // have buffered messages
+          {
+            const size_t index = msg_index;
+            if (op != PEEK) // advance
+              msg_index++;
+            return msg_queue[index];
+          }
+        // no messages available
+        if (op == POP_BLOCKED)
+          pollin();
+      }
+    while (op == POP_BLOCKED);
+    return NULL;
+  }
+public:
+  void
+  send_msg (FieldBuffer *fb, // takes fb ownership
+            bool         _wakeup)
+  {
+    pthread_spin_lock (&msg_spinlock);
+    msg_vector.push_back (fb);
+    msg_last_size = msg_vector.size();
+    pthread_spin_unlock (&msg_spinlock);
+    if (_wakeup)
+      wakeup();
+  }
+  FieldBuffer*  fetch_msg()     { return get_msg (POP); }
+  bool          has_msg()       { return get_msg (PEEK); }
+  FieldBuffer*  pop_msg()       { return get_msg (POP_BLOCKED); }
+  ~TransportChannel ()
+  {
+    pthread_spin_destroy (&msg_spinlock);
+  }
+  TransportChannel () :
+    msg_index (0), msg_last_size (0)
+  {
+    pthread_spin_init (&msg_spinlock, 0 /* pshared */);
+  }
+};
+
+// == ConnectionTransport ==
+class ConnectionTransport /// Transport layer for messages sent between ClientConnection and ServerConnection.
+{
+  TransportChannel         server_queue; // messages sent to server
+  TransportChannel         client_queue; // messages sent to client
+  std::deque<FieldBuffer*> client_events; // messages pending for client
+  sem_t                    result_sem;
+  int                      ref_count;
+  void     operator=               (const ConnectionTransport&); // no assignments
+  explicit ConnectionTransport     (const ConnectionTransport&); // no copying
+public:
+  ConnectionTransport () :
+    ref_count (1)
+  {
+    pthread_spin_init (&ehandler_spin, 0 /* pshared */);
+    sem_init (&result_sem, 0 /* unshared */, 0 /* init */);
+  }
+  ConnectionTransport*
   ref()
   {
-    __sync_fetch_and_add (&m_ref_count, +1);
+    int last_ref = __sync_fetch_and_add (&ref_count, 1);
+    assert (last_ref > 0);
     return this;
   }
   void
   unref()
   {
-    uint32_t o = __sync_fetch_and_add (&m_ref_count, -1);
-    if (o -1 == 0)
+    int last_ref = __sync_fetch_and_add (&ref_count, -1);
+    assert (last_ref > 0);
+    if (last_ref == 1)
       delete this;
   }
-  ~MapHandle()
+  virtual
+  ~ConnectionTransport ()
   {
-    if (m_needs_free)
-      free (const_cast<InternalMap*> (imap));
-    memset (this, 0, sizeof (*this));
+    assert (ref_count == 0);
+    sem_destroy (&result_sem);
+    pthread_spin_destroy (&ehandler_spin);
   }
-  static TypeMap
-  create_type_map (void *addr, size_t length, bool needs_free)
+  void  block_for_result        () { sem_wait (&result_sem); }
+  void  notify_for_result       () { sem_post (&result_sem); }
+public: // server
+  void          server_send_event (FieldBuffer *fb) { return client_queue.send_msg (fb, true); } // FIXME: check type
+  int           server_notify_fd  ()    { return server_queue.inputfd(); }
+  bool          server_pending    ()    { return server_queue.has_msg(); }
+  void          server_dispatch   ();
+public: // client
+  int          client_notify_fd   ()    { return client_queue.inputfd(); }
+  bool         client_pending     ()    { return !client_events.empty() || client_queue.has_msg(); }
+  void         client_dispatch    ();
+  FieldBuffer* client_call_remote (FieldBuffer *fb);
+  // client event handler
+  typedef std::set<uint64_t> UIntSet;
+  pthread_spinlock_t        ehandler_spin;
+  UIntSet                   ehandler_set;
+  uint64_t
+  client_register_event_handler (ClientConnection::EventHandler *evh)
   {
-    MapHandle *handle = new MapHandle (addr, length, needs_free);
-    assert (handle->m_ref_count == 0);
-    TypeMap type_map (handle);
-    assert (handle->m_ref_count == 1);
-    return type_map;
+    pthread_spin_lock (&ehandler_spin);
+    const std::pair<UIntSet::iterator,bool> ipair = ehandler_set.insert (ptrdiff_t (evh));
+    pthread_spin_unlock (&ehandler_spin);
+    return ipair.second ? ptrdiff_t (evh) : 0; // unique insertion
   }
-  static TypeMap
-  create_error_type_map (int _status)
+  ClientConnection::EventHandler*
+  client_find_event_handler (uint64_t handler_id)
   {
-    MapHandle *handle = new MapHandle (const_cast<char*> (zero_type_or_map), 0, false);
-    assert (handle->m_ref_count == 0);
-    handle->m_status = _status;
-    TypeMap type_map (handle);
-    assert (handle->m_ref_count == 1);
-    return type_map;
+    pthread_spin_lock (&ehandler_spin);
+    UIntSet::iterator iter = ehandler_set.find (handler_id);
+    pthread_spin_unlock (&ehandler_spin);
+    if (iter == ehandler_set.end())
+      return NULL; // unknown handler_id
+    ClientConnection::EventHandler *evh = (ClientConnection::EventHandler*) ptrdiff_t (handler_id);
+    return evh;
   }
-private:
-  MapHandle (void *addr, size_t length, bool needs_free) :
-    imap ((InternalMap*) addr), m_ref_count (0), m_length (length),
-    m_needs_free (needs_free), m_status (0)
-  {}
-  explicit MapHandle (const MapHandle&);
-  void     operator= (const MapHandle&);
+  bool
+  client_delete_event_handler (uint64_t handler_id)
+  {
+    pthread_spin_lock (&ehandler_spin);
+    size_t nerased = ehandler_set.erase (handler_id);
+    pthread_spin_unlock (&ehandler_spin);
+    return nerased > 0; // deletion successful?
+  }
 };
 
-InternalType*
-InternalMap::internal_type (uint32_t offset) const
+FieldBuffer*
+ConnectionTransport::client_call_remote (FieldBuffer *fb)
 {
-  if (PLIC_UNLIKELY (offset & 0x3 || offset < seg_types || offset + sizeof (InternalType) > seg_lists))
-    __PLIC_return_EFAULT (NULL);
-  return (InternalType*) (((char*) this) + offset);
-}
-
-InternalList*
-InternalMap::internal_list (uint32_t offset) const
-{
-  if (PLIC_UNLIKELY (offset & 0x3 || offset < seg_lists || offset + sizeof (InternalList) > seg_strings))
-    __PLIC_return_EFAULT (NULL);
-  InternalList *il = (InternalList*) (((char*) this) + offset);
-  if (PLIC_UNLIKELY (offset + sizeof (*il) + il->length * 4 > seg_strings))
-    __PLIC_return_EFAULT (NULL);
-  return il;
-}
-
-InternalString*
-InternalMap::internal_string (uint32_t offset) const
-{
-  if (PLIC_UNLIKELY (offset & 0x3 || offset < seg_strings || offset + sizeof (InternalString) > length))
-    __PLIC_return_EFAULT (NULL);
-  InternalString *is = (InternalString*) (((char*) this) + offset);
-  if (PLIC_UNLIKELY (offset + sizeof (*is) + is->length > length))
-    __PLIC_return_EFAULT (NULL);
-  return is;
-}
-
-TypeMap::TypeMap (TypeCode::MapHandle *handle) :
-  m_handle (handle->ref())
-{}
-
-TypeMap::TypeMap (const TypeMap &src) :
-  m_handle (src.m_handle->ref())
-{}
-
-TypeMap&
-TypeMap::operator= (const TypeMap &src)
-{
-  TypeCode::MapHandle *old = m_handle;
-  m_handle = src.m_handle->ref();
-  old->unref();
-  return *this;
-}
-
-TypeMap::~TypeMap ()
-{
-  m_handle->unref();
-  m_handle = NULL;
-}
-
-int
-TypeMap::error_status ()
-{
-  return m_handle->status();
-}
-
-size_t
-TypeMap::type_count () const
-{
-  InternalList *il = m_handle->internal_list (m_handle->imap->types);
-  return il ? il->length : 0;
-}
-
-const TypeCode
-TypeMap::type (size_t index) const
-{
-  InternalList *il = m_handle->internal_list (m_handle->imap->types);
-  if (il && index < il->length)
+  PLIC_THROW_IF_FAIL (fb != NULL);
+  // enqueue method call message
+  const Plic::MessageId msgid = Plic::MessageId (fb->first_id());
+  server_queue.send_msg (fb, true);
+  // wait for result
+  const bool needsresult = Plic::msgid_has_result (msgid);
+  if (needsresult)
+    block_for_result ();
+  while (needsresult)
     {
-      Plic::InternalType *it = m_handle->internal_type (il->items[index]);
-      if (it)
-        return TypeCode (m_handle, it);
+      FieldBuffer *fr = client_queue.pop_msg();
+      Plic::MessageId retid = Plic::MessageId (fr->first_id());
+      if (Plic::msgid_is_error (retid))
+        {
+          FieldReader fbr (*fr);
+          fbr.skip_msgid();
+          std::string msg = fbr.pop_string();
+          std::string dom = fbr.pop_string();
+          warning_printf ("%s: %s", dom.c_str(), msg.c_str());
+          delete fr;
+        }
+      else if (Plic::msgid_is_result (retid))
+        return fr;
+      else
+        client_events.push_back (fr);
     }
-  __PLIC_return_EFAULT (TypeCode::notype (m_handle));
-}
-
-struct TypeRegistry {
-  typedef std::vector<TypeMap> TypeMapVector;
-  explicit  TypeRegistry() : builtins (load_builtins()) { pthread_spin_init (&typemap_spinlock, 0 /* pshared */); }
-  /*dtro*/ ~TypeRegistry()   { pthread_spin_destroy (&typemap_spinlock); }
-  size_t    size()           { lock(); size_t sz = typemaps.size(); unlock(); return sz; }
-  TypeMap   nth (size_t n)   { lock(); TypeMap tp = n < typemaps.size() ? typemaps[n] : builtins; unlock(); return tp; }
-  void      add (TypeMap tp) { lock(); typemaps.push_back (tp); unlock(); }
-  TypeMap   standard()       { return builtins; }
-private:
-  void      lock()           { pthread_spin_lock (&typemap_spinlock); }
-  void      unlock()         { pthread_spin_unlock (&typemap_spinlock); }
-  static TypeMap     load_builtins ();
-  pthread_spinlock_t typemap_spinlock;
-  TypeMapVector      typemaps;
-  TypeMap            builtins;
-};
-static TypeRegistry *type_registry = NULL;
-
-static inline void
-type_registry_initialize()
-{
-  if (PLIC_UNLIKELY (!type_registry))
-    {
-      TypeRegistry *tr = new TypeRegistry();
-      __sync_synchronize();
-      if (!__sync_bool_compare_and_swap (&type_registry, NULL, tr))
-        delete tr;
-    }
-}
-
-TypeCode
-TypeMap::lookup (std::string name)
-{
-  type_registry_initialize();
-  size_t sz = type_registry->size();
-  for (size_t i = 0; i < sz; i++)
-    {
-      TypeMap tp = type_registry->nth (i);
-      if (PLIC_UNLIKELY (tp.error_status()))
-        break;
-      TypeCode tc = tp.lookup_local (name);
-      if (PLIC_UNLIKELY (!tc.untyped()))
-        return tc;
-    }
-  return type_registry->standard().lookup_local (name);
-}
-
-TypeCode
-TypeMap::lookup_local (std::string name) const
-{
-  InternalList *il = m_handle->internal_list (m_handle->imap->types);
-  const size_t clen = name.size();
-  const char* cname = name.data(); // not 0-terminated
-  if (PLIC_LIKELY (il))
-    for (size_t i = 0; PLIC_LIKELY (i < il->length); i++)
-      {
-        InternalType *it = m_handle->internal_type (il->items[i]);
-        InternalString *is = PLIC_LIKELY (it) ? m_handle->internal_string (it->name) : NULL;
-        if (PLIC_UNLIKELY (is && clen == is->length && strncmp (cname, is->chars, clen) == 0))
-          return TypeCode (m_handle, it);
-      }
-  return TypeCode::notype (m_handle);
-}
-
-TypeCode
-TypeMap::notype ()
-{
-  type_registry_initialize();
-  return TypeCode (type_registry->standard().m_handle, (InternalType*) zero_type_or_map);
-}
-
-TypeCode::TypeCode (MapHandle *handle, InternalType *itype) :
-  m_handle (handle->ref()), m_type (itype)
-{}
-
-TypeCode::TypeCode (const TypeCode &clone) :
-  m_handle (clone.m_handle->ref()), m_type (clone.m_type)
-{}
-
-TypeCode&
-TypeCode::operator= (const TypeCode &clone)
-{
-  m_handle->unref();
-  m_handle = clone.m_handle->ref();
-  m_type = clone.m_type;
-  return *this;
-}
-
-TypeCode::~TypeCode ()
-{
-  m_type = NULL;
-  m_handle->unref();
-  m_handle = NULL;
+  return NULL;
 }
 
 void
-TypeCode::swap (TypeCode &other)
+ConnectionTransport::server_dispatch ()
 {
-  MapHandle *b_handle = other.m_handle;
-  InternalType *b_type = other.m_type;
-  other.m_handle = m_handle;
-  other.m_type = m_type;
-  m_handle = b_handle;
-  m_type = b_type;
-}
-
-TypeCode
-TypeCode::notype (MapHandle *handle)
-{
-  return TypeCode (handle, (InternalType*) zero_type_or_map);
-}
-
-bool
-TypeCode::untyped () const
-{
-  return m_handle == NULL || m_type == NULL || kind() == UNTYPED;
-}
-
-bool
-TypeCode::operator!= (const TypeCode &o) const
-{
-  return !operator== (o);
-}
-
-TypeKind
-TypeCode::kind () const
-{
-  return PLIC_LIKELY (m_type) ? TypeKind (m_type->tkind) : UNTYPED;
-}
-
-std::string
-TypeCode::kind_name () const
-{
-  return type_kind_name (kind());
-}
-
-std::string
-TypeCode::name () const
-{
-  return PLIC_LIKELY (m_handle) ? m_handle->simple_string (m_type->name) : "<broken>";
-}
-
-size_t
-TypeCode::aux_count () const
-{
-  if (PLIC_UNLIKELY (!m_handle) || PLIC_UNLIKELY (!m_type))
-    return 0;
-  InternalList *il = m_handle->internal_list (m_type->aux_strings);
-  return il ? il->length : 0;
-}
-
-std::string
-TypeCode::aux_data (size_t index) const // name=utf8data string
-{
-  InternalList *il = m_handle->internal_list (m_type->aux_strings);
-  if (!il || index > il->length)
-    __PLIC_return_EFAULT ("");
-  return m_handle->simple_string (il->items[index]);
-}
-
-std::string
-TypeCode::aux_value (std::string key) const // utf8data string
-{
-  const size_t clen = key.size();
-  const char* cname = key.data(); // not 0-terminated
-  InternalList *il = m_handle->internal_list (m_type->aux_strings);
-  if (il)
-    for (size_t i = 0; i < il->length; i++)
-      {
-        InternalString *is = m_handle->internal_string (il->items[i]);
-        if (is && clen < is->length && is->chars[clen] == '=' && strncmp (cname, is->chars, clen) == 0)
-          return std::string (is->chars + clen + 1, is->length - clen - 1);
-      }
-  return "";
-}
-
-std::string
-TypeCode::hints () const
-{
-  std::string str = aux_value ("hints");
-  if (str.size() == 0 || str[0] != ':')
-    str = ":" + str;
-  if (str[str.size() - 1] != ':')
-    str = str + ":";
-  return str;
-}
-
-size_t
-TypeCode::enum_count () const
-{
-  if (kind() != ENUM)
-    return 0;
-  InternalList *il = m_handle->internal_list (m_type->custom);
-  return il ? il->length / 3 : 0;
-}
-
-std::vector<std::string>
-TypeCode::enum_value (size_t index) const // (ident,label,blurb) choic
-{
-  std::vector<String> sv;
-  if (kind() != ENUM)
-    return sv;
-  InternalList *il = m_handle->internal_list (m_type->custom);
-  if (!il || index * 3 > il->length)
-    __PLIC_return_EFAULT (sv);
-  sv.push_back (m_handle->simple_string (il->items[index * 3 + 0]));   // ident
-  sv.push_back (m_handle->simple_string (il->items[index * 3 + 1]));   // label
-  sv.push_back (m_handle->simple_string (il->items[index * 3 + 2]));   // blurb
-  return sv;
-}
-
-size_t
-TypeCode::prerequisite_count () const
-{
-  if (kind() != INSTANCE)
-    return 0;
-  InternalList *il = m_handle->internal_list (m_type->custom);
-  return il ? il->length : 0;
-}
-
-std::string
-TypeCode::prerequisite (size_t index) const
-{
-  std::string s;
-  if (kind() != INSTANCE)
-    return s;
-  InternalList *il = m_handle->internal_list (m_type->custom);
-  if (!il || index > il->length)
-    __PLIC_return_EFAULT (s);
-  return m_handle->simple_string (il->items[index]);
-}
-
-size_t
-TypeCode::field_count () const
-{
-  TypeKind k = kind();
-  if (k == SEQUENCE)
-    return 1;
-  if (k != RECORD)
-    return 0;
-  InternalList *il = m_handle->internal_list (m_type->custom);
-  return il ? il->length : 0;
-}
-
-TypeCode
-TypeCode::field (size_t index) const // RECORD or SEQUENCE
-{
-  TypeKind k = kind();
-  uint32_t field_offset;
-  if (k == SEQUENCE && index == 0)
-    field_offset = m_type->custom;
-  else if (k == RECORD)
+  FieldBuffer *fb = server_queue.fetch_msg();
+  if (!fb)
+    return;
+  FieldReader fbr (*fb);
+  const MessageId msgid = MessageId (fbr.pop_int64());
+  const uint64_t  hashlow = fbr.pop_int64();
+  const bool needsresult = msgid_has_result (msgid);
+  struct Wrapper : ServerConnection { using ServerConnection::find_method; };
+  const DispatchFunc method = Wrapper::find_method (msgid, hashlow);
+  FieldBuffer *fr = NULL;
+  if (method)
     {
-      InternalList *il = m_handle->internal_list (m_type->custom);
-      if (!il || index > il->length)
-        __PLIC_return_EFAULT (TypeCode::notype (m_handle));
-      field_offset = il->items[index];
+      fr = method (fbr);
+      const MessageId retid = MessageId (fr ? fr->first_id() : 0);
+      if (fr && (!needsresult || !msgid_is_result (retid)))
+        {
+          warning_printf ("bogus result from method (%016lx%016llx): id=%016lx", msgid, hashlow, retid);
+          delete fr;
+          fr = NULL;
+        }
     }
   else
-    return TypeCode::notype (m_handle);
-  InternalType *it = m_handle->internal_type (field_offset);
-  return it ? TypeCode (m_handle, it) : TypeCode::notype (m_handle);
+    warning_printf ("unknown message (%016lx%016llx)", msgid, hashlow);
+  delete fb;
+  if (needsresult)
+    {
+      client_queue.send_msg (fr ? fr : FieldBuffer::new_result(), false);
+      notify_for_result();
+    }
 }
 
-std::string
-TypeCode::origin () const // type for TYPE_REFERENCE
+void
+ConnectionTransport::client_dispatch ()
 {
-  std::string s;
-  if (kind() != TYPE_REFERENCE)
-    return s;
-  return m_handle->simple_string (m_type->custom);
+  FieldBuffer *fb;
+  if (!client_events.empty())
+    {
+      fb = client_events.front();
+      client_events.pop_front();
+    }
+  else
+    fb = client_queue.fetch_msg();
+  if (!fb)
+    return;
+  FieldReader fbr (*fb);
+  const MessageId msgid = MessageId (fbr.pop_int64());
+  const uint64_t  hashlow = fbr.pop_int64();
+  if (msgid_is_event (msgid))
+    {
+      const uint64_t handler_id = fbr.pop_int64();
+      ClientConnection::EventHandler *evh = client_find_event_handler (handler_id);
+      if (evh)
+        {
+          FieldBuffer *fr = evh->handle_event (*fb);
+          if (fr)
+            {
+              FieldReader frr (*fr);
+              const MessageId retid = MessageId (frr.pop_int64());
+              frr.skip(); // msgid low
+              if (msgid_is_error (retid))
+                {
+                  std::string msg = frr.pop_string(), domain = frr.pop_string();
+                  if (domain.size())
+                    domain += ": ";
+                  msg = domain + msg;
+                  warning_printf ("%s", msg.c_str());
+                }
+              delete fr;
+            }
+        }
+      else
+        warning_printf ("invalid signal handler id in %s: %llu", "event", handler_id);
+    }
+  else if (msgid_is_discon (msgid))
+    {
+      const uint64_t handler_id = fbr.pop_int64();
+      const bool deleted = true; // FIXME: currently broken : connection.delete_event_handler (handler_id);
+      if (!deleted)
+        warning_printf ("invalid signal handler id in %s: %llu", "disconnect", handler_id);
+    }
+  else
+    warning_printf ("unknown message (%016lx%016llx)", msgid, hashlow);
+  delete fb;
+}
+
+// == ClientConnection ==
+ClientConnection::ClientConnection (ServerConnection &server_connection) :
+  m_transport (server_connection.m_transport->ref())
+{}
+
+ClientConnection::ClientConnection() :
+  m_transport (NULL)
+{}
+
+ClientConnection::ClientConnection (const ClientConnection &clone) :
+  m_transport (clone.m_transport ? clone.m_transport->ref() : NULL)
+{}
+
+void
+ClientConnection::operator= (const ClientConnection &clone)
+{
+  ConnectionTransport *old = m_transport;
+  m_transport = clone.m_transport ? clone.m_transport->ref() : NULL;
+  if (old)
+    old->unref();
+}
+
+ClientConnection::~ClientConnection ()
+{
+  if (m_transport)
+    m_transport->unref();
+  m_transport = NULL;
 }
 
 bool
-TypeCode::operator== (const TypeCode &o) const
+ClientConnection::is_null () const              { return m_transport == NULL; }
+int
+ClientConnection::notify_fd ()                  { return m_transport->client_notify_fd(); }
+bool
+ClientConnection::pending ()                    { return m_transport->client_pending(); }
+void
+ClientConnection::dispatch ()                   { return m_transport->client_dispatch(); }
+FieldBuffer*
+ClientConnection::call_remote (FieldBuffer *fb) { return m_transport->client_call_remote (fb); }
+uint64_t
+ClientConnection::register_event_handler (EventHandler *evh) { return m_transport->client_register_event_handler (evh); }
+ClientConnection::EventHandler*
+ClientConnection::find_event_handler (uint64_t h_id)     { return m_transport->client_find_event_handler (h_id); }
+bool
+ClientConnection::delete_event_handler (uint64_t h_id)   { return m_transport->client_delete_event_handler (h_id); }
+
+ClientConnection::EventHandler::~EventHandler()
+{}
+
+// == ServerConnection ==
+ServerConnection::ServerConnection (ConnectionTransport &transport) :
+  m_transport (transport.ref())
+{}
+
+ServerConnection::ServerConnection () :
+  m_transport (NULL)
+{}
+
+ServerConnection::ServerConnection (const ServerConnection &clone) :
+  m_transport (clone.m_transport ? clone.m_transport->ref() : NULL)
+{}
+
+void
+ServerConnection::operator= (const ServerConnection &clone)
 {
-  return o.m_handle == m_handle && o.m_type == m_type;
+  ConnectionTransport *old = m_transport;
+  m_transport = clone.m_transport ? clone.m_transport->ref() : NULL;
+  if (old)
+    old->unref();
 }
 
-std::string
-TypeCode::pretty (const std::string &indent) const
+ServerConnection::~ServerConnection ()
 {
-  std::string s = indent;
-  s += name();
-  s += std::string (" (") + type_kind_name (kind()) + ")";
-  switch (kind())
-    {
-      char buffer[1024];
-    case ENUM:
-      snprintf (buffer, sizeof (buffer), "%zu", enum_count());
-      s += std::string (": ") + buffer;
-      for (uint32_t i = 0; i < enum_count(); i++)
-        {
-          std::vector<String> sv = enum_value (i);
-          s += std::string ("\n") + indent + indent + sv[0] + ", " + sv[1] + ", " + sv[2];
-        }
-      break;
-    case INSTANCE:
-      snprintf (buffer, sizeof (buffer), "%zu", prerequisite_count());
-      s += std::string (": ") + buffer;
-      for (uint32_t i = 0; i < prerequisite_count(); i++)
-        {
-          std::string sp = prerequisite (i);
-          s += std::string ("\n") + indent + indent + sp;
-        }
-      break;
-    case RECORD: case SEQUENCE:
-      snprintf (buffer, sizeof (buffer), "%zu", field_count());
-      s += std::string (": ") + buffer;
-      for (uint32_t i = 0; i < field_count(); i++)
-        {
-          const TypeCode memb = field (i);
-          s += std::string ("\n") + memb.pretty (indent + indent);
-        }
-      break;
-    case TYPE_REFERENCE:
-      s += std::string (": ") + origin();
-      break;
-    default: ;
-    }
-  if (aux_count())
-    {
-      s += std::string (" [");
-      for (uint32_t i = 0; i < aux_count(); i++)
-        {
-          std::string aux = aux_data (i);
-          s += std::string ("\n") + indent + indent + aux;
-          // verify aux_value
-          const char *eq = strchr (aux.c_str(), '=');
-          if (eq)
-            {
-              const size_t eqp = eq - aux.data();
-              const std::string key = aux.substr (0, eqp);
-              std::string val = aux_value (key);
-              if (val != aux.substr (eqp + 1))
-                {
-                  errno = ENXIO;
-                  perror (std::string ("aux_value for type: " + name() + ": " + key).c_str()), abort();
-                }
-            }
-        }
-      s += "]";
-    }
-  return s;
+  if (m_transport)
+    m_transport->unref();
+  m_transport = NULL;
 }
 
-static char* /* return malloc()-ed buffer containing a full read of FILE */
-file_memread (FILE   *stream,
-              size_t *lengthp)
+bool
+ServerConnection::is_null () const              { return m_transport == NULL; }
+void
+ServerConnection::send_event (FieldBuffer *fb) { return m_transport->server_send_event (fb); }
+int
+ServerConnection::notify_fd () { return m_transport->server_notify_fd(); }
+bool
+ServerConnection::pending () { return m_transport->server_pending(); }
+void
+ServerConnection::dispatch () { return m_transport->server_dispatch(); }
+
+ServerConnection
+ServerConnection::create_threaded ()
 {
-  size_t sz = 256;
-  char *malloc_string = (char*) malloc (sz);
-  if (!malloc_string)
-    return NULL;
-  char *start = malloc_string;
-  errno = 0;
-  while (!feof (stream))
-    {
-      size_t bytes = fread (start, 1, sz - (start - malloc_string), stream);
-      if (bytes <= 0 && ferror (stream) && errno != EAGAIN)
-        {
-          start = malloc_string; // error/0-data
-          break;
-        }
-      start += bytes;
-      if (start == malloc_string + sz)
-        {
-          bytes = start - malloc_string;
-          sz *= 2;
-          char *newstring = (char*) realloc (malloc_string, sz);
-          if (!newstring)
-            {
-              start = malloc_string; // error/0-data
-              break;
-            }
-          malloc_string = newstring;
-          start = malloc_string + bytes;
-        }
-    }
-  int savederr = errno;
-  *lengthp = start - malloc_string;
-  if (!*lengthp)
-    {
-      free (malloc_string);
-      malloc_string = NULL;
-    }
-  errno = savederr;
-  return malloc_string;
+  ConnectionTransport *t = new ConnectionTransport(); // ref_count=1
+  ServerConnection scon (*t);
+  t->unref();
+  return scon;
 }
 
-TypeMap
-TypeMap::load (std::string filename)
+// == MethodRegistry ==
+static inline bool
+operator< (const TypeHash &a, const TypeHash &b)
 {
-  TypeMap tp = TypeMap::load_local (filename);
-  if (!tp.error_status())
-    {
-      type_registry_initialize();
-      type_registry->add (tp);
-      errno = 0;
-    }
-  return tp;
+  return PLIC_UNLIKELY (a.typehi == b.typehi) ? a.typelo < b.typelo : a.typehi < b.typehi;
+}
+typedef std::map<TypeHash, DispatchFunc> DispatcherMap;
+static DispatcherMap                     dispatcher_map;
+static pthread_mutex_t                   dispatcher_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool                              dispatcher_map_locked = false;
+
+DispatchFunc
+ServerConnection::find_method (uint64_t hashhi, uint64_t hashlo)
+{
+  TypeHash typehash (hashhi, hashlo);
+#if 1 // avoid costly mutex locking
+  if (PLIC_UNLIKELY (dispatcher_map_locked == false))
+    dispatcher_map_locked = true;
+  return dispatcher_map[typehash];
+#else
+  pthread_mutex_lock (&dispatcher_mutex);
+  DispatchFunc dispatcher_func = dispatcher_map[typehash];
+  pthread_mutex_unlock (&dispatcher_mutex);
+  return dispatcher_func;
+#endif
 }
 
-TypeMap
-TypeRegistry::load_builtins ()
+void
+ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
 {
-  assert (type_registry == NULL);
-  TypeMap tp = TypeMap::load_local ("///..builtins..");
-  assert (tp.error_status() == 0);
-  return tp;
-}
-
-TypeMap
-TypeMap::load_local (std::string filename)
-{
-  if (!type_registry && filename == "///..builtins..")
-    return builtins();
-  FILE *file = fopen (filename.c_str(), "r");
-  if (!file)
+  PLIC_THROW_IF_FAIL (dispatcher_map_locked == false);
+  pthread_mutex_lock (&dispatcher_mutex);
+  DispatcherMap::size_type size_before = dispatcher_map.size();
+  TypeHash typehash (mentry.hashhi, mentry.hashlo);
+  dispatcher_map[typehash] = mentry.dispatcher;
+  DispatcherMap::size_type size_after = dispatcher_map.size();
+  pthread_mutex_unlock (&dispatcher_mutex);
+  // simple hash collision check (sanity check, see below)
+  if (PLIC_UNLIKELY (size_before == size_after))
     {
-      errno = errno ? errno : ENOMEM;
-      return TypeCode::MapHandle::create_error_type_map (errno);
-    }
-  size_t length = 0;
-  char *contents = file_memread (file, &length);
-  int savederr = errno;
-  fclose (file);
-  errno = savederr;
-  InternalMap *imap = (InternalMap*) contents;
-  if (!contents || length < sizeof (*imap) + 4)
-    {
-      if (contents)
-        free (contents);
-      errno = ENODATA;
-      return TypeCode::MapHandle::create_error_type_map (errno);
-    }
-  if (!imap->check_magic() || !imap->check_lengths (length) || !imap->check_tail())
-    {
-      free (contents);
-      errno = ELIBBAD;
-      return TypeCode::MapHandle::create_error_type_map (errno);
-    }
-  TypeMap type_map = TypeCode::MapHandle::create_type_map (imap, length, true);
-  errno = 0;
-  return type_map;
-}
-
-#include "../plic/builtins.cc" // defines intern_builtins_cc_typ
-
-TypeMap
-TypeMap::builtins ()
-{
-  InternalMap *imap = (InternalMap*) intern_builtins_cc_typ;
-  const size_t length = sizeof (intern_builtins_cc_typ);
-  if (!imap || sizeof (intern_builtins_cc_typ) < sizeof (*imap) + 4)
-    {
-      errno = ENODATA;
-      perror ("ERROR: accessing builtin PLIC types");
+      errno = EKEYREJECTED;
+      perror (string_printf ("%s:%u: Plic::ServerConnection::MethodRegistry::register_method: "
+                             "duplicate hash registration (%016llx%016llx)",
+                             __FILE__, __LINE__, mentry.hashhi, mentry.hashlo).c_str());
       abort();
     }
-  if (!imap->check_magic() || !imap->check_lengths (length) || !imap->check_tail())
-    {
-      errno = ELIBBAD;
-      perror ("ERROR: accessing builtin PLIC types");
-      abort();
-    }
-  TypeMap type_map = TypeCode::MapHandle::create_type_map (imap, length, true);
-  errno = 0;
-  return type_map;
 }
 
 } // Plic
