@@ -45,6 +45,8 @@ Plic::FieldBuffer* plic$_error (const char *format, ...)
 
 } // Anonymous
 #endif // __PLIC_GENERIC_CC_BOILERPLATE__
+
+#include <plic/cxxstubaux.hh>
 """
 
 servercc_boilerplate = r"""
@@ -63,8 +65,6 @@ Plic::uint64_t       connection_handle2id  (const Plic::SmartHandle &h) { return
 static inline void   connection_context4id (Plic::uint64_t ipcid, Plic::NonCopyable *ctx) {}
 template<class C> C* connection_id2context (Plic::uint64_t oid) { return (C*) NULL; }
 #endif // !PLIC_CONNECTION
-
-#include <plic/cxxstubaux.hh>
 """
 
 identifiers = {
@@ -353,7 +353,7 @@ class Generator:
     l = self.inherit_reduce (l)
     return l
   def interface_class_inheritance (self, type_info):
-    plic_smarthandle = 'Plic::SmartHandle'
+    plic_smarthandle, ddc = 'Plic::SmartHandle', False
     l = self.interface_class_ancestors (type_info)
     l = [self.C (pr) for pr in l] # types -> names
     if   self.gen_mode == G4SERVER and l:
@@ -364,19 +364,19 @@ class Generator:
     elif self.gen_mode == G4CLIENT and l:
       heritage = 'public'
     elif self.gen_mode == G4CLIENT and not l:
-      l = [plic_smarthandle]
+      l, ddc = [plic_smarthandle], True
       heritage = 'public virtual'
     if self.gen_mode == G4CLIENT:
       cl = l if l == [plic_smarthandle] else [plic_smarthandle] + l
     else:
       cl = []
-    return (l, heritage, cl) # prerequisite list, heritage type, constructor arg list)
+    return (l, heritage, cl, ddc) # prerequisites, heritage type, constructor args, direct-SH-descendant
   def generate_interface_class (self, type_info):
     s, classC = '\n', self.C (type_info) # class names
     # declare
     s += 'class %s' % classC
     # inherit
-    l, heritage, cl = self.interface_class_inheritance (type_info)
+    l, heritage, cl, ddc = self.interface_class_inheritance (type_info)
     s += ' : ' + heritage + ' %s' % (', ' + heritage + ' ').join (l) + '\n'
     s += '  /// See also the corresponding IDL class %s.\n' % type_info.name # doxygen
     s += '{\n'
@@ -389,6 +389,8 @@ class Generator:
       s += '  explicit ' + self.F ('') + '%s ();\n' % self.C (type_info) # ctor
       s += '  virtual ' + self.F ('/*Des*/') + '~%s () = 0;\n' % self.C (type_info) # dtor
     else: # G4CLIENT
+      if ddc:
+        s += '  static Plic::ClientConnection __client_connection__ (void);\n'
       for sg in type_info.signals:
         s += '  ' + self.generate_signal_proxy_typedef (sg, type_info)
     s += 'public:\n'
@@ -534,9 +536,12 @@ class Generator:
   def generate_client_class_methods (self, class_info):
     s, classH, classC = '', self.H (class_info.name), class_info.name + '_Context$' # class names
     classH2 = (classH, classH)
-    l, heritage, cl = self.interface_class_inheritance (class_info)
+    l, heritage, cl, ddc = self.interface_class_inheritance (class_info)
     s += '%s::%s ()' % classH2 # ctor
     s += '\n{}\n'
+    if ddc:
+      s += 'Plic::ClientConnection\n%s::__client_connection__ (void)\n{\n' % classH
+      s += '  return PLIC_CONNECTION();\n}\n'
     s += 'void\n'
     s += 'operator<<= (Plic::FieldBuffer &fb, const %s &handle)\n{\n' % classH
     s += '  fb.add_object (connection_handle2id (handle));\n'

@@ -31,6 +31,8 @@ Plic::FieldBuffer* plic$_error (const char *format, ...)
 } // Anonymous
 #endif // __PLIC_GENERIC_CC_BOILERPLATE__
 
+#include <plic/cxxstubaux.hh>
+
 
 #ifndef PLIC_CONNECTION
 #define PLIC_CONNECTION()       (*(Plic::ServerConnection*)NULL)

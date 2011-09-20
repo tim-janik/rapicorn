@@ -31,6 +31,8 @@ Plic::FieldBuffer* plic$_error (const char *format, ...)
 } // Anonymous
 #endif // __PLIC_GENERIC_CC_BOILERPLATE__
 
+#include <plic/cxxstubaux.hh>
+
 
 #ifndef PLIC_CONNECTION
 #define PLIC_CONNECTION()       (*(Plic::ClientConnection*)NULL)
@@ -38,8 +40,6 @@ Plic::uint64_t       connection_handle2id  (const Plic::SmartHandle &h) { return
 static inline void   connection_context4id (Plic::uint64_t ipcid, Plic::NonCopyable *ctx) {}
 template<class C> C* connection_id2context (Plic::uint64_t oid) { return (C*) NULL; }
 #endif // !PLIC_CONNECTION
-
-#include <plic/cxxstubaux.hh>
 
 
 // --- Interfaces (class declarations) ---
@@ -175,6 +175,7 @@ class FirstInterface_SmartHandle : public virtual Plic::SmartHandle
   static FirstInterface_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
+  static Plic::ClientConnection __client_connection__ (void);
 public:
   template<class C>
   static FirstInterface_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
@@ -363,6 +364,7 @@ class UIWidgetArea_SmartHandle : public virtual Plic::SmartHandle
   static UIWidgetArea_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
+  static Plic::ClientConnection __client_connection__ (void);
   typedef Rapicorn::Signals::SignalProxy<UIWidgetArea_SmartHandle, void ()> Signal_void_signal;
   typedef Rapicorn::Signals::SignalProxy<UIWidgetArea_SmartHandle, double (UIWidgetArea_SmartHandle &ba1, int someint)> Signal_sample_signal;
 public:
@@ -404,6 +406,7 @@ class Parent_SmartHandle : public virtual Plic::SmartHandle
   static Parent_SmartHandle     _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
+  static Plic::ClientConnection __client_connection__ (void);
 public:
   template<class C>
   static Parent_SmartHandle     downcast (C c) { return _cast (c, c.cast_types()); }
@@ -489,6 +492,7 @@ class QuickIface_SmartHandle : public virtual Plic::SmartHandle
   static QuickIface_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
+  static Plic::ClientConnection __client_connection__ (void);
 public:
   template<class C>
   static QuickIface_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
@@ -506,6 +510,7 @@ class MethodTestInterface_SmartHandle : public virtual Plic::SmartHandle
   static MethodTestInterface_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
+  static Plic::ClientConnection __client_connection__ (void);
 public:
   template<class C>
   static MethodTestInterface_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
@@ -543,6 +548,7 @@ class SignalTestInterface_SmartHandle : public virtual Plic::SmartHandle
   static SignalTestInterface_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
+  static Plic::ClientConnection __client_connection__ (void);
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, void ()> Signal_void_result;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, bool ()> Signal_bool_result;
   typedef Rapicorn::Signals::SignalProxy<SignalTestInterface_SmartHandle, int ()> Signal_int_result;
@@ -637,6 +643,7 @@ class PropertyTester_SmartHandle : public virtual Plic::SmartHandle
   static PropertyTester_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
+  static Plic::ClientConnection __client_connection__ (void);
 public:
   template<class C>
   static PropertyTester_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
@@ -686,6 +693,7 @@ class ButtonArea_SmartHandle : public virtual Plic::SmartHandle
   static ButtonArea_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
+  static Plic::ClientConnection __client_connection__ (void);
   typedef Rapicorn::Signals::SignalProxy<ButtonArea_SmartHandle, bool ()> Signal_check_activate;
   typedef Rapicorn::Signals::SignalProxy<ButtonArea_SmartHandle, void ()> Signal_activate;
 public:
@@ -716,6 +724,7 @@ class PureMethods_SmartHandle : public virtual Plic::SmartHandle
   static PureMethods_SmartHandle _cast (Plic::SmartHandle&, const Plic::TypeHashList&);
   static const Plic::TypeHash&  _type ();
 protected:
+  static Plic::ClientConnection __client_connection__ (void);
 public:
   template<class C>
   static PureMethods_SmartHandle downcast (C c) { return _cast (c, c.cast_types()); }
@@ -774,6 +783,11 @@ FirstInterface_Context$::list_types ()
 }
 FirstInterface_SmartHandle::FirstInterface_SmartHandle ()
 {}
+Plic::ClientConnection
+FirstInterface_SmartHandle::__client_connection__ (void)
+{
+  return PLIC_CONNECTION();
+}
 void
 operator<<= (Plic::FieldBuffer &fb, const FirstInterface_SmartHandle &handle)
 {
@@ -1252,6 +1266,11 @@ UIWidgetArea_Context$::list_types ()
 }
 UIWidgetArea_SmartHandle::UIWidgetArea_SmartHandle ()
 {}
+Plic::ClientConnection
+UIWidgetArea_SmartHandle::__client_connection__ (void)
+{
+  return PLIC_CONNECTION();
+}
 void
 operator<<= (Plic::FieldBuffer &fb, const UIWidgetArea_SmartHandle &handle)
 {
@@ -1536,6 +1555,11 @@ Parent_Context$::list_types ()
 }
 Parent_SmartHandle::Parent_SmartHandle ()
 {}
+Plic::ClientConnection
+Parent_SmartHandle::__client_connection__ (void)
+{
+  return PLIC_CONNECTION();
+}
 void
 operator<<= (Plic::FieldBuffer &fb, const Parent_SmartHandle &handle)
 {
@@ -1884,6 +1908,11 @@ QuickIface_Context$::list_types ()
 }
 QuickIface_SmartHandle::QuickIface_SmartHandle ()
 {}
+Plic::ClientConnection
+QuickIface_SmartHandle::__client_connection__ (void)
+{
+  return PLIC_CONNECTION();
+}
 void
 operator<<= (Plic::FieldBuffer &fb, const QuickIface_SmartHandle &handle)
 {
@@ -1970,6 +1999,11 @@ MethodTestInterface_Context$::list_types ()
 }
 MethodTestInterface_SmartHandle::MethodTestInterface_SmartHandle ()
 {}
+Plic::ClientConnection
+MethodTestInterface_SmartHandle::__client_connection__ (void)
+{
+  return PLIC_CONNECTION();
+}
 void
 operator<<= (Plic::FieldBuffer &fb, const MethodTestInterface_SmartHandle &handle)
 {
@@ -2291,6 +2325,11 @@ SignalTestInterface_Context$::list_types ()
 }
 SignalTestInterface_SmartHandle::SignalTestInterface_SmartHandle ()
 {}
+Plic::ClientConnection
+SignalTestInterface_SmartHandle::__client_connection__ (void)
+{
+  return PLIC_CONNECTION();
+}
 void
 operator<<= (Plic::FieldBuffer &fb, const SignalTestInterface_SmartHandle &handle)
 {
@@ -2640,6 +2679,11 @@ PropertyTester_Context$::list_types ()
 }
 PropertyTester_SmartHandle::PropertyTester_SmartHandle ()
 {}
+Plic::ClientConnection
+PropertyTester_SmartHandle::__client_connection__ (void)
+{
+  return PLIC_CONNECTION();
+}
 void
 operator<<= (Plic::FieldBuffer &fb, const PropertyTester_SmartHandle &handle)
 {
@@ -2966,6 +3010,11 @@ ButtonArea_Context$::list_types ()
 }
 ButtonArea_SmartHandle::ButtonArea_SmartHandle ()
 {}
+Plic::ClientConnection
+ButtonArea_SmartHandle::__client_connection__ (void)
+{
+  return PLIC_CONNECTION();
+}
 void
 operator<<= (Plic::FieldBuffer &fb, const ButtonArea_SmartHandle &handle)
 {
@@ -3149,6 +3198,11 @@ PureMethods_Context$::list_types ()
 }
 PureMethods_SmartHandle::PureMethods_SmartHandle ()
 {}
+Plic::ClientConnection
+PureMethods_SmartHandle::__client_connection__ (void)
+{
+  return PLIC_CONNECTION();
+}
 void
 operator<<= (Plic::FieldBuffer &fb, const PureMethods_SmartHandle &handle)
 {

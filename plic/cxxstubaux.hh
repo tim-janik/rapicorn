@@ -10,8 +10,15 @@ namespace CxxStub /// Internal types, used by the CxxStub code generator.
 
 /// Handles remote (dis-)connection and client side dispatching of events via Rapicorn signals.
 template<class Handle, typename SignalSignature>
-struct SignalHandler : Plic::ClientConnection::EventHandler
+class SignalHandler : Plic::ClientConnection::EventHandler
 {
+  static inline Plic::ClientConnection
+  __client_connection__ (void)
+  {
+    struct _Handle : Handle { using Handle::__client_connection__; };
+    return _Handle::__client_connection__();
+  }
+public:
   typedef Rapicorn::Signals::SignalProxy<Handle, SignalSignature> ProxySignal;
   typedef Rapicorn::Signals::Signal<
     Handle, SignalSignature,
@@ -32,7 +39,7 @@ struct SignalHandler : Plic::ClientConnection::EventHandler
   {
     if (m_handler_id)
       {
-        PLIC_CONNECTION().delete_event_handler (m_handler_id);
+        __client_connection__().delete_event_handler (m_handler_id);
         m_handler_id = 0;
       }
   }
@@ -45,7 +52,7 @@ struct SignalHandler : Plic::ClientConnection::EventHandler
     if (hasconnections)
       {
         if (!m_handler_id)      // signal connected
-          m_handler_id = PLIC_CONNECTION().register_event_handler (this);
+          m_handler_id = __client_connection__().register_event_handler (this);
         fb <<= m_handler_id;    // handler connection request
         fb <<= 0;               // no disconnection
       }
@@ -57,7 +64,7 @@ struct SignalHandler : Plic::ClientConnection::EventHandler
         fb <<= m_connection_id; // disconnection request
         m_connection_id = 0;
       }
-    Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
+    Plic::FieldBuffer *fr = __client_connection__().call_remote (&fb); // deletes fb
     if (fr)
       { // FIXME: assert that fr is a non-NULL FieldBuffer with result message
         Plic::FieldReader frr (*fr);
