@@ -272,7 +272,7 @@ string_from_double (double value)
 }
 
 vector<double>
-string_to_vector (const String &string)
+string_to_double_vector (const String &string)
 {
   vector<double> dvec;
   const char *spaces = " \t\n";
@@ -304,13 +304,13 @@ string_to_vector (const String &string)
       if (*d && strchr (delims, *d))
         d++;                                    /* eat delimiter */
     }
-  // printf ("vector: %d: %s\n", dvec.size(), string_from_vector (dvec).c_str());
+  // printf ("vector: %d: %s\n", dvec.size(), string_from_double_vector (dvec).c_str());
   return dvec;
 }
 
 String
-string_from_vector (const vector<double> &dvec,
-                    const String         &delim)
+string_from_double_vector (const vector<double> &dvec,
+                           const String         &delim)
 {
   String s;
   for (uint i = 0; i < dvec.size(); i++)

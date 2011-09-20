@@ -346,7 +346,7 @@ PropertyPoint<Class>::set_value (Deletable *obj, const String &svalue)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   Point point;
-  vector<double> dvec = string_to_vector (svalue);
+  vector<double> dvec = string_to_double_vector (svalue);
   if (dvec.size() == 2)
     point = Point (dvec[0], dvec[1]);
   (instance->*setter) (point);
@@ -360,7 +360,7 @@ PropertyPoint<Class>::get_value (Deletable *obj)
   vector<double> dvec;
   dvec.push_back (point.x);
   dvec.push_back (point.y);
-  return string_from_vector (dvec);
+  return string_from_double_vector (dvec);
 }
 
 template<class Class> bool

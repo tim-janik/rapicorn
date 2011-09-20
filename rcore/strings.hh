@@ -62,8 +62,8 @@ template<> inline uint64        string_to_type<uint64>   (const String &string) 
 template<> inline String        string_from_type<uint64> (uint64         value) { return string_from_uint (value); }
 template<> inline String        string_to_type<String>   (const String &string) { return string; }
 template<> inline String        string_from_type<String> (String         value) { return value; }
-vector<double>                  string_to_vector         (const String         &string);
-String                          string_from_vector       (const vector<double> &dvec,
+vector<double>                  string_to_double_vector  (const String         &string);
+String                          string_from_double_vector(const vector<double> &dvec,
                                                           const String         &delim = " ");
 String  			string_from_errno        (int         errno_val);
 bool                            string_is_uuid           (const String &uuid_string); /* check uuid formatting */
