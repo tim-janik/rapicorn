@@ -409,8 +409,6 @@ public:
   template<class Obj> static Obj* ref_sink (Obj *obj) { obj->ref_sink(); return obj; }
   template<class Obj> static void unref    (Obj &obj) { obj.unref(); }
   template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
-  template<class Obj> static void sink     (Obj &obj) { obj.ref_sink(); obj.unref(); }
-  template<class Obj> static void sink     (Obj *obj) { obj->ref_sink(); obj->unref(); }
 protected:
   virtual void pre_finalize       ();
   virtual void finalize           ();
@@ -423,8 +421,6 @@ template<class Obj> static Obj& ref_sink (Obj &obj) { obj.ref_sink();  return ob
 template<class Obj> static Obj* ref_sink (Obj *obj) { obj->ref_sink(); return obj; }
 template<class Obj> static void unref    (Obj &obj) { obj.unref(); }
 template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
-template<class Obj> static void sink     (Obj &obj) { obj.ref_sink(); obj.unref(); }
-template<class Obj> static void sink     (Obj *obj) { obj->ref_sink(); obj->unref(); }
 
 /* --- Locatable --- */
 class Locatable : public virtual ReferenceCountable {
