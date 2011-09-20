@@ -41,20 +41,20 @@ struct SignalHandler : Plic::ClientConnection::EventHandler
   {
     Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + 2);
     fb.add_msgid (hhi, hlo);
-    fb << *rsignal.emitter();
+    fb <<= *rsignal.emitter();
     if (hasconnections)
       {
         if (!m_handler_id)      // signal connected
           m_handler_id = PLIC_CONNECTION().register_event_handler (this);
-        fb << m_handler_id;     // handler connection request
-        fb << 0;                // no disconnection
+        fb <<= m_handler_id;    // handler connection request
+        fb <<= 0;               // no disconnection
       }
     else
       {                         // signal disconnected
         if (m_handler_id)
           ; // FIXME: deletion! PLIC_CONNECTION().delete_event_handler (m_handler_id), m_handler_id = 0;
-        fb << 0;                // no handler connection
-        fb << m_connection_id;  // disconnection request
+        fb <<= 0;               // no handler connection
+        fb <<= m_connection_id; // disconnection request
         m_connection_id = 0;
       }
     Plic::FieldBuffer *fr = PLIC_CONNECTION().call_remote (&fb); // deletes fb
@@ -63,7 +63,7 @@ struct SignalHandler : Plic::ClientConnection::EventHandler
         Plic::FieldReader frr (*fr);
         frr.skip_msgid();       // FIXME: msgid for return?
         if (frr.remaining() && m_handler_id)
-          frr >> m_connection_id;
+          frr >>= m_connection_id;
         delete fr;
       }
   }

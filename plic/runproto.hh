@@ -17,7 +17,7 @@ public:
     if (PLIC_UNLIKELY (fbr.remaining() != NARGS))
       Plic::error_printf ("invalid number of signal arguments");
     typename Type<A1>::T a1; typename Type<A2>::T a2;
-    fbr >> a1; fbr >> a2;
+    fbr >>= a1; fbr >>= a2;
     return sig.emit (a1, a2);
   }
 };

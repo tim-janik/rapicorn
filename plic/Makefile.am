@@ -56,8 +56,10 @@ runtime.hh: runtypes.hh runproto.hh xmanifold.py Makefile.am
 	$(Q) echo "// plic/runtime.hh - Plic C++ Runtime API" 		>  xtmp-$(@F)
 	$(Q) echo "#ifndef __PLIC_RUNTIME_HH__" 			>> xtmp-$(@F)
 	$(Q) echo "#define __PLIC_RUNTIME_HH__" 			>> xtmp-$(@F)
-	$(Q) cat $< 							>> xtmp-$(@F)
-	$(Q) $(srcdir)/xmanifold.py runproto.hh 18 			>> xtmp-$(@F)
+	$(Q) echo '# 1 "$(abs_srcdir)/runtypes.hh"' 			>> xtmp-$(@F)
+	$(Q) cat $(srcdir)/runtypes.hh					>> xtmp-$(@F)
+	$(Q) echo '# 1 "$(abs_srcdir)/runproto.hh"' 			>> xtmp-$(@F)
+	$(Q) $(srcdir)/xmanifold.py $(srcdir)/runproto.hh 18		>> xtmp-$(@F)
 	$(Q) echo "#endif // __PLIC_RUNTIME_HH__" 			>> xtmp-$(@F)
 	$(Q) cp xtmp-$(@F) $@
 	$(Q) rm -f xtmp-$(@F)

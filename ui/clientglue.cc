@@ -47,7 +47,7 @@ init_app (const String       &app_ident,
   Plic::FieldBuffer8 fb (1);
   fb.add_object (appid);
   Plic::FieldReader fbr (fb);
-  fbr >> app_cached;
+  fbr >>= app_cached;
   return app_cached;
 }
 

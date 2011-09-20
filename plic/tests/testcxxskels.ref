@@ -12,50 +12,50 @@ namespace MandatoryNamespace {
 
 enum Empty {
 };
-inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Empty &e) { fb << Plic::EnumValue (e); return fb; }
-inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Empty &e) { e = Empty (frr.pop_evalue()); return frr; }
+inline void operator<<= (Plic::FieldBuffer &fb,  Empty &e) { fb <<= Plic::EnumValue (e); }
+inline void operator>>= (Plic::FieldReader &frr, Empty &e) { e = Empty (frr.pop_evalue()); }
 
 enum Enum1 {
   E1_A = 1,
 };
-inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum1 &e) { fb << Plic::EnumValue (e); return fb; }
-inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum1 &e) { e = Enum1 (frr.pop_evalue()); return frr; }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum1 &e) { fb <<= Plic::EnumValue (e); }
+inline void operator>>= (Plic::FieldReader &frr, Enum1 &e) { e = Enum1 (frr.pop_evalue()); }
 
 enum Enum1c {
   E1C_A = 1,
 };
-inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum1c &e) { fb << Plic::EnumValue (e); return fb; }
-inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum1c &e) { e = Enum1c (frr.pop_evalue()); return frr; }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum1c &e) { fb <<= Plic::EnumValue (e); }
+inline void operator>>= (Plic::FieldReader &frr, Enum1c &e) { e = Enum1c (frr.pop_evalue()); }
 
 enum Enum2 {
   E2_A = 1,
   E2_B = 2,
 };
-inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum2 &e) { fb << Plic::EnumValue (e); return fb; }
-inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum2 &e) { e = Enum2 (frr.pop_evalue()); return frr; }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum2 &e) { fb <<= Plic::EnumValue (e); }
+inline void operator>>= (Plic::FieldReader &frr, Enum2 &e) { e = Enum2 (frr.pop_evalue()); }
 
 enum Enum2c {
   E2C_A = 1,
   E2C_B = 2,
 };
-inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum2c &e) { fb << Plic::EnumValue (e); return fb; }
-inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum2c &e) { e = Enum2c (frr.pop_evalue()); return frr; }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum2c &e) { fb <<= Plic::EnumValue (e); }
+inline void operator>>= (Plic::FieldReader &frr, Enum2c &e) { e = Enum2c (frr.pop_evalue()); }
 
 enum Enum3 {
   E3_A = 1,
   E3_B = 2,
   E3_C = 3,
 };
-inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum3 &e) { fb << Plic::EnumValue (e); return fb; }
-inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum3 &e) { e = Enum3 (frr.pop_evalue()); return frr; }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum3 &e) { fb <<= Plic::EnumValue (e); }
+inline void operator>>= (Plic::FieldReader &frr, Enum3 &e) { e = Enum3 (frr.pop_evalue()); }
 
 enum Enum3c {
   E3C_A = 1,
   E3C_B = 2,
   E3C_C = 3,
 };
-inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum3c &e) { fb << Plic::EnumValue (e); return fb; }
-inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum3c &e) { e = Enum3c (frr.pop_evalue()); return frr; }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum3c &e) { fb <<= Plic::EnumValue (e); }
+inline void operator>>= (Plic::FieldReader &frr, Enum3c &e) { e = Enum3c (frr.pop_evalue()); }
 
 enum Enum4a {
   E4A_A = 1,
@@ -63,8 +63,8 @@ enum Enum4a {
   E4A_C = 3,
   E4A_D = 4,
 };
-inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum4a &e) { fb << Plic::EnumValue (e); return fb; }
-inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum4a &e) { e = Enum4a (frr.pop_evalue()); return frr; }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum4a &e) { fb <<= Plic::EnumValue (e); }
+inline void operator>>= (Plic::FieldReader &frr, Enum4a &e) { e = Enum4a (frr.pop_evalue()); }
 
 enum Enum4b {
   E4B_A = 1,
@@ -72,8 +72,8 @@ enum Enum4b {
   E4B_C = 3,
   E4B_D = 4,
 };
-inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum4b &e) { fb << Plic::EnumValue (e); return fb; }
-inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum4b &e) { e = Enum4b (frr.pop_evalue()); return frr; }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum4b &e) { fb <<= Plic::EnumValue (e); }
+inline void operator>>= (Plic::FieldReader &frr, Enum4b &e) { e = Enum4b (frr.pop_evalue()); }
 
 enum Enum4c {
   E4C_A = 1,
@@ -81,8 +81,8 @@ enum Enum4c {
   E4C_C = 3,
   E4C_D = 4,
 };
-inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum4c &e) { fb << Plic::EnumValue (e); return fb; }
-inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum4c &e) { e = Enum4c (frr.pop_evalue()); return frr; }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum4c &e) { fb <<= Plic::EnumValue (e); }
+inline void operator>>= (Plic::FieldReader &frr, Enum4c &e) { e = Enum4c (frr.pop_evalue()); }
 
 enum Enum4d {
   E4D_A = 1,
@@ -90,8 +90,8 @@ enum Enum4d {
   E4D_C = 3,
   E4D_D = 4,
 };
-inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  Enum4d &e) { fb << Plic::EnumValue (e); return fb; }
-inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, Enum4d &e) { e = Enum4d (frr.pop_evalue()); return frr; }
+inline void operator<<= (Plic::FieldBuffer &fb,  Enum4d &e) { fb <<= Plic::EnumValue (e); }
+inline void operator>>= (Plic::FieldReader &frr, Enum4d &e) { e = Enum4d (frr.pop_evalue()); }
 
 enum ExtensiveEnum {
   V1a = 1,
@@ -130,8 +130,8 @@ enum ExtensiveEnum {
   V35 = 42,
   V36 = 42, // "foo""4"
 };
-inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  ExtensiveEnum &e) { fb << Plic::EnumValue (e); return fb; }
-inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, ExtensiveEnum &e) { e = ExtensiveEnum (frr.pop_evalue()); return frr; }
+inline void operator<<= (Plic::FieldBuffer &fb,  ExtensiveEnum &e) { fb <<= Plic::EnumValue (e); }
+inline void operator>>= (Plic::FieldReader &frr, ExtensiveEnum &e) { e = ExtensiveEnum (frr.pop_evalue()); }
 
 class I_FirstInterface_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class FirstInterface.
@@ -143,9 +143,9 @@ public:
   virtual void                          _list_types (Plic::TypeHashList&) const;
   virtual void                          void_func                  ();
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_FirstInterface_Interface&);
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_FirstInterface_Interface*);
-Plic::FieldReader& operator>> (Plic::FieldReader&, I_FirstInterface_Interface*&);
+void operator<<= (Plic::FieldBuffer&, I_FirstInterface_Interface&);
+void operator<<= (Plic::FieldBuffer&, I_FirstInterface_Interface*);
+void operator>>= (Plic::FieldReader&, I_FirstInterface_Interface*&);
 
 struct XFooRecordImpl {
   bool                          single_bool;
@@ -167,86 +167,86 @@ struct XFooRecordImpl {
   Plic::Any                     any3;
   inline                        XFooRecordImpl () { single_bool = 0; single_num = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const XFooRecordImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, XFooRecordImpl&);
+void operator<<= (Plic::FieldBuffer&, const XFooRecordImpl&);
+void operator>>= (Plic::FieldReader&, XFooRecordImpl&);
 
 struct XFooSequenceImpl : public std::vector<bool> {
   typedef std::vector<bool> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const XFooSequenceImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, XFooSequenceImpl&);
+void operator<<= (Plic::FieldBuffer&, const XFooSequenceImpl&);
+void operator>>= (Plic::FieldReader&, XFooSequenceImpl&);
 
 struct IntSequenceImpl : public std::vector<int> {
   typedef std::vector<int> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const IntSequenceImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, IntSequenceImpl&);
+void operator<<= (Plic::FieldBuffer&, const IntSequenceImpl&);
+void operator>>= (Plic::FieldReader&, IntSequenceImpl&);
 
 struct FloatSequenceImpl : public std::vector<double> {
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const FloatSequenceImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, FloatSequenceImpl&);
+void operator<<= (Plic::FieldBuffer&, const FloatSequenceImpl&);
+void operator>>= (Plic::FieldReader&, FloatSequenceImpl&);
 
 struct StringSequenceImpl : public std::vector<std::string> {
   typedef std::vector<std::string> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const StringSequenceImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, StringSequenceImpl&);
+void operator<<= (Plic::FieldBuffer&, const StringSequenceImpl&);
+void operator>>= (Plic::FieldReader&, StringSequenceImpl&);
 
 struct ExtensiveEnumSequenceImpl : public std::vector<ExtensiveEnum> {
   typedef std::vector<ExtensiveEnum> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const ExtensiveEnumSequenceImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, ExtensiveEnumSequenceImpl&);
+void operator<<= (Plic::FieldBuffer&, const ExtensiveEnumSequenceImpl&);
+void operator>>= (Plic::FieldReader&, ExtensiveEnumSequenceImpl&);
 
 struct RecordSequenceImpl : public std::vector<XFooRecordImpl> {
   typedef std::vector<XFooRecordImpl> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const RecordSequenceImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, RecordSequenceImpl&);
+void operator<<= (Plic::FieldBuffer&, const RecordSequenceImpl&);
+void operator>>= (Plic::FieldReader&, RecordSequenceImpl&);
 
 struct SequenceSequenceImpl : public std::vector<IntSequenceImpl> {
   typedef std::vector<IntSequenceImpl> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const SequenceSequenceImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, SequenceSequenceImpl&);
+void operator<<= (Plic::FieldBuffer&, const SequenceSequenceImpl&);
+void operator>>= (Plic::FieldReader&, SequenceSequenceImpl&);
 
 struct InterfaceSequenceImpl : public std::vector<I_FirstInterface_Interface*> {
   typedef std::vector<I_FirstInterface_Interface*> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const InterfaceSequenceImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, InterfaceSequenceImpl&);
+void operator<<= (Plic::FieldBuffer&, const InterfaceSequenceImpl&);
+void operator>>= (Plic::FieldReader&, InterfaceSequenceImpl&);
 
 struct AnySequenceImpl : public std::vector<Plic::Any> {
   typedef std::vector<Plic::Any> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const AnySequenceImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, AnySequenceImpl&);
+void operator<<= (Plic::FieldBuffer&, const AnySequenceImpl&);
+void operator>>= (Plic::FieldReader&, AnySequenceImpl&);
 
 struct NestedTypesRecImpl {
   XFooRecordImpl                rec;
   XFooSequenceImpl              seq;
   inline                        NestedTypesRecImpl () { }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const NestedTypesRecImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, NestedTypesRecImpl&);
+void operator<<= (Plic::FieldBuffer&, const NestedTypesRecImpl&);
+void operator>>= (Plic::FieldReader&, NestedTypesRecImpl&);
 
 struct NestedTypesSeqImpl : public std::vector<NestedTypesRecImpl> {
   typedef std::vector<NestedTypesRecImpl> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const NestedTypesSeqImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, NestedTypesSeqImpl&);
+void operator<<= (Plic::FieldBuffer&, const NestedTypesSeqImpl&);
+void operator>>= (Plic::FieldReader&, NestedTypesSeqImpl&);
 
 typedef Plic::Any AliasAny;
 
@@ -271,8 +271,8 @@ struct NewRecordImpl {
   NestedTypesRecImpl            ntr;
   inline                        NewRecordImpl () { i = 0; enum1 = Enum1 (0); }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const NewRecordImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, NewRecordImpl&);
+void operator<<= (Plic::FieldBuffer&, const NewRecordImpl&);
+void operator>>= (Plic::FieldReader&, NewRecordImpl&);
 
 namespace Inner {
 
@@ -282,16 +282,16 @@ struct InnerRecordImpl {
   NewRecordImpl                 rec;
   inline                        InnerRecordImpl () { x = 0; y = 0; }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const InnerRecordImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, InnerRecordImpl&);
+void operator<<= (Plic::FieldBuffer&, const InnerRecordImpl&);
+void operator>>= (Plic::FieldReader&, InnerRecordImpl&);
 } // Inner
 
 struct Refer2InnerImpl {
   Inner::InnerRecordImpl        r;
   inline                        Refer2InnerImpl () { }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const Refer2InnerImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, Refer2InnerImpl&);
+void operator<<= (Plic::FieldBuffer&, const Refer2InnerImpl&);
+void operator>>= (Plic::FieldReader&, Refer2InnerImpl&);
 } // MandatoryNamespace
 
 namespace OtherNamespace {
@@ -303,8 +303,8 @@ struct SomeRecordImpl {
   MandatoryNamespace::Inner::InnerRecordImpl r4;
   inline                        SomeRecordImpl () { }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const SomeRecordImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, SomeRecordImpl&);
+void operator<<= (Plic::FieldBuffer&, const SomeRecordImpl&);
+void operator>>= (Plic::FieldReader&, SomeRecordImpl&);
 } // OtherNamespace
 
 namespace Auxdata {
@@ -352,9 +352,9 @@ public:
   virtual std::string                   on_click2out             ();
   virtual void                          on_click2in              (const std::string &command);
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_UIWidgetArea_Interface&);
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_UIWidgetArea_Interface*);
-Plic::FieldReader& operator>> (Plic::FieldReader&, I_UIWidgetArea_Interface*&);
+void operator<<= (Plic::FieldBuffer&, I_UIWidgetArea_Interface&);
+void operator<<= (Plic::FieldBuffer&, I_UIWidgetArea_Interface*);
+void operator>>= (Plic::FieldReader&, I_UIWidgetArea_Interface*&);
 
 class I_Parent_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class Parent.
@@ -365,9 +365,9 @@ protected:
 public:
   virtual void                          _list_types (Plic::TypeHashList&) const;
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Parent_Interface&);
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Parent_Interface*);
-Plic::FieldReader& operator>> (Plic::FieldReader&, I_Parent_Interface*&);
+void operator<<= (Plic::FieldBuffer&, I_Parent_Interface&);
+void operator<<= (Plic::FieldBuffer&, I_Parent_Interface*);
+void operator>>= (Plic::FieldReader&, I_Parent_Interface*&);
 
 class I_Child_Interface : public virtual I_Parent_Interface
   /// See also the corresponding IDL class Child.
@@ -378,9 +378,9 @@ protected:
 public:
   virtual void                          _list_types (Plic::TypeHashList&) const;
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Child_Interface&);
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Child_Interface*);
-Plic::FieldReader& operator>> (Plic::FieldReader&, I_Child_Interface*&);
+void operator<<= (Plic::FieldBuffer&, I_Child_Interface&);
+void operator<<= (Plic::FieldBuffer&, I_Child_Interface*);
+void operator>>= (Plic::FieldReader&, I_Child_Interface*&);
 
 class I_Descendant_Interface : public virtual I_Child_Interface
   /// See also the corresponding IDL class Descendant.
@@ -391,9 +391,9 @@ protected:
 public:
   virtual void                          _list_types (Plic::TypeHashList&) const;
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Descendant_Interface&);
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_Descendant_Interface*);
-Plic::FieldReader& operator>> (Plic::FieldReader&, I_Descendant_Interface*&);
+void operator<<= (Plic::FieldBuffer&, I_Descendant_Interface&);
+void operator<<= (Plic::FieldBuffer&, I_Descendant_Interface*);
+void operator>>= (Plic::FieldReader&, I_Descendant_Interface*&);
 
 class I_GrandChild_Interface : public virtual I_Descendant_Interface
   /// See also the corresponding IDL class GrandChild.
@@ -404,30 +404,30 @@ protected:
 public:
   virtual void                          _list_types (Plic::TypeHashList&) const;
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_GrandChild_Interface&);
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_GrandChild_Interface*);
-Plic::FieldReader& operator>> (Plic::FieldReader&, I_GrandChild_Interface*&);
+void operator<<= (Plic::FieldBuffer&, I_GrandChild_Interface&);
+void operator<<= (Plic::FieldBuffer&, I_GrandChild_Interface*);
+void operator>>= (Plic::FieldReader&, I_GrandChild_Interface*&);
 
 enum QuickEnum {
   ZERO = 0,
 };
-inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  QuickEnum &e) { fb << Plic::EnumValue (e); return fb; }
-inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); return frr; }
+inline void operator<<= (Plic::FieldBuffer &fb,  QuickEnum &e) { fb <<= Plic::EnumValue (e); }
+inline void operator>>= (Plic::FieldReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); }
 
 struct QuickRecordImpl {
   int                           int1;
   int                           int2;
   inline                        QuickRecordImpl () { int1 = 0; int2 = 0; }
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const QuickRecordImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, QuickRecordImpl&);
+void operator<<= (Plic::FieldBuffer&, const QuickRecordImpl&);
+void operator>>= (Plic::FieldReader&, QuickRecordImpl&);
 
 struct QuickSequenceImpl : public std::vector<double> {
   typedef std::vector<double> Sequence;
   reference append_back(); ///< Append data at the end, returns write reference to data.
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const QuickSequenceImpl&);
-Plic::FieldReader& operator>> (Plic::FieldReader&, QuickSequenceImpl&);
+void operator<<= (Plic::FieldBuffer&, const QuickSequenceImpl&);
+void operator>>= (Plic::FieldReader&, QuickSequenceImpl&);
 
 class I_QuickIface_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class QuickIface.
@@ -439,9 +439,9 @@ public:
   virtual void                          _list_types (Plic::TypeHashList&) const;
   virtual void                          simple_function        (int i = 9);
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_QuickIface_Interface&);
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_QuickIface_Interface*);
-Plic::FieldReader& operator>> (Plic::FieldReader&, I_QuickIface_Interface*&);
+void operator<<= (Plic::FieldBuffer&, I_QuickIface_Interface&);
+void operator<<= (Plic::FieldBuffer&, I_QuickIface_Interface*);
+void operator>>= (Plic::FieldReader&, I_QuickIface_Interface*&);
 
 class I_MethodTestInterface_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class MethodTestInterface.
@@ -473,9 +473,9 @@ public:
   virtual I_QuickIface_Interface*       method_with_quickiface          (I_QuickIface_Interface &input,
                                                                          I_QuickIface_Interface &iface0 = *(I_QuickIface_Interface*) NULL);
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_MethodTestInterface_Interface&);
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_MethodTestInterface_Interface*);
-Plic::FieldReader& operator>> (Plic::FieldReader&, I_MethodTestInterface_Interface*&);
+void operator<<= (Plic::FieldBuffer&, I_MethodTestInterface_Interface&);
+void operator<<= (Plic::FieldBuffer&, I_MethodTestInterface_Interface*);
+void operator>>= (Plic::FieldReader&, I_MethodTestInterface_Interface*&);
 
 class I_SignalTestInterface_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class SignalTestInterface.
@@ -530,9 +530,9 @@ public:
   Signal_any_arg sig_any_arg;
   Signal_self_args sig_self_args;
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_SignalTestInterface_Interface&);
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_SignalTestInterface_Interface*);
-Plic::FieldReader& operator>> (Plic::FieldReader&, I_SignalTestInterface_Interface*&);
+void operator<<= (Plic::FieldBuffer&, I_SignalTestInterface_Interface&);
+void operator<<= (Plic::FieldBuffer&, I_SignalTestInterface_Interface*);
+void operator>>= (Plic::FieldReader&, I_SignalTestInterface_Interface*&);
 
 class I_ChildInheritingSignals_Interface : public virtual I_SignalTestInterface_Interface
   /// See also the corresponding IDL class ChildInheritingSignals.
@@ -545,9 +545,9 @@ public:
   typedef Rapicorn::Signals::Signal<I_ChildInheritingSignals_Interface, void (I_ChildInheritingSignals_Interface &c, I_SignalTestInterface_Interface &p, const Plic::Any &a, int i, const QuickRecordImpl &r, const QuickSequenceImpl &s)> Signal_child_signal;
   Signal_child_signal sig_child_signal;
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_ChildInheritingSignals_Interface&);
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_ChildInheritingSignals_Interface*);
-Plic::FieldReader& operator>> (Plic::FieldReader&, I_ChildInheritingSignals_Interface*&);
+void operator<<= (Plic::FieldBuffer&, I_ChildInheritingSignals_Interface&);
+void operator<<= (Plic::FieldBuffer&, I_ChildInheritingSignals_Interface*);
+void operator>>= (Plic::FieldReader&, I_ChildInheritingSignals_Interface*&);
 
 class I_AnotherChild_Interface : public virtual I_SignalTestInterface_Interface
   /// See also the corresponding IDL class AnotherChild.
@@ -558,9 +558,9 @@ protected:
 public:
   virtual void                          _list_types (Plic::TypeHashList&) const;
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_AnotherChild_Interface&);
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_AnotherChild_Interface*);
-Plic::FieldReader& operator>> (Plic::FieldReader&, I_AnotherChild_Interface*&);
+void operator<<= (Plic::FieldBuffer&, I_AnotherChild_Interface&);
+void operator<<= (Plic::FieldBuffer&, I_AnotherChild_Interface*);
+void operator>>= (Plic::FieldReader&, I_AnotherChild_Interface*&);
 
 class I_PropertyTester_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class PropertyTester.
@@ -591,9 +591,9 @@ public:
   virtual Plic::Any                     any_prop       () const = 0;
   virtual void                          any_prop       (const Plic::Any&) = 0;
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_PropertyTester_Interface&);
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_PropertyTester_Interface*);
-Plic::FieldReader& operator>> (Plic::FieldReader&, I_PropertyTester_Interface*&);
+void operator<<= (Plic::FieldBuffer&, I_PropertyTester_Interface&);
+void operator<<= (Plic::FieldBuffer&, I_PropertyTester_Interface*);
+void operator>>= (Plic::FieldReader&, I_PropertyTester_Interface*&);
 } // InterfaceTests
 
 namespace RapicornPlicTest {
@@ -605,8 +605,8 @@ enum ClickType {
   CLICK_FAST_REPEAT = 4,
   CLICK_KEY_REPEAT = 5,
 };
-inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  ClickType &e) { fb << Plic::EnumValue (e); return fb; }
-inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, ClickType &e) { e = ClickType (frr.pop_evalue()); return frr; }
+inline void operator<<= (Plic::FieldBuffer &fb,  ClickType &e) { fb <<= Plic::EnumValue (e); }
+inline void operator>>= (Plic::FieldReader &frr, ClickType &e) { e = ClickType (frr.pop_evalue()); }
 
 class I_ButtonArea_Interface : public virtual Plic::SimpleServer
   /// See also the corresponding IDL class ButtonArea.
@@ -629,9 +629,9 @@ public:
   Signal_check_activate sig_check_activate;
   Signal_activate sig_activate;
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_ButtonArea_Interface&);
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_ButtonArea_Interface*);
-Plic::FieldReader& operator>> (Plic::FieldReader&, I_ButtonArea_Interface*&);
+void operator<<= (Plic::FieldBuffer&, I_ButtonArea_Interface&);
+void operator<<= (Plic::FieldBuffer&, I_ButtonArea_Interface*);
+void operator>>= (Plic::FieldReader&, I_ButtonArea_Interface*&);
 
 class I_PureMethods_Interface;
 
@@ -645,9 +645,9 @@ public:
   virtual void                          _list_types (Plic::TypeHashList&) const;
   virtual int                           pure_method             (double f) = 0;
 };
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_PureMethods_Interface&);
-Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, I_PureMethods_Interface*);
-Plic::FieldReader& operator>> (Plic::FieldReader&, I_PureMethods_Interface*&);
+void operator<<= (Plic::FieldBuffer&, I_PureMethods_Interface&);
+void operator<<= (Plic::FieldBuffer&, I_PureMethods_Interface*);
+void operator>>= (Plic::FieldReader&, I_PureMethods_Interface*&);
 } // RapicornPlicTest
 
 // --- Interface Skeletons ---

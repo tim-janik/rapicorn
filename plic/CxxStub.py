@@ -237,8 +237,8 @@ class Generator:
     s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
     if type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
-      s += 'Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const %s&);\n' % self.C (type_info)
-      s += 'Plic::FieldReader& operator>> (Plic::FieldReader&, %s&);\n' % self.C (type_info)
+      s += 'void operator<<= (Plic::FieldBuffer&, const %s&);\n' % self.C (type_info)
+      s += 'void operator>>= (Plic::FieldReader&, %s&);\n' % self.C (type_info)
     s += self.generate_shortalias (type_info)   # typedef alias
     return s
   def generate_proto_add_args (self, fb, type_info, aprefix, arg_info_list, apostfix):
@@ -246,36 +246,34 @@ class Generator:
     for arg_it in arg_info_list:
       ident, type_node = arg_it
       ident = aprefix + ident + apostfix
-      s += '  %s << %s;\n' % (fb, ident)
+      s += '  %s <<= %s;\n' % (fb, ident)
     return s
   def generate_proto_pop_args (self, fbr, type_info, aprefix, arg_info_list, apostfix = ''):
     s = ''
     for arg_it in arg_info_list:
       ident, type_node = arg_it
       ident = aprefix + ident + apostfix
-      s += '  %s >> %s;\n' % (fbr, ident)
+      s += '  %s >>= %s;\n' % (fbr, ident)
     return s
   def generate_record_impl (self, type_info):
     s = ''
-    s += 'inline Plic::FieldBuffer& __attribute__ ((used))\n'
-    s += 'operator<< (Plic::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
+    s += 'inline void __attribute__ ((used))\n'
+    s += 'operator<<= (Plic::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
     s += '  Plic::FieldBuffer &fb = dst.add_rec (%u);\n' % len (type_info.fields)
     s += self.generate_proto_add_args ('fb', type_info, 'self.', type_info.fields, '')
-    s += '  return dst;\n'
     s += '}\n'
-    s += 'inline Plic::FieldReader& __attribute__ ((used))\n'
-    s += 'operator>> (Plic::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
+    s += 'inline void __attribute__ ((used))\n'
+    s += 'operator>>= (Plic::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
     s += '  Plic::FieldReader fbr (src.pop_rec());\n'
-    s += '  if (fbr.remaining() < %u) return src;\n' % len (type_info.fields)
+    s += '  if (fbr.remaining() < %u) return;\n' % len (type_info.fields)
     s += self.generate_proto_pop_args ('fbr', type_info, 'self.', type_info.fields)
-    s += '  return src;\n'
     s += '}\n'
     return s
   def generate_sequence_impl (self, type_info):
     s = ''
     el = type_info.elements
-    s += 'inline Plic::FieldBuffer& __attribute__ ((used))\n'
-    s += 'operator<< (Plic::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
+    s += 'inline void __attribute__ ((used))\n'
+    s += 'operator<<= (Plic::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
     s += '  const size_t len = self.size();\n'
     s += '  Plic::FieldBuffer &fb = dst.add_seq (len);\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
@@ -283,10 +281,9 @@ class Generator:
                                                        [('self', type_info.elements[1])],
                                                        '[k]')) + '\n'
     s += '  }\n'
-    s += '  return dst;\n'
     s += '}\n'
-    s += 'inline Plic::FieldReader& __attribute__ ((used))\n'
-    s += 'operator>> (Plic::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
+    s += 'inline void __attribute__ ((used))\n'
+    s += 'operator>>= (Plic::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
     s += '  Plic::FieldReader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
     if el[1].storage == Decls.INTERFACE:
@@ -294,9 +291,8 @@ class Generator:
     else:
       s += '  self.resize (len);\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
-    s += '    fbr >> self[k];\n'
+    s += '    fbr >>= self[k];\n'
     s += '  }\n'
-    s += '  return src;\n'
     s += '}\n'
     s += '%s::reference\n' % self.C (type_info)
     s += '%s::append_back()\n{\n' % self.C (type_info)
@@ -444,12 +440,12 @@ class Generator:
     s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
     if self.gen_mode == G4SERVER:
-      s += 'Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, %s&);\n' % self.C (type_info)
-      s += 'Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, %s*);\n' % self.C (type_info)
-      s += 'Plic::FieldReader& operator>> (Plic::FieldReader&, %s*&);\n' % self.C (type_info)
+      s += 'void operator<<= (Plic::FieldBuffer&, %s&);\n' % self.C (type_info)
+      s += 'void operator<<= (Plic::FieldBuffer&, %s*);\n' % self.C (type_info)
+      s += 'void operator>>= (Plic::FieldReader&, %s*&);\n' % self.C (type_info)
     else: # G4CLIENT
-      s += 'Plic::FieldBuffer& operator<< (Plic::FieldBuffer&, const %s&);\n' % self.C (type_info)
-      s += 'Plic::FieldReader& operator>> (Plic::FieldReader&, %s&);\n' % self.C (type_info)
+      s += 'void operator<<= (Plic::FieldBuffer&, const %s&);\n' % self.C (type_info)
+      s += 'void operator>>= (Plic::FieldReader&, %s&);\n' % self.C (type_info)
     s += self.generate_shortalias (type_info)   # typedef alias
     return s
   def generate_shortalias (self, type_info):
@@ -514,12 +510,12 @@ class Generator:
     s += '    Plic::FieldReader frr (*fr);\n'
     s += '    frr.skip_msgid(); // FIXME: msgid for return?\n' # FIXME: check errors
     s += '    size_t len;\n'
-    s += '    frr >> len;\n'
+    s += '    frr >>= len;\n'
     s += '    PLIC_CHECK (frr.remaining() == len * 2, "result truncated");\n'
     s += '    Plic::TypeHashList *thv = new Plic::TypeHashList();\n'
     s += '    Plic::TypeHash thash;\n'
     s += '    for (size_t i = 0; i < len; i++) {\n'
-    s += '      frr >> thash;\n'
+    s += '      frr >>= thash;\n'
     s += '      thv->push_back (thash);\n'
     s += '    }\n'
     s += '    delete fr;\n'
@@ -541,16 +537,14 @@ class Generator:
     l, heritage, cl = self.interface_class_inheritance (class_info)
     s += '%s::%s ()' % classH2 # ctor
     s += '\n{}\n'
-    s += 'Plic::FieldBuffer&\n'
-    s += 'operator<< (Plic::FieldBuffer &fb, const %s &handle)\n{\n' % classH
+    s += 'void\n'
+    s += 'operator<<= (Plic::FieldBuffer &fb, const %s &handle)\n{\n' % classH
     s += '  fb.add_object (connection_handle2id (handle));\n'
-    s += '  return fb;\n'
     s += '}\n'
-    s += 'Plic::FieldReader&\n'
-    s += 'operator>> (Plic::FieldReader &fbr, %s &handle)\n{\n' % classH
+    s += 'void\n'
+    s += 'operator>>= (Plic::FieldReader &fbr, %s &handle)\n{\n' % classH
     s += '  const Plic::uint64_t ipcid = fbr.pop_object();\n'
     s += '  handle = PLIC_ISLIKELY (ipcid) ? connection_id2context<%s> (ipcid)->handle$ : %s();\n' % (classC, classH)
-    s += '  return fbr;\n'
     s += '}\n'
     s += 'const Plic::TypeHash&\n'
     s += '%s::_type()\n{\n' % classH
@@ -589,20 +583,17 @@ class Generator:
       s += ' :\n  ' + ', '.join (l)
     s += '\n{}\n'
     s += '%s::~%s () {}\n' % (classC, classC) # dtor
-    s += 'Plic::FieldBuffer&\n'
-    s += 'operator<< (Plic::FieldBuffer &fb, %s &obj)\n{\n' % classC
+    s += 'void\n'
+    s += 'operator<<= (Plic::FieldBuffer &fb, %s &obj)\n{\n' % classC
     s += '  fb.add_object (connection_object2id (&obj));\n'
-    s += '  return fb;\n'
     s += '}\n'
-    s += 'Plic::FieldBuffer&\n'
-    s += 'operator<< (Plic::FieldBuffer &fb, %s *obj)\n{\n' % classC
+    s += 'void\n'
+    s += 'operator<<= (Plic::FieldBuffer &fb, %s *obj)\n{\n' % classC
     s += '  fb.add_object (connection_object2id (obj));\n'
-    s += '  return fb;\n'
     s += '}\n'
-    s += 'Plic::FieldReader&\n'
-    s += 'operator>> (Plic::FieldReader &fbr, %s* &obj)\n{\n' % classC
+    s += 'void\n'
+    s += 'operator>>= (Plic::FieldReader &fbr, %s* &obj)\n{\n' % classC
     s += '  obj = connection_id2object<%s> (fbr.pop_object());\n' % classC
-    s += '  return fbr;\n'
     s += '}\n'
     s += 'void\n'
     s += '%s::_list_types (Plic::TypeHashList &thl) const\n{\n' % classC
@@ -793,9 +784,9 @@ class Generator:
     s += '  Plic::TypeHashList thl;\n'
     s += '  self->_list_types (thl);\n'
     s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result (1 + 2 * thl.size());\n' # store return value
-    s += '  rb << Plic::int64_t (thl.size());\n'
+    s += '  rb <<= Plic::int64_t (thl.size());\n'
     s += '  for (size_t i = 0; i < thl.size(); i++)\n'
-    s += '    rb << thl[i];\n'
+    s += '    rb <<= thl[i];\n'
     s += '  return &rb;\n'
     s += '}\n'
     return s
@@ -861,7 +852,7 @@ class Generator:
     s += '  {\n'
     s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1);\n' # msgid handler
     s += '    fb.add_msgid (Plic::MSGID_DISCON, 0); // FIXME: 0\n' # self.method_digest (stype)
-    s += '    fb << m_handler;\n'
+    s += '    fb <<= m_handler;\n'
     s += '    m_connection.send_event (&fb); // deletes fb\n'
     s += '  }\n'
     cpp_rtype = self.R (stype.rtype)
@@ -871,7 +862,7 @@ class Generator:
     s += 'SharedPtr sp)\n  {\n'
     s += '    Plic::FieldBuffer &fb = *Plic::FieldBuffer::_new (2 + 1 + %u);\n' % len (stype.args) # msgid handler args
     s += '    fb.add_msgid (Plic::MSGID_EVENT, 0); // FIXME: 0\n' # self.method_digest (stype)
-    s += '    fb << sp->m_handler;\n'
+    s += '    fb <<= sp->m_handler;\n'
     ident_type_args = [('arg_' + a[0], a[1]) for a in stype.args] # marshaller args
     args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
     if args2fb:
@@ -889,14 +880,14 @@ class Generator:
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     s += '  PLIC_CHECK (self, "self must be non-NULL");\n'
     s += '  Plic::uint64_t handler_id, con_id, cid = 0;\n'
-    s += '  fbr >> handler_id;\n'
-    s += '  fbr >> con_id;\n'
+    s += '  fbr >>= handler_id;\n'
+    s += '  fbr >>= con_id;\n'
     s += '  if (con_id) self->sig_%s.disconnect (con_id);\n' % stype.name
     s += '  if (handler_id) {\n'
     s += '    %s::SharedPtr sp (new %s (PLIC_CONNECTION(), handler_id));\n' % (closure_class, closure_class)
     s += '    cid = self->sig_%s.connect (slot (sp->handler, sp)); }\n' % stype.name
     s += '  Plic::FieldBuffer &rb = *Plic::FieldBuffer::new_result();\n'
-    s += '  rb << cid;\n'
+    s += '  rb <<= cid;\n'
     s += '  return &rb;\n'
     s += '}\n'
     return s
@@ -950,10 +941,10 @@ class Generator:
         s += ' // %s' % re.sub ('\n', ' ', blurb)
       s += '\n'
     s += '};\n'
-    s += 'inline Plic::FieldBuffer& operator<< (Plic::FieldBuffer &fb,  %s &e) ' % type_info.name
-    s += '{ fb << Plic::EnumValue (e); return fb; }\n'
-    s += 'inline Plic::FieldReader& operator>> (Plic::FieldReader &frr, %s &e) ' % type_info.name
-    s += '{ e = %s (frr.pop_evalue()); return frr; }\n' % type_info.name
+    s += 'inline void operator<<= (Plic::FieldBuffer &fb,  %s &e) ' % type_info.name
+    s += '{ fb <<= Plic::EnumValue (e); }\n'
+    s += 'inline void operator>>= (Plic::FieldReader &frr, %s &e) ' % type_info.name
+    s += '{ e = %s (frr.pop_evalue()); }\n' % type_info.name
     return s
   def insertion_text (self, key):
     text = self.insertions.get (key, '')
