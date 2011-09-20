@@ -46,7 +46,7 @@ check-logging-output: testrcore2
 	$(Q) grep -q 'FATAL:.*"test-pfatal"' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) test-pfatal'"
 	$(Q) grep -q '(debugging message)' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) debugging'"
 	$(Q) grep -q ':.*random.*"test-pdebug"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) test-pdebug'"
-	$(Q) grep -q 'assumption failed (errno == 0)' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) errno diagnostics'"
+	$(Q) grep -q 'check failed (errno == 0)' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) errno diagnostics'"
 	$(Q) grep -q 'failed.*"test-return-if-fail"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) return-if-fail'"
 	$(Q) grep -q 'failed.*"test-return-val-if-' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) return-val-if-fail'"
 	$(Q) grep -q 'CRITICAL:.*"test-critical"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) test-critical'"

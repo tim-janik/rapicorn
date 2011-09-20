@@ -182,12 +182,12 @@ static inline void critical (const char *format, ...)  { va_list a; va_start (a,
 static inline void pcritical (const char *format, ...) { va_list a; va_start (a, format); Logging::messagev ("PCRITICAL", RAPICORN__FILE__, format, a); va_end (a); }
 #define RAPICORN_ASSERT_NOT_REACHED             RAPICORN_ASSERT_UNREACHED
 #define RAPICORN_ASSERT_UNREACHED()             do { Rapicorn::Logging::message ("FATAL", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "encountered unreachable assertion"); Rapicorn::Logging::abort(); } while (0)
-#define RAPICORN_RETURN_IF_FAIL(expr)           do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assumption failed: %s", #expr); return; } while (0)
-#define RAPICORN_RETURN_VAL_IF_FAIL(expr,rv)    do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assumption failed: %s", #expr); return rv; } while (0)
+#define RAPICORN_RETURN_IF_FAIL(expr)           do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "check failed: %s", #expr); return; } while (0)
+#define RAPICORN_RETURN_VAL_IF_FAIL(expr,rv)    do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "check failed: %s", #expr); return rv; } while (0)
 #define RAPICORN_ASSERT(expr)  do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("ABORT",   RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assertion failed: %s",   #expr); } while (0)
 #define RAPICORN_PASSERT(expr) do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("PABORT",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assertion failed (%s)",  #expr); } while (0)
-#define RAPICORN_CHECK(expr)   do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK",   RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assumption failed: %s",  #expr); } while (0)
-#define RAPICORN_PCHECK(expr)  do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("PCHECK",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assumption failed (%s)", #expr); } while (0)
+#define RAPICORN_CHECK(expr)   do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK",   RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "check failed: %s",  #expr); } while (0)
+#define RAPICORN_PCHECK(expr)  do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("PCHECK",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "check failed (%s)", #expr); } while (0)
 #define RAPICORN_DEBUG(...)    do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("DEBUG",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
 #define RAPICORN_PDEBUG(...)   do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("PDEBUG", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
 #define RAPICORN_FIXME(...)    do { Rapicorn::Logging::message ("DEBUG",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
