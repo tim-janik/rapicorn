@@ -616,7 +616,7 @@ class XmlToPango : Rapicorn::MarkupParser {
         }
         break;
       default:
-        set_error ("invalid elememnt: " + xnode.name(), &xnode);
+        set_error ("invalid element: " + xnode.name(), &xnode);
       }
     // open tag
     if (pa)
