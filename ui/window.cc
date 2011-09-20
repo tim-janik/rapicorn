@@ -103,34 +103,6 @@ WindowImpl::get_focus () const
   return get_data (&focus_item_key);
 }
 
-static ItemImpl*
-container_find_item (ContainerImpl &container,
-                     const String  &name)
-{
-  for (ContainerImpl::ChildWalker cw = container.local_children (); cw.has_next(); cw++)
-    {
-      ItemImpl &item = *cw;
-      if (name == item.name())
-        return &item;
-      ContainerImpl *ct = dynamic_cast<ContainerImpl*> (&item);
-      if (ct)
-        {
-          ItemImpl *it = container_find_item (*ct, name);
-          if (it)
-            return it;
-        }
-    }
-  return NULL;
-}
-
-ItemImpl*
-WindowImpl::find_item (const String &item_name)
-{
-  if (item_name == name())
-    return this;
-  return container_find_item (*this, item_name);
-}
-
 cairo_surface_t*
 WindowImpl::create_snapshot (const Rect &subarea)
 {

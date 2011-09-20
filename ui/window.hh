@@ -33,7 +33,6 @@ public:
   explicit              WindowImpl              ();
   ItemImpl*             get_focus               () const;
   cairo_surface_t*      create_snapshot         (const Rect  &subarea);
-  ItemImpl*             find_item               (const String &name);
   // grab handling
   virtual void          add_grab                                (ItemImpl &child, bool unconfined = false);
   void                  add_grab                                (ItemImpl *child, bool unconfined = false);

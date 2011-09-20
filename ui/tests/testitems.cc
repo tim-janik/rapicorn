@@ -54,7 +54,7 @@ test_factory ()
   run_main_loop_recursive (false);
   TOK();
   WindowImpl *window = &testwin.impl();
-  item = window->find_item ("TestItemL2");
+  item = window->interface<ItemImpl*> ("TestItemL2");
   TASSERT (item != NULL);
   titem = dynamic_cast<TestContainer*> (item);
   TASSERT (titem != NULL);
@@ -195,15 +195,6 @@ test_idl_test_item ()
   window.close();
 }
 REGISTER_UITHREAD_TEST ("TestItem/Test TestItem (test-item-window)", test_idl_test_item);
-
-template<class C> C*
-interface (ItemIface *itemi)
-{
-  ItemImpl *item = dynamic_cast<ItemImpl*> (itemi);
-  if (item)
-    return item->interface<C*>();
-  return NULL;
-}
 
 static void
 test_complex_dialog ()
