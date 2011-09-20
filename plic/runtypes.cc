@@ -389,24 +389,6 @@ SmartHandle::_reset ()
   m_rpc_id = 0;
 }
 
-void*
-SmartHandle::_cast_iface () const
-{
-  // unoptimized version of _void_iface()
-  if (m_rpc_id & 3)
-    PLIC_THROW ("invalid cast from rpc-id to class pointer");
-  return (void*) m_rpc_id;
-}
-
-void
-SmartHandle::_void_iface (void *rpc_id_ptr)
-{
-  uint64_t rpcid = uint64_t (rpc_id_ptr);
-  if (rpcid & 3)
-    PLIC_THROW ("invalid rpc-id assignment from unaligned class pointer");
-  m_rpc_id = rpcid;
-}
-
 uint64_t
 SmartHandle::_rpc_id () const
 {

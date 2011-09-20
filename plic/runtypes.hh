@@ -237,9 +237,6 @@ protected:
   typedef uint64_t RpcId;
   explicit                  SmartHandle (uint64_t ipcid);
   void                      _reset      ();
-  void*                     _cast_iface () const;
-  inline void*              _void_iface () const;
-  void                      _void_iface (void *rpc_id_ptr);
 public:
   explicit                  SmartHandle ();
   uint64_t                  _rpc_id     () const;
@@ -433,14 +430,6 @@ private: /// @name Internals
 };
 
 // == inline implementations ==
-inline void*
-SmartHandle::_void_iface () const
-{
-  if (PLIC_UNLIKELY (m_rpc_id & 3))
-    return _cast_iface();
-  return (void*) m_rpc_id;
-}
-
 inline void
 FieldBuffer::reset()
 {
