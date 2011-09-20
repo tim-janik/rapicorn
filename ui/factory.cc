@@ -646,7 +646,7 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
     call_args = unused_args;
   } catch (...) {
     fatal ("%s: failed to assign properties", bgadget->definition().c_str());
-    sink (item);
+    unref (ref_sink (item));
     env.pop_map (custom_args);
     throw;
   }
@@ -672,11 +672,11 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
       }
   } catch (std::exception &exc) {
     fatal ("%s: construction failed: %s", bgadget->definition().c_str(), exc.what());
-    sink (item);
+    unref (ref_sink (item));
     env.pop_map (custom_args);
     throw;
   } catch (...) {
-    sink (item);
+    unref (ref_sink (item));
     env.pop_map (custom_args);
     throw;
   }
@@ -686,11 +686,11 @@ FactorySingleton::call_gadget (const BaseGadget   *bgadget,
       parent->add (item); /* pack into parent */
   } catch (std::exception &exc) {
     fatal ("%s: adding to parent (%s) failed: %s", bgadget->definition().c_str(), parent->name().c_str(), exc.what());
-    sink (item);
+    unref (ref_sink (item));
     env.pop_map (custom_args);
     throw;
   } catch (...) {
-    sink (item);
+    unref (ref_sink (item));
     env.pop_map (custom_args);
     throw;
   }
