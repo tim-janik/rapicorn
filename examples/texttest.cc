@@ -14,11 +14,11 @@ main (int   argc,
   // find and load GUI definitions relative to argv[0]
   app.auto_load ("RapicornExamples", "texttest.xml", argv[0]);
 
-  // create and show main wind0w
-  Wind0w wind0w = app.create_wind0w ("main-shell");
-  wind0w.show();
+  // create and show main window
+  Window window = app.create_window ("main-shell");
+  window.show();
 
-  // run event loops while wind0ws are on screen
+  // run event loops while windows are on screen
   return app.run_and_exit();
 }
 

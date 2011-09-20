@@ -26,7 +26,7 @@
   <def:TestItemL1 inherit="TestItemL0" accu="L1"/>
   <def:TestItemL2 inherit="TestItemL1" accu="L2"/>
 
-  <!-- main wind0w -->
+  <!-- main window -->
   <def:test-TestItemL2 inherit="Window">
     <TestItemL2 accu="Instance"/>
   </def:test-TestItemL2>

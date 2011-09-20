@@ -44,12 +44,12 @@ ApplicationImpl::the ()
   return *the_app;
 }
 
-Wind0wIface*
-ApplicationImpl::create_wind0w (const std::string    &wind0w_identifier,
+WindowIface*
+ApplicationImpl::create_window (const std::string    &window_identifier,
                                 const StringList     &arguments,
                                 const StringList     &env_variables)
 {
-  return &Factory::create_wind0w (wind0w_identifier,
+  return &Factory::create_window (window_identifier,
                                   arguments,
                                   env_variables);
 }
@@ -127,12 +127,12 @@ ApplicationIface::close ()
 {
 }
 
-Wind0wList
-ApplicationImpl::list_wind0ws ()
+WindowList
+ApplicationImpl::list_windows ()
 {
-  Wind0wList wl;
-  for (uint i = 0; i < m_wind0ws.size(); i++)
-    wl.push_back (m_wind0ws[i]);
+  WindowList wl;
+  for (uint i = 0; i < m_windows.size(); i++)
+    wl.push_back (m_windows[i]);
   return wl;
 }
 
@@ -152,9 +152,9 @@ ApplicationImpl::collect_components (const String &path)
   ItemSeq result;
   if (cmatcher) // valid path
     {
-      for (uint i = 0; i < m_wind0ws.size(); i++)
+      for (uint i = 0; i < m_windows.size(); i++)
         {
-          ItemImpl *witem = dynamic_cast<ItemImpl*> (m_wind0ws[i]);
+          ItemImpl *witem = dynamic_cast<ItemImpl*> (m_windows[i]);
           if (witem)
             {
               vector<ItemImpl*> more = collect_items (*witem, *cmatcher);
@@ -167,10 +167,10 @@ ApplicationImpl::collect_components (const String &path)
 }
 
 void
-ApplicationImpl::add_wind0w (Wind0wIface &wind0w)
+ApplicationImpl::add_window (WindowIface &window)
 {
-  ref_sink (wind0w);
-  m_wind0ws.push_back (&wind0w);
+  ref_sink (window);
+  m_windows.push_back (&window);
 }
 
 void
@@ -180,13 +180,13 @@ ApplicationImpl::lost_primaries()
 }
 
 bool
-ApplicationImpl::remove_wind0w (Wind0wIface &wind0w)
+ApplicationImpl::remove_window (WindowIface &window)
 {
-  vector<Wind0wIface*>::iterator it = std::find (m_wind0ws.begin(), m_wind0ws.end(), &wind0w);
-  if (it == m_wind0ws.end())
+  vector<WindowIface*>::iterator it = std::find (m_windows.begin(), m_windows.end(), &window);
+  if (it == m_windows.end())
     return false;
-  m_wind0ws.erase (it);
-  unref (wind0w);
+  m_windows.erase (it);
+  unref (window);
   return true;
 }
 

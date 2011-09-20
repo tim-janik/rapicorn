@@ -126,11 +126,11 @@ interface Drawable : Item {
 };
 
 /**
- * A Wind0w interface is the main user visible handle for screen objects in Rapicorn.
- * Wind0ws can be obtained from the Application singleton. They contain UI elements
+ * A Window interface is the main user visible handle for screen objects in Rapicorn.
+ * Windows can be obtained from the Application singleton. They contain UI elements
  * like buttons and text fields, and the neccessary logic for UI event processing.
  */
-interface Wind0w : Container {
+interface Window : Container {
   bool          viewable                () = 0;
   void          show                    () = 0;
   bool          closed                  () = 0;
@@ -148,14 +148,14 @@ interface Wind0w : Container {
   bool          synthesize_delete       () = 0;
 };
 
-sequence Wind0wList {
-  Wind0w wind0ws;
+sequence WindowList {
+  Window windows;
 };
 
 /**
  * For each Rapicorn program, there exists one global Application singleton.
  * All general program operations are provided by the Application interface,
- * such as the facility to create Wind0w objects on the screen.
+ * such as the facility to create Window objects on the screen.
  */
 interface Application {
   /* startup */
@@ -169,14 +169,14 @@ interface Application {
   bool          factory_window  (string         factory_definition);
   void          load_string     (string         xml_string,
                                  string         i18n_domain = "") = 0;
-  /* wind0ws */
-  Wind0w        create_wind0w   (string         wind0w_identifier,
+  /* windows */
+  Window        create_window   (string         window_identifier,
                                  StringList     arguments = 0,
                                  StringList     env_variables = 0) = 0;
   bool          finishable      ();
   signal void   missing_primary ();
   void          close           ();
-  Wind0wList    list_wind0ws            () = 0;
+  WindowList    list_windows            () = 0;
   Item          unique_component        (string path) = 0;
   ItemSeq       collect_components      (string path) = 0;
   // helpers

@@ -25,7 +25,7 @@ class_scope:Item:
   ItemImpl&       impl ();
   const ItemImpl& impl () const;
 
-class_scope:Wind0w:
+class_scope:Window:
   WindowImpl&       impl ();
   const WindowImpl& impl () const;
 

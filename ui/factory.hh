@@ -41,7 +41,7 @@ ItemImpl&       create_item      (const String           &item_identifier,
 ContainerImpl&  create_container (const String           &container_identifier,
                                   const ArgumentList     &arguments = ArgumentList(),
                                   const ArgumentList     &env_variables = ArgumentList());
-Wind0wIface&    create_wind0w    (const String           &wind0w_identifier,
+WindowIface&    create_window    (const String           &window_identifier,
                                   const ArgumentList     &arguments = ArgumentList(),
                                   const ArgumentList     &env_variables = ArgumentList());
 

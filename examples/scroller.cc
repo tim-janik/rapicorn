@@ -44,18 +44,18 @@ main (int   argc,
   // find and load GUI definitions relative to argv[0]
   app.auto_load ("RapicornExamples", "scroller.xml", argv[0]);
 
-  // create main wind0w
-  Wind0w wind0w = app.create_wind0w ("main-shell");
+  // create main window
+  Window window = app.create_window ("main-shell");
 
   // create button rows
-  Container mshell = wind0w;
+  Container mshell = window;
   for (uint i = 0; i < 50; i++)
     add_button_row (mshell, i);
 
   // show main window
-  wind0w.show();
+  window.show();
 
-  // run event loops while wind0ws are on screen
+  // run event loops while windows are on screen
   return app.run_and_exit();
 }
 

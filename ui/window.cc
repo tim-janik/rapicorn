@@ -18,7 +18,7 @@ struct ClassDoctor {
 };
 
 WindowImpl&
-Wind0wIface::impl ()
+WindowIface::impl ()
 {
   WindowImpl *wimpl = dynamic_cast<WindowImpl*> (this);
   if (!wimpl)
@@ -27,7 +27,7 @@ Wind0wIface::impl ()
 }
 
 const WindowImpl&
-Wind0wIface::impl () const
+WindowIface::impl () const
 {
   const WindowImpl *wimpl = dynamic_cast<const WindowImpl*> (this);
   if (!wimpl)
@@ -173,14 +173,14 @@ WindowImpl::WindowImpl() :
   RAPICORN_ASSERT (m_source == source);
   m_loop.add (m_source, EventLoop::PRIORITY_NORMAL);
   m_source->primary (false);
-  ApplicationImpl::the().add_wind0w (*this);
+  ApplicationImpl::the().add_window (*this);
   change_flags_silently (ANCHORED, true);       /* window is always anchored */
 }
 
 void
 WindowImpl::dispose ()
 {
-  ApplicationImpl::the().remove_wind0w (*this);
+  ApplicationImpl::the().remove_window (*this);
 }
 
 WindowImpl::~WindowImpl()
@@ -1201,12 +1201,6 @@ WindowImpl::synthesize_delete ()
   EventContext ec;
   enqueue_async (create_event_win_delete (ec));
   return true;
-}
-
-Wind0wIface&
-WindowImpl::wind0w ()
-{
-  return *this;
 }
 
 static const ItemFactory<WindowImpl> window_factory ("Rapicorn::Factory::Window");

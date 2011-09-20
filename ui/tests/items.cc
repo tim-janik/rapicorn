@@ -13,12 +13,12 @@ test_window()
   // FIXME: this needs porting to use client API
 
   // create example item
-  Wind0wIface &wind0w = *app.create_wind0w ("Window");
+  WindowIface &window = *app.create_window ("Window");
   TOK();
-  ItemImpl &item = wind0w.impl();
+  ItemImpl &item = window.impl();
   TOK();
-  WindowImpl &window = item.interface<WindowImpl&>();
-  TASSERT (&window != NULL);
+  WindowImpl &wimpl = item.interface<WindowImpl&>();
+  TASSERT (&wimpl != NULL);
   TOK();
 }
 REGISTER_UITHREAD_TEST ("Items/Test Window creation", test_window);

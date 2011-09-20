@@ -5,13 +5,13 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-handle_commands (Wind0w           &wind0w,
+handle_commands (Window           &window,
                  const String     &command,
                  const StringList &args)
 {
   printout ("%s(): command: %s(%s)\n", __func__, command.c_str(), string_join (",", args).c_str());
   if (command == "close")
-    wind0w.close();
+    window.close();
   return true;
 }
 
@@ -27,16 +27,16 @@ main (int   argc,
                  "hello.xml",           // GUI file name
                  argv[0]);
 
-  /* create main wind0w */
-  Wind0w wind0w = app.create_wind0w ("main-wind0w");
+  /* create main window */
+  Window window = app.create_window ("main-window");
 
   /* connect custom callback to handle UI commands */
-  wind0w.sig_commands() += handle_commands;
+  window.sig_commands() += handle_commands;
 
-  /* display wind0w on screen */
-  wind0w.show();
+  /* display window on screen */
+  window.show();
 
-  /* run event loops while wind0ws are on screen */
+  /* run event loops while windows are on screen */
   return app.run_and_exit();
 }
 

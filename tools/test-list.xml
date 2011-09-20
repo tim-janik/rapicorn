@@ -44,7 +44,7 @@
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="5" homogeneous="0" >
 	  <item-list hspread="1" vspread="1"/>
-	  <Button hexpand="1" on-click="Wind0w::close()" > <Label markup-text="Quit"/> </Button>
+	  <Button hexpand="1" on-click="Window::close()" > <Label markup-text="Quit"/> </Button>
 	</VBox>
       </Alignment>
     </Ambience>

@@ -49,7 +49,7 @@ test_factory ()
   TOK();
   ItemImpl *item;
   TestContainer *titem;
-  Wind0wIface &testwin = *app.create_wind0w ("test-TestItemL2");
+  WindowIface &testwin = *app.create_window ("test-TestItemL2");
   testwin.show();
   run_main_loop_recursive (false);
   TOK();
@@ -85,20 +85,20 @@ static void
 test_cxx_server_gui ()
 {
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
-  Wind0wIface &wind0w = *app.create_wind0w ("Window");
+  WindowIface &window = *app.create_window ("Window");
   TOK();
   ItemImpl &titem = Factory::create_item ("TestItem");
   TOK();
-  wind0w.impl().add (titem);
+  window.impl().add (titem);
   TOK();
-  /* close wind0w (and exit main loop) after first expose */
-  wind0w.impl().enable_auto_close();
+  /* close window (and exit main loop) after first expose */
+  window.impl().enable_auto_close();
   TOK();
   /* verify and assert at least one TestItem rendering */
   uint old_seen_test = TestContainer::seen_test_items();
   TOK();
   /* show onscreen and handle events like expose */
-  wind0w.show();
+  window.show();
   run_main_loop_recursive();
   TOK();
   /* assert TestItem rendering */
@@ -123,9 +123,9 @@ static void
 test_test_item ()
 {
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
-  Wind0wIface &wind0w = *app.create_wind0w ("alignment-test");
+  WindowIface &window_iface = *app.create_window ("alignment-test");
   TOK();
-  WindowImpl &window = wind0w.impl();
+  WindowImpl &window = window_iface.impl();
   TestContainer *titem = window.interface<TestContainer*>();
   TASSERT (titem != NULL);
   titem->sig_assertion_ok += slot (assertion_ok);
@@ -133,11 +133,11 @@ test_test_item ()
   titem->fatal_asserts (ServerTests::server_test_item_fatal_asserts);
   TOK();
   run_main_loop_recursive (false);
-  /* close wind0w (and exit main loop) after first expose */
+  /* close window (and exit main loop) after first expose */
   window.enable_auto_close();
   /* verify and assert at least one TestItem rendering */
   uint old_seen_test = TestContainer::seen_test_items();
-  wind0w.show();
+  window.show();
   run_main_loop_recursive();
   uint seen_test = TestContainer::seen_test_items();
   TASSERT (seen_test > old_seen_test);
@@ -163,9 +163,9 @@ test_idl_test_item ()
 {
   ensure_ui_file();
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
-  Wind0wIface &wind0w = *app.create_wind0w ("test-item-wind0w");
+  WindowIface &window_iface = *app.create_window ("test-item-window");
   TOK();
-  WindowImpl &window = wind0w.impl();
+  WindowImpl &window = window_iface.impl();
   IdlTestItemIface *titemp = window.interface<IdlTestItemIface*>();
   TASSERT (titemp != NULL);
   IdlTestItemIface &titem = *titemp;
@@ -192,9 +192,9 @@ test_idl_test_item ()
   TASSERT (sv.size() == sl.size()); TASSERT (sv[2] == "THREE");
   titem.self_prop (NULL); TASSERT (titem.self_prop() == NULL);
   titem.self_prop (titemp); TASSERT (titem.self_prop() == titemp);
-  wind0w.close();
+  window.close();
 }
-REGISTER_UITHREAD_TEST ("TestItem/Test TestItem (test-item-wind0w)", test_idl_test_item);
+REGISTER_UITHREAD_TEST ("TestItem/Test TestItem (test-item-window)", test_idl_test_item);
 
 template<class C> C*
 interface (ItemIface *itemi)
@@ -212,13 +212,13 @@ test_complex_dialog ()
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
   ItemIface *item = app.unique_component ("/#"); // invalid path
   TASSERT (item == NULL);
-  item = app.unique_component ("/#complex-dialog"); // non-existing wind0w
+  item = app.unique_component ("/#complex-dialog"); // non-existing window
   TASSERT (item == NULL);
-  Wind0wIface &wind0w = *app.create_wind0w ("complex-dialog");
+  WindowIface &window = *app.create_window ("complex-dialog");
   TOK();
   if (ServerTests::server_test_run_dialogs)
     {
-      wind0w.show();
+      window.show();
       run_main_loop_recursive();
     }
   TOK();

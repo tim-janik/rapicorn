@@ -5,7 +5,7 @@ namespace {
 using namespace Rapicorn;
 
 static bool
-custom_commands (Wind0w           &window,
+custom_commands (Window           &window,
                  const String     &command,
                  const StringList &args)
 {
@@ -41,7 +41,7 @@ main (int   argc,
   app.auto_load ("RapicornTest", "tour.xml", argv[0]);
 
   // create window, handle commands
-  Wind0w window = app.create_wind0w ("tour-dialog");
+  Window window = app.create_window ("tour-dialog");
   window.sig_commands() += custom_commands;
 
   // display window and enter main event loop

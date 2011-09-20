@@ -129,7 +129,7 @@ parse_args (int    *argc_p,
 }
 
 static void
-window_displayed (Wind0w &window)
+window_displayed (Window &window)
 {
   if (test_dump)
     {
@@ -183,11 +183,11 @@ main (int   argc,
     }
 
   // create window, hook up post-display handler
-  Wind0w wind0w = app.create_wind0w (dialog);
-  wind0w.sig_displayed() += window_displayed;
+  Window window = app.create_window (dialog);
+  window.sig_displayed() += window_displayed;
 
-  /* show wind0w and process events */
-  wind0w.show();
+  /* show window and process events */
+  window.show();
 
   return app.run_and_exit();
 }

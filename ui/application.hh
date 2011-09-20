@@ -7,7 +7,7 @@
 namespace Rapicorn {
 
 class ApplicationImpl : public ApplicationIface {
-  vector<Wind0wIface*>     m_wind0ws;
+  vector<WindowIface*>     m_windows;
 public:
   virtual String      auto_path              (const String  &file_name,
                                               const String  &binary_path,
@@ -18,12 +18,12 @@ public:
                                               const std::string &i18n_domain = "");
   virtual void        load_string            (const std::string &xml_string,
                                               const std::string &i18n_domain = "");
-  virtual Wind0wIface* create_wind0w         (const std::string &wind0w_identifier,
+  virtual WindowIface* create_window         (const std::string &window_identifier,
                                               const StringList &arguments = StringList(),
                                               const StringList &env_variables = StringList());
-  void                add_wind0w             (Wind0wIface &wind0w);
-  bool                remove_wind0w          (Wind0wIface &wind0w);
-  virtual Wind0wList  list_wind0ws           ();
+  void                add_window             (WindowIface &window);
+  bool                remove_window          (WindowIface &window);
+  virtual WindowList  list_windows           ();
   virtual ItemIface*  unique_component       (const String &path);
   virtual ItemSeq     collect_components     (const String &path);
   virtual ListModelRelayIface* create_list_model_relay (int                n_columns,

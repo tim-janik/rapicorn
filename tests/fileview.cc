@@ -55,12 +55,12 @@ main (int   argc,
   // find and load GUI definitions relative to argv[0]
   app.auto_load ("RapicornFileView", "fileview.xml", argv[0]);
 
-  // create main wind0w
+  // create main window
   // FIXME: Store1 *s1 = create_store();
-  Wind0w wind0w = app.create_wind0w ("main-dialog"); // FIXME: Args (""), Args ("ListModel=" + s1->model().plor_name()));
-  wind0w.show();
+  Window window = app.create_window ("main-dialog"); // FIXME: Args (""), Args ("ListModel=" + s1->model().plor_name()));
+  window.show();
 
-  // run event loops while wind0ws are on screen
+  // run event loops while windows are on screen
   return app.run_and_exit();
 }
 

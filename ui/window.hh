@@ -8,7 +8,7 @@
 namespace Rapicorn {
 
 /* --- Window --- */
-class WindowImpl : public virtual SingleContainerImpl, public virtual Wind0wIface,
+class WindowImpl : public virtual SingleContainerImpl, public virtual WindowIface,
                    public virtual EventLoop::Source, public virtual Viewp0rt::EventReceiver {
   friend class  ItemImpl;
   EventLoop            &m_loop;
@@ -34,7 +34,6 @@ public:
   ItemImpl*             get_focus               () const;
   cairo_surface_t*      create_snapshot         (const Rect  &subarea);
   ItemImpl*             find_item               (const String &name);
-  virtual Wind0wIface&  wind0w                                  ();     // MT-safe
   // grab handling
   virtual void          add_grab                                (ItemImpl &child, bool unconfined = false);
   void                  add_grab                                (ItemImpl *child, bool unconfined = false);
@@ -47,6 +46,19 @@ public:
   // signals
   typedef Signal<WindowImpl, bool (const String&, const StringVector&), CollectorWhile0<bool> >   CommandSignal;
   typedef Signal<WindowImpl, void ()> NotifySignal;
+  /* WindowIface */
+  virtual bool          viewable                                ();
+  virtual void          show                                    ();
+  virtual bool          closed                                  ();
+  virtual void          close                                   ();
+  virtual bool          synthesize_enter                        (double xalign = 0.5,
+                                                                 double yalign = 0.5);
+  virtual bool          synthesize_leave                        ();
+  virtual bool          synthesize_click                        (ItemIface &item,
+                                                                 int        button,
+                                                                 double     xalign = 0.5,
+                                                                 double     yalign = 0.5);
+  virtual bool          synthesize_delete                       ();
 private:
   void                  notify_displayed                        (void);
   virtual void          remove_grab_item                        (ItemImpl               &child);
@@ -78,7 +90,6 @@ private:
   virtual void          create_viewp0rt                         ();
   virtual bool          has_viewp0rt                            ();
   virtual void          destroy_viewp0rt                        ();
-  virtual bool          viewable                                ();
   void                  idle_show                               ();
   /* main loop */
   virtual bool          prepare                                 (const EventLoop::State &state,
@@ -87,18 +98,6 @@ private:
   virtual bool          dispatch                                (const EventLoop::State &state);
   virtual bool          custom_command                          (const String       &command_name,
                                                                  const StringList   &command_args);
-  /* Wind0wIface */
-  virtual void          show                                    ();
-  virtual bool          closed                                  ();
-  virtual void          close                                   ();
-  virtual bool          synthesize_enter                        (double xalign = 0.5,
-                                                                 double yalign = 0.5);
-  virtual bool          synthesize_leave                        ();
-  virtual bool          synthesize_click                        (ItemIface &item,
-                                                                 int        button,
-                                                                 double     xalign = 0.5,
-                                                                 double     yalign = 0.5);
-  virtual bool          synthesize_delete                       ();
   /* event handling */
   virtual void          enqueue_async                           (Event                  *event);
   virtual void          cancel_item_events                      (ItemImpl               *item);

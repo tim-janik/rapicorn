@@ -54,18 +54,18 @@ main (int   argc,
   // find and load GUI definitions relative to argv[0]
   app.auto_load ("RapicornExamples", "graphics.xml", argv[0]);
 
-  // create main wind0w
-  Wind0w wind0w = app.create_wind0w ("graphics-dialog");
+  // create main window
+  Window window = app.create_window ("graphics-dialog");
 
   // hook up drawable test
-  Drawable drawable = wind0w.component<Drawable> ("/Drawable#drawable1");
+  Drawable drawable = window.component<Drawable> ("/Drawable#drawable1");
   RAPICORN_ASSERT (drawable._is_null() == false);
   drawable.sig_redraw() += slot (&drawable_redraw);
 
   // show main window
-  wind0w.show();
+  window.show();
 
-  // run event loops while wind0ws are on screen
+  // run event loops while windows are on screen
   return app.run_and_exit();
 }
 
