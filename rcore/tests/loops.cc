@@ -98,7 +98,7 @@ test_loop_basics()
   TASSERT (pipe_reader_seen == 0);
   while (pipe_reader_seen < 4999)
     loop->iterate (true);
-  TCMPSIGNED (pipe_reader_seen, ==, 4999);
+  TCMP (pipe_reader_seen, ==, 4999);
   err = close (pipe_fds[1]);    // pipe becomes unusable
   TASSERT (err == 0);
   loop->iterate_pending();      // PollFDSource prepare/check must auto-close fds here
