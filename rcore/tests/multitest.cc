@@ -42,9 +42,9 @@ static void
 test_cpu_info (void)
 {
   const RapicornCPUInfo cpi = cpu_info ();
-  TASSERT (cpi.machine != NULL);
+  TCMP (cpi.machine, !=, NULL);
   String cps = cpu_info_string (cpi);
-  TASSERT (cps.size() != 0);
+  ASSERT (cps.size() != 0);
   if (Test::verbose())
     printout ("\n#####\n%s#####\n", cps.c_str());
 }
@@ -53,25 +53,25 @@ REGISTER_TEST ("General/CpuInfo", test_cpu_info);
 static void
 test_poll_consts()
 {
-  TASSERT (RAPICORN_SYSVAL_POLLIN     == POLLIN);
-  TASSERT (RAPICORN_SYSVAL_POLLPRI    == POLLPRI);
-  TASSERT (RAPICORN_SYSVAL_POLLOUT    == POLLOUT);
-  TASSERT (RAPICORN_SYSVAL_POLLRDNORM == POLLRDNORM);
-  TASSERT (RAPICORN_SYSVAL_POLLRDBAND == POLLRDBAND);
-  TASSERT (RAPICORN_SYSVAL_POLLWRNORM == POLLWRNORM);
-  TASSERT (RAPICORN_SYSVAL_POLLWRBAND == POLLWRBAND);
-  TASSERT (RAPICORN_SYSVAL_POLLERR    == POLLERR);
-  TASSERT (RAPICORN_SYSVAL_POLLHUP    == POLLHUP);
-  TASSERT (RAPICORN_SYSVAL_POLLNVAL   == POLLNVAL);
+  TCMP (RAPICORN_SYSVAL_POLLIN,     ==, POLLIN);
+  TCMP (RAPICORN_SYSVAL_POLLPRI,    ==, POLLPRI);
+  TCMP (RAPICORN_SYSVAL_POLLOUT,    ==, POLLOUT);
+  TCMP (RAPICORN_SYSVAL_POLLRDNORM, ==, POLLRDNORM);
+  TCMP (RAPICORN_SYSVAL_POLLRDBAND, ==, POLLRDBAND);
+  TCMP (RAPICORN_SYSVAL_POLLWRNORM, ==, POLLWRNORM);
+  TCMP (RAPICORN_SYSVAL_POLLWRBAND, ==, POLLWRBAND);
+  TCMP (RAPICORN_SYSVAL_POLLERR,    ==, POLLERR);
+  TCMP (RAPICORN_SYSVAL_POLLHUP,    ==, POLLHUP);
+  TCMP (RAPICORN_SYSVAL_POLLNVAL,   ==, POLLNVAL);
 }
 REGISTER_TEST ("General/Poll constants", test_poll_consts);
 
 static void
 test_regex (void)
 {
-  TASSERT (Regex::match_simple ("Lion", "Lion", Regex::EXTENDED | Regex::ANCHORED, Regex::MATCH_NORMAL) == true);
-  TASSERT (Regex::match_simple ("Ok", "<TEXT>Close</TEXT>", Regex::COMPILE_NORMAL, Regex::MATCH_NORMAL) == false);
-  TASSERT (Regex::match_simple ("\\bOk", "<TEXT>Ok</TEXT>", Regex::COMPILE_NORMAL, Regex::MATCH_NORMAL) == true);
+  TCMP (Regex::match_simple ("Lion", "Lion", Regex::EXTENDED | Regex::ANCHORED, Regex::MATCH_NORMAL), ==, true);
+  TCMP (Regex::match_simple ("Ok", "<TEXT>Close</TEXT>", Regex::COMPILE_NORMAL, Regex::MATCH_NORMAL), ==, false);
+  TCMP (Regex::match_simple ("\\bOk", "<TEXT>Ok</TEXT>", Regex::COMPILE_NORMAL, Regex::MATCH_NORMAL), ==, true);
 }
 REGISTER_TEST ("General/Regex Tests", test_regex);
 
@@ -86,41 +86,41 @@ test_paths()
   p = "0\\1\\2\\3\\4\\5\\6\\7\\8\\9\\a\\b\\c\\d\\e\\f";
 #endif
   // printerr ("%s == %s\n", s.c_str(), p.c_str());
-  TASSERT (s == p);
+  TCMP (s, ==, p);
   bool b = Path::isabs (p);
-  TASSERT (b == false);
+  TCMP (b, ==, false);
 #if RAPICORN_DIR_SEPARATOR == '/'
   s = Path::join (RAPICORN_DIR_SEPARATOR_S, s);
 #else
   s = Path::join ("C:\\", s);
 #endif
   b = Path::isabs (s);
-  TASSERT (b == true);
+  TCMP (b, ==, true);
   s = Path::skip_root (s);
-  TASSERT (s == p);
-  TASSERT (Path::dir_separator == "/" || Path::dir_separator == "\\");
-  TASSERT (Path::searchpath_separator == ":" || Path::searchpath_separator == ";");
-  TASSERT (Path::basename ("simple") == "simple");
-  TASSERT (Path::basename ("skipthis" RAPICORN_DIR_SEPARATOR_S "file") == "file");
-  TASSERT (Path::basename (RAPICORN_DIR_SEPARATOR_S "skipthis" RAPICORN_DIR_SEPARATOR_S "file") == "file");
-  TASSERT (Path::dirname ("file") == ".");
-  TASSERT (Path::dirname ("dir" RAPICORN_DIR_SEPARATOR_S) == "dir");
-  TASSERT (Path::dirname ("dir" RAPICORN_DIR_SEPARATOR_S "file") == "dir");
-  TASSERT (Path::cwd() != "");
-  TASSERT (Path::check (Path::join (Path::cwd(), "..", "tests"), "rd") == true); // ./../tests/ should be a readable directory
-  TASSERT (Path::isdirname ("") == false);
-  TASSERT (Path::isdirname ("foo") == false);
-  TASSERT (Path::isdirname ("foo/") == true);
-  TASSERT (Path::isdirname ("/foo") == false);
-  TASSERT (Path::isdirname ("foo/.") == true);
-  TASSERT (Path::isdirname ("foo/..") == true);
-  TASSERT (Path::isdirname ("foo/...") == false);
-  TASSERT (Path::isdirname ("foo/..../") == true);
-  TASSERT (Path::isdirname ("/.") == true);
-  TASSERT (Path::isdirname ("/..") == true);
-  TASSERT (Path::isdirname ("/") == true);
-  TASSERT (Path::isdirname (".") == true);
-  TASSERT (Path::isdirname ("..") == true);
+  TCMP (s, ==, p);
+  ASSERT (Path::dir_separator == "/" || Path::dir_separator == "\\");
+  ASSERT (Path::searchpath_separator == ":" || Path::searchpath_separator == ";");
+  TCMP (Path::basename ("simple"), ==, "simple");
+  TCMP (Path::basename ("skipthis" RAPICORN_DIR_SEPARATOR_S "file"), ==, "file");
+  TCMP (Path::basename (RAPICORN_DIR_SEPARATOR_S "skipthis" RAPICORN_DIR_SEPARATOR_S "file"), ==, "file");
+  TCMP (Path::dirname ("file"), ==, ".");
+  TCMP (Path::dirname ("dir" RAPICORN_DIR_SEPARATOR_S), ==, "dir");
+  TCMP (Path::dirname ("dir" RAPICORN_DIR_SEPARATOR_S "file"), ==, "dir");
+  TCMP (Path::cwd(), !=, "");
+  TCMP (Path::check (Path::join (Path::cwd(), "..", "tests"), "rd"), ==, true); // ./../tests/ should be a readable directory
+  TCMP (Path::isdirname (""), ==, false);
+  TCMP (Path::isdirname ("foo"), ==, false);
+  TCMP (Path::isdirname ("foo/"), ==, true);
+  TCMP (Path::isdirname ("/foo"), ==, false);
+  TCMP (Path::isdirname ("foo/."), ==, true);
+  TCMP (Path::isdirname ("foo/.."), ==, true);
+  TCMP (Path::isdirname ("foo/..."), ==, false);
+  TCMP (Path::isdirname ("foo/..../"), ==, true);
+  TCMP (Path::isdirname ("/."), ==, true);
+  TCMP (Path::isdirname ("/.."), ==, true);
+  TCMP (Path::isdirname ("/"), ==, true);
+  TCMP (Path::isdirname ("."), ==, true);
+  TCMP (Path::isdirname (".."), ==, true);
 }
 REGISTER_TEST ("General/Path handling", test_paths);
 
@@ -154,7 +154,7 @@ test_zintern()
 {
   static const unsigned char TEST_DATA[] = "x\332K\312,\312K-\321\255\312\314+I-\312S(I-.QHI,I\4\0v\317\11V";
   uint8 *data = zintern_decompress (24, TEST_DATA, sizeof (TEST_DATA) / sizeof (TEST_DATA[0]));
-  TASSERT (String ((char*) data) == "birnet-zintern test data");
+  TCMP (String ((char*) data), ==, "birnet-zintern test data");
   zintern_free (data);
 }
 REGISTER_TEST ("General/ZIntern", test_zintern);
@@ -163,18 +163,18 @@ static void
 test_files (void)
 {
   const char *argv0 = program_file().c_str();
-  TASSERT (Path::equals ("/bin", "/../bin") == TRUE);
-  TASSERT (Path::equals ("/bin", "/sbin") == FALSE);
-  TASSERT (Path::check (argv0, "e") == TRUE);
-  TASSERT (Path::check (argv0, "r") == TRUE);
-  // TASSERT (Path::check (argv0, "w") == TRUE); // fails on kfreebsd
-  TASSERT (Path::check (argv0, "x") == TRUE);
-  TASSERT (Path::check (argv0, "d") == FALSE);
-  TASSERT (Path::check (argv0, "l") == FALSE);
-  TASSERT (Path::check (argv0, "c") == FALSE);
-  TASSERT (Path::check (argv0, "b") == FALSE);
-  TASSERT (Path::check (argv0, "p") == FALSE);
-  TASSERT (Path::check (argv0, "s") == FALSE);
+  TCMP (Path::equals ("/bin", "/../bin"), ==, TRUE);
+  TCMP (Path::equals ("/bin", "/sbin"), ==, FALSE);
+  TCMP (Path::check (argv0, "e"), ==, TRUE);
+  TCMP (Path::check (argv0, "r"), ==, TRUE);
+  // TCMP (Path::check (argv0, "w"), ==, TRUE); // fails on kfreebsd
+  TCMP (Path::check (argv0, "x"), ==, TRUE);
+  TCMP (Path::check (argv0, "d"), ==, FALSE);
+  TCMP (Path::check (argv0, "l"), ==, FALSE);
+  TCMP (Path::check (argv0, "c"), ==, FALSE);
+  TCMP (Path::check (argv0, "b"), ==, FALSE);
+  TCMP (Path::check (argv0, "p"), ==, FALSE);
+  TCMP (Path::check (argv0, "s"), ==, FALSE);
 }
 REGISTER_TEST ("General/FileChecks", test_files);
 
@@ -185,9 +185,9 @@ test_virtual_typeid()
   struct TypeB : public virtual VirtualTypeid {};
   TypeA a;
   TypeB b;
-  TASSERT (a.typeid_name() != b.typeid_name());
-  TASSERT (strstr (a.typeid_pretty_name().c_str(), "TypeA") != NULL);
-  TASSERT (strstr (b.typeid_pretty_name().c_str(), "TypeB") != NULL);
+  TCMP (a.typeid_name(), !=, b.typeid_name());
+  TCMP (strstr (a.typeid_pretty_name().c_str(), "TypeA"), !=, NULL);
+  TCMP (strstr (b.typeid_pretty_name().c_str(), "TypeB"), !=, NULL);
 }
 REGISTER_TEST ("General/VirtualTypeid", test_virtual_typeid);
 
@@ -315,156 +315,156 @@ REGISTER_TEST ("General/Locatable IDs", test_locatable_ids);
 static void
 test_dtoi32()
 {
-  TASSERT (_dtoi32_generic (0.0) == 0);
-  TASSERT (_dtoi32_generic (+0.3) == +0);
-  TASSERT (_dtoi32_generic (-0.3) == -0);
-  TASSERT (_dtoi32_generic (+0.7) == +1);
-  TASSERT (_dtoi32_generic (-0.7) == -1);
-  TASSERT (_dtoi32_generic (+2147483646.3) == +2147483646);
-  TASSERT (_dtoi32_generic (+2147483646.7) == +2147483647);
-  TASSERT (_dtoi32_generic (-2147483646.3) == -2147483646);
-  TASSERT (_dtoi32_generic (-2147483646.7) == -2147483647);
-  TASSERT (_dtoi32_generic (-2147483647.3) == -2147483647);
-  TASSERT (_dtoi32_generic (-2147483647.7) == -2147483648LL);
-  TASSERT (dtoi32 (0.0) == 0);
-  TASSERT (dtoi32 (+0.3) == +0);
-  TASSERT (dtoi32 (-0.3) == -0);
-  TASSERT (dtoi32 (+0.7) == +1);
-  TASSERT (dtoi32 (-0.7) == -1);
-  TASSERT (dtoi32 (+2147483646.3) == +2147483646);
-  TASSERT (dtoi32 (+2147483646.7) == +2147483647);
-  TASSERT (dtoi32 (-2147483646.3) == -2147483646);
-  TASSERT (dtoi32 (-2147483646.7) == -2147483647);
-  TASSERT (dtoi32 (-2147483647.3) == -2147483647);
-  TASSERT (dtoi32 (-2147483647.7) == -2147483648LL);
+  TCMP (_dtoi32_generic (0.0), ==, 0);
+  TCMP (_dtoi32_generic (+0.3), ==, +0);
+  TCMP (_dtoi32_generic (-0.3), ==, -0);
+  TCMP (_dtoi32_generic (+0.7), ==, +1);
+  TCMP (_dtoi32_generic (-0.7), ==, -1);
+  TCMP (_dtoi32_generic (+2147483646.3), ==, +2147483646);
+  TCMP (_dtoi32_generic (+2147483646.7), ==, +2147483647);
+  TCMP (_dtoi32_generic (-2147483646.3), ==, -2147483646);
+  TCMP (_dtoi32_generic (-2147483646.7), ==, -2147483647);
+  TCMP (_dtoi32_generic (-2147483647.3), ==, -2147483647);
+  TCMP (_dtoi32_generic (-2147483647.7), ==, -2147483648LL);
+  TCMP (dtoi32 (0.0), ==, 0);
+  TCMP (dtoi32 (+0.3), ==, +0);
+  TCMP (dtoi32 (-0.3), ==, -0);
+  TCMP (dtoi32 (+0.7), ==, +1);
+  TCMP (dtoi32 (-0.7), ==, -1);
+  TCMP (dtoi32 (+2147483646.3), ==, +2147483646);
+  TCMP (dtoi32 (+2147483646.7), ==, +2147483647);
+  TCMP (dtoi32 (-2147483646.3), ==, -2147483646);
+  TCMP (dtoi32 (-2147483646.7), ==, -2147483647);
+  TCMP (dtoi32 (-2147483647.3), ==, -2147483647);
+  TCMP (dtoi32 (-2147483647.7), ==, -2147483648LL);
 }
 REGISTER_TEST ("Math/dtoi32", test_dtoi32);
 
 static void
 test_dtoi64()
 {
-  TASSERT (_dtoi64_generic (0.0) == 0);
-  TASSERT (_dtoi64_generic (+0.3) == +0);
-  TASSERT (_dtoi64_generic (-0.3) == -0);
-  TASSERT (_dtoi64_generic (+0.7) == +1);
-  TASSERT (_dtoi64_generic (-0.7) == -1);
-  TASSERT (_dtoi64_generic (+2147483646.3) == +2147483646);
-  TASSERT (_dtoi64_generic (+2147483646.7) == +2147483647);
-  TASSERT (_dtoi64_generic (-2147483646.3) == -2147483646);
-  TASSERT (_dtoi64_generic (-2147483646.7) == -2147483647);
-  TASSERT (_dtoi64_generic (-2147483647.3) == -2147483647);
-  TASSERT (_dtoi64_generic (-2147483647.7) == -2147483648LL);
-  TASSERT (_dtoi64_generic (+4294967297.3) == +4294967297LL);
-  TASSERT (_dtoi64_generic (+4294967297.7) == +4294967298LL);
-  TASSERT (_dtoi64_generic (-4294967297.3) == -4294967297LL);
-  TASSERT (_dtoi64_generic (-4294967297.7) == -4294967298LL);
-  TASSERT (_dtoi64_generic (+1125899906842624.3) == +1125899906842624LL);
-  TASSERT (_dtoi64_generic (+1125899906842624.7) == +1125899906842625LL);
-  TASSERT (_dtoi64_generic (-1125899906842624.3) == -1125899906842624LL);
-  TASSERT (_dtoi64_generic (-1125899906842624.7) == -1125899906842625LL);
-  TASSERT (dtoi64 (0.0) == 0);
-  TASSERT (dtoi64 (+0.3) == +0);
-  TASSERT (dtoi64 (-0.3) == -0);
-  TASSERT (dtoi64 (+0.7) == +1);
-  TASSERT (dtoi64 (-0.7) == -1);
-  TASSERT (dtoi64 (+2147483646.3) == +2147483646);
-  TASSERT (dtoi64 (+2147483646.7) == +2147483647);
-  TASSERT (dtoi64 (-2147483646.3) == -2147483646);
-  TASSERT (dtoi64 (-2147483646.7) == -2147483647);
-  TASSERT (dtoi64 (-2147483647.3) == -2147483647);
-  TASSERT (dtoi64 (-2147483647.7) == -2147483648LL);
-  TASSERT (dtoi64 (+4294967297.3) == +4294967297LL);
-  TASSERT (dtoi64 (+4294967297.7) == +4294967298LL);
-  TASSERT (dtoi64 (-4294967297.3) == -4294967297LL);
-  TASSERT (dtoi64 (-4294967297.7) == -4294967298LL);
-  TASSERT (dtoi64 (+1125899906842624.3) == +1125899906842624LL);
-  TASSERT (dtoi64 (+1125899906842624.7) == +1125899906842625LL);
-  TASSERT (dtoi64 (-1125899906842624.3) == -1125899906842624LL);
-  TASSERT (dtoi64 (-1125899906842624.7) == -1125899906842625LL);
+  TCMP (_dtoi64_generic (0.0), ==, 0);
+  TCMP (_dtoi64_generic (+0.3), ==, +0);
+  TCMP (_dtoi64_generic (-0.3), ==, -0);
+  TCMP (_dtoi64_generic (+0.7), ==, +1);
+  TCMP (_dtoi64_generic (-0.7), ==, -1);
+  TCMP (_dtoi64_generic (+2147483646.3), ==, +2147483646);
+  TCMP (_dtoi64_generic (+2147483646.7), ==, +2147483647);
+  TCMP (_dtoi64_generic (-2147483646.3), ==, -2147483646);
+  TCMP (_dtoi64_generic (-2147483646.7), ==, -2147483647);
+  TCMP (_dtoi64_generic (-2147483647.3), ==, -2147483647);
+  TCMP (_dtoi64_generic (-2147483647.7), ==, -2147483648LL);
+  TCMP (_dtoi64_generic (+4294967297.3), ==, +4294967297LL);
+  TCMP (_dtoi64_generic (+4294967297.7), ==, +4294967298LL);
+  TCMP (_dtoi64_generic (-4294967297.3), ==, -4294967297LL);
+  TCMP (_dtoi64_generic (-4294967297.7), ==, -4294967298LL);
+  TCMP (_dtoi64_generic (+1125899906842624.3), ==, +1125899906842624LL);
+  TCMP (_dtoi64_generic (+1125899906842624.7), ==, +1125899906842625LL);
+  TCMP (_dtoi64_generic (-1125899906842624.3), ==, -1125899906842624LL);
+  TCMP (_dtoi64_generic (-1125899906842624.7), ==, -1125899906842625LL);
+  TCMP (dtoi64 (0.0), ==, 0);
+  TCMP (dtoi64 (+0.3), ==, +0);
+  TCMP (dtoi64 (-0.3), ==, -0);
+  TCMP (dtoi64 (+0.7), ==, +1);
+  TCMP (dtoi64 (-0.7), ==, -1);
+  TCMP (dtoi64 (+2147483646.3), ==, +2147483646);
+  TCMP (dtoi64 (+2147483646.7), ==, +2147483647);
+  TCMP (dtoi64 (-2147483646.3), ==, -2147483646);
+  TCMP (dtoi64 (-2147483646.7), ==, -2147483647);
+  TCMP (dtoi64 (-2147483647.3), ==, -2147483647);
+  TCMP (dtoi64 (-2147483647.7), ==, -2147483648LL);
+  TCMP (dtoi64 (+4294967297.3), ==, +4294967297LL);
+  TCMP (dtoi64 (+4294967297.7), ==, +4294967298LL);
+  TCMP (dtoi64 (-4294967297.3), ==, -4294967297LL);
+  TCMP (dtoi64 (-4294967297.7), ==, -4294967298LL);
+  TCMP (dtoi64 (+1125899906842624.3), ==, +1125899906842624LL);
+  TCMP (dtoi64 (+1125899906842624.7), ==, +1125899906842625LL);
+  TCMP (dtoi64 (-1125899906842624.3), ==, -1125899906842624LL);
+  TCMP (dtoi64 (-1125899906842624.7), ==, -1125899906842625LL);
 }
 REGISTER_TEST ("Math/dtoi64", test_dtoi64);
 
 static void
 test_iround()
 {
-  TASSERT (round (0.0) == 0.0);
-  TASSERT (round (+0.3) == +0.0);
-  TASSERT (round (-0.3) == -0.0);
-  TASSERT (round (+0.7) == +1.0);
-  TASSERT (round (-0.7) == -1.0);
-  TASSERT (round (+4294967297.3) == +4294967297.0);
-  TASSERT (round (+4294967297.7) == +4294967298.0);
-  TASSERT (round (-4294967297.3) == -4294967297.0);
-  TASSERT (round (-4294967297.7) == -4294967298.0);
-  TASSERT (iround (0.0) == 0);
-  TASSERT (iround (+0.3) == +0);
-  TASSERT (iround (-0.3) == -0);
-  TASSERT (iround (+0.7) == +1);
-  TASSERT (iround (-0.7) == -1);
-  TASSERT (iround (+4294967297.3) == +4294967297LL);
-  TASSERT (iround (+4294967297.7) == +4294967298LL);
-  TASSERT (iround (-4294967297.3) == -4294967297LL);
-  TASSERT (iround (-4294967297.7) == -4294967298LL);
-  TASSERT (iround (+1125899906842624.3) == +1125899906842624LL);
-  TASSERT (iround (+1125899906842624.7) == +1125899906842625LL);
-  TASSERT (iround (-1125899906842624.3) == -1125899906842624LL);
-  TASSERT (iround (-1125899906842624.7) == -1125899906842625LL);
+  TCMP (round (0.0), ==, 0.0);
+  TCMP (round (+0.3), ==, +0.0);
+  TCMP (round (-0.3), ==, -0.0);
+  TCMP (round (+0.7), ==, +1.0);
+  TCMP (round (-0.7), ==, -1.0);
+  TCMP (round (+4294967297.3), ==, +4294967297.0);
+  TCMP (round (+4294967297.7), ==, +4294967298.0);
+  TCMP (round (-4294967297.3), ==, -4294967297.0);
+  TCMP (round (-4294967297.7), ==, -4294967298.0);
+  TCMP (iround (0.0), ==, 0);
+  TCMP (iround (+0.3), ==, +0);
+  TCMP (iround (-0.3), ==, -0);
+  TCMP (iround (+0.7), ==, +1);
+  TCMP (iround (-0.7), ==, -1);
+  TCMP (iround (+4294967297.3), ==, +4294967297LL);
+  TCMP (iround (+4294967297.7), ==, +4294967298LL);
+  TCMP (iround (-4294967297.3), ==, -4294967297LL);
+  TCMP (iround (-4294967297.7), ==, -4294967298LL);
+  TCMP (iround (+1125899906842624.3), ==, +1125899906842624LL);
+  TCMP (iround (+1125899906842624.7), ==, +1125899906842625LL);
+  TCMP (iround (-1125899906842624.3), ==, -1125899906842624LL);
+  TCMP (iround (-1125899906842624.7), ==, -1125899906842625LL);
 }
 REGISTER_TEST ("Math/iround", test_iround);
 
 static void
 test_iceil()
 {
-  TASSERT (ceil (0.0) == 0.0);
-  TASSERT (ceil (+0.3) == +1.0);
-  TASSERT (ceil (-0.3) == -0.0);
-  TASSERT (ceil (+0.7) == +1.0);
-  TASSERT (ceil (-0.7) == -0.0);
-  TASSERT (ceil (+4294967297.3) == +4294967298.0);
-  TASSERT (ceil (+4294967297.7) == +4294967298.0);
-  TASSERT (ceil (-4294967297.3) == -4294967297.0);
-  TASSERT (ceil (-4294967297.7) == -4294967297.0);
-  TASSERT (iceil (0.0) == 0);
-  TASSERT (iceil (+0.3) == +1);
-  TASSERT (iceil (-0.3) == -0);
-  TASSERT (iceil (+0.7) == +1);
-  TASSERT (iceil (-0.7) == -0);
-  TASSERT (iceil (+4294967297.3) == +4294967298LL);
-  TASSERT (iceil (+4294967297.7) == +4294967298LL);
-  TASSERT (iceil (-4294967297.3) == -4294967297LL);
-  TASSERT (iceil (-4294967297.7) == -4294967297LL);
-  TASSERT (iceil (+1125899906842624.3) == +1125899906842625LL);
-  TASSERT (iceil (+1125899906842624.7) == +1125899906842625LL);
-  TASSERT (iceil (-1125899906842624.3) == -1125899906842624LL);
-  TASSERT (iceil (-1125899906842624.7) == -1125899906842624LL);
+  TCMP (ceil (0.0), ==, 0.0);
+  TCMP (ceil (+0.3), ==, +1.0);
+  TCMP (ceil (-0.3), ==, -0.0);
+  TCMP (ceil (+0.7), ==, +1.0);
+  TCMP (ceil (-0.7), ==, -0.0);
+  TCMP (ceil (+4294967297.3), ==, +4294967298.0);
+  TCMP (ceil (+4294967297.7), ==, +4294967298.0);
+  TCMP (ceil (-4294967297.3), ==, -4294967297.0);
+  TCMP (ceil (-4294967297.7), ==, -4294967297.0);
+  TCMP (iceil (0.0), ==, 0);
+  TCMP (iceil (+0.3), ==, +1);
+  TCMP (iceil (-0.3), ==, -0);
+  TCMP (iceil (+0.7), ==, +1);
+  TCMP (iceil (-0.7), ==, -0);
+  TCMP (iceil (+4294967297.3), ==, +4294967298LL);
+  TCMP (iceil (+4294967297.7), ==, +4294967298LL);
+  TCMP (iceil (-4294967297.3), ==, -4294967297LL);
+  TCMP (iceil (-4294967297.7), ==, -4294967297LL);
+  TCMP (iceil (+1125899906842624.3), ==, +1125899906842625LL);
+  TCMP (iceil (+1125899906842624.7), ==, +1125899906842625LL);
+  TCMP (iceil (-1125899906842624.3), ==, -1125899906842624LL);
+  TCMP (iceil (-1125899906842624.7), ==, -1125899906842624LL);
 }
 REGISTER_TEST ("Math/iceil", test_iceil);
 
 static void
 test_ifloor()
 {
-  TASSERT (floor (0.0) == 0.0);
-  TASSERT (floor (+0.3) == +0.0);
-  TASSERT (floor (-0.3) == -1.0);
-  TASSERT (floor (+0.7) == +0.0);
-  TASSERT (floor (-0.7) == -1.0);
-  TASSERT (floor (+4294967297.3) == +4294967297.0);
-  TASSERT (floor (+4294967297.7) == +4294967297.0);
-  TASSERT (floor (-4294967297.3) == -4294967298.0);
-  TASSERT (floor (-4294967297.7) == -4294967298.0);
-  TASSERT (ifloor (0.0) == 0);
-  TASSERT (ifloor (+0.3) == +0);
-  TASSERT (ifloor (-0.3) == -1);
-  TASSERT (ifloor (+0.7) == +0);
-  TASSERT (ifloor (-0.7) == -1);
-  TASSERT (ifloor (+4294967297.3) == +4294967297LL);
-  TASSERT (ifloor (+4294967297.7) == +4294967297LL);
-  TASSERT (ifloor (-4294967297.3) == -4294967298LL);
-  TASSERT (ifloor (-4294967297.7) == -4294967298LL);
-  TASSERT (ifloor (+1125899906842624.3) == +1125899906842624LL);
-  TASSERT (ifloor (+1125899906842624.7) == +1125899906842624LL);
-  TASSERT (ifloor (-1125899906842624.3) == -1125899906842625LL);
-  TASSERT (ifloor (-1125899906842624.7) == -1125899906842625LL);
+  TCMP (floor (0.0), ==, 0.0);
+  TCMP (floor (+0.3), ==, +0.0);
+  TCMP (floor (-0.3), ==, -1.0);
+  TCMP (floor (+0.7), ==, +0.0);
+  TCMP (floor (-0.7), ==, -1.0);
+  TCMP (floor (+4294967297.3), ==, +4294967297.0);
+  TCMP (floor (+4294967297.7), ==, +4294967297.0);
+  TCMP (floor (-4294967297.3), ==, -4294967298.0);
+  TCMP (floor (-4294967297.7), ==, -4294967298.0);
+  TCMP (ifloor (0.0), ==, 0);
+  TCMP (ifloor (+0.3), ==, +0);
+  TCMP (ifloor (-0.3), ==, -1);
+  TCMP (ifloor (+0.7), ==, +0);
+  TCMP (ifloor (-0.7), ==, -1);
+  TCMP (ifloor (+4294967297.3), ==, +4294967297LL);
+  TCMP (ifloor (+4294967297.7), ==, +4294967297LL);
+  TCMP (ifloor (-4294967297.3), ==, -4294967298LL);
+  TCMP (ifloor (-4294967297.7), ==, -4294967298LL);
+  TCMP (ifloor (+1125899906842624.3), ==, +1125899906842624LL);
+  TCMP (ifloor (+1125899906842624.7), ==, +1125899906842624LL);
+  TCMP (ifloor (-1125899906842624.3), ==, -1125899906842625LL);
+  TCMP (ifloor (-1125899906842624.7), ==, -1125899906842625LL);
 }
 REGISTER_TEST ("Math/ifloor", test_ifloor);
 
@@ -507,26 +507,27 @@ binary_lookup_tests()
   TOK();
   /* failed lookups */
   fit = binary_lookup (sv.begin(), sv.end(), compare_floats, -INFINITY);
-  TASSERT (fit == sv.end());
+  TCMP (fit, ==, sv.end());
   fit = binary_lookup_sibling (sv.begin(), sv.end(), compare_floats, -INFINITY);
-  TASSERT (fit != sv.end());
+  TCMP (fit, !=, sv.end());
   /* 0-size lookups */
   vector<float> ev;
   fit = binary_lookup (ev.begin(), ev.end(), compare_floats, 0);
-  TASSERT (fit == ev.end());
+  TCMP (fit, ==, ev.end());
   fit = binary_lookup_sibling (ev.begin(), ev.end(), compare_floats, 0);
-  TASSERT (fit == ev.end());
+  TCMP (fit, ==, ev.end());
   pit = binary_lookup_insertion_pos (ev.begin(), ev.end(), compare_floats, 0);
-  TASSERT (pit.first == ev.end() && pit.second == false);
+  TCMP (pit.first, ==, ev.end());
+  TCMP (pit.second, ==, false);
   TDONE();
   TSTART ("General/Binary Binary lookup");
   for (uint i = 0; i < fv.size(); i++)
     {
       fit = binary_lookup (sv.begin(), sv.end(), compare_floats, fv[i]);
-      TCHECK (fit != sv.end());
-      TCHECK (fv[i] == *fit);           /* silent assertion */
+      TCMP (fit, !=, sv.end());
+      TCMP (fv[i], ==, *fit);
       if (i % 10000 == 9999)
-        TASSERT (fv[i] == *fit);        /* verbose assertion */
+        TCMP (fv[i], ==, *fit);
     }
   TDONE();
   TSTART ("General/Binary Sibling lookup");
@@ -534,8 +535,8 @@ binary_lookup_tests()
     {
       double target = (sv[i - 1] + sv[i]) / 2.0;
       fit = binary_lookup_sibling (sv.begin(), sv.end(), compare_floats, target);
-      TCHECK (fit != sv.end());
-      TCHECK (sv[i] == *fit || sv[i - 1] == *fit);
+      TCMP (fit, !=, sv.end());
+      ASSERT (sv[i] == *fit || sv[i - 1] == *fit);
       if (i % 10000 == 9999)
         TOK();
     }
@@ -547,12 +548,12 @@ binary_lookup_tests()
       pit = binary_lookup_insertion_pos (sv.begin(), sv.end(), compare_floats, fv[i]);
       fit = pit.first;
       seen_inexact |= pit.second == false;
-      TCHECK (fit != sv.end());
-      TCHECK (fv[i] == *fit);
+      TCMP (fit, !=, sv.end());
+      TCMP (fv[i], ==, *fit);
       if (i % 10000 == 9999)
         TOK();
     }
-  TASSERT (seen_inexact == false);
+  TCMP (seen_inexact, ==, false);
   TDONE();
   TSTART ("General/Binary Insertion lookup2");
   seen_inexact = false;
@@ -562,12 +563,12 @@ binary_lookup_tests()
       pit = binary_lookup_insertion_pos (sv.begin(), sv.end(), compare_floats, target);
       fit = pit.first;
       seen_inexact |= pit.second == false;
-      TCHECK (fit != sv.end());
-      TCHECK (sv[i] == *fit || sv[i - 1] == *fit);
+      TCMP (fit, !=, sv.end());
+      ASSERT (sv[i] == *fit || sv[i - 1] == *fit);
       if (i % 10000 == 9999)
         TOK();
     }
-  TASSERT (seen_inexact == true);
+  TCMP (seen_inexact, ==, true);
 }
 REGISTER_TEST ("General/Binary Lookups", binary_lookup_tests);
 
