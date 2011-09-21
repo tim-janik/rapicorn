@@ -29,12 +29,8 @@
 #define TWARN(...)              Rapicorn::Test::test_output (6, __VA_ARGS__)
 #define TRUN(name, func)        ({ TSTART (name); func(); TDONE(); })
 #define TCMP(a,cmp,b)           TCMP_op (a,cmp,b,#a,#b)
-#define TASSERT(code)           TASSERT_impl (code)
+#define TASSERT                 RAPICORN_ASSERT // TASSERT (condition)
 #define TOK()                   do {} while (0) // printerr (".")
-#define TASSERT_impl(code)      do { if (code) TOK(); else      \
-      Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
-                                  "assertion failed: %s", #code);       \
-  } while (0)
 #define TCMP_op(a,cmp,b,sa,sb)  do { if (a cmp b) TOK(); else {     \
   String __tassert_va = Rapicorn::Test::stringify_arg (a, #a);  \
   String __tassert_vb = Rapicorn::Test::stringify_arg (b, #b);  \
