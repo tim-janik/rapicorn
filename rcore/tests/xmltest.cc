@@ -33,9 +33,9 @@ xml_tree_test (void)
   if (error.code)
     fatal ("%s:%d:%d:error.code=%d: %s", input_file, error.line_number, error.char_number, error.code, error.message.c_str());
   else
-    TCHECK (xnode != NULL);
+    TCMP (xnode, !=, NULL);
   /* check root */
-  TCHECK (xnode->name() == "toplevel-tag");
+  TCMP (xnode->name(), ==, "toplevel-tag");
   vector<XmlNode*>::const_iterator cit;
   uint testmask = 0;
   /* various checks */
@@ -44,12 +44,12 @@ xml_tree_test (void)
       {
         /* check attribute parsing */
         XmlNode *child = *cit;
-        TCHECK (child->has_attribute ("a") == true);
-        TCHECK (child->has_attribute ("A") == false);
-        TCHECK (child->get_attribute ("a") == "a");
-        TCHECK (child->get_attribute ("b") == "1234b");
-        TCHECK (child->get_attribute ("c") == "_<->^&+;");
-        TCHECK (child->get_attribute ("d") == "");
+        TCMP (child->has_attribute ("a"), ==, true);
+        TCMP (child->has_attribute ("A"), ==, false);
+        TCMP (child->get_attribute ("a"), ==, "a");
+        TCMP (child->get_attribute ("b"), ==, "1234b");
+        TCMP (child->get_attribute ("c"), ==, "_<->^&+;");
+        TCMP (child->get_attribute ("d"), ==, "");
         testmask |= 1;
       }
     else if ((*cit)->name() == "child2")
@@ -60,8 +60,8 @@ xml_tree_test (void)
         for (uint i = 0; i < ARRAY_SIZE (children); i++)
           {
             const XmlNode *c = child->first_child (children[i]);
-            TCHECK (c != NULL);
-            TCHECK (c->name() == children[i]);
+            TCMP (c, !=, NULL);
+            TCMP (c->name(), ==, children[i]);
           }
         testmask |= 2;
       }
@@ -69,30 +69,30 @@ xml_tree_test (void)
       {
         /* check simple text */
         XmlNode *child = *cit;
-        TCHECK (child->text() == "foo-blah");
+        TCMP (child->text(), ==, "foo-blah");
         testmask |= 4;
       }
     else if ((*cit)->name() == "child5")
       {
         /* check text reconstruction */
         const XmlNode *child = *cit;
-        TCHECK (child->text() == "foobarbaseldroehn!");
+        TCMP (child->text(), ==, "foobarbaseldroehn!");
         // printout ("[node:line=%u:char=%u]", child->parsed_line(), child->parsed_char());
         testmask |= 8;
       }
-  TCHECK (testmask == 15);
+  TCMP (testmask, ==, 15);
   /* check attribute order */
   const XmlNode *cnode = xnode->first_child ("orderedattribs");
-  TCHECK (cnode != NULL);
-  TCHECK (cnode->text() == "orderedattribs-text");
+  TCMP (cnode, !=, NULL);
+  TCMP (cnode->text(), ==, "orderedattribs-text");
   const vector<String> oa = cnode->list_attributes();
-  TCHECK (oa.size() == 6);
-  TCHECK (oa[0] == "x1");
-  TCHECK (oa[1] == "z");
-  TCHECK (oa[2] == "U");
-  TCHECK (oa[3] == "foofoo");
-  TCHECK (oa[4] == "coffee");
-  TCHECK (oa[5] == "last");
+  TCMP (oa.size(), ==, 6);
+  TCMP (oa[0], ==, "x1");
+  TCMP (oa[1], ==, "z");
+  TCMP (oa[2], ==, "U");
+  TCMP (oa[3], ==, "foofoo");
+  TCMP (oa[4], ==, "coffee");
+  TCMP (oa[5], ==, "last");
   /* cleanup */
   if (xnode)
     unref (xnode);
@@ -144,7 +144,7 @@ test_array2xml()
   assert (xnode);
   ref_sink (xnode);
   String result = xnode->xml_string().c_str();
-  assert (expected_xmlarray == result);
+  assert (expected_xmlarray, ==, result);
   // printout ("XML:\n%s\n", result.c_str());
   unref (xnode);
 }
