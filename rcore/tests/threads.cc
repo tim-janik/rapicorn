@@ -31,7 +31,7 @@ class Thread_AtomicUp : public Thread {
   virtual void
   run ()
   {
-    TASSERT (name() == "AtomicTest");
+    TCMP (name(), ==, "AtomicTest");
     volatile int *ip = (int*) data;
     for (uint i = 0; i < 25; i++)
       Atomic::add (ip, +3);
@@ -49,7 +49,7 @@ class Thread_AtomicDown : public Thread {
   virtual void
   run ()
   {
-    TASSERT (name() == "AtomicTest");
+    TCMP (name(), ==, "AtomicTest");
     volatile int *ip = (int*) data;
     for (uint i = 0; i < 25; i++)
       Atomic::add (ip, -4);
@@ -90,7 +90,7 @@ test_atomic (void)
   // g_printerr ("{ %d ?= %d }", atomic_counter, result);
   for (int i = 0; i < count; i++)
     unref (threads[i]);
-  TASSERT (atomic_counter == result);
+  TCMP (atomic_counter, ==, result);
 }
 REGISTER_TEST ("Threads/AtomicThreading", test_atomic);
 
@@ -119,8 +119,8 @@ class Thread_RunOnce : public Thread {
         usleep (500); // sched_yield replacement to force contention
         once_leave (&runonce_value, size_t (42));
       }
-    TASSERT (*runonce_counter == 1);
-    TASSERT (runonce_value == 42);
+    TCMP (*runonce_counter, ==, 1);
+    TCMP (runonce_value, ==, 42);
     /* sinal thread end */
     Atomic::add (&runonce_threadcount, -1);
     runonce_mutex.lock();
@@ -146,7 +146,7 @@ test_runonce (void)
       threads[i]->start();
       TASSERT (threads[i]);
     }
-  TASSERT (runonce_value == 0);
+  TCMP (runonce_value, ==, 0);
   runonce_mutex.unlock(); // syncronized thread start
   runonce_mutex.lock();
   while (Atomic::get (&runonce_threadcount) > 0)
@@ -157,8 +157,8 @@ test_runonce (void)
   runonce_mutex.unlock();
   for (int i = 0; i < count; i++)
     unref (threads[i]);
-  TASSERT (runonce_counter == 1);
-  TASSERT (runonce_value == 42);
+  TCMP (runonce_counter, ==, 1);
+  TCMP (runonce_value, ==, 42);
 }
 REGISTER_TEST ("Threads/RunOnceTest", test_runonce);
 
@@ -236,24 +236,24 @@ test_threads (void)
   Thread *thread3 = new Thread_Plus1 ("plus3", &thread_data3);
   ref_sink (thread3);
   thread3->start();
-  TASSERT (thread1 != NULL);
-  TASSERT (thread2 != NULL);
-  TASSERT (thread3 != NULL);
-  TASSERT (thread_data1 == 0);
-  TASSERT (thread_data2 == 0);
-  TASSERT (thread_data3 == 0);
-  TASSERT (thread1->running() == TRUE);
-  TASSERT (thread2->running() == TRUE);
-  TASSERT (thread3->running() == TRUE);
+  TCMP (thread1, !=, NULL);
+  TCMP (thread2, !=, NULL);
+  TCMP (thread3, !=, NULL);
+  TCMP (thread_data1, ==, 0);
+  TCMP (thread_data2, ==, 0);
+  TCMP (thread_data3, ==, 0);
+  TCMP (thread1->running(), ==, TRUE);
+  TCMP (thread2->running(), ==, TRUE);
+  TCMP (thread3->running(), ==, TRUE);
   thread1->wakeup();
   thread2->wakeup();
   thread3->wakeup();
   thread1->abort();
   thread2->abort();
   thread3->abort();
-  TASSERT (thread_data1 > 0);
-  TASSERT (thread_data2 > 0);
-  TASSERT (thread_data3 > 0);
+  TCMP (thread_data1, >, 0);
+  TCMP (thread_data2, >, 0);
+  TCMP (thread_data3, >, 0);
   unref (thread1);
   unref (thread2);
   unref (thread3);
@@ -272,8 +272,8 @@ struct ThreadA : public virtual Rapicorn::Thread {
   virtual void
   run ()
   {
-    TASSERT (this->name() == "ThreadA");
-    TASSERT (this->name() == Thread::Self::name());
+    TCMP (this->name(), ==, "ThreadA");
+    TCMP (this->name(), ==, Thread::Self::name());
     for (int j = 0; j < 17905; j++)
       Atomic::add (counter, value);
   }
@@ -291,7 +291,7 @@ lockable (M &mutex)
 static void
 test_thread_cxx (void)
 {
-  TASSERT (NULL != &Thread::self());
+  TCMP (NULL, !=, &Thread::self());
   volatile int atomic_counter = 0;
   int result = 0;
   int count = 35;
@@ -305,7 +305,7 @@ test_thread_cxx (void)
       TASSERT (threads[i]);
       ref_sink (threads[i]);
     }
-  TASSERT (atomic_counter == 0);
+  TCMP (atomic_counter, ==, 0);
   for (int i = 0; i < count; i++)
     threads[i]->start();
   for (int i = 0; i < count; i++)
@@ -313,45 +313,45 @@ test_thread_cxx (void)
       threads[i]->wait_for_exit();
       unref (threads[i]);
     }
-  TASSERT (atomic_counter == result);
+  TCMP (atomic_counter, ==, result);
   TDONE ();
 
   TSTART ("Threads/C++OwnedMutex");
   static OwnedMutex static_omutex;
-  TASSERT (static_omutex.mine() == false);
+  TCMP (static_omutex.mine(), ==, false);
   static_omutex.lock();
-  TASSERT (static_omutex.mine() == true);
+  TCMP (static_omutex.mine(), ==, true);
   static_omutex.unlock();
-  TASSERT (static_omutex.mine() == false);
+  TCMP (static_omutex.mine(), ==, false);
   static_omutex.lock();
-  TASSERT (static_omutex.mine() == true);
+  TCMP (static_omutex.mine(), ==, true);
   static_omutex.lock();
-  TASSERT (static_omutex.mine() == true);
+  TCMP (static_omutex.mine(), ==, true);
   static_omutex.unlock();
-  TASSERT (static_omutex.mine() == true);
+  TCMP (static_omutex.mine(), ==, true);
   static_omutex.unlock();
-  TASSERT (static_omutex.mine() == false);
-  TASSERT (NULL != &Thread::self());
+  TCMP (static_omutex.mine(), ==, false);
+  TCMP (NULL, !=, &Thread::self());
   OwnedMutex omutex;
-  TASSERT (omutex.owner() == NULL);
-  TASSERT (omutex.mine() == false);
+  TCMP (omutex.owner(), ==, NULL);
+  TCMP (omutex.mine(), ==, false);
   omutex.lock();
-  TASSERT (omutex.owner() == &Thread::self());
-  TASSERT (omutex.mine() == true);
-  TASSERT (lockable (omutex) == true);
+  TCMP (omutex.owner(), ==, &Thread::self());
+  TCMP (omutex.mine(), ==, true);
+  TCMP (lockable (omutex), ==, true);
   bool locked = omutex.trylock();
-  TASSERT (locked == true);
+  TCMP (locked, ==, true);
   omutex.unlock();
   omutex.unlock();
-  TASSERT (omutex.owner() == NULL);
-  TASSERT (lockable (omutex) == true);
-  TASSERT (omutex.owner() == NULL);
+  TCMP (omutex.owner(), ==, NULL);
+  TCMP (lockable (omutex), ==, true);
+  TCMP (omutex.owner(), ==, NULL);
   locked = omutex.trylock();
-  TASSERT (locked == true);
-  TASSERT (omutex.owner() == &Thread::self());
-  TASSERT (lockable (omutex) == true);
+  TCMP (locked, ==, true);
+  TCMP (omutex.owner(), ==, &Thread::self());
+  TCMP (lockable (omutex), ==, true);
   omutex.unlock();
-  TASSERT (omutex.owner() == NULL);
+  TCMP (omutex.owner(), ==, NULL);
 }
 REGISTER_TEST ("Threads/C++Threading", test_thread_cxx);
 
@@ -405,30 +405,30 @@ static void
 test_scoped_locks()
 {
   Mutex mutex1;
-  TASSERT (lockable (mutex1) == true);
+  TCMP (lockable (mutex1), ==, true);
   {
     ScopedLock<Mutex> locker1 (mutex1);
-    TASSERT (lockable (mutex1) == false);
+    TCMP (lockable (mutex1), ==, false);
   }
-  TASSERT (lockable (mutex1) == true);
+  TCMP (lockable (mutex1), ==, true);
   {
     ScopedLock<Mutex> locker0 (mutex1, BALANCED);
-    TASSERT (lockable (mutex1) == true);
+    TCMP (lockable (mutex1), ==, true);
     locker0.lock();
-    TASSERT (lockable (mutex1) == false);
+    TCMP (lockable (mutex1), ==, false);
     locker0.unlock();
-    TASSERT (lockable (mutex1) == true);
+    TCMP (lockable (mutex1), ==, true);
   }
-  TASSERT (lockable (mutex1) == true);
+  TCMP (lockable (mutex1), ==, true);
   {
     ScopedLock<Mutex> locker2 (mutex1, AUTOLOCK);
-    TASSERT (lockable (mutex1) == false);
+    TCMP (lockable (mutex1), ==, false);
     locker2.unlock();
-    TASSERT (lockable (mutex1) == true);
+    TCMP (lockable (mutex1), ==, true);
     locker2.lock();
-    TASSERT (lockable (mutex1) == false);
+    TCMP (lockable (mutex1), ==, false);
   }
-  TASSERT (lockable (mutex1) == true);
+  TCMP (lockable (mutex1), ==, true);
   RecMutex rmutex;
   test_recursive_scoped_lock (rmutex, 999);
   OwnedMutex omutex;
@@ -436,29 +436,29 @@ test_scoped_locks()
   // test ScopedLock balancing unlock + lock
   mutex1.lock();
   {
-    TASSERT (lockable (mutex1) == false);
+    TCMP (lockable (mutex1), ==, false);
     ScopedLock<Mutex> locker (mutex1, BALANCED);
     locker.unlock();
-    TASSERT (lockable (mutex1) == true);
+    TCMP (lockable (mutex1), ==, true);
   } // ~ScopedLock (BALANCED) now does locker.lock()
-  TASSERT (lockable (mutex1) == false);
+  TCMP (lockable (mutex1), ==, false);
   {
     ScopedLock<Mutex> locker (mutex1, BALANCED);
   } // ~ScopedLock (BALANCED) now does nothing
-  TASSERT (lockable (mutex1) == false);
+  TCMP (lockable (mutex1), ==, false);
   mutex1.unlock();
   // test ScopedLock balancing lock + unlock
   {
-    TASSERT (lockable (mutex1) == true);
+    TCMP (lockable (mutex1), ==, true);
     ScopedLock<Mutex> locker (mutex1, BALANCED);
     locker.lock();
-    TASSERT (lockable (mutex1) == false);
+    TCMP (lockable (mutex1), ==, false);
   } // ~ScopedLock (BALANCED) now does locker.unlock()
-  TASSERT (lockable (mutex1) == true);
+  TCMP (lockable (mutex1), ==, true);
   {
     ScopedLock<Mutex> locker (mutex1, BALANCED);
   } // ~ScopedLock (BALANCED) now does nothing
-  TASSERT (lockable (mutex1) == true);
+  TCMP (lockable (mutex1), ==, true);
 }
 REGISTER_TEST ("Threads/Scoped Locks", test_scoped_locks);
 
@@ -469,52 +469,52 @@ test_thread_atomic_cxx (void)
   /* integer functions */
   volatile int ai, r;
   Atomic::set (&ai, 17);
-  TASSERT (ai == 17);
+  TCMP (ai, ==, 17);
   r = Atomic::get (&ai);
-  TASSERT (r == 17);
+  TCMP (r, ==, 17);
   Atomic::add (&ai, 9);
   r = Atomic::get (&ai);
-  TASSERT (r == 26);
+  TCMP (r, ==, 26);
   Atomic::set (&ai, -1147483648);
-  TASSERT (ai == -1147483648);
+  TCMP (ai, ==, -1147483648);
   r = Atomic::get (&ai);
-  TASSERT (r == -1147483648);
+  TCMP (r, ==, -1147483648);
   Atomic::add (&ai, 9);
   r = Atomic::get (&ai);
-  TASSERT (r == -1147483639);
+  TCMP (r, ==, -1147483639);
   Atomic::add (&ai, -20);
   r = Atomic::get (&ai);
-  TASSERT (r == -1147483659);
+  TCMP (r, ==, -1147483659);
   r = Atomic::cas (&ai, 17, 19);
-  TASSERT (r == false);
+  TCMP (r, ==, false);
   r = Atomic::get (&ai);
-  TASSERT (r == -1147483659);
+  TCMP (r, ==, -1147483659);
   r = Atomic::cas (&ai, -1147483659, 19);
-  TASSERT (r == true);
+  TCMP (r, ==, true);
   r = Atomic::get (&ai);
-  TASSERT (r == 19);
+  TCMP (r, ==, 19);
   r = Atomic::add (&ai, 1);
-  TASSERT (r == 19);
+  TCMP (r, ==, 19);
   r = Atomic::get (&ai);
-  TASSERT (r == 20);
+  TCMP (r, ==, 20);
   r = Atomic::add (&ai, -20);
-  TASSERT (r == 20);
+  TCMP (r, ==, 20);
   r = Atomic::get (&ai);
-  TASSERT (r == 0);
+  TCMP (r, ==, 0);
   /* pointer functions */
   void * volatile ap, * volatile p;
   Atomic::ptr_set (&ap, (void*) 119);
-  TASSERT (ap == (void*) 119);
+  TCMP (ap, ==, (void*) 119);
   p = Atomic::ptr_get (&ap);
-  TASSERT (p == (void*) 119);
+  TCMP (p, ==, (void*) 119);
   r = Atomic::ptr_cas (&ap, (void*) 17, (void*) -42);
-  TASSERT (r == false);
+  TCMP (r, ==, false);
   p = Atomic::ptr_get (&ap);
-  TASSERT (p == (void*) 119);
+  TCMP (p, ==, (void*) 119);
   r = Atomic::ptr_cas (&ap, (void*) 119, (void*) 4294967279U);
-  TASSERT (r == true);
+  TCMP (r, ==, true);
   p = Atomic::ptr_get (&ap);
-  TASSERT (p == (void*) 4294967279U);
+  TCMP (p, ==, (void*) 4294967279U);
 }
 REGISTER_TEST ("Threads/C++AtomicThreading", test_thread_atomic_cxx);
 
@@ -571,7 +571,7 @@ struct RingBufferWriter : public virtual Rapicorn::Thread, IntSequence {
         while (j)
           {
             k = ring->write (j, b);
-            TCHECK (k <= j);
+            TCMP (k, <=, j);
             j -= k;
             b += k;
             if (!k)     // waiting for reader thread
@@ -605,20 +605,20 @@ struct RingBufferReader : public virtual Rapicorn::Thread, IntSequence {
         if (rand() & 1)
           {
             k = ring->read (n, b, false);
-            TCHECK (n == k);
+            TCMP (n, ==, k);
             if (k)
               CONTENTION_PRINTF ("+");
           }
         else
           {
             k = ring->read (n, b, true);
-            TCHECK (k <= n);
+            TCMP (k, <=, n);
             if (!k)         // waiting for writer thread
               handle_contention();
             CONTENTION_PRINTF (k ? "+" : "\\");
           }
         for (uint i = 0; i < k; i++)
-          TCHECK (b[i] == gen_int());
+          TCMP (b[i], ==, gen_int());
         if (l / 499999 != (l + k) / 499999)
           TOK();
         l += k;
@@ -633,17 +633,17 @@ test_ring_buffer ()
   static const char *testtext = "Ring Buffer test Text (47\xff)";
   uint n, ttl = strlen (testtext);
   Atomic::RingBuffer<char> rb1 (ttl);
-  TASSERT (rb1.n_writable() == ttl);
+  TCMP (rb1.n_writable(), ==, ttl);
   n = rb1.write (ttl, testtext);
-  TASSERT (n == ttl);
-  TASSERT (rb1.n_writable() == 0);
-  TASSERT (rb1.n_readable() == ttl);
+  TCMP (n, ==, ttl);
+  TCMP (rb1.n_writable(), ==, 0);
+  TCMP (rb1.n_readable(), ==, ttl);
   char buffer[8192];
   n = rb1.read (8192, buffer);
-  TASSERT (n == ttl);
-  TASSERT (rb1.n_readable() == 0);
-  TASSERT (rb1.n_writable() == ttl);
-  TASSERT (strncmp (buffer, testtext, n) == 0);
+  TCMP (n, ==, ttl);
+  TCMP (rb1.n_readable(), ==, 0);
+  TCMP (rb1.n_writable(), ==, ttl);
+  TCMP (strncmp (buffer, testtext, n), ==, 0);
   TDONE();
 
   /* check lower end ring buffer sizes (high contention test) */
@@ -709,7 +709,7 @@ struct MyDeletableHook : public Deletable::DeletionHook {
   virtual void
   monitoring_deletable (Deletable &deletable_obj)
   {
-    TASSERT (deletable == NULL);
+    TCMP (deletable, ==, NULL);
     deletable = &deletable_obj;
   }
   virtual void
@@ -757,10 +757,10 @@ test_deletable_destruction ()
      */
   }
   MyDeletable *deletable2 = new MyDeletable;
-  TASSERT (deletable2 != NULL);
+  TCMP (deletable2, !=, NULL);
   deletable_destructor = false;
   delete deletable2;
-  TASSERT (deletable_destructor == true);
+  TCMP (deletable_destructor, ==, true);
   /* early_deletable and late_deletable are only tested at program end */
 }
 REGISTER_TEST ("Threads/Deletable destruction", test_deletable_destruction);
