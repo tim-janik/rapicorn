@@ -28,8 +28,9 @@
 #define TINFO(...)              Rapicorn::Test::test_output (2, __VA_ARGS__)
 #define TWARN(...)              Rapicorn::Test::test_output (6, __VA_ARGS__)
 #define TRUN(name, func)        ({ TSTART (name); func(); TDONE(); })
-#define TCMP(a,cmp,b)           TCMP_implf (a,cmp,b)
+#define TCMP(a,cmp,b)           TCMP_op (a,cmp,b,#a,#b)
 #define TCMPHEX(a,cmp,b)        TCMP_implx (a,cmp,b)
+#define TCMPFLOAT(a,cmp,b)      TCMP_implf (a,cmp,b)
 #define TCMPSIGNED(a,cmp,b)     TCMP_impls (a,cmp,b)
 #define TCHECK(code)            TCHECK_impl (code)
 #define TASSERT(code)           TCHECK_impl (code)
@@ -38,6 +39,13 @@
       Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
                                   "assertion failed: %s", #code);       \
   } while (0)
+#define TCMP_op(a,cmp,b,sa,sb)  do { if (a cmp b) TOK(); else {     \
+  String __tassert_va = Rapicorn::Test::stringify_arg (a, #a);  \
+  String __tassert_vb = Rapicorn::Test::stringify_arg (b, #b);  \
+  Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
+                              "assertion failed: %s %s %s: %s %s %s", \
+                              sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
+    } } while (0)
 #define TCMP_implf(a,cmp,b)     do { if (a cmp b) TOK(); else { \
   double __tassert_va = a; double __tassert_vb = b;             \
   Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
@@ -130,6 +138,23 @@ void    add             (const String &testname,
 {
   add_internal (testname, (void(*)(void*)) test_func, (void*) data);
 }
+
+/// == Stringify Args ==
+inline String                   stringify_arg  (const char   *a, const char *str_a) { return string_to_cquote (a); }
+template<class V> inline String stringify_arg  (V            *a, const char *str_a) { return string_printf ("%p", a); }
+template<class A> inline String stringify_arg  (const A      &a, const char *str_a) { return str_a; }
+template<> inline String stringify_arg<float>  (const float  &a, const char *str_a) { return string_printf ("%.8g", a); }
+template<> inline String stringify_arg<double> (const double &a, const char *str_a) { return string_printf ("%.17g", a); }
+template<> inline String stringify_arg<bool>   (const bool   &a, const char *str_a) { return string_printf ("%u", a); }
+template<> inline String stringify_arg<int8>   (const int8   &a, const char *str_a) { return string_printf ("%d", a); }
+template<> inline String stringify_arg<int16>  (const int16  &a, const char *str_a) { return string_printf ("%d", a); }
+template<> inline String stringify_arg<int32>  (const int32  &a, const char *str_a) { return string_printf ("%d", a); }
+template<> inline String stringify_arg<int64>  (const int64  &a, const char *str_a) { return string_printf ("%lld", a); }
+template<> inline String stringify_arg<uint8>  (const uint8  &a, const char *str_a) { return string_printf ("%u", a); }
+template<> inline String stringify_arg<uint16> (const uint16 &a, const char *str_a) { return string_printf ("%u", a); }
+template<> inline String stringify_arg<uint32> (const uint32 &a, const char *str_a) { return string_printf ("%u", a); }
+template<> inline String stringify_arg<uint64> (const uint64 &a, const char *str_a) { return string_printf ("%llu", a); }
+template<> inline String stringify_arg<String> (const String &a, const char *str_a) { return string_to_cquote (a); }
 
 class RegisterTest {
   static void add_test (char kind, const String &testname, void (*test_func) (void*), void *data);
