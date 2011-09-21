@@ -29,13 +29,9 @@
 #define TWARN(...)              Rapicorn::Test::test_output (6, __VA_ARGS__)
 #define TRUN(name, func)        ({ TSTART (name); func(); TDONE(); })
 #define TCMP(a,cmp,b)           TCMP_op (a,cmp,b,#a,#b)
-#define TCMPHEX(a,cmp,b)        TCMP_implx (a,cmp,b)
-#define TCMPFLOAT(a,cmp,b)      TCMP_implf (a,cmp,b)
-#define TCMPSIGNED(a,cmp,b)     TCMP_impls (a,cmp,b)
-#define TCHECK(code)            TCHECK_impl (code)
-#define TASSERT(code)           TCHECK_impl (code)
-#define TOK()           do {} while (0) // printerr (".")
-#define TCHECK_impl(code)       do { if (code) TOK(); else      \
+#define TASSERT(code)           TASSERT_impl (code)
+#define TOK()                   do {} while (0) // printerr (".")
+#define TASSERT_impl(code)      do { if (code) TOK(); else      \
       Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
                                   "assertion failed: %s", #code);       \
   } while (0)
@@ -45,24 +41,6 @@
   Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
                               "assertion failed: %s %s %s: %s %s %s", \
                               sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
-    } } while (0)
-#define TCMP_implf(a,cmp,b)     do { if (a cmp b) TOK(); else { \
-  double __tassert_va = a; double __tassert_vb = b;             \
-  Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
-                              "assertion failed: %s %s %s: %.17g %s %.17g", \
-                              #a, #cmp, #b, __tassert_va, #cmp, __tassert_vb); \
-    } } while (0)
-#define TCMP_implx(a,cmp,b)     do { if (a cmp b) TOK(); else { \
-  uint64 __tassert_va = a; uint64 __tassert_vb = b;             \
-  Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
-                              "assertion failed: %s %s %s: 0x%08Lx %s 0x%08Lx", \
-                              #a, #cmp, #b, __tassert_va, #cmp, __tassert_vb); \
-    } } while (0)
-#define TCMP_impls(a,cmp,b)     do { if (a cmp b) TOK(); else { \
-  int64 __tassert_va = a; int64 __tassert_vb = b;               \
-  Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
-    "assertion failed: %s %s %s: %lld %s %lld",                         \
-                              #a, #cmp, #b, __tassert_va, #cmp, __tassert_vb); \
     } } while (0)
 
 namespace Rapicorn {
@@ -150,10 +128,10 @@ template<> inline String stringify_arg<int8>   (const int8   &a, const char *str
 template<> inline String stringify_arg<int16>  (const int16  &a, const char *str_a) { return string_printf ("%d", a); }
 template<> inline String stringify_arg<int32>  (const int32  &a, const char *str_a) { return string_printf ("%d", a); }
 template<> inline String stringify_arg<int64>  (const int64  &a, const char *str_a) { return string_printf ("%lld", a); }
-template<> inline String stringify_arg<uint8>  (const uint8  &a, const char *str_a) { return string_printf ("%u", a); }
-template<> inline String stringify_arg<uint16> (const uint16 &a, const char *str_a) { return string_printf ("%u", a); }
-template<> inline String stringify_arg<uint32> (const uint32 &a, const char *str_a) { return string_printf ("%u", a); }
-template<> inline String stringify_arg<uint64> (const uint64 &a, const char *str_a) { return string_printf ("%llu", a); }
+template<> inline String stringify_arg<uint8>  (const uint8  &a, const char *str_a) { return string_printf ("0x%02x", a); }
+template<> inline String stringify_arg<uint16> (const uint16 &a, const char *str_a) { return string_printf ("0x%04x", a); }
+template<> inline String stringify_arg<uint32> (const uint32 &a, const char *str_a) { return string_printf ("0x%08x", a); }
+template<> inline String stringify_arg<uint64> (const uint64 &a, const char *str_a) { return string_printf ("0x%08Lx", a); }
 template<> inline String stringify_arg<String> (const String &a, const char *str_a) { return string_to_cquote (a); }
 
 class RegisterTest {
