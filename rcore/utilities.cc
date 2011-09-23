@@ -134,37 +134,108 @@ timestamp_benchmark ()
   return stamp;
 }
 
-// === Logging ===
-bool Logging::m_debugging = 0;
+// == KeyConfig ==
+struct KeyConfig {
+  typedef std::map<String, String> StringMap;
+  Mutex         m_mutex;
+  StringMap     m_map;
+public:
+  void          assign    (const String &key, const String &val);
+  String        slookup   (const String &key, const String &dfl = "");
+  void          configure (const String &colon_options);
+};
+void
+KeyConfig::assign (const String &key, const String &val)
+{
+  ScopedLock<Mutex> locker (m_mutex);
+  m_map[key] = val;
+}
+String
+KeyConfig::slookup (const String &key, const String &dfl)
+{
+  ScopedLock<Mutex> locker (m_mutex);
+  StringMap::iterator it = m_map.find (key);
+  return it == m_map.end() ? dfl : it->second;
+}
+void
+KeyConfig::configure (const String &colon_options)
+{
+  ScopedLock<Mutex> locker (m_mutex);
+  String s = ":" + colon_options + ":";
+  std::transform (s.begin(), s.end(), s.begin(), ::tolower);
+  const char *tail, *current;
+  for (tail = s.c_str(), current = strchr (tail, ':'); current; current = strchr (tail, ':'))
+    {
+      String val, key = String (tail, current - tail);
+      tail = current + 1;
+      const char *eq = strchr (key.c_str(), '=');
+      if (eq)
+        {
+          val = eq + 1;
+          key = String (key.c_str(), eq - key.c_str());
+        }
+      else
+        val = "1";
+      if (strncmp (key.c_str(), "no-", 3) == 0)
+        {
+          key = key.substr (3);
+          val = string_from_int (!string_to_int (val));
+        }
+      m_map[key] = val;
+    }
+}
 
-static Mutex                 conftest_mutex;
-static const char           *conftest_logfile = NULL;
-static bool                  conftest_fatal_to_syslog = true;
-static bool                  conftest_critical_to_syslog = false;
-static bool                  conftest_abort_on_criticals = false;
-static std::map<String,bool> conftest_smap;
-static const char *conftest_aliases[] = {
+
+// === Logging ===
+bool               Logging::m_debugging = true; // bootup default before _init()
+static KeyConfig * volatile conftest_map = NULL;
+static const char   * const conftest_defaults = "fatal-syslog=1:syslog=0:fatal-warnings=0";
+static const char   * const conftest_aliases[] = {
   "debug",      "verbose",
   "v=1",        "verbose",
   "v=0",        "no-verbose",
 };
 
-static int
-conftest_lookup_U (const char *option, int vdefault)
+static inline KeyConfig&
+conftest_procure ()
 {
-  std::map<String,bool>::const_iterator it;
-  it = conftest_smap.find (option);
-  if (it == conftest_smap.end())
+  KeyConfig *kconfig = Atomic::ptr_get (&conftest_map);
+  if (UNLIKELY (kconfig == NULL))
     {
-      String o (option);
-      for (uint i = 0; i < ARRAY_SIZE (conftest_aliases); i += 2)
-        if (o == conftest_aliases[i])
-          {
-            it = conftest_smap.find (conftest_aliases[i+1]);
-            break;
-          }
+      kconfig = new KeyConfig();
+      kconfig->configure (conftest_defaults);
+      if (Atomic::ptr_cas (&conftest_map, (KeyConfig*) NULL, kconfig))
+        {
+          const char *env_rapicorn = getenv ("RAPICORN");
+          // configure with support for aliases, caches, etc
+          Logging::configure (env_rapicorn ? env_rapicorn : "");
+        }
+      else
+        {
+          delete kconfig; // some other thread was faster
+          kconfig = Atomic::ptr_get (&conftest_map);
+        }
     }
-  return it != conftest_smap.end() ? it->second : vdefault;
+  return *kconfig;
+}
+
+static String
+conftest_slookup (const String &key, const String &dfl = "")
+{
+  const char *const none = "\xff";
+  String val = conftest_procure().slookup (key, none);
+  if (val != none)
+    return val;
+  for (uint i = 0; i < ARRAY_SIZE (conftest_aliases); i += 2)
+    if (key == conftest_aliases[i])
+      return conftest_procure().slookup (conftest_aliases[i+1], dfl);
+  return dfl;
+}
+
+static int
+conftest_lookup (const char *option, int vdefault = 0)
+{
+  return string_to_int (conftest_slookup (option, string_from_int (vdefault)));
 }
 
 void
@@ -172,49 +243,27 @@ Logging::configure (const char *option)
 {
   String s = ":" + String (option ? option : "") + ":";
   std::transform (s.begin(), s.end(), s.begin(), ::tolower);
-  const char *l, *p;
-  for (l = s.c_str(), p = strchr (l, ':'); p; p = strchr (l, ':'))
+  String tmp = s;
+  for (uint i = 0; i < ARRAY_SIZE (conftest_aliases); i += 2)
     {
-      String o = String (l, p - l);
-      l = p + 1;
-      for (uint i = 0; i < ARRAY_SIZE (conftest_aliases); i += 2)
-        if (o == conftest_aliases[i])
-          o = conftest_aliases[i+1];
-      bool v = true;
-      if (strncmp (o.c_str(), "no-", 3) == 0)
+      String m = String (":") + conftest_aliases[i] + ":";
+      const char *p = strstr (s.c_str(), m.c_str());
+      if (p)
         {
-          v = !v;
-          o = o.substr (3);
-        }
-      if (strncmp (o.c_str(), "logfile=", 8) == 0)
-        {
-          ScopedLock<Mutex> locker (conftest_mutex);
-          if (!conftest_logfile)
-            conftest_logfile = strdup (&o[8]);
-        }
-      else if (!o.empty() && !strchr (o.c_str(), '='))
-        {
-          ScopedLock<Mutex> locker (conftest_mutex);
-          conftest_smap[o] = v;
+          String r = conftest_aliases[i + 1];
+          size_t pos = p - s.c_str();
+          s = s.substr (0, pos) + ":" + r + ":" + s.substr (pos + m.size());
         }
     }
-  if (true)
-    {
-      ScopedLock<Mutex> locker (conftest_mutex);
-      // update cached configurations
-      m_debugging                 = conftest_lookup_U ("verbose", m_debugging);
-      conftest_fatal_to_syslog    = conftest_lookup_U ("fatal-syslog", conftest_fatal_to_syslog);
-      conftest_critical_to_syslog = conftest_lookup_U ("syslog", conftest_critical_to_syslog);
-      conftest_abort_on_criticals = conftest_lookup_U ("fatal-warnings", conftest_abort_on_criticals);
-    }
+  conftest_procure().configure (s);
+  Atomic::value_set (&m_debugging, (bool) conftest_lookup ("verbose")); // update "cached" configuration
 }
 
 int
 Logging::conftest (const char *option,
                    int         vdefault)
 {
-  ScopedLock<Mutex> locker (conftest_mutex);
-  return conftest_lookup_U (option, vdefault);
+  return conftest_lookup (option, vdefault);
 }
 
 static String
@@ -283,11 +332,14 @@ Logging::message (const char *kind, const char *file, int line, const char *func
   int saved_errno = errno;
   if (!kind)
     kind = "DIAG";
-  enum { DO_STDERR = 1, DO_SYSLOG = 2, DO_ABORT = 4, DO_DEBUG = 8, DO_ERRNO = 16, DO_STAMP = 32 };
-  const int FATAL_SYSLOG = conftest_fatal_to_syslog ? DO_SYSLOG : 0;
-  const int MAY_SYSLOG = conftest_critical_to_syslog ? DO_SYSLOG : 0;
-  const int MAY_ABORT  = conftest_abort_on_criticals ? DO_ABORT  : 0;
+  enum { DO_STDERR = 1, DO_SYSLOG = 2, DO_ABORT = 4, DO_DEBUG = 8, DO_ERRNO = 16, DO_STAMP = 32, DO_LOGFILE = 64, };
+  static int conftest_logfd = 0;
+  const String conftest_logfile = conftest_logfd == 0 ? conftest_slookup ("logfile") : "";
+  const int FATAL_SYSLOG = conftest_lookup ("fatal-syslog") ? DO_SYSLOG : 0;
+  const int MAY_SYSLOG = conftest_lookup ("syslog") ? DO_SYSLOG : 0;
+  const int MAY_ABORT  = conftest_lookup ("fatal-warnings") ? DO_ABORT  : 0;
   int f = 0;
+  f |= conftest_logfd > 0 || !conftest_logfile.empty() ? DO_LOGFILE : 0;
   f |= logtest (&kind, "FATAL",     0, DO_STDERR | FATAL_SYSLOG | DO_ABORT);
   f |= logtest (&kind, "PFATAL",    1, DO_STDERR | FATAL_SYSLOG | DO_ABORT | DO_ERRNO);
   f |= logtest (&kind, "CRITICAL",  0, DO_STDERR | MAY_SYSLOG | MAY_ABORT);
@@ -299,7 +351,6 @@ Logging::message (const char *kind, const char *file, int line, const char *func
   f |= logtest (&kind, "FIXIT",     0, DO_DEBUG | DO_STAMP);
   f |= logtest (&kind, "DEBUG",     0, DO_DEBUG | DO_STAMP);
   f |= logtest (&kind, "PDEBUG",    1, DO_DEBUG | DO_ERRNO | DO_STAMP);
-  f |= !conftest_logfile ? 0 :         DO_STAMP;
   String ff = func ? func + String (":") : "";
   String ll;
   if (file)
@@ -338,16 +389,15 @@ Logging::message (const char *kind, const char *file, int line, const char *func
         end += "Aborting...\n";
       printerr ("%s[%u]:%s%s %s%s", program_name().c_str(), thread_pid(), ll.c_str(), what.c_str(), msg.c_str(), end.c_str());
     }
-  if (conftest_logfile)
+  if (f & DO_LOGFILE)
     {
-      static int logfd = 0;
       String out;
-      if (once_enter (&logfd))
+      if (once_enter (&conftest_logfd))
         {
           int fd;
           do
             fd = open (Path::abspath (conftest_logfile).c_str(), O_WRONLY | O_CREAT | O_APPEND | O_NOCTTY, 0666);
-          while (logfd < 0 && errno == EINTR);
+          while (conftest_logfd < 0 && errno == EINTR);
           if (fd == 0) // invalid initialization value
             {
               fd = dup (fd);
@@ -356,7 +406,7 @@ Logging::message (const char *kind, const char *file, int line, const char *func
           out = string_printf ("[%llu.%06llu] %s[%u]: program started at: %5llu.%06llu\n",
                                delta / 1000000, delta % 1000000, program_name().c_str(), thread_pid(),
                                start / 1000000, start % 1000000);
-          once_leave (&logfd, fd);
+          once_leave (&conftest_logfd, fd);
         }
       out += string_printf ("[%llu.%06llu] %s[%u]:%s%s %s%s",
                             delta / 1000000, delta % 1000000, program_name().c_str(), thread_pid(),
@@ -365,7 +415,7 @@ Logging::message (const char *kind, const char *file, int line, const char *func
         out += "aborting...\n";
       int err;
       do
-        err = write (logfd, out.data(), out.size());
+        err = write (conftest_logfd, out.data(), out.size());
       while (err < 0 && (errno == EINTR || errno == EAGAIN));
     }
   if (f & DO_SYSLOG)

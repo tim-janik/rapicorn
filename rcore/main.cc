@@ -317,9 +317,9 @@ init_core (const String       &app_ident,
   if (!g_get_application_name() || g_get_application_name() == g_get_prgname())
     g_set_application_name (program_app_ident.c_str());
 
-  // ensure logging works correctly
+  // ensure logging is fully initialized
+  Logging::configure ("");
   const char *env_rapicorn = getenv ("RAPICORN");
-  Logging::configure (env_rapicorn ? env_rapicorn : "");
   RAPICORN_DEBUG ("startup; RAPICORN=%s", env_rapicorn ? env_rapicorn : "");
 
   // setup init settings
