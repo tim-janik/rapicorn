@@ -131,6 +131,7 @@ String      process_handle ();
 #define PASSERT            RAPICORN_PASSERT            // (condition)
 #define DEBUG              RAPICORN_DEBUG
 #define PDEBUG             RAPICORN_PDEBUG
+#define throw_if_fail      RAPICORN_THROW_IF_FAIL      // (condition)
 #define return_if_fail     RAPICORN_RETURN_IF_FAIL     // (condition)
 #define return_val_if_fail RAPICORN_RETURN_VAL_IF_FAIL // (condition, value)
 #define assert_unreached   RAPICORN_ASSERT_UNREACHED   // ()
@@ -182,6 +183,7 @@ static inline void critical (const char *format, ...)  { va_list a; va_start (a,
 static inline void pcritical (const char *format, ...) { va_list a; va_start (a, format); Logging::messagev ("PCRITICAL", RAPICORN__FILE__, format, a); va_end (a); }
 #define RAPICORN_ASSERT_NOT_REACHED             RAPICORN_ASSERT_UNREACHED
 #define RAPICORN_ASSERT_UNREACHED()             do { Rapicorn::Logging::message ("FATAL", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "encountered unreachable assertion"); Rapicorn::Logging::abort(); } while (0)
+#define RAPICORN_THROW_IF_FAIL(expr)            do { if (RAPICORN_LIKELY (expr)) break; throw Rapicorn::AssertionError (#expr, RAPICORN__FILE__, __LINE__); } while (0)
 #define RAPICORN_RETURN_IF_FAIL(expr)           do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "check failed: %s", #expr); return; } while (0)
 #define RAPICORN_RETURN_VAL_IF_FAIL(expr,rv)    do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "check failed: %s", #expr); return rv; } while (0)
 #define RAPICORN_ASSERT(expr)  do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("ABORT",   RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assertion failed: %s",   #expr); } while (0)
@@ -191,6 +193,16 @@ static inline void pcritical (const char *format, ...) { va_list a; va_start (a,
 #define RAPICORN_DEBUG(...)    do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("DEBUG",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
 #define RAPICORN_PDEBUG(...)   do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("PDEBUG", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
 #define RAPICORN_FIXME(...)    do { Rapicorn::Logging::message ("DEBUG",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
+
+// == AssertionError ==
+class AssertionError : public std::exception /// Exception type, thrown from RAPICORN_THROW_IF_FAIL() and throw_if_fail().
+{
+  const String m_msg;
+public:
+  explicit            AssertionError  (const String &expr, const String &file = "", size_t line = 0);
+  virtual            ~AssertionError  () throw();
+  virtual const char* what            () const throw(); ///< Obtain a string describing the assertion error.
+};
 
 /* --- timestamp handling --- */
 uint64  timestamp_startup    ();        // µseconds

@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cstring>
 #include <syslog.h>
+#include <stdexcept>
 
 #if !__GNUC_PREREQ (3, 4) || (__GNUC__ == 3 && __GNUC_MINOR__ == 4 && __GNUC_PATCHLEVEL__ < 6)
 #error This GNU C++ compiler version is known to be broken - please consult ui/README
@@ -453,7 +454,83 @@ Logging::string_func (const char *func, const char *pretty_func)
   return func ? func : "???"; // FIXME: use pretty_func to include possible prefixes
 }
 
-/* --- utilities --- */
+// == AssertionError ==
+static String
+construct_error_msg (const String &file, size_t line, const char *error, const String &expr)
+{
+  String s;
+  if (!file.empty())
+    {
+      s += file;
+      if (line > 0)
+        s += ":" + string_from_int (line);
+      s += ": ";
+    }
+  s += error;
+  if (!expr.empty())
+    {
+      s += ": ";
+      s += expr;
+    }
+  return s;
+}
+
+AssertionError::AssertionError (const String &expr, const String &file, size_t line) :
+  m_msg (construct_error_msg (file, line, "assertion failed", expr))
+{}
+
+AssertionError::~AssertionError () throw()
+{}
+
+const char*
+AssertionError::what () const throw()
+{
+  return m_msg.c_str();
+}
+
+// == Assertion Macros ==
+/**
+ * @def RAPICORN_THROW_IF_FAIL(expr)
+ * This macro takes an expression @a expr as argument and throws an AssertionError exception
+ * if the expression does not evaulate true at runtime. This is normally used as function entry
+ * condition.
+ */
+/**
+ * @def throw_if_fail
+ * Shorthand for RAPICORN_THROW_IF_FAIL() if RAPICORN_CONVENIENCE is defined.
+ */
+
+/**
+ * @def return_if_fail
+ * This macro takes an expression @a expr as argument and returns from the current function
+ * if the expression does not evaulate true at runtime. This is normally used as function entry
+ * condition.
+ * Shorthand for RAPICORN_RETURN_IF_FAIL() if RAPICORN_CONVENIENCE is defined.
+ */
+
+/**
+ * @def return_val_if_fail
+ * This macro takes an expression @a expr as argument and return @a rv from the current function
+ * if the expression does not evaulate true at runtime. This is normally used as function entry
+ * condition.
+ * Shorthand for RAPICORN_RETURN_VAL_IF_FAIL() if RAPICORN_CONVENIENCE is defined.
+ */
+
+/**
+ * @def RAPICORN_ASSERT_UNREACHED()
+ * This macro issues an error if it is reached at runtime. This is normally used to label
+ * code conditions intended to be unreachable.
+ */
+/**
+ * @def assert_unreached
+ * Shorthand for RAPICORN_ASSERT_UNREACHED() if RAPICORN_CONVENIENCE is defined.
+ */
+/**
+ * @def assert_not_reached
+ * Shorthand for RAPICORN_ASSERT_UNREACHED() if RAPICORN_CONVENIENCE is defined.
+ */
+
+// == utilities ==
 void
 printerr (const char *format, ...)
 {
