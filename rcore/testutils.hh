@@ -34,7 +34,7 @@
 #define TCMP_op(a,cmp,b,sa,sb)  do { if (a cmp b) TOK(); else {     \
   String __tassert_va = Rapicorn::Test::stringify_arg (a, #a);  \
   String __tassert_vb = Rapicorn::Test::stringify_arg (b, #b);  \
-  Rapicorn::Logging::message ("ABORT", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), \
+  Rapicorn::Logging::message ("ABORT", RAPICORN_SOURCE_LOCATION,        \
                               "assertion failed: %s %s %s: %s %s %s", \
                               sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
     } } while (0)

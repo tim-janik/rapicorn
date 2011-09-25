@@ -135,6 +135,63 @@ timestamp_benchmark ()
   return stamp;
 }
 
+// == Source Location ==
+SourceLocation::SourceLocation (const char *file, int line, const char *func,
+                                const char *pretty_func, const char *component) :
+  m_file (file), m_line (line > 0 ? string_from_int (line) : ""), m_func (func),
+  m_pretty (pretty_func), m_component (component)
+{}
+
+String
+SourceLocation::where () const
+{
+  return where (LOCATION | FUNCTION);
+}
+
+String
+SourceLocation::where (int bits) const
+{
+  String s;
+  if (bits & LOCATION && !m_file.empty())
+    {
+    s += m_file;
+    if (!m_line.empty())
+      s += ":" + m_line;
+    }
+  if (bits & FUNCTION && !m_func.empty())
+    {
+      s += s.empty() ? "" : ": ";
+      s += m_func + "()";
+    }
+  if (bits & COMPONENT && !m_component.empty())
+    {
+      s += s.empty() ? "" : ": ";
+      s += m_component;
+    }
+  if (!s.empty())
+    s += ": ";
+  return s;
+}
+
+static String
+file_stem (const String &fname)
+{
+  const char *file = strrchr (fname.c_str(), DIR_SEPARATOR); // strip directories
+  if (file)
+    file += 1; // skip directory separator
+  else
+    file = fname.c_str();
+  const char *dot = strrchr (file, '.');
+  return !dot || dot == file ? file : String (file, dot - file);
+}
+
+String
+SourceLocation::debug_prefix () const
+{
+  String f = file_stem (m_file);
+  return f.empty() ? "" : f + ": ";
+}
+
 // == KeyConfig ==
 struct KeyConfig {
   typedef std::map<String, String> StringMap;
@@ -185,7 +242,6 @@ KeyConfig::configure (const String &colon_options)
       m_map[key] = val;
     }
 }
-
 
 // === Logging ===
 bool               Logging::m_debugging = true; // bootup default before _init()
@@ -301,18 +357,6 @@ ensure_openlog()
     }
 }
 
-static String
-file_stem (const char *fname)
-{
-  const char *file = strrchr (fname, DIR_SEPARATOR); // strip directories
-  if (file)
-    file += 1; // skip directory separator
-  else
-    file = fname;
-  const char *dot = strrchr (file, '.');
-  return !dot || dot == file ? file : String (file, dot - file);
-}
-
 static inline int
 logtest (const char **kindp, const char *mode, int advance, int flags)
 {
@@ -325,7 +369,7 @@ logtest (const char **kindp, const char *mode, int advance, int flags)
 }
 
 void
-Logging::message (const char *kind, const char *file, int line, const char *func, const char *format, ...)
+Logging::message (const char *kind, const SourceLocation &sloc, const char *format, ...)
 {
   /* The logging system must work before Rapicorn is initialized, and possibly even during
    * global_ctor phase. So any initialization needed here needs to be handled on demand.
@@ -352,16 +396,12 @@ Logging::message (const char *kind, const char *file, int line, const char *func
   f |= logtest (&kind, "FIXIT",     0, DO_DEBUG | DO_STAMP);
   f |= logtest (&kind, "DEBUG",     0, DO_DEBUG | DO_STAMP);
   f |= logtest (&kind, "PDEBUG",    1, DO_DEBUG | DO_ERRNO | DO_STAMP);
-  String ff = func ? func + String (":") : "";
-  String ll;
-  if (file)
-    ll = line <= 0 ? file : string_printf ("%s:%u", file, line);
-  ll += ":" + ff;
-  String what = kind && kind[0] ? String (" ") + kind + ":" : "";
-  String msg;
+  const String where = sloc.where();
+  const String what = kind && kind[0] ? String() + kind + ": " : "";
+  const String wherewhat = where.empty() ? String (" ") + what : where + what;
   va_list vargs;
   va_start (vargs, format);
-  msg = string_vprintf (format, vargs);
+  String msg = string_vprintf (format, vargs);
   va_end (vargs);
   String emsg = f & DO_ERRNO ? ": " + string_from_errno (saved_errno) + "\n" : "\n";
   if (f & DO_STAMP)
@@ -378,17 +418,16 @@ Logging::message (const char *kind, const char *file, int line, const char *func
                     start / 1000000, start % 1000000);
           once_leave (&first_debug, true);
         }
-      String where = file ? file_stem (file) + ":" : "";
-      printerr ("[%llu.%06llu] %s %s%s",
+      printerr ("[%llu.%06llu] %s%s%s",
                 delta / 1000000, delta % 1000000,
-                where.c_str(), msg.c_str(), emsg.c_str());
+                sloc.debug_prefix().c_str(), msg.c_str(), emsg.c_str());
     }
   if (f & DO_STDERR)
     {
       String end = emsg;
       if (f & DO_ABORT)
         end += "Aborting...\n";
-      printerr ("%s[%u]:%s%s %s%s", program_name().c_str(), thread_pid(), ll.c_str(), what.c_str(), msg.c_str(), end.c_str());
+      printerr ("%s[%u]:%s%s%s", program_name().c_str(), thread_pid(), wherewhat.c_str(), msg.c_str(), end.c_str());
     }
   if (f & DO_LOGFILE)
     {
@@ -409,9 +448,9 @@ Logging::message (const char *kind, const char *file, int line, const char *func
                                start / 1000000, start % 1000000);
           once_leave (&conftest_logfd, fd);
         }
-      out += string_printf ("[%llu.%06llu] %s[%u]:%s%s %s%s",
+      out += string_printf ("[%llu.%06llu] %s[%u]:%s%s%s",
                             delta / 1000000, delta % 1000000, program_name().c_str(), thread_pid(),
-                            ll.c_str(), what.c_str(), msg.c_str(), emsg.c_str());
+                            wherewhat.c_str(), msg.c_str(), emsg.c_str());
       if (f & DO_ABORT)
         out += "aborting...\n";
       int err;
@@ -422,13 +461,12 @@ Logging::message (const char *kind, const char *file, int line, const char *func
   if (f & DO_SYSLOG)
     {
       ensure_openlog();
-      if (!ll.empty())
-        ll += " ";
       String end = emsg;
       if (!end.empty() && end[end.size()-1] == '\n')
         end.resize (end.size()-1);
       const int level = f & DO_ABORT ? LOG_ERR : LOG_WARNING;
-      syslog (level, "%s%s%s", ll.c_str(), msg.c_str(), end.c_str());
+      const String severity = (f & DO_ABORT) ? "ABORTING: " : "";
+      syslog (level, "%s%s%s", severity.c_str(), msg.c_str(), end.c_str());
     }
   if (f & DO_ABORT)
     {
@@ -443,9 +481,9 @@ Logging::abort()
 }
 
 void
-Logging::messagev (const char *kind, String file, const char *format, va_list vargs)
+Logging::messagev (const char *kind, const SourceLocation &sloc, const char *format, va_list vargs)
 {
-  message (kind, file.c_str(), 0, NULL, "%s", string_vprintf (format, vargs).c_str());
+  message (kind, sloc, "%s", string_vprintf (format, vargs).c_str());
 }
 
 String

@@ -158,17 +158,37 @@ inline void breakpoint() { __builtin_trap(); }
 #define RAPICORN__FILE__        __FILE__
 #endif
 #define RAPICORN__FUNC__        Rapicorn::Logging::string_func (__func__, __PRETTY_FUNCTION__)
+#ifdef  __COMPONENT__
+#define RAPICORN_COMPONENT      __COMPONENT__
+#elif   defined __BASE_FILE__
+#define RAPICORN_COMPONENT      __BASE_FILE__
+#else
+#define RAPICORN_COMPONENT      __FILE__
+#endif
 
-/* === Logging and Assertions === */
+// == Source Location ==
+class SourceLocation {
+  String m_file, m_line, m_func, m_pretty, m_component;
+public:
+  enum Bits { NONE = 0, LOCATION = 1, FUNCTION = 2, COMPONENT = 4 };
+  SourceLocation (const char *file, int line, const char *func, const char *pretty_func, const char *component);
+  String where () const;
+  String where (int bits) const;
+  String debug_prefix () const;
+};
+#define RAPICORN_SOURCE_LOCATION        Rapicorn::SourceLocation::SourceLocation (__FILE__, __LINE__, __func__, __PRETTY_FUNCTION__, RAPICORN_COMPONENT)
+#define RAPICORN_SOURCE_COMPONENT       Rapicorn::SourceLocation::SourceLocation ("", 0, "", "", RAPICORN_COMPONENT)
+
+// == Logging and Assertions ==
 class Logging {
   static bool m_debugging;      // cached for speedups
 public:
   static void   configure       (const char *option);
   static int    conftest        (const char *option, int vdefault = 0);
   static bool   debugging       ()                      { return RAPICORN_UNLIKELY (m_debugging); }
-  static void   message         (const char *kind, const char *file, int line, const char *func,
-                                 const char *format, ...) RAPICORN_PRINTF (5, 6);
-  static void   messagev        (const char *kind, String file, const char *format, va_list vargs);
+  static void   message         (const char *kind, const SourceLocation &sloc,
+                                 const char *format, ...) RAPICORN_PRINTF (3, 4);
+  static void   messagev        (const char *kind, const SourceLocation &sloc, const char *format, va_list vargs);
   static String string_func     (const char *func, const char *pretty_func = NULL);
   static void   abort           () RAPICORN_NORETURN;
 };
@@ -177,22 +197,22 @@ static inline void fatal (const char *format, ...)     RAPICORN_PRINTF (1, 2) RA
 static inline void pfatal (const char *format, ...)    RAPICORN_PRINTF (1, 2) RAPICORN_NORETURN;
 static inline void critical (const char *format, ...)  RAPICORN_PRINTF (1, 2);
 static inline void pcritical (const char *format, ...) RAPICORN_PRINTF (1, 2);
-static inline void fatal (const char *format, ...)     { va_list a; va_start (a, format); Logging::messagev ("FATAL",     RAPICORN__FILE__, format, a); va_end (a); while (1); }
-static inline void pfatal (const char *format, ...)    { va_list a; va_start (a, format); Logging::messagev ("PFATAL",    RAPICORN__FILE__, format, a); va_end (a); while (1); }
-static inline void critical (const char *format, ...)  { va_list a; va_start (a, format); Logging::messagev ("CRITICAL",  RAPICORN__FILE__, format, a); va_end (a); }
-static inline void pcritical (const char *format, ...) { va_list a; va_start (a, format); Logging::messagev ("PCRITICAL", RAPICORN__FILE__, format, a); va_end (a); }
+static inline void fatal (const char *format, ...)     { va_list a; va_start (a, format); Logging::messagev ("FATAL",     RAPICORN_SOURCE_COMPONENT, format, a); va_end (a); while (1); }
+static inline void pfatal (const char *format, ...)    { va_list a; va_start (a, format); Logging::messagev ("PFATAL",    RAPICORN_SOURCE_COMPONENT, format, a); va_end (a); while (1); }
+static inline void critical (const char *format, ...)  { va_list a; va_start (a, format); Logging::messagev ("CRITICAL",  RAPICORN_SOURCE_COMPONENT, format, a); va_end (a); }
+static inline void pcritical (const char *format, ...) { va_list a; va_start (a, format); Logging::messagev ("PCRITICAL", RAPICORN_SOURCE_COMPONENT, format, a); va_end (a); }
 #define RAPICORN_ASSERT_NOT_REACHED             RAPICORN_ASSERT_UNREACHED
-#define RAPICORN_ASSERT_UNREACHED()             do { Rapicorn::Logging::message ("FATAL", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "encountered unreachable assertion"); Rapicorn::Logging::abort(); } while (0)
-#define RAPICORN_THROW_IF_FAIL(expr)            do { if (RAPICORN_LIKELY (expr)) break; throw Rapicorn::AssertionError (#expr, RAPICORN__FILE__, __LINE__); } while (0)
-#define RAPICORN_RETURN_IF_FAIL(expr)           do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "check failed: %s", #expr); return; } while (0)
-#define RAPICORN_RETURN_VAL_IF_FAIL(expr,rv)    do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "check failed: %s", #expr); return rv; } while (0)
-#define RAPICORN_ASSERT(expr)  do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("ABORT",   RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assertion failed: %s",   #expr); } while (0)
-#define RAPICORN_PASSERT(expr) do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("PABORT",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "assertion failed (%s)",  #expr); } while (0)
-#define RAPICORN_CHECK(expr)   do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK",   RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "check failed: %s",  #expr); } while (0)
-#define RAPICORN_PCHECK(expr)  do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("PCHECK",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), "check failed (%s)", #expr); } while (0)
-#define RAPICORN_DEBUG(...)    do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("DEBUG",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
-#define RAPICORN_PDEBUG(...)   do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("PDEBUG", RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
-#define RAPICORN_FIXME(...)    do { Rapicorn::Logging::message ("DEBUG",  RAPICORN__FILE__, __LINE__, RAPICORN__FUNC__.c_str(), __VA_ARGS__); } while (0)
+#define RAPICORN_ASSERT_UNREACHED()             do { Rapicorn::Logging::message ("FATAL", RAPICORN_SOURCE_LOCATION, "encountered unreachable assertion"); Rapicorn::Logging::abort(); } while (0)
+#define RAPICORN_THROW_IF_FAIL(expr)            do { if (RAPICORN_LIKELY (expr)) break; throw Rapicorn::AssertionError (#expr, __FILE__, __LINE__); } while (0)
+#define RAPICORN_RETURN_IF_FAIL(expr)           do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK", RAPICORN_SOURCE_LOCATION, "check failed: %s", #expr); return; } while (0)
+#define RAPICORN_RETURN_VAL_IF_FAIL(expr,rv)    do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK", RAPICORN_SOURCE_LOCATION, "check failed: %s", #expr); return rv; } while (0)
+#define RAPICORN_ASSERT(expr)  do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("ABORT",  RAPICORN_SOURCE_LOCATION, "assertion failed: %s",   #expr); } while (0)
+#define RAPICORN_PASSERT(expr) do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("PABORT", RAPICORN_SOURCE_LOCATION, "assertion failed (%s)",  #expr); } while (0)
+#define RAPICORN_CHECK(expr)   do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("CHECK",  RAPICORN_SOURCE_LOCATION, "check failed: %s",  #expr); } while (0)
+#define RAPICORN_PCHECK(expr)  do { if (RAPICORN_LIKELY (expr)) break; Rapicorn::Logging::message ("PCHECK", RAPICORN_SOURCE_LOCATION, "check failed (%s)", #expr); } while (0)
+#define RAPICORN_DEBUG(...)    do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("DEBUG",  RAPICORN_SOURCE_LOCATION, __VA_ARGS__); } while (0)
+#define RAPICORN_PDEBUG(...)   do { if (RAPICORN_UNLIKELY (Rapicorn::Logging::debugging())) Rapicorn::Logging::message ("PDEBUG", RAPICORN_SOURCE_LOCATION, __VA_ARGS__); } while (0)
+#define RAPICORN_FIXME(...)    do { Rapicorn::Logging::message ("DEBUG",  RAPICORN_SOURCE_LOCATION, __VA_ARGS__); } while (0)
 
 // == AssertionError ==
 class AssertionError : public std::exception /// Exception type, thrown from RAPICORN_THROW_IF_FAIL() and throw_if_fail().
