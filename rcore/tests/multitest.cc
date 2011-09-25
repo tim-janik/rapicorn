@@ -601,7 +601,7 @@ main (int   argc,
 
   test_before_thread_init();
 
-  String app_ident = String ("Rapicorn/") + RAPICORN__FILE__;
+  String app_ident = __SOURCE_COMPONENT__;
   if (argc >= 2 && String ("--print-process-handle") == argv[1])
     {
       init_core (app_ident, &argc, argv);

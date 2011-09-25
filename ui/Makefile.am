@@ -4,7 +4,7 @@ include $(top_srcdir)/Makefile.decl
 SUBDIRS    = . tests
 
 INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
-DEFS      = -DRAPICORN_CONVENIENCE -D__SOURCE_FILE__='"$(patsubst $(realpath $(abs_top_srcdir))/%,%, $(realpath $<))"' \
+DEFS      = -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"' \
 	    $(RAPICORN_GUI_CFLAGS) -D__RAPICORN_BUILD__
 
 # === Source Files ===

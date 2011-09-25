@@ -2,7 +2,7 @@
 include $(top_srcdir)/Makefile.decl
 
 INCLUDES	+= -I$(top_srcdir) $(RAPICORN_GUI_CFLAGS)
-DEFS		+=
+DEFS		+= -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"'
 
 # example programs
 noinst_PROGRAMS	 = $(EXAMPLES)

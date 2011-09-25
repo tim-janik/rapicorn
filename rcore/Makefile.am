@@ -4,10 +4,10 @@ include $(top_srcdir)/Makefile.decl
 SUBDIRS	     = . rsvg tests
 
 INCLUDES    += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(RAPICORN_CORE_CFLAGS)
-DEFS	     = -DRAPICORN_CONVENIENCE -D__SOURCE_FILE__='"$(patsubst $(realpath $(abs_top_srcdir))/%,%, $(realpath $<))"' \
+DEFS	     = -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"' \
 	       -D__RAPICORN_BUILD__
-GLIB_MKENUMS = glib-mkenums
 PLICINT	     = $(top_builddir)/plic/plic-intern
+GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
         rapicorncpu.hh	rapicorndebugtools.hh	rapicornthread.hh	utilities.hh  \

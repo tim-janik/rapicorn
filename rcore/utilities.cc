@@ -142,6 +142,10 @@ SourceLocation::SourceLocation (const char *file, int line, const char *func,
   m_pretty (pretty_func), m_component (component)
 {}
 
+SourceLocation::SourceLocation (const char *component) :
+  m_file (""), m_line (""), m_func (""), m_pretty (""), m_component (component)
+{}
+
 String
 SourceLocation::where () const
 {
@@ -484,12 +488,6 @@ void
 Logging::messagev (const char *kind, const SourceLocation &sloc, const char *format, va_list vargs)
 {
   message (kind, sloc, "%s", string_vprintf (format, vargs).c_str());
-}
-
-String
-Logging::string_func (const char *func, const char *pretty_func)
-{
-  return func ? func : "???"; // FIXME: use pretty_func to include possible prefixes
 }
 
 // == AssertionError ==

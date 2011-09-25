@@ -150,20 +150,12 @@ inline void breakpoint() { __asm__ __volatile__ ("bpt"); }
 #else   /* !__i386__ && !__alpha__ */
 inline void breakpoint() { __builtin_trap(); }
 #endif
-#ifdef  __SOURCE_FILE__
-#define RAPICORN__FILE__        __SOURCE_FILE__
+#ifdef  __SOURCE_COMPONENT__
+#define RAPICORN__SOURCE_COMPONENT__    __SOURCE_COMPONENT__
 #elif   defined __BASE_FILE__
-#define RAPICORN__FILE__        __BASE_FILE__
+#define RAPICORN__SOURCE_COMPONENT__    __BASE_FILE__
 #else
-#define RAPICORN__FILE__        __FILE__
-#endif
-#define RAPICORN__FUNC__        Rapicorn::Logging::string_func (__func__, __PRETTY_FUNCTION__)
-#ifdef  __COMPONENT__
-#define RAPICORN_COMPONENT      __COMPONENT__
-#elif   defined __BASE_FILE__
-#define RAPICORN_COMPONENT      __BASE_FILE__
-#else
-#define RAPICORN_COMPONENT      __FILE__
+#define RAPICORN__SOURCE_COMPONENT__    __FILE__
 #endif
 
 // == Source Location ==
@@ -172,12 +164,13 @@ class SourceLocation {
 public:
   enum Bits { NONE = 0, LOCATION = 1, FUNCTION = 2, COMPONENT = 4 };
   SourceLocation (const char *file, int line, const char *func, const char *pretty_func, const char *component);
+  SourceLocation (const char *source_component);
   String where () const;
   String where (int bits) const;
   String debug_prefix () const;
 };
-#define RAPICORN_SOURCE_LOCATION        Rapicorn::SourceLocation::SourceLocation (__FILE__, __LINE__, __func__, __PRETTY_FUNCTION__, RAPICORN_COMPONENT)
-#define RAPICORN_SOURCE_COMPONENT       Rapicorn::SourceLocation::SourceLocation ("", 0, "", "", RAPICORN_COMPONENT)
+#define RAPICORN_SOURCE_LOCATION        Rapicorn::SourceLocation::SourceLocation (__FILE__, __LINE__, __func__, __PRETTY_FUNCTION__, RAPICORN__SOURCE_COMPONENT__)
+#define RAPICORN_SOURCE_COMPONENT       Rapicorn::SourceLocation::SourceLocation (RAPICORN__SOURCE_COMPONENT__)
 
 // == Logging and Assertions ==
 class Logging {
@@ -189,7 +182,6 @@ public:
   static void   message         (const char *kind, const SourceLocation &sloc,
                                  const char *format, ...) RAPICORN_PRINTF (3, 4);
   static void   messagev        (const char *kind, const SourceLocation &sloc, const char *format, va_list vargs);
-  static String string_func     (const char *func, const char *pretty_func = NULL);
   static void   abort           () RAPICORN_NORETURN;
 };
 

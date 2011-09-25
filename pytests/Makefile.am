@@ -2,7 +2,7 @@
 include $(top_srcdir)/Makefile.decl
 
 INCLUDES += -I$(top_srcdir)
-DEFS	 += -DRAPICORN_CONVENIENCE -D__SOURCE_FILE__='"$(patsubst $(realpath $(abs_top_srcdir))/%,%, $(realpath $<))"'
+DEFS	 += -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"'
 
 # variables
 noinst_PROGRAMS  = # auto-cleaned

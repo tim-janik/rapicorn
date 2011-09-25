@@ -9,7 +9,7 @@ main (int   argc,
       char *argv[])
 {
   // initialize Rapicorn
-  Application app = init_app (String ("Rapicorn/Examples/") + RAPICORN__FILE__, &argc, argv);
+  Application app = init_app (__SOURCE_COMPONENT__, &argc, argv);
 
   // find and load GUI definitions relative to argv[0]
   app.auto_load ("RapicornExamples", "texttest.xml", argv[0]);

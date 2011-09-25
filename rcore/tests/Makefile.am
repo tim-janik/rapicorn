@@ -2,7 +2,7 @@
 include $(top_srcdir)/Makefile.decl
 
 INCLUDES += -I$(top_srcdir) $(RAPICORN_CORE_CFLAGS)
-DEFS	 += -DRAPICORN_CONVENIENCE -D__SOURCE_FILE__='"$(patsubst $(realpath $(abs_top_srcdir))/%,%, $(realpath $<))"'
+DEFS	 += -DRAPICORN_CONVENIENCE -D__SOURCE_COMPONENT__='"Rapicorn@RAPICORN_RELEASE@/$(subdir)/$<"'
 PLICINT	  = $(top_builddir)/plic/plic-intern
 
 # test programs
