@@ -90,6 +90,11 @@ test_logging (const char *logarg)
       RAPICORN_CHECK (0 > 1);
       errno = EINVAL;
       RAPICORN_PCHECK (errno == 0);
+      try {
+        throw_if_fail (0 == "throw-if-fail");
+      } catch (Rapicorn::AssertionError ar) {
+        printerr ("Caught exception: %s\n", ar.what());
+      }
       critical ("execution has reached a critical condition (\"test-critical\")");
       errno = EINVAL;
       pcritical ("execution has reached a critical condition (\"test-pcritical\")");
