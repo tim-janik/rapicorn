@@ -47,6 +47,7 @@ struct EmitterMany {
   Signal<EmitterMany, void (int   , double, int   , double, int   , double, int   , double, int   , double, int   , double, int   , double)> sig_void_14;
   Signal<EmitterMany, void (double, int   , double, int   , double, int   , double, int   , double, int   , double, int   , double, int   , double)> sig_void_15;
   Signal<EmitterMany, void (int   , double, short , uint  , float , char  , uint8 , long  , int64 , char  , uint  , float , char  , double, uint64, short )> sig_void_16;
+  Signal<EmitterMany, void (const String&, const String&, const char*)> sig_void_cref;
   Signal<EmitterMany, String ()> sig_string_0;
   Signal<EmitterMany, String (int   )> sig_string_1;
   Signal<EmitterMany, String (int   , double)> sig_string_2;
@@ -69,6 +70,7 @@ struct EmitterMany {
     sig_void_4 (*this), sig_void_5 (*this), sig_void_6 (*this), sig_void_7 (*this),
     sig_void_8 (*this), sig_void_9 (*this), sig_void_10 (*this), sig_void_11 (*this),
     sig_void_12 (*this), sig_void_13 (*this), sig_void_14 (*this), sig_void_15 (*this), sig_void_16 (*this),
+    sig_void_cref (*this),
     sig_string_0 (*this), sig_string_1 (*this), sig_string_2 (*this), sig_string_3 (*this),
     sig_string_4 (*this), sig_string_5 (*this), sig_string_6 (*this), sig_string_7 (*this),
     sig_string_8 (*this), sig_string_9 (*this), sig_string_10 (*this), sig_string_11 (*this),
@@ -95,6 +97,7 @@ struct EmitterMany {
            __func__, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, xref.message());
     return __func__;
   }
+  void do_void_cref (const String &s, const String &t, const char *c) { assert (s != t && s == c); }
   void testme ()
   {
     TSTART ("Signals/Multi-arg");
@@ -115,6 +118,8 @@ struct EmitterMany {
     sig_void_14.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14);
     sig_void_15.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
     sig_void_16.emit (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+    sig_void_cref.emit ("foo", "A const String reference", "foo");
+    sig_void_cref += slot (*this, &EmitterMany::do_void_cref);
     ExtraType xt, &xref = xt;
     sig_string_14 += slot (test_string_14_emitter_data, xt);
     sig_string_14 += slot (test_string_14_data, xt);
