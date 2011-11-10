@@ -78,9 +78,8 @@ protected:
     HSHRINK                   = 1 << 19,
     VSHRINK                   = 1 << 20,
     ALLOCATABLE               = 1 << 21,
-    POSITIVE_ALLOCATION       = 1 << 22,
-    DEBUG                     = 1 << 23,
-    LAST_FLAG                 = 1 << 24
+    DEBUG                     = 1 << 22,
+    LAST_FLAG                 = 1 << 23
   };
   void                        set_flag          (uint32 flag, bool on = true);
   void                        unset_flag        (uint32 flag) { set_flag (flag, false); }
@@ -120,7 +119,7 @@ public:
   bool                        visible           () const { return test_flags (VISIBLE) && !test_flags (HIDDEN_CHILD); }
   void                        visible           (bool b) { set_flag (VISIBLE, b); }
   bool                        allocatable       () const { return visible() && test_all_flags (ALLOCATABLE | PARENT_VISIBLE); }
-  bool                        drawable          () const { return visible() && test_flags (POSITIVE_ALLOCATION); }
+  bool                        drawable          () const { return visible() && m_allocation.width > 0 && m_allocation.height > 0; }
   virtual bool                viewable          () const; // drawable() && parent->viewable();
   bool                        sensitive         () const { return test_all_flags (SENSITIVE | PARENT_SENSITIVE); }
   virtual void                sensitive         (bool b);

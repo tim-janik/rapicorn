@@ -112,8 +112,6 @@ ItemImpl::set_flag (uint32 flag,
   bool fchanged = change_flags_silently (flag, on);
   if (fchanged)
     {
-      if ((flag & (VISIBLE | POSITIVE_ALLOCATION)) == POSITIVE_ALLOCATION)
-        change_flags_silently (POSITIVE_ALLOCATION, false);
       if (flag & propagate_flag_mask)
         {
           expose();
@@ -1431,10 +1429,8 @@ ItemImpl::set_allocation (const Allocation &area)
   Allocation oa = allocation();
   /* always reallocate to re-layout children */
   change_flags_silently (INVALID_ALLOCATION, false); /* skip notification */
-  change_flags_silently (POSITIVE_ALLOCATION, false); /* !drawable() while size_allocate() is called */
   size_allocate (allocatable () ? sarea : Allocation (0, 0, 0, 0));
   Allocation a = allocation();
-  change_flags_silently (POSITIVE_ALLOCATION, a.width > 0 && a.height > 0);
   bool need_expose = oa != a || test_flags (INVALID_CONTENT);
   change_flags_silently (INVALID_CONTENT, false); /* skip notification */
   /* expose old area */
