@@ -191,7 +191,7 @@ WindowImpl::size_request (Requisition &requisition)
   if (has_allocatable_child())
     {
       ItemImpl &child = get_child();
-      requisition = child.size_request();
+      requisition = child.requisition();
     }
 }
 
@@ -202,7 +202,7 @@ WindowImpl::size_allocate (Allocation area)
   if (has_allocatable_child())
     {
       ItemImpl &child = get_child();
-      Requisition rq = child.size_request();
+      Requisition rq = child.requisition();
       child.set_allocation (area);
     }
 }
@@ -251,7 +251,7 @@ WindowImpl::resize_all (Allocation *new_area)
   Requisition req;
   while (test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
-      req = size_request(); /* unsets INVALID_REQUISITION */
+      req = requisition(); /* unsets INVALID_REQUISITION */
       if (!have_allocation)
         {
           /* fake initial allocation */

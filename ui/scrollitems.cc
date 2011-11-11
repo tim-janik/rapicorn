@@ -121,7 +121,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
         ItemImpl &child = get_child();
         if (child.allocatable())
           {
-            requisition = child.size_request ();
+            requisition = child.requisition();
             chspread = child.hspread();
             cvspread = child.vspread();
           }
@@ -141,7 +141,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
         return;
       }
     ItemImpl &child = get_child();
-    Requisition rq = child.size_request();
+    Requisition rq = child.requisition();
     if (rq.width < area.width)
       {
         area.x += (area.width - rq.width) / 2;

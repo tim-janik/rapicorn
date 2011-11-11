@@ -269,7 +269,7 @@ TableImpl::size_request_pass1()
     {
       if (!cw->allocatable())
         continue;
-      Requisition crq = cw->size_request();
+      Requisition crq = cw->requisition();
       const PackInfo &pi = cw->pack_info();
       /* fetch requisition from single-column children */
       if (left_attach (pi) + 1 == right_attach (pi))
@@ -317,7 +317,7 @@ TableImpl::size_request_pass3()
       /* request remaining space for multi-column children */
       if (left_attach (pi) + 1 != right_attach (pi))
         {
-          Requisition crq = cw->size_request();
+          Requisition crq = cw->requisition();
           /* Check and see if there is already enough space for the child. */
           uint width = 0;
           for (uint col = left_attach (pi); col < right_attach (pi); col++)
@@ -356,7 +356,7 @@ TableImpl::size_request_pass3()
       /* request remaining space for multi-row children */
       if (bottom_attach (pi) + 1 != top_attach (pi))
         {
-          Requisition crq = cw->size_request();
+          Requisition crq = cw->requisition();
           /* Check and see if there is already enough space for the child. */
           uint height = 0;
           for (uint row = bottom_attach (pi); row < top_attach (pi); row++)
@@ -771,7 +771,7 @@ TableImpl::size_allocate_pass2 ()
       if (!cw->allocatable())
         continue;
       const PackInfo &pi = cw->pack_info();
-      Requisition crq = cw->size_request();
+      Requisition crq = cw->requisition();
       int x = ifloor (area.x);
       for (uint col = 0; col < left_attach (pi); col++)
         x += cols[col].allocation + cols[col].spacing;

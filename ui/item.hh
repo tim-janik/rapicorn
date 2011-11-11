@@ -227,7 +227,6 @@ public:
   bool                       viewp0rt_point         (Point        p);           /* viewp0rt coordinates relative */
   /* public size accessors */
   Requisition                requisition        ();                             // effective size requisition
-  Requisition                size_request       () { return requisition(); }    // FIXME: remove
   void                       set_allocation     (const Allocation &area);       // assign new allocation
   const Allocation&          allocation         () { return m_allocation; }     // current allocation
   /* display */

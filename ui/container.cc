@@ -706,7 +706,7 @@ SingleContainerImpl::size_request (Requisition &requisition)
   if (has_allocatable_child())
     {
       ItemImpl &child = get_child();
-      Requisition cr = child.size_request ();
+      Requisition cr = child.requisition ();
       const PackInfo &pi = child.pack_info();
       requisition.width = pi.left_spacing + cr.width + pi.right_spacing;
       requisition.height = pi.bottom_spacing + cr.height + pi.top_spacing;
@@ -721,7 +721,7 @@ Allocation
 SingleContainerImpl::layout_child (ItemImpl         &child,
                                    const Allocation &carea)
 {
-  Requisition rq = child.size_request();
+  Requisition rq = child.requisition();
   const PackInfo &pi = child.pack_info();
   Allocation area = carea;
   /* pad allocation */

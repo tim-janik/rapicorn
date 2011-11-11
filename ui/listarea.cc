@@ -271,7 +271,7 @@ ItemListImpl::size_request (Requisition &requisition)
       /* size request all children */
       if (!cw->allocatable())
         continue;
-      Requisition crq = cw->size_request();
+      Requisition crq = cw->requisition();
       requisition.width = MAX (requisition.width, crq.width);
       chspread = cvspread = false;
     }
@@ -516,7 +516,7 @@ ItemListImpl::scroll_row_layout (ListRow *lr_current,
 
   int64 rowheight; // FIXME: make const: const int64 rowheight = lookup_row_size (scroll_item);
   {
-    Requisition requisition = lr_current->rowbox->size_request();
+    Requisition requisition = lr_current->rowbox->requisition();
     rowheight = requisition.height;
   }
 

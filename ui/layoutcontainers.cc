@@ -52,7 +52,7 @@ public:
         ItemImpl &child = get_child();
         if (child.allocatable())
           {
-            Requisition cr = child.size_request ();
+            Requisition cr = child.requisition();
             requisition.width = left_padding() + cr.width + right_padding();
             requisition.height = bottom_padding() + cr.height + top_padding();
             chspread = child.hspread();
@@ -70,7 +70,7 @@ public:
     if (!has_allocatable_child())
       return;
     ItemImpl &child = get_child();
-    Requisition rq = child.size_request();
+    Requisition rq = child.requisition();
     /* pad allocation */
     area.x += left_padding();
     area.width -= left_padding() + right_padding();

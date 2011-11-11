@@ -225,7 +225,7 @@ protected:
     if (has_allocatable_child())
       {
         ItemImpl &child = get_child();
-        requisition = child.size_request ();
+        requisition = child.requisition();
         /* we confine spreading to within the trough, so don't propagate hspread/vspread here */
       }
   }
@@ -242,7 +242,7 @@ protected:
     if (!has_allocatable_child())
       return;
     ItemImpl &child = get_child();
-    Requisition rq = child.size_request();
+    Requisition rq = child.requisition();
     /* expand/scale child */
     if (area.width > rq.width && !child.hspread())
       {
@@ -346,7 +346,7 @@ protected:
         ItemImpl &child = get_child();
         if (child.allocatable())
           {
-            requisition = child.size_request ();
+            requisition = child.requisition();
             chspread = child.hspread();
             cvspread = child.vspread();
           }

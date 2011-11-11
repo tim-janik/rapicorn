@@ -1037,7 +1037,7 @@ bool
 ItemImpl::tune_requisition (double new_width,
                         double new_height)
 {
-  Requisition req = size_request();
+  Requisition req = requisition();
   if (new_width >= 0)
     req.width = new_width;
   if (new_height >= 0)
