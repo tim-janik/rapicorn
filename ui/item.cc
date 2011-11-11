@@ -1003,29 +1003,28 @@ ItemImpl::invalidate_size()
 Requisition
 ItemImpl::inner_size_request()
 {
-  Requisition ireq; // 0,0
-  if (test_flags (ItemImpl::INVALID_REQUISITION))
-    do
-      {
-        change_flags_silently (ItemImpl::INVALID_REQUISITION, false); /* skip notification */
-        if (allocatable())
-          {
-            ireq = Requisition(); // 0,0
-            size_request (ireq);
-            ireq.width = MAX (ireq.width, 0);
-            ireq.height = MAX (ireq.height, 0);
-            Requisition ovr (width(), height());
-            if (ovr.width >= 0)
-              ireq.width = ovr.width;
-            if (ovr.height >= 0)
-              ireq.height = ovr.height;
-          }
-        cache_requisition (&ireq);
-      }
-    while (test_flags (ItemImpl::INVALID_REQUISITION));
-  else if (allocatable())
-    ireq = cache_requisition();
-  return ireq;
+  /* loop until we gather a valid requisition, this explicitely allows for
+   * requisition invalidation during the size_request phase, item implementations
+   * have to ensure we're not looping endlessly
+   */
+  while (test_flags (ItemImpl::INVALID_REQUISITION))
+    {
+      change_flags_silently (ItemImpl::INVALID_REQUISITION, false); // skip notification
+      Requisition inner; // 0,0
+      if (allocatable())
+        {
+          size_request (inner);
+          inner.width = MAX (inner.width, 0);
+          inner.height = MAX (inner.height, 0);
+          Requisition ovr (width(), height());
+          if (ovr.width >= 0)
+            inner.width = ovr.width;
+          if (ovr.height >= 0)
+            inner.height = ovr.height;
+        }
+      m_requisition = inner;
+    }
+  return allocatable() ? m_requisition : Requisition();
 }
 
 Requisition
@@ -1377,14 +1376,6 @@ ItemImpl::color_scheme (ColorSchemeType cst)
         set_data (&item_color_scheme_key, cst);
       ClassDoctor::update_item_heritage (*this);
     }
-}
-
-Requisition
-ItemImpl::cache_requisition (Requisition *requisition)
-{
-  if (requisition)
-    m_requisition = *requisition;
-  return m_requisition;
 }
 
 bool

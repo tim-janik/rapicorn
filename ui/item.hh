@@ -87,7 +87,6 @@ protected:
   bool                        test_all_flags    (uint32 mask) const { return (m_flags & mask) == mask; }
   virtual bool                self_visible      () const;
   /* size requisition and allocation */
-  Requisition                 cache_requisition (Requisition *requisition = NULL);
   virtual void                size_request      (Requisition &requisition) = 0;
   virtual void                size_allocate     (Allocation   area) = 0;
   virtual void                invalidate_parent ();
