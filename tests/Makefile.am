@@ -48,6 +48,15 @@ factory-test: $(srcdir)/factory-test.ref
 EXTRA_DIST += factory-test.xml factory-test.ref
 check: factory-test
 
+# texting test
+XML_FILES  += texting.xml
+texting-png-test: $(srcdir)/texting.xml
+	$(Q) rm -f xtmp-texting.png
+	$(Q) $(X11TEST_RAPIDRUN) --snapshot=xtmp-texting.png -x $(srcdir)/texting.xml $(QSTDERR)
+	$(Q) eval "$$TSTOCR" xtmp-texting.png "Regu.ar.Text" \""Insensitive Text"\" \""Editab.e Text Edit.r Text"\"
+	$(Q) rm -f xtmp-texting.png
+check: texting-png-test
+
 xmllint-check:
 	$(Q) cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES) ; eval "$$TSTDIAGNOSE" "'linting $(XML_FILES)'"
 check: xmllint-check
