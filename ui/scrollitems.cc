@@ -133,13 +133,10 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
       }
   }
   virtual void
-  size_allocate (Allocation area)
+  size_allocate (Allocation area, bool changed)
   {
     if (!has_allocatable_child())
-      {
-        allocation (area);
-        return;
-      }
+      return;
     ItemImpl &child = get_child();
     Requisition rq = child.requisition();
     if (rq.width < area.width)
@@ -152,7 +149,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
         area.y += (area.height - rq.height) / 2;
         area.height = rq.height;
       }
-    allocation (area);
+    // FIXME: allocation (area);
     area.x = 0; /* 0-offset */
     area.y = 0; /* 0-offset */
     area.width = rq.width;

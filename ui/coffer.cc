@@ -19,7 +19,7 @@ class CofferImpl : public virtual SingleContainerImpl, public virtual Coffer {
   bool          m_overlap_child;
 protected:
   virtual void          size_request    (Requisition &requisition);
-  virtual void          size_allocate   (Allocation area);
+  virtual void          size_allocate   (Allocation area, bool changed);
   virtual void          do_invalidate   ();
   virtual void          render          (Display &display);
 public:
@@ -81,19 +81,23 @@ CofferImpl::size_request (Requisition &requisition)
 }
 
 void
-CofferImpl::size_allocate (Allocation area)
+CofferImpl::size_allocate (Allocation area, bool changed)
 {
-  Allocation carea = area;
-  if (has_allocatable_child() && !m_overlap_child)
+  if (has_allocatable_child())
     {
-      int thickness = 2; // FIXME: use real border marks
-      carea.x += thickness;
-      carea.y += thickness;
-      carea.width -= 2 * thickness;
-      carea.height -= 2 * thickness;
+      Allocation carea = area;
+      if (!m_overlap_child)
+        {
+          int thickness = 2; // FIXME: use real border marks
+          carea.x += thickness;
+          carea.y += thickness;
+          carea.width -= 2 * thickness;
+          carea.height -= 2 * thickness;
+        }
+      ItemImpl &child = get_child();
+      Allocation child_area = layout_child (child, carea);
+      child.set_allocation (child_area);
     }
-  SingleContainerImpl::size_allocate (carea);
-  allocation (area);
 }
 
 void

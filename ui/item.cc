@@ -1035,7 +1035,7 @@ ItemImpl::requisition ()
 
 bool
 ItemImpl::tune_requisition (double new_width,
-                        double new_height)
+                            double new_height)
 {
   Requisition req = requisition();
   if (new_width >= 0)
@@ -1402,12 +1402,6 @@ ItemImpl::tune_requisition (Requisition requisition)
 }
 
 void
-ItemImpl::allocation (const Allocation &area)
-{
-  m_allocation = area;
-}
-
-void
 ItemImpl::set_allocation (const Allocation &area)
 {
   Allocation sarea (iround (area.x), iround (area.y), iround (area.width), iround (area.height));
@@ -1420,7 +1414,11 @@ ItemImpl::set_allocation (const Allocation &area)
   Allocation oa = allocation();
   /* always reallocate to re-layout children */
   change_flags_silently (INVALID_ALLOCATION, false); /* skip notification */
-  size_allocate (allocatable () ? sarea : Allocation (0, 0, 0, 0));
+  if (!allocatable())
+    sarea = Allocation (0, 0, 0, 0);
+  const bool changed = m_allocation != sarea;
+  m_allocation = sarea;
+  size_allocate (m_allocation, changed);
   Allocation a = allocation();
   bool need_expose = oa != a || test_flags (INVALID_CONTENT);
   change_flags_silently (INVALID_CONTENT, false); /* skip notification */

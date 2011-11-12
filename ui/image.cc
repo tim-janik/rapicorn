@@ -126,9 +126,8 @@ protected:
       }
   }
   virtual void
-  size_allocate (Allocation area)
+  size_allocate (Allocation area, bool changed)
   {
-    allocation (area);
     if (m_pixmap)
       {
         m_xoffset = iround (0.5 * (area.width - m_pixmap->width()));

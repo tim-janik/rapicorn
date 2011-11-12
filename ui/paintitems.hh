@@ -62,7 +62,7 @@ class DrawableImpl : public virtual ItemImpl, public virtual DrawableIface {
 protected:
   virtual void  draw_rect       (const PixelRectImpl &pixrect);
   virtual void  size_request    (Requisition &requisition);
-  virtual void  size_allocate   (Allocation area);
+  virtual void  size_allocate   (Allocation area, bool changed);
   virtual void  render          (Display &display);
 public:
   explicit      DrawableImpl    ();

@@ -112,11 +112,6 @@ private:
     if (client)
       requisition.width += client->text_requisition (fallback_chars + m_request_chars, fallback_digits + m_request_digits);
   }
-  virtual void
-  size_allocate (Allocation area)
-  {
-    SingleContainerImpl::size_allocate (area);
-  }
   virtual bool
   can_focus () const
   {

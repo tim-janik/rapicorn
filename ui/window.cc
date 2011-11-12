@@ -196,9 +196,8 @@ WindowImpl::size_request (Requisition &requisition)
 }
 
 void
-WindowImpl::size_allocate (Allocation area)
+WindowImpl::size_allocate (Allocation area, bool changed)
 {
-  allocation (area);
   if (has_allocatable_child())
     {
       ItemImpl &child = get_child();

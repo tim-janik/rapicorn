@@ -273,7 +273,7 @@ class IdlTestItemImpl : public virtual ItemImpl, public virtual IdlTestItemIface
   virtual IdlTestItemIface* self_prop () const                      { return m_self; }
   virtual void          self_prop (IdlTestItemIface *s)              { m_self = s; }
   virtual void          size_request (Requisition &req)         { req = Requisition (12, 12); }
-  virtual void          size_allocate (Allocation area)         { allocation (area); }
+  virtual void          size_allocate (Allocation area, bool changed)   {}
   virtual void          render (Display &display)               {}
 };
 static const ItemFactory<IdlTestItemImpl> test_item_factory ("Rapicorn::Factory::IdlTestItem");

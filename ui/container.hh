@@ -64,7 +64,7 @@ class SingleContainerImpl : public virtual ContainerImpl {
   ItemImpl             *child_item;
 protected:
   virtual void          size_request            (Requisition &requisition);
-  virtual void          size_allocate           (Allocation area);
+  virtual void          size_allocate           (Allocation area, bool changed);
   ItemImpl&             get_child               () { RAPICORN_CHECK (child_item != NULL); return *child_item; }
   virtual void          pre_finalize            ();
   virtual              ~SingleContainerImpl     ();

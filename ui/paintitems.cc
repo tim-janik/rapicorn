@@ -71,9 +71,8 @@ protected:
     requisition.height = 3;
   }
   virtual void
-  size_allocate (Allocation area)
+  size_allocate (Allocation area, bool changed)
   {
-    allocation (area);
     SizePolicyType spol = size_policy();
     if (spol == SIZE_POLICY_WIDTH_FROM_HEIGHT)
       tune_requisition (area.height, -1);
@@ -162,10 +161,8 @@ public:
     requisition.height += (m_top_padding_dots + m_bottom_padding_dots) * 3 * ythick;
   }
   virtual void
-  size_allocate (Allocation area)
-  {
-    allocation (area);
-  }
+  size_allocate (Allocation area, bool changed)
+  {}
   virtual void
   render (Display &display)
   {
@@ -231,9 +228,8 @@ DrawableImpl::size_request (Requisition &requisition)
 }
 
 void
-DrawableImpl::size_allocate (Allocation area)
+DrawableImpl::size_allocate (Allocation area, bool changed)
 {
-  allocation (area);
   m_pic = PixelRectImpl();
   sig_redraw.emit (area.x, area.y, area.width, area.height);
 }

@@ -63,10 +63,9 @@ public:
     set_flag (VSPREAD_CONTAINER, cvspread);
   }
   virtual void
-  size_allocate (Allocation area)
+  size_allocate (Allocation area, bool changed)
   {
     // FIXME: account for child's PackInfo like SingleContainerImpl::size_allocate
-    allocation (area);
     if (!has_allocatable_child())
       return;
     ItemImpl &child = get_child();

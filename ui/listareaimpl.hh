@@ -92,7 +92,7 @@ public:
                                                  bool invalidate_widgets);
   virtual void          visual_update           ();
   virtual void          size_request            (Requisition &requisition);
-  virtual void          size_allocate           (Allocation area);
+  virtual void          size_allocate           (Allocation area, bool changed);
   /* sizing and positioning */
   bool                  pixel_positioning       (const int64       mcount,
                                                  const ModelSizes &ms) const;

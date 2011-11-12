@@ -280,19 +280,23 @@ protected:
       }
   }
   virtual void
-  size_allocate (Allocation area)
+  size_allocate (Allocation area, bool changed)
   {
-    Allocation carea = area;
-    if (has_allocatable_child() && !m_overlap_child)
+    if (has_allocatable_child())
       {
-        int thickness = is_tight_focus() ? 1 : 2;
-        carea.x += thickness;
-        carea.y += thickness;
-        carea.width -= 2 * thickness;
-        carea.height -= 2 * thickness;
+        Allocation carea = area;
+        if (!m_overlap_child)
+          {
+            int thickness = is_tight_focus() ? 1 : 2;
+            carea.x += thickness;
+            carea.y += thickness;
+            carea.width -= 2 * thickness;
+            carea.height -= 2 * thickness;
+          }
+        ItemImpl &child = get_child();
+        Allocation child_area = layout_child (child, carea);
+        child.set_allocation (child_area);
       }
-    SingleContainerImpl::size_allocate (carea);
-    allocation (area);
   }
 public:
   void

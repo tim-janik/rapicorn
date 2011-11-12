@@ -286,10 +286,9 @@ ItemListImpl::size_request (Requisition &requisition)
 }
 
 void
-ItemListImpl::size_allocate (Allocation area)
+ItemListImpl::size_allocate (Allocation area, bool changed)
 {
-  m_need_resize_scroll |= allocation() != area;
-  allocation (area);
+  m_need_resize_scroll |= allocation() != area | changed;
   if (m_need_resize_scroll)
     {
       measure_rows (area.height);

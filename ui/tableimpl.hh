@@ -52,7 +52,7 @@ class TableImpl : public virtual MultiContainerImpl, public virtual Table {
 protected:
   virtual               ~TableImpl      ();
   virtual void          size_request    (Requisition &requisition);
-  virtual void          size_allocate   (Allocation area);
+  virtual void          size_allocate   (Allocation area, bool changed);
   virtual void          repack_child    (ItemImpl       &item,
                                          const PackInfo &orig,
                                          const PackInfo &pnew);

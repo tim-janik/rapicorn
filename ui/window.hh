@@ -71,7 +71,7 @@ private:
   /* sizing */
   virtual void          size_request                            (Requisition            &requisition);
   using                 ItemImpl::size_request;
-  virtual void          size_allocate                           (Allocation              area);
+  virtual void          size_allocate                           (Allocation              area, bool changed);
   virtual bool          tunable_requisitions                    ();
   void                  resize_all                              (Allocation             *new_area);
   virtual void          do_invalidate                           ();

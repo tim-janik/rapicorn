@@ -88,7 +88,7 @@ protected:
   virtual bool                self_visible      () const;
   /* size requisition and allocation */
   virtual void                size_request      (Requisition &requisition) = 0;
-  virtual void                size_allocate     (Allocation   area) = 0;
+  virtual void                size_allocate     (Allocation   area, bool changed) = 0;
   virtual void                invalidate_parent ();
   bool                        tune_requisition  (Requisition  requisition);
   bool                        tune_requisition  (double       new_width,
@@ -228,7 +228,7 @@ public:
   /* public size accessors */
   Requisition                requisition        ();                             // effective size requisition
   void                       set_allocation     (const Allocation &area);       // assign new allocation
-  const Allocation&          allocation         () { return m_allocation; }     // current allocation
+  const Allocation&          allocation         () const { return m_allocation; } // current allocation
   /* display */
   virtual void               render             (Display        &display) = 0;
   /* heritage / appearance */
@@ -310,7 +310,6 @@ public:
                                               const std::nothrow_t &nt = dothrow) const;
   virtual OwnedMutex&       owned_mutex        ();
 protected:
-  void                  allocation      (const Allocation &area);
   virtual bool          do_event        (const Event &event);
 private:
   void                  type_cast_error (const char *dest_type) RAPICORN_NORETURN;

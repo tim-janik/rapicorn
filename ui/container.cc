@@ -746,9 +746,8 @@ SingleContainerImpl::layout_child (ItemImpl         &child,
 }
 
 void
-SingleContainerImpl::size_allocate (Allocation area)
+SingleContainerImpl::size_allocate (Allocation area, bool changed)
 {
-  allocation (area);
   if (has_allocatable_child())
     {
       ItemImpl &child = get_child();

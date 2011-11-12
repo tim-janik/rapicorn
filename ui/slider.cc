@@ -230,9 +230,8 @@ protected:
       }
   }
   virtual void
-  size_allocate (Allocation area)
+  size_allocate (Allocation area, bool changed)
   {
-    allocation (area);
     reallocate_child();
   }
   void

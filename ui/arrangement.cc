@@ -124,9 +124,8 @@ ArrangementImpl::size_request (Requisition &requisition)
 }
 
 void
-ArrangementImpl::size_allocate (Allocation area)
+ArrangementImpl::size_allocate (Allocation area, bool changed)
 {
-  allocation (area);
   for (ChildWalker cw = local_children(); cw.has_next(); cw++)
     {
       ItemImpl &child = *cw;

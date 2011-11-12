@@ -769,9 +769,8 @@ public:
     requisition.height = ceil (1 + UNITS2PIXELS (rect.height));
   }
   virtual void
-  size_allocate (Allocation area)
+  size_allocate (Allocation area, bool changed)
   {
-    allocation (area);
     Text::ParaState pstate; // retrieve defaults
     PangoRectangle rect = { 0, 0 };
     rapicorn_gtk_threads_enter();

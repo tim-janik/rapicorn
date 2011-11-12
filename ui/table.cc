@@ -208,9 +208,8 @@ TableImpl::size_request (Requisition &requisition)
 }
 
 void
-TableImpl::size_allocate (Allocation area)
+TableImpl::size_allocate (Allocation area, bool changed)
 {
-  allocation (area);
   size_allocate_init ();
   size_allocate_pass1 ();
   size_allocate_pass2 ();

@@ -39,7 +39,7 @@ public:
   virtual Rect                  child_area              ();
 protected:
   virtual void                  size_request            (Requisition &requisition);
-  virtual void                  size_allocate           (Allocation area);
+  virtual void                  size_allocate           (Allocation area, bool changed);
   Allocation                    local_child_allocation  (ItemImpl &child,
                                                          double    width,
                                                          double    height);
