@@ -29,6 +29,7 @@ help_usage (bool usage_error)
   printout ("  -l <uilib>                    Load ''uilib'' upon startup.\n");
   printout ("  -x                            Enable auto-exit after first expose.\n");
   printout ("  --list                        List parsed definitions.\n");
+  printout ("  --snapshot pngname            Dump a snapshot to <pngname>.\n");
   printout ("  --test-dump                   Dump test stream after first expose.\n");
   printout ("  --test-matched-node PATTERN   Filter nodes in test dumps.\n");
   printout ("  -h, --help                    Display this help and exit.\n");
@@ -38,7 +39,7 @@ help_usage (bool usage_error)
 static bool parse_test = false;
 static bool auto_exit = false;
 static bool list_definitions = false;
-
+static String dump_snapshot = "";
 static bool test_dump = false;
 static vector<String> test_dump_matched_nodes;
 
@@ -79,6 +80,21 @@ parse_args (int    *argc_p,
       else if (strcmp (argv[i], "--list") == 0)
         {
           list_definitions = true;
+          argv[i] = NULL;
+        }
+      else  if (strcmp ("--snapshot", argv[i]) == 0 ||
+                strncmp ("--snapshot=", argv[i], 11) == 0)
+        {
+          char *v = NULL, *equal = argv[i] + 10;
+          if (*equal == '=')
+            v = equal + 1;
+          else if (i + 1 < argc)
+            {
+              argv[i++] = NULL;
+              v = argv[i];
+            }
+          if (v)
+            dump_snapshot = v;
           argv[i] = NULL;
         }
       else if (strcmp (argv[i], "--test-dump") == 0)
@@ -131,6 +147,10 @@ parse_args (int    *argc_p,
 static void
 window_displayed (Window &window)
 {
+  if (!dump_snapshot.empty())
+    {
+      window.snapshot (dump_snapshot);
+    }
   if (test_dump)
     {
 #if 0 // FIXME
