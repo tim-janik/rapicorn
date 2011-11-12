@@ -135,6 +135,7 @@ interface Window : Container {
   void          show                    () = 0;
   bool          closed                  () = 0;
   void          close                   () = 0;
+  bool          snapshot                (string     pngname) = 0;
   signal bool   commands                (string     cmdname,
                                          StringList args);
   signal void   displayed               ();

@@ -50,6 +50,7 @@ public:
   virtual void          show                                    ();
   virtual bool          closed                                  ();
   virtual void          close                                   ();
+  virtual bool          snapshot                                (const String &pngname);
   virtual bool          synthesize_enter                        (double xalign = 0.5,
                                                                  double yalign = 0.5);
   virtual bool          synthesize_leave                        ();
