@@ -3,6 +3,7 @@
 #include "application.hh"
 #include "factory.hh"
 #include "uithread.hh"
+#include <string.h> // memcpy
 
 namespace Rapicorn {
 
@@ -103,6 +104,28 @@ WindowImpl::get_focus () const
   return get_data (&focus_item_key);
 }
 
+static cairo_surface_t*
+_cairo_image_surface_vflip (cairo_surface_t *isurface)
+{
+  return_val_if_fail (cairo_surface_status (isurface) == CAIRO_STATUS_SUCCESS, NULL);
+  cairo_format_t image_format = cairo_image_surface_get_format (isurface);
+  return_val_if_fail (image_format == CAIRO_FORMAT_ARGB32, NULL);
+  uint8 *data = cairo_image_surface_get_data (isurface);
+  const int width = cairo_image_surface_get_width (isurface);
+  const int height = cairo_image_surface_get_height (isurface);
+  const int stride = cairo_image_surface_get_stride (isurface); // bytes
+  cairo_surface_mark_dirty (isurface); // tainted image content
+  uint8 buffer[width * 4];
+  for (int y = 0; y < height / 2; y++)
+    {
+      uint8 *first = data + stride * y, *last = data + stride * (height - (y + 1));
+      memcpy (buffer, first, width * 4);
+      memcpy (first, last, width * 4);
+      memcpy (last, buffer, width * 4);
+    }
+  return isurface;
+}
+
 cairo_surface_t*
 WindowImpl::create_snapshot (const Rect &subarea)
 {
@@ -118,6 +141,7 @@ WindowImpl::create_snapshot (const Rect &subarea)
   cairo_t *cairo = cairo_create (isurface);
   cairo_translate (cairo, -subarea.x, -subarea.y);
   display.render_backing (cairo);
+  _cairo_image_surface_vflip (isurface);
   cairo_destroy (cairo);
   return isurface;
 }
