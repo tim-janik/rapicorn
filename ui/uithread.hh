@@ -31,7 +31,7 @@
 #include <ui/text-editor.hh>
 // conditional: #include <ui/text-pango.hh>
 #include <ui/utilities.hh>
-#include <ui/viewp0rt.hh>
+#include <ui/screenwindow.hh>
 #include <ui/window.hh>
 
 namespace Rapicorn {

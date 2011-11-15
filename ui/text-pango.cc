@@ -20,7 +20,7 @@
 #include <pango/pangocairo.h>
 #include "factory.hh"
 #include "painter.hh"
-#include "viewp0rt.hh"  // for rapicorn_gtk_threads_enter / rapicorn_gtk_threads_leave
+#include "screenwindow.hh"  // for rapicorn_gtk_threads_enter / rapicorn_gtk_threads_leave
 
 #include <algorithm>
 
