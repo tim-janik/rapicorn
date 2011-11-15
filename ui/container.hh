@@ -50,7 +50,7 @@ public:
   const CommandList&    list_commands   (); /* essentially chaining to ItemImpl:: */
   virtual void          point_children  (Point                   p, /* item coordinates relative */
                                          std::vector<ItemImpl*>     &stack);
-  void         viewp0rt_point_children  (Point                   p, /* viewp0rt coordinates relative */
+  void    screen_window_point_children  (Point                   p, /* screen_window coordinates relative */
                                          std::vector<ItemImpl*>     &stack);
   virtual void          render          (Display                &display);
   void                  debug_tree      (String indent = String());

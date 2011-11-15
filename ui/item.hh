@@ -202,16 +202,16 @@ public:
   Signal<ItemImpl, void ()>               sig_invalidate;
   Signal<ItemImpl, void (ItemImpl *oldt)> sig_hierarchy_changed;
   /* event handling */
-  bool                       process_event          (const Event &event);       /* item coordinates relative */
-  bool                       process_viewp0rt_event (const Event &event);       /* viewp0rt coordinates relative */
+  bool                       process_event               (const Event &event);  // item coordinates relative
+  bool                       process_screen_window_event (const Event &event);  // screen_window coordinates relative
   /* coordinate handling */
 protected:
-  Affine                     affine_to_viewp0rt     ();                         /* item => viewp0rt affine */
-  Affine                     affine_from_viewp0rt   ();                         /* viewp0rt => item affine */
+  Affine                     affine_to_screen_window   ();                    // item => screen_window affine
+  Affine                     affine_from_screen_window ();                    // screen_window => item affine
 public:
-  virtual bool               point                  (Point        p);           /* item coordinates relative */
-  Point                      point_to_viewp0rt      (Point        item_point);  /* item coordinates relative */
-  Point                      point_from_viewp0rt    (Point        window_point);/* viewp0rt coordinates relative */
+  virtual bool               point                     (Point        p);            // item coordinates relative
+  Point                      point_to_screen_window    (Point        item_point);   // item coordinates relative
+  Point                      point_from_screen_window  (Point        window_point); // screen_window coordinates relative
   virtual bool               translate_from         (const ItemImpl   &src_item,
                                                      const uint    n_points,
                                                      Point        *points) const;
@@ -224,7 +224,7 @@ public:
   bool                       translate_to           (const uint    n_rects,
                                                      Rect         *rects,
                                                      const ItemImpl   &target_item) const;
-  bool                       viewp0rt_point         (Point        p);           /* viewp0rt coordinates relative */
+  bool                       screen_window_point    (Point        p);           // screen_window coordinates relative
   /* public size accessors */
   Requisition                requisition        ();                             // effective size requisition
   void                       set_allocation     (const Allocation &area);       // assign new allocation

@@ -9,20 +9,20 @@ namespace Rapicorn {
 
 /* --- Window --- */
 class WindowImpl : public virtual SingleContainerImpl, public virtual WindowIface,
-                   public virtual EventLoop::Source, public virtual Viewp0rt::EventReceiver {
+                   public virtual EventLoop::Source, public virtual ScreenWindow::EventReceiver {
   friend class  ItemImpl;
   EventLoop            &m_loop;
   EventLoop::Source    *m_source;
   Mutex                 m_async_mutex;
   std::list<Event*>     m_async_event_queue;
   Region                m_expose_region;
-  Viewp0rt             *m_viewp0rt;
+  ScreenWindow         *m_screen_window;
   uint                  m_tunable_requisition_counter : 24;
   uint                  m_entered : 1;
   uint                  m_auto_close : 1;
   EventContext          m_last_event_context;
   vector<ItemImpl*>     m_last_entered_children;
-  Viewp0rt::Config      m_config;
+  ScreenWindow::Config  m_config;
   uint                  m_notify_displayed_id;
   void          uncross_focus           (ItemImpl        &fitem);
 protected:
@@ -86,10 +86,10 @@ private:
                                                                  const Point            &dest);
   void                  expose_now                              ();
   virtual void          draw_now                                ();
-  /* viewp0rt ops */
-  virtual void          create_viewp0rt                         ();
-  virtual bool          has_viewp0rt                            ();
-  virtual void          destroy_viewp0rt                        ();
+  /* screen_window ops */
+  virtual void          create_screen_window                    ();
+  virtual bool          has_screen_window                       ();
+  virtual void          destroy_screen_window                   ();
   void                  idle_show                               ();
   /* main loop */
   virtual bool          prepare                                 (const EventLoop::State &state,
@@ -177,7 +177,7 @@ private:
       RAPICORN_ASSERT (rapicorn_thread_entered());
       RAPICORN_ASSERT (window.m_source == this);
       window.m_source = NULL;
-      window.destroy_viewp0rt();
+      window.destroy_screen_window();
     }
   };
 };

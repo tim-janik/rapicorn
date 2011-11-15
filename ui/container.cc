@@ -601,10 +601,10 @@ ContainerImpl::point_children (Point               p, /* window coordinates rela
 }
 
 void
-ContainerImpl::viewp0rt_point_children (Point                   p, /* viewp0rt coordinates relative */
-                                        std::vector<ItemImpl*> &stack)
+ContainerImpl::screen_window_point_children (Point                   p, /* screen_window coordinates relative */
+                                             std::vector<ItemImpl*> &stack)
 {
-  point_children (point_from_viewp0rt (p), stack);
+  point_children (point_from_screen_window (p), stack);
 }
 
 void

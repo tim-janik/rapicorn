@@ -769,21 +769,21 @@ ItemImpl::translate_to (const uint    n_rects,
 }
 
 Point
-ItemImpl::point_from_viewp0rt (Point window_point) /* window coordinates relative */
+ItemImpl::point_from_screen_window (Point window_point) /* window coordinates relative */
 {
   Point p = window_point;
   ContainerImpl *pc = parent();
   if (pc)
     {
       const Affine &caffine = pc->child_affine (*this);
-      p = pc->point_from_viewp0rt (p);  // to viewp0rt coords
+      p = pc->point_from_screen_window (p);  // to screen_window coords
       p = caffine * p;
     }
   return p;
 }
 
 Point
-ItemImpl::point_to_viewp0rt (Point item_point) /* item coordinates relative */
+ItemImpl::point_to_screen_window (Point item_point) /* item coordinates relative */
 {
   Point p = item_point;
   ContainerImpl *pc = parent();
@@ -791,19 +791,19 @@ ItemImpl::point_to_viewp0rt (Point item_point) /* item coordinates relative */
     {
       const Affine &caffine = pc->child_affine (*this);
       p = caffine.ipoint (p);           // to parent coords
-      p = pc->point_to_viewp0rt (p);
+      p = pc->point_to_screen_window (p);
     }
   return p;
 }
 
 Affine
-ItemImpl::affine_from_viewp0rt () /* viewp0rt => item affine */
+ItemImpl::affine_from_screen_window () /* screen_window => item affine */
 {
   Affine iaffine;
   ContainerImpl *pc = parent();
   if (pc)
     {
-      const Affine &paffine = pc->affine_from_viewp0rt();
+      const Affine &paffine = pc->affine_from_screen_window();
       const Affine &caffine = pc->child_affine (*this);
       if (paffine.is_identity())
         iaffine = caffine;
@@ -816,9 +816,9 @@ ItemImpl::affine_from_viewp0rt () /* viewp0rt => item affine */
 }
 
 Affine
-ItemImpl::affine_to_viewp0rt () /* item => viewp0rt affine */
+ItemImpl::affine_to_screen_window () /* item => screen_window affine */
 {
-  Affine iaffine = affine_from_viewp0rt();
+  Affine iaffine = affine_from_screen_window();
   if (!iaffine.is_identity())
     iaffine = iaffine.invert();
   return iaffine;
@@ -835,13 +835,13 @@ ItemImpl::process_event (const Event &event) /* item coordinates relative */
 }
 
 bool
-ItemImpl::process_viewp0rt_event (const Event &event) /* viewp0rt coordinates relative */
+ItemImpl::process_screen_window_event (const Event &event) /* screen_window coordinates relative */
 {
   bool handled = false;
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
   if (controller)
     {
-      const Affine &affine = affine_from_viewp0rt();
+      const Affine &affine = affine_from_screen_window();
       if (affine.is_identity ())
         handled = controller->sig_event.emit (event);
       else
@@ -855,9 +855,9 @@ ItemImpl::process_viewp0rt_event (const Event &event) /* viewp0rt coordinates re
 }
 
 bool
-ItemImpl::viewp0rt_point (Point p) /* window coordinates relative */
+ItemImpl::screen_window_point (Point p) /* window coordinates relative */
 {
-  return point (point_from_viewp0rt (p));
+  return point (point_from_screen_window (p));
 }
 
 bool
@@ -1088,7 +1088,7 @@ ItemImpl::expose (const Region &region) /* item coordinates relative */
   WindowImpl *rt = get_window();
   if (!r.empty() && rt && !test_flags (INVALID_CONTENT))
     {
-      const Affine &affine = affine_to_viewp0rt();
+      const Affine &affine = affine_to_screen_window();
       r.affine (affine);
       rt->expose_window_region (r);
     }
@@ -1430,7 +1430,7 @@ ItemImpl::set_allocation (const Allocation &area)
       WindowImpl *rt = get_window();
       if (!r.empty() && rt)
         {
-          const Affine &affine = affine_to_viewp0rt();
+          const Affine &affine = affine_to_screen_window();
           r.affine (affine);
           Rect rc = r.extents();
           rt->expose (rc);
