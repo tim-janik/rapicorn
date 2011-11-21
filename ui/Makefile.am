@@ -81,6 +81,8 @@ librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(strip		\
 	$(RAPICORN_GUI_LIBS) -lm \
 ) # -lfreetype -lfontconfig
 EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES)
+# -- Build OBJECTS alphabetically --
+librapicorn1008_la_OBJECTS := $(sort $(librapicorn1008_la_OBJECTS))
 
 # === Rapicorn IDL ===
 ROPE        = $(srcdir)/../rope
