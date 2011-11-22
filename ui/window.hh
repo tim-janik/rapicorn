@@ -2,13 +2,13 @@
 #ifndef __RAPICORN_WINDOW_HH__
 #define __RAPICORN_WINDOW_HH__
 
-#include <ui/container.hh>
+#include <ui/viewport.hh>
 #include <ui/screenwindow.hh>
 
 namespace Rapicorn {
 
 /* --- Window --- */
-class WindowImpl : public virtual SingleContainerImpl, public virtual WindowIface,
+class WindowImpl : public virtual ViewportImpl, public virtual WindowIface,
                    public virtual EventLoop::Source, public virtual ScreenWindow::EventReceiver {
   friend class  ItemImpl;
   EventLoop            &m_loop;

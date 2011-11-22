@@ -305,7 +305,7 @@ WindowImpl::resize_all (Allocation *new_area)
 void
 WindowImpl::do_invalidate ()
 {
-  SingleContainerImpl::do_invalidate();
+  ViewportImpl::do_invalidate();
   // we just need to make sure to be woken up, since flags are set appropriately already
   m_loop.wakeup();
 }
@@ -824,7 +824,7 @@ WindowImpl::render (Display &display)
   cairo_t *cr = display.create_cairo (background());
   cairo_destroy (cr);
   // paint children
-  SingleContainerImpl::render (display);
+  ViewportImpl::render (display);
   display.pop_clip_rect();
 }
 
@@ -914,7 +914,7 @@ WindowImpl::dispose_item (ItemImpl &item)
 {
   remove_grab_item (item);
   cancel_item_events (item);
-  SingleContainerImpl::dispose_item (item);
+  ViewportImpl::dispose_item (item);
 }
 
 bool
