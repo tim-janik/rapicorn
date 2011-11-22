@@ -9,6 +9,9 @@ namespace Rapicorn {
 
 class ViewportImpl : public virtual SingleContainerImpl {
 protected:
+  Region                m_expose_region;        // FIXME: private
+  virtual void          render          (Display        &display);
+  void                  collapse_expose_region ();
 public:
   explicit              ViewportImpl    ();
   virtual              ~ViewportImpl    ();

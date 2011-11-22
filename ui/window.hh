@@ -15,7 +15,6 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface,
   EventLoop::Source    *m_source;
   Mutex                 m_async_mutex;
   std::list<Event*>     m_async_event_queue;
-  Region                m_expose_region;
   ScreenWindow         *m_screen_window;
   uint                  m_tunable_requisition_counter : 24;
   uint                  m_entered : 1;
@@ -78,9 +77,6 @@ private:
   virtual void          do_invalidate                           ();
   virtual void          beep                                    ();
   /* rendering */
-  virtual void          render                                  (Display                &display);
-  using                 ItemImpl::render;
-  void                  collapse_expose_region                  ();
   virtual void          expose_window_region                    (const Region           &region);   // window item coords
   virtual void          copy_area                               (const Rect             &src,
                                                                  const Point            &dest);
