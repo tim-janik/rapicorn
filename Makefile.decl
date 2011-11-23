@@ -36,9 +36,10 @@ x11test-start:
 	  && for idoffs in `seq 1001 1500` ; do X11TEST_DISPLAY=$$(($$idoffs + $$RANDOM % 500)) \
 	  && test ! -e /tmp/.X$$X11TEST_DISPLAY-lock && break ; done \
 	  || { echo "$(MAKECMDGOALS): out of available X11 Display IDs"; exit 1 ; }; \
-	  Xephyr :$$X11TEST_DISPLAY -displayID $(DISPLAYHASH) -screen 800x600x32 -nolisten tcp \
-	         -auth /dev/null -noreset -retro >$(x11test_log) 2>&1 & X11TEST_PID="$$!" ; } \
-	&& echo "x11test: pid=$$X11TEST_PID display=$$X11TEST_DISPLAY"
+	  Xephyr :$$X11TEST_DISPLAY -displayID $(DISPLAYHASH) -screen 800x600x32 -nolisten tcp -keybd ephyr \
+	         -auth /dev/null -noreset -retro -host-cursor >$(x11test_log) 2>&1 & X11TEST_PID="$$!" \
+	  && { [ -z "$$DISPLAY" ] || { sleep 1; setxkbmap -print | xkbcomp - :$$X11TEST_DISPLAY 2>/dev/null ; }; }; } \
+	&& echo "x11test: pid=$$X11TEST_PID display=:$$X11TEST_DISPLAY"
 x11test-stop:
 	@$(X11TEST_FIND) || { echo "$(MAKECMDGOALS): no x11test running" ; exit 0 ; } \
 	&& kill -SIGTERM $$X11TEST_PID \
