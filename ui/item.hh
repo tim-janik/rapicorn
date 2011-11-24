@@ -210,7 +210,16 @@ public:
 protected:
   Affine                     affine_to_screen_window   ();                    // item => screen_window affine
   Affine                     affine_from_screen_window ();                    // screen_window => item affine
+  // rendering
+  class RenderContext;
+  virtual void               render_item               (RenderContext    &rcontext);
+  virtual void               render                    (RenderContext    &rcontext,
+                                                        const Allocation &area) = 0;
+  const Region&              rendering_region          (RenderContext    &rcontext) const;
+  virtual cairo_t*           cairo_context             (RenderContext    &rcontext,
+                                                        const Allocation &area = Allocation (-1, -1, 0, 0));
 public:
+  void                       render_into               (cairo_t *cr, const Region &region);
   virtual bool               point                     (Point        p);            // item coordinates relative
   Point                      point_to_screen_window    (Point        item_point);   // item coordinates relative
   Point                      point_from_screen_window  (Point        window_point); // screen_window coordinates relative
@@ -231,8 +240,6 @@ public:
   Requisition                requisition        ();                             // effective size requisition
   void                       set_allocation     (const Allocation &area);       // assign new allocation
   const Allocation&          allocation         () const { return m_allocation; } // current allocation
-  /* display */
-  virtual void               render             (Display        &display) = 0;
   /* heritage / appearance */
   StateType             state                   () const;
   Heritage*             heritage                () const { return m_heritage; }

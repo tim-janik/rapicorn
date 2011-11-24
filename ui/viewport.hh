@@ -20,7 +20,7 @@ protected:
   void                  collapse_expose_region  ();
   void                  discard_expose_region   () { m_expose_region.clear(); }
   bool                  exposes_pending         () const { return !m_expose_region.empty(); }
-  virtual void          render                  (Display        &display);
+  virtual void          render_item             (RenderContext &rcontext);
 public:
   void                  expose_child            (const Region &region);
   void                  expose_child            (const Rect   &rect) { expose_child (Region (rect)); }

@@ -199,38 +199,36 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
       m_vadjustment->thaw();
   }
   virtual void
-  render (Display &display)
+  render (RenderContext    &rcontext,
+          const Allocation &area)
   {
     if (!has_drawable_child())
       return;
+    ItemImpl &child = get_child();
     double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
     double yoffset = m_vadjustment ? round (m_vadjustment->flipped_value()) : 0.0;
-    const Allocation area = allocation();
-    ItemImpl &child = get_child();
-    const IRect ica = child.allocation();
-    Display scroll_display;
-    // constrain scroll_display to child allocation
-    scroll_display.push_clip_rect (ica.x, ica.y, ica.width, ica.height);
-    // constrain scroll_display to visible area
-    scroll_display.push_clip_rect (ifloor (xoffset), ifloor (yoffset), iceil (area.width), iceil (area.height));
+    Region what = area; // bits of view to render
     // constrain scroll_display to expose area
-    Rect pr = display.current_rect();
-    scroll_display.push_clip_rect (ifloor (pr.x - area.x + xoffset), ifloor (pr.y - area.y + yoffset), iceil (pr.width), iceil (pr.height));
-    if (!scroll_display.empty())
+    what.intersect (rendering_region (rcontext));
+    // constrain scroll_display to child allocation
+    what.intersect (child.allocation()); // FIXME: broken...
+    // constrain scroll_display to visible area
+    what.intersect (Rect (ifloor (xoffset), ifloor (yoffset), iceil (area.width), iceil (area.height)));
+    // render child area
+    if (!what.empty())
       {
-        // render child
-        child.render (scroll_display);
-        // paint scroll area background
-        cairo_t *cr = display.create_cairo (background());
-        // shift by scroll offset
+        cairo_t *cr = cairo_context (rcontext);
         cairo_translate (cr, area.x -xoffset, area.y -yoffset);
-        // combine onto parent
-        scroll_display.render_backing (cr);
-        cairo_destroy (cr);
+        child.render_into (cr, what);
       }
-    scroll_display.pop_clip_rect();
-    scroll_display.pop_clip_rect();
-    scroll_display.pop_clip_rect();
+  }
+  virtual Affine
+  child_affine (const ItemImpl &item)
+  {
+    const Allocation area = allocation();
+    double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
+    double yoffset = m_vadjustment ? round (m_vadjustment->flipped_value()) : 0.0;
+    return AffineTranslate (-area.x + xoffset, -area.y + yoffset);
   }
   void
   adjustment_changed()
@@ -264,14 +262,6 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
         m_last_xoffset = xoffset;
         m_last_yoffset = yoffset;
       }
-  }
-  virtual Affine
-  child_affine (const ItemImpl &item)
-  {
-    const Allocation area = allocation();
-    double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
-    double yoffset = m_vadjustment ? round (m_vadjustment->flipped_value()) : 0.0;
-    return AffineTranslate (-area.x + xoffset, -area.y + yoffset);
   }
   virtual void
   set_focus_child (ItemImpl *item)

@@ -130,20 +130,18 @@ cairo_surface_t*
 WindowImpl::create_snapshot (const Rect &subarea)
 {
   const Allocation area = allocation();
-  Display display;
-  display.push_clip_rect (area.x, area.y, area.width, area.height);
-  display.push_clip_rect (subarea.x, subarea.y, subarea.width, subarea.height);
-  /* render display */
-  if (!display.empty())
-    render (display);
-  cairo_surface_t *isurface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, subarea.width, subarea.height);
-  /* comose area */
-  cairo_t *cairo = cairo_create (isurface);
-  cairo_translate (cairo, -subarea.x, -subarea.y);
-  display.render_backing (cairo);
-  _cairo_image_surface_vflip (isurface);
-  cairo_destroy (cairo);
-  return isurface;
+  Region region = area;
+  region.intersect (subarea);
+  cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, subarea.width, subarea.height);
+  warn_if_fail (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
+  cairo_surface_set_device_offset (surface, -subarea.x, -subarea.y);
+  cairo_t *cr = cairo_create (surface);
+  warn_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (cr));
+  render_into (cr, region);
+  cairo_destroy (cr);
+  // cairo_surface_destroy (surface);
+  _cairo_image_surface_vflip (surface);
+  return surface;
 }
 
 WindowImpl::WindowImpl() :
@@ -674,41 +672,41 @@ WindowImpl::notify_displayed()
 void
 WindowImpl::draw_now ()
 {
+  Rect area = allocation();
+  return_if_fail (area.x == 0 && area.y == 0);
   if (m_screen_window)
     {
       /* force delivery of any pending exposes */
       expose_now();
       /* render invalidated contents */
-      Region r = allocation();
-      r.intersect (peek_expose_region());
+      Region region = area;
+      region.intersect (peek_expose_region());
       discard_expose_region();
-      std::vector<Rect> rects;
-      r.list_rects (rects);
-      ScreenWindow::State state = m_screen_window->get_state();
-      for (uint i = 0; i < rects.size(); i++)
-        {
-          const IRect &ir = rects[i];
-          Display display;
-          display.push_clip_rect (ir.x, ir.y, ir.width, ir.height);
-          /* render display */
-          if (!display.empty())
-            render (display);
-          /* avoid unnecessary plane transfers for slow remote
-           * displays, for local displays it'd cause resizing lags.
-           */
-          if (!state.local_blitting && has_pending_win_size())
-            {
-              break;
-            }
-          /* blit to screen */
-          m_screen_window->blit_display (display);
-          display.pop_clip_rect();
-        }
+
+      cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (area.width), iceil (area.height));
+      warn_if_fail (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
+      cairo_t *cr = cairo_create (surface);
+      warn_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (cr));
+      render_into (cr, region);
+      m_screen_window->blit_surface (surface, region);
+      cairo_destroy (cr);
+      cairo_surface_destroy (surface);
       if (!has_pending_win_size() && !m_notify_displayed_id)
         m_notify_displayed_id = m_loop.exec_update (slot (*this, &WindowImpl::notify_displayed));
     }
   else
     discard_expose_region(); // nuke stale exposes
+}
+
+void
+WindowImpl::render (RenderContext    &rcontext,
+                    const Allocation &area)
+{
+  // paint background
+  Color col = background();
+  cairo_t *cr = cairo_context (rcontext);
+  cairo_set_source_rgba (cr, col.red1(), col.green1(), col.blue1(), col.alpha1());
+  cairo_paint (cr);
 }
 
 void

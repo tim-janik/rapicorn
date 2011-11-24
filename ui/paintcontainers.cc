@@ -120,7 +120,6 @@ public:
 private:
   void
   render_shade (cairo_t      *cairo,
-                Affine        affine,
                 int           x,
                 int           y,
                 int           width,
@@ -148,10 +147,10 @@ private:
         painter.draw_center_shade_rect (x + width - 1, y, light, x, y + height - 1, dark);
         break;
       case LIGHTING_CENTER:
-        render_shade (cairo, affine, x, y, width / 2, height / 2, LIGHTING_UPPER_RIGHT | dark_flag);
-        render_shade (cairo, affine, x, y + height / 2, width / 2, height / 2, LIGHTING_LOWER_RIGHT | dark_flag);
-        render_shade (cairo, affine, x + width / 2, y + height / 2, width / 2, height / 2, LIGHTING_LOWER_LEFT | dark_flag);
-        render_shade (cairo, affine, x + width / 2, y, width / 2, height / 2, LIGHTING_UPPER_LEFT | dark_flag);
+        render_shade (cairo, x, y, width / 2, height / 2, LIGHTING_UPPER_RIGHT | dark_flag);
+        render_shade (cairo, x, y + height / 2, width / 2, height / 2, LIGHTING_LOWER_RIGHT | dark_flag);
+        render_shade (cairo, x + width / 2, y + height / 2, width / 2, height / 2, LIGHTING_LOWER_LEFT | dark_flag);
+        render_shade (cairo, x + width / 2, y, width / 2, height / 2, LIGHTING_UPPER_LEFT | dark_flag);
         break;
       case LIGHTING_DIFFUSE:
         painter.draw_shaded_rect (x, y, light, x + width - 1, y + height - 1, light);
@@ -161,11 +160,11 @@ private:
       }
   }
 public:
-  void
-  render (Display &display)
+  virtual void
+  render (RenderContext &rcontext, const Allocation &area)
   {
-    cairo_t *cairo = display.create_cairo();
-    IRect ia = allocation();
+    cairo_t *cr = cairo_context (rcontext);
+    IRect ia = area;
     const int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
     bool bimpressed = branch_impressed(), bprelight = branch_prelight();
     /* render background */
@@ -179,29 +178,27 @@ public:
     else
       background_color = normal_background();
     Color background = heritage()->resolve_color (background_color, STATE_NORMAL, COLOR_BACKGROUND);
-    CPainter painter (cairo);
+    CPainter painter (cr);
     if (background)
       painter.draw_filled_rect (x, y, width, height, background);
     /* render lighting (mutually exclusive) */
     if (bimpressed && impressed_lighting())
-      render_shade (cairo, Affine(), x, y, width, height, impressed_lighting());
+      render_shade (cr, x, y, width, height, impressed_lighting());
     else if (insensitive() && insensitive_lighting())
-      render_shade (cairo, Affine(), x, y, width, height, insensitive_lighting());
+      render_shade (cr, x, y, width, height, insensitive_lighting());
     else if (bprelight && prelight_lighting())
-      render_shade (cairo, Affine(), x, y, width, height, prelight_lighting());
+      render_shade (cr, x, y, width, height, prelight_lighting());
     else if (normal_lighting() && !bimpressed && !insensitive() && !bprelight)
-      render_shade (cairo, Affine(), x, y, width, height, normal_lighting());
+      render_shade (cr, x, y, width, height, normal_lighting());
     /* render shade (combinatoric) */
     if (bimpressed && impressed_shade())
-      render_shade (cairo, Affine(), x, y, width, height, impressed_shade());
+      render_shade (cr, x, y, width, height, impressed_shade());
     if (insensitive() && insensitive_shade())
-      render_shade (cairo, Affine(), x, y, width, height, insensitive_shade());
+      render_shade (cr, x, y, width, height, insensitive_shade());
     if (bprelight && prelight_shade())
-      render_shade (cairo, Affine(), x, y, width, height, prelight_shade());
+      render_shade (cr, x, y, width, height, prelight_shade());
     if (!bimpressed && !insensitive() && !bprelight && normal_shade())
-      render_shade (cairo, Affine(), x, y, width, height, normal_shade());
-    cairo_destroy (cairo);
-    SingleContainerImpl::render (display);
+      render_shade (cr, x, y, width, height, normal_shade());
   }
 };
 static const ItemFactory<AmbienceImpl> ambience_factory ("Rapicorn::Factory::Ambience");
@@ -299,10 +296,11 @@ protected:
       }
   }
 public:
-  void
-  render (Display &display)
+  virtual void
+  render (RenderContext    &rcontext,
+          const Allocation &area)
   {
-    IRect ia = allocation();
+    IRect ia = area;
     int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
     int thickness = is_tight_focus() ? 1 : 2;
     if (width >= thickness && height >= thickness)
@@ -355,7 +353,7 @@ public:
         vector<double> dashes;
         dashes.push_back (3);
         dashes.push_back (2);
-        cairo_t *cr = display.create_cairo ();
+        cairo_t *cr = cairo_context (rcontext);
         CPainter painter (cr);
         if (outer_upper_left || inner_upper_left || inner_lower_right || outer_lower_right)
           painter.draw_shadow (x, y, width, height, outer_upper_left, inner_upper_left, inner_lower_right, outer_lower_right);
@@ -363,9 +361,7 @@ public:
           painter.draw_border (x, y, width, height, border1, dashes);
         if (border2)
           painter.draw_border (x + 1, y + 1, width - 2, height - 2, border2, dashes);
-        cairo_destroy (cr);
       }
-    SingleContainerImpl::render (display);
   }
 };
 static const ItemFactory<FrameImpl> frame_factory ("Rapicorn::Factory::Frame");

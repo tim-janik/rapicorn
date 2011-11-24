@@ -58,16 +58,12 @@ ViewportImpl::allocate_size (const Allocation &area)
 }
 
 void
-ViewportImpl::render (Display &display)
+ViewportImpl::render_item (RenderContext &rcontext)
 {
-  const IRect ia = allocation();
-  display.push_clip_rect (ia.x, ia.y, ia.width, ia.height);
-  // paint background
-  cairo_t *cr = display.create_cairo (background());
-  cairo_destroy (cr);
-  // paint children
-  SingleContainerImpl::render (display);
-  display.pop_clip_rect();
+  // render self & children
+  SingleContainerImpl::render_item (rcontext);
+  // compose
+  // ?
 }
 
 void

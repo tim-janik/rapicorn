@@ -80,16 +80,15 @@ protected:
       tune_requisition (-1, area.width);
   }
   virtual void
-  render (Display &display)
+  render (RenderContext &rcontext, const Allocation &area)
   {
-    IRect ia = allocation();
+    IRect ia = area;
     int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
     if (width >= 2 && height >= 2)
       {
-        cairo_t *cairo = display.create_cairo();
-        CPainter painter (cairo);
+        cairo_t *cr = cairo_context (rcontext);
+        CPainter painter (cr);
         painter.draw_dir_arrow (x, y, width, height, foreground(), m_dir);
-        cairo_destroy (cairo);
       }
   }
 };
@@ -164,10 +163,10 @@ public:
   size_allocate (Allocation area, bool changed)
   {}
   virtual void
-  render (Display &display)
+  render (RenderContext &rcontext, const Allocation &area)
   {
     int ythick = 1, xthick = 1, n_hdots = m_n_hdots, n_vdots = m_n_vdots;
-    IRect ia = allocation();
+    IRect ia = area;
     int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
     int rq_width = m_n_hdots * (xthick + xthick) + MAX (n_hdots - 1, 0) * xthick;
     int rq_height = m_n_vdots * (ythick + ythick) + MAX (n_vdots - 1, 0) * ythick;
@@ -197,8 +196,8 @@ public:
             n_vdots = 1 + h / (3 * ythick);
           }
         Color color = 0x80000000;
-        cairo_t *cairo = display.create_cairo();
-        CPainter rp (cairo);
+        cairo_t *cr = cairo_context (rcontext);
+        CPainter rp (cr);
         for (int j = 0; j < n_vdots; j++)
           {
             int xtmp = 0;
@@ -210,7 +209,6 @@ public:
               }
             y += 3 * ythick;
           }
-        cairo_destroy (cairo);
       }
   }
 };
@@ -250,11 +248,10 @@ DrawableImpl::draw_rect (const PixelRectImpl &pixrect)
 }
 
 void
-DrawableImpl::render (Display &display)
+DrawableImpl::render (RenderContext &rcontext, const Allocation &area)
 {
   const uint size = 10;
-  Allocation area = allocation();
-  cairo_t *cr = display.create_cairo();
+  cairo_t *cr = cairo_context (rcontext);
   // checkerboard pattern
   if (true)
     {
@@ -293,8 +290,6 @@ DrawableImpl::render (Display &display)
       cairo_paint (cr);
       cairo_surface_destroy (surface);
     }
-  // clenaup
-  cairo_destroy (cr);
 }
 
 static const ItemFactory<DrawableImpl> drawable_factory ("Rapicorn::Factory::Drawable");

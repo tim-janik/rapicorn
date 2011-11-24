@@ -127,6 +127,7 @@ struct ScreenWindowGtk : public virtual ScreenWindow {
   virtual bool          visible                 (void);
   virtual bool          viewable                (void);
   virtual void          hide                    (void);
+  virtual void          blit_surface            (cairo_surface_t *surface, Rapicorn::Region region);
   virtual void          blit_display            (Rapicorn::Display &display);
   virtual void          create_display_backing  (Rapicorn::Display &display);
   virtual void          copy_area               (double          src_x,
@@ -352,6 +353,57 @@ ScreenWindowGtk::create_display_backing (Rapicorn::Display &display)
   display.set_backing (cr);
   cairo_surface_destroy (bsurface);
   cairo_destroy (cr);
+}
+
+void
+ScreenWindowGtk::blit_surface (cairo_surface_t *surface, Rapicorn::Region region)
+{
+  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
+  if (!m_screen_window || !GTK_WIDGET_DRAWABLE (m_widget))
+    return;
+  return_if_fail (CAIRO_STATUS_SUCCESS == cairo_surface_status (surface));
+  GdkVisual *gvisual = gdk_drawable_get_visual (m_widget->window);
+  int gwidth, gheight;
+  gdk_drawable_get_size (m_widget->window, &gwidth, &gheight);
+  cairo_surface_t *xsurface = cairo_xlib_surface_create (GDK_WINDOW_XDISPLAY (m_widget->window),
+                                                         GDK_WINDOW_XID (m_widget->window),
+                                                         GDK_VISUAL_XVISUAL (gvisual),
+                                                         gwidth, gheight);
+  return_if_fail (xsurface);
+  CHECK_CAIRO_STATUS (cairo_surface_status (xsurface));
+  return_if_fail (cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
+  cairo_xlib_surface_set_size (xsurface, gwidth, gheight);
+  return_if_fail (cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
+
+  cairo_t *xcr = cairo_create (xsurface);
+  return_if_fail (xcr);
+  return_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
+  cairo_scale (xcr, 1, -1);
+  cairo_translate (xcr, 0, -gheight);
+
+  cairo_save (xcr);
+  vector<Rect> rects;
+  region.list_rects (rects);
+  for (size_t i = 0; i < rects.size(); i++)
+    cairo_rectangle (xcr, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+  cairo_clip (xcr);
+  cairo_set_source_surface (xcr, surface, 0, 0);
+  cairo_set_operator (xcr, CAIRO_OPERATOR_OVER);
+  cairo_paint_with_alpha (xcr, 1);
+  cairo_restore (xcr);
+
+  assert (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
+  gdk_flush();
+  if (xcr)
+    {
+      cairo_destroy (xcr);
+      xcr = NULL;
+    }
+  if (xsurface)
+    {
+      cairo_surface_destroy (xsurface);
+      xsurface = NULL;
+    }
 }
 
 void

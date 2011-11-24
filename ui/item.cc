@@ -1455,4 +1455,95 @@ ItemImpl::set_allocation (const Allocation &area)
     expose();
 }
 
+// == rendering ==
+class ItemImpl::RenderContext {
+  friend class ItemImpl;
+  vector<cairo_surface_t*> surfaces;
+  Region                   render_area;
+  vector<cairo_t*>         cairos;
+public:
+  /*dtor*/     ~RenderContext();
+  const Region& region() const { return render_area; }
+};
+
+void
+ItemImpl::render_into (cairo_t *cr, const Region &region)
+{
+  RenderContext rcontext;
+  rcontext.render_area = allocation();
+  rcontext.render_area.intersect (region);
+  if (!rcontext.render_area.empty())
+    {
+      render_item (rcontext);
+      cairo_save (cr);
+      vector<Rect> rects;
+      rcontext.render_area.list_rects (rects);
+      for (size_t i = 0; i < rects.size(); i++)
+        cairo_rectangle (cr, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+      cairo_clip (cr);
+      for (size_t i = 0; i < rcontext.surfaces.size(); i++)
+        {
+          cairo_set_source_surface (cr, rcontext.surfaces[i], 0, 0);
+          cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+          cairo_paint_with_alpha (cr, 1.0);
+        }
+      cairo_restore (cr);
+    }
+}
+
+void
+ItemImpl::render_item (RenderContext &rcontext)
+{
+  size_t n_cairos = rcontext.cairos.size();
+  render (rcontext, allocation());
+  while (rcontext.cairos.size() > n_cairos)
+    {
+      cairo_destroy (rcontext.cairos.back());
+      rcontext.cairos.pop_back();
+    }
+}
+
+void
+ItemImpl::render (RenderContext    &rcontext,
+                  const Allocation &area)
+{}
+
+const Region&
+ItemImpl::rendering_region (RenderContext &rcontext) const
+{
+  return rcontext.render_area;
+}
+
+cairo_t*
+ItemImpl::cairo_context (RenderContext  &rcontext,
+                         const Allocation &area)
+{
+  Rect rect = area;
+  if (area == Allocation (-1, -1, 0, 0))
+    rect = allocation();
+  return_val_if_fail (rect.width > 0 && rect.height > 0, NULL);
+  cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (rect.width), iceil (rect.height));
+  warn_if_fail (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
+  cairo_surface_set_device_offset (surface, -rect.x, -rect.y);
+  rcontext.surfaces.push_back (surface);
+  cairo_t *cr = cairo_create (surface);
+  rcontext.cairos.push_back (cr);
+  return cr;
+}
+
+ItemImpl::RenderContext::~RenderContext()
+{
+  warn_if_fail (cairos.size() == 0);
+  while (!cairos.empty())
+    {
+      cairo_destroy (cairos.back());
+      cairos.pop_back();
+    }
+  while (!surfaces.empty())
+    {
+      cairo_surface_destroy (surfaces.back());
+      surfaces.pop_back();
+    }
+}
+
 } // Rapicorn

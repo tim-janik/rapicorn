@@ -138,14 +138,14 @@ protected:
   }
 public:
   virtual void
-  render (Display &display)
+  render (RenderContext    &rcontext,
+          const Allocation &area)
   {
     if (m_pixmap)
       {
         int ix = iround (allocation().x + m_xoffset), iy = iround (allocation().y + m_yoffset);
         int ih = m_pixmap->height();
-        display.push_clip_rect (ix, iy, m_pixmap->width(), ih);
-        cairo_t *cr = display.create_cairo();
+        cairo_t *cr = cairo_context (rcontext, Rect (ix, iy, m_pixmap->width(), ih));
         cairo_surface_t *isurface = cairo_surface_from_pixmap (*m_pixmap);
         cairo_set_source_surface (cr, isurface, 0, 0); // (ix,iy) are set in the matrix below
         cairo_matrix_t matrix;
@@ -155,8 +155,6 @@ public:
         cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
         cairo_paint (cr);
         cairo_surface_destroy (isurface);
-        cairo_destroy (cr);
-        display.pop_clip_rect();
       }
   }
 };

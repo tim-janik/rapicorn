@@ -52,7 +52,7 @@ public:
                                          std::vector<ItemImpl*>     &stack);
   void    screen_window_point_children  (Point                   p, /* screen_window coordinates relative */
                                          std::vector<ItemImpl*>     &stack);
-  virtual void          render          (Display                &display);
+  virtual void          render_item     (RenderContext          &rcontext);
   void                  debug_tree      (String indent = String());
   // ContainerIface
   virtual ItemIface*    create_child    (const std::string      &item_identifier,
@@ -65,6 +65,7 @@ class SingleContainerImpl : public virtual ContainerImpl {
 protected:
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area, bool changed);
+  virtual void          render                  (RenderContext&, const Allocation&) {}
   ItemImpl&             get_child               () { RAPICORN_CHECK (child_item != NULL); return *child_item; }
   virtual void          pre_finalize            ();
   virtual              ~SingleContainerImpl     ();
@@ -86,6 +87,7 @@ class MultiContainerImpl : public virtual ContainerImpl {
 protected:
   virtual void          pre_finalize            ();
   virtual              ~MultiContainerImpl      ();
+  virtual void          render                  (RenderContext&, const Allocation&) {}
   virtual ChildWalker   local_children          () const { return value_walker (items); }
   virtual bool          has_children            () { return items.size() > 0; }
   virtual void          add_child               (ItemImpl   &item);
