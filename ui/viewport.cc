@@ -97,16 +97,19 @@ ViewportImpl::expose_child (const Region &region)
 void
 ViewportImpl::collapse_expose_region ()
 {
-  /* check for excess expose fragment scenarios */
+  // check for excess expose fragment scenarios
   uint n_erects = m_expose_region.count_rects();
-  if (n_erects > 999)           /* workable limit, considering O(n^2) collision complexity */
+  /* considering O(n^2) collision computation complexity, but also focus frame
+   * exposures which easily consist of 4+ fragments, a hundred rectangles turn
+   * out to be an emperically suitable threshold.
+   */
+  if (n_erects > 99)
     {
       /* aparently the expose fragments we're combining are too small,
        * so we can end up with spending too much time on expose rectangle
-       * compression (much more than needed for rendering).
+       * compression (more time than needed for actual rendering).
        * as a workaround, we simply force everything into a single expose
        * rectangle which is good enough to avoid worst case explosion.
-       * note that this is only triggered in seldom pathological cases.
        */
       m_expose_region.add (m_expose_region.extents());
       // printerr ("collapsing due to too many expose rectangles: %u -> %u\n", n_erects, m_expose_region.count_rects());
