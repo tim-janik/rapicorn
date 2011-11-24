@@ -1917,6 +1917,12 @@ _rapicorn_region_region_in (const RapicornRegion      *region,
 }
 
 int
+_rapicorn_region_get_rect_count (const RapicornRegion *region)
+{
+  return REGION_NUM_RECTS (region);
+}
+
+int
 _rapicorn_region_get_rects (const RapicornRegion *region,
                             int                   n_rects,
                             RapicornRegionBox    *rects)

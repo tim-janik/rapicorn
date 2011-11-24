@@ -178,8 +178,7 @@ Region::list_rects (std::vector<Rect> &rects) const
 uint
 Region::count_rects () const
 {
-  uint n = _rapicorn_region_get_rects (REGION (this), 0, NULL);
-  return n;
+  return _rapicorn_region_get_rect_count (REGION (this));
 }
 
 void

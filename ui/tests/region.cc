@@ -28,21 +28,21 @@ static void
 test_region_basics (void)
 {
   Region r, z;
-  TASSERT (r.empty());
-  TASSERT (z.empty());
+  TASSERT (r.empty());          TASSERT (r.empty() == !r.count_rects());
+  TASSERT (z.empty());          TASSERT (z.empty() == !z.count_rects());
   TASSERT (r.equal (r));
   TASSERT (r.equal (z));
   r.add (Rect (Point (-1, -1), Point (1, 1)));
-  TASSERT (!r.empty());
-  TASSERT (z.empty());
+  TASSERT (!r.empty());         TASSERT (r.empty() == !r.count_rects());
+  TASSERT (z.empty());          TASSERT (z.empty() == !z.count_rects());
   TASSERT (!r.equal (z));
   r.swap (z);
-  TASSERT (r.empty());
-  TASSERT (!z.empty());
+  TASSERT (r.empty());          TASSERT (r.empty() == !r.count_rects());
+  TASSERT (!z.empty());         TASSERT (z.empty() == !z.count_rects());
   TASSERT (!r.equal (z));
   z.clear();
-  TASSERT (r.empty());
-  TASSERT (z.empty());
+  TASSERT (r.empty());          TASSERT (r.empty() == !r.count_rects());
+  TASSERT (z.empty());          TASSERT (z.empty() == !z.count_rects());
   TASSERT (r.equal (z));
 }
 REGISTER_UITHREAD_TEST ("Region/region basics", test_region_basics);
@@ -52,10 +52,10 @@ test_region_rect1 (void)
 {
   Region r;
   r.clear();
-  TASSERT (r.empty());
+  TASSERT (r.empty());          TASSERT (r.empty() == !r.count_rects());
   TCMP (r.contains (Point (0, 0)), ==, false);
   r.add (Rect (Point (3, 3), Point (5, 5)));
-  TASSERT (!r.empty());
+  TASSERT (!r.empty());         TASSERT (r.empty() == !r.count_rects());
   TCMP (r.contains (2, 2), ==, false);
   TASSERT (r.contains (3, 3));
   TASSERT (r.contains (4, 4));
@@ -72,7 +72,7 @@ test_region_rect1 (void)
   Region z (r);
   TASSERT (r.equal (z));
   r.exor (r);
-  TASSERT (r.empty());
+  TASSERT (r.empty());          TASSERT (r.empty() == !r.count_rects());
   TASSERT (!r.equal (z));
   z.clear();
   TASSERT (r.equal (z));
@@ -100,8 +100,8 @@ test_region2 (void)
     TCMP (b, <, a);
   a.clear();
   b.clear();
-  TASSERT (a.empty());
-  TASSERT (b.empty());
+  TASSERT (a.empty());          TASSERT (a.empty() == !a.count_rects());
+  TASSERT (b.empty());          TASSERT (b.empty() == !b.count_rects());
   TCMP (a.equal (b), ==, true);
   TASSERT ((a != b) == false);
   TASSERT ((a == b) == true);
@@ -139,11 +139,11 @@ test_region2_ops (void)
   a.intersect (a);
   TCMP (a, ==, sa);
   a.exor (a);
-  TASSERT (a.empty());
+  TASSERT (a.empty());          TASSERT (a.empty() == !a.count_rects());
   a.exor (b);
   TCMP (a, ==, b);
   b.exor (a);
-  TASSERT (b.empty());
+  TASSERT (b.empty());          TASSERT (b.empty() == !b.count_rects());
   TCMP (b, !=, sb);
   b.exor (a);
   TCMP (b, ==, sb);
@@ -167,14 +167,14 @@ static void
 test_region_fract (void)
 {
   Region r;
-  TASSERT (r.empty());
-  const double epsilon = r.epsilon();   /* allow errors within +-epsilon */
-  TCMP (epsilon, <=, 0.5);             /* assert at least pxiel resolution */
+  TASSERT (r.empty());                  TASSERT (r.empty() == !r.count_rects());
+  const double epsilon = r.epsilon();   // allow errors within +-epsilon
+  TCMP (epsilon, <=, 0.5);              // assert at least pxiel resolution */
   r.clear();
-  TASSERT (r.empty());
+  TASSERT (r.empty());                  TASSERT (r.empty() == !r.count_rects());
   TCMP (r.contains (Point (0, 0)), ==, false);
   r.add (Rect (Point (0.1, 0.2), Point (3.4, 4.5)));
-  TASSERT (!r.empty());
+  TASSERT (!r.empty());                 TASSERT (r.empty() == !r.count_rects());
   TASSERT (r.contains (2, 2));
   TCMP (r.contains (0, 0), ==, false);
   TASSERT (r.contains (1, 1));
@@ -264,7 +264,7 @@ test_region_cmp ()
         TCMP (c.contains (r1), ==, false);
       if (!r2.empty())
         TCMP (c.contains (r2), ==, false);
-      TASSERT (c.empty());
+      TASSERT (c.empty());              TASSERT (c.empty() == !c.count_rects());
     }
 }
 REGISTER_UITHREAD_TEST ("Region/random-cmp", test_region_cmp);
