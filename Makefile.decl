@@ -28,7 +28,7 @@ X11TEST_FIND  = \
     X11TEST_PID=$${F/:*/} ; X11TEST_DISPLAY=$${F/*:/} ; \
     xset -display :$$X11TEST_DISPLAY q >/dev/null 2>&1 && break ; done
 x11test-find:
-	@$(X11TEST_FIND) || { echo "$(MAKECMDGOALS): no X11 test server, issue: make x11start" ; exit 1 ; } \
+	@$(X11TEST_FIND) || { echo "$(MAKECMDGOALS): no X11 test server, issue: make x11test-start" ; exit 1 ; } \
 	&& echo "x11test: pid=$$X11TEST_PID display=$$X11TEST_DISPLAY"
 x11test-start:
 	@$(X11TEST_FIND) || { \
