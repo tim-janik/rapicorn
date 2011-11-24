@@ -584,15 +584,7 @@ WindowImpl::dispatch_win_draw_event (const Event &event)
   if (devent)
     {
       for (uint i = 0; i < devent->rectangles.size(); i++)
-        {
-          queue_expose_rect (devent->rectangles[i]);
-          if (0)
-            DEBUG ("win-draw: %f %f (at: %f %f)", devent->rectangles[i].width, devent->rectangles[i].height,
-                   devent->rectangles[i].x, devent->rectangles[i].y);
-          /* check for excess expose fragment scenarios */
-          if (i % 11 == 0)              /* infrequent checks are good enough */
-            collapse_expose_region();   /* collapse pathological expose regions */
-        }
+        queue_expose_rect (devent->rectangles[i]);
       handled = true;
     }
   return handled;
