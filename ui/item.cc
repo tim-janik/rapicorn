@@ -100,8 +100,7 @@ ItemImpl::propagate_state (bool notify_changed)
 }
 
 void
-ItemImpl::set_flag (uint32 flag,
-                bool   on)
+ItemImpl::set_flag (uint32 flag, bool on)
 {
   assert ((flag & (flag - 1)) == 0); /* single bit check */
   const uint propagate_flag_mask = (SENSITIVE | PARENT_SENSITIVE | PRELIGHT | IMPRESSED | HAS_DEFAULT |
@@ -1060,51 +1059,25 @@ ItemImpl::tune_requisition (double new_width,
 }
 
 void
-ItemImpl::copy_area (const Rect  &rect,
-                 const Point &dest)
+ItemImpl::expose_internal (const Region &region)
 {
-  WindowImpl *ritem = get_window();
-  if (ritem)
+  if (!region.empty())
     {
-      Allocation a = allocation();
-      Rect srect (Point (a.x, a.y), a.width, a.height);
-      Rect drect (Point (a.x, a.y), a.width, a.height);
-      /* clip src and dest rectangles to allocation */
-      srect.intersect (rect);
-      drect.intersect (Rect (dest, rect.width, rect.height));
-      /* offset src rectangle by the amount the dest rectangle was clipped */
-      Rect src (Point (srect.x + drect.x - dest.x, srect.y + drect.y - dest.y),
-                min (srect.width, drect.width),
-                min (srect.height, drect.height));
-      /* the actual copy */
-      if (!src.empty())
-        ritem->copy_area (src, drect.lower_left());
+      // queue expose region on nextmost viewport
+      ViewportImpl *vp = parent() ? parent()->get_viewport() : get_viewport();
+      if (vp)
+        vp->expose_child_region (region);
     }
 }
 
 void
-ItemImpl::expose ()
+ItemImpl::expose (const Region &region) // item relative
 {
-  expose (allocation());
-}
-
-void
-ItemImpl::expose (const Rect &rect) /* item coordinates relative */
-{
-  expose (Region (rect));
-}
-
-void
-ItemImpl::expose (const Region &region) /* item coordinates relative */
-{
-  Region r (allocation());
-  r.intersect (region);
-  ViewportImpl *vp = get_viewport();
-  if (!r.empty() && vp && !test_flags (INVALID_CONTENT))
+  if (drawable() && !test_flags (INVALID_CONTENT))
     {
-      const Affine &affine = affine_to_screen_window();
-      r.affine (affine);
-      vp->expose_child (r);
+      Region r (allocation());
+      r.intersect (region);
+      expose_internal (r);
     }
 }
 
@@ -1425,7 +1398,7 @@ ItemImpl::set_allocation (const Allocation &area)
   sarea.width  = CLAMP (sarea.width,  0, smax);
   sarea.height = CLAMP (sarea.height, 0, smax);
   /* remember old area */
-  Allocation oa = allocation();
+  const Allocation oa = allocation();
   /* always reallocate to re-layout children */
   change_flags_silently (INVALID_ALLOCATION, false); /* skip notification */
   if (!allocatable())
@@ -1435,20 +1408,13 @@ ItemImpl::set_allocation (const Allocation &area)
   size_allocate (m_allocation, changed);
   Allocation a = allocation();
   bool need_expose = oa != a || test_flags (INVALID_CONTENT);
-  change_flags_silently (INVALID_CONTENT, false); /* skip notification */
-  /* expose old area */
+  change_flags_silently (INVALID_CONTENT, false); // skip notification
+  // expose old area
   if (need_expose)
     {
-      /* expose unclipped */
-      Region r (oa);
-      WindowImpl *rt = get_window();
-      if (!r.empty() && rt)
-        {
-          const Affine &affine = affine_to_screen_window();
-          r.affine (affine);
-          Rect rc = r.extents();
-          rt->expose (rc);
-        }
+      // expose unclipped
+      Region region (oa);
+      expose_internal (region);
     }
   /* expose new area */
   if (need_expose)
@@ -1495,7 +1461,9 @@ void
 ItemImpl::render_item (RenderContext &rcontext)
 {
   size_t n_cairos = rcontext.cairos.size();
-  render (rcontext, allocation());
+  Rect area = allocation();
+  area.intersect (rendering_region (rcontext).extents());
+  render (rcontext, area);
   while (rcontext.cairos.size() > n_cairos)
     {
       cairo_destroy (rcontext.cairos.back());
@@ -1504,8 +1472,7 @@ ItemImpl::render_item (RenderContext &rcontext)
 }
 
 void
-ItemImpl::render (RenderContext    &rcontext,
-                  const Allocation &area)
+ItemImpl::render (RenderContext &rcontext, const Rect &rect)
 {}
 
 const Region&

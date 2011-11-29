@@ -80,13 +80,13 @@ protected:
       tune_requisition (-1, area.width);
   }
   virtual void
-  render (RenderContext &rcontext, const Allocation &area)
+  render (RenderContext &rcontext, const Rect &rect)
   {
-    IRect ia = area;
+    IRect ia = allocation();
     int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
     if (width >= 2 && height >= 2)
       {
-        cairo_t *cr = cairo_context (rcontext);
+        cairo_t *cr = cairo_context (rcontext, rect);
         CPainter painter (cr);
         painter.draw_dir_arrow (x, y, width, height, foreground(), m_dir);
       }
@@ -163,10 +163,10 @@ public:
   size_allocate (Allocation area, bool changed)
   {}
   virtual void
-  render (RenderContext &rcontext, const Allocation &area)
+  render (RenderContext &rcontext, const Rect &rect)
   {
     int ythick = 1, xthick = 1, n_hdots = m_n_hdots, n_vdots = m_n_vdots;
-    IRect ia = area;
+    IRect ia = allocation();
     int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
     int rq_width = m_n_hdots * (xthick + xthick) + MAX (n_hdots - 1, 0) * xthick;
     int rq_height = m_n_vdots * (ythick + ythick) + MAX (n_vdots - 1, 0) * ythick;
@@ -196,7 +196,7 @@ public:
             n_vdots = 1 + h / (3 * ythick);
           }
         Color color = 0x80000000;
-        cairo_t *cr = cairo_context (rcontext);
+        cairo_t *cr = cairo_context (rcontext, rect);
         CPainter rp (cr);
         for (int j = 0; j < n_vdots; j++)
           {
@@ -248,10 +248,11 @@ DrawableImpl::draw_rect (const PixelRectImpl &pixrect)
 }
 
 void
-DrawableImpl::render (RenderContext &rcontext, const Allocation &area)
+DrawableImpl::render (RenderContext &rcontext, const Rect &rect)
 {
   const uint size = 10;
-  cairo_t *cr = cairo_context (rcontext);
+  const Allocation &area = allocation();
+  cairo_t *cr = cairo_context (rcontext, rect);
   // checkerboard pattern
   if (true)
     {
@@ -271,7 +272,6 @@ DrawableImpl::render (RenderContext &rcontext, const Allocation &area)
       cairo_surface_destroy (ps);
       cairo_pattern_set_extend (pat, CAIRO_EXTEND_REPEAT);
       // render pattern
-      Rect area = allocation();
       cairo_rectangle (cr, area.x, area.y, area.width, area.height);
       cairo_clip (cr);
       cairo_translate (cr, area.x, area.y + area.height);

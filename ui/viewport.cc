@@ -5,7 +5,7 @@
 namespace Rapicorn {
 
 ViewportImpl::ViewportImpl () :
-  m_tunable_requisition_counter (0)
+  m_tunable_requisition_counter (0), m_xoffset (0), m_yoffset (0)
 {}
 
 ViewportImpl::~ViewportImpl ()
@@ -20,10 +20,9 @@ ViewportImpl::negotiate_size (const Allocation *carea)
   if (have_allocation)
     {
       area = *carea;
+      area.x = area.y = 0;
       change_flags_silently (INVALID_ALLOCATION, true);
     }
-  else // !have_allocation
-    area = allocation(); // keep x,y
   /* this is the core of the resizing loop. via Item.tune_requisition(), we
    * allow items to adjust the requisition from within size_allocate().
    * whether the tuned requisition is honored at all, depends on
@@ -43,6 +42,7 @@ ViewportImpl::negotiate_size (const Allocation *carea)
           area.width = creq.width;
           area.height = creq.height;
         }
+      // a viewport child is allocated relative to the Viewport origin, normally at 0,0
       set_allocation (area); // unsets INVALID_ALLOCATION, may re-::invalidate_size()
       if (m_tunable_requisition_counter)
         m_tunable_requisition_counter--;
@@ -58,36 +58,61 @@ ViewportImpl::allocate_size (const Allocation &area)
 }
 
 void
-ViewportImpl::render_item (RenderContext &rcontext)
+ViewportImpl::scroll_offsets (int deltax, int deltay)
 {
-  // render self & children
-  SingleContainerImpl::render_item (rcontext);
-  // compose
-  // ?
+  if (deltax != m_xoffset || deltay != m_yoffset)
+    {
+      m_xoffset = deltax;
+      m_yoffset = deltay;
+      expose();
+      // FIXME: need to issue 0-distance move here
+    }
 }
 
 void
-ViewportImpl::queue_expose_region (const Region &region)
+ViewportImpl::render_item (RenderContext &rcontext)
+{
+  // prevent recursive rendering of children
+  ItemImpl::render_item (rcontext);
+  // viewport children are rendered in render()
+}
+
+void
+ViewportImpl::render (RenderContext &rcontext, const Rect &rect)
+{
+  if (!has_drawable_child())
+    return;
+  const Allocation &area = allocation();
+  ItemImpl &child = get_child();
+  const int xoffset = m_xoffset, yoffset = m_yoffset;
+  // constrain rendering within allocation
+  Region what = rect;
+  // constrain to child allocation (child is allocated relative to Viewport origin)
+  const Allocation carea = child.allocation();
+  what.intersect (Rect (area.x + carea.x, area.y + carea.y, carea.width, carea.height));
+  // constrain to exposed region
+  what.intersect (rendering_region (rcontext));
+  // viewport rendering rectangle
+  const Allocation rarea = what.extents();
+  // translate area into child space, shifting by scroll offsets
+  what.translate (xoffset - area.x, yoffset - area.y);
+  // render child stack
+  if (!what.empty())
+    {
+      cairo_t *cr = cairo_context (rcontext, rarea);
+      cairo_translate (cr, area.x - xoffset, area.y - yoffset);
+      child.render_into (cr, what);
+    }
+}
+
+void
+ViewportImpl::expose_child_region (const Region &region)
 {
   if (!region.empty())
     {
       m_expose_region.add (region);
       collapse_expose_region();
     }
-}
-
-void
-ViewportImpl::queue_expose_rect (const Rect &rect)
-{
-  m_expose_region.add (rect);
-  collapse_expose_region();
-}
-
-void
-ViewportImpl::expose_child (const Region &region)
-{
-  // FIXME: need affine handling here?
-  queue_expose_region (region);
 }
 
 void
@@ -108,7 +133,7 @@ ViewportImpl::collapse_expose_region ()
        * rectangle which is good enough to avoid worst case explosion.
        */
       m_expose_region.add (m_expose_region.extents());
-      // printerr ("collapsing due to too many expose rectangles: %u -> %u\n", n_erects, m_expose_region.count_rects());
+      // printerr ("ViewportImpl: collapsing expose rectangles due to overflow: %u -> %u\n", n_erects, m_expose_region.count_rects());
     }
 }
 

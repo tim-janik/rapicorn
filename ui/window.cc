@@ -225,7 +225,7 @@ WindowImpl::resize_screen_window()
       m_config.request_height = asize.height;
       m_pending_win_size = true;
       m_screen_window->enqueue_win_draws();
-      discard_expose_region();
+      discard_expose_region(); // we'll get a new WIN_DRAW event
       m_screen_window->set_config (m_config, true);
       return;
     }
@@ -581,8 +581,10 @@ WindowImpl::dispatch_win_draw_event (const Event &event)
   const EventWinDraw *devent = dynamic_cast<const EventWinDraw*> (&event);
   if (devent)
     {
+      Region r;
       for (uint i = 0; i < devent->rectangles.size(); i++)
-        queue_expose_rect (devent->rectangles[i]);
+        r.add (devent->rectangles[i]);
+      expose (r);
       handled = true;
     }
   return handled;
@@ -600,30 +602,6 @@ WindowImpl::dispatch_win_delete_event (const Event &event)
       handled = true;
     }
   return handled;
-}
-
-void
-WindowImpl::copy_area (const Rect  &src,
-                       const Point &dest)
-{
-  /* need to copy pixel regions and expose regions */
-  if (m_screen_window && src.width && src.height)
-    {
-      /* force delivery of any pending exposes */
-      expose_now();
-      /* intersect copied expose region */
-      Region exr = peek_expose_region();
-      exr.intersect (Region (src));
-      /* pixel-copy area */
-      m_screen_window->copy_area (src.x, src.y, // may queue new exposes
-                                  src.width, src.height,
-                                  dest.x, dest.y);
-      /* shift expose region */
-      exr.affine (AffineTranslate (Point (dest.x - src.x, dest.y - src.y)));
-      /* expose copied area */
-      queue_expose_region (exr);
-      // FIXME: synthesize 0-dist pointer movement from idle handler or in event queue
-    }
 }
 
 void
@@ -676,9 +654,9 @@ WindowImpl::draw_now ()
   return_if_fail (area.x == 0 && area.y == 0);
   if (m_screen_window)
     {
-      /* force delivery of any pending exposes */
+      // force delivery of any pending exposes
       expose_now();
-      /* render invalidated contents */
+      // render invalidated contents
       Region region = area;
       region.intersect (peek_expose_region());
       discard_expose_region();
@@ -699,14 +677,19 @@ WindowImpl::draw_now ()
 }
 
 void
-WindowImpl::render (RenderContext    &rcontext,
-                    const Allocation &area)
+WindowImpl::render (RenderContext &rcontext, const Rect &rect)
 {
   // paint background
   Color col = background();
-  cairo_t *cr = cairo_context (rcontext);
+  cairo_t *cr = cairo_context (rcontext, rect);
   cairo_set_source_rgba (cr, col.red1(), col.green1(), col.blue1(), col.alpha1());
+  vector<Rect> rects;
+  rendering_region (rcontext).list_rects (rects);
+  for (size_t i = 0; i < rects.size(); i++)
+    cairo_rectangle (cr, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+  cairo_clip (cr);
   cairo_paint (cr);
+  ViewportImpl::render (rcontext, rect);
 }
 
 void

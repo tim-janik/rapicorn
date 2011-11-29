@@ -138,14 +138,16 @@ protected:
   }
 public:
   virtual void
-  render (RenderContext    &rcontext,
-          const Allocation &area)
+  render (RenderContext &rcontext, const Rect &rect)
   {
     if (m_pixmap)
       {
-        int ix = iround (allocation().x + m_xoffset), iy = iround (allocation().y + m_yoffset);
+        const Allocation &area = allocation();
+        int ix = iround (area.x + m_xoffset), iy = iround (area.y + m_yoffset);
         int ih = m_pixmap->height();
-        cairo_t *cr = cairo_context (rcontext, Rect (ix, iy, m_pixmap->width(), ih));
+        Rect erect = Rect (ix, iy, m_pixmap->width(), ih);
+        erect.intersect (rect);
+        cairo_t *cr = cairo_context (rcontext, erect);
         cairo_surface_t *isurface = cairo_surface_from_pixmap (*m_pixmap);
         cairo_set_source_surface (cr, isurface, 0, 0); // (ix,iy) are set in the matrix below
         cairo_matrix_t matrix;

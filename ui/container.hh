@@ -65,7 +65,7 @@ class SingleContainerImpl : public virtual ContainerImpl {
 protected:
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area, bool changed);
-  virtual void          render                  (RenderContext&, const Allocation&) {}
+  virtual void          render                  (RenderContext&, const Rect&) {}
   ItemImpl&             get_child               () { RAPICORN_CHECK (child_item != NULL); return *child_item; }
   virtual void          pre_finalize            ();
   virtual              ~SingleContainerImpl     ();
@@ -87,7 +87,7 @@ class MultiContainerImpl : public virtual ContainerImpl {
 protected:
   virtual void          pre_finalize            ();
   virtual              ~MultiContainerImpl      ();
-  virtual void          render                  (RenderContext&, const Allocation&) {}
+  virtual void          render                  (RenderContext&, const Rect&) {}
   virtual ChildWalker   local_children          () const { return value_walker (items); }
   virtual bool          has_children            () { return items.size() > 0; }
   virtual void          add_child               (ItemImpl   &item);

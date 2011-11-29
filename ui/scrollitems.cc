@@ -73,8 +73,7 @@ ScrollAreaImpl::yoffset () const
 }
 
 void
-ScrollAreaImpl::scroll_to (double x,
-                           double y)
+ScrollAreaImpl::scroll_to (double x, double y)
 {
   hadjustment().freeze();
   vadjustment().freeze();
@@ -89,9 +88,8 @@ ScrollAreaImpl::scroll_to (double x,
 static const ItemFactory<ScrollAreaImpl> scroll_area_factory ("Rapicorn::Factory::ScrollArea");
 
 /* --- ScrollPortImpl --- */
-class ScrollPortImpl : public virtual SingleContainerImpl {
+class ScrollPortImpl : public virtual ViewportImpl {
   Adjustment *m_hadjustment, *m_vadjustment;
-  double m_last_xoffset, m_last_yoffset;
   virtual void
   hierarchy_changed (ItemImpl *old_toplevel)
   {
@@ -187,8 +185,6 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
         d = m_vadjustment->page_increment ();
         m_vadjustment->page_increment (CLAMP (d, l, h));
       }
-    m_last_xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
-    m_last_yoffset = m_vadjustment ? round (m_vadjustment->flipped_value()) : 0.0;
     if (m_hadjustment)
       m_hadjustment->constrain();
     if (m_vadjustment)
@@ -197,71 +193,23 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
       m_hadjustment->thaw();
     if (m_vadjustment)
       m_vadjustment->thaw();
-  }
-  virtual void
-  render (RenderContext    &rcontext,
-          const Allocation &area)
-  {
-    if (!has_drawable_child())
-      return;
-    ItemImpl &child = get_child();
-    double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
-    double yoffset = m_vadjustment ? round (m_vadjustment->flipped_value()) : 0.0;
-    Region what = area; // bits of view to render
-    // constrain scroll_display to expose area
-    what.intersect (rendering_region (rcontext));
-    // constrain scroll_display to child allocation
-    what.intersect (child.allocation()); // FIXME: broken...
-    // constrain scroll_display to visible area
-    what.intersect (Rect (ifloor (xoffset), ifloor (yoffset), iceil (area.width), iceil (area.height)));
-    // render child area
-    if (!what.empty())
-      {
-        cairo_t *cr = cairo_context (rcontext);
-        cairo_translate (cr, area.x -xoffset, area.y -yoffset);
-        child.render_into (cr, what);
-      }
+    const int xoffset = m_hadjustment ? iround (m_hadjustment->value()) : 0;
+    const int yoffset = m_vadjustment ? iround (m_vadjustment->flipped_value()) : 0;
+    scroll_offsets (xoffset, yoffset);
   }
   virtual Affine
   child_affine (const ItemImpl &item)
   {
     const Allocation area = allocation();
-    double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
-    double yoffset = m_vadjustment ? round (m_vadjustment->flipped_value()) : 0.0;
+    const int xoffset = scroll_offset_x(), yoffset = scroll_offset_y();
     return AffineTranslate (-area.x + xoffset, -area.y + yoffset);
   }
   void
   adjustment_changed()
   {
-    double xoffset = m_hadjustment ? round (m_hadjustment->value()) : 0.0;
-    double yoffset = m_vadjustment ? round (m_vadjustment->flipped_value()) : 0.0;
-    double xdelta = xoffset - m_last_xoffset;
-    double ydelta = yoffset - m_last_yoffset;
-    WindowImpl *witem = get_window();
-    if (!drawable() || !witem)
-      {
-        m_last_xoffset = xoffset;
-        m_last_yoffset = yoffset;
-      }
-    else if (fabs (xdelta) + fabs (ydelta) >= 0.1)
-      {
-        /* copy scrolled area */
-        Allocation a = allocation();
-        copy_area (Rect (Point (a.x, a.y), a.width, a.height),
-                   Point (a.x - xdelta, a.y - ydelta));
-        /* expose areas uncovered by scrolling */
-        if (xdelta > 0)
-          expose (Allocation (a.x + a.width + max (-a.width, -xdelta), a.y, min (a.width, xdelta), a.height));
-        else if (xdelta < 0)
-          expose (Allocation (a.x, a.y, min (a.width, -xdelta), a.height));
-        if (ydelta > 0)
-          expose (Allocation (a.x, a.y + a.height + max (-a.height, -ydelta), a.width, min (a.height, ydelta)));
-        else if (ydelta < 0)
-          expose (Allocation (a.x, a.y, a.width, min (a.height, -ydelta)));
-        /* update last scroll position */
-        m_last_xoffset = xoffset;
-        m_last_yoffset = yoffset;
-      }
+    const int xoffset = m_hadjustment ? iround (m_hadjustment->value()) : 0;
+    const int yoffset = m_vadjustment ? iround (m_vadjustment->flipped_value()) : 0;
+    scroll_offsets (xoffset, yoffset);
   }
   virtual void
   set_focus_child (ItemImpl *item)
@@ -338,8 +286,7 @@ class ScrollPortImpl : public virtual SingleContainerImpl {
   }
 public:
   ScrollPortImpl() :
-    m_hadjustment (NULL), m_vadjustment (NULL),
-    m_last_xoffset (0), m_last_yoffset(0)
+    m_hadjustment (NULL), m_vadjustment (NULL)
   {}
 };
 static const ItemFactory<ScrollPortImpl> scroll_port_factory ("Rapicorn::Factory::ScrollPort");

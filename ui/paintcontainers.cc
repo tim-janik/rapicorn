@@ -161,10 +161,9 @@ private:
   }
 public:
   virtual void
-  render (RenderContext &rcontext, const Allocation &area)
+  render (RenderContext &rcontext, const Rect &rect)
   {
-    cairo_t *cr = cairo_context (rcontext);
-    IRect ia = area;
+    IRect ia = allocation();
     const int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
     bool bimpressed = branch_impressed(), bprelight = branch_prelight();
     /* render background */
@@ -178,6 +177,7 @@ public:
     else
       background_color = normal_background();
     Color background = heritage()->resolve_color (background_color, STATE_NORMAL, COLOR_BACKGROUND);
+    cairo_t *cr = cairo_context (rcontext, rect);
     CPainter painter (cr);
     if (background)
       painter.draw_filled_rect (x, y, width, height, background);
@@ -297,10 +297,9 @@ protected:
   }
 public:
   virtual void
-  render (RenderContext    &rcontext,
-          const Allocation &area)
+  render (RenderContext &rcontext, const Rect &rect)
   {
-    IRect ia = area;
+    IRect ia = allocation();
     int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
     int thickness = is_tight_focus() ? 1 : 2;
     if (width >= thickness && height >= thickness)
@@ -353,7 +352,7 @@ public:
         vector<double> dashes;
         dashes.push_back (3);
         dashes.push_back (2);
-        cairo_t *cr = cairo_context (rcontext);
+        cairo_t *cr = cairo_context (rcontext, rect);
         CPainter painter (cr);
         if (outer_upper_left || inner_upper_left || inner_lower_right || outer_lower_right)
           painter.draw_shadow (x, y, width, height, outer_upper_left, inner_upper_left, inner_lower_right, outer_lower_right);

@@ -52,6 +52,7 @@ class ItemImpl : public virtual ItemIface {
   ContainerImpl**             _parent_loc        () { return &m_parent; }
   void                        propagate_heritage ();
   void                        heritage           (Heritage  *heritage);
+  void                        expose_internal    (const Region &region);
 protected:
   virtual void                constructed             ();
   /* flag handling */
@@ -192,10 +193,9 @@ public:
   void                        invalidate        ();
   void                        invalidate_size   ();
   void                        changed           ();
-  void                        expose            ();                             /* item allocation */
-  void                        expose            (const Rect       &rect);       /* item coordinates relative */
-  void                        expose            (const Region     &region);     /* item coordinates relative */
-  void                        copy_area         (const Rect &rect, const Point &dest);
+  void                        expose            ()                      { expose (allocation()); }
+  void                        expose            (const Rect &rect)      { expose (Region (rect)); }
+  void                        expose            (const Region &region);
   void                        queue_visual_update  ();
   void                        force_visual_update  ();
   /* public signals */
@@ -213,8 +213,7 @@ protected:
   // rendering
   class RenderContext;
   virtual void               render_item               (RenderContext    &rcontext);
-  virtual void               render                    (RenderContext    &rcontext,
-                                                        const Allocation &area) = 0;
+  virtual void               render                    (RenderContext    &rcontext, const Rect &rect) = 0;
   const Region&              rendering_region          (RenderContext    &rcontext) const;
   virtual cairo_t*           cairo_context             (RenderContext    &rcontext,
                                                         const Allocation &area = Allocation (-1, -1, 0, 0));

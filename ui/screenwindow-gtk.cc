@@ -128,14 +128,6 @@ struct ScreenWindowGtk : public virtual ScreenWindow {
   virtual bool          viewable                (void);
   virtual void          hide                    (void);
   virtual void          blit_surface            (cairo_surface_t *surface, Rapicorn::Region region);
-  virtual void          blit_display            (Rapicorn::Display &display);
-  virtual void          create_display_backing  (Rapicorn::Display &display);
-  virtual void          copy_area               (double          src_x,
-                                                 double          src_y,
-                                                 double          width,
-                                                 double          height,
-                                                 double          dest_x,
-                                                 double          dest_y);
   virtual void          enqueue_win_draws       (void);
   virtual uint          last_draw_stamp         ();
   virtual Info          get_info                ();
@@ -342,20 +334,6 @@ ScreenWindowGtk::hide (void)
 }
 
 void
-ScreenWindowGtk::create_display_backing (Rapicorn::Display &display)
-{
-  if (display.empty())
-    return;
-  const Rect e = display.extents();
-  cairo_surface_t *bsurface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, e.width, e.height);
-  cairo_t *cr = cairo_create (bsurface);
-  cairo_translate (cr, -e.x, -e.y);
-  display.set_backing (cr);
-  cairo_surface_destroy (bsurface);
-  cairo_destroy (cr);
-}
-
-void
 ScreenWindowGtk::blit_surface (cairo_surface_t *surface, Rapicorn::Region region)
 {
   ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
@@ -365,6 +343,29 @@ ScreenWindowGtk::blit_surface (cairo_surface_t *surface, Rapicorn::Region region
   GdkVisual *gvisual = gdk_drawable_get_visual (m_widget->window);
   int gwidth, gheight;
   gdk_drawable_get_size (m_widget->window, &gwidth, &gheight);
+  if (false)
+    {
+      cairo_surface_t *xsurface = cairo_xlib_surface_create (GDK_WINDOW_XDISPLAY (m_widget->window),
+                                                             GDK_WINDOW_XID (m_widget->window),
+                                                             GDK_VISUAL_XVISUAL (gvisual),
+                                                             gwidth, gheight);
+      cairo_t *xcr = cairo_create (xsurface);
+      cairo_scale (xcr, 1, -1);
+      cairo_translate (xcr, 0, -gheight);
+      vector<Rect> rects;
+      region.list_rects (rects);
+      for (size_t i = 0; i < rects.size(); i++)
+        cairo_rectangle (xcr, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+      cairo_clip (xcr);
+      cairo_set_source_rgba (xcr, 0.7, 0, 0.7, 1);
+      cairo_paint (xcr);
+      cairo_destroy (xcr);
+      cairo_surface_flush (xsurface);
+      cairo_surface_destroy (xsurface);
+      gdk_flush();
+      XPending (GDK_WINDOW_XDISPLAY (m_widget->window));
+      usleep (7000);
+    }
   cairo_surface_t *xsurface = cairo_xlib_surface_create (GDK_WINDOW_XDISPLAY (m_widget->window),
                                                          GDK_WINDOW_XID (m_widget->window),
                                                          GDK_VISUAL_XVISUAL (gvisual),
@@ -393,7 +394,6 @@ ScreenWindowGtk::blit_surface (cairo_surface_t *surface, Rapicorn::Region region
   cairo_restore (xcr);
 
   assert (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
-  gdk_flush();
   if (xcr)
     {
       cairo_destroy (xcr);
@@ -403,85 +403,6 @@ ScreenWindowGtk::blit_surface (cairo_surface_t *surface, Rapicorn::Region region
     {
       cairo_surface_destroy (xsurface);
       xsurface = NULL;
-    }
-}
-
-void
-ScreenWindowGtk::blit_display (Rapicorn::Display &display)
-{
-  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-  if (m_screen_window && !display.empty())
-    {
-      int priority;
-      if (m_screen_window->fast_local_blitting)
-        priority = -G_MAXINT / 2;       /* run with PRIORITY_NOW to blit immediately on local displays */
-      else
-        priority = GTK_PRIORITY_REDRAW; /* allow event processing to interrupt blitting on remote displays */
-      if (GTK_WIDGET_DRAWABLE (m_widget))
-        {
-          GdkVisual *gvisual = gdk_drawable_get_visual (m_widget->window);
-          int gwidth, gheight;
-          gdk_drawable_get_size (m_widget->window, &gwidth, &gheight);
-          cairo_surface_t *xsurface = cairo_xlib_surface_create (GDK_WINDOW_XDISPLAY (m_widget->window),
-                                                                 GDK_WINDOW_XID (m_widget->window),
-                                                                 GDK_VISUAL_XVISUAL (gvisual),
-                                                                 gwidth, gheight);
-          return_if_fail (xsurface);
-          CHECK_CAIRO_STATUS (cairo_surface_status (xsurface));
-          return_if_fail (cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
-          cairo_xlib_surface_set_size (xsurface, gwidth, gheight);
-          return_if_fail (cairo_surface_status (xsurface) == CAIRO_STATUS_SUCCESS);
-
-          cairo_t *xcr = cairo_create (xsurface);
-          return_if_fail (xcr);
-          return_if_fail (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
-          cairo_scale (xcr, 1, -1);
-          cairo_translate (xcr, 0, -gheight);
-          display.render_backing (xcr);
-          assert (CAIRO_STATUS_SUCCESS == cairo_status (xcr));
-          gdk_flush();
-          if (xcr)
-            {
-              cairo_destroy (xcr);
-              xcr = NULL;
-            }
-          if (xsurface)
-            {
-              cairo_surface_destroy (xsurface);
-              xsurface = NULL;
-            }
-        }
-    }
-}
-
-void
-ScreenWindowGtk::copy_area (double          src_x,
-                            double          src_y,
-                            double          width,
-                            double          height,
-                            double          dest_x,
-                            double          dest_y)
-{
-  ScopedLock<RapicronGdkSyncLock> locker (GTK_GDK_THREAD_SYNC);
-  if (GTK_WIDGET_DRAWABLE (m_widget))
-    {
-      /* copy the area */
-      int window_height;
-      gdk_window_get_size (m_widget->window, NULL, &window_height);
-      gdk_gc_set_exposures (m_widget->style->black_gc, TRUE);
-      gdk_draw_drawable (m_widget->window, m_widget->style->black_gc, // FIXME: use gdk_window_move_region() with newer Gtk+
-                         m_widget->window, iround (src_x), iround (window_height - src_y - height),
-                         iround (dest_x), iround (window_height - dest_y - height), iround (width), iround (height));
-      gdk_gc_set_exposures (m_widget->style->black_gc, FALSE);
-      /* ensure last GraphicsExpose events are processed before the next copy */
-      GdkEvent *event = gdk_event_get_graphics_expose (m_widget->window);
-      while (event)
-        {
-          gtk_widget_send_expose (m_widget, event);
-          bool last = event->expose.count == 0;
-          gdk_event_free (event);
-          event = last || !m_widget->window ? NULL : gdk_event_get_graphics_expose (m_widget->window);
-        }
     }
 }
 

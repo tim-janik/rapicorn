@@ -1223,15 +1223,14 @@ protected:
     return area;
   }
   virtual void
-  render (RenderContext    &rcontext,
-          const Allocation &allocation_area)
+  render (RenderContext &rcontext, const Rect &rect)
   {
     uint vdot_size = 0;
     Rect larea = layout_area (&vdot_size);
     if (larea.width < 1) // allowed: larea.height < 1
       return;
     /* render text */
-    cairo_t *cr = cairo_context (rcontext);
+    cairo_t *cr = cairo_context (rcontext, rect);
     default_pango_cairo_font_options (NULL, cr);
     rapicorn_gtk_threads_enter();
     if (insensitive())

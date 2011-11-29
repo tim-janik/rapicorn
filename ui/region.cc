@@ -213,6 +213,15 @@ Region::exor (const Region &other)
 }
 
 void
+Region::translate (double deltax, double deltay)
+{
+  std::vector<Rect> rects;
+  list_rects (rects);
+  for (uint i = 0; i < rects.size(); i++)
+    add (Rect (rects[i].x + deltax, rects[i].y + deltay, rects[i].width, rects[i].height));
+}
+
+void
 Region::affine (const Affine &aff)
 {
   // FIXME: optimize for aff.is_identity()

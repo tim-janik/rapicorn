@@ -696,24 +696,6 @@ struct AffineShear : Affine {
   }
 };
 
-/* --- Display --- */
-class Display : protected NonCopyable {
-  std::list<Rect>  clip_stack;
-  cairo_t         *m_backing;
-public:
-  explicit         Display              ();
-  virtual         ~Display              ();
-  void             push_clip_rect       (int x, int y, uint width, uint height) { push_clip_rect (Rect (Point (x, y), width, height)); }
-  void             push_clip_rect       (const Rect &rect);
-  Rect             current_rect         ();
-  cairo_t*         create_cairo         (Color       c = 0x00000000);
-  void             set_backing          (cairo_t    *cairo);
-  Rect             extents              () const;
-  bool             empty                () const;
-  void             pop_clip_rect        ();
-  void             render_backing       (cairo_t *cairo);
-};
-
 /* --- implementations --- */
 inline bool
 Point::equals (const Point &p2,

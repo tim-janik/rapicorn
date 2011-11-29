@@ -147,15 +147,14 @@ protected:
       }
   }
   virtual void
-  render (RenderContext    &rcontext,
-          const Allocation &area)
+  render (RenderContext &rcontext, const Rect &rect)
   {
     assert (rapicorn_thread_entered());
 
     if (m_paint_allocation)
       {
-        IRect ia = area;
-        cairo_t *cr = cairo_context (rcontext);
+        IRect ia = allocation();
+        cairo_t *cr = cairo_context (rcontext, rect);
         CPainter painter (cr);
         painter.draw_filled_rect (ia.x, ia.y, ia.width, ia.height, heritage()->black());
       }
@@ -234,8 +233,7 @@ public:
   explicit TestBoxImpl()
   {}
   virtual void
-  render (RenderContext    &rcontext,
-          const Allocation &area)
+  render (RenderContext &rcontext, const Rect &rect)
   {
     if (!m_handler_id)
       {
@@ -272,7 +270,7 @@ class IdlTestItemImpl : public virtual ItemImpl, public virtual IdlTestItemIface
   virtual void          self_prop (IdlTestItemIface *s)         { m_self = s; }
   virtual void          size_request (Requisition &req)         { req = Requisition (12, 12); }
   virtual void          size_allocate (Allocation area, bool changed) {}
-  virtual void          render (RenderContext &rcontext, const Allocation &area) {}
+  virtual void          render (RenderContext &rcontext, const Rect &rect) {}
 };
 static const ItemFactory<IdlTestItemImpl> test_item_factory ("Rapicorn::Factory::IdlTestItem");
 

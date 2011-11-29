@@ -21,6 +21,9 @@ test_rect (void)
   TCMP (r3.equals (r2, 0.1), ==, false);
   TCMP (r3.equals (r2, 0.5), ==, true);
   TASSERT (r2.equals (r1, 0.00000000000001));           // using epsilon due to precision artefacts
+  r3.translate (-2.5, +1.6);
+  Rect r4 (4.6, 8.8, 1.0, 1.0);
+  TASSERT (r3.equals (r4, 0.00000000000001));           // using epsilon due to precision artefacts
 }
 REGISTER_UITHREAD_TEST ("Region/rectangles", test_rect);
 

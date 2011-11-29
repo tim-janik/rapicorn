@@ -126,14 +126,6 @@ public:
   virtual uint          last_draw_stamp         () = 0;
   virtual void          enqueue_win_draws       (void) = 0;
   virtual void          blit_surface            (cairo_surface_t *surface, Rapicorn::Region region) = 0;
-  virtual void          blit_display            (Display        &plane) = 0;
-  virtual void          create_display_backing  (Rapicorn::Display &display) = 0;
-  virtual void          copy_area               (double          src_x,
-                                                 double          src_y,
-                                                 double          width,
-                                                 double          height,
-                                                 double          dest_x,
-                                                 double          dest_y) = 0;
   /* --- backend API --- */
   class FactoryBase : protected NonCopyable {
     friend class ScreenWindow;

@@ -73,11 +73,9 @@ private:
   virtual void          do_invalidate                           ();
   virtual void          beep                                    ();
   /* rendering */
-  virtual void          copy_area                               (const Rect             &src,
-                                                                 const Point            &dest);
   void                  expose_now                              ();
   virtual void          draw_now                                ();
-  virtual void          render                                  (RenderContext &rcontext, const Allocation &area);
+  virtual void          render                                  (RenderContext &rcontext, const Rect &rect);
   /* screen_window ops */
   virtual void          create_screen_window                    ();
   virtual bool          has_screen_window                       ();
