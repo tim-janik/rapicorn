@@ -8,7 +8,7 @@
 namespace Rapicorn {
 
 class ViewportImpl : public virtual SingleContainerImpl {
-  Region                m_expose_region;
+  Region                m_expose_region;        // maintained in child coord space
   uint                  m_tunable_requisition_counter;
   int                   m_xoffset, m_yoffset;
   void                  negotiate_size          (const Allocation *carea);

@@ -217,6 +217,7 @@ Region::translate (double deltax, double deltay)
 {
   std::vector<Rect> rects;
   list_rects (rects);
+  clear();
   for (uint i = 0; i < rects.size(); i++)
     add (Rect (rects[i].x + deltax, rects[i].y + deltay, rects[i].width, rects[i].height));
 }

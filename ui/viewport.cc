@@ -99,6 +99,7 @@ ViewportImpl::render (RenderContext &rcontext, const Rect &rect)
   // render child stack
   if (!what.empty())
     {
+      m_expose_region.subtract (what);
       cairo_t *cr = cairo_context (rcontext, rarea);
       cairo_translate (cr, area.x - xoffset, area.y - yoffset);
       child.render_into (cr, what);
@@ -112,6 +113,14 @@ ViewportImpl::expose_child_region (const Region &region)
     {
       m_expose_region.add (region);
       collapse_expose_region();
+      if (parent())
+        {
+          const Allocation &area = allocation();
+          // propagate exposes, to make child rendering changes visible at toplevel
+          Region vpregion = region;
+          vpregion.translate (area.x - m_xoffset, area.y - m_yoffset); // translate to viewport coords
+          expose (vpregion);
+        }
     }
 }
 
