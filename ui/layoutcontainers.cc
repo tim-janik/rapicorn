@@ -163,9 +163,11 @@ class VBoxImpl : public virtual TableImpl, public virtual VBox {
   virtual void
   add_child (ItemImpl &item)
   {
-    uint row = 0;
+    uint row = get_n_rows();
+    while (row > 0 && !is_row_used (row - 1))
+      row--;
     if (is_row_used (row))
-      insert_rows (row, 1);
+      insert_rows (row, 1);     // should never be triggered
     item.vposition (row);
     item.vspan (1);
     TableImpl::add_child (item); /* ref, sink, set_parent, insert */
