@@ -135,7 +135,7 @@ CPainter::draw_dir_arrow (double x, double y, double width, double height, Color
       cairo_rel_line_to (cr, 0, -height);
       cairo_close_path (cr);
       break;
-    case DIR_UP:
+    case DIR_DOWN:
       cairo_move_to (cr, x, y);
       cairo_rel_line_to (cr, +width, 0);
       cairo_rel_line_to (cr, -xhalf, height);
@@ -147,7 +147,7 @@ CPainter::draw_dir_arrow (double x, double y, double width, double height, Color
       cairo_rel_line_to (cr, 0, +height);
       cairo_close_path (cr);
       break;
-    case DIR_DOWN:
+    case DIR_UP:
       cairo_move_to (cr, x + width, y + height);
       cairo_rel_line_to (cr, -width, 0);
       cairo_rel_line_to (cr, +xhalf, -height);
