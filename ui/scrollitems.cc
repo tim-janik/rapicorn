@@ -195,14 +195,7 @@ class ScrollPortImpl : public virtual ViewportImpl {
       m_vadjustment->thaw();
     const int xoffset = m_hadjustment ? iround (m_hadjustment->value()) : 0;
     const int yoffset = m_vadjustment ? iround (m_vadjustment->flipped_value()) : 0;
-    scroll_offsets (xoffset, yoffset);
-  }
-  virtual Affine
-  child_affine (const ItemImpl &item)
-  {
-    const Allocation area = allocation();
-    const int xoffset = scroll_offset_x(), yoffset = scroll_offset_y();
-    return AffineTranslate (-area.x + xoffset, -area.y + yoffset);
+    scroll_offsets (xoffset, yoffset); // syncronize offsets, before adjustment_changed() kicks in
   }
   void
   adjustment_changed()

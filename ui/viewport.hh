@@ -16,6 +16,7 @@ class ViewportImpl : public virtual SingleContainerImpl {
 protected:
   void                  negotiate_size          (void) { negotiate_size (NULL); }
   void                  allocate_size           (const Allocation &area);
+  virtual Affine        child_affine            (const ItemImpl &item);
   const Region&         peek_expose_region      () const { return m_expose_region; }
   void                  discard_expose_region   () { m_expose_region.clear(); }
   bool                  exposes_pending         () const { return !m_expose_region.empty(); }

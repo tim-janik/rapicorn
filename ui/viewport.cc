@@ -69,6 +69,14 @@ ViewportImpl::scroll_offsets (int deltax, int deltay)
     }
 }
 
+Affine
+ViewportImpl::child_affine (const ItemImpl &item)
+{
+  const Allocation &area = allocation();
+  const int xoffset = scroll_offset_x(), yoffset = scroll_offset_y();
+  return AffineTranslate (-area.x + xoffset, -area.y + yoffset);
+}
+
 void
 ViewportImpl::render_item (RenderContext &rcontext)
 {
