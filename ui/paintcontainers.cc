@@ -124,7 +124,7 @@ private:
                 int           y,
                 int           width,
                 int           height,
-                LightingType     st)
+                LightingType  st)
   {
     int shade_alpha = 0x3b;
     Color light = light_glint().shade (shade_alpha), dark = dark_glint().shade (shade_alpha);
