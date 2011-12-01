@@ -78,7 +78,7 @@ ScrollAreaImpl::scroll_to (double x, double y)
   hadjustment().freeze();
   vadjustment().freeze();
   m_hadjustment->value (round (x));
-  m_vadjustment->flipped_value (round (y));
+  m_vadjustment->value (round (y));
   m_hadjustment->constrain();
   m_vadjustment->constrain();
   m_hadjustment->thaw();
@@ -194,14 +194,14 @@ class ScrollPortImpl : public virtual ViewportImpl {
     if (m_vadjustment)
       m_vadjustment->thaw();
     const int xoffset = m_hadjustment ? iround (m_hadjustment->value()) : 0;
-    const int yoffset = m_vadjustment ? iround (m_vadjustment->flipped_value()) : 0;
+    const int yoffset = m_vadjustment ? iround (m_vadjustment->value()) : 0;
     scroll_offsets (xoffset, yoffset); // syncronize offsets, before adjustment_changed() kicks in
   }
   void
   adjustment_changed()
   {
     const int xoffset = m_hadjustment ? iround (m_hadjustment->value()) : 0;
-    const int yoffset = m_vadjustment ? iround (m_vadjustment->flipped_value()) : 0;
+    const int yoffset = m_vadjustment ? iround (m_vadjustment->value()) : 0;
     scroll_offsets (xoffset, yoffset);
   }
   virtual void
@@ -271,7 +271,7 @@ class ScrollPortImpl : public virtual ViewportImpl {
     if (deltax)
       m_hadjustment->value (m_hadjustment->value() + deltax);
     if (deltay)
-      m_vadjustment->flipped_value (m_vadjustment->flipped_value() + deltay);
+      m_vadjustment->value (m_vadjustment->value() + deltay);
     m_hadjustment->constrain();
     m_vadjustment->constrain();
     m_hadjustment->thaw();
