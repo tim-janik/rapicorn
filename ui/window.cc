@@ -150,8 +150,7 @@ WindowImpl::WindowImpl() :
   m_loop (*ref_sink (uithread_main_loop()->new_slave())),
   m_source (NULL),
   m_screen_window (NULL),
-  m_tunable_requisition_counter (0),
-  m_entered (false), m_auto_close (false),
+  m_entered (false), m_auto_close (false), m_pending_win_size (false),
   m_notify_displayed_id (0)
 {
   Heritage *hr = ClassDoctor::window_heritage (*this, color_scheme());
@@ -210,96 +209,31 @@ WindowImpl::self_visible () const
 }
 
 void
-WindowImpl::size_request (Requisition &requisition)
+WindowImpl::resize_screen_window()
 {
-  if (has_allocatable_child())
-    {
-      ItemImpl &child = get_child();
-      requisition = child.requisition();
-    }
-}
+  return_if_fail (requisitions_tunable() == false);
 
-void
-WindowImpl::size_allocate (Allocation area, bool changed)
-{
-  if (has_allocatable_child())
-    {
-      ItemImpl &child = get_child();
-      Requisition rq = child.requisition();
-      child.set_allocation (area);
-    }
-}
+  // negotiate size requisition
+  negotiate_size();
 
-bool
-WindowImpl::tunable_requisitions ()
-{
-  return m_tunable_requisition_counter > 0;
-}
-
-void
-WindowImpl::resize_all (Allocation *new_area)
-{
-  assert (m_tunable_requisition_counter == 0);
-  bool have_allocation = false;
-  Allocation area;
-  if (new_area)
-    {
-      area.width = new_area->width;
-      area.height = new_area->height;
-      have_allocation = true;
-      change_flags_silently (INVALID_ALLOCATION, true);
-    }
-  else if (!new_area && m_screen_window)
-    {
-      ScreenWindow::State state = m_screen_window->get_state();
-      if (state.width > 0 && state.height > 0)
-        {
-          area.width = state.width;
-          area.height = state.height;
-          have_allocation = true;
-        }
-    }
-  if (!test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+  // grow screen window if needed
+  if (!m_screen_window)
     return;
-  /* this is the rcore of the resizing loop. via Item.tune_requisition(), we
-   * allow items to adjust the requisition from within size_allocate().
-   * whether the tuned requisition is honored at all, depends on
-   * m_tunable_requisition_counter.
-   * currently, we simply freeze the allocation after 3 iterations. for the
-   * future it's possible to honor the tuned requisition only partially or
-   * proportionally as m_tunable_requisition_counter decreases, so to mimick
-   * a simulated annealing process yielding the final layout.
-   */
-  m_tunable_requisition_counter = 3;
-  Requisition req;
-  while (test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+  const Allocation asize = allocation();
+  ScreenWindow::State state = m_screen_window->get_state();
+  if (state.width <= 0 || state.height <= 0 || asize.width > state.width || asize.height > state.height)
     {
-      req = requisition(); /* unsets INVALID_REQUISITION */
-      if (!have_allocation)
-        {
-          /* fake initial allocation */
-          area.width = req.width;
-          area.height = req.height;
-        }
-      set_allocation (area); /* unsets INVALID_ALLOCATION, may re-::invalidate_size() */
-      if (m_tunable_requisition_counter)
-        m_tunable_requisition_counter--;
+      m_config.request_width = asize.width;
+      m_config.request_height = asize.height;
+      m_pending_win_size = true;
+      m_screen_window->enqueue_win_draws();
+      discard_expose_region();
+      m_screen_window->set_config (m_config, true);
+      return;
     }
-  m_tunable_requisition_counter = 0;
-  if (!have_allocation ||
-      (!new_area &&
-       (req.width > allocation().width || req.height > allocation().height)))
-    {
-      m_config.request_width = req.width;
-      m_config.request_height = req.height;
-      if (m_screen_window)
-        {
-          /* set_config() will request a WIN_SIZE and WIN_DRAW now, so there's no point in handling further exposes */
-          m_screen_window->enqueue_win_draws();
-          m_expose_region.clear();
-          m_screen_window->set_config (m_config, true);
-        }
-    }
+  // screen window size is good, allocate it
+  if (asize.width != state.width || asize.height != state.height)
+    allocate_size (Allocation (0, 0, state.width, state.height));
 }
 
 void
@@ -632,10 +566,9 @@ WindowImpl::dispatch_win_size_event (const Event &event)
   const EventWinSize *wevent = dynamic_cast<const EventWinSize*> (&event);
   if (wevent)
     {
-      Allocation allocation (0, 0, wevent->width, wevent->height);
-      resize_all (&allocation);
-      /* discard all expose requests, we'll get a new WIN_DRAW event */
-      m_expose_region.clear();
+      m_pending_win_size = false;
+      allocate_size (Allocation (0, 0, wevent->width, wevent->height));
+      discard_expose_region(); // we'll get a new WIN_DRAW event
       if (0)
         DEBUG ("win-size: %f %f", wevent->width, wevent->height);
       handled = true;
@@ -652,7 +585,7 @@ WindowImpl::dispatch_win_draw_event (const Event &event)
     {
       for (uint i = 0; i < devent->rectangles.size(); i++)
         {
-          m_expose_region.add (devent->rectangles[i]);
+          queue_expose_rect (devent->rectangles[i]);
           if (0)
             DEBUG ("win-draw: %f %f (at: %f %f)", devent->rectangles[i].width, devent->rectangles[i].height,
                    devent->rectangles[i].x, devent->rectangles[i].y);
@@ -680,17 +613,6 @@ WindowImpl::dispatch_win_delete_event (const Event &event)
 }
 
 void
-WindowImpl::expose_window_region (const Region &region)
-{
-  /* this function is expected to *queue* exposes, and not render immediately */
-  if (m_screen_window && !region.empty())
-    {
-      m_expose_region.add (region);
-      collapse_expose_region();
-    }
-}
-
-void
 WindowImpl::copy_area (const Rect  &src,
                        const Point &dest)
 {
@@ -700,17 +622,17 @@ WindowImpl::copy_area (const Rect  &src,
       /* force delivery of any pending exposes */
       expose_now();
       /* intersect copied expose region */
-      Region exr = m_expose_region;
+      Region exr = peek_expose_region();
       exr.intersect (Region (src));
       /* pixel-copy area */
       m_screen_window->copy_area (src.x, src.y, // may queue new exposes
-                             src.width, src.height,
-                             dest.x, dest.y);
+                                  src.width, src.height,
+                                  dest.x, dest.y);
       /* shift expose region */
       exr.affine (AffineTranslate (Point (dest.x - src.x, dest.y - src.y)));
       /* expose copied area */
-      expose_window_region (exr);
-      // FIXME: synthesize 0-dist pointer movement from idle handler
+      queue_expose_region (exr);
+      // FIXME: synthesize 0-dist pointer movement from idle handler or in event queue
     }
 }
 
@@ -747,7 +669,7 @@ WindowImpl::expose_now ()
         }
     }
   else
-    m_expose_region.clear(); // nuke stale exposes
+    discard_expose_region(); // nuke stale exposes
 }
 
 void
@@ -765,10 +687,11 @@ WindowImpl::draw_now ()
       /* force delivery of any pending exposes */
       expose_now();
       /* render invalidated contents */
-      m_expose_region.intersect (Region (allocation()));
+      Region r = allocation();
+      r.intersect (peek_expose_region());
+      discard_expose_region();
       std::vector<Rect> rects;
-      m_expose_region.list_rects (rects);
-      m_expose_region.clear();
+      r.list_rects (rects);
       ScreenWindow::State state = m_screen_window->get_state();
       for (uint i = 0; i < rects.size(); i++)
         {
@@ -793,7 +716,7 @@ WindowImpl::draw_now ()
         m_notify_displayed_id = m_loop.exec_update (slot (*this, &WindowImpl::notify_displayed));
     }
   else
-    m_expose_region.clear(); // nuke stale exposes
+    discard_expose_region(); // nuke stale exposes
 }
 
 void
@@ -956,14 +879,16 @@ WindowImpl::prepare (const EventLoop::State &state,
                      int64                  *timeout_usecs_p)
 {
   ScopedLock<Mutex> aelocker (m_async_mutex);
-  return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_screen_window && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
+  const bool needs_resizing = !m_pending_win_size && m_screen_window && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
+  return !m_async_event_queue.empty() || exposes_pending() || needs_resizing;
 }
 
 bool
 WindowImpl::check (const EventLoop::State &state)
 {
   ScopedLock<Mutex> aelocker (m_async_mutex);
-  return !m_async_event_queue.empty() || !m_expose_region.empty() || (m_screen_window && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION));
+  const bool needs_resizing = !m_pending_win_size && m_screen_window && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION);
+  return !m_async_event_queue.empty() || exposes_pending() || needs_resizing;
 }
 
 void
@@ -990,9 +915,9 @@ WindowImpl::dispatch (const EventLoop::State &state)
         dispatch_event (*event);
         delete event;
       }
-    else if (m_screen_window && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
-      resize_all (NULL);
-    else if (!m_expose_region.empty())
+    else if (!m_pending_win_size && m_screen_window && test_flags (INVALID_REQUISITION | INVALID_ALLOCATION))
+      resize_screen_window();
+    else if (exposes_pending())
       {
         draw_now();
         if (m_auto_close)
@@ -1038,7 +963,7 @@ WindowImpl::idle_show()
     {
       /* request size, WIN_SIZE and WIN_DRAW */
       if (!m_screen_window->visible())
-        resize_all (NULL);
+        resize_screen_window();
       /* size requested, show up */
       m_screen_window->show();
     }
@@ -1052,7 +977,7 @@ WindowImpl::create_screen_window ()
       if (!m_screen_window)
         {
           m_screen_window = ScreenWindow::create_screen_window ("auto", WINDOW_TYPE_NORMAL, *this);
-          resize_all (NULL);
+          resize_screen_window();
         }
       RAPICORN_ASSERT (m_screen_window != NULL);
       m_source->primary (true); // FIXME: depends on WM-managable

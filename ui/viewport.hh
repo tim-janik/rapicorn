@@ -8,13 +8,25 @@
 namespace Rapicorn {
 
 class ViewportImpl : public virtual SingleContainerImpl {
+  Region                m_expose_region;
+  uint                  m_tunable_requisition_counter;
+  void                  negotiate_size          (const Allocation *carea);
 protected:
-  Region                m_expose_region;        // FIXME: private
-  virtual void          render          (Display        &display);
-  void                  collapse_expose_region ();
+  void                  negotiate_size          (void) { negotiate_size (NULL); }
+  void                  allocate_size           (const Allocation &area);
+  void                  queue_expose_region     (const Region &region);
+  void                  queue_expose_rect       (const Rect   &rect);
+  const Region&         peek_expose_region      () const { return m_expose_region; }
+  void                  collapse_expose_region  ();
+  void                  discard_expose_region   () { m_expose_region.clear(); }
+  bool                  exposes_pending         () const { return !m_expose_region.empty(); }
+  virtual void          render                  (Display        &display);
 public:
-  explicit              ViewportImpl    ();
-  virtual              ~ViewportImpl    ();
+  void                  expose_child            (const Region &region);
+  void                  expose_child            (const Rect   &rect) { expose_child (Region (rect)); }
+  bool                  requisitions_tunable    () const { return m_tunable_requisition_counter > 0; }
+  explicit              ViewportImpl            ();
+  virtual              ~ViewportImpl            ();
 };
 
 } // Rapicorn

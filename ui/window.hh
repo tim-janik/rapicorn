@@ -16,9 +16,9 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface,
   Mutex                 m_async_mutex;
   std::list<Event*>     m_async_event_queue;
   ScreenWindow         *m_screen_window;
-  uint                  m_tunable_requisition_counter : 24;
   uint                  m_entered : 1;
   uint                  m_auto_close : 1;
+  uint                  m_pending_win_size : 1;
   EventContext          m_last_event_context;
   vector<ItemImpl*>     m_last_entered_children;
   ScreenWindow::Config  m_config;
@@ -69,15 +69,10 @@ private:
   vector<ItemImpl*>     item_difference                         (const vector<ItemImpl*>    &clist, /* preserves order of clist */
                                                                  const vector<ItemImpl*>    &cminus);
   /* sizing */
-  virtual void          size_request                            (Requisition            &requisition);
-  using                 ItemImpl::size_request;
-  virtual void          size_allocate                           (Allocation              area, bool changed);
-  virtual bool          tunable_requisitions                    ();
-  void                  resize_all                              (Allocation             *new_area);
+  void                  resize_screen_window                    ();
   virtual void          do_invalidate                           ();
   virtual void          beep                                    ();
   /* rendering */
-  virtual void          expose_window_region                    (const Region           &region);   // window item coords
   virtual void          copy_area                               (const Rect             &src,
                                                                  const Point            &dest);
   void                  expose_now                              ();

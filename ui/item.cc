@@ -944,6 +944,20 @@ ItemImpl::common_ancestor (const ItemImpl &other) const
   return NULL;
 }
 
+ViewportImpl*
+ItemImpl::get_viewport () const
+{
+  ItemImpl *parent = const_cast<ItemImpl*> (this);
+  while (parent)
+    {
+      ViewportImpl *vp = dynamic_cast<ViewportImpl*> (parent);
+      if (vp)
+        return vp;
+      parent = parent->parent();
+    }
+  return NULL;
+}
+
 WindowImpl*
 ItemImpl::get_window () const
 {
@@ -1085,12 +1099,12 @@ ItemImpl::expose (const Region &region) /* item coordinates relative */
 {
   Region r (allocation());
   r.intersect (region);
-  WindowImpl *rt = get_window();
-  if (!r.empty() && rt && !test_flags (INVALID_CONTENT))
+  ViewportImpl *vp = get_viewport();
+  if (!r.empty() && vp && !test_flags (INVALID_CONTENT))
     {
       const Affine &affine = affine_to_screen_window();
       r.affine (affine);
-      rt->expose_window_region (r);
+      vp->expose_child (r);
     }
 }
 
@@ -1384,8 +1398,8 @@ ItemImpl::tune_requisition (Requisition requisition)
   ItemImpl *p = parent();
   if (p && !test_flags (INVALID_REQUISITION))
     {
-      WindowImpl *r = p->get_window();
-      if (r && r->tunable_requisitions())
+      ViewportImpl *vp = p->get_viewport();
+      if (vp && vp->requisitions_tunable())
         {
           Requisition ovr (width(), height());
           requisition.width = ovr.width >= 0 ? ovr.width : MAX (requisition.width, 0);
@@ -1393,7 +1407,7 @@ ItemImpl::tune_requisition (Requisition requisition)
           if (requisition.width != m_requisition.width || requisition.height != m_requisition.height)
             {
               m_requisition = requisition;
-              invalidate_parent(); /* need new size-request on parent */
+              invalidate_parent(); // need new size-request on parent
               return true;
             }
         }
